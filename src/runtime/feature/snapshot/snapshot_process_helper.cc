@@ -93,7 +93,7 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
 {
     RT_LOG(RT_LOG_INFO, "Start to restore aclgraph.");
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-    const int32_t deviceId = dev->Id_();
+    const uint32_t deviceId = dev->Id_();
     ContextDataManage& ctxMan = ContextDataManage::Instance();
     const ReadProtect rp(&ctxMan.GetSetRwLock());
 
@@ -101,7 +101,7 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
     const uint32_t tsId = dev->DevGetTsId();
 
     for (Context* const ctx : ctxMan.GetSetObj()) {
-        if (ctx->Device_()->Id_() != static_cast<uint32_t>(deviceId)) {
+        if (ctx->Device_()->Id_() != deviceId) {
             continue;
         }
         SpinLock& modelLock = ctx->GetModelLock();

@@ -2773,6 +2773,96 @@ TEST_F(ProfilerTest, GetOnlineProfilingDataTest)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(ProfilerTest, GetOnlineProfilingDataCopyDataTest)
+{
+    uint8_t *deviceMem = new uint8_t[ONLINEPROF_MEM_SIZE]();
+    uint8_t *hostRtMem = new uint8_t[ONLINEPROF_MEM_SIZE]();
+    uint8_t *hostTsMem = new uint8_t[ONLINEPROF_MEM_SIZE]();
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    RawDevice *dev = dynamic_cast<RawDevice *>(device);
+    EXPECT_NE(dev, nullptr);
+    NpuDriver *drv = dynamic_cast<NpuDriver *>(dev->driver_);
+    EXPECT_NE(drv, nullptr);
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    Stream *otherStream = new Stream(device, 0);
+    EXPECT_NE(otherStream, nullptr);
+
+    stream->SetOnProfDeviceAddr(deviceMem);
+    stream->SetOnProfHostRtAddr(hostRtMem);
+    stream->SetOnProfHostTsAddr(hostTsMem);
+    uint64_t * const rtReadAddr = RtPtrToPtr<uint64_t *>(hostRtMem);
+    uint64_t * const rtWriteAddr = RtValueToPtr<uint64_t *>(RtPtrToValue(hostRtMem) + (ONLINEPROF_HEAD_SIZE / 2U));
+    rtProfDataInfo_t * const profRtSourceData =
+        RtValueToPtr<rtProfDataInfo_t *>(RtPtrToValue(hostRtMem) + ONLINEPROF_HEAD_SIZE);
+    uint64_t * const tsReadAddr = RtPtrToPtr<uint64_t *>(hostTsMem);
+    uint64_t * const tsWriteAddr = RtValueToPtr<uint64_t *>(RtPtrToValue(hostTsMem) + (ONLINEPROF_HEAD_SIZE / 2U));
+    rtProfDataInfo_t * const profTsSourceData =
+        RtValueToPtr<rtProfDataInfo_t *>(RtPtrToValue(hostTsMem) + ONLINEPROF_HEAD_SIZE);
+
+    *rtReadAddr = 1U;
+    *rtWriteAddr = 3U;
+    *tsReadAddr = 0U;
+    *tsWriteAddr = 0U;
+    int32_t args0 = 10;
+    int32_t args1 = 20;
+    rtSmDesc_t smDesc0 = {};
+    rtSmDesc_t smDesc1 = {};
+    profRtSourceData[1].stubFunc = reinterpret_cast<void *>(0x1000UL);
+    profRtSourceData[1].blockDim = 4U;
+    profRtSourceData[1].args = &args0;
+    profRtSourceData[1].argsSize = sizeof(args0);
+    profRtSourceData[1].smDesc = &smDesc0;
+    profRtSourceData[1].stream = reinterpret_cast<rtStream_t>(stream);
+    profTsSourceData[1].totalcycle = 101U;
+    profTsSourceData[1].ovcycle = 11U;
+    profRtSourceData[2].stubFunc = reinterpret_cast<void *>(0x2000UL);
+    profRtSourceData[2].blockDim = 8U;
+    profRtSourceData[2].args = &args1;
+    profRtSourceData[2].argsSize = sizeof(args1);
+    profRtSourceData[2].smDesc = &smDesc1;
+    profRtSourceData[2].stream = reinterpret_cast<rtStream_t>(otherStream);
+    profTsSourceData[2].totalcycle = 202U;
+    profTsSourceData[2].ovcycle = 22U;
+
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_NONE));
+    rtProfDataInfo_t profData[2] = {};
+    auto error = OnlineProf::GetOnlineProfilingData(stream, profData, 2U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(profData[0].stubFunc, profRtSourceData[1].stubFunc);
+    EXPECT_EQ(profData[0].blockDim, profRtSourceData[1].blockDim);
+    EXPECT_EQ(profData[0].args, profRtSourceData[1].args);
+    EXPECT_EQ(profData[0].argsSize, profRtSourceData[1].argsSize);
+    EXPECT_EQ(profData[0].smDesc, profRtSourceData[1].smDesc);
+    EXPECT_EQ(profData[0].stream, profRtSourceData[1].stream);
+    EXPECT_EQ(profData[0].totalcycle, profTsSourceData[1].totalcycle);
+    EXPECT_EQ(profData[0].ovcycle, profTsSourceData[1].ovcycle);
+    EXPECT_EQ(profData[1].stubFunc, profRtSourceData[2].stubFunc);
+    EXPECT_EQ(profData[1].blockDim, profRtSourceData[2].blockDim);
+    EXPECT_EQ(profData[1].args, profRtSourceData[2].args);
+    EXPECT_EQ(profData[1].argsSize, profRtSourceData[2].argsSize);
+    EXPECT_EQ(profData[1].smDesc, profRtSourceData[2].smDesc);
+    EXPECT_EQ(profData[1].stream, profRtSourceData[2].stream);
+    EXPECT_EQ(profData[1].totalcycle, profTsSourceData[2].totalcycle);
+    EXPECT_EQ(profData[1].ovcycle, profTsSourceData[2].ovcycle);
+    EXPECT_EQ(*rtReadAddr, 3U);
+    EXPECT_EQ(*tsReadAddr, *rtReadAddr);
+    EXPECT_EQ(*tsWriteAddr, *rtWriteAddr);
+
+    stream->SetOnProfDeviceAddr(nullptr);
+    stream->SetOnProfHostRtAddr(nullptr);
+    stream->SetOnProfHostTsAddr(nullptr);
+    delete otherStream;
+    delete stream;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    delete[] hostTsMem;
+    delete[] hostRtMem;
+    delete[] deviceMem;
+}
+
 TEST_F(ProfilerTest, ProfileDecoratorKernelApiTest)
 {
     ApiImpl* apiImpl_ = new ApiImpl();

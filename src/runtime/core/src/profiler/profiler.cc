@@ -58,14 +58,10 @@ __THREAD_LOCAL__ uint32_t Profiler::threadId_ = 0U;
 __THREAD_LOCAL__ uint32_t Profiler::seq_ = 0U;
 
 Profiler::Profiler(Api *const apiObj)
-    : NoCopy(), api_(apiObj), apiProfileDecorator_(nullptr), apiProfileLogDecorator_(nullptr), trackProfEnable_(false),
-      apiProfEnable_(false), apiProfLogEnable_(false), processId_(PidTidFetcher::GetCurrentPid())
+    : NoCopy(), api_(apiObj), apiProfileDecorator_(nullptr), apiProfileLogDecorator_(nullptr), profCfg_(),
+      trackProfEnable_(false), apiProfEnable_(false), apiProfLogEnable_(false),
+      processId_(PidTidFetcher::GetCurrentPid())
 {
-    const errno_t rc = memset_s(&profCfg_, sizeof(rtProfCfg_t), 0, sizeof(rtProfCfg_t));
-    if (rc != EOK) {
-        RT_LOG(RT_LOG_WARNING, "memset_s failed, retCode=%d, size=%zu.", rc, sizeof(rtProfCfg_t));
-    }
-
     threadId_ = 0U;
     seq_ = 0U;
 }
@@ -231,7 +227,7 @@ void Profiler::ModifyTrackData(TaskInfo *const taskInfo, const uint32_t devId, R
     ProfApiContext *profApiContext = GetTopProfApiContext();
     if ((profApiContext != nullptr) && profApiContext->needReport && (profApiContext->apiData.entryTime != 0U)) {
         trackData->compactInfo.timeStamp =
-            profApiContext->apiData.entryTime + 1;  // trackData的时间戳只要在api的begin和end的范围之内就是合理的
+            profApiContext->apiData.entryTime + 1ULL;  // trackData的时间戳只要在api的begin和end的范围之内就是合理的
     } else {
         trackData->compactInfo.timeStamp = MsprofSysCycleTime();
     }

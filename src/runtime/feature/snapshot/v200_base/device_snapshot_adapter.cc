@@ -44,7 +44,8 @@ void DeviceSnapshot::RecordOpAddrAndSize(const Stream * const stm)
 
     RT_LOG(RT_LOG_INFO, "stream_id=%d, head=%hu, tail=%hu.", stm->Id_(), head, tail);
     TaskInfo *nextTask = nullptr;
-    for (uint32_t i = head; i < tail;) {
+    uint32_t i = head;
+    while (i < tail) {
         nextTask = GetTaskInfo(stm->Device_(), stm->Id_(), i);
         if (unlikely(nextTask == nullptr)) {
             i++;
@@ -53,8 +54,8 @@ void DeviceSnapshot::RecordOpAddrAndSize(const Stream * const stm)
         RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%u, type=%d.", stm->Id_(), nextTask->id, nextTask->type);
         RecordArgsAddrAndSize(nextTask);
         RecordFuncCallAddrAndSize(nextTask);
-        i = stm->IsSoftwareSqEnable() || stm->IsAutoSplitSq() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
-            (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
+        const uint32_t taskId = static_cast<uint32_t>(nextTask->id);
+        i = stm->IsSoftwareSqEnable() || stm->IsAutoSplitSq() ? (taskId + 1U) : (taskId + nextTask->sqeNum);
     }
 }
 

@@ -175,28 +175,37 @@ rtError_t OnlineProf::GetOnlineProfilingData(const Stream * const stm, rtProfDat
     }
 
     for (uint32_t profDataIndex = 0U; profDataIndex < profDataNum; profDataIndex++) {
-        if (*rtReadAddr == *rtWriteAddr) { /* should not happen */
+        const uint64_t readIndex = *rtReadAddr;
+        if (readIndex >= MAX_ONLINEPROF_NUM) {
+            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to read data, read index=%" PRIu64 " is invalid.",
+                readIndex);
+            break;
+        }
+
+        if (readIndex == *rtWriteAddr) { /* should not happen */
             RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to read data, current index=%u, need read num=%u.",
                 profDataIndex, profDataNum);
             break;
         }
-        pProfData[profDataIndex].stubFunc = profRtSourceData[*rtReadAddr].stubFunc;
-        pProfData[profDataIndex].blockDim = profRtSourceData[*rtReadAddr].blockDim;
-        pProfData[profDataIndex].args     = profRtSourceData[*rtReadAddr].args;
-        pProfData[profDataIndex].argsSize = profRtSourceData[*rtReadAddr].argsSize;
-        pProfData[profDataIndex].smDesc   = profRtSourceData[*rtReadAddr].smDesc;
-        pProfData[profDataIndex].stream   = profRtSourceData[*rtReadAddr].stream;
-        if (stm != profRtSourceData[*rtReadAddr].stream) { /* need or not? If yes, need return? */
+
+        const rtProfDataInfo_t &rtData = profRtSourceData[readIndex];
+        pProfData[profDataIndex].stubFunc = rtData.stubFunc;
+        pProfData[profDataIndex].blockDim = rtData.blockDim;
+        pProfData[profDataIndex].args     = rtData.args;
+        pProfData[profDataIndex].argsSize = rtData.argsSize;
+        pProfData[profDataIndex].smDesc   = rtData.smDesc;
+        pProfData[profDataIndex].stream   = rtData.stream;
+        if (stm != rtData.stream) { /* need or not? If yes, need return? */
             RT_LOG_INNER_MSG(RT_LOG_ERROR,
                 "Failed to match stream, kernel stream is different from input stream, id=%d.", stm->Id_());
         }
 
-        pProfData[profDataIndex].totalcycle = profTsSourceData[*rtReadAddr].totalcycle;
-        pProfData[profDataIndex].ovcycle    = profTsSourceData[*rtReadAddr].ovcycle;
-        RT_LOG(RT_LOG_DEBUG, "[ts write index=%" PRIu64 "] totalcycle=%" PRIu64 ", ovcycle=%" PRIu64, *rtReadAddr,
+        pProfData[profDataIndex].totalcycle = profTsSourceData[readIndex].totalcycle;
+        pProfData[profDataIndex].ovcycle    = profTsSourceData[readIndex].ovcycle;
+        RT_LOG(RT_LOG_DEBUG, "[ts write index=%" PRIu64 "] totalcycle=%" PRIu64 ", ovcycle=%" PRIu64, readIndex,
                pProfData[profDataIndex].totalcycle, pProfData[profDataIndex].ovcycle);
 
-        *rtReadAddr = (*rtReadAddr + 1U) % MAX_ONLINEPROF_NUM;
+        *rtReadAddr = (readIndex + 1U) % MAX_ONLINEPROF_NUM;
     }
     *tsReadAddr = *rtReadAddr;
 

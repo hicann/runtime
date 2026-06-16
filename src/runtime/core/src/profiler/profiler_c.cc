@@ -117,9 +117,8 @@ void ProfStop(Profiler * const profiler, const uint64_t profConfig, const uint32
         Runtime::Instance()->SetProfileEnableFlag(profiler->IsEnabled(devId));
     };
     ScopeGuard returnProcess(retRecycle);
-    if ((profCfg->isRtsProfEn != 0U) ||(profCfg->isTaskBasedProfEn != 0U) || (profCfg->isProfLogEn != 0U)
-        || (profCfg->isHwtsLogEn != 0U)) {
-        TaskInfo *tsk = nullptr;
+    if ((profCfg->isRtsProfEn != 0U) ||(profCfg->isTaskBasedProfEn != 0U) || (profCfg->isProfLogEn != 0U) ||
+        (profCfg->isHwtsLogEn != 0U)) {
         Stream *stream = dev->GetCtrlSQStream(dev->PrimaryStream_());
         uint32_t pid;
         (void)dev->Driver_()->DeviceGetBareTgid(&pid);
@@ -129,6 +128,7 @@ void ProfStop(Profiler * const profiler, const uint64_t profConfig, const uint32
                 stream->Id_(), static_cast<uint32_t>(error));
             uint32_t pos = 0xFFFFU;
             stream->StreamLock();
+            TaskInfo *tsk = nullptr;
             error = AllocTaskInfo(&tsk, stream, pos);
             if (error != RT_ERROR_NONE) {
                 stream->StreamUnLock();
