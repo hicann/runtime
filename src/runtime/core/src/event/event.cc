@@ -298,7 +298,7 @@ rtError_t Event::CreateEventNotifier(Notifier* &notifier)
     return RT_ERROR_NONE;
 }
 
-rtError_t Event::AllocEventIdResource(const Stream * const stm, int32_t &newEventId) const 
+rtError_t Event::AllocEventIdResource(Stream * const stm, int32_t &newEventId)
 {
     rtError_t error = RT_ERROR_NONE;
     rtError_t errorAbort = RT_ERROR_NONE;

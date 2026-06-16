@@ -45,7 +45,7 @@ public:
     bool DavidUpdateRecordMapAndDestroyEvent(TaskInfo *taskInfo);
     bool DavidUpdateWaitMapAndDestroyEvent(TaskInfo *taskInfo);
     rtError_t ClearRecordStatus() override;
-    rtError_t AllocEventIdResource(Stream * const stm, int32_t &eventId);
+    rtError_t AllocEventIdResource(Stream * const stm, int32_t &eventId) override;
     void UpdateLatestRecord(const DavidRecordTaskInfo &recordInfo, const DavidEventState_t latestStatus,
         const uint64_t timeStamp);
     rtError_t GenEventId() override;
