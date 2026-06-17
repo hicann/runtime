@@ -115,7 +115,7 @@ public:
     void UpdateLatestRecord(RecordTaskInfo &latestRecord, const int32_t newEventId = INVALID_EVENT_ID,
         const uint64_t timeLine = UINT64_MAX, const uint64_t timeStamp = UINT64_MAX);
     virtual bool WaitSendCheck(const Stream * const stm, int32_t &eventId);
-    rtError_t AllocEventIdResource(const Stream * const stm, int32_t &newEventId) const;
+    virtual rtError_t AllocEventIdResource(Stream * const stm, int32_t &newEventId);
     void InitEventAllocFlag(int32_t streamId = -1);
     rtError_t CaptureEventProcess(Stream * const stm);
     rtError_t CaptureWaitProcess(Stream * const stm);
