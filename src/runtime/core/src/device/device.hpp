@@ -31,13 +31,14 @@
 #include "event_expanding.hpp"
 #include "qos.hpp"
 
+#define STREAM_MESSAGE_QUEUE_SIZE (static_cast<uint16_t>(RT_MAX_STREAM_ID * 3U))
+
 namespace cce {
 namespace runtime {
 
 class JettyPool;
 class JettyManager;
 constexpr uint32_t DMA_CPY_NUM_DEVICE_MAX = 5 * 1024U;
-#define STREAM_MESSAGE_QUEUE_SIZE (static_cast<uint16_t>(RT_MAX_STREAM_ID * 3U))
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_32K = 32U * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_16K = 16U * 1024U;
 
