@@ -779,13 +779,6 @@ rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue,
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelCondHandleDestroy(rtCondHandle_t handle)
-{
-    (void)handle;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
 {
     (void)handle;

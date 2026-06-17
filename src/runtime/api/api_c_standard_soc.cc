@@ -746,17 +746,6 @@ rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rt
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelCondHandleDestroy(rtCondHandle_t handle)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT(handle, CondHandle, realHandle);
-    const rtError_t error = apiInstance->ModelCondHandleDestroy(realHandle);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
 {
     Api * const apiInstance = Api::Instance();

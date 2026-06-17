@@ -552,7 +552,6 @@ public:
     virtual rtError_t ModelTaskDisable(rtTask_t task) = 0;
     virtual rtError_t ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
         rtCondHandleFlag_t flag, CondHandle ** const handle) = 0;
-    virtual rtError_t ModelCondHandleDestroy(CondHandle * handle) = 0;
     virtual rtError_t ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr) = 0;
     virtual rtError_t StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags) = 0;
 

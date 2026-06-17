@@ -460,7 +460,6 @@ public:
     rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) override;
     rtError_t ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
         rtCondHandleFlag_t flag, CondHandle ** const handle) override;
-    rtError_t ModelCondHandleDestroy(CondHandle * handle) override;
     rtError_t ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr) override;
     rtError_t StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream * const stm, CondHandle **handle);
     rtError_t StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags) override;

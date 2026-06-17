@@ -438,12 +438,6 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t d
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::ModelCondHandleDestroy(CondHandle * handle)
-{
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
 {
     UNUSED(handle);

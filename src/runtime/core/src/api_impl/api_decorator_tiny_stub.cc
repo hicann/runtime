@@ -105,12 +105,6 @@ rtError_t ApiDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t defaul
     return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
 }
 
-rtError_t ApiDecorator::ModelCondHandleDestroy(CondHandle * handle)
-{
-    UNUSED(handle);
-    return impl_->ModelCondHandleDestroy(handle);
-}
-
 rtError_t ApiDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
 {
     UNUSED(handle);

@@ -168,12 +168,6 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t d
     return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
 }
 
-rtError_t ApiErrorDecorator::ModelCondHandleDestroy(CondHandle * handle)
-{
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
-    return impl_->ModelCondHandleDestroy(handle);
-}
-
 rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
 {
     NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);

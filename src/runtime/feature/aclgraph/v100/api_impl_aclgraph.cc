@@ -214,20 +214,6 @@ rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValu
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::ModelCondHandleDestroy(CondHandle * handle)
-{
-    if (handle == nullptr) {
-        return RT_ERROR_NONE;
-    }
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
-    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
-    error = handle->Destroy();
-    DELETE_O(handle);
-    return error;
-}
-
 rtError_t ApiImpl::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
 {
     Context * const curCtx = CurrentContext();
