@@ -9153,6 +9153,10 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyFromSymbolTest)
         .WillOnce(Return(RT_ERROR_NONE));
     ret = aclrtMemcpyFromSymbol(dst, 10, hostVar, 5, 0, ACL_MEMCPY_DEFAULT);
     EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // 成功场景：count 为 0 时，虽然 offset + count 不再小于 symbolSize，但仍然合法
+    ret = aclrtMemcpyFromSymbol(dst, 10, hostVar, 0, 0, ACL_MEMCPY_DEFAULT);
+    EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtMemcpyFromSymbolAsyncTest)
@@ -9215,6 +9219,11 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyFromSymbolAsyncTest)
         .WillOnce(Return(RT_ERROR_NONE));
     ret = aclrtMemcpyFromSymbolAsync(dst, 10, hostVar, 5, 0, ACL_MEMCPY_DEFAULT, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // 成功场景：count 为 0 时，虽然 offset + count 不再小于 symbolSize，但仍然合法
+    ret = aclrtMemcpyFromSymbolAsync(dst, 10, hostVar, 0, 0, ACL_MEMCPY_DEFAULT, stream);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtMemcpyToSymbolTest)
@@ -9267,6 +9276,10 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyToSymbolTest)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemcpy(_, _, _, _, _))
         .WillOnce(Return(RT_ERROR_NONE));
     ret = aclrtMemcpyToSymbol(hostVar, src, 5, 0, ACL_MEMCPY_DEFAULT);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // 成功场景：count 为 0 时，虽然 offset + count 不再小于 symbolSize，但仍然合法
+    ret = aclrtMemcpyToSymbol(hostVar, src, 0, 0, ACL_MEMCPY_DEFAULT);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
@@ -9325,5 +9338,9 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyToSymbolAsyncTest)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemcpyAsync(_, _, _, _, _, _))
         .WillOnce(Return(RT_ERROR_NONE));
     ret = aclrtMemcpyToSymbolAsync(hostVar, src, 5, 0, ACL_MEMCPY_DEFAULT, stream);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // 成功场景：count 为 0 时，虽然 offset + count 不再小于 symbolSize，但仍然合法
+    ret = aclrtMemcpyToSymbolAsync(hostVar, src, 0, 0, ACL_MEMCPY_DEFAULT, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }

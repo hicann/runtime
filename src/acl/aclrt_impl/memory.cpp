@@ -2560,7 +2560,10 @@ aclError aclrtMemcpyFromSymbolImpl(void *dst, size_t dstMax, const void *symbol,
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyFromSymbol);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyFromSymbol, count = %zu, offset = %zu.", count, offset);
-
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy from symbol, just return success.");
+        return ACL_SUCCESS;
+    }
     aclError ret = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
     if (ret != ACL_SUCCESS) {
         return ret;
@@ -2588,6 +2591,10 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(void *dst, size_t dstMax, const void *sy
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyFromSymbolAsync);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyFromSymbolAsync, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy from symbol async, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError aclErr = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
     if (aclErr != ACL_SUCCESS) {
@@ -2633,6 +2640,10 @@ aclError aclrtMemcpyToSymbolImpl(const void *symbol, const void *src, size_t cou
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyToSymbol);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyToSymbol, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy to symbol, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError ret = CheckMemcpyToSymbol(symbol, src, kind);
     if (ret != ACL_SUCCESS) {
@@ -2660,6 +2671,10 @@ aclError aclrtMemcpyToSymbolAsyncImpl(const void *symbol, const void *src, size_
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyToSymbolAsync);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyToSymbolAsync, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy to symbol async, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError aclErr = CheckMemcpyToSymbol(symbol, src, kind);
     if (aclErr != ACL_SUCCESS) {

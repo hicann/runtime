@@ -65,13 +65,6 @@ bool IsAllZeroSizeBatch(const size_t * const sizes, const size_t count)
         return size == 0UL;
     });
 }
-
-bool HasZeroSizeBatch(const size_t * const sizes, const size_t count)
-{
-    return std::any_of(sizes, sizes + count, [](const size_t size) {
-        return size == 0UL;
-    });
-}
 }
 
 #ifdef __cplusplus
@@ -764,16 +757,17 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx)
 {
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizes, RT_ERROR_INVALID_VALUE);    
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((count == 0U), RT_ERROR_INVALID_VALUE, count, "greater than 0");
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch, just return success.");
         return ACL_RT_SUCCESS;
     }
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const bool hasZeroSizeBatch = HasZeroSizeBatch(sizes, count);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!hasZeroSizeBatch && !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support MemcpyBatch.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -790,18 +784,19 @@ rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t count,
 VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx, rtStream_t stream)
-{
+{    
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizes, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((count == 0), RT_ERROR_INVALID_VALUE, count, "greater than 0");
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch async, just return success.");
         return ACL_RT_SUCCESS;
     }
 
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const bool hasZeroSize = HasZeroSizeBatch(sizes, count);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!hasZeroSize && !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support MemcpyBatchAsync.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

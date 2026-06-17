@@ -1410,7 +1410,7 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_async_param_err0)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, 0U, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, count, nullptr, attrsIdxs, numAttrs, &failIdx, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1421,6 +1421,18 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_async_param_err0)
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, count, attrs, attrsIdxs, 0U, &failIdx, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
+
+    // sizes 全 0
+    for (size_t i = 0; i < count; i++) {
+        sizes[i] = 0U;
+    }
+    error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(failIdx, SIZE_MAX);
+
+    // sizes 为 nullptr
+    error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, nullptr, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     for (size_t i = 0; i < count; i++) {
         delete [] dsts[i];
@@ -1523,7 +1535,7 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_param_err0)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, 0U, attrs, attrsIdxs, numAttrs, &failIdx);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, count, nullptr, attrsIdxs, numAttrs, &failIdx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1532,6 +1544,19 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_param_err0)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, count, attrs, attrsIdxs, 0U, &failIdx);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(failIdx, SIZE_MAX);
+
+    // sizes 全 0， ret: ACL_RT_SUCCESS
+    for (size_t i = 0; i < count; i++) {
+        sizes[i] = 0U;
+    }
+    error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(failIdx, SIZE_MAX);
+
+    // sizes 为 nullptr
+    error = rtsMemcpyBatch((void **)dsts, (void **)srcs, nullptr, count, attrs, attrsIdxs, numAttrs, &failIdx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
 
