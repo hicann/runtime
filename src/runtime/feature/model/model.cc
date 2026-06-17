@@ -817,7 +817,7 @@ rtError_t Model::BuildSqCqForAutoSplit()
 
 rtError_t Model::LoadComplete()
 {
-    if (IsAutoSplitSq()) {
+    if (IsAutoSplitSq() && (!IsModelLoadComplete())) {
         rtError_t error = BuildSqCqForAutoSplit();
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "build sq cq failed, model_id=%u, auto_split_sq=%d.", Id_(), IsAutoSplitSq());  

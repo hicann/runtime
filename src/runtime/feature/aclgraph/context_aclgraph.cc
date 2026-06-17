@@ -327,14 +327,14 @@ rtError_t Context::CheckCaptureModelValidity(Model * const captureMdl) const
     std::list<Stream *> streams = captureMdl->StreamList_();
     COND_RETURN_ERROR((streams.empty() == true),
         RT_ERROR_STREAM_UNJOINED,
-        "No streams is bound to the capture module, model_id=%u.",
+        "No streams is bound to the capture model, model_id=%u.",
         captureMdl->Id_());
 
     CaptureModel * const mdl = dynamic_cast<CaptureModel * const>(captureMdl);
     std::set<uint16_t> & streamIds = mdl->GetTaskGroupStreamIds();
     COND_RETURN_ERROR((!streamIds.empty()),
         RT_ERROR_STREAM_TASKGRP_STATUS,
-        "A task group is not closed in the capture module, model_id=%u.",
+        "A task group is not closed in the capture model, model_id=%u.",
         captureMdl->Id_());
 
     bool isOnlyOrigStream = true;
@@ -403,7 +403,7 @@ rtError_t Context::AddNotifyToAddedCaptureStream(Stream * const oriSingleStm, Ca
         Stream *const lastStm = streamObj.second.back();
  	    error = apiObj->NotifyRecord(notify, lastStm);
         ERROR_RETURN(error,
-            "Notify record failed, device_id=%u, single stream_id=%d, "
+            "Notify record failed, device_id=%u, original stream_id=%d, "
             "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
             device_->Id_(), oriSingleStm->Id_(), captureMdl->Id_(),
             streamObj.second.back()->Id_(), notify->GetNotifyId(), error);
@@ -415,7 +415,7 @@ rtError_t Context::AddNotifyToAddedCaptureStream(Stream * const oriSingleStm, Ca
         }
         error = apiObj->NotifyWait(notify, oriSingleStm, MAX_UINT32_NUM);
         ERROR_RETURN(error,
-            "Notify wit failed, device_id=%u, single stream_id=%d, "
+            "Notify wait failed, device_id=%u, original stream_id=%d, "
             "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
             device_->Id_(), oriSingleStm->Id_(), captureMdl->Id_(),
             streamObj.second.back()->Id_(), notify->GetNotifyId(), error);
@@ -433,7 +433,7 @@ rtError_t Context::SetNotifyForExeModel(CaptureModel* const captureMdl)
         error = CreateNotify(&notify, RT_NOTIFY_DEFAULT);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
         captureMdl->AddExeNotify(notify);
-        RT_LOG(RT_LOG_DEBUG, "create notify id=%u", notify->GetNotifyId());
+        RT_LOG(RT_LOG_DEBUG, "create notify_id=%u", notify->GetNotifyId());
     }
     return error;
 }

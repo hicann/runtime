@@ -36,21 +36,22 @@ rtError_t StarsLaunchDvppRRProcess(Stream * const stm)
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     for (uint32_t i = 0U; i < DVPP_RR_TASK_NUM; i++) {
         writeValueTask = nullptr;
+        Stream *dstStm = stm;
         stm->StreamLock();
-        error = AllocTaskInfo(&writeValueTask, stm, pos);
+        error = AllocTaskInfoForCapture(&writeValueTask, stm, pos, dstStm);
         ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
             streamId, static_cast<uint32_t>(error));
-        SaveTaskCommonInfo(writeValueTask, stm, pos);
+        SaveTaskCommonInfo(writeValueTask, dstStm, pos);
         (void)WriteValueTaskInit(writeValueTask, addr, WRITE_VALUE_SIZE_32_BYTE, &(value[0U]), TASK_WR_CQE_NEVER);
-        writeValueTask->stmArgPos = static_cast<DavidStream *>(stm)->GetArgPos();
-        error = DavidSendTask(writeValueTask, stm);
+        writeValueTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
+        error = DavidSendTask(writeValueTask, dstStm);
         ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(writeValueTask);
-                                    TaskRollBack(stm, pos);
+                                    TaskRollBack(dstStm, pos);
                                     stm->StreamUnLock();,
                                     "Failed to submit DVPP task, stream_id=%d, i=%u, retCode=%#x.",
                                     streamId, i, static_cast<uint32_t>(error));
         stm->StreamUnLock();
-        error = SubmitTaskPostProc(stm, pos);
+        error = SubmitTaskPostProc(dstStm, pos);
         ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.",
             streamId, static_cast<uint32_t>(error));
     }
@@ -70,29 +71,30 @@ rtError_t StarsLaunch(const void * const sqe, const uint32_t sqeLen, Stream * co
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
-    std::function<void()> const errRecycle = [&starsTask, &stm, &pos]() {
+    Stream *dstStm = stm;
+    std::function<void()> const errRecycle = [&starsTask, &stm, &pos, &dstStm]() {
         starsTask->u.starsCommTask.cmdList = {nullptr};
         TaskUnInitProc(starsTask);
-        TaskRollBack(stm, pos);
+        TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfo(&starsTask, stm, pos);
+    error = AllocTaskInfoForCapture(&starsTask, stm, pos, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(starsTask, stm, pos);
+    SaveTaskCommonInfo(starsTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     error = StarsCommonTaskInit(starsTask, *commonSqe, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to initialize stars common task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
-    starsTask->stmArgPos = static_cast<DavidStream *>(stm)->GetArgPos();
-    error = DavidSendTask(starsTask, stm);
+    starsTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
+    error = DavidSendTask(starsTask, dstStm);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit stars common task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), starsTask->taskSn);
-    error = SubmitTaskPostProc(stm, pos);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), starsTask->taskSn);
+    error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
 
@@ -100,7 +102,7 @@ rtError_t StarsLaunch(const void * const sqe, const uint32_t sqeLen, Stream * co
     //           1: need to send three write-value tasks, 0: no need to send three write-value tasks.
     //           will be restored to 0 when construct sqe.
     if ((commonSqe->sqeHeader.reserved == 1U) && IsDvppTask(sqeType)) {
-        error = StarsLaunchDvppRRProcess(stm);
+        error = StarsLaunchDvppRRProcess(dstStm);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "Failed to submit DVPP task, stream_id=%d, sqeType=%hu.", streamId, sqeType);
         }
@@ -116,36 +118,37 @@ rtError_t LaunchMultipleTaskInfo(const rtMultipleTaskInfo_t * const multipleTask
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
+    Stream *dstStm = stm;
     TaskInfo *multipleTask = nullptr;
     const uint32_t sqeNum = multipleTaskInfo->taskNum;
-    std::function<void()> const errRecycle = [&multipleTask, &stm, &pos]() {
+    std::function<void()> const errRecycle = [&multipleTask, &stm, &pos, &dstStm]() {
         TaskUnInitProc(multipleTask);
-        TaskRollBack(stm, pos);
+        TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfo(&multipleTask, stm, pos, sqeNum);
+    error = AllocTaskInfoForCapture(&multipleTask, stm, pos, dstStm, sqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(multipleTask, stm, pos, sqeNum);
+    SaveTaskCommonInfo(multipleTask, dstStm, pos, sqeNum);
     ScopeGuard tskErrRecycle(errRecycle);
     error = DavinciMultipleTaskInit(multipleTask, multipleTaskInfo, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to initialize task, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
-    multipleTask->stmArgPos = static_cast<DavidStream *>(stm)->GetArgPos();
-    error = DavidSendTask(multipleTask, stm);
+    multipleTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
+    error = DavidSendTask(multipleTask, dstStm);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit task, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(streamId, multipleTask->taskSn);
-    error = SubmitTaskPostProc(stm, pos);
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), multipleTask->taskSn);
+    error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     // dvpp rr, send 3 write value task
     for (size_t idx = 0U; idx < multipleTaskInfo->taskNum; idx++) {
         if ((multipleTaskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_DVPP) &&
             (multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.reserved == 1U)) {
-            error = StarsLaunchDvppRRProcess(stm);
+            error = StarsLaunchDvppRRProcess(dstStm);
             ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(multipleTask);,
                 "Failed to submit DVPP task, stream_id=%d, sqeType=%hu.", streamId,
                 multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.type);
