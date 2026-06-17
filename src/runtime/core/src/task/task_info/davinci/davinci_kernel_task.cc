@@ -243,7 +243,7 @@ static void CheckBlockDim(TaskInfo* const taskInfo, const RtFftsPlusKernelSqe* c
     }
 
     const uint16_t blockDim = aicTaskInfo->comm.dim;
-    rtDevResLimitType_t coreType = GetCoreType(taskInfo, sqe, fftsCtx);
+    const rtDevResLimitType_t coreType = GetCoreType(taskInfo, sqe, fftsCtx);
     if (coreType == RT_DEV_RES_TYPE_MAX) {
         return;
     }

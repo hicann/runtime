@@ -638,17 +638,17 @@ static rtError_t ConvertAsyncDmaForSoftWareSqUb(TaskInfo * const taskInfo, TaskI
         return HandleUbModeDmaResult(taskInfo, output);
     }
 
-    JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo);
+    const JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo);
     AsyncWqeInputPara input = {};
     AsyncWqeOutputPara output = {};
     input.wqeType = static_cast<uint32_t>(DRV_ASYNC_DMA_TYPE_NORMAL);
-    input.normal.dst = static_cast<uint8_t *>(memcpyAsyncTaskInfo->destPtr);
-    input.normal.src = static_cast<uint8_t *>(memcpyAsyncTaskInfo->src);
+    input.normal.dst = RtPtrToPtr<uint8_t *>(memcpyAsyncTaskInfo->destPtr);
+    input.normal.src = RtPtrToPtr<uint8_t *>(memcpyAsyncTaskInfo->src);
     rtError_t error = RT_ERROR_NONE;
     if (isSqeUpdate) {
         void* sqeDeviceAddr =
             RtValueToPtr<void*>(updateTask->stream->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
-        input.normal.dst = static_cast<uint8_t*>(sqeDeviceAddr);
+        input.normal.dst = RtPtrToPtr<uint8_t*>(sqeDeviceAddr);
     }
     input.normal.len = memcpyAsyncTaskInfo->size;
     error = StreamJettyHandler::HandleUbDmaTask(

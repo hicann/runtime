@@ -37,7 +37,7 @@ constexpr size_t NOTIFY_INDEX = 2U;
 
 rtError_t Context::UpdateEndGraphTask(Stream * const origCaptureStream, Stream * const exeStream, Notify *ntf) const
 {
-    uint16_t taskId = origCaptureStream->GetLastTaskId();
+    const uint16_t taskId = origCaptureStream->GetLastTaskId();
     TaskInfo *rtNotifyRecord = origCaptureStream->Device_()->GetTaskFactory()->GetTask(origCaptureStream->Id_(), taskId);
     COND_RETURN_ERROR(rtNotifyRecord == nullptr, RT_ERROR_STREAM_CAPTURED, "EndGraph task is NULL");
 
@@ -50,7 +50,7 @@ rtError_t Context::UpdateEndGraphTask(Stream * const origCaptureStream, Stream *
     void *targetAddrOfUpdatedSqe = RtValueToPtr<void *>(origCaptureStream->GetSqBaseAddr() +
         (rtNotifyRecord->pos * sizeof(rtStarsSqe_t)));
     uint64_t realSize = 0U;
-    auto error = MemcopyAsync(
+    const rtError_t error = MemcopyAsync(
         targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
         &realSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update task fail error=0x%x", error);
@@ -100,17 +100,17 @@ rtError_t Context::AllocCascadeCaptureStream(const Stream * const stm, Model *co
 
     if (captureModelTmp->IsSoftwareSqEnable()) {
         /* add stream to model */
-        error = ModelAddStream(captureModel, newCaptureStreamTmp, RT_INVALID_FLAG);
+        error = ModelAddStream(captureModel, newCaptureStreamTmp, static_cast<uint32_t>(RT_INVALID_FLAG));
     } else {
         /* bind stream to model */
-        error = ModelBindStream(captureModel, newCaptureStreamTmp, RT_INVALID_FLAG);
+        error = ModelBindStream(captureModel, newCaptureStreamTmp, static_cast<uint32_t>(RT_INVALID_FLAG));
     }
 
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Bind capture stream failed, device_id=%u, model_id=%u, stream_id=%d, "
             "original stream_id=%d, retCode=%#x.",
             device_->Id_(), captureModel->Id_(), newCaptureStreamTmp->Id_(), stm->Id_(), error);
-        StreamDestroy(newCaptureStreamTmp);
+        (void)StreamDestroy(newCaptureStreamTmp);
         return error;
     }
 
@@ -301,7 +301,7 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
         RT_LOG(RT_LOG_ERROR, "add stream to capture model failed, device_id=%u, model_id=%u, "
             "original stream_id=%d, retCode=%#x.",
             device_->Id_(), captureModel->Id_(), streamId, error);
-        ModelDestroy(captureModel);
+        (void)ModelDestroy(captureModel);
         return error;
     }
 
@@ -407,7 +407,8 @@ rtError_t Context::AddNotifyToAddedCaptureStream(Stream * const oriSingleStm, Ca
             "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
             device_->Id_(), oriSingleStm->Id_(), captureMdl->Id_(),
             streamObj.second.back()->Id_(), notify->GetNotifyId(), error);
-        TaskInfo *task = device_->GetTaskFactory()->GetTask(lastStm->Id_(), lastStm->GetLastTaskId());
+        TaskInfo *task = device_->GetTaskFactory()->GetTask(lastStm->Id_(),
+            static_cast<uint16_t>(lastStm->GetLastTaskId()));
         if (task != nullptr) {
             task->modelSeqId = captureMdl->GenerateSeqId();
             RT_LOG(RT_LOG_INFO, "Alloc task sequence id=%u, device id=%u, stream_id=%d, task_id=%u",
@@ -511,7 +512,7 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
         return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
     }
 
-    bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
+    const bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
     COND_PROC_RETURN_ERROR(!isCaptureFinished, RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING,
         ClearCaptureModel(this, stm, captureModel),
         "sub ACL Graph is capturing, stream_id=%d, capture stream_id=%d.", stm->Id_(), captureStream->Id_());
@@ -571,6 +572,8 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
                     "Failed to fill nop wqe, retCode=%#x.", static_cast<uint32_t>(error));
             }
         }
+    } else {
+        // no operation
     }
 
     (void)captureModel->ModelExecuteType();
@@ -840,6 +843,7 @@ rtError_t Context::CheckCondTaskParamsSize(rtCondTaskParams params)
             COND_RETURN_AND_MSG_OUTER_WITH_PARAM(true, RT_ERROR_INVALID_VALUE, params.type,
                 "RT_COND_TASK_TYPE_IF or RT_COND_TASK_TYPE_WHILE or RT_COND_TASK_TYPE_SWITCH");
     }
+    return RT_ERROR_NONE;
 }
 
 rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm)
@@ -908,8 +912,10 @@ rtError_t Context::PostProcCaptureConditionTask(CondHandle *condHandle, Stream *
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stm->GetCaptureStream()->Model_());
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
     Stream *captureStream = stm->GetCaptureStream();
-    captureModel->StoreCondHandleTaskInfo(captureStream->Id_(), captureStream->GetLastTaskId(), condHandle);
+    const rtError_t error = captureModel->StoreCondHandleTaskInfo(captureStream->Id_(),
+        static_cast<uint16_t>(captureStream->GetLastTaskId()), condHandle);
 
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_INFO, "capture model condition task submit, device_id=%u, stream_id=%d",
         device_->Id_(), captureStream->Id_());
 

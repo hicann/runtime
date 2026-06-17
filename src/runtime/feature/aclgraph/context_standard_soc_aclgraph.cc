@@ -26,7 +26,9 @@ rtError_t Context::TryRecycleCaptureModelResource(const uint32_t allocSqNum, con
         if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
             CaptureModel *captureMdl = dynamic_cast<CaptureModel *>(model);
 
-            if (allocSqNum <= totalReleaseSqNum && ntfCnt <= totalReleaseNtfNum) break;
+            if ((allocSqNum <= totalReleaseSqNum) && (ntfCnt <= totalReleaseNtfNum)) {
+                break;
+            }
 
             if (!captureMdl->IsSoftwareSqEnable() || (captureMdl == excludeMdl)) {
                 continue;

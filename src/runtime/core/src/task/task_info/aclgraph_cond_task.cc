@@ -216,7 +216,7 @@ rtError_t CaptureConditionTaskInit(TaskInfo *taskInfo, CondHandle *condHandle)
     condTaskInfo->notifyTimeout = MAX_UINT32_NUM;
 
     if (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) {
-        rtError_t ret = AllocJumpBackFuncCallMemForCaptureCondTask(taskInfo);
+        const rtError_t ret = AllocJumpBackFuncCallMemForCaptureCondTask(taskInfo);
         ERROR_RETURN(ret, "alloc jumpBack func call mem failed, retCode=%#x.", ret);
     }
 
@@ -495,8 +495,8 @@ rtError_t ReConstructCaptureConditionTaskFc(TaskInfo *taskInfo, CondHandle *cond
         modelSqCountArr.emplace_back(static_cast<uint64_t>(sqCount));
 
         for (Stream *stm : headStreams) {
-            headSqArrData.emplace_back(stm->GetSqId());
-            streamSvmData.emplace_back(RtPtrToValue(stm->GetExecutedTimesSvm()));
+            (void)headSqArrData.emplace_back(stm->GetSqId());
+            (void)streamSvmData.emplace_back(RtPtrToValue(stm->GetExecutedTimesSvm()));
         }
         totalSqCount += sqCount;
     }

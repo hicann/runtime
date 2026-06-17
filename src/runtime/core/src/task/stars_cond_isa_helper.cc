@@ -1645,8 +1645,8 @@ void MemWaitInstrWaitFailedForNonSoftwareSq(RtStarsMemWaitValueLastInstrFc &fc,
     ConstructLLWI(r4, fcPara.profDisableAddr, fc.llwi5);
 
     // load 0x1 to r5
-    ConstructLHWI(r5, 0x1, fc.lhwi6);
-    ConstructLLWI(r5, 0x1, fc.llwi6);
+    ConstructLHWI(r5, 0x1U, fc.lhwi6);
+    ConstructLLWI(r5, 0x1U, fc.llwi6);
 
     // write r4 to 0x0
     ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.updateProfDisableStatus2);
@@ -1822,8 +1822,8 @@ void MemWaitInstrWaitSuccessForSoftwareSq(RtStarsMemWaitValueLastInstrFcEx &fc,
     ConstructLLWI(r5, fcPara.sqIdMemAddr, fc.llwi4);
 
     // load 0xFFFFFFFF to r4
-    ConstructLHWI(r4, 0xFFFFFFFF, fc.lhwi41);
-    ConstructLLWI(r4, 0xFFFFFFFF, fc.llwi41);
+    ConstructLHWI(r4, 0xFFFFFFFFU, fc.lhwi41);
+    ConstructLLWI(r4, 0xFFFFFFFFU, fc.llwi41);
 
     // r4 = r3 & r4 = sqId & 0xFFFFFFFF
     ConstructOpOp(r3, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.andOp);
@@ -1874,8 +1874,8 @@ void MemWaitInstrWaitFailedForSoftwareSq(RtStarsMemWaitValueLastInstrFcEx &fc,
     ConstructLLWI(r4, fcPara.sqIdMemAddr, fc.llwi5);
 
     // load 0x100000000 to r2
-    ConstructLHWI(r2, 0x100000000, fc.lhwi51);
-    ConstructLLWI(r2, 0x100000000, fc.llwi51);
+    ConstructLHWI(r2, 0x100000000U, fc.lhwi51);
+    ConstructLLWI(r2, 0x100000000U, fc.llwi51);
 
     // r5 = r5 | r2, sqId bit32 set to 1
     ConstructOpOp(r5, r2, r5, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.orOp);
@@ -2209,8 +2209,8 @@ static void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitV
     ConstructLLWI(r4, fcPara.profDisableAddr, fc.llwi5);
 
     // load 0x1 to r5
-    ConstructLHWI(r5, 0x1, fc.lhwi6);
-    ConstructLLWI(r5, 0x1, fc.llwi6);
+    ConstructLHWI(r5, 0x1U, fc.lhwi6);
+    ConstructLLWI(r5, 0x1U, fc.llwi6);
 
     // write r4 to 0x0
     ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.updateProfDisableStatus2);
@@ -2256,7 +2256,8 @@ static void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitV
 
     // goto modifySqHeadPreOffset
     ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc8);
-    ConstructBranch(r3, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch8);
+    const uint8_t instrOffset = static_cast<uint8_t>(modifySqHeadPreOffset & 0xFUL);
+    ConstructBranch(r3, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, instrOffset, fc.branch8);
 }
 
 /* used for none-software sq, support dynamic prof, prof enable/disable by c-core */
@@ -2721,7 +2722,8 @@ void ConstructSwitchCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsCap
 
     // Switch语句中，*devAddr为待执行模型数组下标，>= modelCount范围就跳过，执行下一个任务
     ConstructSetJumpPcFc(r1, skipOffset, setupBranch.jumpPcToaddModel);
-    ConstructBranch(r2, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, static_cast<uint8_t>(skipOffset), setupBranch.bltToSkip);
+    const uint8_t instrOffset = static_cast<uint8_t>(skipOffset & 0xFUL);
+    ConstructBranch(r2, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, instrOffset, setupBranch.bltToSkip);
 }
 
 void ConstructCondStoreCurModelPara(uint64_t dfxAddr, uint64_t headSqArrPtrArrAddr,
@@ -2834,7 +2836,8 @@ void ConstructWhileCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsWhil
 
     const uint64_t part3Offset = offsetof(RtStarsCaptureWhileCondFc, addiModelIndex) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r1, part3Offset, setupBranch.jumpPcToaddiModel);
-    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(part3Offset), setupBranch.bneToExecute);
+    const uint8_t instrOffset = static_cast<uint8_t>(part3Offset & 0xFUL);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, instrOffset, setupBranch.bneToExecute);
 }
 
 static void ConstructWhileCondSubmodelOffset(RtStarsCaptureWhileCondFc &fc)
