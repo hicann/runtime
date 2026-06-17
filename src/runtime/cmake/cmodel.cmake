@@ -148,7 +148,6 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
     # mechanism dependance
-    ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v100.cc

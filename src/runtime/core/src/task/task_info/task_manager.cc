@@ -903,14 +903,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc = g_taskFuncArrays[chipType].toCommandFunc;
 
         toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &ToCommandBodyForDynamicProfilingEnableTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &ToCommandBodyForDynamicProfilingDisableTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ToCommandBodyForProfilingEnableTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ToCommandBodyForProfilingDisableTask;
-        toCommandFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ToCommandBodyForOnlineProfEnableTask;
-        toCommandFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ToCommandBodyForOnlineProfDisableTask;
-        toCommandFunc[TS_TASK_TYPE_ADCPROF] = &ToCommandBodyForAdcProfTask;
-        toCommandFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ToCommandBodyForPCTraceTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ToCommandBodyForModelMaintainceTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ToCommandBodyForModelExecuteTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ToCmdBodyForAddEndGraphTask;
@@ -918,8 +910,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ToCmdBodyForModelToAicpuTask;
         toCommandFunc[TS_TASK_TYPE_FFTS_PLUS] = nullptr;
         toCommandFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ToCmdBodyForRingBufferMaintainTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ToCommandBodyForProfilerTraceTask;
-        toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ToCommandBodyForProfilerTraceExTask;
         toCommandFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ToCommandBodyForTimeoutSetTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
         toCommandFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = nullptr;
@@ -934,14 +924,6 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc;
 
         doCompleteSuccFunc[TS_TASK_TYPE_FUSION_ISSUE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_ONLINEPROF_START] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_ADCPROF] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &DoCompleteSuccessForModelMaintainceTask;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &DoCompleteSuccessForModelExecuteTask;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &DoCompleteSuccess;
@@ -950,8 +932,6 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_FFTS_PLUS] = &DoCompleteSuccForFftsPlusTask;
         doCompleteSuccFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_IPCINT_NOTICE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &DoCompleteSuccess;
@@ -964,12 +944,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         toSqeFunc = g_taskFuncArrays[chipType].toSqeFunc;
         toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
-        toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
-        toSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
@@ -977,8 +951,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
         toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
         toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
-        toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
         toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
         toSqeFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &ConstructSqeForCaptureConditionTask;
@@ -990,7 +962,6 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
 
-        taskUnInitFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &PCTraceTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
     }

@@ -130,7 +130,6 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
 
     # mechanism dependance
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc

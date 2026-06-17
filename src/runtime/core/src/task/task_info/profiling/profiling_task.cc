@@ -349,6 +349,5 @@ void ToCommandBodyForPCTraceTask(TaskInfo * const taskInfo, rtCommand_t *const c
     command->u.pctraceTask.virAddr = MAX_UINT32_NUM;
 }
 #endif
-
 }  // namespace runtime
 }  // namespace cce

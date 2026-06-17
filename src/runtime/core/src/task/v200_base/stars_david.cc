@@ -168,12 +168,6 @@ void ConstructDavidSqeBase(TaskInfo *taskInfo, void *const sqe, const TaskSqeInf
 void RegTaskToDavidSqefunc(void)
 {
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructDavidSqeForProfilingEnableTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructDavidSqeForProfilingDisableTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructDavidSqeForModelMaintainceTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructDavidSqeForModelExecuteTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructDavidSqeForAddEndGraphTask;
@@ -181,8 +175,6 @@ void RegTaskToDavidSqefunc(void)
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructDavidSqeForModelToAicpuTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructDavidSqeForRingBufferMaintainTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructDavidSqeForProfilerTraceExTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructDavidSqeForTimeoutSetTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_CCU_LAUNCH] = &ConstructDavidSqeForCcuLaunchTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_KERNEL] = &ConstructDavidSqeForFusionKernelTask;

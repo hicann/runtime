@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "task_manager.h"
 #include "profiling_task.h"
+#include "debug_task.h"
 #include "task_info_v100.h"
 
 namespace cce {
@@ -101,5 +102,147 @@ void PCTraceTaskUnInit(TaskInfo * const taskInfo)
 }
 #endif
 
+#if F_DESC("ProfilingTaskRegister")
+static bool ProfilingTaskRegister()
+{
+    // TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE
+    TaskFuncSingle profilerDynamicEnableFuncs = {
+        .toCommandFunc = &ToCommandBodyForDynamicProfilingEnableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE
+    TaskFuncSingle profilerDynamicDisableFuncs = {
+        .toCommandFunc = &ToCommandBodyForDynamicProfilingDisableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PROFILING_ENABLE
+    TaskFuncSingle profilingEnableFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilingEnableTask,
+        .toSqeFunc = &ConstructSqeForProfilingEnableTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PROFILING_DISABLE
+    TaskFuncSingle profilingDisableFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilingDisableTask,
+        .toSqeFunc = &ConstructSqeForProfilingDisableTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_ONLINEPROF_START
+    TaskFuncSingle onlineProfStartFuncs = {
+        .toCommandFunc = &ToCommandBodyForOnlineProfEnableTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_ONLINEPROF_STOP
+    TaskFuncSingle onlineProfStopFuncs = {
+        .toCommandFunc = &ToCommandBodyForOnlineProfDisableTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_ADCPROF
+    TaskFuncSingle adcProfFuncs = {
+        .toCommandFunc = &ToCommandBodyForAdcProfTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_TRACE
+    TaskFuncSingle profilerTraceFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilerTraceTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_TRACE_EX
+    TaskFuncSingle profilerTraceExFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilerTraceExTask,
+        .toSqeFunc = &ConstructSqeForProfilerTraceExTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    // TS_TASK_TYPE_PCTRACE_ENABLE
+    TaskFuncSingle pcTraceFuncs = {
+        .toCommandFunc = &ToCommandBodyForPCTraceTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &PCTraceTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE, profilerDynamicEnableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE, profilerDynamicDisableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILING_ENABLE, profilingEnableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILING_DISABLE, profilingDisableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ONLINEPROF_START, onlineProfStartFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ONLINEPROF_STOP, onlineProfStopFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ADCPROF, adcProfFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, pcTraceFuncs);
+    }
+    
+    return true;
+}
+
+static bool g_profilingTaskRegister = ProfilingTaskRegister();
+#endif
 }  // namespace runtime
 }  // namespace cce

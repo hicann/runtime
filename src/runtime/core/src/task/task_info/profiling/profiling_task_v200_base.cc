@@ -11,6 +11,8 @@
 #include "stars_david.hpp"
 #include "stream.hpp"
 #include "profiling_task.h"
+#include "task_manager.h"
+#include "debug_task.h"
 
 namespace cce {
 namespace runtime {
@@ -88,5 +90,157 @@ void ConstructDavidSqeForProfilerTraceExTask(TaskInfo *taskInfo, void *const sqe
 }
 #endif
 
+#if F_DESC("ProfilingTaskRegister")
+static bool ProfilingTaskRegister()
+{
+    // TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE
+    TaskFuncSingle profilerDynamicEnableFuncs = {
+        .toCommandFunc = &ToCommandBodyForDynamicProfilingEnableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE
+    TaskFuncSingle profilerDynamicDisableFuncs = {
+        .toCommandFunc = &ToCommandBodyForDynamicProfilingDisableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PROFILING_ENABLE
+    TaskFuncSingle profilingEnableFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilingEnableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PROFILING_DISABLE
+    TaskFuncSingle profilingDisableFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilingDisableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_ONLINEPROF_START
+    TaskFuncSingle onlineProfStartFuncs = {
+        .toCommandFunc = &ToCommandBodyForOnlineProfEnableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_ONLINEPROF_STOP
+    TaskFuncSingle onlineProfStopFuncs = {
+        .toCommandFunc = &ToCommandBodyForOnlineProfDisableTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_ADCPROF
+    TaskFuncSingle adcProfFuncs = {
+        .toCommandFunc = &ToCommandBodyForAdcProfTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_TRACE
+    TaskFuncSingle profilerTraceFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilerTraceTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PROFILER_TRACE_EX
+    TaskFuncSingle profilerTraceExFuncs = {
+        .toCommandFunc = &ToCommandBodyForProfilerTraceExTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    // TS_TASK_TYPE_PCTRACE_ENABLE
+    TaskFuncSingle pcTraceFuncs = {
+        .toCommandFunc = &ToCommandBodyForPCTraceTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE, profilerDynamicEnableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE, profilerDynamicDisableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILING_ENABLE, profilingEnableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILING_DISABLE, profilingDisableFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ONLINEPROF_START, onlineProfStartFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ONLINEPROF_STOP, onlineProfStopFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ADCPROF, adcProfFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, pcTraceFuncs);
+    }
+    
+    // Register David SQE functions
+    RegDavidSqeFunc(TS_TASK_TYPE_PROFILING_ENABLE, &ConstructDavidSqeForProfilingEnableTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_PROFILING_DISABLE, &ConstructDavidSqeForProfilingDisableTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_ONLINEPROF_START, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_ONLINEPROF_STOP, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_ADCPROF, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_PCTRACE_ENABLE, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_PROFILER_TRACE, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_PROFILER_TRACE_EX, &ConstructDavidSqeForProfilerTraceExTask);
+    
+    return true;
+}
+
+static bool g_profilingTaskRegister = ProfilingTaskRegister();
+#endif
 }  // namespace runtime
 }  // namespace cce
