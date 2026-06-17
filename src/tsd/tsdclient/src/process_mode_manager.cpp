@@ -65,7 +65,7 @@ const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP =
     {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
     {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350}},
     {"aicpu_hcomm.tar.gz", {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
-    {"cann-hcomm-compat.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
+    {"cann-hcomm-compat.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
     {HCCD_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
     {"cann-tsch-compat.tar.gz", {}},
     {UDF_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
@@ -2306,8 +2306,10 @@ TSD_StatusT ProcessModeManager::LoadSinglePackageToDevice(const std::string &pkg
         TSD_RUN_INFO("current package:%s does not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
         return TSD_OK;
     }
-    if ((pkgPureName == "cann-tsch-compat.tar.gz") && (!IsSupportCommonInterface(TSD_SUPPORT_CANN_TSCH_COMPAT))) {
-        TSD_RUN_INFO("device does not support cann-tsch-compat package, skip load to device:%u", logicDeviceId_);
+    const uint32_t currentChipType = GetPlatInfoChipType();
+    if ((pkgPureName == "cann-hcomm-compat.tar.gz") && (currentChipType == tsd::CHIP_ASCEND_910B) &&
+        (!IsSupportCommonInterface(TSD_SUPPORT_CANN_HCOMM_COMPAT_910B))) {
+        TSD_RUN_INFO("device does not support cann-hcomm-compat package, skip load to device:%u", logicDeviceId_);
         return TSD_OK;
     }
     if (pkgConInst->GetPkgHostAndDeviceDstPath(pkgPureName, orgFile, dstFile, procSign_.tgid) != TSD_OK) {

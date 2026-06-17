@@ -93,7 +93,7 @@ namespace tsd {
 
     constexpr uint32_t TSD_SUPPORT_COMMON_SINK_PKG_CONFIG = 8U;
 
-    constexpr uint32_t TSD_SUPPORT_CANN_TSCH_COMPAT = 9U;
+    constexpr uint32_t TSD_SUPPORT_CANN_HCOMM_COMPAT_910B = 9U;
 
     constexpr uint32_t MAX_DEVNUM_PER_OS = 64U;  // 当前单OS上芯片最大数是64个
 

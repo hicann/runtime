@@ -2876,38 +2876,61 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_Success)
     EXPECT_EQ(processModeManager.LoadPackageToDeviceByConfig(), TSD_OK);
 }
 
-TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_TschCompat_NotSupported_Skip)
+TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_HcommCompat_910B_NotSupported_Skip)
 {
+    // 910B 芯片 + device 不支持 TSD_SUPPORT_CANN_HCOMM_COMPAT_910B 能力位时，
+    // cann-hcomm-compat.tar.gz 应被跳过加载，返回 TSD_OK，且不会进入下发流程。
     ProcessModeManager processModeManager(deviceId, 0);
     PackConfDetail detail = {};
     detail.loadAsPerSocFlag = true;
+    MOCKER_CPP(&ProcessModeManager::GetPlatInfoChipType)
+        .stubs().will(returnValue(static_cast<uint32_t>(tsd::CHIP_ASCEND_910B)));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
     MOCKER_CPP(&PackageProcessConfig::GetPkgHostAndDeviceDstPath).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg)
         .expects(mockcpp::never()).will(returnValue(TSD_OK));
-    EXPECT_EQ(processModeManager.LoadSinglePackageToDevice("cann-tsch-compat.tar.gz", detail, 0, ""), TSD_OK);
+    EXPECT_EQ(processModeManager.LoadSinglePackageToDevice("cann-hcomm-compat.tar.gz", detail, 0, ""), TSD_OK);
 }
 
-TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_TschCompat_Supported_PassesGate)
+TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_HcommCompat_910B_Supported_PassesGate)
 {
-    // 当 IsSupportCommonInterface 返回 true 时，不在 TSCH_COMPAT 门控处提前返回，
-    // 而是继续后续流程；此处用 GetPkgHostAndDeviceDstPath 返回错误来观测是否“穿过门控”。
+    // 910B 芯片 + device 支持该能力位时，不在门控处提前返回，而是继续后续流程；
+    // 此处用 GetPkgHostAndDeviceDstPath 返回错误来观测是否“穿过门控”。
     ProcessModeManager processModeManager(deviceId, 0);
     PackConfDetail detail = {};
     detail.loadAsPerSocFlag = true;
+    MOCKER_CPP(&ProcessModeManager::GetPlatInfoChipType)
+        .stubs().will(returnValue(static_cast<uint32_t>(tsd::CHIP_ASCEND_910B)));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     MOCKER_CPP(&PackageProcessConfig::GetPkgHostAndDeviceDstPath)
         .stubs().will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
-    EXPECT_EQ(processModeManager.LoadSinglePackageToDevice("cann-tsch-compat.tar.gz", detail, 0, ""),
+    EXPECT_EQ(processModeManager.LoadSinglePackageToDevice("cann-hcomm-compat.tar.gz", detail, 0, ""),
               TSD_INTERNAL_ERROR);
 }
 
-TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_OtherPkg_NotGatedByTschCompatBit)
+TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_HcommCompat_NonChip910B_NotGated)
 {
-    // 即使 TSD_SUPPORT_CANN_TSCH_COMPAT 视为不支持，其他包也不应被该位拦截。
+    // 非 910B 芯片时不受该能力位门控，即使 device 不支持也应穿过门控继续后续流程。
     ProcessModeManager processModeManager(deviceId, 0);
     PackConfDetail detail = {};
     detail.loadAsPerSocFlag = true;
+    MOCKER_CPP(&ProcessModeManager::GetPlatInfoChipType)
+        .stubs().will(returnValue(static_cast<uint32_t>(tsd::CHIP_ASCEND_950)));
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
+    MOCKER_CPP(&PackageProcessConfig::GetPkgHostAndDeviceDstPath)
+        .stubs().will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
+    EXPECT_EQ(processModeManager.LoadSinglePackageToDevice("cann-hcomm-compat.tar.gz", detail, 0, ""),
+              TSD_INTERNAL_ERROR);
+}
+
+TEST_F(ProcessManagerTest, LoadSinglePackageToDevice_OtherPkg_NotGatedByHcommCompatBit)
+{
+    // 非 cann-hcomm-compat.tar.gz 的包不受该能力位门控，即使在 910B 且 device 不支持也应穿过门控。
+    ProcessModeManager processModeManager(deviceId, 0);
+    PackConfDetail detail = {};
+    detail.loadAsPerSocFlag = true;
+    MOCKER_CPP(&ProcessModeManager::GetPlatInfoChipType)
+        .stubs().will(returnValue(static_cast<uint32_t>(tsd::CHIP_ASCEND_910B)));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
     MOCKER_CPP(&PackageProcessConfig::GetPkgHostAndDeviceDstPath)
         .stubs().will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
