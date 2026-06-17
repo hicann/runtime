@@ -228,6 +228,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/dev_info_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/global_state_manager.cc
     ${TOP_DIR}/src/runtime/core/src/common/runtime_handle_guard.cc
+    ${TOP_DIR}/src/runtime/core/src/common/enum_to_string_utils.cc
     ${TOP_DIR}/src/runtime/core/src/common/register_memory.cc
 )
 
@@ -899,6 +900,7 @@ add_executable(runtime_utest
     test/rt_utest_agent.cc
     test/rt_utest_aicpu_err_msg.cc
     test/rt_utest_aicpu_scheduler_agent.cc
+    test/rt_utest_enum_to_string_utils.cc
     test/rt_utest_ttlv.cc
     #test/rt_utest_atrace_log.cc
     test/rt_error_code_test.cc

@@ -328,35 +328,6 @@ private:
     bool isHardwareMode_{true};
 };
 
-inline std::string EventFlagsToString(uint64_t flags) {
-    std::string result;
-    std::vector<std::pair<uint64_t, std::string>> flagNames = {
-        {RT_EVENT_DDSYNC_NS, "RT_EVENT_DDSYNC_NS"},
-        {RT_EVENT_STREAM_MARK, "RT_EVENT_STREAM_MARK"},
-        {RT_EVENT_DDSYNC, "RT_EVENT_DDSYNC"},
-        {RT_EVENT_TIME_LINE, "RT_EVENT_TIME_LINE"},
-        {RT_EVENT_MC2, "RT_EVENT_MC2"},
-        {RT_EVENT_EXTERNAL, "RT_EVENT_EXTERNAL"},
-        {RT_EVENT_IPC, "RT_EVENT_IPC"},
-    };
-    
-    for (const auto& item : flagNames) {
-        if ((flags & item.first) != 0U) {
-            if (!result.empty()) {
-                result += "|";
-            }
-            result += item.second;
-        }
-    }
-    
-    if (result.empty()) {
-        std::ostringstream oss;
-        oss << "UNKNOWN(0x" << std::hex << flags << ")";
-        return oss.str();
-    }
-    
-    return result;
-}
 }
 }
 

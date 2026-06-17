@@ -207,6 +207,7 @@ set(common_src_files_cmodel
     ${RUNTIME_CORE_DIR}/src/common/dev_info_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/global_state_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/runtime_handle_guard.cc
+    ${RUNTIME_CORE_DIR}/src/common/enum_to_string_utils.cc
     ${RUNTIME_CORE_DIR}/src/common/register_memory.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
