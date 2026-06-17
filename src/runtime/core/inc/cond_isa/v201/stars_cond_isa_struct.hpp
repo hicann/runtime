@@ -497,11 +497,12 @@ struct RtStarsDqsInterChipPostProcFc {
     RtStarsCondOpLLWI              llwi10;
     RtStarsCondOpLHWI              lhwi10;
     RtStarsCondOpLoad              ldr7;
+
+    CondMbufTraceFc                srcConsFreembufTracefc;
+
     RtStarsCondOpSystemCsr         csrrc3;
     RtStarsCondOpStore             sw3;
     RtStarsCondOpSystemCsr         csrrs3;
-
-    CondMbufTraceFc                srcConsFreembufTracefc;
 
     RtStarsSetCsrJumpPc            jumpPc4;
     RtStarsCondOpBranch            beq3;

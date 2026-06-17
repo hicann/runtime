@@ -1517,7 +1517,7 @@ void ConstructDqsInterChipPostProcFc(RtStarsDqsInterChipPostProcFc &fc, const Rt
     ConstructLHWI(r2, funcCallPara.dstMbufFreeAddr, fc.lhwi5);
     ConstructLoad(r2, 0U, r2, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr3);
 
-    // r8 = ow mbufHandle
+    // r3 = ow mbufHandle
     ConstructLLWI(r3, dqsPoolIdBlkIdMask, fc.llwi6);
     ConstructLHWI(r3, dqsPoolIdBlkIdMask, fc.lhwi6);
     ConstructOpAnd(r5, r3, r3, fc.and1);
@@ -1574,19 +1574,18 @@ void ConstructDqsInterChipPostProcFc(RtStarsDqsInterChipPostProcFc &fc, const Rt
     ConstructLHWI(r1, funcCallPara.srcMbufFreeAddr, fc.lhwi10);
     ConstructLoad(r1, 0U, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr7);
 
+    MbufTraceRegParam srcConsFreePara = {
+        .loop_index_reg = r0, .mbuf_handle_reg = r3, .avail_reg0 = r8, .avail_reg1 = r2, .avail_reg2 = r6, .avail_reg3 = r7
+    };
+    mbufTraceNop = (RtPtrToValue(&(fc.srcConsFreembufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    ConstructMbufTrace(fc.srcConsFreembufTracefc, funcCallPara.srcConsFreeMbufTracePara, srcConsFreePara, mbufTraceNop);
+
     // cfg use PA
     ConstructSystemCsr(r4, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc3);
     // srcMbufHandle free
     ConstructStore(r1, r3, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw3);
     // restore to use VA
     ConstructSystemCsr(r4, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs3);
-
-    // r3为mbuf handle value寄存器，结合上下文mbuf_handle_reg可以复用
-    MbufTraceRegParam srcConsFreePara = {
-        .loop_index_reg = r0, .mbuf_handle_reg = r3, .avail_reg0 = r1, .avail_reg1 = r2, .avail_reg2 = r6, .avail_reg3 = r7
-    };
-    mbufTraceNop = (RtPtrToValue(&(fc.srcConsFreembufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
-    ConstructMbufTrace(fc.srcConsFreembufTracefc, funcCallPara.srcConsFreeMbufTracePara, srcConsFreePara, mbufTraceNop);
 
     // skip error
     offset = offsetof(RtStarsDqsInterChipPostProcFc, end);
