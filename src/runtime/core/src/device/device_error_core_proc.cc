@@ -1350,7 +1350,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
     if ((contextInfo.contextType == RT_CTX_TYPE_AICORE) || (contextInfo.contextType == RT_CTX_TYPE_AIV)) {
         (void)mapAddr.emplace_back(
             static_cast<uint64_t>(contextInfo.nonTailTaskStartPcH) << 32U | static_cast<uint64_t>(contextInfo.nonTailTaskStartPcL));
-        (void)mapAddr.emplace_back(static_cast<uint64_t>(contextInfo.tailTaskStartPcH) << 32U | contextInfo.tailTaskStartPcL);
+        (void)mapAddr.emplace_back(static_cast<uint64_t>(contextInfo.tailTaskStartPcH) << 32U | static_cast<uint64_t>(contextInfo.tailTaskStartPcL));
         schemMode = contextInfo.schem;
         blockdim = contextInfo.tailBlockdim;
     } else if ((contextInfo.contextType == RT_CTX_TYPE_MIX_AIC) || (contextInfo.contextType == RT_CTX_TYPE_MIX_AIV)) {
@@ -1360,7 +1360,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
             static_cast<uint64_t>(mixCtx->nonTailAicTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->nonTailAicTaskStartPcL));
         (void)mapAddr.emplace_back(static_cast<uint64_t>(mixCtx->tailAicTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->tailAicTaskStartPcL));
         (void)mapAddr.emplace_back(
-            static_cast<uint64_t>(mixCtx->nonTailAivTaskStartPcH) << 32U | mixCtx->nonTailAivTaskStartPcL);
+            static_cast<uint64_t>(mixCtx->nonTailAivTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->nonTailAivTaskStartPcL));
         (void)mapAddr.emplace_back(static_cast<uint64_t>(mixCtx->tailAivTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->tailAivTaskStartPcL));
         schemMode = mixCtx->schem;
         blockdim = mixCtx->tailBlockdim;

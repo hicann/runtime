@@ -62,7 +62,7 @@ public:
         subModelNotify_ = notify;
     }
 
-    Notify *GetSubModelNotify()
+    Notify *GetSubModelNotify() const
     {
         return subModelNotify_;
     }
@@ -82,7 +82,7 @@ public:
         condSize_ = condSize;
     }
 
-    uint32_t GetCondSize()
+    uint32_t GetCondSize() const
     {
         return condSize_;
     }

@@ -585,7 +585,7 @@ rtError_t Context::TearDownStream(Stream *stm, bool flag) const
     if (!Runtime::Instance()->IsExiting()) {
         StreamStateCallbackManager::Instance().Notify(stm, false);
     }
-    rtError_t error = stm->TearDown(false, flag);
+    const rtError_t error = stm->TearDown(false, flag);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_FREE_STREAM, "Failed to tear down stream, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -845,7 +845,7 @@ rtError_t Context::DebugRegister(Model * const mdl, const uint32_t flag, const v
         RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
         error = device_->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, taskGenCallback_, &flipTaskId);
         *taskId = flipTaskId;
-        *streamId = device_->GetCtrlSQ().GetStream()->Id_();
+        *streamId = static_cast<uint32_t>(device_->GetCtrlSQ().GetStream()->Id_());
         ERROR_RETURN(error, "Failed to send debug register message, retCode=%#x.", error);
     } else {
         TaskInfo submitTask = {};

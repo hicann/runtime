@@ -20,7 +20,7 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(const void *const ptr, uint64_t si
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(advise > rtMemAdviseUnSetAccessedBy, RT_ERROR_INVALID_VALUE, advise, "[0, " + std::to_string(rtMemAdviseUnSetAccessedBy) + "]");
     if (location.type == rtMemLocationTypeDevice) {
         int32_t numDev = 0;
-        rtError_t ret = impl_->GetDeviceCount(&numDev);
+        const rtError_t ret = impl_->GetDeviceCount(&numDev);
         ERROR_RETURN(ret, "Get device count failed.");
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM((location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE, 
                                             location.id, "[0, " + std::to_string(numDev - 1) + "]");
@@ -83,7 +83,7 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(const void *ptr, size_t siz
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_STREAM_NULL);
     if (location.type == rtMemLocationTypeDevice) {
         int32_t numDev = 0;
-        rtError_t ret = impl_->GetDeviceCount(&numDev);
+        const rtError_t ret = impl_->GetDeviceCount(&numDev);
         ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, ret, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(ret));
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM((location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
             location.id, "[0, " + std::to_string(numDev - 1) + "]");

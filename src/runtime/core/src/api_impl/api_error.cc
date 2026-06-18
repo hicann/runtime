@@ -5411,7 +5411,7 @@ rtError_t ApiErrorDecorator::GetAllocationGranularity(rtDrvMemProp_t *prop, rtDr
 {
     NULL_PTR_RETURN_MSG_OUTER(prop, RT_ERROR_INVALID_VALUE);
     if (prop->side == DEVICE_TYPE) {
-        uint32_t userDeviceId = prop->devid;
+        const uint32_t userDeviceId = prop->devid;
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
             "Failed to convert the user device ID %u to driver device ID.", userDeviceId);

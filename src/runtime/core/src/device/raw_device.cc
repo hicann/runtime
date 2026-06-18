@@ -2130,7 +2130,7 @@ rtError_t RawDevice::InitPrintInfo()
     COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
     printblockLen_ = rt->GetSimdPrintFifoSize();
     auto props = GetDevProperties();
-    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum) + static_cast<uint64_t>(props.aivNum);
     rtError_t ret = driver_->DevMemAlloc(&printfAddr_, printblockLen_ * totalCoreNum, RT_MEMORY_HBM, deviceId_,
         MODULEID_RUNTIME);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device_id=%u, ret=%u.", deviceId_, ret);

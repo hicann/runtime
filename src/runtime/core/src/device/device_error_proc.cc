@@ -239,7 +239,7 @@ rtError_t DeviceErrorProc::GetTschCapability(const void *devMem) const
     uint8_t *capa = new (std::nothrow) uint8_t[capaLen];
     COND_RETURN_AND_MSG_OUTER(capa == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
         capaLen * sizeof(uint8_t));
-    const int ret = memcpy_s(capa, capaLen, tschCapa->capability, capaLen);
+    const int32_t ret = memcpy_s(capa, capaLen, tschCapa->capability, capaLen);
     if (ret != EOK) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR,
             "Failed to call memcpy_s to copy tschCapa->capability, src=%p, dest=%p, dest_max=%u, count=%u, retCode=%d.",

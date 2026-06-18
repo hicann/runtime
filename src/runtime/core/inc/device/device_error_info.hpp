@@ -236,9 +236,9 @@ struct AicErrorInfo final {
 };
 
 constexpr uint32_t DEVICE_ERROR_RINGBUFFER_SIZE =
-    ((RINGBUFFER_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
+    static_cast<uint32_t>((RINGBUFFER_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
 constexpr uint32_t DEVICE_ERROR_EXT_RINGBUFFER_SIZE =
-    ((RINGBUFFER_EXT_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
+    static_cast<uint32_t>((RINGBUFFER_EXT_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
 
 struct StreamTaskId {
     uint16_t streamId = 0xFFFFU;

@@ -93,7 +93,7 @@ void Engine::WaitCompletion()
     uint32_t taskId = 0U;
     uint32_t waitCnt = 0U;
     uint32_t idx = 0U;
-    uint64_t timeout = device_->GetDevProperties().engineWaitCompletionTImeout;
+    const uint64_t timeout = device_->GetDevProperties().engineWaitCompletionTImeout;
     mmTimespec beginTimeSpec = mmGetTickCount();
     const uint64_t beginCnt = static_cast<uint64_t>(beginTimeSpec.tv_sec) * RT_MS_PER_S +
                               static_cast<uint64_t>(beginTimeSpec.tv_nsec) / RT_MS_TO_NS;

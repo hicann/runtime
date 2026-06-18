@@ -381,7 +381,7 @@ void PrintDumpTimestamp(const DumpInfoHead *dumpHead, const uint32_t blockId,
     const DumpTimeStampInfoMsg *dumpInfoMsg = RtPtrToPtr<const DumpTimeStampInfoMsg *>(dumpHead->infoMsg);
     timeInfo.blockId = dumpInfoMsg->blockIdx;
     timeInfo.blockId &= 0xFFFF; // 低16位记录逻辑block dim
-    timeInfo.blockId |= ((blockId << 16U) & 0xFFFF0000); // 高16位记录物理block dim
+    timeInfo.blockId |= ((blockId << 16U) & 0xFFFF0000U); // 高16位记录物理block dim
     timeInfo.descId = dumpInfoMsg->descId;
     const uint32_t rsv = dumpInfoMsg->rsv;
     timeInfo.syscyc = dumpInfoMsg->syscyc;
@@ -842,7 +842,7 @@ static void DumpBlockInfo(KernelDfxInfo * kernelDfxInfoInstance, const uint8_t *
         if (type != RT_KERNEL_DFX_INFO_INVALID) {
             RT_LOG(RT_LOG_INFO, "Dump BlockInfo, rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, blockAddr=%p, blockInfoSize=%zu",
                 type, coreType, coreId, blockAddr, sizeof(BlockInfo));
-            kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, blockAddr, sizeof(BlockInfo));
+            (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, blockAddr, sizeof(BlockInfo));
         }
     };
     if (!IsDumpSimdBlockInfo[coreId] && coreType != RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) {
@@ -867,7 +867,7 @@ rtError_t ExecuteKernelDfxInfoFunc(const uint8_t *blockAddr, const uint8_t *dump
         type = RT_KERNEL_DFX_INFO_DEFAULT;
         RT_LOG(RT_LOG_INFO, "rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu",
             type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
-        kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
+        (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
         return RT_ERROR_NONE;
     }
     uint64_t dataLen = 0U;
@@ -880,7 +880,7 @@ rtError_t ExecuteKernelDfxInfoFunc(const uint8_t *blockAddr, const uint8_t *dump
         if (type != RT_KERNEL_DFX_INFO_INVALID) {
             RT_LOG(RT_LOG_INFO, "rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu",
                 type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
-            kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, RtPtrToPtr<const uint8_t *>(dumpHead), dumpInfoLen);
+            (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, RtPtrToPtr<const uint8_t *>(dumpHead), dumpInfoLen);
         }
     }
     
@@ -1015,7 +1015,7 @@ uint64_t GetDebugAddrForCore(uint32_t deviceId, uint16_t coreId)
     struct res_map_info resInfo;
     resInfo.target_proc_type = PROCESS_CP1;
     resInfo.res_type = RES_DBG_ADDR;
-    resInfo.res_id = static_cast<unsigned int>(coreId);
+    resInfo.res_id = static_cast<uint32_t>(coreId);
     resInfo.flag = 0U;
     resInfo.rsv[0] = 0U;
 
@@ -1038,7 +1038,7 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, const Device * const de
     Driver *const curDrv = dev->Driver_();
     uint32_t const deviceId = dev->Id_();
     auto props = curDrv->GetDevProperties();
-    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum) + static_cast<uint64_t>(props.aivNum);
     const uint64_t totalLen = blockSize * totalCoreNum;
     std::vector<uint8_t> hostData(totalLen, 0);
 

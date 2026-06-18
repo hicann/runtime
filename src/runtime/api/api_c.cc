@@ -3872,7 +3872,7 @@ rtError_t rtNeedDevVA2PA(bool *need)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     *need = false;
-    rtChipType_t chipType = rtInstance->GetChipType();
+    const rtChipType_t chipType = rtInstance->GetChipType();
     DevProperties devProperty {};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
     COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
@@ -4129,7 +4129,7 @@ rtError_t rtsProfTrace(void *userdata, int32_t length, rtStream_t stream)
         length, "(0, " + std::to_string(dataSize) + "]");
 
     rtProfTraceUserData data = {0, 0, 0};
-    errno_t ret = memcpy_s(&data, sizeof(data), userdata, length);
+    const errno_t ret = memcpy_s(&data, sizeof(data), userdata, static_cast<size_t>(length));
     if (ret != EOK) {
         std::stringstream ss;
         ss << std::hex << "dest=0x" << RtPtrToValue(&data) << ", userdata=0x" << RtPtrToValue(userdata)
