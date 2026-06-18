@@ -207,7 +207,7 @@ rtError_t RawDevice::InitRawDriver()
     Driver * const devDrv = rt->driverFactory_.GetDriver(rawDrvType);
     NULL_PTR_RETURN_MSG(devDrv, RT_ERROR_DRV_NULL);
 
-    rtError_t error = devDrv->DeviceOpen(deviceId_, tsId_, &SSID_);
+    const rtError_t error = devDrv->DeviceOpen(deviceId_, tsId_, &SSID_);
     ERROR_RETURN(error, "Failed to open device, retCode=%#x, device_id=%u.",
                            static_cast<uint32_t>(error), deviceId_);
 
@@ -261,7 +261,7 @@ rtError_t RawDevice::EventExpandingPoolRestore(void)
     if (eventExpandingPool_ == nullptr) {
         return RT_ERROR_NONE;
     }
-    rtError_t ret = eventExpandingPool_->ResetBufferForEvent();
+    const rtError_t ret = eventExpandingPool_->ResetBufferForEvent();
     ERROR_RETURN(ret, "ResetBufferForEvent failed, ret=%#x, deviceId=%u", ret, deviceId_);
     return ret;
 }
@@ -1062,6 +1062,9 @@ rtError_t RawDevice::Start()
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         uint32_t len = 0U;
         error = driver_->GetC2cCtrlAddr(static_cast<int32_t>(deviceId_), &interCoreSyncAddr_, &len);
+        COND_PROC_GOTO_MSG_INNER(error != RT_ERROR_NONE, ERROR_STOP, ;,
+            "Failed to get C2C ctrl address, retCode=%#x, device_id=%u.",
+            static_cast<uint32_t>(error), deviceId_);
     }
 
     InitResource();
@@ -1133,7 +1136,7 @@ void *RawDevice::MallocBufferForSqIdMem(const size_t size, void * const para)
 void RawDevice::FreeBufferForSqIdMem(void * const addr, void * const para)
 {
     Device * const dev = static_cast<Device *>(para);
-    rtError_t error = dev->Driver_()->DevMemFree(addr, dev->Id_());
+    const rtError_t error = dev->Driver_()->DevMemFree(addr, dev->Id_());
     COND_LOG(error != RT_ERROR_NONE, "mem free failed, device_id=%u, retCode=%#x!",
         dev->Id_(), static_cast<uint32_t>(error));
 }
@@ -1147,7 +1150,7 @@ uint64_t RawDevice::AllocSqIdMemAddr(void)
         COND_RETURN_AND_MSG_OUTER(sqIdMemAddrPool_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
             sizeof(BufferAllocator));
     }
-    auto id = sqIdMemAddrPool_->AllocId(true);
+    const auto id = sqIdMemAddrPool_->AllocId(true);
     return RtPtrToValue(sqIdMemAddrPool_->GetItemById(id));
 }
 
@@ -1167,7 +1170,8 @@ rtError_t RawDevice::AllocProfSwitchAddr(void)
     }
 
     void *addr = nullptr;
-    rtError_t error = Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, deviceId_);
+    const rtError_t error = Driver_()->DevMemAlloc(
+        &addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, deviceId_);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "alloc mem failed, "
         "device_id=%u, retCode=%#x", deviceId_, static_cast<uint32_t>(error));
 
@@ -1398,12 +1402,11 @@ rtError_t RawDevice::UpdateTimeoutConfig()
     }
 
     if (timeoutConfig.isCfgOpExcTaskTimeout) {
-        uint32_t opExcTaskTimeout = timeoutConfig.opExcTaskTimeout / RT_TIMEOUT_MS_TO_US;
+        uint32_t opExcTaskTimeout = static_cast<uint32_t>(timeoutConfig.opExcTaskTimeout / RT_TIMEOUT_MS_TO_US);
         if (props.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_NEED_RESET) {
-            opExcTaskTimeout = timeoutConfig.opExcTaskTimeout;
+            opExcTaskTimeout = static_cast<uint32_t>(timeoutConfig.opExcTaskTimeout);
         }
-        TimeoutSetTaskUpdate(timeoutTask, RT_TIMEOUT_TYPE_OP_EXECUTE, 
-            opExcTaskTimeout / RT_TIMEOUT_S_TO_MS);
+        TimeoutSetTaskUpdate(timeoutTask, RT_TIMEOUT_TYPE_OP_EXECUTE, opExcTaskTimeout / RT_TIMEOUT_S_TO_MS);
     }
 
     rtError_t error = SubmitTask(timeoutTask);
@@ -2299,13 +2302,13 @@ rtError_t RawDevice::GetPrintFifoAddrAndCreateThread(uint64_t * const addr, cons
 rtError_t RawDevice::StoreEndGraphNotifyInfo(const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos)
 {
     auto key = std::make_tuple(streamId, captureModel);
-    uint32_t numOfPos = 0;
+    size_t numOfPos = 0U;
 
     captureModelExeInfoLock_.lock();
 
     auto it = captureModelExeInfoMap_.find(key);
     if (it == captureModelExeInfoMap_.end()) {
-        numOfPos = 1;
+        numOfPos = 1U;
         (void)captureModelExeInfoMap_.emplace(key, std::list<uint32_t>(numOfPos, endGraphNotifyPos));
     } else {
         std::list<uint32_t>& posList = captureModelExeInfoMap_[key];
@@ -2315,7 +2318,7 @@ rtError_t RawDevice::StoreEndGraphNotifyInfo(const uint32_t streamId, Model* cap
 
     captureModelExeInfoLock_.unlock();
 
-    RT_LOG(RT_LOG_INFO, "Store exeStreamId=%u captureModelId=%u endGraphNotifyPos=%u in captureModelExeInfoMap_, numOfPos=%u.", 
+    RT_LOG(RT_LOG_INFO, "Store exeStreamId=%u captureModelId=%u endGraphNotifyPos=%u in captureModelExeInfoMap_, numOfPos=%zu.",
         streamId, captureModel->Id_(), endGraphNotifyPos, numOfPos);
     return RT_ERROR_NONE;    
 }
@@ -2477,7 +2480,7 @@ void RawDevice::PollEndGraphNotifyInfoByModelId(const uint32_t modelId)
             break;);
 
         std::list<uint32_t>& sqePosList = it->second;
-        bool isAlreadyExecuted = JudgeIsEndGraphNotifyWaitExecuted(exeStream.get(), model, sqePosList);
+        const bool isAlreadyExecuted = JudgeIsEndGraphNotifyWaitExecuted(exeStream.get(), model, sqePosList);
         exeStream.reset();
         if (isAlreadyExecuted) {
             it = captureModelExeInfoMap_.erase(it);
