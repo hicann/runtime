@@ -111,7 +111,7 @@ static float fp16ToFloat(const uint16_t &fpVal)
         } else {
             // NaN
             const uint32_t mRet = (hfMan & FP16_MAN_MASK) << (FP32_MAN_LEN - FP16_MAN_LEN);
-            uint32_t fVal = (static_cast<uint32_t>(hfSign) << FP32_SIGN_INDEX) | FP32_EXP_MASK | mRet;
+            const uint32_t fVal = (static_cast<uint32_t>(hfSign) << FP32_SIGN_INDEX) | FP32_EXP_MASK | mRet;
             return uint32ToFloat(fVal);
         }
     }

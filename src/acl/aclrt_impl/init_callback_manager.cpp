@@ -28,7 +28,7 @@ aclError UnregisterCallbackImpl(CallbackMapT &callbackMap, std::recursive_mutex 
     const auto range = callbackMap.equal_range(type);
     for (auto it = range.first; it != range.second; ++it) {
         if (it->second.first == cbFunc) {
-            callbackMap.erase(it);
+            (void)callbackMap.erase(it);
             return ACL_SUCCESS;
         }
     }

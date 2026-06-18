@@ -70,7 +70,7 @@ namespace acl {
     {
         ACL_LOG_INFO("start to execute HandleDumpConfig.");
         std::string configStr;
-        aclError ret = acl::JsonParser::GetConfigStrFromFile(configPath, configStr);
+        const aclError ret = acl::JsonParser::GetConfigStrFromFile(configPath, configStr);
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR("Get config string from file[%s] failed, errorCode = %d",
                 configPath, ret);

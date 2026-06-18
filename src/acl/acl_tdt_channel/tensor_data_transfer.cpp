@@ -1028,7 +1028,7 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
     handle->isTdtProcess = false;
     acltdtQueueAttr attr{};
     const size_t count = strlen(name) + 1U;
-    auto ret = memcpy_s(attr.name, RT_MQ_MAX_NAME_LEN, name, count);
+    const auto ret = memcpy_s(attr.name, RT_MQ_MAX_NAME_LEN, name, count);
     if (ret != EN_OK) {
         const std::string retCode = std::to_string(ret);
         std::stringstream ss;
