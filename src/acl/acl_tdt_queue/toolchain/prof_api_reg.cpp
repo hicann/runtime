@@ -135,7 +135,7 @@ namespace {
                 ACL_LOG_ERROR("can not register Callback, prof result = %d", profRet);
             }
         }
-        ~AclRegProfCallback() {}
+        ~AclRegProfCallback() = default;
     };
     static AclRegProfCallback g_profCbReg;
 }
@@ -173,7 +173,7 @@ namespace acl {
             MsprofApi api{};
             api.beginTime = startTime_;
             api.endTime = endTime;
-            thread_local static auto tid = mmGetTid();
+            thread_local static const auto tid = mmGetTid();
             api.threadId = static_cast<uint32_t>(tid);
             api.level = MSPROF_REPORT_ACL_LEVEL;
             api.type = static_cast<uint32_t>(aclApi_);

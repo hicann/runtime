@@ -157,6 +157,6 @@ void AclErrorLogManager::ReportInputErrorWithChar(const char_t *const errorCode,
         argNameArr.push_back(argNames[i]);
         argValArr.push_back(argVals[i]);
     }
-    REPORT_PREDEFINED_ERR_MSG(errorCode, argNameArr, argValArr);
+    (void)REPORT_PREDEFINED_ERR_MSG(errorCode, argNameArr, argValArr);
 }
 } // namespace acl

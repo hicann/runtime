@@ -270,7 +270,7 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
     if ((configPath != nullptr) && (strlen(configPath) != 0UL)) {
         std::string strConfig = PROCESS_MODE;
         bool found = false;
-        auto ret = acl::JsonParser::GetJsonCtxByKey(configPath, strConfig, ACL_ERR_MSG_CONFIG_NAME, found);
+        const auto ret = acl::JsonParser::GetJsonCtxByKey(configPath, strConfig, ACL_ERR_MSG_CONFIG_NAME, found);
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR("Cannot parse err_msg config from file[%s], errorCode = %d", configPath, ret);
             return ret;
@@ -333,7 +333,7 @@ aclError HandleDefaultDeviceAndStackSize(const char_t *const configPath) {
     if (defaultDeviceId == INVALID_DEFAULT_DEVICE) {
         return ACL_SUCCESS;
     }
-    rtError_t rtErr = rtSetDefaultDeviceId(defaultDeviceId);
+    const rtError_t rtErr = rtSetDefaultDeviceId(defaultDeviceId);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("set default device id failed, ret:%d", rtErr);
         return ACL_GET_ERRCODE_RTS(rtErr);
@@ -360,7 +360,7 @@ void GetAllPackageVersion()
         aclCANNPackageVersion pkgVersion = {};
         const aclError ret = aclsysGetCANNVersionImpl(pkgName.first, &pkgVersion);
         if (ret == ACL_SUCCESS) {
-            ACL_LOG_EVENT("Version of %s package is %s", pkgName.second.c_str(), pkgVersion.version);
+            ACL_LOG_EVENT("Version of %s package is %s", pkgName.second.c_str(), static_cast<const char*>(pkgVersion.version));
         } else {
             ACL_LOG_EVENT("Version of %s package is not found", pkgName.second.c_str());
         }
@@ -505,7 +505,7 @@ aclError aclInitImpl(const char *configPath)
     // register kernel launch fill function
     if (acl::IsEnableAutoUCMemeory()) {
         ACL_LOG_INFO("register kernel launch fill function in aclInit");
-        auto rtRegErr = rtRegKernelLaunchFillFunc("g_opSystemRunCfg", acl::UpdateOpSystemRunCfg);
+        const auto rtRegErr = rtRegKernelLaunchFillFunc("g_opSystemRunCfg", acl::UpdateOpSystemRunCfg);
         if (rtRegErr != RT_ERROR_NONE) {
             if (rtRegErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
                 ACL_LOG_WARN("Cannot register kernel launch fill function, feature is not supported.");
@@ -817,7 +817,7 @@ aclError aclsysGetCANNVersionImpl(aclCANNPackageName name, aclCANNPackageVersion
         case ACL_PKG_NAME_OPP:
         case ACL_PKG_NAME_OPP_KERNEL:
             MM_SYS_GET_ENV(MM_ENV_ASCEND_HOME_PATH, pathEnv);
-            if (!pathEnv) {
+            if (pathEnv == nullptr) {
                 ACL_LOG_WARN("[Check]Cannot get env [%s].", kAscendHomeEnvName);
                 ret = ACL_ERROR_INVALID_FILE;
                 break;
@@ -1033,7 +1033,7 @@ static bool ParsePreNumStrict(const std::string &suffix, int32_t &outNum) {
     // scan characters
     for (size_t i = 0; i < suffix.length(); ++i) {
         const char c = suffix[i];
-        if (std::isdigit(static_cast<unsigned char>(c))) {
+        if (std::isdigit(static_cast<unsigned char>(c)) != 0) {
             digitPos = i;
             break;
         } else if (c == '.' || c == '-') {
@@ -1084,7 +1084,7 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
         }
 
         // Find second point
-        const size_t dot2 = verStr.find('.', dot1 + 1);
+        const size_t dot2 = verStr.find('.', dot1 + 1UL);
         if (dot2 == std::string::npos || dot2 == dot1 + 1) {
             ACL_LOG_ERROR("Invalid format [%s]. Missing minor version.", verStr.c_str());
             return ACL_ERROR_INTERNAL_ERROR;
@@ -1093,7 +1093,7 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
         // Find patch number
         const size_t numStart = dot2 + 1;
         size_t numEnd = numStart;
-        while (numEnd < verStr.length() && std::isdigit(static_cast<unsigned char>(verStr[numEnd]))) {
+        while (numEnd < verStr.length() && std::isdigit(static_cast<unsigned char>(verStr[numEnd])) != 0) {
             numEnd++;
         }
 

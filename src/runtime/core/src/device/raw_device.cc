@@ -2217,8 +2217,8 @@ rtError_t RawDevice::ParsePrintInfo()
     std::unique_lock<std::mutex> l(printfMtx_);
     // 最多等待200ms，或被WakeUpPrintf唤醒
     (void)printfCv_.wait_for(l, std::chrono::milliseconds(200));
-    ParseSimdPrintInfo();
-    ParseSimtPrintInfo();
+    (void)ParseSimdPrintInfo();
+    (void)ParseSimtPrintInfo();
     ++parseCounter_;
     return RT_ERROR_NONE;
 }
@@ -2574,7 +2574,7 @@ void RawDevice::FreeFftsPlusArgHandleCache()
 {
     std::lock_guard<std::mutex> lock(fftsPlusArgHandleMutex_);
     for (void *handle : fftsPlusArgHandleCache_) {
-        ArgLoader_()->Release(handle);
+        (void)ArgLoader_()->Release(handle);
     }
     fftsPlusArgHandleCache_.clear();
 }

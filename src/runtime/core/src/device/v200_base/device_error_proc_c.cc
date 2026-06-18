@@ -555,8 +555,8 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device * const 
     bool isHitWhitelist = false;
     GetMteDeviceFaultEvent(dev, faultEventId, isHitBlklist, isHitRemoteBlklist, isHitWhitelist);
     const bool hasL2BuffEcc = (faultEventId == L2_BUFFER_ECC_EVENT_ID);
-    bool hasHbmEcc = (faultEventId == HBM_ECC_EVENT_ID);
-    bool isHitHbmBlkList = !hasL2BuffEcc && isHitBlklist;
+    const bool hasHbmEcc = (faultEventId == HBM_ECC_EVENT_ID);
+    const bool isHitHbmBlkList = !hasL2BuffEcc && isHitBlklist;
     RT_LOG(RT_LOG_ERROR, "support_hbm_ras_report=%d, has_l2_buffer_ecc_event=%d, has_hbm_ecc_notify_event=%d, "
         "has_hbm_ecc_event=%d, hit_black_list=%d, hit_remote_blk_list=%d, hit_white_list=%d.", suppHbmRas, hasL2BuffEcc, hasMteHbmErr,
         hasHbmEcc, isHitBlklist, isHitRemoteBlklist, isHitWhitelist);

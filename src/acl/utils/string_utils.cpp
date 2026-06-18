@@ -52,6 +52,6 @@ std::string StringUtils::Trim(const std::string& str) {
         return str;
     }
     const size_t last = str.find_last_not_of(" \t\r\n");
-    return str.substr(first, (last - first + 1));
+    return str.substr(first, (last - first + 1UL));
 }
 } // namespace acl

@@ -55,6 +55,8 @@ void DeviceErrorProc::MapFusionTaskErrorCode(const TaskInfo* tsk, StarsOpExcepti
         report->errorCode = isTimeout ? TS_ERROR_CCU_TIMEOUT : TS_ERROR_CCU_EXCEPTION;
     } else if (sqeSubType == 0x01U) { // only AICPU sub task
         report->errorCode = isTimeout ? TS_ERROR_AICPU_TIMEOUT : TS_ERROR_AICPU_EXCEPTION;
+    } else {
+        /* unknown sqe sub type, no-op */
     }
 }
 

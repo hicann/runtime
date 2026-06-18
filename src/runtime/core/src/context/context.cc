@@ -1499,7 +1499,7 @@ rtError_t Context::CreateAutoSplitSlaveStream(Stream * const masterStm, Stream *
     // 绑定 slave stream 到 master stream 所在的 model
     Model *model = masterStm->Model_();
     if (model == nullptr) {
-        StreamDestroy(slaveStream, true);
+        (void)StreamDestroy(slaveStream, true);
         RT_LOG(RT_LOG_ERROR, "Master stream has no model, master_stream_id=%d, slave_stream_id=%d.",
             masterStm->GetExposedStreamId(), slaveStream->Id_());
         return RT_ERROR_INVALID_VALUE;
@@ -3116,7 +3116,7 @@ rtError_t Context::DvppGroupCreate(DvppGrp **grp, const uint32_t flags)
     COND_RETURN_AND_MSG_OUTER(newGrp == nullptr, RT_ERROR_DVPP_GRP_NEW, ErrorCode::EE1013, sizeof(DvppGrp));
 
     newGrp->SetContext(this);
-    rtError_t error = newGrp->Setup();
+    const rtError_t error = newGrp->Setup();
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Failed to set up DvppGrp, retCode=%#x.", error);
         DELETE_O(newGrp);

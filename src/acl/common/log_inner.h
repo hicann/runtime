@@ -714,7 +714,7 @@ do { \
 do { \
     if (!(condition)) { \
         const std::string errReason = strerror(errno); \
-        std::string errMsg = acl::AclErrorLogManager::FormatStr("%s, %s", reasonPrefix, errReason.c_str()); \
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("%s, %s", (reasonPrefix), errReason.c_str()); \
         ACL_LOG_ERROR("[Check]Open file [%s] failed, reason is [%s].", path, errReason.c_str()); \
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG, \
             std::vector<const char *>({"path", "reason"}), \

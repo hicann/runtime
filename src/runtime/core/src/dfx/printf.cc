@@ -837,7 +837,7 @@ static rtKernelDfxInfoType GetrtKernelDfxInfoType(const DumpType type)
 
 static void DumpBlockInfo(KernelDfxInfo * kernelDfxInfoInstance, const uint8_t * blockAddr, uint32_t coreType, uint32_t coreId)
 {
-    auto dumpInfo = [&]() -> void
+    auto dumpInfo = [&kernelDfxInfoInstance, &coreType, &coreId, &blockAddr]() -> void
     {
         const rtKernelDfxInfoType type = kernelDfxInfoInstance->GetValidBlockInfoType();
         if (type != RT_KERNEL_DFX_INFO_INVALID) {
@@ -1057,12 +1057,12 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, const Device * const de
 
         BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
         readInfo->dumpType = DumpType::DUMP_BUFO;
-        readInfo->length = sizeof(uint64_t) + sizeof(uint64_t); // readIdx 和 resv 的大小相加
+        readInfo->length = static_cast<uint32_t>(sizeof(uint64_t) + sizeof(uint64_t)); // readIdx 和 resv 的大小相加
         readInfo->readIdx = 0U;
 
         BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
         writeInfo->dumpType = DumpType::DUMP_BUFI;
-        writeInfo->length = sizeof(uint64_t) + sizeof(uint64_t); // writeIdx 和 packIdx 的大小相加
+        writeInfo->length = static_cast<uint32_t>(sizeof(uint64_t) + sizeof(uint64_t)); // writeIdx 和 packIdx 的大小相加
         writeInfo->writeIdx = readInfo->readIdx; // 初始化和readIdx一致
     }
 
@@ -1086,7 +1086,7 @@ rtError_t InitSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv)
 
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
     readInfo->dumpType = DumpType::DUMP_BUFO;
-    readInfo->length = sizeof(uint64_t) + sizeof(uint64_t); // readIdx 和 resv 的大小相加
+    readInfo->length = static_cast<uint32_t>(sizeof(uint64_t) + sizeof(uint64_t)); // readIdx 和 resv 的大小相加
     readInfo->readIdx = 0U;
 
     BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
