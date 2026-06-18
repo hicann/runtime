@@ -928,6 +928,17 @@
       }
     },
     {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument_Null_Pointer",
+      "ErrCode": "EH0014",
+      "ErrMessage": "%s failed because %s cannot be NULL pointers at the same time.",
+      "Arglist": "func, param",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Try again with correct pointer arguments."
+      }
+    },
+    {
       "errClass": "HCCL Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
       "ErrCode": "EI0001",

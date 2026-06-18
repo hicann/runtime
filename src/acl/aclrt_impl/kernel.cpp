@@ -215,7 +215,8 @@ aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, vo
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(name);
     if ((dptr == nullptr) && (size == nullptr)) {
         ACL_LOG_ERROR("[Check][dptr,size]dptr and size cannot both be null.");
-        acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {"dptr and size"});
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG,
+            {"func", "param"}, {"aclrtBinaryGetGlobal", "dptr and size"});
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -879,15 +880,16 @@ aclError aclrtFunctionGetParamInfoImpl(const void *func, size_t paramIndex,
     ACL_LOG_INFO("start to execute aclrtFunctionGetParamInfo, paramIndex=%zu.", paramIndex);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     if ((paramOffset == nullptr) && (paramSize == nullptr)) {
- 	        ACL_LOG_ERROR("[Check][paramOffset,paramSize]paramOffset and paramSize cannot both be null.");
- 	        acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {"paramOffset and paramSize"});
- 	        return ACL_ERROR_INVALID_PARAM;
- 	}
+        ACL_LOG_ERROR("[Check][paramOffset,paramSize]paramOffset and paramSize cannot both be null.");
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG,
+            {"func", "param"}, {"aclrtFunctionGetParamInfo", "paramOffset and paramSize"});
+        return ACL_ERROR_INVALID_PARAM;
+    }
     const rtError_t rtErr = rtFunctionGetParamInfo(func, paramIndex, paramOffset, paramSize);
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
             ACL_LOG_WARN("rtFunctionGetParamInfo does not support, runtime result = %d.", rtErr);
- 	        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+            return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             ACL_LOG_CALL_ERROR("rtFunctionGetParamInfo failed, runtime result = %d.", rtErr);
             return ACL_GET_ERRCODE_RTS(rtErr);

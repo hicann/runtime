@@ -44,6 +44,7 @@ constexpr const char_t *const ALLOC_MEMORY_FAILED_MSG = "EH0010";
 constexpr const char_t *const UNSUPPORTED_SYSTEM_MSG = "EH0011";
 constexpr const char_t *const INVALID_PARAM_NO_VALUE_MSG = "EH0012";
 constexpr const char_t *const STANDARD_FUNC_FAILED_MSG = "EH0013";
+constexpr const char_t *const INVALID_NULL_POINTER_AT_SAME_TIME_MSG = "EH0014";
 
 // first stage
 constexpr const char_t *const ACL_STAGE_SET = "SET";
