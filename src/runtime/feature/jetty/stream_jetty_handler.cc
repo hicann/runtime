@@ -308,7 +308,7 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
         uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
         TaskSqeInfo sqeInfo = {stream->GetSqBaseAddr(), 0ULL};
         ToConstructDavidSqe(taskInfo, static_cast<void *>(sqeBuffer), sqeInfo);
-        errno_t rc = memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(sqeInfo.sqBaseAddr) + SQE_SIZE_UNIT * taskInfo->pos),
+        errno_t rc = memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(stream->GetSqeBuffer()) + SQE_SIZE_UNIT * taskInfo->pos),
             SQE_SIZE_UNIT, RtPtrToPtr<void*>(sqeBuffer), SQE_SIZE_UNIT);
         if (rc != EOK) {
             RT_LOG(RT_LOG_ERROR, "memcpy_s failed for SQE update, stream_id=%d, task_id=%u, rc=%d.",
