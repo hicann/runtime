@@ -32,9 +32,9 @@ class ACL_FUNC_VISIBILITY InitCallbackManager {
   InitCallbackManager();
   ~InitCallbackManager() = default;
   InitCallbackManager(const InitCallbackManager &other) = delete;
-  InitCallbackManager &operator==(const InitCallbackManager &other) = delete;
+  InitCallbackManager &operator=(const InitCallbackManager &other) = delete;
   InitCallbackManager(const InitCallbackManager &&other) = delete;
-  InitCallbackManager &operator==(const InitCallbackManager &&other) = delete;
+  InitCallbackManager &operator=(const InitCallbackManager &&other) = delete;
 
  private:
   std::multimap<aclRegisterCallbackType, std::pair<aclInitCallbackFunc, void*>> initCallbackMap_;

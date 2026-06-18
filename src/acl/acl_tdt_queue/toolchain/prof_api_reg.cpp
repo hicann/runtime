@@ -78,7 +78,7 @@ namespace {
     {
         ACL_LOG_INFO("start to execute ProfInnerStart");
         if (!g_profRun) {
-            RegisterProfType();
+            (void)RegisterProfType();
             g_profRun = true;
         }
         (void)AddDeviceList(profilerConfig->devIdList, profilerConfig->devNums);
