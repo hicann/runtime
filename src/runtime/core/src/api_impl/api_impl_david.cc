@@ -765,6 +765,8 @@ rtError_t ApiImplDavid::BatchMemcpyAsync(void** const dsts, const size_t* const 
     }
 
     if (isD2HorH2DInvolvePageableMemory) {
+        COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Asynchronous batch copy task",
+                                 "The pageable memory copy task does not support graph capture");
         error = StreamSynchronize(curStm, -1);
         ERROR_RETURN(error, "StreamSynchronize failed, stream_id=%d.", curStm->Id_());
         RT_LOG(RT_LOG_DEBUG, "Stream Synchronize success, stream_id=%d.", curStm->Id_());

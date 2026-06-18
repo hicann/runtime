@@ -1743,6 +1743,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
         RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
     if (isD2HorH2DInvolvePageableMemory) {
+        COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Asynchronous copy task",
+                            "The pageable memory copy task does not support graph capture");
         /* 把异步拷贝转化为隐式流同步 + 同步拷贝，以避免异步访问pageable内存引起的PA异常 */
         error = StreamSynchronize(stm, -1);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", streamId);
@@ -2438,6 +2440,8 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
         RT_ERROR_FEATURE_NOT_SUPPORT, "Only H2D, D2H, or D2D are supported");
 
     if (isD2HorH2DInvolvePageableMemory ) {
+        COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,  "Asynchronous 2D memory copy task",
+                                  "The pageable memory copy task does not support graph capture");
         /* 把异步拷贝转化为隐式流同步 + 同步拷贝，以避免异步访问pageable内存引起的PA异常 */
         error = StreamSynchronize(curStm, -1);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", curStm->Id_());

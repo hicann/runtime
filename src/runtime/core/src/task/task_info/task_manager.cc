@@ -897,6 +897,62 @@ const std::vector<rtChipType_t>& GetV201Chips()
     return chips;
 }
 
+static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
+{
+    for (auto chipType : chipTypes) {
+        auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
+
+        taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
+    }
+}
+
+static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
+{
+    for (auto chipType : chipTypes) {
+        auto &setResultFunc = g_taskFuncArrays[chipType].setResultFunc;
+        for (auto &item : setResultFunc) {
+            if (item == nullptr) {
+                item = &SetResultCommon;
+            }
+        }
+
+        setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetResultForModelExecuteTask;
+    }
+}
+
+static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
+{
+    for (auto chipType : chipTypes) {
+        auto &printErrorInfoFunc = g_taskFuncArrays[chipType].printErrorInfoFunc;
+        for (auto &item : printErrorInfoFunc) {
+            if (item == nullptr) {
+                item = &PrintErrorInfoCommon;
+            }
+        }
+        printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
+        printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
+        printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
+        printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
+    }
+}
+
+static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
+{
+    for (auto chipType : chipTypes) {
+        auto &setStarsResultFunc = g_taskFuncArrays[chipType].setStarsResultFunc;
+        for (auto &item : setStarsResultFunc) {
+            if (item == nullptr) {
+                item = &SetStarsResultCommon;
+            }
+        }
+
+        setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
+        setStarsResultFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &SetStarsResultForModelToAicpuTask;
+        setStarsResultFunc[TS_TASK_TYPE_FFTS_PLUS] = &SetStarsResultForFftsPlusTask;
+    }
+}
+
 void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
 {
     PfnTaskToCmd *toCommandFunc = nullptr;
@@ -958,61 +1014,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
     }
 }
 
-static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (auto chipType : chipTypes) {
-        auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
-
-        taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
-    }
-}
-
-static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (auto chipType : chipTypes) {
-        auto &setResultFunc = g_taskFuncArrays[chipType].setResultFunc;
-        for (auto &item : setResultFunc) {
-            if (item == nullptr) {
-                item = &SetResultCommon;
-            }
-        }
-
-        setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetResultForModelExecuteTask;
-    }
-}
-
-static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (auto chipType : chipTypes) {
-        auto &printErrorInfoFunc = g_taskFuncArrays[chipType].printErrorInfoFunc;
-        for (auto &item : printErrorInfoFunc) {
-            if (item == nullptr) {
-                item = &PrintErrorInfoCommon;
-            }
-        }
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
-        printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
-    }
-}
-
-static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (auto chipType : chipTypes) {
-        auto &setStarsResultFunc = g_taskFuncArrays[chipType].setStarsResultFunc;
-        for (auto &item : setStarsResultFunc) {
-            if (item == nullptr) {
-                item = &SetStarsResultCommon;
-            }
-        }
-
-        setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
-        setStarsResultFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &SetStarsResultForModelToAicpuTask;
-        setStarsResultFunc[TS_TASK_TYPE_FFTS_PLUS] = &SetStarsResultForFftsPlusTask;
-    }
-}
 
 void TaskFuncReg(void)
 {
