@@ -5712,10 +5712,8 @@ rtError_t ApiImpl::GetDeviceCapability(const int32_t deviceId, const int32_t mod
         *val = GetTaskIdBitWidth();
         return RT_ERROR_NONE;
     } else {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006,
-            "The combination of featureType value " + InfoTypeToString(static_cast<uint32_t>(featureType)) +
-            " and moduleType value " + ModuleTypeToString(moduleType),
-            "Use a valid combination of featureType and moduleType");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "The combination of featureType value " + InfoTypeToString(featureType) +
+            " and moduleType value " + ModuleTypeToString(moduleType), "Use a valid combination of featureType and moduleType");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 }

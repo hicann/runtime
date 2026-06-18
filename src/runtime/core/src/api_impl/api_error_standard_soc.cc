@@ -115,10 +115,9 @@ rtError_t ApiErrorDecorator::GetCntNotifyId(CountNotify * const inCntNotify, uin
 rtError_t ApiErrorDecorator::WriteValue(rtWriteValueInfo_t * const info, Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(((static_cast<uint32_t>(info->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
-        (info->size == WRITE_VALUE_SIZE_TYPE_INVALID)), RT_ERROR_INVALID_VALUE,
-        WriteValueSizeTypeToString(info->size), "info->size",
-        "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((static_cast<uint32_t>(info->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
+        (info->size == WRITE_VALUE_SIZE_TYPE_INVALID)), RT_ERROR_INVALID_VALUE, 
+        info->size, "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
     const uint64_t temp = 0ULL;
     const uint64_t info_size = static_cast<uint64_t>(info->size) - 1;
     COND_RETURN_AND_MSG_OUTER(static_cast<bool>((~(~temp << info_size )) & info->addr),

@@ -53,9 +53,9 @@ constexpr uint32_t RUNTIME_PUBLIC_VERSION = 1001U;
 // paramName: 参数名字字符串字面量（如"devFeatureType"）
 #define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(COND, RTERRCODE, value, paramName, ...) \
     do { \
-        if (unlikely((COND))) { \
-            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, (value), (paramName), ##__VA_ARGS__); \
-            const std::string& errorStr = RT_GET_ERRDESC((RTERRCODE)); \
+        if (unlikely(COND)) { \
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, value, paramName, ##__VA_ARGS__); \
+            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE); \
             RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
             RT_LOG_FLUSH(); \
             return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE)); \
