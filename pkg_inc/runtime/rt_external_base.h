@@ -19,6 +19,17 @@
 extern "C" {
 #endif
 
+#ifndef RT_STATIC_ASSERT
+#if defined(__cplusplus)
+#define RT_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+#else
+#define RT_STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
+#endif
+#endif
+enum { rt_ext_base_common_begin_line_guard_ = __LINE__ };
+// === CCE_RUNTIME_BASE_COMMON_DATA BEGIN (同步维护：rt_external_base.h / base.h) ===
+#ifndef CCE_RUNTIME_BASE_COMMON_DATA
+#define CCE_RUNTIME_BASE_COMMON_DATA
 // If you need export the function of this library in Win32 dll, use __declspec(dllexport)
 #ifndef RTS_API
 #ifdef RTS_DLL_EXPORT
@@ -189,6 +200,11 @@ typedef enum tagRtExceptionExpandType {
     RT_EXCEPTION_FUSION
 } rtExceptionExpandType_t;
 
+typedef struct rtArgsSizeInfo {
+    void *infoAddr; /* info : atomicIndex|input num input offset|size|size */
+    uint32_t atomicIndex;
+} rtArgsSizeInfo_t;
+
 typedef enum tagRtCoreType {
     RT_CORE_TYPE_AIC = 0,
     RT_CORE_TYPE_AIV,
@@ -199,38 +215,6 @@ typedef enum {
     RT_DEV_RES_VECTOR_CORE,
     RT_DEV_RES_TYPE_MAX
 } rtDevResLimitType_t;
-
-typedef enum {
-    RT_BINARY_TYPE_BIN_VERSION = 0U,
-    RT_BINARY_TYPE_DEBUG_INFO = 1U,
-    RT_BINARY_TYPE_DYNAMIC_PARAM = 2U,
-    RT_BINARY_TYPE_OPTIONAL_PARAM = 3U,
-    RT_BINARY_TYPE_RUNTIME_IMPLICIT_INFO = 4U,
-    RT_BINARY_TYPE_SK_INFO = 5U,
-    RT_BINARY_TYPE_MAX
-} rtBinaryMetaType;
-
-typedef enum {
-    RT_FUNCTION_TYPE_INVALID = 0U,
-    RT_FUNCTION_TYPE_KERNEL_TYPE = 1U,
-    RT_FUNCTION_TYPE_CROSS_CORE = 2U,
-    RT_FUNCTION_TYPE_MIX_TASK_RATION = 3U,
-    RT_FUNCTION_TYPE_DFX_TYPE = 4U,
-    RT_FUNCTION_TYPE_DFX_ARG_INFO = 5U,
-    RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK = 6U,
-    RT_FUNCTION_TYPE_COMPILER_ALLOC_UB_SIZE = 7U,
-    RT_FUNCTION_TYPE_SU_STACK_SIZE = 8U,
-    RT_FUNCTION_TYPE_SIMT_WARP_STACK_SIZE = 9U,
-    RT_FUNCTION_TYPE_SIMT_DVG_WARP_STACK_SIZE = 10U,
-    RT_FUNCTION_TYPE_EARLY_START_ENABLE = 11U,
-    RT_FUNCTION_TYPE_AIV_TYPE_FLAG = 12U,
-    RT_FUNCTION_TYPE_DETERMINISTIC_INFO = 13U,
-    RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO = 14U,
-    RT_FUNCTION_TYPE_BLOCK_DIM_INFO = 15U,
-    RT_FUNCTION_TYPE_PARAM_SUMMARY = 16U,
-    RT_FUNCTION_TYPE_PARAM_INFO = 17U,
-    RT_FUNCTION_TYPE_SCHED_MODE_INFO  = 18U,
-} rtFunctionMetaType;
 
 /**
  * @ingroup dvrt_base
@@ -248,11 +232,6 @@ typedef struct rtExceptionKernelInfo {
     uint8_t reserved[2]; // 填补空间以保持四字节对齐
     int32_t elfDataFlag;
 } rtExceptionKernelInfo_t;
-
-typedef struct rtArgsSizeInfo {
-    void *infoAddr; /* info : atomicIndex|input num input offset|size|size */
-    uint32_t atomicIndex;
-} rtArgsSizeInfo_t;
 
 typedef struct rtExceptionArgsInfo {
     uint32_t argsize;
@@ -288,11 +267,6 @@ typedef enum rtUbExType {
     RT_UB_TYPE_DOORBELL,
     RT_UB_TYPE_DIRECT_WQE
 } rtUbExType_t;
-
-typedef enum tagRtXpuDevType {
-    RT_DEV_TYPE_DPU = 0,
-    RT_DEV_TYPE_REV
-} rtXpuDevType;
 
 typedef struct rtUbExDetailInfo {
     rtUbExType_t ubType;
@@ -594,6 +568,49 @@ RTS_API rtError_t rtRegTaskFailCallbackByModule(const char_t *moduleName, rtTask
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen);
+#endif // CCE_RUNTIME_BASE_COMMON_DATA
+// === CCE_RUNTIME_BASE_COMMON_DATA END ===
+enum { rt_ext_base_common_end_line_guard_ = __LINE__ };
+RT_STATIC_ASSERT(rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_ == 544,
+    "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
+    "Adding data structures is not allowed; please add them outside the macro definition.");
+
+typedef enum {
+    RT_BINARY_TYPE_BIN_VERSION = 0U,
+    RT_BINARY_TYPE_DEBUG_INFO = 1U,
+    RT_BINARY_TYPE_DYNAMIC_PARAM = 2U,
+    RT_BINARY_TYPE_OPTIONAL_PARAM = 3U,
+    RT_BINARY_TYPE_RUNTIME_IMPLICIT_INFO = 4U,
+    RT_BINARY_TYPE_SK_INFO = 5U,
+    RT_BINARY_TYPE_MAX
+} rtBinaryMetaType;
+
+typedef enum {
+    RT_FUNCTION_TYPE_INVALID = 0U,
+    RT_FUNCTION_TYPE_KERNEL_TYPE = 1U,
+    RT_FUNCTION_TYPE_CROSS_CORE = 2U,
+    RT_FUNCTION_TYPE_MIX_TASK_RATION = 3U,
+    RT_FUNCTION_TYPE_DFX_TYPE = 4U,
+    RT_FUNCTION_TYPE_DFX_ARG_INFO = 5U,
+    RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK = 6U,
+    RT_FUNCTION_TYPE_COMPILER_ALLOC_UB_SIZE = 7U,
+    RT_FUNCTION_TYPE_SU_STACK_SIZE = 8U,
+    RT_FUNCTION_TYPE_SIMT_WARP_STACK_SIZE = 9U,
+    RT_FUNCTION_TYPE_SIMT_DVG_WARP_STACK_SIZE = 10U,
+    RT_FUNCTION_TYPE_EARLY_START_ENABLE = 11U,
+    RT_FUNCTION_TYPE_AIV_TYPE_FLAG = 12U,
+    RT_FUNCTION_TYPE_DETERMINISTIC_INFO = 13U,
+    RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO = 14U,
+    RT_FUNCTION_TYPE_BLOCK_DIM_INFO = 15U,
+    RT_FUNCTION_TYPE_PARAM_SUMMARY = 16U,
+    RT_FUNCTION_TYPE_PARAM_INFO = 17U,
+    RT_FUNCTION_TYPE_SCHED_MODE_INFO  = 18U,
+} rtFunctionMetaType;
+
+typedef enum tagRtXpuDevType {
+    RT_DEV_TYPE_DPU = 0,
+    RT_DEV_TYPE_REV
+} rtXpuDevType;
 
 #if defined(__cplusplus)
 }
