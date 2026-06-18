@@ -87,7 +87,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
         TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
-    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(kind, false, UINT32_MAX, RT_ASYNC_CPY_2D);
+    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(kind, false, UINT32_MAX, static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D));
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&taskAsync2d, stm, pos, dstStm, sqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
@@ -95,7 +95,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     SaveTaskCommonInfo(taskAsync2d, dstStm, pos, sqeNum);
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV2(taskAsync2d, dst, dstPitch, src, srcPitch, width, height, kind, fixedSize);
-    taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = RT_ASYNC_CPY_2D;
+    taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
     ERROR_RETURN_MSG_INNER(error, "Init MemcpyAsyncTask failed, stream_id=%d, retCode=%#x", stm->Id_(),
         static_cast<uint32_t>(error));
     // David UB 单算子场景 fixedSize是否与计算出的size相等，如果相等则不需要发送任务
@@ -133,7 +133,7 @@ rtError_t MemcopyBatchAsync(AsyncDmaBatchInfo &batchInfo, uint64_t* const realCn
         TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
-    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(RT_MEMCPY_RESERVED, false, UINT32_MAX, RT_ASYNC_CPY_BATCH);
+    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(RT_MEMCPY_RESERVED, false, UINT32_MAX, static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH));
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&taskAsyncBatch, stm, pos, dstStm, sqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
@@ -141,7 +141,7 @@ rtError_t MemcopyBatchAsync(AsyncDmaBatchInfo &batchInfo, uint64_t* const realCn
     SaveTaskCommonInfo(taskAsyncBatch, dstStm, pos, sqeNum);
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncBatchTaskInit(taskAsyncBatch, batchInfo);
-    taskAsyncBatch->u.memcpyAsyncTaskInfo.copyMethod = RT_ASYNC_CPY_BATCH;
+    taskAsyncBatch->u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH);
     ERROR_RETURN_MSG_INNER(error, "Init taskAsyncBatch task failed, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
     // David UB 单算子场景 如果驱动本次下发处理的count个数为0，则表示没有触发wqe下发，不需要下发ub db task	 

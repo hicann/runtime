@@ -3435,7 +3435,7 @@ TEST_F(ProfilerTest, ChangeTrackDataTaskType_SimtTask)
     runtimeTrack.taskType = taskInfo.type;
     ChangeTrackDataTaskType(runtimeTrack, &taskInfo);
     
-    EXPECT_EQ(runtimeTrack.taskType, PROF_TASK_TYPE_KERNEL_SIMT);
+    EXPECT_EQ(runtimeTrack.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_KERNEL_SIMT));
 }
 
 // 测试 ChangeTrackDataTaskType 函数 - MIX_AIC 任务

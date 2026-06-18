@@ -425,19 +425,19 @@ struct CommonCmdTaskInfo {
 };
 
 // =============================
-enum rtAsyncCpyMethod : uint8_t {
+enum class rtAsyncCpyMethod : uint8_t {
     RT_ASYNC_CPY        = 0, // rtMemcpyAsync
     RT_ASYNC_CPY_2D     = 1, // rtMemcpy2dAsync
     RT_ASYNC_CPY_BATCH  = 2  // rtMemcpyBatchAsync
 };
 
-enum rtDavidUbDmaSqeMode : uint16_t {
+enum class rtDavidUbDmaSqeMode : uint16_t {
     RT_DAVID_SQE_DIRECTWQE_MODE        = 0, // direct wqe
     RT_DAVID_SQE_DOORBELL_MODE         = 1, // doorbell
     RT_STARS_SQE_MODE_END              = 2
 };
 
-enum UbDmaSqeSource : uint16_t {
+enum class UbDmaSqeSource : uint16_t {
     RT_UBDMA_SOURCE_DEFAULT     = 0,
     RT_UBDMA_SOURCE_API         = 1, // 上层调用rtUbDbSend
     RT_UBDMA_SOURCE_MODEL_ASYNC = 2, // 异步拷贝任务入图

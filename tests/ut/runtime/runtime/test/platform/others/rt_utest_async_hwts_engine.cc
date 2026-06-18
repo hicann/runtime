@@ -138,12 +138,12 @@ TEST_F(AsyncHwtsEngineTest, ProcessErrorReport_ErrorReport)
     report.payLoad = 0x2f;
 
     rtTsReport_t errorReport;
-    errorReport.msgType = TS_REPORT_MSG_TYPE_TS_REPORT;
+    errorReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_TS_REPORT;
     errorReport.msgBuf.tsReport = &report;
 
     std::shared_ptr<AsyncHwtsEngine> egine = std::make_unique<AsyncHwtsEngine>(device_);
     egine->ProcessErrorReport(errorReport);
-    errorReport.msgType = TS_REPORT_MSG_TYPE_STARS_CQE;
+    errorReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     egine->ProcessErrorReport(errorReport);
     EXPECT_EQ(errorReport.msgBuf.tsReport->payLoad, 0x2f);
     GlobalMockObject::verify();

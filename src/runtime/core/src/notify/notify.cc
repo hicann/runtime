@@ -216,7 +216,7 @@ rtError_t Notify::Reset(Stream * const streamIn) const
 
     CommonCmdTaskInfo cmdInfo;
     cmdInfo.notifyId = notifyid_;
-    CommonCmdTaskInit(notifyTask, CMD_NOTIFY_RESET, &cmdInfo);
+    CommonCmdTaskInit(notifyTask, PhCmdType::CMD_NOTIFY_RESET, &cmdInfo);
 
     auto error = dev->SubmitTask(notifyTask, (streamIn->Context_())->TaskGenCallback_());
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit notify reset task, retCode=%#x", static_cast<uint32_t>(error));

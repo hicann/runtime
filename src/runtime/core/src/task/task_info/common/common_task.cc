@@ -145,12 +145,12 @@ void CommonCmdTaskInit(TaskInfo * const taskInfo, const PhCmdType cmdType, const
     TaskCommonInfoInit(taskInfo);
 
     taskInfo->type = TS_TASK_TYPE_COMMON_CMD;
-    commonCmdTaskInfo->cmdType = cmdType;
-    if (cmdType == CMD_STREAM_CLEAR) {
+    commonCmdTaskInfo->cmdType = static_cast<uint16_t>(cmdType);
+    if (cmdType == PhCmdType::CMD_STREAM_CLEAR) {
         taskInfo->typeName = "STREAM_CLEAR_TASK";
         commonCmdTaskInfo->streamId = static_cast<uint16_t>(cmdInfo->streamId);
         commonCmdTaskInfo->step = static_cast<uint16_t>(cmdInfo->step);
-    } else if (cmdType == CMD_NOTIFY_RESET) {
+    } else if (cmdType == PhCmdType::CMD_NOTIFY_RESET) {
         taskInfo->typeName = "NOTIFY_RESET_TASK";
         commonCmdTaskInfo->notifyId = cmdInfo->notifyId;
     } else {

@@ -16,13 +16,13 @@
 namespace cce {
 namespace runtime {
 
-enum TaskUpdateFlag : uint8_t {
+enum class TaskUpdateFlag : uint8_t {
     RT_TASK_KEEP = 0,
     RT_TASK_UPDATE,
     RT_TASK_DISABLE
 };
 
-enum TaskOwner : uint8_t {
+enum class TaskOwner : uint8_t {
     RT_TASK_USER,
     RT_TASK_INNER,
 };

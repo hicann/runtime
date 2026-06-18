@@ -157,7 +157,7 @@ void ChangeTrackDataTaskType(struct MsprofRuntimeTrack &runtimeTrack, const Task
     const uint8_t mixType = (aicTaskInfo.kernel != nullptr) ? aicTaskInfo.kernel->GetMixType() : 0U;
     const bool isPureSimtTask = IsPureSimtTask(aicTaskInfo);
     if (isPureSimtTask) {
-        runtimeTrack.taskType = PROF_TASK_TYPE_KERNEL_SIMT;
+        runtimeTrack.taskType = static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_KERNEL_SIMT);
     } else if (mixType == MIX_AIC || mixType == MIX_AIC_AIV_MAIN_AIC) {
         runtimeTrack.taskType = TS_TASK_TYPE_KERNEL_MIX_AIC;
     } else if (mixType == MIX_AIV || mixType == MIX_AIC_AIV_MAIN_AIV) {

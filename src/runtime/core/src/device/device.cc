@@ -204,7 +204,7 @@ rtError_t GroupDevice::ResetGroup()
 {
     groupId_ = lastGroupId_;
     vfId_ = lastVfId_;
-    Driver_()->vfId_ = lastVfId_;
+    Driver_()->SetVfId(lastVfId_);
     poolId_ = lastPoolId_;
     poolIdMax_ = lastPoolIdMax_;
     return RT_ERROR_NONE;

@@ -591,7 +591,7 @@ rtError_t RawDevice::Init()
         IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_THREAD_LOCAL)) {
         error = GroupInfoSetup();
         ERROR_GOTO(error, L2_FREE, "Failed to get group info.");
-        driver_->vfId_ = GetVfId();
+        driver_->SetVfId(GetVfId());
     }
 
     if (IsStarsPlatform()) {

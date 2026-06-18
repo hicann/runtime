@@ -39,9 +39,9 @@ using rtTsReport_t = struct tagTsReportMsg;
 using rtCommand_t = struct tagTsCommand;
 using rtTaskReport_t = struct tagTsTaskReportMsg;
 using rtHostFuncCommand_t = struct tagTsHostFuncSendMsg;
-using rtHostFuncCqReport_t = struct tagTsHostFuncCqReportMsg;
-using rtLogicReport_t = struct tagTsLogicCqReportMsg;
-using rtShmQuery_t = struct tagTsShmTaskMsg;
+struct rtHostFuncCqReport_t;
+struct rtLogicReport_t;
+struct rtShmQuery_t;
 
 class Cdq;
 
@@ -552,7 +552,6 @@ public:
     virtual rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
                                      int64_t &chipId, int64_t &dieId) = 0;
     virtual rtError_t GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t * const val) = 0;
-    uint32_t vfId_{MAX_UINT32_NUM};
     // soma
     virtual rtError_t StreamMemPoolCreate(const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size, bool isGraphPool) = 0;
     virtual rtError_t StreamMemPoolDestroy(const uint32_t deviceId, const uint64_t poolId) = 0;
@@ -571,9 +570,15 @@ public:
     virtual rtError_t GetSwapBufferInfo(const uint32_t deviceId, const uint32_t tsId,
         uint64_t * const swapBufferBaseAddr) = 0;
 
+    uint32_t GetVfId() const { return vfId_; }
+    void SetVfId(uint32_t vfId) { vfId_ = vfId; }
+
 protected:
     // CallBack
     rtKernelReportCallback callBack_;
+
+private:
+    uint32_t vfId_{MAX_UINT32_NUM};
 };
 
 // Device Independent Driver
@@ -600,7 +605,7 @@ public:
     ~DriverFactory();
     Driver *GetDriver(const driverType_t type);
     Driver *GetDriverIfCreated(const driverType_t type) const;
-    static bool RegDriver(const driverType_t type, const DriverGetInsFunc_t func);
+    static bool RegDriver(const driverType_t type, DriverGetInsFunc_t const func);
 
 private:
     std::atomic<Driver *> drivers_[MAX_DRIVER_NUM];

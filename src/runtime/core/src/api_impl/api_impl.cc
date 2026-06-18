@@ -9197,7 +9197,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     }
     ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);,
         "task set params failed");
-    taskInfo->updateFlag = RT_TASK_UPDATE;
+    taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);
     RT_LOG(
         RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%d", taskInfo->stream->Id_(),
         taskInfo->id, taskInfo->typeName, taskInfo->type, params->type);
@@ -9301,7 +9301,7 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
 
     captureModel->ClearShapeInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
     captureModel->ClearTaskExtendInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
-    taskInfo->updateFlag = RT_TASK_DISABLE;
+    taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE);
     RT_LOG(
         RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d", taskInfo->stream->Id_(),
         GetTaskId(taskInfo), taskInfo->typeName, taskInfo->type);

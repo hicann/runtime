@@ -24,7 +24,7 @@ RTS_API rtError_t rtTaskGetType(rtTask_t task, rtTaskType *type)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     
-    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+    static const bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
     if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",

@@ -66,6 +66,10 @@ public:
     {
         return &handle_;
     }
+    const rtInnerObject *GetInnerHandle() const
+    {
+        return &handle_;
+    }
 
     uint16_t Id_() const
     {

@@ -152,7 +152,7 @@ rtError_t CaptureModel::RecycleJetty(int32_t streamId, JettyType type, uint32_t 
         dbInfo.info[0].functionId = jettyInfo.functionId;
         dbInfo.info[0].piValue = ctx->capacity - ctx->filledWqeCount;
         Stream * const stm = Context_()->GetCtrlSQStream();
-        error = StreamUbDbSend(&dbInfo, stm, RT_UBDMA_SOURCE_MODEL_EXE);
+        error = StreamUbDbSend(&dbInfo, stm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_EXE));
         RT_LOG(RT_LOG_INFO, "sent ub doorbell to reset pi/ci, dieId=%u, functionId=%u, jettyId=%u, piValue=%u.",
             jettyInfo.dieId, jettyInfo.functionId, jettyInfo.jettyId, dbInfo.info[0].piValue);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,

@@ -1753,7 +1753,7 @@ TEST_F(DavidTaskRecycleTest, AsyncDmaWqe2DProc_test)
     TaskInfo taskInfo = {};
     SetupMemcpyAsyncTaskInfoForTest(&taskInfo, stream, drv);
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo.u.memcpyAsyncTaskInfo);
-    memcpyAsyncTaskInfo->copyMethod = RT_ASYNC_CPY_2D;
+    memcpyAsyncTaskInfo->copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
     memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
     memcpyAsyncTaskInfo->ubDma.pi = 10;
 
@@ -1789,7 +1789,7 @@ TEST_F(DavidTaskRecycleTest, AsyncDmaWqeBatchProc_test)
     TaskInfo taskInfo = {};
     SetupMemcpyAsyncTaskInfoForTest(&taskInfo, stream, drv);
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo.u.memcpyAsyncTaskInfo);
-    memcpyAsyncTaskInfo->copyMethod = RT_ASYNC_CPY_BATCH;
+    memcpyAsyncTaskInfo->copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH);
     memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
     memcpyAsyncTaskInfo->ubDma.pi = 20;
 

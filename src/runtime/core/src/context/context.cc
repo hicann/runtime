@@ -2524,7 +2524,7 @@ rtError_t Context::StreamClear(const Stream * const stm, rtClearStep_t step) con
     CommonCmdTaskInfo cmdInfo;
     cmdInfo.streamId = static_cast<uint16_t>(streamId);
     cmdInfo.step = step;
-    CommonCmdTaskInit(rtCommonCmdTask, CMD_STREAM_CLEAR, &cmdInfo);
+    CommonCmdTaskInit(rtCommonCmdTask, PhCmdType::CMD_STREAM_CLEAR, &cmdInfo);
 
     rtError_t error = device_->SubmitTask(rtCommonCmdTask, taskGenCallback_);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit stream clear task, retCode=%#x.", error);

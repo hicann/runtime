@@ -1107,8 +1107,8 @@ rtError_t NpuDriver::StreamIdAlloc(int32_t * const id, const uint32_t deviceId, 
     resAllocInput.res[0U] = priority;
     uint32_t drvFlag = ((streamFlag & RT_STREAM_CP_PROCESS_USE) != 0U) ?
         static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
-    if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (vfId_ != MAX_UINT32_NUM)) {
-        resAllocInput.res[2U] = vfId_; // used for david vf scene
+    if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (GetVfId() != MAX_UINT32_NUM)) {
+        resAllocInput.res[2U] = GetVfId(); // used for david vf scene
         drvFlag |= (static_cast<uint32_t>(TSDRV_RES_RANGE_ID));
     }
     resAllocInput.res[1U] = drvFlag;
@@ -1300,8 +1300,8 @@ rtError_t NpuDriver::NotifyIdAlloc(const int32_t deviceId, uint32_t * const id, 
     resAllocInput.tsId = tsId;
     uint32_t drvFlag = (notifyFlag == static_cast<uint32_t>(RT_NOTIFY_MC2)) ?
         static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
-    if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (vfId_ != MAX_UINT32_NUM)) {
-        resAllocInput.res[2U] = vfId_; // used for david vf scene
+    if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (GetVfId() != MAX_UINT32_NUM)) {
+        resAllocInput.res[2U] = GetVfId(); // used for david vf scene
         drvFlag |= (static_cast<uint32_t>(TSDRV_RES_RANGE_ID));
     }
     resAllocInput.res[1U] = drvFlag;
@@ -1366,9 +1366,9 @@ rtError_t NpuDriver::ModelIdAlloc(int32_t * const id, const uint32_t deviceId, c
     resAllocInput.type = DRV_MODEL_ID;
     resAllocInput.tsId = tsId;
     resAllocOutput.resourceId = 0U;
-    if ((GetDevProperties().resAllocRange != 0) && (vfId_ != MAX_UINT32_NUM)) {
+    if ((GetDevProperties().resAllocRange != 0) && (GetVfId() != MAX_UINT32_NUM)) {
         resAllocInput.res[1U] = GetDevProperties().resAllocRange;
-        resAllocInput.res[2U] = vfId_;
+        resAllocInput.res[2U] = GetVfId();
     }
 
     const drvError_t drvRet = halResourceIdAlloc(deviceId, &resAllocInput, &resAllocOutput);

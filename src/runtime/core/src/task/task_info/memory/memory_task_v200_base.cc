@@ -358,7 +358,7 @@ static void AsyncDmaWqeBatchProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const
     destroyParm.sqId = stream->GetSqId();
     destroyParm.ci = memcpyAsyncTaskInfo->ubDma.pi;
     
-    rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqeBatch(stream->Device_()->Id_(), &destroyParm);
+    const rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqeBatch(stream->Device_()->Id_(), &destroyParm);
     COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqeBatch failed, retCode=%#x.", error);
     RT_LOG(RT_LOG_INFO, "ub wqe async batch release success, ci=%u, sq_id=%u.",
             destroyParm.ci, destroyParm.sqId);
@@ -401,9 +401,9 @@ static void AsyncDmaWqeProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stre
     if (stream->IsSoftwareSqEnable()) {
         return;
     }
-    if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_2D) {
+    if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
         AsyncDmaWqe2DProc(memcpyAsyncTaskInfo, stream);
-    } else if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_BATCH) {
+    } else if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH)) {
         AsyncDmaWqeBatchProc(memcpyAsyncTaskInfo, stream);
     } else {
         AsyncDmaWqeBasicProc(memcpyAsyncTaskInfo, stream);

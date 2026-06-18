@@ -155,9 +155,9 @@ static void ConstructSqeForNotifyResetTask(TaskInfo * const taskInfo, rtStarsSqe
 void ConstructSqeForCommonCmdTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     CommonCmdTaskInfo *commonCmdTaskInfo = &(taskInfo->u.commonCmdTask);
-    if (commonCmdTaskInfo->cmdType == CMD_STREAM_CLEAR) {
+    if (commonCmdTaskInfo->cmdType == static_cast<uint16_t>(PhCmdType::CMD_STREAM_CLEAR)) {
         ConstructSqeForStreamClearTask(taskInfo, command);
-    } else if (commonCmdTaskInfo->cmdType == CMD_NOTIFY_RESET) {
+    } else if (commonCmdTaskInfo->cmdType == static_cast<uint16_t>(PhCmdType::CMD_NOTIFY_RESET)) {
         ConstructSqeForNotifyResetTask(taskInfo, command);
     } else {
         // no operation

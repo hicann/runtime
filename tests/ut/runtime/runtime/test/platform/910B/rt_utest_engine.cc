@@ -1160,7 +1160,7 @@ TEST_F(EngineTest, GetTsReportByIdx_GetRecycleWorkTask_null)
     rtStarsCqe_t cqeReport;
     cqeReport.streamID = 1;
     rtTsReport_t tsReport;
-    tsReport.msgType = TS_REPORT_MSG_TYPE_STARS_CQE;
+    tsReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     engine->GetTsReportByIdx(reinterpret_cast<void *>(&cqeReport), 0, tsReport);
     EXPECT_EQ(tsReport.msgBuf.starsCqe->streamID, cqeReport.streamID);
     delete device;
@@ -1179,7 +1179,7 @@ TEST_F(EngineTest, GetReportCommonInfo_TS_REPORT_MSG_TYPE_STARS_CQE)
     cqeReport.SQ_head = 1;
     cqeReport.error_bit = 1;
     rtTsReport_t tsReport;
-    tsReport.msgType = TS_REPORT_MSG_TYPE_STARS_CQE;
+    tsReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     tsReport.msgBuf.starsCqe = &cqeReport;
 
     uint16_t streamId = 0U;
@@ -1428,7 +1428,7 @@ TEST_F(EngineTest, SetReportSimuFlag_test)
     cqeReport.evt = 0U;
 
     rtTsReport_t taskReport;
-    taskReport.msgType = TS_REPORT_MSG_TYPE_STARS_CQE;
+    taskReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     taskReport.msgBuf.starsCqe = &cqeReport;
 
     rtLogicReport_t report;
@@ -1448,7 +1448,7 @@ TEST_F(EngineTest, CheckReportSimuFlag_TS_REPORT_MSG_TYPE_STARS_CQE)
     cqeReport.place_hold = 1U;
 
     rtTsReport_t taskReport;
-    taskReport.msgType = TS_REPORT_MSG_TYPE_STARS_CQE;
+    taskReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     taskReport.msgBuf.starsCqe = &cqeReport;
 
     rtLogicReport_t report;

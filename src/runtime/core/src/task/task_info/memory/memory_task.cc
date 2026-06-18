@@ -343,7 +343,8 @@ uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, u
     }
 
     // UB 2D异步拷贝和批量异步拷贝需要1个sqe ub db
-    if (cpyMethod == RT_ASYNC_CPY_BATCH || cpyMethod == RT_ASYNC_CPY_2D) {
+    if (cpyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH) || 
+        cpyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
         return 1U;
     }
 

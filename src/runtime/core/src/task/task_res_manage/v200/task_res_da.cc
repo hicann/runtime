@@ -42,8 +42,8 @@ bool TaskResManageDavid::CreateTaskRes(Stream* stm)
 
 bool TaskResManageDavid::IsRecyclePosValid(uint16_t recyclePos) const
 {
-    uint16_t head = taskResAHead_.Value();
-    uint16_t tail = taskResATail_.Value();
+    const uint16_t head = taskResAHead_.Value();
+    const uint16_t tail = taskResATail_.Value();
     const bool flag1 = (head <= tail) && (!((recyclePos >= head) && (recyclePos <= tail)));
     const bool flag2 = (head > tail) && ((recyclePos > tail) && (recyclePos < head));
     if (unlikely(flag1 || flag2)) {

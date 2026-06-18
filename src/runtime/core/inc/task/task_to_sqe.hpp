@@ -21,7 +21,7 @@ namespace runtime {
 #pragma pack (1)
 /* preload sqe struct info */
 
-typedef struct {
+struct rtStaticSqe_t{
     /* word0 */
     uint16_t type : 3;
     uint16_t pre_p : 1;
@@ -39,9 +39,9 @@ typedef struct {
 
     /* word1 */
     uint32_t taskParamOffset;
-} rtStaticSqe_t;
+};
 
-typedef struct {
+struct rtDynamicSqe_t {
     /* word0 */
     uint32_t vld : 1;
     uint32_t codeSize : 12;
@@ -50,9 +50,9 @@ typedef struct {
 
     /* word1 */
     uint32_t taskPcOffset;
-} rtDynamicSqe_t;
+};
 
-typedef struct {
+struct rtPrefetchSqe_t {
     /* word0 */
     uint32_t opType : 2;
     uint32_t res0 : 5;
@@ -64,7 +64,7 @@ typedef struct {
 
     /* word2 */
     uint32_t srcOffset;
-} rtPrefetchSqe_t;
+};
 
 union rtTotalSqe_t {
     rtStaticSqe_t staticSqe;
@@ -72,22 +72,22 @@ union rtTotalSqe_t {
     rtPrefetchSqe_t PrefetchSqe;
 };
 
-typedef struct {
+struct rtPreLoadSqe_t{
     /* word0 - 1 */
     uint32_t argOffsetAddrLow;
     uint32_t argOffsetAddrHigh;
-} rtPreLoadSqe_t;
+};
 
 #pragma pack(pop)
 
 inline uint32_t get_high_32_addr(uint64_t addr)
 {
-    return ((addr) >> 32) & 0xFFFFFFFF; // 取高32位
+    return ((addr) >> 32U) & 0xFFFFFFFFU; // 取高32位
 }
 
 inline uint32_t get_low_32_addr(uint64_t addr)
 {
-    return (addr) & 0xFFFFFFFF;
+    return (addr) & 0xFFFFFFFFU;
 }
 
 

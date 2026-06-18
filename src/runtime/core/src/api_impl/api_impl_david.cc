@@ -1281,7 +1281,7 @@ rtError_t ApiImplDavid::UbDbSend(rtUbDbInfo_t * const dbInfo, Stream * const stm
 
     COND_RETURN_AND_MSG_OUTER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         ErrorCode::EE1010, __func__, "stream");
-    return StreamUbDbSend(dbInfo, curStm, RT_UBDMA_SOURCE_API);
+    return StreamUbDbSend(dbInfo, curStm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_API));
 }
 
 rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm)

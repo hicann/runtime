@@ -122,16 +122,16 @@ TEST_F(CloudV2ApiImpltaskOwnerTest, EventResetTask_InheritEventOwner)
     innerTaskInfo.stream = stream_;
     userTaskInfo.stream = stream_;
 
-    innerTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
-    userTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
+    innerTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
+    userTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
 
     rtError_t ret = EventResetTaskInit(&innerTaskInfo, &innerEvent, false, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(innerTaskInfo.taskOwner, TaskOwner::RT_TASK_INNER);
+    EXPECT_EQ(innerTaskInfo.taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
 
     ret = EventResetTaskInit(&userTaskInfo, &userEvent, false, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(userTaskInfo.taskOwner, TaskOwner::RT_TASK_USER);
+    EXPECT_EQ(userTaskInfo.taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_USER));
 }
 
 TEST_F(CloudV2ApiImpltaskOwnerTest, EventWaitTask_InheritEventOwner)
@@ -149,16 +149,16 @@ TEST_F(CloudV2ApiImpltaskOwnerTest, EventWaitTask_InheritEventOwner)
     innerTaskInfo.stream = stream_;
     userTaskInfo.stream = stream_;
 
-    innerTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
-    userTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
+    innerTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
+    userTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
 
     rtError_t ret = EventWaitTaskInit(&innerTaskInfo, &innerEvent, 0, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(innerTaskInfo.taskOwner, TaskOwner::RT_TASK_INNER);
+    EXPECT_EQ(innerTaskInfo.taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
 
     ret = EventWaitTaskInit(&userTaskInfo, &userEvent, 0, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(userTaskInfo.taskOwner, TaskOwner::RT_TASK_USER);
+    EXPECT_EQ(userTaskInfo.taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_USER));
 }
 
 TEST_F(CloudV2ApiImpltaskOwnerTest, TaskGetParams_InnerTaskReturnsDefaultType)
@@ -173,8 +173,8 @@ TEST_F(CloudV2ApiImpltaskOwnerTest, TaskGetParams_InnerTaskReturnsDefaultType)
     innerTaskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     userTaskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     
-    innerTaskInfo.taskOwner = TaskOwner::RT_TASK_INNER;
-    userTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
+    innerTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    userTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
 
     ApiImpl apiImpl;
     rtTaskParams innerParams;
@@ -198,8 +198,8 @@ TEST_F(CloudV2ApiImpltaskOwnerTest, ConvertTaskType_InnerTaskReturnsDefaultType)
     innerTaskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     userTaskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     
-    innerTaskInfo.taskOwner = TaskOwner::RT_TASK_INNER;
-    userTaskInfo.taskOwner = TaskOwner::RT_TASK_USER;
+    innerTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    userTaskInfo.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
 
     rtTaskType innerTaskType;
     rtTaskType userTaskType;

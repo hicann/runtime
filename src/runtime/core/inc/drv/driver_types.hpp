@@ -10,10 +10,16 @@
 #ifndef __CCE_RUNTIME_DRIVER_TYPES_HPP__
 #define __CCE_RUNTIME_DRIVER_TYPES_HPP__
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include "runtime/base.h"
 #include "driver/ascend_hal_define.h"
+
+#define ASYNC_CPY_2D_IN_RSV_LEN 8
+#define ASYNC_CPY_2D_DESTROY_RSV_LEN 8
+#define ASYNC_CPY_BATCH_IN_RSV_LEN 8
+#define ASYNC_CPY_BATCH_DESTROY_RSV_LEN 8
 
 namespace cce {
 namespace runtime {
@@ -61,8 +67,8 @@ struct AsyncDmaWqeOutputInfo {
             int32_t wqeLen;
             uint32_t pi;
             union {
-                unsigned long long fixedSize;
-                unsigned long long fixedCnt;
+                uint64_t fixedSize;
+                uint64_t fixedCnt;
             };
         };
         struct DMA_ADDR dmaAddr;
@@ -81,7 +87,6 @@ struct AsyncDmaWqeDestroyInfo {
     };
 };
 
-#define ASYNC_CPY_2D_IN_RSV_LEN 8
 struct AsyncDmaWqeInputInfo2D {
     drvSqCqType_t type;
     uint32_t tsId;
@@ -95,16 +100,15 @@ struct AsyncDmaWqeInputInfo2D {
     uint64_t width;
     uint64_t height;
     uint64_t fixedSize;
-    uint32_t rsv[ASYNC_CPY_2D_IN_RSV_LEN];
+    std::array<uint32_t, ASYNC_CPY_2D_IN_RSV_LEN> rsv;
 };
 
-#define ASYNC_CPY_2D_DESTROY_RSV_LEN 8
 struct AsyncDmaWqeDestroyInfo2D {
     drvSqCqType_t type;
     uint32_t tsId;
     uint32_t sqId;
     uint32_t ci;
-    uint32_t rsv[ASYNC_CPY_2D_DESTROY_RSV_LEN];
+    std::array<uint32_t, ASYNC_CPY_2D_DESTROY_RSV_LEN> rsv;
 };
 
 struct AsyncDmaBatchInfo {
@@ -116,7 +120,6 @@ struct AsyncDmaBatchInfo {
     uint64_t fixedSize;
 };
 
-#define ASYNC_CPY_BATCH_IN_RSV_LEN 8
 struct AsyncDmaWqeInputInfoBatch {
     drvSqCqType_t type;
     uint32_t tsId;
@@ -127,16 +130,15 @@ struct AsyncDmaWqeInputInfoBatch {
     uint64_t *lens;
     uint64_t count;
     uint64_t fixedCnt;
-    uint32_t rsv[ASYNC_CPY_BATCH_IN_RSV_LEN];
+    std::array<uint32_t, ASYNC_CPY_BATCH_IN_RSV_LEN> rsv;
 };
 
-#define ASYNC_CPY_BATCH_DESTROY_RSV_LEN 8
 struct AsyncDmaWqeDestroyInfoBatch {
     drvSqCqType_t type;
     uint32_t tsId;
     uint32_t sqId;
     uint32_t ci;
-    uint32_t rsv[ASYNC_CPY_BATCH_DESTROY_RSV_LEN];
+    std::array<uint32_t, ASYNC_CPY_BATCH_DESTROY_RSV_LEN> rsv;
 };
 
 struct IpcNotifyOpenPara {
@@ -148,7 +150,34 @@ struct IpcNotifyOpenPara {
 
 struct AsyncDmaJettyHandle {
     uint64_t handle;
-    uint32_t rsv[8];
+    std::array<uint32_t, 8> rsv;
+};
+
+struct AsyncWqeNormalInfo {
+    uint8_t *src;
+    uint8_t *dst;
+    uint64_t len;
+};
+
+struct AsyncWqeBatchInfo {
+    uint64_t *src;
+    uint64_t *dst;
+    uint64_t *len;
+    uint64_t count;
+};
+
+struct AsyncWqeMatrix2dInfo {
+    uint64_t *src;
+    uint64_t *dst;
+    uint64_t dpitch;
+    uint64_t spitch;
+    uint64_t width;
+    uint64_t height;
+    uint64_t fixedSize;
+};
+
+struct AsyncWqeNopInfo {
+    uint64_t nopCnt;
 };
 
 struct AsyncWqeInputPara {
@@ -156,31 +185,12 @@ struct AsyncWqeInputPara {
     uint8_t *wqeBuffer; /* 入参buffer, 直接传入wqe buffer地址，不做二次拷贝 */
     uint32_t size;       /* 入参buffer大小 size */
     union {
-        struct {
-            uint8_t *src;      /* source memory address array */
-            uint8_t *dst;      /* destination memory address array */
-            uint64_t len;       /* normal len */
-        } normal;
-        struct {               /* h2d/d2h 与 d2d 不混合 */
-            uint64_t *src;     /* source memory address array */
-            uint64_t *dst;     /* destination memory address array */
-            uint64_t *len;     /* cpy size array */
-            uint64_t count;    /* cpy array elements count */
-        } batch;
-        struct {
-            uint64_t *src;      /* source memory address array */
-            uint64_t *dst;      /* destination memory address array */
-            uint64_t dpitch;    /* pitch of destination memory */
-            uint64_t spitch;    /* pitch of source memory */
-            uint64_t width;     /* width of matrix transfer */
-            uint64_t height;    /* height of matrix transfer */
-            uint64_t fixedSize;   /* Input: already converted size */
-        } matrix2d;
-        struct { /* for nop wqe */
-            uint64_t nopCnt;
-        } nop;
+        AsyncWqeNormalInfo normal;
+        AsyncWqeBatchInfo batch;
+        AsyncWqeMatrix2dInfo matrix2d;
+        AsyncWqeNopInfo nop;
     };
-    uint32_t rsv[20];
+    std::array<uint32_t, 20> rsv;
 };
 
 struct AsyncWqeOutputPara {
@@ -195,7 +205,7 @@ struct AsyncWqeOutputPara {
      * others: fixedSize return the actual-converted size if fixedCnt is 0, otherwhise return 0
      */
     uint64_t fixedSize;
-    uint32_t rsv[8];
+    std::array<uint32_t, 8> rsv;
 };
 
 struct AsyncWqeFillInfo {
@@ -204,7 +214,7 @@ struct AsyncWqeFillInfo {
     void *srcWqe;
     uint64_t size;
     uint32_t flag;
-    uint32_t rsv[16];
+    std::array<uint32_t, 16> rsv;
 };
 
 } // namespace runtime

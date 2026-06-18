@@ -1474,7 +1474,7 @@ TEST_F(StarsTaskTest, streamclear_ConstructSqe)
     CommonCmdTaskInfo cmdInfo;
     cmdInfo.streamId = 1;
     cmdInfo.step = RT_STREAM_STOP;
-    CommonCmdTaskInit(task, CMD_STREAM_CLEAR, &cmdInfo);
+    CommonCmdTaskInit(task, PhCmdType::CMD_STREAM_CLEAR, &cmdInfo);
     EXPECT_EQ(task->type, TS_TASK_TYPE_COMMON_CMD);
     ToConstructSqe(task, &cmd);
     Complete(task, 0);
@@ -1489,7 +1489,7 @@ TEST_F(StarsTaskTest, notifyreset_ConstructSqe)
     TaskInfo *task = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_COMMON_CMD, error);
     CommonCmdTaskInfo cmdInfo;
     cmdInfo.notifyId = 1;
-    CommonCmdTaskInit(task, CMD_NOTIFY_RESET, &cmdInfo);
+    CommonCmdTaskInit(task, PhCmdType::CMD_NOTIFY_RESET, &cmdInfo);
     EXPECT_EQ(task->type, TS_TASK_TYPE_COMMON_CMD);
     ToConstructSqe(task, &cmd);
     Complete(task, 0);

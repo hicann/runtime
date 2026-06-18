@@ -680,7 +680,7 @@ void Engine::SetReportSimuFlag(const rtTsReport_t &taskReport) const
 
 bool Engine::CheckReportSimuFlag(const rtTsReport_t &taskReport) const
 {
-    if (taskReport.msgType != TS_REPORT_MSG_TYPE_STARS_CQE) {
+    if (taskReport.msgType != tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
         return false;
     }
     rtStarsCqe_t * const cqe = taskReport.msgBuf.starsCqe;

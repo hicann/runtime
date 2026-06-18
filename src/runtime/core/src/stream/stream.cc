@@ -3506,21 +3506,22 @@ rtError_t Stream::UpdateAllPersistentTask()
             sendSqeNum > SQE_NUM_PER_STARS_TASK_MAX, RT_ERROR_INVALID_VALUE,
             "Value %u of sendSqeNum cannot be greater than the maximum number (%u) of SQEs allowed by the task. task_id=%hu, task_type=%d(%s).",
             sendSqeNum, SQE_NUM_PER_STARS_TASK_MAX, workTask->id, workTask->type, workTask->typeName);
-        if (workTask->updateFlag == RT_TASK_UPDATE || workTask->updateFlag == RT_TASK_KEEP) {
+        if (workTask->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE) || 
+            workTask->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP)) {
             COND_RETURN_AND_MSG_OUTER(
                 (totalSendSqeNum + sendSqeNum) >= STREAM_SQ_MAX_DEPTH, RT_ERROR_STREAM_FULL, ErrorCode::EE1019,
                 "Updating all persistent tasks", "The total number of SQEs " + std::to_string(totalSendSqeNum + sendSqeNum) 
                 + " cannot be greater than or equal to the SQ depth " + std::to_string(STREAM_SQ_MAX_DEPTH));
         }
         switch (workTask->updateFlag) {
-            case RT_TASK_UPDATE:
+            case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE):
                 error = HandleTaskUpdate(workTask, captureModel, sqeBufferBackup.get(), sendSqeNum);
                 totalSendSqeNum += sendSqeNum;
                 break;
-            case RT_TASK_DISABLE:
+            case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE):
                 error = HandleTaskDisable(workTask, captureModel);
                 break;
-            case RT_TASK_KEEP:
+            case static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP):
                 error = HandleTaskDefault(workTask, captureModel, sqeBufferBackup.get(), sendSqeNum);
                 totalSendSqeNum += sendSqeNum;
                 break;

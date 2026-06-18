@@ -47,16 +47,16 @@ static inline uint8_t GetStarsDefinedErrCode(const uint8_t errorType)
 }
 
 
-enum tsReportType_t {
+enum class tsReportType_t : uint8_t {
     TS_REPORT_MSG_TYPE_TS_REPORT = 0,
     TS_REPORT_MSG_TYPE_STARS_CQE,
     TS_REPORT_MSG_TYPE_BUTT
 };
 
-typedef union tagReportBuf {
+union tsReportBuf_t {
     rtTaskReport_t *tsReport;
     rtStarsCqe_t *starsCqe;
-} tsReportBuf_t;
+};
 
 struct tagTsReportMsg {
     tsReportType_t msgType;
@@ -89,7 +89,7 @@ struct tagTaskTsCommand {
     rtTsCommandBuf_t cmdBuf;
 };
 
-typedef struct tagTsHostFuncCqReportMsg {
+struct rtHostFuncCqReport_t {
     volatile uint16_t phase      : 1;
     volatile uint16_t SOP        : 1;
     volatile uint16_t MOP        : 1;
@@ -105,9 +105,9 @@ typedef struct tagTsHostFuncCqReportMsg {
     volatile uint16_t eventId;
     volatile uint64_t hostFuncCbPtr;
     volatile uint64_t fnDataPtr;
-} rtHostFuncCqReport_t;
+};
 
-typedef struct tagTsHostFuncSqSendMsg {
+struct rtHostFuncSqCommand_t {
     uint16_t phase : 1;
     uint16_t SOP : 1;
     uint16_t MOP : 1;
@@ -119,9 +119,9 @@ typedef struct tagTsHostFuncSqSendMsg {
     uint16_t cqTail;
     uint16_t sequenceId;
     uint32_t reserved1[13];
-} rtHostFuncSqCommand_t;
+};
 
-typedef struct tagTsHostFuncRecordSendMsg {
+struct rtHostFuncRecordCommand_t {
     uint32_t pid;
     uint8_t cmdType;
     uint8_t vfId;
@@ -132,7 +132,7 @@ typedef struct tagTsHostFuncRecordSendMsg {
     uint16_t taskId;
     uint16_t reserved;
     uint32_t reserved1[12];
-} rtHostFuncRecordCommand_t;
+};
 
 struct tagTsHostFuncSendMsg{
     union {
@@ -145,7 +145,7 @@ struct tagTsHostFuncSendMsg{
  * @ingroup engine
  * @brief the type definition of logic cq (total 16 bytes).
  */
-typedef struct tagTsLogicCqReportMsg {
+struct rtLogicReport_t {
     volatile uint16_t phase      : 1;
     volatile uint16_t SOP        : 1; /* start of packet, indicates this is the first 32bit return payload */
     volatile uint16_t MOP        : 1; /* middle of packet, indicates the payload is a continuation of previous task
@@ -159,9 +159,9 @@ typedef struct tagTsLogicCqReportMsg {
     volatile uint8_t reserved0;
     volatile uint32_t errorCode;
     volatile uint32_t payLoad;    // ((faultTaskId & 0x0000ffff) << 16) | (faultStreamId & 0x0000ffff)
-} rtLogicReport_t;
+};
 
-typedef enum tagTsLogicCqType {
+enum tsLogicCqType {
     LOGIC_RPT_SUCCESS = 0,
     LOGIC_RPT_TERMINAL = 1,
     LOGIC_RPT_TASK_ERROR = 2,
@@ -171,13 +171,13 @@ typedef enum tagTsLogicCqType {
     LOGIC_RPT_EVENT_DESTROY = 6,
     LOGIC_RPT_BLOCKING_OPERATOR = 7,
     LOGIC_RPT_AICPU_ERR_MSG_REPORT = 8
-} tsLogicCqType;
+};
 
 /**
  * @ingroup engine
  * @brief the type definition of virtual sq shm (total 32 bytes).
  */
-typedef struct tagTsShmTaskMsg {
+struct rtShmQuery_t {
     volatile uint32_t taskId;       // execute position
     volatile uint32_t firstErrorCode;   // first error code
     volatile uint32_t taskId1;      // first error task
@@ -186,7 +186,7 @@ typedef struct tagTsShmTaskMsg {
     volatile uint32_t payLoad;
     volatile uint32_t payLoad2;
     volatile uint32_t valid;
-} rtShmQuery_t;
+};
 
 struct rtStarsLocalMemoryParam_t {
     uint8_t coreType;

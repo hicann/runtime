@@ -251,7 +251,7 @@ void AsyncHwtsEngine::ReceivingRun(void)
 
     const bool starsFlag = device_->IsStarsPlatform();
     tsReport.msgType = (starsFlag) ?
-                       TS_REPORT_MSG_TYPE_STARS_CQE : TS_REPORT_MSG_TYPE_TS_REPORT;
+                       tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE : tsReportType_t::TS_REPORT_MSG_TYPE_TS_REPORT;
     device_->GetStreamSqCqManage()->GetDefaultCqId(&cqId);
 
     COND_RETURN_VOID(devDrv == nullptr, "Failed to find device driver.");
@@ -337,7 +337,7 @@ void AsyncHwtsEngine::ProcessTaskReport(const rtTsReport_t &taskReport)
                static_cast<int32_t>(reportTask->type), reportTask->typeName,
                static_cast<int32_t>(reportTask->bindFlag));
         /* Real CQE of Stars sink stream does't need to be processed again, which was processed in simulate CQE */
-        if (reportTask->bindFlag && (taskReport.msgType == TS_REPORT_MSG_TYPE_STARS_CQE)) {
+        if (reportTask->bindFlag && (taskReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE)) {
             reportCount_--;
             return;
         }
@@ -369,7 +369,7 @@ void AsyncHwtsEngine::ProcessTaskReport(const rtTsReport_t &taskReport)
 
 void AsyncHwtsEngine::ProcessErrorReport(const rtTsReport_t &errorReport) const
 {
-    if (errorReport.msgType == TS_REPORT_MSG_TYPE_STARS_CQE) {
+    if (errorReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
         return;
     }
 
@@ -459,7 +459,7 @@ ERROR_RECYCLE:
 void AsyncHwtsEngine::GetReportCommonInfo(const rtTsReport_t &tsReport, uint16_t &streamId,
     uint16_t &taskId, uint16_t &sqId, uint16_t &sqHead, uint16_t &errorBit) const
 {
-    if (tsReport.msgType == TS_REPORT_MSG_TYPE_STARS_CQE) {
+    if (tsReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
         streamId = tsReport.msgBuf.starsCqe->streamID;
         taskId = tsReport.msgBuf.starsCqe->taskID;
         sqId = tsReport.msgBuf.starsCqe->SQ_id;
@@ -523,7 +523,7 @@ uint16_t AsyncHwtsEngine::GetPackageType(const rtTsReport_t &report) const
 {
     uint16_t pkgType = static_cast<uint16_t>(RT_PACKAGE_TYPE_TASK_REPORT);
 
-    if (report.msgType != TS_REPORT_MSG_TYPE_STARS_CQE) {
+    if (report.msgType != tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
         pkgType = static_cast<uint16_t>(report.msgBuf.tsReport->packageType);
     }
 
@@ -532,7 +532,7 @@ uint16_t AsyncHwtsEngine::GetPackageType(const rtTsReport_t &report) const
 
 void AsyncHwtsEngine::GetTsReportByIdx(void * const reportAddr, int32_t const idx, rtTsReport_t &tsReport) const
 {
-    if (tsReport.msgType == TS_REPORT_MSG_TYPE_STARS_CQE) {
+    if (tsReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
         tsReport.msgBuf.starsCqe = RtPtrToPtr<rtStarsCqe_t *>(reportAddr) + idx;
     } else {
         tsReport.msgBuf.tsReport = RtPtrToPtr<rtTaskReport_t *>(reportAddr) + idx;

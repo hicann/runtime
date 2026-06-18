@@ -312,7 +312,7 @@ static rtError_t AsyncJettyToHead(const Model * const mdl, Stream * const stm)
         dbInfo.info[0].jettyId = info.jettyId;
         dbInfo.info[0].functionId = info.functionId;
         dbInfo.info[0].piValue = info.piValue;
-        error = StreamUbDbSend(&dbInfo, stm, RT_UBDMA_SOURCE_MODEL_EXE);
+        error = StreamUbDbSend(&dbInfo, stm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_EXE));
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "send h2d ub doorbell failed, stream_id=%d, model_sq_id=%u, error=%d.", stm->Id_(), info.sqId, error);
     }
@@ -322,7 +322,7 @@ static rtError_t AsyncJettyToHead(const Model * const mdl, Stream * const stm)
         dbInfo.info[0].jettyId = info.jettyId;
         dbInfo.info[0].functionId = info.functionId;
         dbInfo.info[0].piValue = info.piValue;
-        error = StreamUbDbSend(&dbInfo, stm, RT_UBDMA_SOURCE_MODEL_EXE);
+        error = StreamUbDbSend(&dbInfo, stm, static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_EXE));
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "send d2d ub doorbell failed, stream_id=%d, model_sq_id=%u, error=%d.", stm->Id_(), info.sqId, error);
     }

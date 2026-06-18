@@ -399,7 +399,7 @@ rtError_t rtsSetMemcpyDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, void *srcAddr
     Api * const api = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
     TIMESTAMP_BEGIN(rtsSetMemcpyDesc);
-    rtError_t error = api->SetMemcpyDesc(desc, srcAddr, dstAddr, count, kind, config);
+    const rtError_t error = api->SetMemcpyDesc(desc, srcAddr, dstAddr, count, kind, config);
     TIMESTAMP_END(rtsSetMemcpyDesc);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -706,7 +706,7 @@ rtError_t rtsCmoAsyncWithBarrier(void *srcAddrPtr, size_t srcLen, rtCmoOpCode cm
     
     // support prefetch, write back, invalid, flush
     // when invalid op, logicId must set >0, other ops logicId must set 0.
-    switch (cmoType){
+    switch (cmoType) {
         case RT_CMO_INVALID:
             COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(logicId == 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
                 __func__, "0", "logicId", "If parameter cmoType is equal to RT_CMO_INVALID"
@@ -723,6 +723,7 @@ rtError_t rtsCmoAsyncWithBarrier(void *srcAddrPtr, size_t srcLen, rtCmoOpCode cm
             RT_LOG(RT_LOG_WARNING, "cmoType(%d) does not support, support[PREFETCH, WRITEBACK, INVALID, FLUSH]",
                 static_cast<int32_t>(cmoType));
             return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+            break;
     }
 
     rtCmoTaskInfo_t taskInfo = {};

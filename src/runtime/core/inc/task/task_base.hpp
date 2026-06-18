@@ -218,15 +218,15 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_DQS_CONDITION_COPY = 131, /* dqs condition copy*/
     TS_TASK_TYPE_DQS_FRAME_ALIGN = 132, /* dqs frame align */
     TS_TASK_TYPE_CAPTURE_CONDITION = 133, /* capture condition task */
-    TS_TASK_TYPE_RESERVED
+    TS_TASK_TYPE_RESERVED = 134,
 } tsTaskType_t;
 
-enum ProfTaskType {
+enum class ProfTaskType : uint16_t {
     PROF_TASK_TYPE_BEGIN = 600,
     PROF_TASK_TYPE_KERNEL_SIMT = PROF_TASK_TYPE_BEGIN,
 };
 
-enum PhCmdType {
+enum class PhCmdType : uint8_t {
     CMD_STREAM_CLEAR = 0,
     CMD_NOTIFY_RESET = 1,
 };

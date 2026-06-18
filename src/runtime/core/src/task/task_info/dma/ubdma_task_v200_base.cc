@@ -85,8 +85,8 @@ static void TaskFailCallBackForDoorBellTask(TaskInfo* taskInfo, const uint32_t d
     expandInfo.u.ubInfo.ubType = RT_UB_TYPE_DOORBELL;
     expandInfo.u.ubInfo.ubNum = taskInfo->u.ubSendTask.dbNum;
     for (uint i = 0U; i < taskInfo->u.ubSendTask.dbNum; i++) {
-        expandInfo.u.ubInfo.info[i].functionId = taskInfo->u.ubSendTask.info[i].funcId;
-        expandInfo.u.ubInfo.info[i].dieId = taskInfo->u.ubSendTask.info[i].dieId;
+        expandInfo.u.ubInfo.info[i].functionId = static_cast<uint8_t>(taskInfo->u.ubSendTask.info[i].funcId);
+        expandInfo.u.ubInfo.info[i].dieId = static_cast<uint8_t>(taskInfo->u.ubSendTask.info[i].dieId);
         expandInfo.u.ubInfo.info[i].jettyId = taskInfo->u.ubSendTask.info[i].jettyId;
         expandInfo.u.ubInfo.info[i].piValue = taskInfo->u.ubSendTask.info[i].piVal;
     }
@@ -236,7 +236,7 @@ void ConstructDavidSqeForUbDirectSendTask(TaskInfo *taskInfo, void *const sqe, c
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
     RtDavidStarsUbdmaDirectWqemodeSqe * const ubdmaDirectSqe = &(davidSqe->davidUbdmaDirectSqe);
     ubdmaDirectSqe->header.type = RT_DAVID_SQE_TYPE_UBDMA;
-    ubdmaDirectSqe->mode = RT_DAVID_SQE_DIRECTWQE_MODE;
+    ubdmaDirectSqe->mode = static_cast<uint16_t>(rtDavidUbDmaSqeMode::RT_DAVID_SQE_DIRECTWQE_MODE);
     ubdmaDirectSqe->dieId = taskInfo->u.directSendTask.dieId;
     ubdmaDirectSqe->wqeSize =taskInfo->u.directSendTask.wqeSize;
     ubdmaDirectSqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
@@ -277,7 +277,7 @@ void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, void *const sqe, const
     Stream * const stream = taskInfo->stream;
     ubdmaDbSqe->header.type = RT_DAVID_SQE_TYPE_UBDMA;
     ubdmaDbSqe->header.wrCqe = 0U;
-    ubdmaDbSqe->mode = RT_DAVID_SQE_DOORBELL_MODE;
+    ubdmaDbSqe->mode = static_cast<uint16_t>(rtDavidUbDmaSqeMode::RT_DAVID_SQE_DOORBELL_MODE);
     ubdmaDbSqe->doorbellNum = taskInfo->u.ubSendTask.dbNum;
     ubdmaDbSqe->source = taskInfo->u.ubSendTask.source;
     ubdmaDbSqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;

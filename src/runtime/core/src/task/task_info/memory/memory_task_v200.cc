@@ -57,7 +57,7 @@ static void ConstructDavidAsyncDmaSqe(TaskInfo * const taskInfo, rtDavidSqe_t *c
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->sqeLength = 1U;
     sqe->wqeSize = 0U;
-    sqe->mode = RT_DAVID_SQE_DIRECTWQE_MODE;
+    sqe->mode = static_cast<uint16_t>(rtDavidUbDmaSqeMode::RT_DAVID_SQE_DIRECTWQE_MODE);
     sqe->jettyId = memcpyAsyncTaskInfo->ubDma.jettyId;
     sqe->funcId = memcpyAsyncTaskInfo->ubDma.functionId;
     sqe->dieId = memcpyAsyncTaskInfo->ubDma.dieId;
@@ -89,9 +89,9 @@ void ConstructDavidAsyncUbDbSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const c
     RtDavidStarsUbdmaDBmodeSqe * const sqe = &(command->davidUbdmaDbSqe);
     sqe->header.type = RT_DAVID_SQE_TYPE_UBDMA;
     sqe->header.wrCqe = 0U;
-    sqe->mode = RT_DAVID_SQE_DOORBELL_MODE;
+    sqe->mode = static_cast<uint16_t>(rtDavidUbDmaSqeMode::RT_DAVID_SQE_DOORBELL_MODE);
     sqe->doorbellNum = UB_DOORBELL_NUM_MIN;
-    sqe->source = RT_UBDMA_SOURCE_MODEL_ASYNC;
+    sqe->source = static_cast<uint16_t>(UbDmaSqeSource::RT_UBDMA_SOURCE_MODEL_ASYNC);
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->sqeLength = 0U;
     sqe->jettyId1 = memcpyAsyncTaskInfo->ubDma.jettyId;
@@ -151,8 +151,8 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, void *const 
             if (stream->GetBindFlag()) {
                 ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
             } else {
-                if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_2D ||
-                    memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_BATCH) {
+                if (memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D) ||
+                    memcpyAsyncTaskInfo->copyMethod == static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH)) {
                     ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
                 } else {
                     ConstructDavidAsyncDmaSqe(taskInfo, davidSqe, sqBaseAddr);

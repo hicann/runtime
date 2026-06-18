@@ -798,7 +798,8 @@ void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos)
     }
 
     if ((taskInfo->type == TS_TASK_TYPE_NOTIFY_WAIT) && (taskInfo->u.notifywaitTask.isEndGraphNotify)) {
-        (void)taskInfo->stream->Device_()->StoreEndGraphNotifyInfo(taskInfo->stream->Id_(), taskInfo->u.notifywaitTask.captureModel, pos);
+        (void)taskInfo->stream->Device_()->StoreEndGraphNotifyInfo(
+            static_cast<uint32_t>(taskInfo->stream->Id_()), taskInfo->u.notifywaitTask.captureModel, pos);
     }
 
     return;

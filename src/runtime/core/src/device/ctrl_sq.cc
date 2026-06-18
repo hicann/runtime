@@ -144,7 +144,7 @@ rtError_t CtrlSQ::SendStreamClearMsg(const Stream * const stm, rtClearStep_t ste
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_COMMON_CMD;
-    param.commonCmdParam = { CMD_STREAM_CLEAR, streamId, step, 0U};
+    param.commonCmdParam = { PhCmdType::CMD_STREAM_CLEAR, streamId, step, 0U};
     param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_STREAM_CLEAR, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
@@ -171,7 +171,7 @@ rtError_t CtrlSQ::SendNotifyResetMsg(uint32_t notifyId)
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_COMMON_CMD;
 
-    param.commonCmdParam.cmdType = CMD_NOTIFY_RESET;
+    param.commonCmdParam.cmdType = PhCmdType::CMD_NOTIFY_RESET;
     param.commonCmdParam.notifyId = notifyId;
     rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
