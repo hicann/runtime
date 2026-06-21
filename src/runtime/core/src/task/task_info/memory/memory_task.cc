@@ -479,7 +479,7 @@ static rtError_t ConvertAsyncDma2DForSoftWareSq(TaskInfo * const taskInfo2D, voi
             devId, stream->Id_(), error);
         return error;
     }
-    uint64_t size = (output.fixedSize == 0U) ? width * height - fixedSize : output.fixedSize;
+    uint64_t size = (output.fixedCnt == 1U) ? width * height : output.fixedSize;
     memcpyAsyncTaskInfo->ubDma.fixedSize = size;
     memcpyAsyncTaskInfo->size = size;
     return RT_ERROR_NONE;

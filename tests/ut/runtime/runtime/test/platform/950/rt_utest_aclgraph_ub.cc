@@ -2200,3 +2200,42 @@ TEST_F(NpuDriverJettyTest, Context_RoundUpCapacity_AllBranches)
         free(allocBuf);
     }
 }
+
+static rtError_t StubHandleUbDmaTaskFixedCntOne(const Stream *stream, const TaskInfo *task,
+    JettyType jettyType, AsyncWqeInputPara *input, AsyncWqeOutputPara *output)
+{
+    (void)stream;
+    (void)task;
+    (void)jettyType;
+    (void)input;
+    if (output != nullptr) {
+        output->fixedCnt = 1U;
+        output->fixedSize = 0U;
+    }
+    return RT_ERROR_NONE;
+}
+
+TEST_F(NpuDriverJettyTest, ConvertAsyncDma2D_SoftwareSq_FixedCntOne)
+{
+    FullResetAndSetupMocks(stream_->Device_()->Driver_());
+    Runtime::Instance()->SetConnectUbFlag(true);
+    stream_->SetSoftWareSqEnable();
+
+    MOCKER_CPP(&StreamJettyHandler::HandleUbDmaTask)
+        .stubs().will(invoke(StubHandleUbDmaTaskFixedCntOne));
+
+    const uint64_t width = 256U;
+    const uint64_t height = 128U;
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream_;
+    taskInfo.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_H2D;
+
+    rtError_t error = ConvertAsyncDma2D(&taskInfo, reinterpret_cast<void*>(0x20000), width,
+        reinterpret_cast<void*>(0x10000), width, width, height, 0U);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.size, width * height);
+    EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.fixedSize, width * height);
+
+    Runtime::Instance()->SetConnectUbFlag(false);
+}
