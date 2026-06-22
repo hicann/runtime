@@ -222,8 +222,7 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
         return RT_ERROR_MODEL_EXE_FAILED;
     }
 
-    rtError_t error;
-    error = SetNotifyBeforeExecute(stm, this);
+    rtError_t error = SetNotifyBeforeExecute(stm, this);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "Set notify before model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
         stm->Id_(), Id_(), static_cast<uint32_t>(error));

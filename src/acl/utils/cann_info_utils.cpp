@@ -181,9 +181,10 @@ namespace acl {
             // label 或 key 为空说明特性与芯片无关, 无需查询
             return true;
         }
-        constexpr uint32_t kMaxValueLen = 16UL;
+        constexpr uint32_t kMaxValueLen = 16U;
         char_t value[kMaxValueLen] = {0};
-        auto ret = rtGetSocSpec(configInfo.socSpecLabel.c_str(), configInfo.socSpecKey.c_str(), value, kMaxValueLen);
+        const auto ret = rtGetSocSpec(configInfo.socSpecLabel.c_str(), configInfo.socSpecKey.c_str(), value,
+            kMaxValueLen);
         if (ret != RT_ERROR_NONE) {
             ACL_LOG_WARN("Cannot get platform info, label = [%s], key = [%s]", configInfo.socSpecLabel.c_str(),
                          configInfo.socSpecKey.c_str());

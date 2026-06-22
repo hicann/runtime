@@ -47,7 +47,7 @@ bool StringUtils::IsDigit(const std::string &str)
 }
 
 std::string StringUtils::Trim(const std::string& str) {
-    size_t first = str.find_first_not_of(" \t\r\n");
+    const size_t first = str.find_first_not_of(" \t\r\n");
     if (std::string::npos == first) {
         return str;
     }

@@ -969,19 +969,19 @@ rtError_t RawDevice::GetQosInfoByIpc()
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_INS;
-    for(int i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
+    for(uint32_t i = 0U; i < MAX_ACC_QOS_CFG_NUM; i++) {
         rtError_t error = GetOneAicoreQosCfg(deviceId_, aicoreQosCfg[i]);
         if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
             RT_LOG(RT_LOG_WARNING, "Getting AICore QoS config is not supported.");
             return RT_ERROR_NONE;
         }
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Get qos info by ipc failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
+            RT_LOG(RT_LOG_ERROR, "Get qos info by ipc failed, error=%#x, index=%u.", static_cast<uint32_t>(error), i);
             return error;
         }
         error = SetQosCfg(aicoreQosCfg[i], i);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Set qos to device failed, drv devId=%u, index=%d.", deviceId_, i);
+            RT_LOG(RT_LOG_ERROR, "Set qos to device failed, drv devId=%u, index=%u.", deviceId_, i);
             return error;
         }
     }
@@ -1123,7 +1123,7 @@ void *RawDevice::MallocBufferForSqIdMem(const size_t size, void * const para)
 {
     void *addr = nullptr;
     Device * const dev = static_cast<Device *>(para);
-    rtError_t error = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
+    const rtError_t error = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
     COND_RETURN_ERROR(error != RT_ERROR_NONE, nullptr, "alloc mem failed, "
         "size=%u(bytes), kind=%d, device_id=%u, retCode=%#x",
         size, RT_MEMORY_HBM, dev->Id_(), static_cast<uint32_t>(error));
@@ -2333,7 +2333,7 @@ rtError_t RawDevice::DeleteEndGraphNotifyInfo(
         std::list<uint32_t>& posList = captureModelExeInfoMap_[key];
         auto posIt = std::find(posList.begin(), posList.end(), endGraphNotifyPos);
         if (posIt != posList.end()) {
-            posList.erase(posIt);
+            (void)posList.erase(posIt);
         } else {
             captureModelExeInfoLock_.unlock();
             return RT_ERROR_NONE;
@@ -2553,7 +2553,7 @@ rtError_t RawDevice::RestoreSqCqPool()
 {
     RT_LOG(RT_LOG_INFO, "Begin restore deviceSqCqPool_, deviceId=%u.", Id_());
     deviceSqCqPool_->FreeOccupyList();
-    rtError_t err = deviceSqCqPool_->ReAllocSqCqForFreeList();
+    const rtError_t err = deviceSqCqPool_->ReAllocSqCqForFreeList();
 
     COND_RETURN_ERROR(err != RT_ERROR_NONE, err, "Failed to realloc sqcq in deviceSqCqFreeList_, device_id=%u, retCode=%#x",
         deviceId_, static_cast<uint32_t>(err));

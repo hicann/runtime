@@ -1645,12 +1645,12 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
     const DevRingBufferCtlInfo* const ctlInfo, uint32_t head, const uint32_t tail, const bool isPrintTaskInfo,
     const TaskInfo* const taskPtr, size_t elementSize, const ExtProcessorFn& extMergeProcessor) const
 {
-    constexpr size_t headSize = sizeof(DevRingBufferCtlInfo);
     if (elementSize == 0U) {
         RT_LOG(RT_LOG_ERROR, "The element size in ringbuffer is invalid.");
         (void)PrintRingbufferErrorInfo(ctlInfo);
         return RT_ERROR_INVALID_VALUE;
     }
+    constexpr size_t headSize = sizeof(DevRingBufferCtlInfo);
     RT_LOG(RT_LOG_INFO, "it need to process %u errMessages, headSize=%zu, elementSize=%zu.",
         (tail + ctlInfo->ringBufferLen - head) % ctlInfo->ringBufferLen, headSize, elementSize);
 
@@ -1658,8 +1658,8 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
         // 先按当前 head 获取元素，再推进 head；Ext 合并逻辑可继续消费后续紧邻的 Ext 元素。
         const RingBufferElementInfo* const elementInfo = GetRingBufferElement(ctlInfo, elementSize, head);
 
-        RT_LOG(RT_LOG_INFO, "head info %u, tail info=%u, type=%u.", head, tail,
-            (taskPtr == nullptr ? 0xFFU : static_cast<uint32_t>(taskPtr->type)));
+        const uint32_t taskType = (taskPtr == nullptr) ? 0xFFU : static_cast<uint32_t>(taskPtr->type);
+        RT_LOG(RT_LOG_INFO, "head info %u, tail info=%u, type=%u.", head, tail, taskType);
 
         head = (head + 1U) % (ctlInfo->ringBufferLen);
 

@@ -1366,7 +1366,7 @@ rtError_t StarsEngine::StarsResumeRtsq(const rtLogicCqReport_t &logicCq, const u
     const uint64_t beginCnt = static_cast<uint64_t>(beginTimeSpec.tv_sec) * RT_MS_PER_S +
                               static_cast<uint64_t>(beginTimeSpec.tv_nsec) / RT_MS_TO_NS;
     RT_LOG(RT_LOG_WARNING, "Begin to query SQ status, stream_id=%hu.", logicCq.streamId);
-    int32_t getSqTimeout = (failStm->GetSyncRemainTime() == -1) ? (RT_GET_SQ_STATUS_TIMEOUT_TIME * 2) :
+    const int32_t getSqTimeout = (failStm->GetSyncRemainTime() == -1) ? (RT_GET_SQ_STATUS_TIMEOUT_TIME * 2) :
         (failStm->GetSyncRemainTime() * 1000);
     uint32_t pollingCycleCnt = dev->GetDevProperties().sqDisableStatPollingCycleNum;
     pollingCycleCnt = (pollingCycleCnt == 0U) ? SQ_DISABLE_POLLING_CYCLE_COMMON_CNT : pollingCycleCnt;

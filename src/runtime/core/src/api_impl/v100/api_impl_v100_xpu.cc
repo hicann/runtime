@@ -11,7 +11,6 @@
 #include "base.hpp"
 #include "inner_thread_local.hpp"
 #include "runtime.hpp"
-#include "runtime/dev.h"
 #include "error_message_manage.hpp"
 #include "xpu_device.hpp"
 #include "task_fail_callback_manager.hpp"

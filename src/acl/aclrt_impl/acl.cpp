@@ -147,7 +147,7 @@ namespace {
             return ACL_SUCCESS;
         }
 
-        rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
+        const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
         if (rtErr != RT_ERROR_NONE) {
             ACL_LOG_CALL_ERROR(
                 "set limit (%s %zu) failed, runtime result = %d.", typeName.c_str(), stackSize,
@@ -205,7 +205,7 @@ namespace {
             const rtLimitType_t limitType = entry.first;
             const std::string& typeName = entry.second;
 
-            aclError ret = SetPrintFifoSizeByType(configPath, limitType, typeName);
+            const aclError ret = SetPrintFifoSizeByType(configPath, limitType, typeName);
             if (ret != ACL_SUCCESS) {
                 return ret;
             }
@@ -264,7 +264,6 @@ int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen)
 
 aclError HandleErrorManagerConfig(const char_t *const configPath, error_message::ErrorMessageMode &error_mode) {
     const std::string ACL_ERR_MSG_CONFIG_NAME = "err_msg_mode";
-    const std::string INTERNAL_MODE = "\"0\"";
     const std::string PROCESS_MODE = "\"1\"";
     error_mode = error_message::ErrorMessageMode::INTERNAL_MODE;
 
@@ -280,6 +279,7 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
             return ACL_SUCCESS;
         }
         ACL_LOG_INFO("err_msg mode is set [%s].", strConfig.c_str());
+        const std::string INTERNAL_MODE = "\"0\"";
         if (strConfig == INTERNAL_MODE) {
             error_mode = error_message::ErrorMessageMode::INTERNAL_MODE;
         } else if (strConfig == PROCESS_MODE) {
@@ -326,7 +326,7 @@ aclError HandleDefaultDeviceAndStackSize(const char_t *const configPath) {
     ACL_REQUIRES_OK(SetAllStackSizes(configPath));
     // 设置默认设备
     int32_t defaultDeviceId = INVALID_DEFAULT_DEVICE;
-    auto ret = acl::JsonParser::GetDefaultDeviceIdFromFile(configPath, defaultDeviceId);
+    const auto ret = acl::JsonParser::GetDefaultDeviceIdFromFile(configPath, defaultDeviceId);
     if (ret != ACL_SUCCESS) {
         return ACL_ERROR_FAILURE;
     }
@@ -525,7 +525,7 @@ aclError aclInitImpl(const char *configPath)
     acl::GetAllPackageVersion();
 
     aclFinalizeFlag = false;
-    aclInitRefCount = 1;
+    aclInitRefCount = 1UL;
     // 如果 aclJsonHash 为空，说明是第一次调用，设置aclJsonHash
     if (aclInitJsonHash.empty()) {
         aclInitJsonHash = currentHash;
@@ -609,7 +609,7 @@ aclError aclFinalizeInternal()
 
     aclFinalizeFlag = true;
     auto &aclInitRefCount = acl::GetAclInitRefCount();
-    aclInitRefCount = 0;
+    aclInitRefCount = 0UL;
     ACL_LOG_INFO("execute aclFinalizeInternal successfully");
     return ACL_SUCCESS;
 }
@@ -897,7 +897,7 @@ aclError GetVersionStringInternal(const std::string &fullPath, const char_t *pkg
     const size_t keyLen = std::strlen(kVersionInfoKey);
 
     while (std::getline(ifs, line)) {
-        size_t pos = line.find(kVersionInfoKey);
+        const size_t pos = line.find(kVersionInfoKey);
         if (pos != std::string::npos) {
             versionOut = acl::StringUtils::Trim(line.substr(pos + keyLen));
             found = true;
@@ -996,7 +996,7 @@ aclError aclsysGetVersionStrImpl(char *pkgName, char *versionStr)
         return ret;
     }
 
-    errno_t strcpyRet = strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str());
+    const errno_t strcpyRet = strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str());
     if (strcpyRet != EOK) {
         std::stringstream ss;
         ss << std::hex << "src=0x" << reinterpret_cast<uintptr_t>(verInfo.c_str())
@@ -1071,9 +1071,9 @@ static bool ParsePreNumStrict(const std::string &suffix, int32_t &outNum) {
 }
 
 static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, size_t &endPos) {
-    int major = 0;
-    int minor = 0;
-    int patch = 0;
+    int32_t major = 0;
+    int32_t minor = 0;
+    int32_t patch = 0;
 
     try {
         // Find first point
@@ -1103,7 +1103,7 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
         }
 
         major = std::stoi(verStr.substr(0, dot1));
-        minor = std::stoi(verStr.substr(dot1 + 1, dot2 - dot1 - 1));
+        minor = std::stoi(verStr.substr(dot1 + 1, dot2 - dot1 - 1U));
         patch = std::stoi(verStr.substr(numStart, numEnd - numStart));
 
         endPos = numEnd;
@@ -1118,8 +1118,8 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
 
 static aclError ParsePrereleasePart(const std::string &rawSuffix, int32_t &adjustment) {
     std::string suffix = rawSuffix;
-    std::transform(suffix.begin(), suffix.end(), suffix.begin(),
-                   [](unsigned char c){ return std::tolower(c); });
+    (void)std::transform(suffix.begin(), suffix.end(), suffix.begin(),
+                         [](unsigned char c){ return std::tolower(c); });
 
     // Match prerelease keyword(alpha:300, beta:200, rc:100)
     int32_t weight = 0;
@@ -1230,7 +1230,7 @@ static std::string GetFaultEventInfo()
     }
 
     rtDmsEventFilter filter = {};
-    const uint32_t maxFaultNum = 128UL; // max is 128
+    constexpr uint32_t maxFaultNum = 128U; // max is 128
     std::vector<rtDmsFaultEvent> faultEventInfo(maxFaultNum, rtDmsFaultEvent{});
     uint32_t eventCount = 0UL;
     ret = rtGetFaultEvent(deviceId, &filter, &faultEventInfo[0U], maxFaultNum, &eventCount);

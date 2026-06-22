@@ -562,7 +562,7 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device * const 
         hasHbmEcc, isHitBlklist, isHitRemoteBlklist, isHitWhitelist);
 
     const uint16_t local_error = (errType == AICORE_ERROR) ? TS_ERROR_AICORE_MTE_ERROR : TS_ERROR_SDMA_POISON_ERROR;
-    const uint16_t remote_error = TS_ERROR_SDMA_LINK_ERROR;
+    constexpr uint16_t remote_error = TS_ERROR_SDMA_LINK_ERROR;
     if (hasL2BuffEcc) {
         errTaskPtr->mte_error = local_error;
         (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::L2_BUFFER_ERROR);

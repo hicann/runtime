@@ -380,7 +380,7 @@ void PrintDumpTimestamp(const DumpInfoHead *dumpHead, const uint32_t blockId,
 
     const DumpTimeStampInfoMsg *dumpInfoMsg = RtPtrToPtr<const DumpTimeStampInfoMsg *>(dumpHead->infoMsg);
     timeInfo.blockId = dumpInfoMsg->blockIdx;
-    timeInfo.blockId &= 0xFFFF; // 低16位记录逻辑block dim
+    timeInfo.blockId &= 0xFFFFU; // 低16位记录逻辑block dim
     timeInfo.blockId |= ((blockId << 16U) & 0xFFFF0000U); // 高16位记录物理block dim
     timeInfo.descId = dumpInfoMsg->descId;
     const uint32_t rsv = dumpInfoMsg->rsv;

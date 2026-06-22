@@ -13,7 +13,6 @@
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "fwk_adpt_struct.h"
-#include "rt_stars_define.h"
 #include "context.hpp"
 #include "event.hpp"
 #include "notify.hpp"

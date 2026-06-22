@@ -79,17 +79,17 @@ const std::map<uint32_t, std::string> g_hcclRemoteMulBitEccEventIdBlkList = {
 };
 
 const std::vector<EventRasFilter> g_ubNonMemPoisonRasList = {
-    {0x81AF8009U, 0x03, 0x02, 0x10000000, "poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x40000000, "cpu seq data poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x20000000, "dwqe data poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x04000000, "P2P opertion poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x02000000, "UB IO traffic atomic operation poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x01000000, "UB IO traffic store operation poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x00020000, "UB: RX DMA 2-bit ECC error in IO read returns poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x00008000, "Read/atomic request address hitting DWQE space returns poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x00002000, "Atomic write data poisoning / Atomic lookup table exception / Atomic timeout exception / Atomic packet header assembly exception returns poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x00000800, "Read timeout exception / Read lookup table exception / Read packet header assembly exception returns poison."},
-    {0x81AF8009U, 0x03, 0x03, 0x00000200, "CCUA read operation returns poison."}
+    {0x81AF8009U, 0x03U, 0x02U, 0x10000000U, "poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x40000000U, "cpu seq data poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x20000000U, "dwqe data poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x04000000U, "P2P opertion poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x02000000U, "UB IO traffic atomic operation poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x01000000U, "UB IO traffic store operation poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x00020000U, "UB: RX DMA 2-bit ECC error in IO read returns poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x00008000U, "Read/atomic request address hitting DWQE space returns poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x00002000U, "Atomic write data poisoning / Atomic lookup table exception / Atomic timeout exception / Atomic packet header assembly exception returns poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x00000800U, "Read timeout exception / Read lookup table exception / Read packet header assembly exception returns poison."},
+    {0x81AF8009U, 0x03U, 0x03U, 0x00000200U, "CCUA read operation returns poison."}
 };
 
 const std::vector<EventRasFilter> g_ubMemPoisonRasList = {
@@ -799,7 +799,7 @@ bool IsHitBlacklist(const uint32_t deviceId, const std::map<uint32_t, std::strin
     std::vector<rtDmsFaultEvent> faultEventInfo(maxFaultNum);
 
     constexpr size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
-    auto eRet = memset_s(&faultEventInfo[0U], totalSize, 0, totalSize);
+    const auto eRet = memset_s(&faultEventInfo[0U], totalSize, 0, totalSize);
     COND_RETURN_WARN(eRet != EOK, false, "Mem set error, ret=%d", eRet);
 
     uint32_t eventCount = 0U;
