@@ -13,14 +13,12 @@
 
 #include <string>
 #include "runtime/mem_base.h"
-#include "runtime/stream.h"
 #include "runtime/event.h"
 #include "runtime/rts/rts_event.h"
 #include "runtime/kernel.h"
-#include "runtime/dev.h"
 #include "runtime/config.h"
-#include "runtime/rt_preload_task.h"
 #include "driver/ascend_hal_base.h"
+#include "runtime/rt_inner_model.h"
 #include "capture_model.hpp"
 #include "common/thread_local_container.hpp"
 #include "device.hpp"
@@ -208,24 +206,24 @@ static inline std::string CaptureEventModeToString(const uint8_t mode)
     }
 }
 
-static inline std::string InfoTypeToString(const int32_t infoType)
+static inline std::string InfoTypeToString(const uint32_t infoType)
 {
     switch (infoType) {
-        case INFO_TYPE_ENV:
+        case static_cast<uint32_t>(INFO_TYPE_ENV):
             return "ENV(0)";
-        case INFO_TYPE_VERSION:
+        case static_cast<uint32_t>(INFO_TYPE_VERSION):
             return "VERSION(1)";
-        case INFO_TYPE_MASTERID:
+        case static_cast<uint32_t>(INFO_TYPE_MASTERID):
             return "MASTERID(2)";
-        case INFO_TYPE_CORE_NUM:
+        case static_cast<uint32_t>(INFO_TYPE_CORE_NUM):
             return "CORE_NUM(3)";
-        case INFO_TYPE_FREQUE:
+        case static_cast<uint32_t>(INFO_TYPE_FREQUE):
             return "FREQUE(4)";
-        case INFO_TYPE_WORK_MODE:
+        case static_cast<uint32_t>(INFO_TYPE_WORK_MODE):
             return "WORK_MODE(21)";
-        case INFO_TYPE_UTILIZATION:
-            return "UTILIZATION(22)";
-        case INFO_TYPE_CORE_NUM_LEVEL:
+        case static_cast<uint32_t>(INFO_TYPE_UTILIZATION):
+            return "UTILIZATION(23)";
+        case static_cast<uint32_t>(INFO_TYPE_CORE_NUM_LEVEL):
             return "CORE_NUM_LEVEL(15)";
         default:
             return "UNKNOWN(" + std::to_string(infoType) + ")";
@@ -331,7 +329,6 @@ static inline std::string DeviceStateCallbackToString(const DeviceStateCallback 
 }
 
 static inline std::string LastErrLevelToString(const rtLastErrLevel_t level)
-
 {
     switch (level) {
         case RT_THREAD_LEVEL:
@@ -370,6 +367,110 @@ static inline std::string DevFeatureTypeToString(const int32_t devFeatureType)
             return "RT_FEATURE_SYSTEM_TASKID_BIT_WIDTH(20001)";
         default:
             return "UNKNOWN(" + std::to_string(devFeatureType) + ")";
+    }
+}
+
+static inline std::string MemcpyKindToString(const rtMemcpyKind_t kind)
+{
+    switch (kind) {
+        case RT_MEMCPY_HOST_TO_HOST:
+            return "RT_MEMCPY_HOST_TO_HOST(0)";
+        case RT_MEMCPY_HOST_TO_DEVICE:
+            return "RT_MEMCPY_HOST_TO_DEVICE(1)";
+        case RT_MEMCPY_DEVICE_TO_HOST:
+            return "RT_MEMCPY_DEVICE_TO_HOST(2)";
+        case RT_MEMCPY_DEVICE_TO_DEVICE:
+            return "RT_MEMCPY_DEVICE_TO_DEVICE(3)";
+        case RT_MEMCPY_MANAGED:
+            return "RT_MEMCPY_MANAGED(4)";
+        case RT_MEMCPY_ADDR_DEVICE_TO_DEVICE:
+            return "RT_MEMCPY_ADDR_DEVICE_TO_DEVICE(5)";
+        case RT_MEMCPY_HOST_TO_DEVICE_EX:
+            return "RT_MEMCPY_HOST_TO_DEVICE_EX(6)";
+        case RT_MEMCPY_DEVICE_TO_HOST_EX:
+            return "RT_MEMCPY_DEVICE_TO_HOST_EX(7)";
+        case RT_MEMCPY_DEFAULT:
+            return "RT_MEMCPY_DEFAULT(8)";
+        case RT_MEMCPY_RESERVED:
+            return "RT_MEMCPY_RESERVED(9)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<uint32_t>(kind)) + ")";
+    }
+}
+
+static inline std::string MemcpyNewKindToString(const rtMemcpyKind kind)
+{
+    switch (kind) {
+        case RT_MEMCPY_KIND_HOST_TO_HOST:
+            return "RT_MEMCPY_KIND_HOST_TO_HOST(0)";
+        case RT_MEMCPY_KIND_HOST_TO_DEVICE:
+            return "RT_MEMCPY_KIND_HOST_TO_DEVICE(1)";
+        case RT_MEMCPY_KIND_DEVICE_TO_HOST:
+            return "RT_MEMCPY_KIND_DEVICE_TO_HOST(2)";
+        case RT_MEMCPY_KIND_DEVICE_TO_DEVICE:
+            return "RT_MEMCPY_KIND_DEVICE_TO_DEVICE(3)";
+        case RT_MEMCPY_KIND_DEFAULT:
+            return "RT_MEMCPY_KIND_DEFAULT(4)";
+        case RT_MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE:
+            return "RT_MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE(5)";
+        case RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE:
+            return "RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)";
+        case RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE:
+            return "RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE(7)";
+        case RT_MEMCPY_KIND_MAX:
+            return "RT_MEMCPY_KIND_MAX(8)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<uint32_t>(kind)) + ")";
+    }
+}
+
+static inline std::string WriteValueSizeTypeToString(const rtWriteValueSizeType_t type)
+{
+    switch (type) {
+        case WRITE_VALUE_SIZE_TYPE_INVALID:
+            return "WRITE_VALUE_SIZE_TYPE_INVALID(0)";
+        case WRITE_VALUE_SIZE_TYPE_8BIT:
+            return "WRITE_VALUE_SIZE_TYPE_8BIT(1)";
+        case WRITE_VALUE_SIZE_TYPE_16BIT:
+            return "WRITE_VALUE_SIZE_TYPE_16BIT(2)";
+        case WRITE_VALUE_SIZE_TYPE_32BIT:
+            return "WRITE_VALUE_SIZE_TYPE_32BIT(3)";
+        case WRITE_VALUE_SIZE_TYPE_64BIT:
+            return "WRITE_VALUE_SIZE_TYPE_64BIT(4)";
+        case WRITE_VALUE_SIZE_TYPE_128BIT:
+            return "WRITE_VALUE_SIZE_TYPE_128BIT(5)";
+        case WRITE_VALUE_SIZE_TYPE_256BIT:
+            return "WRITE_VALUE_SIZE_TYPE_256BIT(6)";
+        case WRITE_VALUE_SIZE_TYPE_BUFF:
+            return "WRITE_VALUE_SIZE_TYPE_BUFF(7)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<uint32_t>(type)) + ")";
+    }
+}
+
+static inline std::string CondHandleFlagToString(const rtCondHandleFlag_t flag)
+{
+    switch (flag) {
+        case RT_COND_HANDLE_ASSIGN_DEFAULT:
+            return "RT_COND_HANDLE_ASSIGN_DEFAULT(1)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<uint32_t>(flag)) + ")";
+    }
+}
+
+static inline std::string CondTaskTypeToString(const rtCondTaskType_t type)
+{
+    switch (type) {
+        case RT_COND_TASK_TYPE_IF:
+            return "RT_COND_TASK_TYPE_IF(0)";
+        case RT_COND_TASK_TYPE_WHILE:
+            return "RT_COND_TASK_TYPE_WHILE(1)";
+        case RT_COND_TASK_TYPE_SWITCH:
+            return "RT_COND_TASK_TYPE_SWITCH(2)";
+        case RT_COND_TASK_TYPE_MAX:
+            return "RT_COND_TASK_TYPE_MAX(3)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<uint32_t>(type)) + ")";
     }
 }
 
