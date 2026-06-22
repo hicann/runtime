@@ -13,7 +13,7 @@
 - [pre-commit使用方法](docs/guidelines/pre-commit_guide.md)：适用于配置 pre-commit，并在提交代码前运行格式化与合规检查
 - [编码规范](docs/guidelines/coding-guidelines.md)：适用于 Runtime 仓源码实现的统一编码规范
 - [UT代码规范](docs/guidelines/ut-coding-guidelines.md)：适用于 `tests/**` 下 UT 代码的实现规范
-- [UT用例开发指导](docs/guidelines/dt_guide/UT用例开发指导.md)：适用于 UT 场景设计、校验方法和测试实现
+- [UT用例开发指导](docs/guidelines/dt_guide/ut_case_development_guide.md)：适用于 UT 场景设计、校验方法和测试实现
 - [设计文档模板](docs/guidelines/design_document_template.md)：涉及新增特性、接口、配置参数或流程改动时，建议先按模板完成设计说明
 
 建议遵循以下原则：
