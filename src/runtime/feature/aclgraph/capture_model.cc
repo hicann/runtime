@@ -1195,7 +1195,7 @@ rtError_t CaptureModel::AllocSqCqAndBindInternal()
     error = BindSqCqAndSendSqe();
     ERROR_PROC_RETURN_MSG_INNER(error, DELETE_A(sqCqArray_); sqCqNum_ = 0U;,
         "bind sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
-    
+
     SetFirstExecute(true);
     return RT_ERROR_NONE;
 }
