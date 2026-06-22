@@ -389,7 +389,7 @@ ProfApiContext *ProfilerPushProfApiContext(void)
     if (g_apiProfStack.capacity() == 0U) {
         g_apiProfStack.reserve(PROF_API_STACK_RESERVE_SIZE);
     }
-    g_apiProfStack.emplace_back();
+    (void)g_apiProfStack.emplace_back();
     return &g_apiProfStack.back();
 }
 

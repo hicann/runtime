@@ -68,7 +68,7 @@ DeviceSnapshot::DeviceSnapshot(Device *dev)
     : NoCopy(), IDeviceSnapshotOps(), device_(dev)
 {}
 
-DeviceSnapshot::~DeviceSnapshot() noexcept {}
+DeviceSnapshot::~DeviceSnapshot() noexcept = default;
 
 void DeviceSnapshot::RecordFuncCallAddrAndSize(TaskInfo* const task)
 {

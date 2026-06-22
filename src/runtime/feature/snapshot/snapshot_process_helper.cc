@@ -141,7 +141,7 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
         modelLock.Unlock();
     }
 
-    rtError_t err = dev->RestoreSqCqPool();
+    const rtError_t err = dev->RestoreSqCqPool();
     ERROR_RETURN(err, "Restore SqCqPool failed, deviceId=%u, retCode=%#x!", deviceId, static_cast<uint32_t>(err));
     return RT_ERROR_NONE;
 }
