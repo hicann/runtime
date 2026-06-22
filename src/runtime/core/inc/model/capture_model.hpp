@@ -39,8 +39,8 @@ struct MsprofShapeHeader {
     uint32_t taskId;
 };
 
-constexpr uint32_t MS_PROF_SHAPE_INFO_SIZE = sizeof(MsprofShapeInfo);
-constexpr uint32_t MS_PROF_SHAPE_HEADER_SIZE = sizeof(MsprofShapeHeader);
+constexpr uint32_t MS_PROF_SHAPE_INFO_SIZE = static_cast<uint32_t>(sizeof(MsprofShapeInfo));
+constexpr uint32_t MS_PROF_SHAPE_HEADER_SIZE = static_cast<uint32_t>(sizeof(MsprofShapeHeader));
 
 class CaptureModel : public Model {
 public:
@@ -415,7 +415,7 @@ private:
     uint64_t resourceGroupId_{0U};  // 资源组ID，同一父子关系网共享
     rtCondHandle_t condHandle_{nullptr}; // 模型归属的condHandle
     uint16_t rootExeStreamId_{UINT16_MAX};
-    uint32_t loadCompleteNotifyid_{0UL}; // 用于子模型task error等异常场景
+    uint32_t loadCompleteNotifyid_{0U}; // 用于子模型task error等异常场景
 };
 }
 }

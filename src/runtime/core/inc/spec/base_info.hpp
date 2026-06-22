@@ -87,14 +87,14 @@ constexpr uint32_t STARS_NOTIFY_NUM_OF_SINGLE_TABLE_128 = 128U;
 
 constexpr uint64_t RT_STARS_BASE_ADDR_78000000 = 0x078000000ULL;
 
-constexpr uint32_t RT_BS9SX1AA_AICORE_NUM_AG = 10U;
-constexpr uint32_t RT_BS9SX1AA_AICORE_NUM = 9U;
-constexpr uint32_t RT_BS9SX1AA_AIVECTOR_NUM_AG = 8U;
-constexpr uint32_t RT_BS9SX1AA_AIVECTOR_NUM = 7U;
-constexpr uint32_t RT_BS9SX1AB_AICORE_NUM = 8U;
-constexpr uint32_t RT_BS9SX1AB_AIVECTOR_NUM = 6U;
-constexpr uint32_t RT_BS9SX1AC_AICORE_NUM = 6U;
-constexpr uint32_t RT_BS9SX1AC_AIVECTOR_NUM = 4U;
+constexpr int64_t RT_BS9SX1AA_AICORE_NUM_AG = 10;
+constexpr int64_t RT_BS9SX1AA_AICORE_NUM = 9;
+constexpr int64_t RT_BS9SX1AA_AIVECTOR_NUM_AG = 8;
+constexpr int64_t RT_BS9SX1AA_AIVECTOR_NUM = 7;
+constexpr int64_t RT_BS9SX1AB_AICORE_NUM = 8;
+constexpr int64_t RT_BS9SX1AB_AIVECTOR_NUM = 6;
+constexpr int64_t RT_BS9SX1AC_AICORE_NUM = 6;
+constexpr int64_t RT_BS9SX1AC_AIVECTOR_NUM = 4;
 
 constexpr uint64_t STARS_EVENT_BASE_ADDR = 0x200000ULL;
 constexpr uint64_t STARS_EVENT_OFFSET = 0x4ULL;
