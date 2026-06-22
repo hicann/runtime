@@ -17,8 +17,10 @@
 #include "stars_cond_isa_helper.hpp"
 #include "stars_dqs_cond_isa_helper.hpp"
 #include "stars_cond_isa_batch_struct.hpp"
+#include "stars_david.hpp"
 #include "ascend_hal_define.h"
 #include "stars_cond_isa_para.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -1787,6 +1789,163 @@ void PrintErrorInfoForDqsAdspcTask(TaskInfo* taskInfo, const uint32_t devId)
     RT_LOG(RT_LOG_ERROR, "dqs adspc task error, device_id=%u, stream_id=%d, task_id=%u, cqHead=%u, cqTail=%u, "
         "qmngr ow reg val=%#x", devId, taskInfo->stream->Id_(), taskInfo->id, dfx[0U], dfx[1U], dfx[2U]);
 }
+
+static bool DqsTaskRegister()
+{
+    TaskFuncSingle dqsEnqueueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsDequeueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsPrepareFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsPrepareTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsPrepareTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsZeroCopyFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsZeroCopyTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsZeroCopyTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsSchedEndFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsMbufFreeFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsMbufFreeTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsMbufFreeTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsInterChipPreProcFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsInterChipPreProcTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsInterChipPreProcTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsInterChipPostProcFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsInterChipPostProcTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsInterChipPostProcTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsAdspcFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsAdspcTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsAdspcTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsBatchDequeueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsBatchDequeTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsBatchDequeueTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsConditionCopyFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsConditionCopyTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDqsConditionCopyTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle dqsFrameAlignFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &DqsFrameAlignTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetV201Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_ENQUEUE, dqsEnqueueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_DEQUEUE, dqsDequeueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_PREPARE, dqsPrepareFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_ZERO_COPY, dqsZeroCopyFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_SCHED_END, dqsSchedEndFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_MBUF_FREE, dqsMbufFreeFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, dqsInterChipPreProcFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, dqsInterChipPostProcFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_ADSPC, dqsAdspcFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_BATCH_DEQUEUE, dqsBatchDequeueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_CONDITION_COPY, dqsConditionCopyFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DQS_FRAME_ALIGN, dqsFrameAlignFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_MBUF_FREE, &ConstructSqeForDqsMbufFreeTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ENQUEUE, &ConstructSqeForDqsEnqueueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_DEQUEUE, &ConstructSqeForDqsDequeueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ZERO_COPY, &ConstructSqeForDqsZeroCopyTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_SCHED_END, &ConstructSqeForDqsSchedEndTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_PREPARE, &ConstructSqeForDqsPrepareTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, &ConstructSqeForDqsInterChipPreProcTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, &ConstructSqeForDqsInterChipPostProcTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ADSPC, &ConstructSqeForDqsAdspcTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_BATCH_DEQUEUE, &ConstructSqeForDqsBatchDequeueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_CONDITION_COPY, &ConstructSqeForDqsConditionCopyTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DQS_FRAME_ALIGN, &ConstructSqeForDqsFrameAlignTask);
+
+    return true;
+}
+
+static bool g_dqsTaskRegister = DqsTaskRegister();
 
 }
 }
