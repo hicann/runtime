@@ -394,7 +394,7 @@ aclError aclInitImpl(const char *configPath)
 
     // 读取并计算当前文件的哈希值（若文件不存在或无法打开，上面的json_parser中会检验住，此处无须再次判断）
     std::string currentHash;
-    acl::hash_utils::CalculateSimpleHash(configPath, configStr, currentHash);
+    (void)acl::hash_utils::CalculateSimpleHash(configPath, configStr, currentHash);
     // 内容不一致
     if (!aclInitJsonHash.empty() && currentHash != aclInitJsonHash) {
         ACL_LOG_ERROR("config content of [%s] differs from the first aclInit config file path: [%s]", configPath, aclInitJsonPath.c_str());
@@ -1085,13 +1085,13 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
 
         // Find second point
         const size_t dot2 = verStr.find('.', dot1 + 1UL);
-        if (dot2 == std::string::npos || dot2 == dot1 + 1) {
+        if (dot2 == std::string::npos || dot2 == dot1 + 1UL) {
             ACL_LOG_ERROR("Invalid format [%s]. Missing minor version.", verStr.c_str());
             return ACL_ERROR_INTERNAL_ERROR;
         }
 
         // Find patch number
-        const size_t numStart = dot2 + 1;
+        const size_t numStart = dot2 + 1UL;
         size_t numEnd = numStart;
         while (numEnd < verStr.length() && std::isdigit(static_cast<unsigned char>(verStr[numEnd])) != 0) {
             numEnd++;

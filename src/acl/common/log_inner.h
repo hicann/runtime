@@ -309,10 +309,10 @@ public:
         if (condition) { \
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
-                #param, reason, paramVal.c_str()); \
+                #param, (reason), paramVal.c_str()); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, reason})); \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, (reason)})); \
             return ACL_ERROR_INVALID_PARAM; \
         } \
     } while (false)
@@ -334,11 +334,11 @@ public:
     do { \
         if (condition) { \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
-                paramName, reason, paramVal); \
+                (paramName), (reason), (paramVal)); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, paramVal, paramName, reason})); \
-            return ret; \
+                std::vector<const char *>({__func__, (paramVal), (paramName), (reason)})); \
+            return (ret); \
         } \
     } while (false)
 
@@ -483,7 +483,7 @@ do { \
         if (UNLIKELY((val) == nullptr)) { \
             ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
             acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, #val}); \
-            return ret; } \
+            return (ret); } \
         } \
     while (false)
 

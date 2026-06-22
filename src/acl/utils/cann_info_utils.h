@@ -30,11 +30,12 @@ namespace acl {
         std::string readableAttrName;
         std::string socSpecLabel;
         std::string socSpecKey;
-        int32_t minimumRuntimeVersion = UNKNOWN_VERSION;
-        int32_t isAvailable = 0;
+        int32_t minimumRuntimeVersion;
+        int32_t isAvailable;
         explicit CannInfo(const std::string &attrName, const std::string &specLabel,
                           const std::string &specKey) noexcept
-            : readableAttrName(attrName), socSpecLabel(specLabel), socSpecKey(specKey)
+            : readableAttrName(attrName), socSpecLabel(specLabel), socSpecKey(specKey),
+            minimumRuntimeVersion(UNKNOWN_VERSION), isAvailable(0)
         {}
     };
 
