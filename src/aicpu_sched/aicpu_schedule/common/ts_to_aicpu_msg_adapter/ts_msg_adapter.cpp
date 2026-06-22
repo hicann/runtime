@@ -30,6 +30,9 @@ int32_t TsMsgAdapter::ResponseToTs(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
         "Response send failed: api=tsDevSendMsgAsync ret=%d",
         ret);
+    if (FeatureCtrl::GetAicpuSchedMode() == SCHED_MODE_MSGQ) {
+        MessageQueue::SendResponse(0U, 0U);
+    }
     aicpusd_info("Response finish: payload=sqe.");
     return AICPU_SCHEDULE_OK;
 }
@@ -45,6 +48,9 @@ int32_t TsMsgAdapter::ResponseToTs(
         (ret == DRV_ERROR_NONE), AICPU_SCHEDULE_ERROR_INNER_ERROR,
         "Response send failed: api=tsDevSendMsgAsync ret=%d",
         ret);
+    if (FeatureCtrl::GetAicpuSchedMode() == SCHED_MODE_MSGQ) {
+        MessageQueue::SendResponse(0U, 0U);
+    }
     aicpusd_info("Response finish: payload=msg_info.");
     return AICPU_SCHEDULE_OK;
 }
@@ -53,6 +59,11 @@ int32_t TsMsgAdapter::ResponseToTs(
     hwts_response_t& hwtsResp, uint32_t devId, EVENT_ID eventId, uint32_t subeventId) const
 {
     aicpusd_info("Response start: payload=hwts_response.");
+    if (FeatureCtrl::GetAicpuSchedMode() == SCHED_MODE_MSGQ) {
+        MessageQueue::SendResponse(hwtsResp.result, hwtsResp.status);
+        aicpusd_info("Response finish: payload=hwts_response, result[%u], status[%u].", hwtsResp.result, hwtsResp.status);
+        return AICPU_SCHEDULE_OK;
+    }
     const drvError_t ret = halEschedAckEvent(
         devId, eventId, subeventId, PtrToPtr<hwts_response_t, char_t>(&hwtsResp),
         static_cast<uint32_t>(sizeof(hwts_response_t)));

@@ -13,6 +13,38 @@
 using namespace AicpuSchedule;
 using namespace aicpu;
 
+namespace {
+uint32_t g_sendResponseErrCode = 0U;
+uint32_t g_sendResponseStatus = 0U;
+uint32_t g_sendResponseCount = 0U;
+
+void ResetSendResponseCapture()
+{
+    g_sendResponseErrCode = 0U;
+    g_sendResponseStatus = 0U;
+    g_sendResponseCount = 0U;
+}
+
+void SendResponseCapture(const uint32_t errCode, const uint32_t status)
+{
+    g_sendResponseErrCode = errCode;
+    g_sendResponseStatus = status;
+    ++g_sendResponseCount;
+}
+
+drvError_t HalGetDeviceInfoMsgqStub(const uint32_t, const uint32_t, const uint32_t, int64_t *cpuSchedMode)
+{
+    *cpuSchedMode = HAL_HIGH_PERFORMANCE_MODE;
+    return DRV_ERROR_NONE;
+}
+
+void InitMsgqSchedMode()
+{
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(HalGetDeviceInfoMsgqStub));
+    FeatureCtrl::Init(0, 0U);
+}
+} // namespace
+
 class TestAdapter : public TsMsgAdapter {
 public:
     TestAdapter(uint32_t pid, uint8_t cmdType, uint8_t vfId, uint8_t tid, uint8_t tsId)
@@ -55,6 +87,7 @@ protected:
 
     virtual void SetUp()
     {
+        ResetSendResponseCapture();
         std::cout << "TsMsgAdapterTEST SetUP" << std::endl;
     }
 
@@ -119,4 +152,50 @@ TEST_F(TsMsgAdapterTEST, ResponseToTsHwts)
     hwts_response_t hwtsResp = {};
     int32_t ret = adapter.ResponseToTs(hwtsResp, 0, EVENT_TS_CTRL_MSG, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(TsMsgAdapterTEST, ResponseToTsSqeMsgqSendsResponse)
+{
+    InitMsgqSchedMode();
+    MOCKER(tsDevSendMsgAsync).stubs().will(returnValue(0));
+    MOCKER_CPP(&MessageQueue::SendResponse).stubs().will(invoke(SendResponseCapture));
+
+    TestAdapter adapter;
+    TsAicpuSqe aicpuSqe = {};
+    const int32_t ret = adapter.ResponseToTs(aicpuSqe, 0, 0, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(g_sendResponseCount, 1U);
+    EXPECT_EQ(g_sendResponseErrCode, 0U);
+    EXPECT_EQ(g_sendResponseStatus, 0U);
+}
+
+TEST_F(TsMsgAdapterTEST, ResponseToTsMsgInfoMsgqSendsResponse)
+{
+    InitMsgqSchedMode();
+    MOCKER(tsDevSendMsgAsync).stubs().will(returnValue(0));
+    MOCKER_CPP(&MessageQueue::SendResponse).stubs().will(invoke(SendResponseCapture));
+
+    TestAdapter adapter;
+    TsAicpuMsgInfo aicpuMsgInfo = {};
+    const int32_t ret = adapter.ResponseToTs(aicpuMsgInfo, 0, 0, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(g_sendResponseCount, 1U);
+    EXPECT_EQ(g_sendResponseErrCode, 0U);
+    EXPECT_EQ(g_sendResponseStatus, 0U);
+}
+
+TEST_F(TsMsgAdapterTEST, ResponseToTsHwtsMsgqSendsResponse)
+{
+    InitMsgqSchedMode();
+    MOCKER_CPP(&MessageQueue::SendResponse).stubs().will(invoke(SendResponseCapture));
+
+    TestAdapter adapter;
+    hwts_response_t hwtsResp = {};
+    hwtsResp.result = 7U;
+    hwtsResp.status = 9U;
+    const int32_t ret = adapter.ResponseToTs(hwtsResp, 0, EVENT_TS_CTRL_MSG, 0);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(g_sendResponseCount, 1U);
+    EXPECT_EQ(g_sendResponseErrCode, 7U);
+    EXPECT_EQ(g_sendResponseStatus, 9U);
 }
