@@ -226,8 +226,8 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         "DeviceStop timeout, device_id=%d.", devId);
 
     /* 2. Callback HCCL to stop MC2 expand */
-    const uint32_t abortTimeout = ((timeout != 0U) ? (timeout - timeCost[index]) : timeout) / RT_US_TO_MS;
-    error = rtInstance->TaskAbortCallBack(devId, RT_DEVICE_ABORT_PRE, abortTimeout);
+    const uint64_t abortTimeout = (timeout != 0U) ? (timeout - timeCost[index]) : timeout;
+    error = rtInstance->TaskAbortCallBack(devId, RT_DEVICE_ABORT_PRE, static_cast<uint32_t>(abortTimeout / RT_US_TO_MS));
     ERROR_RETURN_MSG_INNER(error,
         "Failed to call the HCCL callback function to complete the preparation before termination, retCode=%#x.",
         static_cast<uint32_t>(error));
