@@ -53,7 +53,7 @@ public:
      * @param type Jetty 类型
      * @return rtError_t 错误码
      */
-    rtError_t UnbindJettyForStream(int32_t streamId, JettyType type, bool& isReleased);
+    rtError_t UnbindJettyForStream(int32_t streamId, JettyType type);
 
     /**
      * @brief 根据 handle 直接释放 Jetty（不依赖 context）

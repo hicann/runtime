@@ -152,6 +152,8 @@ rtError_t CaptureModel::RecycleJetty(int32_t streamId, JettyType type, uint32_t 
         dbInfo.info[0].functionId = jettyInfo.functionId;
         dbInfo.info[0].piValue = ctx->capacity - ctx->filledWqeCount;
         Stream * const stm = Context_()->GetCtrlSQStream();
+        COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL,
+            "GetCtrlSQStream return null, stream_id=%d.", streamId);
         error = StreamUbDbSend(&dbInfo, stm, RT_UBDMA_SOURCE_MODEL_EXE);
         RT_LOG(RT_LOG_INFO, "sent ub doorbell to reset pi/ci, dieId=%u, functionId=%u, jettyId=%u, piValue=%u.",
             jettyInfo.dieId, jettyInfo.functionId, jettyInfo.jettyId, dbInfo.info[0].piValue);
@@ -161,13 +163,10 @@ rtError_t CaptureModel::RecycleJetty(int32_t streamId, JettyType type, uint32_t 
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "ub doorbell sync failed, stream_id=%d, error=%d.", streamId, error);
 
-        bool isReleased = false;
-        error = jettyMgr->UnbindJettyForStream(streamId, type, isReleased);
+        error = jettyMgr->UnbindJettyForStream(streamId, type);
         ERROR_RETURN_MSG_INNER(error, "UnbindJettyForStream failed, stream_id=%d, type=%d, ret=%d.",
             streamId, static_cast<int32_t>(type), error);
-        if (isReleased) {
-            count++;
-        }
+        count++;
     }
     return RT_ERROR_NONE;
 }
@@ -203,30 +202,28 @@ rtError_t CaptureModel::ReleaseJetty(int32_t streamId, JettyType type)
     }
 
     const uint64_t savedHandle = context->jettyHandle;
+    rtError_t error = RT_ERROR_NONE;
 
-    rtError_t finalError = RT_ERROR_NONE;
-    bool isReleased = false;
-    rtError_t error = jettyMgr->UnbindJettyForStream(streamId, type, isReleased);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "UnbindJettyForStream failed, stream_id=%d, ret=%d.", streamId, error);
-        finalError = error;
-    }
-
-    if (isReleased && savedHandle != 0) {
+    if (context->isLargeDepth) {
+        error = jettyMgr->UnbindJettyForStream(streamId, type);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "UnbindJettyForStream failed, stream_id=%d, ret=%d.", streamId, error);
+        }
+    } else if (savedHandle != 0) {
         error = jettyMgr->ReleaseJettyByHandle(savedHandle, type);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "ReleaseJettyByHandle failed, stream_id=%d, handle=%lu, ret=%d.",
                 streamId, savedHandle, error);
-            finalError = error;
         }
     }
+
     Driver* driver = context->filledWqeCount > 0 ? Context_()->Device_()->Driver_() : nullptr;
     if (driver != nullptr) {
         context->ReleaseBuffers(driver);
     }
 
     jettyMgr->DestroyStreamJettyContext(streamId, type);
-    return finalError;
+    return error;
 }
 
 rtError_t CaptureModel::ReleaseAllJetty()

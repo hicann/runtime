@@ -959,6 +959,13 @@ TEST_F(CaptureModelJettyTest, ReleaseJetty_Success)
 
     rtError_t error = captureModel_->ReleaseJetty(streamId, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_D2D, 3000, true);
+    rtError_t bindError2 = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_D2D);
+    ASSERT_EQ(bindError2, RT_ERROR_NONE);
+
+    rtError_t error2 = captureModel_->ReleaseJetty(streamId, JettyType::JETTY_TYPE_D2D);
+    EXPECT_EQ(error2, RT_ERROR_NONE);
 }
 
 TEST_F(CaptureModelJettyTest, TryRecycleCaptureModelJettyResource_Success)
@@ -1530,10 +1537,8 @@ TEST_F(NpuDriverJettyTest, UnbindJettyForStream_Success)
 {
     int32_t streamId = 0;
     JettyManager* mgr = SetupAndBindJettyForStream(stream_, streamId);
-    bool isReleased = false;
-    rtError_t error = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D, isReleased);
+    rtError_t error = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_TRUE(isReleased);
 }
 
 // Cover UnbindJettyForStream large depth
@@ -1554,10 +1559,8 @@ TEST_F(NpuDriverJettyTest, UnbindJettyForStream_LargeDepth_Success)
     rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D);
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     
-    bool isReleased = false;
-    rtError_t error = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D, isReleased);
+    rtError_t error = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_TRUE(isReleased);
 }
 
 // Cover UnbindJettyForStream no context
@@ -1566,10 +1569,8 @@ TEST_F(NpuDriverJettyTest, UnbindJettyForStream_NoContext)
     FullResetAndSetupMocks(stream_->Device_()->Driver_());
     
     JettyManager* mgr = stream_->Device_()->GetJettyManager();
-    bool isReleased = false;
-    rtError_t error = mgr->UnbindJettyForStream(99999, JettyType::JETTY_TYPE_H2D, isReleased);
+    rtError_t error = mgr->UnbindJettyForStream(99999, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_FALSE(isReleased);
 }
 
 TEST_F(NpuDriverJettyTest, ReleaseJettyByHandle_Success)
@@ -1581,10 +1582,8 @@ TEST_F(NpuDriverJettyTest, ReleaseJettyByHandle_Success)
     uint64_t savedHandle = ctx->jettyHandle;
     ASSERT_NE(savedHandle, 0ULL);
 
-    bool isReleased = false;
-    rtError_t unbindError = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D, isReleased);
+    rtError_t unbindError = mgr->UnbindJettyForStream(streamId, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(unbindError, RT_ERROR_NONE);
-    EXPECT_TRUE(isReleased);
 
     rtError_t error = mgr->ReleaseJettyByHandle(savedHandle, JettyType::JETTY_TYPE_H2D);
     EXPECT_EQ(error, RT_ERROR_NONE);

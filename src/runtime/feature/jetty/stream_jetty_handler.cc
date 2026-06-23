@@ -104,7 +104,8 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
 
     if (context->filledWqeCount >= context->capacity) {
         error = context->GrowBuffer(driver);
-        ERROR_RETURN_MSG_INNER(error, "GrowBuffer failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+        ERROR_RETURN_MSG_INNER(error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, error=%d.",
+            context->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), static_cast<int32_t>(error));
         context->isLargeDepth = (context->capacity > JETTY_DEPTH_STANDARD);
         RT_LOG(RT_LOG_DEBUG, "GrowBuffer success, capacity=%u, wqe count=%u.", context->capacity, context->filledWqeCount);
     }
@@ -120,7 +121,7 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
     context->filledWqeCount += output->wqeCnt;
     // 记录 taskId 和 totalWqeCount，用于后续刷新 dieId/funcId/jettyId/pi
     context->taskWqeCounts.push_back(std::pair<uint32_t, uint32_t>(task->id, output->wqeCnt));
-    RT_LOG(RT_LOG_DEBUG, "CreateAndAppendWqe success, stream_id=%d, task_id=%u, size=%lu, wqeCount=%u.", stream->Id_(),
+    RT_LOG(RT_LOG_DEBUG, "Create and append wqe success, stream_id=%d, task_id=%u, size=%lu, wqeCount=%u.", stream->Id_(),
         task->id, memcpyInfo->size, output->wqeCnt);
     return RT_ERROR_NONE;
 }
@@ -135,17 +136,15 @@ rtError_t StreamJettyHandler::HandleUbDmaTask(
     if (!IsUbDmaCopyType(task->u.memcpyAsyncTaskInfo.copyType)) {
         return RT_ERROR_NONE;
     }
+    RT_LOG(RT_LOG_DEBUG, "Handle UbDma task start, stream_id=%d, jettyType=%d.", stream->Id_(), static_cast<int32_t>(jettyType));
 
     StreamJettyContext* context = nullptr;
     // when jettyContext create, reserve jetty
     rtError_t error = GetOrCreateStreamJettyContext(stream, jettyType, context);
-    ERROR_RETURN_MSG_INNER(error, "GetOrCreateStreamJettyContext failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    ERROR_RETURN_MSG_INNER(error, "Create jetty context failed, stream_id=%d, ret=%d.", stream->Id_(), error);
     error = CreateAndAppendWqe(stream, task, context, input, output);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CreateAndAppendWqe failed, stream_id=%d, ret=%d.", stream->Id_(), error);
-        return error;
-    }
-    RT_LOG(RT_LOG_DEBUG, "HandleUbDmaTask success, stream_id=%d, jettyType=%d, filledWqeCount=%u, capacity=%u.",
+    ERROR_RETURN_MSG_INNER(error, "Append wqe failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    RT_LOG(RT_LOG_DEBUG, "Handle UbDma task success, stream_id=%d, jettyType=%d, filledWqeCount=%u, capacity=%u.",
         stream->Id_(), static_cast<int32_t>(jettyType), context->filledWqeCount, context->capacity);
     return RT_ERROR_NONE;
 }
@@ -188,7 +187,7 @@ rtError_t StreamJettyHandler::FillNopWqeForPartialBuffer(const Stream* stream, c
     ERROR_RETURN_MSG_INNER(
         error, "AsyncDmaWqeConvert failed, device_id=%u, bufferSize=%u, ret=%d.", deviceId, bufferSize, error);
     // 这里不可能触发wqe buffer扩容 不需要判断
-    RT_LOG(RT_LOG_INFO, "FillNopWqeForPartialBuffer success, stream_id=%d, fillCount=%u, finalValidWqeCount=%u.",
+    RT_LOG(RT_LOG_INFO, "Fill nop wqe success, stream_id=%d, count=%u, wqe_count=%u.",
         stream->Id_(), fillCount, context->filledWqeCount);
 
     return RT_ERROR_NONE;
@@ -225,7 +224,8 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream* stream, Jetty
     ERROR_RETURN_MSG_INNER(error, "FillNopWqeForPartialBuffer failed, stream_id=%d, ret=%d.", stream->Id_(), error);
 
     error = context->RoundUpCapacity(driver, deviceId);
-    ERROR_RETURN_MSG_INNER(error, "RoundUpCapacity failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    ERROR_RETURN_MSG_INNER(error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, error=%d.",
+        context->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), static_cast<int32_t>(error));
 
     RT_LOG(RT_LOG_INFO, "FillNopWqeOnCaptureEnd success, stream_id=%d, totalValidWqeCount=%u.", streamId,
         context->filledWqeCount);
@@ -269,7 +269,7 @@ rtError_t StreamJettyHandler::SyncWqeBufferToDevice(
         offset += size;
     }
 
-    RT_LOG(RT_LOG_DEBUG, "SyncWqeBufferToDevice success, stream_id=%d.", stream->Id_());
+    RT_LOG(RT_LOG_DEBUG, "Sync wqe buffer to device success, stream_id=%d.", stream->Id_());
     return RT_ERROR_NONE;
 }
 
@@ -316,12 +316,12 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
             return RT_ERROR_SEC_HANDLE;
         }
         RT_LOG(RT_LOG_DEBUG,
-            "UpdateUbdmaSqeWithJettyInfo, stream_id=%d, task_id=%u, wqeCount=%u, "
+            "Update Ubdma sqe, stream_id=%d, task_id=%u, wqeCount=%u, "
             "jetty_id=%u, die_id=%u, func_id=%u.",
             stream->Id_(), taskId, wqeCount, jettyInfo.jettyId, jettyInfo.dieId, jettyInfo.functionId);
     }
 
-    RT_LOG(RT_LOG_DEBUG, "UpdateUbdmaSqeWithJettyInfo success, stream_id=%d, posCount=%zu.", stream->Id_(),
+    RT_LOG(RT_LOG_DEBUG, "Update Ubdma sqe success, stream_id=%d, posCount=%zu.", stream->Id_(),
         context->taskWqeCounts.size());
 
     return RT_ERROR_NONE;

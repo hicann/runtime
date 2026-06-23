@@ -127,6 +127,7 @@ RawDevice::~RawDevice() noexcept
     DELETE_A(tschCapability_);
     DELETE_A(freeEvent_);
     DELETE_O(sqIdMemAddrPool_);
+    jettyManager_.reset();
     if (driver_ != nullptr) {
         if (sqVirtualArrBaseAddr_ != nullptr) {
             (void)driver_->DevMemFree(sqVirtualArrBaseAddr_, deviceId_);

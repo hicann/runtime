@@ -97,29 +97,25 @@ rtError_t JettyManager::BindJettyForStream(int32_t streamId, const CaptureModel 
     return RT_ERROR_NONE;
 }
 
-rtError_t JettyManager::UnbindJettyForStream(int32_t streamId, JettyType type, bool& isReleased)
+rtError_t JettyManager::UnbindJettyForStream(int32_t streamId, JettyType type)
 {
     std::lock_guard<std::recursive_mutex> lock(managerLock_);
     StreamJettyContext* ctx = GetStreamJettyContext(streamId, type);
     if (ctx == nullptr || ctx->jettyHandle == 0) {
         return RT_ERROR_NONE;
     }
-    isReleased = false;
     rtError_t error = RT_ERROR_NONE;
     if (ctx->isLargeDepth) {
         error = jettyPool_->DestroyLargeDepthJetty(ctx->jettyHandle);
     } else {
         error = jettyPool_->MarkFree(ctx->jettyHandle);
     }
-    ERROR_RETURN_MSG_INNER(
-        error, "Unbind jetty for stream failed, stream_id=%d, type=%d, ret=%d.", streamId, static_cast<int32_t>(type),
-        error);
+    ERROR_RETURN_MSG_INNER(error, "Unbind jetty for stream failed, stream_id=%d, type=%d, ret=%d.",
+        streamId, static_cast<int32_t>(type), error);
 
-    isReleased = true;
     ctx->jettyHandle = 0;
 
-    RT_LOG(
-        RT_LOG_INFO, "Unbind jetty for stream success, stream_id=%d, type=%d.", streamId, static_cast<int32_t>(type));
+    RT_LOG(RT_LOG_INFO, "Unbind jetty for stream success, stream_id=%d, type=%d.", streamId, static_cast<int32_t>(type));
     return RT_ERROR_NONE;
 }
 
@@ -151,9 +147,8 @@ rtError_t JettyManager::GetJettyInfoForStream(int32_t streamId, JettyType type, 
     // Query full jetty info from JettyPool (single source of truth, thread-safe)
     rtError_t error = jettyPool_->GetJettyInfoByHandle(it->second->jettyHandle, jettyInfo);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_WARNING, "Jetty info not found in pool, stream_id=%d, type=%d.", streamId,
-            static_cast<int32_t>(type));
+        RT_LOG(RT_LOG_WARNING, "Jetty info not found in pool, stream_id=%d, type=%d.",
+            streamId, static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;

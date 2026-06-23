@@ -59,6 +59,11 @@ rtError_t StreamJettyContext::GrowBuffer(Driver *driver)
         return RT_ERROR_DRV_NULL;
     }
 
+    if (capacity + WQE_BUFFER_DEPTH > JETTY_DEPTH_MAX) {
+        RT_LOG(RT_LOG_ERROR, "capacity %u would exceed max jetty depth %u.", capacity, JETTY_DEPTH_MAX);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
     rtError_t error = AllocWqeBuffer(driver);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     capacity += WQE_BUFFER_DEPTH;

@@ -770,9 +770,11 @@ rtError_t ApiImplDavid::BatchMemcpyAsync(void** const dsts, const size_t* const 
         return MemcpyBatch(dsts, srcs, const_cast<size_t*>(sizes), count, const_cast<rtMemcpyBatchAttr*>(attrs), 
             const_cast<size_t*>(attrsIdxs), numAttrs, failIdx);
     }
-
+    std::vector<void*> localDsts(dsts, dsts + count);
+    std::vector<void*> localSrcs(srcs, srcs + count);
+    std::vector<uint64_t> localSizes(sizes, sizes + count);
     while (remainCnt > 0UL) {
-        AsyncDmaBatchInfo batchInfo = {dsts, srcs, const_cast<uint64_t*>(sizes), remainCnt, fixedCnt, fixedSize};
+        AsyncDmaBatchInfo batchInfo = {localDsts.data(), localSrcs.data(), localSizes.data(), remainCnt, fixedCnt, fixedSize};
         error = MemcopyBatchAsync(batchInfo, &realCnt, &realSize, curStm);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
         // realCnt 本次处理的
