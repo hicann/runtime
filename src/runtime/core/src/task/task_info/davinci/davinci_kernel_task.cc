@@ -274,7 +274,7 @@ void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t *const command)
 
     command->u.kernelTask.isConvertAddr = 0U;
     bool needConvert = true;
-    uint8_t l2Size = 0U;
+    const uint8_t l2Size = 0U;
     needConvert = false;
 
     command->u.kernelTask.priority = stm->Priority();

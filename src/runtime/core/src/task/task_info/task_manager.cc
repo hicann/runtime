@@ -899,7 +899,7 @@ const std::vector<rtChipType_t>& GetV201Chips()
 
 static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
 
         taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
@@ -909,7 +909,7 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
 
 static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &setResultFunc = g_taskFuncArrays[chipType].setResultFunc;
         for (auto &item : setResultFunc) {
             if (item == nullptr) {
@@ -923,7 +923,7 @@ static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
 
 static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &printErrorInfoFunc = g_taskFuncArrays[chipType].printErrorInfoFunc;
         for (auto &item : printErrorInfoFunc) {
             if (item == nullptr) {
@@ -939,7 +939,7 @@ static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
 
 static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &setStarsResultFunc = g_taskFuncArrays[chipType].setStarsResultFunc;
         for (auto &item : setStarsResultFunc) {
             if (item == nullptr) {
@@ -955,7 +955,7 @@ static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
 
 void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &toCommandFunc = g_taskFuncArrays[chipType].toCommandFunc;
 
         toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
@@ -975,7 +975,7 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
 
 static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &doCompleteSuccFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc;
 
         doCompleteSuccFunc[TS_TASK_TYPE_FUSION_ISSUE] = &DoCompleteSuccess;
@@ -995,7 +995,7 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
 
 static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &toSqeFunc = g_taskFuncArrays[chipType].toSqeFunc;
         toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;

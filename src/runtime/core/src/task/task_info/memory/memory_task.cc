@@ -460,7 +460,7 @@ static rtError_t ConvertAsyncDma2DForSoftWareSq(TaskInfo * const taskInfo2D, voi
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo2D->u.memcpyAsyncTaskInfo);
     
     rtError_t error = RT_ERROR_NONE;
-    JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo2D);
+    const JettyType jettyType = StreamJettyHandler::GetJettyTypeFromTask(taskInfo2D);
     AsyncWqeInputPara input = {};
     AsyncWqeOutputPara output = {};
     input.wqeType = static_cast<uint32_t>(DRV_ASYNC_DMA_TYPE_2D);

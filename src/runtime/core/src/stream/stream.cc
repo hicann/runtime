@@ -5175,7 +5175,7 @@ rtError_t Stream::UpdateSnapShotSqe()
     }
 
     Stream * const stm = context_->GetCtrlSQStream();
-    constexpr uint32_t waitTimeout = 1000u * 60u * 10u; // 超时等待十分钟
+    constexpr uint32_t waitTimeout = 1000U * 60U * 10U; // 超时等待十分钟
     const rtError_t error = stm->Synchronize(false, waitTimeout);
     ERROR_RETURN(error, "Synchronize failed, streamId=%u, retCode=%#x.", Id_(), error);
     return RT_ERROR_NONE;

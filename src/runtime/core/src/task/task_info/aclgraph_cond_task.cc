@@ -176,7 +176,7 @@ rtError_t FreeFuncCallMemForCaptureCondTask(TaskInfo * const taskInfo)
     }
 
     condTaskInfo->funCallMemSize = 0UL;
-    FreeFuncCallDevForCaptureCondTask(taskInfo);
+    (void)FreeFuncCallDevForCaptureCondTask(taskInfo);
     return RT_ERROR_NONE;
 }
 
@@ -318,7 +318,7 @@ void Construct3rdSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sq
     Stream * const stm = taskInfo->stream;
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     RtStarsCaptureWhileCondJumpBackFc fc = {};
-    uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
+    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
     ConstructCaptureConditionJumpBackFc(taskInfo, fc);
 
     RtStarsFunctionCallSqe &sqe2 = sqe->fuctionCallSqe;

@@ -1679,6 +1679,7 @@ private:
     void *argsHandle_{nullptr};
     StreamStatus streamStatus_{StreamStatus::NORMAL};
     bool isCtrlSQStream_{false};
+    bool isAutoSplitSq_{false};                // 是否为自动切分SQ模式
     bool *destroyTaskRecycledOnTearDownOutput_{nullptr};
 public:
     TaskResManage *taskResMang_{nullptr};
@@ -1704,7 +1705,6 @@ protected:
     std::mutex modeMutex;
     uint64_t failureMode_; //遇错即停状态
     std::shared_ptr<Stream> myself = nullptr;
-    bool isAutoSplitSq_{false};                // 是否为自动切分SQ模式
     bool isSlaveStream_{false};                // 是否为slave stream
     bool isTsBind_{false};
     AutoSplitSqContext *autoSplitCtx_{nullptr};  // 自动切分上下文

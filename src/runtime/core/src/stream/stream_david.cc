@@ -1529,7 +1529,7 @@ rtError_t DavidStream::UpdateSnapShotSqe()
         }
     }
 
-    constexpr uint32_t waitTimeout = 1000u * 60u * 10u;
+    constexpr uint32_t waitTimeout = 1000U * 60U * 10U;
     const rtError_t error = ctrlStream->Synchronize(false, waitTimeout);
     ERROR_RETURN(error, "Synchronize failed, stream_id=%u, ret=%#x.", ctrlStream->Id_(), error);
     return RT_ERROR_NONE;

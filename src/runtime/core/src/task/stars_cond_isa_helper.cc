@@ -2186,9 +2186,6 @@ static void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitV
     uint64_t modifySqHeadPreOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, goto_pre);
     modifySqHeadPreOffset = modifySqHeadPreOffset / sizeof(uint32_t);
 
-    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, end);
-    endOffset = endOffset / sizeof(uint32_t);
-
     /* wait failed */
     // load prof disable status to r2
     ConstructLoadImm(r2, fcPara.profDisableAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus2);
@@ -2231,8 +2228,8 @@ static void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitV
     ConstructLoadImm(r5, fcPara.swapBufferProfCfgAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LW, fc.loadProfCfg2);
 
     // load value 0xFFFFBFFF to r1, bit14 is sq_log_en
-    ConstructLHWI(r1, 0xFFFFBFFF, fc.lhwi62);
-    ConstructLLWI(r1, 0xFFFFBFFF, fc.llwi62);
+    ConstructLHWI(r1, 0xFFFFBFFFU, fc.lhwi62);
+    ConstructLLWI(r1, 0xFFFFBFFFU, fc.llwi62);
 
     // r5 = r5 & r1, bit14 set to 0
     ConstructOpOp(r5, r1, r5, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.op63);
@@ -2388,8 +2385,8 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastI
     ConstructLLWI(r5, fcPara.sqIdMemAddr, fc.llwi4);
 
     // load 0xFFFFFFFF to r4
-    ConstructLHWI(r4, 0xFFFFFFFF, fc.lhwi41);
-    ConstructLLWI(r4, 0xFFFFFFFF, fc.llwi41);
+    ConstructLHWI(r4, 0xFFFFFFFFU, fc.lhwi41);
+    ConstructLLWI(r4, 0xFFFFFFFFU, fc.llwi41);
 
     // r3 = r3 & r4 = sqId & 0xFFFFFFFF
     ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.andOp);
@@ -2426,8 +2423,8 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastI
     ConstructLoad(r4, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadProfCfg1);
 
     // load value 0x4000 to r1, bit14 is sq_log_en
-    ConstructLHWI(r1, 0x4000, fc.lhwi56);
-    ConstructLLWI(r1, 0x4000, fc.llwi56);
+    ConstructLHWI(r1, 0x4000U, fc.lhwi56);
+    ConstructLLWI(r1, 0x4000U, fc.llwi56);
 
     // r5 = r5 | r1, bit14 set to 1
     ConstructOpOp(r5, r1, r5, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op57);
@@ -2440,8 +2437,8 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastI
     ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi58);
 
     // load 0x80000000 to r1
-    ConstructLHWI(r1, 0x80000000, fc.lhwi59);
-    ConstructLLWI(r1, 0x80000000, fc.llwi59);
+    ConstructLHWI(r1, 0x80000000U, fc.lhwi59);
+    ConstructLLWI(r1, 0x80000000U, fc.llwi59);
 
     // r2 = r3 | r1, r3 = sqId
     ConstructOpOp(r3, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op59);
@@ -2474,9 +2471,6 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastIn
 
     uint64_t modifySqHeadPreOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, loadSqId1);
     modifySqHeadPreOffset = modifySqHeadPreOffset / sizeof(uint32_t);
-
-    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, end);
-    endOffset = endOffset / sizeof(uint32_t);
 
     /* wait failed */
     // load sqId to r5, prof disable status is bit32
@@ -2538,8 +2532,8 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastIn
     ConstructLoad(r4, 0U, r2, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadProfCfg2);
 
     // load value 0xFFFFBFFF to r1, bit14 is sq_log_en
-    ConstructLHWI(r1, 0xFFFFBFFF, fc.lhwi66);
-    ConstructLLWI(r1, 0xFFFFBFFF, fc.llwi66);
+    ConstructLHWI(r1, 0xFFFFBFFFU, fc.lhwi66);
+    ConstructLLWI(r1, 0xFFFFBFFFU, fc.llwi66);
 
     // r2 = r2 & r1, bit14 set to 0
     ConstructOpOp(r2, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.op67);
@@ -2552,8 +2546,8 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastIn
     ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi68);
 
     // load 0x80000000 to r1
-    ConstructLHWI(r1, 0x80000000, fc.lhwi69);
-    ConstructLLWI(r1, 0x80000000, fc.llwi69);
+    ConstructLHWI(r1, 0x80000000U, fc.lhwi69);
+    ConstructLLWI(r1, 0x80000000U, fc.llwi69);
 
     // r2 = r5 | r1, r5 = sqId
     ConstructOpOp(r5, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op69);

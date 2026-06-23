@@ -204,7 +204,7 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream* stream, Jetty
         return RT_ERROR_INVALID_VALUE;
     }
 
-    int32_t streamId = static_cast<int32_t>(stream->Id_());
+    const int32_t streamId = static_cast<int32_t>(stream->Id_());
     StreamJettyContext* context =
         stream->Device_()->GetJettyManager()->GetStreamJettyContext(streamId, jettyType);
     if (context == nullptr) {
