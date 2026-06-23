@@ -39,7 +39,12 @@ public:
     rtError_t AllocCopyPtr(
         const uint32_t size, const bool useArgPool, LoadPolicy policy, StarsArgLoaderResult* const result) override;
     rtError_t LoadArgsFromArray(
-    const bool useArgPool, const Kernel* kernel, void** argsArray, StarsArgLoaderResult* result) override;
+        const bool useArgPool, const Kernel* kernel, void** argsArray, StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtArgsFromArray(
+        const bool useArgPool, const Kernel* kernel, SimtArgsArray* simtArgsArray,
+        StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtHostArgs(
+        const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) override;
 };
 
 }  // namespace runtime

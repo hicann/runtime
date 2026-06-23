@@ -524,7 +524,7 @@ rtError_t ApiImplDavid::EventReset(Event * const evt, Stream * const stm)
 }
 
 rtError_t ApiImplDavid::LaunchKernelByArgsWithType(Kernel * const kernel, const uint32_t coreDim, Stream *stm,
-    const RtArgsWithType * const argsWithType, const TaskCfg &taskCfg)
+    const RtArgsWithType * const argsWithType, TaskCfg &taskCfg)
 {
     rtError_t error = RT_ERROR_NONE;
     RT_LOG(RT_LOG_DEBUG, "LaunchKernelByArgsWithType, device_id=%u, add stream_id=%d, blockDim=%u, argsType=%u.",
@@ -546,12 +546,15 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(Kernel * const kernel, const 
             break;
         }
         case RT_ARGS_ARRAY: {
-            rtArgsEx_t nonCpuArgsInfo = {};
-            rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
-            launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
-            launchKernelExtendArgs.taskCfg = &taskCfg;
-            launchKernelExtendArgs.argsArray = argsWithType->args.argsArrayInfo;
-            error = StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
+            error = StreamLaunchArgsArray(kernel, coreDim, stm, argsWithType->args.argsArrayInfo, taskCfg);
+            break;
+        }
+        case RT_SIMT_ARGS_ARRAY: {
+            error = StreamLaunchSimtArgsArray(kernel, coreDim, stm, argsWithType->args.simtArgsArray, taskCfg);
+            break;
+        }
+        case RT_SIMT_ARGS_HOST: {
+            error = StreamLaunchSimtArgsHost(kernel, coreDim, stm, argsWithType->args.simtArgsHost, taskCfg);
             break;
         }
         default:

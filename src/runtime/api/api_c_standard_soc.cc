@@ -51,6 +51,24 @@ TIMESTAMP_EXTERN(rtMemsetD32Async);
 extern "C" {
 #endif // __cplusplus
 
+static Kernel *ConvertFuncToKernel(Api * const apiInstance, void *func)
+{
+    Kernel *kernel = nullptr;
+    Kernel *symbolKernel = nullptr;
+    rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
+    // 若用户传入的参数已经是 func handle，GetFunctionBySymbol 会找不到对应的 handle 返回错误。
+    // 这是正常情况，因此失败时不直接返回，而是将 func 当作 handle 使用。
+    if (ret == RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_INFO, "find function handle by symbol");
+        kernel = symbolKernel;
+    } else if (ret == RT_ERROR_INVALID_DEVICE_FUNCTION) {
+        RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
+        kernel = RtPtrToPtr<Kernel *>(func);
+    } else {
+        // no op
+    }
+    return kernel;
+}
 
 VISIBILITY_DEFAULT
 rtError_t rtWriteValue(rtWriteValueInfo_t * const info, rtStream_t const stm)
@@ -1584,26 +1602,13 @@ rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtLaunchKernelWithArgsArray");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    Kernel *kernel = nullptr;
-    Kernel *symbolKernel = nullptr;
-    rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
-    // 若用户传入的参数已经是func handle，那么GetFunctionBySymbol会找不到对应的handle返回错误。
-    // 这是正常情况，因此失败时不直接返回
-    if (ret == RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "find function handle by symbol");
-        kernel = symbolKernel;
-    } else {
-        RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
-        kernel = RtPtrToPtr<Kernel *>(func);
-    }
-
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_ARRAY;
     argsWithType.args.argsArrayInfo = args;
 
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
-        exeStream, cfg);
+    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
+    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1822,6 +1827,76 @@ rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numT
     return ACL_RT_SUCCESS;
 }
 
+VISIBILITY_DEFAULT
+rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize,
+    rtStream_t stm, rtKernelLaunchCfg_t *cfg, void *hostArgs, uint32_t argsSize,
+    rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    NULL_PTR_RETURN_MSG_OUTER(func, ACL_ERROR_RT_INVALID_HANDLE);
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    if (IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
+        RT_LOG(RT_LOG_WARNING, "XPU not support rtLaunchSIMTKernelWithHostArgs");
+        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+    }
+
+    SimtArgsHost simtArgsHost = {};
+    simtArgsHost.gridDim = gridDim;
+    simtArgsHost.blockDim = blockDim;
+    simtArgsHost.hostArgs = hostArgs;
+    simtArgsHost.argsSize = argsSize;
+    simtArgsHost.placeHolderArray = placeHolderArray;
+    simtArgsHost.placeHolderNum = placeHolderNum;
+    simtArgsHost.dynUbufSize = dynUbufSize;
+
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgsHost;
+
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
+    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim,
+    size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t *cfg, void **args)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    if (IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
+        RT_LOG(RT_LOG_WARNING, "XPU not support rtLaunchSIMTKernelWithArgsArray");
+        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+    }
+
+    SimtArgsArray simtArgsArray = {};
+    simtArgsArray.gridDim = gridDim;
+    simtArgsArray.blockDim = blockDim;
+    simtArgsArray.argsArrayInfo = args;
+    simtArgsArray.dynUbufSize = dynUbufSize;
+
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgsArray;
+
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
+    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

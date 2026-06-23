@@ -86,6 +86,61 @@ static void SetArgsAix(
     result->handle = nullptr;
 }
 
+static void SetSimtTaskParams(AicTaskInfo *aicTask, const rtStreamLaunchKernelV2ExtendArgs_t *extendArgs)
+{
+    if ((extendArgs->simtArgsArray != nullptr) || (extendArgs->simtArgsHost != nullptr)) {
+        aicTask->simtParamOffset = SIMT_IMPLICIT_PARAM_SIZE;
+        if (extendArgs->simtArgsArray != nullptr) {
+            aicTask->gridDim = extendArgs->simtArgsArray->gridDim;
+            aicTask->blockDim = extendArgs->simtArgsArray->blockDim;
+        } else {
+            aicTask->gridDim = extendArgs->simtArgsHost->gridDim;
+            aicTask->blockDim = extendArgs->simtArgsHost->blockDim;
+        }
+    }
+}
+
+rtError_t StreamLaunchArgsArray(Kernel *kernel, const uint32_t coreDim, Stream *stm,
+    void **argsArrayInfo, TaskCfg &taskCfg)
+{
+    rtArgsEx_t nonCpuArgsInfo = {};
+    nonCpuArgsInfo.argsSize = static_cast<uint32_t>(kernel->GetParamTotalSize());
+    rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
+    launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
+    launchKernelExtendArgs.taskCfg = &taskCfg;
+    launchKernelExtendArgs.argsArray = argsArrayInfo;
+    return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
+}
+
+rtError_t StreamLaunchSimtArgsArray(Kernel *kernel, const uint32_t coreDim, Stream *stm,
+    SimtArgsArray *simtArgsArray, TaskCfg &taskCfg)
+{
+    taskCfg.base.localMemorySize = static_cast<uint32_t>(simtArgsArray->dynUbufSize);
+    rtArgsEx_t nonCpuArgsInfo = {};
+    // argsSize都共用nonCpuArgsInfo.argsSize,
+    nonCpuArgsInfo.argsSize = static_cast<uint32_t>(kernel->GetParamTotalSize()) + SIMT_IMPLICIT_PARAM_SIZE;
+    rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
+    launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
+    launchKernelExtendArgs.taskCfg = &taskCfg;
+    launchKernelExtendArgs.simtArgsArray = simtArgsArray;
+    return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
+}
+
+rtError_t StreamLaunchSimtArgsHost(Kernel *kernel, const uint32_t coreDim, Stream *stm,
+    SimtArgsHost *simtArgsHost, TaskCfg &taskCfg)
+{
+    taskCfg.base.localMemorySize = static_cast<uint32_t>(simtArgsHost->dynUbufSize);
+    const uint32_t combinedSize = simtArgsHost->argsSize + SIMT_IMPLICIT_PARAM_SIZE; // argsSize都共用 nonCpuArgsInfo.argsSize,
+    rtArgsEx_t nonCpuArgsInfo = {};
+    nonCpuArgsInfo.argsSize = combinedSize;
+    rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
+    launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
+    launchKernelExtendArgs.taskCfg = &taskCfg;
+    launchKernelExtendArgs.simtArgsHost = simtArgsHost;
+    return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
+}
+
+
 static rtError_t UpdateDavidKernelPrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize)
 {
     Stream * const dstStream = updateTask->stream;
@@ -422,6 +477,26 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
 
 
 
+static rtError_t LoadArgsForStreamLaunchV2(
+    const rtStreamLaunchKernelV2ExtendArgs_t *extendAgrs, const Kernel *kernel,
+    Stream *dstStm, const rtArgsEx_t *argsInfo, bool useArgPool, StarsArgLoaderResult &result)
+{
+    rtError_t error = RT_ERROR_NONE;
+    if (extendAgrs->simtArgsArray != nullptr) {
+        error = static_cast<DavidStream *>(dstStm)->LoadSimtArgsFromArray(
+            useArgPool, kernel, extendAgrs->simtArgsArray, &result);
+    } else if (extendAgrs->simtArgsHost != nullptr) {
+        error = static_cast<DavidStream *>(dstStm)->LoadSimtHostArgs(
+            useArgPool, extendAgrs->simtArgsHost, &result);
+    } else if (extendAgrs->argsArray != nullptr) {
+        error = static_cast<DavidStream *>(dstStm)->LoadArgsFromArray(
+            useArgPool, kernel, extendAgrs->argsArray, &result);
+    } else {
+        error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
+    }
+    return error;
+}
+
 rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *stm,
     const rtStreamLaunchKernelV2ExtendArgs_t *extendAgrs, const bool isLaunchVec)
 {
@@ -475,16 +550,9 @@ rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *s
     AicTaskInit(kernelTask, kernel, kernelAttrType, static_cast<uint16_t>(coreDim), extendAgrs->taskCfg, false);
 
     error = CheckDynSizeValid(kernelTask, kernel);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to check SIMT shared memory size, stream_id=%d, retCode=%#x.",
-        stm->Id_(), static_cast<uint32_t>(error));
-    if (extendAgrs->argsArray != nullptr) {
-        uint64_t paramTotalSize = kernel->GetParamTotalSize();
-        useArgPool = useArgPool && (paramTotalSize <= STM_ARG_POOL_COPY_SIZE);
-        error = static_cast<DavidStream *>(dstStm)->LoadArgsFromArray(
-            useArgPool, kernel, extendAgrs->argsArray, &result);
-    } else {
-        error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
-    }
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to check SIMT shared memory size, stream_id=%d, kernel_name=%s, retCode=%#x.",
+        stm->Id_(), kernel->Name_().c_str(), static_cast<uint32_t>(error));
+    error = LoadArgsForStreamLaunchV2(extendAgrs, kernel, dstStm, argsInfo, useArgPool, result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         stm->Id_(), useArgPool, static_cast<uint32_t>(error));
     AicTaskInfo *aicTask = &(kernelTask->u.aicTaskInfo);
@@ -493,13 +561,14 @@ rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *s
     aicTask->funcAddr = kernelPc1;
     aicTask->funcAddr1 = kernelPc2;
     SetArgsAix(stm, argsInfo, kernelTask, &result);
-    aicTask->comm.argsSize = (extendAgrs->argsArray != nullptr) ? kernel->GetParamTotalSize() : argsInfo->argsSize;
+    aicTask->comm.argsSize = argsInfo->argsSize;
+    SetSimtTaskParams(aicTask, extendAgrs);
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, arg_size=%u, mixType=%hhu, "
         "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
         "groupDim=%u, groupBlockDim=%u.",
         stm->Id_(), kernel->Name_().c_str(), kernelAttrType, kernel->GetFuncType(),
-        (extendAgrs->argsArray != nullptr) ? kernel->GetParamTotalSize() : argsInfo->argsSize, mixType,
+        argsInfo->argsSize, mixType,
         coreDim, kernel->GetTaskRation(), kernel->KernelVfType_(),
         aicTask->dynamicShareMemSize, kernelPc1, kernelPc2, aicTask->comm.kernelFlag, aicTask->qos,
         aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,

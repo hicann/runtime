@@ -265,6 +265,8 @@
     _(aclError, aclrtLaunchKernelV2, (aclrtFuncHandle funcHandle, uint32_t numBlocks, const void * argsData, size_t argsSize, aclrtLaunchKernelCfg * cfg, aclrtStream stream), (funcHandle, numBlocks, argsData, argsSize, cfg, stream)) \
     _(aclError, aclrtLaunchKernelWithHostArgs, (aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg * cfg, void * hostArgs, size_t argsSize, aclrtPlaceHolderInfo * placeHolderArray, size_t placeHolderNum), (funcHandle, numBlocks, stream, cfg, hostArgs, argsSize, placeHolderArray, placeHolderNum)) \
     _(aclError, aclrtLaunchKernelWithArgsArray, (void * func, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg * cfg, void ** args), (func, numBlocks, stream, cfg, args)) \
+    _(aclError, aclrtLaunchSIMTKernelWithArgsArray, (void * func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg * cfg, void ** args), (func, gridDim, blockDim, dynUbufSize, stream, cfg, args)) \
+    _(aclError, aclrtLaunchSIMTKernelWithHostArgs, (void * func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg * cfg, void * hostArgs, size_t argsSize, aclrtPlaceHolderInfo * placeHolderArray, size_t placeHolderNum), (func, gridDim, blockDim, dynUbufSize, stream, cfg, hostArgs, argsSize, placeHolderArray, placeHolderNum)) \
     _(aclError, aclrtCtxGetFloatOverflowAddr, (void ** overflowAddr), (overflowAddr)) \
     _(aclError, aclrtGetFloatOverflowStatus, (void * outputAddr, uint64_t outputSize, aclrtStream stream), (outputAddr, outputSize, stream)) \
     _(aclError, aclrtResetFloatOverflowStatus, (aclrtStream stream), (stream)) \

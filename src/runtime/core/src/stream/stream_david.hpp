@@ -92,6 +92,26 @@ public:
     void ArgReleaseSingleTask(TaskInfo* const taskInfo, bool freeStmPool) override;
     void ArgReleaseStmPool(TaskInfo* const taskInfo) const override;
     void ArgReleaseMultipleTask(TaskInfo* const taskInfo) override;
+    rtError_t LoadSimtArgsFromArray(const bool useArgPool,
+        const Kernel *kernel, SimtArgsArray *simtArgsArray, StarsArgLoaderResult *result)
+    {
+        if (argManage_ != nullptr) {
+            return argManage_->LoadSimtArgsFromArray(useArgPool, kernel, simtArgsArray, result);
+        }
+        result->kerArgs = nullptr;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t LoadSimtHostArgs(const bool useArgPool,
+        SimtArgsHost* simtArgsHost, StarsArgLoaderResult *result)
+    {
+        if (argManage_ != nullptr) {
+            return argManage_->LoadSimtHostArgs(useArgPool, simtArgsHost, result);
+        }
+        result->kerArgs = nullptr;
+        return RT_ERROR_NONE;
+    }
+
 
     void GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) const;
     rtError_t Restore() override;

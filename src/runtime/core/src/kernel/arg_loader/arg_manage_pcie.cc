@@ -152,5 +152,81 @@ rtError_t PcieArgManage::LoadArgsFromArray(const bool useArgPool,
     return H2DArgCopy(result, argsBuffer, argsSize);
 }
 
+rtError_t PcieArgManage::PrepareSimtArgsBuffer(const uint32_t totalArgsSize, const bool useArgPool,
+    const rtDim3& gridDim, const rtDim3& blockDim, StarsArgLoaderResult* result, void** argsBuffer)
+{
+    rtError_t error = AllocCopyPtr(totalArgsSize, useArgPool, LoadPolicy::LP_GENERIC, result);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    *argsBuffer = ThreadLocalContainer::GetOrCreateArgsBuffer(static_cast<uint64_t>(totalArgsSize));
+    if (*argsBuffer == nullptr) {
+        FreeFail(result);
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+
+    uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {blockDim.z, blockDim.y, blockDim.x,
+                                                        gridDim.z,  gridDim.y,  gridDim.x};
+    errno_t ret = memcpy_s(*argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t PcieArgManage::LoadSimtArgsFromArray(const bool useArgPool,
+    const Kernel *kernel, SimtArgsArray *simtArgsArray, StarsArgLoaderResult *result)
+{
+    uint64_t paramTotalSize = kernel->GetParamTotalSize();
+    uint32_t totalArgsSize = static_cast<uint32_t>(paramTotalSize) + SIMT_IMPLICIT_PARAM_SIZE;
+
+    void *argsBuffer = nullptr;
+    rtError_t error = PrepareSimtArgsBuffer(totalArgsSize, useArgPool,
+        simtArgsArray->gridDim, simtArgsArray->blockDim, result, &argsBuffer);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    void *kernelArgsStart = static_cast<char *>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
+    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArrayInfo, kernelArgsStart);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+        return error;
+    }
+
+    return H2DArgCopy(result, argsBuffer, totalArgsSize);
+}
+
+rtError_t PcieArgManage::LoadSimtHostArgs(const bool useArgPool,
+    SimtArgsHost *simtArgsHost, StarsArgLoaderResult *result)
+{
+    uint32_t totalArgsSize = simtArgsHost->argsSize + SIMT_IMPLICIT_PARAM_SIZE;
+    void *argsBuffer = nullptr;
+    rtError_t error = PrepareSimtArgsBuffer(totalArgsSize, useArgPool,
+        simtArgsHost->gridDim, simtArgsHost->blockDim, result, &argsBuffer);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    void *hostArgsStart = static_cast<char *>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
+    errno_t ret = memcpy_s(hostArgsStart, simtArgsHost->argsSize,
+                           simtArgsHost->hostArgs, simtArgsHost->argsSize);
+    if (ret != EOK) {
+        FreeFail(result);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
+    if (simtArgsHost->placeHolderNum > 0) {
+        const void *adjustedKerArgs = static_cast<const char *>(result->kerArgs) + SIMT_IMPLICIT_PARAM_SIZE;
+        UpdateAddrField(adjustedKerArgs, hostArgsStart, static_cast<uint16_t>(simtArgsHost->placeHolderNum),
+            RtPtrToPtr<rtHostInputInfo_t *>(simtArgsHost->placeHolderArray));
+    }
+
+    return H2DArgCopy(result, argsBuffer, totalArgsSize);
+}
+
 }
 }

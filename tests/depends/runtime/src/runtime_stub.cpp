@@ -1158,6 +1158,39 @@ rtError_t aclStub::rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, r
   return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                   size_t dynUbufSize, rtStream_t stream,
+                                                   rtKernelLaunchCfg_t *cfg, void **argsArray)
+{
+  (void)func;
+  (void)gridDim;
+  (void)blockDim;
+  (void)dynUbufSize;
+  (void)stream;
+  (void)cfg;
+  (void)argsArray;
+  return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                  size_t dynUbufSize, rtStream_t stream,
+                                                  rtKernelLaunchCfg_t *cfg, void *hostArgs,
+                                                  uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
+                                                  uint32_t placeHolderNum)
+{
+  (void)func;
+  (void)gridDim;
+  (void)blockDim;
+  (void)dynUbufSize;
+  (void)stream;
+  (void)cfg;
+  (void)hostArgs;
+  (void)argsSize;
+  (void)placeHolderArray;
+  (void)placeHolderNum;
+  return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtMemExportToShareableHandle(rtDrvMemHandle handle, rtDrvMemHandleType handleType,
                                                 uint64_t flag, uint64_t *shareableHandle)
 {
@@ -3675,6 +3708,22 @@ rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t
                                       rtKernelLaunchCfg_t *cfg, void **argsArray)
 {
   return MockFunctionTest::aclStubInstance().rtLaunchKernelWithArgsArray(func, numBlocks, stream, cfg, argsArray);
+}
+
+rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize,
+                                          rtStream_t stream, rtKernelLaunchCfg_t *cfg, void **argsArray)
+{
+  return MockFunctionTest::aclStubInstance().rtLaunchSIMTKernelWithArgsArray(
+      func, gridDim, blockDim, dynUbufSize, stream, cfg, argsArray);
+}
+
+rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize,
+                                         rtStream_t stream, rtKernelLaunchCfg_t *cfg, void *hostArgs,
+                                         uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
+                                         uint32_t placeHolderNum)
+{
+  return MockFunctionTest::aclStubInstance().rtLaunchSIMTKernelWithHostArgs(
+      func, gridDim, blockDim, dynUbufSize, stream, cfg, hostArgs, argsSize, placeHolderArray, placeHolderNum);
 }
 
 rtError_t rtMemExportToShareableHandle(rtDrvMemHandle handle, rtDrvMemHandleType handleType,

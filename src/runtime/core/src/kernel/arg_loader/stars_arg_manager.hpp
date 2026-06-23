@@ -76,6 +76,10 @@ public:
     virtual rtError_t H2DArgCopy(const StarsArgLoaderResult* const result, void* const args, const uint32_t size) = 0;
     virtual rtError_t LoadArgsFromArray(
         const bool useArgPool, const Kernel* kernel, void** argsArray, StarsArgLoaderResult* result) = 0;
+    virtual rtError_t LoadSimtArgsFromArray(
+        const bool useArgPool, const Kernel* kernel, SimtArgsArray* simtArgsArray, StarsArgLoaderResult* result) = 0;
+    virtual rtError_t LoadSimtHostArgs(
+        const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) = 0;
 
     uint32_t argPoolSize_{0U};
     void* devArgResBaseAddr_{nullptr};
@@ -170,6 +174,10 @@ public:
     void RecycleDevLoader(void * const handle) override;
     rtError_t LoadArgsFromArray(
         const bool useArgPool, const Kernel* kernel, void** argsArray, StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtArgsFromArray(
+        const bool useArgPool, const Kernel* kernel, SimtArgsArray* simtArgsArray, StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtHostArgs(
+        const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) override;
 private:
     struct memTsegInfo memTsegInfo_;
     rtError_t ParseArgsCpyWqe(const StarsArgLoaderResult* const result, const uint32_t size) const;
@@ -189,6 +197,15 @@ public:
     void RecycleDevLoader(void * const handle) override;
     rtError_t LoadArgsFromArray(
         const bool useArgPool, const Kernel* kernel, void** argsArray, StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtArgsFromArray(
+        const bool useArgPool, const Kernel* kernel, SimtArgsArray* simtArgsArray, StarsArgLoaderResult* result) override;
+    rtError_t LoadSimtHostArgs(
+        const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result) override;
+
+private:
+    rtError_t PrepareSimtArgsBuffer(
+        const uint32_t totalArgsSize, const bool useArgPool, const rtDim3& gridDim,
+        const rtDim3& blockDim, StarsArgLoaderResult* result, void** argsBuffer);
 };
 
 } // namespace runtime

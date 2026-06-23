@@ -1105,3 +1105,962 @@ TEST_F(ApiKernelTest, TestRtCheckArgsWithType_ParamCountPositiveNullArgsArrayInf
 
     DestroyTestKernel(kernel);
 }
+
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtKernel_BlockDimZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {0, 1, 1}; // x = 0 should fail
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtKernel_NotSimtKernel)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel =
+        new Kernel("testAicoreKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(0U); // AIV_TYPE_AICORE, not SIMT
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtKernel_NoParamSummary)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);      // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(false); // no param summary
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtKernel_Success)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+    simtArgs.dynUbufSize = 1024;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_GridDimZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {0, 1, 1}; // x = 0 should fail
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_Success)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+    simtArgs.dynUbufSize = 2048;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_BlockDimZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {0, 1, 1}; // x = 0 should fail
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_ArgsSizeZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 0; // should fail
+    simtArgs.hostArgs = nullptr;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_NullHostArgs)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = nullptr; // should fail
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_PlaceHolderNull)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+    simtArgs.placeHolderNum = 2;
+    simtArgs.placeHolderArray = nullptr; // should fail when placeHolderNum > 0
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_PlaceHolderOffsetInvalid)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+
+    char hostArgsBuf[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+    placeHolders[0].addrOffset = 200; // > argsSize, should fail
+    placeHolders[0].dataOffset = 10;
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+    simtArgs.placeHolderNum = 2;
+    simtArgs.placeHolderArray = placeHolders;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHostArgs_PlaceHolderSuccess)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U); // AIV_TYPE_SIMT_VF_ONLY
+    kernel->SetHasParamSummary(true);
+
+    char hostArgsBuf[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+    placeHolders[0].addrOffset = 10;
+    placeHolders[0].dataOffset = 20;
+    placeHolders[1].addrOffset = 30;
+    placeHolders[1].dataOffset = 40;
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+    simtArgs.placeHolderNum = 2;
+    simtArgs.placeHolderArray = placeHolders;
+    simtArgs.dynUbufSize = 2048;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_XpuNotSupport)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    rtChipType_t preChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_XPU);
+    GlobalContainer::SetRtChipType(CHIP_XPU);
+
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    void* argsArray[2] = {(void*)0x10, (void*)0x20};
+
+    rtError_t error = rtLaunchSIMTKernelWithArgsArray(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    rtInstance->SetChipType(preChipType);
+    GlobalContainer::SetRtChipType(preChipType);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_KernelInvalid)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_KERNEL_INVALID));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    void* argsArray[2] = {(void*)0x10, (void*)0x20};
+
+    rtError_t error = rtLaunchSIMTKernelWithArgsArray(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_FeatureNotSupport)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    void* argsArray[2] = {(void*)0x10, (void*)0x20};
+
+    rtError_t error = rtLaunchSIMTKernelWithArgsArray(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_OtherError)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    void* argsArray[2] = {(void*)0x10, (void*)0x20};
+
+    rtError_t error = rtLaunchSIMTKernelWithArgsArray(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_XpuNotSupport)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    rtChipType_t preChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_XPU);
+    GlobalContainer::SetRtChipType(CHIP_XPU);
+
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    char hostArgs[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+
+    rtError_t error = rtLaunchSIMTKernelWithHostArgs(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    rtInstance->SetChipType(preChipType);
+    GlobalContainer::SetRtChipType(preChipType);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_KernelInvalid)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_KERNEL_INVALID));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    char hostArgs[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+
+    rtError_t error = rtLaunchSIMTKernelWithHostArgs(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_FeatureNotSupport)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    char hostArgs[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+
+    rtError_t error = rtLaunchSIMTKernelWithHostArgs(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_OtherError)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    rtDim3 gridDim = {1, 1, 1};
+    rtDim3 blockDim = {1, 1, 1};
+    size_t dynUbufSize = 0;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    char hostArgs[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+
+    rtError_t error = rtLaunchSIMTKernelWithHostArgs(
+        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_NullSimtArgs)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = nullptr;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_GridDimYZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 0, 1};
+    simtArgs.blockDim = {1, 1, 1};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_GridDimZZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 0};
+    simtArgs.blockDim = {1, 1, 1};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_BlockDimYZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 0, 1};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_BlockDimZZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 0};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_SimdSimtMixVf)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(4U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_ParamCountPositiveNullArgsArray)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(5);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsArrayInfo = nullptr;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_ParamCountPositiveWithArgsArray)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(2);
+
+    void* argsArray[2] = {(void*)0x10, (void*)0x20};
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+    simtArgs.argsArrayInfo = argsArray;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_ARRAY;
+    argsWithType.args.simtArgsArray = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_NullSimtArgs)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = nullptr;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_GridDimYZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 0, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_GridDimZZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 0};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_BlockDimYZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 0, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_BlockDimZZero)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 0};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_DataOffsetInvalid)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(3U);
+
+    char hostArgsBuf[128];
+    rtPlaceHolderInfo_t placeHolders[2];
+    placeHolders[0].addrOffset = 10;
+    placeHolders[0].dataOffset = 200;
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+    simtArgs.placeHolderNum = 2;
+    simtArgs.placeHolderArray = placeHolders;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_SimdSimtMixVf)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel = new Kernel("testSimtKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(4U);
+    kernel->SetHasParamSummary(true);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {2, 2, 2};
+    simtArgs.blockDim = {4, 4, 4};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_NotSimtKernel)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel* kernel =
+        new Kernel("testAicoreKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel->SetKernelVfType_(0U);
+
+    char hostArgsBuf[128];
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsSize = 128;
+    simtArgs.hostArgs = hostArgsBuf;
+
+    RtArgsWithType argsWithType;
+    argsWithType.type = RT_SIMT_ARGS_HOST;
+    argsWithType.args.simtArgsHost = &simtArgs;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
+}

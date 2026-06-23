@@ -292,7 +292,7 @@ static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo *taskInfo, rtDavidSqe
     ConstructDavidCommonSqeForDavinciTask(taskInfo, command, sqBaseAddr);
     RtDavidStarsAicAivKernelSqe *sqe = &(command->aicAivSqe);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args);
+    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
     Stream * const stm = taskInfo->stream;
     ConstructAicSqePart(aicTaskInfo, sqe, addr, stm);
     UpdateDavidAICoreSqeForDavinciTask(taskInfo, sqe);
@@ -305,7 +305,7 @@ static void ConstructDavidAivSqeForDavinciTask(TaskInfo *taskInfo, rtDavidSqe_t 
     ConstructDavidCommonSqeForDavinciTask(taskInfo, command, sqBaseAddr);
     RtDavidStarsAicAivKernelSqe *sqe = &(command->aicAivSqe);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args);
+    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
     Stream * const stm = taskInfo->stream;
     ConstructAivSqePart(aicTaskInfo, sqe, addr, stm);
 
@@ -317,7 +317,7 @@ static void SetMixStartPcAndParam(TaskInfo *taskInfo, rtDavidSqe_t * const comma
 {
     RtDavidStarsAicAivKernelSqe *sqe = &(command->aicAivSqe);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args);
+    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
     ConstructMixSqePart(aicTaskInfo, sqe, addr);
     return;
 }

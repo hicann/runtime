@@ -343,6 +343,14 @@ public:
     virtual rtError_t rtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize);
     virtual rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t stream, 
                                                    rtKernelLaunchCfg_t *cfg, void **args);
+    virtual rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                      size_t dynUbufSize, rtStream_t stream,
+                                                      rtKernelLaunchCfg_t *cfg, void **args);
+    virtual rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                     size_t dynUbufSize, rtStream_t stream,
+                                                     rtKernelLaunchCfg_t *cfg, void *hostArgs,
+                                                     uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
+                                                     uint32_t placeHolderNum);
 
     virtual rtError_t rtModelDebugDotPrint(rtModel_t mdl);
     virtual rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char *path, uint32_t flags);
@@ -840,6 +848,14 @@ public:
     MOCK_METHOD3(rtFunctionGetAvailDynUbufPerBlock, rtError_t(void *func, uint32_t flags, size_t *dynamicUbufSize));
     MOCK_METHOD5(rtLaunchKernelWithArgsArray, rtError_t(void *func, uint32_t numBlocks, rtStream_t stream,
                                                          rtKernelLaunchCfg_t *cfg, void **args));
+    MOCK_METHOD7(rtLaunchSIMTKernelWithArgsArray, rtError_t(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                            size_t dynUbufSize, rtStream_t stream,
+                                                            rtKernelLaunchCfg_t *cfg, void **args));
+    MOCK_METHOD10(rtLaunchSIMTKernelWithHostArgs, rtError_t(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                            size_t dynUbufSize, rtStream_t stream,
+                                                            rtKernelLaunchCfg_t *cfg, void *hostArgs,
+                                                            uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
+                                                            uint32_t placeHolderNum));
     MOCK_METHOD1(rtModelDebugDotPrint, rtError_t(rtModel_t mdl));
     MOCK_METHOD3(rtModelDebugJsonPrint, rtError_t(rtModel_t mdl, const char *path, uint32_t flags));
     MOCK_METHOD1(rtThreadExchangeCaptureMode, rtError_t(rtStreamCaptureMode *mode));

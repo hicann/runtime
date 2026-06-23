@@ -15,6 +15,7 @@
 #include "base.h"
 #include "rts/rts.h"
 #include <cstdint>
+#include "runtime/rt_inner_task.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -68,11 +69,30 @@ struct RtArgsHandle {
     ParaDetail para[0];
 };
 
+struct SimtArgsArray {
+    rtDim3 gridDim;
+    rtDim3 blockDim;
+    void **argsArrayInfo;
+    size_t dynUbufSize;
+};
+
+struct SimtArgsHost {
+    rtDim3 gridDim;
+    rtDim3 blockDim;
+    void *hostArgs;
+    uint32_t argsSize;
+    rtPlaceHolderInfo_t *placeHolderArray;
+    uint32_t placeHolderNum;
+    size_t dynUbufSize;
+};
+
 enum ArgsType : int32_t {
     RT_ARGS_NON_CPU_EX = 1,
     RT_ARGS_CPU_EX,
     RT_ARGS_HANDLE,
     RT_ARGS_ARRAY,
+    RT_SIMT_ARGS_ARRAY,
+    RT_SIMT_ARGS_HOST,
     RT_ARGS_MAX
 };
 
@@ -83,6 +103,8 @@ struct RtArgsWithType {
         rtCpuKernelArgs_t *cpuArgsInfo;
         RtArgsHandle *argHandle;
         void **argsArrayInfo;
+        SimtArgsArray *simtArgsArray;
+        SimtArgsHost *simtArgsHost;
     } args;
 };
 
@@ -90,4 +112,7 @@ struct RtArgsWithType {
 }
 #endif
 
-#endif  // CCE_RUNTIME_KERNEL_H
+constexpr uint32_t SIMT_IMPLICIT_PARAM_COUNT = 6U;
+constexpr uint32_t SIMT_IMPLICIT_PARAM_SIZE = SIMT_IMPLICIT_PARAM_COUNT * sizeof(uint32_t);
+
+#endif // CCE_RUNTIME_KERNEL_H

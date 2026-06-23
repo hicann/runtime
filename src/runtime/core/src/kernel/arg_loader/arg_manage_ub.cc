@@ -14,6 +14,7 @@
 #include "stars_arg_manager.hpp"
 #include "kernel.hpp"
 #include "kernel_utils.hpp"
+#include "thread_local_container.hpp"
 
 namespace cce {
 namespace runtime {
@@ -158,6 +159,80 @@ rtError_t UbArgManage::LoadArgsFromArray(const bool useArgPool,
     }
 
     return ParseArgsCpyWqe(result, argsSize);
+}
+
+rtError_t UbArgManage::LoadSimtArgsFromArray(const bool useArgPool,
+    const Kernel *kernel, SimtArgsArray *simtArgsArray, StarsArgLoaderResult *result)
+{
+    uint64_t paramTotalSize = kernel->GetParamTotalSize();
+    uint32_t totalArgsSize = static_cast<uint32_t>(paramTotalSize) + SIMT_IMPLICIT_PARAM_SIZE;
+    rtError_t error = AllocCopyPtr(totalArgsSize, useArgPool, LoadPolicy::LP_GENERIC, result);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Alloc args copy ptr failed, size=%u, device_id=%u, stream_id=%d.",
+            totalArgsSize, stream_->Device_()->Id_(), stream_->Id_());
+        return error;
+    }
+
+    void *argsBuffer = result->hostAddr;
+    uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {
+        simtArgsArray->blockDim.z, simtArgsArray->blockDim.y, simtArgsArray->blockDim.x,
+        simtArgsArray->gridDim.z,  simtArgsArray->gridDim.y,  simtArgsArray->gridDim.x};
+    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_IMPLICIT_PARAM_SIZE, ret);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
+    void *kernelArgsStart = static_cast<char *>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
+    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArrayInfo, kernelArgsStart);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+        return error;
+    }
+
+    return ParseArgsCpyWqe(result, totalArgsSize);
+}
+
+rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool,
+    SimtArgsHost *simtArgsHost, StarsArgLoaderResult *result)
+{
+    uint32_t totalArgsSize = simtArgsHost->argsSize + SIMT_IMPLICIT_PARAM_SIZE;
+    rtError_t error = AllocCopyPtr(totalArgsSize, useArgPool, LoadPolicy::LP_GENERIC, result);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Alloc args copy ptr failed, size=%u, device_id=%u, stream_id=%d.",
+            totalArgsSize, stream_->Device_()->Id_(), stream_->Id_());
+        return error;
+    }
+
+    void *argsBuffer = result->hostAddr;
+    uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {
+        simtArgsHost->blockDim.z, simtArgsHost->blockDim.y, simtArgsHost->blockDim.x,
+        simtArgsHost->gridDim.z,  simtArgsHost->gridDim.y,  simtArgsHost->gridDim.x};
+    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_IMPLICIT_PARAM_SIZE, ret);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
+    void *hostArgsStart = static_cast<char *>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
+    ret = memcpy_s(hostArgsStart, simtArgsHost->argsSize,
+                   simtArgsHost->hostArgs, simtArgsHost->argsSize);
+    if (ret != EOK) {
+        FreeFail(result);
+        RT_LOG(RT_LOG_ERROR, "memcpy host args failed, size=%u, ret=%d.", simtArgsHost->argsSize, ret);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
+    if (simtArgsHost->placeHolderNum > 0) {
+        const void *adjustedKerArgs = static_cast<const char *>(result->kerArgs) + SIMT_IMPLICIT_PARAM_SIZE;
+        UpdateAddrField(adjustedKerArgs, hostArgsStart,
+            static_cast<uint16_t>(simtArgsHost->placeHolderNum),
+            RtPtrToPtr<rtHostInputInfo_t *>(simtArgsHost->placeHolderArray));
+    }
+
+    return ParseArgsCpyWqe(result, totalArgsSize);
 }
 
 }

@@ -1341,6 +1341,38 @@ rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void 
     UNUSED(size);
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim,rtDim3 blockDim,
+    size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t *cfg, void **args)
+{
+    UNUSED(func);
+    UNUSED(gridDim);
+    UNUSED(blockDim);
+    UNUSED(dynUbufSize);
+    UNUSED(stm);
+    UNUSED(cfg);
+    UNUSED(args);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim,
+    size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t *cfg, void *hostArgs,
+    uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum)
+{
+    UNUSED(func);
+    UNUSED(gridDim);
+    UNUSED(blockDim);
+    UNUSED(dynUbufSize);
+    UNUSED(stm);
+    UNUSED(cfg);
+    UNUSED(hostArgs);
+    UNUSED(argsSize);
+    UNUSED(placeHolderArray);
+    UNUSED(placeHolderNum);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -182,6 +182,45 @@ RTS_API rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, con
 RTS_API rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t stm,
                                               rtKernelLaunchCfg_t *cfg, void **args);
 
+/**
+ * @ingroup rts_kernel
+ * @brief launch SIMT kernel with args array.
+ * @param [in] func  kernel handle
+ * @param [in] gridDim  grid dimensions
+ * @param [in] blockDim  block dimensions
+ * @param [in] dynUbufSize  dynamic ubuf size
+ * @param [in] stm  associated stream
+ * @param [in] cfg task t-v config
+ * @param [in] args  args array pointer
+ * @return ACL_RT_SUCCESS for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ */
+RTS_API rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                   size_t dynUbufSize, rtStream_t stm,
+                                                   rtKernelLaunchCfg_t *cfg, void **args);
+
+/**
+ * @ingroup rts_kernel
+ * @brief launch SIMT kernel with host args.
+ * @param [in] func  kernel handle
+ * @param [in] gridDim  grid dimensions
+ * @param [in] blockDim  block dimensions
+ * @param [in] dynUbufSize  dynamic ubuf size
+ * @param [in] stm  associated stream
+ * @param [in] cfg task t-v config
+ * @param [in] hostArgs  host args data pointer
+ * @param [in] argsSize  size of host args
+ * @param [in] placeHolderArray  place holder info array
+ * @param [in] placeHolderNum  number of place holders
+ * @return ACL_RT_SUCCESS for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ */
+RTS_API rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim,
+                                                  size_t dynUbufSize, rtStream_t stm,
+                                                  rtKernelLaunchCfg_t *cfg, void *hostArgs,
+                                                  uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
+                                                  uint32_t placeHolderNum);
+
 #if defined(__cplusplus)
 }
 #endif

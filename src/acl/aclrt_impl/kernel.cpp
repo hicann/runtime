@@ -668,6 +668,33 @@ aclError aclrtLaunchKernelWithArgsArrayImpl(void *func, uint32_t numBlocks,
     return ACL_SUCCESS;
 }
 
+aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(void *func, aclrtDim3 gridDim, aclrtDim3 blockDim,
+    size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithArgsArray);
+    ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithArgsArray");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
+
+    rtDim3 rtGridDim = {gridDim.x, gridDim.y, gridDim.z};
+    rtDim3 rtBlockDim = {blockDim.x, blockDim.y, blockDim.z};
+    rtKernelLaunchCfg_t *rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+    const rtError_t rtErr = rtLaunchSIMTKernelWithArgsArray(
+        func, rtGridDim, rtBlockDim, dynUbufSize, stream, rt_cfg, args);
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray func is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray not support, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+        } else {
+            ACL_LOG_CALL_ERROR("rtLaunchSIMTKernelWithArgsArray failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetFloatOverflowStatusImpl(void *outputAddr, uint64_t outputSize, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFloatOverflowStatus);
@@ -678,6 +705,39 @@ aclError aclrtGetFloatOverflowStatusImpl(void *outputAddr, uint64_t outputSize, 
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclrtGetFloatOverflowStatus");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtLaunchSIMTKernelWithHostArgsImpl(void *func, aclrtDim3 gridDim, aclrtDim3 blockDim,
+    size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs,
+    size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithHostArgs);
+    ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithHostArgs");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
+    ACL_REQUIRES_POSITIVE_REPORT(argsSize);
+
+    rtDim3 rtGridDim = {gridDim.x, gridDim.y, gridDim.z};
+    rtDim3 rtBlockDim = {blockDim.x, blockDim.y, blockDim.z};
+    rtKernelLaunchCfg_t *rtCfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+    rtPlaceHolderInfo_t *rtPlaceHolder = reinterpret_cast<rtPlaceHolderInfo_t *>(placeHolderArray);
+    const rtError_t rtErr = rtLaunchSIMTKernelWithHostArgs(
+        func, rtGridDim, rtBlockDim, dynUbufSize, stream, rtCfg, hostArgs,
+        static_cast<uint32_t>(argsSize), rtPlaceHolder,
+        static_cast<uint32_t>(placeHolderNum));
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs func is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs not support, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+        } else {
+            ACL_LOG_CALL_ERROR("rtLaunchSIMTKernelWithHostArgs failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
+    }
     return ACL_SUCCESS;
 }
 

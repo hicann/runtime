@@ -501,6 +501,12 @@ typedef enum {
     ACL_RT_ENGINE_TYPE_AIV,
 } aclrtEngineType;
 
+typedef struct aclrtDim3 {
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
+} aclrtDim3;
+
 typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
     ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE 
@@ -5077,6 +5083,46 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcH
 ACL_FUNC_VISIBILITY aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks,
                                                              aclrtStream stream, aclrtLaunchKernelCfg *cfg,
                                                              void **args);
+
+/**
+ * @ingroup AscendCL
+ * @brief launch SIMT kernel with args array
+ *
+ * @param [in] func  kernel handle
+ * @param [in] gridDim  grid dimensions
+ * @param [in] blockDim  block dimensions
+ * @param [in] dynUbufSize  dynamic ubuf size
+ * @param [in] stream  associated stream
+ * @param [in] cfg  configuration information
+ * @param [in] args  args array pointer, each element points to a parameter data
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithArgsArray(
+    void *func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize,
+    aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args);
+
+/**
+ * @ingroup AscendCL
+ * @brief launch SIMT kernel with host args
+ *
+ * @param [in] func  kernel handle
+ * @param [in] gridDim  grid dimensions
+ * @param [in] blockDim  block dimensions
+ * @param [in] dynUbufSize  dynamic ubuf size
+ * @param [in] stream  associated stream
+ * @param [in] cfg  configuration information
+ * @param [in] hostArgs  host args data pointer
+ * @param [in] argsSize  size of host args
+ * @param [in] placeHolderArray  place holder info array
+ * @param [in] placeHolderNum  number of place holders
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithHostArgs(
+    void *func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize,
+    aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize,
+    aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum);
 
 /**
  * @ingroup AscendCL

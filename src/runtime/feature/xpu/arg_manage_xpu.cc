@@ -134,5 +134,24 @@ rtError_t XpuArgManage::LoadArgsFromArray(const bool useArgPool,
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t XpuArgManage::LoadSimtArgsFromArray(const bool useArgPool,
+    const Kernel *kernel, SimtArgsArray *simtArgsArray, StarsArgLoaderResult *result)
+{
+    UNUSED(useArgPool);
+    UNUSED(kernel);
+    UNUSED(simtArgsArray);
+    UNUSED(result);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t XpuArgManage::LoadSimtHostArgs(const bool useArgPool,
+    SimtArgsHost *simtArgsHost, StarsArgLoaderResult *result)
+{
+    UNUSED(useArgPool);
+    UNUSED(simtArgsHost);
+    UNUSED(result);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }

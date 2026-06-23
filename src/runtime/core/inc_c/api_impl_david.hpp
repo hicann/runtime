@@ -181,7 +181,7 @@ private:
     rtError_t GetCaptureEvent(const Stream * const stm, Event * const evt, Event ** const captureEvt, const bool isNewEvt = false) override;
     rtError_t CaptureWaitEvent(Context * const ctx, Stream * const stm, Event * const evt, const uint32_t timeout);
     rtError_t LaunchKernelByArgsWithType(Kernel * const kernel, const uint32_t coreDim, Stream *stm,
-        const RtArgsWithType * const argsWithType, const TaskCfg &taskCfg);
+        const RtArgsWithType * const argsWithType, TaskCfg &taskCfg);
 };
 }
 }
