@@ -1829,3 +1829,105 @@ TEST_F(ApiImplTest, memcpyAsyncCheckLocationNotSupportUserMem)
     free(src);
     free(dst);
 }
+
+static rtMemLocationType g_srcLocationType = RT_MEMORY_LOC_MAX;
+static rtMemLocationType g_srcRealLocation = RT_MEMORY_LOC_MAX;
+static rtMemLocationType g_dstLocationType = RT_MEMORY_LOC_MAX;
+static rtMemLocationType g_dstRealLocation = RT_MEMORY_LOC_MAX;
+static uint32_t g_ptrGetRealLocationCallCount = 0U;
+
+rtError_t PtrGetRealLocationStub(Driver *drv, const void *ptr, rtMemLocationType &location,
+    rtMemLocationType &realLocation)
+{
+    (void)drv;
+    (void)ptr;
+    if (g_ptrGetRealLocationCallCount == 0U) {
+        location = g_srcLocationType;
+        realLocation = g_srcRealLocation;
+    } else {
+        location = g_dstLocationType;
+        realLocation = g_dstRealLocation;
+    }
+    ++g_ptrGetRealLocationCallCount;
+    return RT_ERROR_NONE;
+}
+
+void SetMemcpyExLocationStub(rtMemLocationType srcLocation, rtMemLocationType srcRealLocation,
+    rtMemLocationType dstLocation, rtMemLocationType dstRealLocation)
+{
+    g_srcLocationType = srcLocation;
+    g_srcRealLocation = srcRealLocation;
+    g_dstLocationType = dstLocation;
+    g_dstRealLocation = dstRealLocation;
+    g_ptrGetRealLocationCallCount = 0U;
+}
+
+rtError_t MemcpyAsyncCheckExLocationWithStub(ApiErrorDecorator &apiError, rtMemcpyKind_t kind,
+    rtMemLocationType srcRealLocation, rtMemLocationType dstRealLocation)
+{
+    SetMemcpyExLocationStub(srcRealLocation, srcRealLocation, dstRealLocation, dstRealLocation);
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    Driver *driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    int src = 0;
+    int dst = 0;
+    return apiError.MemcpyAsyncCheckExLocation(true, kind, &src, &dst);
+}
+
+TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationSkipWhenCheckKindDisabled)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    int src = 0;
+    int dst = 0;
+
+    EXPECT_EQ(apiError.MemcpyAsyncCheckExLocation(false, RT_MEMCPY_HOST_TO_DEVICE_EX, &src, &dst), RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationHostToDeviceExSuccess)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    rtError_t error = MemcpyAsyncCheckExLocationWithStub(
+        apiError, RT_MEMCPY_HOST_TO_DEVICE_EX, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_DEVICE);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(g_ptrGetRealLocationCallCount, 2U);
+}
+
+TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationHostToDeviceExRejectsDeviceSrc)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    rtError_t error = MemcpyAsyncCheckExLocationWithStub(
+        apiError, RT_MEMCPY_HOST_TO_DEVICE_EX, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(g_ptrGetRealLocationCallCount, 2U);
+}
+
+TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationDeviceToHostExSuccess)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    rtError_t error = MemcpyAsyncCheckExLocationWithStub(
+        apiError, RT_MEMCPY_DEVICE_TO_HOST_EX, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_HOST);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(g_ptrGetRealLocationCallCount, 2U);
+}
+
+TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationDeviceToHostExRejectsDeviceDst)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    rtError_t error = MemcpyAsyncCheckExLocationWithStub(
+        apiError, RT_MEMCPY_DEVICE_TO_HOST_EX, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(g_ptrGetRealLocationCallCount, 2U);
+}

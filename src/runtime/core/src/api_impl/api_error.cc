@@ -1800,7 +1800,12 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     COND_RETURN_AND_MSG_OUTER(!checkKind && (kind == RT_MEMCPY_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
         __func__, "RT_MEMCPY_DEFAULT(7)", "kind", "If parameter checkKind is false, parameter kind cannot be RT_MEMCPY_DEFAULT(7)");
     bool isD2HorH2DInvolvePageableMemory = false;
-    if ((kind != RT_MEMCPY_HOST_TO_DEVICE_EX) && (kind != RT_MEMCPY_DEVICE_TO_HOST_EX)) { 
+    if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
+        error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+            "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%d",
+            streamId, kind);
+    } else {
         const bool isUserRequireToCheckPinnedMem = (configInfo.checkBitmap == CHECK_MEMORY_PINNED);
         error = MemcpyAsyncCheckLocation(
             checkKind, copyKind, src, dst, isUserRequireToCheckPinnedMem, isD2HorH2DInvolvePageableMemory); /* 会更新copykind */
@@ -3558,6 +3563,47 @@ rtError_t ApiErrorDecorator::ModelExit(Model * const mdl, Stream * const stm)
         ERROR_RETURN(error, "Model exit report error.");
     }
     return error;
+}
+
+rtError_t ApiErrorDecorator::MemcpyAsyncCheckExLocation(bool checkKind, const rtMemcpyKind_t kind,
+    const void *const src, const void *const dst) const
+{
+    if (!checkKind) {
+        return RT_ERROR_NONE;
+    }
+    rtMemLocationType srcLocationType = RT_MEMORY_LOC_MAX;
+    rtMemLocationType dstLocationType = RT_MEMORY_LOC_MAX;
+    rtMemLocationType srcRealLocation = RT_MEMORY_LOC_MAX;
+    rtMemLocationType dstRealLocation = RT_MEMORY_LOC_MAX;
+    rtError_t error = GetLocationType(src, dst, srcLocationType, srcRealLocation, dstLocationType, dstRealLocation);
+    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, error != RT_ERROR_NONE, error,
+        "GetLocationType failed, retCode=%#x, src=%p, dst=%p", static_cast<uint32_t>(error), src, dst);
+
+    if (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) {
+        COND_RETURN_AND_MSG_OUTER(
+            (srcRealLocation == RT_MEMORY_LOC_DEVICE) || (dstRealLocation != RT_MEMORY_LOC_DEVICE),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
+            "src/dst address location",
+            "The src address must be a host address and the dst address must be a device address");
+    } else {
+        COND_RETURN_AND_MSG_OUTER(
+            (srcRealLocation != RT_MEMORY_LOC_DEVICE) || (dstRealLocation == RT_MEMORY_LOC_DEVICE),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
+            "src/dst address location",
+            "The src address must be a device address and the dst address must be a host address");
+    }
+
+    RT_LOG(RT_LOG_INFO,
+        "MemcpyAsync EX location check passed, kind=%d, srcLocType=%d(%s), srcRealLocType=%d(%s), "
+        "dstLocType=%d(%s), dstRealLocType=%d(%s).",
+        kind,
+        srcLocationType, MemLocationTypeToStr(srcLocationType),
+        srcRealLocation, MemLocationTypeToStr(srcRealLocation),
+        dstLocationType, MemLocationTypeToStr(dstLocationType),
+        dstRealLocation, MemLocationTypeToStr(dstRealLocation));
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiErrorDecorator::ModelBindQueue(Model * const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag)

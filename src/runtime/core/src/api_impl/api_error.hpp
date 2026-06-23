@@ -737,6 +737,8 @@ private:
     rtError_t GetLocationType(const void *const src, const void *const dst,
         rtMemLocationType &srcLocationType, rtMemLocationType &srcRealLocation,
         rtMemLocationType &dstLocationType, rtMemLocationType &dstRealLocation) const;
+    rtError_t MemcpyAsyncCheckExLocation(bool checkKind, const rtMemcpyKind_t kind,
+        const void *const src, const void *const dst) const;
     rtError_t MemcpyAsyncCheckLocation(bool checkKind, rtMemcpyKind_t &copyKind, const void *const src, const void *const dst,
         bool isUserRequireToCheckPinnedMem, bool &isD2HorH2DInvolvePageableMemory) const;
     rtError_t GetMemcpyConfigInfo(RtMemcpyCfgInfo* configInfo, const rtMemcpyConfig_t* const memcpyConfig, const bool isAsync);
