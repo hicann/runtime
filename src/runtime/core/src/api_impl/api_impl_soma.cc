@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -58,8 +58,8 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t s
     NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(memPoolId, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != Runtime::Instance()->CurrentContext(), RT_ERROR_STREAM_CONTEXT,
-        "stream " + std::to_string(stm->Id_()));
+    Context * const curCtx = Runtime::Instance()->CurrentContext();
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     
     const int32_t streamId = stm->Id_();
     RT_LOG(RT_LOG_DEBUG, "Memory allocation stream_id=%d.", streamId);
@@ -88,8 +88,8 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != Runtime::Instance()->CurrentContext(), RT_ERROR_STREAM_CONTEXT,
-        "stream " + std::to_string(stm->Id_()));
+    Context * const curCtx = Runtime::Instance()->CurrentContext();
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
  
     RT_LOG(RT_LOG_DEBUG, "Free memory ptr=%#" PRIx64 ", stream_id=%d.", RtPtrToValue(ptr), stm->Id_());
 

@@ -189,8 +189,7 @@ rtError_t ApiImpl::StreamTaskClean(Stream * const stm)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-        "stream " + std::to_string(stm->Id_()));
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     return stm->StreamTaskClean();
 }
 
@@ -221,8 +220,7 @@ rtError_t ApiImpl::FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * const fftsPlu
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream * const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-        "stream " + std::to_string(curStm->Id_()));
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     return curCtx->FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag);
 }
@@ -238,8 +236,7 @@ rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-        "stream " + std::to_string(curStm->Id_()));
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     return curCtx->RDMASend(sqIndex, wqeIndex, curStm);
 }
@@ -255,8 +252,7 @@ rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-        "stream " + std::to_string(curStm->Id_()));
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     return curCtx->RdmaDbSend(dbIndex, dbInfo, curStm);
 }
@@ -448,8 +444,7 @@ rtError_t ApiImpl::MemsetD32Async(void* const dst, const uint64_t destMax, const
             curStm = curCtx->DefaultStream_();
             NULL_STREAM_PTR_RETURN_MSG(curStm);
         }
-        COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-            "stream " + std::to_string(curStm->Id_()));
+        COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
         return MemsetD32OnDevice(dst, destMax, value, count, curStm, true);
     }
 }

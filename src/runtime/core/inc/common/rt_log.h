@@ -55,6 +55,9 @@ void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, c
 void ProcessErrorCodeImpl(ErrorCode errCode, const char *file, const int32_t line, const char *func,
     const std::vector<std::string> &values);
 inline std::string RtFmtMsg(const char *fmt, ...) {
+    if (fmt == nullptr) {
+          return "";
+    }
     va_list msg;
     va_start(msg, fmt);
     char buf[RT_MAX_LOG_BUF_SIZE];

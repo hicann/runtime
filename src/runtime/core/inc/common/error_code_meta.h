@@ -68,9 +68,9 @@
       DLOG_ERROR)                                                             \
     /* EE1010 - Execution_Error_Invalid_Context */                            \
     X(EE1010, "EE1010",                                                       \
-      ("func", "object"),                                                     \
+      ("func", "object", "extend_info"),                                      \
       "%s execution failed because %s does not belong to the current "        \
-      "context. ErrorCode=EE1010.\n",                                         \
+      "context. Extended information: %s. ErrorCode=EE1010.\n",               \
       DLOG_ERROR)                                                             \
     /* EE1011 - Invalid_Argument */                                           \
     X(EE1011, "EE1011",                                                       \

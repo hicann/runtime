@@ -32,6 +32,24 @@ protected:
     {}
 };
 
+TEST_F(RtErrorCodeTest, RtFmtMsgNullPtr)
+{
+    EXPECT_EQ(RtFmtMsg(nullptr), "");
+}
+
+TEST_F(RtErrorCodeTest, RtFmtMsgBasic)
+{
+    std::string result = RtFmtMsg("test %d %s", 42, "hello");
+    EXPECT_EQ(result, "test 42 hello");
+}
+
+TEST_F(RtErrorCodeTest, RtFmtMsgPointer)
+{
+    void *ptr = reinterpret_cast<void *>(0x1234);
+    std::string result = RtFmtMsg("ptr=%p", ptr);
+    EXPECT_TRUE(result.find("0x1234") != std::string::npos);
+}
+
 TEST_F(RtErrorCodeTest, GetTsErrModuleType)
 {
     EXPECT_EQ(GetTsErrModuleType(TS_SUCCESS), ERR_MODULE_RTS);
@@ -85,7 +103,8 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
     std::vector<std::string> values7 = {"10", "model invalid"};
     PrintErrMsgToLog(ErrorCode::EE1009, "file", 1000, "func", values7);
  
-    std::vector<std::string> values8 = {"rtModelExecute", "stream"};
+    std::vector<std::string> values8 = {"rtModelExecute", "stream",
+        "stream_id=123, stream_ctx=0x7f8a0001, cur_ctx=0x7f8a0002."};
     PrintErrMsgToLog(ErrorCode::EE1010, "file", 1000, "func", values8);
 
     std::vector<std::string> values1011 = {"rtMemCpy", "0", "size", "size is not 0"};
@@ -147,7 +166,8 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1006, "rtMemCpy", "d2d", "The current device does not support d2d memory copy");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, "10", "repeat bind");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1009, "10", "model invalid");
-    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, "rtModelExecute", "stream");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, "rtModelExecute", "stream",
+        "stream_id=123, stream_ctx=0x7f8a0001, cur_ctx=0x7f8a0002.");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011, "rtMemCpy", "0", "size", "size is not 0");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "NotifyWait", "0", "current deviceId", "The current device cannot deliver Notify Wait");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, "100");
@@ -183,7 +203,7 @@ TEST_F(RtErrorCodeTest, CheckErrCodeParams)
     names = GetParamNames(ErrorCode::EE1009);
     EXPECT_EQ(names, (std::vector<std::string>{"id", "reason"}));
     names = GetParamNames(ErrorCode::EE1010);
-    EXPECT_EQ(names, (std::vector<std::string>{"func", "object"}));
+    EXPECT_EQ(names, (std::vector<std::string>{"func", "object", "extend_info"}));
     names = GetParamNames(ErrorCode::EE1011);
     EXPECT_EQ(names, (std::vector<std::string>{"func", "value", "param", "reason"}));
 }
@@ -232,7 +252,7 @@ TEST_F(RtErrorCodeTest, ErrorCodeTableParamCountMatchesMessageFormat)
         {ErrorCode::EE1001, 1}, {ErrorCode::EE1002, 1}, {ErrorCode::EE1003, 4},
         {ErrorCode::EE1004, 2}, {ErrorCode::EE1005, 1}, {ErrorCode::EE1006, 3},
         {ErrorCode::EE1007, 2}, {ErrorCode::EE1009, 2},
-        {ErrorCode::EE1010, 2}, {ErrorCode::EE1011, 4}, {ErrorCode::EE1012, 4},
+        {ErrorCode::EE1010, 3}, {ErrorCode::EE1011, 4}, {ErrorCode::EE1012, 4},
         {ErrorCode::EE1013, 1}, {ErrorCode::EE1014, 1}, {ErrorCode::EE1015, 2},
         {ErrorCode::EE1016, 2}, {ErrorCode::EE1017, 3}, {ErrorCode::EE1018, 2},
         {ErrorCode::EE1019, 2}, {ErrorCode::EE1020, 5}, {ErrorCode::EE1021, 2},

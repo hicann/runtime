@@ -190,14 +190,26 @@
         RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__); \
     }
 
-//EE1010 错误码使用，用于stream/model/context等的归属关系校验
-#define RT_LOG_OUTER_MSG_INVALID_CONTEXT(object) \
-    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1010, (object))
+// EE1010 错误码使用，用于stream/model/context等的归属关系校验
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, rtErrCode) \
+    if ((stm)->Context_() != (curCtx)) { \
+        std::string extendInfo = RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", (stm)->Id_(), (stm)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "stream", extendInfo); \
+        return rtErrCode; \
+    }
 
-#define COND_RETURN_AND_MSG_INVALID_CONTEXT(COND, RTERRCODE, object) \
-    if (unlikely(COND)) { \
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1010, (object)); \
-        return RTERRCODE; \
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, rtErrCode) \
+    if ((mdl)->Context_() != (curCtx)) { \
+        std::string extendInfo = RtFmtMsg("model_id=%u, model_ctx=%p, cur_ctx=%p", (mdl)->Id_(), (mdl)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "model", extendInfo); \
+        return rtErrCode; \
+    }
+
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL(lbl, curCtx, rtErrCode) \
+    if ((lbl)->Context_() != (curCtx)) { \
+        std::string extendInfo = RtFmtMsg("label_id=%u, label_ctx=%p, cur_ctx=%p", (lbl)->Id_(), (lbl)->Context_(), (curCtx)); \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "label", extendInfo); \
+        return rtErrCode; \
     }
 
 //EE1017 预留参数校验使用

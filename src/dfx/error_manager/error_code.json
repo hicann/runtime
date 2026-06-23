@@ -506,8 +506,8 @@
       "errClass": "RTS Errors",
       "errTitle": "Execution_Error_Invalid_Context",
       "ErrCode": "EE1010",
-      "ErrMessage": "%s execution failed because %s does not belong to the current context.",
-      "Arglist": "func, object",
+      "ErrMessage": "%s execution failed because %s does not belong to the current context. Extended information: %s.",
+      "Arglist": "func, object, extend_info",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"

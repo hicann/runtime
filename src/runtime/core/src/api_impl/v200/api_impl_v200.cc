@@ -36,8 +36,7 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
     Stream *curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
-    COND_RETURN_AND_MSG_OUTER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        ErrorCode::EE1010, __func__, "stream");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
         return XpuLaunchKernel(kernel, blockDim, &argsWithType->args.cpuArgsInfo->baseArgs, curStm, &taskCfg);
