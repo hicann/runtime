@@ -132,12 +132,12 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | binPath | 输入 | 算子二进制文件（*.o文件）的路径，要求绝对路径。<br>对于AI CPU算子，该参数支持传算子信息库文件（*.json）。 |
-| options | 输入 | 加载算子二进制文件的可选参数。类型定义请参见[aclrtBinaryLoadOptions](25_数据类型及其操作接口.md#aclrtBinaryLoadOptions)。 |
-| binHandle | 输出 | 标识算子二进制的句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。 |
+| options | 输入 | 加载算子二进制文件的可选参数。类型定义请参见[aclrtBinaryLoadOptions](25-04_Structs.md#aclrtBinaryLoadOptions)。 |
+| binHandle | 输出 | 标识算子二进制的句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -171,7 +171,7 @@ aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBin
 
 从内存加载并解析算子二进制数据，输出指向算子二进制的binHandle。
 
-调用本接口用于加载AI CPU算子信息（[aclrtBinaryLoadOption](25_数据类型及其操作接口.md#aclrtBinaryLoadOption).type包含ACL\_RT\_BINARY\_LOAD\_OPT\_CPU\_KERNEL\_MODE）时，还需配合使用[aclrtRegisterCpuFunc](#aclrtRegisterCpuFunc)接口注册AI CPU算子。
+调用本接口用于加载AI CPU算子信息（[aclrtBinaryLoadOption](25-04_Structs.md#aclrtBinaryLoadOption).type包含ACL\_RT\_BINARY\_LOAD\_OPT\_CPU\_KERNEL\_MODE）时，还需配合使用[aclrtRegisterCpuFunc](#aclrtRegisterCpuFunc)接口注册AI CPU算子。
 
 注意，系统仅将算子加载至当前Context所对应的Device上，因此在调用[aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig)接口启动算子计算任务时，所在的Device必须与算子加载时的Device相同。
 
@@ -182,12 +182,12 @@ aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBin
 | --- | :---: | --- |
 | data | 输入 | 存放算子二进制数据的Host内存地址，不能为空。 |
 | length | 输入 | 算子二进制数据的内存大小，必须大于0，单位Byte。 |
-| options | 输入 | 加载算子二进制文件的可选参数。类型定义请参见[aclrtBinaryLoadOptions](25_数据类型及其操作接口.md#aclrtBinaryLoadOptions)。 |
-| binHandle | 输出 | 标识算子二进制的句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。 |
+| options | 输入 | 加载算子二进制文件的可选参数。类型定义请参见[aclrtBinaryLoadOptions](25-04_Structs.md#aclrtBinaryLoadOptions)。 |
+| binHandle | 输出 | 标识算子二进制的句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -224,13 +224,13 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | kernelName | 输入 | 核函数名称。 |
-| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -260,13 +260,13 @@ aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEn
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcEntry | 输入 | 标识核函数的关键字。 |
-| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -301,13 +301,13 @@ aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
-| binAddr | 输出 | 算子二进制数据在Device上的内存地址。<br>如果加载算子二进制时设置了懒加载标识（将aclrtBinaryLoadOptions.[aclrtBinaryLoadOption](25_数据类型及其操作接口.md#aclrtBinaryLoadOption).isLazyLoad设置为1），那么调用本接口获取到的binAddr为空指针。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| binAddr | 输出 | 算子二进制数据在Device上的内存地址。<br>如果加载算子二进制时设置了懒加载标识（将aclrtBinaryLoadOptions.[aclrtBinaryLoadOption](25-04_Structs.md#aclrtBinaryLoadOption).isLazyLoad设置为1），那么调用本接口获取到的binAddr为空指针。 |
 | binSize | 输出 | 算子二进制数据的大小，单位Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -343,7 +343,7 @@ aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void *
 
 | 参数名 | 输入/输出 | 说明                                                                                                                                                                                                        |
 | --- | :---: |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | name | 输入 | 全局变量名称。需与算子二进制中定义的全局变量名称一致。                                                                                                                                                                               |
 | dptr | 输出 | Device侧全局变量的地址指针。<br/>若此处传nullptr，表示不需要获取地址。                                                                                                                                                              |
 | size | 输出 | Device侧全局变量的大小，单位Byte。<br/>若此处传nullptr，表示不需要获取大小。<br>dptr和size不能同时为nullptr。                                                                                                                              |
@@ -392,13 +392,13 @@ aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExcept
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。<br>取值详见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。 |
+| binHandle | 输入 | 算子二进制句柄。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。<br>取值详见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 | callback | 输入 | 指定要注册的回调函数。<br>回调函数的函数原型为：<br>typedef void (*aclrtOpExceptionCallback)(aclrtExceptionInfo *exceptionInfo, void *userData); |
 | userData | 输入 | 待传递给回调函数的用户数据的指针。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -439,7 +439,7 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -475,11 +475,11 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | info | 输入 | 异常信息的指针。 |
-| func | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| func | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -509,20 +509,20 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 
 根据核函数句柄获取Device侧算子起始地址。
 
-不同产品上的AI数据处理核心单元不同，关于Core的定义及详细说明，请参见[aclrtDevAttr](25_数据类型及其操作接口.md#aclrtDevAttr)。
+不同产品上的AI数据处理核心单元不同，关于Core的定义及详细说明，请参见[aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)。
 
 ### 参数说明
 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
 | aivAddr | 输出 | Vector Core上的算子起始地址。<br>若通过本接口获取到aivAddr为空，则表示该算子不在Vector Core上执行。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -557,13 +557,13 @@ aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | aicSize | 输出 | 在AI Core或Cube Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在Vector Core上执行，则该值为0。 |
 | aivSize | 输出 | 在Vector Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在AI Core或Cube Core上执行，则该值为0。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -598,13 +598,13 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | maxLen | 输入 | 用户申请用于存储核函数名称的最大内存大小，单位Byte。 |
 | name | 输出 | 核函数名称。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -641,13 +641,13 @@ aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribut
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
-| attrType | 输入 | 指定属性。类型定义请参见[aclrtFuncAttribute](25_数据类型及其操作接口.md#aclrtFuncAttribute)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| attrType | 输入 | 指定属性。类型定义请参见[aclrtFuncAttribute](25-02_Enumerations.md#aclrtFuncAttribute)。 |
 | attrValue | 输出 | 获取属性值。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -686,7 +686,7 @@ aclError aclrtGetHardwareSyncAddr(void **addr)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -723,14 +723,14 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| handle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| handle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcName | 输入 | 执行AI CPU算子的入口函数。不能为空。 |
 | kernelName | 输入 | AI CPU算子的opType。不能为空。 |
-| funcHandle | 输出 | 函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输出 | 函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -767,12 +767,12 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunctionByEntry](#aclrtBinaryGetFunctionByEntry)或[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)获取核函数句柄，再将其作为入参传入本接口。 |
-| argsHandle | 输出 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunctionByEntry](#aclrtBinaryGetFunctionByEntry)或[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)获取核函数句柄，再将其作为入参传入本接口。 |
+| argsHandle | 输出 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -809,14 +809,14 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunctionByEntry](#aclrtBinaryGetFunctionByEntry)或[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)获取核函数句柄，再将其作为入参传入本接口。 |
-| argsHandle | 输出 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。<br>需提前调用[aclrtKernelArgsGetHandleMemSize](#aclrtKernelArgsGetHandleMemSize)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunctionByEntry](#aclrtBinaryGetFunctionByEntry)或[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)获取核函数句柄，再将其作为入参传入本接口。 |
+| argsHandle | 输出 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。<br>需提前调用[aclrtKernelArgsGetHandleMemSize](#aclrtKernelArgsGetHandleMemSize)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
 | userHostMem | 输入 | Host内存地址。<br>需提前调用[aclrtKernelArgsGetMemSize](#aclrtKernelArgsGetMemSize)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
 | actualArgsSize | 输入 | 内存大小。<br>需提前调用[aclrtKernelArgsGetMemSize](#aclrtKernelArgsGetMemSize)接口获取内存大小，再将其作为入参传入此处。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -851,13 +851,13 @@ aclError aclrtKernelArgsGetMemSize(aclrtFuncHandle funcHandle, size_t userArgsSi
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | userArgsSize | 输入 | 在内存中存放参数列表数据所需的大小，单位为Byte。<br>每个参数数据的内存大小都需要8字节对齐，这里的userArgsSize是这些对齐后的参数数据内存大小相加的总和。 |
 | actualArgsSize | 输出 | Kernel Launch时参数列表所需内存的实际大小，单位为Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -892,12 +892,12 @@ aclError aclrtKernelArgsGetHandleMemSize(aclrtFuncHandle funcHandle, size_t *mem
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | memSize | 输出 | 参数列表句柄占用的内存大小，单位为Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -934,14 +934,14 @@ aclError aclrtKernelArgsAppend(aclrtArgsHandle argsHandle, void *param, size_t p
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
 | param | 输入 | 待追加参数值的内存地址。<br>此处为Host内存地址。 |
 | paramSize | 输入 | 内存大小，单位Byte。 |
-| paramHandle | 输出 | 参数句柄。类型定义请参见[aclrtParamHandle](25_数据类型及其操作接口.md#aclrtParamHandle)。 |
+| paramHandle | 输出 | 参数句柄。类型定义请参见[aclrtParamHandle](25-05_Typedefs.md#aclrtParamHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -978,12 +978,12 @@ aclError aclrtKernelArgsAppendPlaceHolder(aclrtArgsHandle argsHandle, aclrtParam
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
-| paramHandle | 输出 | 参数句柄。类型定义请参见[aclrtParamHandle](25_数据类型及其操作接口.md#aclrtParamHandle)。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
+| paramHandle | 输出 | 参数句柄。类型定义请参见[aclrtParamHandle](25-05_Typedefs.md#aclrtParamHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1018,14 +1018,14 @@ aclError aclrtKernelArgsGetPlaceHolderBuffer(aclrtArgsHandle argsHandle, aclrtPa
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
-| paramHandle | 输入 | 参数句柄。类型定义请参见[aclrtParamHandle](25_数据类型及其操作接口.md#aclrtParamHandle)。<br>此处的paramHandle需与[aclrtKernelArgsAppendPlaceHolder](#aclrtKernelArgsAppendPlaceHolder)接口中的paramHandle保持一致。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
+| paramHandle | 输入 | 参数句柄。类型定义请参见[aclrtParamHandle](25-05_Typedefs.md#aclrtParamHandle)。<br>此处的paramHandle需与[aclrtKernelArgsAppendPlaceHolder](#aclrtKernelArgsAppendPlaceHolder)接口中的paramHandle保持一致。 |
 | dataSize | 输入 | 内存大小。 |
 | bufferAddr | 输出 | paramHandle占位符指向的内存地址。<br>后续由用户管理该内存中的数据，但无需管理该内存的生命周期。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1060,14 +1060,14 @@ aclError aclrtKernelArgsParaUpdate(aclrtArgsHandle argsHandle, aclrtParamHandle 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
-| paramHandle | 输入 | 参数句柄。类型定义请参见[aclrtParamHandle](25_数据类型及其操作接口.md#aclrtParamHandle)。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
+| paramHandle | 输入 | 参数句柄。类型定义请参见[aclrtParamHandle](25-05_Typedefs.md#aclrtParamHandle)。 |
 | param | 输入 | 待更新参数值的内存地址。<br>此处为Host内存地址。 |
 | paramSize | 输入 | 内存大小，单位Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1102,11 +1102,11 @@ aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1141,15 +1141,15 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)接口根据kernelName获取funcHandle。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)接口根据kernelName获取funcHandle。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
 | argsData | 输入 | 存放核函数所有入参数据的Device内存地址指针。<br>内存申请接口请参见[内存管理](11_内存管理.md)。<br>注意，执行本接口下发任务的Device需与argsData中使用的Device内存要是同一个Device。 |
 | argsSize | 输入 | argsData参数值的大小，单位为Byte。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 参考资源
 
@@ -1197,16 +1197,16 @@ aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, con
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
 | argsData | 输入 | 存放核函数所有入参数据的Device内存地址指针。<br>内存申请接口请参见[内存管理](11_内存管理.md)。<br>注意，执行本接口下发任务的Device需与argsData中使用的Device内存要是同一个Device。 |
 | argsSize | 输入 | argsData参数值的大小，单位为Byte。 |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25_数据类型及其操作接口.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 参考资源
 
@@ -1256,16 +1256,16 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25_数据类型及其操作接口.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
-| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25_数据类型及其操作接口.md#aclrtArgsHandle)。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](25-05_Typedefs.md#aclrtArgsHandle)。 |
 | reserve | 输入 | 预留参数。当前固定传NULL。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 参考资源
 
@@ -1313,10 +1313,10 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25_数据类型及其操作接口.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
 | hostArgs | 输入 | 存放核函数所有入参数据的Host内存地址指针。 |
 | argsSize | 输入 | hostArgs参数值的大小，单位为Byte。 |
 | placeHolderArray | 输入 | placeholder参数数组。<br>aclrtPlaceHolderInfo定义如下：<br>typedef struct {<br>   uint32_t addrOffset;<br>   uint32_t dataOffset;<br>} aclrtPlaceHolderInfo;<br>成员变量说明如下：<br><br>  - addrOffset：placeholder指向的数据区拷贝到Device后，其真实Device内存地址在launch时需要刷新到hostArgs中，该参数用于指定需刷新的位置偏移<br>  - dataOffset：placeholder指向的数据区需拷贝到Device侧，该参数用于指定数据区基于hostArgs的地址偏移 |
@@ -1324,7 +1324,7 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 参考资源
 
@@ -1371,15 +1371,15 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明                                                                                                  |
 | --- | :---: |-----------------------------------------------------------------------------------------------------|
-| func | 输入 | 内核函数指针（可以是符号或[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)）。                                  |
+| func | 输入 | 内核函数指针（可以是符号或[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)）。                                  |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。                                   |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25_数据类型及其操作接口.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
 | args | 输入 | 参数数组指针。<br/>参数数组中的每个元素均指向核函数参数数据在Host侧的内存地址。                                                        |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 参数数组中的元素顺序需与核函数参数顺序保持一致，且参数数组大小需与核函数参数数量保持一致，否则会导致未定义行为。
@@ -1478,7 +1478,7 @@ aclError aclrtDestroyBinary(aclrtBinary binary)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1514,11 +1514,11 @@ aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | binary | 输入 | 算子二进制信息。<br>此处需先调用[aclrtCreateBinary](#aclrtCreateBinary)接口，获取aclrtBinary类型数据的指针。 |
-| binHandle | 输出 | 指向二进制的handle。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。 |
+| binHandle | 输出 | 指向二进制的handle。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1553,11 +1553,11 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>该handle在调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)、[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)或者[aclrtBinaryLoad](#aclrtBinaryLoad)接口时生成。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>该handle在调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)、[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)或者[aclrtBinaryLoad](#aclrtBinaryLoad)接口时生成。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -1596,12 +1596,12 @@ aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
-| binHandle | 输出 | 算子二进制的句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| binHandle | 输出 | 算子二进制的句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1638,12 +1638,12 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 
 | 参数名 | 输入/输出 | 说明                                                                |
 | --- | :---: |-------------------------------------------------------------------|
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | paramCount | 输出 | 核函数参数列表中所包含的参数数量。                                                 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1678,14 +1678,14 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 | 参数名 | 输入/输出 | 说明                                                                                                                   |
 | --- | :---: |----------------------------------------------------------------------------------------------------------------------|
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。                                                    |
+| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。                                                    |
 | paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0，(参数数量-1)]. |
 | paramOffset | 输出 | 参数在参数数据区中的偏移，单位为Byte。                                                                                                |
 | paramSize | 输出 | 参数的大小，单位为Byte。                                                                                                       |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1723,13 +1723,13 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)，不能为空。 |
+| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)，不能为空。 |
 | flags | 输入 | 预留参数，当前固定配置为0。 |
 | dynamicUbufSize | 输出 | 每个Block可用的动态UB buffer大小，单位为Byte，不能为空。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1768,11 +1768,11 @@ aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | symbol | 输入 | 核函数名。|
-| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 

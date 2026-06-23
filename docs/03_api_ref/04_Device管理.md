@@ -69,7 +69,7 @@ aclError aclrtSetDevice(int32_t deviceId)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -125,7 +125,7 @@ aclrtResetDevice接口内部涉及引用计数的实现，建议aclrtResetDevice
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -180,7 +180,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -253,7 +253,7 @@ aclError aclrtGetDevice(int32_t *deviceId)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -292,11 +292,11 @@ aclError aclrtGetRunMode(aclrtRunMode *runMode)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| runMode | 输出 | 运行模式的指针。类型定义请参见[aclrtRunMode](25_数据类型及其操作接口.md#aclrtRunMode)。 |
+| runMode | 输出 | 运行模式的指针。类型定义请参见[aclrtRunMode](25-02_Enumerations.md#aclrtRunMode)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -335,7 +335,7 @@ aclError aclrtSetTsDevice(aclrtTsId tsId)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -374,7 +374,7 @@ aclError aclrtGetDeviceCount(uint32_t *count)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -410,11 +410,11 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| utilizationInfo | 输出 | 利用率信息结构体指针。类型定义定参见[aclrtUtilizationInfo](25_数据类型及其操作接口.md#aclrtUtilizationInfo)。 |
+| utilizationInfo | 输出 | 利用率信息结构体指针。类型定义定参见[aclrtUtilizationInfo](25-04_Structs.md#aclrtUtilizationInfo)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -457,11 +457,11 @@ aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatu
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| deviceStatus | 输出 | Device状态。类型定义请参见[aclrtDeviceStatus](25_数据类型及其操作接口.md#aclrtDeviceStatus)。 |
+| deviceStatus | 输出 | Device状态。类型定义请参见[aclrtDeviceStatus](25-02_Enumerations.md#aclrtDeviceStatus)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -536,11 +536,11 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| mode | 输入 | 设置浮点计算结果输出模式。类型定义请参见[aclrtFloatOverflowMode](25_数据类型及其操作接口.md#aclrtFloatOverflowMode)。 |
+| mode | 输入 | 设置浮点计算结果输出模式。类型定义请参见[aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -575,11 +575,11 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| mode | 输出 | 获取浮点计算结果输出模式。类型定义请参见[aclrtFloatOverflowMode](25_数据类型及其操作接口.md#aclrtFloatOverflowMode)。 |
+| mode | 输出 | 获取浮点计算结果输出模式。类型定义请参见[aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -620,7 +620,7 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -671,7 +671,7 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -712,7 +712,7 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -753,7 +753,7 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -790,11 +790,11 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 | --- | :---: | --- |
 | outputAddr | 输入&输出 | 用户申请的Device内存，例如通过aclrtMalloc接口申请。 |
 | outputSize | 输入 | 需申请的Device内存大小，单位Byte，固定大小为64Byte。 |
-| stream | 输入 | 指定Stream，用于下发溢出状态查询任务。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定Stream，用于下发溢出状态查询任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -837,11 +837,11 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream，用于下发溢出状态复位任务。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定Stream，用于下发溢出状态复位任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -885,7 +885,7 @@ aclError aclrtSynchronizeDevice(void)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -926,7 +926,7 @@ aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -962,12 +962,12 @@ aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)]。 |
-| attr | 输入 | 属性。类型定义请参见[aclrtDevAttr](25_数据类型及其操作接口.md#aclrtDevAttr)。 |
+| attr | 输入 | 属性。类型定义请参见[aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)。 |
 | value | 输出 | 属性值。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1007,7 +1007,7 @@ aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *grea
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1043,12 +1043,12 @@ aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatu
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)]。 |
-| devFeatureType | 输入 | 特性类型。类型定义请参见[aclrtDevFeatureType](25_数据类型及其操作接口.md#aclrtDevFeatureType)。 |
+| devFeatureType | 输入 | 特性类型。类型定义请参见[aclrtDevFeatureType](25-02_Enumerations.md#aclrtDevFeatureType)。 |
 | value | 输出 | 特性是否支持。<br><br>  - ACL_DEV_FEATURE_NOT_SUPPORT(0)：不支持<br>  - ACL_DEV_FEATURE_SUPPORT(1)：支持<br><br><br>相关宏定义如下：<br>#define ACL_DEV_FEATURE_SUPPORT  0x00000001<br>#define ACL_DEV_FEATURE_NOT_SUPPORT 0x00000000 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1089,7 +1089,7 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1132,7 +1132,7 @@ aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallba
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1172,7 +1172,7 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 用户设备ID、逻辑设备ID、物理设备ID之间的关系
 
@@ -1222,7 +1222,7 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 用户设备ID、逻辑设备ID、物理设备ID之间的关系
 
@@ -1272,7 +1272,7 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 用户设备ID、逻辑设备ID、物理设备ID之间的关系
 
@@ -1322,7 +1322,7 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 用户设备ID、逻辑设备ID、物理设备ID之间的关系
 
@@ -1368,11 +1368,11 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID，与[aclrtSetDevice](#aclrtSetDevice)接口中的Device ID保持一致。 |
-| uuid | 输出 | Device的唯一标识。类型定义请参见[aclrtUuid](25_数据类型及其操作接口.md#aclrtUuid)。 |
+| uuid | 输出 | Device的唯一标识。类型定义请参见[aclrtUuid](25-04_Structs.md#aclrtUuid)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1413,7 +1413,7 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1448,14 +1448,14 @@ aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| capabilities | 输出 | 原子操作支持能力数组，数组长度与count参数值一致。数组中的每个元素是一个位掩码，位掩码的每一位代表对不同数据类型原子操作的支持情况，1表示支持，0表示不支持。类型定义请参见[aclrtAtomicOperationCapability](25_数据类型及其操作接口.md#aclrtAtomicOperationCapability)。 |
-| operations | 输入 | 待查询的原子操作数组，数组长度与count参数值一致。类型定义请参见[aclrtAtomicOperation](25_数据类型及其操作接口.md#aclrtAtomicOperation)。 |
+| capabilities | 输出 | 原子操作支持能力数组，数组长度与count参数值一致。数组中的每个元素是一个位掩码，位掩码的每一位代表对不同数据类型原子操作的支持情况，1表示支持，0表示不支持。类型定义请参见[aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability)。 |
+| operations | 输入 | 待查询的原子操作数组，数组长度与count参数值一致。类型定义请参见[aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation)。 |
 | count | 输入 | 待查询的原子操作数量，其大小必须与capabilities以及operations参数数组的长度一致，否则可能会导致未定义的行为。 |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 
 <br>
@@ -1490,12 +1490,12 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| capabilities | 输出 | 原子操作支持能力数组，数组长度与count参数值一致。数组中的每个元素是一个位掩码，位掩码的每一位代表对不同数据类型原子操作的支持情况，1表示支持，0表示不支持。类型定义请参见[aclrtAtomicOperationCapability](25_数据类型及其操作接口.md#aclrtAtomicOperationCapability)。 |
-| operations | 输入 | 待查询的原子操作数组，数组长度与count参数值一致。类型定义请参见[aclrtAtomicOperation](25_数据类型及其操作接口.md#aclrtAtomicOperation)。 |
+| capabilities | 输出 | 原子操作支持能力数组，数组长度与count参数值一致。数组中的每个元素是一个位掩码，位掩码的每一位代表对不同数据类型原子操作的支持情况，1表示支持，0表示不支持。类型定义请参见[aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability)。 |
+| operations | 输入 | 待查询的原子操作数组，数组长度与count参数值一致。类型定义请参见[aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation)。 |
 | count | 输入 | 待查询的原子操作数量，其大小必须与capabilities以及operations参数数组的长度一致，否则可能会导致未定义的行为。 |
 | srcDeviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
 | dstDeviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。

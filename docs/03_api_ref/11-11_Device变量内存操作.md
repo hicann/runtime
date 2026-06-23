@@ -38,7 +38,7 @@ aclError aclrtGetSymbolAddress(const void *symbol, void **devPtr)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -82,7 +82,7 @@ aclError aclrtGetSymbolSize(const void *symbol, size_t *size)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -123,11 +123,11 @@ aclError aclrtMemcpyFromSymbol(void *dst, size_t dstMax, const void *symbol,
 | symbol | 输入 | Device变量的地址。此处传入`__gm__`声明的变量名取地址。 |
 | count | 输入 | 内存复制的长度，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
 | offset | 输入 | Device变量地址偏移，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
-| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25_数据类型及其操作接口.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_DEVICE_TO_HOST和ACL_MEMCPY_DEFAULT。 |
+| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_DEVICE_TO_HOST和ACL_MEMCPY_DEFAULT。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -171,12 +171,12 @@ aclError aclrtMemcpyFromSymbolAsync(void *dst, size_t dstMax, const void *symbol
 | symbol | 输入 | Device变量的地址。此处传入`__gm__`声明的变量名取地址。 |
 | count | 输入 | 内存复制的长度，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
 | offset | 输入 | Device变量地址偏移，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
-| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25_数据类型及其操作接口.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_DEVICE_TO_HOST和ACL_MEMCPY_DEFAULT。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_DEVICE_TO_HOST和ACL_MEMCPY_DEFAULT。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -217,11 +217,11 @@ aclError aclrtMemcpyToSymbol(const void *symbol, const void *src,
 | src | 输入 | 源内存地址指针。 |
 | count | 输入 | 内存复制的长度，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
 | offset | 输入 | Device变量地址偏移，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
-| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25_数据类型及其操作接口.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_HOST_TO_DEVICE和ACL_MEMCPY_DEFAULT。 |
+| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_HOST_TO_DEVICE和ACL_MEMCPY_DEFAULT。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
@@ -264,12 +264,12 @@ aclError aclrtMemcpyToSymbolAsync(const void *symbol, const void *src,
 | src | 输入 | 源内存地址指针。 |
 | count | 输入 | 内存复制的长度，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
 | offset | 输入 | Device变量地址偏移，单位Byte。需满足 offset + count ≤ Device变量大小，Device变量大小可通过 [aclrtGetSymbolSize](#aclrtGetSymbolSize)接口查询获取。 |
-| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25_数据类型及其操作接口.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_HOST_TO_DEVICE和ACL_MEMCPY_DEFAULT。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| kind | 输入 | 拷贝类型，类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。本接口仅支持ACL_MEMCPY_HOST_TO_DEVICE和ACL_MEMCPY_DEFAULT。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
 
