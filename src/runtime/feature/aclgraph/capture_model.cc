@@ -88,7 +88,6 @@ CaptureModel::~CaptureModel() noexcept
          DELETE_O(condHandle);
     }
     condHandles_.clear(); 
-
 }
 
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl)

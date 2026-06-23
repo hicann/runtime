@@ -924,7 +924,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
         toCommandFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = nullptr;
     }
-
 }
 
 static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
