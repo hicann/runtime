@@ -55,7 +55,8 @@ usage() {
   echo "Usage:"
   echo "  sh build_ut.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
   echo "                 [-t | --target <target1> <target2> ...] [--asan]"
-  echo "                 [-u | --ut] [-c | --cov] [--cann_3rd_lib_path=<PATH>]"
+  echo "                 [-u | --ut] [-c | --cov] [--ut_timeout=<SECONDS>]"
+  echo "                 [--cann_3rd_lib_path=<PATH>]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"
@@ -64,6 +65,8 @@ usage() {
   echo "    -u, --ut [specific_ut]"
   echo "                   Build and execute ut, if specific_ut is provided, run only the specified unit test"
   echo "    -c, --cov      Build ut with coverage tag"
+  echo "    --ut_timeout=<SECONDS>"
+  echo "                   Set timeout for each UT executable, default is 0, 0 disables timeout"
   echo "    --asan         Enable AddressSanitizer (requires libasan.so, libubsan.so, libtsan.so)"
   echo "                   Asan libraries are usually integrated with gcc. If not found, install them:"
   echo "                   Ubuntu/Debian: sudo apt install libasan6 libubsan1 libtsan2"
@@ -84,11 +87,12 @@ checkopts() {
   MAKE_PKG="off"
   ASCEND_3RD_LIB_PATH="$BASEPATH/output/third_party"
   CMAKE_BUILD_TYPE="Debug"
+  UT_TIMEOUT="${UT_TIMEOUT:-0}"
   UT_TARGET="full"
   TARGETS=()
 
   # Process the options
-  parsed_args=$(getopt -o j:hvu::ct:f: -l help,cann_3rd_lib_path:,ut::,verbose,asan,target:, -- "$@") || {
+  parsed_args=$(getopt -o j:hvu::ct:f: -l help,cann_3rd_lib_path:,ut::,verbose,asan,target:,ut_timeout:, -- "$@") || {
     usage
     exit 1
   }
@@ -111,6 +115,10 @@ checkopts() {
         ;;
       --cann_3rd_lib_path)
         ASCEND_3RD_LIB_PATH="$2"
+        shift 2
+        ;;
+      --ut_timeout)
+        UT_TIMEOUT="$2"
         shift 2
         ;;
       -u | --ut)
@@ -162,6 +170,11 @@ checkopts() {
         ;;
     esac
   done
+
+  if ! [[ "${UT_TIMEOUT}" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: --ut_timeout must be a non-negative integer seconds"
+    exit 1
+  fi
 }
 
 # check if changed files only include docs/, docs/guidelines/, example/, .claude/, .opencode/ or markdown files
@@ -350,12 +363,34 @@ run_ut() {
     echo "${UT_TARGET}"
     local ut_dir="${BUILD_PATH}/${ut_path_map["${UT_TARGET}"]}"
     echo "ut_dir = ${ut_dir}"
-    exec_file_cnt=0
-    while read -r ut_exec; do
+    local exec_file_cnt=0
+    if [[ "${UT_TIMEOUT}" -gt 0 ]] && ! command -v timeout >/dev/null 2>&1; then
+      echo "ERROR: timeout command not found. Please install timeout command or run with --ut_timeout=0"
+      return 1
+    fi
+    while IFS= read -r ut_exec; do
         filename=$(basename "$ut_exec")
-        RUN_TEST_CASE="$ut_exec --gtest_output=xml:${report_dir}/${filename}.xml" && ${RUN_TEST_CASE}
-        echo "Executing: $filename"
-        exec_file_cnt=${exec_file_cnt+1}
+        echo "Executing: ${filename}"
+        local ret=0
+        set +e
+        if [[ "${UT_TIMEOUT}" -gt 0 ]]; then
+          timeout "${UT_TIMEOUT}s" \
+            "$ut_exec" "--gtest_output=xml:${report_dir}/${filename}.xml"
+          ret=$?
+        else
+          "$ut_exec" "--gtest_output=xml:${report_dir}/${filename}.xml"
+          ret=$?
+        fi
+        set -e
+
+        if [[ "${UT_TIMEOUT}" -gt 0 && (${ret} -eq 124 || ${ret} -eq 137) ]]; then
+          echo "ERROR: UT ${filename} timed out after ${UT_TIMEOUT}s"
+          return 1
+        elif [[ ${ret} -ne 0 ]]; then
+          echo "ERROR: UT ${filename} failed, exit code: ${ret}"
+          return ${ret}
+        fi
+        exec_file_cnt=$((exec_file_cnt + 1))
     done < <(find "$ut_dir" -type f -executable -not -name "*.so" -not -name "*.cmake" -not -name "Makefile" -not -path "*/CMakeFiles/*")
 
     if [[ $exec_file_cnt -eq 0 ]]; then
@@ -363,7 +398,7 @@ run_ut() {
       exit 1
     fi
     if [ -n "$ORIGINAL_LD_PRELOAD" ]; then
-      export LD_PRLOAD="$ORIGINAL_LD_PRELOAD"
+      export LD_PRELOAD="$ORIGINAL_LD_PRELOAD"
     else
       unset LD_PRELOAD
     fi
