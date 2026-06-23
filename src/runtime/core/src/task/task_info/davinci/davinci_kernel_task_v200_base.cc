@@ -330,7 +330,7 @@ static void ConstructDavidMixSqeForDavinciTask(TaskInfo *taskInfo, rtDavidSqe_t 
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     uint8_t taskRation = 0U;
     uint8_t mixType = static_cast<uint8_t>(NO_MIX);
-    uint8_t schemMode = aicTaskInfo->schemMode;
+    const uint8_t schemMode = aicTaskInfo->schemMode;
     const Kernel *kernel = aicTaskInfo->kernel;
     if (kernel != nullptr) {
         taskRation = static_cast<uint8_t>(kernel->GetTaskRation());

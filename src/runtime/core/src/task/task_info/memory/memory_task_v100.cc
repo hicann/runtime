@@ -618,7 +618,7 @@ static void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitVal
     fcPara.sqHeadNext = (firstSqePos + MEM_WAIT_SQE_NUM) % sqDepth;
     fcPara.lastSqePos = (firstSqePos + MEM_WAIT_SQE_NUM - 1U) % sqDepth;
     fcPara.profSwitchAddr = stream->Device_()->GetProfSwitchAddr();
-    fcPara.profSwitchValue = 0x1;
+    fcPara.profSwitchValue = 0x1ULL;
     fcPara.sqTailOffset = stream->Device_()->GetDevProperties().sqTailOffset;
     fcPara.sqRegAddrArray = RtPtrToValue(stream->Device_()->GetSqVirtualArrBaseAddr_());
     if (stream->IsSoftwareSqEnable()) {

@@ -88,13 +88,13 @@ static bool FloatStatusTaskRegister()
     };
 
     const auto& chips = GetDavidChips();
-    for (auto chip : chips) {
-        RegTaskFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, getFloatStatusFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, clearFloatStatusFuncs);
+    for (const auto chip : chips) {
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, getFloatStatusFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, clearFloatStatusFuncs);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, &ConstructDavidSqeForNpuGetFloatStaTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, &ConstructDavidSqeForNpuClrFloatStaTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, &ConstructDavidSqeForNpuGetFloatStaTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, &ConstructDavidSqeForNpuClrFloatStaTask);
 
     return true;
 }

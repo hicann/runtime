@@ -1671,7 +1671,7 @@ void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc,
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
         RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
@@ -2494,8 +2494,8 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastIn
     ConstructLLWI(r4, fcPara.sqIdMemAddr, fc.llwi5);
 
     // load 0x100000000 to r2
-    ConstructLHWI(r2, 0x100000000, fc.lhwi51);
-    ConstructLLWI(r2, 0x100000000, fc.llwi51);
+    ConstructLHWI(r2, 0x100000000ULL, fc.lhwi51);
+    ConstructLLWI(r2, 0x100000000ULL, fc.llwi51);
 
     // r1 = r5 | r2, sqId bit32 set to 1
     ConstructOpOp(r5, r2, r1, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.orOp);

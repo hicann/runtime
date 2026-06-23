@@ -308,7 +308,7 @@ void ConstructDavidSqeForFusionKernelTask(TaskInfo* const taskInfo, void* const 
 std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo)
 {
     std::string taskName = "FUSION_KERNEL";
-    uint8_t sqeSubType = fusionTaskInfo->sqeSubType;
+    const uint8_t sqeSubType = fusionTaskInfo->sqeSubType;
 
     std::vector<std::string> subTaskNames;
     if ((sqeSubType & (1U << RT_FUSION_AICPU)) != 0U) {

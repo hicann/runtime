@@ -38,7 +38,7 @@ namespace runtime {
 #if F_DESC("钩子注册框架")
 static void DavidRegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
 {
-    for (auto chipType : chipTypes) {
+    for (const auto chipType : chipTypes) {
         auto &doCompleteSuccFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc;
         for (auto &item : doCompleteSuccFunc) {
             if (item == nullptr) {

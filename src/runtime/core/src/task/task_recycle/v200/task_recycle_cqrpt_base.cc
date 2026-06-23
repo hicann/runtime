@@ -316,7 +316,7 @@ rtError_t ProcReport(Device * const dev, uint32_t streamId, const uint32_t syncP
                 targetTaskSn = targetTask->taskSn;
             }
         }
-        uint32_t pos = static_cast<uint32_t>(report.sqHead);
+        const uint32_t pos = static_cast<uint32_t>(report.sqHead);
         uint32_t reportTaskSn = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
         RT_LOG(RT_LOG_INFO, "Get logic report: cnt=%u, idx=%u, stream_id=%hu, report_pos=%u, sync_pos=%u,"
             " sqe_type=%u, sq_head=%u, target_task_sn=%u, report_task_sn=%u, retCode=%#x, errType=%#x.",

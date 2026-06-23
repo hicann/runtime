@@ -95,7 +95,7 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV2(TaskInfo* taskInfo, rtStarsStrea
     const uint64_t sqVirtualAddr = trueStream->GetSqRegVirtualAddr();
     DevProperties props;
     // 此处应该使用device中的函数，但由于UT中动态切换芯片类型，为保证UT通过使用宏
-    auto error = GET_DEV_PROPERTIES(chipType, props);
+    const auto error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         "GetDevProperties failed, chip type=%d.", chipType);
 

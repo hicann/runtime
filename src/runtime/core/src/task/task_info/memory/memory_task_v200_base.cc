@@ -339,7 +339,7 @@ static void AsyncDmaWqe2DProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const St
     destroyParm.sqId = stream->GetSqId();
     destroyParm.ci = memcpyAsyncTaskInfo->ubDma.pi;
     
-    rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqe2D(stream->Device_()->Id_(), &destroyParm);
+    const rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqe2D(stream->Device_()->Id_(), &destroyParm);
     COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqe2d failed, retCode=%#x.", error);
     RT_LOG(RT_LOG_INFO, "ub wqe async 2d release success, ci=%u, sq_id=%u.",
             destroyParm.ci, destroyParm.sqId);
@@ -502,7 +502,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void *const sqe, c
     fcPara.awSize = memWaitValueTask->awSize;
     fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
     fcPara.profSwitchAddr = stream->Device_()->GetProfSwitchAddr();
-    fcPara.profSwitchValue = 0x1;
+    fcPara.profSwitchValue = 0x1ULL;
     fcPara.profDisableAddr = memWaitValueTask->profDisableStatusAddr;
     fcPara.swapBufferBaseAddr = props.swapBufferBaseAddr;
     fcPara.swapBufferUpdateAddr = stream->Device_()->GetStarsRegBaseAddr() + props.swapBufferUpdateRegOffset;

@@ -178,16 +178,16 @@ static bool MaintenanceTaskRegister()
 
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
-        RegTaskFunc(chip, TS_TASK_TYPE_MAINTENANCE, maintenanceFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, getDeviceMsgFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, getStarsVersionFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, aicpuMsgVersionFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_MAINTENANCE, maintenanceFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, getDeviceMsgFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, getStarsVersionFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, aicpuMsgVersionFuncs);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_MAINTENANCE, &ConstructDavidSqeForMaintenanceTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_GET_DEVICE_MSG, &ConstructDavidSqeForGetDevMsgTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_GET_STARS_VERSION, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, &ConstructDavidSqeForAicpuMsgVersionTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_MAINTENANCE, &ConstructDavidSqeForMaintenanceTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_GET_DEVICE_MSG, &ConstructDavidSqeForGetDevMsgTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_GET_STARS_VERSION, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, &ConstructDavidSqeForAicpuMsgVersionTask);
 
     return true;
 }

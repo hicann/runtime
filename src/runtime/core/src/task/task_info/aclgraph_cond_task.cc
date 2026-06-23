@@ -47,7 +47,7 @@ static rtError_t CondTaskFuncCallDevMemAlloc(TaskInfo* taskInfo, CondHandle *con
 
     /* totalSqCount * 2U + modelCount * 3U 为了存储条件算子用到的几个dev地址，含义见下文注释 */
     const uint64_t allocSize = (totalSqCount * 2U + modelCount * 3U) * sizeof(uint64_t) + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
-    rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     if ((ret != RT_ERROR_NONE) || (devMem == nullptr)) {
         RT_LOG(RT_LOG_ERROR, "alloc func call memory failed, retCode=%#x, size=%" PRIu64 "(bytes), device_id=%u",
                     ret, condTaskInfo->funCallMemSize, dev->Id_());

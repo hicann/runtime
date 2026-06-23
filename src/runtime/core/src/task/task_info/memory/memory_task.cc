@@ -1456,7 +1456,7 @@ void StarsV2IpcEventWaitTaskUnInit(TaskInfo* taskInfo)
     COND_RETURN_VOID(event == nullptr, "dynamic_cast failed: event is not IpcEvent");
     IpcHandleVa *vaHandle = event->GetIpcHandleVa();
     COND_RETURN_VOID(event->GetIpcHandleVa() == nullptr, "ipcHandleVa is nullptr");
-    uint16_t curIndex = memWaitValueTask->curIndex;
+    const uint16_t curIndex = memWaitValueTask->curIndex;
     event->IpcVaLock();
     if (vaHandle->deviceMemRef[curIndex] > 0U) {
         vaHandle->deviceMemRef[curIndex]--;
