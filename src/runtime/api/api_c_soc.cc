@@ -78,7 +78,7 @@ rtError_t rtGetSocVersion(char_t *ver, const uint32_t maxLen)
     if (rc != EOK) {
         std::stringstream ss;
         ss << std::hex << "ver=0x" << RtPtrToValue(ver) << ", src=0x" << RtPtrToValue(socName.c_str())
-           << std::dec << ", maxLen=" << maxLen << ", count=" << socName.length() + 1U << ".";
+           << std::dec << ", maxLen=" << maxLen << ", count=" << (socName.length() + 1U) << ".";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_SEC_HANDLE);
     }
