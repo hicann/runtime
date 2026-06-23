@@ -17,10 +17,10 @@ namespace cce {
 namespace runtime {
 rtError_t ApiErrorDecorator::SetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devType != RT_DEV_TYPE_DPU, static_cast<uint32_t>(RT_ERROR_INVALID_VALUE),
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE,
         devType, "RT_DEV_TYPE_DPU(0)");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, static_cast<uint32_t>(RT_ERROR_DEVICE_ID), devId, "0");
-    bool isHaveDevice = Runtime::Instance()->HaveDevice();
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, RT_ERROR_DEVICE_ID, devId, "0");
+    const bool isHaveDevice = Runtime::Instance()->HaveDevice();
     uint32_t runMode = RT_RUN_MODE_RESERVED;
     (void)drvGetPlatformInfo(&runMode);
     drvError_t drvRet = drvGetPlatformInfo(&runMode);
@@ -39,8 +39,8 @@ rtError_t ApiErrorDecorator::SetXpuDevice(const rtXpuDevType devType, const uint
 
 rtError_t ApiErrorDecorator::ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devType != RT_DEV_TYPE_DPU, static_cast<uint32_t>(RT_ERROR_INVALID_VALUE), devType, "RT_DEV_TYPE_DPU(0)");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, static_cast<uint32_t>(RT_ERROR_DEVICE_ID), devId, "0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, devType, "RT_DEV_TYPE_DPU(0)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId != 0U, RT_ERROR_DEVICE_ID, devId, "0");
     return impl_->ResetXpuDevice(devType, devId);
 }
 

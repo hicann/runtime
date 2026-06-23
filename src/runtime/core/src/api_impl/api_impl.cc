@@ -8432,7 +8432,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtError_t error = PtrGetAttributes(dst, &dstAttr);
     ERROR_RETURN(error, "get dst attribute failed, error=%#x", error);
     memType = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
-    rtMemLocationType inputDstType = (memAttr.dstLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
+    const rtMemLocationType inputDstType = (memAttr.dstLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
     COND_RETURN_AND_MSG_OUTER(((memType != inputDstType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "dst", RtFmtMsg("The input memory type %s(%d) and the actual memory type %s(%d) do not match,"
@@ -8442,7 +8442,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     error = PtrGetAttributes(src, &srcAttr);
     ERROR_RETURN(error, "get src attribute failed, error=%#x.", error);
     memType = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
-    rtMemLocationType inputSrcType = (memAttr.srcLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
+    const rtMemLocationType inputSrcType = (memAttr.srcLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
     COND_RETURN_AND_MSG_OUTER(((memType != inputSrcType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "src", RtFmtMsg("The input memory type %s(%d) and the actual memory type %s(%d) do not match,"

@@ -362,8 +362,8 @@ rtError_t ApiErrorDecorator::FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * con
     COND_RETURN_AND_MSG_OUTER(CONTEXT_LEN * static_cast<uint32_t>(sqe->totalContextNum) !=
         static_cast<uint32_t>(fftsPlusTaskInfo->descBufLen), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         __func__, "fftsPlusTaskInfo->descBufLen or fftsPlusTaskInfo->fftsPlusSqe->totalContextNum",
-        RtFmtMsg("Parameter fftsPlusTaskInfo->descBufLen %u should equal to the product of parameter"
-            " fftsPlusTaskInfo->fftsPlusSqe->totalContextNum %u and %u", static_cast<uint32_t>(fftsPlusTaskInfo->descBufLen),
+        RtFmtMsg("Parameter fftsPlusTaskInfo->descBufLen %zu should equal to the product of parameter"
+            " fftsPlusTaskInfo->fftsPlusSqe->totalContextNum %u and %u", fftsPlusTaskInfo->descBufLen,
             static_cast<uint32_t>(sqe->totalContextNum), CONTEXT_LEN));
 
     const rtError_t error = impl_->FftsPlusTaskLaunch(fftsPlusTaskInfo, stm, flag);
