@@ -2000,7 +2000,6 @@ rtError_t rtNotifyRecord(rtNotify_t notify, rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-
     RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->NotifyRecord(notifyPtr, exeStream);

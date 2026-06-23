@@ -1873,7 +1873,6 @@ rtError_t ApiErrorDecorator::RtsMemcpyAsync(void * const dst, const uint64_t des
     rtError_t error = CheckMemcpyAttribute(kind, dst, src);
     ERROR_RETURN(error, "Check attributes failed.");
 
-    
     if(cnt == 0UL) {
         RT_LOG(RT_LOG_WARNING, "Memcpy count is 0, no need to copy, return.");
         return RT_ERROR_NONE;

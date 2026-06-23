@@ -420,8 +420,6 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     return RT_ERROR_NONE;
 }
 
-
-
 rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *stm,
     const rtStreamLaunchKernelV2ExtendArgs_t *extendAgrs, const bool isLaunchVec)
 {
