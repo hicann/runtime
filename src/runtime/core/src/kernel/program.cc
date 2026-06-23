@@ -301,7 +301,7 @@ rtError_t Program::AllKernelAdd(Kernel *&addKernel, bool &isRepeated)
             "Program AllKernelAdd failed, retCode=%#x.", static_cast<uint32_t>(error));
         kernelPos_ += 1;
     } else {
-        RT_LOG(RT_LOG_WARNING, "Add all kernel repeatedly, using registered programid=%u, kernelInfoExt=%" PRIu64,
+        RT_LOG(RT_LOG_WARNING, "Add all kernels repeatedly, programId=%u, kernelInfoExt=%" PRIu64,
             addKernel->Program_()->Id_(), kernelInfoExt);
         kernelMapLock_.Unlock();
         isRepeated = true;
@@ -309,7 +309,7 @@ rtError_t Program::AllKernelAdd(Kernel *&addKernel, bool &isRepeated)
     }
     kernelMapLock_.Unlock();
 
-    RT_LOG(RT_LOG_DEBUG, "add kernel success, prog=%p, programid=%u, kernelInfoExt=%" PRIu64, addKernel->Program_(),
+    RT_LOG(RT_LOG_DEBUG, "Add kernel success, prog=%p, programId=%u, kernelInfoExt=%" PRIu64, addKernel->Program_(),
         addKernel->Program_()->Id_(), kernelInfoExt);
     return error;
 }
@@ -319,7 +319,7 @@ rtError_t Program::KernelNameMapAdd(Kernel *&addKernel)
     kernelMapLock_.Lock();
     const auto iter = kernelNameMap_.find(addKernel->Name_());
     if (iter != kernelNameMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "add kernel repeat, kernel_name=%s", addKernel->Name_().c_str());
+        RT_LOG(RT_LOG_ERROR, "Add kernel repeatedly, kernel_name=%s", addKernel->Name_().c_str());
         kernelMapLock_.Unlock();
         return RT_ERROR_KERNEL_DUPLICATE;
     }
