@@ -402,7 +402,7 @@ static void UpdateQosCfgInFftsCtx(rtFftsPlusMixAicAivCtx_t *fftsCtx, TaskInfo* c
     if (!dev->GetQosCfg().isAicoreQosConfiged) {
         return;
     }
-    QosMasterType masterType = GetQosMasterTypeForCtx(fftsCtx);
+    const QosMasterType masterType = GetQosMasterTypeForCtx(fftsCtx);
     RT_LOG(RT_LOG_INFO, "Begin to update fftsCtx qos info, masterType is %u.", static_cast<uint32_t>(masterType));
     if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
         const std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg().aicoreQosCfg;

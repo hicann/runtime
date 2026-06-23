@@ -250,8 +250,8 @@ rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &ad
         return GetIpcSqeWriteAddrByTsId(taskInfo, addr);
     }
     const uint64_t notifyId = static_cast<uint64_t>(taskInfo->u.notifyrecordTask.notifyId);
-    uint64_t notifyTableId = static_cast<uint64_t>(notifyId / taskInfo->stream->Device_()->GetDevProperties().starsNotifyTableSize);
-    uint64_t notifyNum = static_cast<uint64_t>(notifyId & taskInfo->stream->Device_()->GetDevProperties().ipcNotifyNumMask);
+    const uint64_t notifyTableId = static_cast<uint64_t>(notifyId / taskInfo->stream->Device_()->GetDevProperties().starsNotifyTableSize);
+    const uint64_t notifyNum = static_cast<uint64_t>(notifyId & taskInfo->stream->Device_()->GetDevProperties().ipcNotifyNumMask);
     uint64_t baseAddr = static_cast<uint64_t>(taskInfo->stream->Device_()->GetDevProperties().notifyBase);
 
     if (taskInfo->stream->Device_()->GetDevProperties().starsResourceAddrCalculateMethod == 

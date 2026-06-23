@@ -23,7 +23,7 @@ void DoCompleteSuccessForModelMaintainceTask(TaskInfo * const taskInfo, const ui
 void PrintErrorInfoForModelMaintainceTask(TaskInfo * const taskInfo, const uint32_t devId);
 uint32_t GetEndGraphNotifyId(Model *mdl);
 uint16_t GetRootExeStreamId(const Model * const mdl);
-uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *maintainceTaskInfo);
+uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *const maintainceTaskInfo);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_MODEL_MAINTAINCE_TASK_H

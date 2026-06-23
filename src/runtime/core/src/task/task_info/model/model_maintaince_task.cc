@@ -144,7 +144,7 @@ void DoCompleteSuccessForModelMaintainceTask(TaskInfo * const taskInfo, const ui
     }
 }
 
-uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *maintainceTaskInfo)
+uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *const maintainceTaskInfo)
 {
     if (maintainceTaskInfo->model->GetModelType() != RT_MODEL_CAPTURE_MODEL) {
         return MODEL_EXECUTOR_RESERVED;

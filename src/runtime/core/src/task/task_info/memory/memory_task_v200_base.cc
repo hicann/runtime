@@ -264,7 +264,7 @@ static rtError_t ConvertAsyncDmaBatchForSoftWareSq(TaskInfo * const taskInfo, As
 
 rtError_t ConvertAsyncDmaBatch(TaskInfo * const taskInfo, AsyncDmaBatchInfo &batchInfo)
 {
-    bool isUbMode = Runtime::Instance()->GetConnectUbFlag() ? true : false;
+    const bool isUbMode = Runtime::Instance()->GetConnectUbFlag() ? true : false;
     if (!isUbMode) {
         RT_LOG(RT_LOG_ERROR, "pcie does not support");
         return RT_ERROR_INVALID_VALUE;

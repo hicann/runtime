@@ -176,7 +176,7 @@ void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDa
 
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     RtStarsCaptureWhileCondJumpBackFc fc = {};
-    uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
+    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
     ConstructCaptureConditionJumpBackFc(taskInfo, fc);
 
     rtError_t ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(condTaskInfo->jumpBackFuncCallSvmMem,

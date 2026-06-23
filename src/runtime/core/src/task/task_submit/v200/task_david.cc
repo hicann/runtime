@@ -201,7 +201,7 @@ rtError_t AllocTaskInfoOnAutoSplitStream(Stream *curStream, uint32_t sqeNum, Tas
     AutoSplitSqContext *splitCtx = curStream->GetAutoSplitCtx();
     // 检查是否需要扩容 host SQ buffer
     if ((splitCtx->curStreamSqeCount + sqeNum) > (curStream->GetSqeBufferSize() / sizeof(rtDavidSqe_t))) {
-        rtError_t error = ExpandHostSqeBufferLocked(curStream);
+        const rtError_t error = ExpandHostSqeBufferLocked(curStream);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Failed to expand host SQ buffer, retCode=%#x.", error);
     }
 

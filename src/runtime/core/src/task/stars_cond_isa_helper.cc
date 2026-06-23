@@ -2017,7 +2017,7 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
         RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
@@ -2275,7 +2275,7 @@ void ConstructMemWaitValueInstr2WithDynamicProf(RtStarsMemWaitValueLastInstrFcWi
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
         RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
@@ -2622,7 +2622,7 @@ void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFc
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
         RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
