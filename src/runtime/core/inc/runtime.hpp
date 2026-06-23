@@ -65,7 +65,7 @@ constexpr uint32_t UB_REMOTE_MEM_DATA_EXCEPTION_EVENT_ID = 0x81AFAA00U;
 constexpr uint32_t UB_REMOTE_MEM_TIMEOUT_EVENT_ID = 0x81AFAA02U;
 
 constexpr uint32_t RAS_QUERY_INTERVAL = 10U; 
-constexpr uint32_t RAS_QUERY_MAX_COUNT = 50U;
+constexpr uint16_t RAS_QUERY_MAX_COUNT = 50U;
 constexpr uint16_t RT_DSM_EVENT_FILTER_FLAG_EVENT_ID = 1U;
 constexpr uint16_t READ_FAULT_EVENT_TIMEOUT = 1000U; // 1s
 
