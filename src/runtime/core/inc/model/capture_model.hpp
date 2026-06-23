@@ -300,7 +300,7 @@ public:
         condHandle_ = condHandle;
     }
 
-    rtCondHandle_t GetCondHandle()
+    rtCondHandle_t GetCondHandle() const
     {
         return condHandle_;
     }

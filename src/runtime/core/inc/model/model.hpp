@@ -138,7 +138,7 @@ public:
         auto iter = argLoaderRecord_.find(key);
         if (iter != argLoaderRecord_.end()) {
             void* res = iter->second;
-            argLoaderRecord_.erase(iter);
+            (void)argLoaderRecord_.erase(iter);
             return res;
         }
         return nullptr;
