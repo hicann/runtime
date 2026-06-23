@@ -49,7 +49,7 @@ rtError_t IpcEvent::IpcVaAndPaOperation(size_t granularity, rtDrvMemProp_t *prop
     error = NpuDriver::MapMem(deviceMemVa, p2pSize, 0, deviceMemPa, 0);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to setup ipc event. Reason: MapMem failed, error=%#x.", static_cast<uint32_t>(error));
-    mapFlag_ |= DEV_MEM_MAP_FLAG;;
+    mapFlag_ |= DEV_MEM_MAP_FLAG;
     error = device_->Driver_()->MemSetSync(deviceMemVa, p2pSize, 0U, p2pSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to setup ipc event. Reason: MemSetSync failed, error=%#x.", static_cast<uint32_t>(error));

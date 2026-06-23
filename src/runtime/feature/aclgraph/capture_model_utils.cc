@@ -356,6 +356,8 @@ bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task)
 
 bool IsStreamBindWithSubModel(Stream * const stream)
 {
+    COND_PROC(stream == nullptr, return false;);
+
     Stream *captureStream = stream->GetCaptureStream();
     COND_PROC(captureStream == nullptr, return false;);
 
