@@ -34,6 +34,7 @@ public:
 private:
     std::mutex posToCtrlTaskIdMapLock_;
     std::unordered_map<uint16_t, uint16_t> posToCtrlTaskIdMap_;
+    rtError_t SynchronizeInternal(const bool isNeedWaitSyncCq, int32_t timeout);
 };
 }  // namespace runtime
 }  // namespace cce

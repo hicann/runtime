@@ -49,7 +49,7 @@ CtrlStream::~CtrlStream() noexcept
 {
     rtError_t error = RT_ERROR_NONE;
     if (!posToCtrlTaskIdMap_.empty()) {
-        Synchronize();
+        (void)SynchronizeInternal(false, -1);
     }
 
     if ((sqId_ != UINT32_MAX) && (cqId_ != UINT32_MAX)) {
@@ -94,17 +94,17 @@ rtError_t CtrlStream::GetHeadPosFromCtrlSq(uint32_t &sqHead)
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
+rtError_t CtrlStream::SynchronizeInternal(const bool isNeedWaitSyncCq, int32_t timeout)
 {
-    (void)isNeedWaitSyncCq;
     (void)timeout;
-    constexpr bool queryFlag = true;
+    (void)isNeedWaitSyncCq;
     uint32_t currPosId = UINT32_MAX;
     const uint32_t lastPosId = sqTailPos_;
     uint32_t taskId = UINT32_MAX;
     rtError_t error;
     uint16_t tryCount = 0U;
-    RT_LOG(RT_LOG_DEBUG, "[ctrlsq]start:Synchronize stream_id=%d, tailPos=%u.", Id_(), lastPosId);
+    RT_LOG(RT_LOG_DEBUG, "[ctrlsq]start Synchronize stream_id=%d, tailPos=%u.", Id_(), lastPosId);
+    constexpr bool queryFlag = true;
     while (queryFlag && (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
         StreamSyncLock();
         error = GetHeadPosFromCtrlSq(currPosId);
@@ -126,6 +126,11 @@ rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
         tryCount++;
     }
     return RT_ERROR_NONE;
+}
+
+rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
+{
+    return SynchronizeInternal(isNeedWaitSyncCq, timeout);
 }
 
 rtError_t CtrlStream::AddTaskToStream(const uint32_t pos, const TaskInfo * const tsk)
