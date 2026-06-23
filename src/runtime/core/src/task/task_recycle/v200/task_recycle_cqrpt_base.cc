@@ -216,7 +216,8 @@ static bool ProcReportIsException(const rtLogicCqReport_t &logicCq)
     if (logicCq.sqeType == static_cast<uint8_t>(RT_DAVID_SQE_TYPE_NOTIFY_WAIT)) {
         if ((swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) ||
             (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) ||
-            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT))) {
+            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) ||
+            (logicCq.errorCode == static_cast<uint32_t>(TS_ERROR_END_OF_SEQUENCE))) {
             return false;
         }
     }
