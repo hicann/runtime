@@ -3874,7 +3874,7 @@ rtError_t rtNeedDevVA2PA(bool *need)
     *need = false;
     const rtChipType_t chipType = rtInstance->GetChipType();
     DevProperties devProperty {};
-    rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
+    const rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
     COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
         "GetDevProperties failed, chipType=%u.", chipType);
     if (devProperty.isSupportDevVA2PA) {
