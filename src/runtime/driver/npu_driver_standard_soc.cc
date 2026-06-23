@@ -346,15 +346,18 @@ rtError_t NpuDriver::GetDevResAddress(const uint32_t deviceId, const rtDevResInf
     devResInfo.target_proc_type = processType_t(static_cast<int32_t>(resInfo->procType));
     devResInfo.res_type = res_addr_type(static_cast<int32_t>(resInfo->resType));
     devResInfo.res_id = resInfo->resId;
+    devResInfo.flag = resInfo->flag;
+
     COND_RETURN_WARN(&halResAddrMap == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halResAddrMap does not exist");
     const drvError_t drvRet = halResAddrMap(deviceId, &devResInfo, resAddr, resLen);
     COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_GET_DRV_ERRCODE(drvRet),
-        "[drv api] halResAddrMap does not support");
+        "[drv api] halResAddrMap does not support, processType=%d, resType=%d, flag=%#x.",
+        static_cast<int32_t>(resInfo->procType), static_cast<int32_t>(resInfo->resType), resInfo->flag);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
             "Call driver api halResAddrMap failed, drvRetCode=%d, drvDevId=%u, processType=%d, resType=%d, resId=%u, "
-            "udieId=%u.", static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
-            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId);
+            "udieId=%u, flag=%#x.", static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
+            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId, resInfo->flag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -368,15 +371,18 @@ rtError_t NpuDriver::ReleaseDevResAddress(const uint32_t deviceId, const rtDevRe
     devResInfo.target_proc_type = processType_t(static_cast<int32_t>(resInfo->procType));
     devResInfo.res_type = res_addr_type(static_cast<int32_t>(resInfo->resType));
     devResInfo.res_id = resInfo->resId;
+    devResInfo.flag = resInfo->flag;
+
     COND_RETURN_WARN(&halResAddrUnmap == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halResAddrUnmap does not exist");
     const drvError_t drvRet = halResAddrUnmap(deviceId, &devResInfo);
     COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_GET_DRV_ERRCODE(drvRet),
-        "[drv api] halResAddrUnmap does not support");
+        "[drv api] halResAddrUnmap does not support, processType=%d, resType=%d, flag=%#x.",
+        static_cast<int32_t>(resInfo->procType), static_cast<int32_t>(resInfo->resType), resInfo->flag);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
             "Call driver api halResAddrUnmap failed, drvRetCode=%d, drvDevId=%u, processType=%d, resType=%d, resId=%u, "
-            "udieId=%u.", static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
-            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId);
+            "udieId=%u, flag=%#x.", static_cast<int32_t>(drvRet), deviceId, static_cast<int32_t>(resInfo->procType),
+            static_cast<int32_t>(resInfo->resType), resInfo->resId, resInfo->dieId, resInfo->flag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
