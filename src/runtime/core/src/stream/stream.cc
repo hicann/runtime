@@ -289,7 +289,7 @@ void Stream::FreeStreamId() const
         RT_LOG(RT_LOG_INFO, "Free stream_id=%d.", streamId_);
         if (!IsSoftwareSqEnable() && !IsAutoSplitSq()) {
             TIMESTAMP_BEGIN(rtStreamDestroy_drvStreamIdFree);
-            uint32_t drvFlag = ((flags_ & RT_STREAM_CP_PROCESS_USE) != 0) ?
+            const uint32_t drvFlag = ((flags_ & RT_STREAM_CP_PROCESS_USE) != 0) ?
                 static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
             (void)device_->GetStreamSqCqManage()->DeAllocStreamSqCq(static_cast<uint32_t>(streamId_), cqId_, drvFlag);
         }
@@ -924,7 +924,7 @@ rtError_t Stream::AllocPosToTaskIdMap()
     COND_RETURN_AND_MSG_OUTER(posToTaskIdMap_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013,
             sizeof(uint16_t) * posToTaskIdMapSize_);
 
-    errno_t ret = memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF,
+    const errno_t ret = memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF,
         posToTaskIdMapSize_ * sizeof(uint16_t));
     COND_RETURN_ERROR_MSG_INNER(ret != EOK, RT_ERROR_STREAM_NEW,
         "Failed to call memset_s to set posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.",
@@ -1871,7 +1871,7 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
     rtError_t error = RT_ERROR_NONE;
     const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
     int32_t reportTime = REPORT_TIME_UINT;
-    const int32_t FAST_SYNC_TIMES = 170;
+    constexpr int32_t FAST_SYNC_TIMES = 170;
     int32_t syncTimes = 0;
     while (true) {
         COND_PROC_RETURN_ERROR_MSG_INNER((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT, this->SetNeedSyncFlag(true);,
@@ -3402,7 +3402,7 @@ rtError_t Stream::HandleTaskUpdate(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
     // 将model中的argsHandle备份，然后将新的argsHandle添加到model中
-    model->BackupArgHandle(streamId_, workTask->id);
+    model->BackupArgHandle(static_cast<uint16_t>(streamId_), workTask->id);
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
@@ -3433,7 +3433,7 @@ rtError_t Stream::HandleTaskDisable(TaskInfo* workTask, CaptureModel* model)
         RT_LOG_INFO, "disable task, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
     // 保存argsHandle
-    model->BackupArgHandle(streamId_, workTask->id);
+    model->BackupArgHandle(static_cast<uint16_t>(streamId_), workTask->id);
     // 释放老的taskInfo 释放mix任务的subContext
     (void)device_->GetTaskFactory()->Recycle(workTask);
     return RT_ERROR_NONE;
@@ -4901,7 +4901,7 @@ void Stream::ConstructTraceEventFromTask(TaskInfo *const task, const uint32_t fl
     std::string taskType = (task->typeName != nullptr) ? task->typeName : "Unknown";
     if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
         AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
-        record.args.numBlocks = static_cast<int>(aicTaskInfo->comm.dim);
+        record.args.numBlocks = static_cast<int32_t>(aicTaskInfo->comm.dim);
         const Kernel *kernel = aicTaskInfo->kernel;
         record.args.taskRation = kernel->GetTaskRation();
         record.args.schemMode = aicTaskInfo->schemMode;
@@ -4912,13 +4912,13 @@ void Stream::ConstructTraceEventFromTask(TaskInfo *const task, const uint32_t fl
         }
     } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
         AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
-        record.args.numBlocks = static_cast<int>(aicpuTaskInfo->comm.dim);
+        record.args.numBlocks = static_cast<int32_t>(aicpuTaskInfo->comm.dim);
         const Kernel *kernel = aicpuTaskInfo->kernel;
         std::string kernelName = (kernel != nullptr) ? kernel->GetCpuOpType() : "AICPU_KERNEL";
         taskName = (!kernelName.empty()) ? kernelName : "AICPU_KERNEL";
     } else if (task->type == TS_TASK_TYPE_STREAM_ACTIVE) { 
         StreamActiveTaskInfo *streamActiveTaskInfo = &(task->u.streamactiveTask);
-        record.args.activeStreamId = static_cast<int>(streamActiveTaskInfo->activeStreamId);
+        record.args.activeStreamId = static_cast<int32_t>(streamActiveTaskInfo->activeStreamId);
         taskName = task->typeName;
     } else {
         taskName = task->typeName;
@@ -5264,7 +5264,7 @@ rtError_t Stream::RestoreForSoftwareSq()
     const uint32_t drvFlag = TSDRV_FLAG_SPECIFIED_CQ_ID;
 
     // streamID 重申请
-    rtError_t error = drv->ReAllocResourceId(deviceId, tsId, priority_,
+    rtError_t error = drv->ReAllocResourceId(static_cast<uint32_t>(deviceId), tsId, priority_,
         static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Realloc stream id from driver failed, streamId=%d, deviceId=%u, ret=%d.",
         streamId_, deviceId, error);

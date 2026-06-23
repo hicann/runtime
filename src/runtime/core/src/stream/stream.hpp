@@ -111,14 +111,14 @@ struct RtStarsRecordQueue {
 };
 
 struct TraceArgs {
-    int modelId;
-    int streamId;
-    int taskId;
+    uint32_t modelId;
+    int32_t streamId;
+    uint16_t taskId;
     std::string taskType;
-    int numBlocks = -1;
-    int taskRation = 0;
-    int schemMode = static_cast<int>(RT_SCHEM_MODE_END);
-    int activeStreamId = -1;
+    int32_t numBlocks = -1;
+    int32_t taskRation = 0;
+    int32_t schemMode = static_cast<int>(RT_SCHEM_MODE_END);
+    int32_t activeStreamId = -1;
     std::string extendInfo;
     std::string kernelArgs;
     uint32_t argsSize = 0U;

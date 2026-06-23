@@ -752,15 +752,17 @@ void Engine::ReportStatusOomProc(const rtError_t error, const uint32_t deviceId)
 {
     TrySaveAtraceLogs(device_->GetAtraceEventHandle());
     RT_LOG(RT_LOG_ERROR, "Device oom, ret=%#x device_id=%u, start exception CallBack.", error, deviceId);
-    rtExceptionInfo_t exceptionInfo;
-    exceptionInfo.retcode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(error));
-    exceptionInfo.deviceid = deviceId;
-    exceptionInfo.tid = UINT32_MAX;
-    exceptionInfo.streamid = UINT32_MAX;
-    exceptionInfo.taskid = UINT32_MAX;
-    (void)memset_s(&(exceptionInfo.expandInfo), sizeof(exceptionInfo.expandInfo),
-                   0, sizeof(exceptionInfo.expandInfo));
-    TaskFailCallBackNotify(&exceptionInfo);
+    const std::unique_ptr<rtExceptionInfo_t> exceptionInfo(new(std::nothrow) rtExceptionInfo_t{});
+    COND_RETURN_VOID_AND_MSG_OUTER(exceptionInfo == nullptr, ErrorCode::EE1013,
+        sizeof(rtExceptionInfo_t));
+    exceptionInfo.get()->retcode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(error));
+    exceptionInfo.get()->deviceid = deviceId;
+    exceptionInfo.get()->tid = UINT32_MAX;
+    exceptionInfo.get()->streamid = UINT32_MAX;
+    exceptionInfo.get()->taskid = UINT32_MAX;
+    (void)memset_s(&(exceptionInfo.get()->expandInfo), sizeof(rtExceptionExpandInfo_t),
+                   0, sizeof(rtExceptionExpandInfo_t));
+    TaskFailCallBackNotify(exceptionInfo.get());
 }
 
 void Engine::ReportSocketCloseProc()

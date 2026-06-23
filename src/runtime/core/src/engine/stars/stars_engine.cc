@@ -1561,7 +1561,7 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t &logicCq, const bool
         if (reportTask != nullptr) {
             faultTaskPtr = GetRealReportFaultTask(reportTask, static_cast<const void *>(&swStatus));
             (void)GetDevice()->ProcDeviceErrorInfo(faultTaskPtr);
-            if (faultTaskPtr != nullptr && !faultTaskPtr->isRingbufferGet && faultTaskPtr->type != TS_TASK_TYPE_KERNEL_AICPU) { // Try to get ringbuffer for N-seconds fast recovery.
+            if (faultTaskPtr != nullptr && (faultTaskPtr->isRingbufferGet == 0U) && faultTaskPtr->type != TS_TASK_TYPE_KERNEL_AICPU) { // Try to get ringbuffer for N-seconds fast recovery.
                 (void)GetDevice()->ProcDeviceErrorInfo(faultTaskPtr);
             }
             if (!reportTask->stream->IsSeparateSendAndRecycle()) {

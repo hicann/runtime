@@ -138,7 +138,7 @@ rtError_t UbArgManage::LoadArgsFromArray(const bool useArgPool,
     const Kernel *kernel, void **argsArray, StarsArgLoaderResult *result)
 {
     uint64_t paramTotalSize = kernel->GetParamTotalSize();
-    uint32_t argsSize = static_cast<uint32_t>(paramTotalSize);
+    const uint32_t argsSize = static_cast<uint32_t>(paramTotalSize);
     if (argsSize == 0U) {
         result->kerArgs = nullptr;
         result->hostAddr = nullptr;
