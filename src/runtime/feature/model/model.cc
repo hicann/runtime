@@ -2081,7 +2081,7 @@ rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, const void 
     return RT_ERROR_NONE;
 }
 
-rtError_t Model::ModelDestroyUnregisterCallback(const rtCallback_t fn)
+rtError_t Model::ModelDestroyUnregisterCallback(rtCallback_t const fn)
 {
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
     MdlDestroyCallbackInfo info{fn, nullptr};

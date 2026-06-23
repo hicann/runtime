@@ -757,7 +757,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     const uint8_t mixType = kernel->GetMixType();
     const KernelRegisterType kernelRegType = kernel->GetKernelRegisterType();
-    const static bool isVectorCoreEnable = IS_SUPPORT_CHIP_FEATURE(chipType,
+    static const bool isVectorCoreEnable = IS_SUPPORT_CHIP_FEATURE(chipType,
         RtOptionalFeatureType::RT_FEATURE_DEVICE_EXTRA_VECTOR_CORE);
     // CHIP_DC的MIX算子只用于Vector core使能，按照最新约束必须得有engineType和blockDimOffset，否则校验失败
     if (isVectorCoreEnable &&
@@ -5950,7 +5950,7 @@ rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model * const mdl, con
     return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
 }
 
-rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);

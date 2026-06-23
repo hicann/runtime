@@ -219,7 +219,7 @@ public:
     rtError_t UnBindSqPerStream(Stream * const streamIn);
     rtError_t ModelGetStreams(Stream **streams, uint32_t *numStreams) const;
     rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, const void *ptr);
-    rtError_t ModelDestroyUnregisterCallback(const rtCallback_t fn);
+    rtError_t ModelDestroyUnregisterCallback(rtCallback_t const fn);
     rtError_t CacheLastTaskExtendInfo(const Stream* const stm, const char* infoPtr, const size_t infoSize);
     rtError_t GetTaskExtendInfo(int32_t streamId, uint32_t taskId, std::string& info) const;
     void ClearTaskExtendInfo(const int32_t streamId, const uint32_t taskId);

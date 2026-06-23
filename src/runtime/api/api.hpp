@@ -548,7 +548,7 @@ public:
     virtual rtError_t ModelUpdate(Model* mdl) = 0;
     virtual rtError_t TaskGetSeqId(rtTask_t task, uint32_t *id) = 0;
     virtual rtError_t ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr) = 0;
-    virtual rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) = 0;
+    virtual rtError_t ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn) = 0;
     virtual rtError_t ModelTaskDisable(rtTask_t task) = 0;
     virtual rtError_t ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
         rtCondHandleFlag_t flag, CondHandle ** const handle) = 0;

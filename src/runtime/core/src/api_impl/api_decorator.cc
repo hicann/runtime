@@ -2246,7 +2246,7 @@ rtError_t ApiDecorator::ModelDestroyRegisterCallback(Model * const mdl, const rt
     return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
 }
 
-rtError_t ApiDecorator::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+rtError_t ApiDecorator::ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn)
 {
     return impl_->ModelDestroyUnregisterCallback(mdl, fn);
 }

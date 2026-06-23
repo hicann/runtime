@@ -446,7 +446,7 @@ public:
     rtError_t TaskGetSeqId(rtTask_t task, uint32_t *id) override;
     rtError_t ModelTaskDisable(rtTask_t task) override;
     rtError_t ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr) override;
-    rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) override;
+    rtError_t ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn) override;
     rtError_t ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
         rtCondHandleFlag_t flag, CondHandle ** const handle) override;
     rtError_t ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr) override;

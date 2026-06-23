@@ -884,7 +884,7 @@ rtError_t UmaArgLoader::CheckPolicyPreCondition(uint32_t size, LoadPolicy policy
 
 rtError_t UmaArgLoader::AllocCopyPtrWithSpecificPolicy(uint32_t size, LoadPolicy policy, ArgLoaderResult* result)
 {
-    rtError_t preCheck = CheckPolicyPreCondition(size, policy);
+    const rtError_t preCheck = CheckPolicyPreCondition(size, policy);
     if (preCheck != RT_ERROR_NONE) {
         return preCheck;
     }

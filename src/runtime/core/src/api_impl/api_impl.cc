@@ -326,7 +326,7 @@ rtError_t ApiImpl::DevBinaryRegister(const rtDevBinary_t * const bin, Program **
 {
     Program *programPtr = nullptr;
 
-    rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
+    const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
         return error;
@@ -7856,7 +7856,7 @@ rtError_t ApiImpl::ModelDestroyRegisterCallback(Model * const mdl, const rtCallb
     return mdl->ModelDestroyRegisterCallback(fn, ptr);
 }
 
-rtError_t ApiImpl::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+rtError_t ApiImpl::ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn)
 {
     return mdl->ModelDestroyUnregisterCallback(fn);
 }

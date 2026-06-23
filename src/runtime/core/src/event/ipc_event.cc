@@ -401,7 +401,7 @@ rtError_t IpcEvent::IpcEventWait(Stream * const stm)
     uint8_t* addr = RtPtrToPtr<uint8_t*>(currentDeviceMem_) + curIndex;
     tsk->typeName = "IPC_WAIT";
     tsk->type = TS_TASK_TYPE_IPC_WAIT;
-    error = MemWaitValueTaskInit(tsk, RtPtrToPtr<void*>(addr), 1, 0x0);
+    error = MemWaitValueTaskInit(tsk, RtPtrToPtr<void*>(addr), 1, 0x0U);
     ERROR_RETURN_MSG_INNER(error, "Failed to initialize mem wait value task, stream_id=%d, task_id=%hu, retCode=%#x.",
         stm->Id_(), tsk->id, static_cast<uint32_t>(error));
     MemWaitValueTaskInfo *memWaitValueTask = &tsk->u.memWaitValueTask;
@@ -422,7 +422,7 @@ rtError_t IpcEvent::IpcEventQuery(rtEventStatus_t * const status)
     rtError_t error = context_->CheckStatus();
     ERROR_RETURN(error, "Failed to query ipc event status. Reason: context is abort, status=%#x.", static_cast<uint32_t>(error));
     IpcVaLock();
-    uint16_t curIndex = ipcHandleVa_->currentIndex;
+    const uint16_t curIndex = ipcHandleVa_->currentIndex;
     if (ipcHandleVa_->deviceMemRef[curIndex] == 0U) {
         RT_LOG(RT_LOG_INFO, "not record or record had been finished, return success.");
         *status = RT_EVENT_RECORDED;

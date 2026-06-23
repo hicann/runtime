@@ -26,7 +26,7 @@ struct BlockInfo {
     uint32_t coreId = 0;      // 当前core id
     uint32_t blockNum = 0;    // 本次总共的核数
     uint32_t remainLen = 0;   // 可打印的总长度
-    uint16_t magic = 0xAE86;  // 信息校验数 // 0xAE86
+    uint16_t magic = 0xAE86U;  // 信息校验数 // 0xAE86
     uint16_t flag = 0;        // flag value, 0:simd-aic, 1:simd-aiv, 2:simt
     uint32_t rsv = 0;         // DUMP EXC FLAG
     uint64_t dumpAddr = 0;    // 起始printf的地址

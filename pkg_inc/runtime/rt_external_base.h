@@ -571,7 +571,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 #endif // CCE_RUNTIME_BASE_COMMON_DATA
 // === CCE_RUNTIME_BASE_COMMON_DATA END ===
 enum { rt_ext_base_common_end_line_guard_ = __LINE__ };
-RT_STATIC_ASSERT(rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_ == 544,
+RT_STATIC_ASSERT(((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 544),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 
