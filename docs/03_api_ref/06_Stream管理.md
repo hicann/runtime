@@ -636,6 +636,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 -   不支持使用[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
 -   如果有其它Stream依赖本接口中指定的Stream（例如通过[aclrtRecordEvent](07_Event管理.md#aclrtRecordEvent)、[aclrtStreamWaitEvent](07_Event管理.md#aclrtStreamWaitEvent)等接口实现两个Stream间同步等待），则其它Stream执行可能会卡住，此时您需要显式调用本接口清除其它Stream上的任务。
 -   如果调用本接口清除指定Stream上的任务时，再调用同步等待接口（例如[aclrtSynchronizeStream](#aclrtSynchronizeStream)、[aclrtSynchronizeEvent](07_Event管理.md#aclrtSynchronizeEvent)等），同步等待接口会退出并返回ACL\_ERROR\_RT\_STREAM\_ABORT的报错。
+-   对于Ascend 950PR/Ascend 950DT，不支持如下方式创建的Stream：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT。
 
 
 <br>

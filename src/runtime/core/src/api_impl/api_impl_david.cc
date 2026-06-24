@@ -1738,8 +1738,9 @@ rtError_t ApiImplDavid::StreamAbort(Stream * const stm)
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID,
-        "StreamAbort not support model stream, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(((curStm->Flags() & RT_STREAM_PERSISTENT) != 0U),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Stream aborting", "Aborting persistent stream",
+        "The stream flag contains ACL_STREAM_PERSISTENT(0x4) and the stream cannot be aborted");
     return curStm->StreamAbort();
 }
 
