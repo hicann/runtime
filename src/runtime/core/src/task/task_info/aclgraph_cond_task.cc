@@ -187,7 +187,7 @@ static rtError_t AllocJumpBackFuncCallMemForCaptureCondTask(TaskInfo *taskInfo)
     condTaskInfo->jumpBackFunCallMemSize = sizeof(RtStarsCaptureWhileCondJumpBackFc);
     const Device *dev = taskInfo->stream->Device_();
     const uint64_t allocSize = condTaskInfo->jumpBackFunCallMemSize + FUNC_CALL_INSTR_ALIGN_SIZE;
-    rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_ERROR((ret != RT_ERROR_NONE) || (devMem == nullptr), RT_ERROR_MEMORY_ALLOCATION,
         "alloc jumpBack func call mem failed, retCode=%#x.", ret);
     condTaskInfo->jumpBackBaseFuncCallSvmMem = devMem;
@@ -318,11 +318,11 @@ void Construct3rdSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sq
     Stream * const stm = taskInfo->stream;
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     RtStarsCaptureWhileCondJumpBackFc fc = {};
-    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
+    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsCaptureWhileCondJumpBackFc));
     ConstructCaptureConditionJumpBackFc(taskInfo, fc);
 
     RtStarsFunctionCallSqe &sqe2 = sqe->fuctionCallSqe;
-    rtError_t ret = stm->Device_()->Driver_()->MemCopySync(condTaskInfo->jumpBackFuncCallSvmMem,
+    const rtError_t ret = stm->Device_()->Driver_()->MemCopySync(condTaskInfo->jumpBackFuncCallSvmMem,
         condTaskInfo->jumpBackFunCallMemSize, &fc, funcCallSize, RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         sqe2.sqeHeader.type = RT_STARS_SQE_TYPE_INVALID;
