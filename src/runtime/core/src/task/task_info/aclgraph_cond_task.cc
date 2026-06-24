@@ -266,7 +266,7 @@ void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sq
     Stream *stm = taskInfo->stream;
 
     RtStarsNotifySqe &notifySqe = sqe->notifySqe;
-    memset_s(sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
+    (void)memset_s(sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     notifySqe.header.type = RT_STARS_SQE_TYPE_NOTIFY_WAIT;
     notifySqe.kernel_credit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
     notifySqe.header.rt_stream_id = static_cast<uint16_t>(stm->Id_());
@@ -287,7 +287,7 @@ void ConstructCaptureConditionJumpBackFc(TaskInfo * const taskInfo, RtStarsCaptu
 
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     Stream *stm = taskInfo->stream;
-    uint64_t sqHeadPre = static_cast<uint64_t>(stm->GetCurSqPos() % stm->GetSqDepth());
+    const uint64_t sqHeadPre = static_cast<uint64_t>(stm->GetCurSqPos() % stm->GetSqDepth());
 
     ConstructLoadImm(r1, RtPtrToValue(condTaskInfo->condHandle->GetDevAddr()), RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadDevAddr);
 
@@ -357,7 +357,7 @@ void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *const
     }
 }
 
-rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo *condTaskInfo, rtStarsCaptureCondFcPara_t &para)
+static rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo *condTaskInfo, rtStarsCaptureCondFcPara_t &para)
 {
     rtError_t ret;
     switch (condTaskInfo->condHandle->GetCondType()) {

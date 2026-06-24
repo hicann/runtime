@@ -162,7 +162,7 @@ rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStarsStreamA
 
     Driver * const driver = taskInfo->stream->Device_()->Driver_();
     DevProperties props;
-    const auto error = GET_DEV_PROPERTIES(chipType, props);
+    rtError_t error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         "GetDevProperties failed, chip type=%d.", chipType);
     if (props.isSupportInitFuncCallPara) {
@@ -175,7 +175,7 @@ rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStarsStreamA
             int64_t chipId;
             int64_t dieId;
             const uint32_t deviceId = streamActiveTask->activeStream->Device_()->Id_();
-            rtError_t error = driver->GetDevInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
+            error = driver->GetDevInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
             ERROR_RETURN_MSG_INNER(error, "Failed to get chip id, device_id=%u.", deviceId);
             error = driver->GetDevInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
             ERROR_RETURN_MSG_INNER(error, "Failed to get die id, device_id=%u.", deviceId);

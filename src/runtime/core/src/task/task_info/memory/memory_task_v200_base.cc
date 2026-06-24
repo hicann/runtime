@@ -367,7 +367,7 @@ static void AsyncDmaWqeBatchProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const
 
 static void AsyncDmaWqeBasicProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
 {
-    bool ubFlag = IsDavidUbDma(memcpyAsyncTaskInfo->copyType);
+    const bool ubFlag = IsDavidUbDma(memcpyAsyncTaskInfo->copyType);
     if ((!ubFlag) && (!memcpyAsyncTaskInfo->isSqeUpdateH2D)) {
         return;
     }

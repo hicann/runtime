@@ -121,7 +121,7 @@ public:
     bool IsNeedUpdateTask(const TaskInfo * const updateTask) const;
 
 private:
-    void BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record);
+    void BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const;
     rtError_t HandleTaskUpdate(TaskInfo* workTask, CaptureModel* model,
         uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
     rtError_t HandleTaskDefault(TaskInfo* workTask, CaptureModel* model,

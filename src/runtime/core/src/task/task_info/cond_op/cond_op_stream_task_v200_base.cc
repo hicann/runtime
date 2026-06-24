@@ -33,7 +33,7 @@ void ConstructDavidSqeForStreamLabelSwitchByIndexTask(TaskInfo * const taskInfo,
     fnCallSqe.csc = 1U;
 
     const uint64_t funcAddr = RtPtrToValue(stmLblSwiByIdx->funcCallSvmMem);
-    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(rtStarsLabelSwitchByIndexFc_t));
+    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(rtStarsLabelSwitchByIndexFc_t));
 
     // func call size is rs2[19:0]*4Byte
     ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), fnCallSqe);

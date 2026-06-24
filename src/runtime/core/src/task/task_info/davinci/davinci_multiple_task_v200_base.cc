@@ -67,8 +67,8 @@ static void ConstructDavidDvppSqe(TaskInfo * const taskInfo, rtDavidSqe_t * cons
     IncMultipleTaskCqeNum(taskInfo);
 
     // the dvpp has malloced the cmdlist memory.
-    uint64_t cmdListAddrLow = dvppTask.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_LOW_IDX];
-    uint64_t cmdListAddrHigh = dvppTask.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_HIGH_IDX];
+    const uint64_t cmdListAddrLow = dvppTask.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_LOW_IDX];
+    const uint64_t cmdListAddrHigh = dvppTask.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_HIGH_IDX];
     // the dvpp has malloced the cmdlist memory.
     void *cmdList = RtValueToPtr<void *>(((cmdListAddrHigh << UINT32_BIT_NUM) & 0xFFFFFFFF00000000ULL) |
         (cmdListAddrLow & 0x00000000FFFFFFFFULL));

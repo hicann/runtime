@@ -349,7 +349,7 @@ void DavidStream::DebugDotPrintForModelStm()
     }
 }
 
-void DavidStream::BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record)
+void DavidStream::BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const
 {
     std::string taskName;
     const Kernel *kernel = nullptr;

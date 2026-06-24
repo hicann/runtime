@@ -21,8 +21,8 @@ uint8_t *StreamJettyContext::GetNextWqeBuffer() const
         return nullptr;
     }
 
-    uint32_t idx = filledWqeCount / WQE_BUFFER_DEPTH;
-    uint32_t off = (filledWqeCount % WQE_BUFFER_DEPTH) * WQE_SIZE;
+    const uint32_t idx = filledWqeCount / WQE_BUFFER_DEPTH;
+    const uint32_t off = (filledWqeCount % WQE_BUFFER_DEPTH) * WQE_SIZE;
 
     if (idx >= wqeBuffers.size() || wqeBuffers[idx] == nullptr) {
         return nullptr;
@@ -90,8 +90,8 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver *driver, uint32_t deviceId)
         return RT_ERROR_NONE;
     }
 
-    uint32_t old = static_cast<uint32_t>(wqeBuffers.size());
-    uint32_t need = validDepth / WQE_BUFFER_DEPTH;
+    const uint32_t old = static_cast<uint32_t>(wqeBuffers.size());
+    const uint32_t need = validDepth / WQE_BUFFER_DEPTH;
 
     while (wqeBuffers.size() < need) {
         rtError_t error = AllocWqeBuffer(driver);

@@ -256,7 +256,7 @@ rtError_t StreamJettyHandler::SyncWqeBufferToDevice(
         if (context->wqeBuffers[i] == nullptr) {
             continue;
         }
-        uint64_t size = StreamJettyContext::WQE_BUFFER_DEPTH * StreamJettyContext::WQE_SIZE;
+        const uint64_t size = StreamJettyContext::WQE_BUFFER_DEPTH * StreamJettyContext::WQE_SIZE;
         fillInfo.offset = offset;
         fillInfo.srcWqe = context->wqeBuffers[i].get();
         fillInfo.size = size;

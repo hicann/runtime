@@ -311,16 +311,16 @@ std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo)
     const uint8_t sqeSubType = fusionTaskInfo->sqeSubType;
 
     std::vector<std::string> subTaskNames;
-    if ((sqeSubType & (1U << RT_FUSION_AICPU)) != 0U) {
+    if ((sqeSubType & (1U << (uint32_t)RT_FUSION_AICPU)) != 0U) {
         subTaskNames.push_back("AICPU");
     }
-    if ((sqeSubType & (1U << RT_FUSION_HCOM_CPU)) != 0U) {
+    if ((sqeSubType & (1U << (uint32_t)RT_FUSION_HCOM_CPU)) != 0U) {
         subTaskNames.push_back("HCOM_CPU");
     }
-    if ((sqeSubType & (3U << RT_FUSION_CCU)) != 0U) {
+    if ((sqeSubType & (3U << (uint32_t)RT_FUSION_CCU)) != 0U) {
         subTaskNames.push_back("CCU");
     }
-    if ((sqeSubType & (1U << RT_FUSION_AICORE)) != 0U) {
+    if ((sqeSubType & (1U << (uint32_t)RT_FUSION_AICORE)) != 0U) {
         FusionTaskInfoAicPart* aicPart = &(fusionTaskInfo->aicPart);
         const Kernel *kernel = aicPart->kernel;
         std::string aicName = (kernel != nullptr) ? kernel->Name_() : "AICORE";
@@ -451,7 +451,7 @@ void SetStarsResultForFusionKernelTask(TaskInfo* taskInfo, const rtLogicCqReport
             taskInfo->errorCode = isTimeout ? TS_ERROR_AICPU_TIMEOUT : TS_ERROR_AICPU_EXCEPTION;
         } else if ((logicCqErrorCode & MASK_CCU) != 0U) {
             taskInfo->errorCode = isTimeout ? TS_ERROR_CCU_TIMEOUT : TS_ERROR_CCU_EXCEPTION;
-        }
+        } else {}
 
         RT_LOG(RT_LOG_ERROR, "FusionKernelTask errorCode=%u, logicCq:errType=%u, errCode=%u, "
             "stream_id=%hu, task_id=%hu", taskInfo->errorCode, logicCq.errorType, logicCq.errorCode,

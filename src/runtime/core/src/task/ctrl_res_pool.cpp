@@ -84,7 +84,7 @@ rtError_t CtrlResEntry::Init(Device* const dev)
         taskBuffCellSize_ &= (~(CTRL_BUFF_ASSING_NUM - 1U));
     }
 
-    const uint64_t buffSize = static_cast<uint64_t>(taskBuffCellSize_ * CTRL_TASK_POOL_SIZE);
+    const uint64_t buffSize = static_cast<uint64_t>(taskBuffCellSize_) * static_cast<uint64_t>(CTRL_TASK_POOL_SIZE);
     taskBaseAddr_ = new (std::nothrow) uint8_t[buffSize];
     COND_PROC_RETURN_AND_MSG_OUTER(taskBaseAddr_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
         DELETE_A(taskPool_); DELETE_A(taskList_), std::to_string(buffSize * sizeof(uint8_t)));

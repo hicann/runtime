@@ -2437,8 +2437,8 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastI
     ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi58);
 
     // load 0x80000000 to r1
-    ConstructLHWI(r1, 0x80000000U, fc.lhwi59);
-    ConstructLLWI(r1, 0x80000000U, fc.llwi59);
+    ConstructLHWI(r1, 0x80000000ULL, fc.lhwi59);
+    ConstructLLWI(r1, 0x80000000ULL, fc.llwi59);
 
     // r2 = r3 | r1, r3 = sqId
     ConstructOpOp(r3, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op59);
