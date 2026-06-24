@@ -42,7 +42,7 @@ rtError_t CheckReduceCapability(Device * const dev, const rtRecudeKind_t kind, c
         const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
         if (((sdmaReduceKind >> shift) & 0x1U) == 0U) {
             RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter kind value " + ReduceKindToString(kind),
-                "The current SoC does not support this kind of reduce operation");
+                "The current SoC does not support this kind of reduction operation");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
@@ -56,7 +56,7 @@ rtError_t CheckReduceCapability(Device * const dev, const rtRecudeKind_t kind, c
     const uint32_t kindShift = static_cast<uint32_t>(kind);
     if (((dev->GetDevProperties().sdmaReduceKind >> kindShift) & 0x1U) == 0U) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter kind value " + ReduceKindToString(kind),
-            "The current SoC does not support this kind of reduce operation");
+            "The current SoC does not support this kind of reduction operation");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -64,7 +64,7 @@ rtError_t CheckReduceCapability(Device * const dev, const rtRecudeKind_t kind, c
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_support=0x%x.", capabilityInfo.sdma_reduce_support);
     if (((capabilityInfo.sdma_reduce_support >> offset) & 0x1U) == 0U) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + DataTypeToString(type),
-            "The current SoC does not support the reduce operation on this data type");
+            "The current SoC does not support the reduction operation of this data type");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;

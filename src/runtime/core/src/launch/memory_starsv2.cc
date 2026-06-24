@@ -43,14 +43,14 @@ rtError_t CheckReduceCapability(Stream * const stm, const rtRecudeKind_t kind, c
     const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
     COND_RETURN_AND_MSG_OUTER((((sdmaReduceKind >> shift) & 0x1U) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
         ErrorCode::EE1006, __func__, "Parameter kind value " + ReduceKindToString(kind),
-        "The current SoC does not support this kind of reduce operation");
+        "The current SoC does not support this kind of reduction operation");
 
     const uint32_t sdmaReduceSupport = capabilityInfo.sdma_reduce_support;
     const uint32_t offset = static_cast<uint32_t>(type);
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_support=0x%x.", sdmaReduceSupport);
     if (((sdmaReduceSupport >> offset) & 0x1U) == 0U) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + DataTypeToString(type),
-            "The current SoC does not support reduce operations on this data type");
+            "The current SoC does not support the reduction operation of this data type");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;

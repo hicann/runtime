@@ -275,13 +275,13 @@ rtError_t ApiErrorDecorator::FusionLaunch(void * const fusionInfo, Stream * cons
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_TASK_FUSION_DOT_ONLY_AICPUAIC)) {
         COND_RETURN_AND_MSG_OUTER(g_fusionAllowedList.find(fusionList) == g_fusionAllowedList.end(), RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1006, __func__, "FusionList value " + fusionList, "Fusion task only supports HCOMM with AI Core,"
-            " AI CPU with AI Core, CCU with AI Core task type combinations, or a single CCU task");
+            ErrorCode::EE1006, __func__, "FusionList value " + fusionList,
+            "Fusion tasks support only the combinations of HCOMM and AI Core, AI CPU and AI Core, CCU and AIC, or a single CCU task");
     } else {
         //  1952 only supports A3(aicpu + aic) task
         COND_RETURN_AND_MSG_OUTER(fusionList != "AICPUAIC", RT_ERROR_INVALID_VALUE,
             ErrorCode::EE1006, __func__, "FusionList value " + fusionList,
-            "Fusion task only supports the combination of AI CPU and AI Core");
+            "Fusion tasks support only the combination of AI CPU and AI Core");
     }
 
     RT_LOG(RT_LOG_INFO, "fusion launch: subTaskNum=%u, fusion list=%s.", subTaskNum, fusionList.c_str());
@@ -360,7 +360,7 @@ rtError_t ApiErrorDecorator::FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * con
     const rtFftsPlusSqe_t * const sqe = fftsPlusTaskInfo->fftsPlusSqe;
 
     COND_RETURN_AND_MSG_OUTER(CONTEXT_LEN * static_cast<uint32_t>(sqe->totalContextNum) !=
-        static_cast<uint32_t>(fftsPlusTaskInfo->descBufLen), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        fftsPlusTaskInfo->descBufLen, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         __func__, "fftsPlusTaskInfo->descBufLen or fftsPlusTaskInfo->fftsPlusSqe->totalContextNum",
         RtFmtMsg("Parameter fftsPlusTaskInfo->descBufLen %zu should equal to the product of parameter"
             " fftsPlusTaskInfo->fftsPlusSqe->totalContextNum %u and %u", fftsPlusTaskInfo->descBufLen,

@@ -1530,8 +1530,8 @@ rtError_t NpuDriver::DevMemAllocCached(void ** const dptr, const uint64_t size,
 {
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     if (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_ONLY) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "The huge page only memory policy",
-            "The huge page only memory policy conflicts with the cache memory allocation policy");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "The policy of allocating only huge page memory",
+            "The policy of allocating only huge page memory conflicts with the policy of allocating the underlying cache memory");
         return RT_ERROR_INVALID_VALUE;
     } else {
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {

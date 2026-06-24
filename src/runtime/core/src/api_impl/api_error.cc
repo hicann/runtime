@@ -1105,8 +1105,7 @@ rtError_t ApiErrorDecorator::CheckStreamFlags(const uint32_t flags) const
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_HUGE_DEPTH)) {
         COND_RETURN_AND_MSG_OUTER((flags & RT_STREAM_HUGE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, 
             ErrorCode::EE1006, __func__, "Parameter flags value " + std::to_string(flags),
-            "The current SoC only supports streams of normal task capacity,"
-            " and does not support huge stream creation");
+            "The current SoC supports only streams with a normal number of tasks and does not support huge streams");
     }
 
     constexpr uint32_t maxFlags = (RT_STREAM_DEFAULT | RT_STREAM_PERSISTENT | RT_STREAM_FORCE_COPY |
@@ -1158,7 +1157,7 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
         timeout, "greater than or equal to -1 and not equal to 0");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_AICPU) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
-        "The current stream is used for AI CPU scheduling tasks, and does not support stream synchronization");
+        "The current stream is used to carry AI CPU scheduling tasks and does not support stream synchronization");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg("Stream %d can be called only on the device", stm->Id_()));
@@ -3337,7 +3336,7 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
     if ((stm != nullptr) && (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC))) {
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_AICPU) != 0),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
-            "The current stream is used for AI CPU scheduling tasks, and does not support execution models");
+            "The current stream is used to carry AI CPU scheduling tasks and does not support execution models");
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_PERSISTENT) != 0),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
             "Sink streams do not support execution models");
@@ -5147,7 +5146,7 @@ rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream * const stm, const ui
     COND_RETURN_AND_MSG_OUTER((stm->Flags() & RT_STREAM_AICPU) != 0U, 
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, "Parameter stm->Flags() value " +
         std::to_string(stm->Flags()),
-        "The current stream is used for AI CPU scheduling tasks, and does not support priority setting");
+        "The current stream is used to carry AI CPU scheduling tasks and does not support priority setting");
     int32_t validPriority = static_cast<int32_t>(streamPriority);
     uint32_t priority = streamPriority;
     if (validPriority < RT_STREAM_GREATEST_PRIORITY) {
@@ -5172,7 +5171,7 @@ rtError_t ApiErrorDecorator::GetStreamPriorityValue(Stream * const stm, uint32_t
         "The stream with flag %u does not support priority setting.", stm->Flags());
     COND_RETURN_AND_MSG_OUTER((stm->Flags() & RT_STREAM_AICPU) != 0U, 
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
-        "The current stream is used for AI CPU scheduling tasks, and does not support priority getting");
+        "The current stream is used to carry AI CPU scheduling tasks and does not support priority getting");
     return impl_->GetStreamPriorityValue(stm, streamPriority);
 }
 
