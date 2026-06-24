@@ -13,6 +13,7 @@
 #include "rt_utest_config_define.hpp"
 #include "rt_unwrap.h"
 #include "data/elf.h"
+#include "base_info.hpp"
 
 class ApiTest7 : public testing::Test
 {
@@ -6886,6 +6887,9 @@ TEST_F(ApiTest, get_bin_and_stack_buffer)
     bin.data = m_data;
     bin.length = m_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
+    rtBinHandle real_bin_handle = RtPtrToPtr<rtBinHandle>(program);
 
     ApiImpl impl;
     ApiDecorator api(&impl);
@@ -6893,7 +6897,7 @@ TEST_F(ApiTest, get_bin_and_stack_buffer)
     uint32_t binSize = 0U;
     EXPECT_EQ(rtGetBinBuffer(bin_handle, RT_BIN_HOST_ADDR, &outputBin, &binSize), RT_ERROR_NONE);
     EXPECT_EQ(binSize, m_len);
-    EXPECT_EQ(api.GetBinBuffer(bin_handle, RT_BIN_HOST_ADDR, &outputBin, &binSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetBinBuffer(real_bin_handle, RT_BIN_HOST_ADDR, &outputBin, &binSize), RT_ERROR_NONE);
     EXPECT_EQ(rtGetBinBuffer(bin_handle, RT_BIN_DEVICE_ADDR, &outputBin, &binSize), RT_ERROR_NONE);
     EXPECT_EQ(binSize, m_len);
 
@@ -6901,8 +6905,8 @@ TEST_F(ApiTest, get_bin_and_stack_buffer)
     uint32_t stackSize = 0U;
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(api.GetStackBuffer(real_bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetStackBuffer(real_bin_handle, 0, 1, 0, 0, &stack, &stackSize), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
@@ -6952,6 +6956,9 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
     bin.data = m_data;
     bin.length = m_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
+    rtBinHandle real_bin_handle = RtPtrToPtr<rtBinHandle>(program);
 
     ApiImpl impl;
     ApiDecorator api(&impl);
@@ -6964,7 +6971,7 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
     uint32_t stackSize = 0U;
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIC, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetStackBuffer(real_bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 
@@ -7563,22 +7570,23 @@ TEST_F(ApiTest, create_args_test_01)
     Program *program = &stubProg;
     int32_t fun1;
     Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(k1);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     void *argsHandle;
-    error = rtsKernelArgsInit(k1, &argsHandle);
+    error = rtsKernelArgsInit(funcHandle, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_NE(argsHandle, nullptr);
-    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *handle = rt_ut::UnwrapOrNull<RtArgsHandle>(argsHandle);
     EXPECT_NE(handle->buffer, nullptr);
     EXPECT_NE(handle->bufferSize, 0);
     uint32_t param1 = 1002;
     void *paramHandle = nullptr;
     error = rtsKernelArgsAppend(argsHandle, &param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ParaDetail *pHandle = (ParaDetail *)paramHandle;
+    ParaDetail *pHandle = rt_ut::UnwrapOrNull<ParaDetail>(paramHandle);
     uint32_t *addr1 = reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(handle->buffer) + static_cast<uint64_t>(pHandle->paraOffset));
     EXPECT_EQ(*addr1, param1);
     error = rtsKernelArgsFinalize(argsHandle);
@@ -7616,9 +7624,9 @@ TEST_F(ApiTest, create_args_test_01)
     cfg.attrs = attrs;
     cfg.numAttrs = 6;
 
-    error = rtsLaunchKernelWithConfig(k1, 1, stream_, &cfg, argsHandle, nullptr);
+    error = rtsLaunchKernelWithConfig(funcHandle, 1, stream_, &cfg, argsHandle, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtsLaunchKernelWithHostArgs(k1, 1, stream_, &cfg, 0,0,nullptr,0);
+    error = rtsLaunchKernelWithHostArgs(funcHandle, 1, stream_, &cfg, 0, 0, nullptr, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
     delete k1;
 }
@@ -7630,12 +7638,13 @@ TEST_F(ApiTest, create_args_test_03)
     Program *program = &stubProg;
     int32_t fun1;
     Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(k1);
     k1->userParaNum_ = 20;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     void *argsHandle;
-    error = rtsKernelArgsInit(k1, &argsHandle);
+    error = rtsKernelArgsInit(funcHandle, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_NE(argsHandle, nullptr);
 
@@ -7645,7 +7654,7 @@ TEST_F(ApiTest, create_args_test_03)
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
 
-    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *handle = rt_ut::UnwrapOrNull<RtArgsHandle>(argsHandle);
     rtKernelLaunchCfg_t cfg;
     rtLaunchKernelAttr_t attrs[5];
     attrs[0].id = RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE;
@@ -7664,12 +7673,46 @@ TEST_F(ApiTest, create_args_test_03)
     cfg.attrs = attrs;
     cfg.numAttrs = 5;
     handle->placeHolderNum = 20;
-    error = rtsLaunchKernelWithConfig(k1, 1, stream_, &cfg, argsHandle, nullptr);
+    error = rtsLaunchKernelWithConfig(funcHandle, 1, stream_, &cfg, argsHandle, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     attrs[0].value.schemMode = RT_SCHEM_MODE_END;
-    error = rtsLaunchKernelWithConfig(k1, 1, stream_, &cfg, argsHandle, nullptr);
+    error = rtsLaunchKernelWithConfig(funcHandle, 1, stream_, &cfg, argsHandle, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
     delete k1;
+}
+
+TEST_F(ApiTest, stale_param_handle_should_be_rejected_after_reinit)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("f1", 0ULL, &stubProg, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    kernel.userParaNum_ = 2;
+    kernel.systemParaNum_ = 2;
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+
+    rtArgsHandle argsHandle = nullptr;
+    rtError_t error = rtsKernelArgsInit(funcHandle, &argsHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtParaHandle staleParamHandle = nullptr;
+    uint32_t param = 7U;
+    error = rtsKernelArgsAppend(argsHandle, &param, sizeof(param), &staleParamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsKernelArgsInit(funcHandle, &argsHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t newValue = 9U;
+    error = rtsKernelArgsParaUpdate(argsHandle, staleParamHandle, &newValue, sizeof(newValue));
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
+}
+
+TEST_F(ApiTest, stale_launch_args_handle_should_be_rejected)
+{
+    rtLaunchArgs_t launchArgs = {};
+    rtLaunchArgsHandle argsHandle = rt_ut::InitAndExportHandle<rtLaunchArgsHandle>(&launchArgs);
+    rt_ut::ResetEmbeddedHandle(&launchArgs);
+    const rtError_t error = rtResetLaunchArgs(argsHandle);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
 TEST_F(ApiTest, api_rtsLaunchBarrierTask)

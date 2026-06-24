@@ -1096,6 +1096,7 @@ TEST_F(DeviceTest, STARS_HcclTimeout_ErrorInfo)
     errorInfo.u.hcclFftsplusTimeoutInfo.common.timeout = 1770;
     ret = errorProc->ProcessStarsHcclFftsPlusTimeoutErrorInfo(&errorInfo, 0, device, errorProc);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    GlobalMockObject::reset();
 
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
@@ -1121,6 +1122,7 @@ TEST_F(DeviceTest, STARS_HcclTimeout_ErrorInfo1)
     errorInfo.u.hcclFftsplusTimeoutInfo.common.timeout = 1800;
     ret = errorProc->ProcessStarsHcclFftsPlusTimeoutErrorInfo(&errorInfo, 0, device, errorProc);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    GlobalMockObject::reset();
 
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
@@ -1152,6 +1154,7 @@ TEST_F(DeviceTest, STARS_dsa_ErrorInfo)
     ret = errorProc->ProcessStarsDsaErrorInfo(&errorInfo, 0, device, errorProc);
     GlobalMockObject::verify();
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    GlobalMockObject::reset();
 
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);

@@ -25,6 +25,7 @@
 #include "binary_loader.hpp"
 #include "thread_local_container.hpp"
 #include "dev_info_manage.h"
+#include "rt_unwrap.h"
 #undef private
 
 
@@ -83,7 +84,8 @@ TEST_F(CloudV2ApiKernelTest, TestRtsUnRegKernelLaunchFillFuncSuccess)
 
 TEST_F(CloudV2ApiKernelTest, TestRtsBinaryLoadFromFileSuccess)
 {
-    MOCKER_CPP(&BinaryLoader::Load).stubs().will(returnValue(RT_ERROR_NONE));
+    Program *prog = new PlainProgram();
+    MOCKER_CPP(&BinaryLoader::Load).stubs().with(outBoundP(&prog, sizeof(Program *))).will(returnValue(RT_ERROR_NONE));
     char *path = "test_path";
     rtLoadBinaryConfig_t cfg;
     void *handle;
@@ -94,7 +96,8 @@ TEST_F(CloudV2ApiKernelTest, TestRtsBinaryLoadFromFileSuccess)
 
 TEST_F(CloudV2ApiKernelTest, TestRtsBinaryLoadFromDataSuccess)
 {
-    MOCKER_CPP(&BinaryLoader::Load).stubs().will(returnValue(RT_ERROR_NONE));
+    Program *prog = new PlainProgram();
+    MOCKER_CPP(&BinaryLoader::Load).stubs().with(outBoundP(&prog, sizeof(Program *))).will(returnValue(RT_ERROR_NONE));
     uint32_t tmp;
     rtLoadBinaryConfig_t cfg;
     void *handle;
@@ -106,8 +109,10 @@ TEST_F(CloudV2ApiKernelTest, TestRtsBinaryUnloadSuccess)
 {
     ApiImpl apiImpl;
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryUnLoad).stubs().will(returnValue(RT_ERROR_NONE));
-    void *handle;
-    rtError_t error = rtsBinaryUnload(&handle);
+    PlainProgram program;
+    Program *programBase = &program;
+    rtBinHandle handle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
+    rtError_t error = rtsBinaryUnload(handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -119,7 +124,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAddr)
 
     void* func1;
     void* func2;
-    rtError_t error = rtsFuncGetAddr(&kernel, &func1, &func2);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetAddr(funcHandle, &func1, &func2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -131,16 +137,22 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSize)
 
     size_t aicSize = 0;
     size_t aivSize = 0;
-    rtError_t error = rtFuncGetSize(&kernel, &aicSize, &aivSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFuncGetSize(funcHandle, &aicSize, &aivSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiKernelTest, TestRtsFuncGetByEntrySuccess)
 {
     ApiImpl apiImpl;
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryGetFunctionByEntry).stubs().will(returnValue(RT_ERROR_NONE));
+    Kernel *kernel = new Kernel("testKernelName", 0, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryGetFunctionByEntry)
+    .stubs()
+    .with(mockcpp::any(), mockcpp::any(), outBoundP(&kernel, sizeof(Kernel *)))
+    .will(returnValue(RT_ERROR_NONE));
     ElfProgram program;
-    rtBinHandle binHandle = &program;
+    Program *programBase = &program;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     void *handle;
     rtError_t error = rtsFuncGetByEntry(binHandle, 1024, &handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -162,7 +174,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetName)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
-    rtError_t error = rtsFuncGetName(&kernel, 128, name);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetName(funcHandle, 128, name);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -184,7 +197,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetNameMaxLenFail)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
-    rtError_t error = rtsFuncGetName(&kernel, 1, name);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetName(funcHandle, 1, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -213,8 +227,10 @@ TEST_F(CloudV2ApiKernelTest, TestRtsFuncGetByName)
 TEST_F(CloudV2ApiKernelTest, TestRegisterCpuFunc)
 {
     PlainProgram prog;
+    Program *programBase = &prog;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     rtFuncHandle funcHandle = nullptr;
-    rtError_t error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    rtError_t error = rtsRegisterCpuFunc(binHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(nullptr, funcHandle);
 }
@@ -379,13 +395,14 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     int64_t attrValue = 0;
-    rtError_t error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
+    error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     ApiImpl apiImpl;
@@ -446,15 +463,16 @@ TEST_F(CloudV2ApiKernelTest, TestFunctionGetBinary)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     rtBinHandle binHandle = nullptr;
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
 
     int64_t attrValue = 0;
     rtError_t error = rtFunctionGetBinary(nullptr, &binHandle);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtFunctionGetBinary(static_cast<rtFuncHandle>(&kernel), nullptr);
+    error = rtFunctionGetBinary(funcHandle, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtFunctionGetBinary(static_cast<rtFuncHandle>(&kernel), &binHandle);
+    error = rtFunctionGetBinary(funcHandle, &binHandle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     ApiImpl apiImpl;
@@ -475,7 +493,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
 
     size_t aicSize = 0;
     size_t aivSize = 0;
-    rtFuncGetSize(&kernelAicObj, &aicSize, &aivSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelAicObj);
+    rtFuncGetSize(funcHandle, &aicSize, &aivSize);
     EXPECT_EQ(aicSize, 0);
     EXPECT_EQ(aivSize, 10);
 }
@@ -489,7 +508,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAivWithKernelType)
 
     size_t aicSize = 0;
     size_t aivSize = 0;
-    rtFuncGetSize(&kernelObj, &aicSize, &aivSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelObj);
+    rtFuncGetSize(funcHandle, &aicSize, &aivSize);
     EXPECT_EQ(aicSize, 0);
     EXPECT_EQ(aivSize, 10);
 }
@@ -503,7 +523,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithMixOnlyAiv)
 
     size_t aicSize = 0;
     size_t aivSize = 0;
-    rtFuncGetSize(&kernelObj, &aicSize, &aivSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelObj);
+    rtFuncGetSize(funcHandle, &aicSize, &aivSize);
     EXPECT_EQ(aicSize, 0);
     EXPECT_EQ(aivSize, 10);
 }
@@ -578,9 +599,17 @@ TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_Success)
     rtFuncHandle funcHandle = nullptr;
     ApiImpl apiImpl;
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol).stubs().will(returnValue(RT_ERROR_NONE));
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    Kernel *retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel *)))
+        .will(returnValue(RT_ERROR_NONE));
     rtError_t ret = rtGetFuncBySymbol(symbol, &funcHandle);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(funcHandle), &kernel);
 }
 
 TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_APITest)
@@ -636,9 +665,10 @@ TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_Success)
     prog.elfData_->globalSymbolMap["test_global_var"] = {0x100, 256};
     prog.SetBinBaseAddr((void *)0x8000, 0);
     prog.SetBinAlignBaseAddr((void *)0x8000, 0);
+    InitEmbeddedInnerHandle<Program>(&prog);
     void *dptr = nullptr;
     size_t size = 0;
-    rtError_t ret = rtBinaryGetGlobal((rtBinHandle)(&prog), "test_global_var", &dptr, &size);
+    rtError_t ret = rtBinaryGetGlobal(static_cast<rtBinHandle>(prog.GetInnerHandle()), "test_global_var", &dptr, &size);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(dptr, (void *)0x8100);
     EXPECT_EQ(size, 256);

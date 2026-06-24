@@ -835,7 +835,6 @@ rtError_t Program::RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInf
             continue;
         }
         SetCpuKernelAttr(kernel, kernelInfo, key);
-        InitEmbeddedInnerHandle<Kernel>(kernel);
         kernelNameMap_[key] = kernel;
         RT_LOG(RT_LOG_DEBUG, "cpu kernel info:functionName[%s],kernelSo[%s],opType[%s]",
             kernel->GetCpuFuncName().c_str(), kernel->GetCpuKernelSo().c_str(), key.c_str());
@@ -885,7 +884,6 @@ rtError_t Program::RegisterSingleCpuKernel(const char *const funcName, const cha
         RT_LOG(RT_LOG_ERROR, "Failed to store kernel %s literal name to device, ret=%d", kernelName, ret);
         return ret;
     }
-    InitEmbeddedInnerHandle<Kernel>(kernel);
     kernelNameMap_[kernelName] = kernel;
     kernelMapLock_.Unlock();
 
@@ -1782,7 +1780,7 @@ rtError_t ElfProgram::RegisterAllKernelCommon(void)
 
         error = KernelNameMapAdd(kernelObj);
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
-            DELETE_O(kernelObj);,
+            ResetEmbeddedInnerHandle<Kernel>(kernelObj); DELETE_O(kernelObj);,
             "Add kernel failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
     return RT_ERROR_NONE;

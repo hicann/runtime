@@ -332,9 +332,11 @@ TEST_F(SnapshotTest, GetPoolIndex_AfterAlloc) {
 TEST_F(SnapshotTest, SaveModuleDataInfoToList) {
     PlainProgram prog;
     prog.SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
+    Program *programBase = &prog;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     rtFuncHandle funcHandle = nullptr;
     funcHandle = nullptr;
-    auto error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    auto error = rtsRegisterCpuFunc(binHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(true, funcHandle != nullptr);
     error = Runtime::Instance()->SaveModuleDataInfoToList(&prog);

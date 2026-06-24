@@ -41,6 +41,7 @@
 #include "task_submit.hpp"
 #include "atrace_log.hpp"
 #include "platform/platform_info.h"
+#include "runtime_handle_guard.h"
 #include "stream_state_callback_manager.hpp"
 #include "memory_pool.hpp"
 #include "ini_parse_utils.h"
@@ -1513,6 +1514,7 @@ void Runtime::PutProgram(const Program * const programPtr, bool isUnRegisterApi)
      * kernelTable_.RemoveAll.
      */
     (void)kernelTable_.RemoveAll(prog);
+    ResetEmbeddedInnerHandle<Program>(prog);
     delete prog;
     prog = nullptr;
 }
@@ -2322,8 +2324,8 @@ rtError_t Runtime::LookupAddrAndPrefCnt(const Kernel * const kernel, Context * c
         RT_LOG(RT_LOG_DEBUG, "tmpAddr1=%llu, tmpAddr2=%llu, kernel_name=%s", tmpAddr1, tmpAddr2, kernelName.c_str());
         (void)ctx->Device_()->AddAddrKernelNameMapTable(mapInfo1);
         (void)ctx->Device_()->AddAddrKernelNameMapTable(mapInfo2);
-        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmpAddr1, prog);
-        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmpAddr2, prog);
+        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmpAddr1, prog->GetInnerHandle());
+        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmpAddr2, prog->GetInnerHandle());
     }
     return RT_ERROR_NONE;
 }
@@ -2359,7 +2361,7 @@ rtError_t Runtime::LookupAddrAndPrefCnt(const Kernel * const kernel, Context * c
         rtAddrKernelName_t mapInfo = {tmp_addr, kernelName};
         RT_LOG(RT_LOG_DEBUG, "tmp_addr=%llu, kernel_name=%s", tmp_addr, kernelName.c_str());
         (void)ctx->Device_()->AddAddrKernelNameMapTable(mapInfo);
-        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmp_addr, prog);
+        (void)ctx->Device_()->AddAddrBinHandleMapTable(tmp_addr, prog->GetInnerHandle());
     }
     return RT_ERROR_NONE;
 }

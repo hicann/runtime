@@ -23,6 +23,7 @@
 #include "program.hpp"
 #include "kernel/kernel.hpp"
 #include "task_fail_callback_manager.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 #include "securec.h"
@@ -588,7 +589,8 @@ protected:
             return params;
         }
         
-        params.program = RtPtrToPtr<Program *>(params.binHandle);
+        params.program = rt_ut::UnwrapOrNull<Program>(params.binHandle);
+        EXPECT_NE(params.program, nullptr);
         static std::vector<char> largeBuffer;
         if (bufferSize > 0) {
             largeBuffer.resize(bufferSize);
@@ -639,7 +641,8 @@ TEST_F(MemoryCorruptionTest, TriggerMemoryCorruptionCheck_AicoreException)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -684,7 +687,8 @@ TEST_F(MemoryCorruptionTest, TriggerMemoryCorruptionCheck_FusionAicoreCcuExcepti
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -727,7 +731,8 @@ TEST_F(MemoryCorruptionTest, TriggerMemoryCorruptionCheck_DirectParameters)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -792,6 +797,9 @@ TEST_F(MemoryCorruptionTest, TriggerMemoryCorruptionCheck_NullExceptionInfo)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
+
     EXPECT_NO_THROW(TriggerMemoryCorruptionCheck(nullptr, nullptr, 0, bin_handle, nullptr));
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
@@ -808,7 +816,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_Normal)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -846,7 +855,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_NullKernelInfo)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     EXPECT_NO_THROW(CheckKernelMemoryCorruption(program, nullptr, 0, nullptr));
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
@@ -864,7 +874,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_NullKernelName)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     rtExceptionArgsInfo_t kernelInfo;
     (void)memset_s(&kernelInfo, sizeof(rtExceptionArgsInfo_t), 0, sizeof(rtExceptionArgsInfo_t));
@@ -941,7 +952,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_MemoryCorruptionCheck)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1014,7 +1026,8 @@ TEST_F(MemoryCorruptionTest, LookupKernelByName_KernelTableFind)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1064,7 +1077,8 @@ TEST_F(MemoryCorruptionTest, LookupKernelByName_GlobalKernelTable)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1093,7 +1107,8 @@ TEST_F(MemoryCorruptionTest, LookupKernelByName_NotFound)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1119,7 +1134,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_WithDeviceAndDriver)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1169,7 +1185,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_HostMemAllocFail)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1213,7 +1230,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_MemCopySyncFail)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1263,7 +1281,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_NullDeviceBaseAddr)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     program->SetBinBaseAddr(nullptr, 0);
 
     const std::string &kernelNames = program->GetKernelNamesBuffer();
@@ -1298,7 +1317,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_NullTextData)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     void *originalBinary = program->binary_;
     program->binary_ = nullptr;
 
@@ -1335,7 +1355,8 @@ TEST_F(MemoryCorruptionTest, CheckKernelMemoryCorruption_ZeroSegmentLength)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     const std::string &kernelNames = program->GetKernelNamesBuffer();
     std::string actualKernelName = "test_kernel";
@@ -1369,7 +1390,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_ZeroKernelLength)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1411,7 +1433,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_CrcMismatch)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     for (int i = 0; i < 256; i++) {
         tempBuffer[i] = static_cast<char>(i);
@@ -1464,6 +1487,9 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_NullKernel)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
+
     rtExceptionInfo_t exceptionInfo;
     (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0, sizeof(rtExceptionInfo_t));
     exceptionInfo.taskid = 1;
@@ -1491,7 +1517,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_NullBinaryData)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     void *originalBinary = program->binary_;
     program->binary_ = nullptr;
 
@@ -1534,7 +1561,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_FusionNullKernelName)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1547,7 +1575,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_FusionNullKernelName)
     exceptionInfo.retcode = 100;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_AICPU;
-    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = bin_handle;
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin =
+        bin_handle;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = nullptr;
 
     EXPECT_NO_THROW(TaskFailCallBackNotify(&exceptionInfo));
@@ -1582,7 +1611,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_NullDeviceBaseAddr)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     program->SetBinBaseAddr(nullptr, 0);
 
     rtExceptionInfo_t exceptionInfo;
@@ -1612,7 +1642,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_HostMemAllocFail)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1659,7 +1690,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_MemCopySyncFail)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1706,7 +1738,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_FusionException)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1735,7 +1768,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_FusionException)
     exceptionInfo.retcode = 100;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_AICPU;
-    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = bin_handle;
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin =
+        bin_handle;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = actualKernelName.c_str();
 
     EXPECT_NO_THROW(TaskFailCallBackNotify(&exceptionInfo));
@@ -1768,7 +1802,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_NullKernelInfo)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 
@@ -1814,7 +1849,8 @@ TEST_F(MemoryCorruptionTest, TaskFailCallBackNotify_HostMemFreeFail)
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
 
-    Program *program = RtPtrToPtr<Program *>(bin_handle);
+    Program *program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
     char tempBuffer[256] = {0};
     program->SetBinBaseAddr(static_cast<void *>(tempBuffer), 0);
 

@@ -27,6 +27,8 @@
 #include "model_update_task.h"
 #include "stars_david.hpp"
 #include "capture_model_utils.hpp"
+#include "program.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -154,8 +156,11 @@ rtError_t MdlTaskUpdate(const Stream * const desStm, uint32_t desTaskId, Stream 
     uint32_t tilingTabLen = 0;
     Device *dev = sinkStm->Device_();
     Context * const curCtx = desStm->Context_();
-    rtError_t error = curCtx->CopyTilingTabToDev(static_cast<Program *>(para->hdl),
-        dev, &devCopyMem, &tilingTabLen);
+    Program *program = nullptr;
+    rtError_t error = GetValidatedObject<Program>(reinterpret_cast<rtBinHandle>(para->hdl), program);
+    ERROR_RETURN_MSG_INNER(error, "Failed to validate bin handle, retCode=%#x.", static_cast<uint32_t>(error));
+
+    error = curCtx->CopyTilingTabToDev(program, dev, &devCopyMem, &tilingTabLen);
     ERROR_RETURN_MSG_INNER(error, "Failed to build tiling table, retCode=%#x.", static_cast<uint32_t>(error));
 
     TaskInfo *tsk = nullptr;

@@ -81,29 +81,11 @@ protected:
 
     virtual void SetUp()
     {
-        Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
-        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
-
-        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamUnBindLogicCq)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
-
-        bool enable = false;
-        MOCKER_CPP_VIRTUAL(driver,
-            &Driver::GetSqEnable).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(enable))
-            .will(returnValue(RT_ERROR_NONE));
-
-        MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
-        MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
+        MockDriverApi();
         rtSetDevice(0);
 
         device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+        device_->SetIsChipSupportRecycleThread(false);
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
@@ -119,6 +101,7 @@ protected:
 
     virtual void TearDown()
     {
+        device_->SetIsChipSupportRecycleThread(false);
         if (stream_->GetPendingNum() > 0) {
             stream_->pendingNum_.Set(0U);
         }
@@ -137,6 +120,22 @@ protected:
     }
 
 protected:
+    void MockDriverApi()
+    {
+        Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamUnBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+
+        bool enable = false;
+        MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqEnable)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(enable))
+            .will(returnValue(RT_ERROR_NONE));
+
+        MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+    }
+
     Device *device_ = nullptr;
     Stream *stream_ = nullptr;
     Stream *streamDvpp_ = nullptr;
@@ -191,8 +190,10 @@ TEST_F(CloudV2StarsEngineTest, SubmitNormalTask_01)
 
     MOCKER(WaitAsyncCopyComplete).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    error = engine_->SubmitTask(&task0);
+    error = engine_->ProcessTaskWait(&task0);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::reset();
+    MockDriverApi();
 
     delete kernel;
 }
@@ -478,6 +479,7 @@ TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_02)
     device_->SetMonitorExitFlag(true);
     error = engine.MonitorTaskReclaim(0xFFFFU);
     EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
+    device_->SetMonitorExitFlag(false);
 }
 
 TEST_F(CloudV2StarsEngineTest, MonitorForWatchDog_01)
@@ -600,9 +602,12 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_03)
     tsk->mte_error = 0x221;
     ModelExecuteTaskInit(tsk, nullptr, 0, 0);
 
-    ((StarsEngine *)engine_)->AddTaskToStream(tsk, sendSqeNum);
-
     uint16_t stream_id = stream_->Id_();
+    uint32_t taskId = tsk->id;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::GetTaskIdByPos)
+        .stubs()
+        .with(mockcpp::any(), outBound(taskId))
+        .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::GetTask)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
@@ -611,6 +616,8 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_03)
         .stubs();
     error = ((StarsEngine *)engine_)->ProcessHeadTaskByStreamId(stream_id);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::reset();
+    MockDriverApi();
 }
 
 TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_04)
@@ -623,9 +630,12 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_04)
     tsk->mte_error = 0x220;
     ModelExecuteTaskInit(tsk, nullptr, 0, 0);
 
-    ((StarsEngine *)engine_)->AddTaskToStream(tsk, sendSqeNum);
-
     uint16_t stream_id = stream_->Id_();
+    uint32_t taskId = tsk->id;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::GetTaskIdByPos)
+        .stubs()
+        .with(mockcpp::any(), outBound(taskId))
+        .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::GetTask)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
@@ -634,6 +644,8 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_04)
         .stubs();
     error = ((StarsEngine *)engine_)->ProcessHeadTaskByStreamId(stream_id);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::reset();
+    MockDriverApi();
 }
 
 TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_05)
@@ -646,9 +658,12 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_05)
     tsk->mte_error = 0x58;
     ModelExecuteTaskInit(tsk, nullptr, 0, 0);
 
-    ((StarsEngine *)engine_)->AddTaskToStream(tsk, sendSqeNum);
-
     uint16_t stream_id = stream_->Id_();
+    uint32_t taskId = tsk->id;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::GetTaskIdByPos)
+        .stubs()
+        .with(mockcpp::any(), outBound(taskId))
+        .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::GetTask)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
@@ -657,6 +672,8 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_05)
         .stubs();
     error = ((StarsEngine *)engine_)->ProcessHeadTaskByStreamId(stream_id);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::reset();
+    MockDriverApi();
 }
 
 TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_06)
@@ -669,9 +686,12 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_06)
     tsk->mte_error = 0x57;
     ModelExecuteTaskInit(tsk, nullptr, 0, 0);
 
-    ((StarsEngine *)engine_)->AddTaskToStream(tsk, sendSqeNum);
-
     uint16_t stream_id = stream_->Id_();
+    uint32_t taskId = tsk->id;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::GetTaskIdByPos)
+        .stubs()
+        .with(mockcpp::any(), outBound(taskId))
+        .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::GetTask)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
@@ -680,6 +700,8 @@ TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_06)
         .stubs();
     error = ((StarsEngine *)engine_)->ProcessHeadTaskByStreamId(stream_id);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::reset();
+    MockDriverApi();
 }
 
 TEST_F(CloudV2StarsEngineTest, buffAllocer_t)
@@ -860,7 +882,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport_with_limit_flag)
     auto ret = ((StarsEngine *)engine_)->ProcReportIsException(logicCq, workTask1);
     EXPECT_EQ(ret, false);
 
-    device_->SetIsChipSupportRecycleThread(true);
+    device_->SetIsChipSupportRecycleThread(false);
     stream_->SetLimitFlag(false);
 }
 
@@ -1104,12 +1126,10 @@ TEST_F(CloudV2StarsEngineTest, DvppWaitGroup)
 
 TEST_F(CloudV2StarsEngineTest, GetLastFinishTaskId)
 {
-    uint32_t recycleTaskId = 0;
-    MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
-        .will(returnValue(RT_ERROR_NONE));
-
+    stream_->SetStreamStopSyncFlag(false);
     rtError_t error = stream_->WaitTask(false, stream_->lastTaskId_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->SetStreamStopSyncFlag(true);
 }
 
 
@@ -1721,6 +1741,7 @@ TEST_F(CloudV2StarsEngineTest, ReportRasProc)
 {
     faultEventFlag = 1;
     RawDevice device(0);
+    device.SetDeviceRas(false);
     TaskInfo task = {};
     task.stream = stream_;
     GetMteErrFromCqeStatus(&task, &device, TS_SDMA_STATUS_DDRC_ERROR);

@@ -4066,6 +4066,8 @@ TEST_F(UbStreamTest, LaunchKernelWithHandle)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
@@ -4126,6 +4128,9 @@ TEST_F(UbStreamTest, LaunchKernelWithHandle_Error1)
     master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
@@ -4767,7 +4772,8 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     launchConfig.numAttrs = 2;
     launchConfig.attrs = attrs;
 
-    Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
+    Kernel* kernel = rt_ut::UnwrapOrNull<Kernel>(func_handle);
+    ASSERT_NE(kernel, nullptr);
     kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
 
@@ -9285,6 +9291,8 @@ TEST_F(UbStreamTestLite, LaunchKernelWithHandle_Lite)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
@@ -9968,7 +9976,8 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     launchConfig.numAttrs = RT_LAUNCH_ATTRIBUTE_MAX;
     launchConfig.attrs = attrs;
 
-    Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
+    Kernel* kernel = rt_ut::UnwrapOrNull<Kernel>(func_handle);
+    ASSERT_NE(kernel, nullptr);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     kernel->SetShareMemSize_(2048);
     kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
@@ -13996,6 +14005,8 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtFusionArgsEx_t argsInfo = {};
@@ -14023,7 +14034,7 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     launchConfig.numAttrs = 2;
     launchConfig.attrs = attrs;
     fusionInfo.subTask[1].type = RT_FUSION_AICORE;
-    fusionInfo.subTask[1].task.aicoreInfo.hdl = m_handle;
+    fusionInfo.subTask[1].task.aicoreInfo.hdl = m_prog;
     fusionInfo.subTask[1].task.aicoreInfo.tilingKey = tilingKey;
     fusionInfo.subTask[1].task.aicoreInfo.config = &launchConfig;
 

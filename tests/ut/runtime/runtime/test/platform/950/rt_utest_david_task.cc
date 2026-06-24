@@ -1108,15 +1108,18 @@ TEST_F(TaskTestDavid, get_stack_buffer)
     bin.data = bin_data;
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     ApiImplDavid apiImpl;
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 1, 0, 0, &stack, &stackSize),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 
@@ -1131,6 +1134,8 @@ TEST_F(TaskTestDavid, get_stack_buffer_customer)
     bin.data = bin_data;
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     ApiImplDavid apiImpl;
     const void *stack = nullptr;
@@ -1138,7 +1143,7 @@ TEST_F(TaskTestDavid, get_stack_buffer_customer)
     MOCKER_CPP(&Program::GetMaxMinStackSize)
         .stubs()
         .will(returnValue(KERNEL_STACK_SIZE_32K * 2U));
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 
@@ -1153,11 +1158,13 @@ TEST_F(TaskTestDavid, get_stack_buffer_simt)
     bin.data = bin_data;
     bin.length = bin_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
 
     ApiImplDavid apiImpl;
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 1, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 1, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 

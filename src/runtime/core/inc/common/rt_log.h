@@ -68,4 +68,3 @@ inline std::string RtFmtMsg(const char *fmt, ...) {
 }
 }
 #endif
-

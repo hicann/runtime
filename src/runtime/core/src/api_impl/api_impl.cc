@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
+#include <new>
 #include <string>
 #include "common/enum_to_string_utils.hpp"
 #include "cond_c.hpp"
@@ -103,6 +103,26 @@ using DevInfo = struct {
 namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
 constexpr uint32_t MEM_TYPE_MASK = 0xFF00U;
+
+void ResetKernelArgsParamHandles(RtArgsHandle *argsHandle, uint32_t paramCount)
+{
+    if (argsHandle == nullptr) {
+        return;
+    }
+    for (uint32_t i = 0U; i < paramCount; ++i) {
+        ResetEmbeddedInnerHandle<ParaDetail>(&(argsHandle->para[i]));
+    }
+}
+
+void ReinitKernelArgsEmbeddedHandle(RtArgsHandle *argsHandle, uint32_t paramCount)
+{
+    if (argsHandle == nullptr) {
+        return;
+    }
+    ResetKernelArgsParamHandles(argsHandle, paramCount);
+    ResetEmbeddedInnerHandle<RtArgsHandle>(argsHandle);
+    InitEmbeddedInnerHandle<RtArgsHandle>(argsHandle);
+}
 
 }
 
@@ -761,7 +781,7 @@ rtError_t ApiImpl::CreateLaunchArgs(size_t const argsSize, size_t const hostInfo
     (void)memset_s(hdlHostInputInfo, sizeof(rtHostInputInfo_t) * hostInfoNum,
                    0xFF, sizeof(rtHostInputInfo_t) * hostInfoNum);
     rtLaunchArgs_t *hdlArgs = new (std::nothrow) rtLaunchArgs_t{{nullptr, nullptr, 0, 0, 0, 0, 0, 1, {0}},
-        0, static_cast<uint16_t>(argsSize), static_cast<uint16_t>(hostInfoNum), static_cast<uint16_t>(argsSize)};
+        0, static_cast<uint16_t>(argsSize), static_cast<uint16_t>(hostInfoNum), static_cast<uint16_t>(argsSize), {}};
     COND_PROC_RETURN_AND_MSG_ALLOC_FAILED((hdlArgs == nullptr), RT_ERROR_CALLOC,
         delete [] hdlHostInputInfo, sizeof(rtLaunchArgs_t));
     *argsHandle = hdlArgs;
@@ -784,6 +804,7 @@ rtError_t ApiImpl::DestroyLaunchArgs(rtLaunchArgs_t* argsHandle)
     if (argsHandle->argsInfo.hostInputInfoPtr != nullptr) {
         delete [] argsHandle->argsInfo.hostInputInfoPtr;
     }
+    ResetEmbeddedInnerHandle<rtLaunchArgs_t>(argsHandle);
     DELETE_O(argsHandle);
 
     return RT_ERROR_NONE;
@@ -1102,6 +1123,7 @@ rtError_t ApiImpl::BinaryUnLoad(Program * const binHandle)
             }
         }
     }
+    ResetEmbeddedInnerHandle<Program>(binHandle);
     delete binHandle;
 
     return error;
@@ -8138,12 +8160,14 @@ rtError_t ApiImpl::ProcessOverFlowArgs(RtArgsHandle *argsHandle)
 
 rtError_t ApiImpl::KernelArgsGetHandleMemSize(Kernel * const funcHandle, size_t *memSize)
 {
-    const uint16_t useraraNum = funcHandle->GetUserParaNum();
-    // 需要依赖kernel句柄信息获取用户参数和系统参数
-    *memSize = sizeof(RtArgsHandle) + (useraraNum * sizeof(ParaDetail));
+    const uint32_t maxUserParamNum = (funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU)
+        ? MAX_PARAM_CNT : static_cast<uint32_t>(funcHandle->GetUserParaNum());
 
-    RT_LOG(RT_LOG_DEBUG, "memSize=%zu,useraraNum=%u,RtArgsHandle=%zu,rtParaDetail=%zu",
-        *memSize, useraraNum, sizeof(RtArgsHandle), sizeof(ParaDetail));
+    // 需要依赖kernel句柄信息获取用户参数和系统参数
+    *memSize = sizeof(RtArgsHandle) + (maxUserParamNum * sizeof(ParaDetail));
+
+    RT_LOG(RT_LOG_DEBUG, "memSize=%zu,maxUserParamNum=%u,RtArgsHandle=%zu,rtParaDetail=%zu",
+        *memSize, maxUserParamNum, sizeof(RtArgsHandle), sizeof(ParaDetail));
 
     return  RT_ERROR_NONE;
 }
@@ -8184,10 +8208,17 @@ rtError_t ApiImpl::KernelArgsFinalize(RtArgsHandle *argsHandle)
 rtError_t ApiImpl::KernelArgsInitByUserMem(Kernel * const funcHandle, RtArgsHandle *argsHandle, void *userHostMem,
         size_t actualArgsSize)
 {
+    const uint32_t maxUserParamNum = (funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU)
+        ? MAX_PARAM_CNT : static_cast<uint32_t>(funcHandle->GetUserParaNum());
+    new (argsHandle) RtArgsHandle {};
+    for (uint32_t i = 0U; i < maxUserParamNum; ++i) {
+        new (&(argsHandle->para[i])) ParaDetail {};
+    }
+    ReinitKernelArgsEmbeddedHandle(argsHandle, maxUserParamNum);
     argsHandle->buffer = userHostMem;
     argsHandle->bufferSize = actualArgsSize;
     argsHandle->realUserParamNum = 0U;
-    argsHandle->maxUserParamNum = static_cast<uint8_t>(funcHandle->GetUserParaNum());
+    argsHandle->maxUserParamNum = static_cast<uint8_t>(maxUserParamNum);
     argsHandle->placeHolderNum = 0U;
     argsHandle->funcHandle = funcHandle;
     argsHandle->argsSize = 0U;
@@ -8234,6 +8265,7 @@ rtError_t ApiImpl::KernelArgsInit(Kernel * const funcHandle, RtArgsHandle **args
     NULL_PTR_RETURN_MSG(threadArgsHandle.localArgsHandle_, RT_ERROR_MEMORY_ALLOCATION);
 
     RtArgsHandle *localArgsHandle = threadArgsHandle.localArgsHandle_;
+    ReinitKernelArgsEmbeddedHandle(localArgsHandle, MAX_PARAM_CNT);
     localArgsHandle->argsSize = 0U;
     localArgsHandle->realUserParamNum = 0U;
     localArgsHandle->placeHolderNum = 0U;
@@ -8298,6 +8330,7 @@ rtError_t ApiImpl::KernelArgsAppendPlaceHolder(RtArgsHandle *argsHandle, ParaDet
     argsHandle->para[idx].dataOffset = 0U;
 
     *paraHandle = ((argsHandle->para) + idx);
+    InitEmbeddedInnerHandle<ParaDetail>(*paraHandle);
     argsHandle->argsSize = needOccupyOffset;
     argsHandle->realUserParamNum++;
     argsHandle->placeHolderNum++;
@@ -8390,6 +8423,7 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle *argsHandle, void *para, size_t
             "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_INVALID_VALUE;
     }
+    InitEmbeddedInnerHandle<ParaDetail>(*paraHandle);
     argsHandle->argsSize = needOccupyOffset; // 本地append参数后，内存偏移的变化
     argsHandle->realUserParamNum++;
 
@@ -8952,24 +8986,26 @@ rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info,
 {
     Kernel *kernelTmp = nullptr;
     *funcHandle = nullptr;
-    Program *binHandle;
+    rtBinHandle rawBinHandle = nullptr;
+    Program *binHandle = nullptr;
     const char_t *kernelName = nullptr;
     rtError_t error;
 
     if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
-        binHandle = RtPtrToPtr<Program *>(info->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin);
+        rawBinHandle = info->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin;
         kernelName = info->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName;
     } else if (info->expandInfo.type == RT_EXCEPTION_FUSION && info->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU) {
-        binHandle = RtPtrToPtr<Program *>(info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin);
+        rawBinHandle = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin;
         kernelName = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName;
-    } else {
-        binHandle = nullptr;
     }
-    
-    if (binHandle == nullptr || kernelName == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Get func handle from exception info failed, binHandle=%p, kernelName=%p", binHandle, kernelName);
+
+    if (rawBinHandle == nullptr || kernelName == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Get func handle from exception info failed, binHandle=%p, kernelName=%p",
+            rawBinHandle, kernelName);
         return RT_ERROR_INVALID_VALUE;
     }
+    const rtError_t handleRet = GetValidatedObject<Program>(rawBinHandle, binHandle);
+    ERROR_RETURN(handleRet, "Get program from bin handle failed, ret=%#x", handleRet);
 
     error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kernelTmp);
     // mix kernel retry, remove mix_aic or mix_aiv from kernel name

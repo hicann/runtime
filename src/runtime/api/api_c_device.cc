@@ -771,7 +771,8 @@ rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t ty
 {
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetBinBuffer(binHandle, type, bin, binSize);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t error = apiInstance->GetBinBuffer(RtPtrToPtr<rtBinHandle>(realProgram), type, bin, binSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -782,7 +783,9 @@ rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const
 {
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t error = apiInstance->GetStackBuffer(
+        RtPtrToPtr<rtBinHandle>(realProgram), deviceId, stackType, coreType, coreId, stack, stackSize);
     if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
         return GetRtExtErrCodeAndSetGlobalErr(error);
     }

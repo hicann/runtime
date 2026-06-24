@@ -671,13 +671,14 @@ TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
     master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &arg;
     argsInfo.argsSize = 4100;
     Stream *stream = (Stream *)ctx->DefaultStream_();
-    error = StreamLaunchKernelWithHandle(m_handle, 355, 1, &argsInfo, stream, 0, NULL);
+    error = StreamLaunchKernelWithHandle(m_prog, 355, 1, &argsInfo, stream, 0, NULL);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1047,6 +1048,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
@@ -1055,7 +1057,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     Stream *stream = (Stream *)ctx->DefaultStream_();
     rtChipType_t oldChipType = ((RawDevice *)(ctx->Device_()))->chipType_;
     ((RawDevice *)(ctx->Device_()))->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x400)));
-    error = StreamLaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, stream, 0, NULL);
+    error = StreamLaunchKernelWithHandle(m_prog, 1, 1, &argsInfo, stream, 0, NULL);
     ((RawDevice *)(ctx->Device_()))->chipType_ = oldChipType;
 
     error = rtDevBinaryUnRegister(m_handle);
@@ -1425,7 +1427,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
-    m_prog = (Program *)m_handle;
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, m_prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
@@ -1808,13 +1810,14 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &arg;
     argsInfo.argsSize = 4100;
     Stream *stream = (Stream *)ctx->DefaultStream_();
-    error = StreamLaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, stream, 0, NULL);
+    error = StreamLaunchKernelWithHandle(m_prog, 1, 1, &argsInfo, stream, 0, NULL);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3162,7 +3165,10 @@ TEST_F(CloudV2ContextTest, ModelTaskUpdate_test)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    rtMdlTaskUpdateInfo_t para;
+    rtMdlTaskUpdateInfo_t para = {};
+    PlainProgram program;
+    Program *programBase = &program;
+    para.hdl = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     streamA->bindFlag_.Set(true);
     streamB->bindFlag_.Set(true);
     MOCKER_CPP(&Context::CopyTilingTabToDev).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));

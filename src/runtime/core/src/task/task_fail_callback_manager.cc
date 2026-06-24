@@ -29,7 +29,13 @@ void TriggerMemoryCorruptionCheck(rtExceptionInfo_t *const exceptionInfo, const 
     }
 
     if (binHandle != nullptr) {
-        Program *program = RtPtrToPtr<Program *>(binHandle);
+        Program *program = nullptr;
+        const rtError_t ret = GetValidatedObject<Program>(binHandle, program);
+        if ((ret != RT_ERROR_NONE) || (program == nullptr)) {
+            RT_LOG(RT_LOG_WARNING, "Trigger memory corruption check failed, invalid binHandle=%p, retCode=%#x.",
+                binHandle, ret);
+            return;
+        }
         CheckKernelMemoryCorruption(program, dev, realDeviceId, kernelInfo);
     }
 }
@@ -90,7 +96,13 @@ void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo)
         return;
     }
     
-    Program *program = RtPtrToPtr<Program *>(binHandle);
+    Program *program = nullptr;
+    const rtError_t ret = GetValidatedObject<Program>(binHandle, program);
+    if ((ret != RT_ERROR_NONE) || (program == nullptr)) {
+        RT_LOG(RT_LOG_WARNING, "Op task fail callback notify failed, invalid binHandle=%p, retCode=%#x.",
+            binHandle, ret);
+        return;
+    }
     auto callback = program->opExceptionCallback_;
     void *userData = program->opExceptionCallbackUserData_;
     if (callback != nullptr) {

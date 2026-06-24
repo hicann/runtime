@@ -311,7 +311,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
@@ -399,7 +400,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
@@ -473,7 +475,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error1)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
@@ -547,7 +550,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {

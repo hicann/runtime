@@ -841,9 +841,12 @@ static void TaskFailCallBackForFftsPlusTask(TaskInfo* taskInfo, const uint32_t d
     kernelInfo.kernelName = kernelName.c_str();
     kernelInfo.kernelNameSize = static_cast<uint32_t>(kernelName.size());
     kernelInfo.bin = dev->LookupBinHandleByAddr(info.pcStart);
-    Program *const programHdl = static_cast<Program *>(kernelInfo.bin);
-    if (programHdl != nullptr) {
+    Program *programHdl = nullptr;
+    const rtError_t handleRet = GetValidatedObject<Program>(kernelInfo.bin, programHdl);
+    if ((handleRet == RT_ERROR_NONE) && (programHdl != nullptr)) {
         kernelInfo.binSize = programHdl->GetBinarySize();
+    } else if (handleRet != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "FftsPlus get program from bin handle failed, retCode=%#x.", handleRet);
     }
     RT_LOG(RT_LOG_ERROR, "fftsplus streamId=%d, taskId=%u, context_id=%u, expandType=%u, rtCode=%#x,[%s], "
         "psStart=0x%llx, kernel_name=%s, binHandle=%p, binSize=%u.", streamId, exceptionInfo.taskid,

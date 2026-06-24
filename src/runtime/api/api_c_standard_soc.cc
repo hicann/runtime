@@ -51,23 +51,23 @@ TIMESTAMP_EXTERN(rtMemsetD32Async);
 extern "C" {
 #endif // __cplusplus
 
-static Kernel *ConvertFuncToKernel(Api * const apiInstance, void *func)
+static rtError_t ConvertFuncToKernel(Api * const apiInstance, void *func, Kernel *&kernel,
+                                     const char_t * const callerFuncName)
 {
-    Kernel *kernel = nullptr;
     Kernel *symbolKernel = nullptr;
-    rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
+    const rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
     // 若用户传入的参数已经是 func handle，GetFunctionBySymbol 会找不到对应的 handle 返回错误。
     // 这是正常情况，因此失败时不直接返回，而是将 func 当作 handle 使用。
     if (ret == RT_ERROR_NONE) {
         RT_LOG(RT_LOG_INFO, "find function handle by symbol");
         kernel = symbolKernel;
+        return RT_ERROR_NONE;
     } else if (ret == RT_ERROR_INVALID_DEVICE_FUNCTION) {
         RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
-        kernel = RtPtrToPtr<Kernel *>(func);
+        return ValidateKernelHandleForApi(func, kernel, callerFuncName);
     } else {
-        // no op
+        return GetRtExtErrCodeAndSetGlobalErr(ret);
     }
-    return kernel;
 }
 
 VISIBILITY_DEFAULT
@@ -145,7 +145,8 @@ rtError_t rtGetBinaryDeviceBaseAddr(void *handle, void **deviceBase)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->GetBinaryDeviceBaseAddr(RtPtrToPtr<Program *>(handle), deviceBase);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(handle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->GetBinaryDeviceBaseAddr(realProgram, deviceBase);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -1469,7 +1470,8 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->FunctionGetAttribute(funcHandle, attrType, attrValue);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    const rtError_t error = apiInstance->FunctionGetAttribute(RtPtrToPtr<rtFuncHandle>(realKernel), attrType, attrValue);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1479,8 +1481,14 @@ rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHan
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FunctionGetBinary(RtPtrToPtr<Kernel *>(funcHandle), RtPtrToPtr<Program **>(binHandle));
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    const rtError_t ret = apiInstance->FunctionGetBinary(realKernel, RtPtrToPtr<Program **>(binHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Program * const realProgram = RtPtrToPtr<Program *>(*binHandle);
+    if (realProgram != nullptr) {
+        InitEmbeddedInnerHandle<Program>(realProgram);
+    }
+    *binHandle = ExportEmbeddedHandle<rtBinHandle>(realProgram);
     return ACL_RT_SUCCESS;
 }
 
@@ -1495,7 +1503,8 @@ rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void 
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtBinaryGetGlobal");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    const rtError_t ret = apiInstance->BinaryGetGlobal(RtPtrToPtr<Program *>(binHandle), name, dptr, size);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetGlobal(realProgram, name, dptr, size);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -1512,7 +1521,13 @@ void rtRegisterVariable(void *binHandle, const void *hostVar, const char *device
         return;
     }
 
-    (void)apiInstance->RegisterVariable(binHandle, hostVar, deviceVarName, size, flags);
+    Program *realProgram = nullptr;
+    const rtError_t handleRet = ValidateProgramHandleForApi(binHandle, realProgram, __func__);
+    if (handleRet != RT_ERROR_NONE) {
+        return;
+    }
+
+    (void)apiInstance->RegisterVariable(realProgram, hostVar, deviceVarName, size, flags);
     return;
 }
 
@@ -1538,7 +1553,8 @@ rtError_t rtFunctionGetParamCount(const void *func, size_t *paramCount)
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtFunctionGetParamCount");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    const Kernel *kernel = RtPtrToPtr<const Kernel *>(func);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(const_cast<void *>(func), Kernel, realKernel, ValidateKernelHandleForApi);
+    const Kernel * const kernel = realKernel;
     const rtError_t error = apiInstance->FunctionGetParamCount(kernel, paramCount);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1557,7 +1573,8 @@ rtError_t rtFunctionGetParamInfo(const void *func, size_t paramIndex,
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtFunctionGetParamInfo");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    const Kernel *kernel = RtPtrToPtr<const Kernel *>(func);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(const_cast<void *>(func), Kernel, realKernel, ValidateKernelHandleForApi);
+    const Kernel * const kernel = realKernel;
     const rtError_t error = apiInstance->FunctionGetParamInfo(kernel, paramIndex, paramOffset, paramSize);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1569,7 +1586,7 @@ rtError_t rtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Kernel *kernel = RtPtrToPtr<Kernel *>(func);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(func, Kernel, kernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->FunctionGetAvailDynUbufPerBlock(kernel, flags, dynamicUbufSize);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1583,7 +1600,8 @@ rtError_t rtRegisterFuncSymbol(void *binHandle, const void *symbol, const char *
     UNUSED(reserve);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->RegisterFuncSymbol(binHandle, symbol, kernelName);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->RegisterFuncSymbol(realProgram, symbol, kernelName);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -1607,8 +1625,12 @@ rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t
     argsWithType.args.argsArrayInfo = args;
 
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType, exeStream, cfg);
+    Kernel *kernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, kernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1627,7 +1649,8 @@ rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *
         static_cast<int32_t>(chipType));
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FuncGetSize(RtPtrToPtr<Kernel *>(funcHandle), aicSize, aivSize);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    const rtError_t ret = apiInstance->FuncGetSize(realKernel, aicSize, aivSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -1641,6 +1664,11 @@ rtError_t rtGetFuncBySymbol(const void *symbol, rtFuncHandle *funcHandle)
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(ret == RT_ERROR_INVALID_DEVICE_FUNCTION, ACL_ERROR_RT_INVALID_DEVICE_FUNCTION, ErrorCode::EE1017,
         __func__, "symbol", "The corresponding kernel function cannot be found through the symbol");
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Kernel * const realKernel = RtPtrToPtr<Kernel *>(*funcHandle);
+    if (realKernel != nullptr) {
+        InitEmbeddedInnerHandle<Kernel>(realKernel);
+    }
+    *funcHandle = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
     return ACL_RT_SUCCESS;
 }
 
@@ -1649,7 +1677,8 @@ rtError_t rtBinaryGetMetaNum(const rtBinHandle binHandle, const rtBinaryMetaType
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->BinaryGetMetaNum(RtPtrToPtr<Program *>(binHandle), type, numOfMeta);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetMetaNum(realProgram, type, numOfMeta);
 
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1662,8 +1691,8 @@ rtError_t rtBinaryGetMetaInfo(const rtBinHandle binHandle, const rtBinaryMetaTyp
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret =
-        apiInstance->BinaryGetMetaInfo(RtPtrToPtr<Program *>(binHandle), type, numOfMeta, data, dataSize);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetMetaInfo(realProgram, type, numOfMeta, data, dataSize);
 
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1857,8 +1886,12 @@ rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 bloc
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
+    Kernel *kernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, kernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1889,9 +1922,13 @@ rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blo
     argsWithType.type = RT_SIMT_ARGS_ARRAY;
     argsWithType.args.simtArgsArray = &simtArgsArray;
 
+    Kernel *kernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, kernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    Kernel * const kernel = ConvertFuncToKernel(apiInstance, func);
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
+    ret = apiInstance->LaunchKernelV2(kernel, 1U, &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

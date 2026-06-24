@@ -17,6 +17,7 @@
 #include "runtime/elf_base.h"
 #include "osal.hpp"
 #include "kernel.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -82,6 +83,11 @@ public:
     void Insert2CtxMap(Module ** const moduleItem, Context * const ctxItem);
 
     void Remove2CtxMap(Module ** const moduleItem);
+
+    rtInnerObject *GetInnerHandle()
+    {
+        return &handle_;
+    }
 
     void SetId(uint32_t progId)
     {
@@ -383,6 +389,7 @@ private:
     void ReleaseBinaryOnDestroy();
     void ResetProgramAllocatorOnDestroy() const;
     void CloseBinaryHandleOnDestroy();
+    rtInnerObject handle_ {};
     rtError_t CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle, const Device * const dev) const;
     void SaveBinaryData(const void *data, uint64_t length, const bool isLoadFromFile);
     rtError_t FreeCpuSoH2dMem(Device * const device, std::vector<void *> &allocatedMem) const;

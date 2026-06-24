@@ -10,8 +10,12 @@
 #include "api_handle_guard.h"
 
 #include "api_global_err.h"
+#include "args/args_inner.h"
+#include "base.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
+#include "spec/base_info.hpp"
+
 namespace cce {
 namespace runtime {
 namespace {
@@ -106,6 +110,80 @@ rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle *&out
     } else {
         return ReportApiHandleValidationError(ret, callerFuncName);
     }
+}
+
+rtError_t ValidateProgramHandleForApi(rtBinHandle handle, Program *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<Program>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateKernelHandleForApi(rtFuncHandle handle, Kernel *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<Kernel>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<RtArgsHandle>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    }
+
+    RtArgsHandle * const legacyArgsHandle = reinterpret_cast<RtArgsHandle *>(handle);
+    if (legacyArgsHandle != nullptr) {
+        RtArgsHandle *realArgsHandle = nullptr;
+        const rtError_t legacyRet = GetValidatedObject<RtArgsHandle>(
+            reinterpret_cast<rtArgsHandle>(RtInnerHandleAccessor<RtArgsHandle>::Get(legacyArgsHandle)), realArgsHandle);
+        if ((legacyRet == RT_ERROR_NONE) && (realArgsHandle == legacyArgsHandle)) {
+            outRealObj = legacyArgsHandle;
+            return RT_ERROR_NONE;
+        }
+    }
+
+    return ReportApiHandleValidationError(ret, callerFuncName);
+}
+
+rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<ParaDetail>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateLaunchArgsHandleForApi(rtLaunchArgsHandle handle, rtLaunchArgs_t *&outRealObj,
+    const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<rtLaunchArgs_t>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    }
+
+    rtLaunchArgs_t * const legacyLaunchArgs = reinterpret_cast<rtLaunchArgs_t *>(handle);
+    if (legacyLaunchArgs != nullptr) {
+        rtLaunchArgs_t *realLaunchArgs = nullptr;
+        const rtError_t legacyRet = GetValidatedObject<rtLaunchArgs_t>(
+            reinterpret_cast<rtLaunchArgsHandle>(RtInnerHandleAccessor<rtLaunchArgs_t>::Get(legacyLaunchArgs)),
+            realLaunchArgs);
+        if ((legacyRet == RT_ERROR_NONE) && (realLaunchArgs == legacyLaunchArgs)) {
+            outRealObj = legacyLaunchArgs;
+            return RT_ERROR_NONE;
+        }
+    }
+
+    return ReportApiHandleValidationError(ret, callerFuncName);
 }
 
 } // namespace runtime

@@ -153,7 +153,8 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_KernelExpandCopy_error)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
@@ -234,7 +235,8 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_KernelExpandCopy_error)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // constructing dynamic shape kernel
-    prog = (Program *)handle;
+    prog = rt_ut::UnwrapOrNull<Program>(handle);
+    ASSERT_NE(prog, nullptr);
     Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
@@ -1993,7 +1995,7 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_DYNAMIC_TEST_MIX_1_2_ERROR_4)
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtDevBinaryUnRegister(m_handle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
 TEST_F(NewCloudV2ApiTest, notify_create_with_flag_not_support)
@@ -2475,7 +2477,8 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     size_t argshandleMemSize = 0U;
-    error = rtsKernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(k1);
+    error = rtsKernelArgsGetHandleMemSize(funcHandle, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t size = sizeof(RtArgsHandle) + k1->userParaNum_ * sizeof(ParaDetail);
     EXPECT_EQ(argshandleMemSize, size);
@@ -2485,16 +2488,17 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     const uint8_t maxSysParamCnt = 8U;
     size = userArgsSize + maxSysParamCnt * sizeof(uint64_t) +
          k1->userParaNum_ * sizeof(uint64_t);
-    error = rtsKernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = rtsKernelArgsGetMemSize(funcHandle, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(actualArgsSize, size);
 
-    uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
+    uint8_t *argsHandleMem = new (std::nothrow) uint8_t[argshandleMemSize];
     uint8_t *userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
 
-    error = rtsKernelArgsInitByUserMem(k1, argsHandle, userHostMem, actualArgsSize);
+    error = rtsKernelArgsInitByUserMem(funcHandle, argsHandleMem, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *handle = reinterpret_cast<RtArgsHandle *>(argsHandleMem);
+    rtArgsHandle argsHandle = reinterpret_cast<rtArgsHandle>(&handle->handle_);
     size = k1->isSupportOverFlow_ ? (k1->systemParaNum_ - 1) * sizeof(uint64_t) :
         k1->systemParaNum_ * sizeof(uint64_t);
     EXPECT_EQ(handle->argsSize, size);
@@ -2509,8 +2513,9 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     EXPECT_EQ(handle->para[0].type, 0);
     EXPECT_EQ(handle->para[0].paraOffset, 8);
     EXPECT_EQ(handle->para[0].paraSize, sizeof(uint32_t));
-    EXPECT_NE(paramHandle, nullptr);
-    ParaDetail *pHandle = (ParaDetail *)paramHandle;
+    ASSERT_NE(paramHandle, nullptr);
+    ParaDetail *pHandle = rt_ut::UnwrapOrNull<ParaDetail>(paramHandle);
+    ASSERT_NE(pHandle, nullptr);
     EXPECT_EQ(pHandle->type, 0);
     EXPECT_EQ(pHandle->paraOffset, 8);
     EXPECT_EQ(pHandle->paraSize, sizeof(uint32_t));
@@ -2528,8 +2533,9 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     EXPECT_EQ(handle->para[1].paraOffset, 16);
     EXPECT_EQ(handle->para[1].paraSize, sizeof(uint64_t));
 
-    EXPECT_NE(paraHandle, nullptr);
-    ParaDetail *paHandle = (ParaDetail *)paraHandle;
+    ASSERT_NE(paraHandle, nullptr);
+    ParaDetail *paHandle = rt_ut::UnwrapOrNull<ParaDetail>(paraHandle);
+    ASSERT_NE(paHandle, nullptr);
     EXPECT_EQ(paHandle->type, 1);
     EXPECT_EQ(paHandle->paraOffset, 16);
     EXPECT_EQ(paHandle->paraSize, sizeof(uint64_t));
@@ -2540,7 +2546,8 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     void *paraHandle01;
     error = rtsKernelArgsAppendPlaceHolder(argsHandle, &paraHandle01);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ParaDetail *paHandle01 = (ParaDetail *)paraHandle01;
+    ParaDetail *paHandle01 = rt_ut::UnwrapOrNull<ParaDetail>(paraHandle01);
+    ASSERT_NE(paHandle01, nullptr);
     EXPECT_EQ(paHandle01->type, 1);
     EXPECT_EQ(paHandle01->paraOffset, 24);
     EXPECT_EQ(paHandle01->paraSize, sizeof(uint64_t));
@@ -2568,7 +2575,7 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
     error = rtsKernelArgsFinalize(argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete k1;
-    delete [] argsHandle;
+    delete [] argsHandleMem;
     delete [] userHostMem;
 }
 

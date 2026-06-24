@@ -93,10 +93,12 @@ TEST_F(CloudV2CustomerStackSize, getStackBufferMinSize32K)
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_16K);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_16K);
     program.kernelNameMap_.insert({"test1", &kernel});
+    Program *programBase = &program;
+    rtBinHandle programHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(programHandle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(stackSize, KERNEL_STACK_SIZE_32K);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -114,10 +116,12 @@ TEST_F(CloudV2CustomerStackSize, getStackBufferMinSize64K)
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_16K * 4);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_16K);
     program.kernelNameMap_.insert({"test1", &kernel});
+    Program *programBase = &program;
+    rtBinHandle programHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(programHandle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(stackSize, 114688);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

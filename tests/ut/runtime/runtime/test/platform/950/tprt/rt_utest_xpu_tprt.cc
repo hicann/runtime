@@ -535,6 +535,7 @@ TEST_F(TprtApiTest, TprtSqPushTask_device_null_error)
     TprtTaskSendInfo_t sendInfo = {};
     sendInfo.sqeNum = 1U;
     sendInfo.sqId = 1U;
+    sendInfo.sqeAddr = TprtPtrToPtr<uint8_t*, TprtSqe_t*>(sqeAddr);
     MOCKER_CPP(&TprtManage::GetDeviceByDevId).stubs().will(returnValue((TprtDevice*)nullptr));
     uint32_t error = TprtSqPushTask(devId, &sendInfo);
     EXPECT_EQ(error, TPRT_DEVICE_INVALID);
@@ -550,11 +551,13 @@ TEST_F(TprtApiTest, TprtSqPushTask_sqHandle_null_error)
     TprtTaskSendInfo_t sendInfo = {};
     sendInfo.sqeNum = 1U;
     sendInfo.sqId = 1U;
-    TprtDevice* dev;
+    sendInfo.sqeAddr = TprtPtrToPtr<uint8_t*, TprtSqe_t*>(sqeAddr);
+    TprtDevice* dev = new TprtDevice(devId);
     MOCKER_CPP(&TprtManage::GetDeviceByDevId).stubs().will(returnValue(dev));
     MOCKER_CPP(&TprtDevice::TprtGetSqHandleBySqId).stubs().will(returnValue((TprtSqHandle*)nullptr));
     uint32_t error = TprtSqPushTask(devId, &sendInfo);
     EXPECT_EQ(error, TPRT_SQ_HANDLE_INVALID);
+    DELETE_O(dev);
 }
 
 TEST_F(TprtApiTest, TprtSqPushTask_worker_null_error)
@@ -567,15 +570,18 @@ TEST_F(TprtApiTest, TprtSqPushTask_worker_null_error)
     TprtTaskSendInfo_t sendInfo = {};
     sendInfo.sqeNum = 1U;
     sendInfo.sqId = 1U;
-    TprtDevice* dev;
+    sendInfo.sqeAddr = TprtPtrToPtr<uint8_t*, TprtSqe_t*>(sqeAddr);
+    TprtDevice* dev = new TprtDevice(devId);
     MOCKER_CPP(&TprtManage::GetDeviceByDevId).stubs().will(returnValue(dev));
-    TprtSqHandle* sqHandle;
+    TprtSqHandle* sqHandle = new TprtSqHandle(devId, sendInfo.sqId);
     MOCKER_CPP(&TprtDevice::TprtGetSqHandleBySqId).stubs().will(returnValue(sqHandle));
     MOCKER_CPP(&TprtDevice::TprtGetWorkHandleBySqHandle)
         .stubs()
         .will(returnValue(std::shared_ptr<TprtWorker>(nullptr)));
     uint32_t error = TprtSqPushTask(devId, &sendInfo);
     EXPECT_EQ(error, TPRT_WORKER_INVALID);
+    DELETE_O(sqHandle);
+    DELETE_O(dev);
 }
 
 TEST_F(TprtApiTest, TprtSqPushTask_SqPushTask_error)
@@ -588,15 +594,18 @@ TEST_F(TprtApiTest, TprtSqPushTask_SqPushTask_error)
     TprtTaskSendInfo_t sendInfo = {};
     sendInfo.sqeNum = 1U;
     sendInfo.sqId = 1U;
+    sendInfo.sqeAddr = TprtPtrToPtr<uint8_t*, TprtSqe_t*>(sqeAddr);
     TprtDevice* dev = new TprtDevice(devId);
     MOCKER_CPP(&TprtManage::GetDeviceByDevId).stubs().will(returnValue(dev));
-    TprtSqHandle* sqHandle;
+    TprtSqHandle* sqHandle = new TprtSqHandle(devId, sendInfo.sqId);
     MOCKER_CPP(&TprtDevice::TprtGetSqHandleBySqId).stubs().will(returnValue(sqHandle));
-    auto worker = std::make_shared<TprtWorker>(0, sqHandle, nullptr);
+    auto worker = std::make_shared<TprtWorker>(devId, sqHandle, nullptr);
     MOCKER_CPP(&TprtDevice::TprtGetWorkHandleBySqHandle).stubs().will(returnValue(worker));
     MOCKER_CPP(&TprtSqHandle::SqPushTask).stubs().will(returnValue(TPRT_SQ_QUEUE_FULL));
     uint32_t error = TprtSqPushTask(devId, &sendInfo);
     EXPECT_EQ(error, TPRT_SQ_QUEUE_FULL);
+    worker.reset();
+    DELETE_O(sqHandle);
     DELETE_O(dev);
 }
 
@@ -614,7 +623,6 @@ TEST_F(TprtApiTest, IsQueueFull_true)
 
 TEST_F(TprtApiTest, TprtDeviceOpen_device_exits_error)
 {
-    TprtDevice* dev;
     uint32_t devId = 0U;
     TprtCfgInfo_t cfg = {0U, 1024U, 100U, 1000U};
     TprtDevice* device = new TprtDevice(devId);

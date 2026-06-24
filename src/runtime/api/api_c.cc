@@ -117,6 +117,9 @@ rtError_t rtRegisterAllKernel(const rtDevBinary_t *bin, void **hdl)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->RegisterAllKernel(bin, RtPtrToPtr<Program **>(hdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Program * const realProgram = RtPtrToPtr<Program *>(*hdl);
+    InitEmbeddedInnerHandle<Program>(realProgram);
+    *hdl = ExportEmbeddedHandle<void *>(realProgram);
     return ACL_RT_SUCCESS;
 }
 
@@ -125,8 +128,8 @@ rtError_t rtBinaryRegisterToFastMemory(void *hdl)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Program * const prog = static_cast<Program *>(hdl);
-    const rtError_t ret = apiInstance->BinaryRegisterToFastMemory(prog);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryRegisterToFastMemory(realProgram);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -134,14 +137,14 @@ rtError_t rtBinaryRegisterToFastMemory(void *hdl)
 VISIBILITY_DEFAULT
 rtError_t rtDevBinaryUnRegister(void *hdl)
 {
-    Program * const prog = static_cast<Program *>(hdl);
     if (IsRuntimeKeeperExiting()) {
         RT_LOG(RT_LOG_WARNING, "runtime is exited");
         return ACL_RT_SUCCESS;
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->DevBinaryUnRegister(prog);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->DevBinaryUnRegister(realProgram);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -149,10 +152,10 @@ rtError_t rtDevBinaryUnRegister(void *hdl)
 VISIBILITY_DEFAULT
 rtError_t rtMetadataRegister(void *hdl, const char_t *metadata)
 {
-    Program * const prog = static_cast<Program *>(hdl);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->MetadataRegister(prog, metadata);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->MetadataRegister(realProgram, metadata);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -160,10 +163,10 @@ rtError_t rtMetadataRegister(void *hdl, const char_t *metadata)
 VISIBILITY_DEFAULT
 rtError_t rtDependencyRegister(void *mHandle, void *sHandle)
 {
-    Program * const mProgram = static_cast<Program *>(mHandle);
-    Program * const sProgram = static_cast<Program *>(sHandle);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(mHandle, Program, mProgram, ValidateProgramHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(sHandle, Program, sProgram, ValidateProgramHandleForApi);
 
     const rtError_t ret = apiInstance->DependencyRegister(mProgram, sProgram);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -174,10 +177,10 @@ VISIBILITY_DEFAULT
 rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc, const char_t *stubName, const void *kernelInfoExt,
                              uint32_t funcMode)
 {
-    Program * const prog = static_cast<Program *>(binHandle);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->FunctionRegister(realProgram, stubFunc, stubName, kernelInfoExt, funcMode);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_DUPLICATE, ACL_ERROR_RT_KERNEL_DUPLICATE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -227,6 +230,10 @@ rtError_t rtKernelGetAddrAndPrefCnt(void *hdl, const uint64_t tilingKey,
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    if (flag != RT_STATIC_SHAPE_KERNEL) {
+        RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
+        hdl = realProgram;
+    }
     const rtError_t ret = apiInstance->KernelGetAddrAndPrefCnt(hdl, tilingKey, stubFunc, flag, addr, prefetchCnt);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
 
@@ -247,6 +254,10 @@ rtError_t rtKernelGetAddrAndPrefCntV2(void *hdl, const uint64_t tilingKey,
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    if (flag != RT_STATIC_SHAPE_KERNEL) {
+        RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
+        hdl = realProgram;
+    }
     const rtError_t ret = apiInstance->KernelGetAddrAndPrefCntV2(hdl, tilingKey, stubFunc, flag, kernelInfo);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
 
@@ -344,8 +355,9 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
     }
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, streamPtr, nullptr);
+        realProgram, tilingKey, numBlocks, argsInfo, streamPtr, nullptr);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -371,8 +383,9 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
     }
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandleV2);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, exeStream, cfgInfo);
+        realProgram, tilingKey, numBlocks, argsInfo, exeStream, cfgInfo);
     TIMESTAMP_END(rtKernelLaunchWithHandleV2);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -3264,6 +3277,9 @@ RTS_API rtError_t rtCreateLaunchArgs(size_t argsSize, size_t hostInfoTotalSize, 
     const rtError_t ret = apiInstance->CreateLaunchArgs(argsSize, hostInfoTotalSize, hostInfoNum, argsData,
                                                         RtPtrToPtr<rtLaunchArgs_t**>(argsHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    rtLaunchArgs_t * const realArgsHandle = RtPtrToPtr<rtLaunchArgs_t *>(*argsHandle);
+    InitEmbeddedInnerHandle<rtLaunchArgs_t>(realArgsHandle);
+    *argsHandle = ExportEmbeddedHandle<rtLaunchArgsHandle>(realArgsHandle);
     return ACL_RT_SUCCESS;
 }
 
@@ -3286,7 +3302,9 @@ RTS_API rtError_t rtResetLaunchArgs(rtLaunchArgsHandle argsHandle)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->ResetLaunchArgs(RtPtrToPtr<rtLaunchArgs_t*>(argsHandle));
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    const rtError_t ret = apiInstance->ResetLaunchArgs(realArgsHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3296,7 +3314,9 @@ RTS_API rtError_t rtDestroyLaunchArgs(rtLaunchArgsHandle argsHandle)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->DestroyLaunchArgs(RtPtrToPtr<rtLaunchArgs_t*>(argsHandle));
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    const rtError_t ret = apiInstance->DestroyLaunchArgs(realArgsHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3307,7 +3327,9 @@ RTS_API rtError_t rtAppendLaunchAddrInfo(rtLaunchArgsHandle argsHandle, void *ad
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtAppendLaunchAddrInfo);
-    const rtError_t ret = apiInstance->AppendLaunchAddrInfo(RtPtrToPtr<rtLaunchArgs_t*>(argsHandle), addrInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    const rtError_t ret = apiInstance->AppendLaunchAddrInfo(realArgsHandle, addrInfo);
     TIMESTAMP_END(rtAppendLaunchAddrInfo);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3319,8 +3341,9 @@ RTS_API rtError_t rtAppendLaunchHostInfo(rtLaunchArgsHandle argsHandle, size_t h
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtAppendLaunchHostInfo);
-    const rtError_t ret = apiInstance->AppendLaunchHostInfo(RtPtrToPtr<rtLaunchArgs_t*>(argsHandle),
-                                                            hostInfoSize, hostInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    const rtError_t ret = apiInstance->AppendLaunchHostInfo(realArgsHandle, hostInfoSize, hostInfo);
     TIMESTAMP_END(rtAppendLaunchHostInfo);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3332,9 +3355,15 @@ rtError_t rtBinaryGetFunction(rtBinHandle binHandle, uint64_t tilingKey, rtFuncH
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->BinaryGetFunction(RtPtrToPtr<Program *>(binHandle), tilingKey,
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetFunction(realProgram, tilingKey,
                                                          RtPtrToPtr<Kernel **>(funcHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Kernel * const realKernel = RtPtrToPtr<Kernel *>(*funcHandle);
+    if (realKernel != nullptr) {
+        InitEmbeddedInnerHandle<Kernel>(realKernel);
+    }
+    *funcHandle = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
     return ACL_RT_SUCCESS;
 }
 
@@ -3346,6 +3375,9 @@ rtError_t rtBinaryLoad(const rtDevBinary_t *bin, rtBinHandle *binHandle)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->BinaryLoad(bin, RtPtrToPtr<Program **>(binHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Program * const realProgram = RtPtrToPtr<Program *>(*binHandle);
+    InitEmbeddedInnerHandle<Program>(realProgram);
+    *binHandle = ExportEmbeddedHandle<rtBinHandle>(realProgram);
     return ACL_RT_SUCCESS;
 }
 
@@ -3355,7 +3387,8 @@ rtError_t rtBinaryUnLoad(rtBinHandle binHandle)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->BinaryUnLoad(RtPtrToPtr<Program *>(binHandle));
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryUnLoad(realProgram);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3368,11 +3401,12 @@ rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t numBlocks
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(argsHandle, RT_ERROR_INVALID_VALUE);
-    rtLaunchArgs_t* args = RtPtrToPtr<rtLaunchArgs_t*>(argsHandle);
-    rtArgsEx_t *argsInfo = &(args->argsInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    rtArgsEx_t *argsInfo = &(realArgsHandle->argsInfo);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
-                                                    exeStream, nullptr);
+    const rtError_t ret = apiInstance->LaunchKernel(realKernel, numBlocks, argsInfo, exeStream, nullptr);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3386,11 +3420,12 @@ rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t numBloc
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(argsHandle, RT_ERROR_INVALID_VALUE);
-    rtLaunchArgs_t* args = RtPtrToPtr<rtLaunchArgs_t*>(argsHandle);
-    rtArgsEx_t *argsInfo = &(args->argsInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
+        argsHandle, rtLaunchArgs_t, realArgsHandle, ValidateLaunchArgsHandleForApi);
+    rtArgsEx_t *argsInfo = &(realArgsHandle->argsInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
-                                                    exeStream, cfgInfo);
+    const rtError_t ret = apiInstance->LaunchKernel(realKernel, numBlocks, argsInfo, exeStream, cfgInfo);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3403,9 +3438,9 @@ rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBloc
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
-                                                    exeStream, cfgInfo);
+    const rtError_t ret = apiInstance->LaunchKernel(realKernel, numBlocks, argsInfo, exeStream, cfgInfo);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3428,6 +3463,9 @@ rtError_t rtBinaryLoadWithoutTilingKey(const void *data, const uint64_t length, 
     const rtError_t ret = apiInstance->BinaryLoadWithoutTilingKey(data, length,
                                                                   RtPtrToPtr<Program **>(binHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Program * const realProgram = RtPtrToPtr<Program *>(*binHandle);
+    InitEmbeddedInnerHandle<Program>(realProgram);
+    *binHandle = ExportEmbeddedHandle<rtBinHandle>(realProgram);
     return ACL_RT_SUCCESS;
 }
 
@@ -3445,10 +3483,13 @@ rtError_t rtBinaryGetFunctionByName(rtBinHandle binHandle, const char *kernelNam
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->BinaryGetFunctionByName(RtPtrToPtr<Program *>(binHandle),
-                                                               kernelName,
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(binHandle, Program, realProgram, ValidateProgramHandleForApi);
+    const rtError_t ret = apiInstance->BinaryGetFunctionByName(realProgram, kernelName,
                                                                RtPtrToPtr<Kernel **>(funcHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Kernel * const realKernel = RtPtrToPtr<Kernel *>(*funcHandle);
+    InitEmbeddedInnerHandle<Kernel>(realKernel);
+    *funcHandle = ExportEmbeddedHandle<rtFuncHandle>(realKernel);
     return ACL_RT_SUCCESS;
 }
 
@@ -3458,7 +3499,8 @@ rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionM
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FunctionGetMetaInfo(RtPtrToPtr<const Kernel *>(funcHandle), type, data, length);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    const rtError_t ret = apiInstance->FunctionGetMetaInfo(realKernel, type, data, length);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3470,7 +3512,8 @@ rtError_t rtFunctionGetMetaInfoSize(const rtFuncHandle funcHandle, const rtFunct
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FunctionGetMetaInfoSize(RtPtrToPtr<const Kernel *>(funcHandle), type, size);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
+    const rtError_t ret = apiInstance->FunctionGetMetaInfoSize(realKernel, type, size);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -3892,8 +3935,9 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
 
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(hdl, Program, realProgram, ValidateProgramHandleForApi);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, exeStream, cfgInfo, true);
+        realProgram, tilingKey, numBlocks, argsInfo, exeStream, cfgInfo, true);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

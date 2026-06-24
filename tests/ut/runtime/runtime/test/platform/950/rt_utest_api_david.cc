@@ -5760,9 +5760,11 @@ TEST_F(ApiDavidTest, test_model_task_update_task_on_david)
     error = rtMalloc((void **)&devMemSrc, sizeof(uint64_t), RT_MEMORY_HBM, 255);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    rtMdlTaskUpdateInfo_t  para;
+    rtMdlTaskUpdateInfo_t para = {};
+    PlainProgram program;
+    Program *programBase = &program;
     para.tilingKeyAddr = devMemSrc;
-    para.hdl = &tillingkey;
+    para.hdl = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     para.fftsPlusTaskInfo = nullptr;
     para.blockDimAddr = &blockDimAddr;
     uint32_t desTaskId = 0;
@@ -8387,7 +8389,7 @@ TEST_F(ApiDavidTest, TestLaunchNonKernelByHandle)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -8468,7 +8470,7 @@ TEST_F(ApiDavidTest, TestLaunchAicpuKernelByHandle)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -8709,7 +8711,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -8823,7 +8825,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -8843,6 +8845,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
 
     size_t m_len = sizeof(m_data) / sizeof(m_data[0]);
     void *m_handle;
+    Program *m_prog;
     uint64_t tilingKey = 10241024;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
@@ -8851,6 +8854,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t wwargsInfo = {};
@@ -8897,11 +8902,11 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
 
     ApiImplDavid impl;
 
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     stream->SetModel(mdl);
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_STREAM_MODEL);
 
     TaskUnInitProc(&memcpyTask);
@@ -8952,7 +8957,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -8972,6 +8977,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
     size_t m_len = sizeof(m_data) / sizeof(m_data[0]);
 
     void *m_handle;
+    Program *m_prog;
     uint64_t tilingKey = 10241024;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
@@ -8980,6 +8986,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t wwargsInfo = {};
@@ -9005,7 +9013,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_KERNEL_TYPE);
 
     TaskUnInitProc(&memcpyTask);
@@ -9053,7 +9061,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -9073,6 +9081,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
     size_t m_len = sizeof(m_data) / sizeof(m_data[0]);
 
     void *m_handle;
+    Program *m_prog;
     uint64_t tilingKey = 10241024;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
@@ -9081,6 +9090,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t wwargsInfo = {};
@@ -9102,7 +9113,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
 
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
@@ -9155,7 +9166,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -9175,6 +9186,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
 
     size_t m_len = sizeof(m_data) / sizeof(m_data[0]);
     void *m_handle;
+    Program *m_prog;
     uint64_t tilingKey = 10241024;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
@@ -9183,6 +9195,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t wwargsInfo = {};
@@ -9228,7 +9242,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
     MOCKER_CPP_VIRTUAL(stream->ArgManagePtr(), &StarsArgManager::RecycleDevLoader).stubs().will(ignoreReturnValue());
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     TaskUnInitProc(&memcpyTask);
@@ -9281,7 +9295,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
  
     size_t argshandleMemSize = sizeof(RtArgsHandle) + sizeof(ParaDetail) * 129;
     uint8_t *argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
-    RtArgsHandle *argsInfo = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *argsInfo = reinterpret_cast<RtArgsHandle *>(argsHandle);
     for (int i = 0; i < 129; i++) {
         argsInfo->para[i].type = 1;
     }
@@ -9301,6 +9315,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
 
     size_t m_len = sizeof(m_data) / sizeof(m_data[0]);
     void *m_handle;
+    Program *m_prog;
     uint64_t tilingKey = 10241024;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
@@ -9309,6 +9324,8 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
     master_bin.length = m_len; 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    m_prog = rt_ut::UnwrapOrNull<Program>(m_handle);
+    ASSERT_NE(m_prog, nullptr);
 
     uint64_t arg = 0x1234567890;
     rtArgsEx_t wwargsInfo = {};
@@ -9355,7 +9372,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
 
     ApiImplDavid impl;
 
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
+    error = impl.KernelLaunchWithHandle(m_prog, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
     TaskUnInitProc(&memcpyTask);
 

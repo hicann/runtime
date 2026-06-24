@@ -1414,12 +1414,14 @@ TEST_F(RtApiTest, rtsKernelArgsParaUpdate_MemcpyFail)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(k1);
     void *argsHandle;
-    error = rtsKernelArgsInit(k1, &argsHandle);
+    error = rtsKernelArgsInit(funcHandle, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_NE(argsHandle, nullptr);
 
-    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *handle = rt_ut::UnwrapOrNull<RtArgsHandle>(argsHandle);
+    ASSERT_NE(handle, nullptr);
     EXPECT_NE(handle->buffer, nullptr);
 
     uint32_t param1 = 1002;
@@ -1428,7 +1430,8 @@ TEST_F(RtApiTest, rtsKernelArgsParaUpdate_MemcpyFail)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_NE(paramHandle, nullptr);
 
-    ParaDetail *pHandle = (ParaDetail *)paramHandle;
+    ParaDetail *pHandle = rt_ut::UnwrapOrNull<ParaDetail>(paramHandle);
+    ASSERT_NE(pHandle, nullptr);
     EXPECT_EQ(pHandle->type, 0);
     EXPECT_EQ(pHandle->paraSize, sizeof(uint32_t));
 
@@ -1442,6 +1445,7 @@ TEST_F(RtApiTest, rtsKernelArgsParaUpdate_MemcpyFail)
     error = rtsKernelArgsParaUpdate(argsHandle, paramHandle, &updateData, updateSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
+    rt_ut::ResetEmbeddedHandle(k1);
     delete k1;
 }
 

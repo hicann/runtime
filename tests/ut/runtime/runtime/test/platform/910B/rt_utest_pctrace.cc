@@ -24,6 +24,7 @@
 #include "npu_driver.hpp"
 #include "raw_device.hpp"
 #include "../../data/elf.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -87,7 +88,9 @@ TEST_F(PCTraceTest, alloc_free_mem)
     device->Init();
 
     Module *mdl = new Module(device);
-    mdl->Load(static_cast<Program *>(binHandle_));
+    Program *realProg = rt_ut::UnwrapOrNull<Program>(binHandle_);
+    ASSERT_NE(realProg, nullptr);
+    mdl->Load(realProg);
 
     rtPCtrace->Init(device, mdl);
 
@@ -116,7 +119,9 @@ TEST_F(PCTraceTest, alloc_free_mem2)
     device->Init();
 
     Module *mdl = new Module(device);
-    mdl->Load(static_cast<Program *>(binHandle_));
+    Program *realProg = rt_ut::UnwrapOrNull<Program>(binHandle_);
+    ASSERT_NE(realProg, nullptr);
+    mdl->Load(realProg);
 
     rtPCtrace->Init(device, mdl);
 
@@ -139,7 +144,9 @@ TEST_F(PCTraceTest, alloc_free_mem3)
     device->Init();
 
     Module *mdl = new Module(device);
-    mdl->Load(static_cast<Program *>(binHandle_));
+    Program *realProg = rt_ut::UnwrapOrNull<Program>(binHandle_);
+    ASSERT_NE(realProg, nullptr);
+    mdl->Load(realProg);
 
     rtPCtrace->Init(device, mdl);
 

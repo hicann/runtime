@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "rt_utest_api.hpp"
+#include "rt_unwrap.h"
 
 class ApiExceptionTest : public testing::Test
 {
@@ -38,21 +39,25 @@ void MyOpExceptionCallback(rtExceptionInfo_t *exceptionInfo, void *userData)
 TEST_F(ApiExceptionTest, rtBinarySetExceptionCallback)
 {
     ElfProgram bin_handle;
+    Program *programBase = &bin_handle;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     rtError_t error;
 
     rtOpExceptionCallback callback = MyOpExceptionCallback;
-    error = rtBinarySetExceptionCallback(RtPtrToPtr<rtBinHandle>(&bin_handle), callback, nullptr);
+    error = rtBinarySetExceptionCallback(binHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(bin_handle.opExceptionCallback_, callback);
 
     // 验证重复注册场景
-    error = rtBinarySetExceptionCallback(RtPtrToPtr<rtBinHandle>(&bin_handle), callback, nullptr);
+    error = rtBinarySetExceptionCallback(binHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
 {
     ElfProgram bin_handle;
+    Program *programBase = &bin_handle;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     // bin_handle析构会释放内存
     Kernel *kernel = new Kernel("kernel.so", "kernel_func", "op_type");
     kernel->SetCpuOpType("test");
@@ -65,16 +70,17 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0, sizeof(rtExceptionInfo_t));
     exceptionInfo.retcode = 100;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = binHandle;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test_mix_aic";
 
     rtFuncHandle func;
     error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(func), kernel);
 
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     exceptionInfo.expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU;
-    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = binHandle;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test_mix_aiv";
 
     rtFuncHandle func1;
@@ -91,23 +97,26 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
 TEST_F(ApiExceptionTest, OpTaskFailCallbackNotify)
 {
     ElfProgram bin_handle;
+    Program *programBase = &bin_handle;
+    rtBinHandle apiBinHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
+    rtBinHandle exceptionBinHandle = apiBinHandle;
     rtError_t error;
 
     rtExceptionInfo_t exceptionInfo;
     (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0, sizeof(rtExceptionInfo_t));
     exceptionInfo.retcode = 100;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = exceptionBinHandle;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
 
     rtOpExceptionCallback callback = MyOpExceptionCallback;
-    error = rtBinarySetExceptionCallback(RtPtrToPtr<rtBinHandle>(&bin_handle), callback, nullptr);
+    error = rtBinarySetExceptionCallback(apiBinHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     OpTaskFailCallbackNotify(&exceptionInfo);
 
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
-    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = exceptionBinHandle;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
     OpTaskFailCallbackNotify(&exceptionInfo);
 

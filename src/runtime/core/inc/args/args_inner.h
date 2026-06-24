@@ -16,6 +16,7 @@
 #include "rts/rts.h"
 #include <cstdint>
 #include "runtime/rt_inner_task.h"
+#include "runtime_handle_guard.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -41,6 +42,7 @@ struct ParaDetail {
     size_t paraOffset;
     size_t paraSize;
     size_t dataOffset; // 仅place holder时有效
+    cce::runtime::rtInnerObject handle_;
 };
 
 struct CpuKernelSysArgsInfo {
@@ -66,6 +68,7 @@ struct RtArgsHandle {
     uint8_t isParamUpdating : 1;
     uint8_t rsv1 : 6;
     uint8_t rsv2[2];
+    cce::runtime::rtInnerObject handle_;
     ParaDetail para[0];
 };
 
@@ -110,6 +113,28 @@ struct RtArgsWithType {
 
 #if defined(__cplusplus)
 }
+
+namespace cce {
+namespace runtime {
+
+template <>
+struct RtInnerHandleAccessor<::ParaDetail> {
+    static rtInnerObject *Get(::ParaDetail *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+
+template <>
+struct RtInnerHandleAccessor<::RtArgsHandle> {
+    static rtInnerObject *Get(::RtArgsHandle *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+
+} // namespace runtime
+} // namespace cce
 #endif
 
 constexpr uint32_t SIMT_IMPLICIT_PARAM_COUNT = 6U;

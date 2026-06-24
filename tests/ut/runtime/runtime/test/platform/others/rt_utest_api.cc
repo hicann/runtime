@@ -7425,6 +7425,9 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
     bin.data = m_data;
     bin.length = m_len;
     EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+    Program * const program = rt_ut::UnwrapOrNull<Program>(bin_handle);
+    ASSERT_NE(program, nullptr);
+    rtBinHandle real_bin_handle = RtPtrToPtr<rtBinHandle>(program);
  
     ApiImpl impl;
     ApiDecorator api(&impl);
@@ -7436,10 +7439,10 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 1, 0, 0, &stack, &stackSize), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(api.GetStackBuffer(real_bin_handle, 0, 1, 0, 0, &stack, &stackSize), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIC, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetStackBuffer(real_bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
  

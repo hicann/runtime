@@ -10,6 +10,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <cinttypes>
 
 #include "runtime_handle_guard.h"
+#include "base.hpp"
 #include "securec.h"
 
 namespace cce {
@@ -48,6 +49,21 @@ const char *GetResourceNameByMagic(const uint64_t magic)
         case RT_COND_HANDLE_MAGIC:
             resourceName = "cond_handle";
             break;
+        case RT_PROGRAM_MAGIC:
+            resourceName = "program";
+            break;
+        case RT_KERNEL_MAGIC:
+            resourceName = "kernel";
+            break;
+        case RT_ARGS_MAGIC:
+            resourceName = "args";
+            break;
+        case RT_PARAM_MAGIC:
+            resourceName = "param";
+            break;
+        case RT_LAUNCH_ARGS_MAGIC:
+            resourceName = "launch_args";
+            break;
         default:
             break;
     }
@@ -58,18 +74,20 @@ rtError_t ValidateInnerObject(const void *handle, const uint64_t expectedMagic)
 {
     const char * const objectName = GetResourceNameByMagic(expectedMagic);
     const auto * const innerObject = GetInnerObject(handle);
-    const uint64_t actualMagic = innerObject->magic.load();
+    const uint64_t actualMagic = innerObject->magic.load(std::memory_order_acquire);
 
     if (actualMagic != expectedMagic) {
         const char * const destroyedMsg = (actualMagic == 0U) ? "(Already destroyed)" : "";
         RT_LOG(RT_LOG_ERROR, "Validate %s failed, magic mismatch, expected=%#" PRIx64 ", actual=%#" PRIx64 ". %s",
-               objectName, expectedMagic, actualMagic, destroyedMsg);
+            objectName, expectedMagic, actualMagic, destroyedMsg);
+
         char reason[INVALID_HANDLE_REASON_MAX_LEN] = {0};
         const int32_t ret = snprintf_s(reason, sizeof(reason), sizeof(reason) - 1U,
             "1. The %s handle has been destroyed. 2. The handle type must be %s", objectName, objectName);
         if (ret < 0) {
             reason[0] = '\0';
         }
+
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, "Object validation", objectName, reason);
         return RT_ERROR_INVALID_HANDLE;
     }
@@ -81,12 +99,12 @@ rtError_t ValidateInnerObject(const void *handle, const uint64_t expectedMagic)
 void InitializeInnerObject(rtInnerObject &inner, uint64_t magic, void *object)
 {
     inner.object = object;
-    inner.magic.store(magic);
+    inner.magic.store(magic, std::memory_order_release);
 }
 
 void ResetInnerObject(rtInnerObject &inner)
 {
-    inner.magic.store(0U);
+    inner.magic.store(0U, std::memory_order_release);
     inner.object = nullptr;
 }
 

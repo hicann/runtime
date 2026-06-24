@@ -11,6 +11,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #define RUNTIME_UT_HELPER_H
 
 #include <gtest/gtest.h>
+#include "base.hpp"
 #include "runtime_handle_guard.h"
 #include "runtime/rt.h"
 
@@ -21,6 +22,19 @@ inline T *UnwrapOrNull(HandleT handle)
     T *out = nullptr;
     EXPECT_EQ(::cce::runtime::GetValidatedObject<T>(handle, out), RT_ERROR_NONE);
     return out;
+}
+
+template <class HandleT, class T>
+inline HandleT InitAndExportHandle(T *realObj)
+{
+    ::cce::runtime::InitEmbeddedInnerHandle<T>(realObj);
+    return ::cce::runtime::RtPtrToPtr<HandleT>(::cce::runtime::RtInnerHandleAccessor<T>::Get(realObj));
+}
+
+template <class T>
+inline void ResetEmbeddedHandle(T *realObj)
+{
+    ::cce::runtime::ResetEmbeddedInnerHandle<T>(realObj);
 }
 
 } // namespace rt_ut

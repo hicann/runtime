@@ -66,6 +66,7 @@
 #include "aicpu_c.hpp"
 #include "kernel_utils.hpp"
 #include "stars_arg_manager.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -2482,8 +2483,14 @@ rtError_t Context::ModelTaskUpdate(const Stream * desStm, uint32_t desTaskId, St
 {
     void *devCopyMem = nullptr;
     uint32_t tilingTabLen = 0;
-    rtError_t ret = CopyTilingTabToDev(static_cast<Program *>(para->hdl), sinkStm->Device_(),
-        &devCopyMem, &tilingTabLen);
+
+    Program *program = nullptr;
+    rtError_t ret = GetValidatedObject<Program>(reinterpret_cast<rtBinHandle>(para->hdl), program);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+
+    ret = CopyTilingTabToDev(program, sinkStm->Device_(), &devCopyMem, &tilingTabLen);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
         return ret;

@@ -167,7 +167,7 @@ TEST_F(FftsPlusTaskLaunchTest, FftsPlusTaskLaunchWithFlagForGetDevAddr)
     rtError_t error = rtGetDevArgsAddr(stream_, &argsInfo, &devArgsAddr, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     printf("==44===%p %p\r\n", devArgsAddr, argsHandle);
-    handleInfo[0] = (void *)malloc(128);
+    handleInfo[0] = argsHandle;
     fftsPlusTaskInfo.argsHandleInfoNum = 1;
     fftsPlusTaskInfo.argsHandleInfoPtr = handleInfo;
 
@@ -175,5 +175,4 @@ TEST_F(FftsPlusTaskLaunchTest, FftsPlusTaskLaunchWithFlagForGetDevAddr)
     rtFftsPlusTaskLaunchWithFlag(&fftsPlusTaskInfo, stream_, flag);
 
     free(descBuf);
-    free(handleInfo[0]);
 }

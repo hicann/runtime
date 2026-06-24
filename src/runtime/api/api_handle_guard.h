@@ -29,6 +29,12 @@ rtError_t ValidateEventHandleForApi(rtEvent_t handle, Event *&outRealObj, const 
 rtError_t ValidateNotifyHandleForApi(rtNotify_t handle, Notify *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify *&outRealObj, const char_t *callerFuncName); 
 rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateProgramHandleForApi(rtBinHandle handle, Program *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateKernelHandleForApi(rtFuncHandle handle, Kernel *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateLaunchArgsHandleForApi(rtLaunchArgsHandle handle, rtLaunchArgs_t *&outRealObj,
+    const char_t *callerFuncName);
 
 template <typename HandleT, typename ObjectT>
 HandleT ExportEmbeddedHandle(ObjectT *realObj)
@@ -36,7 +42,7 @@ HandleT ExportEmbeddedHandle(ObjectT *realObj)
     if (realObj == nullptr) {
         return nullptr;
     } else {
-        return RtPtrToPtr<HandleT>(realObj->GetInnerHandle());
+        return reinterpret_cast<HandleT>(RtInnerHandleAccessor<ObjectT>::Get(realObj));
     }
 }
 
@@ -65,6 +71,15 @@ void StoreOptionalEmbeddedHandle(ObjectT *realObj, HandleT *handleOut)
         if (_ret != RT_ERROR_NONE) {                                                                         \
             return _ret;                                                                                     \
         }                                                                                                    \
+    } while (false)
+
+#define RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(_handle, _Type, _outPtr, _validator) \
+    _Type *_outPtr = nullptr;                                                               \
+    do {                                                                                    \
+        const rtError_t _ret = cce::runtime::_validator((_handle), (_outPtr), __func__);   \
+        if (_ret != RT_ERROR_NONE) {                                                        \
+            return _ret;                                                                    \
+        }                                                                                   \
     } while (false)
 
 } // namespace runtime

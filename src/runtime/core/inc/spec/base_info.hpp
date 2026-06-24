@@ -14,6 +14,7 @@
 #include <cstdint>
 #include "base.h"
 #include "kernel.h"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -281,6 +282,7 @@ struct rtLaunchArgs_t {
     const uint16_t argsDataOffset; //args Addr end Offset
     const uint16_t hostInfoMaxNum; //Maximum number of hostInfoMaxNum
     uint16_t argsHostInputOffset;
+    rtInnerObject handle_;
 };
 
 struct RtMemcpyCfgInfo {
@@ -323,6 +325,16 @@ static constexpr const char_t *RT_TSD_SUBPROCESS_BINARY_FILE_DAMAGED = "E30004";
 static constexpr const char_t *RT_TSD_DEVICE_DISCONNECTED = "E30005";
 static constexpr const char_t *RT_TSD_DRV_HDC_SEND_FILE_FAILED_ERROR = "E30006";
 static constexpr const char_t *RT_TSD_ADD_AICPUSD_TO_CGROUP_FAILED = "E30007";
+
+#if defined(__cplusplus)
+template <>
+struct RtInnerHandleAccessor<rtLaunchArgs_t> {
+    static rtInnerObject *Get(rtLaunchArgs_t *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+#endif
 
 }
 }

@@ -25,6 +25,7 @@
 #include <sstream>
 #include <filesystem>
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -192,7 +193,7 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromData_CpuKernel_Success)
     EXPECT_NE(ctx, nullptr);
     uint32_t devId = ctx->Device_()->Id_();
     ret = prog->ProcCpuKernelH2DMem(false, ctx->Device_());
-    ret = rtsBinaryUnload(prog);
+    ret = rtsBinaryUnload(rt_ut::InitAndExportHandle<rtBinHandle>(prog));
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
@@ -275,14 +276,14 @@ TEST_F(BinaryLoaderTest, BinaryLoadAndSetProgramInvalid)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_NE(argsHandle, nullptr);
 
-    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    RtArgsHandle *handle = rt_ut::UnwrapOrNull<RtArgsHandle>(argsHandle);
     EXPECT_NE(handle->buffer, nullptr);
     EXPECT_NE(handle->bufferSize, 0);
     uint32_t param1 = 1002;
     void *paramHandle = nullptr;
     error = rtsKernelArgsAppend(argsHandle, &param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ParaDetail *pHandle = (ParaDetail *)paramHandle;
+    ParaDetail *pHandle = rt_ut::UnwrapOrNull<ParaDetail>(paramHandle);
     uint32_t *addr1 = reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(handle->buffer) + static_cast<uint64_t>(pHandle->paraOffset));
     EXPECT_EQ(*addr1, param1);
     error = rtsKernelArgsFinalize(argsHandle);
@@ -323,7 +324,7 @@ TEST_F(BinaryLoaderTest, BinaryLoadAndSetProgramInvalid)
 
     Context *ctx = Runtime::Instance()->CurrentContext();
     EXPECT_NE(ctx, nullptr);
-    Program * prog = reinterpret_cast<Program *>(proghandle);
+    Program * prog = rt_ut::UnwrapOrNull<Program>(proghandle);
     uint32_t devId = ctx->Device_()->Id_();
     prog->SetDeviceSoAndNameInvalid(devId);
     error = rtsLaunchKernelWithConfig(func, 1, nullptr, &kennelCfg, argsHandle, nullptr);
@@ -446,11 +447,13 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoad_CpuKernel_ArgsUserByMem)
     prog.SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
     prog.SetSoName("libcust_aicpu_kernels.so");
     rtFuncHandle funcHandle = nullptr;
-    rtError_t error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    Program *programBase = &prog;
+    rtBinHandle progHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
+    rtError_t error = rtsRegisterCpuFunc(progHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtFuncHandle funcHandle1 = nullptr;
-    error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle1);
+    error = rtsRegisterCpuFunc(progHandle, "RunCpuKernel", "Abs", &funcHandle1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     size_t memSize = 0U;
@@ -630,7 +633,8 @@ TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAiv)
 
     void *aicAddr;
     void *aivAddr;
-    rtsFuncGetAddr(&kernelAicObj, &aicAddr, &aivAddr);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelAicObj);
+    rtsFuncGetAddr(funcHandle, &aicAddr, &aivAddr);
     EXPECT_EQ(aicAddr, nullptr);
     EXPECT_NE(aivAddr, nullptr);
 }
@@ -644,7 +648,8 @@ TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAivWithKernelType)
 
     void *aicAddr;
     void *aivAddr;
-    rtsFuncGetAddr(&kernelObj, &aicAddr, &aivAddr);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelObj);
+    rtsFuncGetAddr(funcHandle, &aicAddr, &aivAddr);
     EXPECT_EQ(aicAddr, nullptr);
     EXPECT_NE(aivAddr, nullptr);
 }
@@ -658,7 +663,8 @@ TEST_F(BinaryLoaderTest, TestFuncGetAddrWithMixOnlyAiv)
 
     void *aicAddr;
     void *aivAddr;
-    rtsFuncGetAddr(&kernelObj, &aicAddr, &aivAddr);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernelObj);
+    rtsFuncGetAddr(funcHandle, &aicAddr, &aivAddr);
     EXPECT_EQ(aicAddr, nullptr);
     EXPECT_NE(aivAddr, nullptr);
 }

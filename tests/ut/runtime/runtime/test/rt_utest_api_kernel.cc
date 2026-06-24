@@ -27,6 +27,7 @@
 #include "inner_kernel.h"
 #include "base_david.hpp"
 #include "elf.hpp"
+#include "rt_unwrap.h"
 #undef private
 
 
@@ -105,7 +106,8 @@ namespace {
 
 TEST_F(ApiKernelTest, TestRtsBinaryLoadFromFileSuccess)
 {
-    MOCKER_CPP(&BinaryLoader::Load).stubs().will(returnValue(RT_ERROR_NONE));
+    Program *prog = new PlainProgram();
+    MOCKER_CPP(&BinaryLoader::Load).stubs().with(outBoundP(&prog, sizeof(Program *))).will(returnValue(RT_ERROR_NONE));
     char *path = "test_path";
     rtLoadBinaryConfig_t cfg;
     void *handle;
@@ -116,7 +118,8 @@ TEST_F(ApiKernelTest, TestRtsBinaryLoadFromFileSuccess)
 
 TEST_F(ApiKernelTest, TestRtsBinaryLoadFromDataSuccess)
 {
-    MOCKER_CPP(&BinaryLoader::Load).stubs().will(returnValue(RT_ERROR_NONE));
+    Program *prog = new PlainProgram();
+    MOCKER_CPP(&BinaryLoader::Load).stubs().with(outBoundP(&prog, sizeof(Program *))).will(returnValue(RT_ERROR_NONE));
     uint32_t tmp;
     rtLoadBinaryConfig_t cfg;
     void *handle;
@@ -128,8 +131,10 @@ TEST_F(ApiKernelTest, TestRtsBinaryUnloadSuccess)
 {
     ApiImpl apiImpl;
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryUnLoad).stubs().will(returnValue(RT_ERROR_NONE));
-    void *handle;
-    rtError_t error = rtsBinaryUnload(&handle);
+    PlainProgram program;
+    Program *programBase = &program;
+    rtBinHandle handle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
+    rtError_t error = rtsBinaryUnload(handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
 }
@@ -142,16 +147,22 @@ TEST_F(ApiKernelTest, TestFuncGetAddr)
 
     void* func1;
     void* func2;
-    rtError_t error = rtsFuncGetAddr(&kernel, &func1, &func2);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetAddr(funcHandle, &func1, &func2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ApiKernelTest, TestRtsFuncGetByEntrySuccess)
 {
     ApiImpl apiImpl;
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryGetFunctionByEntry).stubs().will(returnValue(RT_ERROR_NONE));
+    Kernel *kernel = new Kernel("testKernelName", 0, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::BinaryGetFunctionByEntry)
+    .stubs()
+    .with(mockcpp::any(), mockcpp::any(), outBoundP(&kernel, sizeof(Kernel *)))
+    .will(returnValue(RT_ERROR_NONE));
     ElfProgram program;
-    rtBinHandle binHandle = &program;
+    Program *programBase = &program;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     void *handle;
     rtError_t error = rtsFuncGetByEntry(binHandle, 1024, &handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -203,7 +214,8 @@ TEST_F(ApiKernelTest, TestFuncGetName)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
-    rtError_t error = rtsFuncGetName(&kernel, 128, name);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetName(funcHandle, 128, name);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -225,7 +237,8 @@ TEST_F(ApiKernelTest, TestFuncGetNameMaxLenFail)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
-    rtError_t error = rtsFuncGetName(&kernel, 1, name);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetName(funcHandle, 1, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -238,20 +251,22 @@ TEST_F(ApiKernelTest, TestCpuKernelLaunch)
 TEST_F(ApiKernelTest, TestRegisterCpuFunc)
 {
     PlainProgram prog;
+    Program *programBase = &prog;
+    rtBinHandle binHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     rtFuncHandle funcHandle = nullptr;
-    rtError_t error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    rtError_t error = rtsRegisterCpuFunc(binHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(nullptr, funcHandle);
 
     prog.SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
     funcHandle = nullptr;
-    error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    error = rtsRegisterCpuFunc(binHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(true, funcHandle != nullptr);
 
     MOCKER_CPP(&Program::StoreKernelLiteralNameToDevice).stubs().will(returnValue(ACL_ERROR_RT_DEVICE_MEM_ERROR));
     funcHandle = nullptr;
-    error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Add", &funcHandle);
+    error = rtsRegisterCpuFunc(binHandle, "RunCpuKernel", "Add", &funcHandle);
     EXPECT_EQ(error, ACL_ERROR_RT_DEVICE_MEM_ERROR);
     EXPECT_EQ(nullptr, funcHandle);
 }
@@ -474,10 +489,11 @@ TEST_F(ApiKernelTest, TestFuncGetAttribute)
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     int64_t attrValue = 0;
-    rtError_t error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
+    error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     ApiImpl apiImpl;
@@ -555,7 +571,8 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplSuccess)
     rtKernelLaunchCfg_t cfg = {};
     void *argsArray[2] = {(void *)0x10, (void *)0x20};
 
-    rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void *>(&kernel), numBlocks, stm, &cfg, argsArray);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtLaunchKernelWithArgsArray(funcHandle, numBlocks, stm, &cfg, argsArray);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -568,8 +585,11 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplSuccessWithSymbol)
     ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     uint64_t tilingKey = 0;
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
-    const Kernel *retKernel = &kernel;
-    MOCKER_CPP(&Runtime::KernelLookup).stubs().will(returnValue(retKernel));
+    Kernel *retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel *)))
+        .will(returnValue(RT_ERROR_NONE));
     
     uint32_t numBlocks = 1;
     rtStream_t stm = nullptr;
@@ -595,7 +615,8 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplKernelInvalid)
     rtKernelLaunchCfg_t cfg = {};
     void *argsArray[2] = {(void *)0x10, (void *)0x20};
 
-    rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void *>(&kernel), numBlocks, stm, &cfg, argsArray);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtLaunchKernelWithArgsArray(funcHandle, numBlocks, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
@@ -614,7 +635,8 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplFeatureNotSupport)
     rtKernelLaunchCfg_t cfg = {};
     void *argsArray[2] = {(void *)0x10, (void *)0x20};
 
-    rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void *>(&kernel), numBlocks, stm, &cfg, argsArray);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtLaunchKernelWithArgsArray(funcHandle, numBlocks, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -633,7 +655,8 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplOtherError)
     rtKernelLaunchCfg_t cfg = {};
     void *argsArray[2] = {(void *)0x10, (void *)0x20};
 
-    rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void *>(&kernel), numBlocks, stm, &cfg, argsArray);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtLaunchKernelWithArgsArray(funcHandle, numBlocks, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -652,7 +675,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplSuccess)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -667,7 +691,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplFeatureNotSupport)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -682,7 +707,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplOtherError)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -701,7 +727,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplSuccess)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), paramIndex, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -718,7 +745,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplFeatureNotSupport)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), paramIndex, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -735,7 +763,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplOtherError)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), paramIndex, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -785,7 +814,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ApiImplSuccess)
     MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -801,7 +830,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ApiImplOtherError)
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs()
         .will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -816,7 +845,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_CpuKernelNoParamSummary)
     kernel.SetHasParamSummary(false);
     
     size_t paramCount = 0;
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -828,7 +858,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_KernelNoParamSummary)
     kernel.SetHasParamSummary(false);
     
     size_t paramCount = 0;
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -848,7 +879,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_Success_RealDecorator)
     kernel.SetParamInfos(paramInfos);
     
     size_t paramCount = 0;
-    rtError_t error = rtFunctionGetParamCount(static_cast<const void *>(&kernel), &paramCount);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(paramCount, 5);
 }
@@ -865,7 +897,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_CpuKernelNoParamSummary)
     
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), 0, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, 0, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -878,7 +911,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_KernelNoParamSummary)
     
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), 0, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, 0, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -901,7 +935,8 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_Success_RealDecorator)
     
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), 1, &paramOffset, &paramSize);
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtFunctionGetParamInfo(funcHandle, 1, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(paramOffset, 64);
     EXPECT_EQ(paramSize, 128);
@@ -926,7 +961,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ParamIndexOutOfRange)
     
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), 3, &paramOffset, &paramSize);
+    rtError_t error = rtFunctionGetParamInfo(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 3, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -949,7 +984,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ParamIndexMuchOutOfRange)
     
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    rtError_t error = rtFunctionGetParamInfo(static_cast<const void *>(&kernel), 100, &paramOffset, &paramSize);
+    rtError_t error = rtFunctionGetParamInfo(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 100, &paramOffset, &paramSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -960,7 +995,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_NonSimtSuccess)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t dynamicUbufSize = 1U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(dynamicUbufSize, 0U);
 }
@@ -974,7 +1009,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_SimtSuccess)
     kernel.SetShareMemSize_(2048U);
 
     size_t dynamicUbufSize = 0U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(dynamicUbufSize, static_cast<size_t>(RT_SIMT_REMAIN_UB_SIZE - 2048U));
 }
@@ -988,7 +1023,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_SimdSimtMixSuccess)
     kernel.SetShareMemSize_(4096U);
 
     size_t dynamicUbufSize = 0U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(dynamicUbufSize, static_cast<size_t>(RT_SIMT_REMAIN_UB_SIZE - 4096U));
 }
@@ -1002,7 +1037,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_SimtShareMemSizeOver
     kernel.SetShareMemSize_(RT_SIMT_REMAIN_UB_SIZE + 1U);
 
     size_t dynamicUbufSize = 0U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -1019,7 +1054,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_OutputNullptr)
     uint64_t tilingKey = 0;
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, nullptr);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -1030,7 +1065,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_FlagsNotZero)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t dynamicUbufSize = 0U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 1U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 1U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -1039,7 +1074,7 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ProgramNullptr)
     Kernel kernel("cpuKernelSo", "cpuFunctionName", "cpuOpType");
 
     size_t dynamicUbufSize = 0U;
-    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(static_cast<void *>(&kernel), 0U, &dynamicUbufSize);
+    rtError_t error = rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
 }
 
@@ -1469,8 +1504,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_XpuNotSupport)
     rtKernelLaunchCfg_t cfg = {};
     void* argsArray[2] = {(void*)0x10, (void*)0x20};
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithArgsArray(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     rtInstance->SetChipType(preChipType);
@@ -1494,8 +1530,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_KernelInvalid)
     rtKernelLaunchCfg_t cfg = {};
     void* argsArray[2] = {(void*)0x10, (void*)0x20};
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithArgsArray(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
@@ -1516,8 +1553,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_FeatureNotSupport)
     rtKernelLaunchCfg_t cfg = {};
     void* argsArray[2] = {(void*)0x10, (void*)0x20};
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithArgsArray(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -1538,8 +1576,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithArgsArray_OtherError)
     rtKernelLaunchCfg_t cfg = {};
     void* argsArray[2] = {(void*)0x10, (void*)0x20};
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithArgsArray(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, argsArray);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
@@ -1565,8 +1604,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_XpuNotSupport)
     char hostArgs[128];
     rtPlaceHolderInfo_t placeHolders[2];
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithHostArgs(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     rtInstance->SetChipType(preChipType);
@@ -1591,8 +1631,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_KernelInvalid)
     char hostArgs[128];
     rtPlaceHolderInfo_t placeHolders[2];
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithHostArgs(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
@@ -1614,8 +1655,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_FeatureNotSupport)
     char hostArgs[128];
     rtPlaceHolderInfo_t placeHolders[2];
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithHostArgs(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
@@ -1637,8 +1679,9 @@ TEST_F(ApiKernelTest, TestRtLaunchSIMTKernelWithHostArgs_OtherError)
     char hostArgs[128];
     rtPlaceHolderInfo_t placeHolders[2];
 
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtLaunchSIMTKernelWithHostArgs(
-        static_cast<void*>(&kernel), gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
+        funcHandle, gridDim, blockDim, dynUbufSize, stm, &cfg, hostArgs, 128, placeHolders, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 

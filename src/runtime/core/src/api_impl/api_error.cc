@@ -26,6 +26,7 @@
 #include "starsv2_base.hpp"
 #include "mem_type.hpp"
 #include "utils.h"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -948,6 +949,12 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t *
             const rtError_t error = CheckArgs(&(taskInfo->taskDesc[idx].u.aicpuTaskDesc.argsInfo));
             ERROR_RETURN_MSG_CALL(ERR_MODULE_GE, error, "check argsInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
         } else if (taskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_AICPU_BY_HANDLE) {
+            Kernel *realKernel = nullptr;
+            const rtError_t handleRet = GetValidatedObject<Kernel>(
+                taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.funcHdl, realKernel);
+            ERROR_RETURN_MSG_CALL(ERR_MODULE_GE, handleRet, "check funcHdl failed, retCode=%#x.",
+                static_cast<uint32_t>(handleRet));
+            taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.funcHdl = realKernel;
             Kernel *hdl = RtPtrToPtr<Kernel *>(taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.funcHdl);
             NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
             const uint32_t coreDim = taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.blockDim;

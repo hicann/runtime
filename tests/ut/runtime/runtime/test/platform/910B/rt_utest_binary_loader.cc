@@ -311,12 +311,14 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoad_CpuKernel_ArgsUserByMem)
     PlainProgram prog;
     prog.SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
     prog.SetSoName("libcust_aicpu_kernels.so");
+    Program *programBase = &prog;
+    rtBinHandle progHandle = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     rtFuncHandle funcHandle = nullptr;
-    rtError_t error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    rtError_t error = rtsRegisterCpuFunc(progHandle, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtFuncHandle funcHandle1 = nullptr;
-    error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle1);
+    error = rtsRegisterCpuFunc(progHandle, "RunCpuKernel", "Abs", &funcHandle1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     size_t memSize = 0U;

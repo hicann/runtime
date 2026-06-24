@@ -433,41 +433,28 @@ TEST_F(EngineTest, engine_ReportTimeoutProc)
 
 TEST_F(EngineTest, engine_GetKernelNameForAiCoreorAiv)
 {
-    Device *device = device_;
-    const void *stubFunc = (void *)0x03;
-    const char *stubName = "efg";
-    Kernel *kernel = NULL;
+    Kernel *kernel = nullptr;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
-    program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
-
-    MOCKER_CPP(&Runtime::GetProgram)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Runtime::PutProgram)
-        .stubs()
-        .will(ignoreReturnValue());
     kernel = new (std::nothrow) Kernel("efg", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
-    kernel->SetStub_(stubFunc);
 
     std::unique_ptr<DirectHwtsEngine> aicpuErrObj = std::make_unique<DirectHwtsEngine>(device_);
-    Stream *stm = stream_;
-    rtError_t errCode = RT_ERROR_NONE;
-    TaskInfo * const kernTask = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
+    TaskInfo kernTask = {};
+    InitByStream(&kernTask, stream_);
+    AicTaskInit(&kernTask, kernel, RT_KERNEL_ATTR_TYPE_CUBE, static_cast<uint16_t>(1), nullptr);
+    EXPECT_EQ(kernTask.type, TS_TASK_TYPE_KERNEL_AICORE);
+    kernTask.u.aicTaskInfo.kernel = kernel;
 
-    Kernel *cubeKernel = CreateTestKernel(RT_KERNEL_ATTR_TYPE_CUBE);
-    AicTaskInit(kernTask, cubeKernel, cubeKernel->GetKernelAttrType(), (uint16_t)1, nullptr);
-    delete cubeKernel;
-    EXPECT_EQ(kernTask->type, TS_TASK_TYPE_KERNEL_AICORE);
-    kernTask->u.aicTaskInfo.kernel = kernel;
     MOCKER_CPP(&TaskFactory::GetTask)
         .stubs()
-        .with(stm->Id_(), kernTask->id)
-        .will(returnValue(kernTask));
-    std::string kernelNameStr = aicpuErrObj->GetKernelNameForAiCoreorAiv(stm->Id_(), kernTask->id);
+        .with(stream_->Id_(), kernTask.id)
+        .will(returnValue(&kernTask));
+
+    std::string kernelNameStr = aicpuErrObj->GetKernelNameForAiCoreorAiv(stream_->Id_(), kernTask.id);
     EXPECT_STREQ("efg", kernelNameStr.c_str());
-    device->GetTaskFactory()->Recycle(kernTask);
+
     DELETE_O(kernel);
+    GlobalMockObject::reset();
 }
 
 rtError_t StubQueryCqShm1(RawDevice *device, uint32_t streamId, rtShmQuery_t &shmInfo)

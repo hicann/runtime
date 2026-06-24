@@ -29,6 +29,7 @@
 #include "elf.hpp"
 #include "api_impl.hpp"
 #include "api_decorator.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1514,10 +1515,10 @@ TEST_F(CloudV2ELFTest, rtGetMetaInfo)
 
     size_t numOfMeta = 0;
     rtError_t error = rtBinaryGetMetaNum(RtPtrToPtr<rtBinHandle>(prog), RT_BINARY_TYPE_BIN_VERSION, &numOfMeta);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     error = rtBinaryGetMetaNum(RtPtrToPtr<rtBinHandle>(prog2), RT_BINARY_TYPE_BIN_VERSION, &numOfMeta);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
@@ -1530,11 +1531,11 @@ TEST_F(CloudV2ELFTest, rtGetMetaInfo)
     std::vector<void *> info(numOfMeta, (void *)v.data());
     error = rtBinaryGetMetaInfo(RtPtrToPtr<rtBinHandle>(prog), RT_BINARY_TYPE_BIN_VERSION, numOfMeta, info.data(),
         size.data());
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     error = rtBinaryGetMetaInfo(RtPtrToPtr<rtBinHandle>(prog2), RT_BINARY_TYPE_BIN_VERSION, numOfMeta, info.data(),
         size.data());
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     error = apiDecorator.BinaryGetMetaInfo((Program *)prog2, RT_BINARY_TYPE_BIN_VERSION, numOfMeta,
         info.data(), size.data());
@@ -1544,19 +1545,19 @@ TEST_F(CloudV2ELFTest, rtGetMetaInfo)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtFunctionGetMetaInfo(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, nullptr, length);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
     prog->elfData_ = new rtElfData;
     error = rtFunctionGetMetaInfo(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_INVALID, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
     delete prog->elfData_;
     prog->elfData_ = nullptr;
 
     error = rtFunctionGetMetaInfo(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     funcHandle->program_ = RtPtrToPtr<Program *>(prog2);
     error = rtFunctionGetMetaInfo(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
     delete prog;
     delete prog2;
@@ -1568,6 +1569,7 @@ TEST_F(CloudV2ELFTest, rtFunctionGetMetaInfoSize)
     ElfProgram *prog = new ElfProgram();
     PlainProgram *prog2 = new PlainProgram();
     Kernel *funcHandle = new Kernel("func", "func", "func");
+    rtFuncHandle rtFunc = rt_ut::InitAndExportHandle<rtFuncHandle>(funcHandle);
     size_t metaSize = 0;
 
     delete prog->elfData_;
@@ -1577,31 +1579,32 @@ TEST_F(CloudV2ELFTest, rtFunctionGetMetaInfoSize)
     rtError_t error = rtFunctionGetMetaInfoSize(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, nullptr);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_KERNEL_TYPE, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     prog->elfData_ = new rtElfData;
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_INVALID, &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_INVALID, &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), rtFunctionMetaType(100), &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, rtFunctionMetaType(100), &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     delete prog->elfData_;
     prog->elfData_ = nullptr;
 
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_SCHED_MODE_INFO, &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_SCHED_MODE_INFO, &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_DFX_ARG_INFO, &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_DFX_ARG_INFO, &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     funcHandle->program_ = RtPtrToPtr<Program *>(prog2);
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_KERNEL_TYPE, &metaSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_DFX_ARG_INFO, &metaSize);
+    error = rtFunctionGetMetaInfoSize(rtFunc, RT_FUNCTION_TYPE_DFX_ARG_INFO, &metaSize);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     delete prog;
     delete prog2;
+    rt_ut::ResetEmbeddedHandle(funcHandle);
     delete funcHandle;
 }
 
