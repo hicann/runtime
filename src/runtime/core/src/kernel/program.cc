@@ -73,24 +73,29 @@ Program::~Program()
 void Program::ReleaseKernelsOnDestroy()
 {
     kernelMapLock_.Lock();
-    std::vector<Kernel *> deletedKernels;
-    for (uint32_t i = 0U; i < kernelPos_; i++) {
-        Kernel * const delKernel = KernelTable_[i].kernel;
-        deletedKernels.push_back(delKernel);
-        ResetEmbeddedInnerHandle<Kernel>(delKernel);
-        delete delKernel;
+    if (KernelTable_ != nullptr) {
+        for (uint32_t i = 0U; i < kernelPos_; i++) {
+            Kernel * const delKernel = KernelTable_[i].kernel;
+            for (auto &iter : kernelNameMap_) {
+                if (iter.second == delKernel) {
+                    iter.second = nullptr;
+                }
+            }
+            ResetEmbeddedInnerHandle<Kernel>(delKernel);
+            delete delKernel;
+        }
     }
-    delete [] KernelTable_;
-    KernelTable_ = nullptr;
 
     for (auto iter = kernelNameMap_.begin(); iter != kernelNameMap_.end(); ++iter) {
         Kernel * const kernel = iter->second;
-        const auto it = std::find(deletedKernels.begin(), deletedKernels.end(), kernel);
-        if (it == deletedKernels.end()) {
+        if (kernel != nullptr) {
             ResetEmbeddedInnerHandle<Kernel>(kernel);
             delete kernel;
         }
     }
+
+    delete [] KernelTable_;
+    KernelTable_ = nullptr;
 
     kernelMapLock_.Unlock();
 }
@@ -104,7 +109,7 @@ void Program::ReleaseBinaryOnDestroy()
     }
 }
 
-void Program::ResetProgramAllocatorOnDestroy()
+void Program::ResetProgramAllocatorOnDestroy() const
 {
     if (progId_ < Runtime::maxProgramNum_) {
         RefObject<Program *> *const programItem = Runtime::Instance()->GetProgramAllocator()->GetDataToItem(progId_);

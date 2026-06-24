@@ -381,7 +381,7 @@ private:
     std::map<std::string, void *> funcNameDevAddrMap_[RT_MAX_DEV_NUM];
     void ReleaseKernelsOnDestroy();
     void ReleaseBinaryOnDestroy();
-    void ResetProgramAllocatorOnDestroy();
+    void ResetProgramAllocatorOnDestroy() const;
     void CloseBinaryHandleOnDestroy();
     rtError_t CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle, const Device * const dev) const;
     void SaveBinaryData(const void *data, uint64_t length, const bool isLoadFromFile);

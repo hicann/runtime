@@ -78,7 +78,7 @@ rtError_t ValidateInnerObject(const void *handle, const uint64_t expectedMagic)
 
 } // namespace
 
-void InitializeInnerObject(rtInnerObject &inner, const uint64_t magic, void *object)
+void InitializeInnerObject(rtInnerObject &inner, uint64_t magic, void *object)
 {
     inner.object = object;
     inner.magic.store(magic);
