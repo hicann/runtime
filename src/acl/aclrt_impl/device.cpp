@@ -214,9 +214,10 @@ aclError aclrtSetTsDeviceImpl(aclrtTsId tsId)
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetTsDevice);
     ACL_LOG_INFO("start to execute aclrtSetTsDevice, tsId = %d.", static_cast<int32_t>(tsId));
     if ((tsId != ACL_TS_ID_AICORE) && (tsId != ACL_TS_ID_AIVECTOR)) {
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, acl::GetTsIdDesc(tsId), "tsId", "ACL_TS_ID_AICORE or ACL_TS_ID_AIVECTOR"}));
+            std::vector<const char *>({funcName.c_str(), acl::GetTsIdDesc(tsId), "tsId", "ACL_TS_ID_AICORE or ACL_TS_ID_AIVECTOR"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     const rtError_t rtErr = rtSetTSDevice(static_cast<uint32_t>(tsId));

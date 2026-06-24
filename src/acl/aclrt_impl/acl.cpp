@@ -1004,9 +1004,10 @@ aclError aclsysGetVersionStrImpl(char *pkgName, char *versionStr)
             << std::dec << ", dest_max=" << static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE) << ".";
         const std::string extendInfo = ss.str();
         const std::string strcpyRetVal = std::to_string(strcpyRet);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
-            std::vector<const char *>({__func__, "strcpy_s", strcpyRetVal.c_str(),
+            std::vector<const char *>({funcName.c_str(), "strcpy_s", strcpyRetVal.c_str(),
                 strerror(strcpyRet), extendInfo.c_str()}));
         ACL_LOG_ERROR("Copy string failed. Dest buffer size is [%zu], source len is [%zu].",
             static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE), verInfo.length());
@@ -1337,9 +1338,10 @@ aclError aclGetDeviceCapabilityImpl(uint32_t deviceId, aclDeviceInfo deviceInfo,
             __func__, deviceId, count);
         const std::string deviceIdVal = std::to_string(deviceId);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("deviceId %u greater than deviceNum %d", deviceId, count);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 

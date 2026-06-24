@@ -102,6 +102,7 @@ public:
         const char_t *const argVals[], const size_t size);
     static void ReportInnerError(const char_t *const fmt, ...);
     static void ReportCallError(const char_t *const fmt, ...);
+    static std::string GetFuncNameWithoutImplSuffix(const char_t *funcName);
 };
 } // namespace acl
 
@@ -297,9 +298,10 @@ public:
             ACL_LOG_ERROR("[Check][PARAM]%s is a reserved parameter and must be %s, current value=%s", \
                 #param, expectVal.c_str(), paramVal.c_str()); \
             std::string errMsg = acl::AclErrorLogManager::FormatStr("%s is a reserved parameter and must be %s", #param, expectVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, errMsg.c_str()})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, errMsg.c_str()})); \
             return ret; \
         } \
     } while (false)
@@ -310,9 +312,10 @@ public:
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
                 #param, (reason), paramVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, (reason)})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, (reason)})); \
             return ACL_ERROR_INVALID_PARAM; \
         } \
     } while (false)
@@ -323,9 +326,10 @@ public:
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
                 #param, reason, paramVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, reason})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, reason})); \
             return ret; \
         } \
     } while (false)
@@ -335,9 +339,10 @@ public:
         if (condition) { \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
                 (paramName), (reason), (paramVal)); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({__func__, (paramVal), (paramName), (reason)})); \
+                std::vector<const char *>({funcName.c_str(), (paramVal), (paramName), (reason)})); \
             return (ret); \
         } \
     } while (false)
@@ -348,9 +353,10 @@ public:
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
                 #param, expect, paramVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
                 std::vector<const char *>({"func", "value", "param", "expect"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, expect})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, expect})); \
             return ACL_ERROR_INVALID_PARAM; \
         } \
     } while (false)
@@ -361,9 +367,10 @@ public:
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
                 #param, expect, paramVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
                 std::vector<const char *>({"func", "value", "param", "expect"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, expect})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, expect})); \
             return ret; \
         } \
     } while (false)
@@ -373,9 +380,10 @@ public:
         if (!(condition)) { \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
                 (paramName), (expect), (paramVal)); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
                 std::vector<const char *>({"func", "value", "param", "expect"}), \
-                std::vector<const char *>({__func__, (paramVal), (paramName), (expect)})); \
+                std::vector<const char *>({funcName.c_str(), (paramVal), (paramName), (expect)})); \
             return (ret); \
         } \
     } while (false)
@@ -386,9 +394,10 @@ public:
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
                 #param, #expect, paramVal.c_str()); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
                 std::vector<const char *>({"func", "value", "param", "expect"}), \
-                std::vector<const char *>({__func__, paramVal.c_str(), #param, #expect})); \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, #expect})); \
             return ACL_ERROR_INVALID_PARAM; \
         } \
     } while (false)
@@ -398,7 +407,8 @@ public:
     do { \
     if (UNLIKELY((val) == nullptr)) { \
         ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
-        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, #val}); \
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
+        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {funcName.c_str(), #val}); \
         return ACL_ERROR_INVALID_PARAM; } \
     } \
     while (false)
@@ -408,7 +418,8 @@ public:
     if (UNLIKELY((val) == nullptr)) { \
         ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
         const char_t *argList[] = {"func", "param"}; \
-        const char_t *argVal[] = {__func__, #val}; \
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
+        const char_t *argVal[] = {funcName.c_str(), #val}; \
         acl::AclErrorLogManager::ReportInputErrorWithChar(acl::NULL_POINTER_FUNC_MSG, argList, argVal, 2U); \
         return ACL_ERROR_INVALID_PARAM; } \
     } \
@@ -419,7 +430,8 @@ public:
     do { \
     if (UNLIKELY((val) == nullptr)) { \
         ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
-        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, name}); \
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
+        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {funcName.c_str(), name}); \
         return ACL_ERROR_INVALID_PARAM; } \
     } \
     while (false)
@@ -452,7 +464,8 @@ public:
 do { \
     if (!(condition)) { \
         const char_t *argList[] = {"func", "param", "reason"}; \
-        const char_t *argVal[] = {__func__, (paramName), (reason)}; \
+    std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
+    const char_t *argVal[] = {funcName.c_str(), (paramName), (reason)}; \
         acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_NO_VALUE_MSG, argList, argVal, 3U); \
         return ACL_ERROR_INVALID_PARAM; \
     } \
@@ -555,9 +568,10 @@ do { \
         if ((val) <= 0) { \
             ACL_LOG_ERROR("[Check][%s]param must be positive.", #val); \
             const std::string valStr = std::to_string(val); \
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
             std::vector<const char *>({"func", "value", "param", "expect"}), \
-            std::vector<const char *>({__func__, valStr.c_str(), #val, "must be greater than zero"})); \
+            std::vector<const char *>({funcName.c_str(), valStr.c_str(), #val, "must be greater than zero"})); \
             return ACL_ERROR_INVALID_PARAM; } \
         } \
     while (false)

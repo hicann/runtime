@@ -171,9 +171,10 @@ aclError aclrtGetGroupInfoDetailImpl(const aclrtGroupInfo *groupInfo, int32_t gr
             groupIndex, count);
         const std::string groupIndexVal = std::to_string(groupIndex);
         std::string expect = "[0, " + std::to_string(count) + "]";
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, groupIndexVal.c_str(), "groupIndex", expect.c_str()}));
+            std::vector<const char *>({funcName.c_str(), groupIndexVal.c_str(), "groupIndex", expect.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -205,9 +206,10 @@ aclError aclrtGetGroupInfoDetailImpl(const aclrtGroupInfo *groupInfo, int32_t gr
             break;
         default:
             ACL_LOG_ERROR("invalid group attribute, attribute = %d", static_cast<int32_t>(attr));
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
-                std::vector<const char *>({__func__, acl::GetGroupAttrDesc(attr), "attr", "[ACL_GROUP_AICORE_INT, ACL_GROUP_GROUPID_INT]"}));
+                std::vector<const char *>({funcName.c_str(), acl::GetGroupAttrDesc(attr), "attr", "[ACL_GROUP_AICORE_INT, ACL_GROUP_GROUPID_INT]"}));
             return ACL_ERROR_INVALID_PARAM;
     }
 

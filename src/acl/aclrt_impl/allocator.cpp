@@ -154,9 +154,10 @@ aclError aclrtAllocatorGetByStreamImpl(aclrtStream stream,
     const std::unique_lock<std::mutex> lk(g_AllocatorDescMutex);
     const auto iter = g_AllocatorDesMap.find(stream);
     if (iter == g_AllocatorDesMap.end()) {
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_NO_VALUE_MSG,
             std::vector<const char *>({"func", "param", "reason"}),
-            std::vector<const char *>({__func__, "stream", "The stream is not registered with any allocator"}));
+            std::vector<const char *>({funcName.c_str(), "stream", "The stream is not registered with any allocator"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     *allocatorDesc = iter->second.first;
