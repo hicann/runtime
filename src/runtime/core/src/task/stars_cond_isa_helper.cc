@@ -1822,8 +1822,8 @@ void MemWaitInstrWaitSuccessForSoftwareSq(RtStarsMemWaitValueLastInstrFcEx &fc,
     ConstructLLWI(r5, fcPara.sqIdMemAddr, fc.llwi4);
 
     // load 0xFFFFFFFF to r4
-    ConstructLHWI(r4, 0xFFFFFFFFU, fc.lhwi41);
-    ConstructLLWI(r4, 0xFFFFFFFFU, fc.llwi41);
+    ConstructLHWI(r4, 0xFFFFFFFFULL, fc.lhwi41);
+    ConstructLLWI(r4, 0xFFFFFFFFULL, fc.llwi41);
 
     // r4 = r3 & r4 = sqId & 0xFFFFFFFF
     ConstructOpOp(r3, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.andOp);
@@ -2385,8 +2385,8 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastI
     ConstructLLWI(r5, fcPara.sqIdMemAddr, fc.llwi4);
 
     // load 0xFFFFFFFF to r4
-    ConstructLHWI(r4, 0xFFFFFFFFU, fc.lhwi41);
-    ConstructLLWI(r4, 0xFFFFFFFFU, fc.llwi41);
+    ConstructLHWI(r4, 0xFFFFFFFFULL, fc.lhwi41);
+    ConstructLLWI(r4, 0xFFFFFFFFULL, fc.llwi41);
 
     // r3 = r3 & r4 = sqId & 0xFFFFFFFF
     ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.andOp);
@@ -2828,7 +2828,7 @@ void ConstructWhileCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsWhil
 
     ConstructLoadImm(r2, para.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, setupBranch.loadDevAddr);
 
-    const uint64_t part3Offset = offsetof(RtStarsCaptureWhileCondFc, addiModelIndex) / sizeof(uint32_t);
+    constexpr uint64_t part3Offset = offsetof(RtStarsCaptureWhileCondFc, addiModelIndex) / sizeof(uint32_t);
     ConstructSetJumpPcFc(r1, part3Offset, setupBranch.jumpPcToaddiModel);
     const uint8_t instrOffset = static_cast<uint8_t>(part3Offset & 0xFUL);
     ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, instrOffset, setupBranch.bneToExecute);
