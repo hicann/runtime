@@ -15,6 +15,7 @@
 #include "count_notify.hpp"
 #include "npu_driver.hpp"
 #include "error_message_manage.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "task_info.hpp"
@@ -837,8 +838,8 @@ rtError_t Context::CheckCondTaskParamsSize(rtCondTaskParams params)
                 "greater than 0");
             return RT_ERROR_NONE;
         default:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(true, RT_ERROR_INVALID_VALUE, params.type,
-                "RT_COND_TASK_TYPE_IF or RT_COND_TASK_TYPE_WHILE or RT_COND_TASK_TYPE_SWITCH");
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(true, RT_ERROR_INVALID_VALUE, CondTaskTypeToString(params.type),
+                "params.type", "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     }
 }
 

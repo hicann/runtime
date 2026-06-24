@@ -1655,9 +1655,10 @@ rtError_t ApiErrorDecorator::MemCopySync(void * const dst, const uint64_t destMa
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cnt > destMax, RT_ERROR_INVALID_VALUE, 
         cnt, "(0, " + std::to_string(destMax) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind >= RT_MEMCPY_RESERVED) ||
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((kind >= RT_MEMCPY_RESERVED) ||
         (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
-        kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        MemcpyKindToString(kind), "kind",
+        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_WARN((dst == src), RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
     const rtError_t error = impl_->MemCopySync(dst, destMax, src, cnt, kind, checkKind);
@@ -1676,9 +1677,10 @@ rtError_t ApiErrorDecorator::MemCopySyncEx(void * const dst, const uint64_t dest
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cnt > destMax, RT_ERROR_INVALID_VALUE, 
         cnt, "(0, " + std::to_string(destMax) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind >= RT_MEMCPY_RESERVED) ||
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((kind >= RT_MEMCPY_RESERVED) ||
         (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
-        kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        MemcpyKindToString(kind), "kind",
+        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_WARN((dst == src), RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
     const rtError_t error = impl_->MemCopySyncEx(dst, destMax, src, cnt, kind);
@@ -1695,10 +1697,11 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(cnt);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cnt > destMax, RT_ERROR_INVALID_VALUE, 
-        cnt, "(0, " + std::to_string(destMax) + "]");    
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind >= RT_MEMCPY_RESERVED) ||
-        (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE, 
-        kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        cnt, "(0, " + std::to_string(destMax) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((kind >= RT_MEMCPY_RESERVED) ||
+        (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
+        MemcpyKindToString(kind), "kind",
+        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_AND_MSG_OUTER(((kind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) && (cnt > MAX_MEMCPY_SIZE_OF_D2D)),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
         cnt, "cnt", RtFmtMsg("If parameter kind equals RT_MEMCPY_ADDR_DEVICE_TO_DEVICE(5),"
@@ -1837,13 +1840,13 @@ rtError_t ApiErrorDecorator::CheckMemcpyAttribute(const rtMemcpyKind kind, const
 
     COND_RETURN_AND_MSG_OUTER(((kind == RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE) &&
         (destAttributes.location.id != srcAttributes.location.id)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(static_cast<uint32_t>(kind)).c_str(), "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, MemcpyNewKindToString(kind), "kind",
         "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, dstAddr DeviceId=" + std::to_string(destAttributes.location.id) +
         ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id));
     
     COND_RETURN_AND_MSG_OUTER(
         ((kind == RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE) && (destAttributes.location.id == srcAttributes.location.id)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(static_cast<uint32_t>(kind)).c_str(), "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, MemcpyNewKindToString(kind), "kind",
         "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE. dstAddr DeviceId=" + std::to_string(destAttributes.location.id) +
         ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id));
 
@@ -6550,7 +6553,8 @@ static rtError_t ValidateAtomicOperations(const rtAtomicOperation* operations, u
     for (uint32_t i = 0U; i < count; ++i) {
         COND_RETURN_AND_MSG_OUTER(
             (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD || operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(operations[i]),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            "UNKNOWN(" + std::to_string(static_cast<int32_t>(operations[i])) + ")",
             "operations[" + std::to_string(i) + "]",
             "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
                 std::to_string(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + "]");

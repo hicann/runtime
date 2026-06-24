@@ -900,6 +900,7 @@ add_executable(runtime_utest
     test/rt_utest_agent.cc
     test/rt_utest_aicpu_err_msg.cc
     test/rt_utest_aicpu_scheduler_agent.cc
+    test/rt_utest_enum_to_string_utils.cc
     test/rt_utest_ttlv.cc
     #test/rt_utest_atrace_log.cc
     test/rt_error_code_test.cc
