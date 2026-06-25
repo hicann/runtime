@@ -275,7 +275,7 @@ namespace acl {
         for (size_t i = 0; i < dataset->blobs.size(); ++i) {
             tdt::DataItem item;
             tdt::TdtDataType tdtDataType;
-            auto ret = GetTdtDataTypeByAclDataType(dataset->blobs[i]->tdtType, tdtDataType);
+            const auto ret = GetTdtDataTypeByAclDataType(dataset->blobs[i]->tdtType, tdtDataType);
             if (ret != ACL_SUCCESS) {
                 ACL_LOG_INNER_ERROR("[Check][Dataset]TensorDatasetSerializes failed, "
                     "invalid tdt type %d", dataset->blobs[i]->tdtType);
@@ -560,9 +560,9 @@ namespace acl {
         for (size_t i = 0; i < itemVec.size(); ++i) {
             itemVec[i].ctrlInfo.curCnt = currentCnt;
             itemVec[i].ctrlInfo.cnt = itemVec.size();
-            size_t ctrlSize = sizeof(ItemInfo) + itemVec[i].dims.size() * sizeof(int64_t);
+            const size_t ctrlSize = sizeof(ItemInfo) + itemVec[i].dims.size() * sizeof(int64_t);
             // 64n + lastDataSize + 64n - lastDataSize
-            size_t alignedSize = Get64AlignedSize(ctrlSize + lastDataSize) - lastDataSize;
+            const size_t alignedSize = Get64AlignedSize(ctrlSize + lastDataSize) - lastDataSize;
             itemVec[i].ctrlInfo.dynamicBitSize = alignedSize - sizeof(ItemInfo);
             std::shared_ptr<uint8_t> ctrlSharedPtr(
                 new (std::nothrow) uint8_t[alignedSize], std::default_delete<uint8_t[]>());
@@ -988,7 +988,7 @@ acltdtChannelHandle *acltdtCreateChannel(uint32_t deviceId, const char *name)
     if (tdtHostInit == nullptr) {
         return nullptr;
     }
-    auto ret = tdtHostInit(deviceId);
+    const auto ret = tdtHostInit(deviceId);
     if (ret != 0) {
         ACL_LOG_INNER_ERROR("[Init][Tdt]tdt host init failed, tdt result = %d", ret);
         return nullptr;
@@ -1051,7 +1051,7 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
     attr.flowCtrlDropTime = 0;
     attr.overWriteFlag = false;
     // queue init should be invoked when device is open
-    auto rtError = rtMemQueueInit(deviceId);
+    const auto rtError = rtMemQueueInit(deviceId);
     if (rtError == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         ACL_LOG_INFO("queue init failed due to runtime does not support.");
         ACL_DELETE_AND_SET_NULL(handle);
@@ -1086,7 +1086,7 @@ aclError acltdtStopChannel(acltdtChannelHandle *handle)
         if (tdtHostStop == nullptr) {
             return ACL_ERROR_FAILURE;
         }
-        auto ret = tdtHostStop(handle->recvName);
+        const auto ret = tdtHostStop(handle->recvName);
         if (ret != 0) {
             ACL_LOG_INNER_ERROR("[Init][Tdt]tdt host stop failed for channel %s, tdt result = %d",
                 handle->name.c_str(), ret);
@@ -1157,7 +1157,7 @@ aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset
         "Only never timeout is supported, timeout can only be set to -1");
 
     std::vector<tdt::DataItem> itemVec;
-    auto ret = acl::TensorDatasetSerializes(dataset, itemVec);
+    const auto ret = acl::TensorDatasetSerializes(dataset, itemVec);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR("[Serialize][Dataset]Failed to TensorDatasetSerializes, device is %u, name is %s.",
             handle->devId, handle->name.c_str());
@@ -1206,14 +1206,14 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *d
     if (tdtHostPopData == nullptr) {
         return ACL_ERROR_FAILURE;
     }
-    int32_t recvRet = tdtHostPopData(handle->recvName, itemVec);
+    const int32_t recvRet = tdtHostPopData(handle->recvName, itemVec);
     if (recvRet != 0) {
         ACL_LOG_INNER_ERROR("[Pop][Data]Failed to receive, tdt result = %d, device is %u, name is %s.",
             recvRet, handle->devId, handle->name.c_str());
         return ACL_ERROR_FAILURE;
     }
 
-    auto ret = acl::TensorDatasetDeserializes(itemVec, dataset);
+    const auto ret = acl::TensorDatasetDeserializes(itemVec, dataset);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR("[Deserialize][Dataset]Failed to TensorDatasetDeserializes, device is %u, name is %s.",
             handle->devId, handle->name.c_str());

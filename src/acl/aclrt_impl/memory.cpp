@@ -193,7 +193,7 @@ void GetPaddingSize(size_t *paddingSize)
         ACL_LOG_EVENT("rtGetSocSpec did not complete successfully, ret=%d.", error);
         return;
     }
-    char *endPtr = NULL;
+    char *endPtr = nullptr;
     errno = 0;
     *paddingSize = static_cast<size_t>(strtoul(paddingSizeStr, &endPtr, STRTOUL_DECIMAL_BASE));
     if (errno == ERANGE || endPtr == paddingSizeStr || *endPtr != '\0') {
@@ -771,7 +771,7 @@ static aclError IsAclPinnedMemory(const void* ptr, bool& isAclMem)
         return ACL_SUCCESS;
     }
     aclrtPtrAttributes attr;
-    aclError ret = aclrtPointerGetAttributesImpl(ptr, &attr);
+    const aclError ret = aclrtPointerGetAttributesImpl(ptr, &attr);
     if (ret != ACL_SUCCESS) {
         isAclMem = false;
         return ret;
@@ -817,7 +817,7 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
     }
 
     bool isAclMem = false;
-    aclError ret = IsAclPinnedMemory(ptr, isAclMem);
+    const aclError ret = IsAclPinnedMemory(ptr, isAclMem);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR("Failed to check memory type, ret=%d", ret);
         return ret; 
@@ -876,7 +876,7 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value,
     }
 
     bool isAclMem = false;
-    aclError ret = IsAclPinnedMemory(ptr, isAclMem);
+    const aclError ret = IsAclPinnedMemory(ptr, isAclMem);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR("Failed to check memory type, ret=%d", ret);
         return ret; 
