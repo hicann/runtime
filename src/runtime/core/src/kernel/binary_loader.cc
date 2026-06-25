@@ -211,7 +211,7 @@ rtError_t BinaryLoader::ReadBinaryFile()
 {
     binRealPath_ = RealPath(binPath_);
     if (binRealPath_.empty()) {
-        RT_LOG(RT_LOG_ERROR, "Binary file path is invalid, path=[%s]", binPath_.c_str());
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "Read binary file", binPath_, "binPath_", RtFmtMsg("Path %s cannot be accessed", binPath_.c_str()));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -399,7 +399,8 @@ PlainProgram* BinaryLoader::ParseJsonAndRegisterCpuKernel()
     nlohmann::json jsonObj;
     rtError_t ret = GetJsonObj(jsonFilePath, jsonFileRealPath, jsonObj);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Parse kernel json file failed, path=%s, ret=%#x", jsonFileRealPath.c_str(), ret);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "Parse kernel json file", jsonFilePath, "jsonFilePath",
+            RtFmtMsg("Path %s cannot be accessed or file format is incorrect", jsonFilePath.c_str()));
         DELETE_O(prog);
         return nullptr;
     }
