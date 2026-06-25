@@ -195,21 +195,21 @@
     if ((stm)->Context_() != (curCtx)) { \
         std::string extendInfo = RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", (stm)->Id_(), (stm)->Context_(), (curCtx)); \
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "stream", extendInfo); \
-        return rtErrCode; \
+        return (rtErrCode); \
     }
 
 #define COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, rtErrCode) \
     if ((mdl)->Context_() != (curCtx)) { \
         std::string extendInfo = RtFmtMsg("model_id=%u, model_ctx=%p, cur_ctx=%p", (mdl)->Id_(), (mdl)->Context_(), (curCtx)); \
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "model", extendInfo); \
-        return rtErrCode; \
+        return (rtErrCode); \
     }
 
 #define COND_RETURN_AND_MSG_INVALID_CONTEXT_LABEL(lbl, curCtx, rtErrCode) \
     if ((lbl)->Context_() != (curCtx)) { \
         std::string extendInfo = RtFmtMsg("label_id=%u, label_ctx=%p, cur_ctx=%p", (lbl)->Id_(), (lbl)->Context_(), (curCtx)); \
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "label", extendInfo); \
-        return rtErrCode; \
+        return (rtErrCode); \
     }
 
 //EE1017 预留参数校验使用

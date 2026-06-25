@@ -4877,7 +4877,9 @@ rtError_t ApiImpl::LabelCreate(Label ** const lbl, Model * const mdl)
     RT_LOG(RT_LOG_INFO, "label create.");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    if (mdl != nullptr) { COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT); }
+    if (mdl != nullptr) {
+        COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    }
 
     if (mdl != nullptr && mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
@@ -5325,7 +5327,9 @@ rtError_t ApiImpl::LabelCreateEx(Label ** const lbl, Model * const mdl, Stream *
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    if (mdl != nullptr) { COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT); }
+    if (mdl != nullptr) {
+        COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
+    }
 
     if (mdl != nullptr && mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);

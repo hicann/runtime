@@ -325,12 +325,12 @@ public:
         if (condition) { \
             const std::string paramVal = std::to_string(param); \
             ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
-                #param, reason, paramVal.c_str()); \
+                #param, (reason), paramVal.c_str()); \
             std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__); \
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
                 std::vector<const char *>({"func", "value", "param", "reason"}), \
-                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, reason})); \
-            return ret; \
+                std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, (reason)})); \
+            return (ret); \
         } \
     } while (false)
 

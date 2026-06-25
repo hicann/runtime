@@ -274,7 +274,7 @@ rtError_t ApiImpl::MemGetInfoByDeviceId(uint32_t deviceId, bool isHugeOnly, size
 
 rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t *val) const
 {
-    unsigned int split_mode;
+    uint32_t split_mode;
     drvError_t drvError;
     COND_RETURN_WARN(&halGetDeviceSplitMode == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
         "[drv api] halGetDeviceSplitMode does not exist.");

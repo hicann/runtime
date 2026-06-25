@@ -1094,7 +1094,7 @@ static aclError ParseBaseVersion(const std::string &verStr, int32_t &baseVal, si
         // Find patch number
         const size_t numStart = dot2 + 1UL;
         size_t numEnd = numStart;
-        while (numEnd < verStr.length() && std::isdigit(static_cast<unsigned char>(verStr[numEnd])) != 0) {
+        while (numEnd < verStr.length() && std::isdigit(static_cast<uint8_t>(verStr[numEnd])) != 0) {
             numEnd++;
         }
 
@@ -1233,7 +1233,7 @@ static std::string GetFaultEventInfo()
     rtDmsEventFilter filter = {};
     constexpr uint32_t maxFaultNum = 128U; // max is 128
     std::vector<rtDmsFaultEvent> faultEventInfo(maxFaultNum, rtDmsFaultEvent{});
-    uint32_t eventCount = 0UL;
+    uint32_t eventCount = 0U;
     ret = rtGetFaultEvent(deviceId, &filter, &faultEventInfo[0U], maxFaultNum, &eventCount);
     if (ret != RT_ERROR_NONE || eventCount == 0UL) {
         ACL_LOG_INFO("Cannot get fault event of device %d, runtime errorCode is %d",
