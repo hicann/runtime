@@ -55,6 +55,10 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
     // check if current data is the first one to process{entity.sendObject size == 0}
     const bool firstData = (entity.GetSendDataObjs().size() == 0U);
     auto dataObj = DataObjManager::Instance().CreateDataObj(&entity, mbuf);
+    if (dataObj == nullptr) {
+        DGW_LOG_WARN("Can't alloc dataObj for entity:[%s].", entity.ToString().c_str());
+        return FsmStatus::FSM_SUCCESS;
+    }
     std::vector<Entity*> dstEntitiesToPush;
     for (auto canPushDstEntity: dstEntitiesCanPush) {
         dataObj->AddRecvEntity(canPushDstEntity);

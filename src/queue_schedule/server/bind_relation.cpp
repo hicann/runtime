@@ -434,11 +434,12 @@ BqsStatus BindRelation::UnBindRelationBySrc(const EntityInfo& srcEntity)
         return BQS_STATUS_DRIVER_ERROR;
     }
 
+    MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     for (const auto &dstEntity : srcToDstIter->second) {
         (void)DelDstToSrc(srcEntity, dstEntity, index);
         // delete dst entity
-        const auto dstIter = dstToSrcRelation_.find(dstEntity);
-        if (dstIter == dstToSrcRelation_.end()) {
+        const auto dstIter = dstToSrcRelation.find(dstEntity);
+        if (dstIter == dstToSrcRelation.end()) {
             (void)DeleteEntity(dstEntity, false, index);
         }
     }
@@ -477,14 +478,15 @@ BqsStatus BindRelation::UnBindRelationByDst(const EntityInfo& dstEntity)
         return BQS_STATUS_DRIVER_ERROR;
     }
 
+    MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
     for (const auto &srcEntity : dstToSrcIter->second) {
         ret = DelSrcToDst(srcEntity, dstEntity, index);
         if (ret != BQS_STATUS_OK) {
             break;
         }
         // delete src entity
-        const auto srcIter = srcToDstRelation_.find(srcEntity);
-        if (srcIter == srcToDstRelation_.end()) {
+        const auto srcIter = srcToDstRelation.find(srcEntity);
+        if (srcIter == srcToDstRelation.end()) {
             (void)DeleteEntity(srcEntity, true, index);
         }
     }

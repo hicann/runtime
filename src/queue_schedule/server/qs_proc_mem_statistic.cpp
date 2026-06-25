@@ -73,7 +73,7 @@ namespace bqs {
         if ((normalPkgCnt == 0UL) && (hugePkgCnt == 0UL)) {
             return false;
         }
-        svmValue = normalPkgCnt * DEFAULT_PAGE_SIZE + hugePkgCnt + H_PAGE_SIZE;
+        svmValue = normalPkgCnt * DEFAULT_PAGE_SIZE + hugePkgCnt * H_PAGE_SIZE;
         return true;
     }
 

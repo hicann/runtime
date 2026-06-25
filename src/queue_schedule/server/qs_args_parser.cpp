@@ -408,7 +408,7 @@ namespace bqs {
             << ", profCfgData_=" << profCfgData_ << ", profFlag_=" << profFlag_
             << ", abnormalInterval_=" << abnormalInterval_ << ", withDeviceId_=" << withDeviceId_
             << ", withHostPid_=" << withHostPid_ << ", withPidSign_=" << withPidSign_
-            << ", withVfId_=" << profCfgData_ << ", withLogLevel_=" << withLogLevel_
+            << ", withVfId_=" << withVfId_ << ", withLogLevel_=" << withLogLevel_
             << ", withGroupName_=" << withGroupName_ << ", withStarter_=" << withStarter_;
 
         return oss.str();

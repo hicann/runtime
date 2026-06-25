@@ -37,14 +37,7 @@ FsmStatus ErrorState::ProcessMessage(Entity &entity, const InnerMessage &msg)
     while (!recvDataObjs.empty()) {
         const auto dataObj = recvDataObjs.front();
         if ((dataObj != nullptr) && (dataObj->GetSendEntity() != nullptr)) {
-            Mbuf * const mbuf = const_cast<Mbuf *>(dataObj->GetMbuf());
-            if (!dataObj->CopRef()) {
-                // fail discard
-                (void)halMbufFree(mbuf);
-                DGW_LOG_INFO("Success to free mbuf for entity[%s] with state[%s].",
-                    entity.ToString().c_str(), entity.GetStateDesc(FsmState::FSM_ERROR_STATE).c_str());
-            }
-            (void) dataObj->GetSendEntity()->RemoveDataObjFromSendList(dataObj);
+            dataObj->GetSendEntity()->RemoveRecvEntityFromSendList(&entity);
         }
         recvDataObjs.pop_front();
     }

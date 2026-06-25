@@ -183,7 +183,7 @@ TEST_F(QsArgsParserUtest, GetParaParsedStrSuccess)
     expectedParsedStr.append("eventLevel_=1, aicpulogLevel=-1, deployMode_=0, reschedInterval_=30, ");
     expectedParsedStr.append("groupName_=, schedPolicy_=0, starter_=0, profCfgData_=, profFlag_=0, ");
     expectedParsedStr.append("abnormalInterval_=10, withDeviceId_=0, withHostPid_=0, withPidSign_=0, ");
-    expectedParsedStr.append("withVfId_=, withLogLevel_=0, withGroupName_=0, withStarter_=0");
+    expectedParsedStr.append("withVfId_=0, withLogLevel_=0, withGroupName_=0, withStarter_=0");
     EXPECT_STREQ(argsParser.GetParaParsedStr().c_str(), expectedParsedStr.c_str());
 }
 
