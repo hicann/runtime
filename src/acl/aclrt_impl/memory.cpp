@@ -1183,8 +1183,7 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     rtProp.devid = prop->location.id;
     rtProp.module_id = acl::APP_MODE_ID_U16;
     rtProp.reserve = prop->reserve;
-    // host alloc
-    const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
+
     // device alloc
     const bool isDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) 
@@ -1200,6 +1199,8 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     }
     auto it = memAttrHandlers.find(static_cast<int32_t>(prop->memAttr));
     if (it != memAttrHandlers.end()) {
+        // host alloc
+        const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
         it->second(rtProp, isHostAlloc, isDeviceAlloc);
     } else {
         ACL_LOG_ERROR("memAttr [%d] is not supported. "
@@ -1418,8 +1419,7 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
     rtProp1.devid = prop->location.id;
     rtProp1.module_id = acl::APP_MODE_ID_U16;
     rtProp1.reserve = prop->reserve;
-    // host alloc
-    const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
+
     // device alloc
     const bool isDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) 
@@ -1435,6 +1435,8 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
     }
     auto it = memAttrHandlers.find(static_cast<int32_t>(prop->memAttr));
     if (it != memAttrHandlers.end()) {
+        // host alloc
+        const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
         it->second(rtProp1, isHostAlloc, isDeviceAlloc);
     } else {
         ACL_LOG_ERROR("memAttr [%d] is not supported. "
