@@ -130,7 +130,7 @@ void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, c
 
 #undef RT_PRINT_CASE
 #define RT_PRINT_CASE(code, name, params, msg, level) \
-    case ErrorCode::code: DispatchErrMsg(level, file, line, func, msg, values); break;
+    case ErrorCode::code: DispatchErrMsg((level), (file), (line), (func), (msg), (values)); break;
     switch (errCode) {
         RUNTIME_ERROR_CODE_TABLE(RT_PRINT_CASE)
         default:

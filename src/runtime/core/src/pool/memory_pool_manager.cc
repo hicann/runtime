@@ -186,7 +186,9 @@ void MemoryPoolManager::CheckAndReleasePools()
                 delete *it;
                 it = pools_.erase(it);  // 从 deque 中移除并释放内存池
                 --freePoolCount;
-                --numPools_;
+                if (numPools_ > 0) {
+                    --numPools_;
+                }
             } else {
                 ++it;
             }

@@ -2234,7 +2234,7 @@ rtError_t ApiImpl::DevMalloc(void ** const devPtr, const uint64_t size, const rt
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    const uint64_t tmpSize = (((size + 0x1FU) >> 5U) << 5U); // 32 byte align
+    const uint64_t tmpSize = ((((size > (MAX_UINT64_NUM - 0x1FU)) ? MAX_UINT64_NUM : (size + 0x1FU)) >> 5U) << 5U); // 32 byte align
 
     auto driver = curCtx->Device_()->Driver_();
     uint32_t devId = curCtx->Device_()->Id_();
@@ -5371,7 +5371,7 @@ rtError_t ApiImpl::GetAiCoreCount(uint32_t * const aiCoreCnt)
     int32_t ret = PlatformManagerV2::Instance().GetSocSpec(socVersion, label, key, result);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Get soc spec failed, ret = %u, please check.", ret);
     try {
-        const uint32_t aiCoreCount = std::stoi(result);
+        const uint32_t aiCoreCount = static_cast<uint32_t>(std::stoul(result));
         *aiCoreCnt = aiCoreCount;
     } catch (...) {
         RT_LOG(RT_LOG_ERROR, "ai_core_cnt=%s is invalid.", result.c_str());
@@ -9016,11 +9016,11 @@ rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info,
         const std::string mixAivName = "_mix_aiv";
         const auto aicPos = adjustedName.rfind(mixAicName);
         if (aicPos != std::string::npos) {
-            adjustedName.erase(aicPos, mixAicName.length());
+            (void)adjustedName.erase(aicPos, mixAicName.length());
         }
         const auto aivPos = adjustedName.rfind(mixAivName);
         if (aivPos != std::string::npos) {
-            adjustedName.erase(aivPos, mixAivName.length());
+            (void)adjustedName.erase(aivPos, mixAivName.length());
         }
 
         if (adjustedName.compare(originalName) != 0) {
@@ -9486,13 +9486,11 @@ rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_
         {RT_DEV_ATTR_HD_CONNECT_TYPE, {MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE}},
     };
  
-    int32_t moduleType = -1;
-    int32_t infoType = -1;
     const auto it = devInfoMap.find(attr);
     if (it != devInfoMap.end()) {
         const DevInfo& devInfo = it->second;
-        moduleType = devInfo.moduleType;
-        infoType = devInfo.infoType;
+        const int32_t moduleType = devInfo.moduleType;
+        const int32_t infoType = devInfo.infoType;
         return GetDeviceInfo(deviceId, moduleType, infoType, val);
     }
 

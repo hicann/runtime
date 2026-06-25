@@ -685,7 +685,7 @@ TEST_F(StreamTest, stream_tearDown_fail)
     stream_var->delayRecycleTaskid_.push_back(0);
     std::cout<<"stream create success."<<std::endl;
 
-    MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().then(returnValue(1));
+    MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().will(returnValue(1));
     error = rtStreamDestroy(stream);
     std::cout<<"stream destroy success."<<std::endl;
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -714,7 +714,7 @@ TEST_F(StreamTest, stream_tearDownforce_test)
     Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(1);
     stream_var->delayRecycleTaskid_.push_back(0);
-    MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().then(returnValue(1));
+    MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().will(returnValue(1));
     error = rtStreamDestroyForce(stream);
     error = rtCtxDestroy(ctx);
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);

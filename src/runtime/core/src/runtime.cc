@@ -257,6 +257,8 @@ void Runtime::UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, 
         }
     } else if (iniAttrs.normalStreamDepth != 0U) {
         props.maxTaskNumPerStream = iniAttrs.normalStreamDepth;
+    } else {
+        // no update to maxTaskNumPerStream
     }
 
     props.npuArch = iniAttrs.npuArch;
@@ -273,7 +275,7 @@ void Runtime::UpdateDevProperties(const rtChipType_t chipTypeValue, const std::s
     DevDynInfoProcFunc func{};
     if ((GET_DEV_INFO_PROC_FUNC(chipTypeValue, func) == RT_ERROR_NONE) && (func.devPropsUpdateFunc != nullptr)) {
         DevProperties props;
-        GET_DEV_PROPERTIES(chipTypeValue, props);
+        (void)GET_DEV_PROPERTIES(chipTypeValue, props);
         func.devPropsUpdateFunc(props);
         SET_DEV_PROPERTIES(chipTypeValue, props);
     }
@@ -550,9 +552,9 @@ void Runtime::InitSocTypeFromBS9SX1AXVersion()
     if (((aicNum == RT_BS9SX1AA_AICORE_NUM_AG) && (aivNum == RT_BS9SX1AA_AIVECTOR_NUM_AG)) ||
         ((aicNum == RT_BS9SX1AA_AICORE_NUM) && (aivNum == RT_BS9SX1AA_AIVECTOR_NUM))) {
         socVersion_ = "BS9SX1AA";
-    } else if ((aicNum == RT_BS9SX1AB_AICORE_NUM) && (aivNum == RT_BS9SX1AB_AIVECTOR_NUM)) {
+    } else if ((aicNum == static_cast<int64_t>(RT_BS9SX1AB_AICORE_NUM)) && (aivNum == static_cast<int64_t>(RT_BS9SX1AB_AIVECTOR_NUM))) {
         socVersion_ = "BS9SX1AB";
-    } else if ((aicNum == RT_BS9SX1AC_AICORE_NUM) && (aivNum == RT_BS9SX1AC_AIVECTOR_NUM)) {
+    } else if ((aicNum == static_cast<int64_t>(RT_BS9SX1AC_AICORE_NUM)) && (aivNum == static_cast<int64_t>(RT_BS9SX1AC_AIVECTOR_NUM))) {
         socVersion_ = "BS9SX1AC";
     } else {
         RT_LOG(RT_LOG_DEBUG, "other version.");
@@ -586,9 +588,9 @@ void Runtime::Init310PSocType(const int64_t vmAicoreNum)
     }
     const char* chipName = RtPtrToPtr<const char*>(chipInfo.name);
     RT_LOG(RT_LOG_DEBUG, "device %u get chipName is %s.", workingDev_, chipName);
-    if (strncmp(chipName, "310P5", strlen("310P5")) == 0) {
+    if (strncmp(chipName, "310P5", sizeof("310P5") - 1U) == 0) {
         socVersion_ = "Ascend310P5";
-    } else if (strncmp(chipName, "310P7", strlen("310P7")) == 0) {
+    } else if (strncmp(chipName, "310P7", sizeof("310P7") - 1U) == 0) {
         socVersion_ = "Ascend310P7";
     } else {
         // do nothing
@@ -1438,7 +1440,8 @@ rtError_t Runtime::AddProgramToPool(Program *const prog)
 {
     // just for loop from last pos.
     static uint32_t programsTryIdx = 0U;
-    const uint32_t newEnd = maxProgramNum_ + programsTryIdx;
+    const uint32_t newEnd = (maxProgramNum_ > (MAX_UINT32_NUM - programsTryIdx)) ?
+        MAX_UINT32_NUM : (maxProgramNum_ + programsTryIdx);
     for (uint32_t i = programsTryIdx; i < newEnd; i++) {
         const uint32_t id = i % maxProgramNum_;
         RefObject<Program *> *const programItem = programAllocator_->GetDataToItem(id);
@@ -1558,7 +1561,6 @@ rtError_t Runtime::RegisterKernelByStubFunc(ElfProgram *elfProg, const void *stu
 
     for (uint32_t idx = 0U; idx < kernelCount; idx++) {
         const RtKernel *elfKernelInfo = &kernels[idx];
-        rtError_t error;
         if (strncmp(kernelName, elfKernelInfo->name, strlen(kernelName)) != 0) {
             continue;
         }
@@ -1566,6 +1568,7 @@ rtError_t Runtime::RegisterKernelByStubFunc(ElfProgram *elfProg, const void *stu
         if ((strcmp(kernelName, elfKernelInfo->name) == 0) ||
             (strcmp(aicMixName, elfKernelInfo->name) == 0) ||
             (strcmp(aivMixName, elfKernelInfo->name) == 0)) {
+            rtError_t error;
             if (kernelObj != nullptr) {
                 error = elfProg->MergeKernel(elfKernelInfo, kernelObj);
                 ERROR_RETURN(error, "merge kernel failed, kernelName=%s. retCode=%#x.",
@@ -2152,7 +2155,7 @@ rtError_t Runtime::HandleAiCpuProfiling(
     if ((profConfig & PROF_TASK_TIME_L3_MASK) != 0UL) {
         profSwitch |= (1U << static_cast<uint32_t>(PROFILING_FEATURE_TIME_L3));
     }
-    profSwitch |= ((profSwitchHi >> 32ULL) & 0xFFFF0000ULL);  // 32是因为profSwitch是uint32，且只需要profSwitchHi的高16位
+    profSwitch |= static_cast<uint32_t>((profSwitchHi >> 32ULL) & 0xFFFF0000ULL);  // 32是因为profSwitch是uint32，且只需要profSwitchHi的高16位
 
     RT_LOG(RT_LOG_INFO, "Handle aicpu profiling, profSwitch=%#" PRIx64, profSwitch);
 #if (!defined CFG_DEV_PLATFORM_PC)
@@ -4204,9 +4207,11 @@ static uint64_t ConvertTimeoutToUs(const uint64_t timeout, const RtTaskTimeUnitT
 {
     uint64_t opExcTaskTimeout;
     if (timeUnitType == RT_TIME_UNIT_TYPE_S) {
-        opExcTaskTimeout = timeout * RT_TIMEOUT_S_TO_US;
+        opExcTaskTimeout = (timeout > (MAX_UINT64_NUM / RT_TIMEOUT_S_TO_US)) ?
+            MAX_UINT64_NUM : (timeout * RT_TIMEOUT_S_TO_US);
     } else if (timeUnitType == RT_TIME_UNIT_TYPE_MS) {
-        opExcTaskTimeout = timeout * RT_TIMEOUT_MS_TO_US;
+        opExcTaskTimeout = (timeout > (MAX_UINT64_NUM / RT_TIMEOUT_MS_TO_US)) ?
+            MAX_UINT64_NUM : (timeout * RT_TIMEOUT_MS_TO_US);
     } else { // us
         opExcTaskTimeout = timeout;
     }
@@ -4227,7 +4232,8 @@ rtError_t Runtime::SetTimeoutConfig(const rtTaskTimeoutType_t type, const uint64
     if ((socVersion_ == "AS31XM1X") || (chipType == CHIP_MC32DM11A) || (chipType == CHIP_MC62CM12A)) {
         timeoutConfig_.mtx.lock();
         timeoutConfig_.isCfgOpExcTaskTimeout = true;
-        timeoutConfig_.opExcTaskTimeout = timeout * RT_TIMEOUT_MS_TO_US;
+        timeoutConfig_.opExcTaskTimeout = (timeout > (MAX_UINT64_NUM / RT_TIMEOUT_MS_TO_US)) ?
+            MAX_UINT64_NUM : (timeout * RT_TIMEOUT_MS_TO_US);
         timeoutConfig_.mtx.unlock();
         return RT_ERROR_NONE;
     }
@@ -5335,7 +5341,7 @@ rtError_t Runtime::SaveModuleDataInfoToList(Program *prog)
             const std::string& soName = iter.first;
             void* soNameDevAddr = iter.second;
             if (soNameDevAddr != nullptr) {
-                std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, soName.size() + 1, soNameDevAddr, nullptr, false));
+                std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, soName.size() + 1U, soNameDevAddr, nullptr, false));
                 COND_RETURN_AND_MSG_OUTER(progMemInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(ModuleMemInfo), "new");
                 moduleBackupList_.push_back(std::move(progMemInfo));
                 RT_LOG(RT_LOG_INFO, "prog id=%u, soName=%s, soNameDevAddr=%p", prog->Id_(), soName.c_str(), soNameDevAddr);
@@ -5434,7 +5440,7 @@ rtError_t Runtime::RestoreModule(void) const
     RT_LOG(RT_LOG_DEBUG, "backup begin");
     for (const auto& node : moduleBackupList_) {
         void* devAddr = const_cast<void *>(node->devAddr);
-        uint32_t memSize = node->memSize;
+        const uint32_t memSize = static_cast<uint32_t>(node->memSize);
         void *hostAddr = static_cast<void *>(node->hostAddr);
         Device *device = const_cast<Runtime*>(this)->GetDevice(node->devId, 0U);
         rtError_t error;

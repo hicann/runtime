@@ -2319,6 +2319,7 @@ TaskInfo *createTaskInfo()
     TaskInfo *taskInfo = (TaskInfo *)malloc(sizeof(TaskInfo));
     taskInfo->id = 0;
     taskInfo->stream = rt_ut::UnwrapOrNull<Stream>(stream);
+    taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);
 
     return taskInfo;
 }

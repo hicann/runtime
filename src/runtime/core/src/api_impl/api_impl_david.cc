@@ -1355,7 +1355,7 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
     COND_RETURN_WARN_WITH_NOLOG_SWITCH(ret != RT_ERROR_NONE, noLog, ret, 
         "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x", threadId, ret);
     rt->LockGroupId(groupId);
-    std::function<void()> const func = [=]() { rt->UnlockGroupId(groupId); };
+    std::function<void()> const func = [rt, groupId]() { rt->UnlockGroupId(groupId); };
     const ScopeGuard groupIdGuarder(func);
 
     Context *priCtx = rt->GetPriCtxByDeviceId(deviceId, tsId);

@@ -77,7 +77,7 @@ rtError_t ApiImpl::MemManagedPrefetchAsync(const void* ptr, size_t size, rtMemMa
     params->size = size;
     params->flags = flags;
 
-    ret = LaunchHostFunc(stream, UvmCallback::PrefetchCallbackWrapper, static_cast<void *>(params));
+    ret = LaunchHostFunc(stream, &UvmCallback::PrefetchCallbackWrapper, static_cast<void *>(params));
     ERROR_PROC_RETURN_MSG_INNER(ret, DELETE_O(params), "LaunchHostFunc fails with error code %#x",
         static_cast<uint32_t>(ret));
     return ret;

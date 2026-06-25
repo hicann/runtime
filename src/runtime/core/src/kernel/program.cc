@@ -1456,7 +1456,7 @@ rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t adviseS
 rtError_t Program::BinaryPoolMemCopySync(void * const devMem, const uint32_t size, void * const data,
     const Device * const device, const bool readonly)
 {
-    uint32_t devId = device->Id_();
+    const uint32_t devId = device->Id_();
     Driver * const curDrv = device->Driver_();
     // 使用 GetPoolMemInfo 原子化获取 baseAddr 和 adviseMutex，消除 TOCTOU 竞争
     PoolMemInfo poolInfo = device->GetKernelMemoryPool()->GetPoolMemInfo(devMem);

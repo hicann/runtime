@@ -19,7 +19,7 @@ namespace cce {
 namespace runtime {
 
 class Device;
-constexpr int32_t BUFF_SLIP_NUMBER = 4U * 1024U * 1024U;
+constexpr int32_t BUFF_SLIP_NUMBER = static_cast<int32_t>(4U * 1024U * 1024U);
 
 class BufferAllocator : public NoCopy {
 public:

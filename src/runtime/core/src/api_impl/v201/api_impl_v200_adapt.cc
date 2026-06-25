@@ -62,7 +62,7 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
     // For the new launch logic, the nop task delivery is hidden in the launchKernel. only for aic/aiv kernel
 
     if ((kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_NON_CPU) && (taskCfg.isExtendValid == 1U) && (taskCfg.extend.blockTaskPrefetch)) {
-        const uint8_t prefetchCnt = PREFETCH_CNT_CLOUD_V2;
+        constexpr uint8_t prefetchCnt = PREFETCH_CNT_CLOUD_V2;
         for (uint8_t cntIdx = 0U; cntIdx < prefetchCnt; cntIdx++) {
             error = NopTask(curStm);
             ERROR_RETURN_MSG_INNER(error, "launch nop task error, error=%#x.", error);

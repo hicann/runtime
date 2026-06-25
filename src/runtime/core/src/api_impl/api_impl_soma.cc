@@ -70,7 +70,7 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t s
     rtError_t error = SomaApi::AllocFromMemPool(devPtr, aligned_size, memPoolId, streamId, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to allocate memory from pool, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "Memory allocated success! Start ptr=0x%llx, end ptr=0x%llx",
-        RtPtrToValue(*devPtr), (RtPtrToValue(*devPtr) + size));
+        RtPtrToValue(*devPtr), (RtPtrToValue(*devPtr) + static_cast<uint64_t>(size)));
     uint64_t va = RtPtrToValue(*devPtr);
     
     AicpuOpType opType = AicpuOpType::MALLOC;
