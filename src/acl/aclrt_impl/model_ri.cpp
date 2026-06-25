@@ -86,9 +86,10 @@ aclError aclmdlRICaptureGetInfoImpl(aclrtStream stream, aclmdlRICaptureStatus *s
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     if (status == nullptr && modelRI == nullptr) {
         ACL_LOG_ERROR("status and modelRI cannot be nullptr at the same time");
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, "nullptr/nullptr", "status/modelRI", "both cannot be nullptr at the same time"}));
+            std::vector<const char *>({funcName.c_str(), "nullptr/nullptr", "status/modelRI", "both cannot be nullptr at the same time"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtStreamCaptureStatus rtStatus = RT_STREAM_CAPTURE_STATUS_NONE;

@@ -159,4 +159,16 @@ void AclErrorLogManager::ReportInputErrorWithChar(const char_t *const errorCode,
     }
     (void)REPORT_PREDEFINED_ERR_MSG(errorCode, argNameArr, argValArr);
 }
+
+std::string AclErrorLogManager::GetFuncNameWithoutImplSuffix(const char_t *funcName)
+{
+    constexpr size_t kAclPrefixLen = 3U;
+    constexpr size_t kImplSuffixLen = 4U;
+    std::string result = funcName;
+    if ((result.size() >= kImplSuffixLen) && (result.compare(0, kAclPrefixLen, "acl") == 0) &&
+        (result.compare(result.size() - kImplSuffixLen, kImplSuffixLen, "Impl") == 0)) {
+        result.resize(result.size() - kImplSuffixLen);
+    }
+    return result;
+}
 } // namespace acl

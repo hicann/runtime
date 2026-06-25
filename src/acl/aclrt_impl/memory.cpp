@@ -911,9 +911,10 @@ aclError aclrtDeviceCanAccessPeerImpl(int32_t *canAccessPeer, int32_t deviceId, 
         const std::string deviceIdVal = std::to_string(deviceId);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("deviceId %d cannot be equal to peerDeviceId %d",
             deviceId, peerDeviceId);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -953,9 +954,10 @@ aclError aclrtDeviceEnablePeerAccessImpl(int32_t peerDeviceId, uint32_t flags)
         const std::string deviceIdVal = std::to_string(deviceId);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("deviceId %d cannot be equal to peerDeviceId %d",
             deviceId, peerDeviceId);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -994,9 +996,10 @@ aclError aclrtDeviceDisablePeerAccessImpl(int32_t peerDeviceId)
         const std::string deviceIdVal = std::to_string(deviceId);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("deviceId %d cannot be equal to peerDeviceId %d",
             deviceId, peerDeviceId);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1189,9 +1192,10 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
         || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
         ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA.", static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal = std::to_string(prop->memAttr);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, memAttrVal.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
                 "ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -1203,9 +1207,10 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal = std::to_string(prop->memAttr);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, memAttrVal.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
                 "The current physical memory attribute is not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -1422,9 +1427,10 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
         || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
         ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA.", static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal = std::to_string(prop->memAttr);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, memAttrVal.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
                 "ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -1436,9 +1442,10 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal2 = std::to_string(prop->memAttr);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, memAttrVal2.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), memAttrVal2.c_str(), "memAttr",
                 "The current physical memory attribute is not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -1611,9 +1618,10 @@ aclError aclrtReduceAsyncImpl(void *dst, const void *src, uint64_t count, aclrtR
         dataType = kMapDataType.at(type);
     } else {
         ACL_LOG_ERROR("[Check][param]param type [%d] is invalid.", static_cast<int32_t>(type));
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, acl::GetDataTypeDesc(type), "type", "The data type is currently not supported"}));
+            std::vector<const char *>({funcName.c_str(), acl::GetDataTypeDesc(type), "type", "The data type is currently not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1677,9 +1685,10 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void *dataPtr, size_t size
         const std::string sizeVal = std::to_string(size);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("the sum of size and offset is greater than %u, size=%zu, offset=%zu.",
             MEM_SIZE_MAX, size, offset);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, sizeVal.c_str(), "size", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), sizeVal.c_str(), "size", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1699,9 +1708,10 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void *dataPtr, size_t size
             << ", dataPtr=0x" << reinterpret_cast<uintptr_t>(dataPtr)
             << std::dec << ", size=" << size << ", count=" << size << ".";
         const std::string extendInfo = ss.str();
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
-            std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
+            std::vector<const char *>({funcName.c_str(), "memcpy_s", retVal.c_str(),
                 strerror(ret), extendInfo.c_str()}));
         ACL_LOG_ERROR("call memcpy_s failed, result = %d, size = %zu, bufSize = %lu, offset = %zu",
                             ret, size, bufSize, offset);
@@ -1720,9 +1730,10 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void *dataPtr, size_t size
         const std::string sizeVal = std::to_string(size);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("the sum of size and offset is greater than %u, size=%zu, offset=%zu",
             MEM_SIZE_MAX, size, offset);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, sizeVal.c_str(), "size", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), sizeVal.c_str(), "size", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
@@ -1742,9 +1753,10 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void *dataPtr, size_t size
             << ", dest=0x" << reinterpret_cast<uintptr_t>(destAddr)
             << std::dec << ", dest_max=" << destMax << ", size=" << size << ".";
         const std::string extendInfo = ss.str();
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
-            std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
+            std::vector<const char *>({funcName.c_str(), "memcpy_s", retVal.c_str(),
                 strerror(ret), extendInfo.c_str()}));
         ACL_LOG_ERROR("call memcpy_s failed, result = %d, size = %zu, bufSize = %lu, offset = %zu",
                             ret, size, bufSize, offset);
@@ -2448,9 +2460,10 @@ aclError aclrtMemManagedPrefetchBatchAsyncImpl(const void** ptrs, size_t* sizes,
         ACL_LOG_ERROR("[Check][PARAM]count must be greater than or equal to numPrefetchLocs");
         const std::string countVal = std::to_string(count);
         std::string errMsg = acl::AclErrorLogManager::FormatStr("must be greater than or equal to numPrefetchLocs %zu", numPrefetchLocs);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, countVal.c_str(), "count", errMsg.c_str()}));
+            std::vector<const char *>({funcName.c_str(), countVal.c_str(), "count", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 

@@ -328,9 +328,10 @@ aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArr
         const std::string arraySizeVal = std::to_string(arraySize);
         std::string reason = acl::AclErrorLogManager::FormatStr(
             "arraySize must be greater than or equal to %u", rtUceInfo.count);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, arraySizeVal.c_str(), "arraySize", reason.c_str()}));
+            std::vector<const char *>({funcName.c_str(), arraySizeVal.c_str(), "arraySize", reason.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -364,7 +365,8 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArra
             ACL_LOG_ERROR("Failed to execute aclrtMemUceRepair with mismatched version, "
                           "pls set valid value only for ptr and len.");
             const char_t *argList[] = {"func", "param", "reason"};
-            const char_t *argVal[] = {__func__, "memUceInfoArray.reserved", "memUceInfoArray.reserved is a reserved parameter and must be 0"};
+            std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+            const char_t *argVal[] = {funcName.c_str(), "memUceInfoArray.reserved", "memUceInfoArray.reserved is a reserved parameter and must be 0"};
             acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_NO_VALUE_MSG, argList, argVal, 3U);
             return ACL_ERROR_INVALID_PARAM;
         }

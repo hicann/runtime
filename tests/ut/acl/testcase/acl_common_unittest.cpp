@@ -2844,3 +2844,70 @@ TEST_F(UTEST_ACL_Common, FormatStr_failed_1100bytes)
     value = acl::AclErrorLogManager::FormatStr(nullptr);
     EXPECT_TRUE(value.empty());
 }
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_empty_string)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("");
+    EXPECT_EQ("", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_shorter_than_suffix)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("abc");
+    EXPECT_EQ("abc", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_not_start_with_acl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("fooImpl");
+    EXPECT_EQ("fooImpl", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_start_with_acl_not_end_with_Impl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclBar");
+    EXPECT_EQ("aclBar", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_acl_only)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("acl");
+    EXPECT_EQ("acl", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_normal_acl_Impl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclFooImpl");
+    EXPECT_EQ("aclFoo", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_exact_aclImpl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclImpl");
+    EXPECT_EQ("acl", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_not_start_acl_not_end_Impl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("fooBar");
+    EXPECT_EQ("fooBar", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_ends_Impl_not_start_acl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("fooBarImpl");
+    EXPECT_EQ("fooBarImpl", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_acl_middle_Impl)
+{
+    std::string result = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclFooImplBar");
+    EXPECT_EQ("aclFooImplBar", result);
+}
+
+TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_multiple_calls)
+{
+    EXPECT_EQ("aclFoo", acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclFooImpl"));
+    EXPECT_EQ("aclBar", acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("aclBarImpl"));
+    EXPECT_EQ("noChange", acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix("noChange"));
+}

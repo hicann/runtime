@@ -97,9 +97,10 @@ aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void 
         *devArgsLen = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argsize;
     } else {
         ACL_LOG_ERROR("exception information type = %d is invalid, get args failed.", info->expandInfo.type);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, acl::GetExceptionExpandTypeDesc(info->expandInfo.type),
+            std::vector<const char *>({funcName.c_str(), acl::GetExceptionExpandTypeDesc(info->expandInfo.type),
                 "info->expandInfo.type", "RT_EXCEPTION_AICORE or RT_EXCEPTION_FUSION"}));
         return ACL_ERROR_INVALID_EXCEPTION_INFO;
     }

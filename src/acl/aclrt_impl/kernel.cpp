@@ -558,9 +558,10 @@ aclError aclrtCmoWaitBarrierImpl(aclrtBarrierTaskInfo *taskInfo, aclrtStream str
             ACL_RT_CMO_MAX_BARRIER_NUM);
         const std::string barrierNumVal = std::to_string(taskInfo->barrierNum);
         const std::string expect = acl::AclErrorLogManager::FormatStr("(0, %d]", ACL_RT_CMO_MAX_BARRIER_NUM);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, barrierNumVal.c_str(), "taskInfo->barrierNum", expect.c_str()}));
+            std::vector<const char *>({funcName.c_str(), barrierNumVal.c_str(), "taskInfo->barrierNum", expect.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtBarrierTaskInfo_t rtTaskInfo;
@@ -739,9 +740,10 @@ aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo *taskInfo, const a
     aclDataType type = taskInfo->dataType;
     if (kMapDataType.count(type) == 0) {
          ACL_LOG_ERROR("[Check][param]param dataType [%d] is invalid.", static_cast<int32_t>(type));
+         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
          acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, acl::GetDataTypeDesc(type), "taskInfo->dataType", "The data type is currently not supported"}));
+            std::vector<const char *>({funcName.c_str(), acl::GetDataTypeDesc(type), "taskInfo->dataType", "The data type is currently not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtRandomNumTaskInfo_t *rtTaskInfo = const_cast<rtRandomNumTaskInfo_t *>(reinterpret_cast<const rtRandomNumTaskInfo_t *>(taskInfo));

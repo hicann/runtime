@@ -159,9 +159,10 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
     if (timeout < defaultTimeout) {
         ACL_LOG_CALL_ERROR("the timeout of synchronize stream is invalid");
         const std::string timeoutVal = std::to_string(timeout);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, timeoutVal.c_str(), "timeout", "[-1, INT_MAX]"}));
+            std::vector<const char *>({funcName.c_str(), timeoutVal.c_str(), "timeout", "[-1, INT_MAX]"}));
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     const rtError_t rtErr = rtStreamSynchronizeWithTimeout(static_cast<rtStream_t>(stream), timeout);
