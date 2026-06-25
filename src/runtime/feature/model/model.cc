@@ -34,6 +34,7 @@
 #include "memory_task.h"
 #include "ctrl_sq.hpp"
 #include "inner_thread_local.hpp"
+#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
@@ -2098,6 +2099,15 @@ rtError_t Model::ModelDestroyUnregisterCallback(rtCallback_t const fn)
 
 rtError_t Model::ModelDestroyCallback()
 {
+    Runtime * const runtime = Runtime::Instance();
+    if ((runtime != nullptr) && runtime->IsExiting()) {
+        RT_LOG(RT_LOG_WARNING,
+            "Runtime is exiting, skip model destroy callback to avoid invoking user callback during teardown, "
+            "model_id=%u.",
+            id_);
+        return RT_ERROR_NONE;
+    }
+
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
     for (const auto& CallBackInfo : mdlDestroyCallbackSet_) {
         if (CallBackInfo.callback != nullptr) {

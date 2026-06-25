@@ -639,6 +639,50 @@ rtError_t task_gen_callback(rtModel_t model, rtTaskInfo_t *taskInfo)
     return RT_ERROR_NONE;
 }
 
+namespace {
+struct RuntimeExitingGuard {
+    explicit RuntimeExitingGuard(Runtime *runtime) : rt(runtime), oldIsExiting(runtime->isExiting_)
+    {
+        rt->isExiting_ = true;
+    }
+
+    ~RuntimeExitingGuard()
+    {
+        rt->isExiting_ = oldIsExiting;
+    }
+
+    Runtime *rt{nullptr};
+    bool oldIsExiting{false};
+};
+
+struct ModelDestroyCallbackExitArgs {
+    bool called{false};
+};
+
+void MarkModelDestroyCallback(void *ptr)
+{
+    ModelDestroyCallbackExitArgs * const args = static_cast<ModelDestroyCallbackExitArgs *>(ptr);
+    if (args != nullptr) {
+        args->called = true;
+    }
+}
+} // namespace
+
+TEST_F(ModelTest, ModelDestroyCallbackSkippedWhenRuntimeExiting)
+{
+    Runtime * const rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    RuntimeExitingGuard guard(rtInstance);
+
+    Model model;
+    ModelDestroyCallbackExitArgs args;
+    rtError_t error = model.ModelDestroyRegisterCallback(MarkModelDestroyCallback, &args);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = model.ModelDestroyCallback();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(args.called);
+}
 
 
 #if 1
