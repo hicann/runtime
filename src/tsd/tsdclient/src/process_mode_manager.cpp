@@ -52,7 +52,6 @@ constexpr uint32_t SUPPORT_OM_INNER_DEC_MSG_TIMEOUT = 10000U;
 constexpr uint32_t ASAN_OPEN_TIMEOUT = 3600000U; // 1hour
 constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
 constexpr uint32_t CLOSE_PID_PER_LOOP = 50U;
-const std::string DRIVER_EXTEND_PKG_NAME = "Ascend-device-sw-plugin.tar.gz";
 constexpr uint32_t DRIVER_EXTEND_MAX_PROCESS_TIME = 140U;
 const std::string QUEUE_SCHEDULE_SO = "libqueue_schedule.so";
 constexpr uint32_t INVALID_NUMBER = 0xFFFFFFFFU;
@@ -1991,90 +1990,6 @@ void ProcessModeManager::ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag &ts
     TSD_RUN_INFO("Parse tsd close flag [%u]", flag);
     tsdCloseFlag.quickCloseFlag = TSD_BITMAP_GET(flag, 0U);
     return;
-}
-TSD_StatusT ProcessModeManager::GetDriverExtendPkgName(std::string &orgFile, std::string &dstFile, int32_t &peerNode)
-{
-    std::string pkgPath;
-    GetEnvFromMmSys(MM_ENV_ASCEND_HOME_PATH, "ASCEND_HOME_PATH", pkgPath);
-    if (pkgPath.empty()) {
-        pkgPath = "/usr/local/Ascend/latest";
-        TSD_INFO("ASCEND_AICPU_PATH is not set, use default value[%s]", pkgPath.c_str());
-    }
-    if ((pkgPath.length() > 0U) && ((pkgPath.at((pkgPath.length()) - 1U)) == '/')) {
-        pkgPath = pkgPath + "device-sw-plugin/";
-    } else {
-        pkgPath = pkgPath + "/device-sw-plugin/";
-    }
-    if (access(pkgPath.c_str(), F_OK) != 0) {
-        TSD_RUN_WARN("cannot get package path:%s, reason:%s", pkgPath.c_str(), SafeStrerror().c_str());
-        return TSD_OK;
-    }
-
-    if (access((pkgPath + DRIVER_EXTEND_PKG_NAME).c_str(), F_OK) != 0) {
-        TSD_ERROR("cannot get package file:%s, reason:%s", pkgPath.c_str(), SafeStrerror().c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-    constexpr uint32_t hdcNameMax = 256U;
-    char_t path[hdcNameMax] = { };
-    const int32_t drvRet = drvHdcGetTrustedBasePath(peerNode, static_cast<int32_t>(logicDeviceId_), &path[0], hdcNameMax);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] drvHdcGetTrustedBasePath failed, ret[%d]", logicDeviceId_, drvRet);
-        return TSD_INTERNAL_ERROR;
-    }
-    orgFile = pkgPath + DRIVER_EXTEND_PKG_NAME;
-    dstFile = std::string(path) + "/" + std::to_string(procSign_.tgid) + "_" + DRIVER_EXTEND_PKG_NAME;
-    return TSD_OK;
-}
-TSD_StatusT ProcessModeManager::LoadDriverExtendPkg()
-{
-    if(IsSupportCommonInterface(TSD_SUPPORT_DRIVER_EXTEND_BIT) == false) {
-        packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)] = 0U;
-        TSD_RUN_INFO("The device-sw-plugin package not found; skipping send to device.");
-        return TSD_OK;
-    }
-
-    std::string orgFile;
-    std::string dstFile;
-    int32_t peerNode = 0;
-    if (GetDriverExtendPkgName(orgFile, dstFile, peerNode) != TSD_OK) {
-        TSD_ERROR("Could not get the device-sw-plugin package.");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (orgFile.empty()) {
-        TSD_RUN_INFO("The device-sw-plugin package was not found, so the system skipped the loading process.");
-        return TSD_OK;
-    }
-    packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)] =
-        CalFileSize(orgFile.c_str());
-    HDCMessage msg;
-    msg.set_real_device_id(logicDeviceId_);
-    msg.set_type(HDCMessage::TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL);
-    msg.set_check_code(packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)]);
-    msg.set_package_worker_type(static_cast<uint32_t>(PackageWorkerType::PACKAGE_WORKER_DRIVER_EXTEND));
-    msg.set_package_max_process_time(DRIVER_EXTEND_MAX_PROCESS_TIME);
-    msg.set_package_type(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND));
-    auto driverExtendPkgCompareMethd = [this]() {
-        if ((this->packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)] ==
-            this->packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)]) ||
-            (!(this->deviceIdle_))) {
-            TSD_INFO("Driver package checksum [%u] matches device [%u]. Idle state [%d]. Skipping send.",
-                this->packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)],
-                this->packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DRIVER_EXTEND)],
-                this->deviceIdle_);
-            return true;
-        }
-        return false;
-    };
-    if (SendHostPackageComplex(peerNode, orgFile, dstFile, msg, driverExtendPkgCompareMethd, false) != TSD_OK) {
-        TSD_ERROR("The complex host package sending operation failed.");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    if (static_cast<uint32_t>(rspCode_) != 0U) {
-        TSD_ERROR("The checkcode comparison between the host and device failed.");
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
 }
 
 TSD_StatusT ProcessModeManager::OpenNetService(const NetServiceOpenArgs *args)

@@ -429,10 +429,6 @@ private:
 
     void SetHostAscendcppCheckCode(HDCMessage &msg);
 
-    TSD_StatusT LoadDriverExtendPkg();
-
-    TSD_StatusT GetDriverExtendPkgName(std::string &orgFile, std::string &dstFile, int32_t &peerNode);
-
     TSD_StatusT LoadPackageConfigInfoToDevice(const bool hasPluginVersion);
 
     TSD_StatusT LoadPackageToDeviceByConfig();

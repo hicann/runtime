@@ -2607,26 +2607,6 @@ TEST_F(ProcessManagerTest, SaveDeviceCheckCode_normalpackage_invalid)
     EXPECT_EQ(processModeManager.deviceIdle_, false);
 }
 
-TEST_F(ProcessManagerTest, GetDriverExtendPkgName)
-{
-    std::string orgFile;
-    std::string dstFile;
-    int32_t peerNode;
-    ProcessModeManager processModeManager(deviceId, 0);
-    processModeManager.GetDriverExtendPkgName(orgFile, dstFile, peerNode);
-}
-
-TEST_F(ProcessManagerTest, GetDriverExtendPkgName_success)
-{
-    MOCKER(access).stubs().will(returnValue(0));
-    MOCKER(&drvHdcGetTrustedBasePath).stubs().will(returnValue(DRV_ERROR_NONE));
-    std::string orgFile;
-    std::string dstFile;
-    int32_t peerNode;
-    ProcessModeManager processModeManager(deviceId, 0);
-    processModeManager.GetDriverExtendPkgName(orgFile, dstFile, peerNode);
-}
-
 TEST_F(ProcessManagerTest, InitTsdClient_Fail_ForInvalidDeviceId)
 {
     ProcessModeManager processModeManager(128U, 0);
@@ -2768,23 +2748,6 @@ TEST_F(ProcessManagerTest, CloseNetService_01)
     processModeManager.hccpPid_ = 123;
     EXPECT_EQ(processModeManager.CloseNetService(), tsd::TSD_OK);
     GlobalMockObject::verify();
-}
-
-TEST_F(ProcessManagerTest, LoadDriverExtendPkg_success)
-{
-    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface)
-        .stubs()
-        .will(returnValue(false))
-        .then(returnValue(true));
-    MOCKER_CPP(&ProcessModeManager::GetDriverExtendPkgName)
-        .stubs()
-        .will(returnValue(1))
-        .then(returnValue(tsd::TSD_OK));
-    ProcessModeManager processModeManager(deviceId, 0);
-    auto ret = processModeManager.LoadDriverExtendPkg();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = processModeManager.LoadDriverExtendPkg();
-    EXPECT_NE(ret, tsd::TSD_OK);
 }
 
 TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_failed)
