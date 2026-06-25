@@ -25,6 +25,7 @@
 #include "inc/weak_ascend_hal.h"
 #include "env_internal_api.h"
 #include "platform_manager_v2.h"
+#include "hdc_message_builder.h"
 #undef private
 #undef protected
 
@@ -3266,20 +3267,68 @@ TEST_F(ProcessManagerTest, GetDriverVersion)
 // ============================================================================
 
 namespace {
-    // 在 /tmp 下生成一个临时 ini 文件，调用方负责删除
-    std::string MakeTempIniFile(const std::string &content)
-    {
-        char path[] = "/tmp/plugin_pkg_ut_XXXXXX";
-        int fd = mkstemp(path);
-        if (fd < 0) {
-            return "";
-        }
-        if (!content.empty()) {
-            (void)write(fd, content.data(), content.size());
-        }
-        close(fd);
-        return std::string(path);
+// 在 /tmp 下生成一个临时 ini 文件，调用方负责删除
+std::string MakeTempIniFile(const std::string &content)
+{
+    char path[] = "/tmp/plugin_pkg_ut_XXXXXX";
+    int fd = mkstemp(path);
+    if (fd < 0) {
+        return "";
     }
+    if (!content.empty()) {
+        (void)write(fd, content.data(), content.size());
+    }
+    close(fd);
+    return std::string(path);
+}
+const char *g_mockAscendAicpuPath = nullptr;
+
+char *MmSysGetEnvAscendAicpuPathStub(mmEnvId id)
+{
+    if (id == MM_ENV_ASCEND_AICPU_PATH && g_mockAscendAicpuPath != nullptr) {
+        return const_cast<char *>(g_mockAscendAicpuPath);
+    }
+    return nullptr;
+}
+
+// Populate every member that ConstructOpenMsg consumes with non-default values
+// so the resulting proto fully exercises each `set_*` call.
+void SeedOpenMsgInputs(ProcessModeManager &mgr)
+{
+    mgr.logicDeviceId_ = 10U;
+    mgr.rankSize_ = 4U;
+    mgr.profilingMode_ = ProfilingMode::PROFILING_OPEN;
+    mgr.logLevel_ = "002";
+    mgr.ccecpuLogLevel_ = "001";
+    mgr.aicpuLogLevel_ = "003";
+    mgr.aicpuDeviceMode_ = 7U;
+    mgr.procSign_.tgid = static_cast<pid_t>(1234);
+    (void)strncpy_s(mgr.procSign_.sign, sizeof(mgr.procSign_.sign), "sign-abcd", sizeof("sign-abcd"));
+    mgr.packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)] = 0xAAU;
+    mgr.packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)] = 0xBBU;
+    mgr.packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)] = 0xCCU;
+}
+
+// Build a MessageContext directly (no ProcessModeManager involved) so the
+// HdcMessageBuilder can be exercised in isolation.
+MessageContext MakeSeededContext()
+{
+    MessageContext ctx{};
+    ctx.logicDeviceId = 10U;
+    ctx.rankSize = 4U;
+    ctx.profilingMode = static_cast<uint32_t>(ProfilingMode::PROFILING_OPEN);
+    ctx.logLevel = "002";
+    ctx.ccecpuLogLevel = "001";
+    ctx.aicpuLogLevel = "003";
+    ctx.aicpuDeviceMode = 7U;
+    ctx.procSign.tgid = static_cast<pid_t>(1234);
+    (void)strncpy_s(ctx.procSign.sign, sizeof(ctx.procSign.sign), "sign-abcd", sizeof("sign-abcd"));
+    ctx.aicpuKernelCheckCode = 0xAAU;
+    ctx.aicpuExtendKernelCheckCode = 0xBBU;
+    ctx.ascendcppCheckCode = 0xCCU;
+    ctx.aicpuSchedMode = ClientManager::aicpuSchedMode_;
+    return ctx;
+}
 }
 
 TEST_F(ProcessManagerTest, PluginVersion_CompareVersion_NumericSegments)
@@ -3570,3 +3619,118 @@ TEST_F(ProcessManagerTest, PluginVersion_ConstructOpenMsg_DoesNotCarryPluginInfo
     EXPECT_EQ(pm.ConstructOpenMsg(hdcMsg, info), tsd::TSD_OK);
     EXPECT_EQ(hdcMsg.device_plugin_versions_size(), 0);
 }
+
+// HdcMessageBuilder::BuildOpen 应把 MessageContext 的每个字段写入 HDCMessage，
+// 且能力位、device_id 取模、aicpu path 等派生逻辑均符合预期。
+TEST_F(ProcessManagerTest, HdcMessageBuilder_BuildOpen_PopulatesAllFields)
+{
+    g_mockAscendAicpuPath = "/home/test/aicpu";
+    MOCKER(mmSysGetEnv).stubs().will(invoke(MmSysGetEnvAscendAicpuPathStub));
+
+    MessageContext ctx = MakeSeededContext();
+    ctx.startHccp = true;
+    ctx.startCp = false;
+
+    HDCMessage hdcMsg;
+    EXPECT_EQ(HdcMessageBuilder::BuildOpen(hdcMsg, ctx), tsd::TSD_OK);
+
+    EXPECT_EQ(hdcMsg.rank_size(), 4U);
+    EXPECT_TRUE(hdcMsg.start_hccp());
+    EXPECT_FALSE(hdcMsg.start_cp());
+    EXPECT_EQ(hdcMsg.profiling_mode(), static_cast<uint32_t>(ProfilingMode::PROFILING_OPEN));
+    // logicDeviceId(10) % PER_OS_CHIP_NUM(4) == 2
+    EXPECT_EQ(hdcMsg.device_id(), 10U % PER_OS_CHIP_NUM);
+    EXPECT_EQ(hdcMsg.real_device_id(), 10U);
+    EXPECT_EQ(hdcMsg.log_level().log_level(), "002");
+    EXPECT_EQ(hdcMsg.ccecpu_log_level().ccecpu_log_level(), "001");
+    EXPECT_EQ(hdcMsg.aicpu_log_level().aicpu_log_level(), "003");
+    EXPECT_EQ(hdcMsg.proc_sign_pid().proc_pid(), 1234U);
+    EXPECT_EQ(hdcMsg.proc_sign_pid().proc_sign(), "sign-abcd");
+    EXPECT_EQ(hdcMsg.check_code(), 0xAAU);
+    EXPECT_EQ(hdcMsg.extendpkg_check_code(), 0xBBU);
+    EXPECT_EQ(hdcMsg.ascendcpppkg_check_code(), 0xCCU);
+    EXPECT_EQ(hdcMsg.type(), HDCMessage::TSD_START_PROC_MSG);
+    EXPECT_EQ(hdcMsg.device_mode(), 7U);
+    EXPECT_EQ(hdcMsg.aicpu_sched_mode(), static_cast<uint32_t>(ClientManager::aicpuSchedMode_));
+    // 能力位仅置 TSDCLIENT_SUPPORT_NEW_ERRORCODE 这一 bit
+    uint32_t expectCap = 0U;
+    TSD_BITMAP_SET(expectCap, TSDCLIENT_SUPPORT_NEW_ERRORCODE);
+    EXPECT_EQ(hdcMsg.tsdclient_capability_level(), expectCap);
+    EXPECT_EQ(hdcMsg.ascend_aicpu_path().ascend_aicpu_path(), "/home/test/aicpu");
+
+    g_mockAscendAicpuPath = nullptr;
+}
+
+// 当环境变量 ASCEND_AICPU_PATH 未设置时，ascend_aicpu_path 字段应为空字符串。
+TEST_F(ProcessManagerTest, HdcMessageBuilder_BuildOpen_EmptyAicpuPathWhenEnvUnset)
+{
+    g_mockAscendAicpuPath = nullptr;
+    MOCKER(mmSysGetEnv).stubs().will(invoke(MmSysGetEnvAscendAicpuPathStub));
+
+    MessageContext ctx = MakeSeededContext();
+    HDCMessage hdcMsg;
+    EXPECT_EQ(HdcMessageBuilder::BuildOpen(hdcMsg, ctx), tsd::TSD_OK);
+    EXPECT_EQ(hdcMsg.ascend_aicpu_path().ascend_aicpu_path(), "");
+}
+
+// HdcMessageBuilder::BuildClose 只写入 close 消息所需的字段。
+TEST_F(ProcessManagerTest, HdcMessageBuilder_BuildClose_PopulatesFields)
+{
+    MessageContext ctx = MakeSeededContext();
+    HDCMessage msg;
+    EXPECT_EQ(HdcMessageBuilder::BuildClose(msg, ctx), tsd::TSD_OK);
+
+    EXPECT_EQ(msg.device_id(), 10U % PER_OS_CHIP_NUM);
+    EXPECT_EQ(msg.real_device_id(), 10U);
+    EXPECT_EQ(msg.type(), HDCMessage::TSD_CLOSE_PROC_MSG);
+    EXPECT_EQ(msg.rank_size(), 4U);
+    EXPECT_EQ(msg.proc_sign_pid().proc_pid(), 1234U);
+}
+
+// ConstructOpenMsg 经 BuildBaseMessageContext + HdcMessageBuilder::BuildOpen
+// 后，应与直接调用 builder 产出一致的关键字段。
+TEST_F(ProcessManagerTest, ConstructOpenMsg_DelegatesToBuilder)
+{
+    g_mockAscendAicpuPath = "/home/test/aicpu";
+    MOCKER(mmSysGetEnv).stubs().will(invoke(MmSysGetEnvAscendAicpuPathStub));
+
+    ProcessModeManager pm(deviceId, 0);
+    SeedOpenMsgInputs(pm);
+
+    HDCMessage hdcMsg;
+    TsdStartStatusInfo info{true, true, false};
+    EXPECT_EQ(pm.ConstructOpenMsg(hdcMsg, info), tsd::TSD_OK);
+
+    EXPECT_EQ(hdcMsg.device_id(), 10U % PER_OS_CHIP_NUM);
+    EXPECT_EQ(hdcMsg.real_device_id(), 10U);
+    EXPECT_EQ(hdcMsg.rank_size(), 4U);
+    EXPECT_TRUE(hdcMsg.start_hccp());
+    EXPECT_TRUE(hdcMsg.start_cp());
+    EXPECT_EQ(hdcMsg.device_mode(), 7U);
+    EXPECT_EQ(hdcMsg.check_code(), 0xAAU);
+    EXPECT_EQ(hdcMsg.extendpkg_check_code(), 0xBBU);
+    EXPECT_EQ(hdcMsg.ascendcpppkg_check_code(), 0xCCU);
+    EXPECT_EQ(hdcMsg.type(), HDCMessage::TSD_START_PROC_MSG);
+    EXPECT_EQ(hdcMsg.proc_sign_pid().proc_pid(), 1234U);
+    EXPECT_EQ(hdcMsg.ascend_aicpu_path().ascend_aicpu_path(), "/home/test/aicpu");
+
+    g_mockAscendAicpuPath = nullptr;
+}
+
+// ConstructCloseMsg 经 BuildBaseMessageContext + HdcMessageBuilder::BuildClose
+// 后，应正确写入 close 消息字段。
+TEST_F(ProcessManagerTest, ConstructCloseMsg_DelegatesToBuilder)
+{
+    ProcessModeManager pm(deviceId, 0);
+    SeedOpenMsgInputs(pm);
+
+    HDCMessage msg;
+    EXPECT_EQ(pm.ConstructCloseMsg(msg), tsd::TSD_OK);
+
+    EXPECT_EQ(msg.device_id(), 10U % PER_OS_CHIP_NUM);
+    EXPECT_EQ(msg.real_device_id(), 10U);
+    EXPECT_EQ(msg.type(), HDCMessage::TSD_CLOSE_PROC_MSG);
+    EXPECT_EQ(msg.rank_size(), 4U);
+    EXPECT_EQ(msg.proc_sign_pid().proc_pid(), 1234U);
+}
+

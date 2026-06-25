@@ -30,12 +30,10 @@
 #include "env_internal_api.h"
 #include "inc/package_process_config.h"
 #include "platform_info.h"
+#include "hdc_message_builder.h"
 
 namespace {
-// 每个OS上的1980芯片数目,每个芯片上每一种类型的进程都要创建一个，所以以芯片数为依据
-constexpr uint32_t PER_OS_CHIP_NUM(4U);
 constexpr uint32_t DEFAULT_QS_RANKSIZE = 0U;
-const std::string TSDAEMON_HOST_NAME = "/var/tsdaemon";
 const std::string RUNTIME_PKG_NAME = "Ascend-runtime_device-minios.tar.gz";
 const std::string DSHAPE_PKG_NAME = "Ascend-opp_rt-minios.aarch64.tar.gz";
 const std::string UDF_PKG_NAME = "cann-udf-compat.tar.gz";
@@ -52,7 +50,6 @@ constexpr uint64_t TSD_SUPPORT_OM_INNER_DEC = 1UL;
 constexpr uint64_t TSD_NOT_SUPPORT_OM_INNER_DEC = 0UL;
 constexpr uint32_t SUPPORT_OM_INNER_DEC_MSG_TIMEOUT = 10000U;
 constexpr uint32_t ASAN_OPEN_TIMEOUT = 3600000U; // 1hour
-const std::string TSDEMON_START_APP = "TSDaemon";
 constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
 constexpr uint32_t CLOSE_PID_PER_LOOP = 50U;
 const std::string DRIVER_EXTEND_PKG_NAME = "Ascend-device-sw-plugin.tar.gz";
@@ -201,19 +198,7 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
 
 TSD_StatusT ProcessModeManager::ConstructCloseMsg(HDCMessage &msg)
 {
-    msg.set_device_id(logicDeviceId_ % PER_OS_CHIP_NUM);
-    // 传递真实的deviceId在回调的时候做校验使用,替代reqId
-    msg.set_real_device_id(logicDeviceId_);
-    msg.set_type(HDCMessage::TSD_CLOSE_PROC_MSG);
-    msg.set_rank_size(rankSize_);
-    // protobuf method, no need check null
-    ProcessSignPid * const signPid = msg.mutable_proc_sign_pid();
-    if (signPid == nullptr) {
-        TSD_ERROR("protobuf new pidSign error");
-        return TSD_INTERNAL_ERROR;
-    }
-    signPid->set_proc_pid(static_cast<uint32_t>(procSign_.tgid));
-    return TSD_OK;
+    return HdcMessageBuilder::BuildClose(msg, BuildBaseMessageContext());
 }
 
 TSD_StatusT ProcessModeManager::Close(const uint32_t flag)
@@ -580,61 +565,40 @@ TSD_StatusT ProcessModeManager::InitTsdClient()
     return hdcRet;
 }
 
+MessageContext ProcessModeManager::BuildBaseMessageContext() const
+{
+    MessageContext ctx{};
+    // Device / process identity
+    ctx.logicDeviceId = logicDeviceId_;
+    ctx.rankSize = rankSize_;
+    ctx.procSign = procSign_;
+    // Profiling
+    ctx.profilingMode = static_cast<uint32_t>(profilingMode_);
+    // Log levels
+    ctx.logLevel = logLevel_;
+    ctx.ccecpuLogLevel = ccecpuLogLevel_;
+    ctx.aicpuLogLevel = aicpuLogLevel_;
+    // Package host check codes
+    ctx.aicpuKernelCheckCode =
+        packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)];
+    ctx.aicpuExtendKernelCheckCode =
+        packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)];
+    ctx.ascendcppCheckCode = packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)];
+    // AICPU / scheduler
+    ctx.aicpuDeviceMode = aicpuDeviceMode_;
+    ctx.aicpuSchedMode = aicpuSchedMode_;
+    // Queue schedule
+    ctx.qsInitGroupName = qsInitGrpName_;
+    ctx.schedPolicy = schedPolicy_;
+    return ctx;
+}
+
 TSD_StatusT ProcessModeManager::ConstructOpenMsg(HDCMessage &hdcMsg, const TsdStartStatusInfo &startInfo)
 {
-    hdcMsg.set_rank_size(rankSize_);
-    hdcMsg.set_start_hccp(startInfo.startHccp_);
-    hdcMsg.set_start_cp(startInfo.startCp_);
-    hdcMsg.set_profiling_mode(static_cast<uint32_t>(profilingMode_));
-    hdcMsg.set_device_id(logicDeviceId_ % PER_OS_CHIP_NUM);
-    // method from protobuf, no need check null
-    LogLevel * const level = hdcMsg.mutable_log_level();
-    if (level == nullptr) {
-        TSD_ERROR("mutable log level error");
-        return TSD_INTERNAL_ERROR;
-    }
-    level->set_log_level(logLevel_);
-    CcecpuLogLevel * const ccecpuLogLevel = hdcMsg.mutable_ccecpu_log_level();
-    if (ccecpuLogLevel != nullptr) {
-        ccecpuLogLevel->set_ccecpu_log_level(ccecpuLogLevel_);
-    }
-    AicpuLogLevel * const aicpuLogLevel = hdcMsg.mutable_aicpu_log_level();
-    if (aicpuLogLevel != nullptr) {
-        aicpuLogLevel->set_aicpu_log_level(aicpuLogLevel_);
-    }
-    // 传递真实的deviceId在回调的时候做校验使用,替代reqId
-    hdcMsg.set_real_device_id(logicDeviceId_);
-    // method from protobuf, no need check null
-    ProcessSignPid * const proSignPid = hdcMsg.mutable_proc_sign_pid();
-    if (proSignPid == nullptr) {
-        TSD_ERROR("mutable proSignPid error");
-        return TSD_INTERNAL_ERROR;
-    }
-    proSignPid->set_proc_pid(static_cast<uint32_t>(procSign_.tgid));
-    const std::string signStr(procSign_.sign);
-    proSignPid->set_proc_sign(signStr);
-    TSD_RUN_INFO("[TsdClient] tsd get process sign successfully, procpid[%u] signSize[%u]",
-              static_cast<uint32_t>(procSign_.tgid), signStr.length());
-    hdcMsg.set_check_code(packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)]);
-    hdcMsg.set_extendpkg_check_code(
-            packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)]);
-    hdcMsg.set_ascendcpppkg_check_code(
-            packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)]);
-    hdcMsg.set_type(HDCMessage::TSD_START_PROC_MSG);
-    hdcMsg.set_device_mode(aicpuDeviceMode_);
-    hdcMsg.set_aicpu_sched_mode(static_cast<uint32_t>(aicpuSchedMode_));
-    uint32_t tsdclientCapabilityLevel = SetTsdClientCapabilityLevel();
-    hdcMsg.set_tsdclient_capability_level(tsdclientCapabilityLevel);
-    std::string aicpuPath;
-    GetEnvFromMmSys(MM_ENV_ASCEND_AICPU_PATH, "ASCEND_AICPU_PATH", aicpuPath);
-    // method from protobuf, no need check null
-    AscendAicpuPath * const ascendAicpuPath = hdcMsg.mutable_ascend_aicpu_path();
-    if (ascendAicpuPath == nullptr) {
-        TSD_ERROR("mutable ascend aicpu path error");
-        return TSD_INTERNAL_ERROR;
-    }
-    ascendAicpuPath->set_ascend_aicpu_path(aicpuPath);
-    return TSD_OK;
+    MessageContext ctx = BuildBaseMessageContext();
+    ctx.startHccp = startInfo.startHccp_;
+    ctx.startCp = startInfo.startCp_;
+    return HdcMessageBuilder::BuildOpen(hdcMsg, ctx);
 }
 
 TSD_StatusT ProcessModeManager::SendOpenMsg(const uint32_t rankSize, const TsdStartStatusInfo startInfo)

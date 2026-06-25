@@ -17,6 +17,7 @@
 #include "device_comm.h"
 #include "driver/ascend_hal.h"
 #include "proto/tsd_message.pb.h"
+#include "hdc_message_builder.h"
 
 namespace tsd {
 struct TsdStartStatusInfo {
@@ -142,6 +143,12 @@ public:
 
     TSD_StatusT ConstructOpenMsg(HDCMessage &hdcMsg, const TsdStartStatusInfo &startInfo);
 
+    // Snapshot the common, manager-derived fields of MessageContext in one place.
+    // All per-message builders start from this base and only override the few
+    // fields specific to their message type, so the "copy member -> context"
+    // logic is written exactly once instead of being duplicated per message.
+    MessageContext BuildBaseMessageContext() const;
+
     TSD_StatusT ProcessQueueForAdc();
 
     TSD_StatusT ConstructCloseMsg(HDCMessage &msg);
@@ -217,8 +224,6 @@ public:
     TSD_StatusT OpenNetService(const NetServiceOpenArgs *args) override;
 
     TSD_StatusT CloseNetService() override;
-
-    uint32_t SetTsdClientCapabilityLevel() const;
 
     TSD_StatusT CompareAndSendCommonSinkPkg(const std::string &pkgPureName, const std::string &hostPkgHash,
         const int32_t peerNode, const std::string &orgFile, const std::string &dstFile);

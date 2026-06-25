@@ -109,6 +109,8 @@ namespace tsd {
 
     constexpr uint64_t S_TO_MS = 1000UL;
 
+    constexpr uint32_t PER_OS_CHIP_NUM = 4U;
+
     void Trim(std::string& str);
 
     // 修副本中任意空白字符（含空格/制表符/换行/回车等）的首尾

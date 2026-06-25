@@ -28,6 +28,7 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/basic_component/device_comm/device_comm.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/hdc_client.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/hdc_common.cpp
+    ${TSD_SRC_PATH}/basic_component/message_builder/hdc_message_builder.cpp
     ${TSD_SRC_PATH}/pub_facility/util_func/tsd_util_func.cpp
     ${TSD_SRC_PATH}/pub_facility/util_func/tsd_sha256.cpp
     ${TSD_SRC_PATH}/common/src/message_parse_client.cpp
@@ -120,6 +121,7 @@ target_include_directories(tsd_client_utest PRIVATE
     ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/pub_facility/env_manager/
     ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
+    ${RUNTIME_DIR}/src/tsd/basic_component/message_builder/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/

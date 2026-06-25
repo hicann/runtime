@@ -164,14 +164,6 @@ void ProcessModeManager::SetTsdStartInfo(const bool cpStatus, const bool hccpSta
     tsdStartStatus_.startQs_ = qsStatus;
 }
 
-uint32_t ProcessModeManager::SetTsdClientCapabilityLevel() const
-{
-    uint32_t curSupport = 0U;
-    TSD_BITMAP_SET(curSupport, TSDCLIENT_SUPPORT_NEW_ERRORCODE);
-    TSD_INFO("Set tsdclient capability level, value is [%u].", curSupport);
-    return curSupport;
-}
-
 bool ProcessModeManager::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo &startInfo)
 {
     if (rankSize <= HCCP_START_RANK_SIZE) {
