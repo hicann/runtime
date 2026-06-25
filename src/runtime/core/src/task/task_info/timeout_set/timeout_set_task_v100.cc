@@ -11,12 +11,13 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "task_manager.h"
+#include "timeout_set_task.h"
 #include "task_info_v100.h"
 
 namespace cce {
 namespace runtime {
 #if F_DESC("TaskTimeoutSetTask")
-void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     TimeoutSetTaskInfo * const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
     Stream * const stm = taskInfo->stream;
@@ -68,5 +69,29 @@ void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const comma
            static_cast<uint32_t>(sqe->topic_type), sqe->usr_data.cmd_type);
 }
 #endif
+
+static bool TimeoutSetTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForTimeoutSetTask,
+        .toSqeFunc = &ConstructSqeForTimeoutSetTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, funcs);
+    }
+
+    return true;
+}
+
+static bool g_timeoutSetTaskRegister = TimeoutSetTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

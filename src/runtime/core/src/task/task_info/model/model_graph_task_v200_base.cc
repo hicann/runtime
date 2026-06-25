@@ -12,13 +12,14 @@
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "model_graph_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("AddEndGraphTask")
 
-void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+static void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     UNUSED(sqeInfo);
@@ -70,6 +71,42 @@ void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, void *const 
 }
 
 #endif
+
+static bool ModelGraphTaskRegister()
+{
+    TaskFuncSingle endGraphFuncs = {
+        .toCommandFunc = &ToCmdBodyForAddEndGraphTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle exitGraphFuncs = {
+        .toCommandFunc = &ToCmdBodyForAddModelExitTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, endGraphFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, exitGraphFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_END_GRAPH, &ConstructDavidSqeForAddEndGraphTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_EXIT_GRAPH, &ConstructDavidSqeBase);
+    return true;
+}
+
+static bool g_modelGraphTaskRegister = ModelGraphTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

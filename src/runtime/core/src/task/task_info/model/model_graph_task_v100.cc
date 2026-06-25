@@ -13,13 +13,14 @@
 #include "context.hpp"
 #include "task_info_v100.h"
 #include "model_graph_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("AddEndGraphTask")
 
-void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     RtStarsAicpuKernelSqe *const sqe = &(command->aicpuSqe);
     Stream *stm = taskInfo->stream;
@@ -74,6 +75,40 @@ void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const comm
 }
 
 #endif
+
+static bool ModelGraphTaskRegister()
+{
+    TaskFuncSingle endGraphFuncs = {
+        .toCommandFunc = &ToCmdBodyForAddEndGraphTask,
+        .toSqeFunc = &ConstructSqeForAddEndGraphTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle exitGraphFuncs = {
+        .toCommandFunc = &ToCmdBodyForAddModelExitTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, endGraphFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, exitGraphFuncs);
+    }
+
+    return true;
+}
+
+static bool g_modelGraphTaskRegister = ModelGraphTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

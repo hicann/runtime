@@ -12,6 +12,7 @@
 #include "stars_david.hpp"
 #include "error_code.h"
 #include "fusion_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -32,6 +33,30 @@ void ConstructAicpuSubSqe(TaskInfo * const taskInfo, rtDavidSqe_t * const davidS
     sqeIndex++;
     return;
 }
+
+static bool FusionKernelTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForFusionKernelTask,
+        .taskUnInitFunc = &FusionKernelTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForFusionKernelTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForFusionKernelTask,
+    };
+
+    const auto &chips = GetV200Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_FUSION_KERNEL, &ConstructDavidSqeForFusionKernelTask);
+    return true;
+}
+
+static bool g_fusionKernelTaskRegister = FusionKernelTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

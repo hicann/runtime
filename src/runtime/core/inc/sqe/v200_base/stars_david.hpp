@@ -506,7 +506,6 @@ void PrintDavidSqe(T const sqe, const char *desc, size_t size = 64)
     }
 }
 
-void RegTaskToDavidSqefunc(void);
 const char_t* GetNotifySubType(const uint16_t subType);
 void InitWriteValueSqe(RtDavidStarsWriteValueSqe * const writeValueSqe,
     const rtWriteValueInfo_t * const writeValueInfo);
@@ -525,7 +524,6 @@ void DavidEventRecordTaskUnInit(TaskInfo * const taskInfo);
 void DavidEventWaitTaskUnInit(TaskInfo * const taskInfo);
 void DavidEventResetTaskUnInit(TaskInfo * const taskInfo);
 void DavidUpdateAndTryToDestroyEvent(TaskInfo *taskInfo, Event **eventPtr, DavidTaskMapType taskMapType);
-void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void DoCompleteSuccessForDavidEventRecordTask(TaskInfo * const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventResetTask(TaskInfo * const taskInfo, const uint32_t devId);
@@ -559,26 +557,18 @@ void UbDirectSendTaskInit(TaskInfo *taskInfo, rtUbWqeInfo_t *wqeInfo);
 void PrintErrorInfoForUbDirectSendTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForUbDmaDirectWqeModeTask(TaskInfo* taskInfo, const uint32_t devId);
 uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo * const taskInfo);
-void ConstructDavidSqeForUbDirectSendTask(TaskInfo *taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForLabelSetTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForStreamActiveTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForOverflowSwitchSetTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForStreamTagSetTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForStreamSwitchTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForStreamLabelSwitchByIndexTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForModelExecuteTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForModelUpdateTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 rtError_t DavidModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
     Model *const modelPtr, Stream *const opStreamPtr, const rtModelStreamType_t modelStreamType,
     const uint32_t firstTaskIndex);
-void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForModelToAicpuTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForNotifyWaitTask(TaskInfo *taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForNotifyRecordTask(TaskInfo *taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForStarsCommonTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
-void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void ConstructDavidSqeForWordOne(const TaskInfo *const taskInfo, rtDavidSqe_t * const sqe);
 void ConstructDavidSqeForDavinciMultipleTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void StarsV2DavinciMultipleTaskUnInit(TaskInfo* taskInfo);

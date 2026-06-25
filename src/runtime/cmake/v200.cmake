@@ -59,6 +59,8 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
@@ -90,6 +92,7 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
@@ -101,28 +104,19 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_common_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_cqrpt_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager_david.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_task.cc
+    ${RUNTIME_FEATURE_DIR}/ccu/ccu_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/davinci_task_launch_config.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/task_adpter.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
-    # mechanism dependance
-    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(libruntime_v200_task_src_files
     ${david_series_common_task_src_file}
 
     # david & solomon 专用差异化文件
-    ${RUNTIME_CORE_DIR}/src/task/v200/task_proc_func_register.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
@@ -136,7 +130,6 @@ set(libruntime_v201_task_src_files
    ${david_series_common_task_src_file}
 
     # v201 专用差异化文件
-    ${RUNTIME_CORE_DIR}/src/task/v201/task_proc_func_register.cc
     ${RUNTIME_FEATURE_DIR}/dqs/dqs_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/task_checker.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v201.cc
@@ -237,10 +230,10 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_CORE_DIR}/src/task/task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_starsV2.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc
@@ -335,7 +328,6 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc

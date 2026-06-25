@@ -14,6 +14,8 @@
 #include "runtime_handle_guard.h"
 #include "rt_inner_model.h"
 
+#include <algorithm>
+
 namespace cce {
 namespace runtime {
 class Model;

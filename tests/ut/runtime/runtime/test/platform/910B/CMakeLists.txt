@@ -33,6 +33,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
@@ -60,7 +61,6 @@ set(runtimeut_common_src_task_list
 
 set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
-    ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_adpter.cc
@@ -74,6 +74,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
@@ -125,7 +126,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/aclgraph_cond_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_stub.cc
 )
 
@@ -747,7 +748,6 @@ add_executable(runtime_utest_xpu_910B
     main.cc
     rt_utest_xpu_api_impl.cc
     rt_utest_xpu_aicpu_c_stub.cc
-    rt_utest_task_proc_func_register_xpu.cc
 )
 
 target_include_directories(runtime_utest_xpu_910B PRIVATE

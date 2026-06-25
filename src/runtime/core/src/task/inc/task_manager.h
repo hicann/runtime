@@ -45,8 +45,6 @@ uint64_t CombineTo64Bit(uint32_t high, uint32_t low);
 void SetStarsResultCommon(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);
 void SetResultCommon(TaskInfo *taskInfo, const void *const data, const uint32_t dataSize);
 void DoCompleteSuccess(TaskInfo *taskInfo, const uint32_t devId);
-void TaskFuncReg(void);
-void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes);
 void PrintErrorInfoCommon(TaskInfo *taskInfo, const uint32_t devId);
 
 using PfnTaskToCmd = void (*)(TaskInfo *const taskInfo, rtCommand_t *const command);

@@ -135,5 +135,13 @@ void RegXpuTaskFunc(void)
     XpuRegSetResultFunc();
     XpuRegPrintErrorInfoFunc();
 }
+
+static bool XpuTaskFuncRegister()
+{
+    RegXpuTaskFunc();
+    return true;
+}
+
+static bool g_xpuTaskFuncRegister = XpuTaskFuncRegister();
 }  // namespace runtime
 }  // namespace cce

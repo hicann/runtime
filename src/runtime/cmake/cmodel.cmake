@@ -31,6 +31,8 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
@@ -62,10 +64,10 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task_v100.cc
 
-    ${RUNTIME_CORE_DIR}/src/task/v100/task_proc_func_register.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_adpter.cc
@@ -84,6 +86,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task.cc
@@ -99,6 +102,8 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
@@ -140,28 +145,20 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_common_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_cqrpt_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager_david.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_task.cc
+    ${RUNTIME_FEATURE_DIR}/ccu/ccu_task_v200_base.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/davinci_task_launch_config.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/task_adpter.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
-    # mechanism dependance
-    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(libruntime_cmodel_v200_task_src_files
     ${david_series_common_task_src_file_cmodel}
 
     # david & solomon 专用差异化文件
-    ${RUNTIME_CORE_DIR}/src/task/v200_base/task_proc_func_register.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
@@ -298,6 +295,7 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_pool.cc
@@ -425,7 +423,6 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_david_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
@@ -555,7 +552,6 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/stars_david.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/cntnotify/count_notify.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_starsv2.cc

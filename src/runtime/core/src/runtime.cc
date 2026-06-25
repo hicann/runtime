@@ -1307,7 +1307,6 @@ rtError_t Runtime::Init()
     excptCallBack_ = nullptr;
 
     InitNpuCollectPath();
-    RegTaskFunc();
     InitStreamSyncMode();
 
     FindDcacheLockOp();

@@ -165,24 +165,5 @@ void ConstructDavidSqeBase(TaskInfo *taskInfo, void *const sqe, const TaskSqeInf
         taskInfo->id, taskInfo->taskSn);
 }
 
-void RegTaskToDavidSqefunc(void)
-{
-    g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructDavidSqeForModelMaintainceTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructDavidSqeForModelExecuteTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructDavidSqeForAddEndGraphTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructDavidSqeForModelToAicpuTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructDavidSqeForRingBufferMaintainTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructDavidSqeForTimeoutSetTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_CCU_LAUNCH] = &ConstructDavidSqeForCcuLaunchTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_KERNEL] = &ConstructDavidSqeForFusionKernelTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_UB_DB_SEND] = &ConstructDavidSqeForUbDbSendTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DIRECT_SEND] = &ConstructDavidSqeForUbDirectSendTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructDavidSqeForModelUpdateTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &ConstructDavidSqeForCaptureConditionTask;
-}
-
 }  // namespace runtime
 }  // namespace cce

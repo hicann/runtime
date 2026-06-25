@@ -15,13 +15,14 @@
 #include "stars_cond_isa_helper.hpp"
 #include "task_info_v100.h"
 #include "model_execute_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelExecuteTask")
 
-void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize)
+static void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize)
 {
     UNUSED(dataSize);
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
@@ -39,7 +40,7 @@ void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const 
         modelExecuteTaskInfo->errorStreamId);
 }
 
-void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command)
+static void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command)
 {
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -70,5 +71,29 @@ void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * c
 }
 
 #endif
+
+static bool ModelExecuteTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelExecuteTask,
+        .toSqeFunc = &ConstructSqeForModelExecuteTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForModelExecuteTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelExecuteTask,
+        .setResultFunc = &SetResultForModelExecuteTask,
+        .setStarsResultFunc = &SetStarsResultForModelExecuteTask,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
+    }
+
+    return true;
+}
+
+static bool g_modelExecuteTaskRegister = ModelExecuteTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

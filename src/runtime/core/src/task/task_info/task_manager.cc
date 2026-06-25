@@ -11,7 +11,6 @@
 #include "task_manager.h"
 #include "task_info_v100.h"
 #include "model_execute_task.h"
-#include "model_graph_task.h"
 #include "profiling_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -24,16 +23,9 @@
 #include "cond_op_label_task.h"
 #include "debug_task.h"
 #include "davinci_multiple_task.h"
-#include "model_maintaince_task.h"
 #include "notify_task.h"
-#include "timeout_set_task.h"
-#include "ringbuffer_maintain_task.h"
-#include "model_update_task.h"
-#include "model_to_aicpu_task.h"
-#include "kernel_fusion_task.h"
 #include "error_code.h"
 #include "stub_task.hpp"
-#include "aclgraph_cond_task.h"
 #include "capture_model.hpp"
 #include <mutex>
 #include <vector>
@@ -895,135 +887,6 @@ const std::vector<rtChipType_t>& GetV201Chips()
 {
     static const std::vector<rtChipType_t> chips = { CHIP_MC62CM12A };
     return chips;
-}
-
-static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
-
-        taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
-    }
-}
-
-static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &setResultFunc = g_taskFuncArrays[chipType].setResultFunc;
-        for (auto &item : setResultFunc) {
-            if (item == nullptr) {
-                item = &SetResultCommon;
-            }
-        }
-
-        setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetResultForModelExecuteTask;
-    }
-}
-
-static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &setStarsResultFunc = g_taskFuncArrays[chipType].setStarsResultFunc;
-        for (auto &item : setStarsResultFunc) {
-            if (item == nullptr) {
-                item = &SetStarsResultCommon;
-            }
-        }
-
-        setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
-        setStarsResultFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &SetStarsResultForModelToAicpuTask;
-        setStarsResultFunc[TS_TASK_TYPE_FFTS_PLUS] = &SetStarsResultForFftsPlusTask;
-    }
-}
-
-static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &printErrorInfoFunc = g_taskFuncArrays[chipType].printErrorInfoFunc;
-        for (auto &item : printErrorInfoFunc) {
-            if (item == nullptr) {
-                item = &PrintErrorInfoCommon;
-            }
-        }
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
-        printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
-        printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
-    }
-}
-
-void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &toCommandFunc = g_taskFuncArrays[chipType].toCommandFunc;
-
-        toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ToCommandBodyForModelMaintainceTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ToCommandBodyForModelExecuteTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ToCmdBodyForAddEndGraphTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ToCmdBodyForAddModelExitTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ToCmdBodyForModelToAicpuTask;
-        toCommandFunc[TS_TASK_TYPE_FFTS_PLUS] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ToCmdBodyForRingBufferMaintainTask;
-        toCommandFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ToCommandBodyForTimeoutSetTask;
-        toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
-        toCommandFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = nullptr;
-    }
-}
-
-static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &doCompleteSuccFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc;
-
-        doCompleteSuccFunc[TS_TASK_TYPE_FUSION_ISSUE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &DoCompleteSuccessForModelMaintainceTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &DoCompleteSuccessForModelExecuteTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &DoCompleteSuccForModelToAicpuTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_FFTS_PLUS] = &DoCompleteSuccForFftsPlusTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_IPCINT_NOTICE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &DoCompleteSuccess;
-    }
-}
-
-static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
-{
-    for (const auto chipType : chipTypes) {
-        auto &toSqeFunc = g_taskFuncArrays[chipType].toSqeFunc;
-        toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
-        toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
-        toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
-        toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
-        toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
-        toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
-        toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
-        toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
-        toSqeFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &ConstructSqeForCaptureConditionTask;
-    }
-}
-
-
-void TaskFuncReg(void)
-{
-    const auto& chipTypes = GetV100Chips();
-
-    RegTaskToCommandFunc(chipTypes);
-    RegTaskToSqefunc(chipTypes);
-    RegDoCompleteSuccFunc(chipTypes);
-    RegTaskUnInitFunc(chipTypes);
-    RegPrintErrorInfoFunc(chipTypes);
-    RegSetResultFunc(chipTypes);
-    RegSetStarsResultFunc(chipTypes);
-
-    return;
 }
 
 void RefreshTaskFuncPointer(rtChipType_t chipType)

@@ -195,11 +195,22 @@ static bool NotifyTaskRegister()
         .setResultFunc = &SetResultCommon,
         .setStarsResultFunc = &SetStarsResultCommon,
     };
+    TaskFuncSingle ipcIntNoticeFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
 
     const auto &chips = GetV100Chips();
-    for (auto chip : chips) {
+    for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_IPCINT_NOTICE, ipcIntNoticeFuncs);
     }
 
     return true;

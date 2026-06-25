@@ -11,13 +11,15 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
+#include "ringbuffer_maintain_task.h"
+#include "task_manager.h"
 #include "task_info_v100.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("RingBufferMaintainTask")
-void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     uint64_t offset = 0UL;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -59,6 +61,29 @@ void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *con
 }
 
 #endif
+
+static bool RingBufferMaintainTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCmdBodyForRingBufferMaintainTask,
+        .toSqeFunc = &ConstructSqeForRingBufferMaintainTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, funcs);
+    }
+
+    return true;
+}
+
+static bool g_ringBufferMaintainTaskRegister = RingBufferMaintainTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

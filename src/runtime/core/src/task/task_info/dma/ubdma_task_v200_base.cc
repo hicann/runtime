@@ -297,5 +297,41 @@ void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, void *const sqe, const
         stream->Id_(), taskInfo->id, taskInfo->u.ubSendTask.dbNum);
 }
 
+static bool UbDmaTaskRegister()
+{
+    TaskFuncSingle ubDbFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForUbDmaDbModeTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForUbDbSendTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetResultForUbDmaTask,
+    };
+    TaskFuncSingle directSendFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForUbDmaDirectWqeModeTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForUbDirectSendTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetResultForUbDmaTask,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_UB_DB_SEND, ubDbFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DIRECT_SEND, directSendFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_UB_DB_SEND, &ConstructDavidSqeForUbDbSendTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DIRECT_SEND, &ConstructDavidSqeForUbDirectSendTask);
+    return true;
 }
-}
+
+static bool g_ubDmaTaskRegister = UbDmaTaskRegister();
+
+}  // namespace runtime
+}  // namespace cce

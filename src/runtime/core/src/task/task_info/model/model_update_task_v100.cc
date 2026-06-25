@@ -12,11 +12,12 @@
 #include "runtime.hpp"
 #include "task_info_v100.h"
 #include "model_update_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
-void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     MdlUpdateTaskInfo *mdlUpdateTaskInfo = &(taskInfo->u.mdlUpdateTask);
     Stream * const stm = taskInfo->stream;
@@ -52,6 +53,29 @@ void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
 
     return;
 }
+
+static bool ModelUpdateTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelUpdateTask,
+        .toSqeFunc = &ConstructSqeForModelUpdateTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TASK_UPDATE, funcs);
+    }
+
+    return true;
+}
+
+static bool g_modelUpdateTaskRegister = ModelUpdateTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

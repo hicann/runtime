@@ -51,7 +51,6 @@ set(runtimeut_common_src_task_list
 
 set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
-    ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_adpter.cc
@@ -62,12 +61,14 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
@@ -76,6 +77,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task_v100.cc
 )
@@ -89,8 +91,8 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_recycle/v200/task_recycle_cqrpt_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_recycle/v200/task_recycle_dvpp.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_recycle/v200/task_recycle_send_sync.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_task.cc
+    ${TOP_DIR}/src/runtime/feature/ccu/ccu_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/david_event_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/ubdma_task_v200_base.cc
@@ -110,6 +112,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task_launch_config.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/task_adpter.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200_base.cc
@@ -118,31 +121,24 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
 
-    # mechanism dependance
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list
     ${runtimeut_david_series_common_src_task_list}
     # david & solomon 专用差异化文件
-    ${TOP_DIR}/src/runtime/core/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200.cc
@@ -275,7 +271,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/aclgraph_cond_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_manager.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_pool.cc
     ${TOP_DIR}/src/runtime/feature/jetty/stream_jetty_context.cc
@@ -418,7 +414,6 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_v200.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event_starsV2.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_pool.cc
@@ -428,7 +423,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/memory/common_memset_d32.cpp
     ${TOP_DIR}/src/runtime/core/src/memory/simd_memsetd32.cpp
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/aclgraph_cond_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
     ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.cc
 )
 
@@ -849,12 +844,10 @@ target_link_libraries(runtimeut_camodel_src_static_lib PRIVATE $<BUILD_INTERFACE
 set(runtimeut_camodel_src_list_v200 ${runtimeut_src_list})
 list(REMOVE_ITEM runtimeut_camodel_src_list_v200
     "${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc"
-    "${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register.cc"
 )
 add_library(runtimeut_camodel_src_v200_static_lib STATIC
     ${runtimeut_camodel_src_list_v200}
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res_camodel.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200_base/task_proc_func_register.cc
 )
 
 target_compile_definitions(runtimeut_camodel_src_v200_static_lib PUBLIC
@@ -988,7 +981,6 @@ add_executable(runtime_camodel_utest_v200
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_david_stub.cc
     stub/hal_stub.cc
     test/main.cc
-    test/rt_utest_camodel_v200.cc
 )
 
 target_compile_definitions(runtime_camodel_utest_v200 PUBLIC
@@ -1478,7 +1470,6 @@ set(runtimeut_v201_src_stream_list
 set(runtimeut_v201_src_task_list
     ${runtimeut_david_series_common_src_task_list}
     # v201
-    ${TOP_DIR}/src/runtime/core/src/task/v201/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v201.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_checker.cc

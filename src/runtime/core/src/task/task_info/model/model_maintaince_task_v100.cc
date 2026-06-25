@@ -15,11 +15,12 @@
 #include "notify.hpp"
 #include "task_info_v100.h"
 #include "model_maintaince_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
-void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command)
+static void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command)
 {
     ModelMaintainceTaskInfo *modelMaintainceTaskInfo = &(taskInfo->u.modelMaintainceTaskInfo);
     RtStarsPhSqe * const sqe = &(command->phSqe);
@@ -87,6 +88,29 @@ void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t 
     }
     return;
 }
+
+static bool ModelMaintainceTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelMaintainceTask,
+        .toSqeFunc = &ConstructSqeForModelMaintainceTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForModelMaintainceTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelMaintainceTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, funcs);
+    }
+
+    return true;
+}
+
+static bool g_modelMaintainceTaskRegister = ModelMaintainceTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

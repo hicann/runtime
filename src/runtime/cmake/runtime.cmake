@@ -36,6 +36,8 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/aclgraph_cond_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
@@ -67,10 +69,10 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task_v100.cc
 
-    ${RUNTIME_CORE_DIR}/src/task/v100/task_proc_func_register_xpu.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_adpter.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
@@ -188,10 +190,10 @@ set(libruntime_src_files_optional
     ${RUNTIME_CORE_DIR}/src/task/task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_pool.cc
 )
@@ -342,7 +344,6 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task_fail_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${RUNTIME_CORE_DIR}/src/memory/common_memset_d32.cpp
     ${RUNTIME_CORE_DIR}/src/memory/simd_memsetd32.cpp

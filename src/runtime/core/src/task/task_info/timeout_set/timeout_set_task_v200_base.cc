@@ -12,11 +12,13 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stars_david.hpp"
+#include "task_manager.h"
+#include "timeout_set_task.h"
 
 namespace cce {
 namespace runtime {
 #if F_DESC("TaskTimeoutSetTask")
-void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, void *const sqe,
+static void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, void *const sqe,
     const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
@@ -65,5 +67,30 @@ void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, void *const sqe,
         static_cast<uint32_t>(aicpuCtrlSqe->topicType), aicpuCtrlSqe->usrData.cmdType);
 }
 #endif
+
+static bool TimeoutSetTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForTimeoutSetTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_TASK_TIMEOUT_SET, &ConstructDavidSqeForTimeoutSetTask);
+    return true;
+}
+
+static bool g_timeoutSetTaskRegister = TimeoutSetTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

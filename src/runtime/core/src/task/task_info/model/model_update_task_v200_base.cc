@@ -12,13 +12,14 @@
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "model_update_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelTaskUpdate")
 
-void ConstructDavidSqeForModelUpdateTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+static void ConstructDavidSqeForModelUpdateTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     UNUSED(sqeInfo);
@@ -50,6 +51,30 @@ void ConstructDavidSqeForModelUpdateTask(TaskInfo * const taskInfo, void *const 
 }
 
 #endif
+
+static bool ModelUpdateTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelUpdateTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TASK_UPDATE, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_TASK_UPDATE, &ConstructDavidSqeForModelUpdateTask);
+    return true;
+}
+
+static bool g_modelUpdateTaskRegister = ModelUpdateTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

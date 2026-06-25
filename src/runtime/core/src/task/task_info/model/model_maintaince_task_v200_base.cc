@@ -16,6 +16,7 @@
 #include "stars_david.hpp"
 #include "model_maintaince_task.h"
 #include "capture_model.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -63,7 +64,7 @@ static void ConstructSqeForModelMaintainceTaskCommon(TaskInfo * const taskInfo, 
     sqe->u.modelMaintainceInfo.sqId = taskInfo->stream->GetSqId();
 }
 
-void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+static void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     UNUSED(sqeInfo);
@@ -131,6 +132,30 @@ void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, void *co
 }
 
 #endif
+
+static bool ModelMaintainceTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelMaintainceTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForModelMaintainceTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelMaintainceTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_MAINTAINCE, &ConstructDavidSqeForModelMaintainceTask);
+    return true;
+}
+
+static bool g_modelMaintainceTaskRegister = ModelMaintainceTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

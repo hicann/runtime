@@ -40,7 +40,6 @@
 #include "event_expanding.hpp"
 #include "event_pool.hpp"
 #include "stub_task.hpp"
-#include "task_manager_david.h"
 #include "rt_inner_model.h"
 #include "inner_kernel.h"
 #include "xpu_aicpu_c.hpp"
@@ -585,7 +584,6 @@ TEST_F(TinyStubTest, task_stub)
     RtTimeoutConfig timeoutConfig;
     ret = UpdateTimeoutConfigTaskSubmitDavid(nullptr, timeoutConfig);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    RegDavidTaskFunc();
 }
 
 TEST_F(TinyStubTest, easy_model_stub)

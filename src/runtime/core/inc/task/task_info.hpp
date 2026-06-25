@@ -187,7 +187,6 @@ void PushBackErrInfo(TaskInfo* taskInfo, const void *errInfo, uint32_t len);
 void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
                     const uint32_t threadId, const uint32_t retCode,
                     const Device * const dev, bool isNeedTransTaskId = false);
-void RegTaskFunc(void);
 void TaskUnInitProc(TaskInfo *taskInfo);
 void SetResult(TaskInfo* taskInfo, const void *const data, const uint32_t dataSize);
 void SetStarsResult(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);

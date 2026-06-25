@@ -13,13 +13,14 @@
 #include "context.hpp"
 #include "stars_david.hpp"
 #include "ringbuffer_maintain_task.h"
+#include "task_manager.h"
 #include "device_error_info.hpp"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("RingBufferMaintainTask")
-void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, void *const sqe,
+static void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, void *const sqe,
     const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
@@ -58,6 +59,30 @@ void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, void 
 }
 
 #endif
+
+static bool RingBufferMaintainTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCmdBodyForRingBufferMaintainTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, &ConstructDavidSqeForRingBufferMaintainTask);
+    return true;
+}
+
+static bool g_ringBufferMaintainTaskRegister = RingBufferMaintainTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

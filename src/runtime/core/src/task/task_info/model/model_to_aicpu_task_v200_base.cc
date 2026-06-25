@@ -12,11 +12,12 @@
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "model_to_aicpu_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
-void ConstructDavidSqeForModelToAicpuTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+static void ConstructDavidSqeForModelToAicpuTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     UNUSED(sqeInfo);
@@ -60,6 +61,30 @@ void ConstructDavidSqeForModelToAicpuTask(TaskInfo * const taskInfo, void *const
         "stream_id=%d, task_id=%hu, task_sn=%u.", static_cast<uint32_t>(aicpuCtrlSqe->topicType), taskInfo->u.modelToAicpuTask.cmdType,
         taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
 }
+
+static bool ModelToAicpuTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCmdBodyForModelToAicpuTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccForModelToAicpuTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelToAicpuTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForModelToAicpuTask,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TO_AICPU, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_TO_AICPU, &ConstructDavidSqeForModelToAicpuTask);
+    return true;
+}
+
+static bool g_modelToAicpuTaskRegister = ModelToAicpuTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

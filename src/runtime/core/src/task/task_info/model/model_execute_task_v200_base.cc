@@ -15,13 +15,14 @@
 #include "stars_david.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "model_execute_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelExecuteTask")
 
-void ConstructDavidSqeForModelExecuteTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+static void ConstructDavidSqeForModelExecuteTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     UNUSED(sqeInfo);
@@ -51,5 +52,30 @@ void ConstructDavidSqeForModelExecuteTask(TaskInfo * const taskInfo, void *const
 }
 
 #endif
+
+static bool ModelExecuteTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForModelExecuteTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForModelExecuteTask,
+        .taskUnInitFunc = &ModelExecuteTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelExecuteTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForModelExecuteTask,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_EXECUTE, &ConstructDavidSqeForModelExecuteTask);
+    return true;
+}
+
+static bool g_modelExecuteTaskRegister = ModelExecuteTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

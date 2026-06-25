@@ -55,7 +55,6 @@
 #include "thread_local_container.hpp"
 #include "../../rt_utest_config_define.hpp"
 #include "task_res_da.hpp"
-#include "task_manager_david.h"
 #include "stars_model_execute_cond_isa_define.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "rt_unwrap.h"

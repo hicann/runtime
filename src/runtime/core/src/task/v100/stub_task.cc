@@ -169,11 +169,6 @@ rtError_t UpdateTimeoutConfigTaskSubmitDavid(Stream * const stm, const RtTimeout
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-void RegDavidTaskFunc(void)
-{
-    return;
-}
-
 int32_t GetTaskIdBitWidth()
 {
     constexpr int32_t taskIdBitWidthForObp = 16;

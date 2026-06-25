@@ -29,7 +29,6 @@
 #include "cmodel_driver.h"
 #include "thread_local_container.hpp"
 #include "task_res.hpp"
-#include "task_manager_david.h"
 #include "../../rt_utest_config_define.hpp"
 #include "args/args_inner.h"
 #include "kernel_utils.hpp"
@@ -225,7 +224,6 @@ protected:
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtInstance->SetConnectUbFlag(true);
-        RegDavidTaskFunc();
         std::cout << "ArgManageUbTest start" << std::endl;
     }
 

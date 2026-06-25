@@ -12,13 +12,14 @@
 #include "runtime.hpp"
 #include "task_info_v100.h"
 #include "model_to_aicpu_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelToAicpuTask")
 
-void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     RtStarsAicpuControlSqe *const sqe = &(command->aicpuControlSqe);
     Stream *stm = taskInfo->stream;
@@ -70,6 +71,29 @@ void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const com
 }
 
 #endif
+
+static bool ModelToAicpuTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCmdBodyForModelToAicpuTask,
+        .toSqeFunc = &ConstructSqeForModelToAicpuTask,
+        .doCompleteSuccFunc = &DoCompleteSuccForModelToAicpuTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelToAicpuTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForModelToAicpuTask,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TO_AICPU, funcs);
+    }
+
+    return true;
+}
+
+static bool g_modelToAicpuTaskRegister = ModelToAicpuTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

@@ -16,8 +16,6 @@ namespace cce {
 namespace runtime {
 
 void ConstructSqeForStarsCommonTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-
 void ConstructSqeForBarrierTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForCmoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId);
@@ -39,12 +37,6 @@ void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t * const comman
 
 void ConstructSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
-void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
-void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize);
-void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
-void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
 void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
@@ -59,7 +51,6 @@ void ConstructFftsMixSqeForDavinciTask(TaskInfo *taskInfo, rtStarsSqe_t *const c
 void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
-void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
 void ConstructSqeForDavinciMultipleTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
