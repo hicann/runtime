@@ -78,6 +78,27 @@ TEST_F(DumpMemoryUtest, Test_CopyHostToDevice)
     EXPECT_TRUE(devMemNull == nullptr);
 }
 
+// 回归测试: CopyHostToDevice 的 rtMemcpy 失败路径必须用 rtFree(释放 device 内存)
+// 而非 rtFreeHost(释放 host 内存)。devMem 来自 rtMalloc(RT_MEMORY_HBM),
+// 用 rtFreeHost 释放会失败并泄漏 device 内存。
+TEST_F(DumpMemoryUtest, Test_CopyHostToDevice_MemcpyFail_ReleaseWithRtFree)
+{
+    char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};
+    rtError_t retError = -1;
+
+    // 确保 rtMalloc 成功, 不依赖真实 HBM 环境, 以进入 memcpy 失败路径
+    MOCKER(rtMalloc).stubs().will(returnValue(RT_ERROR_NONE));
+    // malloc 成功, memcpy 失败 -> 进入错误释放路径
+    MOCKER(rtMemcpy).stubs().will(returnValue(retError));
+    // 期望: 错误路径调用 rtFree(device) 一次, 不调用 rtFreeHost(host)
+    MOCKER(rtFree).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(rtFreeHost).expects(never());
+
+    void *devMemNull = DumpMemory::CopyHostToDevice(stubData, sizeof(stubData));
+    EXPECT_TRUE(devMemNull == nullptr);
+    // TearDown() 中的 GlobalMockObject::verify() 校验上述 expects 是否满足
+}
+
 TEST_F(DumpMemoryUtest, Test_HostMemoryGuardMacro)
 {
     char stubData[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', '\0'};

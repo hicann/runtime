@@ -75,7 +75,7 @@ void *DumpMemory::CopyHostToDevice(const void *hostMem, uint64_t memSize)
     rtRet = rtMemcpy(devMem, memSize, hostMem, memSize, RT_MEMCPY_HOST_TO_DEVICE);
     if (rtRet != RT_ERROR_NONE) {
         IDE_LOGE("rtMemcpy failed, ret: 0x%X", rtRet);
-        FreeHost(devMem);
+        FreeDevice(devMem);
         return nullptr;
     }
     return devMem;
