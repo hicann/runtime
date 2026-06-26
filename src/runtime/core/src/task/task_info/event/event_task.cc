@@ -525,6 +525,30 @@ rtError_t GetEventResetTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskP
 
     return RT_ERROR_NONE;
 }
+
+uint64_t CalculateCrossDeviceEventAddr(Device *srcDevice, const int32_t eventId)
+{
+    const uint64_t eventTableId = 
+        static_cast<uint64_t>(eventId) / STARS_EVENT_NUM_OF_SINGLE_TABLE;
+    const uint64_t eventNum = static_cast<uint64_t>(eventId) & 0xFFFUL;
+    uint64_t base = static_cast<uint64_t>(
+        srcDevice->GetDevProperties().eventBase);
+    if (srcDevice->GetDevProperties().starsResourceAddrCalculateMethod == 
+        StarsResourceAddrCalculateMethod::STARS_RESOURCE_ADDR_CALCULATE_BY_DEVICE_INFO) {
+        const uint64_t chipAddr = srcDevice->GetChipAddr();
+        const uint64_t chipOffset = srcDevice->GetChipOffset();
+        const uint64_t dieOffset = srcDevice->GetDieOffset();
+        base = base + static_cast<uint64_t>(
+            (chipOffset * static_cast<uint64_t>(srcDevice->GetPhyChipId())) +
+            (dieOffset * static_cast<uint64_t>(srcDevice->GetPhyDieId())) + chipAddr);
+    }
+    const uint64_t addr = base + 
+        (eventTableId * STARS_EVENT_TABLE_OFFSET) + 
+        (eventNum * STARS_EVENT_OFFSET);
+    RT_LOG(RT_LOG_INFO, "Cross device event addr calculated: src_device=%u, event_id=%d, addr=0x%llx.",
+        srcDevice->Id_(), eventId, addr);
+    return addr;
+}
 #endif
 }  // namespace runtime
 }  // namespace cce

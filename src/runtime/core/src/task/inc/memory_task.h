@@ -73,6 +73,7 @@ rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams
 void IpcEventDestroy(IpcEvent **eventPtr, int32_t freeId, bool isNeedDestroy);
 void DoCompleteSuccessForIpcRecordTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId);
+void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t devId);
 
 rtError_t CreateL2AddrTaskInit(TaskInfo * const taskInfo, const uint64_t ptePtrAddr);
 void ToCommandBodyForCreateL2AddrTask(TaskInfo * const taskInfo, rtCommand_t *const command);

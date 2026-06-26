@@ -23,6 +23,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "npu_driver.hpp"
+#include "event_task.h"
 #undef protected
 #undef private
 #include "stream_sqcq_manage.hpp"
@@ -541,4 +542,100 @@ TEST_F(EventTest910B, TestEventSynchronizeWithEventInModel)
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(EventTest910B, CrossDeviceEventWaitDeviceNull)
+{
+    rtError_t error;
+    rtEvent_t event;
+    rtStream_t stream;
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    evt->SetRecord(true);
+    evt->eventId_ = 1;
+    RawDevice *srcDevice = new RawDevice(1);
+    evt->device_ = srcDevice;
+    Device *deviceNull = nullptr;
+    MOCKER_CPP(&Runtime::GetDevice).stubs().will(returnValue(deviceNull));
+
+    error = evt->Wait(stm, 0);
+    EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
+
+    delete srcDevice;
+    evt->device_ = nullptr;
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+TEST_F(EventTest910B, CrossDeviceEventWaitAllocTaskFail)
+{
+    rtError_t error;
+    rtEvent_t event;
+    rtStream_t stream;
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    evt->SetRecord(true);
+    evt->eventId_ = 1;
+    RawDevice *srcDevice = new RawDevice(1);
+    evt->device_ = srcDevice;
+    TaskInfo *tsk = nullptr;
+    MOCKER_CPP(&Runtime::GetDevice).stubs().will(returnValue((Device *)srcDevice));
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(tsk));
+    
+    error = evt->Wait(stm, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete srcDevice;
+    evt->device_ = nullptr;
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+TEST_F(EventTest910B, CrossDeviceEventWaitSuccess)
+{
+    rtError_t error;
+    rtEvent_t event;
+    rtStream_t stream;
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    evt->SetRecord(true);
+    evt->eventId_ = 1;
+    RawDevice *srcDevice = new RawDevice(1);
+    evt->device_ = srcDevice;
+    MOCKER_CPP(&Runtime::GetDevice).stubs().will(returnValue((Device *)srcDevice));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    Device *waitDev = stm->Device_();
+    MOCKER_CPP_VIRTUAL(waitDev, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
+    
+    error = evt->Wait(stm, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete srcDevice;
+    evt->device_ = nullptr;
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    GlobalMockObject::verify();
 }

@@ -24,6 +24,7 @@
 #include "kernel_utils.hpp"
 #include "stream_jetty_handler.h"
 #include "capture_model_utils.hpp"
+#include "event_task.h"
 
 namespace cce {
 namespace runtime {
@@ -1640,6 +1641,29 @@ void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId)
     IpcEventDestroy(&event, MAX_INT32_NUM, false);
     RT_LOG(RT_LOG_INFO, "Ipc wait complete device_id=%u, stream_id=%d, task_id=%hu, event_id=%u",
         devId, stream->Id_(), taskInfo->id, curIndex);
+}
+
+void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
+    Stream * const stream = taskInfo->stream;
+    if (memWaitValueTask->event == nullptr) {
+        DoCompleteSuccess(taskInfo, devId);
+        return;
+    }
+
+    Event *event = memWaitValueTask->event;
+    int32_t eventId = event->EventId_();
+    RT_LOG(RT_LOG_INFO, "Cross device event wait complete: device_id=%u, stream_id=%d, "
+        "task_id=%hu, event_id=%d.", devId, stream->Id_(), taskInfo->id, eventId);
+
+    if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
+        stream->SetErrCode(taskInfo->errorCode);
+        RT_LOG(RT_LOG_ERROR, "Cross device event wait error, device_id=%u, retCode=%#x.",
+            devId, taskInfo->errorCode);
+        PrintErrorInfo(taskInfo, devId);
+    }
+    TryToFreeEventIdAndDestroyEvent(&event, eventId, false);
 }
 
 rtError_t MemcpyAsyncTaskPrepare(TaskInfo* const updateTask, void** const hostAddr)

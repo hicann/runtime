@@ -49,6 +49,7 @@ rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* 
 rtError_t GetEventRecordTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetEventWaitTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetEventResetTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params);
+uint64_t CalculateCrossDeviceEventAddr(Device *srcDevice, const int32_t eventId);
 
 void TryToFreeEventIdAndDestroyEvent(Event **eventPtr, int32_t freeId, bool isNeedDestroy,
                                      bool isCaptureDestroy = false);

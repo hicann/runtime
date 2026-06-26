@@ -537,6 +537,52 @@ bool Event::WaitSendCheck(const Stream * const stm, int32_t &eventId)
     return false;
 }
 
+static rtError_t CrossDeviceEventWait(Stream * const stm, Event * const evt, const int32_t eventId, const uint32_t recDevId)
+{
+    if (!IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support mem wait task.",
+               static_cast<int32_t>(Runtime::Instance()->GetChipType()));
+        return RT_ERROR_NONE;
+    }
+    rtError_t error = RT_ERROR_NONE;
+    Device * const dev = stm->Device_();
+    
+    Device *srcDevice = Runtime::Instance()->GetDevice(recDevId, 0);
+    if (srcDevice == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Source device not found, device_id=%u.", recDevId);
+        evt->EventIdCountSub(eventId);
+        return RT_ERROR_DEVICE_NULL;
+    }
+    uint64_t addr = CalculateCrossDeviceEventAddr(srcDevice, eventId);
+    TaskInfo submitTask = {};
+    // Use the MemWait task for cross-device event wait.
+    TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEM_WAIT_VALUE, error, MEM_WAIT_SQE_NUM);
+    COND_PROC_RETURN_ERROR_MSG_INNER((tsk == nullptr), error,
+                                evt->EventIdCountSub(eventId), "Failed to allocate MemWait task, retCode=%#x.",
+                                static_cast<uint32_t>(error));
+    std::function<void()> const errRecycle = [&dev, &tsk, &evt, eventId]() {
+        evt->EventIdCountSub(eventId);
+        (void)dev->GetTaskFactory()->Recycle(tsk);
+    };
+    ScopeGuard tskErrRecycle(errRecycle);
+    tsk->typeName = "MEM_WAIT_VALUE";
+    tsk->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    error = MemWaitValueTaskInit(tsk, RtPtrToPtr<void*>(addr), 1, 0x0);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to init MemWait task, retCode=%#x.", static_cast<uint32_t>(error));
+    MemWaitValueTaskInfo *memWaitTask = &tsk->u.memWaitValueTask;
+    memWaitTask->event = evt;
+    memWaitTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    error = dev->SubmitTask(tsk);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to submit MemWait task, retCode=%#x.", static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    EventStateCallbackManager::Instance().Notify(stm, evt, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
+    
+    RT_LOG(RT_LOG_INFO, "Cross device event wait success: device_id=%u, stream_id=%d, "
+        "src_dev=%u, event_id=%d.", dev->Id_(), stm->Id_(), recDevId, eventId);
+    return RT_ERROR_NONE;
+}
+
 rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
@@ -565,22 +611,24 @@ rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
     rtError_t errorReason;
     const bool isRemoteEventWait = (recDevId != dev->Id_());
 
-    tsk = isRemoteEventWait ? stm->AllocTask(&submitTask, TS_TASK_TYPE_REMOTE_EVENT_WAIT, errorReason) :
-          stm->AllocTask(&submitTask, TS_TASK_TYPE_STREAM_WAIT_EVENT, errorReason);
-    COND_PROC_RETURN_ERROR_MSG_INNER((tsk == nullptr), errorReason,
-                                     EventIdCountSub(eventId), "Failed to allocate task, retCode=%#x.",
-                                     static_cast<uint32_t>(errorReason));
-
-    isRemoteEventWait ? (void)RemoteEventWaitTaskInit(tsk, this, static_cast<int32_t>(recDevId), eventId) :
-    (void)EventWaitTaskInit(tsk, this, eventId, timeout);
-    rtTaskGenCallback const callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-    error = dev->SubmitTask(tsk, callback);
-
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit wait task, retCode=%#x.",
-                         static_cast<uint32_t>(error));
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-    EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
-    return RT_ERROR_NONE;
+    if (isRemoteEventWait) {
+        return CrossDeviceEventWait(stm, this, eventId, recDevId);
+    } else {
+        tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_STREAM_WAIT_EVENT, errorReason);
+        COND_PROC_RETURN_ERROR_MSG_INNER((tsk == nullptr), errorReason,
+                                        EventIdCountSub(eventId), "Failed to allocate task, retCode=%#x.",
+                                        static_cast<uint32_t>(errorReason));
+        
+        (void)EventWaitTaskInit(tsk, this, eventId, timeout);
+        rtTaskGenCallback const callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
+        error = dev->SubmitTask(tsk, callback);
+        
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit wait task, retCode=%#x.",
+                            static_cast<uint32_t>(error));
+        GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+        EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
+        return RT_ERROR_NONE;
+    }
 
 ERROR_RECYCLE:
     DeleteWaitFromMap(tsk);

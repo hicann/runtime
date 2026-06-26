@@ -722,7 +722,7 @@ static bool MemoryTaskRegister()
     TaskFuncSingle memWaitValueFuncs = {
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForMemWaitValueTask,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .doCompleteSuccFunc = &DoCompleteSuccessForMemWaitValueTask,
         .taskUnInitFunc = &MemWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
