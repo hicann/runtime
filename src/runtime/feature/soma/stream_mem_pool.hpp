@@ -82,7 +82,7 @@ struct PairHash {
 enum class AicpuOpType : uint8_t {
     MALLOC = 0,
     FREE = 1,
-    INVALID = 0xFF,
+    INVALID = 0xFFU,
 };
 
 enum class SomaAicpuSubCmd : uint8_t {
@@ -118,7 +118,7 @@ class SegmentManager {
 public:
     SegmentManager(Segment *seg, uint32_t deviceId, bool canDelete);
     ~SegmentManager();
-    rtError_t SegmentAlloc(Segment* &ret, uint64_t size, int streamId, ReuseFlag &flag);
+    rtError_t SegmentAlloc(Segment* &ret, uint64_t size, int32_t streamId, ReuseFlag &flag);
     rtError_t SegmentFree(uint64_t ptr, bool forceFree = false);
     static inline Segment* CreateSegment(uint64_t base, uint64_t size);
     static inline Segment* CreateSegment(uint64_t base, uint64_t size, Segment *next, Segment *prev);
@@ -201,7 +201,7 @@ public:
     void UpdateSeqMap(const int32_t streamId, const int32_t eventId);
     void UpdateEventMap(const int32_t streamId, const int32_t eventId);
     void RemoveFromEventMap(const int32_t eventId);
-    void RemoveSeqMap(rtStream_t stream);
+    void RemoveSeqMap(rtStream_t stm);
     static void StreamStateCallback(rtStream_t stm, rtStreamState type, void *args);
     static void EventStateCallbackWrapper(Stream* stream, Event* event, EventStatePeriod period, void *args);
     rtError_t RegisterSomaCallBack();

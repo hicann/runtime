@@ -778,12 +778,12 @@ static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const boo
             if (threadId != MAX_UINT64_NUM) {
                 ret = rtInstance->SubscribeCallback(threadId, captureStm, curNotify);
             } else {
-                uint64_t threadId = 0UL;
-                ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadId);
+                uint64_t threadIdValue = 0UL;
+                ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadIdValue);
                 COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret,
                     "Get threadId by streamId failed, drv devId=%u, original stream_id=%d, "
                     "capture stream_id=%d, retCode=%#x.", dev->Id_(), stm->Id_(), captureStm->Id_(), ret);
-                ret = rtInstance->SubscribeReport(threadId, captureStm, static_cast<void *>(curNotify));
+                ret = rtInstance->SubscribeReport(threadIdValue, captureStm, static_cast<void *>(curNotify));
             }
             if (ret != RT_ERROR_NONE) {
                 if (curNotify != nullptr) {

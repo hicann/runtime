@@ -2099,7 +2099,7 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
     }
 }
 
-void MemWaitInstrWaitSuccessForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+static void MemWaitInstrWaitSuccessForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;

@@ -323,7 +323,7 @@ Segment *SegmentManager::AllocFromFreeSegs(uint64_t size)
     }
 
     Segment* seg = *fit;
-    freeSegs_.erase(fit);
+    (void)freeSegs_.erase(fit);
     Segment* ret = seg->SplitLeft(size);
     if (seg->basePtr != ret->basePtr) {
         freeSegs_.insert(seg);
@@ -346,7 +346,7 @@ void SegmentManager::MergeIntoFreeSegs(Segment* &seg)
     }
     RT_LOG(RT_LOG_DEBUG, "After merging segment seg, ptr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->size);
     seg->state = SegmentState::FREE;
-    freeSegs_.insert(seg);
+    (void)freeSegs_.insert(seg);
 }
 
 void SegmentManager::TrimCachedSegs(const uint64_t minBytesToKeep)
@@ -363,7 +363,7 @@ void SegmentManager::TrimCachedSegs(const uint64_t minBytesToKeep)
             (void)cachedSegs_.erase(seg);
             uint64_t leftSize = reserveSize_ - minBytesToKeep;
             Segment* left = seg->SplitLeft(leftSize);
-            cachedSegs_.insert(seg);
+            (void)cachedSegs_.insert(seg);
             reserveSize_ -= leftSize;
             MergeIntoFreeSegs(left);
             break;
@@ -448,15 +448,15 @@ rtError_t SegmentManager::SetAttribute(rtMemPoolAttr attr, const void *value)
     
     switch (attr) {
         case rtMemPoolReuseFollowEventDependencies:
-            state_.eventDependencies = (*static_cast<const uint32_t*>(value) == 0 ? 0 : 1);
+            state_.eventDependencies = (*static_cast<const uint32_t*>(value) == 0U ? 0U : 1U);
             RT_LOG(RT_LOG_DEBUG, "Set attribute eventDependencies, value=%u.", state_.eventDependencies);
             break;
         case rtMemPoolReuseAllowOpportunistic:
-            state_.opportunistic = (*static_cast<const uint32_t*>(value) == 0 ? 0 : 1);
+            state_.opportunistic = (*static_cast<const uint32_t*>(value) == 0U ? 0U : 1U);
             RT_LOG(RT_LOG_DEBUG, "Set attribute opportunistic, value=%u.", state_.opportunistic);
             break;
         case rtMemPoolReuseAllowInternalDependencies:
-            state_.internalDependencies = (*static_cast<const uint32_t*>(value) == 0 ? 0 : 1);
+            state_.internalDependencies = (*static_cast<const uint32_t*>(value) == 0U ? 0U : 1U);
             RT_LOG(RT_LOG_DEBUG, "Set attribute internalDependencies, value=%u.", state_.internalDependencies);
             break;
         case rtMemPoolAttrReleaseThreshold:
@@ -497,7 +497,7 @@ rtError_t PoolRegistry::Init()
     if (initialized_) {
         return RT_ERROR_NONE;
     }
-    rtError_t error = RegisterSomaCallBack();
+    const rtError_t error = RegisterSomaCallBack();
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Soma Callback register failed, reCode=%#x.", error);
         return error;
@@ -643,13 +643,13 @@ void PoolRegistry::UpdateEventMap(const int32_t streamId, const int32_t eventId)
     std::lock_guard<std::mutex> lock(mutex_);
     uint64_t seqId = streamSeqId_[streamId];
     eventsMap_[eventId] = {streamId, seqId};
-    streamSeqId_[streamId] += 1; // update the number of event records on the stream
+    streamSeqId_[streamId] += 1UL; // update the number of event records on the stream
 }
 
 void PoolRegistry::RemoveFromEventMap(const int32_t eventId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    eventsMap_.erase(eventId);
+    (void)eventsMap_.erase(eventId);
 }
 
 void PoolRegistry::RemoveSeqMap(rtStream_t stm)
@@ -661,8 +661,8 @@ void PoolRegistry::RemoveSeqMap(rtStream_t stm)
         RT_LOG(RT_LOG_WARNING, "RemoveSeqMap skip invalid stream handle.");
         return;
     }
-    int32_t streamId = stream->Id_();
-    streamSeqId_.erase(streamId);
+    const int32_t streamId = stream->Id_();
+    (void)streamSeqId_.erase(streamId);
     for (auto it = sequenceMap_.begin(); it != sequenceMap_.end();) {
         const auto& [streamId1, streamId2] = it->first;
         if (streamId1 == streamId || streamId2 == streamId) {
