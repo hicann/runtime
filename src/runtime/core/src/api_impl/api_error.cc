@@ -263,18 +263,20 @@ static rtError_t CheckSimtArgsArray(const Kernel* kernel, const RtArgsWithType* 
     const uint32_t kernelVfType = kernel->KernelVfType_();
     const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
                               (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
-    COND_RETURN_OUT_ERROR_MSG_CALL(!isSimtKernel, RT_ERROR_INVALID_VALUE,
-        "Only SIMT kernel can use this interface.");
-    COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        "Kernel does not have param info, please check whether kernel version is matched.");
+    COND_RETURN_AND_MSG_OUTER(!isSimtKernel, RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "kernel", "current API only supports SIMT kernel");
+    COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+         __func__, "kernel", "Kernel does not have param info, please check whether kernel version is matched");
     NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsArray, RT_ERROR_INVALID_VALUE);
     const SimtArgsArray* simtArgs = argsWithType->args.simtArgsArray;
-    COND_RETURN_OUT_ERROR_MSG_CALL(
+    COND_RETURN_AND_MSG_OUTER(
         (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, "gridDim.x, gridDim.y, gridDim.z must all be greater than 0.");
-    COND_RETURN_OUT_ERROR_MSG_CALL(
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "gridDim",
+        "gridDim.x, gridDim.y, gridDim.z must all be greater than 0");
+    COND_RETURN_AND_MSG_OUTER(
         (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, "blockDim.x, blockDim.y, blockDim.z must all be greater than 0.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "blockDim",
+        "blockDim.x, blockDim.y, blockDim.z must all be greater than 0");
     if (kernel->GetParamCount() > 0U) {
         NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsArray->argsArrayInfo, RT_ERROR_INVALID_VALUE);
     }
@@ -286,38 +288,40 @@ static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* c
     const uint32_t kernelVfType = kernel->KernelVfType_();
     const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
                               (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
-    COND_RETURN_OUT_ERROR_MSG_CALL(!isSimtKernel, RT_ERROR_INVALID_VALUE,
-        "Only SIMT kernel can use this interface.");
-    COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        "Kernel does not have param info, please check whether kernel version is matched.");
+    COND_RETURN_AND_MSG_OUTER(!isSimtKernel, RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "kernel", "current API only supports SIMT kernel");
+    COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+         __func__, "kernel", "Kernel does not have param info, please check whether kernel version is matched");
     NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsHost, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsHost->hostArgs, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(argsWithType->args.simtArgsHost->argsSize);
     const SimtArgsHost* simtArgs = argsWithType->args.simtArgsHost;
-    COND_RETURN_OUT_ERROR_MSG_CALL(
+    COND_RETURN_AND_MSG_OUTER(
         (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, "gridDim.x, gridDim.y, gridDim.z must all be greater than 0.");
-    COND_RETURN_OUT_ERROR_MSG_CALL(
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "gridDim",
+        "gridDim.x, gridDim.y, gridDim.z must all be greater than 0");
+    COND_RETURN_AND_MSG_OUTER(
         (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, "blockDim.x, blockDim.y, blockDim.z must all be greater than 0.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "blockDim",
+        "blockDim.x, blockDim.y, blockDim.z must all be greater than 0");
     const uint32_t argsSize = argsWithType->args.simtArgsHost->argsSize;
     const uint32_t placeHolderNum = argsWithType->args.simtArgsHost->placeHolderNum;
     if (placeHolderNum > 0U) {
         NULL_PTR_RETURN_MSG_OUTER(
             argsWithType->args.simtArgsHost->placeHolderArray, RT_ERROR_INVALID_VALUE);
         for (uint32_t i = 0U; i < placeHolderNum; i++) {
-            COND_RETURN_OUT_ERROR_MSG_CALL(
+            COND_RETURN_AND_MSG_OUTER(
                 argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset >= argsSize,
-                RT_ERROR_INVALID_VALUE,
-                "Parameter placeHolderArray[%u].addrOffset should be less than parameter argsSize. "
-                "Parameter placeHolderArray[%u].addrOffset=%u, parameter argsSize=%u.",
-                i, i, argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset, argsSize);
-            COND_RETURN_OUT_ERROR_MSG_CALL(
+                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                RtFmtMsg("placeHolderArray[%u].addrOffset or argsSize", i),
+                RtFmtMsg("Parameter placeHolderArray[%u].addrOffset %u should be less than parameter argsSize %u",
+                    i, argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset, argsSize));
+            COND_RETURN_AND_MSG_OUTER(
                 argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset >= argsSize,
-                RT_ERROR_INVALID_VALUE,
-                "Parameter placeHolderArray[%u].dataOffset should be less than parameter argsSize. "
-                "Parameter placeHolderArray[%u].dataOffset=%u, parameter argsSize=%u.",
-                i, i, argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset, argsSize);
+                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                RtFmtMsg("placeHolderArray[%u].dataOffset or argsSize", i),
+                RtFmtMsg("Parameter placeHolderArray[%u].dataOffset %u should be less than parameter argsSize %u",
+                    i, argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset, argsSize));
         }
     }
     return RT_ERROR_NONE;
