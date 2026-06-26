@@ -352,6 +352,7 @@ void DavidStream::DebugDotPrintForModelStm()
 void DavidStream::BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const
 {
     std::string taskName;
+    std::string taskType = (task->typeName != nullptr) ? task->typeName : "Unknown";
     const Kernel *kernel = nullptr;
 
     // 获取任务名称
@@ -399,6 +400,7 @@ void DavidStream::BuildTraceEventForTask(TaskInfo *const task, const uint32_t fl
     }
     record.name = taskName;
     record.args.taskId = task->id;
+    record.args.taskType = taskType;
     FillTaskExtendInfo(task, record);
 }
 
