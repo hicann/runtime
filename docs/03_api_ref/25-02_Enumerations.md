@@ -19,6 +19,7 @@ enum 类型数据。
 - [aclplatformCoreType](#aclplatformCoreType)
 - [aclplatformDevInfo](#aclplatformDevInfo)
 - [aclplatformLocalMemType](#aclplatformLocalMemType)
+- [aclplatformNpuArch](#aclplatformNpuArch)
 - [aclprofAicoreMetrics](#aclprofAicoreMetrics)
 - [aclprofConfigType](#aclprofConfigType)
 - [aclprofEventAttributes](#aclprofEventAttributes)
@@ -378,11 +379,10 @@ typedef enum aclplatformDevInfo {
     ACL_PLATFORM_L0_B_SIZE         = 10,
     ACL_PLATFORM_L0_C_SIZE         = 11,
     ACL_PLATFORM_L1_SIZE           = 12,
-    ACL_PLATFORM_SHORT_SOC_VERSION = 13,
-    ACL_PLATFORM_SOC_VERSION       = 14,
-    ACL_PLATFORM_AIC_VERSION       = 15,
-    ACL_PLATFORM_NPU_ARCH          = 16,
-    ACL_PLATFORM_MEMORY_TYPE       = 17,
+    ACL_PLATFORM_SOC_VERSION       = 13,
+    ACL_PLATFORM_AIC_VERSION       = 14,
+    ACL_PLATFORM_NPU_ARCH          = 15,
+    ACL_PLATFORM_MEMORY_TYPE       = 16,
 } aclplatformDevInfo;
 ```
 
@@ -402,11 +402,10 @@ typedef enum aclplatformDevInfo {
 | ACL_PLATFORM_L0_B_SIZE | L0-B缓冲区大小，单位Byte。用于Cube Core矩阵运算的右矩阵输入缓存。 |
 | ACL_PLATFORM_L0_C_SIZE | L0-C缓冲区大小，单位Byte。用于Cube Core矩阵运算的输出结果缓存。 |
 | ACL_PLATFORM_L1_SIZE | L1缓冲区大小，单位Byte。 |
-| ACL_PLATFORM_SHORT_SOC_VERSION | AI处理器系列名称。 |
 | ACL_PLATFORM_SOC_VERSION | AI处理器型号名称。 |
 | ACL_PLATFORM_AIC_VERSION | AI Core版本字符串。 |
-| ACL_PLATFORM_NPU_ARCH | NPU架构版本。<br><br> Ascend 950PR/Ascend 950DT对应NPU架构版本为3510，Atlas A3训练系列产品/Atlas A3推理系列产品对应NPU架构版本为2201，Atlas A2训练系列产品/Atlas A2推理系列产品对应NPU架构版本为2201。 |
-| ACL_PLATFORM_MEMORY_TYPE | 设备内存类型，返回值对应[aclplatformLocalMemType](#aclplatformLocalMemType)枚举的整数表示。 |
+| ACL_PLATFORM_NPU_ARCH | NPU架构版本，返回值对应[aclplatformNpuArch](#aclplatformNpuArch)枚举的整数值。<br><br> Ascend 950PR/Ascend 950DT对应NPU架构版本为3510，Atlas A3训练系列产品/Atlas A3推理系列产品对应NPU架构版本为2201，Atlas A2训练系列产品/Atlas A2推理系列产品对应NPU架构版本为2201。 |
+| ACL_PLATFORM_MEMORY_TYPE | 设备内存类型，返回值对应[aclplatformLocalMemType](#aclplatformLocalMemType)枚举的整数值。 |
 
 <br>
 
@@ -415,7 +414,7 @@ typedef enum aclplatformDevInfo {
 ## aclplatformLocalMemType
 
 ```cpp
-enum class aclplatformLocalMemType {
+typedef enum aclplatformLocalMemType {
     L0_A = 0,
     L0_B = 1,
     L0_C = 2,
@@ -423,7 +422,7 @@ enum class aclplatformLocalMemType {
     L2   = 4,
     UB   = 5,
     HBM  = 6
-};
+} aclplatformLocalMemType;
 ```
 
 
@@ -436,6 +435,30 @@ enum class aclplatformLocalMemType {
 | L2  | 二级缓存，专门用于存储频繁访问的数据，以便减少对Global Memory的读写。 |
 | UB  | AI Core内部存储单元，主要用于矢量计算。 |
 | HBM | 设备HBM（高带宽内存）。 |
+
+<br>
+
+<a id="aclplatformNpuArch"></a>
+
+## aclplatformNpuArch
+
+```cpp
+typedef enum aclplatformNpuArch {
+    DAV_1001 = 1001,
+    DAV_2002 = 2002,
+    DAV_2102 = 2102,
+    DAV_2201 = 2201,
+    DAV_3002 = 3002,
+    DAV_3003 = 3003,
+    DAV_3004 = 3004,
+    DAV_3102 = 3102,
+    DAV_3113 = 3113,
+    DAV_3505 = 3505,
+    DAV_3510 = 3510,
+    DAV_5102 = 5102,
+    DAV_RESV = 0xFFFF
+} aclplatformNpuArch;
+```
 
 <br>
 

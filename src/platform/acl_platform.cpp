@@ -99,11 +99,10 @@ const std::vector<std::pair<std::string, std::string>> kDevInfoTable = {
   /* 10: ACL_PLATFORM_L0_B_SIZE        */ {"AICoreSpec",     "l0_b_size"},
   /* 11: ACL_PLATFORM_L0_C_SIZE        */ {"AICoreSpec",     "l0_c_size"},
   /* 12: ACL_PLATFORM_L1_SIZE          */ {"AICoreSpec",     "l1_size"},
-  /* 13: ACL_PLATFORM_SHORT_SOC_VERSION */ {"version",       "Short_SoC_version"},
-  /* 14: ACL_PLATFORM_SOC_VERSION      */ {"version",       "SoC_version"},
-  /* 15: ACL_PLATFORM_AIC_VERSION      */ {"version",       "AIC_version"},
-  /* 16: ACL_PLATFORM_NPU_ARCH         */ {"version",        "NpuArch"},
-  /* 17: ACL_PLATFORM_MEMORY_TYPE      */ {"SoCInfo",        "memory_type"},
+  /* 13: ACL_PLATFORM_SOC_VERSION      */ {"version",       "SoC_version"},
+  /* 14: ACL_PLATFORM_AIC_VERSION      */ {"version",       "AIC_version"},
+  /* 15: ACL_PLATFORM_NPU_ARCH         */ {"version",        "NpuArch"},
+  /* 16: ACL_PLATFORM_MEMORY_TYPE      */ {"SoCInfo",        "memory_type"},
 };
 }  // namespace
 
