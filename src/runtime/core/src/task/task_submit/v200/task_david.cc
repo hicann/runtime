@@ -470,7 +470,7 @@ static void SetFlipTaskNum(Stream *const stream, uint32_t prePos, uint32_t sqeNu
     return;
 }
 
-static rtError_t WriteAutoSplitSqeToHostBuffer(const TaskInfo *taskInfo, Stream * const stm, void *sqeAddr)
+static rtError_t WriteAutoSplitSqeToHostBuffer(const TaskInfo *taskInfo, const Stream *stm, void *sqeAddr)
 {
     AutoSplitSqContext *ctx = stm->GetAutoSplitCtx();
     uint8_t *sqeBuffer = stm->GetSqeBuffer();

@@ -579,7 +579,7 @@ void GetBinAndKernelNameExceptionArgs(const Kernel * const kernel, rtExceptionAr
         kernelNameStr.c_str(), buffSize, ret);
 
     argsInfo->exceptionKernelInfo.kernelNameSize = kernelNameStr.length();
-    argsInfo->exceptionKernelInfo.bin = reinterpret_cast<rtBinHandle>(programPtr->GetInnerHandle());
+    argsInfo->exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(programPtr->GetInnerHandle());
     argsInfo->exceptionKernelInfo.binSize = programPtr->GetBinarySize();
     RT_LOG(RT_LOG_INFO, "kernel_name=%s, kernelNameSize=%u, binSize=%u.",
             argsInfo->exceptionKernelInfo.kernelName,
