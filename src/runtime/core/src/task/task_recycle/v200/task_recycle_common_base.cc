@@ -174,7 +174,8 @@ void TryReclaimToTask(TaskInfo *workTask)
             break;
         }
 
-        if ((delWorkTask->type == TS_TASK_TYPE_NOTIFY_WAIT) && (delWorkTask->u.notifywaitTask.isEndGraphNotify)) {
+        if ((delWorkTask->type == TS_TASK_TYPE_NOTIFY_WAIT) && (delWorkTask->u.notifywaitTask.isEndGraphNotify) &&
+             (delWorkTask->errorCode == 0U)) {
             Complete(delWorkTask, stm->Device_()->Id_());
         }
 
