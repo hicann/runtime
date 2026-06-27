@@ -5089,8 +5089,8 @@ rtError_t ApiImpl::CallbackLaunchWithoutEvent(const rtCallback_t callBackFunc, v
             return ret;
         }
         RT_LOG(RT_LOG_INFO, "Launched stream_id=%d, subscribeFlag=%d, original stream_id=%d, subscribeFlag=%d",
-               launchStm->Id_(), static_cast<int>(launchStm->GetSubscribeFlag()), stm->Id_(),
-               static_cast<int>(stm->GetSubscribeFlag()));
+               launchStm->Id_(), static_cast<int32_t>(launchStm->GetSubscribeFlag()), stm->Id_(),
+               static_cast<int32_t>(stm->GetSubscribeFlag()));
     }
 
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, INVALID_EVENT_ID);

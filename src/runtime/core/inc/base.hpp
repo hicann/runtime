@@ -237,7 +237,7 @@ void ErrorCodeProcess(ErrorCode errorCode, const char *file,
                 values.emplace_back(ptr ? ptr : "");
             } else {
                 std::ostringstream oss;
-                oss << arg;
+                oss << std::forward<decltype(arg)>(arg);
                 values.emplace_back(oss.str());
             }
         };

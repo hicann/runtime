@@ -1633,14 +1633,13 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
 
     const char_t *kernelName = RtPtrToPtr<const char_t *>(kernelInfoExt);
     const bool kernelInfoExtVaild = (kernelInfoExt != nullptr) && (strnlen(kernelName, KERNEL_INFO_EXT_MAX) != 0);
-    std::string tripKName;
     // kernelInfoExtVaild=false,历史遗留场景, 视为找到注册第一个kernel.
     if (!kernelInfoExtVaild) {
         const RtKernel * const kernels = elfProg->GetKernels();
         const RtKernel * const elfKernelInfo = &kernels[0];
 
         /* 去掉kernelName的_mix_aic/_mix_aiv的后缀 */
-        tripKName = elfProg->AdjustKernelName(elfKernelInfo->name);
+        const std::string tripKName = elfProg->AdjustKernelName(elfKernelInfo->name);
         COND_RETURN_ERROR_MSG_INNER(tripKName.empty(), RT_ERROR_INVALID_VALUE, "KernelName cannot be empty.");
         return RegisterKernelByStubFunc(elfProg, stubFunc, stubName, kernelInfoExt, funcMode, tripKName.c_str());
     }
