@@ -1749,6 +1749,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     COND_RETURN_WARN(((addrCfg == nullptr) && (dst == src)),    /* 在check kind/loc之后校验（校验顺序会影响return值） */
         RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
+    COND_RETURN_WARN(IsUbDmaWithSubModel(stm, kind, src, dst), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
     if (isD2HorH2DInvolvePageableMemory) {
         COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Asynchronous copy task",
                             "The pageable memory copy task does not support graph capture");
@@ -1762,7 +1763,6 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
             "the operation has been converted to a synchronous operation. "
             "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
     } else {
-        COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
         error = impl_->MemcpyAsync(dst, destMax, src, cnt, copyKind, stm, cfgInfo, addrCfg, checkKind);
     }
 
@@ -2447,6 +2447,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
     COND_RETURN_WARN(((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) && (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
         RT_ERROR_FEATURE_NOT_SUPPORT, "Only H2D, D2H, or D2D are supported");
 
+    COND_RETURN_WARN(IsUbDmaWithSubModel(stm, kind, src, dst), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
     if (isD2HorH2DInvolvePageableMemory ) {
         COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,  "Asynchronous 2D memory copy task",
                                   "The pageable memory copy task does not support graph capture");
@@ -2460,7 +2461,6 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
             "the operation has been converted to a synchronous operation. "
             "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
     } else {
-        COND_RETURN_WARN(IsStreamBindWithSubModel(curStm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
         error = impl_->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, curStm, copyKind, newKind);
     }
 
@@ -6216,7 +6216,8 @@ rtError_t ApiErrorDecorator::MemcpyBatchAsync(void** const dsts, const size_t* c
             RtFmtMsg("Each entry in attrsIdxs must be less than the parameter count. Parameter attrsIdxs[%zu] is %zu, and count is %zu",
                 i, attrsIdxs[i], count));
     }
-    COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
+    COND_RETURN_WARN((Runtime::Instance()->GetConnectUbFlag()) && IsStreamBindWithSubModel(stm),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
     return impl_->MemcpyBatchAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, stm);
 }
 

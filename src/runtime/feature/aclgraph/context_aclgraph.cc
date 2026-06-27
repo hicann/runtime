@@ -863,6 +863,11 @@ rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskPara
         subCaptureModel->SetCondHandle(params.handle);
         condHandle->PushBackSubModel(subModel);
         params.modelRIArray[loop] = static_cast<rtModel_t>(subModel);
+
+        RT_LOG(RT_LOG_DEBUG, "Sub capture model create success, device_id=%u, parent model_id=%u, sub model_id=%u"
+            " original stream_id=%d, capture stream_id=%d, isSubmodel=%u.",
+            device_->Id_(), condHandle->GetParentModel()->Id_(), subModel->Id_(), stm->Id_(), stm->GetCaptureStream()->Id_(),
+            (dynamic_cast<CaptureModel *>(condHandle->GetParentModel()))->IsSubCaptureModel());
     }
 
     return RT_ERROR_NONE;

@@ -8509,8 +8509,6 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
     const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
     size_t* const failIdx, Stream* const stm)
 {
-    COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
-
     rtError_t error = RT_ERROR_NONE;
     rtMemcpyBatchAttr memAttr = attrs[0];
     size_t attrIdx = 0U;

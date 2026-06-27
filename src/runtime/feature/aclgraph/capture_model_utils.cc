@@ -369,9 +369,37 @@ bool IsStreamBindWithSubModel(Stream * const stream)
     COND_PROC(captureModel == nullptr, return false;);
 
     COND_RETURN_WARN(captureModel->IsSubCaptureModel(), true,
-        "stream belongs to sub ACL Graph, does not support current operation.");
+        "stream_id=%d, capture stream_id=%d, module_id=%u, stream belongs to sub ACL Graph, does not support current operation.",
+ 	    stream->Id_(), captureStream->Id_(), captureModel->Id_());
 
     return false;
+}
+
+bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.stream = const_cast<Stream *>(stm);
+    rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, desAddr);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, false, "Failed to convert copy type, kind=%u.", kind);
+
+    MemcpyAsyncTaskInfo memcpyAsyncTaskInfo = taskInfo.u.memcpyAsyncTaskInfo;
+    if (IsDavidUbDma(memcpyAsyncTaskInfo.copyType)) {
+        return true;
+    }
+
+    return false;
+ }
+
+ bool IsUbDmaWithSubModel(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr)
+ {
+     COND_PROC(stm == nullptr, return false;);
+     bool flag = IsUbDma(stm, kind, srcAddr, desAddr);
+     COND_PROC(!flag, return false;);
+
+     flag = IsStreamBindWithSubModel(stm);
+     COND_PROC(!flag, return false;);
+
+     return true;
 }
 
 } // namespace runtime

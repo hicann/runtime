@@ -182,7 +182,7 @@ rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValu
     NULL_PTR_RETURN_MSG_OUTER(captureModel, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(!(captureModel->IsCaptureActive()),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "mdl",
-        "The ACL Graph has finished capturing.");
+        "The ACL Graph capture has ended");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);

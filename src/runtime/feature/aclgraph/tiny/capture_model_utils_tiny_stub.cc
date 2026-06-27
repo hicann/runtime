@@ -46,6 +46,8 @@ bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task) { UNUSED(task); re
 void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe) { UNUSED(taskInfo); UNUSED(sqe); }
 void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *const command) { UNUSED(taskInfo); UNUSED(command); }
 void CaptureConditionTaskUnInit(TaskInfo * const taskInfo) { UNUSED(taskInfo); }
+bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
+bool IsUbDmaWithSubModel(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
 
 }
 }

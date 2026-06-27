@@ -18,6 +18,7 @@ namespace runtime {
 
 constexpr uint32_t MEM_WAIT_WRITE_VALUE_ADDRESS_LEN = 64U;
 
+rtError_t ConvertCpyType(TaskInfo * const taskInfo, const uint32_t cpyType, const void *const srcAddr, void *const desAddr);
 rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo);
 rtError_t MemcpyAsyncTaskInitV1(TaskInfo * const taskInfo, void *memcpyAddrInfo, const uint64_t cpySize);
 rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, const uint64_t dstPitch,

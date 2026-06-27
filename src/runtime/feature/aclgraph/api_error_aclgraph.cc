@@ -169,7 +169,7 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t d
         RT_ERROR_INVALID_VALUE, CondHandleFlagToString(flag), "flag",
         "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT,
-        ErrorCode::EE1006, __func__, "non ACL Graph mode");
+        ErrorCode::EE1006, __func__, "The mdlRI create condition handle", "The mdlRI is not a ACL Graph");
     return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
 }
 
