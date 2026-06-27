@@ -192,7 +192,7 @@ static rtError_t UpdateCtrlSpaceFrameAlignInfo(const uint8_t inputQueNum, const 
     param.stream_id = static_cast<uint8_t>(streamId);
     param.ts_id = static_cast<uint8_t>(tsId);
     args.input_ptr = &param;
-    args.input_len = sizeof(stars_dqs_update_cs_frame_align_info_t);
+    args.input_len = static_cast<uint32_t>(sizeof(stars_dqs_update_cs_frame_align_info_t));
     args.output_len = 0U;
 
     const rtError_t error = IoctlUtil::GetInstance().IoctlByCmd(STARS_IOCTL_CMD_UPDATE_CS_FRAME_ALIGN_INFO, &args);

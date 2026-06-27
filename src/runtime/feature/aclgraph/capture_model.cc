@@ -860,7 +860,7 @@ void CaptureModel::CaptureModelExecuteFinish(const uint32_t errCode)
     COND_PROC(refCount_ < 1U, return);
     refCount_--;
     if (refCount_ == 0 && errCode != RT_ERROR_NONE) {
-        ReleaseAllJetty();
+        (void)ReleaseAllJetty();
     }
     return;
 }
@@ -883,7 +883,7 @@ void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskI
 {
     void* argHandle = GetAndEraseArgHandle(streamId, taskId);
     if (argHandle != nullptr) {
-        argLoaderBackup_.insert(argHandle);
+        (void)argLoaderBackup_.insert(argHandle);
     }
 }
 
@@ -1259,15 +1259,15 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t &releaseNum)
     sqCqNum_ = 0U;
 
     uint32_t notifReleaseNum = 0;
-    ReleaseNotifyId(notifReleaseNum);
+    (void)ReleaseNotifyId(notifReleaseNum);
     
     return RT_ERROR_NONE;
 }
 
 rtError_t CaptureModel::ReleaseAllSqCq(uint32_t &releaseNum)
 {
-    rtError_t error;
     for (const auto &it : condHandleTaskMap_) {
+        rtError_t error;
         CondHandle *condHandle = it.second;
         for (Model *mdl : condHandle->GetSubCaptureModels()) {
             CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);

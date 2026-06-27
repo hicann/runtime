@@ -294,7 +294,7 @@ rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t *val) const
     return RT_GET_DRV_ERRCODE(drvError);
 }
 
-rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val)
+rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val) const
 {
     (void)deviceId;
     Runtime *const rt = Runtime::Instance();

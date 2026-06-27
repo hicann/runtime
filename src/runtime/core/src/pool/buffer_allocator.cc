@@ -114,7 +114,7 @@ int32_t BufferAllocator::AllocBitMap(uint32_t curCount)
     }
 
     id = bitmap_.AllocId(curCount);
-    if ((id < 0) && (curCount > BUFF_SLIP_NUMBER) && openHugeBuff_ && (hugeBitmap_ != nullptr)) {
+    if ((id < 0) && (curCount > static_cast<uint32_t>(BUFF_SLIP_NUMBER)) && openHugeBuff_ && (hugeBitmap_ != nullptr)) {
         id = hugeBitmap_->AllocId(curCount - BUFF_SLIP_NUMBER);
         id = (id >= 0) ? (id + BUFF_SLIP_NUMBER) : id;
     }

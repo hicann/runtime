@@ -206,7 +206,7 @@ rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t *val) const
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val)
+rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val) const
 {
     UNUSED(deviceId);
     UNUSED(val);

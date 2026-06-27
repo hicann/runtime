@@ -3069,7 +3069,7 @@ rtError_t ApiImpl::MemsetAsync(void * const ptr, const uint64_t destMax, const u
         memsetCallbackParams->destMax = destMax;
         memsetCallbackParams->val = val;
         memsetCallbackParams->cnt = cnt;
-        const rtError_t error = LaunchHostFunc(stm, UvmCallback::MemsetAsyncCallback, static_cast<void *>(memsetCallbackParams));
+        const rtError_t error = LaunchHostFunc(stm, &UvmCallback::MemsetAsyncCallback, static_cast<void *>(memsetCallbackParams));
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "CallbackLaunch fails in MemsetAsync with error code %#x.", error);
             delete memsetCallbackParams;
@@ -5041,12 +5041,12 @@ rtError_t ApiImpl::CallbackLaunchWithEvent(const rtCallback_t callBackFunc, void
             ret = rtInstance->SubscribeCallback(threadId, launchStm, curEvent);
         } else {
             /* get thread id */
-            uint64_t threadId = 0UL;
-            ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadId);
+            uint64_t threadIdx = 0UL;
+            ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadIdx);
             COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, (void)EventDestroy(curEvent),
                 "Get threadId by streamId failed, drv devId=%u, original stream_id=%d, "
                 "capture stream_id=%d, retCode=%#x.", dev->Id_(), stm->Id_(), launchStm->Id_(), ret);
-            ret = rtInstance->SubscribeReport(threadId, launchStm, curEvent);
+            ret = rtInstance->SubscribeReport(threadIdx, launchStm, curEvent);
         }
         if (ret != RT_ERROR_NONE) {
             (void)EventDestroy(curEvent);

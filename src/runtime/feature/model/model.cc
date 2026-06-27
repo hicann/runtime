@@ -1013,7 +1013,7 @@ rtError_t Model::LoadCompleteByStream(void)
     }
     SetNeedSubmitTask(true);
     if (isNeedLoadAicpuModel) {
-        SendAicpuModelLoadMsg(stream);
+        error = SendAicpuModelLoadMsg(stream);
         ERROR_RETURN_MSG_INNER(error, "SendAicpuModelLoadMsg failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
     error = LoadCompleteByStreamPostp(stream);

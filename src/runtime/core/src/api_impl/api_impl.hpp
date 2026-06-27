@@ -768,7 +768,7 @@ protected:
 private:
     rtError_t GetDeviceVirtualInfo(uint32_t deviceId, int64_t *val) const;
     rtError_t GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val);
-    rtError_t GetDeviceNpuArch(uint32_t deviceId, int64_t *val);
+    rtError_t GetDeviceNpuArch(uint32_t deviceId, int64_t *val) const;
     // support feature
     rtError_t GetScheduleType(const int32_t deviceId, int32_t * const val) const;
     rtError_t GetModelTaskUpdateIsSupport(const int32_t deviceId, int32_t * const val);
