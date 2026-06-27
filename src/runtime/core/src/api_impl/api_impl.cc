@@ -4751,8 +4751,8 @@ rtError_t ApiImpl::NotifyWait(Notify * const inNotify, Stream * const stm, const
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1012, __func__, dev->Id_(), "current deviceId",
-            RtFmtMsg("The device (device_id=%d) cannot deliver the notify wait task."
-                " The notify wait task must be delivered on the device (device_id=%d) where the IPC Notify is created",
+            RtFmtMsg("The device (device_id=%u) cannot deliver the notify wait task."
+                " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
             dev->Id_(), inNotify->GetDeviceId()));
 
     uint32_t timeOutTmp = timeOut;

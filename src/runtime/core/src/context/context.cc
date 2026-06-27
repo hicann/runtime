@@ -2722,7 +2722,9 @@ rtError_t Context::StreamAbort(Stream * const stm)
         stm->Id_(), stm->GetSqId(), stm->GetCqId());
     rtError_t ret = RT_ERROR_NONE;
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, __func__, "Aborting model stream is not supported");
+        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, __func__,
+        RtFmtMsg("Aborting stream (stream_id=%d) that is already bound to a model (model_id=%u) is not supported",
+            stm->Id_(), stm->Model_()->Id_()));
     //runtime-ts compatibility check;
     const bool isSupported = IsStreamAbortSupported();
     COND_RETURN_WARN((isSupported == false), RT_ERROR_FEATURE_NOT_SUPPORT, "stream abort is not supported");

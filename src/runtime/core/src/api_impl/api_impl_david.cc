@@ -887,7 +887,10 @@ rtError_t ApiImplDavid::ModelExit(Model * const mdl, Stream * const stm)
     COND_RETURN_AND_MSG_OUTER(stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND,
         ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) is not bound to any model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID,
-        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) is bound to a different model (model_id=%u)", stm->Id_(), stm->Model_()->Id_()));
+        ErrorCode::EE1017, __func__, "stm",
+        RtFmtMsg("The current stream (stream_id=%d) has been bound to another model (model_id=%u) which is different from the input model (model_id=%u). "
+            "The input model must be the same as the model bound to the input stream",
+            stm->Id_(), stm->Model_()->Id_(), mdl->Id_()));
     mdl->IncModelExitNum();
     return RT_ERROR_NONE;  
 }
@@ -1038,8 +1041,8 @@ rtError_t ApiImplDavid::NotifyWait(Notify * const inNotify, Stream * const stm, 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1012, __func__, curCtx->Device_()->Id_(), "current deviceId",
-            RtFmtMsg("The device (device_id=%d) cannot deliver the notify wait task."
-                " The notify wait task must be delivered on the device (device_id=%d) where the IPC Notify is created",
+            RtFmtMsg("The device (device_id=%u) cannot deliver the notify wait task."
+                " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
             curCtx->Device_()->Id_(), inNotify->GetDeviceId()));
     const uint32_t timeOutTmp = timeOut;
     const rtError_t error = NtyWait(inNotify, curStm, timeOutTmp);
