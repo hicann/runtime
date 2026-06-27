@@ -1,0 +1,86 @@
+# 附录 D：编译运行命令参考
+
+## 编译命令
+
+### 方式 1：使用 build_ut.sh（推荐）
+
+```bash
+bash tests/build_ut.sh --target runtime_utest_errmsg_real
+```
+
+**注意**：不加 `-u` 参数，避免运行所有 UT。
+
+### 方式 2：使用 make（最快）
+
+```bash
+cd build && make -j8 runtime_utest_errmsg_real && cd ..
+```
+
+## 运行命令
+
+### 运行所有 ErrMsg 测试
+
+```bash
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest*"
+```
+
+### 运行单个错误码测试
+
+```bash
+# EE1013 内存分配失败
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1013*"
+
+# EE1003 参数值无效
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1003*"
+
+# EE1004 指针参数为空
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1004*"
+
+# EE1017 参数不匹配
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1017*"
+
+# EE1018 API调用顺序错误
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1018*"
+
+# EE1006 功能不支持
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE1006*"
+
+# EE9999 内部错误
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest.EE9999*"
+```
+
+## 一键命令（编译 + 运行）
+
+```bash
+cd build && make -j8 runtime_utest_errmsg_real && cd .. && \
+./build/tests/ut/runtime/runtime/runtime_utest_errmsg_real --gtest_filter="ErrMsgRealTest*"
+```
+
+## 前提条件
+
+确保 `error_code.json` 在正确路径：
+
+```bash
+mkdir -p src/conf/error_manager
+cp src/dfx/error_manager/error_code.json src/conf/error_manager/
+```
+
+## 常见问题
+
+### 问题 1：编译报错 "redefinition of class ErrorManager"
+
+**原因**：未修改 `stub/rt_utest_stub.h`，stub ErrorManager 与真实 ErrorManager 冲突。
+
+**解决**：按附录 B 修改 stub 头文件，添加条件编译。
+
+### 问题 2：ErrMsg 输出为空
+
+**原因**：未取消 `CFG_DEV_PLATFORM_PC` 定义，宏调用被跳过。
+
+**解决**：确保 CMakeLists.txt 中有 `target_compile_options(... -UCFG_DEV_PLATFORM_PC)`。
+
+### 问题 3：ErrorManager Init 返回 -1
+
+**原因**：`error_code.json` 路径不正确。
+
+**解决**：检查路径是否为 `src/conf/error_manager/error_code.json`（相对于工作目录）。

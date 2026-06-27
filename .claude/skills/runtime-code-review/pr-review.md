@@ -141,10 +141,13 @@ python3 .claude/skills/runtime-code-review/scripts/prepare_pr_review_context.py 
 
 8. 按共享规则加载规范文档：
     - `source_files`：`docs/guidelines/coding-guidelines.md`
+      - 涉及 Error Message 相关变更：在上面的基础上，额外读取
+        - `docs/guidelines/error_message_guide/README.md`
+        - 必要时按共享规则继续读取错误码、宏、文案或整改原则专题文档
     - `ut_files`：额外再读
       - `docs/guidelines/ut-coding-guidelines.md`
       - `docs/guidelines/dt_guide/UT用例开发指导.md`
-   - `doc_files`：必要时结合 `docs/guidelines/design_document_template.md`
+    - `doc_files`：必要时结合 `docs/guidelines/design_document_template.md`
 9. 按共享规则逐文件审查
 10. 对发现的问题做验证并过滤误报
 11. 使用共享规则中定义的格式输出结果

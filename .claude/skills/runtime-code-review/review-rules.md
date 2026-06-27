@@ -36,8 +36,9 @@
 ## 输入规则
 
 1. 必须先读取 `docs/guidelines/coding-guidelines.md`，将其作为基础规范来源。
-2. 当变更涉及设计、接口、测试或文档时，还应结合 `docs/guidelines/design_document_template.md` 和 `docs/guidelines/dt_guide/` 下相关文档。
-3. 审查对象由调用方模式提供，可以是本地 diff，也可以是 GitCode PR diff。
+2. 必须扫描变更文件和 diff 内容是否命中 Error Message 信号；命中时读取 `docs/guidelines/error_message_guide/README.md` 并执行 Error Message 专项检视。
+3. 当变更涉及设计、接口、测试或文档时，还应结合 `docs/guidelines/design_document_template.md` 和 `docs/guidelines/dt_guide/` 下相关文档。
+4. 审查对象由调用方模式提供，可以是本地 diff，也可以是 GitCode PR diff。
 
 ## 文件分类与规范加载
 
@@ -53,6 +54,27 @@
 必须读取：
 
 - `docs/guidelines/coding-guidelines.md`
+
+#### Error Message 相关变更
+
+命中以下任一信号时，必须执行 Error Message 专项检视：
+
+| 识别标志 | 说明 |
+|----------|------|
+| 调用[ErrMsg 上报宏使用规范](../../../docs/guidelines/error_message_guide/macro-selection-guide.md)中列出的宏 | Error Message错误上报点 |
+| [`error_code.json`](../../../src/dfx/error_manager/error_code.json) 新增条目或 [`error_code_meta.h`](../../../src/runtime/core/inc/common/error_code_meta.h) 新增 X-Macro 行 | 新增错误码 |
+| 新增 `#define` → 宏展开链追踪确认是上报宏，上报宏定义参考[ErrMsg 上报宏使用规范](../../../docs/guidelines/error_message_guide/macro-selection-guide.md) | 新增上报宏 |
+
+命中后必须先读取：
+
+- `docs/guidelines/error_message_guide/README.md`
+
+必要时再按问题类型读取专题规范：
+
+- 错误码选择不确定：[docs/guidelines/error_message_guide/error-code-guide.md](../../../docs/guidelines/error_message_guide/error-code-guide.md)
+- 宏选择、宏签名、参数数量或字符串风格不确定：[docs/guidelines/error_message_guide/macro-selection-guide.md](../../../docs/guidelines/error_message_guide/macro-selection-guide.md)
+- 文案表达、模板或翻译口径不确定：[docs/guidelines/error_message_guide/message-examples.md](../../../docs/guidelines/error_message_guide/message-examples.md)
+- 整改边界、参数来源、第一现场、防御性编程、重复结构化上报等场景不确定：[docs/guidelines/error_message_guide/rectification-principles.md](../../../docs/guidelines/error_message_guide/rectification-principles.md)
 
 ### UT 文件
 
@@ -156,6 +178,32 @@
 
 1. 测试代码是否满足断言、mock 清理和状态恢复要求。
 2. 是否存在不必要的私有成员访问、`SetChipType` 使用或测试隔离问题。
+
+### H. Error Message 规范
+
+当变更命中 Error Message 相关信号时，必须执行本维度检视。先读取 `docs/guidelines/error_message_guide/README.md`，再按问题类型读取错误码、宏、文案或整改原则专题文档。
+
+重点检查：
+
+1. 用户错误和内部错误分类是否正确：按照[用户错误与内部错误](../../../docs/guidelines/error_message_guide/rectification-principles.md)和[参数来源判断](../../../docs/guidelines/error_message_guide/rectification-principles.md)进行判断。
+2. 错误码选择是否正确，是否匹配场景，Arglist 数量和顺序是否与 `src/dfx/error_manager/error_code.json` 及 `src/runtime/core/inc/common/error_code_meta.h` 匹配：对新增或替换的 ErrorCode，必须按[错误码使用规范](../../../docs/guidelines/error_message_guide/error-code-guide.md)中的说明以及对应分类的决策树逐项判断。
+3. 涉及新增错误码时，需检查新增错误码的完备性， 缺少任一项 → 推荐使用 `errmsg-codegen` skill进行更新，同时需要刷新[错误码使用规范](../../../docs/guidelines/error_message_guide/error-code-guide.md)：
+- JSON 条目完整性：[`error_code.json`](../../../src/dfx/error_manager/error_code.json) 中errClass、errTitle、ErrCode、ErrMessage、Arglist、suggestion
+- X-Macro 表行：[`error_code_meta.h`](../../../src/runtime/core/inc/common/error_code_meta.h)
+- UT 数据（rt_error_code_test.cc 的 allCodes 数组）
+4. 宏是否匹配错误码、控制流和参数传递风格，是否误用 `_INNER` / `_OUTER` 系列宏：按照[ErrMsg 上报宏使用规范](../../../docs/guidelines/error_message_guide/macro-selection-guide.md)进行判断。
+5. 涉及新增宏时，要同步更新[ErrMsg 上报宏使用规范](../../../docs/guidelines/error_message_guide/macro-selection-guide.md)
+6. 错误文案是否包含参数名、参数值、期望值或 Reason，是否可定位、可自闭环，是否句式完整，不存在语法错误。
+7. 是否存在同一错误路径重复结构化上报。
+8. Error Message 整改是否误改业务逻辑、返回值、条件判断或普通日志级别。
+9. 公开 API 参数错误是否漏报必要结构化错误。
+10. 是否满足Error Message整改边界：按照[整改边界](../../../docs/guidelines/error_message_guide/rectification-principles.md)进行判断。
+
+严重程度定义：
+
+- **[必须修改]**：用户错误和内部错误分类明显错误；错误码明显选错；Arglist 数量或顺序与 `error_code.json` / `error_code_meta.h` 不匹配；同一错误路径重复结构化上报；Error Message 整改引入业务逻辑、返回值、条件判断或日志级别变化；公开 API 参数错误漏报必要结构化错误。
+- **[建议修改]**：宏可工作但不是推荐专用宏；文案不够自闭环；Reason、Expected、参数名或参数值表达不清；第一现场日志上下文不足。
+- **[仅供参考]**：非关键措辞优化，或不影响定位的问题说明。
 
 ## 输出格式
 

@@ -8,6 +8,8 @@
 - [x] **gitcode-pr** — Create PR, cherry-pick code to commercial branches. Trigger command: `Review pr 1437` or `Create pr to develop branch`
 - [ ] **superpowers** — Requirement development (generate software design documents, coding, generate test cases). Trigger command: `Develop requirement, requirements...`
 - [x] **runtime-code-review** — Review local code and GitCode PR following various coding standards and module software design constraints
+- [x] **runtime-errmsg-rectification** — Runtime Error Message rectification: review error codes, reporting macros, error messages, and reporting boundaries. Trigger command: `Perform Error Message rectification` or `Review Error Message reporting correctness`
+- [x] **errmsg-ut-setup** — Set up an ErrMsg real-reporting UT verification framework, allowing `ErrorManager::ATCReportErrMessage` to call the real implementation and print formatted ErrMsg. Trigger command: `Verify ErrMsg reporting rectification result` or `Run ErrMsg UT verification`
 - [ ] **gitcode-pipeline** — Trigger pipeline tasks, query pipeline status, get failed task logs
 - [ ] **runtime-dt-runner** — Compile and execute UT/ST test cases
 - [ ] **runtime-tester** — Generate test cases, execute test cases in environments with NPU

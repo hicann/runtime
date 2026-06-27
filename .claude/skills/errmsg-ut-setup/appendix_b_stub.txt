@@ -1,0 +1,53 @@
+# 附录 B：stub 头文件条件编译修改
+
+## 修改文件
+`tests/ut/runtime/runtime/stub/rt_utest_stub.h`
+
+## 修改内容
+
+将文件末尾的 stub `ErrorManager` 类定义修改为：
+
+```cpp
+// stub ErrorManager only when CFG_DEV_PLATFORM_PC is defined
+// otherwise, use real ErrorManager from error_manager.h
+#if defined(CFG_DEV_PLATFORM_PC)
+class ErrorManager {
+public:
+   static ErrorManager &GetInstance();
+   void SetStage(const std::string &firstStage, const std::string &secondStage);
+   void ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key = {},
+                           const std::vector<std::string> &value = {});
+   int Init();
+   int ReportInterErrMessage(std::string error_code, const std::string &error_msg);
+    std::string GetErrorMessage();
+    const std::string &GetLogHeader();
+};
+#endif
+```
+
+## 原始内容（替换前）
+
+```cpp
+class ErrorManager {
+public:
+   static ErrorManager &GetInstance();
+   void SetStage(const std::string &firstStage, const std::string &secondStage);
+   void ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key = {},
+                           const std::vector<std::string> &value = {});
+   int Init();
+   int ReportInterErrMessage(std::string error_code, const std::string &error_msg);
+    std::string GetErrorMessage();
+    const std::string &GetLogHeader();
+};
+```
+
+## 原理说明
+
+当 `-UCFG_DEV_PLATFORM_PC` 取消定义后：
+- stub `ErrorManager` 类不被编译（`#if` 条件不满足）
+- `base.hpp` 引入的真实 `error_manager.h` 中的 `ErrorManager` 类生效
+- 避免了两个同名类的冲突
+
+## 注意事项
+
+此修改仅影响 `runtime_utest_errmsg_real` 目标，其他 UT 目标因仍定义 `CFG_DEV_PLATFORM_PC` 而继续使用 stub。

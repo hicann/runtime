@@ -24,6 +24,9 @@ git diff origin/master...HEAD
 2. 读取共享规则文件：`.claude/skills/runtime-code-review/review-rules.md`
 3. 按文件分类加载规范文档：
     - 源码文件：`docs/guidelines/coding-guidelines.md`
+      - 涉及 Error Message 相关变更：在上面的基础上，额外读取
+        - `docs/guidelines/error_message_guide/README.md`
+        - 必要时按共享规则继续读取错误码、宏、文案或整改原则专题文档
     - UT 文件：在上面的基础上，额外读取
       - `docs/guidelines/ut-coding-guidelines.md`
       - `docs/guidelines/dt_guide/UT用例开发指导.md`

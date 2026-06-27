@@ -1,0 +1,288 @@
+# 附录 C：测试文件完整模板
+
+## 文件路径
+`tests/ut/runtime/runtime/test/rt_errmsg_real_test.cc`
+
+## 完整内容
+
+```cpp
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#include <gtest/gtest.h>
+#include <string>
+#include <vector>
+#include <iostream>
+#include "error_manager.h"
+#include "base.hpp"
+#include "error_message_manage.hpp"
+#include "errcode_manage.hpp"
+#include "error_codes/rt_error_codes.h"
+
+using namespace cce::runtime;
+
+class ErrMsgRealTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        std::string json_base_path = "/mnt/workspace/gitCode/cann-fork/runtime/src/dfx/";
+        int32_t ret = ErrorManager::GetInstance().Init(json_base_path);
+        std::cout << "[SetUp] ErrorManager Init ret=" << ret << std::endl;
+        
+        uint64_t work_stream_id = 0;
+        ErrorManager::GetInstance().ClearErrorMsgContainer(work_stream_id);
+    }
+    
+    void TearDown() override {
+        uint64_t work_stream_id = 0;
+        ErrorManager::GetInstance().ClearErrorMsgContainer(work_stream_id);
+    }
+    
+    std::string GetAndPrintErrMsg() {
+        std::string err_msg = ErrorManager::GetInstance().GetErrorMessage();
+        std::cout << "\n========== ErrMsg Output ==========\n" << err_msg << "\n===================================\n" << std::endl;
+        return err_msg;
+    }
+};
+
+// ============================================================================
+// EE1013: 内存分配失败 - uma_arg_loader.cc:62
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1013_MemoryAllocationFailure) {
+    std::cout << "\n[Test] EE1013 - Memory Allocation Failure" << std::endl;
+    std::cout << "Source: uma_arg_loader.cc:62\nMacro: COND_RETURN_AND_MSG_OUTER(argAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, std::to_string(sizeof(H2DCopyMgr)))" << std::endl;
+    
+    std::string buf_size = std::to_string(144);
+    
+    // 使用 lambda 包装宏调用（解决 void 函数 return value 问题）
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, buf_size);
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("Failed to allocate") != std::string::npos);
+    EXPECT_TRUE(err_msg.find(buf_size) != std::string::npos);
+    EXPECT_TRUE(err_msg.find("host memory") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("Runtime") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1013") != std::string::npos);
+}
+
+// ============================================================================
+// EE1003: 参数值无效 - kernel_utils.cc:198-200
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1003_InvalidParameterValue) {
+    std::cout << "\n[Test] EE1003 - Invalid Parameter Value" << std::endl;
+    std::cout << "Source: kernel_utils.cc:198-200\nMacro: COND_RETURN_AND_MSG_OUTER((taskInfo->type != ...), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, \"rtModelTaskSetParams\", taskInfo->type, \"taskInfo->type\", \"0:AI core task or 66:AI vector task\")" << std::endl;
+    
+    uint32_t invalid_type = 99;
+    
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, 
+            "rtModelTaskSetParams", invalid_type, "taskInfo->type", "0:AI core task or 66:AI vector task");
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("rtModelTaskSetParams") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("99") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("taskInfo->type") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("invalid") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("Expected value") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1003") != std::string::npos);
+}
+
+// ============================================================================
+// EE1004: 指针参数为空 - para_convertor.cc:136 (NULL_PTR_RETURN_MSG_OUTER)
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1004_NullPointerParameter_NullPtrReturnMsgOuter) {
+    std::cout << "\n[Test] EE1004 - Null Pointer Parameter (NULL_PTR_RETURN_MSG_OUTER)" << std::endl;
+    std::cout << "Source: para_convertor.cc:136\nMacro: NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE)" << std::endl;
+    
+    void* null_ptr = nullptr;
+    
+    auto test_func = [&]() -> rtError_t {
+        NULL_PTR_RETURN_MSG_OUTER(null_ptr, RT_ERROR_INVALID_VALUE);
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("cannot be a NULL pointer") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1004") != std::string::npos);
+}
+
+// ============================================================================
+// EE1004: 指针参数为空 - kernel_utils.cc:206-207 (COND_RETURN_AND_MSG_OUTER)
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1004_NullPointerParameter_CondReturnMsgOuter) {
+    std::cout << "\n[Test] EE1004 - Null Pointer Parameter (COND_RETURN_AND_MSG_OUTER)" << std::endl;
+    std::cout << "Source: kernel_utils.cc:206-207\nMacro: COND_RETURN_AND_MSG_OUTER((kernel == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, \"rtModelTaskSetParams\", \"params->kernelTaskParams->funcHandle\")" << std::endl;
+    
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, 
+            "rtModelTaskSetParams", "params->kernelTaskParams->funcHandle");
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("rtModelTaskSetParams") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("params->kernelTaskParams->funcHandle") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("NULL pointer") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1004") != std::string::npos);
+}
+
+// ============================================================================
+// EE1017: 参数不匹配 - para_convertor.cc:35-37
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1017_ParameterMismatch) {
+    std::cout << "\n[Test] EE1017 - Parameter Mismatch" << std::endl;
+    std::cout << "Source: para_convertor.cc:35-37\nMacro: COND_RETURN_AND_MSG_OUTER(phIndex >= arrayArgsNum, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, \"Launch kernel\", \"argsWithType->args.argHandle\", \"The number (5)...\")" << std::endl;
+    
+    std::string reason = "The number (5) of parameters whose para.type is place holder in argHandle must be less than 3";
+    
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+            "Launch kernel", "argsWithType->args.argHandle", reason);
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("Launch kernel") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("argsWithType->args.argHandle") != std::string::npos);
+    EXPECT_TRUE(err_msg.find(reason) != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1017") != std::string::npos);
+}
+
+// ============================================================================
+// EE1018: API调用顺序错误 - model.cc:874-876
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1018_APICallSequenceError) {
+    std::cout << "\n[Test] EE1018 - API Call Sequence Error" << std::endl;
+    std::cout << "Source: model.cc:874-876\nMacro: COND_RETURN_AND_MSG_OUTER(..., RT_ERROR_MODEL_NOT_END, ErrorCode::EE1018, \"aclmdlRIBuildEnd\", \"Before calling aclmdlRIBuildEnd...\")" << std::endl;
+    
+    std::string reason = "Before calling aclmdlRIBuildEnd, you must call aclmdlRIEndTask to mark the end of task delivery in the stream";
+    
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_MODEL_NOT_END, ErrorCode::EE1018, 
+            "aclmdlRIBuildEnd", reason);
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("aclmdlRIBuildEnd") != std::string::npos);
+    EXPECT_TRUE(err_msg.find(reason) != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1018") != std::string::npos);
+}
+
+// ============================================================================
+// EE1006: 功能不支持 - kernel_utils.cc:229-230
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE1006_NotSupported) {
+    std::cout << "\n[Test] EE1006 - Feature Not Supported" << std::endl;
+    std::cout << "Source: kernel_utils.cc:229-230\nMacro: COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, \"non aclGraph mode\")" << std::endl;
+    
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, 
+            "TestBody", "non aclGraph mode");
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("TestBody") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("non aclGraph mode") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("not supported") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE1006") != std::string::npos);
+}
+
+// ============================================================================
+// EE9999: 内部错误 - capture_model.cc:719 (RT_LOG_INNER_MSG)
+// ============================================================================
+TEST_F(ErrMsgRealTest, EE9999_InnerError) {
+    std::cout << "\n[Test] EE9999 - Inner Error" << std::endl;
+    std::cout << "Source: capture_model.cc:719\nMacro: RT_LOG_INNER_MSG(RT_LOG_ERROR, \"Task cannot be a NULL pointer, device_id=%u, model_id=%u.\", device_id, model_id)" << std::endl;
+    
+    uint32_t device_id = 0;
+    uint32_t model_id = 123;
+    
+    // RT_LOG_INNER_MSG 无 return，可直接调用
+    RT_LOG_INNER_MSG(RT_LOG_ERROR, "Task cannot be a NULL pointer, device_id=%u, model_id=%u.", 
+                     device_id, model_id);
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    EXPECT_TRUE(err_msg.find("Task cannot be a NULL pointer") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EE9999") != std::string::npos);
+}
+```
+
+## 新增错误码测试模板
+
+如需新增其他错误码测试，按以下模板编写：
+
+```cpp
+// ============================================================================
+// EEXXXX: 错误描述 - source_file.cc:line_number
+// ============================================================================
+TEST_F(ErrMsgRealTest, EEXXXX_ErrorName) {
+    std::cout << "\n[Test] EEXXXX - Error Description" << std::endl;
+    std::cout << "Source: source_file.cc:line_number\nMacro: COND_RETURN_AND_MSG_OUTER(...)" << std::endl;
+    
+    // 准备参数
+    std::string param1 = "value1";
+    std::string param2 = "value2";
+    
+    // lambda 包装宏调用
+    auto test_func = [&]() -> rtError_t {
+        COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_XXX, ErrorCode::EEXXXX, param1, param2);
+        return RT_ERROR_NONE;
+    };
+    rtError_t ret = test_func();
+    std::cout << "[DEBUG] Macro returned: " << ret << std::endl;
+    
+    std::string err_msg = GetAndPrintErrMsg();
+    
+    // 验证 ErrMsg 内容
+    EXPECT_TRUE(err_msg.find("expected_text") != std::string::npos);
+    EXPECT_TRUE(err_msg.find("EEXXXX") != std::string::npos);
+}
+```
+
+## Lambda 包装技巧说明
+
+问题：`COND_RETURN_AND_MSG_OUTER` 宏内部有 `return RTERRCODE`，但 gtest 的 `TEST_F` 是 void 函数。
+
+解决：用 lambda 包装，lambda 返回 `rtError_t`，宏的 return 在 lambda 内生效：
+```cpp
+auto test_func = [&]() -> rtError_t {
+    COND_RETURN_AND_MSG_OUTER(true, ...);  // 宏内的 return 在这里生效
+    return RT_ERROR_NONE;  // 条件不满足时返回
+};
+rtError_t ret = test_func();  // 调用 lambda
+```
