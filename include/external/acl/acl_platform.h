@@ -41,11 +41,10 @@ typedef enum aclplatformDevInfo {
     ACL_PLATFORM_L0_B_SIZE         = 10,
     ACL_PLATFORM_L0_C_SIZE         = 11,
     ACL_PLATFORM_L1_SIZE           = 12,
-    ACL_PLATFORM_SHORT_SOC_VERSION = 13,
-    ACL_PLATFORM_SOC_VERSION       = 14,
-    ACL_PLATFORM_AIC_VERSION       = 15,
-    ACL_PLATFORM_NPU_ARCH          = 16,
-    ACL_PLATFORM_MEMORY_TYPE       = 17,    
+    ACL_PLATFORM_SOC_VERSION       = 13,
+    ACL_PLATFORM_AIC_VERSION       = 14,
+    ACL_PLATFORM_NPU_ARCH          = 15,
+    ACL_PLATFORM_MEMORY_TYPE       = 16,
 } aclplatformDevInfo;
 
 typedef enum aclplatformCoreType {
@@ -60,6 +59,22 @@ aclError aclplatformGetInstructionInfo(aclplatformCoreType type,
                                         char *value,
                                         uint32_t maxLen);
 
+typedef enum aclplatformNpuArch {
+    DAV_1001 = 1001,
+    DAV_2002 = 2002,
+    DAV_2102 = 2102,
+    DAV_2201 = 2201,
+    DAV_3002 = 3002,
+    DAV_3003 = 3003,
+    DAV_3004 = 3004,
+    DAV_3102 = 3102,
+    DAV_3113 = 3113,
+    DAV_3505 = 3505,
+    DAV_3510 = 3510,
+    DAV_5102 = 5102,
+    DAV_RESV = 0xFFFF
+} aclplatformNpuArch;
+
 // --------------------------------------------------------------------------
 // Mapping: aclplatformDevInfo enum value → (ini section, ini key)
 // Indexed by enum value; order MUST match aclplatformDevInfo definition.
@@ -73,7 +88,7 @@ aclError aclplatformGetInstructionInfo(aclplatformCoreType type,
 //     UB   (5) → ACL_PLATFORM_AICORE_UB_SIZE (1)
 //     HBM  (6) → ACL_PLATFORM_MEMORY_SIZE    (5)
 // --------------------------------------------------------------------------
-enum class aclplatformLocalMemType {
+typedef enum aclplatformLocalMemType {
     L0_A = 0,
     L0_B = 1,
     L0_C = 2,
@@ -81,7 +96,7 @@ enum class aclplatformLocalMemType {
     L2 = 4,
     UB = 5,
     HBM = 6
-};
+} aclplatformLocalMemType;
 
 #ifdef __cplusplus
 }

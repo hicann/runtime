@@ -169,14 +169,6 @@ TEST_F(PlatformManagerAclUTest, acl_platform_GetDeviceInfo_L1_SIZE)
   EXPECT_STREQ(buf, "524288");
 }
 
-TEST_F(PlatformManagerAclUTest, acl_platform_GetDeviceInfo_SHORT_SOC_VERSION)
-{
-  char buf[64] = {0};
-  aclError ret = aclplatformGetDeviceInfo(ACL_PLATFORM_SHORT_SOC_VERSION, buf, sizeof(buf));
-  EXPECT_EQ(ret, ACL_SUCCESS);
-  EXPECT_STREQ(buf, "Ascend910B");
-}
-
 TEST_F(PlatformManagerAclUTest, acl_platform_GetDeviceInfo_SOC_VERSION)
 {
   char buf[64] = {0};
