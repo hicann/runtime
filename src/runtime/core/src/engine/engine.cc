@@ -1051,7 +1051,7 @@ rtError_t Engine::SendTask(TaskInfo * const workTask, uint16_t &taskId, uint32_t
     Stream * const stm = workTask->stream;
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
-        RtFmtMsg("Stream %d with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
+        RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
 
     TIMESTAMP_BEGIN(TryRecycleTask);
     rtError_t error = TryRecycleTask(stm);

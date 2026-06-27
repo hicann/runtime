@@ -381,7 +381,7 @@ static rtError_t CheckUpdateFusionTaskInfo(const TaskInfo * const updateTask, ui
 
     COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
         ErrorCode::EE1017, __func__, "stream",
-        "The update stream must be a single operator stream, not bound to a model");
+        RtFmtMsg("The update stream (stream_id=%d) must be a single operator stream, not bound to a model (model_id=%u)", stm->Id_(), stm->Model_()->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(updateTask->u.fusionKernelTask.sqeLen != sqeLen, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1011, __func__, sqeLen, "sqeLen",

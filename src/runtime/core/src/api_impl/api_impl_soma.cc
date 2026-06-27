@@ -160,7 +160,7 @@ rtError_t ApiImplSoma::SomaAicpuLaunchValidation(const rtKernelLaunchNames_t * c
  
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
-        RtFmtMsg("Stream %d with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
+        RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
     
     RT_LOG(RT_LOG_DEBUG,
            "Launch CPU kernel params: coreDim=%u, argsSize=%u, hostInputLen=%hu,"

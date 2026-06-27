@@ -4329,16 +4329,6 @@ ERROR_TASK:
     return error;
 }
 
-Model* Stream::Model_() const
-{
-    for (auto it = models_.begin(); it != models_.end(); it++) {
-        if (*it != nullptr) {
-            return *it;
-        }
-    }
-    return nullptr;
-}
-
 bool Stream::IsModelsDebugRegister() const
 {
     for (auto it = models_.begin(); it != models_.end(); it++) {

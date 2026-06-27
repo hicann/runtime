@@ -2076,6 +2076,63 @@ TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_RelaxedMode_EE1016)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(CloudV2ApiImplTest, rtsModelBindStream_StreamAlreadyBound)
+{
+    rtError_t error;
+    rtModel_t modelA;
+    rtModel_t modelB;
+    rtStream_t stream;
+
+    error = rtsModelCreate(&modelA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelCreate(&modelB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelBindStream(modelA, stream, RT_MODEL_STREAM_FLAG_DEFAULT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelBindStream(modelB, stream, RT_MODEL_STREAM_FLAG_DEFAULT);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    error = rtsModelUnbindStream(modelA, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelDestroy(modelA);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelDestroy(modelB);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiImplTest, rtsModelBindStream_NonPersistentStream)
+{
+    rtError_t error;
+    rtModel_t model;
+    rtStream_t stream;
+
+    error = rtsModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelBindStream(model, stream, RT_MODEL_STREAM_FLAG_DEFAULT);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtsModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_NonRelaxedMode_EE1016)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);

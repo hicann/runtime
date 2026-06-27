@@ -905,7 +905,7 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opNa
         coreDim, "less than or equal to 0xffff");   
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
-        RtFmtMsg("Stream %d with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
+        RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
     NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
@@ -1048,7 +1048,7 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
 
     COND_RETURN_AND_MSG_OUTER(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     return impl_->StreamDestroy(stm, flag);
 }
@@ -1080,10 +1080,10 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
         "The current stream is used to carry AI CPU scheduling tasks and does not support stream synchronization");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
         RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
-        RtFmtMsg("Stream %d can be called only on the device", stm->Id_()));
+        RtFmtMsg("Stream (stream_id=%d) can be called only on the device", stm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     int32_t streamId = 0;
     if (stm != nullptr) {
@@ -1109,7 +1109,7 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
 rtError_t ApiErrorDecorator::StreamQuery(Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->StreamQuery(stm);
 }
 
@@ -1342,9 +1342,9 @@ rtError_t ApiErrorDecorator::EventSynchronize(Event * const evt, const int32_t t
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support synchronization.");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     COND_RETURN_AND_MSG_OUTER(evt->IsEventInModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, __func__,
-         RtFmtMsg("The event %d in the stream bound to the model is not supported", evt->EventId_()));
+        RtFmtMsg("The event (event_id=%d) in the stream bound to the model is not supported", evt->EventId_()));
     return impl_->EventSynchronize(evt, timeout);
 }
 
@@ -1358,7 +1358,7 @@ rtError_t ApiErrorDecorator::EventQuery(Event * const evt)
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventQuery API");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQuery(evt);
 }
 
@@ -1369,7 +1369,7 @@ rtError_t ApiErrorDecorator::EventQueryStatus(Event * const evt, rtEventStatus_t
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support querying status.");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQueryStatus(evt, status);
 }
 
@@ -1384,7 +1384,7 @@ rtError_t ApiErrorDecorator::EventQueryWaitStatus(Event * const evt, rtEventWait
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventQueryWaitStatus API");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQueryWaitStatus(evt, status);
 }
 
@@ -3181,26 +3181,26 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model * const mdl, Stream * const s
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
         ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, 
         __func__, "ACL_STREAM_DEVICE_USE_ONLY", "stream flag",
-        RtFmtMsg("Stream %d with the flag ACL_STREAM_DEVICE_USE_ONLY cannot be bound to a model", curStm->Id_()));
+        RtFmtMsg("Stream (stream_id=%d) with the flag ACL_STREAM_DEVICE_USE_ONLY cannot be bound to a model", curStm->Id_()));
     COND_RETURN_ERROR_MSG_INNER(curStm->IsBindDvppGrp(), RT_ERROR_STREAM_BIND_GRP, 
-        "Stream %d of the specified DVPP group cannot be bound to a model", curStm->Id_());
+        "Stream (stream_id=%d) of the specified DVPP group cannot be bound to a model", curStm->Id_());
     COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == STOP_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stop mode for stream %d is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stop mode for stream (stream_id=%d) is not supported", curStm->Id_()));
     COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == ABORT_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Abort mode for stream %d is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Abort mode for stream (stream_id=%d) is not supported", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_FAST_LAUNCH) != 0, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011, 
         __func__, "ACL_STREAM_FAST_LAUNCH", "stream flag", 
-        "Stream " + std::to_string(curStm->Id_()) + " with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model");
+        RtFmtMsg("Stream (stream_id=%d) with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER((curStm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC)) &&
         ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0), RT_ERROR_INVALID_VALUE, 
         ErrorCode::EE1011, __func__, curStm->Flags(), "stream flag", 
-        RtFmtMsg("Non-persistent stream %u cannot be bound to a model", curStm->Id_()));
+        RtFmtMsg("Non-persistent stream (stream_id=%d) cannot be bound to a model", curStm->Id_()));
 
     const uint32_t modelId = mdl->Id_();
     const int32_t streamId = curStm->Id_();
@@ -3217,10 +3217,10 @@ rtError_t ApiErrorDecorator::ModelUnbindStream(Model * const mdl, Stream * const
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     const uint32_t modelId = mdl->Id_();
     const int32_t streamId = curStm->Id_();
@@ -3251,7 +3251,7 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
         "stm", "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     
     if ((stm != nullptr) && (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC))) {
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_AICPU) != 0),
@@ -3262,7 +3262,7 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
             "Sink streams do not support execution models");
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
-            RtFmtMsg("Stream %d can be called only on the device", stm->Id_()));
+            RtFmtMsg("Stream (stream_id=%d) can be called only on the device", stm->Id_()));
     }
 
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
@@ -3298,7 +3298,7 @@ rtError_t ApiErrorDecorator::ModelExecuteAsync(Model * const mdl, Stream * const
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
         "stm", "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     const rtError_t error = impl_->ModelExecuteAsync(mdl, stm);
     ERROR_RETURN(error, "Execute model failed.");
@@ -3444,7 +3444,7 @@ rtError_t ApiErrorDecorator::ModelEndGraph(Model * const mdl, Stream * const stm
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
         ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     const rtError_t error = impl_->ModelEndGraph(mdl, curStm, flags);
     ERROR_RETURN(error, "Add model end graph failed, flags=%u.", flags);
@@ -3848,7 +3848,7 @@ rtError_t ApiErrorDecorator::SubscribeReport(const uint64_t threadId, Stream * c
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
         RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
-        RtFmtMsg("The stream %d is in the host callback process and cannot call rtSubscribeReport", stm->Id_()));
+        RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtSubscribeReport", stm->Id_()));
     return impl_->SubscribeReport(threadId, stm);
 }
 
@@ -3858,7 +3858,7 @@ rtError_t ApiErrorDecorator::CallbackLaunch(const rtCallback_t callBackFunc, voi
     NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
         RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__, 
-        RtFmtMsg("The stream %d is in the host callback process and cannot call rtCallbackLaunch", stm->Id_()));
+        RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtCallbackLaunch", stm->Id_()));
     return impl_->CallbackLaunch(callBackFunc, fnData, stm, isBlock);
 }
 
@@ -3874,7 +3874,7 @@ rtError_t ApiErrorDecorator::UnSubscribeReport(const uint64_t threadId, Stream *
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
         RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
-        RtFmtMsg("The stream %d is in the host callback process and cannot call rtUnSubscribeReport", stm->Id_()));
+        RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtUnSubscribeReport", stm->Id_()));
     return impl_->UnSubscribeReport(threadId, stm);
 }
 
@@ -3928,7 +3928,7 @@ rtError_t ApiErrorDecorator::LabelCreateEx(Label ** const lbl, Model * const mdl
     COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
         ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
 
     return impl_->LabelCreateEx(lbl, mdl, curStm);
 }
@@ -4237,7 +4237,7 @@ rtError_t ApiErrorDecorator::NpuGetFloatStatus(void * const outputAddrPtr, const
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     return impl_->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm);
 }
@@ -4247,7 +4247,7 @@ rtError_t ApiErrorDecorator::NpuClearFloatStatus(const uint32_t checkMode, Strea
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     return impl_->NpuClearFloatStatus(checkMode, curStm);
 }
 
@@ -4261,7 +4261,7 @@ rtError_t ApiErrorDecorator::NpuGetFloatDebugStatus(void * const outputAddrPtr, 
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
 
     return impl_->NpuGetFloatDebugStatus(outputAddrPtr, outputSize, checkMode, curStm);
 }
@@ -4271,7 +4271,7 @@ rtError_t ApiErrorDecorator::NpuClearFloatDebugStatus(const uint32_t checkMode, 
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     return impl_->NpuClearFloatDebugStatus(checkMode, curStm);
 }
 
@@ -5049,7 +5049,7 @@ rtError_t ApiErrorDecorator::SetStreamOverflowSwitch(Stream * const stm, const u
         RT_ERROR_INVALID_VALUE, flags, 
         "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->SetStreamOverflowSwitch(stm, flags);
 }
 rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags)
@@ -5136,7 +5136,7 @@ rtError_t ApiErrorDecorator::DvppWaitGroupReport(DvppGrp * const grp, const  rtD
 rtError_t ApiErrorDecorator::SetStreamTag(Stream * const stm, const uint32_t geOpTag)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     const rtError_t error = impl_->SetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "set stream geOpTag failed.");
     return error;
@@ -5202,14 +5202,14 @@ rtError_t ApiErrorDecorator::GetDeviceSatStatus(void * const outputAddrPtr, cons
         RT_ERROR_INVALID_VALUE, "Output size %lu is invalid. Only %lu bytes are supported",
         outputSize, OVERFLOW_OUTPUT_SIZE);
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->GetDeviceSatStatus(outputAddrPtr, outputSize, stm);
 }
 
 rtError_t ApiErrorDecorator::CleanDeviceSatStatus(Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream %d during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->CleanDeviceSatStatus(stm);
 }
 
@@ -6339,7 +6339,7 @@ rtError_t ApiErrorDecorator::LaunchHostFunc(Stream * const stm, const rtCallback
     NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_USER),
         RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
-        RtFmtMsg("The stream %d is in the host callback process and cannot call rtsLaunchHostFunc", stm->Id_()));
+        RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtsLaunchHostFunc", stm->Id_()));
     return impl_->LaunchHostFunc(stm, callBackFunc, fnData);
 }
 
