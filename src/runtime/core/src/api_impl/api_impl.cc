@@ -1584,12 +1584,12 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
     if (evt->IsCapturing()) {
         COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
             StreamFlagsToString(curStm->Flags()), "stream flag",
-            "Stream " + std::to_string(curStm->Id_()) + " does not support the ACL Graph");
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, __func__,
-            "stream", "The default stream cannot be used in the ACL Graph");
+            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
             EventFlagsToString(evt->GetEventFlag()), "event flag",
-            "Event " + std::to_string(evt->EventId_()) + " does not support the ACL Graph");
+            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureEventWait(curCtx, curStm, evt, timeout);
@@ -1925,7 +1925,8 @@ rtError_t ApiImpl::StreamSetMode(Stream * const stm, const uint64_t stmMode)
 
     Stream * const curStm = stm;
     COND_RETURN_AND_MSG_OUTER(curStm->GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__, "stream",
-        "Stream " + std::to_string(curStm->Id_()) + " has been bound to a model. This operation only supports single-operator streams");
+        RtFmtMsg("Stream (stream_id=%d) has been bound to a model (model_id=%u)."
+            " This operation only supports single-operator streams", curStm->Id_(), curStm->Model_()->Id_()));
 
     const uint64_t failmode = (stmMode & 0x1U);
     if (curStm->GetFailureMode() == failmode) {
@@ -2073,9 +2074,9 @@ rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm)
             evt->IsNewMode());
         COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
             StreamFlagsToString(curStm->Flags()), "stream flag",
-            "Stream " + std::to_string(curStm->Id_()) + " does not support the ACL Graph");
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, __func__,
-            "stream", "The default stream cannot be used in the ACL Graph");
+            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_WARN(evt->IsEventWithoutWaitTask(), RT_ERROR_NONE,
             "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
@@ -2118,12 +2119,12 @@ rtError_t ApiImpl::EventReset(Event * const evt, Stream * const stm)
     if (evt->IsCapturing()) {
         COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
             StreamFlagsToString(curStm->Flags()), "stream flag",
-            "Stream " + std::to_string(curStm->Id_()) + " does not support the ACL Graph");
+            RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, __func__,
-            "stream", "The default stream cannot be used in the ACL Graph");
+            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
             EventFlagsToString(evt->GetEventFlag()), "event flag",
-            "Event " + std::to_string(evt->EventId_()) + " does not support the ACL Graph");
+            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureEventReset(evt, curStm);
@@ -2786,10 +2787,10 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void 
     }
 
     COND_RETURN_AND_MSG_OUTER(curStm->GetBindFlag() == true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Updating task information", "stream", "The curStm parameter should be a single-operator flow stream");
+        "Updating task information", "stream", RtFmtMsg("Stream (stream_id=%d) should be a single-operator flow stream", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing() == true, RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
-        "Updating task information", RtFmtMsg("Stream %d during the capture stage is not supported", curStm->Id_()));
+        "Updating task information", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
@@ -4726,8 +4727,9 @@ rtError_t ApiImpl::NotifyWait(Notify * const inNotify, Stream * const stm, const
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1012, __func__, dev->Id_(), "current deviceId",
-            "The current device cannot deliver Notify Wait, the corresponding Notify Wait must be delivered on "
-            "the device that creates the IPC Notify");
+            RtFmtMsg("The device (device_id=%d) cannot deliver the notify wait task."
+                " The notify wait task must be delivered on the device (device_id=%d) where the IPC Notify is created",
+            dev->Id_(), inNotify->GetDeviceId()));
 
     uint32_t timeOutTmp = timeOut;
     if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT) &&
@@ -4829,9 +4831,9 @@ rtError_t ApiImpl::StreamSwitchEx(void * const ptr, const rtCondition_t conditio
 {
     RT_LOG(RT_LOG_DEBUG, "Switch, condition=%d, dataType=%d.", condition, dataType);
     COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "trueStream->modelNum", "The stream is not bound to a model");
+        0, "trueStream->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStream->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "stm->modelNum", "The stream is not bound to a model");
+        0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -4849,12 +4851,12 @@ rtError_t ApiImpl::StreamSwitchN(void * const ptr, const uint32_t size, void * c
     for (uint32_t i = 0U; i < elementSize; i++) {
         NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr[i], RT_ERROR_STREAM_NULL);
         COND_RETURN_AND_MSG_OUTER(trueStreamPtr[i]->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
-            __func__, 0, "trueStreamPtr[" + std::to_string(i) + "]->modelNum", "The stream is not bound to a model");
+            __func__, 0, "trueStreamPtr[" + std::to_string(i) + "]->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStreamPtr[i]->Id_()));
     }
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "stm->modelNum", "The stream is not bound to a model");
+            0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     return CondStreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, stm, dataType, curCtx);
 }
 
@@ -4864,9 +4866,9 @@ rtError_t ApiImpl::StreamActive(Stream * const activeStream, Stream * const stm)
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "stm->modelNum", "The stream is not bound to a model");
+            0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(activeStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "activeStream->modelNum", "The stream is not bound to a model");
+            0, "activeStream->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", activeStream->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     return CondStreamActive(activeStream, stm, curCtx);
@@ -5118,8 +5120,9 @@ rtError_t ApiImpl::CallbackLaunch(const rtCallback_t callBackFunc, void * const 
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(!curStm->IsHostFuncCbReg(), RT_ERROR_STREAM_NO_CB_REG, ErrorCode::EE1018,
-        __func__, "Stream " + std::to_string(curStm->Id_()) + " is not bound to any thread. "
-        "Call the rtSubscribeReport API to bind a thread to the stream");
+        __func__,
+        RtFmtMsg("Stream (stream_id=%d) is not bound to any thread. Call the rtSubscribeReport API to bind a thread to the stream",
+        curStm->Id_()));
 
     Runtime * const rt = Runtime::Instance();
     if (rt->ChipIsHaveStars() && isBlock) {
@@ -5257,7 +5260,7 @@ rtError_t ApiImpl::LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, v
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "stm->modelNum", "The stream is not bound to a model");
+            0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
 
     COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support switching label by index");
 
@@ -5307,16 +5310,17 @@ rtError_t ApiImpl::LabelListCpy(Label ** const lbl, const uint32_t labelNumber, 
             "Label[" + std::to_string(lbIdx) + "] is not associated with any stream. "
             "Call the rtSetLabel API to associate the label with a stream");
         COND_RETURN_AND_MSG_OUTER(lbl[lbIdx]->Stream_()->Model_() == nullptr, RT_ERROR_LABEL_MODEL, ErrorCode::EE1018, __func__,
-            "Stream " + std::to_string(lbl[lbIdx]->Stream_()->Id_()) + " associated with label[" + std::to_string(lbIdx) + "] "
-            "is not in the model. Call the rtLabelSet API to bind the stream to the model first");
+            RtFmtMsg("Stream (stream_id=%d) associated with label[%u] is not in the model."
+            " Call the rtLabelSet API to bind the stream to the model first",
+            lbl[lbIdx]->Stream_()->Id_(), lbIdx));
 
         stm = lbl[lbIdx]->Stream_();
         mdl = stm->Model_();
         COND_RETURN_AND_MSG_OUTER(mdl->Id_() != modelId, RT_ERROR_LABEL_MODEL, ErrorCode::EE1017, __func__,
-            "label[" + std::to_string(lbIdx) + "]",
-            "The stream associated with label[" + std::to_string(lbIdx) + "] is not in the same model as that associated with label[0]. "
-            "The stream associated with label[" + std::to_string(lbIdx) + "] belongs to model " + std::to_string(mdl->Id_()) + ", "
-            "and the stream associated with label[0] belongs to model " + std::to_string(modelId));
+            RtFmtMsg("label[%u]", lbIdx),
+            RtFmtMsg("The stream associated with label[%u] is not in the same model as that associated with label[0]. "
+            "The stream associated with label[%u] belongs to model (model_id=%u), "
+            "and the stream associated with label[0] belongs to model (model_id=%u)", lbIdx, lbIdx, mdl->Id_(), modelId));
     }
 
     return CondLabelListCpy(lbl, labelNumber, dst, dstMax, curCtx->Device_());
@@ -8474,7 +8478,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     COND_RETURN_AND_MSG_OUTER(((memType != inputDstType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "dst", RtFmtMsg("The input memory type %s(%d) and the actual memory type %s(%d) do not match,"
-            " or the input device ID %d and the actual device ID %d do not match", MemLocationTypeToStr(memAttr.dstLoc.type),
+            " or the input device ID (device_id=%d) and the actual device ID (device_id=%d) do not match", MemLocationTypeToStr(memAttr.dstLoc.type),
             memAttr.dstLoc.type, MemLocationTypeToStr(dstAttr.location.type), dstAttr.location.type, memAttr.dstLoc.id, dstAttr.location.id));
 
     error = PtrGetAttributes(src, &srcAttr);
@@ -8484,7 +8488,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     COND_RETURN_AND_MSG_OUTER(((memType != inputSrcType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "src", RtFmtMsg("The input memory type %s(%d) and the actual memory type %s(%d) do not match,"
-            " or the input device ID %d and the actual device ID %d do not match", MemLocationTypeToStr(memAttr.srcLoc.type),
+            " or the input device ID (device_id=%d) and the actual device ID (device_id=%d) do not match", MemLocationTypeToStr(memAttr.srcLoc.type),
             memAttr.srcLoc.type, MemLocationTypeToStr(srcAttr.location.type), srcAttr.location.type, memAttr.srcLoc.id, srcAttr.location.id));
 
     return RT_ERROR_NONE;
@@ -8828,7 +8832,7 @@ rtError_t ApiImpl::CacheLastTaskOpInfo(const void * const infoPtr, const size_t 
 
     Model* mdl = stm->Model_();
     COND_RETURN_ERROR_MSG_INNER(mdl == nullptr || mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL,
-        RT_ERROR_MODEL_NULL, "Stream %u is not bound to a model or the bound model is not a CAPTURE model", lastStreamId);
+        RT_ERROR_MODEL_NULL, "Stream (stream_id=%u) is not bound to a model or the bound model is not a CAPTURE model", lastStreamId);
 
     CaptureModel *captureMdl = dynamic_cast<CaptureModel *>(mdl);
     return captureMdl->CacheLastTaskOpInfo(infoPtr, infoSize, stm);
@@ -9221,7 +9225,7 @@ rtError_t ApiImpl::ModelGetStreams(const Model * const mdl, Stream **streams, ui
 rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
 {
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
-        0, "stm->modelNum", "The stream is not bound to a model");
+        0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     Model* const mdl = stm->Model_();
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
     COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support getting tasks");

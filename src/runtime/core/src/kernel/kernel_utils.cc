@@ -207,7 +207,8 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
 {
     if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "task",
-            "The input task must be a compute task on Cube Core or Vector Core. You can call the aclmdlRITaskGetType API to obtain the task type");
+            "The input task must be a compute task on the Cube Core or Vector Core. Before calling aclmdlRITaskSetParamsImpl, "
+            "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");
         RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
         return RT_ERROR_INVALID_VALUE;
     }
@@ -291,7 +292,8 @@ rtError_t GetKernelAttribute(const TaskInfo* const taskInfo, rtLaunchKernelAttrI
 {
     if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "task",
-            "The input task must be a compute task on Cube Core or Vector Core. You can call the aclmdlRITaskGetType API to obtain the task type");
+            "The input task must be a compute task on the Cube Core or Vector Core. Before calling aclmdlRITaskSetParamsImpl, "
+            "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");
         RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
         return RT_ERROR_INVALID_VALUE;
     }

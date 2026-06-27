@@ -30,7 +30,7 @@ rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
     COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
-        "stream", "The default stream cannot be used in the ACL Graph");
+        "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
     return curCtx->StreamBeginCapture(stm, mode, mdl);
 }
 
@@ -51,7 +51,7 @@ rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMd
     COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
     COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
-        "stream", "The default stream cannot be used in the ACL Graph");
+        "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
     Model *mdl = nullptr;    
     rtError_t ret = curCtx->StreamEndCapture(stm, &mdl);
@@ -144,7 +144,7 @@ rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(captureMdl, curCtx, RT_ERROR_MODEL_CONTEXT);
     COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
-        "stream", "The default stream cannot be used in the ACL Graph");
+        "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
     return curCtx->StreamAddToModel(stm, captureMdl);
 }

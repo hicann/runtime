@@ -200,13 +200,13 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
     RT_LOG(RT_LOG_INFO, "capture model execute, model_id=%u!", Id_());
 
     if (IsCapturing()) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model", "Model is in capturing state, status=CAPTURING");
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model", RtFmtMsg("Model (model_id=%u) is in capturing state, status=CAPTURING", Id_()));
         return RT_ERROR_MODEL_CAPTURED;
     }
 
     if (captureModelStatus_ != RtCaptureModelStatus::READY) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model",
-            "Model is not ready, status=" + CaptureModelStatusToString(captureModelStatus_));
+            RtFmtMsg("Model (model_id=%u) is not ready, status=%s", Id_(), CaptureModelStatusToString(captureModelStatus_).c_str()));
         return RT_ERROR_MODEL_EXE_FAILED;
     }
 
@@ -564,7 +564,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
 
     const uint32_t streamNum = static_cast<uint32_t>(StreamList_().size());
     COND_RETURN_AND_MSG_OUTER(streamNum == 0U, RT_ERROR_INVALID_VALUE, ErrorCode::EE1009, std::to_string(Id_()),
-        "The current aclgraph model running instance neither contains any executable task nor contains any executable stream");
+        RtFmtMsg("The current aclgraph model (model_id=%u) running instance neither contains any executable task nor contains any executable stream", Id_()));
 
     uint32_t totalSqcqNum = 0;
     uint32_t sqcqPoolResNum = Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum();

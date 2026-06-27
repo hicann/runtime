@@ -58,12 +58,12 @@
     /* EE1007 - Resource_Error_Bind_Stream */                                 \
     X(EE1007, "EE1007",                                                       \
       ("id", "reason"),                                                       \
-      "Failed to bind stream with ID %s. Reason: %s. ErrorCode=EE1007.\n",    \
+      "Failed to bind stream (stream_id=%s). Reason: %s. ErrorCode=EE1007.\n",    \
       DLOG_ERROR)                                                             \
     /* EE1009 - Execution_Error_Model */                                      \
     X(EE1009, "EE1009",                                                       \
       ("id", "reason"),                                                       \
-      "Failed to execute model with ID %s. Reason: %s. "                      \
+      "Failed to execute model (model_id=%s). Reason: %s. "                      \
       "ErrorCode=EE1009.\n",                                                  \
       DLOG_ERROR)                                                             \
     /* EE1010 - Execution_Error_Invalid_Context */                            \

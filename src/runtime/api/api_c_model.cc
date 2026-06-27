@@ -83,7 +83,8 @@ rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
         ErrorCode::EE1017, __func__, "stm", "Non-persistent stream cannot be bound to a model");
     if ((bindStream != nullptr) && (bindStream->GetModelNum() != 0)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, bindStream->Id_(),
-            "The stream is bound to more than one mdlRI. Size: " + std::to_string(bindStream->GetModelNum()));
+            RtFmtMsg("The current stream has been bound to a model (model_id=%u) and cannot be bound to the input model (model_id=%u)",
+            bindStream->Model_()->Id_(), realModel->Id_()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_STREAM_MODEL);
     }
 

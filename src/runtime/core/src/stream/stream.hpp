@@ -387,7 +387,15 @@ public:
         models_.erase(mdl);
     }
 
-    Model *Model_() const;
+    Model *Model_() const
+    {
+        for (auto it = models_.begin(); it != models_.end(); it++) {
+            if (*it != nullptr) {
+                return *it;
+            }
+        }
+        return nullptr;
+    }
 
     uint16_t GetModelNum() const
     {

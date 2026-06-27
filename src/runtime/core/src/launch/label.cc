@@ -155,11 +155,12 @@ rtError_t Label::Set(Stream * const stm)
     NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
     COND_RETURN_AND_MSG_OUTER((mgrType_ == LABEL_MGR_TYPE_MODEL) && (stm->Model_() != model_),
         RT_ERROR_LABEL_MODEL, ErrorCode::EE1017, "rtLabelSet", "stream",
-        "Model " + std::to_string(stm->Model_()->Id_()) + " bound to the stream is inconsistent with model "
-        + std::to_string(model_->Id_()) + " to which the label belongs");
+        RtFmtMsg("Model (model_id=%d) bound to the stream is inconsistent with model (model_id=%d) to which the label belongs",
+        stm->Model_()->Id_(), model_->Id_()));
     COND_RETURN_AND_MSG_OUTER((stream_ != nullptr) && (stream_ != stm), RT_ERROR_LABEL_STREAM, ErrorCode::EE1017,
-        "rtLabelSet", "stream", "The current stream " + std::to_string(stm->Id_()) +
-        " is inconsistent with the stream " + std::to_string(stream_->Id_()) + " associated with the label");
+        "rtLabelSet", "stream",
+        RtFmtMsg("The current stream (stream_id=%d) is inconsistent with the stream (stream_id=%d) associated with the label", 
+        stm->Id_(), stream_->Id_()));
     COND_RETURN_AND_MSG_OUTER(setFlag_, RT_ERROR_LABEL_SET, ErrorCode::EE1018,
         "rtLabelSet", "The label cannot be set repeatedly");
 

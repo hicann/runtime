@@ -484,7 +484,7 @@
       "errClass": "RTS Errors",
       "errTitle": "Resource_Error_Bind_Stream",
       "ErrCode": "EE1007",
-      "ErrMessage": "Failed to bind stream with ID %s. Reason: %s.",
+      "ErrMessage": "Failed to bind stream (stream_id=%s). Reason: %s.",
       "Arglist": "id, reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -495,7 +495,7 @@
       "errClass": "RTS Errors",
       "errTitle": "Execution_Error_Model",
       "ErrCode": "EE1009",
-      "ErrMessage": "Failed to execute model with ID %s. Reason: %s.",
+      "ErrMessage": "Failed to execute model (model_id=%s). Reason: %s.",
       "Arglist": "id, reason",
       "suggestion": {
         "Possible Cause": "N/A",

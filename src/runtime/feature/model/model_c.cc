@@ -738,14 +738,14 @@ rtError_t MdlAddEndGraph(Model * const mdl, Stream * const stm, const uint32_t f
     const uint32_t endGraphNum = mdl->EndGraphNum_();
     if (endGraphNum >= 1U) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, "endGraphNum",
-            "model must have only one endgraph");
+            RtFmtMsg("Model (model_id=%u) must have only one endgraph", mdl->Id_()));
         return RT_ERROR_MODEL_ENDGRAPH;
     }
     if ((modelExecuteType != EXECUTOR_AICPU)) {
         const bool isBindThisModel = ((stm->Model_() != nullptr) && (stm->Model_()->Id_() == mdl->Id_()));
         if ((stm->GetModelNum() == 0) || (!isBindThisModel)) {
             RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, "stm",
-                "stream is not bound to the model");
+                RtFmtMsg("stream (stream_id=%d) is not bound to the model", stm->Id_()));
             return RT_ERROR_STREAM_INVALID;
         }
 

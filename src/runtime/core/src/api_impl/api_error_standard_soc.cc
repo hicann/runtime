@@ -316,15 +316,17 @@ rtError_t ApiErrorDecorator::StreamTaskClean(Stream * const stm)
     COND_RETURN_WITH_NOLOG(!isSupport, RT_ERROR_FEATURE_NOT_SUPPORT); 
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_PERSISTENT) == 0U), RT_ERROR_STREAM_INVALID, 
         ErrorCode::EE1011, __func__, "RT_STREAM_PERSISTENT", "stream flag", 
-        "Non-persistent stream " + std::to_string(stm->Id_()) + " does not support stream task clearance");
+        RtFmtMsg("Non-persistent stream (stream_id=%d) does not support stream task clearance", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER((!stm->GetBindFlag()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, __func__,
-        "stream", "Stream " + std::to_string(stm->Id_()) + " must be bound to a model");
+        "stream", RtFmtMsg("Stream (stream_id=%d) must be bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_AICPU) != 0U), RT_ERROR_STREAM_INVALID, 
         ErrorCode::EE1011, __func__, "RT_STREAM_AICPU", "stream flag", 
-        "AICPU stream " + std::to_string(stm->Id_()) + " does not support stream task clearance");
+        RtFmtMsg("AICPU stream (stream_id=%d) does not support stream task clearance", stm->Id_()));
     NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
     COND_RETURN_AND_MSG_OUTER((!stm->Model_()->IsModelLoadComplete()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, 
-        __func__, "stream", "Model " + std::to_string(stm->Model_()->Id_()) + " where stream " + std::to_string(stm->Id_()) + " is located has not been loaded. Clear stream tasks after the model is loaded");
+        __func__, "stream",
+        RtFmtMsg("Model (model_id=%u) where stream (stream_id=%d) is located has not been loaded. Clear stream tasks after the model is loaded",
+        stm->Model_()->Id_(), stm->Id_()));
     COND_RETURN_WARN(IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support cleaning tasks");
     return impl_->StreamTaskClean(stm);
 }

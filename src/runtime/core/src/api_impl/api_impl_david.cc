@@ -881,12 +881,12 @@ rtError_t ApiImplDavid::ModelExit(Model * const mdl, Stream * const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
     const uint32_t modelExitNum = mdl->ModelExitNum_();
     COND_RETURN_AND_MSG_OUTER(modelExitNum >= 1U, RT_ERROR_MODEL_EXIT,
-        ErrorCode::EE1011, __func__, modelExitNum, "modelExitNum", "model must exit only once");
+        ErrorCode::EE1011, __func__, modelExitNum, "modelExitNum", RtFmtMsg("Model (model_id=%u) must exit only once", mdl->Id_()));
     stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND,
-        ErrorCode::EE1017, __func__, "stm", "stream is not bound to any model");
+        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) is not bound to any model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID,
-        ErrorCode::EE1017, __func__, "stm", "stream is bound to a different model");
+        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) is bound to a different model (model_id=%u)", stm->Id_(), stm->Model_()->Id_()));
     mdl->IncModelExitNum();
     return RT_ERROR_NONE;  
 }
@@ -1037,8 +1037,9 @@ rtError_t ApiImplDavid::NotifyWait(Notify * const inNotify, Stream * const stm, 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1012, __func__, curCtx->Device_()->Id_(), "current deviceId",
-            "The current device cannot deliver Notify Wait, the corresponding Notify Wait must be delivered on "
-            "the device that creates the IPC Notify");
+            RtFmtMsg("The device (device_id=%d) cannot deliver the notify wait task."
+                " The notify wait task must be delivered on the device (device_id=%d) where the IPC Notify is created",
+            curCtx->Device_()->Id_(), inNotify->GetDeviceId()));
     const uint32_t timeOutTmp = timeOut;
     const rtError_t error = NtyWait(inNotify, curStm, timeOutTmp);
     const uint32_t notifyId = inNotify->GetNotifyId();
@@ -1482,9 +1483,9 @@ rtError_t ApiImplDavid::StreamSwitchEx(void * const ptr, const rtCondition_t con
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "stm->modelNum", "The stream is not bound to a model");
+        0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "trueStream->modelNum", "The stream is not bound to a model");
+        0, "trueStream->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStream->Id_()));
     return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType, curCtx);
 }
 
@@ -1724,7 +1725,7 @@ rtError_t ApiImplDavid::StreamTaskAbort(Stream * const stm)
     } else {
         const bool isValid = ContextManage::CheckStreamPtrIsValid(curStm);
         COND_RETURN_AND_MSG_OUTER(!isValid, RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1017, __func__, "stm", "stream does not belong to any context");
+            ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", curStm->Id_()));
     }
 
     return curStm->StreamAbort();
@@ -1757,7 +1758,7 @@ rtError_t ApiImplDavid::StreamRecover(Stream * const stm)
 {
     const bool isValid = ContextManage::CheckStreamPtrIsValid(stm);
     COND_RETURN_AND_MSG_OUTER(!isValid, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "stm", "stream does not belong to any context");
+        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", stm->Id_()));
     return stm->StreamRecoverAbort();
 }
 
