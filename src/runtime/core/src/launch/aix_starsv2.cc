@@ -102,7 +102,7 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo * const updateTask, void ** c
         devId, dstStream->Id_(), updateTask->id);
 
     /* 同时适用于AIC、AIV、MIX(AIC + AIV) kernel */
-    const uint64_t sqBaseAddr = dstStream->GetSqBaseAddr();
+    const uint64_t sqBaseAddr = 0ULL;
     ToConstructDavidSqe(updateTask, sqe, sqBaseAddr);
     error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(sqe),
                                 allocSize, RT_MEMCPY_HOST_TO_HOST);
