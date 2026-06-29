@@ -75,8 +75,7 @@ rtError_t EvtRecordSoftwareMode(Event * const evt, Stream * const stm)
     error = dev->AllocExpandingPoolEvent(&eventAddr, &newEventId);
     ERROR_RETURN(error, "Failed to capture address, deviceId=%u, tsId=%u, retCode=%#x",
         dev->Id_(), dev->DevGetTsId(), static_cast<uint32_t>(error));
-    davidEvt->SetEventAddr(eventAddr);
-    davidEvt->SetEventId(newEventId);
+    davidEvt->PublishSoftwareRecordResource(eventAddr, newEventId);
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     stm->StreamLock();
@@ -88,7 +87,7 @@ rtError_t EvtRecordSoftwareMode(Event * const evt, Stream * const stm)
     SaveTaskCommonInfo(tsk, dstStm, pos);
     (void)MemWriteValueTaskInit(tsk, eventAddr, 1UL);
     tsk->typeName = "EVENT_RECORD";
-    tsk->type = TS_TASK_TYPE_CAPTURE_RECORD;
+    tsk->type = (!dstStm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
     MemWriteValueTaskInfo *memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = davidEvt;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
@@ -225,7 +224,7 @@ rtError_t EvtWaitSoftwareMode(Event * const evt, Stream * const stm)
         stm->Id_(), static_cast<uint32_t>(error));
     SaveTaskCommonInfo(tsk, dstStm, pos, MEM_WAIT_V2_SQE_NUM);
     tsk->typeName = "EVENT_WAIT";
-    tsk->type = TS_TASK_TYPE_CAPTURE_WAIT;
+    tsk->type = (!dstStm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WAIT_VALUE : TS_TASK_TYPE_CAPTURE_WAIT;
     error = MemWaitValueTaskInit(tsk, eventAddr, 1UL, 0U);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, 
         "Failed to initialize task, stream_id=%d, retCode=%#x.",

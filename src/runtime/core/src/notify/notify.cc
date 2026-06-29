@@ -15,6 +15,8 @@
 #include "runtime.hpp"
 #include "api.hpp"
 #include "task.hpp"
+#include "event.hpp"
+#include "event_resource.hpp"
 #include "error_message_manage.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
@@ -23,6 +25,7 @@
 #include "notify_task.h"
 #include "common_task.h"
 #include "event_task.h"
+#include <memory>
 
 namespace cce {
 namespace runtime {
@@ -308,7 +311,9 @@ ERROR_RECYCLE_WAIT:
     return error;
 }
 
-rtError_t Notify::Wait(Stream * const streamIn, const uint32_t timeOut, const bool isEndGraphNotify, Model* const captureModel)
+rtError_t Notify::Wait(
+    Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify, Model* const captureModel,
+    std::vector<EventResource>* externalWaitRetainedResources)
 {
     if ((notifyid_ >> RT_NOTIFY_REVISED_OFFSET) > 0U) {
         return RevisedWait(streamIn, timeOut);
@@ -317,6 +322,7 @@ rtError_t Notify::Wait(Stream * const streamIn, const uint32_t timeOut, const bo
     Device * const dev = streamIn->Device_();
     TaskInfo submitTask = {};
     rtError_t errorReason;
+    std::unique_ptr<std::vector<EventResource>> retainedOwner;
     TaskInfo *waitTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_NOTIFY_WAIT, errorReason);
     NULL_PTR_RETURN_MSG(waitTask, errorReason);
 
@@ -327,10 +333,21 @@ rtError_t Notify::Wait(Stream * const streamIn, const uint32_t timeOut, const bo
 
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
     waitTask->u.notifywaitTask.captureModel = captureModel;
+    if ((externalWaitRetainedResources != nullptr) && (!externalWaitRetainedResources->empty())) {
+        retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
+        if (retainedOwner == nullptr) {
+            error = RT_ERROR_MEMORY_ALLOCATION;
+            goto ERROR_RECYCLE;
+        }
+    }
 
     error = dev->SubmitTask(waitTask, (streamIn->Context_())->TaskGenCallback_());
     if (error != RT_ERROR_NONE) {
         goto ERROR_RECYCLE;
+    }
+    if (retainedOwner != nullptr) {
+        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
+        externalWaitRetainedResources->clear();
     }
 
     GET_THREAD_TASKID_AND_STREAMID(waitTask, streamIn->Id_());

@@ -100,6 +100,46 @@ struct RtStarsWriteValueSqe {
     uint32_t write_value_part7;
 };
 
+struct RtStarsWriteValuePtrSqe {
+    // write-value二级指针模式SQE头和调度属性。
+    rtStarsSqeHeader_t header;
+
+    uint32_t res3;
+
+    uint32_t res4 : 16;
+    uint32_t kernel_credit : 8;
+    uint32_t ptr_mode : 1;
+    uint32_t res5 : 7;
+
+    // 二级指针模式载荷，指向Stars读取的write-value描述符。
+    uint32_t write_addr_low;
+
+    uint32_t write_addr_high : 17;
+    uint32_t res6 : 14;
+    uint32_t va : 1;
+
+    uint32_t res7[10];
+};
+
+struct RtStarsWriteValuePtrDst {
+    // pointer-mode write-value描述符使用的目的地址属性。
+    uint32_t write_addr_low;
+
+    uint32_t write_addr_high : 17;
+    uint32_t res6 : 3;
+    uint32_t awsize : 3;
+    uint32_t snoop : 1;
+    uint32_t awcache : 4;
+    uint32_t awprot : 3;
+    uint32_t va : 1;
+
+    // 写入值和保留字段需要与硬件描述符布局保持一致。
+    uint32_t res7;
+    uint32_t sub_type;
+    uint32_t write_value_part[8];
+    uint32_t res8[4];
+};
+
 struct RtDataDumpLoadInfo {
     uint64_t dumpinfoPtr;
     uint32_t length;
@@ -461,6 +501,7 @@ union rtStarsSqe_t final {
     RtStarsEventSqe eventSqe;
     RtStarsNotifySqe notifySqe;
     RtStarsWriteValueSqe writeValueSqe;
+    RtStarsWriteValuePtrSqe writeValuePtrSqe;
     RtStarsMemcpyAsyncSqe memcpyAsyncSqe;
     RtStarsStreamSwitchSqe streamSwitchSqe;
     RtStarsStreamSwitchExSqe streamSwitchExSqe;

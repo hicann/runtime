@@ -12,6 +12,9 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "notify.hpp"
+#include "event.hpp"
+#include "event_resource.hpp"
+#include "event_task.h"
 #include "notify_task.h"
 #include "task_info.hpp"
 #include "task_fail_callback_manager.hpp"
@@ -31,6 +34,25 @@ bool IsSdmaMteErrorCode(const int32_t errCode)
 {
     return (errCode == TS_ERROR_SDMA_LINK_ERROR) || (errCode == TS_ERROR_SDMA_POISON_ERROR) ||
            (errCode == TS_ERROR_SDMA_DDRC_ERROR) || (errCode == AICPU_HCCL_OP_SDMA_LINK_FAILED);
+}
+
+void ReleaseExternalWaitRetainedResources(TaskInfo* taskInfo)
+{
+    if (taskInfo == nullptr) {
+        return;
+    }
+    auto* resources = taskInfo->u.notifywaitTask.externalWaitRetainedResources;
+    if (resources == nullptr) {
+        return;
+    }
+    for (const auto& resource : *resources) {
+        if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0U)) {
+            resource.event->EventIdCountSub(resource.eventId);
+        }
+    }
+    resources->clear();
+    delete resources;
+    taskInfo->u.notifywaitTask.externalWaitRetainedResources = nullptr;
 }
 } // namespace
 
@@ -62,7 +84,7 @@ rtError_t NotifyRecordTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, c
     notifyRecord->notifyId = notifyIndex;
     notifyRecord->deviceId = static_cast<uint32_t>(deviceIndex);
     notifyRecord->phyId = phyIndex;
-    notifyRecord->timestamp = 0UL;
+    notifyRecord->timestamp = 0ULL;
     notifyRecord->isCountNotify = isCountNotify;
     if (notify == nullptr) {
         return RT_ERROR_NOTIFY_NULL;
@@ -276,9 +298,10 @@ rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, con
     NotifyWaitTaskInfo* notifyWaitTask = &(taskInfo->u.notifywaitTask);
     notifyWaitTask->notifyId = notifyIndex;
     notifyWaitTask->timeout = timeOutNum;
-    notifyWaitTask->timestamp = 0UL;
+    notifyWaitTask->timestamp = 0ULL;
     notifyWaitTask->isEndGraphNotify = false;
     notifyWaitTask->captureModel = nullptr;
+    notifyWaitTask->externalWaitRetainedResources = nullptr;
     notifyWaitTask->isCountNotify = isCountNotify;
     if (isCountNotify) {
         if (inNotify == nullptr) {
@@ -291,6 +314,8 @@ rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, con
     }
     return RT_ERROR_NONE;
 }
+
+void NotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalWaitRetainedResources(taskInfo); }
 
 void MapNotifyErrorCodeForFastRecovery(TaskInfo *taskInfo, const uint32_t devId)
 {
@@ -362,6 +387,7 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId
 
     if ((taskInfo->u.notifywaitTask.isEndGraphNotify) &&
         (taskInfo->u.notifywaitTask.captureModel != nullptr)) {
+        ReleaseExternalWaitRetainedResources(taskInfo);
         taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(taskInfo->stream->Id_(),
             taskInfo->u.notifywaitTask.captureModel, taskInfo->pos, taskInfo->errorCode);
     }

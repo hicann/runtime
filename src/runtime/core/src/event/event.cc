@@ -94,24 +94,64 @@ void Event::TryFreeLastEventId()
 
 void Event::EventIdCountSub(const int32_t id, bool isFreeId)
 {
-    const std::lock_guard<std::mutex> lock(idMapMutex_);
-    if (idMap_.find(id) == idMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "event_id=%d not in idMap", id);
-        return;
-    }
-    if (idMap_[id] > 0U) {
-        idMap_[id]--;
-    } else {
-        RT_LOG(RT_LOG_ERROR, "event_id=%d, count already is zero", id);
-    }
-    if (idMap_[id] == 0U) {
-        if (isFreeId && isIdAllocFromDrv_) {
-            device_->FreeEventIdFromDrv(id);
-            RT_LOG(RT_LOG_ERROR, "event_id=%d, error free", id);
-            eventId_ = (eventId_ == id) ? INVALID_EVENT_ID : eventId_;
+    bool needFreeSoftwareEvent = false;
+    {
+        const std::lock_guard<std::mutex> lock(idMapMutex_);
+        if (idMap_.find(id) == idMap_.end()) {
+            RT_LOG(RT_LOG_ERROR, "event_id=%d not in idMap", id);
+            return;
         }
-        idMap_.erase(id);
+        if (idMap_[id] > 0U) {
+            idMap_[id]--;
+        } else {
+            RT_LOG(RT_LOG_ERROR, "event_id=%d, count already is zero", id);
+        }
+        if (idMap_[id] == 0U) {
+            if (!IsHardwareMode()) {
+                needFreeSoftwareEvent = (eventId_ != id);
+            } else if (isFreeId && isIdAllocFromDrv_) {
+                device_->FreeEventIdFromDrv(id);
+                RT_LOG(RT_LOG_ERROR, "event_id=%d, error free", id);
+                eventId_ = (eventId_ == id) ? INVALID_EVENT_ID : eventId_;
+            }
+            idMap_.erase(id);
+        }
     }
+    if (needFreeSoftwareEvent && (device_ != nullptr)) {
+        device_->FreeExpandingPoolEvent(id);
+    }
+}
+
+void Event::PublishSoftwareRecordResource(void *const eventAddr, int32_t eventId)
+{
+    int32_t oldEventId = INVALID_EVENT_ID;
+    bool needFreeOldEvent = false;
+    {
+        const std::lock_guard<std::mutex> lock(idMapMutex_);
+        oldEventId = eventId_;
+        const bool hasOldResource = (eventAddr_ != nullptr) && (oldEventId != INVALID_EVENT_ID);
+        eventAddr_ = eventAddr;
+        eventId_ = eventId;
+        needFreeOldEvent = hasOldResource && (oldEventId != eventId) && (idMap_.find(oldEventId) == idMap_.end());
+    }
+    if (needFreeOldEvent && (device_ != nullptr)) {
+        device_->FreeExpandingPoolEvent(oldEventId);
+    }
+}
+
+rtError_t Event::TrySwitchToSoftwareMode()
+{
+    if (!IsHardwareMode()) {
+        return RT_ERROR_NONE;
+    }
+    const std::lock_guard<std::mutex> recordLock(recordStateMutex_);
+    if (HasRecord() || (latestRecord_.state != INIT)) {
+        RT_LOG(RT_LOG_ERROR, "Event mode cannot switch after record, event_id=%d, record_state=%u.",
+            eventId_, latestRecord_.state);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    SoftwareModeEnable();
+    return RT_ERROR_NONE;
 }
 
 bool Event::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestroy)
@@ -430,8 +470,10 @@ rtError_t Event::Record(Stream * const stm, const bool isApiCall)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
     const std::lock_guard<std::mutex> lockRecord(eventLockForRecord_);
-    if ((!IsHardwareMode()) && (captureStream_ != nullptr)) {
-        return CaptureEventProcess(stm);
+    // 支持record external特性后，software event的record不再仅限于capture场景
+    // 普通record + graph wait external场景中，外部会有software event record
+    if (!IsHardwareMode()) {
+        return RecordSoftwareEvent(stm);
     }
     rtError_t error = RT_ERROR_NONE;
     Device *const dev = stm->Device_();
@@ -583,11 +625,62 @@ static rtError_t CrossDeviceEventWait(Stream * const stm, Event * const evt, con
     return RT_ERROR_NONE;
 }
 
+rtError_t Event::ExternalEventWaitProcess(Stream * const stm)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Device * const dev = stm->Device_();
+    TaskInfo submitTask = {};
+    rtError_t errorReason = RT_ERROR_NONE;
+    TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEM_WAIT_VALUE, errorReason, MEM_WAIT_SQE_NUM);
+    COND_RETURN_ERROR_MSG_INNER(tsk == nullptr, errorReason, "Failed to allocate mem wait task, retCode=%#x.",
+        static_cast<uint32_t>(errorReason));
+    MemWaitValueTaskInfo *memWaitValueTask = &tsk->u.memWaitValueTask;
+    tsk->typeName = "EXTERNAL_EVENT_WAIT";
+    tsk->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    error = MemWaitValueTaskInit(tsk, eventAddr_, 1UL, 0U);
+    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE_MEM_WAIT, "Failed to initialize mem wait task, retCode=%#x.",
+        static_cast<uint32_t>(error));
+    EventIdCountAdd(eventId_);
+    memWaitValueTask->event = this;
+    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    memWaitValueTask->retainedEventId = eventId_;
+    error = dev->SubmitTask(tsk, (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_());
+    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE_MEM_WAIT, "Failed to submit mem wait task, retCode=%#x.",
+        static_cast<uint32_t>(error));
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
+    return RT_ERROR_NONE;
+
+ERROR_RECYCLE_MEM_WAIT:
+    MemWaitTaskUnInit(tsk);
+    (void)dev->GetTaskFactory()->Recycle(tsk);
+    return error;
+}
+
+rtError_t Event::WaitSoftwareEvent(Stream* const stm)
+{
+    if (captureStream_ != nullptr) {
+        return CaptureWaitProcess(stm);
+    }
+    // 支持record external特性后，普通wait需要也能等software event的record，等待方式为mem-wait
+    if (HasRecord() && (eventAddr_ != nullptr) && (eventId_ != INVALID_EVENT_ID)) {
+        return ExternalEventWaitProcess(stm);
+    }
+    if (isNewMode_ && !HasRecord()) {
+        RT_LOG(RT_LOG_INFO, "software event wait first, return success, device_id=%u, event_id=%d",
+            device_->Id_(), eventId_);
+        return RT_ERROR_NONE;
+    }
+    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1018,
+        "The software event has not been recorded. Call rtRecordEvent first to record the event on a stream");
+    return RT_ERROR_INVALID_VALUE;
+}
+
 rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
-    if ((!IsHardwareMode()) && (captureStream_ != nullptr)) {
-        return CaptureWaitProcess(stm);
+    if (!IsHardwareMode()) {
+        return WaitSoftwareEvent(stm);
     }
     int32_t eventId = INVALID_EVENT_ID;
     if (!WaitSendCheck(stm, eventId)) {
@@ -641,8 +734,10 @@ ERROR_RECYCLE:
 rtError_t Event::Reset(Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
-    if ((!IsHardwareMode()) && (captureStream_ != nullptr)) { // capture mode
-        return CaptureResetProcess(stm);
+    // 支持record external特性后，software event的reset不再仅限capture场景
+    // 普通record + graph wait external场景中，可能存在主动reset sof
+    if (!IsHardwareMode()) {
+        return ResetSoftwareEvent(stm);
     }
     rtError_t error;
     TaskInfo submitTask = {};

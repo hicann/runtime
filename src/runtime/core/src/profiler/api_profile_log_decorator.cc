@@ -312,10 +312,10 @@ rtError_t ApiProfileLogDecorator::EventDestroy(Event * evt)
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiProfileLogDecorator::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_EVENT_RECORD, profiler_);
-    const rtError_t error = impl_->EventRecord(evt, stm);
+    const rtError_t error = impl_->EventRecord(evt, stm, flag);
     record.SaveRecord();
     return error;
 }
@@ -769,10 +769,11 @@ rtError_t ApiProfileLogDecorator::LabelListCpy(Label ** const lbl, const uint32_
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiProfileLogDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+    const uint32_t flag)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_STREAM_WAITEVENT, profiler_);
-    const rtError_t error = impl_->StreamWaitEvent(stm, evt, timeout);
+    const rtError_t error = impl_->StreamWaitEvent(stm, evt, timeout, flag);
     record.SaveRecord();
     return error;
 }

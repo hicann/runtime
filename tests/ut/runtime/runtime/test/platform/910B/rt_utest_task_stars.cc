@@ -43,6 +43,7 @@
 #include "raw_device.hpp"
 #include "task_execute_time.h"
 #include "capture_model_utils.hpp"
+#include "stars_cond_isa_helper.hpp"
 #include "../../rt_utest_config_define.hpp"
 #include "task_res.hpp"
 #include "davinci_kernel_task.h"
@@ -432,6 +433,76 @@ TEST_F(StarsTaskTest, FuncCallAllocDevMem_devMem_failed)
     rt_ut::UnwrapOrNull<Model>(model)->ModelRemoveStream(headSream);
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(StarsTaskTest, ExternalWaitSlotFuncCallZeroSatisfiedBeforeDereference)
+{
+    RtStarsExternalWaitFuncCall fc = {};
+    RtStarsExternalWaitFuncCallPara para = {};
+    para.waitRefreshAddr = 0x12340000U;
+    para.maxLoop = 15U;
+    para.sqIdMemAddr = 0x23450000U;
+    para.sqRegAddrArray = 0x34560000U;
+    para.sqTailOffset = 8U;
+    para.profSwitchAddr = 0x45670000U;
+    para.sqId = 3U;
+    para.sqHeadPre = 7U;
+    para.sqHeadNext = 9U;
+    para.lastSqePos = 11U;
+
+    ConstructExternalWaitFuncCall(fc, para);
+
+    const uint8_t waitSuccessOffset = static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, gotoNext) /
+        sizeof(uint32_t));
+    EXPECT_LT(offsetof(RtStarsExternalWaitFuncCall, zeroSatisfied),
+        offsetof(RtStarsExternalWaitFuncCall, loadActual));
+    EXPECT_EQ(fc.loadWaitAddrFromRefresh.func3, RT_STARS_COND_ISA_LOAD_FUNC3_LDR);
+    EXPECT_EQ(fc.loadWaitAddrFromRefresh.rs1, RT_STARS_COND_ISA_REGISTER_R1);
+    EXPECT_EQ(fc.loadWaitAddrFromRefresh.rd, RT_STARS_COND_ISA_REGISTER_R2);
+    EXPECT_EQ(fc.zeroSatisfied.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ);
+    EXPECT_EQ(fc.zeroSatisfied.rs1, RT_STARS_COND_ISA_REGISTER_R2);
+    EXPECT_EQ(fc.zeroSatisfied.rs2, RT_STARS_COND_ISA_REGISTER_R0);
+    EXPECT_EQ(fc.zeroSatisfied.jumpInstrOffset, waitSuccessOffset & 0xFU);
+    EXPECT_EQ(fc.loadActual.func3, RT_STARS_COND_ISA_LOAD_FUNC3_LDR);
+    EXPECT_EQ(fc.loadActual.rs1, RT_STARS_COND_ISA_REGISTER_R2);
+    EXPECT_EQ(fc.loadActual.rd, RT_STARS_COND_ISA_REGISTER_R1);
+    EXPECT_EQ(fc.maskLow8.func3, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI);
+    EXPECT_EQ(fc.maskLow8.immd, 0xFFU);
+    EXPECT_EQ(fc.waitSatisfied.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU);
+    EXPECT_EQ(fc.waitSatisfied.jumpInstrOffset, waitSuccessOffset & 0xFU);
+    EXPECT_EQ(fc.gotoPre.func3, RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_I);
+    EXPECT_EQ(fc.gotoPre.sqId, para.sqId);
+    EXPECT_EQ(fc.gotoPre.sqHead, para.sqHeadPre);
+    EXPECT_EQ(fc.gotoNext.func3, RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_I);
+    EXPECT_EQ(fc.gotoNext.sqId, para.sqId);
+    EXPECT_EQ(fc.gotoNext.sqHead, para.sqHeadNext);
+}
+
+TEST_F(StarsTaskTest, SoftwareSqDynamicProfMemWaitBuildsExtendedFuncCall)
+{
+    RtStarsMemWaitValueLastInstrFcExWithDynamicProf fc = {};
+    RtStarsMemWaitValueInstrFcParaWithDynamicProf para = {};
+    para.devAddr = 0x12340000U;
+    para.value = 1U;
+    para.maxLoop = 15U;
+    para.sqIdMemAddr = 0x23450000U;
+    para.profSwitchAddr = 0x34560000U;
+    para.profDisableAddr = 0x45670000U;
+    para.swapBufferBaseAddr = 0x56780000U;
+    para.swapBufferProfCfgOffset = 0x40U;
+    para.swapBufferUpdateAddr = 0x67890000U;
+    para.swapBufferUpdateValue = 0x80000003U;
+    para.sqSwapShift = 6U;
+    para.sqId = 3U;
+    para.sqHeadPre = 7U;
+
+    ConstructMemWaitValueInstr2ExWithDynamicProf(fc, para);
+
+    EXPECT_EQ(fc.loadProfDisableStatus1.func3, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
+    EXPECT_EQ(fc.branch4.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ);
+    EXPECT_EQ(fc.loadProfDisableStatus2.func3, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
+    EXPECT_EQ(fc.branch6.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE);
+    EXPECT_EQ(fc.loadSqId1.func3, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
 }
 
 TEST_F(StarsTaskTest, ModelMaintaince)
@@ -946,6 +1017,28 @@ TEST_F(StarsTaskTest, WriteValueTaskTest)
     ToConstructSqe(writeValueTask, &cmd);
 
     (void)dev_->GetTaskFactory()->Recycle(writeValueTask);
+}
+
+TEST_F(StarsTaskTest, CaptureRecordExternalTaskBuildsWriteValuePtrSqe)
+{
+    RtStarsWriteValuePtrDst recordSlot = {};
+    rtError_t ret = RT_ERROR_NONE;
+    TaskInfo *task = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, ret);
+    ASSERT_NE(task, nullptr);
+    ASSERT_EQ(CaptureRecordExternalTaskInit(task, &recordSlot, TASK_WR_CQE_DEFAULT), RT_ERROR_NONE);
+
+    rtStarsSqe_t sqe = {};
+    ToConstructSqe(task, &sqe);
+
+    EXPECT_EQ(sqe.writeValuePtrSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(sqe.writeValuePtrSqe.ptr_mode, 1U);
+    EXPECT_EQ(sqe.writeValuePtrSqe.va, 1U);
+    EXPECT_EQ(sqe.writeValuePtrSqe.write_addr_low,
+        static_cast<uint32_t>(RtPtrToValue(&recordSlot) & MASK_32_BIT));
+    EXPECT_EQ(sqe.writeValuePtrSqe.write_addr_high,
+        static_cast<uint32_t>((RtPtrToValue(&recordSlot) >> UINT32_BIT_NUM) & MASK_17_BIT));
+
+    (void)dev_->GetTaskFactory()->Recycle(task);
 }
 
 TEST_F(StarsTaskTest, NotifyIpcTaskHccsTest)

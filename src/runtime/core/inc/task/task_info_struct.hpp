@@ -22,6 +22,7 @@ namespace runtime {
 class Notify;
 class CountNotify;
 class Event;
+struct EventResource;
 class IpcEvent;
 class Program;
 class Model;
@@ -358,6 +359,8 @@ struct NotifyWaitTaskInfo {
     bool isEndGraphNotify;
     Model* captureModel;
     CountNotifyWaitInfo cntNtfyInfo;
+    // endGraph notify执行完成后释放external wait保留的producer事件资源
+    std::vector<EventResource>* externalWaitRetainedResources;
 };
 
 struct LabelSetTaskInfo {

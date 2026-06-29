@@ -16,6 +16,8 @@
 namespace cce {
 namespace runtime {
 
+struct TaskSqeInfo;
+
 constexpr uint32_t MEM_WAIT_WRITE_VALUE_ADDRESS_LEN = 64U;
 
 rtError_t ConvertCpyType(TaskInfo * const taskInfo, const uint32_t cpyType, const void *const srcAddr, void *const desAddr);
@@ -62,6 +64,7 @@ rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* con
 
 rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
                                const uint64_t value, const uint32_t flag);
+rtError_t CaptureWaitExternalTaskInit(TaskInfo* taskInfo, const void* const waitRefreshAddr);
 void MemWaitTaskUnInit(TaskInfo *taskInfo);
 uint32_t GetSendSqeNumForMemWaitTask(const TaskInfo * const taskInfo);
 rtError_t GetWaitValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);

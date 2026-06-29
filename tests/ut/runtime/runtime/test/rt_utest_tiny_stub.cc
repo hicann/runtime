@@ -994,13 +994,13 @@ TEST_F(TinyStubTest, stream_capture_stub)
 TEST_F(TinyStubTest, event_capture_stub)
 {
     Event event(0, 0, nullptr);
-    rtError_t ret = event.CaptureEventProcess(nullptr);
+    rtError_t ret = event.RecordSoftwareEvent(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     ret = event.CaptureWaitProcess(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = event.CaptureResetProcess(nullptr);
+    ret = event.ResetSoftwareEvent(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 

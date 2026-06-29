@@ -46,6 +46,8 @@ void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFc
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara); 
 void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc, const RtStarsMemWaitValueInstrFcPara &fcPara);
 void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc, const RtStarsMemWaitValueInstrFcPara &fcPara);
+void ConstructExternalWaitFuncCall(
+    RtStarsExternalWaitFuncCall& fc, const RtStarsExternalWaitFuncCallPara& fcPara);
 void ConvertOpToReverseOp(const rtStarsCondIsaBranchFunc3_t branchFunc, rtStarsCondIsaBranchFunc3_t &reverseBranchFunc);
 
 void ConstructRdmaPiValueModifyInstr(

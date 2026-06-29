@@ -28,6 +28,7 @@ rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &ad
 
 rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum,
     const CountNotifyWaitInfo * const cntNtfyInfo, void * const inNotify, const bool isCountNotify = false);
+void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
 void ToCommandBodyForNotifyWaitTask(TaskInfo *taskInfo, rtCommand_t *const command);
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo *const taskInfo, const uint32_t devId);

@@ -225,7 +225,9 @@ public:
     // stream API
     virtual rtError_t StreamCreate(Stream ** const stm, const int32_t priority, const uint32_t flags, DvppGrp *grp) = 0;
     virtual rtError_t StreamDestroy(Stream * const stm, bool flag = true) = 0;
-    virtual rtError_t StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout = 0U) = 0;
+    virtual rtError_t StreamWaitEvent(
+        Stream* const stm, Event* const evt, const uint32_t timeout = 0U,
+        const uint32_t flag = RT_EVENT_WAIT_DEFAULT) = 0;
     virtual rtError_t StreamSynchronize(Stream * const stm, const int32_t timeout = -1) = 0;
     virtual rtError_t StreamQuery(Stream * const stm) = 0;
     virtual rtError_t GetStreamId(Stream * const stm, int32_t * const streamId) = 0;
@@ -256,7 +258,8 @@ public:
     virtual rtError_t EventCreateEx(Event ** const evt, const uint64_t flag) = 0;
     virtual rtError_t EventDestroy(Event *evt) = 0;
     virtual rtError_t EventDestroySync(Event *evt) = 0;
-    virtual rtError_t EventRecord(Event * const evt, Stream * const stm) = 0;
+    virtual rtError_t EventRecord(
+        Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) = 0;
     virtual rtError_t EventReset(Event * const evt, Stream * const stm) = 0;
     virtual rtError_t EventSynchronize(Event * const evt, const int32_t timeout = -1) = 0;
     virtual rtError_t EventQuery(Event * const evt) = 0;

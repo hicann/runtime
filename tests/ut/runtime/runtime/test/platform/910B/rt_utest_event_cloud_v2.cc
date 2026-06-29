@@ -24,12 +24,14 @@
 #include "context.hpp"
 #include "npu_driver.hpp"
 #include "event_task.h"
+#include "notify_task.h"
 #undef protected
 #undef private
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
 #include "rt_unwrap.h"
 #include "../../common/rt_utest_context_reset_helper.hpp"
+#include "capture_model.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -119,6 +121,136 @@ TEST_F(EventTest910B, eventEx)
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(EventTest910B, SwitchToSoftwareModeFailsAfterRecord)
+{
+    Event event(device_, RT_EVENT_DEFAULT, nullptr);
+    EXPECT_EQ(event.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+    EXPECT_FALSE(event.IsHardwareMode());
+
+    Event recorded(device_, RT_EVENT_DEFAULT, nullptr);
+    recorded.SetRecord(true);
+    EXPECT_NE(recorded.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+    EXPECT_TRUE(recorded.IsHardwareMode());
+}
+
+TEST(EventNotifyWaitTaskTest, NotifyWaitTaskUnInitClearsExternalWaitRetainedOwner)
+{
+    TaskInfo task = {};
+    auto *resources = new std::vector<EventResource>;
+    resources->push_back({nullptr, 0U, INVALID_EVENT_ID});
+    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+
+    NotifyWaitTaskUnInit(&task);
+
+    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
+    NotifyWaitTaskUnInit(&task);
+}
+
+TEST_F(EventTest910B, NotifyWaitTaskUnInitReleasesRetainedEventWithoutFreeingCurrentId)
+{
+    Event event(device_, RT_EVENT_DEFAULT, nullptr);
+    event.isNewMode_ = true;
+    event.isIdAllocFromDrv_ = true;
+    event.SetEventId(1004);
+    event.EventIdCountAdd(1004);
+    event.SetRecord(true);
+    event.SetHasReset(false);
+
+    TaskInfo task = {};
+    auto *resources = new std::vector<EventResource>;
+    resources->push_back({&event, 0x12340000U, 1004});
+    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+
+    NotifyWaitTaskUnInit(&task);
+
+    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
+    EXPECT_EQ(event.EventId_(), 1004);
+}
+
+TEST_F(EventTest910B, NotifyWaitTaskUnInitSkipsRetainedEventWhenLaunchEventAddrIsZero)
+{
+    Event event(device_, RT_EVENT_DEFAULT, nullptr);
+    event.isNewMode_ = true;
+    event.isIdAllocFromDrv_ = true;
+    event.SetEventId(1004);
+    event.EventIdCountAdd(1004);
+
+    TaskInfo task = {};
+    auto *resources = new std::vector<EventResource>;
+    resources->push_back({&event, 0U, 1004});
+    task.u.notifywaitTask.externalWaitRetainedResources = resources;
+
+    NotifyWaitTaskUnInit(&task);
+
+    EXPECT_EQ(task.u.notifywaitTask.externalWaitRetainedResources, nullptr);
+    EXPECT_EQ(event.EventId_(), 1004);
+}
+
+TEST_F(EventTest910B, CaptureExternalLaunchNotifyFailureAbortSuccessReleasesRetainedWaits)
+{
+    Model *modelBase = nullptr;
+    rtContext_t current = NULL;
+    EXPECT_EQ(rtCtxGetCurrent(&current), RT_ERROR_NONE);
+    Context *ctx = static_cast<Context *>(current);
+    ASSERT_EQ(ctx->ModelCreate(&modelBase, RT_MODEL_CAPTURE_MODEL), RT_ERROR_NONE);
+    CaptureModel *model = dynamic_cast<CaptureModel *>(modelBase);
+    ASSERT_NE(model, nullptr);
+    ExternalEventRefreshInfo launch;
+    launch.retainedWaitResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
+
+    MOCKER_CPP(&Model::ModelAbort).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_NE(model->HandleExternalNotifyAfterExecuteFailure(&launch), RT_ERROR_NONE);
+
+    EXPECT_TRUE(launch.retainedWaitResources.empty());
+    EXPECT_EQ(model->noEndGraphNotifyOwnerRetainedWaitResources_, nullptr);
+    GlobalMockObject::verify();
+    EXPECT_EQ(ctx->ModelDestroy(modelBase), RT_ERROR_NONE);
+}
+
+TEST_F(EventTest910B, CaptureExternalLaunchNotifyFailureAbortFailStoresNoEndGraphNotifyOwner)
+{
+    Model *modelBase = nullptr;
+    rtContext_t current = NULL;
+    EXPECT_EQ(rtCtxGetCurrent(&current), RT_ERROR_NONE);
+    Context *ctx = static_cast<Context *>(current);
+    ASSERT_EQ(ctx->ModelCreate(&modelBase, RT_MODEL_CAPTURE_MODEL), RT_ERROR_NONE);
+    CaptureModel *model = dynamic_cast<CaptureModel *>(modelBase);
+    ASSERT_NE(model, nullptr);
+    ExternalEventRefreshInfo launch;
+    launch.retainedWaitResources.push_back({nullptr, 0U, INVALID_EVENT_ID});
+
+    MOCKER_CPP(&Model::ModelAbort).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    EXPECT_NE(model->HandleExternalNotifyAfterExecuteFailure(&launch), RT_ERROR_NONE);
+
+    EXPECT_TRUE(launch.retainedWaitResources.empty());
+    ASSERT_NE(model->noEndGraphNotifyOwnerRetainedWaitResources_, nullptr);
+    EXPECT_EQ(model->noEndGraphNotifyOwnerRetainedWaitResources_->size(), 1U);
+    GlobalMockObject::verify();
+    EXPECT_EQ(ctx->ModelDestroy(modelBase), RT_ERROR_NONE);
+}
+
+TEST_F(EventTest910B, CaptureExternalLaunchExecuteRejectsNoEndGraphNotifyOwner)
+{
+    rtStream_t stream = nullptr;
+    EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Model *modelBase = nullptr;
+    rtContext_t current = NULL;
+    EXPECT_EQ(rtCtxGetCurrent(&current), RT_ERROR_NONE);
+    Context *ctx = static_cast<Context *>(current);
+    ASSERT_EQ(ctx->ModelCreate(&modelBase, RT_MODEL_CAPTURE_MODEL), RT_ERROR_NONE);
+    CaptureModel *model = dynamic_cast<CaptureModel *>(modelBase);
+    ASSERT_NE(model, nullptr);
+    model->SetCaptureModelStatus(RtCaptureModelStatus::READY);
+    model->noEndGraphNotifyOwnerRetainedWaitResources_.reset(new std::vector<EventResource>);
+
+    EXPECT_EQ(model->Execute(streamObj, -1), RT_ERROR_MODEL_RUNNING);
+
+    EXPECT_EQ(ctx->ModelDestroy(modelBase), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(EventTest910B, reset_submitfailed_rollback)

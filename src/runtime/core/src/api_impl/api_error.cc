@@ -27,6 +27,7 @@
 #include "mem_type.hpp"
 #include "utils.h"
 #include "runtime_handle_guard.h"
+#include "rt_inner_event.h"
 
 namespace cce {
 namespace runtime {
@@ -1137,9 +1138,14 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
     return impl_->StreamDestroy(stm, flag);
 }
 
-rtError_t ApiErrorDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiErrorDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+    const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER(
+        flag != RT_EVENT_WAIT_DEFAULT && flag != RT_EVENT_WAIT_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
+        __func__, "Parameter flag value " + std::to_string(flag),
+        "Only RT_EVENT_WAIT_DEFAULT or RT_EVENT_WAIT_EXTERNAL is supported.");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
         (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1151,7 +1157,13 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(Stream * const stm, Event * const e
         "IPC event is not supported when the capture stream flag is set.");
     COND_RETURN_WARN(evt->IsEventWithoutWaitTask(), RT_ERROR_FEATURE_NOT_SUPPORT,
         "flag=%" PRIu64 " is not supported, and there is no need to wait for the event.", evt->GetEventFlag());
-    return impl_->StreamWaitEvent(stm, evt, timeout);
+    if (flag == RT_EVENT_WAIT_EXTERNAL) {
+        COND_RETURN_WARN(
+            (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
+            "External event wait requires new-mode DDSYNC_NS event, newMode=%d, flag=%" PRIu64 ".", evt->IsNewMode(),
+            evt->GetEventFlag());
+    }
+    return impl_->StreamWaitEvent(stm, evt, timeout, flag);
 }
 
 rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t timeout)
@@ -1371,9 +1383,13 @@ rtError_t ApiErrorDecorator::EventDestroySync(Event *evt)
     return impl_->EventDestroySync(evt);
 }
 
-rtError_t ApiErrorDecorator::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiErrorDecorator::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER(
+        flag != RT_EVENT_RECORD_DEFAULT && flag != RT_EVENT_RECORD_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
+        __func__, "Parameter flag value " + std::to_string(flag),
+        "Only RT_EVENT_RECORD_DEFAULT or RT_EVENT_RECORD_EXTERNAL is supported.");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
         (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1383,7 +1399,13 @@ rtError_t ApiErrorDecorator::EventRecord(Event * const evt, Stream * const stm)
     COND_RETURN_WARN(((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) &&
         (stm->IsCapturing())), RT_ERROR_FEATURE_NOT_SUPPORT,
         "IPC events are not supported when the capture stream flag is set.");
-    const rtError_t error = impl_->EventRecord(evt, stm);
+    if (flag == RT_EVENT_RECORD_EXTERNAL) {
+        COND_RETURN_WARN(
+            (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
+            "External event record requires new-mode DDSYNC_NS event, newMode=%d, flag=%" PRIu64 ".", evt->IsNewMode(),
+            evt->GetEventFlag());
+    }
+    const rtError_t error = impl_->EventRecord(evt, stm, flag);
     COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT),
         error, "Record event failed.");
     return error;

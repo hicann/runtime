@@ -90,10 +90,11 @@ rtError_t MdlUnBindTaskSubmit(Model * const mdl, Stream * const streamIn,
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t NtyWait(Notify * const inNotify, Stream * const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel)
+rtError_t NtyWait(
+    Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
+    Model* const captureModel, std::vector<EventResource>* externalWaitRetainedResources)
 {
-    return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel);
+    return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel, externalWaitRetainedResources);
 }
 
 rtError_t SyncGetDevMsg(Device * const dev, const void * const devMemAddr, const uint32_t devMemSize,

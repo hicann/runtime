@@ -518,6 +518,27 @@ static void ConstructSecondSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe
         "value=0x%llx", stream->Id_(), taskInfo->id, devAddr, value);
 }
 
+namespace {
+void FillMemWaitFunctionCallSqe(TaskInfo* taskInfo, RtStarsFunctionCallSqe &sqe, const uint64_t funcCallSize)
+{
+    Stream *const stm = taskInfo->stream;
+    MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
+    sqe.kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
+    sqe.csc = 1U;
+    sqe.sqeHeader.l1_lock = 0U;
+    sqe.sqeHeader.l1_unlock = 0U;
+    sqe.sqeHeader.type = RT_STARS_SQE_TYPE_COND;
+    sqe.sqeHeader.wr_cqe = stm->GetStarsWrCqeFlag();
+    sqe.sqeHeader.block_dim = 0U;
+    sqe.sqeHeader.rt_stream_id = static_cast<uint16_t>(stm->Id_());
+    sqe.sqeHeader.task_id = taskInfo->id;
+    sqe.conds_sub_type = CONDS_SUB_TYPE_MEM_WAIT_VALUE;
+
+    const uint64_t funcAddr = RtPtrToValue(memWaitValueTask->funcCallSvmMem2);
+    ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), sqe);
+}
+} // namespace
+
 static void ConstructLastSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command,
                                                 const RtStarsMemWaitValueInstrFcPara &fcPara)
 {
@@ -549,26 +570,47 @@ static void ConstructLastSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t
         return;
     }
 
-    sqe.kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    sqe.csc = 1U;
-    sqe.sqeHeader.l1_lock = 0U;
-    sqe.sqeHeader.l1_unlock = 0U;
-    sqe.sqeHeader.type = RT_STARS_SQE_TYPE_COND;
-    sqe.sqeHeader.wr_cqe = stm->GetStarsWrCqeFlag();
-    sqe.sqeHeader.block_dim = 0U;
-    sqe.sqeHeader.rt_stream_id = static_cast<uint16_t>(stm->Id_());
-    sqe.sqeHeader.task_id = taskInfo->id;
-    sqe.conds_sub_type = CONDS_SUB_TYPE_MEM_WAIT_VALUE;
-
-    const uint64_t funcAddr = RtPtrToValue(memWaitValueTask->funcCallSvmMem2);
-
     // func call size is rs2[19:0]*4Byte
-    ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), sqe);
+    FillMemWaitFunctionCallSqe(taskInfo, sqe, funcCallSize);
 
     PrintSqe(command, "MemWaitValueTask last sqe");
     RT_LOG(RT_LOG_INFO, "MemWaitValueTask last sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
         "value=0x%llx, sqHeadPre=%u, flag=%u", stm->Id_(), taskInfo->id,
         fcPara.devAddr, fcPara.value, fcPara.sqHeadPre, fcPara.flag);
+}
+
+static void ConstructLastSqeForExternalWaitTask(TaskInfo* taskInfo, rtStarsSqe_t *const command,
+                                                const RtStarsMemWaitValueInstrFcPara &fcPara)
+{
+    MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
+    RtStarsFunctionCallSqe &sqe = command->fuctionCallSqe;
+
+    (void)memset_s(&sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
+
+    RtStarsExternalWaitFuncCall fc = {};
+    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
+    RtStarsExternalWaitFuncCallPara externalPara = {};
+    externalPara.waitRefreshAddr = fcPara.devAddr;
+    externalPara.maxLoop = fcPara.maxLoop;
+    externalPara.sqIdMemAddr = fcPara.sqIdMemAddr;
+    externalPara.sqRegAddrArray = fcPara.sqRegAddrArray;
+    externalPara.sqTailOffset = fcPara.sqTailOffset;
+    externalPara.profSwitchAddr = fcPara.profSwitchAddr;
+    externalPara.sqId = fcPara.sqId;
+    externalPara.sqHeadPre = fcPara.sqHeadPre;
+    externalPara.sqHeadNext = fcPara.sqHeadNext;
+    externalPara.lastSqePos = fcPara.lastSqePos;
+    externalPara.bindFlag = fcPara.bindFlag;
+    ConstructExternalWaitFuncCall(fc, externalPara);
+    const rtError_t ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(memWaitValueTask->funcCallSvmMem2,
+        memWaitValueTask->funCallMemSize2, &fc, funcCallSize, RT_MEMCPY_HOST_TO_DEVICE);
+    if (ret != RT_ERROR_NONE) {
+        sqe.sqeHeader.type = RT_STARS_SQE_TYPE_INVALID;
+        return;
+    }
+
+    FillMemWaitFunctionCallSqe(taskInfo, sqe, funcCallSize);
+    PrintSqe(command, "CaptureWaitExternalTask last sqe");
 }
 
 void ConstructPhSqeForMemWaitValueTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
@@ -650,6 +692,17 @@ void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const com
     ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
     ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
     return;
+}
+
+void ConstructSqeForCaptureWaitExternalTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+{
+    RtStarsMemWaitValueInstrFcPara fcPara = {};
+    InitFuncCallParaForMemWaitTask(taskInfo, fcPara);
+
+    ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
+    ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]));
+    ConstructLastSqeForExternalWaitTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
+    ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
 }
 #endif
 
@@ -739,9 +792,29 @@ static bool MemoryTaskRegister()
         .setResultFunc = &SetResultCommon,
         .setStarsResultFunc = &SetStarsResultCommon,
     };
+    TaskFuncSingle captureRecordExternalFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
     TaskFuncSingle captureWaitFuncs = {
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForMemWaitValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle captureWaitExternalFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForCaptureWaitExternalTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &MemWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -777,6 +850,8 @@ static bool MemoryTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureRecordExternalFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureWaitExternalFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);

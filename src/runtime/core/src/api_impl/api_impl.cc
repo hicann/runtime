@@ -1562,7 +1562,7 @@ rtError_t ApiImpl::StreamDestroy(Stream * const stm, bool flag)
     return error;
 }
 
-rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout, const uint32_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "Stream wait event, timeout=%us.", timeout);
     Context * const curCtx = CurrentContext();
@@ -1580,6 +1580,23 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
         ", isNotify=%d, isModel=%d, stream_id=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), evt->IsNotify(), (curStm->GetModelNum() != 0U), curStm->Id_());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+
+    if (flag == RT_EVENT_WAIT_EXTERNAL) {
+        COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
+            __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+
+        const Runtime* const rtInstance = Runtime::Instance();
+        NULL_PTR_RETURN_MSG_OUTER(rtInstance, RT_ERROR_INVALID_VALUE);
+        COND_RETURN_WARN(
+            !IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT),
+            RT_ERROR_FEATURE_NOT_SUPPORT,
+            "Current chip does not support value wait task, which required by external event wait.");
+        COND_RETURN_WARN(
+            CheckCaptureModelSupportSoftwareSq(curStm->Device_()) != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT,
+            "External event wait requires software SQ support.");
+        
+        return CaptureExternalEventWait(evt, curStm);
+    }
 
     if (evt->IsCapturing()) {
         COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
@@ -2051,7 +2068,7 @@ rtError_t ApiImpl::EventDestroySync(Event *evt)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "event record.");
     Context * const curCtx = CurrentContext();
@@ -2068,6 +2085,24 @@ rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm)
         "Current mode does not support binding the stream, mode=%d, flag=%" PRIu64 ", isModel=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), (curStm->GetModelNum() != 0U));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+
+    if (flag == RT_EVENT_RECORD_EXTERNAL) {
+        COND_RETURN_AND_MSG_OUTER(
+            (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, __func__,
+            RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+
+        const Runtime* const rtInstance = Runtime::Instance();
+        NULL_PTR_RETURN_MSG_OUTER(rtInstance, RT_ERROR_INVALID_VALUE);
+        COND_RETURN_WARN(
+            !IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT),
+            RT_ERROR_FEATURE_NOT_SUPPORT,
+            "Current chip does not support value write task which required by external event record.");
+        COND_RETURN_WARN(
+            CheckCaptureModelSupportSoftwareSq(curStm->Device_()) != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT,
+            "External event record requires software SQ support.");
+
+        return CaptureExternalEventRecord(evt, curStm);
+    }
 
     if (evt->ToBeCaptured(curStm)) {
         COND_RETURN_WARN(!evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,

@@ -81,21 +81,6 @@ void InitWriteValueSqe(RtDavidStarsWriteValueSqe * const writeValueSqe,
     return;
 }
 
-rtError_t WriteValuePtrTaskInit(TaskInfo *taskInfo, const void * const pointedAddr,
-    TaskWrCqeFlag cqeFlag)
-{
-    TaskCommonInfoInit(taskInfo);
-    taskInfo->typeName = "WriteValuePtrTask";
-    taskInfo->type = TS_TASK_TYPE_WRITE_VALUE;
-
-    WriteValueTaskInfo *writeValTsk = &taskInfo->u.writeValTask;
-    writeValTsk->sqeAddr = RtPtrToValue(pointedAddr);
-    writeValTsk->cqeFlag = cqeFlag;
-    writeValTsk->ptrFlag = 1U;
-
-    return RT_ERROR_NONE;
-}
-
 static void ConstructWriteValueSqePtr(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);

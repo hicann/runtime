@@ -17,6 +17,8 @@
 #include "jetty_manager.h"
 #include "jetty_pool.h"
 #include "drv/driver.hpp"
+#include <securec.h>
+#include <vector>
 
 namespace cce {
 namespace runtime {
@@ -25,6 +27,10 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
 {
     rtError_t error = BindSqCq();
     ERROR_RETURN(error, "Failed to bind SQ and CQ, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+
+    error = RebuildExternalTaskSqes();
+    ERROR_RETURN(error, "Failed to rebuild external task SQE, model_id=%u, retCode=%#x.", Id_(),
+        static_cast<uint32_t>(error));
 
     error = SendSqe();
     ERROR_RETURN(error, "Failed to send SQE, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
@@ -246,6 +252,52 @@ rtError_t CaptureModel::ReleaseAllJetty()
 
     RT_LOG(RT_LOG_DEBUG, "ReleaseAllJetty completed, model_id=%u.", Id_());
     return finalError;
+}
+
+rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task)
+{
+    if ((task == nullptr) || (task->stream == nullptr)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    if (task->stream->GetSqeBuffer() == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    const uint32_t sendSqeNum = GetSendDavidSqeNum(task);
+    const size_t sqeOffset = sizeof(rtDavidSqe_t) * static_cast<size_t>(task->pos);
+    const size_t sqeSize = sizeof(rtDavidSqe_t) * static_cast<size_t>(sendSqeNum);
+    if ((sqeOffset + sqeSize) > task->stream->GetSqeBufferSize()) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    std::vector<rtDavidSqe_t> sqes(sendSqeNum);
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructDavidSqe(task, sqes.data(), sqeInfo);
+    const errno_t ret = memcpy_s(task->stream->GetSqeBuffer() + sqeOffset, sqeSize, sqes.data(), sqeSize);
+    if (ret != EOK) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+size_t CaptureModel::GetExternalRecordRefreshSlotSize(void) const { return sizeof(rtDavidSqe_t); }
+
+rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t eventAddr) const
+{
+    if (slot == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    auto* const sqe = reinterpret_cast<rtDavidSqe_t*>(slot);
+    *sqe = {};
+    sqe->writeValueSqe.header.type = RT_DAVID_SQE_TYPE_WRITE_VALUE;
+    sqe->writeValueSqe.header.ptrMode = 0U;
+    sqe->writeValueSqe.awsize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    sqe->writeValueSqe.snoop = 0U;
+    sqe->writeValueSqe.awcache = 2U;
+    sqe->writeValueSqe.awprot = 0U;
+    sqe->writeValueSqe.va = 1U;
+    sqe->writeValueSqe.writeAddrLow = static_cast<uint32_t>(eventAddr & 0xFFFFFFFFU);
+    sqe->writeValueSqe.writeAddrHigh = static_cast<uint32_t>((eventAddr >> 32U) & 0x1FFFFU);
+    sqe->writeValueSqe.writeValuePart[0] = 1U;
+    return RT_ERROR_NONE;
 }
 } // namespace runtime
 } // namespace cce

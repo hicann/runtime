@@ -24,9 +24,11 @@ constexpr uint32_t HARD_EVENT_RESVERD_MAX = 8U * 1024U;
 bool NeedReBuildSqe(const TaskInfo *const task)
 {
     const tsTaskType_t type = task->type;
-    // mem wait类型task在sqe中会使用到当前stream的PosTail，在task更新后需要重新构造sqe
+    // wait类function-call SQE会固化stream SQ位置，切到目标下发流时需要重建。
+    // external record只在launch时刷新record entry地址，capture阶段保存的SQE字节可复用。
     if ((type == TS_TASK_TYPE_MEM_WAIT_VALUE) || (type == TS_TASK_TYPE_CAPTURE_WAIT) ||
-        (type == TS_TASK_TYPE_IPC_WAIT) || (type == TS_TASK_TYPE_CAPTURE_CONDITION)) {
+        (type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) || (type == TS_TASK_TYPE_IPC_WAIT) ||
+        (type == TS_TASK_TYPE_CAPTURE_CONDITION)) {
         return true;
     }
     return false;

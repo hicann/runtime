@@ -19,6 +19,10 @@ class ApiImplV201 : public ApiImplDavid {
 public:
     // dqs
     rtError_t LaunchDqsTask(Stream * const stm, const rtDqsTaskCfg_t * const taskCfg) override;
+    rtError_t EventRecord(Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;
+    rtError_t StreamWaitEvent(
+        Stream* const stm, Event* const evt, const uint32_t timeout,
+        const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
 };
 }
 }

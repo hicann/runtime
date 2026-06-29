@@ -21,5 +21,21 @@ rtError_t ApiImplV201::LaunchDqsTask(Stream * const stm, const rtDqsTaskCfg_t * 
     return DqsLaunchTask(stm, taskCfg);    
 }
 
+rtError_t ApiImplV201::EventRecord(Event* const evt, Stream* const stm, const uint32_t flag)
+{
+    if (flag == RT_EVENT_RECORD_EXTERNAL) {
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    return ApiImplDavid::EventRecord(evt, stm, flag);
 }
+
+rtError_t ApiImplV201::StreamWaitEvent(Stream* const stm, Event* const evt, const uint32_t timeout, const uint32_t flag)
+{
+    if (flag == RT_EVENT_WAIT_EXTERNAL) {
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    return ApiImplDavid::StreamWaitEvent(stm, evt, timeout, flag);
 }
+
+} // namespace runtime
+} // namespace cce

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "notify_c.hpp"
+#include "event.hpp"
+#include "event_resource.hpp"
 #include "notify_task.h"
 #include "task_david.hpp"
 #include "thread_local_container.hpp"
@@ -16,12 +18,14 @@
 #include "stream_david.hpp"
 #include "profiler_c.hpp"
 #include "rt_log.h"
+#include <memory>
 
 namespace cce {
 namespace runtime {
 
-rtError_t NtyWait(Notify * const inNotify, Stream * const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
-    Model* const captureModel)
+rtError_t NtyWait(
+    Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify,
+    Model* const captureModel, std::vector<EventResource>* externalWaitRetainedResources)
 {
     TaskInfo *waitTask = nullptr;
     rtError_t error = CheckTaskCanSend(streamIn);
@@ -43,6 +47,12 @@ rtError_t NtyWait(Notify * const inNotify, Stream * const streamIn, const uint32
     error = NotifyWaitTaskInit(waitTask, inNotify->GetNotifyId(), timeOut, nullptr, inNotify);
     ERROR_RETURN(error, "Failed to initialize notify wait task, stream_id=%d, retCode=%#x",
         streamIn->Id_(), static_cast<uint32_t>(error));
+    std::unique_ptr<std::vector<EventResource>> retainedOwner;
+    if ((externalWaitRetainedResources != nullptr) && (!externalWaitRetainedResources->empty())) {
+        retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
+        ERROR_RETURN(retainedOwner == nullptr ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_NONE,
+            "Failed to allocate external wait retained owner, stream_id=%d.", streamIn->Id_());
+    }
     RT_LOG(RT_LOG_INFO, "stream_id=%d notify_id=%u.", streamIn->Id_(), inNotify->GetNotifyId());
     waitTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
@@ -52,6 +62,10 @@ rtError_t NtyWait(Notify * const inNotify, Stream * const streamIn, const uint32
     error = DavidSendTask(waitTask, dstStm);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit notify wait task, stream_id=%d, retCode=%#x",
         streamIn->Id_(), static_cast<uint32_t>(error));
+    if (retainedOwner != nullptr) {
+        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
+        externalWaitRetainedResources->clear();
+    }
     tskErrRecycle.ReleaseGuard();
     streamIn->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), waitTask->taskSn);

@@ -2465,7 +2465,7 @@ TEST_F(CloudV2CaptureModelTest, task_get_seq_id)
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_Success)
+TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_Success)
 {
     rtError_t error;
     rtStream_t stream;
@@ -2501,7 +2501,7 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_Success)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    error = evt->CaptureEventProcess(stm);
+    error = evt->RecordSoftwareEvent(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();
@@ -2513,7 +2513,7 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_Success)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_AllocEventFail)
+TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_AllocEventFail)
 {
     rtError_t error;
     rtStream_t stream;
@@ -2546,7 +2546,7 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_AllocEventFail)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    error = evt->CaptureEventProcess(stm);
+    error = evt->RecordSoftwareEvent(stm);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();
@@ -2558,7 +2558,7 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_AllocEventFail)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_SubmitTaskFail)
+TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_SubmitTaskFail)
 {
     rtError_t error;
     rtStream_t stream;
@@ -2594,7 +2594,7 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_SubmitTaskFail)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    error = evt->CaptureEventProcess(stm);
+    error = evt->RecordSoftwareEvent(stm);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();

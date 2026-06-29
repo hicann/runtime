@@ -350,9 +350,10 @@ rtError_t ApiDecorator::StreamDestroy(Stream * const stm, bool flag)
     return impl_->StreamDestroy(stm, flag);
 }
 
-rtError_t ApiDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+    const uint32_t flag)
 {
-    return impl_->StreamWaitEvent(stm, evt, timeout);
+    return impl_->StreamWaitEvent(stm, evt, timeout, flag);
 }
 
 rtError_t ApiDecorator::StreamSynchronize(Stream * const stm, const int32_t timeout)
@@ -451,9 +452,9 @@ rtError_t ApiDecorator::EventDestroySync(Event *evt)
     return impl_->EventDestroySync(evt);
 }
 
-rtError_t ApiDecorator::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiDecorator::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
-    return impl_->EventRecord(evt, stm);
+    return impl_->EventRecord(evt, stm, flag);
 }
 
 rtError_t ApiDecorator::EventReset(Event * const evt, Stream * const stm)

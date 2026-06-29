@@ -70,7 +70,8 @@ public:
     // stream API
     rtError_t StreamCreate(Stream ** const stm, const int32_t priority, const uint32_t flags, DvppGrp *grp) override;
     rtError_t StreamDestroy(Stream * const stm, bool flag) override;
-    rtError_t StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout) override;
+    rtError_t StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+        const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
     rtError_t StreamSynchronize(Stream * const stm, const int32_t timeout) override;
     rtError_t StreamSetMode(Stream * const stm, const uint64_t stmMode) override;
     rtError_t StreamGetMode(const Stream * const stm, uint64_t * const stmMode) override;
@@ -80,7 +81,8 @@ public:
     rtError_t EventCreate(Event ** const evt, const uint64_t flag) override;
     rtError_t EventCreateEx(Event ** const evt, const uint64_t flag) override;
     rtError_t EventDestroy(Event *evt) override;
-    rtError_t EventRecord(Event * const evt, Stream * const stm) override;
+    rtError_t EventRecord(Event * const evt, Stream * const stm,
+        const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;
     rtError_t EventSynchronize(Event * const evt, const int32_t timeout) override;
     rtError_t GetEventID(Event * const evt, uint32_t * const evtId) override;
 

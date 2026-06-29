@@ -204,6 +204,24 @@ TEST_F(CloudV2ApiTest910b, testRtDevBinaryRegisterAllApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiTest910b, EventFlagDecoratorsForwardToImpl)
+{
+    ApiImpl impl;
+    Profiler profiler(&impl);
+    ApiDecorator apiDecorator(&impl);
+    ApiProfileDecorator apiProfileDecorator(&impl, &profiler);
+    ApiProfileLogDecorator apiProfileLogDecorator(&impl, &profiler);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EventRecord).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(apiDecorator.StreamWaitEvent(nullptr, nullptr, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(apiDecorator.EventRecord(nullptr, nullptr, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(apiProfileDecorator.StreamWaitEvent(nullptr, nullptr, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(apiProfileDecorator.EventRecord(nullptr, nullptr, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(apiProfileLogDecorator.StreamWaitEvent(nullptr, nullptr, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(apiProfileLogDecorator.EventRecord(nullptr, nullptr, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiTest910b, testMemcpyHostTaskTest)
 {
     ApiImpl impl;

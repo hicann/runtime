@@ -189,7 +189,7 @@ static bool NotifyTaskRegister()
         .toCommandFunc = &ToCommandBodyForNotifyWaitTask,
         .toSqeFunc = &ConstructSqeForNotifyWaitTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForNotifyWaitTask,
-        .taskUnInitFunc = nullptr,
+        .taskUnInitFunc = &NotifyWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoForNotifyWaitTask,
         .setResultFunc = &SetResultCommon,

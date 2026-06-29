@@ -464,10 +464,11 @@ rtError_t ApiProfileDecorator::StreamDestroy(Stream * const stm, const bool flag
     return error;
 }
 
-rtError_t ApiProfileDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiProfileDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+    const uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_STREAM_WAITEVENT);
-    const rtError_t error = impl_->StreamWaitEvent(stm, evt, timeout);
+    const rtError_t error = impl_->StreamWaitEvent(stm, evt, timeout, flag);
     CallApiEnd(error);
     return error;
 }
@@ -528,10 +529,10 @@ rtError_t ApiProfileDecorator::EventDestroy(Event *evt)
     return error;
 }
 
-rtError_t ApiProfileDecorator::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiProfileDecorator::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_EVENT_RECORD);
-    const rtError_t error = impl_->EventRecord(evt, stm);
+    const rtError_t error = impl_->EventRecord(evt, stm, flag);
     CallApiEnd(error);
     return error;
 }

@@ -16,6 +16,7 @@
 #include "capture_model.hpp"
 #include "stub_task.hpp"
 #include "event_task.h"
+#include "rt_inner_event.h"
 #include "thread_local_container.hpp"
 namespace cce {
 namespace runtime {

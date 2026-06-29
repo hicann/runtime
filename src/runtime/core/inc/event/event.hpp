@@ -56,14 +56,6 @@ struct RecordTaskInfo {
     rtEventState_t state;
 };
 
-// Event Record Flag definitions
-#define RT_EVENT_RECORD_DEFAULT    0U
-#define RT_EVENT_RECORD_EXTERNAL   1U
-
-// Event Wait Flag definitions
-#define RT_EVENT_WAIT_DEFAULT      0U
-#define RT_EVENT_WAIT_EXTERNAL     1U
-
 class Event : public NoCopy {
 public:
     Event();
@@ -117,9 +109,10 @@ public:
     virtual bool WaitSendCheck(const Stream * const stm, int32_t &eventId);
     virtual rtError_t AllocEventIdResource(Stream * const stm, int32_t &newEventId);
     void InitEventAllocFlag(int32_t streamId = -1);
-    rtError_t CaptureEventProcess(Stream * const stm);
-    rtError_t CaptureWaitProcess(Stream * const stm);
-    rtError_t CaptureResetProcess(Stream * const stm);
+    rtError_t RecordSoftwareEvent(Stream* const stm);
+    rtError_t CaptureWaitProcess(Stream* const stm);
+    rtError_t ResetSoftwareEvent(Stream* const stm);
+    rtError_t TrySwitchToSoftwareMode();
     virtual bool IsEventInModel();
     // simple tools for access private.
     uint64_t Timeline_() const {
@@ -142,9 +135,11 @@ public:
         eventId_ = newEventId;
     }
 
+    void PublishSoftwareRecordResource(void *const eventAddr, int32_t eventId);
+
     void SetEventAddr(void *eventAddr) {
- 	    eventAddr_ = eventAddr;
- 	}
+        eventAddr_ = eventAddr;
+    }
 
     void *GetEventAddr() const {
  	    return eventAddr_;
@@ -307,6 +302,8 @@ private:
     rtInnerObject handle_ {};
     bool HasPendingBusyWork();
     rtError_t ProcessBusyWaitIteration(const Runtime * const rtInstance);
+    rtError_t WaitSoftwareEvent(Stream* const stm);
+    rtError_t ExternalEventWaitProcess(Stream* const stm);
     int32_t          freeEventId_;
     uint64_t         timeline_;
     bool             isNotify_;

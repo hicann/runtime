@@ -638,6 +638,7 @@ add_executable(runtime_utest_task_910B
     rt_utest_customer_stack_size.cc
     rt_utest_ipc.cc
     rt_utest_task_res.cc
+    rt_utest_external_event_task.cc
     rt_utest_task.cc
     rt_utest_task_stars.cc
 )

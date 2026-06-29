@@ -25,6 +25,7 @@
 #include "stream_jetty_handler.h"
 #include "capture_model_utils.hpp"
 #include "event_task.h"
+#include "rt_inner_event.h"
 
 namespace cce {
 namespace runtime {
@@ -1431,7 +1432,7 @@ void MemWaitTaskUnInit(TaskInfo *taskInfo)
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
     if (memWaitValueTask->baseFuncCallSvmMem != nullptr) {
         const auto dev = taskInfo->stream->Device_();
-        if (taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT) {
+        if ((taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT) && (taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL)) {
             (void)dev->Driver_()->DevMemFree(memWaitValueTask->baseFuncCallSvmMem, dev->Id_());
         }
         memWaitValueTask->baseFuncCallSvmMem = nullptr;
@@ -1443,6 +1444,12 @@ void MemWaitTaskUnInit(TaskInfo *taskInfo)
         const auto dev = taskInfo->stream->Device_();
         (void)dev->Driver_()->DevMemFree(RtValueToPtr<void *>(memWaitValueTask->profDisableStatusAddr), dev->Id_());
         memWaitValueTask->profDisableStatusAddr = 0UL;
+    }
+
+    if (memWaitValueTask->retainedEventId != INVALID_EVENT_ID) {
+        COND_PROC(memWaitValueTask->event != nullptr,
+            memWaitValueTask->event->EventIdCountSub(memWaitValueTask->retainedEventId));
+        memWaitValueTask->retainedEventId = INVALID_EVENT_ID;
     }
 
     memWaitValueTask->funCallMemSize2 = 0UL;
@@ -1525,7 +1532,13 @@ uint32_t GetSendSqeNumForMemWaitTask(const TaskInfo * const taskInfo)
 static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
 {
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
-    if (taskInfo->stream->IsSoftwareSqEnable()) {
+    if (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) {
+        if (taskInfo->stream->Device_()->IsDavidPlatform()) {
+            memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsv2ExternalWaitFuncCall));
+        } else {
+            memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
+        }
+    } else if (taskInfo->stream->IsSoftwareSqEnable()) {
         if (taskInfo->stream->Device_()->GetDevProperties().sqSwapShift == 0U) {
             memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcEx));
         } else {
@@ -1546,7 +1559,7 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
     const uint64_t allocSize = memWaitValueTask->funCallMemSize2 +
         MEM_WAIT_WRITE_VALUE_ADDRESS_LEN + FUNC_CALL_INSTR_ALIGN_SIZE;
     rtError_t ret = RT_ERROR_NONE;
-    if (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT) {
+    if ((taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT) || (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL)) {
         if (taskInfo->stream->Model_() == nullptr || allocSize > MEM_WAIT_SPLIT_SIZE) {
             RT_LOG(RT_LOG_ERROR, "Model is null or capture wait alloc size=%llu max than %u.", allocSize, MEM_WAIT_SPLIT_SIZE);
             return RT_ERROR_MODEL_NULL;
@@ -1596,6 +1609,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
     memWaitValueTask->funcCallSvmMem2 = nullptr;
     memWaitValueTask->writeValueAddr = nullptr;
     memWaitValueTask->funCallMemSize2 = 0ULL;
+    memWaitValueTask->retainedEventId = INVALID_EVENT_ID;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
     rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);
@@ -1611,6 +1625,19 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
     (void)stream->Device_()->Driver_()->MemCopySync(addr, sizeof(uint64_t), static_cast<const void *>(&initValue),
                                                     sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);    
     memWaitValueTask->profDisableStatusAddr = RtPtrToValue(addr);
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureWaitExternalTaskInit(TaskInfo* taskInfo, const void* const waitRefreshAddr)
+{
+    const rtError_t ret = MemWaitValueTaskInit(taskInfo, waitRefreshAddr, 1U, 0U);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    taskInfo->typeName = "CAPTURE_WAIT_EXTERNAL";
+    taskInfo->type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    taskInfo->u.memWaitValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    taskInfo->sqeNum = static_cast<uint8_t>(GetSendSqeNum(taskInfo));
     return RT_ERROR_NONE;
 }
 

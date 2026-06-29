@@ -11,6 +11,8 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
+#include "device.hpp"
+#include "event.hpp"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "osal.hpp"
@@ -401,6 +403,27 @@ rtError_t rtStreamWaitEventWithTimeout(rtStream_t stm, rtEvent_t evt, uint32_t t
         // nothing to do
     }
     const rtError_t ret = apiInstance->StreamWaitEvent(exeStream, waitEvent, work_timeout);
+
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamWaitEventWithFlag(rtStream_t stm, rtEvent_t evt, int32_t timeout, uint32_t flag)
+{
+    if (flag == RT_EVENT_WAIT_DEFAULT) {
+        return rtStreamWaitEventWithTimeout(stm, evt, timeout);
+    }
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, waitEvent);
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
+        flag == RT_EVENT_WAIT_EXTERNAL && (timeout != -1), RT_ERROR_INVALID_VALUE, timeout,
+        "-1, only timeout=-1 supported when flag is RT_EVENT_WAIT_EXTERNAL");
+    const rtError_t ret = apiInstance->StreamWaitEvent(exeStream, waitEvent, 0U, flag);
 
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

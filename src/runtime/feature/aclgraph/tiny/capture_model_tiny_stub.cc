@@ -26,7 +26,14 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream * const stm) { UNUSED(stm
 
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl) { UNUSED(exeStm); UNUSED(captureMdl); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t CaptureModel::SetNotifyAfterExecute(Stream * const exeStm, CaptureModel* const captureMdl) { UNUSED(exeStm); UNUSED(captureMdl); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t CaptureModel::SetNotifyAfterExecute(
+    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* externalEventRefreshInfo)
+{
+    UNUSED(exeStm);
+    UNUSED(captureMdl);
+    UNUSED(externalEventRefreshInfo);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 bool CaptureModel::IsAddStream(const Stream *stm) const { UNUSED(stm); return false; }
 
@@ -77,6 +84,24 @@ rtError_t CaptureModel::MarkStreamActiveTask(TaskInfo *streamActiveTask) { UNUSE
 rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev) { UNUSED(dev); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::BindSqCqAndSendSqe(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task)
+{
+    UNUSED(task);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+size_t CaptureModel::GetExternalRecordRefreshSlotSize(void) const
+{
+    return 0U;
+}
+
+rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t eventAddr) const
+{
+    UNUSED(slot);
+    UNUSED(eventAddr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 rtError_t CaptureModel::BindSqCq(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 

@@ -276,6 +276,8 @@ static bool MemoryTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);
@@ -287,6 +289,8 @@ static bool MemoryTaskRegister()
     RegDavidSqeFunc(TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, &ConstructDavidSqeForWriteValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, &ConstructDavidSqeForMemWaitValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);

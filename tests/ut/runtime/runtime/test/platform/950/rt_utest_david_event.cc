@@ -1181,6 +1181,168 @@ TEST_F(EventTestDavid, EvtResetSoftwareMode1)
     rtStreamDestroy(stream);
 }
 
+TEST_F(EventTestDavid, EventRecordSoftwareModeDispatchesSoftwareHelper)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    ASSERT_NE(evt, nullptr);
+    evt->SoftwareModeEnable();
+
+    ApiImplDavid apiImpl;
+    MOCKER(EvtRecord).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(EvtRecordSoftwareMode).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(apiImpl.EventRecord(evt, stream_, RT_EVENT_RECORD_DEFAULT), RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, EventResetSoftwareModeDispatchesSoftwareHelper)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreateWithFlag(&event, RT_EVENT_WITH_FLAG), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    ASSERT_NE(evt, nullptr);
+    evt->SoftwareModeEnable();
+
+    ApiImplDavid apiImpl;
+    MOCKER(EvtReset).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(EvtResetSoftwareMode).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(apiImpl.EventReset(evt, stream_), RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, StreamWaitSoftwareModeAfterResetDispatchesSoftwareHelper)
+{
+    rtEvent_t event = nullptr;
+    uint8_t recordValue = 0U;
+    ASSERT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    ASSERT_NE(evt, nullptr);
+    evt->SoftwareModeEnable();
+    evt->SetEventAddr(&recordValue);
+    evt->SetEventId(7);
+    evt->SetRecord(true);
+    evt->SetHasReset(true);
+
+    ApiImplDavid apiImpl;
+    MOCKER(EvtWait).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(EvtWaitSoftwareMode).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(apiImpl.StreamWaitEvent(stream_, evt, 0U, RT_EVENT_WAIT_DEFAULT), RT_ERROR_NONE);
+
+    evt->SetEventAddr(nullptr);
+    evt->SetEventId(INVALID_EVENT_ID);
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, CaptureExternalRecordRegistersPlaceholder)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    ASSERT_NE(evt, nullptr);
+    ASSERT_NE(captureModel, nullptr);
+    stream_->UpdateCaptureStream(stream_);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    stream_->SetModel(captureModel);
+    captureModel->context_ = stream_->Context_();
+
+    ApiImplDavid apiImpl;
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    ASSERT_EQ(apiImpl.CaptureExternalEventRecord(evt, stream_), RT_ERROR_NONE);
+
+    EXPECT_FALSE(evt->IsHardwareMode());
+    EXPECT_EQ(captureModel->externalRecordEventItems_.size(), 1U);
+    stream_->SetModel(nullptr);
+    stream_->UpdateCaptureStream(nullptr);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    delete captureModel;
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, EventRecordExternalDispatchesThroughApiImpl)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreateExWithFlag(&event, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    ASSERT_NE(evt, nullptr);
+    ASSERT_NE(captureModel, nullptr);
+    evt->isNewMode_ = false;
+    stream_->UpdateCaptureStream(stream_);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    stream_->SetModel(captureModel);
+    captureModel->context_ = stream_->Context_();
+
+    ApiImplDavid apiImpl;
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(apiImpl.EventRecord(evt, stream_, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+
+    EXPECT_EQ(captureModel->externalRecordEventItems_.size(), 1U);
+    stream_->SetModel(nullptr);
+    stream_->UpdateCaptureStream(nullptr);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    delete captureModel;
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, CaptureExternalWaitRegistersPlaceholder)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    ASSERT_NE(evt, nullptr);
+    ASSERT_NE(captureModel, nullptr);
+    stream_->UpdateCaptureStream(stream_);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    stream_->SetModel(captureModel);
+    captureModel->context_ = stream_->Context_();
+
+    ApiImplDavid apiImpl;
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    ASSERT_EQ(apiImpl.CaptureExternalEventWait(evt, stream_), RT_ERROR_NONE);
+
+    EXPECT_FALSE(evt->IsHardwareMode());
+    EXPECT_EQ(captureModel->externalWaitEventItems_.size(), 1U);
+    stream_->SetModel(nullptr);
+    stream_->UpdateCaptureStream(nullptr);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    delete captureModel;
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, StreamWaitExternalDispatchesThroughApiImpl)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreateExWithFlag(&event, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    DavidEvent *evt = static_cast<DavidEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    ASSERT_NE(evt, nullptr);
+    ASSERT_NE(captureModel, nullptr);
+    evt->isNewMode_ = false;
+    stream_->UpdateCaptureStream(stream_);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    stream_->SetModel(captureModel);
+    captureModel->context_ = stream_->Context_();
+
+    ApiImplDavid apiImpl;
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(apiImpl.StreamWaitEvent(stream_, evt, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+
+    EXPECT_EQ(captureModel->externalWaitEventItems_.size(), 1U);
+    stream_->SetModel(nullptr);
+    stream_->UpdateCaptureStream(nullptr);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    delete captureModel;
+    rtEventDestroy(event);
+}
+
 TEST_F(EventTestDavid, TestEventSynchronizeWithEventInModel)
 {
     rtError_t error;

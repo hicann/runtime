@@ -45,9 +45,46 @@ void ConstructSqeForStarsCommonTask(TaskInfo* taskInfo, rtStarsSqe_t *const comm
 #endif
 
 #if F_DESC("WriteValueTask")
+static uint8_t GetWriteValueSqeCqeFlag(const TaskInfo * const taskInfo, const TaskWrCqeFlag cqeFlag)
+{
+    switch (cqeFlag) {
+        case TASK_WR_CQE_DEFAULT:
+            return taskInfo->stream->GetStarsWrCqeFlag();
+        case TASK_WR_CQE_NEVER:
+            return 0U;
+        default:
+            return 1U;
+    }
+}
+
+static void ConstructWriteValueSqePtr(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+{
+    WriteValueTaskInfo * const writeValTsk = &(taskInfo->u.writeValTask);
+    RtStarsWriteValuePtrSqe * const sqe = &(command->writeValuePtrSqe);
+    sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
+    sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.wr_cqe = GetWriteValueSqeCqeFlag(taskInfo, writeValTsk->cqeFlag);
+    sqe->header.rt_stream_id = static_cast<uint16_t>(taskInfo->stream->Id_());
+    sqe->header.task_id = taskInfo->id;
+    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
+    sqe->ptr_mode = 1U;
+    sqe->va = 1U;
+    sqe->write_addr_low = static_cast<uint32_t>(writeValTsk->sqeAddr & MASK_32_BIT);
+    sqe->write_addr_high = static_cast<uint32_t>((writeValTsk->sqeAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
+    PrintSqe(command, "WriteValueTaskPtr");
+    RT_LOG(RT_LOG_DEBUG, "WriteValueTaskPtr streamId=%d, taskId=%hu, addr=%#." PRIx64,
+        taskInfo->stream->Id_(), taskInfo->id, writeValTsk->sqeAddr);
+}
+
 void ConstructSqeForWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     WriteValueTaskInfo *writeValTsk = &taskInfo->u.writeValTask;
+    if (writeValTsk->ptrFlag == 1U) {
+        ConstructWriteValueSqePtr(taskInfo, command);
+        return;
+    }
     RtStarsWriteValueSqe *evSqe = &(command->writeValueSqe);
 
     evSqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
@@ -55,17 +92,7 @@ void ConstructSqeForWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const comma
     evSqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
     evSqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
 
-    switch (writeValTsk->cqeFlag) {
-        case TASK_WR_CQE_DEFAULT:
-            evSqe->header.wr_cqe = taskInfo->stream->GetStarsWrCqeFlag();
-            break;
-        case TASK_WR_CQE_NEVER:
-            evSqe->header.wr_cqe = 0U;
-            break;
-        default:
-            evSqe->header.wr_cqe = 1U;
-            break;
-    }
+    evSqe->header.wr_cqe = GetWriteValueSqeCqeFlag(taskInfo, writeValTsk->cqeFlag);
 
     evSqe->header.rt_stream_id = static_cast<uint16_t>(taskInfo->stream->Id_());
     evSqe->header.task_id = taskInfo->id;

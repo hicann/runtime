@@ -69,6 +69,8 @@ struct MemWaitValueTaskInfo {
     void *funcCallSvmMem2;
     void *writeValueAddr;
     Event *event;
+    // 普通stream wait消费software event latest时会增加eventId引用，task回收时需按本次绑定的id释放。
+    int32_t retainedEventId;
 };
  
 struct DqsCommonTaskInfo {

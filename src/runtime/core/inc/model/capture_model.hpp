@@ -11,8 +11,10 @@
 #define __CCE_RUNTIME_CAPTURE_MODEL_HPP__
  
 #include "model.hpp"
+#include "event_resource.hpp"
 #include "task_info.hpp"
 #include "stream.hpp"
+#include "stars.hpp"
 #include "device_sq_cq_pool.hpp"
 #include "jetty_pool.h"
 #include "cond_handle.hpp"
@@ -22,6 +24,7 @@
 namespace cce {
 namespace runtime {
 class Event;
+struct EventResource;
 
 enum class RtCaptureModelStatus {
     NONE = 0,            // init status
@@ -41,6 +44,35 @@ struct MsprofShapeHeader {
 
 constexpr uint32_t MS_PROF_SHAPE_INFO_SIZE = static_cast<uint32_t>(sizeof(MsprofShapeInfo));
 constexpr uint32_t MS_PROF_SHAPE_HEADER_SIZE = static_cast<uint32_t>(sizeof(MsprofShapeHeader));
+constexpr uint64_t EXTERNAL_RECORD_REFRESH_ENTRY_SIZE = RT_STARS_SQE_LEN;
+constexpr uint64_t EXTERNAL_WAIT_REFRESH_ENTRY_SIZE = sizeof(uint64_t);
+
+struct ExternalEventTaskItem {
+    // external操作使用的event对象。
+    Event* event{nullptr};
+    // capture阶段占位任务所在stream id。
+    uint32_t captureStreamId{0U};
+    // capture阶段占位任务id。
+    uint32_t taskId{0U};
+};
+
+struct ExternalEventSummaryInfo {
+    // record refresh entry区域在device表中的偏移。
+    uint64_t recordOffset{0U};
+    // wait refresh entry区域在device表中的偏移。
+    uint64_t waitOffset{0U};
+    // record和wait refresh entry总大小。
+    uint64_t totalSize{0U};
+};
+
+struct ExternalEventRefreshInfo {
+    // 本轮launch的host刷新buffer，随H2D任务guardMem生命周期释放。
+    std::shared_ptr<uint8_t[]> hostRefresh{nullptr};
+    // 本轮external record预分配但尚未发布到event的资源。
+    std::vector<EventResource> preparedRecords;
+    // 本轮external wait持有的producer资源，交给endGraph notify或异常owner释放。
+    std::vector<EventResource> retainedWaitResources;
+};
 
 class CaptureModel : public Model {
 public:
@@ -53,7 +85,9 @@ public:
     rtError_t TearDown() override;
     rtError_t AddStreamToCaptureModel(Stream * const stm);
     rtError_t SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl);
-    rtError_t SetNotifyAfterExecute(Stream * const exeStm, CaptureModel* const captureMdl);
+    // 设置模型执行后的notify同步，必要时把本轮external wait资源转交给notify wait任务释放。
+    rtError_t SetNotifyAfterExecute(
+        Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* externalEventRefreshInfo = nullptr);
     bool IsAddStream(const Stream *stm) const;
 
     void EnterCaptureNotify(const int32_t singleOperStmId, const int32_t captureStmId);
@@ -140,6 +174,24 @@ public:
     }
 
     rtError_t ResetCaptureEvents(Stream * const stm) const;
+    // 注册capture阶段生成的external record占位任务，launch阶段再实例化真实record资源。
+    rtError_t AddExternalRecordEvent(Event *event, uint32_t captureStreamId, uint32_t taskId);
+    // 注册capture阶段生成的external wait占位任务，launch阶段再绑定真实producer资源。
+    rtError_t AddExternalWaitEvent(Event *event, uint32_t captureStreamId, uint32_t taskId);
+    // capture end阶段创建external refresh表并替换record/wait占位任务。
+    rtError_t FinalizeExternalRefreshTable();
+    // 释放capture model持有的external refresh host模板和device表。
+    void ReleaseExternalRefreshTable();
+    // graph launch前准备本轮host refresh内容并持有record/wait资源。
+    rtError_t PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo *launch);
+    // 将本轮host refresh内容通过H2D提交到device refresh表。
+    rtError_t SubmitExternalEventRefreshInfo(Stream *launchStream, ExternalEventRefreshInfo *launch);
+    // graph launch失败时回滚本轮external record/wait资源。
+    void RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo *launch);
+    // graph execute提交成功后发布本轮external record资源到event。
+    void CommitExternalEventRecords(ExternalEventRefreshInfo *launch);
+    // endGraph notify提交失败时转移或释放external wait持有资源。
+    rtError_t HandleExternalNotifyAfterExecuteFailure(ExternalEventRefreshInfo *launch);
 
     void AddNotify(Notify *notify)
     {
@@ -370,8 +422,27 @@ private:
     void ReleaseNotifyListOnDestroy(std::vector<Notify *> &notifyList);
     void ReleaseArgLoaderBackupOnDestroy();
     Stream* GetOriginalCaptureStream(void) const;
+    rtError_t CheckExecuteReady(void) const;
+    rtError_t PrepareModelExecute(Stream* const stm, ExternalEventRefreshInfo* externalEventRefreshInfo);
+    rtError_t ExecuteModelAndCommit(
+        Stream* const stm, int32_t timeout, const uint8_t executeMode,
+        ExternalEventRefreshInfo* externalEventRefreshInfo);
     rtError_t ExecuteCommon(Stream * const stm, int32_t timeout, const uint8_t executeMode);
     rtError_t BindSqCqAndSendSqe(void);
+    rtError_t MoveRetainedWaitsToNoEndGraphNotifyOwner(std::vector<EventResource>* resources);
+    void ReleaseNoEndGraphNotifyOwnerRetainedResources();
+    rtError_t BuildActualExternalTaskSqe(TaskInfo * const task);
+    rtError_t RebuildExternalTaskSqes(void);
+    rtError_t CalculateExternalEventSummaryInfo(void);
+    rtError_t ValidateExternalPlaceholders(void);
+    rtError_t AllocateExternalRefreshTable(void);
+    rtError_t BuildExternalRecordPlaceholders(void);
+    rtError_t BuildExternalWaitPlaceholders(void);
+    rtError_t InitExternalEventHostRefresh(ExternalEventRefreshInfo* launch);
+    rtError_t PrepareExternalEventRecords(ExternalEventRefreshInfo* launch);
+    rtError_t PrepareExternalEventWaits(ExternalEventRefreshInfo* launch);
+    size_t GetExternalRecordRefreshSlotSize(void) const;
+    rtError_t FillExternalRecordRefreshSlot(void * const slot, uint64_t eventAddr) const;
     rtError_t BindStreamToModel(void);
     void ReportCacheTrackData();
     rtError_t InitAllSubCaptureModelCondTaskByDefValue();
@@ -385,6 +456,18 @@ private:
     std::unordered_map<int32_t, std::unordered_set<int32_t>> singleOperStmIdAndCaptureStmIdMap_;
     std::set<Event *> singleOperEvents_;
     std::set<Event *> captureEvents_;
+    // external record占位任务引用，capture end和每次launch按该列表刷新。
+    std::vector<ExternalEventTaskItem> externalRecordEventItems_;
+    // external wait占位任务引用，capture end和每次launch按该列表刷新。
+    std::vector<ExternalEventTaskItem> externalWaitEventItems_;
+    // external refresh表布局，先存record entry，再存wait producer地址entry。
+    ExternalEventSummaryInfo externalEventSummaryInfo_;
+    // capture model生命周期内固定的device refresh表基地址。
+    void *externalEventRefreshDeviceBase_{nullptr};
+    // capture end生成的host模板，launch时复制后仅刷新动态字段。
+    std::shared_ptr<uint8_t[]> externalEventRefreshHostTemplate_{nullptr};
+    // endGraph notify不可用时临时持有的external wait资源。
+    std::unique_ptr<std::vector<EventResource>> noEndGraphNotifyOwnerRetainedWaitResources_;
     std::map<Stream *, std::vector<Stream *>> addStreamMap_; // key为add进来的stream，value为隐式创建的stream
     std::vector<Notify *> addStreamNotifyList_;
     std::vector<Notify *> executeNotifyList_;

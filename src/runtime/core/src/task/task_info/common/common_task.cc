@@ -116,6 +116,34 @@ rtError_t GetIsCmdListNotFreeValByDvppCfg(rtDvppCfg_t *cfg, bool &isCmdListNotFr
 }
 #endif
 
+#if F_DESC("WriteValuePtrTask")
+rtError_t WriteValuePtrTaskInit(TaskInfo* taskInfo, const void* const pointedAddr, TaskWrCqeFlag cqeFlag)
+{
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->typeName = "WriteValuePtrTask";
+    taskInfo->type = TS_TASK_TYPE_WRITE_VALUE;
+
+    WriteValueTaskInfo* writeValTsk = &taskInfo->u.writeValTask;
+    // pointedAddr是平台相关的二级指针描述符，由SQE构造阶段解析。
+    writeValTsk->sqeAddr = RtPtrToValue(pointedAddr);
+    writeValTsk->cqeFlag = cqeFlag;
+    writeValTsk->ptrFlag = 1U;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureRecordExternalTaskInit(TaskInfo* taskInfo, const void* const recordSlotAddr, TaskWrCqeFlag cqeFlag)
+{
+    const rtError_t ret = WriteValuePtrTaskInit(taskInfo, recordSlotAddr, cqeFlag);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    taskInfo->typeName = "CAPTURE_RECORD_EXTERNAL";
+    taskInfo->type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    return RT_ERROR_NONE;
+}
+#endif
+
 #if F_DESC("WriteValueTask")
 rtError_t WriteValueTaskInit(TaskInfo *taskInfo, uint64_t addr, WriteValueSize size,
                              uint8_t *value, TaskWrCqeFlag cqeFlag)

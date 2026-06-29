@@ -7,28 +7,19 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "event.hpp"
+#ifndef CCE_RUNTIME_EVENT_RESOURCE_HPP
+#define CCE_RUNTIME_EVENT_RESOURCE_HPP
 
 namespace cce {
 namespace runtime {
+class Event;
 
-rtError_t Event::RecordSoftwareEvent(Stream * const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
+struct EventResource {
+    Event* event{nullptr};
+    uint64_t eventAddr{0UL};
+    int32_t eventId{-1};
+};
+} // namespace runtime
+} // namespace cce
 
-rtError_t Event::CaptureWaitProcess(Stream * const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t Event::ResetSoftwareEvent(Stream * const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-}
-}
+#endif

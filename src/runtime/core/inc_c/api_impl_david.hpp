@@ -69,9 +69,11 @@ public:
     rtError_t EventCreate(Event ** const evt, const uint64_t flag) override;
     rtError_t EventCreateEx(Event ** const evt, const uint64_t flag) override;
     rtError_t EventDestroy(Event *evt) override;
-    rtError_t EventRecord(Event * const evt, Stream * const stm) override;
+    rtError_t EventRecord(Event * const evt, Stream * const stm,
+        const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;
     rtError_t EventReset(Event * const evt, Stream * const stm) override;
-    rtError_t StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout) override;
+    rtError_t StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+        const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
 
     rtError_t CntNotifyCreate(const int32_t deviceId, CountNotify ** const retCntNotify,
                               const uint32_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
@@ -180,6 +182,8 @@ private:
     rtError_t CaptureResetEvent(const Event * const evt, Stream * const stm);
     rtError_t GetCaptureEvent(const Stream * const stm, Event * const evt, Event ** const captureEvt, const bool isNewEvt = false) override;
     rtError_t CaptureWaitEvent(Context * const ctx, Stream * const stm, Event * const evt, const uint32_t timeout);
+    rtError_t CaptureExternalEventRecord(Event* const evt, Stream* const stm);
+    rtError_t CaptureExternalEventWait(Event* const evt, Stream* const stm);
     rtError_t LaunchKernelByArgsWithType(Kernel * const kernel, const uint32_t coreDim, Stream *stm,
         const RtArgsWithType * const argsWithType, TaskCfg &taskCfg);
 };

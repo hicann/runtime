@@ -150,6 +150,11 @@ rtError_t aclStub::rtStreamWaitEvent(rtStream_t stream, rtEvent_t event)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtStreamWaitEventWithFlag(rtStream_t stream, rtEvent_t event, int32_t timeout, uint32_t flag)
+{
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtStreamWaitEventWithTimeout(rtStream_t stream, rtEvent_t event, uint32_t timeout)
 {
     return RT_ERROR_NONE;
@@ -224,6 +229,11 @@ rtError_t aclStub::rtEventDestroy(rtEvent_t event)
 }
 
 rtError_t aclStub::rtEventRecord(rtEvent_t event, rtStream_t stream)
+{
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtEventRecordWithFlag(rtEvent_t event, rtStream_t stream, uint32_t flag)
 {
     return RT_ERROR_NONE;
 }
@@ -2813,6 +2823,11 @@ rtError_t rtStreamWaitEvent(rtStream_t stream, rtEvent_t event)
     return MockFunctionTest::aclStubInstance().rtStreamWaitEvent(stream, event);
 }
 
+rtError_t rtStreamWaitEventWithFlag(rtStream_t stream, rtEvent_t event, int32_t timeout, uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamWaitEventWithFlag(stream, event, timeout, flag);
+}
+
 rtError_t rtStreamWaitEventWithTimeout(rtStream_t stream, rtEvent_t event, uint32_t timeout)
 {
     return MockFunctionTest::aclStubInstance().rtStreamWaitEventWithTimeout(stream, event, timeout);
@@ -2881,6 +2896,11 @@ rtError_t rtEventDestroy(rtEvent_t event)
 rtError_t rtEventRecord(rtEvent_t event, rtStream_t stream)
 {
     return MockFunctionTest::aclStubInstance().rtEventRecord(event, stream);
+}
+
+rtError_t rtEventRecordWithFlag(rtEvent_t event, rtStream_t stream, uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtEventRecordWithFlag(event, stream, flag);
 }
 
 rtError_t rtsEventWait(rtStream_t stream, rtEvent_t event, uint32_t timeout)

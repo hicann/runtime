@@ -14,6 +14,8 @@
 #include "runtime/rt.h"
 #include "runtime/rts/rts.h"
 #include "runtime/event.h"
+#include "runtime/rt_inner_event.h"
+#include "runtime/rt_inner_stream.h"
 #define private public
 #define protected public
 #include "runtime.hpp"
@@ -40,10 +42,12 @@
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
+#include "api_handle_guard.h"
 #include "device_state_callback_manager.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "capture_model_utils.hpp"
 #include "subscribe.hpp"
 #include <fstream>
 #include <stdio.h>
@@ -63,6 +67,33 @@
 
 using namespace testing;
 using namespace cce::runtime;
+
+namespace {
+void ExpectDestroy(rtStream_t stream, rtEvent_t event)
+{
+    EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+void ExpectCreateStreamEvent(rtStream_t &stream, rtEvent_t &event, uint32_t eventFlag = RT_EVENT_DEFAULT)
+{
+    EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    if (eventFlag == RT_EVENT_DEFAULT) {
+        EXPECT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    } else {
+        EXPECT_EQ(rtEventCreateExWithFlag(&event, eventFlag), RT_ERROR_NONE);
+    }
+}
+
+CaptureModel *GetCaptureModel(rtModel_t captureMdlHandle)
+{
+    Model *modelBase = nullptr;
+    EXPECT_EQ(ValidateModelHandleForApi(captureMdlHandle, modelBase, __func__), RT_ERROR_NONE);
+    CaptureModel *model = dynamic_cast<CaptureModel *>(modelBase);
+    EXPECT_NE(model, nullptr);
+    return model;
+}
+} // namespace
 
 class RtApiTest : public testing::Test
 {
@@ -169,6 +200,97 @@ TEST_F(RtApiTest, capture_api_02)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(RtApiTest, rtEventRecordWithFlagApiValidation)
+{
+    rtStream_t stream = nullptr;
+    rtEvent_t event = nullptr;
+    ExpectCreateStreamEvent(stream, event, RT_EVENT_DDSYNC_NS);
+
+    EXPECT_EQ(rtEventRecordWithFlag(event, stream, RT_EVENT_RECORD_DEFAULT), RT_ERROR_NONE);
+    EXPECT_NE(rtEventRecordWithFlag(event, stream, RT_EVENT_RECORD_EXTERNAL + 1U), RT_ERROR_NONE);
+
+    const uint32_t originalEnvFlags = ThreadLocalContainer::GetEnvFlags();
+    ThreadLocalContainer::SetEnvFlags(0xA5A50000U);
+    EXPECT_NE(rtEventRecordWithFlag(event, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_DEFAULT);
+    ThreadLocalContainer::SetEnvFlags(originalEnvFlags);
+
+    ExpectDestroy(stream, event);
+}
+
+TEST_F(RtApiTest, rtStreamWaitEventWithFlagApiValidation)
+{
+    MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t stream = nullptr;
+    rtEvent_t event = nullptr;
+    ExpectCreateStreamEvent(stream, event, RT_EVENT_DDSYNC_NS);
+
+    EXPECT_NE(rtStreamWaitEventWithFlag(stream, event, static_cast<uint32_t>(-1), RT_EVENT_WAIT_EXTERNAL + 1U),
+        RT_ERROR_NONE);
+    EXPECT_NE(rtStreamWaitEventWithFlag(stream, event, 1U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+
+    const uint32_t originalEnvFlags = ThreadLocalContainer::GetEnvFlags();
+    ThreadLocalContainer::SetEnvFlags(0xA5A50000U);
+    EXPECT_NE(rtStreamWaitEventWithFlag(stream, event, static_cast<uint32_t>(-1), RT_EVENT_WAIT_EXTERNAL),
+        RT_ERROR_NONE);
+    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_DEFAULT);
+    ThreadLocalContainer::SetEnvFlags(originalEnvFlags);
+
+    ExpectDestroy(stream, event);
+}
+
+TEST_F(RtApiTest, rtEventWithFlagExternalRejectsUnsupportedEventModes)
+{
+    MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t stream = nullptr;
+    rtEvent_t event = nullptr;
+    ExpectCreateStreamEvent(stream, event);
+    EXPECT_NE(rtEventRecordWithFlag(event, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_NE(rtStreamWaitEventWithFlag(stream, event, static_cast<uint32_t>(-1), RT_EVENT_WAIT_EXTERNAL),
+        RT_ERROR_NONE);
+    ExpectDestroy(stream, event);
+
+    ExpectCreateStreamEvent(stream, event, RT_EVENT_TIME_LINE);
+    EXPECT_NE(rtEventRecordWithFlag(event, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    EXPECT_NE(rtStreamWaitEventWithFlag(stream, event, static_cast<uint32_t>(-1), RT_EVENT_WAIT_EXTERNAL),
+        RT_ERROR_NONE);
+    ExpectDestroy(stream, event);
+}
+
+TEST_F(RtApiTest, capture_external_refresh_table_mixed_layout)
+{
+    MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t stream = nullptr;
+    rtEvent_t event1 = nullptr;
+    rtEvent_t event2 = nullptr;
+    rtModel_t captureMdlHandle = nullptr;
+    EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventCreateExWithFlag(&event1, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventCreateExWithFlag(&event2, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, nullptr, &captureMdlHandle), RT_ERROR_NONE);
+
+    CaptureModel *model = GetCaptureModel(captureMdlHandle);
+    ASSERT_NE(model, nullptr);
+
+    ASSERT_EQ(rtEventRecordWithFlag(event1, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtEventRecordWithFlag(event2, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamWaitEventWithFlag(stream, event1, static_cast<uint32_t>(-1), RT_EVENT_WAIT_EXTERNAL),
+        RT_ERROR_NONE);
+
+    rtModel_t modelHandle = nullptr;
+    EXPECT_EQ(rtStreamEndCapture(stream, &modelHandle), RT_ERROR_NONE);
+    EXPECT_EQ(model->externalEventSummaryInfo_.recordOffset, 0U);
+    EXPECT_EQ(model->externalEventSummaryInfo_.waitOffset, 2U * EXTERNAL_RECORD_REFRESH_ENTRY_SIZE);
+    EXPECT_EQ(model->externalEventSummaryInfo_.totalSize, 2U * EXTERNAL_RECORD_REFRESH_ENTRY_SIZE +
+        EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
+    EXPECT_NE(model->externalEventRefreshHostTemplate_, nullptr);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventDestroy(event2), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventDestroy(event1), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(RtApiTest, capture_api_03)

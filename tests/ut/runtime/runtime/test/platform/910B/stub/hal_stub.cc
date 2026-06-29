@@ -452,19 +452,24 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo *in, struct h
 drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo *in)
 {
     uint32_t sqId = in->sqId;
+    uint32_t cqId = in->cqId;
     if (devId >= MAX_DEVICE_NUM) {
         RT_LOG(RT_LOG_ERROR, "Invalid devId:%u", devId);
         return DRV_ERROR_INVALID_VALUE;
     }
-    if (sqId >= MAX_SQCQ_NUM) {
+    if ((in->type == DRV_NORMAL_TYPE) && (sqId >= MAX_SQCQ_NUM)) {
         RT_LOG(RT_LOG_ERROR, "Invalid sqId:%u", sqId);
         return DRV_ERROR_INVALID_VALUE;
     }
-    g_sqcqIdBitmap.FreeId(in->sqId);
+    if ((in->type == DRV_LOGIC_TYPE) && (cqId >= MAX_SQCQ_NUM)) {
+        RT_LOG(RT_LOG_ERROR, "Invalid cqId:%u", cqId);
+        return DRV_ERROR_INVALID_VALUE;
+    }
     drvSqCqType_t type = in->type;
     switch (type) {
         case DRV_NORMAL_TYPE: {
             std::lock_guard<std::mutex> lock(g_sqCqInfoMutex);
+            g_sqcqIdBitmap.FreeId(in->sqId);
             g_sqCqInfo[devId][sqId].valid = false;
             g_sqCqInfo[devId][sqId].streamId = 0;
             g_sqCqInfo[devId][sqId].sqHead = 0;
@@ -477,12 +482,12 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo *in)
         case DRV_LOGIC_TYPE: {
             {
                 std::lock_guard<std::mutex> lock(logicMutex);
-                uint32_t streamId = logicCqStreamId[in->cqId];
-                logicCqStreamId.erase(in->sqId);
+                logicCqStreamId.erase(cqId);
             }
+            g_sqcqIdBitmap.FreeId(cqId);
             std::lock_guard<std::mutex> lock1(g_logicCqReportMutex);
             std::queue<rtLogicCqReport_t> tmp;
-            tmp.swap(g_logicCqReport[devId][in->cqId]);
+            tmp.swap(g_logicCqReport[devId][cqId]);
             break;
         }
         default:

@@ -67,7 +67,7 @@ typedef struct tagTaskInfoStru {
     uint8_t resv : 4;
     uint8_t sqeNum : 7; // 使用sqeNum必须在对应taskini中初始化
     uint8_t needPostProc : 1;
-    /*-------------------------tmp begine---------------------------------------*/
+    /*-------------------------tmp begine------------------------------------*/
     // DavinciMultiTaskInfo、PCTraceTaskInfo:
     std::shared_ptr<PCTrace> pcTrace;
     /*-------------------------tmp end---------------------------------------*/

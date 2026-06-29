@@ -36,6 +36,7 @@
 #include "kernel_utils.hpp"
 #include "task_david.hpp"
 #include "task_res_da.hpp"
+#include "capture_model.hpp"
 #include "stream_sqcq_manage.hpp"
 #undef private
 #undef protected
@@ -1197,6 +1198,65 @@ TEST_F(DavidStreamTest, HandleTaskDefault)
 
     rtError_t ret = stream->HandleTaskDefault(task, &captureModel, sqeBuffer1, 1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidStreamTest, ExternalRecordRefreshSlotUsesDavidWriteValueSqe)
+{
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    rtDavidSqe_t slot = {};
+    const uint64_t eventAddr = 0x123456789ABCU;
+    ASSERT_NE(captureModel, nullptr);
+
+    EXPECT_EQ(captureModel->GetExternalRecordRefreshSlotSize(), sizeof(rtDavidSqe_t));
+    EXPECT_EQ(captureModel->FillExternalRecordRefreshSlot(nullptr, eventAddr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel->FillExternalRecordRefreshSlot(&slot, eventAddr), RT_ERROR_NONE);
+
+    EXPECT_EQ(slot.writeValueSqe.header.type, RT_DAVID_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(slot.writeValueSqe.header.ptrMode, 0U);
+    EXPECT_EQ(slot.writeValueSqe.awsize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    EXPECT_EQ(slot.writeValueSqe.writeAddrLow, static_cast<uint32_t>(eventAddr & 0xFFFFFFFFU));
+    EXPECT_EQ(slot.writeValueSqe.writeAddrHigh, static_cast<uint32_t>((eventAddr >> 32U) & 0x1FFFFU));
+    EXPECT_EQ(slot.writeValueSqe.writeValuePart[0], 1U);
+}
+
+TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuffer)
+{
+    auto *captureModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    TaskInfo taskInfo = {};
+    Stream *oldStream = nullptr;
+    uint8_t *oldSqeBuffer = nullptr;
+    uint32_t oldSqeBufferSize = 0U;
+    ASSERT_NE(captureModel, nullptr);
+
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    oldStream = taskInfo.stream;
+    oldSqeBuffer = stream_->sqeBuffer_;
+    taskInfo.stream = stream_;
+    stream_->sqeBuffer_ = nullptr;
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(&taskInfo), RT_ERROR_NONE);
+    stream_->sqeBuffer_ = oldSqeBuffer;
+    taskInfo.stream = oldStream;
+
+    uint8_t sqeBuffer[sizeof(rtDavidSqe_t) * MEM_WAIT_SQE_NUM] = {};
+    uint8_t funcCallMem[sizeof(RtStarsv2ExternalWaitFuncCall)] = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    taskInfo.u.memWaitValueTask.devAddr = 0x1234U;
+    taskInfo.u.memWaitValueTask.funcCallSvmMem2 = funcCallMem;
+    taskInfo.u.memWaitValueTask.funCallMemSize2 = sizeof(funcCallMem);
+    oldSqeBuffer = stream_->sqeBuffer_;
+    oldSqeBufferSize = stream_->sqeBufferSize_;
+    stream_->SetSqeBuffer(sqeBuffer);
+    stream_->SetSqeBufferSize(0U);
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    stream_->SetSqeBufferSize(sizeof(sqeBuffer));
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(&taskInfo), RT_ERROR_NONE);
+    MOCKER(memcpy_s).expects(once()).will(returnValue(EINVAL));
+    EXPECT_EQ(captureModel->BuildActualExternalTaskSqe(&taskInfo), RT_ERROR_INVALID_VALUE);
+    stream_->SetSqeBuffer(oldSqeBuffer);
+    stream_->SetSqeBufferSize(oldSqeBufferSize);
 }
 
 TEST_F(DavidStreamTest, Destructor_ArgHandleNonNull)

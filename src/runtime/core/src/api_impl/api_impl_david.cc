@@ -448,7 +448,7 @@ rtError_t ApiImplDavid::EventDestroy(Event *evt)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::EventRecord(Event * const evt, Stream * const stm)
+rtError_t ApiImplDavid::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -460,6 +460,11 @@ rtError_t ApiImplDavid::EventRecord(Event * const evt, Stream * const stm)
         "Not support current mode bind stm, mode=%d, flag=%" PRIu64 ", isModel=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), (curStm->GetModelNum() != 0));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    if (flag == RT_EVENT_RECORD_EXTERNAL) {
+        COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
+            __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+        return CaptureExternalEventRecord(evt, curStm);
+    }
     if (evt->ToBeCaptured(curStm)) {
         COND_RETURN_WARN(!evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
             "Not support call rtEventCreate or rtEventCreateWithFlag without external flag, mode=%d",
@@ -480,6 +485,8 @@ rtError_t ApiImplDavid::EventRecord(Event * const evt, Stream * const stm)
     }
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         return (dynamic_cast<IpcEvent *>(evt))->IpcEventRecordStarsV2(curStm);
+    } else if (!evt->IsHardwareMode()) {
+        return EvtRecordSoftwareMode(evt, curStm);
     } else {
         return EvtRecord(evt, curStm);
     }
@@ -496,7 +503,8 @@ rtError_t ApiImplDavid::EventReset(Event * const evt, Stream * const stm)
     COND_RETURN_WARN(supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support current mode bind stm, mode=%d, flag=%" PRIu64 ", isModel=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), (curStm->GetModelNum() != 0));
-    if ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && (curStm->GetModelNum() == 0U)) {
+    // David硬件默认event reset沿用历史no-op；software event reset需要下发写0任务，不能提前返回。
+    if ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && evt->IsHardwareMode() && (curStm->GetModelNum() == 0U)) {
         return RT_ERROR_NONE;
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
@@ -516,12 +524,13 @@ rtError_t ApiImplDavid::EventReset(Event * const evt, Stream * const stm)
             return RT_ERROR_NONE;
         }
     } else {
-        if ((curStm != curCtx->DefaultStream_()) && (evt->ToBeCaptured(curStm))) {
+        // hardware event reset没有software写0任务可捕获，仍沿用capture限制；software event reset可转成mem-write任务。
+        if ((curStm != curCtx->DefaultStream_()) && evt->IsHardwareMode() && (evt->ToBeCaptured(curStm))) {
             RT_LOG(RT_LOG_WARNING, "Not support call rtEventCreate or rtEventCreateWithFlag without external flag");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
-    return EvtReset(evt, curStm);
+    return evt->IsHardwareMode() ? EvtReset(evt, curStm) : EvtResetSoftwareMode(evt, curStm);
 }
 
 rtError_t ApiImplDavid::LaunchKernelByArgsWithType(Kernel * const kernel, const uint32_t coreDim, Stream *stm,
@@ -568,7 +577,8 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(Kernel * const kernel, const 
     return error;
 }
 
-rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
+rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
+    const uint32_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "Stream wait event, timeout=%us.", timeout);
     Context * const curCtx = CurrentContext();
@@ -581,6 +591,11 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
         "Not support current mode bind stream, mode=%d, flag=%" PRIu64 ", isModel=%d.",
         evt->IsNewMode(), evt->GetEventFlag(), (curStm->GetModelNum() != 0));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
+    if (flag == RT_EVENT_WAIT_EXTERNAL) {
+        COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
+            __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+        return CaptureExternalEventWait(evt, curStm);
+    }
     if (evt->IsCapturing()) {
         COND_RETURN_ERROR_MSG_INNER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,
         "stream flag does not support capture to model, flag=%u, stream_id=%d.", curStm->Flags(), curStm->Id_());
@@ -619,6 +634,8 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
     rtError_t error = RT_ERROR_NONE;
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         error = (dynamic_cast<IpcEvent *>(evt))->IpcEventWaitStarsV2(curStm);
+    } else if ((!evt->IsHardwareMode()) && evt->HasRecord() && (evt->GetEventAddr() != nullptr)) {
+        error = EvtWaitSoftwareMode(evt, curStm);
     } else {
         error = EvtWait(evt, curStm, timeout);
     }

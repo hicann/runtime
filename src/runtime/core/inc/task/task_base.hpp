@@ -218,7 +218,9 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_DQS_CONDITION_COPY = 131, /* dqs condition copy*/
     TS_TASK_TYPE_DQS_FRAME_ALIGN = 132, /* dqs frame align */
     TS_TASK_TYPE_CAPTURE_CONDITION = 133, /* capture condition task */
-    TS_TASK_TYPE_RESERVED = 134,
+    TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL = 134, /* external event record placeholder */
+    TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL = 135,  /* external event wait placeholder */
+    TS_TASK_TYPE_RESERVED = 136,
 } tsTaskType_t;
 
 enum class ProfTaskType : uint16_t {
