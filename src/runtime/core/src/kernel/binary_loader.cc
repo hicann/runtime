@@ -211,7 +211,7 @@ rtError_t BinaryLoader::ReadBinaryFile()
 {
     binRealPath_ = RealPath(binPath_);
     if (binRealPath_.empty()) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "Read binary file", binPath_, "binPath_", RtFmtMsg("Path %s cannot be accessed", binPath_.c_str()));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "Read binary file", binPath_, "binPath", RtFmtMsg("Path %s cannot be accessed", binPath_.c_str()));
         return RT_ERROR_INVALID_VALUE;
     }
 

@@ -1328,8 +1328,11 @@ rtError_t ApiErrorDecorator::EventCreate(Event ** const evt, const uint64_t flag
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
 
     constexpr uint32_t maxFlag = RT_EVENT_FLAG_MAX;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag & maxFlag) == 0U) || (flag > maxFlag), 
-        RT_ERROR_INVALID_VALUE, flag, "(0, " + std::to_string(maxFlag) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag & maxFlag) == 0U) || (flag > maxFlag),
+        RT_ERROR_INVALID_VALUE, flag,
+        "an OR combination of RT_EVENT_DDSYNC_NS(0x1U), RT_EVENT_STREAM_MARK(0x2U),"
+        " RT_EVENT_DDSYNC(0x4U), and RT_EVENT_TIME_LINE(0x8U);"
+        " or RT_EVENT_MC2(0x10U) or RT_EVENT_EXTERNAL(0x20U) used alone");
 
     constexpr uint64_t solelyFlag[] = {RT_EVENT_MC2, RT_EVENT_EXTERNAL};
     for (const uint64_t itemFlag : solelyFlag) {
@@ -1360,8 +1363,10 @@ rtError_t ApiErrorDecorator::EventCreateEx(Event ** const evt, const uint64_t fl
     }
     constexpr uint32_t maxFlag = (RT_EVENT_DDSYNC_NS | RT_EVENT_STREAM_MARK | RT_EVENT_DDSYNC |
                                   RT_EVENT_TIME_LINE | RT_EVENT_IPC);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag & maxFlag) == 0U) || (flag > maxFlag), 
-        RT_ERROR_INVALID_VALUE, flag, "(0, " + std::to_string(maxFlag) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag & maxFlag) == 0U) || (flag > maxFlag),
+        RT_ERROR_INVALID_VALUE, flag,
+        "an OR combination of RT_EVENT_DDSYNC_NS(0x1U), RT_EVENT_STREAM_MARK(0x2U),"
+        " RT_EVENT_DDSYNC(0x4U), and RT_EVENT_TIME_LINE(0x8U); or RT_EVENT_IPC(0x40U) used alone");
 
     const rtError_t error = impl_->EventCreateEx(evt, flag);
     ERROR_RETURN(error, "Create event failed.");
