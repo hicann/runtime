@@ -449,6 +449,7 @@ private:
     rtError_t BindJetty(Stream * const stm, JettyType type);
     rtError_t RecycleJetty(int32_t streamId, JettyType type, uint32_t &count) const;
     rtError_t ReleaseJetty(int32_t streamId, JettyType type);
+    void RestoreJettyForSnapshot();
     rtError_t RefreshJettyInfoList();
     RtCaptureModelStatus captureModelStatus_{RtCaptureModelStatus::NONE};
     mutable uint32_t cacheOpInfoSwitch_{0U}; // aclgraph stream status: 0: false, 1:true

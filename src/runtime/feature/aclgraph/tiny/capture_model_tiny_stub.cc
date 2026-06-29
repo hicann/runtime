@@ -83,6 +83,8 @@ rtError_t CaptureModel::MarkStreamActiveTask(TaskInfo *streamActiveTask) { UNUSE
 
 rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev) { UNUSED(dev); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+void CaptureModel::RestoreJettyForSnapshot() {}
+
 rtError_t CaptureModel::BindSqCqAndSendSqe(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task)

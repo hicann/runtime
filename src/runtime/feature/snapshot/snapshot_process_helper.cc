@@ -17,6 +17,7 @@
 #include "idevice_snapshot_ops.hpp"
 #include "npu_driver.hpp"
 #include "model.hpp"
+#include "jetty_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -98,6 +99,51 @@ rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan)
     return ret;
 }
 
+static rtError_t ResetJettyForSnapshotRestore(Device * const dev)
+{
+    if (!Runtime::Instance()->GetConnectUbFlag()) {
+        return RT_ERROR_NONE;
+    }
+    JettyManager * const jettyMgr = dev->GetJettyManager();
+    if (jettyMgr == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    const rtError_t err = jettyMgr->ResetJettyForSnapshotRestore();
+    ERROR_RETURN(err, "Reset jetty for snapshot restore failed, deviceId=%u, retCode=%#x!", dev->Id_(),
+        static_cast<uint32_t>(err));
+    return RT_ERROR_NONE;
+}
+
+static rtError_t RestoreSoftwareSqCaptureModel(Device * const dev, Driver * const drv, const uint32_t tsId,
+    Model * const mdl)
+{
+    if (mdl == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    // 只恢复扩流场景的model
+    if (mdl->GetModelType() != ModelType::RT_MODEL_CAPTURE_MODEL) {
+        return RT_ERROR_NONE;
+    }
+    CaptureModel* capMdl = dynamic_cast<CaptureModel*>(mdl);
+    if (capMdl == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "Dynamic cast to CaptureModel failed, modelId=%u.", mdl->Id_());
+        return RT_ERROR_NONE;
+    }
+    if ((!capMdl->IsSoftwareSqEnable()) || (!capMdl->IsCaptureReady())) {
+        return RT_ERROR_NONE;
+    }
+
+    const uint32_t deviceId = dev->Id_();
+    rtError_t err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
+    ERROR_RETURN(err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId,
+        static_cast<uint32_t>(err));
+
+    err = capMdl->RestoreForSoftwareSq(dev);
+    ERROR_RETURN(err, "Restore capture model failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId,
+        static_cast<uint32_t>(err));
+    return RT_ERROR_NONE;
+}
+
 rtError_t SnapShotAclGraphRestore(Device* const dev)
 {
     RT_LOG(RT_LOG_INFO, "Start to restore aclgraph.");
@@ -109,6 +155,10 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
     Driver* drv = dev->Driver_();
     const uint32_t tsId = dev->DevGetTsId();
 
+    rtError_t err = ResetJettyForSnapshotRestore(dev);
+    ERROR_RETURN(err, "Reset jetty for snapshot restore failed, deviceId=%u, retCode=%#x!", deviceId,
+        static_cast<uint32_t>(err));
+
     for (Context* const ctx : ctxMan.GetSetObj()) {
         if (!ContextManage::IsActiveContextOnDevice(ctx, deviceId)) {
             continue;
@@ -116,41 +166,16 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
         SpinLock& modelLock = ctx->GetModelLock();
         modelLock.Lock();
         for (Model* mdl : ctx->GetModelList()) {
-            if (mdl == nullptr) {
-                continue;
-            }
-            // 只恢复扩流场景的model
-            if (mdl->GetModelType() != ModelType::RT_MODEL_CAPTURE_MODEL) {
-                continue;
-            }
-            CaptureModel* capMdl = dynamic_cast<CaptureModel*>(mdl);
-            if (capMdl == nullptr) {
-                RT_LOG(RT_LOG_WARNING, "Dynamic cast to CaptureModel failed, modelId=%u.", mdl->Id_());
-                continue;
-            }
-            if (capMdl->IsSoftwareSqEnable() && capMdl->IsCaptureReady()) {
-                // 恢复modelID
-                rtError_t err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
-                if (err != RT_ERROR_NONE) {
-                    modelLock.Unlock();
-                    ERROR_RETURN(
-                        err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId,
-                        static_cast<uint32_t>(err));
-                }
-
-                err = capMdl->RestoreForSoftwareSq(dev);
-                if (err != RT_ERROR_NONE) {
-                    modelLock.Unlock();
-                    ERROR_RETURN(
-                        err, "Restore capture model failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId,
-                        static_cast<uint32_t>(err));
-                }
+            err = RestoreSoftwareSqCaptureModel(dev, drv, tsId, mdl);
+            if (err != RT_ERROR_NONE) {
+                modelLock.Unlock();
+                return err;
             }
         }
         modelLock.Unlock();
     }
 
-    const rtError_t err = dev->RestoreSqCqPool();
+    err = dev->RestoreSqCqPool();
     ERROR_RETURN(err, "Restore SqCqPool failed, deviceId=%u, retCode=%#x!", deviceId, static_cast<uint32_t>(err));
     return RT_ERROR_NONE;
 }

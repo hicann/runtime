@@ -1468,6 +1468,15 @@ void* CaptureModel::GetShapeInfo(const int32_t streamId, const uint32_t taskId, 
 
     return infoPtr;
 }
+
+void CaptureModel::RestoreJettyForSnapshot()
+{
+    COND_PROC((!IsSoftwareSqEnable()) || (!Runtime::Instance()->GetConnectUbFlag()), return);
+    ClearH2dJettyInfoList();
+    ClearD2dJettyInfoList();
+    SetNeedUpdateUBPi(false);
+}
+
 rtError_t CaptureModel::CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize, const Stream * const stm)
 {
     if (GetModelCacheOpInfoSwitch() == 0U) {
@@ -1534,6 +1543,7 @@ rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev)
     DELETE_A(switchInfo_);
     SetIsSendSqe(false);
     refCount_ = 0;
+    RestoreJettyForSnapshot();
     return RT_ERROR_NONE;
 }
 

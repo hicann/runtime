@@ -936,6 +936,7 @@ TEST_F(TinyStubTest, capture_model_sqcq_stub)
     captureModel.CaptureModelExecuteFinish(RT_ERROR_NONE);
     EXPECT_EQ(captureModel.MarkStreamActiveTask(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.RestoreForSoftwareSq(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    captureModel.RestoreJettyForSnapshot();
 }
 
 TEST_F(TinyStubTest, capture_model_sqcq_bind_stub)
@@ -1307,6 +1308,7 @@ TEST_F(TinyStubTest, jetty_stub)
 {
     JettyManager mgr(0);
     mgr.Clear();
+    EXPECT_EQ(mgr.ResetJettyForSnapshotRestore(), RT_ERROR_NONE);
 
     JettyPool *pool = new JettyPool(0);
     delete pool;

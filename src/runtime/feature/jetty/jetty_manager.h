@@ -64,6 +64,12 @@ public:
     rtError_t ReleaseJettyByHandle(uint64_t handle, JettyType type);
 
     /**
+     * @brief 重置 snapshot restore 前遗留的 Jetty 状态，保留 WQE 元数据
+     * @return rtError_t 错误码
+     */
+    rtError_t ResetJettyForSnapshotRestore();
+
+    /**
      * @brief 获取流的 Jetty 信息
      * @param streamId 流 ID
      * @param type Jetty 类型

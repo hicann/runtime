@@ -65,6 +65,7 @@
 #include "api_impl.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "snapshot_process_helper.hpp"
 #include "inner_thread_local.hpp"
 #include <fstream>
 #include <cstdio>
@@ -145,6 +146,18 @@ TEST_F(CloudV2TaskTest, MemWaitModelIsNull)
     task.type = TS_TASK_TYPE_CAPTURE_WAIT;
     rtError_t ret = MemWaitValueTaskInit(&task, (void *)(&devAddr), 0U, 0U);
     EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
+}
+
+TEST_F(CloudV2TaskTest, SnapShotAclGraphRestoreWithUbFlag)
+{
+    Runtime::Instance()->SetConnectUbFlag(true);
+    RawDevice *device = dynamic_cast<RawDevice *>(Runtime::Instance()->GetDevice(0, 0));
+    ASSERT_NE(device, nullptr);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::RestoreSqCqPool).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error = SnapShotAclGraphRestore(device);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Runtime::Instance()->SetConnectUbFlag(false);
 }
 
 TEST_F(CloudV2TaskTest, stream_IsReclaimAsync)

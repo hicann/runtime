@@ -694,6 +694,46 @@ TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_GetJettyInfoForStream_Wit
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(StreamJettyHandlerIntegrationTest, JettyManager_ResetJettyForSnapshotRestore)
+{
+    JettyManager* mgr = stream_->Device_()->GetJettyManager();
+    ASSERT_NE(mgr, nullptr);
+    StreamJettyContext* ctx = mgr->GetOrCreateStreamJettyContext(stream_, JettyType::JETTY_TYPE_H2D);
+    ASSERT_NE(ctx, nullptr);
+    ctx->capacity = 2048;
+    ctx->filledWqeCount = 100;
+    ctx->taskWqeCounts.push_back({1, 2});
+    auto buffer = std::unique_ptr<uint8_t[]>(new uint8_t[2048 * 64]);
+    ctx->wqeBuffers.push_back(std::move(buffer));
+
+    int32_t streamId = static_cast<int32_t>(stream_->Id_());
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D);
+    ASSERT_EQ(bindError, RT_ERROR_NONE);
+    ASSERT_NE(ctx->jettyHandle, 0U);
+
+    Stream* stream2 = new Stream(stream_->Device_(), 1);
+    StreamJettyContext* ctx2 = mgr->GetOrCreateStreamJettyContext(stream2, JettyType::JETTY_TYPE_D2D);
+    ASSERT_NE(ctx2, nullptr);
+    ctx2->capacity = 2048;
+    ctx2->filledWqeCount = 10;
+    rtError_t bindError2 = mgr->BindJettyForStream(stream2->Id_(), nullptr, JettyType::JETTY_TYPE_D2D);
+    ASSERT_EQ(bindError2, RT_ERROR_NONE);
+    ASSERT_NE(ctx2->jettyHandle, 0U);
+
+    rtError_t resetError = mgr->ResetJettyForSnapshotRestore();
+    EXPECT_EQ(resetError, RT_ERROR_NONE);
+    EXPECT_EQ(ctx->jettyHandle, 0U);
+    EXPECT_EQ(ctx2->jettyHandle, 0U);
+    EXPECT_EQ(ctx->capacity, 2048U);
+    EXPECT_EQ(ctx->filledWqeCount, 100U);
+    EXPECT_EQ(ctx->taskWqeCounts.size(), 1U);
+    EXPECT_EQ(ctx->wqeBuffers.size(), 1U);
+
+    JettyInfo jettyInfo;
+    EXPECT_EQ(mgr->GetJettyInfoForStream(streamId, JettyType::JETTY_TYPE_H2D, jettyInfo), RT_ERROR_INVALID_VALUE);
+    delete stream2;
+}
+
 class JettyManagerTest : public testing::Test {
 protected:
     virtual void SetUp()
@@ -823,6 +863,26 @@ TEST_F(CaptureModelJettyTest, BindJettyForUbdma_AlreadyBound)
     ASSERT_EQ(bindError, RT_ERROR_NONE);
     rtError_t error = captureModel_->BindJettyForUbdma();
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CaptureModelJettyTest, RestoreJettyForSnapshot_ResetOnly)
+{
+    captureModel_->ModelPushFrontStream(stream_);
+    SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 100, false);
+    JettyManager* mgr = device_->GetJettyManager();
+    ASSERT_NE(mgr, nullptr);
+    int32_t streamId = static_cast<int32_t>(stream_->Id_());
+    StreamJettyContext* ctx = mgr->GetStreamJettyContext(streamId, JettyType::JETTY_TYPE_H2D);
+    ASSERT_NE(ctx, nullptr);
+    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D);
+    ASSERT_EQ(bindError, RT_ERROR_NONE);
+    ASSERT_NE(ctx->jettyHandle, 0U);
+
+    captureModel_->RestoreJettyForSnapshot();
+    EXPECT_NE(ctx->jettyHandle, 0U);
+    EXPECT_EQ(ctx->capacity, 2048U);
+    EXPECT_EQ(ctx->filledWqeCount, 100U);
+    EXPECT_EQ(ctx->wqeBuffers.size(), 1U);
 }
 
 TEST_F(CaptureModelJettyTest, BindJettyForUbdma_BothTypes_Success)

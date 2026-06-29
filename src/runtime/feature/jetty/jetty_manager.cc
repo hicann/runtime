@@ -133,6 +133,21 @@ rtError_t JettyManager::ReleaseJettyByHandle(uint64_t handle, JettyType type)
     return RT_ERROR_NONE;
 }
 
+rtError_t JettyManager::ResetJettyForSnapshotRestore()
+{
+    std::lock_guard<std::recursive_mutex> lock(managerLock_);
+    jettyPool_->Clear();
+    for (auto &entry : streamCaptureContexts_) {
+        StreamJettyContext *ctx = entry.second.get();
+        if (ctx == nullptr) {
+            continue;
+        }
+        ctx->jettyHandle = 0;
+    }
+    RT_LOG(RT_LOG_INFO, "Reset jetty for snapshot restore, context_num=%zu.", streamCaptureContexts_.size());
+    return RT_ERROR_NONE;
+}
+
 rtError_t JettyManager::GetJettyInfoForStream(int32_t streamId, JettyType type, JettyInfo& jettyInfo)
 {
     std::lock_guard<std::recursive_mutex> lock(managerLock_);

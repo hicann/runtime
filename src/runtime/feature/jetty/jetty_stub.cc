@@ -32,6 +32,11 @@ void JettyManager::Clear()
 {
 }
 
+rtError_t JettyManager::ResetJettyForSnapshotRestore()
+{
+    return RT_ERROR_NONE;
+}
+
 rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream *stream, JettyType jettyType)
 {
     UNUSED(stream);
