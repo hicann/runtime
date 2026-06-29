@@ -134,6 +134,24 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
     const size_t width, const size_t height, const aclrtMemcpyKind kind, rtMemcpyKind_t &rtKind)
 {
     ACL_LOG_DEBUG("start to execute CheckMemcpy2dParam");
+    if (IsZeroSizeMemcpy2d(width, height)) {
+        return ACL_SUCCESS;
+    }
+
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+
+    if ((width > spitch) || (width > dpitch)) {
+        ACL_LOG_ERROR("[Check][Width]input param width[%zu] must be smaller than spitch[%zu] and dpitch[%zu]",
+            width, spitch, dpitch);
+        const std::string widthVal = std::to_string(width);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("must be less than spitch and dpitch, spitch=%zu, dpitch=%zu",
+            spitch, dpitch);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, widthVal.c_str(), "width", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
     switch (kind) {
         case ACL_MEMCPY_HOST_TO_DEVICE: {
             rtKind = RT_MEMCPY_HOST_TO_DEVICE;
@@ -159,25 +177,6 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
                     "kind", "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEVICE_TO_DEVICE or ACL_MEMCPY_DEFAULT"}));
             return ACL_ERROR_INVALID_PARAM;
         }
-    }
-
-    if (IsZeroSizeMemcpy2d(width, height)) {
-        return ACL_SUCCESS;
-    }
-
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
-
-    if ((width > spitch) || (width > dpitch)) {
-        ACL_LOG_ERROR("[Check][Width]input param width[%zu] must be smaller than spitch[%zu] and dpitch[%zu]",
-            width, spitch, dpitch);
-        const std::string widthVal = std::to_string(width);
-        std::string errMsg = acl::AclErrorLogManager::FormatStr("must be less than spitch and dpitch, spitch=%zu, dpitch=%zu",
-            spitch, dpitch);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
-            std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, widthVal.c_str(), "width", errMsg.c_str()}));
-        return ACL_ERROR_INVALID_PARAM;
     }
     return ACL_SUCCESS;
 }
@@ -641,18 +640,18 @@ aclError aclrtMemcpyImpl(void *dst,
                          aclrtMemcpyKind kind)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpy);
-    rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
-    const aclError ret = MemcpyKindTranslate(kind, rtKind);
-    if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
-        return ret;
-    }
     if (count == 0UL) {
         ACL_LOG_INFO("count is zero, no memory copy will be performed");
         return ACL_SUCCESS;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+    rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
+    const aclError ret = MemcpyKindTranslate(kind, rtKind);
+    if (ret != ACL_SUCCESS) {
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        return ret;
+    }
 
     const rtError_t rtErr = rtMemcpy(dst, destMax, src, count, rtKind);
     if (rtErr != RT_ERROR_NONE) {
@@ -690,18 +689,18 @@ aclError aclrtMemcpyAsyncImpl(void *dst,
                               aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsync);
-    rtMemcpyKind_t rtKindVal = RT_MEMCPY_RESERVED;
-    const aclError ret = MemcpyKindTranslate(kind, rtKindVal);
-    if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
-        return ret;
-    }
     if (count == 0UL) {
         ACL_LOG_INFO("count is zero, no memory copy async will be performed");
         return ACL_SUCCESS;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+    rtMemcpyKind_t rtKindVal = RT_MEMCPY_RESERVED;
+    const aclError ret = MemcpyKindTranslate(kind, rtKindVal);
+    if (ret != ACL_SUCCESS) {
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        return ret;
+    }
 
     ACL_REQUIRES_CALL_RTS_OK(rtMemcpyAsync(dst, destMax, src, count, rtKindVal, static_cast<rtStream_t>(stream)),
                              rtMemcpyAsync);
@@ -718,18 +717,18 @@ aclError aclrtMemcpyAsyncWithConditionImpl(void *dst,
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsyncWithCondition);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyAsyncWithCondition, destMaxSize = %zu, srcSize = %zu, kind = %d",
                   destMax, count, static_cast<int32_t>(kind));
-    rtMemcpyKind_t rtKindValue = RT_MEMCPY_RESERVED;
-    const aclError ret = MemcpyKindTranslate(kind, rtKindValue);
-    if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
-        return ret;
-    }
     if (count == 0UL) {
         ACL_LOG_INFO("zero-size memcpy, no memory copy async will be performed");
         return ACL_SUCCESS;
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+    rtMemcpyKind_t rtKindValue = RT_MEMCPY_RESERVED;
+    const aclError ret = MemcpyKindTranslate(kind, rtKindValue);
+    if (ret != ACL_SUCCESS) {
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        return ret;
+    }
 
     rtMemcpyAttributeValue_t memcpyAttrValue;
     // bit0 standing for not checking matching between address and kind, bit1 standing for checking page-locked addr
@@ -1555,14 +1554,11 @@ aclError aclrtMemcpyAsyncWithOffsetImpl(void **dst, size_t destMax, size_t dstDa
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsyncWithOffset);
     ACL_LOG_INFO("start to execute aclrtMemcpyAsyncWithOffset");
-    if (kind != ACL_MEMCPY_INNER_DEVICE_TO_DEVICE) {
-        ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy with offset, kind = %d", static_cast<int32_t>(kind));
-        return ACL_ERROR_INVALID_PARAM;
-    }
     if (count == 0UL) {
         ACL_LOG_INFO("zero-size memcpy, no memory copy async with offsetwill be performed");
         return ACL_SUCCESS;
     }
+
     const auto memKind = static_cast<rtMemcpyKind>(static_cast<int32_t>(kind));
     const auto rtErr = rtMemcpyAsyncWithOffset(dst, destMax, dstDataOffset, src, count, srcDataOffset, memKind, stream);
     if (rtErr != RT_ERROR_NONE) {
@@ -1854,8 +1850,6 @@ static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrs);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrsIndexes);
 
-    ACL_REQUIRES_POSITIVE_REPORT(numBatches);
-
     for (size_t i = 0UL; i < numBatches; i++) {
         if (destMaxs[i] < sizes[i]) {
             ACL_LOG_ERROR("element of destMaxs must be equal to or greater than corresponding element of sizes");
@@ -1891,17 +1885,21 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
     aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex,
     aclrtStream stream, bool async, const char *apiName)
 {
-    const aclError ret = ValidateMemcpyBatchParams(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes,
-        numAttrs);
-    if (ret != ACL_SUCCESS) {
-        return ret;
-    }
+    // 判断 sizes == nullptr, count == 0 报参数异常
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(sizes);
+    ACL_REQUIRES_POSITIVE_REPORT(numBatches);
+    // 如果所有批次的 size 都为 0，则不执行 memcpy，直接返回成功，不需要校验其他参数
     if (IsAllZeroSizeBatch(sizes, numBatches)) {
         if (failIndex != nullptr) {
             *failIndex = SIZE_MAX;
         }
         ACL_LOG_INFO("successfully execute %s", apiName);
         return ACL_SUCCESS;
+    }
+    const aclError ret = ValidateMemcpyBatchParams(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes,
+        numAttrs);
+    if (ret != ACL_SUCCESS) {
+        return ret;
     }
 
     if (async) {
@@ -2575,7 +2573,10 @@ aclError aclrtMemcpyFromSymbolImpl(void *dst, size_t dstMax, const void *symbol,
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyFromSymbol);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyFromSymbol, count = %zu, offset = %zu.", count, offset);
-
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy from symbol, just return success.");
+        return ACL_SUCCESS;
+    }
     aclError ret = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
     if (ret != ACL_SUCCESS) {
         return ret;
@@ -2603,6 +2604,10 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(void *dst, size_t dstMax, const void *sy
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyFromSymbolAsync);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyFromSymbolAsync, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy from symbol async, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError aclErr = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
     if (aclErr != ACL_SUCCESS) {
@@ -2648,6 +2653,10 @@ aclError aclrtMemcpyToSymbolImpl(const void *symbol, const void *src, size_t cou
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyToSymbol);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyToSymbol, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy to symbol, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError ret = CheckMemcpyToSymbol(symbol, src, kind);
     if (ret != ACL_SUCCESS) {
@@ -2675,6 +2684,10 @@ aclError aclrtMemcpyToSymbolAsyncImpl(const void *symbol, const void *src, size_
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyToSymbolAsync);
     ACL_LOG_DEBUG("start to execute aclrtMemcpyToSymbolAsync, count = %zu, offset = %zu.", count, offset);
+    if(count == 0) {
+        ACL_LOG_INFO("count is 0, no need to execute mem copy to symbol async, just return success.");
+        return ACL_SUCCESS;
+    }
 
     aclError aclErr = CheckMemcpyToSymbol(symbol, src, kind);
     if (aclErr != ACL_SUCCESS) {

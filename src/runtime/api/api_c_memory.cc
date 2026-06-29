@@ -11,7 +11,6 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
-#include "driver/ascend_hal_define.h"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "global_state_manager.hpp"
@@ -48,12 +47,6 @@ TIMESTAMP_EXTERN(rtsMemMallocPhysical);
 }  // namespace cce
 
 namespace {
-bool IsValidRtsMemcpy2dKind(const rtMemcpyKind kind)
-{
-    return (kind == RT_MEMCPY_KIND_DEFAULT) || (kind == RT_MEMCPY_KIND_HOST_TO_DEVICE) ||
-        (kind == RT_MEMCPY_KIND_DEVICE_TO_HOST) || (kind == RT_MEMCPY_KIND_DEVICE_TO_DEVICE);
-}
-
 bool IsZeroSizeMemcpy2d(const uint64_t width, const uint64_t height)
 {
     return (width == 0U) || (height == 0U);
@@ -64,31 +57,6 @@ bool IsAllZeroSizeBatch(const size_t * const sizes, const size_t count)
     return std::all_of(sizes, sizes + count, [](const size_t size) {
         return size == 0UL;
     });
-}
-
-bool HasZeroSizeBatch(const size_t * const sizes, const size_t count)
-{
-    return std::any_of(sizes, sizes + count, [](const size_t size) {
-        return size == 0UL;
-    });
-}
-
-void SetMemcpyBatchFailIndex(size_t * const failIdx, const size_t value)
-{
-    if (failIdx != nullptr) {
-        *failIdx = value;
-    }
-}
-
-rtError_t ValidateMemcpyBatchParams(void ** const dsts, void ** const srcs, const size_t * const sizes,
-    const size_t count, const rtMemcpyBatchAttr * const attrs, const size_t * const attrsIdxs, const size_t numAttrs)
-{
-    if ((dsts == nullptr) || (srcs == nullptr) || (sizes == nullptr) || (attrs == nullptr) || (attrsIdxs == nullptr) ||
-        (count == 0UL) || (numAttrs == 0UL) || (numAttrs > count) ||
-        (count > static_cast<size_t>(DEVMM_MEMCPY_BATCH_MAX_COUNT)) || (attrsIdxs[0] != 0UL)) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-    return RT_ERROR_NONE;
 }
 }
 
@@ -116,20 +84,16 @@ rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_
 VISIBILITY_DEFAULT
 rtError_t rtsMemcpy2D(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(params, RT_ERROR_INVALID_VALUE);
-    if (config != nullptr) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    if (!IsValidRtsMemcpy2dKind(params->kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (IsZeroSizeMemcpy2d(params->width, params->height)) {
         RT_LOG(RT_LOG_INFO, "width or height is 0, no need to copy memory 2d async, just return success.");
         return ACL_RT_SUCCESS;
     }
-
-    GLOBAL_STATE_WAIT_IF_LOCKED();
+    if (config != nullptr) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemCopy2DSync(params->dst, params->dstPitch,
@@ -169,20 +133,17 @@ rtError_t rtMallocHost(void **hostPtr, uint64_t size, const uint16_t moduleId)
 VISIBILITY_DEFAULT
 rtError_t rtsMemcpy2DAsync(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config, rtStream_t stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(params, RT_ERROR_INVALID_VALUE);
-    if (config != nullptr) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    if (!IsValidRtsMemcpy2dKind(params->kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (IsZeroSizeMemcpy2d(params->width, params->height)) {
         RT_LOG(RT_LOG_INFO, "width or height is 0, no need to copy memory 2d async, just return success.");
         return ACL_RT_SUCCESS;
     }
+    if (config != nullptr) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
 
-    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
@@ -782,20 +743,17 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx)
 {
-    SetMemcpyBatchFailIndex(failIdx, SIZE_MAX);
-    const rtError_t validateErr = ValidateMemcpyBatchParams(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs);
-    ERROR_RETURN_WITH_EXT_ERRCODE(validateErr);
-
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizes, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((count == 0U), RT_ERROR_INVALID_VALUE, count, "greater than 0");
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch, just return success.");
         return ACL_RT_SUCCESS;
     }
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const bool hasZeroSizeBatch = HasZeroSizeBatch(sizes, count);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!hasZeroSizeBatch && !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support MemcpyBatch.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -813,21 +771,18 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx, rtStream_t stream)
 {
-    SetMemcpyBatchFailIndex(failIdx, SIZE_MAX);
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(destMaxs, RT_ERROR_INVALID_VALUE);
-    const rtError_t validateErr = ValidateMemcpyBatchParams(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs);
-    ERROR_RETURN_WITH_EXT_ERRCODE(validateErr);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizes, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((count == 0), RT_ERROR_INVALID_VALUE, count, "greater than 0");
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch async, just return success.");
         return ACL_RT_SUCCESS;
     }
 
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const bool hasZeroSize = HasZeroSizeBatch(sizes, count);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!hasZeroSize && !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY)) {
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support MemcpyBatchAsync.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

@@ -625,9 +625,12 @@ TEST_F(CloudV2ApiAbnormalTest, rtMemcpyAsyncWithOffset_Error)
     rtError_t error;
 
     error = rtMemcpyAsyncWithOffset(nullptr, 0, 0, nullptr, 0, 0, RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtMemcpyAsyncWithOffset(nullptr, 0, 0, nullptr, 0, 0, RT_MEMCPY_KIND_HOST_TO_HOST, nullptr);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtMemcpyAsyncWithOffset(nullptr, 0, 0, nullptr, 1, 0, RT_MEMCPY_KIND_HOST_TO_HOST, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 

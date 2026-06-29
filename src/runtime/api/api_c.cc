@@ -91,17 +91,6 @@ TIMESTAMP_EXTERN(rtMemcpyAsyncWithCfg);
 namespace {
     std::array<std::atomic<int64_t>, SYS_OPT_RESERVED> sysParamOpt_ = {};
 
-bool IsValidRtMemcpyKind(const rtMemcpyKind_t kind)
-{
-    return (kind >= RT_MEMCPY_HOST_TO_HOST) && (kind < RT_MEMCPY_RESERVED);
-}
-
-bool IsValidRtMemcpy2dKind(const rtMemcpyKind_t kind)
-{
-    return (kind == RT_MEMCPY_DEFAULT) || (kind == RT_MEMCPY_HOST_TO_DEVICE) ||
-        (kind == RT_MEMCPY_DEVICE_TO_HOST) || (kind == RT_MEMCPY_DEVICE_TO_DEVICE);
-}
-
 bool IsZeroSizeMemcpy2d(const uint64_t width, const uint64_t height)
 {
     return (width == 0U) || (height == 0U);
@@ -1057,9 +1046,6 @@ rtError_t rtMallocCached(void **devPtr, uint64_t size, rtMemType_t type, const u
 VISIBILITY_DEFAULT
 rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory ex, just return success.");
         return ACL_RT_SUCCESS;
@@ -1078,9 +1064,6 @@ rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt,
 VISIBILITY_DEFAULT
 rtError_t rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory, just return success.");
         return ACL_RT_SUCCESS;
@@ -1099,9 +1082,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsync(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind,
                         rtStream_t stm)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory async, just return success.");
         return ACL_RT_SUCCESS;
@@ -1122,9 +1102,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncWithoutCheckKind(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind,
                                         rtStream_t stm)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory async without check kind, just return success.");
         return ACL_RT_SUCCESS;
@@ -1145,9 +1122,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt,
                           rtMemcpyKind_t kind, rtStream_t stm, rtMemcpyConfig_t *memcpyConfig)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory async ex, just return success.");
         return ACL_RT_SUCCESS;
@@ -1168,9 +1142,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncWithCfg(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind,
     rtStream_t stm, uint32_t qosCfg)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory async with cfg, just return success.");
         return ACL_RT_SUCCESS;
@@ -1195,9 +1166,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncWithCfgV2(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind,
     rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
-    if (!IsValidRtMemcpyKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory async with cfg v2, just return success.");
         return ACL_RT_SUCCESS;
@@ -1284,9 +1252,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpy2d(void *dst, uint64_t dstPitch, const void *src, uint64_t srcPitch, uint64_t width, uint64_t height,
                      rtMemcpyKind_t kind)
 {
-    if (!IsValidRtMemcpy2dKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
     if (IsZeroSizeMemcpy2d(width, height)) {
         RT_LOG(RT_LOG_INFO, "width or height is 0, no need to copy memory 2d, just return success.");
         return ACL_RT_SUCCESS;
@@ -1303,9 +1268,6 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpy2dAsync(void *dst, uint64_t dstPitch, const void *src, uint64_t srcPitch, uint64_t width,
                           uint64_t height, rtMemcpyKind_t kind, rtStream_t stm)
 {
-    if (!IsValidRtMemcpy2dKind(kind)) {
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
     if (IsZeroSizeMemcpy2d(width, height)) {
         return ACL_RT_SUCCESS;
     }

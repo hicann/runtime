@@ -903,12 +903,12 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncWithOffset(void **dst, uint64_t dstMax, uint64_t dstDataOffset, const void **src,
     uint64_t cnt, uint64_t srcDataOffset, rtMemcpyKind kind, rtStream_t stm)
 {
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), 
-        RT_ERROR_INVALID_VALUE, kind, "RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE");
     if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "cnt is 0, no need to copy memory async with offset, just return success.");
         return ACL_RT_SUCCESS;
     }
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), 
+        RT_ERROR_INVALID_VALUE, kind, "RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE");
     return rtMemcpyD2DAddrAsync(RtPtrToPtr<void *>(dst), dstMax, dstDataOffset,
         RtPtrToPtr<void *>(src), cnt, srcDataOffset, stm);
 }

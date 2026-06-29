@@ -3012,6 +3012,7 @@ TEST_F(ApiTest, memcpyasyncex_host_to_device)
 TEST_F(ApiTest, memcpy_and_memset_zero_size_no_op)
 {
     rtTaskCfgInfo_t taskCfgInfo = {};
+    rtMemcpyConfig_t memcpyConfig = {};
 
     EXPECT_EQ(rtMemset(nullptr, 0, 0, 0), ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemsetAsync(nullptr, 0, 0, 0, nullptr), ACL_RT_SUCCESS);
@@ -3021,19 +3022,42 @@ TEST_F(ApiTest, memcpy_and_memset_zero_size_no_op)
     EXPECT_EQ(rtMemcpyAsync(nullptr, 0, nullptr, 0, RT_MEMCPY_HOST_TO_DEVICE, nullptr), ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithoutCheckKind(nullptr, 0, nullptr, 0, RT_MEMCPY_DEVICE_TO_HOST, nullptr),
         ACL_RT_SUCCESS);
+    EXPECT_EQ(rtMemcpyAsyncEx(nullptr, 0, nullptr, 0, RT_MEMCPY_DEVICE_TO_DEVICE, nullptr, &memcpyConfig),
+        ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithCfg(nullptr, 0, nullptr, 0, RT_MEMCPY_HOST_TO_HOST, nullptr, 0), ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithCfgV2(nullptr, 0, nullptr, 0, RT_MEMCPY_HOST_TO_HOST, nullptr, &taskCfgInfo),
         ACL_RT_SUCCESS);
 
-    EXPECT_EQ(rtMemcpy(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED), ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(rtMemcpyEx(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED), ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(rtMemcpyAsync(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtMemcpy(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtMemcpyEx(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtMemcpyAsync(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr), ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithoutCheckKind(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr),
-        ACL_ERROR_RT_PARAM_INVALID);
+        ACL_RT_SUCCESS);
+    EXPECT_EQ(rtMemcpyAsyncEx(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr, &memcpyConfig), ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithCfg(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr, 0),
-        ACL_ERROR_RT_PARAM_INVALID);
+        ACL_RT_SUCCESS);
     EXPECT_EQ(rtMemcpyAsyncWithCfgV2(nullptr, 0, nullptr, 0, RT_MEMCPY_RESERVED, nullptr, &taskCfgInfo),
-        ACL_ERROR_RT_PARAM_INVALID);
+        ACL_RT_SUCCESS);
+}
+
+TEST_F(ApiTest, memcpy_invalid_kind_nonzero_reaches_runtime_param_check)
+{
+    uint32_t src[2] = {};
+    uint32_t dst[2] = {};
+    rtTaskCfgInfo_t taskCfgInfo = {};
+    rtMemcpyConfig_t memcpyConfig = {};
+
+    EXPECT_NE(rtMemcpy(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED), RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyEx(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED), RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyAsync(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED, stream_), RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyAsyncWithoutCheckKind(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED, stream_),
+        RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyAsyncEx(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED, stream_, &memcpyConfig),
+        RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyAsyncWithCfg(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED, stream_, 0),
+        RT_ERROR_NONE);
+    EXPECT_NE(rtMemcpyAsyncWithCfgV2(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_RESERVED, stream_, &taskCfgInfo),
+        RT_ERROR_NONE);
 }
 
 TEST_F(ApiTest, memcpy_host_to_device_01)
@@ -4464,15 +4488,61 @@ TEST_F(ApiTest, memcpy2d_zero_size_success)
     error = rtMemcpy2dAsync(nullptr, 0, nullptr, 0, 1, 0, RT_MEMCPY_DEVICE_TO_HOST, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtMemcpy2d(nullptr, 0, nullptr, 0, 0, 1, RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtMemcpy2dAsync(nullptr, 0, nullptr, 0, 1, 0, RT_MEMCPY_RESERVED, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     rtMemcpy2DParams_t para = {};
     para.height = 1;
     para.width = 0;
-    para.kind = RT_MEMCPY_KIND_HOST_TO_DEVICE;
+    para.kind = RT_MEMCPY_KIND_HOST_TO_HOST;
+    rtMemcpyConfig_t config = {};
+    error = rtsMemcpy2D(&para, &config);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsMemcpy2DAsync(&para, &config, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    para.width = 1;
+    para.height = 0;
+    para.kind = RT_MEMCPY_KIND_MAX;
     error = rtsMemcpy2D(&para, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtsMemcpy2DAsync(&para, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    para.dst = nullptr;
+    para.src = nullptr;
+    para.dstPitch = 1;
+    para.srcPitch = 1;
+    para.width = 1;
+    para.height = 1;
+    para.kind = RT_MEMCPY_KIND_HOST_TO_DEVICE;
+    error = rtsMemcpy2D(&para, &config);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtsMemcpy2DAsync(&para, &config, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    uint32_t src[2] = {};
+    uint32_t dst[2] = {};
+    para.dst = dst;
+    para.src = src;
+    para.kind = RT_MEMCPY_KIND_HOST_TO_HOST;
+    error = rtMemcpy2d(dst, sizeof(dst), src, sizeof(src), 1, 1, RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtMemcpy2dAsync(dst, sizeof(dst), src, sizeof(src), 1, 1, RT_MEMCPY_RESERVED, stream_);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtsMemcpy2D(&para, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtsMemcpy2DAsync(&para, nullptr, stream_);
+    EXPECT_NE(error, RT_ERROR_NONE);
 }
 
 //changed
@@ -4925,8 +4995,9 @@ TEST_F(ApiTest, memcpy_batch)
 {
     rtError_t error;
     size_t failIdx = 0U;
-    error = rtsMemcpyBatch(nullptr, nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    size_t sizes[] = {0U};
+    error = rtsMemcpyBatch(nullptr, nullptr, sizes, 1, nullptr, nullptr, 0, &failIdx);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
 
@@ -4934,8 +5005,9 @@ TEST_F(ApiTest, memcpy_batch_async)
 {
     rtError_t error;
     size_t failIdx = 0U;
-    error = rtsMemcpyBatchAsync(nullptr, nullptr,  nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx, stream_);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    size_t sizes[] = {0U};
+    error = rtsMemcpyBatchAsync(nullptr, nullptr,  nullptr, sizes, 1, nullptr, nullptr, 0, &failIdx, stream_);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
 

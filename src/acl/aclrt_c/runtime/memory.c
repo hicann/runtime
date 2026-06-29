@@ -77,12 +77,6 @@ static aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t* 
 
 aclError aclrtMemcpy(void* dst, size_t destMax, const void* src, size_t count, aclrtMemcpyKind kind)
 {
-    rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
-    const aclError ret = MemcpyKindTranslate(kind, &rtKind);
-    if (ret != ACL_SUCCESS) {
-        ACL_LOG_INNER_ERROR("invalid kind[%d]", (int32_t)(kind));
-        return ret;
-    }
     if (count == 0UL) {
         ACL_LOG_INFO("count is 0, no need to copy, just return success.");
         return ACL_SUCCESS;
@@ -90,6 +84,12 @@ aclError aclrtMemcpy(void* dst, size_t destMax, const void* src, size_t count, a
     if (dst == NULL || src == NULL) {
         ACL_LOG_ERROR("%s", dst == NULL ? "dst is NULL" : "src is NULL.");
         return ACL_ERROR_INVALID_PARAM;
+    }
+    rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
+    const aclError ret = MemcpyKindTranslate(kind, &rtKind);
+    if (ret != ACL_SUCCESS) {
+        ACL_LOG_INNER_ERROR("invalid kind[%d]", (int32_t)(kind));
+        return ret;
     }
     return rtMemcpy(dst, destMax, src, count, rtKind);
 }

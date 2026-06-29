@@ -768,6 +768,20 @@ TEST_F(AclRtTest, aclrtMemcpy_kindInvalid) {
   EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 
   ret = aclrtMemcpy(NULL, 0, NULL, 0, (aclrtMemcpyKind)0x7FFFFFFFF);
+  EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(AclRtTest, aclrtMemcpy_zero_count_before_null_and_kind_checks) {
+  void *dst = reinterpret_cast<void *>(0X01);
+  void *src = reinterpret_cast<void *>(0X02);
+
+  aclError ret = aclrtMemcpy(NULL, 1, src, 0, (aclrtMemcpyKind)0x7FFFFFFFF);
+  EXPECT_EQ(ret, ACL_SUCCESS);
+
+  ret = aclrtMemcpy(NULL, 1, src, 1, (aclrtMemcpyKind)0x7FFFFFFFF);
+  EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+  ret = aclrtMemcpy(dst, 1, NULL, 1, (aclrtMemcpyKind)0x7FFFFFFFF);
   EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 

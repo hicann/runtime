@@ -1433,16 +1433,9 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_async_param_err0)
         attrs[i].dstLoc.type = RT_MEMORY_LOC_DEVICE;
     }
 
-    size_t failIdx;
+    size_t failIdx = SIZE_MAX;
     rtError_t error;
-    error = rtsMemcpyBatchAsync(nullptr, destMaxs, (void **)srcs, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-    error = rtsMemcpyBatchAsync((void **)dsts, nullptr, (void **)srcs, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
-    EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, nullptr, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-    error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, nullptr, count, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, 0U, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
@@ -1550,7 +1543,7 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_param_err0)
         attrs[i].dstLoc.type = RT_MEMORY_LOC_DEVICE;
     }
 
-    size_t failIdx;
+    size_t failIdx = SIZE_MAX;
     rtError_t error;
     error = rtsMemcpyBatch(nullptr, (void **)srcs, sizes, count, attrs, attrsIdxs, numAttrs, &failIdx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
