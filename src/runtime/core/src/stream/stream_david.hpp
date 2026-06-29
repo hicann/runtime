@@ -127,6 +127,14 @@ private:
     rtError_t HandleTaskDefault(TaskInfo* workTask, CaptureModel* model,
         uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
     rtError_t HandleTaskDisable(TaskInfo* workTask, CaptureModel* model) override;
+    void FinalizeDavidHostStateOnExit();
+    void RecycleArgHandlesOnDestroy();
+    void ReleaseSqCqResourcesOnDestroy();
+    bool ReleaseDriverResourcesOnDestroy();
+    void ResetHostStateOnDestroy();
+    rtError_t SkipTearDownOnExit(Device * const dev, int32_t stmId);
+    void TearDownAutoSplitSlaves();
+    void WaitRecycleThreadProcDone();
 
     uint64_t sqAddr_{0ULL};
     std::mutex cntNotifyInfoLock_;

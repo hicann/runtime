@@ -49,6 +49,31 @@ DavidStream::DavidStream(Device * const dev, const uint32_t prio, const uint32_t
 
 DavidStream::~DavidStream()
 {
+    Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        FinalizeDavidHostStateOnExit();
+        return;
+    }
+    RecycleArgHandlesOnDestroy();
+
+    if (GetSubscribeFlag() != StreamSubscribeFlag::SUBSCRIBE_NONE) {
+        (void)rt->UnSubscribeReport(this);
+    }
+    if (device_ != nullptr) {
+        if (!ReleaseDriverResourcesOnDestroy()) {
+            return;
+        }
+        ResetHostStateOnDestroy();
+    }
+    ReleaseStreamTaskRes();
+    DestroyArgRecycleList(static_cast<uint32_t>(argRecycleListSize_));
+    DELETE_O(lastHalfRecord_);
+    DELETE_A(taskPublicBuff_);
+    SetLatestModlId(MAX_INT32_NUM);
+}
+
+void DavidStream::RecycleArgHandlesOnDestroy()
+{
     for (auto handle : argHandleRecycleList_) {
         if (argManage_ != nullptr) {
             argManage_->RecycleDevLoader(handle);
@@ -60,75 +85,128 @@ DavidStream::~DavidStream()
         this->ArgManagePtr()->RecycleDevLoader(this->GetArgHandle());
         this->SetArgHandle(nullptr);
     }
+}
 
-    Runtime * const rt = Runtime::Instance();
-    if (GetSubscribeFlag() != StreamSubscribeFlag::SUBSCRIBE_NONE) {
-        (void)rt->UnSubscribeReport(this);
+void DavidStream::ReleaseSqCqResourcesOnDestroy()
+{
+    if (((flags_ & RT_STREAM_PERSISTENT) != 0U) && (sqRegVirtualAddr_ != 0U)) {
+        (void)device_->Driver_()->UnmapSqRegVirtualAddrBySqid(
+            static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId_);
     }
-    if (device_ != nullptr) {
-        if ((device_->GetDevStatus() != RT_ERROR_NONE) && (this->GetBindFlag())) {
-            RT_LOG(RT_LOG_WARNING, "Device fault and the model binds this stream, device_id=%u, stream_id=%d, "
-                "Cannot delete.", device_->Id_(), streamId_);
-            return;
-        }
-        (void)FreeExecutedTimesSvm();
+    sqRegVirtualAddr_ = 0U;
 
-        if (((flags_ & RT_STREAM_PERSISTENT) != 0U) && (sqRegVirtualAddr_ != 0U)) {
-            (void)device_->Driver_()->UnmapSqRegVirtualAddrBySqid(
-                static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId_);
-        }
-        sqRegVirtualAddr_ = 0U;
-
-        if ((!NeedDelSelfStream()) && (Device_()->GetTaskFactory() != nullptr)) {
-            device_->GetTaskFactory()->FreeStreamRes(streamId_);
-        }
-
-        if (dvppGrp_ != nullptr) {
-            (void)device_->Driver_()->StreamUnBindLogicCq(device_->Id_(), device_->DevGetTsId(),
-                static_cast<uint32_t>(streamId_), dvppGrp_->getLogicCqId());
-        } else {
-            (void)device_->GetStreamSqCqManage()->FreeLogicCq(static_cast<uint32_t>(streamId_));
-        }
-
-        if (dvppRRTaskAddr_ != nullptr) {
-            (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr_, device_->Id_());
-            dvppRRTaskAddr_ = nullptr;
-        }
-
-        if (cntNotifyId_ != MAX_UINT32_NUM) {
-            const rtError_t error = device_->Driver_()->NotifyIdFree(
-                static_cast<int32_t>(device_->Id_()), cntNotifyId_, device_->DevGetTsId(), 0U, true);
-            if (error != RT_ERROR_NONE) {
-                RT_LOG_INNER_MSG(RT_LOG_ERROR,
-                    "NotifyIdFree failed, device_id=%u, stream_id=%d, notify_id=%u, retCode=%#x.",
-                    device_->Id_(), streamId_, cntNotifyId_, static_cast<uint32_t>(error));
-            }
-        }
-
-        if (GetMemContainOverflowAddr() != nullptr) {
-            (void)device_->Driver_()->DevMemFree(GetMemContainOverflowAddr(), device_->Id_());
-            SetMemContainOverflowAddr(nullptr);
-        }
-
-        for (void * const addr : devTilingTblAddr) {
-            RT_LOG(RT_LOG_INFO, "Id=%u, devCopyMem=%p", device_->Id_(), addr);
-            (void)device_->Driver_()->DevMemFree(addr, device_->Id_());
-        }
-        FreeStreamIdAndSqCq();
-        ReleaseStreamArgRes();
-        devTilingTblAddr.clear();
-        streamResId = RTS_INVALID_RES_ID;
-        SetContext(nullptr);
-        device_ = nullptr;
-        models_.clear();
-        dvppGrp_ = nullptr;
-        cntNotifyId_ = MAX_UINT32_NUM;
+    if ((!NeedDelSelfStream()) && (Device_()->GetTaskFactory() != nullptr)) {
+        device_->GetTaskFactory()->FreeStreamRes(streamId_);
     }
-    ReleaseStreamTaskRes();
-    DestroyArgRecycleList(static_cast<uint32_t>(argRecycleListSize_));
-    DELETE_O(lastHalfRecord_);
-    DELETE_A(taskPublicBuff_);
-    SetLatestModlId(MAX_INT32_NUM);
+
+    if (dvppGrp_ != nullptr) {
+        (void)device_->Driver_()->StreamUnBindLogicCq(device_->Id_(), device_->DevGetTsId(),
+            static_cast<uint32_t>(streamId_), dvppGrp_->getLogicCqId());
+    } else {
+        (void)device_->GetStreamSqCqManage()->FreeLogicCq(static_cast<uint32_t>(streamId_));
+    }
+
+    if (dvppRRTaskAddr_ != nullptr) {
+        (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr_, device_->Id_());
+        dvppRRTaskAddr_ = nullptr;
+    }
+}
+
+bool DavidStream::ReleaseDriverResourcesOnDestroy()
+{
+    if ((device_->GetDevStatus() != RT_ERROR_NONE) && (this->GetBindFlag())) {
+        RT_LOG(RT_LOG_WARNING, "Device fault and the model binds this stream, device_id=%u, stream_id=%d, "
+            "Cannot delete.", device_->Id_(), streamId_);
+        return false;
+    }
+    (void)FreeExecutedTimesSvm();
+    ReleaseSqCqResourcesOnDestroy();
+
+    if (cntNotifyId_ != MAX_UINT32_NUM) {
+        const rtError_t error = device_->Driver_()->NotifyIdFree(
+            static_cast<int32_t>(device_->Id_()), cntNotifyId_, device_->DevGetTsId(), 0U, true);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG_INNER_MSG(RT_LOG_ERROR,
+                "NotifyIdFree failed, device_id=%u, stream_id=%d, notify_id=%u, retCode=%#x.",
+                device_->Id_(), streamId_, cntNotifyId_, static_cast<uint32_t>(error));
+        }
+    }
+
+    if (GetMemContainOverflowAddr() != nullptr) {
+        (void)device_->Driver_()->DevMemFree(GetMemContainOverflowAddr(), device_->Id_());
+        SetMemContainOverflowAddr(nullptr);
+    }
+
+    for (void * const addr : devTilingTblAddr) {
+        RT_LOG(RT_LOG_INFO, "Id=%u, devCopyMem=%p", device_->Id_(), addr);
+        (void)device_->Driver_()->DevMemFree(addr, device_->Id_());
+    }
+    return true;
+}
+
+void DavidStream::ResetHostStateOnDestroy()
+{
+    FreeStreamIdAndSqCq();
+    ReleaseStreamArgRes();
+    devTilingTblAddr.clear();
+    streamResId = RTS_INVALID_RES_ID;
+    SetContext(nullptr);
+    device_ = nullptr;
+    models_.clear();
+    dvppGrp_ = nullptr;
+    cntNotifyId_ = MAX_UINT32_NUM;
+}
+
+void DavidStream::FinalizeDavidHostStateOnExit()
+{
+    RT_LOG(RT_LOG_WARNING, "Runtime is exiting, finalize david stream host state only, stream_id=%d.", streamId_);
+    if (taskResMang_ != nullptr) {
+        taskResMang_->ReleaseHostStateOnExit();
+        DELETE_O(taskResMang_);
+    }
+    cntNotifyId_ = MAX_UINT32_NUM;
+}
+
+rtError_t DavidStream::SkipTearDownOnExit(Device * const dev, int32_t stmId)
+{
+    uint32_t pendingNum = 0U;
+    TaskResManageDavid * const taskRes = dynamic_cast<TaskResManageDavid *>(taskResMang_);
+    if (taskRes != nullptr) {
+        pendingNum = taskRes->GetPendingNum();
+    }
+    RT_LOG(RT_LOG_WARNING,
+        "Runtime is exiting, skip david stream teardown TS release tasks, stream_id=%d, pendingNum=%u, argsHandle=%p.",
+        stmId, pendingNum, this->GetArgHandle());
+    if (dev != nullptr) {
+        dev->DelStreamFromMessageQueue(this);
+    }
+    return RT_ERROR_NONE;
+}
+
+void DavidStream::TearDownAutoSplitSlaves()
+{
+    if (!(IsAutoSplitSq() && autoSplitCtx_ != nullptr && !IsSlaveStream())) {
+        return;
+    }
+    for (Stream *slave : autoSplitCtx_->slaveStreams) {
+        if (slave != nullptr) {
+            (void)Context_()->TearDownStream(slave, true);
+        }
+    }
+    autoSplitCtx_->slaveStreams.clear();
+}
+
+void DavidStream::WaitRecycleThreadProcDone()
+{
+    uint32_t tryWaitCnt = 0U;
+    while (isRecycleThreadProc_) {
+        (void)mmSleep(1U);
+        // Wait RecycleThread done in 1.5s
+        if ((tryWaitCnt++) > 1500U) {
+            RT_LOG(RT_LOG_ERROR, "stream_id=%d, RecycleThread process over 1.5s.", streamId_);
+            break;
+        }
+    }
 }
 
 void DavidStream::FreeStreamIdAndSqCq()
@@ -470,17 +548,14 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
     const int32_t stmId = streamId_;
     uint16_t head = 0U;
     uint16_t tail = 0U;
-    uint32_t tryWaitCnt = 0U;
 
-    if (IsAutoSplitSq() && autoSplitCtx_ != nullptr && !IsSlaveStream()) {
-        for (Stream *slave : autoSplitCtx_->slaveStreams) {
-            if (slave != nullptr) {
-                (void)Context_()->TearDownStream(slave, true);
-            }
-        }
-        autoSplitCtx_->slaveStreams.clear();
+    Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        return SkipTearDownOnExit(dev, stmId);
     }
-    
+
+    TearDownAutoSplitSlaves();
+
     if ((flags_ & RT_STREAM_PERSISTENT) != 0U) {
         RecycleModelBindStreamAllTask(this, false);
         return RT_ERROR_NONE;
@@ -524,14 +599,7 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
     rawDev->PollEndGraphNotifyInfo();
 
     dev->DelStreamFromMessageQueue(this);
-    while (isRecycleThreadProc_) {
-        (void)mmSleep(1U);
-        // Wait RecycleThread done in 1.5s
-        if ((tryWaitCnt++) > 1500U) {
-            RT_LOG(RT_LOG_ERROR, "stream_id=%d, RecycleThread process over 1.5s.", streamId_);
-            break;
-        }
-    }
+    WaitRecycleThreadProcDone();
     if ((!isRecycleThreadProc_) && (argRecycleListHead_ != argRecycleListTail_)) {
         ProcArgRecycleList();
     }

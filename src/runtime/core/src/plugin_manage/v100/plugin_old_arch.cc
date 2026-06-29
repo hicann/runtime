@@ -29,6 +29,16 @@ VISIBILITY_DEFAULT void DestructorRuntimeImpl(cce::runtime::Runtime *rt)
     return;
 }
 
+VISIBILITY_DEFAULT void PrepareRuntimeProcessExitImpl(cce::runtime::Runtime *rt)
+{
+    if (rt != nullptr) {
+        rt->PrepareProcessExitNoThrow();
+    }
+    cce::runtime::Runtime::runtime_ = nullptr;
+    RT_LOG(RT_LOG_INFO, "RuntimeImpl process exit prepared");
+    return;
+}
+
 VISIBILITY_DEFAULT void DestroyPoolRegistryImpl()
 {
     PoolRegistry::DestroyPoolRegistry();

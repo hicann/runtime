@@ -20,10 +20,12 @@
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
+#include "engine.hpp"
 #include "raw_device.hpp"
 #include "platform/platform_info.h"
 #include "soc_info.h"
 #include "thread_local_container.hpp"
+#include "runtime_exit_test_helper.h"
 
 #undef private
 
@@ -118,6 +120,7 @@ TEST_F(RuntimeTest, binanry_reg_cube_null_data)
 
 using ConstructFunc = Runtime *(*)();
 using DesConstructFunc = void (*)(Runtime *);
+using PrepareProcessExitFunc = void (*)(Runtime *);
 using NothrowNewFunc = void *(*)(size_t, const std::nothrow_t &);
 
 static void *NothrowNewFailStub(size_t size, const std::nothrow_t &tag)
@@ -143,6 +146,31 @@ TEST_F(RuntimeTest, BOOT_RUNTIME_TEST_ConstructRuntime)
     destruct(rt);
 
     dlclose(handlePtr);
+}
+
+TEST_F(RuntimeTest, BOOT_RUNTIME_TEST_PrepareRuntimeProcessExitDoesNotDeleteRuntime)
+{
+    Runtime * const oldRuntime = Runtime::runtime_;
+    Runtime *rt = ConstructRuntimeImpl();
+    EXPECT_NE(rt, nullptr);
+
+    rt->threadGuard_ = new(std::nothrow) ThreadGuard();
+    ASSERT_NE(rt->threadGuard_, nullptr);
+    rt->tsNum_ = 1U;
+    Context * const sentinelContext = reinterpret_cast<Context *>(static_cast<uintptr_t>(0xDEADBEEFU));
+    rt->priCtxs_[0][0].SetVal(sentinelContext);
+
+    PrepareRuntimeProcessExitImpl(rt);
+
+    EXPECT_TRUE(rt->IsExiting());
+    EXPECT_EQ(rt->priCtxs_[0][0].GetVal(false), nullptr);
+    EXPECT_NE(Runtime::runtime_, rt);
+
+    // The process-exit entry must not delete Runtime. Clean up manually after proving the contract.
+    DELETE_O(rt->threadGuard_);
+    rt->isExiting_ = false;
+    delete rt;
+    Runtime::runtime_ = oldRuntime;
 }
 
 TEST_F(RuntimeTest, BootRuntime_CreateRuntimeFailed)
@@ -172,6 +200,19 @@ TEST_F(RuntimeTest, BootRuntime_MsprofRegisterCallbackFailed)
 
     EXPECT_EQ(rt, nullptr);
     EXPECT_EQ(keeperRuntime, nullptr);
+    EXPECT_EQ(bootStage, RuntimeKeeper::BOOT_INIT);
+}
+
+TEST_F(RuntimeTest, BootRuntimeReturnsNullWhenRuntimeKeeperExiting)
+{
+    static RuntimeKeeper keeper;
+    MOCKER(IsRuntimeKeeperExiting).expects(once()).will(returnValue(true));
+
+    Runtime * const rt = keeper.BootRuntime();
+    const uint32_t bootStage = keeper.bootStage_.Value();
+    GlobalMockObject::verify();
+
+    EXPECT_EQ(rt, nullptr);
     EXPECT_EQ(bootStage, RuntimeKeeper::BOOT_INIT);
 }
 
@@ -625,6 +666,151 @@ TEST_F(RuntimeTest, ut_SetAndGetWatchDogDevStatus_04)
         EXPECT_EQ(ret, RT_ERROR_NONE);
         usleep(100000);
     }
+    delete dev;
+}
+
+TEST_F(RuntimeTest, ExitDetachPrimaryContextsDoesNotDereferenceContext)
+{
+    Runtime runtime;
+    runtime.tsNum_ = 1U;
+    Context * const sentinelContext = reinterpret_cast<Context *>(static_cast<uintptr_t>(0xDEADBEEFU));
+    runtime.priCtxs_[0][0].SetVal(sentinelContext);
+
+    runtime.DetachPrimaryContextsOnExit();
+
+    EXPECT_EQ(runtime.priCtxs_[0][0].GetVal(false), nullptr);
+}
+
+TEST_F(RuntimeTest, RuntimeDestructorDoesNotTeardownOrDeleteContextOnExit)
+{
+    {
+        Runtime runtime;
+        runtime.tsNum_ = 1U;
+        runtime.threadGuard_ = new(std::nothrow) ThreadGuard();
+        ASSERT_NE(runtime.threadGuard_, nullptr);
+        Context * const sentinelContext = reinterpret_cast<Context *>(static_cast<uintptr_t>(0xDEADBEEFU));
+        runtime.priCtxs_[0][0].SetVal(sentinelContext);
+    }
+
+    SUCCEED();
+}
+
+TEST_F(RuntimeTest, UninitializedRuntimeDestructorDoesNotMarkGlobalRuntimeExiting)
+{
+    Runtime * const runtimeInstance = static_cast<Runtime *>(Runtime::Instance());
+    RuntimeExitStateGuard guard(runtimeInstance, false);
+
+    {
+        Runtime runtime;
+    }
+
+    EXPECT_FALSE(runtimeInstance->IsExiting());
+}
+
+TEST_F(RuntimeTest, RuntimeDestructorDoesNotDlcloseTsdClientOnExit)
+{
+    MOCKER(mmDlclose).expects(never());
+    {
+        Runtime runtime;
+        uintptr_t tsdClientHandle = 0x1234U;
+        runtime.tsdClientHandle_ = reinterpret_cast<void *>(tsdClientHandle);
+    }
+}
+
+TEST_F(RuntimeTest, PrepareProcessExitNoThrowDetachesReferencesWithoutDeletingRuntimeRegistries)
+{
+    Runtime * const runtimeInstance = static_cast<Runtime *>(Runtime::Instance());
+    RuntimeExitStateGuard guard(runtimeInstance, false);
+
+    Runtime * const runtime = new Runtime();
+    runtime->threadGuard_ = new(std::nothrow) ThreadGuard();
+    ASSERT_NE(runtime->threadGuard_, nullptr);
+    ASSERT_EQ(runtime->InitProgramAllocator(), RT_ERROR_NONE);
+    ObjAllocator<RefObject<Program *>> * const programAllocator = runtime->programAllocator_;
+    ASSERT_NE(programAllocator, nullptr);
+
+    Context * const sentinelContext = reinterpret_cast<Context *>(static_cast<uintptr_t>(0xDEADBEEFU));
+    Program * const sentinelProgram = reinterpret_cast<Program *>(static_cast<uintptr_t>(0xBADC0DEU));
+    runtime->tsNum_ = 1U;
+    runtime->priCtxs_[0][0].SetVal(sentinelContext);
+    RefObject<Program *> * const programItem = programAllocator->GetDataToItem(0U);
+    ASSERT_NE(programItem, nullptr);
+    ASSERT_TRUE(programItem->TryIncAndSet(sentinelProgram));
+
+    RawDevice * const dev = new RawDevice(0U);
+    dev->DevSetTsId(0U);
+    ExitMockEngine * const engine = new ExitMockEngine(dev);
+    dev->engine_ = engine;
+    runtime->devices_[0U][0U].SetVal(dev);
+
+    runtime->PrepareProcessExitNoThrow();
+
+    EXPECT_TRUE(runtime->IsExiting());
+    EXPECT_EQ(runtime->priCtxs_[0][0].GetVal(false), nullptr);
+    EXPECT_EQ(programItem->GetVal(false), nullptr);
+    EXPECT_EQ(runtime->programAllocator_, programAllocator);
+    EXPECT_TRUE(dev->IsDeviceRelease());
+    EXPECT_EQ(engine->stopCalled_, 1U);
+    EXPECT_EQ(runtime->devices_[0U][0U].GetVal(false), nullptr);
+
+    DELETE_O(runtime->threadGuard_);
+    runtime->programAllocator_ = nullptr;
+    DELETE_O(dev->engine_);
+    delete dev;
+    delete runtime;
+}
+
+TEST_F(RuntimeTest, StopDeviceHostThreadsOnExitStopsHostThreadsAndDetachesDevice)
+{
+    Runtime * const runtimeInstance = static_cast<Runtime *>(Runtime::Instance());
+    // This test targets the exit helper, not Runtime::~Runtime(). Keep the temporary Runtime isolated from the
+    // process-global Runtime and intentionally do not delete it; destructor behavior is covered by dedicated tests.
+    Runtime * const runtime = new Runtime();
+    RawDevice * const dev = new RawDevice(0U);
+    dev->DevSetTsId(0U);
+    ExitMockEngine * const engine = new ExitMockEngine(dev);
+    dev->engine_ = engine;
+    runtime->devices_[0U][0U].SetVal(dev);
+
+    RuntimeExitStateGuard guard(runtimeInstance, true);
+    runtime->StopDeviceHostThreadsOnExit();
+
+    EXPECT_TRUE(dev->IsDeviceRelease());
+    EXPECT_EQ(engine->stopCalled_, 1U);
+    EXPECT_EQ(engine->checkSendCalled_, 0U);
+    EXPECT_EQ(engine->checkReceiveCalled_, 0U);
+    EXPECT_EQ(engine->checkMonitorCalled_, 0U);
+    EXPECT_EQ(runtime->devices_[0U][0U].GetVal(false), nullptr);
+    DELETE_O(dev->engine_);
+    delete dev;
+}
+
+TEST_F(RuntimeTest, DeviceReleaseOnExitUsesHostOnlyFinalize)
+{
+    Runtime * const runtimeInstance = static_cast<Runtime *>(Runtime::Instance());
+    // Keep the temporary Runtime alive until process exit to avoid exercising Runtime::~Runtime() in this helper test.
+    Runtime * const runtime = new Runtime();
+    RawDevice * const dev = new RawDevice(0U);
+    dev->DevSetTsId(0U);
+    dev->devProfStatus_ = PROF_AICPU_MODEL_MASK;
+    ExitMockEngine * const engine = new ExitMockEngine(dev);
+    dev->engine_ = engine;
+    ASSERT_TRUE(runtime->devices_[0U][0U].TryIncAndSet(dev));
+    // This case targets DeviceRelease() under exit state; destructor entry is covered by dedicated Runtime tests.
+    runtime->isExiting_ = true;
+
+    RuntimeExitStateGuard guard(runtimeInstance, true);
+    runtime->DeviceRelease(dev);
+
+    EXPECT_TRUE(dev->IsDeviceRelease());
+    EXPECT_EQ(dev->GetDevProfStatus(), 0ULL);
+    EXPECT_EQ(engine->stopCalled_, 1U);
+    EXPECT_EQ(engine->checkSendCalled_, 0U);
+    EXPECT_EQ(engine->checkReceiveCalled_, 0U);
+    EXPECT_EQ(engine->checkMonitorCalled_, 0U);
+    EXPECT_EQ(runtime->devices_[0U][0U].GetVal(false), nullptr);
+    EXPECT_EQ(runtime->devices_[0U][0U].GetRef(), 0ULL);
+    DELETE_O(dev->engine_);
     delete dev;
 }
 

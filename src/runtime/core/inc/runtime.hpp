@@ -182,6 +182,7 @@ public:
     Runtime();
     ~Runtime() override;
     rtError_t Init() override;
+    void PrepareProcessExitNoThrow();
     // Singleton instance.
     static Runtime *Instance()
     {
@@ -296,6 +297,7 @@ public:
     rtError_t SubscribeReport(const uint64_t threadId, Stream * const stm, void *evtNotify) override;
     rtError_t UnSubscribeReport(const uint64_t threadId, Stream * const stm);
     rtError_t UnSubscribeReport(Stream * const stm) override;
+    void UnSubscribeReportHostOnly(Stream * const stm);
     rtError_t GetGroupIdByThreadId(const uint64_t threadId, uint32_t * const deviceId, uint32_t * const tsId,
         uint32_t * const groupId, const bool noLog = false);
     rtError_t GetGroupIdByStreamId(const uint32_t devId, const int32_t streamId, uint32_t * const groupId);
@@ -557,6 +559,14 @@ public:
     bool IsExiting(void) const
     {
         return isExiting_;
+    }
+
+    // During global teardown Runtime::Instance() may already be unavailable.
+    // Destructor fast paths must still treat that as process-exit instead of
+    // falling back to normal driver/resource release.
+    static bool IsProcessExiting(const Runtime *rt)
+    {
+        return (rt == nullptr) || rt->IsExiting();
     }
 
     uint8_t GetStarsFftsDefaultKernelCredit() const
@@ -881,6 +891,12 @@ private:
     void PrimaryContextCallBack(const Context * const ctx, const uint32_t devId);
     void PrimaryContextCallBackAfterTeardown(const uint32_t devId) const;
     void TearDownAndDeleteContextNoThrow(Context *&ctx) const;
+    bool HasRuntimeExitHostState() const;
+    void FinalizeRuntimeExitHostState();
+    void DetachPrimaryContextsOnExit();
+    void DetachXpuContextOnExit();
+    void DetachProgramsOnExit();
+    void StopDeviceHostThreadsOnExit();
     bool AcquirePrimaryXpuContextForRelease(Context *&ctx);
     rtError_t FinalizePrimaryXpuContextRelease(Context *ctx);
     void DetachContextOwnedStreams(const Context *ctx) const;
@@ -896,6 +912,7 @@ private:
         const uint32_t tsId, const bool isForceReset, bool &earlyReturn);
     rtError_t ReleasePrimaryContextSlot(const uint32_t devId, const uint32_t tsId, const bool isForceReset,
         const bool sentinelMode, bool &ret);
+    void FinalizeDeviceReleaseOnExit(RefObject<Device *> &refObj, Device *dev);
     Device *DeviceAddObserver(Device *dev);
     rtError_t RuntimeTrackProfilerStart(const uint64_t profConfig, int32_t numsDev,
         const uint32_t * const deviceList, const uint32_t cacheFlag);

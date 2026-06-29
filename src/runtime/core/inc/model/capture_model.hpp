@@ -369,6 +369,7 @@ private:
     void ClearStreamActiveTask(void);
     void ReleaseNotifyListOnDestroy(std::vector<Notify *> &notifyList);
     void ReleaseArgLoaderBackupOnDestroy();
+    void FinalizeHostStateOnExit() noexcept;
     Stream* GetOriginalCaptureStream(void) const;
     rtError_t ExecuteCommon(Stream * const stm, int32_t timeout, const uint8_t executeMode);
     rtError_t BindSqCqAndSendSqe(void);

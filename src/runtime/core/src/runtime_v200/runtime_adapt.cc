@@ -43,7 +43,6 @@
 #include "stream_state_callback_manager.hpp"
 #include "memory_pool.hpp"
 #include "soc_info.h"
-#include "runtime_keeper.h"
 #include "utils.h"
 #include "device.hpp"
 #include "api_impl_creator.hpp"
@@ -56,51 +55,21 @@ namespace runtime {
 Runtime::~Runtime()
 {
     RT_LOG(RT_LOG_EVENT, "runtime destructor.");
-    SetRuntimeExiting(true);
-    DestroyReportRasThread();
-    isExiting_ = true;
-    (void)WaitMonitorExit();
-    for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
-        for (uint32_t j = 0U; j < tsNum_; j++) {
-            Context *context = priCtxs_[i][j].GetVal(false);
-            priCtxs_[i][j].ResetVal();
-            if (context != nullptr) {
-                if (context->GetThreadRefCount() == 0ULL) {
-                    TearDownAndDeleteContextNoThrow(context);
-                }
-            }
-        }
-    }
-    Context *context = GetXpuCtxt();
-    if (context != nullptr) {
-        const rtError_t ret = ContextManage::RemoveContextFromSet(context);
-        if (ret != RT_ERROR_CONTEXT_NULL) {
-            if (context->GetThreadRefCount() == 0ULL) {
-                TearDownAndDeleteContextNoThrow(context);
-            }
-        }
-    }
-    for (uint32_t i = 0U; i < maxProgramNum_; i++) {
-        if (programAllocator_ == nullptr) {
-            break;
-        }
-        if (!programAllocator_->CheckIdValid(i)) {
-            continue;
-        }
-
-        RefObject<Program *> * const programItem = programAllocator_->GetDataToItem(i);
-        Program *programInst = programItem->GetVal(false);
-        if (programInst != nullptr) {
-            delete programInst;
-            programInst = nullptr;
-            programItem->ResetVal();
-        }
+    // ConstructRuntimeImpl can create a Runtime that has not run Init(); it must not flip process-wide exit state.
+    const bool hasRuntimeExitHostState = HasRuntimeExitHostState();
+    if (hasRuntimeExitHostState) {
+        SetRuntimeExiting(true);
+        isExiting_ = true;
+        GlobalStateManager::GetInstance().ForceUnlocked();
+        DestroyReportRasThread();
+        (void)WaitMonitorExit();
+        FinalizeRuntimeExitHostState();
     }
 
-    if (tsdClientHandle_ != nullptr) {
-        (void)mmDlclose(tsdClientHandle_);
-    }
-
+    // Runtime direct-exit must not unload libtsdclient.so: its global destructors
+    // can enter TSD/HDC/driver close paths while lower modules are also exiting.
+    // The process exit path releases the mapping; explicit device release still
+    // closes TSD through the normal DeviceRelease/StopAicpuExecutor flow.
     tsdClientHandle_ = nullptr;
     tsdOpen_ = nullptr;
     tsdOpenEx_ = nullptr;

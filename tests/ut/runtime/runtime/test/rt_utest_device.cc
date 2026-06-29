@@ -14,6 +14,7 @@
 #define private public
 #define protected public
 #include "runtime.hpp"
+#include "engine.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
 #include "event.hpp"
@@ -28,6 +29,7 @@
 #include "api_impl.hpp"
 #include "aicpu_err_msg.hpp"
 #include "thread_local_container.hpp"
+#include "runtime_exit_test_helper.h"
 #undef private
 #undef protected
 #include "rdma_task.h"
@@ -45,6 +47,18 @@ static uint64_t g_expectCoreId1 = 0U;
 static uint64_t g_expectAicCond = 0U;
 static uint64_t g_expectRsvExt0 = 0U;
 static uint32_t g_expectAicCondIndex = 1U;
+
+class CtrlSQSetupFailStream : public Stream {
+public:
+    explicit CtrlSQSetupFailStream(Device *const dev) : Stream(dev, 0U, RT_STREAM_PRIMARY_DEFAULT)
+    {
+    }
+
+    rtError_t Setup() override
+    {
+        return RT_ERROR_DRV_ERR;
+    }
+};
 
 rtError_t CheckStarsCoreErrorInfoStub(const StarsDeviceErrorInfo * const info,
     const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr)
@@ -2075,6 +2089,52 @@ TEST_F(DeviceTest, SendTaskToStopUseRingBufferSkipWhenAlreadySent)
 
     EXPECT_EQ(errorProc.SendTaskToStopUseRingBuffer(), RT_ERROR_NONE);
     errorProc.deviceRingBufferAddr_ = nullptr;
+}
+
+TEST_F(DeviceTest, RawDeviceStopOnExitSkipsDeepDeviceRelease)
+{
+    RawDevice dev(0U);
+    DevProperties props = {};
+    props.rtsqDepth = 16U;
+    dev.RefreshDevProperties(props);
+    ExitMockEngine * const engine = new ExitMockEngine(&dev);
+    dev.engine_ = engine;
+    dev.deviceErrorProc_ = new (std::nothrow) DeviceErrorProc(&dev);
+    ASSERT_NE(dev.deviceErrorProc_, nullptr);
+    dev.primaryStream_ = reinterpret_cast<Stream *>(0x1234U);
+    dev.ctrlStream_ = reinterpret_cast<Stream *>(0x5678U);
+
+    RuntimeExitStateGuard guard(static_cast<Runtime *>(Runtime::Instance()), true);
+    MOCKER_CPP(&DeviceErrorProc::SendTaskToStopUseRingBuffer).expects(never());
+    MOCKER_CPP(&DeviceErrorProc::DestroyDeviceRingBuffer).expects(never());
+
+    const rtError_t ret = dev.Stop();
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(engine->stopCalled_, 1U);
+    EXPECT_EQ(engine->checkSendCalled_, 0U);
+    EXPECT_EQ(engine->checkReceiveCalled_, 0U);
+    EXPECT_EQ(engine->checkMonitorCalled_, 0U);
+    EXPECT_EQ(dev.primaryStream_, nullptr);
+    EXPECT_EQ(dev.ctrlStream_, nullptr);
+    DELETE_O(dev.deviceErrorProc_);
+    DELETE_O(dev.engine_);
+}
+
+TEST_F(DeviceTest, RawDeviceStopOnExitAllowsNullEngine)
+{
+    RawDevice dev(0U);
+    dev.engine_ = nullptr;
+    dev.primaryStream_ = reinterpret_cast<Stream *>(0x1234U);
+    dev.ctrlStream_ = reinterpret_cast<Stream *>(0x5678U);
+
+    RuntimeExitStateGuard guard(static_cast<Runtime *>(Runtime::Instance()), true);
+
+    const rtError_t ret = dev.Stop();
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(dev.primaryStream_, nullptr);
+    EXPECT_EQ(dev.ctrlStream_, nullptr);
 }
 
 TEST_F(DeviceTest, WriteDevString)

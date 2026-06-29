@@ -45,7 +45,6 @@
 #include "stream_state_callback_manager.hpp"
 #include "memory_pool.hpp"
 #include "ini_parse_utils.h"
-#include "runtime_keeper.h"
 #include "utils.h"
 #include "device.hpp"
 #include "timeout_set_task.h"
@@ -2782,6 +2781,7 @@ void Runtime::PrimaryContextCallBackAfterTeardown(const uint32_t devId) const
     }
 }
 
+
 void Runtime::DetachContextOwnedStreams(const Context *ctx) const
 {
     if (ctx == nullptr) {
@@ -2816,6 +2816,103 @@ void Runtime::TearDownAndDeleteContextNoThrow(Context *&ctx) const
     }
     delete ctx;
     ctx = nullptr;
+}
+
+void Runtime::DetachPrimaryContextsOnExit()
+{
+    for (uint32_t devId = 0U; devId < RT_MAX_DEV_NUM; devId++) {
+        for (uint32_t tsId = 0U; tsId < tsNum_; tsId++) {
+            Context * const context = priCtxs_[devId][tsId].GetVal(false);
+            if (context != nullptr) {
+                RT_LOG(RT_LOG_WARNING,
+                    "Runtime is exiting, detach primary context without teardown or delete, device_id=%u, ts_id=%u, "
+                    "context=%p.",
+                    devId, tsId, context);
+            }
+            priCtxs_[devId][tsId].ResetVal();
+        }
+    }
+}
+
+void Runtime::DetachXpuContextOnExit()
+{
+    if (xpuCtxt_ == nullptr) {
+        return;
+    }
+    RT_LOG(RT_LOG_WARNING, "Runtime is exiting, detach xpu context without teardown or delete, context=%p.", xpuCtxt_);
+    xpuCtxt_ = nullptr;
+    xpuDevice_ = nullptr;
+}
+
+void Runtime::DetachProgramsOnExit()
+{
+    if (programAllocator_ == nullptr) {
+        return;
+    }
+    for (uint32_t id = 0U; id < maxProgramNum_; id++) {
+        if (!programAllocator_->CheckIdValid(id)) {
+            continue;
+        }
+
+        RefObject<Program *> * const programItem = programAllocator_->GetDataToItem(id);
+        if (programItem == nullptr) {
+            continue;
+        }
+        Program * const programInst = programItem->GetVal(false);
+        if (programInst != nullptr) {
+            RT_LOG(RT_LOG_WARNING,
+                "Runtime is exiting, detach program without delete, program_id=%u, program=%p.", id, programInst);
+            programItem->ResetVal();
+        }
+    }
+}
+
+void Runtime::StopDeviceHostThreadsOnExit()
+{
+    for (auto &refObj : devices_) {
+        for (uint32_t tsId = 0U; tsId < RT_MAX_TS_NUM; tsId++) {
+            Device * const dev = refObj[tsId].GetVal(false);
+            if (dev == nullptr) {
+                continue;
+            }
+            RT_LOG(RT_LOG_WARNING,
+                "Runtime is exiting, stop device host threads without device release, device_id=%u, ts_id=%u.",
+                dev->Id_(), tsId);
+            dev->SetDeviceRelease();
+            (void)dev->Stop();
+            (void)SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
+            refObj[tsId].ResetVal();
+        }
+    }
+}
+
+bool Runtime::HasRuntimeExitHostState() const
+{
+    // A Runtime allocated only by ConstructRuntimeImpl may not call Init().
+    // The members below are created during Init(), so their presence means the
+    // destructor has host-side runtime state to detach/stop in process-exit mode.
+    return (threadGuard_ != nullptr) || (programAllocator_ != nullptr) || (streamObserver_ != nullptr) ||
+           (aicpuStreamIdBitmap_ != nullptr) || (cbSubscribe_ != nullptr) || (hbmRasThread_ != nullptr);
+}
+
+void Runtime::PrepareProcessExitNoThrow()
+{
+    SetRuntimeExiting(true);
+    isExiting_ = true;
+    GlobalStateManager::GetInstance().ForceUnlocked();
+    DestroyReportRasThread();
+    (void)WaitMonitorExit();
+    FinalizeRuntimeExitHostState();
+}
+
+void Runtime::FinalizeRuntimeExitHostState()
+{
+    DetachPrimaryContextsOnExit();
+    DetachXpuContextOnExit();
+    DetachProgramsOnExit();
+    StopDeviceHostThreadsOnExit();
+    InnerThreadLocalContainer::SetCurRef(nullptr);
+    InnerThreadLocalContainer::SetCurCtx(nullptr);
 }
 
 rtError_t Runtime::ExecutePrimaryTearDown(RefObject<Context *> &refObj, Context * const ctx, const uint32_t devId,
@@ -3238,6 +3335,26 @@ Device *Runtime::GetDevice(const uint32_t devId, const uint32_t tsId, bool polli
     return refObj.GetVal(polling);
 }
 
+void Runtime::FinalizeDeviceReleaseOnExit(RefObject<Device *> &refObj, Device *dev)
+{
+    const uint32_t devId = dev->Id_();
+    const uint32_t tsId = dev->DevGetTsId();
+
+    RT_LOG(RT_LOG_WARNING,
+        "Runtime is exiting, finalize host-side device release only and rely on driver app-exit cleanup, "
+        "device_id=%u, ts_id=%u.",
+        devId, tsId);
+
+    profConfLock_.Lock();
+    dev->SetDevProfStatus(0x0ULL, false);
+    profConfLock_.Unlock();
+
+    dev->SetDeviceRelease();
+    (void)dev->Stop();
+    refObj.ResetVal();
+    (void)SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
+}
+
 void Runtime::DeviceRelease(Device *dev, const bool isForceReset)
 {
     COND_RETURN_VOID_WARN(dev == nullptr, "ptr device is NULL!");
@@ -3251,9 +3368,14 @@ void Runtime::DeviceRelease(Device *dev, const bool isForceReset)
         }
         refObj[tsId].ChangeValStatus(refObj[tsId].STATUS_BUSY);
         if (!refObj[tsId].DecRef()) {
-            FinalizeDeviceRelease(refObj[tsId], dev, isForceReset);
+
+            if (isExiting_) {
+                FinalizeDeviceReleaseOnExit(refObj[tsId], dev);
+            } else {
+                FinalizeDeviceRelease(refObj[tsId], dev, isForceReset);
+            }
             refObj[tsId].ChangeValStatus(refObj[tsId].STATUS_IDLE);
-            // 1、2、3 order cannot be changed (drv and log requirement)
+            // 1、2、3 order can not be changed (drv and log requirement)
             return;
         }
         refObj[tsId].ChangeValStatus(refObj[tsId].STATUS_IDLE);
@@ -4348,6 +4470,15 @@ rtError_t Runtime::UnSubscribeReport(Stream * const stm)
         stm->Id_(), static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_NONE);
     return error;
+}
+
+void Runtime::UnSubscribeReportHostOnly(Stream * const stm)
+{
+    if ((cbSubscribe_ == nullptr) || (stm == nullptr)) {
+        return;
+    }
+    cbSubscribe_->DeleteStreamHostOnly(stm);
+    stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_NONE);
 }
 
 rtError_t Runtime::GetGroupIdByStreamId(const uint32_t devId, const int32_t streamId, uint32_t * const groupId)

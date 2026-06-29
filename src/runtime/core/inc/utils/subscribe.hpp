@@ -72,6 +72,7 @@ public:
         grpIdWaitBitmap_.FreeId(static_cast<int32_t>(grpId));
     }
     bool IsExistInStreamMap(const Stream * const stm);
+    void DeleteStreamHostOnly(const Stream * const stm);
     rtError_t SubscribeCallback(const uint64_t threadId, Stream * const stm, void *evtNotify);
     bool JudgeNeedSubscribe(const uint64_t threadId, Stream * const stm, const uint32_t deviceId);
     bool TryToGetCallbackSqCqId(const uint64_t threadId, const Stream * const stm, uint32_t *sqId, uint32_t *cqId);
@@ -84,6 +85,7 @@ private:
     bool CheckExistInStreamMap(const Stream * const stm) const;
     bool CheckExistInStreamMap(const Stream * const stm, StreamDevMap::const_iterator &streamIt) const;
     void DeleteAll();
+    void DeleteAllHostOnly();
     bool FindThreadIdByKey(const uint32_t deviceId, const int32_t streamId);
 private:
     uint32_t maxGroupNum_ = static_cast<uint32_t>(RT_THREAD_GROUP_ID_MAX);

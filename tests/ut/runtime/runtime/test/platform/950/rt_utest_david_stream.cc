@@ -1238,6 +1238,25 @@ TEST_F(DavidStreamTest, Destructor_ArgHandleNull)
     GlobalMockObject::verify();
 }
 
+TEST_F(DavidStreamTest, DestructorOnExitSkipsArgHandleRecycle)
+{
+    DavidStream *davidStream = new DavidStream(device_, 0, 0, nullptr);
+    ASSERT_NE(davidStream, nullptr);
+    EXPECT_EQ(davidStream->CreateStreamArgRes(), RT_ERROR_NONE);
+    ASSERT_NE(davidStream->ArgManagePtr(), nullptr);
+
+    davidStream->SetArgHandle(reinterpret_cast<void *>(0x1U));
+    davidStream->AddArgHandleToRecycleList(reinterpret_cast<void *>(0x2U));
+    Runtime * const rt = static_cast<Runtime *>(Runtime::Instance());
+    const bool oldExiting = rt->isExiting_;
+    rt->isExiting_ = true;
+    MOCKER_CPP_VIRTUAL(davidStream->ArgManagePtr(), &StarsArgManager::RecycleDevLoader).expects(never());
+
+    delete davidStream;
+    rt->isExiting_ = oldExiting;
+    GlobalMockObject::verify();
+}
+
 TEST_F(DavidStreamTest, SetAicoreArgsSuperKernel_HandleNull)
 {
     DavidStream *stream = new DavidStream(device_, 0, 0, nullptr);

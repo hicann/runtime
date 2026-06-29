@@ -768,7 +768,7 @@ TEST_F(ContextTest, TearDownSkipsRestoringBoundStreamFailure)
 
     Model model;
     stream->SetModel(&model);
-    error = ctx->TearDown();
+    error = ctx->TearDownOwnedStreamsOnContextTearDown();
     EXPECT_EQ(error, RT_ERROR_NONE);
     ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
 
@@ -782,7 +782,9 @@ TEST_F(ContextTest, TearDownSkipsRestoringBoundStreamFailure)
     EXPECT_FALSE(found);
 
     stream->DelModel(&model);
-    DELETE_O(stream);
+    ctx->RestoreOwnedStream(stream);
+    error = ctx->StreamDestroy(stream, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     runtime->SetDisableThread(disableThread);
     (void)runtime->PrimaryContextRelease(devId);
 }

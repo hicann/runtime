@@ -117,6 +117,15 @@ rtError_t AsyncHwtsEngine::Stop()
 {
     if (sendThread_ != nullptr) {
         DisableSendRunFlag();
+        const Runtime * const rt = Runtime::Instance();
+        if (Runtime::IsProcessExiting(rt)) {
+            // Direct exit skips device-side stop tasks. A null task wakes PopTask();
+            // Run() ignores it and exits because sendRunFlag_ is already false.
+            if (scheduler_ != nullptr) {
+                (void)scheduler_->PushTask(nullptr);
+            }
+            SendingNotify();
+        }
         sendThread_->Join();
         RT_LOG(RT_LOG_INFO, "engine joined send thread OK.");
         DELETE_O(sendThread_);

@@ -22,6 +22,7 @@
 #include "task.hpp"
 #include "notify.hpp"
 #include "count_notify.hpp"
+#include "runtime.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver.hpp"
 #include "task_info.hpp"
@@ -84,6 +85,11 @@ Model::~Model() noexcept
 {
     // context_ is null means setup is not called, no need release member
     if (context_ == nullptr) {
+        return;
+    }
+    Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        FinalizeHostStateOnExit();
         return;
     }
 
@@ -225,6 +231,14 @@ rtError_t Model::AicpuModelDestroy()
 
 rtError_t Model::TearDown()
 {
+    Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        RT_LOG(RT_LOG_WARNING,
+            "Runtime is exiting, skip model deep teardown and rely on driver app-exit cleanup, model_id=%d.",
+            id_);
+        return RT_ERROR_NONE;
+    }
+
     DELETE_O(endGraphNotify_);
 
     rtError_t error = RT_ERROR_NONE;
@@ -248,6 +262,29 @@ void Model::ResetBoundLabelsOnDestroy()
         it.second->UnbindModel();
     }
     labelMap_.clear();
+}
+
+void Model::FinalizeHostStateOnExit() noexcept
+{
+    RT_LOG(RT_LOG_WARNING, "Runtime is exiting, finalize model host state only, model_id=%d.", id_);
+    DELETE_O(notifier_);
+    DELETE_O(labelAllocator_);
+    DELETE_A(modelSwitchInfo_);
+    // Notify owns driver notify id, so direct exit must not delete it.
+    endGraphNotify_ = nullptr;
+    streams_.clear();
+    headStreams_.clear();
+    argLoaderRecord_.clear();
+    dmaAddrRecord_.clear();
+    argActiveStreamRecord_.clear();
+    mapAicpuTask_.clear();
+    h2dJettyInfoList_.clear();
+    d2dJettyInfoList_.clear();
+    context_ = nullptr;
+    aicpuModelInfo_ = nullptr;
+    streamInfoPtr_ = nullptr;
+    aicpuTaskInfoPtr_ = nullptr;
+    queueInfoPtr_ = nullptr;
 }
 
 void Model::ReplaceArgHandle(const uint16_t streamId, const uint16_t taskId, void *argHandle)
@@ -2107,7 +2144,7 @@ rtError_t Model::ModelDestroyUnregisterCallback(rtCallback_t const fn)
 rtError_t Model::ModelDestroyCallback()
 {
     Runtime * const runtime = Runtime::Instance();
-    if ((runtime != nullptr) && runtime->IsExiting()) {
+    if (Runtime::IsProcessExiting(runtime)) {
         RT_LOG(RT_LOG_WARNING,
             "Runtime is exiting, skip model destroy callback to avoid invoking user callback during teardown, "
             "model_id=%u.",

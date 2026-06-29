@@ -550,6 +550,7 @@ private:
     rtError_t SendAicpuModelLoadMsg(Stream *stream) const;
     rtError_t ModelDestroyCallback();
     void ResetBoundLabelsOnDestroy();
+    void FinalizeHostStateOnExit() noexcept;
 
 private:
     int32_t id_ = MODEL_ID_INVALID;

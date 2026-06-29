@@ -420,7 +420,14 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
         return DRV_ERROR_NONE;
     }
 
-    while ((sendCount[devId] == recvCount[devId]));
+    while ((sendCount[devId] == recvCount[devId])) {
+        const Runtime * const rt = Runtime::runtime_;
+        if ((rt != nullptr) && rt->IsExiting()) {
+            out->reportPtr = nullptr;
+            out->count = 0;
+            return DRV_ERROR_NONE;
+        }
+    }
 	//RT_LOG(RT_LOG_INFO, "zyx drvReportGet reportPtr %u,%u,%u,%u", sendCount[devId],recvCount[devId],cqSendCount[devId],sqSendCount[devId]);
 	//std::cout<<"halCqReportGet"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 

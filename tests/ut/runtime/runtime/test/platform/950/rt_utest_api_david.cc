@@ -5277,6 +5277,8 @@ TEST_F(ApiDavidTest, test_stream_switch_ex_and_active_task_on_david)
     error = rtStreamSwitchEx((void *)devMem,  RT_EQUAL, (void *)devMem_target, streamB, streamA, RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    (rt_ut::UnwrapOrNull<Stream>(streamB))->flags_ = RT_STREAM_PERSISTENT;
+
     MOCKER(StreamLabelSwitchByIndexTaskInit).stubs().will(invoke(StreamLabelSwitchByIndexTaskInitStub));
     error = rtLabelSwitchByIndex((void *)devMem, 2, (void *)devMem_target, streamA);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -5732,8 +5734,12 @@ TEST_F(ApiDavidTest, test_set_stream_tag_task_on_david)
 {
     rtError_t ret;
     uint32_t tag = 1U;
-    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t)); 
     Stream *defaultStm = stream_->Context_()->DefaultStream_();
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)calloc(defaultStm->GetSqDepth(), sizeof(rtDavidSqe_t));
+    const auto ctrlSqFeature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ);
+    RawDevice * const rawDevice = static_cast<RawDevice *>(device_);
+    const bool oldCtrlSqFeature = rawDevice->featureSet_[ctrlSqFeature];
+    rawDevice->featureSet_[ctrlSqFeature] = false;
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     defaultStm->SetSqBaseAddr(newSqAddr);
@@ -5748,6 +5754,7 @@ TEST_F(ApiDavidTest, test_set_stream_tag_task_on_david)
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(tag, 1U);
     defaultStm->SetSqBaseAddr(oldSqAddr);
+    rawDevice->featureSet_[ctrlSqFeature] = oldCtrlSqFeature;
     free(sqe);
     sqe = nullptr;
 }
@@ -6302,7 +6309,12 @@ TEST_F(ApiDavidTest, test_profiler_task_on_david)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     Context *curCtx = Runtime::Instance()->CurrentContext();
     Stream *dftStm = curCtx->DefaultStream_();
-    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)calloc(dftStm->GetSqDepth(), sizeof(rtDavidSqe_t));
+    const auto ctrlSqFeature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ);
+    RawDevice * const rawDevice = static_cast<RawDevice *>(stream_->Device_());
+    const bool oldCtrlSqFeature = rawDevice->featureSet_[ctrlSqFeature];
+    rawDevice->featureSet_[ctrlSqFeature] = false;
+    MOCKER_CPP_VIRTUAL(dftStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     dftStm->SetSqBaseAddr(newSqAddr);
@@ -6311,6 +6323,7 @@ TEST_F(ApiDavidTest, test_profiler_task_on_david)
     ProfStop(profiler, 0x0000008000000ULL, 0, stream_->Device_());
     EXPECT_EQ(profiler->ProfCfgPtr()->isRtsProfEn, 1);
     dftStm->SetSqBaseAddr(oldSqAddr);
+    rawDevice->featureSet_[ctrlSqFeature] = oldCtrlSqFeature;
     free(sqe);
     delete profiler;
 }

@@ -724,6 +724,76 @@ TEST_F(ModelTest, ModelDestroyCallbackSkippedWhenRuntimeExiting)
     EXPECT_FALSE(args.called);
 }
 
+TEST_F(ModelTest, ModelFinalizeHostStateOnExitClearsOnlyHostReferences)
+{
+    Runtime * const rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    RuntimeExitingGuard guard(rtInstance);
+
+    Model model;
+    model.streams_.push_back(nullptr);
+    model.headStreams_.push_back(nullptr);
+    model.argLoaderRecord_[1U] = nullptr;
+    model.dmaAddrRecord_.push_back({});
+    model.argActiveStreamRecord_.push_back(nullptr);
+    model.mapAicpuTask_[3U] = {};
+    model.h2dJettyInfoList_.push_back({});
+    model.d2dJettyInfoList_.push_back({});
+
+    model.FinalizeHostStateOnExit();
+
+    EXPECT_EQ(model.context_, nullptr);
+    EXPECT_EQ(model.notifier_, nullptr);
+    EXPECT_EQ(model.labelAllocator_, nullptr);
+    EXPECT_EQ(model.endGraphNotify_, nullptr);
+    EXPECT_TRUE(model.streams_.empty());
+    EXPECT_TRUE(model.headStreams_.empty());
+    EXPECT_TRUE(model.argLoaderRecord_.empty());
+    EXPECT_TRUE(model.dmaAddrRecord_.empty());
+    EXPECT_TRUE(model.argActiveStreamRecord_.empty());
+    EXPECT_TRUE(model.mapAicpuTask_.empty());
+    EXPECT_TRUE(model.h2dJettyInfoList_.empty());
+    EXPECT_TRUE(model.d2dJettyInfoList_.empty());
+    EXPECT_EQ(model.aicpuModelInfo_, nullptr);
+    EXPECT_EQ(model.streamInfoPtr_, nullptr);
+    EXPECT_EQ(model.aicpuTaskInfoPtr_, nullptr);
+    EXPECT_EQ(model.queueInfoPtr_, nullptr);
+}
+
+TEST_F(ModelTest, CaptureModelFinalizeHostStateOnExitClearsCaptureContainers)
+{
+    Runtime * const rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    RuntimeExitingGuard guard(rtInstance);
+
+    CaptureModel model;
+    model.singleOperStmIdAndCaptureStmIdMap_[1].insert(2);
+    model.singleOperEvents_.insert(nullptr);
+    model.captureEvents_.insert(nullptr);
+    model.addStreamMap_[nullptr].push_back(nullptr);
+    model.addStreamNotifyList_.push_back(nullptr);
+    model.executeNotifyList_.push_back(nullptr);
+    model.taskGroupStmIds_.insert(7U);
+    model.rdmaPiValueModifyTaskInfoMap_[8U] = {};
+    model.argLoaderBackup_.insert(nullptr);
+    model.isNeedUpdateEndGraph_ = true;
+    model.trackDataReportFlag_ = true;
+
+    model.FinalizeHostStateOnExit();
+
+    EXPECT_TRUE(model.singleOperStmIdAndCaptureStmIdMap_.empty());
+    EXPECT_TRUE(model.singleOperEvents_.empty());
+    EXPECT_TRUE(model.captureEvents_.empty());
+    EXPECT_TRUE(model.addStreamMap_.empty());
+    EXPECT_TRUE(model.addStreamNotifyList_.empty());
+    EXPECT_TRUE(model.executeNotifyList_.empty());
+    EXPECT_TRUE(model.taskGroupStmIds_.empty());
+    EXPECT_TRUE(model.rdmaPiValueModifyTaskInfoMap_.empty());
+    EXPECT_TRUE(model.argLoaderBackup_.empty());
+    EXPECT_FALSE(model.isNeedUpdateEndGraph_);
+    EXPECT_FALSE(model.trackDataReportFlag_);
+}
+
 
 
 #if 1

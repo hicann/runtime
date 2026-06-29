@@ -195,6 +195,16 @@ void TaskResManage::ReleaseTaskResource(Stream* stm)
     }
 }
 
+void TaskResManage::ReleaseHostStateOnExit()
+{
+    if (taskRes_ != nullptr) {
+        delete[] taskResBaseAddr_;
+        taskResBaseAddr_ = nullptr;
+        taskRes_ = nullptr;
+    }
+    pcieBaseAddr_ = nullptr;
+}
+
 void TaskResManage::ResetTaskRes()
 {
     taskResHead_ = 0U;

@@ -123,6 +123,19 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
     return DRV_ERROR_NONE;
 }
 
+static bool g_failConnectUbFlag = false;
+
+static drvError_t stubDavidGetDeviceInfoWithConnectUbFlagFail(
+    uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+{
+    if (g_failConnectUbFlag && (value != nullptr) && (moduleType == MODULE_TYPE_SYSTEM) &&
+        (infoType == INFO_TYPE_HD_CONNECT_TYPE)) {
+        *value = 2;
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    return stubDavidGetDeviceInfo(devId, moduleType, infoType, value);
+}
+
 static rtError_t stubGetHardVerBySocVerFail(const uint32_t deviceId, int64_t &hardwareVersion)
 {
     return RT_ERROR_DRV_INPUT;
@@ -131,23 +144,6 @@ static rtError_t stubGetHardVerBySocVerFail(const uint32_t deviceId, int64_t &ha
 rtError_t stubGetHardVerBySocVerNoDevice(const uint32_t deviceId, int64_t &hardwareVersion)
 {
     hardwareVersion = PLATFORMCONFIG_NO_DEVICE;
-    return DRV_ERROR_NONE;
-}
-
-static drvError_t stubDavidGetConnectUbFlagFail(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
-{
-    if (value) {
-        if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_950PR_9599;
-        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
-            *value = g_device_driver_version_stub;
-        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_HD_CONNECT_TYPE) {
-            *value = 2;
-            return DRV_ERROR_INVALID_VALUE;
-        } else {
-            *value = 0;
-        }
-    }
     return DRV_ERROR_NONE;
 }
 
@@ -370,7 +366,8 @@ protected:
 
     virtual void SetUp()
     {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetConnectUbFlagFail));
+        g_failConnectUbFlag = false;
+        MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfoWithConnectUbFlagFail));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_disableThread = rtInstance->GetDisableThread();
         g_chipType = rtInstance->GetChipType();
@@ -394,6 +391,7 @@ protected:
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
+        g_failConnectUbFlag = true;
     }
 
     virtual void TearDown()
@@ -407,6 +405,7 @@ protected:
         rtInstance->SetDisableThread(g_disableThread);
         rtInstance->SetChipType(g_chipType);
         GlobalContainer::SetRtChipType(g_chipType);
+        g_failConnectUbFlag = false;
         GlobalMockObject::verify();
     }
 
@@ -431,11 +430,7 @@ protected:
     virtual void SetUp()
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubSolomonGetDeviceInfo));
-        char *socVer = "Ascend910_5591";
-        MOCKER(halGetSocVersion)
-            .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_5591")), mockcpp::any())
-            .will(returnValue(DRV_ERROR_NONE));
+        MOCKER(halGetSocVersion).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_chipType = rtInstance->GetChipType();
         rtInstance->SetChipType(CHIP_CLOUD_V5);

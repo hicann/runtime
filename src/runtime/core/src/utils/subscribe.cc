@@ -20,6 +20,11 @@ CbSubscribe::CbSubscribe(const uint32_t maxGrpNum)
 
 CbSubscribe::~CbSubscribe()
 {
+    Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        DeleteAllHostOnly();
+        return;
+    }
     DeleteAll();
 }
 
@@ -309,6 +314,43 @@ rtError_t CbSubscribe::Delete(Stream * const stm)
     return RT_ERROR_NONE;
 }
 
+void CbSubscribe::DeleteStreamHostOnly(const Stream * const stm)
+{
+    if (stm == nullptr) {
+        return;
+    }
+
+    const int32_t streamId = stm->Id_();
+    uint64_t threadId = 0U;
+    uint32_t groupId = 0U;
+    {
+        const std::lock_guard<std::mutex> subscribeLock(subscribeLock_);
+        StreamDevMap::const_iterator itStream;
+        if (!CheckExistInStreamMap(stm, itStream)) {
+            return;
+        }
+
+        threadId = itStream->second.threadId;
+        groupId = static_cast<uint32_t>(itStream->second.groupId);
+        ThreadIdMapIt it;
+        DevIdTsIdMapIt it2;
+        StreamMapIt it3;
+        if (CheckExistInThreadMap(threadId, stm, it, it2, it3)) {
+            if (it2->second.size() == 1U) {
+                grpIdBitmap_.FreeId(static_cast<int32_t>(groupId));
+                (void)subscribeMapByThreadId_.erase(threadId);
+            } else {
+                (void)it2->second.erase(it3->first);
+            }
+        }
+        (void)subscribeMapByStreamId_.erase(itStream->first);
+    }
+    RT_LOG(RT_LOG_WARNING,
+        "Runtime is exiting, remove callback subscribe host state only, stream_id=%d, threadId=%" PRIu64
+        ", groupId=%u.",
+        streamId, threadId, groupId);
+}
+
 bool CbSubscribe::CheckExistInThreadMap(const uint64_t threadId, const Stream * const stm, ThreadIdMapIt &threadIdIter,
                                         DevIdTsIdMapIt &devIdTsIdIter, StreamMapIt &streamIter)
 {
@@ -511,6 +553,17 @@ void CbSubscribe::DeleteAll()
     subscribeMapByThreadId_.clear();
     subscribeMapByStreamId_.clear();
     subscribeLock_.unlock();
+}
+
+void CbSubscribe::DeleteAllHostOnly()
+{
+    const std::lock_guard<std::mutex> lk(subscribeLock_);
+    // Direct exit only drops host visibility. Do not free callback SQ/CQ, Event,
+    // Notify or group ids here; device-side cleanup is covered by driver app-exit.
+    RT_LOG(RT_LOG_WARNING, "Runtime is exiting, clear all callback subscribe host state only, size=%zu.",
+        subscribeMapByStreamId_.size());
+    subscribeMapByThreadId_.clear();
+    subscribeMapByStreamId_.clear();
 }
 
 bool CbSubscribe::FindThreadIdByKey(const uint32_t deviceId, const int32_t streamId)

@@ -2271,8 +2271,8 @@ rtError_t NpuDriver::CqReportRelease(rtHostFuncCqReport_t * const report, const 
 rtError_t NpuDriver::ReportWait(void ** const report, int32_t * const cnt, const uint32_t deviceId,
                                 const uint32_t tsId, const uint32_t cqId)
 {
-    struct halReportInfoInput irqWaitInputInfo;
-    struct halReportInfoOutput irqWaitOutputInfo;
+    struct halReportInfoInput irqWaitInputInfo = {};
+    struct halReportInfoOutput irqWaitOutputInfo = {};
     irqWaitInputInfo.type = DRV_NORMAL_TYPE;
     irqWaitInputInfo.grpId = 0U;
     irqWaitInputInfo.tsId = tsId;
@@ -2284,6 +2284,17 @@ rtError_t NpuDriver::ReportWait(void ** const report, int32_t * const cnt, const
                "drvRetCode=%d.", deviceId, tsId, drvReportWaitRet);
         drvDfxShowReport(deviceId);
         return RT_GET_DRV_ERRCODE(drvReportWaitRet);
+    }
+
+    const Runtime * const rt = Runtime::runtime_;
+    if ((rt != nullptr) && rt->IsExiting()) {
+        *cnt = 0;
+        *report = nullptr;
+        RT_LOG(RT_LOG_WARNING,
+            "Runtime is exiting, skip getting normal CQ report, device_id=%u, ts_id=%u, cq_id=%u.",
+            deviceId, tsId, cqId);
+        return static_cast<rtError_t>((drvReportWaitRet == DRV_ERROR_SOCKET_CLOSE) ?
+            RT_ERROR_SOCKET_CLOSE : RT_ERROR_NONE);
     }
 
     struct halReportGetInput repGetInputInfo;

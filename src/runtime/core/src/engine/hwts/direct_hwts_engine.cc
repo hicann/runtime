@@ -192,6 +192,15 @@ rtError_t DirectHwtsEngine::Stop()
     DestroyRecycleThread();
     DestroyPrintfThread();
 
+    const Runtime * const rt = Runtime::Instance();
+    if (Runtime::IsProcessExiting(rt)) {
+        const uint32_t devId = (device_ == nullptr) ? UINT32_MAX : device_->Id_();
+        const uint32_t tsId = (device_ == nullptr) ? UINT32_MAX : device_->DevGetTsId();
+        RT_LOG(RT_LOG_WARNING,
+            "Runtime is exiting, skip direct engine logic CQ free, device_id=%u, ts_id=%u, logicCqId=%u.",
+            devId, tsId, logicCqId_);
+        return RT_ERROR_NONE;
+    }
     if (logicCqId_ != MAX_UINT32_NUM) {
         (void)device_->Driver_()->LogicCqFree(device_->Id_(), device_->DevGetTsId(), logicCqId_);
     }

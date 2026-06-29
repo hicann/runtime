@@ -9,6 +9,7 @@
  */
 #include "ctrl_stream.hpp"
 #include "error_message_manage.hpp"
+#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
@@ -48,8 +49,22 @@ rtError_t CtrlStream::Setup()
 CtrlStream::~CtrlStream() noexcept
 {
     rtError_t error = RT_ERROR_NONE;
+    const Runtime * const rt = Runtime::Instance();
+    const bool runtimeExiting = Runtime::IsProcessExiting(rt);
     if (!posToCtrlTaskIdMap_.empty()) {
-        (void)SynchronizeInternal(false, -1);
+        if (runtimeExiting) {
+            RT_LOG(RT_LOG_WARNING, "[ctrlsq]Runtime is exiting, skip ctrl stream synchronize, stream_id=%d, taskNum=%zu.",
+                Id_(), posToCtrlTaskIdMap_.size());
+        } else {
+            (void)SynchronizeInternal(false, -1);
+        }
+    }
+
+    if (runtimeExiting) {
+        RT_LOG(RT_LOG_WARNING,
+            "[ctrlsq]Runtime is exiting, skip ctrl stream SQ/CQ release, stream_id=%d, sqId=%u, cqId=%u, logicCqId=%u.",
+            Id_(), sqId_, cqId_, GetLogicalCqId());
+        return;
     }
 
     if ((sqId_ != UINT32_MAX) && (cqId_ != UINT32_MAX)) {

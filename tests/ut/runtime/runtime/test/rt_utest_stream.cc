@@ -30,6 +30,8 @@
 #include "task_info.hpp"
 #include "davinci_kernel_task.h"
 #include "async_hwts_engine.hpp"
+#include "runtime_exit_test_helper.h"
+#include "subscribe.hpp"
 #undef private
 #undef protected
 #include "ffts_task.h"
@@ -667,46 +669,33 @@ TEST_F(StreamTest, stream_tearDown_fail)
 {
     rtError_t error;
     rtStream_t stream;
-    Context *ctxPtr;
-    int32_t devId;
+    rtContext_t ctx = nullptr;
 
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtChipType_t preChipType = rtInstance->GetChipType();
-    RefObject<Context*> *refObject = NULL;
-    error = rtGetDevice(&devId);
-    refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
-    EXPECT_NE(refObject, nullptr);
-    ctxPtr = refObject->GetVal();
+    error = rtCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context *ctxPtr = static_cast<Context *>(ctx);
     EXPECT_NE(ctxPtr, nullptr);
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
-    stream_var->delayRecycleTaskid_.push_back(0);
     std::cout<<"stream create success."<<std::endl;
 
     MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().will(returnValue(1));
     error = rtStreamDestroy(stream);
     std::cout<<"stream destroy success."<<std::endl;
-    (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 
 TEST_F(StreamTest, stream_tearDownforce_test)
 {
     rtError_t error;
     rtStream_t stream;
-    rtContext_t ctx;
-    Context *ctxPtr;
-    int32_t devId;
+    rtContext_t ctx = nullptr;
 
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtChipType_t preChipType = rtInstance->GetChipType();
-    RefObject<Context*> *refObject = NULL;
-    error = rtGetDevice(&devId);
-    refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
-    EXPECT_NE(refObject, nullptr);
-    ctxPtr = refObject->GetVal();
+    error = rtCtxGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Context *ctxPtr = static_cast<Context *>(ctx);
     EXPECT_NE(ctxPtr, nullptr);
     
     error = rtStreamCreate(&stream, 0);
@@ -717,8 +706,6 @@ TEST_F(StreamTest, stream_tearDownforce_test)
     stream_var->delayRecycleTaskid_.push_back(0);
     MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().will(returnValue(1));
     error = rtStreamDestroyForce(stream);
-    error = rtCtxDestroy(ctx);
-    (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 
 TEST_F(StreamTest, stream_freePersistentTaskId_test)
@@ -1109,6 +1096,84 @@ TEST_F(StreamTest, SendFlipTaskAbort)
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
     DELETE_O(stm);
     DELETE_O(stubDevice);
+}
+
+TEST_F(StreamTest, StreamExitTearDownAndDestructorSkipDriverRelease)
+{
+    RawDevice dev(0U);
+    DevProperties props = {};
+    props.rtsqDepth = 16U;
+    dev.RefreshDevProperties(props);
+    Stream * const stream = new Stream(&dev, 0U);
+    stream->streamId_ = 7;
+    void * const fakeArgsHandle = reinterpret_cast<void *>(0x1234U);
+    stream->argsHandle_ = fakeArgsHandle;
+    stream->dvppRRTaskAddr_ = reinterpret_cast<void *>(0x2345U);
+    stream->timelineAddr_ = reinterpret_cast<uint64_t *>(0x3456U);
+    stream->memContainOverflowAddr_ = reinterpret_cast<void *>(0x4567U);
+    stream->switchNArg_.push_back(reinterpret_cast<void *>(0x5678U));
+    stream->recordDevMemAddr_.push_back(reinterpret_cast<void *>(0x6789U));
+
+    RuntimeExitStateGuard guard(static_cast<Runtime *>(Runtime::Instance()), true);
+
+    EXPECT_EQ(stream->TearDown(), RT_ERROR_NONE);
+    EXPECT_EQ(stream->argsHandle_, fakeArgsHandle);
+    delete stream;
+}
+
+TEST_F(StreamTest, TaskResReleaseHostStateOnExitIsIdempotent)
+{
+    TaskResManage taskRes;
+    taskRes.taskPoolNum_ = 2U;
+    const uint32_t poolSize = static_cast<uint32_t>(sizeof(TaskRes) * taskRes.taskPoolNum_);
+    taskRes.CreateTaskResBaseAddr(poolSize);
+    taskRes.taskRes_ = reinterpret_cast<TaskRes *>(taskRes.GetTaskResBaseAddr());
+    taskRes.pcieBaseAddr_ = reinterpret_cast<uint8_t *>(0x1234U);
+
+    taskRes.ReleaseHostStateOnExit();
+    EXPECT_EQ(taskRes.GetTaskResBaseAddr(), nullptr);
+    EXPECT_EQ(taskRes.taskRes_, nullptr);
+    EXPECT_EQ(taskRes.pcieBaseAddr_, nullptr);
+
+    taskRes.ReleaseHostStateOnExit();
+    EXPECT_EQ(taskRes.GetTaskResBaseAddr(), nullptr);
+    EXPECT_EQ(taskRes.taskRes_, nullptr);
+    EXPECT_EQ(taskRes.pcieBaseAddr_, nullptr);
+}
+
+TEST_F(StreamTest, CbSubscribeHostOnlyDeleteClearsMapsWithoutDriverRelease)
+{
+    RuntimeExitStateGuard guard(static_cast<Runtime *>(Runtime::Instance()), true);
+    RawDevice dev(0U);
+    dev.DevSetTsId(0U);
+    Stream stream(&dev, 0U);
+    stream.streamId_ = 9;
+    CbSubscribe subscribe(4U);
+    constexpr uint64_t threadId = 0x88U;
+    constexpr uint32_t groupId = 1U;
+    constexpr uint32_t sqId = 2U;
+    constexpr uint32_t cqId = 3U;
+    const uint32_t devTsKey = RT_CB_SUBSCRIBE_MK_INFO_KEY(dev.DevGetTsId(), dev.Id_());
+    const uint64_t streamKey = RT_CB_SUBSCRIBE_MK_STREAM_DEV_KEY(dev.Id_(), stream.Id_());
+    cbSubscribeInfo info = {};
+    info.threadId = threadId;
+    info.stream = &stream;
+    info.sqId = sqId;
+    info.cqId = cqId;
+    info.groupId = static_cast<int32_t>(groupId);
+    subscribe.subscribeMapByThreadId_[threadId][devTsKey][stream.Id_()] = info;
+    subscribe.subscribeMapByStreamId_[streamKey] = info;
+    subscribe.grpIdBitmap_.OccupyId(static_cast<int32_t>(groupId));
+
+    subscribe.DeleteStreamHostOnly(&stream);
+    EXPECT_TRUE(subscribe.subscribeMapByThreadId_.empty());
+    EXPECT_TRUE(subscribe.subscribeMapByStreamId_.empty());
+
+    subscribe.subscribeMapByThreadId_[threadId][devTsKey][stream.Id_()] = info;
+    subscribe.subscribeMapByStreamId_[streamKey] = info;
+    subscribe.DeleteAllHostOnly();
+    EXPECT_TRUE(subscribe.subscribeMapByThreadId_.empty());
+    EXPECT_TRUE(subscribe.subscribeMapByStreamId_.empty());
 }
 
 TEST_F(StreamTest, PushFlipTask)

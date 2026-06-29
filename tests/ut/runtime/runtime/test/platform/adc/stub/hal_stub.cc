@@ -356,7 +356,14 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
         return DRV_ERROR_NONE;
     }
 
-    while ((sendCount[devId] == recvCount[devId]));
+    while ((sendCount[devId] == recvCount[devId])) {
+        const Runtime * const rt = Runtime::runtime_;
+        if ((rt != nullptr) && rt->IsExiting()) {
+            out->reportPtr = nullptr;
+            out->count = 0;
+            return DRV_ERROR_NONE;
+        }
+    }
     int32_t pingpong = recvCount[devId] % 2;
     out->reportPtr = &g_report[devId][pingpong];
     out->count = g_reportCount[devId][pingpong];
