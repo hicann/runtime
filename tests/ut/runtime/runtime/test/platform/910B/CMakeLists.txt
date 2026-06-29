@@ -25,6 +25,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100_external_event.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
@@ -324,6 +325,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/device/v100/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp
     ${TOP_DIR}/src/runtime/core/src/device/device_msg_handler.cc

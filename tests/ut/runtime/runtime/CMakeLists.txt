@@ -63,6 +63,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100_external_event.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
@@ -424,6 +425,8 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc
     ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100_external_event.cc
+    ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
 )
 
 set(runtimeut_src_tiny_include_list
@@ -459,6 +462,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/task/tiny/task_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/task/tiny/memory_task_v100_external_event_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_pool_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_expanding_tiny_stub.cc
@@ -613,6 +617,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/device/v100/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp
     ${TOP_DIR}/src/runtime/core/src/device/device_msg_handler.cc
@@ -734,6 +739,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp
     ${TOP_DIR}/src/runtime/core/src/device/device_msg_handler.cc

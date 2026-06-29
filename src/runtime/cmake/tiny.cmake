@@ -25,6 +25,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/tiny/memory_task_v100_external_event_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc

@@ -327,6 +327,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/stars_external_event_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc

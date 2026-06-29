@@ -25,6 +25,7 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100_external_event.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
@@ -421,6 +422,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/task/ctrl_res_pool.cpp
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/stars_external_event_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_david_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
@@ -539,6 +541,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/stars_external_event_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc

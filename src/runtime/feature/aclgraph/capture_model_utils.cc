@@ -172,6 +172,29 @@ bool IsSoftwareSqCaptureModel(const Model * const mdl)
     const CaptureModel *capMdl = dynamic_cast<const CaptureModel *>(mdl);
     return capMdl != nullptr && capMdl->IsSoftwareSqEnable();
 }
+rtError_t CheckCaptureModelSupportValueWaitTask(const bool isRecord)
+{
+    const Runtime * const rt = Runtime::Instance();
+    NULL_PTR_RETURN(rt, RT_ERROR_INVALID_VALUE);
+    const rtChipType_t chipType = rt->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
+        if (isRecord) {
+            RT_LOG(RT_LOG_WARNING, "Current chip does not support value write task which required by external event record.");
+        } else {
+            RT_LOG(RT_LOG_WARNING, "Current chip does not support value wait task, which required by external event wait.");
+        }
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    return RT_ERROR_NONE;
+}
+rtError_t CheckCaptureModelSupportExternalEvent(Device * const dev, const bool isRecord)
+{
+    const rtError_t ret = CheckCaptureModelSupportValueWaitTask(isRecord);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    return CheckCaptureModelSupportSoftwareSq(dev);
+}
 rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev)
 {
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);

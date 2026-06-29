@@ -1585,15 +1585,10 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
         COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
             __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
 
-        const Runtime* const rtInstance = Runtime::Instance();
-        NULL_PTR_RETURN_MSG_OUTER(rtInstance, RT_ERROR_INVALID_VALUE);
-        COND_RETURN_WARN(
-            !IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT),
-            RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Current chip does not support value wait task, which required by external event wait.");
-        COND_RETURN_WARN(
-            CheckCaptureModelSupportSoftwareSq(curStm->Device_()) != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "External event wait requires software SQ support.");
+        const rtError_t supportRet = CheckCaptureModelSupportExternalEvent(curStm->Device_(), false);
+        if (supportRet != RT_ERROR_NONE) {
+            return supportRet;
+        }
         
         return CaptureExternalEventWait(evt, curStm);
     }
@@ -2098,15 +2093,10 @@ rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm, const uint
             (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, __func__,
             RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
 
-        const Runtime* const rtInstance = Runtime::Instance();
-        NULL_PTR_RETURN_MSG_OUTER(rtInstance, RT_ERROR_INVALID_VALUE);
-        COND_RETURN_WARN(
-            !IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT),
-            RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Current chip does not support value write task which required by external event record.");
-        COND_RETURN_WARN(
-            CheckCaptureModelSupportSoftwareSq(curStm->Device_()) != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "External event record requires software SQ support.");
+        const rtError_t supportRet = CheckCaptureModelSupportExternalEvent(curStm->Device_(), true);
+        if (supportRet != RT_ERROR_NONE) {
+            return supportRet;
+        }
 
         return CaptureExternalEventRecord(evt, curStm);
     }

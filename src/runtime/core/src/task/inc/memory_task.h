@@ -78,6 +78,11 @@ void IpcEventDestroy(IpcEvent **eventPtr, int32_t freeId, bool isNeedDestroy);
 void DoCompleteSuccessForIpcRecordTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t devId);
+void FillMemWaitFunctionCallSqe(TaskInfo* taskInfo, RtStarsFunctionCallSqe &sqe, const uint64_t funcCallSize);
+void ConstructSecondSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructPhSqeForMemWaitValueTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
+void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstrFcPara &fcPara);
+void RegisterCaptureExternalTaskFuncForV100(rtChipType_t chip);
 
 rtError_t CreateL2AddrTaskInit(TaskInfo * const taskInfo, const uint64_t ptePtrAddr);
 void ToCommandBodyForCreateL2AddrTask(TaskInfo * const taskInfo, rtCommand_t *const command);

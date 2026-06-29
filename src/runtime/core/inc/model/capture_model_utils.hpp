@@ -24,6 +24,7 @@ bool IsCrossCaptureModel(const Event * const evt, const Stream * const stm);
 bool IsCapturedTask(const Stream * const launchStm, const TaskInfo *submitTask);
 rtError_t GetCaptureStream(Context * const ctx, Stream * const stm, const Event * const evt, Stream ** const captureStm);
 rtError_t CheckCaptureStreamThreadIsMatch(const Stream * const stm);
+rtError_t CheckCaptureModelSupportExternalEvent(Device * const dev, bool isRecord);
 rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev);
 rtError_t CheckCaptureModelSupportCondOp(Device * const dev);
 rtError_t CheckCaptureModelForUpdate(const Stream* stm);

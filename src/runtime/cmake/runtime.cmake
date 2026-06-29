@@ -30,6 +30,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100_external_event.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
@@ -341,6 +342,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/ctrl_res_pool.cpp
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/stars_external_event_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task_fail_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
