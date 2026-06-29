@@ -526,7 +526,7 @@ rtError_t GetEventResetTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskP
     return RT_ERROR_NONE;
 }
 
-uint64_t CalculateCrossDeviceEventAddr(Device *srcDevice, const int32_t eventId)
+uint64_t CalculateCrossDeviceEventAddr(const Device *srcDevice, const int32_t eventId)
 {
     const uint64_t eventTableId = 
         static_cast<uint64_t>(eventId) / STARS_EVENT_NUM_OF_SINGLE_TABLE;
