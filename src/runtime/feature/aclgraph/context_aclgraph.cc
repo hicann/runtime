@@ -271,11 +271,9 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     RT_LOG(RT_LOG_INFO, "capture begin, device_id=%u, original stream_id=%d.", device_->Id_(), streamId);
 
     /* check capture status */
-    if (status != RT_STREAM_CAPTURE_STATUS_NONE) {
-        RT_LOG(RT_LOG_ERROR, "stream is already in capture status, device_id=%u, stream_id=%d, status=%s.",
-            device_->Id_(), streamId, ((status == RT_STREAM_CAPTURE_STATUS_ACTIVE) ? "active" : "invalidated"));
-        return RT_ERROR_STREAM_CAPTURED;
-    }
+    COND_RETURN_AND_MSG_OUTER(status != RT_STREAM_CAPTURE_STATUS_NONE, RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
+        "Stream begin capture", RtFmtMsg("Stream is already in capture status, device_id=%u, stream_id=%d, status=%s", 
+            device_->Id_(), streamId, ((status == RT_STREAM_CAPTURE_STATUS_ACTIVE) ? "active" : "invalidated")));
 
     /* create capture model */
     if (captureModel == nullptr) {
@@ -512,10 +510,12 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
         return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
     }
 
-    bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
-    COND_PROC_RETURN_ERROR(!isCaptureFinished, RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING,
-        ClearCaptureModel(this, stm, captureModel),
-        "sub ACL Graph is capturing, stream_id=%d, capture stream_id=%d.", stm->Id_(), captureStream->Id_());
+    const bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
+    
+    COND_PROC_RETURN_AND_MSG_OUTER(!isCaptureFinished, RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING,
+        ErrorCode::EE1016, ClearCaptureModel(this, stm, captureModel),
+        "Stream end capture", RtFmtMsg("Sub ACL Graph is capturing, stream_id=%d, capture stream_id=%d",
+            stm->Id_(), captureStream->Id_()));
 
     error = CheckCaptureModelValidity(captureModel);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,

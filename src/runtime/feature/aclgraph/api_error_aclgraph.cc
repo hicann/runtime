@@ -43,7 +43,7 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStre
         StreamFlagsToString(stm->Flags()), "stream flag",
         RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_())); 
     COND_RETURN_AND_MSG_OUTER(StreamBeginCaptureMdlCheck(mdl) != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "modelRI", "The modelRI is not a sub ACL Graph.");
+        __func__, "modelRI", "The modelRI is not a sub ACL Graph");
 
     return impl_->StreamBeginCapture(stm, mode, mdl);
 }
