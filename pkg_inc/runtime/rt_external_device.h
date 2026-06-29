@@ -433,6 +433,21 @@ typedef enum tagRtDeviceModuleType {
  */
 RTS_API rtError_t rtGetDeviceCapability(int32_t deviceId, int32_t moduleType, int32_t featureType, int32_t *val);
 
+typedef enum tagRtMemRequestFeature {
+    MEM_REQUEST_FEATURE_DEFAULT = 0,
+    MEM_REQUEST_FEATURE_OPP,
+    MEM_REQUEST_FEATURE_RESERVED
+} rtMemRequestFeature_t;
+
+/**
+ * @ingroup dvrt_dev
+ * @brief get ts mem type
+ * @param [in] rtMemRequestFeature_t mem request feature type
+ * @param [in] mem request size
+ * @return RT_MEMORY_TS, RT_MEMORY_HBM, RT_MEMORY_TS | RT_MEMORY_POLICY_HUGE_PAGE_ONLY
+ */
+RTS_API uint32_t rtGetTsMemType(rtMemRequestFeature_t featureType, uint32_t memSize);
+
 #if defined(__cplusplus)
 }
 #endif
