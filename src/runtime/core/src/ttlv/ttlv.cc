@@ -163,7 +163,7 @@ rtError_t TTLV::Decode()
     }
     while (offset_ < length_) {
         TTLVWordDecoder ttlvTag;
-        auto err = GetTTLV(ttlvTag);
+        const rtError_t err = GetTTLV(ttlvTag);
         if (err != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "Get ttlv failed, offset=%u, ret=%#x.", offset_, err);
             return err;

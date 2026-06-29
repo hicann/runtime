@@ -26,14 +26,14 @@ namespace runtime {
 
 constexpr int32_t RT_INVALID_NUMA_NODE_ID = -1;
 
-typedef struct MemsetCallbackStruct {
+struct MemsetCallbackStruct {
     void *ptr;
     uint64_t destMax;
     uint32_t val;
     uint64_t cnt;
-} MemsetCallbackStruct;
+};
 
-typedef struct rtMemcpyCallbackParam {
+struct rtMemcpyCallbackParam {
     void *dst;
     uint64_t destMax;
     const void *src;
@@ -41,14 +41,14 @@ typedef struct rtMemcpyCallbackParam {
     rtMemcpyKind_t kind;
     bool checkKind;
     Stream* stm;
-} rtMemcpyCallbackParam;
+};
 
-typedef struct PrefetchParams {
+struct PrefetchParams {
     DVdeviceptr ptr;
     struct drv_uvm_location location;
     size_t size;
     uint32_t flags;
-} PrefetchParams;
+};
 
 class UvmCallback {
 public :

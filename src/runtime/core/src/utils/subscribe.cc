@@ -131,7 +131,7 @@ rtError_t CbSubscribe::Insert(const uint64_t threadId, Stream * const stm, void 
     const auto devDrv = stm->Device_()->Driver_();
     uint32_t sqId;
     uint32_t cqId;
-    bool isReuseCqSq = TryToGetCallbackSqCqId(threadId, stm, &sqId, &cqId);
+    const bool isReuseCqSq = TryToGetCallbackSqCqId(threadId, stm, &sqId, &cqId);
     if (!isReuseCqSq) {
         ret = devDrv->SqCqAllocate(devId, tsId, static_cast<uint32_t>(groupId), &sqId, &cqId);
         if (ret != RT_ERROR_NONE) {
@@ -171,7 +171,6 @@ rtError_t CbSubscribe::Insert(const uint64_t threadId, Stream * const stm, void 
 
 rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream * const stm)
 {
-    rtError_t ret;
     const uint32_t devId = stm->Device_()->Id_();
     const uint32_t tsId = stm->Device_()->DevGetTsId();
     ThreadIdMapIt it;
@@ -226,7 +225,7 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream * const stm)
     subscribeLock_.unlock();
     const auto devDrv = stm->Device_()->Driver_();
     if (needsFreeSqCq) {
-        ret = devDrv->SqCqFree(sqId, cqId, devId, tsId);
+        rtError_t ret = devDrv->SqCqFree(sqId, cqId, devId, tsId);
         ERROR_RETURN(
             ret,
             "Failed to free SQ/CQ, thread_id=%" PRIu64 ", "
@@ -241,7 +240,6 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream * const stm)
 
 rtError_t CbSubscribe::Delete(Stream * const stm)
 {
-    rtError_t ret;
     const uint32_t devId = stm->Device_()->Id_();
     const uint32_t tsId = stm->Device_()->DevGetTsId();
     ThreadIdMapIt it;
@@ -296,7 +294,7 @@ rtError_t CbSubscribe::Delete(Stream * const stm)
     subscribeLock_.unlock();
     Driver * const devDrv = stm->Device_()->Driver_();
     if (needsFreeSqCq) {
-        ret = devDrv->SqCqFree(sqId, cqId, devId, tsId);
+        rtError_t ret = devDrv->SqCqFree(sqId, cqId, devId, tsId);
         ERROR_RETURN(
             ret,
             "Failed to free SQ/CQ, thread_id=%" PRIu64 ", "

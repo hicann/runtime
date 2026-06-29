@@ -50,7 +50,7 @@ Driver *DriverFactory::GetDriverIfCreated(const driverType_t type) const
     return drivers_[type].load();
 }
 
-bool DriverFactory::RegDriver(const driverType_t type, const DriverGetInsFunc_t func)
+bool DriverFactory::RegDriver(const driverType_t type, DriverGetInsFunc_t const func)
 {
     if (func == nullptr) {
         return false;

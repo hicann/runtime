@@ -803,7 +803,7 @@ bool IsHitBlacklist(const uint32_t deviceId, const std::map<uint32_t, std::strin
     COND_RETURN_WARN(eRet != EOK, false, "Mem set error, ret=%d", eRet);
 
     uint32_t eventCount = 0U;
-    rtError_t error = GetDeviceFaultEvents(deviceId, &faultEventInfo[0U], eventCount, maxFaultNum);
+    const rtError_t error = GetDeviceFaultEvents(deviceId, &faultEventInfo[0U], eventCount, maxFaultNum);
     COND_PROC((error != RT_ERROR_NONE), return false);
     for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
         if (eventIdBlkList.find(faultEventInfo[faultIndex].eventId) != eventIdBlkList.end()) {
