@@ -84,6 +84,7 @@ enum class TimeoutUpdateMethod {
     TIMEOUT_SET_WITH_AICPU = 0,
     TIMEOUT_WITHOUT_UPDATE,
     TIMEOUT_NEED_RESET,
+    TIMEOUT_WITHOUT_TASK,
     DEFAULT_METHOD,
 };
 

@@ -1411,6 +1411,11 @@ rtError_t RawDevice::UpdateTimeoutConfig()
         ERROR_RETURN_MSG_INNER(Runtime::Instance()->StartAicpuSd(this),
             "Failed to update timeout configuration. Failed to check and start TsdOpenAicpuSd.");
     }
+
+    if (props.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_WITHOUT_TASK) {
+        return RT_ERROR_NONE;
+    }
+
     if (props.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_WITHOUT_UPDATE) {
         return UpdateTimeoutConfigTaskSubmitDavid(stm, timeoutConfig);
     }
