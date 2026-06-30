@@ -1554,7 +1554,7 @@ rtError_t NpuDriver::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
     return RT_GET_DRV_ERRCODE(drvRet);
 }
 
-rtError_t NpuDriver::MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType type, rtHandleAttr attr)
+rtError_t NpuDriver::MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType type, rtHandleAttr &attr)
 {
     COND_RETURN_WARN(&halMemHandleSetAttribute == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemHandleSetAttribute does not exist");
     HandleAttr handleAttr = {attr.memMapRoute, {0, 0, 0, 0}}; 

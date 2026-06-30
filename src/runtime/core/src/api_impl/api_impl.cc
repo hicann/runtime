@@ -9087,13 +9087,16 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
         case TS_TASK_TYPE_CAPTURE_WAIT:
             error = GetCaptureWaitTaskParams(taskInfo, params);
             break;
-        case TS_TASK_TYPE_MEM_WRITE_VALUE:
-            if (strcmp(taskInfo->typeName, "EVENT_RESET") == 0) {
+        case TS_TASK_TYPE_MEM_WRITE_VALUE: {
+            constexpr char_t EVENT_RESET_NAME[] = "EVENT_RESET";
+            if ((strncmp(taskInfo->typeName, EVENT_RESET_NAME, sizeof(EVENT_RESET_NAME) - 1U) == 0) &&
+                (taskInfo->typeName[sizeof(EVENT_RESET_NAME) - 1U] == '\0')) {
                 error = GetCaptureResetTaskParams(taskInfo, params);
             } else {
                 error = GetWriteValueTaskParams(taskInfo, params);
             }
             break;
+        }
         case TS_TASK_TYPE_MEM_WAIT_VALUE:
             error = GetWaitValueTaskParams(taskInfo, params);
             break;
