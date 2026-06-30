@@ -20,6 +20,7 @@
 #include "file_utils.h"
 #include "log/adx_log.h"
 #include "runtime/context.h"
+#include "runtime/config.h"
 #include "rts/rts_snapshot.h"
 #include "error_codes/rt_error_codes.h"
 #include "adump_dsmi.h"
@@ -158,6 +159,46 @@ void DumpManager::EnableExceptionDumpWithEnv()
     }
 }
 
+bool DumpManager::AdjustOpExecuteTimeOut()
+{
+    if (opTimeoutModified_) {
+        IDE_LOGI("Op execute timeout has been adjusted for data dump, skip.");
+        return true;
+    }
+    uint32_t curTimeout = 0U;
+    rtError_t ret = rtGetOpExecuteTimeoutV2(&curTimeout);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return false,
+        "Get op execute timeout failed, skip adjust for data dump. ret=%d", ret);
+    if (curTimeout >= OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS) {
+        IDE_LOGI("Current op execute timeout %ums is no less than %ums, no need to adjust for data dump.",
+            curTimeout, OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS);
+        return true;
+    }
+    ret = rtSetOpExecuteTimeOutWithMs(OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return false,
+        "Set op execute timeout to %ums failed for data dump. ret=%d", OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS, ret);
+    originOpExecuteTimeOut_ = curTimeout;
+    opTimeoutModified_ = true;
+    IDE_LOGI("Adjust op execute timeout from %ums to %ums for data dump.",
+        curTimeout, OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS);
+    return true;
+}
+
+bool DumpManager::RestoreOpExecuteTimeOut()
+{
+    if (!opTimeoutModified_) {
+        return true;
+    }
+    rtError_t ret = rtSetOpExecuteTimeOutWithMs(originOpExecuteTimeOut_);
+    // 恢复失败时保持 opTimeoutModified_=true，以便下次关闭 data dump 时重试恢复
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return false,
+        "Restore op execute timeout to %ums failed. ret=%d", originOpExecuteTimeOut_, ret);
+    IDE_LOGI("Restore op execute timeout to %ums after data dump disabled.", originOpExecuteTimeOut_);
+    opTimeoutModified_ = false;
+    originOpExecuteTimeOut_ = 0U;
+    return true;
+}
+
 void DumpManager::KFCResourceInit()
 {
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
@@ -230,6 +271,8 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConf
         IDE_CTRL_VALUE_FAILED(StartDataDumpServer(), return ADUMP_FAILED,
             "Start data dump server failed! dumpType=%s[%d]",
             DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType);
+        // 后续失败不恢复超时时间，不影响功能。
+        IDE_CTRL_VALUE_FAILED(AdjustOpExecuteTimeOut(), return ADUMP_FAILED, "Adjust op execute timeout failed.");
     }
 
     if (CheckBinValidation() && (isKFCInit_ == false)) {
@@ -335,6 +378,8 @@ int32_t DumpManager::UnSetDumpConfig()
     OperatorDumper::FreeDevMemCache();
     // 停止data dump server
     IDE_CTRL_VALUE_FAILED(StopDataDumpServer(), return ADUMP_FAILED, "Stop data dump server failed!");
+    // 恢复算子超时时间
+    IDE_CTRL_VALUE_FAILED(RestoreOpExecuteTimeOut(), return ADUMP_FAILED, "Restore op execute timeout failed!");
 
     return ADUMP_SUCCESS;
 }

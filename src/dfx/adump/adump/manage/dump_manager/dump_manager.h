@@ -20,6 +20,9 @@
 #include "dump_stream_info.h"
 
 namespace Adx {
+// data dump 场景下设置的算子执行超时时间，取值为 runtime 允许的最大算子执行超时（单位 ms）。
+constexpr uint32_t OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS = 1090922U;
+
 // callback 回调开关控制
 enum class DumpEnableAction : int32_t {
     ENABLE,  // 明确启用
@@ -94,6 +97,8 @@ private:
     bool IsEnableDumpOperatorWithCapture(const std::string& opType, const std::string& opName, aclrtStream stream);
     void RegisterSnapShotCallback();
     void EnableExceptionDumpWithEnv();
+    bool AdjustOpExecuteTimeOut();
+    bool RestoreOpExecuteTimeOut();
     bool snapCbkRegistered_ = false;
     bool registered_ = false;
     bool isKFCInit_ = false;
@@ -108,6 +113,8 @@ private:
     std::string dumpConfigInfo_;
     bool isEnvExceptionDump_ = false;
     bool isCaptureDumpServerInit_ = false;
+    bool opTimeoutModified_ = false;
+    uint32_t originOpExecuteTimeOut_ = 0U;
 };
 } // namespace Adx
 #endif // DUMP_MANAGER_H

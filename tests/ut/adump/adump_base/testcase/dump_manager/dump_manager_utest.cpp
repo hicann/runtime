@@ -23,6 +23,13 @@
 
 using namespace Adx;
 
+static uint32_t GetOpExecuteTimeOut()
+{
+    uint32_t timeout = 0U;
+    (void)rtGetOpExecuteTimeoutV2(&timeout);
+    return timeout;
+}
+
 static void WaitInterval_stub(uint32_t intervalSec)
 {
     (void)intervalSec;
@@ -40,6 +47,11 @@ protected:
     virtual void TearDown()
     {
         DumpManager::Instance().Reset();
+        // 恢复默认算子超时时间，避免污染其他用例
+        (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+        // Reset() 不清理超时调整状态，这里手动复位，避免泄漏到其他用例
+        DumpManager::Instance().opTimeoutModified_ = false;
+        DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
         GlobalMockObject::verify();
     }
 };
@@ -82,6 +94,107 @@ TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
     MOCKER(&DumpSetting::Init).stubs().will(returnValue(ADUMP_FAILED));
     ret = DumpManager::Instance().UnSetDumpConfig();
     EXPECT_EQ(ret, ADUMP_FAILED);
+}
+
+// datadump 使能时，当前算子超时时间小于阈值，应延长至阈值并备份原值；关闭时恢复
+TEST_F(DumpManagerUtest, Test_AdjustAndRestoreOpExecuteTimeOut)
+{
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+    (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
+    DumpManager::Instance().opTimeoutModified_ = false;
+    DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
+
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, true);
+    EXPECT_EQ(DumpManager::Instance().originOpExecuteTimeOut_, 300U);
+    EXPECT_EQ(GetOpExecuteTimeOut(), OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS);
+
+    ret = DumpManager::Instance().UnSetDumpConfig();
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, false);
+    EXPECT_EQ(GetOpExecuteTimeOut(), 300U);
+}
+
+// datadump 使能时，当前算子超时时间不小于阈值，不修改也不备份
+TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_NoNeed)
+{
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+    (void)rtSetOpExecuteTimeOutWithMs(OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS + 100U); // 不小于阈值
+    DumpManager::Instance().opTimeoutModified_ = false;
+    DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
+
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, false);
+    EXPECT_EQ(GetOpExecuteTimeOut(), OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS + 100U);
+
+    ret = DumpManager::Instance().UnSetDumpConfig();
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    // 未修改则关闭时不恢复，超时时间保持不变
+    EXPECT_EQ(GetOpExecuteTimeOut(), OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS + 100U);
+}
+
+// 获取算子超时时间失败时，调整失败导致使能失败，不备份
+TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_GetFailed)
+{
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+    MOCKER(rtGetOpExecuteTimeoutV2).stubs().will(returnValue(static_cast<rtError_t>(1)));
+    (void)rtSetOpExecuteTimeOutWithMs(300U);
+    DumpManager::Instance().opTimeoutModified_ = false;
+
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    EXPECT_EQ(ret, ADUMP_FAILED);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, false);
+
+    ret = DumpManager::Instance().UnSetDumpConfig();
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+// 调整时设置算子超时失败，使能失败，应保持未修改状态，不备份原值
+TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_SetFailed)
+{
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+    (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
+    DumpManager::Instance().opTimeoutModified_ = false;
+    DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
+    // 设置超时失败，Adjust 应在设置阶段提前返回
+    MOCKER(rtSetOpExecuteTimeOutWithMs).stubs().will(returnValue(static_cast<rtError_t>(1)));
+
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    EXPECT_EQ(ret, ADUMP_FAILED);
+    // 设置失败时不应标记已修改，也不应备份原值
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, false);
+    EXPECT_EQ(DumpManager::Instance().originOpExecuteTimeOut_, 0U);
+
+    ret = DumpManager::Instance().UnSetDumpConfig();
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+// 恢复时设置算子超时失败，应保持已修改状态，以便下次关闭时重试
+TEST_F(DumpManagerUtest, Test_RestoreOpExecuteTimeOut_SetFailed)
+{
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+    (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
+    DumpManager::Instance().opTimeoutModified_ = false;
+    DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
+
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, true);
+    EXPECT_EQ(DumpManager::Instance().originOpExecuteTimeOut_, 300U);
+
+    // 关闭时恢复超时失败，UnSetDumpConfig 应返回失败，并保持已修改状态以便下次关闭时重试
+    MOCKER(rtSetOpExecuteTimeOutWithMs).stubs().will(returnValue(static_cast<rtError_t>(1)));
+    ret = DumpManager::Instance().UnSetDumpConfig();
+    EXPECT_EQ(ret, ADUMP_FAILED);
+    EXPECT_EQ(DumpManager::Instance().opTimeoutModified_, true);
+    EXPECT_EQ(DumpManager::Instance().originOpExecuteTimeOut_, 300U);
 }
 
 TEST_F(DumpManagerUtest, Test_DumpOperatorV2_WithCapture_Success)
