@@ -117,16 +117,31 @@ void Program::ReleaseBinaryOnDestroy()
 
 void Program::ResetProgramAllocatorOnDestroy() const
 {
-    if (progId_ < Runtime::maxProgramNum_) {
-        RefObject<Program *> *const programItem = Runtime::Instance()->GetProgramAllocator()->GetDataToItem(progId_);
-        if (programItem != nullptr) {
-            Program *programInst = programItem->GetVal(false);
-            if (programInst != nullptr) {
-                programInst = nullptr;
-                programItem->ResetVal();
-            }
-        }
+    if (progId_ >= Runtime::maxProgramNum_) {
+        RT_LOG(RT_LOG_WARNING, "Skip program allocator reset on destroy, prog=%p, progId=%u, maxProgramNum=%u",
+            this, progId_, Runtime::maxProgramNum_);
+        return;
     }
+
+    RefObject<Program *> *const programItem = Runtime::Instance()->GetProgramAllocator()->GetDataToItem(progId_);
+    if (programItem == nullptr) {
+        return;
+    }
+
+    const uint64_t refCount = programItem->GetRef();
+    Program *programInst = programItem->GetVal(false);
+    if (programInst == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "Program allocator slot already empty on destroy, prog=%p, progId=%u, ref=%llu",
+            this, progId_, refCount);
+        return;
+    }
+
+    if (programInst->IsNewBinaryLoadFlow()) {
+        bool needReset = false;
+        (void)programItem->TryDecRef(needReset);
+    }
+    programInst = nullptr;
+    programItem->ResetVal();
 }
 
 void Program::CloseBinaryHandleOnDestroy()
