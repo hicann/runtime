@@ -2289,11 +2289,6 @@ rtError_t Runtime::StartAicpuSd(Device * const device) const
     }
     RT_LOG(RT_LOG_INFO, "TsdOpenAicpuSd success, userDeviceId=%u, devId=%u", userDeviceId, device->Id_());
     device->SetIsAiCpuSdStarted(true);
-    if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
-        error = device->SendTopicMsgVersionToAicpu();
-        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, aicpuSchSdLock->Unlock();, "send topic msg version to aicpu failed,"
-  	        "retCode=%#x, devId=%u.", static_cast<uint32_t>(error), device->Id_());
- 	}
     aicpuSchSdLock->Unlock();
 #endif
     return RT_ERROR_NONE;
