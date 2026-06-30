@@ -5304,30 +5304,24 @@ void Stream::GetCurrentRunningTaskInfo(uint16_t &taskId, tsTaskType_t &taskType,
     taskId = MAX_UINT16_NUM;
     taskTypeName = "UNKNOWN";
     taskType = TS_TASK_TYPE_RESERVED;
+    uint16_t sqHead = 0U;
+    (void)device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), sqId_, sqHead);
+    const uint32_t taskPos = static_cast<uint32_t>(sqHead);
 
-    uint32_t taskPos = 0U;
-    if (device_->IsStarsPlatform()) {
-        uint16_t sqHead = 0U;
-        (void)device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), sqId_, sqHead);
-        taskPos = static_cast<uint32_t>(sqHead);
+    if (IsSoftwareSqEnable() || IsAutoSplitSq() || !device_->IsDavidPlatform()) {
+        if (taskPos < posToTaskIdMapSize_) {
+            taskId = posToTaskIdMap_[taskPos];
+        }
     } else {
-        taskPos = taskHead_;
+        taskId = sqHead;
     }
 
-    if (taskPos < posToTaskIdMapSize_) {
-        taskId = posToTaskIdMap_[taskPos];
-    }
     if (taskId == MAX_UINT16_NUM) {
         return;
     }
 
     TaskInfo *taskInfo = nullptr;
-    TaskFactory *taskFactory = device_->GetTaskFactory();
-    if (taskFactory != nullptr) {
-        taskInfo = taskFactory->GetTask(streamId_, taskId);
-    }
-
-    if ((taskInfo == nullptr) && (taskResMang_ != nullptr)) {
+    if (taskResMang_ != nullptr) {
         taskInfo = taskResMang_->GetTaskInfo(taskId);
     }
 

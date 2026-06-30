@@ -354,7 +354,7 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_01)
     stream->posToTaskIdMap_ = new uint16_t[stream->posToTaskIdMapSize_];
     (void)memset_s(stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t),
                    0xFF, stream->posToTaskIdMapSize_ * sizeof(uint16_t));
-    MOCKER_CPP(&Device::IsStarsPlatform).stubs().will(returnValue(true));
+    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(true));
     uint16_t taskId = 0U;
     tsTaskType_t taskType = TS_TASK_TYPE_RESERVED;
     const char_t *taskTypeName = nullptr;
@@ -382,7 +382,7 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_02)
     stream->taskHead_ = 0U;
     (void)memset_s(stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t),
                    0xFF, stream->posToTaskIdMapSize_ * sizeof(uint16_t));
-    MOCKER_CPP(&Device::IsStarsPlatform).stubs().will(returnValue(false));
+    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(true));
     uint16_t taskId = 0U;
     tsTaskType_t taskType = TS_TASK_TYPE_RESERVED;
     const char_t *taskTypeName = nullptr;
@@ -410,16 +410,16 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_03)
     stream->taskHead_ = 0U;
     (void)memset_s(stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t),
                    0U, stream->posToTaskIdMapSize_ * sizeof(uint16_t));
-    MOCKER_CPP(&Device::IsStarsPlatform).stubs().will(returnValue(false));
+    MOCKER_CPP(&Device::IsDavidPlatform).stubs().will(returnValue(true));
+    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(false));
+    MOCKER_CPP(&Stream::IsAutoSplitSq).stubs().will(returnValue(false));
     uint16_t taskId = 0U;
     tsTaskType_t taskType = TS_TASK_TYPE_RESERVED;
     const char_t *taskTypeName = nullptr;
-    TaskInfo mockTaskInfo = {};
+    tagTaskInfoStru mockTaskInfo = {};
     mockTaskInfo.typeName = "KERNEL_AICORE";
     mockTaskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
-    TaskFactory *taskFactory = device->GetTaskFactory();
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&mockTaskInfo));
-    MOCKER_CPP_VIRTUAL(device, &Device::GetTaskFactory).stubs().will(returnValue(taskFactory));
+    MOCKER_CPP_VIRTUAL(stream->taskResMang_, &TaskResManage::GetTaskInfo).stubs().will(returnValue(&mockTaskInfo));
 
     stream->GetCurrentRunningTaskInfo(taskId, taskType, taskTypeName);
     EXPECT_EQ(taskId, 0U);
