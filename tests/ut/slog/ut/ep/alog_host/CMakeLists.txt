@@ -48,6 +48,7 @@ set(libAlogSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_buffer_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_host_log_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_file_mgr_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_coverage_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/ascend_hal_stub.c
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/plog_stub.cc
     ${UT_SOURCE_PATH}/ep/stub/system_api_stub.c

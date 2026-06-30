@@ -15,6 +15,7 @@ set(stackcoreSrc
     ${TOP_DIR}/tests/ut/slog/ut/slog/testcase/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/stackcore_excp_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/stackcore_func_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/stackcore_coverage_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/stackcore_stub.c
 )
 

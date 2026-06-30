@@ -100,6 +100,7 @@ set(testSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/pm/testcase/slogd_pm_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/file_mgr_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/file_mgr_excp_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/log_to_file_coverage_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/log_path/testcase/slogd_log_path_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/session_mgr/testcase/slogd_session_mgr_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/msn_report/testcase/slogd_msn_report_func_utest.cc
@@ -108,6 +109,7 @@ set(testSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/slogd/testcase/slogd_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/event_log/testcase/event_log_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/sys_log/testcase/sys_log_func_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/slogd/testcase/slogd_coverage_utest.cc
 )
 
 set(libSlogdInc

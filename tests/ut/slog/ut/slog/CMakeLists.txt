@@ -108,6 +108,7 @@ set(slogSrc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_log_session_manage_unittest.cc
     # # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_group_ut.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_callback_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/dlog_coverage_utest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_buffer_utest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_server_ut.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_ut.cc

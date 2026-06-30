@@ -16,9 +16,22 @@
 #include "slogd_utest_stub.h"
 #include "dlog_console.h"
 #include "adx_service_config.h"
+#include <sys/socket.h>
 
 #define FD_STDOUT 100
-#define HDC_RECV_MAX_LEN 524288 // 512KB buffer space
+#define HDC_RECV_MAX_LEN 524288 // 512KB buffer
+
+/* controllable hooks used by dlog coverage tests */
+static int32_t g_toolErrno = 0;
+static int32_t g_toolWriteFail = 0;
+static int32_t g_toolSocketFail = 0;
+static int32_t g_toolConnectFail = 0;
+static int32_t g_toolCreateThread = 0;
+void SetToolErrno(int32_t err) { g_toolErrno = err; }
+void SetToolWriteFail(int32_t fail) { g_toolWriteFail = fail; }
+void SetToolSocketFail(int32_t fail) { g_toolSocketFail = fail; }
+void SetToolConnectFail(int32_t fail) { g_toolConnectFail = fail; }
+void SetToolCreateThread(int32_t en) { g_toolCreateThread = en; }
 
 int ToolSetThreadName(const char *threadName)
 {
@@ -32,7 +45,7 @@ LogRt InitWriteZip(const char* fileName, int* fd)
 
 INT32 ToolGetErrorCode()
 {
-    return 0;
+    return g_toolErrno;
 }
 
 INT32 ToolOpen(const CHAR *pathName, INT32 flags)
@@ -58,6 +71,10 @@ INT32 ToolWrite(INT32 fd, const VOID *buf, UINT32 bufLen)
     if (fd == FD_STDOUT) {
         printf("%s", buf);
     }
+    if (g_toolWriteFail != 0) {
+        return -1;
+    }
+    return (INT32)bufLen;
 }
 
 INT32 ToolClose(INT32 fd)
@@ -67,7 +84,10 @@ INT32 ToolClose(INT32 fd)
 
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol)
 {
-    return 0;
+    if (g_toolSocketFail != 0) {
+        return SYS_ERROR;
+    }
+    return socket(sockFamily, type, protocol);
 }
 
 INT32 ToolBind(toolSockHandle sockfd, const ToolSockAddr *addr, toolSocklen addrlen)
@@ -164,6 +184,12 @@ INT32 ToolRead (INT32 fd, VOID* mmBuf, UINT32 mmCount)
 
 INT32 ToolConnect(toolSockHandle sockfd, const ToolSockAddr* addr, toolSocklen addrlen)
 {
+    (void)sockfd;
+    (void)addr;
+    (void)addrlen;
+    if (g_toolConnectFail != 0) {
+        return SYS_ERROR;
+    }
     return 0;
 }
 
@@ -184,6 +210,11 @@ INT32 ToolRename(const CHAR *oldName, const CHAR *newName)
 
 INT32 ToolCreateTaskWithDetach(ToolThread  *pstThreadHandle, const ToolUserBlock *pstFuncBlock)
 {
+    if (g_toolCreateThread != 0) {
+        if (pthread_create(pstThreadHandle, NULL, pstFuncBlock->procFunc, pstFuncBlock->pulArg) == 0) {
+            (void)pthread_detach(*pstThreadHandle);
+        }
+    }
     return 0;
 }
 

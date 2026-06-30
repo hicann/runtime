@@ -13,12 +13,15 @@ set(ADX_SOURCE_PATH ${TOP_DIR}/src/dfx/adump)
 ###################################################################
 set(libCommonSrc
     ${LOG_SOURCE_PATH}/utils/log_system_api.c
+    ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/test/log-sys-package-ut.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/log_ring_buffer_utest.cc
 )
 
 set(libCommonInc
     ${LOG_SOURCE_PATH}/utils
+    ${LOG_SOURCE_PATH}/utils/log_buffer
     ${LOG_SOURCE_PATH}/shared
     ${LIBC_SEC_HEADER}
 )
