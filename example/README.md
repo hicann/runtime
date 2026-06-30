@@ -13,6 +13,10 @@ example目录下提供了一系列Runtime接口样例，包括Device管理、Str
 - [5_performance](5_performance/README.md)：性能分析与精度调试样例。
 - [6_scenarios](6_scenarios/README.md)：场景化样例，面向训练流水线、多设备推理和容错执行等典型场景。
 
+## 产品支持表说明
+
+各样例 README 中的产品支持表仅列出当前样例已完成验证或已明确声明支持情况的产品。Ascend 950PR/Ascend 950DT 为新增产品，部分历史样例尚未完成该产品验证；未在表格中列出的产品不代表不支持。若某产品明确不支持，样例 README 会在表格中以 `×` 标识，并根据需要补充说明。
+
 ## 环境准备
 编译运行样例前，需获取固件、驱动及CANN软件包并安装，详细步骤请参见[《CANN软件安装指南》](https://www.hiascend.com/cann/download)。
 
@@ -45,3 +49,7 @@ bash run.sh
 - 样例代码用于学习和接口理解。
 - 为了突出核心流程，部分示例会简化工程化处理。
 - 用于生产环境前，请补充完整的错误处理、资源管理和边界检查。
+
+## Device 复位接口使用约定
+
+单机单进程样例通常使用 `aclrtResetDeviceForce` 清理当前样例占用的 Device 资源；单机多进程 IPC 样例使用 `aclrtResetDevice` 释放当前进程的 Device 资源，避免强制复位影响同机其他进程。

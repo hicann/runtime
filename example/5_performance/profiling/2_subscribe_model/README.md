@@ -43,6 +43,15 @@ bash run.sh
 
 请移步[LINK](https://gitcode.com/cann/ge)查看模型相关流程
 
+## 示例输出
+
+```text
+[INFO]  -------- Start --------
+[INFO]  Running ......
+[INFO]  Stopped ......
+[INFO]  -------- End --------
+```
+
 ## 已知issue
 
    暂无

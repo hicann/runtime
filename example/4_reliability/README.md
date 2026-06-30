@@ -4,7 +4,6 @@
 
 ## 样例列表
 
-- [snapshot](../../docs/design/features/snapshot.md)：运行时快照回调、备份和恢复流程。
 - [overflow_detection](./overflow_detection/README.md)：流级溢出检测开关、状态查询和重置。
 
 ## 相关主题

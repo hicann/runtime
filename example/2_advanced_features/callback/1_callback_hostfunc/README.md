@@ -21,14 +21,9 @@
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# ${ascend_name} 替换为昇腾AI处理器的型号，可通过 npu-smi info 查看 Name 字段并去掉空格获得，例如 ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
 
 # 编译运行
 bash run.sh
@@ -56,6 +51,14 @@ bash run.sh
     - 调用aclrtFree接口释放Device上的内存。
 - 数据传输
     - 调用aclrtMemcpy接口通过内存复制的方式实现数据传输。
+
+## 示例输出
+
+```text
+[INFO]  Hostfunc callback!!!
+[INFO]  After assigning the task through the created stream, the current result is: ...
+[INFO]  Resource cleanup completed.
+```
 
 ## 已知issue
 

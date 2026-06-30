@@ -20,6 +20,15 @@ int32_t main(int argc, const char *argv[])
 {
     INFO_LOG("Start to run device_P2P sample.");
     CHECK_ERROR(aclInit(NULL));
+
+    uint32_t deviceCount = 0;
+    CHECK_ERROR(aclrtGetDeviceCount(&deviceCount));
+    if (deviceCount < 2) {
+        INFO_LOG("[SKIP] Need at least 2 visible devices for P2P, but got %u.", deviceCount);
+        CHECK_ERROR(aclFinalize());
+        return 0;
+    }
+
     CHECK_ERROR(aclrtSetDevice(0));
 
     int32_t canAccessPeer = 0;

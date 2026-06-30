@@ -27,14 +27,9 @@ Run steps:
 ```bash
 # Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# Replace ${ascend_name} with Ascend AI processor model, obtained by checking Name field using npu-smi info and removing spaces, for example ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# Some samples involve calling AscendC operators, need to configure AscendC compiler ascendc.cmake path, for example ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# Find ascendc_kernel_cmake under CANN package installation path, for example find ./ -name ascendc_kernel_cmake, and replace ${cmake_path} with ascendc_kernel_cmake directory path
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
 
 # Build and run
 bash run.sh
@@ -71,6 +66,20 @@ Key features and interfaces in this sample:
 - Data Transfer
     - Call aclrtMemcpy interface to implement data transfer by memory copy.
     - Call aclrtMemcpyAsync interface to perform asynchronous memory copy.
+
+## Sample Output
+
+```text
+[INFO]  After executing, print data1.
+[INFO]  The vector data is: 3.4000  3.4000  3.4000  3.4000  3.4000  3.4000  3.4000  3.4000
+[INFO]  After executing, print data2.
+[INFO]  The vector data is: 0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+[INFO]  After executing, print data3.
+[INFO]  The vector data is: 5.4000  5.4000  5.4000  5.4000  5.4000  5.4000  5.4000  5.4000
+...
+[INFO]  After second execution, print data2.
+[INFO]  The vector data is: 4.4000  4.4000  4.4000  4.4000  4.4000  4.4000  4.4000  4.4000
+```
 
 ## Known Issues
 

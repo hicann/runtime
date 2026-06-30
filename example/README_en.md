@@ -12,6 +12,10 @@ The example directory provides a series of Runtime interface samples, including 
 - [5_performance](5_performance/README_en.md): Performance analysis and precision debugging samples.
 - [6_scenarios](6_scenarios/README_en.md): Scenario-based samples, for typical scenarios such as training pipelines, multi-device inference, and fault-tolerant execution.
 
+## Product Support Table Notes
+
+The product support table in each sample README lists only products that have been verified for the sample or whose support status has been explicitly declared. Ascend 950PR/Ascend 950DT are newly added products, and some historical samples have not yet completed verification on these products. A product not listed in a table does not mean that it is unsupported. If a product is explicitly unsupported, the sample README marks it with `×` in the table and adds notes when needed.
+
 ## Environment Preparation
 
 Before compiling and running samples, obtain and install the firmware, driver, and CANN software packages. For detailed steps, refer to the [CANN Software Installation Guide](https://www.hiascend.com/cann/download).
@@ -46,3 +50,7 @@ All samples demonstrate typical usage patterns of CANN Runtime API.
 - Sample code is for learning and interface understanding.
 - To highlight core processes, some examples simplify engineering handling.
 - Before using in production environments, please add complete error handling, resource management, and boundary checking.
+
+## Device Reset API Usage Convention
+
+Single-process samples on one host usually use `aclrtResetDeviceForce` to clean up Device resources occupied by the current sample. Multi-process IPC samples on one host use `aclrtResetDevice` to release Device resources owned by the current process, avoiding forced reset effects on other processes on the same host.

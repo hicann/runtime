@@ -53,6 +53,16 @@ In this sample, the key functions and interfaces are as follows:
     - Call `aclrtMalloc` and `aclrtFree` interfaces to manage the status buffer.
     - Call `aclrtMemcpy` interface to synchronize the status data to the Host side.
 
+## Sample Output
+
+```text
+[INFO]  Device saturation mode switched from ACL_RT_OVERFLOW_MODE_INFNAN to ACL_RT_OVERFLOW_MODE_SATURATION.
+[INFO]  Overflow switch=1
+[INFO]  Overflow status before reset=0
+[INFO]  Overflow status after reset=0
+[INFO]  Overflow detection sample finished successfully.
+```
+
 ## Known Issues
 
 - `aclrtSetStreamOverflowSwitch` can be used in both `ACL_RT_OVERFLOW_MODE_SATURATION` and `ACL_RT_OVERFLOW_MODE_INFNAN` modes. If the current product does not support this capability, the related interfaces may return `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`. The sample logs a warning and exits after completing resource cleanup.

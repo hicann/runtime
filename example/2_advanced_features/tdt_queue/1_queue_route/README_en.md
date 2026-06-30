@@ -64,6 +64,14 @@ Key features and interfaces in this sample:
     - Call acltdtDestroyQueueRouteList, acltdtDestroyQueueRouteQueryInfo, and acltdtDestroyQueueRoute interfaces to release route-related objects.
     - Call acltdtDestroyQueue interface to destroy source Queue and destination Queue.
 
+## Sample Output
+
+```text
+[INFO]  Queried route count: 1
+[INFO]  Route: src=... dst=... status=...
+[INFO]  Run the queue_route sample successfully.
+```
+
 ## Known Issues
 
 None.

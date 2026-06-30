@@ -76,7 +76,7 @@ The key functionality points and their key interfaces involved in this sample ar
 
 ```text
 [INFO]  Use stream synchronize.
-[INFO]  Applied resource successfully, beging assigning task.
+[INFO]  Applied resource successfully, begin assigning task.
 [INFO]  Begin a long task, num += 1.
 [INFO]  Stream synchronize.
 [INFO]  Begin a short task, num *= 2.

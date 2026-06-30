@@ -20,14 +20,9 @@ Run steps:
 ```bash
 # Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# Replace ${ascend_name} with Ascend AI processor model, obtained by checking Name field using npu-smi info and removing spaces, for example ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# Some samples involve calling AscendC operators, need to configure AscendC compiler ascendc.cmake path, for example ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# Find ascendc_kernel_cmake under CANN package installation path, for example find ./ -name ascendc_kernel_cmake, and replace ${cmake_path} with ascendc_kernel_cmake directory path
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
 
 # Build and run
 bash run.sh
@@ -60,6 +55,22 @@ Key features and interfaces in this sample:
   - `aclrtMalloc` / `aclrtFree`
   - `aclrtMemcpy`
   - `aclrtSynchronizeStream`
+
+## Sample Output
+
+```text
+[INFO]  Begin a easy task and a error task, the error task will callback exception.
+[INFO]  The last task id is: ...
+[INFO]  Exception occurred, callback function.
+[INFO]  The error task id is ...
+[INFO]  The error stream id is ...
+[INFO]  The error thread id is ...
+[INFO]  The error device id is ...
+[INFO]  The error code id is ...
+[ERROR]  aclrtSynchronizeStream(stream_) returned error code ...
+[INFO]  Thread exit
+[INFO]  Run the callback_exception sample successfully.
+```
 
 ## Known Issues
 

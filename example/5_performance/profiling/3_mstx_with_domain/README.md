@@ -1,41 +1,80 @@
-# mstx样例
+# 3_mstx_with_domain
 
-## 简介
+## 描述
 
-本目录包含有mstx各种接口的使用用例，各个文件夹对应不同用例，供用户理解使用mstx接口。目录以及用例具体说明如下：
+本样例展示 mstx 接口在默认 domain 与自定义 domain 中打点的使用方式，并演示通过 msprof 的 `--mstx-domain-include` 和 `--mstx-domain-exclude` 参数控制采集范围。样例源码为当前目录下的 `mstx_with_domain.cpp`，由 `run.sh` 完成编译并执行。
 
-| 样例                                   | 说明                                                | 支持产品型号                                                  |
-| -------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
-| `mstx_with_domain` | 展示mstx接口在默认domain与自定义domain中打点的使用方式 | Atlas A3 训练系列产品/Atlas A3 推理系列产品<br/>Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件<br/>Atlas 200I/500 A2 推理产品<br/>Atlas 推理系列产品<br/>Atlas 训练系列产品 |
+## 产品支持情况
 
-## 使用前准备
+本样例支持以下产品：
 
-本用例依赖于ascend-toolkit，使用前请确认已安装。
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件 | √ |
+| Atlas 200I/500 A2 推理产品 | √ |
+| Atlas 推理系列产品 | √ |
+| Atlas 训练系列产品 | √ |
 
-## 操作指导
+## 编译运行
 
-1. 请在使用前执行source \${install_path}/set_env.sh以保证用例正常执行，\${install_path}为CANN的安装路径，以root安装为例，默认路径为/usr/local/Ascend/ascend-toolkit。
+1.下载样例代码至安装CANN软件的环境，切换到样例目录。
+```bash
+cd ${git_clone_path}/example/5_performance/profiling/3_mstx_with_domain
+```
 
-2. 切换目录至用例所在位置，例如/usr/local/Ascend/ascend-toolkit/8.x.x/tools/mstx/samples。
+2.设置环境变量。
+```bash
+# ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
+source ${install_root}/cann/set_env.sh
+```
 
-3. 执行用例目录下的sample_run.sh脚本。如下三种场景：
+3.执行以下命令运行样例。
+```bash
+bash run.sh
+```
 
-   - 正常执行用例脚本sample_run.sh的情况下，使用msprof配置--msproftx=on采集所有的打点数据（包括默认domain和用户自定义domain范围内的数据），命令如下：
+## msprof采集
 
-     ```bash
-     msprof --msproftx=on bash sample_run.sh
-     ```
+如需使用 msprof 采集 mstx 打点数据，可按如下场景执行：
 
-   - 可以通过增加配置--mstx-domain-include开关来控制想要采集的domain的打点数据，如只想采集"default"域的打点数据，可以配置命令如下：
+```bash
+# 采集所有打点数据，包括默认 domain 和自定义 domain
+msprof --msproftx=on bash run.sh
 
-     ```bash
-     msprof --msproftx=on --mstx-domain-include="default" bash sample_run.sh
-     ```
+# 只采集 default domain 的打点数据
+msprof --msproftx=on --mstx-domain-include="default" bash run.sh
 
-   - 可以通过增加配置--mstx-domain-exclude开关来控制不想要采集的domain的打点数据，如想采集除"default"域之外的打点数据，可以配置命令如下：
+# 采集 default domain 之外的打点数据
+msprof --msproftx=on --mstx-domain-exclude="default" bash run.sh
+```
 
-     ```bash
-     msprof --msproftx=on --mstx-domain-exclude="default" bash sample_run.sh
-     ```
+`--mstx-domain-include` 与 `--mstx-domain-exclude` 参数互斥，不可同时配置。如需指定多个 domain，使用逗号隔开。
 
-   --mstx-domain-include与--mstx-domain-exclude参数互斥，不可同时配置。如需指定多个domain，使用逗号隔开。
+## CANN RUNTIME API
+
+在本样例中，涉及的关键功能点及其关键接口如下所示：
+
+- 默认 domain 打点
+    - 调用 `mstxMarkA` 接口记录默认 domain 的瞬时事件。
+    - 调用 `mstxRangeStartA` 和 `mstxRangeEnd` 接口记录默认 domain 的范围事件。
+- 自定义 domain 管理与打点
+    - 调用 `mstxDomainCreateA` 接口创建自定义 domain。
+    - 调用 `mstxDomainMarkA` 接口记录自定义 domain 的瞬时事件。
+    - 调用 `mstxDomainRangeStartA` 和 `mstxDomainRangeEnd` 接口记录自定义 domain 的范围事件。
+    - 调用 `mstxDomainDestroy` 接口销毁自定义 domain。
+
+## 示例输出
+
+```text
+[INFO]: AscendHome is set to ...
+...
+result[0] is: 1.200000
+result[1] is: 2.200000
+result[2] is: 3.200000
+result[3] is: 5.400000
+result[4] is: 6.400000
+result[5] is: 7.400000
+result[6] is: 9.600000
+result[7] is: 10.600000
+```

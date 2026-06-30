@@ -21,14 +21,9 @@
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# ${ascend_name} 替换为昇腾AI处理器的型号，可通过 npu-smi info 查看 Name 字段并去掉空格获得，例如 ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
 
 # 编译运行
 bash run.sh
@@ -60,6 +55,22 @@ bash run.sh
 
 - `acldumpGetPath`：查询当前Dump输出路径，便于确认Dump结果的落盘目录。
 
+
+## 示例输出
+
+```text
+[INFO]  The dump data path is /tmp.
+[INFO]  acldumpGetPath returned dump path: ...
+[INFO]  result[0] is: 1.000000
+[INFO]  result[1] is: 2.000000
+[INFO]  result[2] is: 3.000000
+[INFO]  result[3] is: 5.000000
+[INFO]  result[4] is: 6.000000
+[INFO]  result[5] is: 7.000000
+[INFO]  result[6] is: 10.000000
+[INFO]  result[7] is: 11.000000
+[INFO]  Run the device_normal sample successfully. please make sure dump data has been in path: /tmp
+```
 
 ## 已知issue
 

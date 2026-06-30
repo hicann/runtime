@@ -19,7 +19,21 @@
 
 环境安装详情以及通用运行步骤请见 example 目录下的 [README](../../../README.md)。
 
+运行步骤如下：
+
+```bash
+# ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
+source ${install_root}/cann/set_env.sh
+
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
+
+# 编译运行
+bash run.sh
+```
+
 本样例至少需要 2 个可用 Device。`run.sh` 中 `CONSUMER_NUM` 默认配置为 1，表示生产者使用 Device 0，消费者使用 Device 1；如需启动更多消费者，请根据实际可用 Device 数量调整 `CONSUMER_NUM`。
+启动进程前，`run.sh` 会调用 `aclrtGetDeviceCount` 检查可用 Device 数量；若设备数不足，将输出 `[SKIP]` 提示并以退出码 0 结束，便于自动化框架识别为环境不满足而非用例失败。
 
 ## CANN RUNTIME API
 
@@ -31,6 +45,8 @@
 - Device 管理
     - 调用 `aclrtSetDevice` 接口指定用于运算的 Device。
     - 调用 `aclrtResetDevice` 接口复位当前运算的 Device，回收 Device 上的资源。
+
+    说明：本样例为单机多进程 IPC 场景，进程退出时使用 `aclrtResetDevice` 释放当前进程的 Device 资源，避免 `aclrtResetDeviceForce` 强制复位影响同机其他进程。
 - Stream 管理
     - 调用 `aclrtCreateStream` 接口创建 Stream。
     - 调用 `aclrtSynchronizeStream` 接口阻塞等待 Stream 上的任务完成。

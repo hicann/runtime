@@ -39,6 +39,18 @@ bash run.sh
     - 调用 `aclprofStart` 接口开启 Profiling 数据采集。
     - 调用 `aclprofStop` 接口停止 Profiling 数据采集。
 
+## 示例输出
+
+```text
+[INFO]  -------- Start --------
+[INFO]  profiling init done
+[INFO]  profiling set config done
+[INFO]  profiling start
+[INFO]  model running ....
+[INFO]  profiling stop and finalize done
+[INFO]  -------- End --------
+```
+
 ## 已知issue
 
    暂无

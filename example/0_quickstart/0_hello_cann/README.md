@@ -2,7 +2,7 @@
 
 ## 描述
 
-本样例是使用Runtime接口的快速入门示示例。以 CANN 神经网络算子库提供的 `aclnnAdd` 向量加法算子为入口，展示一个最小计算闭环：完成初始化配置，指定 Device 并创建 Stream，准备输入/输出 Tensor 和输出 DataBuffer，查询并申请 workspace，执行 `out = self + alpha * other`，同步获取结果并释放资源。
+本样例是使用Runtime接口的快速入门示例。以 CANN 神经网络算子库提供的 `aclnnAdd` 向量加法算子为入口，展示一个最小计算闭环：完成初始化配置，指定 Device 并创建 Stream，准备输入/输出 Tensor 和输出 DataBuffer，查询并申请 workspace，执行 `out = self + alpha * other`，同步获取结果并释放资源。
 
 ## 产品支持情况
 

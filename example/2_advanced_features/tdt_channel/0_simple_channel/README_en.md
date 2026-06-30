@@ -59,6 +59,24 @@ Key features and interfaces in this sample:
     - Call acltdtStopChannel, acltdtCleanChannel, and acltdtDestroyChannel interfaces to stop, cleanup, and destroy Channel.
     - Call acltdtDestroyDataItem and acltdtDestroyDataset interfaces to release Dataset resources.
 
+## Sample Output
+
+```text
+[INFO]  Dataset size: 1
+[INFO]  Tensor type=..., data type=..., bytes=16, dims=(2, 2), firstValue=1.000
+[INFO]  Channel size after send: 1
+[INFO]  Dataset size: 1
+[INFO]  Tensor type=..., data type=..., bytes=16, dims=(2, 2), firstValue=1.000
+[INFO]  Channel size after receive: 0
+[INFO]  Run the simple_channel sample successfully.
+```
+
+If the current runtime environment does not enable queue-backed TDT Channel capability, the sample may print the following warning and exit normally:
+
+```text
+[WARN]  acltdtCreateChannelWithCapacity returned nullptr: this sample needs a queue-backed TDT channel so it can send and receive within one host process
+```
+
 ## Known Issues
 
 None.

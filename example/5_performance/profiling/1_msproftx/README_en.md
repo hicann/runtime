@@ -41,6 +41,19 @@ In this sample, the key functional points and their key interfaces are as follow
     - Call the `aclprofPush` and `aclprofPop` interfaces to record nested ranges.
     - Call the `aclprofRangeStart` and `aclprofRangeStop` interfaces to record non-nested ranges.
 
+## Sample Output
+
+```text
+[INFO]  -------- Start --------
+[INFO]  Preprocess range start
+[INFO]  Preprocess range stop
+[INFO]  Nested operator dispatch range start
+[INFO]  Nested operator dispatch range stop
+[INFO]  Model execute start
+[INFO]  Model execute end
+[INFO]  -------- End --------
+```
+
 ## Known Issues
 
 None.

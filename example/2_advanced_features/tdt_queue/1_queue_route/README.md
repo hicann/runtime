@@ -64,6 +64,14 @@ bash run.sh
     - 调用 acltdtDestroyQueueRouteList、acltdtDestroyQueueRouteQueryInfo 和 acltdtDestroyQueueRoute 接口释放路由相关对象。
     - 调用 acltdtDestroyQueue 接口销毁源 Queue 和目的 Queue。
 
+## 示例输出
+
+```text
+[INFO]  Queried route count: 1
+[INFO]  Route: src=... dst=... status=...
+[INFO]  Run the queue_route sample successfully.
+```
+
 ## 已知 issue
 
 暂无。

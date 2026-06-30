@@ -48,6 +48,17 @@ In this sample, the key functional points and their key interfaces are as follow
     - Call `aclrtAllocatorRegister` and `aclrtAllocatorUnregister` interfaces to complete registration and deregistration of custom allocators.
     - Call `aclrtAllocatorGetByStream` interface to query the currently effective Allocator configuration by Stream.
 
+## Sample Output
+
+```text
+[INFO]  CustomAlloc size=256
+[INFO]  CustomAllocAdvise size=128
+[INFO]  CustomAlloc size=128
+[INFO]  CustomFree invoked
+[INFO]  CustomFree invoked
+[INFO]  Allocator desc queried: descOut=..., allocCount=2, freeCount=2
+```
+
 ## Known Issues
 
 None.

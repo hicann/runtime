@@ -39,6 +39,18 @@ In this sample, the key functional points and their key interfaces are as follow
     - Call the `aclprofStart` interface to start Profiling data collection.
     - Call the `aclprofStop` interface to stop Profiling data collection.
 
+## Sample Output
+
+```text
+[INFO]  -------- Start --------
+[INFO]  profiling init done
+[INFO]  profiling set config done
+[INFO]  profiling start
+[INFO]  model running ....
+[INFO]  profiling stop and finalize done
+[INFO]  -------- End --------
+```
+
 ## Known Issues
 
    None

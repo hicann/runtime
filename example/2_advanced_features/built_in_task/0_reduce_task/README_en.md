@@ -70,6 +70,16 @@ aclError aclrtReduceAsync(
 ACL_RT_MEMCPY_SDMA_AUTOMATIC_SUM  // Automatic sum (prefix sum)
 ```
 
+## Sample Output
+
+```text
+Reduce SUM result[0] = 2.000000
+Reduce SUM result[1] = 4.000000
+Reduce SUM result[2] = 6.000000
+Reduce SUM result[3] = 8.000000
+Sample Run Successfully.
+```
+
 ## Known Issues
   
   None

@@ -19,7 +19,21 @@ Through this approach, one producer can synchronize multiple consumers running o
 
 For environment installation details and general running steps, see [README](../../../README_en.md) in the example directory.
 
+Run steps:
+
+```bash
+# Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
+source ${install_root}/cann/set_env.sh
+
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
+
+# Build and run
+bash run.sh
+```
+
 This sample requires at least 2 available Devices. `CONSUMER_NUM` in `run.sh` defaults to 1, meaning producer uses Device 0 and consumer uses Device 1; to start more consumers, adjust `CONSUMER_NUM` based on actual available Device count.
+Before launching processes, `run.sh` calls `aclrtGetDeviceCount` to check the available Device count. If there are not enough Devices, it prints a `[SKIP]` message and exits with code 0 so automation can treat the result as an unmet environment requirement instead of a sample failure.
 
 ## CANN RUNTIME API
 
@@ -31,6 +45,8 @@ Key features and interfaces in this sample:
 - Device Management
     - Call `aclrtSetDevice` interface to specify Device for computation.
     - Call `aclrtResetDevice` interface to reset current computation Device and reclaim Device resources.
+
+    Note: This sample is a multi-process IPC scenario on one host. Each process calls `aclrtResetDevice` when it exits to release its own Device resources, avoiding the forced reset effect of `aclrtResetDeviceForce` on other processes on the same host.
 - Stream Management
     - Call `aclrtCreateStream` interface to create Stream.
     - Call `aclrtSynchronizeStream` interface to block waiting for Stream task completion.

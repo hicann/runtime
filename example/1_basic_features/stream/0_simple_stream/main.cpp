@@ -38,7 +38,7 @@ int main()
     // 默认流下发任务,默认流随着context创建而创建，给函数传入空即使用默认流
     CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
-    INFO_LOG("Applied resource successfully, beging assigning task.");
+    INFO_LOG("Applied resource successfully, begin assigning task.");
     EasyOP(blockDim, nullptr, numDevice);
     CHECK_ERROR(aclrtSynchronizeStream(nullptr));
     CHECK_ERROR(aclrtMemcpy(&num, size, numDevice, size, ACL_MEMCPY_DEVICE_TO_HOST));

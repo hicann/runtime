@@ -21,14 +21,9 @@ Run steps:
 ```bash
 # Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# Replace ${ascend_name} with Ascend AI processor model, obtained by checking Name field using npu-smi info and removing spaces, for example ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# Some samples involve calling AscendC operators, need to configure AscendC compiler ascendc.cmake path, for example ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# Find ascendc_kernel_cmake under CANN package installation path, for example find ./ -name ascendc_kernel_cmake, and replace ${cmake_path} with ascendc_kernel_cmake directory path
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
 
 # Build and run
 bash run.sh
@@ -56,6 +51,14 @@ Key features and interfaces in this sample:
     - Call aclrtFree interface to release Device memory.
 - Data Transfer
     - Call aclrtMemcpy interface to implement data transfer by memory copy.
+
+## Sample Output
+
+```text
+[INFO]  Hostfunc callback!!!
+[INFO]  After assigning the task through the created stream, the current result is: ...
+[INFO]  Resource cleanup completed.
+```
 
 ## Known Issues
 

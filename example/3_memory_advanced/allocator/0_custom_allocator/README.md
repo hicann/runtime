@@ -48,6 +48,17 @@ bash run.sh
     - 调用 `aclrtAllocatorRegister` 和 `aclrtAllocatorUnregister` 接口完成自定义分配器的注册与注销。
     - 调用 `aclrtAllocatorGetByStream` 接口按 Stream 查询当前生效的 Allocator 配置。
 
+## 示例输出
+
+```text
+[INFO]  CustomAlloc size=256
+[INFO]  CustomAllocAdvise size=128
+[INFO]  CustomAlloc size=128
+[INFO]  CustomFree invoked
+[INFO]  CustomFree invoked
+[INFO]  Allocator desc queried: descOut=..., allocCount=2, freeCount=2
+```
+
 ## 已知 issue
 
 暂无。

@@ -20,6 +20,19 @@ This sample uses binary file to pass event handle, demonstrating core IPC event 
 This sample launches `proc_a` and `proc_b` processes simultaneously by `run.sh`, and exchanges IPC Event handle through temporary file.
 For environment installation details and general running steps, see [README](../../../README_en.md) in the example directory.
 
+Run steps:
+
+```bash
+# Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
+source ${install_root}/cann/set_env.sh
+
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
+
+# Build and run
+bash run.sh
+```
+
 ## CANN RUNTIME API
 
 Key features and interfaces in this sample:
@@ -30,6 +43,8 @@ Key features and interfaces in this sample:
 - Device Management
     - Call `aclrtSetDevice` interface to specify Device for computation.
     - Call `aclrtResetDevice` interface to reset Device.
+
+    Note: This sample is a multi-process IPC scenario on one host. Each process calls `aclrtResetDevice` when it exits to release its own Device resources, avoiding the forced reset effect of `aclrtResetDeviceForce` on other processes on the same host.
 - Stream Management
     - Call `aclrtCreateStream` interface to create Stream.
     - Call `aclrtSynchronizeStream` interface to block waiting for Stream task completion.

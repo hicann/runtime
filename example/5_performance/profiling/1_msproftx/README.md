@@ -41,6 +41,19 @@ bash run.sh
     - 调用 `aclprofPush` 和 `aclprofPop` 接口记录嵌套范围。
     - 调用 `aclprofRangeStart` 和 `aclprofRangeStop` 接口记录非嵌套范围。
 
+## 示例输出
+
+```text
+[INFO]  -------- Start --------
+[INFO]  Preprocess range start
+[INFO]  Preprocess range stop
+[INFO]  Nested operator dispatch range start
+[INFO]  Nested operator dispatch range stop
+[INFO]  Model execute start
+[INFO]  Model execute end
+[INFO]  -------- End --------
+```
+
 ## 已知issue
 
 暂无。

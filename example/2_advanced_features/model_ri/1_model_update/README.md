@@ -21,7 +21,9 @@
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
+
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
 
 # 编译运行
 bash run.sh
@@ -57,6 +59,16 @@ bash run.sh
 - 数据传输
     - 调用aclrtMemcpy接口通过内存复制的方式实现数据传输。
     - 调用aclrtMemcpyAsync接口进行异步的内存复制。
+
+## 示例输出
+
+```text
+[INFO]  Execute model, loop count: 1.
+[INFO]  The vector data is: 5.4000  6.4000  7.4000  8.4000  9.4000  10.4000  11.4000  12.4000
+[INFO]  Execute model, loop count: 2.
+[INFO]  Update alpha value of aclnnAdd
+[INFO]  The vector data is: 7.6000  8.6000  9.6000  10.6000  11.6000  12.6000  13.6000  14.6000
+```
 
 ## 已知issue
 

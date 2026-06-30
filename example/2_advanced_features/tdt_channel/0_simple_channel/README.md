@@ -59,6 +59,24 @@ bash run.sh
     - 调用acltdtStopChannel、acltdtCleanChannel和acltdtDestroyChannel接口停止、清理并销毁Channel。
     - 调用acltdtDestroyDataItem和acltdtDestroyDataset接口释放Dataset资源。
 
+## 示例输出
+
+```text
+[INFO]  Dataset size: 1
+[INFO]  Tensor type=..., data type=..., bytes=16, dims=(2, 2), firstValue=1.000
+[INFO]  Channel size after send: 1
+[INFO]  Dataset size: 1
+[INFO]  Tensor type=..., data type=..., bytes=16, dims=(2, 2), firstValue=1.000
+[INFO]  Channel size after receive: 0
+[INFO]  Run the simple_channel sample successfully.
+```
+
+若当前运行环境未启用队列式 TDT Channel 能力，可能输出如下告警并正常结束：
+
+```text
+[WARN]  acltdtCreateChannelWithCapacity returned nullptr: this sample needs a queue-backed TDT channel so it can send and receive within one host process
+```
+
 ## 已知 issue
 
 暂无。

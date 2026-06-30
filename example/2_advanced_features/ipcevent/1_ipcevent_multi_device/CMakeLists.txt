@@ -30,7 +30,9 @@ link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
 # 可执行文件
 add_executable(proc_a proc_a.cpp)
 add_executable(proc_b proc_b.cpp)
+add_executable(precheck precheck.cpp)
 
 # 链接ACL库
 target_link_libraries(proc_a PRIVATE ascendcl)
 target_link_libraries(proc_b PRIVATE ascendcl)
+target_link_libraries(precheck PRIVATE ascendcl)

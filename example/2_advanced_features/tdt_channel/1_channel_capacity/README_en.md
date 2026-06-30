@@ -62,6 +62,22 @@ Key features and interfaces in this sample:
     - Call acltdtCleanChannel, acltdtStopChannel, and acltdtDestroyChannel interfaces to cleanup, stop, and destroy Channel.
     - Call acltdtDestroyDataItem and acltdtDestroyDataset interfaces to release Dataset resources.
 
+## Sample Output
+
+```text
+[INFO]  Slice info ret=..., sliceNum=..., sliceId=..., tensorType=..., datasetName=...
+[INFO]  Channel size after first send: 1
+[INFO]  Channel size after second send: 2
+[INFO]  Third send ret under capacity pressure: ...
+[INFO]  Run the channel_capacity sample successfully.
+```
+
+If the current runtime environment does not enable capacity-limited TDT Channel capability, the sample may print the following warning and exit normally:
+
+```text
+[WARN]  acltdtCreateChannelWithCapacity returned nullptr: the current runtime likely does not enable capacity-limited TDT channels on this product/build
+```
+
 ## Known Issues
 
 None.

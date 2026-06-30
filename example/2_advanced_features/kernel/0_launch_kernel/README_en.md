@@ -27,16 +27,12 @@ cd ${git_clone_path}/example/2_advanced_features/kernel/0_launch_kernel
 ```bash
 # Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# Replace ${ascend_name} with Ascend AI processor model, obtained by checking Name field using npu-smi info and removing spaces
-export SOC_VERSION=${ascend_name}
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
 
-# Replace ${cmake_path} with ascendc.cmake directory, for example ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-export ASCENDC_CMAKE_DIR=${cmake_path}
+
 ```
-
-If environment variables are not set beforehand, `run.sh` automatically attempts to detect `ASCEND_INSTALL_PATH`, `ASCEND_HOME_PATH`, `$HOME/Ascend/cann`, `/usr/local/Ascend/cann`, `/opt/Ascend/cann`, `SOC_VERSION`, and `ASCENDC_CMAKE_DIR`; if automatic detection fails, set manually using the above commands.
 
 This sample data generation and result verification depends on `numpy`. Ensure Python environment has `numpy` installed before executing `run.sh`.
 

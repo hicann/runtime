@@ -66,13 +66,11 @@ The key functionality points and their corresponding APIs in this sample are as 
 [INFO]  Process B: get Process B's pid successfully
 [INFO]  Process B: get the shareable memory identifier successfully, shareable identifier = ...
 [INFO]  Process B: complete ipc memory sharing
-CANN Version: 1.0.0, TimeStamp: ...
 Destination data: 123
 [INFO]  Allocate memory on the device 0x... successfully
 [INFO]  Write data 123 to the device address 0x...
 [INFO]  Process A: get the shareable memory identifier ... successfully
 [INFO]  Process A: add Process B to the whitelist successfully
-CANN Version: 1.0.0, TimeStamp: ...
 Source data: 123
 [INFO]  Process A: receive the completion signal from Process B, completion signal = 1
 [SUCCESS] IPC memory sharing successfully. Values at source and destination are equal: 123

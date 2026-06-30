@@ -53,6 +53,16 @@ bash run.sh
     - 调用 `aclrtMalloc` 和 `aclrtFree` 接口管理状态缓存。
     - 调用 `aclrtMemcpy` 接口将状态数据同步到 Host 侧。
 
+## 示例输出
+
+```text
+[INFO]  Device saturation mode switched from ACL_RT_OVERFLOW_MODE_INFNAN to ACL_RT_OVERFLOW_MODE_SATURATION.
+[INFO]  Overflow switch=1
+[INFO]  Overflow status before reset=0
+[INFO]  Overflow status after reset=0
+[INFO]  Overflow detection sample finished successfully.
+```
+
 ## 已知 issue
 
 - `aclrtSetStreamOverflowSwitch` 在 `ACL_RT_OVERFLOW_MODE_SATURATION` 和 `ACL_RT_OVERFLOW_MODE_INFNAN` 模式下均可使用。如果当前产品不支持该能力，相关接口可能返回 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`。样例会记录告警并在完成资源清理后退出。

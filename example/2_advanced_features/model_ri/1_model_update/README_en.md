@@ -21,7 +21,9 @@ Run steps:
 ```bash
 # Replace ${install_root} with CANN installation root directory, default installation at /usr/local/Ascend
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
+
+# Automatically identify SOC_VERSION and ASCENDC_CMAKE_DIR.
+source ${git_clone_path}/example/set_sample_env.sh
 
 # Build and run
 bash run.sh
@@ -57,6 +59,16 @@ Key features and interfaces in this sample:
 - Data Transfer
     - Call aclrtMemcpy interface to implement data transfer by memory copy.
     - Call aclrtMemcpyAsync interface to perform asynchronous memory copy.
+
+## Sample Output
+
+```text
+[INFO]  Execute model, loop count: 1.
+[INFO]  The vector data is: 5.4000  6.4000  7.4000  8.4000  9.4000  10.4000  11.4000  12.4000
+[INFO]  Execute model, loop count: 2.
+[INFO]  Update alpha value of aclnnAdd
+[INFO]  The vector data is: 7.6000  8.6000  9.6000  10.6000  11.6000  12.6000  13.6000  14.6000
+```
 
 ## Known Issues
 

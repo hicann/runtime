@@ -51,6 +51,14 @@ Key features and interfaces in this sample:
 - Queue Management
   Call `acltdtCreateQueue` and `acltdtDestroyQueue` interfaces to create and destroy Queue.
 
+## Sample Output
+
+```text
+[INFO]  QueueAttr name=simple_queue, depth=4
+[INFO]  Created queue id=...
+[INFO]  Run the simple_queue sample successfully.
+```
+
 ## Known Issues
 
 None.

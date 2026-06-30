@@ -20,6 +20,19 @@
 本样例会由 `run.sh` 同时启动 `proc_a` 和 `proc_b` 两个进程，并通过临时文件交换 IPC Event 句柄。
 环境安装详情以及通用运行步骤请见 example 目录下的 [README](../../../README.md)。
 
+运行步骤如下：
+
+```bash
+# ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
+source ${install_root}/cann/set_env.sh
+
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
+
+# 编译运行
+bash run.sh
+```
+
 ## CANN RUNTIME API
 
 在该Sample中，涉及的关键功能点及其关键接口，如下所示：
@@ -30,6 +43,8 @@
 - Device 管理
     - 调用 `aclrtSetDevice` 接口指定用于运算的 Device。
     - 调用 `aclrtResetDevice` 接口复位 Device。
+
+    说明：本样例为单机多进程 IPC 场景，进程退出时使用 `aclrtResetDevice` 释放当前进程的 Device 资源，避免 `aclrtResetDeviceForce` 强制复位影响同机其他进程。
 - Stream 管理
     - 调用 `aclrtCreateStream` 接口创建 Stream。
     - 调用 `aclrtSynchronizeStream` 接口阻塞等待 Stream 任务完成。

@@ -43,6 +43,15 @@ In this sample, the key functional points related to models and their key interf
 
 Please refer to [LINK](https://gitcode.com/cann/ge) for model-related processes.
 
+## Sample Output
+
+```text
+[INFO]  -------- Start --------
+[INFO]  Running ......
+[INFO]  Stopped ......
+[INFO]  -------- End --------
+```
+
 ## Known Issues
 
    None

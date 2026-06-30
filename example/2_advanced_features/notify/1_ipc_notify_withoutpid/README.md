@@ -21,14 +21,9 @@
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# ${ascend_name} 替换为昇腾AI处理器的型号，可通过 npu-smi info 查看 Name 字段并去掉空格获得，例如 ascend910b3
-export SOC_VERSION=${ascend_name}
-
-# 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-# 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
 
 # 编译运行
 bash run.sh
@@ -62,7 +57,20 @@ bash run.sh
     - 调用aclrtRecordNotify接口在指定Stream上记录一个Notify。
 
 
+## 示例输出
+
+```text
+[INFO]  Process A: enable data interaction between device 2 and device 3
+[INFO]  Process A: get a shareable identifier for IPC memory sharing successfully, shareable identifier = ...
+[INFO]  Process A: get a shareable identifier for IPC notify sharing successfully, shareable identifier = ...
+[INFO]  Process B: enable data interaction between device 3 and device 2
+[INFO]  Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = ...
+[INFO]  Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = ...
+[INFO]  Process B: write data 123 to the device memory ...
+Destination data: 123
+[SUCCESS] IPC notify for task synchronization is successful. Values at source and destination are equal: 123
+```
+
 ## 已知issue
 
   暂无
-

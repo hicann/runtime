@@ -51,6 +51,14 @@ bash run.sh
 - Queue 管理
   调用 `acltdtCreateQueue` 和 `acltdtDestroyQueue` 接口创建并销毁 Queue。
 
+## 示例输出
+
+```text
+[INFO]  QueueAttr name=simple_queue, depth=4
+[INFO]  Created queue id=...
+[INFO]  Run the simple_queue sample successfully.
+```
+
 ## 已知 issue
 
 暂无。

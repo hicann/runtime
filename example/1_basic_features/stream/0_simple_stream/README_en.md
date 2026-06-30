@@ -64,7 +64,7 @@ The key functionality points and their key interfaces involved in this sample ar
 
 ```text
 [INFO]  Use default stream assigning task.
-[INFO]  Applied resource successfully, beging assigning task.
+[INFO]  Applied resource successfully, begin assigning task.
 [INFO]  After assigning the task through the default stream, the current result is: 1.
 [INFO]  Use created stream assigning task.
 [INFO]  After assigning the task through the created stream, the current result is: 2.

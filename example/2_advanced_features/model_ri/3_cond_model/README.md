@@ -76,6 +76,27 @@ bash run.sh
 - aclnn 算子
     - 调用 `aclnnAddGetWorkspaceSize` 和 `aclnnAdd` 接口执行加法算子计算。
 
+## 示例输出
+
+```text
+[INFO]  ========== IF condition ==========
+[INFO]  IF true branch result:
+[INFO]  The vector data is: 1.2500  2.5000  3.7500  5.0000  6.2500  7.5000  8.7500  10.0000
+[INFO]  IF false branch result:
+[INFO]  The vector data is: 1.2500  2.5000  3.7500  5.0000  6.2500  7.5000  8.7500  10.0000
+[INFO]  IF condition PASSED
+[INFO]  ========== WHILE condition ==========
+[INFO]  WHILE single iteration result:
+[INFO]  The vector data is: 1.2500  2.5000  3.7500  5.0000  6.2500  7.5000  8.7500  10.0000
+[INFO]  WHILE condition PASSED
+[INFO]  ========== SWITCH condition ==========
+[INFO]  SWITCH case 0 result:
+[INFO]  The vector data is: 1.5000  3.0000  4.5000  6.0000  7.5000  9.0000  10.5000  12.0000
+...
+[INFO]  SWITCH condition PASSED
+[INFO]  ========== All tests PASSED ==========
+```
+
 ## 已知issue
 
 暂无

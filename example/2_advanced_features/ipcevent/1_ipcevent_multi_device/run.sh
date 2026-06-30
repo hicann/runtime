@@ -27,7 +27,7 @@ mkdir -p build out
 
 cmake -B build -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
 cmake --build build -j
-cp build/proc_a build/proc_b out/
+cp build/proc_a build/proc_b build/precheck out/
 
 # 设置消费者数量（根据实际可用设备数量调整，生产者使用 device 0）
 # 例如：如果有3个设备（0,1,2），消费者数量为2
@@ -36,6 +36,19 @@ CONSUMER_NUM=1
 if [ $CONSUMER_NUM -lt 1 ]; then
     echo "[ERROR] CONSUMER_NUM must be at least 1"
     exit 1
+fi
+
+REQUIRED_DEVICE_COUNT=$((CONSUMER_NUM + 1))
+set +e
+./out/precheck "${REQUIRED_DEVICE_COUNT}"
+PRECHECK_RET=$?
+set -e
+if [ "${PRECHECK_RET}" -eq 2 ]; then
+    exit 0
+fi
+if [ "${PRECHECK_RET}" -ne 0 ]; then
+    echo "[ERROR] Device count precheck failed."
+    exit "${PRECHECK_RET}"
 fi
 
 echo "[INFO] Starting producer on device 0, waiting for $CONSUMER_NUM consumer(s)..."

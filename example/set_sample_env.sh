@@ -320,12 +320,18 @@ _set_soc_main() {
         return 1
     fi
 
+    export ASCEND_INSTALL_PATH="${_set_soc_cann_path}"
+    export ASCEND_HOME_PATH="${_set_soc_cann_path}"
     export SOC_VERSION="${soc_version}"
     export ASCENDC_CMAKE_DIR="${ascendc_cmake_dir}"
     if [[ "${sourced}" -eq 1 ]]; then
+        echo "[INFO]: ASCEND_INSTALL_PATH is set to ${ASCEND_INSTALL_PATH}"
+        echo "[INFO]: ASCEND_HOME_PATH is set to ${ASCEND_HOME_PATH}"
         echo "[INFO]: SOC_VERSION is set to ${SOC_VERSION}"
         echo "[INFO]: ASCENDC_CMAKE_DIR is set to ${ASCENDC_CMAKE_DIR}"
     else
+        echo "ASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH}"
+        echo "ASCEND_HOME_PATH=${ASCEND_HOME_PATH}"
         echo "SOC_VERSION=${SOC_VERSION}"
         echo "ASCENDC_CMAKE_DIR=${ASCENDC_CMAKE_DIR}"
         echo "[INFO]: To export variables in current shell, run: source ${BASH_SOURCE[0]}"

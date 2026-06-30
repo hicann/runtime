@@ -75,7 +75,6 @@ Typical output from Process A:
 [INFO]  Process A: allocate physical memory successfully
 [INFO]  Process A: reserve virtual memory successfully
 [INFO]  Process A: export a shareable handle successfully, shareable handle = ...
-CANN Version: 1.0.0, TimeStamp: ...
 Source data: 123
 [INFO]  Process A: receive the completion signal from Process B, completion signal = 1
 [INFO]  Process A: release the virtual and physical memory successfully

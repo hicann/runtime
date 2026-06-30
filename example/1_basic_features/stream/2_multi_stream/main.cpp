@@ -47,7 +47,7 @@ namespace {
         // 开始做长任务
         CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
         CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
-        INFO_LOG("Applied resource successfully, beging assigning task.");
+        INFO_LOG("Applied resource successfully, begin assigning task.");
         INFO_LOG("Begin a long task, num += 1.");
         LongOP(kBlockDim, stream1, numDevice);
         CHECK_ERROR(aclrtRecordEvent(event, stream1));
@@ -106,7 +106,7 @@ namespace {
         // 开始做长任务
         CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
         CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
-        INFO_LOG("Applied resource successfully, beging assigning task.");
+        INFO_LOG("Applied resource successfully, begin assigning task.");
         INFO_LOG("Begin a long task, num += 1.");
         LongOP(kBlockDim, stream1, numDevice);
         INFO_LOG("Stream synchronize.");
@@ -162,7 +162,7 @@ namespace {
         // 开始做长任务
         CHECK_ERROR(aclrtMalloc((void**)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
         CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
-        INFO_LOG("Applied resource successfully, beging assigning task.");
+        INFO_LOG("Applied resource successfully, begin assigning task.");
         INFO_LOG("Begin a long task, num += 1.");
         LongOP(kBlockDim, stream1, numDevice);
         INFO_LOG("Stream synchronize.");

@@ -116,16 +116,17 @@ int DoAclAdd(aclrtContext context, aclrtStream stream)
     return ret;
 }
 
-static void TestMstxWithDomain()
+static int TestMstxWithDomain()
 {
     // range with "default" domain start
     uint64_t id = mstxRangeStartA("TestMstxWithDomain", stream);
-    aclrtSetCurrentContext(context);
+    ACL_CALL(aclrtSetCurrentContext(context));
     // mark with "default" domain end
     mstxMarkA("DoAclAdd Start", stream);
-    DoAclAdd(context, stream);
+    ACL_CALL(DoAclAdd(context, stream));
     // range with "default" domain end
     mstxRangeEnd(id);
+    return ACL_SUCCESS;
 }
 
 void MstxDomainInit()
@@ -141,13 +142,16 @@ void MstxDomainDeInit()
 
 int main(int argc, const char **argv)
 {
-    int32_t deviceId = 6;
-    Init(deviceId, &context, &stream);
+    int32_t deviceId = 0;
+    int ret = Init(deviceId, &context, &stream);
+    if (ret != ACL_SUCCESS) {
+        return ret;
+    }
 
     MstxDomainInit();
-    TestMstxWithDomain();
+    ret = TestMstxWithDomain();
     MstxDomainDeInit();
 
-    DeInit(deviceId, &context, &stream);
-    return 0;
+    auto deinitRet = DeInit(deviceId, &context, &stream);
+    return ret != ACL_SUCCESS ? ret : deinitRet;
 }

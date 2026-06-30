@@ -75,7 +75,6 @@ bash run.sh
 [INFO]  Process A: reserve virtual memory successfully
 [INFO]  Process A: export a shareable handle successfully, shareable handle = ...
 [INFO]  Process A: add Process B to the whitelist successfully
-CANN Version: 1.0.0, TimeStamp: ...
 Source data: 123
 [INFO]  Process A: receive the completion signal from Process B, completion signal = 1
 [INFO]  Process A: release the virtual and physical memory successfully

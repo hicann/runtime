@@ -62,6 +62,22 @@ bash run.sh
     - 调用acltdtCleanChannel、acltdtStopChannel和acltdtDestroyChannel接口清理、停止并销毁Channel。
     - 调用acltdtDestroyDataItem和acltdtDestroyDataset接口释放Dataset资源。
 
+## 示例输出
+
+```text
+[INFO]  Slice info ret=..., sliceNum=..., sliceId=..., tensorType=..., datasetName=...
+[INFO]  Channel size after first send: 1
+[INFO]  Channel size after second send: 2
+[INFO]  Third send ret under capacity pressure: ...
+[INFO]  Run the channel_capacity sample successfully.
+```
+
+若当前运行环境未启用容量受限 TDT Channel 能力，可能输出如下告警并正常结束：
+
+```text
+[WARN]  acltdtCreateChannelWithCapacity returned nullptr: the current runtime likely does not enable capacity-limited TDT channels on this product/build
+```
+
 ## 已知 issue
 
 暂无。
