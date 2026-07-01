@@ -368,9 +368,10 @@ bool IsStreamBindWithSubModel(Stream * const stream)
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
     COND_PROC(captureModel == nullptr, return false;);
 
+
     COND_RETURN_WARN(captureModel->IsSubCaptureModel(), true,
-        "stream_id=%d, capture stream_id=%d, module_id=%u, stream belongs to sub ACL Graph, does not support current operation.",
- 	    stream->Id_(), captureStream->Id_(), captureModel->Id_());
+        "stream_id=%d, capture stream_id=%d, model_id=%u, stream belongs to sub ACL Graph, does not support current operation.",
+        stream->Id_(), captureStream->Id_(), captureModel->Id_());
 
     return false;
 }

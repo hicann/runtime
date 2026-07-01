@@ -458,6 +458,7 @@ bool Context::CheckSubModelsIsEndCapture(Stream * const captureStream)
     COND_RETURN_ERROR(captureModel == nullptr, false,
         "capture model is null, capture stream_id=%d.", captureStream->Id_());
 
+    captureModel->ClearCachedAllSubModels();
     bool isEndCapture = captureModel->CheckSubModelsIsEndCapture();
     COND_RETURN_ERROR(!isEndCapture, false,
         "sub capture model is not end capture, capture model_id=%d.", captureModel->Id_());
@@ -546,6 +547,7 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
     error = captureModelTmp->ResetCaptureEvents(stm);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
         "Failed to reset capture events, retCode=%#x.", static_cast<uint32_t>(error));
+
 
     if (!captureModelTmp->IsSoftwareSqEnable()) {
         Api * const apiObj = Runtime::Instance()->ApiImpl_();

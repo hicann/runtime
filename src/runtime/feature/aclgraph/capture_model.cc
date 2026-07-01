@@ -87,7 +87,9 @@ CaptureModel::~CaptureModel() noexcept
     for (auto condHandle : condHandles_) {
          DELETE_O(condHandle);
     }
-    condHandles_.clear(); 
+    condHandles_.clear();
+
+    cachedAllSubModels_.clear();
 }
 
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl)
@@ -187,20 +189,53 @@ void CaptureModel::ReportCacheTrackData()
     trackDataReportFlag_ = true;
 }
 
+std::vector<CaptureModel *> &CaptureModel::GetAllSubCaptureModels()
+{
+    if (!cachedAllSubModels_.empty()) {
+        return cachedAllSubModels_;
+    }
+
+    std::vector<CaptureModel *> stack;
+    stack.push_back(this);
+
+    do {
+        CaptureModel *cur = stack.back();
+        stack.pop_back();
+        if (cur != this) {
+            cachedAllSubModels_.push_back(cur);
+        }
+
+        for (const auto &it : cur->condHandleTaskMap_) {
+            for (auto *mdl : it.second->GetSubCaptureModels()) {
+                CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
+                if (subModel != nullptr) {
+                    stack.push_back(subModel);
+                }
+            }
+        }
+    } while (!stack.empty());
+
+    return cachedAllSubModels_;
+}
+
+void CaptureModel::ClearCachedAllSubModels()
+{
+    cachedAllSubModels_.clear();
+}
+
 rtError_t CaptureModel::InitAllSubCaptureModelCondTaskByDefValue()
 {
     for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        rtError_t error = condHandle->InitCondTaskByDefValue();
+        rtError_t error = it.second->InitCondTaskByDefValue();
         ERROR_RETURN(error, "Init cond task default value failed, model_id=%u, retCode=%#x.",
             Id_(), static_cast<uint32_t>(error));
+    }
 
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            COND_PROC((subModel == nullptr), continue;);
-
-            error = subModel->InitAllSubCaptureModelCondTaskByDefValue();
-            ERROR_RETURN(error, "Sub model init cond task default value failed, model_id=%u, sub model_id=%u, retCode=%#x.",
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        for (const auto &it : subModel->condHandleTaskMap_) {
+            rtError_t error = it.second->InitCondTaskByDefValue();
+            ERROR_RETURN(error, "Sub model init cond task default value failed, root model_id=%u, sub model_id=%u, retCode=%#x.",
                 Id_(), subModel->Id_(), static_cast<uint32_t>(error));
         }
     }
@@ -457,17 +492,6 @@ Stream* CaptureModel::GetOriginalCaptureStream(void) const
 }
 rtError_t CaptureModel::ReleaseNotifyId(uint32_t &releaseNum)
 {
-    // 递归释放子模型的 notify
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if ((subModel != nullptr) && (subModel->GetEndGraphNotify() != nullptr) &&
-                (subModel->GetEndGraphNotify()->GetNotifyId() != MAX_UINT32_NUM)) {
-                subModel->ReleaseNotifyId(releaseNum);
-            }
-        }
-    }
 
     rtError_t error = RT_ERROR_NOTIFY_NOT_COMPLETE;
     if ((GetEndGraphNotify() != nullptr) && (refCount_ == 0U)) {
@@ -475,7 +499,16 @@ rtError_t CaptureModel::ReleaseNotifyId(uint32_t &releaseNum)
         error = GetEndGraphNotify()->FreeId();
         COND_PROC(error != RT_ERROR_NONE, RT_LOG(RT_LOG_WARNING, "Free notify %u failed", GetEndGraphNotify()->GetNotifyId()));
         COND_PROC(error == RT_ERROR_NONE, isNeedUpdateEndGraph_ = true; releaseNum++;);
-        return error;
+    }
+
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        if (subModel->GetEndGraphNotify() != nullptr) {
+            rtError_t subError = subModel->GetEndGraphNotify()->FreeId();
+            COND_PROC(subError != RT_ERROR_NONE,
+                RT_LOG(RT_LOG_WARNING, "Free notify %u failed", subModel->GetEndGraphNotify()->GetNotifyId()));
+            COND_PROC(subError == RT_ERROR_NONE, subModel->isNeedUpdateEndGraph_ = true; releaseNum++;);
+        }
     }
 
     return error;
@@ -519,7 +552,7 @@ rtError_t CaptureModel::UpdateNotifyId(Stream * const exeStream)
     } while (error != RT_ERROR_NONE);
 
     if (!this->IsSubCaptureModel()) { // 只有根模型才刷新，其他各层级子模型发给ts的notify id均为根模型的id，异常时直接解执行流的endgraph wait
-        loadCompleteNotifyid_ = ntf->GetNotifyId();
+        loadCompleteNotifyId_ = ntf->GetNotifyId();
     }
 
     Context *context = origCaptureStream->Context_();
@@ -528,18 +561,11 @@ rtError_t CaptureModel::UpdateNotifyId(Stream * const exeStream)
 
 void CaptureModel::GetSqCqTotalNum(uint32_t &streamNum)
 {
-    streamNum += static_cast<uint32_t>(StreamList_().size());
+    streamNum = static_cast<uint32_t>(StreamList_().size());
 
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel == nullptr) {
-                continue;
-            }
-
-            subModel->GetSqCqTotalNum(streamNum);
-        }
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        streamNum += static_cast<uint32_t>(subModel->StreamList_().size());
     }
 
     return;
@@ -592,7 +618,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     }
 
     SetRootExeStreamIdAll(static_cast<uint32_t>(exeStream->Id_()));
-    error = LoadCompleteAll(loadCompleteNotifyid_);
+    error = LoadCompleteAll(loadCompleteNotifyId_);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "load complete all failed, stream_id=%d, model_id=%u, retCode=%#x.",
             exeStream->Id_(), Id_(), static_cast<uint32_t>(error));
@@ -614,7 +640,6 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     }
 
     refCount_++;
-    isNeedUpdateEndGraph_ = false;
 
     return RT_ERROR_NONE;
 }
@@ -638,7 +663,7 @@ rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum)
     }
 
     // 先递归释放子模型资源
-    rtError_t error = ReleaseAllSqCq(releaseNum);
+    rtError_t error = ReleaseAllSubModelSqCq(releaseNum);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "release all sub models sqcq failed, model_id=%u, retCode=%#x.",
             Id_(), static_cast<uint32_t>(error));
@@ -804,40 +829,37 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMem(void)
 rtError_t CaptureModel::UpdateCondTaskFuncCallMemAll(void)
 {
     rtError_t error = RT_ERROR_NONE;
-    const std::lock_guard<std::mutex> lk(condHandleTaskMapLock_);
 
-    for (const auto &entry : condHandleTaskMap_) {
-        CondHandle *condHandle = entry.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel != nullptr) {
-                error = subModel->UpdateCondTaskFuncCallMemAll();
-                if (error != RT_ERROR_NONE) {
-                    return error;
-                }
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *cur : models) {
+        const std::lock_guard<std::mutex> lk(cur->condHandleTaskMapLock_);
+        for (const auto &entry : cur->condHandleTaskMap_) {
+            CondHandle *condHandle = entry.second;
+            const int32_t streamId = std::get<0>(entry.first);
+            const uint16_t taskId = std::get<1>(entry.first);
+
+            RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, model_id=%u.", streamId, taskId, cur->Id_());
+            if (condHandle == nullptr) {
+                RT_LOG(RT_LOG_WARNING, "CondHandle is null, stream_id=%d, task_id=%hu.", streamId, taskId);
+                continue;
             }
-        }
 
-        const int32_t streamId = std::get<0>(entry.first);
-        const uint16_t taskId = std::get<1>(entry.first);
+            TaskInfo *taskInfo = GetTaskInfo(cur->Context_()->Device_(), static_cast<uint32_t>(streamId), taskId);
+            if (taskInfo == nullptr) {
+                RT_LOG(RT_LOG_WARNING, "TaskInfo not found for cond task, stream_id=%d, task_id=%hu.", streamId, taskId);
+                continue;
+            }
 
-        RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, model_id=%u.", streamId, taskId, Id_());
-        if (condHandle == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "CondHandle is null, stream_id=%d, task_id=%hu.", streamId, taskId);
-            continue;
-        }
-
-        TaskInfo *taskInfo = GetTaskInfo(Context_()->Device_(), static_cast<uint32_t>(streamId), taskId);
-        if (taskInfo == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "TaskInfo not found for cond task, stream_id=%d, task_id=%hu.", streamId, taskId);
-            continue;
-        }
-
-        error = ReConstructCaptureConditionTaskFc(taskInfo, condHandle);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "ReConstructCaptureConditionTaskFc failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-                streamId, taskId, static_cast<uint32_t>(error));
-            break;
+            error = ReConstructCaptureConditionTaskFc(taskInfo, condHandle);
+            if (error != RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_ERROR, "Construct capture condition task fc failed, stream_id=%d, task_id=%hu, retCode=%#x.",
+                    streamId, taskId, static_cast<uint32_t>(error));
+                return error;
+            }
         }
     }
 
@@ -1062,26 +1084,16 @@ rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev)
 
 bool CaptureModel::CheckSubModelsIsEndCapture()
 {
-    bool isEndCapture = true;
-    for (const auto &it : this->GetCondHandleTaskMap()) {
-        for (const auto &mdl : it.second->GetSubCaptureModels()) {
-            CaptureModel *captureModel = RtPtrToPtr<CaptureModel *, Model *>(mdl);
-            if (captureModel == nullptr) {
-                continue;
-            }
-
-            isEndCapture = captureModel->CheckSubModelsIsEndCapture();
-            COND_RETURN_ERROR(!isEndCapture, false,
-                "sub ACL Graph is not end capture, capture model_id=%u.", captureModel->Id_());
-            if (captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::READY) {
-                RT_LOG(RT_LOG_ERROR, "sub ACL Graph is not end capture, parent model_id=%u, sub model_id=%u.",
-                    Id_(), captureModel->Id_());
-                return false;
-            }
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        if (subModel->GetCaptureModelStatus() != RtCaptureModelStatus::READY) {
+            RT_LOG(RT_LOG_ERROR, "sub ACL Graph is not end capture, root model_id=%u, sub model_id=%u.",
+                Id_(), subModel->Id_());
+            return false;
         }
     }
 
-    return isEndCapture;
+    return true;
 }
 
 rtError_t CaptureModel::StoreCondHandleTaskInfo(const int32_t streamId, const uint16_t taskId, CondHandle *condHandle)
@@ -1131,7 +1143,7 @@ rtError_t CaptureModel::ModelEndGraph()
         Context_()->Device_()->Id_(), Id_(), origCaptureStream->Id_(), static_cast<uint32_t>(error));
 
     if (!this->IsSubCaptureModel()) { // 只有根模型才刷新，其他各层级子模型发给ts的notify id均为根模型的id，异常时直接解执行流的endgraph wait
-        loadCompleteNotifyid_ = this->GetEndGraphNotify()->GetNotifyId();
+        loadCompleteNotifyId_ = this->GetEndGraphNotify()->GetNotifyId();
     }
 
     return RT_ERROR_NONE;
@@ -1148,17 +1160,12 @@ rtError_t CaptureModel::SendLoadCompleteEndGraph()
         return error;
     }
 
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel == nullptr) {
-                continue;
-            }
-
-            rtError_t error = subModel->SendLoadCompleteEndGraph();
-            if (error != RT_ERROR_NONE) {
-                return error;
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        if (!subModel->IsModelLoadComplete()) {
+            rtError_t subError = subModel->ModelEndGraph();
+            if (subError != RT_ERROR_NONE) {
+                return subError;
             }
         }
     }
@@ -1206,19 +1213,12 @@ rtError_t CaptureModel::AllocAllSqCq()
     if (error != RT_ERROR_NONE) {
         return error;
     }
-    
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel == nullptr) {
-                continue;
-            }
-            
-            error = subModel->AllocAllSqCq();
-            if (error != RT_ERROR_NONE) {
-                return error;
-            }
+
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        error = subModel->AllocSqCqAndBindInternal();
+        if (error != RT_ERROR_NONE) {
+            return error;
         }
     }
     return RT_ERROR_NONE;
@@ -1259,50 +1259,34 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t &releaseNum)
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::ReleaseAllSqCq(uint32_t &releaseNum)
+rtError_t CaptureModel::ReleaseAllSubModelSqCq(uint32_t &releaseNum)
 {
-    rtError_t error;
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel == nullptr) {
-                continue;
-            }
-
-            error = subModel->ReleaseAllSqCq(releaseNum);
-            COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "release all sqcq failed. model_id=%u, releaseNum=%u",
-                Id_(), releaseNum);
-            error = subModel->ReleaseSqCqInternal(releaseNum);
-            COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "release all sqcq failed. model_id=%u, sqCqNum_=%u, releaseNum=%u",
-                Id_(), sqCqNum_, releaseNum);
-        }
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        rtError_t error = subModel->ReleaseSqCqInternal(releaseNum);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "release all sqcq failed. root model_id=%u, sub model_id=%u, sqCqNum=%u, releaseNum=%u",
+            Id_(), subModel->Id_(), subModel->sqCqNum_, releaseNum);
     }
 
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::LoadCompleteAll(uint32_t loadCompltetNotifyid)
+rtError_t CaptureModel::LoadCompleteAll(uint32_t loadCompltetNotifyId)
 {
-    if (!IsModelLoadComplete() || isNeedUpdateEndGraph_) {
-        loadCompleteNotifyid_ = loadCompltetNotifyid;
-        rtError_t error = LoadComplete();
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "load complete failed, model_id=%u, retCode=%#x.",
-                Id_(), static_cast<uint32_t>(error));
-            return error;
-        }
-    }
-    
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel != nullptr) {
-                rtError_t error = subModel->LoadCompleteAll(loadCompltetNotifyid);
-                if (error != RT_ERROR_NONE) {
-                    return error;
-                }
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        if (!curMdl->IsModelLoadComplete() || curMdl->isNeedUpdateEndGraph_) {
+            curMdl->loadCompleteNotifyId_ = loadCompltetNotifyId;
+            rtError_t error = curMdl->LoadComplete();
+            if (error != RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_ERROR, "load complete failed, model_id=%u, retCode=%#x.",
+                    curMdl->Id_(), static_cast<uint32_t>(error));
+                return error;
             }
         }
     }
@@ -1312,49 +1296,79 @@ rtError_t CaptureModel::LoadCompleteAll(uint32_t loadCompltetNotifyid)
 
 rtError_t CaptureModel::UpdateNotifyIdAll(Stream * const exeStream)
 {
-    if (isNeedUpdateEndGraph_) {
-        rtError_t error = UpdateNotifyId(exeStream);
-        ERROR_RETURN_MSG_INNER(error, "capture model update notify failed, model_id=%u, retCode=%#x.",
-            Id_(), static_cast<uint32_t>(error));
+    /* 更新所有图的endgraph notify record sqe */
+    rtError_t error = UpdateNotifyIdForAllModels(exeStream);
+    ERROR_RETURN_MSG_INNER(error, "update notify id for each model failed, model_id=%u, retCode=%#x.",
+        Id_(), static_cast<uint32_t>(error));
 
-        RT_LOG(RT_LOG_WARNING, "model_id=%u Alloc endgraph notify_id=%u",
-            Id_(), GetEndGraphNotify()->GetNotifyId());
+    /* 更新所有条件算子后面的notify wait sqe */
+    error = UpdateCondTaskNotifyWaitSqe(exeStream);
+    ERROR_RETURN_MSG_INNER(error, "update cond task notify wait sqe failed, model_id=%u, retCode=%#x.",
+        Id_(), static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::UpdateNotifyIdForAllModels(Stream * const exeStream)
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    rtError_t error = RT_ERROR_NONE;
+    for (CaptureModel *curMdl : models) {
+        if (curMdl->isNeedUpdateEndGraph_) {
+            error = curMdl->UpdateNotifyId(exeStream);
+            ERROR_RETURN_MSG_INNER(error, "capture model update notify failed, model_id=%u, retCode=%#x.",
+                curMdl->Id_(), static_cast<uint32_t>(error));
+            RT_LOG(RT_LOG_DEBUG, "model_id=%u Alloc endgraph notify_id=%u",
+                curMdl->Id_(), curMdl->GetEndGraphNotify()->GetNotifyId());
+            curMdl->isNeedUpdateEndGraph_ = false;
+        }
     }
+    return RT_ERROR_NONE;
+}
 
-    Stream *dstStream = nullptr;
-    rtError_t error;
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel != nullptr) {
-                dstStream = subModel->GetExeStream();
-                error = subModel->UpdateNotifyIdAll(exeStream);
-                if (error != RT_ERROR_NONE) {
-                    return error;
+rtError_t CaptureModel::UpdateCondTaskNotifyWaitSqe(Stream * const exeStream)
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    rtError_t error = RT_ERROR_NONE;
+    for (CaptureModel *curMdl : models) {
+        for (const auto &it : curMdl->condHandleTaskMap_) {
+            CondHandle *condHandle = it.second;
+            Stream *dstStream = nullptr;
+            for (Model *mdl : condHandle->GetSubCaptureModels()) {
+                CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
+                if (subModel != nullptr) {
+                    dstStream = subModel->GetExeStream();
+                    break;
                 }
             }
+
+            COND_PROC(dstStream == nullptr, continue;);
+
+            int32_t streamId = 0U;
+            uint16_t taskId = 0U;
+            std::tie(streamId, taskId) = it.first;
+            COND_RETURN_ERROR(dstStream->Id_() != streamId, RT_ERROR_INVALID_VALUE,
+                "stream_id=%d, sub ACL Graph exec stream_id=%d, model_id=%u.", streamId, dstStream->Id_(), curMdl->Id_());
+
+            TaskInfo *taskInfo = dstStream->Device_()->GetTaskFactory()->GetTask(streamId, taskId);
+            COND_RETURN_ERROR(taskInfo == nullptr, RT_ERROR_TASK_NULL, "stream_id=%d, submodel task_id=%u.",
+                streamId, taskId);
+            COND_RETURN_ERROR(taskInfo->type != TS_TASK_TYPE_CAPTURE_CONDITION, RT_ERROR_INVALID_VALUE,
+                "task type is not capture condition, stream_id=%d, task_id=%u.", streamId, taskId);
+
+            taskInfo->u.captureConditionTask.notifyId = condHandle->GetSubModelNotify()->GetNotifyId();
+            Context *context = dstStream->Context_();
+            error = context->UpdateSuModelExeStreamNotifyWaitSqe(taskInfo, exeStream);
+            COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+                "update cond task notify wait sqe failed, stream_id=%d, task_id=%u.", streamId, taskId);
         }
-
-        COND_PROC(dstStream == nullptr, continue;);
-
-        int32_t streamId = 0U;
-        uint16_t taskId = 0U;
-        std::tie(streamId, taskId) = it.first;
-        COND_PROC(dstStream->Id_() != streamId, RT_LOG(RT_LOG_WARNING,
-            "stream_id=%d, sub ACL Graph exec stream_id=%d, model_id=%u.", streamId, dstStream->Id_(), Id_()); continue;);
-
-        TaskInfo *taskInfo = dstStream->Device_()->GetTaskFactory()->GetTask(streamId, taskId);
-        COND_PROC(taskInfo == nullptr, RT_LOG(RT_LOG_WARNING,
-            "stream_id=%d, submodel task_id=%u.", streamId, taskId); continue;);
-        COND_PROC(taskInfo->type != TS_TASK_TYPE_CAPTURE_CONDITION, RT_LOG(RT_LOG_WARNING,
-            "task type is not capture condition, stream_id=%d, task_id=%u.", streamId, taskId); continue;);
-
-        taskInfo->u.captureConditionTask.notifyId = condHandle->GetSubModelNotify()->GetNotifyId();
-        Context *context = dstStream->Context_();
-        error = context->UpdateSuModelExeStreamNotifyWaitSqe(taskInfo, exeStream);
-        COND_PROC(error != RT_ERROR_NONE, RT_LOG(RT_LOG_WARNING,
-            "update cond task notify wait sqe failed, stream_id=%d, task_id=%u.", streamId, taskId); continue;);
     }
     return RT_ERROR_NONE;
 }
@@ -1362,14 +1376,9 @@ rtError_t CaptureModel::UpdateNotifyIdAll(Stream * const exeStream)
 void CaptureModel::SetRootExeStreamIdAll(uint16_t rootExeStreamId)
 {
     SetRootExeStreamId(rootExeStreamId);
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel != nullptr) {
-                subModel->SetRootExeStreamIdAll(rootExeStreamId);
-            }
-        }
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        subModel->SetRootExeStreamId(rootExeStreamId);
     }
 }
 
@@ -1381,17 +1390,14 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMemAll()
             Id_(), static_cast<uint32_t>(error));
         return error;
     }
-    
-    for (const auto &it : condHandleTaskMap_) {
-        CondHandle *condHandle = it.second;
-        for (Model *mdl : condHandle->GetSubCaptureModels()) {
-            CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-            if (subModel != nullptr) {
-                error = subModel->UpdateStreamActiveTaskFuncCallMemAll();
-                if (error != RT_ERROR_NONE) {
-                    return error;
-                }
-            }
+
+    auto &allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel *subModel : allSubModels) {
+        error = subModel->UpdateStreamActiveTaskFuncCallMem();
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "update stream active task failed, model_id=%u, retCode=%#x.",
+                subModel->Id_(), static_cast<uint32_t>(error));
+            return error;
         }
     }
     return RT_ERROR_NONE;

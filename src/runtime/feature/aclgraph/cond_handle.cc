@@ -12,6 +12,7 @@
 #include "device.hpp"
 #include "stream.hpp"
 #include "cond_handle.hpp"
+#include "capture_model.hpp"
 
 #include "context.hpp"
 #include "device.hpp"

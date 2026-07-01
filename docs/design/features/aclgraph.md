@@ -1179,7 +1179,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     // 阶段三：刷新 Notify record/wait SQE
     error = UpdateNotifyIdAll(exeStream);
     SetRootExeStreamIdAll(static_cast<uint32_t>(exeStream->Id_()));
-    error = LoadCompleteAll(loadCompleteNotifyid_);
+    error = LoadCompleteAll(loadCompleteNotifyId_);
     // 阶段四：刷新 Stream Active 条件算子
     error = UpdateStreamActiveTaskFuncCallMemAll();
     // 阶段五：刷新 Cond Task 条件算子

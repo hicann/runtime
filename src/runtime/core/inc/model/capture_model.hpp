@@ -322,7 +322,7 @@ public:
 
     uint32_t GetLoadCompleteNotifyid() const
     {
-        return loadCompleteNotifyid_;
+        return loadCompleteNotifyId_;
     }
 
     const TaskGroup* GetTaskGroup(uint16_t streamId, uint16_t taskId);
@@ -344,14 +344,17 @@ public:
     rtError_t AllocSqCqAndBindInternal();
     rtError_t AllocAllSqCq();
     rtError_t ReleaseSqCqInternal(uint32_t &releaseNum);
-    rtError_t ReleaseAllSqCq(uint32_t &releaseNum);
-    rtError_t LoadCompleteAll(uint32_t loadCompltetNotifyid);
+    rtError_t ReleaseAllSubModelSqCq(uint32_t &releaseNum);
+    rtError_t LoadCompleteAll(uint32_t loadCompltetNotifyId);
     rtError_t UpdateNotifyIdAll(Stream * const exeStream);
+    rtError_t UpdateNotifyIdForAllModels(Stream * const exeStream);
+    rtError_t UpdateCondTaskNotifyWaitSqe(Stream * const exeStream);
     rtError_t UpdateStreamActiveTaskFuncCallMemAll();
     rtError_t UpdateCondTaskFuncCallMemAll();
     void SetRootExeStreamIdAll(uint16_t rootExeStreamId);
     rtError_t StoreCondHandleTaskInfo(const int32_t streamId, const uint16_t taskId, CondHandle *condHandle);
     bool CheckSubModelsIsEndCapture();
+    void ClearCachedAllSubModels();
     
     rtError_t MarkStreamActiveTask(TaskInfo *streamActiveTask); // the task of stream active is need updated
                                                                 // after sq cq is allocated
@@ -373,6 +376,7 @@ private:
     rtError_t BindStreamToModel(void);
     void ReportCacheTrackData();
     rtError_t InitAllSubCaptureModelCondTaskByDefValue();
+    std::vector<CaptureModel *> &GetAllSubCaptureModels();
     rtError_t BindJetty(Stream * const stm, JettyType type);
     rtError_t RecycleJetty(int32_t streamId, JettyType type, uint32_t &count);
     rtError_t ReleaseJetty(int32_t streamId, JettyType type);
@@ -408,12 +412,13 @@ private:
     std::set<void *> argLoaderBackup_;
     std::mutex jettyMutex_;
     std::mutex condHandleTaskMapLock_;
-    std::map<std::tuple<int32_t, uint16_t>, CondHandle *> condHandleTaskMap_; // <stream id, condition task id>, condHandle
+    std::map<std::tuple<int32_t, uint16_t>, CondHandle *> condHandleTaskMap_; // <stream id, condition task id>, condHandle 只有父model非空
+    std::vector<CaptureModel *> cachedAllSubModels_; // 只有根model有效，子model为空。缓存所有子model
     bool isSubCaptureModel_{false};
     uint64_t resourceGroupId_{0U};  // 资源组ID，同一父子关系网共享
     rtCondHandle_t condHandle_{nullptr}; // 模型归属的condHandle
     uint16_t rootExeStreamId_{UINT16_MAX};
-    uint32_t loadCompleteNotifyid_{0UL}; // 用于子模型task error等异常场景
+    uint32_t loadCompleteNotifyId_{0U}; // 用于子模型task error等异常场景
 };
 }
 }
