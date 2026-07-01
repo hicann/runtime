@@ -3887,7 +3887,16 @@ rtError_t ApiImpl::DeviceSetTsId(const uint32_t tsId)
 
 rtError_t ApiImpl::DeviceGetTsId(uint32_t *tsId)
 {
-    *tsId = InnerThreadLocalContainer::GetTsId();
+    const uint32_t devTsId = InnerThreadLocalContainer::GetTsId();
+    *tsId = devTsId;
+
+    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    // 如果非哨兵模式且非单F， 直接返回线程变量信息
+    COND_PROC(!sentinelMode, return RT_ERROR_NONE;);
+
+    // 如果是哨兵模式或者单F，默认设置TSV ID
+    *tsId = RT_TSV_ID;
+    COND_PROC((devTsId != RT_TSV_ID), return DeviceSetTsId(RT_TSV_ID););
 
     return RT_ERROR_NONE;
 }

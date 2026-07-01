@@ -196,8 +196,8 @@ protected:
         MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
 
-        rtSetTSDevice(RT_TSV_ID);
         rtSetDevice(0);
+        rtSetTSDevice(RT_TSV_ID);
 
         (void)rtSetSocVersion("MC62CM12AA");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
