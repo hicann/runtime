@@ -9,6 +9,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+set -e
+
 sourcedir="${INSTALL_PATH}"
 pkg_arch_name="${PKG_ARCH_NAME}"
 
@@ -24,8 +26,8 @@ stub_libs="
 
 remove_runtime_prereq_file() {
     local prereq_file="$1"
-    [ -f "${prereq_file}" ] || return
-    grep -q "share/info/runtime" "${prereq_file}" || return
+    [ -f "${prereq_file}" ] || return 0
+    grep -q "share/info/runtime" "${prereq_file}" || return 0
 
     local file_mod="$(stat -c %a "${prereq_file}" 2> /dev/null)"
     local tmp_file="${prereq_file}.tmp.$$"
@@ -46,11 +48,11 @@ remove_prereq_script_file() {
         return
     fi
     local bindir="${install_path}/${pkg_arch_name}-linux/bin"
-    [ -d "${bindir}" ] && {
+    if [ -d "${bindir}" ]; then
         for prereq_file in prereq_check.bash prereq_check.csh prereq_check.fish; do
             remove_runtime_prereq_file "${bindir}/${prereq_file}"
         done
-    }
+    fi
 }
 
 remove_stub_softlink() {
@@ -59,10 +61,12 @@ remove_stub_softlink() {
         return
     fi
     local devlibdir="${install_path}/${pkg_arch_name}-linux/devlib"
-    ([ -d "${devlibdir}" ] && cd "${devlibdir}" && {
-        chmod u+w . && echo "${stub_libs}" | xargs --no-run-if-empty rm -rf
-        chmod u-w .
-    })
+    if [ -d "${devlibdir}" ]; then
+        (cd "${devlibdir}" && {
+            chmod u+w . && echo "${stub_libs}" | xargs --no-run-if-empty rm -rf
+            chmod u-w .
+        })
+    fi
 }
 
 remove_acl_empty_headers() {
@@ -72,11 +76,19 @@ remove_acl_empty_headers() {
         return
     fi
 
-    chmod u+w "$acl_headers_dir"
-    for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
-        rm -rf "${acl_headers_dir}/${header}" > /dev/null 2>&1
-    done
-    chmod u-w "$acl_headers_dir" > /dev/null 2>&1
+    (
+        cleanup_acl_headers_dir() {
+            local ret=$?
+            chmod u-w "$acl_headers_dir" > /dev/null 2>&1 || ret=1
+            exit "$ret"
+        }
+
+        trap cleanup_acl_headers_dir EXIT
+        chmod u+w "$acl_headers_dir"
+        for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
+            rm -rf "${acl_headers_dir}/${header}" > /dev/null 2>&1
+        done
+    )
 }
 
 process_acl_empty_headers() {

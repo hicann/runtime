@@ -93,7 +93,7 @@ static rtError_t CheckFusionDynSizeValid(TaskInfo* taskInfo, const rtFunsionTask
 
     const uint32_t subKernelNum = fusionKernel->subTaskNum;
     for (uint32_t idx = 0; idx < subKernelNum; idx++) {
-        uint32_t subKernelType = fusionKernel->subTask[idx].type;
+        const uint32_t subKernelType = fusionKernel->subTask[idx].type;
         if (subKernelType == RT_FUSION_AICORE) {
             FusionTaskInfoAicPart *aicPart = &(taskInfo->u.fusionKernelTask.aicPart);
             Kernel *kernel = aicPart->kernel;
@@ -101,7 +101,7 @@ static rtError_t CheckFusionDynSizeValid(TaskInfo* taskInfo, const rtFunsionTask
                 continue;
             }
 
-            rtError_t ret = CheckAndGetTotalShareMemorySize(kernel, aicPart->dynamicShareMemSize, aicPart->simtDcuSmSize);
+            const rtError_t ret = CheckAndGetTotalShareMemorySize(kernel, aicPart->dynamicShareMemSize, aicPart->simtDcuSmSize);
             if (ret != RT_ERROR_NONE) {
                 return ret;
             }
@@ -205,8 +205,8 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
     uint8_t isHas32B = 0U;
     uint32_t dieIdArrange = 0U;
     uint32_t checkArrange = 0U;
-    const uint8_t devDieNum = stm->Device_()->GetDevProperties().ioDieNum;
-    const uint8_t dieNum = (devDieNum != 0) ? devDieNum : 2U;
+    const uint32_t devDieNum = stm->Device_()->GetDevProperties().ioDieNum;
+    const uint32_t dieNum = (devDieNum != 0U) ? devDieNum : 2U;
 
     // get ccu subType
     for (uint32_t i = 0U; i < ccuInfo->taskNum; i++) {
@@ -217,7 +217,7 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
             ccuInfo->ccuTaskInfo[i].argSize,
             std::to_string(RT_CCU_SQE32B_ARGS_SIZE) + " or " + std::to_string(RT_CCU_SQE128B_ARGS_SIZE));
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].dieId >= dieNum, RT_ERROR_INVALID_VALUE,
-            ccuInfo->ccuTaskInfo[i].dieId, "[0, " + std::to_string(dieNum) + ")");
+            static_cast<uint32_t>(ccuInfo->ccuTaskInfo[i].dieId), "[0, " + std::to_string(dieNum) + ")");
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].missionId > RT_CCU_MISSION_ID_MAX,
             RT_ERROR_INVALID_VALUE, ccuInfo->ccuTaskInfo[i].missionId,
             "[0, " + std::to_string(RT_CCU_MISSION_ID_MAX) + "]");
@@ -240,7 +240,7 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
 
     // 双die num奇数返错 0x18 -> 11000
     const bool isDoubleDie = (sqeSubType & 0x18U) == 0x18U ? true : false;
-    uint8_t taskNum = static_cast<uint8_t>(ccuInfo->taskNum);
+    uint32_t taskNum = ccuInfo->taskNum;
     if (isDoubleDie) {
         COND_RETURN_AND_MSG_OUTER(((taskNum & 1U) == 1U), RT_ERROR_INVALID_VALUE,
             ErrorCode::EE1011, __func__, static_cast<uint32_t>(taskNum), "taskNum",
@@ -258,7 +258,7 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
         taskNum, "1");
     ccuArgSize = (isHas32B == 1U) ? RT_CCU_SQE32B_ARGS_SIZE : RT_CCU_SQE128B_ARGS_SIZE;
     // mission id的递增
-    COND_RETURN_AND_MSG_OUTER(!CheckCcuMissionId(ccuInfo->ccuTaskInfo, static_cast<int32_t>(ccuInfo->taskNum),
+    COND_RETURN_AND_MSG_OUTER(!CheckCcuMissionId(ccuInfo->ccuTaskInfo, ccuInfo->taskNum,
         isDoubleDie), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "missionId",
         "CCU subtask mission IDs must be strictly increasing");
 
@@ -388,7 +388,7 @@ static rtError_t CheckUpdateFusionTaskInfo(const TaskInfo * const updateTask, ui
         RtFmtMsg("The update stream (stream_id=%d) must be a single operator stream, not bound to a model (model_id=%u)", stm->Id_(), stm->Model_()->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(updateTask->u.fusionKernelTask.sqeLen != sqeLen, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1011, __func__, sqeLen, "sqeLen",
+        ErrorCode::EE1011, __func__, static_cast<uint32_t>(sqeLen), "sqeLen",
         "sqeLen must match the original fusion task's sqeLen (" +
         std::to_string(updateTask->u.fusionKernelTask.sqeLen) + ")");
 
@@ -449,7 +449,7 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);, "stream_id=%d check failed, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
     DavidStream *davidStm = static_cast<DavidStream *>(stm);
-    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
+    const bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     TaskInfo *taskInfo = nullptr;

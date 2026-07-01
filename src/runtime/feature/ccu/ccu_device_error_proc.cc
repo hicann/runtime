@@ -47,19 +47,19 @@ static void ParseCcuDfxInfo(rtMultiCCUExDetailInfo_t * const multiCcuInfo, const
 	std::unordered_map<uint32_t, const StarsCcuDfxInfo*> dfxInfoMap;
 	for (uint8_t idx = 0U; idx < info->u.ccuErrorInfo.comm.coreNum; idx++) {
 	    const StarsCcuDfxInfo *dfxInfo = &(info->u.ccuErrorInfo.dfxInfo[idx]);
-	    uint32_t key = (dfxInfo->dieId) << DIE_ID_SHIFT_BITS | (dfxInfo->missionId);
-	    dfxInfoMap.emplace(key, dfxInfo);
+	    const uint32_t key = (dfxInfo->dieId) << DIE_ID_SHIFT_BITS | (dfxInfo->missionId);
+	    (void)dfxInfoMap.emplace(key, dfxInfo);
 	}
 	for (uint8_t idx = 0U; idx < multiCcuInfo->ccuMissionNum; idx++) {
-	    uint8_t dieId = multiCcuInfo->missionInfo[idx].dieId;
-	    uint8_t missionId = multiCcuInfo->missionInfo[idx].missionId;
-	    uint32_t key = ((dieId << DIE_ID_SHIFT_BITS) | missionId);
+	    const uint8_t dieId = multiCcuInfo->missionInfo[idx].dieId;
+	    const uint8_t missionId = multiCcuInfo->missionInfo[idx].missionId;
+	    const uint32_t key = ((dieId << DIE_ID_SHIFT_BITS) | missionId);
 	    auto it = dfxInfoMap.find(key);
 	    if (it != dfxInfoMap.end()) {
 	        const StarsCcuDfxInfo *dfxInfo = it->second;
 	        multiCcuInfo->missionInfo[idx].status = dfxInfo->status;
 	        multiCcuInfo->missionInfo[idx].subStatus = dfxInfo->subStatus;
-	        int ret = memcpy_s(multiCcuInfo->missionInfo[idx].panicLog, MAX_CCU_EXCEPTION_INFO_SIZE,
+	        const errno_t ret = memcpy_s(multiCcuInfo->missionInfo[idx].panicLog, MAX_CCU_EXCEPTION_INFO_SIZE,
 	            dfxInfo->panicLog, MAX_CCU_EXCEPTION_INFO_SIZE);
 	        if (ret != 0) {
 	            RT_LOG(RT_LOG_ERROR, "memcpy failed, die_id=%u, mission_id=%u", dieId, missionId);
@@ -114,7 +114,7 @@ static void MapCcuErrorCodeForFastRecovery(const uint8_t status, const uint8_t s
     RT_LOG(RT_LOG_ERROR,
  	    "CCU Launch task error status=%#x, subStatus=%#x, device_id=%u, stream_id=%d, task_id=%hu",
  	    status, subStatus, devId, taskInfo->stream->Id_(), taskInfo->id);
-    bool hasMteErr = HasMteErr(device);
+    const bool hasMteErr = HasMteErr(device);
     if ((status == CCU_TASK_LOCAL_MEM_ERROR) ||
         (status == CCU_TASK_MEM_COPY_ERROR && subStatus == CCU_TASK_READ_LOCAL_MEM_ERROR_SUBSTATUS)) {
         if (hasMteErr && !HasMemUceErr(devId, g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
@@ -140,6 +140,7 @@ static void MapCcuErrorCodeForFastRecovery(const uint8_t status, const uint8_t s
                 devId, taskInfo->stream->Id_(), taskInfo->id, taskInfo->mte_error);
         }
     } else {
+        // No fast recovery mapping is required for other CCU status.
     }
 }
 
@@ -151,7 +152,7 @@ static void MapFusionCcuErrorCodeForFastRecovery(const uint8_t ccuStatus, const 
     RT_LOG(RT_LOG_ERROR,
  	    "fusion CCU Launch task status=%#x, subStatus=%#x, device_id=%u, stream_id=%d, task_id=%hu.",
  	    ccuStatus, subStatus, devId, taskInfo->stream->Id_(), taskInfo->id);
-    bool hasMteErr = HasMteErr(device);
+    const bool hasMteErr = HasMteErr(device);
     if ((ccuStatus == CCU_TASK_LOCAL_MEM_ERROR) ||
  	    (ccuStatus == CCU_TASK_MEM_COPY_ERROR && subStatus == CCU_TASK_READ_LOCAL_MEM_ERROR_SUBSTATUS)) {
         if (hasMteErr && !HasMemUceErr(devId, g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
@@ -178,6 +179,7 @@ static void MapFusionCcuErrorCodeForFastRecovery(const uint8_t ccuStatus, const 
                 devId, taskInfo->stream->Id_(), taskInfo->id, taskInfo->mte_error);
         }
     } else {
+        // No fast recovery mapping is required for other fusion CCU status.
     }
 }
 
@@ -207,6 +209,7 @@ static void ParseAndGetCcuExceptionInfo(rtExceptionExpandInfo_t * const expandIn
             MapFusionCcuErrorCodeForFastRecovery(ccuStatus, subStatus, RtPtrToUnConstPtr<TaskInfo *>(taskInfo));
         }
     } else {
+        // Other task types do not carry CCU exception info.
     }
 }
 
@@ -291,6 +294,7 @@ rtError_t ProcessDavidStarsCcuErrorInfo(const StarsDeviceErrorInfo * const info,
     } else if (errTaskPtr->type == TS_TASK_TYPE_FUSION_KERNEL) {
         TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), info);
     } else {
+        // Other task types do not need CCU task-fail callback handling.
     }
 
     return RT_ERROR_NONE;

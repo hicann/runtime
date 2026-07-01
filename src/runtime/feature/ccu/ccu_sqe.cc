@@ -162,15 +162,15 @@ static rtError_t ConstructCcuSubSqeFor32B(const rtCcuTaskInfo_t * const subInfo,
         sqeAddr = GetSqPosAddr(sqBaseAddr, pos);
     }
     /* word6-7 memcpy, 2*4=8B */
-    constexpr uint8_t cpySize = sizeof(uint32_t) * 2;
-    constexpr int32_t moveSize = static_cast<int32_t>(sizeof(RtDavidStarsCcuSqe32B) - cpySize);
+    constexpr size_t cpySize = sizeof(uint32_t) * 2U;
+    constexpr size_t moveSize = sizeof(RtDavidStarsCcuSqe32B) - cpySize;
 
     RtDavidStarsCcuSqe32B * const sqe = &(sqeAddr->ccuSqe32B[idx]);
     FusionCcuSubSqeCommonInit(subInfo, taskInfo, taskCnt, sqe);
 
     const errno_t ret = memcpy_s(RtPtrToPtr<uint8_t *>(sqe) + moveSize, cpySize, subInfo->args, cpySize);
     COND_RETURN_ERROR_MSG_INNER((ret != EOK), RT_ERROR_SEC_HANDLE,
-        "Failed to call memcpy_s to copy subInfo->args, dest=%p, dest_max=%u, src=%p, count=%u, retCode=%d.",
+        "Failed to call memcpy_s to copy subInfo->args, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.",
         RtPtrToPtr<uint8_t *>(sqe) + moveSize, cpySize, subInfo->args, cpySize, ret);
 
     RT_LOG(RT_LOG_INFO, "taskIdx=%u, sqeIndex=%u, missionId=%hhu, dieId=%hhu, instStartId=%hu, instCnt=%hu,"

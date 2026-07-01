@@ -9,6 +9,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+set -e
+
 sourcedir="${INSTALL_PATH}"
 pkg_arch_name="${PKG_ARCH_NAME}"
 
@@ -30,7 +32,7 @@ add_prereq_script_file() {
     rm -f "${install_path}/device-npu-runtime.tar.gz"
     local src_bindir="${install_path}/share/info/runtime/bin"
     local bindir="${install_path}/${pkg_arch_name}-linux/bin"
-    [ -d "${src_bindir}" ] && [ -d "${bindir}" ] && {
+    if [ -d "${src_bindir}" ] && [ -d "${bindir}" ]; then
         for prereq_file in prereq_check.bash prereq_check.csh prereq_check.fish; do
             local src_file="${src_bindir}/${prereq_file}"
             local dst_file="${bindir}/${prereq_file}"
@@ -40,7 +42,7 @@ add_prereq_script_file() {
             printf '#!/usr/bin/env %s\n%s\n' "${shell_name}" "${src_file}" > "${dst_file}"
             chmod 555 "${dst_file}" > /dev/null 2>&1
         done
-    }
+    fi
 }
  	 
 create_stub_softlink() {
@@ -49,19 +51,23 @@ create_stub_softlink() {
         return
     fi
     local devlibdir="${install_path}/${pkg_arch_name}-linux/devlib"
-    ([ -d "${devlibdir}" ] && cd "${devlibdir}" && {
-        chmod u+w . && \
-        for lib in ${stub_libs}; do
-            lib="linux/${pkg_arch_name}/$lib"
-            [ -f "$lib" ] && ln -sf "$lib" "$(basename $lib)"
-        done
-        chmod u-w .
-    })
+    if [ -d "${devlibdir}" ]; then
+        (cd "${devlibdir}" && {
+            chmod u+w . && \
+            for lib in ${stub_libs}; do
+                lib="linux/${pkg_arch_name}/$lib"
+                [ -f "$lib" ] && ln -sf "$lib" "$(basename $lib)"
+            done
+            chmod u-w .
+        })
+    fi
 }
 
 get_dir_mod() {
     local path="$1"
-    [ -e "$path" ] && stat -c %a "$path"
+    if [ -e "$path" ]; then
+        stat -c %a "$path"
+    fi
 }
 
 gen_acl_header() {
@@ -83,7 +89,9 @@ EOF
  * */
 EOF
     fi
-    [ -n "$mod" ] && chmod "$mod" "$header" > /dev/null 2>&1
+    if [ -n "$mod" ]; then
+        chmod "$mod" "$header" > /dev/null 2>&1
+    fi
 }
 
 create_acl_empty_headers() {
@@ -93,13 +101,21 @@ create_acl_empty_headers() {
         return
     fi
 
-    chmod u+w "$acl_headers_dir"
-    local ref_header="$(find "$acl_headers_dir" -maxdepth 1 -type f -name "*.h" | head -1)"
-    local mod="$(get_dir_mod "$ref_header" 2> /dev/null)"
-    for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
-        gen_acl_header "${acl_headers_dir}/${header}" "$mod"
-    done
-    chmod u-w "$acl_headers_dir" > /dev/null 2>&1
+    (
+        cleanup_acl_headers_dir() {
+            local ret=$?
+            chmod u-w "$acl_headers_dir" > /dev/null 2>&1 || ret=1
+            exit "$ret"
+        }
+
+        trap cleanup_acl_headers_dir EXIT
+        chmod u+w "$acl_headers_dir"
+        local ref_header="$(find "$acl_headers_dir" -maxdepth 1 -type f -name "*.h" | head -1)"
+        local mod="$(get_dir_mod "$ref_header" 2> /dev/null)"
+        for header in acl_base_mdl.h acl_mdl.h acl_op.h; do
+            gen_acl_header "${acl_headers_dir}/${header}" "$mod"
+        done
+    )
 }
 
 process_acl_empty_headers() {

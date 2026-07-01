@@ -384,7 +384,7 @@ bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task)
     return false;
 }
 
-bool IsStreamBindWithSubModel(Stream * const stream)
+bool IsStreamBindWithSubModel(const Stream * const stream)
 {
     COND_PROC(stream == nullptr, return false;);
 
@@ -404,11 +404,11 @@ bool IsStreamBindWithSubModel(Stream * const stream)
     return false;
 }
 
-bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr)
+bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, const void *const desAddr)
 {
     TaskInfo taskInfo = {};
-    taskInfo.stream = const_cast<Stream *>(stm);
-    rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, desAddr);
+    taskInfo.stream = stm;
+    rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, RtPtrToUnConstPtr<void *>(desAddr));
     COND_RETURN_ERROR(error != RT_ERROR_NONE, false, "Failed to convert copy type, kind=%u.", kind);
 
     MemcpyAsyncTaskInfo memcpyAsyncTaskInfo = taskInfo.u.memcpyAsyncTaskInfo;
@@ -419,10 +419,11 @@ bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, 
     return false;
 }
 
-bool IsUbDmaWithSubModel(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr)
+bool IsUbDmaWithSubModel(const Stream *const stm, const uint32_t kind, const void *const srcAddr,
+    const void *const desAddr)
 {
     COND_PROC(stm == nullptr, return false;);
-    bool flag = IsUbDma(stm, kind, srcAddr, desAddr);
+    bool flag = IsUbDma(RtPtrToUnConstPtr<Stream *>(stm), kind, srcAddr, desAddr);
     COND_PROC(!flag, return false;);
 
     flag = IsStreamBindWithSubModel(stm);

@@ -43,13 +43,13 @@ bool IsUseHardwareEvent(Device * const dev) { UNUSED(dev); return false; }
 rtError_t AllocNotifyIdForSubModel(Model * const mdl, Notify *notify) { UNUSED(mdl); UNUSED(notify); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 rtError_t ReleaseNotify(Model * const mdl, Notify *notify) { UNUSED(mdl); UNUSED(notify); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId) { UNUSED(parentModel); UNUSED(sqId); return UINT32_MAX; }
-bool IsStreamBindWithSubModel(Stream * const stream) { UNUSED(stream); return false; }
+bool IsStreamBindWithSubModel(const Stream * const stream) { UNUSED(stream); return false; }
 bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task) { UNUSED(task); return false; }
 void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe) { UNUSED(taskInfo); UNUSED(sqe); }
 void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *const command) { UNUSED(taskInfo); UNUSED(command); }
 void CaptureConditionTaskUnInit(TaskInfo * const taskInfo) { UNUSED(taskInfo); }
-bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
-bool IsUbDmaWithSubModel(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
+bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, const void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
+bool IsUbDmaWithSubModel(const Stream *const stm, const uint32_t kind, const void *const srcAddr, const void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
 
 }
 }

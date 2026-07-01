@@ -35,9 +35,10 @@ bool IsUseHardwareEvent(Device * const dev);
 rtError_t AllocNotifyIdForSubModel(Model * const mdl, Notify *notify);
 rtError_t ReleaseNotify(Model * const mdl, Notify *notify);
 uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId);
-bool IsStreamBindWithSubModel(Stream * const stream);
+bool IsStreamBindWithSubModel(const Stream * const stream);
 bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task);
-bool IsUbDmaWithSubModel(Stream *const stm, const uint32_t kind, const void *const srcAddr, void *const desAddr);
+bool IsUbDmaWithSubModel(const Stream *const stm, const uint32_t kind, const void *const srcAddr,
+    const void *const desAddr);
 
 }
 }
