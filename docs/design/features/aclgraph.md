@@ -31,7 +31,7 @@
   ret = aclmdlRICaptureEnd(stream, &captureModel);
   
   // 多次执行捕获的图
-  ret = aclmdlRIExecute(captureModel, exeStream, -1);
+  ret = aclmdlRIExecuteAsync(captureModel, exeStream);
   ```
 
 - **场景二**：多流捕获（级联捕获）
@@ -114,7 +114,7 @@
   aclmdlRICaptureEnd(stream1, &parentModel);
   
   // 8. 执行父模型，条件值决定执行哪个子模型分支
-  aclmdlRIExecute(parentModel, exeStream, -1);
+  aclmdlRIExecuteAsync(parentModel, exeStream);
   ```
 
 ### 2.2 对外接口
@@ -129,7 +129,6 @@
 | `aclmdlRICaptureTaskGrpEnd()` | `src/acl/aclrt_impl/model_ri.cpp` | 结束任务组                 |
 | `aclmdlRICaptureTaskUpdateBegin()` | `src/acl/aclrt_impl/model_ri.cpp` | 开始任务更新               |
 | `aclmdlRICaptureTaskUpdateEnd()` | `src/acl/aclrt_impl/model_ri.cpp` | 结束任务更新               |
-| `aclmdlRIExecute()` | `src/acl/aclrt_impl/model_ri.cpp` | 执行捕获模型               |
 | `aclmdlRIExecuteAsync()` | `src/acl/aclrt_impl/model_ri.cpp` | 异步执行捕获模型           |
 | `aclmdlRIUpdate()` | `src/acl/aclrt_impl/model_ri.cpp` | 更新捕获模型               |
 | `aclmdlRICaptureThreadExchangeMode()` | `src/acl/aclrt_impl/model_ri.cpp` | 交换线程捕获模式           |
@@ -210,7 +209,7 @@ graph TB
     subgraph API["接口层"]
         BeginCapture["aclmdlRICaptureBegin()"]
         EndCapture["aclmdlRICaptureEnd()"]
-        ModelExecute["aclmdlRIExecute()"]
+        ModelExecute["aclmdlRIExecuteAsync()"]
         TaskGrp["aclmdlRICaptureTaskGrpBegin/EndTaskGrp()"]
     end
 
@@ -297,7 +296,7 @@ sequenceDiagram
     Stream->>Stream: ExitCapture()
     Context-->>App: 返回 CaptureModel
 
-    App->>CaptureModel: aclmdlRIExecute(model, exeStream)
+    App->>CaptureModel: aclmdlRIExecuteAsync(model, exeStream)
     CaptureModel->>CaptureModel: BuildSqCq(exeStream)
     CaptureModel->>SqCq: AllocSqCq(streamNum)
     CaptureModel->>CaptureModel: BindSqCqAndSendSqe
@@ -357,7 +356,7 @@ sequenceDiagram
     CaptureModel->>SubModel: 检查所有子模型是否 READY
     Context-->>App: 返回 CaptureModel
 
-    App->>CaptureModel: aclmdlRIExecute(parentModel, exeStream)
+    App->>CaptureModel: aclmdlRIExecuteAsync(parentModel, exeStream)
     CaptureModel->>CaptureModel: BuildSqCq(exeStream)
     CaptureModel->>CaptureModel: SendLoadCompleteEndGraph
     CaptureModel->>SubModel: ModelEndGraph
@@ -715,7 +714,7 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
 
 ```mermaid
 flowchart TD
-    A[aclmdlRIExecute] --> B[检查捕获状态]
+    A[aclmdlRIExecuteAsync] --> B[检查捕获状态]
     B --> C{是否正在捕获}
     C -->|是| D[返回 ACL_ERROR_RT_MODEL_CAPTURED]
     C -->|否| E[检查模型状态]
