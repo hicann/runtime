@@ -1012,6 +1012,14 @@ drvError_t halMemHostGetDevPointer_not_support_stub(void *srcPtr, uint32_t devid
     return DRV_ERROR_NOT_SUPPORT;
 }
 
+void MockHostGetDevPointerFeatureNotSupport()
+{
+    Driver *driver = Runtime::Instance()->CurrentContext()->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostGetDevPointer)
+        .stubs()
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+}
+
 TEST_F(RtApiTest, host_register_pinned)
 {
     rtError_t error;
@@ -1019,15 +1027,13 @@ TEST_F(RtApiTest, host_register_pinned)
     uintptr_t value = 0x123U;
     void **devPtr = (void **)&value;
 
-    MOCKER(&halMemHostGetDevPointer)
-        .stubs()
-        .will(invoke(halMemHostGetDevPointer_not_support_stub));
+    MockHostGetDevPointerFeatureNotSupport();
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(*devPtr, nullptr);
 
     error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 1U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
@@ -1074,9 +1080,7 @@ TEST_F(RtApiTest, host_register_pinned_mapped)
     MOCKER(&halHostRegister)
         .stubs()
         .will(invoke(halHostRegister_stub));
-    MOCKER(&halMemHostGetDevPointer)
-        .stubs()
-        .will(invoke(halMemHostGetDevPointer_not_support_stub));
+    MockHostGetDevPointerFeatureNotSupport();
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1098,7 +1102,7 @@ TEST_F(RtApiTest, host_register_pinned_mapped)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtHostGetDevicePointer(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U), devPtr, 0U);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(*devPtr, nullptr);
 
     error = rtHostGetDevicePointer(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 5U), devPtr, 1U);
@@ -1122,7 +1126,7 @@ TEST_F(RtApiTest, host_register_pinned_mapped)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
-TEST_F(RtApiTest, host_register_atomic)
+TEST_F(RtApiTest, host_get_device_pointer_hal_not_support)
 {
     rtError_t error;
     auto ptr = std::make_unique<uint32_t>();
@@ -1136,12 +1140,34 @@ TEST_F(RtApiTest, host_register_atomic)
         .stubs()
         .will(invoke(halMemHostGetDevPointer_not_support_stub));
 
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    error = rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(RtApiTest, host_register_atomic)
+{
+    rtError_t error;
+    auto ptr = std::make_unique<uint32_t>();
+    uintptr_t value = 0x123U;
+    void **devPtr = (void **)&value;
+
+    MOCKER(&halHostRegister)
+        .stubs()
+        .will(invoke(halHostRegister_stub));
+    MockHostGetDevPointerFeatureNotSupport();
+
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
     error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(*devPtr, nullptr);
     error = rtsHostUnregister(ptr.get());
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1155,9 +1181,7 @@ TEST_F(RtApiTest, host_register_iomemory_readonly)
     MOCKER(&halHostRegister)
         .stubs()
         .will(invoke(halHostRegister_flag_stub));
-    MOCKER(&halMemHostGetDevPointer)
-        .stubs()
-        .will(invoke(halMemHostGetDevPointer_not_support_stub));
+    MockHostGetDevPointerFeatureNotSupport();
 
     auto readOnlyPtr = std::make_unique<uint32_t>();
     void **readOnlyDevPtr = reinterpret_cast<void **>(&value);
