@@ -283,7 +283,8 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 
 | 产品 | 是否支持 |
 | --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
+| Ascend 950PR | √ |
+| Ascend 950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -354,7 +355,8 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 
 | 产品 | 是否支持 |
 | --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
+| Ascend 950PR | √ |
+| Ascend 950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -444,7 +446,8 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 
 | 产品 | 是否支持 |
 | --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
+| Ascend 950PR | √ |
+| Ascend 950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
