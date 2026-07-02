@@ -492,7 +492,6 @@ Stream* CaptureModel::GetOriginalCaptureStream(void) const
 }
 rtError_t CaptureModel::ReleaseNotifyId(uint32_t &releaseNum)
 {
-
     rtError_t error = RT_ERROR_NOTIFY_NOT_COMPLETE;
     if ((GetEndGraphNotify() != nullptr) && (refCount_ == 0U)) {
         RT_LOG(RT_LOG_WARNING, "model_id=%u free endgraph notify_id=%u", Id_(), GetEndGraphNotify()->GetNotifyId());

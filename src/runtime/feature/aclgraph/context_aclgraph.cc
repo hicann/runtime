@@ -548,7 +548,6 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
         "Failed to reset capture events, retCode=%#x.", static_cast<uint32_t>(error));
 
-
     if (!captureModelTmp->IsSoftwareSqEnable()) {
         Api * const apiObj = Runtime::Instance()->ApiImpl_();
         error = apiObj->ModelEndGraph(captureModel, captureStream, 0U);
