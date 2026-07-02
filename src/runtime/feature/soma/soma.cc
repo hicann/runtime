@@ -142,7 +142,7 @@ rtError_t SomaApi::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr,
     std::shared_ptr<SegmentManager> segMgr = PoolRegistry::Instance().QueryMemPool(RtPtrToPtr<SegmentManager *>(memPool));
     COND_RETURN_AND_MSG_OUTER(segMgr == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Setting memory pool attribute", "memPool",
-        RtFmtMsg("The specified memory pool %p is not created, please create the memory pool before setting its attributes", segMgr));
+        RtFmtMsg("The specified memory pool %p is not created, please create the memory pool before setting its attributes", memPool));
 
     COND_RETURN_AND_MSG_OUTER((attr == rtMemPoolAttrReservedMemCurrent) || (attr == rtMemPoolAttrUsedMemCurrent), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1011, "Setting memory pool attribute", RtFmtMsg("%s(%u)", MemPoolAttrToName(attr), static_cast<uint32_t>(attr)),
@@ -166,7 +166,7 @@ rtError_t SomaApi::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr,
     std::shared_ptr<SegmentManager> segMgr = PoolRegistry::Instance().QueryMemPool(RtPtrToPtr<SegmentManager *>(memPool));
     COND_RETURN_AND_MSG_OUTER(segMgr == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Getting memory pool attribute", "memPool",
-        RtFmtMsg("The specified memory pool %p is not created, please create the memory pool before getting its attributes", segMgr));
+        RtFmtMsg("The specified memory pool %p is not created, please create the memory pool before getting its attributes", memPool));
 
     if ((attr == rtMemPoolReuseFollowEventDependencies) || (attr == rtMemPoolReuseAllowOpportunistic) ||
         (attr == rtMemPoolReuseAllowInternalDependencies)) {
