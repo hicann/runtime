@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <limits>
 #include <new>
 #include <string>
 #include "common/enum_to_string_utils.hpp"
@@ -1688,7 +1689,7 @@ rtError_t ApiImpl::StreamSynchronize(Stream * const stm, const int32_t timeout)
     errCode = curStm->Synchronize(false, timeout);
     if (errCode == RT_ERROR_STREAM_SYNC_TIMEOUT) {
         (void)GetStreamTimeoutSnapshotMsg();
-        uint16_t taskId = MAX_UINT16_NUM;
+        uint16_t taskId = std::numeric_limits<uint16_t>::max();
         const char_t *taskTypeName = "UNKOWN";
         tsTaskType_t taskType = TS_TASK_TYPE_RESERVED;
         curStm->GetCurrentRunningTaskInfo(taskId, taskType, taskTypeName);
@@ -8980,9 +8981,8 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
             error = GetCaptureWaitTaskParams(taskInfo, params);
             break;
         case TS_TASK_TYPE_MEM_WRITE_VALUE: {
-            constexpr char_t EVENT_RESET_NAME[] = "EVENT_RESET";
-            if ((strncmp(taskInfo->typeName, EVENT_RESET_NAME, sizeof(EVENT_RESET_NAME) - 1U) == 0) &&
-                (taskInfo->typeName[sizeof(EVENT_RESET_NAME) - 1U] == '\0')) {
+            const std::string eventResetName = "EVENT_RESET";
+            if (eventResetName == taskInfo->typeName) {
                 error = GetCaptureResetTaskParams(taskInfo, params);
             } else {
                 error = GetWriteValueTaskParams(taskInfo, params);

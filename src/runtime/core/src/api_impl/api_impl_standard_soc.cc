@@ -611,7 +611,7 @@ rtError_t ApiImpl::ProcError(rtError_t error)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, const rtGetMsgCallback callback)
+rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, rtGetMsgCallback const callback)
 {
     RT_LOG(RT_LOG_DEBUG, "GetDeviceMsg, getMsgType=%d", static_cast<int32_t>(getMsgType));
     const auto chipType = Runtime::Instance()->GetChipType();
@@ -625,7 +625,7 @@ rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, const rtGetMsgC
 
     if (getMsgType == RT_GET_DEV_ERROR_MSG) {
         const rtError_t error = GetDevErrMsg(callback);
-        ProcError(error);
+        (void)ProcError(error);
         ERROR_RETURN(error, "Failed to GetDeviceErrMsg, retCode=%#x.", static_cast<uint32_t>(error));
     } else if (getMsgType == RT_GET_DEV_RUNNING_STREAM_SNAPSHOT_MSG) {
         const rtError_t error = GetDevRunningStreamSnapshotMsg(callback);
