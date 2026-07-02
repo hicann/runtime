@@ -474,11 +474,10 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
     std::unique_lock<std::mutex> taskLock(captureLock_);
     const rtStreamCaptureStatus status = stm->GetCaptureStatus();
     /* check capture status */
-    if (status == RT_STREAM_CAPTURE_STATUS_NONE) {
-        RT_LOG(RT_LOG_ERROR, "stream is not in capture status, device_id=%u, origin stream_id=%d, status=NONE.",
-            device_->Id_(), stm->Id_());
-        return RT_ERROR_STREAM_NOT_CAPTURED;
-    }
+    COND_RETURN_AND_MSG_OUTER(status == RT_STREAM_CAPTURE_STATUS_NONE, RT_ERROR_STREAM_NOT_CAPTURED,
+        ErrorCode::EE1018, "rtStreamEndCapture",
+        RtFmtMsg("The stream (stream_id=%d) is not in capture status, call rtStreamBeginCapture API to capture stream first", 
+                 stm->Id_()));
 
     Stream *captureStream = stm->GetCaptureStream();
     NULL_STREAM_PTR_RETURN_MSG(captureStream);
