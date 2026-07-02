@@ -50,6 +50,8 @@ target_compile_options(acl_rt_impl PRIVATE
 target_compile_definitions(acl_rt_impl PRIVATE
     OS_TYPE=0
     FUNC_VISIBILITY
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
 )
 
 # Link options for the generated forwarding stub library.

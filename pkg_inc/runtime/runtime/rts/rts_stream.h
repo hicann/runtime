@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 #define RT_STREAM_DESTORY_FLAG_DEFAULT 0x0ULL
 #define RT_STREAM_DESTORY_FLAG_FORCE 0x1ULL  //Force destroy: The stream will be destroyed without waiting for all tasks on the stream to be completed.
 
@@ -74,7 +76,7 @@ typedef struct {
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config);
 
 /**
  * @ingroup dvrt_stream
@@ -85,7 +87,7 @@ RTS_API rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *co
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue); 
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue);
 
 /**
  * @ingroup dvrt_stream
@@ -96,7 +98,7 @@ RTS_API rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, 
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue);
 
 /**
  * @ingroup rts_stream
@@ -106,7 +108,7 @@ RTS_API rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, 
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags);
 
 /**
  * @ingroup rts_stream
@@ -115,7 +117,7 @@ RTS_API rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamAbort(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamAbort(rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -125,7 +127,7 @@ RTS_API rtError_t rtsStreamAbort(rtStream_t stm);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamSynchronize(rtStream_t stm, int32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamSynchronize(rtStream_t stm, int32_t timeout);
 
 /**
  * @ingroup rts_stream
@@ -134,7 +136,7 @@ RTS_API rtError_t rtsStreamSynchronize(rtStream_t stm, int32_t timeout);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamQuery(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamQuery(rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -143,7 +145,7 @@ RTS_API rtError_t rtsStreamQuery(rtStream_t stm);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamGetAvailableNum(uint32_t *streamCount);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamGetAvailableNum(uint32_t *streamCount);
 
 /**
  * @ingroup rts_stream
@@ -153,7 +155,7 @@ RTS_API rtError_t rtsStreamGetAvailableNum(uint32_t *streamCount);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId);
 
 /**
  * @ingroup rts_stream
@@ -162,7 +164,7 @@ RTS_API rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamBeginTaskGrp(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamBeginTaskGrp(rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -172,7 +174,7 @@ RTS_API rtError_t rtsStreamBeginTaskGrp(rtStream_t stm);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
 
 /**
  * @ingroup rts_stream
@@ -182,7 +184,7 @@ RTS_API rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);
 
 /**
  * @ingroup rts_stream
@@ -191,7 +193,7 @@ RTS_API rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsStreamEndTaskUpdate(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamEndTaskUpdate(rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -206,7 +208,7 @@ RTS_API rtError_t rtsStreamEndTaskUpdate(rtStream_t stm);
  * @return RT_ERROR_NONE for complete
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsSwitchStream(void *leftValue, rtCondition_t cond, void *rightValue,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSwitchStream(void *leftValue, rtCondition_t cond, void *rightValue,
     rtSwitchDataType_t dataType, rtStream_t trueStream, rtStream_t falseStream, rtStream_t stream);
 
 /**
@@ -217,7 +219,7 @@ RTS_API rtError_t rtsSwitchStream(void *leftValue, rtCondition_t cond, void *rig
  * @return RT_ERROR_NONE for complete
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsActiveStream(rtStream_t activeStream, rtStream_t stream);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsActiveStream(rtStream_t activeStream, rtStream_t stream);
 
 /**
  * @ingroup rts_stream
@@ -228,7 +230,7 @@ RTS_API rtError_t rtsActiveStream(rtStream_t activeStream, rtStream_t stream);
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsSetStreamResLimit(rtStream_t stm, const rtDevResLimitType_t type, const uint32_t value);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSetStreamResLimit(rtStream_t stm, const rtDevResLimitType_t type, const uint32_t value);
 
 /**
  * @ingroup rts_stream
@@ -237,7 +239,7 @@ RTS_API rtError_t rtsSetStreamResLimit(rtStream_t stm, const rtDevResLimitType_t
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsResetStreamResLimit(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsResetStreamResLimit(rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -248,7 +250,7 @@ RTS_API rtError_t rtsResetStreamResLimit(rtStream_t stm);
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsGetStreamResLimit(const rtStream_t stm, const rtDevResLimitType_t type, uint32_t *const value);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsGetStreamResLimit(const rtStream_t stm, const rtDevResLimitType_t type, uint32_t *const value);
 
 /**
  * @ingroup rts_stream
@@ -257,7 +259,7 @@ RTS_API rtError_t rtsGetStreamResLimit(const rtStream_t stm, const rtDevResLimit
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsUseStreamResInCurrentThread(const rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsUseStreamResInCurrentThread(const rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -266,7 +268,7 @@ RTS_API rtError_t rtsUseStreamResInCurrentThread(const rtStream_t stm);
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsNotUseStreamResInCurrentThread(const rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotUseStreamResInCurrentThread(const rtStream_t stm);
 
 /**
  * @ingroup rts_stream
@@ -276,14 +278,14 @@ RTS_API rtError_t rtsNotUseStreamResInCurrentThread(const rtStream_t stm);
  * @return RT_ERROR_NONE the function is executed successfully
  * @return OtherValues Failure
  */
-RTS_API rtError_t rtsGetResInCurrentThread(const rtDevResLimitType_t type, uint32_t *const value);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsGetResInCurrentThread(const rtDevResLimitType_t type, uint32_t *const value);
 
 typedef enum {
     RT_STREAM_STATE_CREATE_POST = 1,
     RT_STREAM_STATE_DESTROY_PRE
 } rtStreamState;
 
-typedef void (*rtsStreamStateCallback)(rtStream_t stm, rtStreamState state, void *args);
+typedef void (*rtsStreamStateCallback)(rtStream_t stm, rtStreamState state, void *args) RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE);
 
 /**
  * @ingroup dvrt_stream
@@ -295,7 +297,7 @@ typedef void (*rtsStreamStateCallback)(rtStream_t stm, rtStreamState state, void
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsRegStreamStateCallback(const char_t *regName, rtsStreamStateCallback callback,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsRegStreamStateCallback(const char_t *regName, rtsStreamStateCallback callback,
                                             void *args);
 
 /**
@@ -306,7 +308,7 @@ RTS_API rtError_t rtsRegStreamStateCallback(const char_t *regName, rtsStreamStat
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsStreamStop(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsStreamStop(rtStream_t stm);
 
 /**
  * @ingroup dvrt_stream
@@ -315,8 +317,9 @@ RTS_API rtError_t rtsStreamStop(rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsPersistentTaskClean(rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsPersistentTaskClean(rtStream_t stm);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

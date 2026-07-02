@@ -19,8 +19,12 @@
 extern "C" {
 #endif
 
-RTS_API rtError_t rtGetAddrAndPrefCntWithHandle(void *hdl, const void *kernelInfoExt, void **addr,
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetAddrAndPrefCntWithHandle(void *hdl, const void *kernelInfoExt, void **addr,
     uint32_t *prefetchCnt);
+
+RT_RUNTIME_DEPRECATED_DECLS_END
 
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
 }

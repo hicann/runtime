@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 #define PLAT_COMBINE(arch, chip, ver) (((arch) << 16U) | ((chip) << 8U) | (ver))
 #define PLAT_GET_ARCH(type)           (((type) >> 16U) & 0xffffU)
 #define PLAT_GET_CHIP(type)           (((type) >> 8U) & 0xffU)
@@ -115,7 +117,7 @@ typedef enum tagRTLastErrLevel {
  * @param [in] aiCoreCnt
  * @return aiCoreCnt
  */
-RTS_API rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt);
 
 /**
  * @ingroup
@@ -123,7 +125,7 @@ RTS_API rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt);
  * @param [in] aiCpuCnt
  * @return aiCpuCnt
  */
-RTS_API rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt);
 
 /**
  * @ingroup
@@ -132,7 +134,7 @@ RTS_API rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtSetOpWaitTimeOut(uint32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetOpWaitTimeOut(uint32_t timeout);
 
 /**
  * @ingroup
@@ -141,7 +143,7 @@ RTS_API rtError_t rtSetOpWaitTimeOut(uint32_t timeout);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtSetOpExecuteTimeOut(uint32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetOpExecuteTimeOut(uint32_t timeout);
 
 /**
  * @ingroup
@@ -151,7 +153,7 @@ RTS_API rtError_t rtSetOpExecuteTimeOut(uint32_t timeout);
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 
-RTS_API rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout);
 /**
  * @ingroup
  * @brief get op execute task timeout time.
@@ -159,7 +161,7 @@ RTS_API rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtGetOpExecuteTimeOut(uint32_t * const timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetOpExecuteTimeOut(uint32_t * const timeout);
 
 /**
  * @ingroup
@@ -168,7 +170,7 @@ RTS_API rtError_t rtGetOpExecuteTimeOut(uint32_t * const timeout);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtGetOpTimeOutInterval(uint64_t *interval);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetOpTimeOutInterval(uint64_t *interval);
  
 /**
  * @ingroup
@@ -178,7 +180,7 @@ RTS_API rtError_t rtGetOpTimeOutInterval(uint64_t *interval);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtSetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTimeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTimeout);
 
 /**
  * @ingroup
@@ -187,7 +189,7 @@ RTS_API rtError_t rtSetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTime
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout);
 
 /**
  * @ingroup
@@ -197,7 +199,7 @@ RTS_API rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout);
  *      1:not found ini file, 2:error when reading ini, 3:Heterogenous value is not 1
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtGetIsHeterogenous(int32_t *heterogenous);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetIsHeterogenous(int32_t *heterogenous);
 
 /**
  * @ingroup
@@ -205,7 +207,7 @@ RTS_API rtError_t rtGetIsHeterogenous(int32_t *heterogenous);
  * @param [in] level error level for this api.
  * @return return for error code
  */
-RTS_API rtError_t rtGetLastError(rtLastErrLevel_t level);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetLastError(rtLastErrLevel_t level);
 
 /**
  * @ingroup
@@ -213,7 +215,8 @@ RTS_API rtError_t rtGetLastError(rtLastErrLevel_t level);
  * @param [in] level error level for this api.
  * @return return for error code
  */
-RTS_API rtError_t rtPeekAtLastError(rtLastErrLevel_t level);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtPeekAtLastError(rtLastErrLevel_t level);
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

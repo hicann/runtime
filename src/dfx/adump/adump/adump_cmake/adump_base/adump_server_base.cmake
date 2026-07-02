@@ -50,6 +50,9 @@ set(adumpServerBaseCompileDefinitions
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:OS_TYPE=1>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0>
     google=ascend_private
+
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
 )
 
 set(adumpServerBaseLinkLibraries

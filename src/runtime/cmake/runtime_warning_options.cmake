@@ -12,6 +12,10 @@ include_guard(GLOBAL)
 
 add_library(runtime_warning_options INTERFACE)
 
+target_compile_definitions(runtime_warning_options INTERFACE
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
+)
+
 target_compile_options(runtime_warning_options INTERFACE
     -Wall
     -Werror=missing-field-initializers

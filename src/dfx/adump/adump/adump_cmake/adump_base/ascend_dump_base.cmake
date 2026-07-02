@@ -90,6 +90,12 @@ set(ascendDumpBaseHeaderList
     ${ADUMP_DEPENDENCE_INC}/aicpu/
 )
 
+
+# pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+set(ascendDumpBaseCompileDefinitions
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
+)
+
 set(ascendDumpBaseCompileOptions
     -fno-common
     -fstack-protector-all

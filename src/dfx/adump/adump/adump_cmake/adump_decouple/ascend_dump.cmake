@@ -35,6 +35,8 @@ target_compile_definitions(ascend_dump PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:WIN32>
     google=ascend_private
     FUNC_VISIBILITY
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    ${ascendDumpBaseCompileDefinitions}
 )
 
 set_target_properties(ascend_dump
@@ -81,6 +83,7 @@ target_compile_definitions(ascend_dump_static PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:WIN32>
     google=ascend_private
     FUNC_VISIBILITY
+    ${ascendDumpBaseCompileDefinitions}
 )
 
 target_compile_options(ascend_dump_static PRIVATE

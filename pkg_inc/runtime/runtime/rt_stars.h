@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 /**
  * @ingroup rt_stars
  * @brief launch stars task.
@@ -27,7 +29,7 @@ extern "C" {
  * @param [in] stm      associated stream
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtStarsTaskLaunch(const void *taskSqe, uint32_t sqeLen, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtStarsTaskLaunch(const void *taskSqe, uint32_t sqeLen, rtStream_t stm);
 
 /**
  * @ingroup rt_stars
@@ -39,7 +41,7 @@ RTS_API rtError_t rtStarsTaskLaunch(const void *taskSqe, uint32_t sqeLen, rtStre
  * @param [in] flag        dump flag
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtStarsTaskLaunchWithFlag(const void *taskSqe, uint32_t sqeLen, rtStream_t stm, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtStarsTaskLaunchWithFlag(const void *taskSqe, uint32_t sqeLen, rtStream_t stm, uint32_t flag);
 
 /**
  * @ingroup rt_stars
@@ -49,7 +51,7 @@ RTS_API rtError_t rtStarsTaskLaunchWithFlag(const void *taskSqe, uint32_t sqeLen
  * @param [in] flag         flag
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCmoTaskLaunch(rtCmoTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCmoTaskLaunch(rtCmoTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag);
 
 /**
  * @ingroup dvrt_mem
@@ -61,7 +63,7 @@ RTS_API rtError_t rtCmoTaskLaunch(rtCmoTaskInfo_t *taskInfo, rtStream_t stm, uin
  * @param [in] flag             flag
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCmoAddrTaskLaunch(void *cmoAddrInfo, uint64_t destMax, rtCmoOpCode_t cmoOpCode,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCmoAddrTaskLaunch(void *cmoAddrInfo, uint64_t destMax, rtCmoOpCode_t cmoOpCode,
     rtStream_t stm, uint32_t flag);
 
 /**
@@ -73,7 +75,7 @@ RTS_API rtError_t rtCmoAddrTaskLaunch(void *cmoAddrInfo, uint64_t destMax, rtCmo
  * @param [in] stm            stream
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCmoAsync(void *srcAddrPtr, size_t srcLen, rtCmoOpCode_t cmoType, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCmoAsync(void *srcAddrPtr, size_t srcLen, rtCmoOpCode_t cmoType, rtStream_t stm);
 
 /**
  * @ingroup rt_stars
@@ -83,7 +85,7 @@ RTS_API rtError_t rtCmoAsync(void *srcAddrPtr, size_t srcLen, rtCmoOpCode_t cmoT
  * @param [in] flag         flag
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtBarrierTaskLaunch(rtBarrierTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtBarrierTaskLaunch(rtBarrierTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag);
 
 /*
  * @ingroup dvrt_stream
@@ -93,9 +95,10 @@ RTS_API rtError_t rtBarrierTaskLaunch(rtBarrierTaskInfo_t *taskInfo, rtStream_t 
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag);
 
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

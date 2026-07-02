@@ -102,6 +102,8 @@ target_compile_definitions(ascend_dump PRIVATE
     google=ascend_private
     FUNC_VISIBILITY
     ADUMP_SOC_HOST=0
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
 )
 
 set_target_properties(ascend_dump
@@ -204,6 +206,7 @@ target_compile_definitions(ascend_dump_static PRIVATE
     google=ascend_private
     FUNC_VISIBILITY
     ADUMP_SOC_HOST=0
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
 )
 
 target_compile_options(ascend_dump_static PRIVATE

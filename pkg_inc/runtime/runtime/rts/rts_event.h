@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 typedef enum {
     RT_EVENT_STATUS_NOT_RECORDED = 0,
     RT_EVENT_STATUS_RECORDED = 1,
@@ -82,7 +84,7 @@ typedef struct {
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventCreate(rtEvent_t *evt, uint64_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventCreate(rtEvent_t *evt, uint64_t flag);
 
 /**
  * @ingroup dvrt_event
@@ -92,7 +94,7 @@ RTS_API rtError_t rtsEventCreate(rtEvent_t *evt, uint64_t flag);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventCreateEx(rtEvent_t *evt, uint64_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventCreateEx(rtEvent_t *evt, uint64_t flag);
 
 /**
  * @ingroup dvrt_event
@@ -101,7 +103,7 @@ RTS_API rtError_t rtsEventCreateEx(rtEvent_t *evt, uint64_t flag);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventDestroy(rtEvent_t evt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventDestroy(rtEvent_t evt);
 
 /**
  * @ingroup dvrt_event
@@ -111,7 +113,7 @@ RTS_API rtError_t rtsEventDestroy(rtEvent_t evt);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventGetId(rtEvent_t evt, uint32_t *evtId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventGetId(rtEvent_t evt, uint32_t *evtId);
 
 /**
  * @ingroup dvrt_event
@@ -121,7 +123,7 @@ RTS_API rtError_t rtsEventGetId(rtEvent_t evt, uint32_t *evtId);
  * @return ACL_RT_SUCCESS  for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for others
  */
-RTS_API rtError_t rtsEventQueryStatus(rtEvent_t evt, rtEventRecordStatus *status);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventQueryStatus(rtEvent_t evt, rtEventRecordStatus *status);
 
 /**
  * @ingroup dvrt_event
@@ -131,7 +133,7 @@ RTS_API rtError_t rtsEventQueryStatus(rtEvent_t evt, rtEventRecordStatus *status
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventRecord(rtEvent_t evt, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventRecord(rtEvent_t evt, rtStream_t stm);
 
 /**
  * @ingroup dvrt_stream
@@ -142,7 +144,7 @@ RTS_API rtError_t rtsEventRecord(rtEvent_t evt, rtStream_t stm);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventWait(rtStream_t stream, rtEvent_t evt, uint32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventWait(rtStream_t stream, rtEvent_t evt, uint32_t timeout);
 
 /**
  * @ingroup dvrt_event
@@ -153,7 +155,7 @@ RTS_API rtError_t rtsEventWait(rtStream_t stream, rtEvent_t evt, uint32_t timeou
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  * @return ACL_ERROR_RT_EVENT_SYNC_TIMEOUT for timeout
  */
-RTS_API rtError_t rtsEventSynchronize(rtEvent_t evt, const int32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventSynchronize(rtEvent_t evt, const int32_t timeout);
 
 /**
  * @ingroup dvrt_event
@@ -162,7 +164,7 @@ RTS_API rtError_t rtsEventSynchronize(rtEvent_t evt, const int32_t timeout);
  * @param [in] evt  event handle
  * @return ACL_RT_SUCCESS for ok, errno for failed
  */
-RTS_API rtError_t rtsEventGetTimeStamp(uint64_t *timeStamp, rtEvent_t evt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventGetTimeStamp(uint64_t *timeStamp, rtEvent_t evt);
 
 /**
  * @ingroup dvrt_event
@@ -171,7 +173,7 @@ RTS_API rtError_t rtsEventGetTimeStamp(uint64_t *timeStamp, rtEvent_t evt);
  * @param [in] stm   stream handle
  * @return ACL_RT_SUCCESS for ok
  */
-RTS_API rtError_t rtsEventReset(rtEvent_t evt, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventReset(rtEvent_t evt, rtStream_t stm);
 
 /**
  * @ingroup dvrt_stream
@@ -180,7 +182,7 @@ RTS_API rtError_t rtsEventReset(rtEvent_t evt, rtStream_t stm);
  * @return ACL_RT_SUCCESS for complete
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsEventGetAvailNum(uint32_t *eventCount);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventGetAvailNum(uint32_t *eventCount);
 
 /**
  * @ingroup dvrt_event
@@ -190,7 +192,7 @@ RTS_API rtError_t rtsEventGetAvailNum(uint32_t *eventCount);
  * @param [in] endEvent  ending event
  * @return ACL_RT_SUCCESS for ok, errno for failed
  */
-RTS_API rtError_t rtsEventElapsedTime(float32_t *timeInterval, rtEvent_t startEvent, rtEvent_t endEvent);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsEventElapsedTime(float32_t *timeInterval, rtEvent_t startEvent, rtEvent_t endEvent);
 
 /**
  * @ingroup dvrt_event
@@ -200,7 +202,7 @@ RTS_API rtError_t rtsEventElapsedTime(float32_t *timeInterval, rtEvent_t startEv
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag);
 
 /**
  * @ingroup dvrt_event
@@ -209,7 +211,7 @@ RTS_API rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsNotifyDestroy(rtNotify_t notify);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyDestroy(rtNotify_t notify);
 
 /**
  * @ingroup dvrt_event
@@ -219,7 +221,7 @@ RTS_API rtError_t rtsNotifyDestroy(rtNotify_t notify);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsNotifyRecord(rtNotify_t notify, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyRecord(rtNotify_t notify, rtStream_t stm);
 
 /**
  * @ingroup dvrt_event
@@ -230,7 +232,7 @@ RTS_API rtError_t rtsNotifyRecord(rtNotify_t notify, rtStream_t stm);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsNotifyWaitAndReset(rtNotify_t notify, rtStream_t stm, uint32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyWaitAndReset(rtNotify_t notify, rtStream_t stm, uint32_t timeout);
 
 /**
  * @ingroup dvrt_event
@@ -240,7 +242,7 @@ RTS_API rtError_t rtsNotifyWaitAndReset(rtNotify_t notify, rtStream_t stm, uint3
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtsNotifyGetId(rtNotify_t notify, uint32_t *notifyId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyGetId(rtNotify_t notify, uint32_t *notifyId);
 
 /**
  * @ingroup dvrt_event
@@ -250,14 +252,14 @@ RTS_API rtError_t rtsNotifyGetId(rtNotify_t notify, uint32_t *notifyId);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsNotifyBatchReset(rtNotify_t *notifies, uint32_t num);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyBatchReset(rtNotify_t *notifies, uint32_t num);
 
 /**
  * @ingroup dvrt_event
  * @brief Reset all Notify for the current device in the current process
  * @return ACL_RT_SUCCESS for ok, errno for failed
  */
-RTS_API rtError_t rtNotifyResetAll();
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtNotifyResetAll();
 
 /**
  * @ingroup dvrt_event
@@ -270,7 +272,7 @@ RTS_API rtError_t rtNotifyResetAll();
  *          RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION : Remove the whitelist verification for PID.
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t *key,  uint32_t len, uint64_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t *key,  uint32_t len, uint64_t flag);
 
 /**
  * @ingroup dvrt_event
@@ -283,7 +285,7 @@ RTS_API rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t *key,  uint32_
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsNotifyImportByKey(rtNotify_t *notify, const char_t *key, uint64_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifyImportByKey(rtNotify_t *notify, const char_t *key, uint64_t flag);
 
 /**
  * @ingroup dvrt_event
@@ -295,7 +297,7 @@ RTS_API rtError_t rtsNotifyImportByKey(rtNotify_t *notify, const char_t *key, ui
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtsNotifySetImportPid(rtNotify_t notify, int32_t pid[], int num);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsNotifySetImportPid(rtNotify_t notify, int32_t pid[], int num);
 
 /**
  * @ingroup dvrt_event
@@ -307,7 +309,7 @@ RTS_API rtError_t rtsNotifySetImportPid(rtNotify_t notify, int32_t pid[], int nu
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *serverPids, size_t num);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *serverPids, size_t num);
 
 /**
  * @ingroup rt_stars
@@ -316,7 +318,7 @@ RTS_API rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtSer
  * @param [out] retCntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * const cntNotify);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * const cntNotify);
 
 /**
  * @ingroup rt_stars
@@ -326,7 +328,7 @@ RTS_API rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * cons
  * @param [out] retCntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_t * const cntNotify, const uint32_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_t * const cntNotify, const uint32_t flags);
 
 /**
  * @ingroup rt_stars
@@ -337,7 +339,7 @@ RTS_API rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_
  * @param [in] mode record mode
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t const stm,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t const stm,
                                     const rtCntNtyRecordInfo_t * const info);
 
 /**
@@ -350,7 +352,7 @@ RTS_API rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t 
  * @param [in] mode wait mode
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rtStream_t const stm,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rtStream_t const stm,
                                              const rtCntNtyWaitInfo_t * const info);
 
 /**
@@ -361,7 +363,7 @@ RTS_API rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rt
  * @return RT_ERROR_NONE for ok, others failed
  */
 
-RTS_API rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t const stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t const stm);
 
 /**
  * @ingroup rt_stars
@@ -372,7 +374,7 @@ RTS_API rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t c
  * @param [in] isAsync async or sync
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify);
 
 /**
  * @ingroup rt_stars
@@ -381,7 +383,7 @@ RTS_API rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify);
  * @param [out] cntNotifyAddress count notify address
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtGetCntNotifyAddress(rtCntNotify_t const inCntNotify, uint64_t * const cntNotifyAddress,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetCntNotifyAddress(rtCntNotify_t const inCntNotify, uint64_t * const cntNotifyAddress,
                                         rtNotifyType_t const regType);
 
 /**
@@ -391,7 +393,7 @@ RTS_API rtError_t rtGetCntNotifyAddress(rtCntNotify_t const inCntNotify, uint64_
  * @param [out] notifyId notifyId
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtGetCntNotifyId(rtCntNotify_t inCntNotify, uint32_t * const notifyId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetCntNotifyId(rtCntNotify_t inCntNotify, uint32_t * const notifyId);
 
 /**
  * @ingroup rt_stars
@@ -399,7 +401,7 @@ RTS_API rtError_t rtGetCntNotifyId(rtCntNotify_t inCntNotify, uint32_t * const n
  * @param [out] retCntNotify: count notify object
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flags);
 
 typedef enum {
     RT_CNT_NOTIFY_RECORD_SET_VALUE_MODE = 0x0U,
@@ -423,7 +425,7 @@ typedef struct {
  * @param [in] info count notify info
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm,
                                      rtCntNotifyRecordInfo_t *info);
 
 typedef enum {
@@ -451,7 +453,7 @@ typedef struct {
  * @param [in] info count notify info
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm,
                                               rtCntNotifyWaitInfo_t *info);
 
 /**
@@ -462,7 +464,7 @@ RTS_API rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_
  * @return RT_ERROR_NONE for ok, others failed
  */
 
-RTS_API rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm);
 
 /**
  * @ingroup rt_stars
@@ -471,8 +473,9 @@ RTS_API rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm);
  * @param [out] notifyId notifyId
  * @return RT_ERROR_NONE for ok, others failed
  */
-RTS_API rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

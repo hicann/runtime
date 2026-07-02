@@ -37,6 +37,8 @@ target_compile_definitions(acl_tdt_channel PRIVATE
     _FORTIFY_SOURCE=2
     OS_TYPE=0
     FUNC_VISIBILITY
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
 )
 
 target_link_options(acl_tdt_channel PRIVATE

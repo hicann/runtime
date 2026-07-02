@@ -15,6 +15,44 @@
 #include <stdint.h>
 #include "profiling/prof_api.h"
 
+#undef RT_DEPRECATED
+#undef RT_DEPRECATED_MESSAGE
+#if defined(RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS) || \
+    (defined(CFG_BUILD_NDEBUG) && !defined(RT_RUNTIME_ENABLE_DEPRECATED_WARNINGS))
+    #define RT_DEPRECATED
+    #define RT_DEPRECATED_MESSAGE(message)
+#elif defined(__GNUC__) && (__GNUC__ >= 6)
+    #define RT_DEPRECATED __attribute__((deprecated))
+    #define RT_DEPRECATED_MESSAGE(message) __attribute__((deprecated(message)))
+#elif defined(_MSC_VER)
+    #define RT_DEPRECATED __declspec(deprecated)
+    #define RT_DEPRECATED_MESSAGE(message) __declspec(deprecated(message))
+#else
+    #define RT_DEPRECATED
+    #define RT_DEPRECATED_MESSAGE(message)
+#endif
+
+#ifndef RT_RUNTIME_DEPRECATED_MESSAGE
+#define RT_RUNTIME_DEPRECATED_MESSAGE "This runtime interface is deprecated and will be removed in a future release"
+#endif
+
+#ifndef RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+#if defined(__GNUC__) && (__GNUC__ >= 6)
+    #define RT_RUNTIME_DEPRECATED_DECLS_BEGIN \
+        _Pragma("GCC diagnostic push") \
+        _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+    #define RT_RUNTIME_DEPRECATED_DECLS_END _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+    #define RT_RUNTIME_DEPRECATED_DECLS_BEGIN \
+        __pragma(warning(push)) \
+        __pragma(warning(disable: 4996))
+    #define RT_RUNTIME_DEPRECATED_DECLS_END __pragma(warning(pop))
+#else
+    #define RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+    #define RT_RUNTIME_DEPRECATED_DECLS_END
+#endif
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -52,17 +90,6 @@ typedef float float32_t;
 
 #ifndef float64_t
 typedef double float64_t;
-#endif
-
-#if defined(__GNUC__) && (__GNUC__ >= 6)
-    #define RT_DEPRECATED __attribute__((deprecated))
-    #define RT_DEPRECATED_MESSAGE(message) __attribute__((deprecated(message)))
-#elif defined(_MSC_VER)
-    #define RT_DEPRECATED __declspec(deprecated)
-    #define RT_DEPRECATED_MESSAGE(message) __declspec(deprecated(message))
-#else
-    #define RT_DEPRECATED
-    #define RT_DEPRECATED_MESSAGE(message)
 #endif
 
 /**
@@ -562,10 +589,11 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 #endif // CCE_RUNTIME_BASE_COMMON_DATA
 // === CCE_RUNTIME_BASE_COMMON_DATA END ===
 enum { rt_base_common_end_line_guard_ = __LINE__ };
-RT_STATIC_ASSERT(((rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_) == 535),
+RT_STATIC_ASSERT(rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_ == 524,
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between base.h and external_base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 
 typedef enum ErrRegInfoIdxV100 {
     RT_V100_AIC_ERR_0 = 0,
@@ -636,37 +664,37 @@ typedef enum {
     RT_DEVICE_ABORT_POST,
 } rtTaskAbortStage_t;
 
-typedef int32_t (*rtTaskAbortCallBack)(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void *args);
+typedef int32_t (*rtTaskAbortCallBack)(uint32_t devId, rtTaskAbortStage_t stage, uint32_t timeout, void *args) RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE);
 
 /**
  * @ingroup profiling_base
  * @brief runtime handle.
  */
-RTS_API rtError_t rtSetProfDirEx(const char_t *profDir, const char_t *address, const char_t *jobCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetProfDirEx(const char_t *profDir, const char_t *address, const char_t *jobCtx);
 
 /**
  * @ingroup profiling_base
  * @brief init profiler object.
  */
-RTS_API rtError_t rtProfilerInit(const char_t *profDir, const char_t *address, const char_t *jobCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtProfilerInit(const char_t *profDir, const char_t *address, const char_t *jobCtx);
 
 /**
  * @ingroup profiling_base
  * @brief config rts profiler.
  */
-RTS_API rtError_t rtProfilerConfig(uint16_t profConfig);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtProfilerConfig(uint16_t profConfig);
 
 /**
  * @ingroup profiling_base
  * @brief ts send keypoint profiler log.
  */
-RTS_API rtError_t rtProfilerTrace(uint64_t id, bool notify, uint32_t flags, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtProfilerTrace(uint64_t id, bool notify, uint32_t flags, rtStream_t stm);
 
 /**
  * @ingroup profiling_base
  * @brief ts send keypoint profiler log.
  */
-RTS_API rtError_t rtProfilerTraceEx(uint64_t id, uint64_t modelId, uint16_t tagId, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtProfilerTraceEx(uint64_t id, uint64_t modelId, uint16_t tagId, rtStream_t stm);
 
 /**
  * @ingroup profiling_base
@@ -676,7 +704,7 @@ RTS_API rtError_t rtProfilerTraceEx(uint64_t id, uint64_t modelId, uint16_t tagI
  * @return RT_ERROR_NONE for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtSetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId);
 
 /**
  * @ingroup profiling_base
@@ -686,7 +714,7 @@ RTS_API rtError_t rtSetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t device
  * @return RT_ERROR_NONE for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtUnsetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtUnsetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId);
 
 /**
  * @ingroup profiling_base
@@ -697,7 +725,7 @@ RTS_API rtError_t rtUnsetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t devi
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  * @return ACL_ERROR_RT_INTERNAL_ERROR for can't find deviceId by geModelIdx
  */
-RTS_API rtError_t rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t *deviceId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t *deviceId);
 
 /**
  * @ingroup profiling_base
@@ -707,7 +735,7 @@ RTS_API rtError_t rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t *devic
  * @return RT_ERROR_NONE for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtProfilingCommandHandle(uint32_t type, void *data, uint32_t len);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtProfilingCommandHandle(uint32_t type, void *data, uint32_t len);
 
 /**
  * @ingroup dvrt_base
@@ -715,7 +743,7 @@ RTS_API rtError_t rtProfilingCommandHandle(uint32_t type, void *data, uint32_t l
  * @param [out] NA
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtSetExceptCallback(rtErrorCallback callback);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetExceptCallback(rtErrorCallback callback);
 
 /**
  * @ingroup profiling_base
@@ -725,7 +753,7 @@ RTS_API rtError_t rtSetExceptCallback(rtErrorCallback callback);
  * @return RT_ERROR_NONE for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtGetBinaryDeviceBaseAddr(void *handle, void **deviceBase);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetBinaryDeviceBaseAddr(void *handle, void **deviceBase);
 
 /**
  * @ingroup dvrt_base
@@ -733,7 +761,7 @@ RTS_API rtError_t rtGetBinaryDeviceBaseAddr(void *handle, void **deviceBase);
  * @param [out] NA
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtSetTaskAbortCallBack(const char *moduleName, rtTaskAbortCallBack callback, void *args);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetTaskAbortCallBack(const char *moduleName, rtTaskAbortCallBack callback, void *args);
 
 /**
  * @ingroup dvrt_base
@@ -741,7 +769,7 @@ RTS_API rtError_t rtSetTaskAbortCallBack(const char *moduleName, rtTaskAbortCall
  * @param [out] NA
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtSetTaskFailCallback(rtTaskFailCallback callback);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetTaskFailCallback(rtTaskFailCallback callback);
 
 typedef enum DevCallBackDir {
     DEV_CB_POS_FRONT = 1,
@@ -758,7 +786,7 @@ typedef enum DevCallBackDir {
  * @param [out] NA
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallback callback,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallback callback,
     const rtDevCallBackDir_t notifyPos);
 
 /**
@@ -770,7 +798,7 @@ RTS_API rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStat
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
     rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num);
 
 
@@ -781,7 +809,7 @@ RTS_API rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptio
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelCreate(rtLabel_t *lbl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelCreate(rtLabel_t *lbl);
 
 /**
  * @ingroup dvrt_base
@@ -791,7 +819,7 @@ RTS_API rtError_t rtLabelCreate(rtLabel_t *lbl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelCreateV2(rtLabel_t *lbl, rtModel_t mdl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelCreateV2(rtLabel_t *lbl, rtModel_t mdl);
 
 /**
  * @ingroup dvrt_base
@@ -801,7 +829,7 @@ RTS_API rtError_t rtLabelCreateV2(rtLabel_t *lbl, rtModel_t mdl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelSet(rtLabel_t lbl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelSet(rtLabel_t lbl, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -810,7 +838,7 @@ RTS_API rtError_t rtLabelSet(rtLabel_t lbl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelDestroy(rtLabel_t lbl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelDestroy(rtLabel_t lbl);
 
 /**
  * @ingroup dvrt_base
@@ -820,7 +848,7 @@ RTS_API rtError_t rtLabelDestroy(rtLabel_t lbl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelGoto(rtLabel_t lbl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelGoto(rtLabel_t lbl, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -832,7 +860,7 @@ RTS_API rtError_t rtLabelGoto(rtLabel_t lbl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelSwitchByIndex(void *ptr, uint32_t maxValue, void *labelInfoPtr, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelSwitchByIndex(void *ptr, uint32_t maxValue, void *labelInfoPtr, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -842,7 +870,7 @@ RTS_API rtError_t rtLabelSwitchByIndex(void *ptr, uint32_t maxValue, void *label
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelGotoEx(rtLabel_t lbl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelGotoEx(rtLabel_t lbl, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -854,7 +882,7 @@ RTS_API rtError_t rtLabelGotoEx(rtLabel_t lbl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelListCpy(rtLabel_t *lbl, uint32_t labelNumber, void *dst, uint32_t dstMax);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelListCpy(rtLabel_t *lbl, uint32_t labelNumber, void *dst, uint32_t dstMax);
 
 /**
  * @ingroup dvrt_base
@@ -864,7 +892,7 @@ RTS_API rtError_t rtLabelListCpy(rtLabel_t *lbl, uint32_t labelNumber, void *dst
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelCreateEx(rtLabel_t *lbl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelCreateEx(rtLabel_t *lbl, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -875,7 +903,7 @@ RTS_API rtError_t rtLabelCreateEx(rtLabel_t *lbl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtLabelCreateExV2(rtLabel_t *lbl, rtModel_t mdl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtLabelCreateExV2(rtLabel_t *lbl, rtModel_t mdl, rtStream_t stm);
 
 /**
  * @ingroup dvrt_base
@@ -884,7 +912,7 @@ RTS_API rtError_t rtLabelCreateExV2(rtLabel_t *lbl, rtModel_t mdl, rtStream_t st
  * @param [in] stmMode mode
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtStreamSetMode(rtStream_t stm, const uint64_t stmMode);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtStreamSetMode(rtStream_t stm, const uint64_t stmMode);
 
 /**
  * @ingroup dvrt_base
@@ -893,7 +921,7 @@ RTS_API rtError_t rtStreamSetMode(rtStream_t stm, const uint64_t stmMode);
  * @param [out] stmMode mode pointer
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtStreamGetMode(rtStream_t const stm, uint64_t * const stmMode);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtStreamGetMode(rtStream_t const stm, uint64_t * const stmMode);
 
 /**
  * @ingroup dvrt_base
@@ -905,7 +933,7 @@ RTS_API rtError_t rtStreamGetMode(rtStream_t const stm, uint64_t * const stmMode
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int32_t pid);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int32_t pid);
 
 /**
  * @ingroup dvrt_base
@@ -918,7 +946,9 @@ RTS_API rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtSetIpcMemorySuperPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetIpcMemorySuperPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num);
+
+RT_RUNTIME_DEPRECATED_DECLS_END
 
 #if defined(__cplusplus)
 }

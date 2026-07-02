@@ -50,6 +50,11 @@ PUBLIC
     npu_runtime_headers
 )
 
+target_compile_definitions(runtime_static PRIVATE
+    # pkg_inc/runtime/runtime 下废弃接口调用错误抑制
+    RT_RUNTIME_DISABLE_DEPRECATED_WARNINGS
+)
+
 if(${TARGET_SYSTEM_NAME} STREQUAL "LiteOS")
     target_compile_definitions(runtime_static PRIVATE
         NANO_OS_TYPE=1

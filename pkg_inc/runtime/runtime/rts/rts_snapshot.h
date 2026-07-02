@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 typedef enum { 
     RT_PROCESS_STATE_RUNNING = 0, 
     RT_PROCESS_STATE_LOCKED, 
@@ -32,21 +34,21 @@ typedef enum {
     RT_SNAPSHOT_UNLOCK_POST,
 } rtSnapShotStage;
 
-typedef uint32_t (*rtSnapShotCallBack)(int32_t devId, void* args);
+typedef uint32_t (*rtSnapShotCallBack)(int32_t devId, void* args) RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE);
 
 /**
  * @ingroup rts_snapshot
  * @brief lock the NPU process which will block further rts API calls
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotProcessLock();
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessLock();
 
 /**
  * @ingroup rts_snapshot
  * @brief unlock the NPU process and allow it to continue making RTS API calls
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotProcessUnlock();
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessUnlock();
 
 /**
  * @ingroup rts_snapshot
@@ -56,21 +58,21 @@ RTS_API rtError_t rtSnapShotProcessUnlock();
  *   RT_PROCESS_STATE_LOCKED : RTS API locks are taken so further RTS API calls will block
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotProcessGetState(rtProcessState *state);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessGetState(rtProcessState *state);
 
 /**
  * @ingroup rts_snapshot
  * @brief backup the NPU process
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotProcessBackup();
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessBackup();
 
 /**
  * @ingroup rts_snapshot
  * @brief restore the NPU process from the last backup point
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotProcessRestore();
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessRestore();
 
 /**
  * @ingroup rts_snapshot
@@ -94,7 +96,7 @@ RTS_API rtError_t rtSnapShotProcessRestore();
  *        This can be NULL if no additional data is needed.
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args);
 
 /**
  * @ingroup rts_snapshot
@@ -116,8 +118,9 @@ RTS_API rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCa
  *        Must not be NULL.
  * @return ACL_RT_SUCCESS for ok, others failed
  */
-RTS_API rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

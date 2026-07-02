@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 /**
  * @ingroup rt_context
  * @brief runtime context handle.
@@ -59,7 +61,7 @@ typedef struct tagRtGroupInfo {
  * @param [in] devId    device to create context on
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t devId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t devId);
 
 /**
  * @ingroup rt_context
@@ -69,7 +71,7 @@ RTS_API rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t de
  * @param [in] devId    device to create context on
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId);
 
 /**
  * @ingroup rt_context
@@ -77,7 +79,7 @@ RTS_API rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t 
  * @param [in] destroyCtx   context to destroy
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxDestroy(rtContext_t destroyCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxDestroy(rtContext_t destroyCtx);
 
 /**
  * @ingroup rt_context
@@ -85,7 +87,7 @@ RTS_API rtError_t rtCtxDestroy(rtContext_t destroyCtx);
  * @param [in] destroyCtx   context to destroy
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxDestroyEx(rtContext_t destroyCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxDestroyEx(rtContext_t destroyCtx);
 
 /**
  * @ingroup rt_context
@@ -93,7 +95,7 @@ RTS_API rtError_t rtCtxDestroyEx(rtContext_t destroyCtx);
  * @param [in] currentCtx   context to bind
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxSetCurrent(rtContext_t currentCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxSetCurrent(rtContext_t currentCtx);
 
 /**
  * @ingroup rt_context
@@ -101,7 +103,7 @@ RTS_API rtError_t rtCtxSetCurrent(rtContext_t currentCtx);
  * @param [out] currentCtx   returned context
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxGetCurrent(rtContext_t *currentCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxGetCurrent(rtContext_t *currentCtx);
 
 /**
  * @ingroup rt_context
@@ -109,7 +111,7 @@ RTS_API rtError_t rtCtxGetCurrent(rtContext_t *currentCtx);
  * @param [out] primaryCtx   returned context
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtGetPriCtxByDeviceId(int32_t devId, rtContext_t *primaryCtx);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetPriCtxByDeviceId(int32_t devId, rtContext_t *primaryCtx);
 
 /**
  * @ingroup rt_context
@@ -117,7 +119,7 @@ RTS_API rtError_t rtGetPriCtxByDeviceId(int32_t devId, rtContext_t *primaryCtx);
  * @param [out] devId   returned device id
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtCtxGetDevice(int32_t *devId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxGetDevice(int32_t *devId);
 
 /**
  * @ingroup
@@ -125,7 +127,7 @@ RTS_API rtError_t rtCtxGetDevice(int32_t *devId);
  * @param [in] groupid
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtSetGroup(int32_t groupId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetGroup(int32_t groupId);
 
 /**
  * @ingroup
@@ -133,7 +135,7 @@ RTS_API rtError_t rtSetGroup(int32_t groupId);
  * @param [in] groupid count
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtGetGroupInfo(int32_t groupId, rtGroupInfo_t *groupInfo, uint32_t cnt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetGroupInfo(int32_t groupId, rtGroupInfo_t *groupInfo, uint32_t cnt);
 
 /**
  * @ingroup
@@ -141,7 +143,7 @@ RTS_API rtError_t rtGetGroupInfo(int32_t groupId, rtGroupInfo_t *groupInfo, uint
  * @param [in] groupid count
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtGetGroupCount(uint32_t *cnt);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetGroupCount(uint32_t *cnt);
 
 /**
  * @ingroup rt_context
@@ -149,7 +151,7 @@ RTS_API rtError_t rtGetGroupCount(uint32_t *cnt);
  * @param [in] infMode
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtSetCtxINFMode(bool infMode);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetCtxINFMode(bool infMode);
 
 /**
  * @ingroup rt_context
@@ -158,7 +160,7 @@ RTS_API rtError_t rtSetCtxINFMode(bool infMode);
  * @param [in] configVal system option's value to be set
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal);
 
 /**
  * @ingroup rt_context
@@ -167,7 +169,7 @@ RTS_API rtError_t rtCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64
  * @param [out] configVal system option's value to be get
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * const configVal);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * const configVal);
 
 /**
  * @ingroup rt_context
@@ -175,8 +177,9 @@ RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * c
  * @param [out] overflowAddr current ctx's overflowAddr to be get
  * @return RT_ERROR_NONE for ok, errno for failed
  */
-RTS_API rtError_t rtCtxGetOverflowAddr(void **overflowAddr);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtCtxGetOverflowAddr(void **overflowAddr);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

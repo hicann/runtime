@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 typedef enum tagModelTaskType {
     RT_MODEL_TASK_KERNEL = 0,
     RT_MODEL_TASK_EVENT_RECORD,
@@ -377,7 +379,7 @@ typedef struct tagMdlTaskUpdateInfo {
     rtFftsPlusTaskInfo_t *fftsPlusTaskInfo;
 } rtMdlTaskUpdateInfo_t;
 
-typedef rtError_t (*rtTaskGenCallback)(rtModel_t mdl, rtTaskInfo_t *taskInfo);
+typedef rtError_t (*rtTaskGenCallback)(rtModel_t mdl, rtTaskInfo_t *taskInfo) RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE);
 
 /**
  * @ingroup rt_model
@@ -387,7 +389,7 @@ typedef rtError_t (*rtTaskGenCallback)(rtModel_t mdl, rtTaskInfo_t *taskInfo);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelCreate(rtModel_t *mdl, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelCreate(rtModel_t *mdl, uint32_t flag);
 
 /**
  * @ingroup rt_model
@@ -397,7 +399,7 @@ RTS_API rtError_t rtModelCreate(rtModel_t *mdl, uint32_t flag);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-rtError_t rtModelSetExtId(rtModel_t mdl, uint32_t extId);
+RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelSetExtId(rtModel_t mdl, uint32_t extId);
 
 /**
  * @ingroup rt_model
@@ -406,7 +408,7 @@ rtError_t rtModelSetExtId(rtModel_t mdl, uint32_t extId);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelDestroy(rtModel_t mdl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelDestroy(rtModel_t mdl);
 
 /**
  * @ingroup rt_model
@@ -417,7 +419,7 @@ RTS_API rtError_t rtModelDestroy(rtModel_t mdl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag);
 
 /**
  * @ingroup rt_model
@@ -427,7 +429,7 @@ RTS_API rtError_t rtModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelUnbindStream(rtModel_t mdl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelUnbindStream(rtModel_t mdl, rtStream_t stm);
 
 /**
  * @ingroup rt_model
@@ -435,7 +437,7 @@ RTS_API rtError_t rtModelUnbindStream(rtModel_t mdl, rtStream_t stm);
  * @param [in] mdl   model to execute
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtModelLoadComplete(rtModel_t mdl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelLoadComplete(rtModel_t mdl);
 
 /**
  * @ingroup rt_model
@@ -444,7 +446,7 @@ RTS_API rtError_t rtModelLoadComplete(rtModel_t mdl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag);
 
 /**
  * @ingroup rt_model
@@ -453,7 +455,7 @@ RTS_API rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelExecuteSync(rtModel_t mdl, rtStream_t stm, uint32_t flag, int32_t timeout);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelExecuteSync(rtModel_t mdl, rtStream_t stm, uint32_t flag, int32_t timeout);
 
 /**
  * @ingroup rt_model
@@ -464,7 +466,7 @@ RTS_API rtError_t rtModelExecuteSync(rtModel_t mdl, rtStream_t stm, uint32_t fla
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelGetTaskId(rtModel_t mdl, uint32_t *taskId, uint32_t *streamId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelGetTaskId(rtModel_t mdl, uint32_t *taskId, uint32_t *streamId);
 
 /**
  * @ingroup rt_model
@@ -474,7 +476,7 @@ RTS_API rtError_t rtModelGetTaskId(rtModel_t mdl, uint32_t *taskId, uint32_t *st
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtEndGraph(rtModel_t mdl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtEndGraph(rtModel_t mdl, rtStream_t stm);
 
 /**
  * @ingroup rt_model
@@ -485,7 +487,7 @@ RTS_API rtError_t rtEndGraph(rtModel_t mdl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtEndGraphEx(rtModel_t mdl, rtStream_t stm, uint32_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtEndGraphEx(rtModel_t mdl, rtStream_t stm, uint32_t flags);
 
 /**
  * @ingroup rt_model
@@ -495,7 +497,7 @@ RTS_API rtError_t rtEndGraphEx(rtModel_t mdl, rtStream_t stm, uint32_t flags);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelExecutorSet(rtModel_t mdl, uint8_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelExecutorSet(rtModel_t mdl, uint8_t flags);
 
 /**
  * @ingroup rt_model
@@ -504,7 +506,7 @@ RTS_API rtError_t rtModelExecutorSet(rtModel_t mdl, uint8_t flags);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelAbort(rtModel_t mdl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelAbort(rtModel_t mdl);
 
 /**
  * @ingroup rt_model
@@ -514,7 +516,7 @@ RTS_API rtError_t rtModelAbort(rtModel_t mdl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelExit(rtModel_t mdl, rtStream_t stm);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelExit(rtModel_t mdl, rtStream_t stm);
 
 /**
  * @ingroup rt_model
@@ -524,7 +526,7 @@ RTS_API rtError_t rtModelExit(rtModel_t mdl, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelSetSchGroupId(rtModel_t mdl, const int16_t schGrpId);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelSetSchGroupId(rtModel_t mdl, const int16_t schGrpId);
 
 /**
  * @ingroup rt_model
@@ -536,7 +538,7 @@ RTS_API rtError_t rtModelSetSchGroupId(rtModel_t mdl, const int16_t schGrpId);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelTaskUpdate(rtStream_t desStm, uint32_t desTaskId, rtStream_t sinkStm,
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelTaskUpdate(rtStream_t desStm, uint32_t desTaskId, rtStream_t sinkStm,
                             rtMdlTaskUpdateInfo_t *para);
 
 /**
@@ -547,7 +549,7 @@ RTS_API rtError_t rtModelTaskUpdate(rtStream_t desStm, uint32_t desTaskId, rtStr
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtSetModelName(rtModel_t mdl, const char_t *mdlName);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSetModelName(rtModel_t mdl, const char_t *mdlName);
 
 /**
  * @ingroup rt_model
@@ -557,7 +559,7 @@ RTS_API rtError_t rtSetModelName(rtModel_t mdl, const char_t *mdlName);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelGetNodes(rtModel_t mdl, uint32_t * const num);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelGetNodes(rtModel_t mdl, uint32_t * const num);
 
 /**
  * @ingroup rt_model
@@ -566,7 +568,7 @@ RTS_API rtError_t rtModelGetNodes(rtModel_t mdl, uint32_t * const num);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelDebugDotPrint(rtModel_t mdl);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelDebugDotPrint(rtModel_t mdl);
 
 /**
  * @ingroup rt_model
@@ -577,8 +579,9 @@ RTS_API rtError_t rtModelDebugDotPrint(rtModel_t mdl);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char *path, uint32_t flags);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char *path, uint32_t flags);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

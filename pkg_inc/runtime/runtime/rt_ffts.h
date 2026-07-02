@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
+
 #define RT_FFTS_MAX_SUB_TASK_NUM    32U
 #define RT_FFTS_MAX_TICKET_CACHE_NUM    64U
 #define RT_FFTS_MAX_MANUAL_THREAD_NUM   16U
@@ -184,8 +186,9 @@ typedef struct tagFftsTaskInfo {
     rtTicketCache_t ticketCache[RT_FFTS_MAX_TICKET_CACHE_NUM];
 } rtFftsTaskInfo_t;
 
-RTS_API rtError_t rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif

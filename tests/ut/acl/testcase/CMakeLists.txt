@@ -127,6 +127,7 @@ target_compile_definitions(ut_ascendcl_src PRIVATE
 target_compile_options(ut_ascendcl_src PRIVATE
     -g --coverage -fprofile-arcs -ftest-coverage -fno-access-control
     -Wall -Wextra -Wfloat-equal -Werror
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wno-deprecated-declarations>
 )
 
 target_link_libraries(ut_ascendcl_src PRIVATE
@@ -149,7 +150,7 @@ target_include_directories(ascendcl_cpp_utest PRIVATE
 target_compile_options(ascendcl_cpp_utest PRIVATE
     -O0
     -g
-    -Wno-deprecated-declarations
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wno-deprecated-declarations>
     -Wall -Wfloat-equal -Werror -Wextra
     -fno-access-control
 )

@@ -18,6 +18,8 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
+
+RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 /**
  * @brief get kernel inter core sync address
  *
@@ -26,8 +28,9 @@ extern "C" {
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsGetInterCoreSyncAddr(uint64_t *addr, uint32_t *len);
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsGetInterCoreSyncAddr(uint64_t *addr, uint32_t *len);
 
+RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
 }
 #endif
