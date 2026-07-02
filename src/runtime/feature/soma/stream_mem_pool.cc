@@ -502,12 +502,6 @@ rtError_t PoolRegistry::Init()
         return RT_ERROR_MEMORY_ALLOCATION;
     }
     RT_LOG(RT_LOG_DEBUG, "Init mem address success, devptr=%#" PRIx64 ".", globalSegment_->basePtr);
-    rtError_t error = RegisterSomaCallBack();
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Soma Callback register failed, reCode=%#x.", error);
-        DeleteManager(poolAllocator_);
-        return error;
-    }
     return RT_ERROR_NONE;
 }
 

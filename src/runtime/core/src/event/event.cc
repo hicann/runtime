@@ -455,7 +455,6 @@ rtError_t Event::Record(Stream * const stm, const bool isApiCall)
                          static_cast<uint32_t>(error));
     if (isApiCall) {
         GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-        EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_RECORD);
     }
     isNotify_ = false;
     return RT_ERROR_NONE;
@@ -555,7 +554,6 @@ rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit wait task, retCode=%#x.",
                          static_cast<uint32_t>(error));
     GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-    EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
     return RT_ERROR_NONE;
 
 ERROR_RECYCLE:
