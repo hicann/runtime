@@ -365,7 +365,7 @@ static bool PrintRasEvents(const Device * const dev, const rtDmsFaultEvent * con
     UNUSED(dev);
     for (uint32_t faultIndex = 0; faultIndex < eventCount; faultIndex++) {
         const rtDmsFaultEvent &event = faultEventInfo[faultIndex];
-        uint32_t eventId = event.eventId;
+        const uint32_t eventId = event.eventId;
         auto it = ubRasEventIdAndDesc.find(eventId);
         if (it != ubRasEventIdAndDesc.end()) {
             RT_LOG(RT_LOG_ERROR, "RAS event detected: event_id=0x%x, %s", eventId, it->second.c_str());
@@ -392,7 +392,7 @@ void CheckAndPrintRasInfo(const Device * const dev)
     for (uint32_t queryCount = 0U; queryCount < RAS_QUERY_MAX_COUNT; ++queryCount) {
         (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
         uint32_t eventCount = 0U;
-        rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
+        const rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
         if ((error == RT_ERROR_NONE) && PrintRasEvents(dev, faultEventInfo, eventCount)) {
             return;
         }
@@ -547,7 +547,7 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device * const 
     }
 
     const bool suppHbmRas = (Runtime::Instance()->GetHbmRasProcFlag() != HBM_RAS_NOT_SUPPORT);
-    bool hasMteHbmErr = suppHbmRas ? HasMteErr(dev) : false;
+    const bool hasMteHbmErr = suppHbmRas ? HasMteErr(dev) : false;
 
     uint32_t faultEventId = 0U;
     bool isHitBlklist = false;
@@ -636,7 +636,7 @@ static void ProcessCoreErrorClass(const Device * const dev, const StarsDeviceErr
 
 static void GetRegInfoErrReg(const DavidOneCoreErrorInfo& info, rtExceptionErrRegInfo_t &regInfo)
 {
-    const uint8_t REG_OFFSET = 32;
+    constexpr uint8_t REG_OFFSET = 32;
     regInfo.errReg[RT_V200_SU_ERR_INFO_T0_0] = static_cast<uint32_t>(info.suErrInfo[0]);
     regInfo.errReg[RT_V200_SU_ERR_INFO_T0_1] = static_cast<uint32_t>(info.suErrInfo[0] >> REG_OFFSET);
     regInfo.errReg[RT_V200_SU_ERR_INFO_T0_2] = static_cast<uint32_t>(info.suErrInfo[1]);

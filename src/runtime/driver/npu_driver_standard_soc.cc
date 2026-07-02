@@ -417,7 +417,7 @@ rtError_t NpuDriver::GetSqAddrInfo(const uint32_t deviceId, const uint32_t tsId,
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
         "[drv api] halSqCqQuery sq addr device_id=%u, ts_id=%u, sq_id=%u, drvRetCode=%d.", deviceId, tsId, sqId,
         static_cast<int32_t>(drvRet));
-    sqAddr = (static_cast<uint64_t>(queryInfoIn.value[1]) << 32U) | queryInfoIn.value[0];
+    sqAddr = (static_cast<uint64_t>(queryInfoIn.value[1]) << 32U) | static_cast<uint64_t>(queryInfoIn.value[0]);
     RT_LOG(RT_LOG_INFO, "dev_id=%u, sq_id=%u, sq_host_flag=%u, sqAddr=0x%llx.", deviceId, sqId, sqMemHostFlag, sqAddr);
 
     return RT_ERROR_NONE;
@@ -707,7 +707,7 @@ rtError_t NpuDriver::StreamMemPoolTrim(const uint32_t deviceId, const uint64_t p
         .poolId = poolId,
         .devId = deviceId
     };
-    drvError_t drvRet = halMemPoolTrim(pool, size, poolUsedSize, poolFreeSize);
+    const drvError_t drvRet = halMemPoolTrim(pool, size, poolUsedSize, poolFreeSize);
     DRV_PROCESS_ERROR_RETURN(drvRet, "Call driver api halMemPoolTrim failed, drvRetCode=%d.",
         static_cast<int32_t>(drvRet));
     return RT_ERROR_NONE;
