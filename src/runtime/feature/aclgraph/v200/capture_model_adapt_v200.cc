@@ -271,7 +271,8 @@ rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
     std::vector<rtDavidSqe_t> sqes(sendSqeNum);
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     ToConstructDavidSqe(task, sqes.data(), sqeInfo);
-    const errno_t ret = memcpy_s(task->stream->GetSqeBuffer() + sqeOffset, sqeSize, sqes.data(), sqeSize);
+    void* const sqeBuffer = RtValueToPtr<void*>(RtPtrToValue(task->stream->GetSqeBuffer()) + sqeOffset);
+    const errno_t ret = memcpy_s(sqeBuffer, sqeSize, sqes.data(), sqeSize);
     if (ret != EOK) {
         return RT_ERROR_INVALID_VALUE;
     }

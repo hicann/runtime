@@ -480,7 +480,7 @@ rtError_t CaptureModel::CalculateExternalEventSummaryInfo()
     const uint64_t recordCount = static_cast<uint64_t>(externalRecordEventItems_.size());
     const uint64_t waitCount = static_cast<uint64_t>(externalWaitEventItems_.size());
     const uint64_t recordSlotSize = static_cast<uint64_t>(GetExternalRecordRefreshSlotSize());
-    const uint64_t maxSize = std::numeric_limits<uint64_t>::max();
+    constexpr uint64_t maxSize = std::numeric_limits<uint64_t>::max();
     COND_RETURN_ERROR_MSG_INNER(
         recordSlotSize == 0U, RT_ERROR_INVALID_VALUE, "External record refresh slot size is invalid, model_id=%u.",
         Id_());
@@ -556,7 +556,7 @@ rtError_t CaptureModel::BuildExternalRecordPlaceholders()
         TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
         const auto slotAddr = RtValueToPtr<const void*>(
             RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventSummaryInfo_.recordOffset + i * recordSlotSize);
-        rtError_t initError = CaptureRecordExternalTaskInit(taskInfo, slotAddr, TASK_WR_CQE_DEFAULT);
+        const rtError_t initError = CaptureRecordExternalTaskInit(taskInfo, slotAddr, TASK_WR_CQE_DEFAULT);
         if (initError != RT_ERROR_NONE) {
             ReleaseExternalRefreshTable();
             return initError;
@@ -573,7 +573,7 @@ rtError_t CaptureModel::BuildExternalWaitPlaceholders()
         const auto slotAddr = RtValueToPtr<const void*>(
             RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventSummaryInfo_.waitOffset +
             i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
-        rtError_t initError = CaptureWaitExternalTaskInit(taskInfo, slotAddr);
+        const rtError_t initError = CaptureWaitExternalTaskInit(taskInfo, slotAddr);
         if (initError != RT_ERROR_NONE) {
             ReleaseExternalRefreshTable();
             return initError;
@@ -667,7 +667,7 @@ rtError_t CaptureModel::InitExternalEventHostRefresh(ExternalEventRefreshInfo* l
     COND_RETURN_ERROR_MSG_INNER(
         launch->hostRefresh == nullptr, RT_ERROR_MEMORY_ALLOCATION,
         "Allocate external launch host refresh failed, model_id=%u, size=%lu.", Id_(), externalEventSummaryInfo_.totalSize);
-    errno_t ret = memcpy_s(
+    const errno_t ret = memcpy_s(
         launch->hostRefresh.get(), externalEventSummaryInfo_.totalSize, externalEventRefreshHostTemplate_.get(),
         externalEventSummaryInfo_.totalSize);
     COND_RETURN_ERROR_MSG_INNER(
@@ -694,7 +694,8 @@ rtError_t CaptureModel::PrepareExternalEventRecords(ExternalEventRefreshInfo* la
         ERROR_RETURN_MSG_INNER(
             error, "Allocate external record event failed, model_id=%u, retCode=%#x.", Id_(), error);
         record.eventAddr = RtPtrToValue(eventAddr);
-        void* recordSlot = launch->hostRefresh.get() + externalEventSummaryInfo_.recordOffset + i * recordSlotSize;
+        void* recordSlot = RtValueToPtr<void*>(RtPtrToValue(launch->hostRefresh.get()) +
+            externalEventSummaryInfo_.recordOffset + i * recordSlotSize);
         error = FillExternalRecordRefreshSlot(recordSlot, record.eventAddr);
         ERROR_RETURN_MSG_INNER(
             error, "Fill external record refresh slot failed, model_id=%u, retCode=%#x.", Id_(), error);
@@ -720,8 +721,8 @@ rtError_t CaptureModel::PrepareExternalEventWaits(ExternalEventRefreshInfo* laun
         error = RetainRecordedEventForExternalWait(externalWaitEventItems_[i].event, &eventAddr, &resource);
         ERROR_RETURN_MSG_INNER(
             error, "Retain external wait producer failed, model_id=%u, retCode=%#x.", Id_(), error);
-        uint64_t* waitEntry = RtPtrToPtr<uint64_t*>(
-            launch->hostRefresh.get() + externalEventSummaryInfo_.waitOffset + i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
+        uint64_t* waitEntry = RtValueToPtr<uint64_t*>(RtPtrToValue(launch->hostRefresh.get()) +
+            externalEventSummaryInfo_.waitOffset + i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
         *waitEntry = eventAddr;
         if (resource.event != nullptr) {
             launch->retainedWaitResources.push_back(resource);

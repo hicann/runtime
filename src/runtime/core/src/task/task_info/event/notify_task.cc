@@ -317,7 +317,7 @@ rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, con
 
 void NotifyWaitTaskUnInit(TaskInfo* taskInfo) { ReleaseExternalWaitRetainedResources(taskInfo); }
 
-void MapNotifyErrorCodeForFastRecovery(TaskInfo *taskInfo, const uint32_t devId)
+static void MapNotifyErrorCodeForFastRecovery(TaskInfo *taskInfo, const uint32_t devId)
 {
     Stream * const stream = taskInfo->stream;
     const bool hasMteErr = HasMteErr(stream->Device_());

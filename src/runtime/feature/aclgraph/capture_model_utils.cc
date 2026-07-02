@@ -172,7 +172,7 @@ bool IsSoftwareSqCaptureModel(const Model * const mdl)
     const CaptureModel *capMdl = dynamic_cast<const CaptureModel *>(mdl);
     return capMdl != nullptr && capMdl->IsSoftwareSqEnable();
 }
-rtError_t CheckCaptureModelSupportValueWaitTask(const bool isRecord)
+static rtError_t CheckCaptureModelSupportValueWaitTask(const bool isRecord)
 {
     const Runtime * const rt = Runtime::Instance();
     NULL_PTR_RETURN(rt, RT_ERROR_INVALID_VALUE);

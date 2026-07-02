@@ -325,10 +325,12 @@ rtError_t Notify::Wait(
     std::unique_ptr<std::vector<EventResource>> retainedOwner;
     TaskInfo *waitTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_NOTIFY_WAIT, errorReason);
     NULL_PTR_RETURN_MSG(waitTask, errorReason);
+    std::function<void()> const errRecycle = [&dev, &waitTask]() { (void)dev->GetTaskFactory()->Recycle(waitTask); };
+    ScopeGuard waitTaskRecycle(errRecycle);
 
     rtError_t error = NotifyWaitTaskInit(waitTask, notifyid_, timeOut, nullptr, this);
     if (error != RT_ERROR_NONE) {
-        goto ERROR_RECYCLE;
+        return error;
     }
 
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
@@ -337,14 +339,15 @@ rtError_t Notify::Wait(
         retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
         if (retainedOwner == nullptr) {
             error = RT_ERROR_MEMORY_ALLOCATION;
-            goto ERROR_RECYCLE;
+            return error;
         }
     }
 
     error = dev->SubmitTask(waitTask, (streamIn->Context_())->TaskGenCallback_());
     if (error != RT_ERROR_NONE) {
-        goto ERROR_RECYCLE;
+        return error;
     }
+    waitTaskRecycle.ReleaseGuard();
     if (retainedOwner != nullptr) {
         waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
         externalWaitRetainedResources->clear();
@@ -353,10 +356,6 @@ rtError_t Notify::Wait(
     GET_THREAD_TASKID_AND_STREAMID(waitTask, streamIn->Id_());
 
     return RT_ERROR_NONE;
-
-ERROR_RECYCLE:
-    (void)dev->GetTaskFactory()->Recycle(waitTask);
-    return error;
 }
 
 rtError_t Notify::SetName(const char_t * const nameIn)

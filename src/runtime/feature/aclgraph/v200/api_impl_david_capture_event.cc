@@ -42,7 +42,7 @@ rtError_t CreateExternalWaitPlaceholder(Event* const evt, Stream* const stm)
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
     memWaitValueTask->event = evt;
     tsk->sqeNum = static_cast<uint8_t>(GetSendSqeNum(tsk));
-    rtError_t error = DavidSendTask(tsk, tsk->stream);
+    const rtError_t error = DavidSendTask(tsk, tsk->stream);
     ERROR_RETURN_MSG_INNER(
         error, "Submit external wait placeholder failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), tsk->id,
         static_cast<uint32_t>(error));
@@ -244,12 +244,12 @@ rtError_t ApiImplDavid::CaptureWaitEvent(Context * const ctx, Stream * const stm
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::CaptureExternalEventRecord(Event* const evt, Stream* const stm) const
+rtError_t ApiImplDavid::Starsv2CaptureExternalEventRecord(Event* const evt, Stream* const stm) const
 {
     return RegisterExternalEventTask(evt, stm, true);
 }
 
-rtError_t ApiImplDavid::CaptureExternalEventWait(Event* const evt, Stream* const stm) const
+rtError_t ApiImplDavid::Starsv2CaptureExternalEventWait(Event* const evt, Stream* const stm) const
 {
     return RegisterExternalEventTask(evt, stm, false);
 }

@@ -37,7 +37,7 @@ rtError_t CreateExternalWaitPlaceholder(Event* const evt, Stream* const stm)
     memWaitValueTask->value = 1U;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
     memWaitValueTask->event = evt;
-    rtError_t error = dev->SubmitTask(tsk);
+    const rtError_t error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(
         error, "Submit external wait placeholder failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), tsk->id,
         static_cast<uint32_t>(error));

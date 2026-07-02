@@ -2355,7 +2355,7 @@ void ConstructMemWaitValueInstr2WithDynamicProf(RtStarsMemWaitValueLastInstrFcWi
 }
 
 template <typename Fc>
-void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(Fc &fc,
+static void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(Fc &fc,
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
@@ -2460,7 +2460,7 @@ void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(Fc &fc,
 }
 
 template <typename Fc>
-void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(Fc &fc,
+static void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(Fc &fc,
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
@@ -2534,8 +2534,8 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(Fc &fc,
     ConstructLoad(r4, 0U, r2, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadProfCfg2);
 
     // load value 0xFFFFBFFF to r1, bit14 is sq_log_en
-    ConstructLHWI(r1, 0xFFFFBFFFU, fc.lhwi66);
-    ConstructLLWI(r1, 0xFFFFBFFFU, fc.llwi66);
+    ConstructLHWI(r1, 0xFFFFBFFFULL, fc.lhwi66);
+    ConstructLLWI(r1, 0xFFFFBFFFULL, fc.llwi66);
 
     // r2 = r2 & r1, bit14 set to 0
     ConstructOpOp(r2, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.op67);
@@ -2548,8 +2548,8 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(Fc &fc,
     ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi68);
 
     // load 0x80000000 to r1
-    ConstructLHWI(r1, 0x80000000U, fc.lhwi69);
-    ConstructLLWI(r1, 0x80000000U, fc.llwi69);
+    ConstructLHWI(r1, 0x80000000ULL, fc.lhwi69);
+    ConstructLLWI(r1, 0x80000000ULL, fc.llwi69);
 
     // r2 = r5 | r1, r5 = sqId
     ConstructOpOp(r5, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op69);
@@ -2570,7 +2570,7 @@ void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(Fc &fc,
 }
 
 template <typename Fc>
-void MemWaitInstrSqePreForSoftwareSqAndDynamicProf(Fc &fc,
+static void MemWaitInstrSqePreForSoftwareSqAndDynamicProf(Fc &fc,
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
@@ -2692,7 +2692,7 @@ void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFc
 
     const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
     for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf) / sizeof(uint32_t)); i++) {
-        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
+        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
     }
 }
 

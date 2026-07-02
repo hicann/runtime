@@ -50,8 +50,10 @@ rtError_t NtyWait(
     std::unique_ptr<std::vector<EventResource>> retainedOwner;
     if ((externalWaitRetainedResources != nullptr) && (!externalWaitRetainedResources->empty())) {
         retainedOwner.reset(new (std::nothrow) std::vector<EventResource>(*externalWaitRetainedResources));
-        ERROR_RETURN(retainedOwner == nullptr ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_NONE,
-            "Failed to allocate external wait retained owner, stream_id=%d.", streamIn->Id_());
+        if (retainedOwner == nullptr) {
+            ERROR_RETURN(RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate external wait retained owner, stream_id=%d.",
+                streamIn->Id_());
+        }
     }
     RT_LOG(RT_LOG_INFO, "stream_id=%d notify_id=%u.", streamIn->Id_(), inNotify->GetNotifyId());
     waitTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();

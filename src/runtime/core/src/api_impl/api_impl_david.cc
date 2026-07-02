@@ -463,7 +463,7 @@ rtError_t ApiImplDavid::EventRecord(Event * const evt, Stream * const stm, const
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
             __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
-        return CaptureExternalEventRecord(evt, curStm);
+        return Starsv2CaptureExternalEventRecord(evt, curStm);
     }
     if (evt->ToBeCaptured(curStm)) {
         COND_RETURN_WARN(!evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -594,7 +594,7 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER((!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
             __func__, RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
-        return CaptureExternalEventWait(evt, curStm);
+        return Starsv2CaptureExternalEventWait(evt, curStm);
     }
     if (evt->IsCapturing()) {
         COND_RETURN_ERROR_MSG_INNER(!StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID,

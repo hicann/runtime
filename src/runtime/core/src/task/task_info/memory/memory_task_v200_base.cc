@@ -21,6 +21,8 @@
 #include "task_execute_time.h"
 #include "stream_jetty_handler.h"
 
+#include <cstdint>
+
 namespace cce {
 namespace runtime {
 
@@ -35,40 +37,37 @@ void ConstructStarsv2ExternalWaitFuncCall(const uint64_t waitRefreshAddr, const 
     constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
 
-    const uint64_t waitRefreshLoadOffset = offsetof(RtStarsv2ExternalWaitFuncCall, lhwiWaitRefreshAddr) /
-        sizeof(uint32_t);
-    const uint64_t waitFailedOffset = offsetof(RtStarsv2ExternalWaitFuncCall, gotoPre) / sizeof(uint32_t);
-    const uint64_t endOffset = offsetof(RtStarsv2ExternalWaitFuncCall, end) / sizeof(uint32_t);
+    constexpr uint8_t waitRefreshLoadOffset = static_cast<uint8_t>(
+        offsetof(RtStarsv2ExternalWaitFuncCall, lhwiWaitRefreshAddr) / sizeof(uint32_t));
+    constexpr uint8_t waitFailedOffset = static_cast<uint8_t>(
+        offsetof(RtStarsv2ExternalWaitFuncCall, gotoPre) / sizeof(uint32_t));
+    constexpr uint8_t endOffset = static_cast<uint8_t>(offsetof(RtStarsv2ExternalWaitFuncCall, end) / sizeof(uint32_t));
 
     ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.initLoopIndex);
-    ConstructOpImmAndi(r0, r5, maxLoop, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.loadMaxLoop);
+    ConstructOpImmAndi(r0, r5, static_cast<uint32_t>(maxLoop), RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.loadMaxLoop);
     ConstructLHWI(r1, waitRefreshAddr, fc.lhwiWaitRefreshAddr);
     ConstructLLWI(r1, waitRefreshAddr, fc.llwiWaitRefreshAddr);
     ConstructLoad(r1, 0U, r2, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadWaitAddrFromRefresh);
     ConstructSetJumpPcFc(r1, endOffset, fc.jumpZeroSatisfied);
-    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset),
-        fc.zeroSatisfied);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, endOffset, fc.zeroSatisfied);
     ConstructLoad(r2, 0U, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadActual);
-    ConstructOpImmAndi(r1, r3, 0xFFU, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.maskLow8);
+    ConstructOpImmAndi(r1, r3, UINT8_MAX, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.maskLow8);
     ConstructOpImmAndi(r0, r2, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.loadExpected);
     ConstructSetJumpPcFc(r1, endOffset, fc.jumpWaitSatisfied);
-    ConstructBranch(r3, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, static_cast<uint8_t>(endOffset),
-        fc.waitSatisfied);
+    ConstructBranch(r3, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, endOffset, fc.waitSatisfied);
     ConstructOpImmAndi(r4, r4, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.incrementLoopIndex);
     ConstructSetJumpPcFc(r1, waitFailedOffset, fc.jumpWaitFailed);
-    ConstructBranch(r4, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, static_cast<uint8_t>(waitFailedOffset),
-        fc.loopLimit);
+    ConstructBranch(r4, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, waitFailedOffset, fc.loopLimit);
     ConstructSetJumpPcFc(r1, waitRefreshLoadOffset, fc.jumpRetry);
-    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(waitRefreshLoadOffset),
-        fc.retryBranch);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, waitRefreshLoadOffset, fc.retryBranch);
     ConstructGotoI(r5, static_cast<uint16_t>(sqId), static_cast<uint16_t>(sqHeadPre), fc.gotoPre);
     ConstructSetJumpPcFc(r1, endOffset, fc.jumpEnd);
-    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.endBranch);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, endOffset, fc.endBranch);
     ConstructNop(fc.end);
 
     const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
     for (size_t i = 0UL; i < (sizeof(RtStarsv2ExternalWaitFuncCall) / sizeof(uint32_t)); i++) {
-        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
+        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
     }
 }
 } // namespace

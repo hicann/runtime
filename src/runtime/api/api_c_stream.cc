@@ -413,7 +413,7 @@ VISIBILITY_DEFAULT
 rtError_t rtStreamWaitEventWithFlag(rtStream_t stm, rtEvent_t evt, int32_t timeout, uint32_t flag)
 {
     if (flag == RT_EVENT_WAIT_DEFAULT) {
-        return rtStreamWaitEventWithTimeout(stm, evt, timeout);
+        return rtStreamWaitEventWithTimeout(stm, evt, static_cast<uint32_t>(timeout));
     }
     GLOBAL_STATE_WAIT_IF_LOCKED();
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);

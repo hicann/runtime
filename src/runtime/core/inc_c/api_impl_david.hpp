@@ -182,8 +182,8 @@ private:
     rtError_t CaptureResetEvent(const Event * const evt, Stream * const stm);
     rtError_t GetCaptureEvent(const Stream * const stm, Event * const evt, Event ** const captureEvt, const bool isNewEvt = false) override;
     rtError_t CaptureWaitEvent(Context * const ctx, Stream * const stm, Event * const evt, const uint32_t timeout);
-    rtError_t CaptureExternalEventRecord(Event* const evt, Stream* const stm) const;
-    rtError_t CaptureExternalEventWait(Event* const evt, Stream* const stm) const;
+    rtError_t Starsv2CaptureExternalEventRecord(Event* const evt, Stream* const stm) const;
+    rtError_t Starsv2CaptureExternalEventWait(Event* const evt, Stream* const stm) const;
     rtError_t LaunchKernelByArgsWithType(Kernel * const kernel, const uint32_t coreDim, Stream *stm,
         const RtArgsWithType * const argsWithType, TaskCfg &taskCfg);
 };
