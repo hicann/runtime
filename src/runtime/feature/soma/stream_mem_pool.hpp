@@ -74,10 +74,10 @@ struct SegmentComparator {
 };
 
 struct PairHash {
-    size_t operator()(const pair<int, int>& p) const {
-        size_t h1 = hash<int>()(p.first);
-        size_t h2 = hash<int>()(p.second);
-        return h1 ^ (h2 + HASH_GOLDEN_RATIO + (h1 << 6) + (h1 >> 2));
+    size_t operator()(const pair<int32_t, int32_t>& p) const {
+        const size_t h1 = hash<int32_t>()(p.first);
+        const size_t h2 = hash<int32_t>()(p.second);
+        return h1 ^ (h2 + HASH_GOLDEN_RATIO + (h1 << 6U) + (h1 >> 2U));
     }
 };
 

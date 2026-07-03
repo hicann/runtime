@@ -421,22 +421,26 @@ TEST_F(DavidStreamTest, auto_split_stream_destroy)
 
 TEST_F(DavidStreamTest, auto_split_task_clean)
 {
+    void *mockSvmAddr = reinterpret_cast<void *>(0x1000);
     MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::DevMemAlloc)
         .stubs()
+        .with(outBoundP(&mockSvmAddr), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(0));
     bool enable = false;
     MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::GetSqEnable)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(enable))
         .will(returnValue(0));
-    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::MemCopySync)
-        .stubs()
-        .will(returnValue(0));
-    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::SqSwitchStreamBatch)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::MemCopySync).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::MemSetSync).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::SqSwitchStreamBatch).stubs().will(returnValue(0));
     MOCKER_CPP(&Model::UnbindStream).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Model::ModelUnBindTaskSubmit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::DevMemFree).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::StreamIdReservedFree).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::ReAllocResourceId).stubs().will(returnValue(0));
+    SqAddrMemoryOrder *sqAddrMemoryManage = nullptr;
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetSqAddrMemoryManage).stubs().will(returnValue(sqAddrMemoryManage));
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);

@@ -4692,7 +4692,7 @@ rtError_t Stream::AllocAutoSplitSqAddr()
         SetSqMemOrderType(memOrderType);
         SetSqBaseAddr(RtPtrToValue(sqBaseAddr));
     }
-        
+
     // stars v2要求sq深度必须是8的整数倍+1
     SetSqDepth(sqDepth - Device_()->GetDevProperties().expandStreamSqDepthAdapt);
     return ret;
@@ -5112,6 +5112,16 @@ rtError_t Stream::ReBuildStreamId()
     }
     error = ReBuildDriverStreamResource();
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "free stream id and realloc stream id failed, stream_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+
+    if (GetSqBaseAddr() != 0ULL) {
+        SqAddrMemoryOrder *sqAddrMemoryManage = device_->GetSqAddrMemoryManage();
+        if (sqAddrMemoryManage != nullptr) {
+            error = sqAddrMemoryManage->FreeSqAddr(RtValueToPtr<uint64_t *>(GetSqBaseAddr()), GetSqMemOrderType());
+            COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+                "Free sq addr failed, stream_id=%d, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+        }
+    }
+    SetSqBaseAddr(0ULL);
     SetSqDepth(STREAM_SQ_MAX_DEPTH);
     return error;
 }

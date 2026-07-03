@@ -1918,3 +1918,99 @@ TEST_F(ModelTest, TestBuildSqCqForAutoSplit_OnlyAicpuStreams)
     
     ((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
 }
+
+TEST_F(ModelTest, TestBuildSqCqForAutoSplit_ModelCompleteStream)
+{
+    rtError_t error;
+    Model* model = nullptr;
+    Stream* stream = nullptr;
+    Stream* stream2 = nullptr;
+    Context* ctx = (Context*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(0)->GetVal();
+
+    error = ctx->ModelCreate(&model, RT_MODEL_NORMAL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamCreate(0, 0, &stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamCreate(0, 0, &stream2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stream->isModelComplete = true;
+    stream2->isModelComplete = true;
+
+    error = model->AddStream(stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = model->AddStream(stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = model->BuildSqCqForAutoSplit();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->ModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamDestroy(stream2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
+}
+
+TEST_F(ModelTest, TestBuildSqCqForAutoSplit_TsBindStream)
+{
+    rtError_t error;
+    Model* model = nullptr;
+    Stream* stream = nullptr;
+    Stream* stream2 = nullptr;
+    Context* ctx = (Context*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(0)->GetVal();
+    Device *dev = ctx->Device_();
+
+    SqAddrMemoryOrder *sqAddrMgr = reinterpret_cast<SqAddrMemoryOrder *>(0x1000);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqAddrMemoryManage).stubs().will(returnValue(sqAddrMgr));
+    MOCKER_CPP(&SqAddrMemoryOrder::AllocSqAddr).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)dev->Driver_(), &NpuDriver::SqSwitchStreamBatch).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)dev->Driver_(), &NpuDriver::StreamTaskFill).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)dev->Driver_(), &NpuDriver::SetSqTail).stubs().will(returnValue(0));
+    MOCKER_CPP(&Model::EnterBindStream).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = ctx->ModelCreate(&model, RT_MODEL_NORMAL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    model->SetAutoSplitSq(true);
+
+    error = ctx->StreamCreate(0, 0, &stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream->sqId_ = 1;
+    stream->SetSqDepth(1024);
+    stream->SetSqBaseAddr(0x1000);
+
+    error = ctx->StreamCreate(0, 0, &stream2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream2->sqId_ = 2;
+    stream2->SetSqDepth(1024);
+    stream2->SetSqBaseAddr(0x2000);
+    stream2->SetIsTsBind(true);
+
+    error = model->AddStream(stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = model->AddStream(stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = model->BuildSqCqForAutoSplit();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->ModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = ctx->StreamDestroy(stream2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
+}

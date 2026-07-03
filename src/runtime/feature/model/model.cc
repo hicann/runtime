@@ -771,17 +771,16 @@ rtError_t Model::BuildSqCqForAutoSplit()
     Device * const dev = Context_()->Device_();
     uint32_t streamNum = 0U;
     for (auto stm : StreamList_()) {
-        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
+        COND_PROC((((stm->Flags() & RT_STREAM_AICPU) != 0U) || (stm->isModelComplete)), continue);
         streamNum++;
         rtError_t ret = stm->AllocAutoSplitSqAddr();
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "AllocAutoSplitSqAddr failed. device_id=%u, stream_id=%d, "
             "model_id=%u, retCode=%#x.", dev->Id_(), stm->Id_(), Id_(), static_cast<uint32_t>(ret));
     }
-
     if (streamNum == 0U) {
         return RT_ERROR_NONE;
     }
-    
+
     if (modelSwitchInfo_ == nullptr) {
         modelSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[streamNum]();
         COND_PROC_RETURN_AND_MSG_OUTER(modelSwitchInfo_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, 
@@ -790,7 +789,7 @@ rtError_t Model::BuildSqCqForAutoSplit()
     }
     uint32_t index = 0U;
     for (auto stm : StreamList_()) {
-        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
+        COND_PROC((((stm->Flags() & RT_STREAM_AICPU) != 0U) || stm->isModelComplete), continue);
         /* prepare sq switch Info */
         modelSwitchInfo_[index].stream_id = static_cast<uint32_t>(stm->Id_());
         modelSwitchInfo_[index].sq_id = stm->GetSqId();
@@ -810,12 +809,11 @@ rtError_t Model::BuildSqCqForAutoSplit()
     ERROR_RETURN_MSG_INNER(error, "Send sqe failed, model_id=%u, auto_split_sq=%d, retCode=%#x.", Id_(), IsAutoSplitSq(), static_cast<uint32_t>(error));
 
     for (auto stm : StreamList_()) {
-        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
+        COND_PROC((((stm->Flags() & RT_STREAM_AICPU) != 0U) || stm->IsTsBind()), continue);
         uint32_t streamFlag = static_cast<uint32_t>(RT_INVALID_FLAG);
         COND_PROC(IsModelHeadStream(stm), streamFlag = RT_HEAD_STREAM);
         error = EnterBindStream(stm, streamFlag);
         COND_PROC(error != RT_ERROR_NONE, break);
-        stm->SetIsTsBind(true);    
     }
     ERROR_RETURN_MSG_INNER(error, "Bind stream to model failed, model_id=%u, auto_split_sq=%d, retCode=%#x.", Id_(), IsAutoSplitSq(), static_cast<uint32_t>(error));
 
@@ -827,8 +825,8 @@ rtError_t Model::BuildSqCqForAutoSplit()
 
 rtError_t Model::LoadComplete()
 {
-    if (IsAutoSplitSq() && (!IsModelLoadComplete())) {
-        rtError_t error = BuildSqCqForAutoSplit();
+    if (IsAutoSplitSq()) {
+        const rtError_t error = BuildSqCqForAutoSplit();
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "build sq cq failed, model_id=%u, auto_split_sq=%d.", Id_(), IsAutoSplitSq());  
     }
