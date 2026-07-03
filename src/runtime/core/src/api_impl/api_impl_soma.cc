@@ -28,7 +28,7 @@ rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPool
     return SomaApi::StreamMemPoolCreate(memPool, poolProps);
 }
  
-rtError_t ApiImplSoma::StreamMemPoolDestroy(const rtMemPool_t memPool)
+rtError_t ApiImplSoma::StreamMemPoolDestroy(rtMemPool_t const memPool)
 {
     NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
     RT_LOG(RT_LOG_DEBUG, "Stream memory pool destroy, poolId=%#" PRIx64 ".", RtPtrToValue(memPool));

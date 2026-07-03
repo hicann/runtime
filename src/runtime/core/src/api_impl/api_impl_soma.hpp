@@ -25,7 +25,7 @@ class ApiImplSoma : public ApiSoma {
 public:
     // Soma Impl API
     rtError_t StreamMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProps* poolProps) override;
-    rtError_t StreamMemPoolDestroy(const rtMemPool_t memPool) override;
+    rtError_t StreamMemPoolDestroy(rtMemPool_t const memPool) override;
     rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) override;
     rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) override;
     rtError_t MemPoolMallocAsync(void** const devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm) override;

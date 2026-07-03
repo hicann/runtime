@@ -27,7 +27,7 @@ public:
         size_t alignSize = DEVICE_POOL_ALIGN_SIZE);
     static rtError_t GetDevicePoolAlignSize(rtMemPoolProps &curPoolProps, size_t &alignSize);
     static rtError_t StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps);
-    static rtError_t StreamMemPoolDestroy(const rtMemPool_t memPool);
+    static rtError_t StreamMemPoolDestroy(rtMemPool_t const memPool);
     static rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
     static rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
     static void MemPoolAsyncConfig(rtMemPool_t memPool, uint64_t va, uint64_t size, bool flag);

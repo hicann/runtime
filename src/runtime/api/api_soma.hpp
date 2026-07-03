@@ -37,7 +37,7 @@ public:
  
     // SOMA API
     virtual rtError_t StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps) = 0;
-    virtual rtError_t StreamMemPoolDestroy(const rtMemPool_t memPool) = 0;
+    virtual rtError_t StreamMemPoolDestroy(rtMemPool_t const memPool) = 0;
     virtual rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) = 0;
     virtual rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) = 0;
     virtual rtError_t MemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream * const stm) = 0;

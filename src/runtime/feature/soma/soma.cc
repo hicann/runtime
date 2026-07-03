@@ -75,13 +75,12 @@ rtError_t SomaApi::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProp
         phyDevId, static_cast<uint32_t>(error));
 
     size_t alignSize = DEVICE_POOL_ALIGN_SIZE;
-    const size_t originSize = curPoolProps.maxSize / BYTES_PER_MB;
     error = GetDevicePoolAlignSize(curPoolProps, alignSize);
     ERROR_RETURN(error, "Get device memory pool align size failed, deviceId=%u.", phyDevId);
 
     error = SomaApi::AlignAndValidatePoolSize(curPoolProps, totalSize, alignSize);
     COND_RETURN_AND_MSG_OUTER(curPoolProps.maxSize > totalSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Create memory pool",
-        std::to_string(originSize) + " MB", "rtMemPoolProps.maxSize",
+        std::to_string(poolProps->maxSize / BYTES_PER_MB) + " MB", "rtMemPoolProps.maxSize",
         RtFmtMsg("The memory pool size after %zu MB alignment is %zu MB, which exceeds the available device memory %zu MB on the Device(device_id=%d)",
         alignSize / BYTES_PER_MB, curPoolProps.maxSize / BYTES_PER_MB, totalSize / BYTES_PER_MB, phyDevId));
 
@@ -112,7 +111,7 @@ rtError_t SomaApi::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProp
     return RT_ERROR_NONE;
 }
 
-rtError_t SomaApi::StreamMemPoolDestroy(const rtMemPool_t memPool)
+rtError_t SomaApi::StreamMemPoolDestroy(rtMemPool_t const memPool)
 {
     SegmentManager *delMemPool = RtPtrToPtr<SegmentManager*>(memPool);
     std::shared_ptr<SegmentManager> owned = PoolRegistry::Instance().QueryMemPool(delMemPool);
@@ -123,8 +122,8 @@ rtError_t SomaApi::StreamMemPoolDestroy(const rtMemPool_t memPool)
         "Failed to destroy not deletable memPool(Id=%#" PRIx64 ").",
         owned->MemPoolId());
 
-    uint32_t deviceId = owned->DeviceId();
-    uint64_t poolId = owned->MemPoolId();
+    const uint32_t deviceId = owned->DeviceId();
+    const uint64_t poolId = owned->MemPoolId();
     rtError_t error = Runtime::Instance()->CurrentContext()->Device_()->Driver_()->StreamMemPoolDestroy(
         deviceId, poolId);
     ERROR_RETURN(error, "Failed to destroy memPoolId in device, deviceId=%u, memPoolId=%#" PRIx64,
@@ -206,7 +205,7 @@ rtError_t SomaApi::CheckMemPool(SegmentManager *memPool)
 rtError_t SomaApi::DestroyMemPool(SegmentManager *memPool)
 {
     std::shared_ptr<SegmentManager> owned;
-    rtError_t error = PoolRegistry::Instance().RemoveMemPool(memPool, owned);
+    const rtError_t error = PoolRegistry::Instance().RemoveMemPool(memPool, owned);
     if (error != RT_ERROR_NONE) {
         return error;
     }
@@ -230,7 +229,7 @@ rtError_t SomaApi::AllocFromMemPool(void **ptr, uint64_t size, rtMemPool_t memPo
     SegmentManager *curMemPool = RtPtrToPtr<SegmentManager *>(memPool);
 
     Segment *seg = nullptr;
-    rtError_t error = curMemPool->SegmentAlloc(seg, size, streamId, flag);
+    const rtError_t error = curMemPool->SegmentAlloc(seg, size, streamId, flag);
     COND_RETURN_ERROR((error != RT_ERROR_NONE || seg == nullptr), RT_ERROR_MEM_POOL_ALLOC,
         "Failed to allocate segment from memory pool, size=%#" PRIx64 ", memPoolId=%#" PRIx64 ", streamId=%d.",
         size, curMemPool->MemPoolId(), streamId);
@@ -254,7 +253,7 @@ rtError_t SomaApi::FreeToMemPool(void *ptr, bool forceFree)
     COND_RETURN_ERROR(curMemPool == nullptr, RT_ERROR_POOL_PTR_NOTFOUND,
         "Unable to locate which memory pool the pointer is in, ptr=%#" PRIx64 ".", RtPtrToValue(ptr));
 
-    rtError_t error = curMemPool->SegmentFree(RtPtrToValue(ptr), forceFree);
+    const rtError_t error = curMemPool->SegmentFree(RtPtrToValue(ptr), forceFree);
     ERROR_RETURN(error, "Unable to free ptr=%#" PRIx64 ".", RtPtrToValue(ptr));
 
     return RT_ERROR_NONE;
@@ -317,7 +316,7 @@ bool SomaApi::InMemPoolRegion(void * const ptr)
 
 std::shared_ptr<SegmentManager> SomaApi::FindMemPoolByPtr(void * const ptr)
 {
-    uint64_t p = RtPtrToValue(ptr);
+    const uint64_t p = RtPtrToValue(ptr);
     return PoolRegistry::Instance().FindMemPoolByPtr(p);
 }
 

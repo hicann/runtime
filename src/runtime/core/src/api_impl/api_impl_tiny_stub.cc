@@ -265,7 +265,7 @@ rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPool
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplSoma::StreamMemPoolDestroy(const rtMemPool_t memPool)
+rtError_t ApiImplSoma::StreamMemPoolDestroy(rtMemPool_t const memPool)
 {
     UNUSED(memPool);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
