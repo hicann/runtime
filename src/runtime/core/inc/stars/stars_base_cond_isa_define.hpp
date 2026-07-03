@@ -13,10 +13,10 @@
 
 #include "base.hpp"
 
-#define STARS_SIMPLE_SQ_TAIL_OFFSET (0x8ULL)
 #define STARS_SIMPLE_SQ_HEAD_OFFSET (0x10ULL)
 #define STARS_SIMPLE_SQ_ENABLE_OFFSET (0x14ULL)
-#define DAVID_SIMPLE_SQ_TAIL_OFFSET (0x0ULL)
+constexpr uint16_t DAVID_SIMPLE_SQ_TAIL_OFFSET = 0x0U;
+constexpr uint16_t STARS_SIMPLE_SQ_TAIL_OFFSET = 0x8U;
 
 namespace cce {
 namespace runtime {

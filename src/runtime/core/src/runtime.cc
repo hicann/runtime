@@ -4881,7 +4881,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     if (isPoolMem) {
         error = Program::BinaryPoolMemCopySync(devMem, size, data, device, readonly);
     } else {
-        uint32_t adviseSize = devSize + INSTR_ALIGN_SIZE;
+        uint32_t adviseSize = static_cast<uint32_t>(devSize + INSTR_ALIGN_SIZE);
         error = Program::BinaryMemCopySync(devMem, adviseSize, size, data, device, readonly);
     }
     prog->SetBinBaseAddr(baseAddr, device->Id_());
@@ -5818,7 +5818,7 @@ rtError_t Runtime::RestoreModule(void) const
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
                 "BinaryPoolMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%u.", node->devId, hostAddr, devAddr, memSize);
         } else {
-            uint32_t adviseSize = static_cast<uint32_t>(node->memSize) + INSTR_ALIGN_SIZE;
+            uint32_t adviseSize = static_cast<uint32_t>(node->memSize + INSTR_ALIGN_SIZE);
             error = Program::BinaryMemCopySync(devAddr, adviseSize, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
                 "BinaryMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%u.", node->devId, hostAddr, devAddr, memSize);
