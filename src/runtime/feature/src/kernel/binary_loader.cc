@@ -10,6 +10,8 @@
 
 #include "binary_loader.hpp"
 #include <fstream>
+#include <mutex>
+#include <set>
 #include "error_message_manage.hpp"
 #include "runtime.hpp"
 #include "utils.h"
@@ -21,6 +23,9 @@ namespace cce {
 namespace runtime {
 constexpr uint32_t LOAD_OPTION_LAZY_LOAD_ENABLE = 1U;
 constexpr uint32_t LOAD_OPTION_LAZY_LOAD_DISABLE = 0U;
+
+static std::set<std::string> g_soNameCache;
+static std::mutex g_soNameCacheMutex;
 
 BinaryLoader::BinaryLoader(const char_t * const binPath, const rtLoadBinaryConfig_t * const optionalCfg) :
                            loadOptions_(optionalCfg)
@@ -163,6 +168,23 @@ rtError_t BinaryLoader::ParseLoadOptions()
     return RT_ERROR_NONE;
 }
 
+std::string BinaryLoader::GenerateSoNameFromData()
+{
+    const size_t hashSize = binarySize_ > 1024UL ? 1024UL : binarySize_;
+    uint64_t hash = GetQuickHash(binaryBuffer_, hashSize);
+
+    std::string soName = std::to_string(hash) + "_" + std::to_string(binarySize_);
+    std::lock_guard<std::mutex> lock(g_soNameCacheMutex);
+
+    if (g_soNameCache.find(soName) != g_soNameCache.end()) {
+        uint64_t fullHash = GetQuickHash(binaryBuffer_, binarySize_);
+        soName = std::to_string(fullHash) + "_" + std::to_string(binarySize_);
+    }
+
+    (void)g_soNameCache.insert(soName);
+    return soName + ".so";
+}
+
 rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
 {
     const int32_t mode = option.cpuKernelMode;
@@ -172,7 +194,6 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
     // 2 only user for load from data
     COND_RETURN_OUT_ERROR_MSG_CALL(!isLoadFromFile_ && (mode != 2), RT_ERROR_INVALID_VALUE,
         "load from data scenario cpu kernel mode is invalid, mode=%d, should be 2", mode);
-    size_t binSize;
     switch (mode) {
         case 0: // 0: only need .json
         case 1: // 1: need .so and .json
@@ -181,8 +202,7 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
             break;
         case 2: // 2: load form data
             binPath_ = "";
-            binSize = binarySize_ > 1024UL ? 1024UL : binarySize_;
-            soName_ = std::to_string(GetQuickHash(binaryBuffer_, binSize)) + ".so";
+            soName_ = GenerateSoNameFromData();
             break;
         default:
             // mode range only support [0, 1, 2]

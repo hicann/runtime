@@ -41,6 +41,7 @@ private:
     PlainProgram *LoadCpuMode1Program();
     PlainProgram *ParseJsonAndRegisterCpuKernel();
     rtError_t SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option);
+    std::string GenerateSoNameFromData();
 
     std::string binPath_;
     std::string binRealPath_;
