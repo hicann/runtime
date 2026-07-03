@@ -11,7 +11,7 @@
 
 #include "base.hpp"
 #include "cond_c.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "memory_task.h"
 #include "stream_c.hpp"

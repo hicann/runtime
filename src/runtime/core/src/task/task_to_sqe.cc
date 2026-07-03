@@ -10,7 +10,7 @@
 #include "task_to_sqe.hpp"
 #include <cinttypes>
 #include "event.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "task_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {

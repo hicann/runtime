@@ -13,240 +13,409 @@
 
 #include <unordered_map>
 #include <memory>
+#include <cstdio>
+#include <string>
 #include "acl/acl_base.h"
 #include "acl/acl_rt.h"
 #include "acl/acl_tdt_queue.h"
 #include "runtime/base.h"
+#include "runtime/config.h"
 #include "acl/acl_tdt.h"
 #include "tdt/data_common.h"
+#include "acl_tdt_channel/tensor_data_transfer.h"
 
 namespace acl {
 
+inline std::string FormatEnumUnknownStr(const std::string &typeName, int32_t val) {
+    return "UNKNOWN_" + typeName + "(" + std::to_string(val) + ")";
+}
+
 inline const char* GetDataTypeDesc(aclDataType type) {
     static const std::unordered_map<aclDataType, const char*> dataTypeDescMap = {
-        {ACL_DT_UNDEFINED,  "ACL_DT_UNDEFINED"},
-        {ACL_FLOAT,         "ACL_FLOAT"},
-        {ACL_FLOAT16,       "ACL_FLOAT16"},
-        {ACL_INT8,          "ACL_INT8"},
-        {ACL_INT32,         "ACL_INT32"},
-        {ACL_UINT8,         "ACL_UINT8"},
-        {ACL_INT16,         "ACL_INT16"},
-        {ACL_UINT16,        "ACL_UINT16"},
-        {ACL_UINT32,        "ACL_UINT32"},
-        {ACL_INT64,         "ACL_INT64"},
-        {ACL_UINT64,        "ACL_UINT64"},
-        {ACL_DOUBLE,        "ACL_DOUBLE"},
-        {ACL_BOOL,          "ACL_BOOL"},
-        {ACL_STRING,        "ACL_STRING"},
-        {ACL_COMPLEX64,     "ACL_COMPLEX64"},
-        {ACL_COMPLEX128,    "ACL_COMPLEX128"},
-        {ACL_BF16,          "ACL_BF16"},
-        {ACL_INT4,          "ACL_INT4"},
-        {ACL_UINT1,         "ACL_UINT1"},
-        {ACL_COMPLEX32,     "ACL_COMPLEX32"},
-        {ACL_HIFLOAT8,      "ACL_HIFLOAT8"},
-        {ACL_FLOAT8_E5M2,   "ACL_FLOAT8_E5M2"},
-        {ACL_FLOAT8_E4M3FN, "ACL_FLOAT8_E4M3FN"},
-        {ACL_FLOAT8_E8M0,   "ACL_FLOAT8_E8M0"},
-        {ACL_FLOAT6_E3M2,   "ACL_FLOAT6_E3M2"},
-        {ACL_FLOAT6_E2M3,   "ACL_FLOAT6_E2M3"},
-        {ACL_FLOAT4_E2M1,   "ACL_FLOAT4_E2M1"},
-        {ACL_FLOAT4_E1M2,   "ACL_FLOAT4_E1M2"},
+        {ACL_DT_UNDEFINED,  "DT_UNDEFINED(-1)"},
+        {ACL_FLOAT,         "FLOAT(0)"},
+        {ACL_FLOAT16,       "FLOAT16(1)"},
+        {ACL_INT8,          "INT8(2)"},
+        {ACL_INT32,         "INT32(3)"},
+        {ACL_UINT8,         "UINT8(4)"},
+        {ACL_INT16,         "INT16(6)"},
+        {ACL_UINT16,        "UINT16(7)"},
+        {ACL_UINT32,        "UINT32(8)"},
+        {ACL_INT64,         "INT64(9)"},
+        {ACL_UINT64,        "UINT64(10)"},
+        {ACL_DOUBLE,        "DOUBLE(11)"},
+        {ACL_BOOL,          "BOOL(12)"},
+        {ACL_STRING,        "STRING(13)"},
+        {ACL_COMPLEX64,     "COMPLEX64(16)"},
+        {ACL_COMPLEX128,    "COMPLEX128(17)"},
+        {ACL_BF16,          "BF16(27)"},
+        {ACL_INT4,          "INT4(29)"},
+        {ACL_UINT1,         "UINT1(30)"},
+        {ACL_COMPLEX32,     "COMPLEX32(33)"},
+        {ACL_HIFLOAT8,      "HIFLOAT8(34)"},
+        {ACL_FLOAT8_E5M2,   "FLOAT8_E5M2(35)"},
+        {ACL_FLOAT8_E4M3FN, "FLOAT8_E4M3FN(36)"},
+        {ACL_FLOAT8_E8M0,   "FLOAT8_E8M0(37)"},
+        {ACL_FLOAT6_E3M2,   "FLOAT6_E3M2(38)"},
+        {ACL_FLOAT6_E2M3,   "FLOAT6_E2M3(39)"},
+        {ACL_FLOAT4_E2M1,   "FLOAT4_E2M1(40)"},
+        {ACL_FLOAT4_E1M2,   "FLOAT4_E1M2(41)"},
     };
 
     auto it = dataTypeDescMap.find(type);
-    return (it != dataTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != dataTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclDataType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetMemcpyKindDesc(aclrtMemcpyKind kind) {
     static const std::unordered_map<aclrtMemcpyKind, const char*> memcpyKindDescMap = {
-        {ACL_MEMCPY_HOST_TO_HOST,         "ACL_MEMCPY_HOST_TO_HOST"},
-        {ACL_MEMCPY_HOST_TO_DEVICE,       "ACL_MEMCPY_HOST_TO_DEVICE"},
-        {ACL_MEMCPY_DEVICE_TO_HOST,       "ACL_MEMCPY_DEVICE_TO_HOST"},
-        {ACL_MEMCPY_DEVICE_TO_DEVICE,     "ACL_MEMCPY_DEVICE_TO_DEVICE"},
-        {ACL_MEMCPY_DEFAULT,              "ACL_MEMCPY_DEFAULT"},
-        {ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE, "ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE"},
+        {ACL_MEMCPY_HOST_TO_HOST,         "MEMCPY_HOST_TO_HOST(0)"},
+        {ACL_MEMCPY_HOST_TO_DEVICE,       "MEMCPY_HOST_TO_DEVICE(1)"},
+        {ACL_MEMCPY_DEVICE_TO_HOST,       "MEMCPY_DEVICE_TO_HOST(2)"},
+        {ACL_MEMCPY_DEVICE_TO_DEVICE,     "MEMCPY_DEVICE_TO_DEVICE(3)"},
+        {ACL_MEMCPY_DEFAULT,              "MEMCPY_DEFAULT(4)"},
+        {ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE, "MEMCPY_HOST_TO_BUF_TO_DEVICE(5)"},
+        {ACL_MEMCPY_INNER_DEVICE_TO_DEVICE, "MEMCPY_INNER_DEVICE_TO_DEVICE(6)"},
+        {ACL_MEMCPY_INTER_DEVICE_TO_DEVICE, "MEMCPY_INTER_DEVICE_TO_DEVICE(7)"},
     };
 
     auto it = memcpyKindDescMap.find(kind);
-    return (it != memcpyKindDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != memcpyKindDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtMemcpyKind", static_cast<int32_t>(kind));
+    return enumBuf.c_str();
 }
 
 inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type) {
     static const std::unordered_map<rtExceptionExpandType_t, const char*> exceptionExpandTypeDescMap = {
-        {RT_EXCEPTION_INVALID,   "RT_EXCEPTION_INVALID"},
-        {RT_EXCEPTION_FFTS_PLUS, "RT_EXCEPTION_FFTS_PLUS"},
-        {RT_EXCEPTION_AICORE,    "RT_EXCEPTION_AICORE"},
-        {RT_EXCEPTION_UB,        "RT_EXCEPTION_UB"},
-        {RT_EXCEPTION_CCU,       "RT_EXCEPTION_CCU"},
-        {RT_EXCEPTION_FUSION,    "RT_EXCEPTION_FUSION"},
+        {RT_EXCEPTION_INVALID,   "EXCEPTION_INVALID(0)"},
+        {RT_EXCEPTION_FFTS_PLUS, "EXCEPTION_FFTS_PLUS(1)"},
+        {RT_EXCEPTION_AICORE,    "EXCEPTION_AICORE(2)"},
+        {RT_EXCEPTION_UB,        "EXCEPTION_UB(3)"},
+        {RT_EXCEPTION_CCU,       "EXCEPTION_CCU(4)"},
+        {RT_EXCEPTION_FUSION,    "EXCEPTION_FUSION(5)"},
     };
 
     auto it = exceptionExpandTypeDescMap.find(type);
-    return (it != exceptionExpandTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != exceptionExpandTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("rtExceptionExpandType_t", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetGroupAttrDesc(aclrtGroupAttr attr) {
     static const std::unordered_map<aclrtGroupAttr, const char*> groupAttrDescMap = {
-        {ACL_GROUP_AICORE_INT,  "ACL_GROUP_AICORE_INT"},
-        {ACL_GROUP_AIV_INT,     "ACL_GROUP_AIV_INT"},
-        {ACL_GROUP_AIC_INT,     "ACL_GROUP_AIC_INT"},
-        {ACL_GROUP_SDMANUM_INT, "ACL_GROUP_SDMANUM_INT"},
-        {ACL_GROUP_ASQNUM_INT,  "ACL_GROUP_ASQNUM_INT"},
-        {ACL_GROUP_GROUPID_INT, "ACL_GROUP_GROUPID_INT"},
+        {ACL_GROUP_AICORE_INT,  "GROUP_AICORE_INT(0)"},
+        {ACL_GROUP_AIV_INT,     "GROUP_AIV_INT(1)"},
+        {ACL_GROUP_AIC_INT,     "GROUP_AIC_INT(2)"},
+        {ACL_GROUP_SDMANUM_INT, "GROUP_SDMANUM_INT(3)"},
+        {ACL_GROUP_ASQNUM_INT,  "GROUP_ASQNUM_INT(4)"},
+        {ACL_GROUP_GROUPID_INT, "GROUP_GROUPID_INT(5)"},
     };
 
     auto it = groupAttrDescMap.find(attr);
-    return (it != groupAttrDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != groupAttrDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtGroupAttr", static_cast<int32_t>(attr));
+    return enumBuf.c_str();
 }
 
 inline const char* GetTsIdDesc(aclrtTsId tsId) {
     static const std::unordered_map<aclrtTsId, const char*> tsIdDescMap = {
-        {ACL_TS_ID_AICORE,   "ACL_TS_ID_AICORE"},
-        {ACL_TS_ID_AIVECTOR, "ACL_TS_ID_AIVECTOR"},
-        {ACL_TS_ID_RESERVED, "ACL_TS_ID_RESERVED"},
+        {ACL_TS_ID_AICORE,   "TS_ID_AICORE(0)"},
+        {ACL_TS_ID_AIVECTOR, "TS_ID_AIVECTOR(1)"},
+        {ACL_TS_ID_RESERVED, "TS_ID_RESERVED(2)"},
     };
 
     auto it = tsIdDescMap.find(tsId);
-    return (it != tsIdDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != tsIdDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtTsId", static_cast<int32_t>(tsId));
+    return enumBuf.c_str();
 }
 
 inline const char* GetQueueRouteQueryModeDesc(acltdtQueueRouteQueryMode mode) {
     static const std::unordered_map<acltdtQueueRouteQueryMode, const char*> queueRouteQueryModeDescMap = {
-        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC,       "ACL_TDT_QUEUE_ROUTE_QUERY_SRC"},
-        {ACL_TDT_QUEUE_ROUTE_QUERY_DST,       "ACL_TDT_QUEUE_ROUTE_QUERY_DST"},
-        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST, "ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST"},
-        {ACL_TDT_QUEUE_ROUTE_QUERY_ABNORMAL,  "ACL_TDT_QUEUE_ROUTE_QUERY_ABNORMAL"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC,       "TDT_QUEUE_ROUTE_QUERY_SRC(0)"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_DST,       "TDT_QUEUE_ROUTE_QUERY_DST(1)"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST, "TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST(2)"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_ABNORMAL,  "TDT_QUEUE_ROUTE_QUERY_ABNORMAL(100)"},
     };
 
     auto it = queueRouteQueryModeDescMap.find(mode);
-    return (it != queueRouteQueryModeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != queueRouteQueryModeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteQueryMode", static_cast<int32_t>(mode));
+    return enumBuf.c_str();
 }
 
 inline const char* GetQueueAttrTypeDesc(acltdtQueueAttrType type) {
     static const std::unordered_map<acltdtQueueAttrType, const char*> queueAttrTypeDescMap = {
-        {ACL_TDT_QUEUE_NAME_PTR,    "ACL_TDT_QUEUE_NAME_PTR"},
-        {ACL_TDT_QUEUE_DEPTH_UINT32, "ACL_TDT_QUEUE_DEPTH_UINT32"},
+        {ACL_TDT_QUEUE_NAME_PTR,    "TDT_QUEUE_NAME_PTR(0)"},
+        {ACL_TDT_QUEUE_DEPTH_UINT32, "TDT_QUEUE_DEPTH_UINT32(1)"},
     };
 
     auto it = queueAttrTypeDescMap.find(type);
-    return (it != queueAttrTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != queueAttrTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtQueueAttrType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetQueueRouteParamTypeDesc(acltdtQueueRouteParamType type) {
     static const std::unordered_map<acltdtQueueRouteParamType, const char*> queueRouteParamTypeDescMap = {
-        {ACL_TDT_QUEUE_ROUTE_SRC_UINT32,   "ACL_TDT_QUEUE_ROUTE_SRC_UINT32"},
-        {ACL_TDT_QUEUE_ROUTE_DST_UINT32,   "ACL_TDT_QUEUE_ROUTE_DST_UINT32"},
-        {ACL_TDT_QUEUE_ROUTE_STATUS_INT32, "ACL_TDT_QUEUE_ROUTE_STATUS_INT32"},
+        {ACL_TDT_QUEUE_ROUTE_SRC_UINT32,   "TDT_QUEUE_ROUTE_SRC_UINT32(0)"},
+        {ACL_TDT_QUEUE_ROUTE_DST_UINT32,   "TDT_QUEUE_ROUTE_DST_UINT32(1)"},
+        {ACL_TDT_QUEUE_ROUTE_STATUS_INT32, "TDT_QUEUE_ROUTE_STATUS_INT32(2)"},
     };
 
     auto it = queueRouteParamTypeDescMap.find(type);
-    return (it != queueRouteParamTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != queueRouteParamTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteParamType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetQueueRouteQueryInfoParamTypeDesc(acltdtQueueRouteQueryInfoParamType type) {
     static const std::unordered_map<acltdtQueueRouteQueryInfoParamType, const char*> queueRouteQueryInfoParamTypeDescMap = {
-        {ACL_TDT_QUEUE_ROUTE_QUERY_MODE_ENUM,    "ACL_TDT_QUEUE_ROUTE_QUERY_MODE_ENUM"},
-        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32, "ACL_TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32"},
-        {ACL_TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32, "ACL_TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_MODE_ENUM,    "TDT_QUEUE_ROUTE_QUERY_MODE_ENUM(0)"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32, "TDT_QUEUE_ROUTE_QUERY_SRC_ID_UINT32(1)"},
+        {ACL_TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32, "TDT_QUEUE_ROUTE_QUERY_DST_ID_UINT32(2)"},
     };
 
     auto it = queueRouteQueryInfoParamTypeDescMap.find(type);
-    return (it != queueRouteQueryInfoParamTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != queueRouteQueryInfoParamTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteQueryInfoParamType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetAllocBufTypeDesc(acltdtAllocBufType type) {
     static const std::unordered_map<acltdtAllocBufType, const char*> allocBufTypeDescMap = {
-        {ACL_TDT_NORMAL_MEM, "ACL_TDT_NORMAL_MEM"},
-        {ACL_TDT_DVPP_MEM,   "ACL_TDT_DVPP_MEM"},
+        {ACL_TDT_NORMAL_MEM, "TDT_NORMAL_MEM(0)"},
+        {ACL_TDT_DVPP_MEM,   "TDT_DVPP_MEM(1)"},
     };
 
     auto it = allocBufTypeDescMap.find(type);
-    return (it != allocBufTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != allocBufTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtAllocBufType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetTensorTypeDesc(acltdtTensorType type) {
     static const std::unordered_map<acltdtTensorType, const char*> tensorTypeDescMap = {
-        {ACL_TENSOR_DATA_UNDEFINED,    "ACL_TENSOR_DATA_UNDEFINED"},
-        {ACL_TENSOR_DATA_TENSOR,       "ACL_TENSOR_DATA_TENSOR"},
-        {ACL_TENSOR_DATA_END_OF_SEQUENCE, "ACL_TENSOR_DATA_END_OF_SEQUENCE"},
-        {ACL_TENSOR_DATA_ABNORMAL,     "ACL_TENSOR_DATA_ABNORMAL"},
-        {ACL_TENSOR_DATA_SLICE_TENSOR, "ACL_TENSOR_DATA_SLICE_TENSOR"},
-        {ACL_TENSOR_DATA_END_TENSOR,   "ACL_TENSOR_DATA_END_TENSOR"},
+        {ACL_TENSOR_DATA_UNDEFINED,    "TENSOR_DATA_UNDEFINED(-1)"},
+        {ACL_TENSOR_DATA_TENSOR,       "TENSOR_DATA_TENSOR(0)"},
+        {ACL_TENSOR_DATA_END_OF_SEQUENCE, "TENSOR_DATA_END_OF_SEQUENCE(1)"},
+        {ACL_TENSOR_DATA_ABNORMAL,     "TENSOR_DATA_ABNORMAL(2)"},
+        {ACL_TENSOR_DATA_SLICE_TENSOR, "TENSOR_DATA_SLICE_TENSOR(3)"},
+        {ACL_TENSOR_DATA_END_TENSOR,   "TENSOR_DATA_END_TENSOR(4)"},
     };
 
     auto it = tensorTypeDescMap.find(type);
-    return (it != tensorTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != tensorTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("acltdtTensorType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetSysParamOptDesc(aclSysParamOpt opt) {
     static const std::unordered_map<aclSysParamOpt, const char*> sysParamOptDescMap = {
-        {ACL_OPT_DETERMINISTIC,       "ACL_OPT_DETERMINISTIC"},
-        {ACL_OPT_ENABLE_DEBUG_KERNEL, "ACL_OPT_ENABLE_DEBUG_KERNEL"},
-        {ACL_OPT_STRONG_CONSISTENCY,  "ACL_OPT_STRONG_CONSISTENCY"},
+        {ACL_OPT_DETERMINISTIC,       "OPT_DETERMINISTIC(0)"},
+        {ACL_OPT_ENABLE_DEBUG_KERNEL, "OPT_ENABLE_DEBUG_KERNEL(1)"},
+        {ACL_OPT_STRONG_CONSISTENCY,  "OPT_STRONG_CONSISTENCY(2)"},
     };
 
     auto it = sysParamOptDescMap.find(opt);
-    return (it != sysParamOptDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != sysParamOptDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclSysParamOpt", static_cast<int32_t>(opt));
+    return enumBuf.c_str();
 }
 
 inline const char* GetCallbackBlockTypeDesc(aclrtCallbackBlockType type) {
     static const std::unordered_map<aclrtCallbackBlockType, const char*> callbackBlockTypeDescMap = {
-        {ACL_CALLBACK_NO_BLOCK, "ACL_CALLBACK_NO_BLOCK"},
-        {ACL_CALLBACK_BLOCK,    "ACL_CALLBACK_BLOCK"},
+        {ACL_CALLBACK_NO_BLOCK, "CALLBACK_NO_BLOCK(0)"},
+        {ACL_CALLBACK_BLOCK,    "CALLBACK_BLOCK(1)"},
     };
 
     auto it = callbackBlockTypeDescMap.find(type);
-    return (it != callbackBlockTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != callbackBlockTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtCallbackBlockType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type) {
     static const std::unordered_map<aclrtMemLocationType, const char*> memLocationTypeDescMap = {
-        {ACL_MEM_LOCATION_TYPE_HOST,         "ACL_MEM_LOCATION_TYPE_HOST"},
-        {ACL_MEM_LOCATION_TYPE_DEVICE,       "ACL_MEM_LOCATION_TYPE_DEVICE"},
-        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "ACL_MEM_LOCATION_TYPE_UNREGISTERED"},
-        {ACL_MEM_LOCATION_TYPE_HOST_NUMA,    "ACL_MEM_LOCATION_TYPE_HOST_NUMA"},
+        {ACL_MEM_LOCATION_TYPE_HOST,         "MEM_LOCATION_TYPE_HOST(0)"},
+        {ACL_MEM_LOCATION_TYPE_DEVICE,       "MEM_LOCATION_TYPE_DEVICE(1)"},
+        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "MEM_LOCATION_TYPE_UNREGISTERED(2)"},
+        {ACL_MEM_LOCATION_TYPE_HOST_NUMA,    "MEM_LOCATION_TYPE_HOST_NUMA(4)"},
     };
 
     auto it = memLocationTypeDescMap.find(type);
-    return (it != memLocationTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != memLocationTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtMemLocationType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetMemAllocationTypeDesc(aclrtMemAllocationType type) {
     static const std::unordered_map<aclrtMemAllocationType, const char*> memAllocationTypeDescMap = {
-        {ACL_MEM_ALLOCATION_TYPE_PINNED, "ACL_MEM_ALLOCATION_TYPE_PINNED"},
+        {ACL_MEM_ALLOCATION_TYPE_PINNED, "MEM_ALLOCATION_TYPE_PINNED(0)"},
     };
 
     auto it = memAllocationTypeDescMap.find(type);
-    return (it != memAllocationTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != memAllocationTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtMemAllocationType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetTdtDataTypeDesc(tdt::TdtDataType type) {
     static const std::unordered_map<tdt::TdtDataType, const char*> tdtDataTypeDescMap = {
-        {tdt::TDT_IMAGE_LABEL,      "TDT_IMAGE_LABEL"},
-        {tdt::TDT_TFRECORD,         "TDT_TFRECORD"},
-        {tdt::TDT_DATA_LABEL,       "TDT_DATA_LABEL"},
-        {tdt::TDT_END_OF_SEQUENCE,  "TDT_END_OF_SEQUENCE"},
-        {tdt::TDT_TENSOR,           "TDT_TENSOR"},
-        {tdt::TDT_ABNORMAL,         "TDT_ABNORMAL"},
-        {tdt::TDT_DATATYPE_MAX,     "TDT_DATATYPE_MAX"},
+        {tdt::TDT_IMAGE_LABEL,      "TDT_IMAGE_LABEL(0)"},
+        {tdt::TDT_TFRECORD,         "TDT_TFRECORD(1)"},
+        {tdt::TDT_DATA_LABEL,       "TDT_DATA_LABEL(2)"},
+        {tdt::TDT_END_OF_SEQUENCE,  "TDT_END_OF_SEQUENCE(3)"},
+        {tdt::TDT_TENSOR,           "TDT_TENSOR(4)"},
+        {tdt::TDT_ABNORMAL,         "TDT_ABNORMAL(5)"},
+        {tdt::TDT_DATATYPE_MAX,     "TDT_DATATYPE_MAX(6)"},
     };
 
     auto it = tdtDataTypeDescMap.find(type);
-    return (it != tdtDataTypeDescMap.end()) ? it->second : "UNKNOWN";
+    if (it != tdtDataTypeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("TdtDataType", static_cast<int32_t>(type));
+    return enumBuf.c_str();
 }
 
 inline const char* GetTdtDataTypeDescV2(int32_t type) {
+    static constexpr int32_t TDT_V2_TENSOR = 0;
+    static constexpr int32_t TDT_V2_END_OF_SEQUENCE = 1;
+    static constexpr int32_t TDT_V2_ABNORMAL = 2;
+    static constexpr int32_t TDT_V2_SLICE_TENSOR = 3;
+    static constexpr int32_t TDT_V2_END_TENSOR = 4;
     static const std::unordered_map<int32_t, const char*> tdtDataTypeDescV2Map = {
-        {0, "TDT_TENSOR(0)"},
-        {1, "TDT_END_OF_SEQUENCE(1)"},
-        {2, "TDT_ABNORMAL(2)"},
-        {3, "TDT_SLICE_TENSOR(3)"},
-        {4, "TDT_END_TENSOR(4)"},
+        {TDT_V2_TENSOR,           "TDT_V2_TENSOR(0)"},
+        {TDT_V2_END_OF_SEQUENCE,  "TDT_V2_END_OF_SEQUENCE(1)"},
+        {TDT_V2_ABNORMAL,         "TDT_V2_ABNORMAL(2)"},
+        {TDT_V2_SLICE_TENSOR,     "TDT_V2_SLICE_TENSOR(3)"},
+        {TDT_V2_END_TENSOR,       "TDT_V2_END_TENSOR(4)"},
     };
 
     auto it = tdtDataTypeDescV2Map.find(type);
-    return (it != tdtDataTypeDescV2Map.end()) ? it->second : "UNKNOWN";
+    if (it != tdtDataTypeDescV2Map.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("TdtDataTypeV2", type);
+    return enumBuf.c_str();
+}
+
+inline const char* GetRunModeDesc(aclrtRunMode mode) {
+    static const std::unordered_map<aclrtRunMode, const char*> runModeDescMap = {
+        {ACL_DEVICE, "DEVICE(0)"},
+        {ACL_HOST,   "HOST(1)"},
+    };
+
+    auto it = runModeDescMap.find(mode);
+    if (it != runModeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtRunMode", static_cast<int32_t>(mode));
+    return enumBuf.c_str();
+}
+
+inline const char* GetCaptureModeDesc(aclmdlRICaptureMode mode) {
+    static const std::unordered_map<aclmdlRICaptureMode, const char*> captureModeDescMap = {
+        {ACL_MODEL_RI_CAPTURE_MODE_GLOBAL,       "MODEL_RI_CAPTURE_MODE_GLOBAL(0)"},
+        {ACL_MODEL_RI_CAPTURE_MODE_THREAD_LOCAL, "MODEL_RI_CAPTURE_MODE_THREAD_LOCAL(1)"},
+        {ACL_MODEL_RI_CAPTURE_MODE_RELAXED,      "MODEL_RI_CAPTURE_MODE_RELAXED(2)"},
+    };
+
+    auto it = captureModeDescMap.find(mode);
+    if (it != captureModeDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclmdlRICaptureMode", static_cast<int32_t>(mode));
+    return enumBuf.c_str();
+}
+
+inline const char* GetLastErrLevelDesc(aclrtLastErrLevel level) {
+    static const std::unordered_map<aclrtLastErrLevel, const char*> lastErrLevelDescMap = {
+        {ACL_RT_THREAD_LEVEL, "THREAD_LEVEL(0)"},
+    };
+
+    auto it = lastErrLevelDescMap.find(level);
+    if (it != lastErrLevelDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtLastErrLevel", static_cast<int32_t>(level));
+    return enumBuf.c_str();
+}
+
+inline const char* GetDeviceInfoDesc(aclDeviceInfo info) {
+    static const std::unordered_map<aclDeviceInfo, const char*> deviceInfoDescMap = {
+        {ACL_DEVICE_INFO_UNDEFINED,     "DEVICE_INFO_UNDEFINED(-1)"},
+        {ACL_DEVICE_INFO_AI_CORE_NUM,   "DEVICE_INFO_AI_CORE_NUM(0)"},
+        {ACL_DEVICE_INFO_VECTOR_CORE_NUM, "DEVICE_INFO_VECTOR_CORE_NUM(1)"},
+        {ACL_DEVICE_INFO_L2_SIZE,       "DEVICE_INFO_L2_SIZE(2)"},
+    };
+
+    auto it = deviceInfoDescMap.find(info);
+    if (it != deviceInfoDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclDeviceInfo", static_cast<int32_t>(info));
+    return enumBuf.c_str();
+}
+
+inline const char* GetMemAttrDesc(aclrtMemAttr attr) {
+    static const std::unordered_map<aclrtMemAttr, const char*> memAttrDescMap = {
+        {ACL_DDR_MEM,              "DDR_MEM(0)"},
+        {ACL_HBM_MEM,              "HBM_MEM(1)"},
+        {ACL_DDR_MEM_HUGE,         "DDR_MEM_HUGE(2)"},
+        {ACL_DDR_MEM_NORMAL,       "DDR_MEM_NORMAL(3)"},
+        {ACL_HBM_MEM_HUGE,         "HBM_MEM_HUGE(4)"},
+        {ACL_HBM_MEM_NORMAL,       "HBM_MEM_NORMAL(5)"},
+        {ACL_DDR_MEM_P2P_HUGE,     "DDR_MEM_P2P_HUGE(6)"},
+        {ACL_DDR_MEM_P2P_NORMAL,   "DDR_MEM_P2P_NORMAL(7)"},
+        {ACL_HBM_MEM_P2P_HUGE,     "HBM_MEM_P2P_HUGE(8)"},
+        {ACL_HBM_MEM_P2P_NORMAL,   "HBM_MEM_P2P_NORMAL(9)"},
+        {ACL_HBM_MEM_HUGE1G,       "HBM_MEM_HUGE1G(10)"},
+        {ACL_HBM_MEM_P2P_HUGE1G,   "HBM_MEM_P2P_HUGE1G(11)"},
+        {ACL_MEM_NORMAL,           "MEM_NORMAL(12)"},
+        {ACL_MEM_HUGE,             "MEM_HUGE(13)"},
+        {ACL_MEM_HUGE1G,           "MEM_HUGE1G(14)"},
+        {ACL_MEM_P2P_NORMAL,       "MEM_P2P_NORMAL(15)"},
+        {ACL_MEM_P2P_HUGE,         "MEM_P2P_HUGE(16)"},
+        {ACL_MEM_P2P_HUGE1G,       "MEM_P2P_HUGE1G(17)"},
+    };
+
+    auto it = memAttrDescMap.find(attr);
+    if (it != memAttrDescMap.end()) { return it->second; }
+    static thread_local std::string enumBuf;
+    enumBuf = FormatEnumUnknownStr("aclrtMemAttr", static_cast<int32_t>(attr));
+    return enumBuf.c_str();
+}
+
+static inline std::string DatasetMemTypeToString(const datasetMemType type)
+{
+    std::string result;
+    switch (type) {
+        case MEM_UNKNOWN:
+            result = "MEM_UNKNOWN(0)";
+            break;
+        case MEM_HOST:
+            result = "MEM_HOST(1)";
+            break;
+        case MEM_DEVICE:
+            result = "MEM_DEVICE(2)";
+            break;
+        default:
+            result = "UNKNOWN(" + std::to_string(static_cast<int32_t>(type)) + ")";
+            break;
+    }
+    return result;
 }
 
 } // namespace acl

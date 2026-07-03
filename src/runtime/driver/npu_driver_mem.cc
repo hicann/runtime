@@ -11,6 +11,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "runtime.hpp"
+#include "enum_desc.hpp"
 
 #ifdef CFG_DEV_PLATFORM_PC
 #include "cmodel_driver.h"
@@ -1276,7 +1277,7 @@ rtError_t NpuDriver::DevMemAllocOffline(void **dptr, const uint64_t size,
            size, type, deviceId, chipType_);
 
     if (IsOfflineNotSupportMemType(type)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + std::to_string(type),
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + MemTypeToString(type),
             "The current SoC does not support P2P memory allocation");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -1346,7 +1347,7 @@ rtError_t NpuDriver::DevMemAlloc(void ** const dptr, const uint64_t size, const 
         temptRet = DevMemAllocOnline(dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag,
             isNewApi, cpOnlyFlag);
     } else if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) && (IsOfflineNotSupportMemType(type))) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + std::to_string(type),
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "Parameter type value " + MemTypeToString(type),
             "The current SoC does not support P2P memory allocation");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     } else if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) ||

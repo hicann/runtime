@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "memory_c.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "context.hpp"
 #include "device.hpp"

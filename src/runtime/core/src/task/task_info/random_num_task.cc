@@ -10,6 +10,7 @@
 
 #include "random_num_task.h"
 
+#include "enum_desc.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "task_manager.h"
@@ -97,8 +98,8 @@ static inline rtError_t
     GetRandomNumDataSize(rtRandomNumDataType dataType, size_t &dataSize)
 {
     const auto iter = RANDOM_DATATYPE_SIZE_MAP.find(dataType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(iter == RANDOM_DATATYPE_SIZE_MAP.end(), RT_ERROR_INVALID_VALUE,
-        dataType, "[0, " + std::to_string(RT_RANDOM_NUM_DATATYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(iter == RANDOM_DATATYPE_SIZE_MAP.end(), RT_ERROR_INVALID_VALUE,
+        RandomNumDataTypeToString(dataType), "dataType", "[0, " + std::to_string(RT_RANDOM_NUM_DATATYPE_MAX) + ")");
 
     dataSize = iter->second;
 
@@ -402,17 +403,17 @@ ERROR_FREE:
 static inline rtError_t CheckDataTypeByFuncType(rtRandomNumDataType dataType, rtRandomNumFuncType funcType)
 {
     const auto iter = FUNCTYPE_DATATYPE_MAP.find(funcType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(iter == FUNCTYPE_DATATYPE_MAP.end(), RT_ERROR_INVALID_VALUE,
-        funcType, "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(iter == FUNCTYPE_DATATYPE_MAP.end(), RT_ERROR_INVALID_VALUE,
+        RandomNumFuncTypeToString(funcType), "funcType", "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
 
     const auto strMapIter = FUNCTYPE_DATATYPE_STR_MAP.find(funcType);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(strMapIter == FUNCTYPE_DATATYPE_STR_MAP.end(), RT_ERROR_INVALID_VALUE,
-        funcType, "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(strMapIter == FUNCTYPE_DATATYPE_STR_MAP.end(), RT_ERROR_INVALID_VALUE,
+        RandomNumFuncTypeToString(funcType), "funcType", "[0, " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) + ")");
 
     auto sets = iter->second;
     std::string dataStr = strMapIter->second;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(sets.count(dataType) == 0U, RT_ERROR_INVALID_VALUE,
-        dataType, dataStr.c_str());
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(sets.count(dataType) == 0U, RT_ERROR_INVALID_VALUE,
+        RandomNumDataTypeToString(dataType), "dataType", dataStr.c_str());
 
     return RT_ERROR_NONE;
 }

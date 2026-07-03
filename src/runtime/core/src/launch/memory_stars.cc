@@ -10,7 +10,7 @@
 #include "memory_c.hpp"
 
 #include "common/inner_thread_local.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "enum_desc.hpp"
 #include "context/context.hpp"
 #include "device.hpp"
 #include "memory_task.h"

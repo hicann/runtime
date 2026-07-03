@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model_utils.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "raw_device.hpp"
 #include "context.hpp"

@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"

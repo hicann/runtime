@@ -8,7 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "notify_enum_desc.hpp"
+#include "cond_enum_desc.hpp"
+#include "device_enum_desc.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"

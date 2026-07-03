@@ -11,6 +11,8 @@
 #include "api.hpp"
 #include "api_handle_guard.h"
 #include "base.hpp"
+#include "device_enum_desc.hpp"
+#include "stream_enum_desc.hpp"
 #include "prof_ctrl_callback_manager.hpp"
 #include "error_message_manage.hpp"
 #include "errcode_manage.hpp"
@@ -590,7 +592,7 @@ rtError_t rtStreamCreateWithFlagsExternal(rtStream_t *stm, int32_t priority, uin
     const rtChipType_t chipType = rtInstance->GetChipType();
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((priority != RT_STREAM_GREATEST_PRIORITY) && 
         (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_CREATE_PRIORITY_GREATEST)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(priority).c_str(), "priority",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, StreamPriorityToString(priority).c_str(), "priority",
         "The priority can be set to RT_STREAM_GREATEST_PRIORITY only when chipType is " + std::to_string(CHIP_DC) +
         ". The actual chipType is " + std::to_string(chipType));
 

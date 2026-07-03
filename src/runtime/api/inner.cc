@@ -9,6 +9,7 @@
  */
 
 #include "inner.hpp"
+#include "enum_desc.hpp"
 #include "error_message_manage.hpp"
 #include "runtime/mem.h"
 #include "runtime/kernel.h"
@@ -201,7 +202,7 @@ rtError_t rtGeneralCtrlInner(uintptr_t *ctl, uint32_t num, uint32_t type)
         type, "less than " + std::to_string(RT_GNL_CTRL_TYPE_MAX));
 
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((g_genCtrPro[type].funcCall == nullptr), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1004, __func__, "current type " + std::to_string(type) + " func call");
+        ErrorCode::EE1004, __func__, "current type " + GnlCtrlTypeToString(static_cast<rtGeneralCtrlType_t>(type)) + " func call");
 
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((num != static_cast<uint32_t>(g_genCtrPro[type].num)), RT_ERROR_INVALID_VALUE, 
         num, std::to_string(g_genCtrPro[type].num));

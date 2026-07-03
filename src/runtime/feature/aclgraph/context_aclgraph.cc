@@ -15,7 +15,7 @@
 #include "count_notify.hpp"
 #include "npu_driver.hpp"
 #include "error_message_manage.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "cond_enum_desc.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "task_info.hpp"

@@ -105,7 +105,7 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t &
             break;
         }
         default: {
-            ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %d.", static_cast<int32_t>(kind));
+             ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %d.", static_cast<int32_t>(kind));
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
                 std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind), "kind",
@@ -170,7 +170,7 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
             break;
         }
         default: {
-            ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+             ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
                 std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind),
@@ -1188,13 +1188,12 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     const bool isDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) 
         || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
-        ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA.", static_cast<int32_t>(prop->memAttr));
-        const std::string memAttrVal = std::to_string(prop->memAttr);
+        ACL_LOG_ERROR("memAttr [%s] only support MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).", acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
-                "ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA"}));
+            std::vector<const char *>({funcName.c_str(), acl::GetMemAttrDesc(prop->memAttr), "memAttr",
+                "MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4)"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     auto it = memAttrHandlers.find(static_cast<int32_t>(prop->memAttr));
@@ -1203,14 +1202,13 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
         const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
         it->second(rtProp, isHostAlloc, isDeviceAlloc);
     } else {
-        ACL_LOG_ERROR("memAttr [%d] is not supported. "
+        ACL_LOG_ERROR("memAttr [%s] is not supported. "
                       "For details, please refer to the manual.",
-                      static_cast<int32_t>(prop->memAttr));
-        const std::string memAttrVal = std::to_string(prop->memAttr);
+                      acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), acl::GetMemAttrDesc(prop->memAttr), "memAttr",
                 "The current physical memory attribute is not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -1424,13 +1422,12 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
     const bool isDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
     if (isDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) 
         || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
-        ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA.", static_cast<int32_t>(prop->memAttr));
-        const std::string memAttrVal = std::to_string(prop->memAttr);
+        ACL_LOG_ERROR("memAttr [%s] only support MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4).", acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({funcName.c_str(), memAttrVal.c_str(), "memAttr",
-                "ACL_MEM_LOCATION_TYPE_HOST or ACL_MEM_LOCATION_TYPE_HOST_NUMA"}));
+            std::vector<const char *>({funcName.c_str(), acl::GetMemAttrDesc(prop->memAttr), "memAttr",
+                "MEM_LOCATION_TYPE_HOST(0) or MEM_LOCATION_TYPE_HOST_NUMA(4)"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     auto it = memAttrHandlers.find(static_cast<int32_t>(prop->memAttr));
@@ -1439,14 +1436,13 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
         const bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
         it->second(rtProp1, isHostAlloc, isDeviceAlloc);
     } else {
-        ACL_LOG_ERROR("memAttr [%d] is not supported. "
+        ACL_LOG_ERROR("memAttr [%s] is not supported. "
                       "For details, please refer to the manual.",
-                      static_cast<int32_t>(prop->memAttr));
-        const std::string memAttrVal2 = std::to_string(prop->memAttr);
+                      acl::GetMemAttrDesc(prop->memAttr));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({funcName.c_str(), memAttrVal2.c_str(), "memAttr",
+            std::vector<const char *>({funcName.c_str(), acl::GetMemAttrDesc(prop->memAttr), "memAttr",
                 "The current physical memory attribute is not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }

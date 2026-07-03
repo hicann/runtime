@@ -29,7 +29,7 @@
 #include "heterogenous.h"
 #include "runtime_keeper.h"
 #include "global_state_manager.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "enum_desc.hpp"
 #include "api_handle_guard.h"
 using namespace cce::runtime;
 

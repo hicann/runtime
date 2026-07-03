@@ -947,7 +947,7 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
     if ((dataset->memType != MEM_UNKNOWN) && (currentMemType != MEM_UNKNOWN)) {
         if (dataset->memType != currentMemType) {
         ACL_LOG_ERROR("The memTypes in the dataset must be all host-side or device-side address");
-        const std::string memTypeVal = std::to_string(dataset->memType);
+        const std::string memTypeVal = acl::DatasetMemTypeToString(dataset->memType);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                 std::vector<const char *>({"func", "value", "param", "reason"}),
                 std::vector<const char *>({__func__, memTypeVal.c_str(),

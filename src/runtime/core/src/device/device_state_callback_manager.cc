@@ -9,7 +9,7 @@
  */
 
 #include "device_state_callback_manager.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "device_enum_desc.hpp"
 #include "error_message_manage.hpp"
 
 namespace cce {

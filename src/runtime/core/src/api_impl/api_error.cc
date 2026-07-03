@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "enum_desc.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"
@@ -1247,8 +1247,8 @@ rtError_t ApiErrorDecorator::StreamGetFlags(Stream * const stm,  uint32_t * cons
 rtError_t ApiErrorDecorator::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
     uint32_t * const maxTaskCount)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
-        RT_ERROR_INVALID_VALUE, streamType, "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
+        RT_ERROR_INVALID_VALUE, StreamTypeToString(streamType), "streamType", "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
         + std::to_string(RT_HUGE_STREAM) + "]");
     NULL_PTR_RETURN_MSG_OUTER(maxStrCount, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(maxTaskCount, RT_ERROR_INVALID_VALUE);
@@ -1262,8 +1262,8 @@ rtError_t ApiErrorDecorator::GetMaxStreamAndTask(const uint32_t streamType, uint
 
 rtError_t ApiErrorDecorator::GetAvailStreamNum(const uint32_t streamType, uint32_t * const streamCount)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
-        RT_ERROR_INVALID_VALUE, streamType, "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
+        RT_ERROR_INVALID_VALUE, StreamTypeToString(streamType), "streamType", "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
         + std::to_string(RT_HUGE_STREAM) + "]");
     NULL_PTR_RETURN_MSG_OUTER(streamCount, RT_ERROR_INVALID_VALUE);
     const rtError_t error = impl_->GetAvailStreamNum(streamType, streamCount);
@@ -2175,7 +2175,7 @@ static std::string allowed_list_to_string(const std::vector<rtMemcpyKind_t>& v)
     std::ostringstream oss;
     oss << "{";
     for (size_t i = 0; i < v.size(); ++i) {
-        oss << static_cast<int32_t>(v[i]);  
+        oss << static_cast<int32_t>(v[i]);
         if (i + 1U < v.size()) {        
             oss << ", ";
         }
@@ -2640,8 +2640,8 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, siz
 {
     NULL_PTR_RETURN_MSG_OUTER(freeSize, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(totalSize, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((memInfoType < RT_MEMORYINFO_DDR) || (memInfoType > RT_MEMORYINFO_P2P_HUGE1G), 
-        RT_ERROR_INVALID_MEMORY_TYPE, memInfoType, 
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((memInfoType < RT_MEMORYINFO_DDR) || (memInfoType > RT_MEMORYINFO_P2P_HUGE1G), 
+        RT_ERROR_INVALID_MEMORY_TYPE, MemInfoTypeToString(memInfoType), "memInfoType", 
         "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_P2P_HUGE1G) + "]");
     const rtError_t error = impl_->MemGetInfoEx(memInfoType, freeSize, totalSize);
     ERROR_RETURN(error, "Get Memory extend info failed, memInfoType=%u, free=%zu, total=%zu.",
@@ -3816,8 +3816,8 @@ rtError_t ApiErrorDecorator::StreamSwitchEx(void * const ptr, const rtCondition_
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((condition > RT_LESS_OR_EQUAL) || (condition < 0), RT_ERROR_INVALID_VALUE, 
         condition, "[0, " + std::to_string(RT_LESS_OR_EQUAL) + "]");
-	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
-        dataType, "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
+	COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
+        SwitchDataTypeToString(dataType), "dataType", "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
     const rtError_t error = impl_->StreamSwitchEx(ptr, condition, valuePtr, trueStream, curStm, dataType);
     ERROR_RETURN(error, "Stream switch[extend] failed, condition=%d, dataType=%d.",
         condition, static_cast<int32_t>(dataType));
@@ -3843,8 +3843,8 @@ rtError_t ApiErrorDecorator::StreamSwitchN(void * const ptr, const uint32_t size
         NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr[i], RT_ERROR_INVALID_VALUE);
     }
 
-	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
-        dataType, "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
+	COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
+        SwitchDataTypeToString(dataType), "dataType", "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
     const rtError_t error = impl_->StreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, curStm, dataType);
     ERROR_RETURN(error, "Stream switchN failed, size=%u(bytes), elementSize=%u(bytes) dataType=%d",
         size, elementSize, dataType);

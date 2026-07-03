@@ -8,7 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
-#include "common/enum_to_string_utils.hpp"
+#include "capture_model_enum_desc.hpp"
+#include "cond_enum_desc.hpp"
 #include "stream.hpp"
 #include "capture_adapt.hpp"
 
@@ -40,7 +41,7 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStre
         "[" + std::to_string(RT_STREAM_CAPTURE_MODE_GLOBAL) + ", " +
         std::to_string(RT_STREAM_CAPTURE_MODE_MAX) + ")");
     COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
-        StreamFlagsToString(stm->Flags()), "stream flag",
+        std::to_string(stm->Flags()), "stream flag",
         RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_())); 
     COND_RETURN_AND_MSG_OUTER(StreamBeginCaptureMdlCheck(mdl) != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         __func__, "modelRI", "The modelRI is not a sub ACL Graph");
@@ -52,7 +53,7 @@ rtError_t ApiErrorDecorator::StreamEndCapture(Stream * const stm, Model ** const
 {  
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
-        StreamFlagsToString(stm->Flags()), "stream flag",
+        std::to_string(stm->Flags()), "stream flag",
         RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_()));
     return impl_->StreamEndCapture(stm, captureMdl);
 }
@@ -125,7 +126,7 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream * const stm, Model * const 
         ErrorCode::EE1016, __func__, "Non ACL Graph mode is not supported");
     
     COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
-        StreamFlagsToString(stm->Flags()), "stream flag",
+        std::to_string(stm->Flags()), "stream flag",
         "Stream " + std::to_string(stm->Id_()) + " does not support the ACL Graph");
 
     COND_RETURN_WARN((dynamic_cast<CaptureModel*>(captureMdl))->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support adding streams");

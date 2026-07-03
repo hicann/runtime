@@ -11,7 +11,7 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
-#include "common/enum_to_string_utils.hpp"
+#include "device_enum_desc.hpp"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "driver/ascend_hal.h"
