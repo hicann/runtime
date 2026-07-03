@@ -326,7 +326,7 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {VEC_ERR_HWLP_STACK_OVFL_T0, "The number of nested VLOOP exceeds the hardware limit, which may be a complier bug."},
     {VEC_ERR_HWLP_INSTR_NUM_MISMATCH_T0, "For the nested VLOOP, the number of instructions in the inner loop "
         "is greater than that in the outer loop, which may be a complier bug."},
-    {VEC_ERR_BIU_RESP_ERR_T0, "SMIT accesses an invalid GM address or the cross-device memory access times out."},
+    {VEC_ERR_BIU_RESP_ERR_T0, "SIMT accesses an invalid GM address or the cross-device memory access times out."},
     {VEC_ERR_PB_ECC_MBERR_T0, "A multi-bit ECC error occurs when VEC accesses parameter buffer. See the RAS alarm handling."},
     {VEC_ERR_IDATA_INF_NAN_T0, "The input data of the instruction operation is INF/NAN."},
     {VEC_ERR_DIV_BY_ZERO_T0, "Divide-by-zero error occurs for the VEC instruction."},

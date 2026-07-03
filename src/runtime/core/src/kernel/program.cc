@@ -1731,7 +1731,7 @@ rtError_t ElfProgram::MergeKernel(const RtKernel * const elfkernelInfo, Kernel *
         oldKernel->SetKernelLength2(static_cast<uint32_t>(elfkernelInfo->length));
         oldKernel->SetMinStackSize2(metaInfo->minStackSize);
 
-        // kernelVfType && shareMemSize is used for smit, need set value with aiv kernel
+        // kernelVfType && shareMemSize is used for simt, need set value with aiv kernel
         oldKernel->SetKernelVfType_(metaInfo->kernelVfType);
         oldKernel->SetShareMemSize_(metaInfo->shareMemSize);
     }
