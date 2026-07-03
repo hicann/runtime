@@ -113,6 +113,28 @@ struct RtArgsWithType {
 
 #if defined(__cplusplus)
 }
+
+namespace cce {
+namespace runtime {
+
+template <>
+struct RtInnerHandleAccessor<::ParaDetail> {
+    static rtInnerObject *Get(::ParaDetail *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+
+template <>
+struct RtInnerHandleAccessor<::RtArgsHandle> {
+    static rtInnerObject *Get(::RtArgsHandle *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+
+} // namespace runtime
+} // namespace cce
 #endif
 
 constexpr uint32_t SIMT_IMPLICIT_PARAM_COUNT = 6U;

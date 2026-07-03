@@ -125,20 +125,5 @@ rtError_t GetValidatedObjectImpl(const void *handle, uint64_t expectedMagic, voi
     return RT_ERROR_NONE;
 }
 
-rtInnerObject *RtInnerHandleAccessor<::ParaDetail>::Get(::ParaDetail *realObj)
-{
-    return &realObj->handle_;
-}
-
-rtInnerObject *RtInnerHandleAccessor<::RtArgsHandle>::Get(::RtArgsHandle *realObj)
-{
-    return &realObj->handle_;
-}
-
-rtInnerObject *RtInnerHandleAccessor<rtLaunchArgs_t>::Get(rtLaunchArgs_t *realObj)
-{
-    return &realObj->handle_;
-}
-
 } // namespace runtime
 } // namespace cce

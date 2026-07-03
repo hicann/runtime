@@ -326,6 +326,16 @@ static constexpr const char_t *RT_TSD_DEVICE_DISCONNECTED = "E30005";
 static constexpr const char_t *RT_TSD_DRV_HDC_SEND_FILE_FAILED_ERROR = "E30006";
 static constexpr const char_t *RT_TSD_ADD_AICPUSD_TO_CGROUP_FAILED = "E30007";
 
+#if defined(__cplusplus)
+template <>
+struct RtInnerHandleAccessor<rtLaunchArgs_t> {
+    static rtInnerObject *Get(rtLaunchArgs_t *realObj)
+    {
+        return &realObj->handle_;
+    }
+};
+#endif
+
 }
 }
 #endif // __CCE_RUNTIME_BASE_INFO_HPP__

@@ -83,30 +83,11 @@ struct rtInnerObject {
 };
 
 template <typename T>
-class RtInnerHandleAccessor {
-public:
+struct RtInnerHandleAccessor {
     static rtInnerObject *Get(T *realObj)
     {
         return realObj->GetInnerHandle();
     }
-};
-
-template <>
-class RtInnerHandleAccessor<::ParaDetail> {
-public:
-    static rtInnerObject *Get(::ParaDetail *realObj);
-};
-
-template <>
-class RtInnerHandleAccessor<::RtArgsHandle> {
-public:
-    static rtInnerObject *Get(::RtArgsHandle *realObj);
-};
-
-template <>
-class RtInnerHandleAccessor<rtLaunchArgs_t> {
-public:
-    static rtInnerObject *Get(rtLaunchArgs_t *realObj);
 };
 
 rtError_t GetValidatedObjectImpl(const void *handle, uint64_t expectedMagic, void *&outRealObj);
