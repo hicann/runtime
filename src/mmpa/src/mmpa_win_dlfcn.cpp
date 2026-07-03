@@ -21,7 +21,7 @@ extern "C" {
  *      mode--打开方式
  * 返回值:执行成功返回动态链接库的句柄, 执行错误返回nullptr, 入参检查错误返回nullptr
  */
-VOID *mmDlopen(const CHAR *fileName, INT32 mode)
+VOID* mmDlopen(const CHAR* fileName, INT32 mode)
 {
     if (mode < MMPA_ZERO) {
         return nullptr;
@@ -36,7 +36,7 @@ VOID *mmDlopen(const CHAR *fileName, INT32 mode)
  *       info--是指向mmDlInfo 结构的指针。由用户分配
  * 返回值：执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmDladdr(VOID *addr, mmDlInfo *info)
+INT32 mmDladdr(VOID* addr, mmDlInfo* info)
 {
     __declspec(thread) static TCHAR szPath[MAX_PATH];
     HMODULE hModule = nullptr;
@@ -63,7 +63,7 @@ INT32 mmDladdr(VOID *addr, mmDlInfo *info)
  *       funcName--要求获取的函数的名称
  * 返回值:执行成功返回指向函数的地址, 执行错误返回nullptr, 入参检查错误返回nullptr
  */
-VOID *mmDlsym(VOID *handle, const CHAR *funcName)
+VOID* mmDlsym(VOID* handle, const CHAR* funcName)
 {
     if ((handle == nullptr) || (funcName == nullptr)) {
         return nullptr;
@@ -77,7 +77,7 @@ VOID *mmDlsym(VOID *handle, const CHAR *funcName)
  * 参数:handle--mmDlopen 返回的指向动态链接库指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmDlclose(VOID *handle)
+INT32 mmDlclose(VOID* handle)
 {
     if (handle == nullptr) {
         return EN_INVALID_PARAM;
@@ -95,14 +95,10 @@ INT32 mmDlclose(VOID *handle)
  * 参数:空
  * 返回值:执行成功返回nullptr
  */
-CHAR *mmDlerror(void)
-{
-    return nullptr;
-}
+CHAR* mmDlerror(void) { return nullptr; }
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

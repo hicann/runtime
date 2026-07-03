@@ -11,7 +11,7 @@
 #include "mmpa_api.h"
 
 #ifdef __cplusplus
-#if    __cplusplus
+#if __cplusplus
 extern "C" {
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
@@ -22,7 +22,7 @@ extern "C" {
  *      mode--打开方式
  * 返回值:执行成功返回动态链接库的句柄, 执行错误返回NULL, 入参检查错误返回NULL
  */
-VOID *mmDlopen(const CHAR *fileName, INT32 mode)
+VOID* mmDlopen(const CHAR* fileName, INT32 mode)
 {
     if (mode < MMPA_ZERO) {
         return NULL;
@@ -37,12 +37,12 @@ VOID *mmDlopen(const CHAR *fileName, INT32 mode)
  *       info--是指向mmDlInfo 结构的指针。由用户分配
  * 返回值：执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmDladdr(VOID *addr, mmDlInfo *info)
+INT32 mmDladdr(VOID* addr, mmDlInfo* info)
 {
     if ((addr == NULL) || (info == NULL)) {
         return EN_INVALID_PARAM;
     }
-    INT32 ret = dladdr(addr, (Dl_info *)info);
+    INT32 ret = dladdr(addr, (Dl_info*)info);
     if (ret == MMPA_ZERO) {
         return EN_ERROR;
     }
@@ -55,7 +55,7 @@ INT32 mmDladdr(VOID *addr, mmDlInfo *info)
  *       funcName--要求获取的函数的名称
  * 返回值:执行成功返回指向函数的地址, 执行错误返回NULL, 入参检查错误返回NULL
  */
-VOID *mmDlsym(VOID *handle, const CHAR *funcName)
+VOID* mmDlsym(VOID* handle, const CHAR* funcName)
 {
     if (funcName == NULL) {
         return NULL;
@@ -70,7 +70,7 @@ VOID *mmDlsym(VOID *handle, const CHAR *funcName)
  *       funcName--要求获取的函数的名称
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmDlclose(VOID *handle)
+INT32 mmDlclose(VOID* handle)
 {
     if (handle == NULL) {
         return EN_INVALID_PARAM;
@@ -87,14 +87,10 @@ INT32 mmDlclose(VOID *handle)
  * 描述:当mmDlopen动态链接库操作函数执行失败时，mmDlerror可以返回出错信息
  * 返回值:执行成功返回NULL
  */
-CHAR *mmDlerror(VOID)
-{
-    return dlerror();
-}
+CHAR* mmDlerror(VOID) { return dlerror(); }
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

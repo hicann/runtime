@@ -11,24 +11,24 @@
 #include "mmpa_api.h"
 
 #ifdef __cplusplus
-#if    __cplusplus
+#if __cplusplus
 extern "C" {
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
 
-#define MMPA_CPUINFO_DEFAULT_SIZE               64
-#define MMPA_CPUINFO_DOUBLE_SIZE                128
-#define MMPA_CPUPROC_BUF_SIZE                   256
-#define MMPA_MAX_IF_SIZE                        2048
-#define MMPA_SECOND_TO_MSEC                     1000
-#define MMPA_MSEC_TO_NSEC                       1000000
-#define MMPA_SECOND_TO_NSEC                     1000000000
-#define MMPA_MAX_PHYSICALCPU_COUNT              4096
-#define MMPA_MIN_PHYSICALCPU_COUNT              1
+#define MMPA_CPUINFO_DEFAULT_SIZE 64
+#define MMPA_CPUINFO_DOUBLE_SIZE 128
+#define MMPA_CPUPROC_BUF_SIZE 256
+#define MMPA_MAX_IF_SIZE 2048
+#define MMPA_SECOND_TO_MSEC 1000
+#define MMPA_MSEC_TO_NSEC 1000000
+#define MMPA_SECOND_TO_NSEC 1000000000
+#define MMPA_MAX_PHYSICALCPU_COUNT 4096
+#define MMPA_MIN_PHYSICALCPU_COUNT 1
 
 struct CpuTypeTable {
-    const CHAR *key;
-    const CHAR *value;
+    const CHAR* key;
+    const CHAR* value;
 };
 
 enum {
@@ -45,10 +45,7 @@ enum {
  * 参数:无
  * 返回值:执行成功返回对应调用进程的id, 执行错误返回EN_ERROR
  */
-INT32 mmGetPid(VOID)
-{
-    return (INT32)getpid();
-}
+INT32 mmGetPid(VOID) { return (INT32)getpid(); }
 
 /*
  * 描述:获取调用线程的线程ID
@@ -70,7 +67,7 @@ INT32 mmGetTid(VOID)
  * 参数: pstProcessHandle -- 存放进程ID的指向mmProcess类型的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetPidHandle(mmProcess *processHandle)
+INT32 mmGetPidHandle(mmProcess* processHandle)
 {
     if (processHandle == NULL) {
         return EN_INVALID_PARAM;
@@ -85,7 +82,7 @@ INT32 mmGetPidHandle(mmProcess *processHandle)
  *       value--信号量的初始值
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSemInit(mmSem_t *sem, UINT32 value)
+INT32 mmSemInit(mmSem_t* sem, UINT32 value)
 {
     if (sem == NULL) {
         return EN_INVALID_PARAM;
@@ -102,7 +99,7 @@ INT32 mmSemInit(mmSem_t *sem, UINT32 value)
  * 参数: sem--指向mmSem_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSemWait(mmSem_t *sem)
+INT32 mmSemWait(mmSem_t* sem)
 {
     if (sem == NULL) {
         return EN_INVALID_PARAM;
@@ -120,7 +117,7 @@ INT32 mmSemWait(mmSem_t *sem)
  * 参数: sem--指向mmSem_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSemPost(mmSem_t *sem)
+INT32 mmSemPost(mmSem_t* sem)
 {
     if (sem == NULL) {
         return EN_INVALID_PARAM;
@@ -138,7 +135,7 @@ INT32 mmSemPost(mmSem_t *sem)
  * 参数: sem--指向mmSem_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSemDestroy(mmSem_t *sem)
+INT32 mmSemDestroy(mmSem_t* sem)
 {
     if (sem == NULL) {
         return EN_INVALID_PARAM;
@@ -157,10 +154,7 @@ INT32 mmSemDestroy(mmSem_t *sem)
  *       flags--打开或者创建的文件标志位, 默认 user和group的权限
  * 返回值:执行成功返回对应打开的文件描述符, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmOpen(const CHAR *pathName, INT32 flags)
-{
-    return mmOpen2(pathName, flags, S_IRWXU | S_IRWXG);
-}
+INT32 mmOpen(const CHAR* pathName, INT32 flags) { return mmOpen2(pathName, flags, S_IRWXU | S_IRWXG); }
 
 /*
  * 描述:打开或者创建一个文件
@@ -169,7 +163,7 @@ INT32 mmOpen(const CHAR *pathName, INT32 flags)
  *       mode -- 打开或者创建的权限
  * 返回值:执行成功返回对应打开的文件描述符, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmOpen2(const CHAR *pathName, INT32 flags, MODE mode)
+INT32 mmOpen2(const CHAR* pathName, INT32 flags, MODE mode)
 {
     if ((pathName == NULL) || (flags < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -179,8 +173,7 @@ INT32 mmOpen2(const CHAR *pathName, INT32 flags, MODE mode)
     if (((tmp & (O_TRUNC | O_WRONLY | O_RDWR | O_CREAT)) == MMPA_ZERO) && (flags != O_RDONLY)) {
         return EN_INVALID_PARAM;
     }
-    if (((mode & (S_IRUSR | S_IREAD)) == MMPA_ZERO) &&
-        ((mode & (S_IWUSR | S_IWRITE)) == MMPA_ZERO)) {
+    if (((mode & (S_IRUSR | S_IREAD)) == MMPA_ZERO) && ((mode & (S_IWUSR | S_IWRITE)) == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
 
@@ -194,7 +187,7 @@ INT32 mmOpen2(const CHAR *pathName, INT32 flags, MODE mode)
 /*
  * 描述:内部使用
  */
-static INT32 IdeCheckPopenArgs(const CHAR *type, size_t len)
+static INT32 IdeCheckPopenArgs(const CHAR* type, size_t len)
 {
     if (len < 1U) {
         return EN_INVALID_PARAM;
@@ -218,7 +211,7 @@ static INT32 IdeCheckPopenArgs(const CHAR *type, size_t len)
  * 返回值：若成功则返回文件指针，否则返回NULL，错误原因存于mmGetErrorCode中
  * 说明：popen是危险函数，请使用白名单机制调用
  */
-FILE *mmPopen(CHAR *command, CHAR *type)
+FILE* mmPopen(CHAR* command, CHAR* type)
 {
     if ((command == NULL) || (type == NULL)) {
         return NULL;
@@ -253,7 +246,7 @@ INT32 mmClose(INT32 fd)
  * 参数: stream--为先前由popen（）所返回的文件指针
  * 返回值：执行成功返回cmdstring的终止状态，若出错则返回EN_OK，入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmPclose(FILE *stream)
+INT32 mmPclose(FILE* stream)
 {
     if (stream == NULL) {
         return EN_INVALID_PARAM;
@@ -323,7 +316,7 @@ INT32 mmListen(mmSockHandle sockFd, INT32 backLog)
  *       addrLen--协议地址的长度
  * 返回值:执行成功返回自动生成的一个全新的socket id, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-mmSockHandle mmAccept(mmSockHandle sockFd, mmSockAddr *addr, mmSocklen_t *addrLen)
+mmSockHandle mmAccept(mmSockHandle sockFd, mmSockAddr* addr, mmSocklen_t* addrLen)
 {
     if (sockFd < MMPA_ZERO) {
         return EN_INVALID_PARAM;
@@ -365,7 +358,7 @@ INT32 mmConnect(mmSockHandle sockFd, mmSockAddr* addr, mmSocklen_t addrLen)
  *       sendFlag--发送的方式标志位，一般置0
  * 返回值:执行成功返回实际发送的buf长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-mmSsize_t mmSocketSend(mmSockHandle sockFd, VOID *sendBuf, INT32 sendLen, INT32 sendFlag)
+mmSsize_t mmSocketSend(mmSockHandle sockFd, VOID* sendBuf, INT32 sendLen, INT32 sendFlag)
 {
     if ((sockFd < MMPA_ZERO) || (sendBuf == NULL) || (sendLen <= MMPA_ZERO) || (sendFlag < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -389,15 +382,10 @@ mmSsize_t mmSocketSend(mmSockHandle sockFd, VOID *sendBuf, INT32 sendLen, INT32 
  *       tolen--addr所指地址的长度
  * 返回值：执行成功返回实际发送的buf长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSocketSendTo(mmSockHandle sockFd,
-                     VOID *sendMsg,
-                     INT32 sendLen,
-                     UINT32 sendFlag,
-                     const mmSockAddr* addr,
-                     INT32 tolen)
+INT32 mmSocketSendTo(
+    mmSockHandle sockFd, VOID* sendMsg, INT32 sendLen, UINT32 sendFlag, const mmSockAddr* addr, INT32 tolen)
 {
-    if ((sockFd < MMPA_ZERO) || (sendMsg == NULL) ||
-        (sendLen <= MMPA_ZERO) || (addr == NULL) || (tolen <= MMPA_ZERO)) {
+    if ((sockFd < MMPA_ZERO) || (sendMsg == NULL) || (sendLen <= MMPA_ZERO) || (addr == NULL) || (tolen <= MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
     ssize_t ret = sendto(sockFd, sendMsg, (size_t)(LONG)sendLen, (INT)sendFlag, addr, (socklen_t)tolen);
@@ -415,7 +403,7 @@ INT32 mmSocketSendTo(mmSockHandle sockFd,
  *       recvFlag--接收的方式标志位，一般置0
  * 返回值:执行成功返回实际接收的buf长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-mmSsize_t mmSocketRecv(mmSockHandle sockFd, VOID *recvBuf, INT32 recvLen, INT32 recvFlag)
+mmSsize_t mmSocketRecv(mmSockHandle sockFd, VOID* recvBuf, INT32 recvLen, INT32 recvFlag)
 {
     if ((sockFd < MMPA_ZERO) || (recvBuf == NULL) || (recvLen <= MMPA_ZERO) || (recvFlag < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -439,12 +427,8 @@ mmSsize_t mmSocketRecv(mmSockHandle sockFd, VOID *recvBuf, INT32 recvLen, INT32 
  *       FromLen--addr所指地址的长度
  * 返回值：执行成功返回实际发送的buf长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-mmSsize_t mmSocketRecvFrom(mmSockHandle sockFd,
-                           VOID *recvBuf,
-                           mmSize recvLen,
-                           UINT32 recvFlag,
-                           mmSockAddr* addr,
-                           mmSocklen_t *FromLen)
+mmSsize_t mmSocketRecvFrom(
+    mmSockHandle sockFd, VOID* recvBuf, mmSize recvLen, UINT32 recvFlag, mmSockAddr* addr, mmSocklen_t* FromLen)
 {
     if ((sockFd < MMPA_ZERO) || (recvBuf == NULL) || (recvLen == MMPA_ZERO) || (addr == NULL) || (FromLen == NULL)) {
         return EN_INVALID_PARAM;
@@ -477,25 +461,19 @@ INT32 mmCloseSocket(mmSockHandle sockFd)
 /*
  * 描述:初始化winsockDLL, windows中有效, linux为空实现
  */
-INT32 mmSAStartup(VOID)
-{
-    return EN_OK;
-}
+INT32 mmSAStartup(VOID) { return EN_OK; }
 
 /*
  * 描述:注销winsockDLL, windows中有效, linux为空实现
  */
-INT32 mmSACleanup(VOID)
-{
-    return EN_OK;
-}
+INT32 mmSACleanup(VOID) { return EN_OK; }
 
 /*
  * 描述:mmCreateAndSetTimer定时器的回调函数, 仅在内部使用
  */
 static VOID mmTimerCallBack(union sigval userData)
 {
-    const mmUserBlock_t* const tmp = (mmUserBlock_t *)userData.sival_ptr;
+    const mmUserBlock_t* const tmp = (mmUserBlock_t*)userData.sival_ptr;
     tmp->procFunc(tmp->pulArg);
     return;
 }
@@ -507,14 +485,14 @@ static VOID mmTimerCallBack(union sigval userData)
  *       period:定时器循环的周期值 单位ms
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateAndSetTimer(mmTimer *timerHandle, mmUserBlock_t *timerBlock, UINT milliSecond, UINT period)
+INT32 mmCreateAndSetTimer(mmTimer* timerHandle, mmUserBlock_t* timerBlock, UINT milliSecond, UINT period)
 {
     if ((timerHandle == NULL) || (timerBlock == NULL) || (timerBlock->procFunc == NULL)) {
         return EN_INVALID_PARAM;
     }
 
     struct sigevent event;
-    (VOID)memset_s(&event, sizeof(event), MMPA_ZERO, sizeof(event)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&event, sizeof(event), MMPA_ZERO, sizeof(event)); /* unsafe_function_ignore: memset */
     event.sigev_value.sival_ptr = timerBlock;
     event.sigev_notify = SIGEV_THREAD;
     event.sigev_notify_function = mmTimerCallBack;
@@ -526,9 +504,9 @@ INT32 mmCreateAndSetTimer(mmTimer *timerHandle, mmUserBlock_t *timerBlock, UINT 
     }
 
     struct itimerspec waitTime;
-    (VOID)memset_s(&waitTime, sizeof(waitTime), MMPA_ZERO, sizeof(waitTime)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&waitTime, sizeof(waitTime), MMPA_ZERO, sizeof(waitTime)); /* unsafe_function_ignore: memset */
 
-    waitTime.it_interval.tv_sec =  (LONG)period / MMPA_SECOND_TO_MSEC;
+    waitTime.it_interval.tv_sec = (LONG)period / MMPA_SECOND_TO_MSEC;
     waitTime.it_interval.tv_nsec = ((LONG)period % MMPA_SECOND_TO_MSEC) * MMPA_MSEC_TO_NSEC;
 
     waitTime.it_value.tv_sec = (LONG)milliSecond / MMPA_SECOND_TO_MSEC;
@@ -536,7 +514,7 @@ INT32 mmCreateAndSetTimer(mmTimer *timerHandle, mmUserBlock_t *timerBlock, UINT 
 
     ret = timer_settime(*timerHandle, MMPA_ZERO, &waitTime, NULL);
     if (ret != EN_OK) {
-        (VOID)timer_delete(*timerHandle);
+        (VOID) timer_delete(*timerHandle);
         return EN_ERROR;
     }
 
@@ -565,7 +543,7 @@ INT32 mmDeleteTimer(mmTimer timerHandle)
 static LONG GetMonnotonicTime(VOID)
 {
     struct timespec curTime = {0};
-    (VOID)clock_gettime(CLOCK_MONOTONIC, &curTime);
+    (VOID) clock_gettime(CLOCK_MONOTONIC, &curTime);
     // 以毫秒为单位
     LONG result = (LONG)((curTime.tv_sec) * MMPA_SECOND_TO_MSEC);
     result += (LONG)((curTime.tv_nsec) / MMPA_MSEC_TO_NSEC);
@@ -578,7 +556,7 @@ static LONG GetMonnotonicTime(VOID)
  *       timeout--超时时间 单位ms
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSemTimedWait(mmSem_t *sem, INT32 timeout)
+INT32 mmSemTimedWait(mmSem_t* sem, INT32 timeout)
 {
     if ((sem == NULL) || (timeout < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -589,7 +567,7 @@ INT32 mmSemTimedWait(mmSem_t *sem, INT32 timeout)
         if (sem_trywait(sem) == EN_OK) {
             return EN_OK;
         }
-        (VOID)mmSleep(1); // 延时1毫秒再检测
+        (VOID) mmSleep(1); // 延时1毫秒再检测
     } while (GetMonnotonicTime() <= endTime);
     return EN_OK;
 }
@@ -601,14 +579,14 @@ INT32 mmSemTimedWait(mmSem_t *sem, INT32 timeout)
  *       iovcnt -- 非连续缓冲区的个数, 最大支持MAX_IOVEC_SIZE片非连续缓冲区
  * 返回值:执行成功返回实际写入的长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-mmSsize_t mmWritev(mmProcess fd, mmIovSegment *iov, INT32 iovcnt)
+mmSsize_t mmWritev(mmProcess fd, mmIovSegment* iov, INT32 iovcnt)
 {
     INT32 i = 0;
     if ((fd < MMPA_ZERO) || (iov == NULL) || (iovcnt < MMPA_ZERO) || (iovcnt > MAX_IOVEC_SIZE)) {
         return EN_INVALID_PARAM;
     }
     struct iovec tmpSegment[MAX_IOVEC_SIZE];
-    (VOID)memset_s(tmpSegment, sizeof(tmpSegment), 0, sizeof(tmpSegment)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(tmpSegment, sizeof(tmpSegment), 0, sizeof(tmpSegment)); /* unsafe_function_ignore: memset */
 
     for (i = 0; i < iovcnt; i++) {
         tmpSegment[i].iov_base = iov[i].sendBuf;
@@ -628,7 +606,7 @@ mmSsize_t mmWritev(mmProcess fd, mmIovSegment *iov, INT32 iovcnt)
  *       addr -- 转换后的网络序列IP地址
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmInetAton(const CHAR *addrStr, mmInAddr *addr)
+INT32 mmInetAton(const CHAR* addrStr, mmInAddr* addr)
 {
     if ((addr == NULL) || (addrStr == NULL)) {
         return EN_INVALID_PARAM;
@@ -647,7 +625,7 @@ INT32 mmInetAton(const CHAR *addrStr, mmInAddr *addr)
  *      pipeName-管道名, waitMode-是否阻塞创建
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR, 入参错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateNamedPipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], INT32 waitMode)
+INT32 mmCreateNamedPipe(mmPipeHandle pipeHandle[], CHAR* pipeName[], INT32 waitMode)
 {
     INT32 ret = EN_ERROR;
     INT32 i = 0;
@@ -683,7 +661,7 @@ INT32 mmCreateNamedPipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], INT32 waitM
  *      pipeName-管道名, waitMode-是否阻塞打开
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR, 入参错误返回EN_INVALID_PARAM
  */
-INT32 mmOpenNamePipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], INT32 waitMode)
+INT32 mmOpenNamePipe(mmPipeHandle pipeHandle[], CHAR* pipeName[], INT32 waitMode)
 {
     if (waitMode == 0) {
         pipeHandle[0] = open(pipeName[0], O_WRONLY | O_NONBLOCK);
@@ -708,10 +686,10 @@ INT32 mmOpenNamePipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], INT32 waitMode
 VOID mmCloseNamedPipe(mmPipeHandle namedPipe[])
 {
     if (namedPipe[0] != 0) {
-        (VOID)close(namedPipe[0]);
+        (VOID) close(namedPipe[0]);
     }
     if (namedPipe[1] != 0) {
-        (VOID)close(namedPipe[1]);
+        (VOID) close(namedPipe[1]);
     }
     return;
 }
@@ -724,10 +702,10 @@ VOID mmCloseNamedPipe(mmPipeHandle namedPipe[])
  *      waitMode非0表示阻塞调用
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR, 入参错误返回EN_INVALID_PARAM
  */
-INT32 mmCreatePipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], UINT32 pipeCount, INT32 waitMode)
+INT32 mmCreatePipe(mmPipeHandle pipeHandle[], CHAR* pipeName[], UINT32 pipeCount, INT32 waitMode)
 {
-    if ((pipeCount != MMPA_PIPE_COUNT) || (pipeHandle == NULL) || (pipeName == NULL) ||
-        (pipeName[0] == NULL) || (pipeName[1] == NULL)) {
+    if ((pipeCount != MMPA_PIPE_COUNT) || (pipeHandle == NULL) || (pipeName == NULL) || (pipeName[0] == NULL) ||
+        (pipeName[1] == NULL)) {
         return EN_INVALID_PARAM;
     }
     INT32 writePipe = EN_ERROR;
@@ -758,12 +736,12 @@ INT32 mmCreatePipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], UINT32 pipeCount
     }
 
     if ((pipeHandle[0] == EN_ERROR) || (pipeHandle[1] == EN_ERROR)) {
-        (VOID)mmClose(pipeHandle[0]);
-        (VOID)mmClose(pipeHandle[1]);
-        (VOID)mmClose(writePipe);
+        (VOID) mmClose(pipeHandle[0]);
+        (VOID) mmClose(pipeHandle[1]);
+        (VOID) mmClose(writePipe);
         return EN_ERROR;
     } else {
-        (VOID)mmClose(writePipe);
+        (VOID) mmClose(writePipe);
         return EN_OK;
     }
 }
@@ -775,10 +753,10 @@ INT32 mmCreatePipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], UINT32 pipeCount
  *      pipeCount-管道个数，必须是MMPA_PIPE_COUNT
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR, 入参错误返回EN_INVALID_PARAM
  */
-INT32 mmOpenPipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], UINT32 pipeCount, INT32 waitMode)
+INT32 mmOpenPipe(mmPipeHandle pipeHandle[], CHAR* pipeName[], UINT32 pipeCount, INT32 waitMode)
 {
-    if ((pipeCount != MMPA_PIPE_COUNT) || (pipeHandle == NULL) || (pipeName == NULL) ||
-        (pipeName[0] == NULL) || (pipeName[1] == NULL)) {
+    if ((pipeCount != MMPA_PIPE_COUNT) || (pipeHandle == NULL) || (pipeName == NULL) || (pipeName[0] == NULL) ||
+        (pipeName[1] == NULL)) {
         return EN_INVALID_PARAM;
     }
     if (waitMode == MMPA_ZERO) {
@@ -790,8 +768,8 @@ INT32 mmOpenPipe(mmPipeHandle pipeHandle[], CHAR *pipeName[], UINT32 pipeCount, 
     }
 
     if ((pipeHandle[0] == EN_ERROR) || (pipeHandle[1] == EN_ERROR)) {
-        (VOID)mmClose(pipeHandle[0]);
-        (VOID)mmClose(pipeHandle[1]);
+        (VOID) mmClose(pipeHandle[0]);
+        (VOID) mmClose(pipeHandle[1]);
         return EN_ERROR;
     } else {
         return EN_OK;
@@ -809,26 +787,20 @@ VOID mmClosePipe(mmPipeHandle pipeHandle[], UINT32 pipeCount)
     if ((pipeCount != MMPA_PIPE_COUNT) || (pipeHandle == NULL)) {
         return;
     }
-    (VOID)mmClose(pipeHandle[0]);
-    (VOID)mmClose(pipeHandle[1]);
+    (VOID) mmClose(pipeHandle[0]);
+    (VOID) mmClose(pipeHandle[1]);
     return;
 }
 
 /*
  * 描述:创建完成端口, Linux内部为空实现, 主要用于windows系统
  */
-mmCompletionHandle mmCreateCompletionPort(VOID)
-{
-    return EN_OK;
-}
+mmCompletionHandle mmCreateCompletionPort(VOID) { return EN_OK; }
 
 /*
  * 描述:关闭完成端口, Linux内部为空实现, 主要用于windows系统
  */
-VOID mmCloseCompletionPort(mmCompletionHandle handle)
-{
-    return;
-}
+VOID mmCloseCompletionPort(mmCompletionHandle handle) { return; }
 
 /*
  * 描述:mmPoll内部使用，用来接收数据
@@ -872,10 +844,10 @@ static INT32 LocalGetData(mmPollfd fd, pmmPollData polledData)
 /*
  * 描述:内部使用
  */
-static INT32 CheckPollParam(const mmPollfd *fds, INT32 fdCount, const pmmPollData polledData, mmPollBack pollBack)
+static INT32 CheckPollParam(const mmPollfd* fds, INT32 fdCount, const pmmPollData polledData, mmPollBack pollBack)
 {
-    if ((fds == NULL) || (fdCount == MMPA_ZERO) || (fdCount > FDSIZE) ||
-        (polledData == NULL) || (polledData->buf == NULL) || (pollBack == NULL)) {
+    if ((fds == NULL) || (fdCount == MMPA_ZERO) || (fdCount > FDSIZE) || (polledData == NULL) ||
+        (polledData->buf == NULL) || (pollBack == NULL)) {
         return EN_INVALID_PARAM;
     }
     return EN_OK;
@@ -890,8 +862,9 @@ static INT32 CheckPollParam(const mmPollfd *fds, INT32 fdCount, const pmmPollDat
  *       polledData -- 若读取到会填充进缓存，回调出来，缓存大小由用户分配
  * 返回值:超时返回EN_ERR, 读取成功返回EN_OK, 失败返回EN_ERROR, 入参错误返回EN_INVALID_PARAM
  */
-INT32 mmPoll(mmPollfd *fds, INT32 fdCount, INT32 timeout,
-    mmCompletionHandle handleIOCP, pmmPollData polledData, mmPollBack pollBack)
+INT32 mmPoll(
+    mmPollfd* fds, INT32 fdCount, INT32 timeout, mmCompletionHandle handleIOCP, pmmPollData polledData,
+    mmPollBack pollBack)
 {
     INT32 checkParamRet = CheckPollParam(fds, fdCount, polledData, pollBack);
     if (checkParamRet != EN_OK) {
@@ -900,7 +873,7 @@ INT32 mmPoll(mmPollfd *fds, INT32 fdCount, INT32 timeout,
     INT32 i;
     UINT16 pollRevent;
     struct pollfd polledFd[FDSIZE];
-    (VOID)memset_s(polledFd, sizeof(polledFd), 0, sizeof(polledFd)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(polledFd, sizeof(polledFd), 0, sizeof(polledFd)); /* unsafe_function_ignore: memset */
 
     for (i = 0; i < fdCount; i++) {
         polledFd[i].fd = fds[i].handle;
@@ -949,7 +922,7 @@ INT32 mmGetErrorCode(VOID)
  *       size--缓冲区的大小
  * 返回值:成功返回错误信息的字符串，失败返回NULL
  */
-CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size)
+CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size)
 {
     if ((buf == NULL) || (size == 0)) {
         return NULL;
@@ -970,10 +943,7 @@ CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size)
  * 返回值:执行成功返回:LINUX--当前系统是Linux系统
  *              WIN--当前系统是Windows系统
  */
-INT32 mmGetOsType(VOID)
-{
-    return OS_TYPE;
-}
+INT32 mmGetOsType(VOID) { return OS_TYPE; }
 
 /*
  * 描述:为每一个进程设置文件模式创建屏蔽字，并返回之前的值
@@ -996,7 +966,7 @@ INT32 mmUmask(INT32 pmode)
  * 返回值:子进程未结束返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  *        进程已经结束返回EN_ERR
  */
-INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
+INT32 mmWaitPid(mmProcess pid, INT32* status, INT32 options)
 {
     if ((options != MMPA_ZERO) && (options != M_WAIT_NOHANG) && (options != M_WAIT_UNTRACED)) {
         return EN_INVALID_PARAM;
@@ -1004,7 +974,7 @@ INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
 
     INT32 ret = waitpid(pid, status, options);
     if (ret == EN_ERROR) {
-        return EN_ERROR;                 // 调用异常
+        return EN_ERROR; // 调用异常
     }
     if ((ret > MMPA_ZERO) && (ret == pid)) { // 返回了子进程ID
         if (status != NULL) {
@@ -1015,7 +985,7 @@ INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
                 *status = WTERMSIG(*status); // 信号中止退出码
             }
         }
-        return EN_ERR;                  // 进程结束
+        return EN_ERR; // 进程结束
     }
     return EN_OK; // 进程未结束
 }
@@ -1027,7 +997,7 @@ INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options)
  *      saveptr -- 一个供内部使用的指针，用于保存上次分割剩下的字串
  * 返回值:执行成功返回截取后的字符串指针, 执行失败返回NULL
  */
-CHAR *mmStrTokR(CHAR *str, const CHAR *delim, CHAR **saveptr)
+CHAR* mmStrTokR(CHAR* str, const CHAR* delim, CHAR** saveptr)
 {
     if (delim == NULL) {
         return NULL;
@@ -1042,7 +1012,7 @@ CHAR *mmStrTokR(CHAR *str, const CHAR *delim, CHAR **saveptr)
  *      diskSize--mmDiskSize结构内容
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetDiskFreeSpace(const CHAR *path, mmDiskSize *diskSize)
+INT32 mmGetDiskFreeSpace(const CHAR* path, mmDiskSize* diskSize)
 {
     if ((path == NULL) || (diskSize == NULL)) {
         return EN_INVALID_PARAM;
@@ -1050,7 +1020,7 @@ INT32 mmGetDiskFreeSpace(const CHAR *path, mmDiskSize *diskSize)
 
     // 把文件系统信息读入 struct statvfs buf 中
     struct statvfs buf;
-    (VOID)memset_s(&buf, sizeof(buf), 0, sizeof(buf)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&buf, sizeof(buf), 0, sizeof(buf)); /* unsafe_function_ignore: memset */
 
     INT32 ret = statvfs(path, &buf);
     if (ret == MMPA_ZERO) {
@@ -1094,15 +1064,14 @@ INT32 mmGetOsVersion(CHAR* versionInfo, INT32 versionLength)
     }
     INT32 ret = 0;
     struct utsname sysInfo;
-    (VOID)memset_s(&sysInfo, sizeof(sysInfo), 0, sizeof(sysInfo)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&sysInfo, sizeof(sysInfo), 0, sizeof(sysInfo)); /* unsafe_function_ignore: memset */
     UINT32 length = (UINT32)versionLength;
     size_t len = (size_t)length;
     INT32 fb = uname(&sysInfo);
     if (fb < MMPA_ZERO) {
         return EN_ERROR;
     } else {
-        ret = snprintf_s(versionInfo, len, (len - 1U), "%s-%s-%s",
-            sysInfo.sysname, sysInfo.release, sysInfo.version);
+        ret = snprintf_s(versionInfo, len, (len - 1U), "%s-%s-%s", sysInfo.sysname, sysInfo.release, sysInfo.version);
         if (ret == EN_ERROR) {
             return EN_ERROR;
         }
@@ -1116,7 +1085,7 @@ INT32 mmGetOsVersion(CHAR* versionInfo, INT32 versionLength)
  *      count--获取到的mac地址的个数
  * 返回值:执行成功返回扫描到的EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetMac(mmMacInfo **list, INT32 *count)
+INT32 mmGetMac(mmMacInfo** list, INT32* count)
 {
     if ((list == NULL) || (count == NULL)) {
         return EN_INVALID_PARAM;
@@ -1124,7 +1093,7 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
     struct ifreq ifr;
     CHAR buf[MMPA_MAX_IF_SIZE] = {0};
     struct ifconf ifc;
-    mmMacInfo *macInfo = NULL;
+    mmMacInfo* macInfo = NULL;
     INT32 sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (sock == EN_ERROR) {
         return EN_ERROR;
@@ -1133,7 +1102,7 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
     ifc.ifc_len = (INT)sizeof(buf);
     INT32 ret = ioctl(sock, SIOCGIFCONF, &ifc);
     if (ret == EN_ERROR) {
-        (VOID)close(sock);
+        (VOID) close(sock);
         return EN_ERROR;
     }
 
@@ -1146,18 +1115,18 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
     macInfo = (mmMacInfo*)malloc(needSize);
     if (macInfo == NULL) {
         *count = MMPA_ZERO;
-        (VOID)close(sock);
+        (VOID) close(sock);
         return EN_ERROR;
     }
 
-    (VOID)memset_s(macInfo, needSize, 0, needSize); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(macInfo, needSize, 0, needSize); /* unsafe_function_ignore: memset */
     const struct ifreq* const end = it + *count;
     INT32 i = 0;
     for (; it != end; ++it) {
         ret = strcpy_s(ifr.ifr_name, sizeof(ifr.ifr_name), it->ifr_name);
         if (ret != EOK) {
             *count = MMPA_ZERO;
-            (VOID)close(sock);
+            (VOID) close(sock);
             free(macInfo);
             return EN_ERROR;
         }
@@ -1170,19 +1139,15 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
             if (ret != MMPA_ZERO) {
                 continue;
             }
-            const UCHAR *ptr = (UCHAR *)&ifr.ifr_ifru.ifru_hwaddr.sa_data[0];
-            ret = snprintf_s(macInfo[i].addr,
-                sizeof(macInfo[i].addr), sizeof(macInfo[i].addr) - 1U,
-                "%02X-%02X-%02X-%02X-%02X-%02X",
-                *(ptr + MMPA_MAC_ADDR_FIRST_BYTE),
-                *(ptr + MMPA_MAC_ADDR_SECOND_BYTE),
-                *(ptr + MMPA_MAC_ADDR_THIRD_BYTE),
-                *(ptr + MMPA_MAC_ADDR_FOURTH_BYTE),
-                *(ptr + MMPA_MAC_ADDR_FIFTH_BYTE),
-                *(ptr + MMPA_MAC_ADDR_SIXTH_BYTE));
+            const UCHAR* ptr = (UCHAR*)&ifr.ifr_ifru.ifru_hwaddr.sa_data[0];
+            ret = snprintf_s(
+                macInfo[i].addr, sizeof(macInfo[i].addr), sizeof(macInfo[i].addr) - 1U, "%02X-%02X-%02X-%02X-%02X-%02X",
+                *(ptr + MMPA_MAC_ADDR_FIRST_BYTE), *(ptr + MMPA_MAC_ADDR_SECOND_BYTE),
+                *(ptr + MMPA_MAC_ADDR_THIRD_BYTE), *(ptr + MMPA_MAC_ADDR_FOURTH_BYTE),
+                *(ptr + MMPA_MAC_ADDR_FIFTH_BYTE), *(ptr + MMPA_MAC_ADDR_SIXTH_BYTE));
             if (ret == EN_ERROR) {
                 *count = MMPA_ZERO;
-                (VOID)close(sock);
+                (VOID) close(sock);
                 free(macInfo);
                 return EN_ERROR;
             }
@@ -1191,7 +1156,7 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
             *count = *count - 1;
         }
     }
-    (VOID)close(sock);
+    (VOID) close(sock);
     if (*count <= 0) {
         free(macInfo);
         return EN_ERROR;
@@ -1207,7 +1172,7 @@ INT32 mmGetMac(mmMacInfo **list, INT32 *count)
  *      count--获取到的mac地址的个数
  * 返回值:执行成功返回扫描到的EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetMacFree(mmMacInfo *list, INT32 count)
+INT32 mmGetMacFree(mmMacInfo* list, INT32 count)
 {
     if ((list == NULL) || (count < MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -1225,14 +1190,15 @@ INT32 mmGetMacFree(mmMacInfo *list, INT32 count)
  *      valueLen--缓存长度
  * 返回值:执行成功返回EN_OK, 执行失败返回EN_ERROR
  */
-static INT32 LocalLookup(CHAR *buf, UINT32 bufLen, const CHAR *pattern, CHAR *value, size_t valueLen)
+static INT32 LocalLookup(CHAR* buf, UINT32 bufLen, const CHAR* pattern, CHAR* value, size_t valueLen)
 {
-    const CHAR *pValue = NULL;
-    CHAR *pBuf = NULL;
+    const CHAR* pValue = NULL;
+    CHAR* pBuf = NULL;
     size_t len = strlen(pattern); //lint !e712
 
     // 空白字符过滤
-    for (pBuf = buf; isspace(*pBuf) != 0; pBuf++) {}
+    for (pBuf = buf; isspace(*pBuf) != 0; pBuf++) {
+    }
 
     // 关键字匹配
     INT32 ret = strncmp(pBuf, pattern, len);
@@ -1240,18 +1206,21 @@ static INT32 LocalLookup(CHAR *buf, UINT32 bufLen, const CHAR *pattern, CHAR *va
         return EN_ERROR;
     }
     // :之前空白字符过滤
-    for (pBuf = pBuf + len; isspace(*pBuf) != 0; pBuf++) {}
+    for (pBuf = pBuf + len; isspace(*pBuf) != 0; pBuf++) {
+    }
 
     if (*pBuf == '\0') {
         return EN_ERROR;
     }
 
     // :之后空白字符过滤
-    for (pBuf = pBuf + 1; isspace(*pBuf) != 0; pBuf++) {}
+    for (pBuf = pBuf + 1; isspace(*pBuf) != 0; pBuf++) {
+    }
 
     pValue = pBuf;
     // 截取所需信息
-    for (pBuf = buf + bufLen; isspace(*(pBuf - 1)) != 0; pBuf--) {}
+    for (pBuf = buf + bufLen; isspace(*(pBuf - 1)) != 0; pBuf--) {
+    }
 
     *pBuf = '\0';
 
@@ -1270,19 +1239,14 @@ static INT32 LocalLookup(CHAR *buf, UINT32 bufLen, const CHAR *pattern, CHAR *va
  *      partLen--指针长度
  * 返回值:无
  */
-static const CHAR* LocalGetArmVersion(CHAR *cpuImplememter, CHAR *cpuPart)
+static const CHAR* LocalGetArmVersion(CHAR* cpuImplememter, CHAR* cpuPart)
 {
     static struct CpuTypeTable g_paramatersTable[] = {
-        { "0x410xd03", "ARMv8_Cortex_A53"},
-        { "0x410xd05", "ARMv8_Cortex_A55"},
-        { "0x410xd07", "ARMv8_Cortex_A57"},
-        { "0x410xd08", "ARMv8_Cortex_A72"},
-        { "0x410xd09", "ARMv8_Cortex_A73"},
-        { "0x480xd01", "TaishanV110"}
-    };
+        {"0x410xd03", "ARMv8_Cortex_A53"}, {"0x410xd05", "ARMv8_Cortex_A55"}, {"0x410xd07", "ARMv8_Cortex_A57"},
+        {"0x410xd08", "ARMv8_Cortex_A72"}, {"0x410xd09", "ARMv8_Cortex_A73"}, {"0x480xd01", "TaishanV110"}};
     CHAR cpuArmVersion[MMPA_CPUINFO_DOUBLE_SIZE] = {0};
-    INT32 ret = snprintf_s(cpuArmVersion, sizeof(cpuArmVersion), sizeof(cpuArmVersion) - 1U,
-                           "%s%s", cpuImplememter, cpuPart);
+    INT32 ret =
+        snprintf_s(cpuArmVersion, sizeof(cpuArmVersion), sizeof(cpuArmVersion) - 1U, "%s%s", cpuImplememter, cpuPart);
     if (ret == EN_ERROR) {
         return NULL;
     }
@@ -1302,7 +1266,7 @@ static const CHAR* LocalGetArmVersion(CHAR *cpuImplememter, CHAR *cpuPart)
  *      cpuInfo--存放获取的物理CPU信息
  * 返回值:无
  */
-static VOID LocalGetArmManufacturer(CHAR *cpuImplememter, mmCpuDesc *cpuInfo)
+static VOID LocalGetArmManufacturer(CHAR* cpuImplememter, mmCpuDesc* cpuInfo)
 {
     size_t len = strlen(cpuInfo->manufacturer);
     if (len != 0U) {
@@ -1310,26 +1274,17 @@ static VOID LocalGetArmManufacturer(CHAR *cpuImplememter, mmCpuDesc *cpuInfo)
     }
     INT32 ret = EN_ERROR;
     static struct CpuTypeTable g_manufacturerTable[] = {
-        { "0x41", "ARM"},
-        { "0x42", "Broadcom"},
-        { "0x43", "Cavium"},
-        { "0x44", "DigitalEquipment"},
-        { "0x48", "HiSilicon"},
-        { "0x49", "Infineon"},
-        { "0x4D", "Freescale"},
-        { "0x4E", "NVIDIA"},
-        { "0x50", "APM"},
-        { "0x51", "Qualcomm"},
-        { "0x56", "Marvell"},
-        { "0x69", "Intel"}
-    };
+        {"0x41", "ARM"},       {"0x42", "Broadcom"}, {"0x43", "Cavium"},    {"0x44", "DigitalEquipment"},
+        {"0x48", "HiSilicon"}, {"0x49", "Infineon"}, {"0x4D", "Freescale"}, {"0x4E", "NVIDIA"},
+        {"0x50", "APM"},       {"0x51", "Qualcomm"}, {"0x56", "Marvell"},   {"0x69", "Intel"}};
 
     INT32 i = 0;
     for (i = (INT32)(sizeof(g_manufacturerTable) / sizeof(g_manufacturerTable[0])) - 1; i >= 0; --i) {
         ret = strcasecmp(cpuImplememter, g_manufacturerTable[i].key);
         if (ret == 0) {
-            (VOID)memcpy_s(cpuInfo->manufacturer, sizeof(cpuInfo->manufacturer),
-                g_manufacturerTable[i].value, (strlen(g_manufacturerTable[i].value) + 1U));
+            (VOID) memcpy_s(
+                cpuInfo->manufacturer, sizeof(cpuInfo->manufacturer), g_manufacturerTable[i].value,
+                (strlen(g_manufacturerTable[i].value) + 1U));
             return;
         }
     }
@@ -1344,7 +1299,7 @@ static VOID LocalGetArmManufacturer(CHAR *cpuImplememter, mmCpuDesc *cpuInfo)
  *      physicalCount--当前物理CPU个数，入参和出参
  * 返回值:无
  */
-static VOID LocalGetDeduplicateCnt(INT32 *physicalIds, INT32 size, INT32 id, INT32 *physicalIdCnt)
+static VOID LocalGetDeduplicateCnt(INT32* physicalIds, INT32 size, INT32 id, INT32* physicalIdCnt)
 {
     size_t i = 0U;
     for (; i < *physicalIdCnt; ++i) {
@@ -1364,25 +1319,25 @@ static VOID LocalGetDeduplicateCnt(INT32 *physicalIds, INT32 size, INT32 id, INT
  *      physicalCount--物理CPU个数
  * 返回值:无
  */
-static VOID LocalGetCpuProc(mmCpuDesc *cpuInfo, INT32 *physicalCount)
+static VOID LocalGetCpuProc(mmCpuDesc* cpuInfo, INT32* physicalCount)
 {
-    CHAR buf[MMPA_CPUPROC_BUF_SIZE]                 = {0};
-    CHAR physicalID[MMPA_CPUINFO_DEFAULT_SIZE]      = {0};
-    CHAR cpuMhz[MMPA_CPUINFO_DEFAULT_SIZE]          = {0};
-    CHAR cpuCores[MMPA_CPUINFO_DEFAULT_SIZE]        = {0};
-    CHAR cpuCnt[MMPA_CPUINFO_DEFAULT_SIZE]          = {0};
-    CHAR cpuImplememter[MMPA_CPUINFO_DEFAULT_SIZE]  = {0};
-    CHAR cpuPart[MMPA_CPUINFO_DEFAULT_SIZE]         = {0};
-    CHAR cpuThreads[MMPA_CPUINFO_DEFAULT_SIZE]      = {0};
-    CHAR maxSpeed[MMPA_CPUINFO_DEFAULT_SIZE]        = {0};
+    CHAR buf[MMPA_CPUPROC_BUF_SIZE] = {0};
+    CHAR physicalID[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuMhz[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuCores[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuCnt[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuImplememter[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuPart[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR cpuThreads[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
+    CHAR maxSpeed[MMPA_CPUINFO_DEFAULT_SIZE] = {0};
     INT32 physicalIdCnt = 0U;
     INT32* physicalIds = (INT32*)malloc(MMPA_MAX_PHYSICALCPU_COUNT * sizeof(INT32));
     if (physicalIds == NULL) {
         return;
     }
-    FILE *fp = fopen("/proc/cpuinfo", "r");
+    FILE* fp = fopen("/proc/cpuinfo", "r");
     if (fp == NULL) {
-        (VOID)free(physicalIds);
+        (VOID) free(physicalIds);
         return;
     }
     UINT32 length = 0U;
@@ -1423,8 +1378,8 @@ static VOID LocalGetCpuProc(mmCpuDesc *cpuInfo, INT32 *physicalCount)
             ;
         }
     }
-    (VOID)free(physicalIds);
-    (VOID)fclose(fp);
+    (VOID) free(physicalIds);
+    (VOID) fclose(fp);
     fp = NULL;
     cpuInfo->frequency = atoi(cpuMhz);
     cpuInfo->ncores = atoi(cpuCores);
@@ -1436,7 +1391,7 @@ static VOID LocalGetCpuProc(mmCpuDesc *cpuInfo, INT32 *physicalCount)
     cpuInfo->maxFrequency = atoi(maxSpeed);
     const CHAR* tmp = LocalGetArmVersion(cpuImplememter, cpuPart);
     if (tmp != NULL) {
-        (VOID)memcpy_s(cpuInfo->version, sizeof(cpuInfo->version), tmp, strlen(tmp) + 1U);
+        (VOID) memcpy_s(cpuInfo->version, sizeof(cpuInfo->version), tmp, strlen(tmp) + 1U);
     }
     LocalGetArmManufacturer(cpuImplememter, cpuInfo);
     return;
@@ -1448,7 +1403,7 @@ static VOID LocalGetCpuProc(mmCpuDesc *cpuInfo, INT32 *physicalCount)
  *      count--读取到的物理cpu个数
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetCpuInfo(mmCpuDesc **cpuInfo, INT32 *count)
+INT32 mmGetCpuInfo(mmCpuDesc** cpuInfo, INT32* count)
 {
     if (count == NULL) {
         return EN_INVALID_PARAM;
@@ -1461,7 +1416,7 @@ INT32 mmGetCpuInfo(mmCpuDesc **cpuInfo, INT32 *count)
     mmCpuDesc cpuDest = {};
     // 默认一个CPU
     INT32 physicalCount = 1;
-    mmCpuDesc *pCpuDesc = NULL;
+    mmCpuDesc* pCpuDesc = NULL;
     struct utsname sysInfo = {};
 
     LocalGetCpuProc(&cpuDest, &physicalCount);
@@ -1476,7 +1431,7 @@ INT32 mmGetCpuInfo(mmCpuDesc **cpuInfo, INT32 *count)
         return EN_ERROR;
     }
 
-    (VOID)memset_s(pCpuDesc, needSize, 0, needSize); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(pCpuDesc, needSize, 0, needSize); /* unsafe_function_ignore: memset */
 
     if (uname(&sysInfo) == EN_OK) {
         ret = memcpy_s(cpuDest.arch, sizeof(cpuDest.arch), sysInfo.machine, strlen(sysInfo.machine) + 1U);
@@ -1504,7 +1459,7 @@ INT32 mmGetCpuInfo(mmCpuDesc **cpuInfo, INT32 *count)
  *      count--mmGetCpuInfo获取到的物理cpu个数
  * 返回值:执行成功返回EN_OK, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCpuInfoFree(mmCpuDesc *cpuInfo, INT32 count)
+INT32 mmCpuInfoFree(mmCpuDesc* cpuInfo, INT32 count)
 {
     if ((cpuInfo == NULL) || (count == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
@@ -1517,14 +1472,10 @@ INT32 mmCpuInfoFree(mmCpuDesc *cpuInfo, INT32 count)
  * 描述： 获取系统内存页大小
  * 返回值：返系统回内存页大小
  */
-mmSize mmGetPageSize(VOID)
-{
-    return (mmSize)(LONG)getpagesize();
-}
+mmSize mmGetPageSize(VOID) { return (mmSize)(LONG)getpagesize(); }
 
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

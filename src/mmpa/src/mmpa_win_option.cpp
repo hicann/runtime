@@ -18,39 +18,41 @@ extern "C" {
 static INT32 opterr = 1;       // 与linux的全局环境变量命名保持一致
 static INT32 optind = 1;       // 与linux的全局环境变量命名保持一致
 static INT32 optopt = '?';     // 与linux的全局环境变量命名保持一致
-static CHAR *optarg = nullptr; // 与linux的全局环境变量命名保持一致
+static CHAR* optarg = nullptr; // 与linux的全局环境变量命名保持一致
 static INT32 optreset;         // 与linux的全局环境变量命名保持一致
 
 static INT32 g_nonoptStart = -1;
 static INT32 g_nonoptEnd = -1;
 
 // 错误消息 与linux保持一致
-static const CHAR *OPT_REQ_ARG_CHAR = "option requires an argument -- %c";
-static const CHAR *OPT_REQ_ARG_STRING = "option requires an argument -- %s";
-static const CHAR *OPT_AMBIGIOUS = "OPT_AMBIGIOUSuous option -- %.*s";
-static const CHAR *OPT_NO_ARG = "option doesn't take an argument -- %.*s";
-static const CHAR *OPT_ILLEGAL_CHAR = "unknown option -- %c";
-static const CHAR *OPT_ILLEGAL_STRING = "unknown option -- %s";
+static const CHAR* OPT_REQ_ARG_CHAR = "option requires an argument -- %c";
+static const CHAR* OPT_REQ_ARG_STRING = "option requires an argument -- %s";
+static const CHAR* OPT_AMBIGIOUS = "OPT_AMBIGIOUSuous option -- %.*s";
+static const CHAR* OPT_NO_ARG = "option doesn't take an argument -- %.*s";
+static const CHAR* OPT_ILLEGAL_CHAR = "unknown option -- %c";
+static const CHAR* OPT_ILLEGAL_STRING = "unknown option -- %s";
 
-static CHAR *g_place = const_cast<CHAR *>(MMPA_EMSG);
+static CHAR* g_place = const_cast<CHAR*>(MMPA_EMSG);
 
-#define ERRA(s, c) do { \
-    if (MMPA_PRINT_ERROR) { \
-        (void)fprintf(stderr, s, c); \
-    } \
-} while (0)
+#define ERRA(s, c)                       \
+    do {                                 \
+        if (MMPA_PRINT_ERROR) {          \
+            (void)fprintf(stderr, s, c); \
+        }                                \
+    } while (0)
 
-#define ERRB(s, c, v) do { \
-    if (MMPA_PRINT_ERROR) { \
-        (void)fprintf(stderr, s, c, v); \
-    } \
-} while (0)
+#define ERRB(s, c, v)                       \
+    do {                                    \
+        if (MMPA_PRINT_ERROR) {             \
+            (void)fprintf(stderr, s, c, v); \
+        }                                   \
+    } while (0)
 
 /*
  * 描述:内部使用
  */
-static INT32 LocalOptionProcess(CHAR * const *nargv, const CHAR *options, const mmStructOption *longOption,
-    INT32 match, CHAR *hasEqual)
+static INT32 LocalOptionProcess(
+    CHAR* const* nargv, const CHAR* options, const mmStructOption* longOption, INT32 match, CHAR* hasEqual)
 {
     if (longOption->has_arg == MMPA_NO_ARGUMENT && hasEqual) {
         ERRB(OPT_NO_ARG, (INT32)strlen(longOption->name), longOption->name);
@@ -84,11 +86,11 @@ static INT32 LocalOptionProcess(CHAR * const *nargv, const CHAR *options, const 
 /*
  * 描述:内部使用,
  */
-static INT32 LocalGetMatch(const CHAR *options, const mmStructOption *longOptions,
-    INT32 shortToo, size_t currentArgvLen, INT32 *match)
+static INT32 LocalGetMatch(
+    const CHAR* options, const mmStructOption* longOptions, INT32 shortToo, size_t currentArgvLen, INT32* match)
 {
     INT32 i;
-    CHAR *currentArgv = g_place;
+    CHAR* currentArgv = g_place;
     for (i = 0; longOptions[i].name; i++) {
         /* find matching long option */
         if (strncmp(currentArgv, longOptions[i].name, currentArgvLen)) {
@@ -116,11 +118,11 @@ static INT32 LocalGetMatch(const CHAR *options, const mmStructOption *longOption
  * 描述:内部使用, 解析长选项参数
  * 返回值:如果short_too设置了并且选项不匹配返回-1
  */
-static INT32 LocalParseLongOptions(CHAR * const *nargv, const CHAR *options,
-                                   const mmStructOption *longOptions, INT32 *idx, INT32 shortToo)
+static INT32 LocalParseLongOptions(
+    CHAR* const* nargv, const CHAR* options, const mmStructOption* longOptions, INT32* idx, INT32 shortToo)
 {
-    CHAR *currentArgv = nullptr;
-    CHAR *hasEqual = nullptr;
+    CHAR* currentArgv = nullptr;
+    CHAR* hasEqual = nullptr;
     size_t currentArgvLen;
     INT32 match = -1;
     currentArgv = g_place;
@@ -152,7 +154,7 @@ static INT32 LocalParseLongOptions(CHAR * const *nargv, const CHAR *options,
         } else {
             return (longOptions[match].val);
         }
-    } else  {
+    } else {
         if (shortToo) {
             --optind;
             return (-1);
@@ -166,9 +168,9 @@ static INT32 LocalParseLongOptions(CHAR * const *nargv, const CHAR *options,
 /*
  * 描述:内部使用
  */
-static INT32 LocalNonOption(CHAR * const *nargv, INT32 flags)
+static INT32 LocalNonOption(CHAR* const* nargv, INT32 flags)
 {
-    g_place = const_cast<CHAR *>(MMPA_EMSG);   /* found non-option */
+    g_place = const_cast<CHAR*>(MMPA_EMSG); /* found non-option */
     if (flags & MMPA_FLAG_ALLARGS) {
         optarg = nargv[optind++];
         return (MMPA_INORDER);
@@ -190,14 +192,14 @@ static INT32 LocalNonOption(CHAR * const *nargv, INT32 flags)
 /*
  * 描述:内部使用
  */
-static INT32 LocalUpdateScanPoint(INT32 nargc, CHAR * const *nargv, const CHAR *options, UINT32 flags)
+static INT32 LocalUpdateScanPoint(INT32 nargc, CHAR* const* nargv, const CHAR* options, UINT32 flags)
 {
     /* update scanning pointer */
     optreset = 0;
     INT32 ret;
     if (optind >= nargc) {
-    /* end of argument vector */
-        g_place = const_cast<CHAR *>(MMPA_EMSG);
+        /* end of argument vector */
+        g_place = const_cast<CHAR*>(MMPA_EMSG);
         if (g_nonoptEnd != -1) {
             LocalPermuteArgs(g_nonoptStart, g_nonoptEnd, optind, nargv);
             optind -= g_nonoptEnd - g_nonoptStart;
@@ -219,7 +221,7 @@ static INT32 LocalUpdateScanPoint(INT32 nargc, CHAR * const *nargv, const CHAR *
 
     if (g_place[1] != '\0' && *++g_place == '-' && g_place[1] == '\0') {
         optind++;
-        g_place = const_cast<CHAR *>(MMPA_EMSG);
+        g_place = const_cast<CHAR*>(MMPA_EMSG);
         if (g_nonoptEnd != -1) {
             LocalPermuteArgs(g_nonoptStart, g_nonoptEnd, optind, nargv);
             optind -= g_nonoptEnd - g_nonoptStart;
@@ -234,8 +236,7 @@ static INT32 LocalUpdateScanPoint(INT32 nargc, CHAR * const *nargv, const CHAR *
 /*
  * 描述:内部使用
  */
-static INT32 LocalTakeArg(INT32 nargc, CHAR * const *nargv, const CHAR *options,
-                          CHAR *oli, UINT32 flags, INT32 *optchar)
+static INT32 LocalTakeArg(INT32 nargc, CHAR* const* nargv, const CHAR* options, CHAR* oli, UINT32 flags, INT32* optchar)
 {
     if (*++oli != ':') {
         if (!*g_place) {
@@ -245,9 +246,9 @@ static INT32 LocalTakeArg(INT32 nargc, CHAR * const *nargv, const CHAR *options,
         optarg = nullptr;
         if (*g_place) {
             optarg = g_place;
-        } else if (oli[1] != ':') { /* arg not optional */
-            if (++optind >= nargc) {    /* no arg */
-                g_place = const_cast<CHAR *>(MMPA_EMSG);
+        } else if (oli[1] != ':') {  /* arg not optional */
+            if (++optind >= nargc) { /* no arg */
+                g_place = const_cast<CHAR*>(MMPA_EMSG);
                 ERRA(OPT_REQ_ARG_CHAR, *optchar);
                 optopt = *optchar;
                 return (MMPA_BADARG);
@@ -259,7 +260,7 @@ static INT32 LocalTakeArg(INT32 nargc, CHAR * const *nargv, const CHAR *options,
                 optarg = nargv[++optind];
             }
         }
-        g_place = const_cast<CHAR *>(MMPA_EMSG);
+        g_place = const_cast<CHAR*>(MMPA_EMSG);
         ++optind;
     }
     return 0;
@@ -268,7 +269,7 @@ static INT32 LocalTakeArg(INT32 nargc, CHAR * const *nargv, const CHAR *options,
 /*
  * 描述:内部使用
  */
-static void LocalDisableExten(const CHAR *options, UINT32 flags)
+static void LocalDisableExten(const CHAR* options, UINT32 flags)
 {
     static INT32 posixly_correct = -1;
     if (posixly_correct == -1) {
@@ -294,10 +295,10 @@ static void LocalDisableExten(const CHAR *options, UINT32 flags)
 /*
  * 描述:内部使用
  */
-static INT32 LocalJudgeMinus(const CHAR *options, INT32 *optchar, CHAR **oli)
+static INT32 LocalJudgeMinus(const CHAR* options, INT32* optchar, CHAR** oli)
 {
     if (((*optchar = (INT32)*g_place++) == (INT32)':') || (*optchar == (INT32)'-' && *g_place != '\0') ||
-        ((*oli = const_cast<CHAR *>(strchr(options, *optchar))) == nullptr)) {
+        ((*oli = const_cast<CHAR*>(strchr(options, *optchar))) == nullptr)) {
         if (*optchar == (INT32)'-' && *g_place == '\0') {
             return (-1);
         }
@@ -314,41 +315,41 @@ static INT32 LocalJudgeMinus(const CHAR *options, INT32 *optchar, CHAR **oli)
 /*
  * 描述:内部使用
  */
-static INT32 LocalJudgeW(INT32 nargc, CHAR * const *nargv, const CHAR *options,
-                         const mmStructOption *longOptions, INT32 *idx)
+static INT32 LocalJudgeW(
+    INT32 nargc, CHAR* const* nargv, const CHAR* options, const mmStructOption* longOptions, INT32* idx)
 {
     INT32 optchar = 'W';
 
     if (*g_place == MMPA_ZERO) {
-        if (++optind >= nargc) {    /* no arg */
-            g_place = const_cast<CHAR *>(MMPA_EMSG);
+        if (++optind >= nargc) { /* no arg */
+            g_place = const_cast<CHAR*>(MMPA_EMSG);
             ERRA(OPT_REQ_ARG_CHAR, optchar);
             optopt = optchar;
             return -1;
-        } else {    /* white space */
+        } else { /* white space */
             g_place = nargv[optind];
         }
     }
     optchar = LocalParseLongOptions(nargv, options, longOptions, idx, 0);
-    g_place = const_cast<CHAR *>(MMPA_EMSG);
+    g_place = const_cast<CHAR*>(MMPA_EMSG);
     return (optchar);
 }
 
 /*
  * 描述:内部使用
  */
-static INT32 LocalJudgeM(CHAR * const *nargv, const CHAR *options,
-                         const mmStructOption *longOptions, INT32 *idx, INT32 *optchar)
+static INT32 LocalJudgeM(
+    CHAR* const* nargv, const CHAR* options, const mmStructOption* longOptions, INT32* idx, INT32* optchar)
 {
     INT32 shortToo = 0;
     if (*g_place == '-') {
-        g_place++;    /* --foo long option */
+        g_place++; /* --foo long option */
     } else if (*g_place != ':' && strchr(options, *g_place) != nullptr) {
-        shortToo = 1;   /* could be short option too */
+        shortToo = 1; /* could be short option too */
     }
     *optchar = LocalParseLongOptions(nargv, options, longOptions, idx, shortToo);
     if (*optchar != EN_ERROR) {
-        g_place = const_cast<CHAR *>(MMPA_EMSG);
+        g_place = const_cast<CHAR*>(MMPA_EMSG);
         return (*optchar);
     }
     return 0;
@@ -357,10 +358,10 @@ static INT32 LocalJudgeM(CHAR * const *nargv, const CHAR *options,
 /*
  * 描述:内部使用, 解析命令行参数
  */
-static INT32 LocalGetOptInternal(INT32 nargc, CHAR * const *nargv, const CHAR *options,
-                                 const mmStructOption *longOptions, INT32 *idx, UINT32 flags)
+static INT32 LocalGetOptInternal(
+    INT32 nargc, CHAR* const* nargv, const CHAR* options, const mmStructOption* longOptions, INT32* idx, UINT32 flags)
 {
-    CHAR *optList = nullptr;
+    CHAR* optList = nullptr;
     INT32 optChar = 0;
     INT32 ret;
 START:
@@ -402,73 +403,49 @@ START:
  * 描述:获取变量opterr的值
  * 返回值：获取到opterr的值
  */
-INT32 mmGetOptErr()
-{
-    return opterr;
-}
+INT32 mmGetOptErr() { return opterr; }
 
 /*
  * 描述:设置变量opterr的值
  * mmOptErr：设置的值
  */
-VOID mmSetOptErr(INT32 mmOptErr)
-{
-    opterr = mmOptErr;
-}
+VOID mmSetOptErr(INT32 mmOptErr) { opterr = mmOptErr; }
 
 /*
  * 描述:获取变量optind的值
  * 返回值：获取到optind的值
  */
-INT32 mmGetOptInd()
-{
-    return optind;
-}
+INT32 mmGetOptInd() { return optind; }
 
 /*
  * 描述:设置变量optind的值
  * mmOptInd：设置的值
  */
-VOID mmSetOptInd(INT32 mmOptInd)
-{
-    optind = mmOptInd;
-}
+VOID mmSetOptInd(INT32 mmOptInd) { optind = mmOptInd; }
 
 /*
  * 描述:获取变量optopt的值
  * 返回值：获取到optopt的值
  */
-INT32 mmGetOptOpt()
-{
-    return optopt;
-}
+INT32 mmGetOptOpt() { return optopt; }
 
 /*
  * 描述:设置变量optopt的值
  * mmOptOpt：设置的值
  */
-VOID mmSetOpOpt(INT32 mmOptOpt)
-{
-    optopt = mmOptOpt;
-}
+VOID mmSetOpOpt(INT32 mmOptOpt) { optopt = mmOptOpt; }
 
 /*
  * 描述:获取变量optarg的值
  * 返回值：获取到optarg的指针
  */
-CHAR *mmGetOptArg()
-{
-    return optarg;
-}
+CHAR* mmGetOptArg() { return optarg; }
 
 /*
  * 描述:设置变量optarg的值
  * mmmOptArg：要设置的指针
  */
-VOID mmSetOptArg(CHAR *mmOptArg)
-{
-    optarg = mmOptArg;
-}
+VOID mmSetOptArg(CHAR* mmOptArg) { optarg = mmOptArg; }
 
 /*
  * 描述:分析命令行参数
@@ -477,7 +454,7 @@ VOID mmSetOptArg(CHAR *mmOptArg)
  *      opts--用来指定可以处理哪些选项
  * 返回值:执行错误, 找不到选项元素, 返回EN_ERROR
  */
-INT32 mmGetOpt(INT32 argc, CHAR * const *argv, const CHAR *opts)
+INT32 mmGetOpt(INT32 argc, CHAR* const* argv, const CHAR* opts)
 {
     if (opts == nullptr) {
         return EN_ERROR;
@@ -497,8 +474,7 @@ INT32 mmGetOpt(INT32 argc, CHAR * const *argv, const CHAR *opts)
  *      longindex--表示长选项在longopts中的位置
  * 返回值:执行错误, 找不到选项元素, 返回EN_ERROR
  */
-INT32 mmGetOptLong(INT32 argc, CHAR * const *argv, const CHAR *opts,
-                   const mmStructOption *longopts, INT32 *longindex)
+INT32 mmGetOptLong(INT32 argc, CHAR* const* argv, const CHAR* opts, const mmStructOption* longopts, INT32* longindex)
 {
     if (opts == nullptr) {
         return EN_ERROR;
@@ -514,4 +490,3 @@ INT32 mmGetOptLong(INT32 argc, CHAR * const *argv, const CHAR *opts,
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

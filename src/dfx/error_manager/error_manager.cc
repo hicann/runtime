@@ -23,16 +23,16 @@
 
 #define GE_MODULE_NAME static_cast<int32_t>(GE)
 
-template<typename TI, typename TO>
-inline TO *PtrToPtr(TI *const ptr)
+template <typename TI, typename TO>
+inline TO* PtrToPtr(TI* const ptr)
 {
-    return reinterpret_cast<TO *>(ptr);
+    return reinterpret_cast<TO*>(ptr);
 }
 
-template<typename TI, typename TO>
-inline const TO *PtrToPtr(const TI *const ptr)
+template <typename TI, typename TO>
+inline const TO* PtrToPtr(const TI* const ptr)
 {
-    return reinterpret_cast<const TO *>(ptr);
+    return reinterpret_cast<const TO*>(ptr);
 }
 
 namespace {
@@ -64,7 +64,7 @@ std::string CurrentTimeFormatStr()
     auto milli_seconds = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
     auto micro_seconds = std::chrono::time_point_cast<std::chrono::microseconds>(now);
     const auto now_t = std::chrono::system_clock::to_time_t(now);
-    const std::tm *tm_now = std::localtime(&now_t);
+    const std::tm* tm_now = std::localtime(&now_t);
     if (tm_now == nullptr) {
         return time_str;
     }
@@ -73,48 +73,48 @@ std::string CurrentTimeFormatStr()
     constexpr size_t kMaxTimeLen = 128U;
     constexpr int64_t kOneThousandMs = 1000L;
     error_message::char_t format_time[kMaxTimeLen] = {};
-    (void) snprintf_s(format_time, kMaxTimeLen, kMaxTimeLen - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld",
-                      tm_now->tm_year + year_base, tm_now->tm_mon + 1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min,
-                      tm_now->tm_sec, milli_seconds.time_since_epoch().count() % kOneThousandMs,
-                      micro_seconds.time_since_epoch().count() % kOneThousandMs);
+    (void)snprintf_s(
+        format_time, kMaxTimeLen, kMaxTimeLen - 1U, "%04d-%02d-%02d-%02d:%02d:%02d.%03ld.%03ld",
+        tm_now->tm_year + year_base, tm_now->tm_mon + 1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min,
+        tm_now->tm_sec, milli_seconds.time_since_epoch().count() % kOneThousandMs,
+        micro_seconds.time_since_epoch().count() % kOneThousandMs);
     time_str = format_time;
     return time_str;
 }
-}
+} // namespace
 
-#define GELOGE(fmt, ...)                                                                          \
-    do {                                                                                          \
-        dlog_error(GE_MODULE_NAME, "%" PRIu64 " %s: %s" fmt, GeLog::GetTid(), &__FUNCTION__[0],   \
-            ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__);                   \
+#define GELOGE(fmt, ...)                                                                 \
+    do {                                                                                 \
+        dlog_error(                                                                      \
+            GE_MODULE_NAME, "%" PRIu64 " %s: %s" fmt, GeLog::GetTid(), &__FUNCTION__[0], \
+            ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__);          \
     } while (false)
 
-#define GELOGW(fmt, ...)                                                                          \
-    do {                                                                                          \
-        if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) {                                             \
-            dlog_warn(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0],   \
-                ##__VA_ARGS__);                                                                   \
-        }                                                                                         \
+#define GELOGW(fmt, ...)                                                                                        \
+    do {                                                                                                        \
+        if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) {                                                           \
+            dlog_warn(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+        }                                                                                                       \
     } while (false)
 
-#define GELOGI(fmt, ...)                                                                          \
-    do {                                                                                          \
-        if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                             \
-            dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0],   \
-                ##__VA_ARGS__);                                                                   \
-        }                                                                                         \
+#define GELOGI(fmt, ...)                                                                                        \
+    do {                                                                                                        \
+        if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                                           \
+            dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+        }                                                                                                       \
     } while (false)
 
-#define GELOGD(fmt, ...)                                                                          \
-    do {                                                                                          \
-        if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) {                                            \
-            dlog_debug(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0],  \
-                ##__VA_ARGS__);                                                                   \
-        }                                                                                         \
+#define GELOGD(fmt, ...)                                                                                         \
+    do {                                                                                                         \
+        if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) {                                                           \
+            dlog_debug(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+        }                                                                                                        \
     } while (false)
 
 namespace {
-int32_t ReportInnerErrorMessage(const char *file_name, const char *func, uint32_t line, const char *error_code,
-                                const char *format, va_list arg_list)
+int32_t ReportInnerErrorMessage(
+    const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format,
+    va_list arg_list)
 {
     std::vector<char> buf(LIMIT_PER_MESSAGE, '\0');
     auto ret = vsprintf_s(buf.data(), LIMIT_PER_MESSAGE, format, arg_list);
@@ -122,8 +122,9 @@ int32_t ReportInnerErrorMessage(const char *file_name, const char *func, uint32_
         GELOGE("[Check][Param] FormatErrorMessage failed, ret:%d, file:%s, line:%u", ret, file_name, line);
         return -1;
     }
-    ret = sprintf_s(buf.data() + ret, LIMIT_PER_MESSAGE - static_cast<size_t>(ret), "[FUNC:%s][FILE:%s][LINE:%u]",
-                    func, error_message::TrimPath(std::string(file_name)).c_str(), line);
+    ret = sprintf_s(
+        buf.data() + ret, LIMIT_PER_MESSAGE - static_cast<size_t>(ret), "[FUNC:%s][FILE:%s][LINE:%u]", func,
+        error_message::TrimPath(std::string(file_name)).c_str(), line);
     if (ret < 0) {
         GELOGE("[Check][Param] FormatErrorMessage failed, ret:%d, file:%s, line:%u", ret, file_name, line);
         return -1;
@@ -132,7 +133,7 @@ int32_t ReportInnerErrorMessage(const char *file_name, const char *func, uint32_
     return ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(buf.data()));
 }
 
-std::unique_ptr<error_message::char_t[]> CreateUniquePtrFromString(const std::string &str)
+std::unique_ptr<error_message::char_t[]> CreateUniquePtrFromString(const std::string& str)
 {
     const size_t buf_size = str.empty() ? 1U : (str.size() + 1U);
     auto uni_ptr = std::make_unique<error_message::char_t[]>(buf_size);
@@ -151,59 +152,58 @@ std::unique_ptr<error_message::char_t[]> CreateUniquePtrFromString(const std::st
     return uni_ptr;
 }
 
-void ClearMessageContainerByWorkId(std::map<uint64_t, std::vector<ErrorManager::ErrorItem>> &message_container,
-                                   const uint64_t work_stream_id)
+void ClearMessageContainerByWorkId(
+    std::map<uint64_t, std::vector<ErrorManager::ErrorItem>>& message_container, const uint64_t work_stream_id)
 {
     const std::map<uint64_t, std::vector<ErrorManager::ErrorItem>>::const_iterator err_iter =
         message_container.find(work_stream_id);
     if (err_iter != message_container.cend()) {
-        (void) message_container.erase(err_iter);
+        (void)message_container.erase(err_iter);
     }
 }
 
-std::vector<ErrorManager::ErrorItem> &GetOrCreateMessageContainerByWorkId(
-    std::map<uint64_t, std::vector<ErrorManager::ErrorItem>> &message_container, uint64_t work_id)
+std::vector<ErrorManager::ErrorItem>& GetOrCreateMessageContainerByWorkId(
+    std::map<uint64_t, std::vector<ErrorManager::ErrorItem>>& message_container, uint64_t work_id)
 {
     auto iter = message_container.find(work_id);
     if (iter == message_container.end()) {
-        (void) message_container.emplace(work_id, std::vector<ErrorManager::ErrorItem>());
+        (void)message_container.emplace(work_id, std::vector<ErrorManager::ErrorItem>());
         iter = message_container.find(work_id);
     }
     return iter->second;
 }
-}  // namespace
-
+} // namespace
 
 namespace error_message {
 // first stage
-const std::string kInitialize   = "INIT";
+const std::string kInitialize = "INIT";
 const std::string kModelCompile = "COMP";
-const std::string kModelLoad    = "LOAD";
+const std::string kModelLoad = "LOAD";
 const std::string kModelExecute = "EXEC";
-const std::string kFinalize     = "FINAL";
+const std::string kFinalize = "FINAL";
 
 // SecondStage
 // INITIALIZE
-const std::string kParser               = "PARSER";
-const std::string kOpsProtoInit         = "OPS_PRO";
-const std::string kSystemInit           = "SYS";
-const std::string kEngineInit           = "ENGINE";
-const std::string kOpsKernelInit        = "OPS_KER";
+const std::string kParser = "PARSER";
+const std::string kOpsProtoInit = "OPS_PRO";
+const std::string kSystemInit = "SYS";
+const std::string kEngineInit = "ENGINE";
+const std::string kOpsKernelInit = "OPS_KER";
 const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
 // MODEL_COMPILE
-const std::string kPrepareOptimize    = "PRE_OPT";
-const std::string kOriginOptimize     = "ORI_OPT";
-const std::string kSubGraphOptimize   = "SUB_OPT";
+const std::string kPrepareOptimize = "PRE_OPT";
+const std::string kOriginOptimize = "ORI_OPT";
+const std::string kSubGraphOptimize = "SUB_OPT";
 const std::string kMergeGraphOptimize = "MERGE_OPT";
-const std::string kPreBuild           = "PRE_BLD";
-const std::string kStreamAlloc        = "STM_ALLOC";
-const std::string kMemoryAlloc        = "MEM_ALLOC";
-const std::string kTaskGenerate       = "TASK_GEN";
+const std::string kPreBuild = "PRE_BLD";
+const std::string kStreamAlloc = "STM_ALLOC";
+const std::string kMemoryAlloc = "MEM_ALLOC";
+const std::string kTaskGenerate = "TASK_GEN";
 // COMMON
 const std::string kOther = "DEFAULT";
 
 #ifdef __GNUC__
-std::string TrimPath(const std::string &str)
+std::string TrimPath(const std::string& str)
 {
     if (str.find_last_of('/') != std::string::npos) {
         return str.substr(str.find_last_of('/') + 1U);
@@ -211,7 +211,7 @@ std::string TrimPath(const std::string &str)
     return str;
 }
 #else
-std::string TrimPath(const std::string &str)
+std::string TrimPath(const std::string& str)
 {
     if (str.find_last_of('\\') != std::string::npos) {
         return str.substr(str.find_last_of('\\') + 1U);
@@ -220,7 +220,7 @@ std::string TrimPath(const std::string &str)
 }
 #endif
 
-int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...)
+int32_t FormatErrorMessage(char_t* str_dst, size_t dst_max, const char_t* format, ...)
 {
     int32_t ret;
     va_list arg_list;
@@ -235,8 +235,8 @@ int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format
     return ret;
 }
 
-void ReportInnerError(const char_t *file_name, const char_t *func, uint32_t line, const std::string error_code,
-                      const char_t *format, ...)
+void ReportInnerError(
+    const char_t* file_name, const char_t* func, uint32_t line, const std::string error_code, const char_t* format, ...)
 {
     va_list arg_list;
     va_start(arg_list, format);
@@ -244,42 +244,41 @@ void ReportInnerError(const char_t *file_name, const char_t *func, uint32_t line
     va_end(arg_list);
     return;
 }
-}
+} // namespace error_message
 
 namespace {
 #ifdef __GNUC__
-constexpr const error_message::char_t *const kErrorCodePath = "../conf/error_manager/error_code.json";
-constexpr const error_message::char_t *const kSeparator = "/";
+constexpr const error_message::char_t* const kErrorCodePath = "../conf/error_manager/error_code.json";
+constexpr const error_message::char_t* const kSeparator = "/";
 #else
-const error_message::char_t *const kErrorCodePath = "..\\conf\\error_manager\\error_code.json";
-const error_message::char_t *const kSeparator = "\\";
+const error_message::char_t* const kErrorCodePath = "..\\conf\\error_manager\\error_code.json";
+const error_message::char_t* const kSeparator = "\\";
 #endif
 
 constexpr uint64_t kLength = 2UL;
 
-void Ltrim(std::string &s)
+void Ltrim(std::string& s)
 {
-    (void) s.erase(s.begin(),
-                   std::find_if(s.begin(),
-                                s.end(),
-                                [](const error_message::char_t c) -> bool {
-                                    return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
-                                }));
+    (void)s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const error_message::char_t c) -> bool {
+                      return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
+                  }));
 }
 
-void Rtrim(std::string &s)
+void Rtrim(std::string& s)
 {
-    (void) s.erase(std::find_if(s.rbegin(),
-                                s.rend(),
-                                [](const error_message::char_t c) -> bool {
-                                    return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
-                                }).base(),
-                   s.end());
+    (void)s.erase(
+        std::find_if(
+            s.rbegin(), s.rend(),
+            [](const error_message::char_t c) -> bool {
+                return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
+            })
+            .base(),
+        s.end());
 }
 
 /// @ingroup domi_common
 /// @brief trim space
-void Trim(std::string &s)
+void Trim(std::string& s)
 {
     Rtrim(s);
     Ltrim(s);
@@ -290,8 +289,8 @@ void Trim(std::string &s)
 std::string GetSelfLibraryDir(void)
 {
     mmDlInfo dl_info{nullptr, nullptr, nullptr, nullptr, 0, 0, 0};
-    if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
-        const error_message::char_t *error = mmDlerror();
+    if (mmDladdr(reinterpret_cast<void*>(GetSelfLibraryDir), &dl_info) != EN_OK) {
+        const error_message::char_t* error = mmDlerror();
         error = (error == nullptr) ? "" : error;
         GELOGW("Failed to read the shared library file path! reason:%s", error);
         return std::string();
@@ -314,7 +313,7 @@ std::string GetSelfLibraryDir(void)
 }
 
 // split string
-std::vector<std::string> SplitByDelim(const std::string &str, const error_message::char_t delim)
+std::vector<std::string> SplitByDelim(const std::string& str, const error_message::char_t delim)
 {
     std::vector<std::string> elems;
 
@@ -337,14 +336,13 @@ std::vector<std::string> SplitByDelim(const std::string &str, const error_messag
 
     return elems;
 }
-}  // namespace
-
+} // namespace
 
 thread_local error_message::Context ErrorManager::error_context_ = {0UL, "", "", ""};
 
 /// @brief Obtain ErrorManager instance
 /// @return ErrorManager instance
-ErrorManager &ErrorManager::GetInstance()
+ErrorManager& ErrorManager::GetInstance()
 {
     static ErrorManager instance;
     return instance;
@@ -369,10 +367,7 @@ int32_t ErrorManager::Init(const std::string path)
 
 /// @brief init
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::Init()
-{
-    return Init(GetSelfLibraryDir());
-}
+int32_t ErrorManager::Init() { return Init(GetSelfLibraryDir()); }
 
 int32_t ErrorManager::Init(error_message::ErrorMsgMode error_mode)
 {
@@ -384,7 +379,7 @@ int32_t ErrorManager::Init(error_message::ErrorMsgMode error_mode)
     return Init(GetSelfLibraryDir());
 }
 
-int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string &error_msg)
+int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string& error_msg)
 {
     std::string report_time = CurrentTimeFormatStr();
     constexpr uint64_t kMaxWorkSize = 1000UL;
@@ -403,22 +398,25 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     const std::unique_lock<std::mutex> lck(mutex_);
     if (error_context_.work_stream_id == 0UL) {
         if (error_message_per_work_id_.size() > kMaxWorkSize) {
-            GELOGW("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
-                   error_code.c_str(), kMaxWorkSize);
+            GELOGW(
+                "[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
+                error_code.c_str(), kMaxWorkSize);
             return -1;
         }
         GenWorkStreamIdDefault();
     }
 
-    GELOGI("report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u",
-        error_code.c_str(), error_context_.work_stream_id, error_mode_);
+    GELOGI(
+        "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u", error_code.c_str(),
+        error_context_.work_stream_id, error_mode_);
 
     auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
     auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
 
     if (error_messages.size() > kMaxWorkSize) {
-        GELOGW("[Report][Error]error_code %s, error work_stream_id:%lu item size exceed %lu, skip record",
-               error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
+        GELOGW(
+            "[Report][Error]error_code %s, error work_stream_id:%lu item size exceed %lu, skip record",
+            error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
         return -1;
     }
 
@@ -446,8 +444,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
 /// @param [in] error_code: error code
 /// @param [in] args_map: parameter map
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::ReportErrMessage(const std::string error_code,
-                                       const std::map<std::string, std::string> &args_map)
+int32_t ErrorManager::ReportErrMessage(const std::string error_code, const std::map<std::string, std::string>& args_map)
 {
     std::string report_time = CurrentTimeFormatStr();
     if (!is_init_) {
@@ -462,16 +459,17 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
         GenWorkStreamIdDefault();
     }
 
-    GELOGI("report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.",
-        error_code.c_str(), error_context_.work_stream_id, error_mode_);
+    GELOGI(
+        "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.", error_code.c_str(),
+        error_context_.work_stream_id, error_mode_);
     const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
     if (iter == error_map_.cend()) {
         GELOGW("[Report][Warning]error_code %s is not registered", error_code.c_str());
         return -1;
     }
-    const ErrorInfoConfig &error_info = iter->second;
+    const ErrorInfoConfig& error_info = iter->second;
     std::string error_message = error_info.error_message;
-    for (const std::string &arg : error_info.arg_list) {
+    for (const std::string& arg : error_info.arg_list) {
         if (arg.empty()) {
             GELOGI("arg is null");
             break;
@@ -481,19 +479,20 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
             GELOGE("[Report][Error]error_code: %s, arg %s does not exist in map", error_code.c_str(), arg.c_str());
             return -1;
         }
-        const std::string &arg_value = arg_it->second;
+        const std::string& arg_value = arg_it->second;
         const auto index = error_message.find("%s");
         if (index == std::string::npos) {
-            GELOGE("[Report][Error]error_code: %s, %s location in error_message is not found",
-                   error_code.c_str(), arg.c_str());
+            GELOGE(
+                "[Report][Error]error_code: %s, %s location in error_message is not found", error_code.c_str(),
+                arg.c_str());
             return -1;
         }
         (void)error_message.replace(index, kLength, arg_value);
     }
 
     const std::unique_lock<std::mutex> lock(mutex_);
-    auto &error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
-    auto &warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
+    auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
+    auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
 
     if (error_mode_ == error_message::ErrorMsgMode::PROCESS_MODE) {
         error_message += "[THREAD:" + std::to_string(mmGetTid()) + "]";
@@ -515,7 +514,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
     return 0;
 }
 
-int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string &error_code, const std::string &errmsg)
+int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string& error_code, const std::string& errmsg)
 {
     std::string report_time = CurrentTimeFormatStr();
     if (!is_init_) {
@@ -532,16 +531,19 @@ int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string &error_code, cons
 
     auto final_error_code = error_code;
     if (!IsUserDefinedErrorCode(final_error_code)) {
-        GELOGW("[Report] Current error code is [%s], suggest using the recommended U segment. "
-               "The error code EU0000 is reported!", final_error_code.c_str());
+        GELOGW(
+            "[Report] Current error code is [%s], suggest using the recommended U segment. "
+            "The error code EU0000 is reported!",
+            final_error_code.c_str());
         final_error_code = "EU0000";
     }
 
-    GELOGI("report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.",
-           error_code.c_str(), error_context_.work_stream_id, error_mode_);
+    GELOGI(
+        "report error_message, error_code:%s, work_stream_id:%lu, error_mode:%u.", error_code.c_str(),
+        error_context_.work_stream_id, error_mode_);
 
     const std::unique_lock<std::mutex> lock(mutex_);
-    auto &error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
+    auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
 
     ErrorItem error_item{final_error_code, "", errmsg, "", "", {}, report_time};
     const auto it = find(error_messages.begin(), error_messages.end(), error_item);
@@ -551,13 +553,12 @@ int32_t ErrorManager::ReportErrMsgWithoutTpl(const std::string &error_code, cons
     return 0;
 }
 
-void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages,
-                                             const std::string &first_code,
-                                             std::stringstream &err_stream) const
+void ErrorManager::AssembleInnerErrorMessage(
+    const std::vector<ErrorItem>& error_messages, const std::string& first_code, std::stringstream& err_stream) const
 {
     std::string current_code_print = first_code;
     const bool IsErrorId = IsParamCheckErrorId(first_code);
-    for (auto &item : error_messages) {
+    for (auto& item : error_messages) {
         if (!IsParamCheckErrorId(item.error_id)) {
             current_code_print = item.error_id;
             break;
@@ -565,16 +566,16 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
     }
     err_stream << current_code_print << ": Inner Error!" << std::endl;
     bool print_traceback_once = false;
-    for (auto &item : error_messages) { // Display the first non 8888 error code
+    for (auto& item : error_messages) { // Display the first non 8888 error code
         if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
             err_stream << "        " << item.error_message << std::endl;
             continue;
         }
-        current_code_print == "      "
-            ? (err_stream << current_code_print << " " << item.error_message << std::endl)
-            : (err_stream << current_code_print << "[PID: " << std::to_string(mmGetPid()) << "] " << item.report_time
-                          << " " << item.error_title << "(" << item.error_id << "): "
-                          << " " << item.error_message << std::endl);
+        current_code_print == "      " ?
+            (err_stream << current_code_print << " " << item.error_message << std::endl) :
+            (err_stream << current_code_print << "[PID: " << std::to_string(mmGetPid()) << "] " << item.report_time
+                        << " " << item.error_title << "(" << item.error_id << "): "
+                        << " " << item.error_message << std::endl);
 
         current_code_print = "      ";
         if (!print_traceback_once) {
@@ -586,14 +587,14 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
 
 std::string ErrorManager::GetErrorMessage()
 {
-    const auto &error_messages = GetRawErrorMessages();
+    const auto& error_messages = GetRawErrorMessages();
     if (error_messages.empty()) {
         return "";
     }
 
     std::stringstream err_stream;
     std::string first_code = error_messages[0UL].error_id;
-    for (const auto &item : error_messages) {
+    for (const auto& item : error_messages) {
         if (!IsInnerErrorCode(item.error_id)) {
             first_code = item.error_id;
             err_stream << "[PID: " << std::to_string(mmGetPid()) << "] " << item.report_time << " " << item.error_title
@@ -611,7 +612,7 @@ std::string ErrorManager::GetErrorMessage()
         AssembleInnerErrorMessage(error_messages, first_code, err_stream);
     } else {
         bool print_traceback_once = false;
-        for (const auto &item : error_messages) {
+        for (const auto& item : error_messages) {
             if (first_code == item.error_id && error_messages[0].error_message == item.error_message) {
                 continue;
             }
@@ -631,10 +632,10 @@ std::string ErrorManager::GetWarningMessage()
 {
     GELOGI("current work_stream_id:%lu, error_mode:%u", error_context_.work_stream_id, error_mode_);
     const std::unique_lock<std::mutex> lck(mutex_);
-    auto &warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
+    auto& warning_messages = GetWarningMsgContainer(error_context_.work_stream_id);
 
     std::stringstream warning_stream;
-    for (auto &item : warning_messages) {
+    for (auto& item : warning_messages) {
         warning_stream << "[PID: " << std::to_string(mmGetPid()) << "] " << item.report_time << " " << item.error_title
                        << "(" << item.error_id << "): " << item.error_message << std::endl;
     }
@@ -659,9 +660,9 @@ int32_t ErrorManager::OutputErrMessage(int32_t handle)
         std::cout << err_msg << std::endl;
     } else {
         const mmSsize_t ret = mmWrite(
-            handle, const_cast<error_message::char_t *>(err_msg.c_str()), static_cast<uint32_t>(err_msg.length()));
+            handle, const_cast<error_message::char_t*>(err_msg.c_str()), static_cast<uint32_t>(err_msg.length()));
         if (ret == -1) {
-            GELOGE("[Write][File]fail, reason:%s",  strerror(errno));
+            GELOGE("[Write][File]fail, reason:%s", strerror(errno));
             return -1;
         }
     }
@@ -693,22 +694,23 @@ int32_t ErrorManager::ParseJsonFile(const std::string path)
 /// @brief parse json file
 /// @param [in] handle: json handle
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::ParseJsonFormatString(const void *const handle, uint32_t priority)
+int32_t ErrorManager::ParseJsonFormatString(const void* const handle, uint32_t priority)
 {
     GELOGD("Begin to parse json string");
     try {
-        const nlohmann::json *const json_file = PtrToPtr<void, nlohmann::json>(handle);
+        const nlohmann::json* const json_file = PtrToPtr<void, nlohmann::json>(handle);
         if (json_file->find("error_info_list") == json_file->end()) {
             GELOGW("[Check][Config]The message of error_info_list is not found");
             return -1;
         }
-        const nlohmann::json &error_list_json = json_file->at("error_info_list");
+        const nlohmann::json& error_list_json = json_file->at("error_info_list");
         if (error_list_json.is_null() || !error_list_json.is_array()) {
-            GELOGW("[Check][Config]The message of error_info_list is not found or "
-                   "the message of error_info_list is not array");
+            GELOGW(
+                "[Check][Config]The message of error_info_list is not found or "
+                "the message of error_info_list is not array");
             return -1;
         }
-        for (const auto &error_json : error_list_json) {
+        for (const auto& error_json : error_list_json) {
             ErrorInfoConfig error_info;
             error_info.error_id = error_json["ErrCode"];
             error_info.error_message = error_json["ErrMessage"];
@@ -723,21 +725,23 @@ int32_t ErrorManager::ParseJsonFormatString(const void *const handle, uint32_t p
             error_info.priority = priority;
             auto it = error_map_.find(error_info.error_id);
             if (it == error_map_.cend()) {
-                (void) error_map_.emplace(error_info.error_id, error_info);
+                (void)error_map_.emplace(error_info.error_id, error_info);
                 GELOGD("add error_code %s success", error_info.error_id.c_str());
             } else {
                 if (it->second.priority < error_info.priority) {
                     it->second = error_info;
-                    GELOGD("Update error_code %s success, current priority[%u] is greater than saved priority[%u]",
-                           error_info.error_id.c_str(), priority, it->second.priority);
+                    GELOGD(
+                        "Update error_code %s success, current priority[%u] is greater than saved priority[%u]",
+                        error_info.error_id.c_str(), priority, it->second.priority);
                 } else {
-                    GELOGD("No need update error_code %s, due to current priority[%u] is less and "
-                           "equal than saved priority[%u]",
-                           error_info.error_id.c_str(), priority, it->second.priority);
+                    GELOGD(
+                        "No need update error_code %s, due to current priority[%u] is less and "
+                        "equal than saved priority[%u]",
+                        error_info.error_id.c_str(), priority, it->second.priority);
                 }
             }
         }
-    } catch (const nlohmann::json::exception &e) {
+    } catch (const nlohmann::json::exception& e) {
         GELOGW("[Parse][JsonFile]exception message: %s", e.what());
         return -1;
     }
@@ -748,18 +752,18 @@ int32_t ErrorManager::ParseJsonFormatString(const void *const handle, uint32_t p
 /// @param [in] file_path: json path
 /// @param [in] handle:  print handle
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const handle)
+int32_t ErrorManager::ReadJsonFile(const std::string& file_path, void* const handle)
 {
     if (file_path.empty()) {
         GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
         return -1;
     }
-    nlohmann::json *const json_file = PtrToPtr<void, nlohmann::json>(handle);
+    nlohmann::json* const json_file = PtrToPtr<void, nlohmann::json>(handle);
     if (json_file == nullptr) {
         GELOGW("[Check][Param]JsonFile is nullptr");
         return -1;
     }
-    const error_message::char_t *const file = file_path.data();
+    const error_message::char_t* const file = file_path.data();
     if ((mmAccess2(file, M_F_OK)) != EN_OK) {
         GELOGW("[Read][JsonFile] %s does not exist, error %s", file_path.c_str(), strerror(errno));
         return -1;
@@ -773,7 +777,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
 
     try {
         ifs >> *json_file;
-    } catch (const nlohmann::json::exception &e) {
+    } catch (const nlohmann::json::exception& e) {
         GELOGW("[Read][JsonFile]ifstream to json fail. path: %s, exception message: %s.", file_path.c_str(), e.what());
         ifs.close();
         return -1;
@@ -788,8 +792,8 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
 /// @param [in] error_code: error code
 /// @param [in] vector parameter key, vector parameter value
 /// @return int 0(success) -1(fail)
-void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key,
-                                       const std::vector<std::string> &value)
+void ErrorManager::ATCReportErrMessage(
+    const std::string error_code, const std::vector<std::string>& key, const std::vector<std::string>& value)
 {
     if (!is_init_) {
         const int32_t kRetInit = Init();
@@ -814,17 +818,16 @@ void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::
 /// @brief report graph compile failed message such as error code and op_name in mustune case
 /// @param [in] msg: failed message map, key is error code, value is op_name
 /// @param [out] classified_msg: classified_msg message map, key is error code, value is op_name vector
-void ErrorManager::ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
-                                            std::map<std::string,
-                                            std::vector<std::string>> &classified_msg)
+void ErrorManager::ClassifyCompileFailedMsg(
+    const std::map<std::string, std::string>& msg, std::map<std::string, std::vector<std::string>>& classified_msg)
 {
-    for (const auto &itr : msg) {
+    for (const auto& itr : msg) {
         GELOGD("msg is error_code:%s, op_name:%s", itr.first.c_str(), itr.second.c_str());
         const auto err_code_itr = classified_msg.find(itr.first);
         if (err_code_itr == classified_msg.end()) {
             (void)classified_msg.emplace(itr.first, std::vector<std::string>{itr.second});
         } else {
-            std::vector<std::string> &op_name_list = err_code_itr->second;
+            std::vector<std::string>& op_name_list = err_code_itr->second;
             op_name_list.emplace_back(itr.second);
         }
     }
@@ -834,8 +837,8 @@ void ErrorManager::ClassifyCompileFailedMsg(const std::map<std::string, std::str
 /// @param [in] root_graph_name: root graph name
 /// @param [in] msg: failed message map, key is error code, value is op_name
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
-                                                   const std::map<std::string, std::string> &msg)
+int32_t ErrorManager::ReportMstuneCompileFailedMsg(
+    const std::string& root_graph_name, const std::map<std::string, std::string>& msg)
 {
     if (!is_init_) {
         const int32_t kRetInit = Init();
@@ -845,15 +848,16 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph
         }
     }
     if (msg.empty() || root_graph_name.empty()) {
-        GELOGW("Msg or root graph name is empty, msg size is %zu, root graph name is %s",
-            msg.size(), root_graph_name.c_str());
+        GELOGW(
+            "Msg or root graph name is empty, msg size is %zu, root graph name is %s", msg.size(),
+            root_graph_name.c_str());
         return -1;
     }
     GELOGD("Report graph:%s compile failed msg", root_graph_name.c_str());
     const std::unique_lock<std::mutex> lock(mutex_);
     const auto itr = compile_failed_msg_map_.find(root_graph_name);
     if (itr != compile_failed_msg_map_.end()) {
-        std::map<std::string, std::vector<std::string>> &classified_msg = itr->second;
+        std::map<std::string, std::vector<std::string>>& classified_msg = itr->second;
         ClassifyCompileFailedMsg(msg, classified_msg);
     } else {
         std::map<std::string, std::vector<std::string>> classified_msg;
@@ -867,8 +871,8 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph
 /// @param [in] graph_name: graph name
 /// @param [out] msg_map: failed message map, key is error code, value is op_name list
 /// @return int 0(success) -1(fail)
-int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string,
-                                                std::vector<std::string>> &msg_map)
+int32_t ErrorManager::GetMstuneCompileFailedMsg(
+    const std::string& graph_name, std::map<std::string, std::vector<std::string>>& msg_map)
 {
     if (!is_init_) {
         const int32_t kRetInit = Init();
@@ -887,7 +891,7 @@ int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, s
         GELOGW("can not find graph, name is:%s", graph_name.c_str());
         return -1;
     } else {
-        auto &compile_failed_msg = iter->second;
+        auto& compile_failed_msg = iter->second;
         msg_map.swap(compile_failed_msg);
         (void)compile_failed_msg_map_.erase(graph_name);
     }
@@ -896,26 +900,27 @@ int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, s
     return 0;
 }
 
-std::vector<ErrorManager::ErrorItem> &ErrorManager::GetErrorMsgContainerByWorkId(uint64_t work_id)
+std::vector<ErrorManager::ErrorItem>& ErrorManager::GetErrorMsgContainerByWorkId(uint64_t work_id)
 {
     return GetOrCreateMessageContainerByWorkId(error_message_per_work_id_, work_id);
 }
 
-std::vector<ErrorManager::ErrorItem> &ErrorManager::GetWarningMsgContainerByWorkId(uint64_t work_id)
+std::vector<ErrorManager::ErrorItem>& ErrorManager::GetWarningMsgContainerByWorkId(uint64_t work_id)
 {
     return GetOrCreateMessageContainerByWorkId(warning_messages_per_work_id_, work_id);
 }
 
-std::vector<ErrorManager::ErrorItem> &ErrorManager::GetErrorMsgContainer(uint64_t work_stream_id)
+std::vector<ErrorManager::ErrorItem>& ErrorManager::GetErrorMsgContainer(uint64_t work_stream_id)
 {
-    return (error_mode_ == error_message::ErrorMsgMode::INTERNAL_MODE) ?
-        GetErrorMsgContainerByWorkId(work_stream_id) : error_message_process_;
+    return (error_mode_ == error_message::ErrorMsgMode::INTERNAL_MODE) ? GetErrorMsgContainerByWorkId(work_stream_id) :
+                                                                         error_message_process_;
 }
 
-std::vector<ErrorManager::ErrorItem> &ErrorManager::GetWarningMsgContainer(uint64_t work_stream_id)
+std::vector<ErrorManager::ErrorItem>& ErrorManager::GetWarningMsgContainer(uint64_t work_stream_id)
 {
     return (error_mode_ == error_message::ErrorMsgMode::INTERNAL_MODE) ?
-        GetWarningMsgContainerByWorkId(work_stream_id) : warning_messages_process_;
+               GetWarningMsgContainerByWorkId(work_stream_id) :
+               warning_messages_process_;
 }
 
 void ErrorManager::GenWorkStreamIdDefault()
@@ -925,8 +930,8 @@ void ErrorManager::GenWorkStreamIdDefault()
     const int32_t tid = mmGetTid();
 
     constexpr uint64_t kPidOffset = 100000UL;
-    const uint64_t work_stream_id = static_cast<uint64_t>(static_cast<uint32_t>(pid) * kPidOffset) +
-        static_cast<uint64_t>(tid);
+    const uint64_t work_stream_id =
+        static_cast<uint64_t>(static_cast<uint32_t>(pid) * kPidOffset) + static_cast<uint64_t>(tid);
     error_context_.work_stream_id = work_stream_id;
 }
 
@@ -976,7 +981,7 @@ void ErrorManager::ClearWarningMsgContainer(const uint64_t work_stream_id)
     }
 }
 
-const std::string &ErrorManager::GetLogHeader()
+const std::string& ErrorManager::GetLogHeader()
 {
     if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
         error_context_.log_header = "";
@@ -986,7 +991,7 @@ const std::string &ErrorManager::GetLogHeader()
     return error_context_.log_header;
 }
 
-error_message::Context &ErrorManager::GetErrorManagerContext()
+error_message::Context& ErrorManager::GetErrorManagerContext()
 {
     // son thread need set father thread work_stream_id, but work_stream_id cannot be zero
     // so GenWorkStreamIdDefault here directly
@@ -1004,13 +1009,13 @@ void ErrorManager::SetErrorContext(error_message::Context error_context)
     error_context_.log_header = std::move(error_context.log_header);
 }
 
-void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage)
+void ErrorManager::SetStage(const std::string& first_stage, const std::string& second_stage)
 {
     error_context_.first_stage = first_stage;
     error_context_.second_stage = second_stage;
 }
 
-bool ErrorManager::IsInnerErrorCode(const std::string &error_code) const
+bool ErrorManager::IsInnerErrorCode(const std::string& error_code) const
 {
     const std::string kInterErrorCodePrefix = "9999";
     if (!IsValidErrorCode(error_code)) {
@@ -1021,7 +1026,7 @@ bool ErrorManager::IsInnerErrorCode(const std::string &error_code) const
 }
 
 // 这里只做简单校验, 校验是非内部错误码、非预定义错误码的6位字符串即可
-bool ErrorManager::IsUserDefinedErrorCode(const std::string &error_code)
+bool ErrorManager::IsUserDefinedErrorCode(const std::string& error_code)
 {
     if (!IsValidErrorCode(error_code) || IsInnerErrorCode(error_code)) {
         return false;
@@ -1042,12 +1047,12 @@ bool ErrorManager::IsUserDefinedErrorCode(const std::string &error_code)
     return true;
 }
 
-bool ErrorManager::IsParamCheckErrorId(const std::string &error_code) const
+bool ErrorManager::IsParamCheckErrorId(const std::string& error_code) const
 {
     return (error_code.substr(2U, 4U) == kParamCheckErrorSuffix);
 }
 
-int32_t ErrorManager::SetRawErrorMessages(const std::vector<ErrorItem> &items)
+int32_t ErrorManager::SetRawErrorMessages(const std::vector<ErrorItem>& items)
 {
     const std::unique_lock<std::mutex> lck(mutex_);
     if (error_context_.work_stream_id == 0UL) {
@@ -1055,7 +1060,7 @@ int32_t ErrorManager::SetRawErrorMessages(const std::vector<ErrorItem> &items)
     }
 
     GELOGI("Set error_message, work_stream_id:%lu.", error_context_.work_stream_id);
-    auto &error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
+    auto& error_messages = GetErrorMsgContainer(error_context_.work_stream_id);
     (void)error_messages.insert(error_messages.end(), items.begin(), items.end());
     return 0;
 }
@@ -1070,7 +1075,7 @@ std::vector<error_message::ErrorItem> ErrorManager::GetRawErrorMessages()
 }
 
 namespace error_message {
-int32_t RegisterFormatErrorMessage(const char_t *error_msg, size_t error_msg_len)
+int32_t RegisterFormatErrorMessage(const char_t* error_msg, size_t error_msg_len)
 {
     nlohmann::json j;
     try {
@@ -1084,8 +1089,8 @@ int32_t RegisterFormatErrorMessage(const char_t *error_msg, size_t error_msg_len
     return ErrorManager::GetInstance().ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&j), 1);
 }
 
-int32_t ReportInnerErrMsg(const char *file_name, const char *func, uint32_t line, const char *error_code,
-                          const char *format, ...)
+int32_t ReportInnerErrMsg(
+    const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format, ...)
 {
     va_list arg_list;
     va_start(arg_list, format);
@@ -1094,7 +1099,7 @@ int32_t ReportInnerErrMsg(const char *file_name, const char *func, uint32_t line
     return ret;
 }
 
-int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
+int32_t ReportUserDefinedErrMsg(const char* error_code, const char* format, ...)
 {
     va_list arg_list;
     std::vector<char> buf(LIMIT_PER_MESSAGE, '\0');
@@ -1108,11 +1113,12 @@ int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
     return ErrorManager::GetInstance().ReportErrMsgWithoutTpl(error_code, std::string(buf.data()));
 }
 
-int32_t ReportPredefinedErrMsg(const char *error_code, const std::vector<const char *> &key,
-                               const std::vector<const char *> &value)
+int32_t ReportPredefinedErrMsg(
+    const char* error_code, const std::vector<const char*>& key, const std::vector<const char*>& value)
 {
     if (key.size() != value.size()) {
-        GELOGE("[Check][Param] ReportPredefinedErrMsg failed, vector key size:[%zu] and value size:[%zu] is not equal",
+        GELOGE(
+            "[Check][Param] ReportPredefinedErrMsg failed, vector key size:[%zu] and value size:[%zu] is not equal",
             key.size(), value.size());
         return -1;
     }
@@ -1123,10 +1129,7 @@ int32_t ReportPredefinedErrMsg(const char *error_code, const std::vector<const c
     return ErrorManager::GetInstance().ReportErrMessage(error_code, args_map);
 }
 
-int32_t ReportPredefinedErrMsg(const char *error_code)
-{
-    return ReportPredefinedErrMsg(error_code, {}, {});
-}
+int32_t ReportPredefinedErrMsg(const char* error_code) { return ReportPredefinedErrMsg(error_code, {}, {}); }
 
 int32_t ErrMgrInit(ErrorMessageMode error_mode)
 {
@@ -1162,14 +1165,14 @@ std::vector<ErrMsgRawItem> GetErrMgrRawErrorMessages()
 {
     std::vector<ErrMsgRawItem> raw_items;
     auto error_items = ErrorManager::GetInstance().GetRawErrorMessages();
-    for (const auto &item : error_items) {
+    for (const auto& item : error_items) {
         ErrMsgRawItem raw_item;
         raw_item.error_id = CreateUniquePtrFromString(item.error_id);
         raw_item.error_title = CreateUniquePtrFromString(item.error_title);
         raw_item.error_message = CreateUniquePtrFromString(item.error_message);
         raw_item.possible_cause = CreateUniquePtrFromString(item.possible_cause);
         raw_item.solution = CreateUniquePtrFromString(item.solution);
-        for (const auto &arg : item.args_map) {
+        for (const auto& arg : item.args_map) {
             raw_item.args_key.emplace_back(CreateUniquePtrFromString(arg.first));
             raw_item.args_value.emplace_back(CreateUniquePtrFromString(arg.second));
         }
@@ -1178,10 +1181,10 @@ std::vector<ErrMsgRawItem> GetErrMgrRawErrorMessages()
     }
     return raw_items;
 }
-}  // namespace error_message
+} // namespace error_message
 
 extern "C" {
-int32_t RegisterFormatErrorMessageForC(const char *error_msg, unsigned long error_msg_len)
+int32_t RegisterFormatErrorMessageForC(const char* error_msg, unsigned long error_msg_len)
 {
     if (error_msg == nullptr) {
         GELOGE("[Check][Param] error_msg is null");
@@ -1189,7 +1192,7 @@ int32_t RegisterFormatErrorMessageForC(const char *error_msg, unsigned long erro
     }
     try {
         return error_message::RegisterFormatErrorMessage(error_msg, error_msg_len);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         GELOGE("[Check][Exception] RegisterFormatErrorMessageForC caught exception: %s", e.what());
         return -1;
     } catch (...) {
@@ -1198,7 +1201,7 @@ int32_t RegisterFormatErrorMessageForC(const char *error_msg, unsigned long erro
     }
 }
 
-int32_t ReportPredefinedErrMsgForC(const char *error_code, const char **key, const char **value, unsigned long arg_num)
+int32_t ReportPredefinedErrMsgForC(const char* error_code, const char** key, const char** value, unsigned long arg_num)
 {
     if (error_code == nullptr) {
         GELOGE("[Check][Param] error_code is null");
@@ -1217,8 +1220,8 @@ int32_t ReportPredefinedErrMsgForC(const char *error_code, const char **key, con
     }
 
     try {
-        std::vector<const char *> key_vec;
-        std::vector<const char *> value_vec;
+        std::vector<const char*> key_vec;
+        std::vector<const char*> value_vec;
         key_vec.reserve(arg_num);
         value_vec.reserve(arg_num);
         for (size_t i = 0U; i < arg_num; ++i) {
@@ -1226,7 +1229,7 @@ int32_t ReportPredefinedErrMsgForC(const char *error_code, const char **key, con
             value_vec.push_back(value[i]);
         }
         return error_message::ReportPredefinedErrMsg(error_code, key_vec, value_vec);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         GELOGE("[Check][Exception] ReportPredefinedErrMsgForC caught exception: %s", e.what());
         return -1;
     } catch (...) {
@@ -1235,8 +1238,8 @@ int32_t ReportPredefinedErrMsgForC(const char *error_code, const char **key, con
     }
 }
 
-int32_t ReportInnerErrMsgForC(const char *file_name, const char *func, uint32_t line, const char *error_code,
-                              const char *format, ...)
+int32_t ReportInnerErrMsgForC(
+    const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format, ...)
 {
     if ((file_name == nullptr) || (func == nullptr) || (error_code == nullptr) || (format == nullptr)) {
         GELOGE("[Check][Param] file_name or func or error_code or format is null");
@@ -1248,7 +1251,7 @@ int32_t ReportInnerErrMsgForC(const char *file_name, const char *func, uint32_t 
     int32_t ret = -1;
     try {
         ret = ReportInnerErrorMessage(file_name, func, line, error_code, format, arg_list);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         GELOGE("[Check][Exception] ReportInnerErrMsgForC caught exception: %s", e.what());
     } catch (...) {
         GELOGE("[Check][Exception] ReportInnerErrMsgForC caught unknown exception");
@@ -1256,4 +1259,4 @@ int32_t ReportInnerErrMsgForC(const char *file_name, const char *func, uint32_t 
     va_end(arg_list);
     return ret;
 }
-}  // extern "C"
+} // extern "C"

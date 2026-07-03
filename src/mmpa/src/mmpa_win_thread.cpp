@@ -18,23 +18,21 @@ extern "C" {
 const INT32 MMPA_MAX_WAIT_TIME = 100;
 const INT32 MMPA_MIN_WAIT_TIME = 0;
 
-#define MMPA_FREE(var) \
-    do { \
+#define MMPA_FREE(var)        \
+    do {                      \
         if (var != nullptr) { \
-            free(var); \
-            var = nullptr; \
-        } \
-    } \
-    while (0)
+            free(var);        \
+            var = nullptr;    \
+        }                     \
+    } while (0)
 
 #define MMPA_CLOSE_FILE_HANDLE(var) \
-    do { \
-        if (var != nullptr) { \
+    do {                            \
+        if (var != nullptr) {       \
             (void)CloseHandle(var); \
-            var = nullptr; \
-        } \
-    } \
-    while (0)
+            var = nullptr;          \
+        }                           \
+    } while (0)
 
 /*
  * 描述:内部使用
@@ -54,7 +52,7 @@ static INT32 CheckSizetAddOverflow(size_t a, size_t b)
  */
 static DWORD WINAPI LocalThreadProc(LPVOID pstArg)
 {
-    mmUserBlock_t *pstTemp = reinterpret_cast<mmUserBlock_t *>(pstArg);
+    mmUserBlock_t* pstTemp = reinterpret_cast<mmUserBlock_t*>(pstArg);
     pstTemp->procFunc(pstTemp->pulArg);
     return EN_OK;
 }
@@ -65,9 +63,9 @@ static DWORD WINAPI LocalThreadProc(LPVOID pstArg)
  *       funcBlock --包含函数名和参数的结构体指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateTask(mmThread *threadHandle, mmUserBlock_t *funcBlock)
+INT32 mmCreateTask(mmThread* threadHandle, mmUserBlock_t* funcBlock)
 {
-    if ((threadHandle == nullptr) || (funcBlock  == nullptr) || (funcBlock->procFunc  == nullptr)) {
+    if ((threadHandle == nullptr) || (funcBlock == nullptr) || (funcBlock->procFunc == nullptr)) {
         return EN_INVALID_PARAM;
     }
 
@@ -76,7 +74,8 @@ INT32 mmCreateTask(mmThread *threadHandle, mmUserBlock_t *funcBlock)
     if (*threadHandle == nullptr) {
         return EN_ERROR;
     }
-    (void)WaitForSingleObject(*threadHandle, MMPA_MAX_WAIT_TIME); // 等待时间为100ms，确保funcBlock->procFunc线程体被执行
+    (void)WaitForSingleObject(
+        *threadHandle, MMPA_MAX_WAIT_TIME); // 等待时间为100ms，确保funcBlock->procFunc线程体被执行
     return EN_OK;
 }
 
@@ -87,7 +86,7 @@ INT32 mmCreateTask(mmThread *threadHandle, mmUserBlock_t *funcBlock)
  * 参数:threadHandle-- pthread_t类型的实例
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmJoinTask(mmThread *threadHandle)
+INT32 mmJoinTask(mmThread* threadHandle)
 {
     if (threadHandle == nullptr) {
         return EN_INVALID_PARAM;
@@ -110,7 +109,7 @@ INT32 mmJoinTask(mmThread *threadHandle)
  * 参数:mutex --指向mmMutex_t 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMutexInit(mmMutex_t *mutex)
+INT32 mmMutexInit(mmMutex_t* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -131,7 +130,7 @@ INT32 mmMutexInit(mmMutex_t *mutex)
  * 参数:mutex --指向mmMutex_t 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMutexLock(mmMutex_t *mutex)
+INT32 mmMutexLock(mmMutex_t* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -151,7 +150,7 @@ INT32 mmMutexLock(mmMutex_t *mutex)
  * 参数: mutex --指向mmMutex_t 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMutexTryLock(mmMutex_t *mutex)
+INT32 mmMutexTryLock(mmMutex_t* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -169,7 +168,7 @@ INT32 mmMutexTryLock(mmMutex_t *mutex)
  * 参数:mutex--指向mmMutex_t 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMutexUnLock(mmMutex_t *mutex)
+INT32 mmMutexUnLock(mmMutex_t* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -188,7 +187,7 @@ INT32 mmMutexUnLock(mmMutex_t *mutex)
  * 参数:mutex--指向mmMutex_t 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMutexDestroy(mmMutex_t *mutex)
+INT32 mmMutexDestroy(mmMutex_t* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -207,7 +206,7 @@ INT32 mmMutexDestroy(mmMutex_t *mutex)
  * 输入 :cond -- 指向mmCond的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondInit(mmCond *cond)
+INT32 mmCondInit(mmCond* cond)
 {
     if (cond == nullptr) {
         return EN_INVALID_PARAM;
@@ -222,7 +221,7 @@ INT32 mmCondInit(mmCond *cond)
  * 参数:cond -- 指向mmMutexFC指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondLockInit(mmMutexFC *mutex)
+INT32 mmCondLockInit(mmMutexFC* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -237,7 +236,7 @@ INT32 mmCondLockInit(mmMutexFC *mutex)
  * 参数:cond--指向mmMutexFC 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondLock(mmMutexFC *mutex)
+INT32 mmCondLock(mmMutexFC* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -252,7 +251,7 @@ INT32 mmCondLock(mmMutexFC *mutex)
  * 参数:cond --指向mmMutexFC 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondUnLock(mmMutexFC *mutex)
+INT32 mmCondUnLock(mmMutexFC* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -267,7 +266,7 @@ INT32 mmCondUnLock(mmMutexFC *mutex)
  * 参数:cond--指向mmMutexFC 指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondLockDestroy(mmMutexFC *mutex)
+INT32 mmCondLockDestroy(mmMutexFC* mutex)
 {
     if (mutex == nullptr) {
         return EN_INVALID_PARAM;
@@ -282,7 +281,7 @@ INT32 mmCondLockDestroy(mmMutexFC *mutex)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockInit(mmRWLock_t *rwLock)
+INT32 mmRWLockInit(mmRWLock_t* rwLock)
 {
     if (rwLock == nullptr) {
         return EN_INVALID_PARAM;
@@ -297,7 +296,7 @@ INT32 mmRWLockInit(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockRDLock(mmRWLock_t *rwLock)
+INT32 mmRWLockRDLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -312,7 +311,7 @@ INT32 mmRWLockRDLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockTryRDLock(mmRWLock_t *rwLock)
+INT32 mmRWLockTryRDLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -331,7 +330,7 @@ INT32 mmRWLockTryRDLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockWRLock(mmRWLock_t *rwLock)
+INT32 mmRWLockWRLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -346,7 +345,7 @@ INT32 mmRWLockWRLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockTryWRLock(mmRWLock_t *rwLock)
+INT32 mmRWLockTryWRLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -365,7 +364,7 @@ INT32 mmRWLockTryWRLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARA
  */
-INT32 mmRDLockUnLock(mmRWLock_t *rwLock)
+INT32 mmRDLockUnLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -380,7 +379,7 @@ INT32 mmRDLockUnLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARA
  */
-INT32 mmWRLockUnLock(mmRWLock_t *rwLock)
+INT32 mmWRLockUnLock(mmRWLock_t* rwLock)
 {
     if (rwLock == NULL) {
         return EN_INVALID_PARAM;
@@ -395,10 +394,7 @@ INT32 mmWRLockUnLock(mmRWLock_t *rwLock)
  * 参数: rwLock --指向mmRWLock_t的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmRWLockDestroy(mmRWLock_t *rwLock)
-{
-    return EN_OK;
-}
+INT32 mmRWLockDestroy(mmRWLock_t* rwLock) { return EN_OK; }
 
 /*
  * 描述:用于阻塞当前线程
@@ -406,7 +402,7 @@ INT32 mmRWLockDestroy(mmRWLock_t *rwLock)
  *       mutex -- mmMutexFC指针, 条件变量
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondWait(mmCond *cond, mmMutexFC *mutex)
+INT32 mmCondWait(mmCond* cond, mmMutexFC* mutex)
 {
     if ((cond == nullptr) || (mutex == nullptr)) {
         return EN_INVALID_PARAM;
@@ -427,7 +423,7 @@ INT32 mmCondWait(mmCond *cond, mmMutexFC *mutex)
  *       mmMilliSeconds -- 阻塞时间
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR、超时返回EN_TIMEOUT, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondTimedWait(mmCond *cond, mmMutexFC *mutex, UINT32 milliSecond)
+INT32 mmCondTimedWait(mmCond* cond, mmMutexFC* mutex, UINT32 milliSecond)
 {
     if ((cond == nullptr) || (mutex == nullptr)) {
         return EN_INVALID_PARAM;
@@ -449,7 +445,7 @@ INT32 mmCondTimedWait(mmCond *cond, mmMutexFC *mutex, UINT32 milliSecond)
  * 参数:cond -- mmCond指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondNotify(mmCond *cond)
+INT32 mmCondNotify(mmCond* cond)
 {
     if (cond == nullptr) {
         return EN_INVALID_PARAM;
@@ -464,7 +460,7 @@ INT32 mmCondNotify(mmCond *cond)
  * 参数:cond -- mmCond指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCondNotifyAll(mmCond *cond)
+INT32 mmCondNotifyAll(mmCond* cond)
 {
     if (cond == nullptr) {
         return EN_INVALID_PARAM;
@@ -479,7 +475,7 @@ INT32 mmCondNotifyAll(mmCond *cond)
  * 参数:cond -- mmCond指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32  mmCondDestroy(mmCond *cond)
+INT32 mmCondDestroy(mmCond* cond)
 {
     if (cond == nullptr) {
         return EN_INVALID_PARAM;
@@ -494,7 +490,7 @@ INT32  mmCondDestroy(mmCond *cond)
  *       funcBlock --包含函数名和参数的结构体指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateTaskWithAttr(mmThread *threadHandle, mmUserBlock_t *funcBlock)
+INT32 mmCreateTaskWithAttr(mmThread* threadHandle, mmUserBlock_t* funcBlock)
 {
     return mmCreateTask(threadHandle, funcBlock);
 }
@@ -507,7 +503,7 @@ INT32 mmCreateTaskWithAttr(mmThread *threadHandle, mmUserBlock_t *funcBlock)
 INT32 mmGetProcessPrio(mmProcess pid)
 {
     if (pid == nullptr) {
-        return MMPA_PROCESS_ERROR ;
+        return MMPA_PROCESS_ERROR;
     }
 
     INT32 priority;
@@ -516,8 +512,8 @@ INT32 mmGetProcessPrio(mmProcess pid)
         return MMPA_PROCESS_ERROR;
     }
     switch (ret) {
-        case REALTIME_PRIORITY_CLASS:   // those three process priority in windows
-        case HIGH_PRIORITY_CLASS:       // compare to MMPA_MIN_NI in linux
+        case REALTIME_PRIORITY_CLASS: // those three process priority in windows
+        case HIGH_PRIORITY_CLASS:     // compare to MMPA_MIN_NI in linux
         case ABOVE_NORMAL_PRIORITY_CLASS:
             priority = MMPA_MIN_NI;
             break;
@@ -568,7 +564,7 @@ INT32 mmSetProcessPrio(mmProcess pid, INT32 processPrio)
  * 参数:threadHandle--线程ID
  * 返回值:执行成功返回获取到的优先级, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetThreadPrio(mmThread *threadHandle)
+INT32 mmGetThreadPrio(mmThread* threadHandle)
 {
     if (threadHandle == nullptr) {
         return EN_INVALID_PARAM;
@@ -605,7 +601,7 @@ INT32 mmGetThreadPrio(mmThread *threadHandle)
  *       threadPrio:设置的优先级id，参数范围取1 - 99, 1为最高优先级
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSetThreadPrio(mmThread *threadHandle, INT32 threadPrio)
+INT32 mmSetThreadPrio(mmThread* threadHandle, INT32 threadPrio)
 {
     if (threadHandle == nullptr) {
         return EN_INVALID_PARAM;
@@ -636,7 +632,7 @@ INT32 mmSetThreadPrio(mmThread *threadHandle, INT32 threadPrio)
  *       funcBlock --包含函数名和参数的结构体指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateTaskWithDetach(mmThread *threadHandle, mmUserBlock_t *funcBlock)
+INT32 mmCreateTaskWithDetach(mmThread* threadHandle, mmUserBlock_t* funcBlock)
 {
     INT32 ret = EN_OK;
     DWORD threadId;
@@ -659,7 +655,7 @@ INT32 mmCreateTaskWithDetach(mmThread *threadHandle, mmUserBlock_t *funcBlock)
  *      key-线程变量存储区索引
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmTlsCreate(mmThreadKey *key, void(*destructor)(void*))
+INT32 mmTlsCreate(mmThreadKey* key, void (*destructor)(void*))
 {
     if (key == nullptr) {
         return EN_INVALID_PARAM;
@@ -678,7 +674,7 @@ INT32 mmTlsCreate(mmThreadKey *key, void(*destructor)(void*))
         value--需要设置的局部变量的值
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmTlsSet(mmThreadKey key, const VOID *value)
+INT32 mmTlsSet(mmThreadKey key, const VOID* value)
 {
     if (value == nullptr) {
         return EN_INVALID_PARAM;
@@ -695,10 +691,7 @@ INT32 mmTlsSet(mmThreadKey key, const VOID *value)
  * 参数:key --线程变量存储区索引
  * 返回值:执行成功返回指向局部存储变量的指针, 执行错误返回nullptr
  */
-VOID *mmTlsGet(mmThreadKey key)
-{
-    return TlsGetValue(key);
-}
+VOID* mmTlsGet(mmThreadKey key) { return TlsGetValue(key); }
 
 /*
  * 描述:线程局部变量清除
@@ -720,12 +713,12 @@ INT32 mmTlsDelete(mmThreadKey key)
  *      name--线程名, name的实际长度必须<MMPA_THREADNAME_SIZE
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmSetThreadName(mmThread *threadHandle, const CHAR *name)
+INT32 mmSetThreadName(mmThread* threadHandle, const CHAR* name)
 {
     if ((threadHandle == NULL) || (name == NULL)) {
         return EN_INVALID_PARAM;
     }
-    PCWSTR threadName = reinterpret_cast<PCWSTR>(const_cast<CHAR *>(name));
+    PCWSTR threadName = reinterpret_cast<PCWSTR>(const_cast<CHAR*>(name));
     HRESULT ret = SetThreadDescription(*threadHandle, threadName);
     if (FAILED(ret)) {
         return EN_ERROR;
@@ -740,20 +733,14 @@ INT32 mmSetThreadName(mmThread *threadHandle, const CHAR *name)
  *      name--线程名由用户分配缓存, 缓存长度必须>=MMPA_THREADNAME_SIZE
  * 返回值:windows下默认返回EN_ERROR
  */
-INT32 mmGetThreadName(mmThread *threadHandle, CHAR *name, INT32 size)
-{
-    return EN_ERROR;
-}
+INT32 mmGetThreadName(mmThread* threadHandle, CHAR* name, INT32 size) { return EN_ERROR; }
 
 /*
  * 描述:设置当前执行的线程的线程名-线程体内调用, 仅在Linux下生效, Windows下不支持为空实现
  * 参数:name--需要设置的线程名
  * 返回值:windows下默认返回EN_ERROR
  */
-INT32 mmSetCurrentThreadName(const CHAR *name)
-{
-    return EN_ERROR;
-}
+INT32 mmSetCurrentThreadName(const CHAR* name) { return EN_ERROR; }
 
 /*
  * 描述:获取当前执行的线程的线程名-线程体内调用, 仅在Linux下生效, Windows下不支持为空实现
@@ -761,15 +748,12 @@ INT32 mmSetCurrentThreadName(const CHAR *name)
  *      size--缓存长度必须>=MMPA_THREADNAME_SIZE
  * 返回值:windows下默认返回EN_ERROR
  */
-INT32 mmGetCurrentThreadName(CHAR *name, INT32 size)
-{
-    return EN_ERROR;
-}
+INT32 mmGetCurrentThreadName(CHAR* name, INT32 size) { return EN_ERROR; }
 
 /*
  * 描述:内部使用
  */
-static INT32 LocalGetArgsAndEnvpLen(const mmArgvEnv *env, size_t *argvLen, size_t *envpLen)
+static INT32 LocalGetArgsAndEnvpLen(const mmArgvEnv* env, size_t* argvLen, size_t* envpLen)
 {
     if (env == nullptr) {
         return EN_OK;
@@ -807,11 +791,11 @@ static INT32 LocalGetArgsAndEnvpLen(const mmArgvEnv *env, size_t *argvLen, size_
  * 描述:内部使用，将传入的argvs和envps字符串数组组合成一个argv和envp
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_INVALID_PARAM
  */
-INT32 LocalGetArgsAndEnvp(CHAR *argv, INT32 argvLen, CHAR *envp, INT32 envpLen, const mmArgvEnv *env)
+INT32 LocalGetArgsAndEnvp(CHAR* argv, INT32 argvLen, CHAR* envp, INT32 envpLen, const mmArgvEnv* env)
 {
     INT32 i = 0;
     INT32 ret = 0;
-    CHAR *destEnvp = envp;
+    CHAR* destEnvp = envp;
     // 将argv和envp字符串数组列表拼接成一个字符串命令
     if (env == nullptr) {
         return EN_OK;
@@ -864,7 +848,7 @@ INT32 LocalGetArgsAndEnvp(CHAR *argv, INT32 argvLen, CHAR *envp, INT32 envpLen, 
  *      id--创建的子进程ID号
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *stdoutRedirectFile, mmProcess *id)
+INT32 mmCreateProcess(const CHAR* fileName, const mmArgvEnv* env, const CHAR* stdoutRedirectFile, mmProcess* id)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -874,9 +858,9 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
     HANDLE cmdOutput = nullptr;
     if (stdoutRedirectFile != nullptr) {
-        cmdOutput = CreateFile(stdoutRedirectFile,
-                               GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                               &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        cmdOutput = CreateFile(
+            stdoutRedirectFile, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, &sa, OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL, nullptr);
         if (cmdOutput == INVALID_HANDLE_VALUE) {
             return EN_ERROR;
         }
@@ -891,10 +875,10 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
         MMPA_CLOSE_FILE_HANDLE(cmdOutput);
         return EN_ERROR;
     }
-    CHAR *command = nullptr;
-    CHAR *environment = nullptr;
+    CHAR* command = nullptr;
+    CHAR* environment = nullptr;
     if (argvLen > 0) {
-        command = reinterpret_cast<CHAR *>(malloc(argvLen));
+        command = reinterpret_cast<CHAR*>(malloc(argvLen));
         if (command == nullptr) {
             MMPA_CLOSE_FILE_HANDLE(cmdOutput);
             return EN_ERROR;
@@ -903,7 +887,7 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
     }
 
     if (envpLen > 0) {
-        environment = reinterpret_cast<CHAR *>(malloc(envpLen));
+        environment = reinterpret_cast<CHAR*>(malloc(envpLen));
         if (environment == nullptr) {
             MMPA_CLOSE_FILE_HANDLE(cmdOutput);
             MMPA_FREE(command);
@@ -919,8 +903,8 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
         MMPA_FREE(environment);
         return ret;
     }
-    BOOL bRet = CreateProcess(fileName, (LPTSTR)command, nullptr, nullptr,
-    bInheritHandles, 0, (LPVOID)environment, nullptr, &si, &pi);
+    BOOL bRet = CreateProcess(
+        fileName, (LPTSTR)command, nullptr, nullptr, bInheritHandles, 0, (LPVOID)environment, nullptr, &si, &pi);
     MMPA_CLOSE_FILE_HANDLE(cmdOutput);
     MMPA_FREE(command);
     MMPA_FREE(environment);
@@ -939,24 +923,22 @@ INT32 mmCreateProcess(const CHAR *fileName, const mmArgvEnv *env, const CHAR *st
  *       threadAttr -- 包含需要设置的线程属性类别和值
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle,
-                                 const mmUserBlock_t *funcBlock,
-                                 const mmThreadAttr *threadAttr)
+INT32 mmCreateTaskWithThreadAttr(mmThread* threadHandle, const mmUserBlock_t* funcBlock, const mmThreadAttr* threadAttr)
 
 {
     INT32 ret = EN_OK;
     DWORD threadId;
 
-    if ((threadHandle == nullptr) || (funcBlock == nullptr) || (funcBlock->procFunc == nullptr)
-        || (threadAttr == nullptr)) {
+    if ((threadHandle == nullptr) || (funcBlock == nullptr) || (funcBlock->procFunc == nullptr) ||
+        (threadAttr == nullptr)) {
         return EN_INVALID_PARAM;
     }
     if (threadAttr->stackFlag) {
         if (threadAttr->stackSize < MMPA_THREAD_MIN_STACK_SIZE) {
             return EN_INVALID_PARAM;
         }
-        *threadHandle = CreateThread(nullptr, threadAttr->stackSize,
-                                     LocalThreadProc, (LPVOID)funcBlock, MMPA_ZERO, &threadId);
+        *threadHandle =
+            CreateThread(nullptr, threadAttr->stackSize, LocalThreadProc, (LPVOID)funcBlock, MMPA_ZERO, &threadId);
     } else {
         *threadHandle = CreateThread(nullptr, MMPA_ZERO, LocalThreadProc, (LPVOID)funcBlock, MMPA_ZERO, &threadId);
     }
@@ -976,4 +958,3 @@ INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle,
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

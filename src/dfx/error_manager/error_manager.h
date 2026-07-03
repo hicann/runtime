@@ -25,19 +25,21 @@
 
 namespace error_message {
 using char_t = char;
-std::string TrimPath(const std::string &str);
+std::string TrimPath(const std::string& str);
 #ifdef __GNUC__
-int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max,
-                           const char_t *format, ...)__attribute__((format(printf, 3, 4)));
+int32_t FormatErrorMessage(char_t* str_dst, size_t dst_max, const char_t* format, ...)
+    __attribute__((format(printf, 3, 4)));
 
-void ReportInnerError(const char_t *file_name, const char_t *func, uint32_t line, const std::string error_code,
-                      const char_t *format, ...) __attribute__((format(printf, 5, 6)));
+void ReportInnerError(
+    const char_t* file_name, const char_t* func, uint32_t line, const std::string error_code, const char_t* format, ...)
+    __attribute__((format(printf, 5, 6)));
 #else
-int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...);
-void ReportInnerError(const char_t *file_name, const char_t *func, uint32_t line, const std::string error_code,
-                      const char_t *format, ...);
+int32_t FormatErrorMessage(char_t* str_dst, size_t dst_max, const char_t* format, ...);
+void ReportInnerError(
+    const char_t* file_name, const char_t* func, uint32_t line, const std::string error_code, const char_t* format,
+    ...);
 #endif
-}
+} // namespace error_message
 
 constexpr size_t const LIMIT_PER_MESSAGE = 1024U;
 
@@ -46,7 +48,7 @@ constexpr size_t const LIMIT_PER_MESSAGE = 1024U;
 /// @param [in] key: vector parameter key
 /// @param [in] value: vector parameter value
 ///
-#define REPORT_INPUT_ERROR(error_code, key, value)                                          \
+#define REPORT_INPUT_ERROR(error_code, key, value) \
     ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
 ///
@@ -54,8 +56,7 @@ constexpr size_t const LIMIT_PER_MESSAGE = 1024U;
 /// @param [in] key: vector parameter key
 /// @param [in] value: vector parameter value
 ///
-#define REPORT_ENV_ERROR(error_code, key, value)                                            \
-    ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
+#define REPORT_ENV_ERROR(error_code, key, value) ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
 #define REPORT_INNER_ERROR(error_code, fmt, ...) \
     error_message::ReportInnerError(__FILE__, &__FUNCTION__[0], __LINE__, (error_code), (fmt), ##__VA_ARGS__)
@@ -114,20 +115,20 @@ struct ErrorItem {
     std::map<std::string, std::string> args_map;
     std::string report_time;
 
-    friend bool operator==(const ErrorItem &lhs, const ErrorItem &rhs) noexcept
+    friend bool operator==(const ErrorItem& lhs, const ErrorItem& rhs) noexcept
     {
         return (lhs.error_id == rhs.error_id) && (lhs.error_message == rhs.error_message) &&
-            (lhs.possible_cause == rhs.possible_cause) && (lhs.solution == rhs.solution);
+               (lhs.possible_cause == rhs.possible_cause) && (lhs.solution == rhs.solution);
     }
 };
-}  // namespace error_message
+} // namespace error_message
 
 class ErrorManager {
 public:
     using ErrorItem = error_message::ErrorItem;
     /// @brief Obtain  ErrorManager instance
     /// @return ErrorManager instance
-    static ErrorManager &GetInstance();
+    static ErrorManager& GetInstance();
 
     /// @brief init
     /// @return int 0(success) -1(fail)
@@ -140,19 +141,19 @@ public:
     /// @return int 0(success) -1(fail)
     int32_t Init(const std::string path);
 
-    int32_t ReportInterErrMessage(const std::string error_code, const std::string &error_msg);
+    int32_t ReportInterErrMessage(const std::string error_code, const std::string& error_msg);
 
     /// @brief Report error message
     /// @param [in] error_code: error code
     /// @param [in] args_map: parameter map
     /// @return int 0(success) -1(fail)
-    int32_t ReportErrMessage(const std::string error_code, const std::map<std::string, std::string> &args_map);
+    int32_t ReportErrMessage(const std::string error_code, const std::map<std::string, std::string>& args_map);
 
     /// @brief Report user defined error message
     /// @param [in] error_code: user defined error code
     /// @param [in] errmsg: error message
     /// @return int 0(success) -1(fail)
-    int32_t ReportErrMsgWithoutTpl(const std::string &error_code, const std::string &errmsg);
+    int32_t ReportErrMsgWithoutTpl(const std::string& error_code, const std::string& errmsg);
 
     /// @brief output error message
     /// @param [in] handle: print handle
@@ -167,7 +168,7 @@ public:
     std::string GetErrorMessage();
 
     // 传递原始错误码信息
-    int32_t SetRawErrorMessages(const std::vector<ErrorItem> &items);
+    int32_t SetRawErrorMessages(const std::vector<ErrorItem>& items);
 
     // 获取当前线程下原始上报的内部，外部错误信息，顺序为上报的原始顺序
     // 便于调用方进行自定制的加工，调用成功后会进行已有的错误信息的清理
@@ -178,23 +179,23 @@ public:
     /// @brief Report error message
     /// @param [in] key: vector parameter key
     /// @param [in] value: vector parameter value
-    void ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key = {},
-                             const std::vector<std::string> &value = {});
+    void ATCReportErrMessage(
+        const std::string error_code, const std::vector<std::string>& key = {},
+        const std::vector<std::string>& value = {});
 
     /// @brief report graph compile failed message such as error code and op_name in mstune case
     /// @param [in] graph_name: root graph name
     /// @param [in] msg: failed message map, key is error code, value is op_name
     /// @return int 0(success) -1(fail)
-    int32_t ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
-                                         const std::map<std::string, std::string> &msg);
+    int32_t ReportMstuneCompileFailedMsg(
+        const std::string& root_graph_name, const std::map<std::string, std::string>& msg);
 
     /// @brief get graph compile failed message in mstune case
     /// @param [in] graph_name: graph name
     /// @param [out] msg_map: failed message map, key is error code, value is op_name list
     /// @return int 0(success) -1(fail)
-    int32_t GetMstuneCompileFailedMsg(const std::string &graph_name,
-                                      std::map<std::string,
-                                      std::vector<std::string>> &msg_map);
+    int32_t GetMstuneCompileFailedMsg(
+        const std::string& graph_name, std::map<std::string, std::vector<std::string>>& msg_map);
 
     // @brief generate work_stream_id by current pid and tid, clear error_message stored by same work_stream_id
     // used in external api entrance, all sync api can use
@@ -206,16 +207,16 @@ public:
 
     void GenWorkStreamIdWithSessionIdGraphId(const uint64_t session_id, const uint64_t graph_id);
 
-    const std::string &GetLogHeader();
+    const std::string& GetLogHeader();
 
-    error_message::Context &GetErrorManagerContext();
+    error_message::Context& GetErrorManagerContext();
 
     void SetErrorContext(error_message::Context error_context);
 
-    void SetStage(const std::string &first_stage, const std::string &second_stage);
+    void SetStage(const std::string& first_stage, const std::string& second_stage);
 
     // The default priority is 0 and a higher value indicates a higher priority
-    int32_t ParseJsonFormatString(const void *const handle, uint32_t priority = 0);
+    int32_t ParseJsonFormatString(const void* const handle, uint32_t priority = 0);
 
 private:
     struct ErrorInfoConfig {
@@ -230,39 +231,39 @@ private:
     ErrorManager() = default;
     ~ErrorManager() = default;
 
-    ErrorManager(const ErrorManager &) = delete;
-    ErrorManager(ErrorManager &&) = delete;
-    ErrorManager &operator=(const ErrorManager &)& = delete;
-    ErrorManager &operator=(ErrorManager &&)& = delete;
+    ErrorManager(const ErrorManager&) = delete;
+    ErrorManager(ErrorManager&&) = delete;
+    ErrorManager& operator=(const ErrorManager&) & = delete;
+    ErrorManager& operator=(ErrorManager&&) & = delete;
 
     int32_t ParseJsonFile(const std::string path);
 
-    static int32_t ReadJsonFile(const std::string &file_path, void *const handle);
+    static int32_t ReadJsonFile(const std::string& file_path, void* const handle);
 
-    void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
-                                  std::map<std::string,
-                                  std::vector<std::string>> &classified_msg);
+    void ClassifyCompileFailedMsg(
+        const std::map<std::string, std::string>& msg, std::map<std::string, std::vector<std::string>>& classified_msg);
 
-    bool IsInnerErrorCode(const std::string &error_code) const;
+    bool IsInnerErrorCode(const std::string& error_code) const;
 
-    bool IsUserDefinedErrorCode(const std::string &error_code);
+    bool IsUserDefinedErrorCode(const std::string& error_code);
 
-    bool IsParamCheckErrorId(const std::string &error_code) const;
+    bool IsParamCheckErrorId(const std::string& error_code) const;
 
-    inline bool IsValidErrorCode(const std::string &error_codes) const
+    inline bool IsValidErrorCode(const std::string& error_codes) const
     {
         constexpr uint32_t kErrorCodeValidLength = 6U;
         return error_codes.size() == kErrorCodeValidLength;
     }
 
-    std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
-    std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
+    std::vector<ErrorItem>& GetErrorMsgContainerByWorkId(uint64_t work_id);
+    std::vector<ErrorItem>& GetWarningMsgContainerByWorkId(uint64_t work_id);
 
-    std::vector<ErrorItem> &GetErrorMsgContainer(uint64_t work_stream_id);
-    std::vector<ErrorItem> &GetWarningMsgContainer(uint64_t work_stream_id);
+    std::vector<ErrorItem>& GetErrorMsgContainer(uint64_t work_stream_id);
+    std::vector<ErrorItem>& GetWarningMsgContainer(uint64_t work_stream_id);
 
-    void AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages, const std::string &first_code,
-                                   std::stringstream &err_stream) const;
+    void AssembleInnerErrorMessage(
+        const std::vector<ErrorItem>& error_messages, const std::string& first_code,
+        std::stringstream& err_stream) const;
 
     void ClearErrorMsgContainerByWorkId(const uint64_t work_stream_id);
     void ClearWarningMsgContainerByWorkId(const uint64_t work_stream_id);
@@ -281,7 +282,7 @@ private:
     thread_local static error_message::Context error_context_;
 
     error_message::ErrorMsgMode error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
-    std::vector<ErrorItem> error_message_process_; // 进程粒度，所有的errmsg存到同一个vector
+    std::vector<ErrorItem> error_message_process_;    // 进程粒度，所有的errmsg存到同一个vector
     std::vector<ErrorItem> warning_messages_process_; // 进程粒度，所有的warning msg存到同一个vector
 };
 
@@ -296,7 +297,7 @@ extern "C" {
 #else
 #define GE_FUNC_HOST_VISIBILITY
 #endif
-#endif  // GE_FUNC_HOST_VISIBILITY
+#endif // GE_FUNC_HOST_VISIBILITY
 
 #ifndef GE_FUNC_DEV_VISIBILITY
 #if defined(DEV_VISIBILITY)
@@ -304,7 +305,7 @@ extern "C" {
 #else
 #define GE_FUNC_DEV_VISIBILITY
 #endif
-#endif  // GE_FUNC_DEV_VISIBILITY
+#endif // GE_FUNC_DEV_VISIBILITY
 
 #ifndef FORMAT_PRINTF
 #define FORMAT_PRINTF(format_idx, first_arg) __attribute__((format(printf, (format_idx), (first_arg))))
@@ -324,25 +325,23 @@ extern "C" {
 #endif
 #endif
 
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY int32_t
+RegisterFormatErrorMessageForC(const char* error_msg, unsigned long error_msg_len);
 
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-int32_t RegisterFormatErrorMessageForC(const char *error_msg, unsigned long error_msg_len);
-
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-int32_t ReportPredefinedErrMsgForC(const char *error_code, const char **key, const char **value, unsigned long arg_num);
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY int32_t
+ReportPredefinedErrMsgForC(const char* error_code, const char** key, const char** value, unsigned long arg_num);
 
 #ifdef __GNUC__
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-int32_t ReportInnerErrMsgForC(const char *file_name, const char *func, uint32_t line,
-                              const char *error_code, const char *format, ...) FORMAT_PRINTF(5, 6);
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY int32_t ReportInnerErrMsgForC(
+    const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format, ...)
+    FORMAT_PRINTF(5, 6);
 #else
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-int32_t ReportInnerErrMsgForC(const char *file_name, const char *func, uint32_t line,
-                              const char *error_code, const char *format, ...);
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY int32_t ReportInnerErrMsgForC(
+    const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format, ...);
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // ERROR_MANAGER_H_
+#endif // ERROR_MANAGER_H_

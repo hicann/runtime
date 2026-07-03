@@ -21,24 +21,24 @@
 #include "base/err_mgr.h"
 #include "error_manager.h"
 
-template<typename TI, typename TO>
-inline TO *PtrToPtr(TI *const ptr)
+template <typename TI, typename TO>
+inline TO* PtrToPtr(TI* const ptr)
 {
-    return reinterpret_cast<TO *>(ptr);
+    return reinterpret_cast<TO*>(ptr);
 }
 
-template<typename TI, typename TO>
-inline const TO *PtrToPtr(const TI *const ptr)
+template <typename TI, typename TO>
+inline const TO* PtrToPtr(const TI* const ptr)
 {
-    return reinterpret_cast<const TO *>(ptr);
+    return reinterpret_cast<const TO*>(ptr);
 }
 
 namespace error_message {
 namespace {
-    int32_t system_time_ret = 0;
-    int32_t time_of_day_ret = 0;
+int32_t system_time_ret = 0;
+int32_t time_of_day_ret = 0;
 
-    std::string g_msg1 = R"(
+std::string g_msg1 = R"(
 {
   "error_info_list": [
     {
@@ -66,7 +66,7 @@ namespace {
   ]
 }
 )";
-    std::string g_msg2 = R"(
+std::string g_msg2 = R"(
 {
   "error_info_list": [
     {
@@ -94,7 +94,7 @@ namespace {
   ]
 }
 )";
-    std::string g_msg3 = R"(
+std::string g_msg3 = R"(
 {
   "error_info_list": [
     {
@@ -130,20 +130,20 @@ const char kStringArgFormat[] = "%s";
 const char kErrMsgFormat[] = "errmsg:%s";
 
 template <typename FuncPtr>
-void ExpectCInterfaceSymbolName(FuncPtr func_ptr, const char *expected_symbol_name)
+void ExpectCInterfaceSymbolName(FuncPtr func_ptr, const char* expected_symbol_name)
 {
-    Dl_info info {};
-    ASSERT_NE(dladdr(reinterpret_cast<const void *>(func_ptr), &info), 0);
+    Dl_info info{};
+    ASSERT_NE(dladdr(reinterpret_cast<const void*>(func_ptr), &info), 0);
     ASSERT_NE(info.dli_sname, nullptr);
     EXPECT_STREQ(info.dli_sname, expected_symbol_name);
 }
-}
+} // namespace
 
 class UtestErrorManager : public testing::Test {
 protected:
     void SetUp()
     {
-        auto &instance = ErrorManager::GetInstance();
+        auto& instance = ErrorManager::GetInstance();
         EXPECT_FALSE(instance.is_init_);
         std::string error_code_json_path = BASE_DIR + std::string("/src/dfx/error_manager/error_code.json");
         nlohmann::json json_file;
@@ -163,7 +163,7 @@ protected:
 
 TEST_F(UtestErrorManager, Init_faild)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.Init(""), -1);
     instance.is_init_ = true;
     EXPECT_EQ(instance.Init(""), -1);
@@ -183,14 +183,11 @@ TEST_F(UtestErrorManager, TrimPath)
     EXPECT_EQ(error_message::TrimPath(file), file);
 }
 
-TEST_F(UtestErrorManager, GetInstance)
-{
-    EXPECT_NO_THROW(ErrorManager::GetInstance());
-}
+TEST_F(UtestErrorManager, GetInstance) { EXPECT_NO_THROW(ErrorManager::GetInstance()); }
 
 TEST_F(UtestErrorManager, ReportInterErrMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_context_.work_stream_id = 0;
     EXPECT_EQ(instance.ReportInterErrMessage("errcode", "errmsg"), -1);
     instance.is_init_ = true;
@@ -199,7 +196,7 @@ TEST_F(UtestErrorManager, ReportInterErrMessage)
 
 TEST_F(UtestErrorManager, ReportInterErrMessage_WorkStreamId)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.is_init_ = true;
     auto id = instance.error_context_.work_stream_id;
     instance.error_context_.work_stream_id = 0;
@@ -219,7 +216,7 @@ TEST_F(UtestErrorManager, ReportInterErrMessage_WorkStreamId)
 
 TEST_F(UtestErrorManager, ReportErrMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::string error_code = "error";
     std::map<std::string, std::string> args_map;
     system_time_ret = -1;
@@ -233,7 +230,7 @@ TEST_F(UtestErrorManager, ReportErrMessage)
 
 TEST_F(UtestErrorManager, ReportErrMessage_Normal)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.is_init_ = true;
     std::string error_code = "error";
     std::map<std::string, std::string> args_map;
@@ -250,7 +247,7 @@ TEST_F(UtestErrorManager, ReportErrMessage_Normal)
 
 TEST_F(UtestErrorManager, SetRawErrorMessages)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::vector<ErrorManager::ErrorItem> vec;
     vec.push_back(ErrorManager::ErrorItem());
     instance.error_context_.work_stream_id = 0;
@@ -260,7 +257,7 @@ TEST_F(UtestErrorManager, SetRawErrorMessages)
 
 TEST_F(UtestErrorManager, GetErrorMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.GetErrorMessage(), "");
     std::vector<ErrorManager::ErrorItem> vec;
     vec.push_back(ErrorManager::ErrorItem());
@@ -275,7 +272,7 @@ TEST_F(UtestErrorManager, GetErrorMessage)
 
 TEST_F(UtestErrorManager, GetErrorMessageOk)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.GetErrorMessage(), "");
     std::vector<ErrorManager::ErrorItem> vec;
     vec.push_back(ErrorManager::ErrorItem());
@@ -291,7 +288,7 @@ TEST_F(UtestErrorManager, GetErrorMessageOk)
 
 TEST_F(UtestErrorManager, GetErrorOtherMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::vector<ErrorManager::ErrorItem> vec;
     ErrorManager::ErrorItem item;
     item.error_id = "E18888";
@@ -308,7 +305,7 @@ TEST_F(UtestErrorManager, GetErrorOtherMessage)
 
 TEST_F(UtestErrorManager, GetWarningMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.GetWarningMessage(), "");
     auto warn_msg = error_message::GetErrMgrWarningMessage();
     EXPECT_NE(warn_msg, nullptr);
@@ -317,20 +314,20 @@ TEST_F(UtestErrorManager, GetWarningMessage)
 
 TEST_F(UtestErrorManager, OutputErrMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.OutputErrMessage(1), 0);
     EXPECT_EQ(instance.OutputErrMessage(10000), -1);
 }
 
 TEST_F(UtestErrorManager, OutputMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.OutputMessage(1), 0);
 }
 
 TEST_F(UtestErrorManager, ATCReportErrMessage)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::vector<std::string> key;
     std::vector<std::string> value;
     EXPECT_NO_THROW(instance.ATCReportErrMessage("error", key, value));
@@ -344,7 +341,7 @@ TEST_F(UtestErrorManager, ATCReportErrMessage)
 
 TEST_F(UtestErrorManager, ClassifyCompileFailedMsg)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> msg;
     std::map<std::string, std::vector<std::string>> classified_msg;
     msg["code"] = "error";
@@ -355,7 +352,7 @@ TEST_F(UtestErrorManager, ClassifyCompileFailedMsg)
 
 TEST_F(UtestErrorManager, Context)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_context_.work_stream_id = 0;
     auto context = instance.GetErrorManagerContext();
     EXPECT_NE(instance.error_context_.work_stream_id, 0);
@@ -364,19 +361,19 @@ TEST_F(UtestErrorManager, Context)
 
 TEST_F(UtestErrorManager, GenWorkStreamIdBySessionGraph)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_NO_THROW(instance.GenWorkStreamIdBySessionGraph(1, 2));
 }
 
 TEST_F(UtestErrorManager, GenWorkStreamIdWithSessionIdGraphId)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_NO_THROW(instance.GenWorkStreamIdWithSessionIdGraphId(1, 2));
 }
 
 TEST_F(UtestErrorManager, GetMstuneCompileFailedMsg)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::string graph_name = "graph";
     std::map<std::string, std::vector<std::string>> msg_map;
     EXPECT_EQ(instance.GetMstuneCompileFailedMsg(graph_name, msg_map), -1);
@@ -391,7 +388,7 @@ TEST_F(UtestErrorManager, GetMstuneCompileFailedMsg)
 
 TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::string root_graph_name = "root_graph";
     std::map<std::string, std::string> msg;
     EXPECT_EQ(instance.ReportMstuneCompileFailedMsg(root_graph_name, msg), -1);
@@ -401,7 +398,7 @@ TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg)
 
 TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg_Success)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.is_init_ = true;
     std::string root_graph_name = "root_graph_name";
     std::map<std::string, std::string> msg;
@@ -413,7 +410,7 @@ TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg_Success)
 
 TEST_F(UtestErrorManager, ReadJsonFile)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.ReadJsonFile("", nullptr), -1);
     EXPECT_EQ(instance.ReadJsonFile("json", nullptr), -1);
     std::ofstream out("out.json");
@@ -427,7 +424,7 @@ TEST_F(UtestErrorManager, ReadJsonFile)
 
 TEST_F(UtestErrorManager, ParseJsonFile)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::ofstream out("out.json");
     if (out.is_open()) {
         out << "{\"name\":\"value\"}\n";
@@ -467,20 +464,20 @@ TEST_F(UtestErrorManager, ParseJsonFile)
 TEST_F(UtestErrorManager, ParseJsonFileSuccess)
 {
     std::string error_code_json_path = BASE_DIR + std::string("/src/dfx/error_manager/error_code.json");
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.ParseJsonFile(error_code_json_path), 0);
 }
 
 TEST_F(UtestErrorManager, ClearErrorMsgContainerByWorkId)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_message_per_work_id_[0] = std::vector<ErrorManager::ErrorItem>();
     EXPECT_NO_THROW(instance.ClearErrorMsgContainerByWorkId(0));
 }
 
 TEST_F(UtestErrorManager, GetErrorMsgContainerByWorkId)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::vector<ErrorManager::ErrorItem> vec;
     vec.push_back(ErrorManager::ErrorItem());
     instance.error_message_per_work_id_[0] = vec;
@@ -504,7 +501,7 @@ bool done = false;
 
 void thread1()
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread1";
     EXPECT_EQ(instance.ReportErrMessage("E13000", args_map), 0);
@@ -515,7 +512,7 @@ void thread1()
 
 void thread2()
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread2";
     EXPECT_EQ(instance.ReportErrMessage("E13000", args_map), 0);
@@ -527,7 +524,7 @@ void thread2()
 void thread3()
 {
     std::unique_lock<std::mutex> lck(mu);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread1";
     EXPECT_EQ(instance.ReportErrMessage("E13000", args_map), 0);
@@ -563,7 +560,7 @@ void thread3()
 void thread4()
 {
     std::lock_guard<std::mutex> lck(mu);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread2";
     EXPECT_EQ(instance.ReportErrMessage("E13000", args_map), 0);
@@ -577,7 +574,7 @@ void thread4()
 void thread5()
 {
     std::unique_lock<std::mutex> lck(mu);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread1";
     EXPECT_EQ(instance.ReportErrMessage("E13000", args_map), 0);
@@ -624,7 +621,7 @@ void thread5()
 void thread6()
 {
     std::lock_guard<std::mutex> lck(mu);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_context_.work_stream_id = 10000;
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread2";
@@ -639,7 +636,7 @@ void thread6()
 void thread7()
 {
     std::unique_lock<std::mutex> lck(mu);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_context_.work_stream_id = 10000;
     std::map<std::string, std::string> args_map;
     args_map["argv1"] = "thread1";
@@ -686,7 +683,7 @@ void thread7()
 
 TEST_F(UtestErrorManager, ProcessModeTest01)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_mode_ = error_message::ErrorMsgMode::PROCESS_MODE;
     EXPECT_NE(instance.Init(error_message::ErrorMsgMode::ERR_MSG_MODE_MAX), 0);
     instance.Init(error_message::ErrorMsgMode::PROCESS_MODE);
@@ -739,7 +736,7 @@ TEST_F(UtestErrorManager, ProcessModeTest01)
 
 TEST_F(UtestErrorManager, ProcessModeTest02)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_mode_ = error_message::ErrorMsgMode::PROCESS_MODE;
     auto conf = ErrorManager::ErrorInfoConfig();
     conf.error_id = "E13000";
@@ -775,7 +772,7 @@ TEST_F(UtestErrorManager, ProcessModeTest02)
 
 TEST_F(UtestErrorManager, ProcessModeTest03)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
     auto conf = ErrorManager::ErrorInfoConfig();
     conf.error_id = "E13000";
@@ -813,7 +810,7 @@ TEST_F(UtestErrorManager, ProcessModeTest03)
 
 TEST_F(UtestErrorManager, InternalModeTest04)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
     auto conf = ErrorManager::ErrorInfoConfig();
     conf.error_id = "E13000";
@@ -848,7 +845,7 @@ TEST_F(UtestErrorManager, InternalModeTest04)
 
 TEST_F(UtestErrorManager, InternalModeTest05)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     instance.error_mode_ = error_message::ErrorMsgMode::INTERNAL_MODE;
     auto conf = ErrorManager::ErrorInfoConfig();
     conf.error_id = "E13000";
@@ -883,7 +880,7 @@ TEST_F(UtestErrorManager, InternalModeTest05)
 
 TEST_F(UtestErrorManager, IsUserDefinedErrorCode_Failed_invalid_error_code)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_FALSE(instance.IsUserDefinedErrorCode("E10001"));
     EXPECT_FALSE(instance.IsUserDefinedErrorCode("E1000"));
     EXPECT_FALSE(instance.IsUserDefinedErrorCode("E18888"));
@@ -892,7 +889,7 @@ TEST_F(UtestErrorManager, IsUserDefinedErrorCode_Failed_invalid_error_code)
 
 TEST_F(UtestErrorManager, IsUserDefinedErrorCode_Success)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_TRUE(instance.IsUserDefinedErrorCode("EU0001"));
 }
 
@@ -1040,11 +1037,11 @@ TEST_F(UtestErrorManager, RegisterFormatErrorMessage_Success_WithPriority)
     std::string errmsg = "Report Inner Err msg!";
     EXPECT_EQ(error_message::ReportPredefinedErrMsg("E10025", {"realpath", "errmsg"}, {"11", "22"}), 0);
 
-    REPORT_PREDEFINED_ERR_MSG("E10025", std::vector<const char *>({"realpath", "errmsg"}),
-        std::vector<const char *>({"11", "22"}));
+    REPORT_PREDEFINED_ERR_MSG(
+        "E10025", std::vector<const char*>({"realpath", "errmsg"}), std::vector<const char*>({"11", "22"}));
     REPORT_PREDEFINED_ERR_MSG("E10025");
     auto err_msg = error_message::GetErrMgrErrorMessage();
-    EXPECT_TRUE(std::string(err_msg.get()).find("Test register priority")!= std::string::npos);
+    EXPECT_TRUE(std::string(err_msg.get()).find("Test register priority") != std::string::npos);
 }
 
 TEST_F(UtestErrorManager, RegisterFormatErrorMessage_Failed)
@@ -1137,8 +1134,8 @@ TEST_F(UtestErrorManager, CCallbackWrapperInterfaceNamesRemainStable)
 
 TEST_F(UtestErrorManager, ReportPredefinedErrMsgForC_Success)
 {
-    const char *keys[] = {"value", "parameter", "reason"};
-    const char *values[] = {"1", "2", "le 0"};
+    const char* keys[] = {"value", "parameter", "reason"};
+    const char* values[] = {"1", "2", "le 0"};
     EXPECT_EQ(ReportPredefinedErrMsgForC("E10001", keys, values, 3U), 0);
 
     auto err_msg = error_message::GetErrMgrErrorMessage();
@@ -1155,27 +1152,27 @@ TEST_F(UtestErrorManager, ReportPredefinedErrMsgForC_Failed_NullptrInput)
 
 TEST_F(UtestErrorManager, ReportPredefinedErrMsgForC_Failed_NullErrorCode)
 {
-    const char *keys[] = {"value", "parameter", "reason"};
-    const char *values[] = {"1", "2", "le 0"};
+    const char* keys[] = {"value", "parameter", "reason"};
+    const char* values[] = {"1", "2", "le 0"};
     EXPECT_EQ(ReportPredefinedErrMsgForC(nullptr, keys, values, 3U), -1);
 }
 
 TEST_F(UtestErrorManager, ReportPredefinedErrMsgForC_Failed_PartialNullArray)
 {
-    const char *keys[] = {"value"};
-    const char *values[] = {"1"};
+    const char* keys[] = {"value"};
+    const char* values[] = {"1"};
     EXPECT_EQ(ReportPredefinedErrMsgForC("E10001", nullptr, values, 1U), -1);
     EXPECT_EQ(ReportPredefinedErrMsgForC("E10001", keys, nullptr, 1U), -1);
 }
 
 TEST_F(UtestErrorManager, ReportPredefinedErrMsgForC_Failed_NullArrayElement)
 {
-    const char *keys[] = {"value", nullptr, "reason"};
-    const char *values[] = {"1", "2", "le 0"};
+    const char* keys[] = {"value", nullptr, "reason"};
+    const char* values[] = {"1", "2", "le 0"};
     EXPECT_EQ(ReportPredefinedErrMsgForC("E10001", keys, values, 3U), -1);
 
-    const char *valid_keys[] = {"value", "parameter", "reason"};
-    const char *invalid_values[] = {"1", nullptr, "le 0"};
+    const char* valid_keys[] = {"value", "parameter", "reason"};
+    const char* invalid_values[] = {"1", nullptr, "le 0"};
     EXPECT_EQ(ReportPredefinedErrMsgForC("E10001", valid_keys, invalid_values, 3U), -1);
 }
 
@@ -1198,9 +1195,10 @@ TEST_F(UtestErrorManager, ReportInnerErrMsgForC_Success)
 
 TEST_F(UtestErrorManager, ReportInnerErrMsgForC_Failed_MessageLengthExceedsLimits_1024)
 {
-    EXPECT_EQ(ReportInnerErrMsgForC(__FILE__, __FUNCTION__, __LINE__, "E18888", kErrMsgFormat,
-                                    std::string(1025U, 'a').c_str()),
-              -1);
+    EXPECT_EQ(
+        ReportInnerErrMsgForC(
+            __FILE__, __FUNCTION__, __LINE__, "E18888", kErrMsgFormat, std::string(1025U, 'a').c_str()),
+        -1);
     EXPECT_TRUE(std::string(error_message::GetErrMgrErrorMessage().get()).empty());
 }
 
@@ -1217,7 +1215,7 @@ TEST_F(UtestErrorManager, GetSetErrorManagerContext)
     auto ori_ctx = error_message::GetErrMgrContext();
     ori_ctx.work_stream_id = 11;
     error_message::SetErrMgrContext(ori_ctx);
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_EQ(instance.GetErrorManagerContext().work_stream_id, ori_ctx.work_stream_id);
     SetErrMgrContext(ori_ctx);
 }
@@ -1253,16 +1251,16 @@ protected:
 
 TEST_F(UtestErrorManagerUninitialized, IsUserDefinedErrorCode_Failed_uninitialized)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_FALSE(instance.is_init_);
     EXPECT_FALSE(instance.IsUserDefinedErrorCode("EU0001"));
 }
 
 TEST_F(UtestErrorManagerUninitialized, ReportUserDefinedErrMsg_Failed_uninitialized)
 {
-    auto &instance = ErrorManager::GetInstance();
+    auto& instance = ErrorManager::GetInstance();
     EXPECT_FALSE(instance.is_init_);
     auto ret = error_message::ReportUserDefinedErrMsg("EU0001", "Report user defined error code!");
     EXPECT_EQ(ret, -1);
 }
-}
+} // namespace error_message

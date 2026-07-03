@@ -46,44 +46,38 @@ struct ErrMsgRawItem {
  * @param [in] error_mode: error mode, see ErrorMessageMode definition
  * @return int32_t 0(success) -1(fail)
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-int32_t ErrMgrInit(ErrorMessageMode error_mode);
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY int32_t ErrMgrInit(ErrorMessageMode error_mode);
 
 /**
  * @brief Get Error manager context
  * @return An error manager context
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-ErrorManagerContext GetErrMgrContext();
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ErrorManagerContext GetErrMgrContext();
 
 /**
  * @brief Set Error manager context
  * @param [in] An error manager context
  * @return void
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-void SetErrMgrContext(ErrorManagerContext error_context);
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY void SetErrMgrContext(ErrorManagerContext error_context);
 
 /**
  * @brief Get error message from error manager
  * @return unique_const_char_array, error message
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-unique_const_char_array GetErrMgrErrorMessage();
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY unique_const_char_array GetErrMgrErrorMessage();
 
 /**
  * @brief Get warning message from error manager
  * @return unique_const_char_array, warning message
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-unique_const_char_array GetErrMgrWarningMessage();
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY unique_const_char_array GetErrMgrWarningMessage();
 
 /**
  * @brief Get raw error message from error manager
  * @return the complete info of the error message
  */
-GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY
-std::vector<ErrMsgRawItem> GetErrMgrRawErrorMessages();
-}  // namespace error_message
+GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY std::vector<ErrMsgRawItem> GetErrMgrRawErrorMessages();
+} // namespace error_message
 
-#endif  // PKG_INC_BASE_ERR_MGR_H_
+#endif // PKG_INC_BASE_ERR_MGR_H_

@@ -17,7 +17,7 @@
 #include "mmpa_api.h"
 
 #ifdef __cplusplus
-#if    __cplusplus
+#if __cplusplus
 extern "C" {
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
@@ -30,26 +30,20 @@ int pipeFlag = 0;
 int namedpipeFlag = 0;
 #define BUFFER 255
 #define PERM S_IREAD | S_IWRITE
-char g_tmpStr[BUFFER+1] = "hello msg queue!";
+char g_tmpStr[BUFFER + 1] = "hello msg queue!";
 mmKey_t g_key = 0x12121212;
 mmThreadKey g_thread_log_key;
 
 struct msgtype {
     long mtype;
-    char buffer[BUFFER+1];
+    char buffer[BUFFER + 1];
 };
 
-int utFilter(const struct dirent *entry)
-{
-    return entry->d_name[0] == 't';
-}
+int utFilter(const struct dirent* entry) { return entry->d_name[0] == 't'; }
 
-void signal_action(int arg)
-{
-    printf("Receive the shutdown singal\n");
-}
+void signal_action(int arg) { printf("Receive the shutdown singal\n"); }
 
-void *thread_action(void* arg)
+void* thread_action(void* arg)
 {
     printf("install the signal slot\n");
     signal(SIGINT, signal_action);
@@ -59,9 +53,9 @@ void *thread_action(void* arg)
     }
 }
 
-VOID *tlsTestThread1(VOID *p)
+VOID* tlsTestThread1(VOID* p)
 {
-    char *ptrResult = NULL;
+    char* ptrResult = NULL;
     mmThreadKey keyTmp = 121212;
     char thread_log_filename[20];
     sprintf_s(thread_log_filename, sizeof(thread_log_filename), "tlsTestThread%d.log", 1);
@@ -79,10 +73,10 @@ VOID *tlsTestThread1(VOID *p)
     return NULL;
 }
 
-VOID *tlsTestThread2(VOID *p)
+VOID* tlsTestThread2(VOID* p)
 {
     char thread_log_filename[20];
-    char *ptrResult = NULL;
+    char* ptrResult = NULL;
     sprintf_s(thread_log_filename, sizeof(thread_log_filename), "tlsTestThread%d.log", 2);
 
     mmTlsSet(g_thread_log_key, thread_log_filename);
@@ -100,7 +94,7 @@ VOID* msgqueue_server(VOID* p)
     struct msgtype msg;
     mmMsgid msgid;
 
-    if ((msgid = mmMsgCreate(g_key, PERM|M_MSG_CREAT)) == (mmMsgid)EN_ERROR) {
+    if ((msgid = mmMsgCreate(g_key, PERM | M_MSG_CREAT)) == (mmMsgid)EN_ERROR) {
         fprintf(stderr, "Creat Message Error??%s\a\n", strerror(errno));
         return NULL;
     }
@@ -119,7 +113,7 @@ VOID* msgqueue_client(VOID* p)
     struct msgtype msg;
     mmMsgid msgid;
 
-    if ((msgid = mmMsgOpen(g_key, PERM|M_MSG_CREAT)) == (mmMsgid)EN_ERROR) {
+    if ((msgid = mmMsgOpen(g_key, PERM | M_MSG_CREAT)) == (mmMsgid)EN_ERROR) {
         fprintf(stderr, "Creat Message Error??%s\a\n", strerror(errno));
         return NULL;
     }
@@ -181,7 +175,7 @@ VOID* UTtest_callback(VOID* pstArg)
 
 VOID* poll_server_pipe(VOID* p)
 {
-    char *fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/ut_readfifo", "../tests/ut/mmpa/ut_writefifo"};
+    char* fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/ut_readfifo", "../tests/ut/mmpa/ut_writefifo"};
 
     int res = 0;
     const int mode = 0;
@@ -226,7 +220,7 @@ VOID* poll_server_pipe(VOID* p)
 
 VOID* poll_client_pipe(VOID* p)
 {
-    char *fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/ut_readfifo", "../tests/ut/mmpa/ut_writefifo"};
+    char* fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/ut_readfifo", "../tests/ut/mmpa/ut_writefifo"};
 
     int res = 0;
     const int mode = 0;
@@ -270,7 +264,7 @@ VOID* poll_client_pipe(VOID* p)
 
 VOID* poll_server_namepipe(VOID* p)
 {
-    char *fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/readpipe", "../tests/ut/mmpa/writepipe"};
+    char* fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/readpipe", "../tests/ut/mmpa/writepipe"};
 
     int res = 0;
     const int mode = 0;
@@ -326,7 +320,7 @@ VOID* poll_server_namepipe(VOID* p)
 
 VOID* poll_client_namepipe(VOID* p)
 {
-    char *fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/readpipe", "../tests/ut/mmpa/writepipe"};
+    char* fifo_name[MMPA_PIPE_COUNT] = {"../tests/ut/mmpa/readpipe", "../tests/ut/mmpa/writepipe"};
     int count = 5;
     int res = 0;
     const int mode = 0;
@@ -385,7 +379,7 @@ VOID* poll_server_socket(VOID* p)
 
     serv_add.sin_family = AF_INET;
     serv_add.sin_addr.s_addr = 0;
-    serv_add.sin_port = htons(*(INT32 *)p);
+    serv_add.sin_port = htons(*(INT32*)p);
 
     mmBind(listenfd, (mmSockAddr*)&serv_add, stAddrLen);
     mmListen(listenfd, 5);
@@ -433,8 +427,8 @@ VOID* poll_client_socket(VOID* p)
 
     memset_s(&serv_add, sizeof(serv_add), '0', sizeof(serv_add));
     serv_add.sin_family = AF_INET;
-    inet_aton("127.0.0.1", (struct in_addr *)&serv_add.sin_addr);
-    serv_add.sin_port = htons(*(INT32 *)p);
+    inet_aton("127.0.0.1", (struct in_addr*)&serv_add.sin_addr);
+    serv_add.sin_port = htons(*(INT32*)p);
 
     sockfd = mmSocket(AF_INET, SOCK_STREAM, 0);
     while (true) {
@@ -465,7 +459,7 @@ VOID* server_socket(VOID* p)
 
     serv_add.sin_family = AF_INET;
     serv_add.sin_addr.s_addr = 0;
-    serv_add.sin_port = htons(*(INT32 *)p);
+    serv_add.sin_port = htons(*(INT32*)p);
 
     mmBind(listenfd, (mmSockAddr*)&serv_add, stAddrLen);
     mmListen(listenfd, 5);
@@ -495,8 +489,8 @@ VOID* client_socket(VOID* p)
     memset_s(&serv_add, sizeof(serv_add), '0', sizeof(serv_add));
     sockfd = mmSocket(AF_INET, SOCK_STREAM, 0);
     serv_add.sin_family = AF_INET;
-    inet_aton("127.0.0.1", (struct in_addr *)&serv_add.sin_addr);
-    serv_add.sin_port = htons(*(INT32 *)p);
+    inet_aton("127.0.0.1", (struct in_addr*)&serv_add.sin_addr);
+    serv_add.sin_port = htons(*(INT32*)p);
     while (true) {
         if (0 != socketFlag) {
             mmConnect(sockfd, (mmSockAddr*)&serv_add, sizeof(serv_add));
@@ -513,7 +507,7 @@ VOID* client_socket(VOID* p)
 }
 
 /* [thread_func] */
-static void cleanup_handler(void *arg)
+static void cleanup_handler(void* arg)
 {
     printf("Cleanup handler of second thread./n");
     free(arg);
@@ -521,9 +515,9 @@ static void cleanup_handler(void *arg)
     return;
 }
 
-VOID* thread_func(VOID *arg)
+VOID* thread_func(VOID* arg)
 {
-    struct node *p = NULL;
+    struct node* p = NULL;
     INT32 ret = EN_OK;
     pthread_cleanup_push(cleanup_handler, p);
 
@@ -534,14 +528,14 @@ VOID* thread_func(VOID *arg)
     return NULL;
 }
 
-VOID* thread_func_time(VOID *arg)
+VOID* thread_func_time(VOID* arg)
 {
-    struct node *p = NULL;
+    struct node* p = NULL;
     INT32 ret = EN_OK;
     pthread_cleanup_push(cleanup_handler, p);
     mmMutexLock(&mtxfc);
     time_t t;
-    struct tm *timeinfo;
+    struct tm* timeinfo;
     time(&t);
     timeinfo = localtime(&t);
     printf("before mmCondTimedWait 时间：%s\n", asctime(timeinfo));

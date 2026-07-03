@@ -29,12 +29,13 @@ mmMsgid mmMsgOpen(mmKey_t key, INT32 msgFlag)
         return (mmMsgid)EN_ERROR;
     }
     // 打开命名管道
-    mmMsgid namedPipeId = CreateFile((LPCSTR)pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    mmMsgid namedPipeId = CreateFile(
+        (LPCSTR)pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (namedPipeId == INVALID_HANDLE_VALUE) {
         if (GetLastError() == ERROR_FILE_NOT_FOUND) { // 打开失败，说明还没有创建命名管道
-            namedPipeId = CreateNamedPipe((LPCSTR)pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 0, 1,
-                MMPA_PIPE_BUF_SIZE, MMPA_PIPE_BUF_SIZE, 0, nullptr);
+            namedPipeId = CreateNamedPipe(
+                (LPCSTR)pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 0, 1, MMPA_PIPE_BUF_SIZE,
+                MMPA_PIPE_BUF_SIZE, 0, nullptr);
             if (namedPipeId == INVALID_HANDLE_VALUE) {
                 namedPipeId = nullptr;
                 return (mmMsgid)EN_ERROR;
@@ -61,12 +62,14 @@ mmMsgid mmMsgCreate(mmKey_t key, INT32 msgFlag)
         return (mmMsgid)EN_ERROR;
     }
     // 这里创建的是双向模式且使用重叠模式的命名管道
-    mmMsgid namedPipe = CreateNamedPipe((LPCSTR)pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 0, 1,
-                                        MMPA_PIPE_BUF_SIZE, MMPA_PIPE_BUF_SIZE, 0, nullptr);
+    mmMsgid namedPipe = CreateNamedPipe(
+        (LPCSTR)pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 0, 1, MMPA_PIPE_BUF_SIZE, MMPA_PIPE_BUF_SIZE, 0,
+        nullptr);
     if (namedPipe == INVALID_HANDLE_VALUE) {
         if (GetLastError() == ERROR_PIPE_BUSY) { // 说明管道已经创建，打开就可以
-            namedPipe = CreateFile((LPCSTR)pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            namedPipe = CreateFile(
+                (LPCSTR)pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                nullptr);
             if (namedPipe == INVALID_HANDLE_VALUE) {
                 namedPipe = nullptr;
                 return (mmMsgid)EN_ERROR;
@@ -87,7 +90,7 @@ mmMsgid mmMsgCreate(mmKey_t key, INT32 msgFlag)
  *      msgFlag--消息标志位
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMsgSnd(mmMsgid msqid, VOID *buf, INT32 bufLen, INT32 msgFlag)
+INT32 mmMsgSnd(mmMsgid msqid, VOID* buf, INT32 bufLen, INT32 msgFlag)
 {
     if (buf == nullptr || bufLen <= MMPA_ZERO || msqid == INVALID_HANDLE_VALUE) {
         return EN_INVALID_PARAM;
@@ -110,7 +113,7 @@ INT32 mmMsgSnd(mmMsgid msqid, VOID *buf, INT32 bufLen, INT32 msgFlag)
  *      buf--由用户分配内存
  * 返回值:执行成功返回接收的长度, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmMsgRcv(mmMsgid msqid, VOID *buf, INT32 bufLen, INT32 msgFlag)
+INT32 mmMsgRcv(mmMsgid msqid, VOID* buf, INT32 bufLen, INT32 msgFlag)
 {
     if (buf == nullptr || bufLen <= MMPA_ZERO || msqid == INVALID_HANDLE_VALUE) {
         return EN_INVALID_PARAM;
@@ -143,4 +146,3 @@ INT32 mmMsgClose(mmMsgid msqid)
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

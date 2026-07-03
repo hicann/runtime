@@ -14,7 +14,7 @@
 #define LINUX 0
 #define WIN 1
 
-#if(OS_TYPE == LINUX) //lint !e553
+#if (OS_TYPE == LINUX) //lint !e553
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -87,8 +87,7 @@
 
 #endif
 
-
-#if(OS_TYPE == WIN) //lint !e553
+#if (OS_TYPE == WIN) //lint !e553
 
 #ifdef FUNC_VISIBILITY
 #define MMPA_FUNC_VISIBILITY _declspec(dllexport)
@@ -138,4 +137,3 @@
 #endif
 
 #endif // MMPA_API_H_
-

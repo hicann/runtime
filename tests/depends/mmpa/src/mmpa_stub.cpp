@@ -12,31 +12,17 @@
 #include "acl_stub.h"
 #include <string.h>
 
-INT32 aclStub::mmAccess2(const CHAR *pathName, INT32 mode)
-{
-    return 0;
-}
+INT32 aclStub::mmAccess2(const CHAR* pathName, INT32 mode) { return 0; }
 
-void* aclStub::mmAlignMalloc(mmSize mallocSize, mmSize alignSize)
-{
-    return malloc(mallocSize);
-}
+void* aclStub::mmAlignMalloc(mmSize mallocSize, mmSize alignSize) { return malloc(mallocSize); }
 
-INT32 aclStub::mmDladdr(VOID *addr, mmDlInfo *info)
-{
-    return 0;
-}
+INT32 aclStub::mmDladdr(VOID* addr, mmDlInfo* info) { return 0; }
 
-INT32 mmScandir(const CHAR *path, mmDirent ***entryList, mmFilter filterFunc, mmSort sort)
-{
-    return 0;
-}
+INT32 mmScandir(const CHAR* path, mmDirent*** entryList, mmFilter filterFunc, mmSort sort) { return 0; }
 
-VOID mmScandirFree(mmDirent **entryList, INT32 count)
-{
-}
+VOID mmScandirFree(mmDirent** entryList, INT32 count) {}
 
-INT32 mmScandir2(const CHAR *path, mmDirent2 ***entryList, mmFilter2 filterFunc, mmSort2 sort)
+INT32 mmScandir2(const CHAR* path, mmDirent2*** entryList, mmFilter2 filterFunc, mmSort2 sort)
 {
     if ((path == NULL) || (entryList == NULL)) {
         return EN_INVALID_PARAM;
@@ -48,7 +34,7 @@ INT32 mmScandir2(const CHAR *path, mmDirent2 ***entryList, mmFilter2 filterFunc,
     return count;
 }
 
-VOID mmScandirFree2(mmDirent2 **entryList, INT32 count)
+VOID mmScandirFree2(mmDirent2** entryList, INT32 count)
 {
     if (entryList == NULL) {
         return;
@@ -62,25 +48,25 @@ VOID mmScandirFree2(mmDirent2 **entryList, INT32 count)
     free(entryList);
 }
 
-INT32 mmAccess2(const CHAR *pathName, INT32 mode)
+INT32 mmAccess2(const CHAR* pathName, INT32 mode)
 {
     return MockFunctionTest::aclStubInstance().mmAccess2(pathName, mode);
 }
 
-INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPath(const CHAR* path, CHAR* realPath, INT32 realPathLen)
 {
     INT32 ret = EN_OK;
     if (path == nullptr || realPath == nullptr || realPathLen < MMPA_MAX_PATH) {
         return EN_INVALID_PARAM;
     }
-    char *ptr = realpath(path, realPath);
+    char* ptr = realpath(path, realPath);
     if (ptr == nullptr) {
         ret = EN_ERROR;
     }
     return ret;
 }
 
-INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
+INT32 mmStatGet(const CHAR* path, mmStat_t* buffer)
 {
     if ((path == nullptr) || (buffer == nullptr)) {
         return EN_INVALID_PARAM;
@@ -93,10 +79,7 @@ INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
     return EN_OK;
 }
 
-INT32 mmGetErrorCode()
-{
-    return 0;
-}
+INT32 mmGetErrorCode() { return 0; }
 
 mmTimespec mmGetTickCount()
 {
@@ -116,31 +99,28 @@ INT32 mmGetTid()
     return ret;
 }
 
-INT32 mmIsDir(const CHAR *fileName)
+INT32 mmIsDir(const CHAR* fileName)
 {
     if (fileName == nullptr) {
         return EN_ERR;
     }
 
-    DIR *pDir = opendir (fileName);
+    DIR* pDir = opendir(fileName);
     if (pDir != nullptr) {
-        (void) closedir (pDir);
+        (void)closedir(pDir);
         return EN_OK;
     }
     return EN_ERR;
 }
 
-INT32 mmGetPid()
-{
-    return (INT32)getpid();
-}
+INT32 mmGetPid() { return (INT32)getpid(); }
 
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     if (timeVal == nullptr) {
         return -1;
     }
-    int32_t ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    int32_t ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     return ret;
 }
 
@@ -150,66 +130,42 @@ INT32 mmSleep(UINT32 milliSecond)
     return 0;
 }
 
-mmSize mmGetPageSize()
-{
-    return 2;
-}
+mmSize mmGetPageSize() { return 2; }
 
-void *mmAlignMalloc(mmSize mallocSize, mmSize alignSize)
+void* mmAlignMalloc(mmSize mallocSize, mmSize alignSize)
 {
     return MockFunctionTest::aclStubInstance().mmAlignMalloc(mallocSize, alignSize);
 }
 
-VOID mmAlignFree(VOID *addr)
+VOID mmAlignFree(VOID* addr)
 {
     if (addr != nullptr) {
         free(addr);
     }
 }
 
-INT32 mmRWLockInit(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmRWLockInit(mmRWLock_t* rwLock) { return 0; }
 
-INT32 mmRWLockDestroy(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmRWLockDestroy(mmRWLock_t* rwLock) { return 0; }
 
-INT32 mmRWLockRDLock(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmRWLockRDLock(mmRWLock_t* rwLock) { return 0; }
 
-INT32 mmRDLockUnLock(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmRDLockUnLock(mmRWLock_t* rwLock) { return 0; }
 
-INT32 mmRWLockWRLock(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmRWLockWRLock(mmRWLock_t* rwLock) { return 0; }
 
-INT32 mmWRLockUnLock(mmRWLock_t *rwLock)
-{
-    return 0;
-}
+INT32 mmWRLockUnLock(mmRWLock_t* rwLock) { return 0; }
 
-CHAR *mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR *buf, mmSize size)
+CHAR* mmGetErrorFormatMessage(mmErrorMsg errnum, CHAR* buf, mmSize size)
 {
     static char errInfo[10] = "ErrorMsg";
     return errInfo;
 }
 
-CHAR *mmDlerror()
+CHAR* mmDlerror()
 {
     static char errInfo[10] = "ErrorInfo";
     return errInfo;
 }
 
-INT32 mmDladdr(VOID *addr, mmDlInfo *info)
-{
-    return MockFunctionTest::aclStubInstance().mmDladdr(addr, info);
-}
+INT32 mmDladdr(VOID* addr, mmDlInfo* info) { return MockFunctionTest::aclStubInstance().mmDladdr(addr, info); }

@@ -18,10 +18,7 @@ extern "C" {
 /*
  * 描述:创建一个内存屏障
  */
-VOID mmMb()
-{
-    MemoryBarrier();
-}
+VOID mmMb() { MemoryBarrier(); }
 
 /*
  * 描述： 申请和内存页对齐的内存
@@ -29,16 +26,13 @@ VOID mmMb()
          alignSize--内存对齐的大小
  * 返回值：成功执行时，返回内存地址；失败返回NULL
  */
-VOID *mmAlignMalloc(mmSize mallocSize, mmSize alignSize)
-{
-    return _aligned_malloc(mallocSize, alignSize);
-}
+VOID* mmAlignMalloc(mmSize mallocSize, mmSize alignSize) { return _aligned_malloc(mallocSize, alignSize); }
 
 /*
  * 描述： 释放内存页对齐的内存
  * 参数： addr--内存地址
  */
-VOID mmAlignFree(VOID *addr)
+VOID mmAlignFree(VOID* addr)
 {
     if (addr != NULL) {
         _aligned_free(addr);
@@ -51,4 +45,3 @@ VOID mmAlignFree(VOID *addr)
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

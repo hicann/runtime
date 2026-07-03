@@ -22,14 +22,12 @@
 using namespace testing;
 using namespace std;
 
-int add(int a, int b)
-{
-    return (a + b);
-}
+int add(int a, int b) { return (a + b); }
 
 class Utest_mmpa_linux : public testing::Test {
 public:
     Utest_mmpa_linux() {}
+
 protected:
     virtual void SetUp() {}
     virtual void TearDown()
@@ -52,9 +50,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_01)
     ret = mmGetTid();
     EXPECT_TRUE(ret >= 0);
 
-    MOCKER((long int (*)(long int))syscall)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((long int (*)(long int))syscall).stubs().will(returnValue(EN_ERROR));
     ret = mmGetTid();
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -66,9 +62,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_01)
     ASSERT_EQ(EN_OK, ret);
 
     char threadName[MMPA_THREADNAME_SIZE] = "hello-mmpa";
-    MOCKER((int (*)(char*))prctl)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*))prctl).stubs().will(returnValue(EN_ERROR));
     ret = mmSetCurrentThreadName(threadName);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -79,9 +73,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_01)
     ret = mmGetCurrentThreadName(NULL, 0);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER((int (*)(char*))prctl)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*))prctl).stubs().will(returnValue(EN_ERROR));
     ret = mmGetCurrentThreadName(threadName, MMPA_THREADNAME_SIZE);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -89,7 +81,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_01)
 
 TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_02)
 {
-    mmThread stThreadHandle ;
+    mmThread stThreadHandle;
     mmUserBlock_t stFuncBlock;
     stFuncBlock.pulArg = NULL;
     INT32 ret = mmCreateTask(NULL, &stFuncBlock);
@@ -100,9 +92,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_02)
     ret = mmJoinTask(NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(localtime_r)
-        .stubs()
-        .will(returnValue((struct tm*)NULL));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)NULL));
     ret = mmGetLocalTime(&st);
     ASSERT_EQ(EN_ERROR, ret);
 
@@ -113,9 +103,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTask_03)
 {
     mmThread stThreadHandle;
     mmUserBlock_t stFuncBlock;
-    MOCKER(pthread_create)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_create).stubs().will(returnValue(EN_ERROR));
     stFuncBlock.procFunc = UTtest_callback;
     stFuncBlock.pulArg = NULL;
     INT32 ret = mmCreateTask(&stThreadHandle, &stFuncBlock);
@@ -131,9 +119,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmJoinTask_01)
     stFuncBlock.pulArg = NULL;
     INT32 ret = mmCreateTask(&stThreadHandle, &stFuncBlock);
     ASSERT_EQ(EN_OK, ret);
-    MOCKER(pthread_join)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_join).stubs().will(returnValue(EN_ERROR));
     ret = mmJoinTask(&stThreadHandle);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -176,36 +162,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTaskWithAttr_01)
 TEST_F(Utest_mmpa_linux, Utest_mmMutexUnLock_01)
 {
     mmMutex_t mutex;
-    MOCKER(pthread_mutex_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmMutexInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_lock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_lock).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -216,36 +194,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmMutexUnLock_01)
 TEST_F(Utest_mmpa_linux, Utest_mmMutexTryLock_01)
 {
     mmMutex_t mutex;
-    MOCKER(pthread_mutex_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmMutexInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_trylock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_trylock).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexTryLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexTryLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmMutexUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmMutexDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -256,36 +226,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmMutexTryLock_01)
 TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_01)
 {
     mmRWLock_t mutex;
-    MOCKER(pthread_rwlock_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_rdlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_rdlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockRDLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockRDLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRDLockUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRDLockUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -296,36 +258,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_01)
 TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_02)
 {
     mmRWLock_t mutex;
-    MOCKER(pthread_rwlock_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_tryrdlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_tryrdlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockTryRDLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockTryRDLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRDLockUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRDLockUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -336,36 +290,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_02)
 TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_03)
 {
     mmRWLock_t mutex;
-    MOCKER(pthread_rwlock_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_wrlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_wrlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockWRLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockWRLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmWRLockUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmWRLockUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -376,36 +322,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_03)
 TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_04)
 {
     mmRWLock_t mutex;
-    MOCKER(pthread_rwlock_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockInit(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_trywrlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_trywrlock).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockTryWRLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmRWLockTryWRLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmWRLockUnLock(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmWRLockUnLock(&mutex);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_rwlock_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_rwlock_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmRWLockDestroy(&mutex);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -416,36 +354,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmRWLockInit_04)
 TEST_F(Utest_mmpa_linux, Utest_mmCondLock_01)
 {
     mmMutexFC cs;
-    MOCKER(pthread_mutex_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCondLockInit(&cs);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmCondLockInit(&cs);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_lock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_lock).stubs().will(returnValue(EN_ERROR));
     ret = mmCondLock(&cs);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmCondLock(&cs);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_unlock)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_unlock).stubs().will(returnValue(EN_ERROR));
     ret = mmCondUnLock(&cs);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmCondUnLock(&cs);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(pthread_mutex_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_mutex_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmCondLockDestroy(&cs);
     GlobalMockObject::reset();
     ret = mmCondLockDestroy(&cs);
@@ -459,16 +389,12 @@ TEST_F(Utest_mmpa_linux, Utest_mmCondInit_01)
     INT32 ret = mmCondInit(NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(pthread_condattr_init)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(pthread_condattr_init).stubs().will(returnValue(-1));
     ret = mmCondInit(&cond);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_condattr_setclock)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(pthread_condattr_setclock).stubs().will(returnValue(-1));
     ret = mmCondInit(&cond);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -476,9 +402,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCondInit_01)
     ret = mmCondTimedWait(NULL, NULL, 3000);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(clock_gettime)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(clock_gettime).stubs().will(returnValue(-1));
     ret = mmCondTimedWait(&cond, &mutexFc, 3000);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -514,9 +438,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCondDestroy_01)
     mmCond Cond;
 
     mmCondInit(&Cond);
-    MOCKER(pthread_cond_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_cond_destroy).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCondDestroy(&Cond);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -530,23 +452,17 @@ TEST_F(Utest_mmpa_linux, Utest_mmCondNotify_01)
     mmCond cv;
     mmMutexFC cs;
 
-    MOCKER(pthread_cond_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_cond_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCondInit(&cv);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_cond_wait)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_cond_wait).stubs().will(returnValue(EN_ERROR));
     ret = mmCondWait(&cv, &cs);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_cond_signal)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_cond_signal).stubs().will(returnValue(EN_ERROR));
     ret = mmCondNotify(&cv);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -557,9 +473,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCondNotify_02)
     mmCond cv;
     mmMutexFC cs;
 
-    MOCKER(pthread_cond_broadcast)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_cond_broadcast).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCondNotifyAll(&cv);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -569,36 +483,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmSemInit_01)
 {
     mmSem_t sem;
 
-    MOCKER(sem_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sem_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(sem_wait)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sem_wait).stubs().will(returnValue(EN_ERROR));
     ret = mmSemWait(&sem);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmSemWait(&sem);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(sem_post)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sem_post).stubs().will(returnValue(EN_ERROR));
     ret = mmSemPost(&sem);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
     ret = mmSemPost(&sem);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(sem_destroy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sem_destroy).stubs().will(returnValue(EN_ERROR));
     ret = mmSemDestroy(&sem);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -626,9 +532,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpen_01)
     char myString[40];
     UINT32 length;
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(EN_ERROR));
     INT32 fd = mmOpen((CHAR*)("../tests/ut/mmpa/testcase/test.txt"), O_RDWR);
     ASSERT_EQ(EN_ERROR, fd);
     GlobalMockObject::reset();
@@ -641,9 +545,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpen_01)
     INT32 ret = mmWrite(HANDLE_INVALID_VALUE, myString, length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(write)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(write).stubs().will(returnValue(EN_ERROR));
     ret = mmWrite(fd, myString, length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -659,9 +561,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpen_01)
     ret = mmRead(HANDLE_INVALID_VALUE, myString, length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(read)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(read).stubs().will(returnValue(EN_ERROR));
     ret = mmRead(fd, myString, length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -669,9 +569,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpen_01)
     ret = mmRead(fd, myString, length);
     EXPECT_TRUE(ret > 0);
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(close).stubs().will(returnValue(EN_ERROR));
     ret = mmClose(fd);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -708,9 +606,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpen2_01)
     char myString[40];
     UINT32 length;
     int ret;
-    MOCKER((int (*)(const char*, int, int))open)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(const char*, int, int))open).stubs().will(returnValue(EN_ERROR));
     INT32 fd = mmOpen2((CHAR*)("../tests/ut/mmpa/testcase/test.txt"), O_RDWR, M_IREAD | M_IWRITE);
     ASSERT_EQ(EN_ERROR, fd);
     GlobalMockObject::reset();
@@ -776,9 +672,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_02)
     struct sockaddr_in serv_add;
     mmSocklen_t stAddrLen = sizeof(serv_add);
 
-    MOCKER(socket)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(socket).stubs().will(returnValue(EN_ERROR));
     listenfd = mmSocket(AF_INET, SOCK_STREAM, 0);
     ASSERT_EQ(EN_ERROR, listenfd);
     GlobalMockObject::reset();
@@ -801,9 +695,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_02)
     ret = mmListen(HANDLE_INVALID_VALUE, 5);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(listen)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(listen).stubs().will(returnValue(EN_ERROR));
     ret = mmListen(listenfd, 5);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -814,9 +706,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_02)
     connfd = mmAccept(HANDLE_INVALID_VALUE, (mmSockAddr*)NULL, NULL);
     ASSERT_EQ(EN_INVALID_PARAM, connfd);
 
-    MOCKER(accept)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(accept).stubs().will(returnValue(EN_ERROR));
     connfd = mmAccept(listenfd, (mmSockAddr*)NULL, NULL);
     ASSERT_EQ(EN_ERROR, connfd);
     GlobalMockObject::reset();
@@ -824,9 +714,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_02)
     ret = mmCloseSocket(HANDLE_INVALID_VALUE);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(close).stubs().will(returnValue(EN_ERROR));
     ret = mmCloseSocket(listenfd);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -845,15 +733,13 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_03)
     INT32 p = getIdleSocketid();
 
     serv_add.sin_family = AF_INET;
-    inet_aton("127.0.0.1", (struct in_addr *)&serv_add.sin_addr);
+    inet_aton("127.0.0.1", (struct in_addr*)&serv_add.sin_addr);
     serv_add.sin_port = htons(p);
 
     INT32 ret = mmConnect(HANDLE_INVALID_VALUE, (mmSockAddr*)&serv_add, sizeof(serv_add));
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(connect)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(connect).stubs().will(returnValue(EN_ERROR));
     ret = mmConnect(sockfd, (mmSockAddr*)&serv_add, sizeof(serv_add));
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -870,15 +756,11 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocket_04)
     result = mmSocketRecv(1, NULL, 50, 0);
     ASSERT_EQ(EN_INVALID_PARAM, result);
 
-    MOCKER(send)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(send).stubs().will(returnValue(EN_ERROR));
     result = mmSocketSend(1, msg, 50, 0);
     ASSERT_EQ(EN_ERROR, result);
 
-    MOCKER(recv)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(recv).stubs().will(returnValue(EN_ERROR));
     result = mmSocketRecv(1, msg, 50, 0);
     ASSERT_EQ(EN_ERROR, result);
 
@@ -898,17 +780,13 @@ TEST_F(Utest_mmpa_linux, Utest_mmSocketSend_01)
 
     mmSockAddr addr;
 
-    MOCKER(sendto)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sendto).stubs().will(returnValue(EN_ERROR));
     result = mmSocketSendTo(1, msg, 50, 0, &addr, 50);
     ASSERT_EQ(EN_ERROR, result);
 
     mmSockAddr addr1;
     mmSocklen_t FromLen;
-    MOCKER(recvfrom)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(recvfrom).stubs().will(returnValue(EN_ERROR));
     result = mmSocketRecvFrom(1, msg, 50, 0, &addr1, &FromLen);
     ASSERT_EQ(EN_ERROR, result);
 
@@ -947,9 +825,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDlopen_03)
     VOID* handle = NULL;
     char* newPath = (char*)("tests/ut/mmpa/add/libadd.so");
     VOID* expectValue = NULL;
-    MOCKER(dlopen)
-        .stubs()
-        .will(returnValue(expectValue));
+    MOCKER(dlopen).stubs().will(returnValue(expectValue));
     handle = mmDlopen(newPath, RTLD_LAZY);
     EXPECT_TRUE(NULL == handle);
     GlobalMockObject::reset();
@@ -1012,7 +888,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDladdr_03)
     mmDlInfo dlInfo;
     handle = mmDlopen((CHAR*)("tests/ut/mmpa/add/libadd.so"), RTLD_LAZY);
     EXPECT_TRUE(NULL != handle);
-    INT32 ret = mmDladdr(reinterpret_cast<void *>(&add), &dlInfo);
+    INT32 ret = mmDladdr(reinterpret_cast<void*>(&add), &dlInfo);
     ASSERT_NE(EN_ERROR, ret);
     ret = mmDlclose(handle);
     ASSERT_EQ(EN_OK, ret);
@@ -1023,9 +899,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDlsym_01)
     VOID* handle;
     char* newPath = (char*)("tests/ut/mmpa/add/libadd.so");
     VOID* expect_handle = NULL;
-    MOCKER(dlsym)
-        .stubs()
-        .will(returnValue(expect_handle));
+    MOCKER(dlsym).stubs().will(returnValue(expect_handle));
     handle = mmDlopen(newPath, RTLD_LAZY);
     EXPECT_TRUE(NULL != handle);
     VOID* ret = mmDlsym(handle, (CHAR*)("add"));
@@ -1041,9 +915,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDlclose_01)
     VOID* handle;
     char* newPath = (char*)("tests/ut/mmpa/add/libadd.so");
 
-    MOCKER(dlclose)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(dlclose).stubs().will(returnValue(EN_ERROR));
     handle = mmDlopen(newPath, RTLD_LAZY);
     EXPECT_TRUE(NULL != handle);
     INT32 ret = mmDlclose(handle);
@@ -1087,9 +959,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmStatGet_04)
 {
     mmStat_t buf;
     char* path = (char*)("../tests/ut/mmpa/testcase/mkdir");
-    MOCKER(stat)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(stat).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmStatGet(path, &buf);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1129,9 +999,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmStat64Get_04)
 {
     mmStat64_t buf;
     char* path = (char*)("../tests/ut/mmpa/testcase/mkdir");
-    MOCKER(stat64)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(stat64).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmStat64Get(path, &buf);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1162,9 +1030,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmFStatGet_03)
 {
     mmStat_t buf;
     char* path = (char*)("../tests/ut/mmpa/testcase/mkdir");
-    MOCKER(fstat)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(fstat).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmFStatGet(-1, &buf);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1174,9 +1040,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmMkdir_01)
 {
     mmStat_t buf;
     CHAR newPath[256] = "../tests/ut/mmpa/testcase/mkdir";
-    MOCKER(mkdir)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(mkdir).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmMkdir(newPath, 0755);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1230,23 +1094,15 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateAndSetTimer_04)
     mmUserBlock_t stTimerBlock;
     stTimerBlock.procFunc = UTtest_callback;
     stTimerBlock.pulArg = NULL;
-    MOCKER(timer_create)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(timer_create).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCreateAndSetTimer(&stTimerHandle, &stTimerBlock, 300, 0);
     sleep(2);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(timer_create)
-        .stubs()
-        .will(returnValue(EN_OK));
-    MOCKER(timer_settime)
-        .stubs()
-        .will(returnValue(EN_ERROR));
-    MOCKER(timer_delete)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(timer_create).stubs().will(returnValue(EN_OK));
+    MOCKER(timer_settime).stubs().will(returnValue(EN_ERROR));
+    MOCKER(timer_delete).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateAndSetTimer(&stTimerHandle, &stTimerBlock, 300, 0);
     sleep(2);
     ASSERT_EQ(EN_ERROR, ret);
@@ -1258,9 +1114,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateAndSetTimer_04)
 
 TEST_F(Utest_mmpa_linux, Utest_mmSleep_01)
 {
-    MOCKER(usleep)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(usleep).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmSleep(MMPA_MAX_SLEEP_MILLSECOND + 1);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1269,7 +1123,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSleep_01)
 TEST_F(Utest_mmpa_linux, Utest_mmCond_01)
 {
     int i;
-    struct node *p;
+    struct node* p;
 
     mmThread stThreadHandleProducer;
     mmUserBlock_t stFuncBlockProducer;
@@ -1327,7 +1181,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCond_02)
 TEST_F(Utest_mmpa_linux, Utest_mmCond_03)
 {
     int i;
-    struct node *p;
+    struct node* p;
 
     mmThread stThreadHandleProducer;
     mmUserBlock_t stFuncBlockProducer;
@@ -1352,10 +1206,9 @@ TEST_F(Utest_mmpa_linux, Utest_mmCond_03)
     mmSystemTime_t st;
     INT32 ret = mmGetLocalTime(&st);
     ASSERT_EQ(EN_OK, ret);
-    printf("Local: %u/%u/%u %u:%u:%u %d %d\r\n",
-           st.wYear, st.wMonth, st.wDay,
-           st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
-           st.wDayOfWeek);
+    printf(
+        "Local: %u/%u/%u %u:%u:%u %d %d\r\n", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+        st.wMilliseconds, st.wDayOfWeek);
 }
 
 TEST_F(Utest_mmpa_linux, Utest_mmCond_04)
@@ -1403,7 +1256,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetProcessPrio_01)
     ret = mmGetPidHandle(NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
     ret = mmGetProcessPrio(pid);
-    EXPECT_TRUE(ret >= -20 && ret <= 19) ;
+    EXPECT_TRUE(ret >= -20 && ret <= 19);
     ret = mmSetProcessPrio(pid, processprio);
     ASSERT_EQ(EN_OK, ret);
     ret = mmGetProcessPrio(pid);
@@ -1418,14 +1271,10 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetProcessPrio_02)
 {
     mmProcess pid;
     mmGetPidHandle(&pid);
-    MOCKER(getpriority)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(getpriority).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmGetProcessPrio(pid);
     ASSERT_EQ(EN_ERROR, ret);
-    MOCKER(setpriority)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(setpriority).stubs().will(returnValue(EN_ERROR));
     ret = mmSetProcessPrio(pid, 10);
     ASSERT_EQ(EN_ERROR, ret);
 
@@ -1470,9 +1319,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmAccess_02)
     ret = mmMkdir(dirPath1, 0755);
     printf("dirPath1\n");
     ASSERT_EQ(EN_OK, ret);
-    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s).stubs().will(returnValue(EN_ERROR));
     ret = mmRmdir(rmdirPath);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1491,9 +1338,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmIoctl_01)
     bufStr.inbuf = &iostrt;
     bufStr.inbufLen = sizeof(iostrt);
 
-    MOCKER((int (*)(int, int, char*))ioctl)
-        .stubs()
-        .will(returnValue(EN_OK));
+    MOCKER((int (*)(int, int, char*))ioctl).stubs().will(returnValue(EN_OK));
     ret = mmIoctl(fd, MM_CMD_GET_DISKINFO, &bufStr);
     EXPECT_TRUE(ret >= 0);
     GlobalMockObject::reset();
@@ -1514,7 +1359,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmIoctl_01)
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 }
 
-int clock_gettime_stub(clockid_t clk_id, struct timespec *tp)
+int clock_gettime_stub(clockid_t clk_id, struct timespec* tp)
 {
     tp->tv_sec = 0;
     tp->tv_nsec = MMPA_SECOND_TO_NSEC - 1;
@@ -1528,9 +1373,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSemTimedWait_01)
     ts = 500;
     INT32 ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_OK, ret);
-    MOCKER(clock_gettime)
-        .stubs()
-        .will(invoke(clock_gettime_stub));
+    MOCKER(clock_gettime).stubs().will(invoke(clock_gettime_stub));
 
     ret = mmSemTimedWait(&sem, ts);
     ASSERT_EQ(EN_OK, ret);
@@ -1547,10 +1390,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSemTimedWait_02)
     mmSem_t sem;
     INT32 ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_OK, ret);
-    MOCKER(sem_trywait)
-        .stubs()
-        .will(returnValue(EN_ERROR))
-        .then(returnValue(EN_OK));
+    MOCKER(sem_trywait).stubs().will(returnValue(EN_ERROR)).then(returnValue(EN_OK));
 
     ret = mmSemTimedWait(&sem, 3);
     ASSERT_EQ(EN_OK, ret);
@@ -1567,9 +1407,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSemTimedWait_03)
     mmSem_t sem;
     INT32 ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_OK, ret);
-    MOCKER(sem_trywait)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(sem_trywait).stubs().will(returnValue(EN_ERROR));
 
     ret = mmSemTimedWait(&sem, 2);
     ASSERT_EQ(EN_OK, ret);
@@ -1609,9 +1447,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSemInit_04)
     ts = 5000;
     INT32 ret = mmSemInit(&sem, 1);
     ASSERT_EQ(EN_OK, ret);
-    MOCKER(sem_trywait)
-        .stubs()
-        .will(returnValue(EN_INVALID_PARAM));
+    MOCKER(sem_trywait).stubs().will(returnValue(EN_INVALID_PARAM));
     ret = mmSemTimedWait(&sem, ts);
     ASSERT_EQ(EN_OK, ret);
 }
@@ -1620,11 +1456,9 @@ TEST_F(Utest_mmpa_linux, Utest_mmWritev_01)
 {
     char myString[40];
     UINT32 length;
-    VOID *retPoint = NULL;
+    VOID* retPoint = NULL;
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(EN_ERROR));
     INT32 fd = mmOpen((CHAR*)"../tests/ut/mmpa/testcase/test.txt", O_RDWR);
     ASSERT_EQ(EN_ERROR, fd);
     GlobalMockObject::reset();
@@ -1649,9 +1483,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmWritev_01)
     ret = mmWritev(HANDLE_INVALID_VALUE, iov, 2);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(writev)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(writev).stubs().will(returnValue(EN_ERROR));
     ret = mmWritev(fd, iov, 2);
     ASSERT_EQ(EN_ERROR, ret);
 
@@ -1668,9 +1500,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmWritev_01)
     ret = mmRead(HANDLE_INVALID_VALUE, myString, length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(read)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(read).stubs().will(returnValue(EN_ERROR));
     ret = mmRead(fd, myString, length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1678,9 +1508,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmWritev_01)
     ret = mmRead(fd, myString, length);
     EXPECT_TRUE(ret > 0);
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(close).stubs().will(returnValue(EN_ERROR));
     ret = mmClose(fd);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1704,9 +1532,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmInetAton_01)
     ASSERT_EQ(EN_INVALID_PARAM, ret);
     ret = mmInetAton(str2, &inp);
     ASSERT_EQ(EN_ERROR, ret);
-    MOCKER(inet_aton)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(inet_aton).stubs().will(returnValue(-1));
     ret = mmInetAton(str, &inp);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1733,9 +1559,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpenFile_01)
     INT32 ret = mmWriteFile(HANDLE_INVALID_VALUE, myString, length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(write)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(write).stubs().will(returnValue(EN_ERROR));
     ret = mmWriteFile(fd, myString, length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1752,9 +1576,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpenFile_01)
     ret = mmReadFile(HANDLE_INVALID_VALUE, myString, length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(read)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(read).stubs().will(returnValue(EN_ERROR));
     ret = mmReadFile(fd, myString, length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1762,9 +1584,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmOpenFile_01)
     ret = mmReadFile(fd, myString, length);
     EXPECT_TRUE(ret > 0);
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(close).stubs().will(returnValue(EN_ERROR));
     ret = mmCloseFile(fd);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1838,23 +1658,17 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTaskWithDetach_02)
     stFuncBlock.procFunc = UTtest_callback;
     stFuncBlock.pulArg = NULL;
 
-    MOCKER(pthread_attr_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_attr_init).stubs().will(returnValue(EN_ERROR));
     INT32 ret = mmCreateTaskWithDetach(&stThreadHandle, &stFuncBlock);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_attr_setdetachstate)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_attr_setdetachstate).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateTaskWithDetach(&stThreadHandle, &stFuncBlock);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_create)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_create).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateTaskWithDetach(&stThreadHandle, &stFuncBlock);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1883,15 +1697,11 @@ TEST_F(Utest_mmpa_linux, Utest_mmPoll_01)
 
     polledData.buf = &ifr;
     polledData.bufLen = sizeof(struct ifreq);
-    MOCKER(poll)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(poll).stubs().will(returnValue(1));
     ret = mmPoll(eventfds, 1, 100, handleIOCP, &polledData, pollDataCallback);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER((int (*)(int, int, char*))ioctl)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(int, int, char*))ioctl).stubs().will(returnValue(-1));
     ret = mmPoll(eventfds, 1, 100, handleIOCP, &polledData, pollDataCallback);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1902,16 +1712,12 @@ TEST_F(Utest_mmpa_linux, Utest_mmPoll_01)
     ret = mmPoll(NULL, 1, 100, handleIOCP, &polledData, pollDataCallback);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(poll)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(poll).stubs().will(returnValue(-1));
     ret = mmPoll(eventfds, 1, 100, handleIOCP, &polledData, pollDataCallback);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(poll)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(poll).stubs().will(returnValue(0));
     ret = mmPoll(eventfds, 1, 100, handleIOCP, &polledData, pollDataCallback);
     ASSERT_EQ(EN_ERR, ret);
     GlobalMockObject::reset();
@@ -1947,9 +1753,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmPoll_02)
     ret = mmSetThreadName(&stThreadHandleServer, NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(pthread_setname_np)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_setname_np).stubs().will(returnValue(EN_ERROR));
     ret = mmSetThreadName(&stThreadHandleServer, socketServerName);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -1966,9 +1770,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmPoll_02)
     ret = mmGetThreadName(&stThreadHandleServer, threadName, 0);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(pthread_getname_np)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_getname_np).stubs().will(returnValue(EN_ERROR));
     ret = mmGetThreadName(&stThreadHandleServer, threadName, MMPA_THREADNAME_SIZE);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2042,36 +1844,28 @@ TEST_F(Utest_mmpa_linux, Utest_mmPoll_04)
 TEST_F(Utest_mmpa_linux, Utest_mmCreateNamedPipe_01)
 {
     INT32 ret = EN_OK;
-    char *fifo_name[MMPA_PIPE_COUNT] = {(CHAR*)"../tests/ut/mmpa/ut_read", (CHAR*)"../tests/ut/mmpa/ut_write"};
+    char* fifo_name[MMPA_PIPE_COUNT] = {(CHAR*)"../tests/ut/mmpa/ut_read", (CHAR*)"../tests/ut/mmpa/ut_write"};
     int mode = 1;
     mmUnlink(fifo_name[0]);
     mmUnlink(fifo_name[1]);
     mmPipeHandle pipe[MMPA_PIPE_COUNT];
 
-    MOCKER(mkfifo)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mkfifo).stubs().will(returnValue(-1));
     ret = mmCreateNamedPipe(pipe, fifo_name, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(0));
     ret = mmCreateNamedPipe(pipe, fifo_name, mode);
     ASSERT_EQ(EN_OK, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(-1));
     ret = mmOpenNamePipe(pipe, fifo_name, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(close).stubs().will(returnValue(-1));
     mmCloseNamedPipe(pipe);
     GlobalMockObject::reset();
 }
@@ -2079,10 +1873,8 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateNamedPipe_01)
 TEST_F(Utest_mmpa_linux, Utest_mmCreatePipe_01)
 {
     INT32 ret = EN_OK;
-    char *fifo_name[MMPA_PIPE_COUNT] = {
-        (CHAR*)"../tests/ut/mmpa/ut_pipe_read",
-        (CHAR*)"../tests/ut/mmpa/ut_pipe_write"
-    };
+    char* fifo_name[MMPA_PIPE_COUNT] = {
+        (CHAR*)"../tests/ut/mmpa/ut_pipe_read", (CHAR*)"../tests/ut/mmpa/ut_pipe_write"};
     int mode = 1;
     mmUnlink(fifo_name[0]);
     mmUnlink(fifo_name[1]);
@@ -2094,30 +1886,22 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreatePipe_01)
     ASSERT_EQ(EN_INVALID_PARAM, ret);
     mmClosePipe(pipe, MMPA_PIPE_COUNT - 1);
 
-    MOCKER(mkfifo)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(mkfifo).stubs().will(returnValue(-1));
     ret = mmCreatePipe(pipe, fifo_name, MMPA_PIPE_COUNT, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(-1));
     ret = mmCreatePipe(pipe, fifo_name, MMPA_PIPE_COUNT, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(const char*, int))open)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(const char*, int))open).stubs().will(returnValue(-1));
     ret = mmOpenPipe(pipe, fifo_name, MMPA_PIPE_COUNT, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(close)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(close).stubs().will(returnValue(-1));
     mmClosePipe(pipe, MMPA_PIPE_COUNT);
     GlobalMockObject::reset();
 }
@@ -2136,9 +1920,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetTimeOfDay_01)
     mmGetLocalTime(&st);
     printf("%d-%d-%d %d-%d-%d\n ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
-    MOCKER(localtime_r)
-        .stubs()
-        .will(returnValue((struct tm*)NULL));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)NULL));
     ret = mmGetLocalTime(&st);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2164,9 +1946,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetSystemTime_01)
     mmGetSystemTime(&st);
     printf("%d-%d-%d %d-%d-%d\n ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
-    MOCKER(gmtime_r)
-        .stubs()
-        .will(returnValue((struct tm*)NULL));
+    MOCKER(gmtime_r).stubs().will(returnValue((struct tm*)NULL));
     ret = mmGetSystemTime(&st);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2175,18 +1955,16 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetSystemTime_01)
 TEST_F(Utest_mmpa_linux, Utest_mmGetRealPath_01)
 {
     char buffer_1[260] = {0};
-    char *lpStr1 = buffer_1;
+    char* lpStr1 = buffer_1;
     char buffer_2[] = "../tests/ut/mmpa/";
-    char *lpStr2 = buffer_2;
+    char* lpStr2 = buffer_2;
     INT32 ret = mmGetRealPath(lpStr2, lpStr1);
     printf("lpStr1 = %s\n", lpStr1);
     ASSERT_EQ(EN_OK, ret);
     ret = mmGetRealPath(NULL, lpStr1);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(realpath)
-        .stubs()
-        .will(returnValue((char *)NULL));
+    MOCKER(realpath).stubs().will(returnValue((char*)NULL));
     ret = mmGetRealPath(lpStr2, lpStr1);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2202,9 +1980,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmRealPath_01)
     ret = mmRealPath(NULL, buffer_1, MMPA_MAX_PATH);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(realpath)
-        .stubs()
-        .will(returnValue((char *)NULL));
+    MOCKER(realpath).stubs().will(returnValue((char*)NULL));
     ret = mmRealPath(buffer_2, buffer_1, MMPA_MAX_PATH);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2220,9 +1996,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmlseek_01)
     ret = mmLseek(-1, 3, SEEK_SET);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(lseek)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(lseek).stubs().will(returnValue(-1));
     ret = mmLseek(1, 3, SEEK_SET);
     ASSERT_EQ(EN_ERROR, ret);
 
@@ -2259,9 +2033,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmFtruncate_01)
     ret = mmFtruncate((mmProcess)-1, 3);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(ftruncate)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(ftruncate).stubs().will(returnValue(-1));
     ret = mmFtruncate(1, 3);
     ASSERT_EQ(EN_ERROR, ret);
 
@@ -2291,9 +2063,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDup2_01)
     ret = mmDup2(-2, 2);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(dup2)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(dup2).stubs().will(returnValue(EN_ERROR));
     ret = mmDup2(fd, 2);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2307,9 +2077,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmDup_01)
     INT32 ret = mmDup(-2);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(dup)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(dup).stubs().will(returnValue(EN_ERROR));
     ret = mmDup(fd);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2319,16 +2087,14 @@ TEST_F(Utest_mmpa_linux, Utest_mmDup_01)
 
 TEST_F(Utest_mmpa_linux, Utest_mmFileno_01)
 {
-    FILE *fp = fopen("../tests/ut/mmpa/testcase/test.txt", "r");
+    FILE* fp = fopen("../tests/ut/mmpa/testcase/test.txt", "r");
     INT32 fd = mmFileno(fp);
     EXPECT_TRUE(fd > 0);
 
     fd = mmFileno(NULL);
     ASSERT_EQ(EN_INVALID_PARAM, fd);
 
-    MOCKER(fileno)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(fileno).stubs().will(returnValue(EN_ERROR));
     fd = mmFileno(fp);
     ASSERT_EQ(EN_ERROR, fd);
     GlobalMockObject::reset();
@@ -2337,16 +2103,14 @@ TEST_F(Utest_mmpa_linux, Utest_mmFileno_01)
 
 TEST_F(Utest_mmpa_linux, Utest_mmUnlink)
 {
-    CHAR *lpStr1 = NULL;
+    CHAR* lpStr1 = NULL;
     INT32 ret = mmUnlink(lpStr1);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
     CHAR* newPath = (CHAR*)("../tests/ut/mmpa/testcase/unlink");
     INT32 fd = mmOpen((CHAR*)newPath, O_CREAT | O_RDWR);
     EXPECT_TRUE(fd >= 0);
-    MOCKER(unlink)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(unlink).stubs().will(returnValue(EN_ERROR));
     ret = mmUnlink(newPath);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2359,7 +2123,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmUnlink)
 
 TEST_F(Utest_mmpa_linux, Utest_mmChmod)
 {
-    CHAR *lpStr1 = NULL;
+    CHAR* lpStr1 = NULL;
     char lpStr2[] = "./test";
     INT32 mode = M_IWUSR;
     INT32 ret = mmChmod(lpStr1, mode);
@@ -2368,9 +2132,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmChmod)
     CHAR* newPath = (CHAR*)("../tests/ut/mmpa/testcase/chmod");
     INT32 fd = mmOpen((CHAR*)newPath, O_CREAT | O_RDWR);
 
-    MOCKER(chmod)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(chmod).stubs().will(returnValue(EN_ERROR));
     ret = mmChmod(newPath, mode);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2388,9 +2150,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmLocalTimeR)
     time_t time_seconds = time(0);
     struct tm now_time;
 
-    MOCKER(localtime_r)
-        .stubs()
-        .will(returnValue((struct tm*)NULL));
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)NULL));
     INT32 ret = mmLocalTimeR(&time_seconds, &now_time);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2398,8 +2158,9 @@ TEST_F(Utest_mmpa_linux, Utest_mmLocalTimeR)
     ret = mmLocalTimeR(&time_seconds, &now_time);
     ASSERT_EQ(EN_OK, ret);
 
-    printf("%d-%d-%d %d:%d:%d\n", now_time.tm_year, now_time.tm_mon,
-        now_time.tm_mday, now_time.tm_hour, now_time.tm_min, now_time.tm_sec);
+    printf(
+        "%d-%d-%d %d:%d:%d\n", now_time.tm_year, now_time.tm_mon, now_time.tm_mday, now_time.tm_hour, now_time.tm_min,
+        now_time.tm_sec);
 
     ret = mmLocalTimeR(NULL, &now_time);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
@@ -2407,7 +2168,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmLocalTimeR)
 
 TEST_F(Utest_mmpa_linux, Utest_mmScandir)
 {
-    mmDirent **entryList;
+    mmDirent** entryList;
     int count;
     int i;
     char testDir[64] = "../tests/ut/mmpa/";
@@ -2415,9 +2176,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmScandir)
     count = mmScandir(NULL, &entryList, utFilter, alphasort);
     ASSERT_EQ(EN_INVALID_PARAM, count);
 
-    MOCKER(scandir)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(scandir).stubs().will(returnValue(EN_ERROR));
     count = mmScandir(testDir, &entryList, utFilter, alphasort);
     ASSERT_EQ(EN_ERROR, count);
     GlobalMockObject::reset();
@@ -2434,7 +2193,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmScandir)
 
 TEST_F(Utest_mmpa_linux, Utest_mmScandir2)
 {
-    mmDirent2 **entryList;
+    mmDirent2** entryList;
     int count;
     int i;
     char testDir[64] = "../tests/ut/mmpa/";
@@ -2442,9 +2201,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmScandir2)
     count = mmScandir2(NULL, &entryList, utFilter, alphasort);
     ASSERT_EQ(EN_INVALID_PARAM, count);
 
-    MOCKER(scandir)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(scandir).stubs().will(returnValue(EN_ERROR));
     count = mmScandir2(testDir, &entryList, utFilter, alphasort);
     ASSERT_EQ(EN_ERROR, count);
     GlobalMockObject::reset();
@@ -2464,30 +2221,22 @@ TEST_F(Utest_mmpa_linux, Utest_mmMsgQueue_01)
     mmMsgid ret = EN_OK;
     INT32 fd = 0;
     char buffer[64] = "hello msgqueue!";
-    MOCKER(msgget)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(msgget).stubs().will(returnValue(EN_ERROR));
     ret = mmMsgCreate(0, 0);
     ASSERT_EQ((mmMsgid)EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(msgget)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(msgget).stubs().will(returnValue(EN_ERROR));
     ret = mmMsgOpen(0, 0);
     ASSERT_EQ((mmMsgid)EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(msgsnd)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(msgsnd).stubs().will(returnValue(EN_ERROR));
     ret = mmMsgSnd(0, buffer, 64, 0);
     ASSERT_EQ((mmMsgid)EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(msgrcv)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(msgrcv).stubs().will(returnValue(EN_ERROR));
     ret = mmMsgRcv(0, buffer, 64, 0);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2528,7 +2277,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetOsType)
 TEST_F(Utest_mmpa_linux, Utest_mmTls_01)
 {
     INT32 ret = EN_OK;
-    char *ptrResult = NULL;
+    char* ptrResult = NULL;
     int value = 1;
     mmThreadKey keyTest = 1111;
 
@@ -2538,9 +2287,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmTls_01)
     ret = mmTlsCreate(NULL, NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(pthread_key_create)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_key_create).stubs().will(returnValue(EN_ERROR));
     ret = mmTlsCreate(&g_thread_log_key, NULL);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2596,7 +2343,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmFsync)
 
     INT32 length = 0;
     ret = EN_OK;
-    char myString[20] = { 0 };
+    char myString[20] = {0};
 
     mmCreateFlag fileFlag;
     fileFlag.createFlag = M_CREAT;
@@ -2625,7 +2372,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmFsync2)
 
     INT32 length = 0;
     ret = EN_OK;
-    char myString[20] = { 0 };
+    char myString[20] = {0};
 
     mmCreateFlag fileFlag;
     fileFlag.createFlag = M_CREAT;
@@ -2661,9 +2408,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmChdir)
     ret = mmChdir(currentDir);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(chdir)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(chdir).stubs().will(returnValue(EN_ERROR));
     ret = mmChdir(currentDir);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2698,9 +2443,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetEnv)
     ret = mmGetEnv(test_name_1, test_value, 10);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(EN_INVALID_PARAM));
+    MOCKER(memcpy_s).stubs().will(returnValue(EN_INVALID_PARAM));
     ret = mmGetEnv(test_name_1, test_value, 10);
 
     ASSERT_EQ(EN_ERROR, ret);
@@ -2717,13 +2460,13 @@ TEST_F(Utest_mmpa_linux, Utest_mmSysEnv)
 {
     // valid id
     mmEnvId id = MM_ENV_DUMP_GRAPH_PATH;
-    const CHAR *value1 = "123";
+    const CHAR* value1 = "123";
     INT32 overwrite = 0;
 
     INT32 ret = mmSysSetEnv(id, value1, overwrite);
     ASSERT_EQ(ret, EN_OK);
 
-    CHAR *value = mmSysGetEnv(id);
+    CHAR* value = mmSysGetEnv(id);
     ASSERT_TRUE(value != NULL);
 
     ret = mmSysUnsetEnv(id);
@@ -2759,9 +2502,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmSetEnv)
     ret = mmSetEnv(test_name, test_value, 1);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(setenv)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(setenv).stubs().will(returnValue(EN_ERROR));
     ret = mmSetEnv(test_name, test_value, 1);
     ASSERT_EQ(EN_ERROR, ret);
 }
@@ -2841,19 +2582,15 @@ TEST_F(Utest_mmpa_linux, Utest_mmWaitPid)
 
 TEST_F(Utest_mmpa_linux, Utest_mmDirName)
 {
-    char *path = "../tests/ut/mmpa/testcase";
-    char *tmp = "../tests/ut/mmpa/";
-    MOCKER(dirname)
-        .stubs()
-        .will(returnValue(tmp));
-    char *dir = mmDirName(path);
+    char* path = "../tests/ut/mmpa/testcase";
+    char* tmp = "../tests/ut/mmpa/";
+    MOCKER(dirname).stubs().will(returnValue(tmp));
+    char* dir = mmDirName(path);
     printf("dir = %s, dirname\n", dir);
     ASSERT_NE(nullptr, dir);
 
-    MOCKER(basename)
-        .stubs()
-        .will(returnValue(tmp));
-    char *base = mmBaseName(path);
+    MOCKER(basename).stubs().will(returnValue(tmp));
+    char* base = mmBaseName(path);
     printf("base = %s, basename\n", base);
     ASSERT_NE(nullptr, base);
 
@@ -2867,7 +2604,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetopt)
 {
     INT32 ret;
     int argc = 2;
-    char *argv[30] = { (char*)"-x -y -x", (char*)"-a -b -v" };
+    char* argv[30] = {(char*)"-x -y -x", (char*)"-a -b -v"};
     char opt[] = "xyavb:o";
     ret = mmGetOpt(argc, argv, opt);
     printf("ret = %d\n", ret);
@@ -2881,17 +2618,17 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetoptLong)
     optopt = '?';
     optarg = NULL;
 
-    CHAR *argv[30] = { (CHAR*)"./test", (CHAR*)"--name", (CHAR*)"qxh1", (CHAR*)"--version", (CHAR*)"--help" };
+    CHAR* argv[30] = {(CHAR*)"./test", (CHAR*)"--name", (CHAR*)"qxh1", (CHAR*)"--version", (CHAR*)"--help"};
     INT32 c = (INT32)NULL;
     INT32 f_v = -1;
     INT32 f_n = -1;
     INT32 f_h = -1;
     INT32 opt_index = -1;
     mmStructOption opts[] = {
-        { "version", 0, NULL, 'v' },
-        { "name", 1, NULL, 'n' },
-        { "help", 0, NULL, 'h' },
-        { 0, 0, 0, 0 },
+        {"version", 0, NULL, 'v'},
+        {"name", 1, NULL, 'n'},
+        {"help", 0, NULL, 'h'},
+        {0, 0, 0, 0},
     };
     CHAR opt[] = "vn:h";
     INT32 matchCnt = 0;
@@ -2928,7 +2665,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetoptLong)
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetDiskFreeSpace)
 {
-    char *pathname = (CHAR*)"/var/";
+    char* pathname = (CHAR*)"/var/";
     struct statvfs buf;
     fsblkcnt_t total_size;
     fsblkcnt_t used_size;
@@ -2944,9 +2681,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetDiskFreeSpace)
     error = mmGetDiskFreeSpace(NULL, &dsize);
     EXPECT_TRUE(error == EN_INVALID_PARAM);
 
-    MOCKER(statvfs)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(statvfs).stubs().will(returnValue(-1));
     error = mmGetDiskFreeSpace(pathname, &dsize);
     ASSERT_EQ(EN_ERROR, error);
     GlobalMockObject::reset();
@@ -2954,7 +2689,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetDiskFreeSpace)
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetFileSize)
 {
-    char *pathname = (CHAR*)"tests/ut/mmpa/add/libadd.so";
+    char* pathname = (CHAR*)"tests/ut/mmpa/add/libadd.so";
 
     ULONGLONG length = 0;
     INT32 ret = mmGetFileSize(pathname, &length);
@@ -2963,9 +2698,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetFileSize)
     ret = mmGetFileSize(NULL, &length);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(lstat)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(lstat).stubs().will(returnValue(-1));
     ret = mmGetFileSize(pathname, &length);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -2973,7 +2706,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetFileSize)
 
 TEST_F(Utest_mmpa_linux, Utest_mmIsDir)
 {
-    char *pathname = (CHAR*)"tests/ut/mmpa/add/libadd.so";
+    char* pathname = (CHAR*)"tests/ut/mmpa/add/libadd.so";
     INT32 ret = mmIsDir(pathname);
     ASSERT_EQ(EN_ERROR, ret);
     pathname = (CHAR*)"../tests/ut/mmpa/";
@@ -2983,9 +2716,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmIsDir)
     ret = mmIsDir(NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(lstat)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(lstat).stubs().will(returnValue(-1));
     ret = mmIsDir(pathname);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3001,16 +2732,12 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetOsVersion)
     ret = mmGetOsVersion(NULL, MMPA_MIN_OS_VERSION_SIZE);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(uname)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(uname).stubs().will(returnValue(-1));
     ret = mmGetOsVersion(osVersionInfo, MMPA_MIN_OS_VERSION_SIZE);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s).stubs().will(returnValue(-1));
     ret = mmGetOsVersion(osVersionInfo, MMPA_MIN_OS_VERSION_SIZE);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3026,9 +2753,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetOsName)
     ret = mmGetOsName(NULL, MMPA_MIN_OS_NAME_SIZE);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(gethostname)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(gethostname).stubs().will(returnValue(-1));
     ret = mmGetOsName(osName, MMPA_MIN_OS_NAME_SIZE);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3036,13 +2761,13 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetOsName)
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
 {
-    mmCpuDesc *desc = NULL;
+    mmCpuDesc* desc = NULL;
     INT32 count = 0;
     int i = 0;
     INT32 ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_OK, ret);
 
-    for (i = 0; i<count; i++) {
+    for (i = 0; i < count; i++) {
         printf("arch[%d] is %s\n", i, desc[i].arch);
         printf("manufacturer[%d] is %s\n", i, desc[i].manufacturer);
         printf("version[%d] is %s\n", i, desc[i].version);
@@ -3058,9 +2783,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
     ret = mmGetCpuInfo(&desc, NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(fopen)
-        .stubs()
-        .will(returnValue((FILE*)NULL));
+    MOCKER(fopen).stubs().will(returnValue((FILE*)NULL));
     ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_OK, ret);
     GlobalMockObject::reset();
@@ -3068,9 +2791,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
     ret = mmCpuInfoFree(desc, count);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(popen)
-        .stubs()
-        .will(returnValue((FILE*)NULL));
+    MOCKER(popen).stubs().will(returnValue((FILE*)NULL));
     ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_OK, ret);
     GlobalMockObject::reset();
@@ -3078,9 +2799,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
     ret = mmCpuInfoFree(desc, count);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s).stubs().will(returnValue(EN_ERROR));
     ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_OK, ret);
     GlobalMockObject::reset();
@@ -3088,9 +2807,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
     ret = mmCpuInfoFree(desc, count);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(strcasecmp)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(strcasecmp).stubs().will(returnValue(0));
     ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_OK, ret);
     GlobalMockObject::reset();
@@ -3099,14 +2816,11 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
     ASSERT_EQ(EN_OK, ret);
 }
 
-int atoiStub(const char *nptr)
-{
-    return 4096;
-}
+int atoiStub(const char* nptr) { return 4096; }
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetMac_01)
 {
-    mmMacInfo *list = NULL;
+    mmMacInfo* list = NULL;
     int count = 0;
     int i = 0;
 
@@ -3126,9 +2840,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetMac_01)
     ret = mmGetMacFree(NULL, count);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(socket)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(socket).stubs().will(returnValue(-1));
     ret = mmGetMac(&list, &count);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3137,9 +2849,9 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetMac_01)
 TEST_F(Utest_mmpa_linux, Utest_mmCreateProcess)
 {
     int pid;
-    char *argv[] = {(char*)"ls", (char*)"-al", NULL};
-    char *envp[] = {(char*)"PATH=/bin", NULL};
-    char *filename = (char*)"/bin/ls";
+    char* argv[] = {(char*)"ls", (char*)"-al", NULL};
+    char* envp[] = {(char*)"PATH=/bin", NULL};
+    char* filename = (char*)"/bin/ls";
     char redirectLog[1024] = "../tests/ut/mmpa/ut_createprocess.txt";
     int status = 0;
     mmArgvEnv env;
@@ -3150,9 +2862,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateProcess)
     int ret = mmCreateProcess(filename, &env, NULL, NULL);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(fork)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(fork).stubs().will(returnValue(-1));
     ret = mmCreateProcess(filename, &env, NULL, &pid);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3216,23 +2926,17 @@ TEST_F(Utest_mmpa_linux, Utest_mmCreateTaskWithThreadAttr_03)
     ret = mmCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 
-    MOCKER(pthread_attr_init)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_attr_init).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_attr_setinheritsched)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_attr_setinheritsched).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(pthread_attr_setschedpolicy)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(pthread_attr_setschedpolicy).stubs().will(returnValue(EN_ERROR));
     ret = mmCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
     ASSERT_EQ(EN_INVALID_PARAM, ret);
     GlobalMockObject::reset();
@@ -3242,13 +2946,13 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetErrorFormatMessage_01)
 {
     mmSize size = 0;
     mmErrorMsg errnum;
-    char *ret = mmGetErrorFormatMessage(errnum, NULL, 0);
+    char* ret = mmGetErrorFormatMessage(errnum, NULL, 0);
     ASSERT_EQ(NULL, ret);
 }
 
 TEST_F(Utest_mmpa_linux, Utest_mmShm_01)
 {
-    mmFileHandle fd = mmShmOpen(NULL, O_RDWR|O_CREAT, S_IRWXU);
+    mmFileHandle fd = mmShmOpen(NULL, O_RDWR | O_CREAT, S_IRWXU);
     ASSERT_EQ(EN_ERROR, fd);
 
     INT32 ret = mmShmUnlink(NULL);
@@ -3257,11 +2961,11 @@ TEST_F(Utest_mmpa_linux, Utest_mmShm_01)
 
 TEST_F(Utest_mmpa_linux, Utest_mmPopen_01)
 {
-    FILE *file = NULL;
+    FILE* file = NULL;
     file = mmPopen(NULL, NULL);
     ASSERT_EQ(NULL, file);
 
-    char *command = "ll ../tests/ut/mmpa/testcase/test.txt";
+    char* command = "ll ../tests/ut/mmpa/testcase/test.txt";
     file = mmPopen(command, "r");
 
     INT32 ret = mmPclose(file);
@@ -3288,7 +2992,7 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetSetOpt_02)
 TEST_F(Utest_mmpa_linux, Utest_mmAlign)
 {
     mmSize pageSize = mmGetPageSize();
-    void *addr = mmAlignMalloc(10, pageSize);
+    void* addr = mmAlignMalloc(10, pageSize);
     ASSERT_TRUE(addr != NULL);
     mmAlignFree(addr);
 }
@@ -3325,16 +3029,12 @@ TEST_F(Utest_mmpa_linux, Utest_mmRmDir_01)
     ret = mmClose(fd);
     ASSERT_EQ(EN_OK, ret);
 
-    MOCKER(rmdir)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(rmdir).stubs().will(returnValue(EN_ERROR));
     ret = mmRmdir(rmdirPath);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER(&memset_s)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER(&memset_s).stubs().will(returnValue(EN_ERROR));
     ret = mmRmdir(rmdirPath);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3348,13 +3048,11 @@ TEST_F(Utest_mmpa_linux, Utest_mmRmDir_01)
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_02)
 {
-    mmCpuDesc *desc = NULL;
+    mmCpuDesc* desc = NULL;
     INT32 count = 0;
     INT32 ret = 0;
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
     ret = mmGetCpuInfo(&desc, &count);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
@@ -3365,28 +3063,22 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_02)
 
 TEST_F(Utest_mmpa_linux, Utest_mmGetMac_02)
 {
-    mmMacInfo *list = NULL;
+    mmMacInfo* list = NULL;
     int count = 0;
     int i = 0;
     int ret = 0;
 
-    MOCKER((int (*)(int, int, char*))ioctl)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER((int (*)(int, int, char*))ioctl).stubs().will(returnValue(-1));
     ret = mmGetMac(&list, &count);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(char*, long unsigned int, const char*))strcpy_s)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*, long unsigned int, const char*))strcpy_s).stubs().will(returnValue(EN_ERROR));
     ret = mmGetMac(&list, &count);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();
 
-    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s)
-        .stubs()
-        .will(returnValue(EN_ERROR));
+    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s).stubs().will(returnValue(EN_ERROR));
     ret = mmGetMac(&list, &count);
     ASSERT_EQ(EN_ERROR, ret);
     GlobalMockObject::reset();

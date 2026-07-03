@@ -24,7 +24,7 @@ const INT32 MMPA_MSEC_TO_NSEC = 1000000;
  * 参数:sysTime -- 指向mmSystemTime_t 结构的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetLocalTime(mmSystemTime_t *sysTimePtr)
+INT32 mmGetLocalTime(mmSystemTime_t* sysTimePtr)
 {
     if (sysTimePtr == nullptr) {
         return EN_INVALID_PARAM;
@@ -39,7 +39,7 @@ INT32 mmGetLocalTime(mmSystemTime_t *sysTimePtr)
  * 参数:sysTime -- 指向mmSystemTime_t 结构的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetSystemTime(mmSystemTime_t *sysTimePtr)
+INT32 mmGetSystemTime(mmSystemTime_t* sysTimePtr)
 {
     if (sysTimePtr == nullptr) {
         return EN_INVALID_PARAM;
@@ -70,7 +70,7 @@ INT32 mmSleep(UINT32 milliSecond)
         timeZone--当前系统设置的时区信息, 可以为nullptr, 表示不需要获取时区信息
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR，入参错误返回EN_INVALID_PARAM
  */
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     struct tm nowTime;
     SYSTEMTIME sysTime;
@@ -117,7 +117,7 @@ mmTimespec mmGetTickCount()
  *      result--struct tm格式类型的时间
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
+INT32 mmLocalTimeR(const time_t* timep, struct tm* result)
 {
     INT32 ret = EN_OK;
     if (timep == nullptr || result == nullptr) {
@@ -143,4 +143,3 @@ INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

@@ -25,8 +25,8 @@ extern INT32 getIdleSocketid();
 extern VOID* UTtest_callback(VOID* pstArg);
 extern VOID* client_socket(VOID* p);
 extern VOID* server_socket(VOID* p);
-extern VOID* thread_func(VOID *arg);
-extern VOID* thread_func_time(VOID *arg);
+extern VOID* thread_func(VOID* arg);
+extern VOID* thread_func_time(VOID* arg);
 extern VOID pollDataCallback(pmmPollData pPolledData);
 extern VOID* poll_server_socket(VOID* p);
 extern VOID* poll_client_socket(VOID* p);
@@ -35,11 +35,11 @@ extern VOID* poll_client_pipe(VOID* p);
 extern VOID* poll_server_namepipe(VOID* p);
 extern VOID* poll_client_namepipe(VOID* p);
 
-extern int utFilter(const struct dirent *entry);
+extern int utFilter(const struct dirent* entry);
 extern VOID* msgqueue_server(VOID* p);
 extern VOID* msgqueue_client(VOID* p);
-extern VOID* tlsTestThread1(VOID *p);
-extern VOID* tlsTestThread2(VOID *p);
+extern VOID* tlsTestThread1(VOID* p);
+extern VOID* tlsTestThread2(VOID* p);
 extern void* thread_action(void* arg);
 
 #ifdef __cplusplus
@@ -49,4 +49,3 @@ extern void* thread_action(void* arg);
 #endif /* __cpluscplus */
 
 #endif /* _MMPA_LINUX_STUBTEST_H_ */
-

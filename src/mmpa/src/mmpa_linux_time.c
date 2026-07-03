@@ -11,13 +11,13 @@
 #include "mmpa_api.h"
 
 #ifdef __cplusplus
-#if    __cplusplus
+#if __cplusplus
 extern "C" {
 #endif /* __cpluscplus */
 #endif
 
-#define MMPA_MSEC_TO_USEC                       1000
-#define MMPA_MAX_SLEEP_MILLSECOND_USING_USLEEP  1000
+#define MMPA_MSEC_TO_USEC 1000
+#define MMPA_MAX_SLEEP_MILLSECOND_USING_USLEEP 1000
 #define MMPA_MAX_SLEEP_MICROSECOND_USING_USLEEP 1000000
 
 /*
@@ -25,14 +25,14 @@ extern "C" {
  * 参数: sysTimePtr -- 指向mmSystemTime_t 结构的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetLocalTime(mmSystemTime_t *sysTimePtr)
+INT32 mmGetLocalTime(mmSystemTime_t* sysTimePtr)
 {
     if (sysTimePtr == NULL) {
         return EN_INVALID_PARAM;
     }
 
     struct timeval timeVal;
-    (VOID)memset_s(&timeVal, sizeof(timeVal), 0, sizeof(timeVal)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&timeVal, sizeof(timeVal), 0, sizeof(timeVal)); /* unsafe_function_ignore: memset */
 
     INT32 ret = gettimeofday(&timeVal, NULL);
     if (ret != EN_OK) {
@@ -40,9 +40,9 @@ INT32 mmGetLocalTime(mmSystemTime_t *sysTimePtr)
     }
 
     struct tm nowTime;
-    (VOID)memset_s(&nowTime, sizeof(nowTime), 0, sizeof(nowTime)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&nowTime, sizeof(nowTime), 0, sizeof(nowTime)); /* unsafe_function_ignore: memset */
 
-    const struct tm *tmp = localtime_r(&timeVal.tv_sec, &nowTime);
+    const struct tm* tmp = localtime_r(&timeVal.tv_sec, &nowTime);
     if (tmp == NULL) {
         return EN_ERROR;
     }
@@ -66,14 +66,14 @@ INT32 mmGetLocalTime(mmSystemTime_t *sysTimePtr)
  * 参数:sysTime -- 指向mmSystemTime_t 结构的指针
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmGetSystemTime(mmSystemTime_t *sysTimePtr)
+INT32 mmGetSystemTime(mmSystemTime_t* sysTimePtr)
 {
     if (sysTimePtr == NULL) {
         return EN_INVALID_PARAM;
     }
 
     struct timeval timeVal;
-    (VOID)memset_s(&timeVal, sizeof(timeVal), 0, sizeof(timeVal)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&timeVal, sizeof(timeVal), 0, sizeof(timeVal)); /* unsafe_function_ignore: memset */
 
     INT32 ret = gettimeofday(&timeVal, NULL);
     if (ret != EN_OK) {
@@ -81,9 +81,9 @@ INT32 mmGetSystemTime(mmSystemTime_t *sysTimePtr)
     }
 
     struct tm nowTime;
-    (VOID)memset_s(&nowTime, sizeof(nowTime), 0, sizeof(nowTime)); /* unsafe_function_ignore: memset */
+    (VOID) memset_s(&nowTime, sizeof(nowTime), 0, sizeof(nowTime)); /* unsafe_function_ignore: memset */
 
-    const struct tm *tmp = gmtime_r(&timeVal.tv_sec, &nowTime);
+    const struct tm* tmp = gmtime_r(&timeVal.tv_sec, &nowTime);
     if (tmp == NULL) {
         return EN_ERROR;
     }
@@ -134,12 +134,12 @@ INT32 mmSleep(UINT32 milliSecond)
  *      timeZone--当前系统设置的时区信息, 可以为NULL, 表示不需要获取时区信息
  * 返回值:执行成功返回EN_OK, 失败返回EN_ERROR，入参错误返回EN_INVALID_PARAM
  */
-INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+INT32 mmGetTimeOfDay(mmTimeval* timeVal, mmTimezone* timeZone)
 {
     if (timeVal == NULL) {
         return EN_INVALID_PARAM;
     }
-    INT32 ret = gettimeofday((struct timeval *)timeVal, (struct timezone *)timeZone);
+    INT32 ret = gettimeofday((struct timeval*)timeVal, (struct timezone*)timeZone);
     if (ret != EN_OK) {
         ret = EN_ERROR;
     }
@@ -154,7 +154,7 @@ mmTimespec mmGetTickCount(VOID)
 {
     mmTimespec rts = {0};
     struct timespec ts = {0};
-    (VOID)clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+    (VOID) clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     rts.tv_sec = ts.tv_sec;
     rts.tv_nsec = ts.tv_nsec;
     return rts;
@@ -166,14 +166,14 @@ mmTimespec mmGetTickCount(VOID)
  *      result--struct tm格式类型的时间
  * 返回值:执行成功返回EN_OK, 执行错误返回EN_ERROR, 入参检查错误返回EN_INVALID_PARAM
  */
-INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
+INT32 mmLocalTimeR(const time_t* timep, struct tm* result)
 {
     if ((timep == NULL) || (result == NULL)) {
         return EN_INVALID_PARAM;
     } else {
         time_t ts = *timep;
         struct tm nowTime = {0};
-        const struct tm *tmp = localtime_r(&ts, &nowTime);
+        const struct tm* tmp = localtime_r(&ts, &nowTime);
         if (tmp == NULL) {
             return EN_ERROR;
         }
@@ -193,4 +193,3 @@ INT32 mmLocalTimeR(const time_t *timep, struct tm *result)
 }
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
-

@@ -111,12 +111,6 @@ pattern_comment_2_end = re.compile(r'[*]/\s*$')
 # pattern define
 pattern_define = re.compile(r'^\s*#define')
 pattern_define_return = re.compile(r'\\\s*$')
-# pattern format_error_message
-pattern_format_error_message = re.compile(r'^int32_t FormatErrorMessage')
-pattern_format_error_message_return = re.compile(r'__attribute__')
-
-pattern_format_report_inner_error = re.compile(r'^void ReportInnerError')
-pattern_format_report_inner_error_return = re.compile(r'__attribute__')
 # blank line
 pattern_blank_line = re.compile(r'^\s*$')
 # virtual,explicit,friend,static
@@ -187,8 +181,15 @@ class H2CC(object):
         self.shared_includes_content = shared_includes_content
         self.line_index = 0
         self.input_fd = open(self.input_file, 'r')
-        self.input_content = self.input_fd.readlines()
+        self.input_content = self.input_fd.read()
         self.output_fd = open(self.output_file, 'w')
+
+        self.input_content = re.sub(
+            r"""^((GE_FUNC_HOST_VISIBILITY|GE_FUNC_DEV_VISIBILITY)\s*)+
+                |\n^\s+FORMAT_PRINTF\(.+?\)
+                |^(int32_t\sFormatErrorMessage|void\sReportInnerError)\(.+?__attribute__\(\(format\(printf,.+?\)\)\);
+             """, '', self.input_content, flags=re.MULTILINE | re.DOTALL | re.VERBOSE)
+        self.input_content = self.input_content.splitlines(True)
 
         # The state may be normal_now(in the middle of {}),class_now,namespace_now
         self.stack = []
@@ -220,14 +221,6 @@ class H2CC(object):
                     self.input_content[self.line_index]):
                 self.line_index += 1
             self.line_index += 1
-        # skip FormatErrorMessage with __attribute__
-        if pattern_format_error_message.search(self.input_content[self.line_index]) and \
-           pattern_format_error_message_return.search(self.input_content[self.line_index + 1]):
-            self.line_index += 2
-        # skip ReportInnerError with __attribute__
-        if pattern_format_report_inner_error.search(self.input_content[self.line_index]) and \
-           pattern_format_report_inner_error_return.search(self.input_content[self.line_index + 1]):
-            self.line_index += 2
 
     def write_inc_content(self):
         for shared_include_content in self.shared_includes_content:
@@ -347,7 +340,7 @@ class H2CC(object):
         logging.info("line[%s]", line)
         # deal with case of 'return type' and 'func_name' are not in the same line, like: 'int \n abc(int a, int b)'
         if re.search(r'^\s*(inline)?\s*[a-zA-Z0-9_]+\s*$', self.input_content[start_i - 1]):
-            line = self.input_content[start_i - 1] + line
+            line = self.input_content[start_i - 1].rstrip('\n') + " " + line
         line = line.lstrip()
         if not match:
             self.line_index += 1
