@@ -659,7 +659,7 @@ aclError aclrtGetPhyDevIdByLogicDevIdImpl(int32_t logicDevId, int32_t *const phy
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetUserDevIdByPhyDevIdImpl(int32_t phyDevId, int32_t *const userDevId)
+aclError aclrtGetUserDevIdByPhyDevIdImpl(const int32_t phyDevId, int32_t *const userDevId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetUserDevIdByPhyDevId);
     ACL_LOG_INFO("start to execute aclrtGetUserDevIdByPhyDevId, phyDevId is [%d]", phyDevId);
@@ -674,7 +674,7 @@ aclError aclrtGetUserDevIdByPhyDevIdImpl(int32_t phyDevId, int32_t *const userDe
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetPhyDevIdByUserDevIdImpl(int32_t userDevId, int32_t *const phyDevId)
+aclError aclrtGetPhyDevIdByUserDevIdImpl(const int32_t userDevId, int32_t *const phyDevId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetPhyDevIdByUserDevId);
     ACL_LOG_INFO("start to execute aclrtGetPhyDevIdByUserDevId, userDevId is [%d]", userDevId);

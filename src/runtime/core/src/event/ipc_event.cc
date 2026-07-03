@@ -167,7 +167,7 @@ rtError_t IpcEvent::IpcGetEventHandle(rtIpcEventHandle_t *handle)
         FEATURE_SVM_VMM_NORMAL_GRANULARITY))), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support Ipc event in current drv version, version",
         FEATURE_SVM_VMM_NORMAL_GRANULARITY);
-    memcpy_s(static_cast<void*>(handle), sizeof(uint64_t), &ipcHandle_, sizeof(uint64_t));
+    (void)memcpy_s(static_cast<void*>(handle), sizeof(uint64_t), &ipcHandle_, sizeof(uint64_t));
     return RT_ERROR_NONE;
 }
 
@@ -183,7 +183,7 @@ rtError_t IpcEvent::IpcHandleAllocAndImport(size_t granularity, rtIpcEventHandle
 
     // 1.2 import ipcHandlePa from ipcHandle
     uint64_t ipcHandle;
-    memcpy_s(&ipcHandle, sizeof(uint64_t), static_cast<void*>(ipcEventHandle), sizeof(uint64_t));
+    (void)memcpy_s(&ipcHandle, sizeof(uint64_t), static_cast<void*>(ipcEventHandle), sizeof(uint64_t));
     error = NpuDriver::ImportFromShareableHandle(ipcHandle, IMPORT_DEVICE_ID, &ipcHandlePa);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to open ipc event. Reason: ImportFromShareableHandle failed, error=%#x.", static_cast<uint32_t>(error));
