@@ -73,7 +73,7 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t s
         RtPtrToValue(*devPtr), (RtPtrToValue(*devPtr) + static_cast<uint64_t>(size)));
     const uint64_t va = RtPtrToValue(*devPtr);
     SomaApi::MemPoolAsyncConfig(memPoolId, va, aligned_size, false);
-    const AicpuOpType opType = AicpuOpType::MALLOC;
+    constexpr AicpuOpType opType = AicpuOpType::MALLOC;
     error = SomaAicpuKernelLaunch("SomaMemMng", aligned_size, va, memPoolId, stm, static_cast<int32_t>(opType), static_cast<int32_t>(flag));
     if (error != RT_ERROR_NONE) {
         (void)SomaApi::FreeToMemPool(RtValueToPtr<void*>(va));
@@ -109,8 +109,8 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
         RT_LOG(
             RT_LOG_INFO, "The va is successfully released to the memory pool, ptr=%#" PRIx64 ", stream_id=%d.",
             RtPtrToValue(ptr), stm->Id_());
-        const AicpuOpType opType = AicpuOpType::FREE;
-        const SomaAicpuSubCmd subCmd = SomaAicpuSubCmd::FREE;
+        constexpr AicpuOpType opType = AicpuOpType::FREE;
+        constexpr SomaAicpuSubCmd subCmd = SomaAicpuSubCmd::FREE;
         error = SomaAicpuKernelLaunch("SomaMemMng", allocSize, va, memPool, stm, static_cast<int32_t>(opType), static_cast<int32_t>(subCmd));
         COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT);
         ERROR_RETURN_MSG_INNER(error, "Failed to launch soma free aicpu kernel, va=%" PRIu64 ", memPoolId=%#" PRIx64 ", retCode=%#x.",

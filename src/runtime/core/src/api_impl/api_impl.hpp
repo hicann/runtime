@@ -22,7 +22,7 @@ enum SplitMode {
 };
 
 // drv split mode
-enum VmngSplitMode {
+enum VmngSplitMode : int32_t {
     RT_VMNG_NORMAL_NONE_SPLIT_MODE = 0,    // 物理机模式
     RT_VMNG_VIRTUAL_SPLIT_MODE,            // 虚拟机算力分组
     RT_VMNG_CONTAINER_SPLIT_MODE,          // 容器算力分组

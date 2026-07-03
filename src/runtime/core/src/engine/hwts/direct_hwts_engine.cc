@@ -263,9 +263,9 @@ void DirectHwtsEngine::WakeUpRecycleThread(void)
     if (!recycleThreadAlive_.load(std::memory_order_acquire)) {
         return;
     }
-    inFlightWakeUps_.fetch_add(1, std::memory_order_acq_rel);
+    (void)inFlightWakeUps_.fetch_add(1, std::memory_order_acq_rel);
     if (!recycleThreadAlive_.load(std::memory_order_acquire)) {
-        inFlightWakeUps_.fetch_sub(1, std::memory_order_release);
+        (void)inFlightWakeUps_.fetch_sub(1, std::memory_order_release);
         return;
     }
     (void)mmSemPost(&recycleThreadSem_);

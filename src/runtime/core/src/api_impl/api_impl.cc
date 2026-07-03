@@ -6291,7 +6291,7 @@ static rtError_t QueryQueueInfo(const int32_t devId, const void * const inBuff,
     const rtError_t ret = NpuDriver::MemQueueQueryInfoV2(devId, qid, &memQueInfo);
     ERROR_RETURN(ret, "query queque info failed. ret=%#x", static_cast<uint32_t>(ret));
 
-    *outLen = sizeof(uint32_t);
+    *outLen = static_cast<uint32_t>(sizeof(uint32_t));
     uint32_t *entityType = RtPtrToPtr<uint32_t *>(outBuff);
     *entityType = memQueInfo.entity_type;
 
