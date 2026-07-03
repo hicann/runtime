@@ -453,10 +453,22 @@ aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo *errorInfo)
 
     // Type conversion adaptation
     uint32_t rtsDeviceId = static_cast<uint32_t>(deviceId);
-    rtErrorInfo *rtsErrorInfo = reinterpret_cast<rtErrorInfo*>(errorInfo);
-
+    rtErrorInfo rtsErrorInfo = {};
     // Call RTS interface
-    ACL_REQUIRES_CALL_RTS_OK(rtsGetErrorVerbose(rtsDeviceId, rtsErrorInfo), rtsGetErrorVerbose);
+    ACL_REQUIRES_CALL_RTS_OK(rtsGetErrorVerbose(rtsDeviceId, &rtsErrorInfo), rtsGetErrorVerbose);
+    aclrtMemUceInfoArray *uceInfo = &(errorInfo->detail.uceInfo);
+    errorInfo->tryRepair = rtsErrorInfo.tryRepair;
+    errorInfo->hasDetail = rtsErrorInfo.hasDetail;
+    errorInfo->errorType = static_cast<aclrtErrorType>(rtsErrorInfo.errorType);
+    errorInfo->detail.aicoreErrType = static_cast<aclrtAicoreErrorType>(rtsErrorInfo.detail.aicoreErrType);
+    if ((rtsErrorInfo.hasDetail == 1U) && (rtsErrorInfo.errorType == RT_ERROR_MEMORY)) {
+        uceInfo->arraySize = rtsErrorInfo.detail.uceInfo.arraySize;
+        size_t realSize = std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(ACL_RT_MEM_UCE_INFO_MAX_NUM));
+        for (size_t i = 0U; i < realSize; ++i) {
+            uceInfo->memUceInfoArray[i].addr = reinterpret_cast<void *>(rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr);
+            uceInfo->memUceInfoArray[i].len = rtsErrorInfo.detail.uceInfo.repairAddrArray[i].len;
+        }
+    }
     ACL_LOG_INFO("successfully execute aclrtGetErrorVerbose");
     return ACL_SUCCESS;
 }
@@ -470,10 +482,21 @@ aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo *errorInfo)
 
     // Type conversion adaptation
     uint32_t rtsDeviceId = static_cast<uint32_t>(deviceId);
-    const rtErrorInfo *rtsErrorInfo = reinterpret_cast<const rtErrorInfo*>(errorInfo);
-
+    rtErrorInfo rtsErrorInfo = {};
+    rtsErrorInfo.tryRepair = errorInfo->tryRepair;
+    rtsErrorInfo.hasDetail = errorInfo->hasDetail;
+    rtsErrorInfo.errorType = static_cast<rtErrType>(errorInfo->errorType);
+    rtsErrorInfo.detail.aicoreErrType = static_cast<rtAicoreErrorType>(errorInfo->detail.aicoreErrType);
+    if ((rtsErrorInfo.hasDetail == 1U) && (rtsErrorInfo.errorType == RT_ERROR_MEMORY)) {
+        rtsErrorInfo.detail.uceInfo.arraySize = errorInfo->detail.uceInfo.arraySize;
+        size_t realSize = std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(RT_MAX_RECORD_PA_NUM_PER_DEV));
+        for (size_t i = 0U; i < realSize; ++i) {
+            rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr = reinterpret_cast<uint64_t>(errorInfo->detail.uceInfo.memUceInfoArray[i].addr);
+            rtsErrorInfo.detail.uceInfo.repairAddrArray[i].len = errorInfo->detail.uceInfo.memUceInfoArray[i].len;
+        }
+    }
     // Call RTS interface
-    ACL_REQUIRES_CALL_RTS_OK(rtsRepairError(rtsDeviceId, rtsErrorInfo), rtsRepairError);
+    ACL_REQUIRES_CALL_RTS_OK(rtsRepairError(rtsDeviceId, &rtsErrorInfo), rtsRepairError);
     ACL_LOG_INFO("successfully execute aclrtRepairError");
     return ACL_SUCCESS;
 }

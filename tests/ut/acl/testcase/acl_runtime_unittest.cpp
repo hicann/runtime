@@ -4011,12 +4011,59 @@ TEST_F(UTEST_ACL_Runtime, get_mem_uce_info_success)
   EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
-TEST_F(UTEST_ACL_Runtime, get_error_verbose_success)
+TEST_F(UTEST_ACL_Runtime, get_error_verbose_with_memory_error_and_detail)
 {
     int32_t deviceId = 0;
     aclrtErrorInfo errorInfo;
 
+    rtErrorInfo rtsErrorInfo;
+    rtsErrorInfo.tryRepair = 1;
+    rtsErrorInfo.hasDetail = 1;
+    rtsErrorInfo.errorType = RT_ERROR_MEMORY;
+    rtsErrorInfo.detail.aicoreErrType = RT_AICORE_ERROR_SW;
+    rtsErrorInfo.detail.uceInfo.arraySize = 2;
+    rtsErrorInfo.detail.uceInfo.repairAddrArray[0].ptr = 0x1000;
+    rtsErrorInfo.detail.uceInfo.repairAddrArray[0].len = 4096;
+    rtsErrorInfo.detail.uceInfo.repairAddrArray[1].ptr = 0x2000;
+    rtsErrorInfo.detail.uceInfo.repairAddrArray[1].len = 8192;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsGetErrorVerbose(_, _))
+    .WillOnce(DoAll(SetArgPointee<1>(rtsErrorInfo), Return(RT_ERROR_NONE)));
+
     aclError ret = aclrtGetErrorVerbose(deviceId, &errorInfo);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(errorInfo.tryRepair, 1);
+    EXPECT_EQ(errorInfo.hasDetail, 1);
+    EXPECT_EQ(errorInfo.errorType, ACL_RT_ERROR_MEMORY);
+    EXPECT_EQ(errorInfo.detail.uceInfo.arraySize, 2);
+    EXPECT_EQ(errorInfo.detail.uceInfo.memUceInfoArray[0].addr, reinterpret_cast<void*>(0x1000));
+    EXPECT_EQ(errorInfo.detail.uceInfo.memUceInfoArray[0].len, 4096);
+    EXPECT_EQ(errorInfo.detail.uceInfo.memUceInfoArray[1].addr, reinterpret_cast<void*>(0x2000));
+    EXPECT_EQ(errorInfo.detail.uceInfo.memUceInfoArray[1].len, 8192);
+}
+
+TEST_F(UTEST_ACL_Runtime, get_error_verbose_success)
+{
+    int32_t deviceId = 0;
+    aclrtErrorInfo errorInfo;
+    aclError ret = aclrtGetErrorVerbose(deviceId, &errorInfo);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, repair_error_with_memory_error_and_detail)
+{
+    int32_t deviceId = 0;
+    aclrtErrorInfo errorInfo;
+    errorInfo.tryRepair = 1;
+    errorInfo.hasDetail = 1;
+    errorInfo.errorType = ACL_RT_ERROR_MEMORY;
+    errorInfo.detail.aicoreErrType = ACL_RT_AICORE_ERROR_SW;
+    errorInfo.detail.uceInfo.arraySize = 2;
+    errorInfo.detail.uceInfo.memUceInfoArray[0].addr = reinterpret_cast<void*>(0x1000);
+    errorInfo.detail.uceInfo.memUceInfoArray[0].len = 4096;
+    errorInfo.detail.uceInfo.memUceInfoArray[1].addr = reinterpret_cast<void*>(0x2000);
+    errorInfo.detail.uceInfo.memUceInfoArray[1].len = 8192;
+    aclError ret = aclrtRepairError(deviceId, &errorInfo);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 

@@ -5476,12 +5476,40 @@ void Runtime::ProcHBMRas(const uint32_t devId)
     }
 }
 
+static const char_t* GetEventAssertDesc(const unsigned char assertion)
+{
+    struct AssertDesInfo {
+        unsigned char assert;
+        const char_t* name;
+    };
+
+    enum RtAssertType : unsigned char {
+        EVENT_RESUME = 0U,
+        EVENT_OCCUR = 1U,
+        ONE_TIME_EVENT = 2U,
+    };
+    const AssertDesInfo assertDesc[] = { {EVENT_RESUME, "Event resume"}, {EVENT_OCCUR, "Event occur"},
+                                       {ONE_TIME_EVENT, "One time event"}};
+
+    for (uint32_t i = 0U; i< sizeof(assertDesc) / sizeof(AssertDesInfo); i++) {
+        if (assertDesc[i].assert == assertion) {
+            return assertDesc[i].name;
+        }
+    }
+    return "unknown";
+}
+
 void Runtime::ReportHBMRasProc(void)
 {
     if (hbmRasProcFlag_ == HBM_RAS_WAIT_PROC) {
         for (uint32_t i = 0U; hbmRasThreadRunFlag_ == true && i < (RAS_QUERY_MAX_COUNT - 1U); i++) {
             Device *dev = GetDevice(rasInfo_.devId, 0U, false);
             if (dev != nullptr && !dev->IsDeviceRelease()) {
+                if (dev->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) {
+                    hbmRasProcFlag_ = HBM_RAS_WORKING;
+                    RT_LOG(RT_LOG_INFO, "device_id=%u is in the fast recovery phase and does not need to handle hbm ras.", rasInfo_.devId);
+                    break;
+                }
                 RT_LOG(RT_LOG_DEBUG, "wake up the recycle thread to receive cqe.");
                 dev->WakeUpRecycleThread();
             }
@@ -5506,8 +5534,8 @@ void Runtime::ReportHBMRasProc(void)
         hbmRasProcFlag_ = HBM_RAS_NOT_SUPPORT;
         RT_LOG(RT_LOG_EVENT, "Reading fault events is not supported");
     } else if (error == RT_ERROR_NONE && dmsEvent.eventId == HBM_ECC_NOTIFY_EVENT_ID) {
-        RT_LOG(RT_LOG_ERROR, "get fault event, device_id=%u, assert=%u, event_id=0x%x.",
-            dmsEvent.deviceId, dmsEvent.assertion, dmsEvent.eventId);
+        RT_LOG(RT_LOG_ERROR, "get fault event, device_id=%u, assert=%u[%s], event_id=0x%x.",
+            dmsEvent.deviceId, dmsEvent.assertion, GetEventAssertDesc(dmsEvent.assertion), dmsEvent.eventId);
         hbmRasProcFlag_ = HBM_RAS_WAIT_PROC;
         Device *dev = GetDevice(dmsEvent.deviceId, 0U);
         if (dev != nullptr) {
