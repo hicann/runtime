@@ -1300,8 +1300,11 @@ void Engine::PrintfRun()
 {
     Device * const dev = GetDevice();
     NULL_PTR_RETURN_DIRECTLY(dev);
-    Context *ctx = Runtime::Instance()->GetPriCtxByDeviceId(dev->Id_(), 0U);
-    InnerThreadLocalContainer::SetCurCtx(ctx);
+    Context * const ctx = Runtime::Instance()->GetPriCtxByDeviceId(dev->Id_(), 0U);
+    InnerThreadLocalContainer::SetCurCtx(ctx, true);
+    const ScopeGuard ctxGuard([]() {
+        InnerThreadLocalContainer::SetCurCtx(nullptr);
+    });
     GlobalStateManager::GetInstance().IncBackgroundThreadCount(__func__);
     while (printThreadRunFlag_ && !Runtime::Instance()->IsExiting()) {
         GlobalStateManager::GetInstance().BackgroundThreadWaitIfLocked(__func__);
