@@ -25,7 +25,7 @@ Analyze the overall directory structure and identify key components:
 - `inc/`: Public header files and APIs
 - `proto/`: Protocol buffer definitions for dump data structures
 - `init/`: Initialization and configuration
-对外头文件目录：C:\Users\y00334430\runtime\pkg_inc\dump目录
+对外头文件目录：pkg_inc\dump
 
 ### 2. Key Modules and Classes
 
