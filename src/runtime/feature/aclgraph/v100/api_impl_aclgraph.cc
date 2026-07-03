@@ -27,9 +27,9 @@ rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "Stream begin capture",
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
-    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "Stream begin capture",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
     return curCtx->StreamBeginCapture(stm, mode, mdl);
 }
@@ -48,9 +48,9 @@ rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMd
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "Stream end capture",
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
-    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "stream end capture",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
     Model *mdl = nullptr;    
@@ -140,10 +140,10 @@ rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, "rtStreamAddToModel",
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(captureMdl, curCtx, RT_ERROR_MODEL_CONTEXT);
-    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "rtStreamAddToModel",
         "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", stm->Id_()));
 
     return curCtx->StreamAddToModel(stm, captureMdl);
@@ -181,8 +181,8 @@ rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValu
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
     NULL_PTR_RETURN_MSG_OUTER(captureModel, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(!(captureModel->IsCaptureActive()),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "mdl",
-        "The ACL Graph capture has ended");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtModelCondHandleCreate", "modelRI",
+        RtFmtMsg("ModelRI (model_id=%d) is not in the capture stage", mdl->Id_()));
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
@@ -217,13 +217,13 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream *
     const auto *inner = static_cast<const rtInnerObject *>(params.handle);
     CondHandle *realHandle = static_cast<CondHandle *>(inner->object);
     COND_RETURN_AND_MSG_OUTER((realHandle->GetSubCaptureModels().size() != 0), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "params.handle", "the handle has been launched with condition task.");
+        ErrorCode::EE1017, "rtStreamAddCondTask", "params.handle", "The handle has been launched with condition task.");
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(!stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED,
-        ErrorCode::EE1016, __func__, "stream " + std::to_string(stm->Id_()) + " is not in the capture stage");
+        ErrorCode::EE1016, "rtStreamAddCondTask", RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
     NULL_PTR_RETURN(stm->GetCaptureStream(), RT_ERROR_STREAM_NOT_CAPTURED);
     rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
@@ -234,13 +234,13 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream *
     auto &addStreamMap = (dynamic_cast<CaptureModel *>(stm->GetCaptureStream()->Model_()))->GetAddStreamMap();
     auto it = addStreamMap.find(stm);
     COND_RETURN_AND_MSG_OUTER((it != addStreamMap.end()), RT_ERROR_FEATURE_NOT_SUPPORT,
-        ErrorCode::EE1016, __func__, "The ACL Graph add stream does not support add condition task");
+        ErrorCode::EE1016, "rtStreamAddCondTask", "The ACL Graph add stream does not support add condition task");
 
     error = curCtx->CheckCondTaskParamsSize(params);
     ERROR_RETURN_MSG_INNER(error, "Failed to check condition task params, condition type=%u, condition size=%u, retCode=%#x.",
         params.type, params.size, static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(!realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "condHandle", "The condHandle has already been used by rtStreamAddCondTask");
+        "rtStreamAddCondTask", "params.handle", "The condHandle has already been used by rtStreamAddCondTask");
 
     realHandle->SetCondType(params.type);
     realHandle->SetCondSize(params.size);
