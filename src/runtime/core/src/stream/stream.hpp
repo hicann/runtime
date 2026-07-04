@@ -45,7 +45,7 @@ constexpr uint32_t RECYCLE_INTERVAL = 10U;
 constexpr uint64_t STREAM_FAILURE_MODE_MASK = 0x00000001U;
 constexpr uint32_t STREAM_TO_FULL_CNT = 64U;
 constexpr uint32_t CAPTURE_TASK_RESERVED_NUM = 32U;
-constexpr uint32_t STREAM_SQE_BUFFER_MAX_SIZE = 2 * 1024 * 1024;  // 2M, max sq depth 32768
+constexpr uint32_t STREAM_SQE_BUFFER_MAX_SIZE = 2U * 1024U * 1024U;  // 2M, max sq depth 32768
 constexpr uint32_t STREAM_SQ_MAX_DEPTH = 32768U;
 
 // 自动切分SQ相关常量

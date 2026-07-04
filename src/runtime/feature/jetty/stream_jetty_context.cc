@@ -134,8 +134,8 @@ void StreamJettyContext::ReleaseBuffers(Driver *driver)
         }
     }
     wqeBuffers.clear();
-    filledWqeCount = 0;
-    capacity = 0;
+    filledWqeCount = 0U;
+    capacity = 0U;
 }
 
 } // namespace runtime

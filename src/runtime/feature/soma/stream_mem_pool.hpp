@@ -36,7 +36,7 @@ constexpr uint64_t DEVICE_POOL_VADDR_START = (12ULL << 40);  // 12 TB
 constexpr uint64_t DEVICE_POOL_VADDR_SIZE = (2ULL << 40);  // 2 TB
 constexpr uint64_t DEVICE_POOL_MIN_BLOCK_SIZE = (2UL << 20); // 2 MB
 constexpr uint64_t DEVICE_POOL_ALIGN_SIZE = (2UL << 20); // 2 MB
-constexpr size_t HASH_GOLDEN_RATIO = 0x9e3779b9U;
+constexpr size_t HASH_GOLDEN_RATIO = 0x9e3779b9UL;
 constexpr int INVALID_STREAM_ID = -1;
 constexpr int INVALID_SEQ_ID = -1;
 
