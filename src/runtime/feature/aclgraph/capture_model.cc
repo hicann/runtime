@@ -248,13 +248,13 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
     RT_LOG(RT_LOG_INFO, "capture model execute, model_id=%u!", Id_());
 
     if (IsCapturing()) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model", RtFmtMsg("Model (model_id=%u) is in capturing state, status=CAPTURING", Id_()));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "modelRI", RtFmtMsg("ModelRI (model_id=%u) is in capturing state, status=CAPTURING", Id_()));
         return RT_ERROR_MODEL_CAPTURED;
     }
 
     if (captureModelStatus_ != RtCaptureModelStatus::READY) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model",
-            RtFmtMsg("Model (model_id=%u) is not ready, status=%s", Id_(), CaptureModelStatusToString(captureModelStatus_).c_str()));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "modelRI",
+            RtFmtMsg("ModelRI (model_id=%u) is not ready, status=%s", Id_(), CaptureModelStatusToString(captureModelStatus_).c_str()));
         return RT_ERROR_MODEL_EXE_FAILED;
     }
 

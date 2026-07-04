@@ -247,11 +247,11 @@ bool Context::IsCaptureModeSupport(void) const
 static inline rtError_t CheckCaptureModelIsCaptured(Model * const mdl)
 {
     COND_PROC((mdl == nullptr), return RT_ERROR_NONE);
-
-    std::unique_lock<std::mutex> taskLock(mdl->Context_()->GetCaptureLock());
-    std::list<Stream*> headStreams = mdl->GetHeadStreamList_();
-    const size_t stmNum = headStreams.size();
-    COND_RETURN_ERROR(stmNum != 0U, RT_ERROR_MODEL_CAPTURED, "model is captured, model_id=%u.", mdl->Id_());
+    CaptureModel *captureModelTmp = dynamic_cast<CaptureModel *>(mdl);
+    if (captureModelTmp->GetCaptureModelStatus() != RtCaptureModelStatus::NONE) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, "rtStreamBeginCaptureToModel", "modelRI", RtFmtMsg("ModelRI (model_id=%u) is already captured", mdl->Id_()));
+        return RT_ERROR_MODEL_CAPTURED;
+    }
 
     return RT_ERROR_NONE;
 }
@@ -261,6 +261,7 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     Model *captureModel = mdl;
 
     BufferAllocator::OpenHugeBuff();
+    std::unique_lock<std::mutex> taskLock(captureLock_);
     rtError_t error = CheckCaptureModelIsCaptured(mdl);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "stream begin captured failed, stream_id=%d, model_id=%u.",
         stm->Id_(), mdl->Id_());
@@ -294,7 +295,6 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
             device_->Id_(), captureModel->Id_());
     }
 
-    std::unique_lock<std::mutex> taskLock(captureLock_);
     error = StreamAddToCaptureModelProc(stm, captureModel, true);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "add stream to capture model failed, device_id=%u, model_id=%u, "

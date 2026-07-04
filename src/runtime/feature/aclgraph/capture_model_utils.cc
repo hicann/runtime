@@ -207,8 +207,8 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
         RawDevice* const rawDev = dynamic_cast<RawDevice *>(dev);
         rawDev->PollEndGraphNotifyInfoByModelId(mdl->Id_());
         if (!captureModel->CanUpdate()) {
-            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model",
-                RtFmtMsg("Model (model_id=%u) is in running or capture state, status=%s",
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "modelRI",
+                RtFmtMsg("ModelRI (model_id=%u) is in running or capture state, status=%s",
                     captureModel->Id_(), CaptureModelStatusToString(captureModel->GetCaptureModelStatus()).c_str()));
             return RT_ERROR_MODEL_UPDATE_FAILED;    
         }
