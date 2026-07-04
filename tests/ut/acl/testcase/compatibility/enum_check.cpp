@@ -1063,13 +1063,13 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtEngineType)
 TEST_F(UTEST_ACL_compatibility_enum_check, AclProfType)
 {
   acl::AclProfType value;
-  value = (acl::AclProfType)0x300DCU;
+  value = (acl::AclProfType)0x300DBU;
   EXPECT_EQ(value, acl::AclrtMemExportToShareableHandleV2);
 
-  value = (acl::AclProfType)0x300DDU;
+  value = (acl::AclProfType)0x300DCU;
   EXPECT_EQ(value, acl::AclrtMemImportFromShareableHandleV2);
 
-  value = (acl::AclProfType)0x300DEU;
+  value = (acl::AclProfType)0x300DDU;
   EXPECT_EQ(value, acl::AclrtMemSetPidToShareableHandleV2);
 
   EXPECT_EQ(sizeof(acl::AclProfType), 4);

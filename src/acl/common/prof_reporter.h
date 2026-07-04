@@ -233,7 +233,6 @@ namespace acl {
         AclrtIpcMemImportPidInterServer,
         AclrtNotifySetImportPidInterServer,
         AclrtMemcpyAsyncWithOffset,
-        AclrtGetOpExecuteTimeOut,
         AclrtCheckArchCompatibility,
         AclrtCmoGetDescSize,
         AclrtCmoSetDesc,

@@ -249,7 +249,6 @@ namespace acl {
         {AclProfType::AclrtIpcMemImportPidInterServer,          "aclrtIpcMemIpmportPidInterServer"},
         {AclProfType::AclrtNotifySetImportPidInterServer,       "aclrtNotifySetImportPidInterServer"},
         {AclProfType::AclrtMemcpyAsyncWithOffset,               "aclrtMemcpyAsyncWithOffset"},
-        {AclProfType::AclrtGetOpExecuteTimeOut,                 "aclrtGetOpExecuteTimeOut"},
         {AclProfType::AclrtCheckArchCompatibility,              "aclrtCheckArchCompatibility"},
         {AclProfType::AclrtCmoGetDescSize,                      "aclrtCmoGetDescSize"},
         {AclProfType::AclrtCmoSetDesc,                          "aclrtCmoSetDesc"},
