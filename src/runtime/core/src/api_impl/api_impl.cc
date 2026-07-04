@@ -2555,6 +2555,10 @@ rtError_t ApiImpl::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t fl
             __func__, RtFmtMsg("%#" PRIx64, RtPtrToValue(pHost)), "pHost",
             "The host pointer has not been registered for device address mapping");
         return RT_ERROR_NONE;
+    } else {
+        COND_RETURN_AND_MSG_OUTER(ret == RT_ERROR_INVALID_VALUE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+            __func__, RtFmtMsg("%#" PRIx64, RtPtrToValue(pHost)), "pHost",
+            "The host pointer has not been registered for device address mapping");
     }
     return ret;
 }
