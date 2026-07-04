@@ -23,7 +23,8 @@ Kernel::Kernel(const char_t * const kernelName, const uint64_t key, Program * co
     : program_(prog), kernelAttrType_(kernelAttrType), stubFun_(nullptr), name_(kernelName), tilingKey_(key),
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType),
-      taskRation_(taskRation), funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
+      taskRation_(taskRation), funcType_(funcType), userParaNum_(0U), systemParaNum_(0U),
+      dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
       kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
 {
     if (taskRation_ == NONE_TASK_RATION) {

@@ -1414,7 +1414,7 @@ static rtError_t BinaryMemAdvise(void * const devMem, const uint32_t devSize, rt
         return RT_ERROR_NONE;
     }
 
-    uint32_t devId = device->Id_();
+    const uint32_t devId = device->Id_();
     Driver * const curDrv = device->Driver_();
 
     rtError_t error = curDrv->MemAdvise(devMem, static_cast<uint64_t>(devSize), static_cast<uint32_t>(adviseType), devId);
@@ -1433,7 +1433,7 @@ TIMESTAMP_EXTERN(BinaryMemCpy);
 rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t adviseSize, const uint32_t size, void * const data,
     const Device * const device, const bool readonly)
 {
-    uint32_t devId = device->Id_();
+    const uint32_t devId = device->Id_();
     Driver * const curDrv = device->Driver_();
 
     RT_LOG(RT_LOG_INFO, "binary memcpy to dev_mem, dev_mem=%p, adviseSize=%u, size=%u, device_id=%u, readonly=%d.",

@@ -158,7 +158,7 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
     ERROR_RETURN(
         error, "failed to get prefetch cnt, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.", error, dev->Id_(),
         stm->Id_(), taskInfo->id);
-    rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
+    const rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
     StarsArgLoaderResult result = {};
     error = LoadKernelArgs(stm, argsInfo, result);
     ERROR_RETURN(

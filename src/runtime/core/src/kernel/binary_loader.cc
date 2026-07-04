@@ -155,13 +155,13 @@ rtError_t BinaryLoader::ParseLoadOptions()
 std::string BinaryLoader::GenerateSoNameFromData()
 {
     const size_t hashSize = binarySize_ > 1024UL ? 1024UL : binarySize_;
-    uint64_t hash = GetQuickHash(binaryBuffer_, hashSize);
+    const uint64_t hash = GetQuickHash(binaryBuffer_, hashSize);
 
     std::string soName = std::to_string(hash) + "_" + std::to_string(binarySize_);
     std::lock_guard<std::mutex> lock(g_soNameCacheMutex);
 
     if (g_soNameCache.find(soName) != g_soNameCache.end()) {
-        uint64_t fullHash = GetQuickHash(binaryBuffer_, binarySize_);
+        const uint64_t fullHash = GetQuickHash(binaryBuffer_, binarySize_);
         soName = std::to_string(fullHash) + "_" + std::to_string(binarySize_);
     }
 

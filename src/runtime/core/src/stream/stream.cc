@@ -699,7 +699,7 @@ rtError_t Stream::Setup()
     if (error == RT_ERROR_DRV_NO_RESOURCES) {
         DeviceSqCqPool *sqcqPool = device_->GetDeviceSqCqManage();
         if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
-            Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
+            (void)Context_()->TryRecycleCaptureModelResource(1U, 0U, nullptr);
         }
 
         if ((sqcqPool != nullptr) && (sqcqPool->GetSqCqPoolFreeResNum() != 0U)) {
@@ -3882,7 +3882,7 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
 
         if (tryCount >= maxTryCount) {
             if (timeout > 0) {
-                uint64_t count = GetTimeInterval(beginTime);
+                const uint64_t count = GetTimeInterval(beginTime);
                 COND_RETURN_ERROR_MSG_INNER((count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                     "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms, tryCount=%u.",
                     deviceId, streamId_, count, timeout, tryCount);
@@ -4903,7 +4903,7 @@ void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t
         return;
     }
     std::vector<TraceEvent> recordArray;
-    pid_t pid = getpid();
+    const pid_t pid = getpid();
     uint32_t taskDur = 0U;
     for (auto it = delayRecycleTaskid_.begin(); it != delayRecycleTaskid_.end(); ++it) {
         TraceEvent record = {};
@@ -4936,14 +4936,14 @@ void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t
         record.args.taskId = task->id;
         FillTaskExtendInfo(task, record);
 
-        recordArray.emplace_back(record);
+        (void)recordArray.emplace_back(record);
     }
 
     //translate record array to json string;
     std::ostringstream json_array;
     for (size_t i = 0; i < recordArray.size(); ++i) {
         json_array << TraceEventToJson(recordArray[i]);
-        if ((i < recordArray.size() - 1) || (isLastStm == false)) {
+        if ((i < recordArray.size() - 1UL) || (isLastStm == false)) {
             json_array << ",";
         }
         json_array << "\n";

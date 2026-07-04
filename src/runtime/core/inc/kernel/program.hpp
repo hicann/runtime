@@ -471,7 +471,7 @@ protected:
 private:
     void SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj);
     rtError_t ParseTilingKey(const std::string &kernelName, uint64_t &tilingKey) const;
-    rtError_t GetKernelTypeAndMixTypeByMetaInfo(const RtKernel * const elfkernelInfo,
+    static rtError_t GetKernelTypeAndMixTypeByMetaInfo(const RtKernel * const elfkernelInfo,
         rtKernelAttrType &kernelAttrType, uint8_t &mixType);
     void GetKernelTypeAndMixTypeByName(const std::string kernelName,
         rtKernelAttrType &kernelAttrType, uint8_t &mixType);

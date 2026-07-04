@@ -25,6 +25,7 @@
 #include "npu_driver.hpp"
 #include "ctrl_res_pool.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "context.hpp"
 #include "api_impl.hpp"
 #include "aicpu_err_msg.hpp"
 #include "thread_local_container.hpp"
@@ -2250,6 +2251,28 @@ TEST_F(DeviceTest, StreamSetupTryAlloc)
     EXPECT_EQ(ret, 0U);
 
     GlobalMockObject::verify();
+    delete stream;
+    delete device;
+}
+
+TEST_F(DeviceTest, StreamSetupTryAllocWithContextRecycleResource)
+{
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+    Stream *stream = new Stream(device, 0);
+    Context *ctx = new Context(device, 0);
+    ctx->Init();
+    stream->SetContext(ctx);
+
+    MOCKER_CPP(&StreamSqCqManage::AllocStreamSqCq).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+    MOCKER_CPP(&Context::TryRecycleCaptureModelResource).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t ret = stream->Setup();
+    ASSERT_EQ(ret, RT_ERROR_DRV_NO_RESOURCES);
+
+    GlobalMockObject::verify();
+    stream->SetContext(nullptr);
+    delete ctx;
     delete stream;
     delete device;
 }

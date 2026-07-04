@@ -542,7 +542,7 @@ static void SetMetaFlag(rtElfData * const elfData, uint32_t type)
     COND_RETURN_VOID((type == 0U || type > 32U), "Invalid elf binary addr type=%u!", type);
 
     RT_LOG(RT_LOG_INFO, "Set elf binary addr type=%u", type);
-    const uint32_t bit = (1U << (type - 1));
+    const uint32_t bit = (1U << (type - 1U));
     elfData->ascendMetaFlag |= bit;
 }
 
@@ -1256,7 +1256,7 @@ RtKernel *GetKernels(rtElfData * const elfData)
                 return nullptr;
             }
             (void)memset_s(kernels[kernelNum].name, len + 1U, 0, len + 1U);
-            errno_t rc = strncpy_s(kernels[kernelNum].name, len + 1U, stringTab + psym->st_name, strTabSize);
+            const errno_t rc = strncpy_s(kernels[kernelNum].name, len + 1U, stringTab + psym->st_name, strTabSize);
             COND_LOG(rc != EOK, "strncpy_s failed, size=%zu, strTabSize=%u, retCode=%d.", len + 1U, strTabSize, rc);
             kernels[kernelNum].offset = static_cast<int32_t>(psym->st_value);
             kernels[kernelNum].length = static_cast<int32_t>(psym->st_size);

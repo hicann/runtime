@@ -98,7 +98,7 @@ rtError_t ConvertArgsArrayToArgsEx(rtArgsEx_t &argsEx, const Kernel *kernel, voi
         argsBuffer = ThreadLocalContainer::GetOrCreateArgsBuffer(paramTotalSize);
         NULL_PTR_RETURN_MSG(argsBuffer, RT_ERROR_MEMORY_ALLOCATION);
 
-        rtError_t error = CopyKernelParamsToBuffer(kernel, argsArray, argsBuffer);
+        const rtError_t error = CopyKernelParamsToBuffer(kernel, argsArray, argsBuffer);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
                           "CopyKernelParamsToBuffer failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
