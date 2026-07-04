@@ -224,6 +224,36 @@ bool CaptureModel::IsAddStream(const Stream *stm) const
     }
     return false;
 }
+
+void CaptureModel::ReportTrackData(Profiler* profiler)
+{
+    for (const auto &s : StreamList_()) {
+        if (s == nullptr) {
+            continue;
+        }
+
+        for (const auto &taskId : s->GetCacheCaptureTaskId()) {
+            profiler->ReportTrackData(s, taskId);
+        }
+    }
+
+    trackDataReportFlag_ = true;
+}
+
+void CaptureModel::ReportTrackDataForAllModels(Profiler* profiler)
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        curMdl->ReportTrackData(profiler);
+    }
+
+    return;
+}
+
 void CaptureModel::ReportCacheTrackData()
 {
     if (trackDataReportFlag_) {
@@ -233,17 +263,9 @@ void CaptureModel::ReportCacheTrackData()
     if ((profilerPtr == nullptr) || !(profilerPtr->GetTrackProfEnable())) {
         return;
     }
-    for (const auto &s : StreamList_()) {
-        if (s == nullptr) {
-            continue;
-        }
-        for (const auto &taskId : s->GetCacheCaptureTaskId()) {
-            profilerPtr->ReportTrackData(s, taskId);
-        }
-    }
-    ReportedStreamInfoForProfiling();
-    ReportShapeInfoForProfiling();
-    trackDataReportFlag_ = true;
+    ReportTrackDataForAllModels(profilerPtr);
+    ReportedStreamInfoForProfilingForAllModels();
+    ReportShapeInfoForProfilingForAllModels();
 }
 
 std::vector<CaptureModel *> &CaptureModel::GetAllSubCaptureModels()
@@ -960,6 +982,21 @@ void CaptureModel::ReportedStreamInfoForProfiling() const
     }
     return;
 }
+
+void CaptureModel::ReportedStreamInfoForProfilingForAllModels()
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        curMdl->ReportedStreamInfoForProfiling();
+    }
+
+    return;
+}
+
 void CaptureModel::EraseStreamInfoForProfiling() const
 {
     MsprofCompactInfo compactInfo;
@@ -1584,7 +1621,22 @@ void CaptureModel::ReportShapeInfoForProfiling() const
         }
     }
 }
-rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev)
+
+void CaptureModel::ReportShapeInfoForProfilingForAllModels()
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        curMdl->ReportShapeInfoForProfiling();
+    }
+
+    return;
+}
+
+rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device * const dev)
 {
     RT_LOG(RT_LOG_INFO, "Begin restore capture model, modelId=%u, deviceId=%u.", Id_(), dev->Id_());
     for (auto &stream : StreamList_()) {
@@ -1598,6 +1650,22 @@ rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev)
     SetIsSendSqe(false);
     refCount_ = 0;
     RestoreJettyForSnapshot();
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::RestoreForSoftwareSq(Device * const dev)
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        rtError_t error = curMdl->RestoreForSoftwareSqForOneModels(dev);
+        COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Restore capture stream failed, model_Id=%u, ret=%d.",
+            curMdl->Id_(), error);
+    }
+
     return RT_ERROR_NONE;
 }
 

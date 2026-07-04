@@ -216,37 +216,13 @@ rtError_t SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
         streamId, pos, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
+
+    error = PostProcCaptureConditionTask(condHandle, stm, condTask->id);
+    ERROR_RETURN_MSG_INNER(error, "Failed to post proc capture condition task, stream_id=%d, task_id=%u, retCode=%#x.",
+        stm->Id_(), condTask->id, static_cast<uint32_t>(error));
+
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), condTask->taskSn);
-
     condHandle->SetSubModelExeStream(condTask->stream);
-    return RT_ERROR_NONE;
-}
-
-rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
-{
-    Notify *notify = condHandle->GetSubModelNotify();
-    const rtError_t retFreeId = notify->FreeId();
-    COND_PROC(retFreeId != RT_ERROR_NONE, RT_LOG(RT_LOG_WARNING, "Free notify %u failed", notify->GetNotifyId()));
-
-    for (Model *mdl : condHandle->GetSubCaptureModels()) {
-        CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-        if (subModel == nullptr) {
-            continue;
-        }
-        subModel->SetEndGraphNotify(notify);
-    }
-    // 存储id, handle到父capture model中
-    Stream *captureStream = stm->GetCaptureStream();
-    NULL_PTR_RETURN(captureStream, RT_ERROR_STREAM_NULL);
-
-    Model *capMdl = captureStream->Model_();
-    NULL_PTR_RETURN(capMdl, RT_ERROR_MODEL_NULL);
-
-    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(capMdl);
-    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
-
-    captureModel->StoreCondHandleTaskInfo(captureStream->Id_(), captureStream->GetLastTaskId(), condHandle);
-
     return RT_ERROR_NONE;
 }
 
@@ -277,10 +253,6 @@ rtError_t StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Str
     error = SubmitCaptureConditionTask(condHandle, stm);
     ERROR_RETURN(error, "Failed to submit capture condition task, model_id=%u, stream_id=%d, condition type=%d, condition size=%u, retCode=%#x.",
         stm->Model_()->Id_(), stm->Id_(), params.type, params.size, static_cast<uint32_t>(error));
-
-    error = PostProcCaptureConditionTask(condHandle, stm);
-    ERROR_RETURN(error, "Failed to post proc capture condition task, model_id=%u, stream_id=%d, retCode=%#x.",
-        stm->Model_()->Id_(), stm->Id_(), static_cast<uint32_t>(error));
 
     subModelErrRecycle.ReleaseGuard();
     return RT_ERROR_NONE;

@@ -2198,7 +2198,7 @@ protected:
         MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
             .stubs().with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE)).will(returnValue(true));
         MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
-            .stubs().with(eq(TS_FEATURE_ACLGRAPH_CONDOP)).will(returnValue(true));
+            .stubs().with(eq(TS_FEATURE_ACLGRAPH_COND_OP)).will(returnValue(true));
 
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -2644,9 +2644,9 @@ TEST_F(DavidCondHandleTest, CheckCaptureModelSupportCondOp_FeatureNotSupport)
 
     MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
-        .stubs().with(eq(TS_FEATURE_ACLGRAPH_CONDOP)).will(returnValue(false));
+        .stubs().with(eq(TS_FEATURE_ACLGRAPH_COND_OP)).will(returnValue(false));
 
-    EXPECT_FALSE(device_->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_CONDOP));
+    EXPECT_FALSE(device_->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_COND_OP));
 
     rtError_t ret = CheckCaptureModelSupportCondOp(device_);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -2667,12 +2667,12 @@ TEST_F(DavidCondHandleTest, FindStreamIdInSubModels_FoundInNestedSubModel)
 
     auto *subModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
     subModel->context_ = currentCtx;
-    subModel->SetSubCaptureModel();
+    subModel->SetSubCaptureModelEnable();
     subModel->SetSoftwareSqEnable();
 
     auto *nestedModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
     nestedModel->context_ = currentCtx;
-    nestedModel->SetSubCaptureModel();
+    nestedModel->SetSubCaptureModelEnable();
     nestedModel->SetSoftwareSqEnable();
 
     auto *outerCond = new CondHandle(parentModel, 0, static_cast<rtCondHandleFlag_t>(0));

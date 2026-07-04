@@ -2118,6 +2118,12 @@ rtError_t ApiImplDavid::StreamAddCondTask(rtCondTaskParams params, Stream * cons
     rtError_t error = StreamAddCondTaskParasCheck(params, stm, &realHandle);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "condition task parameters check failed.");
 
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
+    ERROR_RETURN_MSG_INNER(error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.",
+        params.type, params.size, static_cast<uint32_t>(error));
+
     return cce::runtime::StreamAddCondTask(realHandle, params, stm, flags);
 }
 

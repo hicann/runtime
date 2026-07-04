@@ -105,7 +105,7 @@ typedef enum {
     TS_FEATURE_QUERY_STREAM_OVERFLOW_STATUS = 48, // support query overflow bit
     TS_FEATURE_AICORE_TIMEOUT_DFX = 49,
     TS_FEATURE_FLIP_TASK_WITH_STREAM_ID = 50,
-    TS_FEATURE_ACLGRAPH_CONDOP = 51, //ACL Grpah support cond op
+    TS_FEATURE_ACLGRAPH_COND_OP = 51, //ACL Grpah support cond op
 } rtTschFeature;
 
 typedef enum {

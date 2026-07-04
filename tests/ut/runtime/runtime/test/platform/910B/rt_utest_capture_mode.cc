@@ -1139,7 +1139,7 @@ protected:
             .will(returnValue(true));
         MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
             .stubs()
-            .with(eq(TS_FEATURE_ACLGRAPH_CONDOP))
+            .with(eq(TS_FEATURE_ACLGRAPH_COND_OP))
             .will(returnValue(true));
         MOCKER(CheckCaptureModelSupportSoftwareSq)
             .stubs()

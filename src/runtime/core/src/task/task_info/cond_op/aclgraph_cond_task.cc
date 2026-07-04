@@ -10,6 +10,7 @@
 
 #include "stream.hpp"
 #include "runtime.hpp"
+#include "cond_enum_desc.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "context.hpp"
 #include "aclgraph_cond_task.h"
@@ -82,7 +83,7 @@ static rtError_t CondTaskFuncCallDevMemAlloc(TaskInfo* taskInfo, CondHandle *con
     return RT_ERROR_NONE;
 }
 
-static rtError_t CondTaskFuncCallMemAlloc(TaskInfo* taskInfo)
+static rtError_t AllocCondTaskFuncCallMem(TaskInfo* taskInfo)
 {
     void *devMem = nullptr;
     Stream * const stream = taskInfo->stream;
@@ -212,15 +213,17 @@ rtError_t CaptureConditionTaskInit(TaskInfo *taskInfo, CondHandle *condHandle)
     COND_RETURN_ERROR(condTaskInfo->funCallMemSize == 0, RT_ERROR_INVALID_VALUE, "Invalid cond type, cond type=%d", condHandle->GetCondType());
 
     Notify *notify = condHandle->GetSubModelNotify();
-    condTaskInfo->notifyId = (notify != nullptr) ? notify->GetNotifyId() : 0U;
-    condTaskInfo->notifyTimeout = MAX_UINT32_NUM;
+    COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "Sub model end graph notify is null.");
 
+    condTaskInfo->notifyId = notify->GetNotifyId();
+    condTaskInfo->notifyTimeout = MAX_UINT32_NUM;
     if (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) {
+        // 申请while条件算子中第二个条件算子任务，用于判断是否继续执行while子模型
         const rtError_t ret = AllocJumpBackFuncCallMemForCaptureCondTask(taskInfo);
         ERROR_RETURN(ret, "alloc jumpBack func call mem failed, retCode=%#x.", ret);
     }
 
-    return CondTaskFuncCallMemAlloc(taskInfo);
+    return AllocCondTaskFuncCallMem(taskInfo);
 }
 
 void CaptureConditionTaskUnInit(TaskInfo * const taskInfo)
@@ -228,13 +231,68 @@ void CaptureConditionTaskUnInit(TaskInfo * const taskInfo)
     (void)FreeFuncCallMemForCaptureCondTask(taskInfo);
 
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
-    if (condTaskInfo->condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE && condTaskInfo->jumpBackBaseFuncCallSvmMem != nullptr) {
+    if (condTaskInfo->jumpBackBaseFuncCallSvmMem != nullptr) {
         const auto dev = taskInfo->stream->Device_();
         dev->Driver_()->DevMemFree(condTaskInfo->jumpBackBaseFuncCallSvmMem, dev->Id_());
         condTaskInfo->jumpBackBaseFuncCallSvmMem = nullptr;
         condTaskInfo->jumpBackFuncCallSvmMem = nullptr;
         condTaskInfo->jumpBackFunCallMemSize = 0;
     }
+}
+
+rtError_t CheckCondTaskParamsSize(rtCondTaskParams params)
+{
+    RT_LOG(RT_LOG_DEBUG, "condition type=%u, condition size=%u", params.type, params.size);
+    switch (params.type) {
+        case RT_COND_TASK_TYPE_IF:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+                (params.size != RT_COND_NUMBER_ONE) && (params.size != RT_COND_NUMBER_TWO),
+                RT_ERROR_INVALID_VALUE, params.size,
+                "1 or 2");
+            return RT_ERROR_NONE;
+        case RT_COND_TASK_TYPE_WHILE:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size != RT_COND_NUMBER_ONE,
+                RT_ERROR_INVALID_VALUE, params.size,
+                "1");
+            return RT_ERROR_NONE;
+        case RT_COND_TASK_TYPE_SWITCH:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size == RT_COND_NUMBER_ZERO,
+                RT_ERROR_INVALID_VALUE, params.size,
+                "greater than 0");
+            return RT_ERROR_NONE;
+        default:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(true, RT_ERROR_INVALID_VALUE, CondTaskTypeToString(params.type),
+                "params.type", "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
+    }
+}
+
+rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm, const uint16_t taskId)
+{
+    Notify *notify = condHandle->GetSubModelNotify();
+    for (Model *mdl : condHandle->GetSubCaptureModels()) {
+        CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
+        if (subModel == nullptr) {
+            continue;
+        }
+        subModel->SetEndGraphNotify(notify);
+    }
+
+    // 存储stream id, task id, handle到父capture model中
+    Stream *captureStm = stm->GetCaptureStream();
+    NULL_PTR_RETURN(captureStm, RT_ERROR_STREAM_NULL);
+
+    Model *mdl = captureStm->Model_();
+    NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+
+    const rtError_t error = captureModel->StoreCondHandleTaskInfo(captureStm->Id_(), taskId, condHandle);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+
+    RT_LOG(RT_LOG_INFO, "capture model condition task submit, origin stream_id=%d, stream_id=%d, task_id=%u",
+        stm->Id_(), captureStm->Id_(), taskId);
+    return RT_ERROR_NONE;
 }
 
 void Construct1stSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe)
@@ -310,6 +368,13 @@ void ConstructCaptureConditionJumpBackFc(TaskInfo * const taskInfo, RtStarsCaptu
     // modify sq head by goto_r
     ConstructGotoR(r3, r5, fc.goto_pre);
     ConstructNop(fc.end);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
+        for (size_t i = 0UL; i < (sizeof(RtStarsCaptureWhileCondJumpBackFc) / sizeof(uint32_t)); i++) {
+            RT_LOG(RT_LOG_DEBUG, "construct jump back cond task funcall, instr[%zu]=0x%08x", i, cmd[i]);
+        }
+    }
 }
 
 void Construct3rdSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe)

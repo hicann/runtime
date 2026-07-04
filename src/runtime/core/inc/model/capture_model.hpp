@@ -207,6 +207,14 @@ public:
         return addStreamMap_;
     }
 
+    bool CheckIsUserAddStream(Stream *stm)
+    {
+        auto it = addStreamMap_.find(stm);
+        COND_PROC((it != addStreamMap_.end()), return true;);
+
+        return false;
+    }
+
     void SetAddStreamMap(Stream *stm1, Stream *stm2)
     {
         addStreamMap_[stm1].push_back(stm2);
@@ -259,6 +267,7 @@ public:
 
     void DebugDotPrintTaskGroups(const uint32_t deviceId) const;
     void ReportedStreamInfoForProfiling() const;
+    void ReportedStreamInfoForProfilingForAllModels();
     void EraseStreamInfoForProfiling() const;
     rtError_t SetShapeInfo(const Stream* const stm, const uint32_t taskId, const void * const infoPtr,
                            const size_t infoSize);
@@ -267,7 +276,10 @@ public:
 
     rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize, const Stream * const stm);
     void ReportShapeInfoForProfiling() const;
+    void ReportShapeInfoForProfilingForAllModels();
     void SetModelCacheOpInfoSwitch(const uint32_t status) const;
+    void ReportTrackData(Profiler* profiler);
+    void ReportTrackDataForAllModels(Profiler* profiler);
 
     uint32_t GetModelCacheOpInfoSwitch() const
     {
@@ -341,7 +353,7 @@ public:
         return isSubCaptureModel_;
     }
 
-    void SetSubCaptureModel(void)
+    void SetSubCaptureModelEnable(void)
     {
         isSubCaptureModel_ = true;
     }
@@ -410,6 +422,7 @@ public:
     rtError_t MarkStreamActiveTask(TaskInfo *streamActiveTask); // the task of stream active is need updated
                                                                 // after sq cq is allocated
     rtError_t RestoreForSoftwareSq(Device * const dev);
+    rtError_t RestoreForSoftwareSqForOneModels(Device * const dev);
 
     rtError_t BindJettyForUbdma();
     rtError_t RecycleAllJetty(uint32_t &h2dCount, uint32_t &d2dCount);

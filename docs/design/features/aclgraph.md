@@ -328,7 +328,7 @@ sequenceDiagram
 
     App->>Api: aclmdlRIAddCondTask(params, stm, flags)
     Api->>Api: StreamAddCondTaskParasCheck
-    Api->>Context: CheckCondTaskParamsSize(params)
+    Api->>Api: CheckCondTaskParamsSize(params)
     Api->>Context: CreateSubCaptureModels(condHandle, params, stm)
     loop 创建 params.size 个子模型
         Context->>SubModel: ModelCreate(RT_MODEL_CAPTURE_MODEL)

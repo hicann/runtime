@@ -577,7 +577,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void *const sqe, c
 void ConstructDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void Construct1stDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe);
 void Construct2ndDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe);
-void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe);
 void ConstructDavidSqeForMemWriteValueTask(TaskInfo *const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo);
 void StarsV2IpcEventWaitTaskUnInit(TaskInfo* taskInfo);
 void StarsV2IpcEventRecordTaskUnInit(TaskInfo* taskInfo);

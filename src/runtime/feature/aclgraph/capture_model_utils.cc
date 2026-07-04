@@ -252,7 +252,7 @@ rtError_t CheckCaptureModelSupportCondOp(Device * const dev)
         return ret;
     }
 
-    if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_CONDOP))) {
+    if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_COND_OP))) {
         RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condop, device_id=%u.", dev->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }

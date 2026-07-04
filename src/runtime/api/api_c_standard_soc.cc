@@ -788,6 +788,7 @@ rtError_t rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t 
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(params.handle, CondHandle, realHandle);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, realStm);
     const rtError_t error = apiInstance->StreamAddCondTask(params, realStm, flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

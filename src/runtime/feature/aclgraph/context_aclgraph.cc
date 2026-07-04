@@ -309,8 +309,7 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     CondHandle *condHandle = nullptr;
     /* 父model取到的condHandle是nullptr，接口不返错 */
     CaptureModel *captureMdl = dynamic_cast<CaptureModel *>(captureModel);
-    const rtError_t ret = GetValidatedObject<CondHandle>(captureMdl->GetCondHandle(), condHandle);
-    COND_PROC(ret != RT_ERROR_NONE, return RT_ERROR_NONE;);
+    (void)GetValidatedObject<CondHandle>(captureMdl->GetCondHandle(), condHandle);
 
     RT_LOG(RT_LOG_EVENT, "capture begin success, device_id=%u, model_id=%u"
  	    " original stream_id=%d, capture stream_id=%d, stream_status=%d, isSubmodel=%u, parent model_id=%u.",
@@ -824,32 +823,6 @@ rtError_t Context::StreamEndTaskUpdate(Stream * const stm) const
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::CheckCondTaskParamsSize(rtCondTaskParams params)
-{
-    RT_LOG(RT_LOG_DEBUG, "condition type=%u, condition size=%u", params.type, params.size);
-    switch (params.type) {
-        case RT_COND_TASK_TYPE_IF:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-                (params.size != RT_COND_NUMBER_ONE) && (params.size != RT_COND_NUMBER_TWO),
-                RT_ERROR_INVALID_VALUE, params.size,
-                "1 or 2");
-            return RT_ERROR_NONE;
-        case RT_COND_TASK_TYPE_WHILE:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size != RT_COND_NUMBER_ONE,
-                RT_ERROR_INVALID_VALUE, params.size,
-                "1");
-            return RT_ERROR_NONE;
-        case RT_COND_TASK_TYPE_SWITCH:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size == RT_COND_NUMBER_ZERO,
-                RT_ERROR_INVALID_VALUE, params.size,
-                "greater than 0");
-            return RT_ERROR_NONE;
-        default:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(true, RT_ERROR_INVALID_VALUE, CondTaskTypeToString(params.type),
-                "params.type", "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
-    }
-}
-
 rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm)
 {
     for (uint32_t loop = 0; loop < params.size; loop++) {
@@ -865,15 +838,16 @@ rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskPara
 
         models_.remove(subModel); // capture model资源回收不遍历子模型，context析构也不遍历子图，都靠父模型递归完成。
         CaptureModel *subCaptureModel = dynamic_cast<CaptureModel *>(subModel);
-        subCaptureModel->SetSubCaptureModel();
+        subCaptureModel->SetSubCaptureModelEnable();
         subCaptureModel->SetCondHandle(params.handle);
         condHandle->PushBackSubModel(subModel);
         params.modelRIArray[loop] = static_cast<rtModel_t>(subModel);
 
         RT_LOG(RT_LOG_DEBUG, "Sub capture model create success, device_id=%u, parent model_id=%u, sub model_id=%u"
-            " original stream_id=%d, capture stream_id=%d, isSubmodel=%d.",
+            " original stream_id=%d, capture stream_id=%d, isSubmodel=%d, condition type=%u, condition size=%u.",
             device_->Id_(), condHandle->GetParentModel()->Id_(), subModel->Id_(), stm->Id_(), stm->GetCaptureStream()->Id_(),
-            (dynamic_cast<CaptureModel *>(condHandle->GetParentModel()))->IsSubCaptureModel());
+            (dynamic_cast<CaptureModel *>(condHandle->GetParentModel()))->IsSubCaptureModel(),
+            condHandle->GetCondType(), condHandle->GetCondSize());
     }
 
     return RT_ERROR_NONE;
@@ -899,35 +873,14 @@ rtError_t Context::SubmitCaptureConditionTask(CondHandle *condHandle, Stream * c
     error = dev->SubmitTask(tsk, taskGenCallback_);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit capture model condition task, retCode=%#x.",
         static_cast<uint32_t>(error));
-
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
     tskErrRecycle.ReleaseGuard();
 
+    error = PostProcCaptureConditionTask(condHandle, stm, tsk->id);
+    ERROR_RETURN_MSG_INNER(error, "Failed to post proc capture condition task, stream_id=%d, task_id=%u, retCode=%#x.",
+        stm->Id_(), tsk->id, static_cast<uint32_t>(error));
+
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
     condHandle->SetSubModelExeStream(tsk->stream);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::PostProcCaptureConditionTask(CondHandle *condHandle, const Stream * const stm) const
-{
-    Notify *notify = condHandle->GetSubModelNotify();
-    for (Model *mdl : condHandle->GetSubCaptureModels()) {
-        CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
-        if (subModel == nullptr) {
-            continue;
-        }
-        subModel->SetEndGraphNotify(notify);
-    }
-
-    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stm->GetCaptureStream()->Model_());
-    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
-    Stream *captureStream = stm->GetCaptureStream();
-    const rtError_t error = captureModel->StoreCondHandleTaskInfo(captureStream->Id_(),
-        static_cast<uint16_t>(captureStream->GetLastTaskId()), condHandle);
-
-    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
-    RT_LOG(RT_LOG_INFO, "capture model condition task submit, device_id=%u, stream_id=%d",
-        device_->Id_(), captureStream->Id_());
-
     return RT_ERROR_NONE;
 }
 
@@ -957,10 +910,6 @@ rtError_t Context::StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams pa
 
     error = SubmitCaptureConditionTask(condHandle, stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit capture condition task, retCode=%#x.",
-        static_cast<uint32_t>(error));
-
-    error = PostProcCaptureConditionTask(condHandle, stm);
-    ERROR_RETURN_MSG_INNER(error, "Failed to post proc capture condition task, retCode=%#x.",
         static_cast<uint32_t>(error));
 
     subModelErrRecycle.ReleaseGuard();

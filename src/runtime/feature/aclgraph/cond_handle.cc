@@ -90,7 +90,7 @@ rtError_t CondHandle::Setup(Context *ctx)
     ERROR_RETURN(error, "Failed to memset devAddr, retCode=%#x.", static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_DEBUG, "CondHandle setup success, model_id=%u, default_value=%u, flag=%d, dev_addr=%p.",
-        model_ != nullptr ? model_->Id_() : 0U, defaultValue_, static_cast<int32_t>(flag_), devAddr_);
+        model_->Id_(), defaultValue_, static_cast<int32_t>(flag_), devAddr_);
 
     InitEmbeddedInnerHandle(this);
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(model_);

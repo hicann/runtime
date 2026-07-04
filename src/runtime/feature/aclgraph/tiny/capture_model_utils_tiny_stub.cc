@@ -50,6 +50,8 @@ void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *const
 void CaptureConditionTaskUnInit(TaskInfo * const taskInfo) { UNUSED(taskInfo); }
 bool IsUbDma(Stream *const stm, const uint32_t kind, const void *const srcAddr, const void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
 bool IsUbDmaWithSubModel(const Stream *const stm, const uint32_t kind, const void *const srcAddr, const void *const desAddr) { UNUSED(stm); UNUSED(kind); UNUSED(srcAddr); UNUSED(desAddr); return false; }
+rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm, const uint16_t taskId) { UNUSED(condHandle); UNUSED(stm); UNUSED(taskId); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t CheckCondTaskParamsSize(rtCondTaskParams params) { UNUSED(params); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 }
 }

@@ -169,10 +169,9 @@ void Construct2ndDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDa
     PrintDavidSqe(davidSqe, "CaptureConditionTask[1]:NotifyWait");
 }
 
-void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
+void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe)
 {
     // 构造第3个David SQE：JumpBack（仅while类型），条件成立时跳回循环起始位置重新执行
-    UNUSED(sqBaseAddr);
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
     RtDavidStarsFunctionCallSqe &sqe = davidSqe->fuctionCallSqe;
 
@@ -207,6 +206,7 @@ void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDa
 
 void ConstructDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
 {
+    UNUSED(sqeInfo);
     rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
     constexpr uint8_t CONDITION_SQE_INDEX_1 = 1U;
     constexpr uint8_t CONDITION_SQE_INDEX_2 = 2U;
@@ -216,7 +216,7 @@ void ConstructDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, void *c
 
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     if (condTaskInfo->condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) {
-        Construct3rdDavidSqeForCaptureConditionTask(taskInfo, &davidSqe[CONDITION_SQE_INDEX_2], sqeInfo.sqBaseAddr);
+        Construct3rdDavidSqeForCaptureConditionTask(taskInfo, &davidSqe[CONDITION_SQE_INDEX_2]);
     }
 }
 

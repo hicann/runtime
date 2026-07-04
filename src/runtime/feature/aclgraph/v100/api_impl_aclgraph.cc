@@ -15,6 +15,7 @@
 #include "cond_handle/cond_handle.hpp"
 #include "api_handle_guard.h"
 #include "capture_model_utils.hpp"
+#include "aclgraph_cond_task.h"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -236,7 +237,7 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream *
     COND_RETURN_AND_MSG_OUTER((it != addStreamMap.end()), RT_ERROR_FEATURE_NOT_SUPPORT,
         ErrorCode::EE1016, "rtStreamAddCondTask", "The ACL Graph add stream does not support add condition task");
 
-    error = curCtx->CheckCondTaskParamsSize(params);
+    error = CheckCondTaskParamsSize(params);
     ERROR_RETURN_MSG_INNER(error, "Failed to check condition task params, condition type=%u, condition size=%u, retCode=%#x.",
         params.type, params.size, static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(!realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
@@ -244,9 +245,6 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream *
 
     realHandle->SetCondType(params.type);
     realHandle->SetCondSize(params.size);
-    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
-    ERROR_RETURN_MSG_INNER(error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.",
-        params.type, params.size, static_cast<uint32_t>(error));
 
     *handle = realHandle;
     return RT_ERROR_NONE;
@@ -260,6 +258,10 @@ rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream * const stm
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
+    ERROR_RETURN_MSG_INNER(error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.",
+        params.type, params.size, static_cast<uint32_t>(error));
+
     return curCtx->StreamAddCondTask(realHandle, params, stm, flags);
 }
 

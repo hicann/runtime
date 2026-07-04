@@ -31,6 +31,8 @@ void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sq
 void Construct3rdSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe);
 void ConstructCaptureConditionJumpBackFc(TaskInfo * const taskInfo, RtStarsCaptureWhileCondJumpBackFc &fc);
 rtError_t ReConstructCaptureConditionTaskFc(TaskInfo *taskInfo, CondHandle *condHandle);
+rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm, const uint16_t taskId);
+rtError_t CheckCondTaskParamsSize(rtCondTaskParams params);
 
 }  // namespace runtime
 }  // namespace cce
