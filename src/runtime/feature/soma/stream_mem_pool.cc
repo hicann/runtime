@@ -49,7 +49,8 @@ Segment* Segment::SplitLeft(uint64_t splitedSize, bool mustSplit)
     }
 }
 
-void Segment::MergeLeft() {
+void Segment::MergeLeft()
+{
     Segment* old_prev = prev;
     basePtr = prev->basePtr;
     size += prev->size;
@@ -317,7 +318,7 @@ Segment *SegmentManager::AllocFromFreeSegs(uint64_t size)
     RT_LOG(RT_LOG_DEBUG, "Allocating new segment from free segments, size=%#" PRIx64 ".", size);
     Segment reqSegs = Segment(0, size);
     auto fit = freeSegs_.lower_bound(&reqSegs);
-    if(fit == freeSegs_.end()) {
+    if (fit == freeSegs_.end()) {
         RT_LOG(RT_LOG_DEBUG, "Unable to alloc segments(size=%#" PRIx64 ") from free segments.", size);
         return nullptr;
     }
@@ -535,7 +536,7 @@ void PoolRegistry::RegisterMemPool(SegmentManager *mgr)
     std::shared_ptr<SegmentManager> owned(mgr);
     std::lock_guard<std::mutex> lock(mutex_);
     (void)entries_.insert(mgr);
-    poolOwnership_.emplace(mgr, owned);
+    (void)poolOwnership_.emplace(mgr, owned);
 }
 
 rtError_t PoolRegistry::CheckRemoveMemPool(SegmentManager *memPool)
@@ -564,17 +565,21 @@ rtError_t PoolRegistry::RemoveMemPool(SegmentManager* memPool, std::shared_ptr<S
 
         (void)entries_.erase(memPool);
         owned = std::move(ownIt->second);
-        poolOwnership_.erase(ownIt);
+        (void)poolOwnership_.erase(ownIt);
     }
     return RT_ERROR_NONE;
 }
 
 std::shared_ptr<SegmentManager> PoolRegistry::QueryMemPool(SegmentManager *p)
 {
-    if (p == nullptr) return nullptr;
+    if (p == nullptr) {
+        return nullptr;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = poolOwnership_.find(p);
-    if (it == poolOwnership_.end()) return nullptr;
+    if (it == poolOwnership_.end()) {
+        return nullptr;
+    }
     return it->second;
 }
 
@@ -618,18 +623,20 @@ std::unordered_set<std::shared_ptr<SegmentManager>> PoolRegistry::EnumerateMemPo
     ret.reserve(poolOwnership_.size());
     for (auto& [rawPtr, sharedPtr] : poolOwnership_) {
         if (includeGraphPool || rawPtr->GraphId() == MODEL_ID_INVALID) {
-            ret.insert(sharedPtr);
+            (void)ret.insert(sharedPtr);
         }
     }
     return ret;
 }
 
-std::unordered_map<std::pair<int32_t, int32_t>, uint64_t, PairHash> PoolRegistry::GetSequenceMap() const {
+std::unordered_map<std::pair<int32_t, int32_t>, uint64_t, PairHash> PoolRegistry::GetSequenceMap() const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     return sequenceMap_;
 }
 
-std::unordered_map<int32_t, uint64_t> PoolRegistry::GetStreamSeqId() const {
+std::unordered_map<int32_t, uint64_t> PoolRegistry::GetStreamSeqId() const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     return streamSeqId_;
 }

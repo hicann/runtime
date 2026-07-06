@@ -63,18 +63,21 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t s
     RT_LOG(RT_LOG_DEBUG, "Memory allocation stream_id=%d.", streamId);
 
     // Align the allocation size to DEVICE_POOL_MIN_BLOCK_SIZE
-    uint64_t aligned_size = (size + DEVICE_POOL_MIN_BLOCK_SIZE - 1) & ~(DEVICE_POOL_MIN_BLOCK_SIZE - 1);
-    std::shared_ptr<SegmentManager> poolHolder = SomaApi::QueryMemPool(memPoolId);
+    constexpr uint64_t alignMask = DEVICE_POOL_MIN_BLOCK_SIZE - 1;
+    COND_RETURN_ERROR(size > UINT64_MAX - alignMask, RT_ERROR_INVALID_VALUE,
+        "Memory allocation size overflow, size=%" PRIu64 ".", size);
+    const uint64_t alignedSize = (size + alignMask) & ~alignMask;
+    const std::shared_ptr<SegmentManager> poolHolder = SomaApi::QueryMemPool(memPoolId);
     COND_RETURN_ERROR(poolHolder == nullptr, RT_ERROR_MEM_POOL_NULL, "Memory pool is not created or destroyed.");
     ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
-    rtError_t error = SomaApi::AllocFromMemPool(devPtr, aligned_size, memPoolId, streamId, flag);
+    rtError_t error = SomaApi::AllocFromMemPool(devPtr, alignedSize, memPoolId, streamId, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to allocate memory from pool, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "Memory allocated success! Start ptr=0x%llx, end ptr=0x%llx",
         RtPtrToValue(*devPtr), (RtPtrToValue(*devPtr) + static_cast<uint64_t>(size)));
     const uint64_t va = RtPtrToValue(*devPtr);
-    SomaApi::MemPoolAsyncConfig(memPoolId, va, aligned_size, false);
+    SomaApi::MemPoolAsyncConfig(memPoolId, va, alignedSize, false);
     constexpr AicpuOpType opType = AicpuOpType::MALLOC;
-    error = SomaAicpuKernelLaunch("SomaMemMng", aligned_size, va, memPoolId, stm, static_cast<int32_t>(opType), static_cast<int32_t>(flag));
+    error = SomaAicpuKernelLaunch("SomaMemMng", alignedSize, va, memPoolId, stm, static_cast<int32_t>(opType), static_cast<int32_t>(flag));
     if (error != RT_ERROR_NONE) {
         (void)SomaApi::FreeToMemPool(RtValueToPtr<void*>(va));
         COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -94,7 +97,7 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
     RT_LOG(RT_LOG_DEBUG, "Free memory ptr=%#" PRIx64 ", stream_id=%d.", RtPtrToValue(ptr), stm->Id_());
 
     if (SomaApi::InMemPoolRegion(ptr)) {
-        std::shared_ptr<SegmentManager> poolHolder = SomaApi::FindMemPoolByPtr(ptr);
+        const std::shared_ptr<SegmentManager> poolHolder = SomaApi::FindMemPoolByPtr(ptr);
         rtMemPool_t memPool = RtPtrToPtr<rtMemPool_t>(poolHolder.get());
         COND_RETURN_AND_MSG_OUTER(memPool == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
             "Free memory from memory pool", RtFmtMsg("%p", ptr), "ptr",

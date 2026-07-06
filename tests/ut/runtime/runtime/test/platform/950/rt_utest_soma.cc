@@ -114,7 +114,7 @@ TEST_F(SomaTest, AlignAndValidate_ExceedTotal_Fail)
         .reserve = 0
     };
     rtError_t error = SomaApi::AlignAndValidatePoolSize(poolProps, totalSize);
-    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
 TEST_F(SomaTest, AlignAndValidate_SizeRoundUp)

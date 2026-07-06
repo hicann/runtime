@@ -329,7 +329,7 @@ TEST_F(SomaTest, SomaApiTest_Create_Destory)
         .reserve = 0
     };
     error = SomaApi::AlignAndValidatePoolSize(poolProps1, totalSize);
-    ASSERT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+    ASSERT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
 TEST_F(SomaTest, SomaApiMemoryAlignmentTest)

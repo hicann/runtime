@@ -79,7 +79,7 @@ rtError_t SomaApi::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProp
     ERROR_RETURN(error, "Get device memory pool align size failed, deviceId=%u.", phyDevId);
 
     error = SomaApi::AlignAndValidatePoolSize(curPoolProps, totalSize, alignSize);
-    COND_RETURN_AND_MSG_OUTER(curPoolProps.maxSize > totalSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Create memory pool",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Create memory pool",
         std::to_string(poolProps->maxSize / BYTES_PER_MB) + " MB", "rtMemPoolProps.maxSize",
         RtFmtMsg("The memory pool size after %zu MB alignment is %zu MB, which exceeds the available device memory %zu MB on the Device(device_id=%d)",
         alignSize / BYTES_PER_MB, curPoolProps.maxSize / BYTES_PER_MB, totalSize / BYTES_PER_MB, phyDevId));
@@ -192,7 +192,7 @@ rtError_t SomaApi::AlignAndValidatePoolSize(rtMemPoolProps &poolProps, size_t to
         poolProps.maxSize = ((poolProps.maxSize + alignSize - 1) / alignSize) * alignSize;
     }
 
-    COND_RETURN_ERROR(poolProps.maxSize > totalSize, RT_ERROR_MEMORY_ALLOCATION,
+    COND_RETURN_ERROR(poolProps.maxSize > totalSize, RT_ERROR_INVALID_VALUE,
         "Memory pool size (%zu bytes) exceeds device total memory (%zu bytes).", poolProps.maxSize, totalSize);
     return RT_ERROR_NONE;
 }
