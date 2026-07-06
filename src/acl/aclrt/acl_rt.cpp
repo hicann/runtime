@@ -27,10 +27,10 @@ int32_t SetDumpConfigByShim(const acl::AdumpDumpConfigInfo& configInfo)
 __attribute__((constructor)) void InitializeAscendDump()
 {
     acl::AdumpCallbacks callbacks;
-    callbacks.setDumpConfig = SetDumpConfigByShim;
-    callbacks.unsetDump = Adx::AdumpUnSetDump;
-    callbacks.serverInit = AdxDataDumpServerInit;
-    callbacks.serverUnInit = AdxDataDumpServerUnInit;
+    callbacks.setDumpConfig = &SetDumpConfigByShim;
+    callbacks.unsetDump = &Adx::AdumpUnSetDump;
+    callbacks.serverInit = &AdxDataDumpServerInit;
+    callbacks.serverUnInit = &AdxDataDumpServerUnInit;
     acl::SetAdumpCallbacks(callbacks);
 }
 } // namespace

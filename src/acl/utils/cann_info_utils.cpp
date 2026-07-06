@@ -49,7 +49,7 @@ namespace acl {
         bool IsRegularFile(const std::string& path)
         {
             struct stat fileStat = {};
-            return (stat(path.c_str(), &fileStat) == 0) && ((fileStat.st_mode & S_IFMT) == S_IFREG);
+            return (stat(path.c_str(), &fileStat) == 0) && S_ISREG(fileStat.st_mode);
         }
 
         bool FindFileFromCurrentToParents(
