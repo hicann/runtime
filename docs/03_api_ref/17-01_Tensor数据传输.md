@@ -6,7 +6,7 @@
 - [`acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const char *name, size_t capacity)`](#acltdtCreateChannelWithCapacity)：创建acltdtChannelHandle类型的数据，表示可以用于向Device发送数据或是从Device接收数据的通道，通道带容量。
 - [`aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset *dataset, int32_t timeout)`](#acltdtSendTensor)：从Host向Device发送预处理好的数据。
 - [`aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *dataset, int32_t timeout)`](#acltdtReceiveTensor)：在Host接收Device发过来的数据。
-- [`aclError acltdtStopChannel(acltdtChannelHandle *handle)`](#acltdtStopChannel)：调用acltdtSendTensor接口发送数据时或调用acltdtReceiveTensor接口接收数据时，用户线程可能在没有数据时会卡住，此时如果需要退出的话，需要先将线程唤醒，该接口就是用来唤醒被卡住阻塞的线程用的。
+- [`aclError acltdtStopChannel(acltdtChannelHandle *handle)`](#acltdtStopChannel)：调用acltdtSendTensor接口发送数据时或调用acltdtReceiveTensor接口接收数据时，用户线程可能在没有数据时会卡住，此时如果需要退出的话，需要先将线程唤醒，该接口用于唤醒处于阻塞状态的线程。
 - [`aclError acltdtDestroyChannel(acltdtChannelHandle *handle)`](#acltdtDestroyChannel)：销毁acltdtChannelHandle类型的数据，只能销毁通过[acltdtCreateChannel](#acltdtCreateChannel)接口或[acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity)接口创建的acltdtChannelHandle类型。
 - [`aclError acltdtQueryChannelSize(const acltdtChannelHandle *handle, size_t *size)`](#acltdtQueryChannelSize)：查询队列通道内的消息数量。
 - [`aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *sliceNum, size_t* sliceId)`](#acltdtGetSliceInfoFromItem)：用于输出Tensor分片信息。
@@ -197,7 +197,7 @@ aclError acltdtStopChannel(acltdtChannelHandle *handle)
 
 ### 功能说明
 
-调用acltdtSendTensor接口发送数据时或调用acltdtReceiveTensor接口接收数据时，用户线程可能在没有数据时会卡住，此时如果需要退出的话，需要先将线程唤醒，该接口就是用来唤醒被卡住阻塞的线程用的。需要用户在发送、接收线程之外的一个线程里调用这个函数，来唤醒处于阻塞状态的发送/接收线程。
+调用acltdtSendTensor接口发送数据时或调用acltdtReceiveTensor接口接收数据时，用户线程可能在没有数据时会卡住，此时如果需要退出的话，需要先将线程唤醒，该接口用于唤醒处于阻塞状态的线程。需要用户在发送、接收线程之外的一个线程里调用这个函数，来唤醒处于阻塞状态的发送/接收线程。
 
 ### 参数说明
 
