@@ -966,7 +966,7 @@ void CaptureModel::ReportedStreamInfoForProfiling() const
             const auto error =
                 MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
             if (error != MSPROF_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "Reported capture stream info for profiling failed, ret=%d.", error);
+                RT_LOG(RT_LOG_ERROR, "Reported capture stream info for profiling failed, retCode=%#x.", error);
                 return;
             }
             RT_LOG(RT_LOG_DEBUG,
@@ -1012,7 +1012,7 @@ void CaptureModel::EraseStreamInfoForProfiling() const
     compactInfo.data.captureStreamInfo.deviceId = static_cast<uint16_t>(Context_()->Device_()->Id_());
     const auto error = MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
     if (error != MSPROF_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Reported capture stream info for profiling failed, ret=%d.", error);
+        RT_LOG(RT_LOG_ERROR, "Reported capture stream info for profiling failed, retCode=%#x.", error);
     } else {
         RT_LOG(RT_LOG_DEBUG,
             "Reported capture stream info for profiling successfully, captureStatus=%hu, stream_id=%hu, "
@@ -1120,7 +1120,8 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     const std::unique_lock<std::mutex> lk(sqBindMutex_);
 
     rtError_t error = BindJettyForUbdma();
-    ERROR_RETURN_MSG_INNER(error, "bind jettys for streams failed, stream_id=%d, model_id=%u", exeStream->Id_(), Id_());
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "bind jettys for streams failed, stream_id=%d, model_id=%u", exeStream->Id_(), Id_());
 
     /* model execute repeat */
     COND_PROC_RETURN_WARN((sqCqArray_ != nullptr) && (sqCqNum_ != 0U),
@@ -1610,7 +1611,7 @@ void CaptureModel::ReportShapeInfoForProfiling() const
             err = MsprofReportAdditionalInfo(0, shapeInfo, totalSize);
             if (err != MSPROF_ERROR_NONE) {
                 RT_LOG(RT_LOG_ERROR, "Report capture shape info for profiling failed, stream_id=%u, task_id=%u, "
-                "model_id=%u, device_id=%u, thread_id=%u, total_len=%u, shape_len=%u, ret=%d.", header.streamId, header.taskId,
+                "model_id=%u, device_id=%u, thread_id=%u, total_len=%u, shape_len=%u, retCode=%#x.", header.streamId, header.taskId,
                     header.modelId, header.deviceId, shapeInfo->threadId, shapeInfo->dataLen, shapeSize, err);
                 continue;
             }
@@ -1641,7 +1642,7 @@ rtError_t CaptureModel::RestoreForSoftwareSqForOneModels(Device * const dev)
     RT_LOG(RT_LOG_INFO, "Begin restore capture model, modelId=%u, deviceId=%u.", Id_(), dev->Id_());
     for (auto &stream : StreamList_()) {
         rtError_t error = stream->RestoreForSoftwareSq();
-        COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Restore capture stream failed, streamId=%d, deviceId=%u, ret=%d.",
+        COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Restore capture stream failed, streamId=%d, deviceId=%u, retCode=%#x.",
             stream->Id_(), dev->Id_(), error);
     }
     DELETE_A(sqCqArray_);

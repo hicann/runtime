@@ -24,8 +24,8 @@ JettyManager::JettyManager(uint32_t deviceId) : jettyPool_(std::make_unique<Jett
 rtError_t JettyManager::PreAllocJetty(JettyType type)
 {
     rtError_t error = jettyPool_->PreAllocJetty(type);
-    ERROR_RETURN_MSG_INNER(error,
-        "Reserve jetty for stream failed, type=%d, ret=%d.", static_cast<int32_t>(type), error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Reserve jetty for stream failed, type=%d, retCode=%#x.", static_cast<int32_t>(type), error);
     return RT_ERROR_NONE;
 }
 
@@ -78,11 +78,11 @@ rtError_t JettyManager::BindJettyForStream(int32_t streamId, const CaptureModel 
 
     if (jettyCtx->isLargeDepth) {
         error = jettyPool_->AllocLargeDepthJetty(type, jettyCtx->capacity, jettyInfo);
-        ERROR_RETURN_MSG_INNER(error, "Create large depth jetty failed, stream_id=%d, type=%d, ret=%d.",
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Create large depth jetty failed, stream_id=%d, type=%d, retCode=%#x.",
             streamId, static_cast<int32_t>(type), error);
     } else {
         error = AllocJettyWithRetry(type, streamId, excludeMdl, jettyInfo);
-        ERROR_RETURN_MSG_INNER(error, "Acquire jetty failed, stream_id=%d, type=%d, ret=%d.",
+        ERROR_RETURN_MSG_INNER(error, "Acquire jetty failed, stream_id=%d, type=%d, retCode=%#x.",
             streamId, static_cast<int32_t>(type), error);
     }
 
@@ -105,7 +105,7 @@ rtError_t JettyManager::UnbindJettyForStream(int32_t streamId, JettyType type)
     } else {
         error = jettyPool_->FreeJettyLazy(jettyCtx->jettyHandle);
     }
-    ERROR_RETURN_MSG_INNER(error, "Unbind jetty for stream failed, stream_id=%d, type=%d, ret=%d.",
+    ERROR_RETURN_MSG_INNER(error, "Unbind jetty for stream failed, stream_id=%d, type=%d, retCode=%#x.",
         streamId, static_cast<int32_t>(type), error);
 
     jettyCtx->jettyHandle = 0U;
@@ -121,7 +121,7 @@ rtError_t JettyManager::FreeJettyByHandle(uint64_t handle, JettyType type)
         return RT_ERROR_NONE;
     }
     rtError_t error = jettyPool_->FreeJetty(handle, type);
-    ERROR_RETURN_MSG_INNER(error, "Release jetty by handle failed, handle=%lu, type=%d, ret=%d.",
+    ERROR_RETURN_MSG_INNER(error, "Release jetty by handle failed, handle=%lu, type=%d, retCode=%#x.",
         handle, static_cast<int32_t>(type), error);
     RT_LOG(RT_LOG_INFO, "Release jetty by handle success, handle=%lu, type=%d.",
         handle, static_cast<int32_t>(type));
@@ -150,14 +150,14 @@ rtError_t JettyManager::GetJettyInfoForStream(int32_t streamId, JettyType type, 
     auto key = std::make_pair(static_cast<uint32_t>(streamId), type);
     auto it = streamJettyContexts_.find(key);
     if (it == streamJettyContexts_.end() || it->second->jettyHandle == 0) {
-        RT_LOG(RT_LOG_WARNING, "Jetty not found, stream_id=%d, type=%d.", streamId, static_cast<int32_t>(type));
+        RT_LOG(RT_LOG_ERROR, "Jetty not found, stream_id=%d, type=%d.", streamId, static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
 
     // Query full jetty info from JettyPool (single source of truth, thread-safe)
     rtError_t error = jettyPool_->GetJettyInfoByHandle(it->second->jettyHandle, jettyInfo);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "Jetty info not found in pool, stream_id=%d, type=%d.",
+        RT_LOG(RT_LOG_ERROR, "Jetty info not found in pool, stream_id=%d, type=%d.",
             streamId, static_cast<int32_t>(type));
         return RT_ERROR_INVALID_VALUE;
     }
@@ -182,7 +182,7 @@ StreamJettyContext* JettyManager::GetOrCreateStreamJettyContext(const Stream *st
 
     rtError_t error = PreAllocJetty(type);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "PreAllocJetty failed, stream_id=%d, type=%d, ret=%d.",
+        RT_LOG(RT_LOG_ERROR, "PreAllocJetty failed, stream_id=%d, type=%d, retCode=%#x.",
             streamId, static_cast<int32_t>(type), error);
         streamJettyContexts_.erase(key);
         return nullptr;

@@ -39,7 +39,8 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo &jett
     uint64_t handle = 0U;
 
     rtError_t error = driver->AsyncDmaJettyCreate(deviceId_, 1U, depth, dir, &handle);
-    ERROR_RETURN_MSG_INNER(error, "Create jetty failed, device_id=%u, type=%d, depth=%u, ret=%d.",
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Create jetty failed, device_id=%u, type=%d, depth=%u, retCode=%#x.",
         deviceId_, static_cast<int32_t>(type), depth, error);
 
     uint32_t dieId = 0U;
@@ -47,7 +48,7 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo &jett
     uint32_t jettyId = 0U;
     error = driver->AsyncDmaJettyQuery(deviceId_, handle, dieId, functionId, jettyId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Query jetty failed, device_id=%u, handle=%llu, ret=%d.",
+        RT_LOG(RT_LOG_ERROR, "Query jetty failed, device_id=%u, handle=%llu, retCode=%#x.",
             deviceId_, handle, error);
         (void)driver->AsyncDmaJettyDestroy(deviceId_, handle);
         return error;
@@ -101,8 +102,8 @@ rtError_t JettyPool::FreeJetty(uint64_t handle, JettyType type)
         if (it->handle == handle) {
             rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
             if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, type=%d, jetty_id=%u, ret=%d.",
-                    deviceId_, static_cast<int32_t>(type), it->jettyId, static_cast<int32_t>(ret));
+                RT_LOG(RT_LOG_ERROR, "Destroy jetty failed, device_id=%u, type=%d, jetty_id=%u, retCode=%#x.",
+                    deviceId_, static_cast<int32_t>(type), it->jettyId, ret);
                 return ret;
             }
             RT_LOG(RT_LOG_INFO, "Release jetty success, device_id=%u, type=%d, jetty_id=%u.",
@@ -182,8 +183,8 @@ rtError_t JettyPool::FreeLargeDepthJetty(uint64_t handle)
         if (it->handle == handle) {
             rtError_t ret = driver->AsyncDmaJettyDestroy(deviceId_, it->handle);
             if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "Destroy large depth jetty failed, device_id=%u, handle=%llu, ret=%d.",
-                    deviceId_, handle, static_cast<int32_t>(ret));
+                RT_LOG(RT_LOG_ERROR, "Destroy large depth jetty failed, device_id=%u, handle=%llu, retCode=%#x.",
+                    deviceId_, handle, ret);
                 return ret;
             }
             RT_LOG(RT_LOG_INFO, "Destroy large depth jetty success, device_id=%u, handle=%llu, jetty_id=%u.",

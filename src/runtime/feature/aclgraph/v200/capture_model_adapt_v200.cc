@@ -58,7 +58,7 @@ rtError_t CaptureModel::RefreshJettyInfoList()
             JettyInfo jettyInfo = {};
             rtError_t ret = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
             COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret,
-                "GetJettyInfoForStream failed, stream_id=%d, type=%d, ret=%d.", streamId, static_cast<int32_t>(type), ret);
+                "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.", streamId, static_cast<int32_t>(type), ret);
 
             UbAsyncJettyInfo info = {};
             info.dieId = static_cast<uint16_t>(jettyInfo.dieId);
@@ -89,14 +89,14 @@ rtError_t CaptureModel::BindJettyForUbdma()
 
     for (Stream *stm : StreamList_()) {
         rtError_t error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_H2D, this);
-        ERROR_RETURN_MSG_INNER(error, "BindJetty H2D failed, stream_id=%d, ret=%d.", stm->Id_(), error);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "BindJetty H2D failed, stream_id=%d, retCode=%#x.", stm->Id_(), error);
         error = StreamJettyHandler::BindJetty(stm, JettyType::JETTY_TYPE_D2D, this);
-        ERROR_RETURN_MSG_INNER(error, "BindJetty D2D failed, stream_id=%d, ret=%d.", stm->Id_(), error);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "BindJetty D2D failed, stream_id=%d, retCode=%#x.", stm->Id_(), error);
     }
 
     // jetty 可能因回收而更换，清空旧 info 列表,重新添加
     rtError_t error = RefreshJettyInfoList();
-    ERROR_RETURN_MSG_INNER(error, "RefreshJettyInfoList failed, model_id=%u, ret=%d.", Id_(), error);
+    ERROR_RETURN_MSG_INNER(error, "RefreshJettyInfoList failed, model_id=%u, retCode=%#x.", Id_(), error);
     SetJettyBindFlag(true);
     SetNeedUpdateUBPi(false);
     return RT_ERROR_NONE;
@@ -110,9 +110,9 @@ rtError_t CaptureModel::RecycleAllJetty(uint32_t &h2dCount, uint32_t &d2dCount)
     for (Stream *stm : StreamList_()) {
         int32_t streamId = stm->Id_();
         rtError_t error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_H2D, h2dCount);
-        ERROR_RETURN_MSG_INNER(error, "RecycleJetty H2D failed, stream_id=%d, ret=%d.", streamId, error);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "RecycleJetty H2D failed, stream_id=%d, retCode=%#x.", streamId, error);
         error = StreamJettyHandler::RecycleJetty(stm, JettyType::JETTY_TYPE_D2D, d2dCount);
-        ERROR_RETURN_MSG_INNER(error, "RecycleJetty D2D failed, stream_id=%d, ret=%d.", streamId, error);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "RecycleJetty D2D failed, stream_id=%d, retCode=%#x.", streamId, error);
     }
     SetNeedUpdateUBPi(false);
     ClearH2dJettyInfoList();
@@ -133,12 +133,12 @@ rtError_t CaptureModel::ReleaseAllJetty()
         int32_t streamId = stm->Id_();
         rtError_t ret = StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_H2D);
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "ReleaseJetty H2D failed, stream_id=%d, ret=%d.", streamId, static_cast<int32_t>(ret));
+            RT_LOG(RT_LOG_ERROR, "ReleaseJetty H2D failed, stream_id=%d, retCode=%#x.", streamId, ret);
             finalError = ret;
         }
         ret = StreamJettyHandler::ReleaseJetty(stm, JettyType::JETTY_TYPE_D2D);
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "ReleaseJetty D2D failed, stream_id=%d, ret=%d.", streamId, static_cast<int32_t>(ret));
+            RT_LOG(RT_LOG_ERROR, "ReleaseJetty D2D failed, stream_id=%d, retCode=%#x.", streamId, ret);
             finalError = ret;
         }
     }

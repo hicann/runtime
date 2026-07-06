@@ -477,7 +477,7 @@ static rtError_t ConvertAsyncDma2DForSoftWareSq(TaskInfo * const taskInfo2D, voi
     error = StreamJettyHandler::HandleUbDmaTask(
         taskInfo2D, jettyType, &input, &output);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, ret=%d.",
+        RT_LOG(RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, retCode=%#x.",
             devId, stream->Id_(), error);
         return error;
     }
@@ -656,7 +656,7 @@ static rtError_t ConvertAsyncDmaForSoftWareSqUb(TaskInfo * const taskInfo, TaskI
     input.normal.len = memcpyAsyncTaskInfo->size;
     error = StreamJettyHandler::HandleUbDmaTask(
         taskInfo, jettyType, &input, &output);
-    ERROR_RETURN_MSG_INNER(error, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, ret=%d.",
+    ERROR_RETURN_MSG_INNER(error, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, retCode=%#x.",
         devId, stream->Id_(), error);
     return error;
 }
@@ -1831,17 +1831,17 @@ static rtError_t UpdateModelUpdateTask(TaskInfo * const taskInfo)
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
         RtPtrToPtr<uintptr_t>(mdlUpdateTaskInfo->tilingKeyAddr), &tilingKeyOffset);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-        "tilingKeyAddr MemAddressTranslate error=%d.", error);
+        "tilingKeyAddr MemAddressTranslate retCode=%#x.", error);
 
     error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
         RtPtrToPtr<uintptr_t>(mdlUpdateTaskInfo->blockDimAddr), &blockDimOffset);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "blockDimAddr MemAddressTranslate error=%d", error);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "blockDimAddr MemAddressTranslate retCode=%#x", error);
 
     error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
         RtPtrToPtr<uintptr_t>(devCopyMem), &tilingTaboffset);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "devCopyMem MemAddressTranslate error=%d.", error);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "devCopyMem MemAddressTranslate retCode=%#x.", error);
 
     if (mdlUpdateTaskInfo->fftsPlusTaskDescBuf != nullptr) {
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
@@ -1850,7 +1850,7 @@ static rtError_t UpdateModelUpdateTask(TaskInfo * const taskInfo)
     } else {
         error = SetMixDescBufOffset(taskInfo, mdlUpdateTaskInfo->desStreamId, mdlUpdateTaskInfo->destaskId, &descBufOffset);
     }
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "descBuf MemAddressTranslate error=%d.", error);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "descBuf MemAddressTranslate retCode=%#x.", error);
 
     mdlUpdateTaskInfo->descBufOffset = descBufOffset;
     mdlUpdateTaskInfo->tilingKeyOffset = tilingKeyOffset;
@@ -1876,7 +1876,7 @@ rtError_t UpdateTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, v
     } else {
         // do nothing
     }
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update dma or offset failed, ret=%d", error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update dma or offset failed, retCode=%#x", error);
     TaskInfo *rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
     NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);
     std::function<void()> const rtMemcpyAsyncTaskRecycle = [&stm, &rtMemcpyAsyncTask]() {
