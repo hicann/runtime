@@ -1885,6 +1885,7 @@ set(RUNTIME_TARGET
     runtime_utest_cloud
     runtime_utest_adc
     runtime_utest_mini_v3
+    runtime_utest_arch5162
 )
 
 set(RUNTIME_TARGET_COMMON ${RUNTIME_TARGET})

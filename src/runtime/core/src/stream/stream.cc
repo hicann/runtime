@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <inttypes.h>
 #include <iomanip>
 #include "stream.hpp"
 #include "model_update_task.h"
@@ -1096,7 +1097,7 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
 
         count = ClockGetTimeIntervalUs(startTime);
         COND_RETURN_ERROR_MSG_INNER((count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
-            "Abort process timeout, device_id=%u, stream_id=%d, time=%lu us, timeout_threshold=%lu us", 
+            "Abort process timeout, device_id=%u, stream_id=%d, time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us", 
             device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
         (void)mmSleep(1U);
     } while (result == TS_ERROR_APP_QUEUE_FULL);
@@ -1119,7 +1120,7 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
 
         count = ClockGetTimeIntervalUs(startTime);
         COND_RETURN_ERROR_MSG_INNER((count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
-            "Query abort status timeout, device_id=%u, stream_id=%d, time=%lu us, timeout_threshold=%lu us.", 
+            "Query abort status timeout, device_id=%u, stream_id=%d, time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us.", 
             device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
         (void)mmSleep(5U);
     } while (true);
@@ -1326,7 +1327,7 @@ rtError_t Stream::SetL2Addr()
     // alloc device mem, max L2 size is 32M ,need 16 page table
     TIMESTAMP_BEGIN(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
     rtError_t error = device_->Driver_()->DevMemAlloc(&pteVA_, memSize, RT_MEMORY_HBM, device_->Id_());
-    ERROR_RETURN_MSG_INNER(error, "Failed to allocate device memory for L2 address, size=%lu, device_id=%u, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to allocate device memory for L2 address, size=%zu, device_id=%u, retCode=%#x.",
         memSize, device_->Id_(), error);
     TIMESTAMP_END(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
 
@@ -2849,7 +2850,7 @@ rtError_t Stream::WaitTask(bool const isReclaim, const uint32_t taskId, const in
                      static_cast<uint64_t>(endTimeSpec.tv_nsec) / RT_MS_TO_NS;
             count = endCnt > beginCnt ? (endCnt - beginCnt) : 0;
             if (count >= static_cast<uint64_t>(timeout)) {
-                RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms.",
+                RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%" PRIu64 "ms, timeout=%dms.",
                     deviceId, streamId_, count, timeout);
                 return RT_ERROR_STREAM_SYNC_TIMEOUT;
             }
@@ -2980,7 +2981,7 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
             if (timeout > 0) {
                 uint64_t count = GetTimeInterval(beginTimeSpec);
                 COND_RETURN_ERROR_MSG_INNER((count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms, tryCount=%u.",
+                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%" PRIu64 "ms, timeout=%dms, tryCount=%u.",
                     deviceId, streamId_, count, timeout, tryCount);
                 timeout = (timeout - static_cast<int32_t>(count));
             }
@@ -2999,7 +3000,7 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
             if (timeout > 0) {
                 uint64_t count = GetTimeInterval(beginTimeSpec);
                 COND_RETURN_ERROR_MSG_INNER((count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms, "
+                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%" PRIu64 "ms, timeout=%dms, "
                     "tryCount=%u, RunningState=%u.",
                     deviceId, streamId_, count, timeout, tryCount, device_->GetDevRunningState());
             }
@@ -3986,7 +3987,7 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
             if (timeout > 0) {
                 const uint64_t count = GetTimeInterval(beginTime);
                 COND_RETURN_ERROR_MSG_INNER((count >= static_cast<uint64_t>(timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%lums, timeout=%dms, tryCount=%u.",
+                    "Stream synchronize timeout, device_id=%u, stream_id=%d, time=%" PRIu64 "ms, timeout=%dms, tryCount=%u.",
                     deviceId, streamId_, count, timeout, tryCount);
                 timeout = (timeout - static_cast<int32_t>(count));
             }
@@ -4608,7 +4609,7 @@ rtError_t Stream::UpdateTask(TaskInfo** updateTask)
     uint32_t taskIndex = updateTaskGroup->updateTaskIndex;
     if (taskIndex >= updateTaskGroup->taskIds.size()) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR,
-            "The number of tasks cannot exceed the size of the task group, current task index=%u, task group size=%lu.",
+            "The number of tasks cannot exceed the size of the task group, current task index=%u, task group size=%zu.",
             taskIndex,
             updateTaskGroup->taskIds.size());
         return RT_ERROR_STREAM_TASKGRP_UPDATE;

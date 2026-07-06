@@ -222,7 +222,7 @@ rtError_t H2DCopyMgr::H2DMemCopy(void *dst, const void * const src, const uint64
         TIMESTAMP_BEGIN(rtKernelLaunch_MemCopyPcie);
         const errno_t ret = memcpy_s(dst, size, src, size);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%lu.",
+            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%" PRIu64 ".",
             __func__, ret, strerror(ret), dst, src, size);
         TIMESTAMP_END(rtKernelLaunch_MemCopyPcie);
     } else if (policy_ == COPY_POLICY_ASYNC_PCIE_DMA) {
@@ -249,7 +249,7 @@ rtError_t H2DCopyMgr::H2DMemCopy(void *dst, const void * const src, const uint64
         const errno_t ret = memcpy_s(RtValueToPtr<void *>(iter->second.hostAddr),
             size, src, size);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%lu.",
+            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%" PRIu64 ".",
             __func__, ret, strerror(ret), RtValueToPtr<void *>(iter->second.hostAddr), src, size);
 
         handle->dmaHandle = &(iter->second.dmaAddr);

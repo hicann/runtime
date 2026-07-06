@@ -79,7 +79,7 @@ rtError_t MemcopyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, c
         error = dev->Driver_()->MemCopySync(memcpyAddrInfo, flushSize, &sdmaSqe, copySize, RT_MEMCPY_HOST_TO_DEVICE);
         if (error != RT_ERROR_NONE) {
             ERROR_PROC_RETURN_MSG_INNER(error, recycleTask();,
-                "Failed to memory copy stream info, device_id=%u, size=%zu, retCode=%#x.",
+                "Failed to memory copy stream info, device_id=%u, size=%" PRIu64 ", retCode=%#x.",
                 dev->Id_(), copySize, error);
         }
         error = dev->Driver_()->DevMemFlushCache(RtPtrToValue<void *>(memcpyAddrInfo), flushSize);

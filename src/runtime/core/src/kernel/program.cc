@@ -772,7 +772,7 @@ rtError_t PlainProgram::LoadExtract(void * const output, const uint32_t size)
 
     const errno_t ret = memcpy_s(output, static_cast<size_t>(size), binary_, binarySize_);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
-        "Failed to call memcpy_s to copy binary data, dest=%p, dest_max=%zu, src=%p, count=%lu, retCode=%d.",
+        "Failed to call memcpy_s to copy binary data, dest=%p, dest_max=%zu, src=%p, count=%" PRIu64 ", retCode=%d.",
         output, static_cast<size_t>(size), binary_, binarySize_, ret);
     return RT_ERROR_NONE;
 }
@@ -1017,7 +1017,7 @@ rtError_t ElfProgram::LoadExtract(void * const output, const uint32_t size)
     const errno_t ret = memcpy_s(output, static_cast<size_t>(size),
                                  RtPtrToPtr<char_t *>(binary_) + elfData_->text_offset, elfData_->text_size);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
-        "Failed to call memcpy_s to copy text, dest=%p, dest_max=%zu, src=%p, count=%lu, retCode=%d.",
+        "Failed to call memcpy_s to copy text, dest=%p, dest_max=%zu, src=%p, count=%" PRIu64 ", retCode=%d.",
         output, static_cast<size_t>(size), RtPtrToPtr<char_t *>(binary_) + elfData_->text_offset, elfData_->text_size, ret);
     RT_LOG(RT_LOG_INFO, "text_offset:%" PRIu64 ", elfData_->text_size:%" PRIu64, elfData_->text_offset,
         elfData_->text_size);

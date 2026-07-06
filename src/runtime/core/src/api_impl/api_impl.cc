@@ -7077,7 +7077,7 @@ rtError_t ApiImpl::ImportFromShareableHandleV2(const void *shareableHandle, rtMe
         error = NpuDriver::GetServerId(devId, &localServerId);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
             error,
-            "This device does not support cross-server communication devId:%d ServerId:%ld err:%#x",
+            "This device does not support cross-server communication devId:%d ServerId:%" PRId64 " err:%#x",
             devId,
             localServerId,
             static_cast<uint32_t>(error));
@@ -8338,7 +8338,7 @@ rtError_t ApiImpl::ValidateMemCpyParamsAndAttributes(void* dst, size_t destMax, 
     rtMemLocationType realSrcLoc = RT_MEMORY_LOC_MAX;
 
     COND_RETURN_ERROR_MSG_INNER((size > destMax), RT_ERROR_INVALID_VALUE, 
-        "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", size, destMax);
+        "Invalid size, current size=%zu(bytes), valid size range is (0, %zu]!", size, destMax);
     COND_RETURN_ERROR_MSG_INNER((size == 0U), RT_ERROR_INVALID_VALUE, "sizes's value cannot be 0.");
     COND_RETURN_ERROR_MSG_INNER(((dst == nullptr) || (src == nullptr)),
         RT_ERROR_INVALID_VALUE, "dst's value or src's value is nullptr.");    
@@ -8419,7 +8419,7 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
         }
 
         COND_RETURN_AND_MSG_INNER((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-            "Failed to copy memory asynchronously, count=%" PRIu64 ", kind=%d, retCode=%#x.", sizes[i], kind, static_cast<uint32_t>(error));
+            "Failed to copy memory asynchronously, count=%zu, kind=%d, retCode=%#x.", sizes[i], kind, static_cast<uint32_t>(error));
     }
 
     return error;

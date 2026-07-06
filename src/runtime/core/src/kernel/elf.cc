@@ -189,7 +189,7 @@ std::unique_ptr<char_t[]> GetStringTableCopy(const char_t * const src, const uin
     stringTbl[size] = '\0';
     const errno_t ret = memcpy_s(stringTbl, size, src, size);
     if (ret != EOK) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to call memcpy_s to copy string table, dest=%p, dest_max=%lu, src=%p, count=%lu, retCode=%d.",
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to call memcpy_s to copy string table, dest=%p, dest_max=%" PRIu64 ", src=%p, count=%" PRIu64 ", retCode=%d.",
             stringTbl, size, src, size, ret);
         return nullptr;
     }

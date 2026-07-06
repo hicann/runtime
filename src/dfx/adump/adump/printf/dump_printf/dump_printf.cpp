@@ -16,6 +16,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <inttypes.h>
 #include "runtime/mem.h"
 #include "runtime/base.h"
 #include "runtime/dev.h"
@@ -736,13 +737,13 @@ static void AdxPrintTimeStampInfo(const AdxDumpInfoHead *dumpHead, MsprofAicTime
     timeStampInfo->curPc = *(reinterpret_cast<const uint64_t*>(info));
 
     if (!g_adxPrintConfigFlag) {
-        (void)printf("descId is %u, rsv is %u, timeStamp is %lu, pcPtr is %lu.\n",
+        (void)printf("descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".\n",
             timeStampInfo->descId,
             rsv,
             timeStampInfo->syscyc,
             timeStampInfo->curPc);
     }
-    IDE_LOGI("descId is %u, rsv is %u, timeStamp is %lu, pcPtr is %lu.",
+    IDE_LOGI("descId is %u, rsv is %u, timeStamp is %" PRIu64 ", pcPtr is %" PRIu64 ".",
         timeStampInfo->descId,
         rsv,
         timeStampInfo->syscyc,
