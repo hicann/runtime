@@ -36,7 +36,6 @@ namespace acl {
                 return ACL_SUCCESS;
             }
             if (rtRet != ACL_ERROR_RT_QUEUE_FULL) {
-                ACL_LOG_CALL_ERROR("[Enqueue][Queue]fail to enqueue result = %d", rtRet);
                 return rtRet;
             }
             (void)mmSleep(1U); // sleep 1ms
@@ -63,7 +62,6 @@ namespace acl {
                 return ACL_SUCCESS;
             }
             if (rtRet != ACL_ERROR_RT_QUEUE_EMPTY) {
-                ACL_LOG_CALL_ERROR("[Dequeue][Queue]fail to dequeue result = %d", rtRet);
                 return rtRet;
             }
             (void)mmSleep(1U); // sleep 1ms
@@ -127,7 +125,7 @@ namespace acl {
             ACL_LOG_ERROR("qid [%u] can not be destroyed, it need to be unbinded first.", qid);
             return ACL_ERROR_FAILURE;
         }
-        ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
         DeleteMutexForData(qid);
         ACL_LOG_INFO("successfully to execute destroy queue %u", qid);
         return ACL_SUCCESS;
@@ -138,8 +136,7 @@ namespace acl {
     {
         uint32_t outLen = sizeof(permission);
         if (rtMemQueueQuery(deviceId, RT_MQ_QUERY_QUE_ATTR_OF_CUR_PROC,
-                            &qid, sizeof(qid), &permission, &outLen) != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("get queue permission failed");
+            &qid, sizeof(qid), &permission, &outLen) != RT_ERROR_NONE) {
             return ACL_ERROR_FAILURE;
         }
         return ACL_SUCCESS;
@@ -149,7 +146,7 @@ namespace acl {
     {
         if (!isInitQs_) {
             ACL_LOG_INFO("need to init queue schedule");
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueInitQS(devId, nullptr), rtMemQueueInitQS);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueInitQS(devId, nullptr), rtMemQueueInitQS);
             isInitQs_ = true;
         }
         return ACL_SUCCESS;
@@ -182,11 +179,10 @@ namespace acl {
 
     static aclError AllocMBufOnDevice(void **const devPtr, void **const mBuf, const size_t size)
     {
-        ACL_REQUIRES_CALL_RTS_OK(rtMbufAlloc(mBuf, size), rtMbufAlloc);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufAlloc(mBuf, size), rtMbufAlloc);
         ACL_CHECK_MALLOC_RESULT(*mBuf);
         if (rtMbufGetBuffAddr(*mBuf, devPtr) != RT_ERROR_NONE) {
             (void)rtMbufFree(*mBuf);
-            ACL_LOG_INNER_ERROR("[Get][mbuf]get mbuf failed.");
             return ACL_ERROR_BAD_ALLOC;
         }
         if (*devPtr == nullptr) {
@@ -210,7 +206,7 @@ namespace acl {
         eventSum.subeventId = bqs::ACL_BIND_QUEUE_INIT;
         eventSum.msgLen = sizeof(qsInitMsg);
         eventSum.msg = reinterpret_cast<char_t *>(&qsInitMsg);
-        ACL_REQUIRES_CALL_RTS_OK(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
             ACL_LOG_INNER_ERROR("send connect qs failed, ret code is %d", rsp->retCode);
@@ -257,7 +253,6 @@ namespace acl {
             (void)rtMbufFree(mBuf);
             mBuf = nullptr;
             devPtr = nullptr;
-            ACL_LOG_INNER_ERROR("[Call][Rts]call rtMemQueueEnQueue failed");
             return ret;
         }
 
@@ -270,7 +265,6 @@ namespace acl {
         eventSum.msgLen = 0U;
         eventSum.msg = nullptr;
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("call rtEschedSubmitEventSync failed, ret code is %d", ret);
             if (!isMbufEnhanced_) {
                 (void)rtMbufFree(mBuf);
                 mBuf = nullptr;
@@ -280,7 +274,7 @@ namespace acl {
         }
         if (isMbufEnhanced_) {
             // after event sync mbuf need to be dequeue to be used as mbuf can not be free by enqueue side
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDeQueue(0, qsContactId_, &mBuf), rtMemQueueDeQueue);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDeQueue(0, qsContactId_, &mBuf), rtMemQueueDeQueue);
             (void)rtMbufGetBuffAddr(mBuf, &devPtr);
         }
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
@@ -321,7 +315,7 @@ namespace acl {
         eventSum.subeventId = bqs::ACL_QUERY_QUEUE_NUM;
         eventSum.msgLen = sizeof(routeQuery);
         eventSum.msg = reinterpret_cast<char_t *>(&routeQuery);
-        ACL_REQUIRES_CALL_RTS_OK(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
             ACL_LOG_INNER_ERROR("get queue route num failed, ret code is %d", rsp->retCode);
@@ -363,7 +357,6 @@ namespace acl {
             (void)rtMbufFree(mBuf);
             devPtr = nullptr;
             mBuf = nullptr;
-            ACL_LOG_INNER_ERROR("[Call][Rts]call rtMemQueueEnQueue failed");
             return ret;
         }
         bqs::QueueRouteList qsCommonMsg = {0U, 0U, {0}};
@@ -384,7 +377,7 @@ namespace acl {
         }
         if (isMbufEnhanced_) {
             // after event sync mbuf need to be dequeue to be used as mbuf can not be free by enqueue side
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDeQueue(0, qsContactId_, &mBuf), rtMemQueueDeQueue);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDeQueue(0, qsContactId_, &mBuf), rtMemQueueDeQueue);
             (void)rtMbufGetBuffAddr(mBuf, &devPtr);
         }
 
@@ -437,7 +430,7 @@ namespace acl {
         output.groupsOfProc = outputInfo;
         output.maxNum = QUERY_BUFF_GRP_MAX_NUM;
 
-        ACL_REQUIRES_CALL_RTS_OK(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
         grpNum = output.resultNum;
         if ((grpNum == 0U) || (output.groupsOfProc == nullptr)) {
             ACL_LOG_ERROR("[Check] grpNum is zero or groupsOfProc is nullptr, grpNum is %zu", grpNum);
@@ -473,7 +466,7 @@ namespace acl {
         rtMemGrpQueryGroupIdInfo_t outputInfo = {};
         output.groupIdInfo = &outputInfo;
 
-        ACL_REQUIRES_CALL_RTS_OK(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
         qsGroupId_ = output.groupIdInfo->groupId;
         ACL_LOG_INFO("This groupId is %d, name is %s", qsGroupId_, grpName.c_str());
         return ACL_SUCCESS;
@@ -486,16 +479,11 @@ namespace acl {
             rtMemBuffCfg_t cfg = {{}};
             ret = rtMbufInit(&cfg);
             if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
-                ACL_LOG_INNER_ERROR("mbuf init failed, ret is %d", ret);
                 return ret;
             }
             isMbufInit_ = true;
         }
-        ret = rtMbufAllocEx(buf, size, type, qsGroupId_);
-        if (ret != RT_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR("[Alloc][mbuf]fail to alloc mbuf result = %d", ret);
-            return ret;
-        }
+        ACL_REQUIRES_RTS_OK(rtMbufAllocEx(buf, size, type, qsGroupId_));
         return ACL_SUCCESS;
     }
 
@@ -598,11 +586,7 @@ namespace acl {
         }
 
         if (aclRunMode == ACL_HOST) {
-            const rtError_t rtRet = rtGetDevice(&deviceId);
-            if (rtRet != ACL_SUCCESS) {
-                ACL_LOG_CALL_ERROR("[Get][DeviceId]fail to get deviceId errorCode = %d", rtRet);
-                return rtRet;
-            }
+            ACL_REQUIRES_RTS_OK(rtGetDevice(&deviceId));
         }
         return ACL_SUCCESS;
     }
@@ -634,7 +618,6 @@ namespace acl {
             return ret;
         }
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("Failed to execute rtMemQueueEnQueueBuff, device is %d, qid is %u", deviceId, qid);
             return ret;
         }
 
@@ -708,9 +691,9 @@ namespace acl {
         if (attr == nullptr) {
             acltdtQueueAttr tmpAttr{};
             acltdtSetDefaultQueueAttr(tmpAttr);
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueCreate(deviceId, &tmpAttr, qid), rtMemQueueCreate);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueCreate(deviceId, &tmpAttr, qid), rtMemQueueCreate);
         } else {
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueCreate(deviceId, attr, qid), rtMemQueueCreate);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueCreate(deviceId, attr, qid), rtMemQueueCreate);
         }
         return ACL_SUCCESS;
     }

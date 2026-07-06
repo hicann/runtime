@@ -570,11 +570,15 @@ stream/model/context 等对象的归属关系校验。宏自动注入 `__func__`
 |------|---------|---------|---------|
 | ACL_REQUIRES_OK_WITH_INNER_MESSAGE | 原始返回值 | 返回值!=OK | 推荐 |
 | ACL_REQUIRES_CALL_RTS_OK | 原始返回值 | 返回值!=NONE | 推荐 |
+| ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT | 原始返回值 | 返回值!=NONE | 推荐 |
+| ACL_REQUIRES_RTS_OK | 原始返回值 | 返回值!=NONE | 推荐 |
 | ACL_REQUIRES_CALL_GE_OK | 原始返回值 | 返回值!=ge::SUCCESS | 推荐 |
 | ACL_REQUIRES_EOK | ACL_ERROR_FAILURE | 返回值!=EOK | 推荐 |
 
 **说明**：
 - `ACL_REQUIRES_CALL_RTS_OK` 对 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT` 特殊处理：仅打 WARN 日志，不上报 ErrMsg；其他失败情况上报 EH9999
+- `ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT` 对 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT` 特殊处理：仅打 WARN 日志；其他失败情况不上报 ErrMsg（rt 已兜底打屏，acl 不重复上报）
+- `ACL_REQUIRES_RTS_OK` 用于 rt 接口已通过 `ERROR_RETURN_WITH_EXT_ERRCODE` 兜底打屏的场景，acl 侧不重复上报，仅返回 `ACL_GET_ERRCODE_RTS(__ret)`，不上报 ErrMsg
 - `ACL_REQUIRES_EOK` 用于安全函数（memcpy_s 等），固定返回 `ACL_ERROR_FAILURE`
 
 ---

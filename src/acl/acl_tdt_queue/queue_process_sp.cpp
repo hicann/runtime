@@ -21,9 +21,9 @@ namespace acl {
         // if cp is found
         if (GetDstInfo(deviceId, CP_PID, cpPid) == ACL_SUCCESS) {
             rtMemQueueShareAttr_t permission;
-            ACL_REQUIRES_CALL_RTS_OK(GetQueuePermission(deviceId, qid, permission), GetQueuePermission);
+            ACL_REQUIRES_OK(GetQueuePermission(deviceId, qid, permission));
             if (permission.manage != 0U) {
-                ACL_REQUIRES_CALL_RTS_OK(rtMemQueueGrant(deviceId, qid, cpPid, &permission), rtMemQueueGrant);
+                ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, qid, cpPid, &permission), rtMemQueueGrant);
             } else {
                 ACL_LOG_INNER_ERROR("current process has no manage permission on qid %u", qid);
                 return ACL_ERROR_FAILURE;
@@ -43,7 +43,6 @@ namespace acl {
             ACL_LOG_INFO("need to init queue once");
             const rtError_t ret =  rtMemQueueInit(deviceId);
             if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
-                ACL_LOG_INNER_ERROR("queue init failed, ret is %d", ret);
                 return ret;
             }
             isQueueIint = true;
@@ -57,7 +56,7 @@ namespace acl {
             rtAttr.read = 1U;
             rtAttr.manage = 1U;
             rtAttr.write = 1U;
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueGrant(deviceId, *qid, cpPid, &rtAttr), rtMemQueueGrant);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, *qid, cpPid, &rtAttr), rtMemQueueGrant);
         }
         ACL_LOG_INFO("Successfully to execute acltdtCreateQueue, qid is %u", *qid);
         return ACL_SUCCESS;
@@ -79,7 +78,7 @@ namespace acl {
         attr.read = permission & static_cast<uint32_t>(ACL_TDT_QUEUE_PERMISSION_DEQUEUE);
         attr.write = permission & static_cast<uint32_t>(ACL_TDT_QUEUE_PERMISSION_ENQUEUE);
         const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
-        ACL_REQUIRES_CALL_RTS_OK(rtMemQueueGrant(deviceId, qid, pid, &attr), rtMemQueueGrant);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, qid, pid, &attr), rtMemQueueGrant);
         ACL_LOG_INFO("successfully execute acltdtGrantQueue, qid is %u, pid is %d, permisiion is %u, timeout is %d",
                      qid, pid, permission, timeout);
         return ACL_SUCCESS;
@@ -93,10 +92,10 @@ namespace acl {
                      qid, *permission, timeout);
         constexpr int32_t deviceId = 0;
         const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
-        ACL_REQUIRES_CALL_RTS_OK(rtMemQueueAttach(deviceId, qid, timeout), rtMemQueueAttach);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueAttach(deviceId, qid, timeout), rtMemQueueAttach);
         (void)GrantQueue2Cp(deviceId, qid);
         rtMemQueueShareAttr_t attr;
-        ACL_REQUIRES_CALL_RTS_OK(GetQueuePermission(deviceId, qid, attr), GetQueuePermission);
+        ACL_REQUIRES_OK(GetQueuePermission(deviceId, qid, attr));
         uint32_t tmp = 0U;
         tmp = (attr.manage != 0) ? (tmp | static_cast<uint32_t>(ACL_TDT_QUEUE_PERMISSION_MANAGE)) : tmp;
         tmp = (attr.read != 0) ? (tmp | static_cast<uint32_t>(ACL_TDT_QUEUE_PERMISSION_DEQUEUE)) : tmp;
@@ -122,9 +121,9 @@ namespace acl {
             attrSrc.read = 1U;
             rtMemQueueShareAttr_t attrDst = {0U, 0U, 0U, 0U};
             attrDst.write = 1U;
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueGrant(deviceId, qRouteList->routeList[i].srcId, dstPid, &attrSrc),
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, qRouteList->routeList[i].srcId, dstPid, &attrSrc),
                                      rtMemQueueGrant);
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueGrant(deviceId, qRouteList->routeList[i].dstId, dstPid, &attrDst),
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueGrant(deviceId, qRouteList->routeList[i].dstId, dstPid, &attrDst),
                                      rtMemQueueGrant);
         }
         rtEschedEventSummary_t eventSum = {0, 0U, 0, 0U, 0U, nullptr, 0U, 0};
@@ -138,7 +137,7 @@ namespace acl {
         ack.bufLen = sizeof(qsRsp);
         if (!isQsInit_) {
             ACL_REQUIRES_OK(SendConnectQsMsg(deviceId, eventSum, ack));
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueAttach(deviceId, qsContactId_, 0), rtMemQueueAttach);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueAttach(deviceId, qsContactId_, 0), rtMemQueueAttach);
             isQsInit_ = true;
         }
         ACL_REQUIRES_OK(SendBindUnbindMsgOnDevice(qRouteList, true, eventSum, ack));

@@ -16,6 +16,7 @@
 #include "dlog_pub.h"
 #include "mmpa/mmpa_api.h"
 #include "acl/acl_base.h"
+#include "common/error_codes_inner.h"
 
 #ifndef char_t
 using char_t = char;
@@ -265,6 +266,27 @@ public:
             } \
             ACL_LOG_CALL_ERROR("[Call][Rts]call rts api [%s] failed, retCode is %d", #interface, __ret); \
             return __ret; \
+        } \
+    } \
+    while (false)
+
+#define ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(expr, interface) \
+    do { \
+        const rtError_t __ret = (expr); \
+        if (__ret != RT_ERROR_NONE) { \
+            if (__ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) { \
+                ACL_LOG_WARN("rts api [%s] is not supported currently,", #interface); \
+            } \
+            return __ret; \
+        } \
+    } \
+    while (false)
+
+#define ACL_REQUIRES_RTS_OK(expr) \
+    do { \
+        const rtError_t __ret = (expr); \
+        if (__ret != RT_ERROR_NONE) { \
+            return ACL_GET_ERRCODE_RTS(__ret); \
         } \
     } \
     while (false)

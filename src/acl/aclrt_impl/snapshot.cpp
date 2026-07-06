@@ -31,11 +31,7 @@ aclError aclrtSnapShotProcessLockImpl(int pid, void* reserve)
     ACL_CHECK_INVALID_PARAM_NO_VALUE(
         reserve == nullptr, "reserve", "reserve is a reserved parameter and must be nullptr");
 
-    const rtError_t rtErr = rtSnapShotProcessLock();
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute SnapShotProcessLock failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSnapShotProcessLock());
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessLock");
     return ACL_SUCCESS;
@@ -53,11 +49,7 @@ aclError aclrtSnapShotProcessUnlockImpl(int pid, void* reserve)
     ACL_CHECK_INVALID_PARAM_NO_VALUE(
         reserve == nullptr, "reserve", "reserve is a reserved parameter and must be nullptr");
 
-    const rtError_t rtErr = rtSnapShotProcessUnlock();
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute SnapShotProcessUnLock failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSnapShotProcessUnlock());
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessUnlock");
     return ACL_SUCCESS;
@@ -74,11 +66,7 @@ aclError aclrtSnapShotProcessBackupImpl(int pid, aclrtSnapShotBackupArgs* args)
 
     ACL_CHECK_INVALID_PARAM_NO_VALUE(args == nullptr, "args", "args is a reserved parameter and must be nullptr");
 
-    const rtError_t rtErr = rtSnapShotProcessBackup();
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute SnapShotProcessBackup failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackup());
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessBackup");
     return ACL_SUCCESS;
@@ -95,11 +83,7 @@ aclError aclrtSnapShotProcessRestoreImpl(int pid, aclrtSnapShotRestoreArgs* args
 
     ACL_CHECK_INVALID_PARAM_NO_VALUE(args == nullptr, "args", "args is a reserved parameter and must be nullptr");
 
-    const rtError_t rtErr = rtSnapShotProcessRestore();
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute SnapShotProcessRestore failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestore());
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessRestore");
     return ACL_SUCCESS;
@@ -108,12 +92,8 @@ aclError aclrtSnapShotProcessRestoreImpl(int pid, aclrtSnapShotRestoreArgs* args
 aclError aclrtSnapShotCallbackRegisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void* args)
 {
     ACL_LOG_INFO("start to execute aclrtSnapShotCallbackRegister");
-    const rtError_t rtErr = rtSnapShotCallbackRegister(
-        static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback), args);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute SnapShotCallbackRegister failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSnapShotCallbackRegister(
+        static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback), args));
     ACL_LOG_INFO("successfully execute aclrtSnapShotCallbackRegister");
     return ACL_SUCCESS;
 }
@@ -121,13 +101,8 @@ aclError aclrtSnapShotCallbackRegisterImpl(aclrtSnapShotStage stage, aclrtSnapSh
 aclError aclrtSnapShotCallbackUnregisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)
 {
     ACL_LOG_INFO("start to execute aclrtSnapShotCallbackUnregister");
-    const rtError_t rtErr =
-        rtSnapShotCallbackUnregister(static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR(
-            "execute SnapShotCallbackUnregister failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(
+        rtSnapShotCallbackUnregister(static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback)));
     ACL_LOG_INFO("successfully execute aclrtSnapShotCallbackUnregister");
     return ACL_SUCCESS;
 }

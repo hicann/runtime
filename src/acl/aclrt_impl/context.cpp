@@ -34,12 +34,7 @@ aclError aclrtCreateContextImpl(aclrtContext *context, int32_t deviceId)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(context);
 
     rtContext_t rtCtx = nullptr;
-    const rtError_t rtErr = rtCtxCreateEx(&rtCtx, static_cast<uint32_t>(RT_CTX_NORMAL_MODE), deviceId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("create context failed, device is %d, runtime errorCode is %d",
-            deviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtCtxCreateEx(&rtCtx, static_cast<uint32_t>(RT_CTX_NORMAL_MODE), deviceId));
     ACL_LOG_INFO("successfully execute aclrtCreateContext, device is %d.", deviceId);
     *context = static_cast<aclrtContext>(rtCtx);
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_CONTEXT);
@@ -59,11 +54,7 @@ aclError aclrtDestroyContextImpl(aclrtContext context)
     ACL_LOG_INFO("start to execute aclrtDestroyContext.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(context);
 
-    const rtError_t rtErr = rtCtxDestroyEx(static_cast<rtContext_t>(context));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("destroy context failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtCtxDestroyEx(static_cast<rtContext_t>(context)));
     ACL_LOG_INFO("successfully execute aclrtDestroyContext");
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_CONTEXT);
     return ACL_SUCCESS;
@@ -75,11 +66,7 @@ aclError aclrtSetCurrentContextImpl(aclrtContext context)
     ACL_LOG_INFO("start to execute aclrtSetCurrentContext.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(context);
 
-    const rtError_t rtErr = rtCtxSetCurrent(static_cast<rtContext_t>(context));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set current context failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtCtxSetCurrent(static_cast<rtContext_t>(context)));
     ACL_LOG_INFO("successfully execute aclrtSetCurrentContext");
     return ACL_SUCCESS;
 }
@@ -120,10 +107,7 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
         if (rtErr == ACL_ERROR_RT_SYSPARAMOPT_NOT_SET) {
             ACL_LOG_WARN("option %d is not set, runtime errorCode is %d",
                 static_cast<int32_t>(opt),  static_cast<int32_t>(rtErr));
-            return ACL_GET_ERRCODE_RTS(rtErr);
         }
-        ACL_LOG_CALL_ERROR("get sys param failed, runtime result = %d, opt = %d.",
-                           static_cast<int32_t>(rtErr), static_cast<int32_t>(opt));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;
@@ -136,16 +120,10 @@ static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
         acl::GetSysParamOptDesc(opt), "opt",
         "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
         ACL_ERROR_INVALID_PARAM);
-    rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
-        rtErr = rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
+        ACL_REQUIRES_RTS_OK(rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
     } else {
-        rtErr = rtSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
-    }
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set sys param failed, runtime result = %d, opt = %d.",
-                           static_cast<int32_t>(rtErr), static_cast<int32_t>(opt));
-        return ACL_GET_ERRCODE_RTS(rtErr);
+        ACL_REQUIRES_RTS_OK(rtSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
     }
     ACL_LOG_INFO("successfully execute aclrtCtxSetSysParamOpt");
     return ACL_SUCCESS;

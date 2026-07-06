@@ -253,11 +253,7 @@ aclError aclMallocMemInner(void **devPtr, const size_t size, bool isPadding,
     } else {
         flags = RT_MEMORY_DEFAULT;
     }
-    const rtError_t rtErr = rtMalloc(devPtr, alignedSize, flags, moduleId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc device memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMalloc(devPtr, alignedSize, flags, moduleId));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -281,12 +277,8 @@ aclError aclrtMallocInnerWithCfg(void **devPtr, const size_t size, aclrtMemMallo
     // size must be greater than zero
     ACL_REQUIRES_POSITIVE_REPORT(size);
 
-    const rtError_t rtErr = rtsMalloc(devPtr, size, static_cast<rtMallocPolicy>(policy), advise,
-        reinterpret_cast<rtMallocConfig_t*>(cfg));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsMalloc(devPtr, size, static_cast<rtMallocPolicy>(policy), advise,
+        reinterpret_cast<rtMallocConfig_t*>(cfg)));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -333,11 +325,7 @@ aclError aclrtMallocCachedImpl(void **devPtr, size_t size, aclrtMemMallocPolicy 
     } else {
         cacheFlags = RT_MEMORY_DEFAULT;
     }
-    const rtError_t rtErr = rtMallocCached(devPtr, alignedSize, cacheFlags, acl::APP_MODE_ID_U16);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc device memory with cache failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMallocCached(devPtr, alignedSize, cacheFlags, acl::APP_MODE_ID_U16));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -365,11 +353,7 @@ aclError aclrtMallocHostWithCfgImpl(void **ptr, uint64_t size, aclrtMallocConfig
     ACL_LOG_DEBUG("start to execute aclrtMallocHostWithCfg, size = %zu", size);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtsMallocHost(ptr, size, reinterpret_cast<rtMallocConfig_t*>(cfg));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc host memory with cfg failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsMallocHost(ptr, size, reinterpret_cast<rtMallocConfig_t*>(cfg)));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -380,11 +364,7 @@ aclError aclrtPointerGetAttributesImpl(const void *ptr, aclrtPtrAttributes *attr
     ACL_LOG_DEBUG("start to execute aclrtPointerGetAttributes");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attributes);
-    const rtError_t rtErr = rtsPointerGetAttributes(ptr, reinterpret_cast<rtPtrAttributes_t*>(attributes));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsPointerGetAttributes failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsPointerGetAttributes(ptr, reinterpret_cast<rtPtrAttributes_t*>(attributes)));
     return ACL_SUCCESS;
 }
 
@@ -396,7 +376,7 @@ aclError aclrtMemManagedGetAttrImpl(aclrtMemManagedRangeAttribute attribute, con
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedGetAttr(static_cast<rtMemManagedRangeAttribute>(attribute), ptr, size, data, dataSize), rtMemManagedGetAttr);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemManagedGetAttr(static_cast<rtMemManagedRangeAttribute>(attribute), ptr, size, data, dataSize), rtMemManagedGetAttr);
     return ACL_SUCCESS;
 }
 
@@ -410,7 +390,7 @@ aclError aclrtMemManagedGetAttrsImpl(aclrtMemManagedRangeAttribute *attributes, 
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataSizes);
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedGetAttrs(reinterpret_cast<rtMemManagedRangeAttribute *>(attributes), 
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemManagedGetAttrs(reinterpret_cast<rtMemManagedRangeAttribute *>(attributes), 
                                             numAttributes, ptr, size, data, dataSizes), rtMemManagedGetAttrs);
     return ACL_SUCCESS;
 }
@@ -423,11 +403,7 @@ aclError aclrtHostRegisterImpl(void *ptr, uint64_t size, aclrtHostRegisterType t
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     // size must be greater than zero
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtsHostRegister(ptr, size, static_cast<rtHostRegisterType>(type), devPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsHostRegister failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsHostRegister(ptr, size, static_cast<rtHostRegisterType>(type), devPtr));
     return ACL_SUCCESS;
 }
 
@@ -437,11 +413,7 @@ aclError aclrtHostRegisterV2Impl(void *ptr, uint64_t size, uint32_t flag)
     ACL_LOG_DEBUG("start to execute aclrtHostRegisterV2");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtHostRegisterV2(ptr, size, flag);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtHostRegisterV2 failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtHostRegisterV2(ptr, size, flag));
     return ACL_SUCCESS;
 }
 
@@ -452,11 +424,7 @@ aclError aclrtHostGetDevicePointerImpl(void *pHost, void **pDevice, uint32_t fla
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pHost);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pDevice);
     ACL_CHECK_RESERVED_PARAM_REPORT_RET(flag, 0, ACL_ERROR_INVALID_PARAM);
-    const rtError_t rtErr = rtHostGetDevicePointer(pHost, pDevice, flag);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtHostGetDevicePointer failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtHostGetDevicePointer(pHost, pDevice, flag));
     return ACL_SUCCESS;
 }
 
@@ -465,11 +433,7 @@ aclError aclrtHostUnregisterImpl(void *ptr)
     ACL_PROFILING_REG(acl::AclProfType::AclrtHostUnregister);
     ACL_LOG_DEBUG("start to execute aclrtHostUnregister");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
-    const rtError_t rtErr = rtsHostUnregister(ptr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsHostUnregister failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsHostUnregister(ptr));
     return ACL_SUCCESS;
 }
 
@@ -479,16 +443,8 @@ aclError aclrtHostMemMapCapabilitiesImpl(uint32_t deviceId, aclrtHacType hacType
     ACL_PROFILING_REG(acl::AclProfType::AclrtHostMemMapCapabilities);
     ACL_LOG_DEBUG("start to execute aclrtHostMemMapCapabilities, deviceId = %u", deviceId);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(capabilities);
-    const rtError_t rtErr = rtHostMemMapCapabilities(deviceId, static_cast<rtHacType>(hacType),
-        reinterpret_cast<rtHostMemMapCapability*>(capabilities));
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtHostMemMapCapabilities does not support this feature, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call rtHostMemMapCapabilities failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtHostMemMapCapabilities(deviceId, static_cast<rtHacType>(hacType),
+        reinterpret_cast<rtHostMemMapCapability*>(capabilities)), rtHostMemMapCapabilities);
     return ACL_SUCCESS;
 }
 
@@ -499,12 +455,7 @@ aclError aclrtMemFlushImpl(void *devPtr, size_t size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtFlushCache(devPtr, size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("flush cache data to ddr failed, runtime result = %d, size = %zu",
-            static_cast<int32_t>(rtErr), size);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFlushCache(devPtr, size));
     return ACL_SUCCESS;
 }
 
@@ -515,12 +466,7 @@ aclError aclrtMemInvalidateImpl(void *devPtr, size_t size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtInvalidCache(devPtr, size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("invalidate cache data failed, runtime result = %d, size = %zu",
-            static_cast<int32_t>(rtErr), size);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtInvalidCache(devPtr, size));
     return ACL_SUCCESS;
 }
 
@@ -531,11 +477,7 @@ aclError aclrtFreeImpl(void *devPtr)
     ACL_LOG_DEBUG("start to execute aclrtFree");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
-    const rtError_t rtErr = rtFree(devPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("free device memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFree(devPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -548,11 +490,7 @@ aclError aclrtMallocHostImpl(void **hostPtr, size_t size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostPtr);
     // size must be greater than zero
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtErr = rtMallocHost(hostPtr, size, acl::APP_MODE_ID_U16);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc host memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMallocHost(hostPtr, size, acl::APP_MODE_ID_U16));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     return ACL_SUCCESS;
 }
@@ -563,11 +501,7 @@ aclError aclrtMemAllocManagedImpl(void **ptr, uint64_t size, uint32_t flag)
     ACL_LOG_DEBUG("start to execute aclrtMemAllocManaged");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_PARAM_EQUAL_REPORT(flag, ACL_RT_MEM_ATTACH_GLOBAL);
-    const rtError_t rtErr = rtMemAllocManaged(ptr, size, RT_MEMORY_ATTACH_GLOBAL, acl::APP_MODE_ID_U16);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("alloc uvm memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemAllocManaged(ptr, size, RT_MEMORY_ATTACH_GLOBAL, acl::APP_MODE_ID_U16));
     return ACL_SUCCESS;
 }
 
@@ -583,7 +517,7 @@ aclError aclrtMemManagedAdviseImpl(const void *const ptr, uint64_t size, aclrtMe
     memLocation.id = location.id;
     memLocation.type = static_cast<rtMemManagedLocationType>(location.type);
     
-    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedAdvise(ptr, size, advise, memLocation), rtMemManagedAdvise);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemManagedAdvise(ptr, size, advise, memLocation), rtMemManagedAdvise);
     return ACL_SUCCESS;
 }
 
@@ -593,11 +527,7 @@ aclError aclrtFreeHostImpl(void *hostPtr)
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     ACL_LOG_DEBUG("start to execute aclrtFreeHost");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostPtr);
-    const rtError_t rtErr = rtFreeHost(hostPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("free host memory failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFreeHost(hostPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     return ACL_SUCCESS;
 }
@@ -609,11 +539,7 @@ aclError aclrtFreeWithDevSyncImpl(void *devPtr)
     ACL_LOG_DEBUG("start to execute aclrtFreeWithDevSync");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
-    const rtError_t rtErr = rtFreeWithDevSync(devPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("free device memory with device synchronize failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFreeWithDevSync(devPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     return ACL_SUCCESS;
 }
@@ -624,11 +550,7 @@ aclError aclrtFreeHostWithDevSyncImpl(void *hostPtr)
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     ACL_LOG_DEBUG("start to execute aclrtFreeHostWithDevSync");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostPtr);
-    const rtError_t rtErr = rtFreeHostWithDevSync(hostPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("free host memory with device synchronize failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFreeHostWithDevSync(hostPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_HOST);
     return ACL_SUCCESS;
 }
@@ -653,12 +575,7 @@ aclError aclrtMemcpyImpl(void *dst,
         return ret;
     }
 
-    const rtError_t rtErr = rtMemcpy(dst, destMax, src, count, rtKind);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("synchronized memcpy failed, kind = %d, runtime result = %d",
-            static_cast<int32_t>(kind), static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpy(dst, destMax, src, count, rtKind));
     return ACL_SUCCESS;
 }
 
@@ -673,11 +590,7 @@ aclError aclrtMemsetImpl(void *devPtr, size_t maxCount, int32_t value, size_t co
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
-    const rtError_t rtErr = rtMemset(devPtr, maxCount, static_cast<uint32_t>(value), count);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set memory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemset(devPtr, maxCount, static_cast<uint32_t>(value), count));
     return ACL_SUCCESS;
 }
 
@@ -702,7 +615,7 @@ aclError aclrtMemcpyAsyncImpl(void *dst,
         return ret;
     }    
 
-    ACL_REQUIRES_CALL_RTS_OK(rtMemcpyAsync(dst, destMax, src, count, rtKindVal, static_cast<rtStream_t>(stream)),
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemcpyAsync(dst, destMax, src, count, rtKindVal, static_cast<rtStream_t>(stream)),
                              rtMemcpyAsync);
     return ACL_SUCCESS;
 }
@@ -742,7 +655,7 @@ aclError aclrtMemcpyAsyncWithConditionImpl(void *dst,
         .numAttrs = 1U
     };
 
-    ACL_REQUIRES_CALL_RTS_OK(rtMemcpyAsyncEx(dst, destMax, src, count, rtKindValue, static_cast<rtStream_t>(stream),
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemcpyAsyncEx(dst, destMax, src, count, rtKindValue, static_cast<rtStream_t>(stream),
                              &memcpyConfig), rtMemcpyAsyncEx);
     return ACL_SUCCESS;
 }
@@ -758,7 +671,7 @@ aclError aclrtMemsetAsyncImpl(void *devPtr, size_t maxCount, int32_t value, size
     }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
-    ACL_REQUIRES_CALL_RTS_OK(rtMemsetAsync(devPtr, maxCount, static_cast<uint32_t>(value), count, stream),
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemsetAsync(devPtr, maxCount, static_cast<uint32_t>(value), count, stream),
                              rtMemsetAsync);
     return ACL_SUCCESS;
 }
@@ -828,13 +741,10 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
     }
 
     const rtError_t rtErr = rtMemsetD32(ptr, static_cast<uint64_t>(memSize), value, N);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtMemsetD32 does not support this feature, runtime result = %d", rtErr);
-        } else {
-            ACL_LOG_CALL_ERROR("call rtMemsetD32 failed, runtime result = %d", rtErr);
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+    if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+        ACL_LOG_WARN("rtMemsetD32 does not support this feature, runtime result = %d", rtErr);
+    } else if (rtErr != RT_ERROR_NONE) {
+        return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
     return ACL_SUCCESS;
@@ -888,13 +798,10 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value,
 
     const rtError_t rtErr = rtMemsetD32Async(ptr, static_cast<uint64_t>(memSize),
                                              value, N, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtMemsetD32Async does not support this feature, runtime result = %d", rtErr);
-        } else {
-            ACL_LOG_CALL_ERROR("call rtMemsetD32Async failed, runtime result = %d", rtErr);
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+    if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+        ACL_LOG_WARN("rtMemsetD32Async does not support this feature, runtime result = %d", rtErr);
+    } else if (rtErr != RT_ERROR_NONE) {
+        return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
     return ACL_SUCCESS;
@@ -918,19 +825,9 @@ aclError aclrtDeviceCanAccessPeerImpl(int32_t *canAccessPeer, int32_t deviceId, 
     }
 
     uint32_t peerPhyId = 0U;
-    rtError_t rtErr = rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevicePhyIdByIndex failed, deviceId = %d, peerDeviceId = %d, "
-            "runtime result = %d", deviceId, peerDeviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId));
 
-    rtErr = rtDeviceCanAccessPeer(canAccessPeer, static_cast<uint32_t>(deviceId), peerPhyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtDeviceCanAccessPeer failed, deviceId = %d, peerPhyId = %u, "
-            "runtime result = %d", deviceId, peerPhyId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtDeviceCanAccessPeer(canAccessPeer, static_cast<uint32_t>(deviceId), peerPhyId));
 
     return ACL_SUCCESS;
 }
@@ -942,11 +839,7 @@ aclError aclrtDeviceEnablePeerAccessImpl(int32_t peerDeviceId, uint32_t flags)
     ACL_CHECK_RESERVED_PARAM_REPORT_RET(flags, 0U, ACL_ERROR_FEATURE_UNSUPPORTED);
 
     int32_t deviceId = 0;
-    rtError_t rtErr = rtGetDevice(&deviceId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevice failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevice(&deviceId));
 
     if (deviceId == peerDeviceId) {
         ACL_LOG_ERROR("deviceId %d cannot be equal to peerDeviceId %d", deviceId, peerDeviceId);
@@ -961,19 +854,9 @@ aclError aclrtDeviceEnablePeerAccessImpl(int32_t peerDeviceId, uint32_t flags)
     }
 
     uint32_t peerPhyId = 0U;
-    rtErr = rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevicePhyIdByIndex failed, peerDeviceId = %d, runtime result = %d",
-            peerDeviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId));
 
-    rtErr = rtEnableP2P(static_cast<uint32_t>(deviceId), peerPhyId, flags);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtEnableP2P failed, deviceId = %d, peerPhyId = %u, runtime result = %d",
-            deviceId, peerPhyId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEnableP2P(static_cast<uint32_t>(deviceId), peerPhyId, flags));
 
     return ACL_SUCCESS;
 }
@@ -984,11 +867,7 @@ aclError aclrtDeviceDisablePeerAccessImpl(int32_t peerDeviceId)
     ACL_LOG_INFO("start to execute aclrtDeviceDisablePeerAccess");
 
     int32_t deviceId = 0;
-    rtError_t rtErr = rtGetDevice(&deviceId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevice failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevice(&deviceId));
 
     if (deviceId == peerDeviceId) {
         ACL_LOG_ERROR("deviceId %d cannot be equal to peerDeviceId %d", deviceId, peerDeviceId);
@@ -1003,19 +882,9 @@ aclError aclrtDeviceDisablePeerAccessImpl(int32_t peerDeviceId)
     }
 
     uint32_t peerPhyId = 0U;
-    rtErr = rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevicePhyIdByIndex failed, peerDeviceId = %u, runtime result = %d",
-            peerDeviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevicePhyIdByIndex(static_cast<uint32_t>(peerDeviceId), &peerPhyId));
 
-    rtErr = rtDisableP2P(static_cast<uint32_t>(deviceId), peerPhyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtDisableP2P failed, deviceId = %d, peerPhyId = %u, runtime result = %d",
-            deviceId, peerPhyId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtDisableP2P(static_cast<uint32_t>(deviceId), peerPhyId));
 
     return ACL_SUCCESS;
 }
@@ -1027,11 +896,7 @@ aclError aclrtGetMemInfoImpl(aclrtMemAttr attr, size_t *free, size_t *total)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(total);
     ACL_LOG_DEBUG("start to execute aclrtGetMemInfo, memory attribute = %d", static_cast<int32_t>(attr));
 
-    const rtError_t rtErr = rtMemGetInfoEx(static_cast<rtMemInfoType_t>(attr), free, total);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("get memory information failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemGetInfoEx(static_cast<rtMemInfoType_t>(attr), free, total));
 
     ACL_LOG_DEBUG("successfully execute aclrtGetMemInfo, memory attribute = %d, free memory = %zu bytes, "
         "total memory = %zu bytes", static_cast<int32_t>(attr), *free, *total);
@@ -1045,11 +910,7 @@ aclError aclrtGetMemUsageInfoImpl(int32_t deviceId, aclrtMemUsageInfo *memUsageI
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(outputNum);
     ACL_LOG_DEBUG("start to execute aclrtGetMemUsageInfo, deviceId = %d, inputNum = %zu", static_cast<int32_t>(deviceId), inputNum);
 
-    const rtError_t rtErr = rtGetMemUsageInfo(static_cast<uint32_t>(deviceId), reinterpret_cast<rtMemUsageInfo_t*>(memUsageInfo), inputNum, outputNum);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("get memory usage information failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetMemUsageInfo(static_cast<uint32_t>(deviceId), reinterpret_cast<rtMemUsageInfo_t*>(memUsageInfo), inputNum, outputNum));
 
     ACL_LOG_DEBUG("successfully execute aclrtGetMemUsageInfo, deviceId = %d, inputNum = %zu", deviceId, inputNum);
     return ACL_SUCCESS;
@@ -1073,12 +934,7 @@ aclError aclrtMemcpy2dImpl(void *dst,
         return ret;
     }
 
-    const rtError_t rtErr = rtMemcpy2d(dst, dpitch, src, spitch, width, height, rtKind);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Synchronized][Memcpy]synchronized memcpy failed, kind = %d, runtime result = %d",
-            static_cast<int32_t>(kind), static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpy2d(dst, dpitch, src, spitch, width, height, rtKind));
 
     ACL_LOG_DEBUG("Successfuly execute aclrtMemcpy2d, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
         "kind = %d", dpitch, spitch, width, height, static_cast<int32_t>(kind));
@@ -1104,7 +960,7 @@ aclError aclrtMemcpy2dAsyncImpl(void *dst,
         return ret;
     }
 
-    ACL_REQUIRES_CALL_RTS_OK(rtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, rtKindVal, stream),
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, rtKindVal, stream),
                              rtMemcpy2dAsync);
 
     ACL_LOG_DEBUG("Successfuly execute aclrtMemcpy2dAsync, dpitch = %zu, spitch = %zu, width = %zu, height = %zu, "
@@ -1127,15 +983,7 @@ aclError aclrtReserveMemAddressImpl(void **virPtr,
     // flags参数取1，为了早期接口兼容性保留
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0");
 
-    const rtError_t rtErr = rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("reserve memory address unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("reserve memory address failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }   
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags), rtReserveMemAddress);
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_RESERVE_RELEASE_MEMORY_ADDRESS);
     return ACL_SUCCESS;
 }
@@ -1147,11 +995,7 @@ aclError aclrtReleaseMemAddressImpl(void *virPtr)
     ACL_LOG_DEBUG("start to execute aclrtReleaseMemAddress");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
 
-    const rtError_t rtErr = rtReleaseMemAddress(virPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("release memory address failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtReleaseMemAddress(virPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_RESERVE_RELEASE_MEMORY_ADDRESS);
     return ACL_SUCCESS;
 }
@@ -1213,11 +1057,7 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
         return ACL_ERROR_INVALID_PARAM;
     }
 
-    const rtError_t rtErr = rtMallocPhysical(reinterpret_cast<rtDrvMemHandle*>(handle), size, &rtProp, flags);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("malloc physical memory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMallocPhysical(reinterpret_cast<rtDrvMemHandle*>(handle), size, &rtProp, flags));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_PHYSICAL_MEMORY);
     return ACL_SUCCESS;
 }
@@ -1229,11 +1069,7 @@ aclError aclrtFreePhysicalImpl(aclrtDrvMemHandle handle)
     ACL_LOG_DEBUG("start to execute aclrtFreePhysical");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
 
-    const rtError_t rtErr = rtFreePhysical(reinterpret_cast<rtDrvMemHandle>(handle));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("free physical memory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtFreePhysical(reinterpret_cast<rtDrvMemHandle>(handle)));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_PHYSICAL_MEMORY);
     return ACL_SUCCESS;
 }
@@ -1252,11 +1088,7 @@ aclError aclrtMapMemImpl(void *virPtr,
 
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_REQUIRES_PARAM_EQUAL_REPORT(flags, 0);
-    const rtError_t rtErr = rtMapMem(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), flags);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("map memory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMapMem(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), flags));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
     return ACL_SUCCESS;
 }
@@ -1268,11 +1100,7 @@ aclError aclrtUnmapMemImpl(void *virPtr)
     ACL_LOG_DEBUG("start to execute aclrtUnmapMem");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
 
-    const rtError_t rtErr = rtUnmapMem(virPtr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("unmap memory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtUnmapMem(virPtr));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
     return ACL_SUCCESS;
 }
@@ -1285,11 +1113,7 @@ aclError aclrtMemGetAccessImpl(void *virPtr, aclrtMemLocation *location, uint64_
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(location);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(flag);
 
-    const rtError_t rtErr = rtMemGetAccess(virPtr, reinterpret_cast<rtMemLocation*>(location), flag);
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("get access failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemGetAccess(virPtr, reinterpret_cast<rtMemLocation*>(location), flag));
     return ACL_SUCCESS;
 }
 
@@ -1302,12 +1126,8 @@ aclError aclrtMemExportToShareableHandleImpl(aclrtDrvMemHandle handle, aclrtMemH
     ACL_REQUIRES_PARAM_EQUAL_REPORT(handleType, ACL_MEM_HANDLE_TYPE_NONE);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(shareableHandle);
 
-    const rtError_t rtErr = rtsMemExportToShareableHandle(reinterpret_cast<rtDrvMemHandle>(handle),
-                                                        RT_MEM_HANDLE_TYPE_NONE, flags, shareableHandle);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("export shareable handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsMemExportToShareableHandle(reinterpret_cast<rtDrvMemHandle>(handle),
+                                                        RT_MEM_HANDLE_TYPE_NONE, flags, shareableHandle));
     return ACL_SUCCESS;
 }
 
@@ -1319,12 +1139,8 @@ aclError aclrtMemExportToShareableHandleV2Impl(aclrtDrvMemHandle handle, uint64_
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(shareableHandle);
 
-    const rtError_t rtErr = rtMemExportToShareableHandleV2(reinterpret_cast<rtDrvMemHandle>(handle),
-        static_cast<rtMemSharedHandleType>(shareType), flags, shareableHandle);
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("export shareable handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemExportToShareableHandleV2(reinterpret_cast<rtDrvMemHandle>(handle),
+        static_cast<rtMemSharedHandleType>(shareType), flags, shareableHandle));
     return ACL_SUCCESS;
 }  
 
@@ -1335,13 +1151,8 @@ aclError aclrtMemImportFromShareableHandleImpl(uint64_t shareableHandle,
     ACL_LOG_DEBUG("start to execute aclrtMemImportFromShareableHandle");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
 
-    const rtError_t rtErr = rtMemImportFromShareableHandle(shareableHandle, deviceId,
-                                                            reinterpret_cast<rtDrvMemHandle*>(handle));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("import from shareable handle failed, shareableHandle[%lu], deviceId[%d], runtime result = %d",
-                        shareableHandle, deviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemImportFromShareableHandle(shareableHandle, deviceId,
+                                                            reinterpret_cast<rtDrvMemHandle*>(handle)));
     return ACL_SUCCESS;
 }
 
@@ -1360,13 +1171,8 @@ aclError aclrtMemImportFromShareableHandleV2Impl(void *shareableHandle, aclrtMem
         return rtRet;
     }
 
-    const rtError_t rtErr = rtMemImportFromShareableHandleV2(shareableHandle, 
-        static_cast<rtMemSharedHandleType>(shareType), flags, deviceId, reinterpret_cast<rtDrvMemHandle*>(handle));
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("import from shareable handle failed, shareableHandle[%lu], deviceId[%d], runtime result = %d",
-            *(static_cast<uint64_t*>(shareableHandle)), deviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemImportFromShareableHandleV2(shareableHandle, 
+        static_cast<rtMemSharedHandleType>(shareType), flags, deviceId, reinterpret_cast<rtDrvMemHandle*>(handle)));
     return ACL_SUCCESS;
 }
 
@@ -1376,12 +1182,7 @@ aclError aclrtMemSetPidToShareableHandleImpl(uint64_t shareableHandle, int32_t *
     ACL_LOG_DEBUG("start to execute aclrtMemSetPidToShareableHandle");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
     ACL_REQUIRES_POSITIVE_REPORT(pidNum);
-    const rtError_t rtErr = rtMemSetPidToShareableHandle(shareableHandle, pid, static_cast<uint32_t>(pidNum));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set pid to shareable handle failed, shareableHandle[%lu], pidNum[%zu], runtime result = %d",
-                        shareableHandle, pidNum, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemSetPidToShareableHandle(shareableHandle, pid, static_cast<uint32_t>(pidNum)));
     return ACL_SUCCESS;
 }
 
@@ -1394,13 +1195,8 @@ aclError aclrtMemSetPidToShareableHandleV2Impl(void *shareableHandle, aclrtMemSh
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
     ACL_REQUIRES_POSITIVE_REPORT(pidNum);
 
-    const rtError_t rtErr = rtMemSetPidToShareableHandleV2(shareableHandle,
-        static_cast<rtMemSharedHandleType>(shareType), pid, static_cast<uint32_t>(pidNum));
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("set pid to shareable handle failed, shareableHandle[%lu], pidNum[%zu], runtime result = %d",
-            *(static_cast<uint64_t*>(shareableHandle)), pidNum, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemSetPidToShareableHandleV2(shareableHandle,
+        static_cast<rtMemSharedHandleType>(shareType), pid, static_cast<uint32_t>(pidNum)));
     return ACL_SUCCESS;
 }
 
@@ -1447,12 +1243,8 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
         return ACL_ERROR_INVALID_PARAM;
     }
 
-    const rtError_t rtErr = rtMemGetAllocationGranularity(&rtProp1,
-        static_cast<rtDrvMemGranularityOptions>(option), granularity);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Get Allocation Granularity failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemGetAllocationGranularity(&rtProp1,
+        static_cast<rtDrvMemGranularityOptions>(option), granularity));
     return ACL_SUCCESS;
 }
 
@@ -1462,11 +1254,7 @@ aclError aclrtDeviceGetBareTgidImpl(int32_t *pid)
     ACL_LOG_DEBUG("start to execute aclrtDeviceGetBareTgid");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
 
-    const rtError_t rtErr = rtDeviceGetBareTgid(reinterpret_cast<uint32_t *>(pid));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Get Bare Tgid Falied, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtDeviceGetBareTgid(reinterpret_cast<uint32_t *>(pid)));
     return ACL_SUCCESS;
 }
 
@@ -1477,7 +1265,7 @@ aclError aclrtCmoAsyncImpl(void *src, size_t size, aclrtCmoType cmoType, aclrtSt
     ACL_REQUIRES_POSITIVE_REPORT(size);
     const rtCmoOpCode_t type = static_cast<rtCmoOpCode_t>(static_cast<uint32_t>(cmoType) +
         (static_cast<uint32_t>(RT_CMO_PREFETCH) - static_cast<uint32_t>(ACL_RT_CMO_TYPE_PREFETCH)));
-    ACL_REQUIRES_CALL_RTS_OK(rtCmoAsync(src, size, type, stream), rtCmoAsync);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtCmoAsync(src, size, type, stream), rtCmoAsync);
     return ACL_SUCCESS;
 }
 
@@ -1491,11 +1279,7 @@ aclError aclrtGetMemcpyDescSizeImpl(aclrtMemcpyKind kind, size_t *descSize)
         "[RT_MEMCPY_KIND_HOST_TO_HOST, RT_MEMCPY_KIND_MAX)",
         ACL_ERROR_INVALID_PARAM);
     const auto rt_mem_kind = static_cast<rtMemcpyKind>(static_cast<uint32_t>(kind));
-    const auto rtErr = rtsGetMemcpyDescSize(rt_mem_kind, descSize);
-    if (rtErr != RT_ERROR_NONE) {
-       ACL_LOG_CALL_ERROR("Get memcpy desc size Failed, runtime result = %d", rtErr);
-       return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsGetMemcpyDescSize(rt_mem_kind, descSize));
     return ACL_SUCCESS;
 }
 
@@ -1515,12 +1299,8 @@ aclError aclrtSetMemcpyDescImpl(void *desc, aclrtMemcpyKind kind, void *srcAddr,
     ACL_CHECK_INVALID_PARAM_NO_VALUE(config == nullptr, "reserve", "config is a reserved parameter and must be nullptr");
 
     const auto rt_mem_kind = static_cast<rtMemcpyKind>(static_cast<uint32_t>(kind));
-    const auto rtErr = rtsSetMemcpyDesc(static_cast<rtMemcpyDesc_t>(desc), rt_mem_kind, srcAddr, dstAddr,
-                                         count, nullptr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Set memcpy desc Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsSetMemcpyDesc(static_cast<rtMemcpyDesc_t>(desc), rt_mem_kind, srcAddr, dstAddr,
+                                         count, nullptr));
     return ACL_SUCCESS;
 }
 
@@ -1537,11 +1317,7 @@ aclError aclrtMemcpyAsyncWithDescImpl(void *desc, aclrtMemcpyKind kind, aclrtStr
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
 
     const auto rt_mem_kind = static_cast<rtMemcpyKind>(static_cast<int32_t>(kind));
-    const auto rtErr = rtsMemcpyAsyncWithDesc(static_cast<rtMemcpyDesc_t>(desc), rt_mem_kind, nullptr, stream);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Async memcpy with desc Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsMemcpyAsyncWithDesc(static_cast<rtMemcpyDesc_t>(desc), rt_mem_kind, nullptr, stream));
     return ACL_SUCCESS;
 }
 
@@ -1556,15 +1332,7 @@ aclError aclrtMemcpyAsyncWithOffsetImpl(void **dst, size_t destMax, size_t dstDa
     }
     
     const auto memKind = static_cast<rtMemcpyKind>(static_cast<int32_t>(kind));
-    const auto rtErr = rtMemcpyAsyncWithOffset(dst, destMax, dstDataOffset, src, count, srcDataOffset, memKind, stream);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtMemcpyAsyncWithOffset unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call rtMemcpyAsyncWithOffset Failed, runtime result = %d", rtErr);
-        }
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemcpyAsyncWithOffset(dst, destMax, dstDataOffset, src, count, srcDataOffset, memKind, stream), rtMemcpyAsyncWithOffset);
     ACL_LOG_INFO("successfully execute aclrtMemcpyAsyncWithOffset");
     return ACL_SUCCESS;
 }
@@ -1575,11 +1343,7 @@ aclError aclrtValueWriteImpl(void* devAddr, uint64_t value, uint32_t flag, aclrt
     ACL_LOG_INFO("start to execute aclrtValueWrite");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devAddr);
 
-    const auto rtErr = rtsValueWrite(devAddr, value, flag, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsValueWrite Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsValueWrite(devAddr, value, flag, static_cast<rtStream_t>(stream)));
     return ACL_SUCCESS;
 }
 
@@ -1589,11 +1353,7 @@ aclError aclrtValueWaitImpl(void* devAddr, uint64_t value, uint32_t flag, aclrtS
     ACL_LOG_INFO("start to execute aclrtValueWait");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devAddr);
 
-    const auto rtErr = rtsValueWait(devAddr, value, flag, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsValueWait Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsValueWait(devAddr, value, flag, static_cast<rtStream_t>(stream)));
     return ACL_SUCCESS;
 }
 
@@ -1625,11 +1385,7 @@ aclError aclrtReduceAsyncImpl(void *dst, const void *src, uint64_t count, aclrtR
     reduceInfo.count = static_cast<size_t>(count);
     reduceInfo.kind = static_cast<rtReduceKind>(kind);
     reduceInfo.type = dataType;
-    const rtError_t rtErr = rtsLaunchReduceAsyncTask(&reduceInfo, static_cast<rtStream_t>(stream), reserve);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLaunchReduceAsyncTask failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLaunchReduceAsyncTask(&reduceInfo, static_cast<rtStream_t>(stream), reserve));
     return ACL_SUCCESS;
 }
 
@@ -1638,7 +1394,7 @@ aclError aclrtGetBufFromChainImpl(aclrtMbuf headBuf, uint32_t index, aclrtMbuf *
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetBufFromChain);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(headBuf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufChainGetMbuf(headBuf, index, buf), rtMbufChainGetMbuf);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufChainGetMbuf(headBuf, index, buf), rtMbufChainGetMbuf);
     return ACL_SUCCESS;
 }
 
@@ -1647,7 +1403,7 @@ aclError aclrtGetBufChainNumImpl(aclrtMbuf headBuf, uint32_t *num)
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetBufChainNum);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(headBuf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(num);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufChainGetMbufNum(headBuf, num), rtMbufChainGetMbufNum);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufChainGetMbufNum(headBuf, num), rtMbufChainGetMbufNum);
     return ACL_SUCCESS;
 }
 
@@ -1656,7 +1412,7 @@ aclError aclrtAppendBufChainImpl(aclrtMbuf headBuf, aclrtMbuf buf)
     ACL_PROFILING_REG(acl::AclProfType::AclrtAppendBufChain);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(headBuf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufChainAppend(headBuf, buf), rtMbufChainAppend);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufChainAppend(headBuf, buf), rtMbufChainAppend);
     return ACL_SUCCESS;
 }
 
@@ -1665,7 +1421,7 @@ aclError aclrtCopyBufRefImpl(const aclrtMbuf buf, aclrtMbuf *newBuf)
     ACL_PROFILING_REG(acl::AclProfType::AclrtCopyBufRef);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(newBuf);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufCopyBufRef(buf, newBuf), rtMbufCopyBufRef);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufCopyBufRef(buf, newBuf), rtMbufCopyBufRef);
     return ACL_SUCCESS;
 }
 
@@ -1690,7 +1446,7 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void *dataPtr, size_t size
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataPtr);
     uint64_t bufSize = 0U;
     void *tmpDataPtr = nullptr;
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
     ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
     const void *const srcAddr = static_cast<uint8_t *>(tmpDataPtr) + offset;
@@ -1734,7 +1490,7 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void *dataPtr, size_t size
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataPtr);
     uint64_t bufSize = 0U;
     void *tmpDataPtr = nullptr;
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
     ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
     void *const destAddr = static_cast<uint8_t *>(tmpDataPtr) + offset;
@@ -1765,9 +1521,9 @@ aclError aclrtGetBufDataImpl(const aclrtMbuf buf, void **dataPtr, size_t *size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(size);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufGetBuffAddr(buf, dataPtr), rtMbufGetBuffAddr);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetBuffAddr(buf, dataPtr), rtMbufGetBuffAddr);
     uint64_t bufSize = 0U;
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufGetBuffSize(buf, &bufSize), rtMbufGetBuffSize);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetBuffSize(buf, &bufSize), rtMbufGetBuffSize);
     *size = static_cast<size_t>(bufSize);
     return ACL_SUCCESS;
 }
@@ -1778,7 +1534,7 @@ aclError aclrtGetBufDataLenImpl(aclrtMbuf buf, size_t *len)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(len);
     uint64_t dataLen = 0U;
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufGetDataLen(buf, &dataLen), rtMbufGetDataLen);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetDataLen(buf, &dataLen), rtMbufGetDataLen);
     *len = static_cast<size_t>(dataLen);
     return ACL_SUCCESS;
 }
@@ -1787,7 +1543,7 @@ aclError aclrtSetBufDataLenImpl(aclrtMbuf buf, size_t len)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetBufDataLen);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
-    ACL_REQUIRES_CALL_RTS_OK(rtMbufSetDataLen(buf, len), rtMbufSetDataLen);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufSetDataLen(buf, len), rtMbufSetDataLen);
     return ACL_SUCCESS;
 }
 
@@ -1795,11 +1551,7 @@ aclError aclrtFreeBufImpl(aclrtMbuf buf)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtFreeBuf);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
-    const rtError_t rtRet = rtMbufFree(buf);
-    if (rtRet != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Free][buf]Failed to call rtMbufFree, result is [%d].", rtRet);
-        return rtRet;
-    }
+    ACL_REQUIRES_RTS_OK(rtMbufFree(buf));
     buf = nullptr;
     return ACL_SUCCESS;
 }
@@ -1811,11 +1563,7 @@ aclError aclrtAllocBufImpl(aclrtMbuf *buf, size_t size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
     // size must be greater than zero
     ACL_REQUIRES_POSITIVE_REPORT(size);
-    const rtError_t rtRet = rtMbufAlloc(buf, size);
-    if (rtRet != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Alloc][buf]Failed to call rtMbufAlloc, result is [%d].", rtRet);
-        return rtRet;
-    }
+    ACL_REQUIRES_RTS_OK(rtMbufAlloc(buf, size));
     return ACL_SUCCESS;
 }
 
@@ -1828,11 +1576,7 @@ aclError aclrtCmoAsyncWithBarrierImpl(void *src, size_t size, aclrtCmoType cmoTy
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
     const rtCmoOpCode rtCmoType = static_cast<rtCmoOpCode>(static_cast<uint32_t>(cmoType) +
         (static_cast<uint32_t>(RT_CMO_PREFETCH) - static_cast<uint32_t>(ACL_RT_CMO_TYPE_PREFETCH)));
-    const auto rtErr = rtsCmoAsyncWithBarrier(src, size, rtCmoType, barrierId, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsCmoAsyncWithBarrier Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsCmoAsyncWithBarrier(src, size, rtCmoType, barrierId, static_cast<rtStream_t>(stream)));
     return ACL_SUCCESS;
 }
 
@@ -1899,28 +1643,12 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
     }
 
     if (async) {
-        const auto rtErr = rtsMemcpyBatchAsync(dsts, destMaxs, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
-            attrsIndexes, numAttrs, failIndex, stream);
-        if (rtErr != RT_ERROR_NONE) {
-            if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-                ACL_LOG_WARN("rtsMemcpyBatchAsync unsupport, runtime result = %d.", static_cast<int32_t>(rtErr));
-            } else {
-                ACL_LOG_CALL_ERROR("call rtsMemcpyBatchAsync failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-            }   
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtsMemcpyBatchAsync(dsts, destMaxs, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
+            attrsIndexes, numAttrs, failIndex, stream), rtsMemcpyBatchAsync);
         ACL_LOG_INFO("successfully execute %s", apiName);
     } else {
-        const auto rtErr = rtsMemcpyBatch(dsts, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
-            attrsIndexes, numAttrs, failIndex);
-        if (rtErr != RT_ERROR_NONE) {
-            if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-                ACL_LOG_WARN("rtsMemcpyBatch unsupport, runtime result = %d.", static_cast<int32_t>(rtErr));
-            } else {
-                ACL_LOG_CALL_ERROR("call rtsMemcpyBatch failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-            }   
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtsMemcpyBatch(dsts, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
+            attrsIndexes, numAttrs, failIndex), rtsMemcpyBatch);
         ACL_LOG_INFO("successfully execute %s", apiName);
     }
 
@@ -1934,11 +1662,7 @@ aclError aclrtIpcMemGetExportKeyImpl(void *devPtr, size_t size, char *key, size_
         size, len, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
-    const auto rtErr = rtsIpcMemGetExportKey(devPtr, size, key, static_cast<uint32_t>(len), flags);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsIpcMemGetExportKey failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsIpcMemGetExportKey(devPtr, size, key, static_cast<uint32_t>(len), flags));
     return ACL_SUCCESS;
 }
 
@@ -1947,11 +1671,7 @@ aclError aclrtIpcMemCloseImpl(const char *key)
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemClose);
     ACL_LOG_INFO("start to execute aclrtIpcMemClose");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
-    const auto rtErr = rtsIpcMemClose(key);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsIpcMemClose failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsIpcMemClose(key));
     return ACL_SUCCESS;
 }
 
@@ -1961,11 +1681,7 @@ aclError aclrtIpcMemImportByKeyImpl(void **devPtr, const char *key, uint64_t fla
     ACL_LOG_INFO("start to execute aclrtIpcMemImportByKey, flags is [%lu]", flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
-    const auto rtErr = rtsIpcMemImportByKey(devPtr, key, flags);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsIpcMemImportByKey failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsIpcMemImportByKey(devPtr, key, flags));
     return ACL_SUCCESS;
 }
 
@@ -2014,11 +1730,7 @@ aclError aclrtIpcMemSetImportPidImpl(const char *key, int32_t *pid, size_t num)
     ACL_LOG_INFO("start to execute aclrtIpcMemSetImportPid, num is [%zu]", num);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
-    const auto rtErr = rtsIpcMemSetImportPid(key, pid, static_cast<int32_t>(num));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsIpcMemSetImportPid failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsIpcMemSetImportPid(key, pid, static_cast<int32_t>(num)));
     return ACL_SUCCESS;
 }
 
@@ -2026,11 +1738,7 @@ aclError aclrtIpcMemSetAttrImpl(const char *key, aclrtIpcMemAttrType type, uint6
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemSetAttr);
     ACL_LOG_INFO("start to execute aclrtIpcMemSetAttr, type is [%d], attr is [%lu]", type, attr);
-    const auto rtErr = rtIpcSetMemoryAttr(key, type, attr);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtIpcSetMemoryAttr failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtIpcSetMemoryAttr(key, type, attr));
     ACL_LOG_INFO("successfully execute aclrtIpcMemSetAttr");
     return ACL_SUCCESS;
 }
@@ -2039,11 +1747,7 @@ aclError aclrtIpcMemImportPidInterServerImpl(const char *key, aclrtServerPid *se
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemImportPidInterServer);
     ACL_LOG_INFO("start to execute aclrtIpcMemImportPidInterServer, num is [%zu]", num);
-    const auto rtErr = rtIpcMemImportPidInterServer(key, reinterpret_cast<const rtServerPid *>(serverPids), num);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtIpcMemImportPidInterServer failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtIpcMemImportPidInterServer(key, reinterpret_cast<const rtServerPid *>(serverPids), num));
     ACL_LOG_INFO("successfully execute aclrtIpcMemImportPidInterServer");
     return ACL_SUCCESS;
 }
@@ -2054,11 +1758,7 @@ aclError aclrtCheckMemTypeImpl(void** addrList, uint32_t size, uint32_t memType,
     ACL_LOG_INFO("start to execute AclrtCheckMemType, size is [%u], memType is [%u], reserve is [%u]", size, memType, reserve);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(addrList);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(checkResult);
-    const auto rtErr = rtsCheckMemType(addrList, size, memType, checkResult, reserve);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsCheckMemType failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsCheckMemType(addrList, size, memType, checkResult, reserve));
     return ACL_SUCCESS;
 }
 
@@ -2067,12 +1767,8 @@ aclError aclrtDevicePeerAccessStatusImpl(int32_t deviceId, int32_t peerDeviceId,
     ACL_PROFILING_REG(acl::AclProfType::AclrtDevicePeerAccessStatus);
     ACL_LOG_INFO("start to execute aclrtDevicePeerAccessStatus");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
-    const rtError_t rtErr = rtsGetP2PStatus(
-        static_cast<uint32_t>(deviceId), static_cast<uint32_t>(peerDeviceId), reinterpret_cast<uint32_t *>(status));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsGetP2PStatus failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsGetP2PStatus(
+        static_cast<uint32_t>(deviceId), static_cast<uint32_t>(peerDeviceId), reinterpret_cast<uint32_t *>(status)));
     ACL_LOG_INFO("successfully execute aclrtDevicePeerAccessStatus");
     return ACL_SUCCESS;
 }
@@ -2081,11 +1777,7 @@ aclError aclrtCmoGetDescSizeImpl(size_t *size)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCmoGetDescSize);
     ACL_LOG_DEBUG("start to execute aclrtCmoGetDescSize");
-    const rtError_t rtErr = rtsGetCmoDescSize(size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsGetCmoDescSize failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsGetCmoDescSize(size));
     ACL_LOG_INFO("successfully execute aclrtCmoGetDescSize");
     return ACL_SUCCESS;
 }
@@ -2094,11 +1786,7 @@ aclError aclrtCmoSetDescImpl(void *cmoDesc, void *src, size_t size)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCmoSetDesc);
     ACL_LOG_DEBUG("start to execute aclrtCmoSetDesc, memLen =%zu", size);
-    const rtError_t rtErr = rtsSetCmoDesc(cmoDesc, src, size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsSetCmoDesc failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsSetCmoDesc(cmoDesc, src, size));
     ACL_LOG_INFO("successfully execute aclrtCmoSetDesc");
     return ACL_SUCCESS;
 }
@@ -2115,11 +1803,7 @@ aclError aclrtCmoAsyncWithDescImpl(void *cmoDesc, aclrtCmoType cmoType, aclrtStr
     ACL_PROFILING_REG(acl::AclProfType::AclrtCmoAsyncWithDesc);
     ACL_LOG_DEBUG("start to execute aclrtCmoAsyncWithDesc");
     const rtCmoOpCode rtCmoType = ConvertCmoType(cmoType);
-    const rtError_t rtErr = rtsLaunchCmoAddrTask(cmoDesc, stream, rtCmoType, reserve);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLaunchCmoAddrTask failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLaunchCmoAddrTask(cmoDesc, stream, rtCmoType, reserve));
     ACL_LOG_INFO("successfully execute aclrtCmoAsyncWithDesc");
     return ACL_SUCCESS;
 }
@@ -2129,15 +1813,7 @@ aclError aclrtMemSetAccessImpl(void *virPtr, size_t size, aclrtMemAccessDesc *de
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemSetAccess);
     ACL_LOG_INFO("start to execute aclrtMemSetAccess");
     
-    const rtError_t rtErr = rtMemSetAccess(virPtr, size, reinterpret_cast<rtMemAccessDesc*>(desc), count);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("call aclrtMemSetAccess failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call aclrtMemSetAccess failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        }   
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemSetAccess(virPtr, size, reinterpret_cast<rtMemAccessDesc*>(desc), count), rtMemSetAccess);
     ACL_LOG_INFO("successfully execute aclrtMemSetAccess");
     return ACL_SUCCESS;
 }
@@ -2149,11 +1825,7 @@ aclError aclrtMemRetainAllocationHandleImpl(void* virPtr, aclrtDrvMemHandle *han
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
 
-    const rtError_t rtErr = rtMemRetainAllocationHandle(virPtr, reinterpret_cast<rtDrvMemHandle*>(handle));
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("get handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemRetainAllocationHandle(virPtr, reinterpret_cast<rtDrvMemHandle*>(handle)));
     return ACL_SUCCESS;
 }
 
@@ -2187,11 +1859,7 @@ aclError aclrtMemGetAllocationPropertiesFromHandleImpl(aclrtDrvMemHandle handle,
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(prop);
 
     rtDrvMemProp_t rtProp = {};
-    const rtError_t rtErr = rtMemGetAllocationPropertiesFromHandle(reinterpret_cast<rtDrvMemHandle>(handle), &rtProp);
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("get handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemGetAllocationPropertiesFromHandle(reinterpret_cast<rtDrvMemHandle>(handle), &rtProp));
 
     prop->handleType = ACL_MEM_HANDLE_TYPE_NONE;
     prop->allocationType = ACL_MEM_ALLOCATION_TYPE_PINNED;
@@ -2234,15 +1902,7 @@ aclError aclrtReserveMemAddressNoUCMemoryImpl(void **virPtr, size_t size, size_t
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flags == 0ULL) || (flags == 1ULL), flags, "0");
 
     flags = flags | FLAG_START_DYNAMIC_ALLOC_MEM; // bit 9置1
-    const rtError_t rtErr = rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("reserve memory address without UCMemeory unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("reserve memory address without UCMemeory failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }   
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags), rtReserveMemAddress);
     return ACL_SUCCESS;
 }
 
@@ -2251,11 +1911,7 @@ aclError aclrtMemGetAddressRangeImpl(void *ptr, void **pbase, size_t *psize)
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemGetAddressRange);
     ACL_LOG_DEBUG("start to execute aclrtMemGetAddressRange");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
-    const rtError_t rtErr = rtMemGetAddressRange(ptr, pbase, psize);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtMemGetAddressRange failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemGetAddressRange(ptr, pbase, psize));
     ACL_LOG_INFO("successfully execute aclrtMemGetAddressRange");
     return ACL_SUCCESS;
 }
@@ -2268,17 +1924,8 @@ aclError aclrtMemP2PMapImpl(void *devPtr, size_t size, int32_t dstDevId, uint64_
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_CHECK_RESERVED_PARAM_REPORT_RET(flags, 0, ACL_ERROR_INVALID_PARAM);
     uint32_t phyId = 0U;
-    rtError_t rtErr = rtGetDevicePhyIdByIndex(static_cast<uint32_t>(dstDevId), &phyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtGetDevicePhyIdByIndex failed, dstDevId = %u, runtime result = %d",
-            dstDevId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
-    rtErr = rtMemPrefetchToDevice(devPtr, size, phyId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtMemP2PMap failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDevicePhyIdByIndex(static_cast<uint32_t>(dstDevId), &phyId));
+    ACL_REQUIRES_RTS_OK(rtMemPrefetchToDevice(devPtr, size, phyId));
     ACL_LOG_INFO("successfully execute aclrtMemP2PMap");
     return ACL_SUCCESS;
 }
@@ -2309,11 +1956,7 @@ aclError aclrtMemPoolCreateImpl(aclrtMemPool *memPool, const aclrtMemPoolProps *
     ACL_CHECK_INVALID_PARAM_NO_VALUE(memcmp(poolProps->reserved, zeros, sizeof(poolProps->reserved)) == 0,
         "poolProps->reserved", "poolProps->reserved is a reserved parameter and must be nullptr");
 
-    const auto rtErr = rtMemPoolCreate(reinterpret_cast<rtMemPool_t*>(memPool), &rtPoolProps);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtMemPoolCreate failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolCreate(reinterpret_cast<rtMemPool_t*>(memPool), &rtPoolProps));
     return ACL_SUCCESS;
 }
 
@@ -2323,11 +1966,7 @@ aclError aclrtMemPoolDestroyImpl(const aclrtMemPool memPool)
     ACL_LOG_INFO("start to execute aclrtMemPoolDestroy.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memPool);
 
-    const auto rtErr = rtMemPoolDestroy(static_cast<rtMemPool_t>(memPool));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtMemPoolDestroy failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolDestroy(static_cast<rtMemPool_t>(memPool)));
     return ACL_SUCCESS;
 }
 
@@ -2337,11 +1976,7 @@ aclError aclrtMemPoolSetAttrImpl(aclrtMemPool memPool, aclrtMemPoolAttr attr, vo
     ACL_LOG_INFO("start to execute aclrtMemPoolSetAttr.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memPool);
 
-    const auto rtErr = rtMemPoolSetAttr(static_cast<rtMemPool_t>(memPool), static_cast<rtMemPoolAttr>(attr), value);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtMemPoolSetAttr failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolSetAttr(static_cast<rtMemPool_t>(memPool), static_cast<rtMemPoolAttr>(attr), value));
     return ACL_SUCCESS;
 }
 
@@ -2351,11 +1986,7 @@ aclError aclrtMemPoolGetAttrImpl(aclrtMemPool memPool, aclrtMemPoolAttr attr, vo
     ACL_LOG_INFO("start to execute aclrtMemPoolGetAttr.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memPool);
 
-    const auto rtErr = rtMemPoolGetAttr(static_cast<rtMemPool_t>(memPool), static_cast<rtMemPoolAttr>(attr), value);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtMemPoolGetAttr failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolGetAttr(static_cast<rtMemPool_t>(memPool), static_cast<rtMemPoolAttr>(attr), value));
     return ACL_SUCCESS;
 }
 
@@ -2371,11 +2002,7 @@ aclError aclrtMemPoolMallocAsyncImpl(void ** ptr, size_t size, aclrtMemPool memP
         return ACL_SUCCESS;
     }
     
-    const auto rtErr = rtMemPoolMallocAsync(ptr, size, memPool, stream);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Call rtMemPoolMallocAsync failed, runtime result = %d, ptr = %p, size = %zu", rtErr, ptr, size);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolMallocAsync(ptr, size, memPool, stream));
  
     return ACL_SUCCESS;
 }
@@ -2386,11 +2013,7 @@ aclError aclrtMemPoolFreeAsyncImpl(void * ptr, aclrtStream stream)
     ACL_LOG_INFO("Start to execute aclrtMemPoolFreeAsync.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
  
-    const auto rtErr = rtMemPoolFreeAsync(ptr, stream);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Free memory pool failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolFreeAsync(ptr, stream));
     return ACL_SUCCESS;
 }
 
@@ -2400,11 +2023,7 @@ aclError aclrtMemPoolTrimToImpl(aclrtMemPool memPool, size_t minBytesToKeep)
     ACL_LOG_INFO("Start to execute aclrtMemPoolTrimTo.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memPool);
 
-    const auto rtErr = rtMemPoolTrimTo(static_cast<rtMemPool_t>(memPool), minBytesToKeep);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Call rtMemPoolTrimTo failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemPoolTrimTo(static_cast<rtMemPool_t>(memPool), minBytesToKeep));
     return ACL_SUCCESS;
 }
 
@@ -2433,7 +2052,7 @@ aclError aclrtMemManagedPrefetchAsyncImpl(const void* ptr, size_t size, aclrtMem
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_CHECK_RESERVED_PARAM_REPORT_RET(flags, 0, ACL_ERROR_INVALID_PARAM);
     rtMemManagedLocation uvmLocation = { ConvertMemManagedLocationType(location.type), location.id };
-    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedPrefetchAsync(ptr, size, uvmLocation, flags, static_cast<rtStream_t>(stream)),
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemManagedPrefetchAsync(ptr, size, uvmLocation, flags, static_cast<rtStream_t>(stream)),
         rtMemManagedPrefetchAsync);
     return ACL_SUCCESS;
 }
@@ -2473,7 +2092,7 @@ aclError aclrtMemManagedPrefetchBatchAsyncImpl(const void** ptrs, size_t* sizes,
 
     const rtError_t rtErr = rtMemManagedPrefetchBatchAsync(ptrs, sizes, count, uvmPrefetchLocs, prefetchLocIdxs, numPrefetchLocs, flags, static_cast<rtStream_t>(stream));
     ACL_DELETE_ARRAY_AND_SET_NULL(uvmPrefetchLocs);
-    ACL_REQUIRES_CALL_RTS_OK(rtErr, rtMemManagedPrefetchBatchAsync);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtErr, rtMemManagedPrefetchBatchAsync);
     return ACL_SUCCESS;
 }
 
@@ -2486,11 +2105,7 @@ aclError aclrtGetSymbolAddressImpl(const void *symbol, void **devPtr)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
 
     size_t size = 0UL;
-    const rtError_t rtErr = rtSymbolLookup(symbol, devPtr, &size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtSymbolLookup failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSymbolLookup(symbol, devPtr, &size));
     return ACL_SUCCESS;
 }
 
@@ -2503,11 +2118,7 @@ aclError aclrtGetSymbolSizeImpl(const void *symbol, size_t *size)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(size);
 
     void *devPtr = nullptr;
-    const rtError_t rtErr = rtSymbolLookup(symbol, &devPtr, size);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtSymbolLookup failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSymbolLookup(symbol, &devPtr, size));
     return ACL_SUCCESS;
 }
 
@@ -2516,11 +2127,7 @@ static aclError GetSymbolInfo(const void *symbol, size_t count, size_t offset,
 {
     *symbolAddr = nullptr;
     *symbolSize = 0UL;
-    const rtError_t rtErr = rtSymbolLookup(symbol, symbolAddr, symbolSize);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtSymbolLookup failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSymbolLookup(symbol, symbolAddr, symbolSize));
 
     size_t totalSize = 0UL;
     ACL_CHECK_ASSIGN_SIZET_ADD(offset, count, totalSize);
@@ -2586,11 +2193,7 @@ aclError aclrtMemcpyFromSymbolImpl(void *dst, size_t dstMax, const void *symbol,
     }
 
     void *srcAddr = static_cast<void *>(static_cast<uint8_t *>(symbolAddr) + offset);
-    const rtError_t copyErr = rtMemcpy(dst, dstMax, srcAddr, count, RT_MEMCPY_DEVICE_TO_HOST);
-    if (copyErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtMemcpy failed, runtime result = %d.", copyErr);
-        return ACL_GET_ERRCODE_RTS(copyErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpy(dst, dstMax, srcAddr, count, RT_MEMCPY_DEVICE_TO_HOST));
     return ACL_SUCCESS;
 }
 
@@ -2618,11 +2221,7 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(void *dst, size_t dstMax, const void *sy
     }
 
     void *srcAddr = static_cast<void *>(static_cast<uint8_t *>(symbolAddr) + offset);
-    const rtError_t copyErr = rtMemcpyAsync(dst, dstMax, srcAddr, count, RT_MEMCPY_DEVICE_TO_HOST, stream);
-    if (copyErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtMemcpyAsync failed, runtime result = %d.", copyErr);
-        return ACL_GET_ERRCODE_RTS(copyErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpyAsync(dst, dstMax, srcAddr, count, RT_MEMCPY_DEVICE_TO_HOST, stream));
     return ACL_SUCCESS;
 }
 
@@ -2667,11 +2266,7 @@ aclError aclrtMemcpyToSymbolImpl(const void *symbol, const void *src, size_t cou
     }
 
     void *dstAddr = static_cast<void *>(static_cast<uint8_t *>(symbolAddr) + offset);
-    const rtError_t copyErr = rtMemcpy(dstAddr, symbolSize - offset, src, count, RT_MEMCPY_HOST_TO_DEVICE);
-    if (copyErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtMemcpy failed, runtime result = %d.", copyErr);
-        return ACL_GET_ERRCODE_RTS(copyErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpy(dstAddr, symbolSize - offset, src, count, RT_MEMCPY_HOST_TO_DEVICE));
     return ACL_SUCCESS;
 }
 
@@ -2698,11 +2293,7 @@ aclError aclrtMemcpyToSymbolAsyncImpl(const void *symbol, const void *src, size_
     }
 
     void *dstAddr = static_cast<void *>(static_cast<uint8_t *>(symbolAddr) + offset);
-    const rtError_t copyErr = rtMemcpyAsync(dstAddr, symbolSize - offset, src, count, RT_MEMCPY_HOST_TO_DEVICE, stream);
-    if (copyErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtMemcpyAsync failed, runtime result = %d.", copyErr);
-        return ACL_GET_ERRCODE_RTS(copyErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemcpyAsync(dstAddr, symbolSize - offset, src, count, RT_MEMCPY_HOST_TO_DEVICE, stream));
     return ACL_SUCCESS;
 }
 
@@ -2727,15 +2318,7 @@ aclError aclrtMemMapSelectedLinkImpl(void *virPtrDst, size_t size, void *virPtrS
         return ACL_ERROR_INVALID_PARAM;
     }
 
-    const auto rtErr = rtMemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("call aclrtMemMapSelectedLink failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call aclrtMemMapSelectedLink failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        }   
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx), rtMemMapSelectedLink);
     ACL_LOG_INFO("successfully execute aclrtMemMapSelectedLink");
     return ACL_SUCCESS;
 }

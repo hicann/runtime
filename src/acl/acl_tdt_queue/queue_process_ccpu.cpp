@@ -25,7 +25,6 @@ namespace acl {
             ACL_LOG_INFO("need to init queue once");
             const rtError_t ret =  rtMemQueueInit(deviceId);
             if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
-                ACL_LOG_INNER_ERROR("queue init failed, ret is %d", ret);
                 return ret;
             }
             isQueueIint = true;
@@ -54,15 +53,15 @@ namespace acl {
             ACL_LOG_INFO("need to create group");
             const rtMemGrpConfig_t grpConfig = {};
             const std::string gName = "acltdt" + std::to_string(pid);
-            ACL_REQUIRES_CALL_RTS_OK(rtMemGrpCreate(gName.c_str(), &grpConfig), rtMemGrpCreate);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpCreate(gName.c_str(), &grpConfig), rtMemGrpCreate);
 
             rtMemGrpShareAttr_t shareAttr = {};
             shareAttr.admin = 1;
             shareAttr.read = 1;
             shareAttr.write = 1;
             shareAttr.alloc = 1;
-            ACL_REQUIRES_CALL_RTS_OK(rtMemGrpAddProc(gName.c_str(), pid, &shareAttr), rtMemGrpAddProc);
-            ACL_REQUIRES_CALL_RTS_OK(rtMemGrpAttach(gName.c_str(), 0), rtMemGrpAttach);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpAddProc(gName.c_str(), pid, &shareAttr), rtMemGrpAddProc);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpAttach(gName.c_str(), 0), rtMemGrpAttach);
             ACL_REQUIRES_OK(QueryGroupId(gName));
         } else {
             ACL_REQUIRES_OK(QueryGroupId(grpName));
@@ -98,7 +97,7 @@ namespace acl {
         const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
         if (!isQsInit_) {
             ACL_REQUIRES_OK(SendConnectQsMsg(deviceId, eventSum, ack));
-            ACL_REQUIRES_CALL_RTS_OK(rtMemQueueAttach(deviceId, qsContactId_, 0), rtMemQueueAttach);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueAttach(deviceId, qsContactId_, 0), rtMemQueueAttach);
             isQsInit_ = true;
         }
         ACL_REQUIRES_OK(SendBindUnbindMsgOnDevice(qRouteList, true, eventSum, ack));
@@ -164,7 +163,7 @@ namespace acl {
         output.groupsOfProc = outputInfo;
         output.maxNum = QUERY_BUFF_GRP_MAX_NUM;
 
-        ACL_REQUIRES_CALL_RTS_OK(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemGrpQuery(&input, &output), rtMemGrpQuery);
         grpNum = output.resultNum;
         if (grpNum > 0) {
             grpName = std::string(output.groupsOfProc->groupName);
@@ -182,7 +181,6 @@ namespace acl {
             rtMemBuffCfg_t cfg = {{}};
             const rtError_t ret = rtMbufInit(&cfg);
             if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
-                ACL_LOG_INNER_ERROR("mbuf init failed, ret is %d", ret);
                 return ret;
             }
             isMbufInit = true;

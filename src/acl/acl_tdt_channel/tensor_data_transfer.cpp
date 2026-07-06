@@ -491,10 +491,10 @@ namespace acl {
                     (void)rtFree(p);
                 }
             });
-            ACL_REQUIRES_CALL_RTS_OK(
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
                 rtMalloc(reinterpret_cast<void **>(&devPtr), qItem.len, RT_MEMORY_DEFAULT, acl::ACL_MODE_ID_U16),
                 rtMalloc);
-            ACL_REQUIRES_CALL_RTS_OK(
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
                 rtMemcpy(devPtr, qItem.len, ctrlPtr, qItem.len, RT_MEMCPY_HOST_TO_DEVICE), rtMemcpy);
             qItem.addr = devPtr;
             ctrlSharedPtrVec.push_back(ctrlSharedDevPtr);
@@ -633,8 +633,6 @@ namespace acl {
             return ret;
         }
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("Failed to execute acltdtSendTensor, device is %u, name is %s",
-                handle->devId, handle->name.c_str());
             return ret;
         }
         ACL_LOG_DEBUG("success to execute acltdtSendTensor, device is %u, name is %s",
@@ -647,18 +645,17 @@ namespace acl {
         rtContext_t rtCtx = nullptr;
         const rtError_t rtRet = rtCtxGetCurrent(&rtCtx);
         if ((rtRet != ACL_RT_SUCCESS) && (rtRet != ACL_ERROR_RT_CONTEXT_NULL)) {
-            ACL_LOG_CALL_ERROR("rtCtxGetCurrent faild");
             return rtRet;
         }
         if (rtCtx == nullptr) {
             if (handle->ctx_ == nullptr) {
                 ACL_LOG_INFO("current thread need to create new context");
-                ACL_REQUIRES_CALL_RTS_OK(rtCtxCreateEx(&rtCtx, static_cast<uint32_t>(RT_CTX_NORMAL_MODE),
+                ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtCtxCreateEx(&rtCtx, static_cast<uint32_t>(RT_CTX_NORMAL_MODE),
                     static_cast<int32_t>(handle->devId)), rtCtxCreateEx);
                 const_cast<acltdtChannelHandle *>(handle)->ctx_.reset(rtCtx,
                     [](void *p) {if (p != nullptr) {(void)rtCtxDestroyEx(p);}});
             }
-            ACL_REQUIRES_CALL_RTS_OK(rtCtxSetCurrent(handle->ctx_.get()), rtCtxSetCurrent);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtCtxSetCurrent(handle->ctx_.get()), rtCtxSetCurrent);
         }
         return ACL_SUCCESS;
     }
@@ -683,7 +680,7 @@ namespace acl {
             const size_t mallocSize = GetMallocSize(bufLen);
             ACL_LOG_INFO("need mallochost size %zu, bufLen is %zu", mallocSize, bufLen);
             void *outHostAddr = nullptr;
-            ACL_REQUIRES_CALL_RTS_OK(rtMallocHost(&outHostAddr, mallocSize, acl::ACL_MODE_ID_U16), rtMallocHost);
+            ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMallocHost(&outHostAddr, mallocSize, acl::ACL_MODE_ID_U16), rtMallocHost);
             ACL_CHECK_MALLOC_RESULT(outHostAddr);
             dataset->sharedMem_.reset(outHostAddr, [](void *p) {if (p != nullptr) {(void)rtFreeHost(p);}});
             dataset->sharedMemSize_ = mallocSize;
@@ -932,7 +929,7 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
     datasetMemType currentMemType = MEM_UNKNOWN;
     if (dataItem->dataPtr != nullptr) {
         rtPtrAttributes_t attr = {};
-        ACL_REQUIRES_CALL_RTS_OK(rtsPointerGetAttributes(dataItem->dataPtr.get(), &attr), rtsPointerGetAttributes);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtsPointerGetAttributes(dataItem->dataPtr.get(), &attr), rtsPointerGetAttributes);
         if ((attr.location.type == RT_MEMORY_LOC_HOST) || (attr.location.type == RT_MEMORY_LOC_UNREGISTERED)) {
             currentMemType = MEM_HOST;
         } else {
@@ -1062,8 +1059,8 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
         ACL_DELETE_AND_SET_NULL(handle);
         return nullptr;
     }
-    if (rtMemQueueCreate(static_cast<int32_t>(deviceId), &attr, &handle->qid) != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("queue create failed, deviceid is %u", deviceId);
+    const rtError_t rtErr = rtMemQueueCreate(static_cast<int32_t>(deviceId), &attr, &handle->qid);
+    if (rtErr != RT_ERROR_NONE) {
         ACL_DELETE_AND_SET_NULL(handle);
         return nullptr;
     }
@@ -1104,7 +1101,7 @@ aclError acltdtDestroyChannel(acltdtChannelHandle *handle)
     ACL_LOG_INFO("start to acltdtDestroyChannel, device is %u, name is %s",
         handle->devId, handle->name.c_str());
     if (!handle->isTdtProcess) {
-        ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDestroy(static_cast<int32_t>(handle->devId), handle->qid),
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDestroy(static_cast<int32_t>(handle->devId), handle->qid),
             rtMemQueueDestroy);
         ACL_LOG_INFO("acltdtDestroyChannel success, device is %u, name is %s",
             handle->devId, handle->name.c_str());
@@ -1134,7 +1131,7 @@ aclError acltdtCleanChannel(acltdtChannelHandle *handle)
   ACL_LOG_INFO("start to acltdtCleanChannel, device is %u, name is %s",
                handle->devId, handle->name.c_str());
   if (!handle->isTdtProcess) {
-    ACL_REQUIRES_CALL_RTS_OK(rtMemQueueReset(handle->devId, handle->qid), rtMemQueueReset);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueReset(handle->devId, handle->qid), rtMemQueueReset);
     ACL_LOG_INFO("acltdtCleanChannel success, device is %u, name is %s",
                  handle->devId, handle->name.c_str());
     return ACL_SUCCESS;
@@ -1235,12 +1232,8 @@ aclError acltdtQueryChannelSize(const acltdtChannelHandle *handle, size_t *size)
     }
     ACL_LOG_DEBUG("start to execute acltdtQueryChannelSize, device is %u, qid is %u", handle->devId, handle->qid);
     rtMemQueueInfo_t info;
-    const rtError_t ret = rtMemQueueQueryInfo(static_cast<int32_t>(handle->devId), handle->qid, &info);
-    if (ret != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Call][Rts]call rtMemQueueQueryInfo failed, device is %u, qid is %u",
-                           handle->devId, handle->qid);
-        return ret;
-    }
+    ACL_REQUIRES_RTS_OK(
+        rtMemQueueQueryInfo(static_cast<int32_t>(handle->devId), handle->qid, &info));
     *size = static_cast<size_t>(info.size);
     ACL_LOG_DEBUG("success to execute acltdtQueryChannelSize, size is %zu, device is %u, qid is %u",
         *size, handle->devId, handle->qid);
