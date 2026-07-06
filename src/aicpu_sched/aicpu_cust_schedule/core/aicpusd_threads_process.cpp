@@ -70,13 +70,6 @@ int32_t ComputeProcess::Start(const uint32_t deviceId,
     runMode_ = runMode;
     aicpuPid_ = aicpuPid;
     vfId_ = vfId;
-    aicpu::InitProfilingDataInfo(deviceId_, hostPid, CHANNEL_CUS_AICPU);
-    UpdateProfilingSetting(profilingMode);
-    if (profilingMode != 0U) {
-        aicpu::LoadProfilingLib();
-        aicpu::SetProfilingFlagForKFC(profilingMode);
-        aicpu::UpdateMode((profilingMode & 1) == PROFILING_OPEN);
-    }
 
     if ((aicpuNum_ > 0U) && (aicpu::InitTaskMonitorContext(aicpuNum_) != aicpu::AICPU_ERROR_NONE)) {
         aicpusd_err("Init task monitor context failed");
@@ -105,7 +98,13 @@ int32_t ComputeProcess::Start(const uint32_t deviceId,
         aicpusd_info("Bind Sibling pid success, hostpid[%d] aicpusd pid[%d] deviceId[%u] vfId[%u].",
             hostPid, aicpuPid, deviceId, vfId);
     }
-
+    aicpu::InitProfilingDataInfo(deviceId_, hostPid, CHANNEL_CUS_AICPU);
+    UpdateProfilingSetting(profilingMode);
+    if (profilingMode != 0U) {
+        aicpu::LoadProfilingLib();
+        aicpu::SetProfilingFlagForKFC(profilingMode);
+        aicpu::UpdateMode((profilingMode & 1) == PROFILING_OPEN);
+    }
     (void)aicpu::SetAicpuRunMode(runMode_);
     aicpu::SetCustAicpuSdFlag(true);
     const uint32_t ret = RegisterScheduleTask();
