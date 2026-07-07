@@ -1245,10 +1245,26 @@ rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, co
     ret = GetReadLenAndAddr(blockAddr, blockSize, totalReadBufLen, dumpReadStartAddr, dumpInfoVec);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Get read buffer len and addr failed, ret=%u", ret);
     
-    uint64_t processedLen = 0U;
+    uint64_t processedLen = 0ULL;
     std::vector<const DumpInfoHead *> dumpInfoHolds;
     ret = CollectDumpInfoFromBuffer(dumpReadStartAddr, totalReadBufLen, dumpInfoHolds, processedLen, writeInfo->packIdx, dev);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "collect dump info failed, ret=%u", ret);
+    COND_RETURN_DEBUG((processedLen == 0ULL), RT_ERROR_NONE, "No data can be processed.");
+
+    /* clear readed field */
+    const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
+    uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
+    const void *clearBufAddr = RtValueToPtr<const void *>(blockInfo->dumpAddr + readIdx);
+    if (readIdx + processedLen > blockInfo->remainLen) {
+        uint32_t clearLen = blockInfo->remainLen - readIdx;
+        ret = curDrv->MemSetSync(clearBufAddr, clearLen, 0U, clearLen);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemSetSync proc step1 failed, ret=%u", ret);
+        ret = curDrv->MemSetSync(RtValueToPtr<void *>(blockInfo->dumpAddr), processedLen - clearLen, 0U, processedLen - clearLen);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemSetSync proc step2 failed, ret=%u", ret);
+    } else {
+        ret = curDrv->MemSetSync(clearBufAddr, processedLen, 0U, processedLen);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemSetSync proc failed, ret=%u", ret);
+    }
 
     // 更新读指针
     readInfo->readIdx = readInfo->readIdx + processedLen;
