@@ -1124,7 +1124,46 @@ TEST_F(DavidStreamTest, ExpandStreamRecycleModelBindStreamAllTask)
     stream_var->delayRecycleTaskid_.push_back(0);
     std::cout<<"stream create success."<<std::endl;
 
-    stream->ExpandStreamRecycleModelBindStreamAllTask();
+    const bool cleanFlag = false;
+    stream->ExpandStreamRecycleModelBindStreamAllTask(cleanFlag);
+}
+
+TEST_F(DavidStreamTest, ExpandStreamRecycleModelBindStreamAllTask_WithLabelSet)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    TaskResManageDavid *taskResMang = dynamic_cast<TaskResManageDavid *>(stream->taskResMang_);
+    ASSERT_NE(taskResMang, nullptr);
+    stream->SetBindFlag(true);
+
+    // 分配一个任务
+    TaskInfo *task = nullptr;
+    uint32_t pos = 0U;
+    rtError_t error = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(task, nullptr);
+    
+    task->stream = stream;
+    task->type = TS_TASK_TYPE_LABEL_SET;
+    stream->StarsAddTaskToStream(task, 1);
+
+    // 创建 Label 并添加到 stream 的 labels_ 列表
+    Label *label = new Label(nullptr);
+    label->context_ = stream->Context_();
+    label->labelId_ = 0;
+    label->setFlag_ = true;
+    label->devDstAddr_ = reinterpret_cast<void*>(0x1234);
+    stream->labels_.push_back(label);
+    task->u.labelSetTask.labelId = label->Id_();
+    stream->ExpandStreamRecycleModelBindStreamAllTask(true);
+
+    // 验证 Label 被正确回收
+    EXPECT_EQ(label->setFlag_, false);
+    EXPECT_EQ(label->devDstAddr_, nullptr);
+    EXPECT_TRUE(stream->labels_.empty());
+
+    stream->SetBindFlag(false);
+    taskResMang->ResetTaskRes();
+    delete label;
 }
 
 TEST_F(DavidStreamTest, RecordPosToTaskIdMap)

@@ -1467,7 +1467,7 @@ void DavidStream::EraseCacheStream()
     }
 }
 
-void DavidStream::ExpandStreamRecycleModelBindStreamAllTask()
+void DavidStream::ExpandStreamRecycleModelBindStreamAllTask(const bool cleanFlag)
 {
     TaskFactory* factory = device_->GetTaskFactory();
     NULL_PTR_RETURN_DIRECTLY(factory);
@@ -1478,6 +1478,9 @@ void DavidStream::ExpandStreamRecycleModelBindStreamAllTask()
         if (recycleTask == nullptr) {
             RT_LOG(RT_LOG_WARNING, "can't find task from factory, stream_id=%d task_id=%u", streamId_, taskId);
             continue;
+        }
+        if (cleanFlag && (recycleTask->type == TS_TASK_TYPE_LABEL_SET)) {
+            RecycleLabelInfoWithModel(recycleTask);
         }
         (void)factory->Recycle(recycleTask);
     }

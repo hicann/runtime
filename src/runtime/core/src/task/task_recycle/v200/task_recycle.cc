@@ -210,7 +210,7 @@ rtError_t TaskReclaimAllStream(const Device *const dev)
     return RT_ERROR_NONE;
 }
 
-static void RecycleLabelInfoWithModel(TaskInfo* labeltask)
+void RecycleLabelInfoWithModel(TaskInfo* labeltask)
 {
     Stream *stm = labeltask->stream;
     COND_RETURN_NORMAL((stm == nullptr), "Stream is null");
@@ -236,7 +236,7 @@ static void RecycleLabelInfoWithModel(TaskInfo* labeltask)
 void RecycleModelBindStreamAllTask(Stream *const stm, const bool cleanFlag)
 {
     if (stm->IsSoftwareSqEnable() || stm->IsAutoSplitSq()) {
-        stm->ExpandStreamRecycleModelBindStreamAllTask();
+        (static_cast<DavidStream *>(stm))->ExpandStreamRecycleModelBindStreamAllTask(cleanFlag);
         return;
     }
 

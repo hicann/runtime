@@ -61,6 +61,7 @@ bool GetPublicTask(Stream * const stm, const uint16_t endTaskSqPos, uint16_t &de
 void TryReclaimToTaskForDvppGrp(TaskInfo *workTask);
 rtError_t TaskReclaimForSeparatedStm(Stream *const stm);
 void ProcLogicCqUntilEmpty(const Stream *const stm);
+void RecycleLabelInfoWithModel(TaskInfo* labeltask);
 
 }
 }

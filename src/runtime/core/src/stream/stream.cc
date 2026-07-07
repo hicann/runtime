@@ -5324,11 +5324,6 @@ rtError_t Stream::StreamGetTasks(void **tasks, uint32_t *numTasks)
     return RT_ERROR_NONE;
 }
 
-void Stream::ExpandStreamRecycleModelBindStreamAllTask()
-{
-    return;
-}
-
 rtError_t Stream::RestoreForSoftwareSq()
 {
     RT_LOG(RT_LOG_INFO, "Begin restore capture stream, StreamId=%u.", Id_());

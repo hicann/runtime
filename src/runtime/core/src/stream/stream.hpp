@@ -981,7 +981,6 @@ public:
         int32_t timeout);
     virtual bool IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId);
     virtual bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead);
-    virtual void ExpandStreamRecycleModelBindStreamAllTask();
     rtError_t SynchronizeImpl(const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout=-1);
     virtual rtError_t SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec &beginTime, int32_t timeout);
     rtError_t WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimespec &beginTime, int32_t timeout);

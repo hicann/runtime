@@ -71,7 +71,7 @@ public:
     bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead) override;
     void EraseCacheStream() override;
     void RecordPosToTaskIdMap(TaskInfo * const tsk, const uint32_t sendSqeNum);
-    void ExpandStreamRecycleModelBindStreamAllTask() override;
+    void ExpandStreamRecycleModelBindStreamAllTask(const bool cleanFlag);
 
     StarsArgManager* ArgManagePtr() const
     {
