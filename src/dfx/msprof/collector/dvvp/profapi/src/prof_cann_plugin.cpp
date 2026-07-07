@@ -140,7 +140,7 @@ int32_t ProfCannPlugin::ProfSetProfCommand(VOID_PTR command, uint32_t len)
     if (profSetProfCommand_ != nullptr) {
         return profSetProfCommand_(command, len);
     } else {
-        MSPROF_LOGW("MSPROF API Has Not Been Load!");
+        MSPROF_LOGW("MSPROF API Has Not Been Loaded!");
     }
     return PROFILING_FAILED;
 }
@@ -209,7 +209,7 @@ int32_t ProfCannPlugin::RegisterProfileCallback(int32_t callbackType, VOID_PTR c
         case PROFILE_REPORT_REG_DATA_FORMAT_CALLBACK:
         case PROFILE_REPORT_GET_HASH_ID_CALLBACK:
         case PROFILE_HOST_FREQ_IS_ENABLE_CALLBACK:
-            MSPROF_LOGI("Register type %d for atls msprof just return success", callbackType);
+            MSPROF_LOGI("Register type %d for atls msprof just returns success", callbackType);
             break;
         case PROFILE_REPORT_COMPACT_CALLBACK:
             atlsReportCompactInfo_ = reinterpret_cast<decltype(atlsReportCompactInfo_)>(callback);
@@ -268,7 +268,7 @@ void ProfCannPlugin::ProfInitReportBuf(uint32_t type)
     // Compute suitable ring buffer
     size_t expectBuffer = ProfInitReportBufSize(type);
     if (expectBuffer == 0) {
-        MSPROF_LOGI("Report buffer do not need to be initialized.");
+        MSPROF_LOGI("Report buffer does not need to be initialized.");
         return;
     }
     // Init report buffer by dynamic expectBuffer
@@ -340,7 +340,7 @@ int32_t ProfCannPlugin::ProfInit(uint32_t type, void *data, uint32_t dataLen)
     if (profInit_ != nullptr) {
         return profInit_(type, data, dataLen);
     } else {
-        MSPROF_LOGW("MSPROF API Has Not Been Load!");
+        MSPROF_LOGW("MSPROF API Has Not Been Loaded!");
     }
     return 0;
 }
@@ -354,7 +354,7 @@ int32_t ProfCannPlugin::ProfStart(uint32_t dataType, const void *data, uint32_t 
     if (profStart_ != nullptr) {
         return profStart_(dataType, data, length);
     } else {
-        MSPROF_LOGW("MSPROF API Has Not Been Load!");
+        MSPROF_LOGW("MSPROF API Has Not Been Loaded!");
     }
     return 0;
 }
