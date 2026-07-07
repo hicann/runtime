@@ -735,8 +735,8 @@ int32_t ErrorManager::ParseJsonFormatString(const void* const handle, uint32_t p
                         error_info.error_id.c_str(), priority, it->second.priority);
                 } else {
                     GELOGD(
-                        "No need update error_code %s, due to current priority[%u] is less and "
-                        "equal than saved priority[%u]",
+                        "No need update error_code %s, due to current priority[%u] is less than "
+                        "or equal to saved priority[%u]",
                         error_info.error_id.c_str(), priority, it->second.priority);
                 }
             }
