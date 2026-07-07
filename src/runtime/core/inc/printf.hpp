@@ -83,6 +83,7 @@ struct DumpTimeStampInfoMsg {
     uint32_t resv[2];   // reserved
 };
 
+constexpr uint32_t RT_DUMP_SHAPE_MAX_SIZE = 8U;
 struct DumpTensorInfo {
     uint32_t addr = 0U;
     uint32_t dataType = 0U; // 数据类型
@@ -91,14 +92,14 @@ struct DumpTensorInfo {
     uint16_t position;        // position GM, UB, L1, L0C
     uint16_t blockIdx = 0U;      // block idx
     uint32_t dim = 0U;        // dim值
-    uint32_t shape[8] = {0U}; // shape 各维度值 < 8
+    uint32_t shape[RT_DUMP_SHAPE_MAX_SIZE] = {0U}; // shape 各维度值 < 8
     uint32_t resv = 0U;       // 保留字
     uint32_t dumpSize;        // dump实际的大小，不包含对齐长度
 };
 
 struct DumpShapeInfo {
     uint32_t dim = 0U;            // shapeInfo.dim, 即：fmt的offset
-    uint32_t shape[8U] = {0U};     
+    uint32_t shape[RT_DUMP_SHAPE_MAX_SIZE] = {0U};     
     uint32_t resv;                
 };
 

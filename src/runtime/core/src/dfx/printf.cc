@@ -659,8 +659,39 @@ void GetDumpShape(const DumpInfoHead *dumpHead, std::vector<size_t> &shape)
         "The value of dumpHead->infoLen %u must be greater than or equal to that of DumpShapeInfo %zu.",
         dumpHead->infoLen, sizeof(DumpShapeInfo));
     const DumpShapeInfo *const shapeHead = RtPtrToPtr<const DumpShapeInfo *>(dumpHead->infoMsg);
-    for (size_t i = 0U; i < shapeHead->dim; i++) {
+    if (shapeHead->dim > RT_DUMP_SHAPE_MAX_SIZE) {
+        RT_LOG(RT_LOG_WARNING, "DumpShape's shape dim %u exceeds the maximum limit of %u.",
+            shapeHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+        (void)printf("DumpShape's shape dim %u exceeds the maximum limit of %u.\n",
+            shapeHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+        return;
+    }
+
+    for (uint32_t i = 0U; i < shapeHead->dim; i++) {
         shape.push_back(shapeHead->shape[i]);
+    }
+}
+
+void GetDumpTensorShape(const DumpTensorInfo *tensorHead, std::vector<size_t> &shape)
+{
+    // if DumpTensor's shape dim exceeds the maximum limit of shape, discard shape info.
+    if (tensorHead->dim > RT_DUMP_SHAPE_MAX_SIZE) { 
+        RT_LOG(RT_LOG_WARNING, "DumpTensor's shape dim %u exceeds the maximum limit of %u.",
+            tensorHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+        (void)printf("DumpTensor's shape dim %u exceeds the maximum limit of %u.\n",
+            tensorHead->dim, RT_DUMP_SHAPE_MAX_SIZE);
+        shape = {};
+        return;
+    }
+
+    // if DumpTensor's shape dim is zero, use DumpShape to print.
+    if (tensorHead->dim == 0U) {
+        RT_LOG(RT_LOG_DEBUG, "DumpTensor's shape dim %u.", tensorHead->dim);
+        return;
+    }
+    shape = {};
+    for (uint32_t i = 0U; i < tensorHead->dim; i++) {
+        shape.push_back(tensorHead->shape[i]);
     }
 }
 
@@ -800,6 +831,10 @@ void PrintDumpTensor(const DumpInfoHead *dumpHead, const uint32_t coreType, std:
     const size_t actualDataNum = (dumpDataSize == 0U)
                                      ? (static_cast<size_t>(dumpHead->infoLen) - sizeof(DumpTensorInfo)) / dataTypeSize
                                      : static_cast<size_t>(dumpDataSize) / dataTypeSize;
+
+    // shape priority: tensorShape > dumpShape
+    GetDumpTensorShape(tensorHead, shape);
+
     std::string blockInfo = "[";
     blockInfo += (coreType == 0U) ? "AIC " : "AIV ";
     blockInfo += "Block " + std::to_string(tensorHead->blockIdx) + "]";

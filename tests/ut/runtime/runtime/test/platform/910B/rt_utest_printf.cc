@@ -455,13 +455,18 @@ static unsigned char *AddTensorInfo(
     return data;
 }
 
-DumpTensorInfo toDumpTensorInfo(uint32_t addr, uint32_t dataType, uint32_t position)
+DumpTensorInfo toDumpTensorInfo(uint32_t addr, uint32_t dataType, uint32_t position,
+    uint32_t dim = 0, uint32_t num[] = {})
 {
     DumpTensorInfo tensorInfo{};
     tensorInfo.addr = addr;
     tensorInfo.dataType = dataType;
     tensorInfo.desc = 716;
     tensorInfo.position = position;
+    tensorInfo.dim = dim;
+    for (size_t i = 0U; (i < dim) && (i < RT_DUMP_SHAPE_MAX_SIZE); i++ ) {
+        tensorInfo.shape[i] = num[i];
+    }
     return tensorInfo;
 }
 
@@ -829,14 +834,18 @@ TEST_F(PrintfTest, PrintDumpTensorPosition)
     uint64_t totalLen = blockSize * 75;
     std::vector<uint8_t> hostData(totalLen, 0);
     uint8_t *blockAddr = hostData.data();
-    size_t dataLen = sizeof(BlockInfo) + sizeof(BlockReadInfo) + sizeof(DumpInfoHead) + sizeof(DumpTensorInfo) +
-                     sizeof(BlockWriteInfo);
+    size_t dataLen = sizeof(BlockInfo) + sizeof(BlockReadInfo) + sizeof(DumpInfoHead) * 5 +
+        sizeof(DumpTensorInfo) * 5 + sizeof(BlockWriteInfo);
     bool tensorData1[] = {1, 1, 1, 1, 1};
     bool tensorData2[] = {0, 1, 1, 0, 0};
     int8_t tensorData3[] = {-1, 0, -5, 8, -6, 9};
+    int16_t tensorData4[] = {-200, 0, -5, 8, -6, 9};
+    uint16_t tensorData5[] = {255, 256, 0, 8, 666, 9};
     dataLen += sizeof(tensorData1);
     dataLen += sizeof(tensorData2);
     dataLen += sizeof(tensorData3);
+    dataLen += sizeof(tensorData4);
+    dataLen += sizeof(tensorData5);
 
     BlockInfo blockInfo{};
     blockInfo.length = blockSize;
@@ -853,7 +862,9 @@ TEST_F(PrintfTest, PrintDumpTensorPosition)
 
     data = AddTensorInfo(data, 12, tensorData1, 5, toDumpTensorInfo(0x400, 12, 3));
     data = AddTensorInfo(data, 12, tensorData2, 5, toDumpTensorInfo(0x400, 12, 4));
-    data = AddTensorInfo(data, 2, tensorData3, 6, toDumpTensorInfo(0x400, 12, 2));
+    data = AddTensorInfo(data, 2, tensorData3, 6, toDumpTensorInfo(0x400, 2, 2));
+    data = AddTensorInfo(data, 6, tensorData4, 6, toDumpTensorInfo(0x400, 6, 6));
+    data = AddTensorInfo(data, 7, tensorData5, 6, toDumpTensorInfo(0x400, 7, 7));
 
     BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
     writeInfo->writeIdx = dataLen - sizeof(BlockWriteInfo) - sizeof(BlockInfo) - sizeof(BlockReadInfo);
@@ -1076,4 +1087,100 @@ TEST_F(PrintfTest, DumpFP16_InfAndNan)
     uint16_t data4 = 0x7FFF;
     cce::runtime::fp16_t num4[] = {data4};
     EXPECT_TRUE(std::isnan(num4[0].toFloat()));
+}
+
+TEST_F(PrintfTest, PrintDumpTensorShapeWithShape)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+    MOCKER_CPP_VIRTUAL(dev->driver_, &Driver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
+
+    size_t blockSize = 1024 *1024;
+    uint64_t totalLen = blockSize * 75;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    uint8_t *blockAddr = hostData.data();
+
+    size_t dataLen = sizeof(BlockInfo) + sizeof(BlockReadInfo) + sizeof(DumpShapeInfo) * 5 + 
+        sizeof(DumpInfoHead) * 11 + sizeof(DumpTensorInfo) * 6 + sizeof(BlockWriteInfo);
+    uint8_t tensorData1[40];
+    for (uint8_t i = 0U; i < 40U; ++i) {
+        tensorData1[i] = i;
+    }
+    int16_t tensorData2[] = {0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15};
+    float tensorData3[] = {1.223, -9.3, 6789.01, -4.56, 0.0, 78.90};
+    bool tensorData4[35];
+    for (int i = 0; i < 35; ++i) {
+        tensorData4[i] = (i % 2 == 0);
+    }
+    int16_t tensorData5[] = {20, -11, 232, -33, 43, -54, 655, -74, 86, -96, 105, -119, 123, -135, 14, -15};
+    dataLen += sizeof(tensorData1) * 2 + sizeof(tensorData2) + sizeof(tensorData3) + sizeof(tensorData4);
+    dataLen += sizeof(tensorData5);
+
+    BlockInfo blockInfo{};
+    blockInfo.length = blockSize;
+    blockInfo.coreId = 0U;
+    blockInfo.blockNum = 2U;
+    blockInfo.remainLen = blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo);
+    blockInfo.magic = 0xAE86;
+    blockInfo.rsv = 7;
+    unsigned char *data = DumpInfoAppendByte((unsigned char *)blockAddr, blockInfo);
+
+    BlockReadInfo blockReadInfo{};
+    blockReadInfo.readIdx = 0;
+    data = DumpInfoAppendByte(data, blockReadInfo);
+
+    DumpTensorInfo tensorInfo;
+
+    // 1.有dumpShape, tensorShape, 且dim值有效
+    uint32_t shape1[] = {3U, 5U, 4U};
+    data = AddShapeInfo(data, shape1, 3);
+    uint32_t tensorShape1[] = {4U, 2U, 6U};
+    tensorInfo = toDumpTensorInfo(0x039U, 4U, 1U, 3U, tensorShape1);
+    data = AddTensorInfo(data, 4, tensorData1, 40, tensorInfo);
+
+    // 2.没有dumpShape, 没有tensorShape
+    data = AddTensorInfo(data, 4, tensorData1, 40);
+
+    // 3.有dumpShape, 没有tensorShape
+    uint32_t shape2[] = {3U, 3U, 5U};
+    data = AddShapeInfo(data, shape2, 3);
+    tensorInfo = toDumpTensorInfo(0x0401U, 6U, 1U);
+    data = AddTensorInfo(data, 6U, tensorData2, 16, tensorInfo);
+
+    // 4.有dumpShape, tensorShape, tensorShape的dim值大于8U
+    uint32_t shape3[] = {2U, 2U, 3U};
+    data = AddShapeInfo(data, shape3, 3);
+    uint32_t tensorShape2[] = {4U, 2U, 6U, 2U, 4U, 2U, 2U, 3U, 4U};
+    tensorInfo = toDumpTensorInfo(0x0402, 0U, 1U, 9U, tensorShape2);
+    data = AddTensorInfo(data, 6U, tensorData3, 6, tensorInfo);
+
+    // 5.有dumpShape, 有tensorShape, tensorShape的dim为0
+    uint32_t shape4[] = {3U, 2U, 7U};
+    data = AddShapeInfo(data, shape4, 3);
+    uint32_t tensorShape3[] = {2U, 1U, 3U};
+    tensorInfo = toDumpTensorInfo(0x0403U, 12U, 1U, 0U, tensorShape3);
+    data = AddTensorInfo(data, 0U, tensorData4, 35, tensorInfo);
+
+    // 6.有dumpShape, dim值大于8, 没有tensorShape
+    DumpInfoHead shapeHead{};
+    shapeHead.type = DumpType::DUMP_SHAPE;
+    shapeHead.infoLen = sizeof(DumpShapeInfo);
+    data = DumpInfoAppendByte(data, shapeHead);
+    DumpShapeInfo shapeInfo{};
+    shapeInfo.dim = 9U;
+    for (size_t i = 0; i < RT_DUMP_SHAPE_MAX_SIZE; i++) {
+        shapeInfo.shape[i] = i + 1;
+    }
+    data = DumpInfoAppendByte(data, shapeInfo);
+    tensorInfo = toDumpTensorInfo(0x0404, 6U, 1U);
+    data = AddTensorInfo(data, 6U, tensorData5, 16, tensorInfo);
+
+    BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = dataLen - sizeof(BlockWriteInfo) - sizeof(BlockInfo) - sizeof(BlockReadInfo);
+    data = DumpInfoAppendByte(data, writeInfo);
+    error = ParsePrintf(blockAddr, blockSize, dev->driver_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDeviceReset(0);
 }
