@@ -210,7 +210,7 @@ rtError_t CaptureConditionTaskInit(TaskInfo *taskInfo, CondHandle *condHandle)
     taskInfo->sqeNum = (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) ? COND_TASK_WHILE_SQE_NUM : COND_TASK_IF_SWITCH_SQE_NUM;
 
     condTaskInfo->funCallMemSize = GetFuncCallMemSizeForCaptureCondTask(condHandle->GetCondType());
-    COND_RETURN_ERROR(condTaskInfo->funCallMemSize == 0, RT_ERROR_INVALID_VALUE, "Invalid cond type, cond type=%d", condHandle->GetCondType());
+    COND_RETURN_ERROR(condTaskInfo->funCallMemSize == 0U, RT_ERROR_INVALID_VALUE, "Invalid cond type, cond type=%d", condHandle->GetCondType());
 
     Notify *notify = condHandle->GetSubModelNotify();
     COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "Sub model end graph notify is null.");
@@ -233,7 +233,7 @@ void CaptureConditionTaskUnInit(TaskInfo * const taskInfo)
     CaptureConditionTaskInfo *condTaskInfo = &(taskInfo->u.captureConditionTask);
     if (condTaskInfo->jumpBackBaseFuncCallSvmMem != nullptr) {
         const auto dev = taskInfo->stream->Device_();
-        dev->Driver_()->DevMemFree(condTaskInfo->jumpBackBaseFuncCallSvmMem, dev->Id_());
+        (void)dev->Driver_()->DevMemFree(condTaskInfo->jumpBackBaseFuncCallSvmMem, dev->Id_());
         condTaskInfo->jumpBackBaseFuncCallSvmMem = nullptr;
         condTaskInfo->jumpBackFuncCallSvmMem = nullptr;
         condTaskInfo->jumpBackFunCallMemSize = 0;

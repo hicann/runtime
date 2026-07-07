@@ -829,7 +829,9 @@ rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskPara
             return ret;
         }
 
+        modelLock_.Lock();
         models_.remove(subModel); // capture model资源回收不遍历子模型，context析构也不遍历子图，都靠父模型递归完成。
+        modelLock_.Unlock();
         CaptureModel *subCaptureModel = dynamic_cast<CaptureModel *>(subModel);
         subCaptureModel->SetSubCaptureModelEnable();
         subCaptureModel->SetCondHandle(params.handle);
@@ -854,7 +856,8 @@ rtError_t Context::SubmitCaptureConditionTask(CondHandle *condHandle, Stream * c
     TaskInfo submitTask = {};
     const uint32_t sqeNum = (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) ? COND_TASK_WHILE_SQE_NUM : COND_TASK_IF_SWITCH_SQE_NUM;
     tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_CAPTURE_CONDITION, error, sqeNum);
-    COND_RETURN_ERROR_MSG_INNER((tsk == nullptr), error, "task alloc fail err:%#x", static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG(tsk, error);
+
     std::function<void()> const errRecycle = [&dev, &tsk]() {
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
@@ -882,7 +885,7 @@ rtError_t Context::StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams pa
     UNUSED(flags);
     std::function<void()> const errSubModelRecycle = [&condHandle, &params]() {
         condHandle->SubModelDestroy();
-        memset_s(params.modelRIArray, params.size * sizeof(rtModel_t), 0x0U, params.size * sizeof(rtModel_t));
+        (void)memset_s(params.modelRIArray, params.size * sizeof(rtModel_t), 0x0U, params.size * sizeof(rtModel_t));
     };
     ScopeGuard subModelErrRecycle(errSubModelRecycle);
 
@@ -890,8 +893,7 @@ rtError_t Context::StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams pa
     Notify *notify = condHandle->GetSubModelNotify();
     if (notify == nullptr) {
         notify = new (std::nothrow) Notify(device_->Id_(), device_->DevGetTsId());
-        COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW,
-            ErrorCode::EE1013, sizeof(Notify), "new");
+        COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, std::to_string(sizeof(Notify)).c_str(), "new");
         error = notify->SetupWithoutAllocNtyId();
         COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
     }

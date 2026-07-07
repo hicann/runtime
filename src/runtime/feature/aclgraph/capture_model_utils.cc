@@ -247,13 +247,13 @@ rtError_t CheckCaptureModelSupportCondOp(Device * const dev)
 
     const rtError_t ret = CheckCaptureModelSupportSoftwareSq(dev);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "aclgraph condop depends on software sq, device_id=%u, retCode=%#x.",
+        RT_LOG(RT_LOG_WARNING, "aclgraph condition operator depends on software sq, device_id=%u, retCode=%#x.",
             dev->Id_(), static_cast<uint32_t>(ret));
         return ret;
     }
 
     if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_COND_OP))) {
-        RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condop, device_id=%u.", dev->Id_());
+        RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condition operator, device_id=%u.", dev->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 

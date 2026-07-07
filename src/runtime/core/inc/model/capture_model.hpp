@@ -409,6 +409,7 @@ public:
     rtError_t ReleaseSqCqInternal(uint32_t &releaseNum);
     rtError_t ReleaseAllSubModelSqCq(uint32_t &releaseNum);
     rtError_t LoadCompleteAll(uint32_t loadCompltetNotifyId);
+    void UpdateIsNeedUpdateEndGraphFlagAll();
     rtError_t UpdateNotifyIdAll(Stream * const exeStream);
     rtError_t UpdateNotifyIdForAllModels(Stream * const exeStream);
     rtError_t UpdateCondTaskNotifyWaitSqe(Stream * const exeStream);

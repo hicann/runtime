@@ -218,13 +218,14 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream *
     const auto *inner = static_cast<const rtInnerObject *>(params.handle);
     CondHandle *realHandle = static_cast<CondHandle *>(inner->object);
     COND_RETURN_AND_MSG_OUTER((realHandle->GetSubCaptureModels().size() != 0), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, "rtStreamAddCondTask", "params.handle", "The handle has been launched with condition task.");
+        ErrorCode::EE1017, "rtStreamAddCondTask", "params.handle", "The handle has been launched with condition task, "
+        "create a new handle before adding another condition task");
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(!stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED,
-        ErrorCode::EE1016, "rtStreamAddCondTask", RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
+        ErrorCode::EE1018, "rtStreamAddCondTask", RtFmtMsg("Stream (stream_id=%d) must be in the capture stage before adding a condition task", stm->Id_()));
     NULL_PTR_RETURN(stm->GetCaptureStream(), RT_ERROR_STREAM_NOT_CAPTURED);
     rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);

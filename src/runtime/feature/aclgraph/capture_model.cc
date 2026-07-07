@@ -1120,6 +1120,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     COND_PROC(!IsSoftwareSqEnable(), return RT_ERROR_NONE);
     const std::unique_lock<std::mutex> lk(sqBindMutex_);
 
+    SetRootExeStreamIdAll(static_cast<uint32_t>(exeStream->Id_()));
     rtError_t error = BindJettyForUbdma();
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "bind jettys for streams failed, stream_id=%d, model_id=%u", exeStream->Id_(), Id_());
@@ -1162,7 +1163,6 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
         return error;
     }
 
-    SetRootExeStreamIdAll(static_cast<uint32_t>(exeStream->Id_()));
     error = LoadCompleteAll(loadCompleteNotifyId_);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "load complete all failed, stream_id=%d, model_id=%u, retCode=%#x.",
@@ -1170,6 +1170,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
         return error;
     }
 
+    UpdateIsNeedUpdateEndGraphFlagAll();
     error = UpdateStreamActiveTaskFuncCallMemAll();
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "update all stream active task failed, stream_id=%d, model_id=%u, retCode=%#x.",
@@ -1861,6 +1862,20 @@ rtError_t CaptureModel::ReleaseAllSubModelSqCq(uint32_t &releaseNum)
     return RT_ERROR_NONE;
 }
 
+void CaptureModel::UpdateIsNeedUpdateEndGraphFlagAll()
+{
+    std::vector<CaptureModel *> models;
+    models.push_back(this);
+    auto &subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel *curMdl : models) {
+        curMdl->isNeedUpdateEndGraph_ = false;
+    }
+
+    return;
+}
+
 rtError_t CaptureModel::LoadCompleteAll(uint32_t loadCompltetNotifyId)
 {
     std::vector<CaptureModel *> models;
@@ -1912,7 +1927,6 @@ rtError_t CaptureModel::UpdateNotifyIdForAllModels(Stream * const exeStream)
                 curMdl->Id_(), static_cast<uint32_t>(error));
             RT_LOG(RT_LOG_DEBUG, "model_id=%u Alloc endgraph notify_id=%u",
                 curMdl->Id_(), curMdl->GetEndGraphNotify()->GetNotifyId());
-            curMdl->isNeedUpdateEndGraph_ = false;
         }
     }
     return RT_ERROR_NONE;
