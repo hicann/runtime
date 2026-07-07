@@ -25,11 +25,7 @@ aclError aclrtCreateLabelImpl(aclrtLabel *label)
     ACL_LOG_INFO("start to execute aclrtCreateLabel");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(label);
 
-    const rtError_t rtErr = rtsLabelCreate(static_cast<rtLabel_t*>(label));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelCreate failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelCreate(static_cast<rtLabel_t*>(label)));
 
     ACL_LOG_INFO("successfully execute aclrtCreateLabel");
     return ACL_SUCCESS;
@@ -42,11 +38,7 @@ aclError aclrtSetLabelImpl(aclrtLabel label, aclrtStream stream)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(label);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
 
-    const rtError_t rtErr = rtsLabelSet(static_cast<rtLabel_t>(label), static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelSet failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelSet(static_cast<rtLabel_t>(label), static_cast<rtStream_t>(stream)));
 
     ACL_LOG_INFO("successfully execute aclrtSetLabel");
     return ACL_SUCCESS;
@@ -58,11 +50,7 @@ aclError aclrtDestroyLabelImpl(aclrtLabel label)
     ACL_LOG_INFO("start to execute aclrtDestroyLabel");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(label);
 
-    const rtError_t rtErr = rtsLabelDestroy(static_cast<rtLabel_t>(label));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelDestroy failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelDestroy(static_cast<rtLabel_t>(label)));
 
     ACL_LOG_INFO("successfully execute aclrtDestroyLabel");
     return ACL_SUCCESS;
@@ -75,12 +63,8 @@ aclError aclrtCreateLabelListImpl(aclrtLabel *labels, size_t num, aclrtLabelList
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labels);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labelList);
 
-    const rtError_t rtErr = rtsLabelSwitchListCreate(static_cast<rtLabel_t*>(labels), num,
-        reinterpret_cast<void**>(labelList));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelSwitchListCreate failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelSwitchListCreate(static_cast<rtLabel_t*>(labels), num,
+        reinterpret_cast<void**>(labelList)));
 
     ACL_LOG_INFO("successfully execute aclrtCreateLabelList");
     return ACL_SUCCESS;
@@ -92,11 +76,7 @@ aclError aclrtDestroyLabelListImpl(aclrtLabelList labelList)
     ACL_LOG_INFO("start to execute aclrtDestroyLabelList");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labelList);
 
-    const rtError_t rtErr = rtsLabelSwitchListDestroy(reinterpret_cast<void*>(labelList));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelSwitchListDestroy failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelSwitchListDestroy(reinterpret_cast<void*>(labelList)));
 
     ACL_LOG_INFO("successfully execute aclrtDestroyLabelList");
     return ACL_SUCCESS;
@@ -110,12 +90,8 @@ aclError aclrtSwitchLabelByIndexImpl(void *ptr, uint32_t maxValue, aclrtLabelLis
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labelList);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
 
-    const rtError_t rtErr = rtsLabelSwitchByIndex(ptr, maxValue, reinterpret_cast<void*>(labelList),
-        static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsLabelSwitchByIndex failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLabelSwitchByIndex(ptr, maxValue, reinterpret_cast<void*>(labelList),
+        static_cast<rtStream_t>(stream)));
 
     ACL_LOG_INFO("successfully execute aclrtSwitchLabelByIndex");
     return ACL_SUCCESS;

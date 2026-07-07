@@ -30,11 +30,7 @@ extern "C" {
 aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 {
     ACL_LOG_INFO("start to execute aclrtSubscribeReport, threadId is %lu.", threadId);
-    const rtError_t rtErr = rtSubscribeReport(threadId, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("subscribe report failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSubscribeReport(threadId, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtSubscribeReport, threadId is %lu.", threadId);
     return ACL_SUCCESS;
 }
@@ -42,12 +38,8 @@ aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
 {
     ACL_LOG_INFO("start to execute aclrtSetExceptionInfoCallback.");
-    const rtError_t rtErr = rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME,
-        static_cast<rtTaskFailCallback>(callback));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set callback of fail task failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME,
+        static_cast<rtTaskFailCallback>(callback)));
     ACL_LOG_INFO("successfully execute aclrtSetExceptionInfoCallback");
     return ACL_SUCCESS;
 }
@@ -112,11 +104,7 @@ aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo *info,
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
-    const rtError_t rtErr = rtGetFuncHandleFromExceptionInfo(info, func);
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("get func handle from exception info failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetFuncHandleFromExceptionInfo(info, func));
     
     return ACL_SUCCESS;
 }
@@ -127,11 +115,7 @@ aclError aclrtBinarySetExceptionCallbackImpl(aclrtBinHandle binHandle, aclrtOpEx
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(callback);
 
-    const rtError_t rtErr = rtBinarySetExceptionCallback(binHandle, callback, userData);
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("binary set exception callback failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtBinarySetExceptionCallback(binHandle, callback, userData));
     
     return ACL_SUCCESS;
 }
@@ -147,12 +131,8 @@ aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void *userData, aclrtCallback
         "ACL_CALLBACK_BLOCK or ACL_CALLBACK_NO_BLOCK",
         ACL_ERROR_INVALID_PARAM);
     const bool isBlock = (blockType == ACL_CALLBACK_BLOCK);
-    const rtError_t rtErr = rtCallbackLaunch(static_cast<rtCallback_t>(fn), userData,
-        static_cast<rtStream_t>(stream), isBlock);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("launch callback task failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtCallbackLaunch(static_cast<rtCallback_t>(fn), userData,
+        static_cast<rtStream_t>(stream), isBlock));
     ACL_LOG_INFO("successfully execute aclrtLaunchCallback");
     return ACL_SUCCESS;
 }
@@ -161,11 +141,7 @@ aclError aclrtLaunchHostFuncImpl(aclrtStream stream, aclrtHostFunc fn, void *arg
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchHostFunc);
     ACL_LOG_INFO("start to execute aclrtLaunchHostFunc.");
-    const rtError_t rtErr = rtsLaunchHostFunc(static_cast<rtStream_t>(stream), static_cast<rtCallback_t>(fn), args);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("launch callback task failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsLaunchHostFunc(static_cast<rtStream_t>(stream), static_cast<rtCallback_t>(fn), args));
     ACL_LOG_INFO("successfully execute aclrtLaunchHostFunc");
     return ACL_SUCCESS;
 }
@@ -186,8 +162,6 @@ aclError aclrtProcessReportImpl(int32_t timeout)
             ACL_LOG_INFO("no subscribereport info, runtime errorCode = %d", static_cast<int32_t>(rtErr));
         } else if (rtErr == ACL_ERROR_RT_REPORT_TIMEOUT) {
             ACL_LOG_INFO("wait subscribereport timeout, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("process report failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
@@ -198,11 +172,7 @@ aclError aclrtProcessReportImpl(int32_t timeout)
 aclError aclrtUnSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 {
     ACL_LOG_INFO("start to execute aclrtUnSubscribeReport, threadId is %lu.", threadId);
-    const rtError_t rtErr = rtUnSubscribeReport(threadId, static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("unsubscribe report failed, runtime errorCode = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtUnSubscribeReport(threadId, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtUnSubscribeReport, threadId is %lu.", threadId);
     return ACL_SUCCESS;
 }
@@ -212,11 +182,7 @@ aclError aclrtRegStreamStateCallbackImpl(const char *regName, aclrtStreamStateCa
     ACL_PROFILING_REG(acl::AclProfType::AclrtRegStreamStateCallback);
     ACL_LOG_INFO("start to execute aclrtRegStreamStateCallback");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(regName);
-    const rtError_t rtErr = rtsRegStreamStateCallback(regName, reinterpret_cast<rtsStreamStateCallback>(callback), args);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsRegStreamStateCallback failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsRegStreamStateCallback(regName, reinterpret_cast<rtsStreamStateCallback>(callback), args));
     ACL_LOG_INFO("successfully execute aclrtRegStreamStateCallback");
     return ACL_SUCCESS;
 }
@@ -227,11 +193,7 @@ aclError aclrtRegDeviceStateCallbackImpl(const char *regName, aclrtDeviceStateCa
     ACL_LOG_INFO("start to execute aclrtRegDeviceStateCallback");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(regName);
 
-    const rtError_t rtErr = rtsRegDeviceStateCallback(regName, reinterpret_cast<rtsDeviceStateCallback>(callback), args);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsRegDeviceStateCallback failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsRegDeviceStateCallback(regName, reinterpret_cast<rtsDeviceStateCallback>(callback), args));
     ACL_LOG_INFO("successfully execute aclrtRegDeviceStateCallback");
     return ACL_SUCCESS;
 }
@@ -242,11 +204,7 @@ aclError aclrtSetDeviceTaskAbortCallbackImpl(const char *regName, aclrtDeviceTas
     ACL_LOG_INFO("start to execute aclrtSetDeviceTaskAbortCallback");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(regName);
 
-    const rtError_t rtErr = rtsSetDeviceTaskAbortCallback(regName, reinterpret_cast<rtsDeviceTaskAbortCallback>(callback), args);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsSetDeviceTaskAbortCallback failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsSetDeviceTaskAbortCallback(regName, reinterpret_cast<rtsDeviceTaskAbortCallback>(callback), args));
     ACL_LOG_INFO("successfully execute aclrtSetDeviceTaskAbortCallback");
     return ACL_SUCCESS;
 }

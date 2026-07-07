@@ -31,11 +31,7 @@ aclError aclrtCreateEventImpl(aclrtEvent *event)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     rtEvent_t rtEvent = nullptr;
-    const rtError_t rtErr = rtEventCreate(&rtEvent);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("create event failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventCreate(&rtEvent));
 
     *event = static_cast<aclrtEvent>(rtEvent);
     ACL_LOG_INFO("successfully execute aclrtCreateEvent");
@@ -50,11 +46,7 @@ aclError aclrtCreateEventWithFlagImpl(aclrtEvent *event, uint32_t flag)
     ACL_LOG_INFO("start to execute aclrtCreateEventWithFlag.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     rtEvent_t rtEvent = nullptr;
-    const rtError_t rtErr = rtEventCreateWithFlag(&rtEvent, flag);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("create event flag failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventCreateWithFlag(&rtEvent, flag));
     *event = static_cast<aclrtEvent>(rtEvent);
     ACL_LOG_INFO("successfully execute aclrtCreateEventWithFlag.");
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
@@ -68,15 +60,7 @@ aclError aclrtCreateEventExWithFlagImpl(aclrtEvent *event, uint32_t flag)
     ACL_LOG_INFO("start to execute aclrtCreateEventExWithFlag.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     rtEvent_t rtEvent = nullptr;
-    const rtError_t rtErr = rtEventCreateExWithFlag(&rtEvent, flag);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtEventCreateExWithFlag unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("create event ex with flag failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtEventCreateExWithFlag(&rtEvent, flag), rtEventCreateExWithFlag);
     *event = static_cast<aclrtEvent>(rtEvent);
     ACL_LOG_INFO("successfully execute aclrtCreateEventExWithFlag.");
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
@@ -90,11 +74,7 @@ aclError aclrtDestroyEventImpl(aclrtEvent event)
     ACL_LOG_INFO("start to execute aclrtDestroyEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
-    const rtError_t rtErr = rtEventDestroy(static_cast<rtEvent_t>(event));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("destroy event failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventDestroy(static_cast<rtEvent_t>(event)));
     ACL_LOG_INFO("successfully execute aclrtDestroyEvent");
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
     return ACL_SUCCESS;
@@ -106,11 +86,7 @@ aclError aclrtRecordEventImpl(aclrtEvent event, aclrtStream stream)
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
-    const rtError_t rtErr = rtEventRecord(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("record event failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventRecord(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream)));
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     return ACL_SUCCESS;
 }
@@ -121,11 +97,7 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
-    const rtError_t rtErr = rtEventReset(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("reset event failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventReset(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream)));
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     return ACL_SUCCESS;
 }
@@ -142,7 +114,6 @@ aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
     } else if (rtErr == ACL_ERROR_RT_EVENT_NOT_COMPLETE) {
         *status = ACL_EVENT_STATUS_NOT_READY;
     } else {
-        ACL_LOG_INNER_ERROR("Failed to query event status, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;
@@ -155,12 +126,7 @@ aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus *s
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
     rtEventStatus_t rtStatus = RT_EVENT_INIT;
-    const rtError_t rtErr = rtEventQueryStatus(static_cast<rtEvent_t>(event), &rtStatus);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Query][Status]query event recorded status failed, runtime result = %d",
-            static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventQueryStatus(static_cast<rtEvent_t>(event), &rtStatus));
     if (rtStatus == RT_EVENT_RECORDED) {
         *status = ACL_EVENT_RECORDED_STATUS_COMPLETE;
     } else {
@@ -176,12 +142,7 @@ aclError aclrtQueryEventWaitStatusImpl(aclrtEvent event, aclrtEventWaitStatus *s
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
     rtEventWaitStatus_t rtWaitStatus = EVENT_STATUS_NOT_READY;
-    const rtError_t rtErr = rtEventQueryWaitStatus(static_cast<rtEvent_t>(event), &rtWaitStatus);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("[Query][Status]query event wait-status failed, runtime result = %d",
-            static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventQueryWaitStatus(static_cast<rtEvent_t>(event), &rtWaitStatus));
     if (rtWaitStatus == EVENT_STATUS_COMPLETE) {
         *status = ACL_EVENT_WAIT_STATUS_COMPLETE;
     } else {
@@ -196,11 +157,7 @@ aclError aclrtSynchronizeEventImpl(aclrtEvent event)
     ACL_LOG_INFO("start to execute aclrtSynchronizeEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
-    const rtError_t rtErr = rtEventSynchronize(static_cast<rtEvent_t>(event));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("wait event to be complete failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventSynchronize(static_cast<rtEvent_t>(event)));
     ACL_LOG_INFO("successfully execute aclrtSynchronizeEvent");
     return ACL_SUCCESS;
 }
@@ -214,10 +171,8 @@ aclError aclrtSynchronizeEventWithTimeoutImpl(aclrtEvent event, int32_t timeout)
 
     const rtError_t rtErr = rtEventSynchronizeWithTimeout(static_cast<rtEvent_t>(event), timeout);
     if (rtErr == ACL_ERROR_RT_EVENT_SYNC_TIMEOUT) {
-        ACL_LOG_CALL_ERROR("synchronize event timeout, timeout = %dms", timeout);
         return ACL_ERROR_RT_EVENT_SYNC_TIMEOUT;
     } else if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("wait event to be complete failed, runtime result = %dms", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclrtSynchronizeEventWithTimeout");
@@ -231,11 +186,7 @@ aclError aclrtEventElapsedTimeImpl(float *ms, aclrtEvent startEvent, aclrtEvent 
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(startEvent);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(endEvent);
 
-    const rtError_t rtErr = rtEventElapsedTime(ms, startEvent, endEvent);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("computes events elapsed time failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtEventElapsedTime(ms, startEvent, endEvent));
     ACL_LOG_INFO("successfully execute aclrtEventElapsedTime");
     return ACL_SUCCESS;
 }
@@ -246,7 +197,7 @@ aclError aclrtEventGetTimestampImpl(aclrtEvent event, uint64_t *timestamp)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(timestamp);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
-    ACL_REQUIRES_CALL_RTS_OK(rtEventGetTimeStamp(timestamp, event), rtEventGetTimeStamp);
+    ACL_REQUIRES_RTS_OK(rtEventGetTimeStamp(timestamp, event));
 
     ACL_LOG_INFO("successfully execute aclrtEventGetTimestamp");
     return ACL_SUCCESS;
@@ -256,7 +207,7 @@ aclError aclrtSetOpWaitTimeoutImpl(uint32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpWaitTimeout);
     ACL_LOG_INFO("start to execute aclrtSetOpWaitTimeout, timeout = %us", timeout);
-    ACL_REQUIRES_CALL_RTS_OK(rtSetOpWaitTimeOut(timeout), rtSetOpWaitTimeOut);
+    ACL_REQUIRES_RTS_OK(rtSetOpWaitTimeOut(timeout));
     ACL_LOG_INFO("successfully execute aclrtSetOpWaitTimeout, timeout = %us", timeout);
     return ACL_SUCCESS;
 }
@@ -266,11 +217,7 @@ aclError aclrtSetOpExecuteTimeOutImpl(uint32_t timeout)
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpExecuteTimeOut);
     ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOut, timeout = %us", timeout);
 
-    const rtError_t rtErr = rtSetOpExecuteTimeOut(timeout);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set op execute timeout failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSetOpExecuteTimeOut(timeout));
 
     ACL_LOG_INFO("successfully execute aclrtSetOpExecuteTimeOut, timeout = %us", timeout);
     return ACL_SUCCESS;
@@ -281,11 +228,7 @@ aclError aclrtSetOpExecuteTimeOutWithMsImpl(uint32_t timeout)
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpExecuteTimeOutWithMs);
     ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOutWithMs, timeout = %ums", timeout);
 
-    const rtError_t rtErr = rtSetOpExecuteTimeOutWithMs(timeout);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set op execute timeout failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSetOpExecuteTimeOutWithMs(timeout));
 
     ACL_LOG_INFO("successfully execute aclrtSetOpExecuteTimeOutWithMs, timeout = %ums", timeout);
     return ACL_SUCCESS;
@@ -296,7 +239,7 @@ aclError aclrtSetOpExecuteTimeOutV2Impl(uint64_t timeout, uint64_t *actualTimeou
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpExecuteTimeOutV2);
     ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us", timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(actualTimeout);
-    ACL_REQUIRES_CALL_RTS_OK(rtSetOpExecuteTimeOutV2(timeout, actualTimeout), rtSetOpExecuteTimeOutV2);
+    ACL_REQUIRES_RTS_OK(rtSetOpExecuteTimeOutV2(timeout, actualTimeout));
     ACL_LOG_INFO("successfully execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us, actual timeout = %zu us", timeout,
                  *actualTimeout);
     return ACL_SUCCESS;
@@ -307,7 +250,7 @@ aclError aclrtGetOpTimeOutIntervalImpl(uint64_t *interval)
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetOpTimeOutInterval);
     ACL_LOG_INFO("start to execute aclrtGetOpTimeOutIntervalImpl");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(interval);
-    ACL_REQUIRES_CALL_RTS_OK(rtGetOpTimeOutInterval(interval), rtGetOpTimeOutInterval);
+    ACL_REQUIRES_RTS_OK(rtGetOpTimeOutInterval(interval));
     ACL_LOG_INFO("successfully execute aclrtGetOpTimeOutIntervalImpl, interval = %zu us", *interval);
     return ACL_SUCCESS;
 }
@@ -321,7 +264,7 @@ aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArr
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(retSize);
 
     rtMemUceInfo rtUceInfo = {};
-    ACL_REQUIRES_CALL_RTS_OK(rtGetMemUceInfo(deviceId, &rtUceInfo), rtGetMemUceInfo);
+    ACL_REQUIRES_RTS_OK(rtGetMemUceInfo(deviceId, &rtUceInfo));
     if (arraySize < rtUceInfo.count) {
         ACL_LOG_ERROR("Failed to execute aclrtGetMemUceInfo, because arraySize %zu is less than the required size %u.",
                       arraySize, rtUceInfo.count);
@@ -380,11 +323,7 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArra
         rtUceInfo.repairAddr[i].len = memUceInfoArray[i].len;
     }
 
-    const rtError_t rtErr = rtMemUceRepair(deviceId, &rtUceInfo);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtMemUceRepair failed, device id = %d, runtime result = %d", deviceId, static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtMemUceRepair(deviceId, &rtUceInfo));
     return ACL_SUCCESS;
 }
 
@@ -395,11 +334,7 @@ aclError aclrtGetEventIdImpl(aclrtEvent event, uint32_t *eventId)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(eventId);
 
-    const rtError_t rtErr = rtsEventGetId(static_cast<rtEvent_t>(event), eventId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsEventGetId failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsEventGetId(static_cast<rtEvent_t>(event), eventId));
 
     ACL_LOG_INFO("successfully execute aclrtGetEventId");
     return ACL_SUCCESS;
@@ -411,11 +346,7 @@ aclError aclrtGetEventAvailNumImpl(uint32_t *eventCount)
     ACL_LOG_INFO("start to execute aclrtGetEventAvailNum");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(eventCount);
 
-    const rtError_t rtErr = rtsEventGetAvailNum(eventCount);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtsEventGetAvailNum failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsEventGetAvailNum(eventCount));
 
     ACL_LOG_INFO("successfully execute aclrtGetEventAvailNum");
     return ACL_SUCCESS;
@@ -433,7 +364,7 @@ aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo *errorInfo)
     uint32_t rtsDeviceId = static_cast<uint32_t>(deviceId);
     rtErrorInfo rtsErrorInfo = {};
     // Call RTS interface
-    ACL_REQUIRES_CALL_RTS_OK(rtsGetErrorVerbose(rtsDeviceId, &rtsErrorInfo), rtsGetErrorVerbose);
+    ACL_REQUIRES_RTS_OK(rtsGetErrorVerbose(rtsDeviceId, &rtsErrorInfo));
     aclrtMemUceInfoArray *uceInfo = &(errorInfo->detail.uceInfo);
     errorInfo->tryRepair = rtsErrorInfo.tryRepair;
     errorInfo->hasDetail = rtsErrorInfo.hasDetail;
@@ -474,7 +405,7 @@ aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo *errorInfo)
         }
     }
     // Call RTS interface
-    ACL_REQUIRES_CALL_RTS_OK(rtsRepairError(rtsDeviceId, &rtsErrorInfo), rtsRepairError);
+    ACL_REQUIRES_RTS_OK(rtsRepairError(rtsDeviceId, &rtsErrorInfo));
     ACL_LOG_INFO("successfully execute aclrtRepairError");
     return ACL_SUCCESS;
 }
@@ -485,11 +416,7 @@ aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent even
     ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithTimeout, timeout is %d", timeout);
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= 0, timeout, "[0, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
-    const rtError_t rtErr = rtsEventWait(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtStreamWaitEventWithTimeout failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtsEventWait(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout));
     ACL_LOG_INFO("successfully execute aclrtStreamWaitEventWithTimeout");
     return ACL_SUCCESS;
 }
@@ -500,15 +427,7 @@ aclError aclrtIpcGetEventHandleImpl(aclrtEvent event, aclrtIpcEventHandle *handl
     ACL_LOG_INFO("start to execute aclrtIpcGetEventHandle.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    const rtError_t rtErr = rtIpcGetEventHandle(static_cast<rtEvent_t>(event), reinterpret_cast<rtIpcEventHandle_t*>(handle));
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtIpcGetEventHandle unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call rtIpcGetEventHandle Failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtIpcGetEventHandle(static_cast<rtEvent_t>(event), reinterpret_cast<rtIpcEventHandle_t*>(handle)), rtIpcGetEventHandle);
     ACL_LOG_INFO("successfully execute aclrtIpcGetEventHandle.");
     return ACL_SUCCESS;
 }
@@ -519,15 +438,7 @@ aclError aclrtIpcOpenEventHandleImpl(aclrtIpcEventHandle handle, aclrtEvent *eve
     ACL_LOG_INFO("start to execute aclrtIpcOpenEventHandle.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     rtEvent_t rtEvent = nullptr;
-    const rtError_t rtErr = rtIpcOpenEventHandle(*(rtIpcEventHandle_t*)&handle, &rtEvent);
-    if (rtErr != RT_ERROR_NONE) {
-        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtIpcOpenEventHandle unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
-        } else {
-            ACL_LOG_CALL_ERROR("call rtIpcOpenEventHandle Failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        }
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtIpcOpenEventHandle(*(rtIpcEventHandle_t*)&handle, &rtEvent), rtIpcOpenEventHandle);
     *event = static_cast<aclrtEvent>(rtEvent);
     ACL_LOG_INFO("successfully execute aclrtIpcOpenEventHandle.");
     return ACL_SUCCESS;

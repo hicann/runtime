@@ -21,16 +21,10 @@ namespace acl {
         ACL_LOG_INFO("Start to acltdtCreateQueue");
         ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qid);
         int32_t deviceId = 0;
-        rtError_t rtRet = RT_ERROR_NONE;
-        rtRet = rtGetDevice(&deviceId);
-        if (rtRet != ACL_SUCCESS) {
-            ACL_LOG_CALL_ERROR("[Get][DeviceId]fail to get deviceId errorCode = %d", rtRet);
-            return rtRet;
-        }
+        ACL_REQUIRES_RTS_OK(rtGetDevice(&deviceId));
         const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
         const rtError_t ret =  rtMemQueueInit(deviceId);
         if ((ret != ACL_RT_SUCCESS) && (ret != ACL_ERROR_RT_REPEATED_INIT)) {
-            ACL_LOG_INNER_ERROR("queue init failed, ret is %d", ret);
             return ret;
         }
         ACL_REQUIRES_OK(acltdtCreateQueueWithAttr(deviceId, attr, qid));
@@ -41,7 +35,7 @@ namespace acl {
     aclError QueueProcessorHost::acltdtDestroyQueue(const uint32_t qid)
     {
         int32_t deviceId = 0;
-        ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtGetDevice(&deviceId), rtGetDevice);
         // get qs id
         int32_t qsPid = 0;
         size_t routeNum = 0UL;
@@ -65,7 +59,7 @@ namespace acl {
             ACL_LOG_ERROR("qid [%u] can not be destroyed, it needs to be unbound first.", qid);
             return ACL_ERROR_FAILURE;
         }
-        ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
         DeleteMutexForData(qid);
         return ACL_SUCCESS;
     }
@@ -75,7 +69,7 @@ namespace acl {
         ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         int32_t deviceId = 0;
-        ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtGetDevice(&deviceId), rtGetDevice);
         ACL_REQUIRES_OK(InitQueueSchedule(deviceId));
         // get dst pid
         int32_t dstPid = 0;
@@ -104,7 +98,7 @@ namespace acl {
         ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         int32_t deviceId = 0;
-        ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtGetDevice(&deviceId), rtGetDevice);
         // get dst pid
         int32_t dstPid = 0;
         ACL_REQUIRES_OK(GetDstInfo(deviceId, CP_PID, dstPid));
@@ -131,7 +125,7 @@ namespace acl {
         ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtQueryQueueRoutes");
         int32_t deviceId = 0;
-        ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtGetDevice(&deviceId), rtGetDevice);
         // get dst id
         int32_t dstPid = 0;
         ACL_REQUIRES_OK(GetDstInfo(deviceId, CP_PID, dstPid));
@@ -163,7 +157,7 @@ namespace acl {
         ACL_LOG_INFO("route size is %zu, queue route num is %zu", routeSize, qRouteList->routeList.size());
         void *devPtr = nullptr;
         constexpr uint32_t flags = RT_MEMORY_DEFAULT | RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY;
-        ACL_REQUIRES_CALL_RTS_OK(rtMalloc(&devPtr, routeSize, flags, acl::ACL_MODE_ID_U16), rtMalloc);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMalloc(&devPtr, routeSize, flags, acl::ACL_MODE_ID_U16), rtMalloc);
         ACL_CHECK_MALLOC_RESULT(devPtr);
         (void)rtMemset(devPtr, routeSize, 0U, routeSize);
         bqs::QsRouteHead head = {0U, 0U, 0U, 0UL};
@@ -173,7 +167,6 @@ namespace acl {
             isBind ? static_cast<uint32_t>(bqs::ACL_BIND_QUEUE) : static_cast<uint32_t>(bqs::ACL_UNBIND_QUEUE);
         auto ret = rtMemcpy(devPtr, routeSize, &head, sizeof(head), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -186,7 +179,6 @@ namespace acl {
             ret = rtMemcpy((static_cast<uint8_t *>(devPtr) + offset), (routeSize - offset), &tmpRoute,
                 sizeof(tmpRoute), RT_MEMCPY_HOST_TO_DEVICE);
             if (ret != ACL_RT_SUCCESS) {
-                ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
                 (void)rtFree(devPtr);
                 devPtr = nullptr;
                 return ret;
@@ -204,7 +196,6 @@ namespace acl {
         eventSum.msgLen = 0U;
         eventSum.msg = nullptr;
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR("[Call][Rts]call rts api rtEschedSubmitEventSync failed.");
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -222,7 +213,6 @@ namespace acl {
             ret = rtMemcpy(&retRoute, sizeof(retRoute), (static_cast<uint8_t *>(devPtr) + offset),
                 sizeof(retRoute), RT_MEMCPY_DEVICE_TO_HOST);
             if (ret != ACL_RT_SUCCESS) {
-                ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
                 (void)rtFree(devPtr);
                 devPtr = nullptr;
                 return ret;
@@ -253,7 +243,7 @@ namespace acl {
         ACL_LOG_INFO("route size is %zu, queue route num is %zu", routeSize, qRouteList->routeList.size());
         void *devPtr = nullptr;
         constexpr uint32_t flags = RT_MEMORY_DEFAULT | RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY;
-        ACL_REQUIRES_CALL_RTS_OK(rtMalloc(&devPtr, routeSize, flags, acl::ACL_MODE_ID_U16), rtMalloc);
+        ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMalloc(&devPtr, routeSize, flags, acl::ACL_MODE_ID_U16), rtMalloc);
         ACL_CHECK_MALLOC_RESULT(devPtr);
         (void)rtMemset(devPtr, routeSize, 0U, routeSize);
         bqs::QsRouteHead head = {0U, 0U, 0U, 0UL};
@@ -262,7 +252,6 @@ namespace acl {
         head.subEventId = bqs::ACL_QUERY_QUEUE;
         auto ret = rtMemcpy(devPtr, routeSize, &head, sizeof(head), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -275,7 +264,6 @@ namespace acl {
         ret = rtMemcpy((static_cast<uint8_t *>(devPtr) + offset), (routeSize - offset), &routeQuery,
             sizeof(routeQuery), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -308,7 +296,6 @@ namespace acl {
             ret = rtMemcpy(&retRoute, sizeof(retRoute), (static_cast<uint8_t *>(devPtr) + offset),
                 sizeof(retRoute), RT_MEMCPY_DEVICE_TO_HOST);
             if (ret != ACL_RT_SUCCESS) {
-                ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
                 (void)rtFree(devPtr);
                 devPtr = nullptr;
                 return ret;

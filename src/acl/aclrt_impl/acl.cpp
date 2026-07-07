@@ -147,13 +147,7 @@ namespace {
             return ACL_SUCCESS;
         }
 
-        const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
-        if (rtErr != RT_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR(
-                "set limit (%s %zu) failed, runtime result = %d.", typeName.c_str(), stackSize,
-                static_cast<int32_t>(rtErr));
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+        ACL_REQUIRES_RTS_OK(rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize)));
         ACL_LOG_INFO("get %s stack size %zu success\n", typeName.c_str(), stackSize);
         return ACL_SUCCESS;
     }
@@ -189,12 +183,7 @@ namespace {
             return ACL_SUCCESS;
         }
 
-        const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize));
-        if (rtErr != RT_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR("set limit (%s %zu) failed, runtime result = %d.", typeName.c_str(), fifoSize,
-                static_cast<int32_t>(rtErr));
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
+        ACL_REQUIRES_RTS_OK(rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize)));
         ACL_LOG_INFO("set %s fifo size %zu success", typeName.c_str(), fifoSize);
         return ACL_SUCCESS;
     }
@@ -311,7 +300,7 @@ aclError HandleEventModeConfig(const char_t *const configPath) {
         return ACL_SUCCESS;
     }
     ACL_LOG_INFO("event mode is set [%d].", event_mode);
-    ACL_REQUIRES_CALL_RTS_OK(rtEventWorkModeSet(event_mode), rtEventWorkModeSet);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtEventWorkModeSet(event_mode), rtEventWorkModeSet);
     ACL_LOG_INFO("Successfully handled event mode config.");
     return ACL_SUCCESS;
 }
@@ -333,11 +322,7 @@ aclError HandleDefaultDeviceAndStackSize(const char_t *const configPath) {
     if (defaultDeviceId == INVALID_DEFAULT_DEVICE) {
         return ACL_SUCCESS;
     }
-    const rtError_t rtErr = rtSetDefaultDeviceId(defaultDeviceId);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("set default device id failed, ret:%d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtSetDefaultDeviceId(defaultDeviceId));
     isEnableDefaultDevice = true;
     ACL_LOG_INFO("set default device %d success\n", defaultDeviceId);
     return ACL_SUCCESS;
@@ -1327,11 +1312,7 @@ aclError aclGetDeviceCapabilityImpl(uint32_t deviceId, aclDeviceInfo deviceInfo,
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     int32_t count = -1;
-    const rtError_t rtErr = rtGetDeviceCount(&count);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("get device count failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+    ACL_REQUIRES_RTS_OK(rtGetDeviceCount(&count));
     // currently check only, deviceId with [0, count - 1]
     if (deviceId > static_cast<uint32_t>(count - 1)) {
         ACL_LOG_ERROR("%s failed because deviceId %u greater than deviceNum %d.",
