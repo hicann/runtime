@@ -62,20 +62,20 @@ CondHandle::~CondHandle() noexcept
 rtError_t CondHandle::Setup(Context *ctx)
 {
     if (ctx == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Context is null, failed to setup cond handle.");
+        RT_LOG(RT_LOG_ERROR, "Context is null, failed to setup cond handle.");
         return RT_ERROR_CONTEXT_NULL;
     }
 
     context_ = ctx;
     Device *dev = ctx->Device_();
     if (dev == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Device is null, failed to setup cond handle.");
+        RT_LOG(RT_LOG_ERROR, "Device is null, failed to setup cond handle.");
         return RT_ERROR_DEVICE_NULL;
     }
 
     Driver *driver = dev->Driver_();
     if (driver == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Driver is null, failed to setup cond handle.");
+        RT_LOG(RT_LOG_ERROR, "Driver is null, failed to setup cond handle.");
         return RT_ERROR_DRV_NULL;
     }
 

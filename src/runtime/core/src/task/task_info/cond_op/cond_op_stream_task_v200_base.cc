@@ -198,8 +198,8 @@ void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDa
     ConstructFunctionCallInstr(funcAddr, (condTaskInfo->jumpBackFunCallMemSize / 4UL), sqe);
 
     PrintDavidSqe(davidSqe, "CaptureConditionTaskJumpBackDavid");
-    RT_LOG(RT_LOG_INFO, "CaptureConditionTaskJumpBackDavid, deviceId=%u, streamId=%d, taskId=%hu.",
-        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id);
+    RT_LOG(RT_LOG_INFO, "CaptureConditionTaskJumpBackDavid, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
+        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn);
 }
 
 void ConstructDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)

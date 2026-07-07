@@ -1412,6 +1412,8 @@ void Context::SubModelDestroy(Model *subMdl)
 
 rtError_t Context::ModelDestroy(Model *mdl)
 {
+    COND_RETURN_EVENT(!ModelIsExistInContext(mdl), RT_ERROR_NONE, "model model_id=%u is not exist in ctx.", mdl->Id_());
+
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         if (captureModel->IsCapturing()) {

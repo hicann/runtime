@@ -26,7 +26,7 @@ static rtError_t StreamBeginCaptureMdlCheck(Model * const mdl)
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     COND_RETURN_ERROR(captureModel == nullptr, RT_ERROR_MODEL_NULL, "the ACL Graph is null.");
     if (!captureModel->IsSubCaptureModel()) {
-        RT_LOG(RT_LOG_ERROR, "StreamBeginCapture does not support the ACL Graph");
+        RT_LOG(RT_LOG_ERROR, "Stream begin capture does not support the ACL Graph, model_id=%u.", mdl->Id_());
         return RT_ERROR_INVALID_VALUE;
     }
 
