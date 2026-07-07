@@ -13,8 +13,8 @@
 
 #include <unordered_map>
 #include <memory>
-#include <cstdio>
 #include <string>
+#include "securec.h"
 #include "acl/acl_base.h"
 #include "acl/acl_rt.h"
 #include "acl/acl_tdt_queue.h"
@@ -24,10 +24,6 @@
 #include "acl_tdt_channel/tensor_data_transfer.h"
 
 namespace acl {
-
-inline std::string FormatEnumUnknownStr(const std::string &typeName, int32_t val) {
-    return "UNKNOWN_" + typeName + "(" + std::to_string(val) + ")";
-}
 
 inline const char* GetDataTypeDesc(aclDataType type) {
     static const std::unordered_map<aclDataType, const char*> dataTypeDescMap = {
@@ -63,9 +59,9 @@ inline const char* GetDataTypeDesc(aclDataType type) {
 
     auto it = dataTypeDescMap.find(type);
     if (it != dataTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclDataType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetMemcpyKindDesc(aclrtMemcpyKind kind) {
@@ -82,9 +78,9 @@ inline const char* GetMemcpyKindDesc(aclrtMemcpyKind kind) {
 
     auto it = memcpyKindDescMap.find(kind);
     if (it != memcpyKindDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtMemcpyKind", static_cast<int32_t>(kind));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(kind));
+    return enumBuf;
 }
 
 inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type) {
@@ -99,9 +95,9 @@ inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type) {
 
     auto it = exceptionExpandTypeDescMap.find(type);
     if (it != exceptionExpandTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("rtExceptionExpandType_t", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetGroupAttrDesc(aclrtGroupAttr attr) {
@@ -116,9 +112,9 @@ inline const char* GetGroupAttrDesc(aclrtGroupAttr attr) {
 
     auto it = groupAttrDescMap.find(attr);
     if (it != groupAttrDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtGroupAttr", static_cast<int32_t>(attr));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    return enumBuf;
 }
 
 inline const char* GetTsIdDesc(aclrtTsId tsId) {
@@ -130,9 +126,9 @@ inline const char* GetTsIdDesc(aclrtTsId tsId) {
 
     auto it = tsIdDescMap.find(tsId);
     if (it != tsIdDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtTsId", static_cast<int32_t>(tsId));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(tsId));
+    return enumBuf;
 }
 
 inline const char* GetQueueRouteQueryModeDesc(acltdtQueueRouteQueryMode mode) {
@@ -145,9 +141,9 @@ inline const char* GetQueueRouteQueryModeDesc(acltdtQueueRouteQueryMode mode) {
 
     auto it = queueRouteQueryModeDescMap.find(mode);
     if (it != queueRouteQueryModeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteQueryMode", static_cast<int32_t>(mode));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    return enumBuf;
 }
 
 inline const char* GetQueueAttrTypeDesc(acltdtQueueAttrType type) {
@@ -158,9 +154,9 @@ inline const char* GetQueueAttrTypeDesc(acltdtQueueAttrType type) {
 
     auto it = queueAttrTypeDescMap.find(type);
     if (it != queueAttrTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtQueueAttrType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetQueueRouteParamTypeDesc(acltdtQueueRouteParamType type) {
@@ -172,9 +168,9 @@ inline const char* GetQueueRouteParamTypeDesc(acltdtQueueRouteParamType type) {
 
     auto it = queueRouteParamTypeDescMap.find(type);
     if (it != queueRouteParamTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteParamType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetQueueRouteQueryInfoParamTypeDesc(acltdtQueueRouteQueryInfoParamType type) {
@@ -186,9 +182,9 @@ inline const char* GetQueueRouteQueryInfoParamTypeDesc(acltdtQueueRouteQueryInfo
 
     auto it = queueRouteQueryInfoParamTypeDescMap.find(type);
     if (it != queueRouteQueryInfoParamTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtQueueRouteQueryInfoParamType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetAllocBufTypeDesc(acltdtAllocBufType type) {
@@ -199,9 +195,9 @@ inline const char* GetAllocBufTypeDesc(acltdtAllocBufType type) {
 
     auto it = allocBufTypeDescMap.find(type);
     if (it != allocBufTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtAllocBufType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetTensorTypeDesc(acltdtTensorType type) {
@@ -216,9 +212,9 @@ inline const char* GetTensorTypeDesc(acltdtTensorType type) {
 
     auto it = tensorTypeDescMap.find(type);
     if (it != tensorTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("acltdtTensorType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetSysParamOptDesc(aclSysParamOpt opt) {
@@ -230,9 +226,9 @@ inline const char* GetSysParamOptDesc(aclSysParamOpt opt) {
 
     auto it = sysParamOptDescMap.find(opt);
     if (it != sysParamOptDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclSysParamOpt", static_cast<int32_t>(opt));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(opt));
+    return enumBuf;
 }
 
 inline const char* GetCallbackBlockTypeDesc(aclrtCallbackBlockType type) {
@@ -243,9 +239,9 @@ inline const char* GetCallbackBlockTypeDesc(aclrtCallbackBlockType type) {
 
     auto it = callbackBlockTypeDescMap.find(type);
     if (it != callbackBlockTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtCallbackBlockType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type) {
@@ -258,9 +254,9 @@ inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type) {
 
     auto it = memLocationTypeDescMap.find(type);
     if (it != memLocationTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtMemLocationType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetMemAllocationTypeDesc(aclrtMemAllocationType type) {
@@ -270,9 +266,9 @@ inline const char* GetMemAllocationTypeDesc(aclrtMemAllocationType type) {
 
     auto it = memAllocationTypeDescMap.find(type);
     if (it != memAllocationTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtMemAllocationType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetTdtDataTypeDesc(tdt::TdtDataType type) {
@@ -288,9 +284,9 @@ inline const char* GetTdtDataTypeDesc(tdt::TdtDataType type) {
 
     auto it = tdtDataTypeDescMap.find(type);
     if (it != tdtDataTypeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("TdtDataType", static_cast<int32_t>(type));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    return enumBuf;
 }
 
 inline const char* GetTdtDataTypeDescV2(int32_t type) {
@@ -309,9 +305,9 @@ inline const char* GetTdtDataTypeDescV2(int32_t type) {
 
     auto it = tdtDataTypeDescV2Map.find(type);
     if (it != tdtDataTypeDescV2Map.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("TdtDataTypeV2", type);
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", type);
+    return enumBuf;
 }
 
 inline const char* GetRunModeDesc(aclrtRunMode mode) {
@@ -322,9 +318,9 @@ inline const char* GetRunModeDesc(aclrtRunMode mode) {
 
     auto it = runModeDescMap.find(mode);
     if (it != runModeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtRunMode", static_cast<int32_t>(mode));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    return enumBuf;
 }
 
 inline const char* GetCaptureModeDesc(aclmdlRICaptureMode mode) {
@@ -336,9 +332,9 @@ inline const char* GetCaptureModeDesc(aclmdlRICaptureMode mode) {
 
     auto it = captureModeDescMap.find(mode);
     if (it != captureModeDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclmdlRICaptureMode", static_cast<int32_t>(mode));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    return enumBuf;
 }
 
 inline const char* GetLastErrLevelDesc(aclrtLastErrLevel level) {
@@ -348,9 +344,9 @@ inline const char* GetLastErrLevelDesc(aclrtLastErrLevel level) {
 
     auto it = lastErrLevelDescMap.find(level);
     if (it != lastErrLevelDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtLastErrLevel", static_cast<int32_t>(level));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(level));
+    return enumBuf;
 }
 
 inline const char* GetDeviceInfoDesc(aclDeviceInfo info) {
@@ -363,9 +359,9 @@ inline const char* GetDeviceInfoDesc(aclDeviceInfo info) {
 
     auto it = deviceInfoDescMap.find(info);
     if (it != deviceInfoDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclDeviceInfo", static_cast<int32_t>(info));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(info));
+    return enumBuf;
 }
 
 inline const char* GetMemAttrDesc(aclrtMemAttr attr) {
@@ -392,9 +388,9 @@ inline const char* GetMemAttrDesc(aclrtMemAttr attr) {
 
     auto it = memAttrDescMap.find(attr);
     if (it != memAttrDescMap.end()) { return it->second; }
-    static thread_local std::string enumBuf;
-    enumBuf = FormatEnumUnknownStr("aclrtMemAttr", static_cast<int32_t>(attr));
-    return enumBuf.c_str();
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    return enumBuf;
 }
 
 static inline std::string DatasetMemTypeToString(const datasetMemType type)

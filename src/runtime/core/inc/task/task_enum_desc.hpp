@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <string>
+#include "runtime/rt_external_preload.h"
 #include "runtime/rt_external_stars.h"
 #include "rt_log.h"
 

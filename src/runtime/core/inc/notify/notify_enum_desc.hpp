@@ -13,7 +13,8 @@
 
 #include <cstdint>
 #include <string>
-#include "runtime/config.h"
+#include "runtime/event.h"
+#include "runtime/rts/rts_event.h"
 #include "rt_log.h"
 
 namespace cce {
