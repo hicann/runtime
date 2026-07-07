@@ -30,6 +30,7 @@ constexpr uint32_t P2P_ALIGNED = 0x10U;
 constexpr uint32_t DEFAULT = 0U;
 constexpr uint32_t DEVICE_RINGBUFFER_SIZE = 2U * 1024U * 1024U; // 2M
 constexpr uint32_t DEVICE_RINGBUFFER_SIZE_ON_95_96 = 4U * 1024U * 1024U; // 4M
+constexpr uint8_t PREFETCH_CNT_4 = 4U;
 constexpr uint8_t PREFETCH_CNT_8 = 8U;
 constexpr uint32_t PREFETCH_CNT_10 = 10U;
 constexpr int32_t MAX_GROUP_ID = 3;

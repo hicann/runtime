@@ -315,5 +315,36 @@ rtError_t NpuDriver::StreamMemPoolAsyncConfig(const uint32_t deviceId, const uin
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t NpuDriver::DevMemAllocHugePageManaged(void ** const dptr, const uint64_t size, const rtMemType_t type,
+    const uint32_t deviceId, const uint16_t moduleId, const bool isLogError, const bool readOnlyFlag,
+    const bool cpOnlyFlag)
+{
+    UNUSED(dptr);
+    UNUSED(size);
+    UNUSED(type); 
+    UNUSED(deviceId);
+    UNUSED(moduleId);
+    UNUSED(isLogError);
+    UNUSED(readOnlyFlag);
+    UNUSED(cpOnlyFlag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::DevMemAllocManaged(void ** const dptr, const uint64_t size, const rtMemType_t type,
+    const uint32_t deviceId, const uint16_t moduleId, const bool isLogError, const bool readOnlyFlag,
+    const bool starsTillingFlag, const bool cpOnlyFlag) const
+{
+    UNUSED(dptr);
+    UNUSED(size);
+    UNUSED(type);
+    UNUSED(deviceId);
+    UNUSED(moduleId);
+    UNUSED(isLogError);
+    UNUSED(readOnlyFlag);
+    UNUSED(starsTillingFlag);
+    UNUSED(cpOnlyFlag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }

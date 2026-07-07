@@ -761,6 +761,12 @@ private:
     int64_t addrMode_ = 0;
 };
 
+static inline uint64_t FlagAddModuleId(uint64_t drvFlag, uint16_t moduleId)
+{
+    return (drvFlag | (static_cast<uint64_t>(moduleId) << 56U)); // 56 is shift. flag high 8 bit for moduleId
+}
+
+
 }  // namespace runtime
 }  // namespace cce
 

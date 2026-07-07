@@ -232,3 +232,35 @@ target_link_libraries(runtime_platform_tiny PRIVATE
     $<BUILD_INTERFACE:atrace_headers>
 )
 endmacro()
+
+macro(runtime_platform_arch5162_obj target_name)
+add_library(runtime_platform_arch5162 OBJECT
+    ${RUNTIME_DIR}/src/runtime/config/arch5162/dev_info_reg.cc
+)
+
+target_include_directories(runtime_platform_arch5162 PRIVATE
+    ${RUNTIME_INC_DIR_COMMON_PLATFORM}
+)
+
+target_compile_options(runtime_platform_arch5162 PRIVATE
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
+        -fvisibility=hidden
+        -fno-common
+        -fno-strict-aliasing
+        -Werror
+        -Werror=missing-field-initializers
+        -Wextra
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
+)
+
+target_link_libraries(runtime_platform_arch5162 PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:msprof_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
+    $<BUILD_INTERFACE:atrace_headers>
+)
+endmacro()

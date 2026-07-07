@@ -36,6 +36,7 @@ typedef enum tagRtChipType {
     CHIP_MC62CM12A = 17,  /* MC62CM12A */
     CHIP_MC32DM11A = 18,  /* MC32DM11A */
     CHIP_ASCEND_350 = 19, /* Ascend350 */
+    CHIP_5162A = 20,
     CHIP_XPU,             /* XPU，无驱动值，但是有task处理，值不需要固定，无ini配置文件 */
     CHIP_END,             /* 常规芯片类型结束边界（运行时涉及芯片，除 XPU 外，和驱动定义的值一致） */
 

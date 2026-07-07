@@ -924,5 +924,150 @@ rtError_t NpuDriver::StreamMemPoolGetAttr(const uint32_t deviceId, const uint64_
     return RT_ERROR_NONE;
 }
 
+static inline uint64_t FlagAddReadBit(uint64_t drvFlag)
+{
+    return (drvFlag | (static_cast<uint64_t>(RT_MEM_DEV_READONLY) << RT_MEM_DEV_READONLY_BIT));
+}
+
+static inline uint64_t FlagAddCpOnlyBit(uint64_t drvFlag)
+{
+    return (drvFlag | static_cast<uint64_t>(MEM_DEV_CP_ONLY));
+}
+
+rtError_t NpuDriver::DevMemAllocHugePageManaged(void ** const dptr, const uint64_t size, const rtMemType_t type,
+    const uint32_t deviceId, const uint16_t moduleId, const bool isLogError, const bool readOnlyFlag,
+    const bool cpOnlyFlag)
+{
+    drvError_t drvRet;
+    uint64_t drvFlag = 0;
+
+    if (type == RT_MEMORY_P2P_DDR) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_DDR) |
+            static_cast<uint64_t>(MEM_ADVISE_P2P) | static_cast<uint64_t>(MEM_PAGE_HUGE) |
+            static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if (type == RT_MEMORY_P2P_HBM) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_HBM) |
+            static_cast<uint64_t>(MEM_PAGE_HUGE) | static_cast<uint64_t>(MEM_ADVISE_P2P) |
+            static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if (type == RT_MEMORY_DDR) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_DDR) |
+            static_cast<uint64_t>(MEM_PAGE_HUGE) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if ((type == RT_MEMORY_TS) && ((GetDevProperties().hugeManagedFlag & TS_4G_CONTIGUOUS_PHY) != 0)) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_ADVISE_TS) |
+            static_cast<uint64_t>(MEM_ADVISE_4G) | static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if ((type == RT_MEMORY_TS) && ((GetDevProperties().hugeManagedFlag & TS_PAGE_HUGE_ALIGNED) != 0)) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_ADVISE_TS) |
+            static_cast<uint64_t>(MEM_PAGE_HUGE) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+        if ((GetDevProperties().hugeManagedFlag & TS_WITH_HBM) != 0) {
+            drvFlag = drvFlag | static_cast<uint64_t>(MEM_TYPE_HBM);
+        }
+    } else if ((type == RT_MEMORY_HOST_SVM) && ((GetDevProperties().hugeManagedFlag & SVM_HOST_AGENT) != 0)) {
+        drvFlag = static_cast<uint64_t>(MEM_HOST_AGENT) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_HBM) |
+            static_cast<uint64_t>(MEM_PAGE_HUGE) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    }
+
+    if (readOnlyFlag) {
+        drvFlag = FlagAddReadBit(drvFlag);
+    }
+
+    if (cpOnlyFlag) {
+        drvFlag = FlagAddCpOnlyBit(drvFlag);
+    }
+
+    drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
+    if (drvRet != DRV_ERROR_NONE) {
+        const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
+        if (isLogError) {
+            const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
+            DRV_MALLOC_ERROR_PROCESS(drvRet, moduleId, "Call driver api halMemAlloc failed, drvRetCode=%d, "
+                "size=%" PRIu64 "(bytes), type=%d, moduleId=%hu, drvFlag=%#" PRIx64 ", drvDevId=%u, %s.",
+                static_cast<int32_t>(drvRet), size, type, moduleId, drvFlag, deviceId, errorStr.c_str());
+        } else {
+            RT_LOG(RT_LOG_WARNING, "[drv api] halMemAlloc failed:size=%" PRIu64
+                    "(bytes), type=%u, moduleId=%hu, drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u.",
+                   size, type, moduleId, drvFlag, static_cast<int32_t>(drvRet), deviceId);
+        }
+        return rtErrorCode;
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "device_id=%u,type=%u,size=%" PRIu64 "(bytes), chip type=%d, moduleId=%hu.",
+           deviceId, static_cast<uint32_t>(type), size, static_cast<int32_t>(chipType_), moduleId);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::DevMemAllocManaged(void ** const dptr, const uint64_t size, const rtMemType_t type,
+    const uint32_t deviceId, const uint16_t moduleId, const bool isLogError, const bool readOnlyFlag,
+    const bool starsTillingFlag, const bool cpOnlyFlag) const
+{
+    drvError_t drvRet;
+    uint64_t drvFlag = 0;
+
+    if (type == RT_MEMORY_P2P_DDR) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_DDR) |
+            static_cast<uint64_t>(MEM_ADVISE_P2P) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if (type == RT_MEMORY_P2P_HBM) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_HBM) |
+            static_cast<uint64_t>(MEM_ADVISE_P2P) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if (type == RT_MEMORY_DDR) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_DDR) |
+            static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if ((type == RT_MEMORY_TS) && (GetDevProperties().allocManagedFlag == AllocManagedFlag::ALLOC_MANAGED_MEM_ADVISE_4G)) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_ADVISE_TS) |
+                  static_cast<uint64_t>(MEM_ADVISE_4G) | static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) |
+                  static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if ((type == RT_MEMORY_TS) && (GetDevProperties().allocManagedFlag == AllocManagedFlag::ALLOC_MANAGED_MEM_SET_ALIGN_SIZE)) {
+        drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_ADVISE_TS) |
+            static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) | static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else if ((type == RT_MEMORY_HOST_SVM) && (GetDevProperties().allocManagedFlag == AllocManagedFlag::ALLOC_MANAGED_MEM_HOST_AGENT)) {
+        drvFlag = static_cast<uint64_t>(MEM_HOST_AGENT) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    } else {
+        if (starsTillingFlag == true) {
+            drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) |
+                static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_ADVISE_TS) |
+                static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+        } else {
+            drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_TYPE_HBM) |
+                static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+        }
+    }
+
+    if (readOnlyFlag) {
+        drvFlag = FlagAddReadBit(drvFlag);
+    }
+
+    COND_PROC(cpOnlyFlag == true, drvFlag = FlagAddCpOnlyBit(drvFlag));
+
+    drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
+    if (drvRet != DRV_ERROR_NONE) {
+        const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
+        if (isLogError) {
+            const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
+            DRV_MALLOC_ERROR_PROCESS(drvRet, moduleId, "Call driver api halMemAlloc failed, drvRetCode=%d, "
+                "size=%" PRIu64 "(bytes), type=%d, moduleId=%hu, drvFlag=%#" PRIx64 ", drvDevId=%u, %s.",
+                static_cast<int32_t>(drvRet), size, type, moduleId, drvFlag, deviceId, errorStr.c_str());
+        } else {
+            RT_LOG(RT_LOG_WARNING, "[drv api] halMemAlloc failed:size=%" PRIu64
+                    "(bytes), type=%d, moduleId=%hu, drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u!",
+                   size, type, moduleId, drvFlag, static_cast<int32_t>(drvRet), deviceId);
+        }
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "device_id=%u, type=%u, size=%" PRIu64 "(bytes), chip type=%d, moduleId=%hu, tillFlag=%d",
+           deviceId, static_cast<uint32_t>(type), size, static_cast<int32_t>(chipType_), moduleId, starsTillingFlag);
+    return RT_ERROR_NONE;
+}
+
 }
 }
