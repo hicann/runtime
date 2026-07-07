@@ -3305,6 +3305,13 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo * const tsk, const uint32_t send
             "Pack task group failed, stream_id=%d, task_id=%hu.", streamId_, tsk->id);
         taskPersistentTail_.Set(newPosTail);
         delayRecycleTaskid_.push_back(tsk->id);
+
+        Model *model = tsk->stream->Model_();
+        if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+            tsk->modelSeqId = dynamic_cast<CaptureModel *>(model)->GenerateSeqId();
+            RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, sequence id=%u.",
+                tsk->stream->Device_()->Id_(), streamId_, tsk->id, tsk->modelSeqId);
+        }
     } else {
         const uint32_t posHead = bind ? taskPersistentHead_.Value() : taskPosHead_.Value();
         const bool stmFullFlag = IsStreamFull(posHead, posTail, rtsqDepth, sendSqeNum);

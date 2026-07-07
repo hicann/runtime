@@ -933,8 +933,9 @@ TEST_F(TinyStubTest, capture_model_sqcq_stub)
     CaptureModel captureModel(RT_MODEL_NORMAL);
     EXPECT_EQ(captureModel.BuildSqCq(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     captureModel.DeconstructSqCq();
-    uint32_t releaseNum = 0;
-    EXPECT_EQ(captureModel.ReleaseSqCq(releaseNum), RT_ERROR_FEATURE_NOT_SUPPORT);
+    uint32_t releaseSqNum = 0;
+    uint32_t releaseNtyNum = 0;
+    EXPECT_EQ(captureModel.ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum), RT_ERROR_FEATURE_NOT_SUPPORT);
     captureModel.CaptureModelExecuteFinish(RT_ERROR_NONE);
     EXPECT_EQ(captureModel.MarkStreamActiveTask(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.RestoreForSoftwareSq(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);

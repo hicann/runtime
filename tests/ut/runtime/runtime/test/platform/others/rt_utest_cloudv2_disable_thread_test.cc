@@ -1066,6 +1066,7 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_AicpuTask)
 
     // aicpu task;
     TaskInfo task = {};
+    InitByStream(&task, (rt_ut::UnwrapOrNull<Stream>(stream1)));
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
     AicpuTaskInfo *aicpuTask = &(task.u.aicpuTaskInfo);
     aicpuTask->kernel = nullptr;

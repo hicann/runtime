@@ -68,7 +68,7 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream) { UNUSED(exeStream);
 
 void CaptureModel::DeconstructSqCq(void) {}
 
-rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum) { UNUSED(releaseNum); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t &releaseSqNum, uint32_t &releaseNtyNum) { UNUSED(releaseSqNum); UNUSED(releaseNtyNum); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 void CaptureModel::CaptureModelExecuteFinish(const uint32_t errCode) { UNUSED(errCode); }
 

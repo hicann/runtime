@@ -316,14 +316,6 @@ static rtError_t AllocCaptureTaskInfo(TaskInfo **taskInfo, Stream * const stm, u
     taskResMang = RtPtrToPtr<TaskResManageDavid *, TaskResManage *>(curCaptureStream->taskResMang_);
     if (taskResMang->AllocTaskInfoAndPos(sqeNum, pos, taskInfo) == RT_ERROR_NONE) {
         Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
-        Model *m = curCaptureStream->Model_();
-        if ((m != nullptr) && (m->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
-            (*taskInfo)->modelSeqId = dynamic_cast<CaptureModel *>(m)->GenerateSeqId();
-            RT_LOG(RT_LOG_DEBUG, "Alloc capture task, device_id=%u, origin stream_id=%d, "
-                "capture stream_id=%d, task_id=%hu, task_sn=%u, sequence id=%u.",
-                stm->Device_()->Id_(), stm->Id_(), curCaptureStream->Id_(),
-                (*taskInfo)->id, (*taskInfo)->taskSn, (*taskInfo)->modelSeqId);
-        }
     } else {
         stm->SingleStreamTerminateCapture();
     }

@@ -405,12 +405,6 @@ rtError_t Context::AddNotifyToAddedCaptureStream(Stream * const oriSingleStm, Ca
             "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
             device_->Id_(), oriSingleStm->Id_(), captureMdl->Id_(),
             streamObj.second.back()->Id_(), notify->GetNotifyId(), error);
-        TaskInfo *task = device_->GetTaskFactory()->GetTask(lastStm->Id_(), lastStm->GetLastTaskId());
-        if (task != nullptr) {
-            task->modelSeqId = captureMdl->GenerateSeqId();
-            RT_LOG(RT_LOG_INFO, "Alloc task sequence id=%u, device id=%u, stream_id=%d, task_id=%u",
-                task->modelSeqId, device_->Id_(), lastStm->Id_(), lastStm->GetLastTaskId());
-        }
         error = apiObj->NotifyWait(notify, oriSingleStm, MAX_UINT32_NUM);
         ERROR_RETURN(error,
             "Notify wait failed, device_id=%u, original stream_id=%d, "
