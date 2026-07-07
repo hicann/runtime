@@ -21,9 +21,7 @@ namespace tsd {
 ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t deviceMode)
     : ClientManager(deviceId),
       logLevel_("003"),  // error level
-      tsdSessionId_(0U),
-      devCommClient_(nullptr),
-      rspCode_(ResponseCode::FAIL),
+      commAgent_(deviceId),
       rankSize_(0U),
       aicpuPackageExistInDevice_(false),
       aicpuDeviceMode_(deviceMode),
@@ -53,10 +51,6 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
 {
     GetLogLevel();
     SetTsdStartInfo(false, false, false);
-    const auto ret = memset_s(&procSign_, sizeof(procSign_), 0x00, sizeof(procSign_));
-    if (ret != EOK) {
-        TSD_ERROR("memset set error %d.", ret);
-    }
     for (uint32_t index = 0U; index < static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX); index++) {
         packagePeerCheckCode_[index] = 0U;
         packageHostCheckCode_[index] = 0U;
@@ -65,11 +59,8 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
 
 void ProcessModeManager::Destroy()
 {
-    TSD_CHECK_NULLPTR_VOID(devCommClient_);
-    initFlag_ = false;
     SetTsdStartInfo(false, false, false);
-    devCommClient_->CommDestroy();
-    devCommClient_ = nullptr;
+    commAgent_.ReleaseDeviceConnection();
     aicpuPackageExistInDevice_ = false;
 }
 

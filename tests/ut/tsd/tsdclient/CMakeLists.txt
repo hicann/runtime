@@ -26,6 +26,7 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/aicpu_thread_package_worker.cpp
     ${TSD_SRC_PATH}/common/src/base_package_worker.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/device_comm.cpp
+    ${TSD_SRC_PATH}/basic_component/device_comm/device_comm_agent.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/hdc_client.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/hdc_common.cpp
     ${TSD_SRC_PATH}/basic_component/message_builder/hdc_message_builder.cpp

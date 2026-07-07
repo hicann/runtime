@@ -15,6 +15,7 @@
 #include "inc/package_process_config.h"
 #include "inc/plugin_pkg_version.h"
 #include "device_comm.h"
+#include "device_comm_agent.h"
 #include "driver/ascend_hal.h"
 #include "proto/tsd_message.pb.h"
 #include "hdc_message_builder.h"
@@ -172,7 +173,7 @@ public:
 
     TSD_StatusT RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen) override;
 
-    TSD_StatusT SendCommonOpenMsg(const ProcOpenArgs *procArgs) const;
+    TSD_StatusT SendCommonOpenMsg(const ProcOpenArgs *procArgs);
 
     TSD_StatusT ConstructCommonOpenMsg(HDCMessage &hdcMsg, const ProcOpenArgs *procArgs) const;
 
@@ -295,6 +296,21 @@ private:
      * @return TSD_OK when SUCCESS
      */
     TSD_StatusT WaitRsp(const uint32_t timeout, const bool ignoreRecvErr = false, const bool isClose = false);
+
+    /**
+     * @ingroup ProcessModeManager
+     * @brief 根据 startOrStopFailCode_ 映射对应的错误码
+     * @return 映射后的 TSD 错误码
+     */
+    TSD_StatusT MapFailCodeToStatus() const;
+
+    /**
+     * @ingroup ProcessModeManager
+     * @brief 构造 WaitRsp 失败时的诊断报告字符串（纯构造，不产生日志/上报副作用）
+     * @param [in] recvRet : CommRecvData 的返回值
+     * @return 构造好的报告字符串
+     */
+    std::string BuildWaitRspErrReport(const TSD_StatusT recvRet) const;
 
     /**
      * @ingroup ProcessModeManager
@@ -495,19 +511,16 @@ private:
     bool GetShortSocVersion(std::string &shortSocVersion) const;
 
     std::string logLevel_;
-    uint32_t tsdSessionId_;
-    std::shared_ptr<DeviceComm> devCommClient_;
-    process_sign procSign_;
+    DeviceCommAgent commAgent_;
+    ResponseCode rspCode_ = ResponseCode::FAIL;
     std::string errMsg_;
     std::string errorLog_;
-    // rspCode: 0 拉起hccp和cp成功  1：拉起hccp和cp失败, respond结果
-    ResponseCode rspCode_;
+    std::string startOrStopFailCode_;
     TsdStartStatusInfo tsdStartStatus_;
     uint32_t rankSize_;
     bool aicpuPackageExistInDevice_;
     uint32_t aicpuDeviceMode_;
     std::string qsInitGrpName_;
-    std::string startOrStopFailCode_;
     uint64_t schedPolicy_;
     int64_t pidQos_;
     uint32_t tsdSupportLevel_;

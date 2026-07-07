@@ -22,6 +22,7 @@ set(tdt_common_files
     ${BASE_DIR}/pub_facility/util_func/tsd_util_func.cpp
     ${BASE_DIR}/pub_facility/util_func/tsd_sha256.cpp
     ${BASE_DIR}/basic_component/device_comm/device_comm.cpp
+    ${BASE_DIR}/basic_component/device_comm/device_comm_agent.cpp
     ${BASE_DIR}/basic_component/device_comm/hdc_client.cpp
     ${BASE_DIR}/basic_component/message_builder/hdc_message_builder.cpp
     ${BASE_DIR}/common/src/message_parse_client.cpp

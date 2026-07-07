@@ -82,7 +82,7 @@ bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
 }
 
 ClientManager::ClientManager(const uint32_t &deviceId)
-    : logicDeviceId_(deviceId), initFlag_(false),
+    : logicDeviceId_(deviceId),
       profilingMode_(ProfilingMode::PROFILING_CLOSE)
 {
     GetProfilingMode();

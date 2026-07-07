@@ -11,7 +11,6 @@
 #define INNER_INC_CLIENT_MANAGER_H
 
 #include <mmpa/mmpa_api.h>
-#include <atomic>
 #include "tsd_util_func.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
@@ -217,7 +216,6 @@ protected:
     static void ResetPlatInfoFlag();
 
     uint32_t logicDeviceId_;
-    std::atomic_bool initFlag_;
     ProfilingMode profilingMode_;
     std::string packagePath_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
     static RunningMode g_runningMode;
