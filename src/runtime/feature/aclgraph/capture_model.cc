@@ -1087,11 +1087,12 @@ rtError_t CaptureModel::UpdateNotifyId(Stream * const exeStream)
         "Origin capture stream and end graph notify cannot be NULL pointers, model_id=%u.", Id_());
 
     rtError_t error = RT_ERROR_NONE;
+    rtError_t errorTmp = RT_ERROR_NONE;
     do {
         COND_PROC(ntf->GetNotifyId() != MAX_UINT32_NUM, break;); // 所有子模型共用一个notify，其中一个申请，其他的就不用再申请了
         error = ntf->AllocId();
-        COND_PROC(error != RT_ERROR_NONE, error = Context_()->TryRecycleCaptureModelResource(0U, 1U, this));
-        COND_PROC(error != RT_ERROR_NONE, mmSleep(1U));
+        COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(0U, 1U, this));
+        COND_PROC(errorTmp != RT_ERROR_NONE, mmSleep(1U));
     } while (error != RT_ERROR_NONE);
 
     if (!this->IsSubCaptureModel()) { // 只有根模型才刷新，其他各层级子模型发给ts的notify id均为根模型的id，异常时直接解执行流的endgraph wait
@@ -1190,16 +1191,18 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
 
 void CaptureModel::DeconstructSqCq(void)
 {
-    uint32_t releaseNum = 0U;
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0U;
     const std::unique_lock<std::mutex> lk(sqBindMutex_);
 
-    (void)ReleaseSqCq(releaseNum);
+    (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     return;
 }
 
-rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum)
+rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t &releaseSqNum, uint32_t &releaseNtyNum)
 {
-    releaseNum = 0U;
+    releaseSqNum = 0U;
+    releaseNtyNum = 0U;
     if ((sqCqNum_ == 0U) || (refCount_ != 0U)) {
         RT_LOG(RT_LOG_DEBUG, "model cannot be released, model_id=%u, sqCqNum=%u, refCount=%u.",
             Id_(), sqCqNum_, refCount_);
@@ -1207,7 +1210,7 @@ rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum)
     }
 
     // 先递归释放子模型资源
-    rtError_t error = ReleaseAllSubModelSqCq(releaseNum);
+    rtError_t error = ReleaseAllSubModelSqCq(releaseSqNum);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "release all sub models sqcq failed, model_id=%u, retCode=%#x.",
             Id_(), static_cast<uint32_t>(error));
@@ -1222,12 +1225,11 @@ rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum)
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
                 "free sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
-    releaseNum += sqCqNum_;
+    releaseSqNum += sqCqNum_;
     DELETE_A(sqCqArray_);
     sqCqNum_ = 0U;
 
-    uint32_t notifReleaseNum = 0;
-    (void)ReleaseNotifyId(notifReleaseNum);
+    (void)ReleaseNotifyId(releaseNtyNum);
 
     return RT_ERROR_NONE;
 }
@@ -1452,8 +1454,9 @@ void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskI
 
 rtError_t CaptureModel::Update(void)
 {
-    uint32_t releaseNum = 0U;
-    rtError_t error = ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0U;
+    rtError_t error = ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     ERROR_RETURN(error, "release sq cq failed, model_id=%d.", Id_());
     for (Stream* stm : StreamList_()) {
         const int32_t streamId = stm->Id_();
@@ -1470,7 +1473,8 @@ rtError_t CaptureModel::Update(void)
     }
 
     SetIsSendSqe(false);
-    RT_LOG(RT_LOG_INFO, "update finish, model_id=%u, releaseNum=%u.", Id_(), releaseNum);
+    RT_LOG(RT_LOG_INFO, "update finish, model_id=%u, releaseSqNum=%u, releaseNtyNum=%u.", Id_(),
+        releaseSqNum, releaseNtyNum);
     return RT_ERROR_NONE;
 }
 void CaptureModel::SetModelCacheOpInfoSwitch(const uint32_t status) const {
@@ -1841,9 +1845,6 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t &releaseNum)
     DELETE_A(sqCqArray_);
     sqCqNum_ = 0U;
 
-    uint32_t notifReleaseNum = 0;
-    (void)ReleaseNotifyId(notifReleaseNum);
-    
     return RT_ERROR_NONE;
 }
 

@@ -115,10 +115,6 @@ rtError_t Stream::AllocCaptureTaskWithoutLock(tsTaskType_t taskType, uint32_t sq
         curCaptureStream->AddCaptureSqeNum(sqeNum);
         (*task)->stream = curCaptureStream;
         Runtime::Instance()->AllocTaskSn((*task)->taskSn); // 只有A5用了这个字段，其他形态的分配了不用
-        Model *m = curCaptureStream->Model_();
-        if ((m != nullptr) && (m->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
-            (*task)->modelSeqId = dynamic_cast<CaptureModel *>(m)->GenerateSeqId();
-        }
     } else {
         SingleStreamTerminateCapture();
         return errCode;

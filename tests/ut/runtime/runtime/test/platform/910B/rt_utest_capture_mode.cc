@@ -181,9 +181,10 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_INFO)
     notify.Setup();
     notify.FreeId();
     notify.AllocId();
-    uint32_t releaseNum = 0U;
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
     captureModel->UpdateNotifyId(stm);
-    captureModel->ReleaseSqCq(releaseNum);
+    captureModel->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     captureModel->BuildSqCq(stm);
 
@@ -1069,8 +1070,9 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
 
     CaptureModel *captureMdl1 = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model1));
     captureMdl1->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl1->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl1->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);
@@ -1241,8 +1243,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);
@@ -1338,8 +1341,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileWithAssignDefault)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);
@@ -1444,8 +1448,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfE2E)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);
@@ -1542,8 +1547,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfSizeOneE2E)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);
@@ -1643,8 +1649,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleSwitchE2E)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);
@@ -1786,8 +1793,9 @@ MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
 
     delete rawDrv;
     ret = rtModelDestroy(parentModelResult);

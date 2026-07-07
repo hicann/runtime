@@ -1728,8 +1728,9 @@ TEST_F(TaskTestDavid, CaptureModeExecute)
 
     CaptureModel *captureMdl1 = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model1));
     captureMdl1->CaptureModelExecuteFinish(RT_ERROR_NONE);
-    uint32_t releaseNum;
-    captureMdl1->ReleaseSqCq(releaseNum);
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0;
+    captureMdl1->ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
     captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);

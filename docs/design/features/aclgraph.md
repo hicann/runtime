@@ -870,7 +870,7 @@ public:
     void SetSoftwareSqEnable(void);
     rtError_t BuildSqCq(Stream * const exeStream);
     void DeconstructSqCq(void);
-    rtError_t ReleaseSqCq(uint32_t &releaseNum);
+    rtError_t ReleaseSqCqAndNotifyId(uint32_t &releaseSqNum, uint32_t &releaseNtyNum);
 
     // Notify 管理
     rtError_t SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl);
@@ -1328,7 +1328,7 @@ if ((curCaptureStream->GetCaptureSqeNum() + reserved) >= curCaptureStream->GetSq
 ### 5.3 Software SQ 动态绑定
 
 - 支持 SQ/CQ 的动态分配和绑定
-- 执行时 BuildSqCq，完成后 ReleaseSqCq
+- 执行时 BuildSqCq，完成后 ReleaseSqCqAndNotifyId
 - 通过 SqSwitchStreamBatch 实现批量流切换
 
 ### 5.4 Notify 同步机制

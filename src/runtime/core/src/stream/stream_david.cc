@@ -763,6 +763,13 @@ rtError_t DavidStream::StarsAddTaskToStream(TaskInfo * const tsk, const uint32_t
             this->Model_()->SetKernelTaskId(tsk->taskSn, GetExposedStreamId());
         }
         delayRecycleTaskid_.push_back(tsk->id);
+
+        Model *model = tsk->stream->Model_();
+        if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+            tsk->modelSeqId = dynamic_cast<CaptureModel *>(model)->GenerateSeqId();
+            RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, sequence id=%u.",
+                tsk->stream->Device_()->Id_(), streamId_, tsk->id, tsk->modelSeqId);
+        }
     }
     RT_LOG(RT_LOG_INFO, "%s stream, stream_id=%d, task_id=%hu, task_sn=%u, type=%d(%s), "
         "sqe_num=%u, device_id=%u", GetBindFlag() ? "model" : "single-operator", streamId_, tsk->id,
