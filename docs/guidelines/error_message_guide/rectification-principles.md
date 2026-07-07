@@ -238,6 +238,19 @@ Error Message 打印格式应遵循以下规范，确保信息清晰、规范、
 | 连续区间 `[a, b)` 或 `[a, b]` | 保留原始区间描述 | `[0, 10]` |
 | 离散枚举值（1个或多个具体枚举值） | 用 `枚举名(数值)` 格式，与规则1保持一致 | `RELAXED(2)` 或 `GLOBAL(0) THREAD_LOCAL(1)` |
 
+**规则3：芯片类型（chipType）的打印**
+
+芯片类型（chipType）属于内部枚举，不适用规则1的枚举转字符串格式，仅保留数值打印，不打印枚举名描述。
+
+```cpp
+// src/runtime/api/api_c_standard_soc.cc:593
+COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((priority != RT_STREAM_GREATEST_PRIORITY) &&
+    (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_CREATE_PRIORITY_GREATEST)),
+    RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, StreamPriorityToString(priority).c_str(), "priority",
+    "The priority can be set to RT_STREAM_GREATEST_PRIORITY only when chipType is " + std::to_string(CHIP_DC) +
+    ". The actual chipType is " + std::to_string(chipType));
+```
+
 ### 参数名打印规范
 
 用户入参需打印参数名和参数值或地址，确保用户能准确定位问题参数。
