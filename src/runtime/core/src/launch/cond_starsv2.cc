@@ -188,7 +188,7 @@ rtError_t SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
 {
     const int32_t streamId = stm->Id_();
     rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "Stream (stream_id=%d) check can send task failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check whether task can be sent on stream (stream_id=%d), retCode=%#x.", streamId, static_cast<uint32_t>(error));
 
     TaskInfo *condTask = nullptr;
     uint32_t pos = 0xFFFFU;

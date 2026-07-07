@@ -20,7 +20,7 @@ static rtError_t StreamBeginCaptureMdlCheck(Model * const mdl)
 {
     COND_RETURN_WITH_NOLOG((mdl == nullptr), RT_ERROR_NONE);
 
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
+    COND_RETURN_ERROR(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
         "model is not an ACL Graph, modelType=%d.", mdl->GetModelType());
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
