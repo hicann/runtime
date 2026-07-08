@@ -134,16 +134,6 @@ public:
         return count_.Value() & (~REF_UPDATING);
     }
 
-    bool IsRefUpdating() const
-    {
-        return (count_.Value() & REF_UPDATING) != 0ULL;
-    }
-
-    bool TryMarkRefUpdating()
-    {
-        return count_.CompareExchange(0ULL, REF_UPDATING);
-    }
-
     // callef after IncRef return 0.
     void SetVal(T val)
     {

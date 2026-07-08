@@ -468,7 +468,7 @@ TEST_F(ContextTest, PrimaryContextReleaseRestoresContextWhenFinalReleaseFails)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ContextTest, PrimaryContextReleaseRollsBackOrdinaryResetWhenLastThreadReleaseFails)
+TEST_F(ContextTest, PrimaryContextReleaseRollsBackOrdinaryResetWhenFinalReleaseFails)
 {
     int32_t devId = 0;
     rtError_t error = rtGetDevice(&devId);
@@ -481,6 +481,7 @@ TEST_F(ContextTest, PrimaryContextReleaseRollsBackOrdinaryResetWhenLastThreadRel
     runtime->SetDisableThread(false);
     runtime->SetSentinelMode(false);
     runtime->tsNum_ = 1U;
+    (void)runtime->PrimaryContextRelease(devId, true);
 
     RefObject<Context*> * const refObject = static_cast<RefObject<Context*> *>(runtime->PrimaryContextRetain(devId));
     ASSERT_NE(refObject, nullptr);
@@ -490,25 +491,13 @@ TEST_F(ContextTest, PrimaryContextReleaseRollsBackOrdinaryResetWhenLastThreadRel
     error = ctx->StreamCreate(0U, 0U, &stream);
     ASSERT_EQ(error, RT_ERROR_NONE);
     ASSERT_NE(stream, nullptr);
-
-    InnerThreadLocalContainer::SetCurCtx(nullptr);
-    InnerThreadLocalContainer::SetCurRef(nullptr);
-    ctx->ResetThreadRefCount();
-    InnerThreadLocalContainer::SetCurRef(refObject);
-    ASSERT_EQ(ctx->GetThreadRefCount(), 1ULL);
-    bool reset = false;
-    while (refObject->TryDecRef(reset) && !reset) {
-    }
-    ASSERT_TRUE(reset);
-    ASSERT_TRUE(refObject->TrySetValAndResetRef(ctx));
-    ASSERT_EQ(refObject->GetRef(), 0ULL);
+    ASSERT_EQ(refObject->GetRef(), 1ULL);
 
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = runtime->PrimaryContextRelease(devId, false);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(refObject->GetVal(false), ctx);
-    EXPECT_EQ(refObject->GetRef(), 0ULL);
-    EXPECT_EQ(InnerThreadLocalContainer::GetCurCtx(), ctx);
+    EXPECT_EQ(refObject->GetRef(), 1ULL);
     EXPECT_EQ(ctx->GetState(), ContextState::CTX_STATE_ACTIVE);
 
     GlobalMockObject::reset();

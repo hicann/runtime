@@ -191,68 +191,19 @@ void RestorePrimaryContextRef(RefObject<Context *> &refObj)
     refObj.SetPrimaryCtxCallBackFlag(false);
 }
 
-bool TryReuseActivePrimaryContext(RefObject<Context *> &refObj)
-{
-    Context * const ctx = refObj.GetVal(false);
-    if ((ctx == nullptr) || (ctx->GetState() != ContextState::CTX_STATE_ACTIVE)) {
-        return false;
-    }
-    refObj.SetVal(ctx);
-    refObj.SetPrimaryCtxCallBackFlag(false);
-    return true;
-}
-
-bool IsCurrentPrimaryCtx(RefObject<Context *> * const refObj, const Context * const ctx)
-{
-    return (InnerThreadLocalContainer::GetCurRef() == refObj) ||
-        ((ctx != nullptr) && (InnerThreadLocalContainer::GetCurCtx() == ctx));
-}
-
-uint64_t GetPrimaryRetainCount(const RefObject<Context *> &refObj)
-{
-    return refObj.GetRefCount();
-}
-
-uint64_t GetPrimaryTotalRef(const RefObject<Context *> &refObj, const Context * const ctx)
-{
-    const uint64_t threadRefCount = (ctx == nullptr) ? 0ULL : ctx->GetThreadRefCount();
-    return GetPrimaryRetainCount(refObj) + threadRefCount;
-}
-
-void WaitPrimaryRefReady(const RefObject<Context *> &refObj)
-{
-    while (refObj.IsRefUpdating()) {
-        (void)sched_yield();
-    }
-}
-
 bool MarkPrimaryRefUpdatingForForceReset(RefObject<Context *> &refObj, uint64_t &releasedRetainCount)
 {
     releasedRetainCount = 0ULL;
-    while (true) {
-        WaitPrimaryRefReady(refObj);
-        const uint64_t retainCount = GetPrimaryRetainCount(refObj);
-        if (retainCount == 0ULL) {
-            // No retain refs remain; reserve the slot for force teardown.
-            if (refObj.TryMarkRefUpdating()) {
-                return true;
-            }
-            continue;
+    bool reset = false;
+    while (!reset) {
+        // Drain retain refs; the last decrement switches count_ to REF_UPDATING.
+        const bool isRetainReleased = refObj.TryDecRef(reset);
+        if (!isRetainReleased) {
+            return false;
         }
-
-        bool reset = false;
-        while (!reset) {
-            // Drain retain refs; the last decrement switches count_ to REF_UPDATING.
-            const bool isRetainReleased = refObj.TryDecRef(reset);
-            if (!isRetainReleased) {
-                break;
-            }
-            releasedRetainCount++;
-        }
-        if (reset) {
-            return true;
-        }
+        releasedRetainCount++;
     }
+    return true;
 }
 
 enum class PrimaryReleaseAction : uint32_t {
@@ -264,57 +215,24 @@ enum class PrimaryReleaseAction : uint32_t {
 struct PrimaryReleaseDecision {
     PrimaryReleaseAction action;   // Next operation for the primary slot.
     uint64_t retainRestoreCount;   // Retain references to restore if teardown fails.
-    bool restoreCurBinding;        // Restore current-thread binding after ordinary reset rollback.
     bool originForceReset;         // Original force-reset flag saved before teardown.
 };
 
-PrimaryReleaseDecision DecideOrdinaryPrimaryReleaseAction(RefObject<Context *> &refObj, Context * const ctx,
-    const uint32_t devId, const uint32_t tsId, bool &ret)
+PrimaryReleaseDecision DecideOrdinaryPrimaryReleaseAction(RefObject<Context *> &refObj, const uint32_t tsId,
+    bool &ret)
 {
-    PrimaryReleaseDecision decision{PrimaryReleaseAction::TEAR_DOWN_SLOT, 0ULL, false, false};
+    PrimaryReleaseDecision decision{PrimaryReleaseAction::TEAR_DOWN_SLOT, 0ULL, false};
     bool reset = false;  // must be false.
     const bool isRetainReleased = refObj.TryDecRef(reset);
     ret = ret || isRetainReleased;
     const uint64_t refObjValue = refObj.GetRef();
-    const uint64_t threadRefCount = (ctx == nullptr) ? 0ULL : ctx->GetThreadRefCount();
-    RT_LOG(RT_LOG_INFO, "Context TryDecRef, ts_id=%u, count=0x%llx, thread=%llu, reset:%hhu",
-        tsId, refObjValue, threadRefCount, reset);
+    RT_LOG(RT_LOG_INFO, "Context TryDecRef, ts_id=%u, count=0x%llx, reset:%hhu",
+        tsId, refObjValue, reset);
     if (!isRetainReleased) {
-        // Retain count is already zero; only the last bound thread may tear down.
-        const uint64_t totalRef = GetPrimaryTotalRef(refObj, ctx);
-        if ((ctx == nullptr) || (ctx->GetState() != ContextState::CTX_STATE_ACTIVE) || (totalRef == 0ULL)) {
-            decision.action = PrimaryReleaseAction::SKIP_SLOT;
-            return decision;
-        }
-        const bool boundToPrimary = IsCurrentPrimaryCtx(&refObj, ctx);
-        if ((totalRef != 1ULL) || !boundToPrimary) {
-            ret = true;
-            decision.action = PrimaryReleaseAction::SKIP_SLOT;
-            return decision;
-        }
-        reset = true;
-        ret = true;
-        decision.restoreCurBinding = true;
-        if (!refObj.TryMarkRefUpdating()) {
-            RT_LOG(RT_LOG_INFO,
-                "Skip primary context teardown because primary ref is changed, devId=%u, ts_id=%u.",
-                devId, tsId);
-            decision.action = PrimaryReleaseAction::SKIP_SLOT;
-            return decision;
-        }
-    }
-    if (!reset) {
         decision.action = PrimaryReleaseAction::SKIP_SLOT;
         return decision;
     }
-    const uint64_t remainThreadRefCount = (ctx == nullptr) ? 0ULL : ctx->GetThreadRefCount();
-    const bool boundToPrimary = IsCurrentPrimaryCtx(&refObj, ctx);
-    if ((remainThreadRefCount > 1ULL) || ((remainThreadRefCount == 1ULL) && !boundToPrimary)) {
-        // Other threads still hold the primary; keep it active.
-        refObj.SetVal(ctx);
-        RT_LOG(RT_LOG_INFO,
-            "Skip primary context teardown, devId=%u, ts_id=%u, retain=%llu, thread=%llu, bound=%hhu.",
-            devId, tsId, GetPrimaryRetainCount(refObj), remainThreadRefCount, boundToPrimary);
+    if (!reset) {
         decision.action = PrimaryReleaseAction::SKIP_SLOT;
         return decision;
     }
@@ -325,9 +243,8 @@ PrimaryReleaseDecision DecideOrdinaryPrimaryReleaseAction(RefObject<Context *> &
 PrimaryReleaseDecision DecideForcePrimaryReleaseAction(RefObject<Context *> &refObj, Context * const ctx,
     bool &ret)
 {
-    PrimaryReleaseDecision decision{PrimaryReleaseAction::TEAR_DOWN_SLOT, 0ULL, false, false};
-    const uint64_t totalRef = GetPrimaryTotalRef(refObj, ctx);
-    if ((ctx == nullptr) || (totalRef == 0ULL)) {
+    PrimaryReleaseDecision decision{PrimaryReleaseAction::TEAR_DOWN_SLOT, 0ULL, false};
+    if (ctx == nullptr) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "PrimaryContextRelease failed, total ref count is 0.");
         decision.action = PrimaryReleaseAction::RETURN_ERROR;
         return decision;
@@ -346,17 +263,16 @@ PrimaryReleaseDecision DecideForcePrimaryReleaseAction(RefObject<Context *> &ref
 }
 
 PrimaryReleaseDecision DecidePrimaryReleaseAction(RefObject<Context *> &refObj, Context * const ctx,
-    const bool isForceReset, const uint32_t devId, const uint32_t tsId, bool &ret)
+    const bool isForceReset, const uint32_t tsId, bool &ret)
 {
     if (isForceReset) {
         return DecideForcePrimaryReleaseAction(refObj, ctx, ret);
     }
-    return DecideOrdinaryPrimaryReleaseAction(refObj, ctx, devId, tsId, ret);
+    return DecideOrdinaryPrimaryReleaseAction(refObj, tsId, ret);
 }
 
 rtError_t RollbackPrimaryTearDown(RefObject<Context *> &refObj, Context * const ctx, const uint32_t devId,
-    const rtError_t tearDownRet, const bool isForceReset, const uint64_t retainRestoreCount,
-    const bool restoreCurBinding, const bool originForceReset)
+    const rtError_t tearDownRet, const uint64_t retainRestoreCount, const bool originForceReset)
 {
     refObj.SetPrimaryCtxCallBackFlag(false);
     // Make the primary slot visible again with its original force-reset mode.
@@ -366,16 +282,6 @@ rtError_t RollbackPrimaryTearDown(RefObject<Context *> &refObj, Context * const 
         if (!restoreSuccess) {
             RT_LOG(RT_LOG_ERROR, "Primary context teardown failed and retain restore failed, devId=%u.", devId);
         }
-    } else if (refObj.IsRefUpdating()) {
-        // retain may already be zero; clear REF_UPDATING so the active primary can be reused after rollback.
-        const bool resetRefSuccess = refObj.TrySetValAndResetRef(ctx);
-        if (!resetRefSuccess) {
-            RT_LOG(RT_LOG_ERROR, "Primary context teardown failed and ref reset failed, devId=%u.", devId);
-        }
-    }
-    if ((!isForceReset) && restoreCurBinding) {
-        // Ordinary reset rollback keeps the original current context usable for this thread.
-        InnerThreadLocalContainer::SetCurCtx(ctx);
     }
     RT_LOG(RT_LOG_ERROR, "Primary context teardown failed, devId=%u, retCode=%#x.",
         devId, static_cast<uint32_t>(tearDownRet));
@@ -2683,11 +2589,6 @@ RefObject<Context *> *Runtime::PrimaryContextRetain(const uint32_t devId)
         RefObject<Context *> &refObj = priCtxs_[devId][i];
 
         if (!refObj.IncRef()) {
-            if (TryReuseActivePrimaryContext(refObj)) {
-                RT_LOG(RT_LOG_INFO, "Reuse active primary context, devId=%u, ts_id=%u, count=%#llx",
-                    devId, i, refObj.GetRef());
-                continue;
-            }
             PrimaryContextInitInfo initInfo = PreparePrimaryContext(this, refObj, devId, i);
             if (initInfo.err == RT_ERROR_NONE) {
                 initInfo.err = InitializePrimaryContext(initInfo);
@@ -2750,12 +2651,9 @@ rtError_t Runtime::GetPrimaryCtxState(const int32_t devId, uint32_t *flags, int3
 
     for (uint32_t i = 0U; i < tsNum_; i++) {
         RefObject<Context *> &refObj = priCtxs_[devId][i];
-        Context * const ctx = refObj.GetVal(false);
-        const uint64_t refCnt = GetPrimaryRetainCount(refObj);
-        const uint64_t threadRefCount = (ctx == nullptr) ? 0ULL : ctx->GetThreadRefCount();
-        RT_LOG(RT_LOG_INFO, "Default ctx state, devId=%u, ts_id=%u, retain=%#llx, thread=%#llx",
-            devId, i, refCnt, threadRefCount);
-        if ((refCnt + threadRefCount) > 0ULL) {
+        const uint64_t refCnt = refObj.GetRefCount();
+        RT_LOG(RT_LOG_INFO, "Default ctx state, devId=%u, ts_id=%u, count=%#llx", devId, i, refCnt);
+        if (refCnt > 0ULL) {
             *active = 1; // 1 means ctx is in use
             return RT_ERROR_NONE;
         }
@@ -2900,7 +2798,7 @@ rtError_t Runtime::ReleasePrimaryContextSlot(const uint32_t devId, const uint32_
     }
     Context *ctx = refObj.GetVal(false);
     PrimaryReleaseDecision decision =
-        DecidePrimaryReleaseAction(refObj, ctx, isForceReset, devId, tsId, ret);
+        DecidePrimaryReleaseAction(refObj, ctx, isForceReset, tsId, ret);
     if (decision.action == PrimaryReleaseAction::SKIP_SLOT) {
         return RT_ERROR_NONE;
     }
@@ -2911,21 +2809,18 @@ rtError_t Runtime::ReleasePrimaryContextSlot(const uint32_t devId, const uint32_
     bool earlyReturn = false;
     const rtError_t tearDownRet = ExecutePrimaryTearDown(refObj, ctx, devId, tsId, isForceReset, earlyReturn);
     if (earlyReturn) {
-        return RollbackPrimaryTearDown(refObj, ctx, devId, tearDownRet, isForceReset,
-            decision.retainRestoreCount, decision.restoreCurBinding, decision.originForceReset);
+        return RollbackPrimaryTearDown(refObj, ctx, devId, tearDownRet,
+            decision.retainRestoreCount, decision.originForceReset);
     }
     if (tearDownRet != RT_ERROR_NONE) {
-        return RollbackPrimaryTearDown(refObj, ctx, devId, tearDownRet, isForceReset,
-            decision.retainRestoreCount, decision.restoreCurBinding, decision.originForceReset);
+        return RollbackPrimaryTearDown(refObj, ctx, devId, tearDownRet,
+            decision.retainRestoreCount, decision.originForceReset);
     }
     PrimaryContextCallBackAfterTeardown(devId);
     refObj.SetPrimaryCtxCallBackFlag(false);
     const bool resetRefSuccess = refObj.TrySetValAndResetRef(ctx);
     COND_RETURN_ERROR_MSG_INNER(!resetRefSuccess, RT_ERROR_CONTEXT_DEL,
         "Primary context release failed to reset ref, devId=%u, ts_id=%u.", devId, tsId);
-    if (isForceReset) {
-        ctx->ResetThreadRefCount();
-    }
     return RT_ERROR_NONE;
 }
 

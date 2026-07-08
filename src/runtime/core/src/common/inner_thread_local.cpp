@@ -70,6 +70,11 @@ bool UpdateThreadBinding(Context *oldCtx, bool oldNeedThreadRef, Context *newCtx
     }
     return oldCtxDeleted;
 }
+
+bool NeedThreadRef(const Context * const ctx, const bool internalAccess)
+{
+    return (ctx != nullptr) && !internalAccess && !ctx->IsPrimary();
+}
 }
 
 uint32_t InnerThreadLocalContainer::GetLastTaskId(void)
@@ -134,8 +139,8 @@ void InnerThreadLocalContainer::SetCurCtx(Context * const inCurCtx, bool interna
     Context * const newCtx = GetBoundContext(inCurCtx, curRef_);
     const bool newInternalAccess = GetEffectiveContextInternalAccess(inCurCtx,
         (inCurCtx != nullptr) ? internalAccess : false, curRef_, curRefInternalAccess_);
-    const bool oldNeedThreadRef = (oldCtx != nullptr) && (!oldInternalAccess);
-    const bool newNeedThreadRef = (newCtx != nullptr) && (!newInternalAccess);
+    const bool oldNeedThreadRef = NeedThreadRef(oldCtx, oldInternalAccess);
+    const bool newNeedThreadRef = NeedThreadRef(newCtx, newInternalAccess);
     const bool oldCtxDeleted = UpdateThreadBinding(oldCtx, oldNeedThreadRef, newCtx, newNeedThreadRef);
     curCtx_ = inCurCtx;
     curCtxInternalAccess_ = ((curCtx_ != nullptr) ? internalAccess : false);
@@ -157,8 +162,8 @@ void InnerThreadLocalContainer::SetCurRef(RefObject<Context *> * const inCurRef,
     Context * const newCtx = GetBoundContext(curCtx_, inCurRef);
     const bool newInternalAccess = GetEffectiveContextInternalAccess(curCtx_, curCtxInternalAccess_,
         inCurRef, (inCurRef != nullptr) ? internalAccess : false);
-    const bool oldNeedThreadRef = (oldCtx != nullptr) && (!oldInternalAccess);
-    const bool newNeedThreadRef = (newCtx != nullptr) && (!newInternalAccess);
+    const bool oldNeedThreadRef = NeedThreadRef(oldCtx, oldInternalAccess);
+    const bool newNeedThreadRef = NeedThreadRef(newCtx, newInternalAccess);
     const bool oldCtxDeleted = UpdateThreadBinding(oldCtx, oldNeedThreadRef, newCtx, newNeedThreadRef);
     curRef_ = inCurRef;
     curRefInternalAccess_ = ((curRef_ != nullptr) ? internalAccess : false);
