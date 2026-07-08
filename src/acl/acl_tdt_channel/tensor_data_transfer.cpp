@@ -421,7 +421,7 @@ namespace acl {
             }
             if ((aclType == ACL_TENSOR_DATA_TENSOR) || (aclType == ACL_TENSOR_DATA_SLICE_TENSOR)
                 || (aclType == ACL_TENSOR_DATA_END_TENSOR)) {
-                if (itemVec[i].ctrlInfo.version == VERSION_NAME) {
+                if (itemVec[i].ctrlInfo.version == static_cast<int32_t>(VERSION_NAME)) {
                     void *dataReal = (itemVec[i].priorityDataPtr_ != nullptr) ?
                         itemVec[i].priorityDataPtr_ : itemVec[i].dataPtr.get();
                     dataset->name.assign(static_cast<char *>(dataReal), itemVec[i].ctrlInfo.dataLen);

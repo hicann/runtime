@@ -45,6 +45,10 @@
 #include "notify_c.hpp"
 #include "stream_c.hpp"
 #include "cond_c.hpp"
+#include "aicpu_c.hpp"
+#include "aix_c.hpp"
+#include "kernel.hpp"
+#include "program.hpp"
 #include "memcpy_c.hpp"
 #include "model_c.hpp"
 #include "coredump_c.hpp"
@@ -2731,4 +2735,165 @@ TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_8bit_size)
 
     RtStarsMemWaitValueLastInstrFcExWithDynamicProf fcEx = {};
     ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
+}
+
+TEST_F(TaskTestDavid, CpuKernelLaunchForAicpuStream)
+{
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stm, nullptr);
+    stm->flags_ = RT_STREAM_AICPU;
+
+    void *memBase = reinterpret_cast<void *>(100);
+    MOCKER(memcpy_s).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)(device_->Driver_()), &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    uint64_t stubArgs = 0x1234567890;
+    char soName[] = "libDvpp.so";
+    char kernelName[] = "DvppResize";
+    rtKernelLaunchNames_t name = {soName, kernelName, ""};
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = static_cast<void *>(&stubArgs);
+    argsInfo.argsSize = sizeof(stubArgs);
+
+    rtError_t error = StreamLaunchCpuKernel(&name, 1, &argsInfo, stm, RT_KERNEL_HOST_ONLY);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtKernelLaunchNames_t nullName = {nullptr, nullptr, ""};
+    error = StreamLaunchCpuKernel(&nullName, 1, &argsInfo, stm, RT_KERNEL_HOST_ONLY);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stm->flags_ = RT_STREAM_DEFAULT;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stm->taskResMang_));
+    taskResMang->ResetTaskRes();
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, CpuKernelLaunchForAicpuStreamFail)
+{
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stm, nullptr);
+    stm->flags_ = RT_STREAM_AICPU;
+
+    void *memBase = reinterpret_cast<void *>(100);
+    MOCKER(memcpy_s).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)(device_->Driver_()), &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint64_t stubArgs = 0x1234567890;
+    char soName[] = "libDvpp.so";
+    char kernelName[] = "DvppResize";
+    rtKernelLaunchNames_t name = {soName, kernelName, ""};
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = static_cast<void *>(&stubArgs);
+    argsInfo.argsSize = sizeof(stubArgs);
+
+    rtError_t error = StreamLaunchCpuKernel(&name, 1, &argsInfo, stm, RT_KERNEL_HOST_ONLY);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stm->flags_ = RT_STREAM_DEFAULT;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stm->taskResMang_));
+    taskResMang->ResetTaskRes();
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, KernelLaunchExForAicpuStream)
+{
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stm, nullptr);
+    stm->flags_ = RT_STREAM_AICPU;
+
+    MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    uint64_t stubArgs = 0x1234567890;
+    auto args = static_cast<void *>(&stubArgs);
+    auto argsSize = sizeof(stubArgs);
+    rtError_t error = StreamLaunchKernelEx(args, argsSize, RT_KERNEL_DEFAULT, stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stm->flags_ = RT_STREAM_DEFAULT;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stm->taskResMang_));
+    taskResMang->ResetTaskRes();
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, KernelLaunchExForAicpuStreamFail)
+{
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stm, nullptr);
+    stm->flags_ = RT_STREAM_AICPU;
+
+    MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint64_t stubArgs = 0x1234567890;
+    auto args = static_cast<void *>(&stubArgs);
+    auto argsSize = sizeof(stubArgs);
+    rtError_t error = StreamLaunchKernelEx(args, argsSize, RT_KERNEL_DEFAULT, stm);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stm->flags_ = RT_STREAM_DEFAULT;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stm->taskResMang_));
+    taskResMang->ResetTaskRes();
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, StreamLaunchKernelV2ForDavid)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    ASSERT_NE(kernel, nullptr);
+
+    uint64_t arg = 0x1234567890;
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = &arg;
+    argsInfo.argsSize = sizeof(arg);
+    rtStreamLaunchKernelV2ExtendArgs_t extendArgs = {};
+    extendArgs.argsInfo = &argsInfo;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    rtError_t error = StreamLaunchKernelV2(kernel, 8, stream_, &extendArgs, true);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+TEST_F(TaskTestDavid, StreamLaunchKernelV2ForDavid_NullProgram)
+{
+    Kernel *kernel = new (std::nothrow) Kernel("", 0UL, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    ASSERT_NE(kernel, nullptr);
+
+    uint64_t arg = 0x1234567890;
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = &arg;
+    argsInfo.argsSize = sizeof(arg);
+    rtStreamLaunchKernelV2ExtendArgs_t extendArgs = {};
+    extendArgs.argsInfo = &argsInfo;
+
+    rtError_t error = StreamLaunchKernelV2(kernel, 8, stream_, &extendArgs, true);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete kernel;
 }

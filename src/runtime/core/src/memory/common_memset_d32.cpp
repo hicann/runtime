@@ -93,8 +93,8 @@ rtError_t MemsetD32OnDevice(void* dst, uint64_t destMax, uint32_t value,
     }
 
     while (remainingCount > 0) {
-        uint64_t curCount = (remainingCount >= blockCount) ? blockCount : remainingCount;
-        uint64_t curBytes = curCount * sizeof(uint32_t);
+        const uint64_t curCount = (remainingCount >= blockCount) ? blockCount : remainingCount;
+        const uint64_t curBytes = curCount * sizeof(uint32_t);
         
         // Calculate current block's target address and remaining size
         void* curDst = static_cast<char*>(dst) + doneBytes;

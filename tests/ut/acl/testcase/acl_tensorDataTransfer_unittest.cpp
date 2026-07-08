@@ -820,6 +820,67 @@ TEST_F(UTEST_tensor_data_transfer, acltdtGetDatasetName)
     EXPECT_EQ(acltdtDestroyDataset(dataset), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_tensor_data_transfer, TensorDatasetDeserializesV2_ShouldReturn_ACL_SUCCESS_WhenPriorityDataPtrNotNull)
+{
+    acltdtDataset *dataset = acltdtCreateDataset();
+    EXPECT_NE(dataset, nullptr);
+    std::vector<aclTdtDataItemInfo> itemVec;
+    std::string datasetName("priority_name");
+
+    char priorityBuf[64] = {};
+    const auto retCopy = memcpy_s(priorityBuf, sizeof(priorityBuf), datasetName.c_str(), datasetName.size());
+    EXPECT_EQ(retCopy, 0);
+
+    aclTdtDataItemInfo info;
+    info.ctrlInfo.dataType = ACL_TENSOR_DATA_TENSOR;
+    info.ctrlInfo.version = 1;
+    info.ctrlInfo.dataLen = datasetName.size();
+    info.dataPtr = std::shared_ptr<uint8_t>(new uint8_t[1], [] (uint8_t *p) { delete[] p; });
+    info.priorityDataPtr_ = static_cast<void *>(priorityBuf);
+    itemVec.push_back(info);
+
+    auto ret = TensorDatasetDeserializesV2(itemVec, dataset);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    std::string datasetNameAcquied = acltdtGetDatasetName(dataset);
+    EXPECT_EQ(datasetNameAcquied, datasetName);
+    EXPECT_EQ(acltdtDestroyDataset(dataset), ACL_SUCCESS);
+}
+
+TEST_F(UTEST_tensor_data_transfer, TensorDatasetDeserializesV2_ShouldReturn_ACL_SUCCESS_WhenVersionIs0AndVersionIs1)
+{
+    acltdtDataset *dataset = acltdtCreateDataset();
+    EXPECT_NE(dataset, nullptr);
+    std::vector<aclTdtDataItemInfo> itemVec;
+
+    std::string datasetName("slice_end");
+    std::shared_ptr<uint8_t> nameData(new uint8_t[datasetName.size()], [] (uint8_t *p) { delete[] p; });
+    const auto retCopy = memcpy_s(nameData.get(), datasetName.size(), datasetName.c_str(), datasetName.size());
+    EXPECT_EQ(retCopy, 0);
+
+    aclTdtDataItemInfo nameInfo;
+    nameInfo.ctrlInfo.dataType = ACL_TENSOR_DATA_TENSOR;
+    nameInfo.ctrlInfo.version = 1;
+    nameInfo.ctrlInfo.dataLen = datasetName.size();
+    nameInfo.dataPtr = nameData;
+    itemVec.push_back(nameInfo);
+
+    aclTdtDataItemInfo sliceInfo;
+    sliceInfo.ctrlInfo.dataType = ACL_TENSOR_DATA_TENSOR;
+    sliceInfo.ctrlInfo.version = 0;
+    sliceInfo.ctrlInfo.dataLen = sizeof(int32_t);
+    sliceInfo.ctrlInfo.sliceNum = 2;
+    sliceInfo.ctrlInfo.sliceId = 0;
+    sliceInfo.dims = {2, 4};
+    sliceInfo.dataPtr = std::shared_ptr<uint8_t>(new uint8_t[sizeof(int32_t)], [] (uint8_t *p) { delete[] p; });
+    itemVec.push_back(sliceInfo);
+
+    auto ret = TensorDatasetDeserializesV2(itemVec, dataset);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    std::string datasetNameAcquied = acltdtGetDatasetName(dataset);
+    EXPECT_EQ(datasetNameAcquied, datasetName);
+    EXPECT_GE(acltdtGetDatasetSize(dataset), 1);
+}
+
 rtError_t rtsPointerGetAttributesDevice(const void *ptr, rtPtrAttributes_t *attributes)
 {
     (void) ptr;

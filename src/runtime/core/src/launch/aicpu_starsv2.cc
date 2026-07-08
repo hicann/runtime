@@ -157,9 +157,10 @@ static rtError_t StreamLaunchCpuKernelForAicpuStream(const rtKernelLaunchNames_t
         SetNameArgs(kernelTask, soNameAddr, kernelNameAddr);
     }
 
+    const char *logSoName = (launchSoName != nullptr) ? launchSoName : "null";
+    const char *logKernelName = (kernelName != nullptr) ? kernelName : "null";
     RT_LOG(RT_LOG_INFO, "flag=%u, kernelFlag=0x%x, blkdim=%u, soName=%s, kernel_name=%s.",
-        flag, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, launchSoName != nullptr ? launchSoName : "null",
-        kernelName != nullptr ? kernelName : "null");
+        flag, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, logSoName, logKernelName);
     const tsAicpuKernelType aicpuKernelType = ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ?
                                               TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(aicpuKernelType);
@@ -194,7 +195,7 @@ rtError_t StreamLaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames,
         "The current stream status does not meet the conditions for sending the task. stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     DavidStream *davidStm = static_cast<DavidStream *>(stm);
-    bool useArgPool = UseArgsPool(davidStm, argsInfo, false);
+    const bool useArgPool = UseArgsPool(davidStm, argsInfo, false);
 
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&kernelTask, stm, pos, dstStm);
@@ -230,9 +231,10 @@ rtError_t StreamLaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames,
     }
 
     AicpuTaskInfo *aicpuTask = &(kernelTask->u.aicpuTaskInfo);
+    const char *logSoName = (launchSoName != nullptr) ? launchSoName : "null";
+    const char *logKernelName = (kernelName != nullptr) ? kernelName : "null";
     RT_LOG(RT_LOG_INFO, "flag=%u, kernelFlag=0x%x, blkdim=%u, soName=%s, kernel_name=%s.",
-        flag, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, launchSoName != nullptr ? launchSoName : "null",
-        kernelName != nullptr ? kernelName : "null");
+        flag, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, logSoName, logKernelName);
 
     const tsAicpuKernelType aicpuKernelType = ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ?
                                         TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;

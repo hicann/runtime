@@ -508,7 +508,7 @@ rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *s
     uint64_t kernelPc1 = 0ULL;
     uint64_t kernelPc2 = 0ULL;
     const uint8_t mixType = kernel->GetMixType();
-    rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
+    const rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX, nullptr, nullptr};
     TaskInfo *kernelTask = nullptr;
 
