@@ -34,40 +34,22 @@ static bool IfStrStartsWithInvalidChar(const char* str)
     return InvalidCharList.count(*str);
 }
 
-static bool GetMsgPtrToSave(const char* oriMsg, SHARED_PTR_ALIA<std::string> &saveMsg)
+static bool IsMsgValid(const char* oriMsg)
 {
-    if (oriMsg == nullptr || IfStrStartsWithInvalidChar(oriMsg)) {
+    if (oriMsg == nullptr) {
         MSPROF_LOGE("Input Params msg is null");
         return false;
-    }
-    /*
-    pytorch/mindspore 内置通信打点数据样例如下:
-    "{\\\"count\\\": \\\"16\\\",\\\"dataType\\\": \\\"fp32\\\",\\\"groupName\\\": \\\"hccl_world_group\\\",
-      \\\"opName\\\": \\\"HcclSend\\\",\\\"destRank\\\": \\\"10000\\\",\\\"streamId\\\": \\\"0\\\"}"
-    长度可能超过MAX_MESSAGE_LEN, 因此需要删除\符号以减小数据长度，保证数据不截断
-    */
-    if (*oriMsg != '{') {
-        if (strnlen(oriMsg, MAX_MESSAGE_LEN) == MAX_MESSAGE_LEN) {
-            MSPROF_LOGE("Input Params msg length exceeds the maximum value %d", MAX_MESSAGE_LEN);
-            return false;
-        }
-        return true;
-    }
-    SHARED_PTR_ALIA<std::string> saveMsgStr;
-    MSVP_MAKE_SHARED1(saveMsgStr, std::string, oriMsg, return false);
-    saveMsgStr->erase(std::remove(saveMsgStr->begin(), saveMsgStr->end(), '\\'), saveMsgStr->end());
-    if (strnlen(saveMsgStr->c_str(), MAX_MESSAGE_LEN) == MAX_MESSAGE_LEN) {
-        MSPROF_LOGE("Input Params msg length exceeds the maximum value %d", MAX_MESSAGE_LEN);
+    } else if (IfStrStartsWithInvalidChar(oriMsg)) {
+        MSPROF_LOGE("Input Params msg is with invalid first char");
         return false;
     }
-    saveMsg = std::move(saveMsgStr);
     return true;
 }
 
 static bool IsDomainNameValid(const char* name)
 {
     if (name == nullptr || IfStrStartsWithInvalidChar(name)) {
-        MSPROF_LOGE("Input Params domain name is null");
+        MSPROF_LOGE("Input Params domain name is null or with invalid first char");
         return false;
     }
     constexpr size_t maxDomainNameLen = 1024;
@@ -157,15 +139,10 @@ void MstxMarkAFunc(const char* msg, aclrtStream stream)
     if (!MstxDomainMgr::instance()->IsDomainEnabled(domainNameHash)) {
         return;
     }
-    SHARED_PTR_ALIA<std::string> saveMsg = nullptr;
-    if (!GetMsgPtrToSave(msg, saveMsg)) {
+    if (!IsMsgValid(msg)) {
         return;
     }
-    if (saveMsg != nullptr) {
-        MsTxMarkAImpl(saveMsg->c_str(), stream, domainNameHash);
-    } else {
-        MsTxMarkAImpl(msg, stream, domainNameHash);
-    }
+    MsTxMarkAImpl(msg, stream, domainNameHash);
 }
 
 uint64_t MstxRangeStartAFunc(const char* msg, aclrtStream stream)
@@ -179,15 +156,10 @@ uint64_t MstxRangeStartAFunc(const char* msg, aclrtStream stream)
     if (!MstxDomainMgr::instance()->IsDomainEnabled(domainNameHash)) {
         return MSTX_INVALID_RANGE_ID;
     }
-    SHARED_PTR_ALIA<std::string> saveMsg = nullptr;
-    if (!GetMsgPtrToSave(msg, saveMsg)) {
+    if (!IsMsgValid(msg)) {
         return MSTX_INVALID_RANGE_ID;
     }
-    if (saveMsg != nullptr) {
-        return MsTxRangeStartAImpl(saveMsg->c_str(), stream, domainNameHash);
-    } else {
-        return MsTxRangeStartAImpl(msg, stream, domainNameHash);
-    }
+    return MsTxRangeStartAImpl(msg, stream, domainNameHash);
 }
 
 void MstxRangeEndFunc(uint64_t id)
@@ -234,15 +206,10 @@ void MstxDomainMarkAFunc(mstxDomainHandle_t domain, const char* msg, aclrtStream
     if (!MstxDomainMgr::instance()->IsDomainEnabled(domainNameHash)) {
         return;
     }
-    SHARED_PTR_ALIA<std::string> saveMsg = nullptr;
-    if (!GetMsgPtrToSave(msg, saveMsg)) {
+    if (!IsMsgValid(msg)) {
         return;
     }
-    if (saveMsg != nullptr) {
-        MsTxMarkAImpl(saveMsg->c_str(), stream, domainNameHash);
-    } else {
-        MsTxMarkAImpl(msg, stream, domainNameHash);
-    }
+    MsTxMarkAImpl(msg, stream, domainNameHash);
 }
 
 uint64_t MstxDomainRangeStartAFunc(mstxDomainHandle_t domain, const char* msg, aclrtStream stream)
@@ -259,15 +226,10 @@ uint64_t MstxDomainRangeStartAFunc(mstxDomainHandle_t domain, const char* msg, a
     if (!MstxDomainMgr::instance()->IsDomainEnabled(domainNameHash)) {
         return MSTX_INVALID_RANGE_ID;
     }
-    SHARED_PTR_ALIA<std::string> saveMsg = nullptr;
-    if (!GetMsgPtrToSave(msg, saveMsg)) {
+    if (!IsMsgValid(msg)) {
         return MSTX_INVALID_RANGE_ID;
     }
-    if (saveMsg != nullptr) {
-        return MsTxRangeStartAImpl(saveMsg->c_str(), stream, domainNameHash);
-    } else {
-        return MsTxRangeStartAImpl(msg, stream, domainNameHash);
-    }
+    return MsTxRangeStartAImpl(msg, stream, domainNameHash);
 }
 
 void MstxDomainRangeEndFunc(mstxDomainHandle_t domain, uint64_t id)

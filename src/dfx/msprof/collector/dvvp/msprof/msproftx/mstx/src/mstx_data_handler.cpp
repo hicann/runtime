@@ -96,36 +96,69 @@ void MstxDataHandler::Flush()
     ReportData();
 }
 
+std::vector<MsprofTxInfo> MstxDataHandler::SplitMstxInfo(const MstxInfo &info)
+{
+    std::vector<MsprofTxInfo> splitInfos;
+    const size_t maxStrValid = MAX_MESSAGE_LEN - 1;  // -1 for '\0'
+    size_t totalRawLen = info.message.size();
+
+    uint32_t segIdx = 0;  // segment index starts from 0
+    size_t offset = 0;
+    while (offset < totalRawLen) {
+        MsprofTxInfo splitInfo{};
+        splitInfo.infoType = 1;
+        splitInfo.res0 = segIdx;
+        splitInfo.value.stampInfo.threadId = info.threadId;
+        splitInfo.value.stampInfo.eventType = info.eventType;
+        splitInfo.value.stampInfo.startTime = info.startTime;
+        splitInfo.value.stampInfo.endTime = info.endTime;
+        splitInfo.value.stampInfo.markId = info.markId;
+        splitInfo.value.stampInfo.domain = info.domain;
+
+        size_t takeLen = std::min(maxStrValid, totalRawLen - offset);
+        std::string segContent = info.message.substr(offset, takeLen);
+        if (memcpy_s(splitInfo.value.stampInfo.message, maxStrValid, segContent.c_str(), segContent.size()) != EOK) {
+            MSPROF_LOGE("memcpy_s failed for message %s", info.message.c_str());
+            // If memcpy_s fails, skip this segment and continue with the next one
+            offset += takeLen;
+            segIdx++;
+            continue;
+        }
+        splitInfos.emplace_back(splitInfo);
+        offset += takeLen;
+        segIdx++;
+    }
+    return splitInfos;
+}
+
 void MstxDataHandler::ReportData()
 {
     if (mstxDataBuf_.GetUsedSize() == 0) {
         return;
     }
-    MsprofTxInfo info;
+    MstxInfo info;
     for (;;) {
         if (!mstxDataBuf_.TryPop(info)) {
             break;
         }
-        MsprofTxManager::instance()->ReportData(info);
+        auto splitInfos = SplitMstxInfo(info);
+        for (auto &splitInfo : splitInfos) {
+            MsprofTxManager::instance()->ReportData(splitInfo);
+        }
     }
 }
 
 int MstxDataHandler::SaveMarkData(const char* msg, uint64_t mstxEventId, uint64_t domainNameHash)
 {
-    MsprofTxInfo info;
-    info.infoType = 1; // 0: tx , 1: tx_ex
-    info.value.stampInfo.eventType = static_cast<uint16_t>(EventType::MARK);
-    info.value.stampInfo.processId = processId_;
-    info.value.stampInfo.threadId = static_cast<uint32_t>(OsalGetTid());
-    info.value.stampInfo.startTime = Platform::instance()->PlatformSysCycleTime();
-    info.value.stampInfo.endTime = info.value.stampInfo.startTime;
-    info.value.stampInfo.markId = mstxEventId;
-    info.value.stampInfo.domain = domainNameHash;
-    if (memcpy_s(info.value.stampInfo.message, MAX_MESSAGE_LEN - 1, msg, strlen(msg)) != EOK) {
-        MSPROF_LOGE("memcpy message [%s] failed", msg);
-        return PROFILING_FAILED;
-    }
-    info.value.stampInfo.message[strlen(msg)] = '\0';
+    MstxInfo info;
+    info.threadId = static_cast<uint32_t>(OsalGetTid());
+    info.eventType = static_cast<uint32_t>(EventType::MARK);
+    info.startTime = Platform::instance()->PlatformSysCycleTime();
+    info.endTime = info.startTime;
+    info.markId = mstxEventId;
+    info.domain = domainNameHash;
+    info.message = std::string(msg);
+
     if (!mstxDataBuf_.TryPush(std::move(info))) {
         MSPROF_LOGE("try push mstx data failed, event id %lu", mstxEventId);
         return PROFILING_FAILED;
@@ -136,19 +169,13 @@ int MstxDataHandler::SaveMarkData(const char* msg, uint64_t mstxEventId, uint64_
 int MstxDataHandler::SaveRangeData(const char* msg, uint64_t mstxEventId, MstxDataType type, uint64_t domainNameHash)
 {
     if (type == MstxDataType::DATA_RANGE_START) {
-        MsprofTxInfo info;
-        info.infoType = 1; // 0: tx , 1: tx_ex
-        info.value.stampInfo.eventType = static_cast<uint16_t>(EventType::START_OR_STOP);
-        info.value.stampInfo.processId = processId_;
-        info.value.stampInfo.threadId = static_cast<uint32_t>(OsalGetTid());
-        info.value.stampInfo.startTime = Platform::instance()->PlatformSysCycleTime();
-        info.value.stampInfo.markId = mstxEventId;
-        info.value.stampInfo.domain = domainNameHash;
-        if (memcpy_s(info.value.stampInfo.message, MAX_MESSAGE_LEN - 1, msg, strlen(msg)) != EOK) {
-            MSPROF_LOGE("memcpy message [%s] failed", msg);
-            return PROFILING_FAILED;
-        }
-        info.value.stampInfo.message[strlen(msg)] = '\0';
+        MstxInfo info;
+        info.threadId = static_cast<uint32_t>(OsalGetTid());
+        info.eventType = static_cast<uint32_t>(EventType::START_OR_STOP);
+        info.startTime = Platform::instance()->PlatformSysCycleTime();
+        info.markId = mstxEventId;
+        info.domain = domainNameHash;
+        info.message = std::string(msg);
         std::lock_guard<std::mutex> lock(tmpRangeDataMutex_);
         tmpMstxRangeData_.insert({mstxEventId, std::move(info)});
         return PROFILING_SUCCESS;
@@ -159,7 +186,7 @@ int MstxDataHandler::SaveRangeData(const char* msg, uint64_t mstxEventId, MstxDa
             MSPROF_LOGE("mstx range end event [%lu] not found", mstxEventId);
             return PROFILING_FAILED;
         }
-        iter->second.value.stampInfo.endTime = Platform::instance()->PlatformSysCycleTime();
+        iter->second.endTime = Platform::instance()->PlatformSysCycleTime();
         if (!mstxDataBuf_.TryPush(std::move(iter->second))) {
             MSPROF_LOGE("try push mstx data failed, event id %lu", mstxEventId);
             return PROFILING_FAILED;

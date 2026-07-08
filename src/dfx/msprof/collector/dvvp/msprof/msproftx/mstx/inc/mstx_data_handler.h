@@ -34,6 +34,16 @@ enum class MstxDataType {
     DATA_INVALID
 };
 
+struct MstxInfo {
+    uint32_t threadId;
+    uint32_t eventType;
+    uint64_t startTime;
+    uint64_t endTime;
+    uint64_t markId;
+    uint64_t domain;
+    std::string message;
+};
+
 class MstxDataHandler : public analysis::dvvp::common::singleton::Singleton<MstxDataHandler>,
                     public analysis::dvvp::common::thread::Thread {
 public:
@@ -54,14 +64,15 @@ private:
 
     void Flush();
     void ReportData();
+    std::vector<MsprofTxInfo> SplitMstxInfo(const MstxInfo &info);
 
 private:
     uint32_t processId_{0};
     std::atomic<bool> init_{false};
     std::atomic<bool> start_{false};
-    analysis::dvvp::common::queue::RingBuffer<MsprofTxInfo> mstxDataBuf_{MsprofTxInfo{}};
+    analysis::dvvp::common::queue::RingBuffer<MstxInfo> mstxDataBuf_{MstxInfo{}};
     std::mutex tmpRangeDataMutex_;
-    std::unordered_map<uint64_t, MsprofTxInfo> tmpMstxRangeData_;
+    std::unordered_map<uint64_t, MstxInfo> tmpMstxRangeData_;
 };
 }
 }

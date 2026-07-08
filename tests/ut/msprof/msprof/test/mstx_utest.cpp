@@ -200,14 +200,14 @@ TEST_F(MstxUtest, MstxMarkAFuncWillReturnWhenMsgIsNull)
     EXPECT_EQ(0, g_txdataList_.size());
 }
 
-TEST_F(MstxUtest, MstxMarkAFuncWillReturnWhenMsgIsLongerThanMaxLen)
+TEST_F(MstxUtest, MstxMarkAFuncWillSaveDataWhenMsgIsLongerThanMaxLen)
 {
     GlobalMockObject::verify();
     std::string msg(MAX_MESSAGE_LEN + 1, 'a');
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
     MsprofMstxApi::MstxMarkAFunc(msg.c_str(), nullptr);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
-    EXPECT_EQ(0, g_txdataList_.size());
+    EXPECT_EQ(2, g_txdataList_.size());
 }
 
 TEST_F(MstxUtest, MstxMarkAFuncWillReturnInputDataStartsWithInvalidChar)
@@ -221,7 +221,7 @@ TEST_F(MstxUtest, MstxMarkAFuncWillReturnInputDataStartsWithInvalidChar)
     EXPECT_EQ(0, g_txdataList_.size());
 }
 
-TEST_F(MstxUtest, MstxMarkAFuncWillReturnInputCommunicationDataMsgLengthLargerThanMaxValue)
+TEST_F(MstxUtest, MstxMarkAFuncWillSaveDataInputCommunicationDataMsgLengthLargerThanMaxValue)
 {
     // 校验框架内置通信打点数据
     GlobalMockObject::verify();
@@ -233,10 +233,10 @@ TEST_F(MstxUtest, MstxMarkAFuncWillReturnInputCommunicationDataMsgLengthLargerTh
                     "\\\"SDMA\\\", \\\"SrcRank\\\": \\\"50\\\" }";
     MsprofMstxApi::MstxMarkAFunc(msg.c_str(), nullptr);
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
-    EXPECT_EQ(0, g_txdataList_.size());
+    EXPECT_EQ(2, g_txdataList_.size());
 }
 
-TEST_F(MstxUtest, MstxMarkAFuncWillReturnInputCommunicationDataMsgLengthSmallerThanMaxValue)
+TEST_F(MstxUtest, MstxMarkAFuncWillSaveDataInputCommunicationDataMsgLengthSmallerThanMaxValue)
 {
     // 校验框架内置通信打点数据
     GlobalMockObject::verify();
@@ -324,7 +324,7 @@ TEST_F(MstxUtest, MstxRangeStartAFuncWillReturnZeroWhenMsgIsLongerThanMaxValue)
     GlobalMockObject::verify();
     std::string msg(MAX_MESSAGE_LEN + 1, 'a');
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Start(emptyMstxDomainInclude, emptyMstxDomainExclude));
-    EXPECT_EQ(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg.c_str(), nullptr));
+    EXPECT_NE(MSTX_INVALID_RANGE_ID, MsprofMstxApi::MstxRangeStartAFunc(msg.c_str(), nullptr));
     EXPECT_EQ(PROFILING_SUCCESS, MstxDataHandler::instance()->Stop());
 }
 
