@@ -108,7 +108,7 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
 
     if (jettyCtx->filledWqeCount >= jettyCtx->capacity) {
         error = jettyCtx->ExpandCapacity(driver);
-        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, retCode=%#x.",
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "ExpandCapacity failed, capacity=%u, max_depth=%u, stream_id=%d, device_id=%u, retCode=%#x.",
             jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), error);
         jettyCtx->isLargeDepth = (jettyCtx->capacity > JETTY_DEPTH_STANDARD);
         RT_LOG(RT_LOG_DEBUG, "ExpandCapacity success, capacity=%u, wqe count=%u.", jettyCtx->capacity, jettyCtx->filledWqeCount);
@@ -229,7 +229,7 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream* stream, Jetty
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "FillNopWqeForPartialBuffer failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
 
     error = jettyCtx->RoundUpCapacity(driver, deviceId);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, retCode=%#x.",
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "RoundUpCapacity failed, capacity=%u, max_depth=%u, stream_id=%d, device_id=%u, retCode=%#x.",
         jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), error);
 
     RT_LOG(RT_LOG_INFO, "FillNopWqeOnCaptureEnd success, stream_id=%d, totalValidWqeCount=%u.", streamId,

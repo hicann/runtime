@@ -46,6 +46,7 @@ enum class ErrorCode
     EE1020,
     EE1021,
     EE1022,
+    EE1023,
     EE2002,
     WE0001
 };

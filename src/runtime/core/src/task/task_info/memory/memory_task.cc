@@ -571,7 +571,7 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         // david UB 单算子场景 走 UB Doorbell模式
         if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
             error = ConvertAsyncDma2D(taskInfo, dst, dstPitch, srcAddr, srcPitch, width, height, fixedSize);
-            ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDma2D failed, retCode=%#x.", error);
+            COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "ConvertAsyncDma2D failed, retCode=%#x.", error);
             memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
         } else {
             // d2h or h2d data convert
@@ -656,7 +656,7 @@ static rtError_t ConvertAsyncDmaForSoftWareSqUb(TaskInfo * const taskInfo, TaskI
     input.normal.len = memcpyAsyncTaskInfo->size;
     error = StreamJettyHandler::HandleUbDmaTask(
         taskInfo, jettyType, &input, &output);
-    ERROR_RETURN_MSG_INNER(error, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, retCode=%#x.",
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, retCode=%#x.",
         devId, stream->Id_(), error);
     return error;
 }

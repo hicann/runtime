@@ -133,7 +133,7 @@ rtError_t Model::Setup(Context * const contextIn)
 
     rtError_t error = deviceDrv->ModelIdAlloc(&id_, devId, tsId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Malloc model id failed, tsId=%u, retCode=%#x!", tsId, static_cast<uint32_t>(error));
+        RT_LOG(RT_LOG_ERROR, "Alloc model id failed, tsId=%u, retCode=%#x!", tsId, static_cast<uint32_t>(error));
         return error;
     }
 

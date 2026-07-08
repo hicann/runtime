@@ -647,6 +647,17 @@
     },
     {
       "errClass": "RTS Errors",
+      "errTitle": "Resource_Error",
+      "ErrCode": "EE1023",
+      "ErrMessage": "%s failed. Reason: %s.",
+      "Arglist": "func, reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "RTS Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
       "ErrCode": "EE2002",
       "ErrMessage": "Value %s for environment variable %s is invalid. Expected value: %s.",

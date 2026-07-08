@@ -1962,6 +1962,14 @@ TEST_F(NpuDriverJettyTest, Context_ExpandCapacity_Success)
     
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 }
+
+TEST_F(NpuDriverJettyTest, Context_ExpandCapacity_ExceedsMaxDepth)
+{
+    StreamJettyContext context;
+    context.capacity = StreamJettyContext::JETTY_DEPTH_MAX;
+    rtError_t error = context.ExpandCapacity(stream_->Device_()->Driver_());
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
 // ========== Additional coverage for JettyManager functions ==========
 
 TEST_F(NpuDriverJettyTest, JettyManager_AllocJettyWithRetry_Success)
