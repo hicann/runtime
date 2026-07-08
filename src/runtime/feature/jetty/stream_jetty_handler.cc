@@ -108,8 +108,8 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
 
     if (jettyCtx->filledWqeCount >= jettyCtx->capacity) {
         error = jettyCtx->ExpandCapacity(driver);
-        ERROR_RETURN_MSG_INNER(error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, error=%d.",
-            jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), static_cast<int32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "ExpandCapacity failed, capacity=%u, max_depth=%u, stream_id=%d, device_id=%u, retCode=%#x.",
+            jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), error);
         jettyCtx->isLargeDepth = (jettyCtx->capacity > JETTY_DEPTH_STANDARD);
         RT_LOG(RT_LOG_DEBUG, "ExpandCapacity success, capacity=%u, wqe count=%u.", jettyCtx->capacity, jettyCtx->filledWqeCount);
     }
@@ -120,8 +120,8 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
     // wqe buffer 可用大小
     input->size = (StreamJettyContext::WQE_BUFFER_DEPTH - (jettyCtx->filledWqeCount % StreamJettyContext::WQE_BUFFER_DEPTH)) * StreamJettyContext::WQE_SIZE;
     error = driver->AsyncDmaWqeConvert(deviceId, input, output);
-    ERROR_RETURN_MSG_INNER(
-        error, "AsyncDmaWqeConvert failed, device_id=%u, size=%lu, ret=%d.", deviceId, memcpyInfo->size, error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "AsyncDmaWqeConvert failed, device_id=%u, size=%lu, retCode=%#x.", deviceId, memcpyInfo->size, error);
     jettyCtx->filledWqeCount += output->wqeCnt;
     // 记录 taskId 和 totalWqeCount，用于后续刷新 dieId/funcId/jettyId/pi
     jettyCtx->taskWqeCounts.push_back(std::pair<uint32_t, uint32_t>(task->id, output->wqeCnt));
@@ -146,9 +146,9 @@ rtError_t StreamJettyHandler::HandleUbDmaTask(
     StreamJettyContext* jettyCtx = nullptr;
     // when jettyContext create, reserve jetty
     rtError_t error = GetOrCreateStreamJettyContext(stream, jettyType, jettyCtx);
-    ERROR_RETURN_MSG_INNER(error, "Create jetty context failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    ERROR_RETURN_MSG_INNER(error, "Create jetty context failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
     error = CreateAndAppendWqe(task, jettyCtx, input, output);
-    ERROR_RETURN_MSG_INNER(error, "Append wqe failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Append wqe failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
     RT_LOG(RT_LOG_DEBUG, "Handle UbDma task success, stream_id=%d, jettyType=%d, filledWqeCount=%u, capacity=%u.",
         stream->Id_(), static_cast<int32_t>(jettyType), jettyCtx->filledWqeCount, jettyCtx->capacity);
     return RT_ERROR_NONE;
@@ -189,8 +189,8 @@ rtError_t StreamJettyHandler::FillNopWqeForPartialBuffer(const Stream* stream, c
 
     AsyncWqeOutputPara output = {};
     error = driver->AsyncDmaWqeConvert(deviceId, &input, &output);
-    ERROR_RETURN_MSG_INNER(
-        error, "AsyncDmaWqeConvert failed, device_id=%u, bufferSize=%u, ret=%d.", deviceId, bufferSize, error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "AsyncDmaWqeConvert failed, device_id=%u, bufferSize=%u, retCode=%#x.", deviceId, bufferSize, error);
     // 这里不可能触发wqe buffer扩容 不需要判断
     RT_LOG(RT_LOG_INFO, "Fill nop wqe success, stream_id=%d, count=%u, wqe_count=%u.",
         stream->Id_(), fillCount, jettyCtx->filledWqeCount);
@@ -226,11 +226,11 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream* stream, Jetty
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
     error = FillNopWqeForPartialBuffer(stream, jettyCtx);
-    ERROR_RETURN_MSG_INNER(error, "FillNopWqeForPartialBuffer failed, stream_id=%d, ret=%d.", stream->Id_(), error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "FillNopWqeForPartialBuffer failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
 
     error = jettyCtx->RoundUpCapacity(driver, deviceId);
-    ERROR_RETURN_MSG_INNER(error, "Capacity %u exceeds max depth %u, stream_id=%d, device_id=%u, error=%d.",
-        jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), static_cast<int32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "RoundUpCapacity failed, capacity=%u, max_depth=%u, stream_id=%d, device_id=%u, retCode=%#x.",
+        jettyCtx->capacity, StreamJettyContext::JETTY_DEPTH_MAX, stream->Id_(), stream->Device_()->Id_(), error);
 
     RT_LOG(RT_LOG_INFO, "FillNopWqeOnCaptureEnd success, stream_id=%d, totalValidWqeCount=%u.", streamId,
         jettyCtx->filledWqeCount);
@@ -268,7 +268,7 @@ rtError_t StreamJettyHandler::FillWqeToDevice(
 
         error = driver->AsyncDmaWqeFill(deviceId, &fillInfo);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "AsyncDmaWqeFill failed, stream_id=%d, buf_idx=%zu, ret=%d.", stream->Id_(), i, error);
+            RT_LOG(RT_LOG_ERROR, "AsyncDmaWqeFill failed, stream_id=%d, buf_idx=%zu, retCode=%#x.", stream->Id_(), i, error);
             return error;
         }
         offset += size;
@@ -355,17 +355,17 @@ rtError_t StreamJettyHandler::BindJetty(
         return RT_ERROR_NONE;
     }
     rtError_t error = jettyMgr->BindJettyForStream(streamId, excludeMdl, type);
-    ERROR_RETURN_MSG_INNER(error, "BindJettyForStream failed, stream_id=%d, ret=%d.", streamId, error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "BindJettyForStream failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     JettyInfo jettyInfo = {};
     error = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
-    ERROR_RETURN_MSG_INNER(error, "GetJettyInfoForStream failed, stream_id=%d, ret=%d.", streamId, error);
+    ERROR_RETURN_MSG_INNER(error, "GetJettyInfoForStream failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     error = FillWqeToDevice(stream, jettyCtx, jettyInfo);
-    ERROR_RETURN_MSG_INNER(error, "FillWqeToDevice failed, stream_id=%d, ret=%d.", streamId, error);
+    ERROR_RETURN_MSG_INNER(error, "FillWqeToDevice failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     error = UpdateUbdmaSqeWithJettyInfo(stream, jettyCtx, jettyInfo);
-    ERROR_RETURN_MSG_INNER(error, "UpdateUbdmaSqeWithJettyInfo failed, stream_id=%d, ret=%d.", streamId, error);
+    ERROR_RETURN_MSG_INNER(error, "UpdateUbdmaSqeWithJettyInfo failed, stream_id=%d, retCode=%#x.", streamId, error);
     return error;
 }
 
@@ -380,7 +380,7 @@ rtError_t StreamJettyHandler::ResetJettyCi(
     JettyInfo jettyInfo = {};
     rtError_t error = jettyMgr->GetJettyInfoForStream(streamId, type, jettyInfo);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-        "GetJettyInfoForStream failed, stream_id=%d, error=%d.", streamId, error);
+        "GetJettyInfoForStream failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     rtUbDbInfo_t dbInfo = {};
     dbInfo.wrCqe = 0U;
@@ -396,11 +396,11 @@ rtError_t StreamJettyHandler::ResetJettyCi(
     RT_LOG(RT_LOG_INFO, "ResetJettyCi: stream_id=%d, dieId=%u, functionId=%u, jettyId=%u, piValue=%u.",
         streamId, jettyInfo.dieId, jettyInfo.functionId, jettyInfo.jettyId, dbInfo.info[0].piValue);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-        "send ub doorbell failed, stream_id=%d, error=%d.", streamId, error);
+        "send ub doorbell failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     error = ctrlStream->Synchronize();
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-        "ub doorbell sync failed, stream_id=%d, error=%d.", streamId, error);
+        "ub doorbell sync failed, stream_id=%d, retCode=%#x.", streamId, error);
 
     return RT_ERROR_NONE;
 }
@@ -418,12 +418,12 @@ rtError_t StreamJettyHandler::RecycleJetty(Stream *stream, JettyType type, uint3
     }
     rtError_t error = ResetJettyCi(jettyMgr, stream, type, jettyCtx);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-        "ResetJettyCi failed, stream_id=%d, type=%d, error=%d.",
+        "ResetJettyCi failed, stream_id=%d, type=%d, retCode=%#x.",
         streamId, static_cast<int32_t>(type), error);
 
     if (!jettyCtx->isLargeDepth) {
         error = jettyMgr->UnbindJettyForStream(streamId, type);
-        ERROR_RETURN_MSG_INNER(error, "UnbindJettyForStream failed, stream_id=%d, type=%d, ret=%d.",
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "UnbindJettyForStream failed, stream_id=%d, type=%d, retCode=%#x.",
             streamId, static_cast<int32_t>(type), error);
         count++;
     }
@@ -448,12 +448,12 @@ rtError_t StreamJettyHandler::ReleaseJetty(Stream *stream, JettyType type)
     if (jettyCtx->isLargeDepth) {
         error = jettyMgr->UnbindJettyForStream(streamId, type);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "UnbindJettyForStream failed, stream_id=%d, ret=%d.", streamId, error);
+            RT_LOG(RT_LOG_ERROR, "UnbindJettyForStream failed, stream_id=%d, retCode=%#x.", streamId, error);
         }
     } else if (savedHandle != 0) {
         error = jettyMgr->FreeJettyByHandle(savedHandle, type);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "FreeJettyByHandle failed, stream_id=%d, handle=%lu, ret=%d.",
+            RT_LOG(RT_LOG_ERROR, "FreeJettyByHandle failed, stream_id=%d, handle=%lu, retCode=%#x.",
                 streamId, savedHandle, error);
         }
     }

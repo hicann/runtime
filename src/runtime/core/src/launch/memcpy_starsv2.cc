@@ -96,7 +96,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV2(taskAsync2d, dst, dstPitch, src, srcPitch, width, height, kind, fixedSize);
     taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = RT_ASYNC_CPY_2D;
-    ERROR_RETURN_MSG_INNER(error, "Init MemcpyAsyncTask failed, stream_id=%d, retCode=%#x", stm->Id_(),
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Init MemcpyAsyncTask failed, stream_id=%d, retCode=%#x", stm->Id_(),
         static_cast<uint32_t>(error));
     // David UB 单算子场景 fixedSize是否与计算出的size相等，如果相等则不需要发送任务
     if (IsDavidUbDma(taskAsync2d->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag() 

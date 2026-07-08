@@ -60,7 +60,10 @@ rtError_t StreamJettyContext::ExpandCapacity(Driver *driver)
     }
 
     if (capacity + WQE_BUFFER_DEPTH > JETTY_DEPTH_MAX) {
-        RT_LOG(RT_LOG_ERROR, "capacity %u would exceed max jetty depth %u.", capacity, JETTY_DEPTH_MAX);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Expanding the capacity",
+            "There are too many asynchronous copy tasks in the ACL Graph. "
+            "1. If the value of numBatches for aclrtMemcpyBatchAsync in the ACL Graph is too large, reduce the value of numBatches. "
+            "2. If the value of height for aclrtMemcpy2dAsync in the ACL Graph is too large, reduce the value of height");
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -80,8 +83,10 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver *driver, uint32_t deviceId)
     while (validDepth < capacity) {
         validDepth *= 2U; // 2 jetty深度限制
         if (validDepth > JETTY_DEPTH_MAX) {
-            RT_LOG(RT_LOG_ERROR, "capacity %u exceeds max jetty depth %u.",
-                capacity, JETTY_DEPTH_MAX);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Rounding up the capacity",
+                "There are too many asynchronous copy tasks in the ACL Graph. "
+                "1. If the value of numBatches for aclrtMemcpyBatchAsync in the ACL Graph is too large, reduce the value of numBatches. "
+                "2. If the value of height for aclrtMemcpy2dAsync in the ACL Graph is too large, reduce the value of height");
             return RT_ERROR_INVALID_VALUE;
         }
     }
@@ -109,7 +114,7 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver *driver, uint32_t deviceId)
         AsyncWqeOutputPara output = {};
         rtError_t error = driver->AsyncDmaWqeConvert(deviceId, &input, &output);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "NOP WQE fill failed for buffer %u, ret=%d.", i, error);
+            RT_LOG(RT_LOG_ERROR, "NOP WQE fill failed for buffer %u, retCode=%#x.", i, error);
             return error;
         }
     }
@@ -129,7 +134,7 @@ void StreamJettyContext::ReleaseBuffers(Driver *driver)
         if (wqeBuffers[i] != nullptr) {
             rtError_t ret = driver->HostMemFree(wqeBuffers[i].release());
             if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "HostMemFree failed, buf_idx=%zu, ret=%d.", i, static_cast<int32_t>(ret));
+                RT_LOG(RT_LOG_ERROR, "HostMemFree failed, buf_idx=%zu, retCode=%#x.", i, ret);
             }
         }
     }

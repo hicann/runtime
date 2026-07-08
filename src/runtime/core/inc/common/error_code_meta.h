@@ -140,6 +140,11 @@
       "%s failed. Values %s for parameters %s are invalid. "                  \
       "Reason: %s. ErrorCode=EE1022.\n",                                      \
       DLOG_ERROR)                                                             \
+    /* EE1023 - Resource_Error */                                              \
+    X(EE1023, "EE1023",                                                       \
+      ("func", "reason"),                                                     \
+      "%s failed. Reason: %s. ErrorCode=EE1023.\n",                           \
+      DLOG_ERROR)                                                             \
     /* EE2002 - Config_Error_Invalid_Environment_Variable */                  \
     X(EE2002, "EE2002",                                                       \
       ("value", "env", "expect"),                                             \

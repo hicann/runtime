@@ -256,7 +256,7 @@ static rtError_t ConvertAsyncDmaBatchForSoftWareSq(TaskInfo * const taskInfo, As
     error = StreamJettyHandler::HandleUbDmaTask(
         taskInfo, jettyType, &input, &output);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, jetty_type=%u, ret=%d.",
+        RT_LOG(RT_LOG_ERROR, "HandleUbDmaTask failed, device_id=%u, stream_id=%d, jetty_type=%u, retCode=%#x.",
             devId, stream->Id_(), jettyType, error);
         return error;
     }
