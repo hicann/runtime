@@ -1199,6 +1199,7 @@ rtError_t DavidStream::StreamTaskClean()
             "ReBuildStreamId failed, stream_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
         autoSplitCtx_->slaveStreams.clear();
         autoSplitCtx_->curStreamSqeCount = 0;
+        SetBindFlag(true);
     }
     ModelTaskClean();
     COND_PROC((IsAutoSplitSq()), return RT_ERROR_NONE);
