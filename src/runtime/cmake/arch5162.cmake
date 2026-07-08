@@ -400,7 +400,6 @@ set_source_files_properties(${libruntime_aclrt_impl_src_files}
         COMPILE_DEFINITIONS "OS_TYPE=0;FUNC_VISIBILITY"
 )
 
-
 macro(add_runtime_library target_name)
     add_library(${target_name} SHARED
         ${common_src_files}
@@ -489,7 +488,6 @@ macro(add_runtime_library target_name)
                 __RT_ENABLE_ASAN__)
     endif()
 endmacro()
-
 
 add_runtime_library(runtime)
 

@@ -321,7 +321,7 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(void ** const dptr, const uint64
 {
     UNUSED(dptr);
     UNUSED(size);
-    UNUSED(type); 
+    UNUSED(type);
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(isLogError);
