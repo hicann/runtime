@@ -42,6 +42,7 @@ public:
     rtError_t SendStreamRecycleMsg(const RtMaintainceParam &maintenanceParam, TaskInfo *&task);
 
     rtError_t SendNotifyResetMsg(uint32_t notifyId);
+    rtError_t SendNotifyResetV200Msg(const uint32_t notifyIndex, const SingleBitNotifyRecordInfo * const singleInfo, void * const notify);
 
     rtError_t SendModelUnbindMsg(Model * const mdl, Stream * const streamIn, const bool force);
 

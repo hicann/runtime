@@ -50,6 +50,7 @@
 #include "jetty_manager.h"
 #include "jetty_pool.h"
 #include "stream_jetty_handler.h"
+#include "stars_david.hpp"
 #include "device_snapshot.hpp"
 #include "snapshot_process_helper.hpp"
 #include "snapshot_callback_manager.hpp"
@@ -1318,6 +1319,21 @@ TEST_F(TinyStubTest, jetty_stub)
     EXPECT_EQ(StreamJettyHandler::GetJettyTypeFromTask(nullptr), JettyType::JETTY_TYPE_MAX);
     EXPECT_EQ(StreamJettyHandler::HandleUbDmaTask(nullptr, JettyType::JETTY_TYPE_H2D, nullptr, nullptr),
         RT_ERROR_NONE);
+}
+
+TEST_F(TinyStubTest, task_david_stub)
+{
+    EXPECT_EQ(GetHeadUpdateFlag(0), 1U);
+    EXPECT_EQ(GetHeadUpdateFlag(1), 1U);
+    EXPECT_EQ(GetHeadUpdateFlag(63), 1U);
+    EXPECT_EQ(GetHeadUpdateFlag(64), 1U);
+    EXPECT_EQ(GetHeadUpdateFlag(UINT64_MAX), 1U);
+
+    ConstructDavidAsyncUbDbSqe(nullptr, nullptr);
+
+    TaskInfo taskInfo = {};
+    rtDavidSqe_t sqe = {};
+    ConstructDavidAsyncUbDbSqe(&taskInfo, &sqe);
 }
 
 TEST_F(TinyStubTest, xpu_task_fail_callback_manager_stub)

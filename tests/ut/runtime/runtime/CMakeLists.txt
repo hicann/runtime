@@ -1644,6 +1644,7 @@ set(runtimeut_v201_src_list
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
     ${TOP_DIR}/src/runtime/core/src/common/ioctl/v201/ioctl_utils.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v201/task_david_stub.cc
 )
 
 list(REMOVE_ITEM runtimeut_v201_src_list

@@ -24,6 +24,7 @@
 #include "maintenance_task.h"
 #include "context.hpp"
 #include "common_task.h"
+#include "notify_task.h"
 
 namespace cce {
 namespace runtime {
@@ -56,6 +57,13 @@ rtError_t CtrlMsgNotifyResetInit(TaskInfo *const taskInfo, const RtCtrlMsgParam 
     CommonCmdTaskInfo cmdInfo;
     cmdInfo.notifyId = taskParam.notifyId;
     CommonCmdTaskInit(taskInfo, taskParam.cmdType, &cmdInfo);
+    return RT_ERROR_NONE;
+}
+
+rtError_t CtrlMsgNotifyResetV200Init(TaskInfo *const taskInfo, const RtCtrlMsgParam &param)
+{
+    RtNotifyResetParam taskParam = param.notifyResetParam;
+    (void)NotifyResetTaskInit(taskInfo, taskParam.notifyIndex, taskParam.singleInfo, taskParam.notify);
     return RT_ERROR_NONE;
 }
 

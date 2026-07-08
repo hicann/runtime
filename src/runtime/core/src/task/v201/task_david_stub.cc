@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -14,17 +14,11 @@
 
 namespace cce {
 namespace runtime {
-uint8_t GetHeadUpdateFlag(uint64_t allocTimes)
-{
-    UNUSED(allocTimes);
-    return 1U;
-}
 
 void ConstructDavidAsyncUbDbSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const command)
 {
     UNUSED(taskInfo);
     UNUSED(command);
 }
-
 } // namespace runtime
 } // namespace cce

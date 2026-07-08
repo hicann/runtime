@@ -18,6 +18,7 @@
 #include "stream_david.hpp"
 #include "profiler_c.hpp"
 #include "rt_log.h"
+#include "ctrl_sq.hpp"
 #include <memory>
 
 namespace cce {
@@ -135,6 +136,13 @@ rtError_t NtyReset(Notify * const inNotify, Stream * const streamIn)
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1005, "IPC notify reset");
         return RT_ERROR_TASK_NOT_SUPPORT;
     }
+    SingleBitNotifyRecordInfo singleInfo = {false, false, inNotify->GetLastIsPcie(), inNotify->IsPod(),
+                                            inNotify->GetLastLocalId(), inNotify->GetLastBaseAddr(), true};
+
+    if (streamIn->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return streamIn->Device_()->GetCtrlSQ().SendNotifyResetV200Msg(inNotify->GetNotifyId(), &singleInfo, static_cast<void *>(inNotify));
+    }
+ 
     TaskInfo *resetTask = nullptr;
     rtError_t error = CheckTaskCanSend(streamIn);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
@@ -152,8 +160,6 @@ rtError_t NtyReset(Notify * const inNotify, Stream * const streamIn)
         "Failed to alloc task, device_id=%u, stream_id=%d, retCode=%#x.",
         streamIn->Device_()->Id_(), streamId, static_cast<uint32_t>(error));
     SaveTaskCommonInfo(resetTask, dstStm, pos);
-    SingleBitNotifyRecordInfo singleInfo = {false, false, inNotify->GetLastIsPcie(), inNotify->IsPod(),
-                                            inNotify->GetLastLocalId(), inNotify->GetLastBaseAddr(), true};
     error = NotifyResetTaskInit(resetTask, inNotify->GetNotifyId(), &singleInfo, static_cast<void *>(inNotify));
     ScopeGuard tskErrRecycle(errRecycle);
     ERROR_RETURN(error, "Failed to initialize notify reset task, retCode=%#x", static_cast<uint32_t>(error));

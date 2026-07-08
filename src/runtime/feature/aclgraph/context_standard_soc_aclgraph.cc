@@ -91,7 +91,7 @@ rtError_t Context::TryRecycleCaptureModelJettyResource(const CaptureModel * cons
     }
     modelLock_.Unlock();
 
-    return (totalRelease > 0U) ? RT_ERROR_NONE : RT_ERROR_JETTY_POOL_NO_RESOURCES;
+    return error;
 }
 } // namespace runtime
 } // namespace cce

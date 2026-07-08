@@ -29,6 +29,7 @@ enum class RtCtrlMsgType : std::uint32_t {
     RT_CTRL_MSG_SET_OVERFLOW_SWITCH,
     RT_CTRL_MSG_AICPU_MODEL_DESTROY,
     RT_CTRL_MSG_SET_STREAM_TAG,
+    RT_CTRL_MSG_NOTIFY_RESET_V200,
     RT_CTRL_MSG_MAX,
 };
 
@@ -91,6 +92,12 @@ struct RtSetStreamTagParam {
     uint32_t geOpTag;
 };
 
+struct RtNotifyResetParam {
+    uint32_t notifyIndex;
+    const SingleBitNotifyRecordInfo *singleInfo;
+    void *notify;
+};
+
 struct RtCtrlMsgSendParam {
     rtTaskGenCallback callback = nullptr;
     int32_t timeout = -1;
@@ -110,6 +117,7 @@ struct RtCtrlMsgParam {
         RtDebugUnRegisterParam debugUnRegisterParam;
         RtOverflowSwitchSetParam overflowSwitchSetParam;
         RtSetStreamTagParam setStreamTagParam;
+        RtNotifyResetParam notifyResetParam;
     };
 };
 
@@ -125,6 +133,8 @@ rtError_t CtrlMsgStreamClearInit(TaskInfo *const taskInfo, const RtCtrlMsgParam 
 rtError_t CtrlMsgStreamRecycleInit(TaskInfo *taskInfo, const RtCtrlMsgParam &param);
 
 rtError_t CtrlMsgNotifyResetInit(TaskInfo *const taskInfo, const RtCtrlMsgParam &param);
+
+rtError_t CtrlMsgNotifyResetV200Init(TaskInfo *const taskInfo, const RtCtrlMsgParam &param);
 
 rtError_t CtrlMsgModelTaskInit(TaskInfo * const taskInfo, const RtCtrlMsgParam &param);
 

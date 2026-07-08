@@ -137,6 +137,7 @@ void CtrlSQ::RegCtrlMsgInitFunc(void) const
     ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH)] = &CtrlMsgOverflowSwitchSetInit;
     ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_AICPU_MODEL_DESTROY)] = &CtrlMsgAicpuModelInit;
     ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG)] = &CtrlMsgSetStreamTagInit;
+    ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET_V200)] = &CtrlMsgNotifyResetV200Init;
 }
 
 rtError_t CtrlSQ::SendStreamClearMsg(const Stream * const stm, rtClearStep_t step, rtTaskGenCallback callback)
@@ -174,6 +175,22 @@ rtError_t CtrlSQ::SendNotifyResetMsg(uint32_t notifyId)
     param.commonCmdParam.cmdType = PhCmdType::CMD_NOTIFY_RESET;
     param.commonCmdParam.notifyId = notifyId;
     rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET, param);
+    ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
+
+    error = WaitComplete();
+    ERROR_RETURN_MSG_INNER(error, "Failed to wait for ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t CtrlSQ::SendNotifyResetV200Msg(const uint32_t notifyIndex,
+    const SingleBitNotifyRecordInfo * const singleInfo, void * const notify)
+{
+    RtCtrlMsgParam param = {};
+    param.taskType = TS_TASK_TYPE_NOTIFY_RECORD;
+    param.notifyResetParam.notifyIndex = notifyIndex;
+    param.notifyResetParam.singleInfo = singleInfo;
+    param.notifyResetParam.notify = notify;
+    rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_NOTIFY_RESET_V200, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = WaitComplete();
