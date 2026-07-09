@@ -157,7 +157,7 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg &taskCfg, const rtKernelLaunchCfg_t*
     taskCfg.base.schemMode = static_cast<uint8_t>(RT_SCHEM_MODE_END);
     // cfg support nullptr, no need process
     NULL_PTR_RETURN_NOLOG(cfg, RT_ERROR_NONE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->attrs, RT_ERROR_INVALID_VALUE, "Converting the kernel launch configuration attributes into the internal task configuration structure");
     for (size_t idx = 0U; idx < cfg->numAttrs; idx++) {
         switch (cfg->attrs[idx].id) {
             case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:

@@ -17,7 +17,7 @@ namespace cce {
 namespace runtime {
 rtError_t IpcEvent::IpcEventRecordStarsV2(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event Record operation of cross-process IPC");
     Device * const dev = stm->Device_();
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
@@ -82,7 +82,7 @@ rtError_t IpcEvent::IpcEventRecordStarsV2(Stream * const stm)
 
 rtError_t IpcEvent::IpcEventWaitStarsV2(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event Wait operation of cross-process IPC");
     Device * const dev = stm->Device_();
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",

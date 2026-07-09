@@ -2103,7 +2103,7 @@ rtError_t Model::ModelGetStreams(Stream **streams, uint32_t *numStreams) const
         streams[i] = nullptr;
     }
     *numStreams = retStreamNum;
-    COND_RETURN_AND_MSG_OUTER(*numStreams < mdlStreamNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, __func__,
+    COND_RETURN_AND_MSG_OUTER(*numStreams < mdlStreamNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, "Obtaining the stream associated with a model running instance",
         *numStreams, "numStreams",
         "The array space is insufficient. The array size is less than the total number of model streams " +
         std::to_string(mdlStreamNum));

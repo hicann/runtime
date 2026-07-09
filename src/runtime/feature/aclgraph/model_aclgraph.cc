@@ -55,7 +55,7 @@ rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags)
     std::string realFilePath = RealPathForFileNotExists(path);
     std::ofstream outputFile(realFilePath);
     COND_RETURN_AND_MSG_OUTER(!outputFile.is_open(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        __func__, path, "path", "Failed to open the JSON file path");
+        "Exporting the model running instance information in JSON format", path, "path", "Failed to open the JSON file path");
     outputFile << "[\n";
     uint32_t streamCnt = 0;
     bool isLastStream = false;

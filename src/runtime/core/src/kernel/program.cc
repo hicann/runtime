@@ -944,7 +944,7 @@ rtError_t ElfProgram::ParserBinary()
 
     elfData_->obj_size = binarySize_;
     kernels_ = ProcessObject(RtPtrToPtr<char_t *>(binary_), elfData_);
-    NULL_PTR_RETURN_MSG_OUTER(kernels_, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernels_, RT_ERROR_INVALID_VALUE, "Parsing the binary file data of the operator");
 
     const Runtime * const rtInstance = Runtime::Instance();
     const rtChipType_t chipType = rtInstance->GetChipType();

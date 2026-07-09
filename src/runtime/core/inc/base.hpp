@@ -14,6 +14,7 @@
 #include <memory>
 #include <cinttypes>
 #include <sstream>
+#include <type_traits>
 #include "soc_define.hpp"
 #include "osal.hpp"
 #include "error_codes/rt_error_codes.h"
@@ -122,8 +123,8 @@ namespace runtime {
 #define RT_LOG_CALL_MSG_NO_RT_LOG(module_type, format, ...)
 #define RT_LOG_OUTER_MSG_IMPL(error_code, ...)
 #define RT_LOG_OUTER_MSG_WITH_FUNC(error_code, ...)
-#define RT_LOG_OUTER_MSG_INVALID_PARAM(parm, ...)
 #define RT_LOG_OUTER_MSG_WITH_FUNC_DESC(error_code, funcDesc, ...)
+#define RT_LOG_OUTER_MSG_INVALID_PARAM(parm, ...)
 #define RT_LOG_FLUSH()
 #else
 #define RT_LOG(level, format, ...) RT_LOG_##level(format, ##__VA_ARGS__)
@@ -220,41 +221,60 @@ constexpr const char* ErrorCodeToString(ErrorCode code) {
 #undef RT_ERR_TO_STR
 }
 
-template<class... Args>
-void ErrorCodeProcess(ErrorCode errorCode, const char *file,
-    const int32_t line, const char *func, Args&&... args)
+inline std::string MakeStr() { return ""; }
+inline std::string MakeStr(std::nullptr_t) { return ""; }
+inline std::string MakeStr(const char* s) { return (s != nullptr) ? s : ""; }
+inline std::string MakeStr(const std::string& s) { return s; }
+inline std::string MakeStr(std::string&& s) { return std::move(s); }
+template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
+inline std::string MakeStr(T v)
+{
+    std::ostringstream oss;
+    if constexpr (std::is_same_v<std::decay_t<T>, int8_t> || std::is_same_v<std::decay_t<T>, uint8_t>) {
+        oss << static_cast<int>(v);
+    } else {
+        oss << v;
+    }
+    return oss.str();
+}
+inline std::string MakeStr(const void* p)
+{
+    if (p == nullptr) {
+        return "";
+    }
+    std::ostringstream oss;
+    oss << p;
+    return oss.str();
+}
+
+#define RT_ERRVAL_M1(a) cce::runtime::MakeStr(a)
+#define RT_ERRVAL_M2(a, b) cce::runtime::MakeStr(a), cce::runtime::MakeStr(b)
+#define RT_ERRVAL_M3(a, b, c) cce::runtime::MakeStr(a), cce::runtime::MakeStr(b), cce::runtime::MakeStr(c)
+#define RT_ERRVAL_M4(a, b, c, d) cce::runtime::MakeStr(a), cce::runtime::MakeStr(b), cce::runtime::MakeStr(c), cce::runtime::MakeStr(d)
+#define RT_ERRVAL_M5(a, b, c, d, e) cce::runtime::MakeStr(a), cce::runtime::MakeStr(b), cce::runtime::MakeStr(c), cce::runtime::MakeStr(d), cce::runtime::MakeStr(e)
+#define RT_ERRVAL_M6(a, b, c, d, e, f) cce::runtime::MakeStr(a), cce::runtime::MakeStr(b), cce::runtime::MakeStr(c), cce::runtime::MakeStr(d), cce::runtime::MakeStr(e), cce::runtime::MakeStr(f)
+#define RT_ERRVAL_CAT_I(a, b) a##b
+#define RT_ERRVAL_CAT(a, b) RT_ERRVAL_CAT_I(a, b)
+#define RT_ERRVAL_GET(_0, _1, _2, _3, _4, _5, _6, N, ...) N
+#define RT_ERRVAL_COUNT(...) RT_ERRVAL_GET(0, ##__VA_ARGS__, 6, 5, 4, 3, 2, 1, 0)
+#define RT_ERRVAL_DISPATCH(N, ...) RT_ERRVAL_CAT(RT_ERRVAL_M, N)(__VA_ARGS__)
+#define RT_ERRVAL_VALUES(...) RT_ERRVAL_DISPATCH(RT_ERRVAL_COUNT(__VA_ARGS__), __VA_ARGS__)
+
+inline void ErrorCodeProcess(ErrorCode errorCode, const char* file,
+    const int32_t line, const char* func, const std::vector<std::string>& values)
 {
 #if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
-    std::vector<std::string> values;
-    if constexpr (sizeof...(Args) > 0) {
-        values.reserve(sizeof...(Args));
-        auto processArg = [&values](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_arithmetic_v<T>) {
-                values.emplace_back(std::to_string(arg));
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                values.emplace_back(std::forward<decltype(arg)>(arg));
-            } else if constexpr (std::is_convertible_v<T, const char*>) {
-                const char* ptr = arg;
-                values.emplace_back(ptr ? ptr : "");
-            } else {
-                std::ostringstream oss;
-                oss << std::forward<decltype(arg)>(arg);
-                values.emplace_back(oss.str());
-            }
-        };
-
-        (processArg(std::forward<Args>(args)), ...);
-    }
-    ProcessErrorCodeImpl(errorCode, file, line, func, std::move(values));
+    ProcessErrorCodeImpl(errorCode, file, line, func, values);
     ErrorManager::GetInstance().ATCReportErrMessage(
-        ErrorCodeToString(errorCode), 
-        GetParamNames(errorCode), 
-        std::move(values)
-    );
+        ErrorCodeToString(errorCode),
+        GetParamNames(errorCode),
+        values);
 #else
     (void)errorCode;
-    (void)(sizeof...(args));
+    (void)file;
+    (void)line;
+    (void)func;
+    (void)values;
 #endif
 }
 
@@ -266,12 +286,12 @@ void ErrorCodeProcess(ErrorCode errorCode, const char *file,
     RT_LOG_OUTER_MSG_IMPL((error_code), __func__, ##__VA_ARGS__)
 
 #define RT_LOG_OUTER_MSG_WITH_FUNC_DESC(error_code, funcDesc, ...) \
-        RT_LOG_OUTER_MSG_IMPL((error_code), funcDesc, ##__VA_ARGS__)
+    RT_LOG_OUTER_MSG_IMPL((error_code), funcDesc, ##__VA_ARGS__)
 
 // 由调用者保证传参个数和errmsg匹配
 #define RT_LOG_OUTER_MSG_IMPL(error_code, ...)                                                               \
     do {                                                                                                     \
-        ErrorCodeProcess((error_code), __FILE__, __LINE__, &__func__[0], ##__VA_ARGS__);                     \
+        ErrorCodeProcess((error_code), __FILE__, __LINE__, &__func__[0], {RT_ERRVAL_VALUES(__VA_ARGS__)});                     \
     } while (false)
 #endif
 

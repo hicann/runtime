@@ -375,7 +375,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
         const rtArgsEx_t *argsInfo, Stream *stm, const TaskCfg * const taskCfg, const bool isLaunchVec)
 {
     UNUSED(isLaunchVec);
-    NULL_PTR_RETURN_MSG_OUTER(progHandle, RT_ERROR_PROGRAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(progHandle, RT_ERROR_PROGRAM_NULL, "Delivering a kernel task based on BinHandle");
 
     rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX, nullptr, nullptr};
@@ -512,9 +512,9 @@ rtError_t StreamLaunchKernelV2(Kernel *kernel, const uint32_t coreDim, Stream *s
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX, nullptr, nullptr};
     TaskInfo *kernelTask = nullptr;
 
-    NULL_PTR_RETURN_MSG_OUTER(extendAgrs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(extendAgrs, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     const rtArgsEx_t *argsInfo = extendAgrs->argsInfo;
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
 
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check task send status, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));

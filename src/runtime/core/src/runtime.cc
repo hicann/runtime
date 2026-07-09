@@ -2112,7 +2112,7 @@ rtError_t Runtime::OpenNetService(const rtNetServiceOpenArgs *args) const
 {
     rtError_t error = RT_ERROR_NONE;
     COND_RETURN_AND_MSG_OUTER(tsdOpenNetService_ == nullptr, RT_ERROR_DRV_TSD_ERR,
-        ErrorCode::EE1015, __func__, "Symbol TsdOpenNetService not found in libtsdclient.so.");
+        ErrorCode::EE1015, "Starting the HCCP process", "Symbol TsdOpenNetService not found in libtsdclient.so.");
     Context *ctx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(ctx, RT_ERROR_CONTEXT_NULL);
     uint32_t userDeviceId = 0U;
@@ -2131,7 +2131,7 @@ rtError_t Runtime::CloseNetService() const
 {
     rtError_t error = RT_ERROR_NONE;
     COND_RETURN_AND_MSG_OUTER(tsdCloseNetService_ == nullptr, RT_ERROR_DRV_TSD_ERR,
-        ErrorCode::EE1015, __func__, "Symbol TsdCloseNetService not found in libtsdclient.so.");
+        ErrorCode::EE1015, "Stopping the HCCP process", "Symbol TsdCloseNetService not found in libtsdclient.so.");
     Context *ctx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(ctx, RT_ERROR_CONTEXT_NULL);
     uint32_t userDeviceId = 0U;
@@ -4178,7 +4178,7 @@ rtError_t Runtime::SetTaskAbortCallBack(const char_t *regName, void *callback, v
         taskAbortCallbackMap_[regName].args = args;
     } else if(type == TaskAbortCallbackType::RTS_SET_DEVICE_TASK_ABORT_CALLBACK) {
         COND_RETURN_AND_MSG_OUTER(taskAbortCallbackMap_.count(regName) > 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-            __func__, "regName", "The regName " + std::string(regName) + " has been registered and cannot be registered again.");
+            "Registering the aborting callback function of a task", "regName", "The regName " + std::string(regName) + " has been registered and cannot be registered again.");
         taskAbortCallbackMap_[regName].callback = nullptr;
         taskAbortCallbackMap_[regName].callbackV2 = RtPtrToPtr<rtsDeviceTaskAbortCallback>(callback);
         taskAbortCallbackMap_[regName].args = args;
@@ -4983,8 +4983,8 @@ rtError_t Runtime::BinaryUnLoad(const Device *const device, Program * const prog
 
 rtError_t Runtime::RegKernelLaunchFillFunc(const char* symbol, rtKernelLaunchFillFunc callback)
 {
-    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(symbol, RT_ERROR_INVALID_VALUE, "Registering the callback function for data filling during kernel startup");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callback, RT_ERROR_INVALID_VALUE, "Registering the callback function for data filling during kernel startup");
     std::string symbolStr;
     (void)symbolStr.assign(RtPtrToPtr<const char_t *>(symbol));
     const std::unique_lock<std::mutex> regMapLock(mapMutex_);
@@ -4995,7 +4995,7 @@ rtError_t Runtime::RegKernelLaunchFillFunc(const char* symbol, rtKernelLaunchFil
 
 rtError_t Runtime::UnRegKernelLaunchFillFunc(const char* symbol)
 {
-    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(symbol, RT_ERROR_INVALID_VALUE, "Deregistering the callback function for data filling during kernel startup");
     std::string symbolStr;
     (void)symbolStr.assign(RtPtrToPtr<const char_t *>(symbol));
     const std::unique_lock<std::mutex> regMapLock(mapMutex_);
@@ -5019,8 +5019,8 @@ rtError_t Runtime::ExeCallbackFillFunc(std::string symbol, void *cfgAddr, uint32
 
 rtError_t Runtime::GetElfOffset(void * const elfData, const uint32_t elfLen, uint32_t* offset) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(elfData, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(offset, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(elfData, RT_ERROR_INVALID_VALUE, "Obtaining the ElfData offset");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(offset, RT_ERROR_INVALID_VALUE, "Obtaining the ElfData offset");
     int32_t error = GetEhSizeOffset(elfData, elfLen, offset);
     if (error != 0) {
         return RT_ERROR_INVALID_VALUE;

@@ -115,7 +115,7 @@ rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* cons
     const AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     rtKernelTaskParams* kernelTaskParams = &(params->kernelTaskParams);
     Kernel * const kernel = aicTaskInfo->kernel;
-    NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernel, RT_ERROR_INVALID_VALUE, "Obtaining kernel task parameters");
     kernelTaskParams->funcHandle = kernel->GetInnerHandle();
     kernelTaskParams->cfg = nullptr;
     kernelTaskParams->args = aicTaskInfo->comm.args;
@@ -127,7 +127,7 @@ rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* cons
     Model* mdl = stm->Model_();
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, "Non ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Obtaining kernel task parameters", "Non ACL Graph mode is not supported");
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     const TaskGroup* taskGroup = captureModel->GetTaskGroup(stm->Id_(), taskInfo->id);
     params->taskGrp = static_cast<void*>(RtPtrToUnConstPtr<TaskGroup*>(taskGroup));
@@ -243,7 +243,7 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
     Model* mdl = stm->Model_();
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, "Non ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Updating kernel parameters", "Non ACL Graph mode is not supported");
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
 
     if (params->opInfoPtr != nullptr && params->opInfoSize != 0) {
@@ -452,7 +452,7 @@ rtError_t CopyKernelParamsToBuffer(const Kernel *kernel, void **argsArray, void 
         uint32_t offset = 0U;
         uint32_t size = 0U;
         COND_RETURN_AND_MSG_OUTER(argsArray[i] == nullptr,
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, __func__, std::string("argsArray[") + std::to_string(i) + std::string("]"));
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, "Copying kernel parameters to a buffer", std::string("argsArray[") + std::to_string(i) + std::string("]"));
         rtError_t error = kernel->GetParamInfo(i, &offset, &size);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
                        "GetParamInfo failed, index=%u, retCode=%#x.", i, static_cast<uint32_t>(error));        

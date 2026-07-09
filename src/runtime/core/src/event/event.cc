@@ -470,7 +470,7 @@ rtError_t Event::GetEventID(uint32_t * const evtId) const
 
 rtError_t Event::Record(Stream * const stm, const bool isApiCall)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
     const std::lock_guard<std::mutex> lockRecord(eventLockForRecord_);
     // 支持record external特性后，software event的record不再仅限于capture场景
     // 普通record + graph wait external场景中，外部会有software event record
@@ -682,7 +682,7 @@ rtError_t Event::WaitSoftwareEvent(Stream* const stm)
 
 rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Waiting for an event");
     if (!IsHardwareMode()) {
         return WaitSoftwareEvent(stm);
     }
@@ -737,7 +737,7 @@ ERROR_RECYCLE:
 // new mode not call
 rtError_t Event::Reset(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event reset");
     // 支持record external特性后，software event的reset不再仅限capture场景
     // 普通record + graph wait external场景中，可能存在主动reset sof
     if (!IsHardwareMode()) {
@@ -990,7 +990,7 @@ rtError_t Event::Setup()
 
 rtError_t Event::RecordForNotify(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
 
     Device * const dev = stm->Device_();
     TaskInfo submitTask = {};

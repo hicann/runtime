@@ -42,7 +42,7 @@ rtError_t CheckReduceCapability(Stream * const stm, const rtRecudeKind_t kind, c
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_kind=0x%x.", sdmaReduceKind);
     const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
     COND_RETURN_AND_MSG_OUTER((((sdmaReduceKind >> shift) & 0x1U) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
-        ErrorCode::EE1006, __func__, "Parameter kind value " + ReduceKindToString(kind),
+        ErrorCode::EE1006, "Checking the availability of Reduce on the current device", "Parameter kind value " + ReduceKindToString(kind),
         "The current SoC does not support this kind of reduction operation");
 
     const uint32_t sdmaReduceSupport = capabilityInfo.sdma_reduce_support;

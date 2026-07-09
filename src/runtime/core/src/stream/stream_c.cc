@@ -199,7 +199,7 @@ rtError_t CmoAddrTaskLaunchForDavid(rtDavidCmoAddrInfo * const cmoAddrInfo, cons
 
 rtError_t StreamDatadumpInfoLoad(const void * const dumpInfo, const uint32_t length, Stream * const dftStm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dftStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Dump information loading");
     Device *device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDataDumpLoadInfoParam param = {dumpInfo, length, 0U};
@@ -207,7 +207,7 @@ rtError_t StreamDatadumpInfoLoad(const void * const dumpInfo, const uint32_t len
     }
 
     rtError_t error = RT_ERROR_NONE;
-    NULL_PTR_RETURN_MSG_OUTER(dftStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Dump information loading");
     const int32_t streamId = dftStm->Id_();
 
     TaskInfo *rtDumpLoadInfoTask = nullptr;
@@ -641,7 +641,7 @@ rtError_t StreamNopTask(Stream * const stm)
 rtError_t StreamAicpuInfoLoad(Stream * const dftStm, const void * const aicpuInfo,
     const uint32_t length)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dftStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Loading AI CPU information to the device");
     Device *device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtAicpuInfoLoadParam param = {aicpuInfo, length};
@@ -679,7 +679,7 @@ rtError_t StreamAicpuInfoLoad(Stream * const dftStm, const void * const aicpuInf
 
 rtError_t UpdateTimeoutConfigTaskSubmitDavid(Stream * const stm, const RtTimeoutConfig &timeoutConfig)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Delivering a task for updating the timeout interval");
     TaskInfo *timeoutSetTask = nullptr;
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
@@ -944,7 +944,7 @@ rtError_t StreamWriteValuePtr(const rtWriteValueInfo_t * const writeValueInfo, S
 
 rtError_t SendTopicMsgVersionToAicpuDavid(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Sending the topic message version number to the AI CPU");
     TaskInfo *topicMsgVersiontask = nullptr;
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",

@@ -80,7 +80,7 @@ rtError_t NtyWait(
 
 rtError_t NtyRecord(Notify * const inNotify, Stream * const streamIn)
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamIn, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamIn, RT_ERROR_STREAM_NULL, "Notify recording");
     TaskInfo *recordTask = nullptr;
     const int32_t streamId = streamIn->Id_();
     RT_LOG(RT_LOG_INFO, "notify_id=%u, device_id=%u.", inNotify->GetNotifyId(), streamIn->Device_()->Id_());

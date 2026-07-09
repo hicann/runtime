@@ -778,7 +778,7 @@ rtError_t Context::StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle)
 {
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
     COND_RETURN_AND_MSG_OUTER(stm->GetTaskGroupStatus() != StreamTaskGroupStatus::NONE,
-        RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016, __func__, 
+        RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016, "Marking the start of the task to be updated", 
         "The stream is already in task update or sample mode");
 
     COND_RETURN_ERROR_MSG_INNER(handle->isUpdate,
@@ -797,11 +797,11 @@ rtError_t Context::StreamEndTaskUpdate(Stream * const stm) const
 {
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
     COND_RETURN_AND_MSG_OUTER(stm->GetTaskGroupStatus() != StreamTaskGroupStatus::UPDATE,
-        RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016, __func__,
+        RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016, "Marking the end of the task to be updated",
         "The stream is not in task update mode");
 
     TaskGroup *updateTaskGroup = stm->GetUpdateTaskGroup();
-    NULL_PTR_RETURN_MSG_OUTER(updateTaskGroup, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(updateTaskGroup, RT_ERROR_INVALID_VALUE, "Marking the end of the task to be updated");
     (void)stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
 
     const size_t taskIndex = updateTaskGroup->updateTaskIndex;

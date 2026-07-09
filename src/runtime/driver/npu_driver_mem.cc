@@ -1452,7 +1452,7 @@ rtError_t NpuDriver::MemFreeEx(void * const dptr)
 rtError_t NpuDriver::DevMemFree(void * const dptr, const uint32_t deviceId)
 {
     (void)deviceId;
-    NULL_PTR_RETURN_MSG_OUTER(dptr, RT_ERROR_DRV_PTRNULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dptr, RT_ERROR_DRV_PTRNULL, "Release device memory");
 
     const drvError_t drvRet = halMemFree(dptr);
     if (drvRet != DRV_ERROR_NONE) {
@@ -2080,8 +2080,8 @@ TIMESTAMP_EXTERN(MemCopySync_drv);
 rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const void * const src,
                                  const uint64_t size, const rtMemcpyKind_t kind, bool errShow, uint32_t devId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
     if (kind >= RT_MEMCPY_RESERVED) {
         RT_LOG_OUTER_MSG_INVALID_PARAM(
             kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
@@ -2128,8 +2128,8 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
 rtError_t NpuDriver::MemCopyAsync(void * const dst, const uint64_t destMax, const void * const src,
                                   const uint64_t size, const rtMemcpyKind_t kind, volatile uint64_t &copyFd)
 {
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
     if (kind >= RT_MEMCPY_RESERVED) {
         RT_LOG_OUTER_MSG_INVALID_PARAM(
             kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");

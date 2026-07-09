@@ -47,8 +47,8 @@ ApiErrorDecorator::ApiErrorDecorator(Api * const impl) : ApiDecorator(impl)
 
 rtError_t ApiErrorDecorator::DevBinaryRegister(const rtDevBinary_t * const bin, Program ** const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(bin, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bin, RT_ERROR_INVALID_VALUE, "Registering operator binary data");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Registering operator binary data");
 
     const rtError_t error = impl_->DevBinaryRegister(bin, prog);
     ERROR_RETURN(error, "Register binary failed.");
@@ -58,8 +58,8 @@ rtError_t ApiErrorDecorator::DevBinaryRegister(const rtDevBinary_t * const bin, 
 
 rtError_t ApiErrorDecorator::GetNotifyAddress(Notify * const notify, uint64_t * const notifyAddress)
 {
-    NULL_PTR_RETURN_MSG_OUTER(notify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(notifyAddress, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notifyAddress, RT_ERROR_INVALID_VALUE, "Obtaining the Notify address");
     const rtError_t error = impl_->GetNotifyAddress(notify, notifyAddress);
     ERROR_RETURN(error, "GetNotifyAddress failed.");
     RT_LOG(RT_LOG_DEBUG, "success.");
@@ -68,8 +68,8 @@ rtError_t ApiErrorDecorator::GetNotifyAddress(Notify * const notify, uint64_t * 
 
 rtError_t ApiErrorDecorator::RegisterAllKernel(const rtDevBinary_t * const bin, Program ** const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(bin, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bin, RT_ERROR_INVALID_VALUE, "Registering all kernel functions");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Registering all kernel functions");
 
     const uint32_t magic = bin->magic;
     const bool isElfProgram = ((magic == RT_DEV_BINARY_MAGIC_ELF) || (magic == RT_DEV_BINARY_MAGIC_ELF_AICUBE) ||
@@ -85,36 +85,36 @@ rtError_t ApiErrorDecorator::RegisterAllKernel(const rtDevBinary_t * const bin, 
 
 rtError_t ApiErrorDecorator::BinaryRegisterToFastMemory(Program * const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Setting the memory type of the operator binary handle to the fast memory type");
     return impl_->BinaryRegisterToFastMemory(prog);
 }
 
 rtError_t ApiErrorDecorator::DevBinaryUnRegister(Program * const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Deregistering operator binary data");
     return impl_->DevBinaryUnRegister(prog);
 }
 
 rtError_t ApiErrorDecorator::MetadataRegister(Program * const prog, const char_t * const metadata)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(metadata, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Registering the binary metadata information of the operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(metadata, RT_ERROR_INVALID_VALUE, "Registering the binary metadata information of the operator");
     return impl_->MetadataRegister(prog, metadata);
 }
 
 rtError_t ApiErrorDecorator::DependencyRegister(Program * const mProgram, Program * const sProgram)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mProgram, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(sProgram, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mProgram, RT_ERROR_INVALID_VALUE, "Registering the dependency of the operator binary handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sProgram, RT_ERROR_INVALID_VALUE, "Registering the dependency of the operator binary handle");
     return impl_->DependencyRegister(mProgram, sProgram);
 }
 
 rtError_t ApiErrorDecorator::FunctionRegister(Program * const prog, const void * const stubFunc,
     const char_t * const stubName, const void * const kernelInfoExt, const uint32_t funcMode)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stubName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Operator kernel registration");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubFunc, RT_ERROR_INVALID_VALUE, "Operator kernel registration");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubName, RT_ERROR_INVALID_VALUE, "Operator kernel registration");
 
     const rtError_t error = impl_->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
     COND_PROC((error == RT_ERROR_KERNEL_DUPLICATE), return error;);
@@ -125,9 +125,9 @@ rtError_t ApiErrorDecorator::FunctionRegister(Program * const prog, const void *
 rtError_t ApiErrorDecorator::RegisterVariable(void * const binHandle, const void * const hostVar,
     const char_t * const deviceVarName, const size_t size, const uint32_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(hostVar, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(deviceVarName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Registering the device variable mapping table");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hostVar, RT_ERROR_INVALID_VALUE, "Registering the device variable mapping table");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(deviceVarName, RT_ERROR_INVALID_VALUE, "Registering the device variable mapping table");
     
     const auto len = strnlen(deviceVarName, static_cast<size_t>(NAME_MAX_LENGTH));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len >= NAME_MAX_LENGTH, RT_ERROR_INVALID_VALUE, len, 
@@ -141,8 +141,8 @@ rtError_t ApiErrorDecorator::RegisterVariable(void * const binHandle, const void
 rtError_t ApiErrorDecorator::SymbolLookup(const void * const hostVar, void ** const devPtr,
     size_t * const size)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(size, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Querying the address and size of the corresponding device based on the variable address on the host");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(size, RT_ERROR_INVALID_VALUE, "Querying the address and size of the corresponding device based on the variable address on the host");
     const rtError_t error = impl_->SymbolLookup(hostVar, devPtr, size);
     ERROR_RETURN(error, "Symbol lookup failed, hostVar=%p.", hostVar);
     return error;
@@ -150,8 +150,8 @@ rtError_t ApiErrorDecorator::SymbolLookup(const void * const hostVar, void ** co
 
 rtError_t ApiErrorDecorator::GetFunctionByName(const char_t * const stubName, void ** const stubFunc)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stubName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubFunc, RT_ERROR_INVALID_VALUE, "Querying kernel function address based on the kernel function name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubName, RT_ERROR_INVALID_VALUE, "Querying kernel function address based on the kernel function name");
     const rtError_t error = impl_->GetFunctionByName(stubName, stubFunc);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, error != RT_ERROR_NONE, error, "Get stub function failed, name=%s.",
         ((stubName != nullptr) ? stubName : "(none)"));
@@ -160,8 +160,8 @@ rtError_t ApiErrorDecorator::GetFunctionByName(const char_t * const stubName, vo
 
 rtError_t ApiErrorDecorator::GetAddrByFun(const void * const stubFunc, void ** const addr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Querying the device execution address corresponding to the kernel function pointer");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubFunc, RT_ERROR_INVALID_VALUE, "Querying the device execution address corresponding to the kernel function pointer");
     const rtError_t error = impl_->GetAddrByFun(stubFunc, addr);
     ERROR_RETURN(error, "Get address failed.");
     return error;
@@ -170,10 +170,10 @@ rtError_t ApiErrorDecorator::GetAddrByFun(const void * const stubFunc, void ** c
 rtError_t ApiErrorDecorator::GetAddrAndPrefCntWithHandle(void * const hdl, const void * const kernelInfoExt,
                                                          void ** const addr, uint32_t * const prefetchCnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(kernelInfoExt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prefetchCnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hdl, RT_ERROR_INVALID_VALUE, "Obtaining the device address and prefetch count based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernelInfoExt, RT_ERROR_INVALID_VALUE, "Obtaining the device address and prefetch count based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Obtaining the device address and prefetch count based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prefetchCnt, RT_ERROR_INVALID_VALUE, "Obtaining the device address and prefetch count based on the kernel function handle");
 
     const auto name = reinterpret_cast<const char_t *>(kernelInfoExt);
     const auto len = strnlen(name, static_cast<size_t>(NAME_MAX_LENGTH));
@@ -187,33 +187,33 @@ rtError_t ApiErrorDecorator::GetAddrAndPrefCntWithHandle(void * const hdl, const
 
 rtError_t ApiErrorDecorator::CheckArgs(const rtArgsEx_t * const argsInfo) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo->args, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
     RT_LOG(RT_LOG_DEBUG, "hostInputInfoNum=%hu, isNoNeedH2DCopy=%hhu, argsSize=%u, hasTiling=%hhu",
         argsInfo->hostInputInfoNum, argsInfo->isNoNeedH2DCopy, argsInfo->argsSize, argsInfo->hasTiling);
     if (argsInfo->isNoNeedH2DCopy == 0U) {
         if (argsInfo->hasTiling != 0U) {
             COND_RETURN_AND_MSG_OUTER((argsInfo->tilingDataOffset >= argsInfo->argsSize), RT_ERROR_INVALID_VALUE,
-                ErrorCode::EE1017, __func__, "argsInfo->tilingDataOffset or argsInfo->argsSize",
+                ErrorCode::EE1017, "Operator parameter verification", "argsInfo->tilingDataOffset or argsInfo->argsSize",
                 RtFmtMsg("Parameter argsInfo->tilingDataOffset %u should be less than parameter argsInfo->argsSize %u",
                     argsInfo->tilingDataOffset, argsInfo->argsSize));
             COND_RETURN_AND_MSG_OUTER((argsInfo->tilingAddrOffset >= argsInfo->argsSize), RT_ERROR_INVALID_VALUE,
-                ErrorCode::EE1017, __func__, "argsInfo->tilingAddrOffset or argsInfo->argsSize",
+                ErrorCode::EE1017, "Operator parameter verification", "argsInfo->tilingAddrOffset or argsInfo->argsSize",
                 RtFmtMsg("Parameter argsInfo->tilingAddrOffset %u should be less than parameter argsInfo->argsSize %u",
                     argsInfo->tilingAddrOffset, argsInfo->argsSize));
         }
 
         if (argsInfo->hostInputInfoNum != 0U) {
-            NULL_PTR_RETURN_MSG_OUTER(argsInfo->hostInputInfoPtr, RT_ERROR_INVALID_VALUE);
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo->hostInputInfoPtr, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
             for (uint16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
                 COND_RETURN_AND_MSG_OUTER(argsInfo->hostInputInfoPtr[i].addrOffset >= argsInfo->argsSize,
-                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Operator parameter verification",
                     RtFmtMsg("argsInfo->hostInputInfoPtr[%hu].addrOffset or argsInfo->argsSize", i),
                     RtFmtMsg("Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset %u should be less than parameter"
                         " argsInfo->argsSize %u", i, argsInfo->hostInputInfoPtr[i].addrOffset, argsInfo->argsSize));
                 COND_RETURN_AND_MSG_OUTER(argsInfo->hostInputInfoPtr[i].dataOffset >= argsInfo->argsSize,
-                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Operator parameter verification",
                     RtFmtMsg("argsInfo->hostInputInfoPtr[%hu].dataOffset or argsInfo->argsSize", i),
                     RtFmtMsg("Parameter argsInfo->hostInputInfoPtr[%hu].dataOffset %u should be less than parameter"
                         " argsInfo->argsSize %u", i, argsInfo->hostInputInfoPtr[i].dataOffset, argsInfo->argsSize));
@@ -225,12 +225,12 @@ rtError_t ApiErrorDecorator::CheckArgs(const rtArgsEx_t * const argsInfo) const
 
 rtError_t ApiErrorDecorator::CheckNonArgsHandle(const RtArgsHandle * const argsHandle) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Verifying the validity of the kernel parameter handle");
     // 如果Finalize后，再update，只有update完成后再次调用Finalize，isParamUpdating重置为0，表示更新完成
     COND_RETURN_AND_MSG_OUTER((argsHandle->isFinalized == 0U) || (argsHandle->isParamUpdating == 1U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Verifying the validity of the kernel parameter handle",
         "argsHandle", "The argsHandle is not finalized or is currently being updated");
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->buffer, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->buffer, RT_ERROR_INVALID_VALUE, "Verifying the validity of the kernel parameter handle");
     ZERO_RETURN_AND_MSG_OUTER(argsHandle->argsSize);
 
     for (uint16_t i = 0U; i < argsHandle->realUserParamNum; i++) {
@@ -238,11 +238,11 @@ rtError_t ApiErrorDecorator::CheckNonArgsHandle(const RtArgsHandle * const argsH
             continue;
         }
         COND_RETURN_AND_MSG_OUTER(argsHandle->para[i].paraOffset >= argsHandle->argsSize, RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1017, __func__, RtFmtMsg("argsHandle->para[%hu].paraOffset or argsHandle->argsSize", i),
+            ErrorCode::EE1017, "Verifying the validity of the kernel parameter handle", RtFmtMsg("argsHandle->para[%hu].paraOffset or argsHandle->argsSize", i),
             RtFmtMsg("Parameter argsHandle->para[%hu].paraOffset %zu must be less than parameter argsHandle->argsSize %zu",
                 i, argsHandle->para[i].paraOffset, argsHandle->argsSize));
         COND_RETURN_AND_MSG_OUTER(argsHandle->para[i].dataOffset >= argsHandle->argsSize, RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1017, __func__, RtFmtMsg("argsHandle->para[%hu].dataOffset or argsHandle->argsSize", i),
+            ErrorCode::EE1017, "Verifying the validity of the kernel parameter handle", RtFmtMsg("argsHandle->para[%hu].dataOffset or argsHandle->argsSize", i),
             RtFmtMsg("Parameter argsHandle->para[%hu].dataOffset %zu must be less than parameter argsHandle->argsSize %zu",
                 i, argsHandle->para[i].dataOffset, argsHandle->argsSize));
     }
@@ -252,8 +252,8 @@ rtError_t ApiErrorDecorator::CheckNonArgsHandle(const RtArgsHandle * const argsH
 
 static rtError_t CheckCpuArgsInfo(const rtCpuKernelArgs_t * const argsInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo->baseArgs.args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Checking the parameter information of the AI CPU operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo->baseArgs.args, RT_ERROR_INVALID_VALUE, "Checking the parameter information of the AI CPU operator");
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->baseArgs.argsSize);
 
     return RT_ERROR_NONE;
@@ -265,21 +265,21 @@ static rtError_t CheckSimtArgsArray(const Kernel* kernel, const RtArgsWithType* 
     const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
                               (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
     COND_RETURN_AND_MSG_OUTER(!isSimtKernel, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "kernel", "current API only supports SIMT kernel");
+        ErrorCode::EE1017, "Checking SIMT parameters", "kernel", "current API only supports SIMT kernel");
     COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-         __func__, "kernel", "Kernel does not have param info, please check whether kernel version is matched");
-    NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsArray, RT_ERROR_INVALID_VALUE);
+        "Checking SIMT parameters", "kernel", "Kernel does not have param info, please check whether kernel version is matched");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType->args.simtArgsArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
     const SimtArgsArray* simtArgs = argsWithType->args.simtArgsArray;
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "gridDim",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "gridDim",
         "gridDim.x, gridDim.y, gridDim.z must all be greater than 0");
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "blockDim",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "blockDim",
         "blockDim.x, blockDim.y, blockDim.z must all be greater than 0");
     if (kernel->GetParamCount() > 0U) {
-        NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsArray->argsArrayInfo, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType->args.simtArgsArray->argsArrayInfo, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
     }
     return RT_ERROR_NONE;
 }
@@ -290,36 +290,36 @@ static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* c
     const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
                               (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
     COND_RETURN_AND_MSG_OUTER(!isSimtKernel, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "kernel", "current API only supports SIMT kernel");
+        ErrorCode::EE1017, "Checking SIMT parameters", "kernel", "current API only supports SIMT kernel");
     COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-         __func__, "kernel", "Kernel does not have param info, please check whether kernel version is matched");
-    NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsHost, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.simtArgsHost->hostArgs, RT_ERROR_INVALID_VALUE);
+        "Checking SIMT parameters", "kernel", "Kernel does not have param info, please check whether kernel version is matched");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType->args.simtArgsHost, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType->args.simtArgsHost->hostArgs, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
     ZERO_RETURN_AND_MSG_OUTER(argsWithType->args.simtArgsHost->argsSize);
     const SimtArgsHost* simtArgs = argsWithType->args.simtArgsHost;
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "gridDim",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "gridDim",
         "gridDim.x, gridDim.y, gridDim.z must all be greater than 0");
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "blockDim",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "blockDim",
         "blockDim.x, blockDim.y, blockDim.z must all be greater than 0");
     const uint32_t argsSize = argsWithType->args.simtArgsHost->argsSize;
     const uint32_t placeHolderNum = argsWithType->args.simtArgsHost->placeHolderNum;
     if (placeHolderNum > 0U) {
-        NULL_PTR_RETURN_MSG_OUTER(
-            argsWithType->args.simtArgsHost->placeHolderArray, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+            argsWithType->args.simtArgsHost->placeHolderArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
         for (uint32_t i = 0U; i < placeHolderNum; i++) {
             COND_RETURN_AND_MSG_OUTER(
                 argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset >= argsSize,
-                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters",
                 RtFmtMsg("placeHolderArray[%u].addrOffset or argsSize", i),
                 RtFmtMsg("Parameter placeHolderArray[%u].addrOffset %u should be less than parameter argsSize %u",
                     i, argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset, argsSize));
             COND_RETURN_AND_MSG_OUTER(
                 argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset >= argsSize,
-                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters",
                 RtFmtMsg("placeHolderArray[%u].dataOffset or argsSize", i),
                 RtFmtMsg("Parameter placeHolderArray[%u].dataOffset %u should be less than parameter argsSize %u",
                     i, argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset, argsSize));
@@ -330,7 +330,7 @@ static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* c
 
 rtError_t ApiErrorDecorator::CheckArgsWithType(const Kernel *kernel, const RtArgsWithType * const argsWithType) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsWithType, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
 
     rtError_t error = RT_ERROR_NONE;
     switch (argsWithType->type) {
@@ -347,9 +347,9 @@ rtError_t ApiErrorDecorator::CheckArgsWithType(const Kernel *kernel, const RtArg
             COND_RETURN_WARN(kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_FEATURE_NOT_SUPPORT,
                 "AICPU kernel is not supported.");
             COND_RETURN_AND_MSG_OUTER(!kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-                __func__, "kernel", "Kernel does not have parameter information");
+                "Operator parameter verification", "kernel", "Kernel does not have parameter information");
             if (kernel->GetParamCount() > 0U) {
-                NULL_PTR_RETURN_MSG_OUTER(argsWithType->args.argsArrayInfo, RT_ERROR_INVALID_VALUE);
+                NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsWithType->args.argsArrayInfo, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
             }
             break;
         }
@@ -387,7 +387,7 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigInfo(RtMemcpyCfgInfo* configInfo, co
     const bool isAsync)
 {
     rtError_t error = RT_ERROR_NONE;
-    NULL_PTR_RETURN_MSG_OUTER(memcpyConfig->attrs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memcpyConfig->attrs, RT_ERROR_INVALID_VALUE, "Obtaining configurations of memory copy");
     for (uint32_t i = 0U; i < memcpyConfig->numAttrs; i++) {
         rtMemcpyAttribute_t* attr = &(memcpyConfig->attrs[i]);
         error = GetMemcpyConfigAttr(attr, configInfo);
@@ -401,7 +401,7 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigInfo(RtMemcpyCfgInfo* configInfo, co
 rtError_t ApiErrorDecorator::GetMemcpyConfigAttr(rtMemcpyAttribute_t* attr, RtMemcpyCfgInfo* configInfo) const
 {
     rtError_t error = RT_ERROR_NONE;
-    NULL_PTR_RETURN_MSG_OUTER(attr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attr, RT_ERROR_INVALID_VALUE, "Obtaining configuration attributes of memory copy");
     switch (attr->id) {
         case RT_MEMCPY_ATTRIBUTE_CHECK:
             configInfo->checkBitmap = attr->value.checkBitmap;
@@ -418,15 +418,15 @@ rtError_t ApiErrorDecorator::KernelGetAddrAndPrefCnt(void * const hdl, const uin
                                                      const void * const stubFunc, const uint32_t flag,
                                                      void ** const addr, uint32_t * const prefetchCnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prefetchCnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prefetchCnt, RT_ERROR_INVALID_VALUE, "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag > RT_DYNAMIC_SHAPE_KERNEL), RT_ERROR_INVALID_VALUE, 
         flag, "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
 
     if (flag == RT_STATIC_SHAPE_KERNEL) {
-        NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubFunc, RT_ERROR_INVALID_VALUE, "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
     } else {
-        NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hdl, RT_ERROR_INVALID_VALUE, "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
     }
 
     const rtError_t error = impl_->KernelGetAddrAndPrefCnt(hdl, tilingKey, stubFunc, flag, addr, prefetchCnt);
@@ -449,10 +449,10 @@ rtError_t ApiErrorDecorator::KernelGetAddrAndPrefCntV2(void * const hdl, const u
         }
     }
 
-    NULL_PTR_RETURN_MSG_OUTER(kernelInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernelInfo, RT_ERROR_INVALID_VALUE, "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag > RT_DYNAMIC_SHAPE_KERNEL), 
         RT_ERROR_INVALID_VALUE, flag, "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
-    COND_RETURN_AND_MSG_OUTER(invalidFlag == true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(invalidFlag == true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Obtaining the on-device execution address and instruction prefetch count of the kernel function",
         "stubFunc or hdl", "If parameter flag is RT_STATIC_SHAPE_KERNEL(0x00U), stubFunc cannot be nullptr; "
         "If parameter flag is not equal to RT_STATIC_SHAPE_KERNEL(0x00U), parameter hdl cannot be nullptr");
 
@@ -463,7 +463,7 @@ rtError_t ApiErrorDecorator::KernelGetAddrAndPrefCntV2(void * const hdl, const u
 
 rtError_t ApiErrorDecorator::QueryFunctionRegistered(const char_t * const stubName)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stubName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubName, RT_ERROR_INVALID_VALUE, "Checking whether the kernel function is registered");
     return impl_->QueryFunctionRegistered(stubName);
 }
 
@@ -480,13 +480,13 @@ rtError_t ApiErrorDecorator::CheckCfg(const rtTaskCfgInfo_t * const cfgInfo) con
 
 rtError_t ApiErrorDecorator::AppendLaunchAddrInfo(rtLaunchArgs_t* const hdl, void * const addrInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hdl, RT_ERROR_INVALID_VALUE, "Adding an address to the parameter buffer of the kernel");
     /* addrInfo == nullptr is an empty tensor scenario. No error is returned. */
     if (addrInfo == nullptr) {
         RT_LOG(RT_LOG_WARNING, "addrInfo == nullptr.");
     }
     const uint32_t offset = static_cast<uint32_t>(hdl->argsAddrOffset + sizeof(uint64_t));
-    COND_RETURN_AND_MSG_OUTER(offset > hdl->argsDataOffset, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(offset > hdl->argsDataOffset, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Adding an address to the parameter buffer of the kernel",
         "hdl->argsAddrOffset or hdl->argsDataOffset",
         RtFmtMsg("Parameter hdl->argsDataOffset %u should be greater than or equal to the sum of parameter"
             " hdl->argsAddrOffset %u and %zu", hdl->argsDataOffset, hdl->argsAddrOffset, sizeof(uint64_t)));
@@ -496,15 +496,15 @@ rtError_t ApiErrorDecorator::AppendLaunchAddrInfo(rtLaunchArgs_t* const hdl, voi
 rtError_t ApiErrorDecorator::AppendLaunchHostInfo(rtLaunchArgs_t* const hdl, size_t const hostInfoSize,
     void ** const hostInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(hostInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hdl, RT_ERROR_INVALID_VALUE, "Adding host data to the parameter buffer of the kernel");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hostInfo, RT_ERROR_INVALID_VALUE, "Adding host data to the parameter buffer of the kernel");
     COND_RETURN_AND_MSG_OUTER(hdl->argsInfo.hostInputInfoNum >= hdl->hostInfoMaxNum, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "hdl->argsInfo.hostInputInfoNum or hdl->hostInfoMaxNum",
+        "Adding host data to the parameter buffer of the kernel", "hdl->argsInfo.hostInputInfoNum or hdl->hostInfoMaxNum",
         RtFmtMsg("Parameter hdl->argsInfo.hostInputInfoNum %u should be less than parameter hdl->hostInfoMaxNum %u",
             hdl->argsInfo.hostInputInfoNum, hdl->hostInfoMaxNum));
     ZERO_RETURN_AND_MSG_OUTER(hostInfoSize);
     uint32_t currentDataOffset = static_cast<uint32_t>(hdl->argsHostInputOffset + hostInfoSize);
-    COND_RETURN_AND_MSG_OUTER(currentDataOffset > hdl->argsInfo.argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+    COND_RETURN_AND_MSG_OUTER(currentDataOffset > hdl->argsInfo.argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Adding host data to the parameter buffer of the kernel",
         "hdl->argsHostInputOffset, hostInfoSize or hdl->argsInfo.argsSize", 
         RtFmtMsg("Parameter hdl->argsInfo.argsSize %u should be greater than or equal to the sum of parameter"
             " hdl->argsHostInputOffset %u and parameter hostInfoSize %zu", hdl->argsInfo.argsSize, hdl->argsHostInputOffset, hostInfoSize));
@@ -515,7 +515,7 @@ rtError_t ApiErrorDecorator::AppendLaunchHostInfo(rtLaunchArgs_t* const hdl, siz
 rtError_t ApiErrorDecorator::CalcLaunchArgsSize(size_t const argsSize, size_t const hostInfoTotalSize,
                                                 size_t hostInfoNum, size_t * const launchArgsSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(launchArgsSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(launchArgsSize, RT_ERROR_INVALID_VALUE, "Obtaining the actual memory size required by the parameter list during kernel launch");
     ZERO_RETURN_AND_MSG_OUTER(argsSize);
     ZERO_RETURN_AND_MSG_OUTER(hostInfoTotalSize);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX)), RT_ERROR_INVALID_VALUE, 
@@ -528,8 +528,8 @@ rtError_t ApiErrorDecorator::CreateLaunchArgs(size_t const argsSize, size_t cons
                                               size_t hostInfoNum, void * const argsData,
                                               rtLaunchArgs_t ** const argsHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsData, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsData, RT_ERROR_INVALID_VALUE, "Creating a parameter handle for kernel launch");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Creating a parameter handle for kernel launch");
     ZERO_RETURN_AND_MSG_OUTER(argsSize);
     ZERO_RETURN_AND_MSG_OUTER(hostInfoTotalSize);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX)), RT_ERROR_INVALID_VALUE, 
@@ -542,15 +542,15 @@ rtError_t ApiErrorDecorator::CreateLaunchArgs(size_t const argsSize, size_t cons
 
 rtError_t ApiErrorDecorator::DestroyLaunchArgs(rtLaunchArgs_t* argsHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Destroying the boot parameter handle of the kernel function");
     return impl_->DestroyLaunchArgs(argsHandle);
 }
 
 rtError_t ApiErrorDecorator::ResetLaunchArgs(rtLaunchArgs_t* argsHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->argsInfo.args, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->argsInfo.hostInputInfoPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Resetting the parameter handle for kernel launch");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->argsInfo.args, RT_ERROR_INVALID_VALUE, "Resetting the parameter handle for kernel launch");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->argsInfo.hostInputInfoPtr, RT_ERROR_INVALID_VALUE, "Resetting the parameter handle for kernel launch");
     const rtError_t error = impl_->ResetLaunchArgs(argsHandle);
     ERROR_RETURN(error, "ResetLaunchArgs argsHandle = 0x%x", argsHandle);
     return error;
@@ -558,10 +558,10 @@ rtError_t ApiErrorDecorator::ResetLaunchArgs(rtLaunchArgs_t* argsHandle)
 
 rtError_t ApiErrorDecorator::BinaryLoad(const rtDevBinary_t * const bin, Program ** const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(bin, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bin, RT_ERROR_INVALID_VALUE, "Parsing and loading the operator binary file");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Parsing and loading the operator binary file");
     ZERO_RETURN_AND_MSG_OUTER(bin->length);
-    NULL_PTR_RETURN_MSG_OUTER(bin->data, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bin->data, RT_ERROR_INVALID_VALUE, "Parsing and loading the operator binary file");
 
     const uint32_t magic = bin->magic;
     const bool isElfProgram = ((magic == RT_DEV_BINARY_MAGIC_ELF) || (magic == RT_DEV_BINARY_MAGIC_ELF_AICUBE) ||
@@ -576,8 +576,8 @@ rtError_t ApiErrorDecorator::BinaryLoad(const rtDevBinary_t * const bin, Program
 rtError_t ApiErrorDecorator::BinaryGetFunction(const Program * const prog, const uint64_t tilingKey,
                                                Kernel ** const funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Searching for a kernel function based on its name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Searching for a kernel function based on its name");
 
     const rtError_t error = impl_->BinaryGetFunction(prog, tilingKey, funcHandle);
     ERROR_RETURN(error, "BinaryGetFunction failed.");
@@ -586,8 +586,8 @@ rtError_t ApiErrorDecorator::BinaryGetFunction(const Program * const prog, const
 
 rtError_t ApiErrorDecorator::BinaryLoadWithoutTilingKey(const void *data, const uint64_t length, Program ** const prog)
 {
-    NULL_PTR_RETURN_MSG_OUTER(data, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(prog, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(data, RT_ERROR_INVALID_VALUE, "Loading the operator binary data without the tiling key");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prog, RT_ERROR_INVALID_VALUE, "Loading the operator binary data without the tiling key");
     ZERO_RETURN_AND_MSG_OUTER(length);
 
     const rtError_t error = impl_->BinaryLoadWithoutTilingKey(data, length, prog);
@@ -598,9 +598,9 @@ rtError_t ApiErrorDecorator::BinaryLoadWithoutTilingKey(const void *data, const 
 rtError_t ApiErrorDecorator::BinaryGetFunctionByName(const Program * const binHandle, const char_t *kernelName,
                                                      Kernel ** const funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(kernelName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Searching for a kernel function based on its name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernelName, RT_ERROR_INVALID_VALUE, "Searching for a kernel function based on its name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Searching for a kernel function based on its name");
 
     const rtError_t error = impl_->BinaryGetFunctionByName(binHandle, kernelName, funcHandle);
     ERROR_RETURN(error, "BinaryGetFunction failed.");
@@ -610,11 +610,11 @@ rtError_t ApiErrorDecorator::BinaryGetFunctionByName(const Program * const binHa
 rtError_t ApiErrorDecorator::BinaryGetFunctionByEntry(const Program * const binHandle, const uint64_t funcEntry,
                                                       Kernel ** const funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function handle based on the function entry");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function handle based on the function entry");
 	const KernelRegisterType kernelRegType = binHandle->GetKernelRegType();
     COND_RETURN_AND_MSG_OUTER(kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "binHandle->kernelRegType_", "The binHandle obtained after registering the AI CPU operator is not supported");
+        "Obtaining the kernel function handle based on the function entry", "binHandle->kernelRegType_", "The binHandle obtained after registering the AI CPU operator is not supported");
 
     return impl_->BinaryGetFunctionByEntry(binHandle, funcEntry, funcHandle);
 }
@@ -622,45 +622,45 @@ rtError_t ApiErrorDecorator::BinaryGetFunctionByEntry(const Program * const binH
 rtError_t ApiErrorDecorator::BinaryGetMetaNum(Program * const binHandle, const rtBinaryMetaType type,
                                               size_t *numOfMeta)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(numOfMeta, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the number of metadata records of a specific type in the operator binary file");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(numOfMeta, RT_ERROR_INVALID_VALUE, "Obtaining the number of metadata records of a specific type in the operator binary file");
     COND_RETURN_AND_MSG_OUTER(binHandle->GetKernelRegType() != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "binHandle", "The binHandle obtained after registering the AI CPU operator is not supported");
+        ErrorCode::EE1017, "Obtaining the number of metadata records of a specific type in the operator binary file", "binHandle", "The binHandle obtained after registering the AI CPU operator is not supported");
     return impl_->BinaryGetMetaNum(binHandle, type, numOfMeta);
 }
 
 rtError_t ApiErrorDecorator::BinaryGetMetaInfo(Program * const binHandle, const rtBinaryMetaType type,
                                                const size_t numOfMeta, void **data, const size_t *dataSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(data, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dataSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the metadata of the operator binary file");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(data, RT_ERROR_INVALID_VALUE, "Obtaining the metadata of the operator binary file");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dataSize, RT_ERROR_INVALID_VALUE, "Obtaining the metadata of the operator binary file");
     COND_RETURN_AND_MSG_OUTER(binHandle->GetKernelRegType() != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "binHandle", "The binHandle obtained after registering the AI CPU operator is not supported");
+        ErrorCode::EE1017, "Obtaining the metadata of the operator binary file", "binHandle", "The binHandle obtained after registering the AI CPU operator is not supported");
     return impl_->BinaryGetMetaInfo(binHandle, type, numOfMeta, data, dataSize);
 }
 
 rtError_t ApiErrorDecorator::FunctionGetMetaInfo(const Kernel * const funcHandle, const rtFunctionMetaType type, 
                                                  void *data, const uint32_t length)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(data, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Querying metadata information of a kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(data, RT_ERROR_INVALID_VALUE, "Querying metadata information of a kernel function");
     return impl_->FunctionGetMetaInfo(funcHandle, type, data, length);
 }  
 
 rtError_t ApiErrorDecorator::GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(symbol, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function handle based on the function symbol name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function handle based on the function symbol name");
     return impl_->GetFunctionBySymbol(symbol, funcHandle);
 }
 
 rtError_t ApiErrorDecorator::RegisterFuncSymbol(void * const binHandle, const void * const symbol,
                                                 const char_t * const kernelName)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(kernelName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Registering the variable mapping table of the kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(symbol, RT_ERROR_INVALID_VALUE, "Registering the variable mapping table of the kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernelName, RT_ERROR_INVALID_VALUE, "Registering the variable mapping table of the kernel function");
     
     const rtError_t error = impl_->RegisterFuncSymbol(binHandle, symbol, kernelName);
     ERROR_RETURN(error, "Register function symbol failed, symbol=%p.", symbol);
@@ -670,24 +670,24 @@ rtError_t ApiErrorDecorator::RegisterFuncSymbol(void * const binHandle, const vo
 rtError_t ApiErrorDecorator::FunctionGetMetaInfoSize(const Kernel * const funcHandle, const rtFunctionMetaType type,
  	                                                       size_t *size)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(size, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Querying the size of the metadata of a specific type in a kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(size, RT_ERROR_INVALID_VALUE, "Querying the size of the metadata of a specific type in a kernel function");
     return impl_->FunctionGetMetaInfoSize(funcHandle, type, size);
 }
 rtError_t ApiErrorDecorator::RegisterCpuFunc(
     rtBinHandle binHandle, const char_t *const funcName, const char_t *const kernelName, rtFuncHandle *funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(kernelName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Registering AI CPU operator information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcName, RT_ERROR_INVALID_VALUE, "Registering AI CPU operator information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernelName, RT_ERROR_INVALID_VALUE, "Registering AI CPU operator information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Registering AI CPU operator information");
 
     return impl_->RegisterCpuFunc(binHandle, funcName, kernelName, funcHandle);
 }
 
 rtError_t ApiErrorDecorator::BinaryUnLoad(Program * const binHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Deleting the operator binary data pointed to by binHandle");
 
     const rtError_t error = impl_->BinaryUnLoad(binHandle);
     ERROR_RETURN(error, "BinaryUnLoad failed.");
@@ -698,8 +698,8 @@ rtError_t ApiErrorDecorator::BinaryLoadFromFile(const char_t * const binPath,
                                                 const rtLoadBinaryConfig_t * const optionalCfg,
                                                 Program **handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binPath, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binPath, RT_ERROR_INVALID_VALUE, "Loading and parsing the operator binary data from the file");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Loading and parsing the operator binary data from the file");
 
     const rtError_t error = impl_->BinaryLoadFromFile(binPath, optionalCfg, handle);
     ERROR_RETURN(error, "Binary load from file failed.");
@@ -709,8 +709,8 @@ rtError_t ApiErrorDecorator::BinaryLoadFromFile(const char_t * const binPath,
 rtError_t ApiErrorDecorator::BinaryLoadFromData(const void * const data, const uint64_t length,
                                                 const rtLoadBinaryConfig_t * const optionalCfg, Program **handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(data, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(data, RT_ERROR_INVALID_VALUE, "Loading and parsing the operator binary data from the memory");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Loading and parsing the operator binary data from the memory");
     ZERO_RETURN_AND_MSG_OUTER(length);
 
     const rtError_t error = impl_->BinaryLoadFromData(data, length, optionalCfg, handle);
@@ -720,12 +720,12 @@ rtError_t ApiErrorDecorator::BinaryLoadFromData(const void * const data, const u
 
 rtError_t ApiErrorDecorator::FuncGetAddr(const Kernel * const funcHandle, void ** const aicAddr, void ** const aivAddr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(aicAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(aivAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aicAddr, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aivAddr, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
     const KernelRegisterType kernelRegType = funcHandle->GetKernelRegisterType();
     COND_RETURN_AND_MSG_OUTER(kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
+        "Obtaining the execution address of a specified kernel on the device", "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
     const rtError_t error = impl_->FuncGetAddr(funcHandle, aicAddr, aivAddr);
     ERROR_RETURN(error, "Get func addr by function handle failed.");
     return error;
@@ -733,12 +733,12 @@ rtError_t ApiErrorDecorator::FuncGetAddr(const Kernel * const funcHandle, void *
 
 rtError_t ApiErrorDecorator::FuncGetSize(const Kernel * const funcHandle, size_t * const aicSize, size_t * const aivSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(aicSize, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(aivSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aicSize, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aivSize, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
     const KernelRegisterType kernelRegType = funcHandle->GetKernelRegisterType();
     COND_RETURN_AND_MSG_OUTER(kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
+        "Obtaining the size of the kernel function code segment", "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
     const rtError_t error = impl_->FuncGetSize(funcHandle, aicSize, aivSize);
     ERROR_RETURN(error, "Get func size by function handle failed.");
     return error;
@@ -747,7 +747,7 @@ rtError_t ApiErrorDecorator::FuncGetSize(const Kernel * const funcHandle, size_t
 rtError_t ApiErrorDecorator::LaunchKernel(Kernel * const kernel, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
                                           Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernel, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     ZERO_RETURN_AND_MSG_OUTER(blockDim);
     rtError_t error = CheckArgs(argsInfo);
     ERROR_RETURN(error, "check argsInfo failed, retCode=%#x.", error);
@@ -768,13 +768,13 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
     // CHIP_DC的MIX算子只用于Vector core使能，按照最新约束必须得有engineType和blockDimOffset，否则校验失败
     if (isVectorCoreEnable &&
         (kernelRegType != RT_KERNEL_REG_TYPE_CPU) && (mixType != NO_MIX)) {
-        NULL_PTR_RETURN_MSG_OUTER(cfg, RT_ERROR_INVALID_VALUE);
-        NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg, RT_ERROR_INVALID_VALUE, "Checking the parameter configuration before kernel delivery");
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->attrs, RT_ERROR_INVALID_VALUE, "Checking the parameter configuration before kernel delivery");
         ZERO_RETURN_AND_MSG_OUTER(cfg->numAttrs); // numAttrs=0表示没有TV参数
     } else {
         // cfg support nullptr, no need process
         NULL_PTR_RETURN_NOLOG(cfg, RT_ERROR_NONE);
-        NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->attrs, RT_ERROR_INVALID_VALUE, "Checking the parameter configuration before kernel delivery");
     }
 
     uint8_t schedMode = static_cast<uint8_t>(RT_SCHEM_MODE_NORMAL);
@@ -813,7 +813,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
     }
 
     COND_RETURN_AND_MSG_OUTER((timeoutFlag && timeoutUsFlag), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "cfg->attrs",
+        ErrorCode::EE1017, "Checking the parameter configuration before kernel delivery", "cfg->attrs",
         "The RT_LAUNCH_KERNEL_ATTR_TIMEOUT(7) and RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US(8) attributes cannot be carried at the same time");
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(schedMode >= static_cast<uint8_t>(RT_SCHEM_MODE_END),
@@ -830,7 +830,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
         (kernelRegType == RT_KERNEL_REG_TYPE_CPU) || (mixType == NO_MIX), RT_ERROR_NONE);
 
     COND_RETURN_AND_MSG_OUTER((!blockDimOffsetExist || !engineTypeExist), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "cfg->attrs", "Insufficient parameters in the vector core enabled scenario");
+        ErrorCode::EE1017, "Checking the parameter configuration before kernel delivery", "cfg->attrs", "Insufficient parameters in the vector core enabled scenario");
     
     return RT_ERROR_NONE;
 }
@@ -838,7 +838,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
 rtError_t ApiErrorDecorator::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, const RtArgsWithType * const argsWithType,
     Stream * const stm, const rtKernelLaunchCfg_t * const cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernel, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     ZERO_RETURN_AND_MSG_OUTER(blockDim);
 
     rtError_t error = CheckArgsWithType(kernel, argsWithType);
@@ -855,7 +855,7 @@ rtError_t ApiErrorDecorator::KernelLaunch(const void * const stubFunc, const uin
     const rtArgsEx_t * const argsInfo, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stubFunc, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     ZERO_RETURN_AND_MSG_OUTER(coreDim);
     // coreDim is defined uint16_t by sqe
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(coreDim > static_cast<uint32_t>(UINT16_MAX), 
@@ -886,8 +886,8 @@ rtError_t ApiErrorDecorator::KernelLaunchWithHandle(void * const hdl, const uint
 rtError_t ApiErrorDecorator::KernelLaunchEx(const char_t * const opName, const void * const args,
     const uint32_t argsSize, const uint32_t flags, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(opName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(opName, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(args, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     ZERO_RETURN_AND_MSG_OUTER(argsSize);
 
     const rtError_t error = impl_->KernelLaunchEx(opName, args, argsSize, flags, stm);
@@ -900,9 +900,9 @@ rtError_t ApiErrorDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const
     const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
     // So name of control task is null. No need to check.
-    NULL_PTR_RETURN_MSG_OUTER(launchNames, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(launchNames->opName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(launchNames->kernelName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(launchNames, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(launchNames->opName, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(launchNames->kernelName, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
     ZERO_RETURN_AND_MSG_OUTER(coreDim);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(coreDim >= 0x10000U, RT_ERROR_INVALID_VALUE, 
         coreDim, "less than or equal to 0xffff");    
@@ -920,8 +920,8 @@ rtError_t ApiErrorDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const
 rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t * const taskInfo, Stream * const stm,
     const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo->taskDesc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->taskDesc, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
     ZERO_RETURN_AND_MSG_OUTER(taskInfo->taskNum);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->taskNum > MULTIPLE_TASK_MAX_NUM), RT_ERROR_INVALID_VALUE, 
         taskInfo->taskNum, "less than or equal to " + std::to_string(MULTIPLE_TASK_MAX_NUM));
@@ -934,19 +934,16 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t *
     for (size_t idx = 0U; idx < taskInfo->taskNum; idx++) {
         if (taskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_DVPP) {
             const uint16_t type = taskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.type;
-            COND_RETURN_AND_MSG_OUTER(!IsDvppTask(type), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, __func__,
+            COND_RETURN_AND_MSG_OUTER(!IsDvppTask(type), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, "Delivering a DVPP Multiple task",
                 type, "SQE type", "RT_STARS_SQE_TYPE_VPC(12), RT_STARS_SQE_TYPE_JPEGE(13), RT_STARS_SQE_TYPE_JPEGD(14)");
             const uint32_t pos = taskInfo->taskDesc[idx].u.dvppTaskDesc.aicpuTaskPos;
-            COND_RETURN_AND_MSG_OUTER(pos >= stm->GetSqDepth(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, __func__,
+            COND_RETURN_AND_MSG_OUTER(pos >= stm->GetSqDepth(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, "Delivering a DVPP Multiple task",
                 pos, RtFmtMsg("taskInfo->taskDesc[%u].u.dvppTaskDesc.aicpuTaskPos", idx),
                 RtFmtMsg("must be less than %u", stm->GetSqDepth()));
         } else if (taskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_AICPU) {
-            NULL_PTR_RETURN_MSG_OUTER(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.soName,
-                RT_ERROR_INVALID_VALUE);
-            NULL_PTR_RETURN_MSG_OUTER(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.opName,
-                RT_ERROR_INVALID_VALUE);
-            NULL_PTR_RETURN_MSG_OUTER(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.kernelName,
-                RT_ERROR_INVALID_VALUE);
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.soName, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.opName, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->taskDesc[idx].u.aicpuTaskDesc.kernelLaunchNames.kernelName, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
             const uint32_t coreDim = taskInfo->taskDesc[idx].u.aicpuTaskDesc.blockDim;
             ZERO_RETURN_AND_MSG_OUTER(coreDim);
             COND_RETURN_AND_MSG_OUTER_WITH_PARAM(coreDim > static_cast<uint32_t>(UINT16_MAX), 
@@ -961,7 +958,7 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t *
                 static_cast<uint32_t>(handleRet));
             taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.funcHdl = realKernel;
             Kernel *hdl = RtPtrToPtr<Kernel *>(taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.funcHdl);
-            NULL_PTR_RETURN_MSG_OUTER(hdl, RT_ERROR_INVALID_VALUE);
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hdl, RT_ERROR_INVALID_VALUE, "Delivering a DVPP Multiple task");
             const uint32_t coreDim = taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.blockDim;
             ZERO_RETURN_AND_MSG_OUTER(coreDim);
             COND_RETURN_AND_MSG_OUTER_WITH_PARAM(coreDim > static_cast<uint32_t>(UINT16_MAX), 
@@ -984,15 +981,15 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opNa
     const uint32_t kernelType)
 {
     // So name of control task is null. No need to check.
-    NULL_PTR_RETURN_MSG_OUTER(opName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(opName, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
     ZERO_RETURN_AND_MSG_OUTER(coreDim);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(coreDim >= 0x10000U, RT_ERROR_INVALID_VALUE, 
         coreDim, "less than or equal to 0xffff");   
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
-        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Starting the compute task of an AI CPU operator", "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo->args, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
 
     const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
@@ -1004,7 +1001,7 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opNa
 
 rtError_t ApiErrorDecorator::DatadumpInfoLoad(const void * const dumpInfo, const uint32_t length, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dumpInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dumpInfo, RT_ERROR_INVALID_VALUE, "Dump information loading");
     ZERO_RETURN_AND_MSG_OUTER(length);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(((flag != RT_KERNEL_DEFAULT) && (flag != RT_KERNEL_CUSTOM_AICPU)), RT_ERROR_INVALID_VALUE, 
         KernelFlagToString(flag), "flag", "RT_KERNEL_DEFAULT(0) or RT_KERNEL_CUSTOM_AICPU(8)");
@@ -1016,7 +1013,7 @@ rtError_t ApiErrorDecorator::DatadumpInfoLoad(const void * const dumpInfo, const
 
 rtError_t ApiErrorDecorator::AicpuInfoLoad(const void * const aicpuInfo, const uint32_t length)
 {
-    NULL_PTR_RETURN_MSG_OUTER(aicpuInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aicpuInfo, RT_ERROR_INVALID_VALUE, "Delivering load information required by the AI CPU operator to the device");
     ZERO_RETURN_AND_MSG_OUTER(length);
 
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
@@ -1043,7 +1040,7 @@ rtError_t ApiErrorDecorator::AicpuInfoLoad(const void * const aicpuInfo, const u
 
 rtError_t ApiErrorDecorator::SetupArgument(const void * const setupArg, const uint32_t size, const uint32_t offset)
 {
-    NULL_PTR_RETURN_MSG_OUTER(setupArg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(setupArg, RT_ERROR_INVALID_VALUE, "Setting kernel launch parameters");
     ZERO_RETURN_AND_MSG_OUTER(size);
 
     const rtError_t error = impl_->SetupArgument(setupArg, size, offset);
@@ -1054,8 +1051,8 @@ rtError_t ApiErrorDecorator::SetupArgument(const void * const setupArg, const ui
 rtError_t ApiErrorDecorator::KernelTransArgSet(const void * const ptr, const uint64_t size, const uint32_t flag,
     void ** const setupArg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(setupArg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Setting the parameter pointer delivered by the kernel and refreshing the device cache");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(setupArg, RT_ERROR_INVALID_VALUE, "Setting the parameter pointer delivered by the kernel and refreshing the device cache");
     ZERO_RETURN_AND_MSG_OUTER(size);
 
     return impl_->KernelTransArgSet(ptr, size, flag, setupArg);
@@ -1078,7 +1075,7 @@ rtError_t ApiErrorDecorator::KernelFusionEnd(Stream * const stm)
 rtError_t ApiErrorDecorator::StreamCreate(Stream ** const stm, const int32_t priority, const uint32_t flags,
     DvppGrp *grp)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Stream creation");
 
     const rtError_t ret = CheckStreamFlags(flags);
     if (ret != RT_ERROR_NONE) {
@@ -1109,7 +1106,7 @@ rtError_t ApiErrorDecorator::CheckStreamFlags(const uint32_t flags) const
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_HUGE_DEPTH)) {
         COND_RETURN_AND_MSG_OUTER((flags & RT_STREAM_HUGE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, 
-            ErrorCode::EE1006, __func__, "Parameter flags value " + std::to_string(flags),
+            ErrorCode::EE1006, "Checking stream flags", "Parameter flags value " + std::to_string(flags),
             "The current SoC supports only streams with a normal number of tasks and does not support huge streams");
     }
 
@@ -1122,7 +1119,7 @@ rtError_t ApiErrorDecorator::CheckStreamFlags(const uint32_t flags) const
 
     COND_RETURN_AND_MSG_OUTER(((flags & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) &&
         (((flags | static_cast<uint32_t>(RT_STREAM_ACSQ_LOCK)) != (RT_STREAM_ACSQ_LOCK | RT_STREAM_CP_PROCESS_USE))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Parameter flags value " + std::to_string(flags),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Checking stream flags", "Parameter flags value " + std::to_string(flags),
         "The flag RT_STREAM_CP_PROCESS_USE(0x800U) must be used together with RT_STREAM_ACSQ_LOCK(0x2000U)");
 
     return RT_ERROR_NONE;
@@ -1130,10 +1127,10 @@ rtError_t ApiErrorDecorator::CheckStreamFlags(const uint32_t flags) const
 
 rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Stream destruction");
 
     COND_RETURN_AND_MSG_OUTER(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Stream destruction", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     return impl_->StreamDestroy(stm, flag);
 }
@@ -1141,16 +1138,16 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
 rtError_t ApiErrorDecorator::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout,
     const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering stream event waiting");
     COND_RETURN_AND_MSG_OUTER(
         flag != RT_EVENT_WAIT_DEFAULT && flag != RT_EVENT_WAIT_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        __func__, "Parameter flag value " + std::to_string(flag),
+        "Triggering stream event waiting", "Parameter flag value " + std::to_string(flag),
         "Only RT_EVENT_WAIT_DEFAULT or RT_EVENT_WAIT_EXTERNAL is supported.");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
         (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
         ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Parameter evt.eventFlag_ value " +
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Triggering stream event waiting", "Parameter evt.eventFlag_ value " +
         std::to_string(evt->GetEventFlag()), "Device-only events can be called only on the device");
         COND_RETURN_WARN(((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) &&
         (stm->IsCapturing())), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1172,14 +1169,14 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE,
         timeout, "greater than or equal to -1 and not equal to 0");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_AICPU) != 0U),
-        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Synchronizing a stream", "Stream flags value " + std::to_string(stm->Flags()),
         "The current stream is used to carry AI CPU scheduling tasks and does not support stream synchronization");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
-        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Synchronizing a stream", "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg("Stream (stream_id=%d) can be called only on the device", stm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Synchronizing a stream", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     int32_t streamId = 0;
     if (stm != nullptr) {
@@ -1205,42 +1202,42 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
 rtError_t ApiErrorDecorator::StreamQuery(Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Querying a stream", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->StreamQuery(stm);
 }
 
 rtError_t ApiErrorDecorator::GetStreamId(Stream * const stm, int32_t * const streamId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of a specified stream");
     return impl_->GetStreamId(stm, streamId);
 }
 
 rtError_t ApiErrorDecorator::GetSqId(Stream * const stm, uint32_t * const sqId)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(sqId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sqId, RT_ERROR_INVALID_VALUE, "Obtaining the SQ ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Obtaining the SQ ID");
     return impl_->GetSqId(curStm, sqId);
 }
 
 rtError_t ApiErrorDecorator::GetCqId(Stream * const stm, uint32_t * const cqId, uint32_t * const logicCqId)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cqId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(logicCqId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Obtaining the completion queue (CQ) ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cqId, RT_ERROR_INVALID_VALUE, "Obtaining the completion queue (CQ) ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(logicCqId, RT_ERROR_INVALID_VALUE, "Obtaining the completion queue (CQ) ID");
     return impl_->GetCqId(curStm, cqId, logicCqId);
 }
 
 rtError_t ApiErrorDecorator::StreamGetPriority(Stream * const stm,  uint32_t * const priority)
 {
-    NULL_PTR_RETURN_MSG_OUTER(priority, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(priority, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
     return impl_->StreamGetPriority(stm, priority);
 }
 
 rtError_t ApiErrorDecorator::StreamGetFlags(Stream * const stm,  uint32_t * const flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(flags, RT_ERROR_INVALID_VALUE, "Querying the flag in a stream");
     return impl_->StreamGetFlags(stm, flags);
 }
 
@@ -1250,8 +1247,8 @@ rtError_t ApiErrorDecorator::GetMaxStreamAndTask(const uint32_t streamType, uint
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
         RT_ERROR_INVALID_VALUE, StreamTypeToString(streamType), "streamType", "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
         + std::to_string(RT_HUGE_STREAM) + "]");
-    NULL_PTR_RETURN_MSG_OUTER(maxStrCount, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(maxTaskCount, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(maxStrCount, RT_ERROR_INVALID_VALUE, "Querying the maximum numbers of streams and tasks supported by a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(maxTaskCount, RT_ERROR_INVALID_VALUE, "Querying the maximum numbers of streams and tasks supported by a stream");
 
     RT_LOG(RT_LOG_DEBUG, "streamType=%u.", streamType);
     const rtError_t error = impl_->GetMaxStreamAndTask(streamType, maxStrCount, maxTaskCount);
@@ -1265,7 +1262,7 @@ rtError_t ApiErrorDecorator::GetAvailStreamNum(const uint32_t streamType, uint32
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((streamType != RT_NORMAL_STREAM) && (streamType != RT_HUGE_STREAM), 
         RT_ERROR_INVALID_VALUE, StreamTypeToString(streamType), "streamType", "[" + std::to_string(RT_NORMAL_STREAM) + ", " 
         + std::to_string(RT_HUGE_STREAM) + "]");
-    NULL_PTR_RETURN_MSG_OUTER(streamCount, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamCount, RT_ERROR_INVALID_VALUE, "Obtaining the number of available streams on the current device");
     const rtError_t error = impl_->GetAvailStreamNum(streamType, streamCount);
     ERROR_RETURN(error, "Get available stream failed, streamType=%u.", streamType);
     return error;
@@ -1273,7 +1270,7 @@ rtError_t ApiErrorDecorator::GetAvailStreamNum(const uint32_t streamType, uint32
 
 rtError_t ApiErrorDecorator::GetFreeStreamNum(uint32_t * const streamCount)
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamCount, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamCount, RT_ERROR_INVALID_VALUE, "Obtaining the number of idle streams on the current device");
     const rtError_t error = impl_->GetFreeStreamNum(streamCount);
     ERROR_RETURN(error, "Get free stream failed.");
     return error;
@@ -1281,7 +1278,7 @@ rtError_t ApiErrorDecorator::GetFreeStreamNum(uint32_t * const streamCount)
 
 rtError_t ApiErrorDecorator::GetAvailEventNum(uint32_t * const eventCount)
 {
-    NULL_PTR_RETURN_MSG_OUTER(eventCount, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(eventCount, RT_ERROR_INVALID_VALUE, "Querying the number of available events on the current device");
     const rtError_t error = impl_->GetAvailEventNum(eventCount);
     ERROR_RETURN(error, "Query event num failed.");
     return error;
@@ -1289,8 +1286,8 @@ rtError_t ApiErrorDecorator::GetAvailEventNum(uint32_t * const eventCount)
 
 rtError_t ApiErrorDecorator::GetTaskIdAndStreamID(uint32_t * const taskId, uint32_t * const streamId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskId, RT_ERROR_INVALID_VALUE, "Obtaining the task ID and stream ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamId, RT_ERROR_INVALID_VALUE, "Obtaining the task ID and stream ID");
     return impl_->GetTaskIdAndStreamID(taskId, streamId);
 }
 
@@ -1302,7 +1299,7 @@ rtError_t ApiErrorDecorator::SetDeviceFailureMode(uint64_t failureMode)
 rtError_t ApiErrorDecorator::StreamSetMode(Stream * const stm, const uint64_t stmMode)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Setting the error handling mode of a stream");
     COND_RETURN_WARN((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
                      "Coprocessor stream flag=%u is not supported, stream_id=%d", curStm->Flags(), curStm->Id_());
 #ifndef CFG_DEV_PLATFORM_PC
@@ -1318,14 +1315,14 @@ rtError_t ApiErrorDecorator::StreamSetMode(Stream * const stm, const uint64_t st
 rtError_t ApiErrorDecorator::StreamGetMode(const Stream * const stm, uint64_t * const stmMode)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(const_cast<Stream *>(stm));
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stmMode, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stmMode, RT_ERROR_INVALID_VALUE, "Obtaining the error handling mode of a stream");
     return impl_->StreamGetMode(curStm, stmMode);
 }
 
 rtError_t ApiErrorDecorator::EventCreate(Event ** const evt, const uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event creation");
 
     constexpr uint32_t maxFlag = RT_EVENT_FLAG_MAX;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag & maxFlag) == 0U) || (flag > maxFlag),
@@ -1337,7 +1334,7 @@ rtError_t ApiErrorDecorator::EventCreate(Event ** const evt, const uint64_t flag
     constexpr uint64_t solelyFlag[] = {RT_EVENT_MC2, RT_EVENT_EXTERNAL};
     for (const uint64_t itemFlag : solelyFlag) {
         COND_RETURN_AND_MSG_OUTER((((flag & (itemFlag)) != 0UL) && ((flag & (~itemFlag)) != 0UL)), RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1006, __func__, "Parameter flag value " + std::to_string(flag),
+            ErrorCode::EE1006, "Event creation", "Parameter flag value " + std::to_string(flag),
             "RT_EVENT_MC2(0x10U) and RT_EVENT_EXTERNAL(0x20U) do not support OR combination with other flags");
     }
 
@@ -1349,12 +1346,12 @@ rtError_t ApiErrorDecorator::EventCreate(Event ** const evt, const uint64_t flag
 
 rtError_t ApiErrorDecorator::EventCreateEx(Event ** const evt, const uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event creation");
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     constexpr uint64_t solelyFlag[] = {RT_EVENT_MC2, RT_EVENT_EXTERNAL, RT_EVENT_IPC};
     for (const uint64_t itemFlag : solelyFlag) {
         COND_RETURN_AND_MSG_OUTER((((flag & itemFlag) != 0UL) && ((flag & (~itemFlag)) != 0UL)), RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1006, __func__, "Parameter flag value " + std::to_string(flag),
+            ErrorCode::EE1006, "Event creation", "Parameter flag value " + std::to_string(flag),
             "RT_EVENT_MC2(0x10U) and RT_EVENT_EXTERNAL(0x20U) do not support OR combination with other flags");
     }
     if ((flag == RT_EVENT_IPC) && (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_IPC_EVENT))) {
@@ -1376,13 +1373,13 @@ rtError_t ApiErrorDecorator::EventCreateEx(Event ** const evt, const uint64_t fl
 
 rtError_t ApiErrorDecorator::EventDestroy(Event *evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event destruction");
     return impl_->EventDestroy(evt);
 }
 
 rtError_t ApiErrorDecorator::EventDestroySync(Event *evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Synchronous event destruction");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventDestroySync API");
     return impl_->EventDestroySync(evt);
@@ -1390,16 +1387,16 @@ rtError_t ApiErrorDecorator::EventDestroySync(Event *evt)
 
 rtError_t ApiErrorDecorator::EventRecord(Event * const evt, Stream * const stm, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event recording");
     COND_RETURN_AND_MSG_OUTER(
         flag != RT_EVENT_RECORD_DEFAULT && flag != RT_EVENT_RECORD_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        __func__, "Parameter flag value " + std::to_string(flag),
+        "Event recording", "Parameter flag value " + std::to_string(flag),
         "Only RT_EVENT_RECORD_DEFAULT or RT_EVENT_RECORD_EXTERNAL is supported.");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
         (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
         ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Parameter evt.eventFlag_ value " +
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Event recording", "Parameter evt.eventFlag_ value " +
         std::to_string(evt->GetEventFlag()), "Device-only events can be called only on the device");
     COND_RETURN_WARN(((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) &&
         (stm->IsCapturing())), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1418,8 +1415,8 @@ rtError_t ApiErrorDecorator::EventRecord(Event * const evt, Stream * const stm, 
 
 rtError_t ApiErrorDecorator::GetEventID(Event * const evt, uint32_t * const evtId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(evtId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the event ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evtId, RT_ERROR_INVALID_VALUE, "Obtaining the event ID");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtGetEventID API");
     return impl_->GetEventID(evt, evtId);
@@ -1427,12 +1424,12 @@ rtError_t ApiErrorDecorator::GetEventID(Event * const evt, uint32_t * const evtI
 
 rtError_t ApiErrorDecorator::EventReset(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event reset");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
         (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
         ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Parameter evt.eventFlag_ value " +
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Event reset", "Parameter evt.eventFlag_ value " +
         std::to_string(evt->GetEventFlag()), "Device-only events can be called only on the device");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventReset API");
@@ -1449,19 +1446,19 @@ rtError_t ApiErrorDecorator::EventSynchronize(Event * const evt, const int32_t t
     // timeout >=-1, -1:no limited
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE,
         timeout, "greater than or equal to -1 and not equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event synchronization");
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support synchronization.");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
-    COND_RETURN_AND_MSG_OUTER(evt->IsEventInModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, __func__,
+        ErrorCode::EE1016, "Event synchronization", RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
+    COND_RETURN_AND_MSG_OUTER(evt->IsEventInModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Event synchronization",
         RtFmtMsg("The event (event_id=%d) in the stream bound to the model is not supported", evt->EventId_()));
     return impl_->EventSynchronize(evt, timeout);
 }
 
 rtError_t ApiErrorDecorator::EventQuery(Event * const evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event query");
     COND_RETURN_WARN(evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
         "The current mode is not supported, mode=%d", static_cast<int32_t>(evt->IsNewMode()));
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1469,25 +1466,25 @@ rtError_t ApiErrorDecorator::EventQuery(Event * const evt)
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventQuery API");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, "Event query", RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQuery(evt);
 }
 
 rtError_t ApiErrorDecorator::EventQueryStatus(Event * const evt, rtEventStatus_t * const status)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event status query");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Event status query");
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support querying status.");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, "Event status query", RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQueryStatus(evt, status);
 }
 
 rtError_t ApiErrorDecorator::EventQueryWaitStatus(Event * const evt, rtEventWaitStatus_t * const status)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event waiting status query");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Event waiting status query");
     COND_RETURN_WARN(evt->IsNewMode(), RT_ERROR_FEATURE_NOT_SUPPORT,
         "The current mode is not supported, mode=%d", static_cast<int32_t>(evt->IsNewMode()));
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1495,19 +1492,19 @@ rtError_t ApiErrorDecorator::EventQueryWaitStatus(Event * const evt, rtEventWait
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventQueryWaitStatus API");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, "Event waiting status query", RtFmtMsg("Event (event_id=%d) during the capture stage is not supported", evt->EventId_()));
     return impl_->EventQueryWaitStatus(evt, status);
 }
 
 rtError_t ApiErrorDecorator::EventElapsedTime(float32_t * const retTime, Event * const startEvt, Event * const endEvt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(retTime, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(startEvt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(endEvt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retTime, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(startEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(endEvt, RT_ERROR_INVALID_VALUE, "Computing the elapsed time between two events");
     COND_RETURN_AND_MSG_OUTER(startEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("StartEvent %d during the capture stage is not supported", startEvt->EventId_()));
+        ErrorCode::EE1016, "Computing the elapsed time between two events", RtFmtMsg("StartEvent %d during the capture stage is not supported", startEvt->EventId_()));
     COND_RETURN_AND_MSG_OUTER(endEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("EndEvent %d during the capture stage is not supported", endEvt->EventId_()));
+        ErrorCode::EE1016, "Computing the elapsed time between two events", RtFmtMsg("EndEvent %d during the capture stage is not supported", endEvt->EventId_()));
     COND_RETURN_WARN((startEvt->GetEventFlag() == RT_EVENT_EXTERNAL || endEvt->GetEventFlag() == RT_EVENT_EXTERNAL),
         RT_ERROR_FEATURE_NOT_SUPPORT, "The external event does not support getting elapsed time.");
     COND_RETURN_WARN((startEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
@@ -1518,21 +1515,21 @@ rtError_t ApiErrorDecorator::EventElapsedTime(float32_t * const retTime, Event *
 
 rtError_t ApiErrorDecorator::EventGetTimeStamp(uint64_t * const retTime, Event * const evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(retTime, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retTime, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the event execution end time");
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support getting timestamp.");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventGetTimeStamp API");
     COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+        ErrorCode::EE1016, "Obtaining the event execution end time", RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
     return impl_->EventGetTimeStamp(retTime, evt);
 }
 
 rtError_t ApiErrorDecorator::DevMallocCached(void ** const devPtr, const uint64_t size, const rtMemType_t type,
     const uint16_t moduleId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Allocating device memory with the cache attribute");
     ZERO_RETURN_AND_MSG_OUTER(size);
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP): moduleId;
     const rtError_t error = impl_->DevMallocCached(devPtr, size, type, moduleIdCov);
@@ -1544,7 +1541,7 @@ rtError_t ApiErrorDecorator::DevMallocCached(void ** const devPtr, const uint64_
 rtError_t ApiErrorDecorator::DevMalloc(void ** const devPtr, const uint64_t size, const rtMemType_t type,
     const uint16_t moduleId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Allocating device memory");
 
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP): moduleId;
     const rtError_t error = impl_->DevMalloc(devPtr, size, type, moduleIdCov);
@@ -1555,7 +1552,7 @@ rtError_t ApiErrorDecorator::DevMalloc(void ** const devPtr, const uint64_t size
 
 rtError_t ApiErrorDecorator::DevFree(void * const devPtr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Releasing device memory");
 
     const rtError_t error = impl_->DevFree(devPtr);
     ERROR_RETURN(error, "Free device failed, mem=0x%llx", RtPtrToValue(devPtr));
@@ -1565,7 +1562,7 @@ rtError_t ApiErrorDecorator::DevFree(void * const devPtr)
 rtError_t ApiErrorDecorator::DevDvppMalloc(void ** const devPtr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Allocating DVPP device memory");
 
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP): moduleId;
     return impl_->DevDvppMalloc(devPtr, size, flag, moduleIdCov);
@@ -1573,13 +1570,13 @@ rtError_t ApiErrorDecorator::DevDvppMalloc(void ** const devPtr, const uint64_t 
 
 rtError_t ApiErrorDecorator::DevDvppFree(void * const devPtr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Releasing DVPP device memory");
     return impl_->DevDvppFree(devPtr);
 }
 
 rtError_t ApiErrorDecorator::HostMalloc(void ** const hostPtr, const uint64_t size, const uint16_t moduleId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(hostPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hostPtr, RT_ERROR_INVALID_VALUE, "Host memory allocation");
     ZERO_RETURN_AND_MSG_OUTER(size);
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP): moduleId;
     const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleIdCov);
@@ -1597,7 +1594,7 @@ rtError_t ApiErrorDecorator::HostMallocWithCfg(void ** const hostPtr, const uint
 
 rtError_t ApiErrorDecorator::HostFree(void * const hostPtr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(hostPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hostPtr, RT_ERROR_INVALID_VALUE, "Host memory release");
 
     const rtError_t error = impl_->HostFree(hostPtr);
     ERROR_RETURN(error, "Free host memory failed, host addr=%#" PRIx64 ".",
@@ -1610,9 +1607,9 @@ rtError_t ApiErrorDecorator::HostFree(void * const hostPtr)
 rtError_t ApiErrorDecorator::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const in,
     rtMallocHostSharedMemoryOut * const out)
 {
-    NULL_PTR_RETURN_MSG_OUTER(in, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(out, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(in->name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in, RT_ERROR_INVALID_VALUE, "Shared memory allocation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(out, RT_ERROR_INVALID_VALUE, "Shared memory allocation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->name, RT_ERROR_INVALID_VALUE, "Shared memory allocation");
     ZERO_RETURN_AND_MSG_OUTER(in->size);
 
     const rtError_t error = impl_->MallocHostSharedMemory(in, out);
@@ -1623,11 +1620,11 @@ rtError_t ApiErrorDecorator::MallocHostSharedMemory(rtMallocHostSharedMemoryIn *
 
 rtError_t ApiErrorDecorator::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in)
 {
-    NULL_PTR_RETURN_MSG_OUTER(in, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(in->name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->name, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
     ZERO_RETURN_AND_MSG_OUTER(in->size);
-    NULL_PTR_RETURN_MSG_OUTER(in->ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(in->devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->ptr, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->devPtr, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
 
     const rtError_t error = impl_->FreeHostSharedMemory(in);
     ERROR_RETURN(error, "Free host shared memory failed, sharedMemName=%s, sharedMemSize=%" PRIu64 "(bytes), fd=%u.",
@@ -1637,7 +1634,7 @@ rtError_t ApiErrorDecorator::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * con
 
 rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
     ZERO_RETURN_AND_MSG_OUTER(size);
     constexpr uint32_t validFlags = RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY;
     if ((static_cast<uint32_t>(type) & (~validFlags)) != 0U) {
@@ -1645,7 +1642,7 @@ rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegist
             type, RT_HOST_REGISTER_IOMEMORY, RT_HOST_REGISTER_READONLY);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Registering the host memory as device-accessible memory");
 
     const rtError_t error = impl_->HostRegister(ptr, size, type, devPtr);
     ERROR_RETURN(error, "Malloc host memory failed, MemSize=%" PRIu64 "(bytes)", size);
@@ -1654,12 +1651,12 @@ rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegist
 
 rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Host memory address registration");
     ZERO_RETURN_AND_MSG_OUTER(size);
     constexpr uint32_t validFlags = RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY |
         RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED;
     const bool isValidFlag = ((flag & validFlags) != 0U) && ((flag & (~validFlags)) == 0U);
-    COND_RETURN_AND_MSG_OUTER(!isValidFlag, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+    COND_RETURN_AND_MSG_OUTER(!isValidFlag, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Host memory address registration",
         flag, "flag", "The valid flag is an OR combination of RT_MEM_HOST_REGISTER_MAPPED(0x2U), RT_MEM_HOST_REGISTER_IOMEMORY(0x4U),"
         " RT_MEM_HOST_REGISTER_READONLY(0x8U), and RT_MEM_HOST_REGISTER_PINNED(0x10000000U)");
     
@@ -1673,7 +1670,7 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t f
 
 rtError_t ApiErrorDecorator::HostUnregister(void *ptr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Host memory deregistration");
 
     const rtError_t error = impl_->HostUnregister(ptr);
     ERROR_RETURN(error, "Malloc host memory failed.");
@@ -1682,8 +1679,8 @@ rtError_t ApiErrorDecorator::HostUnregister(void *ptr)
 
 rtError_t ApiErrorDecorator::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(pHost, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(pDevice, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pHost, RT_ERROR_INVALID_VALUE, "Obtaining the on-device memory pointer based on the on-host virtual address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pDevice, RT_ERROR_INVALID_VALUE, "Obtaining the on-device memory pointer based on the on-host virtual address");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag != 0), RT_ERROR_INVALID_VALUE, flag, "equal to 0");
 
     const rtError_t error = impl_->HostGetDevicePointer(pHost, pDevice, flag);
@@ -1693,7 +1690,7 @@ rtError_t ApiErrorDecorator::HostGetDevicePointer(void *pHost, void **pDevice, u
 
 rtError_t ApiErrorDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
 {
-    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(capabilities, RT_ERROR_INVALID_VALUE, "Querying the host memory mapping capability on a specified device");
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
@@ -1716,7 +1713,7 @@ rtError_t ApiErrorDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType
 rtError_t ApiErrorDecorator::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Unified virtual memory (UVM) allocation");
     ZERO_RETURN_AND_MSG_OUTER(size);
     const uint16_t moduleIdCov = (moduleId > DEFAULT_MODULEID) ? static_cast<uint16_t>(APP): moduleId;
     const rtError_t error = impl_->ManagedMemAlloc(ptr, size, flag, moduleIdCov);
@@ -1726,7 +1723,7 @@ rtError_t ApiErrorDecorator::ManagedMemAlloc(void ** const ptr, const uint64_t s
 
 rtError_t ApiErrorDecorator::ManagedMemFree(const void * const ptr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Unified virtual memory (UVM) release");
     const rtError_t error = impl_->ManagedMemFree(ptr);
     ERROR_RETURN(error, "Free managed memory failed");
     return error;
@@ -1734,7 +1731,7 @@ rtError_t ApiErrorDecorator::ManagedMemFree(const void * const ptr)
 
 rtError_t ApiErrorDecorator::MemAdvise(void *devPtr, uint64_t count, uint32_t advise)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Providing the memory access policy");
     ZERO_RETURN_AND_MSG_OUTER(count);
     const rtError_t error = impl_->MemAdvise(devPtr, count, advise);
     ERROR_RETURN(error, "memory advise failed, count=%" PRIu64 ", advise=%u", count, advise);
@@ -1758,8 +1755,8 @@ rtError_t ApiErrorDecorator::InvalidCache(const uint64_t base, const size_t len)
 rtError_t ApiErrorDecorator::MemCopySync(void * const dst, const uint64_t destMax, const void * const src,
     const uint64_t cnt, const rtMemcpyKind_t kind, const uint32_t checkKind)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(destMax);
     ZERO_RETURN_AND_MSG_OUTER(cnt);
 
@@ -1780,8 +1777,8 @@ rtError_t ApiErrorDecorator::MemCopySync(void * const dst, const uint64_t destMa
 rtError_t ApiErrorDecorator::MemCopySyncEx(void * const dst, const uint64_t destMax, const void * const src,
     const uint64_t cnt, const rtMemcpyKind_t kind)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(destMax);
     ZERO_RETURN_AND_MSG_OUTER(cnt);
 
@@ -1803,8 +1800,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     const uint64_t cnt, const rtMemcpyKind_t kind, Stream *const stm, const rtTaskCfgInfo_t * const cfgInfo,
     const rtD2DAddrCfgInfo_t * const addrCfg, bool checkKind, const rtMemcpyConfig_t * const memcpyConfig)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cnt > destMax, RT_ERROR_INVALID_VALUE, 
         cnt, "(0, " + std::to_string(destMax) + "]");
@@ -1813,7 +1810,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
         MemcpyKindToString(kind), "kind",
         "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_AND_MSG_OUTER(((kind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) && (cnt > MAX_MEMCPY_SIZE_OF_D2D)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Asynchronous memory copy",
         cnt, "cnt", RtFmtMsg("If parameter kind equals RT_MEMCPY_ADDR_DEVICE_TO_DEVICE(5),"
             " the range of parameter cnt should be (0, %u]", MAX_MEMCPY_SIZE_OF_D2D));
     rtError_t error = MemcpyAsyncCheckParam(kind, stm);
@@ -1835,7 +1832,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     rtMemcpyKind_t copyKind = kind;
     checkKind = (configInfo.checkBitmap == WITHOUT_CHECK_KIND) ? false : checkKind;
     COND_RETURN_AND_MSG_OUTER(!checkKind && (kind == RT_MEMCPY_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        __func__, "RT_MEMCPY_DEFAULT(7)", "kind", "If parameter checkKind is false, parameter kind cannot be RT_MEMCPY_DEFAULT(7)");
+        "Asynchronous memory copy", "RT_MEMCPY_DEFAULT(7)", "kind", "If parameter checkKind is false, parameter kind cannot be RT_MEMCPY_DEFAULT(7)");
     bool isD2HorH2DInvolvePageableMemory = false;
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
         error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
@@ -1870,7 +1867,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
 
         error = impl_->MemCopySync(dst, destMax, src, cnt, copyKind);
         error = (error == RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT) ? RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC : error;
-        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, __func__,
+        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, "Asynchronous memory copy",
             "the operation has been converted to a synchronous operation. "
             "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
     } else {
@@ -1886,15 +1883,15 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
 rtError_t ApiErrorDecorator::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, uint64_t cnt,
     Stream * const stm, bool needCpuTask)
 {
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
     if (needCpuTask){
         COND_RETURN_AND_MSG_OUTER(cnt != sizeof(rtRandomNumTaskInfo_t), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-            __func__, cnt, "cnt", RtFmtMsg("If parameter needCpuTask is equal to %u, the value of parameter cnt should be %zu(bytes)",
+            "Delivering the Submission Queue Entry (SQE) update task", cnt, "cnt", RtFmtMsg("If parameter needCpuTask is equal to %u, the value of parameter cnt should be %zu(bytes)",
                 needCpuTask, sizeof(rtRandomNumTaskInfo_t)));
     } else{
         constexpr uint32_t dsaCopySize = 40U;
         COND_RETURN_AND_MSG_OUTER(cnt != static_cast<uint64_t>(dsaCopySize), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-            __func__, cnt, "cnt", RtFmtMsg("If parameter needCpuTask is not equal to %u, the value of parameter cnt should be %u(bytes)",
+            "Delivering the Submission Queue Entry (SQE) update task", cnt, "cnt", RtFmtMsg("If parameter needCpuTask is not equal to %u, the value of parameter cnt should be %u(bytes)",
                 needCpuTask, dsaCopySize));
     }
     RT_LOG(RT_LOG_DEBUG, "update dsa sqe, cnt=%" PRIu64 "Byte, streamId=%u, taskId=%u", cnt, streamId, taskId);
@@ -1906,14 +1903,14 @@ rtError_t ApiErrorDecorator::LaunchSqeUpdateTask(uint32_t streamId, uint32_t tas
 rtError_t ApiErrorDecorator::MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax,
     const uint64_t count, Stream *stm, const rtTaskCfgInfo_t * const cfgInfo, const bool isMemcpyDesc)
 {
-    NULL_PTR_RETURN_MSG_OUTER(memcpyAddrInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memcpyAddrInfo, RT_ERROR_INVALID_VALUE, "Performing asynchronous memory copy using the address description on the device");
     ZERO_RETURN_AND_MSG_OUTER(count);
-    COND_RETURN_AND_MSG_OUTER(count > destMax, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, 
+    COND_RETURN_AND_MSG_OUTER(count > destMax, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Performing asynchronous memory copy using the address description on the device", 
         count, "count", RtFmtMsg("The count cannot exceed the maximum value destMax %u", destMax));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((count > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, 
         count, RtFmtMsg("(0, %u]", MAX_MEMCPY_SIZE_OF_D2D));
     COND_RETURN_AND_MSG_OUTER((RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, 
-        __func__, memcpyAddrInfo, "memcpyAddrInfo", "memcpyAddrInfo is not 64-byte aligned");
+        "Performing asynchronous memory copy using the address description on the device", memcpyAddrInfo, "memcpyAddrInfo", "memcpyAddrInfo is not 64-byte aligned");
 
     if (isMemcpyDesc == false) {
         Context *curCtx = nullptr;
@@ -1943,22 +1940,22 @@ rtError_t ApiErrorDecorator::CheckMemcpyAttribute(const rtMemcpyKind kind, const
     rtPtrAttributes_t srcAttributes = {};
     rtPtrAttributes_t destAttributes = {};
     rtError_t error = impl_->PtrGetAttributes(dst, &destAttributes);
-    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, __func__, "desc",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Memory copy attribute check", "desc",
         "Failed to get dst pointer memory attributes");
 
     error = impl_->PtrGetAttributes(src, &srcAttributes);
-    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, __func__, "desc",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Memory copy attribute check", "desc",
         "Failed to get src pointer memory attributes");
 
     COND_RETURN_AND_MSG_OUTER(((kind == RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE) &&
         (destAttributes.location.id != srcAttributes.location.id)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, MemcpyNewKindToString(kind), "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Memory copy attribute check", MemcpyNewKindToString(kind), "kind",
         "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, dstAddr DeviceId=" + std::to_string(destAttributes.location.id) +
         ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id));
     
     COND_RETURN_AND_MSG_OUTER(
         ((kind == RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE) && (destAttributes.location.id == srcAttributes.location.id)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, MemcpyNewKindToString(kind), "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Memory copy attribute check", MemcpyNewKindToString(kind), "kind",
         "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE. dstAddr DeviceId=" + std::to_string(destAttributes.location.id) +
         ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id));
 
@@ -1968,8 +1965,8 @@ rtError_t ApiErrorDecorator::CheckMemcpyAttribute(const rtMemcpyKind kind, const
 rtError_t ApiErrorDecorator::RtsMemcpyAsync(void * const dst, const uint64_t destMax, const void * const src,
     const uint64_t cnt, const rtMemcpyKind kind, rtMemcpyConfig_t * const config, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
 
     rtError_t error = CheckMemcpyAttribute(kind, dst, src);
     ERROR_RETURN(error, "Check attributes failed.");
@@ -1987,7 +1984,7 @@ rtError_t ApiErrorDecorator::RtsMemcpyAsync(void * const dst, const uint64_t des
     }
 
     COND_RETURN_AND_MSG_OUTER(((cfgInfo.checkBitmap == WITHOUT_CHECK_KIND) && (kind == RT_MEMCPY_KIND_DEFAULT)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, "RT_MEMCPY_KIND_DEFAULT(4)", "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Asynchronous memory copy", "RT_MEMCPY_KIND_DEFAULT(4)", "kind",
         "When the kind check is disabled, parameter kind cannot be RT_MEMCPY_KIND_DEFAULT(4)");
 
     const rtMemcpyKind_t curKind = GetMemCpyKind(RT_MEMCPY_RESERVED, kind);
@@ -2001,8 +1998,8 @@ rtError_t ApiErrorDecorator::RtsMemcpyAsync(void * const dst, const uint64_t des
 rtError_t ApiErrorDecorator::RtsMemcpy(void * const dst, const uint64_t destMax, const void * const src,
     const uint64_t cnt, const rtMemcpyKind kind, rtMemcpyConfig_t * const config)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
 
     rtError_t error = CheckMemcpyAttribute(kind, dst, src);
     ERROR_RETURN(error, "Check memcpy attribute failed.");
@@ -2028,7 +2025,7 @@ rtError_t ApiErrorDecorator::RtsMemcpy(void * const dst, const uint64_t destMax,
 
     COND_RETURN_AND_MSG_OUTER(((kind == RT_MEMCPY_KIND_DEFAULT) && 
         ((cfgInfo.checkBitmap == WITHOUT_CHECK_KIND) || (cfgInfo.checkBitmap == NOT_CHECK_KIND_BUT_CHECK_PINNED))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, "RT_MEMCPY_KIND_DEFAULT(4)", "kind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Synchronous memory copy", "RT_MEMCPY_KIND_DEFAULT(4)", "kind",
         "When the kind check is disabled, parameter kind cannot be RT_MEMCPY_KIND_DEFAULT(4)");
 
     const rtMemcpyKind_t curKind = GetMemCpyKind(RT_MEMCPY_RESERVED, kind);
@@ -2040,29 +2037,29 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(rtMemcpyDesc_t desc, const void * con
 {
     COND_RETURN_WARN((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
-    NULL_PTR_RETURN_MSG_OUTER(srcAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dstAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(srcAddr, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dstAddr, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desc, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
     COND_RETURN_AND_MSG_RESERVED_PARAM((config != nullptr), RT_ERROR_INVALID_VALUE, "config",
         "config is reserved parameter and must be null");
     ZERO_RETURN_AND_MSG_OUTER(count);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((count > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, 
         count, RtFmtMsg("(0, %u]", MAX_MEMCPY_SIZE_OF_D2D));
     COND_RETURN_AND_MSG_OUTER((RtPtrToValue(desc) % 64ULL) != 0ULL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, 
-        __func__, desc, "desc", "desc is not 64-byte aligned");
+        "Setting the memory copy descriptor", desc, "desc", "desc is not 64-byte aligned");
     rtPtrAttributes_t srcAttributes;
     rtPtrAttributes_t destAttributes;
     rtPtrAttributes_t descAttributes;
     rtError_t error = impl_->PtrGetAttributes(desc, &descAttributes);
-    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, __func__, "desc",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "desc",
         "Failed to get desc pointer memory attributes");
 
     error = impl_->PtrGetAttributes(dstAddr, &destAttributes);
-    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, __func__, "dstAddr",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "dstAddr",
         "Failed to get dstAddr pointer memory attributes");
 
     error = impl_->PtrGetAttributes(srcAddr, &srcAttributes);
-    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, __func__, "srcAddr",
+    COND_RETURN_AND_MSG_OUTER(error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "srcAddr",
         "Failed to get srcAddr pointer memory attributes");
     
     COND_RETURN_ERROR_MSG_INNER(descAttributes.location.type != RT_MEMORY_LOC_DEVICE,
@@ -2070,7 +2067,7 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(rtMemcpyDesc_t desc, const void * con
     
     COND_RETURN_AND_MSG_OUTER(((destAttributes.location.id != srcAttributes.location.id) ||
         (destAttributes.location.type != RT_MEMORY_LOC_DEVICE) ||
-        (srcAttributes.location.type != RT_MEMORY_LOC_DEVICE)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        (srcAttributes.location.type != RT_MEMORY_LOC_DEVICE)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Setting the memory copy descriptor",
         "dstAddr or srcAddr",
         "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, dstAddr DeviceId=" + std::to_string(destAttributes.location.id) +
         ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id) +
@@ -2087,7 +2084,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(rtMemcpyDesc_t desc, Stream *st
 {
     COND_RETURN_WARN((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
-    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desc, RT_ERROR_INVALID_VALUE, "Performing asynchronous memory copy using the memory copy descriptor");
     COND_RETURN_AND_MSG_RESERVED_PARAM((config != nullptr), RT_ERROR_INVALID_VALUE, "config",
         "config is reserved parameter and must be null");
 
@@ -2107,10 +2104,10 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(rtMemcpyDesc_t desc, Stream *st
 rtError_t ApiErrorDecorator::GetDevArgsAddr(Stream *stm, rtArgsEx_t *argsInfo, void **devArgsAddr, void **argsHandle)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(devArgsAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Obtaining the device parameter address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Obtaining the device parameter address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devArgsAddr, RT_ERROR_INVALID_VALUE, "Obtaining the device parameter address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Obtaining the device parameter address");
     const rtError_t error = impl_->GetDevArgsAddr(curStm, argsInfo, devArgsAddr, argsHandle);
     ERROR_RETURN_MSG_INNER(error, "GetDevArgsAddr failed, stream_id=%d.", curStm->Id_());
     return error;
@@ -2121,7 +2118,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, co
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
         if (stm != nullptr) {
             COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() != 0U, RT_ERROR_INVALID_VALUE,
-                ErrorCode::EE1016, __func__, RtFmtMsg("If the stream is a model stream,"
+                ErrorCode::EE1016, "Checking asynchronous memory copy parameters", RtFmtMsg("If the stream is a model stream,"
                     " the memcpy kind %u is not supported", kind));
         }
     }
@@ -2410,14 +2407,14 @@ rtError_t ApiErrorDecorator::ReduceAsync(void * const dst, const void * const sr
     const rtRecudeKind_t kind, const rtDataType_t type, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind >= RT_RECUDE_KIND_END) ||
         (kind < RT_MEMCPY_SDMA_AUTOMATIC_ADD), RT_ERROR_INVALID_VALUE, 
         kind, RtFmtMsg("[%u, %u)", RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_RECUDE_KIND_END));
     COND_RETURN_AND_MSG_OUTER((kind == RT_MEMCPY_SDMA_AUTOMATIC_ADD) && (cnt > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        __func__, cnt, "cnt", RtFmtMsg("If parameter kind equals RT_MEMCPY_SDMA_AUTOMATIC_ADD(10), the range of parameter cnt should be (0, %u]",
+        "Asynchronously performing the Reduce operation", cnt, "cnt", RtFmtMsg("If parameter kind equals RT_MEMCPY_SDMA_AUTOMATIC_ADD(10), the range of parameter cnt should be (0, %u]",
             MAX_MEMCPY_SIZE_OF_D2D));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type >= RT_DATA_TYPE_END) ||
         (type < RT_DATA_TYPE_FP32), RT_ERROR_INVALID_VALUE, type, 
@@ -2431,9 +2428,9 @@ rtError_t ApiErrorDecorator::ReduceAsync(void * const dst, const void * const sr
 rtError_t ApiErrorDecorator::ReduceAsyncV2(void * const dst, const void * const src, const uint64_t cnt,
     const rtRecudeKind_t kind, const rtDataType_t type, Stream * const stm, void * const overflowAddr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(overflowAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(overflowAddr, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind != RT_MEMCPY_SDMA_AUTOMATIC_ADD), RT_ERROR_INVALID_VALUE, 
         kind, std::to_string(RT_MEMCPY_SDMA_AUTOMATIC_ADD));
@@ -2477,8 +2474,8 @@ rtError_t ApiErrorDecorator::MemCopy2DCheckParam(const void * const dst, const u
     const void * const src, const uint64_t srcPitch, const uint64_t width, const uint64_t height,
     const rtMemcpyKind_t kind) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Checking the validity of 2D memory copy parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Checking the validity of 2D memory copy parameters");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(height == 0U, RT_ERROR_INVALID_VALUE, height, "greater than 0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(dstPitch == 0U, RT_ERROR_INVALID_VALUE, dstPitch, "greater than 0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(srcPitch == 0U, RT_ERROR_INVALID_VALUE, srcPitch, "greater than 0");
@@ -2538,7 +2535,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
     const rtMemcpyKind_t kind, const rtMemcpyKind newKind)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Asynchronous 2D memory copy");
     rtMemcpyKind_t copyKind = GetMemCpyKind(kind, newKind);
     rtError_t error = MemCopy2DCheckParam(dst, dstPitch, src, srcPitch, width, height, copyKind);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -2552,7 +2549,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
         ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) &&
         (copyKind != RT_MEMCPY_DEVICE_TO_HOST) &&
         (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "kind or newKind",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Asynchronous 2D memory copy", "kind or newKind",
         RtFmtMsg("Memcpy2dAsync supports only H2D, D2H, or D2D. Parameter kind is %u, and reviseKind is %u", kind, copyKind));
 
     COND_RETURN_WARN(((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) && (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
@@ -2568,7 +2565,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
 
         error = impl_->MemCopy2DSync(dst, dstPitch, src, srcPitch, width, height, copyKind, newKind);
         error = (error == RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT) ? RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC : error;
-        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, __func__,
+        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, "Asynchronous 2D memory copy",
             "the operation has been converted to a synchronous operation. "
             "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
     } else {
@@ -2584,7 +2581,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
 rtError_t ApiErrorDecorator::MemSetSync(const void * const devPtr, const uint64_t destMax, const uint32_t val,
     const uint64_t cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Memory setting synchronization");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
 
     const rtError_t error = impl_->MemSetSync(devPtr, destMax, val, cnt);
@@ -2595,7 +2592,7 @@ rtError_t ApiErrorDecorator::MemSetSync(const void * const devPtr, const uint64_
 rtError_t ApiErrorDecorator::MemsetAsync(void * const ptr, const uint64_t destMax, const uint32_t val,
     const uint64_t cnt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Asynchronously setting the memory content to a specified value");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cnt > destMax, RT_ERROR_INVALID_VALUE, 
         cnt, "(0, " + std::to_string(destMax) + "]");    
@@ -2608,8 +2605,8 @@ rtError_t ApiErrorDecorator::MemsetAsync(void * const ptr, const uint64_t destMa
 
 rtError_t ApiErrorDecorator::MemGetInfo(size_t * const freeSize, size_t * const totalSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(freeSize, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(totalSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(freeSize, RT_ERROR_INVALID_VALUE, "Obtaining memory information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(totalSize, RT_ERROR_INVALID_VALUE, "Obtaining memory information");
 
     const rtError_t error = impl_->MemGetInfo(freeSize, totalSize);
     ERROR_RETURN(error, "Get memory info failed, free=%zu, total=%zu.", *freeSize, *totalSize);
@@ -2621,7 +2618,7 @@ rtError_t ApiErrorDecorator::MemGetInfoByType(const int32_t devId, const rtMemTy
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((devId < 0), RT_ERROR_DEVICE_ID, devId, "greater than or equal to 0");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type >= RT_MEM_INFO_TYPE_MAX), RT_ERROR_INVALID_VALUE, 
         type, "[" + std::to_string(RT_MEM_INFO_TYPE_DDR_SIZE) + ", " + std::to_string(RT_MEM_INFO_TYPE_MAX) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Querying information about different types of memory");
     rtError_t error;
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
@@ -2638,8 +2635,8 @@ rtError_t ApiErrorDecorator::MemGetInfoByType(const int32_t devId, const rtMemTy
 rtError_t ApiErrorDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize,
     size_t * const totalSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(freeSize, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(totalSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(freeSize, RT_ERROR_INVALID_VALUE, "Obtaining the memory information of the current device");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(totalSize, RT_ERROR_INVALID_VALUE, "Obtaining the memory information of the current device");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((memInfoType < RT_MEMORYINFO_DDR) || (memInfoType > RT_MEMORYINFO_P2P_HUGE1G), 
         RT_ERROR_INVALID_MEMORY_TYPE, MemInfoTypeToString(memInfoType), "memInfoType", 
         "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_P2P_HUGE1G) + "]");
@@ -2651,8 +2648,8 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, siz
 
 rtError_t ApiErrorDecorator::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(attributes, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attributes, RT_ERROR_INVALID_VALUE, "Obtaining memory attributes");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Obtaining memory attributes");
 
     rtError_t error = impl_->PointerGetAttributes(attributes, ptr);
     ERROR_RETURN(error, "Get pointer attributes failed");
@@ -2671,8 +2668,8 @@ rtError_t ApiErrorDecorator::PointerGetAttributes(rtPointerAttributes_t * const 
 
 rtError_t ApiErrorDecorator::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes)
 {
-    NULL_PTR_RETURN_MSG_OUTER(attributes, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attributes, RT_ERROR_INVALID_VALUE, "Obtaining memory attributes");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Obtaining memory attributes");
 
     const rtError_t error = impl_->PtrGetAttributes(ptr, attributes);
     ERROR_RETURN(error, "Get pointer attributes failed");
@@ -2683,7 +2680,7 @@ rtError_t ApiErrorDecorator::PtrGetAttributes(const void * const ptr, rtPtrAttri
 
 rtError_t ApiErrorDecorator::MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Prefetching memory data to a specified device");
     ZERO_RETURN_AND_MSG_OUTER(len);
     // PS:这个接口不能做内外dev id的转换
     NULL_PTR_RETURN_MSG(Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER), RT_ERROR_INVALID_VALUE);
@@ -2698,15 +2695,15 @@ rtError_t ApiErrorDecorator::MemPrefetchToDevice(const void * const devPtr, cons
 
 rtError_t ApiErrorDecorator::GetDeviceIDs(uint32_t * const devId, const uint32_t len)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the number of devices");
 
     return impl_->GetDeviceIDs(devId, len);
 }
 
 rtError_t ApiErrorDecorator::OpenNetService(const rtNetServiceOpenArgs *args)
 {
-    NULL_PTR_RETURN_MSG_OUTER(args, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(args->extParamList, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(args, RT_ERROR_INVALID_VALUE, "Starting the HCCP process");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(args->extParamList, RT_ERROR_INVALID_VALUE, "Starting the HCCP process");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((args->extParamCnt <= 0U) || (args->extParamCnt > RT_EXT_PARAM_CNT_MAX), 
         RT_ERROR_INVALID_VALUE, args->extParamCnt, "(0, " + std::to_string(RT_EXT_PARAM_CNT_MAX) + "]");    
 
@@ -2720,7 +2717,7 @@ rtError_t ApiErrorDecorator::CloseNetService()
 
 rtError_t ApiErrorDecorator::GetDeviceCount(int32_t * const cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of devices");
 
     return impl_->GetDeviceCount(cnt);
 }
@@ -2756,14 +2753,14 @@ rtError_t ApiErrorDecorator::SetDevice(const int32_t devId)
 
 rtError_t ApiErrorDecorator::GetDevice(int32_t * const devId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of the device in use");
 
     return impl_->GetDevice(devId);
 }
 
 rtError_t ApiErrorDecorator::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t * const phyId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(phyId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(phyId, RT_ERROR_INVALID_VALUE, "Querying the physical ID of a device based on its logical ID");
 
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIndex, &realDeviceId);
@@ -2776,7 +2773,7 @@ rtError_t ApiErrorDecorator::GetDevicePhyIdByIndex(const uint32_t devIndex, uint
 
 rtError_t ApiErrorDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devIndex, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devIndex, RT_ERROR_INVALID_VALUE, "Querying the logical ID of a device based on its physical ID");
 
     uint32_t realDeviceId = 0;
     rtError_t error = impl_->GetDeviceIndexByPhyId(phyId, &realDeviceId);
@@ -2833,7 +2830,7 @@ rtError_t ApiErrorDecorator::DeviceCanAccessPeer(int32_t * const canAccessPeer, 
         "Failed to convert the user device ID %u to driver device ID.", devId);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
         realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(canAccessPeer, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(canAccessPeer, RT_ERROR_INVALID_VALUE, "Checking whether data exchange is supported between devices");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(peerDevice >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         peerDevice, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     error = impl_->DeviceCanAccessPeer(canAccessPeer, realDeviceId, peerDevice);
@@ -2851,7 +2848,7 @@ rtError_t ApiErrorDecorator::GetP2PStatus(const uint32_t devIdDes, const uint32_
         realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         phyIdSrc, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status");
 
     error = impl_->GetP2PStatus(realDeviceId, phyIdSrc, status);
     ERROR_RETURN(error, "Get P2P status failed, dest devId=%u, src phyId=%u.", devIdDes, phyIdSrc);
@@ -2860,7 +2857,7 @@ rtError_t ApiErrorDecorator::GetP2PStatus(const uint32_t devIdDes, const uint32_
 
 rtError_t ApiErrorDecorator::DeviceGetBareTgid(uint32_t * const pid)
 {
-    NULL_PTR_RETURN_MSG_OUTER(pid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pid, RT_ERROR_INVALID_VALUE, "Obtaining the ID of the current process");
 
     return impl_->DeviceGetBareTgid(pid);
 }
@@ -2992,7 +2989,7 @@ rtError_t ApiErrorDecorator::GetDeviceInfo(const uint32_t deviceId, const int32_
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to convert the user device ID %u to driver device ID.", deviceId);
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Obtaining information about a specified device");
     const auto npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
     int32_t cnt = 1;
@@ -3010,7 +3007,7 @@ rtError_t ApiErrorDecorator::GetDeviceInfo(const uint32_t deviceId, const int32_
 rtError_t ApiErrorDecorator::GetPhyDeviceInfo(const uint32_t phyId, const int32_t moduleType, const int32_t infoType,
     int64_t * const val)
 {
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Obtaining physical device information");
     const auto npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
 
@@ -3028,7 +3025,7 @@ rtError_t ApiErrorDecorator::DeviceSetTsId(const uint32_t tsId)
 
 rtError_t ApiErrorDecorator::DeviceGetTsId(uint32_t *tsId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(tsId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(tsId, RT_ERROR_INVALID_VALUE, "Obtaining the task scheduler (TS) service ID");
 
     return impl_->DeviceGetTsId(tsId);
 }
@@ -3040,7 +3037,7 @@ rtError_t ApiErrorDecorator::ContextCreate(Context ** const inCtx, const int32_t
     COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
         "Failed to convert the user device ID %d to driver device ID.", devId);
 
-    NULL_PTR_RETURN_MSG_OUTER(inCtx, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCtx, RT_ERROR_INVALID_VALUE, "Context creation");
     error = impl_->ContextCreate(inCtx, static_cast<int32_t>(realDeviceId));
     ERROR_RETURN(error, "Create context failed, devId=%d.", devId);
     RT_LOG(RT_LOG_DEBUG, "create context success.");
@@ -3049,7 +3046,7 @@ rtError_t ApiErrorDecorator::ContextCreate(Context ** const inCtx, const int32_t
 
 rtError_t ApiErrorDecorator::ContextDestroy(Context * const inCtx)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inCtx, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCtx, RT_ERROR_INVALID_VALUE, "Context destruction");
 
     const rtError_t error = impl_->ContextDestroy(inCtx);
     ERROR_RETURN(error, "Destroy context failed.");
@@ -3058,7 +3055,7 @@ rtError_t ApiErrorDecorator::ContextDestroy(Context * const inCtx)
 
 rtError_t ApiErrorDecorator::ContextSetCurrent(Context * const inCtx)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inCtx, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCtx, RT_ERROR_INVALID_VALUE, "Thread context setting");
     CHECK_CONTEXT_VALID_WITH_RETURN(inCtx, RT_ERROR_INVALID_VALUE);
     const rtError_t error = impl_->ContextSetCurrent(inCtx);
     ERROR_RETURN(error, "Set current context failed.");
@@ -3067,14 +3064,14 @@ rtError_t ApiErrorDecorator::ContextSetCurrent(Context * const inCtx)
 
 rtError_t ApiErrorDecorator::ContextGetCurrent(Context ** const inCtx)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inCtx, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCtx, RT_ERROR_INVALID_VALUE, "Thread context obtaining");
 
     return impl_->ContextGetCurrent(inCtx);
 }
 
 rtError_t ApiErrorDecorator::ContextGetDevice(int32_t * const devId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the device ID associated with the current thread context");
 
     return impl_->ContextGetDevice(devId);
 }
@@ -3082,8 +3079,8 @@ rtError_t ApiErrorDecorator::ContextGetDevice(int32_t * const devId)
 rtError_t ApiErrorDecorator::NameStream(Stream * const stm, const char_t * const name)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Setting the stream name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the stream name");
 
     return impl_->NameStream(curStm, name);
 }
@@ -3093,7 +3090,7 @@ rtError_t ApiErrorDecorator::ProfilerStart(const uint64_t profConfig, const int3
 {
     ZERO_RETURN_AND_MSG_OUTER(profConfig);
     COND_RETURN_AND_MSG_OUTER((numsDev != -1) && (numsDev != 0) && (deviceList == nullptr), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "profiler config",
+        ErrorCode::EE1017, "Starting profiling analysis", "profiler config",
         RtFmtMsg("The deviceList can be null only when numsDev is -1 or 0, but numsDev is %u", numsDev));
     return impl_->ProfilerStart(profConfig, numsDev, deviceList, cacheFlag, profSwitchHi);
 }
@@ -3103,7 +3100,7 @@ rtError_t ApiErrorDecorator::ProfilerStop(const uint64_t profConfig, const int32
 {
     ZERO_RETURN_AND_MSG_OUTER(profConfig);
     COND_RETURN_AND_MSG_OUTER((numsDev != -1) && (numsDev != 0) && (deviceList == nullptr), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "profiler config",
+        ErrorCode::EE1017, "Stopping profiling analysis", "profiler config",
         RtFmtMsg("The deviceList can be null only when numsDev is -1 or 0, but numsDev is %u", numsDev));
     return impl_->ProfilerStop(profConfig, numsDev, deviceList, profSwitchHi);
 }
@@ -3141,14 +3138,14 @@ rtError_t ApiErrorDecorator::AdcProfiler(const uint64_t addr, const uint32_t len
 
 rtError_t ApiErrorDecorator::SetMsprofReporterCallback(const MsprofReporterCallback callback)
 {
-    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callback, RT_ERROR_INVALID_VALUE, "Setting the callback function for msproftx data reporting");
     return impl_->SetMsprofReporterCallback(callback);
 }
 
 rtError_t ApiErrorDecorator::GetOnlineProfData(Stream * const stm, rtProfDataInfo_t * const pProfData,
     const uint32_t profDataNum)
 {
-    NULL_PTR_RETURN_MSG_OUTER(pProfData, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pProfData, RT_ERROR_INVALID_VALUE, "Obtaining online profile data from a specified stream");
     const rtError_t error = impl_->GetOnlineProfData(stm, pProfData, profDataNum);
     ERROR_RETURN(error, "Get online profiling data failed, data number=%u.", profDataNum);
     return error;
@@ -3157,8 +3154,8 @@ rtError_t ApiErrorDecorator::GetOnlineProfData(Stream * const stm, rtProfDataInf
 rtError_t ApiErrorDecorator::IpcSetMemoryName(const void * const ptr, const uint64_t byteCount, char_t * const name,
     const uint32_t len, const uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Setting the memory to be shared between processes");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the memory to be shared between processes");
     ZERO_RETURN_AND_MSG_OUTER(byteCount);
     ZERO_RETURN_AND_MSG_OUTER(len);
 
@@ -3174,7 +3171,7 @@ rtError_t ApiErrorDecorator::IpcSetMemoryName(const void * const ptr, const uint
 
 rtError_t ApiErrorDecorator::IpcSetMemoryAttr(const char *name, uint32_t type, uint64_t attr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the attribute for IPC-based memory sharing");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type >= RT_ATTR_TYPE_MAX), RT_ERROR_INVALID_VALUE, 
         type, "[0, " + std::to_string(RT_ATTR_TYPE_MAX) + ")");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((attr >= RT_IPC_MEM_ATTR_MAX), RT_ERROR_INVALID_VALUE, 
@@ -3185,13 +3182,13 @@ rtError_t ApiErrorDecorator::IpcSetMemoryAttr(const char *name, uint32_t type, u
 rtError_t ApiErrorDecorator::NopTask(Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Executing a No-Operation (NOP) task");
     return impl_->NopTask(curStm);
 }
 
 rtError_t ApiErrorDecorator::IpcDestroyMemoryName(const char_t * const name)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Destroying the IPC shared memory");
 
     const rtError_t error = impl_->IpcDestroyMemoryName(name);
     ERROR_RETURN(error, "Ipc destroy memory name failed, name=%s.", name);
@@ -3200,8 +3197,8 @@ rtError_t ApiErrorDecorator::IpcDestroyMemoryName(const char_t * const name)
 
 rtError_t ApiErrorDecorator::SetIpcNotifyPid(const char_t * const name, int32_t pid[], const int32_t num)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(pid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share a Notify object");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pid, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share a Notify object");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(num <= 0, RT_ERROR_INVALID_VALUE, 
         num, "(0, " + std::to_string(MAX_INT32_NUM) + "]");
     return impl_->SetIpcNotifyPid(name, pid, num);
@@ -3209,8 +3206,8 @@ rtError_t ApiErrorDecorator::SetIpcNotifyPid(const char_t * const name, int32_t 
 
 rtError_t ApiErrorDecorator::SetIpcMemPid(const char_t * const name, int32_t pid[], const int32_t num)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(pid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory through IPC");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pid, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory through IPC");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(num <= 0, RT_ERROR_INVALID_VALUE, 
         num, "(0, " + std::to_string(MAX_INT32_NUM) + "]");
     return impl_->SetIpcMemPid(name, pid, num);
@@ -3218,8 +3215,8 @@ rtError_t ApiErrorDecorator::SetIpcMemPid(const char_t * const name, int32_t pid
 
 rtError_t ApiErrorDecorator::IpcOpenMemory(void ** const ptr, const char_t * const name, const uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Opening the shared memory between processes");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Opening the shared memory between processes");
 
     constexpr uint64_t maxFlag = RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flags > maxFlag), RT_ERROR_INVALID_VALUE, 
@@ -3232,7 +3229,7 @@ rtError_t ApiErrorDecorator::IpcOpenMemory(void ** const ptr, const char_t * con
 
 rtError_t ApiErrorDecorator::IpcCloseMemory(const void * const ptr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Closing the IPC shared memory");
 
     const rtError_t error = impl_->IpcCloseMemory(ptr);
     ERROR_RETURN(error, "Ipc close memory failed.");
@@ -3241,7 +3238,7 @@ rtError_t ApiErrorDecorator::IpcCloseMemory(const void * const ptr)
 
 rtError_t ApiErrorDecorator::IpcCloseMemoryByName(const char_t * const name)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Closing the IPC shared memory");
 
     const rtError_t error = impl_->IpcCloseMemoryByName(name);
     ERROR_RETURN(error, "Ipc close memory failed.");
@@ -3250,7 +3247,7 @@ rtError_t ApiErrorDecorator::IpcCloseMemoryByName(const char_t * const name)
 
 rtError_t ApiErrorDecorator::ModelCreate(Model ** const mdl, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model running instance creation");
 
     const rtError_t error = impl_->ModelCreate(mdl, flag);
     ERROR_RETURN(error, "Create model failed, flag=%#x.", flag);
@@ -3260,16 +3257,16 @@ rtError_t ApiErrorDecorator::ModelCreate(Model ** const mdl, const uint32_t flag
 
 rtError_t ApiErrorDecorator::ModelSetExtId(Model * const mdl, const uint32_t extId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Setting the model extension ID");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Setting the model extension ID", "ACL Graph mode is not supported");
 
     return impl_->ModelSetExtId(mdl, extId);
 }
 
 rtError_t ApiErrorDecorator::ModelDestroy(Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Destroying a model running instance");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
@@ -3287,30 +3284,30 @@ rtError_t ApiErrorDecorator::ModelDestroy(Model * const mdl)
 rtError_t ApiErrorDecorator::ModelBindStream(Model * const mdl, Stream * const stm, const uint32_t flag)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Binding a model running instance to a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Binding a model running instance to a stream");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Binding a model running instance to a stream", "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Binding a model running instance to a stream", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, 
-        __func__, "ACL_STREAM_DEVICE_USE_ONLY", "stream flag",
+        "Binding a model running instance to a stream", "ACL_STREAM_DEVICE_USE_ONLY", "stream flag",
         RtFmtMsg("Stream (stream_id=%d) with the flag ACL_STREAM_DEVICE_USE_ONLY cannot be bound to a model", curStm->Id_()));
     COND_RETURN_ERROR_MSG_INNER(curStm->IsBindDvppGrp(), RT_ERROR_STREAM_BIND_GRP, 
         "Stream (stream_id=%d) of the specified DVPP group cannot be bound to a model", curStm->Id_());
     COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == STOP_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stop mode for stream (stream_id=%d) is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Binding a model running instance to a stream", RtFmtMsg("Stop mode for stream (stream_id=%d) is not supported", curStm->Id_()));
     COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == ABORT_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Abort mode for stream (stream_id=%d) is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Binding a model running instance to a stream", RtFmtMsg("Abort mode for stream (stream_id=%d) is not supported", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_FAST_LAUNCH) != 0, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011, 
-        __func__, "ACL_STREAM_FAST_LAUNCH", "stream flag", 
+        "Binding a model running instance to a stream", "ACL_STREAM_FAST_LAUNCH", "stream flag", 
         RtFmtMsg("Stream (stream_id=%d) with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model", curStm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER((curStm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC)) &&
         ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0), RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1011, __func__, curStm->Flags(), "stream flag", 
+        ErrorCode::EE1011, "Binding a model running instance to a stream", curStm->Flags(), "stream flag", 
         RtFmtMsg("Non-persistent stream (stream_id=%d) cannot be bound to a model", curStm->Id_()));
 
     const uint32_t modelId = mdl->Id_();
@@ -3326,12 +3323,12 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model * const mdl, Stream * const s
 rtError_t ApiErrorDecorator::ModelUnbindStream(Model * const mdl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Unbinding a model running instance from a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Unbinding a model running instance from a stream");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Unbinding a model running instance from a stream", "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Unbinding a model running instance from a stream", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     const uint32_t modelId = mdl->Id_();
     const int32_t streamId = curStm->Id_();
@@ -3345,7 +3342,7 @@ rtError_t ApiErrorDecorator::ModelUnbindStream(Model * const mdl, Stream * const
 rtError_t ApiErrorDecorator::ModelLoadComplete(Model * const mdl)
 {
     COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Ending the build of a model running instance", "ACL Graph mode is not supported");
 
     const rtError_t error = impl_->ModelLoadComplete(mdl);
     ERROR_RETURN(error, "Load model complete failed.");
@@ -3357,22 +3354,22 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
     // timeout >=-1, -1:no limited
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE,
         timeout, "greater than or equal to -1 and not equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Executing the model running instance");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetModelNum() != 0),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Executing the model running instance",
         "stm", "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Executing the model running instance", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     
     if ((stm != nullptr) && (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC))) {
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_AICPU) != 0),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),
             "The current stream is used to carry AI CPU scheduling tasks and does not support execution models");
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_PERSISTENT) != 0),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),
             "Sink streams do not support execution models");
         COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__, "Stream flag value " + std::to_string(stm->Flags()),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Executing the model running instance", "Stream flag value " + std::to_string(stm->Flags()),
             RtFmtMsg("Stream (stream_id=%d) can be called only on the device", stm->Id_()));
     }
 
@@ -3392,10 +3389,10 @@ rtError_t ApiErrorDecorator::ModelExecuteSync(Model * const mdl, int32_t timeout
     // timeout >=-1, -1:no limited
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE,
         timeout, "greater than or equal to -1 and not equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Synchronously executing the model running instance");
 
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Synchronously executing the model running instance", "ACL Graph mode is not supported");
 
     const rtError_t error = impl_->ModelExecuteSync(mdl, timeout);
     ERROR_RETURN(error, "Execute model failed.");
@@ -3404,12 +3401,12 @@ rtError_t ApiErrorDecorator::ModelExecuteSync(Model * const mdl, int32_t timeout
 
 rtError_t ApiErrorDecorator::ModelExecuteAsync(Model * const mdl, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Asynchronously executing the model running instance");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetModelNum() != 0),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Asynchronously executing the model running instance",
         "stm", "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Asynchronously executing the model running instance", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     const rtError_t error = impl_->ModelExecuteAsync(mdl, stm);
     ERROR_RETURN(error, "Execute model failed.");
@@ -3418,26 +3415,26 @@ rtError_t ApiErrorDecorator::ModelExecuteAsync(Model * const mdl, Stream * const
 
 rtError_t ApiErrorDecorator::ModelGetTaskId(Model * const mdl, uint32_t * const taskId, uint32_t * const streamId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining the last task ID held by a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskId, RT_ERROR_INVALID_VALUE, "Obtaining the last task ID held by a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamId, RT_ERROR_INVALID_VALUE, "Obtaining the last task ID held by a model");
     return impl_->ModelGetTaskId(mdl, taskId, streamId);
 }
 
 rtError_t ApiErrorDecorator::ModelGetId(Model * const mdl, uint32_t * const modelId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(modelId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining the ID of a model running instance");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(modelId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of a model running instance");
     return impl_->ModelGetId(mdl, modelId);
 }
 
 rtError_t ApiErrorDecorator::DebugRegister(Model * const mdl, const uint32_t flag, const void * const addr,
     uint32_t * const streamId, uint32_t * const taskId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a model");
     COND_RETURN_WARN((mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Capture model does not support debug registration.");
 
@@ -3451,7 +3448,7 @@ rtError_t ApiErrorDecorator::DebugRegister(Model * const mdl, const uint32_t fla
 
 rtError_t ApiErrorDecorator::DebugUnRegister(Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
     const uint32_t modelId = mdl->Id_();
     RT_LOG(RT_LOG_INFO, "model_id=%u.", modelId);
     COND_RETURN_WARN((mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -3466,10 +3463,10 @@ rtError_t ApiErrorDecorator::DebugRegisterForStream(Stream * const stm, const ui
     uint32_t * const streamId, uint32_t * const taskId)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
 
     const int32_t id = curStm->Id_();
     RT_LOG(RT_LOG_INFO, "stream_id = %d, flag = %u", id, flag);
@@ -3486,7 +3483,7 @@ rtError_t ApiErrorDecorator::DebugRegisterForStream(Stream * const stm, const ui
 rtError_t ApiErrorDecorator::DebugUnRegisterForStream(Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Deregistering the debugging callback of a stream");
     const int32_t id = curStm->Id_();
     RT_LOG(RT_LOG_INFO, "stream_id=%d.", id);
 
@@ -3500,7 +3497,7 @@ rtError_t ApiErrorDecorator::DebugUnRegisterForStream(Stream * const stm)
 
 rtError_t ApiErrorDecorator::ModelSetSchGroupId(Model * const mdl, const int16_t schGrpId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Setting the scheduling group ID of a model");
     if ((schGrpId < MODEL_SCH_GROUP_ID_MIN) || (schGrpId > MODEL_SCH_GROUP_ID_MAX)) {
         RT_LOG_OUTER_MSG_INVALID_PARAM(schGrpId,
             "[" + std::to_string(MODEL_SCH_GROUP_ID_MIN) + ", " + std::to_string(MODEL_SCH_GROUP_ID_MAX) + "]");
@@ -3514,12 +3511,12 @@ rtError_t ApiErrorDecorator::ModelSetSchGroupId(Model * const mdl, const int16_t
 rtError_t ApiErrorDecorator::ModelTaskUpdate(Stream *desStm, uint32_t desTaskId, Stream *sinkStm,
                                              rtMdlTaskUpdateInfo_t *para)
 {
-    NULL_PTR_RETURN_MSG_OUTER(desStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(sinkStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para->tilingKeyAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para->blockDimAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para->hdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desStm, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sinkStm, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para->tilingKeyAddr, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para->blockDimAddr, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para->hdl, RT_ERROR_INVALID_VALUE, "Updating PC and other information of the target SQE in the target stream");
 
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
 
@@ -3550,12 +3547,12 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(Stream *desStm, uint32_t desTaskId,
 rtError_t ApiErrorDecorator::ModelEndGraph(Model * const mdl, Stream * const stm, const uint32_t flags)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Delivering the EndGraph flag to the stream of a model");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Delivering the EndGraph flag to the stream of a model");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Delivering the EndGraph flag to the stream of a model", "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Delivering the EndGraph flag to the stream of a model", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     
     const rtError_t error = impl_->ModelEndGraph(mdl, curStm, flags);
     ERROR_RETURN(error, "Add model end graph failed, flags=%u.", flags);
@@ -3564,9 +3561,9 @@ rtError_t ApiErrorDecorator::ModelEndGraph(Model * const mdl, Stream * const stm
 
 rtError_t ApiErrorDecorator::ModelExecutorSet(Model * const mdl, const uint8_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Setting the executor type of a model");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Setting the executor type of a model", "ACL Graph mode is not supported");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(!((flags == EXECUTOR_TS) || (flags == EXECUTOR_AICPU)), RT_ERROR_INVALID_VALUE, 
         flags, std::to_string(EXECUTOR_TS) + " or " + std::to_string(EXECUTOR_AICPU));
     const rtError_t error = impl_->ModelExecutorSet(mdl, flags);
@@ -3576,7 +3573,7 @@ rtError_t ApiErrorDecorator::ModelExecutorSet(Model * const mdl, const uint8_t f
 
 rtError_t ApiErrorDecorator::ModelAbort(Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Aborting the model running instance");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
@@ -3590,13 +3587,13 @@ rtError_t ApiErrorDecorator::ModelAbort(Model * const mdl)
 rtError_t ApiErrorDecorator::ModelExit(Model * const mdl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model exiting");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
             RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support exiting model");
     }
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Model exiting");
     const rtError_t error = impl_->ModelExit(mdl, curStm);
     if (error != RT_ERROR_MODEL_ABORT_NORMAL) {
         ERROR_RETURN(error, "Model exit report error.");
@@ -3621,14 +3618,14 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckExLocation(bool checkKind, const rt
     if (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) {
         COND_RETURN_AND_MSG_OUTER(
             (srcRealLocation == RT_MEMORY_LOC_DEVICE) || (dstRealLocation != RT_MEMORY_LOC_DEVICE),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
             RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
             "src/dst address location",
             "The src address must be a host address and the dst address must be a device address");
     } else {
         COND_RETURN_AND_MSG_OUTER(
             (srcRealLocation != RT_MEMORY_LOC_DEVICE) || (dstRealLocation == RT_MEMORY_LOC_DEVICE),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
             RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
             "src/dst address location",
             "The src address must be a device address and the dst address must be a host address");
@@ -3647,9 +3644,9 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckExLocation(bool checkKind, const rt
 
 rtError_t ApiErrorDecorator::ModelBindQueue(Model * const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Binding a queue to a model");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Binding a queue to a model", "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag != RT_MODEL_INPUT_QUEUE) && (flag != RT_MODEL_OUTPUT_QUEUE), 
         RT_ERROR_INVALID_VALUE, flag, std::to_string(RT_MODEL_INPUT_QUEUE) + " or " + std::to_string(RT_MODEL_OUTPUT_QUEUE));    
     const rtError_t error = impl_->ModelBindQueue(mdl, queueId, flag);
@@ -3659,7 +3656,7 @@ rtError_t ApiErrorDecorator::ModelBindQueue(Model * const mdl, const uint32_t qu
 
 rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify ** const retNotify, uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(retNotify, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retNotify, RT_ERROR_INVALID_VALUE, "Notify creation");
 
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
@@ -3682,7 +3679,7 @@ rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify ** cons
 
 rtError_t ApiErrorDecorator::NotifyDestroy(Notify * const inNotify)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify destruction");
 
     const rtError_t error = impl_->NotifyDestroy(inNotify);
     ERROR_RETURN(error, "Destroy notify failed.");
@@ -3691,7 +3688,7 @@ rtError_t ApiErrorDecorator::NotifyDestroy(Notify * const inNotify)
 
 rtError_t ApiErrorDecorator::NotifyRecord(Notify * const inNotify, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify recording");
 
     const rtError_t error = impl_->NotifyRecord(inNotify, stm);
     ERROR_RETURN(error, "Record notify failed.");
@@ -3700,7 +3697,7 @@ rtError_t ApiErrorDecorator::NotifyRecord(Notify * const inNotify, Stream * cons
 
 rtError_t ApiErrorDecorator::NotifyReset(Notify * const inNotify)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Notify resetting");
 
     const rtError_t error = impl_->NotifyReset(inNotify);
     ERROR_RETURN(error, "Reset notify failed.");
@@ -3737,7 +3734,7 @@ rtError_t ApiErrorDecorator::ResourceClean(int32_t devId, rtIdType_t type)
 
 rtError_t ApiErrorDecorator::NotifyWait(Notify * const inNotify, Stream * const stm, const uint32_t timeOut)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Waiting for a Notify");
     const rtError_t error = impl_->NotifyWait(inNotify, stm, timeOut);
     ERROR_RETURN(error, "NotifyWait failed, timeout=%us", timeOut);
     return error;
@@ -3745,8 +3742,8 @@ rtError_t ApiErrorDecorator::NotifyWait(Notify * const inNotify, Stream * const 
 
 rtError_t ApiErrorDecorator::GetNotifyID(Notify * const inNotify, uint32_t * const notifyID)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(notifyID, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notifyID, RT_ERROR_INVALID_VALUE, "Obtaining the Notify ID");
 
     const rtError_t error = impl_->GetNotifyID(inNotify, notifyID);
     ERROR_RETURN(error, "Get notify ID failed.");
@@ -3755,16 +3752,16 @@ rtError_t ApiErrorDecorator::GetNotifyID(Notify * const inNotify, uint32_t * con
 
 rtError_t ApiErrorDecorator::GetNotifyPhyInfo(Notify *const inNotify, rtNotifyPhyInfo *notifyInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(notifyInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Obtaining underlying physical hardware information of Notify");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(notifyInfo, RT_ERROR_INVALID_VALUE, "Obtaining underlying physical hardware information of Notify");
 
     return impl_->GetNotifyPhyInfo(inNotify, notifyInfo);
 }
 
 rtError_t ApiErrorDecorator::IpcSetNotifyName(Notify * const inNotify, char_t * const name, const uint32_t len, const uint64_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify");
     ZERO_RETURN_AND_MSG_OUTER(len);
 
     const Runtime *const rtInstance = Runtime::Instance();
@@ -3785,8 +3782,8 @@ rtError_t ApiErrorDecorator::IpcSetNotifyName(Notify * const inNotify, char_t * 
 
 rtError_t ApiErrorDecorator::IpcOpenNotify(Notify ** const retNotify, const char_t * const name, uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(retNotify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(retNotify, RT_ERROR_INVALID_VALUE, "Enabling IPC Notify");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Enabling IPC Notify");
 
     constexpr uint32_t maxFlag = (RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV | RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag > maxFlag), RT_ERROR_INVALID_VALUE, 
@@ -3798,8 +3795,8 @@ rtError_t ApiErrorDecorator::IpcOpenNotify(Notify ** const retNotify, const char
 
 rtError_t ApiErrorDecorator::NotifyGetAddrOffset(Notify * const inNotify, uint64_t * const devAddrOffset)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inNotify, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(devAddrOffset, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inNotify, RT_ERROR_INVALID_VALUE, "Obtaining the physical address offset of a Notify object");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devAddrOffset, RT_ERROR_INVALID_VALUE, "Obtaining the physical address offset of a Notify object");
 
     const rtError_t error = impl_->NotifyGetAddrOffset(inNotify, devAddrOffset);
     ERROR_RETURN(error, "Get notify address offset failed.");
@@ -3810,10 +3807,10 @@ rtError_t ApiErrorDecorator::StreamSwitchEx(void * const ptr, const rtCondition_
     Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(valuePtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(trueStream, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(valuePtr, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(trueStream, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((condition > RT_LESS_OR_EQUAL) || (condition < 0), RT_ERROR_INVALID_VALUE, 
         condition, "[0, " + std::to_string(RT_LESS_OR_EQUAL) + "]");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
@@ -3828,19 +3825,19 @@ rtError_t ApiErrorDecorator::StreamSwitchN(void * const ptr, const uint32_t size
     Stream ** const trueStreamPtr, const uint32_t elementSize, Stream * const stm, const rtSwitchDataType_t dataType)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(valuePtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Switching between multi-dimensional streams based on conditional operators");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(valuePtr, RT_ERROR_INVALID_VALUE, "Switching between multi-dimensional streams based on conditional operators");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(trueStreamPtr, RT_ERROR_INVALID_VALUE, "Switching between multi-dimensional streams based on conditional operators");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Switching between multi-dimensional streams based on conditional operators");
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((size == 0U), RT_ERROR_INVALID_VALUE, size, "not equal to 0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((elementSize == 0U), RT_ERROR_INVALID_VALUE, elementSize, "not equal to 0");
     COND_RETURN_AND_MSG_OUTER(((UINT32_MAX / size) <= elementSize), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        __func__, elementSize, "elementSize",
+        "Switching between multi-dimensional streams based on conditional operators", elementSize, "elementSize",
         RtFmtMsg("Parameter elementSize should be less than the quotient of %u and parameter size %u", UINT32_MAX, size));
 
     for (uint32_t i = 0U; i < elementSize; i++) {
-        NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr[i], RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(trueStreamPtr[i], RT_ERROR_INVALID_VALUE, "Switching between multi-dimensional streams based on conditional operators");
     }
 
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, 
@@ -3854,8 +3851,8 @@ rtError_t ApiErrorDecorator::StreamSwitchN(void * const ptr, const uint32_t size
 rtError_t ApiErrorDecorator::StreamActive(Stream * const activeStream, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(activeStream, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Stream activation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(activeStream, RT_ERROR_INVALID_VALUE, "Stream activation");
     const rtError_t error = impl_->StreamActive(activeStream, curStm);
     ERROR_RETURN(error, "Stream active failed.");
     return error;
@@ -3863,9 +3860,9 @@ rtError_t ApiErrorDecorator::StreamActive(Stream * const activeStream, Stream * 
 
 rtError_t ApiErrorDecorator::LabelCreate(Label ** const lbl, Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label creation");
     COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Label creation", "ACL Graph mode is not supported");
     const rtError_t error = impl_->LabelCreate(lbl, mdl);
     ERROR_RETURN(error, "Label create failed.");
     RT_LOG(RT_LOG_DEBUG, "label create success, labelId = %hu", (*lbl)->Id_());
@@ -3874,7 +3871,7 @@ rtError_t ApiErrorDecorator::LabelCreate(Label ** const lbl, Model * const mdl)
 
 rtError_t ApiErrorDecorator::LabelDestroy(Label * const lbl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label destruction");
 
     const rtError_t error = impl_->LabelDestroy(lbl);
     ERROR_RETURN(error, "Label destroy failed.");
@@ -3884,8 +3881,8 @@ rtError_t ApiErrorDecorator::LabelDestroy(Label * const lbl)
 rtError_t ApiErrorDecorator::LabelSet(Label * const lbl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label setting");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Label setting");
     const rtError_t error = impl_->LabelSet(lbl, curStm);
     ERROR_RETURN(error, "Set label failed.");
     return error;
@@ -3894,8 +3891,8 @@ rtError_t ApiErrorDecorator::LabelSet(Label * const lbl, Stream * const stm)
 rtError_t ApiErrorDecorator::LabelGoto(Label * const lbl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label redirection");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Label redirection");
     const rtError_t error = impl_->LabelSet(lbl, curStm);
     ERROR_RETURN(error, "Label goto failed.");
     return error;
@@ -3909,17 +3906,17 @@ rtError_t ApiErrorDecorator::SetExceptCallback(const rtErrorCallback callback)
 rtError_t ApiErrorDecorator::SetTaskAbortCallBack(const char *regName, void *callback, void *args,
     TaskAbortCallbackType type)
 {
-    NULL_PTR_RETURN_MSG_OUTER(regName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(regName, RT_ERROR_INVALID_VALUE, "Registering the aborting callback function of a task");
     return impl_->SetTaskAbortCallBack(regName, callback, args, type);
 }
 
 rtError_t ApiErrorDecorator::RegDeviceStateCallback(const char_t *regName, void *callback, void *args,
     DeviceStateCallback type, rtDevCallBackDir_t notifyPos)
 {
-    NULL_PTR_RETURN_MSG_OUTER(regName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(regName, RT_ERROR_INVALID_VALUE, "Registering the device status callback function");
     COND_RETURN_AND_MSG_OUTER((type == DeviceStateCallback::RT_DEVICE_STATE_CALLBACK) &&
         ((notifyPos < DEV_CB_POS_FRONT) || (notifyPos >= DEV_CB_POS_END)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        __func__, notifyPos, "notifyPos", RtFmtMsg("If parameter type equals RT_DEVICE_STATE_CALLBACK(0),"
+        "Registering the device status callback function", notifyPos, "notifyPos", RtFmtMsg("If parameter type equals RT_DEVICE_STATE_CALLBACK(0),"
             " the range of parameter notifyPos should be [%u, %u)", DEV_CB_POS_FRONT, DEV_CB_POS_END));
     return impl_->RegDeviceStateCallback(regName, callback, args, type, notifyPos);
 }
@@ -3950,7 +3947,7 @@ rtError_t ApiErrorDecorator::GetL2CacheOffset(uint32_t deviceId, uint64_t *offse
 rtError_t ApiErrorDecorator::RegTaskFailCallbackByModule(const char_t *regName, void *callback, void *args,
     TaskFailCallbackType type)
 {
-    NULL_PTR_RETURN_MSG_OUTER(regName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(regName, RT_ERROR_INVALID_VALUE, "Registering the callback function for task execution errors");
 
     return impl_->RegTaskFailCallbackByModule(regName, callback, args, type);
 }
@@ -3958,7 +3955,7 @@ rtError_t ApiErrorDecorator::RegTaskFailCallbackByModule(const char_t *regName, 
 rtError_t ApiErrorDecorator::SubscribeReport(const uint64_t threadId, Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
-        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
+        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, "Specifying the thread for processing the callback function in stream",
         RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtSubscribeReport", stm->Id_()));
     return impl_->SubscribeReport(threadId, stm);
 }
@@ -3966,9 +3963,9 @@ rtError_t ApiErrorDecorator::SubscribeReport(const uint64_t threadId, Stream * c
 rtError_t ApiErrorDecorator::CallbackLaunch(const rtCallback_t callBackFunc, void * const fnData,
     Stream * const stm, const bool isBlock)
 {
-    NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callBackFunc, RT_ERROR_INVALID_VALUE, "Delivering an on-host callback function task in a stream");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
-        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__, 
+        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, "Delivering an on-host callback function task in a stream", 
         RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtCallbackLaunch", stm->Id_()));
     return impl_->CallbackLaunch(callBackFunc, fnData, stm, isBlock);
 }
@@ -3984,14 +3981,14 @@ rtError_t ApiErrorDecorator::ProcessReport(const int32_t timeout, const bool noL
 rtError_t ApiErrorDecorator::UnSubscribeReport(const uint64_t threadId, Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME),
-        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
+        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, "Cancelling thread registration",
         RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtUnSubscribeReport", stm->Id_()));
     return impl_->UnSubscribeReport(threadId, stm);
 }
 
 rtError_t ApiErrorDecorator::GetRunMode(rtRunMode * const runMode)
 {
-    NULL_PTR_RETURN_MSG_OUTER(runMode, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(runMode, RT_ERROR_INVALID_VALUE, "Obtaining the current run mode of the AI software stack");
 
     return impl_->GetRunMode(runMode);
 }
@@ -4000,9 +3997,9 @@ rtError_t ApiErrorDecorator::LabelSwitchByIndex(void * const ptr, const uint32_t
     Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(labelInfoPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Redirecting to the corresponding label position based on the label index");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(labelInfoPtr, RT_ERROR_INVALID_VALUE, "Redirecting to the corresponding label position based on the label index");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Redirecting to the corresponding label position based on the label index");
 
     return impl_->LabelSwitchByIndex(ptr, maxVal, labelInfoPtr, curStm);
 }
@@ -4010,8 +4007,8 @@ rtError_t ApiErrorDecorator::LabelSwitchByIndex(void * const ptr, const uint32_t
 rtError_t ApiErrorDecorator::LabelGotoEx(Label * const lbl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label redirection");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Label redirection");
 
     return impl_->LabelGotoEx(lbl, curStm);
 }
@@ -4020,12 +4017,12 @@ rtError_t ApiErrorDecorator::LabelListCpy(Label ** const lbl, const uint32_t lab
     const uint32_t dstMax)
 {
     ZERO_RETURN_AND_MSG_OUTER(labelNumber);
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label list copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Label list copy");
 
     const uint64_t labelSize = sizeof(rtLabelDevInfo) * labelNumber;
     COND_RETURN_AND_MSG_OUTER(labelSize != static_cast<uint64_t>(dstMax), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "labelNumber or dstMax", RtFmtMsg("Parameter dstMax %u should be equal to the product of parameter"
+        "Label list copy", "labelNumber or dstMax", RtFmtMsg("Parameter dstMax %u should be equal to the product of parameter"
             " labelNumber %u and %zu", dstMax, labelNumber, sizeof(rtLabelDevInfo)));
 
     return impl_->LabelListCpy(lbl, labelNumber, dst, dstMax);
@@ -4034,40 +4031,40 @@ rtError_t ApiErrorDecorator::LabelListCpy(Label ** const lbl, const uint32_t lab
 rtError_t ApiErrorDecorator::LabelCreateEx(Label ** const lbl, Model * const mdl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(lbl, RT_ERROR_INVALID_VALUE, "Label creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Label creation");
     COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
-        ErrorCode::EE1016, __func__, "ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Label creation", "ACL Graph mode is not supported");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Label creation", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
 
     return impl_->LabelCreateEx(lbl, mdl, curStm);
 }
 
 rtError_t ApiErrorDecorator::LabelSwitchListCreate(Label ** const labels, const size_t num, void ** const labelList)
 {
-    NULL_PTR_RETURN_MSG_OUTER(labels, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(labelList, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(labels, RT_ERROR_INVALID_VALUE, "Label list creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(labelList, RT_ERROR_INVALID_VALUE, "Label list creation");
     return impl_->LabelSwitchListCreate(labels, num, labelList);
 }
 
 rtError_t ApiErrorDecorator::GetAicpuDeploy(rtAicpuDeployType_t * const deployType)
 {
-    NULL_PTR_RETURN_MSG_OUTER(deployType, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(deployType, RT_ERROR_INVALID_VALUE, "Obtaining the AI CPU deployment type");
 
     return impl_->GetAicpuDeploy(deployType);
 }
 
 rtError_t ApiErrorDecorator::GetAiCoreCount(uint32_t * const aiCoreCnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(aiCoreCnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aiCoreCnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of AI Cores");
 
     return impl_->GetAiCoreCount(aiCoreCnt);
 }
 
 rtError_t ApiErrorDecorator::GetAiCpuCount(uint32_t * const aiCpuCnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(aiCpuCnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aiCpuCnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of AI CPUs");
 
     return impl_->GetAiCpuCount(aiCpuCnt);
 }
@@ -4075,7 +4072,7 @@ rtError_t ApiErrorDecorator::GetAiCpuCount(uint32_t * const aiCpuCnt)
 rtError_t ApiErrorDecorator::GetPairDevicesInfo(const uint32_t devId, const uint32_t otherDevId, const int32_t infoType,
     int64_t * const val)
 {
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Querying the pairing information between two logical devices");
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
@@ -4090,7 +4087,7 @@ rtError_t ApiErrorDecorator::GetPairDevicesInfo(const uint32_t devId, const uint
 rtError_t ApiErrorDecorator::GetPairPhyDevicesInfo(const uint32_t devId, const uint32_t otherDevId, const int32_t infoType,
     int64_t * const val)
 {
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Querying the pairing information between two physical devices");
     RT_LOG(RT_LOG_INFO, "input physical devId=%u, input physical otherDevId=%u, infoType=%d", devId, otherDevId, infoType);
     return impl_->GetPairPhyDevicesInfo(devId, otherDevId, infoType, val);
 }
@@ -4100,7 +4097,7 @@ rtError_t ApiErrorDecorator::GetRtCapability(const rtFeatureType_t featureType, 
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(featureInfo < 0, RT_ERROR_INVALID_VALUE, featureInfo, "greater than or equal to 0");
 
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Querying device features and capabilities");
 
     return impl_->GetRtCapability(featureType, featureInfo, val);
 }
@@ -4128,7 +4125,7 @@ rtError_t ApiErrorDecorator::GetDeviceCapability(const int32_t deviceId,
                                                  const int32_t featureType,
                                                  int32_t * const val)
 {
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Querying features supported by the device");
 
     if ((featureType == static_cast<int32_t>(FEATURE_TYPE_MODEL_TASK_UPDATE)) &&
         (moduleType == static_cast<int32_t>(RT_MODULE_TYPE_TSCPU)) &&
@@ -4254,7 +4251,7 @@ rtError_t ApiErrorDecorator::SetOpExecuteTimeOut(const uint32_t timeout, const R
 
 rtError_t ApiErrorDecorator::GetOpExecuteTimeOut(uint32_t * const timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(timeout, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(timeout, RT_ERROR_INVALID_VALUE, "Obtaining the timeout interval of AI Core operator execution");
     const rtError_t error = impl_->GetOpExecuteTimeOut(timeout);
     ERROR_RETURN(error, "Get op execute timeout failed, timeout=%us.", *timeout);
     return error;
@@ -4262,7 +4259,7 @@ rtError_t ApiErrorDecorator::GetOpExecuteTimeOut(uint32_t * const timeout)
 
 rtError_t ApiErrorDecorator::GetOpExecuteTimeoutV2(uint32_t *const timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(timeout, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(timeout, RT_ERROR_INVALID_VALUE, "Obtaining the timeout interval of AI Core operator execution");
     const rtError_t error = impl_->GetOpExecuteTimeoutV2(timeout);
     ERROR_RETURN(error, "Get op execute timeout failed.");
     return error;
@@ -4270,8 +4267,8 @@ rtError_t ApiErrorDecorator::GetOpExecuteTimeoutV2(uint32_t *const timeout)
 
 rtError_t ApiErrorDecorator::CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible)
 {
-    NULL_PTR_RETURN_MSG_OUTER(omSocVersion, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(canCompatible, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(omSocVersion, RT_ERROR_INVALID_VALUE, "Checking operator instruction compatibility based on the SoC version");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(canCompatible, RT_ERROR_INVALID_VALUE, "Checking operator instruction compatibility based on the SoC version");
     if (omSocVersion != nullptr && omSocVersion[0U] == '\0') {
         RT_LOG(RT_LOG_ERROR, "Input omSocVersion is null, please check.");
         return RT_ERROR_INVALID_VALUE;
@@ -4283,13 +4280,13 @@ rtError_t ApiErrorDecorator::CheckArchCompatibility(const char_t *socVersion, co
 
 rtError_t ApiErrorDecorator::GetOpTimeOutInterval(uint64_t *interval)
 {
-    NULL_PTR_RETURN_MSG_OUTER(interval, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(interval, RT_ERROR_INVALID_VALUE, "Obtaining the minimum interval supported by the hardware for operator timeout configuration");
     return impl_->GetOpTimeOutInterval(interval);
 }
 
 rtError_t ApiErrorDecorator::SetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTimeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(actualTimeout, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(actualTimeout, RT_ERROR_INVALID_VALUE, "Setting the timeout interval for operator execution");
     return impl_->SetOpExecuteTimeOutV2(timeout, actualTimeout);
 }
 
@@ -4300,14 +4297,14 @@ rtError_t ApiErrorDecorator::SetGroup(const int32_t groupId)
 
 rtError_t ApiErrorDecorator::GetGroupCount(uint32_t * const cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of available computing power groups");
 
     return impl_->GetGroupCount(cnt);
 }
 
 rtError_t ApiErrorDecorator::GetGroupInfo(const int32_t groupId, rtGroupInfo_t * const groupInfo, const uint32_t cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(groupInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(groupInfo, RT_ERROR_INVALID_VALUE, "Querying the computing power information of a specified group");
 
     return impl_->GetGroupInfo(groupId, groupInfo, cnt);
 }
@@ -4319,7 +4316,7 @@ rtError_t ApiErrorDecorator::StarsTaskLaunch(const void * const sqe, const uint3
     if (!stm->Device_()->GetDevProperties().isSupportDvppAccelerator) {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    NULL_PTR_RETURN_MSG_OUTER(sqe, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sqe, RT_ERROR_INVALID_VALUE, "Delivering a Stars task to the device for execution");
     // StarsTaskLaunch only support RT_KERNEL_DEFAULT \ RT_KERNEL_DUMPFLAG \ RT_KERNEL_CMDLIST_NOT_FREE
     constexpr uint32_t permitFlag = (RT_KERNEL_DEFAULT | RT_KERNEL_DUMPFLAG | RT_KERNEL_CMDLIST_NOT_FREE);
     if ((flag & (~permitFlag)) != 0U) {
@@ -4333,8 +4330,8 @@ rtError_t ApiErrorDecorator::StarsTaskLaunch(const void * const sqe, const uint3
 
 rtError_t ApiErrorDecorator::GetC2cCtrlAddr(uint64_t * const addr, uint32_t * const len)
 {
-    NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(len, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Obtaining the address and length of the C2C Ctrl register");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(len, RT_ERROR_INVALID_VALUE, "Obtaining the address and length of the C2C Ctrl register");
 
     const rtError_t error = impl_->GetC2cCtrlAddr(addr, len);
     ERROR_RETURN(error, "get c2c ctrl addr.");
@@ -4344,11 +4341,11 @@ rtError_t ApiErrorDecorator::GetC2cCtrlAddr(uint64_t * const addr, uint32_t * co
 rtError_t ApiErrorDecorator::NpuGetFloatStatus(void * const outputAddrPtr, const uint64_t outputSize,
     const uint32_t checkMode, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(outputAddrPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outputAddrPtr, RT_ERROR_INVALID_VALUE, "Obtaining the Float exception status of the NPU");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Obtaining the Float exception status of the NPU", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     return impl_->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm);
 }
@@ -4356,9 +4353,9 @@ rtError_t ApiErrorDecorator::NpuGetFloatStatus(void * const outputAddrPtr, const
 rtError_t ApiErrorDecorator::NpuClearFloatStatus(const uint32_t checkMode, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Clearing the Float exception status flag of the NPU");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Clearing the Float exception status flag of the NPU", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     return impl_->NpuClearFloatStatus(checkMode, curStm);
 }
 
@@ -4366,13 +4363,13 @@ rtError_t ApiErrorDecorator::NpuGetFloatDebugStatus(void * const outputAddrPtr, 
     const uint32_t checkMode, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(outputAddrPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outputAddrPtr, RT_ERROR_INVALID_VALUE, "Obtaining the Float exception debugging status of the NPU");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Obtaining the Float exception debugging status of the NPU");
 
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Obtaining the Float exception debugging status of the NPU", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
 
     return impl_->NpuGetFloatDebugStatus(outputAddrPtr, outputSize, checkMode, curStm);
 }
@@ -4380,15 +4377,15 @@ rtError_t ApiErrorDecorator::NpuGetFloatDebugStatus(void * const outputAddrPtr, 
 rtError_t ApiErrorDecorator::NpuClearFloatDebugStatus(const uint32_t checkMode, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Clearing the Float debugging status flag of the NPU");
     COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
+        ErrorCode::EE1016, "Clearing the Float debugging status flag of the NPU", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", curStm->Id_()));
     return impl_->NpuClearFloatDebugStatus(checkMode, curStm);
 }
 
 rtError_t ApiErrorDecorator::GetDevMsg(const rtGetDevMsgType_t getMsgType, const rtGetMsgCallback callback)
 {
-    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callback, RT_ERROR_INVALID_VALUE, "Obtaining device-related messages");
     const rtError_t error = impl_->GetDevMsg(getMsgType, callback);
     ERROR_RETURN(error, "GetDeviceMsg failed, getMsgType=%d.", static_cast<int32_t>(getMsgType));
     return error;
@@ -4411,7 +4408,7 @@ rtError_t ApiErrorDecorator::MemQueueInitQS(const int32_t devId, const char_t * 
 
 rtError_t ApiErrorDecorator::MemQueueInitFlowGw(const int32_t devId, const rtInitFlowGwInfo_t * const initInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(initInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(initInfo, RT_ERROR_INVALID_VALUE, "Initializing the FlowGw of a memory queue");
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
@@ -4428,8 +4425,8 @@ static inline bool IsHostCpuDevId(const int32_t devId)
 rtError_t ApiErrorDecorator::MemQueueCreate(const int32_t devId, const rtMemQueueAttr_t * const queAttr,
     uint32_t * const qid)
 {
-    NULL_PTR_RETURN_MSG_OUTER(queAttr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(qid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(queAttr, RT_ERROR_INVALID_VALUE, "Memory queue creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(qid, RT_ERROR_INVALID_VALUE, "Memory queue creation");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4445,7 +4442,7 @@ rtError_t ApiErrorDecorator::MemQueueCreate(const int32_t devId, const rtMemQueu
 rtError_t ApiErrorDecorator::MemQueueExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
         const char * const shareName)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareName, RT_ERROR_INVALID_VALUE, "Memory queue export");
     const auto len = strnlen(shareName, SHARE_QUEUE_NAME_LEN);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len >= SHARE_QUEUE_NAME_LEN, RT_ERROR_INVALID_VALUE, 
         len, "less than " + std::to_string(SHARE_QUEUE_NAME_LEN));
@@ -4454,7 +4451,7 @@ rtError_t ApiErrorDecorator::MemQueueExport(const int32_t devId, const uint32_t 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(IsHostCpuDevId(peerDevId), RT_ERROR_INVALID_VALUE, 
         peerDevId, "not equal to " + std::to_string(DEFAULT_HOSTCPU_USER_DEVICE_ID));
     COND_RETURN_AND_MSG_OUTER(devId == peerDevId, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "devId or peerDevId",
+        ErrorCode::EE1017, "Memory queue export", "devId or peerDevId",
         RtFmtMsg("Parameter devId %d should not be equal to parameter peerDevId %d", devId, peerDevId));
     int32_t realDeviceId = 0;
     int32_t realPeerDeviceId = 0;
@@ -4472,7 +4469,7 @@ rtError_t ApiErrorDecorator::MemQueueExport(const int32_t devId, const uint32_t 
 rtError_t ApiErrorDecorator::MemQueueUnExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
         const char * const shareName)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareName, RT_ERROR_INVALID_VALUE, "Canceling the export of a specified memory queue");
     const auto len = strnlen(shareName, SHARE_QUEUE_NAME_LEN);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len >= SHARE_QUEUE_NAME_LEN, RT_ERROR_INVALID_VALUE, 
         len, "less than " + std::to_string(SHARE_QUEUE_NAME_LEN));
@@ -4481,7 +4478,7 @@ rtError_t ApiErrorDecorator::MemQueueUnExport(const int32_t devId, const uint32_
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(IsHostCpuDevId(peerDevId), RT_ERROR_INVALID_VALUE, 
         peerDevId, "not equal to " + std::to_string(DEFAULT_HOSTCPU_USER_DEVICE_ID));
     COND_RETURN_AND_MSG_OUTER(devId == peerDevId, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "devId or peerDevId",
+        ErrorCode::EE1017, "Canceling the export of a specified memory queue", "devId or peerDevId",
         RtFmtMsg("Parameter devId %d should not be equal to parameter peerDevId %d", devId, peerDevId));
     int32_t realDeviceId = 0;
     int32_t realPeerDeviceId = 0;
@@ -4499,17 +4496,17 @@ rtError_t ApiErrorDecorator::MemQueueUnExport(const int32_t devId, const uint32_
 rtError_t ApiErrorDecorator::MemQueueImport(const int32_t devId, const int32_t peerDevId, const char * const shareName,
         uint32_t * const qid)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareName, RT_ERROR_INVALID_VALUE, "Importing a memory queue");
     const auto len = strnlen(shareName, SHARE_QUEUE_NAME_LEN);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len >= SHARE_QUEUE_NAME_LEN, RT_ERROR_INVALID_VALUE, 
         len, "less than " + std::to_string(SHARE_QUEUE_NAME_LEN));   
-    NULL_PTR_RETURN_MSG_OUTER(qid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(qid, RT_ERROR_INVALID_VALUE, "Importing a memory queue");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(IsHostCpuDevId(devId), RT_ERROR_INVALID_VALUE, 
         devId, "not equal to " + std::to_string(DEFAULT_HOSTCPU_USER_DEVICE_ID));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(IsHostCpuDevId(peerDevId), RT_ERROR_INVALID_VALUE, 
         peerDevId, "not equal to " + std::to_string(DEFAULT_HOSTCPU_USER_DEVICE_ID));  
     COND_RETURN_AND_MSG_OUTER(devId == peerDevId, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "devId or peerDevId",
+        ErrorCode::EE1017, "Importing a memory queue", "devId or peerDevId",
         RtFmtMsg("Parameter devId %d should not be equal to parameter peerDevId %d", devId, peerDevId));
     int32_t realDeviceId = 0;
     int32_t realPeerDeviceId = 0;
@@ -4527,7 +4524,7 @@ rtError_t ApiErrorDecorator::MemQueueImport(const int32_t devId, const int32_t p
 rtError_t ApiErrorDecorator::MemQueueUnImport(const int32_t devId, const uint32_t qid, const int32_t peerDevId, 
         const char * const shareName) 
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareName, RT_ERROR_INVALID_VALUE, "Canceling the import of a specified memory queue");
     const auto len = strnlen(shareName, SHARE_QUEUE_NAME_LEN);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len >= SHARE_QUEUE_NAME_LEN, RT_ERROR_INVALID_VALUE, 
         len, "less than " + std::to_string(SHARE_QUEUE_NAME_LEN));
@@ -4536,7 +4533,7 @@ rtError_t ApiErrorDecorator::MemQueueUnImport(const int32_t devId, const uint32_
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(IsHostCpuDevId(peerDevId), RT_ERROR_INVALID_VALUE, 
         peerDevId, "not equal to " + std::to_string(DEFAULT_HOSTCPU_USER_DEVICE_ID));    
     COND_RETURN_AND_MSG_OUTER(devId == peerDevId, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "devId or peerDevId",
+        ErrorCode::EE1017, "Canceling the import of a specified memory queue", "devId or peerDevId",
         RtFmtMsg("Parameter devId %d should not be equal to parameter peerDevId %d", devId, peerDevId));
     int32_t realDeviceId = 0;
     int32_t realPeerDeviceId = 0;
@@ -4554,7 +4551,7 @@ rtError_t ApiErrorDecorator::MemQueueUnImport(const int32_t devId, const uint32_
 rtError_t ApiErrorDecorator::MemQueueSet(const int32_t devId, const rtMemQueueSetCmdType cmd,
     const rtMemQueueSetInputPara * const input)
 {
-    NULL_PTR_RETURN_MSG_OUTER(input, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(input, RT_ERROR_INVALID_VALUE, "Memory queue setting");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4611,7 +4608,7 @@ rtError_t ApiErrorDecorator::MemQueueReset(const int32_t devId, const uint32_t q
 
 rtError_t ApiErrorDecorator::MemQueueEnQueue(const int32_t devId, const uint32_t qid, void * const enQBuf)
 {
-    NULL_PTR_RETURN_MSG_OUTER(enQBuf, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(enQBuf, RT_ERROR_INVALID_VALUE, "Memory queue enqueuing");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4626,7 +4623,7 @@ rtError_t ApiErrorDecorator::MemQueueEnQueue(const int32_t devId, const uint32_t
 
 rtError_t ApiErrorDecorator::MemQueueDeQueue(const int32_t devId, const uint32_t qid, void ** const deQBuf)
 {
-    NULL_PTR_RETURN_MSG_OUTER(deQBuf, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(deQBuf, RT_ERROR_INVALID_VALUE, "Memory queue dequeuing");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4642,7 +4639,7 @@ rtError_t ApiErrorDecorator::MemQueueDeQueue(const int32_t devId, const uint32_t
 rtError_t ApiErrorDecorator::MemQueuePeek(const int32_t devId, const uint32_t qid, size_t * const bufLen,
     const int32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(bufLen, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bufLen, RT_ERROR_INVALID_VALUE, "Peeking the memory queue");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4658,7 +4655,7 @@ rtError_t ApiErrorDecorator::MemQueuePeek(const int32_t devId, const uint32_t qi
 rtError_t ApiErrorDecorator::MemQueueQueryInfo(const int32_t devId, const uint32_t qid,
     rtMemQueueInfo_t * const queryQueueInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(queryQueueInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(queryQueueInfo, RT_ERROR_INVALID_VALUE, "Querying memory queue information");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4674,9 +4671,9 @@ rtError_t ApiErrorDecorator::MemQueueQueryInfo(const int32_t devId, const uint32
 rtError_t ApiErrorDecorator::MemQueueQuery(const int32_t devId, const rtMemQueueQueryCmd_t cmd,
     const void * const inBuff, const uint32_t inLen, void * const outBuff, uint32_t * const outLen)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inBuff, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(outBuff, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(outLen, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inBuff, RT_ERROR_INVALID_VALUE, "Querying the access permission of the current process on a specified memory queue");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outBuff, RT_ERROR_INVALID_VALUE, "Querying the access permission of the current process on a specified memory queue");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outLen, RT_ERROR_INVALID_VALUE, "Querying the access permission of the current process on a specified memory queue");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4692,7 +4689,7 @@ rtError_t ApiErrorDecorator::MemQueueQuery(const int32_t devId, const rtMemQueue
 rtError_t ApiErrorDecorator::MemQueueGrant(const int32_t devId, const uint32_t qid, const int32_t pid,
     rtMemQueueShareAttr_t * const attr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(attr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attr, RT_ERROR_INVALID_VALUE, "Authorizing a specified process to access a memory queue");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4722,8 +4719,8 @@ rtError_t ApiErrorDecorator::MemQueueAttach(const int32_t devId, const uint32_t 
 rtError_t ApiErrorDecorator::EschedSubmitEventSync(const int32_t devId, rtEschedEventSummary_t * const evt,
     rtEschedEventReply_t * const ack)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(ack, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Synchronous event submission");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ack, RT_ERROR_INVALID_VALUE, "Synchronous event submission");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         ((evt->eventId != RT_MQ_SCHED_EVENT_QS_MSG) && (evt->eventId != RT_MQ_SCHED_EVENT_DRV_CUSTOM_MSG)),
         RT_ERROR_FEATURE_NOT_SUPPORT, evt->eventId, std::to_string(RT_MQ_SCHED_EVENT_QS_MSG) 
@@ -4743,9 +4740,9 @@ rtError_t ApiErrorDecorator::EschedSubmitEventSync(const int32_t devId, rtEsched
 rtError_t ApiErrorDecorator::MemQueueEnQueueBuff(const int32_t devId, const uint32_t qid,
     rtMemQueueBuff_t * const inBuf, const int32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inBuf, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inBuf, RT_ERROR_INVALID_VALUE, "Memory queue enqueuing");
     COND_RETURN_AND_MSG_OUTER((inBuf->buffCount > 0U) && (inBuf->buffInfo == nullptr), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1011, __func__, "nullptr", "inBuf->buffInfo",
+        ErrorCode::EE1011, "Memory queue enqueuing", "nullptr", "inBuf->buffInfo",
         RtFmtMsg("When inBuf->buffCount is greater than 0, inBuf->buffInfo cannot be a null pointer."
             " Parameter inBuf->buffCount is %u, devId is %u, and qid is %u", inBuf->buffCount, devId, qid));
     int32_t realDeviceId = 0;
@@ -4763,9 +4760,9 @@ rtError_t ApiErrorDecorator::MemQueueEnQueueBuff(const int32_t devId, const uint
 rtError_t ApiErrorDecorator::MemQueueDeQueueBuff(const int32_t devId, const uint32_t qid,
     rtMemQueueBuff_t * const outBuf, const int32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(outBuf, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outBuf, RT_ERROR_INVALID_VALUE, "Memory queue dequeuing");
     COND_RETURN_AND_MSG_OUTER((outBuf->buffCount > 0U) && (outBuf->buffInfo == nullptr),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, "nullptr", "outBuf->buffInfo",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Memory queue dequeuing", "nullptr", "outBuf->buffInfo",
         RtFmtMsg("When outBuf->buffCount is greater than 0, outBuf->buffInfo cannot be a null pointer."
             " Parameter outBuf->buffCount is %u, devId is %u, and qid is %u", outBuf->buffCount, devId, qid));
     int32_t realDeviceId = 0;
@@ -4818,14 +4815,14 @@ rtError_t ApiErrorDecorator::QueueSubscribe(const int32_t devId, const uint32_t 
 
 rtError_t ApiErrorDecorator::BufEventTrigger(const char_t * const name)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Triggering and reporting buffer-related events");
     return impl_->BufEventTrigger(name);
 }
 
 rtError_t ApiErrorDecorator::QueryDevPid(rtBindHostpidInfo_t * const info, int32_t * const devPid)
 {
-    NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(devPid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Querying the PID on the device");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPid, RT_ERROR_INVALID_VALUE, "Querying the PID on the device");
 
     uint32_t realDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(info->chipId, &realDeviceId);
@@ -4842,37 +4839,37 @@ rtError_t ApiErrorDecorator::BuffAlloc(const uint64_t size, void **buff)
 
 rtError_t ApiErrorDecorator::BuffConfirm(void * const buff, const uint64_t size)
 {
-    NULL_PTR_RETURN_MSG_OUTER(buff, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(buff, RT_ERROR_INVALID_VALUE, "Checking whether the specified buffer is valid shared memory");
     return impl_->BuffConfirm(buff, size);
 }
 
 rtError_t ApiErrorDecorator::BuffFree(void * const buff)
 {
-    NULL_PTR_RETURN_MSG_OUTER(buff, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(buff, RT_ERROR_INVALID_VALUE, "Shared buffer release");
     return impl_->BuffFree(buff);
 }
 
 rtError_t ApiErrorDecorator::MemGrpCreate(const char_t * const name, const rtMemGrpConfig_t * const cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Memory group creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg, RT_ERROR_INVALID_VALUE, "Memory group creation");
     return impl_->MemGrpCreate(name, cfg);
 }
 
 rtError_t ApiErrorDecorator::BuffGetInfo(const rtBuffGetCmdType type, const void * const inBuff, const uint32_t inLen,
     void * const outBuff, uint32_t * const outLen)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inBuff, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(outBuff, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(outLen, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inBuff, RT_ERROR_INVALID_VALUE, "Buffer information obtaining");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outBuff, RT_ERROR_INVALID_VALUE, "Buffer information obtaining");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outLen, RT_ERROR_INVALID_VALUE, "Buffer information obtaining");
     return impl_->BuffGetInfo(type, inBuff, inLen, outBuff, outLen);
 }
 
 rtError_t ApiErrorDecorator::MemGrpCacheAlloc(const char_t *const name, const int32_t devId,
     const rtMemGrpCacheAllocPara *const para)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Memory group cache allocation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para, RT_ERROR_INVALID_VALUE, "Memory group cache allocation");
     int32_t realDeviceId;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4888,21 +4885,21 @@ rtError_t ApiErrorDecorator::MemGrpCacheAlloc(const char_t *const name, const in
 rtError_t ApiErrorDecorator::MemGrpAddProc(const char_t * const name, const int32_t pid,
     const rtMemGrpShareAttr_t * const attr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(attr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Adding the process to a memory group");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attr, RT_ERROR_INVALID_VALUE, "Adding the process to a memory group");
     return impl_->MemGrpAddProc(name, pid, attr);
 }
 
 rtError_t ApiErrorDecorator::MemGrpAttach(const char_t * const name, const int32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Attaching the current process to the memory group with the specified name");
     return impl_->MemGrpAttach(name, timeout);
 }
 
 rtError_t ApiErrorDecorator::MemGrpQuery(rtMemGrpQueryInput_t * const input, rtMemGrpQueryOutput_t * const output)
 {
-    NULL_PTR_RETURN_MSG_OUTER(input, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(output, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(input, RT_ERROR_INVALID_VALUE, "Memory group information query");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(output, RT_ERROR_INVALID_VALUE, "Memory group information query");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         ((input->cmd <= RT_MEM_GRP_QUERY_GROUP) || (input->cmd >= RT_MEM_GRP_QUERY_CMD_MAX)), RT_ERROR_FEATURE_NOT_SUPPORT, 
         input->cmd, "(" + std::to_string(RT_MEM_GRP_QUERY_GROUP) + ", " + std::to_string(RT_MEM_GRP_QUERY_CMD_MAX) + ")");
@@ -4926,8 +4923,8 @@ rtError_t ApiErrorDecorator::MemGrpQuery(rtMemGrpQueryInput_t * const input, rtM
 
 rtError_t ApiErrorDecorator::MemQueueGetQidByName(const int32_t devId, const char_t * const name, uint32_t * const qId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(qId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Obtaining the ID of a memory queue by name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(qId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of a memory queue by name");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -4970,7 +4967,7 @@ rtError_t ApiErrorDecorator::EschedDettachDevice(const uint32_t devId)
 rtError_t ApiErrorDecorator::EschedWaitEvent(const int32_t devId, const uint32_t grpId, const uint32_t threadId,
     const int32_t timeout, rtEschedEventSummary_t * const evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Waiting for an event");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -5003,7 +5000,7 @@ rtError_t ApiErrorDecorator::EschedCreateGrp(const int32_t devId, const uint32_t
 
 rtError_t ApiErrorDecorator::EschedSubmitEvent(const int32_t devId, rtEschedEventSummary_t * const evt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event submission");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -5034,7 +5031,7 @@ rtError_t ApiErrorDecorator::EschedSubscribeEvent(const int32_t devId, const uin
 rtError_t ApiErrorDecorator::EschedAckEvent(const int32_t devId, const rtEventIdType_t evtId,
     const uint32_t subeventId, char_t * const msg, const uint32_t len)
 {
-    NULL_PTR_RETURN_MSG_OUTER(msg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(msg, RT_ERROR_INVALID_VALUE, "Event confirmation");
     int32_t realDeviceId = 0;
     if (IsHostCpuDevId(devId)) {
         realDeviceId = DEFAULT_HOSTCPU_LOGIC_DEVICE_ID;
@@ -5064,7 +5061,7 @@ rtError_t ApiErrorDecorator::CheckDeviceIdIsValid(const int32_t devId) const
 rtError_t ApiErrorDecorator::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInfo, Stream * const stm,
     const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo, RT_ERROR_INVALID_VALUE, "Operating the cache memory on the device");
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     const rtCmoOpCode_t opCode = static_cast<rtCmoOpCode_t>(taskInfo->opCode);
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_CMO)) {
@@ -5080,7 +5077,7 @@ rtError_t ApiErrorDecorator::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInf
 rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t destMax,
     const rtCmoOpCode_t cmoOpCode, Stream * const stm, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cmoAddrInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cmoAddrInfo, RT_ERROR_INVALID_VALUE, "Using the memory descriptor to operate the cache memory on the device");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((cmoOpCode < RT_CMO_PREFETCH) || (cmoOpCode >= RT_CMO_RESERVED)), 
         RT_ERROR_INVALID_VALUE, cmoOpCode, "[" + std::to_string(RT_CMO_PREFETCH) + ", " + std::to_string(RT_CMO_RESERVED) + ")");
     rtChipType_t chipType = Runtime::Instance()->GetChipType();
@@ -5101,7 +5098,7 @@ rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t
 rtError_t ApiErrorDecorator::BarrierTaskLaunch(const rtBarrierTaskInfo_t * const taskInfo, Stream * const stm,
     const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo, RT_ERROR_INVALID_VALUE, "Barrier task delivery");
     ZERO_RETURN_AND_MSG_OUTER(taskInfo->logicIdNum);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM, 
         RT_ERROR_INVALID_VALUE, taskInfo->logicIdNum, "[1, " + std::to_string(RT_CMO_MAX_BARRIER_NUM) + "]");
@@ -5114,8 +5111,8 @@ rtError_t ApiErrorDecorator::BarrierTaskLaunch(const rtBarrierTaskInfo_t * const
 rtError_t ApiErrorDecorator::MemcpyHostTask(void * const dst, const uint64_t destMax, const void * const src,
     const uint64_t cnt, const rtMemcpyKind_t kind, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Delivering a memory copy task on the host");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Delivering a memory copy task on the host");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
 
     Context *curCtx = nullptr;
@@ -5143,14 +5140,14 @@ rtError_t ApiErrorDecorator::SetDeviceSatMode(const rtFloatOverflowMode_t floatO
 
 rtError_t ApiErrorDecorator::GetDeviceSatMode(rtFloatOverflowMode_t * const floatOverflowMode)
 {
-    NULL_PTR_RETURN_MSG_OUTER(floatOverflowMode, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(floatOverflowMode, RT_ERROR_INVALID_VALUE, "Querying the output mode of the floating-point computation result of the current device");
     return impl_->GetDeviceSatMode(floatOverflowMode);
 }
 
 rtError_t ApiErrorDecorator::GetDeviceSatModeForStream(Stream * const stm,
     rtFloatOverflowMode_t * const floatOverflowMode)
 {
-    NULL_PTR_RETURN_MSG_OUTER(floatOverflowMode, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(floatOverflowMode, RT_ERROR_INVALID_VALUE, "Querying the output mode of the floating-point computation result of a specified stream");
     return impl_->GetDeviceSatModeForStream(stm, floatOverflowMode);
 }
 
@@ -5160,22 +5157,22 @@ rtError_t ApiErrorDecorator::SetStreamOverflowSwitch(Stream * const stm, const u
         RT_ERROR_INVALID_VALUE, flags, 
         "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Setting the stream overflow/underflow detection switch", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->SetStreamOverflowSwitch(stm, flags);
 }
 rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(flags, RT_ERROR_INVALID_VALUE, "Obtaining the overflow/underflow detection flag of a specified stream");
     return impl_->GetStreamOverflowSwitch(stm, flags);
 }
 
 rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Setting the stream priority");
     COND_RETURN_ERROR((stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The stream with flag %u does not support priority setting.", stm->Flags());
     COND_RETURN_AND_MSG_OUTER((stm->Flags() & RT_STREAM_AICPU) != 0U, 
-        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, "Parameter stm->Flags() value " +
+        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, "Setting the stream priority", "Parameter stm->Flags() value " +
         std::to_string(stm->Flags()),
         "The current stream is used to carry AI CPU scheduling tasks and does not support priority setting");
     const int32_t validPriority = static_cast<int32_t>(streamPriority);
@@ -5196,12 +5193,12 @@ rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream * const stm, const ui
 
 rtError_t ApiErrorDecorator::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamPriority, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamPriority, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
     COND_RETURN_ERROR((stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The stream with flag %u does not support priority setting.", stm->Flags());
     COND_RETURN_AND_MSG_OUTER((stm->Flags() & RT_STREAM_AICPU) != 0U, 
-        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
+        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, "Obtaining the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
         "The current stream is used to carry AI CPU scheduling tasks and does not support priority getting");
     return impl_->GetStreamPriorityValue(stm, streamPriority);
 }
@@ -5214,7 +5211,7 @@ rtError_t ApiErrorDecorator::DvppGroupCreate(DvppGrp **grp, const uint32_t flags
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_DVPP_GROUP)) {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    NULL_PTR_RETURN_MSG_OUTER(grp, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(grp, RT_ERROR_INVALID_VALUE, "DVPP group creation");
     const rtError_t error = impl_->DvppGroupCreate(grp, flags);
     ERROR_RETURN(error, "Dvpp grp create failed.");
     return error;
@@ -5222,7 +5219,7 @@ rtError_t ApiErrorDecorator::DvppGroupCreate(DvppGrp **grp, const uint32_t flags
 
 rtError_t ApiErrorDecorator::DvppGroupDestory(DvppGrp *grp)
 {
-    NULL_PTR_RETURN_MSG_OUTER(grp, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(grp, RT_ERROR_INVALID_VALUE, "DVPP group destruction");
     const rtError_t error = impl_->DvppGroupDestory(grp);
     ERROR_RETURN(error, "dvpp grp destroy failed.");
     return error;
@@ -5231,8 +5228,8 @@ rtError_t ApiErrorDecorator::DvppGroupDestory(DvppGrp *grp)
 rtError_t ApiErrorDecorator::DvppWaitGroupReport(DvppGrp * const grp, const  rtDvppGrpCallback callBackFunc,
     const int32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(grp, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(grp, RT_ERROR_INVALID_VALUE, "Waiting for reporting of the DVPP group task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callBackFunc, RT_ERROR_INVALID_VALUE, "Waiting for reporting of the DVPP group task");
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(timeout < -1, RT_ERROR_INVALID_VALUE, 
         timeout, "[0, " + std::to_string(MAX_INT32_NUM) + "] or -1");
@@ -5247,7 +5244,7 @@ rtError_t ApiErrorDecorator::DvppWaitGroupReport(DvppGrp * const grp, const  rtD
 rtError_t ApiErrorDecorator::SetStreamTag(Stream * const stm, const uint32_t geOpTag)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Setting the stream tag", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     const rtError_t error = impl_->SetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "set stream geOpTag failed.");
     return error;
@@ -5255,7 +5252,7 @@ rtError_t ApiErrorDecorator::SetStreamTag(Stream * const stm, const uint32_t geO
 
 rtError_t ApiErrorDecorator::GetStreamTag(Stream * const stm, uint32_t * const geOpTag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(geOpTag, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(geOpTag, RT_ERROR_INVALID_VALUE, "Obtaining the stream label");
     const rtError_t error = impl_->GetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "get stream geOpTag failed.");
     return error;
@@ -5276,7 +5273,7 @@ rtError_t ApiErrorDecorator::GetVisibleDeviceIdByLogicDeviceId(const int32_t log
         return RT_ERROR_DEVICE_ID;
     }
 
-    NULL_PTR_RETURN_MSG_OUTER(visibleDeviceId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(visibleDeviceId, RT_ERROR_INVALID_VALUE, "Obtaining the visible device ID based on the user device ID");
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
@@ -5293,7 +5290,7 @@ rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, in
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, 
         configOpt, "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(configVal, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(configVal, RT_ERROR_INVALID_VALUE, "Obtaining the default stream of the current context");
     return impl_->CtxGetSysParamOpt(configOpt, configVal);
 }
 
@@ -5313,14 +5310,14 @@ rtError_t ApiErrorDecorator::GetDeviceSatStatus(void * const outputAddrPtr, cons
         RT_ERROR_INVALID_VALUE, "Output size %lu is invalid. Only %lu bytes are supported",
         outputSize, OVERFLOW_OUTPUT_SIZE);
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Obtaining the overflow status of tasks in all streams on the current device", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->GetDeviceSatStatus(outputAddrPtr, outputSize, stm);
 }
 
 rtError_t ApiErrorDecorator::CleanDeviceSatStatus(Stream * const stm)
 {
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
-        ErrorCode::EE1016, __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        ErrorCode::EE1016, "Clearing the overflow status of tasks in all streams on the current device", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     return impl_->CleanDeviceSatStatus(stm);
 }
 
@@ -5328,7 +5325,7 @@ rtError_t ApiErrorDecorator::GetAllUtilizations(const int32_t devId, const rtTyp
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((kind >= RT_UTIL_TYPE_MAX) || (kind < 0), RT_ERROR_INVALID_VALUE, 
         kind, "[0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(util, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(util, RT_ERROR_INVALID_VALUE, "Querying the usage of Cube, Vector, and AI CPU on the device");
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
@@ -5339,15 +5336,15 @@ rtError_t ApiErrorDecorator::GetAllUtilizations(const int32_t devId, const rtTyp
 
 rtError_t ApiErrorDecorator::GetTaskBufferLen(const rtTaskBuffType_t type, uint32_t * const bufferLen)
 {
-    NULL_PTR_RETURN_MSG_OUTER(bufferLen, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bufferLen, RT_ERROR_INVALID_VALUE, "Obtaining the task buffer length");
 
     return impl_->GetTaskBufferLen(type, bufferLen);
 }
 
 rtError_t ApiErrorDecorator::TaskSqeBuild(const rtTaskInput_t * const taskInput, uint32_t * const taskLen)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskInput, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskLen, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInput, RT_ERROR_INVALID_VALUE, "Creating Submission Queue Entry (SQE) for a task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskLen, RT_ERROR_INVALID_VALUE, "Creating Submission Queue Entry (SQE) for a task");
 
     return impl_->TaskSqeBuild(taskInput, taskLen);
 }
@@ -5355,9 +5352,9 @@ rtError_t ApiErrorDecorator::TaskSqeBuild(const rtTaskInput_t * const taskInput,
 rtError_t ApiErrorDecorator::GetKernelBin(const char_t *const binFileName, char_t **const buffer,
                                           uint32_t *length)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binFileName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(buffer, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(length, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binFileName, RT_ERROR_INVALID_VALUE, "Obtaining the binary file content of an operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(buffer, RT_ERROR_INVALID_VALUE, "Obtaining the binary file content of an operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(length, RT_ERROR_INVALID_VALUE, "Obtaining the binary file content of an operator");
 
     return impl_->GetKernelBin(binFileName, buffer, length);
 }
@@ -5365,18 +5362,18 @@ rtError_t ApiErrorDecorator::GetKernelBin(const char_t *const binFileName, char_
 rtError_t ApiErrorDecorator::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin,
                                           uint32_t *binSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(bin, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(binSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the binHandle address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bin, RT_ERROR_INVALID_VALUE, "Obtaining the binHandle address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binSize, RT_ERROR_INVALID_VALUE, "Obtaining the binHandle address");
     return impl_->GetBinBuffer(binHandle, type, bin, binSize);
 }
 
 rtError_t ApiErrorDecorator::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
     const uint32_t coreId, const void **stack, uint32_t *stackSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stack, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stackSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stack, RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stackSize, RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer");
     return impl_->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
@@ -5390,7 +5387,7 @@ rtError_t ApiErrorDecorator::BinaryGetGlobal(const Program * const binHandle, co
 
 rtError_t ApiErrorDecorator::FreeKernelBin(char_t * const buffer)
 {
-    NULL_PTR_RETURN_MSG_OUTER(buffer, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(buffer, RT_ERROR_INVALID_VALUE, "Releasing memory allocated to the kernel binary file");
 
     return impl_->FreeKernelBin(buffer);
 }
@@ -5398,8 +5395,8 @@ rtError_t ApiErrorDecorator::FreeKernelBin(char_t * const buffer)
 rtError_t ApiErrorDecorator::EschedQueryInfo(const uint32_t devId, const rtEschedQueryType type,
     rtEschedInputInfo *inPut, rtEschedOutputInfo *outPut)
 {
-    NULL_PTR_RETURN_MSG_OUTER(inPut, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(outPut, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inPut, RT_ERROR_INVALID_VALUE, "Information query");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outPut, RT_ERROR_INVALID_VALUE, "Information query");
     uint32_t realDeviceId = 0U;
     if (IsHostCpuDevId(static_cast<int32_t>(devId))) {
         realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
@@ -5413,7 +5410,7 @@ rtError_t ApiErrorDecorator::EschedQueryInfo(const uint32_t devId, const rtEsche
 
 rtError_t ApiErrorDecorator::ModelCheckArchVersion(const char_t *omsocVersion)
 {
-    NULL_PTR_RETURN_MSG_OUTER(omsocVersion, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(omsocVersion, RT_ERROR_INVALID_VALUE, "Checking the compatibility between the model SoC version and the device SoC version");
     if (omsocVersion[0U] == '\0') {
         RT_LOG(RT_LOG_ERROR, "input omsocVersion is null, please check.");
         return RT_ERROR_INVALID_VALUE;
@@ -5424,7 +5421,7 @@ rtError_t ApiErrorDecorator::ModelCheckArchVersion(const char_t *omsocVersion)
 rtError_t ApiErrorDecorator::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void *devAddr,
     uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Virtual memory allocation");
     return impl_->ReserveMemAddress(devPtr, size, alignment, devAddr, flags);
 }
 
@@ -5436,7 +5433,7 @@ rtError_t ApiErrorDecorator::ReleaseMemAddress(void* devPtr)
 rtError_t ApiErrorDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop,
     uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prop, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prop, RT_ERROR_INVALID_VALUE, "Physical memory allocation");
     rtError_t error = RT_ERROR_NONE;
     // only device id need covert
     if (prop->side == DEVICE_TYPE) {
@@ -5485,16 +5482,16 @@ rtError_t ApiErrorDecorator::UnmapMem(void* devPtr)
 
 rtError_t ApiErrorDecorator::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
-    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Setting the memory access permission");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desc, RT_ERROR_INVALID_VALUE, "Setting the memory access permission");
     return impl_->MemSetAccess(virPtr, size, desc, count);
 }
 
 rtError_t ApiErrorDecorator::MemGetAccess(void *virPtr, rtMemLocation *location, uint64_t *flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(location, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Obtaining the memory access permission");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(location, RT_ERROR_INVALID_VALUE, "Obtaining the memory access permission");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(flags, RT_ERROR_INVALID_VALUE, "Obtaining the memory access permission");
     return impl_->MemGetAccess(virPtr, location, flags);
 }
 
@@ -5511,7 +5508,7 @@ rtError_t ApiErrorDecorator::ExportToShareableHandle(rtDrvMemHandle handle, rtDr
 rtError_t ApiErrorDecorator::ExportToShareableHandleV2(
     rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void *shareableHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareableHandle, RT_ERROR_INVALID_VALUE, "Exporting the shared handle of the AI server");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5526,7 +5523,7 @@ rtError_t ApiErrorDecorator::ExportToShareableHandleV2(
 rtError_t ApiErrorDecorator::ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId,
     rtDrvMemHandle* handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Obtaining shareableHandle information and returning the handle in the current process");
     int32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
@@ -5541,8 +5538,8 @@ rtError_t ApiErrorDecorator::ImportFromShareableHandle(uint64_t shareableHandle,
 rtError_t ApiErrorDecorator::ImportFromShareableHandleV2(const void *shareableHandle,
     rtMemSharedHandleType handleType, uint64_t flags, int32_t devId, rtDrvMemHandle *handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareableHandle, RT_ERROR_INVALID_VALUE, "Obtaining shareableHandle information and returning the handle in the current process");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Obtaining shareableHandle information and returning the handle in the current process");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5569,7 +5566,7 @@ rtError_t ApiErrorDecorator::SetPidToShareableHandle(uint64_t shareableHandle, i
 rtError_t ApiErrorDecorator::SetPidToShareableHandleV2(
     const void *shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum)
 {
-    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(shareableHandle, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5580,7 +5577,7 @@ rtError_t ApiErrorDecorator::SetPidToShareableHandleV2(
 rtError_t ApiErrorDecorator::GetAllocationGranularity(rtDrvMemProp_t *prop, rtDrvMemGranularityOptions option,
     size_t *granularity)
 {
-    NULL_PTR_RETURN_MSG_OUTER(prop, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(prop, RT_ERROR_INVALID_VALUE, "Querying the memory allocation granularity");
     if (prop->side == DEVICE_TYPE) {
         const uint32_t userDeviceId = prop->devid;
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
@@ -5601,7 +5598,7 @@ rtError_t ApiErrorDecorator::DeviceStatusQuery(const uint32_t devId, rtDeviceSta
 {
     uint32_t realDeviceId = 0U;
     const Runtime * const rtInstance = Runtime::Instance();
-    NULL_PTR_RETURN_MSG_OUTER(deviceStatus, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(deviceStatus, RT_ERROR_INVALID_VALUE, "Querying the device running status");
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
     COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
@@ -5638,7 +5635,7 @@ rtError_t ApiErrorDecorator::QueryProcessHostPid(int32_t pid, uint32_t *chipId, 
 rtError_t ApiErrorDecorator::SetStreamSqLockUnlock(Stream * const stm, bool isLock)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Locking or unlocking the send queue of a stream");
     return impl_->SetStreamSqLockUnlock(curStm, isLock);
 }
 
@@ -5660,7 +5657,7 @@ rtError_t ApiErrorDecorator::DevVA2PA(uint64_t devAddr, uint64_t len, Stream *st
 rtError_t ApiErrorDecorator::StreamClear(Stream * const stm, rtClearStep_t step)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Clearing tasks in a stream");
     COND_RETURN_ERROR((step > RT_STREAM_CLEAR) || (step < RT_STREAM_STOP), RT_ERROR_INVALID_VALUE,
         "Invalid clearStop, current step=%d, valid range is [%d, %d].", step,
         RT_STREAM_STOP, RT_STREAM_CLEAR);
@@ -5671,7 +5668,7 @@ rtError_t ApiErrorDecorator::StreamClear(Stream * const stm, rtClearStep_t step)
 
 rtError_t ApiErrorDecorator::StreamStop(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Stopping the running tasks in a stream");
     const rtError_t ret = impl_->StreamStop(stm);
     return ret;
 }
@@ -5679,7 +5676,7 @@ rtError_t ApiErrorDecorator::StreamStop(Stream * const stm)
 rtError_t ApiErrorDecorator::StreamAbort(Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Aborting tasks in a stream");
     const rtError_t ret = impl_->StreamAbort(curStm);
     RT_LOG(RT_LOG_EVENT, "Abort stream_id=%d,ret = %u", curStm->Id_(), ret);
     return ret;
@@ -5692,22 +5689,22 @@ rtError_t ApiErrorDecorator::DebugSetDumpMode(const uint64_t mode)
 
 rtError_t ApiErrorDecorator::DebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(coreInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(coreInfo, RT_ERROR_INVALID_VALUE, "Obtaining the physical ID of the stalled AI Core in the current process");
     return impl_->DebugGetStalledCore(coreInfo);
 }
 
 rtError_t ApiErrorDecorator::DebugReadAICore(rtDebugMemoryParam_t *const param)
 {
-    NULL_PTR_RETURN_MSG_OUTER(param, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(param, RT_ERROR_INVALID_VALUE, "Reading the register or buffer information of the AI Core");
     return impl_->DebugReadAICore(param);
 }
 
 rtError_t ApiErrorDecorator::GetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
     rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num)
 {
-    NULL_PTR_RETURN_MSG_OUTER(exceptionInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(exceptionErrRegInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(num, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(exceptionInfo, RT_ERROR_INVALID_VALUE, "Obtaining details about the register related to the exception");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(exceptionErrRegInfo, RT_ERROR_INVALID_VALUE, "Obtaining details about the register related to the exception");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(num, RT_ERROR_INVALID_VALUE, "Obtaining details about the register related to the exception");
     return impl_->GetExceptionRegInfo(exceptionInfo, exceptionErrRegInfo, num);
 }
 
@@ -5719,8 +5716,8 @@ rtError_t ApiErrorDecorator::GetServerIDBySDID(
 
 rtError_t ApiErrorDecorator::ModelNameSet(Model * const mdl, const char_t * const name)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Setting the name of a model running instance");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the name of a model running instance");
     const rtError_t error = impl_->ModelNameSet(mdl, name);
     ERROR_RETURN(error, "set model name failed");
     return error;
@@ -5748,14 +5745,14 @@ rtError_t ApiErrorDecorator::SetDefaultDeviceId(const int32_t deviceId)
 
 rtError_t ApiErrorDecorator::CtxGetCurrentDefaultStream(Stream ** const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the default stream of the current context");
     return impl_->CtxGetCurrentDefaultStream(stm);
 }
 
 rtError_t ApiErrorDecorator::GetPrimaryCtxState(const int32_t devId, uint32_t *flags, int32_t *active)
 {
-    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(active, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(flags, RT_ERROR_INVALID_VALUE, "Obtaining the status of the default context");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(active, RT_ERROR_INVALID_VALUE, "Obtaining the status of the default context");
     int32_t realDeviceId;
     Runtime *rtInstance = Runtime::Instance();
 
@@ -5778,7 +5775,7 @@ rtError_t ApiErrorDecorator::GetPrimaryCtxState(const int32_t devId, uint32_t *f
 rtError_t ApiErrorDecorator::RegStreamStateCallback(const char_t *regName, void *callback, void *args,
     StreamStateCallback type)
 {
-    NULL_PTR_RETURN_MSG_OUTER(regName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(regName, RT_ERROR_INVALID_VALUE, "Registering the stream status callback function");
     return impl_->RegStreamStateCallback(regName, callback, args, type);
 }
 
@@ -5799,7 +5796,7 @@ rtError_t ApiErrorDecorator::DeviceResetForce(const int32_t devId)
 rtError_t ApiErrorDecorator::GetDeviceStatus(const int32_t devId, rtDevStatus_t * const status)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((devId < 0), RT_ERROR_DEVICE_ID, devId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Obtaining device status");
     rtError_t error;
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
@@ -5847,7 +5844,7 @@ rtError_t ApiErrorDecorator::GetDeviceResLimit(const uint32_t devId, const rtDev
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
         type, "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of the current process");
     uint32_t drvDevId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
@@ -5877,7 +5874,7 @@ rtError_t ApiErrorDecorator::GetStreamResLimit(const Stream *const stm, const rt
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
         type, "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of a specified stream");
     return impl_->GetStreamResLimit(stm, type, value);
 }
 
@@ -5895,14 +5892,14 @@ rtError_t ApiErrorDecorator::GetResInCurrentThread(const rtDevResLimitType_t typ
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
         type, "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Obtaining the device resources that can be used by the current thread");
     return impl_->GetResInCurrentThread(type, value);
 }
 
 rtError_t ApiErrorDecorator::HdcServerCreate(const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t * const server)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((devId < 0), RT_ERROR_DEVICE_ID, devId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(server, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(server, RT_ERROR_INVALID_VALUE, "HDC server creation");
     rtError_t error;
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
@@ -5917,7 +5914,7 @@ rtError_t ApiErrorDecorator::HdcServerCreate(const int32_t devId, const rtHdcSer
 
 rtError_t ApiErrorDecorator::HdcServerDestroy(rtHdcServer_t const server)
 {
-    NULL_PTR_RETURN_MSG_OUTER(server, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(server, RT_ERROR_INVALID_VALUE, "HDC server destruction");
     return impl_->HdcServerDestroy(server);
 }
 
@@ -5925,8 +5922,8 @@ rtError_t ApiErrorDecorator::HdcSessionConnect(const int32_t peerNode, const int
     rtHdcSession_t * const session)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((peerDevId < 0), RT_ERROR_DEVICE_ID, peerDevId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(client, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(session, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(client, RT_ERROR_INVALID_VALUE, "HDC session connection");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(session, RT_ERROR_INVALID_VALUE, "HDC session connection");
     rtError_t error;
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
@@ -5941,20 +5938,20 @@ rtError_t ApiErrorDecorator::HdcSessionConnect(const int32_t peerNode, const int
 
 rtError_t ApiErrorDecorator::HdcSessionClose(rtHdcSession_t const session)
 {
-    NULL_PTR_RETURN_MSG_OUTER(session, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(session, RT_ERROR_INVALID_VALUE, "HDC session close");
     return impl_->HdcSessionClose(session);
 }
 
 rtError_t ApiErrorDecorator::GetHostCpuDevId(int32_t * const devId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the device ID allocated to the host CPU");
     return impl_->GetHostCpuDevId(devId);
 }
 
 rtError_t ApiErrorDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((userDevId < 0), RT_ERROR_DEVICE_ID, userDevId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(logicDevId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(logicDevId, RT_ERROR_INVALID_VALUE, "Obtaining the logical device ID based on the user device ID");
     int32_t realDeviceId = 0;
     rtError_t error = impl_->GetLogicDevIdByUserDevId(userDevId, &realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get logicDevId failed.");
@@ -5968,7 +5965,7 @@ rtError_t ApiErrorDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, i
 rtError_t ApiErrorDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t * const userDevId)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((logicDevId < 0), RT_ERROR_DEVICE_ID, logicDevId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(userDevId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(userDevId, RT_ERROR_INVALID_VALUE, "Obtaining the user device ID based on the logical device ID");
     const rtError_t error = CheckDeviceIdIsValid(logicDevId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x",
         logicDevId, static_cast<uint32_t>(error));
@@ -5978,7 +5975,7 @@ rtError_t ApiErrorDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, 
 rtError_t ApiErrorDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t *uuid)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((devId < 0), RT_ERROR_DEVICE_ID, devId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER(uuid, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(uuid, RT_ERROR_INVALID_VALUE, "Obtaining the device UUID");
 
     int32_t drvDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
@@ -5995,7 +5992,7 @@ rtError_t ApiErrorDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t *uuid)
 rtError_t ApiErrorDecorator::SetStreamCacheOpInfoSwitch(const Stream * const stm, uint32_t cacheOpInfoSwitch)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(const_cast<Stream *>(stm));
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Setting the switch for caching operator information in a stream");
     if (cacheOpInfoSwitch != 0U && cacheOpInfoSwitch != 1U) {
         return RT_ERROR_INVALID_VALUE;
     }
@@ -6006,17 +6003,17 @@ rtError_t ApiErrorDecorator::SetStreamCacheOpInfoSwitch(const Stream * const stm
 rtError_t ApiErrorDecorator::GetStreamCacheOpInfoSwitch(const Stream * const stm, uint32_t * const cacheOpInfoSwitch)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(const_cast<Stream *>(stm));
-    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cacheOpInfoSwitch, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cacheOpInfoSwitch, RT_ERROR_INVALID_VALUE, "Querying whether the operator information is cached");
  
     return impl_->GetStreamCacheOpInfoSwitch(curStm, cacheOpInfoSwitch);
 }
 
 rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model update");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, "Non ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Model update", "Non ACL Graph mode is not supported");
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
         "sub ACL Graph does not support updating model");
@@ -6025,8 +6022,8 @@ rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
 
 rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Registering the callback function for model destruction");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(fn, RT_ERROR_INVALID_VALUE, "Registering the callback function for model destruction");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
@@ -6037,8 +6034,8 @@ rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model * const mdl, con
 
 rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, rtCallback_t const fn)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Deregistering the callback function for model destruction");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(fn, RT_ERROR_INVALID_VALUE, "Deregistering the callback function for model destruction");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
         COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
@@ -6050,12 +6047,12 @@ rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, r
 rtError_t ApiErrorDecorator::DevMalloc(void ** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, 
                                        const rtMallocConfig_t * const cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Allocating device memory");
     Runtime *rtInstance = Runtime::Instance();
     NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
 
     if (cfg != nullptr) {
-        NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->attrs, RT_ERROR_INVALID_VALUE, "Allocating device memory");
     }
     const rtError_t error = impl_->DevMalloc(devPtr, size, policy, advise, cfg);
     RT_LOG(RT_LOG_INFO, "device malloc, size=%" PRIu64 "(bytes), start ptr=0x%llx, end ptr=0x%llx",
@@ -6065,7 +6062,7 @@ rtError_t ApiErrorDecorator::DevMalloc(void ** const devPtr, const uint64_t size
 
 rtError_t ApiErrorDecorator::MemReserveAddress(void** virPtr, size_t size, rtMallocPolicy policy, void *expectAddr, rtMallocConfig_t *cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Reserving the virtual address space");
     ZERO_RETURN_AND_MSG_OUTER(size);
     COND_RETURN_AND_MSG_RESERVED_PARAM((expectAddr != nullptr), RT_ERROR_INVALID_VALUE, "expectAddr",
         "expectAddr is reserved parameter and must be null");
@@ -6110,14 +6107,14 @@ rtError_t ApiErrorDecorator::MemMallocPhysical(rtMemHandle* handle, size_t size,
 
 rtError_t ApiErrorDecorator::GetThreadLastTaskId(uint32_t * const taskId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of the last task delivered by the current thread");
 
     return impl_->GetThreadLastTaskId(taskId);
 }
 
 rtError_t ApiErrorDecorator::LaunchDvppTask(const void * const sqe, const uint32_t sqeLen, Stream * const stm, rtDvppCfg_t *cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(sqe, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sqe, RT_ERROR_INVALID_VALUE, "DVPP task delivery");
     const rtError_t error = impl_->LaunchDvppTask(sqe, sqeLen, stm, cfg);
     ERROR_RETURN(error, "Stars launch dvpp task failed.");
 
@@ -6126,7 +6123,7 @@ rtError_t ApiErrorDecorator::LaunchDvppTask(const void * const sqe, const uint32
 
 rtError_t ApiErrorDecorator::LaunchRandomNumTask(const rtRandomNumTaskInfo_t *taskInfo, Stream * const stm, void *reserve)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo, RT_ERROR_INVALID_VALUE, "Starting the random number generation task");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(reserve != nullptr, RT_ERROR_INVALID_VALUE, reserve, "nullptr");
 
     const rtError_t error = impl_->LaunchRandomNumTask(taskInfo, stm, reserve);
@@ -6137,8 +6134,8 @@ rtError_t ApiErrorDecorator::LaunchRandomNumTask(const rtRandomNumTaskInfo_t *ta
 
 rtError_t ApiErrorDecorator::KernelArgsInit(Kernel * const funcHandle, RtArgsHandle **argsHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Initializing the parameter list based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Initializing the parameter list based on the kernel function handle");
 
     const rtError_t error = impl_->KernelArgsInit(funcHandle, argsHandle);
     ERROR_RETURN(error, "kernel args init failed.");
@@ -6148,9 +6145,9 @@ rtError_t ApiErrorDecorator::KernelArgsInit(Kernel * const funcHandle, RtArgsHan
 
 rtError_t ApiErrorDecorator::KernelArgsAppendPlaceHolder(RtArgsHandle *argsHandle, ParaDetail **paraHandle) 
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(paraHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Adding placeholder parameters to the kernel parameter handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE, "Adding placeholder parameters to the kernel parameter handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(paraHandle, RT_ERROR_INVALID_VALUE, "Adding placeholder parameters to the kernel parameter handle");
 
     const rtError_t error = impl_->KernelArgsAppendPlaceHolder(argsHandle, paraHandle);
     ERROR_RETURN(error, "kernel args append ph failed.");
@@ -6161,10 +6158,10 @@ rtError_t ApiErrorDecorator::KernelArgsAppendPlaceHolder(RtArgsHandle *argsHandl
 rtError_t ApiErrorDecorator::KernelArgsGetPlaceHolderBuffer(RtArgsHandle *argsHandle, ParaDetail *paraHandle,
     size_t dataSize, void **bufferAddr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(paraHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(bufferAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Obtaining the memory address pointed to by the paramHandle placeholder");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the memory address pointed to by the paramHandle placeholder");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(paraHandle, RT_ERROR_INVALID_VALUE, "Obtaining the memory address pointed to by the paramHandle placeholder");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(bufferAddr, RT_ERROR_INVALID_VALUE, "Obtaining the memory address pointed to by the paramHandle placeholder");
     ZERO_RETURN_AND_MSG_OUTER(dataSize);
 
     const rtError_t error = impl_->KernelArgsGetPlaceHolderBuffer(argsHandle, paraHandle, dataSize, bufferAddr);
@@ -6175,8 +6172,8 @@ rtError_t ApiErrorDecorator::KernelArgsGetPlaceHolderBuffer(RtArgsHandle *argsHa
 
 rtError_t ApiErrorDecorator::KernelArgsGetHandleMemSize(Kernel * const funcHandle, size_t *memSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(memSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the memory size occupied by the parameter list handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memSize, RT_ERROR_INVALID_VALUE, "Obtaining the memory size occupied by the parameter list handle");
 
     const rtError_t error = impl_->KernelArgsGetHandleMemSize(funcHandle, memSize);
     ERROR_RETURN(error, "kernel args get handle mem size failed.");
@@ -6186,8 +6183,8 @@ rtError_t ApiErrorDecorator::KernelArgsGetHandleMemSize(Kernel * const funcHandl
 
 rtError_t ApiErrorDecorator::KernelArgsFinalize(RtArgsHandle *argsHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Marking the completion of kernel parameter assembly");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle->funcHandle, RT_ERROR_INVALID_VALUE, "Marking the completion of kernel parameter assembly");
 
     const rtError_t error = impl_->KernelArgsFinalize(argsHandle);
     ERROR_RETURN(error, "kernel args finalize failed.");
@@ -6198,9 +6195,9 @@ rtError_t ApiErrorDecorator::KernelArgsFinalize(RtArgsHandle *argsHandle)
 rtError_t ApiErrorDecorator::KernelArgsInitByUserMem(Kernel * const funcHandle, RtArgsHandle *argsHandle, void *userHostMem,
         size_t actualArgsSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(userHostMem, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Initializing the parameter list based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Initializing the parameter list based on the kernel function handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(userHostMem, RT_ERROR_INVALID_VALUE, "Initializing the parameter list based on the kernel function handle");
     ZERO_RETURN_AND_MSG_OUTER(actualArgsSize);
 
     const rtError_t error = impl_->KernelArgsInitByUserMem(funcHandle, argsHandle, userHostMem, actualArgsSize);
@@ -6211,8 +6208,8 @@ rtError_t ApiErrorDecorator::KernelArgsInitByUserMem(Kernel * const funcHandle, 
 
 rtError_t ApiErrorDecorator::KernelArgsGetMemSize(Kernel * const funcHandle, size_t userArgsSize, size_t *actualArgsSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(actualArgsSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the memory size required by the parameter list during kernel launch");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(actualArgsSize, RT_ERROR_INVALID_VALUE, "Obtaining the memory size required by the parameter list during kernel launch");
 
     const rtError_t error = impl_->KernelArgsGetMemSize(funcHandle, userArgsSize, actualArgsSize);
     ERROR_RETURN(error, "kernel args get mem size failed.");
@@ -6221,10 +6218,10 @@ rtError_t ApiErrorDecorator::KernelArgsGetMemSize(Kernel * const funcHandle, siz
 
 rtError_t ApiErrorDecorator::KernelArgsAppend(RtArgsHandle *argsHandle, void *para, size_t paraSize, ParaDetail **paraHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(para, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsHandle, RT_ERROR_INVALID_VALUE, "Adding parameters to the kernel parameter handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(para, RT_ERROR_INVALID_VALUE, "Adding parameters to the kernel parameter handle");
     ZERO_RETURN_AND_MSG_OUTER(paraSize);
-    NULL_PTR_RETURN_MSG_OUTER(paraHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(paraHandle, RT_ERROR_INVALID_VALUE, "Adding parameters to the kernel parameter handle");
 
     const rtError_t error = impl_->KernelArgsAppend(argsHandle, para, paraSize, paraHandle);
     ERROR_RETURN(error, "kernel args append failed.");
@@ -6233,7 +6230,7 @@ rtError_t ApiErrorDecorator::KernelArgsAppend(RtArgsHandle *argsHandle, void *pa
 
 rtError_t ApiErrorDecorator::MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devAddr, RT_ERROR_INVALID_VALUE, "Writing data to the specified memory");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag != 0U), RT_ERROR_INVALID_VALUE, flag, "0");
 
     rtError_t error = RT_ERROR_NONE;
@@ -6250,7 +6247,7 @@ rtError_t ApiErrorDecorator::MemWriteValue(const void * const devAddr, const uin
 
 rtError_t ApiErrorDecorator::MemWaitValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devAddr, RT_ERROR_INVALID_VALUE, "Unblocking the data in the specified memory when the data meets certain conditions");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag >= static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_MAX)), RT_ERROR_INVALID_VALUE, 
         flag, "[0, " + std::to_string(static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_MAX)) + ")");    
 
@@ -6270,24 +6267,24 @@ rtError_t ApiErrorDecorator::MemcpyBatch(void **dsts, void **srcs, size_t *sizes
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx)
 {
     SetFailIndex(failIdx, SIZE_MAX);
-    NULL_PTR_RETURN_MSG_OUTER(dsts, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(srcs, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(sizes, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dsts, RT_ERROR_INVALID_VALUE, "Batch synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(srcs, RT_ERROR_INVALID_VALUE, "Batch synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sizes, RT_ERROR_INVALID_VALUE, "Batch synchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(count);
-    NULL_PTR_RETURN_MSG_OUTER(attrs, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(attrsIdxs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrs, RT_ERROR_INVALID_VALUE, "Batch synchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrsIdxs, RT_ERROR_INVALID_VALUE, "Batch synchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(numAttrs);
-    COND_RETURN_AND_MSG_OUTER((numAttrs > count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "numAttrs or count",
+    COND_RETURN_AND_MSG_OUTER((numAttrs > count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch synchronous memory copy", "numAttrs or count",
         RtFmtMsg("Parameter numAttrs %zu should be less than or equal to parameter count %zu", numAttrs, count));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((count > static_cast<size_t>(DEVMM_MEMCPY_BATCH_MAX_COUNT)), 
         RT_ERROR_INVALID_VALUE, count, "less than or equal to " + std::to_string(static_cast<size_t>(DEVMM_MEMCPY_BATCH_MAX_COUNT)));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((attrsIdxs[0] != 0U), RT_ERROR_INVALID_VALUE, attrsIdxs[0], "0");
     for (size_t i = 1U; i < numAttrs; i++) {
-        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] <= attrsIdxs[i - 1U]), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] <= attrsIdxs[i - 1U]), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch synchronous memory copy",
             RtFmtMsg("attrsIdxs[%zu] or attrsIdxs[%zu]", i, i - 1U),
             RtFmtMsg("Each entry in attrsIdxs must be greater than the previous entry. Parameter attrsIdxs[%zu] is %zu, and attrsIdxs[%zu] is %zu",
                 i, attrsIdxs[i], i - 1U, attrsIdxs[i - 1U]));
-        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] >= count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] >= count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch synchronous memory copy",
             RtFmtMsg("attrsIdxs[%zu] or count", i),
             RtFmtMsg("Each entry in attrsIdxs must be less than the parameter count. Parameter attrsIdxs[%zu] is %zu, and count is %zu",
                 i, attrsIdxs[i], count));
@@ -6304,25 +6301,25 @@ rtError_t ApiErrorDecorator::MemcpyBatchAsync(void** const dsts, const size_t* c
     Stream* const stm)
 {
     SetFailIndex(failIdx, SIZE_MAX);
-    NULL_PTR_RETURN_MSG_OUTER(dsts, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(destMaxs, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(srcs, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(sizes, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dsts, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(destMaxs, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(srcs, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(sizes, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(count);
-    NULL_PTR_RETURN_MSG_OUTER(attrs, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(attrsIdxs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrs, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrsIdxs, RT_ERROR_INVALID_VALUE, "Batch asynchronous memory copy");
     ZERO_RETURN_AND_MSG_OUTER(numAttrs);
 
-    COND_RETURN_AND_MSG_OUTER((numAttrs > count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "numAttrs or count",
+    COND_RETURN_AND_MSG_OUTER((numAttrs > count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch asynchronous memory copy", "numAttrs or count",
         RtFmtMsg("Parameter numAttrs %zu should be less than or equal to parameter count %zu", numAttrs, count));
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((attrsIdxs[0] != 0U), RT_ERROR_INVALID_VALUE, attrsIdxs[0], "0");
     for (size_t i = 1U; i < numAttrs; i++) {
-        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] <= attrsIdxs[i - 1U]), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] <= attrsIdxs[i - 1U]), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch asynchronous memory copy",
             RtFmtMsg("attrsIdxs[%zu] or attrsIdxs[%zu]", i, i - 1U),
             RtFmtMsg("Each entry in attrsIdxs must be greater than the previous entry. Parameter attrsIdxs[%zu] is %zu,"
                 " and attrsIdxs[%zu] is %zu", i, attrsIdxs[i], i - 1U, attrsIdxs[i - 1U]));
-        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] >= count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__,
+        COND_RETURN_AND_MSG_OUTER((attrsIdxs[i] >= count), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Batch asynchronous memory copy",
             RtFmtMsg("attrsIdxs[%zu] or count", i),
             RtFmtMsg("Each entry in attrsIdxs must be less than the parameter count. Parameter attrsIdxs[%zu] is %zu, and count is %zu",
                 i, attrsIdxs[i], count));
@@ -6334,15 +6331,15 @@ rtError_t ApiErrorDecorator::MemcpyBatchAsync(void** const dsts, const size_t* c
 
 rtError_t ApiErrorDecorator::GetCmoDescSize(size_t *size)
 {
-    NULL_PTR_RETURN_MSG_OUTER(size, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(size, RT_ERROR_INVALID_VALUE, "Obtaining the memory size used by the cache memory descriptor of the current device");
 
     return impl_->GetCmoDescSize(size);
 }
 
 rtError_t ApiErrorDecorator::SetCmoDesc(rtCmoDesc_t cmoDesc, void *srcAddr, size_t srcLen)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cmoDesc, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(srcAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cmoDesc, RT_ERROR_INVALID_VALUE, "Setting the cache memory descriptor");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(srcAddr, RT_ERROR_INVALID_VALUE, "Setting the cache memory descriptor");
     ZERO_RETURN_AND_MSG_OUTER(srcLen);
 
     return impl_->SetCmoDesc(cmoDesc, srcAddr, srcLen);
@@ -6350,8 +6347,8 @@ rtError_t ApiErrorDecorator::SetCmoDesc(rtCmoDesc_t cmoDesc, void *srcAddr, size
 
 rtError_t ApiErrorDecorator::ModelGetName(Model * const mdl, const uint32_t maxLen, char_t * const mdlName)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(mdlName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining the name of a model running instance");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdlName, RT_ERROR_INVALID_VALUE, "Obtaining the name of a model running instance");
     ZERO_RETURN_AND_MSG_OUTER(maxLen);
     const rtError_t error = impl_->ModelGetName(mdl, maxLen, mdlName);
     ERROR_RETURN(error, "get model name failed");
@@ -6360,8 +6357,8 @@ rtError_t ApiErrorDecorator::ModelGetName(Model * const mdl, const uint32_t maxL
 
 rtError_t ApiErrorDecorator::FuncGetName(const Kernel * const kernel, const uint32_t maxLen, char_t * const name) 
 {
-    NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernel, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function name");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(maxLen < (kernel->Name_().length() + 1U), 
         RT_ERROR_INVALID_VALUE, maxLen, "greater than or equal to " + std::to_string(kernel->Name_().length() + 1U));
     const rtError_t error = impl_->FuncGetName(kernel, maxLen, name);
@@ -6371,7 +6368,7 @@ rtError_t ApiErrorDecorator::FuncGetName(const Kernel * const kernel, const uint
 
 rtError_t ApiErrorDecorator::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(errorInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(errorInfo, RT_ERROR_INVALID_VALUE, "Obtaining detailed error information");
     const Runtime * const rtInstance = Runtime::Instance();
     uint32_t realDeviceId = 0U;
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
@@ -6391,7 +6388,7 @@ rtError_t ApiErrorDecorator::GetErrorVerbose(const uint32_t deviceId, rtErrorInf
 
 rtError_t ApiErrorDecorator::RepairError(const uint32_t deviceId, const rtErrorInfo * const errorInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(errorInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(errorInfo, RT_ERROR_INVALID_VALUE, "Rectifying the device faults");
     if (errorInfo->tryRepair == 0U) {
         RT_LOG(RT_LOG_ERROR, "Repair flag is invalid [%u], should be 1.", errorInfo->tryRepair);
         return RT_ERROR_INVALID_VALUE;
@@ -6415,14 +6412,14 @@ rtError_t ApiErrorDecorator::RepairError(const uint32_t deviceId, const rtErrorI
 
 rtError_t ApiErrorDecorator::CheckMemType(void **addrs, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t reserve)
 {
-    NULL_PTR_RETURN_MSG_OUTER(checkResult, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(checkResult, RT_ERROR_INVALID_VALUE, "Device memory type check");
     *checkResult = 0U;
-    NULL_PTR_RETURN_MSG_OUTER(addrs, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addrs, RT_ERROR_INVALID_VALUE, "Device memory type check");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(reserve != 0U, RT_ERROR_INVALID_VALUE, reserve, "0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(size <= 0U, RT_ERROR_INVALID_VALUE, size, "greater than 0");
     constexpr  uint32_t tmpMemType = RT_MEM_MASK_DEV_TYPE | RT_MEM_MASK_RSVD_TYPE | RT_MEM_MASK_DVPP_TYPE;
     COND_RETURN_AND_MSG_OUTER((memType & ~tmpMemType) != 0U, RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-        __func__, RtFmtMsg("Parameter memType value %u", memType),
+        "Device memory type check", RtFmtMsg("Parameter memType value %u", memType),
         "Parameter memType only supports OR combinations of one or more of "
         "RT_MEM_MASK_DEV_TYPE(0x2U), RT_MEM_MASK_RSVD_TYPE(0x20U), and RT_MEM_MASK_DVPP_TYPE(0x8U)");
     return impl_->CheckMemType(addrs, size, memType, checkResult, reserve);
@@ -6431,9 +6428,9 @@ rtError_t ApiErrorDecorator::CheckMemType(void **addrs, uint32_t size, uint32_t 
 rtError_t ApiErrorDecorator::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
                                              const size_t inputNum, size_t * const outputNum)
 {
-    NULL_PTR_RETURN_MSG_OUTER(outputNum, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(outputNum, RT_ERROR_INVALID_VALUE, "Querying the memory usage of a component");
     *outputNum = 0U;
-    NULL_PTR_RETURN_MSG_OUTER(memUsageInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memUsageInfo, RT_ERROR_INVALID_VALUE, "Querying the memory usage of a component");
     ZERO_RETURN_AND_MSG_OUTER(inputNum);
     rtError_t error;
     uint32_t realDeviceId = 0U;
@@ -6448,16 +6445,16 @@ rtError_t ApiErrorDecorator::GetMemUsageInfo(const uint32_t deviceId, rtMemUsage
 
 rtError_t ApiErrorDecorator::LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData)
 {
-    NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callBackFunc, RT_ERROR_INVALID_VALUE, "Adding a host callback function to the stream task queue");
     COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_USER),
-        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, __func__,
+        RT_ERROR_SUBSCRIBE_STREAM, ErrorCode::EE1016, "Adding a host callback function to the stream task queue",
         RtFmtMsg("The stream (stream_id=%d) is in the host callback process and cannot call rtsLaunchHostFunc", stm->Id_()));
     return impl_->LaunchHostFunc(stm, callBackFunc, fnData);
 }
 
 rtError_t ApiErrorDecorator::CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(infoPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(infoPtr, RT_ERROR_INVALID_VALUE, "Caching the operator information of the latest task");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((infoSize == 0U || infoSize > MAX_SHAPE_INFO_SIZE), RT_ERROR_INVALID_VALUE, 
         infoSize, "(0, " + std::to_string(MAX_SHAPE_INFO_SIZE) + "]");
     return impl_->CacheLastTaskOpInfo(infoPtr, infoSize);
@@ -6465,7 +6462,7 @@ rtError_t ApiErrorDecorator::CacheLastTaskOpInfo(const void * const infoPtr, con
 
 rtError_t ApiErrorDecorator::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(extendInfoPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(extendInfoPtr, RT_ERROR_INVALID_VALUE, "Caching the extended information of the latest task");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((infoSize == 0U), RT_ERROR_INVALID_VALUE, infoSize, "not equal to 0");
     constexpr size_t maxExtendInfoSize = 4096U;
     if (infoSize > maxExtendInfoSize) {
@@ -6479,8 +6476,8 @@ rtError_t ApiErrorDecorator::CacheLastTaskExtendInfo(const char* const extendInf
 
 rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(attrValue, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Obtaining kernel function attributes");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((static_cast<uint32_t>(attrType) < RT_FUNCTION_ATTR_KERNEL_TYPE) ||
         (static_cast<uint32_t>(attrType) >= RT_FUNCTION_ATTR_MAX)), RT_ERROR_INVALID_VALUE, 
         attrType, "[" + std::to_string(RT_FUNCTION_ATTR_KERNEL_TYPE) + ", " + std::to_string(RT_FUNCTION_ATTR_MAX) + ")");
@@ -6496,15 +6493,15 @@ rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFun
         const Kernel *const kernel = RtPtrToPtr<Kernel *>(funcHandle);
         const KernelRegisterType kernelRegType = kernel->GetKernelRegisterType();
         COND_RETURN_AND_MSG_OUTER(kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-            __func__, "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
+            "Obtaining kernel function attributes", "funcHandle", "The funcHandle obtained after registering the AI CPU operator is not supported");
     }
     return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
 }
 
 rtError_t ApiErrorDecorator::FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the binary handle of an operator");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the binary handle of an operator");
     return impl_->FunctionGetBinary(funcHandle, binHandle);
 }
 
@@ -6513,7 +6510,7 @@ rtError_t ApiErrorDecorator::FunctionGetParamCount(const Kernel *funcHandle, siz
     COND_RETURN_WARN(funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_FEATURE_NOT_SUPPORT,
         "AI CPU kernels are not supported.");
     COND_RETURN_AND_MSG_OUTER(!funcHandle->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "funcHandle", "Kernel does not have parameter information");
+        "Obtaining the number of parameters from the kernel function handle", "funcHandle", "Kernel does not have parameter information");
     
     return impl_->FunctionGetParamCount(funcHandle, paramCount);
 }
@@ -6524,7 +6521,7 @@ rtError_t ApiErrorDecorator::FunctionGetParamInfo(const Kernel *funcHandle, size
     COND_RETURN_WARN(funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_FEATURE_NOT_SUPPORT,
         "AI CPU kernels are not supported.");
     COND_RETURN_AND_MSG_OUTER(!funcHandle->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        __func__, "funcHandle", "Kernel does not have parameter information");
+        "Obtaining parameter information from the kernel function handle", "funcHandle", "Kernel does not have parameter information");
     if (paramIndex >= funcHandle->GetParamCount()) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, "Obtaining parameter information from the kernel function handle", paramIndex, "paramIndex",
                 "[0, " + std::to_string(funcHandle->GetParamCount()) + ")");
@@ -6536,8 +6533,8 @@ rtError_t ApiErrorDecorator::FunctionGetParamInfo(const Kernel *funcHandle, size
 rtError_t ApiErrorDecorator::FunctionGetAvailDynUbufPerBlock(Kernel *funcHandle, uint32_t flags,
                                                              size_t *dynamicUbufSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(dynamicUbufSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(funcHandle, RT_ERROR_INVALID_VALUE, "Querying the maximum size of the dynamic UB buffer that can be set for a kernel function");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dynamicUbufSize, RT_ERROR_INVALID_VALUE, "Querying the maximum size of the dynamic UB buffer that can be set for a kernel function");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flags != 0U), RT_ERROR_INVALID_VALUE, flags, "0");
 
     Program * const prog = funcHandle->Program_();
@@ -6548,29 +6545,29 @@ rtError_t ApiErrorDecorator::FunctionGetAvailDynUbufPerBlock(Kernel *funcHandle,
 
 rtError_t ApiErrorDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Obtaining the handle of the physical memory based on the virtual memory address");
     return impl_->MemRetainAllocationHandle(virPtr, handle);
 }
 
 rtError_t ApiErrorDecorator::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop)
 {
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Querying the memory attribute information based on the handle of the physical memory information");
     return impl_->MemGetAllocationPropertiesFromHandle(handle, prop);
 }
 
 rtError_t ApiErrorDecorator::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Obtaining the start address and size of the memory block to which the address to be queried belongs");
     COND_RETURN_AND_MSG_OUTER((pbase == nullptr) && (psize == nullptr), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1022, __func__, "nullptr and nullptr", "pbase and psize",
+        ErrorCode::EE1022, "Obtaining the start address and size of the memory block to which the address to be queried belongs", "nullptr and nullptr", "pbase and psize",
         "Parameters pbase and psize cannot both be nullptr");
     return impl_->MemGetAddressRange(ptr, pbase, psize);
 }
 
 rtError_t ApiErrorDecorator::MemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx)
 {
-    NULL_PTR_RETURN_MSG_OUTER(virPtrDst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(virPtrSrc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtrDst, RT_ERROR_INVALID_VALUE, "Mapping the target virtual address to the physical address corresponding to the source virtual address");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtrSrc, RT_ERROR_INVALID_VALUE, "Mapping the target virtual address to the physical address corresponding to the source virtual address");
     ZERO_RETURN_AND_MSG_OUTER(size);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(linkIdx > RT_MEM_LINK_IDX_1, RT_ERROR_INVALID_VALUE, linkIdx,
         "[" + std::to_string(RT_MEM_LINK_IDX_0) + ", " + std::to_string(RT_MEM_LINK_IDX_1) + "]");
@@ -6579,36 +6576,36 @@ rtError_t ApiErrorDecorator::MemMapSelectedLink(void *virPtrDst, size_t size, vo
 
 rtError_t ApiErrorDecorator::BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData)
 {
-    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, "Registering a callback function for an operator execution exception");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(callback, RT_ERROR_INVALID_VALUE, "Registering a callback function for an operator execution exception");
     /* userData为预留字段, 当前不进行非空校验 */
     return impl_->BinarySetExceptionCallback(binHandle, callback, userData);
 }
 
 rtError_t ApiErrorDecorator::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function handle from the exception information");
     return impl_->GetFuncHandleFromExceptionInfo(info, funcHandle);
 }
 
 rtError_t ApiErrorDecorator::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(params, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining task parameter information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params, RT_ERROR_INVALID_VALUE, "Obtaining task parameter information");
     return impl_->TaskGetParams(task, params);
 }
 
 rtError_t ApiErrorDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(params, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Setting task parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params, RT_ERROR_INVALID_VALUE, "Setting task parameters");
     return impl_->TaskSetParams(task, params);
 }
 
 rtError_t ApiErrorDecorator::KernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(attrValue, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining the launch configuration attributes of a kernel task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(attrValue, RT_ERROR_INVALID_VALUE, "Obtaining the launch configuration attributes of a kernel task");
     return impl_->KernelTaskGetAttribute(task, attrId, attrValue);
 }
 
@@ -6616,14 +6613,14 @@ rtError_t ApiErrorDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, 
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type < RT_KERNEL_DFX_INFO_DEFAULT || type > RT_KERNEL_DFX_INFO_BLOCK_INFO),
         RT_ERROR_INVALID_VALUE, type, "[" + std::to_string(RT_KERNEL_DFX_INFO_DEFAULT) + ", " + std::to_string(RT_KERNEL_DFX_INFO_BLOCK_INFO) + "]");
-    NULL_PTR_RETURN_MSG_OUTER(func, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(func, RT_ERROR_INVALID_VALUE, "Registering the dump callback function");
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
 rtError_t ApiErrorDecorator::ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(numStreams, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining the stream associated with a model running instance");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(numStreams, RT_ERROR_INVALID_VALUE, "Obtaining the stream associated with a model running instance");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         const CaptureModel *captureModel = dynamic_cast<const CaptureModel *>(mdl);
         if (captureModel == nullptr) {
@@ -6638,28 +6635,28 @@ rtError_t ApiErrorDecorator::ModelGetStreams(const Model * const mdl, Stream **s
 
 rtError_t ApiErrorDecorator::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(numTasks, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining all tasks in a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(numTasks, RT_ERROR_INVALID_VALUE, "Obtaining all tasks in a stream");
     return impl_->StreamGetTasks(stm, tasks, numTasks);
 }
 
 rtError_t ApiErrorDecorator::TaskGetType(rtTask_t task, rtTaskType *type)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(type, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining the task type");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(type, RT_ERROR_INVALID_VALUE, "Obtaining the task type");
     return impl_->TaskGetType(task, type);
 }
 
 rtError_t ApiErrorDecorator::TaskGetSeqId(rtTask_t task, uint32_t *id)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(id, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(id, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
     return impl_->TaskGetSeqId(task, id);
 }
 
 rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
 {
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Setting the status of a specified task to disabled");
     return impl_->ModelTaskDisable(task);
 }
 
@@ -6668,7 +6665,7 @@ static rtError_t ValidateAtomicOperations(const rtAtomicOperation* operations, u
     for (uint32_t i = 0U; i < count; ++i) {
         COND_RETURN_AND_MSG_OUTER(
             (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD || operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Validating atomic operations",
             "UNKNOWN(" + std::to_string(static_cast<int32_t>(operations[i])) + ")",
             "operations[" + std::to_string(i) + "]",
             "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
@@ -6680,8 +6677,8 @@ static rtError_t ValidateAtomicOperations(const rtAtomicOperation* operations, u
 rtError_t ApiErrorDecorator::GetHostAtomicCapabilities(
     uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(operations, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(capabilities, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between a specified device and the host");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(operations, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between a specified device and the host");
     ZERO_RETURN_AND_MSG_OUTER(count);
 
     int32_t realDeviceId;
@@ -6704,8 +6701,8 @@ rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
     uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
     int32_t dstDeviceId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(operations, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(capabilities, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(operations, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
     ZERO_RETURN_AND_MSG_OUTER(count);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (srcDeviceId == dstDeviceId), RT_ERROR_DEVICE_ID, srcDeviceId, "srcDeviceId must be different from dstDeviceId");
@@ -6737,7 +6734,7 @@ rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
 
 rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)
 {
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(val, RT_ERROR_INVALID_VALUE, "Querying device information based on the specified attribute");
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,

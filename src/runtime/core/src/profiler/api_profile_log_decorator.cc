@@ -561,8 +561,8 @@ rtError_t ApiProfileLogDecorator::ContextSetCurrent(Context * const inCtx)
 
 rtError_t ApiProfileLogDecorator::NameStream(Stream * const stm, const char_t * const name)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Setting the stream name");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Setting the stream name");
 
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
     if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {

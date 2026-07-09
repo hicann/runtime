@@ -157,7 +157,7 @@ rtError_t XpuStream::StarsGetPublicTaskHead(
     (void)isTaskBind;
     COND_RETURN_AND_MSG_INNER(delTaskId == nullptr, RT_ERROR_TASK_NULL,
         "delTaskId is null, stream_id=%d.", streamId_);
-    NULL_PTR_RETURN_MSG_OUTER(taskResMang_, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskResMang_, RT_ERROR_INVALID_VALUE, "Obtaining the ID of the next task to be reclaimed from the stream task queue");
     TaskResManageDavid *taskRes = RtPtrToPtr<TaskResManageDavid *>(taskResMang_);
     const uint32_t taskResTail = taskRes->GetTaskPosTail();
     const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);

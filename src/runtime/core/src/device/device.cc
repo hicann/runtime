@@ -164,7 +164,7 @@ rtError_t GroupDevice::GetGroupInfo(const int32_t grpId, rtGroupInfo_t * const i
 
 rtError_t GroupDevice::GetGroupCount(uint32_t * const cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of available computing power groups");
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_INFO_SETUP_DOT_ON_DEMIND)) {
         (void)QueryGroupInfo();

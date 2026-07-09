@@ -222,9 +222,9 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
     COND_RETURN_WITH_NOLOG((isSupportResult != RT_ERROR_NONE), isSupportResult);
 
     Model* const mdl = stm->Model_();
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_MODEL_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_MODEL_NULL, "Checking whether the capture model is updatable");
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1016, __func__, "Non ACL Graph mode is not supported");
+        ErrorCode::EE1016, "Checking whether the capture model is updatable", "Non ACL Graph mode is not supported");
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
         RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support update operations");

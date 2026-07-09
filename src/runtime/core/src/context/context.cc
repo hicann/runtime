@@ -1488,7 +1488,7 @@ rtError_t Context::LaunchSqeUpdateTask(const void * const src, const uint64_t cp
     TaskInfo submitTask = {};
     rtError_t errorReason;
 
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
 
     TaskInfo *rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
     NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);
@@ -2067,13 +2067,13 @@ rtError_t Context::ModelAddEndGraph(Model * const mdl, Stream * const stm, const
     }
     const uint32_t endGraphNum = mdl->EndGraphNum_();
     COND_RETURN_AND_MSG_OUTER(
-        endGraphNum >= 1U, RT_ERROR_MODEL_ENDGRAPH, ErrorCode::EE1011, __func__, endGraphNum, "endGraphNum",
+        endGraphNum >= 1U, RT_ERROR_MODEL_ENDGRAPH, ErrorCode::EE1011, "Adding an EndGraph flag to the stream bound to the model", endGraphNum, "endGraphNum",
         "The model must have only one end graph");
 
     if (device_->IsStarsPlatform() && (modelExecuteType != EXECUTOR_AICPU)) {
         const bool isBindThisModel = ((stm->Model_() != nullptr) && (stm->Model_()->Id_() == mdl->Id_()));
         COND_RETURN_AND_MSG_OUTER(
-            (stm->GetModelNum() == 0) || (!isBindThisModel), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, __func__,
+            (stm->GetModelNum() == 0) || (!isBindThisModel), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, "Adding an EndGraph flag to the stream bound to the model",
             "stream",
             "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
 
@@ -2195,14 +2195,14 @@ rtError_t Context::ModelExit(Model * const mdl, Stream * const stm)
     rtError_t error;
     const uint32_t modelExitNum = mdl->ModelExitNum_();
     COND_RETURN_AND_MSG_OUTER(
-        modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, __func__, modelExitNum, "modelExitNum",
+        modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum",
         "The model must exit only once");
     stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     COND_RETURN_AND_MSG_OUTER(
-        stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND, ErrorCode::EE1017, __func__, "stream",
+        stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND, ErrorCode::EE1017, "Model exiting", "stream",
         "Stream " + std::to_string(stm->Id_()) + " must be bound to a model");
     COND_RETURN_AND_MSG_OUTER(
-        stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID, ErrorCode::EE1017, __func__, "stream",
+        stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID, ErrorCode::EE1017, "Model exiting", "stream",
         "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
 
     TaskInfo submitTask = {};
@@ -2695,7 +2695,7 @@ rtError_t Context::StreamClear(const Stream * const stm, rtClearStep_t step) con
     const int32_t streamId = stm->Id_();
 
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, __func__, "Clearing model stream is not supported");
+        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, "Clearing tasks in a stream", "Clearing model stream is not supported");
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         return device_->GetCtrlSQ().SendStreamClearMsg(stm, step, taskGenCallback_);
     }
@@ -2737,7 +2737,7 @@ rtError_t Context::StreamAbort(Stream * const stm)
         stm->Id_(), stm->GetSqId(), stm->GetCqId());
     rtError_t ret = RT_ERROR_NONE;
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, __func__,
+        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, "Aborting tasks in a stream",
         RtFmtMsg("Aborting stream (stream_id=%d) that is already bound to a model (model_id=%u) is not supported",
             stm->Id_(), stm->Model_()->Id_()));
     //runtime-ts compatibility check;
@@ -3001,7 +3001,7 @@ rtError_t Context::DebugSetDumpMode(const uint64_t mode)
 
 rtError_t Context::DebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo)
 {
-    NULL_PTR_RETURN_MSG_OUTER(coreInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(coreInfo, RT_ERROR_INVALID_VALUE, "Obtaining the physical ID of the stalled AI Core in the current process");
     COND_RETURN_ERROR((!device_->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disable!");
     RT_LOG(RT_LOG_INFO, "Start to get core info.");
     RtDebugSendInfo sendInfo = {};

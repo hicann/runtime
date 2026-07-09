@@ -910,7 +910,7 @@ rtError_t RawDevice::AllocCustomerStackPhyBase()
     }
 
     auto props = GetDevProperties();
-    COND_RETURN_AND_MSG_OUTER(customerStackSize > props.maxCustomerStackSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, 
+    COND_RETURN_AND_MSG_OUTER(customerStackSize > props.maxCustomerStackSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Allocating physical memory with a customized stack size", 
         std::to_string(customerStackSize), "customerStackSize", "The AI Core stack size " + std::to_string(customerStackSize) +
         " set by calling rtDeviceSetLimit must be less than or equal to " + std::to_string(props.maxCustomerStackSize));
 

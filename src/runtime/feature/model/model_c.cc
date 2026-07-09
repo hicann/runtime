@@ -36,7 +36,7 @@ namespace runtime {
 rtError_t ModelDebugRegister(Model * const mdl, const uint32_t flag, const void * const addr,
     uint32_t * const streamId, uint32_t * const taskId, Stream * const dftStm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dftStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Registering a debugging task for a model");
     COND_RETURN_WARN(mdl->IsDebugRegister(),
         RT_ERROR_DEBUG_REGISTER_FAILED, "Failed to debug register model repeatedly.");
 
@@ -85,7 +85,7 @@ rtError_t ModelDebugRegister(Model * const mdl, const uint32_t flag, const void 
 
 rtError_t ModelDebugUnRegister(Model * const mdl, Stream * const dftStm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(dftStm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dftStm, RT_ERROR_STREAM_NULL, "Deregistering a debugging task for a model");
     COND_RETURN_WARN(!mdl->IsDebugRegister(),
         RT_ERROR_DEBUG_UNREGISTER_FAILED, "Failed to debug unregister model. The model is not debug registered.");
     rtError_t error = RT_ERROR_NONE;
