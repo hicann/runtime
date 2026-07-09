@@ -71,7 +71,18 @@ private:
 #endif
     void UninitHostMoveBuffer();
     int32_t WriteToHostMoveBuffer(const MsprofAdditionalInfo *data, size_t dataSize);
+    int32_t WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo *data, uint32_t recordCount);
     int32_t DrainBufferToHostMove();
+
+    // One step of the host-move drain loop: keep draining, sleep-and-retry, or stop on a fatal error.
+    enum class HostMoveStep : int32_t {
+        OK = 0,
+        RETRY,
+        FATAL,
+    };
+    HostMoveStep AcquireHostMoveFreeSlots(uint32_t &freeSlots);
+    HostMoveStep MoveOneBatchToHostMove(size_t maxBatchRecords, uint32_t freeSlots,
+        uint64_t &totalWriteLen);
 
 private:
     volatile bool stopped_;

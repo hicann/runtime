@@ -139,17 +139,15 @@ public:
             }
 
             currWriteCursor = lastWriteIndex_.load();
-            currReadCursor = readIndex_.load();
-            nextWriteCursor = (currWriteCursor + dataSize) & mask_;
-            
-            // check whether there is sufficient space
-            availableSpace = (currWriteCursor >= currReadCursor) ? 
-                                  (capacity_ - currWriteCursor + currReadCursor) : 
-                                  (currReadCursor - currWriteCursor);
-            
+            currReadCursor = readIndex_.load(std::memory_order_acquire);
+            nextWriteCursor = currWriteCursor + dataSize;
+
+            // check whether there is sufficient space (unbounded counters)
+            availableSpace = capacity_ - (currWriteCursor - currReadCursor);
+
             if (availableSpace < dataSize) {
                 MSPROF_LOGW("Variable block buffer about to overflow, buffer name: %s, buffer capacity: %u, "
-                          "currWriteCursor: %zu, currReadCursor: %zu, dataSize: %zu", 
+                          "currWriteCursor: %zu, currReadCursor: %zu, dataSize: %zu",
                           name_.c_str(), capacity_, currWriteCursor, currReadCursor, dataSize);
                 usleep(VARIABLE_BLOCK_PUSH_WAIT_TIME);
             }
@@ -157,7 +155,7 @@ public:
                 !lastWriteIndex_.compare_exchange_strong(currWriteCursor, nextWriteCursor));
 
         size_t writePos = currWriteCursor & mask_;
-        
+
         if (writePos + dataSize <= capacity_) {
             (void)memcpy_s(dataBuffer_ + writePos, dataSize, data, dataSize);
         } else {
@@ -167,7 +165,16 @@ public:
             (void)memcpy_s(dataBuffer_, frontSize, data + endSize, frontSize);
         }
 
-        writeIndex_.fetch_add(dataSize);
+        // Commit in reservation order: only publish after the previous segment is published.
+        // This keeps writeIndex_ as a "contiguous & fully-written" boundary, so BatchPop never
+        // reads a region whose memcpy has not completed. The release here pairs with the
+        // acquire load of writeIndex_ in BatchPop to guarantee the data is visible.
+        size_t expected = currWriteCursor;
+        while (!writeIndex_.compare_exchange_weak(expected, nextWriteCursor,
+                                                  std::memory_order_release,
+                                                  std::memory_order_relaxed)) {
+            expected = currWriteCursor; // previous producer has not committed yet, spin
+        }
         return MSPROF_ERROR_NONE;
     }
     /**
@@ -182,14 +189,16 @@ public:
         }
 
         size_t currReadCursor = readIndex_.load(std::memory_order_relaxed);
-        size_t currWriteCursor = writeIndex_.load(std::memory_order_relaxed);
-        size_t currIndex = currReadCursor & mask_;
-        size_t outIndex = currWriteCursor & mask_;
-        if (currIndex == outIndex) {
+        size_t currWriteCursor = writeIndex_.load(std::memory_order_acquire);
+        if (currReadCursor == currWriteCursor) {
             return nullptr;
         }
-        if (currIndex < outIndex) {
-            popSize = outIndex - currIndex;
+
+        size_t currIndex = currReadCursor & mask_;
+        size_t avail = currWriteCursor - currReadCursor;
+        // do not cross the ring boundary in a single pop; return the contiguous tail first
+        if (currIndex + avail <= capacity_) {
+            popSize = avail;
         } else {
             popSize = capacity_ - currIndex;
         }
@@ -208,7 +217,7 @@ public:
         }
 
         (void)memset_s(popPtr, popSize, 0, popSize);
-        readIndex_.fetch_add(popSize);
+        readIndex_.fetch_add(popSize, std::memory_order_release);
     }
     /**
     * @brief Get used size of variable block buffer

@@ -32,6 +32,8 @@ constexpr uint64_t START_SWITCH = 1U;       // define by runtime
 constexpr uint32_t AICPU_SWITCH = 2U;       // define by runtime
 constexpr uint32_t MAX_ADD_REPORT_SIZE = 131072; // 512 * sizeof(MsprofAdditionalInfo)
 constexpr uint64_t HOST_MOVE_BUFFER_SIZE = 4 * 1024 * 1024;
+constexpr uint64_t NS_PER_SECOND = 1000 * 1000 * 1000; // nanoseconds per second
+constexpr uint64_t BYTES_PER_MB = 1024 * 1024;         // bytes per MB
 const char * const AICPU_EVENT_GRP_NAME = "prof_aicpu_grp";
 const char * const AI_CUSTOM_CPU_EVENT_GRP_NAME = "prof_cus_grp";
 const char * const AICPU_PROFILING_REPORT_THREAD_NAME = "Prof_Reporter";
@@ -348,53 +350,104 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
     return ret;
 }
 
+// Validate the host-move ring pointers and compute the number of free slots available for writing.
+// Returns FATAL on a corrupted ring (caller should stop), RETRY when the ring is full and the
+// caller should sleep, or OK with freeSlots set when there is room to write.
+DevprofDrvAicpu::HostMoveStep DevprofDrvAicpu::AcquireHostMoveFreeSlots(uint32_t &freeSlots)
+{
+    // recordSize is sizeof(...) so it is a compile-time non-zero constant; the division is safe.
+    const uint32_t recordSize = static_cast<uint32_t>(sizeof(MsprofAdditionalInfo));
+    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
+    uint32_t rptr = *hostMoveRptr_;
+    uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / recordSize);
+    if (writeIdx >= maxIdx || rptr >= maxIdx) {
+        MSPROF_LOGE("Invalid wptr/rptr, wptr=%u rptr=%u max=%u", writeIdx, rptr, maxIdx);
+        stopped_ = true;
+        MSPROF_LOGE("Discarded pending data size=%zu in host move buffer", aicpuAdditionalBuffer_.GetUsedSize());
+        return HostMoveStep::FATAL;
+    }
+
+    // Free slots in the ring, keeping a one-slot gap so wptr never catches up to rptr (which
+    // would look empty to the consumer). Full when usedSlots reaches maxIdx - 1.
+    uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
+    freeSlots = (maxIdx - 1 > usedSlots) ? (maxIdx - 1 - usedSlots) : 0;
+    if (freeSlots == 0) {
+        MSPROF_LOGW("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
+        if (stopped_) {
+            MSPROF_LOGE("Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
+            return HostMoveStep::FATAL;
+        }
+        return HostMoveStep::RETRY;
+    }
+    return HostMoveStep::OK;
+}
+
+// Pop one batch from the source buffer and write it into the host-move ring, accumulating stats.
+// Returns RETRY when nothing could be popped (caller should sleep), otherwise OK.
+DevprofDrvAicpu::HostMoveStep DevprofDrvAicpu::MoveOneBatchToHostMove(size_t maxBatchRecords,
+    uint32_t freeSlots, uint64_t &totalWriteLen)
+{
+    // recordSize is sizeof(...) so it is a compile-time non-zero constant; the division is safe.
+    const size_t recordSize = sizeof(MsprofAdditionalInfo);
+    // Pop as much as is available, capped by the per-batch limit and the free ring slots.
+    size_t wantRecords = std::min(aicpuAdditionalBuffer_.GetUsedSize(), maxBatchRecords);
+    wantRecords = std::min(wantRecords, static_cast<size_t>(freeSlots));
+    size_t popSize = wantRecords * recordSize;
+    // BatchPop may shrink popSize to the contiguous span before the source ring wraps; the
+    // wrapped remainder is handled by the next loop iteration.
+    void *outPtr = aicpuAdditionalBuffer_.BatchPop(popSize, stopped_);
+    if (outPtr == nullptr) {
+        return HostMoveStep::RETRY;
+    }
+
+    uint32_t recordCount = static_cast<uint32_t>(popSize / recordSize);
+    uint64_t batchStartTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
+    int32_t ret = WriteBatchToHostMoveBuffer(static_cast<const MsprofAdditionalInfo *>(outPtr), recordCount);
+    uint64_t batchEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Write batch to host move buffer failed, recordCount=%u", recordCount);
+    } else {
+        totalWriteLen += popSize;
+        uint64_t costNs = batchEndTime - batchStartTime;
+        uint64_t rateMBps = (costNs > 0) ? (static_cast<uint64_t>(popSize) * NS_PER_SECOND / costNs / BYTES_PER_MB) : 0;
+        MSPROF_LOGI("Host move batch: records=%u, size=%zuB, cost=%lluns, rate=%lluMB/s",
+            recordCount, popSize, costNs, rateMBps);
+    }
+    aicpuAdditionalBuffer_.BatchPopBufferIndexShift(outPtr, popSize);
+    return HostMoveStep::OK;
+}
+
 int32_t DevprofDrvAicpu::DrainBufferToHostMove()
 {
+    // Move up to 512K-256B per batch (aligned down to a whole number of records), mirroring the
+    // driver report cap in RunNormalMode, instead of one record at a time. The divisor is a
+    // compile-time non-zero sizeof, so the division cannot divide by zero.
+    const size_t maxBatchRecords = analysis::dvvp::common::queue::MAX_DRV_REPORT_SIZE / sizeof(MsprofAdditionalInfo);
     uint64_t totalWriteLen = 0;
+
     while (!stopped_ || (aicpuAdditionalBuffer_.GetUsedSize() != 0)) {
         if (aicpuAdditionalBuffer_.GetUsedSize() == 0) {
             (void)OsalSleep(WAIT_DATA_TIME);
             continue;
         }
 
-        uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
-        uint32_t rptr = *hostMoveRptr_;
-        uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / sizeof(MsprofAdditionalInfo));
-        if (writeIdx >= maxIdx || rptr >= maxIdx) {
-            MSPROF_LOGE("Invalid wptr/rptr, wptr=%u rptr=%u max=%u", writeIdx, rptr, maxIdx);
-            stopped_ = true;
-            MSPROF_LOGE("Discarded pending data size=%zu in host move buffer", aicpuAdditionalBuffer_.GetUsedSize());
+        uint32_t freeSlots = 0;
+        HostMoveStep slotStep = AcquireHostMoveFreeSlots(freeSlots);
+        if (slotStep == HostMoveStep::FATAL) {
             return PROFILING_FAILED;
         }
-
-        uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
-        if (usedSlots >= maxIdx - 1) {
-            MSPROF_LOGW("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
-            if (stopped_) {
-                MSPROF_LOGE("Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
-                return PROFILING_FAILED;
-            }
+        if (slotStep == HostMoveStep::RETRY) {
             (void)OsalSleep(WAIT_DATA_TIME);
             continue;
         }
 
-        size_t outSize = sizeof(MsprofAdditionalInfo);
-        void *outPtr = aicpuAdditionalBuffer_.BatchPop(outSize, stopped_);
-        if (outPtr == nullptr) {
+        if (MoveOneBatchToHostMove(maxBatchRecords, freeSlots, totalWriteLen) ==
+            HostMoveStep::RETRY) {
             (void)OsalSleep(WAIT_DRV_TIME);
             continue;
         }
-
-        int32_t ret = WriteToHostMoveBuffer(static_cast<const MsprofAdditionalInfo *>(outPtr),
-                      sizeof(MsprofAdditionalInfo));
-        if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Write to host move buffer failed");
-        } else {
-            totalWriteLen += sizeof(MsprofAdditionalInfo);
-        }
-        aicpuAdditionalBuffer_.BatchPopBufferIndexShift(outPtr, sizeof(MsprofAdditionalInfo));
     }
-    MSPROF_LOGI("Host move: write pointer wrote total length=%lu bytes to ring buffer", totalWriteLen);
+    MSPROF_LOGI("Host move: flushed total=%lluB", totalWriteLen);
     return PROFILING_SUCCESS;
 }
 
@@ -560,6 +613,58 @@ int32_t DevprofDrvAicpu::WriteToHostMoveBuffer(const MsprofAdditionalInfo *data,
     *hostMoveWptr_ = newWriteIdx;
 
     MSPROF_LOGD("Write to host move buffer success, writeIdx=%u -> %u", writeIdx, newWriteIdx);
+    return PROFILING_SUCCESS;
+}
+
+// Write a contiguous batch of records into the host-move ring buffer in as few memcpy_s calls as
+// possible (one, or two when the batch wraps the ring end). The caller guarantees recordCount does
+// not exceed the free slots, so this never overruns unconsumed data.
+int32_t DevprofDrvAicpu::WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo *data, uint32_t recordCount)
+{
+    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || data == nullptr || recordCount == 0) {
+        MSPROF_LOGE("Write batch to host move buffer input invalid");
+        return PROFILING_FAILED;
+    }
+ 
+    const uint32_t recordSize = static_cast<uint32_t>(sizeof(MsprofAdditionalInfo));
+    const uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / recordSize);
+    // recordCount must stay strictly below maxIdx: a full ring (recordCount == maxIdx) would make
+    // newWriteIdx wrap back to writeIdx, which the consumer reads as wptr == rptr (empty) and
+    // silently drops the whole batch. The one-slot gap is enforced here as the last line of defense.
+    if (maxIdx == 0 || recordCount >= maxIdx) {
+        MSPROF_LOGE("Write batch to host move buffer failed, recordCount=%u, maxIdx=%u", recordCount, maxIdx);
+        return PROFILING_FAILED;
+    }
+ 
+    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
+    const uint32_t bufferLimit = static_cast<uint32_t>(hostMoveBufferSize_);
+ 
+    // Split the batch at the ring end: [writeIdx, maxIdx) first, then wrap to [0, ...) if needed.
+    const uint32_t firstCount = std::min(recordCount, maxIdx - writeIdx);
+    const uint32_t writeOffset = writeIdx * recordSize;
+    errno_t ret = memcpy_s(hostMoveBuffer_ + writeOffset, bufferLimit - writeOffset,
+        data, static_cast<size_t>(firstCount) * recordSize);
+    if (ret != EOK) {
+        MSPROF_LOGE("Memcpy batch to host move buffer failed, ret: %d, firstCount: %u", ret, firstCount);
+        return PROFILING_FAILED;
+    }
+    const uint32_t secondCount = recordCount - firstCount;
+    if (secondCount > 0) {
+        ret = memcpy_s(hostMoveBuffer_, bufferLimit, data + firstCount,
+            static_cast<size_t>(secondCount) * recordSize);
+        if (ret != EOK) {
+            MSPROF_LOGE("Memcpy wrapped batch to host move buffer failed, ret: %d, secondCount: %u", ret, secondCount);
+            return PROFILING_FAILED;
+        }
+    }
+ 
+    const uint32_t newWriteIdx = (writeIdx + recordCount) % maxIdx;
+    hostMoveWriteIndex_.store(newWriteIdx, std::memory_order_release);
+    std::atomic_thread_fence(std::memory_order_release);
+    *hostMoveWptr_ = newWriteIdx;
+ 
+    MSPROF_LOGD("Write batch to host move buffer success, count=%u, writeIdx=%u -> %u",
+        recordCount, writeIdx, newWriteIdx);
     return PROFILING_SUCCESS;
 }
 

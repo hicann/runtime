@@ -526,6 +526,103 @@ TEST_F(DEVPROF_DRV_UTEST, RecordHostMoveBufferAddresses)
     GlobalMockObject::verify();
 }
 
+TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Basic)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    DevprofDrvAicpu::instance()->SetSupportHostMove(true);
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info));
+ 
+    // invalid inputs
+    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(nullptr, 1));
+    MsprofAdditionalInfo records[4];
+    for (auto &r : records) {
+        r.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    }
+    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 0));
+ 
+    // write a batch of 4 records, wptr advances by 4
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 4));
+    EXPECT_EQ(4U, wptrVal);
+ 
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+ 
+TEST_F(DEVPROF_DRV_UTEST, WriteBatchToHostMoveBuffer_Wrap)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    DevprofDrvAicpu::instance()->SetSupportHostMove(true);
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    // small ring of 4 records so the batch wraps the ring end
+    const size_t recordSize = sizeof(MsprofAdditionalInfo);
+    const uint32_t ringRecords = 4;
+    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, recordSize * ringRecords, &wptrVal, &rptrVal);
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info));
+ 
+    MsprofAdditionalInfo records[3];
+    for (auto &r : records) {
+        r.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    }
+    // start near the ring end so a 3-record batch wraps: write 3 at idx 0 -> wptr=3
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 3));
+    EXPECT_EQ(3U, wptrVal);
+    // next 3-record batch from idx 3 wraps: (3 + 3) % 4 = 2
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(records, 3));
+    EXPECT_EQ(2U, wptrVal);
+    // recordCount larger than the ring is rejected
+    MsprofAdditionalInfo tooMany[5];
+    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(tooMany, 5));
+    // recordCount == maxIdx (full ring) must also be rejected: otherwise newWriteIdx wraps back to
+    // writeIdx and the consumer reads wptr == rptr (empty), silently dropping the whole batch.
+    MsprofAdditionalInfo full[4];
+    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->WriteBatchToHostMoveBuffer(full, ringRecords));
+ 
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+ 
+TEST_F(DEVPROF_DRV_UTEST, DrainBufferToHostMove_MultiRecord)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
+    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
+    DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
+ 
+    // push several records, then drain them all in a single batch
+    const uint32_t pushCount = 8;
+    for (uint32_t i = 0; i < pushCount; ++i) {
+        MsprofAdditionalInfo data;
+        data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+        AdprofReportAdditionalInfo(0, static_cast<void *>(&data), sizeof(MsprofAdditionalInfo));
+    }
+ 
+    MOCKER(OsalSleep).stubs().will(returnValue(0));
+    DevprofDrvAicpu::instance()->stopped_ = true;
+    EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->DrainBufferToHostMove());
+    // all pushed records moved to the host ring: wptr advanced by pushCount
+    EXPECT_EQ(pushCount, wptrVal);
+ 
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+
 TEST_F(DEVPROF_DRV_UTEST, ProfStopDevicePause_ThreadStopFailed)
 {
     DevprofDrvAicpu::instance()->Reset();

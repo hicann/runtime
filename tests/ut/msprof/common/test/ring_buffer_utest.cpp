@@ -9,11 +9,16 @@
  */
 #include <string>
 #include <memory>
+#include <thread>
+#include <vector>
+#include <atomic>
+#include <cstring>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "queue/ring_buffer.h"
 #include "queue/report_buffer.h"
 #include "queue/block_buffer.h"
+#include "queue/variable_block_buffer.h"
 #include "prof_api.h"
 #include "prof_common.h"
 #include "utils/utils.h"
@@ -407,4 +412,195 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest) {
     bq->BatchPopBufferIndexShift(outPtr, outSize);
     bq->UnInit();
     free(hcclBufPtr);
+}
+
+// ---------------------------------------------------------------------------
+// VariableBlockBuffer tests
+// ---------------------------------------------------------------------------
+
+// Init / UnInit and not-initialized guards: capacity below the minimum is rejected, a valid
+// capacity succeeds, repeat init is a no-op, and push/pop on an uninitialized buffer are safe.
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_InitAndUnInit) {
+    // push/pop before init are rejected without crashing
+    std::shared_ptr<VariableBlockBuffer> uninit(new VariableBlockBuffer());
+    const char data[16] = {0};
+    EXPECT_EQ(MSPROF_ERROR_UNINITIALIZE, uninit->BatchPush(data, sizeof(data)));
+    size_t popSize = 1;
+    EXPECT_EQ(nullptr, uninit->BatchPop(popSize));
+
+    std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
+    EXPECT_NE(nullptr, bq);
+    // capacity smaller than MIN_VARIABLE_BLOCK_BUFF_CAPACITY (2048) is rejected
+    EXPECT_EQ(false, bq->Init("VbbTooSmall", 1024));
+    // valid capacity succeeds
+    EXPECT_EQ(true, bq->Init("VbbOk", 4096));
+    // repeat init returns true without re-allocating
+    EXPECT_EQ(true, bq->Init("VbbOk", 4096));
+    bq->UnInit();
+}
+
+// Push/pop behaviour: single round-trip, multi-segment contiguous pop in order, data cleared after
+// shift, plus defensive early-returns (pop with size 0, index-shift with null ptr / zero size).
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_PushPopTest) {
+    std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
+    EXPECT_EQ(true, bq->Init("VbbPushPop", 4096));
+
+    // defensive early-returns on an empty buffer
+    size_t zero = 0;
+    EXPECT_EQ(nullptr, bq->BatchPop(zero));
+    char dummy[8] = {0};
+    bq->BatchPopBufferIndexShift(nullptr, 16);
+    bq->BatchPopBufferIndexShift(dummy, 0);
+
+    // single push/pop round-trip: popped data equals pushed data, region cleared after shift
+    const char msg[] = "variable-block-payload";
+    const size_t len = sizeof(msg);
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(msg, len));
+    EXPECT_EQ(len, bq->GetUsedSize());
+    size_t popSize = 1;
+    void *outPtr = bq->BatchPop(popSize);
+    EXPECT_NE(nullptr, outPtr);
+    EXPECT_EQ(len, popSize);
+    EXPECT_EQ(0, memcmp(outPtr, msg, len));
+    bq->BatchPopBufferIndexShift(outPtr, popSize);
+    EXPECT_EQ(0U, bq->GetUsedSize());
+
+    // multiple variable-length segments are popped as one contiguous span, in push order
+    const char a[] = {1, 2, 3};
+    const char b[] = {4, 5, 6, 7, 8};
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(a, sizeof(a)));
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(b, sizeof(b)));
+    EXPECT_EQ(sizeof(a) + sizeof(b), bq->GetUsedSize());
+    size_t popSize2 = 1;
+    void *outPtr2 = bq->BatchPop(popSize2);
+    EXPECT_NE(nullptr, outPtr2);
+    EXPECT_EQ(sizeof(a) + sizeof(b), popSize2);
+    const char expect[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    EXPECT_EQ(0, memcmp(outPtr2, expect, sizeof(expect)));
+    bq->BatchPopBufferIndexShift(outPtr2, popSize2);
+    EXPECT_EQ(0U, bq->GetUsedSize());
+    bq->UnInit();
+}
+
+// Ring boundary behaviour: a single pop never crosses the ring end (the wrapped tail is returned
+// on the next pop), and when the buffer is full and never drained BatchPush bails out at maxCycles_
+// returning MSPROF_ERROR_NONE instead of hanging.
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_WrapAndOverflow) {
+    std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
+    const size_t cap = 4096;
+    EXPECT_EQ(true, bq->Init("VbbWrap", cap));
+
+    // advance write/read cursors close to the ring end so the next push wraps
+    std::vector<char> chunk(1024, 0);
+    for (int i = 0; i < 3; ++i) {
+        EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(chunk.data(), chunk.size()));
+        size_t popSize = 1;
+        void *p = bq->BatchPop(popSize);
+        EXPECT_NE(nullptr, p);
+        bq->BatchPopBufferIndexShift(p, popSize);
+    }
+    // now write cursor is at 3072; push 1536 bytes -> wraps the 4096 ring
+    std::vector<char> big(1536);
+    for (size_t i = 0; i < big.size(); ++i) {
+        big[i] = static_cast<char>(i & 0xFF);
+    }
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(big.data(), big.size()));
+    EXPECT_EQ(big.size(), bq->GetUsedSize());
+
+    // first pop returns only the contiguous tail (cap - 3072 = 1024 bytes)
+    size_t popSize = 1;
+    void *outPtr = bq->BatchPop(popSize);
+    EXPECT_NE(nullptr, outPtr);
+    EXPECT_EQ(cap - 3072, popSize);
+    EXPECT_EQ(0, memcmp(outPtr, big.data(), popSize));
+    bq->BatchPopBufferIndexShift(outPtr, popSize);
+
+    // second pop returns the wrapped remainder
+    size_t remain = big.size() - (cap - 3072);
+    size_t popSize2 = 1;
+    void *outPtr2 = bq->BatchPop(popSize2);
+    EXPECT_NE(nullptr, outPtr2);
+    EXPECT_EQ(remain, popSize2);
+    EXPECT_EQ(0, memcmp(outPtr2, big.data() + (cap - 3072), remain));
+    bq->BatchPopBufferIndexShift(outPtr2, popSize2);
+    EXPECT_EQ(0U, bq->GetUsedSize());
+    bq->UnInit();
+
+    // cycle overflow: small ring (maxCycles_ = 2), fill it and never drain -> second push that
+    // cannot fit exhausts maxCycles_ and returns NONE (record dropped) rather than spinning forever
+    std::shared_ptr<VariableBlockBuffer> full(new VariableBlockBuffer(2));
+    EXPECT_EQ(true, full->Init("VbbCycle", 2048));
+    std::vector<char> filler(2000, 7);
+    EXPECT_EQ(MSPROF_ERROR_NONE, full->BatchPush(filler.data(), filler.size()));
+    EXPECT_EQ(MSPROF_ERROR_NONE, full->BatchPush(filler.data(), filler.size()));
+    full->UnInit();
+}
+
+// Concurrency: multiple producers + one consumer. Verifies the ordered-commit fix guarantees that
+// BatchPop never observes a region whose memcpy has not finished (no torn/partial records).
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, VariableBlockBuffer_ConcurrentProducers) {
+    // each record: [producerId][seq][payload bytes all equal to (id ^ seq) & 0xFF], fixed size
+    struct Rec {
+        uint32_t id;
+        uint32_t seq;
+        char pad[56];
+    };
+    const size_t recSize = sizeof(Rec);
+
+    std::shared_ptr<VariableBlockBuffer> bq(new VariableBlockBuffer());
+    EXPECT_EQ(true, bq->Init("VbbConcurrent", 65536));
+
+    std::atomic<bool> stop(false);
+    std::atomic<long> corrupt(0);
+    std::atomic<long> popped(0);
+
+    std::thread consumer([&]() {
+        while (!stop.load() || bq->GetUsedSize() != 0) {
+            size_t popSize = 1;
+            void *p = bq->BatchPop(popSize);
+            if (p == nullptr) {
+                continue;
+            }
+            char *base = static_cast<char *>(p);
+            for (size_t off = 0; off + recSize <= popSize; off += recSize) {
+                Rec *r = reinterpret_cast<Rec *>(base + off);
+                char expect = static_cast<char>((r->id ^ r->seq) & 0xFF);
+                for (size_t k = 0; k < sizeof(r->pad); ++k) {
+                    if (r->pad[k] != expect) {
+                        corrupt.fetch_add(1);
+                        break;
+                    }
+                }
+                popped.fetch_add(1);
+            }
+            size_t whole = (popSize / recSize) * recSize;
+            bq->BatchPopBufferIndexShift(p, whole > 0 ? whole : popSize);
+        }
+    });
+
+    const uint32_t perProducer = 10000;
+    auto producer = [&](uint32_t id) {
+        Rec r;
+        r.id = id;
+        for (uint32_t s = 0; s < perProducer; ++s) {
+            r.seq = s;
+            char v = static_cast<char>((id ^ s) & 0xFF);
+            (void)memset_s(r.pad, sizeof(r.pad), v, sizeof(r.pad));
+            (void)bq->BatchPush(reinterpret_cast<const char *>(&r), recSize);
+        }
+    };
+
+    std::vector<std::thread> producers;
+    for (uint32_t i = 0; i < 4; ++i) {
+        producers.emplace_back(producer, i + 1);
+    }
+    for (auto &t : producers) {
+        t.join();
+    }
+    stop.store(true);
+    consumer.join();
+
+    // ordered-commit + release/acquire must guarantee zero torn records
+    EXPECT_EQ(0, corrupt.load());
+    bq->UnInit();
 }
