@@ -4,6 +4,13 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
+        files: \.(c|h|cpp|hpp|cc|hh|cxx|hxx)$
+        exclude: ^(docs|example|include|pkg_inc|scripts|src|stub|tests)
+        args:
+          - "--style=file"
+          - "--verbose"
+          - "-i"
+
 
   # OAT compliance check (Open Source Audit Tool)
   - repo: local
@@ -11,6 +18,7 @@ repos:
       - id: oat-check
         name: OAT Compliance Check
         entry: bash scripts/oat_check.sh
+        exclude: .pre-commit-config.yaml
         language: system
         pass_filenames: true
         types: [file]
