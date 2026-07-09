@@ -294,7 +294,7 @@ rm -rf output/ build/
 
 ## 学习教程
 
-Runtime提供了开发指南、API参考，详细可参见 [Runtime 参考资料](./docs/README.md)。
+Runtime提供了开发指南、API参考，详细可参见 [Runtime 参考资料](./docs/zh/README.md)。
 
 ## 相关信息
 - [贡献指南](CONTRIBUTING.md)

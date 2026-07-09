@@ -1,0 +1,475 @@
+# 11-05 统一寻址
+
+本章节描述统一/托管内存（Unified/Managed Memory）接口，用于自动迁移的内存分配、预取及属性查询。
+
+- [`aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)`](#aclrtMemAllocManaged)：申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。
+- [`aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location)`](#aclrtMemManagedAdvise)：管理统一虚拟内存（Unified Virtual Memory, UVM）的策略属性，既支持设置策略属性，也支持取消设置。
+- [`aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)`](#aclrtMemManagedGetAttr)：查询指定大小的UVM内存的策略属性值。
+- [`aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)`](#aclrtMemManagedGetAttrs)：查询指定大小的UVM内存的策略属性值。
+- [`aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemManagedLocation location, uint32_t flags, aclrtStream stream)`](#aclrtMemManagedPrefetchAsync)：管理统一虚拟内存（Unified Virtual Memory, UVM）的预取。
+- [`aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_t count, aclrtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags, aclrtStream stream)`](#aclrtMemManagedPrefetchBatchAsync)：管理统一虚拟内存（Unified Virtual Memory, UVM）的批量预取。
+- [`aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t flags)`](#aclrtMemP2PMap)：本接口用于建立同一进程内两个Device之间的内存页表映射，以实现跨Device的内存访问，但在进行此操作前，需先调用[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口以开启两个Device间的数据交互。
+- [`aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attributes)`](#aclrtPointerGetAttributes)：获取内存属性信息，包括内存是位于Host还是Device、页表大小等信息。
+
+<a id="aclrtMemAllocManaged"></a>
+
+## aclrtMemAllocManaged
+
+```c
+aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3214 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id3214 -->
+<!-- npu="A3" id3215 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id3215 -->
+<!-- npu="910b" id3216 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3216 -->
+<!-- npu="310b" id3217 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3217 -->
+<!-- npu="310p" id3218 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3218 -->
+<!-- npu="910" id3219 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3219 -->
+<!-- npu="IPV350" id3220 -->
+- IPV350：不支持
+<!-- end id3220 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id1 -->
+
+### 功能说明
+
+申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2M对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
+
+通过本接口申请的内存仅在实际访问时才会建立虚拟内存到物理内存的页表映射关系。如果内存访问发生在Host上，则映射Host的物理内存；如果内存访问发生在Device上，则映射Device的物理内存。后续使用该内存时，每当访问内存的对象发生变更，例如，从Host变更为Device，从一个Device变更为另一个Device等，在新的访问对象上会触发缺页中断，需要将内存数据迁移到新的访问对象上，并重新建立虚拟内存到物理内存的页表映射关系，此时前一个访问对象上的页表映射关系将失效、物理内存也会释放。若频繁的更换访问对象，则会频繁触发缺页中断、频繁迁移内存数据和重新建立页表映射关系，影响性能。为了减少这种情况带来的性能开销，Runtime还提供了[aclrtMemManagedAdvise](#aclrtMemManagedAdvise)接口来设置内存管理策略。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| ptr | 输出 | “已分配内存的指针”的指针，由于Host和Device虚拟地址统一编址，该参数不区分申请位置。 |
+| size | 输入 | 内存大小，单位Byte。<br>size不能为0，单个应用进程最大可申请3T UVM类型的虚拟内存。 |
+| flag | 输入 | 内存标识。<br>当前flag仅支持设置为ACL_RT_MEM_ATTACH_GLOBAL，所对应数值为1。设置为ACL_RT_MEM_ATTACH_GLOBAL后，通过本接口申请的内存在Device和Host侧都可以被访问。<br>宏定义如下：<br>#define ACL_RT_MEM_ATTACH_GLOBAL (0x01U) |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+本接口分配的内存不会进行对内容进行初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemManagedAdvise"></a>
+
+## aclrtMemManagedAdvise
+
+```c
+aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id2150 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id2150 -->
+<!-- npu="A3" id2151 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id2151 -->
+<!-- npu="910b" id2152 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2152 -->
+<!-- npu="310b" id2153 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id2153 -->
+<!-- npu="310p" id2154 -->
+- Atlas 推理系列产品：不支持
+<!-- end id2154 -->
+<!-- npu="910" id2155 -->
+- Atlas 训练系列产品：不支持
+<!-- end id2155 -->
+<!-- npu="IPV350" id2156 -->
+- IPV350：不支持
+<!-- end id2156 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id2 -->
+
+### 功能说明
+
+管理统一虚拟内存（Unified Virtual Memory, UVM）的策略属性，既支持设置策略属性，也支持取消设置。
+
+本接口操作的内存必须是通过[aclrtMemAllocManaged](#aclrtMemAllocManaged)接口申请的内存，设置的策略属性值可使用[aclrtMemManagedGetAttr](#aclrtMemManagedGetAttr)和[aclrtMemManagedGetAttrs](#aclrtMemManagedGetAttrs)接口查询。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| ptr | 输入 | 待设置属性的内存地址，地址范围必须在UVM内存范围之内，即[0x90000000000ULL, 0x90000000000ULL+3T)。 |
+| size | 输入 | 内存大小，单位Byte，要求2MB对齐。取值范围为(0, 3T]。 |
+| advise | 输入 | 内存策略属性。<br>类型定义请参见[aclrtMemManagedAdviseType](25-02_Enumerations.md#aclrtMemManagedAdviseType)。 |
+| location | 输入 | 物理内存的位置信息，location参数包含id和type两个成员。<br>类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemManagedGetAttr"></a>
+
+## aclrtMemManagedGetAttr
+
+```c
+aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1688 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id1688 -->
+<!-- npu="A3" id1689 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id1689 -->
+<!-- npu="910b" id1690 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1690 -->
+<!-- npu="310b" id1691 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id1691 -->
+<!-- npu="310p" id1692 -->
+- Atlas 推理系列产品：不支持
+<!-- end id1692 -->
+<!-- npu="910" id1693 -->
+- Atlas 训练系列产品：不支持
+<!-- end id1693 -->
+<!-- npu="IPV350" id1694 -->
+- IPV350：不支持
+<!-- end id1694 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id3 -->
+
+### 功能说明
+
+查询指定大小的UVM内存的策略属性值。
+
+本接口操作的内存必须是通过[aclrtMemAllocManaged](#aclrtMemAllocManaged)接口分配的。若查询的这段内存范围内的策略属性值不一致，则查询结果为无效值。
+
+与[aclrtMemManagedGetAttrs](#aclrtMemManagedGetAttrs)接口不同，本接口仅支持一次查询一个内存策略属性的值。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| attribute | 输入 | 待查询的属性。类型定义请参见[aclrtMemManagedRangeAttribute](25-02_Enumerations.md#aclrtMemManagedRangeAttribute)。 |
+| ptr | 输入 | 待查询属性的内存首地址，范围必须在UVM内存范围之内，即[0x90000000000ULL, 0x90000000000ULL+3T)。 |
+| size | 输入 | 待查询属性的内存大小，单位Byte。取值范围为(0, 3T]。 |
+| data | 输出 | 查询结果。 |
+| dataSize | 输入 | 存放查询结果的内存大小，单位Byte。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemManagedGetAttrs"></a>
+
+## aclrtMemManagedGetAttrs
+
+```c
+aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id2073 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id2073 -->
+<!-- npu="A3" id2074 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id2074 -->
+<!-- npu="910b" id2075 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2075 -->
+<!-- npu="310b" id2076 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id2076 -->
+<!-- npu="310p" id2077 -->
+- Atlas 推理系列产品：不支持
+<!-- end id2077 -->
+<!-- npu="910" id2078 -->
+- Atlas 训练系列产品：不支持
+<!-- end id2078 -->
+<!-- npu="IPV350" id2079 -->
+- IPV350：不支持
+<!-- end id2079 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id4 -->
+
+### 功能说明
+
+查询指定大小的UVM内存的策略属性值。
+
+本接口操作的内存必须是通过[aclrtMemAllocManaged](#aclrtMemAllocManaged)接口分配的。若查询的这段内存范围内的策略属性值不一致，则查询结果为无效值。
+
+与[aclrtMemManagedGetAttr](#aclrtMemManagedGetAttr)接口不同，本接口支持一次查询多个内存策略属性的值。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| attributes | 输入 | 待查询的属性数组。类型定义请参见[aclrtMemManagedRangeAttribute](25-02_Enumerations.md#aclrtMemManagedRangeAttribute)。 |
+| numAttributes | 输入 | 待查询的属性数组大小。 |
+| ptr | 输入 | 待查询属性的内存首地址，范围必须在UVM内存范围之内，即[0x90000000000ULL, 0x90000000000ULL+3T)。 |
+| size | 输入 | 待查询属性的内存大小，单位Byte。取值范围为(0, 3T]。 |
+| data | 输出 | 查询结果数组。 |
+| dataSizes | 输入 | 存放查询结果数组的内存大小，单位Byte。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemManagedPrefetchAsync"></a>
+
+## aclrtMemManagedPrefetchAsync
+
+```c
+aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemManagedLocation location, uint32_t flags, aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id2136 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id2136 -->
+<!-- npu="A3" id2137 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id2137 -->
+<!-- npu="910b" id2138 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2138 -->
+<!-- npu="310b" id2139 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id2139 -->
+<!-- npu="310p" id2140 -->
+- Atlas 推理系列产品：不支持
+<!-- end id2140 -->
+<!-- npu="910" id2141 -->
+- Atlas 训练系列产品：不支持
+<!-- end id2141 -->
+<!-- npu="IPV350" id2142 -->
+- IPV350：不支持
+<!-- end id2142 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id5 -->
+
+### 功能说明
+
+管理统一虚拟内存（Unified Virtual Memory, UVM）的预取。
+
+本接口操作的内存必须是通过[aclrtMemAllocManaged](#aclrtMemAllocManaged)接口分配的。本接口是异步接口，调用接口仅表示任务下发成功，不表示任务执行成功，调用本接口后，需调用同步等待接口（例如[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保内存预取的任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| ptr      |   输入    | 待预取的内存地址，地址范围必须在UVM内存范围内存，即[0x90000000000ULL, 0x90000000000ULL+3T)。 |
+| size     |   输入    | 待预取的内存长度，单位Byte，要求2MB对齐。取值范围为(0, 3T]。 |
+| location |   输入    | 物理内存的位置信息，location参数包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
+| flags    |   输入    | 预留参数。当前固定配置为0。                                  |
+| stream   |   输入    | 指定执行内存预取任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemManagedPrefetchBatchAsync"></a>
+
+## aclrtMemManagedPrefetchBatchAsync
+
+```c
+aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_t count, aclrtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags, aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id2339 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id2339 -->
+<!-- npu="A3" id2340 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+<!-- end id2340 -->
+<!-- npu="910b" id2341 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2341 -->
+<!-- npu="310b" id2342 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id2342 -->
+<!-- npu="310p" id2343 -->
+- Atlas 推理系列产品：不支持
+<!-- end id2343 -->
+<!-- npu="910" id2344 -->
+- Atlas 训练系列产品：不支持
+<!-- end id2344 -->
+<!-- npu="IPV350" id2345 -->
+- IPV350：不支持
+<!-- end id2345 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id6 -->
+
+### 功能说明
+
+管理统一虚拟内存（Unified Virtual Memory, UVM）的批量预取。
+
+本接口操作的内存必须是通过[aclrtMemAllocManaged](#aclrtMemAllocManaged)接口分配的。本接口是异步接口，调用接口仅表示任务下发成功，不表示任务执行成功，调用本接口后，需调用同步等待接口（例如[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保内存预取的任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| ptrs            |   输入    | 待预取的内存地址数组，每个地址范围必须在UVM内存范围内存，即[0x90000000000ULL, 0x90000000000ULL+3T)。 |
+| sizes           |   输入    | 内存预取长度数组，用于存放每一段要预取的UVM内存长度，单位Byte。每段长度要求2MB对齐，取值范围为(0, 3T]。 |
+| count           |   输入    | ptrs和sizes数组长度。                                        |
+| prefetchLocs    |   输入    | 物理内存的位置信息数组，每个位置信息都包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
+| prefetchLocIdxs |   输入    | 物理内存预取信息索引数组，用于指定prefetchLocs数组中的每个物理地址适用的预取范围。对于prefetchLocs[k]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[k]个下标到第prefetchLocIdxs[k+1]-1个下标指向元素的UVM内存地址，同时对于prefetchLocs[numPrefetchLocs-1]指定的物理地址，将预取ptrs数组中从第prefetchLocs[numPrefetchLocs-1]个下标到第count-1个下标指向元素的UVM内存地址。 |
+| numPrefetchLocs |   输入    | prefetchLocs和prefetchLocIdxs数组的长度。                    |
+| flags           |   输入    | 预留参数。当前固定配置为0。                                  |
+| stream          |   输入    | 指定执行内存预取任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 将ptrs中指定的数据预取到prefetchLocs中指定的物理内存区域，每个预取操作的大小由sizes指定，ptrs、sizes这两个数组必须具有count指定的相同长度。
+- 在预取批处理操作中，prefetchLocs数组中的每个条目可应用与多个预取操作，具体通过prefetchLocIdxs数组指定对应物理地址区域需要预取的起始UVM地址索引。prefetchLocs和prefetchLocIdxs这两个数组必须具有numPrefetchLocs指定的相同长度。例如：若批处理包含ptrs/sizes列出的10个预取操作，其中前6个需要被预取到同一块物理内存区域，后4个需要被预取到另一块物理内存区域，则numPrefetchLocs为2，prefetchLocIdxs为\{0,6\}，prefetchLocs包含两组物理内存的位置信息。注意，prefetchLocIdxs的首个条目必须为0，且每个条目必须大于前一个条目，最后一个条目应小于count。此外numPrefetchLocs必须小于等于count。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemP2PMap"></a>
+
+## aclrtMemP2PMap
+
+```c
+aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t flags)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id2605 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id2605 -->
+<!-- npu="A3" id2606 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id2606 -->
+<!-- npu="910b" id2607 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2607 -->
+<!-- npu="310b" id2608 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id2608 -->
+<!-- npu="310p" id2609 -->
+- Atlas 推理系列产品：支持
+<!-- end id2609 -->
+<!-- npu="910" id2610 -->
+- Atlas 训练系列产品：支持
+<!-- end id2610 -->
+<!-- npu="IPV350" id2611 -->
+- IPV350：不支持
+<!-- end id2611 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id7 -->
+
+### 功能说明
+
+本接口用于建立同一进程内两个Device之间的内存页表映射，以实现跨Device的内存访问，但在进行此操作前，需先调用[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口以开启两个Device间的数据交互。
+
+调用本接口建立页表映射后，跨Device访问时不会出现内存缺页的问题，首次访问内存时性能更优。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| devPtr | 输入 | Device内存地址（例如调用aclrtMalloc接口申请的Device内存），此处指共享内存提供方的内存地址。 |
+| size | 输入 | 内存大小，单位Byte。 |
+| dstDevId | 输入 | Device ID，此处指共享内存使用方的ID。 |
+| flags | 输入 | 预留参数，当前固定设置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+<br>
+<br>
+<br>
+
+<a id="aclrtPointerGetAttributes"></a>
+
+## aclrtPointerGetAttributes
+
+```c
+aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attributes)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1709 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1709 -->
+<!-- npu="A3" id1710 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1710 -->
+<!-- npu="910b" id1711 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1711 -->
+<!-- npu="310b" id1712 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id1712 -->
+<!-- npu="310p" id1713 -->
+- Atlas 推理系列产品：支持
+<!-- end id1713 -->
+<!-- npu="910" id1714 -->
+- Atlas 训练系列产品：支持
+<!-- end id1714 -->
+<!-- npu="IPV350" id1715 -->
+- IPV350：不支持
+<!-- end id1715 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id8 -->
+
+### 功能说明
+
+获取内存属性信息，包括内存是位于Host还是Device、页表大小等信息。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| ptr | 输入 | 内存地址。<br>此处不允许传入通过aclrtHostRegister接口映射的Device地址，也不允许传入通过aclrtHostGetDevicePointer接口获取的Device地址，否则会导致未定义行为。<br> |
+| attributes | 输出 | 内存属性信息。类型定义请参见[aclrtPtrAttributes](25-04_Structs.md#aclrtPtrAttributes)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>

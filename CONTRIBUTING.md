@@ -9,12 +9,12 @@
 
 此外，开发者在编码、编写测试和准备设计方案前，请优先阅读 `docs/guidelines/` 目录下的开发指南，并遵从其中的相关规范：
 
-- [开发指南总览](docs/guidelines/README.md)
-- [pre-commit使用方法](docs/guidelines/pre-commit_guide.md)：适用于配置 pre-commit，并在提交代码前运行格式化与合规检查
-- [编码规范](docs/guidelines/coding-guidelines.md)：适用于 Runtime 仓源码实现的统一编码规范
-- [UT代码规范](docs/guidelines/ut-coding-guidelines.md)：适用于 `tests/**` 下 UT 代码的实现规范
-- [UT用例开发指导](docs/guidelines/dt_guide/ut_case_development_guide.md)：适用于 UT 场景设计、校验方法和测试实现
-- [设计文档模板](docs/guidelines/design_document_template.md)：涉及新增特性、接口、配置参数或流程改动时，建议先按模板完成设计说明
+- [开发指南总览](docs/zh/guidelines/README.md)
+- [pre-commit使用方法](docs/zh/guidelines/pre-commit_guide.md)：适用于配置 pre-commit，并在提交代码前运行格式化与合规检查
+- [编码规范](docs/zh/guidelines/coding-guidelines.md)：适用于 Runtime 仓源码实现的统一编码规范
+- [UT代码规范](docs/zh/guidelines/ut-coding-guidelines.md)：适用于 `tests/**` 下 UT 代码的实现规范
+- [UT用例开发指导](docs/zh/guidelines/dt_guide/ut_case_development_guide.md)：适用于 UT 场景设计、校验方法和测试实现
+- [设计文档模板](docs/zh/guidelines/design_document_template.md)：涉及新增特性、接口、配置参数或流程改动时，建议先按模板完成设计说明
 
 建议遵循以下原则：
 

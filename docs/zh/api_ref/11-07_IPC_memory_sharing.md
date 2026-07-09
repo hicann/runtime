@@ -1,0 +1,375 @@
+# 11-07 IPC 进程间内存共享
+
+本章节描述 IPC（Inter-Process Communication）进程间内存共享接口，用于跨进程的内存导出与导入。
+
+- [`aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t len, uint64_t flags)`](#aclrtIpcMemGetExportKey)：在本进程中将指定Device内存设置为IPC（Inter-Process Communication）共享内存，并返回共享内存key，以便后续将内存共享给其它进程。
+- [`aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)`](#aclrtIpcMemSetImportPid)：设置IPC共享内存的进程白名单。
+- [`aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)`](#aclrtIpcMemImportPidInterServer)：针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，批量设置IPC共享内存的进程白名单。
+- [`aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)`](#aclrtIpcMemImportByKey)：在本进程中导入key的信息，并返回本进程可以使用的Device内存地址指针。
+- [`aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t attr)`](#aclrtIpcMemSetAttr)：设置IPC共享内存的属性信息。
+- [`aclError aclrtIpcMemClose(const char *key)`](#aclrtIpcMemClose)：关闭IPC共享内存，调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中、调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中都需要调用此接口。
+
+<a id="aclrtIpcMemGetExportKey"></a>
+
+## aclrtIpcMemGetExportKey
+
+```c
+aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t len, uint64_t flags)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1275 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1275 -->
+<!-- npu="A3" id1276 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1276 -->
+<!-- npu="910b" id1277 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1277 -->
+<!-- npu="310b" id1278 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id1278 -->
+<!-- npu="310p" id1279 -->
+- Atlas 推理系列产品：支持
+<!-- end id1279 -->
+<!-- npu="910" id1280 -->
+- Atlas 训练系列产品：支持
+<!-- end id1280 -->
+<!-- npu="IPV350" id1281 -->
+- IPV350：不支持
+<!-- end id1281 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id1 -->
+
+### 功能说明
+
+在本进程中将指定Device内存设置为IPC（Inter-Process Communication）共享内存，并返回共享内存key，以便后续将内存共享给其它进程。
+
+**本接口需与以下其它关键接口配合使用**，以便实现内存共享，此处以A、B进程为例，说明两个进程间的内存共享接口调用流程:
+
+1. 在A进程中：
+    1. 调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)接口申请内存。
+    2. 调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口导出共享内存key。
+
+        调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口时，可指定是否启用进程白名单校验，若启用，则需单独调用[aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid)接口将B进程的进程ID设置为白名单；反之，则无需调用[aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid)接口。
+
+    3. 调用[aclrtIpcMemClose](#aclrtIpcMemClose)接口关闭IPC共享内存。
+
+        B进程调用[aclrtIpcMemClose](#aclrtIpcMemClose)接口关闭IPC共享内存后，A进程再关闭IPC共享内存，否则可能导致异常。
+
+    4. 调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口释放内存。
+
+2. 在B进程中：
+    1. 调用[aclrtDeviceGetBareTgid](04_device_management.md#aclrtDeviceGetBareTgid)接口，获取B进程的进程ID。
+
+        本接口内部在获取进程ID时已适配物理机、虚拟机场景，用户只需调用本接口获取进程ID，再配合其它接口使用，达到内存共享的目的。若用户不调用本接口、自行获取进程ID，可能会导致后续使用进程ID异常。
+
+    2. 调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)获取key的信息，并返回本进程可以使用的Device内存地址指针。
+
+        调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口前，需确保待共享内存存在，不能提前释放。
+
+    3. 调用[aclrtIpcMemClose](#aclrtIpcMemClose)接口关闭IPC共享内存。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| devPtr | 输入 | Device内存地址。 |
+| size | 输入 | 内存大小，单位Byte。 |
+| key | 输出 | 共享内存key，是一个长度为len的字符数组。 |
+| len | 输入 | key的长度，固定配置为65。 |
+| flags | 输入 | 是否启用进程白名单校验。<br>取值为如下宏：<br><br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。配置为该值时，需单独调用[aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid)接口将使用共享内存key的进程ID设置为白名单。<br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。配置为该值时，则无需调用[aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+不同Device上的两个进程通过IPC共享时，如下图，Device 0上的A进程通过IPC方式将内存共享给Device 1上的B进程，在B进程中使用此共享内存地址。
+
+![](figures/IPC_shared_memory_diagram.png)
+
+在B进程中使用共享内存地址时，需注意以下要求（同一个Device上的两个进程通过IPC共享内存时不存在以下要求）：
+
+<!-- npu="310p" id1 -->
+- 在Atlas 推理系列产品上，调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)接口申请Device内存时，policy处需选择P2P类型，例如ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P。
+<!-- end id1 -->
+- 内存复制时，不支持根据源内存地址指针、目的内存地址指针自动判断复制方向；不支持Host-\>Device或Device-\>Host方向的内存复制操作，同步复制、异步复制都不支持；不支持同一个Device内的同步内存复制，但支持同一个Device内的异步内存复制。
+- 支持Cube计算单元、Vector计算单元跨片访问。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtIpcMemSetImportPid"></a>
+
+## aclrtIpcMemSetImportPid
+
+```c
+aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1191 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1191 -->
+<!-- npu="A3" id1192 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1192 -->
+<!-- npu="910b" id1193 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1193 -->
+<!-- npu="310b" id1194 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id1194 -->
+<!-- npu="310p" id1195 -->
+- Atlas 推理系列产品：支持
+<!-- end id1195 -->
+<!-- npu="910" id1196 -->
+- Atlas 训练系列产品：支持
+<!-- end id1196 -->
+<!-- npu="IPV350" id1197 -->
+- IPV350：不支持
+<!-- end id1197 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id2 -->
+
+### 功能说明
+
+设置IPC共享内存的进程白名单。
+
+本接口需与其它接口配合使用，以便实现内存共享的目的，配合使用流程请参见[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口处的说明。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| key | 输入 | 通过[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口获取的内存key。 |
+| pid | 输入 | 用于存放白名单进程ID的数组。<br>进程ID可调用[aclrtDeviceGetBareTgid](04_device_management.md#aclrtDeviceGetBareTgid)接口获取，Docker场景下获取到的是物理机上的进程ID，非Docker场景下获取到的是进程ID。 |
+| num | 输入 | 白名单进程数量，与pid参数数组的大小保持一致。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtIpcMemImportPidInterServer"></a>
+
+## aclrtIpcMemImportPidInterServer
+
+```c
+aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id519 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id519 -->
+<!-- npu="A3" id520 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id520 -->
+<!-- npu="910b" id521 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+<!-- end id521 -->
+<!-- npu="310b" id522 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id522 -->
+<!-- npu="310p" id523 -->
+- Atlas 推理系列产品：不支持
+<!-- end id523 -->
+<!-- npu="910" id524 -->
+- Atlas 训练系列产品：不支持
+<!-- end id524 -->
+<!-- npu="IPV350" id525 -->
+- IPV350：不支持
+<!-- end id525 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id3 -->
+
+### 功能说明
+
+批量设置IPC共享内存的进程白名单。
+
+<!-- npu="A3" id2 -->
+该接口针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品。
+<!-- end id2 -->
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| key | 输入 | 进程间共享时使用的名称。<br>必须先调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口获取共享内存key，再作为入参传入。 |
+| serverPids | 输入 | 白名单信息数组。类型定义请参见[aclrtServerPid](25-04_Structs.md#aclrtServerPid)。 |
+| num | 输入 | serverPids数组的大小。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtIpcMemImportByKey"></a>
+
+## aclrtIpcMemImportByKey
+
+```c
+aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id568 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id568 -->
+<!-- npu="A3" id569 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id569 -->
+<!-- npu="910b" id570 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id570 -->
+<!-- npu="310b" id571 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id571 -->
+<!-- npu="310p" id572 -->
+- Atlas 推理系列产品：支持
+<!-- end id572 -->
+<!-- npu="910" id573 -->
+- Atlas 训练系列产品：支持
+<!-- end id573 -->
+<!-- npu="IPV350" id574 -->
+- IPV350：不支持
+<!-- end id574 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id4 -->
+
+### 功能说明
+
+在本进程中导入key的信息，并返回本进程可以使用的Device内存地址指针。
+
+本接口需与其它接口配合使用，以便实现内存共享的目的，配合使用流程请参见[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口处的说明。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| devPtr | 输出 | Device内存地址指针。 |
+| key | 输入 | 共享内存key<br>必须先调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口获取共享内存key，再作为入参传入。 |
+| flags | 输入 | 是否开启两个Device之间的数据交互。<br>取值为如下宏：<br><br>  - ACL_RT_IPC_MEM_IMPORT_FLAG_DEFAULT：默认值，关闭两个Device之间的数据交互。配置为该值时，需单独调用[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口开启两个Device之间的数据交互。<br>  - ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS：开启两个Device之间的数据交互。配置为该值时，则无需调用[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_IPC_MEM_IMPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS 0x1UL |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtIpcMemSetAttr"></a>
+
+## aclrtIpcMemSetAttr
+
+```c
+aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t attr)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id421 -->
+- Ascend 950PR/Ascend 950DT：不支持
+<!-- end id421 -->
+<!-- npu="A3" id422 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id422 -->
+<!-- npu="910b" id423 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+<!-- end id423 -->
+<!-- npu="310b" id424 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id424 -->
+<!-- npu="310p" id425 -->
+- Atlas 推理系列产品：不支持
+<!-- end id425 -->
+<!-- npu="910" id426 -->
+- Atlas 训练系列产品：不支持
+<!-- end id426 -->
+<!-- npu="IPV350" id427 -->
+- IPV350：不支持
+<!-- end id427 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id5 -->
+
+### 功能说明
+
+设置IPC共享内存的属性信息。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| key | 输入 | 共享内存key<br>必须先调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口获取共享内存key，再作为入参传入。 |
+| type | 输入 | 内存映射类型。类型定义请参见[aclrtIpcMemAttrType](25-02_Enumerations.md#aclrtIpcMemAttrType)。<br>当前支持配置为ACL_RT_IPC_MEM_ATTR_ACCESS_LINK，用于在跨片访问时，指定双die之间是SIO（serial input/output）通道、还是HCCS（Huawei Cache Coherence System）通道。 |
+| attr | 输入 | 属性。<br>当前支持设置为如下宏：<br><br>  - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO：SIO通道，默认该选项<br>  - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS：HCCS通道<br><br><br>宏的定义如下：<br>#define ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO 0<br>#define ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS 1 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtIpcMemClose"></a>
+
+## aclrtIpcMemClose
+
+```c
+aclError aclrtIpcMemClose(const char *key)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1303 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1303 -->
+<!-- npu="A3" id1304 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1304 -->
+<!-- npu="910b" id1305 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1305 -->
+<!-- npu="310b" id1306 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id1306 -->
+<!-- npu="310p" id1307 -->
+- Atlas 推理系列产品：支持
+<!-- end id1307 -->
+<!-- npu="910" id1308 -->
+- Atlas 训练系列产品：支持
+<!-- end id1308 -->
+<!-- npu="IPV350" id1309 -->
+- IPV350：不支持
+<!-- end id1309 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id6 -->
+
+### 功能说明
+
+关闭IPC共享内存，调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中、调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中都需要调用此接口。
+
+对于同一个共享内存key，需所有调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中都调用aclrtIpcMemClose接口后，调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中才可以调用aclrtIpcMemClose接口，否则可能导致异常。
+
+本接口需与其它接口配合使用，以便实现内存共享的目的，配合使用流程请参见[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口处的说明。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| key | 输入 | 通过aclrtIpcMemGetExportKey接口获取的共享内存key。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。

@@ -295,7 +295,7 @@ rm -rf output/ build/
 
 ## Learning Resources
 
-Runtime provides development guides and API references. For details, refer to [Runtime Reference Documentation](./docs/README.md).
+Runtime provides development guides and API references. For details, refer to [Runtime Reference Documentation](./docs/zh/README.md).
 
 ## Related Information
 - [Contributing Guide](CONTRIBUTING_en.md)
