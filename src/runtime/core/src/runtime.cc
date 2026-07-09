@@ -2944,7 +2944,7 @@ void Runtime::InitAtrace(Device *dev, TraHandle &curAtraceHandle) const
     }
 }
 
-rtError_t Runtime::InitOpExecTimeout(Device *dev)
+rtError_t Runtime::InitOpExecTimeout(const Device *dev)
 {
     if (timeoutConfig_.isInit) {
         return RT_ERROR_NONE;

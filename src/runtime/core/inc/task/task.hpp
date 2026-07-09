@@ -9,7 +9,9 @@
  */
 #ifndef __CCE_RUNTIME_TASK_HPP__
 #define __CCE_RUNTIME_TASK_HPP__
+#include <atomic>
 #include <condition_variable>
+#include <mutex>
 #include "base.hpp"
 #include "stars.hpp"
 #include "hwts.hpp"

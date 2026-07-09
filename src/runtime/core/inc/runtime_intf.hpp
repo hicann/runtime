@@ -12,7 +12,7 @@
 
 #include "base.hpp"
 #include "errcode_manage.hpp"
-#include "dev.h"
+#include "runtime/rt_external_device.h"
 #include "stream.hpp"
 
 namespace cce {

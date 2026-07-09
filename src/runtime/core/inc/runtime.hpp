@@ -834,7 +834,7 @@ public:
     }
     rtError_t startAicpuExecutor(const uint32_t devId, const uint32_t tsId);
     rtError_t StopAicpuExecutor(const uint32_t devId, const uint32_t tsId, const bool isQuickClose = false) const;
-    rtError_t InitOpExecTimeout(Device *dev);
+    rtError_t InitOpExecTimeout(const Device *dev);
     Stream *GetCurStream(Stream * const stm) const;
     rtError_t PrimaryXpuContextRelease(const uint32_t devId);
 
