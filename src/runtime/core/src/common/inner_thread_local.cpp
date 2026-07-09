@@ -137,8 +137,9 @@ void InnerThreadLocalContainer::SetCurCtx(Context * const inCurCtx, bool interna
     const bool oldInternalAccess = GetEffectiveContextInternalAccess(curCtx_, curCtxInternalAccess_,
         curRef_, curRefInternalAccess_);
     Context * const newCtx = GetBoundContext(inCurCtx, curRef_);
+    const bool newCurCtxInternalAccess = (inCurCtx != nullptr) && internalAccess;
     const bool newInternalAccess = GetEffectiveContextInternalAccess(inCurCtx,
-        (inCurCtx != nullptr) ? internalAccess : false, curRef_, curRefInternalAccess_);
+        newCurCtxInternalAccess, curRef_, curRefInternalAccess_);
     const bool oldNeedThreadRef = NeedThreadRef(oldCtx, oldInternalAccess);
     const bool newNeedThreadRef = NeedThreadRef(newCtx, newInternalAccess);
     const bool oldCtxDeleted = UpdateThreadBinding(oldCtx, oldNeedThreadRef, newCtx, newNeedThreadRef);
@@ -160,8 +161,9 @@ void InnerThreadLocalContainer::SetCurRef(RefObject<Context *> * const inCurRef,
     const bool oldInternalAccess = GetEffectiveContextInternalAccess(curCtx_, curCtxInternalAccess_,
         curRef_, curRefInternalAccess_);
     Context * const newCtx = GetBoundContext(curCtx_, inCurRef);
+    const bool newCurRefInternalAccess = (inCurRef != nullptr) && internalAccess;
     const bool newInternalAccess = GetEffectiveContextInternalAccess(curCtx_, curCtxInternalAccess_,
-        inCurRef, (inCurRef != nullptr) ? internalAccess : false);
+        inCurRef, newCurRefInternalAccess);
     const bool oldNeedThreadRef = NeedThreadRef(oldCtx, oldInternalAccess);
     const bool newNeedThreadRef = NeedThreadRef(newCtx, newInternalAccess);
     const bool oldCtxDeleted = UpdateThreadBinding(oldCtx, oldNeedThreadRef, newCtx, newNeedThreadRef);

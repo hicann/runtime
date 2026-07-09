@@ -36,7 +36,7 @@ void ConstructDynamicSqHeadGotoR(const uint64_t sqIdMemAddr, const uint32_t sqHe
     ConstructLHWI(r4, static_cast<uint64_t>(sqHead), gotoBlock.lhwiSqHead);
     ConstructLLWI(r4, static_cast<uint64_t>(sqHead), gotoBlock.llwiSqHead);
     // r4 = sqHead << 16，goto_r操作数中高16位承载目标head。
-    ConstructOpImmSlli(r4, r4, UINT16_BIT_NUM, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI,
+    ConstructOpImmSlli(r4, r4, static_cast<uint8_t>(UINT16_BIT_NUM), RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI,
         RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, gotoBlock.slliSqHead);
     // r3 = sqId | (sqHead << 16)，低位保留运行时SQ ID，高位写入目标head。
     ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR,
