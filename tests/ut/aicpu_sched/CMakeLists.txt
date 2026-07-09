@@ -61,11 +61,7 @@ set(AICPU_SCHED_TARGET
   aicpu_aicpuschedule_utest_lhisi
   aicpu_sharder_utest
   aicpu_kernel_utest
-
-  # aicpu_sched_sim_utest  # 默认不编译/不执行；如需运行请显式指定：
-                          #   bash tests/build_ut.sh -u aicpu_sched -t aicpu_sched_sim_utest
-                          #   ./build/tests/ut/aicpu_sched/aicpu_schedule/ut/aicpu_sched_sim_utest
-
+  aicpu_sched_sim_utest
   # aicpu_aicpuschedule_stest
   # aicpu_aicpuschedule_stest_host_cpu
   # aicpu_aicpuschedule_stest_hostaicpu

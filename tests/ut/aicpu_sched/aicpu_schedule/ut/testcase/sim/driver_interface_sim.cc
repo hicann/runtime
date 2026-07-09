@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <time.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -113,21 +114,26 @@ int32_t SetProfHandle(std::shared_ptr<aicpu::ProfMessage> prof)
 
 std::shared_ptr<aicpu::ProfMessage> GetProfHandle() { return g_prof; }
 
+// 使用真实单调时钟（纳秒）作为 system tick，配合 GetSystemTickFreq() 返回 1e9。
+// 说明：aicpu monitor 在 online 模式下按 taskTimeoutTick_ = taskTimeout(28s) * tickFreq 判定任务超时，
+// 若返回快速自增的伪计数器且 freq=1，会使 nowTick-startTick 轻易超过 28，导致监控线程对在飞任务误判超时并调用
+// SendKillMsgToTsd()->LastwordCallback()，与 worker 线程并发遍历/修改调度器内部状态而偶现段错误。
+// 采用真实纳秒时钟后，28s 超时对应真实 28 秒，UT 中任务微秒级完成不会触发误判；且避免了非线程安全的静态自增计数器。
 uint64_t GetSystemTick()
 {
-    static uint64_t tick = 1;
-    tick++;
-    return tick;
+    struct timespec ts = {};
+    (void)clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + static_cast<uint64_t>(ts.tv_nsec);
 }
 
-static uint64_t g_time = 0;
 uint64_t NowMicros()
 {
-    g_time++;
-    return g_time;
+    struct timespec ts = {};
+    (void)clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<uint64_t>(ts.tv_sec) * 1000000ULL + static_cast<uint64_t>(ts.tv_nsec) / 1000ULL;
 }
 
-uint64_t GetSystemTickFreq() { return 1; }
+uint64_t GetSystemTickFreq() { return 1000000000ULL; }
 
 ProfMessage::ProfMessage(const char* tag) : tag_(tag) {}
 

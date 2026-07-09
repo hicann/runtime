@@ -52,6 +52,7 @@
 #include "aicpusd_status.h"
 #include "aicpu_event_struct.h"
 #include "aicpu_engine.h"
+#include "ae_kernel_lib_aicpu.hpp"
 #include "aicpu_async_event.h"
 #include "ae_so_manager.hpp"
 #include "../aicpusd_msq_operator_stub.h"
@@ -174,11 +175,9 @@ aeStatus_t GetApiMixed(
     return AE_STATUS_SUCCESS;
 }
 
-static IDE_SESSION GetSessionStub(DumpSessionManager* self, int32_t hostPid, uint32_t deviceId)
+static IDE_SESSION IdeDumpStartStub(const char* connectInfo)
 {
-    (void)self;
-    (void)hostPid;
-    (void)deviceId;
+    (void)connectInfo;
     return reinterpret_cast<IDE_SESSION>(0x1);
 }
 
@@ -251,33 +250,65 @@ static void RemoveDirRecursive(const std::string& path)
 
 class AicpuSchedSimTEST : public testing::Test {
 protected:
+    static constexpr const char* kSoDirs[] = {
+        "/usr/lib64/aicpu_kernels/", "/usr/lib64/aicpu_kernels/0/aicpu_kernels_device/",
+        "/usr/lib64/aicpu_kernels/0/aicpu_kernels_device/0_0/"};
+    static constexpr const char* kSimSoName = "libSimTest.so";
+
+    void CreateSimSoFiles()
+    {
+        for (const char* dir : kSoDirs) {
+            (void)system((std::string("mkdir -p ") + dir + " && gcc -shared -o " + dir + kSimSoName +
+                          " /dev/null 2>/dev/null || touch " + dir + kSimSoName)
+                             .c_str());
+        }
+    }
+    void RemoveSimSoFiles()
+    {
+        for (const char* dir : kSoDirs) {
+            (void)system((std::string("rm -f ") + dir + kSimSoName).c_str());
+        }
+    }
+
     void SetUp() override
     {
+        CreateSimSoFiles();
         SimPlatform::Reset();
         AicpuScheduleInterface::GetInstance().aicpusdInitFlagMap_.clear();
         AicpuEventManager::GetInstance().InitEventFunc(SCHED_MODE_INTERRUPT);
     }
     void TearDown() override
     {
+        cce::AIKernelsLibAiCpu::DestroyInstance();
+        DumpSessionManager::GetInstance().CloseAllSessions();
         GlobalMockObject::verify();
         SimPlatform::Reset();
+        RemoveSimSoFiles();
     }
     EschedSimEngine& Esched() { return SimPlatform::Esched(); }
 
     using GetApiStub = aeStatus_t (*)(cce::MultiSoManager*, aicpu::KernelType, const char*, const char*, void**);
 
+    static GetApiStub g_currentGetApi;
+
+    static void* KernelDlsymRouterWrapper(const char* funcName)
+    {
+        void* funcAddr = nullptr;
+        if (g_currentGetApi != nullptr) {
+            (void)g_currentGetApi(nullptr, aicpu::KERNEL_TYPE_AICPU, g_simSoName, funcName, &funcAddr);
+        }
+        return funcAddr;
+    }
+
     void SetupCommonMocks(GetApiStub getApi)
     {
+        g_currentGetApi = getApi;
+        AicpuScheduleUtStub::SetDlsymRouter(&KernelDlsymRouterWrapper);
         MOCKER_CPP(&AicpuDrvManager::CheckBindHostPid).stubs().will(returnValue(0));
-        MOCKER(dlopen).stubs().will(invoke(AicpuScheduleUtStub::DlopenMsqOperatorStub));
-        MOCKER(dlsym).stubs().will(invoke(AicpuScheduleUtStub::DlsymMsqOperatorStub));
-        MOCKER(dlclose).stubs().will(returnValue(0));
-        MOCKER(halResAddrMap).stubs().will(invoke(HalResAddrMapSimStub));
-        MOCKER_CPP(
-            &cce::MultiSoManager::GetApi,
-            aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType, const char*, const char*, void**))
+        MOCKER(&cce::SingleSoManager::GetFunc, aeStatus_t(void*, const char*, void**))
             .stubs()
-            .will(invoke(getApi));
+            .will(invoke(&AicpuScheduleUtStub::SingleSoManagerGetFuncStub));
+        MOCKER(halResAddrMap).stubs().will(invoke(HalResAddrMapSimStub));
         Esched().SetSubmitLoopback(true);
     }
 
@@ -344,6 +375,8 @@ protected:
     }
 };
 
+AicpuSchedSimTEST::GetApiStub AicpuSchedSimTEST::g_currentGetApi = nullptr;
+
 // ComputeProcessMain → 4 worker → 注入 HWTS → ParallelFor 4 分片 → shutdown
 TEST_F(AicpuSchedSimTEST, EndToEnd_ParallelFor_4Workers_Success)
 {
@@ -367,7 +400,6 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_ParallelFor_4Workers_Success)
         usleep(1000U);
     }
     EXPECT_EQ(param.subtaskCount.load(), 4U);
-    EXPECT_EQ(param.result, 4U);
 
     for (uint32_t i = 0U; i < 5000U; ++i) {
         if (Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= 1U) {
@@ -376,6 +408,7 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_ParallelFor_4Workers_Success)
         usleep(1000U);
     }
     EXPECT_TRUE(Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= 1U) << "算子执行后未上报 HWTS 应答";
+    EXPECT_EQ(param.result, 4U);
 
     ShutdownAndJoin(mainRet, mainDone, mainThread);
 }
@@ -434,29 +467,16 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_MixedBatch_100Ops_Success)
         InjectHwtsOpEvent(ctxs[i].subeventId, opName, paramBase);
     }
 
-    // 等待全部算子执行完成
+    // 等待全部算子执行完成（以 ack 为准，不检查非原子 result 字段）
     for (uint32_t i = 0U; i < 30000U; ++i) {
-        bool allDone = true;
-        for (int32_t j = 0; j < kOpCount; ++j) {
-            if (ctxs[j].type == OpType::PARALLEL) {
-                if (ctxs[j].parallelParam.subtaskCount.load() < 4U) {
-                    allDone = false;
-                    break;
-                }
-            } else if (ctxs[j].type == OpType::NORMAL) {
-                if (ctxs[j].normalParam.result != ctxs[j].normalParam.magic + 1U) {
-                    allDone = false;
-                    break;
-                }
-            }
-        }
-        if (allDone && Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= static_cast<size_t>(kOpCount)) {
+        if (Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= static_cast<size_t>(kOpCount)) {
             break;
         }
         usleep(1000U);
     }
+    EXPECT_EQ(Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL), static_cast<size_t>(kOpCount)) << "HWTS 应答数不足";
 
-    // 逐个断言算子执行结果
+    // 逐个断言算子执行结果（ack 到达后 result 已可见）
     int32_t parallelOk = 0;
     int32_t normalOk = 0;
     for (int32_t i = 0; i < kOpCount; ++i) {
@@ -476,15 +496,6 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_MixedBatch_100Ops_Success)
     }
     EXPECT_EQ(parallelOk, kParallelCount) << "分裂算子未全部执行成功";
     EXPECT_EQ(normalOk, kNormalCount) << "普通算子未全部执行成功";
-
-    // 等待全部 HWTS 应答上报
-    for (uint32_t i = 0U; i < 10000U; ++i) {
-        if (Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= static_cast<size_t>(kOpCount)) {
-            break;
-        }
-        usleep(1000U);
-    }
-    EXPECT_EQ(Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL), static_cast<size_t>(kOpCount)) << "HWTS 应答数不足";
 
     // 校验 ack 的 result 和 status
     auto acks = Esched().TakeAckRecords();
@@ -520,7 +531,7 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_MixedBatch_100Ops_Success)
 TEST_F(AicpuSchedSimTEST, EndToEnd_Dump_30Tasks_Success)
 {
     SetupCommonMocks(GetApiSimSuccess);
-    MOCKER_CPP(&DumpSessionManager::GetSession).stubs().will(invoke(GetSessionStub));
+    MOCKER(IdeDumpStart).stubs().will(invoke(IdeDumpStartStub));
 
     const std::string dumpDir = "/tmp/sim_dump_test";
     RemoveDirRecursive(dumpDir);
@@ -582,22 +593,15 @@ TEST_F(AicpuSchedSimTEST, EndToEnd_Dump_30Tasks_Success)
         InjectHwtsOpEvent(static_cast<uint32_t>(200 + i), g_simOpName, reinterpret_cast<uint64_t>(&opParams[i]));
     }
 
-    // 等待全部算子执行完成
+    // 等待全部算子执行完成（以 ack 为准，不检查非原子 result 字段）
     for (uint32_t i = 0U; i < 30000U; ++i) {
-        bool allOpsDone = true;
-        for (int32_t j = 0; j < kNormalOpCount; ++j) {
-            if (opParams[j].result != opParams[j].magic + 1U) {
-                allOpsDone = false;
-                break;
-            }
-        }
-        if (allOpsDone && Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= static_cast<size_t>(kNormalOpCount)) {
+        if (Esched().AckedEventCount(EVENT_TS_HWTS_KERNEL) >= static_cast<size_t>(kNormalOpCount)) {
             break;
         }
         usleep(1000U);
     }
 
-    // 断言普通算子全部执行成功
+    // 断言普通算子全部执行成功（ack 到达后 result 已可见）
     int32_t normalOk = 0;
     for (int32_t i = 0; i < kNormalOpCount; ++i) {
         EXPECT_EQ(opParams[i].result, opParams[i].magic + 1U) << "普通算子[" << i << "] result 不正确";
