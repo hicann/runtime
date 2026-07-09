@@ -1630,7 +1630,7 @@ void ElfProgram::GetKernelTypeAndMixTypeByName(const std::string &kernelName,
 }
 
 rtError_t ElfProgram::GetKernelTypeAndMixType(const RtKernel * const elfkernelInfo,
-    rtKernelAttrType &kernelAttrType, uint8_t &mixType)
+    rtKernelAttrType &kernelAttrType, uint8_t &mixType) const
 {
     const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
     kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);

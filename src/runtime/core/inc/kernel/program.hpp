@@ -483,7 +483,7 @@ private:
     void GetKernelTypeAndMixTypeByName(const std::string &kernelName,
         rtKernelAttrType &kernelAttrType, uint8_t &mixType) const;
     rtError_t GetKernelTypeAndMixType(const RtKernel * const elfkernelInfo,
-        rtKernelAttrType &kernelAttrType, uint8_t &mixType);
+        rtKernelAttrType &kernelAttrType, uint8_t &mixType) const;
 
     rtElfData *elfData_;
     RtKernel *kernels_;
