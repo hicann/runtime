@@ -108,6 +108,7 @@ std::vector<MsprofTxInfo> MstxDataHandler::SplitMstxInfo(const MstxInfo &info)
         MsprofTxInfo splitInfo{};
         splitInfo.infoType = 1;
         splitInfo.res0 = segIdx;
+        splitInfo.value.stampInfo.processId = processId_;
         splitInfo.value.stampInfo.threadId = info.threadId;
         splitInfo.value.stampInfo.eventType = info.eventType;
         splitInfo.value.stampInfo.startTime = info.startTime;
