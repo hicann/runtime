@@ -21,7 +21,11 @@ on:
 env:
   org_name: "cann"
   repo_name: "runtime"
+  MERGE_ID: ${{atomgit.event.pull_request.number}}
+  TARGET_BRANCH: ${{atomgit.base_ref}}
+  SOURCE_BRANCH: ${{atomgit.head_ref}}
   obs_path: "${{ vars.OBS_PATH}}/${{ env.MERGE_ID }}"
+  obs_smoke_path: "presmoke/runtime/a2/${{ env.MERGE_ID }}"
 
 stages:
   stage1:
@@ -56,7 +60,7 @@ stages:
             identifier: process_checkout
             uses: checkout
             with:
-              ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
+              ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
               token: ${{secrets.GIT_TOKEN}}
           -
             name: get_pr
@@ -334,7 +338,7 @@ stages:
             identifier: process_checkout
             uses: checkout
             with:
-              ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
+              ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
               token: ${{secrets.GIT_TOKEN}}
           -
             name: download
@@ -384,7 +388,7 @@ stages:
             identifier: process_checkout
             uses: checkout
             with:
-              ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
+              ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
               token: ${{secrets.GIT_TOKEN}}
           -
             name: download
@@ -424,6 +428,107 @@ stages:
         runs-on: [dedicate-hosted, x64, large]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu24.04_x86:lv6_v1.1073
+    pre:
+    - type: auto
+    fail-fast: true
+  stage5:
+    name: PreSmoke
+    jobs:
+      A2_smoke:
+        name: A2_pre_smoke
+        steps:
+          - 
+            name: Checkout
+            identifier: process_checkout
+            uses: checkout
+            with:
+              path: "./runner"
+          - 
+            name: Checkout gitcode
+            identifier: process_checkout_gitcode
+            uses: checkout
+            with:
+              repository: "https://gitcode.com/cann/.gitcode.git"
+              ref: master
+              path: "./runner/ci"
+          - name: download run file
+            identifier: process_download
+            uses: obs-download
+            with:
+              endpoint: "obs.cn-north-4.myhuaweicloud.com"
+              bucket: "ascend-ci"
+              key: "${{jobs.JOB_arm_compile_ubuntu24.outputs.arm_run_key}}"
+              path: ${{ steps.process_checkout.outputs.path }}
+          -
+            name: tar businesscode
+            run: |
+              cd ${{ steps.process_checkout.outputs.path }}           
+              tar -zcf ../smoke_data.tar.gz .
+              mv ../smoke_data.tar.gz ./
+          - 
+            name: upload
+            identifier: process_upload
+            uses: obs-upload
+            with:
+              endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
+              bucket: "ascend-ci"
+              access-key: ${{secrets.AK}}
+              secret-key: ${{secrets.SK}}
+              artifact-path: |
+                ${{ steps.process_checkout.outputs.path }}/smoke_data.tar.gz
+              object-prefix: ${{ env.obs_smoke_path }}/
+          - 
+            name: smoke executor
+            uses: manifest-management-plugin
+            with:
+              action: DEPLOY
+              repo: ${{ steps.process_checkout.outputs.path }}
+              file_path: ${{ steps.process_checkout.outputs.path }}/ci/smoke-conf/smoke-A2.yaml
+              manifest_image: swr.cn-south-1.myhuaweicloud.com/pre_smoke/${{ jobs.JOB_image.outputs.Smoke_A900_npupool }}
+              custom_shell_script: |-
+                mkdir -p /home/taskspace && cd /home/taskspace
+                echo "start run test case, please wait ..."
+                export ASCEND_GLOBAL_LOG_LEVEL=2
+                export ASCEND_SLOG_PRINT_TO_STDOUT=0
+                source /usr/local/Ascend/cann/set_env.sh
+                echo "1. downaload rttest_data.zip"
+                wget -nv https://opencann-obs.obs.cn-north-4.myhuaweicloud.com/ci/rttest_data.zip && unzip -q rttest_data.zip
+                echo "2. download businesscode"
+                wget -nv ${{ steps.process_upload.outputs.primary-url }}
+                tar -zxf $(basename "${{ steps.process_upload.outputs.primary-url }}")
+                # 安装 runtime 包到 /usr/local/Ascend
+                filename=$(basename "${{ steps.process_download.outputs.download-path }}")
+                yes "y" | bash ${filename} --full --install-path=/usr/local/Ascend --quiet
+                path=$(pwd)
+                source /usr/local/Ascend/cann/set_env.sh
+                bash scripts/pre-smoking.sh ${path}/rtstest_host 2>&1 | tee -a ./run_test.log
+                echo "Run all examples success" >> ./run_test.log
+                # 打包plog
+                mkdir -p /root/ascend
+                slog_name="slog.tar.gz"
+                tar -zcf slog.tar.gz -C /root/ascend log
+                # upload plog
+                if python3 /home/upload.py --bucket-name "ascend-ci" --action upload  --local-file "slog.tar.gz" --obs-object-key "${{env.repo_name}}/package/${{ env.MERGE_ID }}/${slog_name}" --ak "${{secrets.AK}}" --sk "${{secrets.SK}}"; then
+                  echo "::set-output var=plog_url:https://ascend-ci.obs.cn-north-4.myhuaweicloud.com/${{env.repo_name}}/package/${{ env.MERGE_ID }}/slog.tar.gz"
+                fi
+                npu-smi info
+                echo "4. checking test results ..."
+                date_time=`date +%Y%m%d`"."`date +%H%M%S`
+                if grep -w -e "Run all examples success" "./run_test.log"; then
+                  echo "$date_time : run test case success"
+                else
+                  echo "$date_time : run test case failed"
+                  exit 1
+                fi
+          - 
+            name: smoke resource clean
+            uses: manifest-management-plugin
+            with:
+              action: CRUSH
+              repo: ${{ steps.process_checkout.outputs.path }}
+              file_path: ${{ steps.process_checkout.outputs.path }}/ci/smoke-conf/smoke-A2.yaml
+        if: "${{ default() }}"
+        runs-on: ['self-hosted','arch=arm','smoke=204']
     pre:
     - type: auto
     fail-fast: true

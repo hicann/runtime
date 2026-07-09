@@ -9,6 +9,11 @@ on:
       image_version:
         required: true
         type: string
+    outputs:
+      arm_run_url:
+        value: ${{jobs.JOB_compile.outputs.primary-url}}
+      arm_run_key:
+        value: ${{jobs.JOB_compile.outputs.primary-key}}
 
 jobs:
   JOB_compile:
@@ -21,7 +26,7 @@ jobs:
         identifier: process_checkout
         uses: checkout
         with:
-          ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
+          ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
           token: ${{secrets.GIT_TOKEN}}
       -
         name: download
