@@ -162,6 +162,27 @@ COND_RETURN_AND_MSG_OUTER(..., ErrorCode::EE1016, __func__,
 
 > **为什么禁止 `std::string` 相加？** `std::string` 拼接会在编译产物中生成大量临时字符串对象和模板实例化代码，导致 .so 文件显著膨胀。`RtFmtMsg` 使用栈上 `char[]` 缓冲区 + `snprintf`，编译产物更紧凑。
 
+### 语义化函数描述（_WITH_DESC / _WITH_FUNC_DESC 变体）
+
+部分 `_OUTER` 宏提供 `_WITH_DESC` 或 `_WITH_FUNC_DESC` 后缀变体，区别在于函数描述的传入方式：
+
+| 变体后缀 | 函数描述来源 | 示例 |
+|---------|------------|------|
+| 无后缀（如 `RT_LOG_OUTER_MSG_WITH_FUNC`） | `__func__`（C++ 函数名） | `"MemCopySync"` |
+| `_WITH_DESC` / `_WITH_FUNC_DESC` | 调用者传入 `funcDesc` 字符串 | `"Synchronous memory copy"` |
+
+`__func__` 为编译器生成的函数名，对用户不够友好；`_WITH_DESC` / `_WITH_FUNC_DESC` 变体允许传入语义化描述字符串，使错误信息更易理解。
+
+**选择建议**：新代码对于非接口层代码(不以acl，rt或者是aclrt开头的函数)优先使用 `_WITH_DESC` / `_WITH_FUNC_DESC` 变体，传入能描述当前操作语义的字符串。例如：
+
+```cpp
+// 推荐：使用语义化描述
+RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Closing the IPC shared memory");
+
+// 不推荐：使用 __func__（函数名对用户无意义）
+RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+```
+
 ---
 
 ## 3. 外部错误码宏
@@ -170,24 +191,27 @@ COND_RETURN_AND_MSG_OUTER(..., ErrorCode::EE1016, __func__,
 
 ### EE1003 - Invalid_Argument（参数值校验）
 
-参数值不合法时使用。宏自动注入 `__func__` 和参数名字符串，开发者只需传入参数值和期望值。
+参数值不合法时使用。宏自动注入参数名字符串，开发者只需传入参数值和期望值。`_DESC` 变体额外接收 `FUNC_DESC` 参数用于语义化函数描述（详见「语义化函数描述」小节）。
 
 | 宏名 | 返回类型 | 条件类型 | PROC | GOTO | 设置全局错误码 | 推荐等级 | 替代宏 |
 |------|---------|---------|------|------|--------------|---------|--------|
 | COND_RETURN_AND_MSG_OUTER_WITH_PARAM | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
+| COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
 | COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
 | ZERO_RETURN_AND_MSG_OUTER | rtError_t | 零值 | 否 | 否 | 否 | 推荐 | — |
 | COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM | ACL错误码(rt转换) | 自定义条件 | 否 | 否 | 是 | 推荐 | — |
 | COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME | ACL错误码(rt转换) | 自定义条件 | 否 | 否 | 是 | 推荐 | — |
 | RT_LOG_OUTER_MSG_INVALID_PARAM | 无 | 无条件 | 否 | 否 | 否 | 特定场景 | — |
+| RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC | 无 | 无条件 | 否 | 否 | 否 | 特定场景 | — |
 
 ### EE1004 - Invalid_Argument_Null_Pointer
 
-空指针检查专用。宏自动使用 `#PTR`（参数名字符串化），无需手动传入。
+空指针检查专用。宏自动使用 `#PTR`（参数名字符串化），无需手动传入。`_WITH_FUNC_DESC` 变体额外接收 `FUNC_DESC` 参数用于语义化函数描述（详见「语义化函数描述」小节）。
 
 | 宏名 | 返回类型 | 条件类型 | PROC | GOTO | 设置全局错误码 | 推荐等级 | 替代宏 |
 |------|---------|---------|------|------|--------------|---------|--------|
 | NULL_PTR_RETURN_MSG_OUTER | rtError_t | 空指针 | 否 | 否 | 否 | 推荐 | — |
+| NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC | rtError_t | 空指针 | 否 | 否 | 否 | 推荐 | — |
 | PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE | ACL错误码(rt转换) | 空指针 | 否 | 否 | 是 | 推荐 | — |
 
 ### EE1010 - Execution_Error_Invalid_Context
@@ -207,6 +231,15 @@ stream/model/context 等对象的归属关系校验。宏自动注入 `__func__`
 |------|---------|---------|------|------|--------------|---------|--------|
 | COND_PROC_RETURN_AND_MSG_ALLOC_FAILED | rtError_t | 自定义条件 | 是 | 否 | 否 | 推荐 | — |
 
+### EE1016 - Stream_Capture_Mode_Not_Support
+
+Stream capture 模式检查专用。检查当前上下文是否支持 capture 操作，不支持时上报 EE1016 并返回 `RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT`。实际 ErrMsg 上报由 `CheckCaptureModeSupport()` 函数内部通过 `RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1016, funcName, reason)` 完成。`_WITH_DESC` 变体传入语义化函数描述代替 `__func__`（详见「语义化函数描述」小节）。
+
+| 宏名 | 返回类型 | 条件类型 | PROC | GOTO | 设置全局错误码 | 推荐等级 | 替代宏 |
+|------|---------|---------|------|------|--------------|---------|--------|
+| CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN | 无 | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
+| CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_DESC | 无 | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
+
 ### EE1017 - Invalid_Argument（预留参数校验）
 
 预留参数校验使用。`param` 为参数名，`reason` 为不合法原因。
@@ -223,7 +256,7 @@ stream/model/context 等对象的归属关系校验。宏自动注入 `__func__`
 
 ### 通用外部错误码主力封装宏
 
-适用于 EE1005~EE1021、EE2002、WE0001 等没有专用宏的外部错误码。调用者传入 `ErrorCode` 枚举值和对应参数。
+适用于 EE1005~EE1021（EE1016 capture mode 场景除外）、EE2002、WE0001 等没有专用宏的外部错误码。调用者传入 `ErrorCode` 枚举值和对应参数。
 
 | 宏名 | 返回类型 | 条件类型 | PROC | GOTO | 设置全局错误码 | 推荐等级 | 替代宏 |
 |------|---------|---------|------|------|--------------|---------|--------|
@@ -245,6 +278,7 @@ stream/model/context 等对象的归属关系校验。宏自动注入 `__func__`
 | RT_LOG_OUTER_MSG | 显式输入 | 字符串错误码 | 外部 | 特定场景 | — |
 | RT_LOG_OUTER_MSG_IMPL | 显式输入 | ErrorCode 枚举 | 外部 | 特定场景 | — |
 | RT_LOG_OUTER_MSG_WITH_FUNC | 显式输入 | ErrorCode 枚举 | 外部 | 特定场景 | — |
+| RT_LOG_OUTER_MSG_WITH_FUNC_DESC | 显式输入 | ErrorCode 枚举 | 外部 | 特定场景 | — |
 | REPORT_INPUT_ERROR | 显式输入 | 字符串错误码 | 外部 | **不能直接使用** | — |
 | REPORT_ENV_ERROR | 显式输入 | 字符串错误码 | 外部 | **不能直接使用** | — |
 ---
@@ -353,7 +387,7 @@ stream/model/context 等对象的归属关系校验。宏自动注入 `__func__`
 
 ```
 我要上报的错误码是否有专用的宏？
-├─ 是（EE1003/EE1004/EE1010/EE1013/EE1017，见第3节）
+├─ 是（EE1003/EE1004/EE1010/EE1013/EE1016/EE1017，见第3节）
 │   └─ 专用宏是否能满足我的场景？（根据 PROC/GOTO/返回类型/设置全局错误码 判断）
 │       ├─ 是 → 使用专用宏
 │       └─ 否

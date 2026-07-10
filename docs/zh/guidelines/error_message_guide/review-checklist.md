@@ -52,7 +52,7 @@
 
 （1）最底层外部错误码打屏宏 `RT_LOG_OUTER_MSG_IMPL`，不自动添加任何参数
 
-（2）自动前置函数名的宏 `RT_LOG_OUTER_MSG_WITH_FUNC` 及再次封装后的宏，自动添加 `__func__` 作第一个参数。**有效参数 = 1 + len(args)**。勿手动重复传 `__func__`。
+（2）自动前置函数名的宏 `RT_LOG_OUTER_MSG_WITH_FUNC` 及再次封装后的宏，自动添加 `__func__` 作第一个参数。**有效参数 = 1 + len(args)**。勿手动重复传 `__func__`。`RT_LOG_OUTER_MSG_WITH_FUNC_DESC` 及其封装宏（如 `RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC`）行为类似，但自动添加的是调用者传入的 `funcDesc` 而非 `__func__`。
 
 （3）专用宏为简化使用，通常自动处理通用参数，有效参数要根据实际情况计算。如 `RT_LOG_OUTER_MSG_INVALID_PARAM` 宏为 EE1003 专用，展开链为：
 
@@ -62,7 +62,7 @@ RT_LOG_OUTER_MSG_INVALID_PARAM(parm, expect)
     → RT_LOG_OUTER_MSG_IMPL(EE1003, __func__, (parm), #parm, expect)
 ```
 
-有效参数 = 3 + len(args)。EE1003 期望 4 个参数，可变参数应为 1 个（即期望值 expect）。
+有效参数 = 3 + len(args)。EE1003 期望 4 个参数，可变参数应为 1 个（即期望值 expect）。`RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(funcDesc, parm, expect)` 展开链相同，仅将 `__func__` 替换为 `funcDesc`。
 
 **EH 层宏说明：**
 
