@@ -1995,7 +1995,6 @@ rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo *
     const uint32_t tsId = InnerThreadLocalContainer::GetTsId();
     Device * const dev = Runtime::Instance()->GetDevice(deviceId, tsId);
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
-    dev->SetBaseTime();
     switch (errorInfo->errorType) {
         case RT_ERROR_L2:
             error = L2BufferErrorResume(dev, deviceId);
@@ -2018,6 +2017,7 @@ rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo *
             RT_LOG(RT_LOG_ERROR, "Does not support current error type [%d]", errorInfo->errorType);
             break;
     }
+    dev->SetBaseTime();
     return error;
 }
 

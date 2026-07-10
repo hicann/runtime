@@ -5746,6 +5746,10 @@ rtError_t ApiImpl::MemUceRepair(const uint32_t deviceId, rtMemUceInfo *memUceInf
     RT_LOG(RT_LOG_EVENT, "drv devId %u: time cost: %llu us", deviceId,
         (static_cast<uint64_t>(tv[1U].tv_sec) - static_cast<uint64_t>(tv[0U].tv_sec)) * 1000000ULL +
         static_cast<uint64_t>(tv[1U].tv_usec) - static_cast<uint64_t>(tv[0U].tv_usec));
+    Device * const dev = Runtime::Instance()->GetDevice(deviceId, 0U, false);
+    if (dev != nullptr) {
+        dev->SetBaseTime();
+    }
     return error;
 }
 
@@ -8563,7 +8567,6 @@ rtError_t ApiImpl::RepairError(const uint32_t deviceId, const rtErrorInfo * cons
     Runtime * const rtInstance = Runtime::Instance();
     Device * const dev = rtInstance->GetDevice(static_cast<uint32_t>(deviceId), static_cast<uint32_t>(RT_TSC_ID));
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-    dev->SetBaseTime();
     switch (errorInfo->errorType) {
         case RT_NO_ERROR:
             RT_LOG(RT_LOG_DEBUG ,"No device fault error exists.");
@@ -8579,6 +8582,7 @@ rtError_t ApiImpl::RepairError(const uint32_t deviceId, const rtErrorInfo * cons
                 "{" + std::to_string(RT_NO_ERROR) + ", " + std::to_string(RT_ERROR_MEMORY) + ", " + std::to_string(RT_ERROR_LINK) + "}");
             break;
     }
+    dev->SetBaseTime();
     return error;
 }
 
