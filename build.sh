@@ -19,7 +19,7 @@ usage() {
   echo "Usage:"
   echo "  sh build.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
   echo "              [--ascend_install_path=<PATH>] [--cann_3rd_lib_path=<PATH>]"
-  echo "              [--asan] [--build_host_only] [--cov] [--pkg-type=<TYPE>]"
+  echo "              [--module_extension=<VALUE>] [--asan] [--build_host_only] [--cov] [--pkg-type=<TYPE>]"
   echo "              [--sign-script <PATH>] [--enable-sign] [--version <VERSION>]"
   echo ""
   echo "Options:"
@@ -37,6 +37,8 @@ usage() {
   echo "                   Set ascend package install path, default /usr/local/Ascend/cann"
   echo "    --cann_3rd_lib_path=<PATH>"
   echo "                   Set ascend third_party package install path, default ./output/third_party"
+  echo "    --module_extension=<VALUE>"
+  echo "                   Set module extension value, default empty"
   echo "    --sign-script <PATH>"
   echo "                   Set sign-script's path to <PATH>"
   echo "    --enable-sign"
@@ -60,6 +62,7 @@ checkopts() {
   ENABLE_SIGN="OFF"
   ENABLE_BUILD_DEVICE="ON"
   VERSION_INFO="9.1.0"
+  MODULE_EXT=""
 
   if [ -z "$ASCEND_INSTALL_PATH" ]; then
     ASCEND_INSTALL_PATH="/usr/local/Ascend/cann"
@@ -74,7 +77,7 @@ checkopts() {
   fi
 
   # Process the options
-  parsed_args=$(getopt -a -o j:hvf: -l help,pkg,verbose,cov,build_host_only,pkg-type:,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,asan,sign-script:,enable-sign,version: -- "$@") || {
+  parsed_args=$(getopt -a -o j:hvf: -l help,pkg,verbose,cov,build_host_only,pkg-type:,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,module_extension:,asan,sign-script:,enable-sign,version: -- "$@") || {
     usage
     exit 1
   }
@@ -130,6 +133,10 @@ checkopts() {
         ;;
       --ascend_3rd_lib_path)
         ASCEND_3RD_LIB_PATH="$(realpath $2)"
+        shift 2
+        ;;
+      --module_extension)
+        MODULE_EXT="$2"
         shift 2
         ;;
       --sign-script)
@@ -272,7 +279,8 @@ build_rts() {
               -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE} \
               -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT} \
               -DVERSION_INFO=${VERSION_INFO} \
-              -DPACKAGE_TYPE=${PACKAGE_TYPE}"
+              -DPACKAGE_TYPE=${PACKAGE_TYPE} \
+              -DMODULE_EXT=${MODULE_EXT}"
 
   echo "CMAKE_ARGS=${CMAKE_ARGS}"
   cmake -S ../ -B . ${CMAKE_ARGS}
