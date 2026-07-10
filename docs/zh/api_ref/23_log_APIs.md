@@ -207,6 +207,20 @@ void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list
 
 无。
 
+### 调用示例
+
+```c
+static void LogUserModule(int32_t moduleId, int32_t level, const char *fmt, ...)
+{
+    va_list list;
+    va_start(list, fmt);
+    acllogVaList(moduleId, level, fmt, list);
+    va_end(list);
+}
+
+LogUserModule(0xff00, DLOG_INFO, "user module log");
+```
+
 <br>
 <br>
 <br>
