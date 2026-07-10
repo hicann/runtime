@@ -41,9 +41,8 @@ static void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, void 
     aicpuKernelSqe->sqeLength = 0U;
 
     // soname aicpu no need
-    const uint64_t addr = 0ULL;
-    aicpuKernelSqe->taskSoAddrLow = static_cast<uint32_t>(addr);
-    aicpuKernelSqe->taskSoAddrHigh = static_cast<uint16_t>(addr >> UINT32_BIT_NUM);
+    aicpuKernelSqe->taskSoAddrLow = 0U;
+    aicpuKernelSqe->taskSoAddrHigh = 0U;
 
     aicpuKernelSqe->paramAddrLow = static_cast<uint32_t>(taskInfo->u.addEndGraphTask.argptr);
     aicpuKernelSqe->paramAddrHigh = static_cast<uint16_t>(taskInfo->u.addEndGraphTask.argptr >> UINT32_BIT_NUM);
