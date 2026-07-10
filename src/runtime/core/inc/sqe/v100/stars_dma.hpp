@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef __CCE_RUNTIME_STARS_DMA_HPP__
-#define __CCE_RUNTIME_STARS_DMA_HPP__
+#ifndef CCE_RUNTIME_STARS_DMA_HPP
+#define CCE_RUNTIME_STARS_DMA_HPP
 
 #include "task_info.hpp"
 #include "stars_base.hpp"
@@ -318,4 +318,4 @@ struct RtLiteStarsRdmaSqe {
 
 }  // namespace runtime
 }  // namespace cce
-#endif  // __CCE_RUNTIME_STARS_DMA_HPP__
+#endif  // CCE_RUNTIME_STARS_DMA_HPP

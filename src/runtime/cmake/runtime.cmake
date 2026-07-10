@@ -439,6 +439,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe
     ${RUNTIME_DIR}/src/runtime/inc/device
     ${RUNTIME_DIR}/src/runtime/inc/sqe
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v100
     ${RUNTIME_DIR}/src/runtime/core/inc/stars
     ${RUNTIME_DIR}/src/runtime/core/inc/stream
     ${RUNTIME_DIR}/src/runtime/core/inc/task

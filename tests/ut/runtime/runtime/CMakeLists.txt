@@ -1345,6 +1345,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/dfx
     ${TOP_DIR}/src/runtime/core/inc/kernel
     ${TOP_DIR}/src/runtime/core/inc/soc
+    ${TOP_DIR}/src/runtime/core/inc/sqe/v100
     ${TOP_DIR}/src/runtime/core/inc/stars
     ${TOP_DIR}/src/runtime/core/inc/stream
     ${TOP_DIR}/src/runtime/core/inc/launch
