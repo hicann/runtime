@@ -35,8 +35,6 @@ target_include_directories(adump_headers INTERFACE
     $<BUILD_INTERFACE:${ADUMP_DIR}/inc>
     $<BUILD_INTERFACE:${ADUMP_DIR}/inc/adump>
     $<BUILD_INTERFACE:${ADUMP_DIR}/external>
-    $<BUILD_INTERFACE:${ADUMP_DIR}/inc/metadef>
-    $<BUILD_INTERFACE:${ADUMP_DIR}/inc/metadef/external>
     $<BUILD_INTERFACE:${PROJECT_TOP_DIR}/include/external>
     $<BUILD_INTERFACE:${PROJECT_TOP_DIR}/pkg_inc/dump>
     ${RUNTIME_DIR}/src/dfx/error_manager
