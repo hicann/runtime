@@ -22,23 +22,23 @@ namespace runtime {
  
 rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
 {
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(poolProps, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memPool, RT_ERROR_INVALID_VALUE, "Memory pool creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(poolProps, RT_ERROR_INVALID_VALUE, "Memory pool creation");
     RT_LOG(RT_LOG_DEBUG, "Stream memory pool create.");
     return SomaApi::StreamMemPoolCreate(memPool, poolProps);
 }
  
 rtError_t ApiImplSoma::StreamMemPoolDestroy(const rtMemPool_t memPool)
 {
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memPool, RT_ERROR_INVALID_VALUE, "Memory pool destruction");
     RT_LOG(RT_LOG_DEBUG, "Stream memory pool destroy, poolId=%#" PRIx64 ".", RtPtrToValue(memPool));
     return SomaApi::StreamMemPoolDestroy(memPool);
 }
  
 rtError_t ApiImplSoma::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
 {
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memPool, RT_ERROR_INVALID_VALUE, "Setting the attribute value of a memory pool");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Setting the attribute value of a memory pool");
     COND_RETURN_ERROR((attr == rtMemPoolAttrReservedMemCurrent) || (attr == rtMemPoolAttrUsedMemCurrent),
         RT_ERROR_POOL_OP_INVALID, "Read only attribute does not allow setting.");
     RT_LOG(RT_LOG_DEBUG, "Stream memory pool set attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool), static_cast<uint32_t>(attr));
@@ -47,17 +47,17 @@ rtError_t ApiImplSoma::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr a
  
 rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
 {
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memPool, RT_ERROR_INVALID_VALUE, "Obtaining the specified attribute value of a memory pool");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Obtaining the specified attribute value of a memory pool");
     RT_LOG(RT_LOG_DEBUG, "Stream memory pool get attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool), static_cast<uint32_t>(attr));
     return SomaApi::StreamMemPoolGetAttr(memPool, attr, value);
 }
  
 rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(memPoolId, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Allocating memory of a specified size from the memory pool");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memPoolId, RT_ERROR_INVALID_VALUE, "Allocating memory of a specified size from the memory pool");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Allocating memory of a specified size from the memory pool");
     Context * const curCtx = Runtime::Instance()->CurrentContext();
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     
@@ -86,8 +86,8 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t s
  
 rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Asynchronously releasing memory in the memory pool");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Asynchronously releasing memory in the memory pool");
     Context * const curCtx = Runtime::Instance()->CurrentContext();
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
  
@@ -153,13 +153,13 @@ void ApiImplSoma::MemPoolFreeAsyncCallback(void *fnData)
 rtError_t ApiImplSoma::SomaAicpuLaunchValidation(const rtKernelLaunchNames_t * const launchNames, const uint32_t blockDim,
     const rtArgsEx_t * const argsInfo, const Stream * const stm, const uint32_t flags) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(launchNames->kernelName, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(launchNames->kernelName, RT_ERROR_INVALID_VALUE, "Checking the validity of kernel function startup parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo, RT_ERROR_INVALID_VALUE, "Checking the validity of kernel function startup parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsInfo->args, RT_ERROR_INVALID_VALUE, "Checking the validity of kernel function startup parameters");
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
  
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
-        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Checking the validity of kernel function startup parameters", "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
     
     RT_LOG(RT_LOG_DEBUG,

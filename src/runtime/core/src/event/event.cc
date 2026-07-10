@@ -404,7 +404,7 @@ rtError_t Event::GetEventID(uint32_t * const evtId) const
 
 rtError_t Event::Record(Stream * const stm, const bool isApiCall)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
     const std::lock_guard<std::mutex> lockRecord(eventLockForRecord_);
     if ((!IsHardwareMode()) && (captureStream_ != nullptr)) {
         return CaptureEventProcess(stm);
@@ -514,7 +514,7 @@ bool Event::WaitSendCheck(const Stream * const stm, int32_t &eventId)
 
 rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Waiting for an event");
     if ((!IsHardwareMode()) && (captureStream_ != nullptr)) {
         return CaptureWaitProcess(stm);
     }
@@ -566,7 +566,7 @@ ERROR_RECYCLE:
 // new mode not call
 rtError_t Event::Reset(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event reset");
     if ((!IsHardwareMode()) && (captureStream_ != nullptr)) { // capture mode
         return CaptureResetProcess(stm);
     }
@@ -817,7 +817,7 @@ rtError_t Event::Setup()
 
 rtError_t Event::RecordForNotify(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
 
     Device * const dev = stm->Device_();
     TaskInfo submitTask = {};

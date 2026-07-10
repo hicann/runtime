@@ -65,15 +65,18 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     const uint32_t groupBlockDim = launchTaskCfg->Group.groupBlockDim;
 
     if (blockDim > UINT16_MAX) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(blockDim, "[0, 0xffff]");
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Checking the parameter configuration before kernel delivery",
+            blockDim, "[0, 0xffff]");
         return RT_ERROR_INVALID_VALUE;
     }
     if (groupDim > UINT16_MAX) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(groupDim, "[0, 0xffff]");
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Checking the parameter configuration before kernel delivery",
+            groupDim, "[0, 0xffff]");
         return RT_ERROR_INVALID_VALUE;
     }
     if (groupBlockDim > UINT16_MAX) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(groupBlockDim, "[0, 0xffff]");
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Checking the parameter configuration before kernel delivery",
+            groupBlockDim, "[0, 0xffff]");
         return RT_ERROR_INVALID_VALUE;
     }
 

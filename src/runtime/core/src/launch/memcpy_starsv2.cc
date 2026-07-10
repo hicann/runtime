@@ -75,7 +75,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     const uint64_t srcPitch, const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind,
     uint64_t * const realSize, Stream * const stm, const uint64_t fixedSize)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Asynchronous 2D memory copy");
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Stream check failed, stream_id=%d , retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
@@ -194,7 +194,7 @@ rtError_t MemcopyAsync(void * const dst, const uint64_t destMax, const void * co
     const rtD2DAddrCfgInfo_t * const addrCfg)
 {
     UNUSED(destMax);
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Asynchronous memory copy");
 
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "CheckTaskCanSend failed, stream_id=%d, error:%#x", stm->Id_(),

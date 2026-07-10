@@ -877,12 +877,12 @@ rtError_t ApiImplDavid::ModelExit(Model * const mdl, Stream * const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
     const uint32_t modelExitNum = mdl->ModelExitNum_();
     COND_RETURN_AND_MSG_OUTER(modelExitNum >= 1U, RT_ERROR_MODEL_EXIT,
-        ErrorCode::EE1011, __func__, modelExitNum, "modelExitNum", RtFmtMsg("Model (model_id=%u) must exit only once", mdl->Id_()));
+        ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum", RtFmtMsg("Model (model_id=%u) must exit only once", mdl->Id_()));
     stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND,
-        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) is not bound to any model", stm->Id_()));
+        ErrorCode::EE1017, "Model exiting", "stm", RtFmtMsg("Stream (stream_id=%d) is not bound to any model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(stm->Model_()->Id_() != mdl->Id_(), RT_ERROR_MODEL_EXIT_ID,
-        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("The current stream (stream_id=%d) has been bound to another model (model_id=%u) which is different from the input model (model_id=%u). "
+        ErrorCode::EE1017, "Model exiting", "stm", RtFmtMsg("The current stream (stream_id=%d) has been bound to another model (model_id=%u) which is different from the input model (model_id=%u). "
  	            "The input model must be the same as the model bound to the input stream",
  	            stm->Id_(), stm->Model_()->Id_(), mdl->Id_()));
     mdl->IncModelExitNum();
@@ -1007,8 +1007,8 @@ rtError_t ApiImplDavid::GetCntNotifyAddress(CountNotify *const inCntNotify, uint
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         // Driver now only support NOTIFY_CNT_ST_SLICE for count notify
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM((regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE, 
-            regType, std::to_string(NOTIFY_CNT_ST_SLICE));
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC((regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE, 
+            "Obtaining the on-device address of a CntNotify object", regType, std::to_string(NOTIFY_CNT_ST_SLICE));
     } else {
         COND_RETURN_ERROR(regType == NOTIFY_TABLE_SLICE, RT_ERROR_INVALID_VALUE,
             "CntNotify does not support getting notify table address.");
@@ -1034,7 +1034,7 @@ rtError_t ApiImplDavid::NotifyWait(Notify * const inNotify, Stream * const stm, 
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1012, __func__, curCtx->Device_()->Id_(), "current deviceId",
+        ErrorCode::EE1012, "Waiting for a Notify", curCtx->Device_()->Id_(), "current deviceId",
             RtFmtMsg("The device (device_id=%u) cannot deliver the notify wait task."
                 " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
             curCtx->Device_()->Id_(), inNotify->GetDeviceId()));
@@ -1449,7 +1449,7 @@ rtError_t ApiImplDavid::CallbackLaunch(const rtCallback_t callBackFunc, void * c
 
 rtError_t ApiImplDavid::ModelAbort(Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_MODEL_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_MODEL_NULL, "Aborting the model running instance");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL(mdl, curCtx, RT_ERROR_MODEL_CONTEXT);
@@ -1480,9 +1480,9 @@ rtError_t ApiImplDavid::StreamSwitchEx(void * const ptr, const rtCondition_t con
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
-    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Switching between streams based on conditions",
         0, "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
-    COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+    COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Switching between streams based on conditions",
         0, "trueStream->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStream->Id_()));
     return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType, curCtx);
 }
@@ -1723,7 +1723,7 @@ rtError_t ApiImplDavid::StreamTaskAbort(Stream * const stm)
     } else {
         const bool isValid = ContextManage::CheckStreamPtrIsValid(curStm);
         COND_RETURN_AND_MSG_OUTER(!isValid, RT_ERROR_INVALID_VALUE,
-            ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", curStm->Id_()));
+            ErrorCode::EE1017, "Aborting a stream task", "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", curStm->Id_()));
     }
 
     return curStm->StreamAbort();
@@ -1756,7 +1756,7 @@ rtError_t ApiImplDavid::StreamRecover(Stream * const stm)
 {
     const bool isValid = ContextManage::CheckStreamPtrIsValid(stm);
     COND_RETURN_AND_MSG_OUTER(!isValid, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1017, __func__, "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", stm->Id_()));
+        ErrorCode::EE1017, "Resuming tasks in a stream", "stm", RtFmtMsg("Stream (stream_id=%d) does not belong to any context", stm->Id_()));
     return stm->StreamRecoverAbort();
 }
 

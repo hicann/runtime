@@ -1705,7 +1705,8 @@ rtError_t GetBinaryMetaInfo(const rtElfData * const elfData, const uint16_t type
     auto metaInfo = GetMetaInfo(elfData, section, type);
     // numOfMeta为0不需要特殊处理
     if (metaInfo.size() != numOfMeta) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(numOfMeta, metaInfo.size());
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Obtaining the metadata of the operator binary file",
+            numOfMeta, metaInfo.size());
         return RT_ERROR_INVALID_VALUE;
     }
     

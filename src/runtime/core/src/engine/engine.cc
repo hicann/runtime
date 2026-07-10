@@ -179,7 +179,7 @@ rtError_t Engine::SubmitTaskNormal(TaskInfo * const workTask, uint32_t * const f
             (void)memset_s(&command, sizeof(rtCommand_t), 0U, sizeof(rtCommand_t));
             ToCommand(workTask, &command);
             COND_RETURN_AND_MSG_OUTER((workTask->stream->Model_() == nullptr), RT_ERROR_MODEL_NULL,
-                ErrorCode::EE1018, __func__,
+                ErrorCode::EE1018, "Submitting a task",
                 "Aicpu stream requires a model association. Call the rtsModelBindStream API to bind a model to the stream");
             (void)workTask->stream->Model_()->SaveAicpuStreamTask(workTask->stream, &command);
         }
@@ -1050,7 +1050,7 @@ rtError_t Engine::SendTask(TaskInfo * const workTask, uint16_t &taskId, uint32_t
 {
     Stream * const stm = workTask->stream;
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U),
-        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, __func__, "Stream flags value " + std::to_string(stm->Flags()),
+        RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Sending a task", "Stream flags value " + std::to_string(stm->Flags()),
         RtFmtMsg("Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for kernel launch", stm->Id_()));
 
     TIMESTAMP_BEGIN(TryRecycleTask);

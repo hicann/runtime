@@ -55,7 +55,7 @@ rtError_t ApiErrorDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, 
 {
     COND_RETURN_ERROR_MSG_INNER(devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE,
         "devType=%d is invalid, retCode=%#x", devType, static_cast<uint32_t>(RT_ERROR_INVALID_VALUE));
-    NULL_PTR_RETURN_MSG_OUTER(moduleName, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(moduleName, RT_ERROR_INVALID_VALUE, "Setting the callback function for XPU task exceptions");
     return impl_->XpuSetTaskFailCallback(devType, moduleName, callback);
 }
 

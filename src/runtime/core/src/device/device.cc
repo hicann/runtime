@@ -164,7 +164,7 @@ rtError_t GroupDevice::GetGroupInfo(const int32_t grpId, rtGroupInfo_t * const i
 
 rtError_t GroupDevice::GetGroupCount(uint32_t * const cnt)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cnt, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of available computing power groups");
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_INFO_SETUP_DOT_ON_DEMIND)) {
         (void)QueryGroupInfo();
@@ -178,7 +178,8 @@ rtError_t GroupDevice::SetGroup(const int32_t grpId)
 {
     const int32_t maxGroupId = GetDevProperties().maxGroupId;
     if ((grpId < MIN_GROUP_ID) || (grpId > maxGroupId)) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(grpId,
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Specifying the group used for the current operation",
+            grpId,
             "[" + std::to_string(MIN_GROUP_ID) + ", " + std::to_string(maxGroupId) + "]");
         return RT_ERROR_INVALID_VALUE;
     }

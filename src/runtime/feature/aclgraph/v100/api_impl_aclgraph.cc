@@ -43,7 +43,7 @@ rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMd
         CaptureModel *captureModel = RtPtrToPtr<CaptureModel *, Model *>(captureStream->Model_());
         if ((captureModel != nullptr) && (!captureModel->IsSubCaptureModel())) {
             isSubCaptureModel = false;
-            NULL_PTR_RETURN_MSG_OUTER(captureMdl, RT_ERROR_INVALID_VALUE);
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(captureMdl, RT_ERROR_INVALID_VALUE, "Ending the capture of a stream");
         }
     }
     Context * const curCtx = CurrentContext();
@@ -180,7 +180,7 @@ rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValu
     rtCondHandleFlag_t flag, CondHandle ** const handle)
 {
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
-    NULL_PTR_RETURN_MSG_OUTER(captureModel, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(captureModel, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
     COND_RETURN_AND_MSG_OUTER(!(captureModel->IsCaptureActive()),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtModelCondHandleCreate", "modelRI",
         RtFmtMsg("ModelRI (model_id=%d) is not in the capture stage", mdl->Id_()));

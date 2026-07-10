@@ -430,8 +430,8 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t *taskInfo)
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to get random num data size, dataType=%d, retCode=%d.", taskInfo->dataType, error);
 
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomResultAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE, "Checking the validity of random number generation task parameters");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskInfo->randomResultAddr, RT_ERROR_INVALID_VALUE, "Checking the validity of random number generation task parameters");
 
     // 随机种子和随机数个数均为64bit
     const rtRandomParaInfo_t seed = taskInfo->randomSeed;
@@ -457,7 +457,8 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t *taskInfo)
             error = CheckNorDisTaskInfo(taskInfo, dataSize);
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(taskInfo->randomNumFuncParaInfo.funcType,
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Checking the validity of random number generation task parameters",
+                taskInfo->randomNumFuncParaInfo.funcType,
                 "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) +")");
             error = RT_ERROR_INVALID_VALUE;
             break;

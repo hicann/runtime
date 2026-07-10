@@ -66,7 +66,7 @@ rtError_t CondStreamSwitchN(
     }
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_STREAM_CONTEXT);
 
-    NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(trueStreamPtr, RT_ERROR_STREAM_NULL, "Switching between multi-dimensional streams based on conditional operators");
 
     rtError_t error;
     StreamSwitchNLoadResult result;

@@ -35,7 +35,7 @@ static rtError_t StreamBeginCaptureMdlCheck(Model * const mdl)
 
 rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Starting capturing tasks delivered to a stream");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(((mode >= RT_STREAM_CAPTURE_MODE_MAX) ||
         (mode < RT_STREAM_CAPTURE_MODE_GLOBAL)), RT_ERROR_INVALID_VALUE, StreamCaptureModeToString(mode), "mode",
         "[" + std::to_string(RT_STREAM_CAPTURE_MODE_GLOBAL) + ", " +
@@ -52,7 +52,7 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStre
 
 rtError_t ApiErrorDecorator::StreamEndCapture(Stream * const stm, Model ** const captureMdl)
 {  
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Ending the capture of a stream");
     COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, "Stream end capture",
         std::to_string(stm->Flags()), "stream flag",
         RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", stm->Id_()));
@@ -62,7 +62,7 @@ rtError_t ApiErrorDecorator::StreamEndCapture(Stream * const stm, Model ** const
 rtError_t ApiErrorDecorator::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptureStatus * const status,
                                                   Model ** const captureMdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the capture information of a stream");
     COND_RETURN_AND_MSG_OUTER((status == nullptr) && (captureMdl == nullptr), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1022, "rtStreamGetCaptureInfo", "nullptr and nullptr", "status and captureMdl",
         "Parameters status and captureMdl cannot both be nullptr");
@@ -72,57 +72,57 @@ rtError_t ApiErrorDecorator::StreamGetCaptureInfo(const Stream * const stm, rtSt
 
 rtError_t ApiErrorDecorator::StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Marking the start of the task to be updated");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Marking the start of the task to be updated");
 
     COND_RETURN_AND_MSG_OUTER((stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
-        __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        "Marking the start of the task to be updated", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL,
-        ErrorCode::EE1016, __func__, "Only single operator stream is supported");
+        ErrorCode::EE1016, "Marking the start of the task to be updated", "Only single operator stream is supported");
 
     return impl_->StreamBeginTaskUpdate(stm, handle);
 }
 
 rtError_t ApiErrorDecorator::StreamEndTaskUpdate(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Marking the end of the task to be updated");
 
     COND_RETURN_AND_MSG_OUTER((stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
-        __func__, RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+        "Marking the end of the task to be updated", RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
     
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL,
-        ErrorCode::EE1016, __func__, "Only single operator stream is supported");
+        ErrorCode::EE1016, "Marking the end of the task to be updated", "Only single operator stream is supported");
 
     return impl_->StreamEndTaskUpdate(stm);
 }
 
 rtError_t ApiErrorDecorator::ModelGetNodes(const Model * const mdl, uint32_t * const num)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(num, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining model node information");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(num, RT_ERROR_INVALID_VALUE, "Obtaining model node information");
 
     return impl_->ModelGetNodes(mdl, num);
 }
 
 rtError_t ApiErrorDecorator::ModelDebugDotPrint(const Model * const mdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Exporting the model running instance information in DOT format");
 
     return impl_->ModelDebugDotPrint(mdl);
 }
 
 rtError_t ApiErrorDecorator::ModelDebugJsonPrint(const Model * const mdl, const char* path, const uint32_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(path, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Exporting the model running instance information in JSON format");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(path, RT_ERROR_INVALID_VALUE, "Exporting the model running instance information in JSON format");
     return impl_->ModelDebugJsonPrint(mdl, path, flags);
 }
 
 rtError_t ApiErrorDecorator::StreamAddToModel(Stream * const stm, Model * const captureMdl)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(captureMdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Binding a model running instance to a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(captureMdl, RT_ERROR_INVALID_VALUE, "Binding a model running instance to a stream");
     COND_RETURN_AND_MSG_OUTER(captureMdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
         ErrorCode::EE1016, "rtStreamAddToModel", "Non ACL Graph mode is not supported");
 
@@ -137,7 +137,7 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream * const stm, Model * const 
 
 rtError_t ApiErrorDecorator::ThreadExchangeCaptureMode(rtStreamCaptureMode * const mode)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mode, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mode, RT_ERROR_INVALID_VALUE, "Switching the capture mode of the current thread");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((static_cast<uint32_t>(*mode) >= RT_STREAM_CAPTURE_MODE_MAX),
         RT_ERROR_INVALID_VALUE, StreamCaptureModeToString(*mode), "mode",
         "less than " + std::to_string(RT_STREAM_CAPTURE_MODE_MAX));
@@ -147,26 +147,26 @@ rtError_t ApiErrorDecorator::ThreadExchangeCaptureMode(rtStreamCaptureMode * con
 
 rtError_t ApiErrorDecorator::StreamBeginTaskGrp(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Marking the start of a task group");
     COND_RETURN_AND_MSG_OUTER((!stm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
-        __func__, RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
+        "Marking the start of a task group", RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
     return impl_->StreamBeginTaskGrp(stm);
 }
 
 rtError_t ApiErrorDecorator::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Marking the end of a task group");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Marking the end of a task group");
     COND_RETURN_AND_MSG_OUTER((!stm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
-        __func__, RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
+        "Marking the end of a task group", RtFmtMsg("Stream (stream_id=%d) is not in the capture stage", stm->Id_()));
     return impl_->StreamEndTaskGrp(stm, handle);
 }
 
 rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
     rtCondHandleFlag_t flag, CondHandle ** const handle)
 {
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(static_cast<uint32_t>(flag) > RT_COND_HANDLE_ASSIGN_DEFAULT,
         RT_ERROR_INVALID_VALUE, CondHandleFlagToString(flag), "flag",
         "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
@@ -177,23 +177,23 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t d
 
 rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Obtaining the device pointer of a conditional handle");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, "Obtaining the device pointer of a conditional handle");
     return impl_->ModelCondHandleGetCondPtr(handle, devPtr);
 }
 
 rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((static_cast<uint32_t>(params.type) > RT_COND_TASK_TYPE_SWITCH),
         RT_ERROR_INVALID_VALUE, CondTaskTypeToString(params.type), "params.type",
         "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((params.size == 0), RT_ERROR_INVALID_VALUE, params.size, "(0, UINT32_MAX]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC((params.size == 0), RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream", params.size, "(0, UINT32_MAX]");
     COND_RETURN_AND_MSG_RESERVED_PARAM((flags != 0), RT_ERROR_INVALID_VALUE, "flags",
         "flags is reserved parameter and must be 0");
 
-    NULL_PTR_RETURN_MSG_OUTER(params.handle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(params.modelRIArray, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params.handle, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params.modelRIArray, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");
 
     return impl_->StreamAddCondTask(params, stm, flags);
 }

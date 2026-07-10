@@ -5212,7 +5212,7 @@ rtError_t Stream::StreamGetTasks(void **tasks, uint32_t *numTasks)
         tasks[i] = nullptr;
     }
     *numTasks = retTaskNum;
-    COND_RETURN_AND_MSG_OUTER(*numTasks < taskNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, __func__,
+    COND_RETURN_AND_MSG_OUTER(*numTasks < taskNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, "Obtaining all tasks in a stream",
         *numTasks, "numTasks",
         "The array space is insufficient. The array size is less than the total number of tasks in model streams " +
         std::to_string(taskNum));

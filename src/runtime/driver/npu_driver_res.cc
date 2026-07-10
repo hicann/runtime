@@ -69,7 +69,7 @@ rtError_t NpuDriver::GetAllFaultEvent(const uint32_t deviceId, rtDmsFaultEvent *
 rtError_t NpuDriver::ReadFaultEvent(
     const int32_t deviceId, uint32_t timeout, const rtDmsEventFilter * const filter, rtDmsFaultEvent *dmsEvent)
 {
-    NULL_PTR_RETURN_MSG_OUTER(filter, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(filter, RT_ERROR_INVALID_VALUE, "Reading an error event");
     drvError_t drvRet = DRV_ERROR_NONE;
 
     COND_RETURN_WARN(&halReadFaultEvent == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,

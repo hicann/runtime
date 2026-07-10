@@ -751,7 +751,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     StarsArgLoaderResult result = {};
     bool copyFlag = true;
     uint8_t mixType = NO_MIX;
-    NULL_PTR_RETURN_MSG_OUTER(progHandle, RT_ERROR_PROGRAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(progHandle, RT_ERROR_PROGRAM_NULL, "Delivering a kernel task based on BinHandle");
 
     uint64_t addr1 = 0ULL;
     uint64_t addr2 = 0ULL;

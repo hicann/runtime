@@ -24,10 +24,10 @@ rtError_t XpuLaunchKernel(const Kernel * const kernel, const uint32_t coreDim, c
     Stream * const stm, const TaskCfg * const taskCfg)
 {
     COND_RETURN_AND_MSG_OUTER(kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_NON_CPU,
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "kernel",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Launching XPU kernel", "kernel",
         "XPU kernel launch only supports AICPU operators");
     COND_RETURN_AND_MSG_OUTER(taskCfg->base.dumpflag != 0,
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "taskCfg",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Launching XPU kernel", "taskCfg",
         "XPU kernel launch does not support dump");
     
     RT_LOG(RT_LOG_DEBUG,

@@ -21,7 +21,7 @@ namespace runtime {
 
 rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Operating the cache memory on the device");
     if (stm->Model_() != nullptr) {
         RT_LOG(RT_LOG_WARNING, "CMO task stream does not support in model.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;

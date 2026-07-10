@@ -35,7 +35,7 @@ rtError_t StreamStateCallbackManager::RegStreamStateCallback(const char_t *regNa
         callbackMap_[regName].args = nullptr;
     } else if(type == StreamStateCallback::RTS_STREAM_STATE_CALLBACK) {
         COND_RETURN_AND_MSG_OUTER(callbackMap_.count(regName) > 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-            __func__, regName, "regName", "The callback name has already been registered");
+            "Registering the stream status callback function", regName, "regName", "The callback name has already been registered");
         callbackMap_[regName].callback = nullptr;
         callbackMap_[regName].callbackV2 = RtPtrToPtr<rtsStreamStateCallback>(callback);
         callbackMap_[regName].args = args;

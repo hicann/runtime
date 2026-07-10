@@ -147,6 +147,13 @@
         return RTERRCODE; \
     }
 
+//EE1003错误码专用，带语义化函数描述
+#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(COND, RTERRCODE, FUNC_DESC, param, ...) \
+    if (unlikely(COND)) { \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, FUNC_DESC, (param), #param, ##__VA_ARGS__); \
+        return RTERRCODE; \
+    }
+
 //EE1003错误码使用，value与参数名分开传入
 //value: ToString(var)等可读值表达式（运行时求值）
 //paramName: 参数名字字符串字面量（如"level"、"flag"）

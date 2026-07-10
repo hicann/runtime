@@ -1329,7 +1329,8 @@ rtError_t NpuDriver::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t 
             infoType = MODULE_TYPE_AICPU;
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(kind, "(0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
+            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Querying the usage of Cube, Vector, and AI CPU on the device",
+                kind, "(0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
     int64_t value = 0;
@@ -1411,7 +1412,7 @@ rtError_t NpuDriver::HdcSessionClose(rtHdcSession_t const session)
 
 rtError_t NpuDriver::GetServerId(const uint32_t deviceId, int64_t *const serverId)
 {
-    NULL_PTR_RETURN_MSG_OUTER(serverId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(serverId, RT_ERROR_INVALID_VALUE, "Obtaining the server ID");
     const drvError_t drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_SERVER_ID, serverId);
     // 判断是否支持跨机 (71 serverId=0x3FF)
     if (drvRet == DRV_ERROR_NOT_SUPPORT || *serverId == 0x3FF) {
@@ -1438,7 +1439,7 @@ rtError_t NpuDriver::GetHostID(uint32_t *hostId)
 
 rtError_t NpuDriver::GetPageFaultCount(const uint32_t deviceId, uint32_t * const value)
 {
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Querying the number of errors on the SVM page of a specified device");
     struct drv_process_status_output out = {};
     COND_RETURN_WARN(&halCheckProcessStatusEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halCheckProcessStatusEx does not exist");

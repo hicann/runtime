@@ -541,7 +541,7 @@ RECYCLE:
 
 rtError_t UmaArgLoader::GetKernelInfoDevAddr(const char_t * const name, const KernelInfoType type, void ** const addr)
 {
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_KERNEL_NAME);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_KERNEL_NAME, "Querying the start address of the corresponding operator on the device based on the kernel name.");
 
     rtError_t error;
     switch (type) {

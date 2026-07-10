@@ -20,7 +20,7 @@ namespace runtime {
 
 rtError_t EvtRecord(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
     rtError_t error = RT_ERROR_NONE;
     DavidEvent *davidEvt = static_cast<DavidEvent *>(evt);
     int32_t newEventId = davidEvt->EventId_();
@@ -63,7 +63,7 @@ rtError_t EvtRecord(Event * const evt, Stream * const stm)
 
 rtError_t EvtRecordSoftwareMode(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event recording");
     DavidEvent *davidEvt = static_cast<DavidEvent *>(evt);
     TaskInfo *tsk = nullptr;
     rtError_t error = CheckTaskCanSend(stm);
@@ -161,7 +161,7 @@ rtError_t ProcStreamRecordTask(Stream * const stm, int32_t timeout)
 
 rtError_t EvtWait(Event * const evt, Stream * const stm, const uint32_t timeout)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Waiting for an event");
     rtError_t error = RT_ERROR_NONE;
     Device * const dev = stm->Device_();
     DavidEvent *davidEvt = static_cast<DavidEvent *>(evt);
@@ -205,7 +205,7 @@ rtError_t EvtWait(Event * const evt, Stream * const stm, const uint32_t timeout)
 
 rtError_t EvtWaitSoftwareMode(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Waiting for an event");
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 
@@ -252,7 +252,7 @@ rtError_t EvtWaitSoftwareMode(Event * const evt, Stream * const stm)
 
 rtError_t EvtReset(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event reset");
     TaskInfo *tsk = nullptr;
     DavidEvent *davidEvt = static_cast<DavidEvent *>(evt);
     const int32_t eventId = davidEvt->EventId_();
@@ -285,7 +285,7 @@ rtError_t EvtReset(Event * const evt, Stream * const stm)
 
 rtError_t EvtResetSoftwareMode(Event * const evt, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_STREAM_NULL, "Event reset");
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 

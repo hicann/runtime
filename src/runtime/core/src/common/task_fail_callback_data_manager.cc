@@ -74,7 +74,7 @@ rtError_t TaskFailCallBackManager::RegTaskFailCallback(const char_t *regName, vo
         callbackMap_[regName].args = nullptr;
     } else if(type == TaskFailCallbackType::RTS_SET_TASK_FAIL_CALLBACK) {
         COND_RETURN_AND_MSG_OUTER(callbackMap_.count(regName) > 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-            __func__, regName, "regName", "The callback name has already been registered.");
+            "Registering the callback function for task exceptions", regName, "regName", "The callback name has already been registered.");
         callbackMap_[regName].callback = nullptr;
         callbackMap_[regName].callbackV2 = RtPtrToPtr<rtsTaskFailCallback>(callback);
         callbackMap_[regName].args = args;

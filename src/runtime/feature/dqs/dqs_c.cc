@@ -360,31 +360,31 @@ static rtError_t DqsSchedConfigCheck(const rtDqsSchedCfg_t *const cfg)
 static rtError_t DqsZeroCopyTaskCfgCheck(const rtDqsZeroCopyCfg_t *const cfg)
 {
     const rtDqsZeroCopyType copyType = cfg->copyType;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (copyType != RT_DQS_ZERO_COPY_INPUT) && (copyType != RT_DQS_ZERO_COPY_OUTPUT),
-        RT_ERROR_INVALID_VALUE, copyType, "[0, 1]");
+        RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task", copyType, "[0, 1]");
 
     const rtDqsZeroCopyAddrOrderType copyOrderType = cfg->cpyAddrOrder;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_LOW32_FIRST) &&
         (copyOrderType != RT_DQS_ZERO_COPY_ADDR_ORDER_HIGH32_FIRST),
-        RT_ERROR_INVALID_VALUE, copyOrderType, "[0, 1]");
+        RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task", copyOrderType, "[0, 1]");
     
     ZERO_RETURN_AND_MSG_OUTER(cfg->count)
-    NULL_PTR_RETURN_MSG_OUTER(cfg->dest, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg->offset, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->dest, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->offset, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS zero-copy task");
 
     return RT_ERROR_NONE;
 }
  
 static rtError_t DqsAdspcTaskCfgCheck(const rtDqsAdspcTaskCfg_t *const cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cfg, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cfg->cqeSize != ADSPC_CQE_SIZE, RT_ERROR_INVALID_VALUE, 
-        cfg->cqeSize, std::to_string(ADSPC_CQE_SIZE));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(cfg->cqeSize != ADSPC_CQE_SIZE, RT_ERROR_INVALID_VALUE, 
+        "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.", cfg->cqeSize, std::to_string(ADSPC_CQE_SIZE));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(cfg->cqDepth != ADSPC_CQ_DEPTH, RT_ERROR_INVALID_VALUE, 
-        cfg->cqDepth, std::to_string(ADSPC_CQ_DEPTH));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(cfg->cqDepth != ADSPC_CQ_DEPTH, RT_ERROR_INVALID_VALUE, 
+        "Checking the configuration validity of the DQS cross-chip solver (ADSPC) task.", cfg->cqDepth, std::to_string(ADSPC_CQ_DEPTH));
 
     ZERO_RETURN_AND_MSG_OUTER(cfg->cqeBaseAddr);
     ZERO_RETURN_AND_MSG_OUTER(cfg->cqeCopyAddr);
@@ -397,10 +397,10 @@ static rtError_t DqsAdspcTaskCfgCheck(const rtDqsAdspcTaskCfg_t *const cfg)
 
 static rtError_t DqsConditionCopyTaskCfgCheck(const rtDqsConditionCopyCfg_t *const cfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(cfg, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg->condition, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg->dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(cfg->src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS conditional copy task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->condition, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS conditional copy task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->dst, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS conditional copy task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cfg->src, RT_ERROR_INVALID_VALUE, "Checking the configuration validity of the DQS conditional copy task");
     ZERO_RETURN_MSG(cfg->cnt);
 
     COND_RETURN_ERROR_MSG_INNER((RtPtrToValue(cfg->dst) % 8ULL) != 0ULL,
@@ -421,7 +421,7 @@ static rtError_t DqsConditionCopyTaskCfgCheck(const rtDqsConditionCopyCfg_t *con
 
 static rtError_t DqsLaunchSchedConfig(Stream * const stm, const rtDqsTaskCfg_t *const taskCfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskCfg->cfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskCfg->cfg, RT_ERROR_INVALID_VALUE, "Starting a DQS scheduling configuration task");
     const rtError_t ret = DqsSchedConfigCheck(RtPtrToPtr<rtDqsSchedCfg_t *>(taskCfg->cfg));
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
 
@@ -430,7 +430,7 @@ static rtError_t DqsLaunchSchedConfig(Stream * const stm, const rtDqsTaskCfg_t *
 
 static rtError_t DqsLaunchZeroCopyTask(Stream * const stm, const rtDqsTaskCfg_t *const taskCfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskCfg->cfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskCfg->cfg, RT_ERROR_INVALID_VALUE, "Starting a DQS zero-copy task");
     const DqsTaskConfig dqsTaskCfg = { .zeroCopyCfg = RtPtrToPtr<rtDqsZeroCopyCfg_t *>(taskCfg->cfg) };
     const rtError_t ret = DqsZeroCopyTaskCfgCheck(dqsTaskCfg.zeroCopyCfg);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
@@ -440,7 +440,7 @@ static rtError_t DqsLaunchZeroCopyTask(Stream * const stm, const rtDqsTaskCfg_t 
 
 static rtError_t DqsLaunchAdspcTask(Stream * const stm, const rtDqsTaskCfg_t *const taskCfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskCfg->cfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskCfg->cfg, RT_ERROR_INVALID_VALUE, "Starting a DQS cross-chip solver (ADSPC) task");
     const DqsTaskConfig dqsTaskCfg = { .adspcCfg = RtPtrToPtr<rtDqsAdspcTaskCfg_t *>(taskCfg->cfg) };
     const rtError_t ret = DqsAdspcTaskCfgCheck(dqsTaskCfg.adspcCfg);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
@@ -450,7 +450,7 @@ static rtError_t DqsLaunchAdspcTask(Stream * const stm, const rtDqsTaskCfg_t *co
 
 static rtError_t DqsLaunchConditionCopyTask(Stream * const stm, const rtDqsTaskCfg_t *const taskCfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(taskCfg->cfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskCfg->cfg, RT_ERROR_INVALID_VALUE, "Starting a DQS conditional copy task");
     const DqsTaskConfig dqsTaskCfg = { .condCopyCfg = RtPtrToPtr<rtDqsConditionCopyCfg_t *>(taskCfg->cfg) };
     const rtError_t ret = DqsConditionCopyTaskCfgCheck(dqsTaskCfg.condCopyCfg);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
@@ -493,8 +493,8 @@ static std::map<rtDqsTaskType, DqsLaunchTaskFunc> DQS_LAUNCH_TASK_FUNC_MAP = {
 
 rtError_t DqsLaunchTask(Stream *const stm, const rtDqsTaskCfg_t *const taskCfg)
 {
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(taskCfg, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "DQS task delivery");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(taskCfg, RT_ERROR_INVALID_VALUE, "DQS task delivery");
 
     auto dqsLaunchTaskFuncIter = DQS_LAUNCH_TASK_FUNC_MAP.find(taskCfg->type);
 

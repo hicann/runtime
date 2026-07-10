@@ -156,7 +156,7 @@ rtError_t Notify::ReAllocId() const
 
 rtError_t Notify::Record(Stream * const streamIn)
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamIn, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamIn, RT_ERROR_STREAM_NULL, "Notify recording");
     Device * const dev = streamIn->Device_();
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -203,7 +203,7 @@ ERROR_RECYCLE:
 
 rtError_t Notify::Reset(Stream * const streamIn) const
 {
-    NULL_PTR_RETURN_MSG_OUTER(streamIn, RT_ERROR_STREAM_NULL);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamIn, RT_ERROR_STREAM_NULL, "Notify reset");
     Device * const dev = streamIn->Device_();
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         return dev->GetCtrlSQ().SendNotifyResetMsg(notifyid_);
