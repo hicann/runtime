@@ -1553,7 +1553,7 @@ rtError_t Context::StreamCreate(const uint32_t prio, const uint32_t flag, Stream
     }
 
     newStream->SetContext(this);
-    if (isAutoSplitEnable) {
+    if ((isAutoSplitEnable) && ((flag & RT_STREAM_FORBIDDEN_DEFAULT) == 0U)) {
         newStream->SetAutoSplitSq(true);
         error = newStream->SetupForAutoSplit();
         RT_LOG(RT_LOG_INFO, "Stream setup with auto split, stream_id=%d, prio=%u, flag=%u.",
