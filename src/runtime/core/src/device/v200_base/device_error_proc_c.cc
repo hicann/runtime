@@ -795,7 +795,7 @@ void GetExceptionArgsForFusionKernelTask(const TaskInfo * const taskInfo, rtExce
 static void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo * const info, uint64_t errorNumber)
 {
     RT_LOG_CALL_MSG(ERR_MODULE_TBE, "The error from device(chipId=%u, dieId=%u), serial number is %" PRIu64 ", "
-        "exception occurred during fusion kernel task execution, streamId=%u, taskId=%u, subtasks' subType=%hu,"
+        "exception occurred during fusion kernel task execution, streamId=%u, taskId=%u, subtasks' subType=%hu, "
         "sqeLength=%hu, cqeStatus=%u.", info->u.fusionKernelErrorInfo.comm.chipId, info->u.fusionKernelErrorInfo.comm.dieId,
         errorNumber, info->u.fusionKernelErrorInfo.comm.streamId, info->u.fusionKernelErrorInfo.comm.taskId,
         info->u.fusionKernelErrorInfo.subType, info->u.fusionKernelErrorInfo.sqeLength,

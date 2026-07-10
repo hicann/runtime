@@ -48,6 +48,9 @@ void AixKernelTaskInitForFusion(TaskInfo * const taskInfo, const rtAicAivFusionI
     aicPart->qos = launchTaskCfg->qos;
     aicPart->partId = launchTaskCfg->partId;
     aicPart->schemMode = launchTaskCfg->schemMode;
+    if (aicPart->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END)) {
+        aicPart->schemMode = (aicPart->kernel == nullptr) ? static_cast<uint8_t>(RT_SCHEM_MODE_NORMAL) : aicPart->kernel->GetSchedMode();
+    }
 
     aicPart->dynamicShareMemSize = 0U;
     aicPart->simtDcuSmSize = RT_SIMT_UB_SIZE;
