@@ -1709,8 +1709,8 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
     rtError_t error = RT_ERROR_NONE;
     Runtime *rt = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
-    Context * const curCtx = CurrentContext();
     if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
+        Context * const curCtx = CurrentContext();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         RT_LOG(RT_LOG_WARNING, "DeviceSetLimit, drv devId=%u, type=%u, value=%u.", static_cast<uint32_t>(devId),
             static_cast<uint32_t>(type), val);
