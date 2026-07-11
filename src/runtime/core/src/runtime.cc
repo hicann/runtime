@@ -5021,7 +5021,7 @@ rtError_t Runtime::GetElfOffset(void * const elfData, const uint32_t elfLen, uin
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(elfData, RT_ERROR_INVALID_VALUE, "Obtaining the ElfData offset");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(offset, RT_ERROR_INVALID_VALUE, "Obtaining the ElfData offset");
-    int32_t error = GetEhSizeOffset(elfData, elfLen, offset);
+    const int32_t error = GetEhSizeOffset(elfData, elfLen, offset);
     if (error != 0) {
         return RT_ERROR_INVALID_VALUE;
     }
