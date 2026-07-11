@@ -123,8 +123,8 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "AsyncDmaWqeConvert failed, device_id=%u, size=%lu, retCode=%#x.", deviceId, memcpyInfo->size, error);
     jettyCtx->filledWqeCount += output->wqeCnt;
-    // 记录 taskId 和 totalWqeCount，用于后续刷新 dieId/funcId/jettyId/pi
-    jettyCtx->taskWqeCounts.push_back(std::pair<uint32_t, uint32_t>(task->id, output->wqeCnt));
+    // 记录 task 和 totalWqeCount 用于后续刷新 dieId/funcId/jettyId/pi
+ 	jettyCtx->taskWqeCounts.push_back(std::pair<TaskInfo*, uint32_t>(const_cast<TaskInfo*>(task), output->wqeCnt));
     RT_LOG(RT_LOG_DEBUG, "Create and append wqe success, stream_id=%d, task_id=%u, size=%lu, wqeCount=%u.", stream->Id_(),
         task->id, memcpyInfo->size, output->wqeCnt);
     return RT_ERROR_NONE;
@@ -296,12 +296,12 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     NULL_PTR_RETURN(stream->Device_()->GetTaskFactory(), RT_ERROR_INVALID_VALUE);
     for (const auto& pos : jettyCtx->taskWqeCounts) {
-        uint32_t taskId = pos.first;
         uint32_t wqeCount = pos.second;
-        TaskInfo* taskInfo = stream->Device_()->GetTaskFactory()->GetTask(stream->Id_(), taskId);
+        TaskInfo* taskInfo = pos.first;
         if (taskInfo == nullptr) {
             continue;
         }
+        uint32_t taskId = taskInfo->id;
         MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
         memcpyAsyncTaskInfo->ubDma.jettyId = jettyInfo.jettyId;
         memcpyAsyncTaskInfo->ubDma.dieId = jettyInfo.dieId;
@@ -309,6 +309,8 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
         memcpyAsyncTaskInfo->ubDma.pi = wqeCount;
         rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX] = {};
         rtDavidSqe_t* sqe = davidSqe;
+        taskInfo->bindFlag = taskInfo->stream->GetBindFlag();
+ 	    taskInfo->isNoRingbuffer = 1U;
         ConstructDavidAsyncUbDbSqe(taskInfo, sqe);
         sqe->phSqe.header.headUpdate = GetHeadUpdateFlag(taskId);
         const errno_t rc = memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(stream->GetSqeBuffer()) + sizeof(rtStarsSqe_t) * taskInfo->pos),

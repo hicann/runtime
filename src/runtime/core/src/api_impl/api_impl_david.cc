@@ -697,7 +697,7 @@ rtError_t ApiImplDavid::MemCopy2DAsync(void * const dst, const uint64_t dstPitch
         if (Runtime::Instance()->GetConnectUbFlag() && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)) {
             fixedSize = realSize;
             remainSize = totalSize - fixedSize;
-            if (remainSize > 0UL && !(curStm->GetBindFlag())) {
+            if (remainSize > 0UL && !(curStm->IsCapturing())) {
                 error = curStm->Synchronize();
                 ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.",
                     static_cast<uint32_t>(error));
@@ -769,7 +769,7 @@ rtError_t ApiImplDavid::BatchMemcpyAsync(void** const dsts, const size_t* const 
         fixedCnt = realCnt;
         fixedSize = realSize;
         remainCnt -= fixedCnt;
-        if (remainCnt > 0UL && !(curStm->GetBindFlag())) {
+        if (remainCnt > 0UL && !(curStm->IsCapturing())) {
             error = curStm->Synchronize();
             ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
         }

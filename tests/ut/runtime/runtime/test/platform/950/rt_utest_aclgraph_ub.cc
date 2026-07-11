@@ -599,7 +599,7 @@ TEST_F(StreamJettyHandlerIntegrationTest, FillWqeToDevice_WithValidBuffers)
 TEST_F(StreamJettyHandlerIntegrationTest, UpdateUbdmaSqeWithJettyInfo_WithPositions)
 {
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 1});
+    context.taskWqeCounts.push_back({nullptr, 1});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 1;
     jettyInfo.dieId = 2;
@@ -2276,7 +2276,7 @@ TEST_F(NpuDriverJettyTest, UpdateUbdmaSqeWithJettyInfo_TaskFactoryNull)
 {
     FullResetAndSetupMocks(stream_->Device_()->Driver_());
     StreamJettyContext context;
-    context.taskWqeCounts.push_back(std::make_pair(1U, 1U));
+    context.taskWqeCounts.push_back(std::make_pair(static_cast<TaskInfo*>(nullptr), 1U));
     JettyInfo jettyInfo;
     RawDevice* rawDev = static_cast<RawDevice*>(stream_->Device_());
     TaskFactory* origFactory = rawDev->taskFactory_;

@@ -99,7 +99,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Init MemcpyAsyncTask failed, stream_id=%d, retCode=%#x", stm->Id_(),
         static_cast<uint32_t>(error));
     // David UB 单算子场景 fixedSize是否与计算出的size相等，如果相等则不需要发送任务
-    if (IsDavidUbDma(taskAsync2d->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag() 
+    if (IsDavidUbDma(taskAsync2d->u.memcpyAsyncTaskInfo.copyType) && !stm->IsCapturing() 
         && fixedSize == taskAsync2d->u.memcpyAsyncTaskInfo.size) {
         RT_LOG(RT_LOG_WARNING,
             "In UB eager mode, no need to send taskAsync2d if fixedSize has not changed. stream_id=%d, fixedSize=%" PRIu64 ", size=%" PRIu64 " ",  
@@ -145,7 +145,7 @@ rtError_t MemcopyBatchAsync(AsyncDmaBatchInfo &batchInfo, uint64_t* const realCn
     ERROR_RETURN_MSG_INNER(error, "Init taskAsyncBatch task failed, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
     // David UB 单算子场景 如果驱动本次下发处理的count个数为0，则表示没有触发wqe下发，不需要下发ub db task	 
-    if (IsDavidUbDma(taskAsyncBatch->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag()
+    if (IsDavidUbDma(taskAsyncBatch->u.memcpyAsyncTaskInfo.copyType) && !stm->IsCapturing()
         && batchInfo.fixedCnt == taskAsyncBatch->u.memcpyAsyncTaskInfo.size) {
         RT_LOG(RT_LOG_WARNING,
             "In UB eager mode, no need to send taskAsyncBatch if fixedCnt has not changed. stream_id=%d, fixedCnt=%" PRIu64 ", size=%" PRIu64 " ",  
