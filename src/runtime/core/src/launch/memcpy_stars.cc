@@ -213,15 +213,21 @@ rtError_t MemSetAsync(Stream * const stm, void * const ptr, const uint64_t destM
     } else {
         void *hostPtr = nullptr;
         std::shared_ptr<void> hostPtrGuard;
-        // malloc 64M Host memory and memset with parameter:fillVal
-        hostPtr = AlignedMalloc(Context::MEM_ALIGN_SIZE, static_cast<size_t>(MEM_BLOCK_SIZE));
-        NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
-        hostPtrGuard.reset(hostPtr, &AlignedFree);
         const uint64_t setSize = (fillCount < MEM_BLOCK_SIZE) ? fillCount : MEM_BLOCK_SIZE;
+        // Allocate host memory via driver interface instead of glibc malloc.
+        // Driver-allocated host memory may be pre-pinned, reducing page fault latency on memset.
+        Driver * const driver = stm->Device_()->Driver_();
+        // driver->HostMemAlloc接口内已经默认做了512字节对齐
+        rtError_t allocErr = driver->HostMemAlloc(&hostPtr, setSize, stm->Device_()->Id_());
+        ERROR_RETURN(allocErr, "Alloc host mem failed, size=%llu, retCode=%#x.",
+            setSize, static_cast<uint32_t>(allocErr));
+        NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
+        // hostPtrGuard takes ownership: deleter calls HostMemFree on last reference.
+        // Do NOT manually call HostMemFree after this point — shared_ptr handles it.
+        hostPtrGuard.reset(hostPtr, [driver](void *p) { (void)driver->HostMemFree(p); });
         ret = memset_s(hostPtr, setSize, static_cast<int32_t>(fillVal), setSize);
         if (ret != EOK) {
             RT_LOG(RT_LOG_DEBUG, "memset_s failed, retCode=%d", ret);
-            hostPtr = nullptr;
             return RT_ERROR_SEC_HANDLE;
         }
 
@@ -229,7 +235,6 @@ rtError_t MemSetAsync(Stream * const stm, void * const ptr, const uint64_t destM
             RT_LOG(RT_LOG_WARNING,
                 "current fillCount=%" PRIu64 ", destMax=%" PRIu64 ", fillCount must be less than or equal to destMax!",
                 fillCount, destMax);
-            hostPtr = nullptr;
             return RT_ERROR_MEMORY_ALLOCATION;
         }
 

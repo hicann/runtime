@@ -6492,6 +6492,15 @@ TEST_F(ApiDavidTest, memset_async)
 
     error = rtMemsetAsync(tmp_devPtr, 60, 0, 65 * 1024 * 1024, streamHandle_);
     EXPECT_NE(error, RT_ERROR_NONE);
+
+    // Cover HostMemAlloc failure path
+    NpuDriver *realDrv = dynamic_cast<NpuDriver *>(stream_->Device_()->Driver_());
+    MOCKER_CPP_VIRTUAL(realDrv, &NpuDriver::HostMemAlloc)
+                    .stubs()
+                    .will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    error = rtMemsetAsync(devPtr, 60, 0, 60, streamHandle_);
+    EXPECT_NE(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
     stream_->SetSqBaseAddr(oldSqAddr);
     TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
     RecycleModelBindStreamAllTask(stream_, false);
