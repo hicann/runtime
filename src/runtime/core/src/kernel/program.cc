@@ -673,7 +673,7 @@ rtError_t Program::StoreKernelLiteralNameToDevice(Kernel *const kernel)
 {
     void *soNameDevAddr = nullptr;
     void *funcNameDevAddr = nullptr;
-
+    COND_PROC(kernelRegType_ == RT_KERNEL_REG_TYPE_NON_CPU, return RT_ERROR_NONE);
     // get current device
     Runtime* runtime = Runtime::Instance();
     NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
@@ -1338,11 +1338,11 @@ rtError_t Program::CopySoAndNameToCurrentDevice()
             // Aicpu算子注册时，把KernelName, soname存储至device侧，并把devAddr记录至kernel，从而args区无须填入kernelName, soname
             Kernel *kernel = iter->second;
             ret = StoreKernelLiteralNameToDevice(kernel);
+
             if (unlikely(ret != RT_ERROR_NONE)) {
                 RT_LOG(RT_LOG_ERROR, "Failed to store kernel %s literal name to device_id=%d, retCode=%#x", iter->first.c_str(), device->Id_(), ret);
-                ResetEmbeddedInnerHandle<Kernel>(kernel);
-                delete kernel;
-                iter = kernelNameMap_.erase(iter);
+                kernelMapLock_.Unlock();
+                return ret;
             } else {
                 ++iter;
             }

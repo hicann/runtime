@@ -785,3 +785,30 @@ TEST_F(ProgramTest, GetKernelTypeAndMixTypeByMetaInfo_MixMain_InvalidKernelName)
     rtError_t ret = program.GetKernelTypeAndMixTypeByMetaInfo(&kernel, kernelAttrType, mixType);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
 }
+
+TEST_F(ProgramTest, StoreKernelLiteralNameToDevice_NonCpu_ReturnEarly)
+{
+    ElfProgram *program = new ElfProgram();
+    program->SetKernelRegType(RT_KERNEL_REG_TYPE_NON_CPU);
+    Kernel *kernel = new Kernel("non_cpu_kernel", 0U, program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    rtError_t ret = program->StoreKernelLiteralNameToDevice(kernel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    delete kernel;
+    delete program;
+}
+
+TEST_F(ProgramTest, CopySoAndNameToCurrentDevice_StoreKernelLiteralNameFailed)
+{
+    ElfProgram *program = new ElfProgram();
+    program->SetIsNewBinaryLoadFlow(true);
+    program->SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
+    Kernel *kernel = new Kernel("cpu_kernel", 0U, program, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    program->kernelNameMap_["cpu_kernel"] = kernel;
+
+    MOCKER_CPP(&Program::StoreKernelLiteralNameToDevice).stubs().will(returnValue(ACL_ERROR_RT_DEVICE_MEM_ERROR));
+    rtError_t ret = program->CopySoAndNameToCurrentDevice();
+    EXPECT_EQ(ret, ACL_ERROR_RT_DEVICE_MEM_ERROR);
+    GlobalMockObject::verify();
+
+    delete program;
+}
