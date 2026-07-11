@@ -661,8 +661,12 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
     }
 
     if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "[SqCqManage]Alloc sq cq fail, stream_id=%d, retCode=%#x.", streamId_,
-            static_cast<uint32_t>(error));
+        RT_LOG(RT_LOG_ERROR, "[SqCqManage]Alloc sq cq fail, stream_id=%d, retCode=%#x.",
+            streamId_, static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
         return error;
     }
 

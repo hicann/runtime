@@ -10,6 +10,7 @@
 #include "coprocessor_stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "runtime.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -23,7 +24,15 @@ rtError_t CoprocessorStream::Setup()
     rtError_t error =
         device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_, flags_);
     device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
-    ERROR_RETURN(error, "Failed to alloc coprocessor stream id, retCode=%#x.", error);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to alloc coprocessor stream id, retCode=%#x.",
+            static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DRV_NO_STREAM_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
     RT_LOG(RT_LOG_DEBUG, "Alloc coprocessor stream, stream_id=%d", streamId_);
 
     /**** alloc sq cq id *****/
@@ -34,8 +43,12 @@ rtError_t CoprocessorStream::Setup()
     constexpr uint32_t drvFlag = static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID);
     error = stmSqCqManage->AllocStreamSqCq(this, priority_, drvFlag, tmpSqId, tmpCqId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Alloc coprocessor sq cq failed, stream_id=%d, retCode=%#x.",
+        RT_LOG(RT_LOG_ERROR, "Alloc coprocessor sq cq failed, stream_id=%d, retCode=%#x.",
             streamId_, static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
         device_->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(streamId_));
         (void)device_->Driver_()->StreamIdFree(streamId_, device_->Id_(), device_->DevGetTsId(), flags_);
         streamId_ = -1;

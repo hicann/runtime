@@ -381,8 +381,16 @@ rtError_t Context::CreateNotify(Notify **notify, uint32_t flag)
 
     (*notify)->SetNotifyFlag(flag);
     const rtError_t error = (*notify)->Setup();
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(*notify);,
-        "Notify create failed, setup failed, device_id=%d, retCode=%#x", deviceId, static_cast<uint32_t>(error));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Notify create failed, setup failed, device_id=%d, retCode=%#x",
+            deviceId, static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Notify resource",
+                "Too many ACL graphs are executed concurrently");
+        }
+        DELETE_O(*notify);
+        return error;
+    }
 
     return RT_ERROR_NONE;
 }

@@ -557,8 +557,15 @@ rtError_t StreamSqCqManage::AllocLogicCq(const uint32_t streamId, const bool isN
         error = device_->Driver_()->LogicCqAllocate(device_->Id_(), device_->DevGetTsId(),
             streamId, isNeedFast, logicCqId, isFastCq, false);
     }
-    ERROR_RETURN_MSG_INNER(error, "Failed to alloc logic cq, stream_id=%u, logicCqId=%u, isFastCq=%u",
-        streamId, logicCqId, static_cast<uint32_t>(isFastCq));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to alloc logic cq, stream_id=%u, logicCqId=%u, isFastCq=%u",
+            streamId, logicCqId, static_cast<uint32_t>(isFastCq));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
     const uint64_t threadId = PidTidFetcher::GetCurrentUserTid();
     rtLogicCqInfo_t info;
     info.logicCqId = logicCqId;

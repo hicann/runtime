@@ -4064,6 +4064,25 @@ TEST_F(ApiDavidTest, CountNotify_Create)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiDavidTest, CountNotifySetupNotifyIdNoResource)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device *device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevicePhyIdByIndex)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::NotifyIdAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_NOTIFY_RESOURCES));
+
+    CountNotify notify(device->Id_(), device->DevGetTsId());
+    EXPECT_EQ(notify.Setup(), RT_ERROR_DRV_NO_NOTIFY_RESOURCES);
+}
+
 TEST_F(ApiDavidTest, test_launch_dvpp_task_get_cmdlist_not_free_error)
 {
     ApiImplDavid apiImpl;

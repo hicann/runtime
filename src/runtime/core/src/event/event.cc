@@ -383,6 +383,10 @@ rtError_t Event::AllocEventIdResource(Stream * const stm, int32_t &newEventId)
         RT_LOG(RT_LOG_INFO, "alloc_id=%d, event_id=%d, err_code=%d.", newEventId, eventId_, error);
     } while ((error == RT_ERROR_DRV_NO_EVENT_RESOURCES) && (device_->GetDevStatus() == RT_ERROR_NONE) &&
             ((!isDisableThreadFlag || (tryCount < 1000U))));
+    if ((error == RT_ERROR_DRV_NO_EVENT_RESOURCES) && (device_->GetDevStatus() == RT_ERROR_NONE)) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Event resource",
+            "Too many events are created");
+    }
     return error;
 }
 

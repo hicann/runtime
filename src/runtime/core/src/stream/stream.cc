@@ -609,6 +609,23 @@ rtError_t Stream::EschedManage(const bool enFlag) const
     return error;
 }
 
+rtError_t Stream::AllocStreamIdFromDriver()
+{
+    TIMESTAMP_BEGIN(rtStreamCreate_drvStreamIdAlloc);
+    const rtError_t error = device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
+    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
+    TIMESTAMP_END(rtStreamCreate_drvStreamIdAlloc);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to alloc stream id, retCode=%#x.", static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DRV_NO_STREAM_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t Stream::Setup()
 {
     rtError_t error;
@@ -683,11 +700,8 @@ rtError_t Stream::Setup()
     if ((flags_ & RT_STREAM_OVERFLOW) != 0U) {
         SetOverflowSwitch(true);
     }
-    TIMESTAMP_BEGIN(rtStreamCreate_drvStreamIdAlloc);
-    error = device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
-    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
-    TIMESTAMP_END(rtStreamCreate_drvStreamIdAlloc);
-    ERROR_RETURN(error, "Failed to alloc stream id, retCode=%#x.", error);
+    error = AllocStreamIdFromDriver();
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
 
     error = AllocExecutedTimesSvm();
@@ -717,8 +731,12 @@ rtError_t Stream::Setup()
 
     TIMESTAMP_END(rtStreamCreate_AllocStreamSqCq);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Alloc sq cq failed, stream_id=%d, retCode=%#x.", streamId_,
+        RT_LOG(RT_LOG_ERROR, "Alloc sq cq failed, stream_id=%d, retCode=%#x.", streamId_,
             static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
         device_->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(streamId_));
         (void)device_->Driver_()->StreamIdFree(streamId_, device_->Id_(), device_->DevGetTsId());
         streamId_ = -1;
@@ -864,11 +882,8 @@ rtError_t Stream::SetupWithoutBindSq()
     error = CreateStreamArgRes(); // only for stars v2
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "New args res manage failed.");
 
-    TIMESTAMP_BEGIN(rtStreamCreate_drvStreamIdAlloc);
-    error = device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
-    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
-    TIMESTAMP_END(rtStreamCreate_drvStreamIdAlloc);
-    ERROR_RETURN(error, "Failed to alloc stream id, retCode=%#x.", error);
+    error = AllocStreamIdFromDriver();
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
 
     error = AllocExecutedTimesSvm();
@@ -967,12 +982,8 @@ rtError_t Stream::AllocSqeBufferForAutoSplit()
 
 rtError_t Stream::AllocStreamIdForAutoSplit()
 {
-    TIMESTAMP_BEGIN(rtStreamCreate_drvStreamIdAlloc);
-    rtError_t error = device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
-    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
-    TIMESTAMP_END(rtStreamCreate_drvStreamIdAlloc);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
-        "Failed to alloc stream id, retCode=%#x.", error);
+    const rtError_t error = AllocStreamIdFromDriver();
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_DEBUG, "Alloc stream for auto split, master_stream_id=%d, cur_stream_id=%d",
         GetExposedStreamId(), Id_());
     return RT_ERROR_NONE;
@@ -997,8 +1008,15 @@ rtError_t Stream::AllocSqCqForAutoSplitWithRetry()
         }
     }
 
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
-        "[SqCqManage]Alloc sq cq fail, stream_id=%d, retCode=%#x.", streamId_, static_cast<uint32_t>(error));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "[SqCqManage]Alloc sq cq fail, stream_id=%d, retCode=%#x.",
+            streamId_, static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
 
     UpdateSqCq(&sqCqInfo);
     return RT_ERROR_NONE;
@@ -1022,7 +1040,16 @@ rtError_t Stream::SetupForAutoSplit()
     ERROR_RETURN_MSG_INNER(error, "Create stream arg res failed.");
 
     error = AllocStreamIdForAutoSplit();
-    ERROR_RETURN_MSG_INNER(error, "Failed to alloc stream id for auto split.");
+    if (error != RT_ERROR_NONE) {
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DRV_NO_STREAM_RESOURCES)) {
+            RT_LOG(RT_LOG_ERROR, "Failed to alloc stream id for auto split, retCode=%#x.",
+                static_cast<uint32_t>(error));
+            return error;
+        }
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to alloc stream id for auto split, retCode=%#x.",
+            static_cast<uint32_t>(error));
+        return error;
+    }
 
     error = AllocExecutedTimesSvm();
     ERROR_RETURN_MSG_INNER(error, "Failed to alloc svm for executed times, retCode=%#x.",

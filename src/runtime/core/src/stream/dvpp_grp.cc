@@ -11,6 +11,7 @@
 #include "dvpp_grp.hpp"
 #include "context.hpp"
 #include "device.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -38,7 +39,14 @@ rtError_t DvppGrp::Setup()
     rtError_t error = device_->Driver_()->LogicCqAllocateV2(device_->Id_(), device_->DevGetTsId(),
         RT_MAX_STREAM_ID, logicCqId, true);
 
-    ERROR_RETURN_MSG_INNER(error, "Failed to alloc logic cq");
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to alloc logic cq");
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
     logicCq_ = logicCqId;
     RT_LOG(RT_LOG_INFO, "dvpp grp logicCq=%u alloc success", logicCq_);
     return RT_ERROR_NONE;

@@ -60,8 +60,10 @@ void EventExpandingPool::FreeBufferForEvent(void * const addr, void * const para
 rtError_t EventExpandingPool::AllocAndInsertEvent(void** const eventAddr, int32_t *eventId)
 {
     const std::unique_lock<std::mutex> taskLock(EventMapLock_);
-    COND_RETURN_ERROR_MSG_INNER(eventIdCount_ == INT32_MAX, RT_ERROR_DRV_NO_EVENT_RESOURCES,
-        "Event count is reaching the maximum.");
+    COND_PROC_RETURN_AND_MSG_OUTER(eventIdCount_ == INT32_MAX, RT_ERROR_DRV_NO_EVENT_RESOURCES, ErrorCode::EE1023,
+        RT_LOG(RT_LOG_ERROR, "Event count is reaching the maximum."),
+        "Alloc Event resource",
+        "Too many events are created");
     int32_t currentEventId = -1;
  	const uint16_t oriPoolIndex = poolIndex_;
  	do {
@@ -79,8 +81,10 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void** const eventAddr, int32_
  	    }
  	    poolIndex_ = (poolIndex_ + 1U) % MAX_POOL_CNT;
  	} while (oriPoolIndex != poolIndex_); // only one loop
- 	COND_RETURN_ERROR_MSG_INNER(currentEventId < 0, RT_ERROR_DRV_NO_EVENT_RESOURCES,
- 	    "Failed to allocate event ID from event pool.");
+    COND_PROC_RETURN_AND_MSG_OUTER(currentEventId < 0, RT_ERROR_DRV_NO_EVENT_RESOURCES, ErrorCode::EE1023,
+        RT_LOG(RT_LOG_ERROR, "Failed to allocate event ID from event pool."),
+        "Alloc Event resource",
+        "Too many events are created");
  	lastEventId_ = EVENT_INIT_VALUE + (PER_POOL_CNT * poolIndex_) + currentEventId; // (init:65536) + (PER_POOL_CNT * index)  + cur
  	*eventAddr = eventAllocator_[poolIndex_]->GetItemById(currentEventId, false);
     *eventId = lastEventId_;

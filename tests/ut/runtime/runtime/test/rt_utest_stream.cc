@@ -22,7 +22,9 @@
 #include "task_res.hpp"
 #include "ctrl_stream.hpp"
 #include "coprocessor_stream.hpp"
+#include "dvpp_grp.hpp"
 #include "engine_stream_observer.hpp"
+#include "shm_cq.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "scheduler.hpp"
 #include "runtime.hpp"
@@ -2937,5 +2939,197 @@ TEST_F(StreamTest, recycle_model_delay_recycle_task_cannot_find_task)
     stream->RecycleModelDelayRecycleTask();
 
     delete stream;
+    delete device;
+}
+
+TEST_F(StreamTest, ShmCqInitVirtualCqNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::VirtualCqAllocate)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    {
+        ShmCq shmCq;
+        EXPECT_EQ(shmCq.Init(device), RT_ERROR_DRV_NO_RESOURCES);
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, DvppGrpSetupLogicCqNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    {
+        DvppGrp grp(device, 0U);
+        EXPECT_EQ(grp.Setup(), RT_ERROR_DRV_NO_RESOURCES);
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, StreamSetupAllocSqCqNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    Stream *stream = new Stream(device, 0U);
+    int32_t streamId = 1;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .with(outBoundP(&streamId, sizeof(streamId)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    void *executedTimes = reinterpret_cast<void *>(0x1000);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&executedTimes, sizeof(executedTimes)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemSetSync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::NormalSqCqAllocate)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    EXPECT_EQ(stream->Setup(), RT_ERROR_DRV_NO_RESOURCES);
+
+    delete stream;
+    delete device;
+}
+
+TEST_F(StreamTest, CoprocessorStreamSetupStreamIdNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_STREAM_RESOURCES));
+
+    {
+        CoprocessorStream stream(device, 0U, 0U);
+        EXPECT_EQ(stream.Setup(), RT_ERROR_DRV_NO_STREAM_RESOURCES);
+        device->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(stream.streamId_));
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, CoprocessorStreamSetupAllocSqCqNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    int32_t streamId = 1;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .with(outBoundP(&streamId, sizeof(streamId)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::NormalSqCqAllocate)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    {
+        CoprocessorStream stream(device, 0U, 0U);
+        EXPECT_EQ(stream.Setup(), RT_ERROR_DRV_NO_RESOURCES);
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, AllocStreamIdForAutoSplitNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_STREAM_RESOURCES));
+
+    {
+        Stream stream(device, 0U);
+        EXPECT_EQ(stream.AllocStreamIdForAutoSplit(), RT_ERROR_DRV_NO_STREAM_RESOURCES);
+        device->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(stream.streamId_));
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, SetupForAutoSplitAllocStreamIdErrors)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_STREAM_RESOURCES))
+        .then(returnValue(RT_ERROR_INVALID_VALUE));
+
+    {
+        Stream stream(device, 0U);
+        EXPECT_EQ(stream.SetupForAutoSplit(), RT_ERROR_DRV_NO_STREAM_RESOURCES);
+        device->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(stream.streamId_));
+    }
+    {
+        Stream stream(device, 0U);
+        EXPECT_EQ(stream.SetupForAutoSplit(), RT_ERROR_INVALID_VALUE);
+        device->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(stream.streamId_));
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, AllocSqCqForAutoSplitWithRetryNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::NormalSqCqAllocate)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+    {
+        Stream stream(device, 0U);
+        EXPECT_EQ(stream.AllocSqCqForAutoSplitWithRetry(), RT_ERROR_DRV_NO_RESOURCES);
+    }
+
+    delete device;
+}
+
+TEST_F(StreamTest, StreamSqCqManageAllocLogicCqNoResource)
+{
+    RawDevice *device = new RawDevice(0);
+    ASSERT_EQ(device->Init(), RT_ERROR_NONE);
+    Driver *driver = device->Driver_();
+    uint32_t logicCqId = 0U;
+    bool isFastCq = false;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocate)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    {
+        StreamSqCqManage manage(device);
+        EXPECT_EQ(manage.AllocLogicCq(1U, false, logicCqId, isFastCq, false), RT_ERROR_DRV_NO_RESOURCES);
+    }
+
     delete device;
 }

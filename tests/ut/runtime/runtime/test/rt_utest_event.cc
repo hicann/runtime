@@ -226,6 +226,40 @@ TEST_F(EventTest, UpdateEventOfCntNotifyInfo)
     delete stm;
 }
 
+TEST_F(EventTest, AllocEventIdResourceNoEventResource)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Device *device = rtInstance->GetDevice(0, 0);
+    ASSERT_NE(device, nullptr);
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    const bool oldDisableThread = rtInstance->GetDisableThread();
+    rtInstance->SetDisableThread(true);
+    Stream stm(device, 0U);
+    stm.SetContext(ctx);
+    Event evt(device, RT_EVENT_DEFAULT, ctx);
+    int32_t newEventId = INVALID_EVENT_ID;
+    Driver *driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportEventPool)
+        .stubs()
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::EventIdAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_EVENT_RESOURCES));
+    MOCKER_CPP_VIRTUAL(device, &Device::TaskReclaimAllForNoRes)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&stm, &Stream::CheckContextStatus)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetDevStatus)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(evt.AllocEventIdResource(&stm, newEventId), RT_ERROR_DRV_NO_EVENT_RESOURCES);
+    rtInstance->SetDisableThread(oldDisableThread);
+}
+
 TEST_F(EventTest, event_sync_02)
 {
     rtError_t error;

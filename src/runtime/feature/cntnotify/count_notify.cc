@@ -71,8 +71,15 @@ rtError_t CountNotify::Setup()
     uint32_t curNotifyId = 0U;
     RT_LOG(RT_LOG_INFO, "notify_flag=%u", notifyFlag_);
     error = driver_->NotifyIdAlloc(static_cast<int32_t>(deviceId_), &curNotifyId, dev->DevGetTsId(), notifyFlag_, true);
-    ERROR_RETURN_MSG_INNER(error, "count NotifyIdAlloc failed, device_id=%u, retCode=%#x!",
-        deviceId_, static_cast<uint32_t>(error));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "count NotifyIdAlloc failed, device_id=%u, retCode=%#x!",
+            deviceId_, static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc CntNotify resource",
+                "Too many CntNotify objects are created");
+        }
+        return error;
+    }
 
     dev->PushCntNotify(this);
     notifyid_ = curNotifyId;

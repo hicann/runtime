@@ -1136,8 +1136,12 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
     uint32_t totalSqcqNum = 0;
     uint32_t sqcqPoolResNum = Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum();
     GetSqCqTotalNum(totalSqcqNum);
-    COND_RETURN_ERROR((totalSqcqNum > RT_DEVICE_SQCQ_RES_MAX_NUM), RT_ERROR_DRV_NO_RESOURCES,
-        "exestream_id=%d, model_id=%u, totalSqcqNum=%u, sqcqPoolResNum=%u", exeStream->Id_(), Id_(), totalSqcqNum, sqcqPoolResNum);
+    COND_PROC_RETURN_AND_MSG_OUTER((totalSqcqNum > RT_DEVICE_SQCQ_RES_MAX_NUM), RT_ERROR_DRV_NO_RESOURCES,
+        ErrorCode::EE1023,
+        RT_LOG(RT_LOG_ERROR, "exestream_id=%d, model_id=%u, totalSqcqNum=%u, sqcqPoolResNum=%u",
+            exeStream->Id_(), Id_(), totalSqcqNum, sqcqPoolResNum),
+        "Check Stream resource capacity",
+        "Too many streams are captured to the ACL Graph");
 
     // 阶段一：Notify申请
     error = SendLoadCompleteEndGraph();
@@ -1731,9 +1735,16 @@ rtError_t CaptureModel::ModelEndGraph()
     } while (error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES && loopCnt < 3000U);
     
     COND_PROC(loopCnt > 1U, RT_LOG(RT_LOG_EVENT, "End for trying free Notify"));
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
-        "capture model end graph failed, device_id=%u, capture model_id=%u, original capture stream_id=%d, retCode=%#x.",
-        Context_()->Device_()->Id_(), Id_(), origCaptureStream->Id_(), static_cast<uint32_t>(error));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR,
+            "capture model end graph failed, device_id=%u, capture model_id=%u, original capture stream_id=%d, retCode=%#x.",
+            Context_()->Device_()->Id_(), Id_(), origCaptureStream->Id_(), static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Notify resource",
+                "Too many ACL graphs are executed concurrently");
+        }
+        return error;
+    }
 
     if (!this->IsSubCaptureModel()) { // 只有根模型才刷新，其他各层级子模型发给ts的notify id均为根模型的id，异常时直接解执行流的endgraph wait
         loadCompleteNotifyId_ = this->GetEndGraphNotify()->GetNotifyId();
@@ -1780,12 +1791,19 @@ rtError_t CaptureModel::AllocSqCqAndBindInternal()
         std::to_string(sizeof(rtDeviceSqCqInfo_t) * streamNum), "new");
 
     rtError_t error = AllocSqCqProc(streamNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_A(sqCqArray_);,
-        "alloc sq resource failed, model_id=%u, required number=%u, current available number=%u, "
-        "maximum number=%u, retCode=%#x.",
-        Id_(), streamNum, Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolFreeResNum(),
-        Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum(),
-        static_cast<uint32_t>(error));
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "alloc sq resource failed, model_id=%u, required number=%u, current available number=%u, "
+            "maximum number=%u, retCode=%#x.",
+            Id_(), streamNum, Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolFreeResNum(),
+            Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum(),
+            static_cast<uint32_t>(error));
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are captured to the ACL Graph");
+        }
+        DELETE_A(sqCqArray_);
+        return error;
+    }
 
     sqCqNum_ = streamNum;
     error = AllocSqAddr();

@@ -42,9 +42,39 @@
 #include "stream_jetty_handler.h"
 #undef private
 #undef protected
+#include "api.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
+
+Notify *CreateStubNotifyForCondHandle(Context *ctx, uint32_t flag)
+{
+    if ((ctx == nullptr) || (ctx->Device_() == nullptr)) {
+        return nullptr;
+    }
+    Device *device = ctx->Device_();
+    Notify *notify = new (std::nothrow) Notify(device->Id_(), device->DevGetTsId());
+    if (notify == nullptr) {
+        return nullptr;
+    }
+
+    static uint32_t notifyId = 0U;
+    notify->SetNotifyFlag(flag);
+    notify->notifyid_ = notifyId++;
+    notify->phyId_ = 0U;
+    notify->dev_ = nullptr;
+    notify->driver_ = nullptr;
+    return notify;
+}
+
+rtError_t StubCreateNotifyForCondHandle(Context *ctx, Notify **notify, uint32_t flag)
+{
+    *notify = CreateStubNotifyForCondHandle(ctx, flag);
+    if (*notify == nullptr) {
+        return RT_ERROR_NOTIFY_NEW;
+    }
+    return RT_ERROR_NONE;
+}
 
 class CloudV2CaptureModelTest : public testing::Test {
 protected:
@@ -1208,6 +1238,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
     ret = rtStreamEndCapture(subStream, &subModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(stream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1234,8 +1265,8 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
     captureMdl->isModelComplete_ = true;
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -1306,6 +1337,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileWithAssignDefault)
     ret = rtStreamEndCapture(subStream, &subModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(stream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1332,8 +1364,8 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileWithAssignDefault)
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
     captureMdl->isModelComplete_ = true;
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -1413,6 +1445,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfE2E)
     ret = rtStreamEndCapture(subStream2, &subModelResult2);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(stream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1439,8 +1472,8 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfE2E)
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
     captureMdl->isModelComplete_ = true;
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -1512,6 +1545,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfSizeOneE2E)
     ret = rtStreamEndCapture(subStream1, &subModelResult1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(stream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1538,8 +1572,8 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfSizeOneE2E)
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
     captureMdl->isModelComplete_ = true;
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -1614,6 +1648,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleSwitchE2E)
         EXPECT_EQ(ret, RT_ERROR_NONE);
     }
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(stream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1640,8 +1675,8 @@ TEST_F(CloudV2CondHandleTest, CondHandleSwitchE2E)
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
     captureMdl->isModelComplete_ = true;
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -1756,6 +1791,7 @@ TEST_F(CloudV2CondHandleTest, CondHandleIfNestedIfE2E)
     ret = rtStreamEndCapture(ifFalseSubStream, &ifFalseModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(invoke(StubCreateNotifyForCondHandle));
     rtModel_t parentModelResult;
     ret = rtStreamEndCapture(parentStream, &parentModelResult);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1784,8 +1820,8 @@ MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
     captureMdl->isModelComplete_ = true;
 
     Stream *origCaptureStream = rt_ut::UnwrapOrNull<Stream>(parentStream);
-    Notify *endGraphNotify = new Notify(0, 0);
-    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    Notify *endGraphNotify = CreateStubNotifyForCondHandle(captureMdl->Context_(), RT_NOTIFY_DEFAULT);
+    ASSERT_NE(endGraphNotify, nullptr);
     endGraphNotify->SetEndGraphModel(captureMdl);
     captureMdl->SetEndGraphNotify(endGraphNotify);
 
@@ -2702,4 +2738,87 @@ TEST_F(CloudV2CaptureModelTest, GetCaptureResetTaskParams_Success)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureModelEndGraphInnerError)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    CaptureModel model;
+    model.context_ = ctx;
+    Stream stream(static_cast<Device *>(nullptr), 0U);
+    stream.streamId_ = 1;
+    stream.SetContext(ctx);
+    stream.MarkOrigCaptureStream(true);
+    model.streams_.push_back(&stream);
+    Api *api = rtInstance->ApiImpl_();
+    ASSERT_NE(api, nullptr);
+    MOCKER_CPP_VIRTUAL(api, &Api::ModelEndGraph)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(model.ModelEndGraph(), RT_ERROR_INVALID_VALUE);
+
+    model.streams_.clear();
+}
+
+TEST_F(CloudV2CaptureModelTest, CreateNotifySetupNoResource)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Notify *notify = nullptr;
+    MOCKER_CPP(&Notify::Setup)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    EXPECT_EQ(ctx->CreateNotify(&notify, RT_NOTIFY_DEFAULT), RT_ERROR_DRV_NO_RESOURCES);
+    EXPECT_EQ(notify, nullptr);
+}
+
+TEST_F(CloudV2CaptureModelTest, BuildSqCqStreamResourceCapacityExceeded)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device *device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    CaptureModel model;
+    model.context_ = ctx;
+    model.SetSoftwareSqEnable();
+    Stream exeStream(static_cast<Device *>(nullptr), 0U);
+    exeStream.streamId_ = 1;
+    exeStream.SetContext(ctx);
+    for (uint32_t i = 0U; i <= RT_DEVICE_SQCQ_RES_MAX_NUM; ++i) {
+        model.streams_.push_back(&exeStream);
+    }
+    MOCKER_CPP(&CaptureModel::BindJettyForUbdma)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(model.BuildSqCq(&exeStream), RT_ERROR_DRV_NO_RESOURCES);
+
+    model.streams_.clear();
+}
+
+TEST_F(CloudV2CaptureModelTest, AllocSqCqAndBindInternalNoResource)
+{
+    Runtime *rtInstance = Runtime::Instance();
+    Context *ctx = rtInstance->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device *device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    CaptureModel model;
+    model.context_ = ctx;
+    Stream stream(static_cast<Device *>(nullptr), 0U);
+    stream.SetContext(ctx);
+    model.streams_.push_back(&stream);
+    MOCKER_CPP(&CaptureModel::AllocSqCqProc)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+
+    EXPECT_EQ(model.AllocSqCqAndBindInternal(), RT_ERROR_DRV_NO_RESOURCES);
+
+    model.streams_.clear();
 }

@@ -10,6 +10,7 @@
 #include "shm_cq.hpp"
 #include "task.hpp"
 #include "runtime.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -51,8 +52,15 @@ rtError_t ShmCq::Init(Device * dev)
         return error;
     }
 
-    ERROR_RETURN_MSG_INNER(error, "Failed to allocate virtual cq, retCode=%#x, deviceId=%u.",
-        static_cast<uint32_t>(error), deviceId_);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to allocate virtual cq, retCode=%#x, deviceId=%u.",
+            static_cast<uint32_t>(error), deviceId_);
+        if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
+                "Too many streams are created");
+        }
+        return error;
+    }
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, (vSqBase_ == nullptr), RT_ERROR_INVALID_VALUE,
         "Failed to allocate virtual cq, deviceId=%u, vSqReadonly=%u.", dev->Id_(), vSqReadonly_);
     dev_ = dev;

@@ -96,6 +96,10 @@ rtError_t DavidEvent::GenEventId()
     const rtError_t error = devDrv->NotifyIdAlloc(device_->Id_(), RtPtrToPtr<uint32_t *>(&eventId_),
         device_->DevGetTsId(), eventFlag, false, true);
 
+    if ((error == RT_ERROR_DRV_NO_EVENT_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Event resource",
+            "Too many events are created");
+    }
     ERROR_RETURN(error, "Failed to allocate event id, device_id=%u, tsId=%u, retCode=%#x.",
         device_->Id_(), device_->DevGetTsId(), static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "Event id alloc success, device_id=%u, tsId=%u, eventFlag=%u, event_id=%d",

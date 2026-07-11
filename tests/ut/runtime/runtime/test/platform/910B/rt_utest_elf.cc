@@ -54,7 +54,6 @@ protected:
     {
         rtSetDevice(0);
         std::cout << "a test SetUP" << std::endl;
-        rtError_t error;
         Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
         EXPECT_NE(rtInstance, nullptr);
         GlobalContainer::SetHardwareSocVersion("");
@@ -775,36 +774,15 @@ TEST_F(CloudV2ELFTest, ELF_Get_64bit_Section_Headers_Error_02)
 
 TEST_F(CloudV2ELFTest, ELF_Get_64bit_Elf_Symbols_Error_01)
 {
-    rtElfData *elfData;
-    Elf_Internal_Shdr *section;
-    unsigned long num_syms_return = 0;
-    elfData = new (std::nothrow) rtElfData();
+    rtElfData elfData = {};
+    Elf_Internal_Shdr section = {};
+    uint64_t numSymsReturn = 0UL;
 
-    section= new Elf_Internal_Shdr;
-    if (NULL != section)
-    {
-        memset_s(section,sizeof(Elf_Internal_Shdr),'\0',sizeof(Elf_Internal_Shdr));
-    }
-    section->sh_size = 0;
-    std::unique_ptr<Elf_Internal_Sym[]> out = Get64bitElfSymbols(elfData, section, &num_syms_return);
-    EXPECT_EQ(elfData->kernel_num,0);
-    if (NULL != elfData)
-    {
-        if(NULL != elfData->section_headers)
-        {
-            delete [] elfData->section_headers;
-            elfData->section_headers = NULL;
-        }
-
-        delete elfData;
-        elfData = NULL;
-    }
-    if (NULL != section)
-    {
-        delete section;
-        section = NULL;
-    }
-
+    section.sh_size = 0;
+    std::unique_ptr<Elf_Internal_Sym[]> out = Get64bitElfSymbols(&elfData, &section, &numSymsReturn);
+    EXPECT_EQ(out.get(), nullptr);
+    EXPECT_EQ(numSymsReturn, 0UL);
+    EXPECT_EQ(elfData.kernel_num, 0U);
 }
 
 TEST_F(CloudV2ELFTest, ELF_Get_64bit_Elf_Symbols_Error_02)
