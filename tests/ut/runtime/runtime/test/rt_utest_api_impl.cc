@@ -1931,3 +1931,22 @@ TEST_F(ApiImplTest, MemcpyAsyncCheckExLocationDeviceToHostExRejectsDeviceDst)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(g_ptrGetRealLocationCallCount, 2U);
 }
+
+TEST_F(ApiImplTest, MemcpyAsyncExLocationCheckInOnlineMode)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE);
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    Driver *driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    NpuDriver *npuDriver = static_cast<NpuDriver *>(driver);
+    MOCKER_CPP_VIRTUAL(npuDriver, &NpuDriver::GetRunMode).stubs().will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).stubs().will(returnValue(RT_ERROR_NONE));
+
+    int src = 0;
+    int dst = 0;
+    rtError_t error = apiError.MemcpyAsync(&dst, sizeof(dst), &src, sizeof(src),
+        RT_MEMCPY_HOST_TO_DEVICE_EX, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

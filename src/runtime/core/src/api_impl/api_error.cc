@@ -1730,11 +1730,19 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     COND_RETURN_AND_MSG_OUTER(!checkKind && (kind == RT_MEMCPY_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
         "Asynchronous memory copy", "RT_MEMCPY_DEFAULT(7)", "kind", "If parameter checkKind is false, parameter kind cannot be RT_MEMCPY_DEFAULT(7)");
     bool isD2HorH2DInvolvePageableMemory = false;
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
+    const uint32_t runMode = curCtx->Device_()->Driver_()->GetRunMode();
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
-        error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%d",
-            streamId, kind);
+        if (runMode == RT_RUN_MODE_ONLINE) {
+            error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
+            COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+                "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%d",
+                streamId, kind);
+        } else {
+            // no operation
+        }
     } else {
         const bool isUserRequireToCheckPinnedMem = (configInfo.checkBitmap == CHECK_MEMORY_PINNED);
         error = MemcpyAsyncCheckLocation(
@@ -1744,10 +1752,6 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
             streamId, checkKind, copyKind);
     }
 
-    Context *curCtx = Runtime::Instance()->CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
-    const uint32_t runMode = curCtx->Device_()->Driver_()->GetRunMode();
     COND_RETURN_WARN(((copyKind == RT_MEMCPY_HOST_TO_HOST) && (runMode == RT_RUN_MODE_ONLINE)),
         RT_ERROR_FEATURE_NOT_SUPPORT, "H2H is not supported");
     COND_RETURN_WARN(((addrCfg == nullptr) && (dst == src)),    /* 在check kind/loc之后校验（校验顺序会影响return值） */
