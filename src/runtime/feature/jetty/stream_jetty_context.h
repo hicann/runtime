@@ -14,7 +14,7 @@
 #include <vector>
 #include <memory>
 #include "jetty_pool.h"
-
+#include "task_info.hpp"
 namespace cce {
 namespace runtime {
 
@@ -31,9 +31,8 @@ struct StreamJettyContext {
     uint32_t filledWqeCount = 0U;
     uint32_t capacity = 0U;
 
-    // Record of tasks that need jetty info patch: (taskId, wqeCount)
-    std::vector<std::pair<uint32_t, uint32_t>> taskWqeCounts;
-
+    // Record of tasks that need jetty info patch: (taskInfo pointer, wqeCount)
+ 	std::vector<std::pair<TaskInfo*, uint32_t>> taskWqeCounts;
     JettyType jettyType = JettyType::JETTY_TYPE_MAX;
     bool isLargeDepth = false;
     uint64_t jettyHandle = 0U;

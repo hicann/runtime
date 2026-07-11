@@ -5517,21 +5517,21 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_EmptyTaskWqeCounts)
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_TaskInfoNullSkipped)
 {
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({9999, 1});
+    context.taskWqeCounts.push_back({nullptr, 1});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 10;
     jettyInfo.dieId = 5;
     jettyInfo.functionId = 3;
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(static_cast<TaskInfo*>(nullptr)));
     rtError_t error = StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(stream_, &context, jettyInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_TaskFactoryNull)
 {
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream_;
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 1});
+    context.taskWqeCounts.push_back({&taskInfo, 1});
     JettyInfo jettyInfo = {};
     TaskFactory *origFactory = dev_->GetTaskFactory();
     RawDevice *rawDev = dynamic_cast<RawDevice *>(dev_);
@@ -5558,9 +5558,8 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_JettyInfoFieldsUpdated)
     uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
     stream_->sqeBuffer_ = sqeBuffer;
 
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 1});
+    context.taskWqeCounts.push_back({&taskInfo, 1});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 10;
     jettyInfo.dieId = 5;
@@ -5573,7 +5572,6 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_JettyInfoFieldsUpdated)
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.functionId, 3);
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.pi, 1);
     stream_->sqeBuffer_ = nullptr;
-    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
@@ -5590,14 +5588,12 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
     stream_->sqeBuffer_ = sqeBuffer;
 
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 2});
-    context.taskWqeCounts.push_back({1, 3});
+    context.taskWqeCounts.push_back({&taskInfo0, 2});
+    context.taskWqeCounts.push_back({&taskInfo0, 3});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 20;
     jettyInfo.dieId = 8;
     jettyInfo.functionId = 7;
-
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo0));
 
     rtError_t error = StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(stream_, &context, jettyInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -5606,7 +5602,6 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_MultipleTasks)
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.functionId, 7);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.pi, 3);
     stream_->sqeBuffer_ = nullptr;
-    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_PartialNullTaskInfo)
@@ -5622,23 +5617,20 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_PartialNullTaskInfo)
     stream_->sqeBuffer_ = sqeBuffer;
 
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 1});
-    context.taskWqeCounts.push_back({9999, 2});
+    context.taskWqeCounts.push_back({&taskInfo0, 1});
+    context.taskWqeCounts.push_back({nullptr, 2});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 15;
     jettyInfo.dieId = 3;
     jettyInfo.functionId = 2;
-
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo0));
 
     rtError_t error = StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(stream_, &context, jettyInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.jettyId, 15);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.dieId, 3);
     EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.functionId, 2);
-    EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.pi, 2);
+    EXPECT_EQ(taskInfo0.u.memcpyAsyncTaskInfo.ubDma.pi, 1);
     stream_->sqeBuffer_ = nullptr;
-    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
@@ -5655,9 +5647,8 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
     stream_->sqeBuffer_ = sqeBuffer;
     uint64_t sqBaseAddr = stream_->GetSqBaseAddr();
 
-    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
     StreamJettyContext context;
-    context.taskWqeCounts.push_back({0, 1});
+    context.taskWqeCounts.push_back({&taskInfo, 1});
     JettyInfo jettyInfo = {};
     jettyInfo.jettyId = 1;
     jettyInfo.dieId = 1;
@@ -5669,5 +5660,4 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.dieId, 1);
     EXPECT_EQ(taskInfo.u.memcpyAsyncTaskInfo.ubDma.functionId, 1);
     stream_->sqeBuffer_ = nullptr;
-    GlobalMockObject::verify();
 }
