@@ -840,6 +840,10 @@ aclError aclmdlRIBuildEnd(aclmdlRI modelRI, void *reserve)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+### 约束说明
+
+调用本接口后，不支持再向模型运行实例绑定的Stream下发任务，否则后续模型执行会出现异常。
+
 <br>
 <br>
 <br>
