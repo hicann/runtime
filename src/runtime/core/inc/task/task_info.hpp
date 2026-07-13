@@ -76,6 +76,7 @@ typedef struct tagTaskInfoStru {
         AicpuTaskInfo aicpuTaskInfo;
         DavinciMultiTaskInfo davinciMultiTaskInfo;
         MemcpyAsyncTaskInfo memcpyAsyncTaskInfo;
+        MemsetAsyncTaskInfo memsetAsyncTaskInfo;
         ReduceAsyncV2TaskInfo reduceAsyncV2TaskInfo;
         EventRecordTaskInfo eventRecordTaskInfo;
         EventResetTaskInfo eventResetTaskInfo;

@@ -9,8 +9,6 @@
  */
 #include "api_impl.hpp"
 #include "api_impl_soma.hpp"
-#include "simd_memsetd32.h"
-#include "common_memset_d32.h"
 
 namespace cce {
 namespace runtime {

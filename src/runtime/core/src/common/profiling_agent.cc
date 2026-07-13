@@ -52,6 +52,7 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {TS_TASK_TYPE_STREAM_WAIT_EVENT, "EVENT_WAIT"},
         {TS_TASK_TYPE_FUSION_ISSUE, "KERNEL_FUSION"},
         {TS_TASK_TYPE_MEMCPY, "MEMCPY_ASYNC"},
+        {TS_TASK_TYPE_MEMSET, "MEMSET_ASYNC"},
         {TS_TASK_TYPE_MAINTENANCE, "MAINTENANCE"},
         {TS_TASK_TYPE_CREATE_STREAM, "CREATE_STREAM"},
         {TS_TASK_TYPE_DATA_DUMP, "reserve"}, // reserve but not support task type

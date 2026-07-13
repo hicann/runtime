@@ -8,8 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
-#include "simd_memsetd32.h"
-#include "common_memset_d32.h"
 
 namespace cce {
 namespace runtime {

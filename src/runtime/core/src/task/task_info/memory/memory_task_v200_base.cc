@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "stars_base.hpp"
 #include "memory_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -529,6 +530,41 @@ void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcp
         PrintModuleIdProc(driver, errStr, RtValueToPtr<void *>(hostAddrInfo.src),
             RtValueToPtr<void *>(hostAddrInfo.dst), countNum);
     }
+}
+
+void ConstructDavidSqeForMemsetAsyncTask(TaskInfo * const taskInfo, void *const sqe, const TaskSqeInfo &sqeInfo)
+{
+    UNUSED(sqeInfo);
+    rtDavidSqe_t *davidSqe = static_cast<rtDavidSqe_t *>(sqe);
+    MemsetAsyncTaskInfo *memsetTask = &(taskInfo->u.memsetAsyncTaskInfo);
+    Stream * const stream = taskInfo->stream;
+    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
+    RtDavidStarsMemcpySqe * const memcpySqe = &(davidSqe->memcpyAsyncSqe);
+    memcpySqe->header.type = RT_DAVID_SQE_TYPE_SDMA;
+    memcpySqe->header.preP = 0U;
+    memcpySqe->header.postP = 0U;
+    memcpySqe->kernelCredit = GetSdmaKernelCredit();
+    memcpySqe->opcode = RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET;
+    memcpySqe->srcStreamId = 0x1FU;
+    memcpySqe->u.strideMode0.dstStreamId = 0x1FU;
+    memcpySqe->srcSubStreamId = 1U;
+    memcpySqe->u.strideMode0.dstSubStreamId = 1U;
+    const uint64_t destAddr = RtPtrToValue(memsetTask->targetPtr);
+    memcpySqe->u.strideMode0.lengthMove = memsetTask->fillCount;
+    memcpySqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(destAddr & 0x00000000FFFFFFFFU);
+    memcpySqe->u.strideMode0.srcAddrHigh = static_cast<uint32_t>((destAddr & 0xFFFFFFFF00000000U) >> UINT32_BIT_NUM);
+    memcpySqe->u.strideMode0.dstAddrLow = memsetTask->fillValue;
+    memcpySqe->u.strideMode0.dstAddrHigh = 0U;
+    memcpySqe->vaValid = 0U;
+    memcpySqe->ie2 = 0U;
+    memcpySqe->sssv = 1U;
+    memcpySqe->dssv = 1U;
+    memcpySqe->sns = 1U;
+    memcpySqe->dns = 1U;
+
+    PrintDavidSqe(davidSqe, "SdmaMemsetTask");
+    RT_LOG(RT_LOG_INFO, "SdmaMemsetTask, stream_id=%d, task_id=%hu, destAddr=%#" PRIx64 ", value=0x%x, size=%" PRIu64 ",",
+        stream->Id_(), taskInfo->id, destAddr, memsetTask->fillValue, memsetTask->fillCount);
 }
 #endif
 

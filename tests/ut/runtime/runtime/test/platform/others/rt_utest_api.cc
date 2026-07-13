@@ -14,8 +14,7 @@
 #include "../../rt_utest_config_define.hpp"
 #include "rt_unwrap.h"
 #include "npu_driver.hpp"
-#include "common_memset_d32.h"
-#include "simd_memsetd32.h"
+#include "memset_common.h"
 #include "memcpy_c.hpp"
 
 static rtError_t IpcOpenNotifyStubSucc(cce::runtime::ApiImpl *api, Notify ** const retNotify,
@@ -5178,6 +5177,36 @@ TEST_F(ApiTest, rts_memset_async)
     error = rtsFree(devPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TEST_F(ApiTest, rts_memset_async_sdma) {
+    rtError_t error;
+    void *devPtr;
+    rtMallocConfig_t *p = nullptr;
+    error = rtsMalloc(&devPtr, 60, RT_MEM_MALLOC_HUGE_FIRST, RT_MEM_ADVISE_NONE, p);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
+    ASSERT_NE(stm, nullptr);
+    const DevProperties origProps = stm->Device_()->GetDevProperties();
+    DevProperties sdmaProps = origProps;
+    sdmaProps.memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_SUPPORT;
+    stm->Device_()->RefreshDevProperties(sdmaProps);
+    struct SdmaPropGuard {
+        Stream* s; const DevProperties& p;
+        ~SdmaPropGuard() { s->Device_()->RefreshDevProperties(p); }
+    } propGuard{stm, origProps};
+
+    error = rtsMemsetAsync(devPtr, 60, 1, 60, stream_);
+    EXPECT_EQ(error, 207000);
+
+    stm->Device_()->RefreshDevProperties(origProps);
+    error = rtsMemsetAsync(devPtr, 60, 1, 60, stream_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamSynchronize(stream_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsFree(devPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
  
 TEST_F(ApiTest, rtsLabelSwitchListCreate)
 {
@@ -8030,6 +8059,45 @@ TEST_F(ApiTest, rtMemsetD32_async_device) {
     rtFree(devPtr);
 }
 
+TEST_F(ApiTest, rtMemsetD32_test_sdma_path) {
+    void *devPtr = nullptr;
+    const size_t N = 1024;
+    const size_t size = N * sizeof(uint32_t);
+    rtError_t ret = rtMalloc(&devPtr, size, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream = nullptr;
+    ret = rtStreamCreate(&stream, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    const DevProperties origProps = stm->Device_()->GetDevProperties();
+    DevProperties sdmaProps = origProps;
+    sdmaProps.memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_SUPPORT;
+    stm->Device_()->RefreshDevProperties(sdmaProps);
+
+    ret = rtMemsetD32Async(devPtr, size, 1U, N, stream);
+    EXPECT_EQ(ret, 207000);
+
+    stm->Device_()->RefreshDevProperties(origProps);
+    ret = rtMemsetD32Async(devPtr, size, 1U, N, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamSynchronize(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stm->Device_()->RefreshDevProperties(origProps);
+    rtStreamDestroy(stream);
+    rtFree(devPtr);
+}
+
+TEST_F(ApiTest, rtMemsetD32OnDeviceByMemcpy_exceeds_destMax) {
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
+    ASSERT_NE(stm, nullptr);
+    rtError_t ret = MemsetD32OnDeviceByMemcpy(nullptr, 8U, 0xABABABABU, 10U, stm, false);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+}
+
 // 大数据量（256MB）测试，验证分块逻辑
 TEST_F(ApiTest, rtMemsetD32_large_device) {
     const size_t N = 64 * 1024 * 1024 / sizeof(uint32_t); // 64MB 元素 = 256MB
@@ -8039,6 +8107,31 @@ TEST_F(ApiTest, rtMemsetD32_large_device) {
     if (ret != RT_ERROR_NONE) GTEST_SKIP() << "Cannot allocate 256MB device memory";
     uint32_t value = 0x5A5A5A5A;
     ret = rtMemsetD32(devPtr, size, value, N);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtFree(devPtr);
+}
+
+TEST_F(ApiTest, MemSetAsync_fillCount_exceeds_destMax) {
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
+    ASSERT_NE(stm, nullptr);
+    void *devPtr = nullptr;
+    rtError_t ret = rtMalloc(&devPtr, 1024, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    // fillCount=2048 > destMax=1024, device memory path returns error
+    ret = MemSetAsync(stm, devPtr, 1024, 0x5AU, 2048);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    rtFree(devPtr);
+}
+
+TEST_F(ApiTest, DevMemSetAsyncByMemcpy_large_fillCount) {
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
+    ASSERT_NE(stm, nullptr);
+    // fillCount > MEM_BLOCK_SIZE (64MB): covers step2 (D2D full block) + step3 (D2D remainder)
+    const uint64_t fillCount = 2ULL * MEM_BLOCK_SIZE + 100ULL;
+    void *devPtr = nullptr;
+    rtError_t ret = rtMalloc(&devPtr, fillCount, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    if (ret != RT_ERROR_NONE) GTEST_SKIP() << "Cannot allocate large device memory";
+    ret = DevMemSetAsyncByMemcpy(stm, devPtr, fillCount, 0x5AU, fillCount);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rtFree(devPtr);
 }

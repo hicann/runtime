@@ -432,6 +432,21 @@ rtError_t ConvertCpyType(TaskInfo * const taskInfo, const uint32_t cpyType,
     return RT_ERROR_NONE;
 }
 
+void MemsetAsyncTaskInit(TaskInfo * const taskInfo, void * const ptr,
+    const uint64_t destMax, const uint32_t val, const uint64_t cnt)
+{
+    TaskCommonInfoInit(taskInfo);
+
+    taskInfo->type = TS_TASK_TYPE_MEMSET;
+    taskInfo->typeName = const_cast<char_t*>("MEMSET_ASYNC");
+
+    MemsetAsyncTaskInfo *memsetAsyncTaskInfo = &(taskInfo->u.memsetAsyncTaskInfo);
+    memsetAsyncTaskInfo->targetPtr = ptr;
+    memsetAsyncTaskInfo->targetSize = destMax;
+    memsetAsyncTaskInfo->fillValue = val;
+    memsetAsyncTaskInfo->fillCount = cnt;
+}
+
 rtError_t MemcpyAsyncTaskInitV1(TaskInfo * const taskInfo, void *memcpyAddrInfo, const uint64_t cpySize)
 {
     const rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);

@@ -274,6 +274,13 @@ struct MemcpyAsyncTaskInfo {
     bool isConcernedRecycle;
 };
 
+struct MemsetAsyncTaskInfo {
+    void *targetPtr;
+    uint64_t targetSize;
+    uint32_t fillValue;
+    uint64_t fillCount;
+};
+
 struct rtD2DAddrCfgInfo_t {
     uint64_t srcOffset;
     uint64_t dstOffset;

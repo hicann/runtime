@@ -25,9 +25,17 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include "simd_memsetd32.h"
+#include "memset_common.h"
+#include "task_info_base.hpp"
+#include "task_info.hpp"
+#include "device_properties.h"
+#include "stars_base.hpp"
+#include "task_base.hpp"
+using namespace cce::runtime;
 
 // 测试 MemsetD32Optimized 对齐地址填充
+class MemsetTaskTest : public testing::Test {};
+
 TEST(SimdUtilsTest, OptimizedAligned) {
     const size_t count = 1024;
     uint32_t* buf = (uint32_t*)aligned_alloc(32, count * sizeof(uint32_t));
@@ -92,3 +100,62 @@ TEST(SimdUtilsTest, OptimizedLarge) {
     EXPECT_EQ(buf[count-1], value);
     free(buf);
 }
+
+TEST_F(MemsetTaskTest, ExpandByteToU32_ff) {
+    EXPECT_EQ(ExpandByteToU32(0xFF), 0xFFFFFFFFU);
+}
+
+TEST_F(MemsetTaskTest, ExpandByteToU32_01) {
+    EXPECT_EQ(ExpandByteToU32(0x01), 0x01010101U);
+}
+
+struct IsSupportParam {
+    MemsetTaskSupportType support;
+    uint32_t memDevId;
+    uint32_t curDevId;
+    bool expected;
+};
+
+class MemsetTaskIsSupportParamTest : public MemsetTaskTest,
+    public testing::WithParamInterface<IsSupportParam> {};
+
+TEST_P(MemsetTaskIsSupportParamTest, IsSupportMemsetTask) {
+    const auto &p = GetParam();
+    DevProperties props{};
+    props.memsetTaskSupport = p.support;
+    EXPECT_EQ(IsSupportMemsetTask(p.memDevId, p.curDevId, props), p.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(IsSupportMemsetTask, MemsetTaskIsSupportParamTest,
+    testing::Values(
+        // Same device
+        IsSupportParam{MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT, 0U, 0U, false},
+        IsSupportParam{MemsetTaskSupportType::MEMSET_TASK_SUPPORT, 0U, 0U, true},
+        // Cross device - always false regardless of support type
+        IsSupportParam{MemsetTaskSupportType::MEMSET_TASK_SUPPORT, 0U, 1U, false},
+        IsSupportParam{MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT, 1U, 0U, false}
+    ));
+
+TEST_F(MemsetTaskTest, MemsetD32OnHost_basic) {
+    uint32_t buf[64] = {};
+    rtError_t error = MemsetD32OnHost(buf, sizeof(buf), 0xA5A5A5A5U, 64);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    for (size_t i = 0; i < 64; i++) {
+        EXPECT_EQ(buf[i], 0xA5A5A5A5U);
+    }
+}
+
+TEST_F(MemsetTaskTest, MemsetD32OnHost_zero_count) {
+    uint32_t buf[16] = {};
+    rtError_t error = MemsetD32OnHost(buf, sizeof(buf), 0xDEADBEEFU, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    for (size_t i = 0; i < 16; i++) {
+        EXPECT_EQ(buf[i], 0U);
+    }
+}
+
+TEST_F(MemsetTaskTest, MemsetD32OnDevice_totalBytes_exceeds_destMax) {
+    rtError_t error = MemsetD32OnDevice(nullptr, 8U, 0xABABABABU, 10U, nullptr, false);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+

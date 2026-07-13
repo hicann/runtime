@@ -85,8 +85,6 @@
 #include "platform_manager_v2.h"
 #include "xpu_aicpu_c.hpp"
 #include "fast_recover.hpp"
-#include "simd_memsetd32.h"
-#include "common_memset_d32.h"
 #include "kernel/symbol_table.hpp"
 #include "snapshot_callback_manager.hpp"
 #include "snapshot_process_helper.hpp"

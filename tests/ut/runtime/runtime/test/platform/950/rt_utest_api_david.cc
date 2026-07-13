@@ -54,6 +54,7 @@
 #include "device_error_proc_c.hpp"
 #include "dfx_api.hpp"
 #include "memcpy_c.hpp"
+#include "memset_common.h"
 #include "task_res_da.hpp"
 #include "fast_recover.hpp"
 #include "model_c.hpp"
@@ -65,6 +66,7 @@
 #include "aicpu_c.hpp"
 #include "aix_c.hpp"
 #include "memory_task.h"
+#include "task_manager.h"
 #include "event_task.h"
 #include "kernel_utils.hpp"
 #include "event_david.hpp"
@@ -6498,6 +6500,7 @@ TEST_F(ApiDavidTest, memset_async)
     error = rtMalloc(&devPtr, 60, RT_MEMORY_HBM, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     error = rtMemsetAsync(devPtr, 60, 0, 100, streamHandle_);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -6540,10 +6543,12 @@ TEST_F(ApiDavidTest, memset_async)
     error = rtMemsetAsync(devPtr, memsize+1, 0, memsize+1, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER(MemcopyAsync).stubs().will(invoke(MemcopyAsync_stub));
+    GlobalMockObject::verify();
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = rtMemsetAsync(devPtr, memsize+1, 0, memsize+1, streamHandle_);
     EXPECT_NE(error, RT_ERROR_NONE);
-    MOCKER(memset_s).stubs().will(invoke(memset_s_stub));
+    GlobalMockObject::verify();
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = rtMemsetAsync(devPtr, memsize+1, 0, memsize+1, streamHandle_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -6572,6 +6577,31 @@ TEST_F(ApiDavidTest, memset_async)
     free(sqe);
     sqe = nullptr;
     delete rawDrv;
+}
+
+TEST_F(ApiDavidTest, ConstructDavidSqeForMemsetAsyncTask_basic)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream_;
+    taskInfo.taskSn = 42U;
+
+    void *ptr = reinterpret_cast<void *>(0x1000U);
+    MemsetAsyncTaskInit(&taskInfo, ptr, 4096U, 0xABABABABU, 1024U);
+
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {};
+    sqeInfo.sqBaseAddr = reinterpret_cast<uint64_t>(&sqe);
+
+    ConstructDavidSqeForMemsetAsyncTask(&taskInfo, &sqe, sqeInfo);
+
+    RtDavidStarsMemcpySqe *memcpySqe = &sqe.memcpyAsyncSqe;
+    EXPECT_EQ(memcpySqe->opcode, RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET);
+    EXPECT_EQ(memcpySqe->header.type, RT_DAVID_SQE_TYPE_SDMA);
+    EXPECT_EQ(memcpySqe->u.strideMode0.dstAddrLow, 0xABABABABU);
+    EXPECT_EQ(memcpySqe->u.strideMode0.dstAddrHigh, 0U);
+    EXPECT_EQ(memcpySqe->u.strideMode0.lengthMove, 1024U);
+    EXPECT_EQ(memcpySqe->sssv, 1U);
+    EXPECT_EQ(memcpySqe->sns, 1U);
 }
 
 uint32_t gabort_times = 0U;

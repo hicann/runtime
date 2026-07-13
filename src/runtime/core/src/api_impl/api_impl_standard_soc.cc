@@ -48,8 +48,7 @@
 #include "ipc_event.hpp"
 #include "inner_thread_local.hpp"
 #include "soma.hpp"
-#include "simd_memsetd32.h"
-#include "common_memset_d32.h"
+#include "memset_common.h"
 
 namespace cce {
 namespace runtime {
@@ -414,7 +413,7 @@ rtError_t ApiImpl::MemsetD32(void* const dst, const uint64_t destMax, const uint
     if (attr.location.type == RT_MEMORY_LOC_HOST || attr.location.type == RT_MEMORY_LOC_HOST_NUMA) {
        return MemsetD32OnHost(dst, destMax, value, count);
     } else {
-       return MemsetD32OnDevice(dst, destMax, value, count, nullptr, false);
+       return MemsetD32OnDevice(dst, destMax, value, count, nullptr, false, attr.location.id);
     }
 }
 
@@ -446,7 +445,7 @@ rtError_t ApiImpl::MemsetD32Async(void* const dst, const uint64_t destMax, const
             NULL_STREAM_PTR_RETURN_MSG(curStm);
         }
         COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
-        return MemsetD32OnDevice(dst, destMax, value, count, curStm, true);
+        return MemsetD32OnDevice(dst, destMax, value, count, curStm, true, attr.location.id);
     }
 }
 

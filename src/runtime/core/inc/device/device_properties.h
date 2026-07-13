@@ -59,6 +59,11 @@ constexpr uint8_t OVERFLOW_MODE_INFNAN = 0x2U;
 constexpr uint32_t RT_ATOMIC_OPERATION_MAX_VAL =
     static_cast<uint32_t>(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + 1U;
 
+enum class MemsetTaskSupportType : uint8_t {
+    MEMSET_TASK_NOT_SUPPORT = 0U,
+    MEMSET_TASK_SUPPORT = 1U,
+};
+
 enum class EventWaitTimeoutType : uint8_t {
     SET_OP_WAIT_TIMEOUT_NOT_SUPPORT,
     SET_OP_WAIT_TIMEOUT_NEED_TS_VERSION,
@@ -369,6 +374,7 @@ struct DevProperties final {
     uint32_t sqSwapShift;
     uint32_t swapBufferProfCfgOffset;
     uint32_t taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT;
+    MemsetTaskSupportType memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT;
 };
 }
 }

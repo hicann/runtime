@@ -1128,6 +1128,7 @@ add_executable(runtime_utest_api
     test/rt_utest_profiler.cc
     test/rt_utest_profileapi.cc
     test/rt_utest_api_exception.cc
+    test/platform/others/rt_utest_simd_memsetd32.cc
 )
 
 target_compile_definitions(runtime_utest_api PUBLIC

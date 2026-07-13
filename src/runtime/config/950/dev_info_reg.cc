@@ -309,6 +309,8 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
     .sqSwapShift = 6U,
     .swapBufferProfCfgOffset = 32U,
+    .taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT,
+    .memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_SUPPORT,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DAVID, CHIP_DAVID_PROPERTIES);

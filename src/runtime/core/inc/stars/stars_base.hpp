@@ -85,7 +85,8 @@ enum RtStarsMemcpyAsyncOperationKind {
     RT_STARS_MEMCPY_ASYNC_OP_KIND_ADD      = 0x01,
     RT_STARS_MEMCPY_ASYNC_OP_KIND_MAX      = 0x02,
     RT_STARS_MEMCPY_ASYNC_OP_KIND_MIN      = 0x03,
-    RT_STARS_MEMCPY_ASYNC_OP_KIND_EQUAL    = 0x04
+    RT_STARS_MEMCPY_ASYNC_OP_KIND_EQUAL    = 0x04,
+    RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET   = 0x05
 };
 
 // 1910b tiny conds op sub type

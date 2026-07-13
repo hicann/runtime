@@ -139,7 +139,8 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE = 28,    /* profiler dynamic task */
     TS_TASK_TYPE_ALLOC_DSA_ADDR = 29,      /* alloc dsa addr task */
     TS_TASK_TYPE_CCU_LAUNCH = 30,          /* HCCL CCU Launch task */
-    TS_TASK_TYPE_MEM_WAIT_PROF = 31, /* mem wait prof */
+    TS_TASK_TYPE_MEM_WAIT_PROF = 31,       /* mem wait prof */
+    TS_TASK_TYPE_MEMSET = 32,              /* memset task */
     TS_TASK_TYPE_STARS_COMMON = 50,        /* stars common task */
     TS_TASK_TYPE_FFTS = 51,                /* ffts task */
     TS_TASK_TYPE_FFTS_PLUS = 52,           /* ffts plus task */

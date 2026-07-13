@@ -8,8 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "common_memset_d32.h"
-#include "simd_memsetd32.h"
+#include "memset_common.h"
 #include "api_impl_david.hpp"
 #include "api_impl.hpp"
 #include "api.hpp"
@@ -67,7 +66,7 @@ static rtError_t MemsetD32OnDeviceSingleBlock(void* curDst, uint64_t remainingMa
     return RT_ERROR_NONE;
 }
 
-rtError_t MemsetD32OnDevice(void* dst, uint64_t destMax, uint32_t value,
+rtError_t MemsetD32OnDeviceByMemcpy(void* dst, uint64_t destMax, uint32_t value,
                             uint64_t count, Stream* stm, bool isAsync)
 {
     // Dynamically get block size (consistent with MemcpyAsync)
@@ -83,14 +82,6 @@ rtError_t MemsetD32OnDevice(void* dst, uint64_t destMax, uint32_t value,
     uint64_t remainingCount = count;
     uint64_t doneBytes = 0;
     const uint64_t totalBytes = count * sizeof(uint32_t);
-    
-    // Check if total size exceeds destMax
-    if (totalBytes > destMax) {
-        RT_LOG(
-            RT_LOG_ERROR, "Total size exceeds destMax, totalBytes=%" PRIu64 ", destMax=%" PRIu64 ".", totalBytes,
-            destMax);
-        return RT_ERROR_INVALID_VALUE;
-    }
 
     while (remainingCount > 0) {
         const uint64_t curCount = (remainingCount >= blockCount) ? blockCount : remainingCount;
@@ -113,5 +104,28 @@ rtError_t MemsetD32OnDevice(void* dst, uint64_t destMax, uint32_t value,
     return RT_ERROR_NONE;
 }
 
+rtError_t MemsetD32OnDevice(void* dst, uint64_t destMax, uint32_t value,
+                            uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId)
+{
+    const uint64_t totalBytes = count * sizeof(uint32_t);
+    if (totalBytes > destMax) {
+        RT_LOG(RT_LOG_ERROR, "Total size exceeds destMax, totalBytes=%" PRIu64 ", destMax=%" PRIu64 ".",
+            totalBytes, destMax);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    // Only async path tries SDMA Memset
+    if (isAsync) {
+        NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
+        Device* device = stm->Device_();
+        const DevProperties &props = device->GetDevProperties();
+        if (IsSupportMemsetTask(memDevId, device->Id_(), props)) {
+            return DevMemSetAsyncByMemset(stm, dst, destMax, value, totalBytes);
+        }
+    }
+
+    // Fallback path (sync or async without memset task support)
+    return MemsetD32OnDeviceByMemcpy(dst, destMax, value, count, stm, isAsync);
+}
 }  // namespace runtime
 }  // namespace cce

@@ -190,97 +190,15 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t MemSetAsync(Stream * const stm, void * const ptr, const uint64_t destMax,
-    const uint32_t fillVal, const uint64_t fillCount)
+rtError_t DevMemSetAsyncByMemset(Stream * const stm, void * const ptr,
+    const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount)
 {
-    const Runtime * const rtInstance = Runtime::Instance();
-    RT_LOG(RT_LOG_DEBUG, "current chip type is %u,"
-        " fillVal=%u, fillCount=%" PRIu64 ", destMax=%" PRIu64 ", stream_id=%d.",
-        rtInstance->GetChipType(), fillVal, fillCount, destMax, stm->Id_());
-    rtError_t error;
-    errno_t ret = EOK;
-
-    rtPtrAttributes_t attributes;
-    error = stm->Device_()->Driver_()->PtrGetAttributes(ptr, &attributes);
-    ERROR_RETURN_MSG_INNER(error, "get pointer attribute failed, retCode=%#x.", error);
-
-    if ((attributes.location.type == RT_MEMORY_LOC_HOST) || (attributes.location.type == RT_MEMORY_LOC_UNREGISTERED)) {
-        RT_LOG(RT_LOG_DEBUG, "memset location type is %u.", attributes.location.type);
-        ret = memset_s(ptr, destMax, static_cast<int32_t>(fillVal), fillCount);
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
-            "Memset async failed, due to memset_s failed, destMax=%" PRIu64 ", fillCount=%" PRIu64 ", retCode=%d.",
-            destMax, fillCount, ret);
-    } else {
-        void *hostPtr = nullptr;
-        std::shared_ptr<void> hostPtrGuard;
-        const uint64_t setSize = (fillCount < MEM_BLOCK_SIZE) ? fillCount : MEM_BLOCK_SIZE;
-        // Allocate host memory via driver interface instead of glibc malloc.
-        // Driver-allocated host memory may be pre-pinned, reducing page fault latency on memset.
-        Driver * const driver = stm->Device_()->Driver_();
-        // 接口内会处理好字节对齐，这里不需要处理
-        rtError_t allocErr = driver->HostMemAlloc(&hostPtr, setSize, stm->Device_()->Id_());
-        ERROR_RETURN(allocErr, "Alloc host mem failed, size=%llu, retCode=%#x.",
-            setSize, static_cast<uint32_t>(allocErr));
-        NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
-        // hostPtrGuard takes ownership: deleter calls HostMemFree on last reference.
-        // Do NOT manually call HostMemFree after this point — shared_ptr handles it.
-        hostPtrGuard.reset(hostPtr, [driver](void *p) { (void)driver->HostMemFree(p); });
-        ret = memset_s(hostPtr, setSize, static_cast<int32_t>(fillVal), setSize);
-        if (ret != EOK) {
-            RT_LOG(RT_LOG_DEBUG, "memset_s failed, retCode=%d", ret);
-            return RT_ERROR_SEC_HANDLE;
-        }
-
-        if (fillCount > destMax) {
-            RT_LOG(RT_LOG_WARNING,
-                "current fillCount=%" PRIu64 ", destMax=%" PRIu64 ", fillCount must be less than or equal to destMax!",
-                fillCount, destMax);
-            return RT_ERROR_MEMORY_ALLOCATION;
-        }
-
-        uint64_t remainSize = (fillCount < MEM_BLOCK_SIZE) ? fillCount : MEM_BLOCK_SIZE;
-        uint64_t realSize = 0UL;
-        uint64_t doneSize = 0UL;
-        // memcpyaync this Host memory to ptr
-        while (remainSize > 0ULL) {
-            error = MemcopyAsync(
-                (RtPtrToPtr<char_t*, void*>(ptr)) + doneSize, destMax - doneSize,
-                RtPtrToPtr<char_t*, void*>(hostPtr) + doneSize, remainSize, RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize,
-                hostPtrGuard);
-
-            ERROR_RETURN_MSG_INNER(error, "Memcpy async step1 failed, retCode=%#x,"
-                " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-                error, destMax - doneSize, remainSize, RT_MEMCPY_HOST_TO_DEVICE);
-            doneSize += realSize;
-            remainSize -= realSize;
-        }
-
-        if (fillCount > MEM_BLOCK_SIZE) {
-            const uint64_t memBlockNum = fillCount / MEM_BLOCK_SIZE;
-            uint64_t idx = 1UL;
-            for (; idx < memBlockNum; idx++) {
-                error = MemcopyAsync(
-                    RtPtrToPtr<char_t*, void*>(ptr) + (idx * MEM_BLOCK_SIZE), destMax - (idx * MEM_BLOCK_SIZE),
-                    RtPtrToPtr<char_t*, void*>(ptr), MEM_BLOCK_SIZE, RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
-                ERROR_RETURN_MSG_INNER(error, "Memcpy async step2 failed,"
-                    " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-                    destMax - (idx * MEM_BLOCK_SIZE), MEM_BLOCK_SIZE, RT_MEMCPY_DEVICE_TO_DEVICE);
-            }
-
-            const uint64_t memRemain = fillCount % MEM_BLOCK_SIZE;
-            if (memRemain > 0ULL) {
-                char_t * const dstAddr = (RtPtrToPtr<char_t *, void *>(ptr)) + (memBlockNum * MEM_BLOCK_SIZE);
-                error = MemcopyAsync(
-                    dstAddr, destMax - (memBlockNum * MEM_BLOCK_SIZE), static_cast<char_t*>(ptr), memRemain,
-                    RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
-                ERROR_RETURN_MSG_INNER(error, "Memcpy async step3 failed,"
-                    " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
-                    destMax - (memBlockNum * MEM_BLOCK_SIZE), memRemain, RT_MEMCPY_DEVICE_TO_DEVICE);
-            }
-        }
-    }
-
-    return error;
+    UNUSED(stm);
+    UNUSED(ptr);
+    UNUSED(destMax);
+    UNUSED(fillVal);
+    UNUSED(fillCount);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 } // namespace runtime
