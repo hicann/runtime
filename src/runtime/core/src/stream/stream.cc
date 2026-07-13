@@ -731,11 +731,14 @@ rtError_t Stream::Setup()
 
     TIMESTAMP_END(rtStreamCreate_AllocStreamSqCq);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Alloc sq cq failed, stream_id=%d, retCode=%#x.", streamId_,
-            static_cast<uint32_t>(error));
         if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL)) {
+            RT_LOG(RT_LOG_ERROR, "Alloc sq cq failed, stream_id=%d, retCode=%#x.", streamId_,
+                static_cast<uint32_t>(error));
             RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Stream resource",
                 "Too many streams are created");
+        } else {
+            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Alloc sq cq failed, stream_id=%d, retCode=%#x.", streamId_,
+                static_cast<uint32_t>(error));
         }
         device_->GetStreamSqCqManage()->DelStreamIdToStream(static_cast<uint32_t>(streamId_));
         (void)device_->Driver_()->StreamIdFree(streamId_, device_->Id_(), device_->DevGetTsId());
