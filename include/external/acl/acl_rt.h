@@ -3994,6 +3994,38 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uui
 
 /**
  * @ingroup AscendCL
+ * @brief device limit type
+ */
+typedef enum tagAclrtDeviceLimit {
+    ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE = 0,
+    ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE = 1,
+    ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE = 2,
+    ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE = 3,
+    ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE = 4,
+} aclrtDeviceLimit;
+
+/**
+ * @ingroup AscendCL
+ * @brief set device resource limit
+ * @param [in] limit   limit type
+ * @param [in] value   limit value
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value);
+
+/**
+ * @ingroup AscendCL
+ * @brief get device resource limit
+ * @param [in] limit   limit type
+ * @param [out] value  limit value
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value);
+
+/**
+ * @ingroup AscendCL
  * @brief get h2d atomic capabilities by device id
  * @param [out] capabilities  atomic capabilities
  * @param [in] operations     atomic operations

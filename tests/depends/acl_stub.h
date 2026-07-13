@@ -330,6 +330,7 @@ public:
     virtual rtError_t rtMemQueueReset(int32_t devId, uint32_t qid);
     virtual rtError_t rtSetDefaultDeviceId(int32_t deviceId);
     virtual rtError_t rtDeviceSetLimit(int32_t devId, rtLimitType_t type, uint32_t val);
+    virtual rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t *val);
     virtual rtError_t rtEventWorkModeSet(uint8_t event_mode);
     virtual rtError_t rtRegStreamStateCallback(const char *regName, rtStreamStateCallback callback);
     virtual rtError_t rtCtxGetCurrentDefaultStream(rtStream_t* stm);
@@ -624,6 +625,7 @@ public:
     MOCK_METHOD1(rtSetDevice, rtError_t(int32_t device));
     MOCK_METHOD1(rtSetDefaultDeviceId, rtError_t(int32_t device));
     MOCK_METHOD3(rtDeviceSetLimit, rtError_t(int32_t devId, rtLimitType_t type, uint32_t val));
+    MOCK_METHOD2(rtDeviceGetLimit, rtError_t(rtLimitType_t type, uint32_t *val));
     MOCK_METHOD1(rtEventWorkModeSet, rtError_t(uint8_t event_mode));
     MOCK_METHOD1(rtDeviceReset, rtError_t(int32_t device));
     MOCK_METHOD1(rtDeviceResetForce, rtError_t(int32_t device));

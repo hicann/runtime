@@ -678,7 +678,7 @@ TEST_F(DeviceTest, DevSetLimit_in_rawdev_01)
     rtLimitType_t type = (rtLimitType_t)1U;
     Device *dev = ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
     rtError_t error = rtDeviceSetLimit(1, type, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(error, RT_ERROR_NONE);
 
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
     rtDeviceReset(1);

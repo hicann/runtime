@@ -420,6 +420,7 @@ public:
     virtual rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex) = 0;
     virtual rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) = 0;
     virtual rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) = 0;
+    virtual rtError_t DeviceGetLimit(const rtLimitType_t type, uint32_t *val) = 0;
     virtual rtError_t DeviceSynchronize(const int32_t timeout = -1) = 0;
     virtual rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) = 0;
     virtual rtError_t SnapShotProcessLock() = 0;

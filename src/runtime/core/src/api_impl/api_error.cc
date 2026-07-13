@@ -2896,6 +2896,14 @@ rtError_t ApiErrorDecorator::DeviceSetLimit(const int32_t devId, const rtLimitTy
     return error;
 }
 
+rtError_t ApiErrorDecorator::DeviceGetLimit(const rtLimitType_t type, uint32_t *val)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val == nullptr, RT_ERROR_INVALID_VALUE, val, "non-null");
+    rtError_t error = impl_->DeviceGetLimit(type, val);
+    ERROR_RETURN(error, "Device get limit failed, type=%d.", static_cast<int32_t>(type));
+    return error;
+}
+
 rtError_t ApiErrorDecorator::DeviceSynchronize(const int32_t timeout)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE,

@@ -625,6 +625,7 @@ add_executable(runtime_utest_task_910B
     stub/rt_utest_api_common_defination.cc
     main.cc
     rt_utest_api_device_limit.cc
+    rt_utest_api_device_stack_limit.cc
     rt_utest_api_stream_limit.cc
     rt_utest_api_test6.cc
     rt_utest_api_device.cc

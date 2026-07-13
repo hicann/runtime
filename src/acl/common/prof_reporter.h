@@ -270,6 +270,8 @@ namespace acl {
         AclrtHostMemMapCapabilities,
         AclrtStreamGetPriority,
         AclrtStreamGetFlags,
+        AclrtDeviceSetLimit,
+        AclrtDeviceGetLimit,
         AclrtGetMemUsageInfo,
         AclrtHostRegisterV2,
         AclrtHostGetDevicePointer,

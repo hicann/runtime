@@ -205,6 +205,8 @@
     _(aclError, aclrtDeviceGetStreamPriorityRange, (int32_t * leastPriority, int32_t * greatestPriority), (leastPriority, greatestPriority)) \
     _(aclError, aclrtGetDeviceCapability, (int32_t deviceId, aclrtDevFeatureType devFeatureType, int32_t * value), (deviceId, devFeatureType, value)) \
     _(aclError, aclrtDeviceGetUuid, (int32_t deviceId, aclrtUuid * uuid), (deviceId, uuid)) \
+    _(aclError, aclrtDeviceSetLimit, (aclrtDeviceLimit limit, size_t value), (limit, value)) \
+    _(aclError, aclrtDeviceGetLimit, (aclrtDeviceLimit limit, size_t * value), (limit, value)) \
     _(aclError, aclrtCtxGetCurrentDefaultStream, (aclrtStream * stream), (stream)) \
     _(aclError, aclrtGetPrimaryCtxState, (int32_t deviceId, uint32_t * flags, int32_t * active), (deviceId, flags, active)) \
     _(aclError, aclrtReduceAsync, (void * dst, const void * src, uint64_t count, aclrtReduceKind kind, aclDataType type, aclrtStream stream, void * reserve), (dst, src, count, kind, type, stream, reserve)) \

@@ -1735,6 +1735,40 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImplDavid::DeviceGetLimit(const rtLimitType_t type, uint32_t *val)
+{
+    RT_LOG(RT_LOG_DEBUG, "type=%u.", static_cast<uint32_t>(type));
+    Runtime *rt = Runtime::Instance();
+    COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
+    if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
+        Context * const curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        RT_LOG(RT_LOG_WARNING, "DeviceGetLimit, type=%u.", static_cast<uint32_t>(type));
+        *val = 0;
+        return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_STACK_SIZE) {
+        *val = rt->GetDeviceCustomerStackSize();
+        return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
+        std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
+        *val = rt->GetSimdPrintFifoSize();
+        return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE) {
+        std::unique_lock<std::mutex> lock(rt->GetSimtFifoMutex());
+        *val = rt->GetSimtPrintFifoSize();
+        return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_SIMT_STACK_SIZE) {
+        *val = static_cast<uint32_t>(rt->GetSimtWarpStkSize());
+        return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
+        *val = rt->GetSimtDvgWarpStkSize();
+        return RT_ERROR_NONE;
+    } else {
+        RT_LOG(RT_LOG_WARNING, "Limit type is not supported, type=%u", static_cast<uint32_t>(type));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+}
+
 rtError_t ApiImplDavid::StreamTaskAbort(Stream * const stm)
 {
     Stream *curStm = stm;

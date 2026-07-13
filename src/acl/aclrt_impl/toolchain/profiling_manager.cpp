@@ -158,6 +158,8 @@ namespace acl {
         {AclProfType::AclrtGetEventAvailNum,                    "aclrtGetEventAvailNum"},
         {AclProfType::AclrtGetDeviceInfo,                       "aclrtGetDeviceInfo"},
         {AclProfType::AclrtDeviceGetUuid,                       "aclrtDeviceGetUuid"},
+        {AclProfType::AclrtDeviceSetLimit,                      "aclrtDeviceSetLimit"},
+        {AclProfType::AclrtDeviceGetLimit,                      "aclrtDeviceGetLimit"},
         {AclProfType::AclrtDeviceGetStreamPriorityRange,        "aclrtDeviceGetStreamPriorityRange"},
         {AclProfType::AclrtGetDeviceCapability,                 "aclrtGetDeviceCapability"},
         {AclProfType::AclrtCtxGetCurrentDefaultStream,          "aclrtCtxGetCurrentDefaultStream"},

@@ -11,13 +11,19 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
+#include <stdalign.h>
+#include <thread>
+#include <vector>
 #define private public
 #define protected public
 #include "runtime.hpp"
+#include "model.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
+#include "notify.hpp"
 #include "event.hpp"
 #include "task_info.hpp"
+#include "ffts_task.h"
 #include "device/device_error_proc.hpp"
 #include "device_error_proc_c.hpp"
 #include "program.hpp"
@@ -25,9 +31,13 @@
 #include "npu_driver.hpp"
 #include "ctrl_res_pool.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "davinci_kernel_task.h"
 #include "api_impl.hpp"
 #include "aicpu_err_msg.hpp"
+#include "profiler.hpp"
 #include "thread_local_container.hpp"
+#include "stars_david.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 #include "rdma_task.h"
@@ -260,4 +270,344 @@ TEST_F(DeviceTestDavid, AddAddrKernelNameMapTableTest)
     mapInfo.kernelName = "testKernel";
     auto error = dev.AddAddrKernelNameMapTable(mapInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+class DavidDeviceLimitTest : public testing::Test {
+protected:
+    static void SetUpTestCase() {}
+
+    static void TearDownTestCase() {}
+
+    virtual void SetUp()
+    {
+        Runtime* rtInstance = (Runtime*)Runtime::Instance();
+        oldChipType = rtInstance->GetChipType();
+        rtInstance->SetChipType(CHIP_DAVID);
+        GlobalContainer::SetRtChipType(CHIP_DAVID);
+        int64_t hardwareVersion = CHIP_DAVID << 8;
+        Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
+            .will(returnValue(RT_ERROR_NONE));
+        char* socVer = "Ascend950PR_9599";
+        MOCKER(halGetSocVersion)
+            .stubs()
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
+            .will(returnValue(DRV_ERROR_NONE));
+        oldDeviceCustomerStackSize = rtInstance->deviceCustomerStackSize_;
+        oldSimtWarpStkSize = rtInstance->simtWarpStkSize_;
+        oldSimtDvgWarpStkSize = rtInstance->simtDvgWarpStkSize_;
+        oldPrintblockLen = rtInstance->printblockLen_;
+        oldSimtPrintLen = rtInstance->simtPrintLen_;
+        rtInstance->deviceCustomerStackSize_ = KERNEL_STACK_SIZE_32K;
+        isCfgOpWaitTaskTimeout = rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout;
+        isCfgOpExcTaskTimeout = rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout;
+        rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout = false;
+        rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = false;
+        rtSetDevice(0);
+    }
+
+    virtual void TearDown()
+    {
+        rtDeviceReset(0);
+        Runtime* rtInstance = (Runtime*)Runtime::Instance();
+        rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout = isCfgOpWaitTaskTimeout;
+        rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = isCfgOpExcTaskTimeout;
+        rtInstance->SetChipType(oldChipType);
+        GlobalContainer::SetRtChipType(oldChipType);
+        rtInstance->deviceCustomerStackSize_ = oldDeviceCustomerStackSize;
+        rtInstance->simtWarpStkSize_ = oldSimtWarpStkSize;
+        rtInstance->simtDvgWarpStkSize_ = oldSimtDvgWarpStkSize;
+        rtInstance->printblockLen_ = oldPrintblockLen;
+        rtInstance->simtPrintLen_ = oldSimtPrintLen;
+        GlobalMockObject::verify();
+    }
+
+private:
+    rtChipType_t oldChipType;
+    uint32_t oldDeviceCustomerStackSize{KERNEL_STACK_SIZE_32K};
+    uint64_t oldSimtWarpStkSize{0};
+    uint32_t oldSimtDvgWarpStkSize{0};
+    uint32_t oldPrintblockLen{0};
+    uint32_t oldSimtPrintLen{0};
+    bool isCfgOpWaitTaskTimeout{false};
+    bool isCfgOpExcTaskTimeout{false};
+};
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_StackSize_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, 65536U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 65536U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_SimtStackSize_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, 256U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 256U * RT_MAX_THREAD_NUM_PER_WARP);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtStackSize_AlignTo128B)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, 200U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 256U * RT_MAX_THREAD_NUM_PER_WARP);
+}
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_SimtDvgWarpStackSize_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, 512U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 512U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_SimtPrintfFifo_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 2097152U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 2097152U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_SimdPrintfFifo_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 65536U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 65536U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_Concurrent_SimtStackSize_NoCrash)
+{
+    const int32_t threadNum = 4;
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadNum; i++) {
+        threads.emplace_back([i]() {
+            uint32_t val = 256U + static_cast<uint32_t>(i) * 128U;
+            rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, val);
+        });
+    }
+    for (auto &t : threads) { t.join(); }
+
+    uint32_t val = 0U;
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 256U * RT_MAX_THREAD_NUM_PER_WARP);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_Concurrent_SimtDvgStackSize_NoCrash)
+{
+    const int32_t threadNum = 4;
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadNum; i++) {
+        threads.emplace_back([i]() {
+            uint32_t val = 512U + static_cast<uint32_t>(i) * 128U;
+            rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, val);
+        });
+    }
+    for (auto &t : threads) { t.join(); }
+
+    uint32_t val = 0U;
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 512U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_Concurrent_SimtStack_SetAndGet_NoCrash)
+{
+    const int32_t writerNum = 2;
+    const int32_t readerNum = 2;
+    std::vector<std::thread> threads;
+
+    for (int32_t i = 0; i < writerNum; i++) {
+        threads.emplace_back([i]() {
+            for (int32_t j = 0; j < 100; j++) {
+                uint32_t val = 256U + static_cast<uint32_t>(i) * 128U;
+                rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, val);
+            }
+        });
+    }
+    for (int32_t i = 0; i < readerNum; i++) {
+        threads.emplace_back([]() {
+            for (int32_t j = 0; j < 100; j++) {
+                uint32_t val = 0U;
+                rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+            }
+        });
+    }
+    for (auto &t : threads) { t.join(); }
+
+    uint32_t val = 0U;
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 256U * RT_MAX_THREAD_NUM_PER_WARP);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_Concurrent_BothSimtStacks_NoCrash)
+{
+    const int32_t threadNum = 4;
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadNum; i++) {
+        threads.emplace_back([i]() {
+            if (i % 2 == 0) {
+                rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, 256U + static_cast<uint32_t>(i) * 128U);
+            } else {
+                rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, 512U + static_cast<uint32_t>(i) * 128U);
+            }
+        });
+    }
+    for (auto &t : threads) { t.join(); }
+
+    uint32_t val = 0U;
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 256U * RT_MAX_THREAD_NUM_PER_WARP);
+
+    val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 512U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_NegativeOne_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, static_cast<uint32_t>(-1));
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimdFifo_NegativeOne_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, static_cast<uint32_t>(-1));
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_BelowMin_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 512U * 1024U);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetAndGetLimit_LowPowerTimeout_Placeholder)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_LOW_POWER_TIMEOUT, 1000U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 999U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_LOW_POWER_TIMEOUT, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, 0U);
+}
+
+TEST_F(DavidDeviceLimitTest, GetLimit_NullValue_ReturnsError)
+{
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_InvalidDevId_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(-1, RT_LIMIT_TYPE_STACK_SIZE, 65536U);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, GetLimit_NullValue_ErrMsg_ReturnsInvalidValue)
+{
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, GetLimit_UnsupportedType_ErrMsg_ReturnsError)
+{
+    uint32_t val = 999U;
+    rtError_t ret = rtDeviceGetLimit(static_cast<rtLimitType_t>(99), &val);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, GetLimit_AllTypes_DefaultValues)
+{
+    uint32_t val = 0U;
+
+    rtError_t ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(val, KERNEL_STACK_SIZE_32K);
+
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, GetLimit_UnsupportedType_ReturnsNotSupport)
+{
+    uint32_t val = 999U;
+    rtError_t ret = rtDeviceGetLimit(static_cast<rtLimitType_t>(99), &val);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_BothSimtStacksZero_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, 0U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, 0U);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtStackSize_LargeValue)
+{
+    const uint32_t largeVal = 256U * 1024U * 1024U;
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, largeVal);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_STACK_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_Zero_ReturnsError)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 0U);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_MinValue_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 1U * 1024U * 1024U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t val = 0U;
+    ret = rtDeviceGetLimit(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_GE(val, 1U * 1024U * 1024U);
+}
+
+TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_MaxValue_Success)
+{
+    rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 64U * 1024U * 1024U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }

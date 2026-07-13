@@ -315,6 +315,7 @@ public:
     rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex) override;
     rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) override;
     rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) override;
+    rtError_t DeviceGetLimit(const rtLimitType_t type, uint32_t *val) override;
     rtError_t DeviceSynchronize(const int32_t timeout) override;
     rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) override;
     rtError_t SnapShotProcessLock() override;

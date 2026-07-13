@@ -143,11 +143,20 @@ namespace {
         }
 
         if (!stackSizeExist) {
-            // 如果 stackSizeExist 为 false，直接返回 ACL_SUCCESS
             return ACL_SUCCESS;
         }
 
-        ACL_REQUIRES_RTS_OK(rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize)));
+        // Tolerate FEATURE_NOT_SUPPORT for backward compatibility: older versions
+        // always returned SUCCESS even on platforms that do not support the limit type.
+        const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
+        if (rtErr != RT_ERROR_NONE) {
+            if (ACL_GET_ERRCODE_RTS(rtErr) == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+                ACL_LOG_WARN("set limit (%s %zu) not supported on this platform, skip.",
+                    typeName.c_str(), stackSize);
+                return ACL_SUCCESS;
+            }
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
         ACL_LOG_INFO("get %s stack size %zu success\n", typeName.c_str(), stackSize);
         return ACL_SUCCESS;
     }
@@ -159,7 +168,7 @@ namespace {
 
             const aclError ret = SetStackSizeByType(configPath, limitType, typeName.c_str());
             if (ret == ACL_ERROR_FAILURE) {
-                return ret; // 如果返回 ACL_ERROR_FAILURE，直接返回错误
+                return ret;
             }
         }
         return ACL_SUCCESS;
@@ -183,7 +192,17 @@ namespace {
             return ACL_SUCCESS;
         }
 
-        ACL_REQUIRES_RTS_OK(rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize)));
+        // Tolerate FEATURE_NOT_SUPPORT for backward compatibility: older versions
+        // always returned SUCCESS even on platforms that do not support the limit type.
+        const rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize));
+        if (rtErr != RT_ERROR_NONE) {
+            if (ACL_GET_ERRCODE_RTS(rtErr) == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+                ACL_LOG_WARN("set limit (%s %zu) not supported on this platform, skip.",
+                    typeName.c_str(), fifoSize);
+                return ACL_SUCCESS;
+            }
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
         ACL_LOG_INFO("set %s fifo size %zu success", typeName.c_str(), fifoSize);
         return ACL_SUCCESS;
     }

@@ -1371,6 +1371,15 @@ rtError_t aclStub::rtDeviceSetLimit(int32_t devId, rtLimitType_t type, uint32_t 
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtDeviceGetLimit(rtLimitType_t type, uint32_t *val)
+{
+    (void)type;
+    if (val != nullptr) {
+        *val = 0U;
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtEventWorkModeSet(uint8_t event_mode)
 {
     (void)event_mode;
@@ -3863,6 +3872,11 @@ rtError_t rtSetDefaultDeviceId(int32_t deviceId)
 rtError_t rtDeviceSetLimit(int32_t devId, rtLimitType_t type, uint32_t val)
 {
     return MockFunctionTest::aclStubInstance().rtDeviceSetLimit(devId, type, val);
+}
+
+rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t *val)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceGetLimit(type, val);
 }
 
 rtError_t rtEventWorkModeSet(uint8_t event_mode)

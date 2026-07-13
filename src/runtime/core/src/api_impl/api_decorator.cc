@@ -841,6 +841,11 @@ rtError_t ApiDecorator::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
     return impl_->DeviceSetLimit(devId, type, val);
 }
 
+rtError_t ApiDecorator::DeviceGetLimit(const rtLimitType_t type, uint32_t *val)
+{
+    return impl_->DeviceGetLimit(type, val);
+}
+
 rtError_t ApiDecorator::DeviceSynchronize(const int32_t timeout)
 {
     return impl_->DeviceSynchronize(timeout);

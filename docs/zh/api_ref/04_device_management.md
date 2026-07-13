@@ -37,6 +37,8 @@
 - [`aclError aclrtDeviceGetBareTgid(int32_t *pid)`](#aclrtDeviceGetBareTgid)：获取当前进程的进程ID。
 - [`aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId)`](#aclrtDeviceGetHostAtomicCapabilities)：查询指定Device与Host之间支持的原子操作详情。
 - [`aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)`](#aclrtDeviceGetP2PAtomicCapabilities)：查询一个AI Server内两个Device之间支持的原子操作详情。AI Server通常是多个Device组成的服务器形态的统称。
+- [`aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)`](#aclrtDeviceSetLimit)：设置当前Device的资源限制，如栈大小、printf FIFO大小等。
+- [`aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)`](#aclrtDeviceGetLimit)：查询当前Device的资源限制值。
 
 <a id="aclrtSetDevice"></a>
 
@@ -2075,3 +2077,135 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<a id="aclrtDeviceSetLimit"></a>
+
+## aclrtDeviceSetLimit
+
+```c
+aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3260 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3260 -->
+<!-- npu="A3" id3261 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3261 -->
+<!-- npu="910b" id3262 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3262 -->
+<!-- npu="310b" id3266 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3266 -->
+<!-- npu="310p" id3267 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3267 -->
+<!-- npu="910" id3268 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3268 -->
+<!-- npu="IPV350" id3269 -->
+- IPV350：不支持
+<!-- end id3269 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id25 -->
+
+### 功能说明
+
+设置当前Device的资源限制（如栈大小、printf FIFO大小等），作用于当前进程。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| limit | 输入 | 资源限制类型，取值见[aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit)枚举。 |
+| value | 输入 | 限制值，单位为字节。取值范围与limit类型相关，详见约束说明。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+
+### 约束说明
+
+- 必须在`aclInit`之后、`aclrtSetDevice`之前调用。
+- 资源限制值为进程级共享，所有Device共用同一套配置，无法为不同Device设置不同的值。本接口内部固定使用Device 0进行设置，若设置了`ASCEND_RT_VISIBLE_DEVICES`环境变量且不包含Device 0，则本接口及`aclInit`中通过acl.json设置栈大小/FIFO大小均会失败。此时请确保`ASCEND_RT_VISIBLE_DEVICES`包含Device 0。
+- 多次`aclrtSetDevice`不`aclrtResetDevice`：物理内存只分配一次，修改值后不会重新分配。
+- `aclrtResetDevice`后值保持：再`aclrtSetDevice`时按当前值重新分配。
+- Set/Get返回的是当前的瞬时值，不保证多线程并发安全。
+- `ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`：值需大于32768(32K)才生效，≤32K时保持默认不生效；>32K时向上取整到16KB边界。
+<!-- npu="A3,910b" id3270 -->
+- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`上限为192KB，超出上限在调用`aclrtSetDevice`时报错。不支持`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`枚举选项，调用时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+<!-- end id3270 -->
+- `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：取值范围为[1024(1KB), 67108864(64MB)]，8B向上对齐，超范围返回`ACL_ERROR_RT_PARAM_INVALID`。
+<!-- npu="950" id3271 -->
+- 对于Ascend 950PR/Ascend 950DT，`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`上限为128KB，超出上限在调用`aclrtSetDevice`时报错。`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`无上限校验，128B向上对齐后×32（每warp线程数），超大值对齐溢出时调用`aclrtSetDevice`可能因物理内存不足失败。`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`无上限校验，128B向上对齐，超大值对齐溢出时调用`aclrtSetDevice`可能因物理内存不足失败。`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`取值范围为[1048576(1MB), 67108864(64MB)]，8B向上对齐，超范围返回`ACL_ERROR_RT_PARAM_INVALID`。`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时为0，否则返回`ACL_ERROR_RT_PARAM_INVALID`。
+<!-- end id3271 -->
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceGetLimit"></a>
+
+## aclrtDeviceGetLimit
+
+```c
+aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3263 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3263 -->
+<!-- npu="A3" id3264 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3264 -->
+<!-- npu="910b" id3265 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3265 -->
+<!-- npu="310b" id3272 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3272 -->
+<!-- npu="310p" id3273 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3273 -->
+<!-- npu="910" id3274 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3274 -->
+<!-- npu="IPV350" id3275 -->
+- IPV350：不支持
+<!-- end id3275 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id26 -->
+
+### 功能说明
+
+查询当前Device的资源限制值。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| limit | 输入 | 资源限制类型，取值见[aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit)枚举。 |
+| value | 输出 | 查询到的限制值，单位为字节。不能为nullptr。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+
+### 约束说明
+
+- 资源限制值为进程级共享，所有Device共用同一套配置，任意Device上查询返回相同值。
+- Set/Get返回的是当前的瞬时值，不保证多线程并发安全。
+- 在`aclrtSetDevice`之后查询栈大小可能得到与实际物理分配不一致的值。例如：先调用`aclrtDeviceSetLimit`设置栈大小为A，再调用`aclrtSetDevice`生效，物理内存按A分配；此后再调用`aclrtDeviceSetLimit`修改为B（不重新调用`aclrtSetDevice`），此时调用`aclrtDeviceGetLimit`查询返回B，但实际物理内存仍按A分配。
+
+<!-- npu="A3,910b" id3276 -->
+- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+<!-- end id3276 -->
+
+<!-- npu="950" id3277 -->
+- 对于Ascend 950PR/Ascend 950DT，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`返回对齐后×32的值（每warp线程数），如设置256则查询返回8192；查询`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`返回对齐后的值（不乘线程数），如设置512则查询返回512。
+<!-- end id3277 -->

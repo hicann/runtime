@@ -2329,3 +2329,35 @@ enum acltdtTensorType {
     ACL_TENSOR_DATA_END_TENSOR        // tensor分片场景下标识最后一个tensor
 };
 ```
+
+<br>
+
+<a id="aclrtDeviceLimit"></a>
+
+## aclrtDeviceLimit
+
+```c
+typedef enum tagAclrtDeviceLimit {
+    ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE = 0,
+    ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE = 1,
+    ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE = 2,
+    ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE = 3,
+    ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE = 4,
+} aclrtDeviceLimit;
+```
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE | SIMT栈大小（per-thread）。 |
+| ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE | SIMT分支栈大小（per-warp）。 |
+| ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE | AI Core栈大小（每核）。 |
+| ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE | SIMD printf FIFO大小（每核）。 |
+| ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE | SIMT printf FIFO大小。 |
+
+<!-- npu="950" id90 -->
+对于Ascend 950PR/Ascend 950DT，支持以上全部枚举选项。
+<!-- end id90 -->
+
+<!-- npu="A3,910b" id91 -->
+对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，不支持`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`枚举选项。
+<!-- end id91 -->

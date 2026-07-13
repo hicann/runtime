@@ -6281,6 +6281,194 @@ TEST_F(UTEST_ACL_Runtime, aclrtResetDeviceResLimit_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+// Scenario: pass invalid enum value(99), ACL layer AclLimitToRtLimit returns RESERVED, should return param error
+// Coverage path: enum mapping invalid value validation
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_failed_with_invalid_limit)
+{
+    const auto ret = aclrtDeviceSetLimit(static_cast<aclrtDeviceLimit>(99), 1024U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+// Scenario: RT layer rtDeviceSetLimit returns error, ACL layer should propagate error code
+// Coverage path: error code conversion in ACL layer when RT layer fails
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_failed_with_rt_error)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
+    const auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, 8192U);
+    EXPECT_NE(ret, ACL_SUCCESS);
+}
+
+// Scenario: normal set of SIMT_STACK_SIZE, mock RT layer returns success
+// Coverage path: enum mapping(0->1) + deviceId=0 + propagate RT layer success
+// Note: do not mock rtGetDevice, verify interface does not depend on SetDevice
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_success)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    const auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, 8192U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+// Scenario: GetLimit with value=nullptr, should return param error
+// Coverage path: output pointer non-null validation
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_failed_with_null_value)
+{
+    const auto ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+// Scenario: GetLimit with invalid enum value(99), should return param error
+// Coverage path: Get-side enum mapping invalid value validation
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_failed_with_invalid_limit)
+{
+    size_t value = 0U;
+    const auto ret = aclrtDeviceGetLimit(static_cast<aclrtDeviceLimit>(99), &value);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_success)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(_, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    size_t value = 0U;
+    const auto ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_unsupported_type_returns_error)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    size_t value = 999U;
+    const auto ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, &value);
+    EXPECT_NE(ret, ACL_SUCCESS);
+}
+
+// UC-ACL-NEW-01: cover Set/Get roundtrip for all 5 valid limit types
+// For each ACL enum value, execute Set → Get, verify mock layer receives correct RT enum value and returns success
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetGetLimit_all_five_types_roundtrip)
+{
+    struct LimitTestCase {
+        aclrtDeviceLimit aclLimit;
+        size_t value;
+        int32_t expectedRtType; // expected RT enum value received by mock
+    };
+    const LimitTestCase cases[] = {
+        {ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, 8192U, 1},
+        {ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE, 1024U, 2},
+        {ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 65536U, 3},
+        {ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 131072U, 4},
+        {ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE, 4096U, 5},
+    };
+    for (const auto &tc : cases) {
+        EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(0, static_cast<rtLimitType_t>(tc.expectedRtType), tc.value))
+            .WillOnce(Return(RT_ERROR_NONE));
+        auto ret = aclrtDeviceSetLimit(tc.aclLimit, tc.value);
+        EXPECT_EQ(ret, ACL_SUCCESS);
+
+        EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(static_cast<rtLimitType_t>(tc.expectedRtType), _))
+            .WillOnce(DoAll(SetArgPointee<1>(tc.value), Return(RT_ERROR_NONE)));
+        size_t getValue = 0U;
+        ret = aclrtDeviceGetLimit(tc.aclLimit, &getValue);
+        EXPECT_EQ(ret, ACL_SUCCESS);
+        EXPECT_EQ(getValue, tc.value);
+    }
+}
+
+// UC-ACL-NEW-02: boundary value test (value=0 and value=UINT32_MAX)
+// ACL layer does not validate value range, should pass through to RT layer as-is
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_boundary_values)
+{
+    // value = 0
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, 0U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 0U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // value = UINT32_MAX
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, UINT32_MAX))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, UINT32_MAX);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // value = UINT32_MAX + 1 (exceeds uint32, should be rejected by ACL)
+    ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, static_cast<size_t>(UINT32_MAX) + 1U);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+// UC-ACL-NEW-03: ACL enum value 0 maps to RT_LIMIT_TYPE_SIMT_STACK_SIZE(1)
+// Verify ACL enum 0 is not misinterpreted by RT as LOW_POWER_TIMEOUT(0)
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_enum_mapping_acl0_to_rt1)
+{
+    // Exact match: mock expects type=1 (not 0), verify lookup table mapping is correct
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_STACK_SIZE, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE, 256U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Verify ACL enum 4 → RT enum 5
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE, 4096U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+// UC-ACL-NEW-04: multiple Set of same type → last one wins
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_multiple_set_last_wins)
+{
+    // First Set(100)
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, 100U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 100U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Second Set(200)
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, 200U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 200U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Get returns the last value
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(_, _))
+        .WillOnce(DoAll(SetArgPointee<1>(200U), Return(RT_ERROR_NONE)));
+    size_t value = 0U;
+    ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(value, 200U);
+}
+
+// UC-ACL-NEW-05: different types independently Set/Get
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetGetLimit_different_types_independent)
+{
+    // Set STACK_SIZE = 100
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, 100U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    auto ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 100U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Set SIMD_FIFO = 200
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 200U))
+        .WillOnce(Return(RT_ERROR_NONE));
+    ret = aclrtDeviceSetLimit(ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 200U);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Get STACK_SIZE = 100 (unaffected by FIFO Set)
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, _))
+        .WillOnce(DoAll(SetArgPointee<1>(100U), Return(RT_ERROR_NONE)));
+    size_t value = 0U;
+    ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(value, 100U);
+
+    // Get SIMD_FIFO = 200
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetLimit(RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, _))
+        .WillOnce(DoAll(SetArgPointee<1>(200U), Return(RT_ERROR_NONE)));
+    ret = aclrtDeviceGetLimit(ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(value, 200U);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetStreamResLimit_failed_with_invalid_args)
 {
     aclrtDevResLimitType type = ACL_RT_DEV_RES_CUBE_CORE;

@@ -556,6 +556,92 @@ aclError aclrtCheckArchCompatibilityImpl(const char *socVersion, int32_t *canCom
     ACL_LOG_INFO("successfully execute aclrtCheckArchCompatibility");
     return ACL_SUCCESS;
 }
+
+static constexpr rtLimitType_t ACL_TO_RT_LIMIT_TABLE[] = {
+    RT_LIMIT_TYPE_SIMT_STACK_SIZE,
+    RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE,
+    RT_LIMIT_TYPE_STACK_SIZE,
+    RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE,
+    RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE,
+};
+static constexpr size_t ACL_TO_RT_LIMIT_TABLE_SIZE =
+    sizeof(ACL_TO_RT_LIMIT_TABLE) / sizeof(ACL_TO_RT_LIMIT_TABLE[0]);
+
+static rtLimitType_t AclLimitToRtLimit(aclrtDeviceLimit limit)
+{
+    const auto idx = static_cast<size_t>(limit);
+    if (idx >= ACL_TO_RT_LIMIT_TABLE_SIZE) {
+        return RT_LIMIT_TYPE_RESERVED;
+    }
+    return ACL_TO_RT_LIMIT_TABLE[idx];
+}
+
+aclError aclrtDeviceSetLimitImpl(aclrtDeviceLimit limit, size_t value)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSetLimit);
+    ACL_LOG_INFO(
+        "start to execute aclrtDeviceSetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), value);
+    const auto rtType = AclLimitToRtLimit(limit);
+    if (rtType == RT_LIMIT_TYPE_RESERVED) {
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        std::string limitStr = std::to_string(static_cast<int32_t>(limit));
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({funcName.c_str(), limitStr.c_str(), "limit", "[0, 4]"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    if (value > static_cast<size_t>(UINT32_MAX)) {
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        std::string valueStr = std::to_string(value);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({funcName.c_str(), valueStr.c_str(), "value", "[0, UINT32_MAX]"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    const rtError_t rtSetErr = rtDeviceSetLimit(0, rtType, static_cast<uint32_t>(value));
+    if (rtSetErr != RT_ERROR_NONE) {
+        if (ACL_GET_ERRCODE_RTS(rtSetErr) == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("aclrtDeviceSetLimit not supported, limit is [%d], value is [%zu].",
+                static_cast<int32_t>(limit), value);
+            return ACL_GET_ERRCODE_RTS(rtSetErr);
+        }
+        ACL_LOG_CALL_ERROR("rtDeviceSetLimit failed, runtime result = %d.", static_cast<int32_t>(rtSetErr));
+        return ACL_GET_ERRCODE_RTS(rtSetErr);
+    }
+    ACL_LOG_INFO(
+        "successfully execute aclrtDeviceSetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), value);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceGetLimitImpl(aclrtDeviceLimit limit, size_t *value)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetLimit);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetLimit, limit is [%d]", static_cast<int32_t>(limit));
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
+    const auto rtType = AclLimitToRtLimit(limit);
+    if (rtType == RT_LIMIT_TYPE_RESERVED) {
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        std::string limitStr = std::to_string(static_cast<int32_t>(limit));
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({funcName.c_str(), limitStr.c_str(), "limit", "[0, 4]"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    uint32_t rtValue = 0U;
+    const rtError_t rtGetErr = rtDeviceGetLimit(rtType, &rtValue);
+    if (rtGetErr != RT_ERROR_NONE) {
+        if (ACL_GET_ERRCODE_RTS(rtGetErr) == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("aclrtDeviceGetLimit not supported, limit is [%d].", static_cast<int32_t>(limit));
+            return ACL_GET_ERRCODE_RTS(rtGetErr);
+        }
+        ACL_LOG_CALL_ERROR("rtDeviceGetLimit failed, runtime result = %d.", static_cast<int32_t>(rtGetErr));
+        return ACL_GET_ERRCODE_RTS(rtGetErr);
+    }
+    *value = static_cast<size_t>(rtValue);
+    ACL_LOG_INFO(
+        "successfully execute aclrtDeviceGetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), *value);
+    return ACL_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif

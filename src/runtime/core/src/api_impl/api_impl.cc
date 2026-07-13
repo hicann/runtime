@@ -3627,13 +3627,16 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
 {
     RT_LOG(RT_LOG_INFO, "Set Limit, drv devId=%d, type=%d, value=%u.", devId, type, val);
     (void)devId;
+    if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
+        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
+        RT_LOG(RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%u",
+            static_cast<uint32_t>(type));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
     rtError_t ret = RT_ERROR_NONE;
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime *rt = Runtime::Instance();
         rt->SetDeviceCustomerStackSize(val);
-    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE) {
-        RT_LOG(RT_LOG_WARNING, "Limit type is not supported, type=%u", static_cast<uint32_t>(type));
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
     } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
         Runtime *rt = Runtime::Instance();
         std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
@@ -3643,6 +3646,30 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         Device *const dev = curCtx->Device_();
         ret = dev->DevSetLimit(type, val);
+    }
+    return ret;
+}
+
+rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t *val)
+{
+    RT_LOG(RT_LOG_INFO, "Get Limit, type=%d.", static_cast<int32_t>(type));
+    rtError_t ret = RT_ERROR_NONE;
+    if (type == RT_LIMIT_TYPE_STACK_SIZE) {
+        Runtime *rt = Runtime::Instance();
+        *val = rt->GetDeviceCustomerStackSize();
+    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
+               type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
+        RT_LOG(RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%u",
+            static_cast<uint32_t>(type));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
+        Runtime *rt = Runtime::Instance();
+        std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
+        *val = rt->GetSimdPrintFifoSize();
+    } else {
+        RT_LOG(RT_LOG_WARNING, "Limit type not supported on this platform, type=%u, returning default 0.",
+            static_cast<uint32_t>(type));
+        *val = 0U;
     }
     return ret;
 }

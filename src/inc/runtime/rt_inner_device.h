@@ -81,6 +81,16 @@ RTS_API rtError_t rtDeviceGetP2PAtomicCapabilities(
     uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
     int32_t dstDeviceId);
 
+/**
+ * @ingroup dvrt_dev
+ * @brief get device resource limit value
+ * @param [in] type   limit type
+ * @param [out] val   limit value
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t *val);
+
 #if defined(__cplusplus)
 }
 #endif
