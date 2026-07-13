@@ -1,9 +1,8 @@
 # 19-04 PyTorch场景标记迭代时间
 
-本章节描述 PyTorch 场景下标记迭代时间的接口。
+本章节描述PyTorch场景下标记迭代时间的接口。
 
 - [`aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, aclrtStream stream)`](#aclprofGetStepTimestamp)：利用单算子模型执行接口实现训练的场景下，使用本接口用于标记迭代开始与结束时间，为后续Profiling解析提供迭代标识，以便以迭代为粒度展示性能数据。
-
 
 <a id="aclprofGetStepTimestamp"></a>
 
@@ -15,19 +14,34 @@ aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, 
 
 ### 产品支持情况
 
-
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+<!-- npu="950" id2395 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id2395 -->
+<!-- npu="A3" id2396 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id2396 -->
+<!-- npu="910b" id2397 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2397 -->
+<!-- npu="310b" id2398 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id2398 -->
+<!-- npu="310p" id2399 -->
+- Atlas 推理系列产品：支持
+<!-- end id2399 -->
+<!-- npu="910" id2400 -->
+- Atlas 训练系列产品：支持
+<!-- end id2400 -->
+<!-- npu="IPV350" id2401 -->
+- IPV350：不支持
+<!-- end id2401 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/19-04_setting_Iteration_time_in_pytorch_scenarios_res.md#id1 -->
 
 ### 功能说明
 
 利用单算子模型执行接口实现训练的场景下，使用本接口用于标记迭代开始与结束时间，为后续Profiling解析提供迭代标识，以便以迭代为粒度展示性能数据。
 
 ### 参数说明
-
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |

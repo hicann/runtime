@@ -522,11 +522,31 @@ typedef enum {
 }aclprofAicoreMetrics;
 ```
 
+<!-- npu="310b" id97 -->
+Atlas 200I/500 A2 推理产品：不支持ACL\_AICORE\_MEMORY\_ACCESS
+<!-- end id97 -->
+
+<!-- npu="310p" id98 -->
+Atlas 推理系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+<!-- end id98 -->
+
+<!-- npu="910" id99 -->
+Atlas 训练系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+<!-- end id99 -->
+
+<!-- npu="910b" id100 -->
 Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
+<!-- end id100 -->
 
+<!-- npu="A3" id101 -->
 Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
+<!-- end id101 -->
 
+<!-- npu="950" id102 -->
 Ascend 950PR/Ascend 950DT：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+<!-- end id102 -->
+
+<!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id16 -->
 
 <br>
 
@@ -554,30 +574,63 @@ typedef enum {
     ACL_PROF_ARGS_MAX                   = 17
 } aclprofConfigType;
 ```
+<!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id17 -->
+<!-- npu="950" id87 -->
+Ascend 950PR/Ascend 950DT：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+<!-- end id87 -->
 
-Ascend 950PR/Ascend 950DT：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ。
+<!-- npu="310p" id88 -->
+Atlas 推理系列产品：不支持ACL\_PROF\_SYS\_IO\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+<!-- end id88 -->
+
+<!-- npu="310b" id89 -->
+Atlas 200I/500 A2 推理产品：不支持ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+<!-- end id89 -->
+
+<!-- npu="910" id90 -->
+Atlas 训练系列产品：不支持ACL\_PROF\_OPTYPE。
+<!-- end id90 -->
+
+<!-- npu="910b" id91 -->
+Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持ACL\_PROF\_OPTYPE。
+<!-- end id91 -->
+
+<!-- npu="A3" id92 -->
+Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_PROF\_OPTYPE。
+<!-- end id92 -->
 
 枚举项说明如下：
 
 - ACL\_PROF\_STORAGE\_LIMIT ：指定落盘目录允许存放的最大文件容量，有效取值范围为\[200, 4294967295\]，单位为MB。
 - ACL\_PROF\_SYS\_HARDWARE\_MEM\_FREQ：片上内存读写速率、QoS传输带宽、LLC三级缓存带宽、加速器带宽、SoC传输带宽、组件内存占用等的采集频率，范围\[1,100\]，单位Hz。不同产品的采集内容略有差异，请以实际结果为准。已知在安装有glibc<2.34的环境上采集memory数据，可能触发glibc的一个已知[Bug 19329](https://sourceware.org/bugzilla/show_bug.cgi?id=19329)，通过升级环境的glibc版本可解决此问题。
 
+    <!-- npu="950" id93 -->
     Ascend 950PR/Ascend 950DT，Qos和SoC支持的采集频率最大支持配置10000，其他采集项支持的最大采集频率仍为100，若配置超出范围，其他采集项则按照最大采集频率100进行采集。
+    <!-- end id93 -->
 
+    <!-- npu="310b" id94 -->
+    Atlas 200I/500 A2 推理产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    <!-- end id94 -->
+
+    <!-- npu="910b" id95 -->
     Atlas A2 训练系列产品/Atlas A2 推理系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    <!-- end id95 -->
 
+    <!-- npu="A3" id96 -->
     Atlas A3 训练系列产品/Atlas A3 推理系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    <!-- end id96 -->
 
 - ACL\_PROF\_LLC\_MODE：LLC Profiling采集事件。要求同时设置ACL\_PROF\_SYS\_HARDWARE\_MEM\_FREQ。可以设置为：
     - read：读事件，三级缓存读速率。
     - write：写事件，三级缓存写速率。默认为read。
 
-- ACL\_PROF\_SYS\_IO\_FREQ：NIC、ROCE、UB带宽数据采集频率，范围\[1,100\]，单位hz。不同产品的采集内容略有差异，请以实际结果为准。
-- ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ：集合通信带宽数据（HCCS）、PCIe数据采集开关、片间传输带宽信息采集频率、SIO数据、UB带宽数据采集开关，范围\[1,50\]，单位hz。不同产品的采集内容略有差异，请以实际结果为准。
+- ACL\_PROF\_SYS\_IO\_FREQ：NIC、ROCE、UB带宽数据采集频率，范围\[1,100\]，单位Hz。不同产品的采集内容略有差异，请以实际结果为准。
+- ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ：集合通信带宽数据（HCCS）、PCIe数据采集开关、片间传输带宽信息采集频率、SIO数据、UB带宽数据采集开关，范围\[1,50\]，单位Hz。不同产品的采集内容略有差异，请以实际结果为准。
 - ACL\_PROF\_DVPP\_FREQ：DVPP采集频率，范围\[1,100\]。
 - ACL\_PROF\_HOST\_SYS：Host侧进程级别的性能数据采集开关，取值包括cpu和mem。
 - ACL\_PROF\_HOST\_SYS\_USAGE：Host侧系统和所有进程的性能数据采集开关，取值包括cpu和mem。
 - ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ：CPU利用率、内存利用率的采集频率，范围\[1,50\]。
+- ACL\_PROF\_NTS\_METRICS：V380 PMU信息和NTS task运行时间统计信息采集开关，取值只能是PipeUtilization。
 - ACL\_PROF\_PATH：设置数据落盘路径。
 
 <br>

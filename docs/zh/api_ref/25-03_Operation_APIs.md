@@ -412,11 +412,28 @@ aclprofConfig *aclprofCreateConfig(uint32_t *deviceIdList, uint32_t deviceNums, 
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+<!-- npu="950" id2724 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id2724 -->
+<!-- npu="A3" id2725 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id2725 -->
+<!-- npu="910b" id2726 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id2726 -->
+<!-- npu="310b" id2727 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id2727 -->
+<!-- npu="310p" id2728 -->
+- Atlas 推理系列产品：支持
+<!-- end id2728 -->
+<!-- npu="910" id2729 -->
+- Atlas 训练系列产品：支持
+<!-- end id2729 -->
+<!-- npu="IPV350" id2730 -->
+- IPV350：不支持
+<!-- end id2730 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id44 -->
 
 ### 功能说明
 
@@ -459,12 +476,28 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
-
+<!-- npu="950" id211 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id211 -->
+<!-- npu="A3" id212 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id212 -->
+<!-- npu="910b" id213 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id213 -->
+<!-- npu="310b" id214 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id214 -->
+<!-- npu="310p" id215 -->
+- Atlas 推理系列产品：支持
+<!-- end id215 -->
+<!-- npu="910" id216 -->
+- Atlas 训练系列产品：支持
+<!-- end id216 -->
+<!-- npu="IPV350" id217 -->
+- IPV350：不支持
+<!-- end id217 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id45 -->
 ### 功能说明
 
 销毁通过[aclprofCreateConfig](#aclprofCreateConfig)接口创建的aclprofConfig类型的数据。
@@ -506,11 +539,28 @@ aclprofStepInfo* aclprofCreateStepInfo()
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+<!-- npu="950" id1863 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1863 -->
+<!-- npu="A3" id1864 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1864 -->
+<!-- npu="910b" id1865 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1865 -->
+<!-- npu="310b" id1866 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id1866 -->
+<!-- npu="310p" id1867 -->
+- Atlas 推理系列产品：支持
+<!-- end id1867 -->
+<!-- npu="910" id1868 -->
+- Atlas 训练系列产品：支持
+<!-- end id1868 -->
+<!-- npu="IPV350" id1869 -->
+- IPV350：不支持
+<!-- end id1869 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id46 -->
 
 ### 功能说明
 
@@ -541,11 +591,28 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+<!-- npu="950" id351 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id351 -->
+<!-- npu="A3" id352 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id352 -->
+<!-- npu="910b" id353 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id353 -->
+<!-- npu="310b" id354 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id354 -->
+<!-- npu="310p" id355 -->
+- Atlas 推理系列产品：支持
+<!-- end id355 -->
+<!-- npu="910" id356 -->
+- Atlas 训练系列产品：支持
+<!-- end id356 -->
+<!-- npu="IPV350" id357 -->
+- IPV350：不支持
+<!-- end id357 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id47 -->
 
 ### 功能说明
 
@@ -584,12 +651,28 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(int8_t timeInfoSwitch, aclp
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
-
+<!-- npu="950" id43 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id43 -->
+<!-- npu="A3" id44 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id44 -->
+<!-- npu="910b" id45 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id45 -->
+<!-- npu="310b" id46 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id46 -->
+<!-- npu="310p" id47 -->
+- Atlas 推理系列产品：支持
+<!-- end id47 -->
+<!-- npu="910" id48 -->
+- Atlas 训练系列产品：支持
+<!-- end id48 -->
+<!-- npu="IPV350" id49 -->
+- IPV350：不支持
+<!-- end id49 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id48 -->
 ### 功能说明
 
 创建aclprofSubscribeConfig类型的数据，表示创建订阅配置信息。
@@ -627,11 +710,28 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscri
 
 ### 产品支持情况
 
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+<!-- npu="950" id1744 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id1744 -->
+<!-- npu="A3" id1745 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id1745 -->
+<!-- npu="910b" id1746 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id1746 -->
+<!-- npu="310b" id1747 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id1747 -->
+<!-- npu="310p" id1748 -->
+- Atlas 推理系列产品：支持
+<!-- end id1748 -->
+<!-- npu="910" id1749 -->
+- Atlas 训练系列产品：支持
+<!-- end id1749 -->
+<!-- npu="IPV350" id1750 -->
+- IPV350：不支持
+<!-- end id1750 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/25-03_Operation_APIs_res.md#id49 -->
 
 ### 功能说明
 

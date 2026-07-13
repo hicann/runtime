@@ -578,7 +578,7 @@ aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoS
 5. 调用[aclrtCacheLastTaskOpInfo](#aclrtCacheLastTaskOpInfo)接口缓存算子信息。
 6. 再次调用[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口关闭算子信息缓存开关。
 7. 调用[aclmdlRICaptureEnd](15_model_running_instance__management.md#aclmdlRICaptureEnd)接口结束任务捕获。
-8. 开启采集性能数据（参见[Profiling数据采集接口](19-01_Profiling数据采集接口.md)章节下的接口）后，调用[aclmdlRIExecuteAsync](15_model_running_instance__management.md#aclmdlRIExecuteAsync)接口执行推理。
+8. 开启采集性能数据（参见[Profiling数据采集接口](19-01_data_profiling_apis.md)章节下的接口）后，调用[aclmdlRIExecuteAsync](15_model_running_instance__management.md#aclmdlRIExecuteAsync)接口执行推理。
 
     在此过程中，采集的性能数据会附带算子信息。
 
