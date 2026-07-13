@@ -5451,7 +5451,7 @@ void Runtime::ReportUBMemRasProc()
             continue;
         }
         uint32_t eventCount = 0U;
-        rtError_t error = GetDeviceFaultEvents(devId, &faultEventInfo[0U], eventCount, false);
+        const rtError_t error = GetDeviceFaultEvents(devId, &faultEventInfo[0U], eventCount, false);
         if (error != RT_ERROR_NONE) {
             continue;
         }
@@ -5461,7 +5461,7 @@ void Runtime::ReportUBMemRasProc()
 
 void Runtime::ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount)
 {
-    static uint64_t lastReportTime[RT_MAX_DEV_NUM] = {0ULL};
+    static std::array<uint64_t, RT_MAX_DEV_NUM> lastReportTime = {};
     for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
         if ((faultEventInfo[faultIndex].eventId == UB_MEM_NETWORK_EXCEPTION_EVENT_ID) &&
             (faultEventInfo[faultIndex].alarmRaisedTime > lastReportTime[devId])) {

@@ -118,8 +118,8 @@ drvError_t __attribute__((weak)) halGetFaultEvent(uint32_t devId, struct halEven
     struct halFaultEventInfo *eventInfo, uint32_t len, uint32_t *eventCount);
 drvError_t __attribute__((weak)) halGetNotifyEvent(uint32_t devId, struct halEventFilter *filter,
     struct halFaultEventInfo *eventInfo, uint32_t len, uint32_t *eventCount);
-drvError_t __attribute__((weak)) halGetDeviceInfoByBuff(uint32_t devId, int moduleType,
-    int infoType, void *buf, int32_t *size);
+drvError_t __attribute__((weak)) halGetDeviceInfoByBuff(uint32_t devId, int32_t moduleType,
+    int32_t infoType, void *buf, int32_t *size);
 drvError_t __attribute__((weak)) halSetDeviceInfoByBuff(uint32_t devId, int32_t moduleType,
     int32_t infoType, void *buf, int32_t size);
 drvError_t __attribute__((weak)) halRepairFault(uint32_t devid, halRepairFaultInfo *info);

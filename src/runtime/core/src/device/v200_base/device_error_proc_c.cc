@@ -465,7 +465,7 @@ static void AixLinkErrProc(const Device * const dev, const StarsDeviceErrorInfo 
 {
     std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
     uint32_t eventCount = 0U;
-    rtError_t error = GetDeviceFaultEvents(dev->Id_(), &faultEventInfo[0U], eventCount);
+    const rtError_t error = GetDeviceFaultEvents(dev->Id_(), &faultEventInfo[0U], eventCount);
     if (error != RT_ERROR_NONE) {
         AiCoreUnknownErrProc(dev, info);
         return;
