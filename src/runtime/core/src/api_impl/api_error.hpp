@@ -249,6 +249,8 @@ public:
     rtError_t FreePhysical(rtDrvMemHandle handle) override;
     rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) override;
     rtError_t UnmapMem(void* devPtr) override;
+    rtError_t MemMapNoAccess(
+        void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) override;
     rtError_t MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count) override;
     rtError_t MemGetAccess(void *virPtr, rtMemLocation *location, uint64_t *flags) override;
     rtError_t ExportToShareableHandle(

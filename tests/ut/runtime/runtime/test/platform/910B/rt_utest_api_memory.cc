@@ -214,6 +214,98 @@ TEST_F(RtMemoryApiTest, rtMapMem)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(RtMemoryApiTest, NpuDriverMemMapNoAccessPassesAllArgumentsToHal)
+{
+    uint8_t virPtrToken = 0U;
+    void *virPtr = static_cast<void *>(&virPtrToken);
+    constexpr size_t size = 0x200000U;
+    constexpr size_t offset = 0x1000U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    constexpr uint64_t flags = 0U;
+
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .with(mockcpp::eq(virPtr), mockcpp::eq(size), mockcpp::eq(offset),
+            mockcpp::eq(reinterpret_cast<drv_mem_handle_t *>(handle)), mockcpp::eq(flags))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    const rtError_t error = NpuDriver::MemMapNoAccess(virPtr, size, offset, handle, flags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(RtMemoryApiTest, NpuDriverMemMapNoAccessReturnsFeatureNotSupport)
+{
+    uint8_t virPtrToken = 0U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    const rtError_t error = NpuDriver::MemMapNoAccess(&virPtrToken, 1U, 0U, handle, 0U);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RtMemoryApiTest, NpuDriverMemMapNoAccessConvertsDriverError)
+{
+    uint8_t virPtrToken = 0U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    const rtError_t error = NpuDriver::MemMapNoAccess(&virPtrToken, 1U, 0U, handle, 0U);
+    EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+}
+
+TEST_F(RtMemoryApiTest, RtMemMapNoAccessPassesAllArgumentsToHal)
+{
+    uint8_t virPtrToken = 0U;
+    void *virPtr = static_cast<void *>(&virPtrToken);
+    constexpr size_t size = 0x200000U;
+    constexpr size_t offset = 0x1000U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    constexpr uint64_t flags = 0U;
+
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .with(mockcpp::eq(virPtr), mockcpp::eq(size), mockcpp::eq(offset),
+            mockcpp::eq(reinterpret_cast<drv_mem_handle_t *>(handle)), mockcpp::eq(flags))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    const rtError_t error = rtMemMapNoAccess(virPtr, size, offset, handle, flags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(RtMemoryApiTest, RtMemMapNoAccessConvertsFeatureNotSupport)
+{
+    uint8_t virPtrToken = 0U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    const rtError_t error = rtMemMapNoAccess(&virPtrToken, 1U, 0U, handle, 0U);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RtMemoryApiTest, RtMemMapNoAccessConvertsDriverError)
+{
+    uint8_t virPtrToken = 0U;
+    uint8_t handleToken = 0U;
+    rtDrvMemHandle handle = static_cast<void *>(&handleToken);
+    MOCKER(halMemMapNoAccess)
+        .expects(once())
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    const rtError_t error = rtMemMapNoAccess(&virPtrToken, 1U, 0U, handle, 0U);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(RtMemoryApiTest, rtUnmapMem)
 {
     rtError_t error = rtUnmapMem(nullptr);

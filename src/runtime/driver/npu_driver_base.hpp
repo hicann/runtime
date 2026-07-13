@@ -77,6 +77,8 @@ drvError_t __attribute__((weak)) halMemCreate(drv_mem_handle_t **handle, size_t 
 drvError_t __attribute__((weak)) halMemRelease (drv_mem_handle_t *handle);
 drvError_t __attribute__((weak)) halMemMap(void *ptr, size_t size, size_t offset, drv_mem_handle_t *handle,
     uint64_t flag);
+drvError_t __attribute__((weak)) halMemMapNoAccess(void *ptr, size_t size, size_t offset,
+    drv_mem_handle_t *handle, uint64_t flag);
 drvError_t __attribute__((weak))halMemGetAddressReserveRange(void **ptr, size_t *size, drv_mem_addr_reserve_type type,
     uint64_t flag);
 drvError_t __attribute__((weak)) halMemUnmap(void *ptr);

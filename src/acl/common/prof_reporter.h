@@ -329,6 +329,7 @@ namespace acl {
         AclrtStreamWaitEventWithFlag,
         AclrtGetUserDevIdByPhyDevId,
         AclrtGetPhyDevIdByUserDevId,
+        AclrtMemMapNoAccess,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

@@ -2663,6 +2663,32 @@ ACL_FUNC_VISIBILITY aclError aclrtUnmapMem(void *virPtr);
 
 /**
  * @ingroup AscendCL
+ * @brief Maps an allocation handle to a reserved virtual address range without access permission
+ *
+ * @par Function
+ * Establishes a binding between an allocation handle and a previously reserved virtual address range.
+ * No access permission is granted by this interface. Call aclrtMemSetAccess before accessing the range.
+ *
+ * @param virPtr [IN]  Starting virtual address to map. Must be non-null.
+ * @param size [IN]    Mapping size in bytes. Must be greater than 0.
+ * @param offset [IN]  Offset into the memory represented by handle from which to start mapping.
+ * @param handle [IN]  Physical memory handle. Must be non-null.
+ * @param flags [IN]   Reserved, must be 0.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_PARAM Invalid virPtr / size / handle / flags.
+ * @retval ACL_ERROR_RT_FEATURE_NOT_SUPPORT The driver does not support this function.
+ *
+ * @see aclrtReserveMemAddress | aclrtMemSetAccess | aclrtUnmapMem
+ */
+ACL_FUNC_VISIBILITY aclError aclrtMemMapNoAccess(void *virPtr,
+                                                 size_t size,
+                                                 size_t offset,
+                                                 aclrtDrvMemHandle handle,
+                                                 uint64_t flags);
+
+/**
+ * @ingroup AscendCL
  * @brief Create config handle of stream
  *
  * @retval the aclrtStreamConfigHandle pointer

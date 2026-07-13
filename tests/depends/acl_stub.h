@@ -280,6 +280,8 @@ public:
     virtual rtError_t rtMallocPhysical(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags);
     virtual rtError_t rtFreePhysical(rtDrvMemHandle handle);
     virtual rtError_t rtMapMem(void *devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
+    virtual rtError_t rtMemMapNoAccess(
+        void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
     virtual rtError_t rtUnmapMem(void *devPtr);
     virtual rtError_t rtBinaryLoadWithoutTilingKey(const void *data, const uint64_t length, rtBinHandle *binHandle);
     virtual rtError_t rtBinaryUnLoad(rtBinHandle binHandle);
@@ -788,6 +790,8 @@ public:
     MOCK_METHOD4(rtMallocPhysical, rtError_t(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags));
     MOCK_METHOD1(rtFreePhysical, rtError_t(rtDrvMemHandle handle));
     MOCK_METHOD5(rtMapMem, rtError_t(void *devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags));
+    MOCK_METHOD5(rtMemMapNoAccess,
+        rtError_t(void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags));
     MOCK_METHOD1(rtUnmapMem, rtError_t(void *devPtr));
 
     MOCK_METHOD5(rtMemManagedPrefetchAsync, rtError_t(const void *ptr, size_t size, rtMemManagedLocation location,

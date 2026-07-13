@@ -6983,6 +6983,16 @@ rtError_t ApiImpl::UnmapMem(void* devPtr)
     return error;
 }
 
+rtError_t ApiImpl::MemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    const rtError_t error = NpuDriver::MemMapNoAccess(virPtr, size, offset, handle, flags);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, error);
+    ERROR_RETURN(error, "failed, ptr=%p, size=%zu, offset=%zu, handle=%p, flags=%" PRIu64,
+        virPtr, size, offset, handle, flags);
+    return error;
+}
+
 rtError_t ApiImpl::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
     const rtError_t error = NpuDriver::MemSetAccess(virPtr, size, desc, count);

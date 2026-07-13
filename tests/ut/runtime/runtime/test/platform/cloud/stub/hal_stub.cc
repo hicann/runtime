@@ -1423,6 +1423,11 @@ drvError_t halMemMap(void *ptr, size_t size, size_t offset, drv_mem_handle_t *ha
     return DRV_ERROR_NONE;
 }
 
+drvError_t halMemMapNoAccess(void *ptr, size_t size, size_t offset, drv_mem_handle_t *handle, uint64_t flag)
+{
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halMemUnmap(void *ptr)
 {
     return DRV_ERROR_NONE;

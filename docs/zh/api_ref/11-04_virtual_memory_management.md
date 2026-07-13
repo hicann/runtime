@@ -8,6 +8,7 @@
 - [`aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t alignment, void *expectPtr, uint64_t flags)`](#aclrtReserveMemAddressNoUCMemory)：预留虚拟内存。
 - [`aclError aclrtReleaseMemAddress(void *virPtr)`](#aclrtReleaseMemAddress)：释放通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口申请的虚拟内存。
 - [`aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)`](#aclrtMapMem)：将虚拟内存映射到物理内存。
+- [`aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)`](#aclrtMemMapNoAccess)：预留接口，暂不支持。
 - [`aclError aclrtUnmapMem(void *virPtr)`](#aclrtUnmapMem)：取消虚拟内存与物理内存之间的映射关系。
 - [`aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandleType handleType, uint64_t flags, uint64_t *shareableHandle)`](#aclrtMemExportToShareableHandle)：将本进程通过[aclrtMallocPhysical](#aclrtMallocPhysical)接口获取到的Device物理内存handle导出，以便后续将Device物理内存共享给其它进程。
 - [`aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid, size_t pidNum)`](#aclrtMemSetPidToShareableHandle)：设置共享内存的进程白名单。
@@ -471,6 +472,50 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 
 对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id15 -->
+
+<br>
+<br>
+<br>
+
+<a id="aclrtMemMapNoAccess"></a>
+
+## aclrtMemMapNoAccess
+
+```c
+aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)
+```
+
+**须知：本接口为预留接口，暂不支持。**
+
+### 功能说明
+
+将虚拟内存映射到物理内存。
+本接口与aclrtMemMap接口的区别在于：调用本接口成功后，目标Device上尚未建立可访问页表，虚拟地址区间不可访问。因此，需先调用[aclrtMemSetAccess](#aclrtMemSetAccess)接口设置内存访问权限，以触发在Device上建立可访问页表，方可访问该虚拟地址区间。
+
+**本接口需与以下其它接口配合使用**，典型调用流程如下：
+
+1. 预留虚拟内存（[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口）；
+2. 申请物理内存（[aclrtMallocPhysical](#aclrtMallocPhysical)接口），或导入共享物理内存handle（[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)或[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口）；
+3. 建立虚拟地址与物理内存handle之间的no-access绑定关系（[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口）；
+4. 为目标Device设置访问权限（[aclrtMemSetAccess](#aclrtMemSetAccess)接口）；
+5. 执行任务（调用具体的任务接口）；
+6. 取消虚拟内存与物理内存之间的绑定关系（[aclrtUnmapMem](#aclrtUnmapMem)接口）；
+7. 释放物理内存handle（[aclrtFreePhysical](#aclrtFreePhysical)接口）；
+8. 释放虚拟内存（[aclrtReleaseMemAddress](#aclrtReleaseMemAddress)接口）。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| virPtr | 输入 | 待绑定的虚拟内存地址指针，不能为nullptr。该地址需位于通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留的有效虚拟地址区间内。 |
+| size | 输入 | 待绑定的内存大小，单位Byte，取值必须大于0。 |
+| offset | 输入 | handle对应物理内存内的偏移值。offset与size的合法范围及对齐要求由底层驱动校验。 |
+| handle | 输入 | 物理内存信息handle，不能为nullptr。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>handle可通过[aclrtMallocPhysical](#aclrtMallocPhysical)、[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)或[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口获取。 |
+| flags | 输入 | 预留参数，当前只能设置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 <br>
 <br>
@@ -1057,8 +1102,8 @@ aclError aclrtMemSetAccess(void* virPtr, size_t size, aclrtMemAccessDesc* desc, 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| virPtr | 输入 | 虚拟内存的起始地址。<br>必须与[aclrtMapMem](#aclrtMapMem)接口的virPtr地址相同。 |
-| size | 输入 | 虚拟内存的长度。<br>必须与[aclrtMapMem](#aclrtMapMem)接口的size相同。 |
+| virPtr | 输入 | 虚拟内存的起始地址。<br>必须与[aclrtMapMem](#aclrtMapMem)或[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口的virPtr地址相同。 |
+| size | 输入 | 虚拟内存的长度。<br>必须与[aclrtMapMem](#aclrtMapMem)或[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口的size相同。 |
 | desc | 输入 | 内存访问的配置信息，包含内存访问保护标志、内存所在位置等。类型定义请参见[aclrtMemAccessDesc](25-04_Structs.md#aclrtMemAccessDesc)。 |
 | count | 输入 | desc数组长度。 |
 

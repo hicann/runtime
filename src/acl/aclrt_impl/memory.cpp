@@ -1105,6 +1105,23 @@ aclError aclrtUnmapMemImpl(void *virPtr)
     return ACL_SUCCESS;
 }
 
+aclError aclrtMemMapNoAccessImpl(
+    void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemMapNoAccess);
+    ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
+    ACL_LOG_DEBUG("start to execute aclrtMemMapNoAccess, virPtr = %p, size = %zu, offset = %zu, flags = %llu",
+        virPtr, size, offset, static_cast<unsigned long long>(flags));
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+    ACL_REQUIRES_POSITIVE_REPORT(size);
+    ACL_REQUIRES_PARAM_EQUAL_REPORT(flags, 0);
+    ACL_REQUIRES_RTS_OK(
+        rtMemMapNoAccess(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), flags));
+    ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtMemGetAccessImpl(void *virPtr, aclrtMemLocation *location, uint64_t *flag) 
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemGetAccess);

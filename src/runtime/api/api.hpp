@@ -355,6 +355,8 @@ public:
     virtual rtError_t FreePhysical(rtDrvMemHandle handle) = 0;
     virtual rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) = 0;
     virtual rtError_t UnmapMem(void* devPtr) = 0;
+    virtual rtError_t MemMapNoAccess(
+        void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) = 0;
     virtual rtError_t MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count) = 0;
     virtual rtError_t MemGetAccess(void *virPtr, rtMemLocation *location, uint64_t *flags) = 0;
     virtual rtError_t ExportToShareableHandle(rtDrvMemHandle handle, rtDrvMemHandleType handleType,

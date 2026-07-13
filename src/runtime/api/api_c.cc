@@ -3723,6 +3723,19 @@ rtError_t rtUnmapMem(void* devPtr)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtMemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api *apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->MemMapNoAccess(virPtr, size, offset, handle, flags);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtMemExportToShareableHandle(rtDrvMemHandle handle, rtDrvMemHandleType handleType,
     uint64_t flags, uint64_t *shareableHandle)
 {

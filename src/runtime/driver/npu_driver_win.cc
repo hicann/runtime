@@ -129,6 +129,17 @@ rtError_t NpuDriver::UnmapMem(void* devPtr)
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::MemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    UNUSED(virPtr);
+    UNUSED(size);
+    UNUSED(offset);
+    UNUSED(handle);
+    UNUSED(flags);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
     UNUSED(virPtr);

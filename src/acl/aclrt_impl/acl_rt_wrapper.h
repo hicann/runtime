@@ -106,6 +106,7 @@
     _(aclError, aclrtFreePhysical, (aclrtDrvMemHandle handle), (handle)) \
     _(aclError, aclrtMapMem, (void * virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags), (virPtr, size, offset, handle, flags)) \
     _(aclError, aclrtUnmapMem, (void * virPtr), (virPtr)) \
+    _(aclError, aclrtMemMapNoAccess, (void * virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags), (virPtr, size, offset, handle, flags)) \
     _(aclError, aclrtCreateStream, (aclrtStream * stream), (stream)) \
     _(aclError, aclrtCreateStreamWithConfig, (aclrtStream * stream, uint32_t priority, uint32_t flag), (stream, priority, flag)) \
     _(aclError, aclrtDestroyStream, (aclrtStream stream), (stream)) \

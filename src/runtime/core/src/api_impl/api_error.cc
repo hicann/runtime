@@ -5487,6 +5487,12 @@ rtError_t ApiErrorDecorator::UnmapMem(void* devPtr)
     return impl_->UnmapMem(devPtr);
 }
 
+rtError_t ApiErrorDecorator::MemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    return impl_->MemMapNoAccess(virPtr, size, offset, handle, flags);
+}
+
 rtError_t ApiErrorDecorator::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Setting the memory access permission");

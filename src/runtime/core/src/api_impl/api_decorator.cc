@@ -1952,6 +1952,12 @@ rtError_t ApiDecorator::UnmapMem(void* devPtr)
     return impl_->UnmapMem(devPtr);
 }
 
+rtError_t ApiDecorator::MemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    return impl_->MemMapNoAccess(virPtr, size, offset, handle, flags);
+}
+
 rtError_t ApiDecorator::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
     return impl_->MemSetAccess(virPtr, size, desc, count);

@@ -1014,6 +1014,11 @@ rtError_t aclStub::rtMapMem(void *devPtr, size_t size, size_t offset, rtDrvMemHa
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtMemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) {
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtUnmapMem(void *devPtr) {
     return RT_ERROR_NONE;
 }
@@ -3645,6 +3650,11 @@ rtError_t rtFreePhysical(rtDrvMemHandle handle) {
 
 rtError_t rtMapMem(void *devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) {
     return MockFunctionTest::aclStubInstance().rtMapMem(devPtr, size, offset, handle, flags);
+}
+
+rtError_t rtMemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) {
+    return MockFunctionTest::aclStubInstance().rtMemMapNoAccess(virPtr, size, offset, handle, flags);
 }
 
 rtError_t rtUnmapMem(void *devPtr) {

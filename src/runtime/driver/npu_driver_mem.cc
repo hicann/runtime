@@ -432,6 +432,25 @@ rtError_t NpuDriver::MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHa
     return RT_GET_DRV_ERRCODE(drvRet);
 }
 
+rtError_t NpuDriver::MemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
+{
+    COND_RETURN_WARN(&halMemMapNoAccess == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halMemMapNoAccess does not exist");
+
+    const drvError_t drvRet =
+        halMemMapNoAccess(virPtr, size, offset, RtPtrToPtr<drv_mem_handle_t *>(handle), flags);
+    COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halMemMapNoAccess does not support.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halMemMapNoAccess failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    return RT_GET_DRV_ERRCODE(drvRet);
+}
+
 rtError_t NpuDriver::UnmapMem(void* devPtr)
 {
     drvError_t drvRet = DRV_ERROR_NONE;

@@ -295,6 +295,21 @@ RTS_API rtError_t rtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* size
 RTS_API rtError_t rtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx);
 
 /**
+ * @ingroup rt_mem
+ * @brief Bind physical memory to a virtual address range without access permission.
+ * @param [in] virPtr virtual address to map.
+ * @param [in] size mapping size in bytes.
+ * @param [in] offset offset into the memory represented by handle.
+ * @param [in] handle physical memory handle.
+ * @param [in] flags reserved, must be 0.
+ * @return RT_ERROR_NONE for ok.
+ * @return RT_ERROR_FEATURE_NOT_SUPPORT if the driver does not support this function.
+ * @return RT_ERROR_DRV_ERR for driver error.
+ */
+RTS_API rtError_t rtMemMapNoAccess(
+    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
+
+/**
  * @ingroup dvrt_mem
  * @brief set memory with uint32_t value (element-wise)
  * @param [in] dst      destination address

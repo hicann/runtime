@@ -107,6 +107,7 @@ namespace acl {
         {AclProfType::AclrtMallocPhysical,                      "aclrtMallocPhysical"},
         {AclProfType::AclrtFreePhysical,                        "aclrtFreePhysical"},
         {AclProfType::AclrtMapMem,                              "aclrtMapMem"},
+        {AclProfType::AclrtMemMapNoAccess,                      "aclrtMemMapNoAccess"},
         {AclProfType::AclrtUnmapMem,                            "aclrtUnmapMem"},
         {AclProfType::AclrtLaunchKernel,                        "aclrtLaunchKernel"},
         {AclProfType::AclrtMemGetAccess,                        "aclrtMemGetAccess"},

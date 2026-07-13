@@ -3185,6 +3185,106 @@ TEST_F(UTEST_ACL_Runtime, virtual_physical_memory_map_unmap)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_success_with_all_arguments_forwarded)
+{
+    uint8_t virStorage = 0U;
+    uint8_t handleStorage = 0U;
+    void *const virPtr = &virStorage;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+    constexpr uint64_t flags = 0U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(),
+                rtMemMapNoAccess(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), flags))
+        .WillOnce(Return(RT_ERROR_NONE));
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, size, offset, handle, flags), ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_rejects_null_virtual_address)
+{
+    uint8_t handleStorage = 0U;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapNoAccess(_, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMemMapNoAccess(nullptr, size, offset, handle, 0U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_rejects_zero_size)
+{
+    uint8_t virStorage = 0U;
+    uint8_t handleStorage = 0U;
+    void *const virPtr = &virStorage;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapNoAccess(_, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, 0U, offset, handle, 0U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_rejects_null_handle)
+{
+    uint8_t virStorage = 0U;
+    void *const virPtr = &virStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapNoAccess(_, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, size, offset, nullptr, 0U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_rejects_nonzero_flags)
+{
+    uint8_t virStorage = 0U;
+    uint8_t handleStorage = 0U;
+    void *const virPtr = &virStorage;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapNoAccess(_, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, size, offset, handle, 1U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_returns_feature_not_support)
+{
+    uint8_t virStorage = 0U;
+    uint8_t handleStorage = 0U;
+    void *const virPtr = &virStorage;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(),
+                rtMemMapNoAccess(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), 0U))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, size, offset, handle, 0U), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, mem_map_no_access_returns_other_runtime_error)
+{
+    uint8_t virStorage = 0U;
+    uint8_t handleStorage = 0U;
+    void *const virPtr = &virStorage;
+    const aclrtDrvMemHandle handle = &handleStorage;
+    constexpr size_t size = 4096U;
+    constexpr size_t offset = 128U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(),
+                rtMemMapNoAccess(virPtr, size, offset, reinterpret_cast<rtDrvMemHandle>(handle), 0U))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    EXPECT_EQ(aclrtMemMapNoAccess(virPtr, size, offset, handle, 0U), ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, create_binary_failed_with_nullptr_input)
 {
   aclrtBinary binary = nullptr;
