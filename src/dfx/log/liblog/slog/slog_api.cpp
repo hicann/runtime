@@ -651,11 +651,16 @@ extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) int32_t acllogCheckDebugLevel
 extern "C" LOG_FUNC_VISIBILITY __attribute((weak)) void acllogVaList(int32_t moduleId, int32_t level, const char *fmt,
     va_list list)
 {
+    if ((moduleId < 0) || (moduleId > static_cast<int32_t>(ACLLOG_USER_MODULE_ID_MAX))) {
+        SELF_LOG_WARN("acllogRecord/acllogVaList input moduleId=%d is illegal, valid range is [0, %u], log recording failed.",
+            moduleId, ACLLOG_USER_MODULE_ID_MAX);
+        return;
+    }
     if (g_slogFuncInfo[DLOG_VA_LIST].handle != nullptr) {
         reinterpret_cast<DlogVaListFunc>(g_slogFuncInfo[DLOG_VA_LIST].handle)(moduleId, level, fmt, list);
         return;
     }
-    if ((moduleId < 0) || (fmt == nullptr)) {
+    if (fmt == nullptr) {
         return;
     }
 

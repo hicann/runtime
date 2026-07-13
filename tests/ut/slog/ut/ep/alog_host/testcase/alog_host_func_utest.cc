@@ -992,6 +992,88 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogPrintUserModuleId)
     unsetenv("ASCEND_PROCESS_LOG_PATH");
 }
 
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogInvalidModuleId_NegativeOne)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    // moduleId=-1 为负数，非法入参，应拒绝记录并在系统日志打印原因
+    acllogRecord(-1, DLOG_INFO, "invalid module id %d", -1);
+    CallAcllogVaList(-1, DLOG_WARN, "invalid module id %d", -1);
+
+    DlogDestructor();
+
+    // 非法 moduleId 不应产生主机日志
+    // 若未修复，-1 会被 MODULE_ID_MASK 截断并产生日志
+    EXPECT_EQ(0, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+}
+
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogInvalidModuleId_Overflow65536)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    // moduleId=65536(0x10000) 超过上限 65535，非法入参，应拒绝记录并在系统日志打印原因
+    acllogRecord(0x10000, DLOG_INFO, "invalid module id %d", 65536);
+    CallAcllogVaList(0x10000, DLOG_WARN, "invalid module id %d", 65536);
+
+    DlogDestructor();
+
+    // 非法 moduleId 不应产生主机日志
+    // 若未修复，65536 会被 MODULE_ID_MASK(0xFFFF) 截断为模块 0 并产生日志
+    EXPECT_EQ(0, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+}
+
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogValidModuleId_Baseline)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    // moduleId=0xff00(65280) 为合法用户模块，应正常记录
+    acllogRecord(0xff00, DLOG_INFO, "valid module log %d", 0xff00);
+
+    DlogDestructor();
+
+    // 合法 moduleId 应产生 1 条主机日志
+    EXPECT_EQ(1, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+}
+
+TEST_F(EP_ALOG_HOST_FUNC_UTEST, AcllogInvalidModuleId)
+{
+    setenv("ASCEND_GLOBAL_LOG_LEVEL", "0", 1);
+    setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+    DlogConstructor();
+
+    // moduleId 超过上限 65535 或为负数，均为非法入参，应拒绝记录并在系统日志打印原因
+    acllogRecord(0x10000, DLOG_INFO, "invalid module id %d", 1);
+    CallAcllogVaList(0x20000, DLOG_WARN, "invalid module id %d", 2);
+    acllogRecord(-1, DLOG_INFO, "invalid module id %d", 3);
+    CallAcllogVaList(-2, DLOG_WARN, "invalid module id %d", 4);
+    // 合法 moduleId 仍可正常记录，回归正常路径
+    acllogRecord(0xff00, DLOG_INFO, "valid module log");
+
+    DlogDestructor();
+
+    // 非法 moduleId 不应产生主机日志，仅合法 moduleId 产生 1 条；
+    // 若未修复，0x10000/0x20000 会被 MODULE_ID_MASK 截断为模块 0 并产生额外日志（共 3 条）
+    EXPECT_EQ(1, DlogCheckHostPrintNum(PATH_ROOT, "debug"));
+
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+    unsetenv("ASCEND_PROCESS_LOG_PATH");
+}
+
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogAllInterface)
 {
     // 初始化
