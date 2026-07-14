@@ -2253,6 +2253,19 @@ TEST_F(TaskTest, ToConstructSqeForFlipTask)
     EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_FLIP);
 }
 
+TEST_F(TaskTest, ToConstructSqeForFlipTaskTaskID)
+{
+    TaskInfo task = {};
+    task.stream = stream_;
+    uint16_t flipNum = 1U;
+    FlipTaskInit(&task, flipNum, 0, 1);
+
+    rtStarsSqe_t sqe = {};
+    ToConstructSqe(&task, &sqe);
+    EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_FLIP);
+    EXPECT_EQ(sqe.phSqe.task_id, UINT16_MAX);
+}
+
 TEST_F(TaskTest, ToConstructSqeForUpdateAddressTask)
 {
     TaskInfo task = {};

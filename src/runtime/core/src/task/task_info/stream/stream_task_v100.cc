@@ -251,7 +251,11 @@ void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
     sqe->wr_cqe = 0U;
     sqe->res0 = 0U;
     sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
-    sqe->task_id = taskInfo->id;
+    if (flipTaskInfo->subType == RT_FLIP_TASK_STREAM_ID) {
+        sqe->task_id = RT_MILAN_TASK_ID_MAX;
+    } else {
+        sqe->task_id = taskInfo->id;
+    }
     sqe->task_type = TS_TASK_TYPE_FLIP;
     sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     sqe->u.flip_task_info.flipNumReport = flipTaskInfo->flipNumReport;
