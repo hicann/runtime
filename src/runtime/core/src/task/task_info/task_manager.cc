@@ -897,12 +897,12 @@ const std::vector<rtChipType_t>& GetV201Chips()
 void RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "chip type is invalid: %d", chipType);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d].", chipType, CHIP_BEGIN, CHIP_END - 1);
         return;
     }
     
     if (taskType >= TS_TASK_TYPE_RESERVED) {
-        RT_LOG(RT_LOG_ERROR, "task type is invalid: %d", taskType);
+        RT_LOG(RT_LOG_ERROR, "Invalid taskType = %d, valid range: [0, %d).", taskType, TS_TASK_TYPE_RESERVED);
         return;
     }
     
@@ -922,7 +922,7 @@ void RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSin
 void RefreshTaskFuncPointer(rtChipType_t chipType)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
-        RT_LOG(RT_LOG_ERROR, "Invalid chipType: %d", chipType);
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d].", chipType, CHIP_BEGIN, CHIP_END - 1);
         return;
     }
     
