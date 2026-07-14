@@ -18,6 +18,7 @@ namespace cce {
 namespace runtime {
 
 bool IsAicAivBiuPerfStreamSupported(const Stream *const stm);
+void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe * const sqe, const Stream * const stm);
 
 inline void CheckBlockDim(const Stream *const stm, const uint16_t sqeType, const uint16_t blockDim)
 {
@@ -54,15 +55,7 @@ inline void ConfigDieFriendly(const TaskInfo *const taskInfo, RtDavidStarsAicAiv
     const Stream * const stm)
 {
     sqe->dieFriendly = 1U;
-#ifndef CFG_DEV_PLATFORM_PC
-    const uint8_t dieNum = stm->Device_()->GetDavidDieNum();
-    if (dieNum <= 1U) {
-        sqe->dieFriendly = 0U;
-    }
-#else
-    UNUSED(stm);
-#endif
-
+    ConfigSqeDieFriendly(sqe, stm);
     const bool aicTask = (taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC);
     uint16_t blkDim = 0U;
     uint16_t groupDim = 0U;

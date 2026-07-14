@@ -53,6 +53,17 @@ void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe * cons
     return;
 }
 
+void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe * const sqe, const Stream * const stm)
+{
+#ifndef CFG_DEV_PLATFORM_PC
+    const uint8_t dieNum = stm->Device_()->GetDavidDieNum();
+    if (dieNum <= 1U) {
+        sqe->dieFriendly = 0U;
+    }
+#endif
+    return;
+}
+
 static bool DavinciKernelTaskRegister()
 {
     TaskFuncSingle aicAivFuncs = {
