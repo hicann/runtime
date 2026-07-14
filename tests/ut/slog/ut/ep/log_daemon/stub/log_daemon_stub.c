@@ -105,6 +105,26 @@ hdcError_t halGetDeviceInfoByBuff(uint32_t devId, int32_t moduleType, int32_t in
     return DRV_ERROR_NONE;
 }
 
+drvError_t drvGetDevNum(uint32_t *num_dev)
+{
+    (void)num_dev;
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
+drvError_t drvGetDevIDs(uint32_t *devices, uint32_t len)
+{
+    (void)devices;
+    (void)len;
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
+drvError_t drvDeviceGetPhyIdByIndex(uint32_t logic_id, uint32_t *phy_id)
+{
+    (void)logic_id;
+    (void)phy_id;
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
 int32_t AdxSendMsgByHandle(const CommHandle *handle, CmdClassT type, IdeString data, uint32_t len)
 {
     return 0;

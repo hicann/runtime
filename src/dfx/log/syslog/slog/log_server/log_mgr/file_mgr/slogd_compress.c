@@ -14,6 +14,7 @@
 #include "log_compress/log_compress.h"
 #include "log_file_info.h"
 #include "log_file_util.h"
+#include "iam.h"
 #include "log_pm.h"
 #include "log_pm_sig.h"
 #include "log_print.h"

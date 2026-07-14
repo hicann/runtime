@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,19 +8,20 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef LOG_SOFTWARE_ZIP_H
-#define LOG_SOFTWARE_ZIP_H
-
-#include "log_error_code.h"
+#ifndef UNIFIED_TIMER_H
+#define UNIFIED_TIMER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-LogStatus SoftwareCompressFile(const char *file);
+enum TimerType {
+    ONESHOT_TIMER = 0,
+    PERIODIC_TIMER = 1,
+};
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif
+#endif // UNIFIED_TIMER_H

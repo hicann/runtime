@@ -38,8 +38,10 @@ set(libSlogdSrc
     ${LOG_SOURCE_PATH}/utils/share_mem.c
     ${LOG_SOURCE_PATH}/utils/log_system_api.c
     ${LOG_SOURCE_PATH}/utils/log_common.c
+    ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c
     ${LOG_SOURCE_PATH}/utils/log_compress/log_compress.c
     ${LOG_SOURCE_PATH}/utils/log_compress/log_software_zip.c
+    ${LOG_SOURCE_PATH}/utils/high_mem.c
     ${LOG_SOURCE_PATH}/utils/log_time.c
     #${LOG_SOURCE_PATH}/utils/log_print_syslog.c
     ${LOG_SOURCE_PATH}/utils/log_file_util.c
@@ -101,6 +103,8 @@ set(testSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/file_mgr_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/file_mgr_excp_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/log_to_file_coverage_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/log_software_zip_utest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/file_mgr/testcase/high_mem_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/log_path/testcase/slogd_log_path_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/session_mgr/testcase/slogd_session_mgr_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/msn_report/testcase/slogd_msn_report_func_utest.cc
@@ -144,6 +148,7 @@ set(libSlogdInc
     ${LOG_SOURCE_PATH}/syslog/common/driver
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
+    ${LOG_SOURCE_PATH}/utils/log_buffer
     ${LOG_SOURCE_PATH}/utils/log_compress
     ${CMAKE_CURRENT_SOURCE_DIR}/slogd/stub
     ${UT_SOURCE_PATH}/ep/stub
@@ -184,10 +189,15 @@ target_compile_definitions(ep_slogd_utest PRIVATE
     APP_LOG_PID_RECORD
 )
 
+set_source_files_properties(${LOG_SOURCE_PATH}/utils/log_compress/log_software_zip.c
+    PROPERTIES COMPILE_DEFINITIONS SOFTWARE_ZIP
+)
+
 target_link_libraries(ep_slogd_utest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
     c_sec
+    z
 )
 
 target_compile_options(ep_slogd_utest PRIVATE
@@ -232,6 +242,7 @@ target_link_libraries(ep_slogd_milan_utest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
     c_sec
+    z
 )
 
 target_compile_options(ep_slogd_milan_utest PRIVATE

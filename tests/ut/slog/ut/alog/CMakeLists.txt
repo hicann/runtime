@@ -22,6 +22,7 @@ set(libLibalogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_attr.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_env.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_mgr.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_unified_timer_api.c
     ${LOG_SOURCE_PATH}/utils/log_print_syslog.c
     ${LOG_SOURCE_PATH}/utils/log_system_api.c
     ${LOG_SOURCE_PATH}/utils/log_file_util.c
@@ -32,6 +33,7 @@ set(libLibalogSrc
     ${TOP_DIR}/tests/ut/slog/ut/slog/testcase/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log-libalog-ut.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/api_c_ut.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/dlog_unified_timer_api_ut.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/alog_stub.c
 )
 
@@ -42,6 +44,7 @@ set(libLibalogInc
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
     ${LOG_SOURCE_PATH}/syslog/common/config
+    ${CMAKE_CURRENT_SOURCE_DIR}/stub
 )
 
 add_executable(log_libalog_utest
@@ -56,6 +59,7 @@ target_compile_definitions(log_libalog_utest PRIVATE
     _LOG_UT_
     LOG_CPP
     WRITE_TO_SYSLOG
+    OS_TYPE_DEF=0
 )
 
 target_link_libraries(log_libalog_utest PRIVATE

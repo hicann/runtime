@@ -45,6 +45,9 @@ set(logDaemonSrc
     ${LOG_SOURCE_PATH}/utils/log_time.c
     ${LOG_SOURCE_PATH}/utils/msg_queue.c
     ${LOG_SOURCE_PATH}/utils/library_load.c
+    ${LOG_SOURCE_PATH}/syslog/msnpureport/config/msnpureport_level.c
+    ${LOG_SOURCE_PATH}/syslog/msnpureport/utils/msnpureport_print.c
+    ${LOG_SOURCE_PATH}/syslog/msnpureport/utils/msnpureport_utils.c
 
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/log_daemon_stub.c
     ${UT_SOURCE_PATH}/stub/self_log_stub.c
@@ -56,6 +59,8 @@ set(logDaemonSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_daemon_func_utest.cc
     # config_cmd
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/config_cmd/log_cmd.cc
+    # msnpureport
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/msnpureport/msnpureport_level_utest.cc
     # sys_monitor
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/sys_monitor/sys_monitor_func_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/sys_monitor/sys_monitor_excp_utest.cc
@@ -105,6 +110,8 @@ set(logDaemonInc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect
     ${LOG_SOURCE_PATH}/syslog/log_daemon/lib_load
     ${LOG_SOURCE_PATH}/syslog/msnpureport
+    ${LOG_SOURCE_PATH}/syslog/msnpureport/config
+    ${LOG_SOURCE_PATH}/syslog/msnpureport/utils
     ${UT_SOURCE_PATH}/stub
     ${UT_SOURCE_PATH}/ep/stub
     ${CMAKE_CURRENT_SOURCE_DIR}/stub
