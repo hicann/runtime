@@ -775,10 +775,11 @@ int32_t ErrorManager::ReadJsonFile(const std::string& file_path, void* const han
         return -1;
     }
 
+    const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     try {
-        ifs >> *json_file;
+        *json_file = nlohmann::json::parse(content.c_str(), content.c_str() + content.size());
     } catch (const nlohmann::json::exception& e) {
-        GELOGW("[Read][JsonFile]ifstream to json fail. path: %s, exception message: %s.", file_path.c_str(), e.what());
+        GELOGW("[Read][JsonFile]Parse json fail. path: %s, exception message: %s.", file_path.c_str(), e.what());
         ifs.close();
         return -1;
     }

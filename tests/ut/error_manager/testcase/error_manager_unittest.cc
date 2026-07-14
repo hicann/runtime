@@ -422,6 +422,18 @@ TEST_F(UtestErrorManager, ReadJsonFile)
     EXPECT_EQ(instance.ReadJsonFile("out.json", &json_file), 0);
 }
 
+TEST_F(UtestErrorManager, ReadJsonFile_Failed_incorrent_format_json_file)
+{
+    auto& instance = ErrorManager::GetInstance();
+    std::ofstream out("out.json");
+    if (out.is_open()) {
+        out << "{\"name\":\"value\"\n"; // lack }
+        out.close();
+    }
+    nlohmann::json json_file;
+    EXPECT_NE(instance.ReadJsonFile("out.json", &json_file), 0);
+}
+
 TEST_F(UtestErrorManager, ParseJsonFile)
 {
     auto& instance = ErrorManager::GetInstance();
