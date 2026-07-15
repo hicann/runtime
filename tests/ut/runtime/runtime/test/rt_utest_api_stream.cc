@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "rt_utest_api.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 class ApiStreamTest : public testing::Test {
 public:
@@ -44,8 +45,7 @@ protected:
         curCtx->DefaultStream_()->pendingNum_.Set(0U);
         MOCKER_CPP_VIRTUAL(curCtx->Device_(), &Device::GetDevRunningState).stubs().will(returnValue(1U));
         StubClearHalSqSendAndRecvCnt(0);
-        rtDeviceReset(0);
-        GlobalMockObject::verify();
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         rtInstance->SetDisableThread(disableFlag_);

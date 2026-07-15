@@ -33,6 +33,7 @@
 #include "model_maintaince_task.h"
 #include "model_execute_task.h"
 #include "data/elf.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -58,7 +59,8 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        GlobalMockObject::reset();
+        ut::ForceResetPrimaryDeviceIfActive();
     }
 
 };
@@ -1415,10 +1417,19 @@ TEST_F(ModelTest, model_stream_not_dc_not_support_reuse)
     }
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
 
+    error = rtModelUnbindStream(model[0], stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     for (uint16_t i = 0; i < 2; i++) {
         error = rtModelDestroy(model[i]);
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtCtxDestroy(ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ModelTest, model_stream_get_head_stream)

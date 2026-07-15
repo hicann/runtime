@@ -16,6 +16,10 @@
 #include "securec.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
+
+#include <memory>
+#include <vector>
 
 using namespace testing;
 using namespace cce::runtime;
@@ -35,16 +39,22 @@ protected:
     virtual void SetUp()
     {
         rtSetDevice(0);
-        prog_ = CreateMockElfProgram();
-        Runtime::Instance()->GetSymbolTable().Register(prog_, &hostVar_, "test_symbol", sizeof(hostVar_), 0U);
+        std::unique_ptr<ElfProgram> prog(CreateMockElfProgram());
+        prog_ = prog.get();
+        retainedPrograms_.push_back(std::move(prog));
+
+        std::unique_ptr<int> hostVar(new int(0));
+        hostVar_ = hostVar.get();
+        retainedHostVars_.push_back(std::move(hostVar));
+
+        Runtime::Instance()->GetSymbolTable().Register(prog_, hostVar_, "test_symbol", sizeof(*hostVar_), 0U);
     }
 
     virtual void TearDown()
     {
-        delete prog_;
         prog_ = nullptr;
-        rtDeviceReset(0);
-        GlobalMockObject::verify();
+        hostVar_ = nullptr;
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 
     ElfProgram *CreateMockElfProgram()
@@ -58,8 +68,13 @@ protected:
     }
 
     ElfProgram *prog_ = nullptr;
-    int hostVar_ = 0;
+    int *hostVar_ = nullptr;
+    static std::vector<std::unique_ptr<ElfProgram>> retainedPrograms_;
+    static std::vector<std::unique_ptr<int>> retainedHostVars_;
 };
+
+std::vector<std::unique_ptr<ElfProgram>> SymbolTest::retainedPrograms_;
+std::vector<std::unique_ptr<int>> SymbolTest::retainedHostVars_;
 
 TEST_F(SymbolTest, rtSymbolLookup_SymbolNotFound)
 {
@@ -76,15 +91,16 @@ TEST_F(SymbolTest, rtSymbolLookup_Success)
     void *devPtr = nullptr;
     size_t size = 0;
 
-    rtError_t error = rtSymbolLookup(&hostVar_, &devPtr, &size);
+    rtError_t error = rtSymbolLookup(hostVar_, &devPtr, &size);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(devPtr, (void *)0x8100);
-    EXPECT_EQ(size, sizeof(hostVar_));
+    EXPECT_EQ(size, sizeof(*hostVar_));
 }
 
 TEST_F(SymbolTest, SymbolTable_Register_Duplicate)
 {
-    rtError_t error = Runtime::Instance()->GetSymbolTable().Register(prog_, &hostVar_, "test_symbol", sizeof(hostVar_), 0U);
+    rtError_t error = Runtime::Instance()->GetSymbolTable().Register(prog_, hostVar_, "test_symbol",
+        sizeof(*hostVar_), 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -103,15 +119,16 @@ TEST_F(SymbolTest, ApiRegisterVariable_DeviceVarNameTooLong)
 TEST_F(SymbolTest, ApiRegisterVariable_ImplSuccess)
 {
     Api *api = Api::Instance();
-    int newHostVar = 0;
+    std::unique_ptr<int> newHostVar(new int(0));
+    int * const newHostVarPtr = newHostVar.get();
+    retainedHostVars_.push_back(std::move(newHostVar));
     prog_->elfData_->globalSymbolMap["new_symbol"] = {0x200, sizeof(int)};
 
-    rtError_t error = api->RegisterVariable(prog_, &newHostVar, "new_symbol", sizeof(newHostVar), 0U);
+    rtError_t error = api->RegisterVariable(prog_, newHostVarPtr, "new_symbol", sizeof(*newHostVarPtr), 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     void *devPtr = nullptr;
     size_t size = 0;
-    error = rtSymbolLookup(&newHostVar, &devPtr, &size);
+    error = rtSymbolLookup(newHostVarPtr, &devPtr, &size);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
-

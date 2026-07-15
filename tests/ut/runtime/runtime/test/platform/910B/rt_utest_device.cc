@@ -75,11 +75,12 @@ protected:
 
     virtual void TearDown()
     {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
         rtDeviceReset(0);
         std::cout << "a test TearDown" << std::endl;
         Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
         EXPECT_NE(rtInstance, nullptr);
-		GlobalMockObject::verify();
     }
 public:
     static uint32_t g_case_num;
@@ -263,6 +264,7 @@ static void DeleteFakeStream(Stream * const stream)
 {
     if (stream != nullptr) {
         stream->streamId_ = -1;
+        stream->device_ = nullptr;
     }
     delete stream;
 }
@@ -1601,7 +1603,12 @@ TEST_F(CloudV2DeviceTest, STARS_dsa_ErrorInfo)
     Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
     DeviceErrorProc *errorProc = new DeviceErrorProc(device);
     StarsDeviceErrorInfo errorInfo = {};
-    TaskInfo taskInfo = {};
+    Stream *stm = new Stream(device, 1);
+    stm->streamId_ = 1;
+    rtError_t errCode = RT_ERROR_NONE;
+    TaskInfo * const dsaTask = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
+    EXPECT_NE(dsaTask, nullptr);
+    device->GetTaskFactory()->SetSerialId(stm, dsaTask);
     errorInfo.u.dsaErrorInfo.coreNum = 1;
     rtError_t ret = errorProc->ProcessStarsDsaErrorInfo(nullptr, 0, device, errorProc);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1612,14 +1619,20 @@ TEST_F(CloudV2DeviceTest, STARS_dsa_ErrorInfo)
     MOCKER(PushBackErrInfo).stubs().will(returnValue(0));
     ret = errorProc->ProcessStarsDsaErrorInfo(&errorInfo, 0, device, errorProc);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    MOCKER_CPP(&TaskFactory::GetTask)
-    .stubs()
-    .with(mockcpp::any(), mockcpp::any())
-    .will(returnValue(&taskInfo));
     errorInfo.u.dsaErrorInfo.type = DSA_ERROR;
+    if (dsaTask != nullptr) {
+        errorInfo.u.dsaErrorInfo.sqe.sqeHeader.rt_stream_id = static_cast<uint16_t>(stm->Id_());
+        errorInfo.u.dsaErrorInfo.sqe.sqeHeader.task_id = dsaTask->id;
+    }
     ret = errorProc->ProcessStarsDsaErrorInfo(&errorInfo, 0, device, errorProc);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    if (dsaTask != nullptr) {
+        EXPECT_TRUE(dsaTask->isRingbufferGet);
+        (void)device->GetTaskFactory()->Recycle(dsaTask);
+    }
+    DeleteFakeStream(stm);
 
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
@@ -1848,14 +1861,17 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus)
 {
     // ffts+ aicore contexit
     rtSetDevice(1);
-    TaskInfo taskInfo = {};
-    FftsPlusTaskInfo *fftsPlusTaskInfo = &(taskInfo.u.fftsPlusTask);
-    fftsPlusTaskInfo->descAlignBuf = malloc(256);
-    fftsPlusTaskInfo->descBufLen = 256;
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
     Stream *stm = new Stream(device, 1);
     stm->streamId_ = 1;
-    taskInfo.stream = stm;
+    rtError_t errCode = RT_ERROR_NONE;
+    TaskInfo * const taskInfo = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_FFTS_PLUS, errCode);
+    ASSERT_NE(taskInfo, nullptr);
+    FftsPlusTaskInfo *fftsPlusTaskInfo = &(taskInfo->u.fftsPlusTask);
+    void *descAlignBuf = malloc(256);
+    ASSERT_NE(descAlignBuf, nullptr);
+    fftsPlusTaskInfo->descAlignBuf = descAlignBuf;
+    fftsPlusTaskInfo->descBufLen = 256;
     DeviceErrorProc *errorProc = new DeviceErrorProc(device);
     StarsDeviceErrorInfo errorInfo = {};
 
@@ -1866,6 +1882,8 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus)
     errorInfo.u.coreTimeoutDfxInfo.comm = common;
     StarsOneTimeoutSlotDfxInfo slotInfo0 = {};
     slotInfo0.fftsType = 4U;
+    slotInfo0.streamId = static_cast<uint16_t>(stm->Id_());
+    slotInfo0.taskId = taskInfo->id;
     errorInfo.u.coreTimeoutDfxInfo.slotInfo[0] = slotInfo0;
 
     StarsOneTimeoutCoreDfxInfo coreInfo0 = {};
@@ -1880,14 +1898,12 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs()
     .with(outBoundP(addr, sizeof(temp)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
     .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&TaskFactory::GetTask)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(&taskInfo));
     errorProc->ProcessStarsTimeoutDfxSlotInfo4FftsPlus(&errorInfo, device, 0);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    (void)device->GetTaskFactory()->Recycle(taskInfo);
     DeleteFakeStream(stm);
-    free(fftsPlusTaskInfo->descAlignBuf);
+    free(descAlignBuf);
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
     auto error = rtDeviceReset(1);
@@ -1898,14 +1914,17 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus1)
 {
     // ffts+ mix contexit
     rtSetDevice(1);
-    TaskInfo taskInfo = {};
-    FftsPlusTaskInfo *fftsPlusTaskInfo = &(taskInfo.u.fftsPlusTask);
-    fftsPlusTaskInfo->descAlignBuf = malloc(256);
-    fftsPlusTaskInfo->descBufLen = 256;
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
     Stream *stm = new Stream(device, 1);
     stm->streamId_ = 1;
-    taskInfo.stream = stm;
+    rtError_t errCode = RT_ERROR_NONE;
+    TaskInfo * const taskInfo = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_FFTS_PLUS, errCode);
+    ASSERT_NE(taskInfo, nullptr);
+    FftsPlusTaskInfo *fftsPlusTaskInfo = &(taskInfo->u.fftsPlusTask);
+    void *descAlignBuf = malloc(256);
+    ASSERT_NE(descAlignBuf, nullptr);
+    fftsPlusTaskInfo->descAlignBuf = descAlignBuf;
+    fftsPlusTaskInfo->descBufLen = 256;
     DeviceErrorProc *errorProc = new DeviceErrorProc(device);
     StarsDeviceErrorInfo errorInfo = {};
 
@@ -1916,6 +1935,8 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus1)
     errorInfo.u.coreTimeoutDfxInfo.comm = common;
     StarsOneTimeoutSlotDfxInfo slotInfo0 = {};
     slotInfo0.fftsType = 4U;
+    slotInfo0.streamId = static_cast<uint16_t>(stm->Id_());
+    slotInfo0.taskId = taskInfo->id;
     errorInfo.u.coreTimeoutDfxInfo.slotInfo[0] = slotInfo0;
 
     StarsOneTimeoutCoreDfxInfo coreInfo0 = {};
@@ -1928,14 +1949,12 @@ TEST_F(CloudV2DeviceTest, STARS_AicoreTimeoutDfxSlotInfo4FftsPlus1)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs()
     .with(outBoundP(addr, sizeof(temp)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
     .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&TaskFactory::GetTask)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(&taskInfo));
     errorProc->ProcessStarsTimeoutDfxSlotInfo4FftsPlus(&errorInfo, device, 0);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    (void)device->GetTaskFactory()->Recycle(taskInfo);
     DeleteFakeStream(stm);
-    free(fftsPlusTaskInfo->descAlignBuf);
+    free(descAlignBuf);
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
     auto error = rtDeviceReset(1);

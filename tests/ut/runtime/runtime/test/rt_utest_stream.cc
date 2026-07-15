@@ -49,6 +49,7 @@
 #include "capture_adapt.hpp"
 #include "data/elf.h"
 #include "task_test_helper.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -101,8 +102,7 @@ protected:
     virtual void TearDown()
     {
         ind = 0;
-        GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         std::cout<<"ut test end."<<std::endl;
     }
 
@@ -164,7 +164,7 @@ TEST_F(StreamTest, stream_create_and_destroy)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamDestroy(stream);
+    error = rtStreamDestroyForce(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -176,7 +176,7 @@ TEST_F(StreamTest, stream_with_flag_create_and_destroy)
     error = rtStreamCreateWithFlags(&stream, 0, 8); /* flag = AICPU */
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamDestroy(stream);
+    error = rtStreamDestroyForce(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1540,6 +1540,9 @@ TEST_F(StreamTest, stream_EnterFailureAbort)
     EXPECT_EQ(stream->GetFailureMode(), 2);
 
     delete stream;
+    MOCKER_CPP(&DeviceErrorProc::SendTaskToStopUseRingBuffer)
+        .stubs().will(returnValue(static_cast<rtError_t>(RT_ERROR_NONE)));
+    (void)device->Stop();
     delete device;
 }
 
@@ -2792,7 +2795,7 @@ TEST_F(StreamTest, rtsLaunchHostFunc00)
     error = rtsLaunchHostFunc(NULL, ApiTest_Stream_Cb, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
-}
+    }
 
 TEST_F(StreamTest, SendFlipTaskWithStreamId_SuccessPath)
 {
@@ -2925,10 +2928,10 @@ TEST_F(StreamTest, SendFlipTaskWithStreamId_AllocTaskFail)
 TEST_F(StreamTest, recycle_model_delay_recycle_task_cannot_find_task)
 {
     RawDevice *device = new RawDevice(0);
-    device->Init();
+    EXPECT_EQ(device->Init(), RT_ERROR_NONE);
 
     Stream *stream = new Stream(device, 0);
-    stream->Setup();
+    EXPECT_EQ(stream->Setup(), RT_ERROR_NONE);
     stream->SetBindFlag(true);
     stream->streamId_ = 1;
 
@@ -2938,7 +2941,9 @@ TEST_F(StreamTest, recycle_model_delay_recycle_task_cannot_find_task)
 
     stream->RecycleModelDelayRecycleTask();
 
+    EXPECT_EQ(stream->TearDown(), RT_ERROR_NONE);
     delete stream;
+    EXPECT_EQ(device->Stop(), RT_ERROR_NONE);
     delete device;
 }
 

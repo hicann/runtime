@@ -54,6 +54,7 @@
 #include "rts.h"
 #include "rts_snapshot.h"
 #include "ipc_event.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -89,7 +90,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 private:
     bool isErrorNone_ = true;

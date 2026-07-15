@@ -28,6 +28,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
 #include "rt_unwrap.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -59,7 +60,7 @@ protected:
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         ((Runtime *)Runtime::Instance())->SetDisableThread(false);

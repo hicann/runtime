@@ -14,6 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "driver.hpp"
 #include "cmodel_driver.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -40,7 +41,7 @@ protected:
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         GlobalMockObject::verify();
     }
 };

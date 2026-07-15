@@ -33,6 +33,7 @@
 #include "device/device_error_proc.hpp"
 #include "raw_device.hpp"
 #include "rt_unwrap.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 #undef protected
 
@@ -48,7 +49,7 @@ protected:
 
     static void TearDownTestCase()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 
     virtual void SetUp()

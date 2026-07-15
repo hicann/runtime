@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <filesystem>
+#include <unistd.h>
 #include "thread_local_container.hpp"
 #include "rt_unwrap.h"
 
@@ -33,8 +34,8 @@ using namespace cce::runtime;
 static bool CreateFile(std::string &fileName, std::string content);
 static void DeleteFile(std::string &fileName);
 
-std::string binaryTxtFileName("llt/ace/npuruntime/runtime/ut/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance.txt");
-std::string binaryFileName("llt/ace/npuruntime/runtime/ut/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance.o");
+std::string binaryTxtFileName("tests/ut/runtime/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance.txt");
+std::string binaryFileName("tests/ut/runtime/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance.o");
 
 class BinaryLoaderTest : public testing::Test
 {
@@ -575,13 +576,23 @@ TEST_F(BinaryLoaderTest, TestParseKernelJsonFile_1)
 
 TEST_F(BinaryLoaderTest, TestParseKernelJsonFile_NotSupport)
 {
-    std::string file =
-        "../tests/ut/runtime/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance_debugOption.json";
+    std::string file = "/tmp/runtime_binary_loader_debug_option_" + std::to_string(getpid()) + ".o";
+    std::string jsonFile = "/tmp/runtime_binary_loader_debug_option_" + std::to_string(getpid()) + ".json";
+    std::string content =
+        "{\"binFileName\":\"runtime_binary_loader_debug_option\",\"binFileSuffix\":\".o\",\"blockDim\":40,"
+        "\"coreType\":\"VectorCore\",\"deterministic\":\"ignore\",\"intercoreSync\":1,"
+        "\"kernelName\":\"runtime_binary_loader_debug_option\",\"magic\":\"RT_DEV_BINARY_MAGIC_ELF_AIVEC\","
+        "\"memoryStamping\":[],\"opParaSize\":0,\"parameters\":[null,null],"
+        "\"debugOptions\":\"test_printf_test\",\"sha256\":\"23673556afa3860402a84eda043f19ffbd350a39a08ac94635dbbfeb35a2024d\"}";
+    ASSERT_TRUE(CreateFile(file, ""));
+    ASSERT_TRUE(CreateFile(jsonFile, content));
     BinaryLoader binaryLoader(file.c_str(), nullptr);
     binaryLoader.binRealPath_ = file.c_str();
     ElfProgram program;
     rtError_t ret = binaryLoader.ParseKernelJsonFile(&program);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    DeleteFile(file);
+    DeleteFile(jsonFile);
 }
 
 TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceSuccess)
@@ -735,4 +746,3 @@ TEST_F(BinaryLoaderTest, TestParseLoadOptions_InvalidOptionId)
     BinaryLoader binaryLoader(nullptr, 0, &cfg);
     EXPECT_EQ(binaryLoader.ParseLoadOptions(), RT_ERROR_INVALID_VALUE);
 }
-

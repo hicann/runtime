@@ -122,12 +122,13 @@ drvError_t halSqMsgSend(uint32_t devId, halSqMsgInfo *Sendinfo)
 {
     if ((devId < 0) || (devId >= MAX_DEVICE_NUM))
         return DRV_ERROR_INVALID_VALUE;
-    while (sendCount[devId] != recvCount[devId]);
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE));
 
     rtCommand_t *cmd = &g_command[devId];
-    int32_t pingpong = sendCount[devId] % 2;
+    int32_t pingpong = __atomic_load_n(&sendCount[devId], __ATOMIC_RELAXED) % 2;
     rtTaskReport_t *report;
     uint64_t ts;
+    uint32_t reportCount = Sendinfo->reportCount;
 
     switch (cmd->type)
     {
@@ -136,6 +137,7 @@ drvError_t halSqMsgSend(uint32_t devId, halSqMsgInfo *Sendinfo)
         report = &g_report[devId][pingpong][0];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts & 0xffffffffu;
         report->SOP = 1;
         report->MOP = 0;
@@ -143,10 +145,12 @@ drvError_t halSqMsgSend(uint32_t devId, halSqMsgInfo *Sendinfo)
         report = &g_report[devId][pingpong][1];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts >> 32;
         report->SOP = 0;
         report->MOP = 0;
         report->EOP = 1;
+        reportCount = 2U;
         break;
     default:
         report = &g_report[devId][pingpong][0];
@@ -159,8 +163,8 @@ drvError_t halSqMsgSend(uint32_t devId, halSqMsgInfo *Sendinfo)
         //delete cmd;
         break;
     }
-    g_reportCount[devId][pingpong] = Sendinfo->reportCount > 2? 2: Sendinfo->reportCount;
-    sendCount[devId]++;
+    __atomic_store_n(&g_reportCount[devId][pingpong], static_cast<int32_t>(reportCount > 2U ? 2U : reportCount), __ATOMIC_RELEASE);
+    __atomic_fetch_add(&sendCount[devId], 1, __ATOMIC_RELEASE);
     return DRV_ERROR_NONE;
 }
 
@@ -168,11 +172,11 @@ drvError_t drvReportGet(uint32_t devId, drvReportGetInfo* info)
 {
     if ((devId < 0) || (devId >= MAX_DEVICE_NUM))
         return DRV_ERROR_INVALID_VALUE;
-    while (sendCount[devId] == recvCount[devId]);
-    int32_t pingpong = recvCount[devId] % 2;
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) == __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE));
+    int32_t pingpong = __atomic_load_n(&recvCount[devId], __ATOMIC_RELAXED) % 2;
     info->reportPtr = &g_report[devId][pingpong];
-    info->count = g_reportCount[devId][pingpong];
-    recvCount[devId]++;
+    info->count = __atomic_load_n(&g_reportCount[devId][pingpong], __ATOMIC_ACQUIRE);
+    __atomic_fetch_add(&recvCount[devId], 1, __ATOMIC_RELEASE);
     return DRV_ERROR_NONE;
 }
 

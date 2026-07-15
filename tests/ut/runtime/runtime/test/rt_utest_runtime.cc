@@ -26,6 +26,7 @@
 #include "soc_info.h"
 #include "thread_local_container.hpp"
 #include "runtime_exit_test_helper.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 #undef private
 
@@ -59,7 +60,7 @@ protected:
     {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
 
@@ -671,6 +672,10 @@ TEST_F(RuntimeTest, ut_SetAndGetWatchDogDevStatus_04)
 
 TEST_F(RuntimeTest, ExitDetachPrimaryContextsDoesNotDereferenceContext)
 {
+    Runtime * const runtimeInstance = static_cast<Runtime *>(Runtime::Instance());
+    RuntimeExitStateGuard guard(runtimeInstance, false);
+    ut::ForceResetPrimaryDeviceIfActive();
+
     Runtime runtime;
     runtime.tsNum_ = 1U;
     Context * const sentinelContext = reinterpret_cast<Context *>(static_cast<uintptr_t>(0xDEADBEEFU));
@@ -1172,7 +1177,11 @@ protected:
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        ut::ForceResetPrimaryDeviceIfActive();
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 };
 

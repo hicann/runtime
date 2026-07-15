@@ -12,17 +12,13 @@
 #define TESTS_UT_RUNTIME_RUNTIME_TEST_COMMON_RT_UTEST_CONTEXT_RESET_HELPER_HPP_
 
 #include <cstring>
-#include <vector>
-
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "runtime/rt.h"
 #include "context.hpp"
 #include "device.hpp"
-#include "raw_device.hpp"
 #include "runtime.hpp"
 #include "stream.hpp"
-#include "stream_sqcq_manage.hpp"
 #include "device/device_error_proc.hpp"
 #include "toolchain/slog.h"
 
@@ -64,6 +60,7 @@ inline void ClearCurrentDefaultStreamPending()
         stream->SetAbortStatus(RT_ERROR_NONE);
         stream->SetBeingAbortedFlag(false);
         stream->SetIsSubmitTaskFailFlag(false);
+
         stream->pendingNum_.Set(0U);
     };
 
@@ -72,19 +69,6 @@ inline void ClearCurrentDefaultStreamPending()
     clearStream(curCtx->GetCtrlSQStream());
     for (Stream * const stream : curCtx->StreamList_()) {
         clearStream(stream);
-    }
-
-    StreamSqCqManage * const streamManage = curCtx->Device_()->GetStreamSqCqManage();
-    if (streamManage == nullptr) {
-        return;
-    }
-    std::vector<uint32_t> streamIds;
-    streamManage->GetAllStreamId(streamIds);
-    for (const uint32_t streamId : streamIds) {
-        Stream *stream = nullptr;
-        if ((streamManage->GetStreamById(streamId, &stream) == RT_ERROR_NONE) && (stream != nullptr)) {
-            clearStream(stream);
-        }
     }
 }
 
@@ -137,12 +121,12 @@ inline void ResetPrimaryDeviceIfActiveWithDeviceDown()
     // only, keep the device in DEV_RUNNING_NORMAL, and let RawDevice::Stop() run
     // the normal stream teardown so engine threads can exit through their real
     // terminal path.
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
     if (!IsPrimaryDeviceActive()) {
         return;
     }
-
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
 
     if (Runtime::Instance()->CurrentContext() == nullptr) {
         rtError_t setDeviceError = rtSetDevice(0);
@@ -152,9 +136,12 @@ inline void ResetPrimaryDeviceIfActiveWithDeviceDown()
     ClearCurrentContextStatusForReset();
     ClearCurrentDefaultStreamPending();
 
-    MOCKER(CheckLogLevel).stubs().will(returnValue(0));
     MOCKER_CPP(&DeviceErrorProc::SendTaskToStopUseRingBuffer)
         .stubs().will(returnValue(static_cast<rtError_t>(RT_ERROR_NONE)));
+    Context * const curCtx = Runtime::Instance()->CurrentContext();
+    if ((curCtx != nullptr) && (curCtx->Device_() != nullptr)) {
+        MOCKER_CPP_VIRTUAL(curCtx->Device_(), &Device::WaitCompletion).stubs();
+    }
 
     rtError_t error = rtDeviceResetForce(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

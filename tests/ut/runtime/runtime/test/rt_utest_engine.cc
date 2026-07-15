@@ -112,7 +112,7 @@ protected:
         rtInstance->DeviceRelease(device_);
         ut::ClearCurrentContextStatusForReset();
         ut::ClearCurrentDefaultStreamPending();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }

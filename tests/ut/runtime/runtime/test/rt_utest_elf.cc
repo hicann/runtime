@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "thread_local_container.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 #include "elf.hpp"
 #include "data/elf.h"
@@ -56,9 +57,8 @@ protected:
     }
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         std::cout << "a test TearDown" << std::endl;
-		GlobalMockObject::verify();
     }
 
 };

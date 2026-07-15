@@ -222,13 +222,14 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (sendCount[devId] != recvCount[devId]);
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE));
 
     rtCommand_t *cmd = &g_command[devId];
-    int32_t pingpong = sendCount[devId] % 2;
+    int32_t pingpong = __atomic_load_n(&sendCount[devId], __ATOMIC_RELAXED) % 2;
     rtTaskReport_t *report;
     rtHostFuncCqReport_t *cbReport;
     uint64_t ts;
+    uint32_t reportCount = info->reportCount;
     switch (cmd->type)
     {
     case TS_TASK_TYPE_EVENT_RECORD:
@@ -236,6 +237,7 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         report = &g_report[devId][pingpong][0];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts & 0xffffffffu;
         report->SOP = 1;
         report->MOP = 0;
@@ -243,10 +245,12 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         report = &g_report[devId][pingpong][1];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts >> 32;
         report->SOP = 0;
         report->MOP = 0;
         report->EOP = 1;
+        reportCount = 2U;
         break;
     case TS_TASK_TYPE_HOSTFUNC_CALLBACK:
         cbReport = &g_CqReportMsg[devId];
@@ -289,15 +293,15 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         //delete cmd;
         break;
     }
-    if (info->reportCount > 2)
+    if (reportCount > 2U)
     {
-        info->reportCount = 2;
+        reportCount = 2U;
     }
-    g_reportCount[devId][pingpong] = info->reportCount;
-    sendCount[devId]++;
+    __atomic_store_n(&g_reportCount[devId][pingpong], static_cast<int32_t>(reportCount), __ATOMIC_RELEASE);
+    __atomic_fetch_add(&sendCount[devId], 1, __ATOMIC_RELEASE);
 
     if (Runtime::Instance()->GetDisableThread()) {
-        recvCount[devId]++;
+        __atomic_fetch_add(&recvCount[devId], 1, __ATOMIC_RELEASE);
         if (cmd->streamID < 1024) {
             vCqShmInfo[cmd->streamID].taskId = cmd->taskID;
             vCqShmInfo[cmd->streamID].valid = 0x5A5A5A5A;

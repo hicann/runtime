@@ -25,6 +25,7 @@
 #include "task_info.hpp"
 #include "npu_driver.hpp"
 #include "context.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 #include <map>
 #include <utility>  // For std::pair and std::make_pair.
 
@@ -52,7 +53,7 @@ protected:
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         GlobalMockObject::verify();
     }
 };

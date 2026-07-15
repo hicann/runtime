@@ -20,6 +20,7 @@
 #include "thread_local_container.hpp"
 #include "raw_device.hpp"
 #include "prof_ctrl_callback_manager.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 #undef protected
 
@@ -154,7 +155,7 @@ TEST_F(PrintfTest, TestParsePrintInfo)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestInitSimtPrintf) {
@@ -192,7 +193,7 @@ TEST_F(PrintfTest, TestInitSimtPrintf) {
     error = ParseSimtPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 void FillNoParamDumpInfo(DumpInfoHead *noParamDumpInfo, DumpType type, const uint32_t rsvLen)
@@ -399,7 +400,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_Print)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestParseBlockInfo_SIMT)
@@ -464,7 +465,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_SIMT)
     EXPECT_EQ(readInfo->readIdx + 36, writeInfo->writeIdx);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Exceed_Len)
@@ -528,7 +529,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Exceed_Len)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 // 绕接场景
@@ -579,7 +580,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Circular)
     EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Assert)
@@ -631,7 +632,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Assert)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestParseBlockInfo_Assert)
@@ -682,7 +683,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_Assert)
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestParseBlockInfo_TimeStamp)
@@ -720,7 +721,7 @@ TEST_F(PrintfTest, TestParseBlockInfo_TimeStamp)
 
     cmodelDrvMemcpy_flag = 0;
     delete[] addr;
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 rtError_t MemCopySync_stub(
     Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
@@ -909,7 +910,7 @@ TEST_F(PrintfTest, PrintDumpLargeTensorWithShape)
 
     error = ParsePrintf(blockAddr, 1024, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, DumpTensorPrintf)
@@ -927,7 +928,7 @@ TEST_F(PrintfTest, DumpTensorPrintf)
     AddBlockInfo((unsigned char *)blockAddr);
     error = ParsePrintf(hostData.data(), blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, PrintDumpTensorWithShape)
@@ -993,7 +994,7 @@ TEST_F(PrintfTest, PrintDumpTensorWithShape)
     data = DumpInfoAppendByte(data, writeInfo);
     error = ParsePrintf(blockAddr, blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, PrintDumpTensorWithoutShape)
@@ -1065,7 +1066,7 @@ TEST_F(PrintfTest, PrintDumpTensorWithoutShape)
     data = DumpInfoAppendByte(data, writeInfo);
     error = ParsePrintf(blockAddr, blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, PrintDumpTensorWhenDataError)
@@ -1133,7 +1134,7 @@ TEST_F(PrintfTest, PrintDumpTensorWhenDataError)
     data = DumpInfoAppendByte(data, writeInfo);
     error = ParsePrintf(blockAddr, blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, PrintDumpTensorPosition)
@@ -1185,7 +1186,7 @@ TEST_F(PrintfTest, PrintDumpTensorPosition)
     data = DumpInfoAppendByte(data, writeInfo);
     error = ParsePrintf(blockAddr, blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, HIFLOAT8_Dumptensor)
@@ -1428,7 +1429,7 @@ TEST_F(PrintfTest, TestInitPrintf_MaxResMapTypeTooSmall)
     EXPECT_EQ(blockInfo->dbgAddr, 0U);
 
     GlobalMockObject::verify();
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestInitPrintf_HalResMapFailed)
@@ -1457,7 +1458,7 @@ TEST_F(PrintfTest, TestInitPrintf_HalResMapFailed)
     EXPECT_EQ(blockInfo->dbgAddr, 0U);
 
     GlobalMockObject::verify();
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, TestInitPrintf_DebugAddrSuccess)
@@ -1483,7 +1484,7 @@ TEST_F(PrintfTest, TestInitPrintf_DebugAddrSuccess)
     EXPECT_NE(blockInfo->dbgAddr, 0x1000U);
     EXPECT_EQ(blockInfo->dbgAddr, 0U);
 
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }
 
 TEST_F(PrintfTest, PrintDumpTensorShapeWithShape)
@@ -1579,5 +1580,5 @@ TEST_F(PrintfTest, PrintDumpTensorShapeWithShape)
     data = DumpInfoAppendByte(data, writeInfo);
     error = ParsePrintf(blockAddr, blockSize, dev->driver_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtDeviceReset(0);
+    ut::ForceResetPrimaryDeviceIfActive();
 }

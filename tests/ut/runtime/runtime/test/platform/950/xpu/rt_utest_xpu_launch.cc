@@ -73,8 +73,14 @@ TEST_F(XpuLaunchTest, XpuCheckTaskCanSend_Success_01)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     TaskInfo taskInfo = TaskInfo{};
-    TaskInfo *taskInfoPtr = &taskInfo;
+    TaskInfo *taskInfoPtr = nullptr;
+    taskInfoPtr = &taskInfo;
     taskInfoPtr->u.aicpuTaskInfo = AicpuTaskInfo{};
+    MOCKER_CPP(&XpuStream::LoadArgsInfo<rtAicpuArgsEx_t>).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(XpuAllocTaskInfo).stubs().with(outBoundP(&taskInfoPtr, mockcpp::any()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(XpuSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
@@ -100,7 +106,11 @@ TEST_F(XpuLaunchTest, XpuCheckTaskCanSend_Success_01)
     error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
         context->StreamList_().front(), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    TprtDavinciTaskUnInit(taskInfoPtr);
+    error = context->StreamDestroy(*result);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     delete result;
     delete kernel;
 }
@@ -555,98 +565,98 @@ uint32_t AicpuFuncSuccessMock(uint32_t a)
     return 0;
 }
 
-TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Success)
+struct XpuNoMockerLaunchContext {
+    TaskInfo taskInfo = {};
+    TaskInfo *taskInfoPtr = nullptr;
+    uint32_t param = 10U;
+    rtCpuKernelArgs_t cpuArgsInfo = {};
+    rtAicpuArgsEx_t baseArgs = {};
+    RtArgsWithType argsWithType = {};
+    rtKernelLaunchCfg_t taskCfg = {};
+    rtLaunchKernelAttr_t attrs[1] = {};
+};
+
+void MockXpuNoMockerLaunchPath(XpuNoMockerLaunchContext &ctx)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
     MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
     rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    MOCKER(XpuCheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
-    Program *program = &stubProg;
-    const char* stub = "";
-    void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    ctx.taskInfoPtr = &ctx.taskInfo;
+    ctx.taskInfoPtr->u.aicpuTaskInfo = AicpuTaskInfo{};
+    MOCKER_CPP(&XpuStream::LoadArgsInfo<rtAicpuArgsEx_t>).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(XpuAllocTaskInfo).stubs().with(outBoundP(&ctx.taskInfoPtr, mockcpp::any()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(XpuSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+}
+
+Kernel *CreateXpuNoMockerKernel(Program *program, void *kernelFunc)
+{
+    void *stubFunc = nullptr;
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
     kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
     kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
-    kernel->SetKernelLiteralNameDevAddr(nullptr, (void *)(&AicpuFuncSuccessMock), 0);
-    rtStream_t stream;
-    rtsStreamCreate(&stream, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    kernel->SetKernelLiteralNameDevAddr(nullptr, kernelFunc, 0);
+    return kernel;
+}
 
-    RtArgsWithType argsWithType{};
-    argsWithType.type = RT_ARGS_CPU_EX;
-    rtCpuKernelArgs_t cpuArgsInfo = rtCpuKernelArgs_t{};
-    argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
-    rtAicpuArgsEx_t baseArgs = rtAicpuArgsEx_t{};
-    uint32_t param = 10;
-    baseArgs.args = (void*)(&param);
-    baseArgs.argsSize = sizeof(uint32_t);
-    cpuArgsInfo.baseArgs = baseArgs;
+void InitXpuNoMockerLaunchArgs(XpuNoMockerLaunchContext &ctx)
+{
+    ctx.argsWithType.type = RT_ARGS_CPU_EX;
+    ctx.argsWithType.args.cpuArgsInfo = &ctx.cpuArgsInfo;
+    ctx.baseArgs.args = (void *)(&ctx.param);
+    ctx.baseArgs.argsSize = sizeof(uint32_t);
+    ctx.cpuArgsInfo.baseArgs = ctx.baseArgs;
+}
 
-    rtKernelLaunchCfg_t taskCfg;
-    taskCfg.numAttrs = 1;
-    rtLaunchKernelAttr_t attrs[1];
-    attrs[0].id = RT_LAUNCH_KERNEL_ATTR_DATA_DUMP;
-    attrs[0].value.isDataDump = DATA_DUMP_DISABLE; // DATA_DUMP_ENABLE
-    taskCfg.attrs = attrs;
+void InitXpuNoMockerTaskCfg(XpuNoMockerLaunchContext &ctx)
+{
+    ctx.taskCfg.numAttrs = 1;
+    ctx.attrs[0].id = RT_LAUNCH_KERNEL_ATTR_DATA_DUMP;
+    ctx.attrs[0].value.isDataDump = DATA_DUMP_DISABLE;
+    ctx.taskCfg.attrs = ctx.attrs;
+}
 
-    ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
+void CleanupXpuNoMockerLaunch(Kernel *kernel, XpuNoMockerLaunchContext &ctx, rtStream_t stream)
+{
     delete kernel;
-    error = rtStreamDestroy(stream);
+    TprtDavinciTaskUnInit(ctx.taskInfoPtr);
+    rtError_t error = rtStreamDestroy(stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
-TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Fail)
+void RunXpuLaunchKernelV2NoMocker(void *kernelFunc)
 {
-    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
-    MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
-    rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    XpuNoMockerLaunchContext ctx;
+    MockXpuNoMockerLaunchPath(ctx);
 
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
-    const char* stub = "";
-    void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
-    kernel->SetStub_(stubFunc);
-    kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
-    kernel->SetKernelLiteralNameDevAddr(nullptr, (void *)(&AicpuFuncFailMock), 0);
-    rtStream_t stream;
-    rtsStreamCreate(&stream, nullptr);
+    Kernel *kernel = CreateXpuNoMockerKernel(program, kernelFunc);
+    rtStream_t stream = nullptr;
+    rtError_t error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    RtArgsWithType argsWithType{};
-    argsWithType.type = RT_ARGS_CPU_EX;
-    rtCpuKernelArgs_t cpuArgsInfo = rtCpuKernelArgs_t{};
-    argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
-    rtAicpuArgsEx_t baseArgs = rtAicpuArgsEx_t{};
-    uint32_t param = 10;
-    baseArgs.args = (void*)(&param);
-    baseArgs.argsSize = sizeof(uint32_t);
-    cpuArgsInfo.baseArgs = baseArgs;
-
-    rtKernelLaunchCfg_t taskCfg;
-    taskCfg.numAttrs = 1;
-    rtLaunchKernelAttr_t attrs[1];
-    attrs[0].id = RT_LAUNCH_KERNEL_ATTR_DATA_DUMP;
-    attrs[0].value.isDataDump = DATA_DUMP_DISABLE; // DATA_DUMP_ENABLE
-    taskCfg.attrs = attrs;
+    InitXpuNoMockerLaunchArgs(ctx);
+    InitXpuNoMockerTaskCfg(ctx);
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &ctx.argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &ctx.taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    CleanupXpuNoMockerLaunch(kernel, ctx, stream);
+}
 
-    delete kernel;
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Success)
+{
+    RunXpuLaunchKernelV2NoMocker((void *)(&AicpuFuncSuccessMock));
+}
+
+TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Fail)
+{
+    RunXpuLaunchKernelV2NoMocker((void *)(&AicpuFuncFailMock));
 }

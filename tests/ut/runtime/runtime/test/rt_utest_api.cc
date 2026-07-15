@@ -91,7 +91,7 @@ protected:
         rtError_t error3 = rtDevBinaryUnRegister(binHandle_);
         std::cout<<"api test start end : "<<error1<<", "<<error2<<", "<<error3<<std::endl;
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         rtInstance->SetIsUserSetSocVersion(false);
@@ -154,7 +154,7 @@ protected:
 
     static void TearDownTestCase()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
     }

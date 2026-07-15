@@ -28,6 +28,7 @@
 #include "base_david.hpp"
 #include "elf.hpp"
 #include "rt_unwrap.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 
 
@@ -56,7 +57,8 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        GlobalMockObject::reset();
+        ut::ForceResetPrimaryDeviceIfActive();
     }
 };
 
@@ -299,7 +301,8 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        GlobalMockObject::reset();
+        ut::ForceResetPrimaryDeviceIfActive();
     }
 };
 

@@ -17,6 +17,7 @@
 #include "base.hpp"
 #include "pool.hpp"
 #include "runtime.hpp"
+#include "device.hpp"
 #include "gtest/gtest.h"
 #include "cmodel_driver.h"
 #include "task.hpp"
@@ -32,6 +33,19 @@
 #define MAX_SQCQ_NUM 1024
 #define STUB_TS_GRP_NUM 5
 using namespace cce::runtime;
+
+static bool IsReportWaitStopped(const uint32_t devId)
+{
+    Runtime * const rt = Runtime::runtime_;
+    if (rt == nullptr) {
+        return false;
+    }
+    if (rt->IsExiting()) {
+        return true;
+    }
+    const Device * const dev = rt->GetDevice(devId, 0U, false);
+    return (dev != nullptr) && dev->IsDeviceRelease();
+}
 
 static Bitmap g_eventIdBitmap(MAX_EVENT_NUM);
 static Bitmap g_streamIdBitmap(992);
@@ -221,14 +235,15 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (sendCount[devId] != recvCount[devId]);
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE));
     //std::cout<<"halSqMsgSend"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 
     rtCommand_t *cmd = &g_command[devId];
-    int32_t pingpong = sendCount[devId] % 2;
+    int32_t pingpong = __atomic_load_n(&sendCount[devId], __ATOMIC_RELAXED) % 2;
     rtTaskReport_t *report;
     rtHostFuncCqReport_t *cbReport;
     uint64_t ts;
+    uint32_t reportCount = info->reportCount;
     switch (cmd->type)
     {
     case TS_TASK_TYPE_EVENT_RECORD:
@@ -236,6 +251,7 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         report = &g_report[devId][pingpong][0];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts & 0xffffffffu;
         report->SOP = 1;
         report->MOP = 0;
@@ -243,10 +259,12 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         report = &g_report[devId][pingpong][1];
         report->streamID = cmd->streamID;
         report->taskID = cmd->taskID;
+        report->packageType = RT_PACKAGE_TYPE_TASK_REPORT;
         report->payLoad = ts >> 32;
         report->SOP = 0;
         report->MOP = 0;
         report->EOP = 1;
+        reportCount = 2U;
         break;
     case TS_TASK_TYPE_HOSTFUNC_CALLBACK:
         cbReport = &g_CqReportMsg[devId];
@@ -289,15 +307,15 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
         //delete cmd;
         break;
     }
-    if (info->reportCount > 2)
+    if (reportCount > 2U)
     {
-        info->reportCount = 2;
+        reportCount = 2U;
     }
-    g_reportCount[devId][pingpong] = info->reportCount;
-    sendCount[devId]++;
+    __atomic_store_n(&g_reportCount[devId][pingpong], static_cast<int32_t>(reportCount), __ATOMIC_RELEASE);
+    __atomic_fetch_add(&sendCount[devId], 1, __ATOMIC_RELEASE);
 
     if (Runtime::Instance()->GetDisableThread()) {
-        recvCount[devId]++;
+        __atomic_fetch_add(&recvCount[devId], 1, __ATOMIC_RELEASE);
         if (Runtime::Instance()->GetChipType() == CHIP_910_B_93) {
             rtStarsSqe_t *starsSqe = reinterpret_cast<rtStarsSqe_t *>(cmd);
             if (starsSqe->phSqe.rt_streamID < 1024) {
@@ -332,8 +350,8 @@ drvError_t halCentreNotifyGet(int index, int *value)
 
 void StubClearHalSqSendAndRecvCnt(uint32_t devId)
 {
-    sendCount[devId] = 0;
-    recvCount[devId] = 0;
+    __atomic_store_n(&sendCount[devId], 0, __ATOMIC_RELEASE);
+    __atomic_store_n(&recvCount[devId], 0, __ATOMIC_RELEASE);
 }
 
 drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct halReportGetOutput *out)
@@ -373,9 +391,8 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
         return DRV_ERROR_NONE;
     }
 
-    while ((sendCount[devId] == recvCount[devId])) {
-        const Runtime * const rt = Runtime::runtime_;
-        if ((rt != nullptr) && rt->IsExiting()) {
+    while ((__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) == __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))) {
+        if (IsReportWaitStopped(devId)) {
             out->reportPtr = nullptr;
             out->count = 0;
             return DRV_ERROR_NONE;
@@ -384,12 +401,12 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
 	//RT_LOG(RT_LOG_INFO, "zyx drvReportGet reportPtr %u,%u,%u,%u", sendCount[devId],recvCount[devId],cqSendCount[devId],sqSendCount[devId]);
 	//std::cout<<"halCqReportGet"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 
-    int32_t pingpong = recvCount[devId] % 2;
+    int32_t pingpong = __atomic_load_n(&recvCount[devId], __ATOMIC_RELAXED) % 2;
     out->reportPtr = &g_report[devId][pingpong];
     //RT_LOG(RT_LOG_INFO, "zyx drvReportGet reportPtr %p", &g_report[devId][pingpong]);
-    out->count = g_reportCount[devId][pingpong];
+    out->count = __atomic_load_n(&g_reportCount[devId][pingpong], __ATOMIC_ACQUIRE);
     //RT_LOG(RT_LOG_INFO, "zyx drvReportGet count %p", g_reportCount[devId][pingpong]);
-    recvCount[devId]++;
+    __atomic_fetch_add(&recvCount[devId], 1, __ATOMIC_RELEASE);
     return DRV_ERROR_NONE;
 }
 

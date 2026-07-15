@@ -62,6 +62,15 @@ rtError_t stubGetHardVerBySocVer(const uint32_t deviceId, int64_t &hardwareVersi
     return DRV_ERROR_NONE;
 }
 
+rtError_t StubSetStreamOverflowSwitch(Context *ctx, Stream * const stm, const uint32_t flags)
+{
+    UNUSED(ctx);
+    if (stm != nullptr) {
+        stm->SetOverflowSwitch(flags != 0U);
+    }
+    return RT_ERROR_NONE;
+}
+
 class StarsTaskTest : public testing::Test {
 protected:
     static void SetUpTestCase()
@@ -886,9 +895,6 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
 
-    ApiImpl apiImpl;
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::SetStreamOverflowSwitch).stubs().will(returnValue(RT_ERROR_NONE));
-
     uint32_t flags = 0U;
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
@@ -896,11 +902,12 @@ TEST_F(StarsTaskTest, OverflowSwitch)
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    MOCKER_CPP(&Context::SetStreamOverflowSwitch).stubs().will(invoke(StubSetStreamOverflowSwitch));
     ret = rtSetStreamOverflowSwitch(stream, 1U);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    EXPECT_EQ(flags, 0U);
+    EXPECT_EQ(flags, 1U);
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
@@ -908,7 +915,10 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    EXPECT_EQ(flags, 0U);
+    EXPECT_EQ(flags, 1U);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
 }
 
 TEST_F(StarsTaskTest, OverflowSwitchSetTask)

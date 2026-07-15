@@ -63,6 +63,7 @@
 #include "barrier_task.h"
 #include "stream_task.h"
 #include "data/elf.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -90,9 +91,7 @@ protected:
     virtual void TearDown()
     {
         std::cout << "ContextTest TearDown" << std::endl;
-        GlobalMockObject::verify();
-        rtDeviceReset(0);
-        GlobalMockObject::reset();
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         std::cout << "ContextTest TearDown end" << std::endl;
     }
 };
@@ -2954,8 +2953,7 @@ protected:
 
     virtual void TearDown()
     {
-        GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 
 public:

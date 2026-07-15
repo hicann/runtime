@@ -26,6 +26,7 @@
 #include "api.hpp"
 #include "cmodel_driver.h"
 #include "thread_local_container.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -44,14 +45,25 @@ protected:
 
     virtual void SetUp()
     {
-        rtSetDevice(0);
+        const testing::TestInfo * const testInfo = testing::UnitTest::GetInstance()->current_test_info();
+        setDevice_ = ((testInfo == nullptr) || (std::string(testInfo->name()) != "uma_arg_loader_copy_err2"));
+        if (setDevice_) {
+            rtSetDevice(0);
+        }
     }
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
-        GlobalMockObject::verify();
+        if (setDevice_) {
+            ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
+        } else {
+            GlobalMockObject::verify();
+            GlobalMockObject::reset();
+        }
     }
+
+private:
+    bool setDevice_ = false;
 };
 
 TEST_F(ArgLoaderTest, uma_arg_loader_test_310M)
@@ -1220,7 +1232,10 @@ TEST_F(ArgLoaderTest, uma_arg_loader_find_kernel_info_name)
     loader->Init();
 
     std::unordered_map<std::string, void *> nameMap;
-    void *addr1, *addr2;
+    uint32_t addrObj1 = 0U;
+    uint32_t addrObj2 = 0U;
+    void *addr1 = &addrObj1;
+    void *addr2 = &addrObj2;
     nameMap.emplace("TEST_KERNEL_01", addr1);
     nameMap.emplace("TEST_KERNEL_02", addr2);
 

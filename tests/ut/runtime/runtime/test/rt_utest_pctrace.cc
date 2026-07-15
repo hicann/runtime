@@ -25,6 +25,7 @@
 #include "raw_device.hpp"
 #include "data/elf.h"
 #include "rt_unwrap.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -56,7 +57,7 @@ protected:
         rtError_t error1 = rtStreamDestroy(stream_);
         rtError_t error3 = rtDevBinaryUnRegister(binHandle_);
         std::cout<<"pctrace test start end : "<<error1<<", "<<error3<<std::endl;
-        rtDeviceReset(0);
+        ut::ForceResetPrimaryDeviceIfActive();
     }
 
     virtual void SetUp()

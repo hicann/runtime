@@ -24,6 +24,7 @@
 #include "dev_info_manage.h"
 #include "thread_local_container.hpp"
 #include "../../rt_utest_config_define.hpp"
+#include "../../common/rt_utest_context_reset_helper.hpp"
 
 #undef private
 
@@ -63,7 +64,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 
     static void InitVisibleDevices()

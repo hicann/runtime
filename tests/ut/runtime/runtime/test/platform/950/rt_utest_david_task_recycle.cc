@@ -1458,8 +1458,10 @@ TEST_F(DavidTaskRecycleTest, test_recycle_task_abort_on_failure)
     stm->SetFailureMode(ABORT_ON_FAILURE);
     stm->isForceRecycle_ = false;
  
-    MOCKER(GetDrvSqHead).stubs()
-        .with(mockcpp::any(), outBound(0U))
+    Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    uint16_t sqHead = 0U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead).stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
  
     error = RecycleTaskBySqHeadForRecyleThread(stm);
@@ -1508,8 +1510,8 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_SqHeadEqualsSqTail) {
     uint16_t sqTail = 4U;
     bool sqEnable = true;
  
-    MOCKER(GetDrvSqHead).stubs()
-        .with(mockcpp::any(), outBound(sqHead))
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::GetSqHead).stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
  
     Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
@@ -1670,9 +1672,9 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_ShouldSubmitRecycleTask_When
     uint16_t sqTail = 20U; 
     bool sqEnable = false; 
 
-    MOCKER(GetDrvSqHead)
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::GetSqHead)
         .stubs()
-        .with(mockcpp::any(), outBound(sqHead))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
     Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqTail).stubs().will(returnValue(1));

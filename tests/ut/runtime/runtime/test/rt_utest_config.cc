@@ -23,6 +23,7 @@
 #undef protected
 #undef private
 #include "driver.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 
 using namespace testing;
@@ -48,7 +49,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
 

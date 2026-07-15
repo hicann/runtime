@@ -102,6 +102,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 
     static Stream *stream_;

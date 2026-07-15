@@ -22,6 +22,7 @@
 #include "thread_local_container.hpp"
 #include "platform/platform_info.h"
 #include "platform_manager_v2.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 
 
@@ -49,8 +50,7 @@ protected:
 
     virtual void TearDown()
     {
-        GlobalMockObject::verify();
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
 

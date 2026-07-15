@@ -9,6 +9,7 @@
  */
 #include "rt_utest_api.hpp"
 #include "rt_unwrap.h"
+#include "common/rt_utest_context_reset_helper.hpp"
 
 class ApiExceptionTest : public testing::Test
 {
@@ -27,7 +28,9 @@ protected:
 
     virtual void TearDown()
     {
-         GlobalMockObject::verify();
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
 

@@ -3673,6 +3673,7 @@ TEST_F(CloudV2ContextTest, SetupDefaultStreamSetupFailed)
 TEST_F(CloudV2ContextTest, AicpuInfoLoadSubmitAndSyncFailed)
 {
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
     int32_t devId = 0;
     RefObject<Context*>* refObject = nullptr;
     Context* ctx = GetPrimaryContext(devId, refObject);
@@ -3685,6 +3686,7 @@ TEST_F(CloudV2ContextTest, AicpuInfoLoadSubmitAndSyncFailed)
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     EXPECT_EQ(ctx->AicpuInfoLoad(&aicpuInfo, sizeof(aicpuInfo)), RT_ERROR_INVALID_VALUE);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::IsSupportFeature).stubs().will(returnValue(false));
     MOCKER(AicpuInfoLoadTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
@@ -3694,6 +3696,7 @@ TEST_F(CloudV2ContextTest, AicpuInfoLoadSubmitAndSyncFailed)
 
     ReleasePrimaryContext(devId);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
 }
 
 TEST_F(CloudV2ContextTest, DebugRegisterForStreamInitSubmitAndSyncFailed)

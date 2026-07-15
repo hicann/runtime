@@ -22,6 +22,10 @@
 #include "xpu_stub.h"
 #include "../../../common/rt_utest_xpu_helper.hpp"
 
+#include <cstdio>
+#include <fstream>
+#include <unistd.h>
+
 using namespace cce::runtime;
 class XpuDeviceTest : public ut::XpuRuntimeMockTest {
 protected:
@@ -40,11 +44,15 @@ protected:
 
 TEST_F(XpuDeviceTest, GetConfigIniValueDouble_Success)
 {
-    const std::string dirName = "../tests/ut/runtime/runtime/test/data/";
-    const std::string fileName = dirName + std::to_string(getpid()) + "TestRuntimeConfig.ini";
+    char fileNameTemplate[] = "/tmp/runtime_xpu_config_XXXXXX";
+    const int fd = mkstemp(fileNameTemplate);
+    ASSERT_GE(fd, 0);
+    close(fd);
+    const std::string fileName(fileNameTemplate);
 
     std::ofstream myfile;
     myfile.open(fileName);
+    ASSERT_TRUE(myfile.is_open());
     myfile<<"[Global Config]\n";
     myfile<<"ver1=1.0\n";
     myfile<<"ver2=abc\n";
@@ -57,8 +65,7 @@ TEST_F(XpuDeviceTest, GetConfigIniValueDouble_Success)
 
     EXPECT_FALSE(GetConfigIniValueDouble(fileName, "ver2=", val));
     EXPECT_FALSE(GetConfigIniValueDouble(fileName, "ver3=", val));
-    const std::string rmFileCmd = "rm -f " + fileName;
-    system(rmFileCmd.c_str());
+    std::remove(fileName.c_str());
 }
 
 TEST_F(XpuDeviceTest, GetConfigIniValueDouble_FilePathNull)

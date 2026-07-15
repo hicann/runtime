@@ -55,11 +55,12 @@ protected:
  
     static void TearDownTestCase()
     {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
         rtError_t error1 = rtStreamDestroy(stream_);
         rtError_t error2 = rtEventDestroy(event_);
         rtError_t error3 = rtDevBinaryUnRegister(binHandle_);
         std::cout<<"api test start end : "<<error1<<", "<<error2<<", "<<error3<<std::endl;
-        GlobalMockObject::verify();
         rtDeviceReset(0);
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         (void)rtSetSocVersion("");
@@ -75,7 +76,8 @@ protected:
  
     virtual void TearDown()
     {
-         GlobalMockObject::verify();
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
  
 public:

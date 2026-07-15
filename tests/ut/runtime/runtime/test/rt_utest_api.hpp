@@ -67,6 +67,7 @@
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
 #include "soma.hpp"
+#include "common/rt_utest_context_reset_helper.hpp"
 #undef protected
 #undef private
 
@@ -232,8 +233,7 @@ protected:
         curCtx->DefaultStream_()->pendingNum_.Set(0U);
         MOCKER_CPP_VIRTUAL(curCtx->Device_(), &Device::GetDevRunningState).stubs().will(returnValue(1U));
         StubClearHalSqSendAndRecvCnt(0);
-        rtDeviceReset(0);
-        GlobalMockObject::verify();
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         rtInstance->SetDisableThread(disableFlag_);
@@ -282,7 +282,7 @@ protected:
 
     static void TearDownTestCase()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         (void)rtSetSocVersion("");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         ((Runtime *)Runtime::Instance())->SetDisableThread(flag);      // Recover.

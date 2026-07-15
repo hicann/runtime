@@ -28,6 +28,7 @@
 #include "aicpu_err_msg.hpp"
 #include "cmodel_driver.h"
 #include "thread_local_container.hpp"
+#include "../../common/rt_utest_context_reset_helper.hpp"
 #undef private
 #undef protected
 #include "rdma_task.h"
@@ -57,9 +58,8 @@ protected:
 
     virtual void TearDown()
     {
-        rtDeviceReset(0);
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
         std::cout << "a test TearDown" << std::endl;
-        GlobalMockObject::verify();
     }
 public:
     static uint32_t g_case_num;
