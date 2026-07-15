@@ -390,7 +390,8 @@ enum class SocPmuTlvType {
     SOC_PMU_HA_CFG = 1,
     SOC_PMU_SMMU_CFG = 2,
     SOC_PMU_NOC_CFG = 3,
-    SOC_PMU_CFG_RESERVE = 4
+    SOC_PMU_SMMU_DFX_CFG = 4,
+    SOC_PMU_CFG_RESERVE = 5
 };
 
 struct SocPmuTlvCfg {
@@ -406,6 +407,16 @@ struct SocPmuConfig {
 struct SocPmuNocConfig {
     uint32_t nocNum;
     uint16_t nocEvent[PMU_EVENT_NOC_MAX_NUM];
+};
+
+struct smmuDFXEventConfig {
+    uint32_t smmuOffset;
+    uint32_t regMask;
+};
+
+struct SocPmuSmmuDFXConfig {
+    uint32_t eventNum;
+    smmuDFXEventConfig smmuDFXEvent[0]; // flexible array, allocate by eventNum
 };
 
 struct DrvPeripheralProfileCfg {
@@ -467,6 +478,8 @@ void DrvCopySocPmuParam(const std::vector<std::string> &eventsList, void *config
     size_t &configPos);
 void DrvCopySocPmuNocParam(const std::vector<std::string> &eventsList, void *configP, size_t configSize,
     size_t &configPos);
+
+void DrvCopySocPmuSmmuDFXParam(void *configP, size_t configSize, size_t &configPos);
 
 void DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType type, void *configP, size_t configSize,
     size_t &configPos);

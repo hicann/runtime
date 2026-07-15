@@ -394,7 +394,47 @@ TEST_F(PLATFORM_UTEST, ProfNotifySetDeviceSkipsWhenDevIdHighBitSet) {
         Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 0x80000001U, false));
 }
 
-#ifndef BUILD_PROFILING_OPEN_PROJECT
+TEST_F(PLATFORM_UTEST, L2CacheAdaptorAddsSmmuDfxForSupportedPlatform)
+{
+    auto platform = Platform::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
+    MOCKER_CPP(&ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformType::CHIP_CLOUD_V3));
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
+
+    std::string l2Switch = "on";
+    std::string l2Events;
+    std::string npuEvents;
+    platform->L2CacheAdaptor(npuEvents, l2Switch, l2Events);
+
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d;SMMU_DFX:",
+        npuEvents);
+    EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
+}
+
+TEST_F(PLATFORM_UTEST, L2CacheAdaptorSkipsSmmuDfxForUnsupportedPlatform)
+{
+    auto platform = Platform::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
+    MOCKER_CPP(&ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformType::CHIP_CLOUD_V4));
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
+
+    std::string l2Switch = "on";
+    std::string l2Events;
+    std::string npuEvents;
+    platform->L2CacheAdaptor(npuEvents, l2Switch, l2Events);
+
+    EXPECT_EQ("0x00,0x88,0x89,0x8A,0x74,0x75,0x97", l2Events);
+    EXPECT_EQ("HA:0x00,0x88,0x89,0x8A,0x74,0x75,0x97;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
+        npuEvents);
+    EXPECT_EQ(std::string::npos, npuEvents.find("SMMU_DFX:"));
+    EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
+}
+
 TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
     GlobalMockObject::verify();
     MdcLiteV2Platform platform;
@@ -462,5 +502,25 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
     EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
 }
-#endif // BUILD_PROFILING_OPEN_PROJECT
+
+TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask) {
+    GlobalMockObject::verify();
+
+    PlatformInterface platformInterface;
+    EXPECT_EQ(0U, platformInterface.GetSmmuDFXOffset());
+    EXPECT_EQ(0U, platformInterface.GetSmmuDFXRegMask());
+
+    CloudV2Platform cloudV2Platform;
+    EXPECT_EQ(0x0E78U, cloudV2Platform.GetSmmuDFXOffset());
+    EXPECT_EQ(0x3FFFFFFFU, cloudV2Platform.GetSmmuDFXRegMask());
+
+    DavidPlatform davidPlatform;
+    EXPECT_EQ(0x0E78U, davidPlatform.GetSmmuDFXOffset());
+    EXPECT_EQ(0x3FFFFFFFU, davidPlatform.GetSmmuDFXRegMask());
+
+    auto platform = Platform::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
+    EXPECT_EQ(0U, platform->GetSmmuDFXOffset());
+    EXPECT_EQ(0U, platform->GetSmmuDFXRegMask());
+}
 }

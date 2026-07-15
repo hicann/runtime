@@ -17,6 +17,7 @@
 #include "ascend_inpackage_hal.h"
 #include "json_parser.h"
 #include "validation/nts_metrics_validation.h"
+#include "platform/platform.h"
 namespace analysis {
 namespace dvvp {
 namespace driver {
@@ -32,6 +33,27 @@ const std::string SOC_PMU_HA = "HA:";
 const std::string SOC_PMU_MATA = "MATA:";
 const std::string SOC_PMU_SMMU = "SMMU:";
 const std::string SOC_PMU_NOC = "NOC:";
+const std::string SOC_PMU_SMMU_DFX = "SMMU_DFX:";
+// Driver hal API version that starts to support the SMMU DFX TLV parameter (__HAL_API_VER_PATCH + 1
+// over 0x072418). Older drivers do not understand SOC_PMU_SMMU_DFX_CFG, so the segment is dropped.
+constexpr uint32_t SUPPORT_SMMU_DFX_API_VERSION = 0x072419;
+
+// Whether the running driver supports the SMMU DFX TLV parameter.
+static bool IsSmmuDFXSupported()
+{
+    return Analysis::Dvvp::Common::Platform::Platform::instance()->DrvGetApiVersion() >=
+        SUPPORT_SMMU_DFX_API_VERSION;
+}
+
+// Number of SMMU DFX events packed (currently a single platform-provided {offset, regMask}).
+constexpr uint32_t SMMU_DFX_EVENT_NUM = 1;
+
+// SocPmuSmmuDFXConfig now has a flexible array member (smmuDFXEvent[]), so its on-wire size is the
+// fixed header plus eventNum entries. Use this helper everywhere instead of sizeof(SocPmuSmmuDFXConfig).
+static size_t GetSocPmuSmmuDFXConfigSize(uint32_t eventNum)
+{
+    return sizeof(SocPmuSmmuDFXConfig) + static_cast<size_t>(eventNum) * sizeof(smmuDFXEventConfig);
+}
 
 int32_t DrvGetChannels(struct DrvProfChannelsInfo &channels)
 {
@@ -367,8 +389,9 @@ int32_t DrvSocPmuTaskStart(int32_t profDeviceId, AI_DRV_CHANNEL profChannel,
         DrvPackSocPmuParam(socPmuEventList[i], configP, configSize, configPos);
     }
 
-    MSPROF_EVENT("Begin to start profiling DrvSocPmuTaskStart, profDeviceId=%d, profChannel=%d", profDeviceId,
-                 static_cast<int32_t>(profChannel));
+    MSPROF_EVENT("Begin to start profiling DrvSocPmuTaskStart, profDeviceId=%d, profChannel=%d, "
+                 "events=%s, configSize=%zu", profDeviceId, static_cast<int32_t>(profChannel),
+                 multiSocPmuEvents.c_str(), configSize);
     struct prof_start_para profStartPara;
     profStartPara.sample_period = 0;
     profStartPara.real_time = PROFILE_REAL_TIME;
@@ -385,8 +408,9 @@ int32_t DrvSocPmuTaskStart(int32_t profDeviceId, AI_DRV_CHANNEL profChannel,
         return PROFILING_FAILED;
     }
 
-    MSPROF_EVENT("Succeeded to start profiling DrvSocPmuTaskStart, profDeviceId=%d, profChannel=%d", profDeviceId,
-                 static_cast<int32_t>(profChannel));
+    MSPROF_EVENT("Succeeded to start profiling DrvSocPmuTaskStart, profDeviceId=%d, profChannel=%d, "
+                 "events=%s, configSize=%zu", profDeviceId, static_cast<int32_t>(profChannel),
+                 multiSocPmuEvents.c_str(), configSize);
     return PROFILING_SUCCESS;
 }
 
@@ -401,6 +425,9 @@ size_t DrvPackSocPmuSize(const std::string &socPmuEvents)
     }
     if (socPmuEvents.find(SOC_PMU_SMMU) != std::string::npos) {
         socPmuSize += (sizeof(SocPmuTlvCfg) + sizeof(SocPmuConfig));
+    }
+    if (socPmuEvents.find(SOC_PMU_SMMU_DFX) != std::string::npos && IsSmmuDFXSupported()) {
+        socPmuSize += (sizeof(SocPmuTlvCfg) + GetSocPmuSmmuDFXConfigSize(SMMU_DFX_EVENT_NUM));
     }
     if (socPmuEvents.find(SOC_PMU_NOC) != std::string::npos) {
         socPmuSize += (sizeof(SocPmuTlvCfg) + sizeof(SocPmuNocConfig));
@@ -450,6 +477,38 @@ void DrvCopySocPmuNocParam(const std::vector<std::string> &eventsList, void *con
     configPos += sizeof(SocPmuNocConfig);
 }
 
+void DrvCopySocPmuSmmuDFXParam(void *configP, size_t configSize, size_t &configPos)
+{
+    // SocPmuSmmuDFXConfig has a flexible array member, so allocate header + eventNum entries.
+    const size_t cfgSize = GetSocPmuSmmuDFXConfigSize(SMMU_DFX_EVENT_NUM);
+    void *infoPtr = Utils::ProfMalloc(cfgSize);
+    if (infoPtr == nullptr) {
+        MSPROF_LOGE("Failed to malloc soc pmu smmu dfx param, size: %zu.", cfgSize);
+        return;
+    }
+    auto *cfg = static_cast<SocPmuSmmuDFXConfig *>(infoPtr);
+    (void)memset_s(cfg, cfgSize, 0, cfgSize);
+    cfg->eventNum = SMMU_DFX_EVENT_NUM;
+    // smmuOffset/regMask are defined per platform (milan/CloudV2, david/David); fetch from platform.
+    cfg->smmuDFXEvent[0].smmuOffset = Analysis::Dvvp::Common::Platform::Platform::instance()->GetSmmuDFXOffset();
+    cfg->smmuDFXEvent[0].regMask = Analysis::Dvvp::Common::Platform::Platform::instance()->GetSmmuDFXRegMask();
+    MSPROF_LOGD("Pack soc pmu smmu dfx param, eventNum=%u, smmuOffset=0x%x, regMask=0x%x.",
+        cfg->eventNum, cfg->smmuDFXEvent[0].smmuOffset, cfg->smmuDFXEvent[0].regMask);
+    if ((configPos + cfgSize) > configSize) {
+        MSPROF_LOGW("Soc pmu smmu dfx param overflow, configSize: %zu, configPos: %zu.", configSize, configPos);
+        Utils::ProfFree(infoPtr);
+        return;
+    }
+    errno_t err = memcpy_s(static_cast<uint8_t *>(configP) + configPos, configSize - configPos, cfg, cfgSize);
+    if (err != EOK) {
+        MSPROF_LOGE("Failed to copy soc pmu smmu dfx param.");
+        Utils::ProfFree(infoPtr);
+        return;
+    }
+    Utils::ProfFree(infoPtr);
+    configPos += cfgSize;
+}
+
 void DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType type, void *configP, size_t configSize,
     size_t &configPos)
 {
@@ -458,6 +517,8 @@ void DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType type, void *configP,
     tlv.eventType = static_cast<uint16_t>(type);
     if (type == analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_NOC_CFG) {
         tlv.eventLen = sizeof(SocPmuNocConfig);
+    } else if (type == analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_SMMU_DFX_CFG) {
+        tlv.eventLen = static_cast<uint16_t>(GetSocPmuSmmuDFXConfigSize(SMMU_DFX_EVENT_NUM));
     } else {
         tlv.eventLen = sizeof(SocPmuConfig);
     }
@@ -482,6 +543,17 @@ void DrvPackSocPmuParam(const std::string &socPmuEvents, void *configP, size_t c
         DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_HA_CFG, configP, configSize, configPos);
         eventsList = Utils::Split(socPmuEvents.substr(SOC_PMU_MATA.size()), false, "", ",");
         DrvCopySocPmuParam(eventsList, configP, configSize, configPos);
+    } else if (socPmuEvents.compare(0, SOC_PMU_SMMU_DFX.size(), SOC_PMU_SMMU_DFX) == 0) {
+        // smmu dfx tlv and cfg (fixed offset/regmask values). Only new drivers understand this TLV;
+        // on old drivers the segment is dropped (and DrvPackSocPmuSize reserves no space for it).
+        if (IsSmmuDFXSupported()) {
+            DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_SMMU_DFX_CFG, configP, configSize,
+                configPos);
+            DrvCopySocPmuSmmuDFXParam(configP, configSize, configPos);
+        } else {
+            MSPROF_LOGW("Driver does not support SMMU DFX (need api version >= 0x%x), skip the config.",
+                SUPPORT_SMMU_DFX_API_VERSION);
+        }
     } else if (socPmuEvents.compare(0, SOC_PMU_SMMU.size(), SOC_PMU_SMMU) == 0) {
         // smmu tlv and cfg
         DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_SMMU_CFG, configP, configSize, configPos);

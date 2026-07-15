@@ -113,6 +113,8 @@ public:
     void L2CacheAdaptor(std::string &npuEvents, std::string &l2Switch, std::string &l2Events) const;
     std::string GetL2CacheEvents() const;
     std::string GetSmmuEventStr() const;
+    uint32_t GetSmmuDFXOffset() const;
+    uint32_t GetSmmuDFXRegMask() const;
     std::string GetNtsEvents(const std::string &metrics) const;
     int32_t HalEschedQueryInfo(uint32_t devId, ESCHED_QUERY_TYPE type,
         struct esched_input_info *inPut, struct esched_output_info *outPut) const;

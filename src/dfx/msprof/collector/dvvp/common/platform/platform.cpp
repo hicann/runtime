@@ -399,6 +399,9 @@ void Platform::L2CacheAdaptor(std::string &npuEvents, std::string &l2Switch, std
         l2Events = platform_->GetL2CacheEvents();
         if (CheckIfSupport(PLATFORM_TASK_SOC_PMU)) {
             npuEvents = "HA:" + GetL2CacheEvents() + ";SMMU:" + GetSmmuEventStr();
+            if (GetSmmuDFXOffset() != 0 && GetSmmuDFXRegMask() != 0) {
+                npuEvents += ";SMMU_DFX:";
+            }
         }
         MSPROF_LOGI("Platform get l2 cache events: %s, soc pmu events: %s.", l2Events.c_str(), npuEvents.c_str());
         return;
@@ -419,6 +422,22 @@ std::string Platform::GetL2CacheEvents() const
 std::string Platform::GetSmmuEventStr() const
 {
     return platform_->GetSmmuEventStr();
+}
+
+uint32_t Platform::GetSmmuDFXOffset() const
+{
+    if (platform_ == nullptr) {
+        return 0;
+    }
+    return platform_->GetSmmuDFXOffset();
+}
+
+uint32_t Platform::GetSmmuDFXRegMask() const
+{
+    if (platform_ == nullptr) {
+        return 0;
+    }
+    return platform_->GetSmmuDFXRegMask();
 }
 
 std::string Platform::GetNtsEvents(const std::string &metrics) const

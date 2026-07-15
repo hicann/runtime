@@ -248,7 +248,7 @@ struct HdcSessionNotify {
  * when modify enum para, struct para add patch version.
  * this means when new API compatible with old API, change patch version
  */
-#define __HAL_API_VER_PATCH 0x18
+#define __HAL_API_VER_PATCH 0x19
 
 /**
  * @ingroup driver

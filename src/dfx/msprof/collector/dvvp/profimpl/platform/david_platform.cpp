@@ -22,6 +22,9 @@ constexpr char DAVID_RESOURCECONFLICTRATIO[] = "0x540,0x556,0x502,0x528";
 constexpr char DAVID_L2CACHE[] = "0x424,0x425,0x426,0x42a,0x42b,0x42c";
 constexpr char DAVID_L2CACHEEVENT[] = "0x00,0x81,0x82,0x83,0x74,0x75";
 constexpr uint16_t MAX_QOS_MONITOR_NUM = 8;
+// SOC PMU SMMU DFX config values for the david platform (independent from other platforms).
+constexpr uint32_t DAVID_SMMU_DFX_OFFSET = 0x0E78;
+constexpr uint32_t DAVID_SMMU_DFX_REG_MASK = 0x3FFFFFFF; // bits 0-29 set, bits 30,31 clear
 
 PLATFORM_REGISTER(CHIP_CLOUD_V3, DavidPlatform);
 DavidPlatform::DavidPlatform()
@@ -75,6 +78,16 @@ DavidPlatform::DavidPlatform()
 uint16_t DavidPlatform::GetMaxMonitorNumber() const
 {
     return MAX_DAVID_MONITOR_NUM;
+}
+
+uint32_t DavidPlatform::GetSmmuDFXOffset() const
+{
+    return DAVID_SMMU_DFX_OFFSET;
+}
+
+uint32_t DavidPlatform::GetSmmuDFXRegMask() const
+{
+    return DAVID_SMMU_DFX_REG_MASK;
 }
 
 uint16_t DavidPlatform::GetQosMonitorNumber() const

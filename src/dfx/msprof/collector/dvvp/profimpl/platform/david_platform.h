@@ -20,6 +20,8 @@ public:
     DavidPlatform();
     ~DavidPlatform() override {}
     uint16_t GetMaxMonitorNumber() const override;
+    uint32_t GetSmmuDFXOffset() const override;
+    uint32_t GetSmmuDFXRegMask() const override;
 
 protected:
     std::string GetPipeUtilizationMetrics() override;

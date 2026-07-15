@@ -22,12 +22,14 @@
 #include "config_manager.h"
 #include "validation/param_validation.h"
 #include "utils.h"
+#include "platform/platform.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::driver;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::validation;
 using namespace analysis::dvvp::common::utils;
+using namespace Analysis::Dvvp::Common::Platform;
 #define CHANNEL_STR(s) #s
 
 ///////////////////////////////////////////////////////////////////
@@ -1000,11 +1002,9 @@ TEST_F(DRIVER_AI_DRV_API_TEST, MsprofDrvApiLibLoadedPath) {
 // 覆盖 ai_drv_dsmi_api.cpp：DrvGeAicFrq / DrvGeAivFrq 经 MsprofDrvApi::halGetDeviceInfo 取频率。
 TEST_F(DRIVER_AI_DRV_API_TEST, DrvDsmiFrequency) {
     GlobalMockObject::verify();
-#ifndef BUILD_PROFILING_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CLOUD_TYPE));
-#endif
     int64_t outFreq = 1500;
     MOCKER(halGetDeviceInfo)
         .stubs()
@@ -1019,4 +1019,45 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvDsmiFrequency) {
     (void)Analysis::Dvvp::Driver::DrvGeAivFrq(-1);
     int64_t f = 0;
     EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::Driver::DrvGetAicoreInfo(-1, f));
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvSocPmuTaskStartWithSmmuDFX) {
+    GlobalMockObject::verify();
+    constexpr uint32_t SUPPORT_SMMU_DFX_API_VERSION = 0x072419;
+
+    // Part A: driver supports SMMU DFX — exercises the full pack/copy path.
+    MOCKER_CPP(&Platform::DrvGetApiVersion)
+        .stubs()
+        .will(returnValue(SUPPORT_SMMU_DFX_API_VERSION));
+    MOCKER_CPP(&Platform::GetSmmuDFXOffset)
+        .stubs()
+        .will(returnValue(0x0E78U));
+    MOCKER_CPP(&Platform::GetSmmuDFXRegMask)
+        .stubs()
+        .will(returnValue(0x3FFFFFFFU));
+    MOCKER(prof_drv_start)
+        .stubs()
+        .will(returnValue(PROF_ERROR))
+        .then(returnValue(PROF_OK));
+
+    std::string events = "SMMU_DFX:";
+    EXPECT_EQ(PROFILING_FAILED, DrvSocPmuTaskStart(0, PROF_CHANNEL_SOC_PMU, events));
+    EXPECT_EQ(PROFILING_SUCCESS, DrvSocPmuTaskStart(0, PROF_CHANNEL_SOC_PMU, events));
+
+    // Mixed events: HA + SMMU_DFX + SMMU — all three TLV segments packed.
+    events = "HA:0x00,0x81;SMMU_DFX:;SMMU:0x2,0x8a";
+    EXPECT_EQ(PROFILING_SUCCESS, DrvSocPmuTaskStart(0, PROF_CHANNEL_SOC_PMU, events));
+    GlobalMockObject::verify();
+
+    // Part B: old driver does not support SMMU DFX — segment silently dropped.
+    MOCKER_CPP(&Platform::DrvGetApiVersion)
+        .stubs()
+        .will(returnValue(SUPPORT_SMMU_DFX_API_VERSION - 1));
+    MOCKER(prof_drv_start)
+        .stubs()
+        .will(returnValue(PROF_OK));
+
+    events = "SMMU_DFX:";
+    EXPECT_EQ(PROFILING_SUCCESS, DrvSocPmuTaskStart(0, PROF_CHANNEL_SOC_PMU, events));
+    GlobalMockObject::verify();
 }

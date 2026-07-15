@@ -89,6 +89,18 @@ std::string PlatformInterface::GetSmmuEventStr()
     return INTERFACE_SMMU_EVENT;
 };
 
+// Default: SMMU DFX is not configured on the platform (0 offset/mask means "unsupported").
+// Only platforms that support SOC PMU SMMU DFX (milan/CloudV2, david/David) override these.
+uint32_t PlatformInterface::GetSmmuDFXOffset() const
+{
+    return 0;
+};
+
+uint32_t PlatformInterface::GetSmmuDFXRegMask() const
+{
+    return 0;
+};
+
 std::string PlatformInterface::GetL2CacheEvents()
 {
     return INTERFACE_L2CACHEEVENT;

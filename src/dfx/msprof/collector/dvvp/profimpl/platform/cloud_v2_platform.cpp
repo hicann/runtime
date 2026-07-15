@@ -13,6 +13,10 @@
 namespace Dvvp {
 namespace Collect {
 namespace Platform {
+// SOC PMU SMMU DFX config values for the milan platform (independent from other platforms).
+constexpr uint32_t CLOUD_V2_SMMU_DFX_OFFSET = 0x0E78;
+constexpr uint32_t CLOUD_V2_SMMU_DFX_REG_MASK = 0x3FFFFFFF; // bits 0-29 set, bits 30,31 clear
+
 PLATFORM_REGISTER(CHIP_CLOUD_V2, CloudV2Platform);
 CloudV2Platform::CloudV2Platform()
 {
@@ -95,6 +99,16 @@ int32_t CloudV2Platform::InitOnlineAnalyzer()
 {
     MSVP_MAKE_SHARED0(analyzer_, CloudV2Analyzer, return -1);
     return 0;
+}
+
+uint32_t CloudV2Platform::GetSmmuDFXOffset() const
+{
+    return CLOUD_V2_SMMU_DFX_OFFSET;
+}
+
+uint32_t CloudV2Platform::GetSmmuDFXRegMask() const
+{
+    return CLOUD_V2_SMMU_DFX_REG_MASK;
 }
 }
 }

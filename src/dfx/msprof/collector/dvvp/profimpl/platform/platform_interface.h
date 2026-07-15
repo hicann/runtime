@@ -43,17 +43,12 @@ constexpr char INTERFACE_NTS_PIPEUTILIZATION[] = "";
 constexpr char EMPTY_FREQUENCY[] = "";
 
 enum PlatformTypeEnum {
-#ifndef BUILD_PROFILING_OPEN_PROJECT
     CHIP_MINI        = 0,
-#endif // BUILD_PROFILING_OPEN_PROJECT
     CHIP_CLOUD       = 1,
-#ifndef BUILD_PROFILING_OPEN_PROJECT
     CHIP_MDC         = 2,
-#endif // BUILD_PROFILING_OPEN_PROJECT
     CHIP_DC          = 4,
     CHIP_CLOUD_V2    = 5,
     CHIP_MINI_V3     = 7,
-#ifndef BUILD_PROFILING_OPEN_PROJECT
     CHIP_TINY_V1     = 8,
     CHIP_NANO_V1     = 9,
     CHIP_MDC_MINI_V3 = 11,
@@ -63,9 +58,6 @@ enum PlatformTypeEnum {
     CHIP_MDC_V2      = 17,
     CHIP_MDC_LITE_V2 = 18,
     CHIP_END
-#else
-    CHIP_END         = 17
-#endif // BUILD_PROFILING_OPEN_PROJECT
 };
 
 enum PlatformFeature {
@@ -247,6 +239,8 @@ public:
     virtual int32_t GetAiPmuMetrics(const std::string &key, std::string &vaule);
     virtual bool FeatureIsSupport(const PlatformFeature feature) const;
     virtual std::string GetSmmuEventStr();
+    virtual uint32_t GetSmmuDFXOffset() const;
+    virtual uint32_t GetSmmuDFXRegMask() const;
     virtual std::string GetL2CacheEvents();
     virtual PlatformFeature PmuMetricsToFeature(const std::string &key) const;
     virtual uint16_t GetMaxMonitorNumber() const;
