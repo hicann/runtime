@@ -630,6 +630,24 @@ TEST_F(TraceStackcoreUtest, TestTraceSignalInit)
     TraceSignalExit();
 }
 
+TEST_F(TraceStackcoreUtest, TestTraceSignalInit_AltStack)
+{
+    // Verify the alternate signal stack is installed so a stack-overflow
+    // SIGSEGV can be captured (issue #699, coredump scenario enhancement).
+    TraStatus ret = TraceSignalInit();
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+
+    stack_t curStack = {0};
+    ASSERT_EQ(0, sigaltstack(NULL, &curStack));
+    EXPECT_EQ(0, curStack.ss_flags & SS_DISABLE);
+    EXPECT_NE(nullptr, curStack.ss_sp);
+    EXPECT_GT(curStack.ss_size, 0U);
+
+    // TraceSignalExit() now disables the alt stack (SS_DISABLE), symmetric
+    // with TraceSignalInit(), so no manual sigaltstack cleanup is needed here.
+    TraceSignalExit();
+}
+
 TEST_F(TraceStackcoreUtest, TestStackcoreLogSave)
 {
     TraceExit();
