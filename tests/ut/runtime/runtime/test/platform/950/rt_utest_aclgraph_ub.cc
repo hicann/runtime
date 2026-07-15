@@ -2106,7 +2106,6 @@ TEST_F(NpuDriverJettyTest, ConvertAsyncDmaForTaskUpdate_SoftwareSqUb_NonPersiste
 
     rtError_t error = ConvertAsyncDmaForTaskUpdate(&taskInfo, &updateTaskInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_TRUE(taskInfo.u.memcpyAsyncTaskInfo.ubDma.isUbAsyncMode);
 
     free(updateSqBuf);
     delete updateStream;

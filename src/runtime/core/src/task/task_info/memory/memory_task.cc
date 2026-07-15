@@ -316,7 +316,6 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo)
     memcpyAsyncTaskInfo->isSqeUpdateD2H = false;
     memcpyAsyncTaskInfo->isConcernedRecycle = false;
 
-    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = false;
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag = 0U;
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.len = 0U;
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst = nullptr;
@@ -514,7 +513,6 @@ rtError_t ConvertAsyncDma2D(TaskInfo * const taskInfo2D, void *const dst, const 
     Stream * const stream = taskInfo2D->stream;
     const uint32_t devId = stream->Device_()->Id_();
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo2D->u.memcpyAsyncTaskInfo);
-    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
     
     if (stream->IsSoftwareSqEnable()) {
         return ConvertAsyncDma2DForSoftWareSq(taskInfo2D, dst, src, dstPitch, srcPitch, width, height, fixedSize);
@@ -641,7 +639,6 @@ static rtError_t ConvertAsyncDmaForSoftWareSqUb(TaskInfo * const taskInfo, TaskI
     }
     if (isSqeUpdate && ((stream->Flags() & RT_STREAM_PERSISTENT) == 0)) {
         AsyncDmaWqeInputInfo input = {};
-        memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
         input.tsId = stream->Device_()->DevGetTsId();
         input.sqId = stream->GetSqId();
         input.src = memcpyAsyncTaskInfo->src;
@@ -714,7 +711,6 @@ rtError_t ConvertAsyncDma(TaskInfo * const taskInfo)
     
     AsyncDmaWqeInputInfo input;
     (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo), 0, sizeof(AsyncDmaWqeInputInfo));
-    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
     input.destPtr = memcpyAsyncTaskInfo->destPtr;
     input.tsId = stream->Device_()->DevGetTsId();
     input.sqId = stream->GetSqId();
@@ -760,7 +756,6 @@ rtError_t ConvertAsyncDmaForTaskUpdate(TaskInfo * const taskInfo, TaskInfo * con
 
     AsyncDmaWqeInputInfo input;
     (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo), 0, sizeof(AsyncDmaWqeInputInfo));
-    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = isUbMode ? true : false;
     input.info.sqe_pos = updateTaskInfo->id;
     input.info.sqId = updateTaskInfo->stream->GetSqId();
     input.tsId = updateTaskInfo->stream->Device_()->DevGetTsId();
@@ -1024,9 +1019,9 @@ static void PrintUbdmaErrorInfo(const MemcpyAsyncTaskInfo * const memcpyAsyncTas
 {
     if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
         RT_LOG(RT_LOG_ERROR, "ub async copy error, die_id=%u, functionId=%u, jettyId=%u,"
-            " wqeLen=%d, is_ub_mode=%d, is_sqe_update=%d, pi=%u, fixedSize(fixedCnt)=%llu.",
+            " wqeLen=%d, is_sqe_update=%d, pi=%u, fixedSize(fixedCnt)=%llu.",
             memcpyAsyncTaskInfo->ubDma.dieId, memcpyAsyncTaskInfo->ubDma.functionId, memcpyAsyncTaskInfo->ubDma.jettyId,
-            memcpyAsyncTaskInfo->ubDma.wqeLen, memcpyAsyncTaskInfo->ubDma.isUbAsyncMode,
+            memcpyAsyncTaskInfo->ubDma.wqeLen,
             memcpyAsyncTaskInfo->isSqeUpdateH2D, memcpyAsyncTaskInfo->ubDma.pi, memcpyAsyncTaskInfo->ubDma.fixedSize);
     }
 }
@@ -1273,7 +1268,20 @@ bool IsDavidUbDma(const uint32_t copyTypeFlag)
 
 uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo)
 {
-    if (taskInfo->u.memcpyAsyncTaskInfo.ubDma.isUbAsyncMode) {
+    const MemcpyAsyncTaskInfo *const memcpyAsyncTask = &(taskInfo->u.memcpyAsyncTaskInfo);
+    /* Ascned950装备场景下的配置是pcie互联 */
+    if (IsDavidUbDma(memcpyAsyncTask->copyType)) {
+        // ub图下沉场景使用ub db
+        if ((taskInfo->stream->Flags() & RT_STREAM_PERSISTENT) != 0U) {
+            return 1U;
+        }
+
+        // UB 2D异步拷贝和批量异步拷贝需要1个sqe ub db
+        uint32_t copyMethod = memcpyAsyncTask->copyMethod;
+        if (copyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH) || 
+            copyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
+            return 1U;
+        }
         return 2U;
     }
     return 1U;

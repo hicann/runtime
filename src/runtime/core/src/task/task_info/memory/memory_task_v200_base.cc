@@ -339,7 +339,6 @@ rtError_t ConvertAsyncDmaBatch(TaskInfo * const taskInfo, AsyncDmaBatchInfo &bat
     const uint32_t devId = stream->Device_()->Id_();
     AsyncDmaWqeInputInfoBatch input;
     (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfoBatch), 0, sizeof(AsyncDmaWqeInputInfoBatch));
-    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
 
     input.tsId = stream->Device_()->DevGetTsId();
     input.sqId = stream->GetSqId();
