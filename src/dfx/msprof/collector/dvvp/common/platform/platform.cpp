@@ -349,6 +349,15 @@ uint16_t Platform::GetMaxMonitorNumber() const
     return platform_->GetMaxMonitorNumber();
 }
 
+std::vector<BiuPerfChannelInfo> Platform::GetBiuPerfChannelInfos(const std::vector<uint32_t> &groupVector,
+    uint32_t groupNum) const
+{
+    if (platform_ == nullptr) {
+        return {};
+    }
+    return platform_->GetBiuPerfChannelInfos(groupVector, groupNum);
+}
+
 int32_t Platform::InitOnlineAnalyzer()
 {
     if (platform_ == nullptr) {

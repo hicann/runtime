@@ -24,6 +24,7 @@
 #include "david_platform.h"
 #include "david_v121_platform.h"
 #include "mdc_lite_v2_platform.h"
+#include "mdc_v2_platform.h"
 #include "error_manager_stub2.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
@@ -522,5 +523,24 @@ TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask) {
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
     EXPECT_EQ(0U, platform->GetSmmuDFXOffset());
     EXPECT_EQ(0U, platform->GetSmmuDFXRegMask());
+}
+
+TEST_F(PLATFORM_UTEST, MdcV2PlatformBiuPerfChannelInfos) {
+    GlobalMockObject::verify();
+    MdcV2Platform platform;
+
+    std::vector<uint32_t> groupVector = {0, 1, 2, 3, 4, 5};
+    auto channelInfos = platform.GetBiuPerfChannelInfos(groupVector, static_cast<uint32_t>(groupVector.size()));
+
+    ASSERT_EQ(4U, channelInfos.size());
+    const std::vector<BiuPerfChannelInfo> expected = {
+        {0, 0, 0, 11},
+        {2, 0, 2, 17},
+        {3, 0, 3, 20},
+        {5, 0, 5, 26},
+    };
+    for (size_t i = 0; i < expected.size(); i++) {
+        EXPECT_EQ(expected[i], channelInfos[i]);
+    }
 }
 }

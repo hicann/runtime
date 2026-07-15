@@ -105,6 +105,8 @@ public:
     int32_t HalGetDeviceQosInfo(uint32_t deviceId, QosProfileInfo &info, int32_t* length) const;
     void GetQosProfileInfo(uint32_t deviceId, std::string &qosEventInfo, std::vector<uint8_t> &qosEventId);
     uint16_t GetMaxMonitorNumber() const;
+    std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> GetBiuPerfChannelInfos(
+        const std::vector<uint32_t> &groupVector, uint32_t groupNum) const;
     int32_t InitOnlineAnalyzer();
     uint32_t GetMetricsPmuNum(const std::string &name) const;
     std::string GetMetricsTopName(const std::string &name) const;

@@ -19,6 +19,8 @@ public:
     MdcV2Platform();
     ~MdcV2Platform() override {}
     uint16_t GetMaxMonitorNumber() const override;
+    std::vector<BiuPerfChannelInfo> GetBiuPerfChannelInfos(const std::vector<uint32_t> &groupVector,
+        uint32_t groupNum) const override;
 
 protected:
     std::string GetPipeUtilizationMetrics() override;

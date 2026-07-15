@@ -155,6 +155,19 @@ enum PlatformFeature {
     PLATFORM_COLLECTOR_TYPES_MAX
 };
 
+struct BiuPerfChannelInfo {
+    uint32_t groupId;
+    uint32_t groupType;
+    uint32_t groupNo;
+    uint32_t channelId;
+
+    bool operator==(const BiuPerfChannelInfo &other) const
+    {
+        return groupId == other.groupId && groupType == other.groupType && groupNo == other.groupNo &&
+            channelId == other.channelId;
+    }
+};
+
 const std::map<std::string, PlatformFeature> METRIC_FEATURE_MAP = {
     {"ArithmeticUtilization",      PLATFORM_TASK_AU_PMU},
     {"PipeUtilization",            PLATFORM_TASK_PU_PMU},
@@ -245,6 +258,8 @@ public:
     virtual PlatformFeature PmuMetricsToFeature(const std::string &key) const;
     virtual uint16_t GetMaxMonitorNumber() const;
     virtual uint16_t GetQosMonitorNumber() const;
+    virtual std::vector<BiuPerfChannelInfo> GetBiuPerfChannelInfos(const std::vector<uint32_t> &groupVector,
+        uint32_t groupNum) const;
     virtual int32_t InitOnlineAnalyzer();
     virtual uint32_t GetMetricsPmuNum(const std::string &name) const;
     virtual std::string GetMetricsTopName(const std::string &name) const;

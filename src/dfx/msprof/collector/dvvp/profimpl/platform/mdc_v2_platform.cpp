@@ -22,6 +22,11 @@ constexpr char MDC_V2_L2CACHE[] = "0x424,0x425,0x426,0x42a,0x42b,0x42c";
 constexpr char MDC_V2_L2CACHEEVENT[] = "0x00,0x75,0x76,0x77,0x64,0x65";
 constexpr char MDC_V2_NTS_PIPEUTILIZATION[] = "0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35";
 constexpr uint16_t MAX_QOS_MONITOR_NUM = 8;
+// BIU perf: channelId = firstChannelId + groupNo * groupChannelNum.
+// MDC V2 only supports groups 0, 2, 3, 5 (a subset of David's sequential 0..N).
+constexpr uint32_t MDC_V2_BIU_PERF_FIRST_CHANNEL_ID = 11;
+constexpr uint32_t MDC_V2_BIU_PERF_GROUP_CHANNEL_NUM = 3;
+constexpr uint32_t MDC_V2_BIU_PERF_GROUP_TYPE = 0;
 
 PLATFORM_REGISTER(CHIP_MDC_V2, MdcV2Platform);
 MdcV2Platform::MdcV2Platform()
@@ -82,6 +87,20 @@ uint16_t MdcV2Platform::GetMaxMonitorNumber() const
 uint16_t MdcV2Platform::GetQosMonitorNumber() const
 {
     return MAX_QOS_MONITOR_NUM;
+}
+
+std::vector<BiuPerfChannelInfo> MdcV2Platform::GetBiuPerfChannelInfos(const std::vector<uint32_t> &groupVector,
+    uint32_t groupNum) const
+{
+    (void)groupVector;
+    (void)groupNum;
+    static const std::vector<uint32_t> supportedGroupIds = {0, 2, 3, 5};
+    std::vector<BiuPerfChannelInfo> channelInfos;
+    for (uint32_t groupId : supportedGroupIds) {
+        uint32_t channelId = MDC_V2_BIU_PERF_FIRST_CHANNEL_ID + groupId * MDC_V2_BIU_PERF_GROUP_CHANNEL_NUM;
+        channelInfos.push_back({groupId, MDC_V2_BIU_PERF_GROUP_TYPE, groupId, channelId});
+    }
+    return channelInfos;
 }
 
 std::string MdcV2Platform::GetPipeUtilizationMetrics()

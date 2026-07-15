@@ -12,6 +12,7 @@
 #define ANALYSIS_DVVP_JOB_WRAPPER_PROF_BIU_PERF_JOB_H
 
 #include "prof_comm_job.h"
+#include "platform_interface.h"
 
 namespace Analysis {
 namespace Dvvp {
@@ -28,6 +29,7 @@ public:
 
 private:
     uint32_t GenGroupVector(int64_t aiCoreNum);
+    std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> GetBiuChannelInfos() const;
 
 private:
     uint32_t groupNum_;

@@ -19,6 +19,11 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::validation;
 using namespace analysis::dvvp::common::config;
 
+namespace {
+constexpr uint32_t BIU_PERF_GROUP_CHANNEL_NUM = 3;
+constexpr uint32_t BIU_PERF_FIRST_CHANNEL_ID = 11;
+}
+
 std::map<PlatformTypeEnum, std::function<std::shared_ptr<PlatformInterface>()>> PlatformReflection::platformMap_;
 std::string PlatformInterface::GetDeviceOscDefaultFreq()
 {
@@ -219,6 +224,21 @@ uint16_t PlatformInterface::GetMaxMonitorNumber() const
 uint16_t PlatformInterface::GetQosMonitorNumber() const
 {
     return MAX_COLLECT_MONITOR_NUM;
+}
+
+std::vector<BiuPerfChannelInfo> PlatformInterface::GetBiuPerfChannelInfos(const std::vector<uint32_t> &groupVector,
+    uint32_t groupNum) const
+{
+    std::vector<BiuPerfChannelInfo> channelInfos;
+    for (uint32_t groupId = 0; groupId < groupNum && groupId < groupVector.size(); groupId++) {
+        for (uint32_t groupType = 0; groupType < BIU_PERF_GROUP_CHANNEL_NUM; groupType++) {
+            channelInfos.push_back({
+                groupId, groupType, groupVector[groupId], BIU_PERF_FIRST_CHANNEL_ID +
+                    groupId * BIU_PERF_GROUP_CHANNEL_NUM + groupType
+            });
+        }
+    }
+    return channelInfos;
 }
 
 int32_t PlatformInterface::InitOnlineAnalyzer()
