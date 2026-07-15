@@ -22,6 +22,7 @@
 #include "task.hpp"
 #include "model.hpp"
 #include "context.hpp"
+#include <algorithm>
 
 namespace cce {
 namespace runtime {
@@ -259,7 +260,7 @@ rtError_t StreamJettyHandler::FillWqeToDevice(
         if (jettyCtx->wqeBuffers[i] == nullptr) {
             continue;
         }
-        const uint64_t size = StreamJettyContext::WQE_BUFFER_DEPTH * StreamJettyContext::WQE_SIZE;
+        constexpr uint32_t size = StreamJettyContext::WQE_BUFFER_DEPTH * StreamJettyContext::WQE_SIZE;
         fillInfo.offset = offset;
         fillInfo.srcWqe = jettyCtx->wqeBuffers[i].get();
         fillInfo.size = size;
@@ -294,12 +295,12 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     NULL_PTR_RETURN(stream->Device_()->GetTaskFactory(), RT_ERROR_INVALID_VALUE);
     for (const auto& pos : jettyCtx->taskWqeCounts) {
-        uint32_t wqeCount = pos.second;
+        const uint32_t wqeCount = pos.second;
         TaskInfo* taskInfo = pos.first;
         if (taskInfo == nullptr) {
             continue;
         }
-        uint32_t taskId = taskInfo->id;
+        const uint32_t taskId = taskInfo->id;
         MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
         memcpyAsyncTaskInfo->ubDma.jettyId = jettyInfo.jettyId;
         memcpyAsyncTaskInfo->ubDma.dieId = jettyInfo.dieId;
@@ -381,11 +382,11 @@ rtError_t StreamJettyHandler::ResetJettyCi(
     rtUbDbInfo_t dbInfo = {};
     dbInfo.wrCqe = 0U;
     dbInfo.dbNum = static_cast<uint8_t>(UB_DOORBELL_NUM_MIN);
-    dbInfo.info[0].dieId = static_cast<uint16_t>((jettyInfo.dieId > UINT16_MAX) ? UINT16_MAX : jettyInfo.dieId);
-    dbInfo.info[0].jettyId = static_cast<uint16_t>((jettyInfo.jettyId > UINT16_MAX) ? UINT16_MAX : jettyInfo.jettyId);
-    dbInfo.info[0].functionId = static_cast<uint16_t>((jettyInfo.functionId > UINT16_MAX) ? UINT16_MAX : jettyInfo.functionId);
+    dbInfo.info[0].dieId = static_cast<uint16_t>(std::min(jettyInfo.dieId, static_cast<uint32_t>(UINT16_MAX)));
+    dbInfo.info[0].jettyId = static_cast<uint16_t>(std::min(jettyInfo.jettyId, static_cast<uint32_t>(UINT16_MAX)));
+    dbInfo.info[0].functionId = static_cast<uint16_t>(std::min(jettyInfo.functionId, static_cast<uint32_t>(UINT16_MAX)));
     const uint32_t piVal = ctx->capacity - ctx->filledWqeCount;
-    dbInfo.info[0].piValue = static_cast<uint16_t>((piVal > UINT16_MAX) ? UINT16_MAX : piVal);
+    dbInfo.info[0].piValue = static_cast<uint16_t>(std::min(piVal, static_cast<uint32_t>(UINT16_MAX)));
     NULL_PTR_RETURN(stream->Context_(), RT_ERROR_INVALID_VALUE);
     Stream *ctrlStream = stream->Context_()->GetCtrlSQStream();
     NULL_PTR_RETURN(ctrlStream, RT_ERROR_INVALID_VALUE);

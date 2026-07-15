@@ -17,6 +17,7 @@
 #include "drv/driver.hpp"
 #include <securec.h>
 #include <vector>
+#include <algorithm>
 
 namespace cce {
 namespace runtime {
@@ -61,9 +62,9 @@ rtError_t CaptureModel::RefreshJettyInfoList()
                 "GetJettyInfoForStream failed, stream_id=%d, type=%d, retCode=%#x.", streamId, static_cast<int32_t>(type), ret);
 
             UbAsyncJettyInfo info = {};
-            info.dieId = static_cast<uint16_t>((jettyInfo.dieId > UINT16_MAX) ? UINT16_MAX : jettyInfo.dieId);
-            info.functionId = static_cast<uint16_t>((jettyInfo.functionId > UINT16_MAX) ? UINT16_MAX : jettyInfo.functionId);
-            info.jettyId = static_cast<uint16_t>((jettyInfo.jettyId > UINT16_MAX) ? UINT16_MAX : jettyInfo.jettyId);
+            info.dieId = static_cast<uint16_t>(std::min(jettyInfo.dieId, static_cast<uint32_t>(UINT16_MAX)));
+            info.functionId = static_cast<uint16_t>(std::min(jettyInfo.functionId, static_cast<uint32_t>(UINT16_MAX)));
+            info.jettyId = static_cast<uint16_t>(std::min(jettyInfo.jettyId, static_cast<uint32_t>(UINT16_MAX)));
             info.piValue = static_cast<uint16_t>(jettyCtx->capacity - jettyCtx->filledWqeCount);
             info.sqId = stm->GetSqId();
             if (type == JettyType::JETTY_TYPE_H2D) {
