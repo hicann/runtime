@@ -564,7 +564,7 @@ void ErrorManager::AssembleInnerErrorMessage(
             break;
         }
     }
-    err_stream << current_code_print << ": Inner Error!" << std::endl;
+    err_stream << current_code_print << ": Internal error!" << std::endl;
     bool print_traceback_once = false;
     for (auto& item : error_messages) { // Display the first non 8888 error code
         if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
@@ -651,7 +651,7 @@ int32_t ErrorManager::OutputErrMessage(int32_t handle)
     std::string err_msg = GetErrorMessage();
     if (err_msg.empty()) {
         std::stringstream err_stream;
-        err_stream << "E19999: Inner Error!" << std::endl;
+        err_stream << "E19999: Internal error!" << std::endl;
         err_stream << "        " << "Unknown error occurred. Please check the log." << std::endl;
         err_msg = err_stream.str();
     }
