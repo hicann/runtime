@@ -475,7 +475,17 @@ set(runtimeut_src_tiny_include_list
 
 set(runtime_raw_device_adpt_common_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
+    ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
 )
+
+set(runtime_david_simt_adpt_list
+    ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
+)
+
+set(runtime_v201_simt_adpt_list
+    ${TOP_DIR}/src/runtime/core/src/device/v201/dev_simt_stack_checker.cc
+)
+
 set(runtime_raw_device_adpt_david_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_david.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_david.cpp
@@ -656,6 +666,7 @@ set(runtimeut_david_src_list
     ${runtimeut_src_callback_list}
     ${runtimeut_src_david_c_list}
     ${runtime_raw_device_adpt_david_list}
+    ${runtime_david_simt_adpt_list}
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
@@ -1536,6 +1547,7 @@ set(runtimeut_v201_src_list
     ${runtimeut_src_callback_list}
     ${runtimeut_src_david_c_list}
     ${runtime_raw_device_adpt_david_list}
+    ${runtime_v201_simt_adpt_list}
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc

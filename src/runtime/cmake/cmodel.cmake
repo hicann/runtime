@@ -395,6 +395,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/v100/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
+    ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${RUNTIME_CORE_DIR}/src/pool/bitmap.cc
@@ -518,6 +519,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/v200_base/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_david.cc
+    ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
     ${RUNTIME_CORE_DIR}/src/pool/bitmap.cc

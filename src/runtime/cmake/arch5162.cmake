@@ -153,6 +153,7 @@ set(libruntime_callback_files
 
 set(runtime_raw_device_adpt_common_list
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
+    ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
 )
 
 set(runtime_src_aclgraph_list

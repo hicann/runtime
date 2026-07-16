@@ -191,6 +191,7 @@ set(runtimeut_src_callback_list
 
 set(runtime_raw_device_adpt_common_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
+    ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
 )
 
 

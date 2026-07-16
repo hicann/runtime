@@ -32,13 +32,14 @@
 #include "arg_loader_ub.hpp"
 #include "stream_c.hpp"
 #include "count_notify.hpp"
+#include "dev_simt_stack_checker.hpp"
 
 namespace cce {
 namespace runtime {
 rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
 {
     UNUSED(chipType);
-    if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
+    if (!IsNeedAllocSimtStack(this)) {
         return RT_ERROR_NONE;
     }
     const uint64_t simtWarpStkSize = Runtime::Instance()->GetSimtWarpStkSize();

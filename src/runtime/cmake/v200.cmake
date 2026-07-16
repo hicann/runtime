@@ -371,6 +371,7 @@ set(libruntime_v200_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_creator_c.cc
     ${RUNTIME_DIR}/src/runtime/driver/v200/npu_driver.cc
     ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
+    ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
     ${RUNTIME_FEATURE_DIR}/xpu/runtime_xpu_adapt.cc
     ${libruntime_v200_task_src_files}
     ${libruntime_v200_context_src_files}
@@ -396,6 +397,7 @@ set(libruntime_v201_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v201.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v200_adapt.cc
     ${RUNTIME_CORE_DIR}/src/common/ioctl/v201/ioctl_utils.cc
+    ${RUNTIME_CORE_DIR}/src/device/v201/dev_simt_stack_checker.cc
     ${RUNTIME_DIR}/src/runtime/driver/v201/npu_driver.cc
     ${RUNTIME_FEATURE_DIR}/dqs/stars_dqs_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
