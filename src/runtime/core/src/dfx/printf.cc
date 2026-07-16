@@ -1253,10 +1253,10 @@ rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, co
 
     /* clear readed field */
     const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
-    uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
+    const uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
     const void *clearBufAddr = RtValueToPtr<const void *>(blockInfo->dumpAddr + readIdx);
     if (readIdx + processedLen > blockInfo->remainLen) {
-        uint32_t clearLen = blockInfo->remainLen - readIdx;
+        const uint64_t clearLen = blockInfo->remainLen - readIdx;
         ret = curDrv->MemSetSync(clearBufAddr, clearLen, 0U, clearLen);
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemSetSync proc step1 failed, ret=%u", ret);
         ret = curDrv->MemSetSync(RtValueToPtr<void *>(blockInfo->dumpAddr), processedLen - clearLen, 0U, processedLen - clearLen);

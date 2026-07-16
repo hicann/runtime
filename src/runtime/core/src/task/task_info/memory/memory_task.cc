@@ -1276,7 +1276,7 @@ uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo)
         }
 
         // UB 2D异步拷贝和批量异步拷贝需要1个sqe ub db
-        uint32_t copyMethod = memcpyAsyncTask->copyMethod;
+        const uint32_t copyMethod = memcpyAsyncTask->copyMethod;
         if (copyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH) || 
             copyMethod == static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)) {
             return 1U;
