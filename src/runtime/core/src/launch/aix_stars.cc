@@ -17,6 +17,7 @@
 #include "context.hpp"
 #include "davinci_kernel_task.h"
 #include "inner_thread_local.hpp"
+#include "task_info_v100.h"
 #include "memory_task.h"
 #include "stream_task.h"
 #include "osal.hpp"

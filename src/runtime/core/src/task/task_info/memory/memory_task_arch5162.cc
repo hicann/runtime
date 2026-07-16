@@ -9,6 +9,7 @@
  */
 
 #include "memory_task.h"
+#include "task_info_v100.h"
 
 namespace cce {
 namespace runtime {
@@ -19,6 +20,23 @@ void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcp
     UNUSED(errStr);
     UNUSED(memcpyAddrInfo);
     UNUSED(countNum);
+}
+
+rtError_t MixKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize)
+{
+    UNUSED(updateTask);
+    UNUSED(hostAddr);
+    UNUSED(allocSize);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr,
+                                    const uint64_t allocSize)
+{
+    UNUSED(updateTask);
+    UNUSED(hostAddr);
+    UNUSED(allocSize);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 }  // namespace runtime

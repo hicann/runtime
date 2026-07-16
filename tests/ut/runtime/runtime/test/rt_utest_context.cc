@@ -62,6 +62,7 @@
 #include "memory_c.hpp"
 #include "barrier_task.h"
 #include "stream_task.h"
+#include "task_info_v100.h"
 #include "data/elf.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 

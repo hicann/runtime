@@ -148,6 +148,7 @@ const std::map<std::string, StubVersionInfo> kVersionInfoMap = {
     {"BS9SX1AB", {"2", "2001"}},          {"BS9SX1AC", {"2", "2001"}},    {"AS31XM1X", {"11", "3001"}},
     {"Ascend610Lite", {"12", "3101"}},    {"MC62CM12AA", {"17", "3511"}}, {"MC32DM11AA", {"18", "3512"}},
     {"Ascend950PR_9599", {"15", "3510"}}, {"KirinX90", {"200", "3003"}},  {"Kirin9030", {"201", "3006"}},
+    {"Ascend5162A", {"21", "5162"}},
 };
 
 const std::map<std::string, StubFieldMap> kSocInfoMap = {

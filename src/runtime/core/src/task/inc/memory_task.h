@@ -49,10 +49,8 @@ void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcp
 void ReleaseCpyTmpMemFor3588(TaskInfo * const taskInfo);
 rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
                                 const void *&src, void *&des, uint64_t size);
-rtError_t MixKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize);
 rtError_t SqeUpdateH2DTaskInit(TaskInfo * const taskInfo, void *srcAddr, void *dstAddr, const uint64_t cpySize,
                                void *releaseArgHandle, void * const updateArgHandle);
-rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize);
 /* D2H copy, src = sqeBaseAddr + sqeOffset, dst info = sqId + pos + sqeOffset, convert dst addr by ts-agent */
 rtError_t UpdateD2HTaskInit(TaskInfo * const taskInfo, const void *sqeBaseAddr, const uint64_t cpySize,
                                         const uint32_t sqId, const uint32_t pos, const uint8_t sqeOffset);

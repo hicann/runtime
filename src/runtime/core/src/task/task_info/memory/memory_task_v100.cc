@@ -687,6 +687,99 @@ void ConstructSqeForUpdateAddressTask(TaskInfo * const taskInfo, rtStarsSqe_t * 
 }
 #endif
 
+#if F_DESC("MixKernelUpdateTask")
+static void MixKernelUpdateDebug(TaskInfo * const updateTask, const rtFftsPlusMixAicAivCtx_t * const newFftsCtx)
+{
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 0) {
+        return;
+    }
+
+    Stream * const stream = updateTask->stream;
+    Driver * const curDrv = stream->Device_()->Driver_();
+    AicTaskInfo *aicTaskInfo = &(updateTask->u.aicTaskInfo);
+    const void *contextAddr = aicTaskInfo->descAlignBuf;
+    rtFftsPlusMixAicAivCtx_t oldFftsCtx = {};
+
+    const rtError_t error = curDrv->MemCopySync(static_cast<void *>(&oldFftsCtx), sizeof(oldFftsCtx),
+                                                contextAddr, CONTEXT_LEN, RT_MEMCPY_DEVICE_TO_HOST);
+    COND_RETURN_VOID(error != RT_ERROR_NONE, "MemCopySync failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    RT_LOG(RT_LOG_INFO, "update mix kernel, device_id=%u, stream_id=%u, task_id=%hu",
+        stream->Device_()->Id_(), stream->Id_(), updateTask->id);
+
+    RT_LOG(RT_LOG_INFO, "old context debug info");
+    ShowDavinciTaskMixDebug(&oldFftsCtx);
+
+    RT_LOG(RT_LOG_INFO, "new context debug info");
+    ShowDavinciTaskMixDebug(newFftsCtx);
+    return;
+}
+
+rtError_t MixKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize)
+{
+    Stream * const stream = updateTask->stream;
+    const uint32_t devId = static_cast<uint32_t>(stream->Device_()->Id_());
+    Driver * const driver = updateTask->stream->Device_()->Driver_();
+    rtFftsPlusMixAicAivCtx_t fftsCtx = {};
+
+    rtError_t error = driver->HostMemAlloc(hostAddr, allocSize, devId);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+            "Failed to alloc host memory, retCode=%#x.", error);
+
+    uint32_t minStackSize = 0U;
+    FillFftsAicAivCtxForDavinciTask(updateTask, &fftsCtx, minStackSize);
+    UNUSED(minStackSize);
+    error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(&fftsCtx),
+                                sizeof(fftsCtx), RT_MEMCPY_HOST_TO_HOST);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        (void)driver->HostMemFree(*hostAddr),
+        "MemCopySync failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    MixKernelUpdateDebug(updateTask, &fftsCtx);
+
+    return RT_ERROR_NONE;
+}
+
+#endif
+
+#if F_DESC("NormalKernelUpdateTask")
+rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr,
+                                    const uint64_t allocSize)
+{
+    Stream * const stream = updateTask->stream;
+    const uint32_t devId = static_cast<uint32_t>(stream->Device_()->Id_());
+    Driver * const driver = updateTask->stream->Device_()->Driver_();
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stream->Model_());
+    rtStarsSqe_t sqe = {};
+
+    /* alloc host memory */
+    rtError_t error = driver->HostMemAlloc(hostAddr, allocSize, devId);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+            "Failed to alloc host memory, retCode=%#x.", error);
+
+    /* construct new sqe */
+    RT_LOG(RT_LOG_INFO, "update normal kernel, device_id=%u, stream_id=%d, task_id=%hu",
+        devId, stream->Id_(), updateTask->id);
+
+    ConstructAICoreSqeForDavinciTask(updateTask, &sqe);
+
+    if (stream->IsSoftwareSqEnable() && (captureModel != nullptr)) {
+        if (!captureModel->IsSendSqe()) {
+            (void)memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(stream->GetSqeBuffer()) + sizeof(rtStarsSqe_t) * updateTask->pos),
+                           sizeof(rtStarsSqe_t), RtPtrToPtr<void *, rtStarsSqe_t *>(&sqe), sizeof(rtStarsSqe_t));
+        }
+    }
+
+    error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(&sqe),
+                                sizeof(sqe), RT_MEMCPY_HOST_TO_HOST);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        (void)driver->HostMemFree(*hostAddr),
+        "MemCopySync failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    return RT_ERROR_NONE;
+}
+#endif
+
 static bool MemoryTaskRegister()
 {
     TaskFuncSingle memcpyFuncs = {

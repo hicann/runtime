@@ -18,14 +18,9 @@ namespace runtime {
 constexpr const uint32_t ARGS_PER_STRING_MAX_LEN = 20U;
 void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
 
-void FillFftsAicAivCtxForDavinciTask(
-    TaskInfo *const taskInfo, rtFftsPlusMixAicAivCtx_t *fftsCtx, uint32_t& minStackSize);
-void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *const command);
-
 void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t *const command);
 
-void ShowDavinciTaskMixDebug(const rtFftsPlusMixAicAivCtx_t * const fftsCtx);
 void GetKernelNameForAiCpu(TaskInfo* taskInfo, std::string &nameInfo);
 void GetSoNameForAiCpu(TaskInfo* taskInfo, std::string &nameInfo);
 void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, std::string &extendInfo);
@@ -51,6 +46,9 @@ rtError_t GetArgsInfo(TaskInfo* taskInfo);
 rtError_t GetMixCtxInfo(TaskInfo* taskInfo);
 void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId);
 std::string GetTaskKernelName(const TaskInfo *task);
+
+void CheckBlockDim(TaskInfo* const taskInfo, const RtFftsPlusKernelSqe* const sqe,
+                        const rtFftsPlusMixAicAivCtx_t* const fftsCtx);
 }
 }
 #endif

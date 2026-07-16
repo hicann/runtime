@@ -21,6 +21,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc

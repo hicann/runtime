@@ -21,6 +21,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task.cc
@@ -297,11 +298,14 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/model/model.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
-    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc 
+    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
+    ${TOP_DIR}/src/runtime/config/arch5162/dev_info_reg.cc
 )
 
 ###################################################################################################
 add_library(runtimeut_src_static_lib_5162a STATIC ${runtimeut_src_list})
+
+target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:runtime_utest_intf_pub_arch5162>)
 
 target_include_directories(
     runtimeut_src_static_lib_5162a PUBLIC 

@@ -319,42 +319,11 @@ struct RtStarsPhSqe {
     } u;
 };
 
-struct RtFftsPlusKernelSqe {
-    rtStarsSqeHeader_t header;
-    uint16_t fftsType : 3;
-    uint16_t res1 : 9;
-    uint16_t wrr_ratio : 4;
-    uint16_t res2;
-    uint16_t sqe_index;
-    uint16_t kernel_credit : 8;
-    uint16_t schem : 2;
-    uint16_t res3 : 1;
-    uint16_t icache_prefetch_cnt : 5;
-    uint32_t stackPhyBaseLow;
-    uint32_t stackPhyBaseHigh;
-    uint32_t res4;
-    uint32_t pmg : 2;
-    uint32_t ns : 1;
-    uint32_t part_id : 8;
-    uint32_t res5 : 1;
-    uint32_t qos : 4;
-    uint32_t res6 : 16;
-    uint32_t pc_addr_low;
-    uint32_t pcAddrHigh : 16;
-    uint32_t res7 : 16;
-    uint32_t paramAddrLow;
-    uint32_t param_addr_high;
-    // use res8[1] bit 4 for l2cache
-    uint32_t res8[4];
-};
-
 union rtStarsSqe_t final {
     RtStarsAicAivKernelSqe aicAivKernelSqe;
     RtStarsNotifySqe notifySqe;
     RtStarsWriteValueSqe writeValueSqe;
     RtStarsPhSqe phSqe;
-
-    RtFftsPlusKernelSqe fftsPlusKernelSqe;
 };
 
 struct RtStarsFunctionCallSqe {
@@ -383,6 +352,35 @@ struct rtStarsSdmaSqe_t {
     uint16_t dstSubStreamId;
 
     uint32_t length;
+};
+
+struct RtFftsPlusKernelSqe {
+    rtStarsSqeHeader_t header;
+    uint16_t fftsType : 3;
+    uint16_t res1 : 9;
+    uint16_t wrr_ratio : 4;
+    uint16_t res2;
+    uint16_t sqe_index;
+    uint16_t kernel_credit : 8;
+    uint16_t schem : 2;
+    uint16_t res3 : 1;
+    uint16_t icache_prefetch_cnt : 5;
+    uint32_t stackPhyBaseLow;
+    uint32_t stackPhyBaseHigh;
+    uint32_t res4;
+    uint32_t pmg : 2;
+    uint32_t ns : 1;
+    uint32_t part_id : 8;
+    uint32_t res5 : 1;
+    uint32_t qos : 4;
+    uint32_t res6 : 16;
+    uint32_t pc_addr_low;
+    uint32_t pcAddrHigh : 16;
+    uint32_t res7 : 16;
+    uint32_t paramAddrLow;
+    uint32_t param_addr_high;
+    // use res8[1] bit 4 for l2cache
+    uint32_t res8[4];
 };
 
 #pragma pack(pop)
