@@ -974,41 +974,6 @@ bool IsEventRasMatch(const rtDmsFaultEvent &event, const EventRasFilter &filter)
            (event.errorRegisterIndex == filter.errorRegisterIndex) && ((filter.bitMask & rasCode) != 0);
 }
 
-bool IsEventIdAndRasCodeMatch( const uint32_t deviceId, const std::vector<EventRasFilter>& ubNonMemPoisonRasList)
-{
-    std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
-    uint32_t eventCount = 0U;
-    const rtError_t error = GetDeviceFaultEvents(deviceId, &faultEventInfo[0U], eventCount);
-    if (error != RT_ERROR_NONE) {
-        return false;
-    }
-    // UB Bus Access Exception eventId
-    const uint32_t targetEventId = ubNonMemPoisonRasList.front().eventId;
-
-    for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
-        const auto& currentEvent = faultEventInfo[faultIndex];
-        const uint32_t eventId = currentEvent.eventId;
-        RT_LOG(RT_LOG_INFO, "eventId=%#" PRIx32, eventId);
-        if (eventId != targetEventId) {
-            continue;
-        }
-        for (const auto& filter : ubNonMemPoisonRasList) {
-            if (IsEventRasMatch(currentEvent, filter)) {
-                RT_LOG(RT_LOG_INFO,
-                    "[UB Security Event] Device: %u, Event ID: %#" PRIx32 ", subModuleId: 0x%02X, errorRegisterIndex: 0x%02X, bitMask: %u",
-                    deviceId,
-                    currentEvent.eventId,
-                    currentEvent.subModuleId,
-                    currentEvent.errorRegisterIndex, 
-                    filter.bitMask);
-
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, const uint32_t coreIdx,
     const uint16_t type, const TaskInfo *errTaskPtr)
 {

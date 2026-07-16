@@ -480,8 +480,6 @@ public:
     virtual void PushFftsPlusArgHandle(void *argHandle) = 0;
     virtual void FreeFftsPlusArgHandleCache() = 0;
     virtual rtError_t RestoreSqCqPool() = 0;
-    virtual void SetDeviceFaultInfo(DeviceFaultInfo info) = 0;
-    virtual DeviceFaultInfo GetDeviceFaultInfo() const = 0;
 
     inline std::mutex& GetHcclStreamIndexMutex(void)
     {

@@ -5072,6 +5072,23 @@ void Runtime::ReportHBMRasProc(void)
     }
 }
 
+static void ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount)
+{
+    static std::array<uint64_t, RT_MAX_DEV_NUM> lastReportTime = {};
+    for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
+        if ((faultEventInfo[faultIndex].eventId == UB_MEM_NETWORK_EXCEPTION_EVENT_ID) &&
+            (faultEventInfo[faultIndex].alarmRaisedTime > lastReportTime[devId])) {
+            lastReportTime[devId] = faultEventInfo[faultIndex].alarmRaisedTime;
+            if (ContextManage::DeviceSetFaultTypeIfNoError(devId, DeviceFaultType::L3_PORT_ERROR)) {
+                ContextManage::SetGlobalFailureErr(devId, RT_ERROR_L3_PORT_ERROR);
+                RT_LOG(RT_LOG_INFO, "set fault type for ub mem, device id=%u, event id=0x%x.",
+                    devId, faultEventInfo[faultIndex].eventId);
+            }
+            break;
+        }
+    }
+}
+
 void Runtime::ReportUBMemRasProc()
 {
     std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
@@ -5086,23 +5103,6 @@ void Runtime::ReportUBMemRasProc()
             continue;
         }
         ProcUBMemNetworkException(devId, &faultEventInfo[0U], eventCount);
-    }
-}
-
-void Runtime::ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount)
-{
-    static std::array<uint64_t, RT_MAX_DEV_NUM> lastReportTime = {};
-    for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
-        if ((faultEventInfo[faultIndex].eventId == UB_MEM_NETWORK_EXCEPTION_EVENT_ID) &&
-            (faultEventInfo[faultIndex].alarmRaisedTime > lastReportTime[devId])) {
-            lastReportTime[devId] = faultEventInfo[faultIndex].alarmRaisedTime;
-            if (ContextManage::DeviceSetFaultTypeIfNoError(devId, DeviceFaultType::L3_PORT_ERROR)) {
-                ContextManage::SetGlobalFailureErr(devId, RT_ERROR_L3_PORT_ERROR);
-                RT_LOG(RT_LOG_INFO, "set fault type for ub mem, device id=%u, event id=0x%x.",
-                    devId, faultEventInfo[faultIndex].eventId);
-            }
-            break;
-        }
     }
 }
 

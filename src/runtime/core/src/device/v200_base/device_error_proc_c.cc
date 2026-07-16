@@ -471,21 +471,16 @@ static void AixLinkErrProc(const Device * const dev, const StarsDeviceErrorInfo 
         return;
     }
 
-    if (!IsHitBlacklist(&faultEventInfo[0U], eventCount, g_ccuTimeoutEventIdBlkList)) {
-        for (uint32_t faultIndex = 0; faultIndex < eventCount; faultIndex++) {
-            if (faultEventInfo[faultIndex].eventId == UB_REMOTE_MEM_TIMEOUT_EVENT_ID) {
-                errTaskPtr->mte_error = TS_ERROR_LINK_ERROR;
-                RT_LOG(RT_LOG_ERROR, "network link error, stream_id=%hu, task_id=%hu, errorCode=%#x.",
-                    info->u.coreErrorInfo.comm.streamId, info->u.coreErrorInfo.comm.taskId,
-                    static_cast<uint32_t>(RT_ERROR_DEVICE_LINK_ERROR));
-                (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
-                DeviceFaultInfo faultInfo = {};
-                faultInfo.eventId = faultEventInfo[faultIndex].eventId;
-                faultInfo.nodeType = faultEventInfo[faultIndex].nodeType;
-                (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultInfo(faultInfo);
-                return;
-            }
+    if (IsFaultEventOccur(UB_REMOTE_MEM_TIMEOUT_EVENT_ID, &faultEventInfo[0U], eventCount) &&
+        !IsHitBlacklist(&faultEventInfo[0U], eventCount, g_ccuTimeoutEventIdBlkList)) {
+        if (errTaskPtr != nullptr) {
+            errTaskPtr->mte_error = TS_ERROR_LINK_ERROR;
         }
+        RT_LOG(RT_LOG_ERROR, "network link error, stream_id=%hu, task_id=%hu, errorCode=%#hx.",
+            info->u.coreErrorInfo.comm.streamId, info->u.coreErrorInfo.comm.taskId,
+            (errTaskPtr == nullptr) ? static_cast<uint16_t>(TS_ERROR_RESERVED) : errTaskPtr->mte_error);
+        (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
+        return;
     }
     AiCoreUnknownErrProc(dev, info);
 }

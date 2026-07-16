@@ -938,7 +938,6 @@ private:
     rtError_t GetDcacheLockMixOpPath(std::string &dcacheLockMixOpPath) const;
     void ReportHBMRasProc();
     void ReportUBMemRasProc();
-    static void ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount);
     void ProcHBMRas(const uint32_t devId);
     void ReportPageFaultProc();
     void ProcPageFault(Device * const device, const uint32_t value);

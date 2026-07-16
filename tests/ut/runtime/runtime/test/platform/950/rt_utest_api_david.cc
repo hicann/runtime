@@ -7892,6 +7892,7 @@ static drvError_t stubhalGetFaultEventUBMem(uint32_t devId, struct halEventFilte
 {
     *eventCount = 1;
     eventInfo[0].event_id = UB_MEM_NETWORK_EXCEPTION_EVENT_ID;
+    eventInfo[0].alarm_raised_time = 0x1000ULL;
     eventInfo[0].deviceid = 0;
     return DRV_ERROR_NONE;
 }
