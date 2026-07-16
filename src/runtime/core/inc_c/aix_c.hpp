@@ -23,6 +23,7 @@ namespace runtime {
         void **argsArray;
         SimtArgsArray *simtArgsArray;
         SimtArgsHost *simtArgsHost;
+        ArgsType argsType;
     };
 
     rtError_t StreamLaunchKernelV1(const void * const stubFunc, const uint32_t coreDim,

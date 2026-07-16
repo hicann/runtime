@@ -2966,3 +2966,74 @@ TEST_F(TaskTestDavid, StreamLaunchKernelV2ForDavid_NullProgram)
 
     delete kernel;
 }
+
+TEST_F(TaskTestDavid, StreamLaunchSimtArgsArrayDispatchToLoadSimtArgsFromArray)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    ASSERT_NE(kernel, nullptr);
+    kernel->SetParamTotalSize(0);
+
+    ASSERT_EQ(stream_->CreateStreamArgRes(), RT_ERROR_NONE);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.argsArrayInfo = nullptr;
+    simtArgs.dynUbufSize = 0;
+
+    TaskCfg taskCfg = {};
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+    UbArgManage *argManage = static_cast<UbArgManage *>(static_cast<DavidStream *>(stream_)->ArgManagePtr());
+    MOCKER_CPP_VIRTUAL(argManage, &UbArgManage::LoadSimtArgsFromArray)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = StreamLaunchSimtArgsArray(kernel, 8, stream_, &simtArgs, taskCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stream_->ReleaseStreamArgRes();
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stream_->taskResMang_));
+    taskResMang->ResetTaskRes();
+    delete kernel;
+}
+
+TEST_F(TaskTestDavid, StreamLaunchSimtArgsHostDispatchToLoadSimtHostArgs)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    ASSERT_NE(kernel, nullptr);
+    kernel->SetParamTotalSize(0);
+
+    ASSERT_EQ(stream_->CreateStreamArgRes(), RT_ERROR_NONE);
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.hostArgs = nullptr;
+    simtArgs.argsSize = 0;
+    simtArgs.placeHolderArray = nullptr;
+    simtArgs.placeHolderNum = 0;
+    simtArgs.dynUbufSize = 0;
+
+    TaskCfg taskCfg = {};
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+    UbArgManage *argManage = static_cast<UbArgManage *>(static_cast<DavidStream *>(stream_)->ArgManagePtr());
+    MOCKER_CPP_VIRTUAL(argManage, &UbArgManage::LoadSimtHostArgs)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = StreamLaunchSimtArgsHost(kernel, 8, stream_, &simtArgs, taskCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stream_->ReleaseStreamArgRes();
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(stream_->taskResMang_));
+    taskResMang->ResetTaskRes();
+    delete kernel;
+}

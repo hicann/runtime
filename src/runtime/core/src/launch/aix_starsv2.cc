@@ -109,6 +109,7 @@ rtError_t StreamLaunchArgsArray(Kernel *kernel, const uint32_t coreDim, Stream *
     launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
     launchKernelExtendArgs.argsArray = argsArrayInfo;
+    launchKernelExtendArgs.argsType = RT_ARGS_ARRAY;
     return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
 }
 
@@ -123,6 +124,7 @@ rtError_t StreamLaunchSimtArgsArray(Kernel *kernel, const uint32_t coreDim, Stre
     launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
     launchKernelExtendArgs.simtArgsArray = simtArgsArray;
+    launchKernelExtendArgs.argsType = RT_SIMT_ARGS_ARRAY;
     return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
 }
 
@@ -137,6 +139,7 @@ rtError_t StreamLaunchSimtArgsHost(Kernel *kernel, const uint32_t coreDim, Strea
     launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
     launchKernelExtendArgs.simtArgsHost = simtArgsHost;
+    launchKernelExtendArgs.argsType = RT_SIMT_ARGS_HOST;
     return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
 }
 
@@ -488,7 +491,7 @@ static rtError_t LoadArgsForStreamLaunchV2(
     } else if (extendAgrs->simtArgsHost != nullptr) {
         error = static_cast<DavidStream *>(dstStm)->LoadSimtHostArgs(
             useArgPool, extendAgrs->simtArgsHost, &result);
-    } else if (extendAgrs->argsArray != nullptr) {
+    } else if (extendAgrs->argsType == RT_ARGS_ARRAY) {
         error = static_cast<DavidStream *>(dstStm)->LoadArgsFromArray(
             useArgPool, kernel, extendAgrs->argsArray, &result);
     } else {
