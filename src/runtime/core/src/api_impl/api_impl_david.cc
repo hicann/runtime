@@ -2037,6 +2037,7 @@ rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo *
             error = MemUceErrorResume(dev, deviceId, errorInfo);
             break;
         case RT_ERROR_LINK:
+            dev->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
             break;
         case RT_ERROR_L3_PORT:
             error = L3PortRepairResume(dev);
