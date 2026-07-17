@@ -182,6 +182,7 @@ TEST_F(IpcEventStarsV2Test, RecordStarsV2_Success) {
     IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
     error = ipcEvent->IpcEventRecordStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_TRUE(g_mockTask.needPostProc);
 
     rtStreamDestroy(stream);
     rtEventDestroy(event);
@@ -216,6 +217,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_Success) {
 
     error = ipcEvent->IpcEventWaitStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_TRUE(g_mockTask.needPostProc);
 
     rtStreamDestroy(stream);
     rtEventDestroy(event);
@@ -295,29 +297,90 @@ TEST_F(IpcEventStarsV2Test, RecordTaskUnInit_NormalPath) {
     MOCKER(IpcEventDestroy).stubs().will(invoke(IpcEventDestroyMock));
 
     rtEvent_t event;
-    rtError_t error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
+    rtStream_t stream;
+    rtError_t error = rtStreamCreate(&stream, 0);
+    ASSERT_EQ(error, ACL_RT_SUCCESS);
+    error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
     ASSERT_EQ(error, ACL_RT_SUCCESS);
     IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
 
     IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
     uint16_t testIndex = 0;
     handleVa->currentIndex = testIndex;
-    handleVa->deviceMemRef[testIndex] = 1;
-    uint8_t testMem = 0xAA;
-    ipcEvent->currentHostMem_ = &testMem;
 
     TaskInfo taskInfo;
     taskInfo.type = TS_TASK_TYPE_IPC_RECORD;
     taskInfo.u.memWriteValueTask.event = ipcEvent;
     taskInfo.u.memWriteValueTask.curIndex = testIndex;
-    taskInfo.stream = reinterpret_cast<Stream*>(0x1234);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
 
     StarsV2IpcEventRecordTaskUnInit(&taskInfo);
 
     EXPECT_EQ(g_ipcEventDestroyCallCount, 1);
-    EXPECT_EQ(handleVa->deviceMemRef[testIndex], 0);
-    EXPECT_EQ(testMem, 0);
+    EXPECT_EQ(g_ipcEventDestroyTimeout, static_cast<int32_t>(testIndex));
     EXPECT_TRUE(ipcEvent->IsIpcFinished());
+
+    rtStreamDestroy(stream);
+    rtEventDestroy(event);
+}
+
+TEST_F(IpcEventStarsV2Test, TryFreeEventIdAndCheckCanBeDelete_NormalPath) {
+    ResetIpcEventStarsV2Mocks();
+
+    MOCKER(halMemExportToShareableHandle).stubs().will(invoke(halMemExportToShareableHandleStub));
+    MOCKER(halMemAddressReserve).stubs().will(invoke(halMemAddressReserveStub));
+    MOCKER(halMemCreate).stubs().will(invoke(halMemCreateStub));
+    MOCKER_CPP(&IpcEvent::IpcVaLockInit).stubs().will(invoke(IpcVaLockInitStub));
+    MOCKER_CPP(&IpcEvent::IpcVaLock).stubs().will(invoke(IpcVaLockStub));
+    MOCKER_CPP(&IpcEvent::IpcVaUnLock).stubs().will(invoke(IpcVaUnLockStub));
+
+    rtEvent_t event;
+    rtError_t error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
+    ASSERT_EQ(error, ACL_RT_SUCCESS);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+
+    IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
+    uint32_t testIndex = 0;
+    handleVa->deviceMemRef[testIndex] = 1;
+    ipcEvent->totalTaskCnt_ = 1;
+    uint8_t testMem = 0xFF;
+    ipcEvent->currentHostMem_ = &testMem;
+
+    bool canDelete = ipcEvent->TryFreeEventIdAndCheckCanBeDelete(
+        static_cast<int32_t>(testIndex), false);
+
+    EXPECT_EQ(handleVa->deviceMemRef[testIndex], 0U);
+    EXPECT_EQ(testMem, 0);
+    EXPECT_FALSE(canDelete);
+
+    rtEventDestroy(event);
+}
+
+TEST_F(IpcEventStarsV2Test, TryFreeEventIdAndCheckCanBeDelete_RefCountZero) {
+    ResetIpcEventStarsV2Mocks();
+
+    MOCKER(halMemExportToShareableHandle).stubs().will(invoke(halMemExportToShareableHandleStub));
+    MOCKER(halMemAddressReserve).stubs().will(invoke(halMemAddressReserveStub));
+    MOCKER(halMemCreate).stubs().will(invoke(halMemCreateStub));
+    MOCKER_CPP(&IpcEvent::IpcVaLockInit).stubs().will(invoke(IpcVaLockInitStub));
+    MOCKER_CPP(&IpcEvent::IpcVaLock).stubs().will(invoke(IpcVaLockStub));
+    MOCKER_CPP(&IpcEvent::IpcVaUnLock).stubs().will(invoke(IpcVaUnLockStub));
+
+    rtEvent_t event;
+    rtError_t error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
+    ASSERT_EQ(error, ACL_RT_SUCCESS);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+
+    IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
+    uint32_t testIndex = 0;
+    handleVa->deviceMemRef[testIndex] = 0;
+    ipcEvent->totalTaskCnt_ = 1;
+
+    bool canDelete = ipcEvent->TryFreeEventIdAndCheckCanBeDelete(
+        static_cast<int32_t>(testIndex), false);
+
+    EXPECT_EQ(handleVa->deviceMemRef[testIndex], 0U);
+    EXPECT_FALSE(canDelete);
 
     rtEventDestroy(event);
 }

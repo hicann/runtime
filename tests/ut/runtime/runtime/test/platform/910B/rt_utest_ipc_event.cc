@@ -77,7 +77,7 @@ drvError_t halMemExportToShareableHandleStub(drv_mem_handle_t *handle, drv_mem_h
     return DRV_ERROR_NONE;
 }
 
-IpcHandleVa eventAddr = {1, RtValueToPtr<void*>(1), 0, 0};
+IpcHandleVa eventAddr = {0, RtValueToPtr<void*>(1), 0, 0};
 drvError_t halMemAddressReserveStub(void **ptr, size_t size, size_t alignment, void *addr, uint64_t flag)
 {
     *ptr = &eventAddr;

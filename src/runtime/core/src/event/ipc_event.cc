@@ -456,7 +456,7 @@ rtError_t IpcEvent::IpcEventSync(int32_t timeout)
     uint8_t* hostaddr = GetCurrentHostMem() + curIndex;
     uint16_t queryTimes = 0U;
     const mmTimespec beginTimeSpec = mmGetTickCount();
-    while ((*hostaddr == 0U) || IsIpcFinished()) {
+    while ((*hostaddr == 0U) && !IsIpcFinished()) {
         error = context_->CheckStatus();
         ERROR_RETURN(error, "Failed to synchronize ipc event. Reason: context is abort, status=%#x.", static_cast<uint32_t>(error));
         queryTimes++;
@@ -464,6 +464,7 @@ rtError_t IpcEvent::IpcEventSync(int32_t timeout)
             (void)mmSleep(100U);
             queryTimes = 0U;
         }
+        device_->WakeUpRecycleThread();
         COND_RETURN_ERROR((IsProcessTimeout(beginTimeSpec, timeout)), RT_ERROR_EVENT_SYNC_TIMEOUT,
             "event synchronize timeout, device_id=%u, timeout=%dms.",
             device_->Id_(), timeout);
@@ -474,11 +475,30 @@ rtError_t IpcEvent::IpcEventSync(int32_t timeout)
 
 bool IpcEvent::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestroy)
 {
-    UNUSED(id);
+    IpcVaLock();
+    bool destroyFlag = false;
+    uint32_t curIndex = static_cast<uint32_t>(id);
     if (isNeedDestroy) {
         SetIsNeedDestroy(isNeedDestroy_.Value() || isNeedDestroy);
+        destroyFlag = (totalTaskCnt_ == 0U);
+        IpcVaUnLock();
+        return destroyFlag;
     }
-    return isNeedDestroy_.Value() && (totalTaskCnt_ == 0U);
+
+    if (ipcHandleVa_->deviceMemRef[curIndex] > 0U) {
+        ipcHandleVa_->deviceMemRef[curIndex]--;
+    } else {
+        RT_LOG(RT_LOG_ERROR, "device_id=%u, event_id=%u, current_id=%u, count already is zero",
+            device_->Id_(), curIndex, ipcHandleVa_->currentIndex);
+    }
+    if (ipcHandleVa_->deviceMemRef[curIndex] == 0U) {
+        uint8_t* addr = GetCurrentHostMem() + curIndex;
+        (void)memset_s(RtPtrToPtr<void*>(addr), sizeof(uint8_t), 0, sizeof(uint8_t));
+    }
+    IpcEventCountSub();
+    destroyFlag = isNeedDestroy_.Value() && (totalTaskCnt_ == 0U);
+    IpcVaUnLock();
+    return destroyFlag;
 }
 
 void IpcEvent::FreeMemForVaUse()
@@ -516,9 +536,9 @@ void IpcEvent::FreeMemForVaUse()
 
 rtError_t IpcEvent::ReleaseDrvResource()
 {
-    const std::lock_guard<std::mutex> lock(eventResLock_);
     NULL_PTR_RETURN(device_, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN(device_->Driver_(), RT_ERROR_INVALID_VALUE);
+    const std::lock_guard<std::mutex> lock(eventResLock_);
     FreeMemForVaUse();
     if (deviceMemPa_ != nullptr) {
         (void)NpuDriver::FreePhysical(deviceMemPa_);

@@ -113,16 +113,6 @@ public :
             static_cast<uint64_t>(LockStatus::LOCK_RELEASED)));
     }
 
-    void EventDestroyLock(void)
-    {
-        eventDestroyLock_.lock();
-    }
-
-    void EventDestroyUnLock(void)
-    {
-        eventDestroyLock_.unlock();
-    }
-
     void SetIpcFinished(void)
     {
         eventStatus_ = RECORDED;
@@ -156,7 +146,6 @@ private:
     uint32_t mapFlag_;
     rtEventState_t eventStatus_;
     std::mutex eventResLock_;
-    std::mutex eventDestroyLock_;
 };
 }
 }

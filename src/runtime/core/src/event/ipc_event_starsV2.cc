@@ -52,9 +52,9 @@ rtError_t IpcEvent::IpcEventRecordStarsV2(Stream * const stm)
         IpcVaUnLock();,
         "Failed to initialize mem write value task, stream_id=%d, task_id=%hu, retCode=%#x.",
         stm->Id_(), tsk->id, static_cast<uint32_t>(error));
-   
     tsk->typeName = "IPC_RECORD";
     tsk->type = TS_TASK_TYPE_IPC_RECORD;
+    tsk->needPostProc = true;
     MemWriteValueTaskInfo *memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->curIndex = curIndex;
     memWriteValueTask->event = this;
@@ -130,6 +130,7 @@ rtError_t IpcEvent::IpcEventWaitStarsV2(Stream * const stm)
 
     tsk->typeName = "IPC_WAIT";
     tsk->type = TS_TASK_TYPE_IPC_WAIT;
+    tsk->needPostProc = true;
     MemWaitValueTaskInfo *memWaitValueTask = &tsk->u.memWaitValueTask;
     memWaitValueTask->curIndex = curIndex;
     memWaitValueTask->event = this;
