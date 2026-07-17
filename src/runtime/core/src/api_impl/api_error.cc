@@ -1771,7 +1771,7 @@ rtError_t ApiErrorDecorator::MemCopySync(void * const dst, const uint64_t destMa
 
     const rtError_t error = impl_->MemCopySync(dst, destMax, src, cnt, kind, checkKind);
     COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT),
-        error, "Memory copy sync failed, cnt=%" PRIu64 ", kind=%d.", cnt, static_cast<int32_t>(kind));
+        error, "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToString(kind).c_str());
     return error;
 }
 
@@ -1793,7 +1793,7 @@ rtError_t ApiErrorDecorator::MemCopySyncEx(void * const dst, const uint64_t dest
 
     const rtError_t error = impl_->MemCopySyncEx(dst, destMax, src, cnt, kind);
     COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT),
-        error, "Memory copy sync failed, cnt=%" PRIu64 ", kind=%d.", cnt, static_cast<int32_t>(kind));
+        error, "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToString(kind).c_str());
     return error;
 }
 
@@ -1843,8 +1843,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
         if (runMode == RT_RUN_MODE_ONLINE) {
             error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-                "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%d",
-                streamId, kind);
+                "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%s",
+                streamId, MemcpyKindToString(kind).c_str());
         } else {
             // no operation
         }
@@ -1853,8 +1853,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
         error = MemcpyAsyncCheckLocation(
             checkKind, copyKind, src, dst, isUserRequireToCheckPinnedMem, isD2HorH2DInvolvePageableMemory); /* 会更新copykind */
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "MemcpyAsync check src or dst location failed, stream_id=%d, checkKind=%d, copyKind=%d",
-            streamId, checkKind, copyKind);
+            "MemcpyAsync check src or dst location failed, stream_id=%d, checkKind=%d, copyKind=%s",
+            streamId, checkKind, MemcpyKindToString(copyKind).c_str());
     }
 
     COND_RETURN_WARN(((copyKind == RT_MEMCPY_HOST_TO_HOST) && (runMode == RT_RUN_MODE_ONLINE)),
@@ -1880,8 +1880,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
     }
 
     COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT),
-        error, "Memcpy async failed, count=%" PRIu64 ", kind=%d, isInvolvePageableMemory=%d",
-        cnt, static_cast<int32_t>(copyKind), isD2HorH2DInvolvePageableMemory);
+        error, "Memcpy async failed, count=%" PRIu64 ", kind=%s, isInvolvePageableMemory=%d",
+        cnt, MemcpyKindToString(copyKind).c_str(), isD2HorH2DInvolvePageableMemory);
     return error;
 }
 
