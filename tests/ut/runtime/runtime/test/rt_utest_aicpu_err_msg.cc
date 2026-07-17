@@ -409,6 +409,60 @@ TEST_F(AicpuErrMsgTest, FaultForAiCore1)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(AicpuErrMsgTest, PrintAicpuErrorInfo_SQEFieldsInErrorMsg)
+{
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    Stream *stm = new Stream(device, 1);
+    stm->streamId_ = 1;
+    rtError_t errCode = RT_ERROR_NONE;
+    TaskInfo * const task = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICPU, errCode);
+    EXPECT_NE(task, nullptr);
+
+    AicpuTaskInit(task, 1, 1);
+    Kernel *kernel = new (std::nothrow) Kernel("libmc2_server.so", "Mc2ServerKernel", "AlltoAllvQuantGroupedMatMul");
+    EXPECT_NE(kernel, nullptr);
+    InitEmbeddedInnerHandle<Kernel>(kernel);
+    task->u.aicpuTaskInfo.kernel = kernel;
+    task->u.aicpuTaskInfo.kernelInnerHandle = kernel->GetInnerHandle();
+    task->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_AICPU);
+    task->u.aicpuTaskInfo.comm.args = reinterpret_cast<void *>(0x1000);
+    task->u.aicpuTaskInfo.comm.argsSize = 256U;
+    task->u.aicpuTaskInfo.soName = reinterpret_cast<void *>(0x2000);
+    task->u.aicpuTaskInfo.funcName = reinterpret_cast<void *>(0x3000);
+    task->u.aicpuTaskInfo.headParamOffset = 64U;
+    task->errorCode = TS_ERROR_AICPU_EXCEPTION;
+
+    PrintErrorInfo(task, 0);
+
+    bool foundParamAddr = false;
+    bool foundArgsSize = false;
+    bool foundSoNameDevAddr = false;
+    bool foundFuncNameDevAddr = false;
+    bool foundHeadParamOffset = false;
+    bool foundAicpuKernelType = false;
+    for (const auto &errMsg : stm->errorMsg_) {
+        std::string msg = errMsg.second;
+        if (msg.find("paramAddr=0x1040") != std::string::npos) { foundParamAddr = true; }
+        if (msg.find("argsSize=256") != std::string::npos) { foundArgsSize = true; }
+        if (msg.find("soNameDevAddr=0x2000") != std::string::npos) { foundSoNameDevAddr = true; }
+        if (msg.find("funcNameDevAddr=0x3000") != std::string::npos) { foundFuncNameDevAddr = true; }
+        if (msg.find("headParamOffset=64") != std::string::npos) { foundHeadParamOffset = true; }
+        if (msg.find("aicpuKernelType=2") != std::string::npos) { foundAicpuKernelType = true; }
+    }
+    EXPECT_EQ(foundParamAddr, true);
+    EXPECT_EQ(foundArgsSize, true);
+    EXPECT_EQ(foundSoNameDevAddr, true);
+    EXPECT_EQ(foundFuncNameDevAddr, true);
+    EXPECT_EQ(foundHeadParamOffset, true);
+    EXPECT_EQ(foundAicpuKernelType, true);
+
+    device->GetTaskFactory()->Recycle(task);
+    DELETE_O(stm);
+    delete kernel;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
 TEST_F(AicpuErrMsgTest, GetError)
 {
     Device *dev = nullptr;

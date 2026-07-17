@@ -611,6 +611,12 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
     const std::string funcName = (isKernelValid && kernel != nullptr) ? kernel->GetCpuFuncName() : "";
     std::string kernelName = (isKernelValid && kernel != nullptr) ? kernel->GetCpuOpType() : "";
     std::string soName = (isKernelValid && kernel != nullptr) ? kernel->GetCpuKernelSo() : "";
+    const uint64_t paramAddr = RtPtrToValue(aicpuTaskInfo->comm.args) + aicpuTaskInfo->headParamOffset;
+    const uint32_t argsSize = aicpuTaskInfo->comm.argsSize;
+    const uint64_t soNameDevAddr = RtPtrToValue(aicpuTaskInfo->soName);
+    const uint64_t funcNameDevAddr = RtPtrToValue(aicpuTaskInfo->funcName);
+    const uint32_t headParamOffset = aicpuTaskInfo->headParamOffset;
+    const tsAicpuKernelType aicpuKernelType = static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType);
 
     if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) && (taskInfo->errorCode == TS_ERROR_AICPU_TIMEOUT)) {
         const std::string errMsg = "The AI CPU operator " + kernelName + " that times out is on device " +
@@ -619,18 +625,24 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
         RT_LOG_OUTER_MSG(RT_AICPU_TIMEOUT_ERROR, "%s", errMsg.c_str());
     } else {
         RT_LOG_CALL_MSG_NO_RT_LOG(ERR_MODULE_AICPU, "AI CPU kernel execution failed, device_id=%u, stream_id=%d, "
-            "%s=%u, soName=%s, funcName=%s, kernelName=%s, errorCode=%#x.",
-            devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str(), taskInfo->errorCode);
+            "%s=%u, soName=%s, funcName=%s, kernelName=%s, errorCode=%#x, "
+            "paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", funcNameDevAddr=%#" PRIx64 ", "
+            "headParamOffset=%u, aicpuKernelType=%u.",
+            devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str(),
+            taskInfo->errorCode, paramAddr, argsSize, soNameDevAddr, funcNameDevAddr, headParamOffset,
+            static_cast<uint32_t>(aicpuKernelType));
     }
 
     Stream *const reportStream = GetReportStream(taskInfo->stream);
     std::string extendInfo;
-    const tsAicpuKernelType aicpuKernelType = static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType);
     if ((aicpuKernelType == TS_AICPU_KERNEL_AICPU) || (aicpuKernelType == TS_AICPU_KERNEL_CUSTOM_AICPU)) {
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
-            "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, fault op_name=%s, soName=%s, funcName=%s, kernelName=%s.",
+            "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, fault op_name=%s, soName=%s, "
+            "funcName=%s, kernelName=%s, paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", "
+            "funcNameDevAddr=%#" PRIx64 ", headParamOffset=%u, aicpuKernelType=%u.",
             devId, streamId, TaskIdDesc(), taskId, taskInfo->stream->GetTaskTag(taskInfo->id).c_str(),
-            soName.c_str(), funcName.c_str(), kernelName.c_str());
+            soName.c_str(), funcName.c_str(), kernelName.c_str(), paramAddr, argsSize, soNameDevAddr,
+            funcNameDevAddr, headParamOffset, static_cast<uint32_t>(aicpuKernelType));
         return;
     }
 
@@ -648,8 +660,11 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
         devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str());
     STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
         "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, kernel_type=%u, "
-        "fault op_name=%s, extend_info=%s.", devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum, 
-        aicpuKernelType, taskInfo->stream->GetTaskTag(taskInfo->id).c_str(), extendInfo.c_str());
+        "fault op_name=%s, extend_info=%s, paramAddr=%#" PRIx64 ", argsSize=%u, soNameDevAddr=%#" PRIx64 ", "
+        "funcNameDevAddr=%#" PRIx64 ", headParamOffset=%u.",
+        devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum, aicpuKernelType,
+        taskInfo->stream->GetTaskTag(taskInfo->id).c_str(), extendInfo.c_str(),
+        paramAddr, argsSize, soNameDevAddr, funcNameDevAddr, headParamOffset);
 }
 
 rtError_t GetMixCtxInfo(TaskInfo* taskInfo)
