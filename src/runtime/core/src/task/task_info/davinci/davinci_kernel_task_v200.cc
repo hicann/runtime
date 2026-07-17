@@ -60,6 +60,9 @@ void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe * const sqe, const Stream 
     if (dieNum <= 1U) {
         sqe->dieFriendly = 0U;
     }
+#else
+    UNUSED(stm);
+    UNUSED(sqe);
 #endif
     return;
 }

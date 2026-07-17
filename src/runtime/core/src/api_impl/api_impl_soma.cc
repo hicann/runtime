@@ -131,7 +131,7 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
     params->stm = stm;
     RT_LOG(RT_LOG_DEBUG, "Register MemPoolFreeAsync callback with data ptr=%#" PRIx64 ", stream_id=%d.",
         RtPtrToValue(ptr), stm->Id_());
-    rtError_t error = Runtime::Instance()->ApiImpl_()->LaunchHostFunc(stm, &ApiImplSoma::MemPoolFreeAsyncCallback, RtPtrToPtr<void *>(memBuffer));
+    const rtError_t error = Runtime::Instance()->ApiImpl_()->LaunchHostFunc(stm, &ApiImplSoma::MemPoolFreeAsyncCallback, RtPtrToPtr<void *>(memBuffer));
     if (error != RT_ERROR_NONE) {
         DELETE_A(memBuffer);
         RT_LOG(RT_LOG_ERROR, "Failed to register MemPoolFreeAsync callback, retCode=%#x.", static_cast<uint32_t>(error));
