@@ -105,7 +105,7 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t &
             break;
         }
         default: {
-            ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %d.", static_cast<int32_t>(kind));
+             ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %s.", acl::GetMemcpyKindDesc(kind));
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
                 std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind), "kind",
@@ -571,7 +571,7 @@ aclError aclrtMemcpyImpl(void *dst,
     rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
     const aclError ret = MemcpyKindTranslate(kind, rtKind);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
         return ret;
     }
 
@@ -611,7 +611,7 @@ aclError aclrtMemcpyAsyncImpl(void *dst,
     rtMemcpyKind_t rtKindVal = RT_MEMCPY_RESERVED;
     const aclError ret = MemcpyKindTranslate(kind, rtKindVal);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
         return ret;
     }
 
@@ -639,7 +639,7 @@ aclError aclrtMemcpyAsyncWithConditionImpl(void *dst,
     rtMemcpyKind_t rtKindValue = RT_MEMCPY_RESERVED;
     const aclError ret = MemcpyKindTranslate(kind, rtKindValue);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+        ACL_LOG_ERROR("invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
         return ret;
     }
 
