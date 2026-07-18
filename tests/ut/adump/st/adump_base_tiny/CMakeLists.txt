@@ -51,7 +51,7 @@ set(adumpBaseTinyUtestSrc
 
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_platform_api/adump_platform_api_device.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/thread.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/thread_mdc.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/common/thread_without_attr.cpp
         ${SRC_CODE_ROOT_PATH}/adump/operator/operator_preliminary/operator_preliminary_device.cpp
 )
 
@@ -63,7 +63,7 @@ set(adumpBaseTinyUtestSrcList
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/adx_exception_callback_stest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/adump_platform_api_device_stest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/operator_preliminary_device_stest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/thread_mdc_stest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/thread_without_attr_stest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/main.cpp
 )
 

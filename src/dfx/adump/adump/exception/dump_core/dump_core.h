@@ -33,6 +33,8 @@ public:
     explicit DumpCore(const std::string& path, uint32_t devId) : path_(path), devId_(devId) {};
     ~DumpCore() = default;
     int32_t DumpCoreFile(const rtExceptionInfo& exception);
+    void DumpV2Register(uint8_t coreType, uint16_t coreId);
+    void DumpV4Register(uint8_t coreType, uint16_t coreId);
 
 private:
     struct CacheParam {
@@ -78,14 +80,12 @@ private:
         uint8_t coreType, uint16_t coreId, const std::string& sectionName, std::vector<LocalMemInfo>& localMemInfoList);
     void DumpLocalAuxInfo(const std::string& coreIdStr, std::vector<LocalMemInfo>& localMemInfoList);
     void DumpRegister(uint8_t coreType, uint16_t coreId);
-    void DumpV2Register(uint8_t coreType, uint16_t coreId);
     void DumpV2DebugRegister(
         uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables,
         std::vector<RegInfo>& regData) const;
     void DumpV2ErrorRegister(
         uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
         std::vector<RegInfo>& regData) const;
-    void DumpV4Register(uint8_t coreType, uint16_t coreId);
     void DumpV4DebugRegister(
         uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
         std::vector<RegInfoWide>& regData) const;

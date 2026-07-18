@@ -12,6 +12,9 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/adx_dump_process.cpp
     ${ADUMP_ADUMP_DIR}/adx_dump_record.cpp
     ${ADUMP_ADUMP_DIR}/common/adump_dsmi.cpp
+    ${ADUMP_ADUMP_DIR}/common/platform/cloud_v2_platform.cpp
+    ${ADUMP_ADUMP_DIR}/common/platform/cloud_v4_platform.cpp
+    ${ADUMP_ADUMP_DIR}/common/platform/dc_platform.cpp
     ${ADUMP_ADUMP_DIR}/common/file.cpp
     ${ADUMP_ADUMP_DIR}/common/json_parser.cpp
     ${ADUMP_ADUMP_DIR}/common/lib_path.cpp

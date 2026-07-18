@@ -15,14 +15,16 @@
 #include "common/thread.h"
 #include "adx_dump_record.h"
 #include "adump_pub.h"
+#include "adump_platform_manager.h"
 
 using namespace Adx;
 
 class DumpConfigConverterExtraUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        ResetAllPlatformManagers();
         GlobalMockObject::verify();
     }
 };
@@ -279,11 +281,13 @@ class DumpManagerExtraUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
+        ResetAllPlatformManagers();
         MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
     }
     virtual void TearDown()
     {
+        ResetAllPlatformManagers();
         DumpManager::Instance().Reset();
         GlobalMockObject::verify();
     }

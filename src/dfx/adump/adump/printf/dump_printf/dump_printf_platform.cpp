@@ -11,64 +11,39 @@
 #include "runtime/base.h"
 #include "runtime/dev.h"
 #include "dump_printf_platform.h"
-
-namespace {
-constexpr size_t ADX_CORETYPE_ID_OFFSET = 50U;
-constexpr size_t ADX_BLOCK_NUM = 75U;
-constexpr size_t ADX_MAX_STR_LEN = 1024U * 1024U;
-constexpr size_t ADX_SOC_VERSION_MAX = 50U;
-constexpr const char* PREFIX_ASCEND950 = "Ascend950";
-constexpr size_t ADX_MAX_AICORE_ON_ASCEND950 = 36U;
-constexpr uint32_t ADX_SYNC_TIMEOUT = 60000U;
-constexpr uint32_t ADX_DAVID_TIMEOUT = 60000U * 30U;
-} // namespace
+#include "adump_platform_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool AdxIsAscend950();
-
-bool AdxIsAscend950()
-{
-    char socType[ADX_SOC_VERSION_MAX];
-    if ((rtGetSocVersion(socType, ADX_SOC_VERSION_MAX) == RT_ERROR_NONE) &&
-        (strncmp(socType, PREFIX_ASCEND950, strlen(PREFIX_ASCEND950)) == 0)) {
-        return true;
-    }
-
-    return false;
-}
-
 size_t AdxGetCoreTypeIDOffset()
 {
-    if (AdxIsAscend950()) {
-        return ADX_MAX_AICORE_ON_ASCEND950 * 2;
-    }
-
-    return ADX_CORETYPE_ID_OFFSET;
+    static const Adx::DataDumpInterface defaultPlat;
+    auto *plat = Adx::DataDumpManager::Get();
+    return (plat != nullptr) ? plat->GetCoreTypeIDOffset() : defaultPlat.GetCoreTypeIDOffset();
 }
 
 size_t AdxGetBlockNum() {
-    if (AdxIsAscend950()) {
-        return ADX_MAX_AICORE_ON_ASCEND950 * 3;
-    }
-
-    return ADX_BLOCK_NUM;
+    static const Adx::DataDumpInterface defaultPlat;
+    auto *plat = Adx::DataDumpManager::Get();
+    return (plat != nullptr) ? plat->GetBlockNum() : defaultPlat.GetBlockNum();
 }
 
 bool AdxEnableSimtDump(size_t dumpWorkSpaceSize)
 {
-    return AdxIsAscend950() && dumpWorkSpaceSize > AdxGetBlockNum() * ADX_MAX_STR_LEN;
+    auto *plat = Adx::DataDumpManager::Get();
+    if (plat == nullptr) {
+        return false;
+    }
+    return plat->IsSimtDumpEnabled(dumpWorkSpaceSize);
 }
 
 int32_t GetStreamSynchronizeTimeout()
 {
-    int32_t timeout = ADX_SYNC_TIMEOUT;
-    if (AdxIsAscend950()) {
-        timeout = ADX_DAVID_TIMEOUT;
-    }
-    return timeout;
+    static const Adx::DataDumpInterface defaultPlat;
+    auto *plat = Adx::DataDumpManager::Get();
+    return (plat != nullptr) ? plat->GetStreamSyncTimeout() : defaultPlat.GetStreamSyncTimeout();
 }
 
 #ifdef __cplusplus

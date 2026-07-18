@@ -13,6 +13,7 @@
 #include <string>
 #include "mockcpp/mockcpp.hpp"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "kernel_pc_fixer.h"
 #include "runtime/base.h"
 #include "acc_error_info.h"
@@ -26,11 +27,13 @@ class KernelPcFixerUTest : public testing::Test {
 protected:
     void SetUp() override
     {
+        Adx::ResetAllPlatformManagers();
         PcFixerFactory::instance_.reset();
     }
 
     void TearDown() override
     {
+        Adx::ResetAllPlatformManagers();
         PcFixerFactory::instance_.reset();
         GlobalMockObject::verify();
     }
@@ -202,6 +205,7 @@ TEST_F(KernelPcFixerUTest, FactoryCreatesSupportedFixersAndRejectsUnsupported)
 
     GlobalMockObject::verify();
     PcFixerFactory::instance_.reset();
+    Adx::ResetAllPlatformManagers();
 
     uint32_t v4Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4Type)).will(returnValue(true));
@@ -209,12 +213,14 @@ TEST_F(KernelPcFixerUTest, FactoryCreatesSupportedFixersAndRejectsUnsupported)
 
     GlobalMockObject::verify();
     PcFixerFactory::instance_.reset();
+    Adx::ResetAllPlatformManagers();
 
     uint32_t dcType = static_cast<uint32_t>(PlatformType::CHIP_DC_TYPE);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(dcType)).will(returnValue(true));
     EXPECT_EQ(nullptr, PcFixerFactory::GetInstance());
 
     GlobalMockObject::verify();
+    Adx::ResetAllPlatformManagers();
 
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().will(returnValue(false));
     EXPECT_EQ(nullptr, PcFixerFactory::GetInstance());

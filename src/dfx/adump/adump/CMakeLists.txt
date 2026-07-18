@@ -53,26 +53,13 @@ if(PRODUCT)
             PRODUCT STREQUAL "npuf10" OR
             PRODUCT STREQUAL "ascend310rc" OR
             PRODUCT STREQUAL "ascend310Brcesl" OR
-            PRODUCT STREQUAL "ascend310Brcemu")
-        include(adump_cmake/adump_couple/adump_server.cmake)
-        include(adump_cmake/adump_couple/ascend_dump.cmake)
-        include(adump_cmake/adump_couple/adump.cmake)
-    elseif(PRODUCT STREQUAL "ascend610" OR
-            PRODUCT STREQUAL "ascend610Lite" OR
-            PRODUCT STREQUAL "ascend610Liteesl" OR
-            PRODUCT STREQUAL "as31xm1" OR
+            PRODUCT STREQUAL "ascend310Brcemu" OR
             PRODUCT STREQUAL "ascend035" OR
-            PRODUCT STREQUAL "mc62cm12a" OR
-            PRODUCT STREQUAL "mc62cm12aesl" OR
-            PRODUCT STREQUAL "mc32dm11a")
+            PRODUCT STREQUAL "ascend310Brc" OR
+            (DEFINED MODULE_EXT AND NOT (MODULE_EXT STREQUAL "")))
         include(adump_cmake/adump_couple/adump_server.cmake)
         include(adump_cmake/adump_couple/ascend_dump.cmake)
         include(adump_cmake/adump_couple/adump.cmake)
-    elseif(PRODUCT STREQUAL "ascend310Brc")
-        include(adump_cmake/adump_couple/adump_server.cmake)
-        include(adump_cmake/adump_couple/ascend_dump.cmake)
-        include(adump_cmake/adump_couple/adump.cmake)
-
     elseif(PRODUCT STREQUAL "ascend" OR
             PRODUCT STREQUAL "helper310p" OR
             PRODUCT STREQUAL "ascend310" OR
@@ -93,16 +80,9 @@ if(PRODUCT)
         include(adump_cmake/adump_decouple/adump_server.cmake)
         include(adump_cmake/adump_decouple/ascend_dump.cmake)
         include(adump_cmake/adump_decouple/adump.cmake)
-    elseif(PRODUCT STREQUAL "ascend310B" OR
-            PRODUCT STREQUAL "ascend310p" OR
-            PRODUCT STREQUAL "ascend910" OR
-            PRODUCT STREQUAL "ascend910B" OR
-            PRODUCT STREQUAL "ascend910_93")
-        include(adump_cmake/adump_decouple/adump_server.cmake)
-        include(adump_cmake/adump_decouple/ascend_dump.cmake)
-        include(adump_cmake/adump_decouple/adump.cmake)
     else()
-        message(STATUS "Unknown PRODUCT[${PRODUCT}], will build artifacts with default stragety")
+        message(STATUS "Unknown PRODUCT, no chip type matched and MODULE_EXT is empty, "
+                        "will build artifacts with default stragety")
         include(adump_cmake/adump_decouple/adump_server.cmake)
         include(adump_cmake/adump_decouple/ascend_dump.cmake)
         include(adump_cmake/adump_decouple/adump.cmake)

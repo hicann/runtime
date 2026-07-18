@@ -15,6 +15,7 @@
 #include "kernel_pc_fixer.h"
 #include "acc_error_info.h"
 #include "common/adump_dsmi.h"
+#include "common/adump_platform_manager.h"
 #include "log/adx_log.h"
 
 namespace Adx {
@@ -463,19 +464,15 @@ PcFixerInterface* PcFixerFactory::GetInstance()
 {
     std::lock_guard<std::mutex> lock(g_pcFixerMutex);
     if (!instance_) {
-        uint32_t platform = 0;
-        IDE_CTRL_VALUE_WARN(AdumpDsmi::DrvGetPlatformType(platform), return nullptr,
-            "[Dump][Exception] Get platform type failed, PC fix skipped.");
-        switch (static_cast<PlatformType>(platform)) {
-            case PlatformType::CHIP_CLOUD_V2:
-                instance_.reset(new CloudV2PcFixer());
-                break;
-            case PlatformType::CHIP_CLOUD_V4:
-                instance_.reset(new CloudV4PcFixer());
-                break;
-            default:
-                IDE_LOGW("[Dump][Exception] Unsupported platform type %u, PC fix skipped.", platform);
-                return nullptr;
+        auto *plat = CoredumpManager::Get();
+        if (plat == nullptr) {
+            IDE_LOGW("[Dump][Exception] Platform unavailable, PC fix skipped.");
+            return nullptr;
+        }
+        instance_ = plat->CreatePcFixer();
+        if (!instance_) {
+            IDE_LOGW("[Dump][Exception] Unsupported platform for PC fix, PC fix skipped.");
+            return nullptr;
         }
     }
     return instance_.get();

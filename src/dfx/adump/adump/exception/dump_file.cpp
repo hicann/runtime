@@ -17,6 +17,7 @@
 #include "log/hdc_log.h"
 #include "log/adx_log.h"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "dump_tensor_plugin.h"
 #include "hccl_mc2_define.h"
 #include "proto/dump_task.pb.h"
@@ -389,35 +390,24 @@ int32_t DumpFile::WriteInputBuffer()
 }
 
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
-int32_t DumpFile::GetSocVersion(std::string &socVersion) const
-{
-    constexpr uint32_t socVersionLength = 128U;
-    char version[socVersionLength] = {0};
-    rtError_t ret = rtGetSocVersion(version, socVersionLength);
-    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Get soc version failed, ret=%d", ret);
-    IDE_LOGI("Get soc Version: %s", version);
-    socVersion = std::string(version);
-    return ADUMP_SUCCESS;
-}
-
 bool DumpFile::SupportDumpMc2spaces() const
 {
-    std::string socVersion;
-    int32_t ret = GetSocVersion(socVersion);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return false, "Get soc version failed");
-    return std::string(socVersion).find("Ascend910") != std::string::npos;
+    auto *plat = ExceptionDumpManager::Get();
+    if (plat == nullptr) {
+        IDE_LOGW("[Dump][Exception] Platform unavailable, mc2 spaces dump disabled.");
+        return false;
+    }
+    return plat->SupportMc2SpacesDump();
 }
 
 uint64_t DumpFile::ComputeStructSize() const
 {
-    std::string socVersion;
-    int32_t ret = GetSocVersion(socVersion);
-    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return 0, "[Dump][ExceptionWorkspace] Get soc version failed");
-    if (std::string(socVersion).find("Ascend910_93") != std::string::npos) {
-        return sizeof(HcclOpResParam);
-    } else {
-        return sizeof(HcclCombinOpParam);
+    auto *plat = ExceptionDumpManager::Get();
+    if (plat == nullptr) {
+        IDE_LOGE("[Dump][Exception] Platform unavailable, cannot determine mc2 struct size.");
+        return 0;
     }
+    return plat->GetMc2StructSize();
 }
 
 void DumpFile::HandleMc2CtxV1(const void *hostData, uint64_t &totalSize, std::vector<DeviceData> &dataList) const

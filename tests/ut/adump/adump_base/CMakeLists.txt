@@ -57,6 +57,9 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/common/file.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/lib_path.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_dsmi.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/common/platform/cloud_v2_platform.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/common/platform/cloud_v4_platform.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/common/platform/dc_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_platform_api/adump_platform_api.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/json_parser.cpp
 
@@ -106,6 +109,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_path_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_file_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_sys_utils_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/platform_impl_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_manager_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_func_utest.cpp

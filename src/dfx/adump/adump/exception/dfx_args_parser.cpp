@@ -8,12 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include <set>
 #include <sstream>
 #include "securec.h"
 #include "dfx_args_parser.h"
 #include "dump_memory.h"
-#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "log/adx_log.h"
 
 namespace Adx {
@@ -217,11 +216,13 @@ int32_t DfxArgsParser::GetShapeData(uint64_t atomicIndex)
 
 bool DfxArgsParser::GetIsDataTypeSizeByte(bool &isDataTypeSizeByte) const
 {
-    static const std::set<PlatformType> platforms = {PlatformType::CHIP_CLOUD_V2, PlatformType::CHIP_DC_TYPE};
-    uint32_t platformType = 0;
-    IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platformType), return false, "Get platform type failed.");
-    auto it = platforms.find(static_cast<PlatformType>(platformType));
-    isDataTypeSizeByte = it != platforms.end();
+    auto *plat = ExceptionDumpManager::Get();
+    if (plat == nullptr) {
+        // 未注册平台沿用默认语义：视为非按字节并继续解析，保持与平台工厂化前一致
+        isDataTypeSizeByte = false;
+        return true;
+    }
+    isDataTypeSizeByte = plat->IsArgsDataTypeSizeByByte();
     return true;
 }
 

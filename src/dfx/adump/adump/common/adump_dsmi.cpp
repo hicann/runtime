@@ -100,7 +100,7 @@ bool AdumpDsmi::DrvGetPlatformType(uint32_t &platformType)
         } else if (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
             IDE_LOGW("Driver doesn't support device type version by rtGetDeviceInfo interface, ret=%d"
                 ", set PlatformType::HELPER_DEVICE_TYPE", static_cast<int32_t>(ret));
-            chipId = DEFAULT_CHIP_TYPE; // tmp set mdc type for helper device
+            chipId = DEFAULT_CHIP_TYPE; // tmp set default chip type for helper device
             break;
         }
     }

@@ -27,6 +27,7 @@
 #include "dump_tensor_plugin.h"
 #include "thread_manager.h"
 #include "hccl_mc2_define.h"
+#include "adump_platform_manager.h"
 #include "ascend_hal.h"
 #include "dump_exception_stub.h"
 
@@ -37,9 +38,10 @@ using namespace Adx;
 
 class DumpArgsUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        ResetAllPlatformManagers();
         ThreadManager::Instance().WaitAll();
         DumpManager::Instance().Reset();
         FreeExceptionRegInfo();

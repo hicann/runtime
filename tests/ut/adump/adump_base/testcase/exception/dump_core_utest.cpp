@@ -13,6 +13,7 @@
 #include "runtime/rt.h"
 #include "dump_file_checker.h"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "exception_dumper.h"
 #include "dump_manager.h"
 #include "register_config.h"
@@ -25,8 +26,9 @@ using namespace Adx;
 
 class DUMP_CORE_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown() {
+        ResetAllPlatformManagers();
         DumpManager::Instance().Reset();
         FreeExceptionRegInfo();
         GlobalMockObject::verify();

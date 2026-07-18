@@ -75,8 +75,6 @@ struct KfcDumpOpInitParam {
     char kernelName[FILE_NAME_MAX] = "AicpuKfcDumpSrvInit";
 };
 
-extern const std::map<PlatformType, std::string> BIN_NAME_MAP;
-
 class OperatorPreliminary {
 public:
     OperatorPreliminary(const DumpSetting &setting, const uint32_t deviceId);

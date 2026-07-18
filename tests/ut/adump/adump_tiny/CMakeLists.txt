@@ -40,7 +40,7 @@ set(adumpTinySrcList
     ${SRC_CODE_ROOT_PATH}/adump/adump_ascend031/manage/adump_api_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/adump_ascend031/printf/dump_printf.cpp
 
-    ${SRC_CODE_ROOT_PATH}/adcore/common/thread_mdc.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/common/thread_without_attr.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/hdc/hdc_api_stub.cpp
 
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_platform_api/adump_platform_api_device.cpp
@@ -60,7 +60,7 @@ set(adumpTinySrcList
 
 set(adumpTinyUtestSrcList
     ${ADUMP_TINY_UT_ROOT_PATH}/testcase/dump_manager_utest.cpp
-    ${ADUMP_TINY_UT_ROOT_PATH}/testcase/thread_mdc_utest.cpp
+    ${ADUMP_TINY_UT_ROOT_PATH}/testcase/thread_without_attr_utest.cpp
     ${ADUMP_TINY_UT_ROOT_PATH}/testcase/hdc_api_stub_utest.cpp
     ${ADUMP_TINY_UT_ROOT_PATH}/testcase/adump_api_platform_utest.cpp
     ${ADUMP_TINY_UT_ROOT_PATH}/testcase/dump_printf_utest.cpp

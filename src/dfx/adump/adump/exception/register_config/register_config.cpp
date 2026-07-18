@@ -12,7 +12,7 @@
 #include "dump_common.h"
 #include "register_config.h"
 #include "acc_error_info.h"
-#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 
 namespace Adx {
 
@@ -376,20 +376,11 @@ void CloudV4Register::GenAddrByStep(RegisterType regType, const std::vector<Regi
 
 void RegisterManager::CreateRegister()
 {
-    uint32_t type = 0;
-    if (!AdumpDsmi::DrvGetPlatformType(type)) {
+    auto *plat = CoredumpManager::Get();
+    if (plat == nullptr) {
         return;
     }
-    switch (static_cast<PlatformType>(type)) {
-        case PlatformType::CHIP_CLOUD_V2:
-            register_ = std::make_shared<CloudV2Register>();
-            break;
-        case PlatformType::CHIP_CLOUD_V4:
-            register_ = std::make_shared<CloudV4Register>();
-            break;
-        default:
-            break;
-    }
+    register_ = plat->CreateRegister();
 }
 
 RegisterManager::RegisterManager()

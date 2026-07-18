@@ -14,15 +14,17 @@
 #include "mockcpp/mockcpp.hpp"
 #include "register_config.h"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "dump_common.h"
 
 using namespace Adx;
 
 class RegisterManagerPlatformUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { Adx::ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        Adx::ResetAllPlatformManagers();
         GlobalMockObject::verify();
     }
 };

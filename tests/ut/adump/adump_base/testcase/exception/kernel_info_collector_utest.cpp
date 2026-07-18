@@ -29,6 +29,7 @@
 #include "hccl_mc2_define.h"
 #include "ascend_hal.h"
 #include "dump_exception_stub.h"
+#include "adump_platform_manager.h"
 #include "kernel_info_collector.h"
 #include "dump_exception_stub.h"
 
@@ -38,9 +39,11 @@ using namespace Adx;
 class KernelInfoCollectorUTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        Adx::ResetAllPlatformManagers();
     }
 
     void TearDown() override {
+        Adx::ResetAllPlatformManagers();
         FreeExceptionRegInfo();
     }
 

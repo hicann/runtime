@@ -19,15 +19,17 @@
 #include "exception_dumper.h"
 #include "dump_manager.h"
 #include "file.h"
+#include "adump_platform_manager.h"
 #include "dump_exception_stub.h"
 
 using namespace Adx;
 
 class ExceptionDumperUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        ResetAllPlatformManagers();
         DumpManager::Instance().Reset();
         FreeExceptionRegInfo();
         GlobalMockObject::verify();

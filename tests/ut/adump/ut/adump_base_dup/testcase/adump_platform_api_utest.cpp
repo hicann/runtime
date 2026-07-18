@@ -1,30 +1,41 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include <gtest/gtest.h>
 #include <fstream>
 #include <functional>
 #include <thread>
 #include "mockcpp/mockcpp.hpp"
 #include "adump_platform_api.h"
-#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "dump_common.h"
 #include "dump_core.h"
 
 using namespace Adx;
 
+namespace {
+void MockPlatformInfoSuccess()
+{
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
+        .stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
+        .stubs().will(returnValue(0U));
+}
+}
+
 class DupAdumpPlatformApiUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
+        ResetAllPlatformManagers();
     }
 };
 
@@ -35,105 +46,61 @@ TEST_F(DupAdumpPlatformApiUtest, Test_GetAicoreSizeInfo)
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize), true);
 }
 
-TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNum)
+// UB 来源按入参 platform 查询，不依赖 DSMI 当前平台缓存。
+TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumUsesInputPlatform)
 {
-    const std::string socVersion("123");
-    PlatformType platform = PlatformType::CHIP_CLOUD_V4;
-    PlatformData platformData;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), false);
-    platform = PlatformType::CHIP_CLOUD_V2;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
-    platform = PlatformType::CHIP_DC_TYPE;
-    PlatformData platformDataDC;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformDataDC), true);
-}
+    MockPlatformInfoSuccess();
 
-TEST_F(DupAdumpPlatformApiUtest, Test_CHIP_CORE_MAP_ContainsV4)
-{
-    const std::string socVersion("123");
-    PlatformType platform = PlatformType::CHIP_CLOUD_V4;
+    const std::string socVersion("Ascend950");
     PlatformData platformData;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), false);
-}
-
-TEST_F(DupAdumpPlatformApiUtest, Test_CHIP_CORE_MAP_AllPlatforms)
-{
-    auto &chipCoreMap = []() -> const std::map<PlatformType, bool>& {
-        static std::map<PlatformType, bool> map = {
-            {PlatformType::CHIP_DC_TYPE, false},
-            {PlatformType::CHIP_CLOUD_V2, true},
-            {PlatformType::CHIP_CLOUD_V4, true}
-        };
-        return map;
-    }();
-    
-    EXPECT_EQ(chipCoreMap.at(PlatformType::CHIP_DC_TYPE), false);
-    EXPECT_EQ(chipCoreMap.at(PlatformType::CHIP_CLOUD_V2), true);
-    EXPECT_EQ(chipCoreMap.at(PlatformType::CHIP_CLOUD_V4), true);
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, PlatformType::CHIP_CLOUD_V4, platformData), true);
 }
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumV4Success)
 {
+    MockPlatformInfoSuccess();
+
     const std::string socVersion("Ascend950");
-    PlatformType platform = PlatformType::CHIP_CLOUD_V4;
     PlatformData platformData;
-    
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(0U));
-    
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, PlatformType::CHIP_CLOUD_V4, platformData), true);
 }
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumV2Success)
 {
+    MockPlatformInfoSuccess();
+
     const std::string socVersion("Ascend910B");
-    PlatformType platform = PlatformType::CHIP_CLOUD_V2;
     PlatformData platformData;
-    
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(0U));
-    
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, PlatformType::CHIP_CLOUD_V2, platformData), true);
 }
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumDCSuccess)
 {
+    MockPlatformInfoSuccess();
+
     const std::string socVersion("Ascend310P");
-    PlatformType platform = PlatformType::CHIP_DC_TYPE;
     PlatformData platformData;
-    
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(0U));
-    
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, PlatformType::CHIP_DC_TYPE, platformData), true);
 }
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumInitFail)
 {
-    const std::string socVersion("Ascend950");
-    PlatformType platform = PlatformType::CHIP_CLOUD_V4;
-    PlatformData platformData;
-    
     MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
         .stubs().will(returnValue(1U));
-    
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), false);
+
+    const std::string socVersion("Ascend950");
+    PlatformData platformData;
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, PlatformType::CHIP_CLOUD_V4, platformData), false);
 }
 
 TEST_F(DupAdumpPlatformApiUtest, Test_GetAicoreSizeInfoFail)
 {
     const std::string socVersion("test");
     BufferSize bufferSize{};
-    
+
     MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
         .stubs().will(returnValue(1U));
-    
+
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize), false);
 }
 
@@ -141,39 +108,21 @@ TEST_F(DupAdumpPlatformApiUtest, Test_GetAicoreSizeInfoGetPlatformInfoFail)
 {
     const std::string socVersion("test");
     BufferSize bufferSize{};
-    
+
     MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
         .stubs().will(returnValue(0U));
     MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
         .stubs().will(returnValue(1U));
-    
+
     EXPECT_EQ(AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize), false);
 }
 
-TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumAllPlatformsSuccess)
+// 未注册平台类型时 DataDumpManager 返回 nullptr，UB 来源无法判定，返回 false。
+TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumUnregisteredPlatform)
 {
-    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo)
-        .stubs().will(returnValue(0U));
-    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo)
-        .stubs().will(returnValue(0U));
-    
-    const std::string socVersion("Ascend950");
-    
-    PlatformType platform = PlatformType::CHIP_DC_TYPE;
-    PlatformData platformData;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
-    
-    platform = PlatformType::CHIP_CLOUD_V2;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
-    
-    platform = PlatformType::CHIP_CLOUD_V4;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), true);
-}
+    MockPlatformInfoSuccess();
 
-TEST_F(DupAdumpPlatformApiUtest, Test_GetUBSizeAndCoreNumInvalidPlatform)
-{
     const std::string socVersion("test");
-    PlatformType platform = static_cast<PlatformType>(255);
     PlatformData platformData;
-    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, platform, platformData), false);
+    EXPECT_EQ(AdumpPlatformApi::GetUBSizeAndCoreNum(socVersion, static_cast<PlatformType>(255), platformData), false);
 }

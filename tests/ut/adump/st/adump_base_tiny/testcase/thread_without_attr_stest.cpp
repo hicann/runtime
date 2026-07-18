@@ -16,7 +16,7 @@
 
 using namespace Adx;
 
-class TinyMdcThreadStest : public testing::Test {
+class TinyThreadWithoutAttrStest : public testing::Test {
 protected:
     virtual void SetUp() {}
     virtual void TearDown()
@@ -25,7 +25,7 @@ protected:
     }
 };
 
-TEST_F(TinyMdcThreadStest, Test_CreateTask)
+TEST_F(TinyThreadWithoutAttrStest, Test_CreateTask)
 {
     mmUserBlock_t funcBlock;
     funcBlock.procFunc = nullptr;

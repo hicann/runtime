@@ -11,7 +11,7 @@
 #include <iomanip>
 #include "log/adx_log.h"
 #include "runtime/mem.h"
-#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "register_config.h"
 #include "exception_info_common.h"
 #include "dump_core.h"
@@ -21,18 +21,12 @@ constexpr int32_t REG_FIELD_WIDTH = 2;
 
 void DumpCore::DumpRegister(uint8_t coreType, uint16_t coreId)
 {
-    uint32_t platform = 0;
-    IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platform), return, "Get platform type failed.");
-    switch (static_cast<PlatformType>(platform)) {
-        case PlatformType::CHIP_CLOUD_V2:
-            DumpV2Register(coreType, coreId);
-            break;
-        case PlatformType::CHIP_CLOUD_V4:
-            DumpV4Register(coreType, coreId);
-            break;
-        default:
-            break;
+    auto *plat = CoredumpManager::Get();
+    if (plat == nullptr) {
+        IDE_LOGW("[DumpCore] Platform unavailable, register dump skipped.");
+        return;
     }
+    plat->DumpRegister(*this, coreType, coreId);
 }
 
 std::string DumpCore::FormatRegisterData(const uint8_t* valAddr, uint8_t valSize) const
@@ -216,16 +210,11 @@ void DumpCore::DumpV4ErrorRegister(
 
 uint16_t DumpCore::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
 {
-    uint32_t platform = 0;
-    IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platform), return coreId, "Get platform type failed.");
-    switch (static_cast<PlatformType>(platform)) {
-        case PlatformType::CHIP_CLOUD_V2:
-            return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(CORE_SIZE_AIC + coreId);
-        case PlatformType::CHIP_CLOUD_V4:
-            return (coreType == CORE_TYPE_AIC) ? coreId : static_cast<uint16_t>(CORE_SIZE_AIC_DAVID + coreId);
-        default:
-            break;
+    auto *plat = CoredumpManager::Get();
+    if (plat == nullptr) {
+        IDE_LOGW("[DumpCore] Platform unavailable, coreId not converted.");
+        return coreId;
     }
-    return coreId;
+    return plat->ConvertCoreId(coreType, coreId);
 }
 } // namespace Adx

@@ -16,6 +16,7 @@
 #include "file_utils.h"
 #include "log/adx_log.h"
 #include "adump_platform_api.h"
+#include "adump_platform_manager.h"
 #include "runtime/kernel.h"
 #include "runtime/mem.h"
 #include "runtime/dev.h"
@@ -54,11 +55,12 @@ uint64_t OperatorPreliminary::CalcWorkspaceSize(uint64_t statsCnt)
 
 std::string OperatorPreliminary::GetBinName() const
 {
-    auto it = BIN_NAME_MAP.find(setting_.GetPlatformType());
-    if (it != BIN_NAME_MAP.cend()) {
-        return it->second;
+    auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(setting_.GetPlatformType());
+    if (plat == nullptr) {
+        return "UNKNOW_FILENAME";
     }
-    return "UNKNOW_FILENAME";
+    std::string name = plat->GetKfcBinName();
+    return name.empty() ? "UNKNOW_FILENAME" : name;
 }
 
 int32_t OperatorPreliminary::GetStreamInfo()

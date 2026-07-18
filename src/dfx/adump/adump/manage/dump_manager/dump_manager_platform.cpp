@@ -9,22 +9,17 @@
  */
 #include "dump_manager.h"
 
-#include <vector>
 #include "log/adx_log.h"
-#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 
 namespace Adx {
 bool DumpManager::CheckCoredumpSupportedPlatform() const
 {
-    const std::vector<PlatformType> supportedType = {PlatformType::CHIP_CLOUD_V2, PlatformType::CHIP_CLOUD_V4};
-    uint32_t platformType = 0;
-    IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platformType), return false, "Get platform type failed.");
-
-    for (const auto &platform : supportedType) {
-        if (platformType == static_cast<uint32_t>(platform)) {
-            return true;
-        }
+    auto *plat = FeaturesSupportManager::Get();
+    if (plat == nullptr) {
+        IDE_LOGW("[DumpManager] Platform unavailable, coredump not supported.");
+        return false;
     }
-    return false;
+    return plat->FeatureIsSupport(AdumpPlatformFeature::FEATURE_CORE_DUMP);
 }
 }  // namespace Adx

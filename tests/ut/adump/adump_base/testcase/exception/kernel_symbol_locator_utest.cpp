@@ -17,6 +17,7 @@
 #include "securec.h"
 #include "mockcpp/mockcpp.hpp"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "adump_pub.h"
 #include "exception_info_common.h"
 #include "kernel_symbol_locator.h"
@@ -342,6 +343,7 @@ protected:
         g_mockElf.clear();
         KernelSymbolLocator::ClearCache();
         PcFixerFactory::instance_.reset();
+        Adx::ResetAllPlatformManagers();
     }
 
     void TearDown() override
@@ -349,6 +351,7 @@ protected:
         g_mockElf.clear();
         KernelSymbolLocator::ClearCache();
         PcFixerFactory::instance_.reset();
+        Adx::ResetAllPlatformManagers();
         GlobalMockObject::verify();
     }
 };

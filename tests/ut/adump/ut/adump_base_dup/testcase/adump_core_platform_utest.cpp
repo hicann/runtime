@@ -15,15 +15,17 @@
 #include "dump_core.h"
 #include "register_config.h"
 #include "adump_dsmi.h"
+#include "adump_platform_manager.h"
 #include "dump_common.h"
 
 using namespace Adx;
 
 class DupDumpCoreUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        ResetAllPlatformManagers();
         GlobalMockObject::verify();
     }
 };
@@ -34,6 +36,14 @@ TEST_F(DupDumpCoreUtest, Test_DumpRegisterNotSupport)
     uint32_t v4type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V4);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v4type)).will(returnValue(true));
     core.DumpRegister(0, 0);
+}
+
+TEST_F(DupDumpCoreUtest, Test_CloudLegacyExceptionSupport)
+{
+    auto plat = PlatformReflection<ExceptionDumpInterface>::CreatePlatform(PlatformType::CHIP_CLOUD_TYPE);
+    ASSERT_NE(plat, nullptr);
+    EXPECT_TRUE(plat->SupportMc2SpacesDump());
+    EXPECT_FALSE(plat->IsArgsDataTypeSizeByByte());
 }
 
 TEST_F(DupDumpCoreUtest, Test_DumpRegister)

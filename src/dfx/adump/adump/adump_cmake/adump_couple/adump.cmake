@@ -37,22 +37,17 @@ set(adumpSrcList
     ${ADUMP_ADUMP_DIR}/device/adx_dump_soc_api.cpp
 )
 
+# MODULE_EXT 由 build.sh --module_extension=<VALUE> 传入，非空时标识需隐藏的类产品。
 if(ENABLE_NPUF10 STREQUAL true OR
     PRODUCT STREQUAL "npuf10" OR
     PRODUCT STREQUAL "ascend310" OR
-    PRODUCT STREQUAL "as31xm1" OR
     PRODUCT STREQUAL "ascend035" OR
-    PRODUCT STREQUAL "ascend610" OR
-    PRODUCT STREQUAL "ascend610Lite" OR
-    PRODUCT STREQUAL "ascend610Liteesl" OR
-    PRODUCT STREQUAL "mc62cm12a" OR
-    PRODUCT STREQUAL "mc62cm12aesl" OR
-    PRODUCT STREQUAL "mc32dm11a")
-    list(APPEND adumpSrcList 
-        ${ADUMP_DIR}/adcore/common/thread_mdc.cpp
+    (DEFINED MODULE_EXT AND NOT (MODULE_EXT STREQUAL "")))
+    list(APPEND adumpSrcList
+        ${ADUMP_DIR}/adcore/common/thread_without_attr.cpp
     )
 else()
-    list(APPEND adumpSrcList 
+    list(APPEND adumpSrcList
         ${ADUMP_DIR}/adcore/common/thread_comm.cpp
     )
 endif()

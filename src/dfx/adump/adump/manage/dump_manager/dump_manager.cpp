@@ -18,6 +18,7 @@
 #include "str_utils.h"
 #include "lib_path.h"
 #include "file_utils.h"
+#include "adump_platform_manager.h"
 #include "log/adx_log.h"
 #include "runtime/context.h"
 #include "runtime/config.h"
@@ -386,11 +387,11 @@ int32_t DumpManager::UnSetDumpConfig()
 
 std::string DumpManager::GetBinName() const
 {
-    auto it = BIN_NAME_MAP.find(dumpSetting_.GetPlatformType());
-    if (it != BIN_NAME_MAP.cend()) {
-        return it->second;
+    auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(dumpSetting_.GetPlatformType());
+    if (plat == nullptr) {
+        return "";
     }
-    return "";
+    return plat->GetKfcBinName();
 }
 
 bool DumpManager::CheckBinValidation()

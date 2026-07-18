@@ -26,7 +26,7 @@ void *ThreadEntry(void *arg)
 }
 }
 
-class TinyMdcThreadUtest : public testing::Test {
+class TinyThreadWithoutAttrUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
     virtual void TearDown()
@@ -36,7 +36,7 @@ protected:
     }
 };
 
-TEST_F(TinyMdcThreadUtest, Test_CreateTask_Success)
+TEST_F(TinyThreadWithoutAttrUtest, Test_CreateTask_Success)
 {
     mmUserBlock_t funcBlock{};
     funcBlock.procFunc = ThreadEntry;
@@ -46,7 +46,7 @@ TEST_F(TinyMdcThreadUtest, Test_CreateTask_Success)
     EXPECT_EQ(Thread::CreateDetachTask(tid, funcBlock), 0);
 }
 
-TEST_F(TinyMdcThreadUtest, Test_CreateDetachTask_Failed)
+TEST_F(TinyThreadWithoutAttrUtest, Test_CreateDetachTask_Failed)
 {
     mmUserBlock_t funcBlock{};
     funcBlock.procFunc = ThreadEntry;

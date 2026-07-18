@@ -14,14 +14,16 @@
 #include "mockcpp/mockcpp.hpp"
 #include "operator_preliminary.h"
 #include "dump_setting.h"
+#include "adump_platform_manager.h"
 
 using namespace Adx;
 
 class OperatorPreliminaryPlatformUtest : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { Adx::ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
+        Adx::ResetAllPlatformManagers();
         GlobalMockObject::verify();
     }
 };

@@ -9,15 +9,10 @@
  */
 #include "adump_platform_api.h"
 #include "platform/platform_info.h"
+#include "adump_platform_manager.h"
 #include "adx_log.h"
 
 namespace Adx {
-static const std::map<PlatformType, bool> CHIP_CORE_MAP = {
-    {PlatformType::CHIP_DC_TYPE,  false},
-    {PlatformType::CHIP_CLOUD_V2, true},
-    {PlatformType::CHIP_CLOUD_V4, true}
-};
-
 inline bool GetPlatformInfo(const std::string socVersion, fe::PlatformInfo &platInfo, fe::OptionalInfo &optionalInfo)
 {
     IDE_CTRL_VALUE_FAILED(fe::PlatformInfoManager::GeInstance().InitializePlatformInfo() == 0U,
@@ -34,9 +29,10 @@ bool AdumpPlatformApi::GetUBSizeAndCoreNum(const std::string &socVersion, Platfo
     IDE_CTRL_VALUE_FAILED(GetPlatformInfo(socVersion, platInfo, optionalInfo), return false,
         "Failed to get ub size and core number.");
 
-    auto it = CHIP_CORE_MAP.find(platform);
-    IDE_CTRL_VALUE_FAILED(it != CHIP_CORE_MAP.cend(), return false, "Current chip type %d is not adapted.", platform);
-    if (it->second) {
+    auto plat = PlatformReflection<DataDumpInterface>::CreatePlatform(platform);
+    IDE_CTRL_VALUE_FAILED(plat != nullptr, return false, "Current chip type %u is not adapted.",
+        static_cast<uint32_t>(platform));
+    if (plat->IsUbFromAiCore()) {
         data.ubSize = platInfo.ai_core_spec.ub_size;
     } else {
         data.ubSize = platInfo.vector_core_spec.ub_size;
