@@ -41,8 +41,8 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/llc_event_utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/json/json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
+    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/driver/channel/ai_drv_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/msprof_drv_api.cpp
@@ -366,8 +366,8 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/common/json/json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
+    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_register.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_soc.cpp
@@ -555,5 +555,59 @@ target_link_libraries(msprof_utest PRIVATE
 set_target_properties(msprof_utest
     PROPERTIES
     OUTPUT_NAME msprof_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+####################### devprof_api_utest ###########################
+add_executable(devprof_api_utest
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
+    test/main.cpp
+    test/devprof_api_utest.cpp
+    ../stub/mmpa_stub.cpp
+    ../stub/sec_stub.cpp
+    ../stub/hdc-log-stub.cpp
+    ../stub/devdrv_runtime_api_stub.cpp
+)
+
+target_include_directories(devprof_api_utest PRIVATE
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/dfx/msprof/inc/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+    ${MSPROF_SOURCE_DIR}/dvvp/common/logger
+    ${MSPROF_SOURCE_DIR}/dvvp/common
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation
+    ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log
+    ${MSPROF_SOURCE_DIR}/dvvp/common/errno
+    ${MSPROF_SOURCE_DIR}/dvvp/common/singleton
+    ${MSPROF_SOURCE_DIR}/dvvp
+    ${MSPROF_SOURCE_DIR}/basic/osal
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
+)
+
+target_compile_options(devprof_api_utest PRIVATE
+    -g
+    -pipe
+    -fno-access-control
+)
+
+target_compile_definitions(devprof_api_utest PRIVATE
+    __PROF_LLT
+    google=ascend_private
+)
+
+target_link_libraries(devprof_api_utest PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
+)
+
+set_target_properties(devprof_api_utest
+    PROPERTIES
+    OUTPUT_NAME devprof_api_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

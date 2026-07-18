@@ -92,3 +92,44 @@ set_target_properties(stub_file_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+####################### c_base_msprof_err_mgr_utest ###########################
+add_executable(c_base_msprof_err_mgr_utest
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/c_base/msprof_error_manager.cpp
+    test/main.cpp
+    test/c_base_msprof_err_mgr_utest.cpp
+    stub/report_err_msg_stub.c
+)
+
+target_include_directories(c_base_msprof_err_mgr_utest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/stub
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/c_base
+    ${MSPROF_SOURCE_DIR}/dvvp/common/singleton
+    ${MSPROF_SOURCE_DIR}/dvvp/common
+    ${MSPROF_SOURCE_DIR}/dvvp
+    ${TOP_DIR}/src/dfx/msprof/inc/external
+    ${LIBC_SEC_HEADER}
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+)
+
+target_compile_options(c_base_msprof_err_mgr_utest PRIVATE
+    -g
+    -pipe
+    -fno-access-control
+)
+
+target_compile_definitions(c_base_msprof_err_mgr_utest PRIVATE
+    __PROF_LLT
+    google=ascend_private
+)
+
+target_link_libraries(c_base_msprof_err_mgr_utest PRIVATE
+    $<BUILD_INTERFACE:msprof_intf_llt_pub>
+    c_sec
+)
+
+set_target_properties(c_base_msprof_err_mgr_utest
+    PROPERTIES
+    OUTPUT_NAME c_base_msprof_err_mgr_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+

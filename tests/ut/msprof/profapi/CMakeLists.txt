@@ -115,3 +115,102 @@ set_target_properties(prof_api_utest
     OUTPUT_NAME prof_api_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+####################### prof_device_api_utest ###########################
+add_executable(prof_device_api_utest
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_device_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
+    test/main.cpp
+    test/prof_device_api_utest.cpp
+    ../stub/mmpa_stub.cpp
+    ../stub/sec_stub.cpp
+    ../stub/hdc-log-stub.cpp
+    ../stub/devdrv_runtime_api_stub.cpp
+)
+
+target_include_directories(prof_device_api_utest PRIVATE
+    ${libmsprofHeaderDir}
+    ${MSPROF_SOURCE_DIR}/dvvp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/logger
+    ${MSPROF_SOURCE_DIR}/dvvp/common
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation
+    ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log
+    ${MSPROF_SOURCE_DIR}/dvvp/common/errno
+    ${MSPROF_SOURCE_DIR}/basic/osal
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
+)
+
+target_compile_options(prof_device_api_utest PRIVATE
+    -g
+    -pipe
+    -fno-access-control
+)
+
+target_compile_definitions(prof_device_api_utest PRIVATE
+    __PROF_LLT
+    google=ascend_private
+)
+
+target_link_libraries(prof_device_api_utest PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
+)
+
+set_target_properties(prof_device_api_utest
+    PROPERTIES
+    OUTPUT_NAME prof_device_api_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+####################### prof_avp_api_utest ###########################
+add_executable(prof_avp_api_utest
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_avp_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_avp_inner_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
+    test/main.cpp
+    test/prof_avp_api_utest.cpp
+    ../stub/mmpa_stub.cpp
+    ../stub/sec_stub.cpp
+    ../stub/hdc-log-stub.cpp
+    ../stub/devdrv_runtime_api_stub.cpp
+)
+
+target_include_directories(prof_avp_api_utest PRIVATE
+    ${libmsprofHeaderDir}
+    ${MSPROF_SOURCE_DIR}/dvvp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/logger
+    ${MSPROF_SOURCE_DIR}/dvvp/common
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation
+    ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log
+    ${MSPROF_SOURCE_DIR}/dvvp/common/errno
+    ${MSPROF_SOURCE_DIR}/basic/osal
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
+)
+
+target_compile_options(prof_avp_api_utest PRIVATE
+    -g
+    -pipe
+    -fno-access-control
+)
+
+target_compile_definitions(prof_avp_api_utest PRIVATE
+    __PROF_LLT
+    google=ascend_private
+)
+
+target_link_libraries(prof_avp_api_utest PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
+)
+
+set_target_properties(prof_avp_api_utest
+    PROPERTIES
+    OUTPUT_NAME prof_avp_api_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

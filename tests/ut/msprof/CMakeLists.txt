@@ -18,6 +18,7 @@ target_include_directories(msprof_intf_llt_pub INTERFACE
 target_compile_definitions(msprof_intf_llt_pub INTERFACE
     CFG_BUILD_DEBUG
     _GLIBCXX_USE_CXX11_ABI=0
+    _GNU_SOURCE
 )
 target_compile_options(msprof_intf_llt_pub INTERFACE
     -g
@@ -83,6 +84,7 @@ add_subdirectory(profhal)
 add_subdirectory(streamio)
 add_subdirectory(stub_utest)
 add_subdirectory(transport)
+add_subdirectory(st/adda)
 add_subdirectory(st/cli)
 add_subdirectory(st/geoption)
 add_subdirectory(st/acljson)
@@ -91,6 +93,8 @@ add_subdirectory(st/api)
 ###################################################################################################
 
 set(MSPROF_TARGET_PART1
+    prof_c_utest
+    proftransport_ut_static
     acp_utest
     application_utest
     osal_linux_utest
@@ -108,6 +112,11 @@ set(MSPROF_TARGET_PART1
     streamio_common_utest
     stub_file_utest
     transport
+    adda_stest
+    c_base_msprof_err_mgr_utest
+    prof_device_api_utest
+    prof_avp_api_utest
+    devprof_api_utest
 )
 
 set(MSPROF_TARGET_PART2

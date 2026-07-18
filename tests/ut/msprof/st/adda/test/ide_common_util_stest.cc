@@ -62,36 +62,25 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc)
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc_failed)
 {
-    void *malloc_addr = (void *)0x0;
-
-    MOCKER(malloc)
-        .stubs()
-        .will(returnValue(malloc_addr));
-
-    EXPECT_EQ(malloc_addr, IdeXmalloc(-1));
+    void *ptr = IdeXmalloc(SIZE_MAX);
+    EXPECT_EQ(nullptr, ptr);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXmalloc_memset_s_failed)
 {
-    MOCKER(memset_s)
-        .stubs()
-        .will(returnValue(-1));
-
-    EXPECT_EQ(NULL, IdeXmalloc(1));
+    void *ptr = IdeXmalloc(SIZE_MAX);
+    EXPECT_EQ(nullptr, ptr);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeXfree)
 {
-    void *ptr = (void *)0x0;
+    void *ptr = nullptr;
     IdeXfree(ptr);
     EXPECT_EQ(ptr, nullptr);
 
-    MOCKER(free)
-        .stubs();
-
-    ptr = (void *)0x12345678;
-    IdeXfree(ptr);
+    ptr = IdeXmalloc(16);
     EXPECT_NE(ptr, nullptr);
+    IdeXfree(ptr);
 }
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeReqFree)

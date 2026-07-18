@@ -1,14 +1,12 @@
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
-# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(ADUMP_SOURCE_DIR ${TOP_DIR}/runtime/src/dfx/adump)
-set(MSPROF_SOURCE_DIR ${TOP_DIR}/abl/msprof/collector)
 
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/adda/impl/adx_dsmi.cpp
@@ -24,6 +22,7 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/hdc_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/memory_utils.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/msprof_drv_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
 )
 
@@ -40,6 +39,7 @@ set(localSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/test/ide_daemon_hdc_stest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/test/ide_daemon_stest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/test/ide_handle_stest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp
     ../stub/error_manager_stub.cpp
 )
 
@@ -52,16 +52,21 @@ target_include_directories(adda_stest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/stub
     ../stub
     ${MSPROF_SOURCE_DIR}/dvvp
+    ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/adda/impl
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log
     ${MSPROF_SOURCE_DIR}/dvvp/common/logger
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/common/thread
     ${MSPROF_SOURCE_DIR}/basic/osal
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
-    ${TOP_DIR}/inc/driver
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/src/dfx/adump/inc
+    ${TOP_DIR}/src/dfx/adump/inc/adump
+    ${TOP_DIR}/src/dfx/log/inc/toolchain
+    ${TOP_DIR}/src/dfx/error_manager
 )
 
 target_compile_definitions(adda_stest PRIVATE
@@ -70,27 +75,22 @@ target_compile_definitions(adda_stest PRIVATE
     CFG_BUILD_DEBUG
     IDE_DAEMON_DEVICE
     IDE_DAEMON_RC
-)
-
-target_link_libraries(adda_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    -Wl,--as-needed
-    -lpthread
-    c_sec
-    ascend_protobuf
+    google=ascend_private
 )
 
 target_compile_options(adda_stest PRIVATE
-    -Werror
+    -g
+    -pipe
+    -fno-access-control
 )
 
-target_link_options(adda_stest PRIVATE
+target_link_libraries(adda_stest PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
 )
 
-run_llt_test(
-    TARGET adda_stest
-    TASK_NUM 1
+set_target_properties(adda_stest
+    PROPERTIES
+    OUTPUT_NAME adda_stest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

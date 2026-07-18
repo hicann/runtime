@@ -14,6 +14,9 @@
 #include <stdlib.h>
 typedef u_int32_t uint32_t;
 typedef u_int64_t uint64_t;
- 
+
+#else
+/* Non-LITE_OS UT build needs the real getopt_long/struct option/optarg/optind. */
+#include_next <getopt.h>
 #endif
 #endif

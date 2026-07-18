@@ -7,22 +7,21 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "gtest/gtest.h"
+#ifndef ERROR_MANAGER_STUB_H
+#define ERROR_MANAGER_STUB_H
 
-#if defined(__GNUC__)
-extern "C" void __gcov_dump(void) __attribute__((weak));
-extern "C" void __gcov_exit(void) __attribute__((weak));
+#define REPORT_INNER_ERROR(error_code, fmt, ...)
+#define REPORT_CALL_ERROR(error_code, fmt, ...)
+#define REPORT_INPUT_ERROR(error_code, key, value)
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
-    int ret = RUN_ALL_TESTS();
-#if defined(__GNUC__)
-    if (__gcov_dump != nullptr) {
-        __gcov_dump();
-    } else if (__gcov_exit != nullptr) {
-        __gcov_exit();
-    }
-#endif
-    _exit(ret);
+void ReportErrMessage(const char *errorCode, char **keys, char **values, unsigned long argNum);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

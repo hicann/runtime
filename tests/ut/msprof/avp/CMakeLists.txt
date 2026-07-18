@@ -195,10 +195,7 @@ add_library(proftransport_ut_static STATIC
 
 target_include_directories(proftransport_ut_static PRIVATE
     ${proftransportInc}
-    ${TOP_DIR}/graphengine/inc
-    ${TOP_DIR}/graphengine/inc/framework
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
+    ${RUNTIME_DIR}/src/dfx/error_manager
     ${MSPROF_SOURCE_DIR}/dvvp/depend/c_base
 )
 
