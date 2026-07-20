@@ -15,6 +15,10 @@
 #include "dlog_unified_timer_api.h"
 #include "unified_timer_error_code.h"
 
+#ifndef UNIFIED_TIMER_NAME_DUPLICATE
+#define UNIFIED_TIMER_NAME_DUPLICATE UNIFILED_TIMER_NAME_DUPLICATE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -355,7 +359,7 @@ static void DlogAddSyncTask(void)
         return;
     }
     uint32_t ret = DlogAddUnifiedTimer(DLOG_SYNC_TIMER_NAME, DlogSyncUnifiedTimerCb, LOG_SYNC_PERIOD, ONESHOT_TIMER);
-    if ((ret != 0) && (ret != UNIFILED_TIMER_NAME_DUPLICATE)) {
+    if ((ret != 0) && (ret != UNIFIED_TIMER_NAME_DUPLICATE)) {
         SELF_LOG_ERROR("add unified timer failed, ret = %u, errno = %d, pid = %d, timerName = %s.",
             ret, ToolGetErrorCode(), ToolGetPid(), DLOG_SYNC_TIMER_NAME);
         (void)__sync_lock_test_and_set(&g_dlogAsyncMgr.syncFlag, false);

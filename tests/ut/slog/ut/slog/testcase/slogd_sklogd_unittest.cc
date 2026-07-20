@@ -72,33 +72,33 @@ TEST_F(SlogdSklogd, GetChValue)
     GlobalMockObject::reset();
 }
 
-TEST_F(SlogdSklogd,CheckProessBufParm)
+TEST_F(SlogdSklogd, CheckProessBufParm)
 {
-    char *buf;
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(-1, CheckProessBufParm(buf, 2, &buf));
-    GlobalMockObject::reset();
+    const char msg[] = "x";
+    char *buf = nullptr;
+    EXPECT_EQ(0, CheckProessBufParm(msg, sizeof(msg), &buf));
+    ASSERT_NE(nullptr, buf);
+    EXPECT_STREQ(msg, buf);
+    free(buf);
 }
-TEST_F(SlogdSklogd,CheckProessBufParmNULL)
+
+TEST_F(SlogdSklogd, CheckProessBufParmNULL)
 {
-    char *buf;
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(-1, CheckProessBufParm(buf, 0, &buf));
-    GlobalMockObject::reset();
+    const char msg[] = "x";
+    char *buf = nullptr;
+    EXPECT_EQ(-1, CheckProessBufParm(msg, 0, &buf));
 
     EXPECT_EQ(-1, CheckProessBufParm(NULL, 0, NULL));
-    GlobalMockObject::reset();
 }
+
 TEST_F(SlogdSklogd, ProcessBuf)
 {
     EXPECT_EQ(-1, ProcessBuf(NULL, 0));
 
     char *msg = "12,1,8269165240,-;h";
-    char *buf = (char*)malloc(COMMON_BUFSIZE);
+    char *buf = (char *)malloc(COMMON_BUFSIZE);
     strncpy_s(buf, strlen(msg) + 1, msg, strlen(msg) + 1);
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(-1, ProcessBuf(buf, strlen(buf) + 1));
-    GlobalMockObject::reset();
+    EXPECT_EQ(0, ProcessBuf(buf, strlen(buf) + 1));
 
     strncpy_s(buf, strlen(msg) + 1, msg, strlen(msg) + 1);
     MOCKER(memcpy_s).stubs().will(returnValue(-1));

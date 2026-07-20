@@ -24,7 +24,12 @@ set(logDaemonSrc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/file_monitor/file_slogdlog_monitor.c
     ${LOG_SOURCE_PATH}/syslog/log_daemon/file_monitor/file_device_app_monitor.c
     ${LOG_SOURCE_PATH}/syslog/log_daemon/server_mgr/server_mgr.c
-    # ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_get_file.cpp
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/config_cmd/hdclog_device_init.c
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_dsmi_drv.cpp
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_file_dump_c.cpp
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_file_utils.cpp
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_get_file.cpp
+    ${LOG_SOURCE_PATH}/syslog/log_daemon/file_dump/log_process_util.cpp
     ${LOG_SOURCE_PATH}/syslog/common/pm/log_pm.c
     ${LOG_SOURCE_PATH}/syslog/common/pm/log_monitor.c
     ${LOG_SOURCE_PATH}/syslog/common/pm/start_single_process.c
@@ -47,6 +52,7 @@ set(logDaemonSrc
     ${LOG_SOURCE_PATH}/utils/library_load.c
 
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/log_daemon_stub.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stub/log_daemon_cpp_stub.cc
     ${UT_SOURCE_PATH}/stub/self_log_stub.c
     ${UT_SOURCE_PATH}/stub/ascend_hal_stub.c
 
@@ -86,7 +92,14 @@ set(logDaemonInc
     ${TOP_DIR}/src/aicpu_sched/extern_include
     ${TOP_DIR}/src/dfx/adump/external
     ${TOP_DIR}/src/dfx/adump/inc/adump
+    ${TOP_DIR}/src/dfx/adump/adcore
+    ${TOP_DIR}/src/dfx/adump/adcore/commopts
+    ${TOP_DIR}/src/dfx/adump/adcore/common
+    ${TOP_DIR}/src/dfx/adump/adcore/component
+    ${TOP_DIR}/src/dfx/adump/adcore/hdc
+    ${TOP_DIR}/src/dfx/adump/adcore/protocol
     ${LOG_SOURCE_PATH}/shared
+    ${LOG_SOURCE_PATH}/inc/msnpureport
     ${LOG_SOURCE_PATH}/utils
     ${LOG_SOURCE_PATH}/syslog/common
     ${LOG_SOURCE_PATH}/syslog/common/pm

@@ -158,36 +158,12 @@ int32_t AdxServiceCleanup(int32_t serverType)
     return 0;
 }
 
-int32_t FileDumpInit(void)
-{
-    return 0;
-}
-
-int32_t FileDumpExit(void)
-{
-    return 0;
-}
-
 int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString srcPath, AdxString desPath,
     SendFileType flag)
 {
     return 0;
 }
 
-int32_t HdclogDeviceInit(void)
-{
-    return 0;
-}
-
-int32_t HdclogDeviceDestroy(void)
-{
-    return 0;
-}
-
-int32_t IdeDeviceLogProcess(const CommHandle *command, const void* value, uint32_t len)
-{
-    return 0;
-}
 static int g_cpuAlarmNum = 0;
 static int g_cpuStatNum = 0;
 static int g_memAlarmNum = 0;

@@ -259,6 +259,17 @@ TEST(EP_SYS_MONITOR_FUNC_UTEST, SysmonitorMemStat)
 }
 
 int32_t topPrintNum = 0;
+int32_t ToolReadFdInfoStub(int32_t fd, void *buf, uint32_t bufLen)
+{
+    (void)fd;
+    const char fdInfo[] = "1 0 100";
+    if ((buf == nullptr) || (bufLen < sizeof(fdInfo))) {
+        return -1;
+    }
+    (void)memcpy(buf, fdInfo, sizeof(fdInfo));
+    return sizeof(fdInfo) - 1;
+}
+
 char *fgetsStub(char *str, int n, FILE *stream)
 {
     (void)str;
@@ -287,6 +298,9 @@ char *strtokStub(char *str, const char *delim, char **context)
 
 TEST(EP_SYS_MONITOR_FUNC_UTEST, SysmonitorFdAlarm)
 {
+    MOCKER(ToolRead)
+        .stubs()
+        .will(invoke(ToolReadFdInfoStub));
     MOCKER(SysmonitorFdGetUsage)
         .stubs()
         .will(returnValue(99.0f));
@@ -303,10 +317,14 @@ TEST(EP_SYS_MONITOR_FUNC_UTEST, SysmonitorFdAlarm)
     EXPECT_EQ(1, LogGetFdAlarmNum());
     EXPECT_EQ(3, LogGetFdTopNum());
     LogClearPrintNum();
+    GlobalMockObject::verify();
 }
 
 TEST(EP_SYS_MONITOR_FUNC_UTEST, SysmonitorFdStat)
 {
+    MOCKER(ToolRead)
+        .stubs()
+        .will(invoke(ToolReadFdInfoStub));
     MOCKER(SysmonitorFdGetUsage)
         .stubs()
         .will(returnValue(99.0f));

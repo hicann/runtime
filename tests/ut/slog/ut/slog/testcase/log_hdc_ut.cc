@@ -16,15 +16,20 @@
 #include "log_session_manage.h"
 #include "log_common.h"
 #include "hdc_api.h"
+#undef private
+#undef protected
 
 using namespace Adx;
 static const std::string INSERT_MSG = "###[HDC_MSG]_DEVICE_FRAMEWORK_START_###";
 static const std::string DELETE_MSG = "###[HDC_MSG]_DEVICE_FRAMEWORK_END_###";
+static SessionNode *g_node = NULL;
 
 class ADX_LOG_HDC_TEST: public testing::Test {
 protected:
     virtual void SetUp() {}
     virtual void TearDown() {
+        free(g_node);
+        g_node = NULL;
         GlobalMockObject::verify();
     }
 };
@@ -41,7 +46,6 @@ TEST_F(ADX_LOG_HDC_TEST, UnInit)
     EXPECT_EQ(IDE_DAEMON_OK, LogHdc.UnInit());
 }
 
-SessionNode *g_node = NULL;
 static SessionNode* GetSessionNodeStub(uint32_t pid, uint32_t devId)
 {
     if(g_node == NULL){
@@ -58,6 +62,7 @@ static SessionNode* GetSessionNodeNullStub(uint32_t pid, uint32_t devId)
 static LogRt DeleteSessionNodeStub(uintptr_t session, int pid, int devId)
 {
     free(g_node);
+    g_node = NULL;
     return (LogRt)IDE_DAEMON_OK;
 }
 

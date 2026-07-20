@@ -11,6 +11,7 @@ add_subdirectory(slog)
 add_subdirectory(common)
 add_subdirectory(alog)
 add_subdirectory(ep)
+add_subdirectory(iam)
 add_subdirectory(rc)
 
 set(SLOG_UT_TARGETS
@@ -22,6 +23,11 @@ set(SLOG_UT_TARGETS
     ep_slogd_utest
     ep_slogd_milan_utest
     ep_stackcore_utest
+    iam_slog_utest
+    iam_slogd_utest
+    mergeslog_coverage_utest
+    log_proxy_coverage_utest
+    hardware_zip_coverage_utest
     rc_alog_utest
 )
 

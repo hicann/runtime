@@ -12,6 +12,7 @@
 #include "log_config_common.h"
 #include "log_config_block.h"
 #include "log_config_group.h"
+#include "log_config_list.h"
 #include "log_config_api.h"
 #include "slogd_config_mgr.h"
 #include "slogd_write_limit.h"
@@ -25,6 +26,7 @@
 #include "log_file_info.h"
 #include "log_session_manage.h"
 #include "slogd_dynamic_level.h"
+#include "log_level_parse.h"
 #include "operate_loglevel.h"
 #include "log_pm_sig.h"
 #include "msg_queue.h"
@@ -38,6 +40,50 @@
 #include <unistd.h>
 
 using namespace std;
+
+extern "C" {
+typedef struct {
+    int logType;
+    char appLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
+} AppWatchThreadArg;
+
+typedef struct {
+    int len;
+    char *data;
+} DynamicLevelFileDataBuf;
+
+typedef struct {
+    int32_t devId;
+    int32_t moduleNum;
+    char *globalLevel;
+    char *eventLevel;
+    char *moduleLevel;
+} DynamicGetLevelInfo;
+
+LogRt CheckAppDirIfExist(const char *appLogPath);
+int32_t AppLogDirFilter(const ToolDirent *dir);
+int32_t AppLogFileFilter(const ToolDirent *dir);
+int32_t RemoveDir(const char *dir);
+void RemoveAppLogDir(int logType, const char *dir);
+LogRt ScanAppLog(const char *path, int logType);
+void *AppLogWatcher(const ArgPtr arg);
+void CreateThread(void);
+extern AppWatchThreadArg g_args[LOG_TYPE_NUM];
+extern char g_rootLogPath[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U];
+
+LogRt ReadFileAll(const char *cfgFile, DynamicLevelFileDataBuf *dataBuf);
+LogRt WriteToSlogCfg(const char *cfgFile, DynamicLevelFileDataBuf fileBuf);
+LogRt SetSlogCfgLevel(const char *cfgFile, const char *cfgName, int level);
+void ToUpper(char *str);
+LogRt SetGlobalLogLevel(char *data, int32_t devId);
+LogRt SetModuleLogLevel(char *data, int32_t devId);
+LogRt SetEventLevelValue(char *data);
+LogRt SetLogLevelValue(LogCmdMsg data);
+int32_t ConstructModuleLevel(DynamicGetLevelInfo *level, const ConfList *listNode, bool isNewStyle);
+int32_t ConstructEventLevel(char *dst, const char *valueString);
+int32_t ConstructGlobalLevel(char *dst, const char *valueString, int32_t mask);
+int32_t FindLevelFunc(const Buff *node, ArgPtr arg, bool isNewStyle);
+}
 
 static const char *g_appSortBase = PATH_ROOT "/appsort";
 
@@ -91,6 +137,8 @@ class SLOGD_COVERAGE_UTEST : public testing::Test
 protected:
     virtual void SetUp()
     {
+        (void)memcpy_s(savedArgs_, sizeof(savedArgs_), g_args, sizeof(g_args));
+        (void)strcpy_s(savedRootPath_, sizeof(savedRootPath_), g_rootLogPath);
         ResetErrLog();
         system("rm -rf " PATH_ROOT "/*");
         system("mkdir -p " PATH_ROOT);
@@ -100,6 +148,8 @@ protected:
     virtual void TearDown()
     {
         EXPECT_EQ(0U, GetErrLogNum());
+        (void)memcpy_s(g_args, sizeof(g_args), savedArgs_, sizeof(savedArgs_));
+        (void)strcpy_s(g_rootLogPath, sizeof(g_rootLogPath), savedRootPath_);
         system("rm -rf " PATH_ROOT "/*");
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test case");
         GlobalMockObject::verify();
@@ -116,6 +166,10 @@ protected:
         system("rm -rf " PATH_ROOT);
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] End test suite");
     }
+
+private:
+    AppWatchThreadArg savedArgs_[LOG_TYPE_NUM] = {};
+    char savedRootPath_[CFG_LOGAGENT_PATH_MAX_LENGTH + 1U] = { 0 };
 };
 
 // ------------------------- log_config_common.c -------------------------
@@ -564,6 +618,207 @@ TEST_F(SLOGD_COVERAGE_UTEST, SlogdApplogSortFileFuncCoverage)
     pb = &db;
     EXPECT_EQ(1, SlogdApplogSortFileFunc(g_appSortBase, &pa, &pb));
 
+    ResetErrLog();
+}
+
+TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryValidationAndFilteringCoverage)
+{
+    EXPECT_EQ(ARGV_NULL, CheckAppDirIfExist(nullptr));
+    const char *watchPath = PATH_ROOT "/watch-debug";
+    EXPECT_EQ(SUCCESS, CheckAppDirIfExist(watchPath));
+    EXPECT_EQ(0, access(watchPath, F_OK));
+    EXPECT_EQ(SUCCESS, CheckAppDirIfExist(watchPath));
+
+    ToolDirent entry;
+    (void)memset_s(&entry, sizeof(entry), 0, sizeof(entry));
+    EXPECT_EQ(FILTER_NOK, AppLogDirFilter(nullptr));
+    EXPECT_EQ(FILTER_NOK, AppLogFileFilter(nullptr));
+    entry.d_type = DT_REG;
+    (void)strcpy_s(entry.d_name, sizeof(entry.d_name), "device-app-1");
+    EXPECT_EQ(FILTER_NOK, AppLogDirFilter(&entry));
+    EXPECT_EQ(FILTER_OK, AppLogFileFilter(&entry));
+    entry.d_type = DT_DIR;
+    EXPECT_EQ(FILTER_OK, AppLogDirFilter(&entry));
+    (void)strcpy_s(entry.d_name, sizeof(entry.d_name), "aos-core-app-1");
+    EXPECT_EQ(FILTER_OK, AppLogDirFilter(&entry));
+    EXPECT_EQ(FILTER_OK, AppLogFileFilter(&entry));
+    (void)strcpy_s(entry.d_name, sizeof(entry.d_name), "unrelated");
+    EXPECT_EQ(FILTER_NOK, AppLogDirFilter(&entry));
+    EXPECT_EQ(FILTER_NOK, AppLogFileFilter(&entry));
+}
+
+TEST_F(SLOGD_COVERAGE_UTEST, AppLogDirectoryRemovalAndScanCoverage)
+{
+    const char *watchPath = PATH_ROOT "/watch-remove";
+    ASSERT_EQ(0, mkdir(watchPath, 0750));
+    (void)strcpy_s(g_args[DEBUG_LOG].appLogPath, sizeof(g_args[DEBUG_LOG].appLogPath), watchPath);
+
+    EXPECT_EQ(SUCCESS, ScanAppLog(watchPath, DEBUG_LOG));
+    EXPECT_EQ(SCANDIR_DIR_FAILED, ScanAppLog(PATH_ROOT "/missing", DEBUG_LOG));
+    ResetErrLog();
+
+    for (int32_t i = 0; i < 3; i++) {
+        char dirName[128] = { 0 };
+        char fileName[160] = { 0 };
+        ASSERT_GT(snprintf_s(dirName, sizeof(dirName), sizeof(dirName) - 1,
+                             "%s/device-app-%d", watchPath, i), 0);
+        ASSERT_EQ(0, mkdir(dirName, 0750));
+        ASSERT_GT(snprintf_s(fileName, sizeof(fileName), sizeof(fileName) - 1,
+                             "%s/device-app-%d.log", dirName, i), 0);
+        int32_t fd = open(fileName, O_CREAT | O_WRONLY, 0600);
+        ASSERT_GE(fd, 0);
+        ASSERT_EQ(1, write(fd, "x", 1));
+        ASSERT_EQ(0, close(fd));
+    }
+    EXPECT_EQ(SUCCESS, ScanAppLog(watchPath, DEBUG_LOG));
+
+    const char *directDir = PATH_ROOT "/watch-direct";
+    ASSERT_EQ(0, mkdir(directDir, 0750));
+    char directFile[160] = { 0 };
+    ASSERT_GT(snprintf_s(directFile, sizeof(directFile), sizeof(directFile) - 1,
+                         "%s/device-app-direct.log", directDir), 0);
+    int32_t fd = open(directFile, O_CREAT | O_WRONLY, 0600);
+    ASSERT_GE(fd, 0);
+    ASSERT_EQ(0, close(fd));
+    EXPECT_EQ(SYS_OK, RemoveDir(directDir));
+    EXPECT_NE(0, access(directDir, F_OK));
+
+    RemoveAppLogDir(DEBUG_LOG, nullptr);
+    RemoveAppLogDir(DEBUG_LOG, "missing");
+}
+
+TEST_F(SLOGD_COVERAGE_UTEST, AppLogWatcherSetupAndExitCoverage)
+{
+    (void)strcpy_s(g_rootLogPath, sizeof(g_rootLogPath), PATH_ROOT);
+    MOCKER(ToolCreateTaskWithThreadAttr).stubs().will(returnValue(SYS_ERROR));
+    CreateThread();
+    ResetErrLog();
+
+    CreateAppLogWatchThread();
+    EXPECT_STREQ(PATH_ROOT "/debug", g_args[DEBUG_LOG].appLogPath);
+    EXPECT_STREQ(PATH_ROOT "/security", g_args[SECURITY_LOG].appLogPath);
+    EXPECT_STREQ(PATH_ROOT "/run", g_args[RUN_LOG].appLogPath);
+    ResetErrLog();
+
+    LogRecordSigNo(15);
+    EXPECT_EQ(nullptr, AppLogWatcher(g_args));
+    LogRecordSigNo(0);
+    ResetErrLog();
+}
+
+TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelFileReadAndUpdateCoverage)
+{
+    DynamicLevelFileDataBuf data = { 0, nullptr };
+    EXPECT_EQ(ARGV_NULL, ReadFileAll(nullptr, &data));
+    EXPECT_EQ(ARGV_NULL, ReadFileAll(SLOG_CONF_FILE_PATH, nullptr));
+    EXPECT_EQ(GET_CONF_FILEPATH_FAILED, ReadFileAll(PATH_ROOT "/missing.conf", &data));
+
+    const char *invalidPath = PATH_ROOT "/dynamic.txt";
+    FILE *fp = fopen(invalidPath, "w");
+    ASSERT_NE(nullptr, fp);
+    ASSERT_GT(fputs("invalid", fp), 0);
+    ASSERT_EQ(0, fclose(fp));
+    EXPECT_EQ(CONF_FILEPATH_INVALID, ReadFileAll(invalidPath, &data));
+
+    const char *emptyPath = PATH_ROOT "/empty.conf";
+    fp = fopen(emptyPath, "w");
+    ASSERT_NE(nullptr, fp);
+    ASSERT_EQ(0, fclose(fp));
+    EXPECT_EQ(READ_FILE_ERR, ReadFileAll(emptyPath, &data));
+
+    const char *configPath = PATH_ROOT "/dynamic.conf";
+    fp = fopen(configPath, "w");
+    ASSERT_NE(nullptr, fp);
+    ASSERT_GT(fputs("# dynamic coverage\nglobal_level=3 # keep\nSLOG=2\n", fp), 0);
+    ASSERT_EQ(0, fclose(fp));
+    ASSERT_EQ(SUCCESS, ReadFileAll(configPath, &data));
+    ASSERT_NE(nullptr, data.data);
+    EXPECT_NE(nullptr, strstr(data.data, "global_level=3"));
+    free(data.data);
+    data = { 4, const_cast<char *>("noop") };
+    EXPECT_EQ(SUCCESS, WriteToSlogCfg(configPath, data));
+
+    fp = fopen(configPath, "w");
+    ASSERT_NE(nullptr, fp);
+    ASSERT_GT(fputs("# dynamic coverage\nglobal_level=3 # keep\nSLOG=2\n", fp), 0);
+    ASSERT_EQ(0, fclose(fp));
+    EXPECT_EQ(ARGV_NULL, SetSlogCfgLevel(nullptr, "global_level", DLOG_INFO));
+    EXPECT_EQ(ARGV_NULL, SetSlogCfgLevel(configPath, nullptr, DLOG_INFO));
+    EXPECT_EQ(INPUT_INVALID, SetSlogCfgLevel(configPath, "", DLOG_INFO));
+    EXPECT_EQ(SUCCESS, SetSlogCfgLevel(configPath, "not_present", DLOG_INFO));
+    EXPECT_EQ(SUCCESS, SetSlogCfgLevel(configPath, "global_level", DLOG_INFO));
+    ResetErrLog();
+}
+
+TEST_F(SLOGD_COVERAGE_UTEST, DynamicLevelCommandAndFormattingCoverage)
+{
+    ToUpper(nullptr);
+    char mixed[] = "sLoG";
+    ToUpper(mixed);
+    EXPECT_STREQ("SLOG", mixed);
+
+    EXPECT_EQ(ARGV_NULL, SetGlobalLogLevel(nullptr, 0));
+    char globalNoOpen[] = "info]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetGlobalLogLevel(globalNoOpen, 0));
+    char globalNoClose[] = "[info";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetGlobalLogLevel(globalNoClose, 0));
+    char globalInvalid[] = "[invalid]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetGlobalLogLevel(globalInvalid, 0));
+
+    EXPECT_EQ(ARGV_NULL, SetModuleLogLevel(nullptr, 0));
+    char moduleNoBrackets[] = "SLOG:info";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetModuleLogLevel(moduleNoBrackets, 0));
+    char moduleNoColon[] = "[SLOG]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetModuleLogLevel(moduleNoColon, 0));
+    char moduleUnknown[] = "[UNKNOWN:info]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetModuleLogLevel(moduleUnknown, 0));
+    char moduleBadLevel[] = "[SLOG:invalid]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetModuleLogLevel(moduleBadLevel, 0));
+
+    EXPECT_EQ(ARGV_NULL, SetEventLevelValue(nullptr));
+    char eventNoOpen[] = "enable]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetEventLevelValue(eventNoOpen));
+    char eventNoClose[] = "[enable";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetEventLevelValue(eventNoClose));
+    char eventInvalid[] = "[invalid]";
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetEventLevelValue(eventInvalid));
+
+    LogCmdMsg command = {};
+    (void)strcpy_s(command.msgData, sizeof(command.msgData), "invalid");
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetLogLevelValue(command));
+    (void)strcpy_s(command.msgData, sizeof(command.msgData), "SetLogLevelX");
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetLogLevelValue(command));
+    (void)strcpy_s(command.msgData, sizeof(command.msgData), "SetLogLevel(9)[info]");
+    EXPECT_EQ(LEVEL_INFO_ILLEGAL, SetLogLevelValue(command));
+
+    char globalLevel[GLOBAL_ENABLE_MAX_LEN] = { 0 };
+    char eventLevel[GLOBAL_ENABLE_MAX_LEN] = { 0 };
+    char moduleLevel[INVLID_MOUDLE_ID * SINGLE_MODULE_MAX_LEN] = { 0 };
+    DynamicGetLevelInfo level = { 0, 0, globalLevel, eventLevel, moduleLevel };
+    ConfList node = {};
+    (void)strcpy_s(node.confName, sizeof(node.confName), "SLOG");
+    (void)strcpy_s(node.confValue, sizeof(node.confValue), "2");
+    EXPECT_EQ(SYS_ERROR, ConstructModuleLevel(nullptr, &node, false));
+    EXPECT_EQ(SYS_ERROR, ConstructModuleLevel(&level, nullptr, false));
+    EXPECT_EQ(SYS_OK, ConstructModuleLevel(&level, &node, false));
+    EXPECT_NE(nullptr, strstr(moduleLevel, "SLOG:"));
+
+    EXPECT_EQ(SYS_ERROR, ConstructEventLevel(nullptr, "1"));
+    EXPECT_EQ(SYS_OK, ConstructEventLevel(eventLevel, "0"));
+    EXPECT_STREQ(EVENT_DISABLE, eventLevel);
+    EXPECT_EQ(SYS_OK, ConstructEventLevel(eventLevel, "invalid"));
+    EXPECT_STREQ(EVENT_ENABLE, eventLevel);
+
+    EXPECT_EQ(SYS_ERROR, ConstructGlobalLevel(nullptr, "1", DEBUG_LOG_MASK));
+    EXPECT_EQ(SYS_OK, ConstructGlobalLevel(globalLevel, "invalid", DEBUG_LOG_MASK));
+    EXPECT_STREQ("ERROR", globalLevel);
+    EXPECT_EQ(SYS_OK, ConstructGlobalLevel(globalLevel, "invalid", RUN_LOG_MASK));
+    EXPECT_STREQ("INFO", globalLevel);
+    EXPECT_EQ(SYS_OK, ConstructGlobalLevel(globalLevel, "3", SLOGD_GLOBAL_TYPE_MASK));
+    EXPECT_STREQ("ERROR", globalLevel);
+
+    EXPECT_EQ(SYS_ERROR, FindLevelFunc(nullptr, &level, false));
+    EXPECT_EQ(SYS_ERROR, FindLevelFunc(reinterpret_cast<const Buff *>(&node), nullptr, false));
     ResetErrLog();
 }
 

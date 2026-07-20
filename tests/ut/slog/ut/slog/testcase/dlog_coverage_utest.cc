@@ -33,6 +33,7 @@ extern "C" {
 #include "log_common.h"
 #include "log_file_info.h"
 #include "log_error_code.h"
+#include "slogd_collect_log.h"
 }
 
 /* controllable hooks exported by slogd_utest_stub.c */
@@ -734,4 +735,9 @@ TEST_F(DlogLevelShmUtest, WatcherThreadRunsAndExitsWhenNotifyUnavailable)
     (void)usleep(200000);
     SetToolCreateThread(0);
     EXPECT_TRUE(true);
+}
+
+TEST(SlogdCollectCoverageUtest, DisabledCollectAcceptsInput)
+{
+    EXPECT_TRUE(SlogdCheckCollectValid(nullptr, 0));
 }

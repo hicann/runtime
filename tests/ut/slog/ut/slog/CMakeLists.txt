@@ -25,7 +25,7 @@ set(slogSrc
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_shm.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_mgr.c
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_env.c
-    # ${LOG_SOURCE_PATH}/syslog/sklog/klogd.c
+    ${LOG_SOURCE_PATH}/syslog/sklog/klogd.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/level_mgr/operate_loglevel.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/level_mgr/slogd_dynamic_level.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/level_mgr/slogd_firmware_level.c
@@ -38,7 +38,7 @@ set(slogSrc
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_pre_process/log_communication/slogd_communication_socket.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/slogd_flush.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/buffer_mgr/slogd_buffer.c
-    # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_pre_process/cmd_process/slogd_collect_log.c
+    ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_pre_process/cmd_process/slogd_collect_log.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/file_mgr/slogd_compress.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/sys_log/slogd_syslog.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/sys_log/slogd_kernel_log.c
@@ -59,10 +59,10 @@ set(slogSrc
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/firmware_log/slogd_firmware_log.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/firmware_log/log_recv.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/firmware_log/log_recv_interface.c
-    # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/session_mgr/log_hdc_server.cpp
+    ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/session_mgr/log_hdc_server.cpp
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/sys_get/log_sys_get.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/sys_report/log_sys_report.c
-    # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/app_report/log_hdc.cpp
+    ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_post_process/app_report/log_hdc.cpp
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_classify/group_log/slogd_group_log.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/file_mgr/log_to_file.c
     # ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_mgr/file_mgr/slogd_write_limit.c
@@ -97,7 +97,7 @@ set(slogSrc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_share_mem_unittest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_log_monitor_unittest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_msg_queue_unittest.cc
-    # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_sklogd_unittest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_sklogd_unittest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_log_common_util.cc
     # # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_set_loglevel_unittest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/slogd_common_unittest.cc
@@ -110,8 +110,8 @@ set(slogSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/plog_callback_utest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/dlog_coverage_utest.cc
     # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_buffer_utest.cc
-    # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_server_ut.cc
-    # ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_ut.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_server_ut.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/log_hdc_ut.cc
 )
 
 set(slogInc

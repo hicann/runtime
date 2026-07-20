@@ -472,6 +472,56 @@ int32_t AdxRegisterService(int32_t serverType, ComponentType componentType, AdxC
     return 0;
 }
 
+int32_t SysGetInit(void)
+{
+    return 0;
+}
+
+int32_t SysGetDestroy(void)
+{
+    return 0;
+}
+
+int32_t SysGetProcess(const CommHandle *handle, const void *value, uint32_t len)
+{
+    return 0;
+}
+
+int32_t SysReportInit(void)
+{
+    return 0;
+}
+
+int32_t SysReportDestroy(void)
+{
+    return 0;
+}
+
+int32_t SysReportProcess(const CommHandle *handle, const void *value, uint32_t len)
+{
+    return 0;
+}
+
+LogRt InsertSessionNode(uintptr_t session, int32_t pid, int32_t devId)
+{
+    return SYS_OK;
+}
+
+SessionNode *GetSessionNode(uint32_t pid, uint32_t devId)
+{
+    return NULL;
+}
+
+bool IsSessionNodeListNull(void)
+{
+    return true;
+}
+
+LogRt DeleteSessionNode(uintptr_t session, int32_t pid, int32_t devId)
+{
+    return SYS_OK;
+}
+
 int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *value)
 {
     *value = 0;
