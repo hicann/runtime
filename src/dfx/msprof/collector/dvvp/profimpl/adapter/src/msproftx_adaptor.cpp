@@ -140,6 +140,8 @@ extern "C" int32_t ProfAclRangeStart(VOID_PTR stamp, uint32_t *rangeId)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
+        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofRangeStart"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     if (stamp == nullptr) {
@@ -156,6 +158,8 @@ extern "C" int32_t ProfAclRangeStop(uint32_t rangeId)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
+        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofRangeStop"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     return Msprof::MsprofTx::MsprofTxManager::instance()->RangeStop(rangeId);

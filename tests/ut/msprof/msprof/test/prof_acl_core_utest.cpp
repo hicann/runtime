@@ -5046,7 +5046,9 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStart) {
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
         .stubs()
         .will(returnValue(true));
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofRangeStart((void *)0x12345678, &rangeId));
+    EXPECT_EQ("EK0004", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStop) {
@@ -5066,7 +5068,9 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStop) {
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
         .stubs()
         .will(returnValue(true));
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofRangeStop(0));
+    EXPECT_EQ("EK0004", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangePushEx) {
@@ -5110,6 +5114,23 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, RangeStop) {
     MOCKER_CPP(&ProfStampPool::GetStampById).stubs().will(returnValue(ptr));
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(PROFILING_FAILED, Msprof::MsprofTx::MsprofTxManager::instance()->RangeStop(1));
+    EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
+}
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerRangeReportsApiSequenceErrorWhenNotInitialized)
+{
+    GlobalMockObject::verify();
+    auto manager = Msprof::MsprofTx::MsprofTxManager::instance();
+    manager->isInit_ = false;
+    MsprofStampInstance validStamp = {};
+    uint32_t rangeId = 0;
+
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(PROFILING_FAILED, manager->RangeStart(&validStamp, &rangeId));
+    EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
+
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(PROFILING_FAILED, manager->RangeStop(rangeId));
     EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 

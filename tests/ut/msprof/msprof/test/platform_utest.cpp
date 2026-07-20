@@ -271,6 +271,22 @@ TEST_F(PLATFORM_UTEST, CheckAclJsonConfigInvalidReportsConfigErrorForInvalidAicp
     EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
+TEST_F(PLATFORM_UTEST, CheckAclJsonConfigInvalidReportsConfigErrorForNumericAicpu)
+{
+    NanoJson::Json jsonCfg;
+    jsonCfg["switch"] = "on";
+    jsonCfg["output"] = "prof_path";
+    jsonCfg["aicpu"] = 123;
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
+        .stubs()
+        .will(returnValue(true));
+
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        Msprofiler::Api::ProfAclMgr::instance()->CheckAclJsonConfigInvalid(jsonCfg));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+}
+
 TEST_F(PLATFORM_UTEST, CheckGeOptionConfigInvalidReportsInvalidArgumentForInvalidAicpu)
 {
     NanoJson::Json jsonCfg;
@@ -278,6 +294,23 @@ TEST_F(PLATFORM_UTEST, CheckGeOptionConfigInvalidReportsInvalidArgumentForInvali
     jsonCfg["training_trace"] = "on";
     jsonCfg["task_trace"] = "on";
     jsonCfg["aicpu"] = "test";
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
+        .stubs()
+        .will(returnValue(true));
+
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        Msprofiler::Api::ProfAclMgr::instance()->CheckGeOptionConfigInvalid(jsonCfg));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+}
+
+TEST_F(PLATFORM_UTEST, CheckGeOptionConfigInvalidReportsInvalidArgumentForNumericAicpu)
+{
+    NanoJson::Json jsonCfg;
+    jsonCfg["output"] = "prof_path";
+    jsonCfg["training_trace"] = "on";
+    jsonCfg["task_trace"] = "on";
+    jsonCfg["aicpu"] = 123;
     MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
         .stubs()
         .will(returnValue(true));

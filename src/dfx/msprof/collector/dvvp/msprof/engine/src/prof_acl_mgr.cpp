@@ -15,6 +15,7 @@
 #include <csignal>
 #include <cstring>
 #include <memory>
+#include <set>
 #include "osal.h"
 #include "config/config.h"
 #include "config_manager.h"
@@ -195,6 +196,24 @@ void ReportOutputPathInvalidError(const std::string &output)
     std::string reason = "Output path contains invalid character";
     MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
         std::vector<std::string>({output, "output", reason}));
+}
+
+bool JsonConfigRequiresString(const std::string &config)
+{
+    static const std::set<std::string> stringConfigs = {
+        "switch", "aic_metrics", "aicpu", "l2", "hccl", "msproftx", "instr_profiling", "task_tsfw",
+        "ascendcl", "task_trace", "task_time", "runtime_api", "ge_api", "task_memory", "llc_profiling",
+        "host_sys", "host_sys_usage", "sys_mem_serviceflow", "training_trace", "task_block"
+    };
+    return stringConfigs.find(config) != stringConfigs.end();
+}
+
+bool JsonConfigTypeIsValid(const NanoJson::JsonValue &value, const std::string &config)
+{
+    if (JsonConfigRequiresString(config)) {
+        return value.type == NanoJson::JsonValueType::STRING;
+    }
+    return true;
 }
 
 const uint32_t ACL_CFG_LEN_MAX = 1024 * 1024;  // max input cfg len is 1024 * 1024
@@ -1936,6 +1955,12 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json &acljsonCfg) 
             iter->first == "instr_profiling_freq" || iter->first == "optype") {
             continue;
         } else {
+            if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
+                std::string reason = GetJsonConfigInvalidReason(iter->first);
+                MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
+                    std::vector<std::string>({iter->second(), iter->first, reason}));
+                return MSPROF_ERROR_CONFIG_INVALID;
+            }
             if (!ProfParamsAdapter::instance()->CheckJsonConfig(iter->first, iter->second)) {
                 std::string reason = GetJsonConfigInvalidReason(iter->first);
                 MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
@@ -2187,6 +2212,12 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json &geoptionCfg
             iter->first == "instr_profiling_freq" || iter->first == "optype") {
             continue;
         } else {
+            if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
+                MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+                    std::vector<std::string>({iter->second(), iter->first,
+                        GetJsonConfigInvalidReason(iter->first)}));
+                return MSPROF_ERROR_CONFIG_INVALID;
+            }
             if (!ProfParamsAdapter::instance()->CheckJsonConfig(iter->first, iter->second)) {
                 MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
                     std::vector<std::string>({iter->second(), iter->first,

@@ -305,6 +305,8 @@ int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t *rangeId) con
 {
     if (!isInit_) {
         MSPROF_LOGE("[RangeStart]MsprofTxManager is not inited yet");
+        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+            std::vector<std::string>({"aclprofStart", "aclprofRangeStart"}));
         return PROFILING_FAILED;
     }
     if (stamp == nullptr) {
@@ -331,6 +333,8 @@ int32_t MsprofTxManager::RangeStop(uint32_t rangeId) const
 {
     if (!isInit_) {
         MSPROF_LOGE("[RangeStop]MsprofTxManager is not inited yet");
+        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+            std::vector<std::string>({"aclprofStart", "aclprofRangeStop"}));
         return PROFILING_FAILED;
     }
     auto stamp = stampPool_->GetStampById(rangeId);
@@ -350,6 +354,7 @@ int32_t MsprofTxManager::ReportStampData(MsprofStampInstance *stamp) const
     stamp->txInfo.value.stampInfo.threadId = static_cast<uint32_t>(OsalGetTid());
     if (reporter_->Report(stamp->txInfo) != MSPROF_ERROR_NONE) {
         MSPROF_LOGE("[ReportStampData] report profiling data failed.");
+        MSPROF_INNER_ERROR("EK9999", "Failed to report msproftx stamp data.");
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
