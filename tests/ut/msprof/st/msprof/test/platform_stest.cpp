@@ -12,9 +12,11 @@
 #include <iostream>
 #include "errno/error_code.h"
 #include "platform/platform.h"
+#include "david_v121_platform.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace analysis::dvvp::common::error;
+using namespace Dvvp::Collect::Platform;
 
 class PLATFORM_STEST: public testing::Test {
 protected:
@@ -50,4 +52,14 @@ TEST_F(PLATFORM_STEST, GetPlatform) {
     auto platform = std::make_shared<Platform>();
 
     EXPECT_EQ(SysPlatformType::INVALID, platform->GetPlatform());
+}
+
+TEST_F(PLATFORM_STEST, DavidV121PlatformL2CacheMetrics) {
+    GlobalMockObject::verify();
+    DavidV121Platform platform;
+    std::string aicEvent;
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform.GetL2CacheEvents());
 }

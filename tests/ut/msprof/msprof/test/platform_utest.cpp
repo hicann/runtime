@@ -429,8 +429,8 @@ TEST_F(PLATFORM_UTEST, L2CacheAdaptorSkipsSmmuDfxForUnsupportedPlatform)
     std::string npuEvents;
     platform->L2CacheAdaptor(npuEvents, l2Switch, l2Events);
 
-    EXPECT_EQ("0x00,0x88,0x89,0x8A,0x74,0x75,0x97", l2Events);
-    EXPECT_EQ("HA:0x00,0x88,0x89,0x8A,0x74,0x75,0x97;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", l2Events);
+    EXPECT_EQ("HA:0x00,0x81,0x82,0x83,0x74,0x75;SMMU:0x2,0x8a,0x8b,0x8c,0x8d",
         npuEvents);
     EXPECT_EQ(std::string::npos, npuEvents.find("SMMU_DFX:"));
     EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
@@ -502,6 +502,27 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
     std::string aicEvent;
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
     EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+}
+
+TEST_F(PLATFORM_UTEST, DavidV121PlatformL2CacheMetrics) {
+    GlobalMockObject::verify();
+    DavidV121Platform platform;
+    std::string aicEvent;
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform.GetL2CacheEvents());
+}
+
+TEST_F(PLATFORM_UTEST, DavidV121PlatformReflectionL2CacheMetrics) {
+    GlobalMockObject::verify();
+    auto platform = PlatformReflection::CreatePlatformClass(CHIP_CLOUD_V4);
+    ASSERT_NE(nullptr, platform);
+
+    std::string aicEvent;
+    EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform->GetL2CacheEvents());
 }
 
 TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask) {
