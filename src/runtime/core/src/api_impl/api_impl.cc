@@ -8930,6 +8930,52 @@ rtError_t ApiImpl::BinarySetExceptionCallback(Program *binHandle, void *callback
     return OpTaskFailCallbackReg(binHandle, callback, userData);
 }
 
+static rtError_t GetAicpuFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle)
+{
+    const rtFuncHandle rawFuncHandle = info->expandInfo.u.aicpuInfo.funcHandle;
+    if (rawFuncHandle == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Get func handle from AICPU exception info failed, funcHandle is nullptr.");
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    Kernel *kernelTmp = nullptr;
+    const rtError_t handleRet = GetValidatedObject<Kernel>(rawFuncHandle, kernelTmp);
+    ERROR_RETURN(handleRet, "Get kernel from AICPU exception info failed, ret=%#x", handleRet);
+    *funcHandle = kernelTmp;
+    return RT_ERROR_NONE;
+}
+
+static std::string GetAdjustedMixKernelName(const char_t *kernelName)
+{
+    std::string adjustedName(kernelName);
+    const std::string mixAicName = "_mix_aic";
+    const std::string mixAivName = "_mix_aiv";
+    const auto aicPos = adjustedName.rfind(mixAicName);
+    if (aicPos != std::string::npos) {
+        (void)adjustedName.erase(aicPos, mixAicName.length());
+    }
+    const auto aivPos = adjustedName.rfind(mixAivName);
+    if (aivPos != std::string::npos) {
+        (void)adjustedName.erase(aivPos, mixAivName.length());
+    }
+    return adjustedName;
+}
+
+static rtError_t BinaryGetFunctionByExceptionKernelName(Program *binHandle, const char_t *kernelName,
+    Kernel ** const funcHandle)
+{
+    rtError_t error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, funcHandle);
+    if (error != RT_ERROR_KERNEL_NULL) {
+        return error;
+    }
+
+    const std::string adjustedName = GetAdjustedMixKernelName(kernelName);
+    if (adjustedName.compare(kernelName) != 0) {
+        error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, adjustedName.c_str(), funcHandle);
+    }
+    return error;
+}
+
 rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle)
 {
     Kernel *kernelTmp = nullptr;
@@ -8937,7 +8983,10 @@ rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info,
     rtBinHandle rawBinHandle = nullptr;
     Program *binHandle = nullptr;
     const char_t *kernelName = nullptr;
-    rtError_t error;
+
+    if (info->expandInfo.type == RT_EXCEPTION_AICPU) {
+        return GetAicpuFuncHandleFromExceptionInfo(info, funcHandle);
+    }
 
     if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
         rawBinHandle = info->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin;
@@ -8955,27 +9004,7 @@ rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info,
     const rtError_t handleRet = GetValidatedObject<Program>(rawBinHandle, binHandle);
     ERROR_RETURN(handleRet, "Get program from bin handle failed, ret=%#x", handleRet);
 
-    error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kernelTmp);
-    // mix kernel retry, remove mix_aic or mix_aiv from kernel name
-    if (error == RT_ERROR_KERNEL_NULL) {
-        std::string originalName(kernelName);
-        std::string adjustedName(kernelName);
-        const std::string mixAicName = "_mix_aic";
-        const std::string mixAivName = "_mix_aiv";
-        const auto aicPos = adjustedName.rfind(mixAicName);
-        if (aicPos != std::string::npos) {
-            (void)adjustedName.erase(aicPos, mixAicName.length());
-        }
-        const auto aivPos = adjustedName.rfind(mixAivName);
-        if (aivPos != std::string::npos) {
-            (void)adjustedName.erase(aivPos, mixAivName.length());
-        }
-
-        if (adjustedName.compare(originalName) != 0) {
-            error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, adjustedName.c_str(), &kernelTmp);
-        }
-    }
-
+    const rtError_t error = BinaryGetFunctionByExceptionKernelName(binHandle, kernelName, &kernelTmp);
     ERROR_RETURN(error, "Get func handle from exception info failed, ret=%#x", error);
     RT_LOG(RT_LOG_INFO, "Get func handle from exception info success, binHandle=%p, binHandle_id=%u, kernelName=%p",
         binHandle, binHandle->Id_(), kernelName);

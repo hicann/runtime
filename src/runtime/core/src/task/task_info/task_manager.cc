@@ -26,7 +26,12 @@
 #include "error_code.h"
 #include "stub_task.hpp"
 #include "capture_model.hpp"
+#include "api.hpp"
+#include <algorithm>
+#include <cstring>
+#include <limits>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace cce {
@@ -644,6 +649,186 @@ void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t *argsInfo)
     return;
 }
 
+static bool IsAicpuKernelHandleValid(const AicpuTaskInfo * const aicpuTaskInfo)
+{
+    if ((aicpuTaskInfo == nullptr) || (aicpuTaskInfo->kernel == nullptr)) {
+        return false;
+    }
+    const rtInnerObject * const innerObject = aicpuTaskInfo->kernelInnerHandle;
+    return ((innerObject != nullptr) && (innerObject->magic.load() == RT_KERNEL_MAGIC));
+}
+
+static bool GetAicpuExceptionNameCopySize(const AicpuTaskInfo * const aicpuTaskInfo, const void * const nameAddr,
+    size_t &copySize)
+{
+    if ((aicpuTaskInfo == nullptr) || (aicpuTaskInfo->comm.args == nullptr) ||
+        (aicpuTaskInfo->comm.argsSize == 0U) || (nameAddr == nullptr)) {
+        return false;
+    }
+
+    const uintptr_t argsBegin = reinterpret_cast<uintptr_t>(aicpuTaskInfo->comm.args);
+    const uintptr_t argsSize = static_cast<uintptr_t>(aicpuTaskInfo->comm.argsSize);
+    if (argsBegin > (std::numeric_limits<uintptr_t>::max() - argsSize)) {
+        return false;
+    }
+
+    const uintptr_t argsEnd = argsBegin + argsSize;
+    const uintptr_t nameBegin = reinterpret_cast<uintptr_t>(nameAddr);
+    if ((nameBegin < argsBegin) || (nameBegin >= argsEnd)) {
+        return false;
+    }
+
+    copySize = static_cast<size_t>(std::min(argsEnd - nameBegin,
+        static_cast<uintptr_t>(KERNEL_INFO_ENTRY_SIZE)));
+    return copySize > 0U;
+}
+
+static void CopyAicpuExceptionNameFromArgs(TaskInfo * const taskInfo, const void * const nameAddr,
+    std::string &name)
+{
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
+    size_t copySize = 0U;
+    if (!GetAicpuExceptionNameCopySize(aicpuTaskInfo, nameAddr, copySize)) {
+        return;
+    }
+
+    char_t nameBuffer[KERNEL_INFO_ENTRY_SIZE] = {};
+    Driver * const driver = taskInfo->stream->Device_()->Driver_();
+    if (driver == nullptr) {
+        return;
+    }
+    const rtError_t error = driver->MemCopySync(nameBuffer, copySize, nameAddr, copySize,
+        RT_MEMCPY_DEVICE_TO_HOST);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "Copy AICPU exception name failed, nameAddr=%p, retCode=%#x.", nameAddr, error);
+        return;
+    }
+
+    const char_t * const nameEnd = static_cast<const char_t *>(std::memchr(nameBuffer, '\0', copySize));
+    if (nameEnd == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "Get AICPU exception name failed, string is not null-terminated.");
+        return;
+    }
+    name.assign(nameBuffer, static_cast<size_t>(nameEnd - nameBuffer));
+}
+
+static void GetAicpuExceptionName(TaskInfo * const taskInfo, const void * const nameAddr,
+    const KernelInfoType nameType, std::string &name)
+{
+    if ((taskInfo == nullptr) || (taskInfo->stream == nullptr) || (taskInfo->stream->Device_() == nullptr) ||
+        (nameAddr == nullptr)) {
+        return;
+    }
+
+    ArgLoader * const argLoader = taskInfo->stream->Device_()->ArgLoader_();
+    if (argLoader != nullptr) {
+        argLoader->GetKernelInfoFromAddr(name, nameType, const_cast<void *>(nameAddr));
+        if (!name.empty()) {
+            return;
+        }
+    }
+    CopyAicpuExceptionNameFromArgs(taskInfo, nameAddr, name);
+}
+
+void GetAicpuExceptionDetailInfo(TaskInfo *taskInfo, rtAicpuExDetailInfo_t *detailInfo)
+{
+    if (detailInfo == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "detailInfo is nullptr.");
+        return;
+    }
+
+    (void)memset_s(detailInfo, sizeof(rtAicpuExDetailInfo_t), 0, sizeof(rtAicpuExDetailInfo_t));
+    if (taskInfo == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "taskInfo is nullptr.");
+        return;
+    }
+
+    if (taskInfo->type != TS_TASK_TYPE_KERNEL_AICPU) {
+        return;
+    }
+
+    Stream * const stream = taskInfo->stream;
+    RT_LOG(RT_LOG_INFO, "Get AICPU exception detail info, device_id=%u, stream_id=%d, task_id=%hu, "
+        "task_type=%u.", stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->type);
+
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
+    detailInfo->argAddr = aicpuTaskInfo->comm.args;
+    detailInfo->argsize = aicpuTaskInfo->comm.argsSize;
+    if (!IsAicpuKernelHandleValid(aicpuTaskInfo)) {
+        if ((aicpuTaskInfo->kernel != nullptr) || (aicpuTaskInfo->kernelInnerHandle != nullptr)) {
+            RT_LOG(RT_LOG_WARNING, "AICPU kernel handle is invalid, kernel=%p, kernelInnerHandle=%p.",
+                aicpuTaskInfo->kernel, aicpuTaskInfo->kernelInnerHandle);
+        }
+        return;
+    }
+
+    detailInfo->funcHandle = static_cast<rtFuncHandle>(const_cast<rtInnerObject *>(aicpuTaskInfo->kernelInnerHandle));
+}
+
+static void SetAicpuExceptionStringInfo(TaskInfo *taskInfo, rtAicpuExDetailInfo_t *detailInfo,
+    std::string &soName, std::string &functionName, std::string &kernelName)
+{
+    if ((taskInfo == nullptr) || (detailInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_KERNEL_AICPU)) {
+        return;
+    }
+
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
+    if (IsAicpuKernelHandleValid(aicpuTaskInfo)) {
+        Kernel * const kernel = aicpuTaskInfo->kernel;
+        soName = kernel->GetCpuKernelSo();
+        functionName = kernel->GetCpuFuncName();
+        kernelName = kernel->GetCpuOpType();
+        detailInfo->soName = soName.c_str();
+        detailInfo->functionName = functionName.c_str();
+        detailInfo->kernelName = kernelName.c_str();
+        return;
+    }
+
+    GetAicpuExceptionName(taskInfo, aicpuTaskInfo->soName, KernelInfoType::SO_NAME, soName);
+    GetAicpuExceptionName(taskInfo, aicpuTaskInfo->funcName, KernelInfoType::KERNEL_NAME, functionName);
+    detailInfo->soName = soName.empty() ? nullptr : soName.c_str();
+    detailInfo->functionName = functionName.empty() ? nullptr : functionName.c_str();
+}
+
+static TaskInfo *GetTaskForFailCallback(const Device * const dev, const uint32_t streamId, const uint32_t taskId,
+    const bool isNeedTransTaskId, uint32_t &exceptionTaskId)
+{
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
+        TaskInfo * const workTask = GetTaskInfo(dev, streamId, taskId, isNeedTransTaskId);
+        if (workTask != nullptr) {
+            exceptionTaskId = workTask->taskSn;
+        }
+        return workTask;
+    }
+
+    TaskInfo * const workTask = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId),
+        static_cast<uint16_t>(taskId));
+    exceptionTaskId = CovertToFlipTaskId(workTask, taskId);
+    return workTask;
+}
+
+static rtExceptionExpandType_t SetExceptionExpandInfo(TaskInfo *workTask, rtExceptionExpandInfo_t * const expandInfo,
+    std::string &aicpuSoName, std::string &aicpuFunctionName, std::string &aicpuKernelName)
+{
+    if (workTask == nullptr) {
+        return RT_EXCEPTION_INVALID;
+    }
+
+    if ((workTask->type == TS_TASK_TYPE_KERNEL_AICORE) || (workTask->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
+        GetExceptionArgs(workTask, &(expandInfo->u.aicoreInfo.exceptionArgs));
+        return RT_EXCEPTION_AICORE;
+    }
+
+    if (workTask->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        GetAicpuExceptionDetailInfo(workTask, &(expandInfo->u.aicpuInfo));
+        SetAicpuExceptionStringInfo(workTask, &(expandInfo->u.aicpuInfo),
+            aicpuSoName, aicpuFunctionName, aicpuKernelName);
+        return RT_EXCEPTION_AICPU;
+    }
+
+    return RT_EXCEPTION_INVALID;
+}
+
 void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
                       const uint32_t threadId, const uint32_t retCode,
                       const Device * const dev, bool isNeedTransTaskId)
@@ -661,21 +846,14 @@ void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
     rtError_t rtErrCode = RT_ERROR_NONE;
     const char_t *const retDes = GetTsErrCodeMap(retCode, &rtErrCode);
 
-    TaskInfo *workTask = nullptr;
     uint32_t exceptionTaskId = 0xFFFFFFFFU;
-    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-        workTask = GetTaskInfo(dev, streamId, taskId, isNeedTransTaskId);
-        if (workTask != nullptr) {
-            exceptionTaskId = workTask->taskSn;
-        }
-    } else {
-        workTask = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), static_cast<uint16_t>(taskId));
-        exceptionTaskId = CovertToFlipTaskId(workTask, taskId);
-    }
+    TaskInfo * const workTask = GetTaskForFailCallback(dev, streamId, taskId, isNeedTransTaskId, exceptionTaskId);
+    std::string aicpuSoName;
+    std::string aicpuFunctionName;
+    std::string aicpuKernelName;
+    const rtExceptionExpandType_t type = SetExceptionExpandInfo(workTask, &exceptionInfo.expandInfo,
+        aicpuSoName, aicpuFunctionName, aicpuKernelName);
 
-    const rtExceptionExpandType_t type = ((workTask != nullptr) && ((workTask->type == TS_TASK_TYPE_KERNEL_AICORE) ||
-        (workTask->type == TS_TASK_TYPE_KERNEL_AIVEC))) ? RT_EXCEPTION_AICORE : RT_EXCEPTION_INVALID;
-    GetExceptionArgs(workTask, &(exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs));
     exceptionInfo.retcode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(rtErrCode));
     exceptionInfo.taskid = exceptionTaskId;
     uint32_t exposedStreamId = workTask != nullptr ? workTask->stream->GetExposedStreamId() : streamId;
@@ -688,7 +866,8 @@ void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
         streamId, exposedStreamId, exceptionTaskId, rtErrCode, retDes);
 
     TaskFailCallBackNotify(&exceptionInfo);
-    if (exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName != nullptr) {
+    if ((type == RT_EXCEPTION_AICORE) &&
+        (exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName != nullptr)) {
         delete[] exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName;
     }
 }

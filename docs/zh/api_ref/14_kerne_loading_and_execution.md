@@ -451,7 +451,7 @@ aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExcept
 
 调用本接口注册回调函数。若多次设置回调函数，以最后一次设置为准。
 
-在执行算子之前，调用本接口注册回调函数。如果算子执行过程中出现异常，将触发回调函数的执行，并将异常信息存储在aclrtExceptionInfo结构体中。之后，可以通过调用[aclrtGetArgsFromExceptionInfo](#aclrtGetArgsFromExceptionInfo)和[aclrtGetFuncHandleFromExceptionInfo](#aclrtGetFuncHandleFromExceptionInfo)接口，从异常信息中获取用户下发算子执行任务时的参数以及核函数句柄。目前，仅支持获取AI Core算子执行异常时的信息。
+在执行算子之前，调用本接口注册回调函数。如果算子执行过程中出现异常，将触发回调函数的执行，并将异常信息存储在aclrtExceptionInfo结构体中。之后，可以通过调用[aclrtGetArgsFromExceptionInfo](#aclrtGetArgsFromExceptionInfo)和[aclrtGetFuncHandleFromExceptionInfo](#aclrtGetFuncHandleFromExceptionInfo)接口，从异常信息中获取用户下发算子执行任务时的参数以及核函数句柄。目前，支持获取AI Core算子和AICPU算子执行异常时的信息。
 
 ### 参数说明
 

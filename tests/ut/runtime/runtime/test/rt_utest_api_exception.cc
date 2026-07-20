@@ -39,6 +39,14 @@ void MyOpExceptionCallback(rtExceptionInfo_t *exceptionInfo, void *userData)
     EXPECT_EQ(exceptionInfo->retcode, 100);
 }
 
+uint32_t g_opExceptionCallbackCount = 0U;
+
+void CountOpExceptionCallback(rtExceptionInfo_t *exceptionInfo, void *userData)
+{
+    MyOpExceptionCallback(exceptionInfo, userData);
+    ++g_opExceptionCallbackCount;
+}
+
 TEST_F(ApiExceptionTest, rtBinarySetExceptionCallback)
 {
     ElfProgram bin_handle;
@@ -81,6 +89,11 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(func), kernel);
 
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
+    error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(func), kernel);
+
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     exceptionInfo.expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = binHandle;
@@ -90,11 +103,58 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICPU;
+    exceptionInfo.expandInfo.u.aicpuInfo.funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+
+    rtFuncHandle funcAicpu;
+    error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &funcAicpu);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(funcAicpu), kernel);
+
     exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
 
     rtFuncHandle func2;
     error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func2);
     EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfoAicpuNullFuncHandle)
+{
+    rtExceptionInfo_t exceptionInfo;
+    (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0, sizeof(rtExceptionInfo_t));
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICPU;
+
+    rtFuncHandle func = nullptr;
+    const rtError_t error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(func, nullptr);
+}
+
+TEST_F(ApiExceptionTest, OpTaskFailCallbackNotifyAicpuInvalidInputs)
+{
+    rtExceptionInfo_t exceptionInfo;
+    (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0, sizeof(rtExceptionInfo_t));
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICPU;
+
+    exceptionInfo.expandInfo.u.aicpuInfo.funcHandle = nullptr;
+    OpTaskFailCallbackNotify(&exceptionInfo);
+
+    rtInnerObject invalidInnerHandle;
+    invalidInnerHandle.magic.store(0U);
+    invalidInnerHandle.object = nullptr;
+    exceptionInfo.expandInfo.u.aicpuInfo.funcHandle = reinterpret_cast<rtFuncHandle>(&invalidInnerHandle);
+    OpTaskFailCallbackNotify(&exceptionInfo);
+
+    Kernel *kernel = new Kernel("aicpu_test", 0U, nullptr, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    exceptionInfo.expandInfo.u.aicpuInfo.funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+    OpTaskFailCallbackNotify(&exceptionInfo);
+    delete kernel;
+
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin =
+        reinterpret_cast<rtBinHandle>(&invalidInnerHandle);
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "invalid";
+    OpTaskFailCallbackNotify(&exceptionInfo);
 }
 
 TEST_F(ApiExceptionTest, OpTaskFailCallbackNotify)
@@ -112,17 +172,29 @@ TEST_F(ApiExceptionTest, OpTaskFailCallbackNotify)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = exceptionBinHandle;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
 
-    rtOpExceptionCallback callback = MyOpExceptionCallback;
+    rtOpExceptionCallback callback = CountOpExceptionCallback;
     error = rtBinarySetExceptionCallback(apiBinHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    g_opExceptionCallbackCount = 0U;
 
     OpTaskFailCallbackNotify(&exceptionInfo);
+    EXPECT_EQ(g_opExceptionCallbackCount, 1U);
 
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
+    exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_AICPU;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = exceptionBinHandle;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
     OpTaskFailCallbackNotify(&exceptionInfo);
+    EXPECT_EQ(g_opExceptionCallbackCount, 2U);
+
+    Kernel *kernel = new Kernel("aicpu_test", 0U, programBase, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICPU;
+    exceptionInfo.expandInfo.u.aicpuInfo.funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+    OpTaskFailCallbackNotify(&exceptionInfo);
+    EXPECT_EQ(g_opExceptionCallbackCount, 3U);
+    delete kernel;
 
     exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
     OpTaskFailCallbackNotify(&exceptionInfo);
+    EXPECT_EQ(g_opExceptionCallbackCount, 3U);
 }

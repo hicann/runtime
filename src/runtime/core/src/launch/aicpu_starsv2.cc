@@ -281,20 +281,26 @@ static rtError_t StreamLaunchCpuKernelExWithArgsForAicpuStm(const uint32_t coreD
     return RT_ERROR_NONE;
 }
 
-static void SetTaskInfo(TaskInfo *kernelTask, const rtAicpuArgsEx_t * const argsInfo, const Kernel * const kernel,
-    const TaskCfg * const taskCfg, const AicpuTaskInfo &tmpTaskInfo)
+static void SetAicpuKernelInfo(TaskInfo *kernelTask, const Kernel * const kernel, const Device * const device)
 {
     AicpuTaskInfo *aicpuTask = &(kernelTask->u.aicpuTaskInfo);
     aicpuTask->kernel = const_cast<Kernel*>(kernel);
     if (kernel != nullptr) {
         aicpuTask->kernelInnerHandle = kernel->GetInnerHandle();
+        SetNameArgs(kernelTask, kernel->GetSoNameDevAddr(device->Id_()), kernel->GetFuncNameDevAddr(device->Id_()));
     }
-    aicpuTask->aicpuFlags = tmpTaskInfo.aicpuFlags;
-    aicpuTask->aicpuKernelType = tmpTaskInfo.aicpuKernelType;
-    aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, tmpTaskInfo.aicpuFlags);
-    aicpuTask->headParamOffset = tmpTaskInfo.headParamOffset;
+}
+
+static void SetTaskInfo(TaskInfo *kernelTask, const rtAicpuArgsEx_t * const argsInfo, const TaskCfg * const taskCfg,
+    const uint32_t flag, const uint32_t kernelType, const size_t cpuParamHeadOffset)
+{
+    AicpuTaskInfo *aicpuTask = &(kernelTask->u.aicpuTaskInfo);
+    aicpuTask->aicpuFlags = flag;
+    aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernelType);
+    aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, flag);
+    aicpuTask->headParamOffset = static_cast<uint32_t>(cpuParamHeadOffset);
     RT_LOG(RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, headParamOffset=%u.", 
-        tmpTaskInfo.aicpuKernelType, tmpTaskInfo.aicpuFlags, aicpuTask->timeout, aicpuTask->comm.kernelFlag,  
+        kernelType, flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag,
         aicpuTask->comm.dim, aicpuTask->headParamOffset);
 }
 
@@ -332,15 +338,9 @@ rtError_t StreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, const rtAicpuA
     error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         streamId, useArgPool, static_cast<uint32_t>(error));
-    /* 默认使用kernel注册时的devAddr */
-    if (kernel != nullptr) {
-        SetNameArgs(kernelTask, kernel->GetSoNameDevAddr(stm->Device_()->Id_()), kernel->GetFuncNameDevAddr(stm->Device_()->Id_()));
-    }
-
+    SetAicpuKernelInfo(kernelTask, kernel, stm->Device_());
     SetArgsAicpu(nullptr, argsInfo, kernelTask, &result);
-    AicpuTaskInfo tmpTaskInfo = {{}, nullptr, nullptr, nullptr, nullptr, nullptr, flag, 
-        static_cast<uint32_t>(cpuParamHeadOffset), 0, static_cast<uint8_t>(kernelType), 0, nullptr};
-    SetTaskInfo(kernelTask, argsInfo, kernel, taskCfg, tmpTaskInfo);
+    SetTaskInfo(kernelTask, argsInfo, taskCfg, flag, kernelType, cpuParamHeadOffset);
     error = DavidSendTask(kernelTask, dstStm);
     ERROR_RETURN_MSG_INNER(error, "Submit task failed, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));

@@ -79,6 +79,7 @@
 #include "jetty_manager.h"
 #include "task_info_base.hpp"
 #include "capture_model_utils.hpp"
+#include "aicpu_c.hpp"
 #undef protected
 #undef private
 
@@ -89,6 +90,30 @@ namespace {
 constexpr uint32_t TS_SDMA_STATUS_DDRC_ERROR = 0x8U;
 constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
+TaskInfo *g_aicpuTask = nullptr;
+void *g_aicpuArgsAddr = nullptr;
+void *g_expectedAicpuSoNameAddr = nullptr;
+void *g_expectedAicpuFuncNameAddr = nullptr;
+
+rtError_t AllocAicpuTaskStub(TaskInfo **taskInfo, Stream * const stm, uint32_t &pos, Stream *&dstStm,
+    uint32_t sqeNum, bool isKernelLaunch)
+{
+    UNUSED(sqeNum);
+    UNUSED(isKernelLaunch);
+    *taskInfo = g_aicpuTask;
+    pos = 0U;
+    dstStm = stm;
+    return RT_ERROR_NONE;
+}
+
+rtError_t SendAicpuTaskStub(TaskInfo *taskInfo, Stream * const stm)
+{
+    UNUSED(stm);
+    EXPECT_EQ(taskInfo, g_aicpuTask);
+    EXPECT_EQ(taskInfo->u.aicpuTaskInfo.soName, g_expectedAicpuSoNameAddr);
+    EXPECT_EQ(taskInfo->u.aicpuTaskInfo.funcName, g_expectedAicpuFuncNameAddr);
+    return RT_ERROR_NONE;
+}
 }  // namespace
 
 static bool g_disableThread;
@@ -4151,6 +4176,56 @@ TEST_F(DavidTaskTest1, load_args_for_aicpu_task)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     TaskUnInitProc(&kernTask);
+}
+
+TEST_F(DavidTaskTest, stream_launch_aicpu_kernel_preserves_name_address_precedence)
+{
+    TaskInfo taskInfo = {};
+    g_aicpuTask = &taskInfo;
+    g_aicpuArgsAddr = reinterpret_cast<void *>(0x10000U);
+    StarsArgLoaderResult loadResult = {};
+    loadResult.kerArgs = g_aicpuArgsAddr;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfoForCapture).stubs().will(invoke(AllocAicpuTaskStub));
+    MOCKER_CPP(&DavidStream::LoadArgsInfo<rtAicpuArgsEx_t>)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&loadResult, sizeof(loadResult)), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(invoke(SendAicpuTaskStub));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+    uint64_t args = 0U;
+    rtAicpuArgsEx_t argsInfo = {};
+    argsInfo.args = &args;
+    argsInfo.argsSize = sizeof(args);
+
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("RawAicpuFunction", 0U, &program, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    kernel.SetKernelLiteralNameDevAddr(reinterpret_cast<void *>(0x20000U),
+        reinterpret_cast<void *>(0x30000U), stream_->Device_()->Id_());
+    argsInfo.soNameAddrOffset = 8U;
+    argsInfo.kernelNameAddrOffset = 16U;
+    g_expectedAicpuSoNameAddr = reinterpret_cast<void *>(0x10008U);
+    g_expectedAicpuFuncNameAddr = reinterpret_cast<void *>(0x10010U);
+    const rtError_t error = StreamLaunchCpuKernelExWithArgs(1U, &argsInfo, nullptr, stream_, RT_KERNEL_DEFAULT,
+        KERNEL_TYPE_AICPU, &kernel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    g_aicpuTask = nullptr;
+    g_aicpuArgsAddr = nullptr;
+    g_expectedAicpuSoNameAddr = nullptr;
+    g_expectedAicpuFuncNameAddr = nullptr;
+}
+
+TEST_F(DavidTaskTest, uninit_aicpu_task_clears_exception_name_addresses)
+{
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.u.aicpuTaskInfo.soName = reinterpret_cast<void *>(0x1000U);
+    taskInfo.u.aicpuTaskInfo.funcName = reinterpret_cast<void *>(0x2000U);
+
+    StarsV2DavinciTaskUnInit(&taskInfo);
+
+    EXPECT_EQ(taskInfo.u.aicpuTaskInfo.soName, nullptr);
+    EXPECT_EQ(taskInfo.u.aicpuTaskInfo.funcName, nullptr);
 }
 
 TEST_F(DavidTaskTest1, notify_task_wait_timeout_error_proc)

@@ -224,7 +224,8 @@ typedef enum tagRtExceptionExpandType {
     RT_EXCEPTION_AICORE,
     RT_EXCEPTION_UB,
     RT_EXCEPTION_CCU,
-    RT_EXCEPTION_FUSION
+    RT_EXCEPTION_FUSION,
+    RT_EXCEPTION_AICPU
 } rtExceptionExpandType_t;
 
 typedef struct rtArgsSizeInfo {
@@ -248,6 +249,13 @@ typedef enum {
  * @brief Program handle.
  */
 typedef void *rtBinHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief Kernel handle.
+ */
+typedef void *rtFuncHandle;
+
 typedef struct rtExceptionKernelInfo {
     uint32_t binSize;
     rtBinHandle bin; // binHandle
@@ -321,6 +329,15 @@ typedef struct rtAicoreExDetailInfo {
     rtExceptionArgsInfo_t exceptionArgs;
 } rtAicoreExDetailInfo_t;
 
+typedef struct rtAicpuExDetailInfo {
+    rtFuncHandle funcHandle;
+    const char *soName;
+    const char *functionName;
+    const char *kernelName;
+    void *argAddr;
+    uint32_t argsize;
+} rtAicpuExDetailInfo_t;
+
 typedef struct rtFusionAICoreCCUExDetailInfo {
     rtExceptionArgsInfo_t exceptionArgs;
     rtMultiCCUExDetailInfo_t ccuDetailMsg;
@@ -338,6 +355,7 @@ typedef struct rtExceptionExpandInfo {
     union {
         rtFftsPlusExDetailInfo_t fftsPlusInfo;
         rtAicoreExDetailInfo_t aicoreInfo; // 关注下影响
+        rtAicpuExDetailInfo_t aicpuInfo;
         rtUbExDetailInfo_t ubInfo;
         rtMultiCCUExDetailInfo_t ccuInfo;       /* use for ccu task */
         rtFusionExDetailInfo_t fusionInfo;      /* use for fusion task */
@@ -372,12 +390,6 @@ typedef void (*rtOpExceptionCallback)(rtExceptionInfo_t *exceptionInfo, void *us
  * @brief dataLen: length of data
  */
 typedef rtError_t (*rtProfCtrlHandle)(uint32_t dataType, void *data, uint32_t dataLen);
-
-/**
- * @ingroup dvrt_base
- * @brief Kernel handle.
- */
-typedef void *rtFuncHandle;
 
 /**
  * @ingroup dvrt_base
@@ -589,7 +601,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 #endif // CCE_RUNTIME_BASE_COMMON_DATA
 // === CCE_RUNTIME_BASE_COMMON_DATA END ===
 enum { rt_base_common_end_line_guard_ = __LINE__ };
-RT_STATIC_ASSERT(((rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_) == 524),
+RT_STATIC_ASSERT(((rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_) == 536),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between base.h and external_base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 

@@ -118,6 +118,8 @@ void AicpuTaskInit(TaskInfo *taskInfo, const uint16_t dimNum, const uint32_t fla
     taskInfo->type = TS_TASK_TYPE_KERNEL_AICPU;
     taskInfo->typeName = const_cast<char_t*>("KERNEL_AICPU");
 
+    aicpuTaskInfo->soName = nullptr;
+    aicpuTaskInfo->funcName = nullptr;
     aicpuTaskInfo->argsInfo = nullptr;
     aicpuTaskInfo->kernel = nullptr;
     aicpuTaskInfo->kernelInnerHandle = nullptr;

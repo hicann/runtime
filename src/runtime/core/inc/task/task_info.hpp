@@ -249,6 +249,7 @@ bool IsNeedFreeStreamRes(const TaskInfo *task);
 uint32_t CovertToFlipTaskId(const int32_t streamId, const uint32_t taskId, const Device * const dev);
 uint32_t CovertToFlipTaskId(const TaskInfo* const taskInfo, const uint32_t taskId);
 void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t *argsInfo);
+void GetAicpuExceptionDetailInfo(TaskInfo *taskInfo, rtAicpuExDetailInfo_t *detailInfo);
 
 void SetSqPos(TaskInfo* taskInfo, const uint32_t pos);
 void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos);

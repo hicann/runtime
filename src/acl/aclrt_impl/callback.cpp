@@ -83,6 +83,9 @@ aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void 
     if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
         *devArgsPtr = info->expandInfo.u.aicoreInfo.exceptionArgs.argAddr;
         *devArgsLen = info->expandInfo.u.aicoreInfo.exceptionArgs.argsize;
+    } else if (info->expandInfo.type == RT_EXCEPTION_AICPU) {
+        *devArgsPtr = info->expandInfo.u.aicpuInfo.argAddr;
+        *devArgsLen = info->expandInfo.u.aicpuInfo.argsize;
     } else if (info->expandInfo.type == RT_EXCEPTION_FUSION && 
         info->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU) {
         *devArgsPtr = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argAddr;
@@ -93,7 +96,7 @@ aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void 
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
             std::vector<const char *>({funcName.c_str(), acl::GetExceptionExpandTypeDesc(info->expandInfo.type),
-                "info->expandInfo.type", "RT_EXCEPTION_AICORE or RT_EXCEPTION_FUSION"}));
+                "info->expandInfo.type", "RT_EXCEPTION_AICORE, RT_EXCEPTION_AICPU or RT_EXCEPTION_FUSION"}));
         return ACL_ERROR_INVALID_EXCEPTION_INFO;
     }
     

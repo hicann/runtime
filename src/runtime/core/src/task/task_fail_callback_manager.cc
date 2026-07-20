@@ -79,30 +79,15 @@ rtError_t XpuTaskFailCallbackReg(const char_t *regName, void *callback)
     return XpuTaskFailCallBackManager::Instance().RegXpuTaskFailCallback(regName, callback);
 }
 
-void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo)
+static void ExecuteOpExceptionCallback(Program * const program, rtExceptionInfo_t * const exceptionInfo)
 {
-    rtBinHandle binHandle;
+    if (program == nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "Skip binary exception callback because program is nullptr, exception_type=%d, "
+            "stream_id=%u, task_id=%u.", exceptionInfo->expandInfo.type, exceptionInfo->streamid,
+            exceptionInfo->taskid);
+        return;
+    }
 
-    if (exceptionInfo->expandInfo.type == RT_EXCEPTION_AICORE) {
-        binHandle = exceptionInfo->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin;
-    } else if (exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION &&
-        exceptionInfo->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_AICPU) {
-        binHandle = exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin;
-    } else {
-        binHandle = nullptr;
-    }
-    
-    if (binHandle == nullptr) {
-        return;
-    }
-    
-    Program *program = nullptr;
-    const rtError_t ret = GetValidatedObject<Program>(binHandle, program);
-    if ((ret != RT_ERROR_NONE) || (program == nullptr)) {
-        RT_LOG(RT_LOG_WARNING, "Op task fail callback notify failed, invalid binHandle=%p, retCode=%#x.",
-            binHandle, ret);
-        return;
-    }
     auto callback = program->opExceptionCallback_;
     void *userData = program->opExceptionCallbackUserData_;
     if (callback != nullptr) {
@@ -111,6 +96,58 @@ void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo)
             program, program->Id_(), exceptionInfo->streamid, exceptionInfo->taskid, exceptionInfo->retcode);
         callback(exceptionInfo, userData);
     }
+}
+
+static Program *GetAicpuExceptionProgram(const rtExceptionInfo_t * const exceptionInfo)
+{
+    const rtFuncHandle funcHandle = exceptionInfo->expandInfo.u.aicpuInfo.funcHandle;
+    if (funcHandle == nullptr) {
+        return nullptr;
+    }
+
+    Kernel *kernel = nullptr;
+    const rtError_t ret = GetValidatedObject<Kernel>(funcHandle, kernel);
+    if ((ret != RT_ERROR_NONE) || (kernel == nullptr)) {
+        RT_LOG(RT_LOG_WARNING, "Op task fail callback notify failed, invalid funcHandle=%p, retCode=%#x.",
+            funcHandle, ret);
+        return nullptr;
+    }
+
+    Program * const program = kernel->Program_();
+    if (program == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "Op task fail callback notify failed, program is nullptr, funcHandle=%p.",
+            funcHandle);
+    }
+    return program;
+}
+
+void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo)
+{
+    if (exceptionInfo->expandInfo.type == RT_EXCEPTION_AICPU) {
+        ExecuteOpExceptionCallback(GetAicpuExceptionProgram(exceptionInfo), exceptionInfo);
+        return;
+    }
+
+    rtBinHandle binHandle = nullptr;
+    if (exceptionInfo->expandInfo.type == RT_EXCEPTION_AICORE) {
+        binHandle = exceptionInfo->expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin;
+    } else if (exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION &&
+        exceptionInfo->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_AICPU) {
+        binHandle = exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin;
+    }
+
+    if (binHandle == nullptr) {
+        return;
+    }
+
+    Program *program = nullptr;
+    const rtError_t ret = GetValidatedObject<Program>(binHandle, program);
+    if ((ret != RT_ERROR_NONE) || (program == nullptr)) {
+        RT_LOG(RT_LOG_WARNING, "Op task fail callback notify failed, invalid binHandle=%p, retCode=%#x.",
+            binHandle, ret);
+        return;
+    }
+    ExecuteOpExceptionCallback(program, exceptionInfo);
 }
 
 rtError_t OpTaskFailCallbackReg(Program *binHandle, void *callback, void *userData)

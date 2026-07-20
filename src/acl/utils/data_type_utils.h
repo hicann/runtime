@@ -92,6 +92,7 @@ inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type) {
         {RT_EXCEPTION_UB,        "EXCEPTION_UB(3)"},
         {RT_EXCEPTION_CCU,       "EXCEPTION_CCU(4)"},
         {RT_EXCEPTION_FUSION,    "EXCEPTION_FUSION(5)"},
+        {RT_EXCEPTION_AICPU,     "EXCEPTION_AICPU(6)"},
     };
 
     auto it = exceptionExpandTypeDescMap.find(type);

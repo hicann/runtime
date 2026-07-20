@@ -42,6 +42,7 @@
 #undef private
 #include <thread>
 #include <chrono>
+#include <limits>
 #include "ctrl_stream.hpp"
 #include "ctrl_stream.hpp"
 #include "runtime.hpp"
@@ -76,6 +77,82 @@
 
 using namespace testing;
 using namespace cce::runtime;
+
+namespace {
+void *g_expectedAicpuArgAddr = nullptr;
+uint32_t g_expectedAicpuArgSize = 0U;
+bool g_aicpuExceptionCallbackCalled = false;
+bool g_aicoreExceptionCallbackCalled = false;
+bool g_rawAicpuExceptionCallbackCalled = false;
+uint32_t g_invalidRawAicpuExceptionCallbackCount = 0U;
+void *g_cachedRawAicpuSoNameAddr = nullptr;
+void *g_cachedRawAicpuFunctionNameAddr = nullptr;
+
+void GetCachedRawAicpuNameStub(ArgLoader *argLoader, std::string &name, const KernelInfoType type, void *addr)
+{
+    UNUSED(argLoader);
+    if ((type == KernelInfoType::SO_NAME) && (addr == g_cachedRawAicpuSoNameAddr)) {
+        name = "libraw_aicpu.so";
+    } else if ((type == KernelInfoType::KERNEL_NAME) && (addr == g_cachedRawAicpuFunctionNameAddr)) {
+        name = "RawAicpuFunction";
+    }
+}
+
+void CheckAicpuExceptionCallback(rtExceptionInfo_t *exceptionInfo, void *userData)
+{
+    (void)userData;
+    ASSERT_NE(exceptionInfo, nullptr);
+    EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_AICPU);
+    const rtAicpuExDetailInfo_t &aicpuInfo = exceptionInfo->expandInfo.u.aicpuInfo;
+    EXPECT_EQ(aicpuInfo.argAddr, g_expectedAicpuArgAddr);
+    EXPECT_EQ(aicpuInfo.argsize, g_expectedAicpuArgSize);
+    EXPECT_STREQ(aicpuInfo.soName, "libcpu.so");
+    EXPECT_STREQ(aicpuInfo.functionName, "RunCpuKernel");
+    EXPECT_STREQ(aicpuInfo.kernelName, "Add");
+    g_aicpuExceptionCallbackCalled = true;
+}
+
+void CheckAicoreExceptionCallback(rtExceptionInfo_t *exceptionInfo)
+{
+    ASSERT_NE(exceptionInfo, nullptr);
+    EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_AICORE);
+    EXPECT_EQ(exceptionInfo->expandInfo.u.aicoreInfo.exceptionArgs.argAddr, g_expectedAicpuArgAddr);
+    EXPECT_EQ(exceptionInfo->expandInfo.u.aicoreInfo.exceptionArgs.argsize, g_expectedAicpuArgSize);
+    g_aicoreExceptionCallbackCalled = true;
+}
+
+void CheckRawAicpuExceptionCallback(rtExceptionInfo_t *exceptionInfo)
+{
+    ASSERT_NE(exceptionInfo, nullptr);
+    EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_AICPU);
+    const rtAicpuExDetailInfo_t &aicpuInfo = exceptionInfo->expandInfo.u.aicpuInfo;
+    EXPECT_EQ(aicpuInfo.argAddr, g_expectedAicpuArgAddr);
+    EXPECT_EQ(aicpuInfo.argsize, g_expectedAicpuArgSize);
+    EXPECT_EQ(aicpuInfo.funcHandle, nullptr);
+    EXPECT_STREQ(aicpuInfo.soName, "libraw_aicpu.so");
+    EXPECT_STREQ(aicpuInfo.functionName, "RawAicpuFunction");
+    EXPECT_EQ(aicpuInfo.kernelName, nullptr);
+
+    rtFuncHandle funcHandle = nullptr;
+    EXPECT_EQ(rtGetFuncHandleFromExceptionInfo(exceptionInfo, &funcHandle), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(funcHandle, nullptr);
+    g_rawAicpuExceptionCallbackCalled = true;
+}
+
+void CheckInvalidRawAicpuExceptionCallback(rtExceptionInfo_t *exceptionInfo)
+{
+    ASSERT_NE(exceptionInfo, nullptr);
+    EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_AICPU);
+    const rtAicpuExDetailInfo_t &aicpuInfo = exceptionInfo->expandInfo.u.aicpuInfo;
+    EXPECT_EQ(aicpuInfo.argAddr, g_expectedAicpuArgAddr);
+    EXPECT_EQ(aicpuInfo.argsize, g_expectedAicpuArgSize);
+    EXPECT_EQ(aicpuInfo.funcHandle, nullptr);
+    EXPECT_EQ(aicpuInfo.soName, nullptr);
+    EXPECT_EQ(aicpuInfo.functionName, nullptr);
+    EXPECT_EQ(aicpuInfo.kernelName, nullptr);
+    ++g_invalidRawAicpuExceptionCallbackCount;
+}
+} // namespace
 
 class TaskTest : public testing::Test {
 protected:
@@ -3160,6 +3237,355 @@ TEST_F(TaskTest, TestGetExceptionArgs)
     aicTaskInfo->comm.argsSize = 10;
     GetExceptionArgs(&taskInfo, &argsInfo);
     EXPECT_EQ(10, argsInfo.argsize);
+}
+
+TEST_F(TaskTest, TestGetAicpuExceptionDetailInfo)
+{
+    TaskInfo taskInfo = {};
+    rtAicpuExDetailInfo_t detailInfo = {};
+    char addr[10] = {};
+    Kernel kernel("libcpu.so", "RunCpuKernel", "Add");
+
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    AicpuTaskInfo *aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = addr;
+    aicpuTaskInfo->comm.argsSize = sizeof(addr);
+    aicpuTaskInfo->kernel = &kernel;
+    InitEmbeddedInnerHandle<Kernel>(&kernel);
+    aicpuTaskInfo->kernelInnerHandle = kernel.GetInnerHandle();
+
+    GetAicpuExceptionDetailInfo(&taskInfo, &detailInfo);
+    EXPECT_EQ(detailInfo.argAddr, addr);
+    EXPECT_EQ(detailInfo.argsize, sizeof(addr));
+    EXPECT_EQ(rt_ut::UnwrapOrNull<Kernel>(detailInfo.funcHandle), &kernel);
+    EXPECT_EQ(detailInfo.soName, nullptr);
+    EXPECT_EQ(detailInfo.functionName, nullptr);
+    EXPECT_EQ(detailInfo.kernelName, nullptr);
+}
+
+TEST_F(TaskTest, TestGetAicpuExceptionDetailInfoWithoutKernel)
+{
+    TaskInfo taskInfo = {};
+    rtAicpuExDetailInfo_t detailInfo = {};
+    char addr[10] = {};
+
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    AicpuTaskInfo *aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = addr;
+    aicpuTaskInfo->comm.argsSize = sizeof(addr);
+
+    GetAicpuExceptionDetailInfo(&taskInfo, &detailInfo);
+    EXPECT_EQ(detailInfo.argAddr, addr);
+    EXPECT_EQ(detailInfo.argsize, sizeof(addr));
+    EXPECT_EQ(detailInfo.funcHandle, nullptr);
+    EXPECT_EQ(detailInfo.soName, nullptr);
+    EXPECT_EQ(detailInfo.functionName, nullptr);
+    EXPECT_EQ(detailInfo.kernelName, nullptr);
+}
+
+TEST_F(TaskTest, TestGetAicpuExceptionDetailInfoWithInvalidKernelHandle)
+{
+    Kernel kernel("RawAicpuFunction", 0U, nullptr, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.u.aicpuTaskInfo.kernel = &kernel;
+    taskInfo.u.aicpuTaskInfo.kernelInnerHandle = nullptr;
+    rtAicpuExDetailInfo_t detailInfo = {};
+
+    GetAicpuExceptionDetailInfo(&taskInfo, &detailInfo);
+
+    EXPECT_EQ(detailInfo.funcHandle, nullptr);
+}
+
+TEST_F(TaskTest, TestGetAicpuExceptionDetailInfoInvalidInput)
+{
+    TaskInfo taskInfo = {};
+    rtAicpuExDetailInfo_t detailInfo = {};
+    detailInfo.argAddr = reinterpret_cast<void *>(0x1);
+
+    GetAicpuExceptionDetailInfo(&taskInfo, nullptr);
+    GetAicpuExceptionDetailInfo(nullptr, &detailInfo);
+    EXPECT_EQ(detailInfo.argAddr, nullptr);
+    EXPECT_EQ(detailInfo.argsize, 0U);
+
+    detailInfo.argAddr = reinterpret_cast<void *>(0x1);
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    GetAicpuExceptionDetailInfo(&taskInfo, &detailInfo);
+    EXPECT_EQ(detailInfo.argAddr, nullptr);
+    EXPECT_EQ(detailInfo.argsize, 0U);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithAicpuExceptionInfo)
+{
+    ElfProgram binHandle;
+    Program *program = &binHandle;
+    rtBinHandle exportedBinHandle = rt_ut::InitAndExportHandle<rtBinHandle>(program);
+    EXPECT_EQ(rtBinarySetExceptionCallback(exportedBinHandle, CheckAicpuExceptionCallback, nullptr), RT_ERROR_NONE);
+
+    Kernel kernel("Add", 0U, program, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
+    kernel.SetCpuKernelSo("libcpu.so");
+    kernel.SetCpuFuncName("RunCpuKernel");
+    kernel.SetCpuOpType("Add");
+
+    TaskInfo taskInfo = {};
+    char args[10] = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 7U;
+    taskInfo.taskSn = 17U;
+    AicpuTaskInfo *aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = args;
+    aicpuTaskInfo->comm.argsSize = sizeof(args);
+    aicpuTaskInfo->kernel = &kernel;
+    InitEmbeddedInnerHandle<Kernel>(&kernel);
+    aicpuTaskInfo->kernelInnerHandle = kernel.GetInnerHandle();
+
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_aicpuExceptionCallbackCalled = false;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+    EXPECT_TRUE(g_aicpuExceptionCallbackCalled);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithRawAicpuExceptionInfo)
+{
+    constexpr size_t soNameOffset = 8U;
+    constexpr size_t functionNameOffset = 40U;
+    char args[128] = {};
+    ASSERT_EQ(strcpy_s(args + soNameOffset, sizeof(args) - soNameOffset, "libraw_aicpu.so"), EOK);
+    ASSERT_EQ(strcpy_s(args + functionNameOffset, sizeof(args) - functionNameOffset, "RawAicpuFunction"), EOK);
+
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 8U;
+    taskInfo.taskSn = 18U;
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = args;
+    aicpuTaskInfo->comm.argsSize = sizeof(args);
+    aicpuTaskInfo->soName = args + soNameOffset;
+    aicpuTaskInfo->funcName = args + functionNameOffset;
+
+    constexpr char moduleName[] = "raw_aicpu_exception_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckRawAicpuExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_rawAicpuExceptionCallbackCalled = false;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+    NpuDriver drv;
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+    EXPECT_TRUE(g_rawAicpuExceptionCallbackCalled);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithCachedRawAicpuNames)
+{
+    char args[8] = {};
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 9U;
+    taskInfo.taskSn = 19U;
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = args;
+    aicpuTaskInfo->comm.argsSize = sizeof(args);
+    g_cachedRawAicpuSoNameAddr = reinterpret_cast<void *>(0x1000U);
+    g_cachedRawAicpuFunctionNameAddr = reinterpret_cast<void *>(0x2000U);
+    aicpuTaskInfo->soName = g_cachedRawAicpuSoNameAddr;
+    aicpuTaskInfo->funcName = g_cachedRawAicpuFunctionNameAddr;
+
+    constexpr char moduleName[] = "cached_raw_aicpu_exception_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckRawAicpuExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_rawAicpuExceptionCallbackCalled = false;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(stream_->Device_()->ArgLoader_(), &ArgLoader::GetKernelInfoFromAddr)
+        .stubs()
+        .will(invoke(GetCachedRawAicpuNameStub));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    EXPECT_TRUE(g_rawAicpuExceptionCallbackCalled);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+    g_cachedRawAicpuSoNameAddr = nullptr;
+    g_cachedRawAicpuFunctionNameAddr = nullptr;
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackHandlesRawAicpuNameCopyFailure)
+{
+    char args[128] = {};
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 10U;
+    taskInfo.taskSn = 20U;
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = args;
+    aicpuTaskInfo->comm.argsSize = sizeof(args);
+    aicpuTaskInfo->soName = args + 8U;
+    aicpuTaskInfo->funcName = args + 40U;
+
+    constexpr char moduleName[] = "raw_aicpu_name_copy_failure_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckInvalidRawAicpuExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_invalidRawAicpuExceptionCallbackCount = 0U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+    NpuDriver drv;
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    EXPECT_EQ(g_invalidRawAicpuExceptionCallbackCount, 1U);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackHandlesMissingRawAicpuNames)
+{
+    char args[8] = {};
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 11U;
+    taskInfo.taskSn = 21U;
+    taskInfo.u.aicpuTaskInfo.comm.args = args;
+    taskInfo.u.aicpuTaskInfo.comm.argsSize = sizeof(args);
+
+    constexpr char moduleName[] = "raw_aicpu_missing_names_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckInvalidRawAicpuExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_invalidRawAicpuExceptionCallbackCount = 0U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    taskInfo.u.aicpuTaskInfo.comm.args = nullptr;
+    taskInfo.u.aicpuTaskInfo.comm.argsSize = 0U;
+    taskInfo.u.aicpuTaskInfo.soName = reinterpret_cast<void *>(0x1000U);
+    taskInfo.u.aicpuTaskInfo.funcName = reinterpret_cast<void *>(0x2000U);
+    g_expectedAicpuArgAddr = nullptr;
+    g_expectedAicpuArgSize = 0U;
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    EXPECT_EQ(g_invalidRawAicpuExceptionCallbackCount, 2U);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackRejectsInvalidRawAicpuNames)
+{
+    char args[128];
+    (void)memset_s(args, sizeof(args), 'x', sizeof(args));
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.id = 9U;
+    taskInfo.taskSn = 19U;
+    AicpuTaskInfo * const aicpuTaskInfo = &(taskInfo.u.aicpuTaskInfo);
+    aicpuTaskInfo->comm.args = args;
+    aicpuTaskInfo->comm.argsSize = sizeof(args);
+    aicpuTaskInfo->soName = args + 8U;
+    aicpuTaskInfo->funcName = args + 40U;
+
+    constexpr char moduleName[] = "invalid_raw_aicpu_exception_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckInvalidRawAicpuExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_invalidRawAicpuExceptionCallbackCount = 0U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+    NpuDriver drv;
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    const uintptr_t argsEnd = reinterpret_cast<uintptr_t>(args) + sizeof(args);
+    aicpuTaskInfo->soName = reinterpret_cast<void *>(argsEnd);
+    aicpuTaskInfo->funcName = reinterpret_cast<void *>(argsEnd + 8U);
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    void * const overflowArgs = reinterpret_cast<void *>(std::numeric_limits<uintptr_t>::max() - 4U);
+    aicpuTaskInfo->comm.args = overflowArgs;
+    aicpuTaskInfo->comm.argsSize = 8U;
+    aicpuTaskInfo->soName = overflowArgs;
+    aicpuTaskInfo->funcName = overflowArgs;
+    g_expectedAicpuArgAddr = overflowArgs;
+    g_expectedAicpuArgSize = 8U;
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    EXPECT_EQ(g_invalidRawAicpuExceptionCallbackCount, 3U);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithoutTaskInfo)
+{
+    MOCKER(GetTaskInfo).stubs().will(returnValue(static_cast<TaskInfo *>(nullptr)));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(static_cast<TaskInfo *>(nullptr)));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), 12U, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithAicoreExceptionInfo)
+{
+    char args[16] = {};
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.id = 14U;
+    taskInfo.taskSn = 24U;
+    taskInfo.u.aicTaskInfo.comm.args = args;
+    taskInfo.u.aicTaskInfo.comm.argsSize = sizeof(args);
+
+    constexpr char moduleName[] = "aicore_exception_ut";
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, CheckAicoreExceptionCallback), RT_ERROR_NONE);
+    g_expectedAicpuArgAddr = args;
+    g_expectedAicpuArgSize = sizeof(args);
+    g_aicoreExceptionCallbackCalled = false;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
+
+    EXPECT_TRUE(g_aicoreExceptionCallbackCalled);
+    EXPECT_EQ(rtRegTaskFailCallbackByModule(moduleName, nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTest, TestTaskFailCallBackWithUnsupportedTaskType)
+{
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, stream_);
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    taskInfo.id = 13U;
+    taskInfo.taskSn = 23U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+
+    TaskFailCallBack(static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION,
+        stream_->Device_(), false);
 }
 
 TEST_F(TaskTest, TestReduceAsyncV2TaskInitFailed)

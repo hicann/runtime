@@ -8987,6 +8987,14 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetArgsFromExceptionInfo)
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(devArgs, (void *)(&args));
     EXPECT_EQ(devArgsLen, argsLen);
+
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICPU;
+    exceptionInfo.expandInfo.u.aicpuInfo.argAddr = (void *)(&args);
+    exceptionInfo.expandInfo.u.aicpuInfo.argsize = argsLen;
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(devArgs, (void *)(&args));
+    EXPECT_EQ(devArgsLen, argsLen);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtGetFuncHandleFromExceptionInfo)
