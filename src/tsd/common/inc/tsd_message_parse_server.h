@@ -14,24 +14,24 @@
 #include "inc/tsd_message_parse_interface.h"
 
 namespace tsd {
-    class MessageParseServer : public MessageParseInterface {
-    public:
-        /**
-        * @ingroup hiaiengine
-        * @brief 静态函数，获取单例对象
-        * @param 无
-        * @return MessageParseServer的指针
-        */
-        static MessageParseServer* GetInstance();
+class MessageParseServer : public MessageParseInterface {
+public:
+    /**
+     * @ingroup hiaiengine
+     * @brief 静态函数，获取单例对象
+     * @param 无
+     * @return MessageParseServer的指针
+     */
+    static MessageParseServer* GetInstance();
 
-    private:
-        MessageParseServer() = default;
-        virtual ~MessageParseServer() override = default;
-        MessageParseServer(const MessageParseServer&) = delete;
-        MessageParseServer(MessageParseServer&&) = delete;
-        MessageParseServer& operator=(const MessageParseServer&) = delete;
-        MessageParseServer& operator=(MessageParseServer&) = delete;
-        MessageParseServer& operator=(MessageParseServer&&) = delete;
-    };
-}
-#endif  // TDT_DEVICE_INNER_INC_TSD_MESSAGE_PARSE_SERVER_H
+private:
+    MessageParseServer() = default;
+    virtual ~MessageParseServer() override = default;
+    MessageParseServer(const MessageParseServer&) = delete;
+    MessageParseServer(MessageParseServer&&) = delete;
+    MessageParseServer& operator=(const MessageParseServer&) = delete;
+    MessageParseServer& operator=(MessageParseServer&) = delete;
+    MessageParseServer& operator=(MessageParseServer&&) = delete;
+};
+} // namespace tsd
+#endif // TDT_DEVICE_INNER_INC_TSD_MESSAGE_PARSE_SERVER_H

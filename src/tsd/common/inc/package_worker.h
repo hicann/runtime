@@ -17,22 +17,19 @@
 #include <memory>
 #include "inc/package_worker_factory.h"
 
-
 namespace tsd {
 class PackageWorker {
 public:
-    explicit PackageWorker(const uint32_t devId, const uint32_t vfId) : deviceId_(devId), vfId_(vfId),
-                                                                        isDestroy_(false), workers_({})
+    explicit PackageWorker(const uint32_t devId, const uint32_t vfId)
+        : deviceId_(devId), vfId_(vfId), isDestroy_(false), workers_({})
     {
         workers_.fill(nullptr);
     };
 
-    ~PackageWorker() {
-        Stop();
-    };
+    ~PackageWorker() { Stop(); };
 
     static std::shared_ptr<PackageWorker> GetInstance(const uint32_t devId, const uint32_t vfId);
-    TSD_StatusT LoadPackage(const PackageWorkerType type, const std::string &path, const std::string &fileName);
+    TSD_StatusT LoadPackage(const PackageWorkerType type, const std::string& path, const std::string& fileName);
     TSD_StatusT UnloadPackage(const PackageWorkerType type);
     uint64_t GetPackageCheckCode(const PackageWorkerType type);
     void ClearPackageCheckCode(const PackageWorkerType type);
@@ -48,7 +45,8 @@ private:
     uint32_t vfId_;
     bool isDestroy_;
     std::mutex workersMutex_;
-    std::array<std::shared_ptr<BasePackageWorker>, (static_cast<size_t>(PackageWorkerType::PACKAGE_WORKER_MAX)+1UL)> workers_;
+    std::array<std::shared_ptr<BasePackageWorker>, (static_cast<size_t>(PackageWorkerType::PACKAGE_WORKER_MAX) + 1UL)>
+        workers_;
     static std::mutex workerManagerMutex_;
     static std::map<std::pair<uint32_t, uint32_t>, std::shared_ptr<PackageWorker>> workerManager_;
 };

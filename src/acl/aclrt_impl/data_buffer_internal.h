@@ -14,12 +14,10 @@
 #include <stdint.h>
 
 struct aclDataBuffer {
-    aclDataBuffer(void* const dataIn, const uint64_t len) : data(dataIn), length(len)
-    {
-    }
+    aclDataBuffer(void* const dataIn, const uint64_t len) : data(dataIn), length(len) {}
 
     ~aclDataBuffer() = default;
-    void *data;
+    void* data;
     uint64_t length;
 };
 

@@ -20,17 +20,17 @@
 #include "inc/basic_define.h"
 
 namespace tsd {
-using PackageWorkerCreateFunc = std::function<std::shared_ptr<BasePackageWorker>(const PackageWorkerParas &)>;
+using PackageWorkerCreateFunc = std::function<std::shared_ptr<BasePackageWorker>(const PackageWorkerParas&)>;
 
 class PackageWorkerFactory {
 public:
-    static PackageWorkerFactory &GetInstance();
-    static bool RegisterPackageWorker(const PackageWorkerType type, const PackageWorkerCreateFunc &func);
-    std::shared_ptr<BasePackageWorker> CreatePackageWorker(const PackageWorkerType type,
-                                                           const PackageWorkerParas paras) const;
+    static PackageWorkerFactory& GetInstance();
+    static bool RegisterPackageWorker(const PackageWorkerType type, const PackageWorkerCreateFunc& func);
+    std::shared_ptr<BasePackageWorker> CreatePackageWorker(
+        const PackageWorkerType type, const PackageWorkerParas paras) const;
 
 private:
-    PackageWorkerFactory() : creatorMapMtx_(), creatorMap_() {};
+    PackageWorkerFactory() : creatorMapMtx_(), creatorMap_(){};
     ~PackageWorkerFactory() = default;
 
     PackageWorkerFactory(PackageWorkerFactory const&) = delete;
@@ -38,7 +38,7 @@ private:
     PackageWorkerFactory(PackageWorkerFactory&&) = delete;
     PackageWorkerFactory& operator=(PackageWorkerFactory&&) = delete;
 
-    bool RegisterPackageWorkerCreator(const PackageWorkerType type, const PackageWorkerCreateFunc &func);
+    bool RegisterPackageWorkerCreator(const PackageWorkerType type, const PackageWorkerCreateFunc& func);
 
     std::mutex creatorMapMtx_;
     std::map<PackageWorkerType, PackageWorkerCreateFunc> creatorMap_;
@@ -46,9 +46,10 @@ private:
 } // namespace tsd
 
 #define REGISTER_PACKAGE_WORKER(type, clazz)                                                                      \
-namespace {                                                                                                       \
-    static bool __attribute__((unused)) g_Creator_##clazz = PackageWorkerFactory::RegisterPackageWorker((type),   \
+    namespace {                                                                                                   \
+    static bool __attribute__((unused)) g_Creator_##clazz = PackageWorkerFactory::RegisterPackageWorker(          \
+        (type),                                                                                                   \
         [](const PackageWorkerParas paras) -> std::shared_ptr<clazz> { return std::make_shared<clazz>(paras); }); \
-}
+    }
 
 #endif // TSD_PACKAGE_WORKER_FACTORY_H

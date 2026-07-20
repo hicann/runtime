@@ -17,23 +17,23 @@ extern "C" {
 
 typedef struct {
     mmAtomicType64 refCount;
-    void *obj;
+    void* obj;
 } RefObj;
 
-typedef void* (*FnCreateRefObjValue)(RefObj *);
-typedef void* (*FnCreateRefObjValueWithUserData)(RefObj *, const void *);
-typedef void (*FnDestroyRefObjValue)(RefObj *);
+typedef void* (*FnCreateRefObjValue)(RefObj*);
+typedef void* (*FnCreateRefObjValueWithUserData)(RefObj*, const void*);
+typedef void (*FnDestroyRefObjValue)(RefObj*);
 
-#define REF_OBJ_INIT {0, NULL}
-void InitRefObj(RefObj *obj);
-static inline void* GetRefObjVal(RefObj *obj)
-{
-    return obj->obj;
-};
-void* GetObjRef(RefObj *obj, FnCreateRefObjValue fnCreateObj);
-void* GetObjRefWithUserData(RefObj *obj, const void *userData, FnCreateRefObjValueWithUserData fnCreateObj);
+#define REF_OBJ_INIT \
+    {                \
+        0, NULL      \
+    }
+void InitRefObj(RefObj* obj);
+static inline void* GetRefObjVal(RefObj* obj) { return obj->obj; };
+void* GetObjRef(RefObj* obj, FnCreateRefObjValue fnCreateObj);
+void* GetObjRefWithUserData(RefObj* obj, const void* userData, FnCreateRefObjValueWithUserData fnCreateObj);
 // 为了避免fnDestroyObj里面释放RefObj场景的，obj->obj的指针赋空的动作由fnDestroyObj函数执行保证
-void ReleaseObjRef(RefObj *obj, FnDestroyRefObjValue fnDestroyObj);
+void ReleaseObjRef(RefObj* obj, FnDestroyRefObjValue fnDestroyObj);
 
 #ifdef __cplusplus
 }

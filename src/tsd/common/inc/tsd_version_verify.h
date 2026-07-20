@@ -17,41 +17,40 @@
 namespace tsd {
 class VersionVerify {
 public:
-
-    VersionVerify() : peerVersion_(0U) {};
+    VersionVerify() : peerVersion_(0U){};
 
     ~VersionVerify() = default;
 
     /**
-    * @ingroup VersionVerify
-    * @param [in] peerVersionInfo : client version info
-    * @brief check whether client and server can establish communication
-    */
+     * @ingroup VersionVerify
+     * @param [in] peerVersionInfo : client version info
+     * @brief check whether client and server can establish communication
+     */
     bool PeerVersionCheck(const HDCMessage::VersionInfo& peerVersionInfo);
 
     /**
-    * @ingroup VersionVerify
-    * @param [in] msgType : communication type
-    * @brief check whether this type of communication can be understood by server
-    */
+     * @ingroup VersionVerify
+     * @param [in] msgType : communication type
+     * @brief check whether this type of communication can be understood by server
+     */
     bool SpecialFeatureCheck(const HDCMessage::MsgType& msgType);
 
     /**
-    * @ingroup VersionVerify
-    * @param [in] peerVersionInfo : client version info
-    * @brief parse and save version info send from client
-    */
+     * @ingroup VersionVerify
+     * @param [in] peerVersionInfo : client version info
+     * @brief parse and save version info send from client
+     */
     void ParseVersionInfo(const HDCMessage::VersionInfo& peerVersionInfo);
 
     /**
-    * @ingroup VersionVerify
-    * @param [in] msg : message send by client
-    * @brief add version info to message which client will send to server
-    */
+     * @ingroup VersionVerify
+     * @param [in] msg : message send by client
+     * @brief add version info to message which client will send to server
+     */
     void SetVersionInfo(HDCMessage& msg) const;
 
 private:
-    uint32_t peerVersion_;  // used for hdc communication;
+    uint32_t peerVersion_; // used for hdc communication;
     std::map<HDCMessage::MsgType, std::set<std::string>> peerFeatureList_;
     std::map<HDCMessage::MsgType, bool> alreadyCheckedList_;
 };

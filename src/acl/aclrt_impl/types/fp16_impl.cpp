@@ -21,7 +21,7 @@ union TypeUnion {
     uint32_t uVal;
 };
 
-static void ExtractFP16(const uint16_t val, uint16_t *const s, int16_t *const e, uint16_t *const m)
+static void ExtractFP16(const uint16_t val, uint16_t* const s, int16_t* const e, uint16_t* const m)
 {
     // 1.Extract
     *s = FP16_EXTRAC_SIGN(val);
@@ -64,7 +64,7 @@ static bool IsRoundOne(const uint64_t man, const uint16_t truncLen)
  * @brief   normalize fp16_t value
  * @return
  */
-static void Fp16Normalize(uint16_t &expVal, uint16_t &man)
+static void Fp16Normalize(uint16_t& expVal, uint16_t& man)
 {
     if (expVal >= FP16_MAX_EXP) {
         expVal = FP16_MAX_EXP - 1U;
@@ -112,20 +112,20 @@ uint16_t FloatToFp16(const float32_t val)
 {
     TypeUnion u;
     u.fVal = val;
-    const uint32_t ui32V = u.uVal;  // 1:8:23bit sign:exp:man
-    const auto sRet = static_cast<uint16_t>((ui32V & FP32_SIGN_MASK) >> FP32_SIGN_INDEX);  // 4Byte->2Byte
-    const uint32_t eF = (ui32V & FP32_EXP_MASK) >> FP32_MAN_LEN; // 8 bit exponent
+    const uint32_t ui32V = u.uVal;                                                        // 1:8:23bit sign:exp:man
+    const auto sRet = static_cast<uint16_t>((ui32V & FP32_SIGN_MASK) >> FP32_SIGN_INDEX); // 4Byte->2Byte
+    const uint32_t eF = (ui32V & FP32_EXP_MASK) >> FP32_MAN_LEN;                          // 8 bit exponent
     uint32_t mF = (ui32V & FP32_MAN_MASK); // 23 bit mantissa dont't need to care about denormal
 
     uint16_t mRet;
     uint16_t eRet;
     // Exponent overflow/NaN converts to signed inf/NaN
-    if (eF > 0x8FU) {  // 0x8Fu:142=127+15
+    if (eF > 0x8FU) { // 0x8Fu:142=127+15
         eRet = FP16_MAX_EXP - 1U;
         mRet = FP16_MAX_MAN;
-    } else if (eF <= 0x70U) {  // 0x70u:112=127-15 Exponent underflow converts to denormalized half or signed zero
+    } else if (eF <= 0x70U) { // 0x70u:112=127-15 Exponent underflow converts to denormalized half or signed zero
         eRet = 0U;
-        if (eF >= 0x67U) {  // 0x67:103=127-24 Denormal
+        if (eF >= 0x67U) {    // 0x67:103=127-24 Denormal
             mF = (mF | FP32_MAN_HIDE_BIT);
             const uint16_t shiftOut = FP32_MAN_LEN;
             const uint64_t mTmp = (static_cast<uint64_t>(mF)) << (eF - 0x67U);
@@ -135,12 +135,12 @@ uint16_t FloatToFp16(const float32_t val)
             if (needRound) {
                 mRet++;
             }
-        } else if ((eF == 0x66U) && (mF > 0U)) {  // 0x66:102 Denormal 0<f_v<min(Denormal)
+        } else if ((eF == 0x66U) && (mF > 0U)) { // 0x66:102 Denormal 0<f_v<min(Denormal)
             mRet = 1U;
         } else {
             mRet = 0U;
         }
-    } else {  // Regular case with no overflow or underflow
+    } else { // Regular case with no overflow or underflow
         const uint32_t mLenDelta = FP32_MAN_LEN - FP16_MAN_LEN;
         eRet = static_cast<uint16_t>(eF - 0x70U);
         const bool needRound = IsRoundOne(static_cast<uint64_t>(mF), static_cast<uint16_t>(mLenDelta));

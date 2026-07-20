@@ -28,16 +28,13 @@ typedef struct MdlExecParam {
     uint32_t sqid;
     uint8_t meType;
     void* cbFn;
-    void *cbData;
+    void* cbData;
     bool sync;
 } MdlExecParam;
 
-static RtCtrlMdlInfo g_rtCtrlMdlInfo[MODEL_TYPE_MAX] = {
-    {NULL, UINT32_MAX},
-    {NULL, UINT32_MAX}
-};
+static RtCtrlMdlInfo g_rtCtrlMdlInfo[MODEL_TYPE_MAX] = {{NULL, UINT32_MAX}, {NULL, UINT32_MAX}};
 
-static void GetMdlExecuteInfo(MdlExecParam *param, rtMdlExecute_t* modelExec)
+static void GetMdlExecuteInfo(MdlExecParam* param, rtMdlExecute_t* modelExec)
 {
     modelExec->ioaSrcAddr = NULL;
     modelExec->dynamicTaskPtr = (void*)((char*)g_rtCtrlMdlInfo[param->type].taskDesc + MODEL_TASK_DESC_SIZE);
@@ -60,15 +57,15 @@ static void GetMdlExecuteInfo(MdlExecParam *param, rtMdlExecute_t* modelExec)
 
 static rtError_t CreateTaskDescInfo(struct halGetTaskDescInput* input, struct halGetTaskDescOutput* out)
 {
-    drvError_t drvRet = halMemAlloc(&(input->mdl_ctrl_info.static_task_desc),
-        MODEL_TASK_DESC_SIZE + MODEL_TASK_DESC_SIZE, RT_MEMORY_DEFAULT);
+    drvError_t drvRet = halMemAlloc(
+        &(input->mdl_ctrl_info.static_task_desc), MODEL_TASK_DESC_SIZE + MODEL_TASK_DESC_SIZE, RT_MEMORY_DEFAULT);
     if (drvRet != DRV_ERROR_NONE) {
         RT_LOG_ERROR("halMemAlloc failed, ret=%d.", drvRet);
         return ErrorConvert(drvRet);
     }
 
-    input->mdl_ctrl_info.dynamic_task_desc = (void*)(
-        (char*)input->mdl_ctrl_info.static_task_desc + MODEL_TASK_DESC_SIZE);
+    input->mdl_ctrl_info.dynamic_task_desc =
+        (void*)((char*)input->mdl_ctrl_info.static_task_desc + MODEL_TASK_DESC_SIZE);
     input->mdl_ctrl_info.static_task_desc_size = MODEL_TASK_DESC_SIZE;
     input->mdl_ctrl_info.dynamic_task_desc_size = MODEL_TASK_DESC_SIZE;
 
@@ -142,7 +139,7 @@ rtError_t SendNullMdl(uint32_t sqId)
     return CtrlMdlExec(&param);
 }
 
-static rtError_t SendCallBackMdl(rtCallback_t callBackFunc, void *fnData, uint32_t sqId, bool isBlock)
+static rtError_t SendCallBackMdl(rtCallback_t callBackFunc, void* fnData, uint32_t sqId, bool isBlock)
 {
     uint8_t meType = (isBlock) ? MDL_BLOCK_CALLBACK : MDL_NON_BLOCK_CALLBACK;
     MdlExecParam param = {CALLBACK, sqId, meType, callBackFunc, fnData, false};
@@ -177,7 +174,7 @@ rtError_t rtProcessReport(int32_t timeout)
 
     RT_LOG_INFO("rptNum=%d.", output.rpt_num);
     for (uint8_t i = 0; i < output.rpt_num; i++) {
-        void (*callbackFunc)(void *userData) = (void *)input.rpt[i].fn;
+        void (*callbackFunc)(void* userData) = (void*)input.rpt[i].fn;
         if (callbackFunc == NULL) {
             continue;
         }
@@ -195,7 +192,7 @@ rtError_t rtProcessReport(int32_t timeout)
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtCallbackLaunch(rtCallback_t callBackFunc, void *fnData, rtStream_t stm, bool isBlock)
+rtError_t rtCallbackLaunch(rtCallback_t callBackFunc, void* fnData, rtStream_t stm, bool isBlock)
 {
     rtStream_t stream = stm;
     if (stream == NULL) {

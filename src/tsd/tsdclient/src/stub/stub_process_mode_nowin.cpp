@@ -14,11 +14,12 @@
 namespace tsd {
 namespace {
 constexpr uint32_t MAX_QUEUE_ID_NUM = 8192U;
-}  // namespace
+} // namespace
 TSD_StatusT ProcessModeManager::ProcessQueueForAdc()
 {
     if ((GetPlatInfoMode() != static_cast<uint32_t>(ModeType::OFFLINE)) || !IsAdcEnv()) {
-        TSD_RUN_INFO("[TsdClient] it is unnecessary for current mode[%u] to grant queue auth to aicpusd",
+        TSD_RUN_INFO(
+            "[TsdClient] it is unnecessary for current mode[%u] to grant queue auth to aicpusd",
             static_cast<uint32_t>(ModeType::OFFLINE));
         return TSD_OK;
     }
@@ -36,9 +37,9 @@ TSD_StatusT ProcessModeManager::ProcessQueueForAdc()
     return TSD_OK;
 }
 
-TSD_StatusT ProcessModeManager::ProcessQueueGrant(const QueueQueryOutputPara &queueInfoOutBuff,
-                                                  const QueueQueryOutput * const queueInfoList,
-                                                  const pid_t aicpuPid) const
+TSD_StatusT ProcessModeManager::ProcessQueueGrant(
+    const QueueQueryOutputPara& queueInfoOutBuff, const QueueQueryOutput* const queueInfoList,
+    const pid_t aicpuPid) const
 {
     const uint32_t outLen = queueInfoOutBuff.outLen;
     if (outLen == 0U) {
@@ -60,8 +61,8 @@ TSD_StatusT ProcessModeManager::ProcessQueueGrant(const QueueQueryOutputPara &qu
         if (!static_cast<bool>(queueInfoList->queQueryQuesOfProcInfo[i].attr.manage)) {
             continue;
         }
-        const auto drvRet = halQueueGrant(logicDeviceId_, static_cast<int32_t>(queueId),
-            aicpuPid, queueInfoList->queQueryQuesOfProcInfo[i].attr);
+        const auto drvRet = halQueueGrant(
+            logicDeviceId_, static_cast<int32_t>(queueId), aicpuPid, queueInfoList->queQueryQuesOfProcInfo[i].attr);
         if ((drvRet != DRV_ERROR_NONE) && (drvRet != DRV_ERROR_NOT_SUPPORT)) {
             TSD_ERROR("[TsdClient]Grant qid[%u] failed, ret[%d]", queueId, drvRet);
             return TSD_INTERNAL_ERROR;
@@ -92,13 +93,13 @@ TSD_StatusT ProcessModeManager::SyncQueueAuthority() const
         TSD_ERROR("[TsdClient] fail to alloc queueInfoListPtr");
         return TSD_INTERNAL_ERROR;
     }
-    QueueQueryOutput *queueInfoList = queueInfoListPtr.get();
+    QueueQueryOutput* queueInfoList = queueInfoListPtr.get();
     if (queueInfoList == nullptr) {
         TSD_ERROR("[TsdClient] queueInfoList is null");
         return TSD_INTERNAL_ERROR;
     }
-    QueueQueryOutputPara queueInfoOutBuff = {PtrToPtr<QueueQueryOutput, void>(queueInfoList),
-                                             static_cast<uint32_t>(sizeof(QueueQueryOutput))};
+    QueueQueryOutputPara queueInfoOutBuff = {
+        PtrToPtr<QueueQueryOutput, void>(queueInfoList), static_cast<uint32_t>(sizeof(QueueQueryOutput))};
     QueueQueryInputPara queueInput = {PtrToPtr<pid_t, void>(&srcPid), static_cast<uint32_t>(sizeof(srcPid))};
     drvRet = halQueueQuery(logicDeviceId_, QUEUE_QUERY_QUES_OF_CUR_PROC, &queueInput, &queueInfoOutBuff);
     if (drvRet == DRV_ERROR_NOT_SUPPORT) {
@@ -113,7 +114,7 @@ TSD_StatusT ProcessModeManager::SyncQueueAuthority() const
     return ProcessQueueGrant(queueInfoOutBuff, queueInfoList, aicpuPid);
 }
 
-TSD_StatusT ProcessModeManager::GetAicpusdPid(pid_t &aicpusdPid) const
+TSD_StatusT ProcessModeManager::GetAicpusdPid(pid_t& aicpusdPid) const
 {
     aicpusdPid = -1;
     const pid_t srcPid = drvDeviceGetBareTgid();
@@ -140,4 +141,4 @@ TSD_StatusT ProcessModeManager::GetAicpusdPid(pid_t &aicpusdPid) const
     return TSD_OK;
 }
 
-}
+} // namespace tsd

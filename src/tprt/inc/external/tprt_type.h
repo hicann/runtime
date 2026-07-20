@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef void *TprtResHandle_t;
+typedef void* TprtResHandle_t;
 #define SQCQ_INFO_LENGTH 8
 #define SQCQ_RESV_LENGTH 8
 #define SQCQ_MAX_DEPTH 1024U
@@ -32,7 +32,7 @@ typedef enum tagTprtSqCqPropType {
 } TprtSqCqPropType_t;
 
 typedef struct tagTprtTaskSendInfo_t {
-    uint8_t *sqeAddr;
+    uint8_t* sqeAddr;
     uint32_t sqId;
     uint32_t sqeNum;
 } TprtTaskSendInfo_t;
@@ -50,7 +50,7 @@ typedef enum tagSqCqOpType {
 
 typedef enum tagTprtSqState_t {
     TPRT_SQ_STATE_IS_RUNNING = 0,
-    TPRT_SQ_STATE_ERROR_ENCOUNTERED= 1,
+    TPRT_SQ_STATE_ERROR_ENCOUNTERED = 1,
     TPRT_SQ_STATE_IS_QUITTED = 2,
 } TprtSqState_t;
 
@@ -69,7 +69,7 @@ typedef struct TprtSqCqInputInfo {
 typedef struct TprtCfgInfo {
     uint32_t sqcqMaxNum;
     uint32_t sqcqMaxDepth;
-    uint32_t timeoutMonitorUint;  // unit:ms
+    uint32_t timeoutMonitorUint; // unit:ms
     uint32_t defaultExeTimeout;  // unit:ms
 } TprtCfgInfo_t;
 
@@ -84,7 +84,7 @@ typedef struct TprtSqCqQueryInfo {
 typedef struct tagTprtReportCqeInfo {
     TprtSqCqOpType_t type;
     uint32_t cqId;
-    uint8_t *cqeAddr;
+    uint8_t* cqeAddr;
     uint32_t cqeNum;
     uint32_t reportCqeNum; /* output */
     uint32_t res[SQCQ_RESV_LENGTH];
@@ -92,8 +92,8 @@ typedef struct tagTprtReportCqeInfo {
 
 typedef struct tagTprtLogicCqReport_t {
     uint32_t taskSn;
-    uint32_t errorCode;    // cqe acc_status/sq_sw_status
-    uint8_t errorType;     // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
+    uint32_t errorCode; // cqe acc_status/sq_sw_status
+    uint8_t errorType;  // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
     uint8_t sqeType;
     uint16_t sqId;
     uint16_t sqHead;

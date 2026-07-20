@@ -14,11 +14,11 @@
 #define LINUX 0
 #define LITEOS 1
 
-#if(NANO_OS_TYPE == LINUX) //lint !e553
+#if (NANO_OS_TYPE == LINUX) // lint !e553
 #include "mmpa_linux.h"
 #endif
 
-#if(NANO_OS_TYPE == LITEOS) //lint !e553
+#if (NANO_OS_TYPE == LITEOS) // lint !e553
 #if defined(CPU_HIFI3Z) && CPU_HIFI3Z
 #include "mmpa_dsp.h"
 #else

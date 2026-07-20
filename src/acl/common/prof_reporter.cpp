@@ -11,14 +11,14 @@
 #include "prof_reporter.h"
 #include "mmpa/mmpa_api.h"
 
-
 namespace {
-bool IsDumpToStdEnabled() {
-   const char *profilingToStdOut = nullptr;
-   MM_SYS_GET_ENV(MM_ENV_GE_PROFILING_TO_STD_OUT, profilingToStdOut);
-   return profilingToStdOut != nullptr;
+bool IsDumpToStdEnabled()
+{
+    const char* profilingToStdOut = nullptr;
+    MM_SYS_GET_ENV(MM_ENV_GE_PROFILING_TO_STD_OUT, profilingToStdOut);
+    return profilingToStdOut != nullptr;
 }
-}
+} // namespace
 
 namespace acl {
 bool AclProfilingReporter::profRun = false;
@@ -28,7 +28,6 @@ AclProfilingReporter::AclProfilingReporter(const AclProfType apiId) : aclApi_(ap
         startTime_ = MsprofSysCycleTime();
     }
 }
-
 
 AclProfilingReporter::~AclProfilingReporter() noexcept
 {
@@ -45,4 +44,4 @@ AclProfilingReporter::~AclProfilingReporter() noexcept
         (void)MsprofReportApi(true, &api);
     }
 }
-}  // namespace acl
+} // namespace acl

@@ -13,8 +13,8 @@
 #include "mmpa/mmpa_api.h"
 namespace cce {
 namespace tprt {
-constexpr uint32_t TPRT_MAX_LOG_BUF_SIZE = 896;  // Total length for slog is 1024 bytes, and head use 128 bytes.
-void RecordErrorLog(const char *file, const int32_t line, const char *fun, const char *fmt, ...)
+constexpr uint32_t TPRT_MAX_LOG_BUF_SIZE = 896; // Total length for slog is 1024 bytes, and head use 128 bytes.
+void RecordErrorLog(const char* file, const int32_t line, const char* fun, const char* fmt, ...)
 {
     if (file == nullptr || fun == nullptr || fmt == nullptr) {
         return;
@@ -27,13 +27,14 @@ void RecordErrorLog(const char *file, const int32_t line, const char *fun, const
     int ret = vsnprintf_truncated_s(buf, TPRT_MAX_LOG_BUF_SIZE, fmt, arg);
     va_end(arg);
     if (ret > 0) {
-        DlogSub(static_cast<int32_t>(RUNTIME), "TPRT", DLOG_ERROR, "[%s:%d] TID[%d] %s:%s%s",
-            file, line, mmGetTid(), fun, err.c_str(), buf);
+        DlogSub(
+            static_cast<int32_t>(RUNTIME), "TPRT", DLOG_ERROR, "[%s:%d] TID[%d] %s:%s%s", file, line, mmGetTid(), fun,
+            err.c_str(), buf);
     }
     return;
 }
 
-void RecordLog(int32_t level, const char *file, const int32_t line, const char *fun, const char *fmt, ...)
+void RecordLog(int32_t level, const char* file, const int32_t line, const char* fun, const char* fmt, ...)
 {
     if (file == nullptr || fun == nullptr || fmt == nullptr) {
         return;
@@ -45,9 +46,10 @@ void RecordLog(int32_t level, const char *file, const int32_t line, const char *
     int ret = vsnprintf_truncated_s(buf, TPRT_MAX_LOG_BUF_SIZE, fmt, arg);
     va_end(arg);
     if (ret > 0) {
-        DlogSub(static_cast<int32_t>(RUNTIME), "TPRT", level, "[%s:%d] TID[%d] %s:%s", file, line, mmGetTid(), fun, buf);
+        DlogSub(
+            static_cast<int32_t>(RUNTIME), "TPRT", level, "[%s:%d] TID[%d] %s:%s", file, line, mmGetTid(), fun, buf);
     }
     return;
 }
-}
-}
+} // namespace tprt
+} // namespace cce

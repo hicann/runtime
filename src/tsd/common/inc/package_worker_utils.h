@@ -9,20 +9,21 @@
  */
 #ifndef TSD_PACKAGE_WORKER_UTILS_H
 #define TSD_PACKAGE_WORKER_UTILS_H
- 
+
 #include <string>
 #include <functional>
 #include "tsd/status.h"
- 
+
 namespace tsd {
 
 class PackageWorkerUtils {
 public:
-    using TraverseFileHandle = std::function<void(const std::string &filePath)>;
-    static TSD_StatusT VerifyPackage(const std::string &pkgPath);
-    static TSD_StatusT MakeDirectory(const std::string &dirPath);
-    static void RemoveFile(const std::string &filePath);
-    static uint64_t GetFileSize(const std::string &filePath);
+    using TraverseFileHandle = std::function<void(const std::string& filePath)>;
+    static TSD_StatusT VerifyPackage(const std::string& pkgPath);
+    static TSD_StatusT MakeDirectory(const std::string& dirPath);
+    static void RemoveFile(const std::string& filePath);
+    static uint64_t GetFileSize(const std::string& filePath);
+
 private:
     PackageWorkerUtils() = default;
     ~PackageWorkerUtils() = default;

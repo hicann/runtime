@@ -15,10 +15,10 @@
 namespace cce {
 namespace tprt {
 
-using PfnTprtOpSqCq = uint32_t (*)(TprtDevice *, TprtSqCqOpInfo_t *);
-static uint32_t TprtProcSqQueryInfo(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
+using PfnTprtOpSqCq = uint32_t (*)(TprtDevice*, TprtSqCqOpInfo_t*);
+static uint32_t TprtProcSqQueryInfo(TprtDevice* dev, TprtSqCqOpInfo_t* opInfo)
 {
-    TprtSqHandle *sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
+    TprtSqHandle* sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
     if (sqHandle == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
         return TPRT_SQ_HANDLE_INVALID;
@@ -38,19 +38,17 @@ static uint32_t TprtProcSqQueryInfo(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
             break;
         default:
             error = TPRT_INPUT_OP_TYPE_INVALID;
-            TPRT_LOG(TPRT_LOG_ERROR,
-                "device_id[%u] sq_id[%u] op=%u is invalid.",
-                dev->TprtDevGetDevId_(),
-                opInfo->reqId,
+            TPRT_LOG(
+                TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] op=%u is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId,
                 opInfo->prop);
             break;
     }
     return error;
 }
 
-static uint32_t TprtProcConfigSq(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
+static uint32_t TprtProcConfigSq(TprtDevice* dev, TprtSqCqOpInfo_t* opInfo)
 {
-    TprtSqHandle *sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
+    TprtSqHandle* sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
     if (sqHandle == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
         return TPRT_SQ_HANDLE_INVALID;
@@ -62,10 +60,8 @@ static uint32_t TprtProcConfigSq(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
             break;
         default:
             error = TPRT_INPUT_OP_TYPE_INVALID;
-            TPRT_LOG(TPRT_LOG_ERROR,
-                "device_id[%u] sq_id[%u] prop[%u].",
-                dev->TprtDevGetDevId_(),
-                opInfo->reqId,
+            TPRT_LOG(
+                TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] prop[%u].", dev->TprtDevGetDevId_(), opInfo->reqId,
                 opInfo->prop);
             break;
     }
@@ -76,8 +72,8 @@ TprtDevice::TprtDevice(uint32_t devId, uint32_t timeoutMonitorUint) : devId_(dev
 {
     timer_ = new (std::nothrow) TprtTimer();
     if (timer_ != nullptr) {
-        timer_->SetDevice(this); 
-        timer_->Start(timeoutMonitorUint);    // 定时器启动
+        timer_->SetDevice(this);
+        timer_->Start(timeoutMonitorUint); // 定时器启动
     } else {
         TPRT_LOG(TPRT_LOG_ERROR, "Failed to create timer for device_id[%u].", devId_);
     }
@@ -118,8 +114,8 @@ uint32_t TprtDevice::CheckDuplicateSqCqId(uint32_t sqId, uint32_t cqId)
 
 uint32_t TprtDevice::TprtSqCqAlloc(const uint32_t sqId, const uint32_t cqId)
 {
-    TprtSqHandle *sqHandle = nullptr;
-    TprtCqHandle *cqHandle = nullptr;
+    TprtSqHandle* sqHandle = nullptr;
+    TprtCqHandle* cqHandle = nullptr;
     std::shared_ptr<TprtWorker> worker = nullptr;
 
     std::lock_guard<std::mutex> allocLock(sqCqWorkerMapLock_);
@@ -129,15 +125,22 @@ uint32_t TprtDevice::TprtSqCqAlloc(const uint32_t sqId, const uint32_t cqId)
     }
 
     std::function<void()> const errRecycle = [&sqId, &cqId, &sqHandle, &cqHandle, &worker, this]() {
-        if (this->sqHandleMap_.find(sqId) != this->sqHandleMap_.end()) { this->sqHandleMap_.erase(sqId); }
-        if (this->cqHandleMap_.find(cqId) != this->cqHandleMap_.end()) { this->cqHandleMap_.erase(cqId); }
-        if (this->workerMap_.find(sqHandle) != this->workerMap_.end()) { this->workerMap_.erase(sqHandle); }
+        if (this->sqHandleMap_.find(sqId) != this->sqHandleMap_.end()) {
+            this->sqHandleMap_.erase(sqId);
+        }
+        if (this->cqHandleMap_.find(cqId) != this->cqHandleMap_.end()) {
+            this->cqHandleMap_.erase(cqId);
+        }
+        if (this->workerMap_.find(sqHandle) != this->workerMap_.end()) {
+            this->workerMap_.erase(sqHandle);
+        }
         DELETE_O(sqHandle);
         DELETE_O(cqHandle);
-        if (worker != nullptr) { 
+        if (worker != nullptr) {
             worker->TprtWorkerFree();
-            worker.reset(); 
-    }};
+            worker.reset();
+        }
+    };
     ScopeGuard allocErrRecycle(errRecycle);
     sqHandle = new (std::nothrow) TprtSqHandle(devId_, sqId);
     if (sqHandle == nullptr) {
@@ -172,8 +175,8 @@ uint32_t TprtDevice::TprtSqCqAlloc(const uint32_t sqId, const uint32_t cqId)
 
 uint32_t TprtDevice::TprtSqCqDeAlloc(const uint32_t sqId, const uint32_t cqId)
 {
-    TprtSqHandle *sqHandle = nullptr;
-    TprtCqHandle *cqHandle = nullptr;
+    TprtSqHandle* sqHandle = nullptr;
+    TprtCqHandle* cqHandle = nullptr;
     std::shared_ptr<TprtWorker> workHandle = nullptr;
     std::unique_lock<std::mutex> mapLock(sqCqWorkerMapLock_);
     auto sqItor = sqHandleMap_.find(sqId);
@@ -214,7 +217,7 @@ uint32_t TprtDevice::TprtSqCqDeAlloc(const uint32_t sqId, const uint32_t cqId)
     return TPRT_SUCCESS;
 }
 
-TprtSqHandle *TprtDevice::TprtGetSqHandleBySqId(uint32_t sqId)
+TprtSqHandle* TprtDevice::TprtGetSqHandleBySqId(uint32_t sqId)
 {
     std::unique_lock<std::mutex> sqLock(sqCqWorkerMapLock_);
     if (sqHandleMap_.find(sqId) != sqHandleMap_.end()) {
@@ -224,7 +227,7 @@ TprtSqHandle *TprtDevice::TprtGetSqHandleBySqId(uint32_t sqId)
     return nullptr;
 }
 
-TprtCqHandle *TprtDevice::TprtGetCqHandleByCqId(uint32_t cqId)
+TprtCqHandle* TprtDevice::TprtGetCqHandleByCqId(uint32_t cqId)
 {
     std::unique_lock<std::mutex> cqLock(sqCqWorkerMapLock_);
     if (cqHandleMap_.find(cqId) != cqHandleMap_.end()) {
@@ -244,13 +247,10 @@ std::shared_ptr<TprtWorker> TprtDevice::TprtGetWorkHandleBySqHandle(TprtSqHandle
     return nullptr;
 }
 
-uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo)
+uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t* opInfo)
 {
-    TPRT_LOG(TPRT_LOG_DEBUG,
-        "device_id[%u] process op type[%d] reqId[%u] prop[%u].",
-        devId_,
-        opInfo->type,
-        opInfo->reqId,
+    TPRT_LOG(
+        TPRT_LOG_DEBUG, "device_id[%u] process op type[%d] reqId[%u] prop[%u].", devId_, opInfo->type, opInfo->reqId,
         opInfo->prop);
     uint32_t error = TPRT_SUCCESS;
     switch (opInfo->type) {
@@ -264,13 +264,9 @@ uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo)
             error = TPRT_INPUT_OP_TYPE_INVALID;
     }
     if (error != TPRT_SUCCESS) {
-            TPRT_LOG(TPRT_LOG_ERROR,
-                "device_id[%u] process op type[%d] reqId[%u] prop[%u] failed, error=%u.",
-                devId_,
-                opInfo->type,
-                opInfo->reqId,
-                opInfo->prop,
-                error);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "device_id[%u] process op type[%d] reqId[%u] prop[%u] failed, error=%u.", devId_,
+            opInfo->type, opInfo->reqId, opInfo->prop, error);
     }
     return error;
 }
@@ -287,12 +283,15 @@ static TimeoutStatus_t waitSqIsTimeout(const TprtSqHandle* sqHandle, const TprtS
     auto timeoutDuration = std::chrono::seconds(sqHandle->GetTimeoutWaitInfo().timeout);
     auto elapsed = curTime - sqHandle->GetTimeoutWaitInfo().timeStamp;
     auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
-    TPRT_LOG(TPRT_LOG_DEBUG, 
-        "waitSqIsTimeout: curTime since epoch: %ld ms, startTime since epoch: %ld ms, elapsed: %ld ms, elapsedSeconds: %ld, timeout setting: %d seconds",
+    TPRT_LOG(
+        TPRT_LOG_DEBUG,
+        "waitSqIsTimeout: curTime since epoch: %ld ms, startTime since epoch: %ld ms, elapsed: %ld ms, elapsedSeconds: "
+        "%ld, timeout setting: %d seconds",
         std::chrono::duration_cast<std::chrono::milliseconds>(curTime.time_since_epoch()).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(sqHandle->GetTimeoutWaitInfo().timeStamp.time_since_epoch()).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
-        elapsedSeconds,
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            sqHandle->GetTimeoutWaitInfo().timeStamp.time_since_epoch())
+            .count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(), elapsedSeconds,
         sqHandle->GetTimeoutWaitInfo().timeout);
     if (curTime - sqHandle->GetTimeoutWaitInfo().timeStamp >= timeoutDuration) {
         return WAIT_TASK_IS_TIMEOUT;
@@ -349,7 +348,7 @@ void TprtDevice::RunCheckTaskTimeout()
     }
     for (const auto& sqId : sqHandleIdList) {
         uint32_t ret = TprtGetSqHandleSharedPtrById(sqId, sqHandle);
-        if ((ret != TPRT_SUCCESS) || (sqHandle == nullptr) || 
+        if ((ret != TPRT_SUCCESS) || (sqHandle == nullptr) ||
             (sqHandle.get()->SqGetSqState() != TPRT_SQ_STATE_IS_RUNNING)) {
             continue;
         }
@@ -365,5 +364,5 @@ void TprtDevice::RunCheckTaskTimeout()
         sqHandle.reset();
     }
 }
-}  // namespace tprt
-}  // namespace cce
+} // namespace tprt
+} // namespace cce

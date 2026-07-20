@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-aclError aclrtCreateLabelImpl(aclrtLabel *label)
+aclError aclrtCreateLabelImpl(aclrtLabel* label)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateLabel);
     ACL_LOG_INFO("start to execute aclrtCreateLabel");
@@ -56,15 +56,15 @@ aclError aclrtDestroyLabelImpl(aclrtLabel label)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCreateLabelListImpl(aclrtLabel *labels, size_t num, aclrtLabelList *labelList)
+aclError aclrtCreateLabelListImpl(aclrtLabel* labels, size_t num, aclrtLabelList* labelList)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateLabelList);
     ACL_LOG_INFO("start to execute aclrtCreateLabelList, num is [%zu]", num);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labels);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labelList);
 
-    ACL_REQUIRES_RTS_OK(rtsLabelSwitchListCreate(static_cast<rtLabel_t*>(labels), num,
-        reinterpret_cast<void**>(labelList)));
+    ACL_REQUIRES_RTS_OK(
+        rtsLabelSwitchListCreate(static_cast<rtLabel_t*>(labels), num, reinterpret_cast<void**>(labelList)));
 
     ACL_LOG_INFO("successfully execute aclrtCreateLabelList");
     return ACL_SUCCESS;
@@ -82,7 +82,7 @@ aclError aclrtDestroyLabelListImpl(aclrtLabelList labelList)
     return ACL_SUCCESS;
 }
 
-aclError aclrtSwitchLabelByIndexImpl(void *ptr, uint32_t maxValue, aclrtLabelList labelList, aclrtStream stream)
+aclError aclrtSwitchLabelByIndexImpl(void* ptr, uint32_t maxValue, aclrtLabelList labelList, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSwitchLabelByIndex);
     ACL_LOG_INFO("start to execute aclrtSwitchLabelByIndex, maxValue is [%u]", maxValue);
@@ -90,8 +90,8 @@ aclError aclrtSwitchLabelByIndexImpl(void *ptr, uint32_t maxValue, aclrtLabelLis
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(labelList);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
 
-    ACL_REQUIRES_RTS_OK(rtsLabelSwitchByIndex(ptr, maxValue, reinterpret_cast<void*>(labelList),
-        static_cast<rtStream_t>(stream)));
+    ACL_REQUIRES_RTS_OK(
+        rtsLabelSwitchByIndex(ptr, maxValue, reinterpret_cast<void*>(labelList), static_cast<rtStream_t>(stream)));
 
     ACL_LOG_INFO("successfully execute aclrtSwitchLabelByIndex");
     return ACL_SUCCESS;

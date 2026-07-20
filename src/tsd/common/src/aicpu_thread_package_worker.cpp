@@ -19,14 +19,13 @@
 #include "inc/package_worker_utils.h"
 #include "inc/package_worker_factory.h"
 
-
 namespace tsd {
 namespace {
 const std::string ENV_NAME_HOME = "HOME";
 constexpr size_t VERIFY_FILE_CONTENT_LEN = 15UL;
 } // namespace
 
-TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string &packagePath, const std::string &packageName)
+TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string& packagePath, const std::string& packageName)
 {
     const std::lock_guard<std::mutex> lk(packageMtx_);
 
@@ -38,7 +37,8 @@ TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string &packagePath
         (void)close(fd_);
         fd_ = -1;
         PackageWorkerUtils::RemoveFile(decomPackagePath_.realPath);
-        if (ret != TSD_OK) Clear();
+        if (ret != TSD_OK)
+            Clear();
     });
 
     if (!IsNeedLoadPackage()) {
@@ -47,9 +47,10 @@ TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string &packagePath
         return TSD_OK;
     }
 
-    TSD_RUN_INFO("Start load package, originPkg=%s, decomPkg=%s, checkCode=%lu, pkgSize=%lu",
-                 originPackagePath_.realPath.c_str(), decomPackagePath_.realPath.c_str(),
-                 GetCheckCode(), GetOriginPackageSize());
+    TSD_RUN_INFO(
+        "Start load package, originPkg=%s, decomPkg=%s, checkCode=%lu, pkgSize=%lu",
+        originPackagePath_.realPath.c_str(), decomPackagePath_.realPath.c_str(), GetCheckCode(),
+        GetOriginPackageSize());
 
     ret = MoveOriginPackageToDecompressDir();
     if (ret != TSD_OK) {
@@ -75,13 +76,14 @@ TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string &packagePath
         return ret;
     }
 
-    TSD_RUN_INFO("Load package success, originPkg=%s, decomPkg=%s, checkCode=%lu",
-                 originPackagePath_.realPath.c_str(), decomPackagePath_.realPath.c_str(), GetCheckCode());
+    TSD_RUN_INFO(
+        "Load package success, originPkg=%s, decomPkg=%s, checkCode=%lu", originPackagePath_.realPath.c_str(),
+        decomPackagePath_.realPath.c_str(), GetCheckCode());
 
     return TSD_OK;
 }
 
-void AicpuThreadPackageWorker::PreProcessPackage(const std::string &packagePath, const std::string &packageName)
+void AicpuThreadPackageWorker::PreProcessPackage(const std::string& packagePath, const std::string& packageName)
 {
     DefaultPreProcessPackage(packagePath, packageName);
 
@@ -124,13 +126,14 @@ void AicpuThreadPackageWorker::SetDecompressPackagePath()
 
 TSD_StatusT AicpuThreadPackageWorker::OpenVerifyFile()
 {
-    fd_ = open(verifyFilePath_.c_str(), O_CREAT|O_EXCL|O_RDWR,  S_IRUSR|S_IWUSR);
+    fd_ = open(verifyFilePath_.c_str(), O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
     if (fd_ < 0) {
         TSD_RUN_INFO("Create verify file end, path=%s, reason=%s", verifyFilePath_.c_str(), SafeStrerror().c_str());
         fd_ = open(verifyFilePath_.c_str(), O_RDWR);
         if (fd_ < 0) {
-            TSD_ERROR("Create and open verify file failed, path=%s, reason=%s",
-                      verifyFilePath_.c_str(), SafeStrerror().c_str());
+            TSD_ERROR(
+                "Create and open verify file failed, path=%s, reason=%s", verifyFilePath_.c_str(),
+                SafeStrerror().c_str());
             return TSD_INTERNAL_ERROR;
         }
     }
@@ -170,7 +173,7 @@ bool AicpuThreadPackageWorker::IsNeedLoadPackage()
     return true;
 }
 
-TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeShared(uint64_t &savedCheckCode) const
+TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeShared(uint64_t& savedCheckCode) const
 {
     if (fd_ < 0) {
         TSD_ERROR("Verify file not open, fd is less than 0");
@@ -195,7 +198,7 @@ TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeShared(uint64_t &savedChe
     return TSD_OK;
 }
 
-TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeUnshared(uint64_t &savedCheckCode) const
+TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeUnshared(uint64_t& savedCheckCode) const
 {
     const int32_t ret = flock(fd_, LOCK_EX);
     if (ret == -1) {
@@ -210,12 +213,12 @@ TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeUnshared(uint64_t &savedC
     return TSD_OK;
 }
 
-TSD_StatusT AicpuThreadPackageWorker::ReadCheckCode(uint64_t &savedCheckCode) const
+TSD_StatusT AicpuThreadPackageWorker::ReadCheckCode(uint64_t& savedCheckCode) const
 {
     savedCheckCode = 0UL;
     char_t buf[VERIFY_FILE_CONTENT_LEN + 1U];
-    const int32_t eRet = memset_s(&buf[0], sizeof(char_t)*(VERIFY_FILE_CONTENT_LEN + 1U),
-                                  0, sizeof(char_t)*(VERIFY_FILE_CONTENT_LEN + 1U));
+    const int32_t eRet = memset_s(
+        &buf[0], sizeof(char_t) * (VERIFY_FILE_CONTENT_LEN + 1U), 0, sizeof(char_t) * (VERIFY_FILE_CONTENT_LEN + 1U));
     if (eRet != 0) {
         TSD_ERROR("Memset failed in read check code, ret=%d", eRet);
         return TSD_INTERNAL_ERROR;
@@ -240,11 +243,7 @@ TSD_StatusT AicpuThreadPackageWorker::ReadCheckCode(uint64_t &savedCheckCode) co
 std::string AicpuThreadPackageWorker::GetMovePackageToDecompressDirCmd() const
 {
     std::string cmd("");
-    cmd.append("cp '")
-       .append(originPackagePath_.realPath)
-       .append("' '")
-       .append(decomPackagePath_.realPath)
-       .append("'");
+    cmd.append("cp '").append(originPackagePath_.realPath).append("' '").append(decomPackagePath_.realPath).append("'");
     return cmd;
 }
 
@@ -252,11 +251,11 @@ std::string AicpuThreadPackageWorker::GetDecompressPackageCmd() const
 {
     std::string cmd("");
     cmd.append("mkdir -p ")
-       .append(soInstallRootPath_)
-       .append(" ; tar --no-same-owner -ozxf ")
-       .append(decomPackagePath_.realPath)
-       .append(" -C ")
-       .append(soInstallRootPath_);
+        .append(soInstallRootPath_)
+        .append(" ; tar --no-same-owner -ozxf ")
+        .append(decomPackagePath_.realPath)
+        .append(" -C ")
+        .append(soInstallRootPath_);
     return cmd;
 }
 
@@ -265,8 +264,9 @@ TSD_StatusT AicpuThreadPackageWorker::PostProcessPackage()
     const std::string soInstallPath = TsdPathMgr::BuildKernelSoPath(soInstallRootPath_);
     TSD_StatusT ret = AicpuPackageProcess::CheckPackageName(soInstallPath, decomPackagePath_.name);
     if (ret != TSD_OK) {
-        TSD_ERROR("Check package name failed, ret=%u, soInstallPath=%s, name=%s",
-                  ret, soInstallPath.c_str(), decomPackagePath_.name.c_str());
+        TSD_ERROR(
+            "Check package name failed, ret=%u, soInstallPath=%s, name=%s", ret, soInstallPath.c_str(),
+            decomPackagePath_.name.c_str());
         return ret;
     }
 
@@ -304,8 +304,9 @@ TSD_StatusT AicpuThreadPackageWorker::ResetExtendVerifyFile() const
     const std::string extendVerifyFile = decomPackagePath_.path + EXTEND_VERIFY_FILE_NAME;
     const int32_t fd = open(extendVerifyFile.c_str(), O_RDWR);
     if (fd < 0) {
-        TSD_INFO("Opening extend verify file was not successful, path=%s, reason=%s",
-                 extendVerifyFile.c_str(), SafeStrerror().c_str());
+        TSD_INFO(
+            "Opening extend verify file was not successful, path=%s, reason=%s", extendVerifyFile.c_str(),
+            SafeStrerror().c_str());
         return TSD_OK;
     }
     const ScopeGuard fdGuard([fd]() { (void)close(fd); });

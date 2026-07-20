@@ -27,7 +27,8 @@ enum rtKernelDfxInfoType {
     RT_KERNEL_DFX_INFO_INVALID = 0x7FFFFFFFU,
 };
 
-using rtKernelDfxInfoProFunc = void (*)(rtKernelDfxInfoType type, uint32_t coreType, uint32_t coreId, const uint8_t *buffer, size_t length);
+using rtKernelDfxInfoProFunc =
+    void (*)(rtKernelDfxInfoType type, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length);
 
 /**
  * @brief register dump function

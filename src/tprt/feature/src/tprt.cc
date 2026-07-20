@@ -13,10 +13,8 @@
 #include "tprt_base.hpp"
 namespace cce {
 namespace tprt {
-TprtManage *TprtManage::tprt_ = nullptr;
-TprtManage::TprtManage()
-{
-}
+TprtManage* TprtManage::tprt_ = nullptr;
+TprtManage::TprtManage() {}
 
 TprtManage::~TprtManage()
 {
@@ -28,15 +26,15 @@ TprtManage::~TprtManage()
     }
 }
 
-void TprtManage::TprtInitCfg(const TprtCfgInfo_t *cfg)
+void TprtManage::TprtInitCfg(const TprtCfgInfo_t* cfg)
 {
     sqcqMaxNum_ = cfg->sqcqMaxNum;
     sqcqMaxDepth_ = cfg->sqcqMaxDepth;
-    timeoutMonitorUint_ = cfg->timeoutMonitorUint;  // unit:ms
-    defaultExeTimeout_ = cfg->defaultExeTimeout;  // unit:ms
+    timeoutMonitorUint_ = cfg->timeoutMonitorUint; // unit:ms
+    defaultExeTimeout_ = cfg->defaultExeTimeout;   // unit:ms
 }
 
-uint32_t TprtManage::TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *cfg)
+uint32_t TprtManage::TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t* cfg)
 {
     std::unique_lock<std::mutex> tprtDeviceMapLock(deviceIdToDeviceMapLock_);
     if (deviceMap_.empty()) {
@@ -45,7 +43,7 @@ uint32_t TprtManage::TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *c
 
     auto devInfo = deviceMap_.find(devId);
     if (devInfo == deviceMap_.end()) {
-        TprtDevice *device = new (std::nothrow) TprtDevice(devId, timeoutMonitorUint_);
+        TprtDevice* device = new (std::nothrow) TprtDevice(devId, timeoutMonitorUint_);
         if (device == nullptr) {
             TPRT_LOG(TPRT_LOG_ERROR, "TprtDeviceOpen failed, device_id=%u.", devId);
             return TPRT_DEVICE_NEW_FAILED;
@@ -60,7 +58,7 @@ uint32_t TprtManage::TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *c
 
 uint32_t TprtManage::TprtDeviceClose(const uint32_t devId)
 {
-    TprtDevice *device = GetDeviceByDevId(devId);
+    TprtDevice* device = GetDeviceByDevId(devId);
     if (device == nullptr) {
         TPRT_LOG(TPRT_LOG_WARNING, "device does not exist, devId=%u.", devId);
         return TPRT_DEVICE_INVALID;
@@ -73,7 +71,7 @@ uint32_t TprtManage::TprtDeviceClose(const uint32_t devId)
     return error;
 }
 
-TprtDevice *TprtManage::GetDeviceByDevId(const uint32_t devId)
+TprtDevice* TprtManage::GetDeviceByDevId(const uint32_t devId)
 {
     std::unique_lock<std::mutex> tprtDeviceMapLock(deviceIdToDeviceMapLock_);
     auto devInfo = deviceMap_.find(devId);
@@ -105,5 +103,5 @@ bool TprtManage::IsQueueFull(const uint16_t head, const uint16_t tail, const uin
     return false;
 }
 
-}  // namespace runtime
-}  // namespace cce
+} // namespace tprt
+} // namespace cce

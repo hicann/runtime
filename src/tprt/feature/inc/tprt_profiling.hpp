@@ -27,7 +27,6 @@ private:
     uint32_t RT_PROFILE_TYPE_DPU_INFO = 806U;
     uint32_t TS_TASK_TYPE_KERNEL_AICPU = 1U;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 #endif
-

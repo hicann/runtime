@@ -23,25 +23,25 @@ constexpr uint32_t SHA256_BLOCK_SIZE = 64U;
 struct Context {
     uint32_t state[8];
     uint64_t totalLen;
-    uint32_t bufLen;  // invariant: [0, SHA256_BLOCK_SIZE), maintained by UpdateCore
+    uint32_t bufLen; // invariant: [0, SHA256_BLOCK_SIZE), maintained by UpdateCore
     uint8_t buffer[SHA256_BLOCK_SIZE];
 };
 
-void Init(Context &ctx);
-void Update(Context &ctx, const uint8_t *data, size_t len);
-void Final(Context &ctx, uint8_t *hash);
+void Init(Context& ctx);
+void Update(Context& ctx, const uint8_t* data, size_t len);
+void Final(Context& ctx, uint8_t* hash);
 
 // 一次性计算
-void Compute(const uint8_t *data, size_t len, uint8_t *hash);
+void Compute(const uint8_t* data, size_t len, uint8_t* hash);
 
 // 一次性计算并返回十六进制字符串
-std::string ComputeHexString(const uint8_t *data, size_t len);
+std::string ComputeHexString(const uint8_t* data, size_t len);
 
 // 强制使用纯软件实现（用于UT验证软件回退路径的正确性）
-void ComputeSoft(const uint8_t *data, size_t len, uint8_t *hash);
-std::string ComputeHexStringSoft(const uint8_t *data, size_t len);
+void ComputeSoft(const uint8_t* data, size_t len, uint8_t* hash);
+std::string ComputeHexStringSoft(const uint8_t* data, size_t len);
 
-}  // namespace sha256
-}  // namespace tsd
+} // namespace sha256
+} // namespace tsd
 
-#endif  // TSD_SHA256_H
+#endif // TSD_SHA256_H

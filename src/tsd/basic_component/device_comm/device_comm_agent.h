@@ -24,13 +24,13 @@ public:
     explicit DeviceCommAgent(const uint32_t logicDeviceId);
     ~DeviceCommAgent();
 
-    DeviceCommAgent(const DeviceCommAgent &) = delete;
-    DeviceCommAgent &operator=(const DeviceCommAgent &) = delete;
+    DeviceCommAgent(const DeviceCommAgent&) = delete;
+    DeviceCommAgent& operator=(const DeviceCommAgent&) = delete;
 
     TSD_StatusT InitTsdClient(bool isAdcEnv);
     TSD_StatusT SendMsg(const HDCMessage& msg);
     TSD_StatusT RecvData(bool ignoreRecvErr = false, uint32_t timeout = 0U);
-    TSD_StatusT GetHdcConctStatus(int32_t &sessStat, bool isAdcEnv);
+    TSD_StatusT GetHdcConctStatus(int32_t& sessStat, bool isAdcEnv);
     TSD_StatusT GetVersionVerify(std::shared_ptr<VersionVerify>& inspector);
     void ReleaseDeviceConnection();
 
@@ -46,5 +46,5 @@ private:
     uint32_t tsdSessionId_ = 0;
     process_sign procSign_ = {};
 };
-}  // namespace tsd
-#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_DEVICE_COMM_AGENT_H
+} // namespace tsd
+#endif // TSD_BASIC_COMPONENT_DEVICE_COMM_DEVICE_COMM_AGENT_H

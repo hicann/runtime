@@ -89,7 +89,7 @@ RTS_API rtError_t rtDeviceGetP2PAtomicCapabilities(
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t *val);
+RTS_API rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t* val);
 
 #if defined(__cplusplus)
 }

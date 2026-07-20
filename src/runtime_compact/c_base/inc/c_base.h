@@ -18,11 +18,11 @@ extern "C" {
 
 #define SUCCESS 0
 
-typedef void (*FnDestroy)(void *);
+typedef void (*FnDestroy)(void*);
 
-#define MEMBER_OFFSET(mainType, memberName) ((uintptr_t)(void *)(&(((mainType *)0)->memberName)))
+#define MEMBER_OFFSET(mainType, memberName) ((uintptr_t)(void*)(&(((mainType*)0)->memberName)))
 #define GET_MAIN_BY_MEMBER(memberAddr, mainType, memberName) \
-    ((mainType *)(void *)((uintptr_t)(void *)(memberAddr)-MEMBER_OFFSET(mainType, memberName)))
+    ((mainType*)(void*)((uintptr_t)(void*)(memberAddr)-MEMBER_OFFSET(mainType, memberName)))
 
 #if defined(__cplusplus)
 }

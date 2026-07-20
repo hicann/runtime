@@ -21,14 +21,15 @@ typedef struct {
     uint64_t oldValTrigger;
 } RefObjUpdate;
 
-void InitRefObj(RefObj *obj)
+void InitRefObj(RefObj* obj)
 {
     obj->refCount = 0;
     obj->obj = NULL;
 }
 
-static bool ObjRefCount(RefObj *obj, const RefObjUpdate *update,
-    void(*pfnHook)(RefObj *, const void *, void *), void *appInfo, const void *usrData)
+static bool ObjRefCount(
+    RefObj* obj, const RefObjUpdate* update, void (*pfnHook)(RefObj*, const void*, void*), void* appInfo,
+    const void* usrData)
 {
     uint64_t oldVal;
     uint64_t newVal;
@@ -59,20 +60,20 @@ static bool ObjRefCount(RefObj *obj, const RefObjUpdate *update,
     return false;
 }
 
-static void CreateRefObjVal(RefObj *obj, const void *userData, void *fnCreateObj)
+static void CreateRefObjVal(RefObj* obj, const void* userData, void* fnCreateObj)
 {
     (void)userData;
     obj->obj = ((FnCreateRefObjValue)fnCreateObj)(obj);
     mmSetData64(&obj->refCount, 1);
 }
 
-static void CreateRefObjValWithUserData(RefObj *obj, const void *userData, void *fnCreateObj)
+static void CreateRefObjValWithUserData(RefObj* obj, const void* userData, void* fnCreateObj)
 {
     obj->obj = ((FnCreateRefObjValueWithUserData)fnCreateObj)(obj, userData);
     mmSetData64(&obj->refCount, 1);
 }
 
-static void DestroyRefObjVal(RefObj *obj, const void *userData, void *fnDestroyObj)
+static void DestroyRefObjVal(RefObj* obj, const void* userData, void* fnDestroyObj)
 {
     (void)userData;
     mmSetData64(&obj->refCount, 0);
@@ -81,7 +82,7 @@ static void DestroyRefObjVal(RefObj *obj, const void *userData, void *fnDestroyO
     }
 }
 
-void* GetObjRef(RefObj *obj, FnCreateRefObjValue fnCreateObj)
+void* GetObjRef(RefObj* obj, FnCreateRefObjValue fnCreateObj)
 {
     RefObjUpdate update = {1, 0};
     if (!ObjRefCount(obj, &update, CreateRefObjVal, fnCreateObj, NULL)) {
@@ -93,7 +94,7 @@ void* GetObjRef(RefObj *obj, FnCreateRefObjValue fnCreateObj)
     return obj->obj;
 }
 
-void* GetObjRefWithUserData(RefObj *obj, const void *userData, FnCreateRefObjValueWithUserData fnCreateObj)
+void* GetObjRefWithUserData(RefObj* obj, const void* userData, FnCreateRefObjValueWithUserData fnCreateObj)
 {
     RefObjUpdate update = {1, 0};
     if (!ObjRefCount(obj, &update, CreateRefObjValWithUserData, fnCreateObj, userData)) {
@@ -105,7 +106,7 @@ void* GetObjRefWithUserData(RefObj *obj, const void *userData, FnCreateRefObjVal
     return obj->obj;
 }
 
-void ReleaseObjRef(RefObj *obj, FnDestroyRefObjValue fnDestroyObj)
+void ReleaseObjRef(RefObj* obj, FnDestroyRefObjValue fnDestroyObj)
 {
     RefObjUpdate update = {-1, 1};
     (void)ObjRefCount(obj, &update, DestroyRefObjVal, fnDestroyObj, NULL);

@@ -30,7 +30,7 @@ typedef enum {
 typedef struct {
     CJSON_TYPE type;
     union {
-        char *string;
+        char* string;
         bool value;
         double fNumber;
         int64_t iNumber;
@@ -39,59 +39,26 @@ typedef struct {
     } value;
 } CJsonObj;
 
-CJsonObj *CJsonParse(const char *jsonContent, size_t jsonLen);
-CJsonObj *CJsonFileParse(const char *filePath);
-char *CJsonFileParseKey(const char *filePath, const char *key);
-size_t CJsonParseKeyPosition(const char *jsonContent, size_t jsonLen, const char *key, size_t *offset);
-void FreeCJsonObj(CJsonObj *obj);
-CJsonObj *CJsonArrayAt(CJsonObj *obj, size_t i);
-CJsonObj *GetCJsonSubObj(CJsonObj *obj, const char *key);
+CJsonObj* CJsonParse(const char* jsonContent, size_t jsonLen);
+CJsonObj* CJsonFileParse(const char* filePath);
+char* CJsonFileParseKey(const char* filePath, const char* key);
+size_t CJsonParseKeyPosition(const char* jsonContent, size_t jsonLen, const char* key, size_t* offset);
+void FreeCJsonObj(CJsonObj* obj);
+CJsonObj* CJsonArrayAt(CJsonObj* obj, size_t i);
+CJsonObj* GetCJsonSubObj(CJsonObj* obj, const char* key);
 
-static inline bool CJsonIsNull(CJsonObj *obj)
-{
-    return (obj->type == CJSON_NULL);
-};
-static inline bool CJsonIsInt(CJsonObj *obj)
-{
-    return (obj->type == CJSON_INT);
-};
-static inline bool CJsonIsBool(CJsonObj *obj)
-{
-    return (obj->type == CJSON_BOOL);
-};
-static inline bool CJsonIsDouble(CJsonObj *obj)
-{
-    return (obj->type == CJSON_DOUBLE);
-};
-static inline bool CJsonIsString(CJsonObj *obj)
-{
-    return (obj->type == CJSON_STRING);
-};
-static inline bool CJsonIsObj(CJsonObj *obj)
-{
-    return (obj->type == CJSON_OBJ);
-};
-static inline bool CJsonIsArray(CJsonObj *obj)
-{
-    return (obj->type == CJSON_ARRAY);
-};
-static inline bool GetCJsonBool(CJsonObj *obj)
-{
-    return ((obj->type != CJSON_BOOL)) ? false : obj->value.value;
-};
-static inline int64_t GetCJsonInt(CJsonObj *obj)
-{
-    return (obj->type != CJSON_INT) ? 0 : obj->value.iNumber;
-};
-static inline double GetCJsonDouble(CJsonObj *obj)
-{
-    return (obj->type != CJSON_DOUBLE) ? 0 : obj->value.fNumber;
-};
-static inline char *GetCJsonString(CJsonObj *obj)
-{
-    return (obj->type != CJSON_STRING) ? NULL : obj->value.string;
-};
-static inline size_t GetCJsonArraySize(CJsonObj *obj)
+static inline bool CJsonIsNull(CJsonObj* obj) { return (obj->type == CJSON_NULL); };
+static inline bool CJsonIsInt(CJsonObj* obj) { return (obj->type == CJSON_INT); };
+static inline bool CJsonIsBool(CJsonObj* obj) { return (obj->type == CJSON_BOOL); };
+static inline bool CJsonIsDouble(CJsonObj* obj) { return (obj->type == CJSON_DOUBLE); };
+static inline bool CJsonIsString(CJsonObj* obj) { return (obj->type == CJSON_STRING); };
+static inline bool CJsonIsObj(CJsonObj* obj) { return (obj->type == CJSON_OBJ); };
+static inline bool CJsonIsArray(CJsonObj* obj) { return (obj->type == CJSON_ARRAY); };
+static inline bool GetCJsonBool(CJsonObj* obj) { return ((obj->type != CJSON_BOOL)) ? false : obj->value.value; };
+static inline int64_t GetCJsonInt(CJsonObj* obj) { return (obj->type != CJSON_INT) ? 0 : obj->value.iNumber; };
+static inline double GetCJsonDouble(CJsonObj* obj) { return (obj->type != CJSON_DOUBLE) ? 0 : obj->value.fNumber; };
+static inline char* GetCJsonString(CJsonObj* obj) { return (obj->type != CJSON_STRING) ? NULL : obj->value.string; };
+static inline size_t GetCJsonArraySize(CJsonObj* obj)
 {
     return (obj->type != CJSON_ARRAY) ? 0 : VectorSize(&obj->value.array);
 };

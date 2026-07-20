@@ -20,13 +20,13 @@ namespace tsd {
 namespace {
 std::mutex g_destructFlagMut;
 // runtime的context析构时会调TsdClose接口，此时全局变量对象可能已经析构,所以此处使用指针
-std::map<const uint32_t, bool> *g_destructFlagMap = nullptr;
+std::map<const uint32_t, bool>* g_destructFlagMap = nullptr;
 
 std::mutex g_tsdClientMut;
 // tsdClientInstanceMap_中存储的对象是全局的，进程销毁时才销毁
 static std::map<const uint32_t, std::shared_ptr<ClientManager>> tsdClientInstanceMap_;
 
-static std::map<const uint32_t, uint32_t> *g_userDeviceInfo = nullptr;
+static std::map<const uint32_t, uint32_t>* g_userDeviceInfo = nullptr;
 bool g_hadGetVisibleDevices = false;
 
 struct PlatformInfo {
@@ -39,12 +39,12 @@ bool g_hadGetPlatformInfo = false;
 const std::string AICPU_PACKAGE_PATTERN = "^Ascend([0-9]{3}(rc)?(P)?)?-aicpu_syskernels\\.tar\\.gz$";
 const std::string EXTEND_PACKAGE_PATTERN = "^Ascend([0-9]{3}(rc)?(P)?)?-aicpu_extend_syskernels\\.tar\\.gz$";
 const std::string ASCENDCPP_PACKAGE_PATTERN = "^transformer_tile_fwk_aicpu_kernel\\.tar\\.gz$";
-}  // namespace
+} // namespace
 
 RunningMode ClientManager::g_runningMode = RunningMode::UNSET_MODE;
 std::mutex ClientManager::g_profilingCallbackMut;
 MsprofReporterCallback ClientManager::g_profilingCallback;
-SchedMode ClientManager::aicpuSchedMode_ =  AICPU_SCHED_MODE_INTERRUPT;
+SchedMode ClientManager::aicpuSchedMode_ = AICPU_SCHED_MODE_INTERRUPT;
 
 bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
 {
@@ -81,13 +81,13 @@ bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
     }
 }
 
-ClientManager::ClientManager(const uint32_t &deviceId)
-    : logicDeviceId_(deviceId),
-      profilingMode_(ProfilingMode::PROFILING_CLOSE)
+ClientManager::ClientManager(const uint32_t& deviceId)
+    : logicDeviceId_(deviceId), profilingMode_(ProfilingMode::PROFILING_CLOSE)
 {
     GetProfilingMode();
     packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)] = AICPU_PACKAGE_PATTERN;
-    packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)] = EXTEND_PACKAGE_PATTERN;
+    packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)] =
+        EXTEND_PACKAGE_PATTERN;
     packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)] = ASCENDCPP_PACKAGE_PATTERN;
 }
 
@@ -103,13 +103,14 @@ ClientManager::~ClientManager()
     }
 }
 
-TSD_StatusT ClientManager::GetHdcConctStatus(int32_t &hdcSessStat)
+TSD_StatusT ClientManager::GetHdcConctStatus(int32_t& hdcSessStat)
 {
     hdcSessStat = HDC_SESSION_STATUS_CONNECT;
     return TSD_OK;
 }
 
-std::shared_ptr<ClientManager> ClientManager::GetInstance(const uint32_t &deviceId, const uint32_t deviceMode, const bool transDevIdFlag)
+std::shared_ptr<ClientManager> ClientManager::GetInstance(
+    const uint32_t& deviceId, const uint32_t deviceMode, const bool transDevIdFlag)
 {
     const uint32_t inputDeviceId = deviceId;
     uint32_t logicDeviceId = deviceId;
@@ -131,18 +132,19 @@ std::shared_ptr<ClientManager> ClientManager::GetInstance(const uint32_t &device
     const std::lock_guard<std::mutex> lk(g_tsdClientMut);
     std::shared_ptr<ClientManager> clientManager = nullptr;
     const std::map<const uint32_t, std::shared_ptr<ClientManager>>::const_iterator iter =
-    tsdClientInstanceMap_.find(logicDeviceId);
+        tsdClientInstanceMap_.find(logicDeviceId);
     if (iter != tsdClientInstanceMap_.end()) {
         return iter->second;
     } else {
-        TSD_INFO("[ClientManager] GetInstance, deviceId[%u], g_runningMode[%d], begin saving instance", logicDeviceId,
-                 g_runningMode);
+        TSD_INFO(
+            "[ClientManager] GetInstance, deviceId[%u], g_runningMode[%d], begin saving instance", logicDeviceId,
+            g_runningMode);
         const RunningMode curMode = GetClientRunMode(logicDeviceId);
         TSD_RUN_INFO("[ClientManager] Current mode:%u", static_cast<uint32_t>(curMode));
         if (curMode == RunningMode::PROCESS_MODE) {
-            clientManager.reset(new(std::nothrow)ProcessModeManager(logicDeviceId, deviceMode));
+            clientManager.reset(new (std::nothrow) ProcessModeManager(logicDeviceId, deviceMode));
         } else if (curMode == RunningMode::THREAD_MODE) {
-            clientManager.reset(new(std::nothrow)ThreadModeManager(logicDeviceId));
+            clientManager.reset(new (std::nothrow) ThreadModeManager(logicDeviceId));
         } else {
             TSD_ERROR("[TsdClient] current mode is error");
             return nullptr;
@@ -168,14 +170,11 @@ TSD_StatusT ClientManager::GetPlatformInfo(const uint32_t deviceId)
         return TSD_CLT_OPEN_FAILED;
     }
     const ChipType_t chipType = static_cast<ChipType_t>(TSD_PLAT_GET_CHIP(static_cast<uint64_t>(hardwareVersion)));
-    TSD_INFO("[TsdClient] mode[%u] chipType[%u]",
-             static_cast<uint32_t>(mode), static_cast<uint32_t>(chipType));
+    TSD_INFO("[TsdClient] mode[%u] chipType[%u]", static_cast<uint32_t>(mode), static_cast<uint32_t>(chipType));
     g_platInfo.onlineStatus = mode;
     g_platInfo.chipType = chipType;
-    if ((chipType == static_cast<uint32_t>(CHIP_ADC)) ||
-        (chipType == static_cast<uint32_t>(CHIP_AS31XM1)) ||
-        (chipType == static_cast<uint32_t>(CHIP_610LITE)) ||
-        (chipType == static_cast<uint32_t>(CHIP_MC62CM12A)) ||
+    if ((chipType == static_cast<uint32_t>(CHIP_ADC)) || (chipType == static_cast<uint32_t>(CHIP_AS31XM1)) ||
+        (chipType == static_cast<uint32_t>(CHIP_610LITE)) || (chipType == static_cast<uint32_t>(CHIP_MC62CM12A)) ||
         (chipType == static_cast<uint32_t>(CHIP_MC32DM11A))) {
         g_platInfo.isAdcEnv = true;
     }
@@ -183,27 +182,15 @@ TSD_StatusT ClientManager::GetPlatformInfo(const uint32_t deviceId)
     return TSD_OK;
 }
 
-uint32_t ClientManager::GetPlatInfoMode() const
-{
-    return g_platInfo.onlineStatus;
-}
+uint32_t ClientManager::GetPlatInfoMode() const { return g_platInfo.onlineStatus; }
 
-uint32_t ClientManager::GetPlatInfoChipType()
-{
-    return static_cast<uint32_t>(g_platInfo.chipType);
-}
+uint32_t ClientManager::GetPlatInfoChipType() { return static_cast<uint32_t>(g_platInfo.chipType); }
 
-bool ClientManager::IsAdcEnv() const
-{
-    return g_platInfo.isAdcEnv;
-}
+bool ClientManager::IsAdcEnv() const { return g_platInfo.isAdcEnv; }
 
-void ClientManager::SetPlatInfoMode(const uint32_t platInfoMode) const
-{
-    g_platInfo.onlineStatus = platInfoMode;
-}
+void ClientManager::SetPlatInfoMode(const uint32_t platInfoMode) const { g_platInfo.onlineStatus = platInfoMode; }
 
-void ClientManager::SetProfilingCallback(const MsprofReporterCallback &callback)
+void ClientManager::SetProfilingCallback(const MsprofReporterCallback& callback)
 {
     const std::lock_guard<std::mutex> lk(g_profilingCallbackMut);
     if (g_profilingCallback == nullptr) {
@@ -212,7 +199,7 @@ void ClientManager::SetProfilingCallback(const MsprofReporterCallback &callback)
     g_profilingCallback = callback;
 }
 
-TSD_StatusT ClientManager::SetRunMode(const std::string &valueStr)
+TSD_StatusT ClientManager::SetRunMode(const std::string& valueStr)
 {
     g_runningMode = RunningMode::UNSET_MODE;
     if (valueStr == "PROCESS_MODE") {
@@ -228,8 +215,9 @@ TSD_StatusT ClientManager::SetRunMode(const std::string &valueStr)
 TSD_StatusT ClientManager::SetAicpuSchedMode(const uint32_t schedMode)
 {
     if (schedMode >= AICPU_SCHED_MODE_INVALID) {
-        TSD_RUN_WARN("[TsdClient] Invalid aicpu sched mode use interrupt mode. in=%u, max=%u",
-                     schedMode, static_cast<uint32_t>(AICPU_SCHED_MODE_INVALID));
+        TSD_RUN_WARN(
+            "[TsdClient] Invalid aicpu sched mode use interrupt mode. in=%u, max=%u", schedMode,
+            static_cast<uint32_t>(AICPU_SCHED_MODE_INVALID));
         aicpuSchedMode_ = AICPU_SCHED_MODE_INTERRUPT;
         return tsd::TSD_OK;
     }
@@ -244,20 +232,23 @@ bool ClientManager::CheckPackageExistsOnce(const uint32_t packageType)
 {
     std::string packagePath;
     if (!GetPackagePath(packagePath, packageType)) {
-        TSD_INFO("[TsdClient][deviceId=%u] Package path is invalid, skip load package file, packageType[%u]",
-                 logicDeviceId_, packageType);
+        TSD_INFO(
+            "[TsdClient][deviceId=%u] Package path is invalid, skip load package file, packageType[%u]", logicDeviceId_,
+            packageType);
         return false;
     }
     if ((mmAccess(packagePath.c_str()) != EN_OK) || (mmIsDir(packagePath.c_str()) != EN_OK)) {
-        TSD_WARN("[TsdClient][deviceId=%u] path[%s] does not exist, packageType[%u]", logicDeviceId_,
-                 packagePath.c_str(), packageType);
+        TSD_WARN(
+            "[TsdClient][deviceId=%u] path[%s] does not exist, packageType[%u]", logicDeviceId_, packagePath.c_str(),
+            packageType);
         return false;
     }
-    mmDirent2 **fileList;
+    mmDirent2** fileList;
     const int32_t fileCount = mmScandir2(packagePath.c_str(), &fileList, nullptr, nullptr);
     if (fileCount < 0) {
-        TSD_WARN("[TsdClient][deviceId=%u] scandir path[%s] failed, packageType[%u]", logicDeviceId_,
-                 packagePath.c_str(), packageType);
+        TSD_WARN(
+            "[TsdClient][deviceId=%u] scandir path[%s] failed, packageType[%u]", logicDeviceId_, packagePath.c_str(),
+            packageType);
         return false;
     }
     std::vector<std::string> files;
@@ -266,20 +257,23 @@ bool ClientManager::CheckPackageExistsOnce(const uint32_t packageType)
     }
     mmScandirFree2(fileList, fileCount);
     std::vector<std::string> packages;
-    for (const std::string &fileName : files) { 
-        TSD_INFO("[TsdClient][deviceId=%u] check file[%s], packageType[%u]", logicDeviceId_, fileName.c_str(), packageType);
+    for (const std::string& fileName : files) {
+        TSD_INFO(
+            "[TsdClient][deviceId=%u] check file[%s], packageType[%u]", logicDeviceId_, fileName.c_str(), packageType);
         // c regex, cannot use c++ regex here because the g++ compiler does not support it
         if (ValidateStr(fileName.c_str(), packagePattern_[packageType].c_str())) {
-            TSD_INFO("[TsdClient][deviceId=%u] find package[%s] in path[%s], packageType[%u]", logicDeviceId_, fileName.c_str(),
-                     packagePath.c_str(), packageType);
+            TSD_INFO(
+                "[TsdClient][deviceId=%u] find package[%s] in path[%s], packageType[%u]", logicDeviceId_,
+                fileName.c_str(), packagePath.c_str(), packageType);
             packages.emplace_back(fileName);
         }
     }
     packageName_[packageType] = "";
     bool needSendPackage = false;
     if (packages.size() != 1U) {
-        TSD_RUN_INFO("[TsdClient][deviceId=%u] pkg size[%zu] in path[%s] must be only one, skip send package, packageType[%u]",
-                     logicDeviceId_, packages.size(), packagePath.c_str(), packageType);
+        TSD_RUN_INFO(
+            "[TsdClient][deviceId=%u] pkg size[%zu] in path[%s] must be only one, skip send package, packageType[%u]",
+            logicDeviceId_, packages.size(), packagePath.c_str(), packageType);
     } else {
         needSendPackage = true;
         if (!packages.empty()) {
@@ -288,9 +282,9 @@ bool ClientManager::CheckPackageExistsOnce(const uint32_t packageType)
     }
     if (needSendPackage) {
         packagePath_[packageType] = packagePath;
-        TSD_RUN_INFO("[TsdClient][deviceId=%u] set package path[%s], package name[%s], packageType[%u]", 
-                     logicDeviceId_, packagePath_[static_cast<uint32_t>(packageType)].c_str(),
-                     packageName_[packageType].c_str(), packageType);
+        TSD_RUN_INFO(
+            "[TsdClient][deviceId=%u] set package path[%s], package name[%s], packageType[%u]", logicDeviceId_,
+            packagePath_[static_cast<uint32_t>(packageType)].c_str(), packageName_[packageType].c_str(), packageType);
         return true;
     }
 
@@ -316,14 +310,16 @@ bool ClientManager::CheckPackageExists(const bool loadAicpuKernelFlag)
     return hasPackage;
 }
 
-bool ClientManager::GetPackagePath(std::string &packagePath, const uint32_t packageType) const
+bool ClientManager::GetPackagePath(std::string& packagePath, const uint32_t packageType) const
 {
     std::string ascendAicpuPath;
     GetEnvFromMmSys(MM_ENV_ASCEND_AICPU_PATH, "ASCEND_AICPU_PATH", ascendAicpuPath);
     if (ascendAicpuPath.empty()) {
         ascendAicpuPath = "/usr/local/Ascend/";
-        TSD_INFO("[TsdClient][deviceId=%u] environment variable ASCEND_AICPU_PATH is not set, use default "
-                 "value[%s]", logicDeviceId_, ascendAicpuPath.c_str());
+        TSD_INFO(
+            "[TsdClient][deviceId=%u] environment variable ASCEND_AICPU_PATH is not set, use default "
+            "value[%s]",
+            logicDeviceId_, ascendAicpuPath.c_str());
     }
     std::string packageTitle = "";
     if (!GetPackageTitle(packageTitle)) {
@@ -344,7 +340,7 @@ bool ClientManager::GetPackagePath(std::string &packagePath, const uint32_t pack
     return true;
 }
 
-bool ClientManager::GetPackageTitle(std::string &packageTitle) const
+bool ClientManager::GetPackageTitle(std::string& packageTitle) const
 {
     switch (g_platInfo.chipType) {
         case CHIP_MINI:
@@ -395,21 +391,15 @@ RunningMode ClientManager::GetClientRunMode(const uint32_t logicDeviceId)
             return RunningMode::THREAD_MODE;
         } else {
             return RunningMode::PROCESS_MODE;
-        }  
+        }
     }
     return g_runningMode;
 }
 
 // just for ut test don't use other place
-void ClientManager::SetPlatInfoChipType(const ChipType_t curType)
-{
-    g_platInfo.chipType = curType;
-}
+void ClientManager::SetPlatInfoChipType(const ChipType_t curType) { g_platInfo.chipType = curType; }
 
-void ClientManager::ResetPlatInfoFlag()
-{
-    g_hadGetPlatformInfo = false;
-}
+void ClientManager::ResetPlatInfoFlag() { g_hadGetPlatformInfo = false; }
 
 bool ClientManager::IsSupportSetVisibleDevices()
 {
@@ -431,7 +421,8 @@ bool ClientManager::IsSupportSetVisibleDevices()
     return flag;
 }
 
-bool ClientManager::IsNumeric(const std::string& str) {
+bool ClientManager::IsNumeric(const std::string& str)
+{
     if (str.empty()) {
         return false;
     }
@@ -443,7 +434,7 @@ bool ClientManager::IsNumeric(const std::string& str) {
     return true;
 }
 
-void ClientManager::SplitString(const std::string &str, std::vector<std::string> &result)
+void ClientManager::SplitString(const std::string& str, std::vector<std::string>& result)
 {
     size_t start = 0;
     size_t end = str.find(',');
@@ -494,7 +485,7 @@ bool ClientManager::GetVisibleDevices()
         uint32_t tmpValue = 0U;
         try {
             tmpValue = static_cast<uint32_t>(std::stoi(splitInputStr[i]));
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             TSD_ERROR("[TsdClient] splitInputStr [%s] is invalid, error: %s", splitInputStr[i].c_str(), e.what());
             break;
         }
@@ -519,7 +510,7 @@ bool ClientManager::GetVisibleDevices()
     return true;
 }
 
-TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t &logicDevId)
+TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t& logicDevId)
 {
     if (!g_hadGetVisibleDevices && !GetVisibleDevices()) {
         return TSD_OK;
@@ -536,8 +527,9 @@ TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t user
         TSD_INFO("[TsdClient] change userDevId [%u] to logicDevId [%u]", userDevId, logicDevId);
         return TSD_OK;
     } else {
-        TSD_ERROR("[TsdClient] userDevId [%u] is exceed g_userDeviceInfo size [%zu]", userDevId, g_userDeviceInfo->size());
+        TSD_ERROR(
+            "[TsdClient] userDevId [%u] is exceed g_userDeviceInfo size [%zu]", userDevId, g_userDeviceInfo->size());
         return TSD_PARAMETER_INVALID;
     }
 }
-}  // namespace tsd
+} // namespace tsd

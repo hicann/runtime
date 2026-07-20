@@ -11,21 +11,20 @@
 #include "inc/package_worker_factory.h"
 #include "tsd_log.h"
 
-
 namespace tsd {
-PackageWorkerFactory &PackageWorkerFactory::GetInstance()
+PackageWorkerFactory& PackageWorkerFactory::GetInstance()
 {
     static PackageWorkerFactory inst;
     return inst;
 }
 
-bool PackageWorkerFactory::RegisterPackageWorker(const PackageWorkerType type, const PackageWorkerCreateFunc &func)
+bool PackageWorkerFactory::RegisterPackageWorker(const PackageWorkerType type, const PackageWorkerCreateFunc& func)
 {
     return PackageWorkerFactory::GetInstance().RegisterPackageWorkerCreator(type, func);
 }
 
-bool PackageWorkerFactory::RegisterPackageWorkerCreator(const PackageWorkerType type,
-                                                        const PackageWorkerCreateFunc &func)
+bool PackageWorkerFactory::RegisterPackageWorkerCreator(
+    const PackageWorkerType type, const PackageWorkerCreateFunc& func)
 {
     std::lock_guard<std::mutex> lk(creatorMapMtx_);
     auto iter = creatorMap_.find(type);
@@ -39,8 +38,8 @@ bool PackageWorkerFactory::RegisterPackageWorkerCreator(const PackageWorkerType 
     return true;
 }
 
-std::shared_ptr<BasePackageWorker> PackageWorkerFactory::CreatePackageWorker(const PackageWorkerType type,
-                                                                             const PackageWorkerParas paras) const
+std::shared_ptr<BasePackageWorker> PackageWorkerFactory::CreatePackageWorker(
+    const PackageWorkerType type, const PackageWorkerParas paras) const
 {
     const auto iter = creatorMap_.find(type);
     if (iter == creatorMap_.end()) {

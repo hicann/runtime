@@ -28,7 +28,7 @@ typedef struct TagContext Context;
 typedef struct TagDevice Device;
 typedef struct TagStream Stream;
 
-Device *RetainDevice(const uint32_t devId);
+Device* RetainDevice(const uint32_t devId);
 rtError_t ReleaseDevice(const uint32_t devId);
 #if defined(__cplusplus)
 }

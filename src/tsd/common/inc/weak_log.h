@@ -19,7 +19,7 @@ extern "C" {
 #endif
 #endif // __cplusplus
 LOG_FUNC_VISIBILITY void __attribute__((weak)) DlogFlush(void);
-LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) dlog_getlevel(int32_t moduleId, int32_t *enableEvent);
+LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) dlog_getlevel(int32_t moduleId, int32_t* enableEvent);
 LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent);
 LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) CheckLogLevel(int32_t moduleId, int32_t logLevel);
 LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) DlogSetAttr(LogAttr logAttrInfo);
@@ -28,4 +28,4 @@ LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) DlogSetAttr(LogAttr logAttrInf
 }
 #endif // LOG_CPP
 #endif // __cplusplus
-#endif  // TSD_WEAK_LOG_H
+#endif // TSD_WEAK_LOG_H

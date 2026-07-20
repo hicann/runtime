@@ -12,14 +12,14 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
-#include "mmpa/mmpa_api.h" 
+#include "mmpa/mmpa_api.h"
 #include "tsd_log.h"
 #include "tsd_util_func.h"
 #include "inc/package_verify.h"
 #include "inc/tsd_path_mgr.h"
 
 namespace tsd {
-TSD_StatusT PackageWorkerUtils::VerifyPackage(const std::string &pkgPath)
+TSD_StatusT PackageWorkerUtils::VerifyPackage(const std::string& pkgPath)
 {
     const PackageVerify pkgVerify(pkgPath);
     const TSD_StatusT ret = pkgVerify.VerifyPackage();
@@ -31,7 +31,7 @@ TSD_StatusT PackageWorkerUtils::VerifyPackage(const std::string &pkgPath)
     return TSD_OK;
 }
 
-TSD_StatusT PackageWorkerUtils::MakeDirectory(const std::string &dirPath)
+TSD_StatusT PackageWorkerUtils::MakeDirectory(const std::string& dirPath)
 {
     if (dirPath.empty()) {
         TSD_ERROR("Dir path is empty");
@@ -42,39 +42,32 @@ TSD_StatusT PackageWorkerUtils::MakeDirectory(const std::string &dirPath)
     if (ret == 0) {
         ret = mmIsDir(dirPath.c_str());
         if (ret != EN_OK) {
-            TSD_ERROR("File exist but not is a dir, ret=%d, path=%s, reason=%s",
-                      ret, dirPath.c_str(), SafeStrerror().c_str());
+            TSD_ERROR(
+                "File exist but not is a dir, ret=%d, path=%s, reason=%s", ret, dirPath.c_str(),
+                SafeStrerror().c_str());
             return TSD_INTERNAL_ERROR;
         }
         return TSD_OK;
     }
 
-    ret = mkdir(dirPath.c_str(), (S_IRWXU|S_IRGRP|S_IXGRP));
+    ret = mkdir(dirPath.c_str(), (S_IRWXU | S_IRGRP | S_IXGRP));
     if (ret != 0) {
-        TSD_ERROR("Create dir failed, ret=%d, path=%s, reason=%s",
-                  ret, dirPath.c_str(), SafeStrerror().c_str());
+        TSD_ERROR("Create dir failed, ret=%d, path=%s, reason=%s", ret, dirPath.c_str(), SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
     // chmod is necessary, because mkdir cannot really change mode in rc
-    ret = chmod(dirPath.c_str(), (S_IRWXU|S_IRGRP|S_IXGRP));
+    ret = chmod(dirPath.c_str(), (S_IRWXU | S_IRGRP | S_IXGRP));
     if (ret != 0) {
-        TSD_ERROR("Change dir mode failed, ret=%d, path=%s, reason=%s",
-                  ret, dirPath.c_str(), SafeStrerror().c_str());
+        TSD_ERROR("Change dir mode failed, ret=%d, path=%s, reason=%s", ret, dirPath.c_str(), SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
     return TSD_OK;
 }
 
-void PackageWorkerUtils::RemoveFile(const std::string &filePath)
-{
-    RemoveOneFile(filePath);
-}
+void PackageWorkerUtils::RemoveFile(const std::string& filePath) { RemoveOneFile(filePath); }
 
-uint64_t PackageWorkerUtils::GetFileSize(const std::string &filePath)
-{
-    return CalFileSize(filePath.c_str());
-}
+uint64_t PackageWorkerUtils::GetFileSize(const std::string& filePath) { return CalFileSize(filePath.c_str()); }
 
 } // namespace tsd

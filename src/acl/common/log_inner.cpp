@@ -68,7 +68,7 @@ mmPid_t AclLog::GetTid()
     return tid;
 }
 
-void AclLog::ACLSaveLog(const aclLogLevel logLevel, const char_t *const strLog)
+void AclLog::ACLSaveLog(const aclLogLevel logLevel, const char_t* const strLog)
 {
     if (strLog == nullptr) {
         return;
@@ -91,7 +91,7 @@ void AclLog::ACLSaveLog(const aclLogLevel logLevel, const char_t *const strLog)
     }
 }
 
-std::string AclErrorLogManager::FormatStr(const char_t *const fmt, ...)
+std::string AclErrorLogManager::FormatStr(const char_t* const fmt, ...)
 {
     if (fmt == nullptr) {
         return "";
@@ -100,8 +100,8 @@ std::string AclErrorLogManager::FormatStr(const char_t *const fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     char_t str[acl::MAX_LOG_STRING] = {};
-    const int32_t printRet = vsnprintf_s(str, static_cast<size_t>(acl::MAX_LOG_STRING),
-        static_cast<size_t>(acl::MAX_LOG_STRING - 1U), fmt, ap);
+    const int32_t printRet = vsnprintf_s(
+        str, static_cast<size_t>(acl::MAX_LOG_STRING), static_cast<size_t>(acl::MAX_LOG_STRING - 1U), fmt, ap);
     if (printRet == -1) {
         va_end(ap);
         return "";
@@ -110,19 +110,20 @@ std::string AclErrorLogManager::FormatStr(const char_t *const fmt, ...)
     return str;
 }
 
-void AclErrorLogManager::ReportInputError(const char *errorCode, const std::vector<const char *> &key,
-    const std::vector<const char *> &val)
+void AclErrorLogManager::ReportInputError(
+    const char* errorCode, const std::vector<const char*>& key, const std::vector<const char*>& val)
 {
     (void)REPORT_PREDEFINED_ERR_MSG(errorCode, key, val);
 }
 
-void AclErrorLogManager::ReportInnerError(const char_t *const fmt, ...)
+void AclErrorLogManager::ReportInnerError(const char_t* const fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
     char_t errorMsgStr[ACL_LIMIT_PER_MESSAGE] = {};
-    const int32_t ret = vsnprintf_s(errorMsgStr, static_cast<size_t>(ACL_LIMIT_PER_MESSAGE),
-        static_cast<size_t>(ACL_LIMIT_PER_MESSAGE - 1U), fmt, ap);
+    const int32_t ret = vsnprintf_s(
+        errorMsgStr, static_cast<size_t>(ACL_LIMIT_PER_MESSAGE), static_cast<size_t>(ACL_LIMIT_PER_MESSAGE - 1U), fmt,
+        ap);
     if (ret == -1) {
         va_end(ap);
         ACL_LOG_ERROR("[Call][Vsnprintf]call vsnprintf failed, ret = %d", ret);
@@ -132,13 +133,14 @@ void AclErrorLogManager::ReportInnerError(const char_t *const fmt, ...)
     REPORT_INNER_ERR_MSG("EH9999", "%s", errorMsgStr);
 }
 
-void AclErrorLogManager::ReportCallError(const char_t *const fmt, ...)
+void AclErrorLogManager::ReportCallError(const char_t* const fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
     char_t errorMsgStr[ACL_LIMIT_PER_MESSAGE] = {};
-    const int32_t ret = vsnprintf_s(errorMsgStr, static_cast<size_t>(ACL_LIMIT_PER_MESSAGE),
-        static_cast<size_t>(ACL_LIMIT_PER_MESSAGE - 1U), fmt, ap);
+    const int32_t ret = vsnprintf_s(
+        errorMsgStr, static_cast<size_t>(ACL_LIMIT_PER_MESSAGE), static_cast<size_t>(ACL_LIMIT_PER_MESSAGE - 1U), fmt,
+        ap);
     if (ret == -1) {
         va_end(ap);
         ACL_LOG_ERROR("[Call][Vsnprintf]call vsnprintf failed, ret = %d", ret);
@@ -148,11 +150,11 @@ void AclErrorLogManager::ReportCallError(const char_t *const fmt, ...)
     REPORT_INNER_ERR_MSG("EH9999", "%s", errorMsgStr);
 }
 
-void AclErrorLogManager::ReportInputErrorWithChar(const char_t *const errorCode, const char_t *const argNames[],
-    const char_t *const argVals[], const size_t size)
+void AclErrorLogManager::ReportInputErrorWithChar(
+    const char_t* const errorCode, const char_t* const argNames[], const char_t* const argVals[], const size_t size)
 {
-    std::vector<const char *> argNameArr;
-    std::vector<const char *> argValArr;
+    std::vector<const char*> argNameArr;
+    std::vector<const char*> argValArr;
     for (size_t i = 0U; i < size; ++i) {
         argNameArr.push_back(argNames[i]);
         argValArr.push_back(argVals[i]);
@@ -160,7 +162,7 @@ void AclErrorLogManager::ReportInputErrorWithChar(const char_t *const errorCode,
     (void)REPORT_PREDEFINED_ERR_MSG(errorCode, argNameArr, argValArr);
 }
 
-std::string AclErrorLogManager::GetFuncNameWithoutImplSuffix(const char_t *funcName)
+std::string AclErrorLogManager::GetFuncNameWithoutImplSuffix(const char_t* funcName)
 {
     constexpr size_t kAclPrefixLen = 3U;
     constexpr size_t kImplSuffixLen = 4U;

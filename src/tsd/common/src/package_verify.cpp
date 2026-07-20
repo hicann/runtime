@@ -20,9 +20,9 @@
 
 namespace tsd {
 namespace {
-    using VerifyImgFunc = int32_t(*)(HAL_VERIFY_TYPE, HAL_IMG_ID, const char_t *, int32_t);
-    constexpr uint32_t CMS_HEAD_FIX_PACKET_LEN = (4U + 4U) * 1024U;
-    constexpr uint32_t CMS_IMG_DESC_LEN = 256U;
+using VerifyImgFunc = int32_t (*)(HAL_VERIFY_TYPE, HAL_IMG_ID, const char_t*, int32_t);
+constexpr uint32_t CMS_HEAD_FIX_PACKET_LEN = (4U + 4U) * 1024U;
+constexpr uint32_t CMS_IMG_DESC_LEN = 256U;
 } // namespace
 
 TSD_StatusT PackageVerify::VerifyPackage() const
@@ -61,8 +61,7 @@ TSD_StatusT PackageVerify::IsPackageValid() const
 
     const int32_t ret = access(pkgPath_.c_str(), F_OK);
     if (ret != EOK) {
-        TSD_ERROR("File cannot access, ret=%d, path=%s, reason=%s",
-                  ret, pkgPath_.c_str(), SafeStrerror().c_str());
+        TSD_ERROR("File cannot access, ret=%d, path=%s, reason=%s", ret, pkgPath_.c_str(), SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -72,10 +71,10 @@ TSD_StatusT PackageVerify::IsPackageValid() const
 TSD_StatusT PackageVerify::ChangePackageMode() const
 {
     // package must have write auth, because need rewrite to remove signature
-    const int32_t ret = chmod(pkgPath_.c_str(), (S_IRWXU|S_IRGRP|S_IXGRP));
+    const int32_t ret = chmod(pkgPath_.c_str(), (S_IRWXU | S_IRGRP | S_IXGRP));
     if (ret != EOK) {
-        TSD_ERROR("Change package mode failed, ret=%d, path=%s, reason=%s",
-                  ret, pkgPath_.c_str(), SafeStrerror().c_str());
+        TSD_ERROR(
+            "Change package mode failed, ret=%d, path=%s, reason=%s", ret, pkgPath_.c_str(), SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -111,7 +110,7 @@ bool PackageVerify::IsCmsVerifyPackage() const
         return true;
     }
 
-    PackageProcessConfig *pkgConf = PackageProcessConfig::GetInstance();
+    PackageProcessConfig* pkgConf = PackageProcessConfig::GetInstance();
     if (pkgConf->IsConfigPackageInfo(pkgPath_)) {
         return true;
     }
@@ -123,7 +122,7 @@ TSD_StatusT PackageVerify::VerifyPackageByDrv() const
 {
     const std::string soName = "libascend_drvupgrade.so";
     const std::string soPath = "/usr/lib64/" + soName;
-    void *handle = mmDlopen(soPath.c_str(), MMPA_RTLD_LAZY);
+    void* handle = mmDlopen(soPath.c_str(), MMPA_RTLD_LAZY);
     if (handle == nullptr) {
         handle = mmDlopen(soName.c_str(), MMPA_RTLD_LAZY);
         if (handle == nullptr) {
@@ -134,15 +133,15 @@ TSD_StatusT PackageVerify::VerifyPackageByDrv() const
     const ScopeGuard closeGuard([handle]() { (void)mmDlclose(handle); });
 
     const std::string apiName = "halVerifyImg";
-    void * const tempFunc = mmDlsym(handle, apiName.c_str());
+    void* const tempFunc = mmDlsym(handle, apiName.c_str());
     if (tempFunc == nullptr) {
         TSD_ERROR("Get api %s in %s failed", apiName.c_str(), soName.c_str());
         return TSD_INTERNAL_ERROR;
     }
 
     const VerifyImgFunc verifyImg = reinterpret_cast<VerifyImgFunc>(tempFunc);
-    const int32_t ret = verifyImg(VERIFY_TYPE_SOC, ITEE_IMG_ID, pkgPath_.c_str(),
-                                  static_cast<int32_t>(HAL_VERIFY_MODE_COVER_WITH_HEAD_OFF));
+    const int32_t ret = verifyImg(
+        VERIFY_TYPE_SOC, ITEE_IMG_ID, pkgPath_.c_str(), static_cast<int32_t>(HAL_VERIFY_MODE_COVER_WITH_HEAD_OFF));
     if (ret != 0) {
         TSD_ERROR("Check head tag failed, ret=%d, path=%s", ret, pkgPath_.c_str());
         return TSD_VERIFY_OPP_FAIL;
@@ -175,10 +174,10 @@ TSD_StatusT PackageVerify::VerifyPackageByCms() const
     return TSD_OK;
 }
 
-TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string &srcPath, uint32_t &mixCodeLen) const
+TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string& srcPath, uint32_t& mixCodeLen) const
 {
     TSD_INFO("[CMSCBB_VERIFY] GetPkgCodeLen start");
-    FILE *fp = fopen(srcPath.c_str(), "r");
+    FILE* fp = fopen(srcPath.c_str(), "r");
     if (fp == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] fopen failed. path[%s]", srcPath.c_str());
         return static_cast<uint32_t>(TSD_START_FAIL);
@@ -200,7 +199,7 @@ TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string &srcPath, uint32_t &m
         TSD_ERROR("[CMSCBB_VERIFY] new SeImageHead failed");
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
-    SeImageHead * const pktHeader = pktHeaderPtr.get();
+    SeImageHead* const pktHeader = pktHeaderPtr.get();
     if (pktHeader == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] malloc failed");
         return static_cast<uint32_t>(TSD_START_FAIL);
@@ -221,10 +220,10 @@ TSD_StatusT PackageVerify::GetPkgCodeLen(const std::string &srcPath, uint32_t &m
     return TSD_OK;
 }
 
-TSD_StatusT PackageVerify::ProcessSendStepVerify(const std::string &srcPath, const uint32_t codeLen) const
+TSD_StatusT PackageVerify::ProcessSendStepVerify(const std::string& srcPath, const uint32_t codeLen) const
 {
     TSD_INFO("[CMSCBB_VERIFY] verify code len[%u] start", codeLen);
-    FILE *fp = fopen(srcPath.c_str(), "r");
+    FILE* fp = fopen(srcPath.c_str(), "r");
     if (fp == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] fopen failed. path[%s]", srcPath.c_str());
         return static_cast<uint32_t>(TSD_START_FAIL);
@@ -236,12 +235,12 @@ TSD_StatusT PackageVerify::ProcessSendStepVerify(const std::string &srcPath, con
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
     const uint32_t fileTotalLen = codeLen + CMS_IMG_DESC_LEN;
-    std::unique_ptr<uint8_t []> srcFilePtr(new (std::nothrow) uint8_t[fileTotalLen]);
+    std::unique_ptr<uint8_t[]> srcFilePtr(new (std::nothrow) uint8_t[fileTotalLen]);
     if (srcFilePtr == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] new srcFilePtr failed");
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
-    uint8_t *srcFile = srcFilePtr.get();
+    uint8_t* srcFile = srcFilePtr.get();
     if (srcFile == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] new srcFilePtr failed");
         return static_cast<uint32_t>(TSD_START_FAIL);
@@ -261,11 +260,11 @@ TSD_StatusT PackageVerify::ProcessSendStepVerify(const std::string &srcPath, con
     return TSD_OK;
 }
 
-TSD_StatusT PackageVerify::ReWriteAicpuPackage(const uint8_t * const buf, const uint32_t len,
-                                               const std::string &srcPath) const
+TSD_StatusT PackageVerify::ReWriteAicpuPackage(
+    const uint8_t* const buf, const uint32_t len, const std::string& srcPath) const
 {
     TSD_INFO("[CMSCBB_VERIFY] start write new file");
-    FILE *fp = fopen(srcPath.c_str(), "w");
+    FILE* fp = fopen(srcPath.c_str(), "w");
     if (fp == nullptr) {
         TSD_ERROR("[CMSCBB_VERIFY] fopen failed. path[%s]", srcPath.c_str());
         return static_cast<uint32_t>(TSD_START_FAIL);

@@ -11,7 +11,6 @@
 #include "inc/package_worker.h"
 #include "inc/tsd_path_mgr.h"
 
-
 namespace tsd {
 std::map<std::pair<uint32_t, uint32_t>, std::shared_ptr<PackageWorker>> PackageWorker::workerManager_ = {};
 std::mutex PackageWorker::workerManagerMutex_;
@@ -44,20 +43,22 @@ std::shared_ptr<PackageWorker> PackageWorker::GetInstance(const uint32_t devId, 
     return inst;
 }
 
-TSD_StatusT PackageWorker::LoadPackage(const PackageWorkerType type, const std::string &path,
-                                       const std::string &fileName)
+TSD_StatusT PackageWorker::LoadPackage(
+    const PackageWorkerType type, const std::string& path, const std::string& fileName)
 {
     const std::shared_ptr<BasePackageWorker> packageWorker = GetPackageWorker(type);
     if (packageWorker == nullptr) {
-        TSD_ERROR("Get package worker inst failed by nullptr, type=%u, path=%s, fileName=%s",
-                  static_cast<uint32_t>(type), path.c_str(), fileName.c_str());
+        TSD_ERROR(
+            "Get package worker inst failed by nullptr, type=%u, path=%s, fileName=%s", static_cast<uint32_t>(type),
+            path.c_str(), fileName.c_str());
         return TSD_INSTANCE_NOT_FOUND;
     }
 
     const TSD_StatusT ret = packageWorker->LoadPackage(path, fileName);
     if (ret != TSD_OK) {
-        TSD_ERROR("Load package failed, ret=%u, type=%u, path=%s, fileName=%s",
-                  ret, static_cast<uint32_t>(type), path.c_str(), fileName.c_str());
+        TSD_ERROR(
+            "Load package failed, ret=%u, type=%u, path=%s, fileName=%s", ret, static_cast<uint32_t>(type),
+            path.c_str(), fileName.c_str());
     }
 
     return ret;
@@ -132,10 +133,7 @@ void PackageWorker::DestroyPackageWorker()
     ClearWorkerManager();
 }
 
-void PackageWorker::Stop() noexcept
-{
-    isDestroy_ = true;
-}
+void PackageWorker::Stop() noexcept { isDestroy_ = true; }
 
 void PackageWorker::ClearWorkerManager()
 {
@@ -152,7 +150,7 @@ void PackageWorker::ClearWorkerManager()
 void PackageWorker::SetAsanMode(const bool isAsan)
 {
     std::lock_guard<std::mutex> lk(workersMutex_);
-    for (const auto &worker : workers_) {
+    for (const auto& worker : workers_) {
         if (worker != nullptr) {
             worker->SetAsanMode(isAsan);
         }

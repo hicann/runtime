@@ -15,43 +15,40 @@
 #include "proto/tsd_message.pb.h"
 
 namespace tsd {
-    using ParseFuncType = void (*)(const uint32_t sessionID, const tsd::HDCMessage& msg);
-    class MessageParseInterface {
-    public:
-        /**
-        * @ingroup MessageParseInterface
-        * @brief 处理消息
-        * @param [in]msg:消息数据
-        * @return 无
-        */
-        void ProcessMessage(const uint32_t sessionID, const HDCMessage& msg) const;
-        /**
-        * @ingroup hiaiengine
-        * @brief RegisterMsgProcess注册HDC消息处理函数
-        * @return 无
-        */
-        void RegisterMsgProcess(const HDCMessage::MsgType type, const ParseFuncType func);
-    protected:
-        /**
-        * @ingroup MessageParseInterface
-        * @brief MessageParseInterface基类构造函数
-        */
-        MessageParseInterface();
+using ParseFuncType = void (*)(const uint32_t sessionID, const tsd::HDCMessage& msg);
+class MessageParseInterface {
+public:
+    /**
+     * @ingroup MessageParseInterface
+     * @brief 处理消息
+     * @param [in]msg:消息数据
+     * @return 无
+     */
+    void ProcessMessage(const uint32_t sessionID, const HDCMessage& msg) const;
+    /**
+     * @ingroup hiaiengine
+     * @brief RegisterMsgProcess注册HDC消息处理函数
+     * @return 无
+     */
+    void RegisterMsgProcess(const HDCMessage::MsgType type, const ParseFuncType func);
 
-        virtual ~MessageParseInterface() = default;
+protected:
+    /**
+     * @ingroup MessageParseInterface
+     * @brief MessageParseInterface基类构造函数
+     */
+    MessageParseInterface();
 
-        MessageParseInterface(
-            const MessageParseInterface&) = delete;
-        MessageParseInterface(
-            MessageParseInterface&&) = delete;
-        MessageParseInterface& operator=(
-            const MessageParseInterface&) = delete;
-        MessageParseInterface& operator=(
-            MessageParseInterface&) = delete;
-        MessageParseInterface& operator=(
-            MessageParseInterface&&) = delete;
-    private:
-        std::map<HDCMessage::MsgType, ParseFuncType> parseFuncMap_;
-    };
-}
-#endif  // TDT_COMMON_COMMON_INC_TSD_MESSAGE_PARSE_INTERFACE_H
+    virtual ~MessageParseInterface() = default;
+
+    MessageParseInterface(const MessageParseInterface&) = delete;
+    MessageParseInterface(MessageParseInterface&&) = delete;
+    MessageParseInterface& operator=(const MessageParseInterface&) = delete;
+    MessageParseInterface& operator=(MessageParseInterface&) = delete;
+    MessageParseInterface& operator=(MessageParseInterface&&) = delete;
+
+private:
+    std::map<HDCMessage::MsgType, ParseFuncType> parseFuncMap_;
+};
+} // namespace tsd
+#endif // TDT_COMMON_COMMON_INC_TSD_MESSAGE_PARSE_INTERFACE_H

@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-static void CreateTsMdlDesc(rtMdlLoad_t *modelLoad, tsMdlDescInfo_t *tsModelDesc)
+static void CreateTsMdlDesc(rtMdlLoad_t* modelLoad, tsMdlDescInfo_t* tsModelDesc)
 {
     tsModelDesc->taskdesc_base_addr = (uintptr_t)modelLoad->taskDescBaseAddr;
     tsModelDesc->pc_base_addr = (uintptr_t)modelLoad->pcBaseAddr;
@@ -28,7 +28,7 @@ static void CreateTsMdlDesc(rtMdlLoad_t *modelLoad, tsMdlDescInfo_t *tsModelDesc
     tsModelDesc->weight_prefetch_flag = modelLoad->weightPrefetch;
 }
 
-rtError_t rtNanoModelLoad(rtMdlLoad_t *modelLoad, uint32_t *phyModelId)
+rtError_t rtNanoModelLoad(rtMdlLoad_t* modelLoad, uint32_t* phyModelId)
 {
     if (modelLoad == NULL) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -45,7 +45,7 @@ rtError_t rtNanoModelLoad(rtMdlLoad_t *modelLoad, uint32_t *phyModelId)
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtNanoModelExecute(rtMdlExecute_t *modelExec)
+rtError_t rtNanoModelExecute(rtMdlExecute_t* modelExec)
 {
     if (modelExec == NULL) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -81,7 +81,7 @@ rtError_t rtNanoModelExecute(rtMdlExecute_t *modelExec)
         input.execInfo.desc_info.cqe = 1;
         input.ec_type = DESC_FILL_EXEC_SYNC;
     } else {
-        input.execInfo.desc_info.cqe = 0;  // drv can not received hwts interrupts
+        input.execInfo.desc_info.cqe = 0; // drv can not received hwts interrupts
         input.ec_type = DESC_FILL_EXEC;
     }
     drvError_t drvRet = halModelExec(0, &input, &output);
@@ -122,7 +122,7 @@ rtError_t rtDumpDeInit(void)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMsgSend(uint32_t tId, uint32_t sendTid, int32_t timeout, void *sendInfo, uint32_t size)
+rtError_t rtMsgSend(uint32_t tId, uint32_t sendTid, int32_t timeout, void* sendInfo, uint32_t size)
 {
     drvError_t drvRet = halMsgSend(tId, sendTid, timeout, sendInfo, size);
     if (drvRet != DRV_ERROR_NONE) {
@@ -132,7 +132,7 @@ rtError_t rtMsgSend(uint32_t tId, uint32_t sendTid, int32_t timeout, void *sendI
     return RT_ERROR_NONE;
 }
 
-rtError_t rtSetTaskDescDumpFlag(void *taskDescBaseAddr, size_t taskDescSize, uint32_t taskId)
+rtError_t rtSetTaskDescDumpFlag(void* taskDescBaseAddr, size_t taskDescSize, uint32_t taskId)
 {
     if (taskDescBaseAddr == NULL) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -141,7 +141,7 @@ rtError_t rtSetTaskDescDumpFlag(void *taskDescBaseAddr, size_t taskDescSize, uin
     if (taskId * sizeof(HwtsTaskDesc) >= taskDescSize) {
         return ACL_ERROR_RT_PARAM_INVALID;
     }
-    ((HwtsTaskDesc *)((uint8_t *)taskDescBaseAddr + taskId * sizeof(HwtsTaskDesc)))->dump = 1;
+    ((HwtsTaskDesc*)((uint8_t*)taskDescBaseAddr + taskId * sizeof(HwtsTaskDesc)))->dump = 1;
     return RT_ERROR_NONE;
 }
 

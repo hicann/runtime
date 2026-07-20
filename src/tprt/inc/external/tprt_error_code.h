@@ -14,27 +14,27 @@
 extern "C" {
 #endif
 
-#define  TPRT_SUCCESS                0
-#define  TPRT_INPUT_NULL             0x1
-#define  TPRT_INPUT_INVALID          0x2
-#define  TPRT_INPUT_OP_TYPE_INVALID  0x3
-#define  TPRT_DEVICE_INVALID         0x5
-#define  TPRT_DEVICE_NEW_FAILED      0x6
-#define  TPRT_SQ_HANDLE_INVALID      0x7
-#define  TPRT_SQ_HANDLE_NEW_FAILED   0x8
-#define  TPRT_SQ_QUEUE_FULL          0x9
-#define  TPRT_SQ_DEPTH_IS_INVALID    0xA
-#define  TPRT_SQ_STATE_ABNORMAL      0xB
-#define  TPRT_SQ_EMPTY               0xC
-#define  TPRT_SQE_TYPE_IS_INVALID    0xD
-#define  TPRT_SQE_PARA_IS_INVALID    0xE
-#define  TPRT_CQ_QUEUE_FULL          0xF
-#define  TPRT_CQ_HANDLE_INVALID      0x10
-#define  TPRT_CQ_HANDLE_NEW_FAILED   0x11
-#define  TPRT_WORKER_INVALID         0x12
-#define  TPRT_WORKER_NEW_FAILED      0x13
-#define  TPRT_START_WORKER_FAILED    0x14
-#define  TPRT_TASK_TIMEOUT           0x15
+#define TPRT_SUCCESS 0
+#define TPRT_INPUT_NULL 0x1
+#define TPRT_INPUT_INVALID 0x2
+#define TPRT_INPUT_OP_TYPE_INVALID 0x3
+#define TPRT_DEVICE_INVALID 0x5
+#define TPRT_DEVICE_NEW_FAILED 0x6
+#define TPRT_SQ_HANDLE_INVALID 0x7
+#define TPRT_SQ_HANDLE_NEW_FAILED 0x8
+#define TPRT_SQ_QUEUE_FULL 0x9
+#define TPRT_SQ_DEPTH_IS_INVALID 0xA
+#define TPRT_SQ_STATE_ABNORMAL 0xB
+#define TPRT_SQ_EMPTY 0xC
+#define TPRT_SQE_TYPE_IS_INVALID 0xD
+#define TPRT_SQE_PARA_IS_INVALID 0xE
+#define TPRT_CQ_QUEUE_FULL 0xF
+#define TPRT_CQ_HANDLE_INVALID 0x10
+#define TPRT_CQ_HANDLE_NEW_FAILED 0x11
+#define TPRT_WORKER_INVALID 0x12
+#define TPRT_WORKER_NEW_FAILED 0x13
+#define TPRT_START_WORKER_FAILED 0x14
+#define TPRT_TASK_TIMEOUT 0x15
 #ifdef __cplusplus
 }
 #endif

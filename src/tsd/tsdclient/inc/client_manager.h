@@ -16,7 +16,7 @@
 #include "tsd/status.h"
 #include "tsd/tsd_client.h"
 #include "inc/basic_define.h"
-#define TSD_PLAT_GET_CHIP(type)           (((type) >> 8U) & 0xffU)
+#define TSD_PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)
 
 namespace tsd {
 enum class ProfilingMode {
@@ -42,17 +42,14 @@ typedef enum tagChipType {
     CHIP_610LITE = 12,
     CHIP_ASCEND_950 = 15,
     CHIP_CLOUD_V5 = 16,
-    CHIP_MC62CM12A = 17,  /* MC62CM12A */
-    CHIP_MC32DM11A = 18,  /* CHIP_MC32DM11A */
-    CHIP_ASCEND_350 = 19, 
+    CHIP_MC62CM12A = 17, /* MC62CM12A */
+    CHIP_MC32DM11A = 18, /* CHIP_MC32DM11A */
+    CHIP_ASCEND_350 = 19,
     CHIP_END
 } ChipType_t;
 
 // 返回给tsdclient的open/close确认码
-enum class ResponseCode {
-    SUCCESS = 0,
-    FAIL = 1
-};
+enum class ResponseCode { SUCCESS = 0, FAIL = 1 };
 
 class ClientManager {
 public:
@@ -62,15 +59,16 @@ public:
      * @param [in] deviceId : 设备号
      * @return TsdClient对象的引用
      */
-    static std::shared_ptr<ClientManager> GetInstance(const uint32_t &deviceId, const uint32_t deviceMode = DIE_MODE, const bool transDevIdFlag = true);
+    static std::shared_ptr<ClientManager> GetInstance(
+        const uint32_t& deviceId, const uint32_t deviceMode = DIE_MODE, const bool transDevIdFlag = true);
 
     static TSD_StatusT GetPlatformInfo(const uint32_t deviceId);
 
     static bool CheckDestructFlag(const uint32_t logicDevId);
 
-    static void SetProfilingCallback(const MsprofReporterCallback &callback);
+    static void SetProfilingCallback(const MsprofReporterCallback& callback);
 
-    static TSD_StatusT SetRunMode(const std::string &valueStr);
+    static TSD_StatusT SetRunMode(const std::string& valueStr);
 
     static TSD_StatusT SetAicpuSchedMode(const uint32_t schedMode);
 
@@ -78,7 +76,7 @@ public:
      * @ingroup ClientManager
      * @brief 构造函数
      */
-    explicit ClientManager(const uint32_t &deviceId);
+    explicit ClientManager(const uint32_t& deviceId);
 
     /**
      * @ingroup ClientManager
@@ -117,7 +115,7 @@ public:
      * @param [in] flag:  profiling 标志位
      * @return TSD_OK:成功 或者其他错误码
      */
-    virtual TSD_StatusT UpdateProfilingConf(const uint32_t &flag) = 0;
+    virtual TSD_StatusT UpdateProfilingConf(const uint32_t& flag) = 0;
 
     /**
      * @ingroup ClientManager
@@ -125,7 +123,7 @@ public:
      * @param [in] initInfo : QS初始化参数
      * @return TSD_OK:成功 或者其他错误码
      */
-    virtual TSD_StatusT InitQs(const InitFlowGwInfo * const initInfo) = 0;
+    virtual TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo) = 0;
 
     /**
      * @ingroup ClientManager
@@ -146,44 +144,46 @@ public:
      * @brief get hdc session status
      * @return TSD_OK:成功 或者其他错误码
      */
-    virtual TSD_StatusT GetHdcConctStatus(int32_t &hdcSessStat);
+    virtual TSD_StatusT GetHdcConctStatus(int32_t& hdcSessStat);
 
     static RunningMode GetClientRunMode(const uint32_t logicDeviceId);
 
-    virtual TSD_StatusT LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen,
-                                         const char_t *const fileName, const uint64_t fileNameLen) = 0;
+    virtual TSD_StatusT LoadFileToDevice(
+        const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName,
+        const uint64_t fileNameLen) = 0;
 
-    virtual TSD_StatusT ProcessOpenSubProc(ProcOpenArgs *openArgs) = 0;
+    virtual TSD_StatusT ProcessOpenSubProc(ProcOpenArgs* openArgs) = 0;
 
     virtual TSD_StatusT ProcessCloseSubProc(const pid_t closePid) = 0;
 
-    virtual TSD_StatusT GetSubProcStatus(ProcStatusInfo *pidInfo, const uint32_t arrayLen) = 0;
+    virtual TSD_StatusT GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen) = 0;
 
-    virtual TSD_StatusT RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen) = 0;
+    virtual TSD_StatusT RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen) = 0;
 
-    virtual TSD_StatusT GetSubProcListStatus(ProcStatusParam *pidInfo, const uint32_t arrayLen) = 0;
+    virtual TSD_StatusT GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen) = 0;
 
     bool IsAdcEnv() const;
- 
+
     static uint32_t GetPlatInfoChipType();
 
-    virtual TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) = 0;
+    virtual TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize) = 0;
 
     static bool IsNumeric(const std::string& str);
 
     static bool IsSupportSetVisibleDevices();
 
-    static void SplitString(const std::string &str, std::vector<std::string> &result);
+    static void SplitString(const std::string& str, std::vector<std::string>& result);
 
     static bool GetVisibleDevices();
 
-    static TSD_StatusT ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t &logicDevId);
+    static TSD_StatusT ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t& logicDevId);
 
-    virtual TSD_StatusT OpenNetService(const NetServiceOpenArgs *args) = 0;
+    virtual TSD_StatusT OpenNetService(const NetServiceOpenArgs* args) = 0;
 
     virtual TSD_StatusT CloseNetService() = 0;
 
-    bool GetPackageTitle(std::string &packageTitle) const;
+    bool GetPackageTitle(std::string& packageTitle) const;
+
 protected:
     /**
      * @ingroup ClientManager
@@ -225,14 +225,14 @@ protected:
     std::string packageName_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 
 private:
-    ClientManager(const ClientManager &) = delete;
-    ClientManager(ClientManager &&) = delete;
-    ClientManager &operator=(const ClientManager &) = delete;
-    ClientManager &operator=(ClientManager &) = delete;
-    ClientManager &operator=(ClientManager &&) = delete;
-    bool GetPackagePath(std::string &packagePath, const uint32_t packageType) const;
+    ClientManager(const ClientManager&) = delete;
+    ClientManager(ClientManager&&) = delete;
+    ClientManager& operator=(const ClientManager&) = delete;
+    ClientManager& operator=(ClientManager&) = delete;
+    ClientManager& operator=(ClientManager&&) = delete;
+    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const;
     bool CheckPackageExistsOnce(const uint32_t packageType);
     std::string packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 };
-}  // namespace tsd
-#endif  // INNER_INC_CLIENT_MANAGER_H
+} // namespace tsd
+#endif // INNER_INC_CLIENT_MANAGER_H

@@ -21,9 +21,9 @@ typedef struct TagContext {
     Vector streamVec;
     mmMutex_t streamLock;
 } Context;
-Stream *CreateContextStream(Context* curCtx, rtStreamConfigHandle *handle, rtError_t *error);
+Stream* CreateContextStream(Context* curCtx, rtStreamConfigHandle* handle, rtError_t* error);
 void DestroyContextStream(Context* curCtx, Stream* stream);
-Device *GetContextDevice(Context* context);
+Device* GetContextDevice(Context* context);
 uint32_t GetContextDeviceId(Context* context);
 
 rtError_t SetupContext(Context* context);

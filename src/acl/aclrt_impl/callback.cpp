@@ -20,7 +20,7 @@
 #include "utils/data_type_utils.h"
 
 namespace {
-    constexpr uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
+constexpr uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
 }
 
 #ifdef __cplusplus
@@ -38,109 +38,108 @@ aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
 {
     ACL_LOG_INFO("start to execute aclrtSetExceptionInfoCallback.");
-    ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME,
-        static_cast<rtTaskFailCallback>(callback)));
+    ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME, static_cast<rtTaskFailCallback>(callback)));
     ACL_LOG_INFO("successfully execute aclrtSetExceptionInfoCallback");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetTaskIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
+uint32_t aclrtGetTaskIdFromExceptionInfoImpl(const aclrtExceptionInfo* info)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->taskid;
 }
 
-uint32_t aclrtGetStreamIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
+uint32_t aclrtGetStreamIdFromExceptionInfoImpl(const aclrtExceptionInfo* info)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->streamid;
 }
 
-uint32_t aclrtGetThreadIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
+uint32_t aclrtGetThreadIdFromExceptionInfoImpl(const aclrtExceptionInfo* info)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->tid;
 }
 
-uint32_t aclrtGetDeviceIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
+uint32_t aclrtGetDeviceIdFromExceptionInfoImpl(const aclrtExceptionInfo* info)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->deviceid;
 }
 
-uint32_t aclrtGetErrorCodeFromExceptionInfoImpl(const aclrtExceptionInfo *info)
+uint32_t aclrtGetErrorCodeFromExceptionInfoImpl(const aclrtExceptionInfo* info)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->retcode;
 }
 
-aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)
+aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo* info, void** devArgsPtr, uint32_t* devArgsLen)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devArgsPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devArgsLen);
-    
+
     if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
         *devArgsPtr = info->expandInfo.u.aicoreInfo.exceptionArgs.argAddr;
         *devArgsLen = info->expandInfo.u.aicoreInfo.exceptionArgs.argsize;
     } else if (info->expandInfo.type == RT_EXCEPTION_AICPU) {
         *devArgsPtr = info->expandInfo.u.aicpuInfo.argAddr;
         *devArgsLen = info->expandInfo.u.aicpuInfo.argsize;
-    } else if (info->expandInfo.type == RT_EXCEPTION_FUSION && 
-        info->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU) {
+    } else if (
+        info->expandInfo.type == RT_EXCEPTION_FUSION && info->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU) {
         *devArgsPtr = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argAddr;
         *devArgsLen = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argsize;
     } else {
         ACL_LOG_ERROR("exception information type = %d is invalid, get args failed.", info->expandInfo.type);
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
-            std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({funcName.c_str(), acl::GetExceptionExpandTypeDesc(info->expandInfo.type),
-                "info->expandInfo.type", "RT_EXCEPTION_AICORE, RT_EXCEPTION_AICPU or RT_EXCEPTION_FUSION"}));
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+            std::vector<const char*>(
+                {funcName.c_str(), acl::GetExceptionExpandTypeDesc(info->expandInfo.type), "info->expandInfo.type",
+                 "RT_EXCEPTION_AICORE, RT_EXCEPTION_AICPU or RT_EXCEPTION_FUSION"}));
         return ACL_ERROR_INVALID_EXCEPTION_INFO;
     }
-    
+
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo *info, aclrtFuncHandle *func)
+aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo* info, aclrtFuncHandle* func)
 {
     ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_RTS_OK(rtGetFuncHandleFromExceptionInfo(info, func));
-    
+
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinarySetExceptionCallbackImpl(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
+aclError aclrtBinarySetExceptionCallbackImpl(
+    aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void* userData)
 {
     ACL_LOG_INFO("start to execute aclrtBinarySetExceptionCallback.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(callback);
 
     ACL_REQUIRES_RTS_OK(rtBinarySetExceptionCallback(binHandle, callback, userData));
-    
+
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void *userData, aclrtCallbackBlockType blockType,
-    aclrtStream stream)
+aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void* userData, aclrtCallbackBlockType blockType, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchCallback);
     ACL_LOG_INFO("start to execute aclrtLaunchCallback.");
     ACL_CHECK_INVALID_VALUE_WITH_DESC(
         (blockType == ACL_CALLBACK_BLOCK || blockType == ACL_CALLBACK_NO_BLOCK),
-        acl::GetCallbackBlockTypeDesc(blockType), "blockType",
-        "ACL_CALLBACK_BLOCK or ACL_CALLBACK_NO_BLOCK",
+        acl::GetCallbackBlockTypeDesc(blockType), "blockType", "ACL_CALLBACK_BLOCK or ACL_CALLBACK_NO_BLOCK",
         ACL_ERROR_INVALID_PARAM);
     const bool isBlock = (blockType == ACL_CALLBACK_BLOCK);
-    ACL_REQUIRES_RTS_OK(rtCallbackLaunch(static_cast<rtCallback_t>(fn), userData,
-        static_cast<rtStream_t>(stream), isBlock));
+    ACL_REQUIRES_RTS_OK(
+        rtCallbackLaunch(static_cast<rtCallback_t>(fn), userData, static_cast<rtStream_t>(stream), isBlock));
     ACL_LOG_INFO("successfully execute aclrtLaunchCallback");
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchHostFuncImpl(aclrtStream stream, aclrtHostFunc fn, void *args) 
+aclError aclrtLaunchHostFuncImpl(aclrtStream stream, aclrtHostFunc fn, void* args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchHostFunc);
     ACL_LOG_INFO("start to execute aclrtLaunchHostFunc.");
@@ -180,7 +179,7 @@ aclError aclrtUnSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtRegStreamStateCallbackImpl(const char *regName, aclrtStreamStateCallback callback, void *args)
+aclError aclrtRegStreamStateCallbackImpl(const char* regName, aclrtStreamStateCallback callback, void* args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRegStreamStateCallback);
     ACL_LOG_INFO("start to execute aclrtRegStreamStateCallback");
@@ -190,7 +189,7 @@ aclError aclrtRegStreamStateCallbackImpl(const char *regName, aclrtStreamStateCa
     return ACL_SUCCESS;
 }
 
-aclError aclrtRegDeviceStateCallbackImpl(const char *regName, aclrtDeviceStateCallback callback, void *args)
+aclError aclrtRegDeviceStateCallbackImpl(const char* regName, aclrtDeviceStateCallback callback, void* args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRegDeviceStateCallback);
     ACL_LOG_INFO("start to execute aclrtRegDeviceStateCallback");
@@ -201,13 +200,14 @@ aclError aclrtRegDeviceStateCallbackImpl(const char *regName, aclrtDeviceStateCa
     return ACL_SUCCESS;
 }
 
-aclError aclrtSetDeviceTaskAbortCallbackImpl(const char *regName, aclrtDeviceTaskAbortCallback callback, void *args)
+aclError aclrtSetDeviceTaskAbortCallbackImpl(const char* regName, aclrtDeviceTaskAbortCallback callback, void* args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetDeviceTaskAbortCallback);
     ACL_LOG_INFO("start to execute aclrtSetDeviceTaskAbortCallback");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(regName);
 
-    ACL_REQUIRES_RTS_OK(rtsSetDeviceTaskAbortCallback(regName, reinterpret_cast<rtsDeviceTaskAbortCallback>(callback), args));
+    ACL_REQUIRES_RTS_OK(
+        rtsSetDeviceTaskAbortCallback(regName, reinterpret_cast<rtsDeviceTaskAbortCallback>(callback), args));
     ACL_LOG_INFO("successfully execute aclrtSetDeviceTaskAbortCallback");
     return ACL_SUCCESS;
 }

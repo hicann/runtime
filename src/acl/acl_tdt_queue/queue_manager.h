@@ -40,22 +40,22 @@ public:
      * Get queue processor
      * @return queueProcessorPtr queue processor pointer
      */
-    QueueProcessor *GetQueueProcessor();
+    QueueProcessor* GetQueueProcessor();
 
-    static aclError GetRunningEnv(RunEnv &runningEnv);
+    static aclError GetRunningEnv(RunEnv& runningEnv);
 
     QueueManager() = default;
 
     ~QueueManager() = default;
 
     // not allow copy constructor and assignment operators
-    QueueManager(const QueueManager &) = delete;
+    QueueManager(const QueueManager&) = delete;
 
-    QueueManager &operator=(const QueueManager &) = delete;
+    QueueManager& operator=(const QueueManager&) = delete;
 
-    QueueManager(QueueManager &&) = delete;
+    QueueManager(QueueManager&&) = delete;
 
-    QueueManager &&operator=(QueueManager &&) = delete;
+    QueueManager&& operator=(QueueManager&&) = delete;
 
 private:
     // queue processor
@@ -64,6 +64,6 @@ private:
     std::mutex muCreateProcessProc_;
 };
 
-}
+} // namespace acl
 
 #endif // QUEUE_MANAGER_H

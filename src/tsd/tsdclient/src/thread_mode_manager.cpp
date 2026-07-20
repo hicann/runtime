@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "inc/thread_mode_manager.h"
 #include "driver/ascend_hal.h"
 #include "tsd_log.h"
@@ -17,11 +17,11 @@
 #include "inc/package_worker_utils.h"
 
 namespace {
-    const uint32_t SUB_PROC_PARAM_LIST_MAX_COUNT = 128U;
-    constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
-}  // namespace
+const uint32_t SUB_PROC_PARAM_LIST_MAX_COUNT = 128U;
+constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
+} // namespace
 namespace tsd {
-ThreadModeManager::ThreadModeManager(const uint32_t &deviceId)
+ThreadModeManager::ThreadModeManager(const uint32_t& deviceId)
     : ClientManager(deviceId),
       startAicpu_(nullptr),
       stopAicpu_(nullptr),
@@ -34,7 +34,8 @@ ThreadModeManager::ThreadModeManager(const uint32_t &deviceId)
       startQs_(nullptr),
       adprofHandle_(nullptr),
       startAdprof_(nullptr),
-      stopAdprof_(nullptr) {}
+      stopAdprof_(nullptr)
+{}
 
 void ThreadModeManager::OpenTfSo(const uint32_t vfId)
 {
@@ -47,14 +48,13 @@ void ThreadModeManager::OpenTfSo(const uint32_t vfId)
         TSD_RUN_INFO("get HOME PATH abnormal.");
         return;
     }
-    std::string tfLibraryPath =
-        homeEnv + "/aicpu_kernels/" + std::to_string(vfId) + "/aicpu_kernels_device/sand_box/";
+    std::string tfLibraryPath = homeEnv + "/aicpu_kernels/" + std::to_string(vfId) + "/aicpu_kernels_device/sand_box/";
     if (access(tfLibraryPath.c_str(), R_OK) != 0) {
         TSD_RUN_INFO("access tf path %s abnormal:%s.", tfLibraryPath.c_str(), SafeStrerror().c_str());
         return;
     }
     tfLibraryPath += "libtensorflow.so";
-    tfSoHandle_ = mmDlopen(tfLibraryPath.c_str(),  RTLD_GLOBAL|RTLD_NOW);
+    tfSoHandle_ = mmDlopen(tfLibraryPath.c_str(), RTLD_GLOBAL | RTLD_NOW);
     if (tfSoHandle_ == nullptr) {
         TSD_RUN_INFO("cannot open %s: [%s]", tfLibraryPath.c_str(), dlerror());
         return;
@@ -90,7 +90,7 @@ TSD_StatusT ThreadModeManager::OpenAicpuSd()
 TSD_StatusT ThreadModeManager::CapabilityGet(const int32_t type, const uint64_t ptr)
 {
     if (type == TSD_CAPABILITY_ADPROF) {
-        bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+        bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
         if (resultPtr == nullptr) {
             TSD_ERROR("input ptr is null");
             return TSD_INTERNAL_ERROR;
@@ -107,14 +107,16 @@ TSD_StatusT ThreadModeManager::StartCallAICPU()
         const std::string libPath = "/usr/lib64/libaicpu_scheduler.so";
         handle_ = mmDlopen(libPath.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
         if (handle_ == nullptr) {
-            TSD_RUN_WARN("[ThreadModeManager] Cannot open libaicpu_scheduler.so, deviceId[%u], reason[%s]",
-                         logicDeviceId_, dlerror());
+            TSD_RUN_WARN(
+                "[ThreadModeManager] Cannot open libaicpu_scheduler.so, deviceId[%u], reason[%s]", logicDeviceId_,
+                dlerror());
             const std::string helperPath = "libaicpu_scheduler.so";
             handle_ = mmDlopen(helperPath.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
             if (handle_ == nullptr) {
                 ret = TSD_INTERNAL_ERROR;
-                TSD_ERROR("[ThreadModeManager] failed open libaicpu_scheduler.so, deviceId[%u], reason[%s]",
-                          logicDeviceId_, dlerror());
+                TSD_ERROR(
+                    "[ThreadModeManager] failed open libaicpu_scheduler.so, deviceId[%u], reason[%s]", logicDeviceId_,
+                    dlerror());
                 return ret;
             }
         }
@@ -130,15 +132,16 @@ TSD_StatusT ThreadModeManager::StartCallAICPU()
     }
     SetAICPUProfilingCallback();
     const int32_t devicePid = static_cast<int32_t>(getpid());
-    TSD_INFO("[ThreadModeManager] InitAICPUScheduler, deviceId[%u], devicePid[%d], profilingMode_[%d]", logicDeviceId_,
-             devicePid, profilingMode_);
+    TSD_INFO(
+        "[ThreadModeManager] InitAICPUScheduler, deviceId[%u], devicePid[%d], profilingMode_[%d]", logicDeviceId_,
+        devicePid, profilingMode_);
 #ifdef NOT_COVERAGE_BY_UT
     const uint32_t deviceId = logicDeviceId_;
     const int32_t result = (*startAicpu_)(deviceId, devicePid, profilingMode_);
     if (result != 0) {
         ret = TSD_INTERNAL_ERROR;
-        TSD_ERROR("[ThreadModeManager] failed call aicpu interface, logicDeviceId_=%u, result=%d", logicDeviceId_,
-                  result);
+        TSD_ERROR(
+            "[ThreadModeManager] failed call aicpu interface, logicDeviceId_=%u, result=%d", logicDeviceId_, result);
     }
 #endif
     return ret;
@@ -155,9 +158,10 @@ void ThreadModeManager::SetAICPUProfilingCallback() const
 #ifdef NOT_COVERAGE_BY_UT
     const int32_t result = (*setAicpuCallback_)(g_profilingCallback);
     if (result != 0) {
-        TSD_ERROR("[ThreadModeManager] failed call aicpu AicpuSetMsprofReporterCallback interface, "
-                  "deviceId_[%u], result[%d]",
-                  logicDeviceId_, result);
+        TSD_ERROR(
+            "[ThreadModeManager] failed call aicpu AicpuSetMsprofReporterCallback interface, "
+            "deviceId_[%u], result[%d]",
+            logicDeviceId_, result);
     }
 #endif
     TSD_RUN_INFO("[ThreadModeManager] profiling callback call finish");
@@ -183,7 +187,7 @@ TSD_StatusT ThreadModeManager::Close(const uint32_t flag)
     return ret;
 }
 
-TSD_StatusT ThreadModeManager::UpdateProfilingConf(const uint32_t &flag)
+TSD_StatusT ThreadModeManager::UpdateProfilingConf(const uint32_t& flag)
 {
     TSD_StatusT ret = TSD_OK;
     if (handle_ == nullptr) {
@@ -197,8 +201,9 @@ TSD_StatusT ThreadModeManager::UpdateProfilingConf(const uint32_t &flag)
     const int32_t result = (*updateProfiling_)(logicDeviceId_, devicePid, flag);
     if (result != 0) {
         ret = TSD_DEVICEID_ERROR;
-        TSD_ERROR("[TsdClient] failed call aicpu update profiling interface, logicDeviceId=%u, result=%d",
-                  logicDeviceId_, result);
+        TSD_ERROR(
+            "[TsdClient] failed call aicpu update profiling interface, logicDeviceId=%u, result=%d", logicDeviceId_,
+            result);
     }
 #endif
     return ret;
@@ -233,7 +238,9 @@ TSD_StatusT ThreadModeManager::LoadSysOpKernel()
 TSD_StatusT ThreadModeManager::HandleAICPUPackage(const uint32_t packageType) const
 {
     if (packageName_[packageType] == "") {
-        TSD_RUN_INFO("[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", logicDeviceId_, packageType);
+        TSD_RUN_INFO(
+            "[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", logicDeviceId_,
+            packageType);
         return TSD_OK;
     }
 
@@ -249,8 +256,9 @@ TSD_StatusT ThreadModeManager::HandleAICPUPackage(const uint32_t packageType) co
         ret = worker->LoadPackage(PackageWorkerType::PACKAGE_WORKER_EXTEND_THREAD, srcPath, packageName_[packageType]);
     }
     if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] Load package file[%s] failed, path[%s] packageType[%u]", logicDeviceId_, 
-                  packageName_[packageType].c_str(), srcPath.c_str(), packageType);
+        TSD_ERROR(
+            "[TsdClient][deviceId_=%u] Load package file[%s] failed, path[%s] packageType[%u]", logicDeviceId_,
+            packageName_[packageType].c_str(), srcPath.c_str(), packageType);
         if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
             return ret;
         }
@@ -291,12 +299,9 @@ void ThreadModeManager::Destroy()
     }
 }
 
-ThreadModeManager::~ThreadModeManager()
-{
-    Destroy();
-}
+ThreadModeManager::~ThreadModeManager() { Destroy(); }
 
-TSD_StatusT ThreadModeManager::InitQs(const InitFlowGwInfo * const initInfo)
+TSD_StatusT ThreadModeManager::InitQs(const InitFlowGwInfo* const initInfo)
 {
     (void)initInfo;
     if (StartCallQS(logicDeviceId_) != TSD_OK) {
@@ -318,8 +323,9 @@ TSD_StatusT ThreadModeManager::StartCallQS(const uint32_t logicDeviceId)
             qsHandle_ = mmDlopen(helperPath.c_str(), MMPA_RTLD_NOW);
             if (qsHandle_ == nullptr) {
                 ret = TSD_INTERNAL_ERROR;
-                TSD_ERROR("[ThreadModeManager] failed open libqueue_schedule.so, deviceId[%u], reason[%s]",
-                          logicDeviceId_, mmDlerror());
+                TSD_ERROR(
+                    "[ThreadModeManager] failed open libqueue_schedule.so, deviceId[%u], reason[%s]", logicDeviceId_,
+                    mmDlerror());
                 return ret;
             }
         }
@@ -341,27 +347,28 @@ TSD_StatusT ThreadModeManager::StartCallQS(const uint32_t logicDeviceId)
     std::string qsReschedInterval;
     GetEnvFromMmSys(MM_ENV_QS_RESCHED_INTEVAL, "QS_RESCHED_INTEVAL", qsReschedInterval);
     if (qsReschedInterval.empty()) {
-        TSD_INFO("QS_RESCHED_INTEVAL[%s] env variable does not exist or its value is invalid",
-            qsReschedInterval.c_str());
+        TSD_INFO(
+            "QS_RESCHED_INTEVAL[%s] env variable does not exist or its value is invalid", qsReschedInterval.c_str());
     } else {
         try {
             qsReschedIntervalValue = static_cast<uint32_t>(std::stoi(qsReschedInterval));
-        } catch(...) {
+        } catch (...) {
             TSD_INFO("QS_RESCHED_INTEVAL[%s] env variable cannot convert to uint32 value", qsReschedInterval.c_str());
         }
     }
     const int32_t result = (*startQs_)(logicDeviceId, static_cast<uint32_t>(qsReschedIntervalValue));
     if (result != 0) {
         ret = TSD_INTERNAL_ERROR;
-        TSD_ERROR("[TsdClient] failed call QS interface, logicDeviceId=%u, result=%d, reschedInterval=%d",
-            logicDeviceId, result, qsReschedIntervalValue);
+        TSD_ERROR(
+            "[TsdClient] failed call QS interface, logicDeviceId=%u, result=%d, reschedInterval=%d", logicDeviceId,
+            result, qsReschedIntervalValue);
     }
 #endif
     return ret;
 }
 
-TSD_StatusT ThreadModeManager::LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen,
-                                                const char_t *const fileName, const uint64_t fileNameLen)
+TSD_StatusT ThreadModeManager::LoadFileToDevice(
+    const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen)
 {
     (void)filePath;
     (void)pathLen;
@@ -370,17 +377,18 @@ TSD_StatusT ThreadModeManager::LoadFileToDevice(const char_t *const filePath, co
     return TSD_INTERNAL_ERROR;
 }
 
-TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs *openArgs)
+TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
 {
     if (openArgs == nullptr) {
         TSD_ERROR("openArgs is nullptr");
         return TSD_INTERNAL_ERROR;
     }
-    TSD_RUN_INFO("[ThreadModeManager] enter into ProcessOpenSubProc subtype:%u",
-                 static_cast<uint32_t>(openArgs->procType));
+    TSD_RUN_INFO(
+        "[ThreadModeManager] enter into ProcessOpenSubProc subtype:%u", static_cast<uint32_t>(openArgs->procType));
     if (openArgs->procType != TSD_SUB_PROC_ADPROF) {
-        TSD_ERROR("[ThreadModeManager] open in thread mode is not supported, procType:%u",
-                  static_cast<uint32_t>(openArgs->procType));
+        TSD_ERROR(
+            "[ThreadModeManager] open in thread mode is not supported, procType:%u",
+            static_cast<uint32_t>(openArgs->procType));
         return TSD_INTERNAL_ERROR;
     }
     if (adprofHandle_ == nullptr) {
@@ -388,15 +396,17 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs *openArgs)
         const std::string adprofLibName = "libascend_devprof.so";
         adprofHandle_ = mmDlopen(adprofLibName.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
         if (adprofHandle_ == nullptr) {
-            TSD_ERROR("[ThreadModeManager] failed open libascend_devprof.so, deviceId[%u], reason[%s]",
-                      logicDeviceId_, mmDlerror());
+            TSD_ERROR(
+                "[ThreadModeManager] failed open libascend_devprof.so, deviceId[%u], reason[%s]", logicDeviceId_,
+                mmDlerror());
             return TSD_INTERNAL_ERROR;
         }
         if (startAdprof_ == nullptr) {
             startAdprof_ = reinterpret_cast<StartAdprof>(mmDlsym(adprofHandle_, "AdprofStart"));
             if (startAdprof_ == nullptr) {
-                TSD_ERROR("[ThreadModeManager] failed mmDlsym startAdprof function, deviceId[%u], reason[%s]",
-                          logicDeviceId_, mmDlerror());
+                TSD_ERROR(
+                    "[ThreadModeManager] failed mmDlsym startAdprof function, deviceId[%u], reason[%s]", logicDeviceId_,
+                    mmDlerror());
                 return TSD_INTERNAL_ERROR;
             }
         }
@@ -406,20 +416,20 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs *openArgs)
         TSD_ERROR("extParamList too long, extParamCnt:%u", static_cast<uint32_t>(openArgs->extParamCnt));
         return TSD_INTERNAL_ERROR;
     }
-    char_t *argv[SUB_PROC_PARAM_LIST_MAX_COUNT + 1] = {nullptr};
+    char_t* argv[SUB_PROC_PARAM_LIST_MAX_COUNT + 1] = {nullptr};
     std::vector<std::string> extParamList;
     for (uint64_t index = 0; index < openArgs->extParamCnt; index++) {
         std::string extParam(openArgs->extParamList[index].paramInfo, openArgs->extParamList[index].paramLen);
-        TSD_INFO("index:%llu, extra parameters:%s, len:%llu",
-                 index, extParam.c_str(), openArgs->extParamList[index].paramLen);
+        TSD_INFO(
+            "index:%llu, extra parameters:%s, len:%llu", index, extParam.c_str(),
+            openArgs->extParamList[index].paramLen);
         extParamList.push_back(extParam);
-        argv[index] = const_cast<char *>(extParamList[index].c_str());
+        argv[index] = const_cast<char*>(extParamList[index].c_str());
     }
     int32_t argc = static_cast<int32_t>(openArgs->extParamCnt);
-    const int32_t result = (*startAdprof_)(argc, (const char *)(&argv[0]));
+    const int32_t result = (*startAdprof_)(argc, (const char*)(&argv[0]));
     if (result != 0) {
-        TSD_ERROR("[ThreadModeManager] failed call startAdprof logicDeviceId_=%u, result=%d", logicDeviceId_,
-                  result);
+        TSD_ERROR("[ThreadModeManager] failed call startAdprof logicDeviceId_=%u, result=%d", logicDeviceId_, result);
         return TSD_INTERNAL_ERROR;
     }
 
@@ -432,21 +442,21 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProc(const pid_t closePid)
     return TSD_INTERNAL_ERROR;
 }
 
-TSD_StatusT ThreadModeManager::GetSubProcStatus(ProcStatusInfo *pidInfo, const uint32_t arrayLen)
+TSD_StatusT ThreadModeManager::GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen)
 {
     (void)pidInfo;
     (void)arrayLen;
     return TSD_INTERNAL_ERROR;
 }
 
-TSD_StatusT ThreadModeManager::RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen)
+TSD_StatusT ThreadModeManager::RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen)
 {
     (void)filePath;
     (void)pathLen;
     return TSD_INTERNAL_ERROR;
 }
 
-TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize)
+TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize)
 {
     if ((listSize == 0U) || (closeList == nullptr)) {
         TSD_ERROR("[ThreadModeManager]closeList is nullptr or pid list size invalid:%u", listSize);
@@ -454,8 +464,9 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam *cl
     }
     TSD_RUN_INFO("[ThreadModeManager] enter ExecuteClosePidList cnt:%u, procType:%u", listSize, closeList[0].procType);
     if (closeList[0].procType != TSD_SUB_PROC_ADPROF) {
-        TSD_ERROR("[ThreadModeManager] close in thread mode is not supported, procType:%u",
-                  static_cast<uint32_t>(closeList[0].procType));
+        TSD_ERROR(
+            "[ThreadModeManager] close in thread mode is not supported, procType:%u",
+            static_cast<uint32_t>(closeList[0].procType));
         return TSD_INTERNAL_ERROR;
     }
 
@@ -475,36 +486,32 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam *cl
     TSD_INFO("[ThreadModeManager] stopAdprof, deviceId[%u]", logicDeviceId_);
     const int32_t result = (*stopAdprof_)();
     if (result != 0) {
-        TSD_ERROR("[ThreadModeManager] failed call stopAdprof logicDeviceId_=%u, result=%d", logicDeviceId_,
-                  result);
+        TSD_ERROR("[ThreadModeManager] failed call stopAdprof logicDeviceId_=%u, result=%d", logicDeviceId_, result);
         return TSD_INTERNAL_ERROR;
     }
 
     return TSD_OK;
 }
 
-TSD_StatusT ThreadModeManager::GetSubProcListStatus(ProcStatusParam *pidInfo, const uint32_t arrayLen)
+TSD_StatusT ThreadModeManager::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
         TSD_ERROR("input param is error");
         return TSD_INTERNAL_ERROR;
     }
 
-    TSD_RUN_INFO("[ThreadModeManager] enter into GetSubProcListStatus, arrayLen:%u, procType:%u",
-                 arrayLen, pidInfo[0].procType);
+    TSD_RUN_INFO(
+        "[ThreadModeManager] enter into GetSubProcListStatus, arrayLen:%u, procType:%u", arrayLen, pidInfo[0].procType);
     if (pidInfo[0].procType == TSD_SUB_PROC_ADPROF) {
         pidInfo[0].curStat = SUB_PROCESS_STATUS_NORMAL;
     }
 
     return TSD_OK;
 }
-TSD_StatusT ThreadModeManager::CloseNetService()
-{
-    return TSD_CLOSE_NOT_SUPPORT_NET_SERVICE;
-}
-TSD_StatusT ThreadModeManager::OpenNetService(const NetServiceOpenArgs *args)
+TSD_StatusT ThreadModeManager::CloseNetService() { return TSD_CLOSE_NOT_SUPPORT_NET_SERVICE; }
+TSD_StatusT ThreadModeManager::OpenNetService(const NetServiceOpenArgs* args)
 {
     (void)args;
     return TSD_OPEN_NOT_SUPPORT_NET_SERVICE;
 }
-}  // namespace tsd
+} // namespace tsd

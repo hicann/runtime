@@ -64,7 +64,7 @@ public:
      * @param [in] hdcSessStat : hdcSessStat
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT GetHdcConctStatus(int32_t &hdcSessStat) override;
+    TSD_StatusT GetHdcConctStatus(int32_t& hdcSessStat) override;
 
     /**
      * @ingroup ProcessModeManager
@@ -72,9 +72,9 @@ public:
      * @param flag : control number
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT UpdateProfilingConf(const uint32_t &flag) override;
+    TSD_StatusT UpdateProfilingConf(const uint32_t& flag) override;
 
-    TSD_StatusT InitQs(const InitFlowGwInfo * const initInfo) override;
+    TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo) override;
     /**
      * @ingroup ProcessModeManager
      * @brief tsd capablity apply
@@ -82,14 +82,14 @@ public:
      */
     TSD_StatusT CapabilityGet(const int32_t type, const uint64_t ptr) override;
 
-     /**
+    /**
      * @ingroup ProcessModeManager
      * @brief handle open/close/updatefrom response from device
      * @param [in] sessionID : message from sessionId
      * @param [in] msg
      * @return TSD_OK when SUCCESS
      */
-    static void ServerToClientMsgProc(const uint32_t sessionID, const HDCMessage &msg);
+    static void ServerToClientMsgProc(const uint32_t sessionID, const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
@@ -98,7 +98,7 @@ public:
      * @param [in] msg
      * @return TSD_OK when SUCCESS
      */
-    static void CapabilityResMsgProc(const uint32_t sessionID, const HDCMessage &msg);
+    static void CapabilityResMsgProc(const uint32_t sessionID, const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
@@ -107,7 +107,7 @@ public:
      * @param [in] msg
      * @return TSD_OK when SUCCESS
      */
-    static void PackageInfoMsgProc(const uint32_t sessionID, const HDCMessage &msg);
+    static void PackageInfoMsgProc(const uint32_t sessionID, const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
@@ -118,7 +118,7 @@ public:
 
     virtual ~ProcessModeManager() override;
 
-    TSD_StatusT ConstructOpenMsg(HDCMessage &hdcMsg, const TsdStartStatusInfo &startInfo);
+    TSD_StatusT ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo);
 
     // Snapshot the common, manager-derived fields of MessageContext in one place.
     // All per-message builders start from this base and only override the few
@@ -128,50 +128,52 @@ public:
 
     TSD_StatusT ProcessQueueForAdc();
 
-    TSD_StatusT ConstructCloseMsg(HDCMessage &msg);
+    TSD_StatusT ConstructCloseMsg(HDCMessage& msg);
 
-    TSD_StatusT LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen, const char_t *const fileName,
-                                 const uint64_t fileNameLen) override;
-    TSD_StatusT SendFileToDevice(const char_t *const filePath, const uint64_t pathLen, const char_t *const fileName,
-                                 const uint64_t fileNameLen, const bool addPreFix = false);
+    TSD_StatusT LoadFileToDevice(
+        const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName,
+        const uint64_t fileNameLen) override;
+    TSD_StatusT SendFileToDevice(
+        const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen,
+        const bool addPreFix = false);
 
     TSD_StatusT LoadRuntimePkgToDevice();
 
-    TSD_StatusT GetDeviceHsPkgCheckCode(const uint32_t checkCode, const HDCMessage::MsgType msgType,
-                                        const bool beforeSendFlag);
+    TSD_StatusT GetDeviceHsPkgCheckCode(
+        const uint32_t checkCode, const HDCMessage::MsgType msgType, const bool beforeSendFlag);
 
-    TSD_StatusT ProcessOpenSubProc(ProcOpenArgs *openArgs) override;
+    TSD_StatusT ProcessOpenSubProc(ProcOpenArgs* openArgs) override;
 
     TSD_StatusT ProcessCloseSubProc(const pid_t closePid) override;
 
-    TSD_StatusT GetSubProcStatus(ProcStatusInfo *pidInfo, const uint32_t arrayLen) override;
+    TSD_StatusT GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen) override;
 
-    TSD_StatusT RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen) override;
+    TSD_StatusT RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen) override;
 
-    TSD_StatusT SendCommonOpenMsg(const ProcOpenArgs *procArgs);
+    TSD_StatusT SendCommonOpenMsg(const ProcOpenArgs* procArgs);
 
-    TSD_StatusT ConstructCommonOpenMsg(HDCMessage &hdcMsg, const ProcOpenArgs *procArgs) const;
+    TSD_StatusT ConstructCommonOpenMsg(HDCMessage& hdcMsg, const ProcOpenArgs* procArgs) const;
 
-    bool SetCommonOpenParamList(MessageContext &ctx, const ProcOpenArgs *const procArgs) const;
+    bool SetCommonOpenParamList(MessageContext& ctx, const ProcOpenArgs* const procArgs) const;
 
     TSD_StatusT LoadDShapePkgToDevice();
 
-    TSD_StatusT LoadOmFileToDevice(const char_t *const filePath, const uint64_t pathLen, const char_t *const fileName,
-                                   const uint64_t fileNameLen);
+    TSD_StatusT LoadOmFileToDevice(
+        const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen);
 
-    bool IsOkToLoadFileToDevice(const char_t *const fileName, const uint64_t fileNameLen);
+    bool IsOkToLoadFileToDevice(const char_t* const fileName, const uint64_t fileNameLen);
 
-    void GetAscendLatestIntallPath(std::string &pkgBasePath) const;
+    void GetAscendLatestIntallPath(std::string& pkgBasePath) const;
 
-    TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) override;
+    TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize) override;
 
-    TSD_StatusT ExecuteClosePidList(const ProcStatusParam *closeList, const uint32_t startIndex, const uint32_t pidCnt);
+    TSD_StatusT ExecuteClosePidList(const ProcStatusParam* closeList, const uint32_t startIndex, const uint32_t pidCnt);
 
-    TSD_StatusT GetSubProcListStatus(ProcStatusParam *pidInfo, const uint32_t arrayLen) override;
+    TSD_StatusT GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen) override;
 
-    void StoreProcListStatus(const HDCMessage &msg);
+    void StoreProcListStatus(const HDCMessage& msg);
 
-        /**
+    /**
      * @ingroup ProcessModeManager
      * @brief save start status
      * @param [in] cpStatus
@@ -187,20 +189,20 @@ public:
      */
     TSD_StatusT InitTsdClient();
 
-    TSD_StatusT OpenNetService(const NetServiceOpenArgs *args) override;
+    TSD_StatusT OpenNetService(const NetServiceOpenArgs* args) override;
 
     TSD_StatusT CloseNetService() override;
 
-    TSD_StatusT CompareAndSendCommonSinkPkg(const std::string &pkgPureName, const std::string &hostPkgHash,
-        const int32_t peerNode, const std::string &orgFile, const std::string &dstFile);
+    TSD_StatusT CompareAndSendCommonSinkPkg(
+        const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode,
+        const std::string& orgFile, const std::string& dstFile);
+
 private:
     struct TsdCloseFlag {
         uint32_t quickCloseFlag : 1; /* [0, 0] */
         uint32_t res : 31;           /* [31, 1] */
     };
-    enum TsdCloseMode {
-        QUICK_CLOSE_MODE = 1
-    };
+    enum TsdCloseMode { QUICK_CLOSE_MODE = 1 };
     /**
      * @ingroup ProcessModeManager
      * @brief carry aicpu ops package to device
@@ -214,14 +216,14 @@ private:
      * @param [in] msg
      * @return void
      */
-    void DeviceMsgProcess(const HDCMessage &msg);
+    void DeviceMsgProcess(const HDCMessage& msg);
     /**
      * @ingroup ProcessModeManager
      * @brief used for pidqosres msg proc
      * @param [in] msg
      * @return void
      */
-    void PidQosMsgProc(const HDCMessage &msg);
+    void PidQosMsgProc(const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
@@ -236,7 +238,7 @@ private:
      * @param [in] valStr
      * @return void
      */
-    void ParseModuleLogLevelByKey(const std::string &keyStr, const std::string &valStr);
+    void ParseModuleLogLevelByKey(const std::string& keyStr, const std::string& valStr);
 
     /**
      * @ingroup ProcessModeManager
@@ -244,7 +246,7 @@ private:
      * @param [in] envModuleLogLevel
      * @return void
      */
-    void ParseModuleLogLevel(const std::string &envModuleLogLevel);
+    void ParseModuleLogLevel(const std::string& envModuleLogLevel);
 
     /**
      * @ingroup ProcessModeManager
@@ -282,30 +284,28 @@ private:
      * @brief send aicpu package to device
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT SendAICPUPackage(const int32_t peerNode, const std::string &path);
+    TSD_StatusT SendAICPUPackage(const int32_t peerNode, const std::string& path);
 
     /**
      * @ingroup ProcessModeManager
      * @brief send aicpu package to device simple
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT SendAICPUPackageSimple(const int32_t peerNode, const std::string &orgFile, const std::string &dstFile,
-        bool useCannPath);
+    TSD_StatusT SendAICPUPackageSimple(
+        const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath);
 
     /**
      * @ingroup ProcessModeManager
      * @brief send host package to device mul process exclusive
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT SendHostPackageComplex(const int32_t peerNode, const std::string &orgFile,
-                                       const std::string &dstFile, HDCMessage &msg,
-                                       const std::function<bool(void)> &compareCallBack,
-                                       bool useCannPath);
+    TSD_StatusT SendHostPackageComplex(
+        const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
+        const std::function<bool(void)>& compareCallBack, bool useCannPath);
 
-    TSD_StatusT SendMsgAndHostPackage(const int32_t peerNode, const std::string &orgFile,
-                                      const std::string &dstFile, HDCMessage &msg,
-                                      const std::function<bool(void)> &compareCallBack,
-                                      bool useCannPath);
+    TSD_StatusT SendMsgAndHostPackage(
+        const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
+        const std::function<bool(void)>& compareCallBack, bool useCannPath);
 
     /**
      * @ingroup ProcessModeManager
@@ -329,7 +329,7 @@ private:
      * @param [out] startInfo
      * @return true: open false：not open
      */
-    bool CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo &startInfo);
+    bool CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo);
 
     /**
      * @ingroup ProcessModeManager
@@ -338,9 +338,9 @@ private:
      */
     TSD_StatusT SyncQueueAuthority() const;
 
-    TSD_StatusT ProcessQueueGrant(const QueueQueryOutputPara &queueInfoOutBuff,
-                                  const QueueQueryOutput * const queueInfoList,
-                                  const pid_t aicpuPid) const;
+    TSD_StatusT ProcessQueueGrant(
+        const QueueQueryOutputPara& queueInfoOutBuff, const QueueQueryOutput* const queueInfoList,
+        const pid_t aicpuPid) const;
 
     /**
      * @ingroup ProcessModeManager
@@ -348,7 +348,7 @@ private:
      * @param [out] aicpuPid invalid value is -1
      * @return void
      */
-    TSD_StatusT GetAicpusdPid(pid_t &aicpusdPid) const;
+    TSD_StatusT GetAicpusdPid(pid_t& aicpusdPid) const;
 
     /**
      * @ingroup ProcessModeManager
@@ -376,49 +376,50 @@ private:
      * @brief check whether need to send aicpu package to device
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT GetDeviceCheckCodeRetry(const HDCMessage &msg);
+    TSD_StatusT GetDeviceCheckCodeRetry(const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
      * @brief save check code from device package
      * @return void
      */
-    void SaveDeviceCheckCode(const HDCMessage &msg);
+    void SaveDeviceCheckCode(const HDCMessage& msg);
 
-    void HandleNormalPackageCheckCodeRsp(const HDCMessage &msg);
-    void HandleCannHsCheckCodeRsp(const HDCMessage &msg);
-    void HandleDevicePluginVersionRsp(const HDCMessage &msg);
+    void HandleNormalPackageCheckCodeRsp(const HDCMessage& msg);
+    void HandleCannHsCheckCodeRsp(const HDCMessage& msg);
+    void HandleDevicePluginVersionRsp(const HDCMessage& msg);
 
     /**
      * @ingroup ProcessModeManager
      * @brief Parse tsd close flag and update tsdCloseFlag
      * @return void
      */
-    void ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag &tsdCloseFlag) const;
+    void ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag& tsdCloseFlag) const;
 
-    TSD_StatusT SendCommonPackage(const int32_t peerNode, const std::string &path, const uint32_t packageType);
+    TSD_StatusT SendCommonPackage(const int32_t peerNode, const std::string& path, const uint32_t packageType);
 
-    void SetHostAicpuCheckCode(HDCMessage &msg);
+    void SetHostAicpuCheckCode(HDCMessage& msg);
 
-    void SetHostExtendCheckCode(HDCMessage &msg);
+    void SetHostExtendCheckCode(HDCMessage& msg);
 
-    void SetHostAscendcppCheckCode(HDCMessage &msg);
+    void SetHostAscendcppCheckCode(HDCMessage& msg);
 
     TSD_StatusT LoadPackageConfigInfoToDevice(const bool hasPluginVersion);
 
     TSD_StatusT LoadPackageToDeviceByConfig();
 
-    TSD_StatusT GetTrustedBasePathFromDevice(int32_t &peerNode, std::string &dstDirPreFix);
+    TSD_StatusT GetTrustedBasePathFromDevice(int32_t& peerNode, std::string& dstDirPreFix);
 
-    TSD_StatusT LoadSinglePackageToDevice(const std::string &pkgPureName, const PackConfDetail &detail,
-        int32_t peerNode, const std::string &dstDirPreFix);
+    TSD_StatusT LoadSinglePackageToDevice(
+        const std::string& pkgPureName, const PackConfDetail& detail, int32_t peerNode,
+        const std::string& dstDirPreFix);
 
-    void ReportSinkPkgRspError(const std::string &pkgPureName);
+    void ReportSinkPkgRspError(const std::string& pkgPureName);
 
-    bool IsCompatPluginPackage(const PackConfDetail &detail) const;
+    bool IsCompatPluginPackage(const PackConfDetail& detail) const;
     PluginUpdateStrategy GetPluginUpdateStrategy();
-    bool ShouldLoadCompatPluginPkg(const std::string &pkgPureName);
-    bool CompareHostDeviceCompatPluginVersion(const std::string &pkgPureName);
+    bool ShouldLoadCompatPluginPkg(const std::string& pkgPureName);
+    bool CompareHostDeviceCompatPluginVersion(const std::string& pkgPureName);
 
     void SetDeviceCommonSinkPackHashValue(const std::string pkgName, const std::string hashValue)
     {
@@ -454,19 +455,21 @@ private:
 
     bool IsCommonSinkHostAndDevicePkgSame(const std::string pkgName)
     {
-        return ((GetHostCommonSinkPackHashValue(pkgName) == GetDeviceCommonSinkPackHashValue(pkgName)) &&
+        return (
+            (GetHostCommonSinkPackHashValue(pkgName) == GetDeviceCommonSinkPackHashValue(pkgName)) &&
             (!GetHostCommonSinkPackHashValue(pkgName).empty()));
     }
-    void StoreAllPkgHashValue(const HDCMessage &msg);
+    void StoreAllPkgHashValue(const HDCMessage& msg);
 
-    bool SupportLoadPkg(const std::string &pkgName) const;
+    bool SupportLoadPkg(const std::string& pkgName) const;
 
     std::string GetCurHostMutexFile(bool useCannPath) const;
-    TSD_StatusT LoadCannHsPkgToDevice(const std::string &pkgPureName);
-    TSD_StatusT LoadFileAndWaitRsp(const std::string &pkgPureName, const std::string &hostPkgHash,
-                                   const int32_t peerNode, const std::string &orgFile, const std::string &dstFile);
-    TSD_StatusT GetCannHsPkgCheckCode(const std::string &pkgPureName, const std::string &hostPkgHash);
-    bool GetShortSocVersion(std::string &shortSocVersion) const;
+    TSD_StatusT LoadCannHsPkgToDevice(const std::string& pkgPureName);
+    TSD_StatusT LoadFileAndWaitRsp(
+        const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode,
+        const std::string& orgFile, const std::string& dstFile);
+    TSD_StatusT GetCannHsPkgCheckCode(const std::string& pkgPureName, const std::string& hostPkgHash);
+    bool GetShortSocVersion(std::string& shortSocVersion) const;
 
     std::string logLevel_;
     DeviceCommAgent commAgent_;
@@ -482,9 +485,9 @@ private:
     std::string qsInitGrpName_;
     uint64_t schedPolicy_;
     uint32_t openSubPid_;
-    ProcStatusInfo *pidArry_;
+    ProcStatusInfo* pidArry_;
     uint32_t pidArryLen_;
-    ProcStatusParam *pidList_;
+    ProcStatusParam* pidList_;
     bool getCheckCodeRetrySupport_;
     uint32_t hccpPid_;
     bool isStartedHccp_;
@@ -504,5 +507,5 @@ private:
     bool hasComputedPluginStrategy_ = false;
     PluginUpdateStrategy pluginUpdateStrategy_ = PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE;
 };
-}  // namespace tsd
-#endif  // INNER_INC_PROCESS_MODE_MANAGER_H
+} // namespace tsd
+#endif // INNER_INC_PROCESS_MODE_MANAGER_H

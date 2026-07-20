@@ -109,7 +109,7 @@ RTS_API rtError_t rtTaskGetType(rtTask_t task, rtTaskType* type);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtTaskGetSeqId(rtTask_t task, uint32_t *id);
+RTS_API rtError_t rtTaskGetSeqId(rtTask_t task, uint32_t* id);
 
 /**
  * @ingroup rt_task
@@ -127,7 +127,7 @@ RTS_API rtError_t rtModelTaskGetParams(rtTask_t task, rtTaskParams* params);
  * @ingroup rt_task
  * @brief Set task parameters
  * @details Update parameter information for the specified task
- * @note  This API only supports AclGraph 
+ * @note  This API only supports AclGraph
  * @param task [in] task handle
  * @param params [in] Input parameter containing parameter information to be set
  * @retval RT_ERROR_NONE for ok
@@ -146,7 +146,8 @@ RTS_API rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params);
  * @retval RT_ERROR_NONE for ok
  * @retval OtherValues Failure
  */
-RTS_API rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue);
+RTS_API rtError_t
+rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue);
 
 /**
  * @ingroup rt_task
@@ -167,7 +168,6 @@ RTS_API rtError_t rtModelTaskDisable(rtTask_t task);
  */
 RTS_API rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize);
 
-
 /**
  * @ingroup rts_kernel
  * @brief launch kernel with args array.
@@ -179,8 +179,8 @@ RTS_API rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, con
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t stm,
-                                              rtKernelLaunchCfg_t *cfg, void **args);
+RTS_API rtError_t
+rtLaunchKernelWithArgsArray(void* func, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t* cfg, void** args);
 
 /**
  * @ingroup rts_kernel
@@ -195,9 +195,9 @@ RTS_API rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rt
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rtDim3 blockDim,
-                                                   size_t dynUbufSize, rtStream_t stm,
-                                                   rtKernelLaunchCfg_t *cfg, void **args);
+RTS_API rtError_t rtLaunchSIMTKernelWithArgsArray(
+    void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
+    void** args);
 
 /**
  * @ingroup rts_kernel
@@ -215,11 +215,9 @@ RTS_API rtError_t rtLaunchSIMTKernelWithArgsArray(void *func, rtDim3 gridDim, rt
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtLaunchSIMTKernelWithHostArgs(void *func, rtDim3 gridDim, rtDim3 blockDim,
-                                                  size_t dynUbufSize, rtStream_t stm,
-                                                  rtKernelLaunchCfg_t *cfg, void *hostArgs,
-                                                  uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray,
-                                                  uint32_t placeHolderNum);
+RTS_API rtError_t rtLaunchSIMTKernelWithHostArgs(
+    void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
+    void* hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t* placeHolderArray, uint32_t placeHolderNum);
 
 #if defined(__cplusplus)
 }

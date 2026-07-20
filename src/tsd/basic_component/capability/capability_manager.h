@@ -16,7 +16,7 @@
 #include "inc/client_manager.h"
 #include "inc/basic_define.h"
 #include "proto/tsd_message.pb.h"
-#include "tsd/tsd_client.h"  // SubProcType
+#include "tsd/tsd_client.h" // SubProcType
 
 #include <string>
 
@@ -50,21 +50,21 @@ class CapabilityManager;
 // member getters/setters without friendship.
 struct CapabilitySpec {
     int32_t type;
-    HDCMessage::MsgType msgType;          // request: type → proto MsgType
-    HDCMessage::MsgType rspMsgType;       // response: proto MsgType for device rsp
-    bool requiresStartCpAndComm;          // IsOkToGetCapability gate
-    uint32_t waitTimeout;                 // WaitCapabilityRsp timeout (ms)
-    bool waitIgnoreFail;                  // WaitCapabilityRsp tolerate failure
-    bool hasTimeoutFallback;              // write "unsupported" value on timeout
+    HDCMessage::MsgType msgType;    // request: type → proto MsgType
+    HDCMessage::MsgType rspMsgType; // response: proto MsgType for device rsp
+    bool requiresStartCpAndComm;    // IsOkToGetCapability gate
+    uint32_t waitTimeout;           // WaitCapabilityRsp timeout (ms)
+    bool waitIgnoreFail;            // WaitCapabilityRsp tolerate failure
+    bool hasTimeoutFallback;        // write "unsupported" value on timeout
 
     // Try to serve the result from already-cached state.
     // Returns true if the output pointer was written and no device round-trip
     // is needed.
-    bool (*tryUseStored)(CapabilityManager &mgr, uint64_t ptr);
+    bool (*tryUseStored)(CapabilityManager& mgr, uint64_t ptr);
 
     // Write the current member state to the caller's output pointer.
     // Returns TSD_OK on success.
-    TSD_StatusT (*saveResult)(const CapabilityManager &mgr, uint64_t ptr);
+    TSD_StatusT (*saveResult)(const CapabilityManager& mgr, uint64_t ptr);
 
     // Write the "unsupported / zero" value to the caller's output pointer.
     // Used by WaitCapabilityRsp when hasTimeoutFallback is set and the
@@ -72,15 +72,15 @@ struct CapabilitySpec {
     void (*writeUnsupported)(uint64_t ptr);
 
     // Update internal member state from a device response message.
-    void (*updateStateFromMsg)(CapabilityManager &mgr, const HDCMessage &msg);
+    void (*updateStateFromMsg)(CapabilityManager& mgr, const HDCMessage& msg);
 };
 
 // Look up the spec for a given capability type.  Returns nullptr if unknown.
-const CapabilitySpec *FindCapabilitySpec(int32_t type);
+const CapabilitySpec* FindCapabilitySpec(int32_t type);
 
 class CapabilityManager {
 public:
-    CapabilityManager(uint32_t logicDeviceId, DeviceCommAgent &commAgent, bool isAdcEnv);
+    CapabilityManager(uint32_t logicDeviceId, DeviceCommAgent& commAgent, bool isAdcEnv);
     ~CapabilityManager();
 
     TSD_StatusT CapabilityGet(const int32_t type, const uint64_t ptr);
@@ -93,13 +93,13 @@ public:
     bool CheckSubProcSupported(SubProcType procType);
 
     bool IsOkToGetCapability(const int32_t type) const;
-    void ConstructCapabilityMsg(HDCMessage &msg, const int32_t type);
+    void ConstructCapabilityMsg(HDCMessage& msg, const int32_t type);
     TSD_StatusT SendCapabilityMsg(const int32_t type);
     TSD_StatusT WaitCapabilityRsp(const int32_t type, const uint64_t ptr);
     TSD_StatusT SaveCapabilityResult(const int32_t type, const uint64_t ptr) const;
 
-    void UpdateStateFromMsg(const HDCMessage &msg);
-    void HandlePidQosRsp(const HDCMessage &msg);
+    void UpdateStateFromMsg(const HDCMessage& msg);
+    void HandlePidQosRsp(const HDCMessage& msg);
     void SetStartCpStatus(bool startCp) { tsdStartCp_ = startCp; }
 
     // --- accessors used by CapabilitySpec strategy functions ---
@@ -108,8 +108,8 @@ public:
     bool IsSupportOmInnerDec() const { return supportOmInnerDec_; }
     bool IsAdprofSupport() const { return adprofSupport_; }
     bool IsStartCp() const { return tsdStartCp_; }
-    DeviceCommAgent &GetCommAgent() { return commAgent_; }
-    const DeviceCommAgent &GetCommAgent() const { return commAgent_; }
+    DeviceCommAgent& GetCommAgent() { return commAgent_; }
+    const DeviceCommAgent& GetCommAgent() const { return commAgent_; }
 
     // --- mutators used by CapabilitySpec strategy functions ---
     void SetTsdSupportLevel(uint32_t level) { tsdSupportLevel_ = level; }
@@ -122,7 +122,7 @@ private:
     bool UseStoredCapabityInfo(const int32_t type, const uint64_t ptr);
 
     uint32_t logicDeviceId_;
-    DeviceCommAgent &commAgent_;
+    DeviceCommAgent& commAgent_;
     bool isAdcEnv_;
 
     uint32_t tsdSupportLevel_ = 0U;
@@ -134,5 +134,5 @@ private:
     bool hasGetHostSoPath_ = false;
 };
 
-}  // namespace tsd
-#endif  // TSD_BASIC_COMPONENT_CAPABILITY_CAPABILITY_MANAGER_H
+} // namespace tsd
+#endif // TSD_BASIC_COMPONENT_CAPABILITY_CAPABILITY_MANAGER_H

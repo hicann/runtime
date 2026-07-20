@@ -13,33 +13,31 @@
 
 #include "inc/base_package_worker.h"
 
-
 namespace tsd {
 const std::string VERIFY_FILE_NAME = "aicpu_package_install.info";
 const std::string EXTEND_VERIFY_FILE_NAME = "extend_aicpu_package_install.info";
 
 class AicpuThreadPackageWorker : public BasePackageWorker {
 public:
-    explicit AicpuThreadPackageWorker(const PackageWorkerParas paras) : BasePackageWorker(paras), verifyFileName_(""),
-                                                                        verifyFilePath_(""), soInstallRootPath_(""),
-                                                                        fd_(-1)
+    explicit AicpuThreadPackageWorker(const PackageWorkerParas paras)
+        : BasePackageWorker(paras), verifyFileName_(""), verifyFilePath_(""), soInstallRootPath_(""), fd_(-1)
     {
         TSD_RUN_INFO("Start init %s. %s", __func__, paras.DebugString().c_str());
         verifyFileName_ = VERIFY_FILE_NAME;
     };
     virtual ~AicpuThreadPackageWorker() override = default;
 
-    TSD_StatusT LoadPackage(const std::string &packagePath, const std::string &packageName) override;
+    TSD_StatusT LoadPackage(const std::string& packagePath, const std::string& packageName) override;
     TSD_StatusT UnloadPackage() override;
 
 private:
-    void PreProcessPackage(const std::string &packagePath, const std::string &packageName) override;
+    void PreProcessPackage(const std::string& packagePath, const std::string& packageName) override;
     void SetDecompressPackagePath() override;
     TSD_StatusT OpenVerifyFile();
     bool IsNeedLoadPackage() override;
-    TSD_StatusT GetSavedCheckCodeShared(uint64_t &savedCheckCode) const;
-    TSD_StatusT GetSavedCheckCodeUnshared(uint64_t &savedCheckCode) const;
-    TSD_StatusT ReadCheckCode(uint64_t &savedCheckCode) const;
+    TSD_StatusT GetSavedCheckCodeShared(uint64_t& savedCheckCode) const;
+    TSD_StatusT GetSavedCheckCodeUnshared(uint64_t& savedCheckCode) const;
+    TSD_StatusT ReadCheckCode(uint64_t& savedCheckCode) const;
     std::string GetMovePackageToDecompressDirCmd() const override;
     std::string GetDecompressPackageCmd() const override;
     TSD_StatusT PostProcessPackage() override;

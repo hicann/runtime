@@ -45,7 +45,7 @@ ACL_MDL_FUNC_MAP(ACL_RT_CPP)
 
 ACL_RT_ALLOCATOR_FUNC_MAP(ACL_RT_CPP)
 
-void aclAppLog(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, ...)
+void aclAppLog(aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -53,7 +53,8 @@ void aclAppLog(aclLogLevel logLevel, const char *func, const char *file, uint32_
     va_end(args);
 }
 
-extern "C" ACL_FUNC_VISIBILITY void aclAppLogWithArgs(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, va_list args)
+extern "C" ACL_FUNC_VISIBILITY void aclAppLogWithArgs(
+    aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, va_list args)
 {
     aclAppLogImpl(logLevel, func, file, line, fmt, args);
 }

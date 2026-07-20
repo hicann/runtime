@@ -21,47 +21,49 @@
 #include "acl/acl_base.h"
 
 namespace acl {
-    constexpr const size_t MAX_CANN_ATTR_SIZE = 128U;
-    // if version info is not set in swFeatureList.json, use UNKNOWN_VERSION as default value
-    constexpr const int32_t UNKNOWN_VERSION = -1;
-    constexpr const char_t *const SW_CONFIG_RUNTIME = "runtimeVersion";
+constexpr const size_t MAX_CANN_ATTR_SIZE = 128U;
+// if version info is not set in swFeatureList.json, use UNKNOWN_VERSION as default value
+constexpr const int32_t UNKNOWN_VERSION = -1;
+constexpr const char_t* const SW_CONFIG_RUNTIME = "runtimeVersion";
 
-    struct CannInfo {
-        std::string readableAttrName;
-        std::string socSpecLabel;
-        std::string socSpecKey;
-        int32_t minimumRuntimeVersion;
-        int32_t isAvailable;
-        explicit CannInfo(const std::string &attrName, const std::string &specLabel,
-                          const std::string &specKey) noexcept
-            : readableAttrName(attrName), socSpecLabel(specLabel), socSpecKey(specKey),
-            minimumRuntimeVersion(UNKNOWN_VERSION), isAvailable(0)
-        {}
-    };
+struct CannInfo {
+    std::string readableAttrName;
+    std::string socSpecLabel;
+    std::string socSpecKey;
+    int32_t minimumRuntimeVersion;
+    int32_t isAvailable;
+    explicit CannInfo(const std::string& attrName, const std::string& specLabel, const std::string& specKey) noexcept
+        : readableAttrName(attrName),
+          socSpecLabel(specLabel),
+          socSpecKey(specKey),
+          minimumRuntimeVersion(UNKNOWN_VERSION),
+          isAvailable(0)
+    {}
+};
 
-    class CannInfoUtils {
-    public:
-        static aclError GetAttributeList(const aclCannAttr **cannAttr, size_t *num);
-        static aclError GetAttribute(aclCannAttr cannAttr, int32_t *value);
-        static aclError ParseVersionValue(const std::string &str, int32_t *value);
+class CannInfoUtils {
+public:
+    static aclError GetAttributeList(const aclCannAttr** cannAttr, size_t* num);
+    static aclError GetAttribute(aclCannAttr cannAttr, int32_t* value);
+    static aclError ParseVersionValue(const std::string& str, int32_t* value);
 
-    private:
-        static aclError Initialize();
-        static aclError GetConfigInstallPath();
-        static aclError ParseVersionInfo(const std::string &path, int32_t *version);
-        static bool MatchVersionInfo(const CannInfo &configCannInfo);
-        static bool CheckNPUFeatures(const CannInfo &configInfo);
-        static void CheckAndUpdateAttrAvailability();
+private:
+    static aclError Initialize();
+    static aclError GetConfigInstallPath();
+    static aclError ParseVersionInfo(const std::string& path, int32_t* version);
+    static bool MatchVersionInfo(const CannInfo& configCannInfo);
+    static bool CheckNPUFeatures(const CannInfo& configInfo);
+    static void CheckAndUpdateAttrAvailability();
 
-        static std::mutex mutex_;
-        static bool initFlag_;
-        static int32_t currentRuntimeVersion_;
-        static std::string swConfigPath_;
-        static std::string defaultInstallPath_;
-        static aclCannAttr attrArray_[MAX_CANN_ATTR_SIZE];
-        static size_t attrNum_;
-        static std::map<aclCannAttr, CannInfo> attrToCannInfo_;
-    };
+    static std::mutex mutex_;
+    static bool initFlag_;
+    static int32_t currentRuntimeVersion_;
+    static std::string swConfigPath_;
+    static std::string defaultInstallPath_;
+    static aclCannAttr attrArray_[MAX_CANN_ATTR_SIZE];
+    static size_t attrNum_;
+    static std::map<aclCannAttr, CannInfo> attrToCannInfo_;
+};
 } // namespace acl
 
 #endif // ASCEND_CANN_INFO_UTILS_H

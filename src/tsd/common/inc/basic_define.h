@@ -14,18 +14,9 @@
 #include <cstdint>
 
 namespace tsd {
-enum class HDCServiceType : uint32_t {
-    FRAMEWORK,
-    TDT,
-    TSD,
-    HDC_SERVICE_TYPE_TOTAL_NUM
-};
+enum class HDCServiceType : uint32_t { FRAMEWORK, TDT, TSD, HDC_SERVICE_TYPE_TOTAL_NUM };
 
-enum class ModeType : uint32_t{
-    OFFLINE = 0,
-    ONLINE,
-    INVALID_MODE_TYPE
-};
+enum class ModeType : uint32_t { OFFLINE = 0, ONLINE, INVALID_MODE_TYPE };
 
 // max number of each device can split
 constexpr uint32_t DEVICE_MAX_SPLIT_NUM = 16U;
@@ -64,10 +55,9 @@ struct BaseInfo {
     uint32_t uniqueVfId;
 
     BaseInfo() : BaseInfo(0U, 0U, 0U, 0U) {}
-    BaseInfo(const uint32_t devId, const uint32_t pid,
-             const uint32_t vfid, const uint32_t uniqueVfid) : deviceId(devId), hostPid(pid), vfId(vfid),
-                                                               uniqueVfId(uniqueVfid) {};
+    BaseInfo(const uint32_t devId, const uint32_t pid, const uint32_t vfid, const uint32_t uniqueVfid)
+        : deviceId(devId), hostPid(pid), vfId(vfid), uniqueVfId(uniqueVfid){};
 };
-}
+} // namespace tsd
 
 #endif // TSD_BASIC_DEFINE_H

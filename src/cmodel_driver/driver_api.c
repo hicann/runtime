@@ -29,12 +29,12 @@ enum EventStatus {
     RECORDCOMPLETE,
 };
 typedef struct tagModelHostFuncCqReportMsg {
-    volatile uint16_t phase      : 1;
-    volatile uint16_t SOP        : 1;
-    volatile uint16_t MOP        : 1;
-    volatile uint16_t EOP        : 1;
+    volatile uint16_t phase : 1;
+    volatile uint16_t SOP : 1;
+    volatile uint16_t MOP : 1;
+    volatile uint16_t EOP : 1;
     volatile uint16_t reserved : 12;
-    volatile uint16_t streamId ;
+    volatile uint16_t streamId;
     volatile uint16_t taskId;
     volatile uint16_t sqId;
     volatile uint16_t sqHead;
@@ -50,39 +50,39 @@ typedef struct tagModelHostFuncSqSendMsg {
     uint16_t MOP : 1;
     uint16_t EOP : 1;
     uint16_t reserved : 12;
-    uint16_t streamId ;
+    uint16_t streamId;
     uint16_t taskId;
     uint16_t cqId;
     uint16_t cqTail;
     uint16_t sequenceId;
     uint32_t reserved1;
-}modelHostFuncSqSendMsg_t;
+} modelHostFuncSqSendMsg_t;
 
 struct tagModelHostFuncCqReportMsg g_ModelCqReport;
 struct tagModelHostFuncSqSendMsg g_ModelSqSend;
 
-drvError_t drvGetPlatformInfo(uint32_t *info)
+drvError_t drvGetPlatformInfo(uint32_t* info)
 {
     COND_RETURN_CMODEL(info == NULL, DRV_ERROR_INVALID_HANDLE, "info is NULL.");
     *info = RUN_MODE_ONLINE;
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvGetDevNum(uint32_t *num_dev)
+drvError_t drvGetDevNum(uint32_t* num_dev)
 {
     COND_RETURN_CMODEL(num_dev == NULL, DRV_ERROR_INVALID_HANDLE, "num_dev is NULL.");
     *num_dev = MAX_DEV_NUM;
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvGetDevIDs(uint32_t *devices, uint32_t len)
+drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len)
 {
     UNUSED(len);
     COND_RETURN_CMODEL(devices == NULL, DRV_ERROR_INVALID_HANDLE, "devices is NULL");
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvDeviceOpen(void **devInfo, uint32_t deviceId)
+drvError_t drvDeviceOpen(void** devInfo, uint32_t deviceId)
 {
     UNUSED(devInfo);
     UNUSED(deviceId);
@@ -99,7 +99,7 @@ drvError_t drvDeviceClose(uint32_t devId)
     return DRV_ERROR_NONE;
 }
 
-DVresult drvMemAddressTranslate(DVdeviceptr vptr, UINT64 *pptr)
+DVresult drvMemAddressTranslate(DVdeviceptr vptr, UINT64* pptr)
 {
     COND_RETURN_CMODEL(pptr == NULL, DRV_ERROR_INVALID_HANDLE, "pptr is NULL.");
     COND_RETURN_CMODEL(vptr == 0, DRV_ERROR_INVALID_VALUE, "vptr is 0");
@@ -108,7 +108,7 @@ DVresult drvMemAddressTranslate(DVdeviceptr vptr, UINT64 *pptr)
 }
 
 #define MEM_VIRT_MASK (((1U << MEM_VIRT_WIDTH) - 1) << MEM_VIRT_BIT)
-drvError_t halMemAlloc(void **pp, UINT64 size, UINT64 flag)
+drvError_t halMemAlloc(void** pp, UINT64 size, UINT64 flag)
 {
     if ((flag & MEM_VIRT_MASK) == MEM_HOST) {
         COND_RETURN_CMODEL(pp == NULL, DRV_ERROR_INVALID_VALUE, "pp is NULL");
@@ -121,19 +121,16 @@ drvError_t halMemAlloc(void **pp, UINT64 size, UINT64 flag)
     }
 }
 
-drvError_t halMemFree(void *pp)
-{
-    return drvMemFree(pp, 0);
-}
+drvError_t halMemFree(void* pp) { return drvMemFree(pp, 0); }
 
-drvError_t halSqCqConfig(uint32_t devId, struct halSqCqConfigInfo *info)
+drvError_t halSqCqConfig(uint32_t devId, struct halSqCqConfigInfo* info)
 {
     UNUSED(devId);
     UNUSED(info);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHostRegister(void *hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void **devPtr)
+drvError_t halHostRegister(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void** devPtr)
 {
     UNUSED(hostPtr);
     UNUSED(size);
@@ -143,14 +140,14 @@ drvError_t halHostRegister(void *hostPtr, UINT64 size, UINT32 flag, UINT32 devid
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHostUnregister(void *hostPtr, UINT32 devid)
+drvError_t halHostUnregister(void* hostPtr, UINT32 devid)
 {
     UNUSED(hostPtr);
     UNUSED(devid);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemHostGetDevPointer(void *srcPtr, uint32_t devid, void **dstPtr)
+drvError_t halMemHostGetDevPointer(void* srcPtr, uint32_t devid, void** dstPtr)
 {
     UNUSED(srcPtr);
     UNUSED(devid);
@@ -158,14 +155,14 @@ drvError_t halMemHostGetDevPointer(void *srcPtr, uint32_t devid, void **dstPtr)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode)
+drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode)
 {
     UNUSED(dev_id);
     UNUSED(mode);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halResourceIdAlloc(uint32_t devId, struct halResourceIdInputInfo *in, struct halResourceIdOutputInfo *out)
+drvError_t halResourceIdAlloc(uint32_t devId, struct halResourceIdInputInfo* in, struct halResourceIdOutputInfo* out)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halResourceIdInputInfo is NULL.");
     COND_RETURN_CMODEL(out == NULL, DRV_ERROR_INVALID_HANDLE, "halResourceIdOutputInfo is NULL.");
@@ -173,10 +170,10 @@ drvError_t halResourceIdAlloc(uint32_t devId, struct halResourceIdInputInfo *in,
 
     switch (in->type) {
         case DRV_STREAM_ID:
-            ret = __drvIdAlloc((int32_t *)&(out->resourceId), devId, DRV_RES_STREAM);
+            ret = __drvIdAlloc((int32_t*)&(out->resourceId), devId, DRV_RES_STREAM);
             break;
         case DRV_EVENT_ID:
-            ret = __drvIdAlloc((int32_t *)&(out->resourceId), devId, DRV_RES_EVENT);
+            ret = __drvIdAlloc((int32_t*)&(out->resourceId), devId, DRV_RES_EVENT);
             break;
         case DRV_MODEL_ID:
             out->resourceId = 1;
@@ -193,7 +190,7 @@ drvError_t halResourceIdAlloc(uint32_t devId, struct halResourceIdInputInfo *in,
     return ret;
 }
 
-drvError_t halResourceIdFree(uint32_t devId, struct halResourceIdInputInfo *in)
+drvError_t halResourceIdFree(uint32_t devId, struct halResourceIdInputInfo* in)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halResourceIdInputInfo is NULL.");
     drvError_t ret = DRV_ERROR_NONE;
@@ -220,14 +217,14 @@ drvError_t halResourceIdFree(uint32_t devId, struct halResourceIdInputInfo *in)
     return ret;
 }
 
-drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput *in, struct halSqMemGetOutput *out)
+drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput* in, struct halSqMemGetOutput* out)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halSqMemGetInput is NULL.");
     COND_RETURN_CMODEL(out == NULL, DRV_ERROR_INVALID_HANDLE, "halSqMemGetOutput is NULL.");
 
     uint32_t deviceId;
-    drvQosQueue_t *queue = NULL;
-    drvQosMgmt_t *qMgmt = NULL;
+    drvQosQueue_t* queue = NULL;
+    drvQosMgmt_t* qMgmt = NULL;
     const int32_t qos = 0;
     drvError_t ret = DRV_ERROR_NONE;
 
@@ -240,7 +237,7 @@ drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput *in, struct halSq
             UNUSED(queue);
             UNUSED(qMgmt);
             UNUSED(qos);
-            out->cmdPtr = (void *)&g_ModelSqSend;
+            out->cmdPtr = (void*)&g_ModelSqSend;
             break;
         case DRV_NORMAL_TYPE:
             deviceId = DEVICE_HANDLE_TO_ID(devId);
@@ -249,11 +246,13 @@ drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput *in, struct halSq
             queue = &(g_drvQosQueue[deviceId][qos]);
             qMgmt = &(g_drvQosQueueMgmt[deviceId][qos]);
 
-            COND_RETURN_CMODEL(((queue->headIndex) == (queue->tailIndex + 1) % DRV_QOS_QUEUE_SIZE) ||
-                               (qMgmt->IsOccupy[queue->tailIndex] == 1), DRV_ERROR_INNER_ERR, "queue is full");
+            COND_RETURN_CMODEL(
+                ((queue->headIndex) == (queue->tailIndex + 1) % DRV_QOS_QUEUE_SIZE) ||
+                    (qMgmt->IsOccupy[queue->tailIndex] == 1),
+                DRV_ERROR_INNER_ERR, "queue is full");
 
             qMgmt->IsOccupy[queue->tailIndex] = 1;
-            out->cmdPtr = (void **)&queue->taskCommand[queue->tailIndex];
+            out->cmdPtr = (void**)&queue->taskCommand[queue->tailIndex];
             queue->tailIndex = (queue->tailIndex + 1) % DRV_QOS_QUEUE_SIZE;
             break;
         default:
@@ -265,7 +264,7 @@ drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput *in, struct halSq
     return ret;
 }
 
-drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo *info)
+drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
 {
     COND_RETURN_CMODEL(info == NULL, DRV_ERROR_INVALID_HANDLE, "halSqMsgInfo is NULL.");
 
@@ -280,16 +279,16 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo *info)
             int32_t deviceId = (int32_t)devId;
             int8_t qos = 0;
             int32_t qid;
-            drvQosQueue_t *queue = NULL;
-            drvQosMgmt_t *qMgmt = NULL;
+            drvQosQueue_t* queue = NULL;
+            drvQosMgmt_t* qMgmt = NULL;
 
-            COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE,
-                               "invalid device %d", deviceId);
+            COND_RETURN_CMODEL(
+                (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device %d", deviceId);
 
             queue = &(g_drvQosQueue[deviceId][qos]);
             drvCommand_t command;
-            command = (drvCommand_t)&queue->taskCommand[(queue->tailIndex + DRV_QOS_QUEUE_SIZE - 1) %
-                DRV_QOS_QUEUE_SIZE];
+            command =
+                (drvCommand_t)&queue->taskCommand[(queue->tailIndex + DRV_QOS_QUEUE_SIZE - 1) % DRV_QOS_QUEUE_SIZE];
 
             ret = drvQosHandleToId(deviceId, &qos, &qid, command);
             COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, ret, "drvQosHandleToId failed");
@@ -312,10 +311,10 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo *info)
 void drvDfxShowReport(uint32_t devId)
 {
     UNUSED(devId);
-    return ;
+    return;
 }
 
-drvError_t drvDeviceGetTransWay(void *src, void *dst, uint8_t *trans_type)
+drvError_t drvDeviceGetTransWay(void* src, void* dst, uint8_t* trans_type)
 {
     UNUSED(src);
     UNUSED(dst);
@@ -332,7 +331,7 @@ DVresult drvMemPrefetchToDevice(DVdeviceptr devPtr, size_t len, DVdevice device)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvCustomCall(uint32_t devId, uint32_t cmd, void *para)
+drvError_t drvCustomCall(uint32_t devId, uint32_t cmd, void* para)
 {
     UNUSED(devId);
     UNUSED(cmd);
@@ -353,13 +352,13 @@ DVresult drvMemsetD8(DVdeviceptr dst, size_t destMax, UINT8 value, size_t size)
     COND_RETURN_CMODEL(dst == 0, DRV_ERROR_INVALID_VALUE, "dst is NULL");
     COND_RETURN_CMODEL(size == 0, DRV_ERROR_INVALID_VALUE, "size is 0");
     COND_RETURN_CMODEL(size > destMax, DRV_ERROR_INVALID_VALUE, "size is bigger than destMax");
-    ret = drvModelMemset(dst, destMax, (int32_t) value, size);
+    ret = drvModelMemset(dst, destMax, (int32_t)value, size);
     COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, DRV_ERROR_INVALID_HANDLE, "drvModelMemset failed, ret=%d", (int32_t)ret);
 
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     UNUSED(devId);
     UNUSED(infoType);
@@ -395,7 +394,7 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
     return DRV_ERROR_NONE;
 }
 
-DVresult drvMemGetAttribute(DVdeviceptr vptr, struct DVattribute *attr)
+DVresult drvMemGetAttribute(DVdeviceptr vptr, struct DVattribute* attr)
 {
     COND_RETURN_CMODEL(attr == NULL, DRV_ERROR_INVALID_VALUE, "attr is NULL.");
     attr->devId = 0;
@@ -409,17 +408,17 @@ DVresult drvMemGetAttribute(DVdeviceptr vptr, struct DVattribute *attr)
     return DRV_ERROR_NONE;
 }
 
-DVresult drvMemConvertAddr(DVdeviceptr pSrc, DVdeviceptr pDst, UINT32 len, struct DMA_ADDR *dmaAddr)
+DVresult drvMemConvertAddr(DVdeviceptr pSrc, DVdeviceptr pDst, UINT32 len, struct DMA_ADDR* dmaAddr)
 {
     COND_RETURN_CMODEL(dmaAddr == NULL, DRV_ERROR_INVALID_VALUE, "dmaAddr is NULL.");
-    dmaAddr->phyAddr.src = (void *)((uintptr_t)pSrc);
-    dmaAddr->phyAddr.dst = (void *)((uintptr_t)pDst);
+    dmaAddr->phyAddr.src = (void*)((uintptr_t)pSrc);
+    dmaAddr->phyAddr.dst = (void*)((uintptr_t)pDst);
     dmaAddr->phyAddr.len = len;
     dmaAddr->phyAddr.flag = 0;
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvMemDestroyAddr(struct DMA_ADDR *ptr)
+drvError_t drvMemDestroyAddr(struct DMA_ADDR* ptr)
 {
     UNUSED(ptr);
     return DRV_ERROR_NONE;
@@ -449,7 +448,7 @@ drvError_t halDeviceEnableP2PNotify(uint32_t phy_dev, uint32_t peer_phy_dev, uin
     return DRV_ERROR_NONE;
 }
 
-drvError_t halDeviceCanAccessPeer(int32_t *canAccessPeer, uint32_t device, uint32_t peerDevice)
+drvError_t halDeviceCanAccessPeer(int32_t* canAccessPeer, uint32_t device, uint32_t peerDevice)
 {
     UNUSED(canAccessPeer);
     UNUSED(device);
@@ -470,7 +469,7 @@ int drvMemDeviceClose(unsigned int devid)
     return (int32_t)DRV_ERROR_NONE;
 }
 
-drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo *in, struct halSqCqOutputInfo *out)
+drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct halSqCqOutputInfo* out)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halSqCqInputInfo is NULL.");
     COND_RETURN_CMODEL(out == NULL, DRV_ERROR_INVALID_HANDLE, "halSqCqOutputInfo is NULL.");
@@ -506,7 +505,7 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo *in, struct h
     return ret;
 }
 
-drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo *info)
+drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* info)
 {
     COND_RETURN_CMODEL(info == NULL, DRV_ERROR_INVALID_HANDLE, "halSqCqFreeInfo is NULL.");
     drvError_t ret = DRV_ERROR_NONE;
@@ -527,7 +526,7 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo *info)
     return ret;
 }
 
-drvError_t halCqReportIrqWait(uint32_t devId, struct halReportInfoInput *in, struct halReportInfoOutput *out)
+drvError_t halCqReportIrqWait(uint32_t devId, struct halReportInfoInput* in, struct halReportInfoOutput* out)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halReportInfoInput is NULL.");
     COND_RETURN_CMODEL(out == NULL, DRV_ERROR_INVALID_HANDLE, "halReportInfoOutput is NULL.");
@@ -552,14 +551,14 @@ drvError_t halCqReportIrqWait(uint32_t devId, struct halReportInfoInput *in, str
     return ret;
 }
 
-drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct halReportGetOutput *out)
+drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct halReportGetOutput* out)
 {
     COND_RETURN_CMODEL(in == NULL, DRV_ERROR_INVALID_HANDLE, "halReportGetInput is NULL.");
     COND_RETURN_CMODEL(out == NULL, DRV_ERROR_INVALID_HANDLE, "halReportGetOutput is NULL.");
 
     drvError_t ret = DRV_ERROR_NONE;
     uint32_t deviceId;
-    drvReportQueue_t *drvReportQueuePoint = NULL;
+    drvReportQueue_t* drvReportQueuePoint = NULL;
 
     switch (in->type) {
         case DRV_CALLBACK_TYPE:
@@ -568,7 +567,7 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
             UNUSED(drvReportQueuePoint);
 
             out->count = 1;
-            out->reportPtr = (void *)&g_ModelCqReport;
+            out->reportPtr = (void*)&g_ModelCqReport;
             break;
         case DRV_NORMAL_TYPE:
 
@@ -579,7 +578,7 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput *in, struct h
             drvReportQueuePoint = &(g_drvReportQueue[deviceId]);
 
             drvSemWait(&g_drvSem[deviceId]);
-            out->reportPtr = (void *)&(drvReportQueuePoint->retort[drvReportQueuePoint->headIndex]);
+            out->reportPtr = (void*)&(drvReportQueuePoint->retort[drvReportQueuePoint->headIndex]);
             drvReportQueuePoint->headIndex = (drvReportQueuePoint->headIndex + 1) % DRV_REPORT_QUEUE_SIZE;
             break;
         default:
@@ -612,7 +611,7 @@ drvError_t halReportRelease(uint32_t devId, struct halReportReleaseInfo* info)
     return ret;
 }
 
-drvError_t halGetChipCapability(uint32_t deviceId, struct halCapabilityInfo *info)
+drvError_t halGetChipCapability(uint32_t deviceId, struct halCapabilityInfo* info)
 {
     UNUSED(deviceId);
     COND_RETURN_CMODEL(info == NULL, DRV_ERROR_INVALID_VALUE, "info is NULL.");
@@ -621,14 +620,12 @@ drvError_t halGetChipCapability(uint32_t deviceId, struct halCapabilityInfo *inf
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetCapabilityGroupInfo(int deviceId, int ownerId,  int groupId, struct capability_group_info *groupInfo,
-                                     int group_count)
+drvError_t halGetCapabilityGroupInfo(
+    int deviceId, int ownerId, int groupId, struct capability_group_info* groupInfo, int group_count)
 {
     UNUSED(deviceId);
     UNUSED(ownerId);
-    if ((groupId == -1 && group_count != STUB_TS_GRP_NUM) ||
-        (groupId > -1 && group_count != 1) ||
-        (groupId < -1)) {
+    if ((groupId == -1 && group_count != STUB_TS_GRP_NUM) || (groupId > -1 && group_count != 1) || (groupId < -1)) {
         return DRV_ERROR_INVALID_VALUE;
     }
     if (groupId == -1) {
@@ -645,14 +642,14 @@ drvError_t halGetCapabilityGroupInfo(int deviceId, int ownerId,  int groupId, st
         }
         groupInfo[1].extend_attribute = 1;
     } else {
-            groupInfo->group_id = (uint32_t)groupId;
-            groupInfo->state = 1;
-            groupInfo->extend_attribute = 1;
-            groupInfo->aicore_number = 1;
-            groupInfo->aivector_number = 1;
-            groupInfo->sdma_number = 1;
-            groupInfo->aicpu_number = 1;
-            groupInfo->active_sq_number = 1;
+        groupInfo->group_id = (uint32_t)groupId;
+        groupInfo->state = 1;
+        groupInfo->extend_attribute = 1;
+        groupInfo->aicore_number = 1;
+        groupInfo->aivector_number = 1;
+        groupInfo->sdma_number = 1;
+        groupInfo->aicpu_number = 1;
+        groupInfo->active_sq_number = 1;
     }
     return DRV_ERROR_NONE;
 }
@@ -660,29 +657,29 @@ drvError_t halGetCapabilityGroupInfo(int deviceId, int ownerId,  int groupId, st
 DVresult drvMemcpy(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_t ByteCount)
 {
     if ((src < HBM_BASE || src >= HBM_MAX_ADDR) && (dst < HBM_BASE || dst >= HBM_MAX_ADDR)) {
-        return drvModelMemcpy((void *)((uintptr_t)dst), destMax, (void *)((uintptr_t) src),
-                              ByteCount, DRV_MEMCPY_HOST_TO_HOST);
+        return drvModelMemcpy(
+            (void*)((uintptr_t)dst), destMax, (void*)((uintptr_t)src), ByteCount, DRV_MEMCPY_HOST_TO_HOST);
     }
     if ((src < HBM_BASE || src >= HBM_MAX_ADDR) && (dst >= HBM_BASE && dst < HBM_MAX_ADDR)) {
-        return drvModelMemcpy((void *)((uintptr_t)dst), destMax, (void *)((uintptr_t) src),
-                              ByteCount, DRV_MEMCPY_HOST_TO_DEVICE);
+        return drvModelMemcpy(
+            (void*)((uintptr_t)dst), destMax, (void*)((uintptr_t)src), ByteCount, DRV_MEMCPY_HOST_TO_DEVICE);
     }
     if ((src >= HBM_BASE && src < HBM_MAX_ADDR) && (dst < HBM_BASE || dst >= HBM_MAX_ADDR)) {
-        return drvModelMemcpy((void *)((uintptr_t)dst), destMax, (void *)((uintptr_t) src),
-                              ByteCount, DRV_MEMCPY_DEVICE_TO_HOST);
+        return drvModelMemcpy(
+            (void*)((uintptr_t)dst), destMax, (void*)((uintptr_t)src), ByteCount, DRV_MEMCPY_DEVICE_TO_HOST);
     }
-    return drvModelMemcpy((void *)((uintptr_t)dst), destMax, (void *)((uintptr_t) src),
-                          ByteCount, DRV_MEMCPY_DEVICE_TO_DEVICE);
+    return drvModelMemcpy(
+        (void*)((uintptr_t)dst), destMax, (void*)((uintptr_t)src), ByteCount, DRV_MEMCPY_DEVICE_TO_DEVICE);
 }
 
-drvError_t drvMemSmmuQuery(DVdevice device, UINT32 *SSID)
+drvError_t drvMemSmmuQuery(DVdevice device, UINT32* SSID)
 {
     UNUSED(device);
     UNUSED(SSID);
     return DRV_ERROR_NONE;
 }
 
-DVresult drvMemAllocL2buffAddr(DVdevice device, void **l2buff, UINT64 *pte)
+DVresult drvMemAllocL2buffAddr(DVdevice device, void** l2buff, UINT64* pte)
 {
     UNUSED(device);
     UNUSED(l2buff);
@@ -690,14 +687,14 @@ DVresult drvMemAllocL2buffAddr(DVdevice device, void **l2buff, UINT64 *pte)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvMemReleaseL2buffAddr(uint32_t device, void *l2buff)
+drvError_t drvMemReleaseL2buffAddr(uint32_t device, void* l2buff)
 {
     UNUSED(device);
     UNUSED(l2buff);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemGetInfo(DVdevice device, unsigned int type, struct MemInfo *info)
+drvError_t halMemGetInfo(DVdevice device, unsigned int type, struct MemInfo* info)
 {
     UNUSED(device);
     UNUSED(type);
@@ -705,7 +702,7 @@ drvError_t halMemGetInfo(DVdevice device, unsigned int type, struct MemInfo *inf
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemCtl(int type, void *param_value, size_t param_value_size, void *out_value, size_t *out_size_ret)
+drvError_t halMemCtl(int type, void* param_value, size_t param_value_size, void* out_value, size_t* out_size_ret)
 {
     UNUSED(type);
     UNUSED(param_value);
@@ -715,7 +712,7 @@ drvError_t halMemCtl(int type, void *param_value, size_t param_value_size, void 
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvGetP2PStatus(uint32_t dev, uint32_t peer_dev, uint32_t *status)
+drvError_t drvGetP2PStatus(uint32_t dev, uint32_t peer_dev, uint32_t* status)
 {
     UNUSED(dev);
     UNUSED(peer_dev);
@@ -724,7 +721,7 @@ drvError_t drvGetP2PStatus(uint32_t dev, uint32_t peer_dev, uint32_t *status)
     return DRV_ERROR_NONE;
 }
 
-DVresult halShmemCreateHandle(DVdeviceptr vptr, size_t byte_count, char *name, unsigned int name_len)
+DVresult halShmemCreateHandle(DVdeviceptr vptr, size_t byte_count, char* name, unsigned int name_len)
 {
     UNUSED(vptr);
     UNUSED(byte_count);
@@ -733,14 +730,14 @@ DVresult halShmemCreateHandle(DVdeviceptr vptr, size_t byte_count, char *name, u
     return DRV_ERROR_NONE;
 }
 
-DVresult halShmemOpenHandle(const char *name, DVdeviceptr *vptr)
+DVresult halShmemOpenHandle(const char* name, DVdeviceptr* vptr)
 {
     UNUSED(name);
     UNUSED(vptr);
     return DRV_ERROR_NONE;
 }
 
-DVresult halShmemOpenHandleByDevId(DVdevice devId, const char *name, DVdeviceptr *vptr)
+DVresult halShmemOpenHandleByDevId(DVdevice devId, const char* name, DVdeviceptr* vptr)
 {
     UNUSED(devId);
     UNUSED(name);
@@ -748,7 +745,7 @@ DVresult halShmemOpenHandleByDevId(DVdevice devId, const char *name, DVdeviceptr
     return DRV_ERROR_NONE;
 }
 
-DVresult halShmemOpenHandleV2(DVdevice dev_id, const char *name, DVdeviceptr *vptr, uint64_t flag)
+DVresult halShmemOpenHandleV2(DVdevice dev_id, const char* name, DVdeviceptr* vptr, uint64_t flag)
 {
     UNUSED(dev_id);
     UNUSED(name);
@@ -757,7 +754,7 @@ DVresult halShmemOpenHandleV2(DVdevice dev_id, const char *name, DVdeviceptr *vp
     return DRV_ERROR_NONE;
 }
 
-DVresult halShmemMapRouteCheck(const char *name, DVdevice dst_devid, uint32_t map_route)
+DVresult halShmemMapRouteCheck(const char* name, DVdevice dst_devid, uint32_t map_route)
 {
     UNUSED(name);
     UNUSED(dst_devid);
@@ -771,13 +768,13 @@ DVresult halShmemCloseHandle(DVdeviceptr vptr)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halShmemDestroyHandle(const char *name)
+drvError_t halShmemDestroyHandle(const char* name)
 {
     UNUSED(name);
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvCreateIpcNotify(struct drvIpcNotifyInfo *info, char *name, unsigned int len)
+drvError_t drvCreateIpcNotify(struct drvIpcNotifyInfo* info, char* name, unsigned int len)
 {
     UNUSED(info);
     UNUSED(name);
@@ -785,21 +782,21 @@ drvError_t drvCreateIpcNotify(struct drvIpcNotifyInfo *info, char *name, unsigne
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvDestroyIpcNotify(const char *name, struct drvIpcNotifyInfo *info)
+drvError_t drvDestroyIpcNotify(const char* name, struct drvIpcNotifyInfo* info)
 {
     UNUSED(info);
     UNUSED(name);
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvCloseIpcNotify(const char *name, struct drvIpcNotifyInfo *info)
+drvError_t drvCloseIpcNotify(const char* name, struct drvIpcNotifyInfo* info)
 {
     UNUSED(info);
     UNUSED(name);
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvSetIpcNotifyPid(const char *name, pid_t pid[], int num)
+drvError_t drvSetIpcNotifyPid(const char* name, pid_t pid[], int num)
 {
     UNUSED(name);
     UNUSED(pid);
@@ -807,26 +804,26 @@ drvError_t drvSetIpcNotifyPid(const char *name, pid_t pid[], int num)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvNotifyIdAddrOffset(uint32_t deviceId, struct drvNotifyInfo *drvInfo)
+drvError_t drvNotifyIdAddrOffset(uint32_t deviceId, struct drvNotifyInfo* drvInfo)
 {
     UNUSED(deviceId);
     UNUSED(drvInfo);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halShrIdOpen(const char *name, struct drvShrIdInfo *info)
+drvError_t halShrIdOpen(const char* name, struct drvShrIdInfo* info)
 {
     UNUSED(name);
     UNUSED(info);
     return DRV_ERROR_NONE;
 }
-drvError_t halShrIdClose(const char *name)
+drvError_t halShrIdClose(const char* name)
 {
     UNUSED(name);
     return DRV_ERROR_NONE;
 }
 
-drvError_t halShmemSetPidHandle(const char *name, pid_t pid[], int num)
+drvError_t halShmemSetPidHandle(const char* name, pid_t pid[], int num)
 
 {
     UNUSED(name);
@@ -835,7 +832,7 @@ drvError_t halShmemSetPidHandle(const char *name, pid_t pid[], int num)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvLoadProgram(uint32_t deviceId, void *program, unsigned int offset, size_t ByteCount, void **vPtr)
+drvError_t drvLoadProgram(uint32_t deviceId, void* program, unsigned int offset, size_t ByteCount, void** vPtr)
 {
     UNUSED(deviceId);
     UNUSED(program);
@@ -845,14 +842,14 @@ drvError_t drvLoadProgram(uint32_t deviceId, void *program, unsigned int offset,
     return DRV_ERROR_INVALID_MALLOC_TYPE;
 }
 
-drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
+drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t* phyId)
 {
     if (phyId != NULL) {
         *phyId = devIndex;
     }
     return DRV_ERROR_NONE;
 }
-drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
+drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t* devIndex)
 {
     if (devIndex != NULL) {
         *devIndex = phyId;
@@ -860,7 +857,7 @@ drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
     return DRV_ERROR_NONE;
 }
 
-int AICPUModelLoad(void *arg)
+int AICPUModelLoad(void* arg)
 {
     UNUSED(arg);
     return (int32_t)DRV_ERROR_NONE;
@@ -887,12 +884,9 @@ drvError_t drvMbindHbm(DVdeviceptr devPtr, size_t len, unsigned int type, uint32
     return DRV_ERROR_NONE;
 }
 
-pid_t drvDeviceGetBareTgid(void)
-{
-    return 0;
-}
+pid_t drvDeviceGetBareTgid(void) { return 0; }
 
-drvError_t halGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t *value)
+drvError_t halGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t* value)
 {
     UNUSED(devId);
     UNUSED(otherDevId);
@@ -901,8 +895,7 @@ drvError_t halGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t in
     return DRV_ERROR_NONE;
 }
 
-drvError_t halCdqCreate(unsigned int devId, unsigned int tsId, struct halCdqPara *cdqPara,
-    unsigned int *queId)
+drvError_t halCdqCreate(unsigned int devId, unsigned int tsId, struct halCdqPara* cdqPara, unsigned int* queId)
 {
     UNUSED(devId);
     UNUSED(tsId);
@@ -919,8 +912,8 @@ drvError_t halCdqDestroy(unsigned int devId, unsigned int tsId, unsigned int que
     return DRV_ERROR_NONE;
 }
 
-drvError_t halCdqAllocBatch(unsigned int devId, unsigned int tsId, unsigned int queId,
-    unsigned int timeout, unsigned int *batchId)
+drvError_t halCdqAllocBatch(
+    unsigned int devId, unsigned int tsId, unsigned int queId, unsigned int timeout, unsigned int* batchId)
 {
     UNUSED(devId);
     UNUSED(tsId);
@@ -930,7 +923,7 @@ drvError_t halCdqAllocBatch(unsigned int devId, unsigned int tsId, unsigned int 
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetChipFromDevice(int device_id, int *chip_id)
+drvError_t halGetChipFromDevice(int device_id, int* chip_id)
 {
     UNUSED(device_id);
     UNUSED(chip_id);
@@ -945,7 +938,7 @@ drvError_t halGetDeviceFromChip(int chip_id, int device_list[], int count)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetDeviceCountFromChip(int chip_id, int *device_count)
+drvError_t halGetDeviceCountFromChip(int chip_id, int* device_count)
 {
     UNUSED(chip_id);
     UNUSED(device_count);
@@ -959,23 +952,21 @@ drvError_t halGetChipList(int chip_list[], int count)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halGetChipCount(int *chip_count)
+drvError_t halGetChipCount(int* chip_count)
 {
     UNUSED(chip_count);
     return DRV_ERROR_NONE;
 }
 
-
 DVresult cmodelDrvMemcpy(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_t size, drvMemcpyKind_t kind)
 {
-    return drvModelMemcpy((void *)((uintptr_t)dst), destMax, (void *)((uintptr_t) src), size, kind);
+    return drvModelMemcpy((void*)((uintptr_t)dst), destMax, (void*)((uintptr_t)src), size, kind);
 }
 
-drvError_t cmodelDrvFreeHost(void *pp)
+drvError_t cmodelDrvFreeHost(void* pp)
 {
     COND_RETURN_CMODEL(pp == NULL, DRV_ERROR_INVALID_VALUE, "pp is NULL.");
     free(pp);
     pp = NULL;
     return DRV_ERROR_NONE;
 }
-

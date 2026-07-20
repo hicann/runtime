@@ -43,7 +43,7 @@ aclError aclrtResetDevice(int32_t deviceId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetDevice(int32_t *deviceId)
+aclError aclrtGetDevice(int32_t* deviceId)
 {
     if (deviceId == NULL) {
         ACL_LOG_ERROR("deviceId is NULL");

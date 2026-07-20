@@ -17,30 +17,30 @@
 
 namespace acl {
 class ACL_FUNC_VISIBILITY InitCallbackManager {
- public:
-  static InitCallbackManager &GetInstance();
+public:
+    static InitCallbackManager& GetInstance();
 
-  aclError RegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void *userData);
-  aclError UnRegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc);
-  aclError NotifyInitCallback(aclRegisterCallbackType type, const char *configStr, size_t len);
+    aclError RegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void* userData);
+    aclError UnRegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc);
+    aclError NotifyInitCallback(aclRegisterCallbackType type, const char* configStr, size_t len);
 
-  aclError RegFinalizeCallback(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void *userData);
-  aclError UnRegFinalizeCallback(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc);
-  aclError NotifyFinalizeCallback(aclRegisterCallbackType type);
+    aclError RegFinalizeCallback(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void* userData);
+    aclError UnRegFinalizeCallback(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc);
+    aclError NotifyFinalizeCallback(aclRegisterCallbackType type);
 
- private:
-  InitCallbackManager();
-  ~InitCallbackManager() = default;
-  InitCallbackManager(const InitCallbackManager &other) = delete;
-  InitCallbackManager &operator=(const InitCallbackManager &other) = delete;
-  InitCallbackManager(const InitCallbackManager &&other) = delete;
-  InitCallbackManager &operator=(const InitCallbackManager &&other) = delete;
+private:
+    InitCallbackManager();
+    ~InitCallbackManager() = default;
+    InitCallbackManager(const InitCallbackManager& other) = delete;
+    InitCallbackManager& operator=(const InitCallbackManager& other) = delete;
+    InitCallbackManager(const InitCallbackManager&& other) = delete;
+    InitCallbackManager& operator=(const InitCallbackManager&& other) = delete;
 
- private:
-  std::multimap<aclRegisterCallbackType, std::pair<aclInitCallbackFunc, void*>> initCallbackMap_;
-  std::multimap<aclRegisterCallbackType, std::pair<aclFinalizeCallbackFunc, void*>> finalizeCallbackMap_;
-  std::recursive_mutex mutex_;
+private:
+    std::multimap<aclRegisterCallbackType, std::pair<aclInitCallbackFunc, void*>> initCallbackMap_;
+    std::multimap<aclRegisterCallbackType, std::pair<aclFinalizeCallbackFunc, void*>> finalizeCallbackMap_;
+    std::recursive_mutex mutex_;
 };
-}
+} // namespace acl
 
-#endif  //ASCEND_RUNTIME_INIT_CALLBACK_MANAGER_H_
+#endif // ASCEND_RUNTIME_INIT_CALLBACK_MANAGER_H_

@@ -16,11 +16,11 @@ namespace {
 constexpr int32_t ERROR_LOG = 3;
 constexpr int32_t DEBUG_LOG = 0;
 constexpr uint32_t HCCP_START_RANK_SIZE = 1U;
-}  // namespace
+} // namespace
 namespace tsd {
 ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t deviceMode)
     : ClientManager(deviceId),
-      logLevel_("003"),  // error level
+      logLevel_("003"), // error level
       commAgent_(deviceId),
       capabilityMgr_(deviceId, commAgent_, IsAdcEnv()),
       rankSize_(0U),
@@ -57,7 +57,7 @@ void ProcessModeManager::Destroy()
     aicpuPackageExistInDevice_ = false;
 }
 
-void ProcessModeManager::ParseModuleLogLevelByKey(const std::string &keyStr, const std::string &valStr)
+void ProcessModeManager::ParseModuleLogLevelByKey(const std::string& keyStr, const std::string& valStr)
 {
     int32_t val = 0;
     if (TransStrToInt(valStr, val)) {
@@ -73,7 +73,7 @@ void ProcessModeManager::ParseModuleLogLevelByKey(const std::string &keyStr, con
     }
 }
 
-void ProcessModeManager::ParseModuleLogLevel(const std::string &envModuleLogLevel)
+void ProcessModeManager::ParseModuleLogLevel(const std::string& envModuleLogLevel)
 {
     std::size_t offsetColon = 0;
     std::size_t offsetEqual = 0;
@@ -124,9 +124,10 @@ void ProcessModeManager::GetLogLevel()
         GetEnvFromMmSys(MM_ENV_ASCEND_GLOBAL_LOG_LEVEL, "ASCEND_GLOBAL_LOG_LEVEL", envLogLevel);
         GetEnvFromMmSys(MM_ENV_ASCEND_GLOBAL_EVENT_ENABLE, "ASCEND_GLOBAL_EVENT_ENABLE", envEventLevel);
         GetEnvFromMmSys(MM_ENV_ASCEND_MODULE_LOG_LEVEL, "ASCEND_MODULE_LOG_LEVEL", envModuleLogLevel);
-        TSD_RUN_INFO("[TsdClient] get ASCEND_GLOBAL_LOG_LEVEL [%s] ASCEND_GLOBAL_EVENT_ENABLE [%s] "
-                     "ASCEND_MODULE_LOG_LEVEL [%s]", envLogLevel.c_str(), envEventLevel.c_str(),
-                     envModuleLogLevel.c_str());
+        TSD_RUN_INFO(
+            "[TsdClient] get ASCEND_GLOBAL_LOG_LEVEL [%s] ASCEND_GLOBAL_EVENT_ENABLE [%s] "
+            "ASCEND_MODULE_LOG_LEVEL [%s]",
+            envLogLevel.c_str(), envEventLevel.c_str(), envModuleLogLevel.c_str());
         if (ValidateStr(envLogLevel.c_str(), logPattern.c_str())) {
             logLevelString = envLogLevel;
         }
@@ -149,7 +150,7 @@ void ProcessModeManager::SetTsdStartInfo(const bool cpStatus, const bool hccpSta
     capabilityMgr_.SetStartCpStatus(cpStatus);
 }
 
-bool ProcessModeManager::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo &startInfo)
+bool ProcessModeManager::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo)
 {
     if (rankSize <= HCCP_START_RANK_SIZE) {
         if (tsdStartStatus_.startCp_) {
@@ -167,8 +168,9 @@ bool ProcessModeManager::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatus
         startInfo.startCp_ = true;
         startInfo.startHccp_ = true;
     }
-    TSD_INFO("[TsdClient] get open para startCp[%u] startHccp[%u] (0:false 1:true)",
-             static_cast<uint32_t>(startInfo.startCp_), static_cast<uint32_t>(startInfo.startHccp_));
+    TSD_INFO(
+        "[TsdClient] get open para startCp[%u] startHccp[%u] (0:false 1:true)",
+        static_cast<uint32_t>(startInfo.startCp_), static_cast<uint32_t>(startInfo.startHccp_));
     return true;
 }
-}
+} // namespace tsd

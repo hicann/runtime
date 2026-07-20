@@ -21,10 +21,7 @@ typedef struct TagDevice {
 } Device;
 
 // device
-uint32_t GetDeviceId(const Device* device)
-{
-    return device->deviceId;
-}
+uint32_t GetDeviceId(const Device* device) { return device->deviceId; }
 
 Device* CreateDevice(const uint32_t devId)
 {

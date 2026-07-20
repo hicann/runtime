@@ -21,21 +21,21 @@ const std::string BASE_HASH_CFG_FILE = "bin_hash.cfg";
 class TsdPathMgr {
 public:
     // /usr/lib64/aicpu_kernels/2/ || /home/HwHiAiUser/inuse/aicpu_kernels/0/
-    static std::string BuildKernelSoRootPath(const uint32_t uniqueVfId, const std::string &destPath = "");
+    static std::string BuildKernelSoRootPath(const uint32_t uniqueVfId, const std::string& destPath = "");
 
     // /usr/lib64/aicpu_kernels/2/aicpu_kernels_device/
     static std::string BuildKernelSoPath(const uint32_t uniqueVfId);
 
-    static std::string BuildKernelSoPath(const std::string &kernelSoRootPath);
+    static std::string BuildKernelSoPath(const std::string& kernelSoRootPath);
 
     // /usr/lib64/aicpu_kernels/2/aicpu_extend_syskernels/
-    static std::string BuildExtendKernelSoPath(const std::string &kernelSoRootPath);
+    static std::string BuildExtendKernelSoPath(const std::string& kernelSoRootPath);
 
-    static std::string BuildExtendKernelHashCfgPath(const std::string &kernelSoRootPath);
+    static std::string BuildExtendKernelHashCfgPath(const std::string& kernelSoRootPath);
 
     // /usr/lib64/aicpu_kernels/2/aicpu_kernels_device/version.info
-    static std::string AddVersionInfoName(const std::string &kernelSoPath);
+    static std::string AddVersionInfoName(const std::string& kernelSoPath);
 };
-}  // namespace tsd
+} // namespace tsd
 
-#endif  // TSD_PATH_MGR_H
+#endif // TSD_PATH_MGR_H

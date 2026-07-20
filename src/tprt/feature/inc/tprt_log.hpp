@@ -15,9 +15,8 @@
 #include <vector>
 namespace cce {
 namespace tprt {
-void RecordErrorLog(const char *file, const int32_t line, const char *fun, const char *fmt, ...);
-void RecordLog(int32_t level, const char *file, const int32_t line, const char *fun, const char *fmt, ...);
-}
-}
+void RecordErrorLog(const char* file, const int32_t line, const char* fun, const char* fmt, ...);
+void RecordLog(int32_t level, const char* file, const int32_t line, const char* fun, const char* fmt, ...);
+} // namespace tprt
+} // namespace cce
 #endif
-

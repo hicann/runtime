@@ -21,7 +21,7 @@
 #include "common/resource_statistics.h"
 
 namespace {
-std::unordered_map<rtError_t, const char *> succStmSyncErrCodes = {
+std::unordered_map<rtError_t, const char*> succStmSyncErrCodes = {
     {ACL_ERROR_RT_END_OF_SEQUENCE, "end of sequence"},
     {ACL_ERROR_RT_MODEL_ABORT_NORMAL, "model abort normal"},
     {ACL_ERROR_RT_AICORE_OVER_FLOW, "aicore overflow"},
@@ -34,7 +34,7 @@ std::unordered_map<rtError_t, const char *> succStmSyncErrCodes = {
 extern "C" {
 #endif
 
-aclError aclrtCreateStreamImpl(aclrtStream *stream)
+aclError aclrtCreateStreamImpl(aclrtStream* stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateStream);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_STREAM);
@@ -49,7 +49,7 @@ aclError aclrtCreateStreamImpl(aclrtStream *stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCreateStreamWithConfigImpl(aclrtStream *stream, uint32_t priority, uint32_t flag)
+aclError aclrtCreateStreamWithConfigImpl(aclrtStream* stream, uint32_t priority, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateStreamWithConfig);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_STREAM);
@@ -125,8 +125,7 @@ aclError aclrtSynchronizeStreamImpl(aclrtStream stream)
     if (rtErr != RT_ERROR_NONE) {
         const auto it = succStmSyncErrCodes.find(rtErr);
         if (it != succStmSyncErrCodes.cend()) {
-            ACL_LOG_INFO("Synchronize stream success, err = %d, desc = %s",
-                         static_cast<int32_t>(rtErr), it->second);
+            ACL_LOG_INFO("Synchronize stream success, err = %d, desc = %s", static_cast<int32_t>(rtErr), it->second);
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
@@ -142,9 +141,9 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
         ACL_LOG_CALL_ERROR("the timeout of synchronize stream is invalid");
         const std::string timeoutVal = std::to_string(timeout);
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
-            std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({funcName.c_str(), timeoutVal.c_str(), "timeout", "[-1, INT_MAX]"}));
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+            std::vector<const char*>({funcName.c_str(), timeoutVal.c_str(), "timeout", "[-1, INT_MAX]"}));
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     const rtError_t rtErr = rtStreamSynchronizeWithTimeout(static_cast<rtStream_t>(stream), timeout);
@@ -154,8 +153,9 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
     if (rtErr != RT_ERROR_NONE) {
         const auto it = succStmSyncErrCodes.find(rtErr);
         if (it != succStmSyncErrCodes.cend()) {
-            ACL_LOG_INFO("synchronize stream with timeout success, err = %d, desc = %s",
-                         static_cast<int32_t>(rtErr), it->second);
+            ACL_LOG_INFO(
+                "synchronize stream with timeout success, err = %d, desc = %s", static_cast<int32_t>(rtErr),
+                it->second);
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
@@ -163,7 +163,7 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
     return ACL_SUCCESS;
 }
 
-aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status)
+aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus* status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamQuery);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
@@ -180,7 +180,7 @@ aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status)
     return ACL_SUCCESS;
 }
 
-aclError aclrtStreamGetPriorityImpl(aclrtStream stream, uint32_t *priority)
+aclError aclrtStreamGetPriorityImpl(aclrtStream stream, uint32_t* priority)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetPriority);
     ACL_LOG_INFO("start to execute aclrtStreamGetPriority");
@@ -193,7 +193,7 @@ aclError aclrtStreamGetPriorityImpl(aclrtStream stream, uint32_t *priority)
     return ACL_SUCCESS;
 }
 
-aclError aclrtStreamGetFlagsImpl(aclrtStream stream, uint32_t *flags)
+aclError aclrtStreamGetFlagsImpl(aclrtStream stream, uint32_t* flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetFlags);
     ACL_LOG_INFO("start to execute aclrtStreamGetFlags");
@@ -240,17 +240,17 @@ aclError aclrtStreamWaitEventWithFlagImpl(aclrtStream stream, aclrtEvent event, 
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEventWithFlag);
     ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithFlag");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET((flag == ACL_EVENT_WAIT_DEFAULT) ||
-        (flag == ACL_EVENT_WAIT_EXTERNAL), flag, "ACL_EVENT_WAIT_DEFAULT or ACL_EVENT_WAIT_EXTERNAL",
-        ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        (flag == ACL_EVENT_WAIT_DEFAULT) || (flag == ACL_EVENT_WAIT_EXTERNAL), flag,
+        "ACL_EVENT_WAIT_DEFAULT or ACL_EVENT_WAIT_EXTERNAL", ACL_ERROR_INVALID_PARAM);
 
     if (flag == ACL_EVENT_WAIT_EXTERNAL) {
-        ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout == 0U, timeout, "0 when flag is ACL_EVENT_WAIT_EXTERNAL",
-            ACL_ERROR_INVALID_PARAM);
+        ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+            timeout == 0U, timeout, "0 when flag is ACL_EVENT_WAIT_EXTERNAL", ACL_ERROR_INVALID_PARAM);
     }
 
-    ACL_REQUIRES_RTS_OK(rtStreamWaitEventWithFlag(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event),
-        timeout, flag));
+    ACL_REQUIRES_RTS_OK(
+        rtStreamWaitEventWithFlag(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout, flag));
     return ACL_SUCCESS;
 }
 
@@ -263,7 +263,7 @@ aclError aclrtSetStreamFailureModeImpl(aclrtStream stream, uint64_t mode)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetStreamOverflowSwitchImpl(aclrtStream stream, uint32_t *flag)
+aclError aclrtGetStreamOverflowSwitchImpl(aclrtStream stream, uint32_t* flag)
 {
     ACL_LOG_INFO("start to execute aclrtGetStreamOverflowSwitch");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(flag);
@@ -291,7 +291,7 @@ aclError aclrtStreamAbortImpl(aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtStreamGetIdImpl(aclrtStream stream, int32_t *streamId)
+aclError aclrtStreamGetIdImpl(aclrtStream stream, int32_t* streamId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetId);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(streamId);
@@ -299,7 +299,7 @@ aclError aclrtStreamGetIdImpl(aclrtStream stream, int32_t *streamId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetStreamAvailableNumImpl(uint32_t *streamCount)
+aclError aclrtGetStreamAvailableNumImpl(uint32_t* streamCount)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetStreamAvailableNum);
     ACL_LOG_INFO("start to execute aclrtGetStreamAvailableNum");
@@ -311,27 +311,27 @@ aclError aclrtGetStreamAvailableNumImpl(uint32_t *streamCount)
     return ACL_SUCCESS;
 }
 
-aclError aclrtSetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue *value)
+aclError aclrtSetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetStreamAttribute);
     ACL_LOG_INFO("start to execute aclrtSetStreamAttribute, stmAttrType = [%u]", static_cast<uint32_t>(stmAttrType));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
-    ACL_REQUIRES_RTS_OK(rtsStreamSetAttribute(static_cast<rtStream_t>(stream),
-        static_cast<rtStreamAttr>(stmAttrType),
+    ACL_REQUIRES_RTS_OK(rtsStreamSetAttribute(
+        static_cast<rtStream_t>(stream), static_cast<rtStreamAttr>(stmAttrType),
         reinterpret_cast<rtStreamAttrValue_t*>(value)));
 
     ACL_LOG_INFO("successfully execute aclrtSetStreamAttribute");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue *value)
+aclError aclrtGetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetStreamAttribute);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
-    ACL_REQUIRES_RTS_OK(rtsStreamGetAttribute(static_cast<rtStream_t>(stream),
-        static_cast<rtStreamAttr>(stmAttrType),
+    ACL_REQUIRES_RTS_OK(rtsStreamGetAttribute(
+        static_cast<rtStream_t>(stream), static_cast<rtStreamAttr>(stmAttrType),
         reinterpret_cast<rtStreamAttrValue_t*>(value)));
 
     return ACL_SUCCESS;
@@ -350,22 +350,24 @@ aclError aclrtActiveStreamImpl(aclrtStream activeStream, aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtSwitchStreamImpl(void *leftValue, aclrtCondition cond, void *rightValue, aclrtCompareDataType dataType,
-    aclrtStream trueStream, aclrtStream falseStream, aclrtStream stream)
+aclError aclrtSwitchStreamImpl(
+    void* leftValue, aclrtCondition cond, void* rightValue, aclrtCompareDataType dataType, aclrtStream trueStream,
+    aclrtStream falseStream, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSwitchStream);
-    ACL_LOG_INFO("start to execute aclrtSwitchStream, cond is [%u], dataType is [%u]",
-        static_cast<uint32_t>(cond), static_cast<uint32_t>(dataType));
+    ACL_LOG_INFO(
+        "start to execute aclrtSwitchStream, cond is [%u], dataType is [%u]", static_cast<uint32_t>(cond),
+        static_cast<uint32_t>(dataType));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(leftValue);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(rightValue);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(trueStream);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
-    ACL_CHECK_INVALID_PARAM_NO_VALUE(falseStream == nullptr, "falseStream",
-        "falseStream is a reserved parameter and must be nullptr");
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(
+        falseStream == nullptr, "falseStream", "falseStream is a reserved parameter and must be nullptr");
 
-    ACL_REQUIRES_RTS_OK(rtsSwitchStream(leftValue, static_cast<rtCondition_t>(cond), rightValue,
-        static_cast<rtSwitchDataType_t>(dataType), static_cast<rtStream_t>(trueStream),
-        static_cast<rtStream_t>(falseStream), static_cast<rtStream_t>(stream)));
+    ACL_REQUIRES_RTS_OK(rtsSwitchStream(
+        leftValue, static_cast<rtCondition_t>(cond), rightValue, static_cast<rtSwitchDataType_t>(dataType),
+        static_cast<rtStream_t>(trueStream), static_cast<rtStream_t>(falseStream), static_cast<rtStream_t>(stream)));
 
     ACL_LOG_INFO("successfully execute aclrtSwitchStream");
     return ACL_SUCCESS;
@@ -391,12 +393,11 @@ aclError aclrtPersistentTaskCleanImpl(aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclmdlRIGetTasksByStreamImpl(aclrtStream stream, aclmdlRITask *tasks, uint32_t *numTasks)
+aclError aclmdlRIGetTasksByStreamImpl(aclrtStream stream, aclmdlRITask* tasks, uint32_t* numTasks)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetTasksByStream);
 
-    ACL_REQUIRES_RTS_OK(rtStreamGetTasks(static_cast<rtStream_t>(stream), static_cast<rtTask_t *>(tasks),
-        numTasks));
+    ACL_REQUIRES_RTS_OK(rtStreamGetTasks(static_cast<rtStream_t>(stream), static_cast<rtTask_t*>(tasks), numTasks));
 
     return ACL_SUCCESS;
 }

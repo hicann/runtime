@@ -36,23 +36,20 @@ extern "C" {
 
 #define REPORT_INPUT_ERROR(errCode, params, vals)                                         \
     do {                                                                                  \
-        char *argList[] = params;                                                         \
-        char *argVal[] = vals;                                                            \
+        char* argList[] = params;                                                         \
+        char* argVal[] = vals;                                                            \
         ReportErrMessage(errCode, argList, argVal, sizeof(argList) / sizeof(argList[0])); \
     } while (false)
 
 // 请调用者必须保证数组args和arg_values个数一致,且数组个数argsNum正确
-void ReportErrMessage(const char *errorCode, char *args[], char *argValues[], int32_t argsNum);
-void ReportInterErrMessage(const char *errorCode, const char *errorMsg);
-char *GetErrorMessage(void);
-void FormatReportInner(const char *errorCode, const char *fmt, ...);
+void ReportErrMessage(const char* errorCode, char* args[], char* argValues[], int32_t argsNum);
+void ReportInterErrMessage(const char* errorCode, const char* errorMsg);
+char* GetErrorMessage(void);
+void FormatReportInner(const char* errorCode, const char* fmt, ...);
 #else
 #define REPORT_INNER_ERROR(errCode, fmt, ...)
 #define REPORT_INPUT_ERROR(errCode, params, vals)
-__attribute__((weak)) char *GetErrorMessage(void)
-{
-    return NULL;
-}
+__attribute__((weak)) char* GetErrorMessage(void) { return NULL; }
 
 #endif
 

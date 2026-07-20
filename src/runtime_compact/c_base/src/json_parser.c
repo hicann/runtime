@@ -20,36 +20,33 @@ extern "C" {
 
 #define JSON_CONTANT_LEN_MAX 0x7FFFFFFFU
 typedef struct {
-    const char *jsonContent;
+    const char* jsonContent;
     size_t contentLen;
     size_t parserIndex;
     bool fileJson;
 } CJsonParser;
 
 typedef struct {
-    char *key;
+    char* key;
     CJsonObj value;
 } CJsonKeyObj;
 
 typedef struct {
-    const char *data;
+    const char* data;
     size_t len;
     size_t escapeCharNum;
 } CJsonString;
 
 static char g_decimalPoint = '.';
 
-CJsonObj *CJsonArrayAt(CJsonObj *obj, size_t i)
+CJsonObj* CJsonArrayAt(CJsonObj* obj, size_t i)
 {
-    return (CJsonObj *)((obj->type != CJSON_ARRAY) ? NULL : VectorAt(&obj->value.array, i));
+    return (CJsonObj*)((obj->type != CJSON_ARRAY) ? NULL : VectorAt(&obj->value.array, i));
 }
 
-static inline char GetDecimalPoint(void)
-{
-    return g_decimalPoint;
-}
+static inline char GetDecimalPoint(void) { return g_decimalPoint; }
 
-static inline void InitCJsonParseZero(CJsonParser *parser)
+static inline void InitCJsonParseZero(CJsonParser* parser)
 {
     parser->contentLen = 0;
     parser->jsonContent = NULL;
@@ -57,7 +54,7 @@ static inline void InitCJsonParseZero(CJsonParser *parser)
     parser->fileJson = false;
 }
 
-static void InitCJsonParser(CJsonParser *parser, const char *jsonContent, size_t jsonLen)
+static void InitCJsonParser(CJsonParser* parser, const char* jsonContent, size_t jsonLen)
 {
     parser->contentLen = jsonLen;
     parser->jsonContent = jsonContent;
@@ -65,7 +62,7 @@ static void InitCJsonParser(CJsonParser *parser, const char *jsonContent, size_t
     parser->fileJson = false;
 }
 
-static void InitCJsonFileParser(CJsonParser *parser, const char *filePath)
+static void InitCJsonFileParser(CJsonParser* parser, const char* filePath)
 {
     char resolvedPath[PATH_MAX];
     int32_t ret = mmRealPath(filePath, resolvedPath, PATH_MAX);
@@ -73,7 +70,7 @@ static void InitCJsonFileParser(CJsonParser *parser, const char *filePath)
     if (ret != EN_OK) {
         return;
     }
-    mmFileHandle *fd = mmOpenFile(resolvedPath, FILE_READ);
+    mmFileHandle* fd = mmOpenFile(resolvedPath, FILE_READ);
     if (fd == NULL) {
         return;
     }
@@ -81,7 +78,7 @@ static void InitCJsonFileParser(CJsonParser *parser, const char *filePath)
     long contentLen = mmTellFile(fd);
     if ((contentLen > 0) && ((uint32_t)contentLen <= JSON_CONTANT_LEN_MAX)) {
         if (mmSeekFile(fd, 0, MM_SEEK_FILE_BEGIN) == EN_OK) {
-            char *jsonContent = (char *)mmMalloc((unsigned long long)contentLen);
+            char* jsonContent = (char*)mmMalloc((unsigned long long)contentLen);
             if (jsonContent == NULL) {
                 mmCloseFile(fd);
                 return;
@@ -97,46 +94,43 @@ static void InitCJsonFileParser(CJsonParser *parser, const char *filePath)
     return;
 }
 
-static void DeInitCJsonParser(CJsonParser *parser)
+static void DeInitCJsonParser(CJsonParser* parser)
 {
     if (parser->fileJson) {
-        (void)mmFree((void *)parser->jsonContent);
+        (void)mmFree((void*)parser->jsonContent);
         parser->jsonContent = NULL;
         parser->contentLen = 0;
     }
     InitCJsonParseZero(parser);
 }
 
-static inline bool CheckValidSpace(CJsonParser *parser, size_t space)
+static inline bool CheckValidSpace(CJsonParser* parser, size_t space)
 {
     return (space <= (parser->contentLen - parser->parserIndex));
 }
 
-static inline const char *ParseContent(CJsonParser *parser)
-{
-    return &parser->jsonContent[parser->parserIndex];
-}
+static inline const char* ParseContent(CJsonParser* parser) { return &parser->jsonContent[parser->parserIndex]; }
 
-static inline bool CheckCJsonKey(CJsonParser *parser, const char *key, size_t keyLen)
+static inline bool CheckCJsonKey(CJsonParser* parser, const char* key, size_t keyLen)
 {
     return CheckValidSpace(parser, keyLen) ? (strncmp(ParseContent(parser), key, keyLen) == 0) : false;
 }
 
-static inline bool CheckCJsonKeyChar(CJsonParser *parser, char key)
+static inline bool CheckCJsonKeyChar(CJsonParser* parser, char key)
 {
     return (CheckValidSpace(parser, 1) && (ParseContent(parser)[0] == key));
 }
 
-static inline void SkipUtf8Bom(CJsonParser *parser)
+static inline void SkipUtf8Bom(CJsonParser* parser)
 {
-    const char *bom = "\xEF\xBB\xBF";
+    const char* bom = "\xEF\xBB\xBF";
     const size_t bomlen = 3;
     if (CheckCJsonKey(parser, bom, bomlen)) {
         parser->parserIndex += bomlen;
     }
 }
 
-static inline void SkipWhiteSpace(CJsonParser *parser)
+static inline void SkipWhiteSpace(CJsonParser* parser)
 {
 #define MIN_VISIBLE_CHAR 33
     size_t index = parser->parserIndex;
@@ -146,7 +140,7 @@ static inline void SkipWhiteSpace(CJsonParser *parser)
     parser->parserIndex = index;
 }
 
-static inline bool ParseNullKey(CJsonParser *parser, CJsonObj *value)
+static inline bool ParseNullKey(CJsonParser* parser, CJsonObj* value)
 {
 #define KEY_NULL_LEN 4UL
     if (CheckCJsonKey(parser, "null", KEY_NULL_LEN)) {
@@ -159,7 +153,7 @@ static inline bool ParseNullKey(CJsonParser *parser, CJsonObj *value)
     return false;
 }
 
-static inline bool ParseTrueKey(CJsonParser *parser, CJsonObj *value)
+static inline bool ParseTrueKey(CJsonParser* parser, CJsonObj* value)
 {
 #define KEY_TRUE_LEN 4UL
     if (CheckCJsonKey(parser, "true", KEY_TRUE_LEN)) {
@@ -173,7 +167,7 @@ static inline bool ParseTrueKey(CJsonParser *parser, CJsonObj *value)
     return false;
 }
 
-static inline bool ParseFalseKey(CJsonParser *parser, CJsonObj *value)
+static inline bool ParseFalseKey(CJsonParser* parser, CJsonObj* value)
 {
 #define KEY_FALSE_LEN 5UL
     if (CheckCJsonKey(parser, "false", KEY_FALSE_LEN)) {
@@ -187,10 +181,10 @@ static inline bool ParseFalseKey(CJsonParser *parser, CJsonObj *value)
     return false;
 }
 
-static double StrTod(char *str, char **endPtr)
+static double StrTod(char* str, char** endPtr)
 {
 #define TEN 10
-    char *strIn = str;
+    char* strIn = str;
     int32_t sign = 1;
     double result = 0.0;
     int32_t decimalPoint = 0;
@@ -251,12 +245,12 @@ static double StrTod(char *str, char **endPtr)
     return sign * result;
 }
 
-static bool ParseNumber(CJsonParser *parser, CJsonObj *value)
+static bool ParseNumber(CJsonParser* parser, CJsonObj* value)
 {
 #define MAX_NUMBER_LEN 64U
     char numStr[MAX_NUMBER_LEN + 1] = "\0";
     size_t end = parser->contentLen - parser->parserIndex;
-    const char *data = &parser->jsonContent[parser->parserIndex];
+    const char* data = &parser->jsonContent[parser->parserIndex];
     size_t i;
     CJSON_TYPE type = CJSON_INT;
 
@@ -286,7 +280,7 @@ static bool ParseNumber(CJsonParser *parser, CJsonObj *value)
     }
 
     numStr[i] = '\0';
-    char *afterEnd = numStr;
+    char* afterEnd = numStr;
     int64_t iNumber = 0;
     double fNumber = 0;
     if (type == CJSON_INT) {
@@ -311,10 +305,10 @@ static bool ParseNumber(CJsonParser *parser, CJsonObj *value)
     return true;
 }
 
-static char *NewCStringByJsonString(CJsonString *jsonString)
+static char* NewCStringByJsonString(CJsonString* jsonString)
 {
     size_t validLen = jsonString->len - jsonString->escapeCharNum;
-    char *string = (char *)mmMalloc(validLen + 1);
+    char* string = (char*)mmMalloc(validLen + 1);
     if (string == NULL) {
         return NULL;
     }
@@ -330,8 +324,8 @@ static char *NewCStringByJsonString(CJsonString *jsonString)
     }
 
     size_t index = 0;
-    const char *endData = jsonString->data + jsonString->len;
-    for (const char *srcString = jsonString->data; (srcString < endData) && (index < validLen); srcString++, index++) {
+    const char* endData = jsonString->data + jsonString->len;
+    for (const char* srcString = jsonString->data; (srcString < endData) && (index < validLen); srcString++, index++) {
         if (*srcString != '\\') {
             string[index] = *(srcString);
             continue;
@@ -369,14 +363,14 @@ static char *NewCStringByJsonString(CJsonString *jsonString)
     return string;
 }
 
-static bool ParseCJsonString(CJsonParser *parser, CJsonString *string)
+static bool ParseCJsonString(CJsonParser* parser, CJsonString* string)
 {
     if (!CheckCJsonKeyChar(parser, '\"')) {
         return false;
     }
 
     size_t index = parser->parserIndex + 1;
-    const char *data = &parser->jsonContent[index];
+    const char* data = &parser->jsonContent[index];
     string->escapeCharNum = 0;
     while ((index < parser->contentLen) && (*data != '\"')) {
         if (*data == '\\') {
@@ -402,7 +396,7 @@ static bool ParseCJsonString(CJsonParser *parser, CJsonString *string)
     return true;
 }
 
-static bool ParseString(CJsonParser *parser, CJsonObj *value)
+static bool ParseString(CJsonParser* parser, CJsonObj* value)
 {
     CJsonString jsonString;
     if (!ParseCJsonString(parser, &jsonString)) {
@@ -420,22 +414,22 @@ static bool ParseString(CJsonParser *parser, CJsonObj *value)
     return true;
 }
 
-static int CJsonKeyCmp(void *a, void *b, void *appInfo)
+static int CJsonKeyCmp(void* a, void* b, void* appInfo)
 {
     (void)appInfo;
-    return strcmp(((CJsonKeyObj *)a)->key, ((CJsonKeyObj *)b)->key);
+    return strcmp(((CJsonKeyObj*)a)->key, ((CJsonKeyObj*)b)->key);
 }
 
-static inline CJsonObj *NewCJsonObj(void)
+static inline CJsonObj* NewCJsonObj(void)
 {
-    CJsonObj *obj = (CJsonObj *)mmMalloc(sizeof(CJsonObj));
+    CJsonObj* obj = (CJsonObj*)mmMalloc(sizeof(CJsonObj));
     if (obj != NULL) {
         obj->type = CJSON_NULL;
     }
     return obj;
 }
 
-static inline void DeInitCJsonObj(CJsonObj *obj)
+static inline void DeInitCJsonObj(CJsonObj* obj)
 {
     switch (obj->type) {
         case CJSON_STRING:
@@ -452,22 +446,22 @@ static inline void DeInitCJsonObj(CJsonObj *obj)
     }
 }
 
-void FreeCJsonObj(CJsonObj *obj)
+void FreeCJsonObj(CJsonObj* obj)
 {
     if (obj == NULL) {
         return;
     }
     DeInitCJsonObj(obj);
-    mmFree((void *)obj);
+    mmFree((void*)obj);
 }
 
-typedef bool (*PFN_ParseValue)(CJsonParser *parser, CJsonObj *value);
+typedef bool (*PFN_ParseValue)(CJsonParser* parser, CJsonObj* value);
 typedef struct {
     char key;
     PFN_ParseValue pfnParse;
 } KeyCharParsePair;
 
-static inline bool ParseKey(CJsonParser *parser, char **key)
+static inline bool ParseKey(CJsonParser* parser, char** key)
 {
     CJsonString jsonString;
     if (!ParseCJsonString(parser, &jsonString)) {
@@ -482,7 +476,7 @@ static inline bool ParseKey(CJsonParser *parser, char **key)
     return (*key != NULL);
 }
 
-static bool ParseSimpleValue(CJsonParser *parser, CJsonObj *value)
+static bool ParseSimpleValue(CJsonParser* parser, CJsonObj* value)
 {
     static PFN_ParseValue keyValueParse[] = {ParseNullKey, ParseTrueKey, ParseFalseKey, ParseNumber};
     static size_t count = sizeof(keyValueParse) / sizeof(keyValueParse[0]);
@@ -494,8 +488,8 @@ static bool ParseSimpleValue(CJsonParser *parser, CJsonObj *value)
     return false;
 }
 
-extern bool ParseCJsonObj(CJsonParser *parser, CJsonObj *value);
-static inline size_t ParseKeyValuePair(CJsonParser *parser, char **key, CJsonObj *obj)
+extern bool ParseCJsonObj(CJsonParser* parser, CJsonObj* value);
+static inline size_t ParseKeyValuePair(CJsonParser* parser, char** key, CJsonObj* obj)
 {
     // parse key
     if (!ParseKey(parser, key)) {
@@ -521,16 +515,16 @@ static inline size_t ParseKeyValuePair(CJsonParser *parser, char **key, CJsonObj
     return validJson ? valueIndex : 0;
 }
 
-static void DeInitCJsonKeyObj(void *item)
+static void DeInitCJsonKeyObj(void* item)
 {
-    CJsonKeyObj *obj = (CJsonKeyObj *)item;
+    CJsonKeyObj* obj = (CJsonKeyObj*)item;
     if (obj->key != NULL) {
         mmFree(obj->key);
         DeInitCJsonObj(&obj->value);
     }
 }
 
-static bool ParseObj(CJsonParser *parser, CJsonObj *value)
+static bool ParseObj(CJsonParser* parser, CJsonObj* value)
 {
     // skip {
     parser->parserIndex++;
@@ -585,16 +579,13 @@ static bool ParseObj(CJsonParser *parser, CJsonObj *value)
     return true;
 }
 
-static void DestroyCJsonArrayItem(void *item)
-{
-    DeInitCJsonObj((CJsonObj *)item);
-}
+static void DestroyCJsonArrayItem(void* item) { DeInitCJsonObj((CJsonObj*)item); }
 
-static bool ParseArray(CJsonParser *parser, CJsonObj *value)
+static bool ParseArray(CJsonParser* parser, CJsonObj* value)
 {
     parser->parserIndex++;
 
-    Vector *array = NULL;
+    Vector* array = NULL;
     if (value != NULL) {
         value->type = CJSON_ARRAY;
         array = &value->value.array;
@@ -644,7 +635,7 @@ static bool ParseArray(CJsonParser *parser, CJsonObj *value)
     return true;
 }
 
-static bool ParseStructValue(CJsonParser *parser, CJsonObj *value)
+static bool ParseStructValue(CJsonParser* parser, CJsonObj* value)
 {
     static KeyCharParsePair keyCharParsePair[] = {{'\"', ParseString}, {'{', ParseObj}, {'[', ParseArray}};
     static const size_t count = sizeof(keyCharParsePair) / sizeof(keyCharParsePair[0]);
@@ -656,7 +647,7 @@ static bool ParseStructValue(CJsonParser *parser, CJsonObj *value)
     return false;
 }
 
-bool ParseCJsonObj(CJsonParser *parser, CJsonObj *value)
+bool ParseCJsonObj(CJsonParser* parser, CJsonObj* value)
 {
     SkipWhiteSpace(parser);
     if (ParseSimpleValue(parser, value)) {
@@ -666,9 +657,9 @@ bool ParseCJsonObj(CJsonParser *parser, CJsonObj *value)
     return ParseStructValue(parser, value);
 }
 
-static CJsonObj *CJsonParseByParser(CJsonParser *parser)
+static CJsonObj* CJsonParseByParser(CJsonParser* parser)
 {
-    CJsonObj *obj = NewCJsonObj();
+    CJsonObj* obj = NewCJsonObj();
     if (obj == NULL) {
         return NULL;
     }
@@ -681,36 +672,36 @@ static CJsonObj *CJsonParseByParser(CJsonParser *parser)
     return obj;
 }
 
-CJsonObj *CJsonParse(const char *jsonContent, size_t jsonLen)
+CJsonObj* CJsonParse(const char* jsonContent, size_t jsonLen)
 {
     CJsonParser parser;
     InitCJsonParser(&parser, jsonContent, jsonLen);
     return CJsonParseByParser(&parser);
 }
 
-CJsonObj *CJsonFileParse(const char *filePath)
+CJsonObj* CJsonFileParse(const char* filePath)
 {
     CJsonParser parser;
     InitCJsonFileParser(&parser, filePath);
-    CJsonObj *jsonObj = CJsonParseByParser(&parser);
+    CJsonObj* jsonObj = CJsonParseByParser(&parser);
     DeInitCJsonParser(&parser);
     return jsonObj;
 }
 
-CJsonObj *GetCJsonSubObj(CJsonObj *obj, const char *key)
+CJsonObj* GetCJsonSubObj(CJsonObj* obj, const char* key)
 {
     if (obj->type != CJSON_OBJ) {
         return NULL;
     }
     CJsonKeyObj cmpKey = {(char*)key, {0}};
-    CJsonKeyObj *keyObj = (CJsonKeyObj *)SortVectorAtKey(&obj->value.objs, &cmpKey);
+    CJsonKeyObj* keyObj = (CJsonKeyObj*)SortVectorAtKey(&obj->value.objs, &cmpKey);
     if (keyObj == NULL) {
         return NULL;
     }
     return &keyObj->value;
 }
 
-static size_t ParseObjSubKeyPosition(CJsonParser *parser, const char *key, size_t *offset)
+static size_t ParseObjSubKeyPosition(CJsonParser* parser, const char* key, size_t* offset)
 {
     // skip {
     parser->parserIndex++;
@@ -728,7 +719,7 @@ static size_t ParseObjSubKeyPosition(CJsonParser *parser, const char *key, size_
             SkipWhiteSpace(parser);
         }
 
-        char *curkey = NULL;
+        char* curkey = NULL;
         size_t valueIndex = ParseKeyValuePair(parser, &curkey, NULL);
         if (valueIndex == 0) {
             return 0;
@@ -752,7 +743,7 @@ static size_t ParseObjSubKeyPosition(CJsonParser *parser, const char *key, size_
     return len;
 }
 
-static size_t ParseCJsonKeyObjPosition(CJsonParser *parser, const char *key, size_t *offset)
+static size_t ParseCJsonKeyObjPosition(CJsonParser* parser, const char* key, size_t* offset)
 {
     SkipUtf8Bom(parser);
     SkipWhiteSpace(parser);
@@ -763,16 +754,16 @@ static size_t ParseCJsonKeyObjPosition(CJsonParser *parser, const char *key, siz
     return ParseObjSubKeyPosition(parser, key, offset);
 }
 
-char *CJsonFileParseKey(const char *filePath, const char *key)
+char* CJsonFileParseKey(const char* filePath, const char* key)
 {
     CJsonParser parser;
     InitCJsonFileParser(&parser, filePath);
 
     size_t offset;
     size_t len = ParseCJsonKeyObjPosition(&parser, key, &offset);
-    char *value = NULL;
+    char* value = NULL;
     if (len > 0) {
-        value = (char *)mmMalloc(len + 1);
+        value = (char*)mmMalloc(len + 1);
         if (value != NULL) {
             errno_t ret = memcpy_s(value, len, parser.jsonContent + offset, len);
             if (ret != EOK) {
@@ -787,7 +778,7 @@ char *CJsonFileParseKey(const char *filePath, const char *key)
     return value;
 }
 
-size_t CJsonParseKeyPosition(const char *jsonContent, size_t jsonLen, const char *key, size_t *offset)
+size_t CJsonParseKeyPosition(const char* jsonContent, size_t jsonLen, const char* key, size_t* offset)
 {
     CJsonParser parser;
     InitCJsonParser(&parser, jsonContent, jsonLen);

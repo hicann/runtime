@@ -93,11 +93,11 @@ extern drvQosMgmt_t g_drvQosQueueMgmt[MAX_DEV_NUM][TS_TASK_CMD_QUEUE_PRIORITIES_
 extern drvReportQueue_t g_drvReportQueue[MAX_DEV_NUM];
 extern drvSem_t g_drvSem[MAX_DEV_NUM];
 
-drvError_t drvQosHandleToId(int32_t deviceId, int8_t *qos, int32_t *qid, const drvCommand_t * const cmd);
-drvError_t drvSetTaskCommand(int32_t device, int8_t qos, drvQosQueue_t *queue, drvQosMgmt_t *qMgmt);
+drvError_t drvQosHandleToId(int32_t deviceId, int8_t* qos, int32_t* qid, const drvCommand_t* const cmd);
+drvError_t drvSetTaskCommand(int32_t device, int8_t qos, drvQosQueue_t* queue, drvQosMgmt_t* qMgmt);
 drvError_t drvQueueInit(void);
 void drvReportIrqTrigger(drvInterruptNum_t irq);
-void drvSemWait(drvSem_t *sem);
+void drvSemWait(drvSem_t* sem);
 
 #ifdef __cplusplus
 }

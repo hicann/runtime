@@ -19,7 +19,7 @@ struct TimeoutWaitInfo {
     uint8_t isNeedProcess{false};
     uint16_t waitSqHead{0};
     uint32_t waitTaskSn{0};
-    uint16_t timeout{0};  //单位为s
+    uint16_t timeout{0}; // 单位为s
     std::chrono::steady_clock::time_point timeStamp{};
 };
 
@@ -29,29 +29,14 @@ public:
     ~TprtSqHandle();
     void Destructor();
     void TprtSetSqState(const TprtSqState_t status);
-    uint32_t SqPushTask(const uint8_t *sqeAddr, const uint32_t sqeNum);
-    uint32_t SqPeekTask(TprtSqe_t *sqe);
-    uint16_t SqGetSqHead() const
-    {
-        return sqHead_.load();
-    }
-    uint16_t SqGetSqTail() const
-    {
-        return sqTail_.load();
-    }
-    void SqSetSqTailToHead()
-    {
-        sqHead_.store(sqTail_.load());
-    }
-    void SqSetSqState(TprtSqState_t state)
-    {
-        sqState_.store(state);
-    }
-    TprtSqState_t SqGetSqState() const
-    {
-        return sqState_.load();
-    }
-    uint32_t SqExeTask(const TprtSqe_t *sqe);
+    uint32_t SqPushTask(const uint8_t* sqeAddr, const uint32_t sqeNum);
+    uint32_t SqPeekTask(TprtSqe_t* sqe);
+    uint16_t SqGetSqHead() const { return sqHead_.load(); }
+    uint16_t SqGetSqTail() const { return sqTail_.load(); }
+    void SqSetSqTailToHead() { sqHead_.store(sqTail_.load()); }
+    void SqSetSqState(TprtSqState_t state) { sqState_.store(state); }
+    TprtSqState_t SqGetSqState() const { return sqState_.load(); }
+    uint32_t SqExeTask(const TprtSqe_t* sqe);
     uint32_t SqGetCqeState() const
     {
         if (isExistCqe_) {
@@ -59,35 +44,27 @@ public:
         }
         return 0U;
     }
-    void SqSetCqeState(bool flag)
-    {
-        isExistCqe_ = flag;
-    }
-    uint32_t SqGetSqId() const
-    {
-        return sqId_;
-    }
+    void SqSetCqeState(bool flag) { isExistCqe_ = flag; }
+    uint32_t SqGetSqId() const { return sqId_; }
     void SqUpdateHead(const uint8_t sqeNum);
-    template<typename T>
+    template <typename T>
     void PrintTprtSqe(T const sqe, const size_t size = 64) const
     {
         if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 0) {
             return;
         }
-        const uint32_t * const cmd = TprtPtrToPtr<const uint32_t *>(sqe);
+        const uint32_t* const cmd = TprtPtrToPtr<const uint32_t*>(sqe);
         for (size_t i = 0UL; i < (size / sizeof(uint32_t)); i += 8U) {
-            TPRT_LOG(TPRT_LOG_DEBUG, "%08x %08x %08x %08x %08x %08x %08x %08x",
-                cmd[i], cmd[i + 1U], cmd[i + 2U], cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U],
-                cmd[i + 7U]);
+            TPRT_LOG(
+                TPRT_LOG_DEBUG, "%08x %08x %08x %08x %08x %08x %08x %08x", cmd[i], cmd[i + 1U], cmd[i + 2U],
+                cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U], cmd[i + 7U]);
         }
     }
-    const TimeoutWaitInfo& GetTimeoutWaitInfo() const 
-    { 
-        return waitInfo_; 
-    }
+    const TimeoutWaitInfo& GetTimeoutWaitInfo() const { return waitInfo_; }
     void SetTimeoutWaitInfo();
     uint32_t GetTaskTimeout(const TprtSqe_t* headTask) const;
-    std::shared_ptr<TprtSqHandle> GetSharedPtr() {
+    std::shared_ptr<TprtSqHandle> GetSharedPtr()
+    {
         if (myself == nullptr) {
             myself.reset(this);
         }
@@ -106,7 +83,7 @@ private:
     TimeoutWaitInfo waitInfo_;
     std::shared_ptr<TprtSqHandle> myself = nullptr;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 
 #endif

@@ -11,15 +11,15 @@
 #include "inc/tsd_message_parse_client.h"
 
 namespace tsd {
-    /**
-    * @ingroup hiaiengine
-    * @brief 静态函数，获取单例对象
-    * @param 无
-    * @return MessageParseClient的指针
-    */
-    MessageParseClient* MessageParseClient::GetInstance()
-    {
-        static MessageParseClient instance;
-        return &instance;
-    }
+/**
+ * @ingroup hiaiengine
+ * @brief 静态函数，获取单例对象
+ * @param 无
+ * @return MessageParseClient的指针
+ */
+MessageParseClient* MessageParseClient::GetInstance()
+{
+    static MessageParseClient instance;
+    return &instance;
 }
+} // namespace tsd

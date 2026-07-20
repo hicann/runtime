@@ -17,32 +17,29 @@
 #include "common/log_inner.h"
 
 namespace acl {
-    class AclProfilingManager final {
-    public:
-        static AclProfilingManager &GetInstance();
-        // init acl prof module
-        aclError Init();
-        // uninit acl prof module
-        aclError UnInit();
-        // acl profiling module is running or not
-        bool AclProfilingIsRun() const
-        {
-            return isProfiling_;
-        }
+class AclProfilingManager final {
+public:
+    static AclProfilingManager& GetInstance();
+    // init acl prof module
+    aclError Init();
+    // uninit acl prof module
+    aclError UnInit();
+    // acl profiling module is running or not
+    bool AclProfilingIsRun() const { return isProfiling_; }
 
-        // return flag of device list that needs report prof data is empty or not
-        bool IsDeviceListEmpty() const;
-        aclError AddDeviceList(const uint32_t *const deviceIdList, const uint32_t deviceNums);
-        aclError RemoveDeviceList(const uint32_t *const deviceIdList, const uint32_t deviceNums);
-        aclError RegisterProfilingType() const;
+    // return flag of device list that needs report prof data is empty or not
+    bool IsDeviceListEmpty() const;
+    aclError AddDeviceList(const uint32_t* const deviceIdList, const uint32_t deviceNums);
+    aclError RemoveDeviceList(const uint32_t* const deviceIdList, const uint32_t deviceNums);
+    aclError RegisterProfilingType() const;
 
-    private:
-        ~AclProfilingManager() = default;
-        AclProfilingManager() = default;
-        bool isProfiling_ = false;
-        std::mutex mutex_;
-        std::unordered_set<uint32_t> deviceList_;
-    };
+private:
+    ~AclProfilingManager() = default;
+    AclProfilingManager() = default;
+    bool isProfiling_ = false;
+    std::mutex mutex_;
+    std::unordered_set<uint32_t> deviceList_;
+};
 
-} // namespace acl/ ACL_PROFILING_MANAGER_H_
+} // namespace acl
 #endif // ACL_PROFILING_MANAGER_H_

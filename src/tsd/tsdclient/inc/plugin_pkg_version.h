@@ -34,23 +34,23 @@ struct PluginPkgVersion {
 class PluginPkgVersionUtil {
 public:
     // 根据插件包文件名 (cann-xxx-compat.tar.gz) 得到对应ini配置文件名 (cann-xxx-compat.ini)
-    static std::string GetIniNameByPkgName(const std::string &pkgName);
+    static std::string GetIniNameByPkgName(const std::string& pkgName);
 
     // 从一行配置 (key=value) 中提取key 与 value，成功返回 true
-    static bool ParseLine(const std::string &line, std::string &key, std::string &value);
+    static bool ParseLine(const std::string& line, std::string& key, std::string& value);
 
     // 解析 .ini 文件得到 version / timestamp
-    static bool ParseIniFile(const std::string &iniPath, PluginPkgVersion &info);
+    static bool ParseIniFile(const std::string& iniPath, PluginPkgVersion& info);
 
     // 比较两个版本号，按 '.' 分割逐段数值比较
     // 返回 -1 表示 a < b, 0 表示 ==, 1 表示 a > b
-    static int32_t CompareVersion(const std::string &versionA, const std::string &versionB);
+    static int32_t CompareVersion(const std::string& versionA, const std::string& versionB);
 
     // 比较两个时间戳，简单字典序比较 (时间戳格式 YYYYMMDD_HHMMSSXXX 单调)
-    static int32_t CompareTimestamp(const std::string &timestampA, const std::string &timestampB);
+    static int32_t CompareTimestamp(const std::string& timestampA, const std::string& timestampB);
 
     // 综合 version + timestamp 比较，version 优先
-    static int32_t Compare(const PluginPkgVersion &a, const PluginPkgVersion &b);
+    static int32_t Compare(const PluginPkgVersion& a, const PluginPkgVersion& b);
 };
 
 } // namespace tsd

@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-aclError aclrtProfTraceImpl(void *userdata, int32_t length, aclrtStream stream)
+aclError aclrtProfTraceImpl(void* userdata, int32_t length, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtProfTrace);
     ACL_LOG_INFO("start to execute AclrtProfTrace, length is [%d]", length);

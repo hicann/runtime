@@ -13,21 +13,16 @@
 #include <string.h>
 #include <string>
 #include <vector>
-#include<memory>
+#include <memory>
 
 #include "acl/acl_tdt.h"
 
-enum datasetMemType {
-    MEM_UNKNOWN = 0,
-    MEM_HOST,
-    MEM_DEVICE
-};
+enum datasetMemType { MEM_UNKNOWN = 0, MEM_HOST, MEM_DEVICE };
 
 struct acltdtDataItem {
-    acltdtDataItem(acltdtTensorType tdtType,
-        const int64_t *dims, size_t dimNum, const std::string &dimsStr,
-        aclDataType type, const std::string &typeStr,
-        std::shared_ptr<void> tensorData, size_t size)
+    acltdtDataItem(
+        acltdtTensorType tdtType, const int64_t* dims, size_t dimNum, const std::string& dimsStr, aclDataType type,
+        const std::string& typeStr, std::shared_ptr<void> tensorData, size_t size)
     {
         this->tdtType = tdtType;
         for (size_t i = 0; i < dimNum; ++i) {
@@ -51,13 +46,13 @@ struct acltdtDataItem {
     std::string dataTypeStr;
     size_t dataLen;
     std::shared_ptr<void> dataPtr;
-    void *priorityData_; // this addr can not be free because it is passed by outside
+    void* priorityData_; // this addr can not be free because it is passed by outside
     uint16_t sliceNum;
     uint16_t sliceId;
 };
 
 struct acltdtDataset {
-    acltdtDataset()  : freeSelf(false) {};
+    acltdtDataset() : freeSelf(false){};
     ~acltdtDataset()
     {
         if (freeSelf) {
@@ -67,7 +62,7 @@ struct acltdtDataset {
         }
     }
     std::string name;
-    std::vector<acltdtDataItem *> blobs;
+    std::vector<acltdtDataItem*> blobs;
     datasetMemType memType = MEM_UNKNOWN;
     bool freeSelf;
     // mem reuse for performance optimization, used in acltdtReceiveTensor process
@@ -76,7 +71,7 @@ struct acltdtDataset {
 };
 
 struct acltdtChannelHandle {
-    acltdtChannelHandle(uint32_t deviceId, const char *channelName)
+    acltdtChannelHandle(uint32_t deviceId, const char* channelName)
     {
         devId = deviceId;
         isTdtProcess = true;
@@ -100,13 +95,12 @@ struct acltdtChannelHandle {
 };
 
 namespace acl {
-    constexpr size_t RESERVED_SIZE = 24U;
-    aclError acltdtSendTensorV2(const acltdtChannelHandle *handle, const acltdtDataset *dataset, int32_t timeout);
+constexpr size_t RESERVED_SIZE = 24U;
+aclError acltdtSendTensorV2(const acltdtChannelHandle* handle, const acltdtDataset* dataset, int32_t timeout);
 
-    aclError acltdtReceiveTensorV2(const acltdtChannelHandle *handle, acltdtDataset *dataset, int32_t timeout);
+aclError acltdtReceiveTensorV2(const acltdtChannelHandle* handle, acltdtDataset* dataset, int32_t timeout);
 
-    aclError GetOrMallocHostMem(const acltdtChannelHandle *handle, acltdtDataset *dataset,
-        size_t bufLen, void *&hostPtr);
+aclError GetOrMallocHostMem(const acltdtChannelHandle* handle, acltdtDataset* dataset, size_t bufLen, void*& hostPtr);
 
 #pragma pack(push, 1)
 struct ItemInfo {
@@ -128,7 +122,7 @@ struct aclTdtDataItemInfo {
     ItemInfo ctrlInfo;
     std::vector<int64_t> dims;
     std::shared_ptr<void> dataPtr;
-    void *priorityDataPtr_ = nullptr;
+    void* priorityDataPtr_ = nullptr;
 };
-}
+} // namespace acl
 #endif // ACL_TENSOR_DATA_TRANSFER_H

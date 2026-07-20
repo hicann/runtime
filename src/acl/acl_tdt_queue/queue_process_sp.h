@@ -18,38 +18,37 @@
 namespace acl {
 class QueueProcessorSp : public QueueProcessor {
 public:
-    aclError acltdtCreateQueue(const acltdtQueueAttr *const attr, uint32_t *const qid) override;
+    aclError acltdtCreateQueue(const acltdtQueueAttr* const attr, uint32_t* const qid) override;
 
     aclError acltdtDestroyQueue(const uint32_t qid) override;
 
-    aclError acltdtGrantQueue(const uint32_t qid, const int32_t pid, const uint32_t permission,
-        const int32_t timeout) override;
+    aclError acltdtGrantQueue(
+        const uint32_t qid, const int32_t pid, const uint32_t permission, const int32_t timeout) override;
 
-    aclError acltdtAttachQueue(const uint32_t qid, const int32_t timeout,
-        uint32_t *const permission) override;
+    aclError acltdtAttachQueue(const uint32_t qid, const int32_t timeout, uint32_t* const permission) override;
 
-    aclError acltdtBindQueueRoutes(acltdtQueueRouteList *const qRouteList) override;
+    aclError acltdtBindQueueRoutes(acltdtQueueRouteList* const qRouteList) override;
 
-    aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList *const qRouteList) override;
+    aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList* const qRouteList) override;
 
     aclError GrantQueue2Cp(const int32_t deviceId, const uint32_t qid) const;
 
-    aclError acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *const queryInfo,
-                                    acltdtQueueRouteList *const qRouteList) override;
+    aclError acltdtQueryQueueRoutes(
+        const acltdtQueueRouteQueryInfo* const queryInfo, acltdtQueueRouteList* const qRouteList) override;
 
-    aclError acltdtAllocBuf(const size_t size, const uint32_t type, acltdtBuf *const buf) override;
+    aclError acltdtAllocBuf(const size_t size, const uint32_t type, acltdtBuf* const buf) override;
 
     QueueProcessorSp() = default;
     ~QueueProcessorSp() override = default;
 
     // not allow copy constructor and assignment operators
-    QueueProcessorSp(const QueueProcessorSp &) = delete;
+    QueueProcessorSp(const QueueProcessorSp&) = delete;
 
-    QueueProcessorSp &operator=(const QueueProcessorSp &) = delete;
+    QueueProcessorSp& operator=(const QueueProcessorSp&) = delete;
 
-    QueueProcessorSp(QueueProcessorSp &&) = delete;
+    QueueProcessorSp(QueueProcessorSp&&) = delete;
 
-    QueueProcessorSp &&operator=(QueueProcessorSp &&) = delete;
+    QueueProcessorSp&& operator=(QueueProcessorSp&&) = delete;
 };
-}
+} // namespace acl
 #endif // QUEUE_PROCESS_SP_H

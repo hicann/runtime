@@ -14,19 +14,22 @@
 extern "C" {
 #endif
 typedef struct CSingleListNode {
-    struct CSingleListNode *next;
+    struct CSingleListNode* next;
 } CSingleListNode;
 
 typedef struct {
-    CSingleListNode *head;
-    CSingleListNode *tail;
+    CSingleListNode* head;
+    CSingleListNode* tail;
 } CSingleList;
 
 /**
  * You can use this macro to initialize the linked list while defining it,
  *  or use the function InitCSingleList to initialize it before use
  */
-#define CSINGLE_LIST_INIT {NULL, NULL}
+#define CSINGLE_LIST_INIT \
+    {                     \
+        NULL, NULL        \
+    }
 #define CSingleListNext(curNode) ((curNode) != NULL) ? (curNode)->next : NULL
 
 /**
@@ -38,23 +41,17 @@ typedef struct {
     for ((curNode) = (list)->head, (nextNode) = CSingleListNext(curNode); (curNode) != NULL; \
          (curNode) = (nextNode), (nextNode) = CSingleListNext(nextNode))
 
-static inline void InitCSingleList(CSingleList *list)
+static inline void InitCSingleList(CSingleList* list)
 {
     list->head = NULL;
     list->tail = NULL;
 }
 
-static inline bool IsSingleListEmpty(CSingleList *list)
-{
-    return list->head == NULL;
-}
+static inline bool IsSingleListEmpty(CSingleList* list) { return list->head == NULL; }
 
-static inline CSingleListNode* GetSingleListHead(CSingleList *list)
-{
-    return list->head;
-}
+static inline CSingleListNode* GetSingleListHead(CSingleList* list) { return list->head; }
 
-static inline void InsertCSingleListHead(CSingleList *list, CSingleListNode *insertNode)
+static inline void InsertCSingleListHead(CSingleList* list, CSingleListNode* insertNode)
 {
     insertNode->next = list->head;
     list->head = insertNode;
@@ -63,7 +60,7 @@ static inline void InsertCSingleListHead(CSingleList *list, CSingleListNode *ins
     }
 }
 
-static inline void InsertCSingleListTail(CSingleList *list, CSingleListNode *insertNode)
+static inline void InsertCSingleListTail(CSingleList* list, CSingleListNode* insertNode)
 {
     insertNode->next = NULL;
     if (list->tail == NULL) {
@@ -74,7 +71,7 @@ static inline void InsertCSingleListTail(CSingleList *list, CSingleListNode *ins
     list->tail = insertNode;
 }
 
-static inline void InsertCSingleList(CSingleList *list, CSingleListNode *listNode, CSingleListNode *insertNode)
+static inline void InsertCSingleList(CSingleList* list, CSingleListNode* listNode, CSingleListNode* insertNode)
 {
     insertNode->next = listNode->next;
     listNode->next = insertNode;
@@ -83,12 +80,13 @@ static inline void InsertCSingleList(CSingleList *list, CSingleListNode *listNod
     }
 }
 
-static inline void RemoveCSingleListNode(CSingleList *list, CSingleListNode *listNode)
+static inline void RemoveCSingleListNode(CSingleList* list, CSingleListNode* listNode)
 {
-    CSingleListNode *curNode;
-    CSingleListNode *nextNode;
-    CSingleListNode *preNode = NULL;
-    CSingleListForEach(list, curNode, nextNode) {
+    CSingleListNode* curNode;
+    CSingleListNode* nextNode;
+    CSingleListNode* preNode = NULL;
+    CSingleListForEach(list, curNode, nextNode)
+    {
         if (curNode != listNode) {
             preNode = curNode;
             continue;
@@ -108,15 +106,9 @@ static inline void RemoveCSingleListNode(CSingleList *list, CSingleListNode *lis
     }
 }
 
-static inline void RemoveCSingleListHead(CSingleList *list)
-{
-    RemoveCSingleListNode(list, list->head);
-}
+static inline void RemoveCSingleListHead(CSingleList* list) { RemoveCSingleListNode(list, list->head); }
 
-static inline void RemoveCSingleListTail(CSingleList *list)
-{
-    RemoveCSingleListNode(list, list->tail);
-}
+static inline void RemoveCSingleListTail(CSingleList* list) { RemoveCSingleListNode(list, list->tail); }
 #ifdef __cplusplus
 }
 #endif

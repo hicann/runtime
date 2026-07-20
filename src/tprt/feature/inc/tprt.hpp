@@ -18,7 +18,7 @@ namespace tprt {
 
 class TprtManage {
 public:
-    static TprtManage *Instance()
+    static TprtManage* Instance()
     {
         // tprt_:The caller controls the application to ensure that the destructor is released.
         return tprt_;
@@ -26,44 +26,29 @@ public:
     TprtManage();
     ~TprtManage();
 
-    void TprtInitCfg(const TprtCfgInfo_t *cfg);
-    uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *cfg);
+    void TprtInitCfg(const TprtCfgInfo_t* cfg);
+    uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t* cfg);
     uint32_t TprtDeviceClose(const uint32_t devId);
-    TprtDevice *GetDeviceByDevId(const uint32_t devId);
+    TprtDevice* GetDeviceByDevId(const uint32_t devId);
     void TprtDeleteDeviceByDevId(const uint32_t devId);
-	uint32_t TprtGetSqMaxDepth() const
-    {
-        return sqcqMaxDepth_;
-    }
-    uint32_t TprtGetSqCqMaxNum() const
-    {
-        return sqcqMaxNum_;
-    }
-    uint32_t TprtGetDefaultExeTimeout() const
-    {
-        return defaultExeTimeout_;
-    }
+    uint32_t TprtGetSqMaxDepth() const { return sqcqMaxDepth_; }
+    uint32_t TprtGetSqCqMaxNum() const { return sqcqMaxNum_; }
+    uint32_t TprtGetDefaultExeTimeout() const { return defaultExeTimeout_; }
     bool IsQueueFull(const uint16_t head, const uint16_t tail, const uint32_t allocNum) const;
-    bool getTprtTaskReportEnable()
-    {
-        return TprtTaskReportEnable_;
-    }
-    void setTprtTaskReportEnable(bool enable)
-    {
-        TprtTaskReportEnable_ = enable;
-    }
-    static TprtManage *tprt_;
+    bool getTprtTaskReportEnable() { return TprtTaskReportEnable_; }
+    void setTprtTaskReportEnable(bool enable) { TprtTaskReportEnable_ = enable; }
+    static TprtManage* tprt_;
 
 private:
     uint32_t sqcqMaxNum_{0U};
     uint32_t sqcqMaxDepth_{0U};
-    uint32_t timeoutMonitorUint_{0U};  // unit:ms
-    uint32_t defaultExeTimeout_{0U};  // unit:ms
+    uint32_t timeoutMonitorUint_{0U};                     // unit:ms
+    uint32_t defaultExeTimeout_{0U};                      // unit:ms
     std::mutex deviceIdToDeviceMapLock_;
-    std::unordered_map<uint32_t, TprtDevice *> deviceMap_;      // key is deviceId, value is device
+    std::unordered_map<uint32_t, TprtDevice*> deviceMap_; // key is deviceId, value is device
     bool TprtTaskReportEnable_ = false;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 
 #endif

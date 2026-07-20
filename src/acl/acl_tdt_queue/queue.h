@@ -35,6 +35,6 @@ struct acltdtQueueRoute {
     int32_t status;
 };
 namespace acl {
-    aclError CheckQueueRouteQueryInfo(const acltdtQueueRouteQueryInfo *const queryInfo);
+aclError CheckQueueRouteQueryInfo(const acltdtQueueRouteQueryInfo* const queryInfo);
 }
 #endif // ACL_QUEUE_H

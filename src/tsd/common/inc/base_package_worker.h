@@ -20,7 +20,6 @@
 #include "tsd_log.h"
 #include "tsd_util_func.h"
 
-
 namespace tsd {
 using TimePoint = std::chrono::high_resolution_clock::time_point;
 
@@ -28,8 +27,8 @@ struct PackageWorkerParas {
     uint32_t deviceId;
     uint32_t vfId;
 
-    PackageWorkerParas() : deviceId(0U), vfId(0U) {};
-    PackageWorkerParas(const uint32_t devId, const uint32_t vfid) : deviceId(devId), vfId(vfid) {};
+    PackageWorkerParas() : deviceId(0U), vfId(0U){};
+    PackageWorkerParas(const uint32_t devId, const uint32_t vfid) : deviceId(devId), vfId(vfid){};
 
     std::string DebugString() const
     {
@@ -37,25 +36,31 @@ struct PackageWorkerParas {
         oss << "Package worker parameters, "
             << "deviceId=" << deviceId << ", "
             << "vfId=" << vfId;
- 
+
         return oss.str();
     }
 };
- 
+
 class BasePackageWorker {
 public:
-    explicit BasePackageWorker(const PackageWorkerParas paras) : deviceId_(paras.deviceId), vfId_(paras.vfId),
-                                                                 uniqueVfId_(CalcUniqueVfId(paras.deviceId, paras.vfId)),
-                                                                 originPackagePath_(), decomPackagePath_(),
-                                                                 packageMtx_(), isVfMode_(false), isAsanMode_(false),
-                                                                 originPackageSize_(0UL), checkCode_(0UL),
-                                                                 decompressTime_()
+    explicit BasePackageWorker(const PackageWorkerParas paras)
+        : deviceId_(paras.deviceId),
+          vfId_(paras.vfId),
+          uniqueVfId_(CalcUniqueVfId(paras.deviceId, paras.vfId)),
+          originPackagePath_(),
+          decomPackagePath_(),
+          packageMtx_(),
+          isVfMode_(false),
+          isAsanMode_(false),
+          originPackageSize_(0UL),
+          checkCode_(0UL),
+          decompressTime_()
     {
         isVfMode_ = IsCurrentVfMode(deviceId_, vfId_);
     };
-    virtual ~BasePackageWorker() {};
+    virtual ~BasePackageWorker(){};
 
-    virtual TSD_StatusT LoadPackage(const std::string &packagePath, const std::string &packageName) = 0;
+    virtual TSD_StatusT LoadPackage(const std::string& packagePath, const std::string& packageName) = 0;
     virtual TSD_StatusT UnloadPackage() = 0;
     virtual uint64_t GetPackageCheckCode();
 
@@ -79,10 +84,10 @@ protected:
         std::string name;
         std::string realPath;
 
-        PackagePath() : path(""), name(""), realPath("") {};
-        PackagePath(const std::string &packagePath, const std::string &packageName) : path(packagePath),
-                                                                                      name(packageName),
-                                                                                      realPath("") {
+        PackagePath() : path(""), name(""), realPath(""){};
+        PackagePath(const std::string& packagePath, const std::string& packageName)
+            : path(packagePath), name(packageName), realPath("")
+        {
             if (path.back() != '/') {
                 path.append("/");
             }
@@ -99,8 +104,8 @@ protected:
         }
     };
 
-    virtual void PreProcessPackage(const std::string &packagePath, const std::string &packageName);
-    void DefaultPreProcessPackage(const std::string &packagePath, const std::string &packageName);
+    virtual void PreProcessPackage(const std::string& packagePath, const std::string& packageName);
+    void DefaultPreProcessPackage(const std::string& packagePath, const std::string& packageName);
     virtual void SetDecompressPackagePath() = 0;
     virtual bool IsNeedLoadPackage();
     virtual TSD_StatusT MoveOriginPackageToDecompressDir() const;
@@ -112,15 +117,9 @@ protected:
     void DefaultClear();
     virtual bool IsNeedUnloadPackage();
 
-    inline uint64_t GetCheckCode() const
-    {
-        return checkCode_;
-    }
+    inline uint64_t GetCheckCode() const { return checkCode_; }
 
-    inline TimePoint GetDecompressTime() const
-    {
-        return decompressTime_;
-    }
+    inline TimePoint GetDecompressTime() const { return decompressTime_; }
 
     inline void SetCheckCode(const uint64_t checkCode)
     {
@@ -136,12 +135,9 @@ protected:
         return;
     }
 
-    inline uint64_t GetOriginPackageSize() const
-    {
-        return originPackageSize_;
-    }
+    inline uint64_t GetOriginPackageSize() const { return originPackageSize_; }
 
-    inline void SetOriginPackagePath(const std::string &path, const std::string &fileName)
+    inline void SetOriginPackagePath(const std::string& path, const std::string& fileName)
     {
         originPackagePath_ = PackagePath(path, fileName);
 
@@ -155,21 +151,15 @@ protected:
         return;
     }
 
-    inline bool IsVfMode() const
-    {
-        return isVfMode_;
-    }
+    inline bool IsVfMode() const { return isVfMode_; }
 
-    inline bool IsAsanMode() const
-    {
-        return isAsanMode_;
-    }
+    inline bool IsAsanMode() const { return isAsanMode_; }
 
     const uint32_t deviceId_;
     const uint32_t vfId_;
     const uint32_t uniqueVfId_;
     PackagePath originPackagePath_; // Path where the package is first uploaded to the device, mostly is the hdcd dir.
-    PackagePath decomPackagePath_; // Path where the package is move to and wait for decompress.
+    PackagePath decomPackagePath_;  // Path where the package is move to and wait for decompress.
     std::mutex packageMtx_;
 
 private:

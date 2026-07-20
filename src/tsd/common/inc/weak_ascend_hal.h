@@ -14,11 +14,12 @@
 #include "driver/ascend_inpackage_hal.h"
 
 extern "C" {
-int __attribute__((weak)) halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num);
-DLLEXPORT __attribute__((weak)) drvError_t drvHdcSendFileV2(int peer_node, int peer_devid, const char *file,
-    const char *dst_path, void (*progress_notifier)(struct drvHdcProgInfo *));
-DLLEXPORT __attribute__((weak)) drvError_t drvHdcGetTrustedBasePathV2(int peer_node, int peer_devid, char *base_path,
-    unsigned int path_len);
-drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char *socVersion, uint32_t len);
+int __attribute__((weak)) halGetDeviceVfMax(unsigned int devId, unsigned int* vf_max_num);
+DLLEXPORT __attribute__((weak)) drvError_t drvHdcSendFileV2(
+    int peer_node, int peer_devid, const char* file, const char* dst_path,
+    void (*progress_notifier)(struct drvHdcProgInfo*));
+DLLEXPORT __attribute__((weak)) drvError_t drvHdcGetTrustedBasePathV2(
+    int peer_node, int peer_devid, char* base_path, unsigned int path_len);
+drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char* socVersion, uint32_t len);
 }
-#endif  // TSD_WEAK_ASCEND_HAL_H
+#endif // TSD_WEAK_ASCEND_HAL_H

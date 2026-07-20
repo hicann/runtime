@@ -18,8 +18,8 @@ extern "C" {
 #endif
 
 // for mem link
-#define RT_MEM_LINK_IDX_0 0U     // SIO
-#define RT_MEM_LINK_IDX_1 1U     // HCCS
+#define RT_MEM_LINK_IDX_0 0U // SIO
+#define RT_MEM_LINK_IDX_1 1U // HCCS
 
 typedef struct {
     uint32_t side;
@@ -29,7 +29,7 @@ typedef struct {
     uint64_t reserve;
 } rtMemPoolProps;
 
-typedef void *rtMemPool_t;
+typedef void* rtMemPool_t;
 
 typedef enum rtMemPoolAttr {
     rtMemPoolReuseFollowEventDependencies = 0x1,
@@ -83,7 +83,7 @@ typedef enum rtMemManagedLocationType {
     rtMemLocationTypeHostNumaCurrent
 } rtMemManagedLocationType;
 
-typedef struct rtMemManagedLocation{
+typedef struct rtMemManagedLocation {
     rtMemManagedLocationType type;
     int32_t id;
 } rtMemManagedLocation;
@@ -94,61 +94,61 @@ typedef struct {
 } rtHandleAttr;
 
 typedef enum rtMemLinkType {
-    RT_MEM_ACCESS_LINK_SIO = 0, // only support A3
-    RT_MEM_ACCESS_LINK_HCCS = 1, // only support A3
-    RT_MEM_ACCESS_UB_ONE_PORT_PATH = 2, // only support A5
+    RT_MEM_ACCESS_LINK_SIO = 0,           // only support A3
+    RT_MEM_ACCESS_LINK_HCCS = 1,          // only support A3
+    RT_MEM_ACCESS_UB_ONE_PORT_PATH = 2,   // only support A5
     RT_MEM_ACCESS_UB_MULTI_PORT_PATH = 3, // only support A5
     RT_MEM_ACCESS_LINK_MAX
 } rtMemLinkType;
 
 typedef enum tagRtIpcMemAttr {
-    RT_IPC_MEM_ATTR_SIO = 0, // only support A3
-    RT_IPC_MEM_ATTR_HCCS = 1, // only support A3
-    RT_IPC_MEM_ATTR_UB_ONE_PORT_PATH = 2, // only support A5
+    RT_IPC_MEM_ATTR_SIO = 0,                // only support A3
+    RT_IPC_MEM_ATTR_HCCS = 1,               // only support A3
+    RT_IPC_MEM_ATTR_UB_ONE_PORT_PATH = 2,   // only support A5
     RT_IPC_MEM_ATTR_UB_MULTI_PORT_PATH = 3, // only support A5
     RT_IPC_MEM_ATTR_MAX
 } rtIpcMemAttr;
 
 /**
-* @ingroup rt_mem
-* @brief Create new memory pool.
-* @param [IN] poolProps The memory pool parameters.
-* @param [OUT] memPool Pointer to memory pool handle.
-* @return RT_ERROR_NONE for ok
-* @return RT_ERROR_INVALID_VALUE for error input
-*/
-RTS_API rtError_t rtMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps);
+ * @ingroup rt_mem
+ * @brief Create new memory pool.
+ * @param [IN] poolProps The memory pool parameters.
+ * @param [OUT] memPool Pointer to memory pool handle.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProps* poolProps);
 
 /**
-* @ingroup rt_mem
-* @brief Destroy the memory pool.
-* @param [IN] memPool Virtual mem pool handle.
-* @return RT_ERROR_NONE for ok
-* @return RT_ERROR_INVALID_VALUE for error input
-*/
+ * @ingroup rt_mem
+ * @brief Destroy the memory pool.
+ * @param [IN] memPool Virtual mem pool handle.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
 RTS_API rtError_t rtMemPoolDestroy(rtMemPool_t const memPool);
 
 /**
-* @ingroup rt_mem
-* @brief Set specific attributes of the memory pool.
-* @param [IN] memPool Virtual mem pool handle.
-* @param [IN] attr The Memory pool attribute to be modified.
-* @param [IN] value The value to be modified.
-* @return RT_ERROR_NONE for ok
-* @return RT_ERROR_INVALID_VALUE for error input
-*/
-RTS_API rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
+ * @ingroup rt_mem
+ * @brief Set specific attributes of the memory pool.
+ * @param [IN] memPool Virtual mem pool handle.
+ * @param [IN] attr The Memory pool attribute to be modified.
+ * @param [IN] value The value to be modified.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value);
 
 /**
-* @ingroup rt_mem
-* @brief Get specific attributes of the memory pool.
-* @param [IN] memPool Virtual mem pool handle.
-* @param [IN] attr The Memory pool attribute to be obtained.
-* @param [OUT] value The value to be obtained.
-* @return RT_ERROR_NONE for ok
-* @return RT_ERROR_INVALID_VALUE for error input
-*/
-RTS_API rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
+ * @ingroup rt_mem
+ * @brief Get specific attributes of the memory pool.
+ * @param [IN] memPool Virtual mem pool handle.
+ * @param [IN] attr The Memory pool attribute to be obtained.
+ * @param [OUT] value The value to be obtained.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value);
 
 /**
  * @ingroup dvrt_mem
@@ -160,7 +160,7 @@ RTS_API rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
+RTS_API rtError_t rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize);
 
 /**
  * @ingroup dvrt_mem
@@ -172,20 +172,21 @@ RTS_API rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtMemPrefetchToDevice(void *devPtr, uint64_t len, int32_t devId);
+RTS_API rtError_t rtMemPrefetchToDevice(void* devPtr, uint64_t len, int32_t devId);
 
 /**
-* @ingroup rt_mem
-* @brief Allocating memory from memory pool asynchronously.
-* @param [OUT] ptr The pointer pointing to the memory to be allocated.
-* @param [IN] size The size of memory to be allocated.
-* @param [IN] memPoolId Id of the target memory pool.
-* @param [IN] stm The stream to perform memory allocation task.
-* @return RT_ERROR_NONE for ok
-* @return RT_ERROR_INVALID_VALUE for error input
-*/
-RTS_API rtError_t rtMemPoolMallocAsync(void **ptr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm);
- 
+ * @ingroup rt_mem
+ * @brief Allocating memory from memory pool asynchronously.
+ * @param [OUT] ptr The pointer pointing to the memory to be allocated.
+ * @param [IN] size The size of memory to be allocated.
+ * @param [IN] memPoolId Id of the target memory pool.
+ * @param [IN] stm The stream to perform memory allocation task.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t
+rtMemPoolMallocAsync(void** ptr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm);
+
 /**
  * @ingroup rt_mem
  * @brief Free memory from memory pool asynchronously.
@@ -206,7 +207,8 @@ RTS_API rtError_t rtMemPoolFreeAsync(void* ptr, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return others for error
  */
-RTS_API rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location);
+RTS_API rtError_t
+rtMemManagedAdvise(const void* const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location);
 
 /**
  * @ingroup dvrt_mem
@@ -215,11 +217,12 @@ RTS_API rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint1
  * @param [in] ptr          memory pointer
  * @param [in] size         memory size
  * @param [out] data        the result of the query
- * @param [in] dataSize     the size of the buffer where the query result are stored  
+ * @param [in] dataSize     the size of the buffer where the query result are stored
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize);
+RTS_API rtError_t
+rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void* ptr, size_t size, void* data, size_t dataSize);
 
 /**
  * @ingroup dvrt_mem
@@ -233,8 +236,9 @@ RTS_API rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, cons
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                      size_t size, void **data, size_t *dataSizes);
+RTS_API rtError_t rtMemManagedGetAttrs(
+    rtMemManagedRangeAttribute* attributes, size_t numAttributes, const void* ptr, size_t size, void** data,
+    size_t* dataSizes);
 
 /**
  * @ingroup rts_mem
@@ -247,7 +251,7 @@ RTS_API rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, s
 RTS_API rtError_t rtMemPoolTrimTo(rtMemPool_t memPool, uint64_t minBytesToKeep);
 
 /**
-* @ingroup rt_mem
+ * @ingroup rt_mem
  * @brief Asynchronous prefetch memory to the specified destination device.
  * @param [in] ptr      UVM(unified virtual memory) address which will be prefetched.
  * @param [in] size     size of memory in bytes.
@@ -257,8 +261,8 @@ RTS_API rtError_t rtMemPoolTrimTo(rtMemPool_t memPool, uint64_t minBytesToKeep);
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemManagedPrefetchAsync(const void* ptr, size_t size, rtMemManagedLocation location,
-    uint32_t flags, rtStream_t stream);
+RTS_API rtError_t rtMemManagedPrefetchAsync(
+    const void* ptr, size_t size, rtMemManagedLocation location, uint32_t flags, rtStream_t stream);
 
 /**
  * @ingroup rt_mem
@@ -269,18 +273,19 @@ RTS_API rtError_t rtMemManagedPrefetchAsync(const void* ptr, size_t size, rtMemM
  * @param [in] prefetchLocs    array of destination physics memory location to prefetch to.
  * @param [in] prefetchLocIdxs index array mapping prefetchLocs elements to a range of prefetch operations:
                                prefetchLocs[k] applies to operations from prefetchLocIdxs[k] to prefetchLocIdxs[k+1]-1;
-                               prefetchLocs[numPrefetchLocs - 1] applies from prefetchLocIdxs[numPrefetchLocs-1] to count-1.
+                               prefetchLocs[numPrefetchLocs - 1] applies from prefetchLocIdxs[numPrefetchLocs-1] to
+ count-1.
  * @param [in] numPrefetchLocs size of prefetchLocs and prefetchLocIdxs arrays.
  * @param [in] flags           reserved, must be 0.
  * @param [in] stream          stream to enqueue prefetch operation.
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_t count,
-    rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags,
-    rtStream_t stream);
+RTS_API rtError_t rtMemManagedPrefetchBatchAsync(
+    const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs,
+    size_t numPrefetchLocs, uint64_t flags, rtStream_t stream);
 
-/** 
+/**
  * @ingroup rt_mem
  * @brief virPtrDst can be mapped to the physical address of virPtrSrc through different channels.
  * @param [in] virPtrDst        virtual address.
@@ -292,7 +297,7 @@ RTS_API rtError_t rtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* size
  * @return RT_ERROR_FEATURE_NOT_SUPPORT for not support.
  * @return RT_ERROR_DRV_ERR for driver error.
  */
-RTS_API rtError_t rtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx);
+RTS_API rtError_t rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx);
 
 /**
  * @ingroup rt_mem
@@ -306,8 +311,7 @@ RTS_API rtError_t rtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPt
  * @return RT_ERROR_FEATURE_NOT_SUPPORT if the driver does not support this function.
  * @return RT_ERROR_DRV_ERR for driver error.
  */
-RTS_API rtError_t rtMemMapNoAccess(
-    void *virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
+RTS_API rtError_t rtMemMapNoAccess(void* virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
 
 /**
  * @ingroup dvrt_mem
@@ -319,7 +323,7 @@ RTS_API rtError_t rtMemMapNoAccess(
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemsetD32(void *dst, uint64_t destMax, uint32_t value, uint64_t count);
+RTS_API rtError_t rtMemsetD32(void* dst, uint64_t destMax, uint32_t value, uint64_t count);
 
 /**
  * @ingroup dvrt_mem
@@ -332,7 +336,7 @@ RTS_API rtError_t rtMemsetD32(void *dst, uint64_t destMax, uint32_t value, uint6
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemsetD32Async(void *dst, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stm);
+RTS_API rtError_t rtMemsetD32Async(void* dst, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stm);
 #if defined(__cplusplus)
 }
 #endif

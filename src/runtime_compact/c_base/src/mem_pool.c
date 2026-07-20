@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-void InitMemPoolWithCSingleList(MemPool *pool, size_t memSize)
+void InitMemPoolWithCSingleList(MemPool* pool, size_t memSize)
 {
     InitCSingleList(&pool->idleList);
     pool->memSize = memSize;
@@ -22,23 +22,24 @@ void InitMemPoolWithCSingleList(MemPool *pool, size_t memSize)
     pool->reuseMemFlag = false;
 }
 
-void DeInitMemPoolWithCSingleList(MemPool *pool)
+void DeInitMemPoolWithCSingleList(MemPool* pool)
 {
-    CSingleListNode *curNode;
-    CSingleListNode *nextNode;
+    CSingleListNode* curNode;
+    CSingleListNode* nextNode;
     while (!mmCompareAndSwap64(&pool->updating, 0, 1)) {
     }
-    CSingleListForEach(&pool->idleList, curNode, nextNode) {
+    CSingleListForEach(&pool->idleList, curNode, nextNode)
+    {
         RemoveCSingleListNode(&pool->idleList, curNode);
-        MemNode *memNode = GET_MAIN_BY_MEMBER(curNode, MemNode, node);
+        MemNode* memNode = GET_MAIN_BY_MEMBER(curNode, MemNode, node);
         mmFree(memNode);
     }
     mmSetData64(&pool->updating, 0);
 }
 
-void* MemPoolAllocWithCSingleList(MemPool *pool)
+void* MemPoolAllocWithCSingleList(MemPool* pool)
 {
-    MemNode *memNode = NULL;
+    MemNode* memNode = NULL;
     while (!mmCompareAndSwap64(&pool->updating, 0, 1)) {
     }
     if (IsSingleListEmpty(&pool->idleList)) {
@@ -55,13 +56,13 @@ void* MemPoolAllocWithCSingleList(MemPool *pool)
     return (void*)((memNode == NULL) ? NULL : memNode->data);
 }
 
-void MemPoolFreeWithCSingleList(MemPool *pool, void *mem, FnDestroy pfnDestroy)
+void MemPoolFreeWithCSingleList(MemPool* pool, void* mem, FnDestroy pfnDestroy)
 {
     if (mem == NULL) {
         return;
     }
 
-    MemNode *memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
+    MemNode* memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
     if (memNode == NULL) {
         return;
     }
@@ -88,10 +89,7 @@ void MemPoolFreeWithCSingleList(MemPool *pool, void *mem, FnDestroy pfnDestroy)
     return;
 }
 
-bool GetMemPoolReuseFlag(MemPool *pool)
-{
-    return (pool->reuseMemFlag);
-}
+bool GetMemPoolReuseFlag(MemPool* pool) { return (pool->reuseMemFlag); }
 
 #ifdef __cplusplus
 }

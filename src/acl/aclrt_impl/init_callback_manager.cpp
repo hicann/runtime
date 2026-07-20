@@ -15,8 +15,8 @@
 namespace acl {
 namespace {
 template <typename CallbackMapT, typename CallbackFuncT>
-aclError UnregisterCallbackImpl(CallbackMapT &callbackMap, std::recursive_mutex &mutex,
-                                aclRegisterCallbackType type, CallbackFuncT cbFunc)
+aclError UnregisterCallbackImpl(
+    CallbackMapT& callbackMap, std::recursive_mutex& mutex, aclRegisterCallbackType type, CallbackFuncT cbFunc)
 {
     if (cbFunc == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
@@ -36,8 +36,9 @@ aclError UnregisterCallbackImpl(CallbackMapT &callbackMap, std::recursive_mutex 
 }
 
 template <typename CallbackMapT, typename NotifyInvokerT>
-aclError NotifyCallbackImpl(CallbackMapT &callbackMap, std::recursive_mutex &mutex,
-                            aclRegisterCallbackType type, const NotifyInvokerT &notifyInvoker)
+aclError NotifyCallbackImpl(
+    CallbackMapT& callbackMap, std::recursive_mutex& mutex, aclRegisterCallbackType type,
+    const NotifyInvokerT& notifyInvoker)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     const auto range = callbackMap.equal_range(type);
@@ -49,19 +50,19 @@ aclError NotifyCallbackImpl(CallbackMapT &callbackMap, std::recursive_mutex &mut
     }
     return ACL_SUCCESS;
 }
-}  // namespace
+} // namespace
 
-InitCallbackManager &InitCallbackManager::GetInstance()
+InitCallbackManager& InitCallbackManager::GetInstance()
 {
     // 单例模式上下文不做判空和捕获异常，内存分配失败这种极端情况让程序正常终止，比引入更复杂的错误处理逻辑更合理
     // 这里单例在堆上申请且内存不显式释放，是考虑到so卸载顺序的问题，延长单例的生命周期确保不引入异常
-    static InitCallbackManager *instance = new InitCallbackManager();
+    static InitCallbackManager* instance = new InitCallbackManager();
     return *instance;
 }
 
-InitCallbackManager::InitCallbackManager(){}
+InitCallbackManager::InitCallbackManager() {}
 
-aclError InitCallbackManager::RegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void *userData)
+aclError InitCallbackManager::RegInitCallback(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void* userData)
 {
     if (cbFunc == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
@@ -73,7 +74,7 @@ aclError InitCallbackManager::RegInitCallback(aclRegisterCallbackType type, aclI
     initCallbackMap_.insert({type, {cbFunc, userData}});
     // 已经初始化的情况下，需要立即执行
     if (GetAclInitFlag()) {
-        auto &configData = GetConfigPathStr();
+        auto& configData = GetConfigPathStr();
         (void)cbFunc(configData.c_str(), configData.size(), userData);
     }
     return ACL_SUCCESS;
@@ -84,17 +85,16 @@ aclError InitCallbackManager::UnRegInitCallback(aclRegisterCallbackType type, ac
     return UnregisterCallbackImpl(initCallbackMap_, mutex_, type, cbFunc);
 }
 
-aclError InitCallbackManager::NotifyInitCallback(aclRegisterCallbackType type,
-                                                 const char *configStr, size_t len)
+aclError InitCallbackManager::NotifyInitCallback(aclRegisterCallbackType type, const char* configStr, size_t len)
 {
-    return NotifyCallbackImpl(initCallbackMap_, mutex_, type,
-        [configStr, len](const std::pair<aclInitCallbackFunc, void *> &callbackEntry) {
+    return NotifyCallbackImpl(
+        initCallbackMap_, mutex_, type, [configStr, len](const std::pair<aclInitCallbackFunc, void*>& callbackEntry) {
             return callbackEntry.first(configStr, len, callbackEntry.second);
         });
 }
 
-aclError InitCallbackManager::RegFinalizeCallback(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc,
-    void *userData)
+aclError InitCallbackManager::RegFinalizeCallback(
+    aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void* userData)
 {
     if (cbFunc == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
@@ -114,9 +114,9 @@ aclError InitCallbackManager::UnRegFinalizeCallback(aclRegisterCallbackType type
 
 aclError InitCallbackManager::NotifyFinalizeCallback(aclRegisterCallbackType type)
 {
-    return NotifyCallbackImpl(finalizeCallbackMap_, mutex_, type,
-        [](const std::pair<aclFinalizeCallbackFunc, void *> &callbackEntry) {
+    return NotifyCallbackImpl(
+        finalizeCallbackMap_, mutex_, type, [](const std::pair<aclFinalizeCallbackFunc, void*>& callbackEntry) {
             return callbackEntry.first(callbackEntry.second);
         });
 }
-}  // namespace acl
+} // namespace acl

@@ -17,10 +17,7 @@
 extern "C" {
 #endif
 
-typedef enum tagRtStackType {
-    RT_STACK_TYPE_SCALAR = 0,
-    RT_STACK_TYPE_SIMT
-} rtStackType_t;
+typedef enum tagRtStackType { RT_STACK_TYPE_SCALAR = 0, RT_STACK_TYPE_SIMT } rtStackType_t;
 
 /**
  * @ingroup rt_kernel
@@ -35,8 +32,9 @@ typedef enum tagRtStackType {
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, 
-                                   const uint16_t coreId, const void **stack, uint32_t *stackSize);
+RTS_API rtError_t rtGetStackBuffer(
+    const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const uint16_t coreId, const void** stack, uint32_t* stackSize);
 
 /**
  * @ingroup rt_kernel
@@ -47,7 +45,7 @@ RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceI
  * @param [out] aivSize   kernel size of aivector
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize);
+RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize);
 
 /**
  * @ingroup rt_kernel
@@ -56,7 +54,7 @@ RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, 
  * @param [out] binHandle  bin handle
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle);
+RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle);
 
 /**
  * @brief get parameter count from function handle.
@@ -65,7 +63,7 @@ RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtFunctionGetParamCount(const void *func, size_t *paramCount);
+RTS_API rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount);
 
 /**
  * @brief get parameter info from function handle by index.
@@ -76,8 +74,7 @@ RTS_API rtError_t rtFunctionGetParamCount(const void *func, size_t *paramCount);
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtFunctionGetParamInfo(const void *func, size_t paramIndex,
-                                         size_t *paramOffset, size_t *paramSize);
+RTS_API rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize);
 
 /**
  * @brief get available dynamic ubuf size per block from function handle.
@@ -87,7 +84,7 @@ RTS_API rtError_t rtFunctionGetParamInfo(const void *func, size_t paramIndex,
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize);
+RTS_API rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize);
 
 /**
  * @ingroup rt_kernel
@@ -99,7 +96,7 @@ RTS_API rtError_t rtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, 
  * @retval RT_ERROR_INVALID_SYMBOL invalid device symbol.
  * @retval ACL_ERROR_RT_PARAM_INVALID for error input.
  */
-RTS_API rtError_t rtSymbolLookup(const void *hostVar, void **devPtr, size_t *size);
+RTS_API rtError_t rtSymbolLookup(const void* hostVar, void** devPtr, size_t* size);
 
 /**
  * @ingroup rts_kernel
@@ -111,7 +108,7 @@ RTS_API rtError_t rtSymbolLookup(const void *hostVar, void **devPtr, size_t *siz
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_SYMBOL_NOT_FOUND if symbol not found
  */
-RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void **dptr, size_t *size);
+RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char* name, void** dptr, size_t* size);
 
 /**
  * @ingroup rt_kernel
@@ -122,10 +119,10 @@ RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *nam
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  * @return ACL_ERROR_RT_INVALID_DEVICE_FUNCTION for symbol not found in funcsymbol table
  */
-RTS_API rtError_t rtGetFuncBySymbol(const void *symbol, rtFuncHandle *funcHandle);
+RTS_API rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif  // CCE_RUNTIME_INNER_KERNEL_H
+#endif // CCE_RUNTIME_INNER_KERNEL_H

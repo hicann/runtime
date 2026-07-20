@@ -16,13 +16,13 @@
 extern "C" {
 #endif
 
-static int DefaultCmpFunc(void *a, void *b, void *appInfo)
+static int DefaultCmpFunc(void* a, void* b, void* appInfo)
 {
-    SortVector *sortVector = (SortVector *)appInfo;
+    SortVector* sortVector = (SortVector*)appInfo;
     return memcmp(a, b, sortVector->vector.itemSize);
 }
 
-void InitSortVector(SortVector *sortVector, size_t itemSize, FnBinaryCompare pfnCmp, void *appInfo)
+void InitSortVector(SortVector* sortVector, size_t itemSize, FnBinaryCompare pfnCmp, void* appInfo)
 {
     InitVector(&sortVector->vector, itemSize);
     if (pfnCmp != NULL) {
@@ -34,14 +34,11 @@ void InitSortVector(SortVector *sortVector, size_t itemSize, FnBinaryCompare pfn
     }
 }
 
-void DeInitSortVector(SortVector *vector)
-{
-    DeInitVector(&vector->vector);
-}
+void DeInitSortVector(SortVector* vector) { DeInitVector(&vector->vector); }
 
-SortVector *CreateSortVector(size_t itemSize, FnBinaryCompare pfnCmp, void *appInfo)
+SortVector* CreateSortVector(size_t itemSize, FnBinaryCompare pfnCmp, void* appInfo)
 {
-    SortVector *sortVector = (SortVector *)mmMalloc(sizeof(SortVector));
+    SortVector* sortVector = (SortVector*)mmMalloc(sizeof(SortVector));
     if (sortVector == NULL) {
         return NULL;
     }
@@ -49,58 +46,52 @@ SortVector *CreateSortVector(size_t itemSize, FnBinaryCompare pfnCmp, void *appI
     return sortVector;
 }
 
-void DestroySortVector(SortVector *sortVector)
+void DestroySortVector(SortVector* sortVector)
 {
     DeInitSortVector(sortVector);
     mmFree(sortVector);
 }
 
-size_t CapacitySortVector(SortVector *sortVector, size_t capacity)
+size_t CapacitySortVector(SortVector* sortVector, size_t capacity)
 {
     return CapacityVector(&sortVector->vector, capacity);
 }
 
-void *SortVectorAt(SortVector *sortVector, size_t index)
-{
-    return VectorAt(&sortVector->vector, index);
-}
+void* SortVectorAt(SortVector* sortVector, size_t index) { return VectorAt(&sortVector->vector, index); }
 
-static int SortVectorBinaryCmp(void *a, void *b, void *appInfo)
+static int SortVectorBinaryCmp(void* a, void* b, void* appInfo)
 {
-    SortVector *sortVector = (SortVector *)appInfo;
+    SortVector* sortVector = (SortVector*)appInfo;
     return sortVector->fnCmp(a, b, sortVector->appInfo);
 }
 
-static void *SortVectorGet(void *appInfo, size_t index)
-{
-    return SortVectorAt((SortVector *)appInfo, index);
-}
+static void* SortVectorGet(void* appInfo, size_t index) { return SortVectorAt((SortVector*)appInfo, index); }
 
-static int FindSortVectorClosest(SortVector *sortVector, void *key, size_t *closestIndex)
+static int FindSortVectorClosest(SortVector* sortVector, void* key, size_t* closestIndex)
 {
     return BinarySearchClosest(
         sortVector, VectorSize(&sortVector->vector), key, SortVectorGet, SortVectorBinaryCmp, closestIndex);
 }
 
-size_t FindSortVector(SortVector *sortVector, void *key)
+size_t FindSortVector(SortVector* sortVector, void* key)
 {
     size_t index;
     int cmpRst = FindSortVectorClosest(sortVector, key, &index);
     return (cmpRst == 0) ? index : SortVectorSize(sortVector);
 }
 
-void *SortVectorAtKey(SortVector *sortVector, void *key)
+void* SortVectorAtKey(SortVector* sortVector, void* key)
 {
     return VectorAt(&sortVector->vector, FindSortVector(sortVector, key));
 }
 
-void *EmplaceSortVector(SortVector *sortVector, void *data)
+void* EmplaceSortVector(SortVector* sortVector, void* data)
 {
     size_t index;
     int cmpRst = FindSortVectorClosest(sortVector, data, &index);
     if (cmpRst == 0) {
         size_t size = sortVector->vector.itemSize;
-        void *keyData = VectorAt(&sortVector->vector, index);
+        void* keyData = VectorAt(&sortVector->vector, index);
         errno_t ret = memcpy_s(keyData, size, data, size);
         if (ret != EOK) {
             return NULL;
@@ -114,7 +105,7 @@ void *EmplaceSortVector(SortVector *sortVector, void *data)
     return EmplaceVector(&sortVector->vector, index, data);
 }
 
-void RemoveSortVector(SortVector *sortVector, size_t index)
+void RemoveSortVector(SortVector* sortVector, size_t index)
 {
     RemoveVector(&sortVector->vector, index);
     return;

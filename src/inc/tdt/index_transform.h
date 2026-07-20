@@ -13,19 +13,19 @@
 
 #include "stdint.h"
 /**
-* @ingroup IndexTransform
-* @brief get logical device id by phy device id.
-*
-* @par Function get logical device id by phy device id.
-*
-* @param  phyId [IN] physical device id
-* @param  logicalId [OUT] logical device id
-* @retval 0 Success
-* @retval OtherValues Fail
-*
-* @par Dependency
-* @li libruntime.so: Library to which the interface belongs.
-*/
+ * @ingroup IndexTransform
+ * @brief get logical device id by phy device id.
+ *
+ * @par Function get logical device id by phy device id.
+ *
+ * @param  phyId [IN] physical device id
+ * @param  logicalId [OUT] logical device id
+ * @retval 0 Success
+ * @retval OtherValues Fail
+ *
+ * @par Dependency
+ * @li libruntime.so: Library to which the interface belongs.
+ */
 
-int32_t IndexTransform(const uint32_t phyId, uint32_t &logicId);
+int32_t IndexTransform(const uint32_t phyId, uint32_t& logicId);
 #endif

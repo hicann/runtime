@@ -21,14 +21,13 @@
 #include "tsd_util_func.h"
 #include "inc/package_worker_utils.h"
 
-
 namespace tsd {
 namespace {
 const std::string SAND_BOX_DIR_NAME = "sand_box";
 const std::string SAND_BOX_SO_ITEM_NAME = "SandBoxSo=";
 } // namespace
 
-TSD_StatusT AicpuPackageProcess::CheckPackageName(const std::string &soInstallPath, const std::string &packageName)
+TSD_StatusT AicpuPackageProcess::CheckPackageName(const std::string& soInstallPath, const std::string& packageName)
 {
     std::string srcPkgName("");
     TSD_StatusT ret = GetSrcPackageName(packageName, srcPkgName);
@@ -45,15 +44,16 @@ TSD_StatusT AicpuPackageProcess::CheckPackageName(const std::string &soInstallPa
     }
 
     if (srcPkgName != innerPkgName) {
-        TSD_ERROR("Package source name is not same as package inner name, srcPkgName=%s, innerPkgName=%s",
-                  srcPkgName.c_str(), innerPkgName.c_str());
+        TSD_ERROR(
+            "Package source name is not same as package inner name, srcPkgName=%s, innerPkgName=%s", srcPkgName.c_str(),
+            innerPkgName.c_str());
         return TSD_INTERNAL_ERROR;
     }
 
     return TSD_OK;
 }
 
-TSD_StatusT AicpuPackageProcess::GetSrcPackageName(const std::string &packageName, std::string &srcPkgName)
+TSD_StatusT AicpuPackageProcess::GetSrcPackageName(const std::string& packageName, std::string& srcPkgName)
 {
     std::smatch ret;
     const std::regex rule("Ascend.*\\.tar\\.gz");
@@ -68,9 +68,9 @@ TSD_StatusT AicpuPackageProcess::GetSrcPackageName(const std::string &packageNam
     return TSD_OK;
 }
 
-TSD_StatusT AicpuPackageProcess::GetInnerPkgName(const std::string &soInstallPath, std::string &innerPkgName)
+TSD_StatusT AicpuPackageProcess::GetInnerPkgName(const std::string& soInstallPath, std::string& innerPkgName)
 {
-    const auto handler = [&innerPkgName] (const std::string &line) -> bool {
+    const auto handler = [&innerPkgName](const std::string& line) -> bool {
         const auto idx = line.find("=");
         if ((idx != std::string::npos) && (line.find("Name") != std::string::npos)) {
             innerPkgName = line.substr(idx + 1UL);
@@ -89,9 +89,9 @@ TSD_StatusT AicpuPackageProcess::GetInnerPkgName(const std::string &soInstallPat
     return ret;
 }
 
-TSD_StatusT AicpuPackageProcess::WalkInVersionFile(const std::string &soInstallPath, const VersionLineHandler &handler)
+TSD_StatusT AicpuPackageProcess::WalkInVersionFile(const std::string& soInstallPath, const VersionLineHandler& handler)
 {
-    std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
+    std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
         TSD_ERROR("Alloc memory for path failed.");
         return TSD_INTERNAL_ERROR;
@@ -105,8 +105,9 @@ TSD_StatusT AicpuPackageProcess::WalkInVersionFile(const std::string &soInstallP
 
     const std::string versionInfoFilePath = TsdPathMgr::AddVersionInfoName(soInstallPath);
     if (realpath(versionInfoFilePath.data(), path.get()) == nullptr) {
-        TSD_ERROR("Get real path of version file failed, file=%s, reason=%s",
-                  versionInfoFilePath.c_str(), SafeStrerror().c_str());
+        TSD_ERROR(
+            "Get real path of version file failed, file=%s, reason=%s", versionInfoFilePath.c_str(),
+            SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -130,7 +131,7 @@ TSD_StatusT AicpuPackageProcess::WalkInVersionFile(const std::string &soInstallP
     return TSD_OK;
 }
 
-TSD_StatusT AicpuPackageProcess::MoveSoToSandBox(const std::string &soInstallPath)
+TSD_StatusT AicpuPackageProcess::MoveSoToSandBox(const std::string& soInstallPath)
 {
     std::string soList("");
     TSD_StatusT ret = GetSandBoxSoListInVersionFile(soInstallPath, soList);
@@ -159,8 +160,9 @@ TSD_StatusT AicpuPackageProcess::MoveSoToSandBox(const std::string &soInstallPat
         const std::string dstFile = sandBoxPath + soName;
         const int32_t status = rename(orgFile.c_str(), dstFile.c_str());
         if (status != 0) {
-            TSD_RUN_WARN("Rename sandbox so failed, status=%d, orgFile=%s, dstFile=%s, reason=%s,",
-                         status, orgFile.c_str(), dstFile.c_str(), SafeStrerror().c_str());
+            TSD_RUN_WARN(
+                "Rename sandbox so failed, status=%d, orgFile=%s, dstFile=%s, reason=%s,", status, orgFile.c_str(),
+                dstFile.c_str(), SafeStrerror().c_str());
         } else {
             TSD_RUN_INFO("Rename sandbox so success, orgFile=%s, dstFile=%s", orgFile.c_str(), dstFile.c_str());
         }
@@ -169,9 +171,9 @@ TSD_StatusT AicpuPackageProcess::MoveSoToSandBox(const std::string &soInstallPat
     return TSD_OK;
 }
 
-TSD_StatusT AicpuPackageProcess::GetSandBoxSoListInVersionFile(const std::string &soInstallPath, std::string &soList)
+TSD_StatusT AicpuPackageProcess::GetSandBoxSoListInVersionFile(const std::string& soInstallPath, std::string& soList)
 {
-    const auto handler = [&soList] (const std::string &line) -> bool {
+    const auto handler = [&soList](const std::string& line) -> bool {
         const auto idx = line.find("=");
         if ((idx != std::string::npos) && (line.find(SAND_BOX_SO_ITEM_NAME) != std::string::npos)) {
             soList = line.substr(idx + 1UL);
@@ -200,7 +202,7 @@ bool AicpuPackageProcess::IsSoExist(const uint32_t uniqueVfId)
     return true;
 }
 
-TSD_StatusT AicpuPackageProcess::CopyExtendSoToCommonSoPath(const std::string &soInstallRootPath, const bool isAsan)
+TSD_StatusT AicpuPackageProcess::CopyExtendSoToCommonSoPath(const std::string& soInstallRootPath, const bool isAsan)
 {
     const std::string aicpuSoPath = TsdPathMgr::BuildKernelSoPath(soInstallRootPath);
     const std::string extendSoPath = TsdPathMgr::BuildExtendKernelSoPath(soInstallRootPath);
@@ -208,23 +210,25 @@ TSD_StatusT AicpuPackageProcess::CopyExtendSoToCommonSoPath(const std::string &s
     const std::string hashCfgFile = extendSoPath + BASE_HASH_CFG_FILE;
     std::string cmd;
     if (access(hashCfgFile.c_str(), F_OK) == 0) {
-        cmd = "mkdir -p " + aicpuSoPath + " ; mv " + extendSoPath + "*.so* " + aicpuSoPath +
-              " ; mv " + hashCfgFile + " " + extendHashCfgPath + " && rm -rf " + extendSoPath;
+        cmd = "mkdir -p " + aicpuSoPath + " ; mv " + extendSoPath + "*.so* " + aicpuSoPath + " ; mv " + hashCfgFile +
+              " " + extendHashCfgPath + " && rm -rf " + extendSoPath;
     } else {
-        cmd = "mkdir -p " + aicpuSoPath + " ; mv " + extendSoPath + "*.so* " + aicpuSoPath +
-              " && rm -rf " + extendSoPath;
+        cmd =
+            "mkdir -p " + aicpuSoPath + " ; mv " + extendSoPath + "*.so* " + aicpuSoPath + " && rm -rf " + extendSoPath;
     }
     const int32_t ret = PackSystem(cmd.c_str());
     if ((isAsan) && (ret != 0)) {
-        TSD_INFO("Move extend so to common so path end. cmd=%s, ret=%d, reason=%s.",
-                 cmd.c_str(), ret, SafeStrerror().c_str());
+        TSD_INFO(
+            "Move extend so to common so path end. cmd=%s, ret=%d, reason=%s.", cmd.c_str(), ret,
+            SafeStrerror().c_str());
     } else if (ret != 0) {
-        TSD_ERROR("Move extend so to common so path failed. cmd=%s, ret=%d, reason=%s.",
-                  cmd.c_str(), ret, SafeStrerror().c_str());
+        TSD_ERROR(
+            "Move extend so to common so path failed. cmd=%s, ret=%d, reason=%s.", cmd.c_str(), ret,
+            SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
     TSD_RUN_INFO("Move extend so to common so path success, cmd=%s", cmd.c_str());
     return TSD_OK;
 }
-}
+} // namespace tsd

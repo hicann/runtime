@@ -15,13 +15,9 @@
 namespace cce {
 namespace tprt {
 
-TprtProfiling::TprtProfiling()
-{
-}
+TprtProfiling::TprtProfiling() {}
 
-TprtProfiling::~TprtProfiling()
-{
-}
+TprtProfiling::~TprtProfiling() {}
 
 uint32_t TprtProfiling::TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask) const
 {
@@ -43,5 +39,5 @@ uint32_t TprtProfiling::TprtReportTask(uint64_t startTime, uint64_t endTime, uin
     }
     return 0;
 }
-}
-}
+} // namespace tprt
+} // namespace cce

@@ -34,28 +34,31 @@ typedef struct {
     uint8_t data[0];
 } MemNode;
 
-#define MEM_POOL_INIT(memSize) {CSINGLE_LIST_INIT, (memSize), 0, 0, false}
-void InitMemPoolWithCSingleList(MemPool *pool, size_t memSize);
-void DeInitMemPoolWithCSingleList(MemPool *pool);
-void* MemPoolAllocWithCSingleList(MemPool *pool);
-void MemPoolFreeWithCSingleList(MemPool *pool, void *mem, FnDestroy pfnDestroy);
-bool GetMemPoolReuseFlag(MemPool *pool);
+#define MEM_POOL_INIT(memSize)                    \
+    {                                             \
+        CSINGLE_LIST_INIT, (memSize), 0, 0, false \
+    }
+void InitMemPoolWithCSingleList(MemPool* pool, size_t memSize);
+void DeInitMemPoolWithCSingleList(MemPool* pool);
+void* MemPoolAllocWithCSingleList(MemPool* pool);
+void MemPoolFreeWithCSingleList(MemPool* pool, void* mem, FnDestroy pfnDestroy);
+bool GetMemPoolReuseFlag(MemPool* pool);
 
-static inline bool MemPoolMemUsed(void *mem)
+static inline bool MemPoolMemUsed(void* mem)
 {
-    MemNode *memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
+    MemNode* memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
     return ((memNode->flag & MEM_POOL_NODE_USED_FLAG) == MEM_POOL_NODE_USED_FLAG);
 }
 
-static inline uint32_t GetMemPoolMemSeq(void *mem)
+static inline uint32_t GetMemPoolMemSeq(void* mem)
 {
-    MemNode *memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
+    MemNode* memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
     return (uint32_t)(memNode->flag >> MEM_POOL_NODE_SEQ_BITNUM);
 }
 
-static inline bool MemPoolMemMatchSeq(void *mem, uint32_t seq)
+static inline bool MemPoolMemMatchSeq(void* mem, uint32_t seq)
 {
-    MemNode *memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
+    MemNode* memNode = GET_MAIN_BY_MEMBER(mem, MemNode, data);
     return (memNode->flag == (MEM_POOL_NODE_USED_FLAG | (((uint64_t)seq) << MEM_POOL_NODE_SEQ_BITNUM)));
 }
 #ifdef __cplusplus

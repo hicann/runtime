@@ -19,19 +19,19 @@
 #endif
 #include "driver_mem.h"
 
-drvMemNode_t *g_drvMemMgmtHead[MAX_DEV_NUM];
-drvMemNode_t *g_drvMemMgmtTail[MAX_DEV_NUM];
+drvMemNode_t* g_drvMemMgmtHead[MAX_DEV_NUM];
+drvMemNode_t* g_drvMemMgmtTail[MAX_DEV_NUM];
 
 void drvResetMgmtHead(void);
 void drvResetMgmtTail(void);
 
 drvError_t drvMemMgmtQueueFree(int32_t deviceId)
 {
-    drvMemNode_t *drvMemFreeNode = NULL;
-    drvMemNode_t *drvMemFreeFront = NULL;
+    drvMemNode_t* drvMemFreeNode = NULL;
+    drvMemNode_t* drvMemFreeFront = NULL;
 
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
 
     if (g_drvMemMgmtHead[deviceId] != NULL) {
         drvMemFreeNode = g_drvMemMgmtHead[deviceId];
@@ -64,8 +64,8 @@ drvError_t drvMemMgmtInit(void)
             COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, ret, "drvMemMgmtQueueFree failed");
         }
 
-        g_drvMemMgmtHead[i] = (drvMemNode_t *)malloc(sizeof(drvMemNode_t));
-        g_drvMemMgmtTail[i] = (drvMemNode_t *)malloc(sizeof(drvMemNode_t));
+        g_drvMemMgmtHead[i] = (drvMemNode_t*)malloc(sizeof(drvMemNode_t));
+        g_drvMemMgmtTail[i] = (drvMemNode_t*)malloc(sizeof(drvMemNode_t));
         if ((g_drvMemMgmtHead[i] == NULL) || (g_drvMemMgmtTail[i] == NULL)) {
             drvResetMgmtHead();
             drvResetMgmtTail();
@@ -111,15 +111,15 @@ void drvResetMgmtTail(void)
     }
 }
 
-drvError_t drvMemAllocDeviceHBM(void **dptr, uint64_t requestSize, int32_t deviceId)
+drvError_t drvMemAllocDeviceHBM(void** dptr, uint64_t requestSize, int32_t deviceId)
 {
     uint8_t fitFlag = 0;
-    drvMemNode_t *drvNewMemNode = NULL;
-    drvMemNode_t *drvNewMemMgmt = NULL;
+    drvMemNode_t* drvNewMemNode = NULL;
+    drvMemNode_t* drvNewMemMgmt = NULL;
 
     COND_RETURN_CMODEL(dptr == NULL, DRV_ERROR_INVALID_HANDLE, "dptr is NULL");
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
     COND_RETURN_CMODEL(requestSize > MAX_ALLOC, DRV_ERROR_INVALID_VALUE, "too large requestSize=%" PRIu64, requestSize);
 
 #ifdef __LIBFUZZER_HBM_ASAN__
@@ -136,11 +136,12 @@ drvError_t drvMemAllocDeviceHBM(void **dptr, uint64_t requestSize, int32_t devic
             (drvNewMemMgmt->drvMemMgmtData.size == requestSize)) {
             drvNewMemMgmt->drvMemMgmtData.status = DRV_MEM_BUSY;
             tempt = (uintptr_t)(drvNewMemMgmt->drvMemMgmtData.address + HBM_BASE);
-            *dptr = (void *)(tempt);
+            *dptr = (void*)(tempt);
             fitFlag = 1;
-        } else if ((drvNewMemMgmt->drvMemMgmtData.status == DRV_MEM_FREE) &&
-                   (drvNewMemMgmt->drvMemMgmtData.size > requestSize)) {
-            drvNewMemNode = (drvMemNode_t *)malloc(sizeof(drvMemNode_t));
+        } else if (
+            (drvNewMemMgmt->drvMemMgmtData.status == DRV_MEM_FREE) &&
+            (drvNewMemMgmt->drvMemMgmtData.size > requestSize)) {
+            drvNewMemNode = (drvMemNode_t*)malloc(sizeof(drvMemNode_t));
             COND_RETURN_CMODEL(drvNewMemNode == NULL, DRV_ERROR_OUT_OF_MEMORY, "malloc failed");
 
             errno_t rc = EOK;
@@ -157,12 +158,12 @@ drvError_t drvMemAllocDeviceHBM(void **dptr, uint64_t requestSize, int32_t devic
 
             drvNewMemMgmt->prior->next = drvNewMemNode;
             drvNewMemMgmt->prior = drvNewMemNode;
-            drvNewMemMgmt->drvMemMgmtData.address = drvNewMemNode->drvMemMgmtData.address +
-                drvNewMemNode->drvMemMgmtData.size;
+            drvNewMemMgmt->drvMemMgmtData.address =
+                drvNewMemNode->drvMemMgmtData.address + drvNewMemNode->drvMemMgmtData.size;
             drvNewMemMgmt->drvMemMgmtData.size -= requestSize;
 
             tempt = (uintptr_t)(drvNewMemNode->drvMemMgmtData.address + HBM_BASE);
-            *dptr = (void *)(tempt);
+            *dptr = (void*)(tempt);
             fitFlag = 1;
         }
 
@@ -178,14 +179,14 @@ drvError_t drvMemAllocDeviceHBM(void **dptr, uint64_t requestSize, int32_t devic
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvMergeDeviceHBM(drvMemNode_t *drvNewMemMgmt, int32_t deviceId)
+drvError_t drvMergeDeviceHBM(drvMemNode_t* drvNewMemMgmt, int32_t deviceId)
 {
-    drvMemNode_t *drvMemFreeNode = NULL;
+    drvMemNode_t* drvMemFreeNode = NULL;
     COND_RETURN_CMODEL(drvNewMemMgmt == NULL, DRV_ERROR_INVALID_HANDLE, "drvNewMemMgmt is NULL");
-    COND_RETURN_CMODEL(drvNewMemMgmt->drvMemMgmtData.status != DRV_MEM_FREE, DRV_ERROR_INVALID_HANDLE,
-        "status is not free");
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        drvNewMemMgmt->drvMemMgmtData.status != DRV_MEM_FREE, DRV_ERROR_INVALID_HANDLE, "status is not free");
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
 
     if ((drvNewMemMgmt->prior != g_drvMemMgmtHead[deviceId]) &&
         (drvNewMemMgmt->prior->drvMemMgmtData.status == DRV_MEM_FREE)) {
@@ -216,35 +217,35 @@ drvError_t drvMergeDeviceHBM(drvMemNode_t *drvNewMemMgmt, int32_t deviceId)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvFreeDeviceHBM(const void *dptr, int32_t deviceId)
+drvError_t drvFreeDeviceHBM(const void* dptr, int32_t deviceId)
 {
 #ifdef __LIBFUZZER_HBM_ASAN__
     free(dptr);
 #else
     uint8_t fitFlag = 0;
     drvError_t error;
-    drvMemNode_t *drvNewMemMgmt = NULL;
+    drvMemNode_t* drvNewMemMgmt = NULL;
 
     COND_RETURN_CMODEL(dptr == NULL, DRV_ERROR_INVALID_HANDLE, "dptr is NULL");
-    COND_RETURN_CMODEL((uint64_t)((uintptr_t)dptr) < HBM_BASE || (uint64_t)((uintptr_t) dptr) >= HBM_MAX_ADDR,
-        DRV_ERROR_INVALID_HANDLE, "invalid dptr");
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
-    COND_RETURN_CMODEL(g_drvMemMgmtHead[deviceId] == NULL, DRV_ERROR_INVALID_HANDLE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        (uint64_t)((uintptr_t)dptr) < HBM_BASE || (uint64_t)((uintptr_t)dptr) >= HBM_MAX_ADDR, DRV_ERROR_INVALID_HANDLE,
+        "invalid dptr");
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
+    COND_RETURN_CMODEL(g_drvMemMgmtHead[deviceId] == NULL, DRV_ERROR_INVALID_HANDLE, "invalid device_id=%d", deviceId);
 
     drvNewMemMgmt = g_drvMemMgmtHead[deviceId]->next;
 
     while (drvNewMemMgmt != NULL) {
-        if (dptr == (void *)((uintptr_t)(drvNewMemMgmt->drvMemMgmtData.address + HBM_BASE))) {
+        if (dptr == (void*)((uintptr_t)(drvNewMemMgmt->drvMemMgmtData.address + HBM_BASE))) {
             fitFlag = 1;
             break;
         }
         drvNewMemMgmt = drvNewMemMgmt->next;
     }
 
-    COND_RETURN_CMODEL((fitFlag == 0) || (drvNewMemMgmt == NULL), DRV_ERROR_INVALID_HANDLE,
-        "memory block is not found");
+    COND_RETURN_CMODEL(
+        (fitFlag == 0) || (drvNewMemMgmt == NULL), DRV_ERROR_INVALID_HANDLE, "memory block is not found");
     drvNewMemMgmt->drvMemMgmtData.status = DRV_MEM_FREE;
 
     error = drvMergeDeviceHBM(drvNewMemMgmt, deviceId);
@@ -253,7 +254,7 @@ drvError_t drvFreeDeviceHBM(const void *dptr, int32_t deviceId)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvMemAlloc(void **dptr, uint64_t size, drvMemType_t type, int32_t nodeId)
+drvError_t drvMemAlloc(void** dptr, uint64_t size, drvMemType_t type, int32_t nodeId)
 {
     int32_t deviceId;
     drvError_t ret = DRV_ERROR_RESERVED;
@@ -270,8 +271,8 @@ drvError_t drvMemAlloc(void **dptr, uint64_t size, drvMemType_t type, int32_t no
 #endif
 
     deviceId = DEVICE_TO_NODE(nodeId);
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
 
     switch (type) {
         case DRV_MEMORY_HBM:
@@ -288,13 +289,13 @@ drvError_t drvMemAlloc(void **dptr, uint64_t size, drvMemType_t type, int32_t no
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvMemFree(const void *dptr, int32_t deviceId)
+drvError_t drvMemFree(const void* dptr, int32_t deviceId)
 {
     drvError_t ret;
 
     COND_RETURN_CMODEL(dptr == NULL, DRV_ERROR_INVALID_HANDLE, "dptr is NULL");
-    COND_RETURN_CMODEL((deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d",
-        deviceId);
+    COND_RETURN_CMODEL(
+        (deviceId < 0) || (deviceId >= MAX_DEV_NUM), DRV_ERROR_INVALID_VALUE, "invalid device_id=%d", deviceId);
 
     ret = drvFreeDeviceHBM(dptr, deviceId);
     COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, ret, "drvFreeDeviceHBM failed");
@@ -302,7 +303,7 @@ drvError_t drvMemFree(const void *dptr, int32_t deviceId)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvModelMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t size, drvMemcpyKind_t kind)
+drvError_t drvModelMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t size, drvMemcpyKind_t kind)
 {
     modelRWStatus_t ret = MODEL_RW_ERROR_NONE;
 
@@ -315,7 +316,7 @@ drvError_t drvModelMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t
 #ifndef __DRV_CFG_DEV_PLATFORM_ESL__
         case DRV_MEMCPY_HOST_TO_DEVICE: {
             uint64_t address = (uint64_t)((uintptr_t)dst);
-            ret = busDirectWrite(address, size, (void *)src, 0);
+            ret = busDirectWrite(address, size, (void*)src, 0);
             COND_RETURN_CMODEL(ret != MODEL_RW_ERROR_NONE, DRV_ERROR_INVALID_HANDLE, "error address %" PRIx64, address);
             break;
         }
@@ -365,10 +366,10 @@ drvError_t drvModelMemset(uint64_t dst, size_t destMax, int32_t value, size_t si
     errno_t memRet = EOK;
     while ((tSize > 0U) && (memRet == EOK)) {
         if (tSize <= MEMSET_SIZE_MAX) {
-            memRet = memset_s((void *)((uintptr_t) tDst), tDestMax, value, tSize);
+            memRet = memset_s((void*)((uintptr_t)tDst), tDestMax, value, tSize);
             tSize = 0;
         } else {
-            memRet = memset_s((void *)((uintptr_t) tDst), tDestMax, value, MEMSET_SIZE_MAX);
+            memRet = memset_s((void*)((uintptr_t)tDst), tDestMax, value, MEMSET_SIZE_MAX);
             tDst += MEMSET_SIZE_MAX;
             tSize -= MEMSET_SIZE_MAX;
             tDestMax -= MEMSET_SIZE_MAX;

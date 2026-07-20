@@ -8,15 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef INC_TDT_TRAIN_MODE_H
 #define INC_TDT_TRAIN_MODE_H
 
-enum TrainMode {
-    NOFLAG = -1,
-    DPFLAG = 0,
-    MEFLAG = 1
-};
+enum TrainMode { NOFLAG = -1, DPFLAG = 0, MEFLAG = 1 };
 
 TrainMode GetTrainMode();
 

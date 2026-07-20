@@ -118,13 +118,13 @@ uint32_t TsdSetMsprofReporterCallback(const MsprofReporterCallback callback)
     return tsd::TSD_OK;
 }
 
-uint32_t TsdInitQs(const uint32_t logicDeviceId, const char_t * const groupName)
+uint32_t TsdInitQs(const uint32_t logicDeviceId, const char_t* const groupName)
 {
     const InitFlowGwInfo tmpFlowGwInfo = {groupName, 0U, 0U, {}};
     return TsdInitFlowGw(logicDeviceId, &tmpFlowGwInfo);
 }
 
-uint32_t TsdInitFlowGw(const uint32_t logicDeviceId, const InitFlowGwInfo * const initInfo)
+uint32_t TsdInitFlowGw(const uint32_t logicDeviceId, const InitFlowGwInfo* const initInfo)
 {
     TSD_RUN_INFO("TsdInitFlowGw Begin.");
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
@@ -147,7 +147,7 @@ uint32_t TsdInitFlowGw(const uint32_t logicDeviceId, const InitFlowGwInfo * cons
     return ret;
 }
 
-uint32_t GetHdcConctStatus(const uint32_t logicDeviceId, int32_t *hdcSessStat)
+uint32_t GetHdcConctStatus(const uint32_t logicDeviceId, int32_t* hdcSessStat)
 {
     if (hdcSessStat == nullptr) {
         return tsd::TSD_OK;
@@ -161,7 +161,7 @@ uint32_t GetHdcConctStatus(const uint32_t logicDeviceId, int32_t *hdcSessStat)
     return tsd::ClientManager::GetInstance(logicDeviceId)->GetHdcConctStatus(*hdcSessStat);
 }
 
-uint32_t TsdSetAttr(const char_t * const attrKey, const char_t * const attrValue)
+uint32_t TsdSetAttr(const char_t* const attrKey, const char_t* const attrValue)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
     if ((attrKey == nullptr) || (attrValue == nullptr)) {
@@ -206,8 +206,9 @@ uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, cons
     return ret;
 }
 
-uint32_t TsdFileLoad(const uint32_t logicDeviceId, const char_t *filePath, const uint64_t pathLen,
-                     const char_t *fileName, const uint64_t fileNameLen)
+uint32_t TsdFileLoad(
+    const uint32_t logicDeviceId, const char_t* filePath, const uint64_t pathLen, const char_t* fileName,
+    const uint64_t fileNameLen)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -222,7 +223,7 @@ uint32_t TsdFileLoad(const uint32_t logicDeviceId, const char_t *filePath, const
     return ret;
 }
 
-uint32_t TsdProcessOpen(const uint32_t logicDeviceId, ProcOpenArgs *openArgs)
+uint32_t TsdProcessOpen(const uint32_t logicDeviceId, ProcOpenArgs* openArgs)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -252,7 +253,7 @@ uint32_t TsdProcessClose(const uint32_t logicDeviceId, const pid_t closePid)
     return ret;
 }
 
-uint32_t TsdFileUnLoad(const uint32_t logicDeviceId, const char_t *filePath, const uint64_t pathLen)
+uint32_t TsdFileUnLoad(const uint32_t logicDeviceId, const char_t* filePath, const uint64_t pathLen)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -267,7 +268,7 @@ uint32_t TsdFileUnLoad(const uint32_t logicDeviceId, const char_t *filePath, con
     return ret;
 }
 
-uint32_t TsdGetProcStatus(const uint32_t logicDeviceId, ProcStatusInfo *pidInfo, const uint32_t arrayLen)
+uint32_t TsdGetProcStatus(const uint32_t logicDeviceId, ProcStatusInfo* pidInfo, const uint32_t arrayLen)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -284,12 +285,12 @@ uint32_t TsdGetProcStatus(const uint32_t logicDeviceId, ProcStatusInfo *pidInfo,
 
 uint32_t NotifyPmToStartTsdaemon(const uint32_t logicDeviceId)
 {
-    (void) logicDeviceId;
+    (void)logicDeviceId;
     return tsd::TSD_PARAMETER_INVALID;
 }
 
-uint32_t ProcessCloseSubProcList(const uint32_t logicDeviceId, const ProcStatusParam *closeList,
-                                 const uint32_t listSize)
+uint32_t ProcessCloseSubProcList(
+    const uint32_t logicDeviceId, const ProcStatusParam* closeList, const uint32_t listSize)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -304,7 +305,7 @@ uint32_t ProcessCloseSubProcList(const uint32_t logicDeviceId, const ProcStatusP
     return ret;
 }
 
-uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam *pidInfo, const uint32_t arrayLen)
+uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;
@@ -319,7 +320,7 @@ uint32_t TsdGetProcListStatus(const uint32_t logicDeviceId, ProcStatusParam *pid
     return ret;
 }
 
-uint32_t TsdOpenNetService(const uint32_t logicDeviceId, const NetServiceOpenArgs *args)
+uint32_t TsdOpenNetService(const uint32_t logicDeviceId, const NetServiceOpenArgs* args)
 {
     if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
         return tsd::TSD_OK;

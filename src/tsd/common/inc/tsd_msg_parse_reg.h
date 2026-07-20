@@ -16,23 +16,22 @@
 #include "inc/tsd_message_parse_server.h"
 
 namespace tsd {
-    class MsgParseReg {
-    public:
-        explicit MsgParseReg(const HDCMessage::MsgType type, ParseFuncType const func) noexcept
-        {
+class MsgParseReg {
+public:
+    explicit MsgParseReg(const HDCMessage::MsgType type, ParseFuncType const func) noexcept
+    {
 #ifdef TDT_HOST_LIB
-            MessageParseClient::GetInstance()->RegisterMsgProcess(type, func);
+        MessageParseClient::GetInstance()->RegisterMsgProcess(type, func);
 #else
-            MessageParseServer::GetInstance()->RegisterMsgProcess(type, func);
+        MessageParseServer::GetInstance()->RegisterMsgProcess(type, func);
 #endif
-        }
+    }
 
-        ~MsgParseReg() = default;
-    };  // class MsgParseReg
+    ~MsgParseReg() = default;
+}; // class MsgParseReg
 
-
-#define TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(name, type, msgParseFunc)                            \
+#define TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(name, type, msgParseFunc) \
     static MsgParseReg tdtAutoMsgParse##name((type), (msgParseFunc))
-}  // namespace tsd
+} // namespace tsd
 
 #endif // INC_TDT_MSG_PARSE_REG_H

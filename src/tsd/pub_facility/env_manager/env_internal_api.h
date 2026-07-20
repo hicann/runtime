@@ -15,38 +15,38 @@
 #include "mmpa/mmpa_api.h"
 
 namespace tsd {
-    /**
-     * @ingroup
-     * @brief read env value
-     * @param [in] id : env id
-     * @param [in] envName : env to get
-     * @param [out] envValue : result
-     * @return : void
-     */
-    void GetEnvFromMmSys(mmEnvId id, const char *envName, std::string &envValue);
+/**
+ * @ingroup
+ * @brief read env value
+ * @param [in] id : env id
+ * @param [in] envName : env to get
+ * @param [out] envValue : result
+ * @return : void
+ */
+void GetEnvFromMmSys(mmEnvId id, const char* envName, std::string& envValue);
 
-    /**
-     * @ingroup IsFpgaMmSysEnv
-     * @brief 读环境变量判断当前是否是FPGA环境
-     * @return : true: fpga环境， false: 非fpga环境
-     */
-    bool IsFpgaMmSysEnv();
+/**
+ * @ingroup IsFpgaMmSysEnv
+ * @brief 读环境变量判断当前是否是FPGA环境
+ * @return : true: fpga环境， false: 非fpga环境
+ */
+bool IsFpgaMmSysEnv();
 
-    /**
-     * @ingroup IsAsanMmSysEnv
-     * @brief 读环境变量判断当前是否是ASAN环境
-     * @return : true: asan环境， false: 非asan环境
-     */
-    bool IsAsanMmSysEnv();
+/**
+ * @ingroup IsAsanMmSysEnv
+ * @brief 读环境变量判断当前是否是ASAN环境
+ * @return : true: asan环境， false: 非asan环境
+ */
+bool IsAsanMmSysEnv();
 
-    /**
-     * @ingroup
-     * @brief If the envStr value is same as envValue passed in, return true
-     * @param [in] id : env id
-     * @param [in] ：envStr：env name
-     * @param [in] ：envValue：expected env value
-     * @return : true, if value equal to envValue
-     */
-    bool GetFlagFromMmSys(mmEnvId id, const char_t * const envStr, const char_t * const envValue);
-}
-#endif  // TSD_PUB_FACILITY_ENV_MANAGER_ENV_INTERNAL_API_H
+/**
+ * @ingroup
+ * @brief If the envStr value is same as envValue passed in, return true
+ * @param [in] id : env id
+ * @param [in] ：envStr：env name
+ * @param [in] ：envValue：expected env value
+ * @return : true, if value equal to envValue
+ */
+bool GetFlagFromMmSys(mmEnvId id, const char_t* const envStr, const char_t* const envValue);
+} // namespace tsd
+#endif // TSD_PUB_FACILITY_ENV_MANAGER_ENV_INTERNAL_API_H

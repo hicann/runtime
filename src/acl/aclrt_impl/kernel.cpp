@@ -24,13 +24,10 @@
 #include "utils/data_type_utils.h"
 namespace {
 static const std::map<aclDataType, rtRandomNumDataType> kMapDataType = {
-    { ACL_INT32, RT_RANDOM_NUM_DATATYPE_INT32 },
-    { ACL_INT64, RT_RANDOM_NUM_DATATYPE_INT64 },
-    { ACL_UINT32, RT_RANDOM_NUM_DATATYPE_UINT32 },
-    { ACL_UINT64, RT_RANDOM_NUM_DATATYPE_UINT64 },
-    { ACL_BF16, RT_RANDOM_NUM_DATATYPE_BF16 },
-    { ACL_FLOAT16, RT_RANDOM_NUM_DATATYPE_FP16 },
-    { ACL_FLOAT, RT_RANDOM_NUM_DATATYPE_FP32 },
+    {ACL_INT32, RT_RANDOM_NUM_DATATYPE_INT32},   {ACL_INT64, RT_RANDOM_NUM_DATATYPE_INT64},
+    {ACL_UINT32, RT_RANDOM_NUM_DATATYPE_UINT32}, {ACL_UINT64, RT_RANDOM_NUM_DATATYPE_UINT64},
+    {ACL_BF16, RT_RANDOM_NUM_DATATYPE_BF16},     {ACL_FLOAT16, RT_RANDOM_NUM_DATATYPE_FP16},
+    {ACL_FLOAT, RT_RANDOM_NUM_DATATYPE_FP32},
 };
 
 }
@@ -39,72 +36,72 @@ static const std::map<aclDataType, rtRandomNumDataType> kMapDataType = {
 extern "C" {
 #endif
 
-aclrtBinary aclrtCreateBinaryImpl(const void *data, size_t dataLen)
+aclrtBinary aclrtCreateBinaryImpl(const void* data, size_t dataLen)
 {
-  ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
-  ACL_LOG_INFO("start to execute aclrtCreateBinary");
-  ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(data);
+    ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
+    ACL_LOG_INFO("start to execute aclrtCreateBinary");
+    ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(data);
 
-  rtDevBinary_t *binaryDesc = new(std::nothrow) rtDevBinary_t();
-  ACL_CHECK_MALLOC_RESULT_REPORT_RET(binaryDesc, sizeof(rtDevBinary_t), "new", nullptr);
+    rtDevBinary_t* binaryDesc = new (std::nothrow) rtDevBinary_t();
+    ACL_CHECK_MALLOC_RESULT_REPORT_RET(binaryDesc, sizeof(rtDevBinary_t), "new", nullptr);
 
-  binaryDesc->magic = 0U;
-  binaryDesc->version = 0U;
-  binaryDesc->data = data;
-  binaryDesc->length = static_cast<uint64_t>(dataLen);
+    binaryDesc->magic = 0U;
+    binaryDesc->version = 0U;
+    binaryDesc->data = data;
+    binaryDesc->length = static_cast<uint64_t>(dataLen);
 
-  ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
-  return binaryDesc;
+    ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
+    return binaryDesc;
 }
 
 aclError aclrtDestroyBinaryImpl(aclrtBinary binary)
 {
-  ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
-  ACL_LOG_INFO("start to execute aclrtDestroyBinary");
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binary);
+    ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
+    ACL_LOG_INFO("start to execute aclrtDestroyBinary");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binary);
 
-  delete reinterpret_cast<rtDevBinary_t *>(binary);
+    delete reinterpret_cast<rtDevBinary_t*>(binary);
 
-  ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
-  return ACL_SUCCESS;
+    ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_BINARY_DESC);
+    return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryLoadImpl(const aclrtBinary binary, aclrtBinHandle *binHandle)
+aclError aclrtBinaryLoadImpl(const aclrtBinary binary, aclrtBinHandle* binHandle)
 {
-  ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
-  ACL_LOG_INFO("start to execute aclrtBinaryLoad");
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binary);
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
-  rtDevBinary_t *bin = reinterpret_cast<rtDevBinary_t *>(binary);
-  ACL_REQUIRES_RTS_OK(rtBinaryLoadWithoutTilingKey(bin->data, bin->length, binHandle));
+    ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
+    ACL_LOG_INFO("start to execute aclrtBinaryLoad");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binary);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    rtDevBinary_t* bin = reinterpret_cast<rtDevBinary_t*>(binary);
+    ACL_REQUIRES_RTS_OK(rtBinaryLoadWithoutTilingKey(bin->data, bin->length, binHandle));
 
-  ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
-  return ACL_SUCCESS;
+    ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
+    return ACL_SUCCESS;
 }
 
 aclError aclrtBinaryUnLoadImpl(aclrtBinHandle binHandle)
 {
-  ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
-  ACL_LOG_INFO("start to execute aclrtBinaryUnLoad");
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
+    ACL_LOG_INFO("start to execute aclrtBinaryUnLoad");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
 
-  ACL_REQUIRES_RTS_OK(rtBinaryUnLoad(binHandle));
+    ACL_REQUIRES_RTS_OK(rtBinaryUnLoad(binHandle));
 
-  ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
-  return ACL_SUCCESS;
+    ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_LOAD_UNLOAD_BINARY);
+    return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryGetFunctionImpl(const aclrtBinHandle binHandle, const char *kernelName, aclrtFuncHandle *funcHandle)
+aclError aclrtBinaryGetFunctionImpl(const aclrtBinHandle binHandle, const char* kernelName, aclrtFuncHandle* funcHandle)
 {
-  ACL_LOG_INFO("start to execute aclrtBinaryGetFunction");
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(kernelName);
-  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_LOG_INFO("start to execute aclrtBinaryGetFunction");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(kernelName);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
 
-  // currently not support multi kernel, so tilingKey always use 0
-  ACL_REQUIRES_RTS_OK(rtsFuncGetByName(binHandle, kernelName, funcHandle));
+    // currently not support multi kernel, so tilingKey always use 0
+    ACL_REQUIRES_RTS_OK(rtsFuncGetByName(binHandle, kernelName, funcHandle));
 
-  return ACL_SUCCESS;
+    return ACL_SUCCESS;
 }
 
 aclError aclmdlRITaskDisableImpl(aclmdlRITask task)
@@ -114,15 +111,15 @@ aclError aclmdlRITaskDisableImpl(aclmdlRITask task)
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchKernelImpl(aclrtFuncHandle funcHandle, uint32_t numBlocks, const void *argsData,
-                               size_t argsSize, aclrtStream stream)
+aclError aclrtLaunchKernelImpl(
+    aclrtFuncHandle funcHandle, uint32_t numBlocks, const void* argsData, size_t argsSize, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernel);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsData);
 
     rtArgsEx_t argsInfo = {};
-    argsInfo.args = const_cast<void *>(argsData);
+    argsInfo.args = const_cast<void*>(argsData);
     argsInfo.argsSize = static_cast<uint32_t>(argsSize);
     argsInfo.isNoNeedH2DCopy = 1U;
 
@@ -135,24 +132,24 @@ aclError aclrtLaunchKernelImpl(aclrtFuncHandle funcHandle, uint32_t numBlocks, c
             return ACL_GET_ERRCODE_RTS(rtErr);
         }
     }
-  return ACL_SUCCESS;
+    return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryLoadFromFileImpl(const char* binPath, aclrtBinaryLoadOptions *options, aclrtBinHandle *binHandle)
+aclError aclrtBinaryLoadFromFileImpl(const char* binPath, aclrtBinaryLoadOptions* options, aclrtBinHandle* binHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryLoadFromFile);
     ACL_LOG_INFO("start to execute aclrtBinaryLoadFromFile, binPath[%s]", binPath);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binPath);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
-    const rtLoadBinaryConfig_t *rt_options = nullptr;
+    const rtLoadBinaryConfig_t* rt_options = nullptr;
     if (options != nullptr) {
-       rt_options = reinterpret_cast<rtLoadBinaryConfig_t *>(options);
+        rt_options = reinterpret_cast<rtLoadBinaryConfig_t*>(options);
     }
     ACL_REQUIRES_RTS_OK(rtsBinaryLoadFromFile(binPath, rt_options, binHandle));
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryGetDevAddressImpl(const aclrtBinHandle binHandle, void **binAddr, size_t *binSize)
+aclError aclrtBinaryGetDevAddressImpl(const aclrtBinHandle binHandle, void** binAddr, size_t* binSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryGetDevAddress);
     ACL_LOG_INFO("start to execute aclrtBinaryGetDevAddress");
@@ -169,7 +166,7 @@ aclError aclrtBinaryGetDevAddressImpl(const aclrtBinHandle binHandle, void **bin
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle *funcHandle)
+aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle* funcHandle)
 {
     ACL_LOG_INFO("start to execute aclrtBinaryGetFunctionByEntry");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
@@ -179,15 +176,15 @@ aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t fu
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)
+aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char* name, void** dptr, size_t* size)
 {
     ACL_LOG_INFO("start to execute aclrtBinaryGetGlobal");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(name);
     if ((dptr == nullptr) && (size == nullptr)) {
         ACL_LOG_ERROR("[Check][dptr,size]dptr and size cannot both be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG,
-            {"func", "param"}, {"aclrtBinaryGetGlobal", "dptr and size"});
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG, {"func", "param"}, {"aclrtBinaryGetGlobal", "dptr and size"});
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -196,7 +193,7 @@ aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, vo
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFuncBySymbolImpl(const void *symbol, aclrtFuncHandle *funcHandle)
+aclError aclrtGetFuncBySymbolImpl(const void* symbol, aclrtFuncHandle* funcHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFuncBySymbol);
     ACL_LOG_INFO("start to execute aclrtGetFuncBySymbol");
@@ -207,7 +204,7 @@ aclError aclrtGetFuncBySymbolImpl(const void *symbol, aclrtFuncHandle *funcHandl
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
+aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
 {
     ACL_LOG_INFO("start to execute aclrtGetFunctionAddr");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
@@ -218,26 +215,27 @@ aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void **aicAddr, vo
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionSizeImpl(aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
+aclError aclrtGetFunctionSizeImpl(aclrtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize)
 {
     ACL_REQUIRES_RTS_OK(rtFuncGetSize(funcHandle, aicSize, aivSize));
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchKernelWithConfigImpl(aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream,
-                                         aclrtLaunchKernelCfg *cfg, aclrtArgsHandle argsHandle, void *reserve)
+aclError aclrtLaunchKernelWithConfigImpl(
+    aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg* cfg,
+    aclrtArgsHandle argsHandle, void* reserve)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithConfig);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithConfig");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_POSITIVE_REPORT(numBlocks);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
-    ACL_CHECK_INVALID_PARAM_NO_VALUE(reserve == nullptr, "reserve",
-        "reserve is a reserved parameter and must be nullptr");
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(
+        reserve == nullptr, "reserve", "reserve is a reserved parameter and must be nullptr");
 
-    rtKernelLaunchCfg_t *rt_cfg = nullptr;
-    if (cfg != nullptr ) {
-        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+    rtKernelLaunchCfg_t* rt_cfg = nullptr;
+    if (cfg != nullptr) {
+        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
     }
     const auto rtErr = rtsLaunchKernelWithConfig(funcHandle, numBlocks, stream, rt_cfg, argsHandle, reserve);
     if (rtErr != RT_ERROR_NONE) {
@@ -254,29 +252,34 @@ aclError aclrtLaunchKernelWithConfigImpl(aclrtFuncHandle funcHandle, uint32_t nu
 aclError aclmdlRITaskGetParamsImpl(aclmdlRITask task, aclmdlRITaskParams* params)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetParams);
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtModelTaskGetParams(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskParams*>(params)), rtModelTaskGetParams);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtModelTaskGetParams(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskParams*>(params)),
+        rtModelTaskGetParams);
     return ACL_SUCCESS;
 }
 
 aclError aclmdlRITaskSetParamsImpl(aclmdlRITask task, aclmdlRITaskParams* params)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskSetParams);
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtModelTaskSetParams(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskParams*>(params)), rtModelTaskSetParams);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtModelTaskSetParams(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskParams*>(params)),
+        rtModelTaskSetParams);
     return ACL_SUCCESS;
 }
 
-aclError aclmdlRIKernelTaskGetAttributeImpl(aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue *attrValue)
+aclError aclmdlRIKernelTaskGetAttributeImpl(
+    aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue* attrValue)
 {
     ACL_PROFILING_REG(acl::AclProfType::aclmdlRIKernelTaskGetAttribute);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(task);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrValue);
-    ACL_REQUIRES_RTS_OK(rtModelKernelTaskGetAttribute(static_cast<rtTask_t>(task),
-        static_cast<rtLaunchKernelAttrId>(attrId),
+    ACL_REQUIRES_RTS_OK(rtModelKernelTaskGetAttribute(
+        static_cast<rtTask_t>(task), static_cast<rtLaunchKernelAttrId>(attrId),
         reinterpret_cast<rtLaunchKernelAttrVal_t*>(attrValue)));
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsInitImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHandle)
+aclError aclrtKernelArgsInitImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle* argsHandle)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsInit");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
@@ -286,8 +289,8 @@ aclError aclrtKernelArgsInitImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle *ar
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsInitByUserMemImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle argsHandle, void *userHostMem,
-                                          size_t actualArgsSize)
+aclError aclrtKernelArgsInitByUserMemImpl(
+    aclrtFuncHandle funcHandle, aclrtArgsHandle argsHandle, void* userHostMem, size_t actualArgsSize)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsInitByUserMem");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
@@ -299,7 +302,7 @@ aclError aclrtKernelArgsInitByUserMemImpl(aclrtFuncHandle funcHandle, aclrtArgsH
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsGetMemSizeImpl(aclrtFuncHandle funcHandle, size_t userArgsSize, size_t *actualArgsSize)
+aclError aclrtKernelArgsGetMemSizeImpl(aclrtFuncHandle funcHandle, size_t userArgsSize, size_t* actualArgsSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetMemSize);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetMemSize");
@@ -310,7 +313,7 @@ aclError aclrtKernelArgsGetMemSizeImpl(aclrtFuncHandle funcHandle, size_t userAr
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsGetHandleMemSizeImpl(aclrtFuncHandle funcHandle, size_t *memSize)
+aclError aclrtKernelArgsGetHandleMemSizeImpl(aclrtFuncHandle funcHandle, size_t* memSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetHandleMemSize);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetHandleMemSize");
@@ -321,8 +324,8 @@ aclError aclrtKernelArgsGetHandleMemSizeImpl(aclrtFuncHandle funcHandle, size_t 
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsAppendImpl(aclrtArgsHandle argsHandle, void *param, size_t paramSize,
-                                   aclrtParamHandle *paramHandle)
+aclError aclrtKernelArgsAppendImpl(
+    aclrtArgsHandle argsHandle, void* param, size_t paramSize, aclrtParamHandle* paramHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsAppend);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsAppend");
@@ -335,7 +338,7 @@ aclError aclrtKernelArgsAppendImpl(aclrtArgsHandle argsHandle, void *param, size
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsAppendPlaceHolderImpl(aclrtArgsHandle argsHandle, aclrtParamHandle *paramHandle)
+aclError aclrtKernelArgsAppendPlaceHolderImpl(aclrtArgsHandle argsHandle, aclrtParamHandle* paramHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsAppendPlaceHolder);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsAppendPlaceHolder");
@@ -346,8 +349,8 @@ aclError aclrtKernelArgsAppendPlaceHolderImpl(aclrtArgsHandle argsHandle, aclrtP
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsGetPlaceHolderBufferImpl(aclrtArgsHandle argsHandle, aclrtParamHandle paramHandle,
-                                                 size_t dataSize, void **bufferAddr)
+aclError aclrtKernelArgsGetPlaceHolderBufferImpl(
+    aclrtArgsHandle argsHandle, aclrtParamHandle paramHandle, size_t dataSize, void** bufferAddr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetPlaceHolderBuffer);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetPlaceHolderBuffer");
@@ -360,8 +363,8 @@ aclError aclrtKernelArgsGetPlaceHolderBufferImpl(aclrtArgsHandle argsHandle, acl
     return ACL_SUCCESS;
 }
 
-aclError aclrtKernelArgsParaUpdateImpl(aclrtArgsHandle argsHandle, aclrtParamHandle paramHandle, void *param,
-                                       size_t paramSize)
+aclError aclrtKernelArgsParaUpdateImpl(
+    aclrtArgsHandle argsHandle, aclrtParamHandle paramHandle, void* param, size_t paramSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsParaUpdate);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsParaUpdate");
@@ -383,7 +386,7 @@ aclError aclrtKernelArgsFinalizeImpl(aclrtArgsHandle argsHandle)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetThreadLastTaskIdImpl(uint32_t *taskId)
+aclError aclrtGetThreadLastTaskIdImpl(uint32_t* taskId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetThreadLastTaskId);
     ACL_LOG_DEBUG("start to execute aclrtGetThreadLastTaskId");
@@ -392,7 +395,7 @@ aclError aclrtGetThreadLastTaskIdImpl(uint32_t *taskId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionNameImpl(aclrtFuncHandle funcHandle, uint32_t maxLen, char *name)
+aclError aclrtGetFunctionNameImpl(aclrtFuncHandle funcHandle, uint32_t maxLen, char* name)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionName);
     ACL_LOG_DEBUG("start to execute aclrtGetFunctionName, maxLen is [%u]", maxLen);
@@ -401,20 +404,20 @@ aclError aclrtGetFunctionNameImpl(aclrtFuncHandle funcHandle, uint32_t maxLen, c
     return ACL_SUCCESS;
 }
 
-aclError aclrtBinaryLoadFromDataImpl(const void *data, size_t length,
-    const aclrtBinaryLoadOptions *options, aclrtBinHandle *binHandle)
+aclError aclrtBinaryLoadFromDataImpl(
+    const void* data, size_t length, const aclrtBinaryLoadOptions* options, aclrtBinHandle* binHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryLoadFromData);
     ACL_LOG_DEBUG("start to execute aclrtBinaryLoadFromData, length is [%zu]", length);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
-    ACL_REQUIRES_RTS_OK(rtsBinaryLoadFromData(data, length,
-        reinterpret_cast<const rtLoadBinaryConfig_t*>(options), static_cast<rtBinHandle*>(binHandle)));
+    ACL_REQUIRES_RTS_OK(rtsBinaryLoadFromData(
+        data, length, reinterpret_cast<const rtLoadBinaryConfig_t*>(options), static_cast<rtBinHandle*>(binHandle)));
     return ACL_SUCCESS;
 }
 
-aclError aclrtRegisterCpuFuncImpl(const aclrtBinHandle handle, const char *funcName,
-    const char *kernelName, aclrtFuncHandle *funcHandle)
+aclError aclrtRegisterCpuFuncImpl(
+    const aclrtBinHandle handle, const char* funcName, const char* kernelName, aclrtFuncHandle* funcHandle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRegisterCpuFunc);
     ACL_LOG_DEBUG("start to execute aclrtRegisterCpuFunc");
@@ -422,31 +425,34 @@ aclError aclrtRegisterCpuFuncImpl(const aclrtBinHandle handle, const char *funcN
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcName);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(kernelName);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
-    ACL_REQUIRES_RTS_OK(rtsRegisterCpuFunc(static_cast<rtBinHandle>(handle), funcName, kernelName,
-        static_cast<rtFuncHandle*>(funcHandle)));
+    ACL_REQUIRES_RTS_OK(rtsRegisterCpuFunc(
+        static_cast<rtBinHandle>(handle), funcName, kernelName, static_cast<rtFuncHandle*>(funcHandle)));
     return ACL_SUCCESS;
 }
 
-aclError aclrtCmoWaitBarrierImpl(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream, uint32_t flag)
+aclError aclrtCmoWaitBarrierImpl(aclrtBarrierTaskInfo* taskInfo, aclrtStream stream, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCmoWaitBarrier);
     ACL_LOG_DEBUG("start to execute aclrtCmoWaitBarrier, flag is [%u]", flag);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(taskInfo);
     if ((taskInfo->barrierNum == 0U) || (taskInfo->barrierNum > ACL_RT_CMO_MAX_BARRIER_NUM)) {
-        ACL_LOG_ERROR("[Check][taskInfo]param taskInfo is invalid, taskInfo->barrierNum must be in range (0, %d]",
+        ACL_LOG_ERROR(
+            "[Check][taskInfo]param taskInfo is invalid, taskInfo->barrierNum must be in range (0, %d]",
             ACL_RT_CMO_MAX_BARRIER_NUM);
         const std::string barrierNumVal = std::to_string(taskInfo->barrierNum);
         const std::string expect = acl::AclErrorLogManager::FormatStr("(0, %d]", ACL_RT_CMO_MAX_BARRIER_NUM);
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
-            std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({funcName.c_str(), barrierNumVal.c_str(), "taskInfo->barrierNum", expect.c_str()}));
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+            std::vector<const char*>(
+                {funcName.c_str(), barrierNumVal.c_str(), "taskInfo->barrierNum", expect.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtBarrierTaskInfo_t rtTaskInfo;
     rtTaskInfo.logicIdNum = taskInfo->barrierNum;
     for (size_t i = 0U; i < taskInfo->barrierNum; i++) {
-        rtTaskInfo.cmoInfo[i].cmoType = static_cast<uint16_t>(taskInfo->cmoInfo[i].cmoType) +
+        rtTaskInfo.cmoInfo[i].cmoType =
+            static_cast<uint16_t>(taskInfo->cmoInfo[i].cmoType) +
             (static_cast<uint16_t>(RT_CMO_PREFETCH) - static_cast<uint16_t>(ACL_RT_CMO_TYPE_PREFETCH));
         rtTaskInfo.cmoInfo[i].logicId = taskInfo->cmoInfo[i].barrierId;
     }
@@ -454,21 +460,22 @@ aclError aclrtCmoWaitBarrierImpl(aclrtBarrierTaskInfo *taskInfo, aclrtStream str
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchKernelV2Impl(aclrtFuncHandle funcHandle, uint32_t numBlocks, const void *argsData,
-                                 size_t argsSize, aclrtLaunchKernelCfg *cfg, aclrtStream stream)
+aclError aclrtLaunchKernelV2Impl(
+    aclrtFuncHandle funcHandle, uint32_t numBlocks, const void* argsData, size_t argsSize, aclrtLaunchKernelCfg* cfg,
+    aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelV2);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelV2");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsData);
 
-    rtKernelLaunchCfg_t *rt_cfg = nullptr;
-    if (cfg != nullptr ) {
-        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+    rtKernelLaunchCfg_t* rt_cfg = nullptr;
+    if (cfg != nullptr) {
+        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
     }
 
-    const rtError_t rtErr = rtsLaunchKernelWithDevArgs(funcHandle, numBlocks, stream, rt_cfg,
-        argsData, static_cast<uint32_t>(argsSize), nullptr);
+    const rtError_t rtErr = rtsLaunchKernelWithDevArgs(
+        funcHandle, numBlocks, stream, rt_cfg, argsData, static_cast<uint32_t>(argsSize), nullptr);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
             ACL_LOG_WARN("rtsLaunchKernelWithDevArgs funHandle is invalid, runtime result = %d.", rtErr);
@@ -481,26 +488,27 @@ aclError aclrtLaunchKernelV2Impl(aclrtFuncHandle funcHandle, uint32_t numBlocks,
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchKernelWithHostArgsImpl(aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream,
-                                           aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize,
-                                           aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
+aclError aclrtLaunchKernelWithHostArgsImpl(
+    aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg* cfg, void* hostArgs,
+    size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray, size_t placeHolderNum)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithHostArgs);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
 
-    rtKernelLaunchCfg_t *rt_cfg = nullptr;
-    rtPlaceHolderInfo_t *rt_placeHolderArray = nullptr;
-    if (cfg != nullptr ) {
-        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+    rtKernelLaunchCfg_t* rt_cfg = nullptr;
+    rtPlaceHolderInfo_t* rt_placeHolderArray = nullptr;
+    if (cfg != nullptr) {
+        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
     }
 
-    if (placeHolderArray != nullptr ) {
-        rt_placeHolderArray = reinterpret_cast<rtPlaceHolderInfo_t *>(placeHolderArray);
+    if (placeHolderArray != nullptr) {
+        rt_placeHolderArray = reinterpret_cast<rtPlaceHolderInfo_t*>(placeHolderArray);
     }
 
-    const rtError_t rtErr = rtsLaunchKernelWithHostArgs(funcHandle, numBlocks, stream, rt_cfg,
-        hostArgs, static_cast<uint32_t>(argsSize), rt_placeHolderArray, placeHolderNum);
+    const rtError_t rtErr = rtsLaunchKernelWithHostArgs(
+        funcHandle, numBlocks, stream, rt_cfg, hostArgs, static_cast<uint32_t>(argsSize), rt_placeHolderArray,
+        placeHolderNum);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
             ACL_LOG_WARN("rtsLaunchKernelWithHostArgs funHandle is invalid, runtime result = %d.", rtErr);
@@ -513,17 +521,17 @@ aclError aclrtLaunchKernelWithHostArgsImpl(aclrtFuncHandle funcHandle, uint32_t 
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchKernelWithArgsArrayImpl(void *func, uint32_t numBlocks,
-                                            aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)
+aclError aclrtLaunchKernelWithArgsArrayImpl(
+    void* func, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg* cfg, void** args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithArgsArray);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithArgsArray");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_POSITIVE_REPORT(numBlocks);
 
-    rtKernelLaunchCfg_t *rt_cfg = nullptr;
+    rtKernelLaunchCfg_t* rt_cfg = nullptr;
     if (cfg != nullptr) {
-        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
+        rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
     }
 
     const rtError_t rtErr = rtLaunchKernelWithArgsArray(func, numBlocks, stream, rt_cfg, args);
@@ -541,8 +549,9 @@ aclError aclrtLaunchKernelWithArgsArrayImpl(void *func, uint32_t numBlocks,
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(void *func, aclrtDim3 gridDim, aclrtDim3 blockDim,
-    size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)
+aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    aclrtLaunchKernelCfg* cfg, void** args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithArgsArray);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithArgsArray");
@@ -550,9 +559,9 @@ aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(void *func, aclrtDim3 gridDim, a
 
     rtDim3 rtGridDim = {gridDim.x, gridDim.y, gridDim.z};
     rtDim3 rtBlockDim = {blockDim.x, blockDim.y, blockDim.z};
-    rtKernelLaunchCfg_t *rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
-    const rtError_t rtErr = rtLaunchSIMTKernelWithArgsArray(
-        func, rtGridDim, rtBlockDim, dynUbufSize, stream, rt_cfg, args);
+    rtKernelLaunchCfg_t* rt_cfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
+    const rtError_t rtErr =
+        rtLaunchSIMTKernelWithArgsArray(func, rtGridDim, rtBlockDim, dynUbufSize, stream, rt_cfg, args);
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
             ACL_LOG_WARN("rtLaunchSIMTKernelWithArgsArray func is invalid, runtime result = %d.", rtErr);
@@ -567,7 +576,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(void *func, aclrtDim3 gridDim, a
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFloatOverflowStatusImpl(void *outputAddr, uint64_t outputSize, aclrtStream stream)
+aclError aclrtGetFloatOverflowStatusImpl(void* outputAddr, uint64_t outputSize, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFloatOverflowStatus);
     ACL_LOG_INFO("start to execute aclrtGetFloatOverflowStatus, outputSize = %lu", outputSize);
@@ -576,9 +585,10 @@ aclError aclrtGetFloatOverflowStatusImpl(void *outputAddr, uint64_t outputSize, 
     return ACL_SUCCESS;
 }
 
-aclError aclrtLaunchSIMTKernelWithHostArgsImpl(void *func, aclrtDim3 gridDim, aclrtDim3 blockDim,
-    size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs,
-    size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
+aclError aclrtLaunchSIMTKernelWithHostArgsImpl(
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    aclrtLaunchKernelCfg* cfg, void* hostArgs, size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray,
+    size_t placeHolderNum)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithHostArgs);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithHostArgs");
@@ -588,12 +598,11 @@ aclError aclrtLaunchSIMTKernelWithHostArgsImpl(void *func, aclrtDim3 gridDim, ac
 
     rtDim3 rtGridDim = {gridDim.x, gridDim.y, gridDim.z};
     rtDim3 rtBlockDim = {blockDim.x, blockDim.y, blockDim.z};
-    rtKernelLaunchCfg_t *rtCfg = reinterpret_cast<rtKernelLaunchCfg_t *>(cfg);
-    rtPlaceHolderInfo_t *rtPlaceHolder = reinterpret_cast<rtPlaceHolderInfo_t *>(placeHolderArray);
+    rtKernelLaunchCfg_t* rtCfg = reinterpret_cast<rtKernelLaunchCfg_t*>(cfg);
+    rtPlaceHolderInfo_t* rtPlaceHolder = reinterpret_cast<rtPlaceHolderInfo_t*>(placeHolderArray);
     const rtError_t rtErr = rtLaunchSIMTKernelWithHostArgs(
-        func, rtGridDim, rtBlockDim, dynUbufSize, stream, rtCfg, hostArgs,
-        static_cast<uint32_t>(argsSize), rtPlaceHolder,
-        static_cast<uint32_t>(placeHolderNum));
+        func, rtGridDim, rtBlockDim, dynUbufSize, stream, rtCfg, hostArgs, static_cast<uint32_t>(argsSize),
+        rtPlaceHolder, static_cast<uint32_t>(placeHolderNum));
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
             ACL_LOG_WARN("rtLaunchSIMTKernelWithHostArgs func is invalid, runtime result = %d.", rtErr);
@@ -617,11 +626,13 @@ aclError aclrtResetFloatOverflowStatusImpl(aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtNpuGetFloatOverFlowStatusImpl(void *outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)
+aclError aclrtNpuGetFloatOverFlowStatusImpl(
+    void* outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNpuGetFloatOverFlowStatus);
     ACL_LOG_INFO("start to execute aclrtNpuGetFloatOverFlowStatus, outputSize = %lu", outputSize);
-    ACL_REQUIRES_RTS_OK(rtsNpuGetFloatOverFlowStatus(outputAddr, outputSize, checkMode, static_cast<rtStream_t>(stream)));
+    ACL_REQUIRES_RTS_OK(
+        rtsNpuGetFloatOverFlowStatus(outputAddr, outputSize, checkMode, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtNpuGetFloatOverFlowStatus");
     return ACL_SUCCESS;
 }
@@ -635,48 +646,51 @@ aclError aclrtNpuClearFloatOverFlowStatusImpl(uint32_t checkMode, aclrtStream st
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetHardwareSyncAddrImpl(void **addr)
+aclError aclrtGetHardwareSyncAddrImpl(void** addr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetHardwareSyncAddr);
     ACL_REQUIRES_RTS_OK(rtsGetHardwareSyncAddr(addr));
     return ACL_SUCCESS;
 }
 
-aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo *taskInfo, const aclrtStream stream, void *reserve)
+aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo* taskInfo, const aclrtStream stream, void* reserve)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRandomNumAsync);
     ACL_LOG_INFO("start to execute aclrtRandomNumAsync");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(taskInfo);
     aclDataType type = taskInfo->dataType;
     if (kMapDataType.count(type) == 0) {
-         ACL_LOG_ERROR("[Check][param]param dataType [%d] is invalid.", static_cast<int32_t>(type));
-         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
-            std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({funcName.c_str(), acl::GetDataTypeDesc(type), "taskInfo->dataType", "The data type is currently not supported"}));
+        ACL_LOG_ERROR("[Check][param]param dataType [%d] is invalid.", static_cast<int32_t>(type));
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>(
+                {funcName.c_str(), acl::GetDataTypeDesc(type), "taskInfo->dataType",
+                 "The data type is currently not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
-    rtRandomNumTaskInfo_t *rtTaskInfo = const_cast<rtRandomNumTaskInfo_t *>(reinterpret_cast<const rtRandomNumTaskInfo_t *>(taskInfo));
+    rtRandomNumTaskInfo_t* rtTaskInfo =
+        const_cast<rtRandomNumTaskInfo_t*>(reinterpret_cast<const rtRandomNumTaskInfo_t*>(taskInfo));
     rtTaskInfo->dataType = kMapDataType.at(type);
-    ACL_REQUIRES_RTS_OK(rtsLaunchRandomNumTask(rtTaskInfo,
-        static_cast<rtStream_t>(stream), reserve));
+    ACL_REQUIRES_RTS_OK(rtsLaunchRandomNumTask(rtTaskInfo, static_cast<rtStream_t>(stream), reserve));
     ACL_LOG_INFO("successfully execute aclrtRandomNumAsync");
     return ACL_SUCCESS;
 }
 
-aclError aclrtTaskUpdateAsyncImpl(aclrtStream taskStream, uint32_t taskId, aclrtTaskUpdateInfo *info, aclrtStream execStream)
+aclError aclrtTaskUpdateAsyncImpl(
+    aclrtStream taskStream, uint32_t taskId, aclrtTaskUpdateInfo* info, aclrtStream execStream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtTaskUpdateAsync);
     ACL_LOG_INFO("start to execute aclrtTaskUpdateAsync");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(info);
-    ACL_REQUIRES_RTS_OK(rtsLaunchUpdateTask(static_cast<rtStream_t>(taskStream), taskId,
-        static_cast<rtStream_t>(execStream),
-        reinterpret_cast<rtTaskUpdateCfg_t *>(info)));
+    ACL_REQUIRES_RTS_OK(rtsLaunchUpdateTask(
+        static_cast<rtStream_t>(taskStream), taskId, static_cast<rtStream_t>(execStream),
+        reinterpret_cast<rtTaskUpdateCfg_t*>(info)));
     ACL_LOG_INFO("successfully execute aclrtTaskUpdateAsync");
     return ACL_SUCCESS;
 }
 
-aclError aclrtCacheLastTaskOpInfoImpl(const void * const infoPtr, const size_t infoSize)
+aclError aclrtCacheLastTaskOpInfoImpl(const void* const infoPtr, const size_t infoSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCacheLastTaskOpInfo);
     ACL_LOG_INFO("start to execute aclrtCacheLastTaskOpInfo");
@@ -698,7 +712,7 @@ aclError aclrtCacheLastTaskExtendInfoImpl(const char* const extendInfoPtr, const
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t *attrValue)
+aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t* attrValue)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionAttribute);
     ACL_LOG_INFO("start to execute aclrtGetFunctionAttribute");
@@ -711,7 +725,7 @@ aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttr
     return ACL_SUCCESS;
 }
 
-aclError aclmdlRITaskGetSeqIdImpl(aclmdlRITask task, uint32_t *id)
+aclError aclmdlRITaskGetSeqIdImpl(aclmdlRITask task, uint32_t* id)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetSeqId);
 
@@ -719,13 +733,13 @@ aclError aclmdlRITaskGetSeqIdImpl(aclmdlRITask task, uint32_t *id)
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetBinaryImpl(const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle)
+aclError aclrtFunctionGetBinaryImpl(const aclrtFuncHandle funcHandle, aclrtBinHandle* binHandle)
 {
     ACL_REQUIRES_RTS_OK(rtFunctionGetBinary(funcHandle, binHandle));
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetParamCountImpl(const void *func, size_t *paramCount)
+aclError aclrtFunctionGetParamCountImpl(const void* func, size_t* paramCount)
 {
     ACL_LOG_INFO("start to execute aclrtFunctionGetParamCount");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
@@ -735,40 +749,41 @@ aclError aclrtFunctionGetParamCountImpl(const void *func, size_t *paramCount)
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetParamInfoImpl(const void *func, size_t paramIndex,
-                                       size_t *paramOffset, size_t *paramSize)
+aclError aclrtFunctionGetParamInfoImpl(const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize)
 {
     ACL_LOG_INFO("start to execute aclrtFunctionGetParamInfo, paramIndex=%zu.", paramIndex);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     if ((paramOffset == nullptr) && (paramSize == nullptr)) {
         ACL_LOG_ERROR("[Check][paramOffset,paramSize]paramOffset and paramSize cannot both be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG,
-            {"func", "param"}, {"aclrtFunctionGetParamInfo", "paramOffset and paramSize"});
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_NULL_POINTER_AT_SAME_TIME_MSG, {"func", "param"},
+            {"aclrtFunctionGetParamInfo", "paramOffset and paramSize"});
         return ACL_ERROR_INVALID_PARAM;
     }
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtFunctionGetParamInfo(func, paramIndex, paramOffset, paramSize), rtFunctionGetParamInfo);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtFunctionGetParamInfo(func, paramIndex, paramOffset, paramSize), rtFunctionGetParamInfo);
     ACL_LOG_INFO("successfully execute aclrtFunctionGetParamInfo.");
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetAvailDynUbufPerBlockImpl(void *func, uint32_t flags, size_t *dynamicUbufSize)
+aclError aclrtFunctionGetAvailDynUbufPerBlockImpl(void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
     ACL_LOG_INFO("start to execute aclrtFunctionGetAvailDynUbufPerBlock.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dynamicUbufSize);
     ACL_REQUIRES_PARAM_EQUAL_REPORT(flags, 0U);
 
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtFunctionGetAvailDynUbufPerBlock(func, flags, dynamicUbufSize), rtFunctionGetAvailDynUbufPerBlock);
-    ACL_LOG_INFO("successfully execute aclrtFunctionGetAvailDynUbufPerBlock, dynamicUbufSize=%zu.",
-        *dynamicUbufSize);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtFunctionGetAvailDynUbufPerBlock(func, flags, dynamicUbufSize), rtFunctionGetAvailDynUbufPerBlock);
+    ACL_LOG_INFO("successfully execute aclrtFunctionGetAvailDynUbufPerBlock, dynamicUbufSize=%zu.", *dynamicUbufSize);
     return ACL_SUCCESS;
 }
 
-aclError aclmdlRITaskGetTypeImpl(aclmdlRITask task, aclmdlRITaskType *type)
+aclError aclmdlRITaskGetTypeImpl(aclmdlRITask task, aclmdlRITaskType* type)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetType);
-    
-    ACL_REQUIRES_RTS_OK(rtTaskGetType(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskType *>(type)));
+
+    ACL_REQUIRES_RTS_OK(rtTaskGetType(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskType*>(type)));
 
     return ACL_SUCCESS;
 }

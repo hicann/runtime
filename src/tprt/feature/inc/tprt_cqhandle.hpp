@@ -20,10 +20,11 @@ class TprtCqHandle {
 public:
     explicit TprtCqHandle(const uint32_t devId, const uint32_t cqId);
     ~TprtCqHandle();
-    uint32_t TprtCqWriteCqe(const uint8_t errorType, const uint32_t errorCode, const TprtSqe_t *sqe,
-                            const TprtSqHandle *sqHandle);
-    void TprtCqHandleGetCqe(TprtReportCqeInfo_t *cqeInfo);
+    uint32_t TprtCqWriteCqe(
+        const uint8_t errorType, const uint32_t errorCode, const TprtSqe_t* sqe, const TprtSqHandle* sqHandle);
+    void TprtCqHandleGetCqe(TprtReportCqeInfo_t* cqeInfo);
     bool TprtCqIsFull(uint32_t queueDepth);
+
 private:
     uint32_t devId_{0xFFFFFFFFU};
     uint32_t cqId_{0xFFFFFFFFU};
@@ -32,7 +33,7 @@ private:
     std::array<TprtCqeReport_t, SQCQ_MAX_DEPTH> cqQueue_;
     std::mutex cqQueueLock_;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 
 #endif

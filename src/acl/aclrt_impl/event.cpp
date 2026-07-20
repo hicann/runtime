@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-aclError aclrtCreateEventImpl(aclrtEvent *event)
+aclError aclrtCreateEventImpl(aclrtEvent* event)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateEvent);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
@@ -40,7 +40,7 @@ aclError aclrtCreateEventImpl(aclrtEvent *event)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCreateEventWithFlagImpl(aclrtEvent *event, uint32_t flag)
+aclError aclrtCreateEventWithFlagImpl(aclrtEvent* event, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateEventWithFlag);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
@@ -54,7 +54,7 @@ aclError aclrtCreateEventWithFlagImpl(aclrtEvent *event, uint32_t flag)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCreateEventExWithFlagImpl(aclrtEvent *event, uint32_t flag)
+aclError aclrtCreateEventExWithFlagImpl(aclrtEvent* event, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateEventExWithFlag);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_EVENT);
@@ -83,7 +83,7 @@ aclError aclrtDestroyEventImpl(aclrtEvent event)
 
 aclError aclrtRecordEventImpl(aclrtEvent event, aclrtStream stream)
 {
-     ACL_PROFILING_REG(acl::AclProfType::AclrtRecordEvent);
+    ACL_PROFILING_REG(acl::AclProfType::AclrtRecordEvent);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
@@ -97,9 +97,9 @@ aclError aclrtRecordEventWithFlagImpl(aclrtEvent event, aclrtStream stream, uint
     ACL_PROFILING_REG(acl::AclProfType::AclrtRecordEventWithFlag);
     ACL_LOG_INFO("start to execute aclrtRecordEventWithFlag");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET((flag == ACL_EVENT_RECORD_DEFAULT) ||
-        (flag == ACL_EVENT_RECORD_EXTERNAL), flag, "ACL_EVENT_RECORD_DEFAULT or ACL_EVENT_RECORD_EXTERNAL",
-        ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        (flag == ACL_EVENT_RECORD_DEFAULT) || (flag == ACL_EVENT_RECORD_EXTERNAL), flag,
+        "ACL_EVENT_RECORD_DEFAULT or ACL_EVENT_RECORD_EXTERNAL", ACL_ERROR_INVALID_PARAM);
 
     if (flag == ACL_EVENT_RECORD_DEFAULT) {
         return aclrtRecordEventImpl(event, stream);
@@ -120,7 +120,7 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
+aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus* status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEvent);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
@@ -137,7 +137,7 @@ aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
     return ACL_SUCCESS;
 }
 
-aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus *status)
+aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus* status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEventStatus);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
@@ -153,7 +153,7 @@ aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus *s
     return ACL_SUCCESS;
 }
 
-aclError aclrtQueryEventWaitStatusImpl(aclrtEvent event, aclrtEventWaitStatus *status)
+aclError aclrtQueryEventWaitStatusImpl(aclrtEvent event, aclrtEventWaitStatus* status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEventWaitStatus);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
@@ -184,7 +184,8 @@ aclError aclrtSynchronizeEventWithTimeoutImpl(aclrtEvent event, int32_t timeout)
 {
     ACL_LOG_INFO("start to execute aclrtSynchronizeEventWithTimeout, timeout = %dms", timeout);
     constexpr int32_t defaultTimeout = -1;
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= defaultTimeout, timeout, "[-1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        timeout >= defaultTimeout, timeout, "[-1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     const rtError_t rtErr = rtEventSynchronizeWithTimeout(static_cast<rtEvent_t>(event), timeout);
@@ -197,7 +198,7 @@ aclError aclrtSynchronizeEventWithTimeoutImpl(aclrtEvent event, int32_t timeout)
     return ACL_SUCCESS;
 }
 
-aclError aclrtEventElapsedTimeImpl(float *ms, aclrtEvent startEvent, aclrtEvent endEvent)
+aclError aclrtEventElapsedTimeImpl(float* ms, aclrtEvent startEvent, aclrtEvent endEvent)
 {
     ACL_LOG_INFO("start to execute aclrtEventElapsedTime");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ms);
@@ -209,7 +210,7 @@ aclError aclrtEventElapsedTimeImpl(float *ms, aclrtEvent startEvent, aclrtEvent 
     return ACL_SUCCESS;
 }
 
-aclError aclrtEventGetTimestampImpl(aclrtEvent event, uint64_t *timestamp)
+aclError aclrtEventGetTimestampImpl(aclrtEvent event, uint64_t* timestamp)
 {
     ACL_LOG_INFO("start to execute aclrtEventGetTimestamp");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(timestamp);
@@ -252,18 +253,19 @@ aclError aclrtSetOpExecuteTimeOutWithMsImpl(uint32_t timeout)
     return ACL_SUCCESS;
 }
 
-aclError aclrtSetOpExecuteTimeOutV2Impl(uint64_t timeout, uint64_t *actualTimeout)
+aclError aclrtSetOpExecuteTimeOutV2Impl(uint64_t timeout, uint64_t* actualTimeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpExecuteTimeOutV2);
     ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us", timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(actualTimeout);
     ACL_REQUIRES_RTS_OK(rtSetOpExecuteTimeOutV2(timeout, actualTimeout));
-    ACL_LOG_INFO("successfully execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us, actual timeout = %zu us", timeout,
-                 *actualTimeout);
+    ACL_LOG_INFO(
+        "successfully execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us, actual timeout = %zu us", timeout,
+        *actualTimeout);
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetOpTimeOutIntervalImpl(uint64_t *interval)
+aclError aclrtGetOpTimeOutIntervalImpl(uint64_t* interval)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetOpTimeOutInterval);
     ACL_LOG_INFO("start to execute aclrtGetOpTimeOutIntervalImpl");
@@ -273,8 +275,7 @@ aclError aclrtGetOpTimeOutIntervalImpl(uint64_t *interval)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray,
-                                size_t arraySize, size_t *retSize)
+aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo* memUceInfoArray, size_t arraySize, size_t* retSize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetMemUceInfo);
     ACL_LOG_INFO("start to execute aclrtGetMemUceInfo on device %d, arraySize %zu", deviceId, arraySize);
@@ -284,50 +285,55 @@ aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArr
     rtMemUceInfo rtUceInfo = {};
     ACL_REQUIRES_RTS_OK(rtGetMemUceInfo(deviceId, &rtUceInfo));
     if (arraySize < rtUceInfo.count) {
-        ACL_LOG_ERROR("Failed to execute aclrtGetMemUceInfo, because arraySize %zu is less than the required size %u.",
-                      arraySize, rtUceInfo.count);
+        ACL_LOG_ERROR(
+            "Failed to execute aclrtGetMemUceInfo, because arraySize %zu is less than the required size %u.", arraySize,
+            rtUceInfo.count);
         const std::string arraySizeVal = std::to_string(arraySize);
-        std::string reason = acl::AclErrorLogManager::FormatStr(
-            "arraySize must be greater than or equal to %u", rtUceInfo.count);
+        std::string reason =
+            acl::AclErrorLogManager::FormatStr("arraySize must be greater than or equal to %u", rtUceInfo.count);
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
-            std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({funcName.c_str(), arraySizeVal.c_str(), "arraySize", reason.c_str()}));
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>({funcName.c_str(), arraySizeVal.c_str(), "arraySize", reason.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
     size_t realSize = std::min(rtUceInfo.count, RT_MAX_RECORD_PA_NUM_PER_DEV);
     for (size_t i = 0; i < realSize; ++i) {
-        memUceInfoArray[i].addr = reinterpret_cast<void *>(rtUceInfo.repairAddr[i].ptr);
+        memUceInfoArray[i].addr = reinterpret_cast<void*>(rtUceInfo.repairAddr[i].ptr);
         memUceInfoArray[i].len = rtUceInfo.repairAddr[i].len;
-        (void)memset_s(memUceInfoArray[i].reserved, sizeof(memUceInfoArray[i].reserved),
-                       0, sizeof(memUceInfoArray[i].reserved));
+        (void)memset_s(
+            memUceInfoArray[i].reserved, sizeof(memUceInfoArray[i].reserved), 0, sizeof(memUceInfoArray[i].reserved));
     }
     *retSize = realSize;
 
-    ACL_LOG_INFO("successfully execute aclrtGetMemUceInfo on device %d, arraySize %zu, retSize %zu,",
-                 deviceId, arraySize, *retSize);
+    ACL_LOG_INFO(
+        "successfully execute aclrtGetMemUceInfo on device %d, arraySize %zu, retSize %zu,", deviceId, arraySize,
+        *retSize);
     return ACL_SUCCESS;
 }
 
-aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize)
+aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo* memUceInfoArray, size_t arraySize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemUceRepair);
     ACL_LOG_INFO("start to execute aclrtMemUceRepair on device %d, arraySize %zu", deviceId, arraySize);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memUceInfoArray);
 
-    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(arraySize > RT_MAX_RECORD_PA_NUM_PER_DEV, arraySize, 
-        "must be less than or equal to 128", ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(
+        arraySize > RT_MAX_RECORD_PA_NUM_PER_DEV, arraySize, "must be less than or equal to 128",
+        ACL_ERROR_INVALID_PARAM);
 
-    //reserved value check, should be fill with zero
+    // reserved value check, should be fill with zero
     size_t reservedZeroValue[UCE_INFO_RESERVED_SIZE] = {0};
     for (size_t i = 0; i < arraySize; ++i) {
         if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, UCE_INFO_RESERVED_SIZE)) {
             ACL_LOG_ERROR("Failed to execute aclrtMemUceRepair with mismatched version, "
                           "pls set valid value only for ptr and len.");
-            const char_t *argList[] = {"func", "param", "reason"};
+            const char_t* argList[] = {"func", "param", "reason"};
             std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-            const char_t *argVal[] = {funcName.c_str(), "memUceInfoArray.reserved", "memUceInfoArray.reserved is a reserved parameter and must be 0"};
+            const char_t* argVal[] = {
+                funcName.c_str(), "memUceInfoArray.reserved",
+                "memUceInfoArray.reserved is a reserved parameter and must be 0"};
             acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_NO_VALUE_MSG, argList, argVal, 3U);
             return ACL_ERROR_INVALID_PARAM;
         }
@@ -345,7 +351,7 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArra
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetEventIdImpl(aclrtEvent event, uint32_t *eventId)
+aclError aclrtGetEventIdImpl(aclrtEvent event, uint32_t* eventId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetEventId);
     ACL_LOG_INFO("start to execute aclrtGetEventId");
@@ -358,7 +364,7 @@ aclError aclrtGetEventIdImpl(aclrtEvent event, uint32_t *eventId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetEventAvailNumImpl(uint32_t *eventCount)
+aclError aclrtGetEventAvailNumImpl(uint32_t* eventCount)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetEventAvailNum);
     ACL_LOG_INFO("start to execute aclrtGetEventAvailNum");
@@ -371,7 +377,7 @@ aclError aclrtGetEventAvailNumImpl(uint32_t *eventCount)
 }
 
 // Implementation of querying detailed information of NPU faults
-aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo *errorInfo)
+aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo* errorInfo)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetErrorVerbose);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(errorInfo);
@@ -383,16 +389,18 @@ aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo *errorInfo)
     rtErrorInfo rtsErrorInfo = {};
     // Call RTS interface
     ACL_REQUIRES_RTS_OK(rtsGetErrorVerbose(rtsDeviceId, &rtsErrorInfo));
-    aclrtMemUceInfoArray *uceInfo = &(errorInfo->detail.uceInfo);
+    aclrtMemUceInfoArray* uceInfo = &(errorInfo->detail.uceInfo);
     errorInfo->tryRepair = rtsErrorInfo.tryRepair;
     errorInfo->hasDetail = rtsErrorInfo.hasDetail;
     errorInfo->errorType = static_cast<aclrtErrorType>(rtsErrorInfo.errorType);
     errorInfo->detail.aicoreErrType = static_cast<aclrtAicoreErrorType>(rtsErrorInfo.detail.aicoreErrType);
     if ((rtsErrorInfo.hasDetail == 1U) && (rtsErrorInfo.errorType == RT_ERROR_MEMORY)) {
         uceInfo->arraySize = rtsErrorInfo.detail.uceInfo.arraySize;
-        size_t realSize = std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(ACL_RT_MEM_UCE_INFO_MAX_NUM));
+        size_t realSize =
+            std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(ACL_RT_MEM_UCE_INFO_MAX_NUM));
         for (size_t i = 0U; i < realSize; ++i) {
-            uceInfo->memUceInfoArray[i].addr = reinterpret_cast<void *>(rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr);
+            uceInfo->memUceInfoArray[i].addr =
+                reinterpret_cast<void*>(rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr);
             uceInfo->memUceInfoArray[i].len = rtsErrorInfo.detail.uceInfo.repairAddrArray[i].len;
         }
     }
@@ -401,7 +409,7 @@ aclError aclrtGetErrorVerboseImpl(int32_t deviceId, aclrtErrorInfo *errorInfo)
 }
 
 // Repair NPU malfunction implementation
-aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo *errorInfo)
+aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo* errorInfo)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRepairError);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(errorInfo);
@@ -416,9 +424,11 @@ aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo *errorInfo)
     rtsErrorInfo.detail.aicoreErrType = static_cast<rtAicoreErrorType>(errorInfo->detail.aicoreErrType);
     if ((rtsErrorInfo.hasDetail == 1U) && (rtsErrorInfo.errorType == RT_ERROR_MEMORY)) {
         rtsErrorInfo.detail.uceInfo.arraySize = errorInfo->detail.uceInfo.arraySize;
-        size_t realSize = std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(RT_MAX_RECORD_PA_NUM_PER_DEV));
+        size_t realSize =
+            std::min(rtsErrorInfo.detail.uceInfo.arraySize, static_cast<size_t>(RT_MAX_RECORD_PA_NUM_PER_DEV));
         for (size_t i = 0U; i < realSize; ++i) {
-            rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr = reinterpret_cast<uint64_t>(errorInfo->detail.uceInfo.memUceInfoArray[i].addr);
+            rtsErrorInfo.detail.uceInfo.repairAddrArray[i].ptr =
+                reinterpret_cast<uint64_t>(errorInfo->detail.uceInfo.memUceInfoArray[i].addr);
             rtsErrorInfo.detail.uceInfo.repairAddrArray[i].len = errorInfo->detail.uceInfo.memUceInfoArray[i].len;
         }
     }
@@ -439,24 +449,27 @@ aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent even
     return ACL_SUCCESS;
 }
 
-aclError aclrtIpcGetEventHandleImpl(aclrtEvent event, aclrtIpcEventHandle *handle)
+aclError aclrtIpcGetEventHandleImpl(aclrtEvent event, aclrtIpcEventHandle* handle)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcGetEventHandle);
     ACL_LOG_INFO("start to execute aclrtIpcGetEventHandle.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtIpcGetEventHandle(static_cast<rtEvent_t>(event), reinterpret_cast<rtIpcEventHandle_t*>(handle)), rtIpcGetEventHandle);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtIpcGetEventHandle(static_cast<rtEvent_t>(event), reinterpret_cast<rtIpcEventHandle_t*>(handle)),
+        rtIpcGetEventHandle);
     ACL_LOG_INFO("successfully execute aclrtIpcGetEventHandle.");
     return ACL_SUCCESS;
 }
 
-aclError aclrtIpcOpenEventHandleImpl(aclrtIpcEventHandle handle, aclrtEvent *event)
+aclError aclrtIpcOpenEventHandleImpl(aclrtIpcEventHandle handle, aclrtEvent* event)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcOpenEventHandle);
     ACL_LOG_INFO("start to execute aclrtIpcOpenEventHandle.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     rtEvent_t rtEvent = nullptr;
-    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtIpcOpenEventHandle(*(rtIpcEventHandle_t*)&handle, &rtEvent), rtIpcOpenEventHandle);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtIpcOpenEventHandle(*(rtIpcEventHandle_t*)&handle, &rtEvent), rtIpcOpenEventHandle);
     *event = static_cast<aclrtEvent>(rtEvent);
     ACL_LOG_INFO("successfully execute aclrtIpcOpenEventHandle.");
     return ACL_SUCCESS;

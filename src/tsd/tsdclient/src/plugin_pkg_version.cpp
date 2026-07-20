@@ -26,7 +26,8 @@ const std::string KEY_VERSION = "version";
 const std::string KEY_TIMESTAMP = "timestamp";
 } // namespace
 
-std::string PluginPkgVersionUtil::GetIniNameByPkgName(const std::string &pkgName) {
+std::string PluginPkgVersionUtil::GetIniNameByPkgName(const std::string& pkgName)
+{
     if (pkgName.size() > PKG_SUFFIX.size() &&
         pkgName.compare(pkgName.size() - PKG_SUFFIX.size(), PKG_SUFFIX.size(), PKG_SUFFIX) == 0) {
         return pkgName.substr(0U, pkgName.size() - PKG_SUFFIX.size()) + INI_SUFFIX;
@@ -34,7 +35,8 @@ std::string PluginPkgVersionUtil::GetIniNameByPkgName(const std::string &pkgName
     return pkgName + INI_SUFFIX;
 }
 
-bool PluginPkgVersionUtil::ParseLine(const std::string &line, std::string &key, std::string &value) {
+bool PluginPkgVersionUtil::ParseLine(const std::string& line, std::string& key, std::string& value)
+{
     std::string trimmed = line;
     TrimWhitespace(trimmed);
     if (trimmed.empty() || trimmed[0] == '#' || trimmed[0] == ';') {
@@ -51,7 +53,8 @@ bool PluginPkgVersionUtil::ParseLine(const std::string &line, std::string &key, 
     return !key.empty();
 }
 
-bool PluginPkgVersionUtil::ParseIniFile(const std::string &iniPath, PluginPkgVersion &info) {
+bool PluginPkgVersionUtil::ParseIniFile(const std::string& iniPath, PluginPkgVersion& info)
+{
     std::ifstream ifs(iniPath);
     if (!ifs.is_open()) {
         return false;
@@ -69,8 +72,8 @@ bool PluginPkgVersionUtil::ParseIniFile(const std::string &iniPath, PluginPkgVer
             continue;
         }
         // key 大小写不敏感，统一转小写后再比较，兼容 Version=/VERSION=/version= 等写法
-        std::transform(k.begin(), k.end(), k.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        std::transform(
+            k.begin(), k.end(), k.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         if (k == KEY_VERSION) {
             info.version = v;
         } else if (k == KEY_TIMESTAMP) {
@@ -83,13 +86,14 @@ bool PluginPkgVersionUtil::ParseIniFile(const std::string &iniPath, PluginPkgVer
     return !info.version.empty();
 }
 
-int32_t PluginPkgVersionUtil::CompareVersion(const std::string &versionA, const std::string &versionB) {
+int32_t PluginPkgVersionUtil::CompareVersion(const std::string& versionA, const std::string& versionB)
+{
     std::vector<std::string> partsA = SplitByChar(versionA, '.');
     std::vector<std::string> partsB = SplitByChar(versionB, '.');
     size_t n = std::max(partsA.size(), partsB.size());
     for (size_t i = 0U; i < n; ++i) {
-        const std::string &a = (i < partsA.size()) ? partsA[i] : std::string("0");
-        const std::string &b = (i < partsB.size()) ? partsB[i] : std::string("0");
+        const std::string& a = (i < partsA.size()) ? partsA[i] : std::string("0");
+        const std::string& b = (i < partsB.size()) ? partsB[i] : std::string("0");
         int32_t cmp = CompareSegmentNumeric(a, b);
         if (cmp != 0) {
             return cmp;
@@ -98,14 +102,16 @@ int32_t PluginPkgVersionUtil::CompareVersion(const std::string &versionA, const 
     return 0;
 }
 
-int32_t PluginPkgVersionUtil::CompareTimestamp(const std::string &timestampA, const std::string &timestampB) {
+int32_t PluginPkgVersionUtil::CompareTimestamp(const std::string& timestampA, const std::string& timestampB)
+{
     if (timestampA == timestampB) {
         return 0;
     }
     return (timestampA < timestampB) ? -1 : 1;
 }
 
-int32_t PluginPkgVersionUtil::Compare(const PluginPkgVersion &a, const PluginPkgVersion &b) {
+int32_t PluginPkgVersionUtil::Compare(const PluginPkgVersion& a, const PluginPkgVersion& b)
+{
     int32_t cmp = CompareVersion(a.version, b.version);
     if (cmp != 0) {
         return cmp;

@@ -19,8 +19,8 @@
 namespace acl {
 namespace file_utils {
 
-aclError GetSoRealPath(std::string &path);
-std::string GetLocalRealPath(const std::string &path);
+aclError GetSoRealPath(std::string& path);
+std::string GetLocalRealPath(const std::string& path);
 } // namespace file_utils
 } // namespace acl
 

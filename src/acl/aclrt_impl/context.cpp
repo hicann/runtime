@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-aclError aclrtCreateContextImpl(aclrtContext *context, int32_t deviceId)
+aclError aclrtCreateContextImpl(aclrtContext* context, int32_t deviceId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateContext);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_CONTEXT);
@@ -71,7 +71,7 @@ aclError aclrtSetCurrentContextImpl(aclrtContext context)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetCurrentContextImpl(aclrtContext *context)
+aclError aclrtGetCurrentContextImpl(aclrtContext* context)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetCurrentContext);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(context);
@@ -87,26 +87,25 @@ aclError aclrtGetCurrentContextImpl(aclrtContext *context)
     return ACL_SUCCESS;
 }
 
-static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
+static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t* value, bool isCtx)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     ACL_CHECK_INVALID_VALUE_WITH_DESC(
         (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
         acl::GetSysParamOptDesc(opt), "opt",
-        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
-        ACL_ERROR_INVALID_PARAM);
+        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY", ACL_ERROR_INVALID_PARAM);
     rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
         rtErr = rtCtxGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
-    }
-    else {
+    } else {
         rtErr = rtGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
     }
 
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_SYSPARAMOPT_NOT_SET) {
-            ACL_LOG_WARN("option %d is not set, runtime errorCode is %d",
-                static_cast<int32_t>(opt),  static_cast<int32_t>(rtErr));
+            ACL_LOG_WARN(
+                "option %d is not set, runtime errorCode is %d", static_cast<int32_t>(opt),
+                static_cast<int32_t>(rtErr));
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
@@ -118,8 +117,7 @@ static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
     ACL_CHECK_INVALID_VALUE_WITH_DESC(
         (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
         acl::GetSysParamOptDesc(opt), "opt",
-        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
-        ACL_ERROR_INVALID_PARAM);
+        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY", ACL_ERROR_INVALID_PARAM);
     if (isCtx) {
         ACL_REQUIRES_RTS_OK(rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
     } else {
@@ -129,8 +127,7 @@ static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
     return ACL_SUCCESS;
 }
 
-
-aclError aclrtCtxGetSysParamOptImpl(aclSysParamOpt opt, int64_t *value)
+aclError aclrtCtxGetSysParamOptImpl(aclSysParamOpt opt, int64_t* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxGetSysParamOpt);
     return GetSysParamOpt(opt, value, true);
@@ -139,20 +136,15 @@ aclError aclrtCtxGetSysParamOptImpl(aclSysParamOpt opt, int64_t *value)
 aclError aclrtCtxSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxSetSysParamOpt);
-    ACL_LOG_INFO("start to execute aclrtCtxSetSysParamOpt, opt = %d, value = %ld.",
-                 static_cast<int32_t>(opt), value);
+    ACL_LOG_INFO("start to execute aclrtCtxSetSysParamOpt, opt = %d, value = %ld.", static_cast<int32_t>(opt), value);
     return SetSysParamOpt(opt, value, true);
 }
 
-aclError aclrtGetSysParamOptImpl(aclSysParamOpt opt, int64_t *value)
-{
-    return GetSysParamOpt(opt, value, false);
-}
+aclError aclrtGetSysParamOptImpl(aclSysParamOpt opt, int64_t* value) { return GetSysParamOpt(opt, value, false); }
 
 aclError aclrtSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
-    ACL_LOG_INFO("start to execute aclrtSetSysParamOpt, opt = %d, value = %ld.",
-                 static_cast<int32_t>(opt), value);
+    ACL_LOG_INFO("start to execute aclrtSetSysParamOpt, opt = %d, value = %ld.", static_cast<int32_t>(opt), value);
     return SetSysParamOpt(opt, value, false);
 }
 
@@ -172,7 +164,7 @@ aclError aclrtGetLastErrorImpl(aclrtLastErrLevel level)
     return rtGetLastError(rtLevel);
 }
 
-aclError aclrtCtxGetCurrentDefaultStreamImpl(aclrtStream *stream)
+aclError aclrtCtxGetCurrentDefaultStreamImpl(aclrtStream* stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxGetCurrentDefaultStream);
     ACL_LOG_INFO("start to execute aclrtCtxGetCurrentDefaultStream");
@@ -180,8 +172,8 @@ aclError aclrtCtxGetCurrentDefaultStreamImpl(aclrtStream *stream)
 
     const rtError_t rtErr = rtsCtxGetCurrentDefaultStream(stream);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_ERROR("call rtsCtxGetCurrentDefaultStream failed, runtime errorCode is %d",
-            static_cast<int32_t>(rtErr));
+        ACL_LOG_ERROR(
+            "call rtsCtxGetCurrentDefaultStream failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
@@ -189,31 +181,30 @@ aclError aclrtCtxGetCurrentDefaultStreamImpl(aclrtStream *stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCtxGetFloatOverflowAddrImpl(void **overflowAddr)
+aclError aclrtCtxGetFloatOverflowAddrImpl(void** overflowAddr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxGetFloatOverflowAddr);
 
     const rtError_t rtErr = rtsCtxGetFloatOverflowAddr(overflowAddr);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_ERROR("call rtsCtxGetFloatOverflowAddr failed, runtime errorCode is %d",
-            static_cast<int32_t>(rtErr));
+        ACL_LOG_ERROR("call rtsCtxGetFloatOverflowAddr failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetPrimaryCtxStateImpl(int32_t deviceId, uint32_t *flags, int32_t *active)
+aclError aclrtGetPrimaryCtxStateImpl(int32_t deviceId, uint32_t* flags, int32_t* active)
 {
     ACL_LOG_INFO("start to execute aclrtGetPrimaryCtxState");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(active);
-    ACL_CHECK_INVALID_PARAM_NO_VALUE(flags == nullptr, "flags",
-        "flags is a reserved parameter and must be nullptr");
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(flags == nullptr, "flags", "flags is a reserved parameter and must be nullptr");
 
     uint32_t tmp = 0;
     const rtError_t rtErr = rtsGetPrimaryCtxState(deviceId, &tmp, active);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_WARN("call aclrtGetPrimaryCtxState failed, runtime errorCode is %d, device id is %d",
+        ACL_LOG_WARN(
+            "call aclrtGetPrimaryCtxState failed, runtime errorCode is %d, device id is %d",
             static_cast<int32_t>(rtErr), deviceId);
         return ACL_GET_ERRCODE_RTS(rtErr);
     }

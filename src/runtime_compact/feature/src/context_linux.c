@@ -17,17 +17,11 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
-__thread  Context *g_curCtx = NULL;
-__thread  uint32_t g_curCtxSeq = 0;
-void InitCtxRecord(void)
-{
-    return;
-}
+__thread Context* g_curCtx = NULL;
+__thread uint32_t g_curCtxSeq = 0;
+void InitCtxRecord(void) { return; }
 
-void DeinitCtxRecord(void)
-{
-    return;
-}
+void DeinitCtxRecord(void) { return; }
 
 rtError_t SetupContext(Context* context)
 {
@@ -49,7 +43,7 @@ rtError_t TearDownContext(Context* context)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCtxGetCurrent(rtContext_t *currentCtx)
+rtError_t rtCtxGetCurrent(rtContext_t* currentCtx)
 {
     if (currentCtx == NULL) {
         RT_LOG_ERROR("context is NULL!");

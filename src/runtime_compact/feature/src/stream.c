@@ -24,9 +24,9 @@ typedef struct TagStream {
     uint32_t sqId;
     uint32_t priority;
     mmAtomicType64 threadId[MODEL_TYPE_MAX];
-    void *sharedWorkPtr;
+    void* sharedWorkPtr;
     size_t sharedWorkSize;
-    Context *context;
+    Context* context;
     uint64_t lastMeid;
 } Stream;
 
@@ -41,9 +41,9 @@ static rtError_t SetupStream(Stream* stream)
     struct halSqCqInputInfo in = {0};
     in.cfg.qos = (uint8_t)stream->priority;
     struct halSqCqOutputInfo out = {0};
-    drvError_t  drvRet = halSqCqAllocate(GetContextDeviceId(stream->context), &in, &out);
+    drvError_t drvRet = halSqCqAllocate(GetContextDeviceId(stream->context), &in, &out);
     if (drvRet != DRV_ERROR_NONE) {
-        return(rtError_t)ErrorConvert(drvRet);
+        return (rtError_t)ErrorConvert(drvRet);
     }
     stream->sqId = out.sqid;
     return ACL_RT_SUCCESS;
@@ -58,9 +58,9 @@ rtError_t FreeStream(Stream* stream)
     return ACL_RT_SUCCESS;
 }
 
-Stream *CreateStream(Context *curCtx, rtStreamConfigHandle *handle, rtError_t *error)
+Stream* CreateStream(Context* curCtx, rtStreamConfigHandle* handle, rtError_t* error)
 {
-    Stream *stm = (Stream *)mmMalloc(sizeof(Stream));
+    Stream* stm = (Stream*)mmMalloc(sizeof(Stream));
     if (stm == NULL) {
         *error = ACL_ERROR_RT_MEMORY_ALLOCATION;
         return NULL;
@@ -86,15 +86,9 @@ Stream *CreateStream(Context *curCtx, rtStreamConfigHandle *handle, rtError_t *e
     return stm;
 }
 
-uint32_t GetStreamDeviceId(rtStream_t stm)
-{
-    return GetContextDeviceId(((Stream*)stm)->context);
-}
+uint32_t GetStreamDeviceId(rtStream_t stm) { return GetContextDeviceId(((Stream*)stm)->context); }
 
-uint64_t GetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type)
-{
-    return ((Stream*)stm)->threadId[type];
-}
+uint64_t GetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type) { return ((Stream*)stm)->threadId[type]; }
 
 bool SetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type, uint64_t threadId)
 {
@@ -103,16 +97,13 @@ bool SetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type, uint64_t threadId)
 
 void ResetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type)
 {
-    mmSetData64((mmAtomicType64 *)(&(((Stream*)stm)->threadId[type])), UINT64_MAX);
+    mmSetData64((mmAtomicType64*)(&(((Stream*)stm)->threadId[type])), UINT64_MAX);
     return;
 }
 
-uint32_t GetStreamSqID(rtStream_t stm)
-{
-    return ((Stream*)stm)->sqId;
-}
+uint32_t GetStreamSqID(rtStream_t stm) { return ((Stream*)stm)->sqId; }
 
-rtError_t rtStreamCreateWithConfig(rtStream_t *stm, rtStreamConfigHandle *handle)
+rtError_t rtStreamCreateWithConfig(rtStream_t* stm, rtStreamConfigHandle* handle)
 {
     if (stm == NULL) {
         RT_LOG_ERROR("stream is NULL!");
@@ -157,7 +148,7 @@ rtError_t rtStreamDestroy(rtStream_t stm)
 
 rtError_t rtStreamSynchronize(rtStream_t stm)
 {
-    Stream *inStm = (Stream *)stm;
+    Stream* inStm = (Stream*)stm;
     if (inStm == NULL) {
         RT_LOG_ERROR("stream is NULL.");
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -165,7 +156,7 @@ rtError_t rtStreamSynchronize(rtStream_t stm)
     return SendNullMdl(inStm->sqId);
 }
 
-rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
+rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t* sqId)
 {
     if (sqId == NULL) {
         return ACL_ERROR_RT_INTERNAL_ERROR;
@@ -174,17 +165,17 @@ rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
         RT_LOG_ERROR("stream is NULL.");
         return ACL_ERROR_RT_PARAM_INVALID;
     }
-    *sqId = ((Stream *)stm)->sqId;
+    *sqId = ((Stream*)stm)->sqId;
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtStreamGetWorkspace(const rtStream_t stm, void **workaddr, size_t *worksize)
+rtError_t rtStreamGetWorkspace(const rtStream_t stm, void** workaddr, size_t* worksize)
 {
     if (stm == NULL || workaddr == NULL || worksize == NULL) {
         return ACL_ERROR_RT_INTERNAL_ERROR;
     }
-    *workaddr = ((Stream *)stm)->sharedWorkPtr;
-    *worksize = ((Stream *)stm)->sharedWorkSize;
+    *workaddr = ((Stream*)stm)->sharedWorkPtr;
+    *worksize = ((Stream*)stm)->sharedWorkSize;
     return ACL_RT_SUCCESS;
 }
 

@@ -17,10 +17,10 @@
 extern "C" {
 #endif
 
-#define RT_EVENT_RECORD_DEFAULT    (0x00U)
-#define RT_EVENT_RECORD_EXTERNAL   (0x01U)
-#define RT_EVENT_WAIT_DEFAULT      (0x00U)
-#define RT_EVENT_WAIT_EXTERNAL     (0x01U)
+#define RT_EVENT_RECORD_DEFAULT (0x00U)
+#define RT_EVENT_RECORD_EXTERNAL (0x01U)
+#define RT_EVENT_WAIT_DEFAULT (0x00U)
+#define RT_EVENT_WAIT_EXTERNAL (0x01U)
 
 /**
  * @ingroup dvrt_event

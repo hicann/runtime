@@ -32,49 +32,50 @@ constexpr uint32_t AISDK_CODETAG_LEN = 16U;
 constexpr uint32_t ENCHASH_LEN = 32U;
 struct SeImageHead {
     uint32_t preamble;
-    uint8_t  reserved0[RESERVED0_LEN];
+    uint8_t reserved0[RESERVED0_LEN];
     uint32_t headLen;
     uint32_t userLen;
-    uint8_t  userDefineData[USERDEFINEDDATA_LEN];
-    uint8_t  ucLHash[UCLHASH_LEN];
+    uint8_t userDefineData[USERDEFINEDDATA_LEN];
+    uint8_t ucLHash[UCLHASH_LEN];
     uint32_t subkeyCertOffset;
     uint32_t subkeyCertLen;
     uint32_t rootHashAlo;
     uint32_t codeSignAlgo;
     uint32_t rootPubkeyLen;
-    uint8_t  rootPubkey[ROOTPUBKEY_LEN];
-    uint8_t  rootPubkeyE[ROOTPUBKEYE_LEN];
+    uint8_t rootPubkey[ROOTPUBKEY_LEN];
+    uint8_t rootPubkeyE[ROOTPUBKEYE_LEN];
     uint32_t codeOffset;
     uint32_t uwLCodeLen;
     uint32_t signOffset;
     uint32_t signLen;
     uint32_t codeEncryptFlag;
     uint32_t codeEncryptAlgo;
-    uint8_t  codeDeriveSalt[CODEDERIVESALT_LEN];
+    uint8_t codeDeriveSalt[CODEDERIVESALT_LEN];
     uint32_t kmIretationCnt;
-    uint8_t  codeEncryptIv[CODEENCRYPTIV_LEN];
-    uint8_t  codeEncryptTag[CODEENCRYPTTAG_LEN];
-    uint8_t  codeEncryptAdd[CODEENCRYPTADD_LEN];
-    uint8_t  reserved1[RESERVED1_LEN];
+    uint8_t codeEncryptIv[CODEENCRYPTIV_LEN];
+    uint8_t codeEncryptTag[CODEENCRYPTTAG_LEN];
+    uint8_t codeEncryptAdd[CODEENCRYPTADD_LEN];
+    uint8_t reserved1[RESERVED1_LEN];
     uint32_t h2cEnable;
     uint32_t h2cCertLen;
     uint32_t h2cCertOffset;
     uint32_t rootPubkeyInfo;
-    uint8_t  reserved2[RESERVED2_LEN];
+    uint8_t reserved2[RESERVED2_LEN];
     uint32_t headMagic;
-    uint8_t  headHash[HEADHASH_LEN];
-    uint8_t  aisdkCmsFlag[AISDK_CMSFLAG_LEN];
-    uint8_t  aisdkCodeNVCNT[AISDK_CODENVCNT_LEN];
-    uint8_t  aisdkCodeTag[AISDK_CODETAG_LEN];
-    uint8_t  encHash[ENCHASH_LEN];
+    uint8_t headHash[HEADHASH_LEN];
+    uint8_t aisdkCmsFlag[AISDK_CMSFLAG_LEN];
+    uint8_t aisdkCodeNVCNT[AISDK_CODENVCNT_LEN];
+    uint8_t aisdkCodeTag[AISDK_CODETAG_LEN];
+    uint8_t encHash[ENCHASH_LEN];
     uint32_t certType;
 };
 class PackageVerify {
 public:
-    PackageVerify(const std::string &pkgPath) : pkgPath_(pkgPath) {};
+    PackageVerify(const std::string& pkgPath) : pkgPath_(pkgPath){};
     ~PackageVerify() = default;
 
     TSD_StatusT VerifyPackage() const;
+
 private:
     PackageVerify(PackageVerify const&) = delete;
     PackageVerify& operator=(PackageVerify const&) = delete;
@@ -89,10 +90,9 @@ private:
     TSD_StatusT VerifyPackageByCms() const;
     TSD_StatusT VerifyPackageByDrv() const;
     uint32_t GetVerifyDeviceId() const;
-    TSD_StatusT GetPkgCodeLen(const std::string &srcPath, uint32_t &mixCodeLen) const;
-    TSD_StatusT ProcessSendStepVerify(const std::string &srcPath, const uint32_t codeLen) const;
-    TSD_StatusT ReWriteAicpuPackage(const uint8_t * const buf, const uint32_t len,
-        const std::string &srcPath) const;
+    TSD_StatusT GetPkgCodeLen(const std::string& srcPath, uint32_t& mixCodeLen) const;
+    TSD_StatusT ProcessSendStepVerify(const std::string& srcPath, const uint32_t codeLen) const;
+    TSD_StatusT ReWriteAicpuPackage(const uint8_t* const buf, const uint32_t len, const std::string& srcPath) const;
 
     std::string pkgPath_;
 };

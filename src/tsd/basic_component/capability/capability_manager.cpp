@@ -37,16 +37,16 @@ constexpr uint64_t TSD_NOT_SUPPORT_OM_INNER_DEC = 0UL;
 // ===========================================================================
 
 // ---- PID_QOS ----
-bool PidQosTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool PidQosTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     (void)mgr;
     (void)ptr;
     return false;
 }
 
-TSD_StatusT PidQosSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT PidQosSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    uint64_t * const resultPtr = reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr));
+    uint64_t* const resultPtr = reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr));
     if (resultPtr == nullptr) {
         TSD_ERROR("input ptr is null");
         return TSD_CLT_OPEN_FAILED;
@@ -58,31 +58,25 @@ TSD_StatusT PidQosSaveResult(const CapabilityManager &mgr, uint64_t ptr)
     return TSD_OK;
 }
 
-void PidQosWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr)) = 0UL;
-}
+void PidQosWriteUnsupported(uint64_t ptr) { *reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr)) = 0UL; }
 
-void PidQosUpdateState(CapabilityManager &mgr, const HDCMessage &msg)
-{
-    mgr.SetPidQos(msg.pid_of_qos());
-}
+void PidQosUpdateState(CapabilityManager& mgr, const HDCMessage& msg) { mgr.SetPidQos(msg.pid_of_qos()); }
 
 // ---- SUPPORT_LEVEL ----
-bool LevelTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool LevelTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     const uint32_t level = mgr.GetTsdSupportLevel();
     if (TSD_BITMAP_GET(level, TSD_SUPPORT_HS_AISERVER_FEATURE_BIT) != 0U) {
-        uint32_t * const resultPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
+        uint32_t* const resultPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
         *resultPtr = level;
         return true;
     }
     return false;
 }
 
-TSD_StatusT LevelSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT LevelSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    uint32_t * const resultPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
+    uint32_t* const resultPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
     if (resultPtr == nullptr) {
         TSD_ERROR("input ptr is null");
         return TSD_CLT_OPEN_FAILED;
@@ -91,12 +85,9 @@ TSD_StatusT LevelSaveResult(const CapabilityManager &mgr, uint64_t ptr)
     return TSD_OK;
 }
 
-void LevelWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<uint32_t *>(static_cast<uintptr_t>(ptr)) = 0U;
-}
+void LevelWriteUnsupported(uint64_t ptr) { *reinterpret_cast<uint32_t*>(static_cast<uintptr_t>(ptr)) = 0U; }
 
-void LevelUpdateState(CapabilityManager &mgr, const HDCMessage &msg)
+void LevelUpdateState(CapabilityManager& mgr, const HDCMessage& msg)
 {
     const uint32_t level = msg.capability_level();
     if ((msg.tsd_rsp_code() == 0U) && (level != 0U)) {
@@ -105,66 +96,60 @@ void LevelUpdateState(CapabilityManager &mgr, const HDCMessage &msg)
 }
 
 // ---- OM_INNER_DEC ----
-bool OmInnerDecTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool OmInnerDecTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     if (mgr.IsSupportOmInnerDec()) {
-        uint64_t * const resultPtr = reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr));
+        uint64_t* const resultPtr = reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr));
         *resultPtr = TSD_SUPPORT_OM_INNER_DEC;
         return true;
     }
     return false;
 }
 
-TSD_StatusT OmInnerDecSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT OmInnerDecSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    uint64_t * const resultPtr = reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr));
+    uint64_t* const resultPtr = reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr));
     *resultPtr = mgr.IsSupportOmInnerDec() ? TSD_SUPPORT_OM_INNER_DEC : TSD_NOT_SUPPORT_OM_INNER_DEC;
     return TSD_OK;
 }
 
-void OmInnerDecWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr)) = 0UL;
-}
+void OmInnerDecWriteUnsupported(uint64_t ptr) { *reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr)) = 0UL; }
 
-void OmInnerDecUpdateState(CapabilityManager &mgr, const HDCMessage &msg)
+void OmInnerDecUpdateState(CapabilityManager& mgr, const HDCMessage& msg)
 {
     mgr.SetSupportOmInnerDec(msg.tsd_rsp_code() == 0U);
 }
 
 // ---- BUILTIN_UDF ----
-bool BuiltinUdfTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool BuiltinUdfTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     if (TSD_BITMAP_GET(mgr.GetTsdSupportLevel(), TSD_SUPPORT_BUILTIN_UDF_BIT)) {
-        bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+        bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
         *resultPtr = true;
         return true;
     }
     return false;
 }
 
-TSD_StatusT BuiltinUdfSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT BuiltinUdfSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+    bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
     *resultPtr = TSD_BITMAP_GET(mgr.GetTsdSupportLevel(), TSD_SUPPORT_BUILTIN_UDF_BIT) ? true : false;
     return TSD_OK;
 }
 
-void BuiltinUdfWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr)) = false;
-}
+void BuiltinUdfWriteUnsupported(uint64_t ptr) { *reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr)) = false; }
 
 // ---- DRIVER_VERSION ----
-bool DriverVersionTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool DriverVersionTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     (void)mgr;
-    uint64_t * const resultPtr = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
+    uint64_t* const resultPtr = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
     *resultPtr = 0UL;
     return true;
 }
 
-TSD_StatusT DriverVersionSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT DriverVersionSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
     (void)mgr;
     (void)ptr;
@@ -173,25 +158,22 @@ TSD_StatusT DriverVersionSaveResult(const CapabilityManager &mgr, uint64_t ptr)
     return TSD_CLT_OPEN_FAILED;
 }
 
-void DriverVersionWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr)) = 0UL;
-}
+void DriverVersionWriteUnsupported(uint64_t ptr) { *reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr)) = 0UL; }
 
 // ---- ADPROF ----
-bool AdprofTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool AdprofTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     if (mgr.IsAdprofSupport()) {
-        bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+        bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
         *resultPtr = true;
         return true;
     }
     return false;
 }
 
-TSD_StatusT AdprofSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT AdprofSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+    bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
     if (resultPtr == nullptr) {
         TSD_ERROR("input ptr is null");
         return TSD_CLT_OPEN_FAILED;
@@ -200,38 +182,29 @@ TSD_StatusT AdprofSaveResult(const CapabilityManager &mgr, uint64_t ptr)
     return TSD_OK;
 }
 
-void AdprofWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr)) = false;
-}
+void AdprofWriteUnsupported(uint64_t ptr) { *reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr)) = false; }
 
-void AdprofUpdateState(CapabilityManager &mgr, const HDCMessage &msg)
-{
-    mgr.SetAdprofSupport(msg.support_adprof());
-}
+void AdprofUpdateState(CapabilityManager& mgr, const HDCMessage& msg) { mgr.SetAdprofSupport(msg.support_adprof()); }
 
 // ---- MULTIPLE_HCCP ----
-bool MultipleHccpTryUseStored(CapabilityManager &mgr, uint64_t ptr)
+bool MultipleHccpTryUseStored(CapabilityManager& mgr, uint64_t ptr)
 {
     if (TSD_BITMAP_GET(mgr.GetTsdSupportLevel(), TSD_SUPPORT_MUL_HCCP) != 0U) {
-        bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+        bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
         *resultPtr = true;
         return true;
     }
     return false;
 }
 
-TSD_StatusT MultipleHccpSaveResult(const CapabilityManager &mgr, uint64_t ptr)
+TSD_StatusT MultipleHccpSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
-    bool * const resultPtr = reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr));
+    bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
     *resultPtr = TSD_BITMAP_GET(mgr.GetTsdSupportLevel(), TSD_SUPPORT_MUL_HCCP) != 0U ? true : false;
     return TSD_OK;
 }
 
-void MultipleHccpWriteUnsupported(uint64_t ptr)
-{
-    *reinterpret_cast<bool *>(static_cast<uintptr_t>(ptr)) = false;
-}
+void MultipleHccpWriteUnsupported(uint64_t ptr) { *reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr)) = false; }
 
 // ===========================================================================
 // The single registration point — one row per capability type.
@@ -248,7 +221,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_PIDQOS,
         HDCMessage::TSD_GET_PID_QOS,
         HDCMessage::TSD_GET_PID_QOS_RSP,
-        true, 0U, false, false,
+        true,
+        0U,
+        false,
+        false,
         PidQosTryUseStored,
         PidQosSaveResult,
         PidQosWriteUnsupported,
@@ -258,7 +234,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_LEVEL,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP,
-        false, COMMON_SUPPORT_TIMEOUT, true, false,
+        false,
+        COMMON_SUPPORT_TIMEOUT,
+        true,
+        false,
         LevelTryUseStored,
         LevelSaveResult,
         LevelWriteUnsupported,
@@ -268,7 +247,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_OM_INNER_DEC,
         HDCMessage::TSD_SUPPORT_OM_INNER_DEC,
         HDCMessage::TSD_SUPPORT_OM_INNER_DEC_RSP,
-        false, SUPPORT_OM_INNER_DEC_MSG_TIMEOUT, true, true,
+        false,
+        SUPPORT_OM_INNER_DEC_MSG_TIMEOUT,
+        true,
+        true,
         OmInnerDecTryUseStored,
         OmInnerDecSaveResult,
         OmInnerDecWriteUnsupported,
@@ -278,7 +260,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_BUILTIN_UDF,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP,
-        false, COMMON_SUPPORT_TIMEOUT, true, false,
+        false,
+        COMMON_SUPPORT_TIMEOUT,
+        true,
+        false,
         BuiltinUdfTryUseStored,
         BuiltinUdfSaveResult,
         BuiltinUdfWriteUnsupported,
@@ -288,7 +273,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_DRIVER_VERSION,
         HDCMessage::INIT,
         HDCMessage::INIT,
-        false, 0U, false, false,
+        false,
+        0U,
+        false,
+        false,
         DriverVersionTryUseStored,
         DriverVersionSaveResult,
         DriverVersionWriteUnsupported,
@@ -298,7 +286,10 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_ADPROF,
         HDCMessage::TSD_GET_SUPPORT_ADPROF,
         HDCMessage::TSD_GET_SUPPORT_ADPROF_RSP,
-        false, COMMON_SUPPORT_TIMEOUT, true, false,
+        false,
+        COMMON_SUPPORT_TIMEOUT,
+        true,
+        false,
         AdprofTryUseStored,
         AdprofSaveResult,
         AdprofWriteUnsupported,
@@ -308,18 +299,21 @@ const CapabilitySpec kCapabilitySpecs[] = {
         TSD_CAPABILITY_MUTIPLE_HCCP,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL,
         HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP,
-        false, COMMON_SUPPORT_TIMEOUT, true, false,
+        false,
+        COMMON_SUPPORT_TIMEOUT,
+        true,
+        false,
         MultipleHccpTryUseStored,
         MultipleHccpSaveResult,
         MultipleHccpWriteUnsupported,
         nullptr,
     },
 };
-}  // namespace
+} // namespace
 
-const CapabilitySpec *FindCapabilitySpec(const int32_t type)
+const CapabilitySpec* FindCapabilitySpec(const int32_t type)
 {
-    for (const CapabilitySpec &spec : kCapabilitySpecs) {
+    for (const CapabilitySpec& spec : kCapabilitySpecs) {
         if (spec.type == type) {
             return &spec;
         }
@@ -327,14 +321,13 @@ const CapabilitySpec *FindCapabilitySpec(const int32_t type)
     return nullptr;
 }
 
-CapabilityManager::CapabilityManager(uint32_t logicDeviceId, DeviceCommAgent &commAgent, bool isAdcEnv)
-    : logicDeviceId_(logicDeviceId),
-      commAgent_(commAgent),
-      isAdcEnv_(isAdcEnv) {}
+CapabilityManager::CapabilityManager(uint32_t logicDeviceId, DeviceCommAgent& commAgent, bool isAdcEnv)
+    : logicDeviceId_(logicDeviceId), commAgent_(commAgent), isAdcEnv_(isAdcEnv)
+{}
 
 CapabilityManager::~CapabilityManager() {}
 
-void CapabilityManager::ConstructCapabilityMsg(HDCMessage &msg, const int32_t type)
+void CapabilityManager::ConstructCapabilityMsg(HDCMessage& msg, const int32_t type)
 {
     MessageContext ctx{};
     ctx.logicDeviceId = logicDeviceId_;
@@ -345,7 +338,7 @@ void CapabilityManager::ConstructCapabilityMsg(HDCMessage &msg, const int32_t ty
 
 bool CapabilityManager::IsOkToGetCapability(const int32_t type) const
 {
-    const CapabilitySpec *spec = FindCapabilitySpec(type);
+    const CapabilitySpec* spec = FindCapabilitySpec(type);
     if (spec == nullptr) {
         return false;
     }
@@ -394,8 +387,8 @@ bool CapabilityManager::IsSupportCommonInterface(const uint32_t level)
         return true;
     }
 
-    TSD_RUN_INFO("IsSupportCommonInterface check was not successful, level[%u], tsd support level[%u]",
-                 level, curSupportLevel);
+    TSD_RUN_INFO(
+        "IsSupportCommonInterface check was not successful, level[%u], tsd support level[%u]", level, curSupportLevel);
     return false;
 }
 
@@ -429,7 +422,7 @@ bool CapabilityManager::CheckSubProcSupported(SubProcType procType)
         {TSD_SUB_PROC_BUILTIN_UDF, TSD_SUPPORT_BUILTIN_UDF_BIT},
         {TSD_SUB_PROC_ADPROF, TSD_SUPPORT_ADPROF_BIT},
     };
-    for (const SubProcCapabilityEntry &entry : kSubProcCapabilityMap) {
+    for (const SubProcCapabilityEntry& entry : kSubProcCapabilityMap) {
         if (entry.procType == procType) {
             return IsSupportCommonInterface(entry.capabilityBit);
         }
@@ -439,7 +432,7 @@ bool CapabilityManager::CheckSubProcSupported(SubProcType procType)
 
 bool CapabilityManager::UseStoredCapabityInfo(const int32_t type, const uint64_t ptr)
 {
-    const CapabilitySpec *spec = FindCapabilitySpec(type);
+    const CapabilitySpec* spec = FindCapabilitySpec(type);
     if (spec == nullptr) {
         return false;
     }
@@ -463,8 +456,7 @@ TSD_StatusT CapabilityManager::WaitRspForCapability(const uint32_t timeout, cons
     if (ret != TSD_OK) {
         if (!ignoreRecvErr) {
             TSD_ERROR("tsd client wait capability response fail, ret=%u", static_cast<uint32_t>(ret));
-            TSD_REPORT_INNER_ERROR("tsd client wait capability response fail, ret=%u",
-                                   static_cast<uint32_t>(ret));
+            TSD_REPORT_INNER_ERROR("tsd client wait capability response fail, ret=%u", static_cast<uint32_t>(ret));
         }
         return TSD_CLT_OPEN_FAILED;
     }
@@ -473,7 +465,7 @@ TSD_StatusT CapabilityManager::WaitRspForCapability(const uint32_t timeout, cons
 
 TSD_StatusT CapabilityManager::WaitCapabilityRsp(const int32_t type, const uint64_t ptr)
 {
-    const CapabilitySpec *spec = FindCapabilitySpec(type);
+    const CapabilitySpec* spec = FindCapabilitySpec(type);
     const uint32_t timeout = (spec != nullptr) ? spec->waitTimeout : 0U;
     const bool ignoreFail = (spec != nullptr) ? spec->waitIgnoreFail : false;
 
@@ -504,8 +496,9 @@ TSD_StatusT CapabilityManager::CapabilityGet(const int32_t type, const uint64_t 
         return TSD_CLT_OPEN_FAILED;
     }
     if (!IsOkToGetCapability(type)) {
-        TSD_ERROR("[CapabilityManager] startCp[%u],type[%d],sessionid[%u]",
-                  static_cast<uint32_t>(tsdStartCp_), type, commAgent_.GetSessionId());
+        TSD_ERROR(
+            "[CapabilityManager] startCp[%u],type[%d],sessionid[%u]", static_cast<uint32_t>(tsdStartCp_), type,
+            commAgent_.GetSessionId());
         return TSD_CLT_OPEN_FAILED;
     }
     if (UseStoredCapabityInfo(type, ptr)) {
@@ -514,14 +507,15 @@ TSD_StatusT CapabilityManager::CapabilityGet(const int32_t type, const uint64_t 
     TSD_StatusT ret = commAgent_.InitTsdClient(isAdcEnv_);
     TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
 
-    TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED,
-                      "[CapabilityManager] devCommClient_ is null in Close function.");
+    TSD_CHECK_NULLPTR(
+        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED,
+        "[CapabilityManager] devCommClient_ is null in Close function.");
     ret = SendCapabilityMsg(type);
     TSD_CHECK(ret == TSD_OK, ret, "SendCapabilityMsg failed.");
 
     TSD_RUN_INFO(
-        "[CapabilityManager][deviceId=%u] [sessionId=%u] [type=%d]send capability successfully.",
-        logicDeviceId_, commAgent_.GetSessionId(), type);
+        "[CapabilityManager][deviceId=%u] [sessionId=%u] [type=%d]send capability successfully.", logicDeviceId_,
+        commAgent_.GetSessionId(), type);
 
     ret = WaitCapabilityRsp(type, ptr);
 
@@ -533,18 +527,18 @@ TSD_StatusT CapabilityManager::CapabilityGet(const int32_t type, const uint64_t 
 
 TSD_StatusT CapabilityManager::SaveCapabilityResult(const int32_t type, const uint64_t ptr) const
 {
-    const CapabilitySpec *spec = FindCapabilitySpec(type);
+    const CapabilitySpec* spec = FindCapabilitySpec(type);
     if (spec == nullptr) {
         return TSD_CLT_OPEN_FAILED;
     }
     return spec->saveResult(*this, ptr);
 }
 
-void CapabilityManager::UpdateStateFromMsg(const HDCMessage &msg)
+void CapabilityManager::UpdateStateFromMsg(const HDCMessage& msg)
 {
     const HDCMessage::MsgType msgType = msg.type();
     bool handledBySpec = false;
-    for (const CapabilitySpec &spec : kCapabilitySpecs) {
+    for (const CapabilitySpec& spec : kCapabilitySpecs) {
         if ((spec.rspMsgType != msgType) || (spec.updateStateFromMsg == nullptr)) {
             continue;
         }
@@ -563,7 +557,7 @@ void CapabilityManager::UpdateStateFromMsg(const HDCMessage &msg)
     }
 }
 
-void CapabilityManager::HandlePidQosRsp(const HDCMessage &msg)
+void CapabilityManager::HandlePidQosRsp(const HDCMessage& msg)
 {
     pidQos_ = msg.pid_of_qos();
     const uint32_t realDeviceId = msg.real_device_id();
@@ -574,4 +568,4 @@ void CapabilityManager::HandlePidQosRsp(const HDCMessage &msg)
         realDeviceId, static_cast<uint32_t>(msgType), deviceId, msg.tsd_rsp_code(), pidQos_);
 }
 
-}  // namespace tsd
+} // namespace tsd

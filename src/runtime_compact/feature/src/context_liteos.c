@@ -20,15 +20,15 @@ extern "C" {
 #endif
 typedef struct {
     uint32_t key;
-    Context *ctx;
+    Context* ctx;
     uint32_t seq;
 } ContextKeyObj;
 
-int ContextKeyCmp(void *a, void *b, void *appInfo)
+int ContextKeyCmp(void* a, void* b, void* appInfo)
 {
     (void)appInfo;
-    uint32_t keyA = ((ContextKeyObj *)a)->key;
-    uint32_t keyB = ((ContextKeyObj *)b)->key;
+    uint32_t keyA = ((ContextKeyObj*)a)->key;
+    uint32_t keyB = ((ContextKeyObj*)b)->key;
     return keyA - keyB;
 }
 
@@ -47,9 +47,9 @@ void DeinitCtxRecord(void)
     DeInitSortVector(&g_contextRecord);
 }
 
-rtError_t SetupContext(Context *context)
+rtError_t SetupContext(Context* context)
 {
-    Context *curCtx = context;
+    Context* curCtx = context;
     uint32_t curCtxSeq = GetMemPoolMemSeq(context);
     uint32_t taskId = mmGetTaskId();
     ContextKeyObj ctxObj = {taskId, curCtx, curCtxSeq};
@@ -64,12 +64,12 @@ rtError_t SetupContext(Context *context)
     return RT_ERROR_NONE;
 }
 
-rtError_t TearDownContext(Context *context)
+rtError_t TearDownContext(Context* context)
 {
     ContextKeyObj ctxObj;
     ctxObj.key = mmGetTaskId();
     mmMutexLock(&g_ctxRecordMutex);
-    ContextKeyObj *findObj = (ContextKeyObj *)SortVectorAtKey(&g_contextRecord, &ctxObj);
+    ContextKeyObj* findObj = (ContextKeyObj*)SortVectorAtKey(&g_contextRecord, &ctxObj);
     if (findObj != NULL && findObj->ctx == context) {
         size_t index = FindSortVector(&g_contextRecord, &ctxObj);
         if (index < SortVectorSize(&g_contextRecord)) {
@@ -85,7 +85,7 @@ rtError_t TearDownContext(Context *context)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCtxGetCurrent(rtContext_t *currentCtx)
+rtError_t rtCtxGetCurrent(rtContext_t* currentCtx)
 {
     if (currentCtx == NULL) {
         RT_LOG_ERROR("context is NULL!");
@@ -95,10 +95,9 @@ rtError_t rtCtxGetCurrent(rtContext_t *currentCtx)
     ContextKeyObj ctxObj;
     ctxObj.key = mmGetTaskId();
     mmMutexLock(&g_ctxRecordMutex);
-    ContextKeyObj *findObj = (ContextKeyObj *)SortVectorAtKey(&g_contextRecord, &ctxObj);
+    ContextKeyObj* findObj = (ContextKeyObj*)SortVectorAtKey(&g_contextRecord, &ctxObj);
     // 1.未set过 2. set过但置为null了; 3.不匹配
-    if (findObj == NULL || (findObj->ctx == NULL || !MemPoolMemMatchSeq(findObj->ctx,
-        findObj->seq))) {
+    if (findObj == NULL || (findObj->ctx == NULL || !MemPoolMemMatchSeq(findObj->ctx, findObj->seq))) {
         RT_LOG_WARNING("current context is NULL!");
         mmMutexUnLock(&g_ctxRecordMutex);
         return ACL_ERROR_RT_CONTEXT_NULL;
@@ -116,7 +115,7 @@ rtError_t rtCtxSetCurrent(rtContext_t currentCtx)
         return ACL_ERROR_RT_CONTEXT_NULL;
     }
 
-    Context *curCtx = currentCtx;
+    Context* curCtx = currentCtx;
     uint32_t curCtxSeq = currentCtx == NULL ? 0 : GetMemPoolMemSeq(currentCtx);
     uint32_t taskId = mmGetTaskId();
     ContextKeyObj ctxObj = {taskId, curCtx, curCtxSeq};

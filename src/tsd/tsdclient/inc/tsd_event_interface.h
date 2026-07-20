@@ -24,40 +24,40 @@ constexpr uint32_t MAX_GROUP_NAME_LENGTH = 96U;
 constexpr int32_t TIMEOUT_INTERVAL = 3000;
 
 enum class TsdSubProcessType {
-    PROCESS_HCCP = 0,                     // hccp process
-    PROCESS_COMPUTE = 1,                  // aicpu_schedule process
-    PROCESS_CUSTOM_COMPUTE = 2,           // aicpu_cust_schedule process
-    PROCESS_QUEUE_SCHEDULE = 3,           // queue_schedule process
-    PROCESS_UDF            = 4,           // udf
-    PROCESS_NN             = 5,           // nn
-    PROCESS_PROXY          = 6,           // proxy
-    PROCESS_BUILTIN_UDF    = 7,           // builtin udf
-    PROCESS_ADPROF         = 8,           // adprof
-    PROCESS_MAXPROCTYPE    = 0xFF,        // max type
+    PROCESS_HCCP = 0,           // hccp process
+    PROCESS_COMPUTE = 1,        // aicpu_schedule process
+    PROCESS_CUSTOM_COMPUTE = 2, // aicpu_cust_schedule process
+    PROCESS_QUEUE_SCHEDULE = 3, // queue_schedule process
+    PROCESS_UDF = 4,            // udf
+    PROCESS_NN = 5,             // nn
+    PROCESS_PROXY = 6,          // proxy
+    PROCESS_BUILTIN_UDF = 7,    // builtin udf
+    PROCESS_ADPROF = 8,         // adprof
+    PROCESS_MAXPROCTYPE = 0xFF, // max type
 };
 
 struct TsdCustStartEventInfo {
-    uint32_t deviceId;                    // device id
-    uint32_t srcPid;                      // send process pid
-    uint32_t dstPid;                      // receive process pid
-    uint32_t hostPid;                     // host pid
-    uint32_t vfId;                        // vf id
-    uint32_t procType;                    // process type
-    uint32_t eventType;                   // event type
-    uint32_t groupNameNum;                 // initial group name number
+    uint32_t deviceId;                           // device id
+    uint32_t srcPid;                             // send process pid
+    uint32_t dstPid;                             // receive process pid
+    uint32_t hostPid;                            // host pid
+    uint32_t vfId;                               // vf id
+    uint32_t procType;                           // process type
+    uint32_t eventType;                          // event type
+    uint32_t groupNameNum;                       // initial group name number
     char_t groupNameList[MAX_GROUP_NAME_LENGTH]; // initial group name list
 };
 
 struct TsdEventHeadInfo {
-    uint32_t deviceId;                    // device id
-    uint32_t srcPid;                      // send process pid
-    uint32_t dstPid;                      // receive process pid
-    uint32_t hostPid;                     // host pid
-    uint8_t vfId;                         // vf id
-    uint8_t reserve;                      // reserve
-    uint16_t reqId;                       // request id
-    uint32_t procType;                    // process type
-    uint32_t eventType;                   // event type
+    uint32_t deviceId;  // device id
+    uint32_t srcPid;    // send process pid
+    uint32_t dstPid;    // receive process pid
+    uint32_t hostPid;   // host pid
+    uint8_t vfId;       // vf id
+    uint8_t reserve;    // reserve
+    uint16_t reqId;     // request id
+    uint32_t procType;  // process type
+    uint32_t eventType; // event type
 };
 
 class TsdEventInterface {
@@ -81,8 +81,8 @@ public:
      * @param [in] timeoutInterval : event wait interval
      * @return TSD_OK: success, other: error code
      */
-    int32_t WaitAndProcessEvent(const uint32_t deviceId, const uint32_t groupId, const uint32_t threadIndex,
-                                    const int32_t timeoutInterval);
+    int32_t WaitAndProcessEvent(
+        const uint32_t deviceId, const uint32_t groupId, const uint32_t threadIndex, const int32_t timeoutInterval);
 
     /**
      * @ingroup TsdEventInterface
@@ -91,16 +91,17 @@ public:
      * @param [in] groupId : group id (0-31)
      * @param [in] index : tid (0-15)
      */
-    virtual void ProcessEvent(event_info &eventInfo) = 0;
+    virtual void ProcessEvent(event_info& eventInfo) = 0;
 
 protected:
     TsdEventInterface() = default;
-    virtual ~TsdEventInterface() {};;
+    virtual ~TsdEventInterface(){};
+    ;
 
-    TsdEventInterface(const TsdEventInterface &) = delete;
-    TsdEventInterface(TsdEventInterface &&) = delete;
-    TsdEventInterface &operator=(const TsdEventInterface &) = delete;
-    TsdEventInterface &operator=(TsdEventInterface &&) = delete;
+    TsdEventInterface(const TsdEventInterface&) = delete;
+    TsdEventInterface(TsdEventInterface&&) = delete;
+    TsdEventInterface& operator=(const TsdEventInterface&) = delete;
+    TsdEventInterface& operator=(TsdEventInterface&&) = delete;
 };
-}
+} // namespace tsd
 #endif // DEVICE_INNER_INC_TSD_EVENT_INTERFACE_H

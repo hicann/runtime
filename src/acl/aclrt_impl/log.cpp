@@ -14,22 +14,22 @@
 #include "common/log_inner.h"
 
 namespace {
-constexpr const char_t *const TRUNCATED_MARK = "...[truncated]";
-constexpr size_t TRUNCATED_MARK_LEN = 14U;  // strlen("...[truncated]")
+constexpr const char_t* const TRUNCATED_MARK = "...[truncated]";
+constexpr size_t TRUNCATED_MARK_LEN = 14U; // strlen("...[truncated]")
 
 // 在缓冲区尾部覆盖写入截断标记，标记连同结尾 '\0' 仍落在 MAX_LOG_STRING 预算内，避免被下游二次截断。
-void AppendTruncatedMark(char_t *const buf)
+void AppendTruncatedMark(char_t* const buf)
 {
-    (void)strcpy_s(&buf[acl::MAX_LOG_STRING - 1U - TRUNCATED_MARK_LEN],
-        TRUNCATED_MARK_LEN + 1U, TRUNCATED_MARK);
+    (void)strcpy_s(&buf[acl::MAX_LOG_STRING - 1U - TRUNCATED_MARK_LEN], TRUNCATED_MARK_LEN + 1U, TRUNCATED_MARK);
 }
-}  // namespace
+} // namespace
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void aclAppLogImpl(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, va_list args)
+void aclAppLogImpl(
+    aclLogLevel logLevel, const char* func, const char* file, uint32_t line, const char* fmt, va_list args)
 {
     if ((fmt == nullptr) || (func == nullptr) || (file == nullptr)) {
         return;
@@ -48,8 +48,9 @@ void aclAppLogImpl(aclLogLevel logLevel, const char *func, const char *file, uin
     }
 
     char_t strLog[acl::MAX_LOG_STRING] = {};
-    const int32_t headRet = snprintf_truncated_s(strLog, static_cast<size_t>(acl::MAX_LOG_STRING),
-        "%d %s:%s:%u: \"%s\"", acl::AclLog::GetTid(), func, file, line, str);
+    const int32_t headRet = snprintf_truncated_s(
+        strLog, static_cast<size_t>(acl::MAX_LOG_STRING), "%d %s:%s:%u: \"%s\"", acl::AclLog::GetTid(), func, file,
+        line, str);
 
     // 正文或头部拼接发生截断时，在最终串尾部补写截断标记，提示用户内容不完整。
     if ((bodyRet >= static_cast<int32_t>(acl::MAX_LOG_STRING - 1U)) ||

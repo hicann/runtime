@@ -17,38 +17,37 @@
 #include "utils/cann_info_utils.h"
 
 namespace acl {
-    class JsonParser {
-    public:
-        static aclError ParseJsonFromFile(const char_t *const fileName, nlohmann::json &js);
-        static aclError GetJsonCtxByKey(
-            const char_t *const fileName, std::string &strJsonCtx, const std::string &subStrKey, bool &found);
-        static aclError GetAttrConfigFromFile(
-            const char_t *const fileName, std::map<aclCannAttr, CannInfo> &cannInfoMap);
-        static aclError GetDefaultDeviceIdFromFile(const char_t *const fileName, int32_t& devId);
-        static aclError GetEventModeFromFile(const char_t *const fileName, uint8_t &event_mode, bool &found);
-        static aclError GetStackSizeByType(const char_t *const fileName, const std::string &typeName, size_t &outSize,
-                                            bool &outExist);  
-        static aclError GetPrintFifoSizeByType(const char_t* const fileName, const std::string& typeName, 
-            size_t& fifoSize, bool& found);
-        static aclError ParseJson(const char_t* const fileName, const char_t *const configStr, nlohmann::json &js);
-        static aclError GetConfigStrFromFile(const char_t *const fileName, std::string &configStr);
+class JsonParser {
+public:
+    static aclError ParseJsonFromFile(const char_t* const fileName, nlohmann::json& js);
+    static aclError GetJsonCtxByKey(
+        const char_t* const fileName, std::string& strJsonCtx, const std::string& subStrKey, bool& found);
+    static aclError GetAttrConfigFromFile(const char_t* const fileName, std::map<aclCannAttr, CannInfo>& cannInfoMap);
+    static aclError GetDefaultDeviceIdFromFile(const char_t* const fileName, int32_t& devId);
+    static aclError GetEventModeFromFile(const char_t* const fileName, uint8_t& event_mode, bool& found);
+    static aclError GetStackSizeByType(
+        const char_t* const fileName, const std::string& typeName, size_t& outSize, bool& outExist);
+    static aclError GetPrintFifoSizeByType(
+        const char_t* const fileName, const std::string& typeName, size_t& fifoSize, bool& found);
+    static aclError ParseJson(const char_t* const fileName, const char_t* const configStr, nlohmann::json& js);
+    static aclError GetConfigStrFromFile(const char_t* const fileName, std::string& configStr);
 
-    private:
-        static void GetMaxNestedLayers(const char_t *const fileName, const size_t length,
-                                       size_t &maxObjDepth, size_t &maxArrayDepth);
-        static bool IsValidFileName(const char_t *const fileName);
+private:
+    static void GetMaxNestedLayers(
+        const char_t* const fileName, const size_t length, size_t& maxObjDepth, size_t& maxArrayDepth);
+    static bool IsValidFileName(const char_t* const fileName);
 
-        static const nlohmann::json& GetCfgJsonByKey(const nlohmann::json &js, const std::string &key) {
-            return js.at(key);
-        }
+    static const nlohmann::json& GetCfgJsonByKey(const nlohmann::json& js, const std::string& key)
+    {
+        return js.at(key);
+    }
 
-        static std::string GetCfgStrByKey(const nlohmann::json &js , const std::string &key) {
-            return js.at(key).get<std::string>();
-        }
-        
-        static bool ContainKey(const nlohmann::json &js, const std::string &key) {
-            return (js.find(key) != js.end());
-        }
-    };
-}
+    static std::string GetCfgStrByKey(const nlohmann::json& js, const std::string& key)
+    {
+        return js.at(key).get<std::string>();
+    }
+
+    static bool ContainKey(const nlohmann::json& js, const std::string& key) { return (js.find(key) != js.end()); }
+};
+} // namespace acl
 #endif // ACL_JSON_PARSER_H

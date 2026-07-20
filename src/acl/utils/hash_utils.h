@@ -15,7 +15,7 @@
 
 namespace acl {
 namespace hash_utils {
-aclError CalculateSimpleHash(const char *filePath, const std::string &configString, std::string &hashResult);
+aclError CalculateSimpleHash(const char* filePath, const std::string& configString, std::string& hashResult);
 } // namespace hash_utils
 } // namespace acl
 

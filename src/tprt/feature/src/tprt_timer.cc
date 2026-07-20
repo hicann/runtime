@@ -16,16 +16,11 @@
 namespace cce {
 namespace tprt {
 
-TprtTimer::TprtTimer() : is_running_(false), device_(nullptr)
-{ 
-}
+TprtTimer::TprtTimer() : is_running_(false), device_(nullptr) {}
 
-TprtTimer::~TprtTimer() 
-{
-    TPRT_LOG(TPRT_LOG_EVENT, "worker:%s destructor", workerName_.c_str());
-}
+TprtTimer::~TprtTimer() { TPRT_LOG(TPRT_LOG_EVENT, "worker:%s destructor", workerName_.c_str()); }
 
-void TprtTimer::Start(uint32_t interval) 
+void TprtTimer::Start(uint32_t interval)
 {
     if (is_running_) {
         TPRT_LOG(TPRT_LOG_WARNING, "TprtTimer is already running the periodic task.");
@@ -38,11 +33,11 @@ void TprtTimer::Start(uint32_t interval)
     is_running_ = true;
     interval_ = interval;
     workerName_ = std::to_string(device_->TprtDevGetDevId_());
-    workerThread_ = std::thread(&TprtTimer::RunPeriodicTask, this); 
+    workerThread_ = std::thread(&TprtTimer::RunPeriodicTask, this);
     TPRT_LOG(TPRT_LOG_INFO, "Worker thread of periodic task start, thread_name=%s", workerName_.c_str());
 }
 
-void TprtTimer::RunPeriodicTask() 
+void TprtTimer::RunPeriodicTask()
 {
     workerName_ = std::to_string(mmGetTid()) + "_" + workerName_;
     TPRT_LOG(TPRT_LOG_INFO, "Worker thread of periodic task start, thread_name=%s", workerName_.c_str());
@@ -58,10 +53,11 @@ void TprtTimer::RunPeriodicTask()
             TPRT_LOG(TPRT_LOG_ERROR, "Exception occurred while running RunCheckTaskTimeout.");
         }
 
-        auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime); 
-        // 计算需要休眠的时间	 
-        auto sleepTime = std::chrono::milliseconds(interval_) - elapsedTime;	 
-        if (sleepTime.count() > 0) { 
+        auto elapsedTime =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime);
+        // 计算需要休眠的时间
+        auto sleepTime = std::chrono::milliseconds(interval_) - elapsedTime;
+        if (sleepTime.count() > 0) {
             // 执行可中断的休眠，可快速响应停止信号
             std::unique_lock<std::mutex> lock(mutex_);
             (void)cv_.wait_for(lock, sleepTime, [this]() { return !is_running_; });
@@ -69,7 +65,8 @@ void TprtTimer::RunPeriodicTask()
     }
 }
 
-void TprtTimer::Stop() {
+void TprtTimer::Stop()
+{
     if (is_running_) {
         is_running_ = false;
         cv_.notify_all();
@@ -79,5 +76,5 @@ void TprtTimer::Stop() {
         TPRT_LOG(TPRT_LOG_INFO, "TprtTimer worker thread stop, thread_name=%s", workerName_.c_str());
     }
 }
-}
-}
+} // namespace tprt
+} // namespace cce

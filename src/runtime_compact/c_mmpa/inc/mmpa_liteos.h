@@ -23,8 +23,8 @@
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
-#endif  // __cpluscplus
-#endif  // __cpluscplus
+#endif // __cpluscplus
+#endif // __cpluscplus
 
 typedef uint32_t mmMutex_t;
 typedef Atomic mmAtomicType;
@@ -45,80 +45,49 @@ typedef file_t mmFileHandle;
 #define MM_SEEK_FILE_END SEEK_FILE_END
 #define MM_TASK_ID_INVALID LOS_ERRNO_TSK_ID_INVALID
 
-typedef enum {
-    FILE_READ = 0,
-    FILE_READ_BIN,
-    FILE_MODE_BUTT
-} MM_FILE_MODE;
+typedef enum { FILE_READ = 0, FILE_READ_BIN, FILE_MODE_BUTT } MM_FILE_MODE;
 
-static inline int32_t mmSetData(mmAtomicType *ptr, int32_t value)
-{
-    return LOS_AtomicXchg32bits(ptr, value);
-}
+static inline int32_t mmSetData(mmAtomicType* ptr, int32_t value) { return LOS_AtomicXchg32bits(ptr, value); }
 
-static inline int64_t mmSetData64(mmAtomicType64 *ptr, int64_t value)
-{
-    return LOS_AtomicXchg64bits(ptr, value);
-}
+static inline int64_t mmSetData64(mmAtomicType64* ptr, int64_t value) { return LOS_AtomicXchg64bits(ptr, value); }
 
-static inline int32_t mmValueInc(mmAtomicType *ptr, int32_t value)
-{
-    return LOS_AtomicAdd(ptr, value);
-}
+static inline int32_t mmValueInc(mmAtomicType* ptr, int32_t value) { return LOS_AtomicAdd(ptr, value); }
 
-static inline bool mmCompareAndSwap(mmAtomicType *ptr, int32_t oldval, int32_t newval)
+static inline bool mmCompareAndSwap(mmAtomicType* ptr, int32_t oldval, int32_t newval)
 {
     return !LOS_AtomicCmpXchg32bits(ptr, newval, oldval);
 }
 
-static inline bool mmCompareAndSwap64(mmAtomicType64 *ptr, int64_t oldval, int64_t newval)
+static inline bool mmCompareAndSwap64(mmAtomicType64* ptr, int64_t oldval, int64_t newval)
 {
     return !LOS_AtomicCmpXchg64bits(ptr, newval, oldval);
 }
 
-static inline void mmValueStore(mmAtomicType *ptr, int32_t value)
-{
-    LOS_AtomicSet(ptr, value);
-}
+static inline void mmValueStore(mmAtomicType* ptr, int32_t value) { LOS_AtomicSet(ptr, value); }
 
-static inline int32_t mmMutexInit(mmMutex_t *mutex)
-{
-    return (LOS_MuxCreate(mutex) != EN_OK) ? EN_ERROR : EN_OK;
-}
+static inline int32_t mmMutexInit(mmMutex_t* mutex) { return (LOS_MuxCreate(mutex) != EN_OK) ? EN_ERROR : EN_OK; }
 
-static inline int32_t mmMutexLock(mmMutex_t *mutex)
+static inline int32_t mmMutexLock(mmMutex_t* mutex)
 {
     return (LOS_MuxPend(*mutex, LOS_WAIT_FOREVER) != EN_OK) ? EN_ERROR : EN_OK;
 }
 
-static inline int32_t mmMutexUnLock(mmMutex_t *mutex)
-{
-    return (LOS_MuxPost(*mutex) != EN_OK) ? EN_ERROR : EN_OK;
-}
+static inline int32_t mmMutexUnLock(mmMutex_t* mutex) { return (LOS_MuxPost(*mutex) != EN_OK) ? EN_ERROR : EN_OK; }
 
-static inline int32_t mmMutexDestroy(mmMutex_t *mutex)
-{
-    return (LOS_MuxDelete(*mutex) != EN_OK) ? EN_ERROR : EN_OK;
-}
+static inline int32_t mmMutexDestroy(mmMutex_t* mutex) { return (LOS_MuxDelete(*mutex) != EN_OK) ? EN_ERROR : EN_OK; }
 
-static inline void mmSchedYield(void)
-{
-    (void)LOS_TaskYield();
-}
+static inline void mmSchedYield(void) { (void)LOS_TaskYield(); }
 
-static inline uint64_t mmGetTaskId(void)
-{
-    return LOS_CurTaskIDGet();
-}
+static inline uint64_t mmGetTaskId(void) { return LOS_CurTaskIDGet(); }
 
-static inline size_t mmReadFile(void *ptr, int32_t size, int32_t nitems, mmFileHandle *fd)
+static inline size_t mmReadFile(void* ptr, int32_t size, int32_t nitems, mmFileHandle* fd)
 {
     return file_read(ptr, size, nitems, fd);
 }
 
-static inline mmFileHandle *mmOpenFile(const char *fileName, int32_t mode)
+static inline mmFileHandle* mmOpenFile(const char* fileName, int32_t mode)
 {
-    mmFileHandle *fd = NULL;
+    mmFileHandle* fd = NULL;
     if (fileName == NULL || strlen(fileName) == 0) {
         return fd;
     }
@@ -128,46 +97,37 @@ static inline mmFileHandle *mmOpenFile(const char *fileName, int32_t mode)
     return fd;
 }
 
-static inline int32_t mmCloseFile(mmFileHandle *fd)
-{
-    return file_close(fd);
-}
+static inline int32_t mmCloseFile(mmFileHandle* fd) { return file_close(fd); }
 
-static inline int32_t mmRealPath(const char *path, char *realPath, int32_t realPathLen)
+static inline int32_t mmRealPath(const char* path, char* realPath, int32_t realPathLen)
 {
-    int32_t ret  = strcpy_s(realPath, realPathLen, path);
+    int32_t ret = strcpy_s(realPath, realPathLen, path);
     if (ret != EN_OK) {
         return EN_ERROR;
     }
     return EN_OK;
 }
 
-static inline int32_t mmAccess(const char *pathName, int32_t mode)
+static inline int32_t mmAccess(const char* pathName, int32_t mode)
 {
     (void)mode;
     return (strlen(pathName) > LITEOS_PATH_MAX) ? EN_ERROR : EN_OK;
 }
 
-static inline int32_t mmSeekFile(mmFileHandle *fd, int64_t offset, int32_t seekFlag)
+static inline int32_t mmSeekFile(mmFileHandle* fd, int64_t offset, int32_t seekFlag)
 {
     return file_seek(fd, (long)offset, seekFlag);
 }
 
-static inline long mmTellFile(mmFileHandle *fd)
-{
-    return file_tell(fd);
-}
+static inline long mmTellFile(mmFileHandle* fd) { return file_tell(fd); }
 
-static inline void *mmMalloc(unsigned long long size)
+static inline void* mmMalloc(unsigned long long size)
 {
-    void *ptr = NULL;
+    void* ptr = NULL;
     return (halHostMemAlloc(&ptr, size, 0) == EN_OK) ? ptr : NULL;
 }
 
-static inline void mmFree(void *ptr)
-{
-    halHostMemFree(ptr);
-}
+static inline void mmFree(void* ptr) { halHostMemFree(ptr); }
 #ifdef __cplusplus
 #if __cplusplus
 }

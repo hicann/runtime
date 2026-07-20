@@ -56,4 +56,4 @@ typedef enum ErrRegInfoIdxV200 {
 }
 #endif
 
-#endif  // ACC_ERROR_INFO_H
+#endif // ACC_ERROR_INFO_H

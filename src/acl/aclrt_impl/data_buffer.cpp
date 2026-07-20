@@ -57,15 +57,15 @@ size_t aclDataTypeSizeImpl(aclDataType dataType)
     }
 }
 
-aclDataBuffer *aclCreateDataBufferImpl(void *data, size_t size)
+aclDataBuffer* aclCreateDataBufferImpl(void* data, size_t size)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclCreateDataBuffer);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_DATA_BUFFER);
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_DATA_BUFFER);
-    return new(std::nothrow) aclDataBuffer(data, size);
+    return new (std::nothrow) aclDataBuffer(data, size);
 }
 
-aclError aclDestroyDataBufferImpl(const aclDataBuffer *dataBuffer)
+aclError aclDestroyDataBufferImpl(const aclDataBuffer* dataBuffer)
 {
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_DATA_BUFFER);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataBuffer);
@@ -75,7 +75,7 @@ aclError aclDestroyDataBufferImpl(const aclDataBuffer *dataBuffer)
     return ACL_SUCCESS;
 }
 
-aclError aclUpdateDataBufferImpl(aclDataBuffer *dataBuffer, void *data, size_t size)
+aclError aclUpdateDataBufferImpl(aclDataBuffer* dataBuffer, void* data, size_t size)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataBuffer);
     dataBuffer->data = data;
@@ -83,7 +83,7 @@ aclError aclUpdateDataBufferImpl(aclDataBuffer *dataBuffer, void *data, size_t s
     return ACL_SUCCESS;
 }
 
-void *aclGetDataBufferAddrImpl(const aclDataBuffer *dataBuffer)
+void* aclGetDataBufferAddrImpl(const aclDataBuffer* dataBuffer)
 {
     if (dataBuffer == nullptr) {
         return nullptr;
@@ -92,7 +92,7 @@ void *aclGetDataBufferAddrImpl(const aclDataBuffer *dataBuffer)
     return dataBuffer->data;
 }
 
-uint32_t aclGetDataBufferSizeImpl(const aclDataBuffer *dataBuffer)
+uint32_t aclGetDataBufferSizeImpl(const aclDataBuffer* dataBuffer)
 {
     if (dataBuffer == nullptr) {
         return 0U;
@@ -101,7 +101,7 @@ uint32_t aclGetDataBufferSizeImpl(const aclDataBuffer *dataBuffer)
     return static_cast<uint32_t>(dataBuffer->length);
 }
 
-size_t aclGetDataBufferSizeV2Impl(const aclDataBuffer *dataBuffer)
+size_t aclGetDataBufferSizeV2Impl(const aclDataBuffer* dataBuffer)
 {
     if (dataBuffer == nullptr) {
         return 0U;

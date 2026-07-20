@@ -50,12 +50,11 @@ static struct ErrorMessage g_errorMap[] = {
     {DRV_ERROR_CDQ_ABNORMAL, ACL_ERROR_RT_CDQ_BATCH_ABNORMAL},
     {DRV_ERROR_CDQ_NOT_EXIST, ACL_ERROR_RT_PARAM_INVALID},
     {DRV_ERROR_NO_CDQ_RESOURCES, ACL_ERROR_RT_NO_CDQ_RESOURCE},
-    {DRV_ERROR_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT}
-};
+    {DRV_ERROR_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT}};
 
 static int Compare(const void* a, const void* b)
 {
-    return ((*(const struct ErrorMessage *)a).drvError - (*(const struct ErrorMessage *)b).drvError) ;
+    return ((*(const struct ErrorMessage*)a).drvError - (*(const struct ErrorMessage*)b).drvError);
 }
 
 int32_t ErrorConvert(int32_t drvError)
@@ -64,8 +63,8 @@ int32_t ErrorConvert(int32_t drvError)
     static size_t errorMapLen = sizeof(g_errorMap) / sizeof(g_errorMap[0]);
     static size_t errorPairLen = sizeof(g_errorMap[0]);
 
-    struct ErrorMessage *ret =
-        (struct ErrorMessage *)bsearch(&errorPair, g_errorMap, errorMapLen, errorPairLen, Compare);
+    struct ErrorMessage* ret =
+        (struct ErrorMessage*)bsearch(&errorPair, g_errorMap, errorMapLen, errorPairLen, Compare);
     if (ret != NULL) {
         return (*ret).rtError;
     }

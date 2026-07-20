@@ -17,7 +17,6 @@
 #include "tsd_util_func.h"
 #include "inc/package_worker_utils.h"
 
-
 namespace tsd {
 uint64_t BasePackageWorker::GetPackageCheckCode()
 {
@@ -25,7 +24,7 @@ uint64_t BasePackageWorker::GetPackageCheckCode()
     return checkCode_;
 }
 
-void BasePackageWorker::PreProcessPackage(const std::string &packagePath, const std::string &packageName)
+void BasePackageWorker::PreProcessPackage(const std::string& packagePath, const std::string& packageName)
 {
     // The preprocess such as set the origin and decom path for package, calc the package size, must done in this func
     DefaultPreProcessPackage(packagePath, packageName);
@@ -33,7 +32,7 @@ void BasePackageWorker::PreProcessPackage(const std::string &packagePath, const 
     return;
 }
 
-void BasePackageWorker::DefaultPreProcessPackage(const std::string &packagePath, const std::string &packageName)
+void BasePackageWorker::DefaultPreProcessPackage(const std::string& packagePath, const std::string& packageName)
 {
     // set the package path
     SetOriginPackagePath(packagePath, packageName);
@@ -76,8 +75,9 @@ TSD_StatusT BasePackageWorker::MoveOriginPackageToDecompressDir() const
     const std::string cmd = GetMovePackageToDecompressDirCmd();
     const int32_t cmdRet = PackSystem(cmd.c_str());
     if (cmdRet != 0) {
-        TSD_RUN_WARN("Moving the origin package to the decompress path was not successful, ret=%d, cmd=%s, reason=%s",
-                     cmdRet, cmd.c_str(), strerror(errno));
+        TSD_RUN_WARN(
+            "Moving the origin package to the decompress path was not successful, ret=%d, cmd=%s, reason=%s", cmdRet,
+            cmd.c_str(), strerror(errno));
     }
     TSD_INFO("Move origin package to decompress path end, ret=%d, cmd=%s", cmdRet, cmd.c_str());
 

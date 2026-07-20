@@ -21,17 +21,11 @@ extern "C" {
 static MemPool g_contextMemPool = MEM_POOL_INIT(sizeof(Context));
 
 // context
-Device *GetContextDevice(Context *context)
-{
-    return context->device;
-}
+Device* GetContextDevice(Context* context) { return context->device; }
 
-uint32_t GetContextDeviceId(Context *context)
-{
-    return GetDeviceId(context->device);
-}
+uint32_t GetContextDeviceId(Context* context) { return GetDeviceId(context->device); }
 
-static void DestroyStream(void *pStream)
+static void DestroyStream(void* pStream)
 {
     FreeStream(*(Stream**)pStream);
     return;
@@ -44,15 +38,15 @@ static void FreeContextRes(Context* context)
     return;
 }
 
-static void FreeContext(Context *context)
+static void FreeContext(Context* context)
 {
     MemPoolFreeWithCSingleList(&g_contextMemPool, context, (FnDestroy)FreeContextRes);
     return;
 }
 
-static Context* CreateContext(Device* const dev, rtError_t *error)
+static Context* CreateContext(Device* const dev, rtError_t* error)
 {
-    Context* ctx = (Context *)MemPoolAllocWithCSingleList(&g_contextMemPool);
+    Context* ctx = (Context*)MemPoolAllocWithCSingleList(&g_contextMemPool);
     if (ctx == NULL) {
         RT_LOG_ERROR("malloc fail");
         *error = ACL_ERROR_RT_MEMORY_ALLOCATION;
@@ -75,14 +69,14 @@ static Context* CreateContext(Device* const dev, rtError_t *error)
 static rtError_t EmplaceStream(Context* curCtx, Stream* stream)
 {
     mmMutexLock(&curCtx->streamLock);
-    void *err = EmplaceBackVector(&(curCtx->streamVec), &stream);
+    void* err = EmplaceBackVector(&(curCtx->streamVec), &stream);
     mmMutexUnLock(&curCtx->streamLock);
     return err == NULL ? ACL_ERROR_RT_INTERNAL_ERROR : RT_ERROR_NONE;
 }
 
-Stream *CreateContextStream(Context* curCtx, rtStreamConfigHandle *handle, rtError_t *error)
+Stream* CreateContextStream(Context* curCtx, rtStreamConfigHandle* handle, rtError_t* error)
 {
-    Stream *stm = CreateStream(curCtx, handle, error);
+    Stream* stm = CreateStream(curCtx, handle, error);
     if (stm != NULL) {
         if (EmplaceStream(curCtx, stm) != RT_ERROR_NONE) {
             FreeStream(stm);
@@ -99,7 +93,7 @@ void DestroyContextStream(Context* curCtx, Stream* stream)
     mmMutexLock(&curCtx->streamLock);
     size_t size = VectorSize(&(curCtx->streamVec));
     for (size_t i = 0; i < size; ++i) {
-        Stream *tmpStm = *(Stream **)VectorAt(&(curCtx->streamVec), i);
+        Stream* tmpStm = *(Stream**)VectorAt(&(curCtx->streamVec), i);
         if (tmpStm == stream) {
             RemoveVector(&(curCtx->streamVec), i);
             break;
@@ -109,7 +103,7 @@ void DestroyContextStream(Context* curCtx, Stream* stream)
     return;
 }
 
-static void DestroyContext(Context *context)
+static void DestroyContext(Context* context)
 {
     FreeContextRes(context);
     uint32_t devId = GetContextDeviceId(context);
@@ -117,14 +111,14 @@ static void DestroyContext(Context *context)
     return;
 }
 
-rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId)
+rtError_t rtCtxCreateEx(rtContext_t* createCtx, uint32_t flags, int32_t devId)
 {
     (void)flags;
     if (createCtx == NULL) {
         RT_LOG_ERROR("context is NULL");
         return ACL_ERROR_RT_CONTEXT_NULL;
     }
-    Device *const dev = RetainDevice((uint32_t)devId);
+    Device* const dev = RetainDevice((uint32_t)devId);
     if (dev == NULL) {
         RT_LOG_ERROR("retain dev fail, devId=%d.", devId);
         return ACL_ERROR_RT_DEV_SETUP_ERROR;
@@ -150,12 +144,14 @@ rtError_t rtCtxDestroyEx(rtContext_t destroyCtx)
     return RT_ERROR_NONE;
 }
 
-void InitCtxMemPool(void) {
+void InitCtxMemPool(void)
+{
     InitMemPoolWithCSingleList(&g_contextMemPool, sizeof(Context));
     return;
 }
 
-void DeInitCtxMemPool(void) {
+void DeInitCtxMemPool(void)
+{
     DeInitMemPoolWithCSingleList(&g_contextMemPool);
     return;
 }

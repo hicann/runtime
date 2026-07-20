@@ -30,7 +30,7 @@ typedef struct TagRuntime {
 
 Runtime g_runTime;
 
-static rtError_t GetMemInfoType(const rtMemInfoType_t memInfoType, uint32_t * const type)
+static rtError_t GetMemInfoType(const rtMemInfoType_t memInfoType, uint32_t* const type)
 {
     rtError_t error = ACL_RT_SUCCESS;
     switch (memInfoType) {
@@ -59,7 +59,7 @@ static rtError_t GetMemInfoType(const rtMemInfoType_t memInfoType, uint32_t * co
     return error;
 }
 
-rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
+rtError_t rtMalloc(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
     (void)moduleId;
     const uint32_t p2pTypeSet = RT_MEMORY_POLICY_HUGE_PAGE_FIRST_P2P | RT_MEMORY_POLICY_HUGE_PAGE_ONLY_P2P |
@@ -75,7 +75,7 @@ rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtFree(void *devPtr)
+rtError_t rtFree(void* devPtr)
 {
     const drvError_t error = halMemFree(devPtr);
     if (error != DRV_ERROR_NONE) {
@@ -86,7 +86,7 @@ rtError_t rtFree(void *devPtr)
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64_t cnt)
+rtError_t rtMemset(void* devPtr, uint64_t destMax, uint32_t val, uint64_t cnt)
 {
     drvError_t error = halMemset((DVdeviceptr)(uintptr_t)devPtr, destMax, (uint8_t)val, cnt);
     if (error != DRV_ERROR_NONE) {
@@ -96,7 +96,7 @@ rtError_t rtMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64_t cnt)
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *freeSize, size_t *totalSize)
+rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t* freeSize, size_t* totalSize)
 {
     uint32_t type = 0U;
     rtError_t ret = GetMemInfoType(memInfoType, &type);
@@ -115,10 +115,10 @@ rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *freeSize, size_t *
     return ACL_RT_SUCCESS;
 }
 
-rtError_t rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
+rtError_t rtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtMemcpyKind_t kind)
 {
-    drvError_t error = halMemcpy((DVdeviceptr)(uintptr_t)dst, destMax,
-                                 (DVdeviceptr)(uintptr_t)src, cnt, (drvMemcpyKind_t)kind);
+    drvError_t error =
+        halMemcpy((DVdeviceptr)(uintptr_t)dst, destMax, (DVdeviceptr)(uintptr_t)src, cnt, (drvMemcpyKind_t)kind);
     if (error != DRV_ERROR_NONE) {
         RT_LOG_ERROR("halMemcpy failed, kind = %d, drvRet = %d", (int32_t)(kind), (int32_t)(error));
         return ErrorConvert(error);
@@ -155,7 +155,7 @@ rtError_t rtInit(void)
 static void FreeRuntime()
 {
     for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; ++i) {
-        while ((Device *)GetRefObjVal(&(g_runTime.devices[i])) != NULL) {
+        while ((Device*)GetRefObjVal(&(g_runTime.devices[i])) != NULL) {
             (void)ReleaseDevice(i);
         }
     }
@@ -177,24 +177,21 @@ void rtDeinit(void)
     return;
 }
 
-static bool HaveDevice(void)
-{
-    return g_runTime.isHaveDevice;
-}
+static bool HaveDevice(void) { return g_runTime.isHaveDevice; }
 
-static void *CreateDeviceRef(RefObj *obj)
+static void* CreateDeviceRef(RefObj* obj)
 {
     uint32_t devId = obj - &(g_runTime.devices[0]);
     return CreateDevice(devId);
 }
 
-static void DestroyDeviceRef(RefObj *obj)
+static void DestroyDeviceRef(RefObj* obj)
 {
-    FreeDevice((Device *)GetRefObjVal(obj));
+    FreeDevice((Device*)GetRefObjVal(obj));
     obj->obj = NULL;
 }
 
-Device *RetainDevice(const uint32_t devId)
+Device* RetainDevice(const uint32_t devId)
 {
     if (devId >= RT_MAX_DEV_NUM) {
         RT_LOG_ERROR("Device retain fail, devId=%d, valid range is [0,%u)", devId, RT_MAX_DEV_NUM);
@@ -224,12 +221,9 @@ rtError_t rtSetDevice(int32_t devId)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtDeviceReset(int32_t devId)
-{
-    return HaveDevice() ? ReleaseDevice((uint32_t)devId) : RT_ERROR_NONE;
-}
+rtError_t rtDeviceReset(int32_t devId) { return HaveDevice() ? ReleaseDevice((uint32_t)devId) : RT_ERROR_NONE; }
 
-rtError_t rtGetDevice(int32_t *devId)
+rtError_t rtGetDevice(int32_t* devId)
 {
     if (devId == NULL) {
         return ACL_ERROR_RT_INTERNAL_ERROR;
@@ -243,7 +237,7 @@ rtError_t rtGetDevice(int32_t *devId)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetRunMode(rtRunMode *runMode)
+rtError_t rtGetRunMode(rtRunMode* runMode)
 {
     if (runMode == NULL) {
         return ACL_ERROR_RT_INTERNAL_ERROR;

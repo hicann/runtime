@@ -21,11 +21,9 @@ class AllocatorDesc {
 public:
     AllocatorDesc() = default;
     ~AllocatorDesc() = default;
-    AllocatorDesc(aclrtAllocator allocator,
-                  aclrtAllocatorAllocFunc allocFunc,
-                  aclrtAllocatorFreeFunc freeFunc,
-                  aclrtAllocatorAllocAdviseFunc allocAdviseFunc,
-                  aclrtAllocatorGetAddrFromBlockFunc getAddrFromBlockFunc)
+    AllocatorDesc(
+        aclrtAllocator allocator, aclrtAllocatorAllocFunc allocFunc, aclrtAllocatorFreeFunc freeFunc,
+        aclrtAllocatorAllocAdviseFunc allocAdviseFunc, aclrtAllocatorGetAddrFromBlockFunc getAddrFromBlockFunc)
     {
         this->obj = allocator;
         this->allocFunc = allocFunc;
@@ -42,7 +40,7 @@ public:
 std::mutex g_AllocatorDescMutex;
 // The first aclrtAllocatorDesc is created by the user, while the second AllocatorDesc is a saved copy.
 std::map<aclrtStream, std::pair<aclrtAllocatorDesc, AllocatorDesc>> g_AllocatorDesMap;
-}
+} // namespace
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +51,7 @@ aclrtAllocatorDesc aclrtAllocatorCreateDescImpl()
     ACL_PROFILING_REG(acl::AclProfType::AclrtAllocatorCreateDesc);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_DESC);
     ACL_LOG_INFO("Create allocator description.");
-    AllocatorDesc *allocatorDesc = new(std::nothrow) AllocatorDesc;
+    AllocatorDesc* allocatorDesc = new (std::nothrow) AllocatorDesc;
     ACL_CHECK_MALLOC_RESULT_REPORT_RET(allocatorDesc, sizeof(AllocatorDesc), "new", nullptr);
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_DESC);
     return static_cast<aclrtAllocatorDesc>(allocatorDesc);
@@ -65,7 +63,7 @@ aclError aclrtAllocatorDestroyDescImpl(aclrtAllocatorDesc allocatorDesc)
     ACL_LOG_INFO("Destroy allocator description, allocatorDesc %p.", allocatorDesc);
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_DESC);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
-    delete static_cast<AllocatorDesc *>(allocatorDesc);
+    delete static_cast<AllocatorDesc*>(allocatorDesc);
     allocatorDesc = nullptr;
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_ALLOCATOR_DESC);
     return ACL_SUCCESS;
@@ -76,7 +74,7 @@ aclError aclrtAllocatorSetObjToDescImpl(aclrtAllocatorDesc allocatorDesc, aclrtA
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocator);
     ACL_LOG_INFO("Set allocator to allocator description, allocatorDesc %p.", allocatorDesc);
-    static_cast<AllocatorDesc *>(allocatorDesc)->obj = allocator;
+    static_cast<AllocatorDesc*>(allocatorDesc)->obj = allocator;
     return ACL_SUCCESS;
 }
 
@@ -85,7 +83,7 @@ aclError aclrtAllocatorSetAllocFuncToDescImpl(aclrtAllocatorDesc allocatorDesc, 
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_LOG_INFO("Set alloc function to allocator description, allocatorDesc %p.", allocatorDesc);
-    static_cast<AllocatorDesc *>(allocatorDesc)->allocFunc = func;
+    static_cast<AllocatorDesc*>(allocatorDesc)->allocFunc = func;
     return ACL_SUCCESS;
 }
 
@@ -94,26 +92,27 @@ aclError aclrtAllocatorSetFreeFuncToDescImpl(aclrtAllocatorDesc allocatorDesc, a
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_LOG_INFO("Set free function to allocator description, allocatorDesc %p.", allocatorDesc);
-    static_cast<AllocatorDesc *>(allocatorDesc)->freeFunc = func;
+    static_cast<AllocatorDesc*>(allocatorDesc)->freeFunc = func;
     return ACL_SUCCESS;
 }
 
-aclError aclrtAllocatorSetAllocAdviseFuncToDescImpl(aclrtAllocatorDesc allocatorDesc, aclrtAllocatorAllocAdviseFunc func)
+aclError aclrtAllocatorSetAllocAdviseFuncToDescImpl(
+    aclrtAllocatorDesc allocatorDesc, aclrtAllocatorAllocAdviseFunc func)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_LOG_INFO("Set alloc advise function to allocator description, allocatorDesc %p.", allocatorDesc);
-    static_cast<AllocatorDesc *>(allocatorDesc)->allocAdviseFunc = func;
+    static_cast<AllocatorDesc*>(allocatorDesc)->allocAdviseFunc = func;
     return ACL_SUCCESS;
 }
 
-aclError aclrtAllocatorSetGetAddrFromBlockFuncToDescImpl(aclrtAllocatorDesc allocatorDesc,
-                                                     aclrtAllocatorGetAddrFromBlockFunc func)
+aclError aclrtAllocatorSetGetAddrFromBlockFuncToDescImpl(
+    aclrtAllocatorDesc allocatorDesc, aclrtAllocatorGetAddrFromBlockFunc func)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_LOG_INFO("Set get_addr_from_block function to allocator description, allocatorDesc %p.", allocatorDesc);
-    static_cast<AllocatorDesc *>(allocatorDesc)->getAddrFromBlockFunc = func;
+    static_cast<AllocatorDesc*>(allocatorDesc)->getAddrFromBlockFunc = func;
     return ACL_SUCCESS;
 }
 
@@ -123,17 +122,16 @@ aclError aclrtAllocatorRegisterImpl(aclrtStream stream, aclrtAllocatorDesc alloc
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
 
-    AllocatorDesc *allocDesc = static_cast<AllocatorDesc *>(allocatorDesc);
+    AllocatorDesc* allocDesc = static_cast<AllocatorDesc*>(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(allocDesc->obj, "allocatorDesc->obj");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(allocDesc->allocFunc, "allocatorDesc->allocFunc");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(allocDesc->freeFunc, "allocatorDesc->freeFunc");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(allocDesc->getAddrFromBlockFunc, "allocatorDesc->getAddrFromBlockFunc");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(
+        allocDesc->getAddrFromBlockFunc, "allocatorDesc->getAddrFromBlockFunc");
 
-    AllocatorDesc allocDescCopy = AllocatorDesc(allocDesc->obj,
-                                                allocDesc->allocFunc,
-                                                allocDesc->freeFunc,
-                                                allocDesc->allocAdviseFunc,
-                                                allocDesc->getAddrFromBlockFunc);
+    AllocatorDesc allocDescCopy = AllocatorDesc(
+        allocDesc->obj, allocDesc->allocFunc, allocDesc->freeFunc, allocDesc->allocAdviseFunc,
+        allocDesc->getAddrFromBlockFunc);
     std::pair<aclrtAllocatorDesc, AllocatorDesc> allocatorDescPair(allocatorDesc, allocDescCopy);
     const std::unique_lock<std::mutex> lk(g_AllocatorDescMutex);
     g_AllocatorDesMap[stream] = allocatorDescPair;
@@ -141,13 +139,10 @@ aclError aclrtAllocatorRegisterImpl(aclrtStream stream, aclrtAllocatorDesc alloc
     return ACL_SUCCESS;
 }
 
-aclError aclrtAllocatorGetByStreamImpl(aclrtStream stream,
-                                    aclrtAllocatorDesc *allocatorDesc,
-                                    aclrtAllocator *allocator,
-                                    aclrtAllocatorAllocFunc *allocFunc,
-                                    aclrtAllocatorFreeFunc *freeFunc,
-                                    aclrtAllocatorAllocAdviseFunc *allocAdviseFunc,
-                                    aclrtAllocatorGetAddrFromBlockFunc *getAddrFromBlockFunc)
+aclError aclrtAllocatorGetByStreamImpl(
+    aclrtStream stream, aclrtAllocatorDesc* allocatorDesc, aclrtAllocator* allocator,
+    aclrtAllocatorAllocFunc* allocFunc, aclrtAllocatorFreeFunc* freeFunc,
+    aclrtAllocatorAllocAdviseFunc* allocAdviseFunc, aclrtAllocatorGetAddrFromBlockFunc* getAddrFromBlockFunc)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(allocatorDesc);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
@@ -155,13 +150,13 @@ aclError aclrtAllocatorGetByStreamImpl(aclrtStream stream,
     const auto iter = g_AllocatorDesMap.find(stream);
     if (iter == g_AllocatorDesMap.end()) {
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_NO_VALUE_MSG,
-            std::vector<const char *>({"func", "param", "reason"}),
-            std::vector<const char *>({funcName.c_str(), "stream", "The stream is not registered with any allocator"}));
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_NO_VALUE_MSG, std::vector<const char*>({"func", "param", "reason"}),
+            std::vector<const char*>({funcName.c_str(), "stream", "The stream is not registered with any allocator"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     *allocatorDesc = iter->second.first;
-    AllocatorDesc &desc = iter->second.second;
+    AllocatorDesc& desc = iter->second.second;
     if (allocator != nullptr) {
         *allocator = desc.obj;
     }

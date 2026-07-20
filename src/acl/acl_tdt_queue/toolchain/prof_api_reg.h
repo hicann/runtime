@@ -17,29 +17,29 @@
 #define TDT_QUEUE_PROF_TYPE_START_OFFSET 0x008000U
 
 namespace acl {
-    aclError AclTdtQueueProfCtrlHandle(uint32_t dataType, void *data, uint32_t dataLen);
+aclError AclTdtQueueProfCtrlHandle(uint32_t dataType, void* data, uint32_t dataLen);
 
-    enum AclTdtQueueProfType {
-        // start with 0x038000U
-        TdtQueueProfTypeStart = MSPROF_REPORT_ACL_RUNTIME_BASE_TYPE + TDT_QUEUE_PROF_TYPE_START_OFFSET,
-        AcltdtEnqueue,
-        AcltdtDequeue,
-        AcltdtEnqueueData,
-        AcltdtDequeueData,
-        // this is the end, can not add after TdtQueueProfTypeEnd
-        TdtQueueProfTypeEnd
-    };
+enum AclTdtQueueProfType {
+    // start with 0x038000U
+    TdtQueueProfTypeStart = MSPROF_REPORT_ACL_RUNTIME_BASE_TYPE + TDT_QUEUE_PROF_TYPE_START_OFFSET,
+    AcltdtEnqueue,
+    AcltdtDequeue,
+    AcltdtEnqueueData,
+    AcltdtDequeueData,
+    // this is the end, can not add after TdtQueueProfTypeEnd
+    TdtQueueProfTypeEnd
+};
 
-    class AclTdtQueueProfilingReporter {
-    public:
-        explicit AclTdtQueueProfilingReporter(const AclTdtQueueProfType apiId);
-        virtual ~AclTdtQueueProfilingReporter() noexcept;
-    private:
-        uint64_t startTime_ = 0UL;
-        const AclTdtQueueProfType aclApi_;
-    };
-}  // namespace acl
+class AclTdtQueueProfilingReporter {
+public:
+    explicit AclTdtQueueProfilingReporter(const AclTdtQueueProfType apiId);
+    virtual ~AclTdtQueueProfilingReporter() noexcept;
 
-#define ACL_PROFILING_REG(apiId) \
-    const acl::AclTdtQueueProfilingReporter profilingReporter(apiId)
-#endif 
+private:
+    uint64_t startTime_ = 0UL;
+    const AclTdtQueueProfType aclApi_;
+};
+} // namespace acl
+
+#define ACL_PROFILING_REG(apiId) const acl::AclTdtQueueProfilingReporter profilingReporter(apiId)
+#endif

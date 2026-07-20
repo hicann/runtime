@@ -17,7 +17,7 @@ extern "C" {
 #define VECTOR_BASIC_STEP 8
 #define VECTOR_MAX_AREA 0x80000000U
 
-void InitVector(Vector *vector, size_t itemSize)
+void InitVector(Vector* vector, size_t itemSize)
 {
     vector->itemSize = itemSize;
     vector->size = 0;
@@ -26,7 +26,7 @@ void InitVector(Vector *vector, size_t itemSize)
     vector->pfnDestroyItem = NULL;
 }
 
-void ClearVector(Vector *vector)
+void ClearVector(Vector* vector)
 {
     if (vector->pfnDestroyItem != NULL) {
         for (size_t i = 0; i < vector->size; i++) {
@@ -36,7 +36,7 @@ void ClearVector(Vector *vector)
     vector->size = 0;
 }
 
-void DeInitVector(Vector *vector)
+void DeInitVector(Vector* vector)
 {
     ClearVector(vector);
     if (vector->data != NULL) {
@@ -45,9 +45,9 @@ void DeInitVector(Vector *vector)
     InitVector(vector, 0);
 }
 
-Vector *CreateVector(size_t itemSize)
+Vector* CreateVector(size_t itemSize)
 {
-    Vector *vector = (Vector *)mmMalloc(sizeof(Vector));
+    Vector* vector = (Vector*)mmMalloc(sizeof(Vector));
     if (vector == NULL) {
         return NULL;
     }
@@ -55,13 +55,13 @@ Vector *CreateVector(size_t itemSize)
     return vector;
 }
 
-void DestroyVector(Vector *vector)
+void DestroyVector(Vector* vector)
 {
     DeInitVector(vector);
     mmFree(vector);
 }
 
-void MoveVector(Vector *src, Vector *desc)
+void MoveVector(Vector* src, Vector* desc)
 {
     desc->capacity = src->capacity;
     desc->data = src->data;
@@ -71,7 +71,7 @@ void MoveVector(Vector *src, Vector *desc)
     InitVector(src, 0);
 }
 
-size_t CapacityVector(Vector *vector, size_t capacity)
+size_t CapacityVector(Vector* vector, size_t capacity)
 {
     if (vector->capacity >= capacity) {
         return vector->capacity;
@@ -84,7 +84,7 @@ size_t CapacityVector(Vector *vector, size_t capacity)
 
     size_t validCapacity = (capacity >= maxCapacity) ? maxCapacity : capacity;
     size_t areaSize = validCapacity * vector->itemSize;
-    uint8_t *data = (uint8_t *)mmMalloc(areaSize);
+    uint8_t* data = (uint8_t*)mmMalloc(areaSize);
     if (data == NULL) {
         return vector->capacity;
     }
@@ -103,7 +103,7 @@ size_t CapacityVector(Vector *vector, size_t capacity)
     return validCapacity;
 }
 
-size_t ReSizeVector(Vector *vector, size_t size)
+size_t ReSizeVector(Vector* vector, size_t size)
 {
     if (size > vector->capacity) {
         (void)CapacityVector(vector, size);
@@ -118,7 +118,7 @@ size_t ReSizeVector(Vector *vector, size_t size)
     return vector->size;
 }
 
-void *EmplaceVector(Vector *vector, size_t index, void *data)
+void* EmplaceVector(Vector* vector, size_t index, void* data)
 {
     if (vector->size == vector->capacity) {
         size_t capacity =
@@ -132,7 +132,7 @@ void *EmplaceVector(Vector *vector, size_t index, void *data)
         return NULL;
     }
 
-    uint8_t *itemData = vector->data + (index * vector->itemSize);
+    uint8_t* itemData = vector->data + (index * vector->itemSize);
     errno_t ret;
     if (index < vector->size) {
         size_t mvArea = (vector->size - index) * vector->itemSize;
@@ -149,23 +149,17 @@ void *EmplaceVector(Vector *vector, size_t index, void *data)
     return itemData;
 }
 
-void *EmplaceBackVector(Vector *vector, void *data)
-{
-    return EmplaceVector(vector, vector->size, data);
-}
+void* EmplaceBackVector(Vector* vector, void* data) { return EmplaceVector(vector, vector->size, data); }
 
-void *EmplaceHeadVector(Vector *vector, void *data)
-{
-    return EmplaceVector(vector, 0, data);
-}
+void* EmplaceHeadVector(Vector* vector, void* data) { return EmplaceVector(vector, 0, data); }
 
-void RemoveVector(Vector *vector, size_t index)
+void RemoveVector(Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return;
     }
 
-    uint8_t *itemData = vector->data + (index * vector->itemSize);
+    uint8_t* itemData = vector->data + (index * vector->itemSize);
     if (vector->pfnDestroyItem != NULL) {
         vector->pfnDestroyItem(itemData);
     }
@@ -181,14 +175,14 @@ void RemoveVector(Vector *vector, size_t index)
     vector->size--;
     // free memory when no data
     if ((vector->size == 0) && (vector->capacity != 0)) {
-         mmFree(vector->data);
-         vector->data = NULL;
-         vector->capacity = 0;
+        mmFree(vector->data);
+        vector->data = NULL;
+        vector->capacity = 0;
     }
     return;
 }
 
-void *VectorAt(Vector *vector, size_t index)
+void* VectorAt(Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return NULL;
@@ -196,7 +190,7 @@ void *VectorAt(Vector *vector, size_t index)
     return vector->data + (index * vector->itemSize);
 }
 
-const void *ConstVectorAt(const Vector *vector, size_t index)
+const void* ConstVectorAt(const Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return NULL;

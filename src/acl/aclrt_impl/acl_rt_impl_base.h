@@ -19,14 +19,14 @@ struct aclrtUtilizationExtendInfo {
     bool isUtilizationExtend = false;
 };
 namespace acl {
-    aclError UpdatePlatformInfoWithDevice(int32_t deviceId);
-    const std::string &GetSocVersion();
-    ACL_FUNC_VISIBILITY bool GetAclInitFlag();
-    ACL_FUNC_VISIBILITY uint64_t &GetAclInitRefCount();
-    ACL_FUNC_VISIBILITY std::recursive_mutex &GetAclInitMutex();
-    ACL_FUNC_VISIBILITY std::string &GetConfigPathStr();
-    ACL_FUNC_VISIBILITY void SetConfigPathStr(std::string &configStr);
-    ACL_FUNC_VISIBILITY aclError GetStrFromConfigPath(const char *configPath, std::string &configStr);
-}
+aclError UpdatePlatformInfoWithDevice(int32_t deviceId);
+const std::string& GetSocVersion();
+ACL_FUNC_VISIBILITY bool GetAclInitFlag();
+ACL_FUNC_VISIBILITY uint64_t& GetAclInitRefCount();
+ACL_FUNC_VISIBILITY std::recursive_mutex& GetAclInitMutex();
+ACL_FUNC_VISIBILITY std::string& GetConfigPathStr();
+ACL_FUNC_VISIBILITY void SetConfigPathStr(std::string& configStr);
+ACL_FUNC_VISIBILITY aclError GetStrFromConfigPath(const char* configPath, std::string& configStr);
+} // namespace acl
 
 #endif // ASCEND_RUNTIME_ACL_RT_IMPL_BASE_H_

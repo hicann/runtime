@@ -11,43 +11,43 @@
 #include "env_internal_api.h"
 
 namespace tsd {
-    void GetEnvFromMmSys(mmEnvId id, const char *envName, std::string &envValue)
-    {
-        constexpr size_t envValueMaxLen = 1024UL * 1024UL;
-        try {
-            const char *envPath = nullptr;
-            envPath = (&mmSysGetEnv != nullptr) ? mmSysGetEnv(id) : getenv(envName);
-            if ((envPath == nullptr) || (strnlen(envPath, envValueMaxLen) >= envValueMaxLen)) {
-                TSD_WARN("Get env[%s] failed", envName);
-                return;
-            }
-            envValue = envPath;
-        } catch (std::exception &e) {
-            TSD_ERROR("get env failed:[%s]", e.what());
+void GetEnvFromMmSys(mmEnvId id, const char* envName, std::string& envValue)
+{
+    constexpr size_t envValueMaxLen = 1024UL * 1024UL;
+    try {
+        const char* envPath = nullptr;
+        envPath = (&mmSysGetEnv != nullptr) ? mmSysGetEnv(id) : getenv(envName);
+        if ((envPath == nullptr) || (strnlen(envPath, envValueMaxLen) >= envValueMaxLen)) {
+            TSD_WARN("Get env[%s] failed", envName);
+            return;
         }
-    }
-
-    bool GetFlagFromMmSys(mmEnvId id, const char_t * const envStr, const char_t * const envValue)
-    {
-        std::string isFlag;
-        GetEnvFromMmSys(id, envStr, isFlag);
-        if (!isFlag.empty()) {
-            if (isFlag == envValue) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool IsFpgaMmSysEnv()
-    {
-        const bool isFpga = GetFlagFromMmSys(MM_ENV_DATAMASTER_RUN_MODE, "DATAMASTER_RUN_MODE", "1");
-        return isFpga;
-    }
-
-    bool IsAsanMmSysEnv()
-    {
-        const bool isAsan = GetFlagFromMmSys(MM_ENV_ASAN_RUN_MODE, "ASAN_RUN_MODE", "1");
-        return isAsan;
+        envValue = envPath;
+    } catch (std::exception& e) {
+        TSD_ERROR("get env failed:[%s]", e.what());
     }
 }
+
+bool GetFlagFromMmSys(mmEnvId id, const char_t* const envStr, const char_t* const envValue)
+{
+    std::string isFlag;
+    GetEnvFromMmSys(id, envStr, isFlag);
+    if (!isFlag.empty()) {
+        if (isFlag == envValue) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool IsFpgaMmSysEnv()
+{
+    const bool isFpga = GetFlagFromMmSys(MM_ENV_DATAMASTER_RUN_MODE, "DATAMASTER_RUN_MODE", "1");
+    return isFpga;
+}
+
+bool IsAsanMmSysEnv()
+{
+    const bool isAsan = GetFlagFromMmSys(MM_ENV_ASAN_RUN_MODE, "ASAN_RUN_MODE", "1");
+    return isAsan;
+}
+} // namespace tsd

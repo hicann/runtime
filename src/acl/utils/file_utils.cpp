@@ -12,13 +12,12 @@
 #include "mmpa/mmpa_api.h"
 #include "common/log_inner.h"
 
-
 namespace acl {
 namespace file_utils {
-aclError GetSoRealPath(std::string &path)
+aclError GetSoRealPath(std::string& path)
 {
     mmDlInfo dlInfo;
-    if ((mmDladdr(reinterpret_cast<void *>(&GetSoRealPath), &dlInfo) != EN_OK) || (dlInfo.dli_fname == nullptr)) {
+    if ((mmDladdr(reinterpret_cast<void*>(&GetSoRealPath), &dlInfo) != EN_OK) || (dlInfo.dli_fname == nullptr)) {
         ACL_LOG_WARN("Failed to get shared library path! errmsg:%s", mmDlerror());
         return ACL_ERROR_INTERNAL_ERROR;
     }
@@ -42,21 +41,20 @@ aclError GetSoRealPath(std::string &path)
     return ACL_SUCCESS;
 }
 
-std::string GetLocalRealPath(const std::string &path)
+std::string GetLocalRealPath(const std::string& path)
 {
     if (path.empty()) {
         return "";
     }
 
     char resolvedPath[PATH_MAX] = {0};
-    
+
     if (realpath(path.c_str(), resolvedPath) == nullptr) {
         ACL_LOG_WARN("Failed to get real path for [%s], errno:%d", path.c_str(), errno);
         return "";
     }
-    
+
     return std::string(resolvedPath);
 }
 } // namespace file_utils
 } // namespace acl
-

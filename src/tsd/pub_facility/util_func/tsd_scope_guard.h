@@ -15,22 +15,17 @@
 namespace tsd {
 class ScopeGuard {
 public:
-    explicit ScopeGuard(const std::function<void()> exitScope)
-        : exitScope_(exitScope)
-    {}
+    explicit ScopeGuard(const std::function<void()> exitScope) : exitScope_(exitScope) {}
 
-    ~ScopeGuard()
-    {
-        exitScope_();
-    }
+    ~ScopeGuard() { exitScope_(); }
 
 private:
     ScopeGuard(ScopeGuard const&) = delete;
     ScopeGuard& operator=(ScopeGuard const&) = delete;
-    ScopeGuard& operator=(ScopeGuard &) = delete;
+    ScopeGuard& operator=(ScopeGuard&) = delete;
     ScopeGuard(ScopeGuard&&) = delete;
     ScopeGuard& operator=(ScopeGuard&&) = delete;
     std::function<void()> exitScope_;
 };
-}
+} // namespace tsd
 #endif // TSD_PUB_FACILITY_UTIL_FUNC_TSD_SCOPE_GUARD_H

@@ -14,14 +14,14 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
-uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *cfg);
+uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t* cfg);
 uint32_t TprtDeviceClose(uint32_t devId);
-uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, const TprtSqCqInputInfo *cqInfo);
-uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, const TprtSqCqInputInfo *cqInfo);
-uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t *sendInfo);
-uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t *opInfo);
-uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo);
-uint32_t TprtGetSqState(uint32_t devId, TprtReportCqeInfo_t *cqeInfo);
+uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo* sqInfo, const TprtSqCqInputInfo* cqInfo);
+uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo* sqInfo, const TprtSqCqInputInfo* cqInfo);
+uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t* sendInfo);
+uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t* opInfo);
+uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t* cqeInfo);
+uint32_t TprtGetSqState(uint32_t devId, TprtReportCqeInfo_t* cqeInfo);
 uint32_t TprtProfilingEnable(bool isEnable);
 #ifdef __cplusplus
 }

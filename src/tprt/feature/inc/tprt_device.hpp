@@ -16,11 +16,7 @@
 
 namespace cce {
 namespace tprt {
-typedef enum TimeoutStatus {
-    WAIT_TASK_IS_FINISHED,
-    WAIT_TASK_IS_WORKING,
-    WAIT_TASK_IS_TIMEOUT
-} TimeoutStatus_t;
+typedef enum TimeoutStatus { WAIT_TASK_IS_FINISHED, WAIT_TASK_IS_WORKING, WAIT_TASK_IS_TIMEOUT } TimeoutStatus_t;
 
 class TprtDevice {
 public:
@@ -29,33 +25,30 @@ public:
     uint32_t TprtDeviceStop();
     uint32_t TprtSqCqAlloc(const uint32_t sqId, const uint32_t cqId);
     uint32_t TprtSqCqDeAlloc(const uint32_t sqId, const uint32_t cqId);
-    TprtSqHandle *TprtGetSqHandleBySqId(uint32_t sqId);
-    TprtCqHandle *TprtGetCqHandleByCqId(uint32_t cqId);
+    TprtSqHandle* TprtGetSqHandleBySqId(uint32_t sqId);
+    TprtCqHandle* TprtGetCqHandleByCqId(uint32_t cqId);
     std::shared_ptr<TprtWorker> TprtGetWorkHandleBySqHandle(TprtSqHandle* handle);
 
     uint32_t TprtDeleteDevice();
-    uint32_t TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo);
-    uint32_t TprtDevGetDevId_() const
-    {
-        return devId_;
-    }
+    uint32_t TprtDevOpSqCqInfo(TprtSqCqOpInfo_t* opInfo);
+    uint32_t TprtDevGetDevId_() const { return devId_; }
     void RunCheckTaskTimeout();
-    uint32_t TprtGetSqHandleSharedPtrById(const uint32_t sqId, std::shared_ptr<TprtSqHandle> &sharedSqHandle);
-    void GetAllSqHandleId(std::vector<uint32_t> &SqHandleIdList);
+    uint32_t TprtGetSqHandleSharedPtrById(const uint32_t sqId, std::shared_ptr<TprtSqHandle>& sharedSqHandle);
+    void GetAllSqHandleId(std::vector<uint32_t>& SqHandleIdList);
 
 private:
     uint32_t devId_;
     std::mutex sqCqWorkerMapLock_;
-    std::unordered_map<uint32_t, TprtSqHandle *> sqHandleMap_;      // key is sqId, value is Stream
-    std::unordered_map<uint32_t, TprtCqHandle *> cqHandleMap_;
-    std::unordered_map<TprtSqHandle *, std::shared_ptr<TprtWorker>> workerMap_;
+    std::unordered_map<uint32_t, TprtSqHandle*> sqHandleMap_; // key is sqId, value is Stream
+    std::unordered_map<uint32_t, TprtCqHandle*> cqHandleMap_;
+    std::unordered_map<TprtSqHandle*, std::shared_ptr<TprtWorker>> workerMap_;
     TprtTimer* timer_;
     std::mutex sqHandleMapLock_;
 
     void ProcessWaitingTask(uint32_t sqId, TprtSqHandle* sqHandle);
     uint32_t CheckDuplicateSqCqId(uint32_t sqId, uint32_t cqId);
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 
 #endif

@@ -18,12 +18,13 @@ constexpr const int32_t MIN_GE_ERROR_CODE = 145000;
 constexpr const int32_t MAX_GE_ERROR_CODE = 545999;
 constexpr const int32_t MIN_RTS_ERROR_CODE = 107000;
 constexpr const int32_t MAX_RTS_ERROR_CODE = 507999;
-}
+} // namespace acl
 
-#define ACL_GET_ERRCODE_RTS(innerErrCode)   (innerErrCode)
-#define ACL_GET_ERRCODE_GE(innerErrCode) \
-    (((((innerErrCode) >= acl::MIN_GE_ERROR_CODE) && ((innerErrCode) <= acl::MAX_GE_ERROR_CODE)) || \
-    (((innerErrCode) >= acl::MIN_RTS_ERROR_CODE) && ((innerErrCode) <= acl::MAX_RTS_ERROR_CODE))) ? \
-    (innerErrCode) : ACL_ERROR_GE_FAILURE)
+#define ACL_GET_ERRCODE_RTS(innerErrCode) (innerErrCode)
+#define ACL_GET_ERRCODE_GE(innerErrCode)                                                              \
+    (((((innerErrCode) >= acl::MIN_GE_ERROR_CODE) && ((innerErrCode) <= acl::MAX_GE_ERROR_CODE)) ||   \
+      (((innerErrCode) >= acl::MIN_RTS_ERROR_CODE) && ((innerErrCode) <= acl::MAX_RTS_ERROR_CODE))) ? \
+         (innerErrCode) :                                                                             \
+         ACL_ERROR_GE_FAILURE)
 
 #endif // ACL_ERROR_CODES_INNER_H_

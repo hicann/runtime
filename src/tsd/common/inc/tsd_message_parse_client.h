@@ -14,24 +14,24 @@
 #include "inc/tsd_message_parse_interface.h"
 
 namespace tsd {
-    class MessageParseClient : public MessageParseInterface {
-    public:
-        /**
-        * @ingroup hiaiengine
-        * @brief 静态函数，获取单例对象
-        * @param 无
-        * @return MessageParseClient的指针
-        */
-        static MessageParseClient* GetInstance();
+class MessageParseClient : public MessageParseInterface {
+public:
+    /**
+     * @ingroup hiaiengine
+     * @brief 静态函数，获取单例对象
+     * @param 无
+     * @return MessageParseClient的指针
+     */
+    static MessageParseClient* GetInstance();
 
-    private:
-        MessageParseClient() = default;
-        virtual ~MessageParseClient() = default;
-        MessageParseClient(const MessageParseClient&) = delete;
-        MessageParseClient(MessageParseClient&&) = delete;
-        MessageParseClient& operator=(const MessageParseClient&) = delete;
-        MessageParseClient& operator=(MessageParseClient&) = delete;
-        MessageParseClient& operator=(MessageParseClient&&) = delete;
-    };
-}
-#endif  // TDT_HOST_INNER_INC_TSD_MESSAGE_PARSE_CLIENT_H
+private:
+    MessageParseClient() = default;
+    virtual ~MessageParseClient() = default;
+    MessageParseClient(const MessageParseClient&) = delete;
+    MessageParseClient(MessageParseClient&&) = delete;
+    MessageParseClient& operator=(const MessageParseClient&) = delete;
+    MessageParseClient& operator=(MessageParseClient&) = delete;
+    MessageParseClient& operator=(MessageParseClient&&) = delete;
+};
+} // namespace tsd
+#endif // TDT_HOST_INNER_INC_TSD_MESSAGE_PARSE_CLIENT_H

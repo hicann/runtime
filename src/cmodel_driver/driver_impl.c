@@ -32,7 +32,7 @@
 const uint32_t STUB_DEVICE_ID_CMODEL = 64;
 
 #ifndef __DRV_CFG_DEV_PLATFORM_ESL__
-typedef void(*DriverReportIrqTriger)(uint32_t);
+typedef void (*DriverReportIrqTriger)(uint32_t);
 extern void tsRegDrvReportIrqTriger(DriverReportIrqTriger irqTriger);
 #endif
 
@@ -42,20 +42,21 @@ int8_t g_drvTaskpoolIdList[MAX_DEV_NUM][MAX_TASK_NUM];
 int8_t g_drvSqCqIdList[MAX_DEV_NUM][MAX_SQCQ_NUM];
 int8_t g_drvEventStateList[2 * MAX_EVENT_NUM];
 
-int32_t g_maxIds[DRV_RES_CNT] = { MAX_STREAM_NUM, MAX_EVENT_NUM, MAX_TASK_NUM, MAX_SQCQ_NUM };
-int8_t *g_idLists[DRV_RES_CNT] = { (int8_t *)g_drvStreamIdList, (int8_t *)g_drvEventIdList,
-                                   (int8_t *)g_drvTaskpoolIdList, (int8_t *)g_drvSqCqIdList };
-drvError_t g_fullErrors[DRV_RES_CNT] = { DRV_ERROR_INNER_ERR, DRV_ERROR_INNER_ERR,
-                                         DRV_ERROR_OUT_OF_MEMORY, DRV_ERROR_INNER_ERR };
+int32_t g_maxIds[DRV_RES_CNT] = {MAX_STREAM_NUM, MAX_EVENT_NUM, MAX_TASK_NUM, MAX_SQCQ_NUM};
+int8_t* g_idLists[DRV_RES_CNT] = {
+    (int8_t*)g_drvStreamIdList, (int8_t*)g_drvEventIdList, (int8_t*)g_drvTaskpoolIdList, (int8_t*)g_drvSqCqIdList};
+drvError_t g_fullErrors[DRV_RES_CNT] = {
+    DRV_ERROR_INNER_ERR, DRV_ERROR_INNER_ERR, DRV_ERROR_OUT_OF_MEMORY, DRV_ERROR_INNER_ERR};
 
-drvError_t __drvIdAlloc(int32_t *id, uint32_t device, int resType)
+drvError_t __drvIdAlloc(int32_t* id, uint32_t device, int resType)
 {
     COND_RETURN_CMODEL(id == NULL, DRV_ERROR_INVALID_HANDLE, "id is NULL");
     uint32_t deviceId = DEVICE_HANDLE_TO_ID(device);
-    COND_RETURN_CMODEL(deviceId >= MAX_DEV_NUM && deviceId != STUB_DEVICE_ID_CMODEL, DRV_ERROR_INVALID_DEVICE,
-                       "invalid device %u", deviceId);
+    COND_RETURN_CMODEL(
+        deviceId >= MAX_DEV_NUM && deviceId != STUB_DEVICE_ID_CMODEL, DRV_ERROR_INVALID_DEVICE, "invalid device %u",
+        deviceId);
     int32_t maxId = g_maxIds[resType];
-    int8_t *resList = g_idLists[resType] + ((uint32_t)maxId * device);
+    int8_t* resList = g_idLists[resType] + ((uint32_t)maxId * device);
 
     int32_t i = 0;
     while (i < maxId) {
@@ -76,11 +77,11 @@ drvError_t __drvIdFree(int32_t id, uint32_t device, int resType)
 {
     uint32_t deviceId = DEVICE_HANDLE_TO_ID(device);
     COND_RETURN_CMODEL(deviceId >= MAX_DEV_NUM, DRV_ERROR_INVALID_VALUE, "invalid device %u", deviceId);
-    COND_RETURN_CMODEL((resType < 0) || (resType >= (int32_t)DRV_RES_CNT), DRV_ERROR_INVALID_VALUE,
-                       "invalid resType %d", resType);
+    COND_RETURN_CMODEL(
+        (resType < 0) || (resType >= (int32_t)DRV_RES_CNT), DRV_ERROR_INVALID_VALUE, "invalid resType %d", resType);
 
     int32_t maxId = g_maxIds[resType];
-    int8_t *resList = g_idLists[resType] + ((uint32_t)maxId * device);
+    int8_t* resList = g_idLists[resType] + ((uint32_t)maxId * device);
 
     COND_RETURN_CMODEL((id < 0) || (id >= maxId), DRV_ERROR_INVALID_VALUE, "invalid id %d", id);
     COND_RETURN_CMODEL(resList[id] == 0, DRV_ERROR_INVALID_VALUE, "id %d is not alloced", id);
@@ -93,16 +94,16 @@ drvError_t __drvIdFree(int32_t id, uint32_t device, int resType)
 drvError_t drvEventIDListInit(void)
 {
     errno_t ret = memset_s(g_drvEventIdList, sizeof(g_drvEventIdList), 0, sizeof(g_drvEventIdList));
-    COND_RETURN_CMODEL(ret!= EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
+    COND_RETURN_CMODEL(ret != EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
     ret = memset_s(g_drvEventStateList, sizeof(g_drvEventStateList), 0, sizeof(g_drvEventStateList));
-    COND_RETURN_CMODEL(ret!= EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
+    COND_RETURN_CMODEL(ret != EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
     return DRV_ERROR_NONE;
 }
 
 drvError_t drvStreamIDListInit(void)
 {
     errno_t ret = memset_s(g_drvStreamIdList, sizeof(g_drvStreamIdList), 0, sizeof(g_drvStreamIdList));
-    COND_RETURN_CMODEL(ret!= EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
+    COND_RETURN_CMODEL(ret != EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
     return DRV_ERROR_NONE;
 }
 
@@ -116,7 +117,7 @@ static drvError_t drvSqCqIDListInit(void)
 static drvError_t drvTaskpoolIDListInit(void)
 {
     errno_t ret = memset_s(g_drvTaskpoolIdList, sizeof(g_drvTaskpoolIdList), 0, sizeof(g_drvTaskpoolIdList));
-    COND_RETURN_CMODEL(ret!= EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
+    COND_RETURN_CMODEL(ret != EOK, DRV_ERROR_OUT_OF_MEMORY, "memset_s return error %d", ret);
     return DRV_ERROR_NONE;
 }
 
@@ -144,12 +145,11 @@ drvError_t drvDriverStubInit(void)
 #ifndef __DRV_CFG_DEV_PLATFORM_ESL__
         // interface for decoupling,because tsch depends on runtime while st
         tsRegDrvReportIrqTriger(drvReportIrqTrigger);
-        char camodelLogPath[MAX_ENV_PATH_LEN] = { 0 };
-        const char *camodelLogPathValue = NULL;
+        char camodelLogPath[MAX_ENV_PATH_LEN] = {0};
+        const char* camodelLogPathValue = NULL;
         MM_SYS_GET_ENV(MM_ENV_CAMODEL_LOG_PATH, camodelLogPathValue);
         if (camodelLogPathValue != NULL) {
-            int ret = memcpy_s(camodelLogPath, MAX_ENV_PATH_LEN - 1, camodelLogPathValue,
-                               strlen(camodelLogPathValue));
+            int ret = memcpy_s(camodelLogPath, MAX_ENV_PATH_LEN - 1, camodelLogPathValue, strlen(camodelLogPathValue));
             if (ret != EOK) {
                 return DRV_ERROR_INVALID_VALUE;
             }

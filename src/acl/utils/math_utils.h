@@ -17,7 +17,7 @@
 
 namespace acl {
 
-inline aclError CheckSizeTMultiOverflow(const size_t a, const size_t b, size_t &res)
+inline aclError CheckSizeTMultiOverflow(const size_t a, const size_t b, size_t& res)
 {
     if ((a != 0U) && (b != 0U) && ((SIZE_MAX / a) < b)) {
         ACL_LOG_ERROR("[Check][Overflow]%zu multiplies %zu overflow", a, b);
@@ -27,7 +27,7 @@ inline aclError CheckSizeTMultiOverflow(const size_t a, const size_t b, size_t &
     return ACL_SUCCESS;
 }
 
-inline aclError CheckUint32MultiOverflow(const uint32_t a, const uint32_t b, uint32_t &res)
+inline aclError CheckUint32MultiOverflow(const uint32_t a, const uint32_t b, uint32_t& res)
 {
     if ((a != 0U) && (b != 0U) && ((UINT32_MAX / a) < b)) {
         ACL_LOG_ERROR("[Check][Overflow]%u multiplies %u overflow", a, b);
@@ -37,7 +37,7 @@ inline aclError CheckUint32MultiOverflow(const uint32_t a, const uint32_t b, uin
     return ACL_SUCCESS;
 }
 
-inline aclError CheckIntAddOverflow(const int32_t a, const int32_t b, int32_t &res)
+inline aclError CheckIntAddOverflow(const int32_t a, const int32_t b, int32_t& res)
 {
     if (((b > 0) && (a > (INT_MAX - b))) || ((b < 0) && (a < (INT_MIN - b)))) {
         ACL_LOG_ERROR("[Check][Overflow]%d adds %d overflow", a, b);
@@ -47,7 +47,7 @@ inline aclError CheckIntAddOverflow(const int32_t a, const int32_t b, int32_t &r
     return ACL_SUCCESS;
 }
 
-inline aclError CheckSizeTAddOverflow(const size_t a, const size_t b, size_t &res)
+inline aclError CheckSizeTAddOverflow(const size_t a, const size_t b, size_t& res)
 {
     if (a > (SIZE_MAX - b)) {
         ACL_LOG_ERROR("[Check][Overflow]%zu adds %zu overflow", a, b);
@@ -57,7 +57,7 @@ inline aclError CheckSizeTAddOverflow(const size_t a, const size_t b, size_t &re
     return ACL_SUCCESS;
 }
 
-inline aclError CheckUint32AddOverflow(const uint32_t a, const uint32_t b, uint32_t &res)
+inline aclError CheckUint32AddOverflow(const uint32_t a, const uint32_t b, uint32_t& res)
 {
     if (a > (UINT32_MAX - b)) {
         ACL_LOG_ERROR("[Check][Overflow]%u adds %u overflow", a, b);
@@ -68,52 +68,52 @@ inline aclError CheckUint32AddOverflow(const uint32_t a, const uint32_t b, uint3
 }
 } // namespace acl
 
-#define ACL_CHECK_ASSIGN_SIZET_MULTI(a, b, res)                      \
-    do {                                                             \
-            const aclError ret = acl::CheckSizeTMultiOverflow((a), (b), (res));  \
-            if (ret != ACL_SUCCESS) {                             \
-                return ret;                                          \
-            }                                                        \
+#define ACL_CHECK_ASSIGN_SIZET_MULTI(a, b, res)                             \
+    do {                                                                    \
+        const aclError ret = acl::CheckSizeTMultiOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                           \
+            return ret;                                                     \
+        }                                                                   \
     } while (false)
 
-#define ACL_CHECK_ASSIGN_SIZET_MULTI_RET_NUM(a, b, res)                      \
-    do {                                                             \
-            const aclError ret = acl::CheckSizeTMultiOverflow((a), (b), (res));  \
-            if (ret != ACL_SUCCESS) {                             \
-                return 0U;                                          \
-            }                                                       \
+#define ACL_CHECK_ASSIGN_SIZET_MULTI_RET_NUM(a, b, res)                     \
+    do {                                                                    \
+        const aclError ret = acl::CheckSizeTMultiOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                           \
+            return 0U;                                                      \
+        }                                                                   \
     } while (false)
 
-#define ACL_CHECK_ASSIGN_UINT32_MULTI(a, b, res)                      \
-    do {                                                             \
-            const aclError ret = acl::CheckUint32MultiOverflow((a), (b), (res));  \
-            if (ret != ACL_SUCCESS) {                             \
-                return ret;                                          \
-            }                                                        \
+#define ACL_CHECK_ASSIGN_UINT32_MULTI(a, b, res)                             \
+    do {                                                                     \
+        const aclError ret = acl::CheckUint32MultiOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                            \
+            return ret;                                                      \
+        }                                                                    \
     } while (false)
 
-#define ACL_CHECK_ASSIGN_INT32_ADD(a, b, res)                        \
-    do {                                                             \
-            const aclError ret = acl::CheckIntAddOverflow((a), (b), (res));      \
-            if (ret != ACL_SUCCESS) {                             \
-                return ret;                                          \
-            }                                                        \
+#define ACL_CHECK_ASSIGN_INT32_ADD(a, b, res)                           \
+    do {                                                                \
+        const aclError ret = acl::CheckIntAddOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                       \
+            return ret;                                                 \
+        }                                                               \
     } while (false)
 
-#define ACL_CHECK_ASSIGN_SIZET_ADD(a, b, res)                       \
-    do {                                                            \
-            const aclError ret = acl::CheckSizeTAddOverflow((a), (b), (res));   \
-            if (ret != ACL_SUCCESS) {                            \
-                return ret;                                         \
-            }                                                       \
+#define ACL_CHECK_ASSIGN_SIZET_ADD(a, b, res)                             \
+    do {                                                                  \
+        const aclError ret = acl::CheckSizeTAddOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                         \
+            return ret;                                                   \
+        }                                                                 \
     } while (false)
 
-#define ACL_CHECK_ASSIGN_UINT32T_ADD(a, b, res)                       \
-    do {                                                            \
-            const aclError ret = acl::CheckUint32AddOverflow((a), (b), (res));   \
-            if (ret != ACL_SUCCESS) {                            \
-                return ret;                                         \
-            }                                                       \
+#define ACL_CHECK_ASSIGN_UINT32T_ADD(a, b, res)                            \
+    do {                                                                   \
+        const aclError ret = acl::CheckUint32AddOverflow((a), (b), (res)); \
+        if (ret != ACL_SUCCESS) {                                          \
+            return ret;                                                    \
+        }                                                                  \
     } while (false)
 
 #endif // MATH_UTILS_H

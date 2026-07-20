@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-aclError aclInitCallbackRegisterImpl(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void *userData)
+aclError aclInitCallbackRegisterImpl(aclRegisterCallbackType type, aclInitCallbackFunc cbFunc, void* userData)
 {
     return acl::InitCallbackManager::GetInstance().RegInitCallback(type, cbFunc, userData);
 }
@@ -25,7 +25,7 @@ aclError aclInitCallbackUnRegisterImpl(aclRegisterCallbackType type, aclInitCall
     return acl::InitCallbackManager::GetInstance().UnRegInitCallback(type, cbFunc);
 }
 
-aclError aclFinalizeCallbackRegisterImpl(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void *userData)
+aclError aclFinalizeCallbackRegisterImpl(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void* userData)
 {
     return acl::InitCallbackManager::GetInstance().RegFinalizeCallback(type, cbFunc, userData);
 }

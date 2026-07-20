@@ -15,11 +15,11 @@
 extern "C" {
 #endif
 
-typedef void *(*FnBinaryGet)(void *appInfo, size_t id);
-typedef int (*FnBinaryCompare)(void *a, void *b, void *appInfo);
+typedef void* (*FnBinaryGet)(void* appInfo, size_t id);
+typedef int (*FnBinaryCompare)(void* a, void* b, void* appInfo);
 
 static inline int BinarySearchClosest(
-    void *appInfo, size_t size, void *key, FnBinaryGet fnBinaryGet, FnBinaryCompare fnComp, size_t *closestIndex)
+    void* appInfo, size_t size, void* key, FnBinaryGet fnBinaryGet, FnBinaryCompare fnComp, size_t* closestIndex)
 {
     if (size == 0) {
         *closestIndex = 0;
@@ -32,7 +32,7 @@ static inline int BinarySearchClosest(
     int compRet = 0;
     while (left <= right) {
         mid = (left + right) >> 1;
-        void *midData = fnBinaryGet(appInfo, mid);
+        void* midData = fnBinaryGet(appInfo, mid);
         compRet = fnComp(key, midData, appInfo);
         if (compRet > 0) {
             left = mid + 1;

@@ -18,23 +18,23 @@
 extern "C" {
 #endif
 enum TprtSqeType : uint8_t {
-    TPRT_SQE_TYPE_AICPU             = 0, // AICPU
-    TPRT_SQE_TYPE_INVALID             = 1,
+    TPRT_SQE_TYPE_AICPU = 0, // AICPU
+    TPRT_SQE_TYPE_INVALID = 1,
 };
 
 enum TprtErrorType : uint8_t {
-    TPRT_EXIST_ERROR             = 1U,
-    TPRT_EXIST_TIMEOUT             = 2U,
+    TPRT_EXIST_ERROR = 1U,
+    TPRT_EXIST_TIMEOUT = 2U,
 };
 
 #define TPRT_SQE_LENGTH (sizeof(TprtSqe_t))
 #pragma pack(push)
-#pragma pack (1)
+#pragma pack(1)
 
 struct TprtCqeReport_t {
     uint32_t taskSn;
-    uint32_t errorCode;    // cqe acc_status/sq_sw_status
-    uint8_t errorType;     // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
+    uint32_t errorCode; // cqe acc_status/sq_sw_status
+    uint8_t errorType;  // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
     uint8_t sqeType;
     uint16_t sqId;
     uint16_t sqHead;
@@ -67,9 +67,8 @@ struct TprtStarsCommonSqe_t {
     TprtStarsSqeHeader_t sqeHeader;
 
     /* word2-15 */
-    uint32_t commandCustom[14];       // word 2-15 is custom define by command.
+    uint32_t commandCustom[14]; // word 2-15 is custom define by command.
 };
-
 
 union TprtSqe_t {
     TprtStarsCommonSqe_t commonSqe;

@@ -13,21 +13,17 @@
 #include <string>
 #include "tprt_cqhandle.hpp"
 
-enum TprtWorkerState : uint32_t {
-    TPRT_WORKER_STATE_RUNNING = 0U,
-    TPRT_WORKER_STATE_QUIT,
-    TPRT_WORKER_STATE_INVALID
-};
+enum TprtWorkerState : uint32_t { TPRT_WORKER_STATE_RUNNING = 0U, TPRT_WORKER_STATE_QUIT, TPRT_WORKER_STATE_INVALID };
 
 namespace cce {
 namespace tprt {
 
 class TprtWorker {
 public:
-    explicit TprtWorker(uint32_t devId, TprtSqHandle *sqHandle, TprtCqHandle *cqHandle);
+    explicit TprtWorker(uint32_t devId, TprtSqHandle* sqHandle, TprtCqHandle* cqHandle);
     ~TprtWorker();
     uint32_t TprtWorkerStop();
-    void  TprtWokerScheduleSq();
+    void TprtWokerScheduleSq();
     uint32_t TprtWorkerStart();
     void TprtWorkerFree();
     void TprtWorkerScheduleSq();
@@ -40,14 +36,14 @@ private:
     uint32_t devId_{0xFFFFFFFFU};
     // the pattern of worker name is : {$sqId}_{$pid}_{$devId}
     std::string workerName_;
-    //std::mutex stateMtx;
+    // std::mutex stateMtx;
     std::atomic<bool> workerRunningFlag_{false};
-    TprtSqHandle *sqHandle_{nullptr};
-    TprtCqHandle *cqHandle_{nullptr};
+    TprtSqHandle* sqHandle_{nullptr};
+    TprtCqHandle* cqHandle_{nullptr};
     std::thread workerThread_;
     mmSem_t workerThreadSem_;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 
 #endif

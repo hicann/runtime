@@ -15,14 +15,13 @@
 #include <functional>
 #include "tsd/status.h"
 
-
 namespace tsd {
 class AicpuPackageProcess {
 public:
-    static TSD_StatusT CheckPackageName(const std::string &soInstallPath, const std::string &packageName);
-    static TSD_StatusT MoveSoToSandBox(const std::string &soInstallPath);
+    static TSD_StatusT CheckPackageName(const std::string& soInstallPath, const std::string& packageName);
+    static TSD_StatusT MoveSoToSandBox(const std::string& soInstallPath);
     static bool IsSoExist(const uint32_t uniqueVfId);
-    static TSD_StatusT CopyExtendSoToCommonSoPath(const std::string &soInstallRootPath, const bool isAsan);
+    static TSD_StatusT CopyExtendSoToCommonSoPath(const std::string& soInstallRootPath, const bool isAsan);
 
 private:
     AicpuPackageProcess() = default;
@@ -33,11 +32,11 @@ private:
     AicpuPackageProcess(AicpuPackageProcess&&) = delete;
     AicpuPackageProcess& operator=(AicpuPackageProcess&&) = delete;
 
-    using VersionLineHandler = std::function<bool (const std::string &)>;
-    static TSD_StatusT GetSrcPackageName(const std::string &packageName, std::string &srcPkgName);
-    static TSD_StatusT GetInnerPkgName(const std::string &versionFilePath, std::string &innerPkgName);
-    static TSD_StatusT WalkInVersionFile(const std::string &soInstallPath, const VersionLineHandler &handler);
-    static TSD_StatusT GetSandBoxSoListInVersionFile(const std::string &versionFilePath, std::string &soList);
+    using VersionLineHandler = std::function<bool(const std::string&)>;
+    static TSD_StatusT GetSrcPackageName(const std::string& packageName, std::string& srcPkgName);
+    static TSD_StatusT GetInnerPkgName(const std::string& versionFilePath, std::string& innerPkgName);
+    static TSD_StatusT WalkInVersionFile(const std::string& soInstallPath, const VersionLineHandler& handler);
+    static TSD_StatusT GetSandBoxSoListInVersionFile(const std::string& versionFilePath, std::string& soList);
 };
 } // namespace tsd
 

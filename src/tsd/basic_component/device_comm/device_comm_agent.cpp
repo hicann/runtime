@@ -18,7 +18,8 @@ DeviceCommAgent::DeviceCommAgent(const uint32_t logicDeviceId) : logicDeviceId_(
 
 DeviceCommAgent::~DeviceCommAgent() {}
 
-TSD_StatusT DeviceCommAgent::InitTsdClient(bool isAdcEnv) {
+TSD_StatusT DeviceCommAgent::InitTsdClient(bool isAdcEnv)
+{
     isAdcEnv_ = isAdcEnv;
     if (devCommClient_ != nullptr) {
         TSD_INFO("[TsdClient] tsd client has already been initialized");
@@ -29,8 +30,9 @@ TSD_StatusT DeviceCommAgent::InitTsdClient(bool isAdcEnv) {
         TSD_ERROR("driver get process sign failed. ret[%d].", ret);
         return TSD_CLT_OPEN_FAILED;
     }
-    TSD_INFO("[TsdClient][deviceId=%u] get process sign success, procPid[%u]", logicDeviceId_,
-             static_cast<uint32_t>(procSign_.tgid));
+    TSD_INFO(
+        "[TsdClient][deviceId=%u] get process sign success, procPid[%u]", logicDeviceId_,
+        static_cast<uint32_t>(procSign_.tgid));
 
     if (logicDeviceId_ >= MAX_DEVNUM_PER_HOST) {
         TSD_ERROR("[TsdClient] deviceId[%u] is not supported, not in [0-127] exit open function", logicDeviceId_);
@@ -64,7 +66,8 @@ TSD_StatusT DeviceCommAgent::InitTsdClient(bool isAdcEnv) {
     return hdcRet;
 }
 
-TSD_StatusT DeviceCommAgent::SendMsg(const HDCMessage& msg) {
+TSD_StatusT DeviceCommAgent::SendMsg(const HDCMessage& msg)
+{
     if (devCommClient_ == nullptr) {
         TSD_ERROR("[DeviceCommAgent] devCommClient_ is null, send msg failed.");
         return TSD_INSTANCE_NOT_INITIALED;
@@ -72,14 +75,16 @@ TSD_StatusT DeviceCommAgent::SendMsg(const HDCMessage& msg) {
     return devCommClient_->CommSendMsg(tsdSessionId_, msg);
 }
 
-TSD_StatusT DeviceCommAgent::RecvData(bool ignoreRecvErr, uint32_t timeout) {
+TSD_StatusT DeviceCommAgent::RecvData(bool ignoreRecvErr, uint32_t timeout)
+{
     if (devCommClient_ == nullptr) {
         return TSD_INSTANCE_NOT_INITIALED;
     }
     return devCommClient_->CommRecvData(tsdSessionId_, ignoreRecvErr, timeout);
 }
 
-TSD_StatusT DeviceCommAgent::GetHdcConctStatus(int32_t &sessStat, bool isAdcEnv) {
+TSD_StatusT DeviceCommAgent::GetHdcConctStatus(int32_t& sessStat, bool isAdcEnv)
+{
     if (devCommClient_ != nullptr) {
         return devCommClient_->CommGetConctStatus(sessStat);
     }
@@ -92,17 +97,19 @@ TSD_StatusT DeviceCommAgent::GetHdcConctStatus(int32_t &sessStat, bool isAdcEnv)
     return TSD_OK;
 }
 
-TSD_StatusT DeviceCommAgent::GetVersionVerify(std::shared_ptr<VersionVerify>& inspector) {
+TSD_StatusT DeviceCommAgent::GetVersionVerify(std::shared_ptr<VersionVerify>& inspector)
+{
     if (devCommClient_ == nullptr) {
         return TSD_INSTANCE_NOT_INITIALED;
     }
     return devCommClient_->CommGetVersionVerify(tsdSessionId_, inspector);
 }
 
-void DeviceCommAgent::ReleaseDeviceConnection() {
+void DeviceCommAgent::ReleaseDeviceConnection()
+{
     if (devCommClient_ != nullptr) {
         devCommClient_->CommDestroy();
         devCommClient_ = nullptr;
     }
 }
-}  // namespace tsd
+} // namespace tsd

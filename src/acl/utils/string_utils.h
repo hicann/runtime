@@ -19,8 +19,8 @@
 namespace acl {
 class StringUtils {
 public:
-    static void Split(const std::string &str, const char_t delim, std::vector<std::string> &elems);
-    static bool IsDigit(const std::string &str);
+    static void Split(const std::string& str, const char_t delim, std::vector<std::string>& elems);
+    static bool IsDigit(const std::string& str);
     static std::string Trim(const std::string& str);
 };
 } // namespace acl

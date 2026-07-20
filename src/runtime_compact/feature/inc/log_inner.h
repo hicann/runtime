@@ -30,64 +30,65 @@ extern "C" {
 #define RT_PROFILE_INNER_ERROR "EK9999"
 #define RT_SYSTEM_INNER_ERROR "EE9999"
 
-static inline int32_t GetTid(void)
-{
-    return (int32_t)(mmGetTaskId());
-}
+static inline int32_t GetTid(void) { return (int32_t)(mmGetTaskId()); }
 #ifdef RUN_TEST
-#define RT_LOG_EVENT(format, ...)                                                                    \
-    do {                                                                                             \
-        printf("[EVENT][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__);       \
+#define RT_LOG_EVENT(format, ...)                                                              \
+    do {                                                                                       \
+        printf("[EVENT][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define RT_LOG_ERROR(format, ...)                                                                    \
-    do {                                                                                             \
-        printf("[ERROR][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__);       \
+#define RT_LOG_ERROR(format, ...)                                                              \
+    do {                                                                                       \
+        printf("[ERROR][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define RT_LOG_WARNING(format, ...)                                                                  \
-    do {                                                                                             \
-        printf("[WARNING][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__);     \
+#define RT_LOG_WARNING(format, ...)                                                              \
+    do {                                                                                         \
+        printf("[WARNING][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define RT_LOG_INFO(format, ...)                                                                     \
-    do {                                                                                             \
-        printf("[INFO][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__);        \
+#define RT_LOG_INFO(format, ...)                                                              \
+    do {                                                                                      \
+        printf("[INFO][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define RT_LOG_DEBUG(format, ...)                                                                    \
-    do {                                                                                             \
-        printf("[DEBUG][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__);       \
+#define RT_LOG_DEBUG(format, ...)                                                              \
+    do {                                                                                       \
+        printf("[DEBUG][%s:%d]%d " #format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 #else
-#define RT_LOG_EVENT(format, ...)                                                                    \
-    do {                                                                                             \
-        DlogRecord((int32_t)RUNTIME, DLOG_EVENT, "[Event][%s:%d]%d " format "\n", __FILE__, __LINE__, \
-            GetTid(), ##__VA_ARGS__);                                                     \
+#define RT_LOG_EVENT(format, ...)                                                                        \
+    do {                                                                                                 \
+        DlogRecord(                                                                                      \
+            (int32_t)RUNTIME, DLOG_EVENT, "[Event][%s:%d]%d " format "\n", __FILE__, __LINE__, GetTid(), \
+            ##__VA_ARGS__);                                                                              \
     } while (false)
 
-#define RT_LOG_ERROR(format, ...)                                                                    \
-    do {                                                                                             \
-        DlogRecord((int32_t)RUNTIME, DLOG_ERROR, "[ERROR][%s:%d]%d " format "\n", __FILE__, __LINE__, \
-            GetTid(), ##__VA_ARGS__);                                                     \
+#define RT_LOG_ERROR(format, ...)                                                                        \
+    do {                                                                                                 \
+        DlogRecord(                                                                                      \
+            (int32_t)RUNTIME, DLOG_ERROR, "[ERROR][%s:%d]%d " format "\n", __FILE__, __LINE__, GetTid(), \
+            ##__VA_ARGS__);                                                                              \
     } while (false)
 
-#define RT_LOG_WARNING(format, ...)                                                                   \
-    do {                                                                                              \
-        DlogRecord((int32_t)RUNTIME, DLOG_WARN, "[WARNING][%s:%d]%d " format "\n", __FILE__, __LINE__, \
-            GetTid(), ##__VA_ARGS__);                                                      \
+#define RT_LOG_WARNING(format, ...)                                                                       \
+    do {                                                                                                  \
+        DlogRecord(                                                                                       \
+            (int32_t)RUNTIME, DLOG_WARN, "[WARNING][%s:%d]%d " format "\n", __FILE__, __LINE__, GetTid(), \
+            ##__VA_ARGS__);                                                                               \
     } while (false)
 
-#define RT_LOG_INFO(format, ...)                                                                     \
-    do {                                                                                             \
-        DlogRecord((int32_t)RUNTIME, DLOG_INFO, "[INFO][%s:%d]%d " format "\n", __FILE__, __LINE__,   \
-            GetTid(), ##__VA_ARGS__);                                                      \
+#define RT_LOG_INFO(format, ...)                                                                                       \
+    do {                                                                                                               \
+        DlogRecord(                                                                                                    \
+            (int32_t)RUNTIME, DLOG_INFO, "[INFO][%s:%d]%d " format "\n", __FILE__, __LINE__, GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define RT_LOG_DEBUG(format, ...)                                                                    \
-    do {                                                                                             \
-        DlogRecord((int32_t)RUNTIME, DLOG_DEBUG, "[DEBUG][%s:%d]%d " format "\n", __FILE__, __LINE__, \
-            GetTid(), ##__VA_ARGS__);                                                     \
+#define RT_LOG_DEBUG(format, ...)                                                                        \
+    do {                                                                                                 \
+        DlogRecord(                                                                                      \
+            (int32_t)RUNTIME, DLOG_DEBUG, "[DEBUG][%s:%d]%d " format "\n", __FILE__, __LINE__, GetTid(), \
+            ##__VA_ARGS__);                                                                              \
     } while (false)
 #endif
 
@@ -95,4 +96,4 @@ static inline int32_t GetTid(void)
 }
 #endif
 
-#endif  // RUNTIME_C_FEATURE_LOG_INNER_H
+#endif // RUNTIME_C_FEATURE_LOG_INNER_H

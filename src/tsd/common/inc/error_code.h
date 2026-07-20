@@ -14,7 +14,7 @@
 #include "tsd/status.h"
 
 namespace tsd {
-    // device run mode
+// device run mode
 enum DeviceRunMode : uint32_t {
     DIE_MODE = 0U,
     CHIP_MODE,
@@ -78,5 +78,5 @@ enum ErroCode : uint32_t {
     TSD_LOAD_COMMON_SINK_PKG_FAILED_BY_BUSY,
     TSD_CMS_NO_HEAD,
 };
-}
-#endif  // INC_TSD_ERROR_CODE_H
+} // namespace tsd
+#endif // INC_TSD_ERROR_CODE_H

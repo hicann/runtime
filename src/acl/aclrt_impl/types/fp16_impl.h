@@ -104,30 +104,25 @@ float32_t Fp16ToFloat(const uint16_t val);
  * @ingroup fp16 basic operator
  * @brief   get sign of fp16
  */
-#define FP16_EXTRAC_SIGN(x)            (((x) >> 15U) & 1U)
+#define FP16_EXTRAC_SIGN(x) (((x) >> 15U) & 1U)
 /**
  * @ingroup fp16 basic operator
  * @brief   get exponent of fp16
  */
-#define FP16_EXTRAC_EXP(x)             (((x) >> 10U) & acl::FP16_MAX_EXP)
+#define FP16_EXTRAC_EXP(x) (((x) >> 10U) & acl::FP16_MAX_EXP)
 /**
  * @ingroup fp16 basic operator
  * @brief   get mantissa of fp16
  */
-#define FP16_EXTRAC_MAN(x)             ((((x) >> 0U) & 0x3FFU) |          \
-                                       ((((((x) >> 10U) & 0x1FU) > 0U) ? 1U : 0U) * 0x400U))
+#define FP16_EXTRAC_MAN(x) ((((x) >> 0U) & 0x3FFU) | ((((((x) >> 10U) & 0x1FU) > 0U) ? 1U : 0U) * 0x400U))
 /**
  * @ingroup fp16 basic operator
  * @brief   constructor of fp16 from sign exponent and mantissa
  */
-#define FP16_CONSTRUCTOR(s, e, m)        (((s) << acl::FP16_SIGN_INDEX) |      \
-                                          ((e) << acl::FP16_MAN_LEN) |         \
-                                          ((m) & acl::FP16_MAX_MAN))
+#define FP16_CONSTRUCTOR(s, e, m) (((s) << acl::FP16_SIGN_INDEX) | ((e) << acl::FP16_MAN_LEN) | ((m)&acl::FP16_MAX_MAN))
 /**
  * @ingroup fp32 basic operator
  * @brief   constructor of fp32 from sign exponent and mantissa
  */
-#define FP32_CONSTRUCTOR(s, e, m)        (((s) << acl::FP32_SIGN_INDEX) |      \
-                                          ((e) << acl::FP32_MAN_LEN) |         \
-                                          ((m) & acl::FP32_MAX_MAN))
+#define FP32_CONSTRUCTOR(s, e, m) (((s) << acl::FP32_SIGN_INDEX) | ((e) << acl::FP32_MAN_LEN) | ((m)&acl::FP32_MAX_MAN))
 #endif // ACL_TYPES_FP16_IMPL_H_

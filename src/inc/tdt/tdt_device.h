@@ -18,7 +18,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 namespace tdt {
 /**
@@ -39,9 +39,9 @@ namespace tdt {
  * @li data_common.h: Header file where 'DataItem' defined
  *
  */
-int32_t TdtDevicePushData(const std::string &channelName, std::vector<DataItem> &items);
-}  // namespace tdt
+int32_t TdtDevicePushData(const std::string& channelName, std::vector<DataItem>& items);
+} // namespace tdt
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
-#endif  // HOST_INNER_INC_TDT_DEVICE_H_
+#endif // __cplusplus
+#endif // HOST_INNER_INC_TDT_DEVICE_H_

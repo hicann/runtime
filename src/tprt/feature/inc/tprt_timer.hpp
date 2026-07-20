@@ -27,7 +27,7 @@ public:
     TprtTimer();
     ~TprtTimer();
 
-    void Start(uint32_t interval); 
+    void Start(uint32_t interval);
     void Stop();
     void SetDevice(TprtDevice* device) { device_ = device; }
 
@@ -43,6 +43,6 @@ private:
 
     void RunPeriodicTask();
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 #endif

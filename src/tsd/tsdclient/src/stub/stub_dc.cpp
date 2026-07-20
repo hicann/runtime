@@ -11,7 +11,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 
-int halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num)
+int halGetDeviceVfMax(unsigned int devId, unsigned int* vf_max_num)
 {
     (void)devId;
     if (vf_max_num != nullptr) {

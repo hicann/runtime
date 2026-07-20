@@ -13,17 +13,11 @@ repos:
             | pkg_inc
             | scripts
             | src/(
-              acl
-              | aicpu_sched
-              | cmodel_driver
+              aicpu_sched
               | dfx
-              | inc
               | mmpa
               | platform
               | queue_schedule
-              | runtime_compact
-              | tprt
-              | tsd
             )(/|$)
             | stub
             | tests(?:

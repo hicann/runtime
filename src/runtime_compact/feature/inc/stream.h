@@ -19,8 +19,8 @@ extern "C" {
 #endif
 
 // stream
-Stream* CreateStream(Context* curCtx, rtStreamConfigHandle *handle, rtError_t *error);
-rtError_t FreeStream(Stream *stream);
+Stream* CreateStream(Context* curCtx, rtStreamConfigHandle* handle, rtError_t* error);
+rtError_t FreeStream(Stream* stream);
 uint64_t GetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type);
 bool SetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type, uint64_t threadId);
 void ResetStreamThreadID(rtStream_t stm, SUBSCRIBE_TYPE type);

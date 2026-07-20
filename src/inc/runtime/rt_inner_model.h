@@ -21,7 +21,7 @@ extern "C" {
  * @ingroup dvrt_base
  * @brief condition task handle.
  */
-typedef void *rtCondHandle_t;
+typedef void* rtCondHandle_t;
 
 typedef enum tagRtCondHandleFlag {
     RT_COND_HANDLE_ASSIGN_DEFAULT = 1,
@@ -44,8 +44,9 @@ typedef enum tagRtCondNumber {
 typedef struct rtCondTaskParams {
     rtCondHandle_t handle; // condition handle
     rtCondTaskType_t type; // condition type
-    uint32_t size; //condition number, 1 or 2 for if condition, 1 for while condition, greater than 0 for switch condition
-    rtModel_t *modelRIArray; // sub models.
+    uint32_t
+        size; // condition number, 1 or 2 for if condition, 1 for while condition, greater than 0 for switch condition
+    rtModel_t* modelRIArray; // sub models.
 } rtCondTaskParams;
 
 /**
@@ -59,7 +60,7 @@ typedef struct rtCondTaskParams {
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_INSUFFICIENT_INPUT_ARRAY for insufficient tasks array size to hold all streams
  */
-RTS_API rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *numStreams);
+RTS_API rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t* streams, uint32_t* numStreams);
 
 /**
  * @ingroup rt_model
@@ -70,7 +71,7 @@ RTS_API rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, ui
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr);
+RTS_API rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void* ptr);
 
 /**
  * @ingroup rt_model
@@ -101,8 +102,8 @@ RTS_API rtError_t rtModelUpdate(rtModel_t mdl);
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-RTS_API rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue,
-    rtCondHandleFlag_t flag, rtCondHandle_t *handle);
+RTS_API rtError_t
+rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t* handle);
 
 /**
  * @ingroup AscendCL
@@ -112,7 +113,7 @@ RTS_API rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchV
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-RTS_API rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr);
+RTS_API rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t** devPtr);
 
 /**
  * @ingroup AscendCL

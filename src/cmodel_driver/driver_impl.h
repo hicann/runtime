@@ -55,7 +55,7 @@ extern int8_t g_drvTaskpoolIdList[MAX_DEV_NUM][MAX_TASK_NUM];
 extern int8_t g_drvSqCqIdList[MAX_DEV_NUM][MAX_SQCQ_NUM];
 extern int8_t g_drvEventStateList[2 * MAX_EVENT_NUM];
 
-drvError_t __drvIdAlloc(int32_t *id, uint32_t device, int resType);
+drvError_t __drvIdAlloc(int32_t* id, uint32_t device, int resType);
 drvError_t __drvIdFree(int32_t id, uint32_t device, int resType);
 drvError_t drvDriverStubInit(void);
 drvError_t drvDriverStubExit(void);

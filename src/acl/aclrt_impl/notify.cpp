@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-aclError aclrtCreateNotifyImpl(aclrtNotify *notify, uint64_t flag)
+aclError aclrtCreateNotifyImpl(aclrtNotify* notify, uint64_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateNotify);
     ACL_LOG_INFO("start to execute aclrtCreateNotify, flag is [%lu]", flag);
@@ -61,13 +61,13 @@ aclError aclrtWaitAndResetNotifyImpl(aclrtNotify notify, aclrtStream stream, uin
     ACL_PROFILING_REG(acl::AclProfType::AclrtWaitAndResetNotify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
 
-    ACL_REQUIRES_RTS_OK(rtsNotifyWaitAndReset(static_cast<rtNotify_t>(notify),
-        static_cast<rtStream_t>(stream), timeout));
+    ACL_REQUIRES_RTS_OK(
+        rtsNotifyWaitAndReset(static_cast<rtNotify_t>(notify), static_cast<rtStream_t>(stream), timeout));
 
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetNotifyIdImpl(aclrtNotify notify, uint32_t *notifyId)
+aclError aclrtGetNotifyIdImpl(aclrtNotify notify, uint32_t* notifyId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetNotifyId);
     ACL_LOG_INFO("start to execute aclrtGetNotifyId");
@@ -80,7 +80,7 @@ aclError aclrtGetNotifyIdImpl(aclrtNotify notify, uint32_t *notifyId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyBatchResetImpl(aclrtNotify *notifies, size_t num)
+aclError aclrtNotifyBatchResetImpl(aclrtNotify* notifies, size_t num)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyBatchReset);
     ACL_LOG_INFO("start to execute aclrtNotifyBatchReset, num is [%zu]", num);
@@ -91,7 +91,7 @@ aclError aclrtNotifyBatchResetImpl(aclrtNotify *notifies, size_t num)
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char *key, size_t len, uint64_t flags)
+aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char* key, size_t len, uint64_t flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyGetExportKey);
     ACL_LOG_INFO("start to execute aclrtNotifyGetExportKey, len is [%zu], flags is [%lu]", len, flags);
@@ -104,7 +104,7 @@ aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char *key, size_t len, 
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyImportByKeyImpl(aclrtNotify *notify, const char *key, uint64_t flags)
+aclError aclrtNotifyImportByKeyImpl(aclrtNotify* notify, const char* key, uint64_t flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyImportByKey);
     ACL_LOG_INFO("start to execute aclrtNotifyImportByKey, flags is [%lu]", flags);
@@ -117,7 +117,7 @@ aclError aclrtNotifyImportByKeyImpl(aclrtNotify *notify, const char *key, uint64
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifySetImportPidImpl(aclrtNotify notify, int32_t *pid, size_t num)
+aclError aclrtNotifySetImportPidImpl(aclrtNotify notify, int32_t* pid, size_t num)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifySetImportPid);
     ACL_LOG_INFO("start to execute aclrtNotifySetImportPid, num is [%zu]", num);
@@ -130,18 +130,18 @@ aclError aclrtNotifySetImportPidImpl(aclrtNotify notify, int32_t *pid, size_t nu
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifySetImportPidInterServerImpl(aclrtNotify notify, aclrtServerPid *serverPids, size_t num)
+aclError aclrtNotifySetImportPidInterServerImpl(aclrtNotify notify, aclrtServerPid* serverPids, size_t num)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifySetImportPidInterServer);
     ACL_LOG_INFO("start to execute aclrtNotifySetImportPidInterServer, num is [%zu]", num);
 
-    ACL_REQUIRES_RTS_OK(rtNotifySetImportPidInterServer(notify, reinterpret_cast<const rtServerPid *>(serverPids), num));
+    ACL_REQUIRES_RTS_OK(rtNotifySetImportPidInterServer(notify, reinterpret_cast<const rtServerPid*>(serverPids), num));
 
     ACL_LOG_INFO("successfully execute aclrtNotifySetImportPidInterServer");
     return ACL_SUCCESS;
 }
 
-aclError aclrtCntNotifyCreateImpl(aclrtCntNotify *cntNotify, uint64_t flag)
+aclError aclrtCntNotifyCreateImpl(aclrtCntNotify* cntNotify, uint64_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyCreate);
     ACL_LOG_INFO("start to execute aclrtCntNotifyCreate, flag is [%lu]", flag);
@@ -163,24 +163,24 @@ aclError aclrtCntNotifyDestroyImpl(aclrtCntNotify cntNotify)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCntNotifyRecordImpl(aclrtCntNotify cntNotify, aclrtStream stream, aclrtCntNotifyRecordInfo *info)
+aclError aclrtCntNotifyRecordImpl(aclrtCntNotify cntNotify, aclrtStream stream, aclrtCntNotifyRecordInfo* info)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyRecord);
     ACL_LOG_INFO("start to execute aclrtCntNotifyRecord");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(info);
 
-    ACL_REQUIRES_RTS_OK(rtsCntNotifyRecord(cntNotify, stream, reinterpret_cast<rtCntNotifyRecordInfo_t *>(info)));
+    ACL_REQUIRES_RTS_OK(rtsCntNotifyRecord(cntNotify, stream, reinterpret_cast<rtCntNotifyRecordInfo_t*>(info)));
 
     ACL_LOG_INFO("successfully execute aclrtCntNotifyRecord");
     return ACL_SUCCESS;
 }
 
-aclError aclrtCntNotifyWaitWithTimeoutImpl(aclrtCntNotify cntNotify, aclrtStream stream, aclrtCntNotifyWaitInfo *info)
+aclError aclrtCntNotifyWaitWithTimeoutImpl(aclrtCntNotify cntNotify, aclrtStream stream, aclrtCntNotifyWaitInfo* info)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyWaitWithTimeout);
     ACL_LOG_INFO("start to execute aclrtCntNotifyWaitWithTimeout");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(info);
-    ACL_REQUIRES_RTS_OK(rtsCntNotifyWaitWithTimeout(cntNotify, stream, reinterpret_cast<rtCntNotifyWaitInfo_t *>(info)));
+    ACL_REQUIRES_RTS_OK(rtsCntNotifyWaitWithTimeout(cntNotify, stream, reinterpret_cast<rtCntNotifyWaitInfo_t*>(info)));
 
     ACL_LOG_INFO("successfully execute aclrtCntNotifyWaitWithTimeout");
     return ACL_SUCCESS;
@@ -197,7 +197,7 @@ aclError aclrtCntNotifyResetImpl(aclrtCntNotify cntNotify, aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCntNotifyGetIdImpl(aclrtCntNotify cntNotify, uint32_t *notifyId)
+aclError aclrtCntNotifyGetIdImpl(aclrtCntNotify cntNotify, uint32_t* notifyId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyGetId);
     ACL_LOG_INFO("start to execute aclrCntNotifyGetId");

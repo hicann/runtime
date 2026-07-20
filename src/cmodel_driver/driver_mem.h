@@ -67,14 +67,14 @@ typedef struct tagDrvMemAttribute {
  */
 typedef struct tagDrvMemNode {
     drvMemAttribute_t drvMemMgmtData;
-    struct tagDrvMemNode *prior;
-    struct tagDrvMemNode *next;
+    struct tagDrvMemNode* prior;
+    struct tagDrvMemNode* next;
 } drvMemNode_t;
 
 drvError_t drvMemMgmtInit(void);
-drvError_t drvMemAlloc(void **dptr, uint64_t size, drvMemType_t type, int32_t nodeId);
-drvError_t drvMemFree(const void *dptr, int32_t deviceId);
-drvError_t drvModelMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t size, drvMemcpyKind_t kind);
+drvError_t drvMemAlloc(void** dptr, uint64_t size, drvMemType_t type, int32_t nodeId);
+drvError_t drvMemFree(const void* dptr, int32_t deviceId);
+drvError_t drvModelMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t size, drvMemcpyKind_t kind);
 drvError_t drvModelMemset(uint64_t dst, size_t destMax, int32_t value, size_t size);
 
 #ifdef __cplusplus

@@ -20,7 +20,7 @@
 namespace cce {
 namespace tprt {
 
-TprtWorker::TprtWorker(uint32_t devId, TprtSqHandle *sqHandle, TprtCqHandle *cqHandle)
+TprtWorker::TprtWorker(uint32_t devId, TprtSqHandle* sqHandle, TprtCqHandle* cqHandle)
     : devId_(devId), sqHandle_(sqHandle), cqHandle_(cqHandle)
 {
     uint32_t sqId = sqHandle_->SqGetSqId();
@@ -34,10 +34,10 @@ TprtWorker::~TprtWorker()
     cqHandle_ = nullptr;
 }
 
-void TprtWorker::TprtWorkerProcessErrorCqe(TprtErrorType errorType, uint32_t errorCode, TprtSqe_t *task)
+void TprtWorker::TprtWorkerProcessErrorCqe(TprtErrorType errorType, uint32_t errorCode, TprtSqe_t* task)
 {
-    TprtCqHandle *cqHandle = GetCqHandle();
-    TprtSqHandle *sqHandle = GetSqHandle();
+    TprtCqHandle* cqHandle = GetCqHandle();
+    TprtSqHandle* sqHandle = GetSqHandle();
     if (cqHandle != nullptr) {
         uint32_t ret = cqHandle->TprtCqWriteCqe(errorType, errorCode, task, sqHandle);
         if (ret == TPRT_SUCCESS) {
@@ -54,9 +54,9 @@ void TprtWorker::TprtWorkerScheduleSq()
     uint32_t sqId = sqHandle_->SqGetSqId();
     workerName_ = std::to_string(sqId) + "_" + std::to_string(devId_) + "_" + std::to_string(mmGetTid());
     cce::tprt::TprtProfiling profiler;
-    while(workerRunningFlag_) {
+    while (workerRunningFlag_) {
         (void)mmSemWait(&workerThreadSem_);
-        TprtSqHandle *sqHandle = GetSqHandle();
+        TprtSqHandle* sqHandle = GetSqHandle();
         if (sqHandle != nullptr) {
             while (sqHandle->SqGetSqState() == TPRT_SQ_STATE_IS_RUNNING) {
                 TprtSqe_t headTask = {};
@@ -67,7 +67,8 @@ void TprtWorker::TprtWorkerScheduleSq()
                     uint32_t result = sqHandle->SqExeTask(&headTask);
                     if (result == TPRT_SUCCESS) {
                         sqHandle->SqUpdateHead(headTask.commonSqe.sqeHeader.sqeLength);
-                        TPRT_LOG(TPRT_LOG_DEBUG, "sq_id=%u sq_head=%u.", sqHandle->SqGetSqId(), sqHandle->SqGetSqHead());
+                        TPRT_LOG(
+                            TPRT_LOG_DEBUG, "sq_id=%u sq_head=%u.", sqHandle->SqGetSqId(), sqHandle->SqGetSqHead());
                     } else {
                         sqHandle->PrintTprtSqe(&headTask, TPRT_LOG_ERROR);
                         TprtWorkerProcessErrorCqe(TPRT_EXIST_ERROR, result, &headTask);
@@ -121,5 +122,5 @@ void TprtWorker::TprtWorkerFree()
     (void)mmSemDestroy(&workerThreadSem_);
 }
 
-}  // namespace tprt
-}  // namespace cce
+} // namespace tprt
+} // namespace cce

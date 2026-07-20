@@ -16,29 +16,24 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
-uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *cfg)
+uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t* cfg)
 {
     if (cfg == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] input is null.", devId);
         return TPRT_INPUT_NULL;
     }
     if ((cfg->sqcqMaxDepth == 0U) || (cfg->sqcqMaxDepth > SQCQ_MAX_DEPTH) || (cfg->sqcqMaxNum == 0U)) {
-        TPRT_LOG(TPRT_LOG_ERROR,
-            "device_id[%u] sqcqMaxDepth[%u] sqcqMaxNum[%u].",
-            devId,
-            cfg->sqcqMaxDepth,
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "device_id[%u] sqcqMaxDepth[%u] sqcqMaxNum[%u].", devId, cfg->sqcqMaxDepth,
             cfg->sqcqMaxNum);
         return TPRT_INPUT_INVALID;
     }
     return cce::tprt::TprtManage::Instance()->TprtDeviceOpen(devId, cfg);
 }
 
-uint32_t TprtDeviceClose(uint32_t devId)
-{
-    return cce::tprt::TprtManage::Instance()->TprtDeviceClose(devId);
-}
+uint32_t TprtDeviceClose(uint32_t devId) { return cce::tprt::TprtManage::Instance()->TprtDeviceClose(devId); }
 
-uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, const TprtSqCqInputInfo *cqInfo)
+uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo* sqInfo, const TprtSqCqInputInfo* cqInfo)
 {
     if (sqInfo == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "sqInfo is null, device_id=%u.", devId);
@@ -49,34 +44,32 @@ uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, c
         return TPRT_INPUT_INVALID;
     }
     if (sqInfo->inputType != TPRT_ALLOC_SQ_TYPE) {
-        TPRT_LOG(TPRT_LOG_ERROR, "Input type of sqInfo is wrong, device_id=%u, inputType=%u.", devId, sqInfo->inputType);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "Input type of sqInfo is wrong, device_id=%u, inputType=%u.", devId, sqInfo->inputType);
         return TPRT_INPUT_INVALID;
     }
     if (cqInfo->inputType != TPRT_ALLOC_CQ_TYPE) {
-        TPRT_LOG(TPRT_LOG_ERROR, "Input type of cqInfo is wrong, device_id=%u, inputType=%u.", devId, cqInfo->inputType);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "Input type of cqInfo is wrong, device_id=%u, inputType=%u.", devId, cqInfo->inputType);
         return TPRT_INPUT_INVALID;
     }
 
     uint32_t sqCqMaxNum = cce::tprt::TprtManage::Instance()->TprtGetSqCqMaxNum();
     if (sqInfo->reqId >= sqCqMaxNum) {
-        TPRT_LOG(TPRT_LOG_ERROR,
-            "The reqId of sqInfo is larger than max num, device_id=%u, reqId=%u, sqCqMaxNum=%u.",
-            devId,
-            sqInfo->reqId,
-            sqCqMaxNum);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "The reqId of sqInfo is larger than max num, device_id=%u, reqId=%u, sqCqMaxNum=%u.", devId,
+            sqInfo->reqId, sqCqMaxNum);
         return TPRT_INPUT_INVALID;
     }
 
     if (cqInfo->reqId >= sqCqMaxNum) {
-        TPRT_LOG(TPRT_LOG_ERROR,
-            "The reqId of cqInfo is larger than max num, device_id=%u, reqId=%u, sqCqMaxNum=%u.",
-            devId,
-            cqInfo->reqId,
-            sqCqMaxNum);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "The reqId of cqInfo is larger than max num, device_id=%u, reqId=%u, sqCqMaxNum=%u.", devId,
+            cqInfo->reqId, sqCqMaxNum);
         return TPRT_INPUT_INVALID;
     }
 
-    cce::tprt::TprtDevice *device = cce::tprt::TprtManage::Instance()->GetDeviceByDevId(devId);
+    cce::tprt::TprtDevice* device = cce::tprt::TprtManage::Instance()->GetDeviceByDevId(devId);
     if (device == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] is not found.", devId);
         return TPRT_DEVICE_INVALID;
@@ -84,17 +77,15 @@ uint32_t TprtSqCqCreate(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, c
 
     uint32_t error = device->TprtSqCqAlloc(sqInfo->reqId, cqInfo->reqId);
     if (error != TPRT_SUCCESS) {
-        TPRT_LOG(TPRT_LOG_ERROR,
-            "Failed to alloc sq cq, device_id=%u, sq_id=%u, cq_id=%u.",
-            devId,
-            sqInfo->reqId,
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "Failed to alloc sq cq, device_id=%u, sq_id=%u, cq_id=%u.", devId, sqInfo->reqId,
             cqInfo->reqId);
         return error;
     }
     return TPRT_SUCCESS;
 }
 
-uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, const TprtSqCqInputInfo *cqInfo)
+uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo* sqInfo, const TprtSqCqInputInfo* cqInfo)
 {
     if (sqInfo == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "sqInfo is null, device_id=%u.", devId);
@@ -105,15 +96,17 @@ uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, 
         return TPRT_INPUT_INVALID;
     }
     if (sqInfo->inputType != TPRT_FREE_SQ_TYPE) {
-        TPRT_LOG(TPRT_LOG_ERROR, "Input type of sqInfo is wrong, device_id=%u, inputType=%u.", devId, sqInfo->inputType);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "Input type of sqInfo is wrong, device_id=%u, inputType=%u.", devId, sqInfo->inputType);
         return TPRT_INPUT_INVALID;
     }
     if (cqInfo->inputType != TPRT_FREE_CQ_TYPE) {
-        TPRT_LOG(TPRT_LOG_ERROR, "Input type of cqInfo is wrong, device_id=%u, inputType=%u.", devId, cqInfo->inputType);
+        TPRT_LOG(
+            TPRT_LOG_ERROR, "Input type of cqInfo is wrong, device_id=%u, inputType=%u.", devId, cqInfo->inputType);
         return TPRT_INPUT_INVALID;
     }
 
-    cce::tprt::TprtDevice *device = cce::tprt::TprtManage::Instance()->GetDeviceByDevId(devId);
+    cce::tprt::TprtDevice* device = cce::tprt::TprtManage::Instance()->GetDeviceByDevId(devId);
     if (device == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] is not found.", devId);
         return TPRT_DEVICE_INVALID;
@@ -123,20 +116,20 @@ uint32_t TprtSqCqDestroy(const uint32_t devId, const TprtSqCqInputInfo *sqInfo, 
     return error;
 }
 
-uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t *sendInfo)
+uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t* sendInfo)
 {
     const uint32_t depth = cce::tprt::TprtManage::Instance()->TprtGetSqMaxDepth();
     if ((sendInfo == nullptr) || (sendInfo->sqeNum >= depth)) {
         TPRT_LOG(TPRT_LOG_ERROR, "input is invalid device_id[%u].", devId);
         return TPRT_INPUT_INVALID;
     }
-    cce::tprt::TprtManage *manage = cce::tprt::TprtManage::Instance();
-    cce::tprt::TprtDevice *dev = manage->GetDeviceByDevId(devId);
+    cce::tprt::TprtManage* manage = cce::tprt::TprtManage::Instance();
+    cce::tprt::TprtDevice* dev = manage->GetDeviceByDevId(devId);
     if (dev == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] is invalid.", devId);
         return TPRT_DEVICE_INVALID;
     }
-    cce::tprt::TprtSqHandle *sqHandle = dev->TprtGetSqHandleBySqId(sendInfo->sqId);
+    cce::tprt::TprtSqHandle* sqHandle = dev->TprtGetSqHandleBySqId(sendInfo->sqId);
     if (sqHandle == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] is invalid.", devId, sendInfo->sqId);
         return TPRT_SQ_HANDLE_INVALID;
@@ -148,22 +141,21 @@ uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t *sendInfo
     }
     uint32_t error = sqHandle->SqPushTask(sendInfo->sqeAddr, sendInfo->sqeNum);
     if (error != TPRT_SUCCESS) {
-        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] push task failed, error=%u.", devId,
-            sendInfo->sqId, error);
+        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] push task failed, error=%u.", devId, sendInfo->sqId, error);
         return error;
     }
     worker->WorkerWakeUp();
     return error;
 }
 
-uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t *opInfo)
+uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t* opInfo)
 {
     if (opInfo == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "input is null device_id[%u].", devId);
         return TPRT_INPUT_INVALID;
     }
-    cce::tprt::TprtManage *manage = cce::tprt::TprtManage::Instance();
-    cce::tprt::TprtDevice *dev = manage->GetDeviceByDevId(devId);
+    cce::tprt::TprtManage* manage = cce::tprt::TprtManage::Instance();
+    cce::tprt::TprtDevice* dev = manage->GetDeviceByDevId(devId);
     if (dev == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] is invalid.", devId);
         return TPRT_DEVICE_INVALID;
@@ -172,7 +164,7 @@ uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t *opInfo)
     return error;
 }
 
-uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo)
+uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t* cqeInfo)
 {
     if ((cqeInfo == nullptr) || (cqeInfo->cqeNum == 0U) || (cqeInfo->cqeAddr == nullptr)) {
         TPRT_LOG(TPRT_LOG_ERROR, "cqe info is invalid, device_id=%u.", devId);
@@ -182,13 +174,13 @@ uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo)
         TPRT_LOG(TPRT_LOG_ERROR, "device_id=%u op type[%u] is invalid.", devId, cqeInfo->type);
         return TPRT_INPUT_OP_TYPE_INVALID;
     }
-    cce::tprt::TprtManage *manage = cce::tprt::TprtManage::Instance();
-    cce::tprt::TprtDevice *dev = manage->GetDeviceByDevId(devId);
+    cce::tprt::TprtManage* manage = cce::tprt::TprtManage::Instance();
+    cce::tprt::TprtDevice* dev = manage->GetDeviceByDevId(devId);
     if (dev == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] is invalid.", devId);
         return TPRT_DEVICE_INVALID;
     }
-    cce::tprt::TprtCqHandle *cqHandle = dev->TprtGetCqHandleByCqId(cqeInfo->cqId);
+    cce::tprt::TprtCqHandle* cqHandle = dev->TprtGetCqHandleByCqId(cqeInfo->cqId);
     if (cqHandle == nullptr) {
         TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] cq_id=%u cqhandle can not find.", devId, cqeInfo->cqId);
         return TPRT_CQ_HANDLE_INVALID;
@@ -199,7 +191,7 @@ uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo)
 
 uint32_t TprtProfilingEnable(bool isEnable)
 {
-    cce::tprt::TprtManage *manage = cce::tprt::TprtManage::Instance();
+    cce::tprt::TprtManage* manage = cce::tprt::TprtManage::Instance();
     manage->setTprtTaskReportEnable(isEnable);
     return 0;
 }

@@ -20,11 +20,11 @@ using StopAICPU = int32_t (*)(uint32_t, int32_t);
 using UpdateProfiling = int32_t (*)(uint32_t, int32_t, uint32_t);
 using SetAICPUCallback = int32_t (*)(MsprofReporterCallback);
 using StartQS = int32_t (*)(uint32_t, uint32_t);
-using StartAdprof = int32_t (*)(int32_t argc, const char *argv);
+using StartAdprof = int32_t (*)(int32_t argc, const char* argv);
 using StopAdprof = int32_t (*)();
 class ThreadModeManager : public ClientManager {
 public:
-    explicit ThreadModeManager(const uint32_t &deviceId);
+    explicit ThreadModeManager(const uint32_t& deviceId);
 
     /**
      * @ingroup ClientManager
@@ -57,10 +57,10 @@ public:
      * @param flag : control number
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT UpdateProfilingConf(const uint32_t &flag) override;
+    TSD_StatusT UpdateProfilingConf(const uint32_t& flag) override;
 
-    TSD_StatusT InitQs(const InitFlowGwInfo * const initInfo) override;
-    
+    TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo) override;
+
     ~ThreadModeManager() override;
 
     /**
@@ -76,24 +76,26 @@ public:
      */
     TSD_StatusT CapabilityGet(const int32_t type, const uint64_t ptr) override;
 
-    TSD_StatusT LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen, const char_t *const fileName,
-                                 const uint64_t fileNameLen) override;
+    TSD_StatusT LoadFileToDevice(
+        const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName,
+        const uint64_t fileNameLen) override;
 
-    TSD_StatusT ProcessOpenSubProc(ProcOpenArgs *openArgs) override;
+    TSD_StatusT ProcessOpenSubProc(ProcOpenArgs* openArgs) override;
 
     TSD_StatusT ProcessCloseSubProc(const pid_t closePid) override;
 
-    TSD_StatusT GetSubProcStatus(ProcStatusInfo *pidInfo, const uint32_t arrayLen) override;
+    TSD_StatusT GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen) override;
 
-    TSD_StatusT RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen) override;
+    TSD_StatusT RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen) override;
 
-    TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) override;
+    TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize) override;
 
-    TSD_StatusT GetSubProcListStatus(ProcStatusParam *pidInfo, const uint32_t arrayLen) override;
+    TSD_StatusT GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen) override;
 
-    TSD_StatusT OpenNetService(const NetServiceOpenArgs *args) override;
+    TSD_StatusT OpenNetService(const NetServiceOpenArgs* args) override;
 
     TSD_StatusT CloseNetService() override;
+
 private:
     /**
      * @ingroup ThreadModeManager
@@ -129,14 +131,14 @@ private:
     StopAICPU stopAicpu_;
     UpdateProfiling updateProfiling_;
     SetAICPUCallback setAicpuCallback_;
-    void *handle_;
+    void* handle_;
     int32_t vfId_;
-    void *qsHandle_;
-    void *tfSoHandle_;
+    void* qsHandle_;
+    void* tfSoHandle_;
     StartQS startQs_;
-    void *adprofHandle_;
+    void* adprofHandle_;
     StartAdprof startAdprof_;
     StopAdprof stopAdprof_;
 };
-}  // namespace tsd
+} // namespace tsd
 #endif // INNER_INC_THREAD_MODE_MANAGER_H

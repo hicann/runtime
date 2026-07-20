@@ -17,25 +17,19 @@
 #include "common/log_inner.h"
 
 namespace acl {
-    class AclDump {
-    public:
-        static aclError HandleDumpConfig(const char_t *const configPath);
-        static AclDump &GetInstance();
-        void SetAdxInitFromAclInitFlag(const bool flag)
-        {
-          adxInitFromAclInitFlag_ = flag;
-        }
-        bool GetAdxInitFromAclInitFlag() const
-        {
-          return adxInitFromAclInitFlag_;
-        }
+class AclDump {
+public:
+    static aclError HandleDumpConfig(const char_t* const configPath);
+    static AclDump& GetInstance();
+    void SetAdxInitFromAclInitFlag(const bool flag) { adxInitFromAclInitFlag_ = flag; }
+    bool GetAdxInitFromAclInitFlag() const { return adxInitFromAclInitFlag_; }
 
-    private:
-        static aclError HandleDumpCommand(const char *configStr, size_t size, const char *configPath);
-        bool adxInitFromAclInitFlag_ = false;
-        ~AclDump() = default;
-        AclDump() = default;
-    };
-}
+private:
+    static aclError HandleDumpCommand(const char* configStr, size_t size, const char* configPath);
+    bool adxInitFromAclInitFlag_ = false;
+    ~AclDump() = default;
+    AclDump() = default;
+};
+} // namespace acl
 
 #endif // ACL_DUMP_H_

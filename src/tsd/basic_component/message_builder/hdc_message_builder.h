@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
-#include "driver/ascend_hal_base.h"   // process_sign
+#include "driver/ascend_hal_base.h" // process_sign
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
-#include "tsd/tsd_client.h"           // SchedMode
+#include "tsd/tsd_client.h" // SchedMode
 
 namespace tsd {
 // Pure value-type snapshot of the inputs required to assemble an HDC message.
@@ -74,7 +74,7 @@ struct MessageContext {
     bool asan;
 
     // ---- Generic package operation (per-call) ----
-    uint32_t msgType;                // raw HDCMessage::MsgType for generic builders
+    uint32_t msgType; // raw HDCMessage::MsgType for generic builders
     uint32_t checkCode;
     uint32_t packageType;
     uint32_t packageWorkerType;
@@ -103,11 +103,11 @@ struct MessageContext {
     std::vector<uint32_t> subProcTypeList;
 
     // ---- Common open sub-process (per-call, TSD_OPEN_SUB_PROC) ----
-    uint32_t subProcOpenType;                                          // helper_sub_proc.process_type
+    uint32_t subProcOpenType; // helper_sub_proc.process_type
     bool hasSubProcFilePath;
     std::string subProcFilePath;
-    bool withSubProcLogLevel;                                          // include log_level (HCCP case)
-    std::vector<std::pair<std::string, std::string>> subProcEnvList;   // (env_name, env_value)
+    bool withSubProcLogLevel;                                        // include log_level (HCCP case)
+    std::vector<std::pair<std::string, std::string>> subProcEnvList; // (env_name, env_value)
     std::vector<std::string> subProcExtParamList;
 };
 
@@ -123,65 +123,65 @@ class HdcMessageBuilder {
 public:
     HdcMessageBuilder() = delete;
     ~HdcMessageBuilder() = delete;
-    HdcMessageBuilder(const HdcMessageBuilder &) = delete;
-    HdcMessageBuilder(HdcMessageBuilder &&) = delete;
-    HdcMessageBuilder &operator=(const HdcMessageBuilder &) = delete;
-    HdcMessageBuilder &operator=(HdcMessageBuilder &&) = delete;
+    HdcMessageBuilder(const HdcMessageBuilder&) = delete;
+    HdcMessageBuilder(HdcMessageBuilder&&) = delete;
+    HdcMessageBuilder& operator=(const HdcMessageBuilder&) = delete;
+    HdcMessageBuilder& operator=(HdcMessageBuilder&&) = delete;
 
     // Build TSD_START_PROC_MSG.
     // Byte-equivalent to the legacy ProcessModeManager::ConstructOpenMsg.
-    static TSD_StatusT BuildOpen(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildOpen(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_CLOSE_PROC_MSG.
     // Byte-equivalent to the legacy ProcessModeManager::ConstructCloseMsg.
-    static TSD_StatusT BuildClose(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildClose(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_UPDATE_PROIFILING_MSG.
     // Reads ctx.profilingMode / rankSize / logicDeviceId / procSign.
-    static TSD_StatusT BuildUpdateProfiling(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildUpdateProfiling(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_OM_PKG_DECOMPRESS_STATUS.
     // Reads ctx.omfileName / logicDeviceId / procSign.
-    static TSD_StatusT BuildOmFileDecompress(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildOmFileDecompress(HDCMessage& msg, const MessageContext& ctx);
 
     // Build a generic package check-code message. The concrete proto type is
     // carried by ctx.msgType (raw HDCMessage::MsgType), and the body uses
     // ctx.checkCode / beforeSendPkg / logicDeviceId / procSign.
-    static TSD_StatusT BuildPackageCheckCode(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildPackageCheckCode(HDCMessage& msg, const MessageContext& ctx);
 
     // Build a capability-query message.
     // Reads ctx.capabilityType (raw TsdCapabilityType) to derive the proto
     // message type, plus ctx.logicDeviceId / ctx.procSign.
-    static TSD_StatusT BuildCapability(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildCapability(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_CLOSE_SUB_PROC.
     // Reads ctx.closeSubProcPid / logicDeviceId / procSign.
-    static TSD_StatusT BuildCloseSubProc(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildCloseSubProc(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_REMOVE_FILE.
     // Reads ctx.removeFilePath / logicDeviceId / procSign.
-    static TSD_StatusT BuildRemoveFile(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildRemoveFile(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_GET_DEVICE_CANN_HS_CHECKCODE.
     // Reads ctx.packageMaxProcessTime / packageWorkerType / packageType /
     // packageName / hashCode / logicDeviceId.
-    static TSD_StatusT BuildCannHsCheckCode(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildCannHsCheckCode(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_GET_SUB_PROC_STATUS.
     // Reads ctx.subProcPidList (+ optional ctx.subProcTypeList) / logicDeviceId /
     // procSign. Handles both GetSubProcStatus (pids only) and GetSubProcListStatus
     // (pids + types).
-    static TSD_StatusT BuildGetSubProcStatus(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildGetSubProcStatus(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_CLOSE_SUB_PROC_LIST.
     // Reads ctx.subProcPidList / subProcTypeList / logicDeviceId / procSign.
-    static TSD_StatusT BuildCloseSubProcList(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildCloseSubProcList(HDCMessage& msg, const MessageContext& ctx);
 
     // Build TSD_OPEN_SUB_PROC (common open).
     // Reads ctx.subProcOpenType / subProcFilePath / subProcEnvList /
     // subProcExtParamList / ascendInstallPath / withSubProcLogLevel / logLevel /
     // logicDeviceId / procSign.
-    static TSD_StatusT BuildCommonOpen(HDCMessage &msg, const MessageContext &ctx);
+    static TSD_StatusT BuildCommonOpen(HDCMessage& msg, const MessageContext& ctx);
 };
-}  // namespace tsd
-#endif  // TSD_BASIC_COMPONENT_MESSAGE_BUILDER_HDC_MESSAGE_BUILDER_H
+} // namespace tsd
+#endif // TSD_BASIC_COMPONENT_MESSAGE_BUILDER_HDC_MESSAGE_BUILDER_H

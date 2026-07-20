@@ -33,7 +33,7 @@ static pthread_key_t g_subscribeInfoThreadKey;
 static __thread uint64_t g_subscribeUUID = UINT64_MAX;
 static __thread uint64_t g_threadId = UINT64_MAX;
 
-static int SubScribePairCmp(void *a, void *b, void *appInfo)
+static int SubScribePairCmp(void* a, void* b, void* appInfo)
 {
     (void)appInfo;
     return (int)(((SubScribePair*)a)->keyThreadID - ((SubScribePair*)b)->keyThreadID);
@@ -94,7 +94,8 @@ static uint64_t GetSubscribeId(uint64_t threadId)
     }
     pthread_mutex_unlock(&(g_subScribeInfo.suscribeInfoLock));
 
-    RT_LOG_INFO("currentPid[0x%llx], tid[0x%llx], subScribeCount[0x%llx], subscribeUUID[0x%llx].",
+    RT_LOG_INFO(
+        "currentPid[0x%llx], tid[0x%llx], subScribeCount[0x%llx], subscribeUUID[0x%llx].",
         (uint64_t)g_subScribeInfo.curPid, (uint64_t)threadId, (uint64_t)g_subScribeInfo.subScribeCount,
         (uint64_t)subscribeUUID);
     return subscribeUUID;
@@ -152,8 +153,8 @@ rtError_t UnSubscribeReport(uint64_t threadId, rtStream_t stm, SUBSCRIBE_TYPE ty
     uint64_t streamThreadId = GetStreamThreadID(stream, type);
     if ((streamThreadId != UINT64_MAX) && (streamThreadId == threadId)) {
         ResetStreamThreadID(stream, type);
-        drvError_t drvRet = halSqUnSubscribeTid(
-            (uint8_t)GetStreamDeviceId(stream), (uint8_t)GetStreamSqID(stream), (uint8_t)type);
+        drvError_t drvRet =
+            halSqUnSubscribeTid((uint8_t)GetStreamDeviceId(stream), (uint8_t)GetStreamSqID(stream), (uint8_t)type);
         if (drvRet != DRV_ERROR_NONE) {
             RT_LOG_ERROR("unSubscribe failed, ret=%d.", drvRet);
             return ErrorConvert(drvRet);

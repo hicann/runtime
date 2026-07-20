@@ -11,7 +11,7 @@
 #include "string_utils.h"
 
 namespace acl {
-void StringUtils::Split(const std::string &str, const char_t delim, std::vector<std::string> &elems)
+void StringUtils::Split(const std::string& str, const char_t delim, std::vector<std::string>& elems)
 {
     elems.clear();
     if (str.empty()) {
@@ -32,13 +32,13 @@ void StringUtils::Split(const std::string &str, const char_t delim, std::vector<
     }
 }
 
-bool StringUtils::IsDigit(const std::string &str)
+bool StringUtils::IsDigit(const std::string& str)
 {
     if (str.empty()) {
         return false;
     }
 
-    for (const char_t &c : str) {
+    for (const char_t& c : str) {
         if (isdigit(static_cast<int32_t>(c)) == 0) {
             return false;
         }
@@ -46,7 +46,8 @@ bool StringUtils::IsDigit(const std::string &str)
     return true;
 }
 
-std::string StringUtils::Trim(const std::string& str) {
+std::string StringUtils::Trim(const std::string& str)
+{
     const size_t first = str.find_first_not_of(" \t\r\n");
     if (std::string::npos == first) {
         return str;

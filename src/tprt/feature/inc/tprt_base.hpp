@@ -39,54 +39,60 @@ enum TprtLogLevel : uint8_t {
 #define TPRT_LOG(level, format, ...)
 #else
 #define TPRT_LOG(level, format, ...) TPRT_LOG_##level(format, ##__VA_ARGS__)
-#define TPRT_LOG_TPRT_LOG_EVENT(format, ...)                                                 \
-    do {                                                                                 \
-        DlogSub(static_cast<int32_t>(TPRT_EVENT_LOG_MASK), "TPRT", DLOG_INFO, "TID[%d] %s: " format "\n", mmGetTid(), &__func__[0], ##__VA_ARGS__); \
+#define TPRT_LOG_TPRT_LOG_EVENT(format, ...)                                                                      \
+    do {                                                                                                          \
+        DlogSub(                                                                                                  \
+            static_cast<int32_t>(TPRT_EVENT_LOG_MASK), "TPRT", DLOG_INFO, "TID[%d] %s: " format "\n", mmGetTid(), \
+            &__func__[0], ##__VA_ARGS__);                                                                         \
     } while (false)
 
-#define TPRT_LOG_TPRT_LOG_ERROR(format, ...)                                                            \
-    do {                                                                                            \
+#define TPRT_LOG_TPRT_LOG_ERROR(format, ...)                                                     \
+    do {                                                                                         \
         cce::tprt::RecordErrorLog(__FILE__, __LINE__, &__func__[0], format "\n", ##__VA_ARGS__); \
     } while (false)
 
-#define TPRT_LOG_TPRT_LOG_WARNING(format, ...)                                               \
-    do {                                                                                 \
-        DlogSub(static_cast<int32_t>(RUNTIME), "TPRT", DLOG_WARN, "TID[%d] %s: " format "\n", mmGetTid(), &__func__[0], ##__VA_ARGS__);  \
+#define TPRT_LOG_TPRT_LOG_WARNING(format, ...)                                                                      \
+    do {                                                                                                            \
+        DlogSub(                                                                                                    \
+            static_cast<int32_t>(RUNTIME), "TPRT", DLOG_WARN, "TID[%d] %s: " format "\n", mmGetTid(), &__func__[0], \
+            ##__VA_ARGS__);                                                                                         \
     } while (false)
 
-#define TPRT_LOG_TPRT_LOG_INFO(format, ...)                                                  \
-    do {                                                                                 \
-        DlogSub(static_cast<int32_t>(RUNTIME), "TPRT", DLOG_INFO, "TID[%d] %s: " format "\n", mmGetTid(), &__func__[0], ##__VA_ARGS__); \
+#define TPRT_LOG_TPRT_LOG_INFO(format, ...)                                                                         \
+    do {                                                                                                            \
+        DlogSub(                                                                                                    \
+            static_cast<int32_t>(RUNTIME), "TPRT", DLOG_INFO, "TID[%d] %s: " format "\n", mmGetTid(), &__func__[0], \
+            ##__VA_ARGS__);                                                                                         \
     } while (false)
 
-#define TPRT_LOG_TPRT_LOG_DEBUG(format, ...)                                                                       \
-    do {                                                                                                       \
-        if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {                                   \
+#define TPRT_LOG_TPRT_LOG_DEBUG(format, ...)                                                                \
+    do {                                                                                                    \
+        if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {                                \
             cce::tprt::RecordLog(DLOG_DEBUG, __FILE__, __LINE__, &__func__[0], format "\n", ##__VA_ARGS__); \
-        }                                                                                                      \
+        }                                                                                                   \
     } while (false)
 
 #endif
 
-#define DELETE_O(p)  \
+#define DELETE_O(p)       \
     if ((p) != nullptr) { \
-        delete (p);    \
+        delete (p);       \
         (p) = nullptr;    \
     }
 
-template<typename TI>
+template <typename TI>
 inline uint64_t RtPtrToValue(const TI ptr)
 {
     return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ptr));
 }
 
-template<typename TO>
+template <typename TO>
 inline TO TprtValueToPtr(const uint64_t value)
 {
     return reinterpret_cast<TO>(static_cast<uintptr_t>(value));
 }
 
-template<typename TO, typename TI>
+template <typename TO, typename TI>
 inline TO TprtPtrToPtr(const TI ptr)
 {
     return reinterpret_cast<TO>(ptr);
@@ -94,9 +100,7 @@ inline TO TprtPtrToPtr(const TI ptr)
 
 class ScopeGuard {
 public:
-    explicit ScopeGuard(std::function<void()> callback)
-        : exitCallback_(callback)
-    {}
+    explicit ScopeGuard(std::function<void()> callback) : exitCallback_(callback) {}
 
     ~ScopeGuard() noexcept
     {
@@ -104,10 +108,7 @@ public:
             exitCallback_();
         }
     }
-    void ReleaseGuard()
-    {
-        exitCallback_ = nullptr;
-    }
+    void ReleaseGuard() { exitCallback_ = nullptr; }
 
 private:
     ScopeGuard(ScopeGuard const&) = delete;
@@ -118,6 +119,6 @@ private:
 private:
     std::function<void()> exitCallback_;
 };
-}
-}
+} // namespace tprt
+} // namespace cce
 #endif // __CCE_TPRT_BASE_HPP__
