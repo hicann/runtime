@@ -148,6 +148,10 @@ uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo)
             }
             break;
         }
+        case RT_DATA_TYPE_UINT32: {
+            opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_DATA_TYPE_UINT32);
+            break;
+        }
         default: {
             // Should not run here.
             // if not support, it will return RT_ERROR_FEATURE_NOT_SUPPORT at context.cc's reduce ability check.
@@ -296,11 +300,7 @@ void MemWaitTaskUnInit(TaskInfo *taskInfo)
         memWaitValueTask->writeValueAddr = nullptr;
     }
 
-    if (memWaitValueTask->profDisableStatusAddr != 0UL) {
-        const auto dev = taskInfo->stream->Device_();
-        (void)dev->Driver_()->DevMemFree(RtValueToPtr<void *>(memWaitValueTask->profDisableStatusAddr), dev->Id_());
-        memWaitValueTask->profDisableStatusAddr = 0UL;
-    }
+    memWaitValueTask->profDisableStatusAddr = 0UL;
 
     if (memWaitValueTask->retainedEventId != INVALID_EVENT_ID) {
         COND_PROC(memWaitValueTask->event != nullptr,
@@ -339,7 +339,7 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
     void *devMem = nullptr;
     const auto dev = taskInfo->stream->Device_();
     const uint64_t allocSize = memWaitValueTask->funCallMemSize2 +
-        MEM_WAIT_WRITE_VALUE_ADDRESS_LEN + FUNC_CALL_INSTR_ALIGN_SIZE;
+        MEM_WAIT_WRITE_VALUE_ADDRESS_LEN + FUNC_CALL_INSTR_ALIGN_SIZE + sizeof(uint64_t);
     rtError_t ret = RT_ERROR_NONE;
     if ((taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT) || (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL)) {
         if (taskInfo->stream->Model_() == nullptr || allocSize > MEM_WAIT_SPLIT_SIZE) {
@@ -374,6 +374,12 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
         memWaitValueTask->writeValueAddr = devMem3;
     }
 
+    void *addr = RtValueToPtr<void *>(RtPtrToValue(memWaitValueTask->writeValueAddr) + MEM_WAIT_WRITE_VALUE_ADDRESS_LEN);
+    uint64_t initValue = 0UL;
+    (void)taskInfo->stream->Device_()->Driver_()->MemCopySync(addr, sizeof(uint64_t), static_cast<const void *>(&initValue),
+                                                    sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);    
+    memWaitValueTask->profDisableStatusAddr = RtPtrToValue(addr);
+
     return RT_ERROR_NONE;
 }
 
@@ -396,17 +402,6 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
     rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);
 
-    Stream * const stream = taskInfo->stream;
-    const uint32_t devId = stream->Device_()->Id_();
-    void *addr = nullptr;
-    ret = stream->Device_()->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, devId);
-    COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, MemWaitTaskUnInit(taskInfo),
-        "Failed to alloc memory, device_id=%u, retCode=%#x.", devId, static_cast<uint32_t>(ret));
-
-    uint64_t initValue = 0UL;
-    (void)stream->Device_()->Driver_()->MemCopySync(addr, sizeof(uint64_t), static_cast<const void *>(&initValue),
-                                                    sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);    
-    memWaitValueTask->profDisableStatusAddr = RtPtrToValue(addr);
     return RT_ERROR_NONE;
 }
 
