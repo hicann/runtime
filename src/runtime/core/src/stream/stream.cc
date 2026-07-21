@@ -2166,16 +2166,11 @@ void Stream::StreamSyncFinishReport() const
 
 rtError_t Stream::Query(void) const
 {
-    rtError_t error = RT_ERROR_NONE;
-    COND_RETURN_AND_MSG_OUTER(
-        GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, "rtStreamQuery",
-        "stream " + std::to_string(this->Id_()), "The persistent stream does not support task execution status query");
-
     // Sending and receiving thread will update pendingNum_
     if (!Runtime::Instance()->GetDisableThread()) {
         return (pendingNum_.Value() == 0U) ? RT_ERROR_NONE : RT_ERROR_STREAM_NOT_COMPLETE;
     }
-
+    rtError_t error;
     // Check whether the tasks are complete
     if (device_->IsStarsPlatform()) {
         uint16_t sqHead = 0U;

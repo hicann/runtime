@@ -1411,19 +1411,20 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream* const stm, const int32_t 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE, "Synchronizing a stream", timeout,
         "greater than or equal to -1 and not equal to 0");
-    COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && ((stm->Flags() & RT_STREAM_AICPU) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1006,
-        "Synchronizing a stream", "Stream flags value " + std::to_string(stm->Flags()),
-        "The current stream is used to carry AI CPU scheduling tasks and does not support stream synchronization");
-    COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_STREAM_INVALID,
-        ErrorCode::EE1006, "Synchronizing a stream", "Stream flags value " + std::to_string(stm->Flags()),
-        RtFmtMsg("Stream (stream_id=%d) can be called only on the device", stm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(
         ((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
         "Synchronizing a stream",
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+
+    if ((stm != nullptr) &&
+        ((stm->Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE | RT_STREAM_PERSISTENT)) != 0U)) {
+        const uint32_t deviceId = (stm->Device_() != nullptr) ? stm->Device_()->Id_() : UINT32_MAX;
+        RT_LOG(
+            RT_LOG_EVENT, "stream synchronize return, device_id=%u, stream_id=%d, stream_flag=%d.", deviceId,
+            stm->Id_(), stm->Flags());
+        return RT_ERROR_NONE;
+    }
 
     int32_t streamId = 0;
     if (stm != nullptr) {
@@ -1451,6 +1452,16 @@ rtError_t ApiErrorDecorator::StreamQuery(Stream* const stm)
     COND_RETURN_AND_MSG_OUTER(
         ((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Querying a stream",
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
+
+    if ((stm != nullptr) &&
+        ((stm->Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE | RT_STREAM_PERSISTENT)) != 0U)) {
+        const uint32_t deviceId = (stm->Device_() != nullptr) ? stm->Device_()->Id_() : UINT32_MAX;
+        RT_LOG(
+            RT_LOG_EVENT, "stream query return, device_id=%u, stream_id=%d, stream_flag=%d.", deviceId, stm->Id_(),
+            stm->Flags());
+        return RT_ERROR_NONE;
+    }
+
     return impl_->StreamQuery(stm);
 }
 

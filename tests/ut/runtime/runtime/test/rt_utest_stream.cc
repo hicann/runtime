@@ -1988,15 +1988,9 @@ TEST_F(StreamTest, Query_test)
     device->Init();
     std::unique_ptr<Stream> stream = std::make_unique<Stream>(device.get(), 0);
 
-    stream->SetBindFlag(true);
-    rtError_t ret = stream->Query();
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    stream->SetBindFlag(false);
     Runtime::Instance()->SetDisableThread(false);
-    ret = stream->Query();
+    rtError_t ret = stream->Query();
     EXPECT_EQ(ret, RT_ERROR_NONE);
-
     Runtime::Instance()->SetDisableThread(true);
     rtChipType_t oldchipType = device->chipType_;
     uint16_t sqHead = 0U;
@@ -2457,6 +2451,71 @@ TEST_F(StreamTest, rtsStreamGetAvailableNum_normal)
     uint32_t avaliStrCount1;
     error = rtsStreamGetAvailableNum(&avaliStrCount1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(StreamTest, rtsStreamSynchronize_aicpu_flag)
+{
+    rtError_t error;
+    rtStream_t stream;
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_AICPU);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamSynchronize(stream, -1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamDestroy(stream, 0x0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamSynchronize_cp_process_use_flag)
+{
+    rtError_t error;
+    rtStream_t stream;
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream* exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(exeStream, nullptr);
+    const uint32_t oldFlags = exeStream->flags_;
+    exeStream->flags_ = RT_STREAM_CP_PROCESS_USE;
+    error = rtsStreamSynchronize(stream, -1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    exeStream->flags_ = oldFlags;
+    error = rtsStreamDestroy(stream, 0x0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamSynchronize_persistent_flag)
+{
+    rtError_t error;
+    rtStream_t stream;
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamSynchronize(stream, -1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamDestroy(stream, 0x0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamQuery_aicpu_flag)
+{
+    rtError_t error;
+    rtStream_t stream;
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_AICPU);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamQuery(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamDestroy(stream, 0x0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(StreamTest, rtsStreamQuery_persistent_flag)
+{
+    rtError_t error;
+    rtStream_t stream;
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamQuery(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsStreamDestroy(stream, 0x0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(StreamTest, stream_create_with_invalid_config)
