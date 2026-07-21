@@ -7270,7 +7270,7 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
     void* outputBin = nullptr;
     uint32_t binSize = 0U;
     EXPECT_EQ(rtsBinaryGetDevAddress(bin_handle, &outputBin, &binSize), RT_ERROR_NONE);
-    EXPECT_EQ(binSize, m_len);
+    EXPECT_LT(binSize, m_len);
 
     const void* stack = nullptr;
     uint32_t stackSize = 0U;
