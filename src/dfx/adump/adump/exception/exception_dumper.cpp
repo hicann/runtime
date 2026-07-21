@@ -151,25 +151,6 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
     return ADUMP_SUCCESS;
 }
 
-bool ExceptionDumper::NeedDumpException(const rtExceptionInfo &exception) const
-{
-    if (exception.retcode == ACL_ERROR_RT_AICORE_OVER_FLOW ||
-        exception.retcode == ACL_ERROR_RT_AIVEC_OVER_FLOW ||
-        // Hardware faults do not need dump.
-        exception.retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR ||
-        exception.retcode == ACL_ERROR_RT_SUSPECT_REMOTE_ERROR ||
-        exception.retcode == ACL_ERROR_RT_LINK_ERROR) {
-        IDE_LOGW("Ignore exception dump request, retcode: %u.", exception.retcode);
-        return false;
-    }
-    rtExceptionArgsInfo_t exceptionArgsInfo{};
-    if (ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo) != ADUMP_SUCCESS) {
-        IDE_LOGW("Get exception args info failed.");
-        return false;
-    }
-    return true;
-}
-
 std::string ExceptionDumper::GetDumpSceneName() const
 {
     if (coredumpStatus_) {
@@ -186,7 +167,8 @@ std::string ExceptionDumper::GetDumpSceneName() const
 int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
 {
     IDE_CTRL_VALUE_WARN(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
-    IDE_CTRL_VALUE_WARN(NeedDumpException(exception), return ADUMP_FAILED, "Exception is not need to dump.");
+    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportExceptionDump(exception),
+        return ADUMP_FAILED, "Exception is not need to dump.");
     IDE_CTRL_VALUE_WARN(coredumpStatus_ || exceptionStatus_ || argsExceptionStatus_, return ADUMP_FAILED,
         "Not enable exception dump.");
     std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
@@ -332,8 +314,9 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
 
 int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath)
 {
+    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
+        return ADUMP_FAILED, "Exception is not support default dump.");
     KernelSymbolLocator::DumpErrorSymbols(exception);
-    // L1 Exception Dump
     DumpOperator excOp;
     bool find = FindExceptionOperator(exception, excOp);
     if (!find) {
@@ -358,6 +341,8 @@ int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, c
 
 int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo &exception, const std::string &dumpPath)
 {
+    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
+        return ADUMP_FAILED, "Exception is not support default dump.");
     KernelSymbolLocator::DumpErrorSymbols(exception);
     DumpArgs args;
     if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {
@@ -413,10 +398,10 @@ int32_t ExceptionDumper::InvokeCallbacks(const rtExceptionInfo &exception,
 
     ExceptionRegInfo exceptionRegInfo{0, nullptr};
     int32_t ret = ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo);
-    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS && exceptionRegInfo.coreNum != 0, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "GetExceptionRegInfo failed, ret=%d, coreNum=%u.", ret, exceptionRegInfo.coreNum);
     
-    uint32_t maxDumpSize = exceptionRegInfo.coreNum;
+    uint32_t maxDumpSize = exceptionRegInfo.coreNum == 0 ? 1 : exceptionRegInfo.coreNum;
     IDE_LOGI("Exception callbacks size=%zu, maxDumpSize=%u.", callbacks_.size(), maxDumpSize);
     
     for (auto &callback : callbacks_) {       

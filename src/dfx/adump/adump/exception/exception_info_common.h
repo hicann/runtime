@@ -32,6 +32,8 @@ public:
     static int32_t GetExceptionRegInfo(const rtExceptionInfo &exception, ExceptionRegInfo &exceptionRegInfo);
     static int32_t GetBinDataFromHandle(rtBinHandle binHandle, std::string &binData, uint32_t &binSize);
     static std::string GetExceptionTaskTypeName(const rtExceptionInfo &exception);
+    static bool IsSupportExceptionDump(const rtExceptionInfo &exception);
+    static bool IsSupportDefaultExceptionDump(const rtExceptionInfo &exception);
     static std::string GetKernelNameWithoutMixSuffix(const std::string &kernelName);
     static std::string GetExceptionKernelName(const rtExceptionInfo &exception);
     static int32_t GetKernelDeviceAddr(rtBinHandle binHandle, void * &devAddr);

@@ -46,7 +46,7 @@ int32_t ExceptionInfoCommon::GetExceptionInfo(const rtExceptionInfo &exception,
     } else if (exceptionTaskType == RT_EXCEPTION_FUSION) {
         exceptionArgsInfo = exception.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs;
     } else {
-        IDE_LOGW("Exception type[%d(%s)] is not supported.", static_cast<int32_t>(exceptionTaskType),
+        IDE_LOGW("Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionTaskType),
             GetExceptionTaskTypeName(exception).c_str());
         return ADUMP_FAILED;
     }
@@ -69,9 +69,50 @@ std::string ExceptionInfoCommon::GetExceptionTaskTypeName(const rtExceptionInfo 
             return "ccu";
         case RT_EXCEPTION_FUSION:
             return "fusion";
+        case RT_EXCEPTION_AICPU:
+            return "aicpu";
         default:
             return "unknown";
     }
+}
+
+bool ExceptionInfoCommon::IsSupportExceptionDump(const rtExceptionInfo &exception)
+{
+    if (exception.retcode == ACL_ERROR_RT_AICORE_OVER_FLOW ||
+        exception.retcode == ACL_ERROR_RT_AIVEC_OVER_FLOW ||
+        // Hardware faults do not need dump.
+        exception.retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR ||
+        exception.retcode == ACL_ERROR_RT_SUSPECT_REMOTE_ERROR ||
+        exception.retcode == ACL_ERROR_RT_LINK_ERROR) {
+        IDE_LOGW("Not support exception dump, rts retcode=%u.", exception.retcode);
+        return false;
+    }
+
+    rtExceptionExpandType_t exceptionType = exception.expandInfo.type;
+    if (exceptionType == RT_EXCEPTION_FFTS_PLUS ||
+        exceptionType == RT_EXCEPTION_AICORE ||
+        exceptionType == RT_EXCEPTION_FUSION ||
+        // Supported for callback exception dump.
+        exceptionType == RT_EXCEPTION_AICPU) {
+        return true;
+    }
+
+    IDE_LOGW("Not support exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
+        GetExceptionTaskTypeName(exception).c_str());
+    return false;
+}
+
+bool ExceptionInfoCommon::IsSupportDefaultExceptionDump(const rtExceptionInfo &exception)
+{
+    rtExceptionExpandType_t exceptionType = exception.expandInfo.type;
+    if (exceptionType == RT_EXCEPTION_FFTS_PLUS ||
+        exceptionType == RT_EXCEPTION_AICORE ||
+        exceptionType == RT_EXCEPTION_FUSION) {
+        return true;
+    }
+    IDE_LOGW("Not support default exception dump, type=%d(%s)", static_cast<int32_t>(exceptionType),
+        GetExceptionTaskTypeName(exception).c_str());
+    return false;
 }
 
 std::string ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(const std::string &kernelName)
@@ -89,18 +130,27 @@ std::string ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(const std::string
 
 std::string ExceptionInfoCommon::GetExceptionKernelName(const rtExceptionInfo &exception)
 {
-    rtExceptionArgsInfo_t exceptionArgsInfo{};
-    if (GetExceptionInfo(exception, exceptionArgsInfo) != ADUMP_SUCCESS) {
-        return "";
+    std::string rawKernelName;
+    if (exception.expandInfo.type == RT_EXCEPTION_AICPU) {
+        const rtAicpuExDetailInfo_t &aicpuInfo = exception.expandInfo.u.aicpuInfo;
+        if (aicpuInfo.kernelName == nullptr) {
+            return "";
+        }
+        rawKernelName.assign(aicpuInfo.kernelName);
+    } else {
+        rtExceptionArgsInfo_t exceptionArgsInfo{};
+        if (GetExceptionInfo(exception, exceptionArgsInfo) != ADUMP_SUCCESS) {
+            return "";
+        }
+
+        const rtExceptionKernelInfo_t &kernelInfo = exceptionArgsInfo.exceptionKernelInfo;
+        if (kernelInfo.kernelName == nullptr || kernelInfo.kernelNameSize == 0) {
+            return "";
+        }
+        rawKernelName.assign(kernelInfo.kernelName, kernelInfo.kernelNameSize);
     }
 
-    const rtExceptionKernelInfo_t &kernelInfo = exceptionArgsInfo.exceptionKernelInfo;
-    if (kernelInfo.kernelName == nullptr || kernelInfo.kernelNameSize == 0) {
-        return "";
-    }
-
-    const std::string kernelName(kernelInfo.kernelName, kernelInfo.kernelNameSize);
-    return GetKernelNameWithoutMixSuffix(kernelName);
+    return GetKernelNameWithoutMixSuffix(rawKernelName);
 }
 
 int32_t ExceptionInfoCommon::GetKernelDeviceAddr(rtBinHandle binHandle, void * &devAddr)

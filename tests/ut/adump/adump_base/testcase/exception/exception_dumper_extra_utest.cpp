@@ -20,6 +20,22 @@
 
 using namespace Adx;
 
+namespace {
+uint32_t g_aicpuCallbackCount = 0U;
+rtExceptionExpandType_t g_aicpuCallbackType = RT_EXCEPTION_INVALID;
+
+// 记录调用次数与传入的异常类型，用于验证回调确实被触发。
+uint32_t CountingOverwriteCallback(void *exceptionInfo, ExceptionDumpInfo *dumpInfo,
+                                   uint32_t dumpSize, uint32_t *realSize, ExceptionDumpMode *mode)
+{
+    ++g_aicpuCallbackCount;
+    if (exceptionInfo != nullptr) {
+        g_aicpuCallbackType = static_cast<rtExceptionInfo *>(exceptionInfo)->expandInfo.type;
+    }
+    return MockCallbackWithOverwrite(exceptionInfo, dumpInfo, dumpSize, realSize, mode);
+}
+}  // namespace
+
 class ExceptionDumperExtraUtest : public testing::Test {
 protected:
     void SetUp() override
@@ -300,22 +316,6 @@ TEST_F(ExceptionDumperExtraUtest, AddDumpOperator_V2_AgingTrue_ViaDumpManager)
 }
 
 // ============================================================================
-// DumpException - no exception status enabled
-// ============================================================================
-TEST_F(ExceptionDumperExtraUtest, DumpException_NoExceptionEnabled)
-{
-    ExceptionDumper dumper;
-    rtExceptionInfo exception = {};
-    exception.deviceid = 0U;
-    // coredumpStatus_=false, exceptionStatus_=false, argsExceptionStatus_=false
-    // CreateDeviceDumpPath runs first; if it fails, returns ADUMP_FAILED
-    // If it succeeds, reaches the "else" branch with "Not enable exception dump"
-    int32_t ret = dumper.DumpException(exception);
-    (void)ret;
-    EXPECT_TRUE(true);
-}
-
-// ============================================================================
 // ExceptionDumperInit: AIC_ERR_DETAIL_DUMP type with status=off → covers lines 99-109
 // ============================================================================
 TEST_F(ExceptionDumperExtraUtest, ExceptionDumperInit_AicErrDetail_StatusOff)
@@ -440,9 +440,14 @@ TEST_F(ExceptionDumperExtraUtest, UnregisterExceptionDumpCallback_NotFound)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
 
-TEST_F(ExceptionDumperExtraUtest, NeedDumpException_IgnoredRetcode)
+TEST_F(ExceptionDumperExtraUtest, DumpException_IgnoredRetcode_Rejected)
 {
     ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_ignored_retcode_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+
     const uint32_t ignoredRetcodes[] = {
         ACL_ERROR_RT_AICORE_OVER_FLOW,
         ACL_ERROR_RT_AIVEC_OVER_FLOW,
@@ -453,13 +458,40 @@ TEST_F(ExceptionDumperExtraUtest, NeedDumpException_IgnoredRetcode)
 
     for (const uint32_t retcode : ignoredRetcodes) {
         rtExceptionInfo exception = {};
+        exception.deviceid = 0U;
+        exception.taskid = 1U;
+        exception.streamid = 2U;
         exception.retcode = retcode;
-        bool needDump = dumper.NeedDumpException(exception);
-        EXPECT_FALSE(needDump) << "retcode: " << retcode;
+        exception.expandInfo.type = RT_EXCEPTION_AICORE;
+        EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED) << "retcode: " << retcode;
     }
 }
 
-TEST_F(ExceptionDumperExtraUtest, NeedDumpException_NormalException)
+TEST_F(ExceptionDumperExtraUtest, DumpException_UnsupportedType_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_unsupported_type_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+
+    const rtExceptionExpandType_t unsupportedTypes[] = {
+        RT_EXCEPTION_INVALID,
+        RT_EXCEPTION_UB,
+        RT_EXCEPTION_CCU
+    };
+
+    for (const rtExceptionExpandType_t type : unsupportedTypes) {
+        rtExceptionInfo exception = {};
+        exception.deviceid = 0U;
+        exception.taskid = 1U;
+        exception.streamid = 2U;
+        exception.expandInfo.type = type;
+        EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED) << "type: " << static_cast<int32_t>(type);
+    }
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_NotEnabled_Rejected)
 {
     ExceptionDumper dumper;
     rtExceptionInfo exception = {};
@@ -467,8 +499,163 @@ TEST_F(ExceptionDumperExtraUtest, NeedDumpException_NormalException)
     exception.taskid = 1U;
     exception.streamid = 2U;
     exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    bool needDump = dumper.NeedDumpException(exception);
-    EXPECT_TRUE(needDump);
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_CreateDumpPathEmpty_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_create_path_empty_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(false));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicpu_Coredump_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_coredump_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::AIC_ERR_DETAIL_DUMP, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetCoredumpStatus());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicpu_Exception_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_exception_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetExceptionStatus());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicpu_Args_NoCallback_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_args_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetArgsExceptionStatus());
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicpu_Args_FastRecovery_Rejected)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_fastrecovery_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetArgsExceptionStatus());
+    (void)rtSetOpExecuteTimeOutWithMs(300U);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicpu_CallbackOverwrite_OnlyDumpCallbackData)
+{
+    g_aicpuCallbackCount = 0U;
+    g_aicpuCallbackType = RT_EXCEPTION_INVALID;
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_overwrite_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(CountingOverwriteCallback), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpArgsExceptionDefault).expects(never());
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+    EXPECT_EQ(g_aicpuCallbackCount, 1U);
+    EXPECT_EQ(g_aicpuCallbackType, RT_EXCEPTION_AICPU);
+    g_aicpuCallbackCount = 0U;
+    g_aicpuCallbackType = RT_EXCEPTION_INVALID;
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicore_CallbackAdditional_DumpBoth)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_additional_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+    MOCKER_CPP(&ExceptionDumper::DumpArgsExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpException_Aicore_CallbackNone_OnlyDefault)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_aicpu_none_test";
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(MockCallbackWithNone), ADUMP_SUCCESS);
+
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpArgsExceptionDefault).expects(once()).will(returnValue(ADUMP_SUCCESS));
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 3U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
 }
 
 TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_NoCallbacks)
@@ -488,68 +675,6 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_NoCallbacks)
     int32_t ret = dumper.DumpException(exception);
     (void)ret;
     EXPECT_TRUE(true);
-}
-
-TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackOverwrite)
-{
-    ExceptionDumper dumper;
-    DumpConfig config;
-    config.dumpStatus = "on";
-    config.dumpPath = "/tmp/adump_args_overwrite_test";
-    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
-    EXPECT_EQ(initRet, ADUMP_SUCCESS);
-
-    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithOverwrite);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-
-    rtExceptionInfo exception = {};
-    exception.deviceid = 0U;
-    exception.taskid = 1U;
-    exception.streamid = 2U;
-    exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    (void)dumper.DumpException(exception);
-}
-
-TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackAdditional)
-{
-    ExceptionDumper dumper;
-    DumpConfig config;
-    config.dumpStatus = "on";
-    config.dumpPath = "/tmp/adump_args_additional_test";
-    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
-    EXPECT_EQ(initRet, ADUMP_SUCCESS);
-
-    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-
-    rtExceptionInfo exception = {};
-    exception.deviceid = 0U;
-    exception.taskid = 1U;
-    exception.streamid = 2U;
-    exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    ret = dumper.DumpException(exception);
-    EXPECT_NE(ret, ADUMP_SUCCESS);
-}
-
-TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackNone)
-{
-    ExceptionDumper dumper;
-    DumpConfig config;
-    config.dumpStatus = "on";
-    config.dumpPath = "/tmp/adump_args_none_test";
-    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
-    EXPECT_EQ(initRet, ADUMP_SUCCESS);
-
-    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithNone);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-
-    rtExceptionInfo exception = {};
-    exception.deviceid = 0U;
-    exception.taskid = 1U;
-    exception.streamid = 2U;
-    exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    ret = dumper.DumpException(exception);
-    EXPECT_NE(ret, ADUMP_SUCCESS);
 }
 
 TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackInvalidMode)

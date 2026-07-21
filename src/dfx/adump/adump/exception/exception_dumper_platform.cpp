@@ -40,8 +40,7 @@ int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo &exception, con
         IDE_LOGI("Get operator timeout %ums", timeout);
         if (timeout < TIMEOUT_THRESHOLD) {
             IDE_LOGE("Operator timeout %ums, enable fast recovery, not dump data to file.", timeout);
-            ret = DumpArgsExceptionFastRecovery(exception);
-            return ADUMP_SUCCESS;
+            return DumpArgsExceptionFastRecovery(exception);
         }
     }
 
@@ -50,7 +49,8 @@ int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo &exception, con
 
 int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const
 {
-    IDE_CTRL_VALUE_WARN(NeedDumpException(exception), return ADUMP_FAILED, "Exception is not need to dump.");
+    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
+        return ADUMP_FAILED, "Exception is not support default dump.");
     // copy exception and other data for thread because of RTS free item after exception callback
     void *exceptionCopy = DumpMemory::CopyHostToHost(&exception, sizeof(rtExceptionInfo));
     if (exceptionCopy == nullptr) {
@@ -77,6 +77,8 @@ int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo &ex
 
 int32_t ExceptionDumper::DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath)
 {
+    IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
+        return ADUMP_FAILED, "Exception is not support default dump.");
     if (coredumpEnableComplete_) {
         std::lock_guard<std::mutex> lock(mutex_);
         DumpCore core(dumpPath, exception.deviceid);
