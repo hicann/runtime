@@ -58,7 +58,7 @@ checkopts() {
   ASCEND_3RD_LIB_PATH="$BASEPATH/output/third_party"
   BUILD_TYPE="Release"
   PACKAGE_TYPE="run"
-  CUSTOM_SIGN_SCRIPT="${BASEPATH}/scripts/sign/community_sign_build.py"
+  CUSTOM_SIGN_SCRIPT=""
   ENABLE_SIGN="OFF"
   ENABLE_BUILD_DEVICE="ON"
   VERSION_INFO="9.1.0"

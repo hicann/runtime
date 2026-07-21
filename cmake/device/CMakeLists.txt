@@ -53,7 +53,7 @@ install(FILES
     DESTINATION ${DEVICE_LIBRARY_PATH} COMPONENT npu-runtime
 )
 
-sign_file(
+add_cann_sign_file(
   OUTPUT_TARGET sign_tsch_fw
   INPUT "${CMAKE_BINARY_DIR}/lib_acl/libtsch_fw_plugin_910b.o"
   CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml" 
@@ -72,7 +72,7 @@ cann_pack_targets_and_files(
   GEN_INI
 )
 
-sign_file(
+add_cann_sign_file(
   INPUT "cann-tsch-compat.tar.gz"
   CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml"
   RESULT_VAR "tsch_compat_sign_file"
