@@ -234,7 +234,6 @@ struct UbDma {
     uint16_t jettyId;
     std::array<uint8_t, 64> wqe; // 64个字节内存空间
     uint8_t *wqePtr;
-    bool isUbAsyncMode;
     int32_t wqeLen;
     uint32_t pi;
     uint64_t fixedSize;

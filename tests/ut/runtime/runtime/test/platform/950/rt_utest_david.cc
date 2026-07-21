@@ -3550,6 +3550,40 @@ TEST_F(DavidTaskTest1, memcpy_async_to_ConstructDavidAsyncUbDbSqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(DavidTaskTest1, memcpy_async_task_init_d2h_ex_for_ubdma)
+{
+    TaskInfo memcpyTask = {};
+    Runtime *rt = ((Runtime *)Runtime::Instance());
+    Device *device = new RawDevice(0);
+    device->Init();
+    Stream *stream = new Stream(device, 0);
+    stream->streamId_ = 1;
+    NpuDriver drv;
+    rtError_t error;
+
+    void *src = malloc(100);
+    void *dst = malloc(100);
+    uint64_t size = sizeof(void *);
+
+    InitByStream(&memcpyTask, stream);
+    (void)MemcpyAsyncTaskInitV3(&memcpyTask, RT_MEMCPY_DEVICE_TO_HOST_EX, src, dst, size, 0, NULL);
+
+    MOCKER(IsDavidUbDma).stubs().will(invoke(IsDavidUbDmaStub));
+    stream->flags_ |= RT_STREAM_PERSISTENT;
+    uint32_t sqeNum = GetSendDavidSqeNum(&memcpyTask);
+    EXPECT_EQ(sqeNum, 1U);
+    memcpyTask.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+    sqeNum = GetSendDavidSqeNum(&memcpyTask);
+    EXPECT_EQ(sqeNum, 1U);
+
+    memcpyTask.u.memcpyAsyncTaskInfo.copyMethod = 0U;
+    TaskUnInitProc(&memcpyTask);
+    free(src);
+    free(dst);
+    delete stream;
+    delete device;
+}
+
 TEST_F(DavidTaskTest, InitFuncStreamSwitchTaskV1)
 {
     TaskInfo switchtask = {};
