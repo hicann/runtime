@@ -308,7 +308,7 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
     /* 8. Resume device send */
     error = DeviceTaskSendResume(devId, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to restore the runtime status of Runtime, retCode=%#x.", static_cast<uint32_t>(error));
+        error, "Failed to restore the running status of Runtime, retCode=%#x.", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
         ((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT, "DeviceResume timeout, device_id=%d.",
