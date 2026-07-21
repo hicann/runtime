@@ -99,43 +99,15 @@ TEST_F(IDE_DAEMON_TEST_STEST, IdeDaemonStartUp)
 {
     GlobalMockObject::verify();
 
-    MOCKER(mmUmask)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(0))
-        .then(returnValue(0));
-
     MOCKER(SingleProcessStart)
         .stubs()
         .will(returnValue(-1))
         .then(returnValue(1))
         .then(returnValue(1));
 
-    MOCKER(dlog_init)
-        .stubs();
-
-    MOCKER(DlogSetAttr)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
-
     MOCKER(AdxStartUpInit)
         .stubs()
         .will(returnValue(IDE_DAEMON_ERROR))
-        .then(returnValue(IDE_DAEMON_OK));
-
-    MOCKER(DaemonDestroy)
-        .stubs();
-
-    MOCKER(mmClose)
-        .stubs()
-        .will(returnValue(0))
-        .then(returnValue(0));
-
-    MOCKER(IdeRealFileRemove)
-        .stubs()
-        .will(returnValue(IDE_DAEMON_OK))
-        .then(returnValue(IDE_DAEMON_OK))
         .then(returnValue(IDE_DAEMON_OK));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, IdeDaemonStartUp());

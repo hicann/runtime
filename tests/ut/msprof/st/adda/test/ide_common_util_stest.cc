@@ -10,8 +10,6 @@
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 
-#include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
 #include <string>
 #include "ide_common_util_stest.h"
@@ -62,36 +60,6 @@ void ResetIdeComponentsFuncs()
     }
 }
 
-void MockDaemonInitCommon(int32_t subInitRet = IDE_DAEMON_OK)
-{
-    MOCKER(IdeFork)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(setsid)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(chdir)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(mmChdir)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(umask)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(mmUmask)
-        .stubs()
-        .will(returnValue(0));
-
-    MOCKER(IdeDaemonSubInit)
-        .stubs()
-        .will(returnValue(subInitRet));
-}
 } // namespace
 
 class IDE_DAEMON_COMMON_UTIL_STEST: public testing::Test {
@@ -151,16 +119,8 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, IdeReqFree)
     EXPECT_NE(&req, nullptr);
 }
 
-TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, DaemonInit_init_failed)
+TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, DaemonInit_component_init_failed)
 {
-    MockDaemonInitCommon(IDE_DAEMON_ERROR);
-
-    EXPECT_EQ(IDE_DAEMON_ERROR, DaemonInit());
-}
-
-TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, DaemonInit_hdc_init_failed)
-{
-    MockDaemonInitCommon();
     g_ideComponentsFuncs.init[IDE_COMPONENT_HDC] = InitFailed;
 
     EXPECT_EQ(IDE_DAEMON_ERROR, DaemonInit());
@@ -168,7 +128,6 @@ TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, DaemonInit_hdc_init_failed)
 
 TEST_F(IDE_DAEMON_COMMON_UTIL_STEST, DaemonInit_success)
 {
-    MockDaemonInitCommon();
     g_ideComponentsFuncs.init[IDE_COMPONENT_HDC] = nullptr;
 
     EXPECT_EQ(IDE_DAEMON_OK, DaemonInit());
