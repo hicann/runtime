@@ -522,6 +522,38 @@ TEST_F(SoManagerUTest, multi_so_mgr_LoadSo)
     EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
 }
 
+TEST_F(SoManagerUTest, SingleSoManager_Init_CheckSoFileFail)
+{
+    SingleSoManager singleSoManager;
+    MOCKER(SingleSoManager::CheckSoFile).stubs().will(returnValue(AE_STATUS_OPEN_SO_FAILED));
+    auto ret = singleSoManager.Init("guardDirName", "soFile");
+    EXPECT_EQ(AE_STATUS_OPEN_SO_FAILED, ret);
+}
+
+TEST_F(SoManagerUTest, MultiSoManager_LoadSo_CreateSingleSoMgrFail)
+{
+    MOCKER_CPP(
+        &MultiSoManager::CreateSingleSoMgr,
+        aeStatus_t(MultiSoManager::*)(const aicpu::KernelType, const std::string&, SingleSoManager*&))
+        .stubs()
+        .will(returnValue(AE_STATUS_INNER_ERROR));
+    SingleSoManager* sinsoMgr = nullptr;
+    aeStatus_t ret = soMngr_.LoadSo(aicpu::KERNEL_TYPE_AICPU, "libtest.so", sinsoMgr);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
+TEST_F(SoManagerUTest, MultiSoManager_CreateSingleSoMgr_GetSoPathFail)
+{
+    MOCKER_CPP(
+        &MultiSoManager::GetSoPath,
+        aeStatus_t(MultiSoManager::*)(const aicpu::KernelType, const std::string&, std::string&) const)
+        .stubs()
+        .will(returnValue(AE_STATUS_INNER_ERROR));
+    SingleSoManager* sinsoMgr = nullptr;
+    aeStatus_t ret = soMngr_.CreateSingleSoMgr(aicpu::KERNEL_TYPE_AICPU, "libtest.so", sinsoMgr);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
 TEST_F(SoManagerUTest, GetThreadModeSoPathSuccess01)
 {
     // for root

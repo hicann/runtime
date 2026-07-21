@@ -209,6 +209,7 @@ namespace cce {
             GetTfKernelThreadModeSoPath(soPath);
             return AE_STATUS_SUCCESS;
         } else {
+            AE_ERR_LOG(AE_MODULE_ID, "Get HOME env failed, get tf thread mode so path failed.");
             return AE_STATUS_INNER_ERROR;
         }
     }
@@ -299,6 +300,7 @@ namespace cce {
         ret = SingleSoManager::OpenSo(soFile_, &soHandle_);
         if (ret != AE_STATUS_SUCCESS) {
             AE_RW_LOCK_UN_LOCK(&rwLock_);
+            AE_RUN_WARN_LOG(AE_MODULE_ID, "LoadTfSo open so failed, soFile[%s], ret[%u].", soFile_.c_str(), ret);
             return ret;
         }
         AE_RW_LOCK_UN_LOCK(&rwLock_);

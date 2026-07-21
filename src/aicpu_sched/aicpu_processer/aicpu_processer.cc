@@ -80,6 +80,7 @@ __attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kerne
     const aeStatus_t ret = cce::AIKernelsLibManger::GetKernelLib(static_cast<const aicpu::KernelType>(kernelType),
                                                                  targetKernelLib);
     if ((ret != AE_STATUS_SUCCESS)) {
+        AE_ERR_LOG(AE_MODULE_ID, "aeCloseSo get kernel lib failed, kernelType[%u], ret[%u].", kernelType, ret);
         return ret;
     }
     return targetKernelLib->CloseSo(soName);

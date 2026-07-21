@@ -120,6 +120,15 @@ TEST_F(AeKernelLibFwkTest, GetThreadModeSoPathFail01)
     EXPECT_EQ(ret, AE_STATUS_SUCCESS);
 }
 
+TEST_F(AeKernelLibFwkTest, GetTfThreadModeSoPathFail_HomeNull)
+{
+    FWKKernelTfImpl fwkImpl;
+    MOCKER(getenv).stubs().will(invoke(GetHomeEnvFail));
+    std::string soPath = "";
+    const auto ret = fwkImpl.GetTfThreadModeSoPath(soPath);
+    EXPECT_EQ(ret, AE_STATUS_INNER_ERROR);
+}
+
 TEST_F(AeKernelLibFwkTest, GetThreadModelTfKernelPathTest)
 {
     // for root

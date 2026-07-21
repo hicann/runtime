@@ -73,7 +73,7 @@ namespace cce {
     {
         opFuncPtr = PtrToFunctionPtr<void, AicpuKFCOpFuncPtr>(dlsym(RTLD_DEFAULT, kernelName));
         if (static_cast<bool>(unlikely(opFuncPtr == nullptr))) {
-            AE_ERR_LOG(AE_MODULE_ID, "Get KFC %s api success, but func is nullptr: %s",
+            AE_ERR_LOG(AE_MODULE_ID, "Get KFC api by global failed, func is nullptr, kernelName[%s], dlerror[%s]",
                 kernelName, dlerror());
             return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
         }
@@ -109,6 +109,8 @@ namespace cce {
         const uint32_t soNameLen = strnlen(kernelSoName, AE_MAX_SO_NAME + 1);
         if (soNameLen == 0) {
             if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
+                AE_ERR_LOG(AE_MODULE_ID, "Get KFC api by global failed, kernelSoName[%s], soNameLen[%u], kernelName[%s].",
+                           kernelSoName, soNameLen, kernelName);
                 return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
             }
         } else {
@@ -117,6 +119,9 @@ namespace cce {
                 opFuncPtr = PtrToFunctionPtr<void, AicpuKFCOpFuncPtr>(funcAddr);
             } else {
                 if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
+                    AE_ERR_LOG(AE_MODULE_ID,
+                               "Get KFC api by soname and global both failed, kernelSoName[%s], soNameLen[%u], kernelName[%s].",
+                               kernelSoName, soNameLen, kernelName);
                     return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
                 }
             }
@@ -157,6 +162,8 @@ namespace cce {
                 char_t *kernelSoName = PtrToPtr<void, char_t>(ValueToPtr(cceKernelBase->kernelSo));
                 if (GetApiBySoname(kernelType, kernelSoName, opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
                     AE_RW_LOCK_UN_LOCK(&rwLock_);
+                    AE_ERR_LOG(AE_MODULE_ID, "Get KFC kernel api failed, kernelSoName[%s], kernelName[%s].",
+                               kernelSoName, kernelName);
                     return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
                 }
                 apiCacher_[kernelName] = opFuncPtr;

@@ -41,6 +41,19 @@ static aeStatus_t GetErrorApiStub(
     return AE_STATUS_SUCCESS;
 }
 
+static aeStatus_t GetApiFailStub(cce::MultiSoManager*, aicpu::KernelType, const char*, const char*, void** funcAddrPtr)
+{
+    *funcAddrPtr = nullptr;
+    return AE_STATUS_INNER_ERROR;
+}
+
+static aeStatus_t GetApiSuccessNullStub(
+    cce::MultiSoManager*, aicpu::KernelType, const char*, const char*, void** funcAddrPtr)
+{
+    *funcAddrPtr = nullptr;
+    return AE_STATUS_SUCCESS;
+}
+
 class AIKernelsLibAiCpuKFCUTest : public testing::Test {
 protected:
     static void SetUpTestCase()
@@ -138,6 +151,60 @@ TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_kernelSo002)
     MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
     int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
     EXPECT_NE(AE_STATUS_SUCCESS, ret);
+}
+
+TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_SonameNotEmpty_GetApiFail_GlobalFail)
+{
+    std::string kernelSo = "libTest.so";
+    kernel_.kernelSo = (uintptr_t)kernelSo.data();
+    std::string kernelName = "TestBothFailA";
+    kernel_.kernelName = (uintptr_t)kernelName.data();
+    MOCKER_CPP(
+        &cce::MultiSoManager::GetApi,
+        aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char*, const char*, void**))
+        .stubs()
+        .will(invoke(GetApiFailStub));
+    MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
+    int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
+TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_SoNameLenExceedMax_GlobalFail)
+{
+    std::string kernelSo(cce::AE_MAX_SO_NAME + 1U, 'a');
+    kernel_.kernelSo = (uintptr_t)kernelSo.data();
+    std::string kernelName = "TestBothFailB";
+    kernel_.kernelName = (uintptr_t)kernelName.data();
+    MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
+    int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
+TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_GlobalApiSuccess)
+{
+    std::string kernelSo = "";
+    kernel_.kernelSo = (uintptr_t)kernelSo.data();
+    std::string kernelName = "TestGlobalOk";
+    kernel_.kernelName = (uintptr_t)kernelName.data();
+    MOCKER(dlsym).stubs().will(returnValue((void*)HcclKernelSuccessStub));
+    int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
+    EXPECT_EQ(AE_STATUS_SUCCESS, ret);
+}
+
+TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_SonameGetApiSuccessButNull_GlobalFail)
+{
+    std::string kernelSo = "libTest.so";
+    kernel_.kernelSo = (uintptr_t)kernelSo.data();
+    std::string kernelName = "TestSonNullA";
+    kernel_.kernelName = (uintptr_t)kernelName.data();
+    MOCKER_CPP(
+        &cce::MultiSoManager::GetApi,
+        aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char*, const char*, void**))
+        .stubs()
+        .will(invoke(GetApiSuccessNullStub));
+    MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
+    int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
 }
 
 TEST_F(AIKernelsLibAiCpuKFCUTest, GetKernelName_UT_LengthExceedsMax)

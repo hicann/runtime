@@ -427,6 +427,13 @@ TEST_F(AicpuEngineUTest, aeCloseSoNullptr_Fail)
     EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
 }
 
+TEST_F(AicpuEngineUTest, aeCloseSo_GetKernelLibFail)
+{
+    const uint32_t invalidKernelType = 0xFFFFFFFFU;
+    aeStatus_t ret = aeCloseSo(invalidKernelType, "libtest.so");
+    EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
+}
+
 TEST_F(AicpuEngineUTest, BatchLoadEmptySo_Success)
 {
     std::vector<std::string> aicpuSoVec;
