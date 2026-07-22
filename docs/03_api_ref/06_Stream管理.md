@@ -513,6 +513,9 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
+### 约束说明
+
+如下方式创建的Stream，通过本接口查询到的status无实际业务语义：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT或ACL_STREAM_DEVICE_USE_ONLY或ACL_STREAM_CPU_SCHEDULE。
 
 <br>
 <br>
@@ -552,6 +555,9 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
+### 约束说明
+
+如下方式创建的Stream不会触发任何业务处理逻辑，接口直接返回成功：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT或ACL_STREAM_DEVICE_USE_ONLY或ACL_STREAM_CPU_SCHEDULE。
 
 <br>
 <br>
@@ -592,6 +598,9 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
+### 约束说明
+
+如下方式创建的Stream不会触发任何业务处理逻辑，接口直接返回成功：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT或ACL_STREAM_DEVICE_USE_ONLY或ACL_STREAM_CPU_SCHEDULE。
 
 <br>
 <br>
