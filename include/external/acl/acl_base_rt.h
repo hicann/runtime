@@ -201,9 +201,10 @@ typedef enum {
 typedef enum { ACL_MEMTYPE_DEVICE = 0, ACL_MEMTYPE_HOST = 1, ACL_MEMTYPE_HOST_COMPILE_INDEPENDENT = 2 } aclMemType;
 
 typedef enum {
-    ACL_OPT_DETERMINISTIC = 0,
+    ACL_OPT_DETERMINISTIC = 0, // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
     ACL_OPT_ENABLE_DEBUG_KERNEL = 1,
-    ACL_OPT_STRONG_CONSISTENCY = 2
+    ACL_OPT_STRONG_CONSISTENCY ACL_DEPRECATED_MESSAGE(
+        "ACL_OPT_STRONG_CONSISTENCY is deprecated, use ACL_OPT_DETERMINISTIC with value 2 instead") = 2
 } aclSysParamOpt;
 
 typedef enum {

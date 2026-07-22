@@ -142,7 +142,7 @@ typedef enum schemModeType {
 } rtschemModeType_t;
 
 typedef enum tagSysParamOpt {
-    SYS_OPT_DETERMINISTIC = 0,       // value: 0:non-DETERMINISTIC, 1:DETERMINISTIC
+    SYS_OPT_DETERMINISTIC = 0,       // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
     SYS_OPT_ENABLE_DEBUG_KERNEL = 1, // value: 0:disable, 1:enable
     SYS_OPT_STRONG_CONSISTENCY = 2,  // value: 0:non-STRONG_CONSISTENCY, 1:STRONG_CONSISTENCY
     SYS_OPT_RESERVED = 3,

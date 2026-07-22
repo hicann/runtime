@@ -3499,12 +3499,15 @@ RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* co
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
+    const int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
         (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        "[SYS_OPT_DETERMINISTIC, SYS_OPT_RESERVED)");
+        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+    const int64_t maxVal =
+        (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (configVal >= SYS_OPT_MAX) || (configVal < 0), RT_ERROR_INVALID_VALUE, configVal,
-        "[SYS_OPT_DISABLE, SYS_OPT_MAX)");
+        (configVal >= maxVal) || (configVal < 0), RT_ERROR_INVALID_VALUE, configVal,
+        RtFmtMsg("[0, %" PRId64 ")", maxVal));
     sysParamOpt_[configOpt].store(configVal);
     return ACL_RT_SUCCESS;
 }
@@ -3514,7 +3517,7 @@ RTS_API rtError_t rtGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const
 {
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
         (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        "[SYS_OPT_DETERMINISTIC, SYS_OPT_RESERVED)");
+        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(configVal, RT_ERROR_INVALID_VALUE);
     *configVal = sysParamOpt_[configOpt].load();
     return ACL_RT_SUCCESS;

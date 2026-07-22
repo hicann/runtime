@@ -2349,6 +2349,34 @@ TEST_F(UTEST_ACL_Common, AclrtCtxSetSysParamOpt)
         .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
     ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+    Mock::VerifyAndClear((void*)(&MockFunctionTest::aclStubInstance()));
+    // DETERMINISTIC value=2 (strong consistency) should pass ACL validation
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 2);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // DETERMINISTIC value=3 (batch consistency) should pass ACL validation
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 3);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // DETERMINISTIC value=0 (disable, lower boundary) should pass
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // ENABLE_DEBUG_KERNEL value=1 should pass
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_ENABLE_DEBUG_KERNEL, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // STRONG_CONSISTENCY value=1 should still work (deprecated but accepted)
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // ENABLE_DEBUG_KERNEL 下边界 0
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_ENABLE_DEBUG_KERNEL, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // STRONG_CONSISTENCY 下边界 0
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // opt 越界 opt=3（等于 SYS_OPT_RESERVED）
+    ret = aclrtCtxSetSysParamOpt(static_cast<aclSysParamOpt>(3), 1);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    // opt 负数 opt=-1
+    ret = aclrtCtxSetSysParamOpt(static_cast<aclSysParamOpt>(-1), 1);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Common, AclrtCtxGetSysParamOptTest)
@@ -2382,6 +2410,34 @@ TEST_F(UTEST_ACL_Common, AclrtSetSysParamOpt)
         .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
     ret = aclrtSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+    Mock::VerifyAndClear((void*)(&MockFunctionTest::aclStubInstance()));
+    // DETERMINISTIC value=2 (strong consistency) should pass ACL validation
+    ret = aclrtSetSysParamOpt(ACL_OPT_DETERMINISTIC, 2);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // DETERMINISTIC value=3 (batch consistency) should pass ACL validation
+    ret = aclrtSetSysParamOpt(ACL_OPT_DETERMINISTIC, 3);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // DETERMINISTIC value=0 (disable, lower boundary) should pass
+    ret = aclrtSetSysParamOpt(ACL_OPT_DETERMINISTIC, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // ENABLE_DEBUG_KERNEL value=1 should pass
+    ret = aclrtSetSysParamOpt(ACL_OPT_ENABLE_DEBUG_KERNEL, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // STRONG_CONSISTENCY value=1 should still work (deprecated but accepted)
+    ret = aclrtSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // ENABLE_DEBUG_KERNEL 下边界 0
+    ret = aclrtSetSysParamOpt(ACL_OPT_ENABLE_DEBUG_KERNEL, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // STRONG_CONSISTENCY 下边界 0
+    ret = aclrtSetSysParamOpt(ACL_OPT_STRONG_CONSISTENCY, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // opt 越界 opt=3（等于 SYS_OPT_RESERVED）
+    ret = aclrtSetSysParamOpt(static_cast<aclSysParamOpt>(3), 1);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    // opt 负数 opt=-1
+    ret = aclrtSetSysParamOpt(static_cast<aclSysParamOpt>(-1), 1);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Common, AclrtGetSysParamOptTest)

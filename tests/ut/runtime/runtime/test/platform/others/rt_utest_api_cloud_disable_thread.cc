@@ -48,6 +48,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
+#include <thread>
+#include <atomic>
+#include <vector>
 #include "thread_local_container.hpp"
 #include "heterogenous.h"
 #include "task_execute_time.h"
@@ -263,6 +266,199 @@ TEST_F(ApiCloudDisableThreadTest, SysParamOpt_test_1)
 
     error = rtsGetSysParamOpt(SYS_OPT_RESERVED, &val);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_SetGetRoundtripValue2And3_Success)
+{
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+
+    int64_t val;
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 2);
+
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 3), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 3);
+
+    EXPECT_EQ(rtCtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2), RT_ERROR_NONE);
+    EXPECT_EQ(rtCtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 2);
+
+    EXPECT_EQ(rtCtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 3), RT_ERROR_NONE);
+    EXPECT_EQ(rtCtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 3);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_ValueBranchValidation_InvalidValueOrSuccess)
+{
+    int64_t val;
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 4), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, -1), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 3), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 3);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_ENABLE_DEBUG_KERNEL, 2), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, INT64_MAX), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, INT64_MIN), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 2), ACL_ERROR_RT_PARAM_INVALID);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_ProcessAndContextLevel_Isolated)
+{
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+
+    rtContext_t oldCtx;
+    rtCtxGetCurrent(&oldCtx);
+    rtContext_t newCtx;
+    rtCtxCreate(&newCtx, 0, 0);
+    rtCtxSetCurrent(newCtx);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2);
+    int64_t val;
+    EXPECT_EQ(rtCtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), ACL_ERROR_RT_SYSPARAMOPT_NOT_SET);
+
+    rtCtxSetCurrent(oldCtx);
+    rtCtxDestroy(newCtx);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_DifferentOpt_SlotIsolated)
+{
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+    rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 0);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2);
+    int64_t val;
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 0);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_ConcurrentProcessLevel_NoCrashValidValue)
+{
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+    rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 0);
+
+    const int threadCount = 8;
+    std::vector<std::thread> threads;
+    for (int i = 0; i < threadCount; i++) {
+        threads.emplace_back([]() {
+            for (int j = 0; j < 1000; j++) {
+                rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, j % 4);
+            }
+        });
+    }
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    int64_t val;
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_GE(val, 0);
+    EXPECT_LT(val, 4);
+
+    std::atomic<bool> stop(false);
+    std::thread writer([&stop]() {
+        for (int i = 0; i < 10000 && !stop.load(); i++) {
+            rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, i % 4);
+        }
+    });
+    std::thread reader([&stop]() {
+        int64_t v;
+        for (int i = 0; i < 10000 && !stop.load(); i++) {
+            rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &v);
+            EXPECT_GE(v, 0);
+            EXPECT_LT(v, 4);
+        }
+    });
+    writer.join();
+    stop.store(true);
+    reader.join();
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+    rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtSetSysParamOpt_DifferentOpt_ConcurrentIsolated)
+{
+    std::thread t1([]() {
+        for (int i = 0; i < 1000; i++) {
+            rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2);
+        }
+    });
+    std::thread t2([]() {
+        for (int i = 0; i < 1000; i++) {
+            rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 1);
+        }
+    });
+    t1.join();
+    t2.join();
+
+    int64_t val;
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 2);
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 1);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+    rtSetSysParamOpt(SYS_OPT_STRONG_CONSISTENCY, 0);
+}
+
+TEST_F(ApiCloudDisableThreadTest, rtCtxSetSysParamOpt_ConcurrentContextLevel_NoCrash)
+{
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
+
+    std::atomic<bool> stop(false);
+    std::thread ctxWriter([&stop]() {
+        for (int i = 0; i < 1000 && !stop.load(); i++) {
+            rtCtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, i % 4);
+        }
+    });
+    std::thread ctxReader([&stop]() {
+        int64_t val;
+        for (int i = 0; i < 1000 && !stop.load(); i++) {
+            if (rtCtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val) == RT_ERROR_NONE) {
+                EXPECT_GE(val, 0);
+                EXPECT_LT(val, 4);
+            }
+        }
+    });
+    ctxWriter.join();
+    stop.store(true);
+    ctxReader.join();
+
+    int64_t val;
+    if (rtCtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val) == RT_ERROR_NONE) {
+        EXPECT_GE(val, 0);
+        EXPECT_LT(val, 4);
+    }
+
+    std::atomic<bool> stop2(false);
+    std::thread procThread([&stop2]() {
+        for (int i = 0; i < 1000 && !stop2.load(); i++) {
+            rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 2);
+        }
+    });
+    std::thread ctxThread([&stop2]() {
+        for (int i = 0; i < 1000 && !stop2.load(); i++) {
+            rtCtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 3);
+        }
+    });
+    procThread.join();
+    stop2.store(true);
+    ctxThread.join();
+
+    EXPECT_EQ(rtGetSysParamOpt(SYS_OPT_DETERMINISTIC, &val), RT_ERROR_NONE);
+    EXPECT_EQ(val, 2);
+
+    rtSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
 }
 
 TEST_F(ApiCloudDisableThreadTest, overflow_test)

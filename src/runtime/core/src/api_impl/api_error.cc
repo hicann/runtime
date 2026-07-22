@@ -6075,12 +6075,15 @@ rtError_t ApiErrorDecorator::GetVisibleDeviceIdByLogicDeviceId(
 
 rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
+    const int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
+        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+    const int64_t maxVal =
+        (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (configVal >= SYS_OPT_MAX) || (configVal < 0), RT_ERROR_INVALID_VALUE, configVal,
-        "[0, " + std::to_string(SYS_OPT_MAX) + ")");
+        (configVal >= maxVal) || (configVal < 0), RT_ERROR_INVALID_VALUE, configVal,
+        RtFmtMsg("[0, %" PRId64 ")", maxVal));
     return impl_->CtxSetSysParamOpt(configOpt, configVal);
 }
 
