@@ -4762,7 +4762,8 @@ rtError_t Runtime::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferTy
         const rtError_t ret = programHdl->CopySoAndNameToCurrentDevice();
         COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "Copy bin to device failed device_id=%u, retCode=%#x.",
             curCtx->Device_()->Id_(), ret);
-        *bin = programHdl->GetBinBaseAddr(curCtx->Device_()->Id_());
+        *binSize = programHdl->LoadSize();
+        *bin = RtPtrToUnConstPtr<void*>(programHdl->GetBinAlignBaseAddr(curCtx->Device_()->Id_()));
     } else {
         // do nothing
     }
