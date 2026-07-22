@@ -180,6 +180,7 @@ TIMESTAMP_EXTERN(rtDvppMalloc);
 TIMESTAMP_EXTERN(rtEventCreate);
 TIMESTAMP_EXTERN(rtEventDestroy);
 TIMESTAMP_EXTERN(rtEventRecord);
+TIMESTAMP_EXTERN(rtEventRecordWithFlag);
 TIMESTAMP_EXTERN(rtEventReset);
 TIMESTAMP_EXTERN(rtEventSynchronize);
 TIMESTAMP_EXTERN(rtFree_drvMemUnLock_drvMemFreeManaged);
@@ -259,6 +260,7 @@ TIMESTAMP_EXTERN(rtStreamDestroy_drvMemReleaseL2buffAddr);
 TIMESTAMP_EXTERN(rtStreamDestroy_drvStreamIdFree);
 TIMESTAMP_EXTERN(rtStreamSynchronize);
 TIMESTAMP_EXTERN(rtStreamSynchronizeWithTimeout);
+TIMESTAMP_EXTERN(rtStreamWaitEventWithFlag);
 TIMESTAMP_EXTERN(SaveTaskInfo);
 TIMESTAMP_EXTERN(SqTaskSend);
 TIMESTAMP_EXTERN(SqTaskSendNormalV1);
@@ -3749,9 +3751,11 @@ void ApiImpl::DumpTimeStampPart2() const
     TIMESTAMP_DUMP(RecycleProcessDavinciList);
     TIMESTAMP_DUMP(rtStreamSynchronize);
     TIMESTAMP_DUMP(rtStreamSynchronizeWithTimeout);
+    TIMESTAMP_DUMP(rtStreamWaitEventWithFlag);
     TIMESTAMP_DUMP(rtEventCreate);
     TIMESTAMP_DUMP(rtEventDestroy);
     TIMESTAMP_DUMP(rtEventRecord);
+    TIMESTAMP_DUMP(rtEventRecordWithFlag);
     TIMESTAMP_DUMP(rtEventReset);
     TIMESTAMP_DUMP(rtEventSynchronize);
     TIMESTAMP_DUMP(rtHostRegisterV2);
@@ -9474,9 +9478,11 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
             error = GetEventResetTaskParamsStarsV2(taskInfo, params);
             break;
         case TS_TASK_TYPE_CAPTURE_RECORD:
+        case TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL:
             error = GetCaptureRecordTaskParams(taskInfo, params);
             break;
         case TS_TASK_TYPE_CAPTURE_WAIT:
+        case TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL:
             error = GetCaptureWaitTaskParams(taskInfo, params);
             break;
         case TS_TASK_TYPE_MEM_WRITE_VALUE: {

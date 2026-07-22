@@ -31,6 +31,7 @@ TIMESTAMP_EXTERN(rtStreamDestroy);
 TIMESTAMP_EXTERN(rtStreamDestroyForce);
 TIMESTAMP_EXTERN(rtStreamSynchronize);
 TIMESTAMP_EXTERN(rtStreamSynchronizeWithTimeout);
+TIMESTAMP_EXTERN(rtStreamWaitEventWithFlag);
 TIMESTAMP_EXTERN(rtStreamCreateByGrp);
 } // namespace runtime
 } // namespace cce
@@ -422,10 +423,12 @@ rtError_t rtStreamWaitEventWithFlag(rtStream_t stm, rtEvent_t evt, uint32_t time
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, waitEvent);
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtStreamWaitEventWithFlag);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
         flag == RT_EVENT_WAIT_EXTERNAL && (timeout != 0U), RT_ERROR_INVALID_VALUE, timeout,
         "0, only timeout=0 supported when flag is RT_EVENT_WAIT_EXTERNAL");
     const rtError_t ret = apiInstance->StreamWaitEvent(exeStream, waitEvent, 0U, flag);
+    TIMESTAMP_END(rtStreamWaitEventWithFlag);
 
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

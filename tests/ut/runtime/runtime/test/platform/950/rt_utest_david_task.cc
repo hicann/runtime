@@ -271,6 +271,33 @@ TEST_F(TaskTestDavid, TestNtyWaitNtyRecord)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(TaskTestDavid, NtyWaitSubmitFailureReleasesExternalWaitRetainedOwner)
+{
+    rtNotify_t notify = nullptr;
+    ASSERT_EQ(rtNotifyCreate(0, &notify), RT_ERROR_NONE);
+    Notify* notifyObj = rt_ut::UnwrapOrNull<Notify>(notify);
+    ASSERT_NE(notifyObj, nullptr);
+    Event event(stream_->Device_(), RT_EVENT_DEFAULT, nullptr);
+    uint8_t eventStatus = 1U;
+    const int32_t eventId = 7;
+    ASSERT_EQ(event.TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+    event.SetEventAddr(&eventStatus);
+    event.SetEventId(eventId);
+    event.SetRecord(true);
+    event.SetHasReset(false);
+    event.EventIdCountAdd(eventId);
+    std::vector<EventResource> retainedResources;
+    retainedResources.push_back({&event, reinterpret_cast<uint64_t>(&eventStatus), eventId});
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(NtyWait(notifyObj, stream_, 0U, true, nullptr, &retainedResources), RT_ERROR_DRV_ERR);
+
+    EXPECT_TRUE(retainedResources.empty());
+    EXPECT_EQ(event.idMap_.find(eventId), event.idMap_.end());
+    EXPECT_EQ(rtNotifyDestroy(notify), RT_ERROR_NONE);
+}
+
 TEST_F(TaskTestDavid, AllocTaskAndSendIPCNotify)
 {
     rtStream_t stream;
@@ -2202,7 +2229,7 @@ TEST_F(TaskTestDavid, ExternalWaitRebuildUsesOriginalTaskPosition)
 {
     TaskInfo taskInfo = {};
     rtDavidSqe_t sqes[MEM_WAIT_V2_SQE_NUM] = {};
-    uint8_t funcCallMem[sizeof(RtStarsv2ExternalWaitFuncCall)] = {};
+    uint8_t funcCallMem[sizeof(RtStarsExternalWaitFuncCall)] = {};
     TaskResManage* oldTaskResMang = stream_->taskResMang_;
 
     InitByStream(&taskInfo, stream_);
@@ -2223,36 +2250,21 @@ TEST_F(TaskTestDavid, ExternalWaitRebuildUsesOriginalTaskPosition)
     ConstructDavidSqeForMemWaitValueTask(&taskInfo, sqes, {0ULL, 0ULL});
     stream_->taskResMang_ = oldTaskResMang;
 
-    const auto* funcCall = reinterpret_cast<const RtStarsv2ExternalWaitFuncCall*>(funcCallMem);
+    const auto* funcCall = reinterpret_cast<const RtStarsExternalWaitFuncCall*>(funcCallMem);
+    const uint8_t gotoPreOffset =
+        static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, gotoPreDynamic) / sizeof(uint32_t));
+    const uint8_t endOffset = static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, end) / sizeof(uint32_t));
     EXPECT_EQ(funcCall->gotoPreDynamic.loadSqId.func3, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
     EXPECT_EQ(funcCall->gotoPreDynamic.loadSqId.rd, RT_STARS_COND_ISA_REGISTER_R3);
     EXPECT_EQ(funcCall->gotoPreDynamic.loadSqId.immdAddrHigh, (stream_->GetSqIdMemAddr() >> 32U) & 0x1FFFFU);
     EXPECT_EQ(funcCall->gotoPreDynamic.loadSqId.immdAddrLow, stream_->GetSqIdMemAddr() & 0xFFFFFFFFU);
     EXPECT_EQ(funcCall->gotoPreDynamic.llwiSqHead.immdLow, 1U);
     EXPECT_EQ(funcCall->gotoPreDynamic.gotoDynamic.func3, RT_STARS_COND_ISA_STREAM_FUNC3_GOTO_R);
-    EXPECT_EQ(funcCall->gotoPreDynamic.gotoDynamic.rs1, RT_STARS_COND_ISA_REGISTER_R3);
-}
-
-TEST_F(TaskTestDavid, ExternalWaitPlaceholderSkipsFuncCallMemcpyWithoutMaterializedBuffer)
-{
-    TaskInfo taskInfo = {};
-    rtDavidSqe_t sqes[MEM_WAIT_V2_SQE_NUM] = {};
-
-    InitByStream(&taskInfo, stream_);
-    taskInfo.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
-    taskInfo.u.memWaitValueTask.devAddr = 0x12340000U;
-    taskInfo.u.memWaitValueTask.value = 1U;
-    taskInfo.u.memWaitValueTask.funcCallSvmMem2 = nullptr;
-    taskInfo.u.memWaitValueTask.funCallMemSize2 = 0U;
-    taskInfo.u.memWaitValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
-    stream_->SetSoftWareSqEnable();
-
-    MOCKER_CPP_VIRTUAL(stream_->Device_()->Driver_(), &Driver::MemCopySync).expects(never());
-
-    ConstructDavidSqeForMemWaitValueTask(&taskInfo, sqes, {0ULL, 0ULL});
-
-    constexpr uint8_t funcCallSqeIndex = 2U;
-    EXPECT_NE(sqes[funcCallSqeIndex].fuctionCallSqe.header.type, RT_DAVID_SQE_TYPE_INVALID);
+    EXPECT_EQ(funcCall->zeroSatisfied.jumpInstrOffset, endOffset & 0xFU);
+    EXPECT_EQ(funcCall->waitSatisfied.jumpInstrOffset, endOffset & 0xFU);
+    EXPECT_EQ(funcCall->loadMaxLoop.immd, 15U);
+    EXPECT_EQ(funcCall->loopLimit.func3, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU);
+    EXPECT_EQ(funcCall->loopLimit.jumpInstrOffset, gotoPreOffset & 0xFU);
 }
 
 class DavidCondHandleTest : public testing::Test {

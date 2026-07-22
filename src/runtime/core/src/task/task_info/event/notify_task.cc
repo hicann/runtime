@@ -46,7 +46,7 @@ void ReleaseExternalWaitRetainedResources(TaskInfo* taskInfo)
         return;
     }
     for (const auto& resource : *resources) {
-        if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0U)) {
+        if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0ULL)) {
             resource.event->EventIdCountSub(resource.eventId);
         }
     }

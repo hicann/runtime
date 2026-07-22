@@ -16,6 +16,45 @@
 namespace cce {
 namespace runtime {
 
+static rtError_t SubmitMemWaitValueTask(Event* const event, Stream* const stm, const bool captureWait)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Device* const dev = stm->Device_();
+    TaskInfo submitTask = {};
+    rtError_t errorReason = RT_ERROR_NONE;
+    const tsTaskType_t allocType = captureWait ? TS_TASK_TYPE_STREAM_WAIT_EVENT : TS_TASK_TYPE_MEM_WAIT_VALUE;
+    TaskInfo* tsk = stm->AllocTask(&submitTask, allocType, errorReason, MEM_WAIT_SQE_NUM);
+    COND_RETURN_ERROR_MSG_INNER(
+        tsk == nullptr, errorReason, "Failed to allocate mem wait task, retCode=%#x.",
+        static_cast<uint32_t>(errorReason));
+    std::function<void()> const errRecycle = [&dev, &tsk]() {
+        MemWaitTaskUnInit(tsk);
+        (void)dev->GetTaskFactory()->Recycle(tsk);
+    };
+    ScopeGuard tskErrRecycle(errRecycle);
+    void* const eventAddr = event->GetEventAddr();
+    COND_RETURN_ERROR_MSG_INNER(
+        eventAddr == nullptr, RT_ERROR_EVENT_RECORDER_NULL, "Event addr is null, event_id=%d.", event->EventId_());
+
+    tsk->typeName = captureWait ? "EVENT_WAIT" : "EXTERNAL_EVENT_WAIT";
+    tsk->type = captureWait ? TS_TASK_TYPE_CAPTURE_WAIT : TS_TASK_TYPE_MEM_WAIT_VALUE;
+    error = MemWaitValueTaskInit(tsk, eventAddr, 1UL, 0U);
+    ERROR_RETURN_MSG_INNER(error, "Failed to initialize mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
+    MemWaitValueTaskInfo* const memWaitValueTask = &tsk->u.memWaitValueTask;
+    memWaitValueTask->event = event;
+    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    if (!captureWait) {
+        const int32_t eventId = event->EventId_();
+        event->EventIdCountAdd(eventId);
+        memWaitValueTask->retainedEventId = eventId;
+    }
+    error = dev->SubmitTask(tsk);
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    return RT_ERROR_NONE;
+}
+
 rtError_t Event::RecordSoftwareEvent(Stream* const stm)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -52,37 +91,22 @@ rtError_t Event::RecordSoftwareEvent(Stream* const stm)
 
 rtError_t Event::CaptureWaitProcess(Stream* const stm)
 {
-    rtError_t error = RT_ERROR_NONE;
-    Device* const dev = stm->Device_();
-    TaskInfo* tsk = nullptr;
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_STREAM_WAIT_EVENT, errorReason, MEM_WAIT_SQE_NUM);
-    COND_RETURN_ERROR_MSG_INNER(
-        (tsk == nullptr), errorReason, "Alloc task failed, retCode=%#x.", static_cast<uint32_t>(errorReason));
-    std::function<void()> const errRecycle = [&dev, &tsk]() { (void)dev->GetTaskFactory()->Recycle(tsk); };
-    ScopeGuard tskErrRecycle(errRecycle);
-    void* eventAddr = this->GetEventAddr();
-    COND_RETURN_ERROR_MSG_INNER(
-        eventAddr == nullptr, RT_ERROR_EVENT_RECORDER_NULL, "eventAddr is null, event_id=%d.", EventId_());
-
-    tsk->typeName = "EVENT_WAIT";
-    tsk->type = TS_TASK_TYPE_CAPTURE_WAIT;
-    error = MemWaitValueTaskInit(tsk, eventAddr, 1, 0x0);
-    ERROR_RETURN_MSG_INNER(
-        error, "Init MemWaitValueTask failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), tsk->id,
-        static_cast<uint32_t>(error));
-    MemWaitValueTaskInfo* memWaitValueTask = &tsk->u.memWaitValueTask;
-    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
-    memWaitValueTask->event = this;
-    error = dev->SubmitTask(tsk);
+    const rtError_t error = SubmitMemWaitValueTask(this, stm, true);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit wait task, retCode=%#x.", static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
     RT_LOG(
-        RT_LOG_INFO, "capture wait task submit success, device_id=%u, stream_id=%d, task_id=%d, event_id=%d",
-        device_->Id_(), stm->Id_(), tsk->id, eventId_);
+        RT_LOG_INFO, "Capture wait task submit success, device_id=%u, stream_id=%d, task_id=%d, event_id=%d",
+        device_->Id_(), stm->Id_(), stm->GetLastTaskId(), eventId_);
     return error;
+}
+
+rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
+{
+    const rtError_t error = SubmitMemWaitValueTask(this, stm, false);
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
+    RT_LOG(
+        RT_LOG_INFO, "External event wait task submit success, device_id=%u, stream_id=%d, task_id=%d, event_id=%d",
+        device_->Id_(), stm->Id_(), stm->GetLastTaskId(), eventId_);
+    return RT_ERROR_NONE;
 }
 
 rtError_t Event::ResetSoftwareEvent(Stream* const stm)

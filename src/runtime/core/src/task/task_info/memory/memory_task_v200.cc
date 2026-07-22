@@ -21,6 +21,34 @@
 namespace cce {
 namespace runtime {
 
+static void ConstructDavidSqeForCaptureExternalRecordTask(
+    TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    const WriteValueTaskInfo* const writeValueTask = &taskInfo->u.writeValTask;
+    if (writeValueTask->sqeAddr == 0ULL) {
+        // capture阶段还未分配device侧内存，放NopTask占位
+        ConstructDavidSqeBase(taskInfo, sqe, sqeInfo);
+        return;
+    }
+    ConstructDavidSqeForWriteValueTask(taskInfo, sqe, sqeInfo);
+}
+
+static void ConstructDavidSqeForCaptureExternalWaitTask(
+    TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    const MemWaitValueTaskInfo* const memWaitValueTask = &taskInfo->u.memWaitValueTask;
+    if (memWaitValueTask->funcCallSvmMem2 == nullptr) {
+        // capture阶段还未分配device侧内存，放NopTask占位
+        rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
+        const uint32_t sendSqeNum = GetSendDavidSqeNum(taskInfo);
+        for (uint32_t i = 0U; i < sendSqeNum; ++i) {
+            ConstructDavidSqeBase(taskInfo, &(davidSqe[i]), sqeInfo);
+        }
+        return;
+    }
+    ConstructDavidSqeForMemWaitValueTask(taskInfo, sqe, sqeInfo);
+}
+
 #if F_DESC("MemcpyAsyncTask")
 static void ConstructDavidPcieDmaSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr)
 {
@@ -303,8 +331,8 @@ static bool MemoryTaskRegister()
     RegDavidSqeFunc(TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, &ConstructDavidSqeForWriteValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, &ConstructDavidSqeForMemWaitValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, &ConstructDavidSqeForCaptureExternalRecordTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, &ConstructDavidSqeForCaptureExternalWaitTask);
     RegDavidSqeFunc(TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);

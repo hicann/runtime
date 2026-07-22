@@ -9,6 +9,7 @@
  */
 #include "capture_model.hpp"
 #include "capture_model_enum_desc.hpp"
+#include "capture_model_utils.hpp"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
@@ -31,7 +32,6 @@
 #include "memory_task.h"
 #include "memcpy_c.hpp"
 #include "notify_c.hpp"
-#include <limits>
 #include <securec.h>
 
 namespace cce {
@@ -40,9 +40,7 @@ namespace runtime {
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_DEFAULT = 0U; /* async and with timeout */
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_ASYNC = 1U;   /* async */
 
-namespace {
-
-rtError_t RetainRecordedEventForExternalWait(Event* event, uint64_t* eventAddr, EventResource* resource)
+static rtError_t RetainRecordedEventForExternalWait(Event* event, uint64_t* eventAddr, EventResource* resource)
 {
     NULL_PTR_RETURN(eventAddr, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN(resource, RT_ERROR_INVALID_VALUE);
@@ -66,31 +64,16 @@ rtError_t RetainRecordedEventForExternalWait(Event* event, uint64_t* eventAddr, 
     return RT_ERROR_NONE;
 }
 
-void CommitPreparedExternalRecordToEvent(Event* event, const uint64_t eventAddr, const int32_t eventId)
+static rtError_t InitExternalRecordTask(TaskInfo* taskInfo, const void* const entryAddr)
 {
-    if ((event == nullptr) || (eventAddr == 0U) || (eventId == INVALID_EVENT_ID)) {
-        RT_LOG(RT_LOG_ERROR, "Invalid event record resource, event addr=%lu, event id=%d.", eventAddr, eventId);
-        return;
+    const rtError_t ret = WriteValuePtrTaskInit(taskInfo, entryAddr, TASK_WR_CQE_DEFAULT);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
     }
-    event->PublishSoftwareRecordResource(RtValueToPtr<void*>(eventAddr), eventId);
-    event->SetRecord(true);
-    event->SetHasReset(false);
+    taskInfo->typeName = "CAPTURE_RECORD_EXTERNAL";
+    taskInfo->type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    return RT_ERROR_NONE;
 }
-
-void ReleaseRetainedEventResources(std::vector<EventResource>* resources)
-{
-    if (resources == nullptr) {
-        return;
-    }
-    for (const auto& resource : *resources) {
-        if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0U)) {
-            resource.event->EventIdCountSub(resource.eventId);
-        }
-    }
-    resources->clear();
-}
-
-} // namespace
 
 CaptureModel::CaptureModel(ModelType type) : Model(type) { beginCaptureTimeStamp_ = MsprofSysCycleTime(); }
 CaptureModel::~CaptureModel() noexcept
@@ -100,7 +83,6 @@ CaptureModel::~CaptureModel() noexcept
         FinalizeHostStateOnExit();
         return;
     }
-    ReleaseNoEndGraphNotifyOwnerRetainedResources();
     ReleaseExternalRefreshTable();
 
     // 清空capturestream和单算子流关系
@@ -179,7 +161,7 @@ rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureMode
     return error;
 }
 rtError_t CaptureModel::SetNotifyAfterExecute(
-    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* externalEventRefreshInfo)
+    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* refreshInfo)
 {
     rtError_t error = RT_ERROR_NONE;
     auto& addStreams = captureMdl->GetAddStreamMap();
@@ -204,7 +186,7 @@ rtError_t CaptureModel::SetNotifyAfterExecute(
                 "Notify record failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
                 notify->GetNotifyId(), streamObj.first->Id_(), error);
             std::vector<EventResource>* retainedResources =
-                (externalEventRefreshInfo == nullptr) ? nullptr : &externalEventRefreshInfo->retainedWaitResources;
+                (refreshInfo == nullptr) ? nullptr : &refreshInfo->retainedWaitResources;
             error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM, true, this, retainedResources);
             COND_RETURN_ERROR(
                 (error != RT_ERROR_NONE), error,
@@ -341,13 +323,10 @@ rtError_t CaptureModel::CheckExecuteReady(void) const
         return RT_ERROR_MODEL_EXE_FAILED;
     }
 
-    COND_RETURN_ERROR(
-        noEndGraphNotifyOwnerRetainedWaitResources_ != nullptr, RT_ERROR_MODEL_RUNNING,
-        "Previous external wait retained resources have no endGraph notify owner, model_id=%u.", Id_());
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::PrepareModelExecute(Stream* const stm, ExternalEventRefreshInfo* externalEventRefreshInfo)
+rtError_t CaptureModel::PreModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo)
 {
     rtError_t error = SetNotifyBeforeExecute(stm, this);
     COND_RETURN_ERROR_MSG_INNER(
@@ -365,15 +344,16 @@ rtError_t CaptureModel::PrepareModelExecute(Stream* const stm, ExternalEventRefr
         "Failed to initial sub acl graph condition value, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
         static_cast<uint32_t>(error));
 
-    error = PrepareExternalEventRefreshInfo(externalEventRefreshInfo);
+    error = PrepareExternalEventRefreshInfo(refreshInfo);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
         "Prepare external launch refresh failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
         static_cast<uint32_t>(error));
 
-    error = SubmitExternalEventRefreshInfo(stm, externalEventRefreshInfo);
+    error = SubmitExternalEventRefreshInfo(
+        stm, refreshInfo, externalEventRefreshDeviceBase_, externalEventRefreshLayout_.totalSize, Id_());
     if (error != RT_ERROR_NONE) {
-        RollbackExternalEventRefreshInfo(externalEventRefreshInfo);
+        RollbackExternalEventRefreshInfo(refreshInfo);
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "Submit external launch refresh failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(),
             Id_(), static_cast<uint32_t>(error));
@@ -382,30 +362,30 @@ rtError_t CaptureModel::PrepareModelExecute(Stream* const stm, ExternalEventRefr
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::ExecuteModelAndCommit(
-    Stream* const stm, int32_t timeout, const uint8_t executeMode, ExternalEventRefreshInfo* externalEventRefreshInfo)
+rtError_t CaptureModel::ExecuteModel(
+    Stream* const stm, int32_t timeout, const uint8_t executeMode, ExternalEventRefreshInfo* refreshInfo)
 {
     ReportCacheTrackData();
     rtError_t error =
         (executeMode == RT_MODEL_CAPTURE_EXECUTE_DEFAULT) ? Model::Execute(stm, timeout) : Model::ExecuteAsync(stm);
     if (error != RT_ERROR_NONE) {
-        RollbackExternalEventRefreshInfo(externalEventRefreshInfo);
+        RollbackExternalEventRefreshInfo(refreshInfo);
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "Model execute failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
             static_cast<uint32_t>(error));
         return error;
     }
-    CommitExternalEventRecords(externalEventRefreshInfo);
+    return RT_ERROR_NONE;
+}
 
-    error = SetNotifyAfterExecute(stm, this, externalEventRefreshInfo);
-    if (error != RT_ERROR_NONE) {
-        const rtError_t handleError = HandleExternalNotifyAfterExecuteFailure(externalEventRefreshInfo);
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR,
-            "Set notify after model execute failed, stream_id=%d, model_id=%u, retCode=%#x, handleRetCode=%#x.",
-            stm->Id_(), Id_(), static_cast<uint32_t>(error), static_cast<uint32_t>(handleError));
-        return error;
-    }
+rtError_t CaptureModel::PostModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo)
+{
+    CommitExternalEventRecords(refreshInfo);
+
+    rtError_t error = SetNotifyAfterExecute(stm, this, refreshInfo);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Set notify after model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
+        stm->Id_(), Id_(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
@@ -417,12 +397,16 @@ rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const 
         return error;
     }
 
-    ExternalEventRefreshInfo externalEventRefreshInfo;
-    error = PrepareModelExecute(stm, &externalEventRefreshInfo);
+    ExternalEventRefreshInfo refreshInfo = {};
+    error = PreModelExecute(stm, &refreshInfo);
     if (error != RT_ERROR_NONE) {
         return error;
     }
-    return ExecuteModelAndCommit(stm, timeout, executeMode, &externalEventRefreshInfo);
+    error = ExecuteModel(stm, timeout, executeMode, &refreshInfo);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    return PostModelExecute(stm, &refreshInfo);
 }
 rtError_t CaptureModel::Execute(Stream* const stm, int32_t timeout)
 {
@@ -457,7 +441,6 @@ rtError_t CaptureModel::TearDown()
         return Model::TearDown();
     }
 
-    ReleaseNoEndGraphNotifyOwnerRetainedResources();
     Profiler* profilerPtr = Runtime::Instance()->Profiler_();
     if (profilerPtr != nullptr) {
         if (profilerPtr->GetTrackProfEnable()) {
@@ -478,9 +461,8 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
     externalRecordEventItems_.clear();
     externalWaitEventItems_.clear();
     externalEventRefreshHostTemplate_.reset();
-    noEndGraphNotifyOwnerRetainedWaitResources_.reset();
     externalEventRefreshDeviceBase_ = nullptr;
-    externalEventSummaryInfo_ = {};
+    externalEventRefreshLayout_ = {};
     taskGroupStmIds_.clear();
     rdmaPiValueModifyTaskInfoMap_.clear();
     argLoaderBackup_.clear();
@@ -506,72 +488,25 @@ rtError_t CaptureModel::AddExternalWaitEvent(Event* event, uint32_t captureStrea
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::CalculateExternalEventSummaryInfo()
-{
-    const uint64_t recordCount = static_cast<uint64_t>(externalRecordEventItems_.size());
-    const uint64_t waitCount = static_cast<uint64_t>(externalWaitEventItems_.size());
-    const uint64_t recordSlotSize = static_cast<uint64_t>(GetExternalRecordRefreshSlotSize());
-    constexpr uint64_t maxSize = std::numeric_limits<uint64_t>::max();
-    COND_RETURN_ERROR_MSG_INNER(
-        recordSlotSize == 0U, RT_ERROR_INVALID_VALUE, "External record refresh slot size is invalid, model_id=%u.",
-        Id_());
-    COND_RETURN_ERROR_MSG_INNER(
-        recordCount > (maxSize / recordSlotSize), RT_ERROR_INVALID_VALUE,
-        "External record refresh table size overflow, model_id=%u, record_num=%zu.", Id_(),
-        externalRecordEventItems_.size());
-    COND_RETURN_ERROR_MSG_INNER(
-        waitCount > (maxSize / EXTERNAL_WAIT_REFRESH_ENTRY_SIZE), RT_ERROR_INVALID_VALUE,
-        "External wait refresh table size overflow, model_id=%u, wait_num=%zu.", Id_(), externalWaitEventItems_.size());
-
-    externalEventSummaryInfo_.recordOffset = 0U;
-    externalEventSummaryInfo_.waitOffset = recordCount * recordSlotSize;
-    const uint64_t waitSize = waitCount * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE;
-    COND_RETURN_ERROR_MSG_INNER(
-        externalEventSummaryInfo_.waitOffset > (maxSize - waitSize), RT_ERROR_INVALID_VALUE,
-        "External refresh table total size overflow, model_id=%u, record_num=%zu, wait_num=%zu.", Id_(),
-        externalRecordEventItems_.size(), externalWaitEventItems_.size());
-    externalEventSummaryInfo_.totalSize = externalEventSummaryInfo_.waitOffset + waitSize;
-    return RT_ERROR_NONE;
-}
-
-rtError_t CaptureModel::ValidateExternalPlaceholders()
-{
-    for (const ExternalEventTaskItem& taskRef : externalRecordEventItems_) {
-        TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
-        COND_RETURN_ERROR_MSG_INNER(
-            (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL), RT_ERROR_INVALID_VALUE,
-            "External record placeholder is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(),
-            taskRef.captureStreamId, taskRef.taskId);
-    }
-    for (const ExternalEventTaskItem& taskRef : externalWaitEventItems_) {
-        TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
-        COND_RETURN_ERROR_MSG_INNER(
-            (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL), RT_ERROR_INVALID_VALUE,
-            "External wait placeholder is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(),
-            taskRef.captureStreamId, taskRef.taskId);
-    }
-    return RT_ERROR_NONE;
-}
-
 rtError_t CaptureModel::AllocateExternalRefreshTable()
 {
     externalEventRefreshHostTemplate_ = std::shared_ptr<uint8_t[]>(
-        new (std::nothrow) uint8_t[externalEventSummaryInfo_.totalSize](), std::default_delete<uint8_t[]>());
+        new (std::nothrow) uint8_t[externalEventRefreshLayout_.totalSize](), std::default_delete<uint8_t[]>());
     COND_RETURN_ERROR_MSG_INNER(
         externalEventRefreshHostTemplate_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
         "Allocate external refresh host template failed, model_id=%u, size=%lu.", Id_(),
-        externalEventSummaryInfo_.totalSize);
+        externalEventRefreshLayout_.totalSize);
     Device* const dev = Context_()->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     Driver* const driver = dev->Driver_();
     NULL_PTR_RETURN_MSG(driver, RT_ERROR_DRV_NULL);
     const rtError_t error = driver->DevMemAlloc(
-        &externalEventRefreshDeviceBase_, externalEventSummaryInfo_.totalSize, RT_MEMORY_DEFAULT, dev->Id_());
+        &externalEventRefreshDeviceBase_, externalEventRefreshLayout_.totalSize, RT_MEMORY_DEFAULT, dev->Id_());
     if (error != RT_ERROR_NONE) {
-        const uint64_t totalSize = externalEventSummaryInfo_.totalSize;
+        const uint64_t totalSize = externalEventRefreshLayout_.totalSize;
         externalEventRefreshHostTemplate_.reset();
         externalEventRefreshDeviceBase_ = nullptr;
-        externalEventSummaryInfo_ = {};
+        externalEventRefreshLayout_ = {};
         ERROR_RETURN_MSG_INNER(
             error, "Allocate external refresh device table failed, model_id=%u, size=%lu, retCode=%#x.", Id_(),
             totalSize, error);
@@ -579,43 +514,44 @@ rtError_t CaptureModel::AllocateExternalRefreshTable()
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::BuildExternalRecordPlaceholders()
+rtError_t CaptureModel::BuildActualExternalRecordTasks()
 {
-    const uint64_t recordSlotSize = static_cast<uint64_t>(GetExternalRecordRefreshSlotSize());
+    const uint64_t recordEntrySize = static_cast<uint64_t>(GetExternalRecordRefreshEntrySize());
     for (size_t i = 0U; i < externalRecordEventItems_.size(); i++) {
         const ExternalEventTaskItem& taskRef = externalRecordEventItems_[i];
         TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
-        const auto slotAddr = RtValueToPtr<const void*>(
-            RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventSummaryInfo_.recordOffset +
-            i * recordSlotSize);
-        const rtError_t initError = CaptureRecordExternalTaskInit(taskInfo, slotAddr, TASK_WR_CQE_DEFAULT);
-        if (initError != RT_ERROR_NONE) {
+        const auto entryAddr = RtValueToPtr<const void*>(
+            RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventRefreshLayout_.recordOffset +
+            i * recordEntrySize);
+        const rtError_t error = InitExternalRecordTask(taskInfo, entryAddr);
+        if (error != RT_ERROR_NONE) {
             ReleaseExternalRefreshTable();
-            return initError;
+            ERROR_RETURN(error, "Build actual external record Ttasks failed, model_id=%u, retCode=%#x.", Id_(), error);
         }
+        taskInfo->u.memWriteValueTask.event = taskRef.event;
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::BuildExternalWaitPlaceholders()
+rtError_t CaptureModel::BuildActualExternalWaitTasks()
 {
     for (size_t i = 0U; i < externalWaitEventItems_.size(); i++) {
         const ExternalEventTaskItem& taskRef = externalWaitEventItems_[i];
         TaskInfo* taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
-        const auto slotAddr = RtValueToPtr<const void*>(
-            RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventSummaryInfo_.waitOffset +
+        const auto entryAddr = RtValueToPtr<const void*>(
+            RtPtrToValue(externalEventRefreshDeviceBase_) + externalEventRefreshLayout_.waitOffset +
             i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
-        const rtError_t initError = CaptureWaitExternalTaskInit(taskInfo, slotAddr);
-        if (initError != RT_ERROR_NONE) {
+        const rtError_t error = CaptureWaitExternalTaskInit(taskInfo, entryAddr);
+        if (error != RT_ERROR_NONE) {
             ReleaseExternalRefreshTable();
-            return initError;
+            ERROR_RETURN(error, "Build actual external wait tasks failed, model_id=%u, retCode=%#x.", Id_(), error);
         }
         taskInfo->u.memWaitValueTask.event = taskRef.event;
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::RebuildExternalTaskSqes(void)
+rtError_t CaptureModel::RebuildAllExternalTaskSqes() const
 {
     for (const ExternalEventTaskItem& taskRef : externalRecordEventItems_) {
         TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), taskRef.captureStreamId, taskRef.taskId);
@@ -623,7 +559,7 @@ rtError_t CaptureModel::RebuildExternalTaskSqes(void)
             (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL), RT_ERROR_INVALID_VALUE,
             "External record task is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(), taskRef.captureStreamId,
             taskRef.taskId);
-        const rtError_t error = BuildActualExternalTaskSqe(taskInfo);
+        const rtError_t error = RebuildExternalTaskSqe(taskInfo);
         ERROR_RETURN(
             error, "Failed to rebuild external record SQE, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(error));
@@ -634,7 +570,7 @@ rtError_t CaptureModel::RebuildExternalTaskSqes(void)
             (taskInfo == nullptr) || (taskInfo->type != TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL), RT_ERROR_INVALID_VALUE,
             "External wait task is invalid, model_id=%u, stream_id=%u, task_id=%u.", Id_(), taskRef.captureStreamId,
             taskRef.taskId);
-        const rtError_t error = BuildActualExternalTaskSqe(taskInfo);
+        const rtError_t error = RebuildExternalTaskSqe(taskInfo);
         ERROR_RETURN(
             error, "Failed to rebuild external wait SQE, model_id=%u, retCode=%#x.", Id_(),
             static_cast<uint32_t>(error));
@@ -644,20 +580,19 @@ rtError_t CaptureModel::RebuildExternalTaskSqes(void)
 
 rtError_t CaptureModel::FinalizeExternalRefreshTable()
 {
-    rtError_t error = CalculateExternalEventSummaryInfo();
+    rtError_t error = CalculateExternalEventRefreshLayout(
+        externalRecordEventItems_.size(), externalWaitEventItems_.size(), &externalEventRefreshLayout_);
     ERROR_RETURN(error, "Calculate external refresh table failed, model_id=%u, retCode=%#x.", Id_(), error);
-    if (externalEventSummaryInfo_.totalSize == 0U) {
+    if (externalEventRefreshLayout_.totalSize == 0U) {
         return RT_ERROR_NONE;
     }
 
-    error = ValidateExternalPlaceholders();
-    ERROR_RETURN(error, "Validate external placeholders failed, model_id=%u, retCode=%#x.", Id_(), error);
     error = AllocateExternalRefreshTable();
     ERROR_RETURN(error, "Allocate external refresh table failed, model_id=%u, retCode=%#x.", Id_(), error);
-    error = BuildExternalRecordPlaceholders();
-    ERROR_RETURN(error, "Build external record placeholders failed, model_id=%u, retCode=%#x.", Id_(), error);
-    error = BuildExternalWaitPlaceholders();
-    ERROR_RETURN(error, "Build external wait placeholders failed, model_id=%u, retCode=%#x.", Id_(), error);
+    error = BuildActualExternalRecordTasks();
+    ERROR_RETURN(error, "Build actual external record tasks failed, model_id=%u, retCode=%#x.", Id_(), error);
+    error = BuildActualExternalWaitTasks();
+    ERROR_RETURN(error, "Build actual external wait tasks failed, model_id=%u, retCode=%#x.", Id_(), error);
     return RT_ERROR_NONE;
 }
 
@@ -671,52 +606,15 @@ void CaptureModel::ReleaseExternalRefreshTable()
     }
     externalEventRefreshHostTemplate_.reset();
     externalEventRefreshDeviceBase_ = nullptr;
-    externalEventSummaryInfo_ = {};
+    externalEventRefreshLayout_ = {};
 }
 
-void CaptureModel::RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo* launch) const
+rtError_t CaptureModel::PrepareExternalRecordsForReplay(ExternalEventRefreshInfo* refreshInfo)
 {
-    if (launch == nullptr) {
-        return;
-    }
-    for (const auto& record : launch->preparedRecords) {
-        if ((record.event != nullptr) && (record.event->Device_() != nullptr) && (record.eventId != INVALID_EVENT_ID)) {
-            record.event->Device_()->FreeExpandingPoolEvent(record.eventId);
-        }
-    }
-    launch->preparedRecords.clear();
-    ReleaseRetainedEventResources(&launch->retainedWaitResources);
-    launch->hostRefresh.reset();
-}
-
-rtError_t CaptureModel::InitExternalEventHostRefresh(ExternalEventRefreshInfo* launch)
-{
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(
-        externalEventRefreshHostTemplate_ == nullptr, RT_ERROR_INVALID_VALUE,
-        "External refresh host template is null, model_id=%u.", Id_());
-
-    launch->hostRefresh = std::shared_ptr<uint8_t[]>(
-        new (std::nothrow) uint8_t[externalEventSummaryInfo_.totalSize](), std::default_delete<uint8_t[]>());
-    COND_RETURN_ERROR_MSG_INNER(
-        launch->hostRefresh == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Allocate external launch host refresh failed, model_id=%u, size=%lu.", Id_(),
-        externalEventSummaryInfo_.totalSize);
-    const errno_t ret = memcpy_s(
-        launch->hostRefresh.get(), externalEventSummaryInfo_.totalSize, externalEventRefreshHostTemplate_.get(),
-        externalEventSummaryInfo_.totalSize);
-    COND_RETURN_ERROR_MSG_INNER(
-        ret != EOK, RT_ERROR_SEC_HANDLE, "Copy external refresh host template failed, model_id=%u, retCode=%d.", Id_(),
-        ret);
-    return RT_ERROR_NONE;
-}
-
-rtError_t CaptureModel::PrepareExternalEventRecords(ExternalEventRefreshInfo* launch)
-{
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
     rtError_t error = RT_ERROR_NONE;
-    const uint64_t recordSlotSize = static_cast<uint64_t>(GetExternalRecordRefreshSlotSize());
-    ScopeGuard rollbackGuard([this, launch]() { RollbackExternalEventRefreshInfo(launch); });
+    const uint64_t recordEntrySize = static_cast<uint64_t>(GetExternalRecordRefreshEntrySize());
+    ScopeGuard rollbackGuard([refreshInfo]() { RollbackExternalEventRefreshInfo(refreshInfo); });
     for (size_t i = 0U; i < externalRecordEventItems_.size(); i++) {
         EventResource record = {externalRecordEventItems_[i].event, 0U, INVALID_EVENT_ID};
         void* eventAddr = nullptr;
@@ -728,22 +626,23 @@ rtError_t CaptureModel::PrepareExternalEventRecords(ExternalEventRefreshInfo* la
         error = record.event->Device_()->AllocExpandingPoolEvent(&eventAddr, &record.eventId);
         ERROR_RETURN_MSG_INNER(error, "Allocate external record event failed, model_id=%u, retCode=%#x.", Id_(), error);
         record.eventAddr = RtPtrToValue(eventAddr);
-        void* recordSlot = RtValueToPtr<void*>(
-            RtPtrToValue(launch->hostRefresh.get()) + externalEventSummaryInfo_.recordOffset + i * recordSlotSize);
-        error = FillExternalRecordRefreshSlot(recordSlot, record.eventAddr);
+        void* recordEntry = RtValueToPtr<void*>(
+            RtPtrToValue(refreshInfo->hostRefresh.get()) + externalEventRefreshLayout_.recordOffset +
+            i * recordEntrySize);
+        error = FillExternalRecordRefreshEntry(recordEntry, record.eventAddr);
         ERROR_RETURN_MSG_INNER(
-            error, "Fill external record refresh slot failed, model_id=%u, retCode=%#x.", Id_(), error);
-        launch->preparedRecords.push_back(record);
+            error, "Fill external record refresh entry failed, model_id=%u, retCode=%#x.", Id_(), error);
+        refreshInfo->preparedRecords.push_back(record);
     }
     rollbackGuard.ReleaseGuard();
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::PrepareExternalEventWaits(ExternalEventRefreshInfo* launch)
+rtError_t CaptureModel::PrepareExternalWaitsForReplay(ExternalEventRefreshInfo* refreshInfo)
 {
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
     rtError_t error = RT_ERROR_NONE;
-    ScopeGuard rollbackGuard([this, launch]() { RollbackExternalEventRefreshInfo(launch); });
+    ScopeGuard rollbackGuard([refreshInfo]() { RollbackExternalEventRefreshInfo(refreshInfo); });
     for (size_t i = 0U; i < externalWaitEventItems_.size(); i++) {
         uint64_t eventAddr = 0U;
         EventResource resource = {};
@@ -755,102 +654,34 @@ rtError_t CaptureModel::PrepareExternalEventWaits(ExternalEventRefreshInfo* laun
         error = RetainRecordedEventForExternalWait(externalWaitEventItems_[i].event, &eventAddr, &resource);
         ERROR_RETURN_MSG_INNER(error, "Retain external wait producer failed, model_id=%u, retCode=%#x.", Id_(), error);
         uint64_t* waitEntry = RtValueToPtr<uint64_t*>(
-            RtPtrToValue(launch->hostRefresh.get()) + externalEventSummaryInfo_.waitOffset +
+            RtPtrToValue(refreshInfo->hostRefresh.get()) + externalEventRefreshLayout_.waitOffset +
             i * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
         *waitEntry = eventAddr;
         if (resource.event != nullptr) {
-            launch->retainedWaitResources.push_back(resource);
+            refreshInfo->retainedWaitResources.push_back(resource);
         }
     }
     rollbackGuard.ReleaseGuard();
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo* launch)
+rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo)
 {
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
-    RollbackExternalEventRefreshInfo(launch);
-    if (externalEventSummaryInfo_.totalSize == 0U) {
+    NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
+    // Prepare阶段失败时只回收本轮已暂存资源：record event id、retained wait资源和host refresh buffer。
+    RollbackExternalEventRefreshInfo(refreshInfo);
+    if (externalEventRefreshLayout_.totalSize == 0U) {
         return RT_ERROR_NONE;
     }
 
-    rtError_t error = InitExternalEventHostRefresh(launch);
-    ERROR_RETURN(error, "Init external launch host refresh failed, model_id=%u, retCode=%#x.", Id_(), error);
-    error = PrepareExternalEventRecords(launch);
-    ERROR_RETURN(error, "Prepare external launch records failed, model_id=%u, retCode=%#x.", Id_(), error);
-    error = PrepareExternalEventWaits(launch);
-    ERROR_RETURN(error, "Prepare external launch waits failed, model_id=%u, retCode=%#x.", Id_(), error);
+    rtError_t error = InitExternalEventHostRefresh(
+        refreshInfo, externalEventRefreshHostTemplate_.get(), externalEventRefreshLayout_.totalSize, Id_());
+    ERROR_RETURN(error, "Init external refresh host buffer failed, model_id=%u, retCode=%#x.", Id_(), error);
+    error = PrepareExternalRecordsForReplay(refreshInfo);
+    ERROR_RETURN(error, "Prepare external refresh records failed, model_id=%u, retCode=%#x.", Id_(), error);
+    error = PrepareExternalWaitsForReplay(refreshInfo);
+    ERROR_RETURN(error, "Prepare external refresh waits failed, model_id=%u, retCode=%#x.", Id_(), error);
     return RT_ERROR_NONE;
-}
-
-rtError_t CaptureModel::SubmitExternalEventRefreshInfo(Stream* launchStream, ExternalEventRefreshInfo* launch)
-{
-    if (externalEventSummaryInfo_.totalSize == 0U) {
-        return RT_ERROR_NONE;
-    }
-    NULL_STREAM_PTR_RETURN_MSG(launchStream);
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(
-        externalEventRefreshDeviceBase_ == nullptr, RT_ERROR_INVALID_VALUE,
-        "External refresh device table is null, model_id=%u.", Id_());
-    COND_RETURN_ERROR_MSG_INNER(
-        launch->hostRefresh == nullptr, RT_ERROR_INVALID_VALUE, "External launch host refresh is null, model_id=%u.",
-        Id_());
-    uint64_t realSize = 0U;
-    return MemcopyAsync(
-        externalEventRefreshDeviceBase_, externalEventSummaryInfo_.totalSize, launch->hostRefresh.get(),
-        externalEventSummaryInfo_.totalSize, RT_MEMCPY_HOST_TO_DEVICE, launchStream, &realSize, launch->hostRefresh);
-}
-
-void CaptureModel::CommitExternalEventRecords(ExternalEventRefreshInfo* launch) const
-{
-    if (launch == nullptr) {
-        return;
-    }
-    for (const auto& record : launch->preparedRecords) {
-        if (record.event != nullptr) {
-            CommitPreparedExternalRecordToEvent(record.event, record.eventAddr, record.eventId);
-        }
-    }
-    launch->preparedRecords.clear();
-}
-
-rtError_t CaptureModel::MoveRetainedWaitsToNoEndGraphNotifyOwner(std::vector<EventResource>* resources)
-{
-    if ((resources == nullptr) || resources->empty()) {
-        return RT_ERROR_NONE;
-    }
-    noEndGraphNotifyOwnerRetainedWaitResources_.reset(new (std::nothrow) std::vector<EventResource>);
-    if (noEndGraphNotifyOwnerRetainedWaitResources_ == nullptr) {
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
-    noEndGraphNotifyOwnerRetainedWaitResources_->swap(*resources);
-    return RT_ERROR_NONE;
-}
-
-void CaptureModel::ReleaseNoEndGraphNotifyOwnerRetainedResources()
-{
-    if (noEndGraphNotifyOwnerRetainedWaitResources_ == nullptr) {
-        return;
-    }
-    ReleaseRetainedEventResources(noEndGraphNotifyOwnerRetainedWaitResources_.get());
-    noEndGraphNotifyOwnerRetainedWaitResources_.reset();
-}
-
-rtError_t CaptureModel::HandleExternalNotifyAfterExecuteFailure(ExternalEventRefreshInfo* launch)
-{
-    NULL_PTR_RETURN_MSG(launch, RT_ERROR_INVALID_VALUE);
-    const rtError_t abortError = ModelAbort();
-    if (abortError == RT_ERROR_NONE) {
-        ReleaseRetainedEventResources(&launch->retainedWaitResources);
-        return RT_ERROR_MODEL_EXE_FAILED;
-    }
-    const rtError_t moveError = MoveRetainedWaitsToNoEndGraphNotifyOwner(&launch->retainedWaitResources);
-    if (moveError != RT_ERROR_NONE) {
-        ReleaseRetainedEventResources(&launch->retainedWaitResources);
-        return moveError;
-    }
-    return abortError;
 }
 
 rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
@@ -2107,6 +1938,15 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMemAll()
             return error;
         }
     }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::EndCaptureAdapterProc()
+{
+    const rtError_t error = FinalizeExternalRefreshTable();
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to finalize external refresh table, retCode=%#x.",
+        static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

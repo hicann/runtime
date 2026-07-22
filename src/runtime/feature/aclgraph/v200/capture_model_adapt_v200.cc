@@ -9,6 +9,8 @@
  */
 #include "capture_model.hpp"
 #include "context.hpp"
+#include "capture_model_utils.hpp"
+#include "internal_error_define.hpp"
 #include "stream_david.hpp"
 #include "memory_task.h"
 #include "task.hpp"
@@ -27,7 +29,7 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     rtError_t error = BindSqCq();
     ERROR_RETURN(error, "Failed to bind SQ and CQ, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
-    error = RebuildExternalTaskSqes();
+    error = RebuildAllExternalTaskSqes();
     ERROR_RETURN(
         error, "Failed to rebuild external task SQE, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
@@ -155,7 +157,7 @@ rtError_t CaptureModel::ReleaseAllJetty()
     return finalError;
 }
 
-rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
+rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
 {
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
@@ -180,14 +182,14 @@ rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
     return RT_ERROR_NONE;
 }
 
-size_t CaptureModel::GetExternalRecordRefreshSlotSize(void) const { return sizeof(rtDavidSqe_t); }
+size_t GetExternalRecordRefreshEntrySize(void) { return sizeof(rtDavidSqe_t); }
 
-rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t eventAddr) const
+rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr)
 {
-    if (slot == nullptr) {
+    if (entry == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
-    auto* const sqe = RtPtrToPtr<rtDavidSqe_t*>(slot);
+    auto* const sqe = RtPtrToPtr<rtDavidSqe_t*>(entry);
     *sqe = {};
     sqe->writeValueSqe.header.type = RT_DAVID_SQE_TYPE_WRITE_VALUE;
     sqe->writeValueSqe.header.ptrMode = 0U;
@@ -196,8 +198,8 @@ rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t
     sqe->writeValueSqe.awcache = 2U;
     sqe->writeValueSqe.awprot = 0U;
     sqe->writeValueSqe.va = 1U;
-    sqe->writeValueSqe.writeAddrLow = static_cast<uint32_t>(eventAddr & 0xFFFFFFFFU);
-    sqe->writeValueSqe.writeAddrHigh = static_cast<uint32_t>((eventAddr >> 32U) & 0x1FFFFU);
+    sqe->writeValueSqe.writeAddrLow = static_cast<uint32_t>(eventAddr & MASK_32_BIT);
+    sqe->writeValueSqe.writeAddrHigh = static_cast<uint32_t>((eventAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
     sqe->writeValueSqe.writeValuePart[0] = 1U;
     return RT_ERROR_NONE;
 }

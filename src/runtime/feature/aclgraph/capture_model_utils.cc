@@ -15,9 +15,22 @@
 #include <sstream>
 #include "notify.hpp"
 #include "capture_model.hpp"
+#include "common_task.h"
+#include "memcpy_c.hpp"
 
 namespace cce {
 namespace runtime {
+
+static void CommitPreparedExternalRecordToEvent(Event* event, const uint64_t eventAddr, const int32_t eventId)
+{
+    if ((event == nullptr) || (eventAddr == 0U) || (eventId == INVALID_EVENT_ID)) {
+        RT_LOG(RT_LOG_ERROR, "Invalid event record resource, event addr=%lu, event id=%d.", eventAddr, eventId);
+        return;
+    }
+    event->PublishSoftwareRecordResource(RtValueToPtr<void*>(eventAddr), eventId);
+    event->SetRecord(true);
+    event->SetHasReset(false);
+}
 
 constexpr uint32_t HARD_EVENT_RESVERD_MAX = 8U * 1024U;
 
@@ -450,6 +463,170 @@ bool IsUbDmaWithSubModel(
     COND_PROC(!flag, return false;);
 
     return true;
+}
+
+rtError_t CalculateExternalEventRefreshLayout(size_t recordCount, size_t waitCount, ExternalEventRefreshLayout* layout)
+{
+    NULL_PTR_RETURN_MSG(layout, RT_ERROR_INVALID_VALUE);
+    const uint64_t recordEntrySize = static_cast<uint64_t>(GetExternalRecordRefreshEntrySize());
+    layout->recordOffset = 0U;
+    layout->waitOffset = static_cast<uint64_t>(recordCount) * recordEntrySize;
+    const uint64_t waitSize = static_cast<uint64_t>(waitCount) * EXTERNAL_WAIT_REFRESH_ENTRY_SIZE;
+    layout->totalSize = layout->waitOffset + waitSize;
+    return RT_ERROR_NONE;
+}
+
+void ReleaseRetainedEventResources(std::vector<EventResource>* resources)
+{
+    COND_PROC(resources == nullptr, return;);
+    for (const auto& resource : *resources) {
+        if ((resource.event != nullptr) && (resource.eventId != INVALID_EVENT_ID) && (resource.eventAddr != 0U)) {
+            resource.event->EventIdCountSub(resource.eventId);
+        }
+    }
+    resources->clear();
+}
+
+void RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo)
+{
+    COND_PROC(refreshInfo == nullptr, return;);
+    for (const auto& record : refreshInfo->preparedRecords) {
+        if ((record.event != nullptr) && (record.event->Device_() != nullptr) && (record.eventId != INVALID_EVENT_ID)) {
+            record.event->Device_()->FreeExpandingPoolEvent(record.eventId);
+        }
+    }
+    refreshInfo->preparedRecords.clear();
+    ReleaseRetainedEventResources(&refreshInfo->retainedWaitResources);
+    refreshInfo->hostRefresh.reset();
+}
+
+rtError_t InitExternalEventHostRefresh(
+    ExternalEventRefreshInfo* refreshInfo, const uint8_t* hostTemplate, uint64_t totalSize, uint32_t modelId)
+{
+    NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_ERROR_MSG_INNER(
+        hostTemplate == nullptr, RT_ERROR_INVALID_VALUE, "External refresh host template is null, model_id=%u.",
+        modelId);
+
+    refreshInfo->hostRefresh =
+        std::shared_ptr<uint8_t[]>(new (std::nothrow) uint8_t[totalSize](), std::default_delete<uint8_t[]>());
+    COND_RETURN_ERROR_MSG_INNER(
+        refreshInfo->hostRefresh == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        "Allocate external refresh host buffer failed, model_id=%u, size=%lu.", modelId, totalSize);
+    const errno_t ret = memcpy_s(refreshInfo->hostRefresh.get(), totalSize, hostTemplate, totalSize);
+    COND_RETURN_ERROR_MSG_INNER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, "Copy external refresh host template failed, model_id=%u, retCode=%d.",
+        modelId, ret);
+    return RT_ERROR_NONE;
+}
+
+rtError_t SubmitExternalEventRefreshInfo(
+    Stream* launchStream, ExternalEventRefreshInfo* refreshInfo, void* deviceBase, uint64_t totalSize, uint32_t modelId)
+{
+    if (totalSize == 0U) {
+        return RT_ERROR_NONE;
+    }
+    NULL_STREAM_PTR_RETURN_MSG(launchStream);
+    NULL_PTR_RETURN_MSG(refreshInfo, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_ERROR_MSG_INNER(
+        deviceBase == nullptr, RT_ERROR_INVALID_VALUE, "External refresh device table is null, model_id=%u.", modelId);
+    COND_RETURN_ERROR_MSG_INNER(
+        refreshInfo->hostRefresh == nullptr, RT_ERROR_INVALID_VALUE,
+        "External refresh host buffer is null, model_id=%u.", modelId);
+    uint64_t realSize = 0U;
+    return MemcopyAsync(
+        deviceBase, totalSize, refreshInfo->hostRefresh.get(), totalSize, RT_MEMCPY_HOST_TO_DEVICE, launchStream,
+        &realSize, refreshInfo->hostRefresh);
+}
+
+void CommitExternalEventRecords(ExternalEventRefreshInfo* refreshInfo)
+{
+    COND_PROC(refreshInfo == nullptr, return;);
+    for (const auto& record : refreshInfo->preparedRecords) {
+        if (record.event != nullptr) {
+            CommitPreparedExternalRecordToEvent(record.event, record.eventAddr, record.eventId);
+        }
+    }
+    refreshInfo->preparedRecords.clear();
+}
+
+rtError_t CreateExternalWaitPlaceholder(Event* const, Stream* const stm, ExternalPlaceholderSubmitter submitPlaceholder)
+{
+    Device* const dev = stm->Device_();
+
+    TaskInfo phTask = {};
+    phTask.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    auto sqeNum = GetSendSqeNum(&phTask);
+
+    rtError_t errorReason = RT_ERROR_NONE;
+    TaskInfo* tsk = stm->AllocTask(&phTask, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, errorReason, sqeNum);
+    COND_RETURN_ERROR_MSG_INNER(
+        tsk == nullptr, errorReason, "Failed to alloc placeholder task for external wait, stream_id=%d, retCode=%#x.",
+        stm->Id_(), errorReason);
+    std::function<void()> const errRecycle = [&dev, &tsk]() { (void)dev->GetTaskFactory()->Recycle(tsk); };
+    ScopeGuard tskErrRecycle(errRecycle);
+    tsk->typeName = "CAPTURE_WAIT_EXTERNAL_PLACEHOLDER";
+    tsk->sqeNum = static_cast<uint8_t>(sqeNum);
+    const rtError_t error = submitPlaceholder(dev, tsk);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to submit placeholder task for  external wait, stream_id=%d, task_id=%hu, retCode=%#x.",
+        stm->Id_(), tsk->id, static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    return RT_ERROR_NONE;
+}
+
+rtError_t CreateExternalRecordPlaceholder(Stream* const stm, ExternalPlaceholderSubmitter submitPlaceholder)
+{
+    Device* const dev = stm->Device_();
+
+    TaskInfo phTask = {};
+    phTask.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    auto sqeNum = GetSendSqeNum(&phTask);
+
+    rtError_t errorReason = RT_ERROR_NONE;
+    TaskInfo* tsk = stm->AllocTask(&phTask, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, errorReason, sqeNum);
+    COND_RETURN_ERROR_MSG_INNER(
+        tsk == nullptr, errorReason, "Failed to alloc placeholder task for external record, stream_id=%d, retCode=%#x.",
+        stm->Id_(), errorReason);
+    std::function<void()> const errRecycle = [&dev, &tsk]() { (void)dev->GetTaskFactory()->Recycle(tsk); };
+    ScopeGuard tskErrRecycle(errRecycle);
+    tsk->typeName = "CAPTURE_RECORD_EXTERNAL_PLACEHOLDER";
+    tsk->sqeNum = static_cast<uint8_t>(sqeNum);
+    rtError_t error = submitPlaceholder(dev, tsk);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to submit placeholder task for external record, stream_id=%d, task_id=%hu, retCode=%#x.",
+        stm->Id_(), tsk->id, static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    return RT_ERROR_NONE;
+}
+
+rtError_t SubmitExternalEventTaskCommon(
+    Event* evt, Stream* stm, bool isRecord, ExternalPlaceholderSubmitter submitPlaceholder)
+{
+    NULL_PTR_RETURN_MSG(evt, RT_ERROR_EVENT_NULL);
+    NULL_STREAM_PTR_RETURN_MSG(stm);
+    NULL_PTR_RETURN_MSG(submitPlaceholder, RT_ERROR_INVALID_VALUE);
+
+    Stream* const captureStm = stm->GetCaptureStream();
+    NULL_STREAM_PTR_RETURN_MSG(captureStm);
+    Model* const mdl = captureStm->Model_();
+    NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODEL_NULL);
+    CaptureModel* const captureMdl = dynamic_cast<CaptureModel*>(mdl);
+    NULL_PTR_RETURN_MSG(captureMdl, RT_ERROR_MODEL_NULL);
+
+    rtError_t error = evt->TrySwitchToSoftwareMode();
+    ERROR_RETURN_MSG_INNER(error, "Switch event to software mode failed, retCode=%#x.", error);
+    error = isRecord ? CreateExternalRecordPlaceholder(stm, submitPlaceholder) :
+                       CreateExternalWaitPlaceholder(evt, stm, submitPlaceholder);
+    ERROR_RETURN_MSG_INNER(error, "Create external event placeholder failed, retCode=%#x.", error);
+
+    const uint32_t taskId = captureStm->GetLastTaskId();
+    error = isRecord ? captureMdl->AddExternalRecordEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId) :
+                       captureMdl->AddExternalWaitEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId);
+    ERROR_RETURN_MSG_INNER(error, "Submit external event task failed, retCode=%#x.", error);
+    return RT_ERROR_NONE;
 }
 
 } // namespace runtime

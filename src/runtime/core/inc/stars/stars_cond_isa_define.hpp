@@ -712,25 +712,14 @@ struct RtStarsMemWaitValueInstrFcParaWithDynamicProf {
 };
 
 struct RtStarsExternalWaitFuncCallPara {
-    // wait refresh entry地址，entry中保存model launch时实例化的producer event地址。
+    // refresh entry地址，entry中保存model launch时实例化的producer event地址。
     uint64_t waitRefreshAddr;
+    // 继承普通mem wait轮询路径的最大轮询次数。
     uint64_t maxLoop;
+    // BindSqCq写入的device内存地址，function-call运行时从中读取真实SQ ID。
     uint64_t sqIdMemAddr;
-
-    // Stars v1等待成功或超时后跳转SQ位置所需字段。
-    uint64_t sqRegAddrArray;
-    uint64_t sqTailOffset;
-    uint64_t profSwitchAddr;
-
-    // Stars v2动态profiling字段，v1 function-call构造时不使用。
-    uint64_t swapBufferBaseAddr;
-    uint64_t swapBufferUpdateAddr;
-    uint32_t sqId;
+    // wait失败路径回跳到wait前SQ位置时使用的SQ head。
     uint32_t sqHeadPre;
-    uint32_t sqHeadNext;
-    uint32_t lastSqePos;
-    uint32_t sqSwapShift;
-    uint32_t swapBufferProfCfgOffset;
 };
 
 // 动态绑SQ场景下，capture阶段无法固化真实SQ ID，必须在模型执行时从stream->GetSqIdMemAddr()
@@ -765,42 +754,11 @@ struct RtStarsExternalWaitFuncCall {
     RtStarsSetCsrJumpPc jumpRetry;
     RtStarsCondOpBranch retryBranch;
 
-    // 动态绑定SQ应从SqIdMemAddr读取SQ id
+    // 此处Dynamic是指动态绑定SQ应从SqIdMemAddr读取SQ id
+    // gotoPre用于wait失败回跳到原wait前位置
     // 参考RtStarsMemWaitValueLastInstrFcEx::goto_pre
-    // 参考RtStarsMemWaitValueLastInstrFcEx::goto_next
-    RtStarsDynamicSqHeadGotoR gotoPreDynamic;
-    RtStarsDynamicSqHeadGotoR gotoNextDynamic;
-
-    RtStarsSetCsrJumpPc jumpEnd;
-    RtStarsCondOpBranch endBranch;
-    RtStarsCondOpNop end;
-};
-
-struct RtStarsv2ExternalWaitFuncCall {
-    RtStarsCondOpImm initLoopIndex;
-    RtStarsCondOpImm loadMaxLoop;
-    RtStarsCondOpLHWI lhwiWaitRefreshAddr;
-    RtStarsCondOpLLWI llwiWaitRefreshAddr;
-    RtStarsCondOpLoad loadWaitAddrFromRefresh;
-    RtStarsSetCsrJumpPc jumpZeroSatisfied;
-    RtStarsCondOpBranch zeroSatisfied;
-    RtStarsCondOpLoad loadActual;
-    RtStarsCondOpImm maskLow8;
-    RtStarsCondOpImm loadExpected;
-    RtStarsSetCsrJumpPc jumpWaitSatisfied;
-    RtStarsCondOpBranch waitSatisfied;
-    RtStarsCondOpImm incrementLoopIndex;
-    RtStarsSetCsrJumpPc jumpWaitFailed;
-    RtStarsCondOpBranch loopLimit;
-    RtStarsSetCsrJumpPc jumpRetry;
-    RtStarsCondOpBranch retryBranch;
-
-    // 动态绑定SQ应从SqIdMemAddr读取SQ id
-    // 参考RtStarsMemWaitValueLastInstrFcExWithDynamicProf::goto_pre
     RtStarsDynamicSqHeadGotoR gotoPreDynamic;
 
-    RtStarsSetCsrJumpPc jumpEnd;
-    RtStarsCondOpBranch endBranch;
     RtStarsCondOpNop end;
 };
 

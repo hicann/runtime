@@ -366,6 +366,8 @@ rtError_t Notify::Wait(
             error = RT_ERROR_MEMORY_ALLOCATION;
             return error;
         }
+        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
+        externalWaitRetainedResources->clear();
     }
 
     error = dev->SubmitTask(waitTask, (streamIn->Context_())->TaskGenCallback_());
@@ -373,10 +375,6 @@ rtError_t Notify::Wait(
         return error;
     }
     waitTaskRecycle.ReleaseGuard();
-    if (retainedOwner != nullptr) {
-        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
-        externalWaitRetainedResources->clear();
-    }
 
     GET_THREAD_TASKID_AND_STREAMID(waitTask, streamIn->Id_());
 

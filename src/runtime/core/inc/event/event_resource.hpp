@@ -18,7 +18,7 @@ class Event;
 
 struct EventResource {
     Event* event{nullptr};
-    uint64_t eventAddr{0UL};
+    uint64_t eventAddr{0ULL};
     int32_t eventId{-1};
 };
 } // namespace runtime

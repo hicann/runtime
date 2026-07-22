@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model.hpp"
+#include "capture_model_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -45,11 +46,11 @@ rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureMode
 }
 
 rtError_t CaptureModel::SetNotifyAfterExecute(
-    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* externalEventRefreshInfo)
+    Stream* const exeStm, CaptureModel* const captureMdl, ExternalEventRefreshInfo* refreshInfo)
 {
     UNUSED(exeStm);
     UNUSED(captureMdl);
-    UNUSED(externalEventRefreshInfo);
+    UNUSED(refreshInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
@@ -175,18 +176,64 @@ void CaptureModel::RestoreJettyForSnapshot() {}
 
 rtError_t CaptureModel::BindSqCqAndSendSqe(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
+rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
 {
     UNUSED(task);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-size_t CaptureModel::GetExternalRecordRefreshSlotSize(void) const { return 0U; }
+size_t GetExternalRecordRefreshEntrySize() { return 0U; }
 
-rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t eventAddr) const
+rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr)
 {
-    UNUSED(slot);
+    UNUSED(entry);
     UNUSED(eventAddr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::AddExternalRecordEvent(Event* const event, uint32_t captureStreamId, uint32_t taskId)
+{
+    UNUSED(event);
+    UNUSED(captureStreamId);
+    UNUSED(taskId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::AddExternalWaitEvent(Event* const event, uint32_t captureStreamId, uint32_t taskId)
+{
+    UNUSED(event);
+    UNUSED(captureStreamId);
+    UNUSED(taskId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::RebuildAllExternalTaskSqes() const { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::FinalizeExternalRefreshTable() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+void CaptureModel::ReleaseExternalRefreshTable() {}
+
+rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo)
+{
+    UNUSED(refreshInfo);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::AllocateExternalRefreshTable() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::BuildActualExternalRecordTasks() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::BuildActualExternalWaitTasks() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::PrepareExternalRecordsForReplay(ExternalEventRefreshInfo* refreshInfo)
+{
+    UNUSED(refreshInfo);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t CaptureModel::PrepareExternalWaitsForReplay(ExternalEventRefreshInfo* refreshInfo)
+{
+    UNUSED(refreshInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

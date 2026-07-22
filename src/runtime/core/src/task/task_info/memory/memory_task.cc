@@ -319,11 +319,7 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
 {
     MemWaitValueTaskInfo* memWaitValueTask = &taskInfo->u.memWaitValueTask;
     if (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) {
-        if (taskInfo->stream->Device_()->IsDavidPlatform()) {
-            memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsv2ExternalWaitFuncCall));
-        } else {
-            memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
-        }
+        memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
     } else if (taskInfo->stream->IsSoftwareSqEnable()) {
         if (taskInfo->stream->Device_()->GetDevProperties().sqSwapShift == 0U) {
             memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcEx));
@@ -635,7 +631,8 @@ rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParam
         event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Record task parameters in capture mode");
     params->eventRecordTaskParams.event = event;
     params->eventRecordTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
-    params->eventRecordTaskParams.recordFlag = RT_EVENT_RECORD_DEFAULT;
+    params->eventRecordTaskParams.recordFlag =
+        (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL) ? RT_EVENT_RECORD_EXTERNAL : RT_EVENT_RECORD_DEFAULT;
 
     return RT_ERROR_NONE;
 }
@@ -650,7 +647,8 @@ rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams*
         event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters in capture mode");
     params->eventWaitTaskParams.event = event;
     params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
-    params->eventWaitTaskParams.waitFlag = RT_EVENT_WAIT_DEFAULT;
+    params->eventWaitTaskParams.waitFlag =
+        (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? RT_EVENT_WAIT_EXTERNAL : RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
 }

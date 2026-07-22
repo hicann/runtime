@@ -15,9 +15,17 @@
 #include "event.hpp"
 #include "stream.hpp"
 #include "notify.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 namespace cce {
 namespace runtime {
+struct EventResource;
+struct ExternalEventRefreshLayout;
+struct ExternalEventRefreshInfo;
+using ExternalPlaceholderSubmitter = rtError_t (*)(Device* dev, TaskInfo* task);
+
 bool IsEventCapturing(const Event* const evt, const Stream* const stm);
 void TerminateCapture(const Event* const evt, const Stream* const stm);
 bool IsCrossCaptureModel(const Event* const evt, const Stream* const stm);
@@ -39,7 +47,20 @@ bool IsStreamBindWithSubModel(const Stream* const stream);
 bool IsTaskBelongToSubCaptureMdl(const TaskInfo* const task);
 bool IsUbDmaWithSubModel(
     const Stream* const stm, const uint32_t kind, const void* const srcAddr, const void* const desAddr);
-
+rtError_t CalculateExternalEventRefreshLayout(size_t recordCount, size_t waitCount, ExternalEventRefreshLayout* layout);
+size_t GetExternalRecordRefreshEntrySize(void);
+rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr);
+rtError_t RebuildExternalTaskSqe(TaskInfo* const task);
+void RollbackExternalEventRefreshInfo(ExternalEventRefreshInfo* refreshInfo);
+void ReleaseRetainedEventResources(std::vector<EventResource>* resources);
+rtError_t InitExternalEventHostRefresh(
+    ExternalEventRefreshInfo* refreshInfo, const uint8_t* hostTemplate, uint64_t totalSize, uint32_t modelId);
+rtError_t SubmitExternalEventRefreshInfo(
+    Stream* launchStream, ExternalEventRefreshInfo* refreshInfo, void* deviceBase, uint64_t totalSize,
+    uint32_t modelId);
+void CommitExternalEventRecords(ExternalEventRefreshInfo* refreshInfo);
+rtError_t SubmitExternalEventTaskCommon(
+    Event* evt, Stream* stm, bool isRecord, ExternalPlaceholderSubmitter submitPlaceholder);
 } // namespace runtime
 } // namespace cce
 

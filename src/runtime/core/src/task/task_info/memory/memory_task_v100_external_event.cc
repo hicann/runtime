@@ -8,99 +8,35 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "task_info_v100.h"
 #include "memory_task.h"
 #include "common_task.h"
 #include "stream.hpp"
-#include "runtime_task_manager.h"
 #include "stars_cond_isa_helper.hpp"
 #include "stars_external_event_cond_isa_helper.hpp"
 
 namespace cce {
 namespace runtime {
-namespace {
-constexpr uint8_t MEM_WAIT_SQE_INDEX_0 = 0U;
-constexpr uint8_t MEM_WAIT_SQE_INDEX_1 = 1U;
-constexpr uint8_t MEM_WAIT_SQE_INDEX_2 = 2U;
-constexpr uint8_t MEM_WAIT_SQE_INDEX_3 = 3U;
-
-void ConstructLastSqeForExternalWaitTask(
-    TaskInfo* taskInfo, rtStarsSqe_t* const command, const RtStarsMemWaitValueInstrFcPara& fcPara)
+rtError_t ConstructLastSqeForExternalWaitTask(
+    TaskInfo* taskInfo, const RtStarsMemWaitValueInstrFcPara& fcPara, uint64_t& funcCallSize)
 {
     MemWaitValueTaskInfo* memWaitValueTask = &taskInfo->u.memWaitValueTask;
-    RtStarsFunctionCallSqe& sqe = command->fuctionCallSqe;
-
-    (void)memset_s(&sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
-    if (memWaitValueTask->funcCallSvmMem2 == nullptr) {
-        // funcCallSvmMem2 == nullptr意味着此时还未进入capture end阶段，task还只是占位符，不必走到后面的MemCopySync
-        FillMemWaitFunctionCallSqe(taskInfo, sqe, 0U);
-        PrintSqe(command, "CaptureWaitExternalTask placeholder last sqe");
-        return;
-    }
-
     RtStarsExternalWaitFuncCall fc = {};
-    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
+    funcCallSize = static_cast<uint64_t>(sizeof(RtStarsExternalWaitFuncCall));
     RtStarsExternalWaitFuncCallPara externalPara = {};
     externalPara.waitRefreshAddr = fcPara.devAddr;
     externalPara.maxLoop = fcPara.maxLoop;
     externalPara.sqIdMemAddr = fcPara.sqIdMemAddr;
-    externalPara.sqRegAddrArray = fcPara.sqRegAddrArray;
-    externalPara.sqTailOffset = fcPara.sqTailOffset;
-    externalPara.profSwitchAddr = fcPara.profSwitchAddr;
-    externalPara.sqId = fcPara.sqId;
     externalPara.sqHeadPre = fcPara.sqHeadPre;
-    externalPara.sqHeadNext = fcPara.sqHeadNext;
-    externalPara.lastSqePos = fcPara.lastSqePos;
     ConstructExternalWaitFuncCall(fc, externalPara);
     const rtError_t ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(
         memWaitValueTask->funcCallSvmMem2, memWaitValueTask->funCallMemSize2, &fc, funcCallSize,
         RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
-        sqe.sqeHeader.type = RT_STARS_SQE_TYPE_INVALID;
-        return;
+        RT_LOG(
+            RT_LOG_ERROR, "Copy external wait function-call failed, stream_id=%d, task_id=%hu, retCode=%#x.",
+            taskInfo->stream->Id_(), taskInfo->id, static_cast<uint32_t>(ret));
     }
-
-    FillMemWaitFunctionCallSqe(taskInfo, sqe, funcCallSize);
-    PrintSqe(command, "CaptureWaitExternalTask last sqe");
-}
-
-void ConstructSqeForCaptureWaitExternalTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
-{
-    RtStarsMemWaitValueInstrFcPara fcPara = {};
-    InitFuncCallParaForMemWaitTask(taskInfo, fcPara);
-
-    ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
-    ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]));
-    ConstructLastSqeForExternalWaitTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
-    ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
-}
-} // namespace
-
-void RegisterCaptureExternalTaskFuncForV100(rtChipType_t chip)
-{
-    TaskFuncSingle captureRecordExternalFuncs = {
-        .toCommandFunc = nullptr,
-        .toSqeFunc = &ConstructSqeForWriteValueTask,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
-        .waitAsyncCpCompleteFunc = nullptr,
-        .printErrorInfoFunc = &PrintErrorInfoCommon,
-        .setResultFunc = &SetResultCommon,
-        .setStarsResultFunc = &SetStarsResultCommon,
-    };
-    TaskFuncSingle captureWaitExternalFuncs = {
-        .toCommandFunc = nullptr,
-        .toSqeFunc = &ConstructSqeForCaptureWaitExternalTask,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = &MemWaitTaskUnInit,
-        .waitAsyncCpCompleteFunc = nullptr,
-        .printErrorInfoFunc = &PrintErrorInfoCommon,
-        .setResultFunc = &SetResultCommon,
-        .setStarsResultFunc = &SetStarsResultCommon,
-    };
-
-    RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureRecordExternalFuncs);
-    RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureWaitExternalFuncs);
+    return ret;
 }
 } // namespace runtime
 } // namespace cce

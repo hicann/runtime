@@ -57,6 +57,8 @@ rtError_t NtyWait(
                 RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate external wait retained owner, stream_id=%d.",
                 streamIn->Id_());
         }
+        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
+        externalWaitRetainedResources->clear();
     }
     RT_LOG(RT_LOG_INFO, "stream_id=%d notify_id=%u.", streamIn->Id_(), inNotify->GetNotifyId());
     waitTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
@@ -68,10 +70,6 @@ rtError_t NtyWait(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit notify wait task, stream_id=%d, retCode=%#x", streamIn->Id_(),
         static_cast<uint32_t>(error));
-    if (retainedOwner != nullptr) {
-        waitTask->u.notifywaitTask.externalWaitRetainedResources = retainedOwner.release();
-        externalWaitRetainedResources->clear();
-    }
     tskErrRecycle.ReleaseGuard();
     streamIn->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), waitTask->taskSn);

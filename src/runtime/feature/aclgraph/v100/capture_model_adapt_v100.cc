@@ -10,6 +10,8 @@
 
 #include "capture_model.hpp"
 #include "context.hpp"
+#include "capture_model_utils.hpp"
+#include "internal_error_define.hpp"
 #include "stars.hpp"
 #include <securec.h>
 #include <vector>
@@ -19,7 +21,7 @@ namespace runtime {
 
 rtError_t CaptureModel::BindSqCqAndSendSqe(void)
 {
-    rtError_t error = RebuildExternalTaskSqes();
+    rtError_t error = RebuildAllExternalTaskSqes();
     ERROR_RETURN_MSG_INNER(
         error, "Rebuild external task SQE failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
@@ -39,7 +41,7 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     return error;
 }
 
-rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
+rtError_t RebuildExternalTaskSqe(TaskInfo* const task)
 {
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
@@ -62,23 +64,23 @@ rtError_t CaptureModel::BuildActualExternalTaskSqe(TaskInfo* const task) const
     return RT_ERROR_NONE;
 }
 
-size_t CaptureModel::GetExternalRecordRefreshSlotSize(void) const { return sizeof(RtStarsWriteValuePtrDst); }
+size_t GetExternalRecordRefreshEntrySize(void) { return sizeof(RtStarsWriteValuePtrDst); }
 
-rtError_t CaptureModel::FillExternalRecordRefreshSlot(void* const slot, uint64_t eventAddr) const
+rtError_t FillExternalRecordRefreshEntry(void* const entry, uint64_t eventAddr)
 {
-    if (slot == nullptr) {
+    if (entry == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
-    auto* const recordSlot = RtPtrToPtr<RtStarsWriteValuePtrDst*>(slot);
-    *recordSlot = {};
-    recordSlot->snoop = 0U;
-    recordSlot->awcache = 2U;
-    recordSlot->awprot = 0U;
-    recordSlot->va = 1U;
-    recordSlot->write_addr_low = static_cast<uint32_t>(eventAddr & 0xFFFFFFFFU);
-    recordSlot->write_addr_high = static_cast<uint32_t>((eventAddr >> 32U) & 0x1FFFFU);
-    recordSlot->awsize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
-    recordSlot->write_value_part[0] = 1U;
+    auto* const recordEntry = RtPtrToPtr<RtStarsWriteValuePtrDst*>(entry);
+    *recordEntry = {};
+    recordEntry->snoop = 0U;
+    recordEntry->awcache = 2U;
+    recordEntry->awprot = 0U;
+    recordEntry->va = 1U;
+    recordEntry->write_addr_low = static_cast<uint32_t>(eventAddr & MASK_32_BIT);
+    recordEntry->write_addr_high = static_cast<uint32_t>((eventAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
+    recordEntry->awsize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    recordEntry->write_value_part[0] = 1U;
     return RT_ERROR_NONE;
 }
 

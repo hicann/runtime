@@ -77,6 +77,9 @@ rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParam
 rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 void IpcEventDestroy(IpcEvent** eventPtr, int32_t freeId, bool isNeedDestroy);
+void FillMemWaitFunctionCallSqe(TaskInfo* taskInfo, RtStarsFunctionCallSqe& sqe, const uint64_t funcCallSize);
+rtError_t ConstructLastSqeForExternalWaitTask(
+    TaskInfo* taskInfo, const RtStarsMemWaitValueInstrFcPara& fcPara, uint64_t& funcCallSize);
 
 rtError_t CreateL2AddrTaskInit(TaskInfo* const taskInfo, const uint64_t ptePtrAddr);
 void ToCommandBodyForCreateL2AddrTask(TaskInfo* const taskInfo, rtCommand_t* const command);

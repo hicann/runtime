@@ -8,10 +8,17 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "task_info_v100.h"
+#include "memory_task.h"
 
 namespace cce {
 namespace runtime {
-void RegisterCaptureExternalTaskFuncForV100(rtChipType_t chip) { UNUSED(chip); }
+rtError_t ConstructLastSqeForExternalWaitTask(
+    TaskInfo* taskInfo, const RtStarsMemWaitValueInstrFcPara& fcPara, uint64_t& funcCallSize)
+{
+    UNUSED(taskInfo);
+    UNUSED(fcPara);
+    UNUSED(funcCallSize);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 } // namespace runtime
 } // namespace cce

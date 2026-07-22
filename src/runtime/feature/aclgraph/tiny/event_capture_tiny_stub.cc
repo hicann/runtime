@@ -24,6 +24,12 @@ rtError_t Event::CaptureWaitProcess(Stream* const stm)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t Event::ResetSoftwareEvent(Stream* const stm)
 {
     UNUSED(stm);

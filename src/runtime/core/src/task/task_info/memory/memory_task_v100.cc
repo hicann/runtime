@@ -571,7 +571,9 @@ static void ConstructLastSqeForMemWaitValueTask(
 
     (void)memset_s(&sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
 
-    if (taskInfo->stream->IsSoftwareSqEnable()) {
+    if (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) {
+        ret = ConstructLastSqeForExternalWaitTask(taskInfo, fcPara, funcCallSize);
+    } else if (taskInfo->stream->IsSoftwareSqEnable()) {
         RtStarsMemWaitValueLastInstrFcEx fcEx = {};
         funcCallSize = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcEx));
         ConstructMemWaitValueInstr2Ex(fcEx, fcPara);
@@ -634,10 +636,9 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
     Stream* const stream = taskInfo->stream;
     const uint32_t rtsqDepth = stream->GetSqDepth();
     const uint32_t taskPosTail = stream->GetBindFlag() ? stream->GetCurSqPos() : stream->GetTaskPosTail();
-    const bool isActualExternalWait =
-        (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) && (memWaitValueTask->funcCallSvmMem2 != nullptr);
     // external wait task的SQE构造在capture end阶段，其pos不能使用GetCurSqPos()，需要使用capture时已经占位的pos
-    const uint32_t firstSqePos = isActualExternalWait ? taskInfo->pos : taskPosTail;
+    const uint32_t firstSqePos = (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? taskInfo->pos : taskPosTail;
+    const uint32_t sqeNum = GetSendSqeNumForMemWaitTask(taskInfo);
     const uint32_t sqDepth = stream->GetSqDepth();
 
     fcPara.devAddr = memWaitValueTask->devAddr;
@@ -648,8 +649,8 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
     fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
     fcPara.sqHeadPre = (firstSqePos + 1U) % rtsqDepth;
     fcPara.awSize = memWaitValueTask->awSize;
-    fcPara.sqHeadNext = (firstSqePos + MEM_WAIT_SQE_NUM) % sqDepth;
-    fcPara.lastSqePos = (firstSqePos + MEM_WAIT_SQE_NUM - 1U) % sqDepth;
+    fcPara.sqHeadNext = (firstSqePos + sqeNum) % sqDepth;
+    fcPara.lastSqePos = (firstSqePos + sqeNum - 1U) % sqDepth;
     fcPara.profSwitchAddr = stream->Device_()->GetProfSwitchAddr();
     fcPara.profSwitchValue = 0x1ULL;
     fcPara.sqTailOffset = stream->Device_()->GetDevProperties().sqTailOffset;
@@ -677,8 +678,7 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
 
 uint32_t GetSendSqeNumForMemWaitTask(const TaskInfo* const taskInfo)
 {
-    UNUSED(taskInfo);
-    return MEM_WAIT_SQE_NUM;
+    return (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? MEM_WAIT_V2_SQE_NUM : MEM_WAIT_SQE_NUM;
 }
 
 void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
@@ -689,8 +689,35 @@ void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
     ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
     ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]));
     ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
-    ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
+    if (GetSendSqeNumForMemWaitTask(taskInfo) == MEM_WAIT_SQE_NUM) {
+        ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
+    }
     return;
+}
+
+void ConstructSqeForCaptureExternalRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+{
+    const WriteValueTaskInfo* const writeValueTask = &taskInfo->u.writeValTask;
+    if (writeValueTask->sqeAddr == 0ULL) {
+        // capture阶段还未分配device侧内存，放NopTask占位
+        ConstructSqeForNopTask(taskInfo, command);
+        return;
+    }
+    ConstructSqeForWriteValueTask(taskInfo, command);
+}
+
+void ConstructSqeForCaptureExternalWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+{
+    const MemWaitValueTaskInfo* const memWaitValueTask = &taskInfo->u.memWaitValueTask;
+    if (memWaitValueTask->funcCallSvmMem2 == nullptr) {
+        // capture阶段还未分配device侧内存，放NopTask占位
+        const uint32_t sendSqeNum = GetSendSqeNum(taskInfo);
+        for (uint32_t i = 0U; i < sendSqeNum; ++i) {
+            ConstructSqeForNopTask(taskInfo, &(command[i]));
+        }
+        return;
+    }
+    ConstructSqeForMemWaitValueTask(taskInfo, command);
 }
 
 void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t devId)
@@ -953,6 +980,26 @@ static bool MemoryTaskRegister()
         .setResultFunc = &SetResultCommon,
         .setStarsResultFunc = &SetStarsResultCommon,
     };
+    TaskFuncSingle captureRecordExternalFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForCaptureExternalRecordTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle captureWaitExternalFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForCaptureExternalWaitTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
     TaskFuncSingle ipcRecordFuncs = {
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForMemWriteValueTask,
@@ -981,7 +1028,8 @@ static bool MemoryTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
-        RegisterCaptureExternalTaskFuncForV100(chip);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureRecordExternalFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureWaitExternalFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);

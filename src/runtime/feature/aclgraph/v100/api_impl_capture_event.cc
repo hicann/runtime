@@ -14,90 +14,16 @@
 #include "inner_thread_local.hpp"
 #include "capture_model.hpp"
 #include "capture_model_utils.hpp"
-#include "common_task.h"
-#include "memory_task.h"
+#include "internal_error_define.hpp"
 
 namespace cce {
 namespace runtime {
-namespace {
-rtError_t CreateExternalWaitPlaceholder(Event* const evt, Stream* const stm)
+
+static rtError_t SubmitExternalEventTask(Event* const evt, Stream* const stm, const bool isRecord)
 {
-    Device* const dev = stm->Device_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason = RT_ERROR_NONE;
-    TaskInfo* tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, errorReason, MEM_WAIT_SQE_NUM);
-    COND_RETURN_ERROR_MSG_INNER(
-        tsk == nullptr, errorReason, "Alloc external event wait task failed, stream_id=%d, retCode=%#x.", stm->Id_(),
-        errorReason);
-    std::function<void()> const errRecycle = [&dev, &tsk]() { (void)dev->GetTaskFactory()->Recycle(tsk); };
-    ScopeGuard tskErrRecycle(errRecycle);
-    tsk->typeName = "CAPTURE_WAIT_EXTERNAL";
-    tsk->type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
-    MemWaitValueTaskInfo* memWaitValueTask = &tsk->u.memWaitValueTask;
-    memWaitValueTask->value = 1U;
-    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
-    memWaitValueTask->event = evt;
-    const rtError_t error = dev->SubmitTask(tsk);
-    ERROR_RETURN_MSG_INNER(
-        error, "Submit external wait placeholder failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), tsk->id,
-        static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-    return RT_ERROR_NONE;
+    return SubmitExternalEventTaskCommon(
+        evt, stm, isRecord, [](Device* dev, TaskInfo* task) { return dev->SubmitTask(task); });
 }
-
-rtError_t CreateExternalRecordPlaceholder(Stream* const stm)
-{
-    Device* const dev = stm->Device_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason = RT_ERROR_NONE;
-    TaskInfo* tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, errorReason);
-    COND_RETURN_ERROR_MSG_INNER(
-        tsk == nullptr, errorReason, "Alloc external event record task failed, stream_id=%d, retCode=%#x.", stm->Id_(),
-        errorReason);
-    std::function<void()> const errRecycle = [&dev, &tsk]() { (void)dev->GetTaskFactory()->Recycle(tsk); };
-    ScopeGuard tskErrRecycle(errRecycle);
-    rtError_t error = CaptureRecordExternalTaskInit(tsk, nullptr, TASK_WR_CQE_DEFAULT);
-    ERROR_RETURN_MSG_INNER(
-        error, "Init external record task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), tsk->id,
-        static_cast<uint32_t>(error));
-    error = dev->SubmitTask(tsk);
-    ERROR_RETURN_MSG_INNER(
-        error, "Submit external record placeholder failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
-        tsk->id, static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-    return RT_ERROR_NONE;
-}
-
-rtError_t RegisterExternalEventTask(Event* const evt, Stream* const stm, const bool isRecord)
-{
-    NULL_PTR_RETURN_MSG(evt, RT_ERROR_EVENT_NULL);
-    NULL_STREAM_PTR_RETURN_MSG(stm);
-
-    Stream* const captureStm = stm->GetCaptureStream();
-    NULL_STREAM_PTR_RETURN_MSG(captureStm);
-    Model* const mdl = captureStm->Model_();
-    NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODEL_NULL);
-    CaptureModel* const captureMdl = dynamic_cast<CaptureModel*>(mdl);
-    NULL_PTR_RETURN_MSG(captureMdl, RT_ERROR_MODEL_NULL);
-
-    rtError_t error = evt->TrySwitchToSoftwareMode();
-    ERROR_RETURN_MSG_INNER(error, "Switch event to software mode failed, retCode=%#x.", error);
-    if (isRecord) {
-        error = CreateExternalRecordPlaceholder(stm);
-        ERROR_RETURN_MSG_INNER(error, "Create external record placeholder failed, retCode=%#x.", error);
-    } else {
-        error = CreateExternalWaitPlaceholder(evt, stm);
-        ERROR_RETURN_MSG_INNER(error, "Create external wait placeholder failed, retCode=%#x.", error);
-    }
-    const uint32_t taskId = captureStm->GetLastTaskId();
-    error = isRecord ? captureMdl->AddExternalRecordEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId) :
-                       captureMdl->AddExternalWaitEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId);
-    ERROR_RETURN_MSG_INNER(error, "Register external event task failed, retCode=%#x.", error);
-    return RT_ERROR_NONE;
-}
-} // namespace
 
 rtError_t ApiImpl::GetCaptureEvent(
     const Stream* const stm, Event* const evt, Event** const captureEvt, const bool isNewEvt)
@@ -179,12 +105,12 @@ rtError_t ApiImpl::CaptureEventWait(Context* const ctx, Stream* const stm, Event
 
 rtError_t ApiImpl::CaptureExternalEventWait(Event* const evt, Stream* const stm) const
 {
-    return RegisterExternalEventTask(evt, stm, false);
+    return SubmitExternalEventTask(evt, stm, false);
 }
 
 rtError_t ApiImpl::CaptureExternalEventRecord(Event* const evt, Stream* const stm) const
 {
-    return RegisterExternalEventTask(evt, stm, true);
+    return SubmitExternalEventTask(evt, stm, true);
 }
 
 rtError_t ApiImpl::CaptureEventRecord(Context* const ctx, Event* const evt, Stream* const stm)

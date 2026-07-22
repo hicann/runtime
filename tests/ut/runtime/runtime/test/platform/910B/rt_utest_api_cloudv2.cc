@@ -20,6 +20,7 @@
 #define protected public
 #include "runtime.hpp"
 #include "api.hpp"
+#include "capture_model_utils.hpp"
 #include "rt_unwrap.h"
 #include "api_impl.hpp"
 #include "api_error.hpp"
@@ -213,6 +214,24 @@ TEST_F(RtApiTest, rtEventRecordWithFlagApiValidation)
     ExpectDestroy(stream, event);
 }
 
+TEST_F(RtApiTest, rtEventRecordWithFlagDefaultGoesThroughWithFlagImpl)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER(rtEventRecord).expects(never());
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::EventRecord)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), RT_EVENT_RECORD_DEFAULT)
+        .will(returnValue(RT_ERROR_NONE));
+
+    Event event;
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    rtEvent_t eventHandle = rt_ut::InitAndExportHandle<rtEvent_t>(&event);
+    rtStream_t streamHandle = rt_ut::InitAndExportHandle<rtStream_t>(&stream);
+
+    EXPECT_EQ(rtEventRecordWithFlag(eventHandle, streamHandle, RT_EVENT_RECORD_DEFAULT), RT_ERROR_NONE);
+}
+
 TEST_F(RtApiTest, rtStreamWaitEventWithFlagApiValidation)
 {
     MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
@@ -271,11 +290,10 @@ TEST_F(RtApiTest, capture_external_refresh_table_mixed_layout)
 
     rtModel_t modelHandle = nullptr;
     EXPECT_EQ(rtStreamEndCapture(stream, &modelHandle), RT_ERROR_NONE);
-    EXPECT_EQ(model->externalEventSummaryInfo_.recordOffset, 0U);
-    EXPECT_EQ(model->externalEventSummaryInfo_.waitOffset, 2U * EXTERNAL_RECORD_REFRESH_ENTRY_SIZE);
-    EXPECT_EQ(
-        model->externalEventSummaryInfo_.totalSize,
-        2U * EXTERNAL_RECORD_REFRESH_ENTRY_SIZE + EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
+    const uint64_t recordEntrySize = GetExternalRecordRefreshEntrySize();
+    EXPECT_EQ(model->externalEventRefreshLayout_.recordOffset, 0U);
+    EXPECT_EQ(model->externalEventRefreshLayout_.waitOffset, 2U * recordEntrySize);
+    EXPECT_EQ(model->externalEventRefreshLayout_.totalSize, 2U * recordEntrySize + EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
     EXPECT_NE(model->externalEventRefreshHostTemplate_, nullptr);
     EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(event2), RT_ERROR_NONE);

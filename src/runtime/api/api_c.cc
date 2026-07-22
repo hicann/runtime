@@ -42,6 +42,7 @@ TIMESTAMP_EXTERN(rtEventCreate);
 TIMESTAMP_EXTERN(rtEventDestroy);
 TIMESTAMP_EXTERN(rtEventDestroySync);
 TIMESTAMP_EXTERN(rtEventRecord);
+TIMESTAMP_EXTERN(rtEventRecordWithFlag);
 TIMESTAMP_EXTERN(rtEventReset);
 TIMESTAMP_EXTERN(rtEventSynchronize);
 TIMESTAMP_EXTERN(rtEventSynchronizeWithTimeout);
@@ -748,16 +749,15 @@ rtError_t rtEventRecord(rtEvent_t evt, rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtEventRecordWithFlag(rtEvent_t evt, rtStream_t stm, uint32_t flag)
 {
-    if (flag == RT_EVENT_RECORD_DEFAULT) {
-        return rtEventRecord(evt, stm);
-    }
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtEventRecordWithFlag);
     RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, eventPtr);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
 
     const rtError_t error = apiInstance->EventRecord(eventPtr, streamPtr, flag);
+    TIMESTAMP_END(rtEventRecordWithFlag);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

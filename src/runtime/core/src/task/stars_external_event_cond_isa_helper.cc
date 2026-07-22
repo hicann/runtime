@@ -62,7 +62,7 @@ void ConstructExternalWaitFuncCall(RtStarsExternalWaitFuncCall& fc, const RtStar
     constexpr uint8_t waitFailedOffset =
         static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, gotoPreDynamic) / sizeof(uint32_t));
     constexpr uint8_t waitSuccessOffset =
-        static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, gotoNextDynamic) / sizeof(uint32_t));
+        static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, end) / sizeof(uint32_t));
     constexpr uint8_t endOffset = static_cast<uint8_t>(offsetof(RtStarsExternalWaitFuncCall, end) / sizeof(uint32_t));
 
     ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.initLoopIndex);
@@ -84,10 +84,12 @@ void ConstructExternalWaitFuncCall(RtStarsExternalWaitFuncCall& fc, const RtStar
     ConstructSetJumpPcFc(r1, waitRefreshLoadOffset, fc.jumpRetry);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, waitRefreshLoadOffset, fc.retryBranch);
     ConstructDynamicSqHeadGotoR(fcPara.sqIdMemAddr, fcPara.sqHeadPre, endOffset, fc.gotoPreDynamic);
-    ConstructDynamicSqHeadGotoR(fcPara.sqIdMemAddr, fcPara.sqHeadNext, endOffset, fc.gotoNextDynamic);
-    ConstructSetJumpPcFc(r1, endOffset, fc.jumpEnd);
-    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, endOffset, fc.endBranch);
     ConstructNop(fc.end);
+
+    const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(&fc);
+    for (size_t i = 0UL; i < (sizeof(RtStarsExternalWaitFuncCall) / sizeof(uint32_t)); i++) {
+        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
+    }
 }
 } // namespace runtime
 } // namespace cce

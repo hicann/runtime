@@ -683,39 +683,6 @@ static rtError_t CrossDeviceEventWait(
     return RT_ERROR_NONE;
 }
 
-rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
-{
-    rtError_t error = RT_ERROR_NONE;
-    Device* const dev = stm->Device_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason = RT_ERROR_NONE;
-    TaskInfo* tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEM_WAIT_VALUE, errorReason, MEM_WAIT_SQE_NUM);
-    COND_RETURN_ERROR_MSG_INNER(
-        tsk == nullptr, errorReason, "Failed to allocate mem wait task, retCode=%#x.",
-        static_cast<uint32_t>(errorReason));
-    std::function<void()> const errRecycle = [&dev, &tsk]() {
-        MemWaitTaskUnInit(tsk);
-        (void)dev->GetTaskFactory()->Recycle(tsk);
-    };
-    ScopeGuard tskErrRecycle(errRecycle);
-    MemWaitValueTaskInfo* memWaitValueTask = &tsk->u.memWaitValueTask;
-    tsk->typeName = "EXTERNAL_EVENT_WAIT";
-    tsk->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
-    error = MemWaitValueTaskInit(tsk, eventAddr_, 1UL, 0U);
-    ERROR_RETURN_MSG_INNER(error, "Failed to initialize mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
-    EventIdCountAdd(eventId_);
-    memWaitValueTask->event = this;
-    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
-    memWaitValueTask->retainedEventId = eventId_;
-    const rtTaskGenCallback callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-    error = dev->SubmitTask(tsk, callback);
-    ERROR_RETURN_MSG_INNER(error, "Failed to submit mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
-    EventStateCallbackManager::Instance().Notify(stm, this, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
-    return RT_ERROR_NONE;
-}
-
 rtError_t Event::WaitSoftwareEvent(Stream* const stm)
 {
     if (captureStream_ != nullptr) {
