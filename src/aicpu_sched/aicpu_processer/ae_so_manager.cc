@@ -83,7 +83,7 @@ aeStatus_t SingleSoManager::Init(const std::string &guardDirName, const std::str
 
     aeStatus_t ret = CheckSoFile(guardDirName, soFile);
     if (ret != AE_STATUS_SUCCESS) {
-        AE_ERR_LOG(AE_MODULE_ID, "CheckSoFile failed, soFile[%s], ret[%u].", soFile.c_str(), ret);
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "CheckSoFile failed, soFile[%s], ret[%u].", soFile.c_str(), ret);
         return ret;
     }
 
@@ -240,7 +240,7 @@ aeStatus_t SingleSoManager::GetApi(const char_t * const soNamePtr, const char_t 
     const aeStatus_t ret = GetFunc(soHandle_, funcName, &theFuncAddr);
     if (ret != AE_STATUS_SUCCESS) {
         AE_RW_LOCK_UN_LOCK(&rwLock_);
-        AE_ERR_LOG(AE_MODULE_ID, "Get func %s from so %s failed, ret[%u].", funcName, soNamePtr, ret);
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "Get func %s from so %s failed, ret[%u].", funcName, soNamePtr, ret);
         return ret;
     }
     // cache func
@@ -381,7 +381,7 @@ aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string &soPath) const
             .append(AICPU_SO_UNCOMPRESS_DIR).append("/");
         return AE_STATUS_SUCCESS;
     } else {
-        AE_ERR_LOG(AE_MODULE_ID, "Get HOME env failed, get thread mode so path failed.");
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "Get HOME env failed, get thread mode so path failed.");
         return AE_STATUS_INNER_ERROR;
     }
 }
@@ -542,7 +542,7 @@ aeStatus_t MultiSoManager::LoadSo(const aicpu::KernelType kernelType,
     const auto ret = CreateSingleSoMgr(kernelType, soName, soMgr);
     if (ret != AE_STATUS_SUCCESS) {
         AE_RW_LOCK_UN_LOCK(&rwLock_);
-        AE_ERR_LOG(AE_MODULE_ID, "CreateSingleSoMgr failed, soName[%s], ret[%u].", soName.c_str(), ret);
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "CreateSingleSoMgr failed, soName[%s], ret[%u].", soName.c_str(), ret);
         return ret;
     }
     AE_RW_LOCK_UN_LOCK(&rwLock_);
@@ -561,7 +561,7 @@ aeStatus_t MultiSoManager::CreateSingleSoMgr(const aicpu::KernelType kernelType,
     std::string realSoPath;
     auto ret = GetSoPath(kernelType, soName, realSoPath);
     if (ret != AE_STATUS_SUCCESS) {
-        AE_ERR_LOG(AE_MODULE_ID, "GetSoPath failed, soName[%s], ret[%u].", soName.c_str(), ret);
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "GetSoPath failed, soName[%s], ret[%u].", soName.c_str(), ret);
         return ret;
     }
     std::string soFile(realSoPath);

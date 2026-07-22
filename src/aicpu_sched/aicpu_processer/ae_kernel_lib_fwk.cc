@@ -209,7 +209,7 @@ namespace cce {
             GetTfKernelThreadModeSoPath(soPath);
             return AE_STATUS_SUCCESS;
         } else {
-            AE_ERR_LOG(AE_MODULE_ID, "Get HOME env failed, get tf thread mode so path failed.");
+            AE_RUN_WARN_LOG(AE_MODULE_ID, "Get HOME env failed, get tf thread mode so path failed.");
             return AE_STATUS_INNER_ERROR;
         }
     }
