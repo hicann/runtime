@@ -851,7 +851,7 @@ uint64_t ProfAclMgr::ProfAclGetDataTypeConfig(const MsprofConfig *config) const
     }
     uint64_t dataTypeConfig = 0;
     if (static_cast<bool>(config->cacheFlag)) {
-        dataTypeConfig |= PROF_TASK_TIME | PROF_TASK_TIME_L1 | PROF_TRAINING_TRACE;
+        dataTypeConfig |= PROF_TASK_TIME | PROF_TASK_TIME_L1;
     }
     if (config->metrics != static_cast<uint32_t>(PROF_AICORE_NONE)) {
         dataTypeConfig |= PROF_AICORE_METRICS;
