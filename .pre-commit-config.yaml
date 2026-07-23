@@ -41,7 +41,6 @@ repos:
               aicpu_sched
               | dfx
               | mmpa
-              | platform
               | queue_schedule
             )(/|$)
             | stub
