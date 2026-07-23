@@ -94,12 +94,13 @@ void ToConstructDavidSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo&
         g_toDavidSqeFunc[taskInfo->type](taskInfo, sqe, sqeInfo);
     }
 
-    if (Runtime::Instance()->GetConnectUbFlag()) {
+    if (Runtime::Instance()->GetConnectUbFlag() &&
+        (static_cast<rtDavidSqe_t*>(sqe)->commonSqe.sqeHeader.headUpdate == 0U)) {
         uint64_t allocTimes = taskInfo->id;
         if (taskInfo->stream->taskResMang_ != nullptr) {
             allocTimes = (RtPtrToPtr<TaskResManageDavid*>(taskInfo->stream->taskResMang_))->GetAllocNum();
         }
-        static_cast<rtDavidSqe_t*>(sqe)->phSqe.header.headUpdate = GetHeadUpdateFlag(allocTimes);
+        static_cast<rtDavidSqe_t*>(sqe)->commonSqe.sqeHeader.headUpdate = GetHeadUpdateFlag(allocTimes);
     }
 
     // set expect cqeNum after sqe construction which will be checked before task recycle
