@@ -11,26 +11,16 @@
 
 set -euo pipefail
 
-_ASCEND_CANN_PATH="${ASCEND_HOME_PATH:-}"
-if [[ -z "${_ASCEND_CANN_PATH}" ]]; then
-    echo "[ERROR]: ASCEND_HOME_PATH is not set."
-    echo "[ERROR]: Please source CANN set_env.sh before running this sample."
-    exit 1
-fi
-
-if [[ ! -f "${_ASCEND_CANN_PATH}/bin/setenv.bash" ]]; then
-    echo "[ERROR]: ${_ASCEND_CANN_PATH}/bin/setenv.bash does not exist."
-    exit 1
-fi
-
-source "${_ASCEND_CANN_PATH}/bin/setenv.bash"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(cd "${SCRIPT_DIR}/../../.." && pwd)/common/resolve_cann_env.sh" && resolve_cann_env
+
+set -euo pipefail
+
 cd "${SCRIPT_DIR}"
 
 rm -rf build
 cmake -B build \
-    -DASCEND_CANN_PACKAGE_PATH="${_ASCEND_CANN_PATH}"
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
 cmake --build build -j
 
 file_path=output_msg.txt

@@ -11,22 +11,22 @@
 
 set -e
 
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
-source $_ASCEND_INSTALL_PATH/bin/setenv.bash
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(cd "${SCRIPT_DIR}/../.." && pwd)/common/resolve_cann_env.sh" && resolve_cann_env
+
 cd "${SCRIPT_DIR}"
 
+# Configure the build directory.
 BUILD_DIR="${SCRIPT_DIR}/build"
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 
 echo "Configuring CMake..."
 cmake .. \
-    -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
 
 echo "Building..."
-make -j$(nproc)
+make -j"$(nproc)"
 
 cd "${SCRIPT_DIR}"
 

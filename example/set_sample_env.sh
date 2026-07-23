@@ -27,7 +27,8 @@ _set_soc_finish() {
     unset -f _set_soc_usage _set_soc_finish _set_soc_normalize _set_soc_is_valid _set_soc_get_arch_dir \
         _set_soc_append_layout_candidate _set_soc_resolve_cann_layout _set_soc_select_cann_path \
         _set_soc_need_build_helper _set_soc_build_helper _set_soc_detect_by_acl _set_soc_append_ascendc_candidate \
-        _set_soc_detect_ascendc_cmake_dir _set_soc_main
+        _set_soc_detect_ascendc_cmake_dir _set_soc_main \
+        resolve_cann_arch_dir resolve_cann_has_acl_layout resolve_cann_env
     unset _set_soc_ret _set_soc_acl_error _set_soc_cann_path _set_soc_include_dir _set_soc_lib_dir \
         _set_soc_detected_version _set_soc_layout_candidates _set_soc_ascendc_candidates \
         _set_soc_shell_options
@@ -122,22 +123,13 @@ _set_soc_resolve_cann_layout() {
 }
 
 _set_soc_select_cann_path() {
-    local path
-    local candidates=()
-
-    [[ -n "${ASCEND_INSTALL_PATH:-}" ]] && candidates+=("${ASCEND_INSTALL_PATH}")
-    [[ -n "${ASCEND_HOME_PATH:-}" ]] && candidates+=("${ASCEND_HOME_PATH}")
-    candidates+=("/usr/local/Ascend/cann")
-
-    for path in "${candidates[@]}"; do
-        if [[ -d "${path}" ]] && _set_soc_resolve_cann_layout "${path}"; then
-            _set_soc_cann_path="${path}"
-            return 0
-        fi
-    done
-
-    _set_soc_acl_error="Cannot find acl/acl.h and libacl_rt.so under ASCEND_INSTALL_PATH, ASCEND_HOME_PATH or /usr/local/Ascend/cann."
-    return 1
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # shellcheck source=/dev/null
+    source "${script_dir}/common/resolve_cann_env.sh" || return 1
+    resolve_cann_env || { _set_soc_acl_error="Failed to resolve CANN environment."; return 1; }
+    _set_soc_cann_path="${ASCEND_INSTALL_PATH}"
+    _set_soc_resolve_cann_layout "${_set_soc_cann_path}" || { _set_soc_acl_error="Cannot find ACL layout under ${_set_soc_cann_path}."; return 1; }
 }
 
 _set_soc_need_build_helper() {

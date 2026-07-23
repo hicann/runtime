@@ -11,15 +11,21 @@
 
 set -euo pipefail
 
-_ASCEND_CANN_PATH="${ASCEND_HOME_PATH:-}"
-if [[ -z "${_ASCEND_CANN_PATH}" ]]; then
-    echo "[ERROR]: ASCEND_HOME_PATH is not set."
-    echo "[ERROR]: Please source CANN set_env.sh before running this sample."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXAMPLE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+if [[ ! -f "${EXAMPLE_DIR}/set_sample_env.sh" ]]; then
+    echo "[ERROR]: ${EXAMPLE_DIR}/set_sample_env.sh does not exist."
     exit 1
 fi
 
-if [[ ! -f "${_ASCEND_CANN_PATH}/bin/setenv.bash" ]]; then
-    echo "[ERROR]: ${_ASCEND_CANN_PATH}/bin/setenv.bash does not exist."
+set +eu
+# shellcheck source=/dev/null
+source "${EXAMPLE_DIR}/set_sample_env.sh"
+ret=$?
+set -euo pipefail
+if [[ "${ret}" -ne 0 ]]; then
+    echo "[ERROR]: Failed to detect CANN environment via ${EXAMPLE_DIR}/set_sample_env.sh. Please check the location of set_sample_env.sh."
     exit 1
 fi
 
@@ -38,9 +44,6 @@ if [[ ! -f "${ASCENDC_CMAKE_DIR}/ascendc.cmake" ]]; then
     exit 1
 fi
 
-source "${_ASCEND_CANN_PATH}/bin/setenv.bash"
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
@@ -49,7 +52,7 @@ cd "${BUILD_DIR}"
 
 echo "Configuring CMake..."
 cmake .. \
-    -DASCEND_CANN_PACKAGE_PATH="${_ASCEND_CANN_PATH}"
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
 
 echo "Building..."
 make -j"$(nproc)"

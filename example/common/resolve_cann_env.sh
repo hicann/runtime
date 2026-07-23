@@ -67,7 +67,9 @@ resolve_cann_env() {
     [ -n "${ASCEND_INSTALL_PATH:-}" ] && candidates+=("${ASCEND_INSTALL_PATH}")
     [ -n "${ASCEND_HOME_PATH:-}" ] && candidates+=("${ASCEND_HOME_PATH}")
     [ -n "${HOME:-}" ] && candidates+=("${HOME}/Ascend/cann")
+    [ -n "${HOME:-}" ] && candidates+=("${HOME}/Ascend/ascend-toolkit/latest")
     candidates+=("/usr/local/Ascend/cann")
+    candidates+=("/usr/local/Ascend/ascend-toolkit/latest")
     candidates+=("/opt/Ascend/cann")
 
     for path in "${candidates[@]}"; do
@@ -85,7 +87,7 @@ resolve_cann_env() {
             export ASCEND_INSTALL_PATH="${path}"
             export ASCEND_HOME_PATH="${path}"
             # shellcheck source=/dev/null
-            source "${set_env_file}"
+            source "${set_env_file}" || { echo "[ERROR]: Failed to source ${set_env_file}."; return 1; }
             return 0
         fi
     done

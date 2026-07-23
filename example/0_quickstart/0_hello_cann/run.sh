@@ -11,12 +11,10 @@
 
 set -e
 
-# Load the CANN environment.
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
-source "$_ASCEND_INSTALL_PATH/bin/setenv.bash"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(cd "${SCRIPT_DIR}/../.." && pwd)/common/resolve_cann_env.sh" && resolve_cann_env
 
 # Enter the sample directory.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
 # Configure the build directory.
@@ -26,7 +24,7 @@ cd "${BUILD_DIR}"
 
 echo "Configuring CMake..."
 cmake .. \
-    -DASCEND_CANN_PACKAGE_PATH="${_ASCEND_INSTALL_PATH}"
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
 
 echo "Building..."
 make -j"$(nproc)"
