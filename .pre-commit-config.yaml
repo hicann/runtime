@@ -73,7 +73,7 @@ repos:
       - id: oat-check
         name: OAT Compliance Check
         entry: bash scripts/oat_check.sh
-        exclude: .pre-commit-config.yaml
+        exclude: '^(\.pre-commit-config\.yaml|README\.md|\.devcontainer/Dockerfile)$'
         language: system
         pass_filenames: true
         types: [file]

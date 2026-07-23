@@ -54,7 +54,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     libtsan0 \
     libubsan1 \
     # 其他构建依赖
-    libssl-dev \
     zlib1g-dev \
     patch \
     perl \
@@ -68,8 +67,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 \
     && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 90
 
 # ── 3. pip 工具 ───────────────────────────────────────────────────────────────
-RUN pip3 install --no-cache-dir --upgrade pip \
-    && pip3 install --no-cache-dir requests
+RUN pip3 install --no-cache-dir --upgrade pip
 
 # ── 4. 工作目录 ───────────────────────────────────────────────────────────────
 WORKDIR /workspace
