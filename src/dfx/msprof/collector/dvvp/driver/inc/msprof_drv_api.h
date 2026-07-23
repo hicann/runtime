@@ -59,6 +59,11 @@ using DrvHdcAddMsgBufferFunc = drvError_t (*)(struct drvHdcMsg *, char *, int);
 using HalHdcSendFunc = hdcError_t (*)(HDC_SESSION, struct drvHdcMsg *, UINT64, UINT32);
 using HalHdcRecvFunc = hdcError_t (*)(HDC_SESSION, struct drvHdcMsg *, int, UINT64, int *, UINT32);
 using HalHdcGetSessionAttrFunc = drvError_t (*)(HDC_SESSION, int, int *);
+using HalEschedAttachDeviceFunc = drvError_t (*)(unsigned int);
+using HalEschedDettachDeviceFunc = drvError_t (*)(unsigned int);
+using HalEschedSubscribeEventFunc = drvError_t (*)(unsigned int, unsigned int, unsigned int, unsigned long long);
+using HalQueryDevpidFunc = drvError_t (*)(struct halQueryDevpidInfo, pid_t *);
+using HalEschedWaitEventFunc = drvError_t (*)(unsigned int, unsigned int, unsigned int, int, struct event_info *);
 
 // msprof 专用驱动动态加载适配层。集中 dlopen("libascend_hal.so") 并 dlsym 主采集路径驱动符号，
 // 懒加载（首次调用时初始化），线程安全（std::call_once）。缺失符号时按类型降级返回：
@@ -110,6 +115,13 @@ public:
     hdcError_t halHdcRecv(HDC_SESSION session, struct drvHdcMsg *pMsg, int bufLen, UINT64 flag,
         int *recvBufCount, UINT32 timeout);
     drvError_t halHdcGetSessionAttr(HDC_SESSION session, int attr, int *value);
+    drvError_t halEschedAttachDevice(unsigned int devId);
+    drvError_t halEschedDettachDevice(unsigned int devId);
+    drvError_t halEschedSubscribeEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
+        unsigned long long eventBitmap);
+    drvError_t halQueryDevpid(struct halQueryDevpidInfo info, pid_t *devPid);
+    drvError_t halEschedWaitEvent(unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout,
+        struct event_info *event);
 
     // 驱动库是否已成功加载（libascend_hal.so dlopen 成功）。通用服务器场景（无驱动库）返回 false。
     bool IsDrvLibLoaded();
@@ -156,6 +168,11 @@ private:
     HalHdcSendFunc halHdcSend_{nullptr};
     HalHdcRecvFunc halHdcRecv_{nullptr};
     HalHdcGetSessionAttrFunc halHdcGetSessionAttr_{nullptr};
+    HalEschedAttachDeviceFunc halEschedAttachDevice_{nullptr};
+    HalEschedDettachDeviceFunc halEschedDettachDevice_{nullptr};
+    HalEschedSubscribeEventFunc halEschedSubscribeEvent_{nullptr};
+    HalQueryDevpidFunc halQueryDevpid_{nullptr};
+    HalEschedWaitEventFunc halEschedWaitEvent_{nullptr};
 };
 }  // namespace driver
 }  // namespace dvvp

@@ -147,6 +147,13 @@ const std::map<std::string, void*> g_map = {
     {"halProfSampleRegisterEx", (void *)halProfSampleRegisterEx},
     {"halProfQueryAvailBufLen", (void *)halProfQueryAvailBufLen},
     {"halProfSampleDataReport", (void *)halProfSampleDataReport},
+    // drv event 线程路径的 5 个符号：随修复改为经 MsprofDrvApi dlopen/dlsym 调用，
+    // 需注册到桩表，否则 dlsym 命中不到会降级导致 aicpu 采集路径异常。
+    {"halEschedAttachDevice", (void *)halEschedAttachDevice},
+    {"halEschedDettachDevice", (void *)halEschedDettachDevice},
+    {"halEschedSubscribeEvent", (void *)halEschedSubscribeEvent},
+    {"halQueryDevpid", (void *)halQueryDevpid},
+    {"halEschedWaitEvent", (void *)halEschedWaitEvent},
     {"rtProfilerTraceEx", (void *)rtProfilerTraceExStub},
     {"MsprofStart", (void *)MsprofStart},
     {"MsprofStop", (void *)MsprofStop}

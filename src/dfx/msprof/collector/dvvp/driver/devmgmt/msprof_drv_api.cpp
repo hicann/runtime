@@ -79,6 +79,12 @@ void MsprofDrvApi::LoadApi()
     halHdcSend_ = LoadDrvApi<HalHdcSendFunc>(ascendHalLibHandle_, "halHdcSend");
     halHdcRecv_ = LoadDrvApi<HalHdcRecvFunc>(ascendHalLibHandle_, "halHdcRecv");
     halHdcGetSessionAttr_ = LoadDrvApi<HalHdcGetSessionAttrFunc>(ascendHalLibHandle_, "halHdcGetSessionAttr");
+    halEschedAttachDevice_ = LoadDrvApi<HalEschedAttachDeviceFunc>(ascendHalLibHandle_, "halEschedAttachDevice");
+    halEschedDettachDevice_ = LoadDrvApi<HalEschedDettachDeviceFunc>(ascendHalLibHandle_, "halEschedDettachDevice");
+    halEschedSubscribeEvent_ =
+        LoadDrvApi<HalEschedSubscribeEventFunc>(ascendHalLibHandle_, "halEschedSubscribeEvent");
+    halQueryDevpid_ = LoadDrvApi<HalQueryDevpidFunc>(ascendHalLibHandle_, "halQueryDevpid");
+    halEschedWaitEvent_ = LoadDrvApi<HalEschedWaitEventFunc>(ascendHalLibHandle_, "halEschedWaitEvent");
 }
 
 void MsprofDrvApi::EnsureInit()
@@ -433,6 +439,53 @@ drvError_t MsprofDrvApi::halHdcGetSessionAttr(HDC_SESSION session, int attr, int
         return DRV_ERROR_NOT_SUPPORT;
     }
     return halHdcGetSessionAttr_(session, attr, value);
+}
+
+drvError_t MsprofDrvApi::halEschedAttachDevice(unsigned int devId)
+{
+    EnsureInit();
+    if (halEschedAttachDevice_ == nullptr) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
+    return halEschedAttachDevice_(devId);
+}
+
+drvError_t MsprofDrvApi::halEschedDettachDevice(unsigned int devId)
+{
+    EnsureInit();
+    if (halEschedDettachDevice_ == nullptr) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
+    return halEschedDettachDevice_(devId);
+}
+
+drvError_t MsprofDrvApi::halEschedSubscribeEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
+    unsigned long long eventBitmap)
+{
+    EnsureInit();
+    if (halEschedSubscribeEvent_ == nullptr) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
+    return halEschedSubscribeEvent_(devId, grpId, threadId, eventBitmap);
+}
+
+drvError_t MsprofDrvApi::halQueryDevpid(struct halQueryDevpidInfo info, pid_t *devPid)
+{
+    EnsureInit();
+    if (halQueryDevpid_ == nullptr) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
+    return halQueryDevpid_(info, devPid);
+}
+
+drvError_t MsprofDrvApi::halEschedWaitEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
+    int timeout, struct event_info *event)
+{
+    EnsureInit();
+    if (halEschedWaitEvent_ == nullptr) {
+        return DRV_ERROR_NOT_SUPPORT;
+    }
+    return halEschedWaitEvent_(devId, grpId, threadId, timeout, event);
 }
 }  // namespace driver
 }  // namespace dvvp

@@ -26,6 +26,7 @@
 #include "errno/error_code.h"
 #include "ai_drv_dev_api.h"
 #include "ai_drv_prof_api.h"
+#include "msprof_drv_api.h"
 #include "config/config.h"
 #include "prof_timer.h"
 #include "uploader_mgr.h"
@@ -485,7 +486,7 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Init) {
         .stubs()
         .will(returnValue(false));
     profAicpuJob->eventAttr_.isWaitDevPid = true;
-    MOCKER(halQueryDevpid)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halQueryDevpid)
     .stubs()
     .will(returnValue(1));
     EXPECT_EQ(PROFILING_SUCCESS, profAicpuJob->Init(collectionJobCfg_));
@@ -540,7 +541,7 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Uninit) {
         .will(returnValue(OSAL_EN_OK))
         .then(returnValue(OSAL_EN_ERR));
 
-    MOCKER(halEschedDettachDevice)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedDettachDevice)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE));
     MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::GetAllChannels)
@@ -782,7 +783,7 @@ TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Uninit) {
         .will(returnValue(OSAL_EN_OK))
         .then(returnValue(OSAL_EN_ERR));
 
-    MOCKER(halEschedDettachDevice)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedDettachDevice)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE));
 
@@ -827,11 +828,11 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, EventThreadHandle) {
     const char *grpName = "prof_adprof_grp";
     struct TaskEventAttr eventAttr = {0, PROF_CHANNEL_AICPU, ADPROF_COLLECTION_JOB, false, false, false, false, 0,
                                       false, false, grpName};
-    MOCKER(halQueryDevpid)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halQueryDevpid)
         .stubs()
         .will(returnValue(1))
         .then(returnValue(DRV_ERROR_NONE));
-    MOCKER(halEschedAttachDevice)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedAttachDevice)
         .stubs()
         .will(returnValue(1))
         .then(returnValue(DRV_ERROR_NONE));
@@ -848,7 +849,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, EventThreadHandle) {
         .will(returnValue(1))
         .then(returnValue((int32_t)DRV_ERROR_NONE));
     EXPECT_EQ(nullptr, ProfDrvEvent::EventThreadHandle(&eventAttr));
-    MOCKER(halEschedSubscribeEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedSubscribeEvent)
         .stubs()
         .will(returnValue(1))
         .then(returnValue(DRV_ERROR_NONE));
@@ -872,7 +873,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEventIgnoresUnexpectedEvent) {
                                       false, false, nullptr};
     event_info event;
     event.comm.event_id = EVENT_TEST;
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_NONE));
@@ -885,7 +886,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEventUpdatesChannelStateOnUserStart) {
                                       false, false, nullptr};
     event_info event;
     event.comm.event_id = EVENT_USR_START;
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_NONE));
@@ -910,7 +911,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEventRetriesOnDriverErrors) {
                                       false, false, nullptr};
     event_info event;
     event.comm.event_id = EVENT_USR_START;
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_SCHED_INNER_ERR))
@@ -927,7 +928,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEventHandlesTimeoutBeforeUserStart) {
                                       false, false, nullptr};
     event_info event;
     event.comm.event_id = EVENT_USR_START;
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(repeat(DRV_ERROR_SCHED_WAIT_TIMEOUT, 2))

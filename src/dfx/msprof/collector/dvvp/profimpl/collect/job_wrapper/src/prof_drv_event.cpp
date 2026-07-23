@@ -11,6 +11,7 @@
 #include "prof_drv_event.h"
 #include "errno/error_code.h"
 #include "ai_drv_prof_api.h"
+#include "msprof_drv_api.h"
 #include "platform/platform.h"
 
 namespace Analysis {
@@ -56,7 +57,7 @@ void *ProfDrvEvent::EventThreadHandle(void *attr)
         MSPROF_LOGW("Unable to query device pid");
         return nullptr;
     }
-    drvError_t ret = halEschedAttachDevice(eventAttr->deviceId);              // attach process to device
+    drvError_t ret = MsprofDrvApi::instance()->halEschedAttachDevice(eventAttr->deviceId);  // attach process to device
     if (ret != DRV_ERROR_NONE) {
         MSPROF_LOGE("Call halEschedAttachDevice failed, devId=%u, ret=%d", eventAttr->deviceId, ret);
         return nullptr;
@@ -73,16 +74,16 @@ void *ProfDrvEvent::EventThreadHandle(void *attr)
         }
         int32_t err = Platform::instance()->HalEschedCreateGrpEx(eventAttr->deviceId, &grpPara, &grpId);
         if (err != DRV_ERROR_NONE) {
-            (void)halEschedDettachDevice(eventAttr->deviceId);                    // dettach process from device
+            (void)MsprofDrvApi::instance()->halEschedDettachDevice(eventAttr->deviceId);  // dettach from device
             MSPROF_LOGW("Called halEschedCreateGrpEx unsuccessfully. (devId=%u, ret=%d)\n", eventAttr->deviceId, err);
             return nullptr;
         }
         MSPROF_LOGI("create grp id:%u by name '%s'", grpId, eventAttr->grpName);
 
         uint64_t eventBitmap = (1ULL << static_cast<uint64_t>(EVENT_USR_START));
-        ret = halEschedSubscribeEvent(eventAttr->deviceId, grpId, 0, eventBitmap);
+        ret = MsprofDrvApi::instance()->halEschedSubscribeEvent(eventAttr->deviceId, grpId, 0, eventBitmap);
         if (ret != DRV_ERROR_NONE) {
-            (void)halEschedDettachDevice(eventAttr->deviceId);
+            (void)MsprofDrvApi::instance()->halEschedDettachDevice(eventAttr->deviceId);
             MSPROF_LOGE("Call halEschedSubscribeEvent failed, devId=%u, ret=%d", eventAttr->deviceId, ret);
             return nullptr;
         }
@@ -132,7 +133,7 @@ int32_t ProfDrvEvent::QueryDevPid(const struct TaskEventAttr *eventAttr)
     drvError_t ret = DRV_ERROR_NOT_SUPPORT;
     int32_t i = 0;
     while (((i < waitCount) && (!eventAttr->isExit)) || eventAttr->isWaitDevPid) {
-        ret = halQueryDevpid(hostpidinfo, &devPid);
+        ret = MsprofDrvApi::instance()->halQueryDevpid(hostpidinfo, &devPid);
         if (ret == DRV_ERROR_NONE) {
             MSPROF_LOGI("Query devPid succ, devId:%u, hostPid:%d, devPid:%d, isWaitDevPid:%d", eventAttr->deviceId,
                 hostPid, devPid, eventAttr->isWaitDevPid);
@@ -152,7 +153,7 @@ void ProfDrvEvent::WaitEvent(struct TaskEventAttr *eventAttr, uint32_t grpId)
     bool onceFlag = true;
     int32_t timeout = 1;  // first timeout need to check channel is valid
     while (!eventAttr->isExit) {
-        drvError_t err = halEschedWaitEvent(eventAttr->deviceId, grpId, 0, timeout, &event);
+        drvError_t err = MsprofDrvApi::instance()->halEschedWaitEvent(eventAttr->deviceId, grpId, 0, timeout, &event);
         timeout = DRV_EVENT_TIMEOUT;
 
         if (err == DRV_ERROR_NONE) {
@@ -200,7 +201,7 @@ void ProfDrvEvent::WaitEvent(struct TaskEventAttr *eventAttr, uint32_t grpId)
 void ProfDrvEvent::SubscribeEventThreadUninit(uint32_t devId) const
 {
     // dettach process from device
-    drvError_t ret = halEschedDettachDevice(devId);
+    drvError_t ret = MsprofDrvApi::instance()->halEschedDettachDevice(devId);
     if (ret != DRV_ERROR_NONE) {
         MSPROF_LOGW("call halEschedDettachDevice ret: %d", ret);
     }

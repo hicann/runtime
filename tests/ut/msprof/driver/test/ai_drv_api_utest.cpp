@@ -976,6 +976,19 @@ TEST_F(DRIVER_AI_DRV_API_TEST, MsprofDrvApiGeneralServerNoLib) {
     EXPECT_EQ(PROF_ERROR, api.ProfChannelPoll(&poll, 1, 0));
     unsigned int len = 0;
     EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halProfDataFlush(0, 0, &len));
+
+    // drv event 线程路径涉及的 5 个接口（原 prof_drv_event.cpp 直连弱符号，改造遗漏导致 MDC 空指针
+    // coredump），改为经 MsprofDrvApi dlopen 适配层调用；无驱动库时统一降级 DRV_ERROR_NOT_SUPPORT。
+    EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedAttachDevice(0));
+    EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedDettachDevice(0));
+    EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedSubscribeEvent(0, 0, 0, 0ULL));
+    struct halQueryDevpidInfo pidInfo;
+    (void)memset_s(&pidInfo, sizeof(pidInfo), 0, sizeof(pidInfo));
+    pid_t devPid = 0;
+    EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halQueryDevpid(pidInfo, &devPid));
+    struct event_info evt;
+    (void)memset_s(&evt, sizeof(evt), 0, sizeof(evt));
+    EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedWaitEvent(0, 0, 0, 0, &evt));
 }
 
 // NPU 场景：libascend_hal.so 加载成功，符号解析命中，包装方法调用到底层实现。
