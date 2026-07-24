@@ -321,6 +321,19 @@ TEST_F(CloudV2ApiTest910b, testMemAdviseTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiTest910b, ReduceAsyncV2ImplError)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiErrDec(&impl);
+    uint64_t dst = 0;
+    uint64_t src = 0;
+    uint64_t overflowAddr = 0;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReduceAsyncV2).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    auto error =
+        apiErrDec.ReduceAsyncV2(&dst, &src, 1, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, nullptr, &overflowAddr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
 TEST_F(CloudV2ApiTest910b, testGetTaskBufferLenTest)
 {
     ApiImpl impl;

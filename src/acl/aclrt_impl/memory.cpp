@@ -250,7 +250,7 @@ aclError CheckMemcpy2dParam(
             break;
         }
         default: {
-            ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
+            ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
@@ -2305,8 +2305,8 @@ static aclError CheckMemcpyFromSymbol(void* dst, const void* symbol, size_t coun
 
     if ((kind != ACL_MEMCPY_DEVICE_TO_HOST) && (kind != ACL_MEMCPY_DEFAULT)) {
         ACL_LOG_ERROR(
-            "[Check][Kind]kind[%d] only support ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT",
-            static_cast<int32_t>(kind));
+            "[Check][Kind]kind[%s] only support ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT",
+            acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
             std::vector<const char*>(
@@ -2377,8 +2377,8 @@ static aclError CheckMemcpyToSymbol(const void* symbol, const void* src, aclrtMe
 
     if ((kind != ACL_MEMCPY_HOST_TO_DEVICE) && (kind != ACL_MEMCPY_DEFAULT)) {
         ACL_LOG_ERROR(
-            "[Check][Kind]kind[%d] only support ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
-            static_cast<int32_t>(kind));
+            "[Check][Kind]kind[%s] only support ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
+            acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
             std::vector<const char*>(

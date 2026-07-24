@@ -9,6 +9,7 @@
  */
 #include "capture_model_utils.hpp"
 #include "capture_model_enum_desc.hpp"
+#include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
 #include "raw_device.hpp"
 #include "context.hpp"
@@ -442,7 +443,9 @@ bool IsUbDma(Stream* const stm, const uint32_t kind, const void* const srcAddr, 
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
     rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, RtPtrToUnConstPtr<void*>(desAddr));
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, false, "Failed to convert copy type, kind=%u.", kind);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, false, "Failed to convert copy type, kind=%s.",
+        MemcpyKindToString(static_cast<rtMemcpyKind_t>(kind)).c_str());
 
     MemcpyAsyncTaskInfo memcpyAsyncTaskInfo = taskInfo.u.memcpyAsyncTaskInfo;
     if (IsDavidUbDma(memcpyAsyncTaskInfo.copyType)) {

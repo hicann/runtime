@@ -11,6 +11,7 @@
 #include <new>
 #include <string>
 #include "device_enum_desc.hpp"
+#include "enum_desc.hpp"
 #include "cond_c.hpp"
 #include "internal_error_define.hpp"
 #include "label_c.hpp"
@@ -8764,8 +8765,8 @@ rtError_t ApiImpl::LoopMemcpyAsync(
 
         COND_RETURN_AND_MSG_INNER(
             (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-            "Failed to copy memory asynchronously, count=%zu, kind=%d, retCode=%#x.", sizes[i], kind,
-            static_cast<uint32_t>(error));
+            "Failed to copy memory asynchronously, count=%zu, kind=%s, retCode=%#x.", sizes[i],
+            MemcpyKindToString(kind).c_str(), static_cast<uint32_t>(error));
     }
 
     return error;

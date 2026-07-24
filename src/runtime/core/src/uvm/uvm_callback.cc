@@ -12,6 +12,7 @@
 #include "npu_driver.hpp"
 #include "api_impl.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
 
 namespace cce {
@@ -50,9 +51,9 @@ void UvmCallback::MemcpyAsyncCallback(void* userData)
     const rtError_t error = driver->MemCopySync(params->dst, params->destMax, params->src, params->cnt, kindCov);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Memcopy sync failed with code=%u dst=%p destMax=%u src=%p cnt=%u kind=%u",
+            RT_LOG_ERROR, "Memcopy sync failed with code=%u dst=%p destMax=%u src=%p cnt=%u kind=%s",
             static_cast<uint32_t>(error), params->dst, params->destMax, params->src, params->cnt,
-            static_cast<uint32_t>(kindCov));
+            MemcpyKindToString(kindCov).c_str());
     }
     delete params;
 }

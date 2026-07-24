@@ -10,6 +10,7 @@
 #include "h2h_copy_mgr.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "securec.h"
 
 namespace cce {
@@ -89,8 +90,8 @@ rtError_t H2HCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint32_
                 RtValueToPtr<void*>(RtPtrToValue<void*>(nonConstSrc) + offset), static_cast<size_t>(curSize));
             COND_RETURN_ERROR_MSG_CALL(
                 ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_INVALID_VALUE,
-                "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. size=%u, offset=%u, kind=%d.",
-                __func__, ret, strerror(ret), size, offset, RT_MEMCPY_HOST_TO_HOST);
+                "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. size=%u, offset=%u, kind=%s.",
+                __func__, ret, strerror(ret), size, offset, MemcpyKindToString(RT_MEMCPY_HOST_TO_HOST).c_str());
             offset += curSize;
         }
     }

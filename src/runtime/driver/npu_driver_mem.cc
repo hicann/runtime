@@ -2260,8 +2260,8 @@ rtError_t NpuDriver::MemCopySync(
             DRV_ERROR_PROCESS(
                 drvRet,
                 "Call driver api drvMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", "
-                "size=%" PRIu64 "(bytes), kind=%d.",
-                static_cast<int32_t>(drvRet), destMax, size, static_cast<int32_t>(kind));
+                "size=%" PRIu64 "(bytes), kind=%s.",
+                static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
         }
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -2310,8 +2310,8 @@ rtError_t NpuDriver::MemCopyAsync(
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api drvAsyncMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", size=%" PRIu64
-            "(bytes), kind=%d.",
-            static_cast<int32_t>(drvRet), destMax, size, static_cast<int32_t>(kind));
+            "(bytes), kind=%s.",
+            static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

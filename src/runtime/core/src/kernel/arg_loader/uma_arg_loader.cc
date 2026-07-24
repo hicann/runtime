@@ -16,6 +16,7 @@
 #include "api.hpp"
 #include "npu_driver.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -176,7 +177,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgsHuge(
         const uint64_t cpySize = static_cast<uint64_t>(size);
         error = umaArgAllocator->H2DMemCopy(kerArgs, args, cpySize);
         ERROR_RETURN(
-            error, "H2DMemCopy, kind=%d, retCode=%#x.", static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE),
+            error, "H2DMemCopy, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(),
             static_cast<uint32_t>(error));
     }
 
@@ -204,7 +205,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgs(
             ((argItemSize > size) ? static_cast<uint64_t>(size) : static_cast<uint64_t>(argItemSize));
         error = umaArgAllocator->H2DMemCopy(kerArgs, args, cpySize);
         ERROR_RETURN(
-            error, "H2DMemCopy, kind=%d, retCode=%#x.", static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE),
+            error, "H2DMemCopy, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(),
             static_cast<uint32_t>(error));
     }
 
@@ -224,7 +225,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgsForMix(
         UpdateArgsAddr(devAddr, argsInfo);
         error = umaArgAllocator->H2DMemCopy(devAddr, args, size);
         ERROR_RETURN(
-            error, "H2DMemCopy, kind=%d, retCode=%#x.", static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE),
+            error, "H2DMemCopy, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(),
             static_cast<uint32_t>(error));
     }
 
@@ -404,7 +405,8 @@ rtError_t UmaArgLoader::PureLoad(const uint32_t size, const void* const args, Ar
     const uint32_t argItemSize = (size > itemSize_) ? maxItemSize_ : itemSize_;
     const uint64_t cpySize = ((argItemSize > size) ? static_cast<uint64_t>(size) : static_cast<uint64_t>(argItemSize));
     error = umaArgAllocator->H2DMemCopy(kerArgs, args, cpySize);
-    ERROR_RETURN(error, "H2DMemCopy, kind=%d, retCode=%#x.", static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), error);
+    ERROR_RETURN(
+        error, "H2DMemCopy, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), error);
 
     argHandle->kerArgs = kerArgs;
     argHandle->freeArgs = true;
@@ -451,8 +453,8 @@ rtError_t UmaArgLoader::LoadCpuKernelArgs(
         copyArgs = true;
         error = umaArgAllocator->H2DMemCopy(kerArgs, argsInfo->args, cpySize);
         ERROR_GOTO(
-            error, RECYCLE, "Synchronize memcpy failed, kind=%d, retCode=%#x.",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            error, RECYCLE, "Synchronize memcpy failed, kind=%s, retCode=%#x.",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
     }
 
     result->kerArgs = (copyArgs ? umaArgAllocator->GetDevAddr(kerArgs) : argsInfo->args);
@@ -527,8 +529,8 @@ rtError_t UmaArgLoader::LoadCpuKernelArgsEx(
         RT_LOG(RT_LOG_DEBUG, "H2DMemCopy src:%p, dst:%p, size:%u.", argsInfo->args, kerArgs, size);
         error = umaArgAllocator->H2DMemCopy(kerArgs, argsInfo->args, cpySize);
         ERROR_GOTO(
-            error, RECYCLE, "Load cpu kernel args failed, kind=%d, retCode=%#x.",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            error, RECYCLE, "Load cpu kernel args failed, kind=%s, retCode=%#x.",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
     }
 
     result->kerArgs = (copyArgs ? umaArgAllocator->GetDevAddr(kerArgs) : argsInfo->args);
@@ -681,8 +683,8 @@ rtError_t UmaArgLoader::LoadStreamSwitchNArgs(
     if (error != RT_ERROR_NONE) {
         (void)drv_->DevMemFree(valueDevAddr, device_->Id_());
         RT_LOG(
-            RT_LOG_ERROR, "Failed to copy value to device when load stream switchN args, kind=%d, retCode=%#x",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            RT_LOG_ERROR, "Failed to copy value to device when load stream switchN args, kind=%s, retCode=%#x",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
         return error;
     }
     stm->PushbackSwitchNArgs(valueDevAddr);
@@ -703,8 +705,8 @@ rtError_t UmaArgLoader::LoadStreamSwitchNArgs(
         (void)drv_->DevMemFree(valueDevAddr, device_->Id_());
         (void)drv_->DevMemFree(streamIdDevAddr, device_->Id_());
         RT_LOG(
-            RT_LOG_ERROR, "Failed to copy true stream ID to device, kind=%d, retCode=%#x",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            RT_LOG_ERROR, "Failed to copy true stream ID to device, kind=%s, retCode=%#x",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
         return error;
     }
 
