@@ -1492,7 +1492,7 @@ uint32_t DavidStream::GetTaskPosTail() const
     return static_cast<uint32_t>(taskRes->GetTaskPosTail());
 }
 
-bool DavidStream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead)
+bool DavidStream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId)
 {
     constexpr uint16_t LARGER_THRESHOLD = 10U;
     constexpr uint16_t SLEEP_UNIT = 5U;
@@ -1509,7 +1509,7 @@ bool DavidStream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t
         uint32_t count = 0U;
         const uint64_t beginTime = GetWallUs();
         while (GetWallUs() - beginTime < SLEEP_UNIT) { // within 10 tasks, yield 5us at most
-            if (IsTaskExcuted(GetExecuteEndTaskId(), taskId) || (sqHead == GetTaskPosTail())) {
+            if (IsTaskExcuted(GetExecuteEndTaskId(), taskId)) {
                 return true;
             }
             count++;

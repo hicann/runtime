@@ -273,14 +273,11 @@ void RecycleModelBindStreamAllTask(Stream* const stm, const bool cleanFlag)
 
 rtError_t RecycleTaskBySqHead(Stream* const stm)
 {
-    uint16_t sqHead = 0U;
-    rtError_t error = GetDrvSqHead(stm, sqHead);
-    COND_RETURN_INFO(
-        error != RT_ERROR_NONE, error, "stream_id=%d, retCode=%#x", stm->Id_(), static_cast<uint32_t>(error));
-
+    uint16_t sqHead = static_cast<uint16_t>(MAX_UINT16_NUM);
     uint32_t endTaskId = MAX_UINT32_NUM;
-    error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
-    COND_PROC(((error != RT_ERROR_NONE) || (endTaskId == MAX_UINT32_NUM)), return RT_ERROR_NONE);
+    rtError_t error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
+    COND_PROC(error != RT_ERROR_NONE, return error);
+    COND_PROC((endTaskId == MAX_UINT32_NUM), return RT_ERROR_NONE);
     stm->SetExecuteEndTaskId(endTaskId);
     return FinishedTaskReclaim(
         stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(), sqHead);

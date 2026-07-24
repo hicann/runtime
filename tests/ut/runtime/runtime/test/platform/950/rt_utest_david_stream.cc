@@ -993,17 +993,15 @@ TEST_F(DavidStreamTest, TestSyncDelayTime)
 
     uint16_t finishedId = 10U;
     uint16_t taskId = 30U;
-    uint16_t sqHead = 0U;
-    bool isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, false);
 
     finishedId = 25U;
-    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, true);
 
-    sqHead = 1U;
     MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsTaskExcuted).stubs().will(returnValue(false));
-    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, false);
 }
 
@@ -1019,7 +1017,7 @@ TEST_F(DavidStreamTest, SynchronizeDelayTime_DistanceGte10)
     uint16_t taskId = 15;
     uint16_t sqHead = 0;
 
-    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(result, false);
 }
 
@@ -1041,7 +1039,7 @@ TEST_F(DavidStreamTest, SynchronizeDelayTime_IsTaskExcutedTrue)
     uint16_t taskId = 5;
     uint16_t sqHead = 100;
 
-    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(result, true);
 
     taskResMng->taskResAHead_.Set(origHead);
@@ -1066,7 +1064,7 @@ TEST_F(DavidStreamTest, SynchronizeDelayTime_WrapAround_IsTaskExcutedTrue)
     uint16_t taskId = 0;
     uint16_t sqHead = 100;
 
-    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(result, true);
 
     taskResMng->taskResAHead_.Set(origHead);
@@ -1091,7 +1089,7 @@ TEST_F(DavidStreamTest, SynchronizeDelayTime_WrapAround_IsTaskExcutedFalse)
     uint16_t taskId = 0;
     uint16_t sqHead = 100;
 
-    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(result, false);
 
     taskResMng->taskResAHead_.Set(origHead);

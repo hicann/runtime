@@ -70,7 +70,7 @@ public:
     uint32_t GetTaskPosHead() const override;
     uint32_t GetTaskPosTail() const override;
     bool IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId) override;
-    bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead) override;
+    bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId) override;
     void EraseCacheStream() override;
     void RecordPosToTaskIdMap(TaskInfo* const tsk, const uint32_t sendSqeNum);
     void ExpandStreamRecycleModelBindStreamAllTask(const bool cleanFlag);

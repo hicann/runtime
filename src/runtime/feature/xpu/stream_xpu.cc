@@ -348,15 +348,20 @@ rtError_t XpuStream::CheckContextStatus(const bool isBlockDefaultStream) const
     }
 }
 
-rtError_t XpuStream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t& finishedId)
+rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finishedId)
 {
     // sqHead indicates the current position of execution; it has not yet been completed.
     const uint32_t rtsqDepth = GetSqDepth();
+
     uint16_t posTail = GetTaskPosTail();
     uint16_t posHead = GetTaskPosHead();
+    rtError_t error = Device_()->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Failed to query SQ head, stream_id=%d, retCode=%#x.", streamId_,
+        static_cast<uint32_t>(error));
     if (((posTail + rtsqDepth - sqHead) % rtsqDepth) > (posTail + rtsqDepth - posHead) % rtsqDepth) {
         RT_LOG(RT_LOG_WARNING, "Invalid task position relation, stream_id=%d, sqHead=%u.", streamId_, sqHead);
-        return RT_ERROR_INVALID_VALUE;
+        return RT_ERROR_NONE;
     }
     uint32_t endTaskId = MAX_UINT32_NUM;
     uint32_t nextTaskId = MAX_UINT32_NUM;
@@ -404,6 +409,7 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
     rtError_t error = RT_ERROR_NONE;
     const uint16_t perSchedYield = 1000U;
     int32_t reportTime = 180 * 1000; // report timeout 3 min.
+    const uint32_t posTail = GetTaskPosTail();
     while (true) {
         COND_RETURN_AND_MSG_OUTER(
             IsProcessTimeout(beginTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT, ErrorCode::EE1002,
@@ -419,22 +425,19 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
         COND_RETURN_AND_MSG_INNER(
             error != RT_ERROR_NONE, error, "Context is in abort state, stream_id=%d, status=%#x.", streamId_,
             static_cast<uint32_t>(error));
-        if (TASK_ID_GEQ(recycleFinishTaskId_, taskId) || sqHead == GetTaskPosTail()) {
+        if (TASK_ID_GEQ(recycleFinishTaskId_, taskId) || (sqHead == posTail)) {
             return RT_ERROR_NONE;
         }
         if (!Device_()->GetIsDoingRecycling()) {
             Device_()->WakeUpRecycleThread();
         }
-        error = Device_()->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
-        COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error, "Failed to query SQ head, stream_id=%d, retCode=%#x.", streamId_,
-            static_cast<uint32_t>(error));
         uint32_t finishedId = MAX_UINT32_NUM;
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
+        COND_PROC((error != RT_ERROR_NONE), return error);
         RT_LOG(
             RT_LOG_DEBUG, "stream_id=%u, task_id=%u, pendingNum=%u, sqHead=%u, recycleFinishTaskId_=%u.", Id_(), taskId,
             GetPendingNum(), sqHead, recycleFinishTaskId_);
-        COND_PROC((error != RT_ERROR_NONE || finishedId == MAX_UINT32_NUM), continue);
+        COND_PROC((finishedId == MAX_UINT32_NUM), continue);
         if (TASK_ID_GEQ(finishedId, taskId)) {
             return RT_ERROR_NONE;
         }
