@@ -31,6 +31,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_memcpy_async_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc

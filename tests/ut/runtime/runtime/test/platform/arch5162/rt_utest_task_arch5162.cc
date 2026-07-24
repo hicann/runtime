@@ -467,3 +467,63 @@ TEST_F(Arch5162TaskTest, StreamActiveTaskInit)
     delete stream;
     delete device;
 }
+
+TEST_F(Arch5162TaskTest, ConstructSqeForMaintenanceTask)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 10;
+    taskInfo.u.maintenanceTaskInfo.mtType = MT_STREAM_DESTROY;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MAINTENANCE];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_RESERVED);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, taskInfo.id);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForMaintenanceTask_RecycleTask)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 20;
+    taskInfo.u.maintenanceTaskInfo.mtType = MT_STREAM_RECYCLE_TASK;
+    taskInfo.u.maintenanceTaskInfo.flag = true;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MAINTENANCE];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, taskInfo.id);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, MaintenanceTaskRegister)
+{
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].waitAsyncCpCompleteFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_MAINTENANCE], nullptr);
+}
