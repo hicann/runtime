@@ -1936,12 +1936,8 @@ rtError_t StarsEngine::RecycleSeparatedStmByFinishedId(Stream * const stm, const
 
 rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
 {
-    uint16_t sqHead = 0U;
+    uint16_t sqHead = static_cast<uint16_t>(MAX_UINT16_NUM);
     uint32_t endTaskId = MAX_UINT16_NUM;
-    rtError_t error = device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), stm->GetSqId(), sqHead);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to query SQ head, retCode=%#x.",
-                                static_cast<uint32_t>(error));
-
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE)) {
         endTaskId = stm->GetLastTaskId();
         RT_LOG(RT_LOG_INFO, "stream is in failure abort and need to reclaim all, stream_id=%d, lastTaskId=%u, "
@@ -1949,8 +1945,9 @@ rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
         return RecycleSeparatedStmByFinishedId(stm, endTaskId);
     }
 
-    error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
-    COND_PROC(((error != RT_ERROR_NONE) || (endTaskId == MAX_UINT16_NUM)), return RT_ERROR_NONE);
+    rtError_t error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
+    COND_PROC((error != RT_ERROR_NONE), return error);
+    COND_PROC((endTaskId == MAX_UINT16_NUM), return RT_ERROR_NONE);
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, sqHead=%d, posHead=%u, posTail=%u, finishedTaskId=%d",
            stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
     (void)RecycleSeparatedStmByFinishedId(stm, endTaskId);
