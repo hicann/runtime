@@ -13,10 +13,10 @@
 
 #define private public
 #define protected public
-#include "inc/package_worker_factory.h"
+#include "package_worker_factory.h"
 #include "tsd_log.h"
-#include "inc/package_worker_utils.h"
-#include "inc/aicpu_thread_package_worker.h"
+#include "package_worker_utils.h"
+#include "aicpu_thread_package_worker.h"
 #undef private
 #undef protected
 using namespace tsd;

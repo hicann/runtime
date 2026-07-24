@@ -11,7 +11,7 @@
 #include "device_comm.h"
 
 #include "tsd_hdc_client.h"
-#include "inc/basic_define.h"
+#include "basic_define.h"
 #include "tsd_util_func.h"
 #include "tsd_log.h"
 

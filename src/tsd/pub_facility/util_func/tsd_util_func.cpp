@@ -26,8 +26,8 @@
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
-#include "inc/basic_define.h"
-#include "inc/weak_ascend_hal.h"
+#include "basic_define.h"
+#include "weak_ascend_hal.h"
 #include "tsd_sha256.h"
 #include "tsd_log.h"
 
@@ -394,6 +394,20 @@ bool IsCurrentVfMode(const uint32_t deviceId, const uint32_t vfId)
     } else {
         return false;
     }
+}
+
+std::string ExtractSubString(const std::string& input, const std::string& begin, const std::string& end)
+{
+    size_t pos = input.find(begin);
+    if (pos == std::string::npos) {
+        return "";
+    }
+    size_t left = pos + begin.length();
+    size_t right = input.find(end, left);
+    if (right == std::string::npos) {
+        return "";
+    }
+    return input.substr(left, right - left);
 }
 
 bool IsVfModeCheckedByDeviceId(const uint32_t deviceId)

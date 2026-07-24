@@ -12,7 +12,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "mockcpp/ChainingMockHelper.h"
 
-#include "inc/tsd_path_mgr.h"
+#include "tsd_path_mgr.h"
 #include "tsd_util_func.h"
 
 using namespace tsd;

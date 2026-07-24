@@ -13,10 +13,10 @@
 
 #define private public
 #define protected public
-#include "inc/package_worker.h"
+#include "package_worker.h"
 #undef private
 #undef protected
-#include "inc/package_worker_utils.h"
+#include "package_worker_utils.h"
 
 using namespace tsd;
 

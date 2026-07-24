@@ -252,4 +252,65 @@ TSD_StatusT HdcMessageBuilder::BuildCommonOpen(HDCMessage& msg, const MessageCon
     SetDeviceIds(msg, ctx);
     return SetProcSignPid(msg, ctx, true);
 }
+
+TSD_StatusT HdcMessageBuilder::BuildCheckPackageRetry(HDCMessage& msg, const MessageContext& ctx)
+{
+    msg.set_real_device_id(ctx.logicDeviceId);
+    msg.set_type(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
+    msg.set_check_code(ctx.checkCode);
+    msg.set_package_type(ctx.packageType);
+    msg.set_wait_flag(ctx.waitFlag);
+    return TSD_OK;
+}
+
+TSD_StatusT HdcMessageBuilder::BuildCheckPackage(HDCMessage& msg, const MessageContext& ctx)
+{
+    msg.set_real_device_id(ctx.logicDeviceId);
+    msg.set_type(HDCMessage::TSD_CHECK_PACKAGE);
+    msg.set_asan(ctx.asan);
+    if (ctx.checkCode != 0U) {
+        msg.set_check_code(ctx.checkCode);
+    }
+    if (ctx.extendpkgCheckCode != 0U) {
+        msg.set_extendpkg_check_code(ctx.extendpkgCheckCode);
+    }
+    if (ctx.ascendcppCheckCode != 0U) {
+        msg.set_ascendcpppkg_check_code(ctx.ascendcppCheckCode);
+    }
+    return TSD_OK;
+}
+
+TSD_StatusT HdcMessageBuilder::BuildUpdatePackageConfig(HDCMessage& msg, const MessageContext& ctx)
+{
+    msg.set_real_device_id(ctx.logicDeviceId);
+    msg.set_type(HDCMessage::TSD_UPDATE_PACKAGE_PROCESS_CONFIG);
+    return SetProcSignPid(msg, ctx, false);
+}
+
+TSD_StatusT HdcMessageBuilder::BuildNormalCheckCode(HDCMessage& msg, const MessageContext& ctx)
+{
+    msg.set_real_device_id(ctx.logicDeviceId);
+    msg.set_type(HDCMessage::TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL);
+    SinkPackageHashCodeInfo* const pkgHostInfo = msg.add_package_hash_code_list();
+    if (pkgHostInfo == nullptr) {
+        TSD_ERROR("add package hash code list error");
+        return TSD_INTERNAL_ERROR;
+    }
+    pkgHostInfo->set_package_name(ctx.packageName);
+    pkgHostInfo->set_hash_code(ctx.hashCode);
+    if (!ctx.hostPluginVersion.Empty()) {
+        PluginPackageVersionInfo* const info = msg.add_host_plugin_versions();
+        if (info == nullptr) {
+            TSD_ERROR("add host plugin versions error");
+            return TSD_INTERNAL_ERROR;
+        }
+        info->set_package_name(ctx.packageName);
+        info->set_version(ctx.hostPluginVersion.version);
+        info->set_timestamp(ctx.hostPluginVersion.timestamp);
+    }
+    msg.set_package_worker_type(ctx.packageWorkerType);
+    msg.set_package_max_process_time(ctx.packageMaxProcessTime);
+    msg.set_package_type(ctx.packageType);
+    return TSD_OK;
+}
 } // namespace tsd

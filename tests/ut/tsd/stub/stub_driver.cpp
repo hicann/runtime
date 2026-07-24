@@ -15,7 +15,7 @@
 #include "stub_log.h"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
-#include "inc/weak_ascend_hal.h"
+#include "weak_ascend_hal.h"
 
 static const int32_t PHYSICAL_ID = 15;
 

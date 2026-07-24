@@ -274,14 +274,15 @@ TEST_F(ClientManagerTest, CheckPackageExistsMatchExtend)
 
 TEST_F(ClientManagerTest, CheckPackageExistsFail)
 {
-    MOCKER_CPP(&ClientManager::GetPackagePath).stubs().will(returnValue(false));
+    using GetPackagePathSig = bool (PackageEnvInfo::*)(std::string&, const uint32_t) const;
+    MOCKER_CPP(static_cast<GetPackagePathSig>(&PackageEnvInfo::GetPackagePath)).stubs().will(returnValue(false));
     const bool ret = ClientManager::GetInstance(0)->CheckPackageExists();
     EXPECT_EQ(ret, false);
 }
 
 TEST_F(ClientManagerTest, GetPackagePathFail)
 {
-    MOCKER_CPP(&ClientManager::GetPackageTitle).stubs().will(returnValue(false));
+    MOCKER_CPP(&PackageEnvInfo::GetPackageTitle).stubs().will(returnValue(false));
     std::string kernelPath;
     const bool ret = ClientManager::GetInstance(0)->GetPackagePath(kernelPath, 0U);
     EXPECT_EQ(ret, false);

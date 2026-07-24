@@ -157,5 +157,7 @@ bool GetFlagFromEnv(const char_t* const envStr, const char_t* const envValue);
 // exports drvHdcSendFile) by inspecting the address of that symbol with
 // dladdr(3).  Returns an empty string on failure.
 std::string GetHostSoPath();
+
+std::string ExtractSubString(const std::string& input, const std::string& begin, const std::string& end);
 } // namespace tsd
 #endif // TSD_PUB_FACILITY_UTIL_FUNC_TSD_UTIL_FUNC_H

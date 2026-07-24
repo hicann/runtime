@@ -11,11 +11,13 @@
 #define INNER_INC_CLIENT_MANAGER_H
 
 #include <mmpa/mmpa_api.h>
+#include <vector>
 #include "tsd_util_func.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
 #include "tsd/tsd_client.h"
-#include "inc/basic_define.h"
+#include "basic_define.h"
+#include "package_env_info.h"
 #define TSD_PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)
 
 namespace tsd {
@@ -184,6 +186,14 @@ public:
 
     bool GetPackageTitle(std::string& packageTitle) const;
 
+    uint32_t GetPlatInfoMode() const;
+
+    bool CheckPackageExists(const bool loadAicpuKernelFlag = true)
+
+    {
+        return envInfo_.CheckPackageExists(loadAicpuKernelFlag);
+    }
+
 protected:
     /**
      * @ingroup ClientManager
@@ -193,23 +203,10 @@ protected:
 
     /**
      * @ingroup ClientManager
-     * @brief GetPlatInfoMode get platinfo mode
-     */
-    uint32_t GetPlatInfoMode() const;
-
-    /**
-     * @ingroup ClientManager
      * @brief SetPlatInfoMode set platinfo mode value
      * @param [in] platInfoMode : used to set g_platInfo.mode
      */
     void SetPlatInfoMode(const uint32_t platInfoMode) const;
-
-    /**
-     * @ingroup ClientManager
-     * @brief carry aicpu ops package to device
-     * @return true: exist; false：not exist
-     */
-    bool CheckPackageExists(const bool loadAicpuKernelFlag = true);
 
     static void SetPlatInfoChipType(const ChipType_t curType);
 
@@ -217,12 +214,15 @@ protected:
 
     uint32_t logicDeviceId_;
     ProfilingMode profilingMode_;
-    std::string packagePath_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
     static RunningMode g_runningMode;
     static std::mutex g_profilingCallbackMut;
     static MsprofReporterCallback g_profilingCallback;
     static SchedMode aicpuSchedMode_;
-    std::string packageName_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
+
+protected:
+    PackageEnvInfo envInfo_;
+    std::string (&packagePath_)[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
+    std::string (&packageName_)[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 
 private:
     ClientManager(const ClientManager&) = delete;
@@ -230,9 +230,18 @@ private:
     ClientManager& operator=(const ClientManager&) = delete;
     ClientManager& operator=(ClientManager&) = delete;
     ClientManager& operator=(ClientManager&&) = delete;
-    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const;
-    bool CheckPackageExistsOnce(const uint32_t packageType);
-    std::string packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
+    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const
+
+    {
+        return envInfo_.GetPackagePath(packagePath, packageType);
+    }
+    bool CheckPackageExistsOnce(const uint32_t packageType) { return envInfo_.CheckPackageExistsOnce(packageType); }
+    std::vector<std::string> ScanAndMatchPackages(const std::string& packagePath, const uint32_t packageType) const
+
+    {
+        return envInfo_.ScanAndMatchPackages(packagePath, packageType);
+    }
+    std::string (&packagePattern_)[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 };
 } // namespace tsd
 #endif // INNER_INC_CLIENT_MANAGER_H

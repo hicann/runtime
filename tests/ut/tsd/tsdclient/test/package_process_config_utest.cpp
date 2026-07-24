@@ -13,10 +13,10 @@
 #include <pwd.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "inc/package_worker_utils.h"
+#include "package_worker_utils.h"
 #define private public
 #define protected public
-#include "inc/package_process_config.h"
+#include "package_process_config.h"
 #undef private
 #undef protected
 

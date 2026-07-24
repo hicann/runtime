@@ -18,7 +18,7 @@
 #include "inc/process_mode_manager.h"
 #include "device_comm.h"
 #include "tsd_hdc_client.h"
-#include "inc/weak_ascend_hal.h"
+#include "weak_ascend_hal.h"
 #undef private
 #undef protected
 

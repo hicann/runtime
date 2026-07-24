@@ -13,9 +13,9 @@
 
 #include <mutex>
 #include <string>
-#include "inc/weak_log.h"
+#include "weak_log.h"
 #include "tsd/status.h"
-#include "inc/error_code.h"
+#include "error_code.h"
 #include "mmpa/mmpa_api.h"
 
 #define TSD_INFO(log, ...)                                                                                             \

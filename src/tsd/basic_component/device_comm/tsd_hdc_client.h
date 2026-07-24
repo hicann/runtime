@@ -19,7 +19,7 @@
 #include "proto/tsd_message.pb.h"
 #include "device_comm.h"
 #include "tsd_hdc_common.h"
-#include "inc/tsd_message_parse_client.h"
+#include "tsd_message_parse_client.h"
 
 namespace tsd {
 constexpr uint32_t HDC_CLIENT_WAIT_TIMEOUT_MS = 30000U;    // 30s

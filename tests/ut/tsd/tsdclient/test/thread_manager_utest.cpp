@@ -15,7 +15,7 @@
 #define protected public
 #include "inc/client_manager.h"
 #include "inc/thread_mode_manager.h"
-#include "inc/package_worker.h"
+#include "package_worker.h"
 #undef private
 #undef protected
 

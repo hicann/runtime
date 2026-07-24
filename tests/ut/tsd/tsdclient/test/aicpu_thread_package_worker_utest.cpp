@@ -10,11 +10,11 @@
 #include <thread>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "inc/package_worker_utils.h"
+#include "package_worker_utils.h"
 #define private public
 #define protected public
-#include "inc/aicpu_package_process.h"
-#include "inc/aicpu_thread_package_worker.h"
+#include "aicpu_package_process.h"
+#include "aicpu_thread_package_worker.h"
 #undef private
 #undef protected
 

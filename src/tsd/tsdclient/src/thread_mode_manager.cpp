@@ -13,8 +13,8 @@
 #include "tsd_log.h"
 #include "tsd_util_func.h"
 #include "env_internal_api.h"
-#include "inc/package_worker.h"
-#include "inc/package_worker_utils.h"
+#include "package_worker.h"
+#include "package_worker_utils.h"
 
 namespace {
 const uint32_t SUB_PROC_PARAM_LIST_MAX_COUNT = 128U;
@@ -314,32 +314,9 @@ TSD_StatusT ThreadModeManager::InitQs(const InitFlowGwInfo* const initInfo)
 
 TSD_StatusT ThreadModeManager::StartCallQS(const uint32_t logicDeviceId)
 {
-    TSD_StatusT ret = TSD_OK;
-    if (qsHandle_ == nullptr) {
-        const std::string libPath = "/usr/lib64/libqueue_schedule.so";
-        qsHandle_ = mmDlopen(libPath.c_str(), MMPA_RTLD_NOW);
-        if (qsHandle_ == nullptr) {
-            const std::string helperPath = "libqueue_schedule.so";
-            qsHandle_ = mmDlopen(helperPath.c_str(), MMPA_RTLD_NOW);
-            if (qsHandle_ == nullptr) {
-                ret = TSD_INTERNAL_ERROR;
-                TSD_ERROR(
-                    "[ThreadModeManager] failed open libqueue_schedule.so, deviceId[%u], reason[%s]", logicDeviceId_,
-                    mmDlerror());
-                return ret;
-            }
-        }
-        if (mmDlsym(qsHandle_, "InitQueueScheduler") == nullptr) {
-            TSD_ERROR("[TsdClient] InitQueueScheduler is nullptr, symbol lost");
-        }
-        startQs_ = reinterpret_cast<StartQS>(mmDlsym(qsHandle_, "InitQueueScheduler"));
-        if (startQs_ == nullptr) {
-            (void)mmDlclose(qsHandle_);
-            qsHandle_ = nullptr;
-            ret = TSD_INTERNAL_ERROR;
-            TSD_ERROR("[TsdClient] failed mmDlsym QS function, logicDeviceId=%u", logicDeviceId);
-            return ret;
-        }
+    TSD_StatusT ret = LoadQsLibrary();
+    if (ret != TSD_OK) {
+        return ret;
     }
 #ifdef NOT_COVERAGE_BY_UT
     TSD_INFO("[TsdClient] QS Initial, logicDeviceId=%u", logicDeviceId);
@@ -367,6 +344,34 @@ TSD_StatusT ThreadModeManager::StartCallQS(const uint32_t logicDeviceId)
     return ret;
 }
 
+TSD_StatusT ThreadModeManager::LoadQsLibrary()
+{
+    if (qsHandle_ != nullptr) {
+        return TSD_OK;
+    }
+    qsHandle_ = mmDlopen("/usr/lib64/libqueue_schedule.so", MMPA_RTLD_NOW);
+    if (qsHandle_ == nullptr) {
+        qsHandle_ = mmDlopen("libqueue_schedule.so", MMPA_RTLD_NOW);
+    }
+    if (qsHandle_ == nullptr) {
+        TSD_ERROR(
+            "[ThreadModeManager] failed open libqueue_schedule.so, deviceId[%u], reason[%s]", logicDeviceId_,
+            mmDlerror());
+        return TSD_INTERNAL_ERROR;
+    }
+    if (mmDlsym(qsHandle_, "InitQueueScheduler") == nullptr) {
+        TSD_ERROR("[TsdClient] InitQueueScheduler is nullptr, symbol lost");
+    }
+    startQs_ = reinterpret_cast<StartQS>(mmDlsym(qsHandle_, "InitQueueScheduler"));
+    if (startQs_ == nullptr) {
+        (void)mmDlclose(qsHandle_);
+        qsHandle_ = nullptr;
+        TSD_ERROR("[TsdClient] failed mmDlsym QS function, logicDeviceId=%u", logicDeviceId_);
+        return TSD_INTERNAL_ERROR;
+    }
+    return TSD_OK;
+}
+
 TSD_StatusT ThreadModeManager::LoadFileToDevice(
     const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen)
 {
@@ -391,48 +396,53 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
             static_cast<uint32_t>(openArgs->procType));
         return TSD_INTERNAL_ERROR;
     }
-    if (adprofHandle_ == nullptr) {
-        // 只传soname，LD_LIBRARY_PATH由调用者profiling侧保证
-        const std::string adprofLibName = "libascend_devprof.so";
-        adprofHandle_ = mmDlopen(adprofLibName.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
-        if (adprofHandle_ == nullptr) {
-            TSD_ERROR(
-                "[ThreadModeManager] failed open libascend_devprof.so, deviceId[%u], reason[%s]", logicDeviceId_,
-                mmDlerror());
-            return TSD_INTERNAL_ERROR;
-        }
-        if (startAdprof_ == nullptr) {
-            startAdprof_ = reinterpret_cast<StartAdprof>(mmDlsym(adprofHandle_, "AdprofStart"));
-            if (startAdprof_ == nullptr) {
-                TSD_ERROR(
-                    "[ThreadModeManager] failed mmDlsym startAdprof function, deviceId[%u], reason[%s]", logicDeviceId_,
-                    mmDlerror());
-                return TSD_INTERNAL_ERROR;
-            }
-        }
+
+    TSD_StatusT ret = LoadAdprofLibrary();
+    if (ret != TSD_OK) {
+        return ret;
     }
 
     if (openArgs->extParamCnt > SUB_PROC_PARAM_LIST_MAX_COUNT) {
         TSD_ERROR("extParamList too long, extParamCnt:%u", static_cast<uint32_t>(openArgs->extParamCnt));
         return TSD_INTERNAL_ERROR;
     }
-    char_t* argv[SUB_PROC_PARAM_LIST_MAX_COUNT + 1] = {nullptr};
+
     std::vector<std::string> extParamList;
+    char_t* argv[SUB_PROC_PARAM_LIST_MAX_COUNT + 1] = {nullptr};
     for (uint64_t index = 0; index < openArgs->extParamCnt; index++) {
-        std::string extParam(openArgs->extParamList[index].paramInfo, openArgs->extParamList[index].paramLen);
+        extParamList.emplace_back(openArgs->extParamList[index].paramInfo, openArgs->extParamList[index].paramLen);
         TSD_INFO(
-            "index:%llu, extra parameters:%s, len:%llu", index, extParam.c_str(),
+            "index:%llu, extra parameters:%s, len:%llu", index, extParamList[index].c_str(),
             openArgs->extParamList[index].paramLen);
-        extParamList.push_back(extParam);
         argv[index] = const_cast<char*>(extParamList[index].c_str());
     }
-    int32_t argc = static_cast<int32_t>(openArgs->extParamCnt);
-    const int32_t result = (*startAdprof_)(argc, (const char*)(&argv[0]));
+    const int32_t result = (*startAdprof_)(static_cast<int32_t>(openArgs->extParamCnt), (const char*)(&argv[0]));
     if (result != 0) {
         TSD_ERROR("[ThreadModeManager] failed call startAdprof logicDeviceId_=%u, result=%d", logicDeviceId_, result);
         return TSD_INTERNAL_ERROR;
     }
+    return TSD_OK;
+}
 
+TSD_StatusT ThreadModeManager::LoadAdprofLibrary()
+{
+    if (adprofHandle_ != nullptr) {
+        return TSD_OK;
+    }
+    adprofHandle_ = mmDlopen("libascend_devprof.so", MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
+    if (adprofHandle_ == nullptr) {
+        TSD_ERROR(
+            "[ThreadModeManager] failed open libascend_devprof.so, deviceId[%u], reason[%s]", logicDeviceId_,
+            mmDlerror());
+        return TSD_INTERNAL_ERROR;
+    }
+    startAdprof_ = reinterpret_cast<StartAdprof>(mmDlsym(adprofHandle_, "AdprofStart"));
+    if (startAdprof_ == nullptr) {
+        TSD_ERROR(
+            "[ThreadModeManager] failed mmDlsym startAdprof function, deviceId[%u], reason[%s]", logicDeviceId_,
+            mmDlerror());
+        return TSD_INTERNAL_ERROR;
+    }
     return TSD_OK;
 }
 

@@ -14,7 +14,7 @@
 #include "device_comm_agent.h"
 #include "hdc_message_builder.h"
 #include "inc/client_manager.h"
-#include "inc/basic_define.h"
+#include "basic_define.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/tsd_client.h" // SubProcType
 
@@ -45,7 +45,6 @@ class CapabilityManager;
 // Every per-type behaviour is expressed as data (a function pointer) rather
 // than a switch-case branch, so adding a new capability type only requires
 // appending one row to the table in capability_manager.cpp.
-//
 // The functions receive a CapabilityManager reference so they can access
 // member getters/setters without friendship.
 struct CapabilitySpec {

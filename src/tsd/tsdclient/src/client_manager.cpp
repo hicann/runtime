@@ -36,9 +36,6 @@ struct PlatformInfo {
 };
 static PlatformInfo g_platInfo;
 bool g_hadGetPlatformInfo = false;
-const std::string AICPU_PACKAGE_PATTERN = "^Ascend([0-9]{3}(rc)?(P)?)?-aicpu_syskernels\\.tar\\.gz$";
-const std::string EXTEND_PACKAGE_PATTERN = "^Ascend([0-9]{3}(rc)?(P)?)?-aicpu_extend_syskernels\\.tar\\.gz$";
-const std::string ASCENDCPP_PACKAGE_PATTERN = "^transformer_tile_fwk_aicpu_kernel\\.tar\\.gz$";
 } // namespace
 
 RunningMode ClientManager::g_runningMode = RunningMode::UNSET_MODE;
@@ -82,13 +79,14 @@ bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
 }
 
 ClientManager::ClientManager(const uint32_t& deviceId)
-    : logicDeviceId_(deviceId), profilingMode_(ProfilingMode::PROFILING_CLOSE)
+    : logicDeviceId_(deviceId),
+      profilingMode_(ProfilingMode::PROFILING_CLOSE),
+      envInfo_(deviceId, g_platInfo.onlineStatus, g_platInfo.isAdcEnv, static_cast<uint32_t>(g_platInfo.chipType)),
+      packagePath_(envInfo_.packagePath_),
+      packageName_(envInfo_.packageName_),
+      packagePattern_(envInfo_.packagePattern_)
 {
     GetProfilingMode();
-    packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)] = AICPU_PACKAGE_PATTERN;
-    packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)] =
-        EXTEND_PACKAGE_PATTERN;
-    packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)] = ASCENDCPP_PACKAGE_PATTERN;
 }
 
 ClientManager::~ClientManager()
@@ -228,146 +226,10 @@ TSD_StatusT ClientManager::SetAicpuSchedMode(const uint32_t schedMode)
     return tsd::TSD_OK;
 }
 
-bool ClientManager::CheckPackageExistsOnce(const uint32_t packageType)
-{
-    std::string packagePath;
-    if (!GetPackagePath(packagePath, packageType)) {
-        TSD_INFO(
-            "[TsdClient][deviceId=%u] Package path is invalid, skip load package file, packageType[%u]", logicDeviceId_,
-            packageType);
-        return false;
-    }
-    if ((mmAccess(packagePath.c_str()) != EN_OK) || (mmIsDir(packagePath.c_str()) != EN_OK)) {
-        TSD_WARN(
-            "[TsdClient][deviceId=%u] path[%s] does not exist, packageType[%u]", logicDeviceId_, packagePath.c_str(),
-            packageType);
-        return false;
-    }
-    mmDirent2** fileList;
-    const int32_t fileCount = mmScandir2(packagePath.c_str(), &fileList, nullptr, nullptr);
-    if (fileCount < 0) {
-        TSD_WARN(
-            "[TsdClient][deviceId=%u] scandir path[%s] failed, packageType[%u]", logicDeviceId_, packagePath.c_str(),
-            packageType);
-        return false;
-    }
-    std::vector<std::string> files;
-    for (int32_t i = 0; i < fileCount; i++) {
-        files.emplace_back(fileList[i]->d_name);
-    }
-    mmScandirFree2(fileList, fileCount);
-    std::vector<std::string> packages;
-    for (const std::string& fileName : files) {
-        TSD_INFO(
-            "[TsdClient][deviceId=%u] check file[%s], packageType[%u]", logicDeviceId_, fileName.c_str(), packageType);
-        // c regex, cannot use c++ regex here because the g++ compiler does not support it
-        if (ValidateStr(fileName.c_str(), packagePattern_[packageType].c_str())) {
-            TSD_INFO(
-                "[TsdClient][deviceId=%u] find package[%s] in path[%s], packageType[%u]", logicDeviceId_,
-                fileName.c_str(), packagePath.c_str(), packageType);
-            packages.emplace_back(fileName);
-        }
-    }
-    packageName_[packageType] = "";
-    bool needSendPackage = false;
-    if (packages.size() != 1U) {
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId=%u] pkg size[%zu] in path[%s] must be only one, skip send package, packageType[%u]",
-            logicDeviceId_, packages.size(), packagePath.c_str(), packageType);
-    } else {
-        needSendPackage = true;
-        if (!packages.empty()) {
-            packageName_[packageType] = packages[0U];
-        }
-    }
-    if (needSendPackage) {
-        packagePath_[packageType] = packagePath;
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId=%u] set package path[%s], package name[%s], packageType[%u]", logicDeviceId_,
-            packagePath_[static_cast<uint32_t>(packageType)].c_str(), packageName_[packageType].c_str(), packageType);
-        return true;
-    }
-
-    return false;
-}
-
-bool ClientManager::CheckPackageExists(const bool loadAicpuKernelFlag)
-{
-    bool hasPackage = false;
-    std::vector<uint32_t> packageTypes;
-    if (loadAicpuKernelFlag) {
-        packageTypes.push_back(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL));
-        packageTypes.push_back(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL));
-    }
-    packageTypes.push_back(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP));
-    for (const auto packageType : packageTypes) {
-        if (CheckPackageExistsOnce(packageType)) {
-            TSD_INFO("[TsdClient][deviceId=%u] get package successfully, packageType[%u]", logicDeviceId_, packageType);
-            hasPackage = true;
-        }
-    }
-
-    return hasPackage;
-}
-
-bool ClientManager::GetPackagePath(std::string& packagePath, const uint32_t packageType) const
-{
-    std::string ascendAicpuPath;
-    GetEnvFromMmSys(MM_ENV_ASCEND_AICPU_PATH, "ASCEND_AICPU_PATH", ascendAicpuPath);
-    if (ascendAicpuPath.empty()) {
-        ascendAicpuPath = "/usr/local/Ascend/";
-        TSD_INFO(
-            "[TsdClient][deviceId=%u] environment variable ASCEND_AICPU_PATH is not set, use default "
-            "value[%s]",
-            logicDeviceId_, ascendAicpuPath.c_str());
-    }
-    std::string packageTitle = "";
-    if (!GetPackageTitle(packageTitle)) {
-        TSD_RUN_INFO("[TsdClient][deviceId=%u] skip load aicpu opkernel packages", logicDeviceId_);
-        return false;
-    }
-
-    if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL) ||
-        packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)) {
-        packagePath = ascendAicpuPath + "/opp/" + packageTitle + "/aicpu/";
-    } else if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)) {
-        packagePath = ascendAicpuPath + "/opp/built-in/";
-    } else {
-        return false;
-    }
-
-    TSD_INFO("[TsdClient][deviceId=%u] get packagePath[%s]", logicDeviceId_, packagePath.c_str());
-    return true;
-}
-
 bool ClientManager::GetPackageTitle(std::string& packageTitle) const
 {
-    switch (g_platInfo.chipType) {
-        case CHIP_MINI:
-            if (g_platInfo.onlineStatus == static_cast<uint32_t>(ModeType::OFFLINE)) {
-                packageTitle = "Ascend310RC";
-            } else {
-                packageTitle = "Ascend310";
-            }
-            break;
-        case CHIP_ASCEND_910A:
-            packageTitle = "Ascend910";
-            break;
-        case CHIP_DC:
-            packageTitle = "Ascend310P";
-            break;
-        case CHIP_ASCEND_950:
-        case CHIP_ASCEND_910B:
-        case CHIP_CLOUD_V5:
-        case CHIP_MINI_V3:
-        case CHIP_ASCEND_350:
-            packageTitle = "Ascend";
-            break;
-        default:
-            packageTitle = "";
-            break;
-    }
-    return !packageTitle.empty();
+    return PackageEnvInfo::ResolvePackageTitle(
+        static_cast<uint32_t>(g_platInfo.chipType), g_platInfo.onlineStatus, packageTitle);
 }
 
 void ClientManager::GetProfilingMode()

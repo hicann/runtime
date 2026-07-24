@@ -17,8 +17,8 @@
 #include "proto/tsd_message.pb.h"
 #include "driver/ascend_hal.h"
 #include "tsd/status.h"
-#include "inc/basic_define.h"
-#include "inc/tsd_version_verify.h"
+#include "basic_define.h"
+#include "tsd_version_verify.h"
 #include "tsd_log.h"
 
 namespace tsd {

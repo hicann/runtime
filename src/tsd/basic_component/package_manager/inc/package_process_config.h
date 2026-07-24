@@ -1,0 +1,99 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef TSD_PACKAGE_PROCESS_CONFIG_H
+#define TSD_PACKAGE_PROCESS_CONFIG_H
+
+#include <string>
+#include <memory>
+#include <map>
+#include "tsd/status.h"
+#include "tsd_log.h"
+#include "proto/tsd_message.pb.h"
+#include "plugin_pkg_version.h"
+
+namespace tsd {
+enum class DeviceInstallPath {
+    RUNTIME_PATH = 0,
+    OM_PATH = 1,
+    AICPU_KERNELS_PATH = 2,
+    COMPAT_PLUGIN_PATH = 3,
+    MAX_PATH = 255
+};
+struct PackConfDetail {
+    DeviceInstallPath decDstDir = DeviceInstallPath::MAX_PATH;
+    std::string findPath = "";
+    std::string hostTruePath = "";
+    bool optionalFlag = false;
+    bool validFlag = false;
+    bool loadAsPerSocFlag = false;
+    PackConfDetail()
+        : decDstDir(DeviceInstallPath::MAX_PATH),
+          findPath(""),
+          hostTruePath(""),
+          optionalFlag(false),
+          validFlag(false),
+          loadAsPerSocFlag(false)
+    {}
+    void PrintfInfo(const std::string& pkgName)
+    {
+        TSD_INFO(
+            "package:%s, decDstDir:%u, findPath:%s, hostTruePath:%s, "
+            "optionalFlag:%u, validFlag:%u, loadAsPerSocFlag:%u",
+            pkgName.c_str(), static_cast<uint32_t>(decDstDir), findPath.c_str(), hostTruePath.c_str(),
+            static_cast<uint32_t>(optionalFlag), static_cast<uint32_t>(validFlag),
+            static_cast<uint32_t>(loadAsPerSocFlag));
+    }
+};
+
+class PackageProcessConfig {
+public:
+    static PackageProcessConfig* GetInstance();
+    PackConfDetail GetConfigDetailInfo(const std::string& srcPath);
+    TSD_StatusT ParseConfigDataFromProtoBuf(const HDCMessage& hdcMsg);
+    TSD_StatusT ParseConfigDataFromFile(const std::string& pkgTitle);
+    void ConstructPkgConfigMsg(HDCMessage& hdcMsg);
+    bool IsNeedToUpdateConfig(const HDCMessage& hdcMsg) const;
+    bool IsConfigPackageInfo(const std::string& oriPkgName);
+    std::map<std::string, PackConfDetail> GetAllPackageConfigInfo() const { return configMap_; }
+    TSD_StatusT GetPkgHostAndDeviceDstPath(
+        const std::string& pkgName, std::string& orgFile, std::string& dstFile, const pid_t hostPid);
+    std::string GetPackageHostTruePath(const std::string& pkgName);
+    // 遍历 configMap_ ，对 compat 插件包解析同名 .ini 文件，刷新 host 侧插件包版本信息
+    void RefreshHostPluginVersions();
+    PluginPkgVersion GetHostPluginVersion(const std::string& pkgName);
+    bool HasCompatPluginPackage() const;
+
+private:
+    bool SetConfigDataOnServer(const SinkPackageConfig& hdcConfig);
+    bool SetConfigDataOnHost(std::ifstream& inFile, const std::string& fileName, const std::string& pkgTitle);
+    std::string GetHostFilePath(const std::string& fileDir, const std::string& fileName) const;
+    bool SetPkgHostTruePath(PackConfDetail& tempNode, const std::string& pkgName, const std::string& pkgTitle) const;
+    PackageProcessConfig();
+    ~PackageProcessConfig() = default;
+    bool ParseSinglePara(
+        std::string& inputLine, PackConfDetail& tempNode, std::unordered_set<std::string>& finishedParseItemSet) const;
+    bool ParseInstallPath(const std::string& para, PackConfDetail& tempNode) const;
+    bool ParseOptionalFlag(const std::string& para, PackConfDetail& tempNode) const;
+    bool ParsePackagePath(const std::string& para, PackConfDetail& tempNode) const;
+    bool ParseLoadAsPerSocFlag(const std::string& para, PackConfDetail& tempNode) const;
+
+private:
+    std::map<std::string, PackConfDetail> configMap_;
+    std::map<std::string, PluginPkgVersion> hostPluginVersions_;
+    std::mutex configMut_;
+    bool finishParse_ = false;
+    std::string hashCode_;
+    using SingleParaParseFunc = bool (PackageProcessConfig::*)(const std::string&, PackConfDetail&) const;
+    const std::map<std::string, SingleParaParseFunc> configParaParseFuncMap_;
+    std::mutex hostPluginVersionMut_;
+};
+} // namespace tsd
+#endif // TSD_PACKAGE_PROCESS_CONFIG_H

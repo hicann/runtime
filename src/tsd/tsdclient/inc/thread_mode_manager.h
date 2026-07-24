@@ -126,6 +126,8 @@ private:
     TSD_StatusT HandleAICPUPackage(const uint32_t packageType) const;
 
     TSD_StatusT StartCallQS(const uint32_t logicDeviceId);
+    TSD_StatusT LoadQsLibrary();
+    TSD_StatusT LoadAdprofLibrary();
     void OpenTfSo(const uint32_t vfId);
     StartAICPU startAicpu_;
     StopAICPU stopAicpu_;

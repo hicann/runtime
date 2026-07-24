@@ -14,9 +14,9 @@
 #include "driver/ascend_hal_define.h"
 #include "mmpa/mmpa_api.h"
 #include "tsd_util_func.h"
-#include "inc/tsd_message_parse_client.h"
+#include "tsd_message_parse_client.h"
 #include "tsd_log.h"
-#include "inc/tsd_version_verify.h"
+#include "tsd_version_verify.h"
 #include "tsd/status.h"
 
 namespace {

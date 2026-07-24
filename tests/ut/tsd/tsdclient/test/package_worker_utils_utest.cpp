@@ -14,8 +14,8 @@
 #include "tsd_util_func.h"
 #define private public
 #define protected public
-#include "inc/package_verify.h"
-#include "inc/package_worker_utils.h"
+#include "package_verify.h"
+#include "package_worker_utils.h"
 #undef private
 #undef protected
 using namespace tsd;

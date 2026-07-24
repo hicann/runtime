@@ -171,7 +171,6 @@ void CompressBlockArmCE(uint32_t state[8], const uint8_t* block)
 // x86 SSSE3 + BMI2 accelerated path (runtime detection)
 // SSSE3: Intel Core 2 2007+ / AMD Bulldozer 2011+
 // BMI2:  Intel Haswell 2013+ / AMD Zen 2017+
-//
 // Uses 128-bit XMM (not 256-bit YMM) intentionally:
 //   - 256-bit store → 32-bit scalar load triggers partial-width
 //     store-to-load forwarding stalls (~15 cycles each on Intel).

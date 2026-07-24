@@ -11,20 +11,19 @@ set(TSD_CLIENT_SRC_FILE
     ${TSD_SRC_PATH}/tsdclient/src/client_manager.cpp
     ${TSD_SRC_PATH}/pub_facility/env_manager/env_internal_api.cpp
     ${TSD_SRC_PATH}/pub_facility/env_manager/env_internal_api.h
-    ${TSD_SRC_PATH}/tsdclient/src/process_mode_base.cpp
     ${TSD_SRC_PATH}/tsdclient/src/process_mode_manager.cpp
-    ${TSD_SRC_PATH}/tsdclient/src/process_mode_msg_parse.cpp
-    ${TSD_SRC_PATH}/tsdclient/src/plugin_pkg_version.cpp
+    ${TSD_SRC_PATH}/tsdclient/src/response_msg_dispatcher.cpp
+    ${TSD_SRC_PATH}/tsdclient/src/sub_process_controller.cpp
+    ${TSD_SRC_PATH}/tsdclient/src/tsd_process_controller.cpp
     ${TSD_SRC_PATH}/tsdclient/src/thread_mode_manager.cpp
     ${TSD_SRC_PATH}/interface/tsd_client.cpp
-    ${TSD_SRC_PATH}/tsdclient/src/stub/stub_dc.cpp
-    ${TSD_SRC_PATH}/tsdclient/src/stub/stub_process_mode_nowin.cpp
+    ${TSD_SRC_PATH}/common/stub/stub_dc.cpp
 )
 
 set(TSD_COMMON_SRC_FILE
-    ${TSD_SRC_PATH}/common/src/aicpu_package_process.cpp
-    ${TSD_SRC_PATH}/common/src/aicpu_thread_package_worker.cpp
-    ${TSD_SRC_PATH}/common/src/base_package_worker.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/aicpu_package_process.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/aicpu_thread_package_worker.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/base_package_worker.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/device_comm.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/device_comm_agent.cpp
     ${TSD_SRC_PATH}/basic_component/device_comm/hdc_client.cpp
@@ -33,15 +32,23 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/basic_component/capability/capability_manager.cpp
     ${TSD_SRC_PATH}/pub_facility/util_func/tsd_util_func.cpp
     ${TSD_SRC_PATH}/pub_facility/util_func/tsd_sha256.cpp
-    ${TSD_SRC_PATH}/common/src/message_parse_client.cpp
-    ${TSD_SRC_PATH}/common/src/message_parse_interface.cpp
-    ${TSD_SRC_PATH}/common/src/package_process_config.cpp
-    ${TSD_SRC_PATH}/common/src/package_verify.cpp
-    ${TSD_SRC_PATH}/common/src/package_worker.cpp
-    ${TSD_SRC_PATH}/common/src/package_worker_factory.cpp
-    ${TSD_SRC_PATH}/common/src/package_worker_utils.cpp
-    ${TSD_SRC_PATH}/common/src/tsd_path_mgr.cpp
-    ${TSD_SRC_PATH}/common/src/version_verify.cpp
+    ${TSD_SRC_PATH}/basic_component/message_rsp_handler/message_parse_client.cpp
+    ${TSD_SRC_PATH}/basic_component/message_rsp_handler/message_parse_interface.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_manager.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_loader.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_check_code_service.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_sender.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_env_info.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_hash_store.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/plugin_version_manager.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/plugin_pkg_version.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_process_config.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_verify.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_worker.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_worker_factory.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/package_worker_utils.cpp
+    ${TSD_SRC_PATH}/basic_component/package_manager/src/tsd_path_mgr.cpp
+    ${TSD_SRC_PATH}/basic_component/device_comm/version_verify.cpp
 )
 
 # SHA256实现为性能关键路径，即使Debug构建也需要-O2优化
@@ -79,6 +86,7 @@ set(TSD_UT_TEST_SRC_FILE
     test/env_internal_api_utest.cpp
     test/hdc_client_utest.cpp
     test/hdc_common_utest.cpp
+    test/hdc_message_builder_utest.cpp
     test/device_comm_utest.cpp
     test/main.cpp
     test/common_util_func.cpp
@@ -118,6 +126,7 @@ target_include_directories(tsd_client_utest PRIVATE
     ${TSD_SRC_PATH}/tsdclient/
     ${CMAKE_BINARY_DIR}/proto/tsd_client_proto/
     ${TSD_SRC_PATH}/tsdclient/inc/
+    ${TSD_SRC_PATH}/basic_component/package_manager/inc/
     ${RUNTIME_DIR}/include/
     ${RUNTIME_DIR}/src/tsd/
     ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
@@ -126,6 +135,7 @@ target_include_directories(tsd_client_utest PRIVATE
     ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
     ${RUNTIME_DIR}/src/tsd/basic_component/message_builder/
     ${RUNTIME_DIR}/src/tsd/basic_component/capability/
+    ${RUNTIME_DIR}/src/tsd/basic_component/message_rsp_handler/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/

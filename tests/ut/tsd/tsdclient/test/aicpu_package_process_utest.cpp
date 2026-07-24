@@ -12,12 +12,12 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "inc/error_code.h"
+#include "error_code.h"
 #include "tsd_util_func.h"
-#include "inc/package_worker_utils.h"
+#include "package_worker_utils.h"
 #define private public
 #define protected public
-#include "inc/aicpu_package_process.h"
+#include "aicpu_package_process.h"
 #undef private
 #undef protected
 

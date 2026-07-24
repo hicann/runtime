@@ -10,7 +10,7 @@
 #include "tsd/tsd_client.h"
 #include "tsd_log.h"
 #include "inc/client_manager.h"
-#include "inc/tsd_msg_parse_reg.h"
+#include "tsd_msg_parse_reg.h"
 #include "tsd_util_func.h"
 
 uint32_t TsdOpen(const uint32_t logicDeviceId, const uint32_t rankSize)

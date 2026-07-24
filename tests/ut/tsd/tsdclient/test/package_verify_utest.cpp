@@ -15,11 +15,11 @@
 #include "mockcpp/ChainingMockHelper.h"
 #include "mmpa/mmpa_api.h"
 #include "tsd/status.h"
-#include "inc/weak_ascend_hal.h"
+#include "weak_ascend_hal.h"
 #include "tsd_log.h"
 #define private public
 #define protected public
-#include "inc/package_verify.h"
+#include "package_verify.h"
 #undef private
 #undef protected
 

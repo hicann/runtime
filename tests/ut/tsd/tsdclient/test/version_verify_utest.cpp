@@ -14,7 +14,7 @@
 
 #define private public
 #define protected public
-#include "inc/tsd_version_verify.h"
+#include "tsd_version_verify.h"
 #undef private
 #undef protected
 

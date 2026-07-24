@@ -1,1625 +1,258 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "inc/process_mode_manager.h"
-#include <sstream>
-#include <fstream>
-#include <iostream>
 #include <string>
-#include <vector>
-#include <regex>
-#include <chrono>
-#include <sys/file.h>
-#include <dlfcn.h>
-#include "driver/ascend_hal.h"
-#include "error_manager.h"
 #include "tsd_log.h"
-#include "tsd_scope_guard.h"
-#include "inc/weak_log.h"
-#include "driver/ascend_inpackage_hal.h"
 #include "tsd/status.h"
-#include "inc/weak_ascend_hal.h"
-#include "tsd_util_func.h"
 #include "env_internal_api.h"
-#include "inc/package_process_config.h"
-#include "platform_info.h"
-#include "hdc_message_builder.h"
+#include "tsd_msg_parse_reg.h"
 
 namespace {
-constexpr uint32_t DEFAULT_QS_RANKSIZE = 0U;
-const std::string RUNTIME_PKG_NAME = "Ascend-runtime_device-minios.tar.gz";
-const std::string DSHAPE_PKG_NAME = "Ascend-opp_rt-minios.aarch64.tar.gz";
-const std::string UDF_PKG_NAME = "cann-udf-compat.tar.gz";
-const std::string HCCD_PKG_NAME = "cann-hccd-compat.tar.gz";
-const std::string HIXL_PKG_NAME = "cann-hixl-compat.tar.gz";
-constexpr uint32_t OMFILE_LOAD_TIMEOUT = 200000U;
-constexpr uint32_t HELPER_PKG_LOAD_TIMEOUT = 10000U;
-constexpr uint64_t HELPER_INPUT_MAX_FILE_PATH_LEN = 4096UL;
-constexpr uint64_t HELPER_INPUT_MAX_FILE_NAME_LEN = 256UL;
-constexpr uint64_t PROCESS_OPEN_MAX_ENV_CNT = 128UL;
-constexpr uint64_t PROCESS_OPEN_MAX_EXT_PARAM_CNT = 128UL;
-constexpr uint32_t ASAN_OPEN_TIMEOUT = 3600000U; // 1hour
-constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
-constexpr uint32_t CLOSE_PID_PER_LOOP = 50U;
-constexpr uint32_t DRIVER_EXTEND_MAX_PROCESS_TIME = 140U;
-const std::string QUEUE_SCHEDULE_SO = "libqueue_schedule.so";
-constexpr uint32_t INVALID_NUMBER = 0xFFFFFFFFU;
-constexpr uint32_t DEFUALT_NET_SERVICE = 2U;
-constexpr uint32_t SOC_VERSION_LEN = 50U;
-const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP = {
-    {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
-    {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350}},
-    {"aicpu_hcomm.tar.gz",
-     {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
-    {"cann-hcomm-compat.tar.gz",
-     {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
-    {HCCD_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
-    {"cann-tsch-compat.tar.gz", {}},
-    {UDF_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
-    {HIXL_PKG_NAME, {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}}};
-const int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
-using TimePoint = std::chrono::high_resolution_clock::time_point;
-std::string ExtractSubString(const std::string& input, const std::string& begin, const std::string& end)
-{
-    size_t pos = input.find(begin);
-    if (pos == std::string::npos) {
-        return "";
-    }
-    size_t left = pos + begin.length();
-    size_t right = input.find(end, left);
-    if (right == std::string::npos) {
-        return "";
-    }
-    return input.substr(left, right - left);
-}
-
-std::string ConstructVerifyPkgErrorReason(const std::string& loadPackageErrorMsg)
-{
-    std::string reason;
-    if (loadPackageErrorMsg.find("does not match") != std::string::npos) {
-        const std::string certType = ExtractSubString(loadPackageErrorMsg, "certType [", "]");
-        const std::string verifyFlag = ExtractSubString(loadPackageErrorMsg, "verifyFlag [", "]");
-        reason = "The current signature verification mode is [" + verifyFlag +
-                 "], which does not match the actual digital signature [" + certType +
-                 "] of the software package. Change the signature verification mode";
-    } else if (loadPackageErrorMsg.find("verifyFlag is not [Close]") != std::string::npos) {
-        const std::string verifyFlag = ExtractSubString(loadPackageErrorMsg, "verifyFlag [", "]");
-        reason = "The signature verification mode has been enabled. However, the soft package does not "
-                 "have a signature. Disable signature verification or use a software package whose "
-                 "digital signature matches the current signature verification mode [" +
-                 verifyFlag + "]";
-    } else if (loadPackageErrorMsg.find("Signature verification failed") != std::string::npos) {
-        reason = "Signature verification failed. The possible cause is that a multi-bit ECC error occurred "
-                 "on the device or the software package has been tampered with. Obtain the device log, check whether "
-                 "ECC errors are reported, and contact technical support at https://www.hiascend.com/support";
-    }
-    return reason;
-}
+constexpr int32_t ERROR_LOG = 3;
+constexpr int32_t DEBUG_LOG = 0;
+constexpr uint32_t DEFAULT_NET_SERVICE = 2U;
 } // namespace
 
 namespace tsd {
 
-TSD_StatusT ProcessModeManager::Open(const uint32_t rankSize)
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc1, HDCMessage::TSD_START_PROC_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc2, HDCMessage::TSD_CLOSE_PROC_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc3, HDCMessage::TSD_UPDATE_PROIFILING_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc4, HDCMessage::TSD_CHECK_PACKAGE_RSP, &ProcessModeManager::PackageInfoMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc5, HDCMessage::TSD_GET_PID_QOS_RSP, &ProcessModeManager::CapabilityResMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc6, HDCMessage::TSD_DRV_BIND_HOST_PID_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc7, HDCMessage::TSD_GET_DEVICE_RUNTIME_CHECKCODE_RSP, &ProcessModeManager::PackageInfoMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc8, HDCMessage::TSD_REMOVE_FILE_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc9, HDCMessage::TSD_OPEN_SUB_PROC_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc10, HDCMessage::TSD_GET_SUB_PROC_STATUS_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc11, HDCMessage::TSD_OM_PKG_DECOMPRESS_STATUS_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc12, HDCMessage::TSD_CLOSE_SUB_PROC_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc13, HDCMessage::TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP,
+    &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc14, HDCMessage::TSD_GET_DEVICE_DSHAPE_CHECKCODE_RSP, &ProcessModeManager::PackageInfoMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc15, HDCMessage::TSD_SUPPORT_OM_INNER_DEC_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc16, HDCMessage::TSD_CLOSE_SUB_PROC_LIST_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc17, HDCMessage::TSD_GET_SUPPORT_ADPROF_RSP, &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc18, HDCMessage::TSD_CHECK_PACKAGE_RETRY_RSP, &ProcessModeManager::PackageInfoMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc19, HDCMessage::TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL_RSP,
+    &ProcessModeManager::PackageInfoMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc20, HDCMessage::TSD_UPDATE_PACKAGE_PROCESS_CONFIG_RSP,
+    &ProcessModeManager::ServerToClientMsgProc);
+TDT_REGISTER_NORMAL_MSG_PARSE_FUNC(
+    ServerToClientMsgProc21, HDCMessage::TSD_GET_DEVICE_CANN_HS_CHECKCODE_RSP, &ProcessModeManager::PackageInfoMsgProc);
+
+ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t deviceMode)
+    : ClientManager(deviceId),
+      logLevel_("003"),
+      commAgent_(deviceId),
+      sharedCtx_(),
+      capabilityMgr_(deviceId, commAgent_, IsAdcEnv()),
+      packageMgr_(deviceId, commAgent_, capabilityMgr_, GetPlatInfoMode(), IsAdcEnv(), GetPlatInfoChipType()),
+      rspDispatcher_(sharedCtx_, packageMgr_, capabilityMgr_),
+      tsdCtrl_(commAgent_, capabilityMgr_, packageMgr_, sharedCtx_, deviceMode),
+      subProcCtrl_(tsdCtrl_, commAgent_, capabilityMgr_, packageMgr_, sharedCtx_),
+      ccecpuLogLevel_(""),
+      aicpuLogLevel_("")
 {
-    if (IsAdcEnv()) {
-        TSD_INFO("skip to start aicpu-sd process.");
-        return TSD_OPEN_NOT_SUPPORT_FOR_ADC; // depend on runtime defined
-    }
-    return OpenProcess(rankSize);
+    sharedCtx_.logicDeviceId = deviceId;
+    sharedCtx_.isAdcEnv = IsAdcEnv();
+    sharedCtx_.platInfoMode = GetPlatInfoMode();
+    sharedCtx_.aicpuSchedMode = aicpuSchedMode_;
+    GetLogLevel();
+    SyncSharedCtxLogLevels();
+    tsdCtrl_.SetTsdStartInfo(false, false, false);
 }
 
-TSD_StatusT ProcessModeManager::OpenAicpuSd() { return OpenProcess(0U); }
-
-TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
+void ProcessModeManager::Destroy()
 {
-    TSD_RUN_INFO("[ProcessModeManager] enter into open process deviceId[%u] rankSize[%u]", logicDeviceId_, rankSize);
-    TsdStartStatusInfo startInfo = {};
-    const TimePoint beginOpen = std::chrono::high_resolution_clock::now();
-    if (!CheckNeedToOpen(rankSize, startInfo)) {
-        TSD_INFO("Open has already been done before.");
-        return TSD_OK;
-    }
-
-    TSD_StatusT ret = LoadPackageConfigInfoToDevice(true);
-    TSD_CHECK(ret == TSD_OK, ret, "Load package config info to device failed.");
-    const TimePoint finLoadCfg = std::chrono::high_resolution_clock::now();
-
-    ret = LoadSysOpKernel();
-    TSD_CHECK(ret == TSD_OK, ret, "Send aicpu package to device failed.");
-    const TimePoint finLoadOpKernel = std::chrono::high_resolution_clock::now();
-
-    ret = LoadPackageToDeviceByConfig();
-    TSD_CHECK(ret == TSD_OK, ret, "Load package to device by config failed");
-    const TimePoint finLoadSinkPkg = std::chrono::high_resolution_clock::now();
-
-    ret = InitTsdClient();
-    TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
-    startInfo.startQs_ = false;
-    ret = SendOpenMsg(rankSize, startInfo);
-    TSD_CHECK(ret == TSD_OK, ret, "Send open message to device failed.");
-    const TimePoint finSendOpenMsg = std::chrono::high_resolution_clock::now();
-
-    TSD_RUN_INFO(
-        "[ProcessModeManager] deviceId[%u] sessionId[%u] rankSize[%u], wait subprocess start response", logicDeviceId_,
-        commAgent_.GetSessionId(), rankSize);
-    if (IsAsanMmSysEnv()) {
-        ret = WaitRsp(ASAN_OPEN_TIMEOUT);
-    } else {
-        ret = WaitRsp(0U);
-    }
-    const TimePoint finRecvRsp = std::chrono::high_resolution_clock::now();
-    if (ret != TSD_OK) {
-        REPORT_INPUT_ERROR("E39007", std::vector<std::string>(), std::vector<std::string>());
-        TSD_ERROR("Wait open response from device failed.");
-        return ret;
-    }
-    SetTsdStartInfo(startInfo.startCp_, startInfo.startHccp_, false);
-
-    ret = ProcessQueueForAdc();
-    if (ret != TSD_OK) {
-        TSD_ERROR("ProcessQueueForAdc error");
-        return ret;
-    }
-    const TimePoint finOpen = std::chrono::high_resolution_clock::now();
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] start hccp and computer process success,"
-        "whole process spent time as follows:"
-        "phase1:[%zu]ms load sink package config to device,"
-        "phase2:[%zu]ms load opkernel to device,"
-        "phase3:[%zu]ms load sink package to device,"
-        "phase4:[%zu]ms send open message to device,"
-        "phase5:[%zu]ms receive open message to device,"
-        "phase6:[%zu]ms process for adc on host,"
-        "whole duration:[%zu]ms",
-        logicDeviceId_, commAgent_.GetSessionId(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadCfg - beginOpen).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadOpKernel - finLoadCfg).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadSinkPkg - finLoadOpKernel).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finSendOpenMsg - finLoadSinkPkg).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finRecvRsp - finSendOpenMsg).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finOpen - finRecvRsp).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(finOpen - beginOpen).count());
-
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::ConstructCloseMsg(HDCMessage& msg)
-{
-    return HdcMessageBuilder::BuildClose(msg, BuildBaseMessageContext());
-}
-
-TSD_StatusT ProcessModeManager::Close(const uint32_t flag)
-{
-    if (!commAgent_.IsInit()) {
-        TSD_RUN_INFO("[TsdClient] tsd client no need to close");
-        return TSD_OK;
-    }
-    // check devCommClient_
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
-    TsdCloseFlag tsdCloseFlag = {};
-    ParseTsdCloseFlag(flag, tsdCloseFlag);
-    if (tsdCloseFlag.quickCloseFlag != ProcessModeManager::QUICK_CLOSE_MODE) {
-        TSD_RUN_INFO(
-            "[TsdClient] Close [deviceId=%u][sessionId=%u] hccp and computer enter", logicDeviceId_,
-            commAgent_.GetSessionId());
-        TSD_StatusT ret = SendCloseMsg();
-        TSD_CHECK(ret == TSD_OK, ret, "Send close message to device failed.");
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId=%u] [sessionId=%u] wait hccp and computer process close response", logicDeviceId_,
-            commAgent_.GetSessionId());
-        ret = WaitRsp(0U, false, true);
-        TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
-        TSD_RUN_INFO("[TsdClient][logicDeviceId_=%u]has recv close hccp and computer process response", logicDeviceId_);
-    } else {
-        TSD_RUN_INFO("Enable quick tsd close, close will only in host.");
-    }
-
+    tsdCtrl_.SetTsdStartInfo(false, false, false);
     commAgent_.ReleaseDeviceConnection();
-    rspCode_ = ResponseCode::FAIL;
-    isStartedHccp_ = false;
-    hccpPid_ = 0;
-    SetTsdStartInfo(false, false, false);
-    aicpuPackageExistInDevice_ = false;
-    hasSendConfigFile_ = false;
-    pkgHostHashValue_.clear();
-    pkgDeviceHashValue_.clear();
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] close hccp and "
-        "computer process success",
-        logicDeviceId_, commAgent_.GetSessionId());
-    return TSD_OK;
+    packageMgr_.ResetOnClose();
 }
 
-TSD_StatusT ProcessModeManager::LoadSysOpKernel()
+void ProcessModeManager::ParseModuleLogLevelByKey(const std::string& keyStr, const std::string& valStr)
 {
-    bool loadAicpuKernelFlag = true;
-    if (capabilityMgr_.IsSupportCommonSink()) {
-        std::string packageTitle;
-        (void)GetPackageTitle(packageTitle);
-        std::string pkgName = packageTitle + "-aicpu_legacy.tar.gz";
-        PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
-        if (!pkgConInst->GetPackageHostTruePath(pkgName).empty()) {
-            TSD_RUN_INFO("[TsdClient][logicDeviceId_=%u] use legacy package", logicDeviceId_);
-            loadAicpuKernelFlag = false;
-        }
-    }
-    if (!CheckPackageExists(loadAicpuKernelFlag)) {
-        TSD_RUN_INFO("[TsdClient][logicDeviceId_=%u] cannot find aicpu packages", logicDeviceId_);
-        return TSD_OK;
-    }
-
-    TSD_StatusT ret = GetDeviceCheckCode();
-    if (ret == TSD_AICPUPACKAGE_EXISTED) {
-        return TSD_OK;
-    }
-    if (ret != TSD_OK) {
-        if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
-            return ret;
-        }
-        return TSD_DEVICEID_ERROR;
-    }
-
-    // if find package in process offline mode, just ignore following operation
-    if (GetPlatInfoMode() == static_cast<uint32_t>(ModeType::OFFLINE)) {
-        TSD_RUN_INFO("[TsdClient]in process offline mode, ignore send any package!");
-        return TSD_OK;
-    }
-
-    constexpr int32_t peerNode = 0;
-    constexpr uint32_t hdcNameMax = 256U;
-    char_t path[hdcNameMax] = {};
-    const int32_t drvRet =
-        drvHdcGetTrustedBasePath(peerNode, static_cast<int32_t>(logicDeviceId_), &path[0], hdcNameMax);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] drvHdcGetTrustedBasePath failed, ret[%d]", logicDeviceId_, drvRet);
-        return TSD_INTERNAL_ERROR;
-    }
-
-    // send aicpu ops package to device through hdc channel
-    ret = SendAICPUPackage(peerNode, std::string(path));
-    if (ret != TSD_OK) {
-        REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
-        TSD_ERROR("[TsdClient][deviceId=%u] send aicpu package to device failed", logicDeviceId_);
-        return ret;
-    }
-
-    // send extend ops package to device through hdc channel
-    ret = SendCommonPackage(
-        peerNode, std::string(path), static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL));
-    if (ret != TSD_OK) {
-        REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
-        TSD_ERROR("[TsdClient][deviceId=%u] send extend package to device failed", logicDeviceId_);
-        return ret;
-    }
-
-    // send ascendcpp ops package to device through hdc channel
-    ret = SendCommonPackage(
-        peerNode, std::string(path), static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP));
-    if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] send ascendcpp package to device failed", logicDeviceId_);
-        return ret;
-    }
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::WaitRsp(const uint32_t timeout, const bool ignoreRecvErr, const bool isClose)
-{
-    const TSD_StatusT ret = commAgent_.RecvData(ignoreRecvErr, timeout);
-    // 针对close消息，如果对端已经关闭了通道，则证明消息已经发送，如果没有收到此消息也按照成功处理
-    // 此时 rspCode_ 未被对端响应更新，不应检查 rspCode_，直接返回成功
-    if (!IsAdcEnv()) {
-        if (isClose && (ret == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED)) {
-            TSD_RUN_INFO("close rsp not receive, server close the session");
-            return TSD_OK;
-        }
-    }
-    if ((ret != TSD_OK) || (static_cast<uint32_t>(rspCode_) != 0U)) {
-        const std::string reportMsg = BuildWaitRspErrReport(ret);
-        if (!ignoreRecvErr) {
-            TSD_ERROR("%s", reportMsg.c_str());
-            TSD_REPORT_INNER_ERROR("%s", reportMsg.c_str());
-        }
-        // 仅在设备已响应（通信成功）但返回失败码时，上报对应的结构化输入错误
-        if ((ret == TSD_OK) && (!startOrStopFailCode_.empty())) {
-            REPORT_INPUT_ERROR(startOrStopFailCode_.c_str(), std::vector<std::string>(), std::vector<std::string>());
-        }
-        return MapFailCodeToStatus();
-    }
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::MapFailCodeToStatus() const
-{
-    if (startOrStopFailCode_ == "E30003") {
-        return TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT;
-    } else if (startOrStopFailCode_ == "E30004") {
-        return TSD_SUBPROCESS_BINARY_FILE_DAMAGED;
-    } else if (startOrStopFailCode_ == "E30006") {
-        return TSD_VERIFY_OPP_FAIL;
-    } else if (startOrStopFailCode_ == "E30007") {
-        return TSD_ADD_AICPUSD_TO_CGROUP_FAILED;
-    } else {
-        return TSD_CLT_OPEN_FAILED;
-    }
-}
-
-std::string ProcessModeManager::BuildWaitRspErrReport(const TSD_StatusT recvRet) const
-{
-    std::ostringstream reportMsg;
-    reportMsg << "tsd client wait response fail, hostpid:" << static_cast<uint32_t>(commAgent_.GetProcSign().tgid);
-    if (recvRet != TSD_OK) {
-        reportMsg << ", receive device response data failed, check hdc service.";
-    } else {
-        reportMsg << ", device response code[" << static_cast<uint32_t>(rspCode_) << "]";
-        if (!errMsg_.empty()) {
-            reportMsg << ". " << errMsg_;
-            reportMsg << ", error stack:\n" << errorLog_;
-        } else {
-            reportMsg << ". unknown device error.";
-        }
-    }
-    return reportMsg.str();
-}
-
-TSD_StatusT ProcessModeManager::SendAICPUPackageSimple(
-    const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath)
-{
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] no equal to begin send file[%s] to [%s]", logicDeviceId_, orgFile.c_str(),
-        dstFile.c_str());
-    if (useCannPath) {
-        const auto ret =
-            drvHdcSendFileV2(peerNode, static_cast<int32_t>(logicDeviceId_), orgFile.c_str(), dstFile.c_str(), nullptr);
-        if (ret != DRV_ERROR_NONE) {
-            TSD_ERROR(
-                "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed ret = %d", logicDeviceId_,
-                orgFile.c_str(), dstFile.c_str(), ret);
-            return TSD_INTERNAL_ERROR;
-        }
-    } else {
-        const auto ret =
-            drvHdcSendFile(peerNode, static_cast<int32_t>(logicDeviceId_), orgFile.c_str(), dstFile.c_str(), nullptr);
-        if (ret != DRV_ERROR_NONE) {
-            TSD_ERROR(
-                "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed ret = %d", logicDeviceId_,
-                orgFile.c_str(), dstFile.c_str(), ret);
-            return TSD_INTERNAL_ERROR;
-        }
-    }
-
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] hdc send file[%s] to [%s] success", logicDeviceId_, orgFile.c_str(), dstFile.c_str());
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::SendMsgAndHostPackage(
-    const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
-    const std::function<bool(void)>& compareCallBack, bool useCannPath)
-{
-    msg.set_wait_flag(false);
-    TSD_StatusT ret = GetDeviceCheckCodeRetry(msg);
-    if (ret != TSD_OK) {
-        if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
-            return ret;
-        }
-        return TSD_INTERNAL_ERROR;
-    }
-    if (compareCallBack()) {
-        TSD_INFO("host check and compare to device, no need to load package");
-        return TSD_OK;
-    }
-
-    if (SendAICPUPackageSimple(peerNode, orgFile, dstFile, useCannPath) != TSD_OK) {
-        REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
-        return TSD_INTERNAL_ERROR;
-    }
-
-    msg.set_wait_flag(true);
-    ret = GetDeviceCheckCodeRetry(msg);
-    if (ret != TSD_OK) {
-        if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
-            return ret;
-        }
-        return TSD_INTERNAL_ERROR;
-    }
-
-    return TSD_OK;
-}
-TSD_StatusT ProcessModeManager::SendHostPackageComplex(
-    const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
-    const std::function<bool(void)>& compareCallBack, bool useCannPath)
-{
-    if (!hasGetHostSoPath_) {
-        hostSoPath_ = tsd::GetHostSoPath();
-        hasGetHostSoPath_ = true;
-    }
-
-    if (hostSoPath_ == "") {
-        return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
-    }
-    const std::string mutexFileName = GetCurHostMutexFile(useCannPath);
-    const std::string mutexFile = hostSoPath_ + mutexFileName;
-    TSD_RUN_INFO("get host mutex file:%s, logicDeviceId:%u", mutexFile.c_str(), logicDeviceId_);
-    if (!CheckRealPath(mutexFile)) {
-        TSD_INFO("Cannot get realpath of mutexFile[%s]", mutexFile.c_str());
-        return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
-    }
-    const int32_t fileData = open(mutexFile.c_str(), O_RDONLY);
-    if (fileData < 0) {
-        TSD_INFO("Opening qs so [%s] was not successful, reason[%s]", mutexFile.c_str(), SafeStrerror().c_str());
-        return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
-    } else {
-        TSD_INFO("Open qs so [%s] success", mutexFile.c_str());
-    }
-    /*
-     * The purpose of adding a file lock is to ensure the serial loading of packages,
-     * so as to avoid excessive consumption of device memory caused by the concurrent send of packages.
-     * The mounted file system does not support file lock, so the behaviour of this function is degraded to
-     * concurrent execution.
-     */
-    const ScopeGuard fileDataGuard([&fileData]() { (void)close(fileData); });
-    const int32_t flockRet = flock(fileData, LOCK_EX);
-    if (flockRet == -1) {
-        TSD_RUN_WARN(
-            "File lock was not successful, ret[%d], errno[%d], reason[%s]", flockRet, errno, SafeStrerror().c_str());
-    }
-
-    // guard file lock
-    const ScopeGuard fileLockGuard([&fileData]() { (void)flock(fileData, LOCK_UN); });
-    return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
-}
-
-TSD_StatusT ProcessModeManager::SendAICPUPackage(const int32_t peerNode, const std::string& path)
-{
-    const uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
-    if (packageName_[packageType] == "") {
-        TSD_RUN_INFO("[TsdClient][deviceId_=%u] aicpu package is not existed, skip send package", logicDeviceId_);
-        return TSD_OK;
-    }
-
-    // check aicpu need to send
-    if (packageHostCheckCode_[packageType] == packagePeerCheckCode_[packageType]) {
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] the checksum of host package[%u] is the same as device[%u], skip send package.",
-            logicDeviceId_, packageHostCheckCode_[packageType], packagePeerCheckCode_[packageType]);
-        return TSD_OK;
-    }
-
-    const std::string orgFile = packagePath_[packageType] + packageName_[packageType];
-    const std::string dstFile =
-        std::string(path) + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + packageName_[packageType];
-    if ((!getCheckCodeRetrySupport_) || (IsAsanMmSysEnv()) || (IsFpgaMmSysEnv())) {
-        return SendAICPUPackageSimple(peerNode, orgFile, dstFile, false);
-    } else {
-        HDCMessage msg;
-        msg.set_real_device_id(logicDeviceId_);
-        msg.set_type(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
-        msg.set_check_code(packageHostCheckCode_[packageType]);
-        msg.set_package_type(packageType);
-        auto aicpuPkgCompareMethd = [this]() {
-            if (this->packageHostCheckCode_[packageType] == this->packagePeerCheckCode_[packageType]) {
-                TSD_INFO(
-                    "[TsdClient] after lock, the checksum of aicpu package[%u] is same as device[%u], skip send",
-                    this->packageHostCheckCode_[packageType], this->packagePeerCheckCode_[packageType]);
-                return true;
+    int32_t val = 0;
+    if (TransStrToInt(valStr, val)) {
+        if (val >= DEBUG_LOG && val <= ERROR_LOG) {
+            if (keyStr == "CCECPU") {
+                ccecpuLogLevel_ = valStr;
+            } else if (keyStr == "AICPU") {
+                aicpuLogLevel_ = valStr;
+            } else {
+                TSD_INFO("[TsdClient] invalid key[%s]", keyStr.c_str());
             }
-            return false;
-        };
-        return SendHostPackageComplex(peerNode, orgFile, dstFile, msg, aicpuPkgCompareMethd, false);
-    }
-}
-
-TSD_StatusT ProcessModeManager::InitTsdClient()
-{
-    if (commAgent_.IsInit()) {
-        TSD_INFO("[TsdClient] tsd client has already been initialized");
-        return TSD_OK;
-    }
-    return commAgent_.InitTsdClient(IsAdcEnv());
-}
-
-MessageContext ProcessModeManager::BuildBaseMessageContext() const
-{
-    MessageContext ctx{};
-    // Device / process identity
-    ctx.logicDeviceId = logicDeviceId_;
-    ctx.rankSize = rankSize_;
-    ctx.procSign = commAgent_.GetProcSign();
-    // Profiling
-    ctx.profilingMode = static_cast<uint32_t>(profilingMode_);
-    // Log levels
-    ctx.logLevel = logLevel_;
-    ctx.ccecpuLogLevel = ccecpuLogLevel_;
-    ctx.aicpuLogLevel = aicpuLogLevel_;
-    // Package host check codes
-    ctx.aicpuKernelCheckCode =
-        packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)];
-    ctx.aicpuExtendKernelCheckCode =
-        packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)];
-    ctx.ascendcppCheckCode = packageHostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)];
-    // AICPU / scheduler
-    ctx.aicpuDeviceMode = aicpuDeviceMode_;
-    ctx.aicpuSchedMode = aicpuSchedMode_;
-    // Queue schedule
-    ctx.qsInitGroupName = qsInitGrpName_;
-    ctx.schedPolicy = schedPolicy_;
-    return ctx;
-}
-
-TSD_StatusT ProcessModeManager::ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo)
-{
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.startHccp = startInfo.startHccp_;
-    ctx.startCp = startInfo.startCp_;
-    return HdcMessageBuilder::BuildOpen(hdcMsg, ctx);
-}
-
-TSD_StatusT ProcessModeManager::SendOpenMsg(const uint32_t rankSize, const TsdStartStatusInfo startInfo)
-{
-    rankSize_ = rankSize;
-    // 当TSDClient连接成功后向TSDaemon发送拉起命令
-    HDCMessage hdcMsg;
-    if (ConstructOpenMsg(hdcMsg, startInfo) != TSD_OK) {
-        TSD_ERROR("ConstructOpenMsg open msg error");
-        return TSD_CLT_OPEN_FAILED;
-    }
-    if (startInfo.startQs_) {
-        hdcMsg.set_type(HDCMessage::TSD_START_QS_MSG);
-        qsInitGroupName* const groupName = hdcMsg.mutable_qs_init_group_name();
-        if (groupName == nullptr) {
-            return TSD_INTERNAL_ERROR;
-        }
-        groupName->set_qs_init_group_name(qsInitGrpName_);
-        hdcMsg.set_sched_policy(schedPolicy_);
-        std::string installPath;
-        GetAscendLatestIntallPath(installPath);
-        if (!installPath.empty()) {
-            hdcMsg.set_ascend_install_path(installPath);
-        }
-    } else {
-        rankSize_ = rankSize;
-        hdcMsg.set_type(HDCMessage::TSD_START_PROC_MSG);
-        if (isStartedHccp_) {
-            hdcMsg.set_start_hccp(true);
         }
     }
-    const TSD_StatusT ret = commAgent_.SendMsg(hdcMsg);
-    if (ret != TSD_OK) {
-        TSD_ERROR(
-            "[TsdClient][deviceId=%u][rankSize_=%u][procpid =%u] "
-            "tsdclient start hccp and computer process failed",
-            logicDeviceId_, rankSize_, static_cast<uint32_t>(commAgent_.GetProcSign().tgid));
-        return TSD_CLT_OPEN_FAILED;
-    }
-    return TSD_OK;
 }
 
-TSD_StatusT ProcessModeManager::SendCloseMsg()
+void ProcessModeManager::ParseModuleLogLevel(const std::string& envModuleLogLevel)
 {
-    // TSDClient向TSDaemon发送关闭命令
-    HDCMessage msg;
-    if (ConstructCloseMsg(msg) != TSD_OK) {
-        TSD_ERROR("ConstructCloseMsg failed");
-        return TSD_INTERNAL_ERROR;
+    std::size_t offsetColon = 0;
+    std::size_t offsetEqual = 0;
+    std::string keyStr = "";
+    std::string valStr = "";
+    std::string moduleLogLevel = envModuleLogLevel;
+    while (true) {
+        offsetColon = moduleLogLevel.find(":");
+        if (offsetColon == std::string::npos) {
+            offsetEqual = moduleLogLevel.find("=");
+            if (offsetEqual != std::string::npos) {
+                keyStr = moduleLogLevel.substr(0U, offsetEqual);
+                valStr = moduleLogLevel.substr(offsetEqual + 1UL);
+                ParseModuleLogLevelByKey(keyStr, valStr);
+            }
+            return;
+        } else {
+            std::string moduleLogLevelPart1 = moduleLogLevel.substr(0U, offsetColon);
+            offsetEqual = moduleLogLevelPart1.find("=");
+            if (offsetEqual != std::string::npos) {
+                keyStr = moduleLogLevelPart1.substr(0U, offsetEqual);
+                valStr = moduleLogLevelPart1.substr(offsetEqual + 1UL);
+                ParseModuleLogLevelByKey(keyStr, valStr);
+            }
+            moduleLogLevel = moduleLogLevel.substr(offsetColon + 1UL);
+        }
     }
-    const TSD_StatusT ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR(
-            "[TsdClient][deviceId=%u] tsdclient close hccp and "
-            "computer process failed",
-            logicDeviceId_);
-        return TSD_CLT_CLOSE_FAILED;
-    }
-
-    return TSD_OK;
 }
 
-TSD_StatusT ProcessModeManager::UpdateProfilingConf(const uint32_t& flag)
+void ProcessModeManager::GetLogLevel()
 {
-    TSD_RUN_INFO(
-        "[TsdClient] Update profiling mode [deviceId=%u][sessionId=%u][flag=%u]", logicDeviceId_,
-        commAgent_.GetSessionId(), flag);
-
-    // 更新profiling状态前先判断是否已经open
-    if (!commAgent_.IsInit()) {
-        TSD_WARN("[TsdClient] tsd client need open first");
-        return TSD_OK;
+    int32_t defaultEventLevel = 1;
+    int32_t defaultLogLevel = 3;
+    if (&dlog_getlevel != nullptr) {
+        defaultLogLevel = dlog_getlevel(AICPU, &defaultEventLevel);
     }
-    // 判空
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED,
-        "[TsdClient] devCommClient_ is null in update profiling function");
-    TSD_StatusT ret = SendUpdateProfilingMsg(flag);
-    TSD_CHECK(ret == TSD_OK, ret, "Send profiling message to tsdaemon failed.");
-
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] wait update profiling msg response", logicDeviceId_,
-        commAgent_.GetSessionId());
-
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait UpdateProfiling response from device failed.");
-    return TSD_OK;
+    std::string eventLevelString = std::to_string(defaultEventLevel);
+    std::string logLevelString = std::to_string(defaultLogLevel);
+    if (!IsAdcEnv()) {
+        const std::string logPattern = "^[0-4]{1}$";
+        const std::string eventPattern = "^[0-1]{1}$";
+        std::string envLogLevel;
+        std::string envModuleLogLevel;
+        std::string envEventLevel;
+        GetEnvFromMmSys(MM_ENV_ASCEND_GLOBAL_LOG_LEVEL, "ASCEND_GLOBAL_LOG_LEVEL", envLogLevel);
+        GetEnvFromMmSys(MM_ENV_ASCEND_GLOBAL_EVENT_ENABLE, "ASCEND_GLOBAL_EVENT_ENABLE", envEventLevel);
+        GetEnvFromMmSys(MM_ENV_ASCEND_MODULE_LOG_LEVEL, "ASCEND_MODULE_LOG_LEVEL", envModuleLogLevel);
+        TSD_RUN_INFO(
+            "[TsdClient] get ASCEND_GLOBAL_LOG_LEVEL [%s] ASCEND_GLOBAL_EVENT_ENABLE [%s] "
+            "ASCEND_MODULE_LOG_LEVEL [%s]",
+            envLogLevel.c_str(), envEventLevel.c_str(), envModuleLogLevel.c_str());
+        if (ValidateStr(envLogLevel.c_str(), logPattern.c_str())) {
+            logLevelString = envLogLevel;
+        }
+        if (ValidateStr(envEventLevel.c_str(), eventPattern.c_str())) {
+            eventLevelString = envEventLevel;
+        }
+        if (ValidateStr(envModuleLogLevel.c_str(), envModuleLogLevel.c_str())) {
+            ParseModuleLogLevel(envModuleLogLevel);
+        }
+    }
+    logLevel_ = eventLevelString + "0" + logLevelString;
+    TSD_INFO("[TsdClient] Get Log Level[%s]", logLevel_.c_str());
+    SyncSharedCtxLogLevels();
 }
 
-TSD_StatusT ProcessModeManager::SendUpdateProfilingMsg(const uint32_t flag)
+void ProcessModeManager::SyncSharedCtxLogLevels()
 {
-    // TSDClient向TSDaemon发送更新profiling状态的消息
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.profilingMode = flag;
-    if (HdcMessageBuilder::BuildUpdateProfiling(msg, ctx) != TSD_OK) {
-        return TSD_INTERNAL_ERROR;
-    }
-    const TSD_StatusT ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] tsdclient update profiling mode failed", logicDeviceId_);
-        return TSD_CLT_UPDATE_PROFILING_FAILED;
-    }
-
-    return TSD_OK;
+    sharedCtx_.logLevel = logLevel_;
+    sharedCtx_.ccecpuLogLevel = ccecpuLogLevel_;
+    sharedCtx_.aicpuLogLevel = aicpuLogLevel_;
+    sharedCtx_.profilingMode = static_cast<uint32_t>(profilingMode_);
+    sharedCtx_.aicpuSchedMode = aicpuSchedMode_;
 }
+
+TSD_StatusT ProcessModeManager::Open(const uint32_t rankSize) { return tsdCtrl_.Open(rankSize); }
+
+TSD_StatusT ProcessModeManager::OpenAicpuSd() { return tsdCtrl_.OpenAicpuSd(); }
+
+TSD_StatusT ProcessModeManager::Close(const uint32_t flag) { return tsdCtrl_.Close(flag); }
 
 TSD_StatusT ProcessModeManager::GetHdcConctStatus(int32_t& hdcSessStat)
 {
-    return commAgent_.GetHdcConctStatus(hdcSessStat, IsAdcEnv());
+    return tsdCtrl_.GetHdcConctStatus(hdcSessStat);
 }
 
-TSD_StatusT ProcessModeManager::GetDeviceCheckCodeOnce(const HDCMessage msg)
-{
-    auto ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Send check_code search message failed.");
-        return ret;
-    }
+TSD_StatusT ProcessModeManager::UpdateProfilingConf(const uint32_t& flag) { return tsdCtrl_.UpdateProfilingConf(flag); }
 
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] wait package info response", logicDeviceId_,
-        commAgent_.GetSessionId());
-    ret = commAgent_.RecvData();
-    if (ret != TSD_OK) {
-        TSD_RUN_INFO("not receive TSD_CHECK_PACKAGE rsp msg, just send pkg to server");
-    }
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::GetDeviceCheckCode()
-{
-    if (aicpuPackageExistInDevice_) {
-        TSD_RUN_INFO("[ProcessModeManager][deviceId=%u] aicpu package already exist in device", logicDeviceId_);
-        return TSD_AICPUPACKAGE_EXISTED;
-    }
-
-    const TSD_StatusT ret = InitTsdClient();
-    if (ret != TSD_OK) {
-        TSD_RUN_WARN("[ProcessModeManager][deviceId=%u] init failed for send aicpu package", logicDeviceId_);
-        if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
-            return ret;
-        }
-        return TSD_HDC_CREATE_SESSION_FAILED;
-    }
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_FOUND,
-        "[ProcessModeManager] devCommClient_ is null in Open function");
-    const ScopeGuard destroySessionGuard([this]() { this->commAgent_.ReleaseDeviceConnection(); });
-
-    std::shared_ptr<VersionVerify> versionVerify = nullptr;
-    (void)commAgent_.GetVersionVerify(versionVerify);
-    TSD_CHECK_NULLPTR(versionVerify, TSD_INTERNAL_ERROR, "no VersionVerify available.");
-
-    if (!versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE)) {
-        TSD_RUN_INFO("[TsdClient] Device does not support search check_code before send aicpu package.");
-        aicpuPackageExistInDevice_ = true;
-        return TSD_OK;
-    }
-
-    HDCMessage msg;
-    msg.set_real_device_id(logicDeviceId_);
-    msg.set_type(HDCMessage::TSD_CHECK_PACKAGE);
-    msg.set_asan(IsAsanMmSysEnv());
-    SetHostAicpuCheckCode(msg);
-    SetHostExtendCheckCode(msg);
-    SetHostAscendcppCheckCode(msg);
-    if (GetDeviceCheckCodeOnce(msg) != TSD_OK) {
-        TSD_ERROR("get check code once failed.");
-        return TSD_INTERNAL_ERROR;
-    }
-    GetDeviceCheckCodeRetrySupport();
-
-    aicpuPackageExistInDevice_ = true;
-
-    return TSD_OK;
-}
-
-void ProcessModeManager::GetDeviceCheckCodeRetrySupport()
-{
-    std::shared_ptr<VersionVerify> versionVerify = nullptr;
-    (void)commAgent_.GetVersionVerify(versionVerify);
-    if (versionVerify == nullptr) {
-        TSD_ERROR("no VersionVerify available.");
-        return;
-    }
-    getCheckCodeRetrySupport_ = versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
-}
-
-TSD_StatusT ProcessModeManager::GetDeviceCheckCodeRetry(const HDCMessage& msg)
-{
-    const TSD_StatusT ret = InitTsdClient();
-    if (ret != TSD_OK) {
-        TSD_RUN_WARN("[ProcessModeManager][deviceId=%u] init failed for send aicpu package", logicDeviceId_);
-        if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
-            return ret;
-        }
-        return TSD_HDC_CREATE_SESSION_FAILED;
-    }
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_FOUND,
-        "[ProcessModeManager] devCommClient_ is null in Open function");
-    const ScopeGuard destroySessionGuard([this]() { this->commAgent_.ReleaseDeviceConnection(); });
-    if (GetDeviceCheckCodeOnce(msg) != TSD_OK) {
-        TSD_ERROR("get check code once failed.");
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
-}
+TSD_StatusT ProcessModeManager::InitQs(const InitFlowGwInfo* const initInfo) { return tsdCtrl_.InitQs(initInfo); }
 
 ProcessModeManager::~ProcessModeManager() {}
-
-TSD_StatusT ProcessModeManager::InitQs(const InitFlowGwInfo* const initInfo)
-{
-    TSD_RUN_INFO("[ProcessModeManager][logicDeviceId_=%u] begin to prepare send open message", logicDeviceId_);
-    if (initInfo == nullptr) {
-        TSD_ERROR("TsdInitQs failed, initInfo is nullptr.");
-        return tsd::TSD_INTERNAL_ERROR;
-    }
-
-    const char_t* const groupName = initInfo->groupName;
-    // tsd支持重入, 判断本次open QS是否需要
-    if (tsdStartStatus_.startQs_) {
-        TSD_INFO("[ProcessModeManager] QS has opened already, no need open again");
-        return TSD_OK;
-    }
-    TSD_StatusT ret = InitTsdClient();
-    TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
-
-    if (groupName != nullptr) {
-        TSD_INFO("[TsdClient]QS open with group[%s]", groupName);
-        qsInitGrpName_ = groupName;
-    } else {
-        TSD_INFO("[TsdClient]QS open with empty groupName");
-        qsInitGrpName_.clear();
-    }
-    schedPolicy_ = initInfo->schedPolicy;
-
-    constexpr TsdStartStatusInfo startInfo = {false, false, true};
-    ret = SendOpenMsg(DEFAULT_QS_RANKSIZE, startInfo);
-    TSD_CHECK(ret == TSD_OK, ret, "Send InitQs message to device failed.");
-
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait InitQs response from device failed.");
-
-    tsdStartStatus_.startQs_ = true;
-    TSD_RUN_INFO(
-        "[TsdClient][logicDeviceId_=%u] [sessionId=%u] start QS process success", logicDeviceId_,
-        commAgent_.GetSessionId());
-    return TSD_OK;
-}
 
 TSD_StatusT ProcessModeManager::CapabilityGet(const int32_t type, const uint64_t ptr)
 {
     return capabilityMgr_.CapabilityGet(type, ptr);
 }
 
-bool ProcessModeManager::IsOkToLoadFileToDevice(const char_t* const fileName, const uint64_t fileNameLen)
-{
-    if ((fileName == nullptr) || (fileNameLen == 0UL) || (fileNameLen >= HELPER_INPUT_MAX_FILE_NAME_LEN)) {
-        TSD_ERROR("input param is error");
-        return false;
-    }
-    if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
-        TSD_ERROR("cur device does not support heterogeneous AIServer");
-        return false;
-    }
-    try {
-        std::string loadFile(fileName, fileNameLen);
-        TSD_RUN_INFO("loadfile name:%s", loadFile.c_str());
-    } catch (std::exception& e) {
-        TSD_ERROR("input fileName is invalid reason:%s", e.what());
-        return false;
-    }
-    return true;
-}
-TSD_StatusT ProcessModeManager::LoadOmFileToDevice(
-    const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen)
-{
-    if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= HELPER_INPUT_MAX_FILE_PATH_LEN)) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-    try {
-        std::string filePathStr(filePath, pathLen);
-        TSD_RUN_INFO("file path is:%s", filePathStr.c_str());
-    } catch (std::exception& e) {
-        TSD_ERROR("input str is invalid reason:%s", e.what());
-        return TSD_INTERNAL_ERROR;
-    }
-    auto ret = SendFileToDevice(filePath, pathLen, fileName, fileNameLen, true);
-    TSD_CHECK(ret == TSD_OK, ret, "SendFileToDevice failed.");
-
-    ret = InitTsdClient();
-    TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
-    TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_FOUND, "devCommClient_ is null in send function");
-    std::string curFile(fileName, fileNameLen);
-    HDCMessage msg;
-    const std::string curPid = std::to_string(commAgent_.GetProcSign().tgid);
-    curFile = curPid + "_" + curFile;
-    TSD_INFO("Load om file name:%s to device logic device id:%u", curFile.c_str(), logicDeviceId_);
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.omfileName = curFile;
-    ret = HdcMessageBuilder::BuildOmFileDecompress(msg, ctx);
-    TSD_CHECK(ret == TSD_OK, ret, "build TSD_OM_PKG_DECOMPRESS_STATUS msg failed.");
-    ret = commAgent_.SendMsg(msg);
-    TSD_CHECK(ret == TSD_OK, ret, "send TSD_OM_PKG_DECOMPRESS_STATUS msg failed.");
-    ret = WaitRsp(OMFILE_LOAD_TIMEOUT);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait TSD_OM_PKG_DECOMPRESS_STATUS response from device failed.");
-    TSD_INFO("LoadOmFileToDevice success filepath:%s, filename:%s", filePath, fileName);
-    return TSD_OK;
-}
-
 TSD_StatusT ProcessModeManager::LoadFileToDevice(
     const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen)
 {
-    if (!IsOkToLoadFileToDevice(fileName, fileNameLen)) {
-        TSD_ERROR("IsOkToLoadFileToDevice is false");
-        return TSD_INTERNAL_ERROR;
-    }
-    // 针对显示调用动态shape包和runtime的加载，路径填空，名字为具体的包名
-    const std::string loadFile(fileName, fileNameLen);
-    TSD_RUN_INFO("begin load file:%s", loadFile.c_str());
-    if (loadFile == RUNTIME_PKG_NAME) {
-        return LoadRuntimePkgToDevice();
-    } else if (loadFile == DSHAPE_PKG_NAME) {
-        return LoadDShapePkgToDevice();
-    } else {
-        return LoadOmFileToDevice(filePath, pathLen, fileName, fileNameLen);
-    }
-}
-
-TSD_StatusT ProcessModeManager::SendFileToDevice(
-    const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen,
-    const bool addPreFix)
-{
-    TSD_RUN_INFO("[TsdClient] [deviceId=%u][pathLen=%llu] SendFileToDevice enter", logicDeviceId_, pathLen);
-    constexpr int32_t peerNode = 0;
-    constexpr uint32_t hdcNameMax = 256U;
-    char_t path[hdcNameMax] = {};
-    int32_t ret = drvHdcGetTrustedBasePath(peerNode, static_cast<int32_t>(logicDeviceId_), &path[0], hdcNameMax);
-    if (ret != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] drvHdcGetTrustedBasePath failed, ret[%d]", logicDeviceId_, ret);
-        return TSD_INTERNAL_ERROR;
-    }
-    std::string curPid;
-    if (commAgent_.IsInit()) {
-        curPid = std::to_string(commAgent_.GetProcSign().tgid);
-    } else {
-        process_sign processSign;
-        ret = drvGetProcessSign(&processSign);
-        if (ret != DRV_ERROR_NONE) {
-            TSD_ERROR("driver get process sign failed. ret[%d].", ret);
-            return TSD_INTERNAL_ERROR;
-        }
-        curPid = std::to_string(processSign.tgid);
-    }
-    std::string curFile(fileName, fileNameLen);
-    std::string dstFile = std::string(path) + "/";
-    if (addPreFix) {
-        dstFile += curPid + "_";
-    }
-    dstFile += curFile;
-    std::string orgPath(filePath, pathLen);
-    std::string orgFile;
-    if ((orgPath.length() > 0U) && ((orgPath.at((orgPath.length()) - 1U)) == '/')) {
-        orgFile = orgPath + curFile;
-    } else {
-        orgFile = orgPath + "/" + curFile;
-    }
-    ret = drvHdcSendFile(peerNode, static_cast<int32_t>(logicDeviceId_), orgFile.c_str(), dstFile.c_str(), nullptr);
-    if (ret != DRV_ERROR_NONE) {
-        TSD_ERROR(
-            "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed, "
-            "ret = %d",
-            logicDeviceId_, orgFile.c_str(), dstFile.c_str(), ret);
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] hdc send file[%s] to [%s] success", logicDeviceId_, orgFile.c_str(), dstFile.c_str());
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::GetDeviceHsPkgCheckCode(
-    const uint32_t checkCode, const HDCMessage::MsgType msgType, const bool beforeSendFlag)
-{
-    TSD_StatusT ret = InitTsdClient();
-    if (ret != TSD_OK) {
-        TSD_ERROR("InitTsdClient failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.msgType = static_cast<uint32_t>(msgType);
-    ctx.checkCode = checkCode;
-    ctx.beforeSendPkg = beforeSendFlag;
-    if (HdcMessageBuilder::BuildPackageCheckCode(msg, ctx) != TSD_OK) {
-        TSD_ERROR("build package check code msg failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Send runtime checkcode failed msgtype:%u.", static_cast<uint32_t>(msgType));
-        commAgent_.ReleaseDeviceConnection();
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] wait package info response msgType:%u", logicDeviceId_,
-        commAgent_.GetSessionId(), static_cast<uint32_t>(msgType));
-    ret = WaitRsp(HELPER_PKG_LOAD_TIMEOUT);
-    if (ret != TSD_OK) {
-        if (beforeSendFlag) {
-            TSD_RUN_INFO("not receive TSD_CHECK_PACKAGE rsp msg, just send pkg to server");
-        } else {
-            TSD_ERROR("not receive TSD_CHECK_PACKAGE failed Msgtype:%u", static_cast<uint32_t>(msgType));
-            return TSD_INTERNAL_ERROR;
-        }
-    }
-    TSD_RUN_INFO("GetDeviceHsPkgCheckCode success Msgtype:%u", static_cast<uint32_t>(msgType));
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::LoadRuntimePkgToDevice()
-{
-    if (capabilityMgr_.IsSupportCommonSink() && (&drvHdcSendFileV2 != nullptr) &&
-        (&drvHdcGetTrustedBasePathV2 != nullptr)) {
-        (void)LoadPackageConfigInfoToDevice(false);
-        if (LoadCannHsPkgToDevice(UDF_PKG_NAME) != TSD_OK) {
-            TSD_ERROR("Load package failed, package:%s", UDF_PKG_NAME.c_str());
-            return TSD_INTERNAL_ERROR;
-        }
-        if (LoadCannHsPkgToDevice(HCCD_PKG_NAME) != TSD_OK) {
-            TSD_ERROR("Load package failed, package:%s", HCCD_PKG_NAME.c_str());
-            return TSD_INTERNAL_ERROR;
-        }
-        TSD_RUN_INFO("Load udf and hccd package success.");
-        return TSD_OK;
-    }
-
-    // 使用ASCEND_LATEST_INSTALL_PATH配置的路径
-    std::string runtimePkgPath;
-    GetAscendLatestIntallPath(runtimePkgPath);
-    if ((runtimePkgPath.length() > 0U) && ((runtimePkgPath.at((runtimePkgPath.length()) - 1U)) == '/')) {
-        runtimePkgPath = runtimePkgPath + "runtime/lib64/";
-    } else {
-        runtimePkgPath = runtimePkgPath + "/runtime/lib64/";
-    }
-    const std::string runtimePkgNameStr = runtimePkgPath + RUNTIME_PKG_NAME;
-    TSD_INFO("target runtime path:%s pkg:%s", runtimePkgPath.c_str(), runtimePkgNameStr.c_str());
-    if ((mmAccess(runtimePkgPath.c_str()) != EN_OK) || (mmIsDir(runtimePkgPath.c_str()) != EN_OK)) {
-        TSD_ERROR("[TsdClient] path[%s] does not exist, deviceId[%u]", runtimePkgPath.c_str(), logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    if (mmAccess(runtimePkgNameStr.c_str()) != EN_OK) {
-        TSD_ERROR("[TsdClient] file[%s] does not exist, deviceId[%u]", runtimePkgNameStr.c_str(), logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    // device侧可能会删除包, 必须把host保存的peercheckcode初始化
-    packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_RUNTIME)] = 0U;
-    const uint32_t hostRuntimeCheckCode = CalFileSize(runtimePkgNameStr.c_str());
-    const auto ret = SendFileToDevice(
-        runtimePkgPath.c_str(), runtimePkgPath.length(), RUNTIME_PKG_NAME.c_str(), RUNTIME_PKG_NAME.length(), true);
-    TSD_CHECK(ret == TSD_OK, ret, "send runtime pkg to device failed.");
-    // helper要求解压的同步性，解压完成后再返回给上层
-    if (GetDeviceHsPkgCheckCode(hostRuntimeCheckCode, HDCMessage::TSD_GET_DEVICE_RUNTIME_CHECKCODE, false) != TSD_OK) {
-        TSD_ERROR("GetDeviceHsPkgCheckCode failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (hostRuntimeCheckCode !=
-        packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_RUNTIME)]) {
-        TSD_ERROR(
-            "checode verify is failed hostRuntimeCheckCode:%u, peerRuntimeCheckCode:%u", hostRuntimeCheckCode,
-            packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_RUNTIME)]);
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::LoadCannHsPkgToDevice(const std::string& pkgPureName)
-{
-    int32_t peerNode = 0;
-    constexpr uint32_t hdcNameMax = 256U;
-    char_t path[hdcNameMax] = {};
-    const int32_t drvRet =
-        drvHdcGetTrustedBasePathV2(peerNode, static_cast<int32_t>(logicDeviceId_), &path[0], hdcNameMax);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] Get hdc trusted path failed, ret[%d]", logicDeviceId_, drvRet);
-        return TSD_INTERNAL_ERROR;
-    }
-
-    PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
-    std::map<std::string, PackConfDetail> configMap = pkgConInst->GetAllPackageConfigInfo();
-    std::string dstDirPreFix = std::string(path);
-    std::string orgFile;
-    std::string dstFile = dstDirPreFix;
-    if (pkgConInst->GetPkgHostAndDeviceDstPath(pkgPureName, orgFile, dstFile, commAgent_.GetProcSign().tgid) !=
-        TSD_OK) {
-        return TSD_INTERNAL_ERROR;
-    }
-    if (orgFile.empty()) {
-        TSD_RUN_WARN("cannot find package:%s, optional is true skip", pkgPureName.c_str());
-        return TSD_OK;
-    }
-
-    const std::string hostHash = CalFileSha256HashValue(orgFile);
-    SetHostCommonSinkPackHashValue(pkgPureName, hostHash);
-    if (IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
-        TSD_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
-        return TSD_OK;
-    }
-
-    if (LoadFileAndWaitRsp(pkgPureName, hostHash, peerNode, orgFile, dstFile) != TSD_OK) {
-        TSD_ERROR("compare and send package to device failed");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    if (static_cast<uint32_t>(rspCode_) != 0U) {
-        TSD_ERROR("host and device check code compare failed, package:%s", pkgPureName.c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_RUN_INFO("Load package success, package:%s", pkgPureName.c_str());
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::LoadFileAndWaitRsp(
-    const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode, const std::string& orgFile,
-    const std::string& dstFile)
-{
-    if (SendAICPUPackageSimple(peerNode, orgFile, dstFile, true) != TSD_OK) {
-        TSD_ERROR("send package to device failed, package:%s", pkgPureName.c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-
-    if (GetCannHsPkgCheckCode(pkgPureName, hostPkgHash) != TSD_OK) {
-        TSD_ERROR("get check code from device failed, package:%s", pkgPureName.c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::GetCannHsPkgCheckCode(const std::string& pkgPureName, const std::string& hostPkgHash)
-{
-    TSD_StatusT ret = InitTsdClient();
-    if (ret != TSD_OK) {
-        TSD_ERROR("InitTsdClient failed");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.packageMaxProcessTime = DRIVER_EXTEND_MAX_PROCESS_TIME;
-    ctx.packageWorkerType = static_cast<uint32_t>(PackageWorkerType::PACKAGE_WORKER_COMMON_SINK);
-    ctx.packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_COMMON_SINK);
-    ctx.packageName = pkgPureName;
-    ctx.hashCode = hostPkgHash;
-    if (HdcMessageBuilder::BuildCannHsCheckCode(msg, ctx) != TSD_OK) {
-        TSD_ERROR("build cann hs check code msg failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Send cann hs check code failed");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] wait cann package info response for %s", logicDeviceId_,
-        commAgent_.GetSessionId(), pkgPureName.c_str());
-    ret = WaitRsp(DRIVER_EXTEND_MAX_PROCESS_TIME * 1000U);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Wait response for package %s failed", pkgPureName.c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO("Get check code for package %s success", pkgPureName.c_str());
-    return TSD_OK;
-}
-
-bool ProcessModeManager::SetCommonOpenParamList(MessageContext& ctx, const ProcOpenArgs* const procArgs) const
-{
-    if ((procArgs->envCnt > PROCESS_OPEN_MAX_ENV_CNT) || (procArgs->extParamCnt > PROCESS_OPEN_MAX_EXT_PARAM_CNT)) {
-        TSD_ERROR("input param error envCnt:%llu, extParamCnt:%llu", procArgs->envCnt, procArgs->extParamCnt);
-        return false;
-    }
-    try {
-        ctx.subProcOpenType = static_cast<uint32_t>(procArgs->procType);
-        if ((procArgs->filePath != nullptr) && (procArgs->pathLen != 0)) {
-            const std::string filePath(procArgs->filePath, procArgs->pathLen);
-            ctx.hasSubProcFilePath = true;
-            ctx.subProcFilePath = filePath;
-            TSD_INFO("filePath:%s", filePath.c_str());
-        }
-        if ((procArgs->procType == TSD_SUB_PROC_BUILTIN_UDF) || (procArgs->procType == TSD_SUB_PROC_UDF)) {
-            for (uint64_t index = 0; index < procArgs->envCnt; index++) {
-                const std::string envName(procArgs->envParaList[index].envName, procArgs->envParaList[index].nameLen);
-                const std::string envValue(
-                    procArgs->envParaList[index].envValue, procArgs->envParaList[index].valueLen);
-                TSD_INFO("input envName:%s, envValue:%s", envName.c_str(), envValue.c_str());
-                ctx.subProcEnvList.emplace_back(envName, envValue);
-            }
-        }
-        for (uint64_t cnt = 0; cnt < procArgs->extParamCnt; cnt++) {
-            const std::string extParam(procArgs->extParamList[cnt].paramInfo, procArgs->extParamList[cnt].paramLen);
-            TSD_INFO(
-                "cnt:%llu, extra parameters:%s, len:%llu", cnt, extParam.c_str(), procArgs->extParamList[cnt].paramLen);
-            ctx.subProcExtParamList.push_back(extParam);
-        }
-    } catch (std::exception& e) {
-        TSD_ERROR("input str is invalid reason:%s", e.what());
-        return false;
-    }
-    return true;
-}
-TSD_StatusT ProcessModeManager::ConstructCommonOpenMsg(HDCMessage& hdcMsg, const ProcOpenArgs* procArgs) const
-{
-    MessageContext ctx = BuildBaseMessageContext();
-    if (!SetCommonOpenParamList(ctx, procArgs)) {
-        TSD_ERROR("input param is error, SetCommonOpenParamList failed");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    std::string runtimePkgPath;
-    GetAscendLatestIntallPath(runtimePkgPath);
-    if (!runtimePkgPath.empty()) {
-        ctx.ascendInstallPath = runtimePkgPath;
-        TSD_RUN_INFO("runtimePkgPath:%s", runtimePkgPath.c_str());
-    }
-
-    if (procArgs->procType == SubProcType::TSD_SUB_PROC_HCCP) {
-        ctx.withSubProcLogLevel = true;
-    }
-    return HdcMessageBuilder::BuildCommonOpen(hdcMsg, ctx);
-}
-
-TSD_StatusT ProcessModeManager::SendCommonOpenMsg(const ProcOpenArgs* procArgs)
-{
-    HDCMessage hdcMsg;
-    if (ConstructCommonOpenMsg(hdcMsg, procArgs) != TSD_OK) {
-        TSD_ERROR("construct open msg error");
-        return TSD_INTERNAL_ERROR;
-    }
-    const TSD_StatusT ret = commAgent_.SendMsg(hdcMsg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("send msg to device error");
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
+    return packageMgr_.LoadFileToDevice(filePath, pathLen, fileName, fileNameLen, tsdCtrl_.BuildBaseMessageContext());
 }
 
 TSD_StatusT ProcessModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
 {
-    if (openArgs == nullptr) {
-        TSD_ERROR("openArgs is null");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (openArgs->subPid == nullptr) {
-        TSD_ERROR("openArgs->subPid is null");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_RUN_INFO("enter into ProcessOpenSubProc subtype:%u", static_cast<uint32_t>(openArgs->procType));
-    if (!capabilityMgr_.CheckSubProcSupported(static_cast<SubProcType>(openArgs->procType))) {
-        TSD_ERROR("ProcessOpenSubProc versionCheck failed, subtype[%u]", static_cast<uint32_t>(openArgs->procType));
-        return TSD_INTERNAL_ERROR;
-    }
-
-    auto ret = InitTsdClient();
-    TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
-
-    ret = SendCommonOpenMsg(openArgs);
-    TSD_CHECK(ret == TSD_OK, ret, "SendCommonOpenMsg failed.");
-
-    ret = WaitRsp(0U);
-    // for test
-    TSD_CHECK(ret == TSD_OK, ret, "wait heterogeneous open msg rsp failed.");
-
-    *(openArgs->subPid) = static_cast<pid_t>(openSubPid_);
-    if (openArgs->procType == SubProcType::TSD_SUB_PROC_HCCP) {
-        isStartedHccp_ = true;
-        hccpPid_ = openSubPid_;
-    }
-    TSD_RUN_INFO("OpenSubProc success type:%u, pid:%u", static_cast<uint32_t>(openArgs->procType), openSubPid_);
-    return TSD_OK;
+    return subProcCtrl_.OpenSubProc(openArgs);
 }
 
 TSD_StatusT ProcessModeManager::ProcessCloseSubProc(const pid_t closePid)
 {
-    if (closePid <= 0) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
-        TSD_ERROR("cur device does not support heterogeneous AIServer");
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO("enter into ProcessCloseSubProc subpid:%d", closePid);
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.closeSubProcPid = static_cast<uint32_t>(closePid);
-    const TSD_StatusT buildRet = HdcMessageBuilder::BuildCloseSubProc(msg, ctx);
-    TSD_CHECK(buildRet == TSD_OK, buildRet, "build TSD_CLOSE_SUB_PROC msg failed.");
-
-    if (isStartedHccp_ && (static_cast<uint32_t>(closePid) == hccpPid_)) {
-        isStartedHccp_ = false;
-        hccpPid_ = 0;
-    }
-
-    TSD_StatusT ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] send remove msg to device error", logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
-    TSD_RUN_INFO("leave ProcessCloseSubProc subpid:%u", closePid);
-    return TSD_OK;
+    return subProcCtrl_.CloseSubProc(closePid);
 }
 
 TSD_StatusT ProcessModeManager::GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen)
 {
-    if ((pidInfo == nullptr) || (arrayLen == 0U)) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_DEBUG("enter into GetSubProcStatus");
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(arrayLen);
-    for (uint32_t index = 0; index < arrayLen; index++) {
-        ctx.subProcPidList.push_back(static_cast<uint32_t>(pidInfo[index].pid));
-    }
-    const TSD_StatusT buildRet = HdcMessageBuilder::BuildGetSubProcStatus(msg, ctx);
-    TSD_CHECK(buildRet == TSD_OK, buildRet, "build TSD_GET_SUB_PROC_STATUS msg failed.");
-    const ScopeGuard closeFileGuard([this]() {
-        pidArry_ = nullptr;
-        pidArryLen_ = 0U;
-    });
-    pidArry_ = pidInfo;
-    pidArryLen_ = arrayLen;
-    TSD_StatusT ret = commAgent_.SendMsg(msg);
-    TSD_CHECK(ret == TSD_OK, ret, "send GetSubProcStatus msg to device failed.");
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait GetSubProcStatus response from device failed.");
-    TSD_DEBUG("leave GetSubProcStatus");
-    return TSD_OK;
+    return subProcCtrl_.GetSubProcStatus(pidInfo, arrayLen);
 }
 
 TSD_StatusT ProcessModeManager::RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen)
 {
-    if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= HELPER_INPUT_MAX_FILE_PATH_LEN)) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-    try {
-        const std::string dstPath(filePath, pathLen);
-        TSD_RUN_INFO("input dstpath:%s", dstPath.c_str());
-        if (!CheckValidatePath(dstPath)) {
-            TSD_ERROR("dstPath[%s] is not correct", dstPath.c_str());
-            return TSD_INTERNAL_ERROR;
-        }
-        if (dstPath.find("..") != std::string::npos) {
-            TSD_ERROR("input path:%s is error", dstPath.c_str());
-            return TSD_INTERNAL_ERROR;
-        }
-    } catch (std::exception& e) {
-        TSD_ERROR("input fileName is invalid reason:%s", e.what());
-        return TSD_INTERNAL_ERROR;
-    }
-    if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
-        TSD_ERROR("cur device does not support heterogeneous AIServer");
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_CHECK_NULLPTR(
-        commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
-    HDCMessage msg;
-    const std::string remvePath(filePath, pathLen);
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.removeFilePath = remvePath;
-    TSD_StatusT ret = HdcMessageBuilder::BuildRemoveFile(msg, ctx);
-    TSD_CHECK(ret == TSD_OK, ret, "build TSD_REMOVE_FILE msg failed.");
-    ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] send remove msg to device error", logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::LoadDShapePkgToDevice()
-{
-    // 使用ASCEND_LATEST_INSTALL_PATH配置的路径
-    std::string curPkgPath;
-    GetAscendLatestIntallPath(curPkgPath);
-    if ((curPkgPath.length() > 0U) && ((curPkgPath.at((curPkgPath.length()) - 1U)) == '/')) {
-        curPkgPath = curPkgPath + "ops/built-in/";
-    } else {
-        curPkgPath = curPkgPath + "/ops/built-in/";
-    }
-    const std::string curPkgName = curPkgPath + DSHAPE_PKG_NAME;
-    TSD_INFO("target pkg path:%s pkgName:%s", curPkgPath.c_str(), curPkgName.c_str());
-    if ((mmAccess(curPkgPath.c_str()) != EN_OK) || (mmIsDir(curPkgPath.c_str()) != EN_OK)) {
-        TSD_ERROR("[TsdClient] path[%s] does not exist, deviceId[%u]", curPkgPath.c_str(), logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    if (mmAccess(curPkgName.c_str()) != EN_OK) {
-        TSD_ERROR("[TsdClient] file[%s] does not exist, deviceId[%u]", curPkgName.c_str(), logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    // device侧可能会删除包, 必须把host保存的peercheckcode初始化
-    packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DSHAPE)] = 0U;
-    const uint32_t checkCode = CalFileSize(curPkgName.c_str());
-    const auto ret = SendFileToDevice(
-        curPkgPath.c_str(), curPkgPath.length(), DSHAPE_PKG_NAME.c_str(), DSHAPE_PKG_NAME.length(), true);
-    TSD_CHECK(ret == TSD_OK, ret, "send dshape pkg to device failed.");
-    // helper要求解压的同步性，解压完成后再返回给上层
-    if (GetDeviceHsPkgCheckCode(checkCode, HDCMessage::TSD_GET_DEVICE_DSHAPE_CHECKCODE, false) != TSD_OK) {
-        TSD_ERROR("GetDeviceHsPkgCheckCode failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (checkCode != packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DSHAPE)]) {
-        TSD_ERROR(
-            "checkode verify is failed checkCode:%u, peerDShapeCheckCode_:%u", checkCode,
-            packagePeerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_DSHAPE)]);
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
-}
-
-void ProcessModeManager::GetAscendLatestIntallPath(std::string& pkgBasePath) const
-{
-    GetEnvFromMmSys(MM_ENV_ASCEND_LATEST_INSTALL_PATH, "ASCEND_LATEST_INSTALL_PATH", pkgBasePath);
-    if (pkgBasePath.empty()) {
-        GetEnvFromMmSys(MM_ENV_ASCEND_HOME_PATH, "ASCEND_HOME_PATH", pkgBasePath);
-        if (pkgBasePath.empty()) {
-            pkgBasePath = "/usr/local/Ascend/latest/";
-            TSD_INFO(
-                "[TsdClient][logicDeviceId_=%u] ASCEND_LATEST_INSTALL_PATH is not set, use default value[%s]",
-                logicDeviceId_, pkgBasePath.c_str());
-        }
-    }
-    TSD_RUN_INFO("latest install path:%s", pkgBasePath.c_str());
+    return subProcCtrl_.RemoveFileOnDevice(filePath, pathLen);
 }
 
 TSD_StatusT ProcessModeManager::ProcessCloseSubProcList(const ProcStatusParam* closeList, const uint32_t listSize)
 {
-    TSD_RUN_INFO(
-        "enter ExecuteClosePidList cnt:%u, tsdSupportLevel_:%u", listSize, capabilityMgr_.GetTsdSupportLevel());
-    if ((listSize > MAX_PROCESS_PID_CNT) || (listSize == 0U) || (closeList == nullptr)) {
-        TSD_ERROR("pid list size invalid:%u", listSize);
-        return TSD_INTERNAL_ERROR;
-    }
-    if (commAgent_.GetDeviceComm() == nullptr) {
-        TSD_RUN_INFO("device comm client is null, skip close sub proc list");
-        return TSD_HDC_CLIENT_CLOSED_EXTERNAL;
-    }
-    if (!TSD_BITMAP_GET(capabilityMgr_.GetTsdSupportLevel(), TSD_SUPPORT_CLOSE_LIST_BIT)) {
-        TSD_StatusT singleCloseRet = TSD_OK;
-        for (uint32_t index = 0U; index < listSize; index++) {
-            if (ProcessCloseSubProc(closeList[index].pid) != TSD_OK) {
-                singleCloseRet = TSD_INTERNAL_ERROR;
-                TSD_ERROR("close pid:%d failed", closeList[index].pid);
-            }
-        }
-        return singleCloseRet;
-    }
-
-    const uint32_t loopCnt = listSize / CLOSE_PID_PER_LOOP;
-    const uint32_t reserveCnt = listSize % CLOSE_PID_PER_LOOP;
-    for (uint32_t cnt = 0U; cnt < loopCnt; cnt++) {
-        if (ExecuteClosePidList(closeList, cnt * CLOSE_PID_PER_LOOP, CLOSE_PID_PER_LOOP) != TSD_OK) {
-            TSD_ERROR("ExecuteClosePidList failed cnt:%u", cnt);
-            return TSD_INTERNAL_ERROR;
-        }
-        TSD_RUN_INFO("ExecuteClosePidList success cnt:%u", cnt);
-    }
-
-    if (ExecuteClosePidList(closeList, loopCnt * CLOSE_PID_PER_LOOP, reserveCnt) != TSD_OK) {
-        TSD_ERROR("ExecuteClosePidList failed reserveCnt:%u", reserveCnt);
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO("ExecuteClosePidList success reserveCnt:%u", reserveCnt);
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::ExecuteClosePidList(
-    const ProcStatusParam* closeList, const uint32_t startIndex, const uint32_t pidCnt)
-{
-    if ((closeList == nullptr) || (pidCnt == 0U) || (pidCnt > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null");
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(pidCnt);
-    ctx.subProcTypeList.reserve(pidCnt);
-    for (uint32_t index = 0U; index < pidCnt; index++) {
-        const uint32_t curPid = static_cast<uint32_t>(closeList[index + startIndex].pid);
-        const uint32_t curType = static_cast<uint32_t>(closeList[index + startIndex].procType);
-        ctx.subProcPidList.push_back(curPid);
-        ctx.subProcTypeList.push_back(curType);
-        TSD_INFO("add close subproc:%d, proctype:%u", closeList[index + startIndex].pid, curType);
-        if (isStartedHccp_ && (closeList[index + startIndex].procType == SubProcType::TSD_SUB_PROC_HCCP) &&
-            (curPid == hccpPid_)) {
-            isStartedHccp_ = false;
-            hccpPid_ = 0;
-        }
-    }
-    const TSD_StatusT buildRet = HdcMessageBuilder::BuildCloseSubProcList(msg, ctx);
-    TSD_CHECK(buildRet == TSD_OK, buildRet, "build TSD_CLOSE_SUB_PROC_LIST msg failed.");
-    TSD_StatusT ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] send close pid array msg to device error", logicDeviceId_);
-        return TSD_INTERNAL_ERROR;
-    }
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait close pid array response from device failed.");
-    TSD_RUN_INFO("leave ExecuteClosePidList startindex:%u, cnt:%u", startIndex, pidCnt);
-    return TSD_OK;
+    return subProcCtrl_.CloseSubProcList(closeList, listSize);
 }
 
 TSD_StatusT ProcessModeManager::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
-    if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is error");
-        return TSD_INTERNAL_ERROR;
-    }
-
-    TSD_INFO("enter into GetSubProcListStatus");
-    TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null");
-    HDCMessage msg;
-    MessageContext ctx = BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(arrayLen);
-    ctx.subProcTypeList.reserve(arrayLen);
-    for (uint32_t index = 0; index < arrayLen; index++) {
-        ctx.subProcPidList.push_back(static_cast<uint32_t>(pidInfo[index].pid));
-        ctx.subProcTypeList.push_back(static_cast<uint32_t>(pidInfo[index].procType));
-    }
-    const TSD_StatusT buildRet = HdcMessageBuilder::BuildGetSubProcStatus(msg, ctx);
-    TSD_CHECK(buildRet == TSD_OK, buildRet, "build TSD_GET_SUB_PROC_STATUS msg failed.");
-    const ScopeGuard closeFileGuard([this]() {
-        pidList_ = nullptr;
-        pidArryLen_ = 0U;
-    });
-    pidList_ = pidInfo;
-    pidArryLen_ = arrayLen;
-    TSD_StatusT ret = commAgent_.SendMsg(msg);
-    TSD_CHECK(ret == TSD_OK, ret, "send GetSubProcListStatus msg to device failed.");
-    ret = WaitRsp(0U);
-    TSD_CHECK(ret == TSD_OK, ret, "Wait GetSubProcListStatus response from device failed.");
-    TSD_INFO("leave GetSubProcListStatus");
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::SendCommonPackage(
-    const int32_t peerNode, const std::string& path, const uint32_t packageType)
-{
-    if (packageName_[packageType] == "") {
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", logicDeviceId_,
-            packageType);
-        return TSD_OK;
-    }
-
-    uint32_t supportLevelName = INVALID_NUMBER;
-    if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)) {
-        supportLevelName = TSD_SUPPORT_EXTEND_PKG;
-    } else if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)) {
-        supportLevelName = TSD_SUPPORT_ASCENDCPP_PKG;
-    }
-    if (TSD_BITMAP_GET(capabilityMgr_.GetTsdSupportLevel(), supportLevelName) == 0U) {
-        packageHostCheckCode_[packageType] = 0U;
-        TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] device does not support, skip send, packageType[%u]", logicDeviceId_,
-            packageType);
-        return TSD_OK;
-    }
-
-    if (packageHostCheckCode_[packageType] == packagePeerCheckCode_[packageType]) {
-        TSD_INFO(
-            "[TsdClient][deviceId_=%u] the checksum of host package[%u] is same as device[%u], skip send package, "
-            "packageType[%u]",
-            logicDeviceId_, packageHostCheckCode_[packageType], packagePeerCheckCode_[packageType], packageType);
-        return TSD_OK;
-    }
-
-    const std::string orgFile = packagePath_[packageType] + packageName_[packageType];
-    const std::string dstFile =
-        std::string(path) + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + packageName_[packageType];
-    TSD_INFO(
-        "[TsdClient][deviceId=%u] hostCheckCode[%u] no equal to deviceCheckCode[%u], begin send file[%s] to [%s], "
-        "packageType[%u]",
-        logicDeviceId_, packageHostCheckCode_[packageType], packagePeerCheckCode_[packageType], orgFile.c_str(),
-        dstFile.c_str(), packageType);
-    const auto ret =
-        drvHdcSendFile(peerNode, static_cast<int32_t>(logicDeviceId_), orgFile.c_str(), dstFile.c_str(), nullptr);
-    if (ret != DRV_ERROR_NONE) {
-        TSD_ERROR(
-            "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed, ret[%d], packageType[%u]", logicDeviceId_,
-            orgFile.c_str(), dstFile.c_str(), ret, packageType);
-        packageHostCheckCode_[packageType] = 0U;
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_INFO(
-        "[TsdClient][deviceId=%u] hdc send file[%s] to [%s] success, packageType[%u]", logicDeviceId_, orgFile.c_str(),
-        dstFile.c_str(), packageType);
-    return TSD_OK;
-}
-
-void ProcessModeManager::SetHostAicpuCheckCode(HDCMessage& msg)
-{
-    const uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
-    if (!packageName_[packageType].empty()) {
-        const std::string orgFile = packagePath_[packageType] + packageName_[packageType];
-        packageHostCheckCode_[packageType] = CalFileSize(orgFile.c_str());
-        msg.set_check_code(packageHostCheckCode_[packageType]);
-    }
-}
-
-void ProcessModeManager::SetHostExtendCheckCode(HDCMessage& msg)
-{
-    const uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL);
-    if (!packageName_[packageType].empty()) {
-        const std::string orgFile = packagePath_[packageType] + packageName_[packageType];
-        packageHostCheckCode_[packageType] = CalFileSize(orgFile.c_str());
-        msg.set_extendpkg_check_code(packageHostCheckCode_[packageType]);
-    }
-}
-
-void ProcessModeManager::SetHostAscendcppCheckCode(HDCMessage& msg)
-{
-    const uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP);
-    if (!packageName_[packageType].empty()) {
-        const std::string orgFile = packagePath_[packageType] + packageName_[packageType];
-        packageHostCheckCode_[packageType] = CalFileSize(orgFile.c_str());
-        msg.set_ascendcpppkg_check_code(packageHostCheckCode_[packageType]);
-    }
-}
-
-void ProcessModeManager::ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag& tsdCloseFlag) const
-{
-    TSD_RUN_INFO("Parse tsd close flag [%u]", flag);
-    tsdCloseFlag.quickCloseFlag = TSD_BITMAP_GET(flag, 0U);
-    return;
+    return subProcCtrl_.GetSubProcListStatus(pidInfo, arrayLen);
 }
 
 TSD_StatusT ProcessModeManager::OpenNetService(const NetServiceOpenArgs* args)
 {
     if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_MUL_HCCP)) {
         TSD_RUN_INFO("current package does not support opening net service with args");
-        if (Open(DEFUALT_NET_SERVICE) != TSD_OK) {
+        if (tsdCtrl_.Open(DEFAULT_NET_SERVICE) != TSD_OK) {
             TSD_ERROR("open default net service failed");
             return TSD_OPEN_DEFAULT_NET_SERVICE_FAILED;
         } else {
@@ -1640,7 +273,7 @@ TSD_StatusT ProcessModeManager::OpenNetService(const NetServiceOpenArgs* args)
         openArgs.extParamCnt = args->extParamCnt;
         openArgs.extParamList = args->extParamList;
         openArgs.subPid = &subPid;
-        return ProcessOpenSubProc(&openArgs);
+        return subProcCtrl_.OpenSubProc(&openArgs);
     }
 }
 
@@ -1651,374 +284,43 @@ TSD_StatusT ProcessModeManager::CloseNetService()
         return TsdClose(0U);
     } else {
         ProcStatusParam closeList;
-        closeList.pid = hccpPid_;
+        closeList.pid = tsdCtrl_.GetHccpPid();
         closeList.curStat = SubProcessStatus::SUB_PROCESS_STATUS_NORMAL;
         closeList.procType = SubProcType::TSD_SUB_PROC_HCCP;
-        return ProcessCloseSubProcList(&closeList, 1U);
+        return subProcCtrl_.CloseSubProcList(&closeList, 1U);
     }
 }
 
-TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice(const bool hasPluginVersion)
+void ProcessModeManager::ServerToClientMsgProc(const uint32_t sessionID, const HDCMessage& msg)
 {
-    if ((capabilityMgr_.IsSupportCommonSink() == false) || (&drvHdcSendFileV2 == nullptr) ||
-        (&drvHdcGetTrustedBasePathV2 == nullptr) || IsAdcEnv() || (&halGetSocVersion == nullptr)) {
-        TSD_RUN_INFO("device does not support common sink package config info");
-        return TSD_OK;
-    }
-
-    if (hasSendConfigFile_) {
-        TSD_RUN_INFO("The package config file has send to device, no need send again. deviceId=%u", logicDeviceId_);
-        return TSD_OK;
-    }
-
-    TSD_StatusT ret = InitTsdClient();
-    if (ret != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] InitTsdClient failed, ret[%d]", logicDeviceId_, ret);
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_FOUND, "devCommClient is null");
-    std::string packageTitle;
-    (void)GetPackageTitle(packageTitle);
-    std::string shortSocVersion;
-    (void)GetShortSocVersion(shortSocVersion);
-    packageTitle = packageTitle + ";" + shortSocVersion;
-    PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
-    ret = pkgConInst->ParseConfigDataFromFile(packageTitle);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Parsing config data was not successful");
-        return TSD_INTERNAL_ERROR;
-    }
-    if (hasPluginVersion) {
-        // 刷新 host 侧 compat 插件包版本信息，并随后随 CONFIG 消息一起下发
-        pkgConInst->RefreshHostPluginVersions();
-    }
-
-    HDCMessage msg;
-    msg.set_real_device_id(logicDeviceId_);
-    msg.set_type(HDCMessage::TSD_UPDATE_PACKAGE_PROCESS_CONFIG);
-    ProcessSignPid* const signPid = msg.mutable_proc_sign_pid();
-    TSD_CHECK_NULLPTR(signPid, TSD_INTERNAL_ERROR, "signPid is null.");
-    signPid->set_proc_pid(static_cast<uint32_t>(commAgent_.GetProcSign().tgid));
-    pkgConInst->ConstructPkgConfigMsg(msg);
-
-    ret = commAgent_.SendMsg(msg);
-    if (ret != TSD_OK) {
-        TSD_ERROR("Send update package config message failed.");
-        return ret;
-    }
-
-    ret = commAgent_.RecvData();
-    TSD_RUN_INFO("Receive load package config response result:%u", ret);
-
-    hasSendConfigFile_ = true;
-
-    return TSD_OK;
+    TSD_INFO("[ServerToClientMsgProc] [sessionID=%u]", sessionID);
+    const uint32_t realDeviceId = msg.real_device_id();
+    const std::shared_ptr<ProcessModeManager> client =
+        std::dynamic_pointer_cast<ProcessModeManager>(ClientManager::GetInstance(realDeviceId, DIE_MODE, false));
+    TSD_CHECK_NULLPTR_VOID(client);
+    client->GetDispatcher().DeviceMsgProcess(msg);
 }
 
-TSD_StatusT ProcessModeManager::CompareAndSendCommonSinkPkg(
-    const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode, const std::string& orgFile,
-    const std::string& dstFile)
+void ProcessModeManager::PackageInfoMsgProc(const uint32_t sessionID, const HDCMessage& msg)
 {
-    HDCMessage msg;
-    msg.set_real_device_id(logicDeviceId_);
-    msg.set_type(HDCMessage::TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL);
-    SinkPackageHashCodeInfo* pkgHostInfo = msg.add_package_hash_code_list();
-    pkgHostInfo->set_package_name(pkgPureName);
-    pkgHostInfo->set_hash_code(hostPkgHash);
-    // 若该包为 compat plugin，则随 checkcode 请求一并携带 host 侧 version/timestamp
-    const PluginPkgVersion hostVer = PackageProcessConfig::GetInstance()->GetHostPluginVersion(pkgPureName);
-    if (!hostVer.Empty()) {
-        PluginPackageVersionInfo* info = msg.add_host_plugin_versions();
-        info->set_package_name(pkgPureName);
-        info->set_version(hostVer.version);
-        info->set_timestamp(hostVer.timestamp);
-    }
-    msg.set_package_worker_type(static_cast<uint32_t>(PackageWorkerType::PACKAGE_WORKER_COMMON_SINK));
-    msg.set_package_max_process_time(DRIVER_EXTEND_MAX_PROCESS_TIME);
-    msg.set_package_type(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_COMMON_SINK));
-    auto commonSinkPkgCompareMethd = [this, pkgPureName]() {
-        if (this->IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
-            TSD_INFO(
-                "checksum of driver package[%s] is same as device[%u], idle[%d], skip send",
-                this->GetHostCommonSinkPackHashValue(pkgPureName).c_str(), this->logicDeviceId_, this->deviceIdle_);
-            return true;
-        }
-        return false;
-    };
-    if (SendHostPackageComplex(peerNode, orgFile, dstFile, msg, commonSinkPkgCompareMethd, true) != TSD_OK) {
-        TSD_ERROR("send common sink package to device failed");
-        return TSD_INTERNAL_ERROR;
-    }
-    return TSD_OK;
+    TSD_INFO("[PackageInfoMsgProc] [sessionID=%u]", sessionID);
+    const uint32_t realDeviceId = msg.real_device_id();
+    TSD_INFO(
+        "[PackageInfoMsgProc] [sessionID=%u] deviceId[%u], checkCode[%u]", sessionID, realDeviceId, msg.check_code());
+    const std::shared_ptr<ProcessModeManager> client =
+        std::dynamic_pointer_cast<ProcessModeManager>(ClientManager::GetInstance(realDeviceId, DIE_MODE, false));
+    TSD_CHECK_NULLPTR_VOID(client);
+    client->GetDispatcher().SaveDeviceCheckCode(msg);
 }
 
-bool ProcessModeManager::SupportLoadPkg(const std::string& pkgName) const
+void ProcessModeManager::CapabilityResMsgProc(const uint32_t sessionID, const HDCMessage& msg)
 {
-    const auto iter = PKG_CHIP_SUPPORT_MAP.find(pkgName);
-    if (iter == PKG_CHIP_SUPPORT_MAP.end()) {
-        TSD_INFO("current package:%s does not need to check chiptype", pkgName.c_str());
-        return true;
-    }
-
-    if ((pkgName == UDF_PKG_NAME) || (pkgName == HCCD_PKG_NAME)) {
-        TSD_INFO("package is not need load, name:%s", pkgName.c_str());
-        return false;
-    }
-
-    const uint32_t currentChipType = GetPlatInfoChipType();
-    const size_t vecSize = iter->second.size();
-    for (size_t index = 0; index < vecSize; index++) {
-        if (currentChipType == static_cast<uint32_t>(iter->second[index])) {
-            TSD_INFO("current device chip:%u support package:%s", currentChipType, pkgName.c_str());
-            return true;
-        }
-    }
-
-    TSD_RUN_INFO("current device chip:%u does not support package:%s", currentChipType, pkgName.c_str());
-    return false;
+    TSD_INFO("[CapabilityResMsgProc] [sessionID=%u]", sessionID);
+    const uint32_t realDeviceId = msg.real_device_id();
+    const std::shared_ptr<ProcessModeManager> client =
+        std::dynamic_pointer_cast<ProcessModeManager>(ClientManager::GetInstance(realDeviceId, DIE_MODE, false));
+    TSD_CHECK_NULLPTR_VOID(client);
+    client->GetDispatcher().PidQosMsgProc(msg);
 }
 
-TSD_StatusT ProcessModeManager::GetTrustedBasePathFromDevice(int32_t& peerNode, std::string& dstDirPreFix)
-{
-    peerNode = 0;
-    constexpr uint32_t hdcNameMax = 256U;
-    char_t path[hdcNameMax] = {};
-    const int32_t drvRet =
-        drvHdcGetTrustedBasePathV2(peerNode, static_cast<int32_t>(logicDeviceId_), &path[0], hdcNameMax);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_ERROR("[TsdClient][deviceId_=%u] drvHdcGetTrustedBasePathV2 failed, ret[%d]", logicDeviceId_, drvRet);
-        return TSD_INTERNAL_ERROR;
-    }
-    dstDirPreFix = std::string(path);
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::LoadSinglePackageToDevice(
-    const std::string& pkgPureName, const PackConfDetail& detail, int32_t peerNode, const std::string& dstDirPreFix)
-{
-    PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
-    std::string orgFile;
-    std::string dstFile = dstDirPreFix;
-    TSD_RUN_INFO("begin to load package:%s to device:%u", pkgPureName.c_str(), logicDeviceId_);
-    if ((!detail.loadAsPerSocFlag) && (!SupportLoadPkg(pkgPureName))) {
-        TSD_RUN_INFO("current package:%s does not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
-        return TSD_OK;
-    }
-    const uint32_t currentChipType = GetPlatInfoChipType();
-    if ((pkgPureName == "cann-hcomm-compat.tar.gz") && (currentChipType == tsd::CHIP_ASCEND_910B) &&
-        (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_CANN_HCOMM_COMPAT_910B))) {
-        TSD_RUN_INFO("device does not support cann-hcomm-compat package, skip load to device:%u", logicDeviceId_);
-        return TSD_OK;
-    }
-    if (pkgConInst->GetPkgHostAndDeviceDstPath(pkgPureName, orgFile, dstFile, commAgent_.GetProcSign().tgid) !=
-        TSD_OK) {
-        return TSD_INTERNAL_ERROR;
-    }
-    if (orgFile.empty()) {
-        TSD_RUN_INFO("cannot find package:%s, optional is true skip", pkgPureName.c_str());
-        return TSD_OK;
-    }
-    const std::string hostPkgHash = CalFileSha256HashValue(orgFile);
-    SetHostCommonSinkPackHashValue(pkgPureName, hostPkgHash);
-    // 对于 compat plugin 包，需要根据版本号与升级策略决定是否加载（优先级高于 CHECKCODE）
-    if (IsCompatPluginPackage(detail) && !ShouldLoadCompatPluginPkg(pkgPureName)) {
-        TSD_RUN_INFO("skip load compat plugin package:%s by version/strategy check", pkgPureName.c_str());
-        return TSD_OK;
-    }
-    if (!IsCompatPluginPackage(detail) && IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
-        TSD_RUN_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
-        return TSD_OK;
-    }
-    if (CompareAndSendCommonSinkPkg(pkgPureName, hostPkgHash, peerNode, orgFile, dstFile) != TSD_OK) {
-        TSD_ERROR("compare and send package to device failed package:%s", pkgPureName.c_str());
-        return TSD_INTERNAL_ERROR;
-    }
-    if (static_cast<uint32_t>(rspCode_) != 0U) {
-        ReportSinkPkgRspError(pkgPureName);
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO("load package:%s to device:%u success", pkgPureName.c_str(), logicDeviceId_);
-    return TSD_OK;
-}
-
-void ProcessModeManager::ReportSinkPkgRspError(const std::string& pkgPureName)
-{
-    bool reportedFlag = false;
-    if (!loadPackageErrorMsg_.empty()) {
-        TSD_ERROR("[Device error message] %s", loadPackageErrorMsg_.c_str());
-        const bool isCmsVerifyFail = (loadPackageErrorMsg_.find("cms verify failed") != std::string::npos);
-        const std::string reason =
-            isCmsVerifyFail ? ConstructVerifyPkgErrorReason(loadPackageErrorMsg_) : std::string{};
-        if (!reason.empty()) {
-            const std::vector<std::string> keys{"package_name", "reason"};
-            const std::vector<std::string> values{pkgPureName, reason};
-            REPORT_INPUT_ERROR("E30009", keys, values);
-            reportedFlag = true;
-        }
-        loadPackageErrorMsg_ = "";
-    }
-    if (!reportedFlag) {
-        REPORT_INPUT_ERROR("E39011", std::vector<std::string>{"package_name"}, std::vector<std::string>{pkgPureName});
-    }
-    TSD_ERROR("host and device checkcode compare failed package:%s", pkgPureName.c_str());
-}
-
-TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
-{
-    if ((capabilityMgr_.IsSupportCommonSink() == false) || (&drvHdcSendFileV2 == nullptr) ||
-        (&drvHdcGetTrustedBasePathV2 == nullptr) || IsAdcEnv()) {
-        TSD_RUN_INFO("device does not support common sink package config info");
-        return TSD_OK;
-    }
-
-    int32_t peerNode = 0;
-    std::string dstDirPreFix;
-    if (GetTrustedBasePathFromDevice(peerNode, dstDirPreFix) != TSD_OK) {
-        return TSD_INTERNAL_ERROR;
-    }
-
-    PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
-    std::map<std::string, PackConfDetail> configMap = pkgConInst->GetAllPackageConfigInfo();
-
-    for (auto iter = configMap.begin(); iter != configMap.end(); iter++) {
-        if (LoadSinglePackageToDevice(iter->first, iter->second, peerNode, dstDirPreFix) != TSD_OK) {
-            return TSD_INTERNAL_ERROR;
-        }
-    }
-
-    return TSD_OK;
-}
-
-bool ProcessModeManager::IsCompatPluginPackage(const PackConfDetail& detail) const
-{
-    return detail.decDstDir == DeviceInstallPath::COMPAT_PLUGIN_PATH;
-}
-
-PluginUpdateStrategy ProcessModeManager::GetPluginUpdateStrategy()
-{
-    if (hasComputedPluginStrategy_) {
-        return pluginUpdateStrategy_;
-    }
-
-    int64_t flag = 0;
-    auto drvRet = halGetDeviceInfo(logicDeviceId_, MODULE_TYPE_SYSTEM, INFO_TYPE_SWPLUGIN_UPGRADE_POLICY, &flag);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_RUN_WARN(
-            "[TsdClient][deviceId=%u] halGetDeviceInfo(INFO_TYPE_SWPLUGIN_UPGRADE_POLICY) failed, retCode[%d],"
-            " fallback to PLUGIN_NOT_FORCE_UPDATE",
-            logicDeviceId_, drvRet);
-        return PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE;
-    }
-    if (flag < static_cast<int64_t>(PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE) ||
-        flag > static_cast<int64_t>(PluginUpdateStrategy::PLUGIN_NO_UPDATE)) {
-        TSD_RUN_WARN(
-            "[TsdClient][deviceId=%u] invalid plugin update strategy from DRV: %lld,"
-            " fallback to PLUGIN_NOT_FORCE_UPDATE",
-            logicDeviceId_, flag);
-        return PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE;
-    }
-    pluginUpdateStrategy_ = static_cast<PluginUpdateStrategy>(flag);
-    hasComputedPluginStrategy_ = true;
-    TSD_RUN_INFO("[TsdClient][deviceId=%u] plugin update strategy from DRV = %lld", logicDeviceId_, flag);
-    return pluginUpdateStrategy_;
-}
-
-bool ProcessModeManager::ShouldLoadCompatPluginPkg(const std::string& pkgPureName)
-{
-    const PluginUpdateStrategy strategy = GetPluginUpdateStrategy();
-    if (strategy == PluginUpdateStrategy::PLUGIN_NO_UPDATE) {
-        TSD_RUN_INFO("plugin update strategy is PLUGIN_NO_UPDATE, skip pkg:%s", pkgPureName.c_str());
-        return false;
-    }
-    if (strategy == PluginUpdateStrategy::PLUGIN_FORCE_UPDATE) {
-        // 即使强制更新策略，仍需按 checkcode 兑底，内容完全一致时避免重复传输
-        TSD_RUN_INFO(
-            "plugin update strategy is PLUGIN_FORCE_UPDATE, fallback to checkcode compare pkg:%s", pkgPureName.c_str());
-        return !IsCommonSinkHostAndDevicePkgSame(pkgPureName);
-    }
-    return CompareHostDeviceCompatPluginVersion(pkgPureName);
-}
-
-bool ProcessModeManager::CompareHostDeviceCompatPluginVersion(const std::string& pkgPureName)
-{
-    const PluginPkgVersion hostInfo = PackageProcessConfig::GetInstance()->GetHostPluginVersion(pkgPureName);
-    const auto itDev = devicePluginVersions_.find(pkgPureName);
-    const PluginPkgVersion deviceInfo = (itDev != devicePluginVersions_.end()) ? itDev->second : PluginPkgVersion{};
-    if (deviceInfo.version.empty()) {
-        TSD_RUN_INFO("device plugin pkg:%s version unavailable, fallback to checkcode compare", pkgPureName.c_str());
-        return !IsCommonSinkHostAndDevicePkgSame(pkgPureName);
-    }
-    if (hostInfo.Empty()) {
-        // 本地读不到插件包版本信息（.ini 缺失或解析失败），无法进行版本决策，跳过下发
-        TSD_RUN_WARN(
-            "[TsdClient][deviceId=%u] host plugin pkg:%s version info unavailable, skip", logicDeviceId_,
-            pkgPureName.c_str());
-        return false;
-    }
-    const int32_t cmp = PluginPkgVersionUtil::Compare(hostInfo, deviceInfo);
-    if (cmp > 0) {
-        TSD_RUN_INFO(
-            "host plugin pkg:%s newer than device, load. host[%s/%s] device[%s/%s]", pkgPureName.c_str(),
-            hostInfo.version.c_str(), hostInfo.timestamp.c_str(), deviceInfo.version.c_str(),
-            deviceInfo.timestamp.c_str());
-        return true;
-    }
-    TSD_RUN_INFO(
-        "host plugin pkg:%s %s device, skip. host[%s/%s] device[%s/%s]", pkgPureName.c_str(),
-        (cmp < 0 ? "older than" : "equals"), hostInfo.version.c_str(), hostInfo.timestamp.c_str(),
-        deviceInfo.version.c_str(), deviceInfo.timestamp.c_str());
-    return false;
-}
-
-std::string ProcessModeManager::GetCurHostMutexFile(bool useCannPath) const
-{
-    if (!useCannPath) {
-        return QUEUE_SCHEDULE_SO;
-    } else {
-        int64_t masterId = 0;
-        uint32_t phyId = 0U;
-        auto drvRet = drvDeviceGetPhyIdByIndex(logicDeviceId_, &phyId);
-        if (drvRet != DRV_ERROR_NONE) {
-            TSD_RUN_WARN(
-                "Getting the physical ID was not successful, retCode[%d] deviceId[%u]", drvRet, logicDeviceId_);
-            return QUEUE_SCHEDULE_SO;
-        }
-        TSD_INFO("deviceId[%u] physical ID[%u]", logicDeviceId_, phyId);
-        drvRet = halGetDeviceInfo(phyId, MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID, &masterId);
-        if (drvRet != DRV_ERROR_NONE) {
-            TSD_RUN_WARN(
-                "Calling halGetDeviceInfo was not successful, retCode[%d] deviceId[%u] physical ID[%u]", drvRet,
-                logicDeviceId_, phyId);
-            return QUEUE_SCHEDULE_SO;
-        }
-        const int64_t devOsId = masterId % SUPPORT_MAX_DEVICE_PER_HOST;
-        std::string mutexFile = MUTEX_FILE_PREFIX + std::to_string(devOsId) + ".cfg";
-        TSD_RUN_INFO(
-            "get masterId:%lld, logicDeviceId:%u, physicalDeviceId[%u],devOsId:%lld, mutexFile:%s, maxcount:%lld",
-            masterId, logicDeviceId_, phyId, devOsId, mutexFile.c_str(), SUPPORT_MAX_DEVICE_PER_HOST);
-        return mutexFile;
-    }
-}
-
-bool ProcessModeManager::GetShortSocVersion(std::string& shortSocVersion) const
-{
-    char_t socVersion[SOC_VERSION_LEN] = {};
-    const auto drvRet = halGetSocVersion(logicDeviceId_, &socVersion[0U], SOC_VERSION_LEN);
-    if (drvRet != DRV_ERROR_NONE) {
-        TSD_RUN_WARN("get soc_version by halGetSocVersion failed");
-        return false;
-    }
-    TSD_INFO("get soc_version:%s", socVersion);
-    (void)fe::PlatformInfoManager::Instance().InitializePlatformInfo();
-    fe::OptionalInfos optionalInfos;
-    fe::PlatFormInfos platformInfos;
-    (void)fe::PlatformInfoManager::Instance().GetPlatformInfos(socVersion, platformInfos, optionalInfos);
-    const bool ret = platformInfos.GetPlatformRes("version", "Short_SoC_version", shortSocVersion);
-    if (!ret) {
-        TSD_RUN_WARN("get short_soc_version by fe::PlatFormInfos::GetPlatformRes failed.");
-        return false;
-    }
-    TSD_RUN_INFO("get short_soc_version:%s", shortSocVersion.c_str());
-    return true;
-}
 } // namespace tsd

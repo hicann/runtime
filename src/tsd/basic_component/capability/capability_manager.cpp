@@ -24,12 +24,10 @@ constexpr uint64_t TSD_NOT_SUPPORT_OM_INNER_DEC = 0UL;
 
 // ===========================================================================
 // Strategy functions — one set per capability type.
-//
 // Each group of free functions below encapsulates the per-type "business"
 // that was previously scattered across multiple switch-case blocks.  They are
 // wired into the kCapabilitySpecs table as function pointers, so the member
 // functions of CapabilityManager contain **zero** switch statements.
-//
 // Adding a new capability type that reuses an existing strategy only requires
 // appending one row to kCapabilitySpecs.  Only a brand-new result-write or
 // state-update strategy requires writing a new strategy function — no existing
@@ -208,7 +206,6 @@ void MultipleHccpWriteUnsupported(uint64_t ptr) { *reinterpret_cast<bool*>(stati
 
 // ===========================================================================
 // The single registration point — one row per capability type.
-//
 // Note: BUILTIN_UDF and MULTIPLE_HCCP share the same rspMsgType as LEVEL
 // (TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP). In UpdateStateFromMsg the first
 // matching spec with a non-null updateStateFromMsg wins; since BUILTIN_UDF
@@ -440,7 +437,6 @@ bool CapabilityManager::UseStoredCapabityInfo(const int32_t type, const uint64_t
 }
 
 // Thin wrapper around commAgent_.RecvData().
-//
 // The legacy ProcessModeManager::WaitRsp() additionally checked rspCode_ and
 // mapped structured error codes via MapFailCodeToStatus(). That check is
 // omitted here because all capability-query responses on the device side are

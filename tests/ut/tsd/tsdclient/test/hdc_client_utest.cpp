@@ -22,7 +22,7 @@
 #include "driver/ascend_hal.h"
 #include "stub_server_reply.h"
 #include "stub_server_msg_impl.h"
-#include "inc/tsd_version_verify.h"
+#include "tsd_version_verify.h"
 
 using namespace tsd;
 using namespace std;

@@ -18,7 +18,7 @@ set(PROTO_LIST
 
 set(tdt_common_files
     ${BASE_DIR}/basic_component/device_comm/hdc_common.cpp
-    ${BASE_DIR}/common/src/message_parse_interface.cpp
+    ${BASE_DIR}/basic_component/message_rsp_handler/message_parse_interface.cpp
     ${BASE_DIR}/pub_facility/util_func/tsd_util_func.cpp
     ${BASE_DIR}/pub_facility/util_func/tsd_sha256.cpp
     ${BASE_DIR}/basic_component/device_comm/device_comm.cpp
@@ -26,8 +26,8 @@ set(tdt_common_files
     ${BASE_DIR}/basic_component/device_comm/hdc_client.cpp
     ${BASE_DIR}/basic_component/message_builder/hdc_message_builder.cpp
     ${BASE_DIR}/basic_component/capability/capability_manager.cpp
-    ${BASE_DIR}/common/src/message_parse_client.cpp
-    ${BASE_DIR}/common/src/version_verify.cpp
+    ${BASE_DIR}/basic_component/message_rsp_handler/message_parse_client.cpp
+    ${BASE_DIR}/basic_component/device_comm/version_verify.cpp
 )
 
 # SHA256 ARM加速路径需要 -march=armv8-a+crypto，仅对该文件生效，避免影响其他代码
@@ -44,24 +44,31 @@ add_library(tsdclient SHARED
     ${BASE_DIR}/interface/tsd_client.cpp
     src/client_manager.cpp
     src/process_mode_manager.cpp
-    src/process_mode_base.cpp
-    src/process_mode_msg_parse.cpp
-    src/plugin_pkg_version.cpp
+    src/response_msg_dispatcher.cpp
+    src/sub_process_controller.cpp
+    src/tsd_process_controller.cpp
     src/thread_mode_manager.cpp
     ${BASE_DIR}/pub_facility/env_manager/env_internal_api.cpp
-    ${BASE_DIR}/common/src/package_worker.cpp
-    ${BASE_DIR}/common/src/package_worker_utils.cpp
-    ${BASE_DIR}/common/src/package_worker_factory.cpp
-    ${BASE_DIR}/common/src/package_verify.cpp
-    ${BASE_DIR}/common/src/base_package_worker.cpp
-    ${BASE_DIR}/common/src/aicpu_thread_package_worker.cpp
-    ${BASE_DIR}/common/src/aicpu_package_process.cpp
-    ${BASE_DIR}/common/src/package_process_config.cpp
-    ${BASE_DIR}/common/src/tsd_path_mgr.cpp
-    $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${CMAKE_CURRENT_SOURCE_DIR}/src/stub/stub_dc.cpp>
+    ${BASE_DIR}/basic_component/package_manager/src/package_manager.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_loader.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_check_code_service.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_sender.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_env_info.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_hash_store.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/plugin_version_manager.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/plugin_pkg_version.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_worker.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_worker_utils.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_worker_factory.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_verify.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/base_package_worker.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/aicpu_thread_package_worker.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/aicpu_package_process.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/package_process_config.cpp
+    ${BASE_DIR}/basic_component/package_manager/src/tsd_path_mgr.cpp
+    $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${BASE_DIR}/common/stub/stub_dc.cpp>
     ${tdt_common_files}
     ${PROTO_SRCS}
-    src/stub/stub_process_mode_nowin.cpp
 )
 
 add_dependencies(tsdclient tsd_host_proto)
@@ -71,6 +78,7 @@ target_include_directories(tsdclient PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_BINARY_DIR}/proto/tsd_host_proto/
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../basic_component/package_manager/inc/
     ${RUNTIME_DIR}/include/
     ${RUNTIME_DIR}/src/tsd/
     ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
@@ -79,6 +87,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
     ${RUNTIME_DIR}/src/tsd/basic_component/message_builder/
     ${RUNTIME_DIR}/src/tsd/basic_component/capability/
+    ${RUNTIME_DIR}/src/tsd/basic_component/message_rsp_handler/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/
