@@ -622,39 +622,5 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
     UNUSED(flags);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
-
-rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
-{
-    UNUSED(ptr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
-{
-    UNUSED(name);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::IpcDestroyMemoryName(const char_t* const name)
-{
-    UNUSED(name);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
-{
-    UNUSED(name);
-    UNUSED(pid);
-    UNUSED(num);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num)
-{
-    UNUSED(name);
-    UNUSED(pid);
-    UNUSED(num);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 } // namespace runtime
 } // namespace cce

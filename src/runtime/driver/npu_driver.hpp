@@ -144,12 +144,6 @@ public:
     // Open IPC Memory
     rtError_t OpenIpcMem(const char_t* const name, uint64_t* const vptr, uint32_t devId) override;
 
-    // Open IPC Memory V2 (for new chip with non-unified address)
-    rtError_t OpenIpcMemV2(const char_t* const name, uint64_t* const vptr, uint32_t devId, uint64_t attr) override;
-
-    // Check IPC Memory Map Route
-    rtError_t CheckIpcMapRoute(const char_t* const name, uint64_t attr, uint32_t devId) override;
-
     // Close IPC Memory
     rtError_t CloseIpcMem(const uint64_t vptr) override;
 

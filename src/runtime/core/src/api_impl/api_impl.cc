@@ -4738,6 +4738,81 @@ rtError_t ApiImpl::NopTask(Stream* const stm)
     return curCtx->NopTask(stm);
 }
 
+rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
+{
+    RT_LOG(RT_LOG_DEBUG, "Start close ipc memory.");
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Closing the IPC shared memory");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    return curCtx->Device_()->Driver_()->CloseIpcMem(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ptr)));
+}
+
+rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
+{
+    RT_LOG(RT_LOG_DEBUG, "start close ipc memory, name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Runtime* const rtInstance = Runtime::Instance();
+    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = rtInstance->GetIpcMemNameMap();
+    const std::string ipcName(name);
+    for (auto& pairMap : ipcMemNameMap) {
+        if (pairMap.second.name == ipcName) {
+            return curCtx->Device_()->Driver_()->CloseIpcMem(pairMap.first);
+        }
+    }
+    RT_LOG(RT_LOG_DEBUG, "destroy ipc memory by IpcDestroyMemoryName, name=%s.", name);
+    return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
+}
+
+rtError_t ApiImpl::IpcDestroyMemoryName(const char_t* const name)
+{
+    RT_LOG(RT_LOG_DEBUG, "Destroy ipc memory. name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "Destroying the IPC shared memory");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
+}
+
+rtError_t ApiImpl::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
+{
+    RT_LOG(RT_LOG_DEBUG, "Set ipc notify pid. name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1005, "Setting the trustlist of processes that can share a Notify object");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    return curCtx->Device_()->Driver_()->SetIpcNotifyPid(name, pid, num);
+}
+
+rtError_t ApiImpl::SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num)
+{
+    RT_LOG(RT_LOG_DEBUG, "Set ipc mem pid. name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1005, "Setting the trustlist of processes that can share memory through IPC");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    return curCtx->Device_()->Driver_()->SetIpcMemPid(name, pid, num);
+}
+
 rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify** const retNotify, uint64_t flag)
 {
     RT_LOG(RT_LOG_INFO, "Notify create.");
@@ -9254,16 +9329,6 @@ rtError_t ApiImpl::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtr
         totalSize += baseSize;
     }
     return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
-{
-    Runtime* rt = Runtime::Instance();
-    std::unique_lock<std::mutex> lock(rt->GetMemMapSelectedLinkMutex_());
-
-    rtHandleAttr attr;
-    attr.memMapRoute = static_cast<uint32_t>(adviceLink);
-    return NpuDriver::MemHandleSetAttribute(handle, HANDLE_ATTR_MEM_MAP_ROUTE, attr);
 }
 
 rtError_t ApiImpl::BinarySetExceptionCallback(Program* binHandle, void* callback, void* userData)

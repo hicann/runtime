@@ -192,10 +192,6 @@ public:
     rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback) override;
     rtError_t XpuProfilingCommandHandle(uint32_t type, void* data, uint32_t len) override;
     rtError_t StreamAddCondTask(rtCondTaskParams params, Stream* const stm, uint32_t flags) override;
-    rtError_t IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr) override;
-    rtError_t IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags) override;
-    rtError_t IpcCloseMemory(const void* const ptr) override;
-    rtError_t IpcCloseMemoryByName(const char_t* const name) override;
 
 protected:
     rtError_t GetDevRunningStreamSnapshotMsg(rtGetMsgCallback const callback) override;

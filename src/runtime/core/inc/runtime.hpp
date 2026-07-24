@@ -337,14 +337,12 @@ public:
 
     bool IsDrvBindStreamThread() const { return (halCqReportRecv == nullptr) ? false : true; }
 
-    std::mutex& GetIpcMemNameLock() { return ipcMemNameLock_; }
+    SpinLock& GetIpcMemNameLock() { return ipcMemNameLock_; }
 
     std::unordered_map<uint64_t, ipcMemInfo_t>& GetIpcMemNameMap() { return ipcMemNameMap_; }
-    std::unordered_map<std::string, ipcMemInfoV2_t>& GetIpcMemNameVaMap() { return ipcMemNameVaMap_; }
     bool isRK3588HostCpu() const { return isRk3588Cpu_; }
-    std::mutex ipcMemNameLock_;
+    SpinLock ipcMemNameLock_;
     std::unordered_map<uint64_t, ipcMemInfo_t> ipcMemNameMap_;
-    std::unordered_map<std::string, ipcMemInfoV2_t> ipcMemNameVaMap_;
     static uint32_t starsPendingMax_;
     static uint32_t maxProgramNum_;
 

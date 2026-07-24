@@ -1628,12 +1628,6 @@ DVresult halMemManagedPrefetchBatch(
 
 int halGetCurrentThreadNumaNode(void) { return 1; }
 
-DVresult halShmemOpenHandleV2(DVdevice dev_id, const char* name, DVdeviceptr* vptr, uint64_t flag)
-{
-    return DRV_ERROR_NONE;
-}
-
-DVresult halShmemMapRouteCheck(const char* name, DVdevice dst_devid, uint32_t map_route) { return DRV_ERROR_NONE; }
 #if defined(__cplusplus)
 }
 #endif

@@ -1793,17 +1793,8 @@ aclError aclrtIpcMemImportByKeyImpl(void** devPtr, const char* key, uint64_t fla
     ACL_LOG_INFO("start to execute aclrtIpcMemImportByKey, flags is [%lu]", flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
-    const auto rtErr = rtsIpcMemImportByKey(devPtr, key, flags);
-    if (rtErr == RT_ERROR_NONE) {
-        return ACL_SUCCESS;
-    }
-
-    if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-        ACL_LOG_WARN("call rtsIpcMemImportByKey failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-    } else {
-        ACL_LOG_CALL_ERROR("call rtsIpcMemImportByKey failed, runtime result = %d", rtErr);
-    }
-    return ACL_GET_ERRCODE_RTS(rtErr);
+    ACL_REQUIRES_RTS_OK(rtsIpcMemImportByKey(devPtr, key, flags));
+    return ACL_SUCCESS;
 }
 
 aclError aclrtMemcpyBatchImpl(
@@ -1866,18 +1857,9 @@ aclError aclrtIpcMemSetAttrImpl(const char* key, aclrtIpcMemAttrType type, uint6
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemSetAttr);
     ACL_LOG_INFO("start to execute aclrtIpcMemSetAttr, type is [%d], attr is [%lu]", type, attr);
-    const auto rtErr = rtIpcSetMemoryAttr(key, type, attr);
-    if (rtErr == RT_ERROR_NONE) {
-        ACL_LOG_INFO("successfully execute aclrtIpcMemSetAttr");
-        return ACL_SUCCESS;
-    }
-
-    if ((rtErr == ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED) || (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT)) {
-        ACL_LOG_WARN("call rtIpcSetMemoryAttr failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-    } else {
-        ACL_LOG_CALL_ERROR("call rtIpcSetMemoryAttr failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-    }
-    return ACL_GET_ERRCODE_RTS(rtErr);
+    ACL_REQUIRES_RTS_OK(rtIpcSetMemoryAttr(key, type, attr));
+    ACL_LOG_INFO("successfully execute aclrtIpcMemSetAttr");
+    return ACL_SUCCESS;
 }
 
 aclError aclrtIpcMemImportPidInterServerImpl(const char* key, aclrtServerPid* serverPids, size_t num)

@@ -13,8 +13,6 @@
 #include <array>
 #include <cstdint>
 #include <string>
-#include <vector>
-#include <utility>
 #include "runtime/base.h"
 #include "driver/ascend_hal_define.h"
 
@@ -30,11 +28,6 @@ struct ipcMemInfo_t {
     std::string name;
     bool locked;
     int32_t ref;
-};
-
-struct ipcMemInfoV2_t {
-    uint64_t latestAttr;                               // 最新设置的属性值
-    std::vector<std::pair<uint64_t, uint64_t>> vaInfo; // <attr, va> 配对列表
 };
 
 struct LogicCqWaitInfo {
