@@ -275,6 +275,13 @@ install(FILES
     COMPONENT npu-runtime
 )
 
+install(FILES
+    ${RUNTIME_DIR}/scripts/package/runtime/pkg_inc/aicpu_engine_struct.h
+    DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/pkg_inc
+    ${INSTALL_OPTIONAL}
+    COMPONENT npu-runtime
+)
+
 install(DIRECTORY
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule/
     DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/pkg_inc/aicpu/aicpu_schedule

@@ -218,6 +218,9 @@
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
         <file value="error_manager.h" install_mod="440" entity="true"/>
     </file_info>
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc" install_path="$(TARGET_ENV)/pkg_inc" install_type="all">
+        <file value="aicpu_engine_struct.h" install_mod="440" entity="true"/>
+    </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
         <file value="aicpu_engine_struct.h" install_mod="440" entity="true"/>
         <file value="aicpu_task_struct.h" install_mod="440" entity="true"/>
