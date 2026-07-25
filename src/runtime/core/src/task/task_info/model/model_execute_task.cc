@@ -297,6 +297,30 @@ static void PrintDebugInfoForModelExecute(const Model *model)
     }
 }
 
+static rtError_t FuncCallSvmMemCopy(const Device* const dev, Model* const model)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Driver* const drv = dev->Driver_();
+    const uint32_t devId = dev->Id_();
+    const bool needAdvise =
+        dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_SPLIT_FUNC_CALL) &&
+        dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU);
+    const rtMemcpyKind_t kind = dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY) ?
+                                    RT_MEMCPY_DEVICE_TO_DEVICE :
+                                    RT_MEMCPY_HOST_TO_DEVICE;
+    void* const dst = RtValueToPtr<void*>(model->GetFuncCallSvmMem());
+    const uint64_t size = model->GetFunCallMemSize();
+    error = BinaryMemAdvise(dst, size, RT_ADVISE_ACCESS_READWRITE, dev, needAdvise);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    error = drv->MemCopySync(dst, size, model->GetFuncCallHostMem(), size, kind);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Memcpy failed, size=%" PRIu64 "(bytes), type=%d, retCode=%#x, device_id=%u.",
+        size, kind, static_cast<uint32_t>(error), devId);
+    error = BinaryMemAdvise(dst, size, RT_ADVISE_ACCESS_READONLY, dev, needAdvise);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    return RT_ERROR_NONE;
+}
+
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo * const taskInfo)
 {
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
@@ -334,14 +358,8 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo * const taskInfo)
                 sizeof(RtStarsModelExeFuncCall), ret);
             RT_LOG(RT_LOG_DEBUG,"model first execute.funcCallHostMem=%#" PRIx64, model->GetFuncCallHostMem());
 
-            const rtMemcpyKind_t kind = (
-                taskInfo->stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY)) ? 
-                RT_MEMCPY_DEVICE_TO_DEVICE : RT_MEMCPY_HOST_TO_DEVICE;
-            ret = (dev->Driver_())->MemCopySync(RtValueToPtr<void *>(model->GetFuncCallSvmMem()),
-                model->GetFunCallMemSize(), model->GetFuncCallHostMem(), model->GetFunCallMemSize(), kind);
-
+            ret = FuncCallSvmMemCopy(dev, model);
             PrintDebugInfoForModelExecute(model);
-
             if (ret != RT_ERROR_NONE) {
                 (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
                 RT_LOG(RT_LOG_ERROR, "MemCopySync for model exe func call failed, retCode=%#x.", ret);

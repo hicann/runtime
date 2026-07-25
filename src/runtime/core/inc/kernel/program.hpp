@@ -65,6 +65,10 @@ struct CpuKernelInfo {
     bool hasOpKernelLib;
 };
 
+rtError_t BinaryMemAdvise(
+    void* const devMem, const uint32_t devSize, rtAdviseMemType adviseType, const Device* const device,
+    const bool readonly);
+
 class Program : public NoCopy {
 public:
     static constexpr uint32_t PLAIN_PROGRAM    = 0U;

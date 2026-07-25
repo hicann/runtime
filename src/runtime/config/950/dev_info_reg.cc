@@ -64,6 +64,7 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU,
     RtOptionalFeatureType::RT_FEATURE_TASK_RECYCLE_THREAD,
+    RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_SPLIT_FUNC_CALL,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC,
     RtOptionalFeatureType::RT_FEATURE_DFX_WATCH_DOG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_FAILURE_MODE_SET,
