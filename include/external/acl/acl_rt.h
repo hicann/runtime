@@ -313,6 +313,7 @@ typedef enum aclrtMemLocationType {
     ACL_MEM_LOCATION_TYPE_HOST = 0, /**< reserved enum, current version not support */
     ACL_MEM_LOCATION_TYPE_DEVICE,
     ACL_MEM_LOCATION_TYPE_UNREGISTERED,
+    ACL_MEM_LOCATION_TYPE_MANAGED,
     ACL_MEM_LOCATION_TYPE_HOST_NUMA = 4, /*alloc host memeory via NUMA ID */
 } aclrtMemLocationType;
 

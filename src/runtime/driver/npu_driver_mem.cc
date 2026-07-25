@@ -2114,15 +2114,17 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SOMA)) != 0U) {
         attributes->location.type = RT_MEMORY_LOC_DEVICE;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_DEVICE)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_MANAGED;
+        attributes->location.type = RT_MEMORY_LOC_DEVICE;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_HOST)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_MANAGED;
+        attributes->location.type = RT_MEMORY_LOC_HOST;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_MANAGED;
+        attributes->location.type = RT_MEMORY_LOC_DEVICE;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_REGISTER)) != 0U) {
         attributes->location.type = RT_MEMORY_LOC_HOST;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
         attributes->location.type = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
+    } else if ((dvAttributes.memType & DV_MEM_UVM) != 0U) {
+        attributes->location.type = RT_MEMORY_LOC_MANAGED;
     } else {
         RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
@@ -2162,14 +2164,14 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         location = RT_MEMORY_LOC_DEVICE;
         realLocation = RT_MEMORY_LOC_DEVICE;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_DEVICE)) != 0U) {
-        location = RT_MEMORY_LOC_MANAGED;
+        location = RT_MEMORY_LOC_DEVICE;
         realLocation = RT_MEMORY_LOC_DEVICE;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_HOST)) != 0U) {
-        location = RT_MEMORY_LOC_MANAGED;
+        location = RT_MEMORY_LOC_HOST;
         realLocation = RT_MEMORY_LOC_HOST;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
-        location = RT_MEMORY_LOC_MANAGED;
-        realLocation = RT_MEMORY_LOC_HOST; // to be check
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE; // to be check
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_REGISTER)) != 0U) {
         location = RT_MEMORY_LOC_HOST;
         realLocation = RT_MEMORY_LOC_HOST;
@@ -2177,8 +2179,8 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         location = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
         realLocation = RT_MEMORY_LOC_HOST;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_UVM)) != 0U) {
-        location = RT_MEMORY_LOC_UVM_MANAGED;
-        realLocation = RT_MEMORY_LOC_HOST;
+        location = RT_MEMORY_LOC_MANAGED;
+        realLocation = RT_MEMORY_LOC_MANAGED;
     } else {
         RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;

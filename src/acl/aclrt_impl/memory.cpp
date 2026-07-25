@@ -1015,12 +1015,21 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     ACL_CHECK_RESERVED_PARAM_REPORT_RET(flags, 0, ACL_ERROR_INVALID_PARAM);
     ACL_REQUIRES_PARAM_EQUAL_REPORT(prop->handleType, ACL_MEM_HANDLE_TYPE_NONE);
     ACL_REQUIRES_PARAM_EQUAL_REPORT(prop->allocationType, ACL_MEM_ALLOCATION_TYPE_PINNED);
-    ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET(
-        prop->location.type == ACL_MEM_LOCATION_TYPE_UNREGISTERED,
-        acl::GetMemLocationTypeDesc(prop->location.type),
-        "prop->location.type",
-        "location type does not support ACL_MEM_LOCATION_TYPE_UNREGISTERED",
-        ACL_ERROR_INVALID_PARAM);
+    if (prop->location.type == ACL_MEM_LOCATION_TYPE_UNREGISTERED ||
+        prop->location.type == ACL_MEM_LOCATION_TYPE_MANAGED) {
+        ACL_LOG_ERROR(
+            "[Check][PARAM]prop->location.type is invalid, location type does not support %s. value=%s",
+            acl::GetMemLocationTypeDesc(prop->location.type), acl::GetMemLocationTypeDesc(prop->location.type));
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "location type does not support %s", acl::GetMemLocationTypeDesc(prop->location.type));
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>(
+                {funcName.c_str(), acl::GetMemLocationTypeDesc(prop->location.type), "prop->location.type",
+                 errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
 
     rtDrvMemProp_t rtProp = {};
     rtProp.side = prop->location.type;

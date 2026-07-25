@@ -75,7 +75,7 @@ bool UvmCallback::IsUvmMem(const void * const ptr, const uint64_t cnt)
         return false;
     }
 
-    if ((locationStart == RT_MEMORY_LOC_UVM_MANAGED) && (locationEnd == RT_MEMORY_LOC_UVM_MANAGED)) {
+    if ((locationStart == RT_MEMORY_LOC_MANAGED) && (locationEnd == RT_MEMORY_LOC_MANAGED)) {
         return true;
     }
 

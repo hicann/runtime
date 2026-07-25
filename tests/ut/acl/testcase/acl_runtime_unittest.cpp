@@ -2912,6 +2912,11 @@ TEST_F(UTEST_ACL_Runtime, physical_memory_malloc_free)
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_NE(handle, nullptr);
 
+    prop.location.type = ACL_MEM_LOCATION_TYPE_MANAGED;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+
     prop.memAttr = ACL_DDR_MEM;
     ret = aclrtMallocPhysical(&handle, size, &prop, 0);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);

@@ -7599,6 +7599,11 @@ TEST_F(ApiTest, rts_memory_reallocation)
     error = drv.PtrGetRealLocation(hostPtr, location, realLocation);
     EXPECT_NE(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_10));
+    error = drv.PtrGetRealLocation(hostPtr, location, realLocation);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
 }
 
 TEST_F(ApiTest, get_taskid_streamid)

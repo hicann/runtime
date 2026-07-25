@@ -82,6 +82,7 @@ DVresult drvMemGetAttribute_6(DVdeviceptr vptr, struct DVattribute *attr);
 DVresult drvMemGetAttribute_7(DVdeviceptr vptr, struct DVattribute *attr);
 DVresult drvMemGetAttribute_8(DVdeviceptr vptr, struct DVattribute *attr);
 DVresult drvMemGetAttribute_9(DVdeviceptr vptr, struct DVattribute *attr);
+DVresult drvMemGetAttribute_10(DVdeviceptr vptr, struct DVattribute *attr);
 extern rtError_t rtStreamAddToModel(rtStream_t stm, rtModel_t captureMdl);
 drvError_t drvGetPlatformInfo_1(uint32_t *info);
 drvError_t drvGetPlatformInfo_2(uint32_t *info);

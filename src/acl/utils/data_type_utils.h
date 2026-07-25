@@ -246,10 +246,11 @@ inline const char* GetCallbackBlockTypeDesc(aclrtCallbackBlockType type) {
 
 inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type) {
     static const std::unordered_map<aclrtMemLocationType, const char*> memLocationTypeDescMap = {
-        {ACL_MEM_LOCATION_TYPE_HOST,         "MEM_LOCATION_TYPE_HOST(0)"},
-        {ACL_MEM_LOCATION_TYPE_DEVICE,       "MEM_LOCATION_TYPE_DEVICE(1)"},
-        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "MEM_LOCATION_TYPE_UNREGISTERED(2)"},
-        {ACL_MEM_LOCATION_TYPE_HOST_NUMA,    "MEM_LOCATION_TYPE_HOST_NUMA(4)"},
+        {ACL_MEM_LOCATION_TYPE_HOST, "ACL_MEM_LOCATION_TYPE_HOST(0)"},
+        {ACL_MEM_LOCATION_TYPE_DEVICE, "ACL_MEM_LOCATION_TYPE_DEVICE(1)"},
+        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "ACL_MEM_LOCATION_TYPE_UNREGISTERED(2)"},
+        {ACL_MEM_LOCATION_TYPE_MANAGED, "ACL_MEM_LOCATION_TYPE_MANAGED(3)"},
+        {ACL_MEM_LOCATION_TYPE_HOST_NUMA, "ACL_MEM_LOCATION_TYPE_HOST_NUMA(4)"},
     };
 
     auto it = memLocationTypeDescMap.find(type);
