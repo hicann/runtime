@@ -118,7 +118,8 @@ struct RtStarsDqsConditionCopyPara {
 struct RtStarsDqsInterChipPreProcPara {
     uint64_t dstMbufHandleAddr;
     uint64_t dstMbuffAllocAddr;
-
+    uint64_t dstAllocEmptyTraceAddr;
+    uint64_t dstNotifyAddr;
     uint64_t dstMbufHeadBlockSizeAddr;
     uint64_t dstMbufDataBlockSizeAddr;
     uint64_t dstMbufHeadBaseAddr;

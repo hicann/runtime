@@ -368,6 +368,12 @@ struct RtStarsDqsInterChipPreProcFc {
 
     RtStarsCondOpImmSLLI slli1;
     RtStarsCondOpImmSLLI srli1;
+
+    RtStarsCondOpLLWI llwiErrCodeFour;
+    RtStarsCondOpLHWI lhwiErrCodeFour;
+    RtStarsSetCsrJumpPc jumpPcErrCode4;
+    RtStarsCondOpBranch beqErrCode4;
+
     RtStarsSetCsrJumpPc jumpPc1;
     RtStarsCondOpBranch bne1;
 
@@ -418,8 +424,35 @@ struct RtStarsDqsInterChipPreProcFc {
     RtStarsCondOpLLWI llwi9;
     RtStarsCondOpLHWI lhwi9;
     RtStarsCondOpStore store3;
+
     RtStarsSetCsrJumpPc jumpPc2;
     RtStarsCondOpBranch beq1;
+
+    RtStarsCondOpLLWI llwiErrTraceAddr;
+    RtStarsCondOpLHWI lhwiErrTraceAddr;
+    RtStarsCondOpLoad ldrErrTraceAddr;
+
+    RtStarsCondOpLLWI llwiErrNotifyAddr;
+    RtStarsCondOpLHWI lhwiErrNotifyAddr;
+    RtStarsCondOpLoad ldrErrNotifyAddr;
+
+    RtStarsCondOpLLWI llwiErrOne;
+    RtStarsCondOpLHWI lhwiErrOne;
+
+    RtStarsCondOpLLWI llwiErrVaMask;
+    RtStarsCondOpLHWI lhwiErrVaMask;
+    RtStarsCondOpSystemCsr csrrcErrPa;
+    RtStarsCondOpStore swErrTrace;
+
+    RtStarsCondOpLLWI llwiErrNotifyVal;
+    RtStarsCondOpLHWI lhwiErrNotifyVal;
+    RtStarsCondOpStore swErrNotify;
+
+    RtStarsCondOpLoad ldrErrTraceRb;
+    RtStarsCondOpLoad ldrErrNotifyRb;
+
+    RtStarsCondOpSystemCsr csrrsErrVa;
+
     RtStarsCondOpSystemCsr dfxFsm1;
     RtStarsCondOpErrorInstr err;
 

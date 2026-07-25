@@ -727,6 +727,12 @@ static rtError_t InitFuncCallParaForDqsInterChipPreProcTask(
     offset = offsetof(stars_dqs_inter_chip_space_t, mbuf_head_memcpy_sqe);
     fcPara.mbufHeadSdmaSqeAddr = interChipSpaceAddr + static_cast<uint64_t>(offset + dstAddrOffset);
 
+    offset = offsetof(stars_dqs_inter_chip_space_t, dst_alloc_empty_trace_addr);
+    fcPara.dstAllocEmptyTraceAddr = interChipSpaceAddr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_inter_chip_space_t, dst_alloc_fail_notify_addr);
+    fcPara.dstNotifyAddr = interChipSpaceAddr + static_cast<uint64_t>(offset);
+
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     InitDstProdAllocFuncCallPara(fcPara.allocMbufTracePara, interChipSpaceAddr, streamId);
 
@@ -735,12 +741,12 @@ static rtError_t InitFuncCallParaForDqsInterChipPreProcTask(
         "Init dqs inter-chip pre-proc params: groupIdx=%u, interChipSpaceAddr=%#llx, "
         "dstMbufHandleAddr=%#llx, dstMbuffAllocAddr=%#llx, dstMbufHeadBlockSizeAddr=%#llx, "
         "dstMbufDataBlockSizeAddr=%#llx, "
-        "dstMbufHeadBaseAddr=%#llx, dstMbufDataBaseAddr=%#llx, mbufDataSdmaSqeAddr=%#llx, mbufHeadSdmaSqeAddr=%#llx, "
-        "dstAddrOffset=%" PRIu64,
+        "dstMbufHeadBaseAddr=%#llx, dstMbufDataBaseAddr=%#llx, mbufDataSdmaSqeAddr=%#llx, mbufHeadSdmaSqeAddr=%#llx,"
+        "dstAllocEmptyTraceAddr=%#llx, dstNotifyAddr=%#llx, dstAddrOffset=%" PRIu64,
         groupIdx, interChipSpaceAddr, fcPara.dstMbufHandleAddr, fcPara.dstMbuffAllocAddr,
         fcPara.dstMbufHeadBlockSizeAddr, fcPara.dstMbufDataBlockSizeAddr, fcPara.dstMbufHeadBaseAddr,
         fcPara.dstMbufDataBaseAddr, fcPara.mbufDataSdmaSqeAddr, fcPara.mbufHeadSdmaSqeAddr,
-        static_cast<uint64_t>(dstAddrOffset));
+        fcPara.dstAllocEmptyTraceAddr, fcPara.dstNotifyAddr, static_cast<uint64_t>(dstAddrOffset));
     return RT_ERROR_NONE;
 }
 

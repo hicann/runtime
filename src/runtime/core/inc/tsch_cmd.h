@@ -427,7 +427,8 @@ typedef struct {
     uint64_t dst_prod_trace_base_addr;      // 对片生产者队列trace基地址 user va
     uint64_t src_lp_sys_cnt_addr;           // 本片LP sys cnt基地址
     uint64_t dst_lp_sys_cnt_addr;           // 对片LP sys cnt基地址
-
+    uint64_t dst_alloc_empty_trace_addr;    // 对片alloc empty trace地址
+    uint64_t dst_alloc_fail_notify_addr;    // 对片notify trace地址
     /* SDMA拷贝SQE：用于拷贝mbuf private info数据, 必须64B对齐 */
     __attribute__((aligned(64))) stars_memcpy_ptr_sdma_sqe_t mbuf_head_memcpy_sqe;
     /* SDMA拷贝SQE: 用于拷贝mbuf data数据, 必须64B对齐 */

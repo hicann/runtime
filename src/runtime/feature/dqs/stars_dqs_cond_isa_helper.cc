@@ -1410,7 +1410,7 @@ void ConstructConditionCopyFc(RtStarsDqsConditionCopyFc& fc, const RtStarsDqsCon
     }
 }
 
-void ConstructDqsInterChipPreProcFc(
+static void ConstructInterChipPreProcAllocMbuf(
     RtStarsDqsInterChipPreProcFc& fc, const RtStarsDqsInterChipPreProcPara& funcCallPara)
 {
     // read immd reg va cfg mask
@@ -1432,12 +1432,28 @@ void ConstructDqsInterChipPreProcFc(
     // r2: error_code = mbufHandle[31:29]
     ConstructOpImmSlli(r1, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli1);
     ConstructOpImmSlli(r2, r2, 61U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli1);
-    // if error_code != 0, goto err
-    uint64_t offset = offsetof(RtStarsDqsInterChipPreProcFc, dfxFsm1);
-    offset = offset / sizeof(uint32_t);
-    ConstructSetJumpPcFc(r7, offset, fc.jumpPc1);
-    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, offset, fc.bne1);
+}
 
+static void ConstructInterChipPreProcErrBranch(RtStarsDqsInterChipPreProcFc& fc)
+{
+    // if error_code == 4, goto err path entry(走完整err path含Notify)
+    ConstructLLWI(r6, 4ULL, fc.llwiErrCodeFour);
+    ConstructLHWI(r6, 4ULL, fc.lhwiErrCodeFour);
+    uint64_t errEntryOffset = offsetof(RtStarsDqsInterChipPreProcFc, llwiErrTraceAddr);
+    errEntryOffset = errEntryOffset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, errEntryOffset, fc.jumpPcErrCode4);
+    ConstructBranch(r2, r6, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(errEntryOffset), fc.beqErrCode4);
+
+    // else if error_code != 0, goto dfxFsm1(只写err code,不走trace/Notify,保持原行为)
+    uint64_t errCodeOnlyOffset = offsetof(RtStarsDqsInterChipPreProcFc, dfxFsm1);
+    errCodeOnlyOffset = errCodeOnlyOffset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, errCodeOnlyOffset, fc.jumpPc1);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(errCodeOnlyOffset), fc.bne1);
+}
+
+static void ConstructInterChipPreProcStoreMbufInfo(
+    RtStarsDqsInterChipPreProcFc& fc, const RtStarsDqsInterChipPreProcPara& funcCallPara)
+{
     // r1为mbuf handle value寄存器， 如果结合上下文，当前mbuf_handle_reg不可复用
     MbufTraceRegParam dstProdAllocRegInfo = {
         .loop_index_reg = r0,
@@ -1514,10 +1530,45 @@ void ConstructDqsInterChipPreProcFc(
     ConstructStore(r6, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SD, fc.store3);
 
     // go to end
-    offset = offsetof(RtStarsDqsInterChipPreProcFc, end);
+    uint64_t offset = offsetof(RtStarsDqsInterChipPreProcFc, end);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r7, offset, fc.jumpPc2);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, offset, fc.beq1);
+}
+
+// err=4 path: VA模式load对片PA地址 -> 切PA -> 写alloc empty trace=1 -> 写Notify=1 -> 切回VA -> 写err code
+// 注意: dstAllocEmptyTraceAddr 应由上层在填参时已包含pool_id偏移
+static void ConstructInterChipPreProcErrPath(
+    RtStarsDqsInterChipPreProcFc& fc, const RtStarsDqsInterChipPreProcPara& funcCallPara)
+{
+    ConstructLLWI(r8, funcCallPara.dstAllocEmptyTraceAddr, fc.llwiErrTraceAddr);
+    ConstructLHWI(r8, funcCallPara.dstAllocEmptyTraceAddr, fc.lhwiErrTraceAddr);
+    ConstructLoad(r8, 0U, r8, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrTraceAddr);
+
+    ConstructLLWI(r9, funcCallPara.dstNotifyAddr, fc.llwiErrNotifyAddr);
+    ConstructLHWI(r9, funcCallPara.dstNotifyAddr, fc.lhwiErrNotifyAddr);
+    ConstructLoad(r9, 0U, r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrNotifyAddr);
+
+    ConstructLLWI(r10, 1ULL, fc.llwiErrOne);
+    ConstructLHWI(r10, 1ULL, fc.lhwiErrOne);
+
+    // cfg use PA
+    ConstructLLWI(r5, AXI_USER_VA_CFG_MASK, fc.llwiErrVaMask);
+    ConstructLHWI(r5, AXI_USER_VA_CFG_MASK, fc.lhwiErrVaMask);
+    ConstructSystemCsr(r5, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrcErrPa);
+
+    ConstructStore(r8, r10, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrTrace);
+
+    // 0x80000000U [31]bit == 1, stars aa safety force inject to notify dst chip
+    ConstructLLWI(r6, 0x80000000U, fc.llwiErrNotifyVal);
+    ConstructLHWI(r6, 0x80000000U, fc.lhwiErrNotifyVal);
+    ConstructStore(r9, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrNotify);
+
+    ConstructLoad(r8, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrTraceRb);
+    ConstructLoad(r9, 0U, r7, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrNotifyRb);
+
+    // restore to use VA
+    ConstructSystemCsr(r5, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrsErrVa);
 
     // err_code
     ConstructSystemCsr(r2, r1, RT_STARS_COND_CSR_CSQ_STATUS_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRW, fc.dfxFsm1);
@@ -1525,6 +1576,15 @@ void ConstructDqsInterChipPreProcFc(
 
     // end
     ConstructNop(fc.end);
+}
+
+void ConstructDqsInterChipPreProcFc(
+    RtStarsDqsInterChipPreProcFc& fc, const RtStarsDqsInterChipPreProcPara& funcCallPara)
+{
+    ConstructInterChipPreProcAllocMbuf(fc, funcCallPara);
+    ConstructInterChipPreProcErrBranch(fc);
+    ConstructInterChipPreProcStoreMbufInfo(fc, funcCallPara);
+    ConstructInterChipPreProcErrPath(fc, funcCallPara);
 
     const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(&fc);
     for (size_t i = 0UL; i < (sizeof(RtStarsDqsInterChipPreProcFc) / sizeof(uint32_t)); i++) {
