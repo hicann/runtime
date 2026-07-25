@@ -1013,7 +1013,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
     }
 
     // 阶段二：SqCq申请
-    error = AllocAllSqCq();
+    error = AllocAllSqCqAndBind();
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "alloc all sqcq failed, stream_id=%d, model_id=%u, retCode=%#x.", exeStream->Id_(), Id_(),
@@ -1021,9 +1021,12 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
         return error;
     }
 
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0U;
     // 阶段三：LoadComplete 刷notify record与子model notify wait sqe
     error = UpdateNotifyIdAll(exeStream);
     if (error != RT_ERROR_NONE) {
+        (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
         RT_LOG(
             RT_LOG_ERROR, "update all notify id failed, stream_id=%d, model_id=%u, retCode=%#x.", exeStream->Id_(),
             Id_(), static_cast<uint32_t>(error));
@@ -1032,6 +1035,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
 
     error = LoadCompleteAll(loadCompleteNotifyId_);
     if (error != RT_ERROR_NONE) {
+        (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
         RT_LOG(
             RT_LOG_ERROR, "load complete all failed, stream_id=%d, model_id=%u, retCode=%#x.", exeStream->Id_(), Id_(),
             static_cast<uint32_t>(error));
@@ -1041,6 +1045,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
     UpdateIsNeedUpdateEndGraphFlagAll();
     error = UpdateStreamActiveTaskFuncCallMemAll();
     if (error != RT_ERROR_NONE) {
+        (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
         RT_LOG(
             RT_LOG_ERROR, "update all stream active task failed, stream_id=%d, model_id=%u, retCode=%#x.",
             exeStream->Id_(), Id_(), static_cast<uint32_t>(error));
@@ -1049,6 +1054,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
 
     error = UpdateCondTaskFuncCallMemAll();
     if (error != RT_ERROR_NONE) {
+        (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum);
         RT_LOG(
             RT_LOG_ERROR, "update all cond task failed, stream_id=%d, model_id=%u, retCode=%#x.", exeStream->Id_(),
             Id_(), static_cast<uint32_t>(error));
@@ -1056,7 +1062,6 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
     }
 
     refCount_++;
-
     return RT_ERROR_NONE;
 }
 
@@ -1091,9 +1096,8 @@ rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t&
     }
 
     error = UnBindSqCq();
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "unbind sq cq failed, model_id=%u, retCode=%#x.", Id_(),
-        static_cast<uint32_t>(error));
+    COND_PROC(error != RT_ERROR_NONE,
+              RT_LOG(RT_LOG_WARNING, "unbind sq cq, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));)
 
     error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCqLazy(sqCqArray_, sqCqNum_);
     COND_RETURN_ERROR(
@@ -1181,7 +1185,7 @@ rtError_t CaptureModel::UnBindSqCq(void)
     rtError_t error = RT_ERROR_NONE;
     Device* const dev = Context_()->Device_();
 
-    COND_RETURN_ERROR((switchInfo_ == nullptr), RT_ERROR_INVALID_VALUE, "switch info is null");
+    COND_RETURN_WARN((switchInfo_ == nullptr), RT_ERROR_INVALID_VALUE, "switch info is null");
 
     /* unbind stream from model */
     for (auto stm : StreamList_()) {
@@ -1724,20 +1728,118 @@ rtError_t CaptureModel::AllocSqCqAndBindInternal()
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::AllocAllSqCq()
+rtError_t CaptureModel::BatchAllocAllSqCq(const std::vector<CaptureModel*>& allModels)
 {
-    rtError_t error = AllocSqCqAndBindInternal();
-    if (error != RT_ERROR_NONE) {
-        return error;
+    std::vector<uint32_t> streamNums;
+    std::vector<rtDeviceSqCqInfo_t*> sqCqArrays;
+    for (CaptureModel* mdl : allModels) {
+        streamNums.push_back(static_cast<uint32_t>(mdl->StreamList_().size()));
+        sqCqArrays.push_back(mdl->sqCqArray_);
     }
 
-    auto& allSubModels = GetAllSubCaptureModels();
-    for (CaptureModel* subModel : allSubModels) {
-        error = subModel->AllocSqCqAndBindInternal();
-        if (error != RT_ERROR_NONE) {
-            return error;
-        }
+    uint32_t streamNum = 0U;
+    for (uint32_t num : streamNums) {
+        streamNum += num;
     }
+
+    DeviceSqCqPool* sqCqPool = Context_()->Device_()->GetDeviceSqCqManage();
+    rtError_t error = RT_ERROR_NONE;
+    rtError_t recycleError = RT_ERROR_NONE;
+    uint32_t retryCount = 0U;
+    uint32_t totalResNum = 0U;
+    do {
+        error = sqCqPool->BatchAllocForModel(streamNums, streamNum, sqCqArrays);
+        totalResNum = sqCqPool->GetSqCqPoolTotalResNum();
+
+        COND_PROC(
+            error != RT_ERROR_NONE, recycleError = Context_()->TryRecycleCaptureModelResource(streamNum, 0U, this));
+        COND_RETURN_ERROR(
+            (recycleError != RT_ERROR_NONE), recycleError,
+            "release resource failed, model_id=%u, stream num=%u,  free sq num=%u, total sq num=%u, retCode=%#x.",
+            Id_(), streamNum, sqCqPool->GetSqCqPoolFreeResNum(), totalResNum, static_cast<uint32_t>(recycleError));
+        COND_PROC(error != RT_ERROR_NONE, (void)mmSleep(1U)); // sleep 1ms
+        retryCount++;
+    } while ((error != RT_ERROR_NONE) && (streamNum <= totalResNum));
+
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error,
+        "alloc sq cq failed, model_id=%u, stream num=%u, free sq num=%u, total res num=%u, retryCount=%u, retCode=%#x.",
+        Id_(), streamNum, sqCqPool->GetSqCqPoolFreeResNum(), totalResNum, retryCount, static_cast<uint32_t>(error));
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::AllocSqCqArrayForEachModel(const std::vector<CaptureModel*>& allModels)
+{
+    for (CaptureModel* mdl : allModels) {
+        const uint32_t streamNum = static_cast<uint32_t>(mdl->StreamList_().size());
+        COND_RETURN_ERROR(streamNum == 0U, RT_ERROR_INVALID_VALUE, "stream num is 0, model_id=%u.", mdl->Id_());
+        COND_RETURN_INFO(
+            (mdl->sqCqArray_ != nullptr) && (mdl->sqCqNum_ != 0U), RT_ERROR_NONE,
+            "model_id=%u, sqCqNum_=%u, stream num=%u.", mdl->Id_(), sqCqNum_, streamNum);
+        mdl->sqCqArray_ = new (std::nothrow) rtDeviceSqCqInfo_t[streamNum];
+        COND_RETURN_AND_MSG_OUTER(
+            mdl->sqCqArray_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013,
+            std::to_string(sizeof(rtDeviceSqCqInfo_t) * streamNum), "new");
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::BindAllSqCqAndSendSqe(const std::vector<CaptureModel*>& allModels)
+{
+    for (CaptureModel* mdl : allModels) {
+        rtError_t error = mdl->AllocSqAddr();
+        ERROR_RETURN_MSG_INNER(
+            error, "alloc sq addr failed, model_id=%u, retCode=%#x.", mdl->Id_(), static_cast<uint32_t>(error));
+
+        error = mdl->BindSqCqAndSendSqe();
+        ERROR_RETURN_MSG_INNER(
+            error, "bind sq cq failed, model_id=%u, retCode=%#x.", mdl->Id_(), static_cast<uint32_t>(error));
+
+        mdl->SetFirstExecute(true);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+void CaptureModel::DeleteAllSqCqArray(const std::vector<CaptureModel*>& allModels)
+{
+    for (CaptureModel* mdl : allModels) {
+        DELETE_A(mdl->sqCqArray_);
+    }
+}
+
+rtError_t CaptureModel::AllocAllSqCqAndBind()
+{
+    std::vector<CaptureModel*> allModels;
+    allModels.push_back(this);
+    auto& allSubModels = GetAllSubCaptureModels();
+    allModels.insert(allModels.end(), allSubModels.begin(), allSubModels.end());
+
+    rtError_t ret = AllocSqCqArrayForEachModel(allModels);
+    COND_PROC_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, DeleteAllSqCqArray(allModels),
+        "Fail to alloc sqcq model_id=%u, model num=%" PRIu64 ".", Id_(), allModels.size());
+
+    ret = BatchAllocAllSqCq(allModels);
+    COND_PROC_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, DeleteAllSqCqArray(allModels),
+        "batch alloc sq cq res failed, model_id=%u, total sq num=%u, retCode=%#x.", Id_(),
+        Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum(), static_cast<uint32_t>(ret));
+
+    for (CaptureModel* mdl : allModels) {
+        mdl->sqCqNum_ = static_cast<uint32_t>(mdl->StreamList_().size());
+    }
+
+    uint32_t releaseSqNum = 0U;
+    uint32_t releaseNtyNum = 0U;
+    ret = BindAllSqCqAndSendSqe(allModels);
+    COND_PROC_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, (void)ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum),
+        "batch alloc sq cq res failed, model_id=%u, total sq num=%u, retCode=%#x.", Id_(),
+        Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum(), static_cast<uint32_t>(ret));
+
     return RT_ERROR_NONE;
 }
 
@@ -1753,10 +1855,8 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t& releaseNum)
     }
 
     rtError_t error = UnBindSqCq();
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "unbind sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
-        return error;
-    }
+    COND_PROC(error != RT_ERROR_NONE,
+              RT_LOG(RT_LOG_WARNING, "unbind sq cq, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error)););
 
     error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCqLazy(sqCqArray_, sqCqNum_);
     if (error != RT_ERROR_NONE) {
