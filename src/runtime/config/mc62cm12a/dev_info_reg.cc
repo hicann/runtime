@@ -62,7 +62,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL,
-    RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_DATA_READ_ONLY,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
@@ -102,6 +101,9 @@ static constexpr uint32_t RT_STARS_MC62CM12A_DEFAULT_KERNEL_CREDIT_UINT32 =
 static constexpr double RT_STARS_MC62CM12A_TASK_KERNEL_CREDIT_SCALE_US =
     RT_MC_KERNEL_CREDIT_SCALE;                                      // 2^24 / 500M *1000*1000(us)
 constexpr uint32_t RT_MC62CM12A_CORE_NUM_PER_DIE = 8U;
+constexpr uint32_t RT_MC62CM12A_MAX_DIE_NUM = 2U;
+constexpr uint32_t RT_MC62CM12A_SCALAR_BUFFER_SIZE =
+    (32U * 1024U * RT_MC62CM12A_CORE_NUM_PER_DIE * RT_MC62CM12A_MAX_DIE_NUM);
 
 static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .engineType = "STARS",
@@ -124,7 +126,7 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .starsNotifyTableSize = STARS_NOTIFY_NUM_OF_SINGLE_TABLE_128,
     .ipcNotifyNumMask = 0x7FUL,
     .mc2FeatureFlag = 0U,
-    .stackPhyBase = RT_SCALAR_BUFFER_SIZE_32K_75,
+    .stackPhyBase = RT_MC62CM12A_SCALAR_BUFFER_SIZE,
     .maxCustomerStackSize = DEFAULT_CUSTOM_STACK_SIZE_MAX,
     .aicNum = RT_AICORE_NUM_25,
     .aivNum = RT_AIVECTOR_NUM_50,
@@ -169,7 +171,7 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .argInitCountSize = DEFAULT_INIT_CNT_OTH,
     .argsAllocatorSize = TINY_INIT_CNT_DEFAULT,
     .superArgAllocatorSize = SUPER_ARG_AllOC_SIZE_128,
-    .maxArgAllocatorSize = ARG_MAX_ENTRY_INIT_NUM,
+    .maxArgAllocatorSize = ARG_MAX_ENTRY_INIT_NUM_32,
     .handleAllocatorSize = HANDLE_ALLOCATOR_SIZE_1024,
     .kernelInfoAllocatorSize = KERNEL_INFO_ALLOC_SIZE,
     .isNeedlogErrorLevel = true,

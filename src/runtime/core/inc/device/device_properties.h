@@ -42,6 +42,7 @@ constexpr uint32_t DEFAULT_INIT_CNT_OTH = 1024U;
 constexpr uint32_t SUPER_ARG_AllOC_SIZE_8 = 8U;
 constexpr uint32_t SUPER_ARG_AllOC_SIZE_128 = 128U;
 constexpr uint32_t ARG_MAX_ENTRY_INIT_NUM = 64U;
+constexpr uint32_t ARG_MAX_ENTRY_INIT_NUM_32 = 32U;
 constexpr uint32_t HANDLE_ALLOCATOR_SIZE_16 = 16U;
 constexpr uint32_t HANDLE_ALLOCATOR_SIZE_1024 = 1024U;
 constexpr uint32_t TINY_INIT_CNT = 64U;
