@@ -549,3 +549,74 @@ TEST_F(Arch5162TaskTest, ConstructSqeForCallbackLaunchTask)
     delete stream;
     delete device;
 }
+
+TEST_F(Arch5162TaskTest, ProfilingTaskRegister)
+{
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].waitAsyncCpCompleteFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_PROFILING_ENABLE], nullptr);
+
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].waitAsyncCpCompleteFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForProfilingEnableTask)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 100U;
+    taskInfo.type = TS_TASK_TYPE_PROFILING_ENABLE;
+    taskInfo.u.profilingEnableTaskInfo.pid = 1234U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    ConstructSqeForProfilingEnableTask(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_PROFILER_DYNAMIC_ENABLE);
+    EXPECT_EQ(sqe.phSqe.header.ie, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.l1Lock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.l1UnLock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.taskId, 100U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForProfilingDisableTask)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 100U;
+    taskInfo.type = TS_TASK_TYPE_PROFILING_DISABLE;
+    taskInfo.u.profilingDisableTaskInfo.pid = 4321U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    ConstructSqeForProfilingDisableTask(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_PROFILER_DYNAMIC_DISABLE);
+    EXPECT_EQ(sqe.phSqe.header.ie, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.l1Lock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.l1UnLock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.taskId, 100U);
+    delete stream;
+    delete device;
+}

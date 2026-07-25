@@ -32,6 +32,8 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task.cc
