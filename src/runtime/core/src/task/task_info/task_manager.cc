@@ -368,24 +368,6 @@ rtError_t WaitExecFinish(const TaskInfo* taskInfo)
     return RT_ERROR_NONE;
 }
 
-void TaskCommonInfoInit(TaskInfo* taskInfo)
-{
-    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].packageReportNum = 1U;
-    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
-    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage = 0U;
-    taskInfo->isValidInO1 = false;
-    taskInfo->needPostProc = false;
-    taskInfo->stmArgPos = UINT32_MAX;
-    taskInfo->mte_error = 0; // init mte_error
-    taskInfo->isNoRingbuffer = 0U;
-
-    /* if old process, set taskTag */
-    if (taskInfo->stream->taskResMang_ == nullptr) {
-        SetTaskTag(taskInfo);
-    }
-    return;
-}
-
 uint64_t CombineTo64Bit(uint32_t high, uint32_t low)
 {
     uint64_t temp = static_cast<uint64_t>(high) << 32U;
@@ -977,6 +959,24 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos)
     } else {
         // no operation
     }
+}
+
+void TaskCommonInfoInit(TaskInfo* taskInfo)
+{
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].packageReportNum = 1U;
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage = 0U;
+    taskInfo->isValidInO1 = false;
+    taskInfo->needPostProc = false;
+    taskInfo->stmArgPos = UINT32_MAX;
+    taskInfo->mte_error = 0; // init mte_error
+    taskInfo->isNoRingbuffer = 0U;
+
+    /* if old process, set taskTag */
+    if (taskInfo->stream->taskResMang_ == nullptr) {
+        SetTaskTag(taskInfo);
+    }
+    return;
 }
 
 void SaveTaskInfo(TaskInfo* const taskInfo, TaskInfo* submitTask)

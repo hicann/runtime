@@ -210,36 +210,6 @@ rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t
     return RT_ERROR_NONE;
 }
 
-rtError_t DeviceSqCqPool::BatchAllocForModel(
-    const std::vector<uint32_t>& streamNums, uint32_t totalStmNum, std::vector<rtDeviceSqCqInfo_t*>& sqCqArrays)
-{
-    RT_LOG(
-        RT_LOG_DEBUG, "deviceId=%u, tsId=%u, modelCount=%zu, total stream num=%u", device_->Id_(),
-        device_->DevGetTsId(), streamNums.size(), totalStmNum);
-
-    const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
-    if (deviceSqCqFreeList_.size() < totalStmNum) {
-        const rtError_t error = BatchAllocSqCq(totalStmNum - static_cast<uint32_t>(deviceSqCqFreeList_.size()));
-        COND_RETURN_INFO(
-            error != RT_ERROR_NONE, error, "Unable to allocate SQ and CQ, total stream num=%u, retCode=%#x.",
-            totalStmNum, static_cast<uint32_t>(error));
-    }
-
-    for (size_t i = 0U; i < streamNums.size(); i++) {
-        for (uint32_t j = 0U; j < streamNums[i]; j++) {
-            sqCqArrays[i][j] = deviceSqCqFreeList_.front();
-            deviceSqCqFreeList_.pop_front();
-            deviceSqCqOccupyList_.push_back(sqCqArrays[i][j]);
-        }
-    }
-
-    RT_LOG(
-        RT_LOG_DEBUG, "device_id=%u, ts_id=%u, total stream num=%u, occupyList_size=%u, freeList_size=%u",
-        device_->Id_(), device_->DevGetTsId(), totalStmNum, deviceSqCqOccupyList_.size(), deviceSqCqFreeList_.size());
-
-    return RT_ERROR_NONE;
-}
-
 rtError_t DeviceSqCqPool::AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t* const sqCqInfo) const
 {
     RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u", device_->Id_(), device_->DevGetTsId());

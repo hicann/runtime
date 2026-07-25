@@ -12,7 +12,6 @@
 
 #include <list>
 #include <mutex>
-#include <vector>
 #include "base.hpp"
 #include "driver.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -37,8 +36,6 @@ public:
     rtError_t Init(void) const;
     void PreAllocSqCq(void);
     rtError_t AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t* const sqCqList);
-    rtError_t BatchAllocForModel(
-        const std::vector<uint32_t>& streamNums, uint32_t totalStmNum, std::vector<rtDeviceSqCqInfo_t*>& sqCqArrays);
     rtError_t AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t* const sqCqInfo) const;
 
     // Release sqcqs in bulk, only releasing them to the pool;

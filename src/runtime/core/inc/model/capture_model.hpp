@@ -274,6 +274,7 @@ public:
     rtError_t ModelEndGraph();
     rtError_t SendLoadCompleteEndGraph();
     rtError_t AllocSqCqAndBindInternal();
+    rtError_t AllocAllSqCq();
     rtError_t ReleaseSqCqInternal(uint32_t& releaseNum);
     rtError_t ReleaseAllSubModelSqCq(uint32_t& releaseNum);
     rtError_t LoadCompleteAll(uint32_t loadCompltetNotifyId);
@@ -319,11 +320,6 @@ private:
     rtError_t PostModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo);
     rtError_t ExecuteCommon(Stream* const stm, int32_t timeout, const uint8_t executeMode);
     rtError_t BindSqCqAndSendSqe(void);
-    rtError_t AllocAllSqCqAndBind();
-    rtError_t BatchAllocAllSqCq(const std::vector<CaptureModel*>& allModels);
-    rtError_t AllocSqCqArrayForEachModel(const std::vector<CaptureModel*>& allModels);
-    rtError_t BindAllSqCqAndSendSqe(const std::vector<CaptureModel*>& allModels);
-    void DeleteAllSqCqArray(const std::vector<CaptureModel*>& allModels);
     rtError_t RebuildAllExternalTaskSqes() const;
     // capture end阶段创建external refresh表并替换record/wait占位任务。
     rtError_t FinalizeExternalRefreshTable();
