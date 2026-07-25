@@ -1242,7 +1242,7 @@
       "ErrMessage": "Failed to start Profiling in %s mode because it is already in %s mode.",
       "Arglist": "mode1,mode2",
       "suggestion": {
-        "Possible Cause": "Do not enable two or more profile data colection modes. Example: When Profiling is started using msprof command lines, do not use acl APIs in the app to start Profiling data collection.",
+        "Possible Cause": "Do not enable two or more profile data collection modes. Example: When Profiling is started using msprof command lines, do not use acl APIs in the app to start Profiling data collection.",
         "Solution": "Change the Profiling startup mode as required."
       }
     },
@@ -1250,7 +1250,7 @@
       "errClass": "Profiling Errors",
       "errTitle": "Resource_Error_Insufficient_Host_Memory",
       "ErrCode": "EK0201",
-      "ErrMessage": "Failed to allocate host memory for Profiling: %s.",
+      "ErrMessage": "Failed to allocate %s host memory for Profiling.",
       "Arglist": "buf_size",
       "suggestion": {
         "Possible Cause": "Allocation failed due to insufficient host memory.",
@@ -1276,7 +1276,7 @@
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "New thread cannot be created due to insufficient system thread resources.",
-        "Solution": "Stop unnecessary theads and ensure that the required resource is available."
+        "Solution": "Stop unnecessary threads and ensure that the required resource is available."
       }
     },
     {

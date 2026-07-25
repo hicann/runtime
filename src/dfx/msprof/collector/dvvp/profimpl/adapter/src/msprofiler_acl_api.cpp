@@ -690,8 +690,8 @@ size_t ProfGetModelId(ProfType type, CONST_VOID_PTR opInfo, size_t opInfoLen, ui
     int32_t ret = OpDescParser::GetModelId(opInfo, opInfoLen, index, &result);
     if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("Failed execute %s%s", g_subscribeTypeMap[type].c_str(), __func__);
-        MSPROF_INNER_ERROR("EK9999", "Failed to get model id on type %s and index %u.",
-            g_subscribeTypeMap[type].c_str(), index);
+        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({std::to_string(index), "index", "failed to get model id"}));
         return static_cast<size_t>(ret);
     }
     MSPROF_LOGD("Successfully execute %s%s", g_subscribeTypeMap[type].c_str(), __func__);

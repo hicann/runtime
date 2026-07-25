@@ -180,8 +180,8 @@ Status aclgrphProfDestroyConfig(ACL_GRPH_PROF_CONFIG_PTR profilerConfig)
 {
     if (profilerConfig == nullptr) {
         MSPROF_LOGE("Destroy profilerConfig failed, profilerConfig must not be nullptr");
-        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config"}),
-            std::vector<std::string>({"profilerConfig"}));
+        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
+            std::vector<std::string>({"nullptr", "profilerConfig", "profilerConfig cannot be nullptr"}));
         return GE_PROF_FAILED;
     }
     delete profilerConfig;
