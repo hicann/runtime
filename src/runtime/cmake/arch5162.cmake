@@ -15,7 +15,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_execute_time.cc
+    ${RUNTIME_CORE_DIR}/src/task/arch5162/task_execute_time.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc

@@ -4524,6 +4524,12 @@ RefObject<Context*>* Runtime::GetRefPriCtx(const uint32_t deviceId, const uint32
 
 static rtError_t SetTimeoutConfigTaskSubmit(Stream* const stm, const rtTaskTimeoutType_t type, const uint32_t timeout)
 {
+    DevProperties prop;
+    rtError_t ret = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), prop);
+    COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "GetDevProperties failed.");
+    if (prop.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_WITHOUT_TASK) {
+        return RT_ERROR_NONE;
+    }
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo* timeoutSetTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_TASK_TIMEOUT_SET, errorReason);

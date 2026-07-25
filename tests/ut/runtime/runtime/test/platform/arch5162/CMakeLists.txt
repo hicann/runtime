@@ -14,7 +14,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/host_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_execute_time.cc
+    ${TOP_DIR}/src/runtime/core/src/task/arch5162/task_execute_time.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
@@ -290,7 +290,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/core/src/plugin_manage/v100/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/core/src/runtime.cc
-    ${TOP_DIR}/src/runtime/core/src/runtime_v100/runtime_adapt.cc 
+    ${TOP_DIR}/src/runtime/core/src/runtime_v100/runtime_adapt.cc
     ${TOP_DIR}/src/runtime/core/src/utils/aicpu_scheduler_agent.cc
     ${TOP_DIR}/src/runtime/core/src/utils/capability.cc
     ${TOP_DIR}/src/runtime/core/src/utils/osal.cc
@@ -312,7 +312,7 @@ add_library(runtimeut_src_static_lib_5162a STATIC ${runtimeut_src_list})
 target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:runtime_utest_intf_pub_arch5162>)
 
 target_include_directories(
-    runtimeut_src_static_lib_5162a PUBLIC 
+    runtimeut_src_static_lib_5162a PUBLIC
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc
@@ -351,6 +351,7 @@ add_executable(runtime_utest_arch5162
     stub/hal_stub.cc
     main.cc
     rt_utest_task_arch5162.cc
+    rt_utest_task_execute_time_arch5162.cc
 )
 
 target_compile_definitions(runtime_utest_arch5162 PUBLIC
