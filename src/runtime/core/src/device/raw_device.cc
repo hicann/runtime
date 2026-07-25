@@ -23,6 +23,7 @@
 #include "task.hpp"
 #include "device/device_error_proc.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "thread_local_container.hpp"
 #include "aicpu_err_msg.hpp"
 #include "dvpp_grp.hpp"
@@ -2110,8 +2111,8 @@ rtError_t RawDevice::WriteDevString(void * const dest, const size_t max, const c
     error = driver_->MemCopySync(dest, static_cast<uint64_t>(devStrLen), str, static_cast<uint64_t>(devStrLen),
         RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(error,
-        "Failed to copy memory for string, size=%zu(bytes), kind=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x.",
-        devStrLen, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+        "Failed to copy memory for string, size=%zu(bytes), kind=%s, retCode=%#x.",
+        devStrLen, MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
@@ -2126,8 +2127,8 @@ rtError_t RawDevice::WriteDevValue(void * const dest, const size_t size, const v
     error = driver_->MemCopySync(dest, static_cast<uint64_t>(size), data, static_cast<uint64_t>(size),
         RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(error,
-        "Failed to copy memory value, size=%zu(bytes), kind=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x.",
-        size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+        "Failed to copy memory value, size=%zu(bytes), kind=%s, retCode=%#x.",
+        size, MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

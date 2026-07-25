@@ -11,6 +11,7 @@
 #include "onlineprof.hpp"
 #include "securec.h"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -151,9 +152,9 @@ rtError_t OnlineProf::GetOnlineProfilingData(const Stream * const stm, rtProfDat
     uint64_t * const rtWriteAddr = RtValueToPtr<uint64_t *>(onlineProfAddr + (ONLINEPROF_HEAD_SIZE / 2U)); // 2:half head size
     rtError_t error = stm->Device_()->Driver_()->MemCopySync(hostTsMem, ONLINEPROF_MEM_SIZE,
         deviceMem, ONLINEPROF_MEM_SIZE, RT_MEMCPY_DEVICE_TO_HOST);
-    ERROR_RETURN_MSG_INNER(error, "Copy memory from ts to runtime failed, size=%u, kind=%d(RT_MEMCPY_DEVICE_TO_HOST), "
+    ERROR_RETURN_MSG_INNER(error, "Copy memory from ts to runtime failed, size=%u, kind=%s, "
         "retCode=%#x.", ONLINEPROF_MEM_SIZE,
-        static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+        MemcpyKindToString(RT_MEMCPY_DEVICE_TO_HOST).c_str(), static_cast<uint32_t>(error));
 
     onlineProfAddr = RtPtrToValue(hostTsMem);
     rtProfDataInfo_t * const profTsSourceData =

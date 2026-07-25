@@ -13,6 +13,7 @@
 #include "stream.hpp"
 #include "task_res.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "stars_arg_manager.hpp"
 #include "kernel.hpp"
 #include "kernel_utils.hpp"
@@ -103,8 +104,8 @@ rtError_t PcieArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, vo
             dst = handle->kerArgs;
         }
         error = handle->argsAlloc->H2DMemCopy(dst, args, static_cast<uint64_t>(size));
-        ERROR_RETURN(error, "H2DMemCopy failed, kind=%d, retCode=%#x.",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), error);
+        ERROR_RETURN(error, "H2DMemCopy failed, kind=%s, retCode=%#x.",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), error);
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,

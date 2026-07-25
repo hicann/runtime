@@ -23,6 +23,7 @@
 #include "notify.hpp"
 #include "count_notify.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "npu_driver.hpp"
 #include "task_info.hpp"
 #include "task_submit.hpp"
@@ -1843,8 +1844,8 @@ rtError_t Model::MallocDevValue(const void * const data, const uint32_t size, vo
         *ptr, static_cast<uint64_t>(size), data, static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
     if (error != RT_ERROR_NONE) {
         ERROR_GOTO(error, FAIL_ALLOC,
-            "Memory copy value failed, size=%u(bytes), kind=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x.",
-            size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            "Memory copy value failed, size=%u(bytes), kind=%s, retCode=%#x.",
+            size, MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
     }
 
     return RT_ERROR_NONE;

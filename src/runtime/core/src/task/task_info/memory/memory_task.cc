@@ -16,6 +16,7 @@
 #include "task_manager.h"
 #include "error_code.h"
 #include "task_execute_time.h"
+#include "enum_desc.hpp"
 #include "davinci_kernel_task.h"
 #include "stars_cond_isa_helper.hpp"
 #include "inner_thread_local.hpp"
@@ -544,7 +545,8 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_D2H;
     } else if (kind == RT_MEMCPY_DEVICE_TO_DEVICE){
         error = ConvertCpyType(taskInfo, kind, srcAddr, dst);
-        ERROR_RETURN_MSG_INNER(error, "Failed to convert the D2D asynchronous copy typeD2D, retCode=%#x, kind=%u.", error, kind);
+        ERROR_RETURN_MSG_INNER(error, "Failed to convert the D2D asynchronous copy typeD2D, retCode=%#x, kind=%s.", error,
+        MemcpyKindToString(static_cast<rtMemcpyKind_t>(kind)).c_str());
     } else {
         // reserve
     }

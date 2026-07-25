@@ -2251,8 +2251,8 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
     if (drvRet != DRV_ERROR_NONE) {
         if (errShow == true) {
             DRV_ERROR_PROCESS(drvRet, "Call driver api drvMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", "
-                "size=%" PRIu64 "(bytes), kind=%d.",
-                static_cast<int32_t>(drvRet), destMax, size, static_cast<int32_t>(kind));
+                "size=%" PRIu64 "(bytes), kind=%s.",
+                static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
         }
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -2295,8 +2295,8 @@ rtError_t NpuDriver::MemCopyAsync(void * const dst, const uint64_t destMax, cons
     record.SaveRecord();
 
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "Call driver api drvAsyncMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", size=%" PRIu64 "(bytes), kind=%d.",
-            static_cast<int32_t>(drvRet), destMax, size, static_cast<int32_t>(kind));
+        DRV_ERROR_PROCESS(drvRet, "Call driver api drvAsyncMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", size=%" PRIu64 "(bytes), kind=%s.",
+            static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

@@ -41,6 +41,7 @@
 #include "event_state_callback_manager.hpp"
 #include "profiling_agent.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "device_msg_handler.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
@@ -8486,7 +8487,7 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
         }
 
         COND_RETURN_AND_MSG_INNER((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-            "Failed to copy memory asynchronously, count=%" PRIu64 ", kind=%d, retCode=%#x.", sizes[i], kind, static_cast<uint32_t>(error));
+            "Failed to copy memory asynchronously, count=%" PRIu64 ", kind=%s, retCode=%#x.", sizes[i], MemcpyKindToString(kind).c_str(), static_cast<uint32_t>(error));
     }
 
     return error;

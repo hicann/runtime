@@ -2217,9 +2217,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(const rtMemLocationType srcLo
     // 4) Otherwise illegal -> log expected set and return error
     std::string expected = allowed_list_to_string(rule.allowedKinds);
     RT_LOG(RT_LOG_ERROR,
-           "MemcpyKindAutoCorrect: invalid kind=%d for src=%d(%s), dst=%d(%s); expected one of [%s], actual=%d.",
-           *kind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType, MemLocationTypeToStr(dstLocationType),
-           expected.c_str(), *kind);
+           "MemcpyKindAutoCorrect: invalid kind=%s for src=%d(%s), dst=%d(%s); expected one of [%s], actual=%s.",
+           MemcpyKindToString(*kind).c_str(), srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType, MemLocationTypeToStr(dstLocationType),
+           expected.c_str(), MemcpyKindToString(*kind).c_str());
     return RT_ERROR_INVALID_VALUE;
 }
 
@@ -2279,8 +2279,8 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(bool checkKind, rtMemcpyKi
     if ((checkKind) && (runMode == RT_RUN_MODE_ONLINE)) {
         error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, error != RT_ERROR_NONE, error,
-            "Memory async check kind and loc failed, retCode=%#x, copyKind=%d, srcLoc=%d, dstLoc=%d",
-            static_cast<uint32_t>(error), copyKind, srcLocationType, dstLocationType);
+            "Memory async check kind and loc failed, retCode=%#x, copyKind=%s, srcLoc=%d, dstLoc=%d",
+            static_cast<uint32_t>(error), MemcpyKindToString(copyKind).c_str(), srcLocationType, dstLocationType);
     }
 
     /* 3) check whether involve pageable host memory */
@@ -2334,7 +2334,7 @@ rtError_t ApiErrorDecorator::ReduceAsync(void * const dst, const void * const sr
         "[" + std::to_string(RT_DATA_TYPE_FP32) + ", " + std::to_string(RT_DATA_TYPE_END) + ")");
 
     const rtError_t error = impl_->ReduceAsync(dst, src, cnt, kind, type, stm, cfgInfo);
-    ERROR_RETURN(error, "Reduce async failed, count=%" PRIu64 ", kind=%d.", cnt, kind);
+    ERROR_RETURN(error, "Reduce async failed, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
     return error;
 }
 
@@ -2354,7 +2354,7 @@ rtError_t ApiErrorDecorator::ReduceAsyncV2(void * const dst, const void * const 
         type, "[" + std::to_string(RT_DATA_TYPE_FP32) + ", " + std::to_string(RT_DATA_TYPE_END) + ")");
 
     const rtError_t error = impl_->ReduceAsyncV2(dst, src, cnt, kind, type, stm, overflowAddr);
-    ERROR_RETURN(error, "Reduce async v2 failed, count=%" PRIu64 ", kind=%d.", cnt, static_cast<int32_t>(kind));
+    ERROR_RETURN(error, "Reduce async v2 failed, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
     return error;
 }
 
@@ -2436,10 +2436,12 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(void * const dst, const uint64_t dstP
             MemLocationTypeToStr(srcRealLocation), dstLocationType, MemLocationTypeToStr(dstLocationType),
             dstRealLocation, MemLocationTypeToStr(dstRealLocation)),
         __func__, "kind or newKind",
-        RtFmtMsg("Memcpy2dSync supports only H2D or D2H. Parameter kind is %d, and newKind is %d", kind, newKind));
+        RtFmtMsg("Memcpy2dSync supports only H2D or D2H. Parameter kind is %s, and newKind is %s",
+                 MemcpyKindToString(kind).c_str(), MemcpyNewKindToString(newKind).c_str()));
     error = impl_->MemCopy2DSync(dst, dstPitch, src, srcPitch, width, height, copyKind);
     ERROR_RETURN(error, "Memcpy2d sync failed, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
-                 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%d", dstPitch, srcPitch, width, height, copyKind);
+                 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s", dstPitch, srcPitch, width, height,
+                 MemcpyKindToString(copyKind).c_str());
     return error;
 }
 
@@ -2463,7 +2465,8 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
         (copyKind != RT_MEMCPY_DEVICE_TO_HOST) &&
         (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Asynchronous 2D memory copy", "kind or newKind",
-        RtFmtMsg("Memcpy2dAsync supports only H2D, D2H, or D2D. Parameter kind is %u, and reviseKind is %u", kind, copyKind));
+        RtFmtMsg("Memcpy2dAsync supports only H2D, D2H, or D2D. Parameter kind is %s, and reviseKind is %s",
+                 MemcpyKindToString(kind).c_str(), MemcpyKindToString(copyKind).c_str()));
 
     COND_RETURN_WARN(((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) && (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
         RT_ERROR_FEATURE_NOT_SUPPORT, "Only H2D, D2H, or D2D are supported");
@@ -2486,7 +2489,8 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
     }
 
     ERROR_RETURN(error, "Memcpy2d async failed, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64
-        ", height=%" PRIu64 ", kind=%d, isInvolvePageableMemory=%d", dstPitch, srcPitch, width, height, copyKind,
+        ", height=%" PRIu64 ", kind=%s, isInvolvePageableMemory=%d", dstPitch, srcPitch, width, height,
+        MemcpyKindToString(copyKind).c_str(),
         isD2HorH2DInvolvePageableMemory);
     return error;
 }

@@ -13,6 +13,7 @@
 #include "stream_xpu.hpp"
 #include "arg_manage_xpu.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "stars_arg_manager.hpp"
 #include "kernel.hpp"
 #include "thread_local_container.hpp"
@@ -102,8 +103,8 @@ rtError_t XpuArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, voi
     XpuHandle *handle = static_cast<XpuHandle *>(result->handle);
     if (handle != nullptr) {
         error = handle->argsAlloc->H2DMemCopy(result->kerArgs, args, size);
-        ERROR_RETURN_MSG_INNER(error, "H2DMemCopy failed, kind=%d, retCode=%#x.",
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_HOST), static_cast<uint32_t>(error));
+        ERROR_RETURN_MSG_INNER(error, "H2DMemCopy failed, kind=%s, retCode=%#x.",
+            MemcpyKindToString(RT_MEMCPY_HOST_TO_HOST).c_str(), static_cast<uint32_t>(error));
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
         if (ret != EOK) {
