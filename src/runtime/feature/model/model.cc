@@ -37,6 +37,7 @@
 #include "ctrl_sq.hpp"
 #include "inner_thread_local.hpp"
 #include "runtime.hpp"
+#include "task_david.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1866,11 +1867,78 @@ void Model::SyncExeStream(void) const
     }
 }
 
-rtError_t Model::ModelAbort()
+rtError_t MdlAbort(Model* const mdl)
 {
     rtError_t error;
     Stream* streamObj = nullptr;
+    Context* const context = mdl->Context_();
+
+    TaskInfo* executeTask = nullptr;
+    if (mdl->ModelExecuteType() != EXECUTOR_AICPU) {
+        RT_LOG(RT_LOG_DEBUG, "Submit abort task to ts");
+        error = context->ModelAbortById(mdl->Id_());
+        COND_RETURN_ERROR(
+            (error == RT_ERROR_TSFW_TASK_ABORT_STOP), error, "Model abort stop before post process, model_id=%u.",
+            mdl->Id_());
+
+        // if last Synchronize timeout, need Synchronize here
+        auto* const exeStm = mdl->GetExeStream();
+        if ((exeStm != nullptr) && exeStm->GetNeedSyncFlag()) {
+            const rtError_t ret = exeStm->Synchronize(false, 100); // 100 wait 100ms
+            if (ret != RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_DEBUG, "In model abort, Synchronize return is %d.", ret);
+            }
+            exeStm->SetNeedSyncFlag(false);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    error = context->StreamCreate(static_cast<uint32_t>(RT_STREAM_PRIORITY_DEFAULT), 0U, &streamObj);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to create stream for model abort, retCode=%#x.", static_cast<uint32_t>(error));
+    std::function<void()> const stmDestroy = [&context, &streamObj]() { (void)context->StreamDestroy(streamObj); };
+    ScopeGuard streamGuard(stmDestroy);
+    executeTask = nullptr;
+    error = CheckTaskCanSend(streamObj);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamObj->Id_(), static_cast<uint32_t>(error));
+    const uint32_t executorFlag = mdl->GetModelExecutorType();
+    uint32_t pos = 0xFFFFU;
+    streamObj->StreamLock();
+    error = AllocTaskInfo(&executeTask, streamObj, pos);
+    ERROR_PROC_RETURN_MSG_INNER(error, streamObj->StreamUnLock();,
+                                                                 "Failed to allocate task, stream_id=%d, retCode=%#x.",
+                                                                 streamObj->Id_(), static_cast<uint32_t>(error));
+    SaveTaskCommonInfo(executeTask, streamObj, pos);
+    (void)ModelToAicpuTaskInit(
+        executeTask, mdl->Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_ABORT), executorFlag,
+        RtPtrToValue(mdl->GetAicpuModelInfo()));
+    error = DavidSendTask(executeTask, streamObj);
+    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(executeTask); TaskRollBack(streamObj, pos);
+                                streamObj->StreamUnLock();
+                                , "Failed to submit model abort task, error=%#x.", static_cast<uint32_t>(error));
+    streamObj->StreamUnLock();
+    RT_LOG(
+        RT_LOG_DEBUG, "Submit task to ts, model_id=%u, executor_flag=%u, stream_id=%d.", mdl->Id_(), executorFlag,
+        streamObj->Id_());
+    error = streamObj->Synchronize();
+    COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_SYNC_TIMEOUT, error, ErrorCode::EE1002, "model abort stream");
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to synchronize model abort stream, retCode=%#x.", static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::ModelAbort()
+{
     Device* const dev = context_->Device_();
+    // David 平台且非 AICPU 执行类型，走新方案
+    if (dev->IsDavidPlatform() && (ModelExecuteType() != EXECUTOR_AICPU)) {
+        return MdlAbort(this);
+    }
+
+    // 其他形态保持原方案
+    rtError_t error;
+    Stream* streamObj = nullptr;
     // stars model abort to ts
     TaskInfo submitTask = {};
     rtError_t errorReason;

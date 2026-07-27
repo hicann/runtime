@@ -34,6 +34,9 @@
 #include "model_execute_task.h"
 #include "data/elf.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+#include "npu_driver.hpp"
+#include "task_david.hpp"
+#include "model_to_aicpu_task.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -2131,4 +2134,47 @@ TEST_F(ModelTest, TestBuildSqCqForAutoSplit_TsBindStream)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);
+}
+
+TEST_F(ModelTest, mdl_abort_aicpu_success)
+{
+    RawDevice* dev = new RawDevice(0);
+    NpuDriver* drv = new NpuDriver();
+    dev->driver_ = drv;
+    dev->Init();
+    Context* ctx = new Context(dev, false);
+    ctx->Init();
+    Stream* defStm = new Stream(dev, 0);
+    ctx->SetDefaultStream(defStm);
+    Stream* newStm = new Stream(dev, 1);
+    Model* model = new Model();
+    model->context_ = ctx;
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    TaskInfo task = {};
+    TaskInfo* tmpTask = &task;
+
+    MOCKER_CPP_VIRTUAL(ctx, &Context::StreamCreate)
+        .stubs()
+        .with(
+            mockcpp::any(), mockcpp::any(), outBoundP(&newStm), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(ctx, &Context::StreamDestroy).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().with(outBoundP(&tmpTask)).will(returnValue(RT_ERROR_NONE));
+    MOCKER(SaveTaskCommonInfo).stubs();
+    MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(newStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = MdlAbort(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    delete model;
+    delete ctx;
+    delete defStm;
+    delete newStm;
+    delete dev;
+    delete drv;
 }
