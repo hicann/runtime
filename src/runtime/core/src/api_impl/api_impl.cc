@@ -8405,26 +8405,31 @@ rtError_t ApiImpl::ValidateMemCpyParamsAndAttributes(void* dst, size_t destMax, 
     rtMemLocationType realDstLoc = RT_MEMORY_LOC_MAX;
     rtMemLocationType realSrcLoc = RT_MEMORY_LOC_MAX;
 
-    COND_RETURN_ERROR_MSG_INNER((size > destMax), RT_ERROR_INVALID_VALUE, 
-        "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", size, destMax);
-    COND_RETURN_ERROR_MSG_INNER((size == 0U), RT_ERROR_INVALID_VALUE, "sizes's value cannot be 0.");
-    COND_RETURN_ERROR_MSG_INNER(((dst == nullptr) || (src == nullptr)),
-        RT_ERROR_INVALID_VALUE, "dst's value or src's value is nullptr.");    
+    COND_RETURN_AND_MSG_OUTER(
+        (size > destMax) || (size == 0U), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking memory copy params",
+        "size",
+        RtFmtMsg(
+            "Parameter size %zu should be greater than 0 and less than or equal to parameter destMax %zu", size,
+            destMax));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(src, RT_ERROR_INVALID_VALUE, "Checking memory copy params");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dst, RT_ERROR_INVALID_VALUE, "Checking memory copy params");
 
     error = CheckMemCpyAttr(dst, src, memAttr, dstAttr, srcAttr);
     realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
     realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "check attributes failed, attributes of src locationType=%d, dst locationType=%d, "
+        error != RT_ERROR_NONE, error,
+        "check attributes failed, attributes of src locationType=%d, dst locationType=%d, "
         "actually dst locationType=%d(%s), src locationType=%d(%s).",
-        memAttr.srcLoc.type, memAttr.dstLoc.type, realDstLoc, MemLocationTypeToStr(realDstLoc),
-        realSrcLoc, MemLocationTypeToStr(realSrcLoc));
-
-    COND_RETURN_ERROR_MSG_INNER((realDstLoc == realSrcLoc),
-        RT_ERROR_INVALID_VALUE, "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
-        "srcLoc type=%d(%s).", realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
+        memAttr.srcLoc.type, memAttr.dstLoc.type, realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
         MemLocationTypeToStr(realSrcLoc));
 
+    COND_RETURN_AND_MSG_OUTER(
+        (realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Checking memory copy params",
+        RtFmtMsg(
+            "Only H2D and D2H copy directions are supported. The destination location type is %s(%d),"
+            " and the source location type is %s(%d)",
+            MemLocationTypeToStr(realDstLoc), realDstLoc, MemLocationTypeToStr(realSrcLoc), realSrcLoc));
     return error;
 }
 
