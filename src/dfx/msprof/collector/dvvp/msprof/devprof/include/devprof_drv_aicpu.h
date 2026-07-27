@@ -86,6 +86,9 @@ private:
 
 private:
     volatile bool stopped_;
+    // Whether the "host move ring buffer full" event has been logged in the current profiling
+    // session, so the log is emitted only once instead of flooding on every retry.
+    bool ringFullLogged_ = false;
     uint32_t devId_;
     uint32_t channelId_;
     volatile uint64_t profConfig_;

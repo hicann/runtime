@@ -12,4 +12,7 @@
 
 #include "slog.h"
 
+void ResetDlogRecordCount();
+int32_t GetDlogRecordCount();
+
 #endif

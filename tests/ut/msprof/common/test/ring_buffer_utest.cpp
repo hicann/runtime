@@ -414,6 +414,80 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_LargePushPopTest) {
     free(hcclBufPtr);
 }
 
+// Cycle overflow: when the CAS retry loop exceeds maxCycles, BatchPush returns
+// MSPROF_ERROR_NONE without pushing data. With maxCycles=1 the overflow triggers
+// on the first iteration.
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowReturnsSuccessWithoutData) {
+    std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(1));
+    std::string name = "CycleOverflowTest";
+    EXPECT_EQ(true, bq->Init(name, 4096));
+    MsprofAdditionalInfo data;
+    data.level = 6000;
+    data.type = 2;
+    data.timeStamp = 151515151;
+    // maxCycles=1: overflow on first iteration, no data pushed
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(0, bq->GetUsedSize());
+    // repeated calls still safe, still no data pushed
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(0, bq->GetUsedSize());
+    bq->UnInit();
+}
+
+// Cycle overflow on a full buffer: fill the buffer to the overflow threshold,
+// then push more data. With a small maxCycles the retry loop exhausts quickly
+// and returns MSPROF_ERROR_NONE without pushing additional data.
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_CycleOverflowOnFullBuffer) {
+    std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(10));
+    std::string name = "FullBufferOverflowTest";
+    EXPECT_EQ(true, bq->Init(name, 4096));
+
+    MsprofAdditionalInfo data;
+    data.level = 6000;
+    data.type = 2;
+    data.timeStamp = 151515151;
+
+    // fill buffer to the overflow threshold: capacity(4096) - packSize(2047) = 2049 entries
+    const size_t threshold = 2049;
+    void *buf = malloc(threshold * sizeof(MsprofAdditionalInfo));
+    EXPECT_NE(nullptr, buf);
+    MsprofAdditionalInfo *addInfo = reinterpret_cast<MsprofAdditionalInfo *>(buf);
+    for (size_t i = 0; i < threshold; i++) {
+        *(addInfo + i) = data;
+    }
+    bq->BatchPush(addInfo, threshold * sizeof(MsprofAdditionalInfo));
+    EXPECT_EQ(threshold, bq->GetUsedSize());
+
+    // buffer is full → retry loop exhausts maxCycles(10) → overflow, no data pushed
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(threshold, bq->GetUsedSize());
+
+    free(buf);
+    bq->UnInit();
+}
+
+// Re-Init resets the cycle overflow flag: after UnInit + Init, the overflow
+// path can be triggered again, confirming the flag was reset to false.
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, BlockBuffer_ReInitResetsOverflowFlag) {
+    std::shared_ptr<BlockBuffer<MsprofAdditionalInfo>> bq(new BlockBuffer<MsprofAdditionalInfo>(1));
+    std::string name = "ReInitOverflowTest";
+    EXPECT_EQ(true, bq->Init(name, 4096));
+    MsprofAdditionalInfo data;
+    data.level = 6000;
+    data.type = 2;
+    data.timeStamp = 151515151;
+    // trigger overflow
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(0, bq->GetUsedSize());
+    // UnInit + Init resets cycleOverflowLogged_ to false
+    bq->UnInit();
+    EXPECT_EQ(true, bq->Init(name, 4096));
+    // overflow can be triggered again after re-init
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->BatchPush(&data, sizeof(MsprofAdditionalInfo)));
+    EXPECT_EQ(0, bq->GetUsedSize());
+    bq->UnInit();
+}
+
 // ---------------------------------------------------------------------------
 // VariableBlockBuffer tests
 // ---------------------------------------------------------------------------
