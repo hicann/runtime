@@ -66,7 +66,7 @@ int main()
     // 再做一个长耗时任务查看耗时
     CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
     CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
-    INFO_LOG("Begin a short task.");
+    INFO_LOG("Begin a long task.");
     CHECK_ERROR(aclrtRecordEvent(startEvent, stream));
     LongOP(blockDim, stream, numDevice);
     CHECK_ERROR(aclrtRecordEvent(endEvent, stream));

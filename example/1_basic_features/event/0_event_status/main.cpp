@@ -50,7 +50,7 @@ int main()
     LongOP(blockDim, stream, numDevice);
     CHECK_ERROR(aclrtRecordEvent(event, stream));
 
-    // 查询同步后的event状态
+    // 查询同步前的event状态
     CHECK_ERROR(aclrtQueryEventStatus(event, &eventStatus));
     INFO_LOG("0 is incompleted, 1 is completed.");
     INFO_LOG("After record but before synchronize, current event status is %d.", eventStatus);
