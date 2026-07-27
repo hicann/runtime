@@ -107,7 +107,8 @@ rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32
            << RtPtrToValue(paramBufDesc.bufInfo) << std::dec << ", destMax=" << bufferLen
            << ", count=" << paramBufDesc.bufSize << ".";
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+            ErrorCode::EE1020, "Constructing host function parameter SQE", "memcpy_s", std::to_string(ret).c_str(),
+            strerror(ret), ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
 

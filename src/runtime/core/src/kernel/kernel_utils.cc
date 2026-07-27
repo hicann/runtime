@@ -215,7 +215,7 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
 {
     if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1017, __func__, "task",
+            ErrorCode::EE1017, "Updating kernel parameters", "task",
             "The input task must be a compute task on the Cube Core or Vector Core. Before calling "
             "aclmdlRITaskSetParams, "
             "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");
@@ -307,7 +307,7 @@ rtError_t GetKernelAttribute(
 {
     if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1017, __func__, "task",
+            ErrorCode::EE1017, "Obtaining kernel function attributes", "task",
             "The input task must be a compute task on the Cube Core or Vector Core. Before calling "
             "aclmdlRIKernelTaskGetAttribute, "
             "use aclmdlRITaskGetType to obtain the task type and check whether the task type is correct");

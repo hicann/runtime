@@ -332,7 +332,8 @@ aclError JsonParser::GetDefaultDeviceIdFromFile(const char_t* const fileName, in
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(
-                {__func__, defaultDeviceIdStr.c_str(), "default_device", "value must be zero or a positive integer"}));
+                {"Parsing the default device ID from the configuration file", defaultDeviceIdStr.c_str(),
+                 "default_device", "value must be zero or a positive integer"}));
         ACL_LOG_ERROR(
             "default_device %s in acl.json is neither zero nor positive integer.", defaultDeviceIdStr.c_str());
         return ACL_ERROR_INVALID_PARAM;

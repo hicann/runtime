@@ -39,8 +39,8 @@ rtError_t CmoTaskInit(
                    << RtPtrToValue(cmoTaskInfo) << std::dec << ", destMax=" << sizeof(rtCmoTaskInfo_t)
                    << ", count=" << sizeof(rtCmoTaskInfo_t) << ".";
                 RT_LOG_OUTER_MSG_IMPL(
-                    ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(error).c_str(), strerror(error),
-                    ss.str().c_str());
+                    ErrorCode::EE1020, "Initializing CMO task", "memcpy_s", std::to_string(error).c_str(),
+                    strerror(error), ss.str().c_str());
                 return RT_ERROR_SEC_HANDLE;
             }
             RT_LOG(

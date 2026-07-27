@@ -1496,7 +1496,8 @@ rtError_t ApiImpl::SetupArgument(const void* const setupArg, const uint32_t size
         ss << std::hex << "dest=0x" << RtPtrToValue(launchArgs + offset) << ", setupArg=0x" << RtPtrToValue(setupArg)
            << std::dec << ", destMax=" << sizeof(launchArg.args) - offset << ", size=" << size << ".";
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+            ErrorCode::EE1020, "Setting kernel launch parameters", "memcpy_s", std::to_string(ret).c_str(),
+            strerror(ret), ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
     const uint32_t totalSize = size + offset;
@@ -5568,7 +5569,8 @@ rtError_t ApiImpl::LabelListCpy(Label** const lbl, const uint32_t labelNumber, v
         if (lbl[lbIdx]->Context_() != curCtx) {
             std::string extendInfo =
                 RtFmtMsg("label_id=%u, label_ctx=%p, cur_ctx=%p.", lbl[lbIdx]->Id_(), lbl[lbIdx]->Context_(), curCtx);
-            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, __func__, "label[" + std::to_string(lbIdx) + "]", extendInfo);
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1010, "Label list copy", "label[" + std::to_string(lbIdx) + "]", extendInfo);
             return RT_ERROR_LABEL_CONTEXT;
         }
         COND_RETURN_AND_MSG_OUTER(
@@ -7814,7 +7816,7 @@ rtError_t ApiImpl::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitTy
             "The value exceeds the total number of cores."
             " drv devId=%u, type=%d, value=%u, total number of cores=%u.",
             devId, type, value, initValue),
-        __func__, value, "value", RtFmtMsg("must be less than or equal to %u", initValue));
+        "Setting the device resource limit", value, "value", RtFmtMsg("must be less than or equal to %u", initValue));
 
     const auto error = SetDeviceResLimitByFe(devId, type, value);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
@@ -8659,7 +8661,8 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t
         ss << std::hex << "dest=0x" << offset << ", para=0x" << RtPtrToValue(para) << std::dec
            << ", destMax=" << paraSize << ", paraSize=" << paraSize << ".";
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+            ErrorCode::EE1020, "Adding placeholder parameters to the kernel parameter handle", "memcpy_s",
+            std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_INVALID_VALUE;
     }
     InitEmbeddedInnerHandle<ParaDetail>(*paraHandle);
@@ -8693,7 +8696,8 @@ rtError_t ApiImpl::MemcpyBatch(
             error, SetFailIndex(failIdx, i), "Failed to verify %zuth memory pair attributes. retCode=%#x.", i,
             static_cast<uint32_t>(error));
         COND_PROC_RETURN_AND_MSG_OUTER(
-            (realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, SetFailIndex(failIdx, i), __func__,
+            (realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, SetFailIndex(failIdx, i),
+            "Batch synchronous memory copy",
             RtFmtMsg(
                 "Only H2D and D2H copy directions are supported. The destination location type is %s(%d),"
                 " and the source location type is %s(%d)",
@@ -8942,7 +8946,8 @@ rtError_t ApiImpl::FuncGetName(const Kernel* const kernel, const uint32_t maxLen
         ss << std::hex << "name=0x" << RtPtrToValue(name) << ", kernelName=0x" << RtPtrToValue(kernel->Name_().c_str())
            << std::dec << ", maxLen=" << maxLen << ", actualLen=" << kernel->Name_().length() + 1U << ".";
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(error).c_str(), strerror(error), ss.str().c_str());
+            ErrorCode::EE1020, "Obtaining the kernel function name", "memcpy_s", std::to_string(error).c_str(),
+            strerror(error), ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
     return RT_ERROR_NONE;
@@ -9440,7 +9445,7 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 
     if (taskInfo->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1017, __func__, "task->type",
+            ErrorCode::EE1017, "Obtaining task parameter information", "task->type",
             "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
             " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
         RT_LOG(
