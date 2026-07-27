@@ -17,14 +17,17 @@
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "rt_unwrap.h"
+#include "notify.hpp"
 #undef protected
 #undef private
 #include "runtime/rt.h"
 #include "event_task.h"
 #include "memory_task.h"
+#include "model_execute_task.h"
 #include "task_info_v100.h"
 #include "task_info.hpp"
 #include "runtime.hpp"
+#include "model.hpp"
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"
 #include "log_types.h"
@@ -331,6 +334,7 @@ TEST_F(Arch5162TaskTest, MemcpyAsyncTaskUnInitAndDoComplete)
     delete stream;
     delete device;
 }
+
 TEST_F(Arch5162TaskTest, ConstructLabelSetSqe)
 {
     RawDevice* device = new RawDevice(0);
@@ -619,4 +623,386 @@ TEST_F(Arch5162TaskTest, ConstructSqeForProfilingDisableTask)
     EXPECT_EQ(sqe.phSqe.header.taskId, 100U);
     delete stream;
     delete device;
+}
+
+TEST_F(Arch5162TaskTest, ModelExecuteTaskInit_nullptr)
+{
+    rtError_t ret = ModelExecuteTaskInit(nullptr, nullptr, 0U, 0U);
+    EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
+}
+
+TEST_F(Arch5162TaskTest, ModelExecuteTaskInit_normal)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    Model* model = nullptr;
+    rtError_t ret = ModelExecuteTaskInit(&taskInfo, model, 1U, 2U);
+    EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ModelExecuteTaskUnInit)
+{
+    TaskInfo taskInfo = {};
+    ModelExecuteTaskUnInit(&taskInfo);
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelExecuteTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1U;
+    taskInfo.u.modelExecuteTaskInfo.modelId = 10U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_CONDS_MODEL_EXEC);
+    EXPECT_EQ(sqe.phSqe.u.modelExecuteInfo.modelId, 10U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, SetResultForModelExecuteTask)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    uint32_t data[3] = {0x00400001, 0x00000002, 0x00000003};
+    PfnTaskSetResult setResultFunc = g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE];
+    setResultFunc(&taskInfo, data, sizeof(data));
+    EXPECT_EQ(taskInfo.errorCode, 1U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ModelExecuteTaskRegister)
+{
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE], nullptr);
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Bind)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_STREAM_ADD;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_STREAM_ADD);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ModelMaintainceTaskRegister)
+{
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+}
+
+TEST_F(Arch5162TaskTest, PrepareSqeInfoForModelExecuteTask)
+{
+    rtError_t ret = PrepareSqeInfoForModelExecuteTask(nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(Arch5162TaskTest, PrintErrorModelExecuteTaskFuncCall) { PrintErrorModelExecuteTaskFuncCall(nullptr); }
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelExecuteTask_AllFields)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 42U;
+    taskInfo.u.modelExecuteTaskInfo.modelId = 10U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, stream->GetStarsWrCqeFlag());
+    EXPECT_EQ(sqe.phSqe.header.l1Lock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.l1UnLock, 0U);
+    EXPECT_EQ(sqe.phSqe.header.ie, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_CONDS_MODEL_EXEC);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, 42U);
+    EXPECT_EQ(sqe.phSqe.u.modelExecuteInfo.modelId, 10U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, SetResultForModelExecuteTask_AllFields)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    uint32_t data[3] = {0xFFFFFABC, 0x0000001F, 0x00000003};
+    PfnTaskSetResult setResultFunc = g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE];
+    setResultFunc(&taskInfo, data, sizeof(data));
+    EXPECT_EQ(taskInfo.errorCode, 0xABCU);
+    EXPECT_EQ(taskInfo.u.modelExecuteTaskInfo.errorTaskId, 0x7FFFU);
+    EXPECT_EQ(taskInfo.u.modelExecuteTaskInfo.errorStreamId, 0xFFFU);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Unbind)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 2U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_STREAM_DEL;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_STREAM_DEL);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_LoadComplete)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 3U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_MODEL_LOAD_COMPLETE;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_LOAD_COMPLETE);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_NO);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_PreProc_Aicpu)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 4U;
+    Model model;
+    model.SetModelExecutorType(EXECUTOR_AICPU);
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_MODEL_PRE_PROC;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_PRE_PROC);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.executorFlag, MODEL_EXECUTOR_AICPU);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.endgraphNotifyId, 0U);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_PreProc_NonAicpu)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 5U;
+    Model model;
+    Notify notify(0U, 0U);
+    notify.notifyid_ = 100U;
+    model.SetEndGraphNotify(&notify);
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_MODEL_PRE_PROC;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_PRE_PROC);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.executorFlag, MODEL_EXECUTOR_RESERVED);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.endgraphNotifyId, 100U);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Abort)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 6U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_MODEL_ABORT;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_ABORT);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_DefaultCase)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 7U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_MODEL_DESTROY;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 0U;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_MODEL_DESTROY);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_NO);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForModelMaintainceTask_Bind_AllFields)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Stream* opStream = new Stream(device, 1);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 8U;
+    Model model;
+    taskInfo.u.modelMaintainceTaskInfo.type = MMT_STREAM_ADD;
+    taskInfo.u.modelMaintainceTaskInfo.model = &model;
+    taskInfo.u.modelMaintainceTaskInfo.opStream = opStream;
+    taskInfo.u.modelMaintainceTaskInfo.streamType = RT_MODEL_HEAD_STREAM;
+    taskInfo.u.modelMaintainceTaskInfo.firstTaskId = 5U;
+    taskInfo.u.modelMaintainceTaskInfo.execTimesSvmOffset = 0x1000ULL;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE];
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, stream->GetStarsWrCqeFlag());
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_MODEL_MAINTAINCE);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, 8U);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.modelId, static_cast<uint16_t>(model.Id_()));
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.streamId, static_cast<uint16_t>(opStream->Id_()));
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.operation, MMT_STREAM_ADD);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.streamType, static_cast<uint16_t>(RT_MODEL_HEAD_STREAM));
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.firstTaskId, 5U);
+    EXPECT_EQ(sqe.phSqe.u.modelMaintainceInfo.streamExecTimesAddr, 0x1000ULL);
+    delete opStream;
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ModelMaintainceTaskRegister_AllFields)
+{
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].waitAsyncCpCompleteFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
 }

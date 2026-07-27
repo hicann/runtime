@@ -21,6 +21,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_func_call.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_memcpy_async_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc

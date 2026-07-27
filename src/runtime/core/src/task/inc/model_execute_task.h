@@ -30,6 +30,10 @@ rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo);
 void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo* const taskInfo);
+void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode);
+void DoCompleteStarsErrorForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId, const uint32_t errCode);
+bool ModelIsExistInContext(const Model* mdl, const Stream* stream);
+void ModelExecuteTaskProcErrorForSoftwareSq(TaskInfo* const taskInfo, const uint32_t errCode);
 
 } // namespace runtime
 } // namespace cce
