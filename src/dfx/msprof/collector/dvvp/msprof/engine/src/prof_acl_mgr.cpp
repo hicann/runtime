@@ -1754,16 +1754,17 @@ void ProfAclMgr::UpdateDataTypeConfigByTimelineTrace(const SHARED_PTR_ALIA<analy
 void ProfAclMgr::UpdateDataTypeConfigByProfLevel(const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
 {
     if (params->prof_level == MSVP_LEVEL_L3) {
-        dataTypeConfig_ |= PROF_TASK_TIME_L3 | PROF_TASK_TIME_L2 | PROF_TASK_TIME_L1 | PROF_TASK_TIME;
+        dataTypeConfig_ |= PROF_TASK_TIME_L3 | PROF_TASK_TIME_L2 | PROF_TASK_TIME_L1 | PROF_TASK_TIME |
+        PROF_TRAINING_TRACE;
     }
     if (params->prof_level == MSVP_LEVEL_L2) {
-        dataTypeConfig_ |= PROF_TASK_TIME_L2 | PROF_TASK_TIME_L1 | PROF_TASK_TIME;
+        dataTypeConfig_ |= PROF_TASK_TIME_L2 | PROF_TASK_TIME_L1 | PROF_TASK_TIME | PROF_TRAINING_TRACE;
     }
     if (params->prof_level == MSVP_LEVEL_L1) {
-        dataTypeConfig_ |= PROF_TASK_TIME_L1 | PROF_TASK_TIME;
+        dataTypeConfig_ |= PROF_TASK_TIME_L1 | PROF_TASK_TIME | PROF_TRAINING_TRACE;
     }
     if (params->prof_level == MSVP_LEVEL_L0) {
-        dataTypeConfig_ |= PROF_TASK_TIME;
+        dataTypeConfig_ |= PROF_TASK_TIME | PROF_TRAINING_TRACE;
     }
 }
 
@@ -2264,6 +2265,10 @@ int32_t ProfAclMgr::MsprofInitGeOptions(VOID_PTR data, uint32_t len)
     ret = CheckWhitelistAndBuildConfig();
     if (ret != MSPROF_ERROR_NONE) {
         return ret;
+    }
+    // Set the dataTypeConfig_ to disable PROF_TRAINING_TRACE if ts_fw_training is off
+    if (params_->ts_fw_training == MSVP_PROF_OFF) {
+        dataTypeConfig_ &= ~PROF_TRAINING_TRACE;
     }
     return MSPROF_ERROR_NONE;
 }
