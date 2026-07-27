@@ -5207,9 +5207,9 @@ rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, co
 
 rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * const configVal)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, "Obtaining the default stream of the current context", 
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context", 
         configOpt, "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(configVal, RT_ERROR_INVALID_VALUE, "Obtaining the default stream of the current context");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(configVal, RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context");
     return impl_->CtxGetSysParamOpt(configOpt, configVal);
 }
 

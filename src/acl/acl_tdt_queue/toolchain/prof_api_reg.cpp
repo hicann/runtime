@@ -110,7 +110,7 @@ namespace {
             ACL_LOG_ERROR("[Check][Len]len[%u] is invalid, it should not be smaller than %zu", len, commandLen);
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                 std::vector<const char *>({"func", "value", "param", "reason"}),
-                std::vector<const char *>({__func__, lenVal.c_str(), "len", errMsg.c_str()}));
+                std::vector<const char *>({"Processing profiling configuration data", lenVal.c_str(), "len", errMsg.c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
         rtProfCommandHandle_t *const profilerConfig = static_cast<rtProfCommandHandle_t *>(data);

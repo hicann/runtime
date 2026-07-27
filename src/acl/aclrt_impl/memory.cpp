@@ -108,7 +108,7 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t &
              ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %s.", acl::GetMemcpyKindDesc(kind));
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
-                std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind), "kind",
+                std::vector<const char *>({"Memory copy type conversion", acl::GetMemcpyKindDesc(kind), "kind",
                 "ACL_MEMCPY_HOST_TO_DEVICE or "
                 "ACL_MEMCPY_DEVICE_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or "
                 "ACL_MEMCPY_HOST_TO_HOST or ACL_MEMCPY_DEFAULT or ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE."}));
@@ -138,8 +138,8 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
         return ACL_SUCCESS;
     }
 
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, "Checking the synchronous memory copy parameter validity");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(src, "Checking the synchronous memory copy parameter validity");
 
     if ((width > spitch) || (width > dpitch)) {
         ACL_LOG_ERROR("[Check][Width]input param width[%zu] must be smaller than spitch[%zu] and dpitch[%zu]",
@@ -149,7 +149,7 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
             spitch, dpitch);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
             std::vector<const char *>({"func", "value", "param", "reason"}),
-            std::vector<const char *>({__func__, widthVal.c_str(), "width", errMsg.c_str()}));
+            std::vector<const char *>({"Checking the synchronous memory copy parameter validity", widthVal.c_str(), "width", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     switch (kind) {
@@ -173,7 +173,7 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
             ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                 std::vector<const char *>({"func", "value", "param", "expect"}),
-                std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind),
+                std::vector<const char *>({"Checking the synchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind),
                     "kind", "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEVICE_TO_DEVICE or ACL_MEMCPY_DEFAULT"}));
             return ACL_ERROR_INVALID_PARAM;
         }
@@ -1596,12 +1596,13 @@ aclError aclrtCmoAsyncWithBarrierImpl(void *src, size_t size, aclrtCmoType cmoTy
 static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
     size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dsts);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(destMaxs);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(srcs);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(sizes);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrs);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrsIndexes);
+    constexpr const char_t *funcDesc = "Checking the batch memory copy parameter validity";
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dsts, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(destMaxs, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(srcs, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(sizes, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(attrs, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(attrsIndexes, funcDesc);
 
     for (size_t i = 0UL; i < numBatches; i++) {
         if (destMaxs[i] < sizes[i]) {
@@ -1611,7 +1612,7 @@ static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **
                 sizes[i], i, destMaxs[i]);
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                 std::vector<const char *>({"func", "value", "param", "reason"}),
-                std::vector<const char *>({__func__, destMaxsVal.c_str(), "destMaxs",
+                std::vector<const char *>({funcDesc, destMaxsVal.c_str(), "destMaxs",
                     errMsg.c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
@@ -1625,7 +1626,7 @@ static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **
                 const std::string rsvVal = std::to_string(attrs[idx].rsv[i]);
                 acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                     std::vector<const char *>({"func", "value", "param", "expect"}),
-                    std::vector<const char *>({__func__, rsvVal.c_str(), "attrs.rsv", "0"}));
+                    std::vector<const char *>({funcDesc, rsvVal.c_str(), "attrs.rsv", "0"}));
                 return ACL_ERROR_INVALID_PARAM;
             }
         }
@@ -1639,8 +1640,8 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
     aclrtStream stream, bool async, const char *apiName)
 {
     // 判断 sizes == nullptr, count == 0 报参数异常
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(sizes);
-    ACL_REQUIRES_POSITIVE_REPORT(numBatches);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(sizes, "Batch memory copy");
+    ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(numBatches, "Batch memory copy");
     // 如果所有批次的 size 都为 0，则不执行 memcpy，直接返回成功，不需要校验其他参数
     if (IsAllZeroSizeBatch(sizes, numBatches)) {
         if (failIndex != nullptr) {
@@ -2160,8 +2161,8 @@ static aclError GetSymbolInfo(const void *symbol, size_t count, size_t offset,
 static aclError CheckMemcpyFromSymbol(void *dst, const void *symbol, size_t count, size_t dstMax,
                                       aclrtMemcpyKind kind)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(symbol);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, "Checking the synchronous memory copy parameter");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, "Checking the synchronous memory copy parameter");
 
     if (count > dstMax) {
         ACL_LOG_ERROR("[Check][Count]count[%zu] must not be greater than dstMax[%zu].", count, dstMax);
@@ -2176,7 +2177,7 @@ static aclError CheckMemcpyFromSymbol(void *dst, const void *symbol, size_t coun
             acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind), "kind",
+            std::vector<const char *>({"Checking the synchronous memory copy parameter", acl::GetMemcpyKindDesc(kind), "kind",
             "ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -2241,15 +2242,15 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(void *dst, size_t dstMax, const void *sy
 static aclError CheckMemcpyToSymbol(const void *symbol, const void *src,
                                     aclrtMemcpyKind kind)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(symbol);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, "Checking the synchronous memory copy parameter");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(src, "Checking the synchronous memory copy parameter");
 
     if ((kind != ACL_MEMCPY_HOST_TO_DEVICE) && (kind != ACL_MEMCPY_DEFAULT)) {
         ACL_LOG_ERROR("[Check][Kind]kind[%s] only support ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
             acl::GetMemcpyKindDesc(kind));
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
             std::vector<const char *>({"func", "value", "param", "expect"}),
-            std::vector<const char *>({__func__, acl::GetMemcpyKindDesc(kind), "kind",
+            std::vector<const char *>({"Checking the synchronous memory copy parameter", acl::GetMemcpyKindDesc(kind), "kind",
             "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT"}));
         return ACL_ERROR_INVALID_PARAM;
     }

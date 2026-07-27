@@ -174,7 +174,7 @@ namespace acl {
             default: {
                 acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                     std::vector<const char *>({"func", "value", "param", "expect"}),
-                    std::vector<const char *>({__func__, acl::GetTensorTypeDesc(aclType),
+                    std::vector<const char *>({"Obtaining the tdt data type", acl::GetTensorTypeDesc(aclType),
                         "aclType", "ACL_TENSOR_DATA_END_OF_SEQUENCE or ACL_TENSOR_DATA_TENSOR or ACL_TENSOR_DATA_ABNORMAL"}));
                 return ACL_ERROR_INVALID_PARAM;
             }
@@ -200,7 +200,7 @@ namespace acl {
             default: {
                 acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                     std::vector<const char *>({"func", "value", "param", "expect"}),
-                    std::vector<const char *>({__func__, acl::GetTensorTypeDesc(aclType),
+                    std::vector<const char *>({"Obtaining the tdt data type", acl::GetTensorTypeDesc(aclType),
                         "aclType", "ACL_TENSOR_DATA_END_OF_SEQUENCE or ACL_TENSOR_DATA_TENSOR or ACL_TENSOR_DATA_ABNORMAL"}));
                 return ACL_ERROR_INVALID_PARAM;
             }
@@ -226,7 +226,7 @@ namespace acl {
             default: {
                 acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                     std::vector<const char *>({"func", "value", "param", "expect"}),
-                    std::vector<const char *>({__func__, acl::GetTdtDataTypeDesc(tdtDataType), "tdtDataType",
+                    std::vector<const char *>({"Obtaining the tensor data type", acl::GetTdtDataTypeDesc(tdtDataType), "tdtDataType",
                         "TDT_END_OF_SEQUENCE or TDT_TENSOR or TDT_ABNORMAL"}));
                 return ACL_ERROR_UNSUPPORTED_DATA_TYPE;
             }
@@ -260,7 +260,7 @@ namespace acl {
             default: {
                 acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
                     std::vector<const char *>({"func", "value", "param", "expect"}),
-                    std::vector<const char *>({__func__, acl::GetTdtDataTypeDescV2(tdtDataType), "tdtDataType",
+                    std::vector<const char *>({"Obtaining the tensor data type", acl::GetTdtDataTypeDescV2(tdtDataType), "tdtDataType",
                         "[TDT_TENSOR(0), TDT_END_OF_SEQUENCE(1), TDT_ABNORMAL(2), TDT_SLICE_TENSOR(3), TDT_END_TENSOR(4)]"}));
                 return ACL_ERROR_UNSUPPORTED_DATA_TYPE;
             }
@@ -326,7 +326,7 @@ namespace acl {
             const std::string sizeVal = std::to_string(dataset->blobs.size());
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                 std::vector<const char *>({"func", "value", "param", "reason"}),
-                std::vector<const char *>({__func__, sizeVal.c_str(), "dataset->blobs.size",
+                std::vector<const char *>({"tdt data deserialization", sizeVal.c_str(), "dataset->blobs.size",
                     "dataset must be empty before deserialization"}));
             return ACL_ERROR_INVALID_PARAM;
         }
@@ -402,7 +402,7 @@ namespace acl {
             const std::string sizeVal = std::to_string(dataset->blobs.size());
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                 std::vector<const char *>({"func", "value", "param", "reason"}),
-                std::vector<const char *>({__func__, sizeVal.c_str(), "dataset->blobs.size",
+                std::vector<const char *>({"tdt data deserialization", sizeVal.c_str(), "dataset->blobs.size",
                     "dataset must be empty or freeSelf must be true before deserialization"}));
             return ACL_ERROR_INVALID_PARAM;
         }

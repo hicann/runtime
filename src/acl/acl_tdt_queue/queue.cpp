@@ -23,9 +23,9 @@ namespace {
     aclError CopyParam(const void *const src, const size_t srcLen, void *const dst, const size_t dstLen,
         size_t *const realCopySize = nullptr)
     {
-        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
-        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
-        ACL_CHECK_INVALID_PARAM_WITH_REASON(srcLen > dstLen, srcLen, "srcLen must not be larger than dstLen");
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(src, "Parameter copy");
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, "Parameter copy");
+        ACL_CHECK_INVALID_PARAM_WITH_REASON_AND_FUNC_DESC(srcLen > dstLen, srcLen, "srcLen must not be larger than dstLen", "Parameter copy");
         const auto ret = memcpy_s(dst, dstLen, src, srcLen);
         if (ret != EOK) {
             const std::string retVal = std::to_string(ret);
@@ -36,7 +36,7 @@ namespace {
             const std::string extendInfo = ss.str();
             acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
                 std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
-                std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
+                std::vector<const char *>({"Parameter copy", "memcpy_s", retVal.c_str(),
                     strerror(ret), extendInfo.c_str()}));
             ACL_LOG_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%zu",
                 ret, srcLen, dstLen);
@@ -56,7 +56,7 @@ namespace acl {
             ACL_LOG_ERROR("mode must be set in acltdtQueueRouteQueryInfo, please use acltdtSetQueueRouteQueryInfo");
             acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                         std::vector<const char *>({"func", "value", "param", "reason"}),
-                        std::vector<const char *>({__func__, "false", "queryInfo->isConfigMode",
+                        std::vector<const char *>({"Checking the validity of the queue route query operation", "false", "queryInfo->isConfigMode",
                                 "Currently, the query is configured based on queue. The queue must be configured through "
                                 "acltdtSetQueueRouteQueryInfo"}));
             return ACL_ERROR_INVALID_PARAM;
@@ -68,7 +68,7 @@ namespace acl {
                                 "please use acltdtSetQueueRouteQueryInfo");
                     acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                         std::vector<const char *>({"func", "value", "param", "reason"}),
-                        std::vector<const char *>({__func__, "false", "queryInfo->isConfigSrc",
+                        std::vector<const char *>({"Checking the validity of the queue route query operation", "false", "queryInfo->isConfigSrc",
                                 "Currently, the query is configured based on the source queue. The source queue must be configured through "
                                 "acltdtSetQueueRouteQueryInfo"}));
                     return ACL_ERROR_INVALID_PARAM;
@@ -81,7 +81,7 @@ namespace acl {
                                 "please use acltdtSetQueueRouteQueryInfo");
                     acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
                         std::vector<const char *>({"func", "value", "param", "reason"}),
-                        std::vector<const char *>({__func__, "false", "queryInfo->isConfigDst",
+                        std::vector<const char *>({"Checking the validity of the queue route query operation", "false", "queryInfo->isConfigDst",
                             "Currently, the query is configured based on the destination queue. The destination queue must be configured through "
                             "acltdtSetQueueRouteQueryInfo"}));
                     return ACL_ERROR_INVALID_PARAM;
@@ -94,7 +94,7 @@ namespace acl {
                                 "please use acltdtSetQueueRouteQueryInfo");
                     const char_t *argList[] = {"func", "value", "param", "reason"};
                     std::string value = std::to_string(queryInfo->isConfigSrc) + '/' + std::to_string(queryInfo->isConfigDst);
-                    const char_t *argVal[] = {__func__, value.c_str(), "queryInfo->isConfigSrc/isConfigDst", 
+                    const char_t *argVal[] = {"Checking the validity of the queue route query operation", value.c_str(), "queryInfo->isConfigSrc/isConfigDst", 
                         "Currently, the query is configured based on the source queue and the destination queue. The source queue and destination queue must be configured through "
                         "acltdtSetQueueRouteQueryInfo"};
                     acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_REASON_MSG, argList, argVal, 4UL);
@@ -108,7 +108,7 @@ namespace acl {
             default: {
                 ACL_LOG_ERROR("[Check][Type]unknown mode %d.", queryInfo->mode);
                 const char_t *argList[] = {"func", "value", "param", "expect"};
-                const char_t *argVal[] = {__func__, acl::GetQueueRouteQueryModeDesc(static_cast<acltdtQueueRouteQueryMode>(queryInfo->mode)),
+                const char_t *argVal[] = {"Checking the validity of the queue route query operation", acl::GetQueueRouteQueryModeDesc(static_cast<acltdtQueueRouteQueryMode>(queryInfo->mode)),
                         "queryInfo->mode", "ACL_TDT_QUEUE_ROUTE_QUERY_SRC or ACL_TDT_QUEUE_ROUTE_QUERY_DST or ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST or ACL_TDT_QUEUE_ROUTE_QUERY_ABNORMAL"};
                 acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_VALUE_MSG, argList, argVal, 4UL);
                 return ACL_ERROR_INVALID_PARAM;

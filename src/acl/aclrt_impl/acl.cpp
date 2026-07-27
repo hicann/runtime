@@ -220,9 +220,10 @@ void aclGetMsgCallback(const char_t *msg, uint32_t len)
 int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen)
 {
     ACL_LOG_INFO("start to execute UpdateOpSystemRunCfg");
-    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(cfgAddr, ACL_ERROR_RT_PARAM_INVALID);
-    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(static_cast<size_t>(cfgLen) < sizeof(size_t), cfgLen,
-        "cfgLen must be greater than or equal to sizeof(size_t)", ACL_ERROR_RT_PARAM_INVALID);
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT_WITH_FUNC_DESC(cfgAddr, ACL_ERROR_RT_PARAM_INVALID,
+        "Updating the system running configuration for operator delivery");
+    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET_AND_FUNC_DESC(static_cast<size_t>(cfgLen) < sizeof(size_t), cfgLen,
+        "cfgLen must be greater than or equal to sizeof(size_t)", ACL_ERROR_RT_PARAM_INVALID, "Updating the system running configuration for operator delivery");
 
     // get device id
     int32_t devId = 0;
@@ -275,10 +276,11 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
             error_mode = error_message::ErrorMessageMode::PROCESS_MODE;
         } else {
             ACL_LOG_ERROR("err_msg mode config is invalid %s", strConfig.c_str());
-            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
-                std::vector<const char *>({"func", "value", "param", "reason"}),
-                std::vector<const char *>({__func__, strConfig.c_str(), "err_msg mode",
-                    "err_msg mode config is invalid, only support INTERNAL_MODE and PROCESS_MODE"}));
+            acl::AclErrorLogManager::ReportInputError(
+                acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+                std::vector<const char*>(
+                    {"Parsing the configuration of the error information reporting mode", strConfig.c_str(), "err_msg mode",
+                     "err_msg mode config is invalid, only support INTERNAL_MODE and PROCESS_MODE"}));
             return ACL_ERROR_INVALID_PARAM;
         }
     }

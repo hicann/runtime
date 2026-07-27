@@ -89,12 +89,12 @@ aclError aclrtGetCurrentContextImpl(aclrtContext *context)
 
 static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
-    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(value, "Obtaining system parameter values from the current context");
+    ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
         (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
         acl::GetSysParamOptDesc(opt), "opt",
         "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
-        ACL_ERROR_INVALID_PARAM);
+        ACL_ERROR_INVALID_PARAM, "Obtaining system parameter values from the current context");
     rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
         rtErr = rtCtxGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
@@ -115,11 +115,11 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 
 static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
 {
-    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+    ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(
         (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
         acl::GetSysParamOptDesc(opt), "opt",
         "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
-        ACL_ERROR_INVALID_PARAM);
+        ACL_ERROR_INVALID_PARAM, "Setting system parameter values in the current context");
     if (isCtx) {
         ACL_REQUIRES_RTS_OK(rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value));
     } else {

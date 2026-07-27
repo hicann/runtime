@@ -342,6 +342,18 @@ public:
         } \
     } while (false)
 
+#define ACL_CHECK_INVALID_PARAM_WITH_REASON_AND_FUNC_DESC(condition, param, reason, funcDesc)                 \
+    do {                                                                                                       \
+        if (condition) {                                                                                       \
+            const std::string paramVal = std::to_string(param);                                                \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", #param, (reason), paramVal.c_str());    \
+            acl::AclErrorLogManager::ReportInputError(                                                         \
+                acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}), \
+                std::vector<const char*>({(funcDesc), paramVal.c_str(), #param, (reason)}));                   \
+            return ACL_ERROR_INVALID_PARAM;                                                                    \
+        }                                                                                                      \
+    } while (false)
+
 #define ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(condition, param, reason, ret) \
     do { \
         if (condition) { \
@@ -354,6 +366,18 @@ public:
                 std::vector<const char *>({funcName.c_str(), paramVal.c_str(), #param, (reason)})); \
             return (ret); \
         } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_PARAM_WITH_REASON_RET_AND_FUNC_DESC(condition, param, reason, ret, funcDesc)        \
+    do {                                                                                                       \
+        if (condition) {                                                                                       \
+            const std::string paramVal = std::to_string(param);                                                \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", #param, (reason), paramVal.c_str());    \
+            acl::AclErrorLogManager::ReportInputError(                                                         \
+                acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}), \
+                std::vector<const char*>({(funcDesc), paramVal.c_str(), #param, (reason)}));                   \
+            return (ret);                                                                                      \
+        }                                                                                                      \
     } while (false)
 
 #define ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET(condition, paramVal, paramName, reason, ret) \
@@ -410,6 +434,17 @@ public:
         } \
     } while (false)
 
+#define ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC(condition, paramVal, paramName, expect, ret, funcDesc)    \
+    do {                                                                                                           \
+        if (!(condition)) {                                                                                        \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", (paramName), (expect), (paramVal)); \
+            acl::AclErrorLogManager::ReportInputError(                                                             \
+                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),            \
+                std::vector<const char*>({(funcDesc), (paramVal), (paramName), (expect)}));                        \
+            return (ret);                                                                                          \
+        }                                                                                                          \
+    } while (false)
+
 #define ACL_REQUIRES_PARAM_EQUAL_REPORT(param, expect) \
     do { \
         if ((param) != (expect)) { \
@@ -446,6 +481,29 @@ public:
         return ACL_ERROR_INVALID_PARAM; } \
     } \
     while (false)
+#endif
+
+#ifndef ENABLE_DVPP_INTERFACE
+#define ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(val, funcDesc)                       \
+    do {                                                                                            \
+        if (UNLIKELY((val) == nullptr)) {                                                           \
+            ACL_LOG_ERROR("[Check][%s]param must not be null.", #val);                              \
+            acl::AclErrorLogManager::ReportInputError(                                              \
+                acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {(funcDesc), #val});                 \
+            return ACL_ERROR_INVALID_PARAM;                                                         \
+        }                                                                                           \
+    } while (false)
+#else
+#define ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(val, funcDesc)                                   \
+    do {                                                                                                        \
+        if (UNLIKELY((val) == nullptr)) {                                                                       \
+            ACL_LOG_ERROR("[Check][%s]param must not be null.", #val);                                          \
+            const char_t* argList[] = {"func", "param"};                                                        \
+            const char_t* argVal[] = {(funcDesc), #val};                                                        \
+            acl::AclErrorLogManager::ReportInputErrorWithChar(acl::NULL_POINTER_FUNC_MSG, argList, argVal, 2U); \
+            return ACL_ERROR_INVALID_PARAM;                                                                     \
+        }                                                                                                       \
+    } while (false)
 #endif
 
 #define ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(val, name) \
@@ -524,6 +582,16 @@ do { \
         } \
     while (false)
 
+#define ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT_WITH_FUNC_DESC(val, ret, funcDesc)   \
+    do {                                                                            \
+        if (UNLIKELY((val) == nullptr)) {                                           \
+            ACL_LOG_ERROR("[Check][%s]param must not be null.", #val);              \
+            acl::AclErrorLogManager::ReportInputError(                              \
+                acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {(funcDesc), #val}); \
+            return (ret);                                                           \
+        }                                                                           \
+    } while (false)
+
 #define ACL_CHECK_MALLOC_RESULT_REPORT_RET(val, size, allocInterface, ret) \
     do { \
         if ((val) == nullptr) { \
@@ -599,6 +667,18 @@ do { \
             return ACL_ERROR_INVALID_PARAM; } \
         } \
     while (false)
+
+#define ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(val, funcDesc)                                          \
+    do {                                                                                                    \
+        if ((val) <= 0) {                                                                                   \
+            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val);                                      \
+            const std::string valStr = std::to_string(val);                                                 \
+            acl::AclErrorLogManager::ReportInputError(                                                      \
+                acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),     \
+                std::vector<const char*>({(funcDesc), valStr.c_str(), #val, "must be greater than zero"})); \
+            return ACL_ERROR_INVALID_PARAM;                                                                 \
+        }                                                                                                   \
+    } while (false)
 
 #define ACL_REQUIRES_POSITIVE(val) \
     do { \

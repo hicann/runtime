@@ -58,7 +58,7 @@ rtError_t SymbolTable::Lookup(const void *hostVar, SymbolEntry &entry)
     auto it = symbolMap_.find(hostVar);
     if (it == symbolMap_.end()) {
         symbolMapLock_.Unlock();
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "symbol",
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, "Looking up symbol table", "symbol",
             "The corresponding device variable cannot be found through the symbol");
         return RT_ERROR_INVALID_SYMBOL;
     }
