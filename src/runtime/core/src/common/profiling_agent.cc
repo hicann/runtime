@@ -21,6 +21,66 @@ namespace {
 constexpr size_t PROF_API_STACK_RESERVE_SIZE = 8U;
 thread_local std::vector<ProfApiContext> g_apiProfStack{};
 thread_local ProfApiContext g_fallbackProfApiContext{};
+
+uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType)
+{
+    switch (extInfoType) {
+        case RT_PROFILE_TYPE_MEMCPY_EXT_INFO:
+            return static_cast<uint32_t>(sizeof(MsprofMemcpyInfo));
+        case RT_PROFILE_TYPE_MEMSET_INFO:
+            return static_cast<uint32_t>(sizeof(MsprofMemsetInfo));
+        case RT_PROFILE_TYPE_MEMMNG_INFO:
+            return static_cast<uint32_t>(sizeof(MsprofMemMngInfo));
+        default:
+            return 0U;
+    }
+}
+
+rtError_t SetProfExtCompactData(
+    const uint32_t extInfoType, const RuntimeProfExtInfo& extInfo, MsprofCompactInfo& compactInfo)
+{
+    switch (extInfoType) {
+        case RT_PROFILE_TYPE_MEMCPY_EXT_INFO:
+            compactInfo.data.memcpyInfo = extInfo.memcpyInfo;
+            return RT_ERROR_NONE;
+        case RT_PROFILE_TYPE_MEMSET_INFO:
+            compactInfo.data.memsetInfo = extInfo.memsetInfo;
+            return RT_ERROR_NONE;
+        case RT_PROFILE_TYPE_MEMMNG_INFO:
+            compactInfo.data.memMngInfo = extInfo.memMngInfo;
+            return RT_ERROR_NONE;
+        default:
+            return RT_ERROR_INVALID_VALUE;
+    }
+}
+
+rtError_t ReportProfExtCompactInfo(
+    const uint32_t extInfoType, const RuntimeProfExtInfo& extInfo, const uint32_t threadId, const uint64_t timeStamp)
+{
+    const uint32_t dataLen = GetProfExtInfoDataLen(extInfoType);
+    if (dataLen == 0U) {
+        RT_LOG(RT_LOG_ERROR, "Invalid runtime profiling ext info type, type=%u.", extInfoType);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    MsprofCompactInfo compactInfo{};
+    compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
+    compactInfo.type = extInfoType;
+    compactInfo.threadId = threadId;
+    compactInfo.timeStamp = timeStamp;
+    compactInfo.dataLen = dataLen;
+    const rtError_t fillRet = SetProfExtCompactData(extInfoType, extInfo, compactInfo);
+    if (fillRet != RT_ERROR_NONE) {
+        return fillRet;
+    }
+
+    const int32_t res = MsprofReportCompactInfo(true, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
+    if (res != MSPROF_ERROR_NONE) {
+        RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling ext info, type=%u, ret=%d.", extInfoType, res);
+        return RT_ERROR_PROF_OPER;
+    }
+    return RT_ERROR_NONE;
+}
 } // namespace
 
 ProfilingAgent& ProfilingAgent::Instance()
@@ -133,6 +193,9 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
 
         // memcpy info
         {RT_PROFILE_TYPE_MEMCPY_INFO, "memcpy_info"},
+        {RT_PROFILE_TYPE_MEMCPY_EXT_INFO, "memcpy_ext_info"},
+        {RT_PROFILE_TYPE_MEMSET_INFO, "memset_info"},
+        {RT_PROFILE_TYPE_MEMMNG_INFO, "memmng_info"},
 
         // task track
         {RT_PROFILE_TYPE_TASK_TRACK, "task_track"},
@@ -448,6 +511,8 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
          "GetCmoDesc"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_SET_CMO_DESC),
          "SetCmoDesc"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_SET_MEMCPY_DESC),
+         "SetMemcpyDesc"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_MODEL_EXECUTE_SYNC),
          "ModelExecuteSync"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_MODEL_EXECUTE_ASYNC),
@@ -551,6 +616,15 @@ void ProfilingAgent::ReportProfApi(const uint32_t devId, RuntimeProfApiData& pro
             MsprofReportCompactInfo(true, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
         if (res != MSPROF_ERROR_NONE) {
             RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling memcpy info, ret=%d.", res);
+            return;
+        }
+    }
+
+    for (uint32_t i = 0U; i < profApiData.extInfoCount; ++i) {
+        const RuntimeProfExtInfoItem& extInfoItem = profApiData.extInfos[i];
+        const rtError_t reportRet = ReportProfExtCompactInfo(
+            extInfoItem.extInfoType, extInfoItem.extInfo, profApiData.threadId, profApiData.entryTime + 1U + i);
+        if (reportRet != RT_ERROR_NONE) {
             return;
         }
     }

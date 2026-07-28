@@ -115,6 +115,8 @@ public:
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t HostMalloc(
         void** const hostPtr, const uint64_t size, const uint16_t moduleId = MODULEID_RUNTIME) override;
+    rtError_t HostMallocWithCfg(
+        void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg = nullptr) override;
     rtError_t HostFree(void* const hostPtr) override;
     rtError_t ManagedMemAlloc(
         void** const ptr, const uint64_t size, const uint32_t flag,
@@ -129,6 +131,10 @@ public:
         Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo = nullptr,
         const rtD2DAddrCfgInfo_t* const addrCfg = nullptr, bool checkKind = true,
         const rtMemcpyConfig_t* const memcpyConfig = nullptr) override;
+    rtError_t MemsetD32(void* const dst, const uint64_t destMax, const uint32_t value, const uint64_t count) override;
+    rtError_t MemsetD32Async(
+        void* const dst, const uint64_t destMax, const uint32_t value, const uint64_t count,
+        Stream* const stm) override;
     rtError_t MemcpyAsyncPtr(
         void* const memcpyAddrInfo, const uint64_t destMax, const uint64_t count, Stream* const stm,
         const rtTaskCfgInfo_t* const cfgInfo, const bool isMemcpyDesc = false) override;
@@ -138,6 +144,10 @@ public:
     rtError_t ReduceAsyncV2(
         void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
         Stream* const stm, void* const overflowAddr) override;
+    rtError_t MemSetSync(
+        const void* const devPtr, const uint64_t destMax, const uint32_t val, const uint64_t cnt) override;
+    rtError_t MemsetAsync(
+        void* const ptr, const uint64_t destMax, const uint32_t val, const uint64_t cnt, Stream* const stm) override;
     rtError_t MemCopy2DSync(
         void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
         const uint64_t height, const rtMemcpyKind_t kind = RT_MEMCPY_RESERVED,
@@ -158,6 +168,13 @@ public:
         const void* const devAddr, const uint64_t value, const uint32_t flag, Stream* const stm) override;
     rtError_t GetDevArgsAddr(
         Stream* const stm, rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) override;
+    rtError_t ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags) override;
+    rtError_t ReleaseMemAddress(void* devPtr) override;
+    rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags) override;
+    rtError_t FreePhysical(rtDrvMemHandle handle) override;
+    rtError_t SetMemcpyDesc(
+        rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count,
+        const rtMemcpyKind kind, rtMemcpyConfig_t* const config) override;
 
     // new memory api
     rtError_t DevMalloc(
@@ -291,6 +308,15 @@ public:
 private:
     void CallApiBegin(const uint16_t profileType, const uint64_t dataSize = 0, const uint16_t cpyDirection = 0) const;
     void CallApiEnd(const rtError_t retCode, const uint32_t devId = static_cast<uint32_t>(UINT16_MAX)) const;
+    RuntimeProfApiData* GetReportProfApiData() const;
+    void FillMemcpyExtInfo(const uint64_t bytes, const uint16_t copyKind, const Stream* const stm) const;
+    void FillMemsetExtInfo(const uint64_t bytes, const uint32_t value, const Stream* const stm) const;
+    void FillMemMngExtInfo(
+        const uint64_t address, const uint64_t size, const uint16_t memMngType, const uint32_t memoryType,
+        const Stream* const stm) const;
+    void FillMemcpyBatchExtInfoByCopyKind(
+        const size_t* const sizes, const size_t count, const rtMemcpyBatchAttr* const attrs,
+        const size_t* const attrsIdxs, const size_t numAttrs, const Stream* const stm) const;
 
 private:
     Profiler* profiler_;

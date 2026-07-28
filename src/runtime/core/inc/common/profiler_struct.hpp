@@ -234,6 +234,7 @@ enum rtProfApiType_t : uint32_t {
     RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES = 186,
     RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES = 187,
     RT_PROF_API_CACHE_LAST_TASK_EXTEND_INFO = 188,
+    RT_PROF_API_SET_MEMCPY_DESC = 189,
     RT_PROF_API_MAX = 200
 };
 
@@ -275,18 +276,40 @@ enum rtProfileDataType_t : uint32_t {
     RT_PROFILE_TYPE_STREAM_SQ_INFO = 807, /* stream sq info */
     RT_PROFILE_TYPE_TASK_TRACK_V2 = 808,  /* task track v2 */
     RT_PROFILE_TYPE_CAPTURE_STREAM_INFO_V2 = 809,
-    RT_PROFILE_TYPE_API_BEGIN = 1000,     /* regist task type and task name for Parsing task info*/
+
+    RT_PROFILE_TYPE_MEMCPY_EXT_INFO = 810, /* memcpy extended info */
+    RT_PROFILE_TYPE_MEMSET_INFO = 811,     /* memset info */
+    RT_PROFILE_TYPE_MEMMNG_INFO = 812,     /* memory management info */
+    RT_PROFILE_TYPE_API_BEGIN = 1000,      /* regist task type and task name for Parsing task info*/
     RT_PROFILE_TYPE_API_END = 2000,
     RT_PROFILE_TYPE_MAX = 2001
 };
 
 enum StreamReportStatus : uint16_t { STREAM_STATUS_CREATE = 0U, STREAM_STATUS_DESTROY = 1U };
 
+enum rtProfMemMngType_t : uint16_t {
+    RT_PROF_MEM_MNG_TYPE_MALLOC = 0U,
+    RT_PROF_MEM_MNG_TYPE_FREE = 1U,
+};
+
 struct RuntimeMemcpyInfo { // for memcpy info
     uint64_t dateSize;
     uint64_t maxSize;
     uint16_t direction;
 };
+
+union RuntimeProfExtInfo {
+    MsprofMemcpyInfo memcpyInfo;
+    MsprofMemsetInfo memsetInfo;
+    MsprofMemMngInfo memMngInfo;
+};
+
+struct RuntimeProfExtInfoItem {
+    uint32_t extInfoType;
+    RuntimeProfExtInfo extInfo;
+};
+
+constexpr uint32_t RUNTIME_PROF_EXT_INFO_NUM = 10U;
 
 struct ProfTypeRegisterInfo {
     uint32_t type;
@@ -308,6 +331,8 @@ struct RuntimeProfApiData {
     uint32_t taskId[RUNTIME_TASK_ID_NUM];
     uint16_t memcpyDirection;
     uint16_t profileType;
+    uint32_t extInfoCount;
+    RuntimeProfExtInfoItem extInfos[RUNTIME_PROF_EXT_INFO_NUM];
 };
 
 struct RuntimeProfTrackData {

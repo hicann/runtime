@@ -175,6 +175,199 @@ void ClearApiProfContextStack(Profiler* profiler)
     profiler->GetProfTaskTrackData() = TaskTrackInfo{};
 }
 
+void PrepareRuntimeProfDecoratorTest(Profiler* profiler)
+{
+    ClearApiProfContextStack(profiler);
+    profiler->SetTrackProfEnable(false);
+    profiler->SetApiProfEnable(true);
+}
+
+class RuntimeProfTestApiImpl : public ApiImpl {
+public:
+    explicit RuntimeProfTestApiImpl(
+        Context* const ctx = nullptr, const rtError_t getDeviceRet = RT_ERROR_INVALID_VALUE, const int32_t deviceId = 0)
+        : ctx_(ctx), getDeviceRet_(getDeviceRet), deviceId_(deviceId)
+    {}
+
+    rtError_t ContextGetCurrent(Context** const ctx) override
+    {
+        if (ctx == nullptr) {
+            return RT_ERROR_INVALID_VALUE;
+        }
+        *ctx = ctx_;
+        return (ctx_ == nullptr) ? RT_ERROR_INVALID_VALUE : RT_ERROR_NONE;
+    }
+
+    rtError_t GetDevice(int32_t* const devId) override
+    {
+        if (devId == nullptr) {
+            return RT_ERROR_INVALID_VALUE;
+        }
+        if (getDeviceRet_ != RT_ERROR_NONE) {
+            return getDeviceRet_;
+        }
+        *devId = deviceId_;
+        return RT_ERROR_NONE;
+    }
+
+private:
+    Context* ctx_;
+    rtError_t getDeviceRet_;
+    int32_t deviceId_;
+};
+
+class RuntimeProfSuccessApiImpl : public RuntimeProfTestApiImpl {
+public:
+    static constexpr uint64_t DEV_ADDR = 0x1000U;
+    static constexpr uint64_t DEV_CACHED_ADDR = 0x1100U;
+    static constexpr uint64_t HOST_ADDR = 0x1200U;
+    static constexpr uint64_t HOST_CFG_ADDR = 0x1300U;
+    static constexpr uint64_t MANAGED_ADDR = 0x1400U;
+    static constexpr uint64_t RESERVED_ADDR = 0x1500U;
+    static constexpr uint64_t PHYSICAL_HANDLE = 0x1600U;
+    static constexpr uint64_t NEW_DEV_ADDR = 0x1700U;
+
+    explicit RuntimeProfSuccessApiImpl(Context* const ctx = nullptr) : RuntimeProfTestApiImpl(ctx) {}
+
+    rtError_t DevMalloc(void** const devPtr, const uint64_t, const rtMemType_t, const uint16_t) override
+    {
+        if (devPtr != nullptr) {
+            *devPtr = reinterpret_cast<void*>(DEV_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t DevFree(void* const) override { return RT_ERROR_NONE; }
+
+    rtError_t DevMallocCached(void** const devPtr, const uint64_t, const rtMemType_t, const uint16_t) override
+    {
+        if (devPtr != nullptr) {
+            *devPtr = reinterpret_cast<void*>(DEV_CACHED_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t HostMalloc(void** const hostPtr, const uint64_t, const uint16_t) override
+    {
+        if (hostPtr != nullptr) {
+            *hostPtr = reinterpret_cast<void*>(HOST_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t HostMallocWithCfg(void** const hostPtr, const uint64_t, const rtMallocConfig_t*) override
+    {
+        if (hostPtr != nullptr) {
+            *hostPtr = reinterpret_cast<void*>(HOST_CFG_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t HostFree(void* const) override { return RT_ERROR_NONE; }
+
+    rtError_t ManagedMemAlloc(void** const ptr, const uint64_t, const uint32_t, const uint16_t) override
+    {
+        if (ptr != nullptr) {
+            *ptr = reinterpret_cast<void*>(MANAGED_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ManagedMemFree(const void* const) override { return RT_ERROR_NONE; }
+
+    rtError_t MemCopySync(
+        void* const, const uint64_t, const void* const, const uint64_t, const rtMemcpyKind_t, const uint32_t) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemcpyAsync(
+        void* const, const uint64_t, const void* const, const uint64_t, const rtMemcpyKind_t, Stream* const,
+        const rtTaskCfgInfo_t* const, const rtD2DAddrCfgInfo_t* const, bool, const rtMemcpyConfig_t* const) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemsetD32(void* const, const uint64_t, const uint32_t, const uint64_t) override { return RT_ERROR_NONE; }
+
+    rtError_t MemsetD32Async(void* const, const uint64_t, const uint32_t, const uint64_t, Stream* const) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemSetSync(const void* const, const uint64_t, const uint32_t, const uint64_t) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemsetAsync(void* const, const uint64_t, const uint32_t, const uint64_t, Stream* const) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemCopy2DSync(
+        void* const, const uint64_t, const void* const, const uint64_t, const uint64_t, const uint64_t,
+        const rtMemcpyKind_t, const rtMemcpyKind) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemCopy2DAsync(
+        void* const, const uint64_t, const void* const, const uint64_t, const uint64_t, const uint64_t, Stream* const,
+        const rtMemcpyKind_t, const rtMemcpyKind) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ReserveMemAddress(void** devPtr, size_t, size_t, void*, uint64_t) override
+    {
+        if (devPtr != nullptr) {
+            *devPtr = reinterpret_cast<void*>(RESERVED_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ReleaseMemAddress(void*) override { return RT_ERROR_NONE; }
+
+    rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t, rtDrvMemProp_t*, uint64_t) override
+    {
+        if (handle != nullptr) {
+            *handle = reinterpret_cast<rtDrvMemHandle>(PHYSICAL_HANDLE);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t FreePhysical(rtDrvMemHandle) override { return RT_ERROR_NONE; }
+
+    rtError_t SetMemcpyDesc(
+        rtMemcpyDesc_t, const void* const, const void* const, const size_t, const rtMemcpyKind,
+        rtMemcpyConfig_t* const) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t DevMalloc(
+        void** const devPtr, const uint64_t, rtMallocPolicy, rtMallocAdvise, const rtMallocConfig_t* const) override
+    {
+        if (devPtr != nullptr) {
+            *devPtr = reinterpret_cast<void*>(NEW_DEV_ADDR);
+        }
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemcpyBatch(void**, void**, size_t*, size_t, rtMemcpyBatchAttr*, size_t*, size_t, size_t*) override
+    {
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t MemcpyBatchAsync(
+        void** const, const size_t* const, void** const, const size_t* const, const size_t,
+        const rtMemcpyBatchAttr* const, const size_t* const, const size_t, size_t* const, Stream* const) override
+    {
+        return RT_ERROR_NONE;
+    }
+};
+
 TEST_F(ProfilerTest, SketchOneProcess)
 {
     // MemcpyAsyncTask memTask;
@@ -291,6 +484,476 @@ TEST_F(ProfilerTest, ApiProfilePlaceholderFramePreserveOuterContext)
 
     ASSERT_EQ(g_reportedApiTypeNum, 0U);
     ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemCopySyncExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_MEM_CPY, 1024U, RT_MEMCPY_HOST_TO_DEVICE);
+    api.FillMemcpyExtInfo(1024U, RT_MEMCPY_HOST_TO_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    EXPECT_EQ(profData.dataSize, 1024U);
+    EXPECT_EQ(profData.memcpyDirection, RT_MEMCPY_HOST_TO_DEVICE);
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 1024U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.streamId, UINT32_MAX);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemCopySyncFailedNoExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_MEM_CPY, 1024U, RT_MEMCPY_HOST_TO_DEVICE);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    EXPECT_EQ(profData.dataSize, 1024U);
+    EXPECT_EQ(profData.extInfoCount, 0U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdGetDeviceFailed)
+{
+    RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_INVALID_VALUE);
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_MEM_CPY);
+    api.FillMemcpyExtInfo(1024U, RT_MEMCPY_HOST_TO_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdFromGetDevice)
+{
+    RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_NONE, 2);
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_MEM_CPY);
+    api.FillMemcpyExtInfo(1024U, RT_MEMCPY_HOST_TO_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.deviceId, static_cast<uint16_t>(2U));
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorUserDeviceIdOverflow)
+{
+    RuntimeProfTestApiImpl impl(nullptr, RT_ERROR_NONE, static_cast<int32_t>(UINT16_MAX) + 1);
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_MEM_CPY);
+    api.FillMemcpyExtInfo(1024U, RT_MEMCPY_HOST_TO_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemSetSyncExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_Memset);
+    api.FillMemsetExtInfo(1024U, 7U, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMSET_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.bytes, 1024U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.value, 7);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.streamId, UINT32_MAX);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.rsv[0], 0U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.rsv[1], 0U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memsetInfo.rsv[2], 0U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemSetSyncFailedNoExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_Memset);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    EXPECT_EQ(profData.extInfoCount, 0U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorDevMallocExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_DEV_MALLOC);
+    api.FillMemMngExtInfo(0x1234U, 4096U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMMNG_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.address, 0x1234U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.size, 4096U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memoryType, MSPROF_MEMORY_TYPE_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memMngType, RT_PROF_MEM_MNG_TYPE_MALLOC);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.deviceId, static_cast<uint16_t>(UINT16_MAX));
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.streamId, UINT32_MAX);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.rsv, 0U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorDevMallocFailedNoExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_DEV_MALLOC);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    EXPECT_EQ(profData.extInfoCount, 0U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorDevFreeExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_DEV_FREE);
+    api.FillMemMngExtInfo(0x5678U, 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMMNG_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.address, 0x5678U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.size, 0U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memoryType, MSPROF_MEMORY_TYPE_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memMngInfo.memMngType, RT_PROF_MEM_MNG_TYPE_FREE);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemMngMemoryTypeExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_HOST_MALLOC);
+    api.FillMemMngExtInfo(0x1234U, 1024U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
+    RuntimeProfApiData& hostProfData = profiler.GetProfApiData();
+
+    ASSERT_EQ(hostProfData.extInfoCount, 1U);
+    EXPECT_EQ(hostProfData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMMNG_INFO);
+    EXPECT_EQ(hostProfData.extInfos[0].extInfo.memMngInfo.memoryType, MSPROF_MEMORY_TYPE_HOST);
+    ClearApiProfContextStack(&profiler);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    api.CallApiBegin(RT_PROF_API_MANAGEDMEM_ALLOC);
+    api.FillMemMngExtInfo(0x5678U, 2048U, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
+    RuntimeProfApiData& managedProfData = profiler.GetProfApiData();
+
+    ASSERT_EQ(managedProfData.extInfoCount, 1U);
+    EXPECT_EQ(managedProfData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMMNG_INFO);
+    EXPECT_EQ(managedProfData.extInfos[0].extInfo.memMngInfo.memoryType, MSPROF_MEMORY_TYPE_MANAGED);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorSetMemcpyDescExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+
+    api.CallApiBegin(RT_PROF_API_SET_MEMCPY_DESC);
+    api.FillMemcpyExtInfo(4096U, RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    EXPECT_EQ(profData.profileType, RT_PROF_API_SET_MEMCPY_DESC);
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 4096U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_DEVICE_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.streamId, UINT32_MAX);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchSingleKindExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    size_t sizes[3] = {10U, 20U, 30U};
+    rtMemcpyBatchAttr attrs[1] = {};
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_HOST;
+    size_t attrsIdxs[1] = {0U};
+
+    api.CallApiBegin(RT_PROF_API_MEMCPY_BATCH);
+    api.FillMemcpyBatchExtInfoByCopyKind(sizes, 3U, attrs, attrsIdxs, 1U, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 60U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_HOST_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.streamId, UINT32_MAX);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchMultiKindExtInfo)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    size_t sizes[3] = {10U, 20U, 30U};
+    rtMemcpyBatchAttr attrs[2] = {};
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].dstLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].srcLoc.type = RT_MEMORY_LOC_DEVICE;
+    size_t attrsIdxs[2] = {0U, 2U};
+
+    api.CallApiBegin(RT_PROF_API_MEMCPY_BATCH);
+    api.FillMemcpyBatchExtInfoByCopyKind(sizes, 3U, attrs, attrsIdxs, 2U, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 2U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 30U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_HOST_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[1].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[1].extInfo.memcpyInfo.bytes, 30U);
+    EXPECT_EQ(profData.extInfos[1].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_DEVICE_TO_HOST);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchAsyncStreamId)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    size_t sizes[1] = {10U};
+    rtMemcpyBatchAttr attrs[1] = {};
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_HOST;
+    size_t attrsIdxs[1] = {0U};
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    stream.streamId_ = 9;
+
+    api.CallApiBegin(RT_PROF_API_MEMCPY_ASYNC_BATCH);
+    api.FillMemcpyBatchExtInfoByCopyKind(sizes, 1U, attrs, attrsIdxs, 1U, &stream);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 1U);
+    EXPECT_EQ(profData.extInfos[0].extInfoType, RT_PROFILE_TYPE_MEMCPY_EXT_INFO);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 10U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_HOST_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.streamId, 9U);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchCopyKindBranches)
+{
+    RuntimeProfTestApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    size_t sizes[3] = {10U, 20U, 30U};
+    rtMemcpyBatchAttr attrs[3] = {};
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].srcLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[1].dstLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[2].srcLoc.type = RT_MEMORY_LOC_MANAGED;
+    attrs[2].dstLoc.type = RT_MEMORY_LOC_HOST;
+    size_t attrsIdxs[3] = {0U, 1U, 2U};
+
+    api.CallApiBegin(RT_PROF_API_MEMCPY_BATCH);
+    api.FillMemcpyBatchExtInfoByCopyKind(sizes, 3U, attrs, attrsIdxs, 3U, nullptr);
+    RuntimeProfApiData& profData = profiler.GetProfApiData();
+
+    ASSERT_EQ(profData.extInfoCount, 3U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.bytes, 10U);
+    EXPECT_EQ(profData.extInfos[0].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_HOST_TO_HOST);
+    EXPECT_EQ(profData.extInfos[1].extInfo.memcpyInfo.bytes, 20U);
+    EXPECT_EQ(profData.extInfos[1].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_DEVICE_TO_DEVICE);
+    EXPECT_EQ(profData.extInfos[2].extInfo.memcpyInfo.bytes, 30U);
+    EXPECT_EQ(profData.extInfos[2].extInfo.memcpyInfo.copyKind, RT_MEMCPY_KIND_MAX);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
+{
+    RuntimeProfSuccessApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+
+    void* ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.DevMalloc(&ptr, 4096U, static_cast<rtMemType_t>(0), MODULEID_RUNTIME), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::DEV_ADDR);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.DevMallocCached(&ptr, 2048U, static_cast<rtMemType_t>(0), MODULEID_RUNTIME), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::DEV_CACHED_ADDR);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.HostMalloc(&ptr, 1024U, MODULEID_RUNTIME), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::HOST_ADDR);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.HostMallocWithCfg(&ptr, 512U, nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::HOST_CFG_ADDR);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.ManagedMemAlloc(&ptr, 256U, 0U, MODULEID_RUNTIME), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::MANAGED_ADDR);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.ReserveMemAddress(&ptr, 128U, 0U, nullptr, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::RESERVED_ADDR);
+
+    rtDrvMemHandle handle = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MallocPhysical(&handle, 64U, nullptr, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(handle), RuntimeProfSuccessApiImpl::PHYSICAL_HANDLE);
+
+    ptr = nullptr;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.DevMalloc(&ptr, 32U, static_cast<rtMallocPolicy>(0), static_cast<rtMallocAdvise>(0), nullptr),
+        RT_ERROR_NONE);
+    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::NEW_DEV_ADDR);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.DevFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::DEV_ADDR)), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.HostFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::HOST_ADDR)), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.ManagedMemFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::MANAGED_ADDR)), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.ReleaseMemAddress(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::RESERVED_ADDR)), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.FreePhysical(reinterpret_cast<rtDrvMemHandle>(RuntimeProfSuccessApiImpl::PHYSICAL_HANDLE)), RT_ERROR_NONE);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyAndMemsetWrappersFillExtInfo)
+{
+    RuntimeProfSuccessApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    void* dst = reinterpret_cast<void*>(0x2000U);
+    void* src = reinterpret_cast<void*>(0x3000U);
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    stream.streamId_ = 9U;
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemCopySync(dst, 1024U, src, 128U, RT_MEMCPY_HOST_TO_DEVICE, INVALID_CHECK_KIND), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemcpyAsync(dst, 1024U, src, 256U, RT_MEMCPY_DEVICE_TO_HOST, &stream), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.MemCopy2DSync(dst, 64U, src, 64U, 8U, 4U, RT_MEMCPY_DEVICE_TO_DEVICE, RT_MEMCPY_KIND_MAX), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.MemCopy2DAsync(dst, 64U, src, 64U, 8U, 4U, &stream, RT_MEMCPY_HOST_TO_DEVICE, RT_MEMCPY_KIND_MAX),
+        RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.SetMemcpyDesc(
+            reinterpret_cast<rtMemcpyDesc_t>(0x4000U), src, dst, 512U, RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr),
+        RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemSetSync(dst, 1024U, 7U, 33U), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemsetAsync(dst, 1024U, 8U, 34U, &stream), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemsetD32(dst, 1024U, 9U, 10U), RT_ERROR_NONE);
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemsetD32Async(dst, 1024U, 10U, 11U, &stream), RT_ERROR_NONE);
+    ClearApiProfContextStack(&profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileDecoratorMemcpyBatchWrappersFillExtInfo)
+{
+    RuntimeProfSuccessApiImpl impl;
+    Profiler profiler(&impl);
+    ApiProfileDecorator api(&impl, &profiler);
+    void* dsts[3] = {};
+    void* srcs[3] = {};
+    size_t destMaxs[3] = {10U, 20U, 30U};
+    size_t sizes[3] = {10U, 20U, 30U};
+    rtMemcpyBatchAttr attrs[2] = {};
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].dstLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].srcLoc.type = RT_MEMORY_LOC_DEVICE;
+    size_t attrsIdxs[2] = {0U, 2U};
+    size_t failIdx = 0U;
+
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(api.MemcpyBatch(dsts, srcs, sizes, 3U, attrs, attrsIdxs, 2U, &failIdx), RT_ERROR_NONE);
+
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    stream.streamId_ = 9U;
+    PrepareRuntimeProfDecoratorTest(&profiler);
+    EXPECT_EQ(
+        api.MemcpyBatchAsync(dsts, destMaxs, srcs, sizes, 3U, attrs, attrsIdxs, 2U, &failIdx, &stream), RT_ERROR_NONE);
+    ClearApiProfContextStack(&profiler);
 }
 
 TEST_F(ProfilerTest, OnlyTaskTrack)

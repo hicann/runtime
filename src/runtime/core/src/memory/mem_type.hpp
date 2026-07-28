@@ -18,6 +18,7 @@ namespace runtime {
 
 // memory type to string
 const char_t* MemLocationTypeToStr(const rtMemLocationType type);
+uint16_t GetMemcpyBatchCopyKind(const rtMemcpyBatchAttr& attr);
 
 } // namespace runtime
 } // namespace cce

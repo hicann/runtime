@@ -427,6 +427,38 @@ struct MsprofStreamSqInfo {     // for MsprofReportCompactInfo buffer data
     uint16_t tsId;              // ts id
 };
 
+struct MsprofMemcpyInfo {  // for runtime memcpy compact info
+    uint64_t bytes;
+    uint16_t copyKind;
+    uint16_t deviceId;
+    uint32_t streamId;
+};
+
+struct MsprofMemsetInfo {  // for runtime memset compact info
+    uint64_t bytes;
+    int32_t value;
+    uint32_t streamId;
+    uint16_t deviceId;
+    uint16_t rsv[3];
+};
+
+typedef enum tagMsprofMemoryType { 
+    MSPROF_MEMORY_TYPE_UNKNOWN = 0,
+    MSPROF_MEMORY_TYPE_HOST = 1,
+    MSPROF_MEMORY_TYPE_DEVICE = 2,
+    MSPROF_MEMORY_TYPE_MANAGED = 3
+} MsprofMemoryType;
+
+struct MsprofMemMngInfo {  // for runtime memory management compact info
+    uint64_t address;
+    uint64_t size;
+    uint32_t memoryType;
+    uint16_t memMngType;
+    uint16_t deviceId;
+    uint32_t streamId;
+    uint32_t rsv;
+};
+
 struct MsprofDpuTrack {  // for MsprofReportCompactInfo buffer data
     uint16_t deviceId;   // high 4 bits, devType: dpu: 1, low 12 bits device id
     uint16_t streamId;
@@ -560,6 +592,9 @@ struct MsprofCompactInfo {  // for MsprofReportCompactInfo buffer data
         struct MsprofHCCLOPInfo hcclopInfo;
         struct MsprofDpuTrack dpuTack;
         struct MsprofStreamExpandSpecInfo streamExpandInfo;
+        struct MsprofMemcpyInfo memcpyInfo;
+        struct MsprofMemsetInfo memsetInfo;
+        struct MsprofMemMngInfo memMngInfo;
     } data;
 };
 

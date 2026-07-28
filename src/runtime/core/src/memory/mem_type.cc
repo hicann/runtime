@@ -32,5 +32,29 @@ const char_t* MemLocationTypeToStr(const rtMemLocationType type)
     }
 }
 
+uint16_t GetMemcpyBatchCopyKind(const rtMemcpyBatchAttr& attr)
+{
+    const auto isHostMemoryLocation = [](const rtMemLocationType type) {
+        return (type == RT_MEMORY_LOC_HOST) || (type == RT_MEMORY_LOC_HOST_NUMA);
+    };
+    const auto isDeviceMemoryLocation = [](const rtMemLocationType type) { return type == RT_MEMORY_LOC_DEVICE; };
+
+    const rtMemLocationType dstType = attr.dstLoc.type;
+    const rtMemLocationType srcType = attr.srcLoc.type;
+    if (isHostMemoryLocation(srcType) && isHostMemoryLocation(dstType)) {
+        return static_cast<uint16_t>(RT_MEMCPY_KIND_HOST_TO_HOST);
+    }
+    if (isHostMemoryLocation(srcType) && isDeviceMemoryLocation(dstType)) {
+        return static_cast<uint16_t>(RT_MEMCPY_KIND_HOST_TO_DEVICE);
+    }
+    if (isDeviceMemoryLocation(srcType) && isHostMemoryLocation(dstType)) {
+        return static_cast<uint16_t>(RT_MEMCPY_KIND_DEVICE_TO_HOST);
+    }
+    if (isDeviceMemoryLocation(srcType) && isDeviceMemoryLocation(dstType)) {
+        return static_cast<uint16_t>(RT_MEMCPY_KIND_DEVICE_TO_DEVICE);
+    }
+    return static_cast<uint16_t>(RT_MEMCPY_KIND_MAX);
+}
+
 } // namespace runtime
 } // namespace cce
