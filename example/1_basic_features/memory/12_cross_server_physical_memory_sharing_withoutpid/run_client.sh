@@ -9,15 +9,22 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
+set -euo pipefail
 
-source $_ASCEND_INSTALL_PATH/bin/setenv.bash
-echo "[INFO]: Current compile soc version is ${SOC_VERSION}"
+_ASCEND_CANN_PATH="${ASCEND_HOME_PATH:-}"
+if [[ -z "${_ASCEND_CANN_PATH}" ]]; then
+    echo "[ERROR]: ASCEND_HOME_PATH is not set."
+    echo "[ERROR]: Please source CANN set_env.sh before running this sample."
+    exit 1
+fi
+
+source "${_ASCEND_CANN_PATH}/bin/setenv.bash"
+echo "[INFO]: Current compile soc version is ${SOC_VERSION:-unknown}"
 
 rm -rf build
 mkdir -p build
 cmake -B build \
-    -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
+    -DASCEND_CANN_PACKAGE_PATH="${_ASCEND_CANN_PATH}"
 cmake --build build -j
 
 rm -rf file
@@ -30,12 +37,17 @@ read -p "Please enter port number (default 8888): " input_port
 port=${input_port:-8888}
 
 echo "[INFO]: Running client connecting to $server_ip:$port..."
-./build/client $server_ip $port | tee "$file_path_client"
+client_ret=0
+./build/client "$server_ip" "$port" | tee "$file_path_client" || client_ret=$?
 
-if grep -q "released memory successfully" "$file_path_client"; then
+if [ "$client_ret" -ne 0 ]; then
+    echo "[FAILURE] Client failed to complete"
+    exit "$client_ret"
+elif grep -q "released memory successfully" "$file_path_client"; then
     echo "[SUCCESS] Client completed successfully"
 else
     echo "[FAILURE] Client failed to complete"
+    exit 1
 fi
 
 exit 0

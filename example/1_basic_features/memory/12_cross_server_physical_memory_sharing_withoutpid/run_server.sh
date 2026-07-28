@@ -9,15 +9,22 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
+set -euo pipefail
 
-source $_ASCEND_INSTALL_PATH/bin/setenv.bash
-echo "[INFO]: Current compile soc version is ${SOC_VERSION}"
+_ASCEND_CANN_PATH="${ASCEND_HOME_PATH:-}"
+if [[ -z "${_ASCEND_CANN_PATH}" ]]; then
+    echo "[ERROR]: ASCEND_HOME_PATH is not set."
+    echo "[ERROR]: Please source CANN set_env.sh before running this sample."
+    exit 1
+fi
+
+source "${_ASCEND_CANN_PATH}/bin/setenv.bash"
+echo "[INFO]: Current compile soc version is ${SOC_VERSION:-unknown}"
 
 rm -rf build
 mkdir -p build
 cmake -B build \
-    -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
+    -DASCEND_CANN_PACKAGE_PATH="${_ASCEND_CANN_PATH}"
 cmake --build build -j
 
 rm -rf file
@@ -32,12 +39,14 @@ if [ -n "$input_port" ]; then
 fi
 
 echo "[INFO]: Running server on port $port..."
-./build/server $port | tee "$file_path_server"
+server_ret=0
+./build/server $port | tee "$file_path_server" || server_ret=$?
 
-if [ $? -eq 0 ]; then
+if [ "$server_ret" -eq 0 ]; then
     echo "[SUCCESS] Server completed successfully."
 else
     echo "[FAILURE] Server failed to complete"
+    exit "$server_ret"
 fi
 
 exit 0
