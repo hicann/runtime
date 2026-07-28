@@ -8,11 +8,12 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
+set -e
 
 echo ${ut_type}
 echo ${TARGET_BRANCH}
 echo ${obs_path}
-set +e
+
 export USE_CCACHE=1
 export PATH=/usr/local/ccache/bin:$PATH
 export CCACHE_SECONDARY_STORAGE=redis://10.0.0.135:6379
@@ -31,6 +32,7 @@ redis-cli -h 10.0.0.135 -p 6379 ping && echo "Redis connection OK" || echo "Redi
 /usr/local/ccache/bin/ccache -z
 echo $(grep -E "^VERSION_ID=" /etc/os-release | cut -d'"' -f2)
 sudo update-alternatives --set gcc /usr/bin/gcc-14
+set +e
 gcc --version
 source /home/jenkins/Ascend/cann/bin/setenv.bash
 if [ "${TARGET_BRANCH}" = "master" ];then
