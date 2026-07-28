@@ -289,7 +289,7 @@ sequenceDiagram
         Stream->>Stream: 记录到 delayRecycleTaskid_
         Stream->>Stream: SQE 直接写入硬件 SQ
         Stream->>HW: SQE 直接写入硬件 SQ
-        HW-->>Stream : sucess
+        HW-->>Stream : success
         Stream-->>RT: success
         RT-->>ACL: success
         ACL-->>App: ACL_SUCCESS
@@ -745,7 +745,7 @@ flowchart TD
     
     %% 非 AutoSplit 路径
     C -->|否| D2["遍历 Model 的 StreamList_"]
-    D2 --> E2["每个 Stream下发mailtaince任务"]
+    D2 --> E2["每个 Stream下发maintenance任务"]
     E2 --> G2["下发 SQE 到设备 SQ"]
     G2 --> I2["记录 SQ Tail"]
     I2 --> M2["isModelComplete_=true"]

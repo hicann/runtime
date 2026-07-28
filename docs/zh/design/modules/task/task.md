@@ -365,7 +365,7 @@ PfnTaskUnInit *g_taskUnInitFunc = g_taskFuncArrays[CHIP_BEGIN].taskUnInitFunc;
 |----------|---------|------|
 | 每 64 个任务下发后 | `WakeUpRecycleThread` | 周期性回收，`allocNum_ % 64 == 0` 时触发 |
 | 下发任务队列满 | `TryToReclaimTask` | 分配队列满时触发主动回收 |
-| 流同步（Synchronize） | `WakeUpRecycleThread` | 出发回收线程，等待所有任务完成 |
+| 流同步（Synchronize） | `WakeUpRecycleThread` | 触发回收线程，等待所有任务完成 |
 | 流销毁（TearDown） | `TaskReclaimByStream` | 清空所有任务 |
 | 独立回收线程 | `RecycleThreadDoForStarsV2` | `IsSeparateSendAndRecycle()` 模式 |
 

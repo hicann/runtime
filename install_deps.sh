@@ -93,7 +93,7 @@ install_python() {
             return
         fi
     fi
-    echo "安装pyton..."
+    echo "安装python..."
     case "$OS" in
         debian)
             run_command sudo $PKG_MANAGER update
