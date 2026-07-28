@@ -69,6 +69,7 @@ rtError_t SomaApi::StreamMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProp
     ERROR_RETURN_MSG_INNER(
         error, "Convert user devId to physical devId failed! userDevId=%u, error Code=%u!", curPoolProps.devId,
         static_cast<uint32_t>(error));
+    curPoolProps.devId = phyDevId;
 
     size_t freeSize = 0;
     size_t totalSize = 0;

@@ -8254,13 +8254,21 @@ rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocP
         return NpuDriver::MallocPhysical(reinterpret_cast<rtDrvMemHandle*>(handle), size, &prop, flags);
     }
 
-    const rtError_t error = ParseMallocCfg(cfg, &cfgVal);
+    rtError_t error = ParseMallocCfg(cfg, &cfgVal);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Parse rtMallocConfig failed, error=%#x.",
         static_cast<uint32_t>(error));
 
+    uint32_t realDeviceId = cfgVal.deviceId;
+    if (cfgVal.deviceId != curCtx->Device_()->Id_()) {
+        error = Runtime::Instance()->ChgUserDevIdToDeviceId(cfgVal.deviceId, &realDeviceId);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %u to driver device ID.",
+            cfgVal.deviceId);
+    }
+
     prop.module_id = cfgVal.moduleId > DEFAULT_MODULEID ? static_cast<uint16_t>(APP) : cfgVal.moduleId;
-    prop.devid = cfgVal.deviceId;
+    prop.devid = realDeviceId;
     RT_LOG(
         RT_LOG_INFO, "size=%" PRIu64 ", type=%#x, pgType=%#x, moduleId=%hu, deviceId=%d.", size, type, prop.pg_type,
         prop.module_id, prop.devid);

@@ -6974,30 +6974,6 @@ rtError_t ApiErrorDecorator::MemMallocPhysical(
         return RT_ERROR_INVALID_VALUE;
     }
 
-    if (cfg == nullptr) { // only cfg is nullptr use default
-        return impl_->MemMallocPhysical(handle, size, policy, cfg);
-    }
-
-    uint32_t deviceId = 0U;
-    bool isSetDeviceId = false;
-    for (uint32_t i = 0U; i < cfg->numAttrs; ++i) {
-        if (cfg->attrs[i].attr == RT_MEM_MALLOC_ATTR_DEVICE_ID) {
-            isSetDeviceId = true;
-            deviceId = cfg->attrs[i].value.deviceId;
-            break;
-        }
-    }
-    if (isSetDeviceId == true) {
-        const uint32_t userDeviceId = deviceId;
-        rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &deviceId);
-        COND_RETURN_ERROR(
-            error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %u to driver device ID.",
-            userDeviceId);
-        error = CheckDeviceIdIsValid(static_cast<int32_t>(deviceId));
-        COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%u, retCode=%#x", deviceId,
-            static_cast<uint32_t>(error));
-    }
     return impl_->MemMallocPhysical(handle, size, policy, cfg);
 }
 

@@ -1873,6 +1873,27 @@ TEST_F(CloudV2ApiTest910b, rtsMemMallocPhysical_01)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(CloudV2ApiTest910b, rtsMemMallocPhysical_ConvertDeviceIdFailed)
+{
+    rtMallocAttribute_t attrs[1];
+    attrs[0].attr = RT_MEM_MALLOC_ATTR_DEVICE_ID;
+    attrs[0].value.deviceId = 255U;
+
+    rtMallocConfig_t cfg;
+    cfg.attrs = attrs;
+    cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
+
+    rtMallocPolicy policy = static_cast<rtMallocPolicy>(RT_MEM_MALLOC_NORMAL_ONLY | RT_MEM_TYPE_HIGH_BAND_WIDTH);
+    rtMemHandle handVal;
+    rtMemHandle* handle = &handVal;
+
+    Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId).stubs().will(returnValue(RT_ERROR_DEVICE_ID));
+
+    rtError_t error = rtsMemMallocPhysical(handle, 100, policy, &cfg);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
+}
+
 TEST_F(CloudV2ApiTest910b, rtsMemMallocPhysical_02)
 {
     rtError_t error;
