@@ -15,6 +15,7 @@
 #include "stream_c.hpp"
 #include "thread_local_container.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -42,11 +43,13 @@ rtError_t GetCaptureEventFromTask(
     TaskInfo* taskInfo = GetTaskInfo(dev, streamId, pos);
     COND_RETURN_ERROR(
         (taskInfo == nullptr), RT_ERROR_TASK_NULL, "Failed to get task, stream_id=%u, task_id=%u.", streamId, pos);
-    COND_RETURN_ERROR(
+    COND_RETURN_AND_MSG_OUTER(
         !((taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) || (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD)),
-        RT_ERROR_STREAM_UNJOINED,
-        "Failed to get capture event from task, the last task type is not event record, stream_id=%u, task_id=%u.",
-        streamId, pos);
+        RT_ERROR_STREAM_UNJOINED, ErrorCode::EE1017, "Capture model validity check", "capture model",
+        RtFmtMsg(
+            "In the cross-stream capture scenario, the last task (task_id=%u) on the sub stream (stream_id=%u) is not "
+            "an event record task. Call aclrtRecordEvent on the sub stream to deliver an event record task",
+            pos, streamId));
     if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
         eventPtr = taskInfo->u.davidEventRecordTaskInfo.event;
     } else {

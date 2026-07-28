@@ -259,7 +259,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_MODULE_NEW] = {
         ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the module object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_STREAM_UNJOINED] = {
-        ACL_ERROR_RT_STREAM_UNJOINED, "capture model contains a stream that was not joined to the original stream"};
+        ACL_ERROR_RT_STREAM_UNJOINED, "capture model contains a stream that was not joined to the origin stream"};
     rtErrMap_[RT_ERROR_MODEL_CAPTURED] = {ACL_ERROR_RT_MODEL_CAPTURED, "model is captured"};
     rtErrMap_[RT_ERROR_MODEL_CAPTURE_STATUS] = {ACL_ERROR_RT_INTERNAL_ERROR, "model status error"};
     rtErrMap_[RT_ERROR_MODEL_RUNNING] = {ACL_ERROR_RT_MODEL_RUNNING, "model is running"};
