@@ -24,6 +24,7 @@
 #include "david_device_simulator.h"
 #include "david_v121_device_simulator.h"
 #include "mdc_lite_v2_device_simulator.h"
+#include "modena_device_simulator.h"
 #include "msprof_stub.h"
 
 namespace Cann {
@@ -135,6 +136,13 @@ uint32_t DeviceSimulatorManager::CreateDeviceSimulator(uint32_t num, StPlatformT
         }
         if (platformType == StPlatformType::CHIP_MDC_LITE_V2) {
             simulator = std::unique_ptr<DeviceSimulator>(new(std::nothrow) MdcLiteV2DeviceSimulator(static_cast<uint32_t>(platformType)));
+            if (simulator == nullptr) {
+                return 0;
+            }
+            devices_.emplace_back(std::move(simulator));
+        }
+        if (platformType == StPlatformType::CHIP_5162A) {
+            simulator = std::unique_ptr<DeviceSimulator>(new(std::nothrow) ModenaDeviceSimulator(static_cast<uint32_t>(platformType)));
             if (simulator == nullptr) {
                 return 0;
             }

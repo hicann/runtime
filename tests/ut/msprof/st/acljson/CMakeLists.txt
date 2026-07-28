@@ -26,6 +26,7 @@ set(testStubSrc
     ${ACLJSON_STUB_DIR}/device/stars_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/david_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/david_v121_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/modena_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/cloud_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/tiny_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/data_report_manager.cpp
@@ -62,6 +63,7 @@ set(testSrc
     testcase/acljson_cloud_stest.cpp
     testcase/acljson_david_stest.cpp
     testcase/acljson_david_v121_stest.cpp
+    testcase/acljson_modena_stest.cpp
     testcase/acljson_nano_stest.cpp
 )
 
@@ -184,6 +186,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp

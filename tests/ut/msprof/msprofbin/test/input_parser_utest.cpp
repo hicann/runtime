@@ -34,6 +34,13 @@ protected:
     }
 };
 
+#ifndef BUILD_PROFILING_OPEN_PROJECT
+static void SetPlatformTypeForTest(PlatformType platformType)
+{
+    ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<int32_t>(platformType));
+}
+#endif // BUILD_PROFILING_OPEN_PROJECT
+
 TEST_F(INPUT_PARSER_UTEST, ProcessOptions) {
     GlobalMockObject::verify();
     InputParser parser = InputParser();
@@ -680,6 +687,40 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     parser.ParamsSwitchValid2(cmdInfo, ARGS_ANALYZE);
     parser.ParamsSwitchValid2(cmdInfo, ARGS_CLEAR);
 }
+
+#ifndef BUILD_PROFILING_OPEN_PROJECT
+TEST_F(INPUT_PARSER_UTEST, CheckAiCoreMetricsValidModena) {
+    GlobalMockObject::verify();
+    SetPlatformTypeForTest(PlatformType::CHIP_5162A);
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+
+    InputParser parser = InputParser();
+    struct MsprofCmdInfo cmdInfo = { {nullptr} };
+
+    cmdInfo.args[ARGS_AIC_METRICS] = "PipeUtilization";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "Memory";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "MemoryUB";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "ArithmeticUtilization";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "ResourceConflictRatio";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+
+    cmdInfo.args[ARGS_AIC_METRICS] = "Custom:0x0";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8";
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = "Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9";
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+
+    cmdInfo.args[ARGS_AIC_METRICS] = "L2Cache";
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    Platform::instance()->Uninit();
+}
+#endif // BUILD_PROFILING_OPEN_PROJECT
 
 TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform) {
     InputParser parser = InputParser();

@@ -25,6 +25,7 @@
 #include "david_v121_platform.h"
 #include "mdc_lite_v2_platform.h"
 #include "mdc_v2_platform.h"
+#include "modena_platform.h"
 #include "error_manager_stub2.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
@@ -535,6 +536,65 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
     std::string aicEvent;
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
     EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+}
+
+TEST_F(PLATFORM_UTEST, ModenaPlatformMetrics) {
+    GlobalMockObject::verify();
+    ModenaPlatform platform;
+    std::string aicEvent;
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("PipeUtilization", aicEvent));
+    EXPECT_EQ("0x501,0x301,0x1,0x202,0x203,0x34,0x35", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("Memory", aicEvent));
+    EXPECT_EQ("0x400,0x401,0x56f,0x570", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("MemoryUB", aicEvent));
+    EXPECT_EQ("0x3,0x5,0x204,0x206,0x571,0x572", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("ArithmeticUtilization", aicEvent));
+    EXPECT_EQ("0x32c,0x32d", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("ResourceConflictRatio", aicEvent));
+    EXPECT_EQ("0x540,0x556", aicEvent);
+
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("MemoryL0", aicEvent));
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("MemoryAccess", aicEvent));
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("PipeStallCycle", aicEvent));
+    EXPECT_EQ(MAX_COLLECT_MONITOR_NUM, platform.GetMaxMonitorNumber());
+}
+
+TEST_F(PLATFORM_UTEST, ModenaPlatformFeatures) {
+    GlobalMockObject::verify();
+    ModenaPlatform platform;
+
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_AU_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_PU_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_MEMORY_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_MEMORYUB_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_RCR_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_TRACE));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_METRICS));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_SWITCH));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_AIC_METRICS));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_L2_CACHE_REG));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_L2_CACHE_PMU));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_MEMORYL0_PMU));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_MEMORY_ACCESS_PMU));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_PSC_PMU));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_BLOCK));
+}
+
+TEST_F(PLATFORM_UTEST, ModenaPlatformReflection) {
+    GlobalMockObject::verify();
+    auto platform = PlatformReflection::CreatePlatformClass(CHIP_5162A);
+    ASSERT_NE(nullptr, platform);
+
+    std::string aicEvent;
+    EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("PipeUtilization", aicEvent));
+    EXPECT_EQ("0x501,0x301,0x1,0x202,0x203,0x34,0x35", aicEvent);
+    EXPECT_EQ(PROFILING_FAILED, platform->GetAiPmuMetrics("L2Cache", aicEvent));
 }
 
 TEST_F(PLATFORM_UTEST, DavidV121PlatformL2CacheMetrics) {

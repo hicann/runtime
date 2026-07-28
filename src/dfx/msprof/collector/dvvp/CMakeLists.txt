@@ -134,6 +134,7 @@ set(profimplCpp
 
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND profimplCpp
+        profimpl/platform/modena_platform.cpp
         profimpl/platform/nano_platform.cpp
         profimpl/platform/mdc_mini_v3_platform.cpp
         profimpl/platform/david_platform.cpp

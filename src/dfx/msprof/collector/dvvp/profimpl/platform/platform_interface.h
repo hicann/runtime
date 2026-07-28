@@ -57,6 +57,7 @@ enum PlatformTypeEnum {
     CHIP_CLOUD_V4    = 16,
     CHIP_MDC_V2      = 17,
     CHIP_MDC_LITE_V2 = 18,
+    CHIP_5162A       = 21,
     CHIP_END
 };
 
@@ -249,7 +250,7 @@ public:
     virtual std::string GetDeviceOscDefaultFreq();
     virtual std::string GetAicDefaultFreq();
     virtual std::string GetAivDefaultFreq();
-    virtual int32_t GetAiPmuMetrics(const std::string &key, std::string &vaule);
+    virtual int32_t GetAiPmuMetrics(const std::string &key, std::string &value);
     virtual bool FeatureIsSupport(const PlatformFeature feature) const;
     virtual std::string GetSmmuEventStr();
     virtual uint32_t GetSmmuDFXOffset() const;

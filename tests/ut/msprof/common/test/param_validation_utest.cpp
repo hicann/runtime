@@ -589,6 +589,29 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventsIsValidMdcLiteV
     EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
 }
 
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventsIsValidModena) {
+    using namespace analysis::dvvp::common::validation;
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::GetMaxMonitorNumber)
+        .stubs()
+        .will(returnValue(MAX_COLLECT_MONITOR_NUM));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_5162A));
+
+    std::vector<std::string> events = {"0x0", "0x1", "0x2", "0x3", "0x4", "0x5", "0x6", "0x7"};
+    EXPECT_EQ(true, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+
+    events = {"0x0", "0x1", "0x2", "0x3", "0x4", "0x5", "0x6", "0x7", "0x8"};
+    EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+
+    events = {"0x7fffffff"};
+    EXPECT_EQ(true, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+
+    events = {"0x80000000"};
+    EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+}
+
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTaskBlockValidMdcLiteV2) {
     using namespace analysis::dvvp::common::validation;
     GlobalMockObject::verify();
@@ -611,6 +634,19 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTaskBlockValidMdcLiteV2) {
     MOCKER_CPP(&Platform::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformTypeEnum::CHIP_MDC_LITE));
+
+    EXPECT_EQ(false, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "on"));
+}
+
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTaskBlockValidModena) {
+    using namespace analysis::dvvp::common::validation;
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_5162A));
 
     EXPECT_EQ(false, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "on"));
 }

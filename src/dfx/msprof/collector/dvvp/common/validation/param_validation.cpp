@@ -514,7 +514,7 @@ bool ParamValidation::CheckParamL0L1Invalid(const std::string &switchName, const
             return true;
         } else {
             std::string task_trace_ranges = Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3)
-                        ? "'on', 'off', 'l0', 'l1', 'l2' or 'l3'." 
+                        ? "'on', 'off', 'l0', 'l1', 'l2' or 'l3'."
                         : "'on', 'off', 'l0', 'l1' or 'l2'.";
             errInfo = "Please input " + task_trace_ranges;
         }
@@ -617,7 +617,7 @@ bool ParamValidation::CheckDeviceIdIsValid(const std::string &devId)
         return false;
     }
     int32_t devIdInt = 0;
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devIdInt, devId), return false, 
+    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devIdInt, devId), return false,
         "devId %s is invalid", devId.c_str());
     if (devIdInt >= 64) { // 64 : devIdMaxNum
         MSPROF_LOGW("devId(%s) is over limited.", devId.c_str());
@@ -1151,7 +1151,8 @@ bool ParamValidation::CheckAiCoreEventsIsValid(const std::vector<std::string> &e
     if (Platform::instance()->GetPlatformType() == CHIP_CLOUD_V3 ||
         Platform::instance()->GetPlatformType() == CHIP_CLOUD_V4 ||
         Platform::instance()->GetPlatformType() == CHIP_MDC_V2 ||
-        Platform::instance()->GetPlatformType() == CHIP_MDC_LITE_V2) {
+        Platform::instance()->GetPlatformType() == CHIP_MDC_LITE_V2 ||
+        Platform::instance()->GetPlatformType() == CHIP_5162A) {
         minEvent = 0;
         maxEvent = ACC_MAX_PMU_EVENT;
     }
@@ -1191,7 +1192,7 @@ bool ParamValidation::CheckTaskBlockValid(const std::string &switchName, const s
     FUNRET_CHECK_EXPR_ACTION(!Platform::instance()->CheckIfSupport(PLATFORM_TASK_BLOCK), return false,
         "Argument %s is not supported", switchName.c_str());
     FUNRET_CHECK_EXPR_ACTION(config.empty(), return false, "Argument %s is empty.", switchName.c_str());
-    if (config.compare(MSVP_PROF_OFF) != 0 && config.compare(MSVP_PROF_ALL) != 0 && 
+    if (config.compare(MSVP_PROF_OFF) != 0 && config.compare(MSVP_PROF_ALL) != 0 &&
         config.compare(MSVP_PROF_ON) != 0) {
         std::string taskBlockRanges;
         if (Platform::instance()->GetPlatformType() == CHIP_CLOUD_V3 ||
@@ -1202,7 +1203,7 @@ bool ParamValidation::CheckTaskBlockValid(const std::string &switchName, const s
         } else {
             taskBlockRanges = "'all', 'off'.";
         }
-        MSPROF_LOGE("Argument %s: invalid value: %s. Please input %s", 
+        MSPROF_LOGE("Argument %s: invalid value: %s. Please input %s",
             switchName.c_str(), config.c_str(), taskBlockRanges.c_str());
         return false;
     }
@@ -1213,7 +1214,7 @@ bool ParamValidation::CheckTaskBlockValid(const std::string &switchName, const s
         Platform::instance()->GetPlatformType() != CHIP_MDC_LITE_V2) {
         MSPROF_LOGE("The on option is not supported on this platform, please use all to collect block data.");
         return false;
-    }  
+    }
     return true;
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT

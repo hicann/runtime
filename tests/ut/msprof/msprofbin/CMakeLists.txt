@@ -100,6 +100,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_commercial.cpp
     )

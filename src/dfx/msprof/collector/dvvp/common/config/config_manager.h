@@ -41,6 +41,7 @@ enum class PlatformType {
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_V2 = 17,
     CHIP_MDC_LITE_V2 = 18,
+    CHIP_5162A = 21,
 #endif // BUILD_PROFILING_OPEN_PROJECT
 #ifdef BUILD_PROFILING_OPEN_PROJECT
     END_TYPE = 17
@@ -67,7 +68,8 @@ const std::map<PlatformType, std::string> FREQUENCY_TYPE = {
     {PlatformType::CHIP_CLOUD_V3, "1000"},
     {PlatformType::CHIP_CLOUD_V4, "1000"},
     {PlatformType::CHIP_MDC_V2, "38.4"},
-    {PlatformType::CHIP_MDC_LITE_V2, "38.4"}
+    {PlatformType::CHIP_MDC_LITE_V2, "38.4"},
+    {PlatformType::CHIP_5162A, "20"}
 #endif // BUILD_PROFILING_OPEN_PROJECT
 };
 
@@ -89,7 +91,8 @@ const std::map<PlatformType, std::string> AIC_TYPE = {
     {PlatformType::CHIP_CLOUD_V3, "800"},
     {PlatformType::CHIP_CLOUD_V4, "1650"},
     {PlatformType::CHIP_MDC_V2, "1400"},
-    {PlatformType::CHIP_MDC_LITE_V2, "1500"}
+    {PlatformType::CHIP_MDC_LITE_V2, "1500"},
+    {PlatformType::CHIP_5162A, "20"}
 #endif // BUILD_PROFILING_OPEN_PROJECT
 };
 

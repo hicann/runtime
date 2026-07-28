@@ -22,6 +22,7 @@ set(testStubSrc
     ${CLI_STUB_DIR}/device/stars_device_simulator.cpp
     ${CLI_STUB_DIR}/device/david_device_simulator.cpp
     ${CLI_STUB_DIR}/device/david_v121_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/modena_device_simulator.cpp
     ${CLI_STUB_DIR}/device/cloud_device_simulator.cpp
     ${CLI_STUB_DIR}/device/tiny_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mmpa_stub.cpp
@@ -59,6 +60,7 @@ set(testSrc
     testcase/cli_mdc_lite_v2_stest.cpp
     testcase/cli_david_stest.cpp
     testcase/cli_david_v121_stest.cpp
+    testcase/cli_modena_stest.cpp
     # testcase/cli_acp_milan_stest.cpp
     # testcase/cli_acp_david_stest.cpp
     stub/cli_stub.cpp
@@ -103,6 +105,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp

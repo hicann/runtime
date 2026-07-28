@@ -121,6 +121,26 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
+#ifndef BUILD_PROFILING_OPEN_PROJECT
+TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeModena)
+{
+    GlobalMockObject::verify();
+    auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
+    configManger->Uninit();
+    configManger->configMap_.clear();
+    configManger->configMap_[TYPE_CONFIG] = "21";
+
+    EXPECT_EQ(PlatformType::CHIP_5162A, configManger->GetPlatformType());
+    configManger->InitFrequency();
+    EXPECT_EQ("20", configManger->GetFrequency());
+    EXPECT_EQ("20", configManger->GetAicDefFrequency());
+    EXPECT_EQ(false, configManger->IsDriverSupportLlc());
+
+    configManger->configMap_.clear();
+    configManger->Uninit();
+}
+#endif // BUILD_PROFILING_OPEN_PROJECT
+
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetVersionSpecificMetrics)
 {
     GlobalMockObject::verify();

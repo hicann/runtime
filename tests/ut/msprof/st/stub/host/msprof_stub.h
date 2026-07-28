@@ -61,6 +61,7 @@ enum class StPlatformType {
     CHIP_CLOUD_V3 = 15,
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_LITE_V2 = 18,
+    CHIP_5162A = 21,
 #endif
     END_TYPE
 };
@@ -93,6 +94,7 @@ const std::map<uint32_t, std::string> CLI_CHECK_OUTPUT = {
     {15, "cliDavidstest_workspace/output"},
     {16, "cliDavidV121stest_workspace/output"},
     {18, "cliMdcLiteV2stest_workspace/output"},
+    {21, "cliModenastest_workspace/output"},
 #endif
 };
 

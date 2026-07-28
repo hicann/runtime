@@ -40,7 +40,7 @@ std::string PlatformInterface::GetAivDefaultFreq()
     return EMPTY_FREQUENCY;
 }
 
-int32_t PlatformInterface::GetAiPmuMetrics(const std::string &key, std::string &vaule)
+int32_t PlatformInterface::GetAiPmuMetrics(const std::string &key, std::string &value)
 {
     if (key.compare(0, CUSTOM_METRICS.length(), CUSTOM_METRICS) == 0) {
         std::string aicoreEvent = key.substr(CUSTOM_METRICS.length());
@@ -50,7 +50,7 @@ int32_t PlatformInterface::GetAiPmuMetrics(const std::string &key, std::string &
             MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", key.c_str());
             return PROFILING_FAILED;
         }
-        vaule = aicoreEvent;
+        value = aicoreEvent;
         return PROFILING_SUCCESS;
     }
 
@@ -59,7 +59,7 @@ int32_t PlatformInterface::GetAiPmuMetrics(const std::string &key, std::string &
         return PROFILING_FAILED;
     }
 
-    vaule = GetMetricsValue(feature);
+    value = GetMetricsValue(feature);
     return PROFILING_SUCCESS;
 }
 

@@ -24,6 +24,7 @@ set(TEST_STUB_SRC
     ${API_STUB_DIR}/device/stars_device_simulator.cpp
     ${API_STUB_DIR}/device/david_device_simulator.cpp
     ${API_STUB_DIR}/device/david_v121_device_simulator.cpp
+    ${API_STUB_DIR}/device/modena_device_simulator.cpp
     ${API_STUB_DIR}/device/cloud_device_simulator.cpp
     ${API_STUB_DIR}/device/dc_device_simulator.cpp
     ${API_STUB_DIR}/device/mdc_device_simulator.cpp
@@ -194,6 +195,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND PROFIMPL_SRC_FILE
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
@@ -744,6 +746,60 @@ add_executable(api_david_v121_stest
     ${SRC_FILE}
     ${CppPath}
     testcase/acl_api/api_david_v121_stest.cpp
+)
+
+####################### api_modena_stest ###########################
+
+add_executable(api_modena_stest
+    ${TEST_STUB_SRC}
+    ${TEST_SRC}
+    ${SRC_FILE}
+    ${CppPath}
+    testcase/acl_api/api_modena_stest.cpp
+)
+
+target_include_directories(api_modena_stest PRIVATE
+    ${INCLUDE_DIR}
+)
+
+target_compile_options(api_modena_stest PRIVATE
+    -g
+    -Wall
+    -std=c++14
+    -fno-access-control
+    -Werror
+)
+
+target_compile_definitions(api_modena_stest PRIVATE
+    C_SEC
+    __PROF_LLT
+    google=ascend_private
+    LLT_DATA_DIR="${LLT_DATA_DIR}"
+    API_STEST
+    PLATFORM_TYPE=21
+    SOC_TYPE="modena"
+)
+
+target_link_options(api_modena_stest PRIVATE
+   -ldl
+   -lpthread
+)
+
+target_link_libraries(api_modena_stest PRIVATE
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:adump_headers>
+    profapi_share_st
+    ascend_protobuf_static
+    c_sec
+    json
+)
+
+set_target_properties(api_modena_stest
+    PROPERTIES
+    OUTPUT_NAME api_modena_stest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_include_directories(api_david_v121_stest PRIVATE
