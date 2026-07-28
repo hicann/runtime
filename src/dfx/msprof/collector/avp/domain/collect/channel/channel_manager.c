@@ -171,7 +171,7 @@ STATIC void ChannelMgChanneFlushIfFinish(ChannelReader *reader, const int32_t cu
 }
 
 /**
- * @brief channel reader funtion, get data from driver by buffer
+ * @brief channel reader function, get data from driver by buffer
  * @param [in] args: channel reader arguments
  * @return NULL
  */

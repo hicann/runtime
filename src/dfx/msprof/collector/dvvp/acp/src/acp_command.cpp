@@ -260,7 +260,7 @@ int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid)
 }
 
 /**
- * @brief subcommand "profile" execution funtion
+ * @brief subcommand "profile" execution function
  * @param [in] profCommand: instance of Argparser
  * @return: PROFILING_SUCCESS
             PROFILING_FAILED

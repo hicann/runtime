@@ -113,7 +113,7 @@ typedef char char_t;
 #define FLOW_CONTROL_FREE_LIMITS (CQ_LEN - FLOW_CONTROL_HIGH_LIMITS)
 /**
  * @ingroup tsch
- * @brief the intial flag of BS
+ * @brief the initial flag of BS
  */
 #define BS_INITIALIZED (0x2U)
 

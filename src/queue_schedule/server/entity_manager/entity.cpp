@@ -76,7 +76,7 @@ FsmStatus Entity::AllowDeque()
     }
 
     // The destination receiver has not finished scheduling, keep peek state
-    // if waitingDecision, maybe some decision is comming, then return fail,
+    // if waitingDecision, maybe some decision is coming, then return fail,
     //    so fsm can transfer to idle to process decision
     if ((!waitingDecision_ && !sendDataObjs_.empty()) ||
         (sendDataObjs_.size() > DYNAMIC_SCHEDULE_THRESHOLD)) {

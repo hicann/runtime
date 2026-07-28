@@ -108,7 +108,7 @@ void TaskAllocator::FreeById(const Stream* const stm, const int32_t taskId, bool
 int32_t TaskAllocator::AllocId(const Stream* const stm, rtError_t& errCode)
 {
     int32_t retId = RT_INVALID_ID;
-    // Allocating taskId in the same stream cannot be operated in mutiple threads at the same time.
+    // Allocating taskId in the same stream cannot be operated in multiple threads at the same time.
     const int32_t streamId = stm->Id_();
     TaskIdManager* idManager = nullptr;
 

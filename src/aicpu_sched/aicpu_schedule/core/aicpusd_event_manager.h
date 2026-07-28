@@ -484,7 +484,7 @@ namespace AicpuSchedule {
         using AicpuControlEventVersionFunc = int32_t (AicpuEventManager::*) (const event_info &);
         std::map<uint16_t, AicpuControlEventVersionFunc> controlEventVersionFuncMap_;
 
-        // event process funtion type
+        // event process function type
         using AicpuEventProc = int32_t (AicpuEventManager::*)(const event_info &, const uint32_t);
 
         AicpuEventProc aicpuEventProcFunc_[EVENT_MAX_NUM] = {nullptr};

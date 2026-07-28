@@ -821,7 +821,7 @@ private:
     bool biuperfProfFlag_ = false;
     bool l2CacheProfFlag_ = false;
     bool trackProfFlag_ = false;
-    uint32_t waitTimeout_ = 0U; // defualt event wait timeout 0s(never timeout)
+    uint32_t waitTimeout_ = 0U; // default event wait timeout 0s(never timeout)
     bool disableWaitPrep_ = false;
     uint8_t profileEnabled_ = 0U;
     bool isNpuCollect = false; // Corresponding to the environment NPU_COLLECT_PATH

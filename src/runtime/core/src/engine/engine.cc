@@ -333,7 +333,7 @@ bool Engine::ProcessTask(TaskInfo* workTask, const uint32_t deviceId)
             pendingNum_.Sub(davinciTaskNum);
         }
     } else {
-        /* if error occured or not is streamSync process, process davinci task in main thread */
+        /* if error occurred or not is streamSync process, process davinci task in main thread */
         if (!(recycleStm->GetStreamAsyncRecycleFlag())) {
             (void)ProcessTaskDavinciList(recycleStm, recycleEndTaskId, deviceId);
         }
