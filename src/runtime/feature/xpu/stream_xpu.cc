@@ -359,7 +359,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error, "Failed to query SQ head, stream_id=%d, retCode=%#x.", streamId_,
         static_cast<uint32_t>(error));
-    if (((posTail + rtsqDepth - sqHead) % rtsqDepth) > (posTail + rtsqDepth - posHead) % rtsqDepth) {
+    if (((posTail + rtsqDepth - sqHead) % rtsqDepth) >= (posTail + rtsqDepth - posHead) % rtsqDepth) {
         RT_LOG(RT_LOG_WARNING, "Invalid task position relation, stream_id=%d, sqHead=%u.", streamId_, sqHead);
         return RT_ERROR_NONE;
     }
@@ -371,7 +371,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
         nextTaskId = exeWorkTask->taskSn;
     } else {
         RT_LOG(RT_LOG_WARNING, "Failed to get task info at sqHead, stream_id=%d, sqHead=%u.", streamId_, sqHead);
-        return RT_ERROR_INVALID_VALUE;
+        nextTaskId = MAX_UINT32_NUM;
     }
 
     uint16_t finishedPos = (sqHead + rtsqDepth - 1) % rtsqDepth;
@@ -383,7 +383,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finis
         RT_LOG(
             RT_LOG_WARNING, "Failed to get task info at finishedPos, stream_id=%d, finishedPos=%u.", streamId_,
             finishedPos);
-        return RT_ERROR_INVALID_VALUE;
+        endTaskId = MAX_UINT32_NUM;
     }
     if (sqHead == posTail || nextTaskId != endTaskId) {
         finishedId = endTaskId;

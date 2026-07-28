@@ -995,8 +995,8 @@ void StarsV2IpcEventRecordTaskUnInit(TaskInfo* taskInfo)
 
     IpcEventDestroy(&event, curIndex, false);
     RT_LOG(
-        RT_LOG_INFO, "ipc wait complete, device_id=%u, stream_id=%d, task_id=%hu, event_id=%u",
-        stream->Device_()->Id_(), stream->Id_(), taskInfo->id, curIndex);
+        RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, event_id=%u", stream->Device_()->Id_(), stream->Id_(),
+        taskInfo->id, curIndex);
 }
 #endif
 

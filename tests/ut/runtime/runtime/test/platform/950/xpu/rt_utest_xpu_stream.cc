@@ -448,3 +448,40 @@ TEST_F(XpuStreamTest, arg_release_single_task)
     delete taskInfo;
     delete result;
 }
+
+TEST_F(XpuStreamTest, get_finished_task_id_by_sq_head_when_task_info_null)
+{
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
+    MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
+    ut::MockXpuTprtRuntime();
+
+    rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    Runtime* rt = (Runtime*)Runtime::Instance();
+    XpuContext* context = static_cast<XpuContext*>(rt->GetXpuCtxt());
+
+    const uint32_t prio = RT_STREAM_PRIORITY_DEFAULT;
+    const uint32_t flag = 0;
+    Stream** result = new Stream*(nullptr);
+    error = context->StreamCreate(prio, flag, result);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    XpuStream* stream = static_cast<XpuStream*>(context->StreamList_().front());
+    stream->sqDepth_ = 4U;
+
+    TaskResManageDavid* taskResMang = dynamic_cast<TaskResManageDavid*>(stream->taskResMang_);
+    taskResMang->taskResAHead_.Set(0U);
+    taskResMang->taskResATail_.Set(2U);
+    taskResMang->taskRes_[0U].taskInfo.id = 0xFFFFU;
+    taskResMang->taskRes_[1U].taskInfo.id = 0xFFFFU;
+
+    uint16_t sqHead = 0U;
+    uint32_t finishedId = 0U;
+    EXPECT_EQ(stream->GetFinishedTaskIdBySqHead(sqHead, finishedId), RT_ERROR_NONE);
+
+    taskResMang->taskResAHead_.Set(0U);
+    taskResMang->taskResATail_.Set(0U);
+
+    rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    delete result;
+}
