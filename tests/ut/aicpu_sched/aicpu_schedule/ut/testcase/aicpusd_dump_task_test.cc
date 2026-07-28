@@ -1322,7 +1322,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrLogTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+    opDumpTask->skipAddressConversion_ = true;
 
     uint64_t testAddr = 0x5000U;
     opDumpTask->inputsBaseAddr_.push_back(testAddr);
@@ -1337,7 +1337,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrBaseAddrZeroTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
 
     opDumpTask->inputsBaseAddr_.push_back(0U);
     opDumpTask->inputsAddrType_.push_back(aicpu::dump::AddressType::TRADITIONAL_ADDR);
@@ -1351,7 +1351,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrRawAddrTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
 
     uint64_t testAddr = 0x4000U;
     opDumpTask->inputsBaseAddr_.push_back(testAddr);
@@ -1366,7 +1366,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrSingleOpTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+    opDumpTask->skipAddressConversion_ = true;
 
     uint64_t testAddr = 0x5000U;
     opDumpTask->inputsBaseAddr_.push_back(testAddr);
@@ -1590,7 +1590,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrTraditionalAddrTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t expectedAddr = 0xABCD1234U;
     uint64_t baseBuffer[1] = {expectedAddr};
     opDumpTask->outputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));
@@ -1604,7 +1604,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrBaseAddrZeroTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     opDumpTask->outputsBaseAddr_.push_back(0U);
     opDumpTask->outputsAddrType_.push_back(aicpu::dump::TRADITIONAL_ADDR);
     uint64_t dataAddr = 0U;
@@ -1616,7 +1616,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrRawAddrTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t testAddr = 0x7000U;
     opDumpTask->outputsBaseAddr_.push_back(testAddr);
     opDumpTask->outputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
@@ -1629,7 +1629,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrSingleOpTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+    opDumpTask->skipAddressConversion_ = true;
     uint64_t testAddr = 0x8000U;
     opDumpTask->outputsBaseAddr_.push_back(testAddr);
     opDumpTask->outputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
@@ -1642,7 +1642,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrNotilingAddrTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t finalDataAddr = 0xCAFE5678U;
     uint64_t level2[1] = {finalDataAddr};
     uint64_t level1[1] = {reinterpret_cast<uint64_t>(level2)};
@@ -1661,7 +1661,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrTraditionalAddrRealMemTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t expectedAddr = 0x1234ABCDU;
     uint64_t baseBuffer[1] = {expectedAddr};
     opDumpTask->inputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));
@@ -1675,7 +1675,7 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrNotilingAddrTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t finalDataAddr = 0xBEEF1234U;
     uint64_t level2[1] = {finalDataAddr};
     uint64_t level1[1] = {reinterpret_cast<uint64_t>(level2)};
@@ -1690,7 +1690,7 @@ TEST_F(AicpuDumpTaskTest, GetOutputDataAddrTraditionalAddrLogTest)
 {
     std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
     opDumpTask->opName_ = "TestLogOp";
-    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->skipAddressConversion_ = false;
     uint64_t expectedAddr = 0xFACE5678U;
     uint64_t baseBuffer[1] = {expectedAddr};
     opDumpTask->outputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));

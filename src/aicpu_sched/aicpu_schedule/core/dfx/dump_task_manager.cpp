@@ -295,7 +295,7 @@ int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t * const infoAddr, cons
         streamId = info.stream_id;
         taskId = info.task_id;
     }
-    aicpusd_info("Load op mapping info, size[%u], streamId[%u], taskId[%u]", len, streamId, taskId);
+    aicpusd_info("Load op mapping info from ts, size[%u], streamId[%u], taskId[%u]", len, streamId, taskId);
     if (infoAddr == nullptr) {
         aicpusd_err("op mapping info addr is null");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -415,7 +415,7 @@ static bool CheckAndGetDumpBitmap(MappingInfoOptionalParam &optionalParam, uint6
 int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(const uint64_t opMappingInfoAddr,
                                                     const uint64_t opMappingInfoLen) const
 {
-    aicpusd_info("load op mapping info for single op or unknown shape op, size[%llu]", opMappingInfoLen);
+    aicpusd_info("load op mapping info from dump task,value[%llu], size[%llu]",opMappingInfoAddr, opMappingInfoLen);
     if (opMappingInfoAddr == 0U) {
         aicpusd_err("op mapping info addr is null");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -468,7 +468,7 @@ int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo &opMappingInf
     }
     const aicpu::dump::Task task = opMappingInfo.task(0);
     DumpMode dumpMode = opMappingInfo.dump_data();
-    aicpusd_info("isSingleOrUnknowShapeOp[true], hasStepId[%u], task_id[%u], stream_id[%u] dumpMode[%d]",
+    aicpusd_info("skipAddressConversion[true], hasStepId[%u], task_id[%u], stream_id[%u] dumpMode[%d]",
         static_cast<uint32_t>(optionalParam.hasStepId), task.task_id(), task.stream_id(),
         static_cast<int32_t>(dumpMode));
     ret = opDumpTaskPtr->PreProcessOpMappingInfo(task,

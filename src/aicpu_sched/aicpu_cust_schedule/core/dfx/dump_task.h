@@ -92,14 +92,14 @@ public:
      * @param  basePath base dump path
      * @param  param optional param
      * @param  dumpStep step need dump
-     * @param  isSingleOrUnknowShapeOp is single op or unknow shape op or not
+     * @param  skipAddressConversion indicates whether to skip address conversion based on addrtype
      * @return whather preprocess success
      */
     StatusCode PreProcessOpMappingInfo(const aicpu::dump::Task &task,
                                        const std::string &basePath,
                                        const MappingInfoOptionalParam &param,
                                        const DumpStep &dumpStep,
-                                       const bool isSingleOrUnknowShapeOp = false);
+                                       const bool skipAddressConversion = false);
 
     /**
      * Deal with dump info event.
@@ -215,7 +215,7 @@ private:
     std::unique_ptr<char_t[]> buff_;
     uint64_t buffSize_;
     uint64_t offset_;
-    bool isSingleOrUnknowShapeOp_;
+    bool skipAddressConversion_;
     int32_t hostPid_;
     uint32_t deviceId_;
 };  // class OpDumpTask

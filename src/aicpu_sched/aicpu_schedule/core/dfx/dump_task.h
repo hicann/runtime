@@ -42,6 +42,14 @@
 	exec_expr1;                                                                      \
   }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+__attribute__((weak)) bool AdumpStatsOpInitStatus();
+#ifdef __cplusplus
+}
+#endif
+
 namespace AicpuSchedule {
 constexpr uint32_t INVALID_VAL = 65535U;
 constexpr uint8_t STARS_DATADUMP_LOAD_INFO = 8;
@@ -178,7 +186,7 @@ public:
      * @param  basePath base dump path
      * @param  param optional param
      * @param  dumpStep step need dump
-     * @param  isSingleOrUnknowShapeOp is single op or unknow shape op or not
+     * @param  skipAddressConversion indicates whether to skip address conversion based on addrtype
      * @return whather preprocess success
      */
     StatusCode PreProcessOpMappingInfo(const aicpu::dump::Task &task,
@@ -186,7 +194,7 @@ public:
                                        const MappingInfoOptionalParam &param,
                                        const DumpStep &dumpStep,
                                        const DumpMode dumpMode,
-                                       const bool isSingleOrUnknowShapeOp = false);
+                                       const bool skipAddressConversion = false);
     StatusCode UpdatePreProcessFftsPlusInputAndOutput(const aicpu::dump::Context &item);
     StatusCode PreProcessUdfOpMappingInfo(uint8_t *dumpInfo, uint64_t length);
     /**
@@ -366,7 +374,7 @@ private:
     std::unique_ptr<char_t[]> buff_;
     uint64_t buffSize_;
     uint64_t offset_;
-    bool isSingleOrUnknowShapeOp_;
+    bool skipAddressConversion_;
     int32_t hostPid_;
     uint32_t deviceId_;
     DumpMode dumpMode_;

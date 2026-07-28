@@ -38,7 +38,7 @@ OpDumpTask::OpDumpTask(const int32_t hostPid, const uint32_t deviceId)
       buff_(nullptr),
       buffSize_(0U),
       offset_(0U),
-      isSingleOrUnknowShapeOp_(false),
+      skipAddressConversion_(false),
       hostPid_(hostPid),
       deviceId_(deviceId),
       dumpMode_(DumpMode::TENSOR_DUMP_DATA) {}
@@ -292,7 +292,7 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
                                                const MappingInfoOptionalParam &param,
                                                const DumpStep &dumpStep,
                                                const DumpMode dumpMode,
-                                               const bool isSingleOrUnknowShapeOp)
+                                               const bool skipAddressConversion)
 {
     aicpusd_info("Base path[%s], has model name[%d], model name[%s], has model id[%d], model id[%u].",
         basePath.c_str(), param.hasModelName, param.modelName.c_str(), param.hasModelId, param.modelId);
@@ -300,7 +300,7 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
     baseDumpPath_ = basePath;
     optionalParam_ = param;
     dumpStep_ = dumpStep;
-    isSingleOrUnknowShapeOp_ = isSingleOrUnknowShapeOp;
+    skipAddressConversion_ = skipAddressConversion;
     // single op no task id and stream id
     taskInfo_.taskId_ = task.task_id();
     taskInfo_.streamId_ = task.stream_id();
@@ -356,7 +356,7 @@ void OpDumpTask::GetInputDataAddr(uint64_t &dataAddr, const int32_t i)
     const uint64_t baseAddr = inputsBaseAddr_.at(static_cast<size_t>(i));
     aicpusd_info("op name[%s], input[%d], base value[%lx]", opName_.c_str(), i, baseAddr);
     dataAddr = baseAddr;
-    if (!isSingleOrUnknowShapeOp_) {
+    if (!skipAddressConversion_) {
         if (baseAddr == 0U) {
             aicpusd_info("op name[%s], input[%d] base addr is null", opName_.c_str(), i);
             return;
@@ -438,7 +438,7 @@ void OpDumpTask::GetOutputDataAddr(uint64_t &dataAddr, const int32_t i)
 {
     const uint64_t baseAddr = outputsBaseAddr_.at(static_cast<size_t>(i));
     dataAddr = baseAddr;
-    if (!isSingleOrUnknowShapeOp_) {
+    if (!skipAddressConversion_) {
         if (baseAddr == 0U) {
             aicpusd_info("op name[%s], output[%d] base addr is null.", opName_.c_str(), i);
             return;
@@ -666,7 +666,7 @@ StatusCode OpDumpTask::Dump(const std::string &path,
 
 StatusCode OpDumpTask::ProcessngNoTiliInput()
 {
-    if (isSingleOrUnknowShapeOp_) {
+    if (skipAddressConversion_) {
         return AICPU_SCHEDULE_OK;
     }
 
@@ -730,7 +730,7 @@ StatusCode OpDumpTask::ProcessngNoTiliInput()
 
 StatusCode OpDumpTask::ProcessngNoTiliOutput()
 {
-    if (isSingleOrUnknowShapeOp_) {
+    if (skipAddressConversion_) {
         return AICPU_SCHEDULE_OK;
     }
     for (int64_t outputDim = 0; outputDim < baseDumpData_.output_size(); ++outputDim) {
@@ -1162,12 +1162,16 @@ bool OpDumpTask::CheckAndGetKfcDumpStatsAPI()
     if (kfcDumpFunc_ != nullptr) {
         return true;
     }
-    kfcDumpFunc_ = PtrToFunctionPtr<void, AicpuKfcDumpFuncPtr>(dlsym(RTLD_DEFAULT, KFC_DUMP_KERNEL_NAME.c_str()));
+    const char *kfcDumpKernelName = (&AdumpStatsOpInitStatus != nullptr && AdumpStatsOpInitStatus())
+        ? "AdumpStatsOpSrvLaunch"
+        : "AicpuKfcDumpSrvLaunch";
+
+    kfcDumpFunc_ = PtrToFunctionPtr<void, AicpuKfcDumpFuncPtr>(dlsym(RTLD_DEFAULT, kfcDumpKernelName));
     if (kfcDumpFunc_ == nullptr) {
-        aicpusd_info("Kfc dump API not get.");
+        aicpusd_info("Kfc dump API[%s] not get.", kfcDumpKernelName);
         return false;
     }
-    aicpusd_info("Kfc dump API has get, no need get again.");
+    aicpusd_info("Kfc dump API[%s] has get, no need get again.", kfcDumpKernelName);
     return true;
 }
 

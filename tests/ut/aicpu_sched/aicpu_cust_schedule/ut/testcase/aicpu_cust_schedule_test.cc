@@ -1009,7 +1009,7 @@ TEST_F(AICPUCustScheduleTEST, ProcessInputDump_dump_fail)
         task.inputsBaseAddr_.push_back((uint64_t)(0));
         task.offset_ = 0;
         task.ProcessInputDump(dumpData, "", IdeDumpStart(nullptr));
-        task.isSingleOrUnknowShapeOp_ = 1;
+        task.skipAddressConversion_ = 1;
         task.ProcessInputDump(dumpData, "", IdeDumpStart(nullptr));
         opInput->set_size(0);
         task.offset_ = 0;

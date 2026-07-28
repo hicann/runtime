@@ -47,7 +47,7 @@ OpDumpTask::OpDumpTask(const int32_t hostPid, const uint32_t deviceId)
       buff_(nullptr),
       buffSize_(0U),
       offset_(0U),
-      isSingleOrUnknowShapeOp_(false),
+      skipAddressConversion_(false),
       hostPid_(hostPid),
       deviceId_(deviceId) { }
 
@@ -229,7 +229,7 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
                                                const std::string &basePath,
                                                const MappingInfoOptionalParam &param,
                                                const DumpStep &dumpStep,
-                                               const bool isSingleOrUnknowShapeOp)
+                                               const bool skipAddressConversion)
 {
     aicpusd_info("Base path[%s], has model name[%d], model name[%s], has model id[%d], model id[%u].",
                  basePath.c_str(), static_cast<int32_t>(param.hasModelName), param.modelName.c_str(),
@@ -239,10 +239,10 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
     baseDumpPath_ = basePath;
     optionalParam_ = param;
     dumpStep_ = dumpStep;
-    isSingleOrUnknowShapeOp_ = isSingleOrUnknowShapeOp;
+    skipAddressConversion_ = skipAddressConversion;
     // single op no task id and stream id
-    taskInfo_.taskId_ = (isSingleOrUnknowShapeOp_ && optionalParam_.hasStepId)? 0U : task.task_id();
-    taskInfo_.streamId_ = (isSingleOrUnknowShapeOp_ && optionalParam_.hasStepId)? 0U : task.stream_id();
+    taskInfo_.taskId_ = (skipAddressConversion_ && optionalParam_.hasStepId)? 0U : task.task_id();
+    taskInfo_.streamId_ = (skipAddressConversion_ && optionalParam_.hasStepId)? 0U : task.stream_id();
     endGraph_ = task.end_graph();
 
     ::toolkit::dumpdata::DumpData dumpData;
@@ -289,7 +289,7 @@ StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dum
         }
         const uint64_t baseAddr = inputsBaseAddr_.at(static_cast<size_t>(i));
         uint64_t dataAddr = baseAddr;
-        if (!isSingleOrUnknowShapeOp_) {
+        if (!skipAddressConversion_) {
             if (baseAddr == 0U) {
                 aicpusd_info("op name[%s], input[%d] base addr is null", opName_.c_str(), i);
                 continue;
@@ -353,7 +353,7 @@ StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &du
         }
         const uint64_t baseAddr = outputsBaseAddr_.at(static_cast<size_t>(i));
         uint64_t dataAddr = baseAddr;
-        if (!isSingleOrUnknowShapeOp_) {
+        if (!skipAddressConversion_) {
             if (baseAddr == 0U) {
                 aicpusd_info("op name[%s], output[%d] base addr is null.", opName_.c_str(), i);
                 continue;
@@ -725,7 +725,7 @@ std::string OpDumpTask::DumpPath(const uint64_t nowTime, const uint64_t dumpNumb
         oss << "/" << optionalParam_.modelId;
     }
     // single op dump
-    if (!((isSingleOrUnknowShapeOp_) && (!optionalParam_.hasStepId))) {
+    if (!((skipAddressConversion_) && (!optionalParam_.hasStepId))) {
         oss << "/" << dumpNumber;
     }
 
