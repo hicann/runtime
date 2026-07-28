@@ -623,6 +623,8 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
 rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
 {
     UNUSED(ptr);

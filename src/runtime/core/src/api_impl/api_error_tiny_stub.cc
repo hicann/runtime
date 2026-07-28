@@ -453,5 +453,7 @@ rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* 
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiErrorDecorator::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
 } // namespace runtime
 } // namespace cce

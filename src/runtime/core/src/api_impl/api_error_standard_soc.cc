@@ -560,5 +560,15 @@ rtError_t ApiErrorDecorator::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcE
     return impl_->IpcOpenEventHandle(handle, event);
 }
 
+rtError_t ApiErrorDecorator::DeviceL2CacheFlush()
+{
+    const rtError_t error = impl_->DeviceL2CacheFlush();
+    if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
+        return error;
+    }
+    ERROR_RETURN(error, "Flush L2 cache failed.");
+    return error;
+}
+
 } // namespace runtime
 } // namespace cce

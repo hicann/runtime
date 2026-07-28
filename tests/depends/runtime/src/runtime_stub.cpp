@@ -803,6 +803,12 @@ rtError_t aclStub::rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virP
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtDeviceL2CacheFlush(void* rsv)
+{
+    (void)rsv;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtBinaryLoadWithoutTilingKey(const void* data, const uint64_t length, rtBinHandle* binHandle)
 {
     (void)data;
@@ -4379,3 +4385,5 @@ rtError_t rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, ui
 {
     return MockFunctionTest::aclStubInstance().rtMemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx);
 }
+
+rtError_t rtDeviceL2CacheFlush(void* rsv) { return MockFunctionTest::aclStubInstance().rtDeviceL2CacheFlush(rsv); }

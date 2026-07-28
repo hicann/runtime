@@ -315,6 +315,7 @@ public:
         const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t FlushCache(const uint64_t base, const size_t len) = 0;
     virtual rtError_t InvalidCache(const uint64_t base, const size_t len) = 0;
+    virtual rtError_t DeviceL2CacheFlush() = 0;
     virtual rtError_t MemCopySync(
         void* const dst, uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
         const uint32_t checkKind = INVALID_CHECK_KIND) = 0;

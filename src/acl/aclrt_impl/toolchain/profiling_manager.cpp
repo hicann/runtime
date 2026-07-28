@@ -327,6 +327,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclmdlRICondHandleGetCondPtr, "aclmdlRICondHandleGetCondPtr"},
     {AclProfType::AclmdlRIAddCondTask, "aclmdlRIAddCondTask"},
     {AclProfType::AclmdlRICaptureToModelRIBegin, "aclmdlRICaptureToModelRIBegin"},
+    {AclProfType::AclrtDeviceL2CacheFlush, "aclrtDeviceL2CacheFlush"},
 };
 
 aclError RegisterType(const uint32_t index)

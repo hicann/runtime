@@ -91,6 +91,15 @@ RTS_API rtError_t rtDeviceGetP2PAtomicCapabilities(
  */
 RTS_API rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t* val);
 
+/**
+ * @ingroup dvrt_dev
+ * @brief Flush L2 cache for current device
+ * @param [in] rsv Reserved parameter, must be nullptr
+ * @return RT_ERROR_NONE for success
+ * @return RT_ERROR_FEATURE_NOT_SUPPORT driver does not support this feature
+ */
+RTS_API rtError_t rtDeviceL2CacheFlush(void* rsv);
+
 #if defined(__cplusplus)
 }
 #endif

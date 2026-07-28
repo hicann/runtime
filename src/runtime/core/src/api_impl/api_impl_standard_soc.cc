@@ -822,5 +822,26 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
     RT_LOG(RT_LOG_DEBUG, "close ipc memory by IpcDestroyMemoryName, name=%s.", name);
     return ret;
 }
+
+rtError_t ApiImpl::DeviceL2CacheFlush()
+{
+    RT_LOG(RT_LOG_INFO, "Flush L2 cache for current device.");
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+
+    drvL2buffInvalidType buf = DRV_L2BUFF_CLEAN_CSP;
+    const rtError_t error = NpuDriver::SetDeviceInfoByBuff(
+        dev->Id_(), MODULE_TYPE_L2BUFF, INFO_TYPE_L2BUFF_INVALID_CACHE, &buf, sizeof(drvL2buffInvalidType));
+    if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1015, "Flushing L2 cache",
+            "If the driver has been upgraded to the latest version, "
+            "the current chip type may not support L2 cache flush.");
+        return error;
+    }
+    return error;
+}
 } // namespace runtime
 } // namespace cce

@@ -228,6 +228,7 @@ public:
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t FlushCache(const uint64_t base, const size_t len) override;
     rtError_t InvalidCache(const uint64_t base, const size_t len) override;
+    rtError_t DeviceL2CacheFlush() override;
     rtError_t MemCopySync(
         void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
         const uint32_t checkKind = INVALID_CHECK_KIND) override;

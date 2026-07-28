@@ -9217,6 +9217,28 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemMapSelectedLinkTest)
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceL2CacheFlush_failed_with_invalid_param)
+{
+    int32_t temp = 1;
+    aclError ret = aclrtDeviceL2CacheFlush(&temp);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceL2CacheFlush_failed_with_rt_error)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceL2CacheFlush(_))
+        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
+    aclError ret = aclrtDeviceL2CacheFlush(nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceL2CacheFlush_success)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceL2CacheFlush(_)).WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtDeviceL2CacheFlush(nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtApiHeaderIncludeTest)
 {
     // 验证 acl_rt_api.h 头文件包含正确，模板函数可编译

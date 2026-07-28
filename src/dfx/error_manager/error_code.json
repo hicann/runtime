@@ -561,7 +561,7 @@
       "errClass": "RTS Errors",
       "errTitle": "Package_Error_Incorrect_Driver_Version",
       "ErrCode": "EE1015",
-      "ErrMessage": "%s failed. Reason: The driver version capacity is insufficient. %s",
+      "ErrMessage": "%s failed. Reason: The driver version capability is insufficient. %s",
       "Arglist": "func, reason",
       "suggestion": {
         "Possible Cause": "N/A",

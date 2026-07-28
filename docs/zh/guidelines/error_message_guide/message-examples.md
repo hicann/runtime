@@ -176,7 +176,7 @@ The host memory is insufficient.
 
 **errTitle:** Package_Error_Incorrect_Driver_Version
 
-**new ErrMessage:** %s failed. Reason: The driver version capacity is insufficient. %s
+**new ErrMessage:** %s failed. Reason: The driver version capability is insufficient. %s
 
 **Arglist:** func, reason
 

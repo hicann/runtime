@@ -658,6 +658,17 @@ aclError aclrtDeviceGetLimitImpl(aclrtDeviceLimit limit, size_t* value)
         "successfully execute aclrtDeviceGetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), *value);
     return ACL_SUCCESS;
 }
+
+aclError aclrtDeviceL2CacheFlushImpl(void* rsv)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceL2CacheFlush);
+    ACL_LOG_INFO("start to execute aclrtDeviceL2CacheFlush");
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(rsv == nullptr, "rsv", "rsv must be nullptr");
+
+    ACL_REQUIRES_RTS_OK(rtDeviceL2CacheFlush(rsv));
+
+    return ACL_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif

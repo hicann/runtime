@@ -79,7 +79,7 @@
       DLOG_ERROR)                                                                                                  \
     /* EE1015 - Package_Error_Incorrect_Driver_Version */                                                          \
     X(EE1015, "EE1015", ("func", "reason"),                                                                        \
-      "%s failed. Reason: The driver version capacity is insufficient. %s "                                        \
+      "%s failed. Reason: The driver version capability is insufficient. %s "                                      \
       "ErrorCode=EE1015.\n",                                                                                       \
       DLOG_ERROR)                                                                                                  \
     /* EE1016 - Not_Supported */                                                                                   \

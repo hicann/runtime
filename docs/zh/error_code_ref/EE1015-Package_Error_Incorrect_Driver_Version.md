@@ -5,13 +5,13 @@
 报错格式如下，占位符%s的含义依次为报错阶段、详细原因：
 
 ```
-%s failed. Reason: The driver version capacity is insufficient. %s
+%s failed. Reason: The driver version capability is insufficient. %s
 ```
 
 报错示例如下：
 
 ```
-rtsIpcMemImportByKey failed. Reason: The driver version capacity is insufficient. The driver interface halShmemInfoGet does not exist.
+rtsIpcMemImportByKey failed. Reason: The driver version capability is insufficient. The driver interface halShmemInfoGet does not exist.
 ```
 
 ## 解决方法

@@ -332,6 +332,7 @@ enum AclProfType {
     AclrtGetUserDevIdByPhyDevId,
     AclrtGetPhyDevIdByUserDevId,
     AclrtMemMapNoAccess,
+    AclrtDeviceL2CacheFlush,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };

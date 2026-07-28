@@ -547,6 +547,8 @@ rtError_t ApiDecorator::FlushCache(const uint64_t base, const size_t len) { retu
 
 rtError_t ApiDecorator::InvalidCache(const uint64_t base, const size_t len) { return impl_->InvalidCache(base, len); }
 
+rtError_t ApiDecorator::DeviceL2CacheFlush() { return impl_->DeviceL2CacheFlush(); }
+
 rtError_t ApiDecorator::MemCopySync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
     const uint32_t checkKind)

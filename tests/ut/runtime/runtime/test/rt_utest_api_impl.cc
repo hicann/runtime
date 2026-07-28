@@ -2085,3 +2085,62 @@ TEST_F(ApiImplTest, MemcpyAsyncExLocationCheckInOnlineMode)
         &dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_DEVICE_EX, nullptr, nullptr, nullptr, true, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TEST_F(ApiImplTest, device_l2_cache_flush_context_null)
+{
+    ApiImpl apiImpl;
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context*)NULL));
+    rtError_t error = apiImpl.DeviceL2CacheFlush();
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_device_null)
+{
+    ApiImpl apiImpl;
+    Context context(nullptr, false);
+    context.Init();
+    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(&context));
+    rtError_t error = apiImpl.DeviceL2CacheFlush();
+    EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_success)
+{
+    ApiImpl apiImpl;
+    MOCKER(halSetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_NONE));
+    rtError_t error = apiImpl.DeviceL2CacheFlush();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_feature_not_support)
+{
+    ApiImpl apiImpl;
+    MOCKER(halSetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    rtError_t error = apiImpl.DeviceL2CacheFlush();
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_failed)
+{
+    ApiImpl apiImpl;
+    MOCKER(halSetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    rtError_t error = apiImpl.DeviceL2CacheFlush();
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_via_c_api)
+{
+    MOCKER(halSetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_NONE));
+    rtError_t error = rtDeviceL2CacheFlush(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, device_l2_cache_flush_via_decorator)
+{
+    ApiImpl apiImpl;
+    ApiDecorator apiDecorator(&apiImpl);
+    MOCKER(halSetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_NONE));
+    rtError_t error = apiDecorator.DeviceL2CacheFlush();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

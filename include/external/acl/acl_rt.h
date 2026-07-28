@@ -5876,6 +5876,18 @@ ACL_FUNC_VISIBILITY aclError aclrtMemManagedPrefetchBatchAsync(
  * @retval OtherValues for other failure situation.
  */
 ACL_FUNC_VISIBILITY aclError aclrtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx);
+
+/**
+ * @ingroup AscendCL
+ * @brief Flush L2 cache for current device.
+ * @param [in] rsv Reserved parameter, must be nullptr.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_INVALID_PARAM rsv is not nullptr.
+ * @retval ACL_ERROR_RT_FEATURE_NOT_SUPPORT The feature is not supported by driver.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceL2CacheFlush(void* rsv);
 #ifdef __cplusplus
 }
 #endif

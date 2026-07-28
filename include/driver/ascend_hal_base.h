@@ -429,6 +429,7 @@ typedef enum {
     INFO_TYPE_SWPLUGIN_UPGRADE_POLICY,
     INFO_TYPE_SUPER_POD_INTERCON_TYPE,
     INFO_TYPE_REAL_TIME,
+    INFO_TYPE_L2BUFF_INVALID_CACHE,
 } DEV_INFO_TYPE;
 
 /**
@@ -1352,6 +1353,8 @@ struct hal_ub_status {
 * MODULE_TYPE_L2BUFF        |  INFO_TYPE_L2BUFF_RESUME    |   L2buff fault resume       |                |
 * --------------------------------------------------------------------------------------------------------
 * MODULE_TYPE_SYSTEM        |  INFO_TYPE_SDK_EX_VERSION   |    SDK extend version       | used in device |
+* --------------------------------------------------------------------------------------------------------
+* MODULE_TYPE_L2BUFF        |  INFO_TYPE_L2BUFF_INVALID_CACHE |  DRV_L2BUFF_CLEAN_CSP   | used in device |
 * --------------------------------------------------------------------------------------------------------
 * @param [in] devId  Device ID, when parameter infoType is set to INFO_TYPE_MASTERID, need to use physical device ID.
 *             In other cases, need to use logical device ID.

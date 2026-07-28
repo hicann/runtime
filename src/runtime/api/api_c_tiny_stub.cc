@@ -1390,6 +1390,13 @@ rtError_t rtLaunchSIMTKernelWithHostArgs(
     UNUSED(placeHolderNum);
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtDeviceL2CacheFlush(void* rsv)
+{
+    UNUSED(rsv);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus
