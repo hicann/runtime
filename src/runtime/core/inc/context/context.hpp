@@ -40,12 +40,10 @@
 #include "mmpa_linux.h"
 #include "cond_handle.hpp"
 
-#define CHECK_CONTEXT_VALID_WITH_RETURN(tmpCtx, ERRCODE)                                                         \
-    {                                                                                                            \
-        const bool isValidFlag = ContextManage::CheckContextIsValid((tmpCtx));                                   \
-        COND_RETURN_AND_MSG_OUTER(                                                                               \
-            !isValidFlag, (ERRCODE), ErrorCode::EE1018, __func__,                                                \
-            "No valid context is bound to the current thread. Set up the device or bind a valid context first"); \
+#define CHECK_CONTEXT_VALID_WITH_RETURN(tmpCtx, ERRCODE)                                    \
+    {                                                                                       \
+        const bool isValidFlag = ContextManage::CheckContextIsValid((tmpCtx));              \
+        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, !isValidFlag, (ERRCODE), "ctx is NULL!"); \
     }
 #define CHECK_CONTEXT_VALID_WITH_PROC_RETURN(tmpCtx, ERRCODE, PROC)     \
     {                                                                   \
