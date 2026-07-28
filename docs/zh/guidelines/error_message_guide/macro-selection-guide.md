@@ -483,17 +483,20 @@ Stream capture 模式检查专用。检查当前上下文是否支持 capture �
 
 ## 3. 空指针检查宏（EH0008）
 
-检查指针是否为 `nullptr`，满足时上报 EH0008 错误并返回。这是 ACL 层使用最频繁的宏族（472+ 处使用）。
+检查指针是否为 `nullptr`，满足时上报 EH0008 错误并返回。这是 ACL 层使用最频繁的宏族（472+ 处使用）。`_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体用调用者传入的语义化描述替代 `__func__`（详见第 8 节「语义化函数描述」）。
 
 | 宏名 | 返回类型 | 条件类型 | 上报 ErrMsg | 推荐等级 | 替代宏 |
 |------|---------|---------|------------|---------|--------|
 | ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT | ACL_ERROR_INVALID_PARAM | 空指针 | EH0008 | 推荐 | — |
+| ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC | ACL_ERROR_INVALID_PARAM | 空指针 | EH0008 | 推荐 | — |
 | ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT | 调用者指定 | 空指针 | EH0008 | 推荐 | — |
+| ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT_WITH_FUNC_DESC | 调用者指定 | 空指针 | EH0008 | 推荐 | — |
 | ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT | nullptr | 空指针 | EH0008 | 推荐 | — |
 | ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME | ACL_ERROR_INVALID_PARAM | 空指针 | EH0008 | 特定场景 | — |
 
 **说明**：
 - `ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT` 是首选宏，返回 `ACL_ERROR_INVALID_PARAM` 并上报 EH0008
+- `_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体额外接收 `funcDesc` 参数，用于非接口层代码传入语义化函数描述
 - `_WITH_PRAM_NAME` 变体用于参数名与变量名不同的场景
 
 ---
@@ -502,35 +505,41 @@ Stream capture 模式检查专用。检查当前上下文是否支持 capture �
 
 ### EH0007 - 非法值（带期望值）
 
-参数值不合法时使用。宏自动注入 `__func__`、参数值、参数名和期望值。
+参数值不合法时使用。宏自动注入 `__func__`、参数值、参数名和期望值。`_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体用调用者传入的语义化描述替代 `__func__`（详见第 8 节「语义化函数描述」）。
 
 | 宏名 | 返回类型 | 条件类型 | 上报 ErrMsg | 推荐等级 | 替代宏 |
 |------|---------|---------|------------|---------|--------|
 | ACL_CHECK_INVALID_VALUE_WITH_EXPECT | ACL_ERROR_INVALID_PARAM | 参数值（取反） | EH0007 | 推荐 | — |
 | ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET | 调用者指定 | 参数值（取反） | EH0007 | 推荐 | — |
 | ACL_CHECK_INVALID_VALUE_WITH_DESC | 调用者指定 | 参数值（取反） | EH0007 | 特定场景 | — |
+| ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC | 调用者指定 | 参数值（取反） | EH0007 | 特定场景 | — |
 | ACL_REQUIRES_PARAM_EQUAL_REPORT | ACL_ERROR_INVALID_PARAM | 参数值（不等） | EH0007 | 推荐 | — |
 | ACL_REQUIRES_POSITIVE_REPORT | ACL_ERROR_INVALID_PARAM | 参数值（<=0） | EH0007 | 推荐 | — |
+| ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC | ACL_ERROR_INVALID_PARAM | 参数值（<=0） | EH0007 | 推荐 | — |
 
 **说明**：
 - `ACL_CHECK_INVALID_VALUE_WITH_EXPECT` 系列的条件是**取反**的：`if (!(condition))` 表示条件不满足时报错
 - `ACL_REQUIRES_PARAM_EQUAL_REPORT` 用于参数必须等于某个特定值的场景
 - `ACL_REQUIRES_POSITIVE_REPORT` 用于参数必须为正数的场景
+- `_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体额外接收 `funcDesc` 参数，用于非接口层代码传入语义化函数描述
 
 ### EH0009 - 非法参数（带原因）
 
-参数非法且需要详细说明原因时使用。
+参数非法且需要详细说明原因时使用。`_AND_FUNC_DESC` 变体用调用者传入的语义化描述替代 `__func__`（详见第 8 节「语义化函数描述」）。
 
 | 宏名 | 返回类型 | 条件类型 | 上报 ErrMsg | 推荐等级 | 替代宏 |
 |------|---------|---------|------------|---------|--------|
 | ACL_CHECK_INVALID_PARAM_WITH_REASON | ACL_ERROR_INVALID_PARAM | 自定义条件 | EH0009 | 推荐 | — |
+| ACL_CHECK_INVALID_PARAM_WITH_REASON_AND_FUNC_DESC | ACL_ERROR_INVALID_PARAM | 自定义条件 | EH0009 | 推荐 | — |
 | ACL_CHECK_INVALID_PARAM_WITH_REASON_RET | 调用者指定 | 自定义条件 | EH0009 | 推荐 | — |
+| ACL_CHECK_INVALID_PARAM_WITH_REASON_RET_AND_FUNC_DESC | 调用者指定 | 自定义条件 | EH0009 | 推荐 | — |
 | ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET | 调用者指定 | 自定义条件 | EH0009 | 特定场景 | — |
 | ACL_CHECK_RESERVED_PARAM_REPORT_RET | 调用者指定 | 参数值（不等） | EH0009 | 推荐 | — |
 
 **说明**：
 - `ACL_CHECK_RESERVED_PARAM_REPORT_RET` 专用于预留参数校验（参数必须等于某个值，如 `flags == 0`）
 - `ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET` 用于参数名和参数值需要手动传入（非 `#param` 字符串化）的场景
+- `_AND_FUNC_DESC` 变体额外接收 `funcDesc` 参数，用于非接口层代码传入语义化函数描述
 
 ### EH0012 - 非法参数（无值）
 
@@ -617,13 +626,47 @@ Stream capture 模式检查专用。检查当前上下文是否支持 capture �
 
 ---
 
-## 8. 快速选择指南
+## 8. 语义化函数描述（_WITH_FUNC_DESC / _AND_FUNC_DESC 变体）
+
+ACL 层部分宏提供 `_WITH_FUNC_DESC` 或 `_AND_FUNC_DESC` 后缀变体，区别在于函数描述的传入方式：
+
+| 变体后缀 | 函数描述来源 | 示例 |
+|---------|------------|------|
+| 无后缀（如 `ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT`） | `__func__`（C++ 函数名，自动去除 `Impl` 后缀） | `"aclrtMemcpy"` |
+| `_WITH_FUNC_DESC` / `_AND_FUNC_DESC` | 调用者传入 `funcDesc` 字符串 | `"Checking the synchronous memory copy parameter validity"` |
+
+> **命名说明**：两种后缀功能完全相同，均用调用者传入的 `funcDesc` 替代 `__func__`。后缀选择取决于基础宏名：基础宏名以 `_REPORT` 结尾时新增变体使用 `_WITH_FUNC_DESC`（如 `ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC`）；其他情况使用 `_AND_FUNC_DESC`（如 `ACL_CHECK_INVALID_VALUE_WITH_DESC_AND_FUNC_DESC`）。
+
+无后缀的宏通过 `GetFuncNameWithoutImplSuffix(__func__)` 自动获取函数名；`_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体允许传入语义化描述字符串，使错误信息更易理解。
+
+**选择建议**：新代码对于非接口层代码（不以 `acl`、`rt` 或 `aclrt` 开头的函数）优先使用 `_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体，传入能描述当前操作语义的字符串。例如：
+
+```cpp
+// 推荐：非接口层使用语义化描述
+ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, "Checking the synchronous memory copy parameter validity");
+
+// 接口层函数（aclrtXxx）可直接使用无后缀宏，__func__ 即为有意义的接口名
+ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
+```
+
+对于手动调用 `AclErrorLogManager::ReportInputError()` 的场景，同样建议将 `__func__` 替换为语义化描述字符串：
+
+```cpp
+// 推荐：非接口层传入语义化描述
+acl::AclErrorLogManager::ReportInputError(
+    acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+    std::vector<const char*>({"Memory copy type conversion", acl::GetMemcpyKindDesc(kind), "kind", "..."}));
+```
+
+---
+
+## 9. 快速选择指南
 
 ```
 我要上报的错误码是否有专用的宏？
 ├─ 是（空指针→EH0008，参数值→EH0007/EH0009/EH0012，文件→EH0004，内存→EH0010，见第3~6节）
 │   └─ 专用宏是否能满足我的场景？（根据返回类型/条件类型判断）
-│       ├─ 是 → 使用专用宏
+│       ├─ 是 → 使用专用宏（非接口层代码优先使用 _WITH_FUNC_DESC / _AND_FUNC_DESC 变体，见第8节）
 │       └─ 否 → 手动调用 AclErrorLogManager::ReportInputError()（见下方说明） 或者 开发新的宏
 │
 └─ 否（EH0001/EH0003/EH0006/EH0011/EH0013 等无专用宏）

@@ -68,6 +68,11 @@ RT_LOG_OUTER_MSG_INVALID_PARAM(parm, expect)
 
 EH 系列错误码（ACL 层）使用 `acl::AclErrorLogManager::ReportInputError` 上报，通过 key-value 字符串向量传参，不走 `RT_LOG_OUTER_MSG_*` 宏链。参数数量校验规则相同：传入的 value 数量必须等于 Arglist 参数数量。
 
+ACL 层宏的 `func` 参数来源：
+- 无后缀宏（如 `ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT`）：自动通过 `GetFuncNameWithoutImplSuffix(__func__)` 获取函数名（去除 `Impl` 后缀）
+- `_WITH_FUNC_DESC` / `_AND_FUNC_DESC` 变体（如 `ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC`、`ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC`）：使用调用者传入的 `funcDesc` 字符串
+- 手动调用 `ReportInputError` 时，`func` 值由调用者自行传入，非接口层代码应传入语义化描述而非 `__func__`
+
 ### 校验项 — 参数值校验
 
 （1）参数值避免使用 `std::string` 拼接方式：该方式创建临时变量会导致 so 变大，建议使用 `RtFmtMsg` 函数（定义于 `rt_log.h`）以格式化字符串方式传入宏
