@@ -291,7 +291,7 @@ static void PrintDebugInfoForModelExecute(const Model* model)
     }
 }
 
-static rtError_t FuncCallSvmMemCopy(const Device* const dev, Model* const model)
+static rtError_t FuncCallSvmMemCopy(const Device* const dev, const Model* const model)
 {
     rtError_t error = RT_ERROR_NONE;
     Driver* const drv = dev->Driver_();
@@ -304,13 +304,14 @@ static rtError_t FuncCallSvmMemCopy(const Device* const dev, Model* const model)
                                     RT_MEMCPY_HOST_TO_DEVICE;
     void* const dst = RtValueToPtr<void*>(model->GetFuncCallSvmMem());
     const uint64_t size = model->GetFunCallMemSize();
-    error = BinaryMemAdvise(dst, size, RT_ADVISE_ACCESS_READWRITE, dev, needAdvise);
+    const uint64_t adviseSize = size + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
+    error = BinaryMemAdvise(dst, adviseSize, RT_ADVISE_ACCESS_READWRITE, dev, needAdvise);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     error = drv->MemCopySync(dst, size, model->GetFuncCallHostMem(), size, kind);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error, "Memcpy failed, size=%" PRIu64 "(bytes), type=%d, retCode=%#x, device_id=%u.",
         size, kind, static_cast<uint32_t>(error), devId);
-    error = BinaryMemAdvise(dst, size, RT_ADVISE_ACCESS_READONLY, dev, needAdvise);
+    error = BinaryMemAdvise(dst, adviseSize, RT_ADVISE_ACCESS_READONLY, dev, needAdvise);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return RT_ERROR_NONE;
 }
