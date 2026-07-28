@@ -37,8 +37,9 @@ TSD_StatusT AicpuThreadPackageWorker::LoadPackage(const std::string& packagePath
         (void)close(fd_);
         fd_ = -1;
         PackageWorkerUtils::RemoveFile(decomPackagePath_.realPath);
-        if (ret != TSD_OK)
+        if (ret != TSD_OK) {
             Clear();
+        }
     });
 
     if (!IsNeedLoadPackage()) {
