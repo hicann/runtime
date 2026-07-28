@@ -149,6 +149,7 @@ target_link_libraries(ep_log_daemon_utest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:adump_headers>
     mmpa
     c_sec
     -ldl

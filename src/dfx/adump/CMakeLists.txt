@@ -22,7 +22,7 @@ install_package(
     PACKAGE adump
     TARGETS adcore adump_server adump_headers ascend_dump
     FILES   ${ADUMP_DIR}/external/adx_datadump_server.h
-            ${ADUMP_DIR}/inc/adump/adump_api.h
+            ${PROJECT_TOP_DIR}/pkg_inc/dump/adump_api.h
             ${PROJECT_TOP_DIR}/pkg_inc/dump/adump_pub.h
             ${PROJECT_TOP_DIR}/pkg_inc/dump/adump_device_pub.h
     DESTINATION pkg_inc/dump

@@ -86,6 +86,7 @@ target_compile_options(adda_stest PRIVATE
 
 target_link_libraries(adda_stest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    $<BUILD_INTERFACE:adump_headers>
     c_sec
 )
 

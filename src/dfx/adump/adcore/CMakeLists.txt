@@ -11,6 +11,7 @@
 set(adcoreHeaders
     ${CMAKE_CURRENT_LIST_DIR}/../external
     ${CMAKE_CURRENT_LIST_DIR}/../inc/adump
+    ${CMAKE_CURRENT_LIST_DIR}/../../../../pkg_inc/dump
     ${CMAKE_CURRENT_LIST_DIR}/
     ${CMAKE_CURRENT_LIST_DIR}/epoll
     ${CMAKE_CURRENT_LIST_DIR}/commopts
