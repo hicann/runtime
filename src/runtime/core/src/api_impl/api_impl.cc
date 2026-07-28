@@ -3767,7 +3767,9 @@ void ApiImpl::DumpTimeStampPart2() const
 static rtError_t DestroyInactiveContext(Context* const ctx)
 {
     COND_RETURN_ERROR_MSG_INNER(ctx == nullptr, RT_ERROR_CONTEXT_NULL, "Context destroy failed, ctx is null.");
-    COND_RETURN_ERROR_MSG_INNER(ctx->GetContextIsNeedDelStatus(), RT_ERROR_CONTEXT_DEL, "Ctx is destroying.");
+    COND_RETURN_AND_MSG_OUTER(
+        ctx->GetContextIsNeedDelStatus(), RT_ERROR_CONTEXT_DEL, ErrorCode::EE1017, "Context destruction", "context",
+        "Context is being destroyed");
     ctx->SetContextDeleteStatus();
     (void)ctx->TryDeleteIfNeeded();
     return RT_ERROR_NONE;
@@ -4155,9 +4157,9 @@ rtError_t ApiImpl::ContextDestroy(Context* const inCtx)
 {
     rtError_t validError = RT_ERROR_CONTEXT_NULL;
     if (!ContextManage::CheckContextIsValid(inCtx, ContextAccessMode::USER, &validError)) {
-        COND_RETURN_ERROR_MSG_INNER(
-            !ContextManage::AcquireInactiveContextForDestroy(inCtx, &validError), validError,
-            "Context destroy failed, ctx=%p.", inCtx);
+        COND_RETURN_AND_MSG_OUTER(
+            !ContextManage::AcquireInactiveContextForDestroy(inCtx, &validError), validError, ErrorCode::EE1017,
+            "Context destruction", "context", "The context handle is a null pointer or has already been destroyed");
         return DestroyInactiveContext(inCtx);
     }
     COND_RETURN_AND_MSG_OUTER(
@@ -4205,9 +4207,9 @@ rtError_t ApiImpl::ContextSetCurrent(Context* const inCtx)
     }
 
     rtError_t validError = RT_ERROR_CONTEXT_NULL;
-    COND_RETURN_ERROR_MSG_INNER(
-        !ContextManage::CheckContextIsValid(inCtx, ContextAccessMode::USER, &validError), validError,
-        "Set current context failed, ctx=%p.", inCtx);
+    COND_RETURN_AND_MSG_OUTER(
+        !ContextManage::CheckContextIsValid(inCtx, ContextAccessMode::USER, &validError), validError, ErrorCode::EE1017,
+        "Setting the current context of the thread", "context", "The context has already been destroyed");
     InnerThreadLocalContainer::SetCurCtx(inCtx);
     InnerThreadLocalContainer::SetCurRef(nullptr); // must be null for context switch
     return RT_ERROR_NONE;
