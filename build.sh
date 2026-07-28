@@ -20,7 +20,7 @@ usage() {
   echo "  sh build.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
   echo "              [--ascend_install_path=<PATH>] [--cann_3rd_lib_path=<PATH>]"
   echo "              [--module_extension=<VALUE>] [--asan] [--build_host_only] [--cov] [--pkg-type=<TYPE>]"
-  echo "              [--sign-script <PATH>] [--enable-sign] [--version <VERSION>]"
+  echo "              [--sign-script <PATH>] [--enable-sign]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"
@@ -43,8 +43,6 @@ usage() {
   echo "                   Set sign-script's path to <PATH>"
   echo "    --enable-sign"
   echo "                   Enable to sign"
-  echo "    --version <VERSION>"
-  echo "                   Set sign version to <VERSION>"
   echo ""
 }
 
@@ -61,11 +59,14 @@ checkopts() {
   CUSTOM_SIGN_SCRIPT=""
   ENABLE_SIGN="OFF"
   ENABLE_BUILD_DEVICE="ON"
-  VERSION_INFO="9.1.0"
   MODULE_EXT=""
 
   if [ -z "$ASCEND_INSTALL_PATH" ]; then
-    ASCEND_INSTALL_PATH="/usr/local/Ascend/cann"
+    if [[ -n "${ASCEND_HOME_PATH}" ]]; then
+      ASCEND_INSTALL_PATH="${ASCEND_HOME_PATH}"
+    else
+      ASCEND_INSTALL_PATH="/usr/local/Ascend/cann"
+    fi
   fi
 
 
@@ -77,7 +78,7 @@ checkopts() {
   fi
 
   # Process the options
-  parsed_args=$(getopt -a -o j:hvf: -l help,pkg,verbose,cov,build_host_only,pkg-type:,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,module_extension:,asan,sign-script:,enable-sign,version: -- "$@") || {
+  parsed_args=$(getopt -a -o j:hvf: -l help,pkg,verbose,cov,build_host_only,pkg-type:,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,module_extension:,asan,sign-script:,enable-sign -- "$@") || {
     usage
     exit 1
   }
@@ -146,10 +147,6 @@ checkopts() {
       --enable-sign)
         ENABLE_SIGN="ON"
         shift
-        ;;
-      --version)
-        VERSION_INFO=$2
-        shift 2
         ;;
       -f)
         CHANGED_FILES_FILE="$2"
@@ -278,7 +275,6 @@ build_rts() {
               -DENABLE_SIGN=${ENABLE_SIGN} \
               -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE} \
               -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT} \
-              -DVERSION_INFO=${VERSION_INFO} \
               -DPACKAGE_TYPE=${PACKAGE_TYPE} \
               -DMODULE_EXT=${MODULE_EXT}"
 

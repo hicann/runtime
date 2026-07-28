@@ -36,7 +36,6 @@ endif()
 # Mark cache entries as consumed even when the current configuration path does not use them.
 set(_cmake_arg_enable_sign "${ENABLE_SIGN}")
 set(_cmake_arg_custom_sign_script "${CUSTOM_SIGN_SCRIPT}")
-set(_cmake_arg_version_info "${VERSION_INFO}")
 
 # third_party
 include(${RUNTIME_DIR}/cmake/third_party/acl_compat.cmake)
@@ -74,42 +73,9 @@ endif()
 
 if(DEFINED ENV{TOOLCHAIN_DIR} AND ENABLE_BUILD_DEVICE)
     set(ENABLE_DEVICE ON)
+    add_cann_device_project(npu-runtime)
 else()
     set(ENABLE_DEVICE OFF)
-endif()
-
-if(ENABLE_DEVICE)
-    set(TOOLCHAIN_DIR $ENV{TOOLCHAIN_DIR})
-    # 对于libc_sec，只有makefile，需要传递编译器路径
-    set(CMAKE_CXX_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-g++")
-    set(CMAKE_C_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-gcc")
-    ExternalProject_Add(device
-        SOURCE_DIR ${RUNTIME_DIR}/cmake/device
-        BINARY_DIR ${CMAKE_BINARY_DIR}/device_build
-        CMAKE_ARGS  
-            -DENABLE_GCOV=${ENABLE_GCOV}
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/device_install
-            -DCMAKE_TOOLCHAIN_FILE=${RUNTIME_DIR}/cmake/aarch64-hcc-toolchain.cmake
-            -DCANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER_}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER_}
-            -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
-            -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-            -DENABLE_SIGN=${ENABLE_SIGN}
-            -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}
-            -DVERSION_INFO=${VERSION_INFO}
-            -DENABLE_OPEN_SRC=TRUE
-        INSTALL_COMMAND ${CMAKE_CPACK_COMMAND}
-        BUILD_ALWAYS TRUE
-    )
-
-    install(FILES
-        ${CMAKE_BINARY_DIR}/device_build/device-npu-runtime.tar.gz
-        DESTINATION .
-        COMPONENT npu-runtime
-    )
 endif()
 
 if (NOT ENABLE_COV AND NOT ENABLE_UT)
