@@ -1,3 +1,4 @@
+#!/bin/bash
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
@@ -7,6 +8,13 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
+
+# 本脚本通常以 source 方式加载，记录调用方原始 errexit 状态，避免 set -e 泄漏到调用方 shell。
+case "$-" in
+    *e*) __setenv_errexit_was_set="y" ;;
+    *) __setenv_errexit_was_set="n" ;;
+esac
+set -e
 
 append_env() {
     local name="$1"
@@ -134,3 +142,9 @@ setenv_main() {
 }
 
 setenv_main "$@"
+
+# 恢复调用方原始 errexit 状态，避免污染 source 本脚本的 shell。
+if [ "$__setenv_errexit_was_set" = "n" ]; then
+    set +e
+fi
+unset __setenv_errexit_was_set
