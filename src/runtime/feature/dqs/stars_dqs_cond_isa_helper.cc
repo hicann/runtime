@@ -1533,7 +1533,7 @@ static void ConstructInterChipPreProcStoreMbufInfo(
     uint64_t offset = offsetof(RtStarsDqsInterChipPreProcFc, end);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r7, offset, fc.jumpPc2);
-    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, offset, fc.beq1);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beq1);
 }
 
 // err=4 path: VA模式load对片PA地址 -> 切PA -> 写alloc empty trace=1 -> 写Notify=1 -> 切回VA -> 写err code
@@ -1560,8 +1560,8 @@ static void ConstructInterChipPreProcErrPath(
     ConstructStore(r8, r10, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrTrace);
 
     // 0x80000000U [31]bit == 1, stars aa safety force inject to notify dst chip
-    ConstructLLWI(r6, 0x80000000U, fc.llwiErrNotifyVal);
-    ConstructLHWI(r6, 0x80000000U, fc.lhwiErrNotifyVal);
+    ConstructLLWI(r6, 0x80000000ULL, fc.llwiErrNotifyVal);
+    ConstructLHWI(r6, 0x80000000ULL, fc.lhwiErrNotifyVal);
     ConstructStore(r9, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrNotify);
 
     ConstructLoad(r8, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrTraceRb);
