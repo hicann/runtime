@@ -15,7 +15,7 @@
 #include "toolchain/prof_api_reg.h"
 #include "common/resource_statistics.h"
 #include "queue_process.h"
-#include "queue_manager.h"
+#include "acl_tdt_queue_manager.h"
 #include "runtime/rt_mem_queue.h"
 #include "utils/data_type_utils.h"
 

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef QUEUE_MANAGER_H
-#define QUEUE_MANAGER_H
+#ifndef ACL_TDT_QUEUE_MANAGER_H
+#define ACL_TDT_QUEUE_MANAGER_H
 
 #include <mutex>
 #include <memory>
@@ -66,4 +66,4 @@ private:
 
 } // namespace acl
 
-#endif // QUEUE_MANAGER_H
+#endif // ACL_TDT_QUEUE_MANAGER_H

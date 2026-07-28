@@ -13,7 +13,7 @@
 #include "common/log_inner.h"
 
 #include "acl_tdt_queue/queue.h"
-#include "acl_tdt_queue/queue_manager.h"
+#include "acl_tdt_queue/acl_tdt_queue_manager.h"
 #include "acl_tdt_queue/queue_process.h"
 #include "acl_tdt_queue/queue_process_sp.h"
 #include "acl_tdt_queue/queue_process_host.h"

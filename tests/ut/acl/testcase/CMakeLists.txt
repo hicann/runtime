@@ -96,7 +96,7 @@ set(SRC_FILES
 ######### tdt #########
     ${BASE_DIR}/src/acl/acl_tdt_channel/tensor_data_transfer.cpp
     ${BASE_DIR}/src/acl/acl_tdt_queue/queue.cpp
-    ${BASE_DIR}/src/acl/acl_tdt_queue/queue_manager.cpp
+    ${BASE_DIR}/src/acl/acl_tdt_queue/acl_tdt_queue_manager.cpp
     ${BASE_DIR}/src/acl/acl_tdt_queue/queue_process.cpp
     ${BASE_DIR}/src/acl/acl_tdt_queue/queue_process_host.cpp
     ${BASE_DIR}/src/acl/acl_tdt_queue/queue_process_sp.cpp

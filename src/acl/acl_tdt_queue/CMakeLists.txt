@@ -11,7 +11,7 @@
 ############ libacl_tdt_queue.so ############
 add_library(acl_tdt_queue SHARED
     queue.cpp
-    queue_manager.cpp
+    acl_tdt_queue_manager.cpp
     queue_process.cpp
     queue_process_host.cpp
     queue_process_sp.cpp
