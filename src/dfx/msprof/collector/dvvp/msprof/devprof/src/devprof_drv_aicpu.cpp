@@ -209,6 +209,7 @@ int32_t DevprofDrvAicpu::Init(const struct AicpuStartPara *para)
 int32_t DevprofDrvAicpu::Start()
 {
     stopped_ = false;
+    ringFullLogged_ = false;
     if (Thread::Start() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to start reporter %s thread", AICPU_PROFILING_REPORT_THREAD_NAME);
         return PROFILING_FAILED;
@@ -372,7 +373,11 @@ DevprofDrvAicpu::HostMoveStep DevprofDrvAicpu::AcquireHostMoveFreeSlots(uint32_t
     uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
     freeSlots = (maxIdx - 1 > usedSlots) ? (maxIdx - 1 - usedSlots) : 0;
     if (freeSlots == 0) {
-        MSPROF_LOGW("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
+        // Log only once per profiling session to avoid flooding when the ring stays full across retries.
+        if (!ringFullLogged_) {
+            MSPROF_EVENT("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
+            ringFullLogged_ = true;
+        }
         if (stopped_) {
             MSPROF_LOGE("Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
             return HostMoveStep::FATAL;
@@ -704,6 +709,7 @@ void DevprofDrvAicpu::Reset(void)
 {
     isRegister_ = false;
     stopped_ = false;
+    ringFullLogged_ = false;
     SetSupportHostMove(false);
     UninitHostMoveBuffer();
     command_.type = static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MAX);

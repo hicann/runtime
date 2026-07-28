@@ -14,6 +14,7 @@
 #include <syslog.h>
 #include <map>
 #include <string>
+#include <atomic>
 
 const std::map<int, std::string> LOG_LEVEL_INFO = {
     {DLOG_DEBUG, "DEBUG"},
@@ -22,6 +23,11 @@ const std::map<int, std::string> LOG_LEVEL_INFO = {
     {DLOG_ERROR, "ERROR"},
     {DLOG_EVENT, "EVENT"},
 };
+
+static std::atomic<int32_t> g_dlogRecordCount{0};
+
+void ResetDlogRecordCount() { g_dlogRecordCount.store(0); }
+int32_t GetDlogRecordCount() { return g_dlogRecordCount.load(); }
 
 void DlogErrorInner(int moduleId, const char *format, ...) {
     va_list args;
@@ -79,6 +85,7 @@ void DlogDebugInner(int moduleId, const char *format, ...) {
 }
 
 void DlogRecord(int module_id, int level, const char *fmt, ...){
+    g_dlogRecordCount.fetch_add(1, std::memory_order_relaxed);
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
     if (iter != LOG_LEVEL_INFO.end())

@@ -41,6 +41,7 @@ public:
           writeIndex_(0),
           idleWriteIndex_(0),
           isInited_(false),
+          cycleOverflowLogged_(false),
           name_(BLOCK_BUFFER_NAME),
           dataBuffer_(nullptr)
     {}
@@ -79,6 +80,7 @@ public:
         }
 
         isInited_ = true;
+        cycleOverflowLogged_.store(false);
         MSPROF_EVENT("Init block buffer successfully, capacity: %zu, buffer name: %s", capacity_, name_.c_str());
         return true;
     }
@@ -138,7 +140,11 @@ public:
         do {
             cycles++;
             if (cycles >= maxCycles_) {
-                MSPROF_LOGW("Block cycle overflow, buffer name: %s, buffer capacity: %u", name_.c_str(), capacity_);
+                bool expected = false;
+                if (cycleOverflowLogged_.compare_exchange_strong(expected, true)) {
+                    MSPROF_EVENT("Block cycle overflow, buffer name: %s, buffer capacity: %zu",
+                        name_.c_str(), capacity_);
+                }
                 return MSPROF_ERROR_NONE;
             }
 
@@ -265,6 +271,7 @@ private:
     std::atomic<size_t> writeIndex_;
     std::atomic<size_t> idleWriteIndex_;
     volatile bool isInited_;
+    std::atomic<bool> cycleOverflowLogged_;
     std::string name_;
     T *dataBuffer_;
 };

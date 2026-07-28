@@ -19,6 +19,7 @@
 #include "utils.h"
 #include "devprof_drv_aicpu.h"
 #include "transport/hash_data.h"
+#include "hdc-log-stub.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
@@ -1058,6 +1059,97 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_ReportStr2Id)
     EXPECT_EQ(0, strncmp(reinterpret_cast<const char *>(record->data), STR2ID_MARK, strlen(STR2ID_MARK)));
 
     analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnce)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    const size_t recordSize = sizeof(MsprofAdditionalInfo);
+    const uint32_t ringRecords = 4;
+    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, recordSize * ringRecords, &wptrVal, &rptrVal);
+    DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
+    DevprofDrvAicpu::instance()->stopped_ = false;
+    DevprofDrvAicpu::instance()->hostMoveWriteIndex_.store(ringRecords - 1);
+
+    ResetDlogRecordCount();
+
+    uint32_t freeSlots = 0;
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
+              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(0U, freeSlots);
+    EXPECT_EQ(1, GetDlogRecordCount());
+
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingFull_LogOnlyOnceOnRetry)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    const size_t recordSize = sizeof(MsprofAdditionalInfo);
+    const uint32_t ringRecords = 4;
+    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, recordSize * ringRecords, &wptrVal, &rptrVal);
+    DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
+    DevprofDrvAicpu::instance()->stopped_ = false;
+    DevprofDrvAicpu::instance()->hostMoveWriteIndex_.store(ringRecords - 1);
+
+    ResetDlogRecordCount();
+
+    uint32_t freeSlots = 0;
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
+              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(1, GetDlogRecordCount());
+
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
+              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(1, GetDlogRecordCount());
+
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::RETRY,
+              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_EQ(1, GetDlogRecordCount());
+
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DEVPROF_DRV_UTEST, AcquireHostMoveFreeSlots_RingNotFull_NoLog)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    const size_t recordSize = sizeof(MsprofAdditionalInfo);
+    const uint32_t ringRecords = 8;
+    uint8_t *buffer = new uint8_t[recordSize * ringRecords];
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, recordSize * ringRecords, &wptrVal, &rptrVal);
+    DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
+    DevprofDrvAicpu::instance()->stopped_ = false;
+    DevprofDrvAicpu::instance()->hostMoveWriteIndex_.store(1);
+
+    ResetDlogRecordCount();
+
+    uint32_t freeSlots = 0;
+    EXPECT_EQ(DevprofDrvAicpu::HostMoveStep::OK,
+              DevprofDrvAicpu::instance()->AcquireHostMoveFreeSlots(freeSlots));
+    EXPECT_GT(freeSlots, 0U);
+    EXPECT_EQ(0, GetDlogRecordCount());
+
     DevprofDrvAicpu::instance()->Release();
     delete[] buffer;
     GlobalMockObject::verify();
