@@ -2270,6 +2270,11 @@ rtError_t ApiDecorator::MemMapSelectedLink(void* virPtrDst, size_t size, void* v
     return impl_->MemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx);
 }
 
+rtError_t ApiDecorator::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
+{
+    return impl_->MemMapSetLink(handle, adviceLink);
+}
+
 rtError_t ApiDecorator::BinarySetExceptionCallback(Program* binHandle, void* callback, void* userData)
 {
     return impl_->BinarySetExceptionCallback(binHandle, callback, userData);

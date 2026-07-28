@@ -19,6 +19,7 @@ add_executable(runtime_utest_api_david
     rt_utest_ub_api.cc
     rt_utest_api_david.cc
     rt_utest_ipc_event_starsV2.cc
+    rt_utest_ipc_mem_david.cc
     rt_utest_context_david.cc
     rt_utest_macro_value.cc
     rt_utest_soma.cc

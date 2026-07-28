@@ -561,13 +561,14 @@ rtError_t NpuDriver::SetIpcMemAttr(const char* name, uint32_t type, uint64_t att
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::OpenIpcMem(const char_t* const name, uint64_t* const vptr, uint32_t devId)
+rtError_t NpuDriver::OpenIpcMem(const char_t* const name, uint64_t* const vptr, uint32_t devId, uint64_t attr)
 {
     drvError_t drvRet = DRV_ERROR_NONE;
-    SpinLock& ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
-    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
 
-    if (&halShmemOpenHandleByDevId == nullptr) {
+    if (&halShmemOpenHandleV2 != nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "use halShmemOpenHandleV2 api.");
+        drvRet = halShmemOpenHandleV2(devId, name, RtPtrToPtr<DVdeviceptr*>(vptr), attr);
+    } else if (&halShmemOpenHandleByDevId == nullptr) {
         RT_LOG(RT_LOG_DEBUG, "not support halShmemOpenHandleByDevId api, use halShmemOpenHandle api.");
         drvRet = halShmemOpenHandle(name, RtPtrToPtr<DVdeviceptr*>(vptr));
     } else {
@@ -575,15 +576,9 @@ rtError_t NpuDriver::OpenIpcMem(const char_t* const name, uint64_t* const vptr, 
     }
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halShmemOpenHandle failed, drvRetCode=%d, name=%s, drvDevId=%u.",
-            static_cast<int32_t>(drvRet), name, devId);
+            drvRet, "Call driver api failed, drvRetCode=%d, name=%s, drvDevId=%u.", static_cast<int32_t>(drvRet), name,
+            devId);
         return RT_GET_DRV_ERRCODE(drvRet);
-    } else {
-        ipcMemNameLock.Lock();
-        (void)ipcMemNameMap[*vptr].name.assign(name);
-        ipcMemNameMap[*vptr].ref = 1;
-        ipcMemNameMap[*vptr].locked = false;
-        ipcMemNameLock.Unlock();
     }
 
     RT_LOG(RT_LOG_INFO, "Open ipc mem success, name=%s.", name);
@@ -617,18 +612,8 @@ rtError_t NpuDriver::CloseIpcMem(const uint64_t vptr)
             static_cast<int32_t>(drvRet), vptr);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
-    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    SpinLock& ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
-    ipcMemNameLock.Lock();
-    for (auto iter = ipcMemNameMap.begin(); iter != ipcMemNameMap.end(); iter++) {
-        if (iter->first == vptr) {
-            ipcMemNameMap.erase(iter);
-            break;
-        }
-    }
-    ipcMemNameLock.Unlock();
 
-    RT_LOG(RT_LOG_DEBUG, "close ipc mem success,vptr=%#" PRIx64, vptr);
+    RT_LOG(RT_LOG_DEBUG, "close ipc mem success, vptr=%#" PRIx64, vptr);
     return RT_ERROR_NONE;
 }
 
@@ -643,6 +628,29 @@ rtError_t NpuDriver::DestroyIpcMem(const char_t* const name)
     }
 
     RT_LOG(RT_LOG_INFO, "Destroy ipc mem success, name=%s.", name);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::CheckIpcMapRoute(const char_t* const name, uint64_t attr, uint32_t devId)
+{
+    COND_RETURN_WARN(
+        &halShmemMapRouteCheck == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halShmemMapRouteCheck does not exist.");
+
+    const drvError_t drvRet = halShmemMapRouteCheck(name, devId, static_cast<uint32_t>(attr));
+    if (drvRet == DRV_ERROR_NOT_EXIST) {
+        RT_LOG(
+            RT_LOG_WARNING, "attr=%" PRIu64 " is not exist, drvRetCode=%d, name=%s, devId=%u.", attr,
+            static_cast<int32_t>(drvRet), name, devId);
+        return RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED;
+    }
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halShmemMapRouteCheck failed, drvRetCode=%d, name=%s, devId=%u, attr=%" PRIu64 ".",
+            static_cast<int32_t>(drvRet), name, devId, attr);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "Check ipc map route success, name=%s, devId=%u, attr=%" PRIu64 ".", name, devId, attr);
     return RT_ERROR_NONE;
 }
 
@@ -1646,7 +1654,12 @@ rtError_t NpuDriver::MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType
         "[drv api] halMemHandleSetAttribute does not exist");
     HandleAttr handleAttr = {attr.memMapRoute, {0, 0, 0, 0}};
     const drvError_t drvRet = halMemHandleSetAttribute(RtPtrToPtr<drv_mem_handle_t*>(handle), type, handleAttr);
-    if (drvRet != DRV_ERROR_NONE) {
+    if (drvRet == DRV_ERROR_NOT_EXIST) {
+        RT_LOG(
+            RT_LOG_WARNING, "adviceLink=%u is not supported, drvRetCode=%d, type=%d, handleAttr.mem_map_route=%u.",
+            attr.memMapRoute, static_cast<int32_t>(drvRet), type, handleAttr.mem_map_route);
+        return RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED;
+    } else if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halMemHandleSetAttribute failed, drvRetCode=%d, type=%d, memMapRoute=%u, "

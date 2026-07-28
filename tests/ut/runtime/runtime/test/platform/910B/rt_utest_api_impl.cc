@@ -2148,3 +2148,32 @@ TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_NonRelaxedMode_EE1016)
     GlobalMockObject::verify();
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
+
+TEST_F(CloudV2ApiImplTest, ApiImpl_MemMapSetLink_success)
+{
+    rtDrvMemHandle handle = reinterpret_cast<rtDrvMemHandle>(0x1234);
+    rtMemLinkType adviceLink = RT_MEM_ACCESS_LINK_SIO;
+
+    ApiImpl impl;
+
+    rtError_t error = impl.MemMapSetLink(handle, adviceLink);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiImplTest, ApiErrorDecorator_MemMapSetLink_handle_null)
+{
+    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
+    ApiErrorDecorator apiErrorDec(oldApi_);
+    rtError_t error = apiErrorDec.MemMapSetLink(nullptr, RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2ApiImplTest, ApiErrorDecorator_MemMapSetLink_adviceLink_out_of_range)
+{
+    rtDrvMemHandle handle = reinterpret_cast<rtDrvMemHandle>(0x1234);
+
+    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
+    ApiErrorDecorator apiErrorDec(oldApi_);
+    rtError_t error = apiErrorDec.MemMapSetLink(handle, RT_MEM_ACCESS_LINK_MAX);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}

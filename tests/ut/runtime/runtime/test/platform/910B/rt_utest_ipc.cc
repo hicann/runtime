@@ -564,64 +564,47 @@ TEST_F(CloudV2IpcApiTest, ipc_memory_close_NotSupportChip)
 TEST_F(CloudV2IpcApiTest, ipc_memory_close_by_name_normal)
 {
     const char* ipcName = "aaa";
-    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    SpinLock& ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
-    ipcMemNameLock.Lock();
-
-    (void)ipcMemNameMap[1].name.assign(ipcName);
-    ipcMemNameMap[1].ref = 1;
-    ipcMemNameMap[1].locked = false;
-    ipcMemNameLock.Unlock();
+    int64_t devPtr = 1;
+    void* ptr = RtValueToPtr<void*>(devPtr);
+    rtError_t error = rtsIpcMemImportByKey(&ptr, ipcName, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     Context* context = Runtime::Instance()->CurrentContext();
     Driver* driver = context->Device_()->Driver_();
     MOCKER_CPP_VIRTUAL(driver, &Driver::CloseIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = rtsIpcMemClose(ipcName);
+    error = rtsIpcMemClose(ipcName);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2IpcApiTest, ipc_memory_close_by_name_error)
 {
-    const char* ipcName = "aaa";
-    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    SpinLock& ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
-    ipcMemNameLock.Lock();
-
-    (void)ipcMemNameMap[1].name.assign(ipcName);
-    ipcMemNameMap[1].ref = 1;
-    ipcMemNameMap[1].locked = false;
-    ipcMemNameLock.Unlock();
+    const char* ipcName = "bbb";
+    int64_t devPtr = 1;
+    void* ptr = RtValueToPtr<void*>(devPtr);
+    rtError_t error = rtsIpcMemImportByKey(&ptr, ipcName, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     Context* context = Runtime::Instance()->CurrentContext();
     Driver* driver = context->Device_()->Driver_();
     MOCKER_CPP_VIRTUAL(driver, &Driver::CloseIpcMem).stubs().will(returnValue(RT_ERROR_DRV_INPUT));
 
-    rtError_t error = rtsIpcMemClose(ipcName);
+    error = rtsIpcMemClose(ipcName);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    ipcMemNameLock.Lock();
-    ipcMemNameMap.clear();
-    ipcMemNameLock.Unlock();
 }
 
 TEST_F(CloudV2IpcApiTest, ipc_mem_close_normal)
 {
     const char* ipcName = "aaa";
-    std::unordered_map<uint64_t, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    SpinLock& ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
-    ipcMemNameLock.Lock();
-
-    (void)ipcMemNameMap[1].name.assign(ipcName);
-    ipcMemNameMap[1].ref = 1;
-    ipcMemNameMap[1].locked = false;
-    ipcMemNameLock.Unlock();
+    int64_t devPtr = 1;
+    void* ptr = RtValueToPtr<void*>(devPtr);
+    rtError_t error = rtsIpcMemImportByKey(&ptr, ipcName, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     Context* context = Runtime::Instance()->CurrentContext();
     Driver* driver = context->Device_()->Driver_();
     MOCKER_CPP_VIRTUAL(driver, &Driver::CloseIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
 
-    uint64_t va = 1;
-    rtError_t error = rtIpcCloseMemory(RtValueToPtr<void*>(va));
+    error = rtIpcCloseMemory(RtValueToPtr<void*>(devPtr));
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

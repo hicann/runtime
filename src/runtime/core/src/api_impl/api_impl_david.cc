@@ -2246,5 +2246,25 @@ rtError_t ApiImplDavid::StreamAddCondTask(rtCondTaskParams params, Stream* const
     return cce::runtime::StreamAddCondTask(realHandle, params, stm, flags);
 }
 
+rtError_t ApiImplDavid::IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr)
+{
+    RT_LOG(RT_LOG_DEBUG, "Set ipc memory attribute. name=%s, type=%u, attr=%" PRIu64 ".", name, type, attr);
+
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    rtError_t error = curCtx->Device_()->Driver_()->CheckIpcMapRoute(name, attr, curCtx->Device_()->Id_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+    std::string ipcName(name);
+    auto it = ipcMemNameMap.find(ipcName);
+    if (it == ipcMemNameMap.end()) {
+        ipcMemInfo_t& info = ipcMemNameMap[ipcName];
+        info.latestAttr = attr;
+    } else {
+        it->second.latestAttr = attr;
+    }
+    return RT_ERROR_NONE;
+}
 } // namespace runtime
 } // namespace cce

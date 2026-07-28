@@ -1336,10 +1336,3 @@ drvError_t halStreamBackup(uint32_t dev_id, struct stream_backup_info* in) { ret
 drvError_t halStreamRestore(uint32_t dev_id, struct stream_backup_info* in) { return DRV_ERROR_NONE; }
 
 drvError_t halDrvEventThreadInit(const uint32_t dev_id) { return DRV_ERROR_NONE; }
-
-DVresult halShmemOpenHandleV2(DVdevice dev_id, const char* name, DVdeviceptr* vptr, uint64_t flag)
-{
-    return DRV_ERROR_NONE;
-}
-
-DVresult halShmemMapRouteCheck(const char* name, DVdevice dst_devid, uint32_t map_route) { return DRV_ERROR_NONE; }

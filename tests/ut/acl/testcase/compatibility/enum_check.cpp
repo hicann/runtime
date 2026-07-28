@@ -1287,3 +1287,20 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclmdlRITaskType)
     value = (aclmdlRITaskType)6;
     EXPECT_EQ(value, ACL_MODEL_RI_TASK_VALUE_WAIT);
 }
+
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtMemLinkType)
+{
+    aclrtMemLinkType type;
+
+    type = (aclrtMemLinkType)0;
+    EXPECT_EQ(type, ACL_RT_MEM_ACCESS_LINK_SIO);
+
+    type = (aclrtMemLinkType)1;
+    EXPECT_EQ(type, ACL_RT_MEM_ACCESS_LINK_HCCS);
+
+    type = (aclrtMemLinkType)2;
+    EXPECT_EQ(type, ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH);
+
+    type = (aclrtMemLinkType)3;
+    EXPECT_EQ(type, ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH);
+}

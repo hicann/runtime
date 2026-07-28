@@ -438,6 +438,7 @@ public:
         const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs,
         size_t numPrefetchLocs, uint64_t flags, Stream* const stream) = 0;
     virtual rtError_t MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx) = 0;
+    virtual rtError_t MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink) = 0;
 
     // device API
     virtual rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) = 0;

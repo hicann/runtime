@@ -25,9 +25,8 @@ namespace cce {
 namespace runtime {
 
 struct ipcMemInfo_t {
-    std::string name;
-    bool locked;
-    int32_t ref;
+    uint64_t latestAttr; // 最新设置的属性值
+    std::vector<uint64_t> vaList;
 };
 
 struct LogicCqWaitInfo {

@@ -1249,7 +1249,7 @@ TEST_F(NpuDriverTest, driver_memory_fail_01)
 
     MOCKER(halShmemOpenHandle).stubs().will(returnValue(DRV_ERROR_RESERVED));
 
-    error = rawDrv->OpenIpcMem("mem3", &ptr1, 0);
+    error = rawDrv->OpenIpcMem("mem3", &ptr1, 0, 0);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
     MOCKER(halShmemCloseHandle).stubs().will(returnValue(DRV_ERROR_RESERVED));
@@ -1293,7 +1293,7 @@ TEST_F(NpuDriverTest2, driver_memory_fail_02)
 
     error = rawDrv->CreateIpcMem((void*)0x1000000, 0x00, "mem2", 4);
 
-    error = rawDrv->OpenIpcMem("mem3", &ptr1, 0);
+    error = rawDrv->OpenIpcMem("mem3", &ptr1, 0, 0);
 
     error = rawDrv->DevMemFree((void*)0x2000000, 0);
 
@@ -2327,7 +2327,7 @@ TEST_F(NpuDriverTest2, OpenIpcMem_fail)
     NpuDriver* rawDrv = new NpuDriver();
 
     MOCKER(halShmemOpenHandle).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->OpenIpcMem("test", nullptr, 0);
+    error = rawDrv->OpenIpcMem("test", nullptr, 0, 0);
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
 
     delete rawDrv;

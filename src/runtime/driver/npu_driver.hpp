@@ -142,7 +142,10 @@ public:
     rtError_t SetIpcMemAttr(const char* name, uint32_t type, uint64_t attr) override;
 
     // Open IPC Memory
-    rtError_t OpenIpcMem(const char_t* const name, uint64_t* const vptr, uint32_t devId) override;
+    rtError_t OpenIpcMem(const char_t* const name, uint64_t* const vptr, uint32_t devId, uint64_t attr) override;
+
+    // Check IPC Memory Map Route
+    rtError_t CheckIpcMapRoute(const char_t* const name, uint64_t attr, uint32_t devId) override;
 
     // Close IPC Memory
     rtError_t CloseIpcMem(const uint64_t vptr) override;

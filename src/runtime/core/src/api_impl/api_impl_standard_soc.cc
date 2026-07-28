@@ -691,8 +691,108 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     }
 
-    error = dev->Driver_()->OpenIpcMem(name, RtPtrToPtr<uint64_t*>(ptr), curCtx->Device_()->Id_());
-    return error;
+    uint64_t latestAttr = 0UL; // if not set, use 0 to drv, otherwise update with cfg
+    std::string ipcName(name);
+    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+    auto it = ipcMemNameMap.find(ipcName);
+    if (it != ipcMemNameMap.end()) {
+        latestAttr = it->second.latestAttr;
+    }
+
+    error = dev->Driver_()->OpenIpcMem(name, RtPtrToPtr<uint64_t*>(ptr), curCtx->Device_()->Id_(), latestAttr);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "open ipc memory failed, name=%s, attr=%#" PRIx64 ".", name, latestAttr);
+        return error;
+    }
+
+    if (it == ipcMemNameMap.end()) {
+        ipcMemInfo_t& info = ipcMemNameMap[ipcName];
+        info.latestAttr = latestAttr;
+        info.vaList.push_back(RtPtrToValue(*ptr));
+    } else {
+        it->second.vaList.push_back(RtPtrToValue(*ptr));
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
+{
+    RT_LOG(RT_LOG_DEBUG, "Start close ipc memory.");
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    const uint64_t vaData = RtPtrToValue(ptr);
+    rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(vaData);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "close ipc memory failed, vptr=%#" PRIx64 ".", vaData);
+        return error;
+    }
+
+    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+    for (auto mapIter = ipcMemNameMap.begin(); mapIter != ipcMemNameMap.end(); ++mapIter) {
+        ipcMemInfo_t& info = mapIter->second;
+        auto vaIter = std::find(info.vaList.begin(), info.vaList.end(), vaData);
+        if (vaIter != info.vaList.end()) {
+            info.vaList.erase(vaIter);
+            if (info.vaList.empty()) {
+                ipcMemNameMap.erase(mapIter);
+            }
+            RT_LOG(RT_LOG_DEBUG, "close ipc mem success, vptr=%#" PRIx64 ".", vaData);
+            return error;
+        }
+    }
+    RT_LOG(RT_LOG_WARNING, "ipc memory vptr=%#" PRIx64 " not found in map, may be closed already.", vaData);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
+{
+    RT_LOG(RT_LOG_DEBUG, "start close ipc memory, name=%s.", name);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    const std::string ipcName(name);
+    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+    auto it = ipcMemNameMap.find(ipcName);
+    if (it == ipcMemNameMap.end()) {
+        RT_LOG(RT_LOG_DEBUG, "destroy ipc memory by IpcDestroyMemoryName, name=%s.", name);
+        return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
+    }
+
+    rtError_t ret = RT_ERROR_NONE;
+    ipcMemInfo_t& info = it->second;
+    for (auto vaIter = info.vaList.begin(); vaIter != info.vaList.end();) {
+        rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(*vaIter);
+        if (error == RT_ERROR_NONE) {
+            vaIter = info.vaList.erase(vaIter);
+            continue;
+        } else {
+            RT_LOG(RT_LOG_ERROR, "close ipc mem failed, name=%s, va=%#" PRIx64 ".", name, *vaIter);
+            ret = error;
+            ++vaIter;
+        }
+    }
+
+    if (info.vaList.empty()) {
+        ipcMemNameMap.erase(it);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "close ipc memory by IpcDestroyMemoryName, name=%s.", name);
+    return ret;
 }
 } // namespace runtime
 } // namespace cce

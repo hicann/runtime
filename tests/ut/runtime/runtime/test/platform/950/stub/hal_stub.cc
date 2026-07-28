@@ -1478,3 +1478,10 @@ drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t siz
 drvError_t halMemPoolSetAttr(soma_mem_pool_t pool, soma_mem_pool_attr attr, void* value) { return DRV_ERROR_NONE; }
 
 drvError_t halMemPoolGetAttr(soma_mem_pool_t pool, soma_mem_pool_attr attr, void* value) { return DRV_ERROR_NONE; }
+
+DVresult halShmemOpenHandleV2(DVdevice dev_id, const char* name, DVdeviceptr* vptr, uint64_t flag)
+{
+    return DRV_ERROR_NONE;
+}
+
+DVresult halShmemMapRouteCheck(const char* name, DVdevice dst_devid, uint32_t map_route) { return DRV_ERROR_NONE; }

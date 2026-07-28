@@ -334,6 +334,7 @@ public:
         const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs,
         size_t numPrefetchLocs, uint64_t flags, Stream* const stream) override;
     rtError_t MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx) override;
+    rtError_t MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink) override;
 
     // device API
     rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) override;
