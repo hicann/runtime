@@ -213,11 +213,14 @@ TEST_F(RtOthersApiTest, capture_api_37)
     rtModel_t model;
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    const rtChipType_t chipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_DC);
+    GlobalContainer::SetRtChipType(CHIP_DC);
 
     MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Context::CreateContextCallBackThread).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&CbSubscribe::GetThreadIdByStreamId).stubs().will(invoke(GetThreadIdByStreamIdStub));
-    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -236,4 +239,7 @@ TEST_F(RtOthersApiTest, capture_api_37)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtInstance->SetChipType(chipType);
+    GlobalContainer::SetRtChipType(chipType);
 }

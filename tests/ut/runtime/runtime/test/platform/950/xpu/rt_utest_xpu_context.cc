@@ -74,9 +74,9 @@ TEST_F(XpuContextTest, TearDownStream_Success)
 {
     XpuDevice* device = new XpuDevice(1);
     XpuStream* stream = new XpuStream(device, RT_STREAM_DEFAULT);
-    XpuContext* ctxt = new (std::nothrow) XpuContext(device, true);
+    Context* ctxt = new (std::nothrow) Context(device, true);
     MOCKER_CPP_VIRTUAL(stream, &XpuStream::TearDown).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&XpuStream::Destructor).stubs().will(returnValue((void*)nullptr));
+    MOCKER_CPP(&XpuStream::Destructor).expects(once()).will(returnValue((void*)nullptr));
     MOCKER_CPP(&XpuStreamSqCqManage::DeAllocXpuStreamSqCq).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t error = ctxt->TearDownStream(stream, true);

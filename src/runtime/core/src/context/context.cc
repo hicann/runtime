@@ -1019,9 +1019,13 @@ rtError_t Context::TearDownStreamAndFinalize(Stream* stm, bool flag, bool* destr
     }
 
     const bool isRecycledByDestroyTask = (destroyTaskRecycledStream != nullptr) && (*destroyTaskRecycledStream);
+    const bool shouldDeleteXpuStream =
+        (error == RT_ERROR_NONE) &&
+        IS_SUPPORT_CHIP_FEATURE(device_->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU);
     const Runtime* const rt = Runtime::Instance();
-    if (!isRecycledByDestroyTask && (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE) ||
-                                     ((rt != nullptr) && rt->GetDisableThread()))) {
+    if (!isRecycledByDestroyTask &&
+        (shouldDeleteXpuStream || device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE) ||
+         ((rt != nullptr) && rt->GetDisableThread()))) {
         DeleteStream(stm);
     }
     return error;
