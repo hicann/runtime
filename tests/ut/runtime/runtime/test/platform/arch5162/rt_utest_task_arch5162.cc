@@ -17,6 +17,8 @@
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "rt_unwrap.h"
+#include "runtime.hpp"
+#include "raw_device.hpp"
 #include "notify.hpp"
 #undef protected
 #undef private
@@ -26,9 +28,8 @@
 #include "model_execute_task.h"
 #include "task_info_v100.h"
 #include "task_info.hpp"
-#include "runtime.hpp"
+#include "npu_driver.hpp"
 #include "model.hpp"
-#include "raw_device.hpp"
 #include "thread_local_container.hpp"
 #include "log_types.h"
 #include "task_execute_time.h"
@@ -39,9 +40,46 @@
 #include "cond_op_stream_task.h"
 #include "stream_task.h"
 #include "task_res.hpp"
+#include "davinci_kernel_task.h"
 #include "event.hpp"
 
 using namespace cce::runtime;
+
+namespace {
+constexpr uint32_t DUMP_ARGS_SIZE = 256U;
+constexpr uint64_t DUMP_ARGS_BASE = 0x1000ULL;
+uint8_t g_dumpArgsBuf[DUMP_ARGS_SIZE] = {};
+bool g_memCopySyncFail = false;
+
+rtError_t DumpAicpuArgsMemCopyStub(
+    Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
+{
+    if (g_memCopySyncFail) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    (void)memcpy_s(dst, static_cast<size_t>(destMax), g_dumpArgsBuf, static_cast<size_t>(size));
+    return RT_ERROR_NONE;
+}
+
+void InitAicpuTaskInfoForDump(
+    TaskInfo& taskInfo, Stream* stream, uint32_t argsSize, void* args, void* soName, void* funcName)
+{
+    taskInfo.stream = stream;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.errorCode = 0x2A;
+    taskInfo.id = 42;
+    taskInfo.u.aicpuTaskInfo.kernel = nullptr;
+    taskInfo.u.aicpuTaskInfo.aicpuKernelType = TS_AICPU_KERNEL_AICPU;
+    taskInfo.u.aicpuTaskInfo.kernelInnerHandle = nullptr;
+    taskInfo.u.aicpuTaskInfo.comm.argsSize = argsSize;
+    taskInfo.u.aicpuTaskInfo.comm.args = args;
+    taskInfo.u.aicpuTaskInfo.soName = soName;
+    taskInfo.u.aicpuTaskInfo.funcName = funcName;
+    taskInfo.u.aicpuTaskInfo.headParamOffset = 0;
+    taskInfo.u.aicpuTaskInfo.aicpuFlags = 0;
+    taskInfo.u.aicpuTaskInfo.timeout = 0;
+}
+} // namespace
 
 class Arch5162TaskTest : public testing::Test {
 protected:
@@ -793,6 +831,34 @@ TEST_F(Arch5162TaskTest, ConstructSqeForProfilingDisableTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, DumpAicpuArgsForDfx_ArgsNull)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.errorCode = 0x2A;
+    taskInfo.id = 42;
+    taskInfo.u.aicpuTaskInfo.kernel = nullptr;
+    taskInfo.u.aicpuTaskInfo.aicpuKernelType = TS_AICPU_KERNEL_AICPU;
+    taskInfo.u.aicpuTaskInfo.kernelInnerHandle = nullptr;
+    taskInfo.u.aicpuTaskInfo.comm.argsSize = 0;
+    taskInfo.u.aicpuTaskInfo.comm.args = nullptr;
+    taskInfo.u.aicpuTaskInfo.soName = nullptr;
+    taskInfo.u.aicpuTaskInfo.funcName = nullptr;
+    taskInfo.u.aicpuTaskInfo.headParamOffset = 0;
+    taskInfo.u.aicpuTaskInfo.aicpuFlags = 0;
+    taskInfo.u.aicpuTaskInfo.timeout = 0;
+
+    PrintErrorInfoForDavinciTask(&taskInfo, 0);
+
+    delete stream;
+    delete device;
+}
+
 TEST_F(Arch5162TaskTest, ModelExecuteTaskInit_nullptr)
 {
     rtError_t ret = ModelExecuteTaskInit(nullptr, nullptr, 0U, 0U);
@@ -808,6 +874,36 @@ TEST_F(Arch5162TaskTest, ModelExecuteTaskInit_normal)
     Model* model = nullptr;
     rtError_t ret = ModelExecuteTaskInit(&taskInfo, model, 1U, 2U);
     EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, DumpAicpuArgsForDfx_ArgsSizeZero)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    char dummyBuf[8] = {};
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.errorCode = 0x2A;
+    taskInfo.id = 42;
+    taskInfo.u.aicpuTaskInfo.kernel = nullptr;
+    taskInfo.u.aicpuTaskInfo.aicpuKernelType = TS_AICPU_KERNEL_AICPU;
+    taskInfo.u.aicpuTaskInfo.kernelInnerHandle = nullptr;
+    taskInfo.u.aicpuTaskInfo.comm.argsSize = 0;
+    taskInfo.u.aicpuTaskInfo.comm.args = static_cast<void*>(dummyBuf);
+    taskInfo.u.aicpuTaskInfo.soName = nullptr;
+    taskInfo.u.aicpuTaskInfo.funcName = nullptr;
+    taskInfo.u.aicpuTaskInfo.headParamOffset = 0;
+    taskInfo.u.aicpuTaskInfo.aicpuFlags = 0;
+    taskInfo.u.aicpuTaskInfo.timeout = 0;
+
+    // argsSize==0 triggers early return in DumpAicpuArgsForDfx before MemCopySync
+    PrintErrorInfoForDavinciTask(&taskInfo, 0);
+
     delete stream;
     delete device;
 }
@@ -838,6 +934,26 @@ TEST_F(Arch5162TaskTest, ConstructSqeForModelExecuteTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, DumpAicpuArgsForDfx_MemCopyFail)
+{
+    NpuDriver drv;
+    RawDevice* device = new RawDevice(0);
+    device->driver_ = &drv;
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    g_memCopySyncFail = true;
+    TaskInfo taskInfo = {};
+    InitAicpuTaskInfoForDump(taskInfo, stream, 64U, reinterpret_cast<void*>(DUMP_ARGS_BASE), nullptr, nullptr);
+
+    MOCKER_CPP_VIRTUAL(device->driver_, &Driver::MemCopySync).stubs().will(invoke(DumpAicpuArgsMemCopyStub));
+    PrintErrorInfoForDavinciTask(&taskInfo, 0);
+
+    g_memCopySyncFail = false;
+    delete stream;
+    delete device;
+}
+
 TEST_F(Arch5162TaskTest, SetResultForModelExecuteTask)
 {
     RawDevice* device = new RawDevice(0);
@@ -848,6 +964,56 @@ TEST_F(Arch5162TaskTest, SetResultForModelExecuteTask)
     PfnTaskSetResult setResultFunc = g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE];
     setResultFunc(&taskInfo, data, sizeof(data));
     EXPECT_EQ(taskInfo.errorCode, 1U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, DumpAicpuArgsForDfx_SoNameInRange)
+{
+    NpuDriver drv;
+    RawDevice* device = new RawDevice(0);
+    device->driver_ = &drv;
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    const char* soNameStr = "test_so.so";
+    memset(g_dumpArgsBuf, 0, sizeof(g_dumpArgsBuf));
+    memcpy_s(g_dumpArgsBuf + 64U, sizeof(g_dumpArgsBuf) - 64U, soNameStr, strlen(soNameStr) + 1U);
+    g_memCopySyncFail = false;
+
+    TaskInfo taskInfo = {};
+    InitAicpuTaskInfoForDump(
+        taskInfo, stream, DUMP_ARGS_SIZE, reinterpret_cast<void*>(DUMP_ARGS_BASE),
+        reinterpret_cast<void*>(DUMP_ARGS_BASE + 64U), nullptr);
+
+    MOCKER_CPP_VIRTUAL(device->driver_, &Driver::MemCopySync).stubs().will(invoke(DumpAicpuArgsMemCopyStub));
+    PrintErrorInfoForDavinciTask(&taskInfo, 0);
+
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, DumpAicpuArgsForDfx_KernelNameInRange)
+{
+    NpuDriver drv;
+    RawDevice* device = new RawDevice(0);
+    device->driver_ = &drv;
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+
+    const char* kernelNameStr = "TestKernel";
+    memset(g_dumpArgsBuf, 0, sizeof(g_dumpArgsBuf));
+    memcpy_s(g_dumpArgsBuf + 128U, sizeof(g_dumpArgsBuf) - 128U, kernelNameStr, strlen(kernelNameStr) + 1U);
+    g_memCopySyncFail = false;
+
+    TaskInfo taskInfo = {};
+    InitAicpuTaskInfoForDump(
+        taskInfo, stream, DUMP_ARGS_SIZE, reinterpret_cast<void*>(DUMP_ARGS_BASE), nullptr,
+        reinterpret_cast<void*>(DUMP_ARGS_BASE + 128U));
+
+    MOCKER_CPP_VIRTUAL(device->driver_, &Driver::MemCopySync).stubs().will(invoke(DumpAicpuArgsMemCopyStub));
+    PrintErrorInfoForDavinciTask(&taskInfo, 0);
+
     delete stream;
     delete device;
 }
