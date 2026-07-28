@@ -7,16 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+
 #include "event.hpp"
+#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
-
-rtError_t Event::RecordSoftwareEvent(Stream* const stm)
-{
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 
 rtError_t Event::CaptureWaitProcess(Stream* const stm)
 {
@@ -25,6 +21,12 @@ rtError_t Event::CaptureWaitProcess(Stream* const stm)
 }
 
 rtError_t Event::ExternalEventWaitProcess(Stream* const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t Event::RecordSoftwareEvent(Stream* const stm)
 {
     UNUSED(stm);
     return RT_ERROR_FEATURE_NOT_SUPPORT;

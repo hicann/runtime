@@ -12,6 +12,7 @@
 #include "inner_thread_local.hpp"
 #include "task_info.hpp"
 #include "memory_task.h"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -138,6 +139,54 @@ rtError_t Event::ResetSoftwareEvent(Stream* const stm)
         stm->Id_(), tsk->id, eventId_);
     tskErrRecycle.ReleaseGuard();
     return error;
+}
+
+bool Event::IsRecordOrigCaptureStream(const Stream* const stm) const
+{
+    for (Stream* const obj : waitTskStreamList_) {
+        if (obj->Id_() == stm->Id_()) {
+            continue;
+        }
+        if (obj->IsOrigCaptureStream()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CaptureModel* Event::GetCaptureModel(void) const
+{
+    if (captureEvent_ != nullptr) {
+        const Stream* const stm = captureEvent_->GetCaptureStream();
+        if (stm != nullptr) {
+            return dynamic_cast<CaptureModel*>(stm->Model_());
+        }
+    }
+    return nullptr;
+}
+
+bool Event::IsCapturing() const
+{
+    if (eventFlag_ == RT_EVENT_EXTERNAL) {
+        return false;
+    }
+    const CaptureModel* const mdl = GetCaptureModel();
+    return ((mdl != nullptr) && (mdl->IsCapturing()));
+}
+
+bool Event::ToBeCaptured(const Stream* const stm) const
+{
+    if (eventFlag_ == RT_EVENT_EXTERNAL) {
+        return false;
+    }
+    const Stream* captureStm = stm->GetCaptureStream();
+    if (captureStm != nullptr) {
+        const CaptureModel* const mdl = dynamic_cast<CaptureModel*>(captureStm->Model_());
+        if ((mdl != nullptr) && (mdl->IsCapturing())) {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace runtime

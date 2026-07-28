@@ -39,6 +39,7 @@
 #include "cond_op_stream_task.h"
 #include "stream_task.h"
 #include "task_res.hpp"
+#include "event.hpp"
 
 using namespace cce::runtime;
 
@@ -57,9 +58,8 @@ TEST_F(Arch5162TaskTest, StubTask)
 {
     Construct2ndSqeForCaptureConditionTask(nullptr, nullptr);
 
-    ConstructSqeForNotifyRecordTask(nullptr, nullptr);
-
-    uint16_t eventId = GetSqeEventId(nullptr);
+    rtStarsSqe_t sqe = {};
+    uint16_t eventId = GetSqeEventId(&sqe);
     EXPECT_EQ(eventId, 0U);
 
     int32_t countNum = 5;
@@ -470,6 +470,174 @@ TEST_F(Arch5162TaskTest, StreamActiveTaskInit)
     stream->taskResMang_ = nullptr;
     delete stream;
     delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForNotifyRecordTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.notifyrecordTask.notifyId = 100;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    ConstructSqeForNotifyRecordTask(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(sqe.writeValueSqe.notifyId, 100);
+    EXPECT_EQ(sqe.writeValueSqe.subType, RT_SQE_SUBTYPE_NOTIFY_ID);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForNotifyWaitTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.notifywaitTask.notifyId = 100;
+    taskInfo.u.notifywaitTask.timeout = 0;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.notifySqe.header.type, RT_STARS_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(sqe.notifySqe.notify_id, 100);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForEventRecordTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    Event event(device, RT_EVENT_DEFAULT, nullptr, false, true);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.eventRecordTaskInfo.event = &event;
+    taskInfo.u.eventRecordTaskInfo.eventid = 5;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_EVENT_RECORD];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(sqe.writeValueSqe.notifyId, 5);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForEventResetTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.eventResetTaskInfo.eventid = 10;
+    taskInfo.u.eventResetTaskInfo.event = nullptr;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_EVENT_RESET];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(sqe.writeValueSqe.notifyId, 10);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructSqeForEventWaitTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.eventWaitTaskInfo.eventId = 7;
+    taskInfo.u.eventWaitTaskInfo.timeout = 0;
+    taskInfo.u.eventWaitTaskInfo.event = nullptr;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.notifySqe.header.type, RT_STARS_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(sqe.notifySqe.notify_id, 7);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, CaptureStubs)
+{
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    Event event(device, RT_EVENT_DEFAULT, nullptr, false, true);
+
+    rtError_t ret = event.CaptureWaitProcess(stream);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    bool result = event.IsCapturing();
+    EXPECT_EQ(result, false);
+
+    CaptureModel* mdl = event.GetCaptureModel();
+    EXPECT_EQ(mdl, nullptr);
+
+    result = event.ToBeCaptured(stream);
+    EXPECT_EQ(result, false);
+
+    result = event.IsRecordOrigCaptureStream(stream);
+    EXPECT_EQ(result, false);
+
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, EventTaskRegister)
+{
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_EVENT_RECORD], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_EVENT_RECORD], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RECORD], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_EVENT_RECORD], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_EVENT_RECORD], nullptr);
+
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_EVENT_RESET], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_EVENT_RESET], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RESET], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_EVENT_RESET], nullptr);
+
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT], nullptr);
+
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_NOTIFY_WAIT], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_NOTIFY_WAIT], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_NOTIFY_WAIT], nullptr);
+
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT], nullptr);
+
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_NOTIFY_RECORD], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_NOTIFY_RECORD], nullptr);
 }
 
 TEST_F(Arch5162TaskTest, ConstructSqeForMaintenanceTask)

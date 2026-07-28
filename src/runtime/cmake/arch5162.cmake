@@ -34,9 +34,11 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task.cc
@@ -169,7 +171,7 @@ set(runtime_src_aclgraph_list
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture_arch5162.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/stream_capture.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
