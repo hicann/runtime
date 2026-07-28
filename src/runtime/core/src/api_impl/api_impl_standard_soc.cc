@@ -693,11 +693,13 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
 
     uint64_t latestAttr = 0UL; // if not set, use 0 to drv, otherwise update with cfg
     std::string ipcName(name);
-    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
-    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    auto it = ipcMemNameMap.find(ipcName);
-    if (it != ipcMemNameMap.end()) {
-        latestAttr = it->second.latestAttr;
+    {
+        const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+        std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+        auto it = ipcMemNameMap.find(ipcName);
+        if (it != ipcMemNameMap.end()) {
+            latestAttr = it->second.latestAttr;
+        }
     }
 
     error = dev->Driver_()->OpenIpcMem(name, RtPtrToPtr<uint64_t*>(ptr), curCtx->Device_()->Id_(), latestAttr);
@@ -706,12 +708,17 @@ rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, con
         return error;
     }
 
-    if (it == ipcMemNameMap.end()) {
-        ipcMemInfo_t& info = ipcMemNameMap[ipcName];
-        info.latestAttr = latestAttr;
-        info.vaList.push_back(RtPtrToValue(*ptr));
-    } else {
-        it->second.vaList.push_back(RtPtrToValue(*ptr));
+    {
+        const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+        std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+        auto it = ipcMemNameMap.find(ipcName);
+        if (it == ipcMemNameMap.end()) {
+            ipcMemInfo_t& info = ipcMemNameMap[ipcName];
+            info.latestAttr = latestAttr;
+            info.vaList.push_back(RtPtrToValue(*ptr));
+        } else {
+            it->second.vaList.push_back(RtPtrToValue(*ptr));
+        }
     }
 
     return RT_ERROR_NONE;
@@ -765,30 +772,51 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
     }
 
     const std::string ipcName(name);
-    const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
-    std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
-    auto it = ipcMemNameMap.find(ipcName);
-    if (it == ipcMemNameMap.end()) {
+    std::vector<uint64_t> vaListCopy;
+    bool nameNotFound = false;
+    {
+        const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+        std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+        auto it = ipcMemNameMap.find(ipcName);
+        if (it == ipcMemNameMap.end()) {
+            nameNotFound = true;
+        } else {
+            vaListCopy = it->second.vaList;
+        }
+    }
+
+    if (nameNotFound) {
         RT_LOG(RT_LOG_DEBUG, "destroy ipc memory by IpcDestroyMemoryName, name=%s.", name);
         return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
     }
 
     rtError_t ret = RT_ERROR_NONE;
-    ipcMemInfo_t& info = it->second;
-    for (auto vaIter = info.vaList.begin(); vaIter != info.vaList.end();) {
-        rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(*vaIter);
+    std::vector<uint64_t> successVas;
+    for (const auto va : vaListCopy) {
+        rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(va);
         if (error == RT_ERROR_NONE) {
-            vaIter = info.vaList.erase(vaIter);
-            continue;
+            successVas.push_back(va);
         } else {
-            RT_LOG(RT_LOG_ERROR, "close ipc mem failed, name=%s, va=%#" PRIx64 ".", name, *vaIter);
+            RT_LOG(RT_LOG_ERROR, "close ipc mem failed, name=%s, va=%#" PRIx64 ".", name, va);
             ret = error;
-            ++vaIter;
         }
     }
 
-    if (info.vaList.empty()) {
-        ipcMemNameMap.erase(it);
+    {
+        const std::unique_lock<std::mutex> lock(Runtime::Instance()->GetIpcMemNameLock());
+        std::unordered_map<std::string, ipcMemInfo_t>& ipcMemNameMap = Runtime::Instance()->GetIpcMemNameMap();
+        auto it = ipcMemNameMap.find(ipcName);
+        if (it != ipcMemNameMap.end()) {
+            for (const auto va : successVas) {
+                auto vaIter = std::find(it->second.vaList.begin(), it->second.vaList.end(), va);
+                if (vaIter != it->second.vaList.end()) {
+                    it->second.vaList.erase(vaIter);
+                }
+            }
+            if (it->second.vaList.empty()) {
+                ipcMemNameMap.erase(it);
+            }
+        }
     }
 
     RT_LOG(RT_LOG_DEBUG, "close ipc memory by IpcDestroyMemoryName, name=%s.", name);
