@@ -1809,16 +1809,14 @@ rtError_t DeviceErrorProc::ProcessStarv2OneElementInRingBuffer(
 // alloc contiguour host mem and dispatch to tsfw
 rtError_t DeviceErrorProc::CreateFastRingbuffer()
 {
-    NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
-    rtError_t error = Runtime::Instance()->InitOpExecTimeout(device_);
-    ERROR_RETURN(error, "failed to get op execute timeout, ret=%#x.", error);
     COND_RETURN_WITH_NOLOG(!Runtime::Instance()->IsSupportOpTimeoutMs(), RT_ERROR_NONE);
     const std::lock_guard<std::mutex> mutexLock(mutex_);
     COND_RETURN_WITH_NOLOG(fastRingBufferAddr_ != nullptr, RT_ERROR_NONE);
 
     void* hostMem = nullptr;
+    NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
     Driver* const devDrv = device_->Driver_();
-    error = devDrv->AllocFastRingBufferAndDispatch(&hostMem, fastRingBufferSize_, device_->Id_());
+    rtError_t error = devDrv->AllocFastRingBufferAndDispatch(&hostMem, fastRingBufferSize_, device_->Id_());
     ERROR_RETURN(error, "Failed to alloc fast ringbuffer memory, size=%zu(bytes).", fastRingBufferSize_);
     (void)memset_s(hostMem, fastRingBufferSize_, 0, fastRingBufferSize_);
     fastRingBufferAddr_ = hostMem;

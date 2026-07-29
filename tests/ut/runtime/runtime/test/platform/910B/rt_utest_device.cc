@@ -648,6 +648,40 @@ TEST_F(CloudV2DeviceTest, device_error_fast_ringbuffer)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(CloudV2DeviceTest, device_error_fast_ringbuffer_exception)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    const bool originIsOpTimeoutMs = rtInstance->timeoutConfig_.isOpTimeoutMs;
+    rtInstance->timeoutConfig_.isOpTimeoutMs = true;
+
+    DeviceErrorProc* errorProc = new DeviceErrorProc(nullptr);
+    rtError_t error = errorProc->CreateFastRingbuffer();
+    EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
+
+    rtInstance->timeoutConfig_.isOpTimeoutMs = originIsOpTimeoutMs;
+    delete errorProc;
+}
+
+TEST_F(CloudV2DeviceTest, device_error_fast_ringbuffer_alloc_fail)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    const bool originIsOpTimeoutMs = rtInstance->timeoutConfig_.isOpTimeoutMs;
+    rtInstance->timeoutConfig_.isOpTimeoutMs = true;
+
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(device);
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::AllocFastRingBufferAndDispatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_MEMORY));
+    rtError_t error = errorProc->CreateFastRingbuffer();
+    EXPECT_EQ(error, RT_ERROR_DRV_MEMORY);
+
+    GlobalMockObject::verify();
+    delete errorProc;
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    rtInstance->timeoutConfig_.isOpTimeoutMs = originIsOpTimeoutMs;
+}
+
 TEST_F(CloudV2DeviceTest, ConvertErrorCodeForFastReport_1)
 {
     StarsOpExceptionInfo report = {};
