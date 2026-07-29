@@ -2375,8 +2375,7 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    const uint64_t tmpSize =
-        ((((size > (MAX_UINT64_NUM - 0x1FU)) ? MAX_UINT64_NUM : (size + 0x1FU)) >> 5U) << 5U); // 32 byte align
+    const uint64_t tmpSize = (((size + 0x1FU) >> 5U) << 5U); // 32 byte align
 
     auto driver = curCtx->Device_()->Driver_();
     uint32_t devId = curCtx->Device_()->Id_();
