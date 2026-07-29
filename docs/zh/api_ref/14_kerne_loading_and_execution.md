@@ -43,8 +43,6 @@
 - [`aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *paramOffset, size_t *paramSize)`](#aclrtFunctionGetParamInfo)：根据索引从核函数句柄获取参数信息。
 - [`aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize)`](#aclrtFunctionGetAvailDynUbufPerBlock)：从核函数句柄获取每个Block可用的动态UB buffer大小。
 - [`aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)`](#aclrtGetFuncBySymbol)：根据核函数名获取核函数句柄。
-- [`aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)`](#aclrtLaunchSIMTKernelWithArgsArray)：使用参数数组启动SIMT核函数计算任务，异步接口。
-- [`aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)`](#aclrtLaunchSIMTKernelWithHostArgs)：使用Host参数启动SIMT核函数计算任务，异步接口。
 
 ## 概念及使用说明
 
@@ -1436,8 +1434,6 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 
 ### 参考资源
 
-<a id="launch_kernel_comparison"></a>
-
 下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
 
 | 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
@@ -1447,8 +1443,6 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 | [aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
 | [aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
 | [aclrtLaunchKernelWithArgsArray](#aclrtLaunchKernelWithArgsArray) | 在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
-| [aclrtLaunchSIMTKernelWithArgsArray](#aclrtLaunchSIMTKernelWithArgsArray) | 用于SIMT核函数，在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
-| [aclrtLaunchSIMTKernelWithHostArgs](#aclrtLaunchSIMTKernelWithHostArgs) | 用于SIMT核函数，在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
 
 <br>
 <br>
@@ -1508,7 +1502,15 @@ aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, con
 
 ### 参考资源
 
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
+下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
+
+| 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
+| --- | --- | --- | --- |
+| [aclrtLaunchKernel](#aclrtLaunchKernel) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 否 |
+| [aclrtLaunchKernelV2](#aclrtLaunchKernelV2) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 是 |
+| [aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
+| [aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
+| [aclrtLaunchKernelWithArgsArray](#aclrtLaunchKernelWithArgsArray) | 在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
 
 <br>
 <br>
@@ -1570,7 +1572,15 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 
 ### 参考资源
 
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
+下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
+
+| 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
+| --- | --- | --- | --- |
+| [aclrtLaunchKernel](#aclrtLaunchKernel) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 否 |
+| [aclrtLaunchKernelV2](#aclrtLaunchKernelV2) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 是 |
+| [aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
+| [aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
+| [aclrtLaunchKernelWithArgsArray](#aclrtLaunchKernelWithArgsArray) | 在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
 
 <br>
 <br>
@@ -1623,7 +1633,7 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
 | hostArgs | 输入 | 存放核函数所有入参数据的Host内存地址指针。 |
 | argsSize | 输入 | hostArgs参数值的大小，单位为Byte。 |
-| placeHolderArray | 输入 | placeholder参数数组。类型定义请参见[aclrtPlaceHolderInfo](25-04_Structs.md#aclrtPlaceHolderInfo)。 |
+| placeHolderArray | 输入 | placeholder参数数组。<br>aclrtPlaceHolderInfo定义如下：<br>typedef struct {<br>   uint32_t addrOffset;<br>   uint32_t dataOffset;<br>} aclrtPlaceHolderInfo;<br>成员变量说明如下：<br><br>  - addrOffset：placeholder指向的数据区拷贝到Device后，其真实Device内存地址在launch时需要刷新到hostArgs中，该参数用于指定需刷新的位置偏移<br>  - dataOffset：placeholder指向的数据区需拷贝到Device侧，该参数用于指定数据区基于hostArgs的地址偏移 |
 | placeHolderNum | 输入 | placeholder参数数组的大小。 |
 
 ### 返回值说明
@@ -1632,7 +1642,15 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 
 ### 参考资源
 
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
+下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
+
+| 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
+| --- | --- | --- | --- |
+| [aclrtLaunchKernel](#aclrtLaunchKernel) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 否 |
+| [aclrtLaunchKernelV2](#aclrtLaunchKernelV2) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 是 |
+| [aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
+| [aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
+| [aclrtLaunchKernelWithArgsArray](#aclrtLaunchKernelWithArgsArray) | 在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
 
 <br>
 <br>
@@ -1679,7 +1697,7 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针（可以是符号或[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)）。                                  |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
 | stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
@@ -1695,7 +1713,15 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 ### 参考资源
 
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
+下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
+
+| 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
+| --- | --- | --- | --- |
+| [aclrtLaunchKernel](#aclrtLaunchKernel) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 否 |
+| [aclrtLaunchKernelV2](#aclrtLaunchKernelV2) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 是 |
+| [aclrtLaunchKernelWithConfig](#aclrtLaunchKernelWithConfig) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
+| [aclrtLaunchKernelWithHostArgs](#aclrtLaunchKernelWithHostArgs) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
+| [aclrtLaunchKernelWithArgsArray](#aclrtLaunchKernelWithArgsArray) | 在接口中指定参数数组指针，每个元素指向一个参数数据 | Host内存 | 是 |
 
 <br>
 <br>
@@ -2201,139 +2227,3 @@ aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
 
 - 本接口只能用于算子静态Shape场景，且仅支持AI Core算子。
 - 核函数句柄仅在当前Device有效，切换Device后需要重新获取。
-
-<br>
-<br>
-<br>
-
-<a id="aclrtLaunchSIMTKernelWithArgsArray"></a>
-
-## aclrtLaunchSIMTKernelWithArgsArray
-
-```c
-aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)
-```
-
-### 产品支持情况
-
-<!-- npu="950" id3494 -->
-- Ascend 950PR/Ascend 950DT：支持
-<!-- end id3494 -->
-<!-- npu="A3" id3495 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
-<!-- end id3495 -->
-<!-- npu="910b" id3496 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
-<!-- end id3496 -->
-<!-- npu="310b" id3497 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id3497 -->
-<!-- npu="310p" id3498 -->
-- Atlas 推理系列产品：不支持
-<!-- end id3498 -->
-<!-- npu="910" id3499 -->
-- Atlas 训练系列产品：不支持
-<!-- end id3499 -->
-<!-- npu="IPV350" id3500 -->
-- IPV350：不支持
-<!-- end id3500 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id39 -->
-
-### 功能说明
-
-基于参数数组的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
-
-
-### 参数说明
-
-| 参数名 | 输入/输出 | 说明 |
-| --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
-| gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
-| blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
-| dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
-| args | 输入 | 参数数组指针。<br/>参数数组中的每个元素均指向核函数参数数据在Host侧的内存地址。 |
-
-### 返回值说明
-
-返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
-
-### 约束说明
-
-参数数组中的元素顺序需与核函数参数顺序保持一致，且参数数组大小需与核函数参数数量保持一致，否则会导致未定义行为。
-
-### 参考资源
-
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。
-
-<br>
-<br>
-<br>
-
-<a id="aclrtLaunchSIMTKernelWithHostArgs"></a>
-
-## aclrtLaunchSIMTKernelWithHostArgs
-
-```c
-aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
-```
-
-### 产品支持情况
-
-<!-- npu="950" id3501 -->
-- Ascend 950PR/Ascend 950DT：支持
-<!-- end id3501 -->
-<!-- npu="A3" id3502 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
-<!-- end id3502 -->
-<!-- npu="910b" id3503 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
-<!-- end id3503 -->
-<!-- npu="310b" id3504 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id3504 -->
-<!-- npu="310p" id3505 -->
-- Atlas 推理系列产品：不支持
-<!-- end id3505 -->
-<!-- npu="910" id3506 -->
-- Atlas 训练系列产品：不支持
-<!-- end id3506 -->
-<!-- npu="IPV350" id3507 -->
-- IPV350：不支持
-<!-- end id3507 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id40 -->
-
-### 功能说明
-
-基于Host内存参数的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
-
-
-### 参数说明
-
-| 参数名 | 输入/输出 | 说明 |
-| --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
-| gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
-| blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
-| dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
-| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
-| hostArgs | 输入 | 存放核函数所有入参数据的Host内存地址指针。 |
-| argsSize | 输入 | hostArgs参数值的大小，单位为Byte。 |
-| placeHolderArray | 输入 | placeholder参数数组。类型定义请参见[aclrtPlaceHolderInfo](25-04_Structs.md#aclrtPlaceHolderInfo)。 |
-| placeHolderNum | 输入 | placeholder参数数组的大小。 |
-
-### 返回值说明
-
-返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
-
-### 约束说明
-
-- hostArgs内存需按核函数参数顺序紧凑排列，且argsSize需与实际参数总大小一致。
-- placeHolderArray中的地址偏移必须与hostArgs中placeholder参数的实际位置对应。
-
-### 参考资源
-
-各Launch接口的功能和使用方式对比请参见[Launch接口对比表](#launch_kernel_comparison)。

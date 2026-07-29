@@ -36,7 +36,6 @@ struct 类型数据。
 - [aclrtMemUsageInfo](#aclrtMemUsageInfo)
 - [aclrtNormalDisInfo](#aclrtNormalDisInfo)
 - [aclrtPhysicalMemProp](#aclrtPhysicalMemProp)
-- [aclrtPlaceHolderInfo](#aclrtPlaceHolderInfo)
 - [aclrtPtrAttributes](#aclrtPtrAttributes)
 - [aclrtRandomNumFuncParaInfo](#aclrtRandomNumFuncParaInfo)
 - [aclrtRandomNumTaskInfo](#aclrtRandomNumTaskInfo)
@@ -51,7 +50,6 @@ struct 类型数据。
 - [aclrtUniformDisInfo](#aclrtUniformDisInfo)
 - [aclrtUtilizationInfo](#aclrtUtilizationInfo)
 - [aclrtUuid](#aclrtUuid)
-- [dim3](#dim3)
 
 <br>
 
@@ -819,24 +817,6 @@ typedef struct aclrtPhysicalMemProp {
 
 <br>
 
-<a id="aclrtPlaceHolderInfo"></a>
-
-## aclrtPlaceHolderInfo
-
-```c
-typedef struct {
-    uint32_t addrOffset;
-    uint32_t dataOffset;
-} aclrtPlaceHolderInfo;
-```
-
-| 成员名称 | 说明 |
-| --- | --- |
-| addrOffset | 待刷新的位置偏移。launch时，Runtime会申请Device内存并将该Device内存地址刷新到hostArgs中，该参数用于指定需刷新的位置偏移。 |
-| dataOffset | 数据区的偏移。placeholder指向的数据区需拷贝到Device侧，该参数用于指定数据区基于hostArgs的地址偏移。 |
-
-<br>
-
 <a id="aclrtPtrAttributes"></a>
 
 ## aclrtPtrAttributes
@@ -1117,29 +1097,3 @@ typedef struct aclrtUtilizationInfo {
     char  bytes[16];    // 一个16字节的字符串，作为Device的唯一标识
 } aclrtUuid;
 ```
-
-<br>
-
-<a id="dim3"></a>
-
-## dim3
-
-```c
-typedef struct dim3 {
-    uint32_t x;
-    uint32_t y;
-    uint32_t z;
-#ifdef __cplusplus
-#if __cplusplus >= 201103L
-    constexpr dim3(uint32_t vx = 1, uint32_t vy = 1, uint32_t vz = 1) : x(vx), y(vy), z(vz) {}
-#else
-    dim3(uint32_t vx = 1, uint32_t vy = 1, uint32_t vz = 1) : x(vx), y(vy), z(vz) {}
-#endif
-#endif // __cplusplus
-} dim3;
-```
-
-- C++环境下，dim3提供默认构造函数，三个成员变量默认初始化为1。
-- C语言环境下，dim3为普通结构体，使用时需显式初始化各成员变量。
-
-<br>

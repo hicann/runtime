@@ -550,8 +550,8 @@ aclError aclrtLaunchKernelWithArgsArrayImpl(
 }
 
 aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(
-    void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg* cfg,
-    void** args)
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    aclrtLaunchKernelCfg* cfg, void** args)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithArgsArray);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithArgsArray");
@@ -586,8 +586,9 @@ aclError aclrtGetFloatOverflowStatusImpl(void* outputAddr, uint64_t outputSize, 
 }
 
 aclError aclrtLaunchSIMTKernelWithHostArgsImpl(
-    void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg* cfg,
-    void* hostArgs, size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray, size_t placeHolderNum)
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    aclrtLaunchKernelCfg* cfg, void* hostArgs, size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray,
+    size_t placeHolderNum)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithHostArgs);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithHostArgs");

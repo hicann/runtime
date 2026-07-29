@@ -504,20 +504,11 @@ typedef enum {
     ACL_RT_ENGINE_TYPE_AIV,
 } aclrtEngineType;
 
-#ifndef __BISHENG_CCEC__
-typedef struct dim3 {
+typedef struct aclrtDim3 {
     uint32_t x;
     uint32_t y;
     uint32_t z;
-#ifdef __cplusplus
-#if __cplusplus >= 201103L
-    constexpr dim3(uint32_t vx = 1, uint32_t vy = 1, uint32_t vz = 1) : x(vx), y(vy), z(vz) {}
-#else
-    dim3(uint32_t vx = 1, uint32_t vy = 1, uint32_t vz = 1) : x(vx), y(vy), z(vz) {}
-#endif
-#endif // __cplusplus
-} dim3;
-#endif // __BISHENG_CCEC__
+} aclrtDim3;
 
 typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
@@ -5183,7 +5174,7 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchKernelWithArgsArray(
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithArgsArray(
-    void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
     aclrtLaunchKernelCfg* cfg, void** args);
 
 /**
@@ -5204,7 +5195,7 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithArgsArray(
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithHostArgs(
-    void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream,
+    void* func, aclrtDim3 gridDim, aclrtDim3 blockDim, size_t dynUbufSize, aclrtStream stream,
     aclrtLaunchKernelCfg* cfg, void* hostArgs, size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray,
     size_t placeHolderNum);
 

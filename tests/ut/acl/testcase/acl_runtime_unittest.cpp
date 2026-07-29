@@ -3470,8 +3470,8 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_nullptr)
 {
     void* func = nullptr;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3484,8 +3484,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_nullptr
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_successful)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {2, 2, 2};
-    dim3 blockDim = {4, 4, 4};
+    aclrtDim3 gridDim = {2, 2, 2};
+    aclrtDim3 blockDim = {4, 4, 4};
     size_t dynUbufSize = 1024;
     aclrtStream stream = (aclrtStream)0x01U;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3500,8 +3500,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_successful)
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_invalid_handle)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3516,8 +3516,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_invalid
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_feature_not_support)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3532,8 +3532,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_feature
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_other_error)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3548,8 +3548,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_args_array_failed_with_other_e
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_nullptr_func)
 {
     void* func = nullptr;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3564,8 +3564,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_nullptr_
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_nullptr_hostargs)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3580,8 +3580,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_nullptr_
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_args_size_zero)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3596,8 +3596,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_args_siz
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_successful)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {2, 2, 2};
-    dim3 blockDim = {4, 4, 4};
+    aclrtDim3 gridDim = {2, 2, 2};
+    aclrtDim3 blockDim = {4, 4, 4};
     size_t dynUbufSize = 2048;
     aclrtStream stream = (aclrtStream)0x01U;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3614,8 +3614,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_successful)
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_invalid_handle)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3632,8 +3632,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_invalid_
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_feature_not_support)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3650,8 +3650,8 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_feature_
 TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_other_error)
 {
     void* func = (void*)0x01U;
-    dim3 gridDim = {1, 1, 1};
-    dim3 blockDim = {1, 1, 1};
+    aclrtDim3 gridDim = {1, 1, 1};
+    aclrtDim3 blockDim = {1, 1, 1};
     size_t dynUbufSize = 0;
     aclrtStream stream = nullptr;
     aclrtLaunchKernelCfg* cfg = nullptr;
@@ -3663,30 +3663,6 @@ TEST_F(UTEST_ACL_Runtime, launch_simt_kernel_with_host_args_failed_with_other_er
     aclError ret = aclrtLaunchSIMTKernelWithHostArgs(
         func, gridDim, blockDim, dynUbufSize, stream, cfg, hostArgs, 128, placeHolders, 2);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
-}
-
-TEST_F(UTEST_ACL_Runtime, dim3_default_constructor_initializes_to_one)
-{
-    dim3 d;
-    EXPECT_EQ(d.x, 1U);
-    EXPECT_EQ(d.y, 1U);
-    EXPECT_EQ(d.z, 1U);
-}
-
-TEST_F(UTEST_ACL_Runtime, dim3_partial_args_constructor)
-{
-    dim3 d(2, 3);
-    EXPECT_EQ(d.x, 2U);
-    EXPECT_EQ(d.y, 3U);
-    EXPECT_EQ(d.z, 1U);
-}
-
-TEST_F(UTEST_ACL_Runtime, dim3_full_args_constructor)
-{
-    dim3 d(2, 3, 4);
-    EXPECT_EQ(d.x, 2U);
-    EXPECT_EQ(d.y, 3U);
-    EXPECT_EQ(d.z, 4U);
 }
 
 TEST_F(UTEST_ACL_Runtime, export_to_shareablehandle_failed_with_rt_func_failed)
