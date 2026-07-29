@@ -10,9 +10,15 @@
 #include "device_error_proc.hpp"
 #include "stream.hpp"
 #include "context.hpp"
+#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
+
+bool IsRasFaultEventId(uint32_t eventId)
+{
+    return (eventId == HBM_ECC_NOTIFY_EVENT_ID) || (eventId == HBM_ECC_EVENT_ID);
+}
 
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap)
 {

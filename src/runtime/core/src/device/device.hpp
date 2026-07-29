@@ -317,6 +317,7 @@ public:
     virtual int64_t GetPhyChipId() const = 0;
     virtual int64_t GetPhyDieId() const = 0;
     virtual int64_t GetBaseTime() const = 0;
+    virtual int64_t GetDeviceCurrentTime() const = 0;
     virtual void SetBaseTime() = 0;
     virtual Stream* GetNextRecycleStream() = 0;
     virtual bool IsSupportEventPool() = 0;

@@ -729,6 +729,139 @@ bool HasMteErr(const Device* const dev)
     return hasMteErr;
 }
 
+static void ExtractEventStateDesc(const std::string& eventName, char* outBuf, size_t outBufLen)
+{
+    if ((outBuf == nullptr) || (outBufLen == 0U)) {
+        return;
+    }
+    const std::string prefix = "event state=";
+    size_t pos = eventName.find(prefix);
+    if (pos == std::string::npos) {
+        (void)snprintf_truncated_s(outBuf, outBufLen, "%s", eventName.c_str());
+        return;
+    }
+    const size_t start = pos + prefix.length();
+    const size_t commaPos = eventName.find(',', start);
+    const size_t end = (commaPos != std::string::npos) ? commaPos : eventName.length();
+    if (start >= end) {
+        outBuf[0] = '\0';
+        return;
+    }
+    const size_t copyLen = end - start;
+    if (copyLen >= outBufLen) {
+        (void)snprintf_truncated_s(outBuf, outBufLen, "%s", eventName.c_str() + start);
+        return;
+    }
+    errno_t ret = strncpy_s(outBuf, outBufLen, eventName.c_str() + start, copyLen);
+    if (ret != EOK) {
+        outBuf[0] = '\0';
+    }
+}
+
+std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName)
+{
+    constexpr size_t DESC_BUF_LEN = 512U;
+    char descBuf[DESC_BUF_LEN] = {0};
+    char stateBuf[RT_DMS_MAX_EVENT_NAME_LENGTH] = {0};
+    ExtractEventStateDesc(eventName, stateBuf, sizeof(stateBuf));
+    (void)snprintf_truncated_s(
+        descBuf, DESC_BUF_LEN,
+        "[event_id:0x%x] %s. For details about troubleshooting, see Health Management Error Definition.", eventId,
+        stateBuf);
+    return std::string(descBuf);
+}
+
+static void UpdateEarliestRasEvent(RasEventMatch& match, const rtDmsFaultEvent& event)
+{
+    if (!match.found || (event.alarmRaisedTime < match.alarmTime)) {
+        match.found = true;
+        match.eventId = event.eventId;
+        match.eventName = std::string(event.eventName);
+        match.additionalInfo = std::string(event.additionalInfo);
+        match.alarmTime = event.alarmRaisedTime;
+    }
+}
+
+static void MatchRasEventInBatch(
+    RasEventMatch& match, const std::vector<rtDmsFaultEvent>& faultEventInfo, uint32_t eventCount, uint64_t lowerBound,
+    uint64_t upperBound)
+{
+    for (uint32_t idx = 0U; idx < eventCount; ++idx) {
+        const uint64_t alarmTime = faultEventInfo[idx].alarmRaisedTime;
+        if ((alarmTime > lowerBound) && (alarmTime < upperBound) && IsRasFaultEventId(faultEventInfo[idx].eventId)) {
+            UpdateEarliestRasEvent(match, faultEventInfo[idx]);
+        }
+    }
+}
+
+// 查询 RAS 故障事件，在时间窗口内匹配目标 eventId
+// 如果在时间窗内，匹配到目标eventID，命中后立即返回，取 alarmRaisedTime 最早的事件作为根因。未命中时打印 DEBUG 诊断日志
+// deviceTimeMs 为时间窗计算的基准时间，windowBeforeMs，windowAfterMs 是时间窗左右边界在基准时间上的左右偏移量，单位ms
+// 时间窗计算方法为 [deviceTimeMs - windowBeforeMs, upperBound]
+// windowAfterMs > 0 时：upperBound = deviceTimeMs + windowAfterMs，表示需轮询等待未来事件到达（如 HW_L_ERROR）；
+// windowAfterMs == 0 时：upperBound = 查询时刻的 device 当前时间，
+// 表示事件已在前序等待中到达，无需轮询等待，单次查询即可（如 MTE/LINK）
+RasEventMatch QueryRasFaultEvents(
+    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowBeforeMs, uint64_t windowAfterMs)
+{
+    RasEventMatch match{};
+    if (dev == nullptr) {
+        return match;
+    }
+    const uint64_t lowerBound = (deviceTimeMs > windowBeforeMs) ? (deviceTimeMs - windowBeforeMs) : 0U;
+    // windowAfterMs > 0: 右边界为 deviceTimeMs + windowAfterMs（等待未来到达的事件）
+    // windowAfterMs == 0: 右边界为查询时的当前 device 时间（事件在 ProcessCoreErrorClass 等待期间已到达）
+    uint64_t upperBound;
+    if (windowAfterMs > 0U) {
+        upperBound = deviceTimeMs + windowAfterMs;
+    } else {
+        const int64_t currTime = dev->GetDeviceCurrentTime();
+        if (currTime <= 0) {
+            RT_LOG(RT_LOG_WARNING, "GetDeviceCurrentTime failed, skip RAS query, device_id=%u.", dev->Id_());
+            return match;
+        }
+        upperBound = static_cast<uint64_t>(currTime);
+    }
+    std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
+
+    uint32_t lastEventCount = 0U;
+    rtError_t lastError = RT_ERROR_NONE;
+    const uint32_t maxQueryCount = (windowAfterMs > 0U) ? static_cast<uint32_t>(GetMteErrWaitCount()) : 1U;
+    for (uint32_t queryCount = 0U; queryCount < maxQueryCount; ++queryCount) {
+        uint32_t eventCount = 0U;
+        const rtError_t error = GetDeviceFaultEvents(dev->Id_(), &faultEventInfo[0U], eventCount, false);
+        lastError = error;
+        lastEventCount = eventCount;
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_WARNING, "GetDeviceFaultEvents failed, skip RAS query, device_id=%u, retCode=%#x.", dev->Id_(),
+                static_cast<uint32_t>(error));
+            return match;
+        }
+        MatchRasEventInBatch(match, faultEventInfo, eventCount, lowerBound, upperBound);
+        if (match.found) {
+            break;
+        }
+        if (queryCount + 1U < maxQueryCount) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
+        }
+    }
+    if (!match.found) {
+        RT_LOG(
+            RT_LOG_DEBUG,
+            "RAS query no match: device_id=%u, deviceTimeMs=%llu, window=[%llu,%llu], "
+            "windowAfterMs=%llu, queryCount=%u, lastError=%#x, eventCount=%u.",
+            dev->Id_(), deviceTimeMs, lowerBound, upperBound, windowAfterMs, maxQueryCount,
+            static_cast<uint32_t>(lastError), lastEventCount);
+        for (uint32_t idx = 0U; idx < lastEventCount; ++idx) {
+            RT_LOG(
+                RT_LOG_DEBUG, "RAS query event[%u]: event_id=%#x, alarm_time=%llu.", idx, faultEventInfo[idx].eventId,
+                faultEventInfo[idx].alarmRaisedTime);
+        }
+    }
+    return match;
+}
+
 // 封装 SMMU 故障检查逻辑
 static bool CheckSmmuFault(const uint32_t deviceId)
 {
@@ -998,15 +1131,56 @@ static void AddExceptionRegInfo(
     exceptionRegMap[key].push_back(regInfo);
 }
 
+// 查询 RAS 故障事件并格式化描述，用于 EZ2001 上报
+static std::string QueryAndFormatRasFault(const Device* const dev, const int64_t deviceTime)
+{
+    if (deviceTime <= 0) {
+        return "";
+    }
+    const uint64_t deviceTimeMs = static_cast<uint64_t>(deviceTime);
+    const uint64_t rasWindowMs = static_cast<uint64_t>(GetMteErrWaitCount()) * RAS_QUERY_INTERVAL;
+    // SetTaskMteErr(errTaskPtr, dev) 中已经等待过事件发生了，这个函数调用结束，只有两种情况：
+    // 1、等足了120ms，没有查到事件，此处不应该再去轮询查事件了，而是直接只查一次，以这次的查询结果为准
+    // 2、没有等够120ms事件就发生了，函数提前返回，此处立即去查询告警，一定能查到
+    // 所以，无论那种情况，此处都不应该再去轮询查事件了，QueryRasFaultEvents的windowAfterMs直接传0
+    RasEventMatch rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, 0U);
+    if (!rasMatch.found) {
+        return "";
+    }
+    RT_LOG(
+        RT_LOG_ERROR, "RAS event detail: device_id=%u, event_id=%#x, event_name=\"%s\", additional_info=\"%s\".",
+        dev->Id_(), rasMatch.eventId, rasMatch.eventName.c_str(), rasMatch.additionalInfo.c_str());
+    return FormatRasFaultDesc(rasMatch.eventId, rasMatch.eventName);
+}
+
+// 判定是否为远端链路错误，命中时设置 errTaskPtr->mte_error 和 device fault type
+static void CheckAndSetLinkError(const Device* const dev, TaskInfo* errTaskPtr, bool isMteErr)
+{
+    // 本地没有其他告警，且报错写mte错误，认为疑似是远端出错
+    const bool hasErrTask = (errTaskPtr != nullptr);
+    bool isLinkError = false;
+    if (isMteErr && hasErrTask) {
+        if (!HasMteErr(dev)) {
+            isLinkError = !HasMemUceErr(dev);
+        }
+    }
+    if (isLinkError) {
+        errTaskPtr->mte_error = TS_ERROR_SDMA_LINK_ERROR;
+        (RtPtrToUnConstPtr<Device*>(dev))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
+    }
+}
+
 static void PrintCoreInfo(
     const StarsDeviceErrorInfo* const info, const uint32_t coreIdx, const uint64_t errorNumber,
-    std::string& errorString, std::string& headMsg)
+    std::string& errorString, std::string& headMsg, const std::string& rasFaultDesc = "")
 {
+    constexpr size_t AICORE_BUF_LEN = 4096U;
+    std::array<char, AICORE_BUF_LEN> aicoreBuffer{};
     /* logs for aic tools, do not modify the item befor making a new agreement with tools */
-    RT_LOG_CALL_MSG(
-        ERR_MODULE_TBE,
-        "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
-        "there is an exception of %s, core id is %" PRIu64 ", "
+    (void)snprintf_truncated_s(
+        aicoreBuffer.data(), AICORE_BUF_LEN,
+        "An error occurs on the device(chipId:%u, dieId:%u), the serial number is %" PRIu64 ", "
+        "the error is %s error, core id is %" PRIu64 ", "
         "error code = %#" PRIx64 ", dump info: "
         "pc start: %#" PRIx64 ", current: %#" PRIx64 ", "
         "vec error info: %#" PRIx64 ", mte error info: %#" PRIx64 ", "
@@ -1017,9 +1191,7 @@ static void PrintCoreInfo(
         "The extend info: errcode:(%#" PRIx64 ", %#" PRIx64 ", %#" PRIx64 ") "
         "errorStr: %s "
         "fixp_error0 info: %#x, fixp_error1 info: %#x, "
-        "fsmId:%u, tslot:%u, thread:%u, ctxid:%u, blk:%u, sublk:%u, subErrType:%u.\n"
-        "For details, see the troubleshooting document on the Ascend official website. Search for the keyword \"AI "
-        "Core Error\".",
+        "fsmId:%u, tslot:%u, thread:%u, ctxid:%u, blk:%u, sublk:%u, subErrType:%u.",
         info->u.coreErrorInfo.comm.chipId, info->u.coreErrorInfo.comm.dieId, errorNumber, headMsg.c_str(),
         info->u.coreErrorInfo.info[coreIdx].coreId, info->u.coreErrorInfo.info[coreIdx].aicError[0],
         info->u.coreErrorInfo.info[coreIdx].pcStart, info->u.coreErrorInfo.info[coreIdx].currentPC,
@@ -1034,6 +1206,15 @@ static void PrintCoreInfo(
         info->u.coreErrorInfo.info[coreIdx].fsmTslotId, info->u.coreErrorInfo.info[coreIdx].fsmThreadId,
         info->u.coreErrorInfo.info[coreIdx].fsmCxtId, info->u.coreErrorInfo.info[coreIdx].fsmBlkId,
         info->u.coreErrorInfo.info[coreIdx].fsmSublkId, info->u.coreErrorInfo.info[coreIdx].subErrType);
+    if (!rasFaultDesc.empty()) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EZ2001, aicoreBuffer.data(), "RAS", rasFaultDesc);
+        return;
+    }
+    RT_LOG_CALL_MSG(
+        ERR_MODULE_TBE,
+        "%s\nFor details, see the troubleshooting document on the Ascend official website. Search for the keyword \"AI "
+        "Core Error\".",
+        aicoreBuffer.data());
 }
 
 static void ProcessMteAndFfts(
@@ -1305,6 +1486,7 @@ rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(
     UNUSED(insPtr);
     bool isFftsPlusTask = false;
     const uint16_t type = info->u.coreErrorInfo.comm.type;
+    const int64_t deviceTime = dev->GetDeviceCurrentTime();
 
     TaskInfo* errTaskPtr = dev->GetTaskFactory()->GetTask(
         static_cast<int32_t>(info->u.coreErrorInfo.comm.streamId), info->u.coreErrorInfo.comm.taskId);
@@ -1325,6 +1507,12 @@ rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(
     const uint32_t inputcoreNum = info->u.coreErrorInfo.comm.coreNum;
     // info->u.coreErrorInfo.comm.flag等于1的场景在上述流程已经判断过，不需要再重复判断
     bool isMteErr = (inputcoreNum > 0U) && (info->u.coreErrorInfo.comm.flag != 1U) && isSupportFastRecover;
+
+    std::string rasFaultDesc;
+    const bool needReportUserErrcode = (info->u.coreErrorInfo.comm.flag == 1U);
+    if (needReportUserErrcode) {
+        rasFaultDesc = QueryAndFormatRasFault(dev, deviceTime);
+    }
     for (uint32_t coreIdx = 0U; coreIdx < inputcoreNum; coreIdx++) {
         if (isFftsPlusTask == false && errTaskPtr != nullptr && errTaskPtr->u.aicTaskInfo.kernel == nullptr) {
             AicTaskInfo* aicTask = &errTaskPtr->u.aicTaskInfo;
@@ -1340,21 +1528,13 @@ rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(
         DeviceErrorProc::ProcessStarsCoreErrorMapInfo(&(info->u.coreErrorInfo.info[coreIdx]), errorString);
         std::string headMsg = GetStarsRingBufferHeadMsg(info->u.coreErrorInfo.comm.type);
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        PrintCoreInfo(info, coreIdx, errorNumber, errorString, headMsg);
+        PrintCoreInfo(info, coreIdx, errorNumber, errorString, headMsg, rasFaultDesc);
+        if (!rasFaultDesc.empty()) {
+            rasFaultDesc.clear();
+        }
         ProcessMteAndFfts(info, coreIdx, isMteErr, isSupportFastRecover, isFftsPlusTask, errTaskPtr);
     }
-    // 本地没有其他告警，且报错写mte错误，认为疑似是远端出错
-    const bool hasErrTask = (errTaskPtr != nullptr);
-    bool isLinkError = false;
-    if (isMteErr && hasErrTask) {
-        if (!HasMteErr(dev)) {
-            isLinkError = !HasMemUceErr(dev);
-        }
-    }
-    if (isLinkError) {
-        errTaskPtr->mte_error = TS_ERROR_SDMA_LINK_ERROR;
-        (RtPtrToUnConstPtr<Device*>(dev))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
-    }
+    CheckAndSetLinkError(dev, errTaskPtr, isMteErr);
     if (errTaskPtr != nullptr) {
         RT_LOG(
             RT_LOG_ERROR, "devId=%u, streamId=%u, taskId=%u, MTE errorCode=%u.", dev->Id_(),

@@ -29,7 +29,17 @@
 namespace cce {
 namespace runtime {
 constexpr size_t DEVICE_FAST_RINGBUFFER_SIZE = 4 * 1024U; // 4k
+
+struct RasEventMatch {
+    bool found = false;
+    uint32_t eventId = 0U;
+    std::string eventName;
+    std::string additionalInfo;
+    uint64_t alarmTime = 0U;
+};
+
 bool HasMteErr(const Device* const dev);
+bool IsRasFaultEventId(uint32_t eventId);
 bool HasMemUceErr(const Device* const dev, const std::map<uint32_t, std::string>& eventIdBlkList = g_mulBitEccEventId);
 void SetTaskMteErr(
     TaskInfo* errTaskPtr, const Device* const dev,
@@ -243,7 +253,9 @@ uint32_t GetRingbufferElementNum();
 
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap);
 uint16_t GetMteErrWaitCount();
-void CheckAndPrintRasInfo(const Device* const dev);
+std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName);
+RasEventMatch QueryRasFaultEvents(
+    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowBeforeMs, uint64_t windowAfterMs);
 void ConvertErrorCodeForFastReport(StarsOpExceptionInfo* report);
 void GetFastRingBufferErrorMap(std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>>& errorMap);
 void InitFastRingBuffer(void* fastRingBufferAddr);

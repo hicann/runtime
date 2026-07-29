@@ -90,6 +90,7 @@ drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len) { return DRV_ERROR_NONE
 drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int* split_mode) { return DRV_ERROR_NONE; }
 
 int32_t faultEventFlag = 0;
+int64_t g_deviceCurrentTimeStub = 0;
 drvError_t halGetFaultEvent(
     uint32_t devId, struct halEventFilter* filter, struct halFaultEventInfo* eventInfo, uint32_t len,
     uint32_t* eventCount)
@@ -145,6 +146,22 @@ drvError_t halGetFaultEvent(
         *eventCount = 1;
         eventInfo[0].event_id = 0x81B58002U;
         eventInfo[0].alarm_raised_time = 0x1000ULL;
+        return DRV_ERROR_NONE;
+    }
+    if (faultEventFlag == 10) {              // UB_REMOTE_MEM_TIMEOUT with alarmRaisedTime strictly inside RAS window
+        *eventCount = 1;
+        eventInfo[0].event_id = 0x81AFAA02U; // UB_REMOTE_MEM_TIMEOUT_EVENT_ID
+        // alarmRaisedTime 须严格小于 upperBound(=GetDeviceCurrentTime)，否则 MatchRasEventInBatch 的
+        // alarmTime < upperBound 不成立，RAS 不会命中 EZ2001 路径
+        eventInfo[0].alarm_raised_time = static_cast<uint64_t>(g_deviceCurrentTimeStub) - 100U;
+        return DRV_ERROR_NONE;
+    }
+    if (faultEventFlag == 11) { // HBM_ECC_EVENT_ID with alarmRaisedTime in HW_L RAS window [t-window, t+window]
+        *eventCount = 1;
+        eventInfo[0].event_id = 0x80E01801U; // HBM_ECC_EVENT_ID
+        // HW_L 路径 windowAfterMs > 0，upperBound = deviceTimeMs + rasWindowMs
+        // alarmRaisedTime 须在 (deviceTimeMs - rasWindowMs, deviceTimeMs + rasWindowMs) 内
+        eventInfo[0].alarm_raised_time = static_cast<uint64_t>(g_deviceCurrentTimeStub);
         return DRV_ERROR_NONE;
     }
     *eventCount = 1;
@@ -209,6 +226,8 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
             *value = PLATFORMCONFIG_DAVID_950PR_9599;
+        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_REAL_TIME) {
+            *value = g_deviceCurrentTimeStub;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
             printf(

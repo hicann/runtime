@@ -2704,5 +2704,21 @@ void RawDevice::SetBaseTime()
     RT_LOG(RT_LOG_DEBUG, "set device base time %" PRId64, baseTime_.load());
 }
 
+int64_t RawDevice::GetDeviceCurrentTime() const
+{
+    int64_t currTime = 0;
+    const rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_SYSTEM, INFO_TYPE_REAL_TIME, &currTime);
+    if ((error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT) && (error != RT_ERROR_DRV_INPUT)) {
+        RT_LOG(
+            RT_LOG_ERROR, "get device current time failed, deviceId=%u, retCode=%#x.", deviceId_,
+            static_cast<uint32_t>(error));
+        return 0;
+    }
+    if (error != RT_ERROR_NONE) {
+        return 0;
+    }
+    return currTime;
+}
+
 } // namespace runtime
 } // namespace cce

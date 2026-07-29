@@ -10,6 +10,8 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
+#include <regex.h>
+#include <cinttypes>
 #define protected public
 #define private public
 #include "task.hpp"
@@ -119,6 +121,11 @@ rtError_t SendAicpuTaskStub(TaskInfo* taskInfo, Stream* const stm)
 static bool g_disableThread;
 static rtChipType_t g_chipType;
 extern int64_t g_device_driver_version_stub;
+extern int64_t g_deviceCurrentTimeStub;
+extern int32_t faultEventFlag;
+extern std::string g_lastDlogRecordLine;
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 #define PLATFORMCONFIG_NO_DEVICE                                                     \
     PLAT_COMBINE(                                                                    \
         (static_cast<uint32_t>(ARCH_C220)), (static_cast<uint32_t>(CHIP_NO_DEVICE)), \
@@ -1216,22 +1223,6 @@ static rtError_t StubGetDeviceFaultEventsWithoutRasEvent(
     return RT_ERROR_NONE;
 }
 
-TEST_F(DavidTaskTest, CheckAndPrintRasInfo_nullptr) { CheckAndPrintRasInfo(nullptr); }
-
-TEST_F(DavidTaskTest, CheckAndPrintRasInfo_with_ras_event)
-{
-    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsWithRasEvent));
-    CheckAndPrintRasInfo(dev_);
-    GlobalMockObject::verify();
-}
-
-TEST_F(DavidTaskTest, CheckAndPrintRasInfo_without_ras_event)
-{
-    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsWithoutRasEvent));
-    CheckAndPrintRasInfo(dev_);
-    GlobalMockObject::verify();
-}
-
 static rtError_t StubGetDeviceFaultEventsError(
     const uint32_t deviceId, rtDmsFaultEvent* const faultEventInfo, uint32_t& eventCount, bool needLog)
 {
@@ -1252,18 +1243,545 @@ static rtError_t StubGetDeviceFaultEventsFeatureNotSupported(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-TEST_F(DavidTaskTest, CheckAndPrintRasInfo_get_fault_events_error)
+// ==================== EZ2001 RAS 测试 ====================
+// A. FormatRasFaultDesc 纯函数测试
+TEST_F(DavidTaskTest, FormatRasFaultDesc_with_event_state_prefix)
 {
-    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsError));
-    CheckAndPrintRasInfo(dev_);
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "node type=UB, event state=bus error");
+    EXPECT_NE(desc.find("0x80e01801"), std::string::npos);
+    EXPECT_NE(desc.find("bus error"), std::string::npos);
+    EXPECT_EQ(desc.find("event state="), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_without_prefix)
+{
+    const std::string desc = FormatRasFaultDesc(0x81afaa03U, "UBMEM auth fail");
+    EXPECT_NE(desc.find("0x81afaa03"), std::string::npos);
+    EXPECT_NE(desc.find("UBMEM auth fail"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_hex_format)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e18400U, "event state=ecc");
+    EXPECT_NE(desc.find("0x80e18400"), std::string::npos);
+}
+
+// B. QueryRasFaultEvents 单元测试
+static void SetDeviceCurrentTimeMock(Device* dev, int64_t timeMs);
+static rtError_t g_rasQueryRetError = RT_ERROR_NONE;
+static uint32_t g_rasQueryEventCount = 0U;
+static rtDmsFaultEvent g_rasQueryEvents[4] = {};
+static uint32_t g_rasQueryCallCount = 0U;
+static uint32_t g_rasQuerySecondEventCount = 0U;
+static rtDmsFaultEvent g_rasQuerySecondEvents[4] = {};
+
+static rtError_t StubRasQueryGetDeviceFaultEvents(
+    const uint32_t deviceId, rtDmsFaultEvent* const faultEventInfo, uint32_t& eventCount, bool needLog)
+{
+    UNUSED(deviceId);
+    UNUSED(needLog);
+    if (faultEventInfo == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    g_rasQueryCallCount++;
+    if ((g_rasQueryCallCount == 2U) && (g_rasQuerySecondEventCount > 0U)) {
+        eventCount = g_rasQuerySecondEventCount;
+        for (uint32_t i = 0U; i < g_rasQuerySecondEventCount && i < 4U; ++i) {
+            faultEventInfo[i] = g_rasQuerySecondEvents[i];
+        }
+        return RT_ERROR_NONE;
+    }
+    eventCount = g_rasQueryEventCount;
+    for (uint32_t i = 0U; i < g_rasQueryEventCount && i < 4U; ++i) {
+        faultEventInfo[i] = g_rasQueryEvents[i];
+    }
+    return g_rasQueryRetError;
+}
+
+static void ResetRasQueryStub()
+{
+    g_rasQueryRetError = RT_ERROR_NONE;
+    g_rasQueryEventCount = 0U;
+    g_rasQueryCallCount = 0U;
+    g_rasQuerySecondEventCount = 0U;
+    for (uint32_t i = 0U; i < 4U; ++i) {
+        g_rasQueryEvents[i] = {};
+        g_rasQuerySecondEvents[i] = {};
+    }
+}
+
+static void SetRasQueryEvent(
+    uint32_t idx, uint32_t eventId, uint64_t alarmTime, const std::string& eventName = "",
+    const std::string& additionalInfo = "")
+{
+    if (idx >= 4U) {
+        return;
+    }
+    g_rasQueryEvents[idx].eventId = eventId;
+    g_rasQueryEvents[idx].alarmRaisedTime = alarmTime;
+    if (!eventName.empty()) {
+        (void)snprintf(
+            g_rasQueryEvents[idx].eventName, sizeof(g_rasQueryEvents[idx].eventName), "%s", eventName.c_str());
+    }
+    if (!additionalInfo.empty()) {
+        (void)snprintf(
+            g_rasQueryEvents[idx].additionalInfo, sizeof(g_rasQueryEvents[idx].additionalInfo), "%s",
+            additionalInfo.c_str());
+    }
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_nullptr_dev)
+{
+    RasEventMatch match = QueryRasFaultEvents(nullptr, 1000U, 500U, 0U);
+    EXPECT_FALSE(match.found);
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_v200_hit_in_window)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U, "event state=ecc", "hbm ecc detail");
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceCurrentTimeMock(dev_, 1000U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
     GlobalMockObject::verify();
 }
 
-TEST_F(DavidTaskTest, CheckAndPrintRasInfo_get_fault_events_feature_not_supported)
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_but_before_window)
 {
-    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsFeatureNotSupported));
-    CheckAndPrintRasInfo(dev_);
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 400U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_FALSE(match.found);
     GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_but_after_upper_bound)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 1600U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_hbm_ecc_notify)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_NOTIFY_EVENT_ID, 800U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceCurrentTimeMock(dev_, 1000U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, HBM_ECC_NOTIFY_EVENT_ID);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_hbm_ecc)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceCurrentTimeMock(dev_, 1000U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_no_wait_single_miss)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, 0x12345678U, 800U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_need_wait_second_hit)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 0U;
+    g_rasQuerySecondEventCount = 1U;
+    g_rasQuerySecondEvents[0].eventId = HBM_ECC_EVENT_ID;
+    g_rasQuerySecondEvents[0].alarmRaisedTime = 800U;
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 500U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_multi_events_earliest)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 2U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 900U);
+    SetRasQueryEvent(1U, UB_REMOTE_MEM_TIMEOUT_EVENT_ID, 700U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceCurrentTimeMock(dev_, 1000U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, UB_REMOTE_MEM_TIMEOUT_EVENT_ID);
+    EXPECT_EQ(match.alarmTime, 700U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_get_error_returned)
+{
+    ResetRasQueryStub();
+    g_rasQueryRetError = RT_ERROR_DRV_ERR;
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
+}
+
+// C. ProcessDavidStarsCoreErrorInfo V200 RAS 流程测试
+static void ResetRasFlowEnv(Device* dev)
+{
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    dev->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
+    dev->SetDeviceRas(false);
+}
+
+static void SetDeviceCurrentTimeMock(Device* dev, int64_t timeMs)
+{
+    g_deviceCurrentTimeStub = timeMs;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceCurrentTime).stubs().will(returnValue(timeMs));
+}
+
+TEST_F(DavidTaskTest, aicore_ras_mte_poison_with_device_time)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_MTE_POISON_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 8;
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aicore_ras_mte_poison_zero_device_time_skip)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_MTE_POISON_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 8;
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aicore_ras_hw_l_with_device_time)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_HW_L_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 4;
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aicore_ras_link_error_with_device_time_hit)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_LINK_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 10;
+    ClearLastDlogRecordLine();
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    const DeviceFaultType faultType = dev_->GetDeviceFaultType();
+    EXPECT_EQ(faultType, DeviceFaultType::LINK_ERROR);
+    // RAS 命中后 QueryRasFaultEvents 打印 RT_LOG_ERROR "RAS event detail"，验证 EZ2001 路径被触发
+    EXPECT_TRUE(DlogRecordContains("RAS event detail")) << "RAS hit not detected in DlogRecord history";
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aicore_ras_s_error_not_trigger)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_S_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 8;
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+// D. AixLinkErrProc 改造验证
+// AixLinkErrProc 等足500ms后单次查询,与原逻辑一致,不做时间窗口过滤
+// faultEventFlag=8: 2个事件(HBM_ECC + UB_REMOTE_MEM_TIMEOUT),后者命中且不在黑名单
+TEST_F(DavidTaskTest, aix_link_proc_hit_timeout_not_in_blacklist)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_LINK_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    faultEventFlag = 8; // UB_REMOTE_MEM_TIMEOUT not in blacklist
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    const DeviceFaultType faultType = dev_->GetDeviceFaultType();
+    EXPECT_EQ(faultType, DeviceFaultType::LINK_ERROR);
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aix_link_proc_not_hit_timeout)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_LINK_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    faultEventFlag = 4; // only HBM_ECC, no UB_REMOTE_MEM_TIMEOUT
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    const DeviceFaultType faultType = dev_->GetDeviceFaultType();
+    EXPECT_EQ(faultType, DeviceFaultType::AICORE_UNKNOWN_ERROR);
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, aix_link_proc_hit_blacklist)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_LINK_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    faultEventFlag = 6; // UbBusError in g_ccuTimeoutEventIdBlkList
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    const DeviceFaultType faultType = dev_->GetDeviceFaultType();
+    EXPECT_EQ(faultType, DeviceFaultType::AICORE_UNKNOWN_ERROR);
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+// D2. RAS 降级与多 core 行为补充覆盖
+// needReport=true 但 RAS 未命中（alarmRaisedTime 不在窗口内）→ 走 EZ9999 降级路径
+TEST_F(DavidTaskTest, aicore_ras_mte_poison_ras_miss_ez9999_fallback)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_MTE_POISON_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 8; // 事件 alarmRaisedTime=0，不在 RAS 窗口 [999500, 1000000] 内
+    ClearLastDlogRecordLine();
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    // RAS 未命中，不走 EZ2001，降级走 EZ9999（RT_LOG_CALL_MSG "AI Core Error"）
+    EXPECT_FALSE(DlogRecordContains("RAS event detail")) << "RAS should not hit";
+    EXPECT_TRUE(DlogRecordContains("AI Core Error")) << "EZ9999 fallback not triggered";
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+// 多 core 场景：首 core 命中 RAS 走 EZ2001，rasFaultDesc.clear() 后第二 core 走 EZ9999
+TEST_F(DavidTaskTest, aicore_ras_multi_core_ez2001_only_first_core)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_LINK_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 2U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 10; // UB_REMOTE_MEM_TIMEOUT, alarmRaisedTime = deviceTime - 100，在窗口内
+    ClearLastDlogRecordLine();
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    // RAS 命中后首 core 走 EZ2001（打印 "RAS event detail"）
+    EXPECT_TRUE(DlogRecordContains("RAS event detail")) << "RAS should hit on first core";
+    // 第二 core 因 rasFaultDesc.clear() 走 EZ9999（打印 "AI Core Error"）
+    EXPECT_TRUE(DlogRecordContains("AI Core Error")) << "EZ9999 should be used for second core";
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+// HW_L_ERROR 路径使用 windowAfterMs > 0（轮询等待未来事件），验证 RAS 命中 EZ2001
+TEST_F(DavidTaskTest, aicore_ras_hw_l_with_device_time_hit)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_HW_L_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ResetRasFlowEnv(dev_);
+    SetDeviceCurrentTimeMock(dev_, 1000000);
+    faultEventFlag = 11; // HBM_ECC_EVENT_ID, alarmRaisedTime = deviceTime，在 [t-window, t+window] 内
+    ClearLastDlogRecordLine();
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    // HW_L 路径 windowAfterMs > 0 轮询，RAS 应命中 EZ2001
+    EXPECT_TRUE(DlogRecordContains("RAS event detail")) << "RAS should hit on HW_L path";
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+}
+
+// E. AICore 错误日志正则解析看护（EZ9999 路径）
+// 通过 log_stub.cc 的 DlogRecord stub 捕获渲染后的完整日志行，对日志行跑正则验证
+// 真实走完 RT_LOG_CALL_MSG → RecordErrorLog → DlogRecord 整个调用链
+// 仅看护 EZ9999 路径（RT_LOG_CALL_MSG），EZ2001 路径在 CFG_DEV_PLATFORM_PC 下为空宏无法拦截
+// 当前 950 平台仅能触发 V200 路径（ProcessDavidStarsCoreErrorInfo），V100 路径（PrintCoreInfo）
+// 需 V100 平台 fixture，当前 UT 不覆盖
+//
+// 正则对应原始 Python 正则的业务文本部分（DlogRecord stub 渲染后的日志含 [file:line]tid func: 前缀）：
+//   device\((?P<dev_id>...)\),...core id is (?P<core_id>\d+),...error code = (?P<error_code>\S+),
+//   .*?pc start:\s(?P<start_pc>\S+),\scurrent:\s(?P<current_pc>\S+),\s(?P<extra_info>.*?\.)
+static const char* AICORE_LOG_REGEX_POSIX =
+    "device\\(([a-zA-Z0-9 ,:]+)\\), [a-zA-Z0-9 ,]+, core id is ([0-9]+), +error code = ([^ ]+),"
+    ".*pc start: ([^ ]+), current: ([^ ]+), (.+\\.)";
+
+static void VerifyAicoreLogRegex(const std::string& logLine)
+{
+    regex_t re;
+    ASSERT_EQ(regcomp(&re, AICORE_LOG_REGEX_POSIX, REG_EXTENDED), 0) << "regcomp failed";
+    regmatch_t m[7];
+    int ret = regexec(&re, logLine.c_str(), 7, m, 0);
+    EXPECT_EQ(ret, 0) << "Log line does not match regex: " << logLine;
+    regfree(&re);
+    if (ret != 0) {
+        return;
+    }
+    // 验证 6 个命名分组（dev_id/core_id/error_code/start_pc/current_pc/extra_info）非空
+    for (int gid = 1; gid <= 6; ++gid) {
+        EXPECT_NE(m[gid].rm_so, -1) << "Regex group " << gid << " not matched";
+        if (m[gid].rm_so != -1) {
+            EXPECT_LT(m[gid].rm_so, m[gid].rm_eo) << "Regex group " << gid << " is empty";
+        }
+    }
+}
+
+// V200 EZ9999: device_error_proc_c.cc ProcessDavidStarsCoreErrorInfo rasFaultDesc 空分支
+// 触发方式：flag=AIX_S_ERROR 不触发 RAS 检测，走 EZ9999 路径
+TEST_F(DavidTaskTest, AicoreLogFmtRegex_V200_EZ9999)
+{
+    DeviceErrorProc errorProc(dev_);
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.coreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_S_ERROR);
+    errorInfo.u.coreErrorInfo.comm.coreNum = 1U;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    InitByStream(&task, stream_);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+
+    ClearLastDlogRecordLine();
+    ResetRasFlowEnv(dev_);
+    g_deviceCurrentTimeStub = 1000000;
+    faultEventFlag = 8;
+    rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    g_deviceCurrentTimeStub = 0;
+    faultEventFlag = 0;
+    GlobalMockObject::verify();
+
+    // 验证捕获到的日志行包含 V200 格式特征并匹配正则
+    ASSERT_FALSE(g_lastDlogRecordLine.empty()) << "DlogRecord not called";
+    EXPECT_NE(g_lastDlogRecordLine.find("device_error_proc_c.cc"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("core id is"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("sc error info"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("pc start:"), std::string::npos);
+    VerifyAicoreLogRegex(g_lastDlogRecordLine);
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_model_to_aicpu)

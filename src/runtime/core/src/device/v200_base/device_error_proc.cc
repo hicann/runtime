@@ -17,6 +17,24 @@ namespace cce {
 namespace runtime {
 constexpr uint32_t FAST_RING_BUFFER_DEPTH = 2U;
 
+static const std::vector<uint32_t> g_rasFaultEventIdList = {
+    UB_REMOTE_MEM_DATA_EXCEPTION_EVENT_ID,
+    UB_REMOTE_MEM_TIMEOUT_EVENT_ID,
+    UBMEM_LOCAL_AUTH_FAIL_EVENT_ID,
+    UBMEM_POISON_EVENT_ID,
+    HBM_ECC_EVENT_ID,
+    HBM_ECC_NOTIFY_EVENT_ID};
+
+bool IsRasFaultEventId(uint32_t eventId)
+{
+    for (const auto& targetId : g_rasFaultEventIdList) {
+        if (eventId == targetId) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap)
 {
     static const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> davidFuncMap = {

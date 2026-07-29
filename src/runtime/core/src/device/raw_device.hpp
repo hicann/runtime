@@ -272,6 +272,7 @@ public:
     int64_t GetPhyDieId() const override { return phyDieId_; }
 
     int64_t GetBaseTime() const override { return baseTime_; }
+    int64_t GetDeviceCurrentTime() const override;
     void SetBaseTime() override;
 
     Stream* GetNextRecycleStream() override;

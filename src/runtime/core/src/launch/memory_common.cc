@@ -131,7 +131,7 @@ rtError_t DevMemSetAsyncByMemcpy(
     // Allocate host memory via driver interface instead of glibc malloc.
     // Driver-allocated host memory may be pre-pinned, reducing page fault latency on memset.
     Driver* const driver = stm->Device_()->Driver_();
-    // 接口内会处理好字节对齐，这里不需要处理
+    // driver->HostMemAlloc接口内已经默认做了512字节对齐
     rtError_t error = driver->HostMemAlloc(&hostPtr, setSize, stm->Device_()->Id_());
     ERROR_RETURN(error, "Alloc host mem failed, size=%" PRIu64 ", retCode=%#x.", setSize, static_cast<uint32_t>(error));
     NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);

@@ -669,6 +669,17 @@
     },
     {
       "errClass": "RTS Errors",
+      "errTitle": "Execution_Error",
+      "ErrCode": "EZ2001",
+      "ErrMessage": "%s\nFault %s occurs in the system: %s",
+      "Arglist": "aicore_error_info, fault_type, fault_info",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "RTS Errors",
       "errTitle": "Model_Binding_Errors",
       "ErrCode": "EE4001",
       "ErrMessage": "Failed to bind the stream to the model. %s",

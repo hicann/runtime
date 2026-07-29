@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <array>
 #include "device_error_proc_c.hpp"
 #include "error_message_manage.hpp"
 #include "task_david.hpp"
@@ -360,45 +361,6 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
      "A multi-bit ECC error occurs when VEC SIMT accesses DVG stack. See the RAS alarm handling."},
 };
 
-static const std::unordered_map<uint32_t, std::string> ubRasEventIdAndDesc = {
-    {UB_POISON_ERROR_EVENT_ID,
-     "node type=UB, sensor type=RAS State, event state=bus error, probably caused by software"},
-};
-
-static bool PrintRasEvents(
-    const Device* const dev, const rtDmsFaultEvent* const faultEventInfo, const uint32_t eventCount)
-{
-    UNUSED(dev);
-    for (uint32_t faultIndex = 0; faultIndex < eventCount; faultIndex++) {
-        const rtDmsFaultEvent& event = faultEventInfo[faultIndex];
-        const uint32_t eventId = event.eventId;
-        auto it = ubRasEventIdAndDesc.find(eventId);
-        if (it != ubRasEventIdAndDesc.end()) {
-            RT_LOG(RT_LOG_ERROR, "RAS event detected: event_id=0x%x, %s", eventId, it->second.c_str());
-            return true;
-        }
-    }
-    return false;
-}
-
-void CheckAndPrintRasInfo(const Device* const dev)
-{
-    if (dev == nullptr) {
-        return;
-    }
-    std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
-    constexpr size_t totalSize = RAS_GET_MAX_NUM * sizeof(rtDmsFaultEvent);
-    for (uint32_t queryCount = 0U; queryCount < RAS_QUERY_MAX_COUNT; ++queryCount) {
-        (void)memset_s(&faultEventInfo[0U], totalSize, 0, totalSize);
-        uint32_t eventCount = 0U;
-        const rtError_t error = GetDeviceFaultEvents(dev->Id_(), &faultEventInfo[0U], eventCount);
-        if ((error == RT_ERROR_NONE) && PrintRasEvents(dev, &faultEventInfo[0U], eventCount)) {
-            return;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
-    }
-}
-
 uint32_t GetRingbufferElementNum() { return RINGBUFFER_LEN_DAVID; }
 
 static void ProcessDavidStarsCoreErrorOneMapInfo(
@@ -464,6 +426,8 @@ static void AiCoreUnknownErrProc(const Device* const dev, const StarsDeviceError
 
 static void AixLinkErrProc(const Device* const dev, const StarsDeviceErrorInfo* const info, TaskInfo* errTaskPtr)
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL * RAS_QUERY_MAX_COUNT));
+
     std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
     uint32_t eventCount = 0U;
     const rtError_t error = GetDeviceFaultEvents(dev->Id_(), &faultEventInfo[0U], eventCount);
@@ -528,7 +492,7 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device* const d
         hasHbmEccNotify && ((faultEventId == HBM_ECC_NOTIFY_EVENT_ID) || (faultEventId == HBM_ECC_EVENT_ID));
     const bool hasRemoteErr = (faultEventId == UB_REMOTE_MEM_DATA_EXCEPTION_EVENT_ID);
     RT_LOG(
-        RT_LOG_ERROR, "has_hbm_ecc_notify_event=%d, event_id=0x%x, device_id=%u", hasHbmEccNotify, faultEventId,
+        RT_LOG_ERROR, "has_hbm_ecc_notify_event=%d, event_id=%#x, device_id=%u", hasHbmEccNotify, faultEventId,
         dev->Id_());
 
     const uint16_t local_error = (errType == AICORE_ERROR) ? TS_ERROR_AICORE_MTE_ERROR : TS_ERROR_SDMA_POISON_ERROR;
@@ -560,7 +524,6 @@ static void SetDeviceFaultTypeByAixErrClass(
                 RT_LOG_ERROR, "mte error, stream_id=%hu, task_id=%hu, errorCode=%#hx.",
                 info->u.coreErrorInfo.comm.streamId, info->u.coreErrorInfo.comm.taskId,
                 (errTaskPtr == nullptr) ? static_cast<uint16_t>(TS_ERROR_RESERVED) : errTaskPtr->mte_error);
-            CheckAndPrintRasInfo(dev);
             break;
         case AixErrClass::AIX_HW_L_ERROR:
             if (!HasBlacklistEventOnDevice(dev->Id_(), g_mulBitEccEventIdBlkList)) {
@@ -584,7 +547,6 @@ static void SetDeviceFaultTypeByAixErrClass(
             }
             break;
         case AixErrClass::AIX_LINK_ERROR:
-            CheckAndPrintRasInfo(dev);
             AixLinkErrProc(dev, info, errTaskPtr);
             break;
         default:
@@ -674,17 +636,97 @@ static void AddExceptionRegInfo(
     exceptionRegMap[key].push_back(regInfo);
 }
 
+// 查询 RAS 故障事件并格式化描述，用于 EZ2001 上报
+static std::string QueryAndFormatRasFaultDavid(
+    const Device* const dev, const int64_t deviceTime, const AixErrClass aixErrClass)
+{
+    const bool needReportUserErrcode =
+        (aixErrClass == AixErrClass::AIX_MTE_POISON_ERROR || aixErrClass == AixErrClass::AIX_HW_L_ERROR ||
+         aixErrClass == AixErrClass::AIX_LINK_ERROR);
+    if (!needReportUserErrcode || (deviceTime <= 0)) {
+        return "";
+    }
+    const uint64_t deviceTimeMs = static_cast<uint64_t>(deviceTime);
+    const uint64_t rasWindowMs = static_cast<uint64_t>(GetMteErrWaitCount()) * RAS_QUERY_INTERVAL;
+    RasEventMatch rasMatch;
+    if (aixErrClass == AixErrClass::AIX_HW_L_ERROR) {
+        // ProcessCoreErrorClass函数的AixErrClass::AIX_HW_L_ERROR分支中没有做任何轮询查询事件的动作，
+        // QueryRasFaultEvents函数中需要轮询500ms，等待事件发生，QueryRasFaultEvents的windowAfterMs直接传rasWindowMs
+        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, rasWindowMs);
+    } else {
+        // AixErrClass::AIX_MTE_POISON_ERROR 和 AixErrClass::AIX_LINK_ERROR分支已经等待过事件发生了，有两种场景
+        // 1、等足了500ms，没有查到事件，此处不应该再去轮询查事件了，而是直接只查一次，以这次的查询结果为准
+        // 2、没有等够500ms事件就发生了，函数提前返回，此处立即去查询告警，一定能查到
+        // 无论那种情况，此处都不应该再去轮询查事件了，QueryRasFaultEvents的windowAfterMs直接传0
+        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, 0U);
+    }
+    if (!rasMatch.found) {
+        return "";
+    }
+    RT_LOG(
+        RT_LOG_ERROR, "RAS event detail: device_id=%u, event_id=%#x, event_name=\"%s\", additional_info=\"%s\".",
+        dev->Id_(), rasMatch.eventId, rasMatch.eventName.c_str(), rasMatch.additionalInfo.c_str());
+    return FormatRasFaultDesc(rasMatch.eventId, rasMatch.eventName);
+}
+
+// 格式化 David 核心 error 信息到 aicoreBuffer，并根据 RAS 命中情况走 EZ2001 或 EZ9999 路径
+static void PrintDavidCoreInfo(
+    const StarsDeviceErrorInfo* const info, const uint32_t coreIdx, const uint64_t errorNumber,
+    const std::string& errorString, const std::string& errorCode, std::string& rasFaultDesc)
+{
+    constexpr size_t AICORE_BUF_LEN = 4096U;
+    std::array<char, AICORE_BUF_LEN> aicoreBuffer{};
+    /* logs for aic tools, do not modify the item befor making a new agreement with tools */
+    (void)snprintf_truncated_s(
+        aicoreBuffer.data(), AICORE_BUF_LEN,
+        "An error occurs on the device(chipId:%u, dieId:%u), the serial number is %" PRIu64 ", "
+        "the error is %s error, core id is %" PRIu64 ", "
+        "error code = %s, dump info: "
+        "pc start: %#" PRIx64 ", current: %#" PRIx64 ", "
+        "sc error info: %#" PRIx64 ", su error info: %#" PRIx64 ",%#" PRIx64 ", "
+        "mte error info: %#" PRIx64 ", vec error info: %#" PRIx64 ", "
+        "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
+        "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ", "
+        "aic cond: %#" PRIx64 ".\n"
+        "The extend info: errcode:(%s) errorStr: %s subErrType: %#x.",
+        info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
+        GetStarsRingBufferHeadMsg(info->u.davidCoreErrorInfo.comm.type).c_str(),
+        info->u.davidCoreErrorInfo.info[coreIdx].coreId, errorCode.c_str(),
+        info->u.davidCoreErrorInfo.info[coreIdx].pcStart, info->u.davidCoreErrorInfo.info[coreIdx].currentPC,
+        info->u.davidCoreErrorInfo.info[coreIdx].scErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[0],
+        info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[1], info->u.davidCoreErrorInfo.info[coreIdx].mteErrInfo[0],
+        info->u.davidCoreErrorInfo.info[coreIdx].vecErrInfo[0], info->u.davidCoreErrorInfo.info[coreIdx].cubeErrInfo,
+        info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask,
+        info->u.davidCoreErrorInfo.info[coreIdx].paraBase, info->u.davidCoreErrorInfo.info[coreIdx].mteError[0],
+        info->u.davidCoreErrorInfo.info[coreIdx].aicCond, errorCode.c_str(), errorString.c_str(),
+        info->u.davidCoreErrorInfo.info[coreIdx].subErrType);
+    if (!rasFaultDesc.empty()) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EZ2001, aicoreBuffer.data(), "RAS", rasFaultDesc);
+        rasFaultDesc.clear();
+    } else {
+        RT_LOG_CALL_MSG(
+            ERR_MODULE_TBE,
+            "%s\nFor details, see the troubleshooting document on the Ascend official website. Search for the "
+            "keyword \"AI Core Error\".",
+            aicoreBuffer.data());
+    }
+}
+
 rtError_t ProcessDavidStarsCoreErrorInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr)
 {
     UNUSED(insPtr);
+    const int64_t deviceTime = dev->GetDeviceCurrentTime();
     ProcessCoreErrorClass(dev, info);
     const uint16_t type = info->u.davidCoreErrorInfo.comm.type;
 
     TaskInfo* errTaskPtr = GetTaskInfo(
         dev, static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.streamId),
         static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.taskId), true);
+
+    const auto aixErrClass = static_cast<AixErrClass>(info->u.coreErrorInfo.comm.flag);
+    std::string rasFaultDesc = QueryAndFormatRasFaultDavid(dev, deviceTime, aixErrClass);
 
     for (uint32_t coreIdx = 0U; coreIdx < static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.coreNum); coreIdx++) {
         if ((errTaskPtr != nullptr) && (errTaskPtr->u.aicTaskInfo.kernel == nullptr)) {
@@ -702,33 +744,7 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
         std::string errorCode;
         ProcessDavidStarsCoreErrorMapInfo(&(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode);
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        /* logs for aic tools, do not modify the item befor making a new agreement with tools */
-        RT_LOG_CALL_MSG(
-            ERR_MODULE_TBE,
-            "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
-            "there is an %s exception, core id is %" PRIu64 ", "
-            "error code = %s, dump info: "
-            "pc start: %#" PRIx64 ", current: %#" PRIx64 ", "
-            "sc error info: %#" PRIx64 ", su error info: %#" PRIx64 ",%#" PRIx64 ", "
-            "mte error info: %#" PRIx64 ", vec error info: %#" PRIx64 ", "
-            "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
-            "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ", "
-            "aic cond: %#" PRIx64 ".\n"
-            "The extend info: errcode:(%s) errorStr: %s subErrType: %#x.\n"
-            "For details, see the troubleshooting document on the Ascend official website. Search for the keyword \"AI "
-            "Core Error\".",
-            info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
-            GetStarsRingBufferHeadMsg(info->u.davidCoreErrorInfo.comm.type).c_str(),
-            info->u.davidCoreErrorInfo.info[coreIdx].coreId, errorCode.c_str(),
-            info->u.davidCoreErrorInfo.info[coreIdx].pcStart, info->u.davidCoreErrorInfo.info[coreIdx].currentPC,
-            info->u.davidCoreErrorInfo.info[coreIdx].scErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[0],
-            info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[1],
-            info->u.davidCoreErrorInfo.info[coreIdx].mteErrInfo[0],
-            info->u.davidCoreErrorInfo.info[coreIdx].vecErrInfo[0],
-            info->u.davidCoreErrorInfo.info[coreIdx].cubeErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo,
-            info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask, info->u.davidCoreErrorInfo.info[coreIdx].paraBase,
-            info->u.davidCoreErrorInfo.info[coreIdx].mteError[0], info->u.davidCoreErrorInfo.info[coreIdx].aicCond,
-            errorCode.c_str(), errorString.c_str(), info->u.davidCoreErrorInfo.info[coreIdx].subErrType);
+        PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc);
     }
     return RT_ERROR_NONE;
 }
