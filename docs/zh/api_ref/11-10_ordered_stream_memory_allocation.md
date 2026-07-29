@@ -184,9 +184,9 @@ int main() {
 
     // 配置任务下发
     ArgsInfo usrArgs;
-    usrAgrs.input_x = ptr1
-    usrAgrs.input_y = ptr2;
-    usrAgrs.output_z = ptr3;
+    usrArgs.input_x = ptr1
+    usrArgs.input_y = ptr2;
+    usrArgs.output_z = ptr3;
 
     error = aclrtMemcpyAsync(devPtr, sizeof(ArgsInfo), (void *)&usrArgs, sizeof(ArgsInfo), ACL_MEMCPY_HOST_TO_DEVICE, stream1);
 

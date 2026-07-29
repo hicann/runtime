@@ -36,7 +36,7 @@ int main()
     CHECK_ERROR(aclrtCreateContext(&context, deviceId));
     // 默认流下发任务,默认流随着context创建而创建，给函数传入空即使用默认流
     CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));
-    CHECK_ERROR(aclrtMemcpy(&num, size, numDevice, size, ACL_MEMCPY_DEVICE_TO_HOST));
+    CHECK_ERROR(aclrtMemcpy(numDevice, size, &num, size, ACL_MEMCPY_HOST_TO_DEVICE));
     CHECK_ERROR(aclrtCreateStream(&stream));
     // 默认为遇错继续执行，调用该函数设置为遇错即停，当一个任务执行遇到错误，后续任务将不进行
     CHECK_ERROR(aclrtSetStreamFailureMode(stream, ACL_STOP_ON_FAILURE));
