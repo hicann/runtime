@@ -28,21 +28,21 @@ enum __attribute__((visibility("default"))) ErrorCode : int32_t {
 /**
  * @brief it is used to load the task and stream info.
  * @param [in] ptr : the address of the task and stream info
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t AICPUModelLoad(void* ptr);
 
 /**
  * @brief it is used to destroy the model.
  * @param [in] modelId : The id of model will be destroy.
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t AICPUModelDestroy(uint32_t modelId);
 
 /**
  * @brief it is used to execute the model.
  * @param [in] modelId : The id of model will be run.
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t AICPUModelExecute(uint32_t modelId);
 
@@ -51,7 +51,7 @@ __attribute__((visibility("default"))) int32_t AICPUModelExecute(uint32_t modelI
  * @param [in] deviceId : The id of self cpu.
  * @param [in] hostPid :  pid of host appication
  * @param [in] profilingMode : it used to open or close profiling.
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t InitAICPUScheduler(
     uint32_t deviceId, pid_t hostPid, ProfilingMode profilingMode);
@@ -61,7 +61,7 @@ __attribute__((visibility("default"))) int32_t InitAICPUScheduler(
  * @param [in] deviceId : The id of self cpu.
  * @param [in] hostPid : The id of host
  * @param [in] flag : flag[0] == 1 means PROFILING_OPEN, otherwise PROFILING_CLOSE.
- * @return AICPU_SCHEDULE_OK: sucess  other: error code in StatusCode
+ * @return AICPU_SCHEDULE_OK: success  other: error code in StatusCode
  */
 __attribute__((visibility("default"))) int32_t UpdateProfilingMode(uint32_t deviceId, pid_t hostPid, uint32_t flag);
 
@@ -69,7 +69,7 @@ __attribute__((visibility("default"))) int32_t UpdateProfilingMode(uint32_t devi
  * @brief it is used to stop the aicpu scheduler for acl.
  * @param [in] deviceId : The id of self cpu.
  * @param [in] hostPid : pid of host appication
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t StopAICPUScheduler(uint32_t deviceId, pid_t hostPid);
 
@@ -78,7 +78,7 @@ __attribute__((visibility("default"))) int32_t StopAICPUScheduler(uint32_t devic
  * @brief it use to execute the model from call interface.
  * @param [in] drvEventInfo : event info.
  * @param [out] eventAck : event ack.
- * @return 0: sucess, other: error code
+ * @return 0: success, other: error code
  */
 __attribute__((visibility("default"))) int32_t AICPUExecuteTask(
     struct event_info* drvEventInfo, struct event_ack* drvEventAck);
@@ -87,7 +87,7 @@ __attribute__((visibility("default"))) int32_t AICPUExecuteTask(
  * @ingroup AicpuScheduleInterface
  * @brief it use to preload so.
  * @param [in] soName : so name.
- * @return 0: sucess, other: error code
+ * @return 0: success, other: error code
  */
 __attribute__((visibility("default"))) int32_t AICPUPreOpenKernels(const char* soName);
 
@@ -95,47 +95,47 @@ __attribute__((visibility("default"))) int32_t AICPUPreOpenKernels(const char* s
  * @brief it is used to load op mapping info for data dump.
  * @param [in] infoAddr : The pointer of info.
  * @param [in] len : The length of info
- * @return AICPU_SCHEDULE_OK: sucess  other: error code in StatusCode
+ * @return AICPU_SCHEDULE_OK: success  other: error code in StatusCode
  */
 __attribute__((visibility("default"))) int32_t LoadOpMappingInfo(const void* infoAddr, uint32_t len);
 
 /**
  * @brief it is used to set report callback function.
  * @param [in] reportCallback : report callback function.
- * @return AICPU_SCHEDULE_OK: sucess  other: error code in StatusCode
+ * @return AICPU_SCHEDULE_OK: success  other: error code in StatusCode
  */
 __attribute__((visibility("default"))) int32_t AicpuSetMsprofReporterCallback(MsprofReporterCallback reportCallback);
 
 /**
  * @brief it is used to init aicpu scheduler for helper.
  * @param [in] initParam : init param.
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t InitCpuScheduler(const CpuSchedInitParam* const initParam);
 
 /**
  * @brief it is used to load model with queue.
  * @param [in] ptr : the address of the model info
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t AicpuLoadModelWithQ(void* ptr);
 
 /**
  * @brief it is used to stop aicpu module.
  * @param [in] eventInfo : the message send by tsd
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
 /**
  * @brief it is used to start aicpu module.
  * @param [in] eventInfo : the message send by tsd
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
 
 /**
  * @brief it is used to send retcode to ts.
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((weak)) __attribute__((visibility("default"))) void AicpuReportNotifyInfo(
     const aicpu::AsyncNotifyInfo& notifyInfo);
@@ -164,21 +164,21 @@ __attribute__((weak)) __attribute__((visibility("default"))) void RegLastwordCal
 /**
  * @brief it is used to load model with event.
  * @param [in] ptr : the address of the model info
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t AicpuLoadModel(void* ptr);
 
 /**
  * @brief it is used to stop model.
  * @param [in] ptr : the address of config
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t AICPUModelStop(const ReDeployConfig* const ptr);
 
 /**
  * @brief it is used to recover model.
  * @param [in] ptr : the address of the config
- * @return AICPU_SCHEDULE_OK: sucess  other: error code
+ * @return AICPU_SCHEDULE_OK: success  other: error code
  */
 __attribute__((visibility("default"))) int32_t AICPUModelClearInputAndRestart(const ReDeployConfig* const ptr);
 

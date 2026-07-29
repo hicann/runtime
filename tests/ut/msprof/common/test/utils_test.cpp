@@ -1210,7 +1210,7 @@ TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile4) {
 
     MOCKER_CPP(fwrite)
         .stubs()
-        .will(returnValue(profName.length())); //sucess. 47 is not equal to the lenth of PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
+        .will(returnValue(profName.length())); //success. 47 is not equal to the lenth of PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
 
     MOCKER_CPP(fclose)
         .stubs()

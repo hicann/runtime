@@ -96,7 +96,7 @@ public:
      * @param total: size of total work
      * @param per_unit_size: expect size of per unit work
      * @param work: process of per unit work
-     * @return uint32_t: 0->sucess other->failed
+     * @return uint32_t: 0->success other->failed
      */
     static uint32_t ParallelFor(
         const CpuKernelContext& ctx, int64_t total, int64_t per_unit_size,
