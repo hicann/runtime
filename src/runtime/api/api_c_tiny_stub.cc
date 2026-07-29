@@ -8,15 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api.hpp"
-#include "global_state_manager.hpp"
-#include "api_c.h"
-#include "api_global_err.h"
-
-namespace cce {
-namespace runtime {
-TIMESTAMP_EXTERN(rtMallocCached);
-} // namespace runtime
-} // namespace cce
 
 using namespace cce::runtime;
 
@@ -1406,22 +1397,6 @@ rtError_t rtDeviceL2CacheFlush(void* rsv)
     UNUSED(rsv);
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
-
-rtError_t rtMallocCached(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    TIMESTAMP_BEGIN(rtMallocCached);
-    const rtError_t error = apiInstance->DevMallocCached(devPtr, size, type, moduleId);
-    TIMESTAMP_END(rtMallocCached);
-    if (unlikely(error != RT_ERROR_NONE)) {
-        return GetRtExtErrCodeAndSetGlobalErr(error);
-    }
-    return ACL_RT_SUCCESS;
-}
-
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -8156,3 +8156,23 @@ TEST_F(ApiTest, rtGetSocVersionWithSetDevice)
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TEST_F(ApiTest, rtMallocCached_success)
+{
+    rtError_t error;
+    void* devMem = nullptr;
+    error = rtMallocCached((void**)&devMem, 100 * sizeof(uint32_t), RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(devMem, nullptr);
+
+    error = rtFree(devMem);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest, rtMallocCached_alloc_failed)
+{
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    void* devMem = nullptr;
+    rtError_t error = rtMallocCached((void**)&devMem, 100 * sizeof(uint32_t), RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}

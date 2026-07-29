@@ -427,6 +427,20 @@ TEST_F(ApiImplTest, kernel_transarg_set_test_offline_flush_failed)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiImplTest, invalid_cache_base_zero)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.InvalidCache(0U, 100U);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, invalid_cache_success)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.InvalidCache(0x1000U, 100U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 #if 0
 TEST_F(ApiImplTest, ReduceAsync_error_01)
 {

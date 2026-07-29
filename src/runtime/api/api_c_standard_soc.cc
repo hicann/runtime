@@ -46,7 +46,6 @@ TIMESTAMP_EXTERN(rtNpuGetFloatStatus);
 TIMESTAMP_EXTERN(rtNpuClearFloatStatus);
 TIMESTAMP_EXTERN(rtMemsetD32);
 TIMESTAMP_EXTERN(rtMemsetD32Async);
-TIMESTAMP_EXTERN(rtMallocCached);
 } // namespace runtime
 } // namespace cce
 
@@ -932,22 +931,6 @@ rtError_t rtReduceAsyncWithCfgV2(
 
     const rtError_t error = apiInstance->ReduceAsync(dst, src, cnt, kind, type, exeStream, cfgInfo);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMallocCached(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    TIMESTAMP_BEGIN(rtMallocCached);
-    const rtError_t error = apiInstance->DevMalloc(devPtr, size, type, moduleId);
-    TIMESTAMP_END(rtMallocCached);
-    if (unlikely(error != RT_ERROR_NONE)) {
-        return GetRtExtErrCodeAndSetGlobalErr(error);
-    }
     return ACL_RT_SUCCESS;
 }
 

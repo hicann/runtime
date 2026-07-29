@@ -61,6 +61,7 @@ TIMESTAMP_EXTERN(rtMemGetInfoByType);
 TIMESTAMP_EXTERN(rtMemGetInfoEx);
 TIMESTAMP_EXTERN(rtPointerGetAttributes);
 TIMESTAMP_EXTERN(rtMemPrefetchToDevice);
+TIMESTAMP_EXTERN(rtMallocCached);
 TIMESTAMP_EXTERN(rtMemcpy);
 TIMESTAMP_EXTERN(rtMemcpyEx);
 TIMESTAMP_EXTERN(rtMemcpyAsync);
@@ -1060,6 +1061,22 @@ rtError_t rtMemPrefetchToDevice(void* devPtr, uint64_t len, int32_t devId)
     const rtError_t error = apiInstance->MemPrefetchToDevice(devPtr, len, devId);
     TIMESTAMP_END(rtMemPrefetchToDevice);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMallocCached(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+
+    TIMESTAMP_BEGIN(rtMallocCached);
+    const rtError_t error = apiInstance->DevMalloc(devPtr, size, type, moduleId);
+    TIMESTAMP_END(rtMallocCached);
+    if (unlikely(error != RT_ERROR_NONE)) {
+        return GetRtExtErrCodeAndSetGlobalErr(error);
+    }
     return ACL_RT_SUCCESS;
 }
 
