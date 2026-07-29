@@ -636,5 +636,35 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
     UNUSED(name);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
+{
+    RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
+    TIMESTAMP_NAME(__func__);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len == 0U, RT_ERROR_INVALID_VALUE, len, "not equal to 0");
+
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    rtError_t error = curCtx->Device_()->GetDeviceStatus();
+    COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
+    return curCtx->Device_()->Driver_()->DevMemFlushCache(base, len);
+}
+
+rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
+{
+    RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
+    TIMESTAMP_NAME(__func__);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(len == 0U, RT_ERROR_INVALID_VALUE, len, "not equal to 0");
+
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    rtError_t error = curCtx->Device_()->GetDeviceStatus();
+    COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
+    return curCtx->Device_()->Driver_()->DevMemInvalidCache(base, len);
+}
 } // namespace runtime
 } // namespace cce

@@ -353,6 +353,7 @@ add_executable(runtime_utest_arch5162
     main.cc
     rt_utest_task_arch5162.cc
     rt_utest_task_execute_time_arch5162.cc
+    rt_utest_mem_arch5162.cc
 )
 
 target_compile_definitions(runtime_utest_arch5162 PUBLIC

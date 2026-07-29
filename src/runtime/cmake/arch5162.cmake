@@ -74,6 +74,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny_stub.cc
 )
 
 set(common_src_files
