@@ -101,6 +101,14 @@ bool ContextManage::CheckContextIsValid(Context* const curCtx, ContextAccessMode
     return false;
 }
 
+void ContextManage::ReportContextValidationError()
+{
+    RT_LOG_OUTER_MSG_IMPL(
+        ErrorCode::EE1018, "Context validation",
+        "No valid context is bound to the current thread. Call aclrtSetDevice or aclrtSetCurrentContext to bind a "
+        "valid context to the current thread before calling this API");
+}
+
 void ContextManage::InsertContext(Context* const insertCtx)
 {
     if (unlikely(insertCtx == nullptr)) {

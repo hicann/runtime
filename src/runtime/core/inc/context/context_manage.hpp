@@ -27,6 +27,7 @@ class ContextManage {
 public:
     static bool CheckContextIsValid(
         Context* const curCtx, ContextAccessMode accessMode = ContextAccessMode::USER, rtError_t* errorCode = nullptr);
+    static void ReportContextValidationError();
     static void InsertContext(Context* const insertCtx);
     static rtError_t MarkContextForDelete(Context* const eraseCtx);
     static rtError_t DeviceAbort(const int32_t devId);
