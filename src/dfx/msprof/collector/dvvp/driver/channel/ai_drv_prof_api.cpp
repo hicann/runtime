@@ -341,7 +341,7 @@ int32_t DrvAicoreTaskBasedStart(int32_t profDeviceId, AI_DRV_CHANNEL profChannel
 
 int32_t DrvAicpuStart(uint32_t profDeviceId, AI_DRV_CHANNEL profChannel)
 {
-    constexpr uint32_t aicpuDrvSamplePeriod = 10U;
+    constexpr uint32_t aicpuDrvSamplePeriod = 7U;
     struct prof_start_para profStartPara = { .channel_type = PROF_PERIPHERAL_TYPE,
                                              .sample_period = aicpuDrvSamplePeriod,
                                              .real_time = PROFILE_REAL_TIME,
