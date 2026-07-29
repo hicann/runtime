@@ -2783,10 +2783,6 @@ TEST_F(StreamTest, public_queue)
 
 TEST_F(StreamTest, rtsLaunchHostFunc00)
 {
-    const bool oldDisableThread = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
-    const ScopeGuard disableThreadGuard(
-        [oldDisableThread]() { Runtime::Instance()->SetDisableThread(oldDisableThread); });
     rtError_t error;
     Stream streamObj(static_cast<Device*>(nullptr), 0U);
     InitEmbeddedInnerHandle<Stream>(&streamObj);
