@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <array>
+
 #include "api_c.h"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
@@ -132,7 +134,7 @@ void ApiProfileDecorator::FillMemcpyBatchExtInfoByCopyKind(
         return;
     }
 
-    uint64_t bytesByKind[RUNTIME_PROF_EXT_INFO_NUM] = {};
+    std::array<uint64_t, RUNTIME_PROF_EXT_INFO_NUM> bytesByKind{};
     size_t attrIdx = 0U;
     for (size_t i = 0U; i < count; ++i) {
         if (((attrIdx + 1U) < numAttrs) && (i >= attrsIdxs[attrIdx + 1U])) {
@@ -692,9 +694,8 @@ rtError_t ApiProfileDecorator::DevMalloc(
     CallApiBegin(RT_PROF_API_DEV_MALLOC);
     const rtError_t error = impl_->DevMalloc(devPtr, size, type, moduleId);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr), size, RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -717,9 +718,8 @@ rtError_t ApiProfileDecorator::DevMallocCached(
     CallApiBegin(RT_PROF_API_CAHCEDMEM_ALLOC);
     const rtError_t error = impl_->DevMallocCached(devPtr, size, type, moduleId);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr), size, RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -755,9 +755,8 @@ rtError_t ApiProfileDecorator::HostMalloc(void** const hostPtr, const uint64_t s
     CallApiBegin(RT_PROF_API_HOST_MALLOC);
     const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleId);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr), size, RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_HOST, nullptr);
+        const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -768,9 +767,8 @@ rtError_t ApiProfileDecorator::HostMallocWithCfg(void** const hostPtr, const uin
     CallApiBegin(RT_PROF_API_HOST_MALLOC);
     const rtError_t error = impl_->HostMallocWithCfg(hostPtr, size, cfg);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr), size, RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_HOST, nullptr);
+        const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -793,9 +791,8 @@ rtError_t ApiProfileDecorator::ManagedMemAlloc(
     CallApiBegin(RT_PROF_API_MANAGEDMEM_ALLOC);
     const rtError_t error = impl_->ManagedMemAlloc(ptr, size, flag, moduleId);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (ptr == nullptr) ? 0U : RtPtrToValue(*ptr), size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED,
-            nullptr);
+        const uint64_t addr = (ptr == nullptr) ? 0U : RtPtrToValue(*ptr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_MANAGED, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -1009,9 +1006,9 @@ rtError_t ApiProfileDecorator::ReserveMemAddress(
     CallApiBegin(RT_PROF_API_DEV_MALLOC);
     const rtError_t error = impl_->ReserveMemAddress(devPtr, size, alignment, devAddr, flags);
     if (error == RT_ERROR_NONE) {
+        const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
         FillMemMngExtInfo(
-            (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr), static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+            addr, static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
@@ -1033,9 +1030,9 @@ rtError_t ApiProfileDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t siz
     CallApiBegin(RT_PROF_API_DEV_MALLOC);
     const rtError_t error = impl_->MallocPhysical(handle, size, prop, flags);
     if (error == RT_ERROR_NONE) {
+        const uint64_t addr = (handle == nullptr) ? 0U : RtPtrToValue(*handle);
         FillMemMngExtInfo(
-            (handle == nullptr) ? 0U : RtPtrToValue(*handle), static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+            addr, static_cast<uint64_t>(size), RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;

@@ -22,39 +22,47 @@ constexpr size_t PROF_API_STACK_RESERVE_SIZE = 8U;
 thread_local std::vector<ProfApiContext> g_apiProfStack{};
 thread_local ProfApiContext g_fallbackProfApiContext{};
 
-uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType)
+static uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType)
 {
+    uint32_t dataLen = 0U;
     switch (extInfoType) {
         case RT_PROFILE_TYPE_MEMCPY_EXT_INFO:
-            return static_cast<uint32_t>(sizeof(MsprofMemcpyInfo));
+            dataLen = static_cast<uint32_t>(sizeof(MsprofMemcpyInfo));
+            break;
         case RT_PROFILE_TYPE_MEMSET_INFO:
-            return static_cast<uint32_t>(sizeof(MsprofMemsetInfo));
+            dataLen = static_cast<uint32_t>(sizeof(MsprofMemsetInfo));
+            break;
         case RT_PROFILE_TYPE_MEMMNG_INFO:
-            return static_cast<uint32_t>(sizeof(MsprofMemMngInfo));
+            dataLen = static_cast<uint32_t>(sizeof(MsprofMemMngInfo));
+            break;
         default:
-            return 0U;
+            break;
     }
+    return dataLen;
 }
 
-rtError_t SetProfExtCompactData(
+static rtError_t SetProfExtCompactData(
     const uint32_t extInfoType, const RuntimeProfExtInfo& extInfo, MsprofCompactInfo& compactInfo)
 {
+    rtError_t ret = RT_ERROR_NONE;
     switch (extInfoType) {
         case RT_PROFILE_TYPE_MEMCPY_EXT_INFO:
             compactInfo.data.memcpyInfo = extInfo.memcpyInfo;
-            return RT_ERROR_NONE;
+            break;
         case RT_PROFILE_TYPE_MEMSET_INFO:
             compactInfo.data.memsetInfo = extInfo.memsetInfo;
-            return RT_ERROR_NONE;
+            break;
         case RT_PROFILE_TYPE_MEMMNG_INFO:
             compactInfo.data.memMngInfo = extInfo.memMngInfo;
-            return RT_ERROR_NONE;
+            break;
         default:
-            return RT_ERROR_INVALID_VALUE;
+            ret = RT_ERROR_INVALID_VALUE;
+            break;
     }
+    return ret;
 }
 
-rtError_t ReportProfExtCompactInfo(
+static rtError_t ReportProfExtCompactInfo(
     const uint32_t extInfoType, const RuntimeProfExtInfo& extInfo, const uint32_t threadId, const uint64_t timeStamp)
 {
     const uint32_t dataLen = GetProfExtInfoDataLen(extInfoType);
