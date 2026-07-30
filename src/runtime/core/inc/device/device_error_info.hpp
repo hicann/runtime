@@ -136,7 +136,7 @@ enum rtSdmaErrorType : std::uint32_t {
     SDMA_DMAA_ERR3 = 4,
     SDMA_AXIM_BERR = 5,
     SDMA_SQ_TABLE_ALL_ZERO = 6,
-    // if the sdma status is timeout , the channel_status don`t need care othe bits.
+    // if the sdma status is timeout , the channel_status don`t need to care about other bits.
     SDMA_ERROR_TIMEOUT = 65536
 };
 
@@ -150,10 +150,10 @@ enum rtAICPUErrorType : std::uint16_t {
     AE_END_OF_SEQUENCE = 6,                         // end of sequence
     AE_STATUS_SILENT_FAULT = 7,                     // silent fault in 1980B
     AE_STATUS_TASK_ABORT = 8,                       // aicpu abort in 1980B
-    AE_STATUS_STRESS_DETECT_FAULT = 9,              // stress detect slient fault in 1980B
-    AE_STATUS_STRESS_DETECT_FAULT_NORAS = 10,       // stress detect slient fault in 1980B
-    AE_STATUS_STRESS_DETECT_FAULT_LOW = 11,         // stress detect slient fault in 1980B
-    AE_STATUS_STRESS_DETECT_FAULT_LOW_OFFLINE = 12, // stress detect slient fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT = 9,              // stress detect silent fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_NORAS = 10,       // stress detect silent fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_LOW = 11,         // stress detect silent fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_LOW_OFFLINE = 12, // stress detect silent fault in 1980B
     AE_TASK_WAIT = 101,                             // task wait for aicpu super task
 
     // [1000, 1099] is used by hccl
