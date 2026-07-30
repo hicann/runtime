@@ -2,13 +2,18 @@ name: codecheck_action
 
 on:
   workflow_call:
+    inputs:
+      precommit_image_version:
+        required: true
+        type: string
+      codecheck_image_version:
+        required: true
+        type: string
 
 
 jobs:
   JOB_precommit:
-    name: precommit
-    select: selected_by_default
-    needs: []
+    name: CodeCheck_precommit
     steps:
       -
         name: Checkout
@@ -44,13 +49,11 @@ jobs:
           artifact-path: "${{ steps.process_checkout.outputs.path }}/pre-commit*.txt"
           object-prefix: ${{ env.obs_path }}/
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, large]
+    runs-on: [dedicate-hosted, x64, small]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu20.04.05_x86:alpha113
+      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.precommit_image_version }}
   JOB_check_pr:
-    name: check_pr
-    select: selected_by_default
-    needs: []
+    name: CodeCheck_check_pr
     steps:
       -
         name: Checkout
@@ -70,19 +73,17 @@ jobs:
             ${{ env.obs_path }}/pr_filelist_mod.txt
           path: ${{ steps.process_checkout.outputs.path }}
       -
-        name: check-pr
+        name: Check-pr
         identifier: check-pr
         uses: cann/.gitcode/actions/check-pr@master
         with:
           repo_name: ${{ env.repo_name }}
           workspace: ${{ steps.process_checkout.outputs.path }}
-    runs-on: [dedicate-hosted, x64, large]
+    runs-on: [dedicate-hosted, x64, small]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu24.04_x86:lv1_v1.1032
+      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.codecheck_image_version }}
   JOB_sca:
-    name: sca
-    select: selected_by_default
-    needs: []
+    name: SCA
     steps:
       -
         name: Checkout
@@ -100,19 +101,17 @@ jobs:
           ref: refs/heads/master
           path: "./runner/CI"
       -
-        name: sca
+        name: SCA
         run: |
           cd ${{ steps.process_checkout.outputs.path }}
           cd CI/scripts
           python3 codescan_gitcode.py --access_key ${{secrets.SCA_AK}} --secret_access_key ${{secrets.SCA_SK}} --access_key_get ${{secrets.SCA_AK_GET}} --secret_access_key_get ${{secrets.SCA_SK_GET}} --org_name ${org_name} --pr_id ${MERGE_ID} --repo ${repo_name} --commit_id ${{ atomgit.event.pull_request.merge_commit_sha }}
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, large]
+    runs-on: [dedicate-hosted, x64, small]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu24.04_x86:lv1_v1.1032
+      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.codecheck_image_version }}
   JOB_antiposion:
-    name: antiposion
-    select: selected_by_default
-    needs: []
+    name: Antiposion
     steps:
       -
         name: Checkout
@@ -130,7 +129,7 @@ jobs:
           ref: refs/heads/master
           path: "./runner/CI"
       -
-        name: antiposion
+        name: Antiposion
         run: |
           cd ${{ steps.process_checkout.outputs.path }}
           cd CI/scripts
@@ -138,11 +137,9 @@ jobs:
     if: "${{ default() }}"
     runs-on: [dedicate-hosted, x64, large]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu24.04_x86:lv1_v1.1032
+      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.codecheck_image_version }}
   JOB_codecheck:
-    name: codecheck
-    select: selected_by_default
-    needs: []
+    name: CodeCheck
     steps:
       -
         name: Checkout
@@ -160,12 +157,12 @@ jobs:
           ref: refs/heads/master
           path: "./runner/CI"
       -
-        name: codecheck
+        name: CodeCheck
         run: |
           cd ${{ steps.process_checkout.outputs.path }}
           cd CI/scripts
           python3 codecheck_gitcode.py --access_key ${{secrets.CODECHECK_AK}} --secret_access_key ${{secrets.CODECHECK_SK}} --access_key_get ${{secrets.CODECHECK_AK_GET}} --secret_access_key_get ${{secrets.CODECHECK_SK_GET}} --org_name ${org_name} --pr_id ${MERGE_ID} --repo ${repo_name} --commit_id ${{ atomgit.event.pull_request.merge_commit_sha }}
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, large]
+    runs-on: [dedicate-hosted, x64, small]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu24.04_x86:lv1_v1.1032
+      image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.codecheck_image_version }}

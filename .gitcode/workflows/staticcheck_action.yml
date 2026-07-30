@@ -1,4 +1,4 @@
-name: staticheck_action
+name: staticcheck_action
 
 on:
   workflow_call:
@@ -6,19 +6,20 @@ on:
       check_type:
         required: true
         type: string
+      image_version:
+        required: true
+        type: string
 
 jobs:
   JOB_staticcheck:
-    name: staticcheck
-    select: selected_by_default
-    needs: []
+    name: CodeCheck_staticcheck
     steps:
       -
         name: Checkout
         identifier: process_checkout
         uses: checkout
         with:
-          ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
+          ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
           token: ${{secrets.GIT_TOKEN}}
       -
         name: download
@@ -57,6 +58,6 @@ jobs:
             ${{ steps.process_checkout.outputs.path }}/StaticCheck_*.json
           object-prefix: ${{ env.obs_path }}/
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, large]
+    runs-on: [dedicate-hosted, x64, small]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/static_check/ubuntu24.04.03:v1.0
+      image: swr.cn-north-4.myhuaweicloud.com/static_check/${{ inputs.image_version }}

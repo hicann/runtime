@@ -3,28 +3,29 @@ name: llt_action
 on:
   workflow_call:
     inputs:
-      ut_type:
+      task_name:
         required: true
         type: string
       ut_package:
         type: string
         default: 'ut_cov_*.tar.gz'
+      ge_st_rt2:
+        required: false
+        type: string
       image_version:
         required: true
         type: string
 
 jobs:
   JOB_ut:
-    name: ut
-    select: selected_by_default
-    needs: []
+    name: UT
     steps:
       -
         name: Checkout
         identifier: process_checkout
         uses: checkout
         with:
-          ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
+          ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
           token: ${{secrets.GIT_TOKEN}}
       -
         name: download
@@ -38,13 +39,19 @@ jobs:
             ${{ env.obs_path }}/ut.sh
           path: ${{ steps.process_checkout.outputs.path }}
       -
+        name: redis-cache
+        uses: cann/.gitcode/actions/redis-cache@master
+      -
         name: ut_acc
         identifier: ut
         run: |
           export WORKSPACE=${{ steps.process_checkout.outputs.path }}
           cd ${{ steps.process_checkout.outputs.path }}
-          export ut_type=${{ inputs.ut_type }}
-          bash ut.sh 
+          export task_name=${{ inputs.task_name }}
+          export ge_st_rt2=${{ inputs.ge_st_rt2 }}
+          export ut_type=${{ inputs.ge_st_rt2 }}
+          export TARGET_BRANCH=${{ env.TARGET_BRANCH }}
+          bash ut.sh
       -
         name: ut_cov
         identifier: ut_cov
@@ -52,12 +59,14 @@ jobs:
         with:
           ut_process: ${{ steps.ut.outputs.ut_process }}
           workspace: ${{ steps.process_checkout.outputs.path }}
-          ut_type: ${{ inputs.ut_type }}
+          task_name: ${{ inputs.task_name }}
+          ut_type: ${{ inputs.ge_st_rt2 }}
           target_branch: ${{ env.TARGET_BRANCH }}
           git_token: ${{secrets.GIT_TOKEN}}
       -
         name: upload
         uses: obs-upload
+        if: ${{ inputs.task_name != 'UT_Test_camodel' && inputs.task_name != 'UT_Test_mmpa' }}
         with:
           endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
           bucket: "ascend-ci"
