@@ -184,6 +184,7 @@ enum class DeviceCvArchType : uint8_t {
 struct DevProperties final {
     std::string engineType;
     bool isStars;
+    bool isStarsV2;
     uint32_t pthreadStackSize; // 0: Use the default stack size. others: Custom Stack Size
     EventWaitTimeoutType eventWaitTimeout;
     uint32_t tsCount;
@@ -217,9 +218,12 @@ struct DevProperties final {
     uint32_t memInfoMapType;
     uint32_t resAllocRange;
     SupportSnapshot supportSnapshot;
+    uint32_t MaxKernelCredit;
     float eventTimestampFreq;
     EngineCreateType taskEngineType;
     SqeVersion CmoSqeVersion;
+    uint32_t DefaultKernelCredit;
+    uint8_t starsDefaultKernelCredit;
     double KernelCreditScale;
     bool isSupportInitFuncCallPara;
     RtsqVirtualAddr rtsqVirtualAddr;
