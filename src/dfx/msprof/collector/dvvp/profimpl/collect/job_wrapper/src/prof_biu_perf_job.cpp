@@ -134,12 +134,25 @@ int32_t ProfBiuPerfJob::Process()
             profBiuPerfJobName_ + "group" + std::to_string(channelInfo.groupId) + "_" +
             coreName[channelInfo.groupType];
         AddReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId, filePath);
-        BiuProfileConfigT config;
-        config.period = DEFAULT_BIU_PERF_CYCLE;
-        config.biuPcSamplingMode = biuPcSamplingMode_;
-        config.groupType = channelInfo.groupType;
-        config.groupNo = channelInfo.groupNo;
-        ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+        // Select the config struct by the running driver hal version: new drivers support
+        // reportDataLoss and use BiuProfileConfigTV2 with it set to true; old drivers fall back to
+        // BiuProfileConfigT.
+        if (IsDrvApiVersionSupport(BIU_REPORT_DATA_LOSS_API_VERSION)) {
+            BiuProfileConfigTV2 config;
+            config.period = DEFAULT_BIU_PERF_CYCLE;
+            config.biuPcSamplingMode = biuPcSamplingMode_;
+            config.groupType = channelInfo.groupType;
+            config.groupNo = channelInfo.groupNo;
+            config.reportDataLoss = true;
+            ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+        } else {
+            BiuProfileConfigT config;
+            config.period = DEFAULT_BIU_PERF_CYCLE;
+            config.biuPcSamplingMode = biuPcSamplingMode_;
+            config.groupType = channelInfo.groupType;
+            config.groupNo = channelInfo.groupNo;
+            ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+        }
         if (ret != PROFILING_SUCCESS) {
             RemoveReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId);
             MSPROF_LOGE("[ProfBiuPerfJob]DrvInstrProfileStart failed. devId:%d, channelId:%d", devId, channelId);
@@ -162,9 +175,9 @@ int32_t ProfBiuPerfJob::Uninit()
             MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", devId, channelId);
             continue;
         }
-        ret = DrvStop(devId, channelId);
+        ret = DrvBiuPerfStop(devId, channelId);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("[ProfBiuPerfJob]DrvStop failed, ret:%d, devId:%d, channelId:%d", ret, devId, channelId);
+            MSPROF_LOGE("[ProfBiuPerfJob]DrvBiuPerfStop failed, ret:%d, devId:%d, channelId:%d", ret, devId, channelId);
         }
         RemoveReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId);
         MSPROF_LOGI("Stop biu perf job end, devId:%d, channelId:%d", devId, channelId);

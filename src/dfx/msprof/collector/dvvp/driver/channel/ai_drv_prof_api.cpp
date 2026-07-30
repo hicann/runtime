@@ -23,27 +23,19 @@ namespace dvvp {
 namespace driver {
 using namespace analysis::dvvp::common::error;
 using namespace Msprofiler::Parser;
+using namespace Analysis::Dvvp::Common::Platform;
 // 32 * 1024 * 0.8  is the full threshold  of ai_core_sample
 constexpr uint32_t AI_CORE_SAMPLE_FULL_THRESHOLD = static_cast<uint32_t>(32 * 1024 * 0.8);
 constexpr int32_t DRV_NOT_ENOUGH_SUB_CHANNEL_RESOURCE = -10;  // PROF_NOT_ENOUGH_SUB_CHANNEL_RESOURCE
 constexpr int32_t DRV_VF_SUB_RESOURCE_FULL = -11;  // PROF_VF_SUB_RESOURCE_FULL
 constexpr int32_t DRV_TS_NOT_BIND_CP_PROCESS = 115; // 0x73
+constexpr int32_t DRV_PROF_DATA_LOSS = 0x916; // status code reported by driver on profiling data loss
 constexpr int32_t STRING_TO_LONG_WEIGHT = 16;
 const std::string SOC_PMU_HA = "HA:";
 const std::string SOC_PMU_MATA = "MATA:";
 const std::string SOC_PMU_SMMU = "SMMU:";
 const std::string SOC_PMU_NOC = "NOC:";
 const std::string SOC_PMU_SMMU_DFX = "SMMU_DFX:";
-// Driver hal API version that starts to support the SMMU DFX TLV parameter (__HAL_API_VER_PATCH + 1
-// over 0x072418). Older drivers do not understand SOC_PMU_SMMU_DFX_CFG, so the segment is dropped.
-constexpr uint32_t SUPPORT_SMMU_DFX_API_VERSION = 0x072419;
-
-// Whether the running driver supports the SMMU DFX TLV parameter.
-static bool IsSmmuDFXSupported()
-{
-    return Analysis::Dvvp::Common::Platform::Platform::instance()->DrvGetApiVersion() >=
-        SUPPORT_SMMU_DFX_API_VERSION;
-}
 
 // Number of SMMU DFX events packed (currently a single platform-provided {offset, regMask}).
 constexpr uint32_t SMMU_DFX_EVENT_NUM = 1;
@@ -341,7 +333,11 @@ int32_t DrvAicoreTaskBasedStart(int32_t profDeviceId, AI_DRV_CHANNEL profChannel
 
 int32_t DrvAicpuStart(uint32_t profDeviceId, AI_DRV_CHANNEL profChannel)
 {
-    constexpr uint32_t aicpuDrvSamplePeriod = 10U;
+    uint32_t aicpuDrvSamplePeriod = 10U;
+    if (IsDrvApiVersionSupport(DAVID_AICPU_SAMPLE_PERIOD) &&
+        Platform::instance()->CheckIfSupport(PLATFORM_AICPU_SAMPLE_PERIOD)) {
+        aicpuDrvSamplePeriod = 5U;
+    }
     struct prof_start_para profStartPara = { .channel_type = PROF_PERIPHERAL_TYPE,
                                              .sample_period = aicpuDrvSamplePeriod,
                                              .real_time = PROFILE_REAL_TIME,
@@ -426,7 +422,9 @@ size_t DrvPackSocPmuSize(const std::string &socPmuEvents)
     if (socPmuEvents.find(SOC_PMU_SMMU) != std::string::npos) {
         socPmuSize += (sizeof(SocPmuTlvCfg) + sizeof(SocPmuConfig));
     }
-    if (socPmuEvents.find(SOC_PMU_SMMU_DFX) != std::string::npos && IsSmmuDFXSupported()) {
+    if (socPmuEvents.find(SOC_PMU_SMMU_DFX) != std::string::npos &&
+        Analysis::Dvvp::Common::Platform::IsDrvApiVersionSupport(
+            Analysis::Dvvp::Common::Platform::SMMU_DFX_API_VERSION)) {
         socPmuSize += (sizeof(SocPmuTlvCfg) + GetSocPmuSmmuDFXConfigSize(SMMU_DFX_EVENT_NUM));
     }
     if (socPmuEvents.find(SOC_PMU_NOC) != std::string::npos) {
@@ -546,13 +544,14 @@ void DrvPackSocPmuParam(const std::string &socPmuEvents, void *configP, size_t c
     } else if (socPmuEvents.compare(0, SOC_PMU_SMMU_DFX.size(), SOC_PMU_SMMU_DFX) == 0) {
         // smmu dfx tlv and cfg (fixed offset/regmask values). Only new drivers understand this TLV;
         // on old drivers the segment is dropped (and DrvPackSocPmuSize reserves no space for it).
-        if (IsSmmuDFXSupported()) {
+        if (Analysis::Dvvp::Common::Platform::IsDrvApiVersionSupport(
+            Analysis::Dvvp::Common::Platform::SMMU_DFX_API_VERSION)) {
             DrvCopySocPmuTlv(analysis::dvvp::driver::SocPmuTlvType::SOC_PMU_SMMU_DFX_CFG, configP, configSize,
                 configPos);
             DrvCopySocPmuSmmuDFXParam(configP, configSize, configPos);
         } else {
             MSPROF_LOGW("Driver does not support SMMU DFX (need api version >= 0x%x), skip the config.",
-                SUPPORT_SMMU_DFX_API_VERSION);
+                static_cast<uint32_t>(Analysis::Dvvp::Common::Platform::SMMU_DFX_API_VERSION));
         }
     } else if (socPmuEvents.compare(0, SOC_PMU_SMMU.size(), SOC_PMU_SMMU) == 0) {
         // smmu tlv and cfg
@@ -1046,6 +1045,29 @@ int32_t DrvStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel)
                  static_cast<int32_t>(profChannel));
 
     return PROFILING_SUCCESS;
+}
+
+int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel)
+{
+    MSPROF_EVENT("Begin to stop profiling DrvBiuPerfStop, profDeviceId=%d, profChannel=%d", profDeviceId,
+                 static_cast<int32_t>(profChannel));
+    int32_t ret = MsprofDrvApi::instance()->ProfStop(static_cast<uint32_t>(profDeviceId), profChannel);
+    if (ret == PROF_OK) {
+        MSPROF_EVENT("Succeeded to stop profiling DrvBiuPerfStop, profDeviceId=%d, profChannel=%d", profDeviceId,
+                     static_cast<int32_t>(profChannel));
+        return PROFILING_SUCCESS;
+    }
+    // Data loss is an acceptable collection result: only log the error and still return success, so
+    // that the biu perf job can finish its teardown normally.
+    if (ret == DRV_PROF_DATA_LOSS) {
+        MSPROF_LOGE("Biu perf data loss detected during data collection, please retry profiling. "
+                    "profDeviceId=%d, profChannel=%d, ret=0x%x",
+                    profDeviceId, static_cast<int32_t>(profChannel), ret);
+        return PROFILING_SUCCESS;
+    }
+    MSPROF_LOGE("Failed to stop profiling DrvBiuPerfStop, profDeviceId=%d, profChannel=%d, ret=%d", profDeviceId,
+                static_cast<int32_t>(profChannel), ret);
+    return PROFILING_FAILED;
 }
 
 int32_t DrvChannelRead(int32_t profDeviceId, AI_DRV_CHANNEL profChannel, UNSIGNED_CHAR_PTR outBuf, uint32_t bufSize)

@@ -1036,7 +1036,8 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvDsmiFrequency) {
 
 TEST_F(DRIVER_AI_DRV_API_TEST, DrvSocPmuTaskStartWithSmmuDFX) {
     GlobalMockObject::verify();
-    constexpr uint32_t SUPPORT_SMMU_DFX_API_VERSION = 0x072419;
+    constexpr uint32_t SUPPORT_SMMU_DFX_API_VERSION =
+        static_cast<uint32_t>(Analysis::Dvvp::Common::Platform::SMMU_DFX_API_VERSION);
 
     // Part A: driver supports SMMU DFX — exercises the full pack/copy path.
     MOCKER_CPP(&Platform::DrvGetApiVersion)

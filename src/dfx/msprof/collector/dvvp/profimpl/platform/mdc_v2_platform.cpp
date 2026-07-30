@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "mdc_v2_platform.h"
+#include "ascend_hal_base.h"
 
 namespace Dvvp {
 namespace Collect {
@@ -24,7 +25,7 @@ constexpr char MDC_V2_NTS_PIPEUTILIZATION[] = "0x301,0x312,0x315,0x316,0x32e,0x7
 constexpr uint16_t MAX_QOS_MONITOR_NUM = 8;
 // BIU perf: channelId = firstChannelId + groupNo * groupChannelNum.
 // MDC V2 only supports groups 0, 2, 3, 5 (a subset of David's sequential 0..N).
-constexpr uint32_t MDC_V2_BIU_PERF_FIRST_CHANNEL_ID = 11;
+constexpr uint32_t MDC_V2_BIU_PERF_FIRST_CHANNEL_ID = CHANNEL_BIU_GROUP0_AIC;
 constexpr uint32_t MDC_V2_BIU_PERF_GROUP_CHANNEL_NUM = 3;
 constexpr uint32_t MDC_V2_BIU_PERF_GROUP_TYPE = 0;
 
@@ -94,10 +95,14 @@ std::vector<BiuPerfChannelInfo> MdcV2Platform::GetBiuPerfChannelInfos(const std:
 {
     (void)groupVector;
     (void)groupNum;
-    static const std::vector<uint32_t> supportedGroupIds = {0, 2, 3, 5};
+    // Whitelisted biu perf AIC channels supported on the MDC V2 platform (groups 0, 2, 3, 5).
+    // The group id is derived back from each channel id via the base channel id and per-group
+    // channel number.
+    static const std::vector<uint32_t> supportedChannelIds = {
+        CHANNEL_BIU_GROUP0_AIC, CHANNEL_BIU_GROUP2_AIC, CHANNEL_BIU_GROUP3_AIC, CHANNEL_BIU_GROUP5_AIC};
     std::vector<BiuPerfChannelInfo> channelInfos;
-    for (uint32_t groupId : supportedGroupIds) {
-        uint32_t channelId = MDC_V2_BIU_PERF_FIRST_CHANNEL_ID + groupId * MDC_V2_BIU_PERF_GROUP_CHANNEL_NUM;
+    for (uint32_t channelId : supportedChannelIds) {
+        uint32_t groupId = (channelId - MDC_V2_BIU_PERF_FIRST_CHANNEL_ID) / MDC_V2_BIU_PERF_GROUP_CHANNEL_NUM;
         channelInfos.push_back({groupId, MDC_V2_BIU_PERF_GROUP_TYPE, groupId, channelId});
     }
     return channelInfos;
