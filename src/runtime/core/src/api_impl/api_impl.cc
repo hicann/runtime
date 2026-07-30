@@ -325,9 +325,6 @@ Context* ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
         if ((deviceId == defaultDeviceId) && (rtInstance->HaveDevice())) {
             const rtError_t error = SetDevice(defaultDeviceId);
             if (error == RT_ERROR_NONE) {
-                if (setGroupFlag) {
-                    procFlag.Set(true);
-                }
                 return InnerThreadLocalContainer::GetCurRef()->GetVal();
             }
         }
