@@ -1307,8 +1307,11 @@ rtError_t Stream::SqCqUpdate()
 
 rtError_t Stream::ReAllocStreamId()
 {
+    const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
+                                    static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
+                                    0U;
     rtError_t error = device_->Driver_()->ReAllocResourceId(
-        device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
+        device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID, remoteFlag);
     ERROR_RETURN_MSG_INNER(
         error, "Realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
 
@@ -1318,13 +1321,16 @@ rtError_t Stream::ReAllocStreamId()
         error, "Realloc sqcq id failed, streamId=%d, deviceId=%u, sqId=%u, ret=%d.", streamId_, device_->Id_(), sqId_,
         error);
 
-    uint32_t addrLen = 0U;
-    error = device_->Driver_()->GetSqRegVirtualAddrBySqid(
-        static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId_, &sqRegVirtualAddr_, &addrLen);
-    ERROR_RETURN_MSG_INNER(error, "Failed to get sq reg virtual addr, deviceId=%u, sqId=%u.", device_->Id_(), sqId_);
+    if ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) == 0U) {
+        uint32_t addrLen = 0U;
+        error = device_->Driver_()->GetSqRegVirtualAddrBySqid(
+            static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId_, &sqRegVirtualAddr_, &addrLen);
+        ERROR_RETURN_MSG_INNER(
+            error, "Failed to get sq reg virtual addr, deviceId=%u, sqId=%u.", device_->Id_(), sqId_);
 
-    error = SetSqRegVirtualAddrToDevice(sqRegVirtualAddr_);
-    ERROR_RETURN_MSG_INNER(error, "Failed to copy virtual addr to device, sqid=%u, error=%d.", sqId_, error);
+        error = SetSqRegVirtualAddrToDevice(sqRegVirtualAddr_);
+        ERROR_RETURN_MSG_INNER(error, "Failed to copy virtual addr to device, sqid=%u, error=%d.", sqId_, error);
+    }
     return error;
 }
 

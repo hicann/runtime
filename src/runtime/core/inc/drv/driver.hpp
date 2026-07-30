@@ -228,7 +228,7 @@ public:
     // Realloc resource ID.
     virtual rtError_t ReAllocResourceId(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, const uint32_t resourceId,
-        drvIdType_t idType) = 0;
+        drvIdType_t idType, const uint32_t drvFlag = 0U) = 0;
 
     // Alloc stream ID.
     virtual rtError_t StreamIdAlloc(

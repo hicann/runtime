@@ -1194,7 +1194,7 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqid(
 
 rtError_t NpuDriver::ReAllocResourceId(
     const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, const uint32_t resourceId,
-    drvIdType_t idType)
+    drvIdType_t idType, const uint32_t drvFlag)
 {
     struct halResourceIdInputInfo resAllocInput = {};
     struct halResourceIdOutputInfo resAllocOutput = {};
@@ -1203,7 +1203,7 @@ rtError_t NpuDriver::ReAllocResourceId(
     resAllocInput.tsId = tsId;
     resAllocInput.resourceId = resourceId;
     resAllocInput.res[0U] = priority;
-    resAllocInput.res[1U] = TSDRV_RES_SPECIFIED_ID;
+    resAllocInput.res[1U] = (TSDRV_RES_SPECIFIED_ID | drvFlag);
 
     RT_LOG(
         RT_LOG_INFO, "Realloc id begin, device_id=%u, priority=%u, ts_id=%u, resourceId=%u, idType=%d", deviceId,

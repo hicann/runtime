@@ -925,13 +925,14 @@ rtError_t NpuDriver::QueryOpExecTimeoutInterval(const uint32_t deviceId, const u
 
 rtError_t NpuDriver::ReAllocResourceId(
     const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, const uint32_t resourceId,
-    drvIdType_t idType)
+    drvIdType_t idType, const uint32_t drvFlag)
 {
     UNUSED(deviceId);
     UNUSED(tsId);
     UNUSED(priority);
     UNUSED(resourceId);
     UNUSED(idType);
+    UNUSED(drvFlag);
     return RT_ERROR_NONE;
 }
 

@@ -188,7 +188,7 @@ public:
     // Realloc resource ID.
     rtError_t ReAllocResourceId(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, const uint32_t resourceId,
-        drvIdType_t idType) override;
+        drvIdType_t idType, const uint32_t drvFlag = 0U) override;
 
     // Alloc stream ID.
     rtError_t StreamIdAlloc(
