@@ -74,7 +74,7 @@ TEST_F(RtQueueApiTest, rtBuffAlloc)
     rtError_t error = rtBuffAlloc(alloc_size, &buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffAlloc(alloc_zero_size, &buff);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -93,7 +93,7 @@ TEST_F(RtQueueApiTest, rtBuffFree)
     rtError_t error = rtBuffFree(buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffFree(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -113,7 +113,7 @@ TEST_F(RtQueueApiTest, rtBuffConfirm)
     rtError_t error = rtBuffConfirm(buff, alloc_size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffConfirm(nullptr, alloc_size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -134,7 +134,7 @@ TEST_F(RtQueueApiTest, rtBuffGetInfo)
     rtError_t error = rtBuffGetInfo(cmd_type, (void*)&inbuff, sizeof(void*), &buff_info, &len);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffGetInfo(cmd_type, nullptr, sizeof(void*), &buff_info, &len);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtBuffGetInfo(cmd_type, (void*)&inbuff, sizeof(void*), nullptr, &len);
@@ -156,7 +156,7 @@ TEST_F(RtQueueApiTest, rtBuffGet)
     rtError_t error = rtBuffGet(nullptr, buff, alloc_size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffGet(nullptr, nullptr, alloc_size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -175,7 +175,7 @@ TEST_F(RtQueueApiTest, rtBuffPut)
     rtError_t error = rtBuffPut(nullptr, buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffPut(nullptr, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -189,7 +189,7 @@ TEST_F(RtQueueApiTest, rtBufEventTrigger)
     rtError_t error = rtBufEventTrigger(name);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBufEventTrigger(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -244,7 +244,7 @@ TEST_F(RtQueueApiTest, rtEschedSubmitEventSync)
     rtError_t error = rtEschedSubmitEventSync(0, &event, &ack);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtEschedSubmitEventSync(0, nullptr, &ack);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtEschedSubmitEventSync(0, &event, nullptr);

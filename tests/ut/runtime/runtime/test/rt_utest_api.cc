@@ -4431,7 +4431,7 @@ TEST_F(ApiTest, rtMemQueueEnQueue)
     rtError_t error = rtMemQueueEnQueue(0, 0, &value);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueEnQueue(0, 0, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4447,7 +4447,7 @@ TEST_F(ApiTest, rtMemQueueDeQueue)
     rtError_t error = rtMemQueueDeQueue(0, 0, &value);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueDeQueue(0, 0, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4463,7 +4463,7 @@ TEST_F(ApiTest, rtMemQueuePeek)
     rtError_t error = rtMemQueuePeek(0, 0, &value, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueuePeek(0, 0, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4479,7 +4479,7 @@ TEST_F(ApiTest, rtMemQueueEnQueueBuff)
     rtError_t error = rtMemQueueEnQueueBuff(0, 0, &buff, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueEnQueueBuff(0, 0, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4515,7 +4515,7 @@ TEST_F(ApiTest, rtMemQueueDeQueueBuff)
     rtError_t error = rtMemQueueDeQueueBuff(0, 0, &buff, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueDeQueueBuff(0, 0, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4531,7 +4531,7 @@ TEST_F(ApiTest, rtMemQueueQueryInfo)
     rtError_t error = rtMemQueueQueryInfo(0, 0, &queInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueQueryInfo(0, 0, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4562,7 +4562,7 @@ TEST_F(ApiTest, rtMemQueueQuery)
     error = rtMemQueueQuery(0, tmpCmd, &qid, sizeof(qid), &tmpOutInfo, &tmpOutLen);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueQuery(0, cmd, nullptr, sizeof(qid), &attr, &outLen);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemQueueQuery(0, cmd, &qid, sizeof(qid), nullptr, &outLen);
@@ -4619,7 +4619,7 @@ TEST_F(ApiTest, rtEschedSubmitEventSync)
     rtError_t error = rtEschedSubmitEventSync(0, &event, &ack);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtEschedSubmitEventSync(0, nullptr, &ack);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtEschedSubmitEventSync(0, &event, nullptr);
@@ -4654,7 +4654,7 @@ TEST_F(ApiTest, rtQueryDevPid)
     rtError_t error = rtQueryDevPid(&info, &devPid);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtQueryDevPid(nullptr, &devPid);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtQueryDevPid(&info, nullptr);
@@ -4691,7 +4691,7 @@ TEST_F(ApiTest, rtBuffConfirm)
     rtError_t error = rtBuffConfirm(buff, alloc_size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffConfirm(nullptr, alloc_size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4712,7 +4712,7 @@ TEST_F(ApiTest, rtBuffAlloc)
     rtError_t error = rtBuffAlloc(alloc_size, &buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffAlloc(alloc_zero_size, &buff);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4729,7 +4729,7 @@ TEST_F(ApiTest, rtMbufAlloc)
     rtError_t error = rtMbufAlloc(&mbuf, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufAlloc(nullptr, 1);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4749,7 +4749,7 @@ TEST_F(ApiTest, rtMbufAllocEx_malloc)
     error = rtMbufAllocEx(&mbuf, 1, 3, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufAllocEx(nullptr, 1, 0, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4768,7 +4768,7 @@ TEST_F(ApiTest, rtMbufBuild)
     rtError_t error = rtMbufBuild(buff, alloc_size, &mbuf);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufBuild(nullptr, alloc_size, &mbuf);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4789,7 +4789,7 @@ TEST_F(ApiTest, rtBuffFree)
     rtError_t error = rtBuffFree(buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffFree(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4810,7 +4810,7 @@ TEST_F(ApiTest, rtMbufUnBuild)
     rtError_t error = rtMbufUnBuild(mbuf, &buff, &alloc_size_free);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufUnBuild(nullptr, &buff, &alloc_size_free);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4828,7 +4828,7 @@ TEST_F(ApiTest, rtBuffGet)
     rtError_t error = rtBuffGet(nullptr, buff, alloc_size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffGet(nullptr, nullptr, alloc_size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4848,7 +4848,7 @@ TEST_F(ApiTest, rtBuffPut)
     rtError_t error = rtBuffPut(nullptr, buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffPut(nullptr, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4862,7 +4862,7 @@ TEST_F(ApiTest, rtMbufAllocEx_malloc_ex)
     rtError_t error = rtMbufAllocEx(&mbuf, 1, 1, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufAllocEx(nullptr, 1, 1, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4879,7 +4879,7 @@ TEST_F(ApiTest, rtMbufFree)
     rtError_t error = rtMbufFree(mbuf);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufFree(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4896,7 +4896,7 @@ TEST_F(ApiTest, rtMbufSetDataLen)
     rtError_t error = rtMbufSetDataLen(mbuf, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufSetDataLen(nullptr, 1);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4914,7 +4914,7 @@ TEST_F(ApiTest, rtMbufGetDataLen)
     rtError_t error = rtMbufGetDataLen(mbuf, &size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufGetDataLen(nullptr, &size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -4935,7 +4935,7 @@ TEST_F(ApiTest, rtMbufGetBuffAddr)
     rtError_t error = rtMbufGetBuffAddr(mbuf, &buff);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufGetBuffAddr(nullptr, &buff);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufGetBuffAddr(mbuf, nullptr);
@@ -4955,7 +4955,7 @@ TEST_F(ApiTest, rtMbufGetBuffSize)
     rtError_t error = rtMbufGetBuffSize(mbuf, &totalSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufGetBuffSize(nullptr, &totalSize);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufGetBuffSize(mbuf, nullptr);
@@ -4976,7 +4976,7 @@ TEST_F(ApiTest, rtMbufGetPrivInfo)
     rtError_t error = rtMbufGetPrivInfo(mbuf, &priv, &size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufGetPrivInfo(nullptr, &priv, &size);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufGetPrivInfo(mbuf, nullptr, &size);
@@ -4993,7 +4993,7 @@ TEST_F(ApiTest, rtMbufCopyBufRef)
     rtError_t error = rtMbufCopyBufRef(mbuf, &newMbuf);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufCopyBufRef(nullptr, &newMbuf);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufCopyBufRef(mbuf, nullptr);
@@ -5008,7 +5008,7 @@ TEST_F(ApiTest, rtMbufChainAppend)
     rtError_t error = rtMbufChainAppend(memBufChainHead, memBuf);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufChainAppend(nullptr, memBuf);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufChainAppend(memBufChainHead, nullptr);
@@ -5028,7 +5028,7 @@ TEST_F(ApiTest, rtMbufChainGetMbufNum)
     rtError_t error = rtMbufChainGetMbufNum(memBufChainHead, &num);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufChainGetMbufNum(nullptr, &num);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufChainGetMbufNum(memBufChainHead, nullptr);
@@ -5048,7 +5048,7 @@ TEST_F(ApiTest, rtMbufChainGetMbuf)
     rtError_t error = rtMbufChainGetMbuf(memBufChainHead, 0, &memBuf);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMbufChainGetMbuf(nullptr, 0, &memBuf);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMbufChainGetMbuf(memBufChainHead, 0, nullptr);
@@ -5068,7 +5068,7 @@ TEST_F(ApiTest, rtMemGrpCreate)
     rtError_t error = rtMemGrpCreate(name, &cfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpCreate(nullptr, &cfg);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemGrpCreate(name, nullptr);
@@ -5090,7 +5090,7 @@ TEST_F(ApiTest, rtBuffGetInfo)
     rtError_t error = rtBuffGetInfo(cmd_type, (void*)&inbuff, sizeof(void*), &buff_info, &len);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBuffGetInfo(cmd_type, nullptr, sizeof(void*), &buff_info, &len);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtBuffGetInfo(cmd_type, (void*)&inbuff, sizeof(void*), nullptr, &len);
@@ -5113,7 +5113,7 @@ TEST_F(ApiTest, rtMemGrpCacheAlloc)
     rtError_t error = rtMemGrpCacheAlloc(name, devId, &para);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpCacheAlloc(nullptr, devId, &para);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemGrpCacheAlloc(name, devId, nullptr);
@@ -5132,7 +5132,7 @@ TEST_F(ApiTest, rtMemQueueSet)
     rtError_t error = rtMemQueueSet(0, RT_MQ_QUEUE_ENABLE_LOCAL_QUEUE, &para);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueSet(0, RT_MQ_QUEUE_ENABLE_LOCAL_QUEUE, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -5151,7 +5151,7 @@ TEST_F(ApiTest, rtMemGrpAddProc)
     rtError_t error = rtMemGrpAddProc(name, pid, &attr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpAddProc(nullptr, pid, &attr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemGrpAddProc(name, pid, nullptr);
@@ -5171,7 +5171,7 @@ TEST_F(ApiTest, rtMemGrpAttach)
     rtError_t error = rtMemGrpAttach(name, timeout);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpAttach(nullptr, timeout);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -5200,7 +5200,7 @@ TEST_F(ApiTest, rtMemGrpQuery)
     rtError_t error = rtMemGrpQuery(&input, &output);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpQuery(nullptr, &output);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemGrpQuery(&input, nullptr);
@@ -5275,7 +5275,7 @@ TEST_F(ApiTest, rtMemGrpQuery_grpId)
     rtError_t error = rtMemGrpQuery(&input, &output);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemGrpQuery(nullptr, &output);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemGrpQuery(&input, nullptr);
@@ -5296,7 +5296,7 @@ TEST_F(ApiTest, rtMemQueueGetQidByName)
     rtError_t error = rtMemQueueGetQidByName(device, name, &qid);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtMemQueueGetQidByName(device, nullptr, &qid);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtMemQueueGetQidByName(device, name, nullptr);
@@ -5378,7 +5378,7 @@ TEST_F(ApiTest, rtEschedWaitEvent)
     rtError_t error = rtEschedWaitEvent(device, grpId, threadId, timeout, &event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtEschedWaitEvent(device, grpId, threadId, timeout, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -6304,7 +6304,7 @@ TEST_F(ApiTest, rtBufEventTrigger)
     rtError_t error = rtBufEventTrigger(name);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid paramter
+    // invalid parameter
     error = rtBufEventTrigger(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
