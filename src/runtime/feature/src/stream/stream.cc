@@ -1531,15 +1531,18 @@ rtError_t Stream::CheckContextTaskSend(const TaskInfo * const workTask) const
     }
 }
 
-rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &finishedId)
+rtError_t Stream::GetFinishedTaskIdBySqHead(uint16_t &sqHead, uint32_t &finishedId)
 {
     // sqHead indicates the current position of execution; it has not yet been completed.
     const uint32_t rtsqDepth = (((flags_ & RT_STREAM_HUGE) != 0U) && (Runtime::macroValue_.maxTaskNumPerHugeStream != 0)) ?
                                Runtime::macroValue_.maxTaskNumPerHugeStream : Runtime::macroValue_.rtsqDepth;
     const uint32_t posTail = GetTaskPosTail();
     const uint32_t posHead = GetTaskPosHead();
+    rtError_t error = device_->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
+                                static_cast<uint32_t>(error));
     if (((posTail + rtsqDepth - sqHead) % rtsqDepth) >= (posTail + rtsqDepth - posHead) % rtsqDepth) {
-        return RT_ERROR_INVALID_VALUE;
+        return RT_ERROR_NONE;
     }
     uint32_t endTaskId = MAX_UINT16_NUM;
     uint32_t nextTaskId = MAX_UINT16_NUM;
@@ -1563,12 +1566,11 @@ bool Stream::IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskI
     return TASK_ID_GEQ(executeEndTaskid, taskId);
 }
 
-bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead)
+bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId)
 {
     constexpr uint16_t LARGER_THRESHOLD = 10U;
     constexpr uint16_t SLEEP_UNIT = 5U;
     constexpr uint16_t perSchedYield = 100U;
-
     uint16_t exeTaskId = (finishedId == MAX_UINT16_NUM) ? executeEndTaskid_.Value() : finishedId;
     if (TASK_ID_LEQ(TASK_ID_ADD(exeTaskId, LARGER_THRESHOLD), taskId)) {
         std::this_thread::sleep_for(std::chrono::microseconds(LARGER_THRESHOLD * SLEEP_UNIT));
@@ -1576,7 +1578,7 @@ bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t task
         uint32_t tryCount = 0U;
         const uint64_t beginTime = GetWallUs();
         while (GetWallUs() - beginTime < SLEEP_UNIT) {
-            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId) || sqHead == GetTaskPosTail()) {
+            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId)) {
                 return true;
             }
             tryCount++;
@@ -1596,6 +1598,7 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
     int32_t reportTime = REPORT_TIME_UINT;
     const int32_t FAST_SYNC_TIMES = 170;
     int32_t syncTimes = 0;
+    const uint32_t posTail = GetTaskPosTail();
     while (true) {
         COND_PROC_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT, this->SetNeedSyncFlag(true);,
                           "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms.",
@@ -1612,22 +1615,21 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
  	        "stream status is %u, device_id=%u, stream_id=%d.", GetStreamStatus(), device_->Id_(), Id_());
         error = CheckContextStatus(false);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-        if ((IsTaskExcuted(GetExecuteEndTaskId(), taskId)) || (sqHead == GetTaskPosTail())) {
+        if ((IsTaskExcuted(GetExecuteEndTaskId(), taskId)) || (sqHead == posTail)) {
             return RT_ERROR_NONE;
         }
         if (!device_->GetIsDoingRecycling()) {
             device_->WakeUpRecycleThread();
         }
-        error = device_->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
-                                    static_cast<uint32_t>(error));
-        uint32_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
+        uint32_t finishedId = MAX_UINT16_NUM;
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
-        if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId, sqHead)) {
+        COND_PROC((error != RT_ERROR_NONE), return error);
+        COND_PROC((sqHead == posTail), return RT_ERROR_NONE);
+        if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId)) {
             return RT_ERROR_NONE;
         }
         syncTimes = syncTimes > FAST_SYNC_TIMES ? syncTimes : syncTimes + 1;
-        COND_PROC((error != RT_ERROR_NONE || finishedId == static_cast<uint16_t>(MAX_UINT16_NUM)), continue);
+        COND_PROC((finishedId == MAX_UINT16_NUM), continue);
         if (IsTaskExcuted(finishedId, taskId)) {
             return RT_ERROR_NONE;
         }

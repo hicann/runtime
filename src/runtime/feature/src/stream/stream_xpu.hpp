@@ -45,7 +45,7 @@ public:
     uint32_t GetTaskPosHead() const override;
     uint32_t GetTaskPosTail() const override;
     rtError_t CheckContextStatus(const bool isBlockDefaultStream = true) const override;
-    rtError_t GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &finishedId) override;
+    rtError_t GetFinishedTaskIdBySqHead(uint16_t &sqHead, uint32_t &finishedId) override;
     rtError_t GetSynchronizeError(rtError_t error) override;
     rtError_t SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec &beginTime, int32_t timeout) override;
     rtError_t Synchronize(const bool isNeedWaitSyncCq, int32_t timeout) override;

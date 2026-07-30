@@ -831,7 +831,9 @@ rtError_t Event::WaitTask(const int32_t timeout)
                                 streamId, static_cast<uint32_t>(error));
     if (stm->IsSeparateSendAndRecycle()) {
         // no timeline，MAX_UINT16_NUM is used to indicate that task reclamation does not need to be waited for.
-        uint32_t concernedTaskId = ((eventFlag_ & RT_EVENT_TIME_LINE) == 0) ? MAX_UINT16_NUM : taskId;
+        const bool noTimeLineEvent = ((eventFlag_ & RT_EVENT_TIME_LINE) == 0);
+        const bool stmNotConcerned = (stm->latestConcernedTaskId.Value() == MAX_UINT16_NUM);
+        uint32_t concernedTaskId = (noTimeLineEvent && stmNotConcerned) ? MAX_UINT16_NUM : taskId;
         error = stm->SynchronizeImpl(taskId, static_cast<uint16_t>(concernedTaskId), timeout);
     } else {
         // if set stream fail mode, need to reclaim task to update error info

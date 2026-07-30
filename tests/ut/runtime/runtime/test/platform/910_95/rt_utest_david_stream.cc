@@ -798,19 +798,17 @@ TEST_F(DavidStreamTest, TestSyncDelayTime)
 
     uint16_t finishedId = 10U;
     uint16_t taskId = 30U;
-    uint16_t sqHead = 0U;
-    bool isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    bool isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, false); 
 
     finishedId = 25U;
-    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, true); 
 
-    sqHead = 1U;
     MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsTaskExcuted)
         .stubs()
         .will(returnValue(false));
-    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId);
     EXPECT_EQ(isFinish, false); 
 }
 
