@@ -47,12 +47,6 @@ int main()
     CHECK_ERROR(aclInit(nullptr));
     INFO_LOG("ACL init successfully");
 
-    int32_t majorVersion = 0;
-    int32_t minorVersion = 0;
-    int32_t patchVersion = 0;
-    CHECK_ERROR(aclrtGetVersion(&majorVersion, &minorVersion, &patchVersion));
-    INFO_LOG("ACL Runtime API version: %d.%d.%d", majorVersion, minorVersion, patchVersion);
-
     // Query CANN package metadata from the installed runtime package.
     CHECK_ERROR(PrintCannVersionInfo());
 

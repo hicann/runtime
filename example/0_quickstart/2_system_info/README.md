@@ -26,7 +26,6 @@
     - 调用 `aclInit` 接口进行初始化配置。
     - 调用 `aclFinalize` 接口实现去初始化。
 - 版本信息查询
-    - 调用 `aclrtGetVersion` 接口查询 ACL Runtime API 版本号。
     - 调用 `aclsysGetVersionStr` 和 `aclsysGetVersionNum` 接口查询 CANN 软件包版本信息。
 - 运行模式与数据类型工具
     - 调用 `aclrtGetRunMode` 接口判断当前运行在 Host 还是 Device 模式。
@@ -36,7 +35,6 @@
 ## 示例输出
 
 ```text
-[INFO]  ACL Runtime API version: 1.2.3
 [INFO]  CANN package [runtime] version string: 8.x.x
 [INFO]  CANN package [runtime] version number: 8000000
 [INFO]  Current run mode: ACL_HOST

@@ -21,7 +21,7 @@ Follow the steps below to run:
 ```bash
 # Replace ${install_root} with the CANN installation root directory, which is installed in `/usr/local/Ascend` by default
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
+export ASCEND_HOME_PATH=${install_root}/cann
 
 # Build and run
 bash run.sh

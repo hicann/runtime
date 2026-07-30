@@ -26,8 +26,7 @@ The key functionality points and their key interfaces involved in this sample ar
     - Call `aclInit` interface for initialization configuration.
     - Call `aclFinalize` interface for deinitialization.
 - Version Information Query
-    - Call `aclrtGetVersion` interface to query ACL Runtime API version number.
-    - Call `aclsysGetVersionStr` and `aclsysGetVersionNum` interfaces to query CANN software package version information.
+    - Call `aclsysGetVersionStr` and `aclsysGetVersionNum` to query CANN package version information.
 - Run Mode and Data Type Tools
     - Call `aclrtGetRunMode` interface to determine whether currently running in Host or Device mode.
     - Call `aclFloatToFloat16` and `aclFloat16ToFloat` interfaces to complete float16/float32 mutual conversion.
@@ -36,7 +35,6 @@ The key functionality points and their key interfaces involved in this sample ar
 ## Sample Output
 
 ```text
-[INFO]  ACL Runtime API version: 1.2.3
 [INFO]  CANN package [runtime] version string: 8.x.x
 [INFO]  CANN package [runtime] version number: 8000000
 [INFO]  Current run mode: ACL_HOST
