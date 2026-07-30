@@ -114,24 +114,10 @@ enum class StarsBaseAddrMethod { STARS_BASE_CALCULATE_BY_DRIVER, STARS_BASE_CALC
 
 enum class RtSqEnableAddrCalMethod { RT_SQ_ENABLE_ADDR_CAL_BY_TRUE_SQID, RT_SQ_ENABLE_ADDR_CAL_STATIC, NOT_SUPPORT };
 
-enum class OMArchVersion : uint8_t { omArchVersion_4, omArchVersion_3, omArchVersion_DEFAULT };
-
-enum class CheckArchVersionCompatibility : uint8_t {
-    Arch_Version_Compat_V220,
-    Arch_Version_Compat_V100,
-    Arch_Version_Compat_DEFAULT,
-};
-
 enum class DcacheLockMixType : uint8_t {
     DCACHE_LOCK_MIX_TYPE_FROM_DEFAULT,
     DCACHE_LOCK_MIX_TYPE_FROM_910_B_93,
     DCACHE_LOCK_MIX_TYPE_FROM_STARS_V2,
-};
-
-enum class KernelFuncType : uint8_t {
-    Kernel_FUC_TYPE_SUPP_AICORE,
-    Kernel_FUC_TYPE_NON_SUPP_AICORE,
-    Kernel_FUC_TYPE_OTHER_AICORE,
 };
 
 enum class CmoAddrInfoType : uint8_t { CMO_ADDR_INFO_TYPE_DAFAULT = 0, CMO_ADDR_INFO_TYPE_DAVID };
@@ -198,7 +184,6 @@ enum class DeviceCvArchType : uint8_t {
 struct DevProperties final {
     std::string engineType;
     bool isStars;
-    bool isStarsV2;
     uint32_t pthreadStackSize; // 0: Use the default stack size. others: Custom Stack Size
     EventWaitTimeoutType eventWaitTimeout;
     uint32_t tsCount;
@@ -232,12 +217,9 @@ struct DevProperties final {
     uint32_t memInfoMapType;
     uint32_t resAllocRange;
     SupportSnapshot supportSnapshot;
-    uint32_t MaxKernelCredit;
     float eventTimestampFreq;
     EngineCreateType taskEngineType;
     SqeVersion CmoSqeVersion;
-    uint32_t DefaultKernelCredit;
-    uint8_t starsDefaultKernelCredit;
     double KernelCreditScale;
     bool isSupportInitFuncCallPara;
     RtsqVirtualAddr rtsqVirtualAddr;
@@ -263,12 +245,8 @@ struct DevProperties final {
     uint32_t handleAllocatorSize;
     uint32_t kernelInfoAllocatorSize;
     bool isNeedlogErrorLevel;
-    bool overflowMode;
     bool opExecuteTimeout; // true for ms, false for s.
-    OMArchVersion omArchVersion;
-    CheckArchVersionCompatibility checkArchVersionCompatibility;
     DcacheLockMixType dcacheLockMixType;
-    KernelFuncType kernelFuncType;
     bool taskPoolSizeFromRtsqDepth;
     uint16_t taskPoolSize;
     GetTsMemTypeMethod getTsMemTypeMethod;
