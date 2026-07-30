@@ -29,7 +29,7 @@ char *LogConfGetPath(void)
 
 STATIC int32_t LogConfInitPath(void)
 {
-    // use defualt path
+    // use default path
     (void)snprintf_truncated_s(g_configFilePath, SLOG_CONF_PATH_MAX_LENGTH, "%s", SLOG_CONF_FILE_PATH);
     if (ToolAccess(g_configFilePath) != SYS_OK) {
         return SYS_ERROR;

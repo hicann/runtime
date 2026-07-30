@@ -27,7 +27,7 @@ typedef struct {
     int16_t moduleId;
 } PlogDeviceLogInfo;
 
-typedef struct { // sub log file list paramter
+typedef struct { // sub log file list parameter
     int32_t fileNum;
     int32_t currIndex;
     int32_t maxFileNum;
@@ -39,7 +39,7 @@ typedef struct { // sub log file list paramter
     unsigned char devWriteFileFlag;
 } PlogFileList;
 
-typedef struct { // log file list paramter
+typedef struct { // log file list parameter
     uint32_t deviceNum;
     char rootPath[MAX_FILEPATH_LEN + 1U];
     PlogFileList hostLogList[LOG_TYPE_NUM];

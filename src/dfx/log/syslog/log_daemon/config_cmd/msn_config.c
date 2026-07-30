@@ -37,7 +37,7 @@ int32_t MsnCmdInit(void)
 }
 
 /**
- * @brief: destory mutex lock
+ * @brief: destroy mutex lock
  * @return: CONFIG_OK: succeed; others: failed
  */
 int32_t MsnCmdDestory(void)

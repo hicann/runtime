@@ -47,7 +47,7 @@ typedef struct {
     uint32_t maxFileNum;
 } StorageRule;
 
-typedef struct { // sub log file list paramter
+typedef struct { // sub log file list parameter
     uint32_t maxFileSize;
     uint32_t totalMaxFileSize;
     char filePath[MAX_FILEPATH_LEN + 1U];
@@ -62,7 +62,7 @@ typedef struct { // sub log file list paramter
     WriteFileLimit *limit;
 } StSubLogFileList;
 
-typedef struct { // log file list paramter
+typedef struct { // log file list parameter
     unsigned char ucDeviceNum;
     int32_t maxFileNum;
     int32_t maxOsFileNum;

@@ -136,7 +136,7 @@
     #define X_OK 0
 #endif
 
-typedef struct { // log data block paramter
+typedef struct { // log data block parameter
     unsigned int ucDeviceID;
     unsigned int ulDataLen;
     char *paucData;

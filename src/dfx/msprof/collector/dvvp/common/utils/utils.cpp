@@ -1181,7 +1181,7 @@ std::string Utils::CreateProfDir(uint64_t index, const std::string &title)
         std::to_string(std::chrono::duration_cast<std::chrono::nanoseconds>(timeSinceEpoch).count()) +
         std::to_string(analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw()));
     randStr.str("");
-    randLen = 8; // 8 : the lenght of the rand str
+    randLen = 8; // 8 : the length of the rand str
     const int32_t hashMod = 18; // change hashId to [A-R]
     for (int32_t idx = 0; idx < randLen; idx++) {
         randStr << static_cast<char>('A' + hashId % hashMod);
