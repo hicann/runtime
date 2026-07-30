@@ -96,7 +96,7 @@ int32_t RunningMode::CheckNeccessaryParams() const
                    inserter(moreReqParams, moreReqParams.begin()));
     if (!moreReqParams.empty()) {
         std::string reqParams = ConvertParamsSetToString(moreReqParams);
-        CmdLog::CmdErrorLog("The argument %s is neccessary when --%s is not empty", reqParams.c_str(),
+        CmdLog::CmdErrorLog("The argument %s is necessary when --%s is not empty", reqParams.c_str(),
                             preCheckParams_.c_str());
         return PROFILING_FAILED;
     }
@@ -815,7 +815,7 @@ int32_t SystemMode::ModeParamsCheck()
     }
 
     if (CheckNeccessaryParams() != PROFILING_SUCCESS) {
-        MSPROF_LOGE("[System Mode] Check neccessary params failed!");
+        MSPROF_LOGE("[System Mode] Check necessary params failed!");
         return PROFILING_FAILED;
     }
     if (!DataWillBeCollected()) {
@@ -1511,7 +1511,7 @@ int32_t RunningMode::HandleProfilingParams() const
     ConfigManager::instance()->GetVersionSpecificMetrics(aiCoreMetrics);
     int32_t ret = Platform::instance()->GetAicoreEvents(aiCoreMetrics, params_->ai_core_profiling_events);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("The intput of ai_core_metrics is invalid");
+        MSPROF_LOGE("The input of ai_core_metrics is invalid");
         return PROFILING_FAILED;
     }
     params_->ai_core_metrics = aiCoreMetrics;
