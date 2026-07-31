@@ -65,7 +65,7 @@ bash run.sh
 
 ```text
 [INFO]  After create event, current event status is 0.
-[INFO]  Applied resource successfully, beging assigning task.
+[INFO]  Applied resource successfully, begin assigning task.
 [INFO]  Begin a long task.
 [INFO]  0 is incompleted, 1 is completed.
 [INFO]  After record but before synchronize, current event status is 0.

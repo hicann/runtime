@@ -104,7 +104,7 @@ int32_t main(int argc, char const *argv[])
     // Call the Add operator
     CHECK_ERROR(aclnnAdd(workspaceAddr, workspaceSize, executor, stream));
 
-    // Wait syschronously for the task execution to complete
+    // Wait synchronously for the task execution to complete
     CHECK_ERROR(aclrtSynchronizeStream(stream));
 
     // Obtain the execution result of the operator and copy the result from the device memory to the host

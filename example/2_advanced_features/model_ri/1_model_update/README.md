@@ -49,7 +49,7 @@ bash run.sh
     - 调用aclmdlRICaptureTaskGrpBegin接口标记要更新的任务组的开始。
     - 调用aclmdlRICaptureTaskGrpEnd接口标注要更新的任务组结束，得到handle句柄用于后续更新。
     - 调用aclmdlRICaptureEnd接口结束捕获模式，并得到modelRI句柄。
-    - 调用aclmdlRIExecuteAsync接口异步执行执行模型推理。
+    - 调用aclmdlRIExecuteAsync接口异步执行模型推理。
     - 调用aclmdlRICaptureTaskUpdateBegin接口标记待更新任务的开始。
     - 调用aclmdlRICaptureTaskUpdateEnd接口标记待更新任务的结束。
     - 调用aclmdlRIDestroy接口销毁模型运行实例。

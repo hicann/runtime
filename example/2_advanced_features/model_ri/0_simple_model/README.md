@@ -48,7 +48,7 @@ bash run.sh
     - 调用aclmdlRICaptureThreadExchangeMode接口更换model的捕获模式。
     - 调用aclmdlRICaptureEnd接口结束捕获模式，并得到modelRI句柄。
     - 调用aclmdlRIDebugJsonPrint接口在维测场景下将模型运行实例信息以JSON格式导出到文件中。
-    - 调用aclmdlRIExecuteAsync接口异步执行执行模型推理。
+    - 调用aclmdlRIExecuteAsync接口异步执行模型推理。
     - 调用aclmdlRIDestroy接口销毁模型运行实例。
 - 内存管理
     - 调用aclrtMalloc接口申请Device上的内存。

@@ -74,7 +74,7 @@ bash run.sh
 [INFO]  Query device status success. deviceStatus: 0.
 [INFO]  RunMode is ACL_HOST.
 [INFO]  Get device resLimit success. VECTOR_CORE 1.
-[INFO]  Thr results (first 10 elements) of the kernel function:
+[INFO]  The results (first 10 elements) of the kernel function:
 [INFO]  Result: hostDst[0]: 0.000000 Expected value: 0.000000
 [INFO]  Result: hostDst[1]: 2.000000 Expected value: 2.000000
 ...

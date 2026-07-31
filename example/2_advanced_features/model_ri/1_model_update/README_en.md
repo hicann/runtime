@@ -49,7 +49,7 @@ Key features and interfaces in this sample:
     - Call aclmdlRICaptureTaskGrpBegin interface to mark the start of task group to update.
     - Call aclmdlRICaptureTaskGrpEnd interface to mark the end of task group to update, get handle for subsequent update.
     - Call aclmdlRICaptureEnd interface to end capture mode and get modelRI handle.
-    - Call aclmdlRIExecuteAsync interface to asynchronously execute model inference.
+    - Call aclmdlRIExecuteAsync interface to execute model inference asynchronously.
     - Call aclmdlRICaptureTaskUpdateBegin interface to mark the start of tasks to update.
     - Call aclmdlRICaptureTaskUpdateEnd interface to mark the end of tasks to update.
     - Call aclmdlRIDestroy interface to destroy model runtime instance.

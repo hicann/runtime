@@ -62,6 +62,7 @@ int main()
     INFO_LOG("End event timestamp: %ld.", time);
     CHECK_ERROR(aclrtEventElapsedTime(&useTime, startEvent, endEvent));
     INFO_LOG("The short task consume time %f ms.", useTime);
+    CHECK_ERROR(aclrtFree(numDevice));// 释放短任务分配的内存
 
     // 再做一个长耗时任务查看耗时
     CHECK_ERROR(aclrtMalloc((void **)&numDevice, size, ACL_MEM_MALLOC_HUGE_FIRST));

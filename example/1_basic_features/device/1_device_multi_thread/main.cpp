@@ -114,7 +114,7 @@ namespace {
         aclrtSynchronizeStream(stream);
         aclrtMemcpy(hostDst, DATA_SIZE, devDst, DATA_SIZE, ACL_MEMCPY_DEVICE_TO_HOST);
 
-        INFO_LOG("Thr results (first 10 elements) of the kernel function:");
+        INFO_LOG("The results (first 10 elements) of the kernel function:");
         for (int i = 0; i < 10; ++i) { // Display the first 10 elements
             INFO_LOG("Result: hostDst[%d]: %f Expected value: %f", i, hostDst[i], hostSrcA[i] + hostSrcB[i]);
         }
@@ -126,6 +126,7 @@ namespace {
         aclrtFree(devDst);
         aclrtFreeHost(hostSrcA);
         aclrtFreeHost(hostSrcB);
+        aclrtFreeHost(hostDst);
 
         aclrtDestroyStream(stream);
         aclrtResetDeviceForce(0);

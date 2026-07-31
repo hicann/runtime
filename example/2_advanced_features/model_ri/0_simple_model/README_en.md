@@ -48,7 +48,7 @@ Key features and interfaces in this sample:
     - Call aclmdlRICaptureThreadExchangeMode interface to change model capture mode.
     - Call aclmdlRICaptureEnd interface to end capture mode and get modelRI handle.
     - Call aclmdlRIDebugJsonPrint interface to export model runtime instance information in JSON format to file in debugging scenario.
-    - Call aclmdlRIExecuteAsync interface to asynchronously execute model inference.
+    - Call aclmdlRIExecuteAsync interface to execute model inference asynchronously.
     - Call aclmdlRIDestroy interface to destroy model runtime instance.
 - Memory Management
     - Call aclrtMalloc interface to allocate Device memory.
