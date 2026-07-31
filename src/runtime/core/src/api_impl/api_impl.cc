@@ -2750,29 +2750,6 @@ rtError_t ApiImpl::DevMallocCached(
     return curCtx->Device_()->Driver_()->DevMemAllocCached(devPtr, size, type, curCtx->Device_()->Id_(), moduleId);
 }
 
-rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
-{
-    RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
-
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    rtError_t error = curCtx->Device_()->GetDeviceStatus();
-    COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
-{
-    RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
-
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImpl::MemCopySync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
     const uint32_t checkKind)

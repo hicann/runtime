@@ -28,6 +28,9 @@
 
 namespace cce {
 namespace runtime {
+/* mem cacheable */
+#define MEM_CACHEABLE_BIT 41
+#define MEM_CACHEABLE_TYPE (0X1ULL << MEM_CACHEABLE_BIT)
 
 static constexpr uint32_t BuildMemTypeFlag(const uint32_t typeValue) { return 1U << typeValue; }
 
@@ -1527,40 +1530,28 @@ rtError_t NpuDriver::DevMemFreeForPctrace(const void* const dst)
 rtError_t NpuDriver::DevMemAllocCached(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId)
 {
+    TIMESTAMP_NAME(__func__);
+
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
-    if (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_ONLY) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1006, "Allocating memory with the cache attribute on the device",
-            "The policy of allocating only huge page memory",
-            "The policy of allocating only huge page memory conflicts with the policy of allocating the underlying "
-            "cache memory");
-        return RT_ERROR_INVALID_VALUE;
-    } else {
-        if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
-            RT_LOG(
-                RT_LOG_WARNING, "invalid size, current size=%" PRIu64 ", valid size range is [%d, %" PRId64 "].", size,
-                0, HUGE_PAGE_MEM_CRITICAL_VALUE);
-        }
-
-        NpuDriverRecord record(static_cast<uint16_t>(RT_PROF_DRV_API_DevMallocCached));
-        uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | MEM_CACHED |
-                           static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
-        drvFlag = FlagAddModuleId(drvFlag, moduleId);
-        const drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), drvFlag); // 20:align size
-        record.SaveRecord();
-
-        if (drvRet != DRV_ERROR_NONE) {
-            const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
-            const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
-            DRV_MALLOC_ERROR_PROCESS(
-                drvRet, moduleId,
-                "Call driver api halMemAlloc failed, drvRetCode=%d, drvDevId=%u,"
-                " size=%" PRIu64 "(bytes), type=%u, drvFlag=%#" PRIx64 ", %s.",
-                static_cast<int32_t>(drvRet), deviceId, size, type, drvFlag, errorStr.c_str());
-            return rtErrorCode;
-        }
+    RT_LOG(RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", memPolicy=%u.", deviceId, type, size, memPolicy);
+    if (memPolicy != RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY) {
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
+    uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_SVM_NORMAL) |
+                       static_cast<uint64_t>(MEM_CACHEABLE_TYPE) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
+    drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
+    if (drvRet != DRV_ERROR_NONE) {
+        const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
+        const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
+        DRV_MALLOC_ERROR_PROCESS(
+            drvRet, moduleId,
+            "[drv api] halMemAlloc failed: "
+            "memPolicy=%u, device_id=%u, type=%u, size=%" PRIu64 "(bytes), drvRetCode=%d, drvFlag=%" PRIu64 ", %s",
+            memPolicy, deviceId, type, size, static_cast<int32_t>(drvRet), drvFlag, errorStr.c_str());
+        return rtErrorCode;
+    }
     return RT_ERROR_NONE;
 }
 

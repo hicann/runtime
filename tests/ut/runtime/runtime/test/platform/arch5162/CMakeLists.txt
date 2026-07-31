@@ -58,7 +58,7 @@ set(runtimeut_src_task_list
 
 set(libruntime_src_files_include_for_arch5162
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
@@ -91,7 +91,8 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
-    ${TOP_DIR}/src/runtime/api/api_c_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/api_c_stub.cc
+    ${TOP_DIR}/src/runtime/api/api_c_arch5162.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/inner.cc
@@ -103,6 +104,8 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
 )
 
@@ -353,6 +356,7 @@ add_executable(runtime_utest_arch5162
     main.cc
     rt_utest_task_arch5162.cc
     rt_utest_task_execute_time_arch5162.cc
+    rt_utest_mem_arch5162.cc
 )
 
 target_compile_definitions(runtime_utest_arch5162 PUBLIC

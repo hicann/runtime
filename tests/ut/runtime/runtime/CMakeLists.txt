@@ -441,9 +441,11 @@ set(runtimeut_src_tiny_exclude_list
 )
 
 set(runtimeut_src_tiny_include_list
-    ${TOP_DIR}/src/runtime/api/api_c_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/api/api_c_stub.cc
+    ${TOP_DIR}/src/runtime/api/api_c_tiny.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_tiny_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_tiny.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc

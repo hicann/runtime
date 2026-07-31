@@ -61,7 +61,8 @@ set(libruntime_api_src_files
     ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_tiny_stub.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_stub.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_arch5162.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
     ${RUNTIME_DIR}/src/runtime/api/api_handle_guard.cc
     ${RUNTIME_DIR}/src/runtime/api/inner.cc
@@ -73,6 +74,8 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_stub.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_creator_c.cc
 )
 

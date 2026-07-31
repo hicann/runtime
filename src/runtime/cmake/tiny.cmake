@@ -159,7 +159,8 @@ set(libruntime_callback_files
 
 set(libruntime_src_files_include_for_tiny
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_stub.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_tiny_stub.cc
@@ -204,7 +205,8 @@ set(libruntime_api_src_files_exclude_for_tiny
 )
 
 set(libruntime_api_src_files_include_for_tiny
-    ${RUNTIME_DIR}/src/runtime/api/api_c_tiny_stub.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_tiny.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_stub.cc
 )
 
 set(libruntime_common_src_files

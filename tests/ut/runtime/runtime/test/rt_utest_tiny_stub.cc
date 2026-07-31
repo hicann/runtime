@@ -12,6 +12,7 @@
 #define protected public
 #define private public
 #include "runtime/rt.h"
+#include "rt_external_mem.h"
 #include "rts/rts.h"
 #include "rts_dqs.h"
 #include "context.hpp"
@@ -59,6 +60,8 @@
 #include "xpu_task_fail_callback_data_manager.h"
 #undef protected
 #undef private
+
+#include "rt_error_codes.h"
 
 using namespace cce::runtime;
 
@@ -1342,4 +1345,39 @@ TEST_F(TinyStubTest, xpu_task_fail_callback_manager_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = instance1.RegXpuTaskFailCallback("regName", reinterpret_cast<void*>(0x1));
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, rtMallocCached_NoContext_ContextNull)
+{
+    void* devPtr = nullptr;
+    rtError_t error = rtMallocCached(&devPtr, 1024, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY, DEFAULT_MODULEID);
+    EXPECT_EQ(error, ACL_ERROR_RT_CONTEXT_NULL);
+}
+
+TEST_F(TinyStubTest, FlushCache_BaseZero_InvalidValue)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.FlushCache(0U, 256U);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TinyStubTest, FlushCache_NoContext_ContextNull)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.FlushCache(0x1000U, 256U);
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(TinyStubTest, InvalidCache_BaseZero_InvalidValue)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.InvalidCache(0U, 256U);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TinyStubTest, InvalidCache_NoContext_ContextNull)
+{
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.InvalidCache(0x1000U, 256U);
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
 }
