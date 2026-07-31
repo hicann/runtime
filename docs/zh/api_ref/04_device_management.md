@@ -879,7 +879,7 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 <!-- npu="310p" id7 -->
-## 约束说明
+### 约束说明
 
 Atlas 推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
 <!-- end id7 -->
@@ -938,7 +938,7 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 <!-- npu="310p" id8 -->
-## 约束说明
+### 约束说明
 
 Atlas 推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
 <!-- end id8 -->

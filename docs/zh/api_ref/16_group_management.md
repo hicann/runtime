@@ -123,7 +123,7 @@ aclError  aclrtGetGroupCount(uint32_t *count)
 
 仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
 
-**acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice.接口释放计算设备。
+**acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放计算设备。
 
 在调用acl接口设置算力Group前，需先调用驱动提供的DCMI接口dcmi\_create\_capability\_group创建分组。若刷新分组（例如调用dcmi\_create\_capability\_group接口新增分组、调用dcmi\_delete\_capability\_group接口删除分组等），需重启业务进程。
 <!-- end id2 -->

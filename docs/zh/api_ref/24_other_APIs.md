@@ -26,6 +26,10 @@
 
 ## aclAppLog
 
+```c
+void aclAppLog(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, ...)
+```
+
 ### 产品支持情况
 
 <!-- npu="950" id1730 -->
@@ -60,12 +64,6 @@ acl接口还提供了ACL\_APP\_LOG宏，封装aclAppLog接口，推荐用户调�
 ```c
 #define ACL_APP_LOG(level, fmt, ...) \
     aclAppLog(level, __FUNCTION__, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-```
-
-### 函数原型
-
-```c
-void aclAppLog(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, ...)
 ```
 
 ### 参数说明

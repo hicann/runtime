@@ -4,13 +4,13 @@
 
 报错格式如下，占位符%s表示报错原因：
 
-```
+```text
 Failed to parse the binary file of the operator. Reason: %s.
 ```
 
 报错示例如下：
 
-```
+```text
 Failed to parse the binary file of the operator. Reason: The ELF section header address in the operator binary ELF file header cannot be empty.
 ```
 

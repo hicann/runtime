@@ -221,7 +221,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION  507050 | 内部任务trap异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_SEND_MSG  507051 | 数据入队过程中消息发送失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_COPY_DATA  507052 | 数据入队过程中内存拷贝失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| #define  ACL_ERROR_RT_DEVICE_MEM_ERROR  507053 | 出现内存UCE（uncorrect error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。 | 请参见aclrtGetMemUceInfo接口中的说明获取并修复内存UCE的错误虚拟地址。 |
+| #define  ACL_ERROR_RT_DEVICE_MEM_ERROR  507053 | 出现内存UCE（uncorrectable error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。 | 请参见aclrtGetMemUceInfo接口中的说明获取并修复内存UCE的错误虚拟地址。 |
 | #define  ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR  507054 | HBM比特ECC故障。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR  507055 | 多进程、多Device场景下，可能出现内存UCE错误。 | 由于当前Device访问的对端Device内存发生故障，用户需排查对端Device进程的错误信息。 |
 | #define  ACL_ERROR_RT_LINK_ERROR  507056 | 多Device场景下，两个Device之间的通信断链。 | 建议重试，若依然报错，则需检查两个Device之间的通信链路。 |

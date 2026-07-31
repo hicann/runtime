@@ -298,7 +298,7 @@ aclError aclrtCreateStream(aclrtStream *stream, uint32_t priority, uint32_t flag
 | --- | --- | --- |
 | stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 | priority | 输入 | 优先级。<br>该参数取值范围：[0, 7]，总共最多支持8个优先级，数字越小代表优先级越高，其中，0的优先级最高，7的优先级最低。如果设置的优先级超过取值范围，则就近修正为边界值。 |
-| flag | 输入 | Stream指针的flag。<br>flag参数值请参见“flag取值说明”。 |
+| flag | 输入 | Stream指针的flag。<br>flag参数值请参见C接口[aclrtCreateStreamWithConfig](06_stream_management.md#aclrtCreateStreamWithConfig)中的“flag取值说明”。 |
 
 ### 返回值说明
 
@@ -660,7 +660,7 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 
 注册Host内存地址。取消注册需调用[aclrtHostUnregister](11-02_host_memory_management.md#aclrtHostUnregister)接口。
 
-本接口为封装接口，仅适用于C++程序，接口内部调用C接口[aclrtHostRegister](11-02_host_memory_management.md#aclrtHostRegister)或[aclrtHostRegisterV2](11-02_host_memory_management.md#aclrtHostRegisterV2)。
+本接口为封装接口，仅适用于C++程序，接口内部调用C接口[aclrtHostRegister](#aclrtHostRegister)或[aclrtHostRegisterV2](11-02_host_memory_management.md#aclrtHostRegisterV2)。
 
 ### 参数说明
 
@@ -838,7 +838,7 @@ aclError aclrtMemAllocManaged(T **devPtr, size_t size, uint32_t flags = ACL_RT_M
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| ptr | 输出 | “已分配内存的指针”的指针，由于Host和Device虚拟地址统一编址，该参数不区分申请位置。 |
+| devPtr | 输出 | “已分配内存的指针”的指针，由于Host和Device虚拟地址统一编址，该参数不区分申请位置。 |
 | size | 输入 | 内存大小，单位Byte。<br>size不能为0，单个应用进程最大可申请3TB UVM类型的虚拟内存。 |
 | flag | 输入 | 内存标识。<br>当前flag仅支持设置为ACL_RT_MEM_ATTACH_GLOBAL，所对应数值为1。设置为ACL_RT_MEM_ATTACH_GLOBAL后，通过本接口申请的内存在Device和Host侧都可以被访问。<br>宏定义如下：<br>#define ACL_RT_MEM_ATTACH_GLOBAL (0x01U) |
 
@@ -1095,7 +1095,6 @@ aclError aclrtMallocHost(T **hostPtr, size_t size, aclrtMallocConfig *cfg = null
 | --- | --- | --- |
 | hostPtr | 输出 | “已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](25-02_Enumerations.md#aclrtMemMallocPolicy)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
 | cfg | 输入 | 内存配置信息。类型定义请参见[aclrtMallocConfig](25-04_Structs.md#aclrtMallocConfig)。 |
 
 ### 返回值说明

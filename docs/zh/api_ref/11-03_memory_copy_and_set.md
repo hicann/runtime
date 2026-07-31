@@ -252,8 +252,6 @@ aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *sr
 aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex)
 ```
 
-**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
-
 ### 产品支持情况
 
 <!-- npu="950" id3382 -->
@@ -321,8 +319,6 @@ aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *si
 ```c
 aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex, aclrtStream stream)
 ```
-
-**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
 
 ### 产品支持情况
 
@@ -393,8 +389,6 @@ aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_
 aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)
 ```
 
-**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
-
 ### 产品支持情况
 
 <!-- npu="950" id50 -->
@@ -463,8 +457,6 @@ aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *
 ```c
 aclError aclrtMemcpyBatchAsyncV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, aclrtStream stream)
 ```
-
-**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
 
 ### 产品支持情况
 

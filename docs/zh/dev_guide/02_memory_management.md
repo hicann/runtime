@@ -15,7 +15,7 @@
 
 以下是一段简单的示例代码。在示例代码中，两个张量从Host内存被拷贝到Device内存，在Device侧完成计算，再将结果从Device内存拷贝到Host内存：
 
-```
+```c
 int main(void)
 {
     int32_t deviceId = 0;
@@ -123,7 +123,7 @@ aclrtMemMallocPolicy的设计理念是把“页大小”“兜底策略”和“
 
 锁页内存可直接通过aclrtMallocHost接口申请，示例代码如下。如果需要在申请时指定内存的其他配置，例如自定义模块ID、配置VA（virtual address）一致性等，也可以使用aclrtMallocHostWithCfg接口申请。
 
-```
+```c
 // 资源初始化
 ......
 
@@ -152,7 +152,7 @@ if (hostPtr) (void)aclrtFreeHost(hostPtr);
 
 若使用malloc/mmap等内存管理接口申请Pageable内存，当前Runtime提供了aclrtHostRegisterV2接口，用于将Pageable内存转换为锁页内存，供Device访问。请注意，当OS内核版本为5.10或更低时，此方法会导致异常，此时应通过aclrtMallocHost接口申请锁页内存。
 
-```
+```c
 // 申请Pageable内存
 void *hostPtr = malloc(size);
 
@@ -183,7 +183,7 @@ Runtime提供了一套虚拟内存管理API，开发者可以更加精细化地�
 
 以下是一个虚拟内存的基本使用示例，申请好物理内存以及虚拟内存后，通过aclrtMapMem接口进行映射，即可通过虚拟地址访问对应的数据：
 
-```
+```c
 void SampleTest()
 {
     // 1. 查询内存申请粒度，并对size做对齐处理

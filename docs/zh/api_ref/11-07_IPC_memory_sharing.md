@@ -307,6 +307,10 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 
 设置IPC共享内存的属性信息。
 
+<!-- npu="A3" id3 -->
+对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口，且两个接口中的key必须保持一致。
+<!-- end id3 -->
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |

@@ -11,7 +11,7 @@
 - [`uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)`](#aclrtGetErrorCodeFromExceptionInfo)：获取异常信息中的错误码。
 - [`aclError aclrtPeekAtLastError(aclrtLastErrLevel level)`](#aclrtPeekAtLastError)：获取当前线程的Runtime（运行时管理模块）错误码，仅获取但不清空错误码。
 - [`aclError aclrtGetLastError(aclrtLastErrLevel level)`](#aclrtGetLastError)：获取当前线程的Runtime（运行时管理模块）错误码，获取后清空当前线程的错误码，这时在线程中无新增错误码之前，调用本接口获取到的是ACL\_SUCCESS。
-- [`aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize, size_t *retSize)`](#aclrtGetMemUceInfo)：获取内存UCE（uncorrect error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。
+- [`aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize, size_t *retSize)`](#aclrtGetMemUceInfo)：获取内存UCE（uncorrectable error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。
 - [`aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize)`](#aclrtMemUceRepair)：修复内存UCE的错误虚拟地址。
 - [`aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)`](#aclrtDeviceTaskAbort)：停止指定Device上的正在执行的任务，同时丢弃指定Device上已下发的任务。
 - [`aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);`](#aclrtGetErrorVerbose)：用于在发生设备故障后获取详细错误信息。此接口必须在获取故障事件之后，提交任务中止之前调用。
@@ -602,7 +602,7 @@ aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, 
 
 ### 功能说明
 
-获取内存UCE（uncorrect error，指系统硬件不能直接处理并恢复内存错误）的错误虚拟地址。
+获取内存UCE（uncorrectable error，指系统硬件不能直接处理并恢复内存错误）的错误虚拟地址。
 
 ### 参数说明
 

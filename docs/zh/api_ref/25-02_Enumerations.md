@@ -1582,7 +1582,7 @@ typedef enum aclrtMemAttr {
     ACL_HBM_MEM_P2P_HUGE,    // 用于Device间数据复制的大页内存，内存申请粒度为2M，不足2M的倍数，向上2M对齐
     ACL_HBM_MEM_P2P_NORMAL,  // 用于Device间数据复制的普通内存
     ACL_HBM_MEM_HUGE1G,      // 大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
-    ACL_HBM_MEM_P2P_HUGE1G   // 用于Device间数据复制的大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
+    ACL_HBM_MEM_P2P_HUGE1G,  // 用于Device间数据复制的大页内存，内存申请粒度为1G，不足1G的倍数，向上1G对齐
 
     /* 以上选项兼容旧版本，需由用户根据硬件内存（DDR、HBM）选择相应的内存属性选项 */
     /* 以下选项由接口内部根据底层硬件内存自动选择DDR或HBM，用户无需关注硬件细节，建议使用以下选项 */
@@ -2332,7 +2332,7 @@ typedef enum {
 typedef enum {
     ACL_TDT_QUEUE_ROUTE_QUERY_SRC = 0,         // 指定为只根据源队列ID匹配查询
     ACL_TDT_QUEUE_ROUTE_QUERY_DST = 1,         // 指定为只根据目标队列ID匹配查询
-    ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST = 2  // 指定为同时根据源、目标队列ID匹配查询
+    ACL_TDT_QUEUE_ROUTE_QUERY_SRC_AND_DST = 2,  // 指定为同时根据源、目标队列ID匹配查询
     ACL_TDT_QUEUE_ROUTE_QUERY_ABNORMAL = 100   // 指定为查询异常路由
 } acltdtQueueRouteQueryMode;
 ```
