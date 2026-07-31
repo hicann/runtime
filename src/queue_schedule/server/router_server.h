@@ -103,7 +103,7 @@ private:
     BqsStatus ParseBindUnbindMsg() const;
 
     /**
-     * Get relation detail infomation from mbuff, including (qsRouterHeadPtr_ aicpuRspHead_ subEventId_
+     * Get relation detail information from mbuff, including (qsRouterHeadPtr_ aicpuRspHead_ subEventId_
      *                                                       qsRouterQueryPtr_ qsRouteListPtr_)
      * @return BQS_STATUS_OK: success, other: failed.
      */

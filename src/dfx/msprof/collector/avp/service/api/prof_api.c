@@ -126,8 +126,8 @@ AVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const ch
 
 /**
  * @brief return hash id of hash info
- * @param [in] hashInfo: infomation to be hashed
- * @param [in] length: the length of infomation to be hashed
+ * @param [in] hashInfo: information to be hashed
+ * @param [in] length: the length of information to be hashed
  * @return hash id
  */
 AVP_PROF_API uint64_t MsprofGetHashId(const char *hashInfo, size_t length)

@@ -214,7 +214,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtDeviceR
 
 /**
  * @ingroup dvrt_dev
- * @brief get total device infomation.
+ * @brief get total device information.
  * @param [in] devId   the device id
  * @param [in] type     limit type RT_LIMIT_TYPE_LOW_POWER_TIMEOUT=0
  * @param [in] val    limit value

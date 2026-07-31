@@ -3909,7 +3909,7 @@ ACL_FUNC_VISIBILITY aclError aclrtGetEventAvailNum(uint32_t* eventCount);
 
 /**
  * @ingroup AscendCL
- * @brief get device infomation.
+ * @brief get device information.
  * @param [in] deviceId  the device id
  * @param [in] attr      device attr
  * @param [out] value    the device info

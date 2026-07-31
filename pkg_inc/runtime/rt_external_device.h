@@ -217,7 +217,7 @@ RTS_API rtError_t rtGetDevMsg(rtGetDevMsgType_t getMsgType, rtGetMsgCallback cal
 
 /**
  * @ingroup dvrt_dev
- * @brief get device infomation.
+ * @brief get device information.
  * @param [in] device   the device id
  * @param [in] moduleType   module type
                typedef enum {
@@ -317,7 +317,7 @@ RTS_API rtError_t rtGetPairPhyDevicesInfo(uint32_t devId, uint32_t otherDevId, i
 
 /**
  * @ingroup dvrt_dev
- * @brief get capability infomation.
+ * @brief get capability information.
  * @param [in] featureType  feature type
  * @param [in] featureInfo  info type
  * @param [out] val  the capability info RT_CAPABILITY_SUPPORT or RT_CAPABILITY_NOT_SUPPORT
@@ -327,7 +327,7 @@ RTS_API rtError_t rtGetRtCapability(rtFeatureType_t featureType, int32_t feature
 
 /**
  * @ingroup dvrt_dev
- * @brief get phy device infomation.
+ * @brief get phy device information.
  * @param [int] phyId        the physic Id
  * @param [int] moduleType   module type
  * @param [int] infoType     info type

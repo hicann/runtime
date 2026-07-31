@@ -96,7 +96,7 @@ int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, in
             MSPROF_LOGE("Failed to check soc pmu events, type: %u, event: %s", static_cast<uint32_t>(eventType),
                 registerList[i].c_str());
             CmdLog::CmdErrorLog("The npu-events[%s] is invalid or exceeds the specified length, "
-                "please check ERROR infomation in host plog.", params_->npuEvents.c_str());
+                "please check ERROR information in host plog.", params_->npuEvents.c_str());
             return MSPROF_DAEMON_ERROR;
         }
     }

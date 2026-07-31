@@ -180,7 +180,7 @@ TEST_F(StarsTaskTest, StreamSwitch)
     std::vector<rtCondition_t> conds = {RT_EQUAL, RT_NOT_EQUAL,    RT_GREATER, RT_GREATER_OR_EQUAL,
                                         RT_LESS,  RT_LESS_OR_EQUAL};
     // stars cond op is not same as runtime.
-    // when condition is true, it jump to end adn do nothing, but runtime is need jump to true stream.
+    // when condition is true, it jump to end and do nothing, but runtime is need jump to true stream.
     std::vector<rtStarsCondIsaBranchFunc3_t> expectStarsConds = {
         RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE,
         RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT};
@@ -218,7 +218,7 @@ TEST_F(StarsTaskTest, StreamSwitchEx)
                                         RT_LESS,  RT_LESS_OR_EQUAL};
 
     // stars cond op is not same as runtime.
-    // when condition is true, it jump to end adn do nothing, but runtime is need jump to true stream.
+    // when condition is true, it jump to end and do nothing, but runtime is need jump to true stream.
     std::vector<rtStarsCondIsaBranchFunc3_t> expectStarsConds = {
         RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE,
         RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT};

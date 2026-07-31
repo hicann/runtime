@@ -215,7 +215,7 @@ int32_t DynProfThread::StopProfTask()
 }
 
 /**
- * @brief Save device infomation when user set device
+ * @brief Save device information when user set device
  */
 void DynProfThread::SaveDevicesInfo(DynProfDeviceInfo data)
 {

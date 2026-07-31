@@ -119,7 +119,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSetTsD
 
 /**
  * @ingroup rts_device
- * @brief get device infomation.
+ * @brief get device information.
  * @param [in] device the device id
  * @param [in] attr device attr
  * @param [out] val   the device info

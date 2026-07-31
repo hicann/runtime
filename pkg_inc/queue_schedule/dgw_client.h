@@ -222,7 +222,7 @@ struct ReDeployConfig {
 
 // config info, group config or routes config
 struct ConfigInfo {
-    ConfigCmd cmd;               // query mode, user donot need fill this param
+    ConfigCmd cmd;               // query mode, user don’t need fill this param
     union {
         GroupConfig groupCfg;    // group config
         RoutesConfig routesCfg;  // routes config

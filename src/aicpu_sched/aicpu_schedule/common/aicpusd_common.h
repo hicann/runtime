@@ -179,7 +179,7 @@ struct AicpuPrepareInfo {
     uint32_t outputAddrNum;     // the address number for model output
     uint64_t outputAddrList;    // the address list of data pointers for model output
     uint64_t outputIndexList;   // the index list for mbuf data pointers to copy to outputAddrList sequential
-    uint32_t outputMbufNum;     // the number of mbuf for model ouput
+    uint32_t outputMbufNum;     // the number of mbuf for model output
     uint64_t outDataSizeList;   // the size list of mbuf allocated for model output
 
     uint32_t inQueueNum;        // queue number of queue in the inQueueIdList
