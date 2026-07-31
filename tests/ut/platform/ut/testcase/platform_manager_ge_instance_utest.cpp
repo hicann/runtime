@@ -87,6 +87,66 @@ TEST_F(PlatformManagerGeUTest, platform_ge_instance_kirin9030)
     EXPECT_EQ(ret3, 0U);
 }
 
+TEST_F(PlatformManagerGeUTest, platform_ge_instance_kirin_dev_0000)
+{
+    PlatformInfoManager& ge_instance = PlatformInfoManager::GeInstance();
+    std::string soc_version = "KirinDev0000";
+    ge_instance.InitRuntimePlatformInfos(soc_version);
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    uint32_t ret1 = ge_instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    EXPECT_EQ(ret1, 0U);
+    uint32_t ret2 = ge_instance.GetRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret2, 0U);
+    uint32_t ret3 = ge_instance.UpdateRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret3, 0U);
+}
+
+TEST_F(PlatformManagerGeUTest, platform_ge_instance_kirin_dev_0001)
+{
+    PlatformInfoManager& ge_instance = PlatformInfoManager::GeInstance();
+    std::string soc_version = "KirinDev0001";
+    ge_instance.InitRuntimePlatformInfos(soc_version);
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    uint32_t ret1 = ge_instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    EXPECT_EQ(ret1, 0U);
+    uint32_t ret2 = ge_instance.GetRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret2, 0U);
+    uint32_t ret3 = ge_instance.UpdateRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret3, 0U);
+}
+
+TEST_F(PlatformManagerGeUTest, platform_ge_instance_kirin_dev_0002)
+{
+    PlatformInfoManager& ge_instance = PlatformInfoManager::GeInstance();
+    std::string soc_version = "KirinDev0002";
+    ge_instance.InitRuntimePlatformInfos(soc_version);
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    uint32_t ret1 = ge_instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    EXPECT_EQ(ret1, 0U);
+    uint32_t ret2 = ge_instance.GetRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret2, 0U);
+    uint32_t ret3 = ge_instance.UpdateRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret3, 0U);
+}
+
+TEST_F(PlatformManagerGeUTest, platform_ge_instance_kirin_dev_0003)
+{
+    PlatformInfoManager& ge_instance = PlatformInfoManager::GeInstance();
+    std::string soc_version = "KirinDev0003";
+    ge_instance.InitRuntimePlatformInfos(soc_version);
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    uint32_t ret1 = ge_instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    EXPECT_EQ(ret1, 0U);
+    uint32_t ret2 = ge_instance.GetRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret2, 0U);
+    uint32_t ret3 = ge_instance.UpdateRuntimePlatformInfosByDevice(0, platform_infos);
+    EXPECT_EQ(ret3, 0U);
+}
+
 TEST_F(PlatformManagerGeUTest, platform_ge_instance_InitRuntimePlatformInfos_success)
 {
     PlatformInfoManager& ge_instance = PlatformInfoManager::GeInstance();

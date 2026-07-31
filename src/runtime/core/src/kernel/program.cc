@@ -1423,7 +1423,7 @@ rtError_t Program::FreeSoAndNameByDeviceId(const uint32_t deviceId)
 }
 
 rtError_t BinaryMemAdvise(
-    void* const devMem, const uint32_t devSize, rtAdviseMemType adviseType, const Device* const device,
+    void* const devMem, const uint64_t devSize, rtAdviseMemType adviseType, const Device* const device,
     const bool readonly)
 {
     if (!readonly) {
@@ -1433,18 +1433,17 @@ rtError_t BinaryMemAdvise(
     const uint32_t devId = device->Id_();
     Driver* const curDrv = device->Driver_();
 
-    rtError_t error =
-        curDrv->MemAdvise(devMem, static_cast<uint64_t>(devSize), static_cast<uint32_t>(adviseType), devId);
+    rtError_t error = curDrv->MemAdvise(devMem, devSize, static_cast<uint32_t>(adviseType), devId);
     // for compatibility between new and old packages, do not handle RT_ERROR_DRV_NOT_SUPPORT and RT_ERROR_DRV_INPUT.
     if ((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT) && (error != RT_ERROR_DRV_INPUT)) {
         RT_LOG(
-            RT_LOG_ERROR, "advise memory, error=%u, dev_mem=%p, dev_size=%u, advise_type=%d, device_id=%u.", error,
-            devMem, devSize, adviseType, devId);
+            RT_LOG_ERROR, "advise memory, retCode=%#x, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=%d, device_id=%u.",
+            static_cast<uint32_t>(error), devMem, devSize, adviseType, devId);
         return error;
     }
 
     RT_LOG(
-        RT_LOG_INFO, "advise memory, dev_mem=%p, dev_size=%u, advise_type=%d, device_id=%u.", devMem, devSize,
+        RT_LOG_INFO, "advise memory, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=%d, device_id=%u.", devMem, devSize,
         adviseType, devId);
     return RT_ERROR_NONE;
 }

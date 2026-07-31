@@ -1126,9 +1126,6 @@ rtError_t RawDevice::Start()
     InitResource();
 
 #ifndef CFG_DEV_PLATFORM_PC
-    error = Runtime::Instance()->InitOpExecTimeout(this);
-    COND_PROC_GOTO_MSG_INNER((error != RT_ERROR_NONE), ERROR_STOP, ;
-                             , "Failed to init op execute timeout, error_code=%#x.", static_cast<uint32_t>(error));
     if (GetDevProperties().ringbufSize != 0) {
         deviceErrorProc_ = new (std::nothrow) DeviceErrorProc(this, GetDevProperties().ringbufSize);
         COND_GOTO_MSG_OUTER(

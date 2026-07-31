@@ -67,7 +67,7 @@ struct CpuKernelInfo {
 };
 
 rtError_t BinaryMemAdvise(
-    void* const devMem, const uint32_t devSize, rtAdviseMemType adviseType, const Device* const device,
+    void* const devMem, const uint64_t devSize, rtAdviseMemType adviseType, const Device* const device,
     const bool readonly);
 
 class Program : public NoCopy {

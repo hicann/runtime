@@ -24,8 +24,11 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::config;
 
 const std::string ASCEND_HAL_LIB = "libascend_hal.so";
-constexpr uint32_t SUPPORT_OSC_FREQ_API_VERSION = 0x071905;
-constexpr uint32_t SUPPORT_ADPROF_VERSION = 0x72316;
+
+bool IsDrvApiVersionSupport(DrvFunctionVersion version)
+{
+    return Platform::instance()->DrvGetApiVersion() >= static_cast<uint32_t>(version);
+}
 
 template <class T>
 inline T LoadDlsymApi(VOID_PTR hanle, const std::string &name)
@@ -58,7 +61,7 @@ int32_t Platform::Init()
         isGeneralServer_ = true;
         MSPROF_LOGI("Ascend hal library is unavailable, running as general server scenario.");
     }
-    if (DrvGetApiVersion() >= SUPPORT_OSC_FREQ_API_VERSION) {
+    if (IsDrvApiVersionSupport(OSC_FREQ_API_VERSION)) {
 #ifndef CPU_CYCLE_NO_SUPPORT
         enableHostOscFreq_ = analysis::dvvp::driver::DrvGetHostFreq(hostOscFreq_);
 #else
@@ -182,7 +185,7 @@ std::string Platform::PlatformGetDeviceOscFreq(uint32_t deviceId, const std::str
 {
     std::string deviceOscFreq;
     bool enableDeviceOscFreq = false;
-    if (DrvGetApiVersion() >= SUPPORT_OSC_FREQ_API_VERSION) {
+    if (IsDrvApiVersionSupport(OSC_FREQ_API_VERSION)) {
         enableDeviceOscFreq = analysis::dvvp::driver::DrvGetDeviceFreq(deviceId, deviceOscFreq);
     }
 
@@ -569,7 +572,7 @@ bool Platform::CheckIfSupportAdprof(uint32_t deviceId) const
         return false;
     }
 
-    if (DrvGetApiVersion() < SUPPORT_ADPROF_VERSION
+    if (!IsDrvApiVersionSupport(ADPROF_API_VERSION)
 #ifndef BUILD_PROFILING_OPEN_PROJECT
         || GetPlatformType() == CHIP_MINI
 #endif // BUILD_PROFILING_OPEN_PROJECT

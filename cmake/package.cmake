@@ -376,6 +376,12 @@ install(DIRECTORY ${RUNTIME_DIR}/src/platform/platform_config/kirin/
     COMPONENT npu-runtime
 )
 
+install(DIRECTORY ${RUNTIME_DIR}/src/platform/platform_config/kirin-dev/
+    DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/data/platform_config
+    ${INSTALL_OPTIONAL}
+    COMPONENT npu-runtime
+)
+
 install(FILES
     ${PROTOBUF_HOST_STATIC_FINAL_PATH}
     DESTINATION ${INSTALL_DIR}

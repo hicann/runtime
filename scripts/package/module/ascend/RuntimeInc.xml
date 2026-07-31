@@ -339,6 +339,10 @@
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="KirinX90.ini" install_mod="440" entity="true"/>
         <file value="Kirin9030.ini" install_mod="440" entity="true"/>
+        <file value="KirinDev0000.ini" install_mod="440" entity="true"/>
+        <file value="KirinDev0001.ini" install_mod="440" entity="true"/>
+        <file value="KirinDev0002.ini" install_mod="440" entity="true"/>
+        <file value="KirinDev0003.ini" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/conf" install_path="$(TARGET_ENV)/conf" install_type="all">
         <file value="ascend_package_load.ini" install_mod="444" entity="true"/>

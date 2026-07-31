@@ -57,6 +57,31 @@ private:
     HalEschedCreateGrpExFunc halEschedCreateGrpEx_{nullptr};
 };
 
+// Driver hal API version (__HAL_API_VER_*) in which each feature became available. The value is the
+// minimum version that supports the feature, so IsDrvApiVersionSupport() is a single ">=" compare.
+// To gate a new feature on the driver version, add one enumerator here with the version it landed in
+// -- no new query function is needed.
+enum DrvFunctionVersion : uint32_t {
+    // Host/device oscillator frequency query (DrvGetHostFreq / DrvGetDeviceFreq).
+    OSC_FREQ_API_VERSION = 0x071905,
+    // adprof driver channel.
+    ADPROF_API_VERSION = 0x072316,
+    // aicpu channel.
+    DAVID_AICPU_SAMPLE_PERIOD = 0x072419,
+    // SMMU DFX TLV parameter (SOC_PMU_SMMU_DFX_CFG). Older drivers do not understand the TLV, so the
+    // segment is dropped.
+    SMMU_DFX_API_VERSION = 0x07241a,
+    // Biu perf data loss report (BiuProfileConfigTV2::reportDataLoss). Older drivers fall back to
+    // BiuProfileConfigT. Same version as SMMU DFX today, but a separate feature -- kept separate so
+    // each call site says which capability it needs.
+    BIU_REPORT_DATA_LOSS_API_VERSION = 0x07241a,
+};
+
+// Whether the running driver supports the given feature. Not cached: DrvGetApiVersion() returns 0
+// while libascend_hal.so is not loaded yet (general-server scenario, or any call before
+// Platform::Init()), and caching that 0 would disable every feature for the rest of the process.
+bool IsDrvApiVersionSupport(DrvFunctionVersion version);
+
 constexpr uint16_t QOS_STREAM_NAME_MAX_LENGTH = 256;
 struct QosProfileInfo {
     uint32_t devId;     // hal接口需要的字段

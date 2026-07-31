@@ -31,6 +31,8 @@ typedef enum tagRtArchType {
     ARCH_M510 = 14, /* MC62CM12A */
     ARCH_L300 = 15, /* KirinX90 */
     ARCH_L311 = 16, /* Kirin9030 */
+    ARCH_L510 = 17, /* KirinDev0000 */
+    ARCH_L516 = 18, /* KirinDev0001 & KirinDev0002 & KirinDev0003 */
     ARCH_END,
 } rtArchType_t;
 

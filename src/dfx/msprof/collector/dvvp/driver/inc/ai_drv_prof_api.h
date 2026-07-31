@@ -335,9 +335,20 @@ using InstrProfileConfigT = struct TagInstrProfileConfig {
 using BiuProfileConfigT = struct TagBiuProfileConfig {
     uint32_t period;
     uint32_t biuPcSamplingMode;  // 0: biu instr mode, 1: pc sampling
-    uint32_t groupType;           // 0: aic, 1: aiv0, 2: aiv1
-    uint32_t groupNo;             // group number
+    uint32_t groupType;          // 0: aic, 1: aiv0, 2: aiv1
+    uint32_t groupNo;            // group number
 };
+
+#pragma pack(push)
+#pragma pack(1)
+using BiuProfileConfigTV2 = struct TagBiuProfileConfigV2 {
+    uint32_t period;
+    uint32_t biuPcSamplingMode;  // 0: biu instr mode, 1: pc sampling
+    uint32_t groupType;          // 0: aic, 1: aiv0, 2: aiv1
+    uint32_t groupNo;            // group number
+    bool reportDataLoss;         // if report data loss
+};
+#pragma pack(pop)
 
 using TsHwtsProfileConfigT = struct TagTsHwtsProfileConfig {
     uint32_t tag; // 0-enable immediately, 1-enable delay
@@ -524,6 +535,10 @@ int32_t DrvStart(uint32_t profDeviceId, AI_DRV_CHANNEL profChannel, prof_start_p
 
 int32_t DrvStop(int32_t profDeviceId,
             AI_DRV_CHANNEL profChannel);
+
+// Dedicated stop for biu perf: when the driver returns the data loss status code (0x916), only log
+// the error and still return success, without affecting the shared DrvStop behavior of other channels.
+int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel);
 
 int32_t DrvChannelRead(int32_t profDeviceId,
                    AI_DRV_CHANNEL profChannel,

@@ -44,6 +44,10 @@ typedef enum tagRtChipType {
     CHIP_EXT_BEGIN = 200,      /* 扩展芯片类型起始边界 */
     CHIP_X90 = CHIP_EXT_BEGIN, /* KirinX90 */
     CHIP_9030,                 /* Kirin9030 */
+    CHIP_DEV_0000,             /* KirinDev0000 */
+    CHIP_DEV_0001,             /* KirinDev0001 */
+    CHIP_DEV_0002,             /* KirinDev0002 */
+    CHIP_DEV_0003,             /* KirinDev0003 */
     CHIP_EXT_END               /* 扩展芯片类型结束边界 */
 } rtChipType_t;
 
