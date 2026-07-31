@@ -2,7 +2,7 @@
 
 ## 1 系统架构总览
 
-**功能概述**：CANN Runtime 是华为昇腾 AI 处理器的运行时组件，提供设备管理、任务调度、内存管理、内核执行等核心功能，是上层AI计算框架（如 PyTorch, Mindspore, Tensorflow）和加速库（如  算子库、通信库、领域加速库、图引擎等）与底层驱动之间的桥梁。
+**功能概述**：CANN Runtime 是华为昇腾 AI 处理器的运行时组件，提供设备管理、任务调度、内存管理、内核执行等核心功能，是上层AI计算框架（如 PyTorch, MindSpore, TensorFlow）和加速库（如  算子库、通信库、领域加速库、图引擎等）与底层驱动之间的桥梁。
 
 ### 1.1 Runtime逻辑架构图
 
@@ -347,7 +347,7 @@ classDiagram
 - NPU任务快速切换
 - 容错的长时运行任务
 
-![](figures/snapshot_senario.svg)
+![](figures/snapshot_scenario.svg)
 
 ### 2.3 Fusion（任务融合）
 

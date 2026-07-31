@@ -168,7 +168,8 @@ flowchart TD
 **位置**：`feature/fusion/fusion_c.cc:418`
 
 **职责**：
-1. 预处理子任务，该函数内涉及各个子任务的处理函数逻辑，包含AI Cpu、AI Core和CCU等子任务的处理模块，具体处理逻辑根据传参中的子任务搭配类型和子任务携带信息进行必要字段的获取和预处理（调用 `FusionKernelTaskPreProc`）
+
+1. 预处理子任务，该函数内涉及各个子任务的处理函数逻辑，包含AI CPU、AI Core和CCU等子任务的处理模块，具体处理逻辑根据传参中的子任务搭配类型和子任务携带信息进行必要字段的获取和预处理（调用 `FusionKernelTaskPreProc`）
 2. 使用流上资源分配 TaskInfo
 3. 处理融合算子任务，在各类子任务的必要字段信息处理完毕后，进行Fusion总体任务的字段初始化和赋值（调用 `FusionKernelTaskProc`）
 4. 加载参数，具体为将rtFusionLaunch接口入参传入的args数据加载到device侧，便于算子执行时的访问（调用 `LoadArgsInfo`）
