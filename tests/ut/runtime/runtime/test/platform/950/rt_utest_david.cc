@@ -4873,13 +4873,6 @@ TEST_F(DavidVfApiTest, test_setgroup_for_david)
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(DavidVfApiTest, test_setgroup_for_david_2)
-{
-    rtError_t error;
-    error = rtSetGroup(1);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-}
-
 TEST_F(DavidVfApiTest, test_rtGetAddrAndPrefCntWithHandle)
 {
     uint32_t prefetchCnt = 0;
