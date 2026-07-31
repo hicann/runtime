@@ -297,22 +297,13 @@ rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
 
 Context* ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 {
-    static bool setGroupFlag = IS_SUPPORT_CHIP_FEATURE(
-        Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO);
-
     Context* const curCtx = InnerThreadLocalContainer::GetCurCtx();
     if (curCtx != nullptr) {
-        if (setGroupFlag) {
-            procFlag.Set(true);
-        }
         return curCtx;
     }
 
     RefObject<Context*>* const curRef = InnerThreadLocalContainer::GetCurRef();
     if (curRef != nullptr) {
-        if (setGroupFlag) {
-            procFlag.Set(true);
-        }
         return curRef->GetPrimaryCtxCallBackFlag() ? curRef->GetVal(false) : curRef->GetVal();
     }
 
@@ -334,9 +325,6 @@ Context* ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
         if ((deviceId == defaultDeviceId) && (rtInstance->HaveDevice())) {
             const rtError_t error = SetDevice(defaultDeviceId);
             if (error == RT_ERROR_NONE) {
-                if (setGroupFlag) {
-                    procFlag.Set(true);
-                }
                 return InnerThreadLocalContainer::GetCurRef()->GetVal();
             }
         }
@@ -4105,10 +4093,6 @@ rtError_t ApiImpl::ContextCreate(Context** const inCtx, const int32_t devId)
     RT_LOG(RT_LOG_INFO, "drv devId=%d.", devId);
     Runtime* const rt = Runtime::Instance();
     rtError_t error = RT_ERROR_NONE;
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO)) {
-        procFlag.Set(true);
-    }
 
     uint32_t tsId;
     int32_t devCnt = 0;

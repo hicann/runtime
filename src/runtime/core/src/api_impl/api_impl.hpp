@@ -799,7 +799,6 @@ public:
     rtError_t StreamRecover(Stream* const stm) override;
     rtError_t StreamTaskClean(Stream* const stm) override;
 
-    bool isInProc() { return procFlag.Value(); }
     Context* CurrentContext(const bool isNeedSetDevice = true, int32_t deviceId = DEFAULT_DEVICE_ID);
     // cmo addr task
     rtError_t GetCmoDescSize(size_t* size) override;
@@ -865,7 +864,6 @@ private:
     rtError_t GetHostAicpuDeviceInfo(const uint32_t deviceId, const int32_t featureType, int32_t* const val);
     rtError_t GetStreamTimeoutSnapshotMsg();
     rtError_t AiCpuTaskSupportCheck();
-    Atomic<bool> procFlag{false};
     rtError_t ResetDeviceForce(const int32_t devId);
     rtError_t CheckCurCtxValid(const int32_t devId);
     virtual rtError_t GetCaptureEvent(

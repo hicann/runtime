@@ -620,8 +620,7 @@ rtError_t RawDevice::Init()
     devCapInfo_.ts_group_number = capabilityInfo.ts_group_number;
     devCapInfo_.sdma_reduce_kind = capabilityInfo.sdma_reduce_kind;
 
-    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO) ||
-        IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_THREAD_LOCAL)) {
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_THREAD_LOCAL)) {
         error = GroupInfoSetup();
         ERROR_GOTO(error, L2_FREE, "Failed to get group info.");
         driver_->SetVfId(GetVfId());
