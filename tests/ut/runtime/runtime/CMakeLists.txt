@@ -253,6 +253,10 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirinx90/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirin9030/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/kirin_dev_0000/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/kirin_dev_0001/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/kirin_dev_0002/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/kirin_dev_0003/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
 )
 

@@ -227,6 +227,70 @@ TEST_F(PlatformManagerUTest, platform_instance_009)
     EXPECT_EQ(aicore_num, 1);
 }
 
+TEST_F(PlatformManagerUTest, platform_instance_010)
+{
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo();
+    EXPECT_EQ(ret, 0U);
+    std::string soc_version = "KirinDev0000";
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    auto fixpipe_map = optional_infos.GetFixPipeDtypeMap();
+    uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
+    uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
+    EXPECT_EQ(vector_core_num, 4);
+    EXPECT_EQ(aicore_num, 4);
+}
+
+TEST_F(PlatformManagerUTest, platform_instance_011)
+{
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo();
+    EXPECT_EQ(ret, 0U);
+    std::string soc_version = "KirinDev0001";
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    auto fixpipe_map = optional_infos.GetFixPipeDtypeMap();
+    uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
+    uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
+    EXPECT_EQ(vector_core_num, 5);
+    EXPECT_EQ(aicore_num, 5);
+}
+
+TEST_F(PlatformManagerUTest, platform_instance_012)
+{
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo();
+    EXPECT_EQ(ret, 0U);
+    std::string soc_version = "KirinDev0002";
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    auto fixpipe_map = optional_infos.GetFixPipeDtypeMap();
+    uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
+    uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
+    EXPECT_EQ(vector_core_num, 1);
+    EXPECT_EQ(aicore_num, 1);
+}
+
+TEST_F(PlatformManagerUTest, platform_instance_013)
+{
+    PlatformInfoManager& instance = PlatformInfoManager::Instance();
+    uint32_t ret = instance.InitializePlatformInfo();
+    EXPECT_EQ(ret, 0U);
+    std::string soc_version = "KirinDev0003";
+    PlatFormInfos platform_infos;
+    OptionalInfos optional_infos;
+    (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+    auto fixpipe_map = optional_infos.GetFixPipeDtypeMap();
+    uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
+    uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
+    EXPECT_EQ(vector_core_num, 5);
+    EXPECT_EQ(aicore_num, 5);
+}
+
 TEST_F(PlatformManagerUTest, platform_instance_Trim)
 {
     PlatformInfoManager& instance = PlatformInfoManager::Instance();

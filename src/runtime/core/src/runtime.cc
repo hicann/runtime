@@ -855,6 +855,18 @@ rtError_t Runtime::GetSocVersionByHardwareVer(int64_t hardwareVersion, int64_t a
         case CHIP_9030:
             socVersion_ = "Kirin9030";
             break;
+        case CHIP_DEV_0000:
+            socVersion_ = "KirinDev0000";
+            break;
+        case CHIP_DEV_0001:
+            socVersion_ = "KirinDev0001";
+            break;
+        case CHIP_DEV_0002:
+            socVersion_ = "KirinDev0002";
+            break;
+        case CHIP_DEV_0003:
+            socVersion_ = "KirinDev0003";
+            break;
         default:
             socVersion_ = "";
             break;

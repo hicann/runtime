@@ -126,6 +126,10 @@ macro(runtime_platform_kirin_obj target_name)
     add_library(runtime_platform_kirin OBJECT
         ${RUNTIME_DIR}/src/runtime/config/kirinx90/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/kirin9030/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirin_dev_0000/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirin_dev_0001/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirin_dev_0002/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirin_dev_0003/dev_info_reg.cc
     )
 
     target_include_directories(runtime_platform_kirin PRIVATE

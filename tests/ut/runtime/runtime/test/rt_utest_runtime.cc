@@ -522,6 +522,34 @@ TEST_F(RuntimeTest, SocTypeByChipType)
     EXPECT_NE(rt.GetSocVersion(), "");
 }
 
+TEST_F(RuntimeTest, SocTypeByChipType_kirin)
+{
+    Runtime rt; // no init
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xc800))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "KirinX90");
+
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xc900))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "Kirin9030");
+
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xca00))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "KirinDev0000");
+
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xcb00))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "KirinDev0001");
+
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xcc00))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "KirinDev0002");
+
+    rt.SetChipType(static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0xcd00))));
+    rt.GetSocVersionByHardwareVer(0, 0, 0);
+    EXPECT_EQ(rt.GetRawSocVersion(), "KirinDev0003");
+}
+
 extern "C" {
 int TsdOpenExStub(uint32_t a, uint32_t b, uint32_t c) { return 0; }
 int TsdOpenStub(uint32_t a, uint32_t b) { return 0; }

@@ -81,6 +81,22 @@ TEST_F(DevInfoManageTest, GetChipTypeFromPlatform)
     result = GetChipTypeFromPlatform("Kirin9030", chipType);
     EXPECT_EQ(result, RT_ERROR_NONE);
     EXPECT_EQ(chipType, CHIP_9030);
+
+    result = GetChipTypeFromPlatform("KirinDev0000", chipType);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(chipType, CHIP_DEV_0000);
+
+    result = GetChipTypeFromPlatform("KirinDev0001", chipType);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(chipType, CHIP_DEV_0001);
+
+    result = GetChipTypeFromPlatform("KirinDev0002", chipType);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(chipType, CHIP_DEV_0002);
+
+    result = GetChipTypeFromPlatform("KirinDev0003", chipType);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(chipType, CHIP_DEV_0003);
 }
 
 TEST_F(DevInfoManageTest, GetNpuArchByName)
@@ -152,6 +168,18 @@ TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirinX90)
     EXPECT_NE(result, RT_ERROR_NONE);
 }
 
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinX90)
+{
+    DevInfoManage info;
+    std::array<bool, FEATURE_MAX_VALUE> features;
+    rtError_t result = info.GetChipFeatureSet(CHIP_X90, features);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
+        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_X90";
+    }
+}
+
 TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirin9030)
 {
     DevInfoManage info;
@@ -183,18 +211,6 @@ TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirin9030)
     EXPECT_NE(result, RT_ERROR_NONE);
 }
 
-TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinX90)
-{
-    DevInfoManage info;
-    std::array<bool, FEATURE_MAX_VALUE> features;
-    rtError_t result = info.GetChipFeatureSet(CHIP_X90, features);
-    EXPECT_EQ(result, RT_ERROR_NONE);
-
-    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
-        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_X90";
-    }
-}
-
 TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirin9030)
 {
     DevInfoManage info;
@@ -204,6 +220,178 @@ TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirin9030)
 
     for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
         EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_9030";
+    }
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirinDev0000)
+{
+    DevInfoManage info;
+    std::string soName;
+    rtError_t result = info.GetPlatformSoName(CHIP_DEV_0000, soName);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevInfoKirinDev0000)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0000, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureKirinDev0000)
+{
+    DevInfoManage info;
+    bool ret = info.IsSupportChipFeature(CHIP_DEV_0000, RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirinDev0000)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0000, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinDev0000)
+{
+    DevInfoManage info;
+    std::array<bool, FEATURE_MAX_VALUE> features;
+    rtError_t result = info.GetChipFeatureSet(CHIP_DEV_0000, features);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
+        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_DEV_0000";
+    }
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirinDev0001)
+{
+    DevInfoManage info;
+    std::string soName;
+    rtError_t result = info.GetPlatformSoName(CHIP_DEV_0001, soName);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevInfoKirinDev0001)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0001, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureKirinDev0001)
+{
+    DevInfoManage info;
+    bool ret = info.IsSupportChipFeature(CHIP_DEV_0001, RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirinDev0001)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0001, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinDev0001)
+{
+    DevInfoManage info;
+    std::array<bool, FEATURE_MAX_VALUE> features;
+    rtError_t result = info.GetChipFeatureSet(CHIP_DEV_0001, features);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
+        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_DEV_0001";
+    }
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirinDev0002)
+{
+    DevInfoManage info;
+    std::string soName;
+    rtError_t result = info.GetPlatformSoName(CHIP_DEV_0002, soName);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevInfoKirinDev0002)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0002, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureKirinDev0002)
+{
+    DevInfoManage info;
+    bool ret = info.IsSupportChipFeature(CHIP_DEV_0002, RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirinDev0002)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0002, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinDev0002)
+{
+    DevInfoManage info;
+    std::array<bool, FEATURE_MAX_VALUE> features;
+    rtError_t result = info.GetChipFeatureSet(CHIP_DEV_0002, features);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
+        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_DEV_0002";
+    }
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirinDev0003)
+{
+    DevInfoManage info;
+    std::string soName;
+    rtError_t result = info.GetPlatformSoName(CHIP_DEV_0003, soName);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevInfoKirinDev0003)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0003, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureKirinDev0003)
+{
+    DevInfoManage info;
+    bool ret = info.IsSupportChipFeature(CHIP_DEV_0003, RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageDevPropertiesKirinDev0003)
+{
+    DevInfoManage info;
+    DevProperties out;
+    rtError_t result = info.GetDevProperties(CHIP_DEV_0003, out);
+    EXPECT_NE(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, DevInfoManageChipFeatureAllFalseKirinDev0003)
+{
+    DevInfoManage info;
+    std::array<bool, FEATURE_MAX_VALUE> features;
+    rtError_t result = info.GetChipFeatureSet(CHIP_DEV_0003, features);
+    EXPECT_EQ(result, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < FEATURE_MAX_VALUE; i++) {
+        EXPECT_EQ(features[i], false) << "Feature[" << i << "] should be false for CHIP_DEV_0003";
     }
 }
 

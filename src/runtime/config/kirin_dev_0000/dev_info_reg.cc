@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 namespace cce {
 namespace runtime {
 
-REGISTER_PLATFORM_LIB_INFO(CHIP_9030, "libruntime_v100.so");
+REGISTER_PLATFORM_LIB_INFO(CHIP_DEV_0000, "libruntime_v100.so");
 
-static const std::unordered_set<RtOptionalFeatureType> KIRIN9030_FEATURE{};
-REGISTER_CHIP_FEATURE_SET(CHIP_9030, KIRIN9030_FEATURE);
+static const std::unordered_set<RtOptionalFeatureType> KIRIN_DEV_0000_FEATURE{};
+REGISTER_CHIP_FEATURE_SET(CHIP_DEV_0000, KIRIN_DEV_0000_FEATURE);
 
-constexpr uint32_t RT_KIRIN9030_AICORE_NUM = 1U;
-constexpr uint32_t RT_KIRIN9030_AIVECTOR_NUM = 1U;
+constexpr uint32_t RT_KIRIN_DEV_0000_AICORE_NUM = 4U;
+constexpr uint32_t RT_KIRIN_DEV_0000_AIVECTOR_NUM = 4U;
 static constexpr uint32_t ASYNC_TASK_D2D_QOS = 6U;
 constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP = 23;
 static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
@@ -30,7 +30,7 @@ static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 =
     254U;                                                           // The STARS reference time is 1090921693.184 us.
 static constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F; // 0.001(us) = 1ns
 
-static const DevProperties CHIP_KIRIN9030_PROPERTIES = {
+static const DevProperties CHIP_KIRIN_DEV_0000_PROPERTIES = {
     .engineType = "STARS",
     .isStars = true,
     .isStarsV2 = false,
@@ -53,8 +53,8 @@ static const DevProperties CHIP_KIRIN9030_PROPERTIES = {
     .mc2FeatureFlag = TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP,
     .stackPhyBase = RT_SCALAR_BUFFER_SIZE_32K_75,
     .maxCustomerStackSize = DEFAULT_CUSTOM_STACK_SIZE_MAX,
-    .aicNum = RT_KIRIN9030_AICORE_NUM,
-    .aivNum = RT_KIRIN9030_AIVECTOR_NUM,
+    .aicNum = RT_KIRIN_DEV_0000_AICORE_NUM,
+    .aivNum = RT_KIRIN_DEV_0000_AIVECTOR_NUM,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE,
     .hugeManagedFlag = SVM_HOST_AGENT,
     .memAllocPctraceFlag = static_cast<uint32_t>(MEM_SVM_HUGE),
@@ -169,6 +169,6 @@ static const DevProperties CHIP_KIRIN9030_PROPERTIES = {
     .swapBufferProfCfgOffset = 0U,
 };
 
-REGISTER_DEV_PROPERTIES(CHIP_9030, CHIP_KIRIN9030_PROPERTIES);
+REGISTER_DEV_PROPERTIES(CHIP_DEV_0000, CHIP_KIRIN_DEV_0000_PROPERTIES);
 } // namespace runtime
 } // namespace cce

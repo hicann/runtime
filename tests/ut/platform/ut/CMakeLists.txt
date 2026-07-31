@@ -131,6 +131,7 @@ add_custom_target(
         echo "-- Copy platform ini files start" && mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config" &&
         cp -rf ${TOP_DIR}/src/platform/platform_config/cann-dev/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
         cp -rf ${TOP_DIR}/src/platform/platform_config/cann/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
+        cp -rf ${TOP_DIR}/src/platform/platform_config/kirin-dev/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
         cp -rf ${TOP_DIR}/src/platform/platform_config/kirin/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
         echo "-- Copy platform ini files end"
 )
