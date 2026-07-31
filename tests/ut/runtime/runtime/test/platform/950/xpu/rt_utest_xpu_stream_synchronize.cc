@@ -104,6 +104,7 @@ TEST_F(XpuStreamSynchronizeTest, Stream_synchronize_fail)
         XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs, context->StreamList_().front(), &taskCfg);
 
     XpuStream* stream = static_cast<XpuStream*>(context->StreamList_().front());
+    MOCKER_CPP_VIRTUAL(stream->Device_(), &Device::WakeUpRecycleThread).stubs();
     stream->Synchronize(true, 10000000);
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     delete result;

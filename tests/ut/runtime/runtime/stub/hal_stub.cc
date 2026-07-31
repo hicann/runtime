@@ -208,8 +208,13 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))
-        ;
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) !=
+           __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE)) {
+        const Runtime* const rt = Runtime::runtime_;
+        if ((rt != nullptr) && rt->IsExiting()) {
+            return DRV_ERROR_NONE;
+        }
+    }
     // std::cout<<"halSqMsgSend"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 
     rtCommand_t* cmd = &g_command[devId];

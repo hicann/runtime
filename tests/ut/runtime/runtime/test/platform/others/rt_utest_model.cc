@@ -105,7 +105,6 @@ TEST_F(ChipModelTest, TestSynchronizeExecuteTimeout)
     rtModel_t rtModel;
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t chipType = rtInstance->GetChipType();
-    const bool disableThread = rtInstance->GetDisableThread();
     rtInstance->SetChipType(CHIP_ADC);
     GlobalContainer::SetRtChipType(CHIP_ADC);
     Device* device = rtInstance->DeviceRetain(0, 0);
@@ -116,11 +115,10 @@ TEST_F(ChipModelTest, TestSynchronizeExecuteTimeout)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* model = rt_ut::UnwrapOrNull<Model>(rtModel);
 
-    Runtime::Instance()->SetDisableThread(true);
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     Stream* stream_var = rt_ut::UnwrapOrNull<Stream>(rtStream);
     MOCKER_CPP_VIRTUAL(stream_var, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
-    model->SetModelExecutorType(EXECUTOR_TS);
+    model->SetModelExecutorType(EXECUTOR_AICPU);
 
     error = model->SynchronizeExecute(rt_ut::UnwrapOrNull<Stream>(rtStream));
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
@@ -135,8 +133,53 @@ TEST_F(ChipModelTest, TestSynchronizeExecuteTimeout)
 
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
-    rtInstance->SetDisableThread(disableThread);
     rtInstance->DeviceRelease(device);
+}
+
+TEST(ModelSynchronizeExecuteTest, TsTaskTimeout)
+{
+    Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+
+    RawDevice device(0);
+    device.properties_.isStars = false;
+    Context context(&device, false);
+    Stream stream(&context, 0);
+    Model model;
+    stream.context_ = &context;
+    model.context_ = &context;
+    model.notifier_ = OsalFactory::CreateNotifier();
+    EXPECT_NE(model.notifier_, nullptr);
+    if (model.notifier_ == nullptr) {
+        model.context_ = nullptr;
+        stream.context_ = nullptr;
+        stream.device_ = nullptr;
+        context.device_ = nullptr;
+        return;
+    }
+    MOCKER_CPP(&Model::SubmitExecuteTask).stubs().will(returnValue(RT_ERROR_NONE));
+    model.SetModelExecutorType(EXECUTOR_TS);
+
+    stream.SetErrCode(TS_ERROR_TASK_TIMEOUT);
+    model.ExecuteComplete();
+    rtError_t error;
+    {
+        const bool oldDisableThread = runtime->GetDisableThread();
+        runtime->SetDisableThread(false);
+        const ScopeGuard disableThreadGuard(
+            [runtime, oldDisableThread]() { runtime->SetDisableThread(oldDisableThread); });
+        error = model.SynchronizeExecute(&stream);
+    }
+    EXPECT_EQ(error, RT_ERROR_TSFW_TASK_TIMEOUT);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    DELETE_O(model.notifier_);
+    model.context_ = nullptr;
+    stream.context_ = nullptr;
+    stream.device_ = nullptr;
+    context.device_ = nullptr;
 }
 
 TEST_F(ChipModelTest, model_stream_bind_max)

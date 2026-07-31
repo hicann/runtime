@@ -256,10 +256,12 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_MODEL_EXECUTE)
     GlobalMockObject::reset();
 }
 
+static thread_local bool g_reportCommunicationLost = false;
+
 drvError_t drvDeviceStatusStub(uint32_t devId, drvStatus_t* status)
 {
     (void)devId;
-    *status = DRV_STATUS_COMMUNICATION_LOST;
+    *status = g_reportCommunicationLost ? DRV_STATUS_COMMUNICATION_LOST : DRV_STATUS_WORK;
     return DRV_ERROR_NONE;
 }
 
@@ -268,8 +270,10 @@ TEST_F(DirectHwtsEngineTest, ReportHeartBreakProcV2_RT_ERROR_LOST_HEARTBEAT)
     RawDevice* device = new RawDevice(0);
     {
         DirectHwtsEngine engine(device);
+        g_reportCommunicationLost = true;
         MOCKER(drvDeviceStatus).stubs().will(invoke(drvDeviceStatusStub));
         rtError_t error = engine.ReportHeartBreakProcV2();
+        g_reportCommunicationLost = false;
         EXPECT_EQ(error, RT_ERROR_LOST_HEARTBEAT);
     }
     delete device;
