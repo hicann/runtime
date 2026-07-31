@@ -25,25 +25,27 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_memcpy_async_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_memcpy_async_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_task_arch5162.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_arch5162.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_submit/v100/task_submit.cc
+    ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/arch5162/task_adpter.cc
@@ -132,7 +134,9 @@ set(libruntime_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profiler.cc
 )
+
 set(libruntime_arg_loader_files
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_pcie.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
@@ -185,6 +189,7 @@ set(runtime_src_aclgraph_list
 
 set(libruntime_src_files_include_for_arch5162
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
@@ -234,6 +239,17 @@ set(runtime_src_kernel_list
     ${RUNTIME_CORE_DIR}/src/kernel/symbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
+)
+
+set(libruntime_other_files
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/common/common_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
+    ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
+    ${libruntime_profile_src_files}
 )
 
 set(libruntime_src_files
@@ -427,6 +443,7 @@ macro(add_runtime_library target_name)
         ${libruntime_api_src_files}
         ${libruntime_src_files}
         ${libruntime_aclrt_impl_src_files}
+        ${libruntime_other_files}
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_mem.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_queue.cc
@@ -438,7 +455,6 @@ macro(add_runtime_library target_name)
     )
 
     target_compile_definitions(${target_name} PRIVATE
-        LOG_CPP
         -DSTATIC_RT_LIB=1  # set 1 when not split so
         -DRUNTIME_API=0  # set 1 when split so and in libruntime.so
     )
@@ -456,6 +472,10 @@ macro(add_runtime_library target_name)
         -Werror
         -Wextra
         -Wfloat-equal
+    )
+
+    target_link_options(${target_name} PRIVATE
+        -Wl,--no-undefined
     )
 
     target_include_directories(${target_name} PRIVATE

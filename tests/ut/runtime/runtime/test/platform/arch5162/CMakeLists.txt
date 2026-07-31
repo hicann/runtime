@@ -18,7 +18,6 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_task_arch5162.cc
@@ -27,23 +26,18 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_arch5162.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_memcpy_async_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_arch5162.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_arch5162.cc
@@ -249,13 +243,23 @@ set(runtimeut_src_kernel_list
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/program_plat.cc
 )
 
+set(libruntime_other_files
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
+    ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
+    ${runtimeut_src_profile_list}
+)
+
 set(runtimeut_src_list
     ${runtimeut_src_task_list}
     ${runtimeut_src_api_list}
     ${runtimeut_src_aclgraph_list}
     ${runtimeut_src_context_list}
     ${runtimeut_src_stream_list}
-    ${runtimeut_src_profile_list}
     ${runtime_src_arg_loader_list}
     ${runtimeut_src_pool_list}
     ${runtimeut_src_ttlv_list}
@@ -266,6 +270,7 @@ set(runtimeut_src_list
     ${runtimeut_src_api_impl_list}
     ${runtimeut_src_device_list}
     ${runtimeut_src_kernel_list}
+    ${libruntime_other_files}
     ${TOP_DIR}/src/runtime/core/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
@@ -299,7 +304,6 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/utils/capability.cc
     ${TOP_DIR}/src/runtime/core/src/utils/osal.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
-    ${TOP_DIR}/src/runtime/core/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny.cpp

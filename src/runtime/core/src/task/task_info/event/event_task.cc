@@ -143,7 +143,8 @@ void ToCommandBodyForEventRecordTask(TaskInfo* const taskInfo, rtCommand_t* cons
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     param.u.eventRecordParams = {
         eventRecordTaskInfo->eventid, static_cast<uint32_t>(eventRecordTaskInfo->waitCqflag),
-        eventRecordTaskInfo->waitCqId, false, ((reinterpret_cast<uintptr_t>(eventRecordTaskInfo->event)) & 0xFFULL)};
+        eventRecordTaskInfo->waitCqId, false,
+        ((reinterpret_cast<uintptr_t>(eventRecordTaskInfo->event)) & static_cast<uintptr_t>(0xFF))};
     AtraceSubmitLog(TYPE_EVENT_RECORD, param);
     eventRecordTaskInfo->event->InsertRecordResetToMap(taskInfo);
     if (Runtime::Instance()->GetDisableThread()) {

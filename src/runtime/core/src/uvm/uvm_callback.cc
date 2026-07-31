@@ -209,7 +209,7 @@ void UvmCallback::PrefetchBatchCallbackWrapper(void* userData)
         DRV_ERROR_PROCESS(
             drvRet,
             "[drv api] halMemManagedPrefetchBatch failed: count=%zu, numPrefetchLocs=%zu, "
-            "flags=%lu, drvRetCode=%d!",
+            "flags=%" PRIu64 ", drvRetCode=%d!",
             count, numPrefetchLocs, flags, static_cast<int32_t>(drvRet));
     }
     DELETE_A(memBuffer);

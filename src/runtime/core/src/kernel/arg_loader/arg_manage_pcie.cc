@@ -112,7 +112,8 @@ rtError_t PcieArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, vo
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "Failed to call memcpy_s to copy args, dest=%p, dest_max=%lu, src=%p, count=%lu, retCode=%d.",
+            "Failed to call memcpy_s to copy args, dest=%p, dest_max=%" PRIu64 ", src=%p, count=%" PRIu64
+            ", retCode=%d.",
             result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size), ret);
     }
     return error;
