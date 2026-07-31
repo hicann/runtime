@@ -22,7 +22,8 @@ aclError aclrtSnapShotProcessLock(int pid, void* reserve)
 ### 产品支持情况
 
 <!-- npu="950" id1639 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id1639 -->
 <!-- npu="A3" id1640 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -78,7 +79,8 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 ### 产品支持情况
 
 <!-- npu="950" id1380 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id1380 -->
 <!-- npu="A3" id1381 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -134,7 +136,8 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 ### 产品支持情况
 
 <!-- npu="950" id3130 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id3130 -->
 <!-- npu="A3" id3131 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -194,7 +197,8 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 ### 产品支持情况
 
 <!-- npu="950" id2822 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id2822 -->
 <!-- npu="A3" id2823 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -250,7 +254,8 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 ### 产品支持情况
 
 <!-- npu="950" id2766 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id2766 -->
 <!-- npu="A3" id2767 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
@@ -305,7 +310,8 @@ aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShot
 ### 产品支持情况
 
 <!-- npu="950" id1772 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR：支持
+- Ascend 950DT：不支持
 <!-- end id1772 -->
 <!-- npu="A3" id1773 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
