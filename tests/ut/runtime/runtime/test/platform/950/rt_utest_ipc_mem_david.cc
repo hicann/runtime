@@ -164,7 +164,8 @@ TEST_F(IpcMemDavidTest, IpcMemNameMap_set_attr_once_import_multiple_times)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ipcMemNameLock.lock();
-    EXPECT_EQ(ipcMemNameMap.find(std::string(ipcName)), ipcMemNameMap.end());
+    EXPECT_NE(ipcMemNameMap.find(std::string(ipcName)), ipcMemNameMap.end());
+    ipcMemNameMap.clear();
     ipcMemNameLock.unlock();
 
     error = rtDeviceReset(0);
@@ -212,7 +213,9 @@ TEST_F(IpcMemDavidTest, IpcMemNameVaMap_import_without_set_attr_default_zero)
 
     ipcMemNameLock.lock();
     auto closeIt = ipcMemNameMap.find(std::string(ipcName));
-    EXPECT_EQ(closeIt, ipcMemNameMap.end());
+    EXPECT_NE(closeIt, ipcMemNameMap.end());
+    EXPECT_EQ(closeIt->second.vaList.size(), 4); // After closing one, there should be 4 remaining
+    ipcMemNameMap.clear();                       // Clear the map to ensure test isolation
     ipcMemNameLock.unlock();
 
     error = rtDeviceReset(0);

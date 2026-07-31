@@ -803,6 +803,13 @@ rtError_t aclStub::rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virP
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
+{
+    (void)handle;
+    (void)adviceLink;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtDeviceL2CacheFlush(void* rsv)
 {
     (void)rsv;
@@ -4387,3 +4394,8 @@ rtError_t rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, ui
 }
 
 rtError_t rtDeviceL2CacheFlush(void* rsv) { return MockFunctionTest::aclStubInstance().rtDeviceL2CacheFlush(rsv); }
+
+rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
+{
+    return MockFunctionTest::aclStubInstance().rtMemMapSetLink(handle, adviceLink);
+}

@@ -938,6 +938,19 @@ RTS_API rtError_t rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPt
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+
+VISIBILITY_DEFAULT
+RTS_API rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->MemMapSetLink(handle, adviceLink);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED, ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

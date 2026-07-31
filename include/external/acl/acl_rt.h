@@ -5897,6 +5897,19 @@ ACL_FUNC_VISIBILITY aclError aclrtMemMapSelectedLink(void* virPtrDst, size_t siz
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtDeviceL2CacheFlush(void* rsv);
+
+/**
+ * @ingroup AscendCL
+ * @brief Set memory access link type for a memory handle before mapping
+ * @param [in] handle Memory handle obtained from aclrtMemImportFromShareableHandle
+ * @param [in] adviceLink Memory access link type. Different chips support different values.
+ * @retval ACL_SUCCESS for success
+ * @retval ACL_ERROR_INVALID_PARAM for invalid parameter (handle is NULL)
+ * @retval ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED for unsupported adviceLink value
+ * @retval ACL_ERROR_RT_FEATURE_NOT_SUPPORT for unsupported chip
+ * @retval OtherValues for other failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink);
 #ifdef __cplusplus
 }
 #endif

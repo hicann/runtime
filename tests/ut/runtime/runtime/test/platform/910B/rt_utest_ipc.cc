@@ -478,6 +478,29 @@ TEST_F(CloudV2IpcApiTest, MemMapSelectedLink)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2IpcApiTest, MemMapSetLink)
+{
+    rtDrvMemHandle handVal = 0;
+    rtDrvMemHandle* handle = &handVal;
+    rtMemLinkType adviceLink = RT_MEM_ACCESS_UB_MULTI_PORT_PATH;
+
+    rtError_t error = rtMemMapSetLink(nullptr, adviceLink);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    adviceLink = RT_MEM_ACCESS_LINK_MAX;
+    error = rtMemMapSetLink(handle, adviceLink);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    adviceLink = RT_MEM_ACCESS_LINK_SIO;
+    error = rtMemMapSetLink(handle, adviceLink);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER(halMemHandleSetAttribute).stubs().will(returnValue(DRV_ERROR_NOT_EXIST));
+    adviceLink = RT_MEM_ACCESS_UB_MULTI_PORT_PATH;
+    error = rtMemMapSetLink(handle, adviceLink);
+    EXPECT_EQ(error, ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED);
+}
+
 TEST_F(CloudV2IpcApiTest, MemGetAllocationPropertiesFromHandle01)
 {
     size_t size = 1024 * 1024; // 1mb

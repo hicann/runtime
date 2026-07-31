@@ -329,6 +329,7 @@ public:
         size_t numPrefetchLocs, uint64_t flags, rtStream_t stream);
     virtual rtError_t rtMemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx);
     virtual rtError_t rtDeviceL2CacheFlush(void* rsv);
+    virtual rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink);
 
     virtual rtError_t rtDeviceGetBareTgid(uint32_t* pid);
     virtual rtError_t rtGetL2CacheOffset(uint32_t deivceId, uint64_t* offset);
@@ -894,6 +895,7 @@ public:
             size_t numPrefetchLocs, uint64_t flags, rtStream_t stream));
     MOCK_METHOD4(rtMemMapSelectedLink, rtError_t(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx));
     MOCK_METHOD1(rtDeviceL2CacheFlush, rtError_t(void* rsv));
+    MOCK_METHOD2(rtMemMapSetLink, rtError_t(rtDrvMemHandle handle, rtMemLinkType adviceLink));
 
     MOCK_METHOD3(
         rtBinaryLoadWithoutTilingKey, rtError_t(const void* data, const uint64_t length, rtBinHandle* binHandle));

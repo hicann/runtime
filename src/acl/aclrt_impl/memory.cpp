@@ -2475,6 +2475,24 @@ aclError aclrtMemMapSelectedLinkImpl(void* virPtrDst, size_t size, void* virPtrS
     ACL_LOG_INFO("successfully execute aclrtMemMapSelectedLink");
     return ACL_SUCCESS;
 }
+
+aclError aclrtMemMapSetLinkImpl(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink)
+{
+    ACL_LOG_INFO("start to execute aclrtMemMapSetLink, adviceLink=%d.", static_cast<rtMemLinkType>(adviceLink));
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+    const auto rtErr = rtMemMapSetLink(static_cast<rtDrvMemHandle>(handle), static_cast<rtMemLinkType>(adviceLink));
+    if (rtErr == RT_ERROR_NONE) {
+        ACL_LOG_INFO("successfully execute aclrtMemMapSetLink.");
+        return ACL_SUCCESS;
+    }
+
+    if ((rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) || (rtErr == ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED)) {
+        ACL_LOG_WARN("call aclrtMemMapSetLink failed, runtime result = %d.", rtErr);
+    } else {
+        ACL_LOG_CALL_ERROR("call aclrtMemMapSetLink failed, runtime result = %d.", rtErr);
+    }
+    return ACL_GET_ERRCODE_RTS(rtErr);
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

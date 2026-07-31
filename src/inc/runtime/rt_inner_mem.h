@@ -337,6 +337,19 @@ RTS_API rtError_t rtMemsetD32(void* dst, uint64_t destMax, uint32_t value, uint6
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtMemsetD32Async(void* dst, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stm);
+
+/**
+ * @ingroup rt_mem
+ * @brief Set memory access link type for a memory handle before mapping
+ * @param [in] handle Memory handle obtained from rtMemImportFromShareableHandle
+ * @param [in] adviceLink Memory access link type
+ * @return RT_ERROR_NONE for success
+ * @return RT_ERROR_INVALID_VALUE for invalid parameter (handle is NULL)
+ * @return RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED for unsupported adviceLink value
+ * @return RT_ERROR_FEATURE_NOT_SUPPORT for unsupported chip or driver interface not exist
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink);
 #if defined(__cplusplus)
 }
 #endif

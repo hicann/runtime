@@ -568,7 +568,8 @@
       (symbol, src, count, offset, kind, stream))                                                                      \
     _(aclError, aclrtMemMapSelectedLink, (void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx),            \
       (virPtrDst, size, virPtrSrc, linkIdx))                                                                           \
-    _(aclError, aclrtDeviceL2CacheFlush, (void* rsv), (rsv))
+    _(aclError, aclrtDeviceL2CacheFlush, (void* rsv), (rsv))                                                           \
+    _(aclError, aclrtMemMapSetLink, (aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink), (handle, adviceLink))
 
 // aclrtAllocator interface map list
 #define ACL_RT_ALLOCATOR_FUNC_MAP(_)                                                                                \

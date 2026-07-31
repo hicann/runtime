@@ -10066,3 +10066,53 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyToSymbolAsyncTest)
     ret = aclrtMemcpyToSymbolAsync(hostVar, src, 0, 0, ACL_MEMCPY_DEFAULT, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_normal)
+{
+    aclrtDrvMemHandle handle = reinterpret_cast<aclrtDrvMemHandle>(0x1234);
+    aclrtMemLinkType adviceLink = ACL_RT_MEM_ACCESS_LINK_SIO;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapSetLink(_, _)).WillOnce(Return(RT_ERROR_NONE));
+
+    aclError ret = aclrtMemMapSetLink(handle, adviceLink);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_handle_null)
+{
+    aclError ret = aclrtMemMapSetLink(nullptr, ACL_RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_feature_not_support)
+{
+    aclrtDrvMemHandle handle = reinterpret_cast<aclrtDrvMemHandle>(0x1234);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapSetLink(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+
+    aclError ret = aclrtMemMapSetLink(handle, ACL_RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_access_path_not_support)
+{
+    aclrtDrvMemHandle handle = reinterpret_cast<aclrtDrvMemHandle>(0x1234);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapSetLink(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED));
+
+    aclError ret = aclrtMemMapSetLink(handle, ACL_RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(ret, ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_other_error)
+{
+    aclrtDrvMemHandle handle = reinterpret_cast<aclrtDrvMemHandle>(0x1234);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemMapSetLink(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_DRV_INTERNAL_ERROR));
+
+    aclError ret = aclrtMemMapSetLink(handle, ACL_RT_MEM_ACCESS_LINK_SIO);
+    EXPECT_EQ(ret, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+}

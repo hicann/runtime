@@ -1665,6 +1665,7 @@ rtError_t NpuDriver::MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType
             "Call driver api halMemHandleSetAttribute failed, drvRetCode=%d, type=%d, memMapRoute=%u, "
             "handleAttr.mem_map_route=%u.",
             static_cast<int32_t>(drvRet), type, attr.memMapRoute, handleAttr.mem_map_route);
+    } else {
     }
     return RT_GET_DRV_ERRCODE(drvRet);
 }
