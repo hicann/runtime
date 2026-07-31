@@ -4842,7 +4842,6 @@ Driver* DavidVfApiTest::driver_ = NULL;
 TEST_F(DavidVfApiTest, test_setgroup_for_david)
 {
     rtError_t error;
-    MOCKER_CPP(&ApiImpl::isInProc).stubs().will(returnValue(false));
     error = rtSetGroup(1);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     error = rtSetGroup(8);
@@ -4877,7 +4876,6 @@ TEST_F(DavidVfApiTest, test_setgroup_for_david)
 TEST_F(DavidVfApiTest, test_setgroup_for_david_2)
 {
     rtError_t error;
-    MOCKER_CPP(&ApiImpl::isInProc).stubs().will(returnValue(true));
     error = rtSetGroup(1);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
