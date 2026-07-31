@@ -59,7 +59,7 @@ Key features and interfaces in this sample:
 ## Sample Output
 
 ```text
-[INFO]  Begin a easy task and a error task, the error task will callback exception.
+[INFO]  Begin an easy task and an error task. The error task will trigger the exception callback.
 [INFO]  The last task id is: ...
 [INFO]  Exception occurred, callback function.
 [INFO]  The error task id is ...

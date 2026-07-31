@@ -131,7 +131,7 @@ int ExceptionCallBackSpace::ExceptionCallBackSample::Callback()
     uint64_t tidInt = std::stoull(oss.str());
     CHECK_ERROR(aclrtSubscribeReport(tidInt, stream_));
     CHECK_ERROR(aclrtSetExceptionInfoCallback(ExceptionCallBackFunc));
-    INFO_LOG("Begin a easy task and a error task, the error task will callback exception.");
+    INFO_LOG("Begin an easy task and an error task. The error task will trigger the exception callback.");
 
     EasyOP(blockDim, stream_, numDevice);
     ErrorOP(blockDim, stream_);
