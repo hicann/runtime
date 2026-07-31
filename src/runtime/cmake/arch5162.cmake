@@ -189,7 +189,6 @@ set(runtime_src_aclgraph_list
 
 set(libruntime_src_files_include_for_arch5162
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
