@@ -61,8 +61,8 @@ int MstxDataHandler::Start(const std::string &mstxDomainInclude, const std::stri
     }
     MstxDomainMgr::instance()->SetMstxDomainsEnabled(mstxDomainInclude, mstxDomainExclude);
     Thread::SetThreadName(analysis::dvvp::common::config::MSVP_MSTX_DATA_HANDLE_THREAD_NAME);
-    analysis::dvvp::common::thread::Thread::Start();
     start_.store(true);
+    analysis::dvvp::common::thread::Thread::Start();
     return PROFILING_SUCCESS;
 }
 
