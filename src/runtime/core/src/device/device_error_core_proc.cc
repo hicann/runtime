@@ -729,6 +729,19 @@ bool HasMteErr(const Device* const dev)
     return hasMteErr;
 }
 
+// 去掉字符串末尾的空格、逗号和句号（任意顺序组合）
+static void TrimTrailingPunct(char* str)
+{
+    if (str == nullptr) {
+        return;
+    }
+    size_t len = strlen(str);
+    while ((len > 0U) && ((str[len - 1U] == ' ') || (str[len - 1U] == '.') || (str[len - 1U] == ','))) {
+        str[len - 1U] = '\0';
+        len--;
+    }
+}
+
 static void ExtractEventStateDesc(const std::string& eventName, char* outBuf, size_t outBufLen)
 {
     if ((outBuf == nullptr) || (outBufLen == 0U)) {
@@ -764,6 +777,7 @@ std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventN
     char descBuf[DESC_BUF_LEN] = {0};
     char stateBuf[RT_DMS_MAX_EVENT_NAME_LENGTH] = {0};
     ExtractEventStateDesc(eventName, stateBuf, sizeof(stateBuf));
+    TrimTrailingPunct(stateBuf);
     (void)snprintf_truncated_s(
         descBuf, DESC_BUF_LEN,
         "[event_id:0x%x] %s. For details about troubleshooting, see Health Management Error Definition.", eventId,

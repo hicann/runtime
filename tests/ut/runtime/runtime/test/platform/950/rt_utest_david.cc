@@ -1266,6 +1266,79 @@ TEST_F(DavidTaskTest, FormatRasFaultDesc_hex_format)
     EXPECT_NE(desc.find("0x80e18400"), std::string::npos);
 }
 
+// TrimTrailingPunct / ExtractEventStateDesc 边界覆盖
+TEST_F(DavidTaskTest, FormatRasFaultDesc_trailing_comma_after_state)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "node type=UB, event state=bus error, extra info");
+    EXPECT_NE(desc.find("bus error"), std::string::npos);
+    EXPECT_EQ(desc.find("extra info"), std::string::npos);
+    EXPECT_EQ(desc.find("bus error,"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_trailing_period_after_state)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=ecc.");
+    EXPECT_NE(desc.find("ecc"), std::string::npos);
+    // stateBuf 末尾句号应被去掉，不会与格式串的句号产生双句号 ".."
+    EXPECT_EQ(desc.find("ecc.."), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_trailing_comma_space)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=bus error, ");
+    EXPECT_NE(desc.find("bus error"), std::string::npos);
+    EXPECT_EQ(desc.find("bus error,"), std::string::npos);
+    // 不会产生 "bus error ."（逗号去掉后不应残留空格再接格式串句号）
+    EXPECT_EQ(desc.find("bus error ."), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_trailing_period_space)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=ecc. ");
+    EXPECT_NE(desc.find("ecc"), std::string::npos);
+    EXPECT_EQ(desc.find("ecc.."), std::string::npos);
+    EXPECT_EQ(desc.find("ecc ."), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_trailing_mixed_punct)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=bus error, . ");
+    EXPECT_NE(desc.find("bus error"), std::string::npos);
+    // 不会产生双句号或逗号残留
+    EXPECT_EQ(desc.find("bus error.."), std::string::npos);
+    EXPECT_EQ(desc.find("bus error,"), std::string::npos);
+    EXPECT_EQ(desc.find("bus error ,"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_no_prefix_trailing_punct)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "UBMEM auth fail, . ");
+    EXPECT_NE(desc.find("UBMEM auth fail"), std::string::npos);
+    EXPECT_EQ(desc.find("UBMEM auth fail.."), std::string::npos);
+    EXPECT_EQ(desc.find("UBMEM auth fail,"), std::string::npos);
+    EXPECT_EQ(desc.find("UBMEM auth fail ,"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_no_prefix_no_trailing_punct)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "UBMEM auth fail");
+    EXPECT_NE(desc.find("UBMEM auth fail"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_state_empty_after_prefix)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=, other info");
+    EXPECT_EQ(desc.find("event state="), std::string::npos);
+    EXPECT_NE(desc.find("0x80e01801"), std::string::npos);
+}
+
+TEST_F(DavidTaskTest, FormatRasFaultDesc_all_punct_state)
+{
+    const std::string desc = FormatRasFaultDesc(0x80e01801U, "event state=., ,");
+    EXPECT_NE(desc.find("0x80e01801"), std::string::npos);
+    EXPECT_EQ(desc.find("event state="), std::string::npos);
+}
+
 // B. QueryRasFaultEvents 单元测试
 static void SetDeviceCurrentTimeMock(Device* dev, int64_t timeMs);
 static rtError_t g_rasQueryRetError = RT_ERROR_NONE;

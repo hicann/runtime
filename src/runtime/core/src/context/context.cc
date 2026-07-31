@@ -2903,7 +2903,13 @@ rtError_t Context::CheckStatus(const Stream* const stm, const bool isBlockDefaul
         RT_LOG_INNER_DETAIL_MSG(RT_DRV_INNER_ERROR, {"device_id"}, {std::to_string(device_->Id_())});
         , "Failed to check device status, device_id=%u, retCode=%#x.", device_->Id_(), status);
     status = device_->GetDeviceStatus();
-    COND_RETURN_ERROR(status != RT_ERROR_NONE, status, "device_id=%d status=%d is abnormal.", device_->Id_(), status);
+    if (unlikely(status != RT_ERROR_NONE)) {
+        if (GetFailureError() != RT_ERROR_NONE) {
+            PopContextErrMsg();
+        }
+        RT_LOG(RT_LOG_ERROR, "device_id=%u status=%d is abnormal.", device_->Id_(), status);
+        return status;
+    }
     Stream* ctrlStream = device_->GetCtrlStream(nullptr);
     if (!isBlockDefault && (stm != nullptr) &&
         ((stm == GetCtrlSQStream()) || (stm == device_->PrimaryStream_()) || stm == ctrlStream) &&
@@ -2933,7 +2939,13 @@ rtError_t Context::CheckTaskSend(const TaskInfo* const workTask)
         RT_LOG_INNER_DETAIL_MSG(RT_DRV_INNER_ERROR, {"device_id"}, {std::to_string(device_->Id_())});
         , "Failed to check device status, device_id=%u, retCode=%#x.", device_->Id_(), status);
     status = device_->GetDeviceStatus();
-    ERROR_RETURN(status, "device_id=%d status=%#x is abnormal, stream_id=%d", device_->Id_(), status, stm->Id_());
+    if (unlikely(status != RT_ERROR_NONE)) {
+        if (GetFailureError() != RT_ERROR_NONE) {
+            PopContextErrMsg();
+        }
+        RT_LOG(RT_LOG_ERROR, "device_id=%u status=%#x is abnormal, stream_id=%d", device_->Id_(), status, stm->Id_());
+        return status;
+    }
     // 任务下发场景
     const bool isDefaultStreamSend =
         (stm->GetFailureMode() != ABORT_ON_FAILURE) && (stm == GetCtrlSQStream()) &&

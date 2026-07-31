@@ -5554,4 +5554,259 @@ TEST_F(ContextTest, LaunchRandomNumTask_Test_abnormal)
     delete device;
     GlobalMockObject::verify();
 }
+
+// ==================== CheckStatus / CheckTaskSend PopContextErrMsg 覆盖 ====================
+static Context* GetPrimaryContext(int32_t &devId)
+{
+    rtError_t error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    RefObject<Context*>* refObject =
+        (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
+    Context* ctx = refObject->GetVal();
+    return ctx;
+}
+
+static void ReleasePrimaryContext(int32_t devId)
+{
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
+}
+
+// CheckStatus: GetDeviceStatus 异常 + GetFailureError 非 NONE → 走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_abnormal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_DEVICE_AICORE_ERROR));
+
+    ctx->failureError_ = RT_ERROR_DEVICE_AICORE_ERROR;
+    rtError_t ret = ctx->CheckStatus(nullptr, false);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->failureError_ = RT_ERROR_NONE;
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckStatus: GetDeviceStatus 异常 + GetFailureError 为 NONE → 不走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_abnormal_without_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_DEVICE_AICORE_ERROR));
+
+    ctx->failureError_ = RT_ERROR_NONE;
+    rtError_t ret = ctx->CheckStatus(nullptr, false);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckStatus: GetDeviceStatus 正常 + GetFailureError 非 NONE → 走第二个 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_normal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_NONE));
+
+    ctx->failureError_ = RT_ERROR_DEVICE_AICORE_ERROR;
+    ctx->ctxMode_ = STOP_ON_FAILURE;
+    rtError_t ret = ctx->CheckStatus(nullptr, true);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->failureError_ = RT_ERROR_NONE;
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckTaskSend: GetDeviceStatus 异常 + GetFailureError 非 NONE → 走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckTaskSend_device_abnormal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_DEVICE_AICORE_ERROR));
+
+    Stream* stm = ctx->defaultStream_;
+    TaskInfo task = {};
+    task.stream = stm;
+
+    ctx->failureError_ = RT_ERROR_DEVICE_AICORE_ERROR;
+    rtError_t ret = ctx->CheckTaskSend(&task);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->failureError_ = RT_ERROR_NONE;
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckTaskSend: GetDeviceStatus 异常 + GetFailureError 为 NONE → 不走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckTaskSend_device_abnormal_without_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_DEVICE_AICORE_ERROR));
+
+    Stream* stm = ctx->defaultStream_;
+    TaskInfo task = {};
+    task.stream = stm;
+
+    ctx->failureError_ = RT_ERROR_NONE;
+    rtError_t ret = ctx->CheckTaskSend(&task);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
 #endif
+
+// ==================== CheckStatus / CheckTaskSend PopContextErrMsg 覆盖 ====================
+static Context* GetPrimaryContext(int32_t& devId)
+{
+    rtError_t error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    RefObject<Context*>* refObject = (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
+    Context* ctx = refObject->GetVal();
+    return ctx;
+}
+
+static void ReleasePrimaryContext(int32_t devId)
+{
+    (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
+}
+
+// CheckStatus: GetDeviceStatus 异常 + GetFailureError 非 NONE → 走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_abnormal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    ctx->SetFailureError(RT_ERROR_INVALID_VALUE);
+    rtError_t ret = ctx->CheckStatus(nullptr, false);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->SetFailureError(RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckStatus: GetDeviceStatus 异常 + GetFailureError 为 NONE → 不走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_abnormal_without_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    ctx->SetFailureError(RT_ERROR_NONE);
+    rtError_t ret = ctx->CheckStatus(nullptr, false);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckStatus: GetDeviceStatus 正常 + GetFailureError 非 NONE → 走第二个 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckStatus_device_normal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_NONE));
+
+    ctx->SetFailureError(RT_ERROR_INVALID_VALUE);
+    ctx->ctxMode_ = STOP_ON_FAILURE;
+    rtError_t ret = ctx->CheckStatus(nullptr, true);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->SetFailureError(RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckTaskSend: GetDeviceStatus 异常 + GetFailureError 非 NONE → 走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckTaskSend_device_abnormal_with_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    Stream* stm = ctx->defaultStream_;
+    TaskInfo task = {};
+    task.stream = stm;
+
+    ctx->SetFailureError(RT_ERROR_INVALID_VALUE);
+    rtError_t ret = ctx->CheckTaskSend(&task);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ctx->SetFailureError(RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}
+
+// CheckTaskSend: GetDeviceStatus 异常 + GetFailureError 为 NONE → 不走 PopContextErrMsg 分支
+TEST_F(ContextTest, CheckTaskSend_device_abnormal_without_failure_error)
+{
+    int32_t devId;
+    Context* ctx = GetPrimaryContext(devId);
+    ASSERT_NE(ctx, nullptr);
+
+    Device* dev = ((Runtime*)Runtime::Instance())->GetDevice(devId, 0);
+    ASSERT_NE(dev, nullptr);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceStatus).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    Stream* stm = ctx->defaultStream_;
+    TaskInfo task = {};
+    task.stream = stm;
+
+    ctx->SetFailureError(RT_ERROR_NONE);
+    rtError_t ret = ctx->CheckTaskSend(&task);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    ReleasePrimaryContext(devId);
+}

@@ -668,7 +668,7 @@
       }
     },
     {
-      "errClass": "RTS Errors",
+      "errClass": "Operator Errors",
       "errTitle": "Execution_Error",
       "ErrCode": "EZ2001",
       "ErrMessage": "%s\nFault %s occurs in the system: %s",
