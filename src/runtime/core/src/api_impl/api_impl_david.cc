@@ -51,6 +51,9 @@
 #include "starsv2_base.hpp"
 #include "utils.h"
 #include "api_handle_guard.h"
+#include "error_message_manage.hpp"
+#include "capability.hpp"
+#include "notify_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -985,8 +988,13 @@ rtError_t ApiImplDavid::CntNotifyCreate(const int32_t deviceId, CountNotify** co
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Device* const dev = curCtx->Device_();
+    Device* const dev = curCtx->Device_();
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
+
+    const uint32_t mc2FeatureFlag = dev->GetDevProperties().mc2FeatureFlag;
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+        ((mc2FeatureFlag == 0U) && (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)), RT_ERROR_INVALID_VALUE,
+        NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0)");
 
     *retCntNotify = new (std::nothrow) CountNotify(static_cast<uint32_t>(deviceId), dev->DevGetTsId());
     COND_RETURN_AND_MSG_OUTER(
