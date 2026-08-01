@@ -244,6 +244,11 @@ void DlogInit(void)
     // sync time zone
     DlogLevelInit();
     (void)DlogAsyncInit();
+#if defined LOG_CPP || defined APP_LOG
+    // level already comes from the env in these builds, so slogd must not filter
+    // by level again; must run after DlogAsyncInit inited the buffers
+    DlogUpdateFlierLevelStatus();
+#endif
     (void)LogGetCpuFrequency();
     DlogSetInited(true);
 }

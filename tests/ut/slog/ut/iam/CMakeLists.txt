@@ -70,6 +70,70 @@ set_target_properties(iam_slog_utest PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
+# iam + APP_LOG build, matching libunified_dlog.so: the log level comes from the
+# environment via dlog_level_env.c instead of the iam ioctl (dlog_level_iam.c is
+# compiled out by its own !APP_LOG guard).
+add_executable(iam_app_slog_utest
+    ${LOG_SOURCE_PATH}/liblog/slog/alog_to_slog.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_async_process.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_core_iam.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_iam.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_env.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_level_mgr.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_message.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_attr.c
+    ${LOG_SOURCE_PATH}/liblog/slog/dlog_time.c
+    ${LOG_SOURCE_PATH}/utils/high_mem.c
+    ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c
+    ${LOG_SOURCE_PATH}/utils/log_system_api.c
+    ${LOG_SOURCE_PATH}/utils/log_common.c
+    ${LOG_SOURCE_PATH}/utils/log_time.c
+    ${LOG_SOURCE_PATH}/utils/library_load.c
+    ${UT_SOURCE_PATH}/slog/testcase/main.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/iam_slog_stub.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/iam_app_slog_level_filter_utest.cc
+)
+
+target_include_directories(iam_app_slog_utest PRIVATE
+    ${TOP_DIR}/include/driver
+    ${LOG_SOURCE_PATH}/liblog/slog
+    ${LOG_SOURCE_PATH}/shared
+    ${LOG_SOURCE_PATH}/utils
+    ${LOG_SOURCE_PATH}/utils/log_buffer
+    ${LOG_SOURCE_PATH}/inc/toolchain
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${UT_SOURCE_PATH}/alog/stub
+    ${UT_SOURCE_PATH}/slog/stub
+)
+
+target_compile_definitions(iam_app_slog_utest PRIVATE
+    _LOG_UT_
+    IAM
+    APP_LOG
+    WRITE_TO_SYSLOG
+    OS_TYPE_DEF=0
+    LOGOUT_IAM_SERVICE_PATH="/tmp/iam_app_slog_utest/iam"
+    HM_DRV_CHAR_DEV_USER_PATH="/tmp/iam_app_slog_utest/himem"
+)
+
+target_link_libraries(iam_app_slog_utest PRIVATE
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:mmpa_headers>
+    mmpa
+    c_sec
+    dl
+)
+
+target_compile_options(iam_app_slog_utest PRIVATE
+    -Werror
+)
+
+set_target_properties(iam_app_slog_utest PROPERTIES
+    OUTPUT_NAME toolchain_iam_app_slog_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+)
+
 add_executable(iam_slogd_utest
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_pre_process/log_communication/slogd_communication_iam.c
     ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c
