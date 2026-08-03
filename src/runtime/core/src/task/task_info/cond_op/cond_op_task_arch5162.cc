@@ -23,12 +23,6 @@
 namespace cce {
 namespace runtime {
 
-void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t* sqe)
-{
-    UNUSED(taskInfo);
-    UNUSED(sqe);
-}
-
 #if F_DESC("LabelSetTask")
 void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
 {

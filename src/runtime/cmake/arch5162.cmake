@@ -72,6 +72,7 @@ set(libruntime_api_src_files
 
 set(libruntime_api_impl_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
@@ -175,15 +176,14 @@ set(runtime_raw_device_adpt_common_list
 
 set(runtime_src_aclgraph_list
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_task_arch5162.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture_arch5162.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/stream_capture.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
 )
 
