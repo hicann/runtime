@@ -69,7 +69,8 @@ DavidPlatform::DavidPlatform()
         PLATFORM_STARS_QOS,
         PLATFORM_SYS_MEM_SERVICEFLOW,
         PLATFORM_ACLAPI_SETDEVICE_ENABLE,
-        PLATFORM_API_STATS
+        PLATFORM_API_STATS,
+        PLATFORM_AICPU_SAMPLE_PERIOD
     };
     InsertPmuFeature();
     InsertSysFeature();

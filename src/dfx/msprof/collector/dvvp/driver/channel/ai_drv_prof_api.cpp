@@ -23,6 +23,7 @@ namespace dvvp {
 namespace driver {
 using namespace analysis::dvvp::common::error;
 using namespace Msprofiler::Parser;
+using namespace Analysis::Dvvp::Common::Platform;
 // 32 * 1024 * 0.8  is the full threshold  of ai_core_sample
 constexpr uint32_t AI_CORE_SAMPLE_FULL_THRESHOLD = static_cast<uint32_t>(32 * 1024 * 0.8);
 constexpr int32_t DRV_NOT_ENOUGH_SUB_CHANNEL_RESOURCE = -10;  // PROF_NOT_ENOUGH_SUB_CHANNEL_RESOURCE
@@ -341,7 +342,11 @@ int32_t DrvAicoreTaskBasedStart(int32_t profDeviceId, AI_DRV_CHANNEL profChannel
 
 int32_t DrvAicpuStart(uint32_t profDeviceId, AI_DRV_CHANNEL profChannel)
 {
-    constexpr uint32_t aicpuDrvSamplePeriod = 10U;
+    uint32_t aicpuDrvSamplePeriod = 10U;
+    if (IsDrvApiVersionSupport(DAVID_AICPU_SAMPLE_PERIOD) &&
+        Platform::instance()->CheckIfSupport(PLATFORM_AICPU_SAMPLE_PERIOD)) {
+        aicpuDrvSamplePeriod = 5U;
+    }
     struct prof_start_para profStartPara = { .channel_type = PROF_PERIPHERAL_TYPE,
                                              .sample_period = aicpuDrvSamplePeriod,
                                              .real_time = PROFILE_REAL_TIME,
