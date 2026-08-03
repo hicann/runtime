@@ -199,6 +199,13 @@ rtError_t CaptureModel::AddExternalRecordEvent(Event* const event, uint32_t capt
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t CaptureModel::CheckExternalEventConstraints(const Event* const event, bool isRecord) const
+{
+    UNUSED(event);
+    UNUSED(isRecord);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t CaptureModel::AddExternalWaitEvent(Event* const event, uint32_t captureStreamId, uint32_t taskId)
 {
     UNUSED(event);

@@ -232,6 +232,51 @@ TEST_F(RtApiTest, rtEventRecordWithFlagDefaultGoesThroughWithFlagImpl)
     EXPECT_EQ(rtEventRecordWithFlag(eventHandle, streamHandle, RT_EVENT_RECORD_DEFAULT), RT_ERROR_NONE);
 }
 
+TEST_F(RtApiTest, eventRecordFlagIsSetByApiErrorDecorator)
+{
+    ApiImpl apiImpl;
+    ApiErrorDecorator apiError(&apiImpl);
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::EventRecord).expects(once()).will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr, false, false);
+
+    EXPECT_EQ(apiError.EventRecord(&event, nullptr, RT_EVENT_RECORD_DEFAULT), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(event.GetRecordFlag(), RT_EVENT_RECORD_DEFAULT);
+
+    event.SetRecordFlag(RT_EVENT_RECORD_EXTERNAL);
+    EXPECT_EQ(apiError.EventRecord(&event, nullptr, RT_EVENT_RECORD_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(event.GetRecordFlag(), RT_EVENT_RECORD_EXTERNAL);
+}
+
+TEST_F(RtApiTest, streamWaitFlagIsSetByApiErrorDecorator)
+{
+    ApiImpl apiImpl;
+    ApiErrorDecorator apiError(&apiImpl);
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::StreamWaitEvent)
+        .expects(once())
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    Event event(nullptr, RT_EVENT_DEFAULT, nullptr, false, false);
+
+    EXPECT_EQ(apiError.StreamWaitEvent(nullptr, &event, 0U, RT_EVENT_WAIT_DEFAULT), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(event.GetWaitFlag(), RT_EVENT_WAIT_DEFAULT);
+
+    event.SetWaitFlag(RT_EVENT_WAIT_EXTERNAL);
+    EXPECT_EQ(apiError.StreamWaitEvent(nullptr, &event, 0U, RT_EVENT_WAIT_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(event.GetWaitFlag(), RT_EVENT_WAIT_EXTERNAL);
+}
+
+TEST_F(RtApiTest, eventOperationFlagSetterOnlySetsValue)
+{
+    Event event;
+
+    event.SetRecordFlag(RT_EVENT_RECORD_EXTERNAL);
+    event.SetRecordFlag(RT_EVENT_RECORD_DEFAULT);
+    event.SetWaitFlag(RT_EVENT_WAIT_EXTERNAL);
+    event.SetWaitFlag(RT_EVENT_WAIT_DEFAULT);
+
+    EXPECT_EQ(event.GetRecordFlag(), RT_EVENT_RECORD_DEFAULT);
+    EXPECT_EQ(event.GetWaitFlag(), RT_EVENT_WAIT_DEFAULT);
+}
+
 TEST_F(RtApiTest, rtStreamWaitEventWithFlagApiValidation)
 {
     MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
@@ -274,10 +319,13 @@ TEST_F(RtApiTest, capture_external_refresh_table_mixed_layout)
     rtStream_t stream = nullptr;
     rtEvent_t event1 = nullptr;
     rtEvent_t event2 = nullptr;
+    rtEvent_t event3 = nullptr, event4 = nullptr;
     rtModel_t captureMdlHandle = nullptr;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
     EXPECT_EQ(rtEventCreateExWithFlag(&event1, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
     EXPECT_EQ(rtEventCreateExWithFlag(&event2, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventCreateExWithFlag(&event3, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventCreateExWithFlag(&event4, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
     ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
     ASSERT_EQ(rtStreamGetCaptureInfo(stream, nullptr, &captureMdlHandle), RT_ERROR_NONE);
 
@@ -286,7 +334,17 @@ TEST_F(RtApiTest, capture_external_refresh_table_mixed_layout)
 
     ASSERT_EQ(rtEventRecordWithFlag(event1, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
     ASSERT_EQ(rtEventRecordWithFlag(event2, stream, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
-    ASSERT_EQ(rtStreamWaitEventWithFlag(stream, event1, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamWaitEventWithFlag(stream, event3, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtEventRecordWithFlag(event4, stream, RT_EVENT_RECORD_DEFAULT), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamWaitEventWithFlag(stream, event4, 0U, RT_EVENT_WAIT_DEFAULT), RT_ERROR_NONE);
+    Event* recordEvent = rt_ut::UnwrapOrNull<Event>(event1);
+    Event* waitEvent = rt_ut::UnwrapOrNull<Event>(event3);
+    ASSERT_NE(recordEvent, nullptr);
+    ASSERT_NE(waitEvent, nullptr);
+    EXPECT_EQ(model->CheckExternalEventConstraints(recordEvent, true), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(model->CheckExternalEventConstraints(waitEvent, false), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(recordEvent->GetRecordFlag(), RT_EVENT_RECORD_EXTERNAL);
+    EXPECT_EQ(waitEvent->GetWaitFlag(), RT_EVENT_WAIT_EXTERNAL);
 
     rtModel_t modelHandle = nullptr;
     EXPECT_EQ(rtStreamEndCapture(stream, &modelHandle), RT_ERROR_NONE);
@@ -296,6 +354,8 @@ TEST_F(RtApiTest, capture_external_refresh_table_mixed_layout)
     EXPECT_EQ(model->externalEventRefreshLayout_.totalSize, 2U * recordEntrySize + EXTERNAL_WAIT_REFRESH_ENTRY_SIZE);
     EXPECT_NE(model->externalEventRefreshHostTemplate_, nullptr);
     EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventDestroy(event4), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventDestroy(event3), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(event2), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(event1), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);

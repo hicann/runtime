@@ -1382,10 +1382,9 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     Stream* const stm, Event* const evt, const uint32_t timeout, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering stream event waiting");
-    COND_RETURN_AND_MSG_OUTER(
-        flag != RT_EVENT_WAIT_DEFAULT && flag != RT_EVENT_WAIT_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        "Triggering stream event waiting", "Parameter flag value " + std::to_string(flag),
-        "Only RT_EVENT_WAIT_DEFAULT or RT_EVENT_WAIT_EXTERNAL is supported.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        ((flag != RT_EVENT_WAIT_DEFAULT) && (flag != RT_EVENT_WAIT_EXTERNAL)), RT_ERROR_INVALID_VALUE,
+        "Triggering stream event waiting", flag, "RT_EVENT_WAIT_DEFAULT(0) or RT_EVENT_WAIT_EXTERNAL(1)");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1400,11 +1399,21 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
         evt->IsEventWithoutWaitTask(), RT_ERROR_FEATURE_NOT_SUPPORT,
         "flag=%" PRIu64 " is not supported, and there is no need to wait for the event.", evt->GetEventFlag());
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
-        COND_RETURN_WARN(
+        COND_RETURN_AND_MSG_OUTER(
             (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "External event wait requires new-mode DDSYNC_NS event, newMode=%d, flag=%" PRIu64 ".", evt->IsNewMode(),
-            evt->GetEventFlag());
+            ErrorCode::EE1016, "Triggering stream event waiting external",
+            "Only events created by rtEventCreateExWithFlag with RT_EVENT_DDSYNC_NS are supported when flag is "
+            "RT_EVENT_WAIT_EXTERNAL");
     }
+    // Wait flag一致性仅由ApiError层检查，其他位置不读写该状态。
+    const uint32_t currentFlag = evt->GetWaitFlag();
+    COND_RETURN_AND_MSG_OUTER(
+        ((currentFlag != UINT32_MAX) && (currentFlag != flag)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+        "Triggering stream event waiting",
+        RtFmtMsg(
+            "The wait flag must remain consistent for the same event, current flag is %s, input flag is %s",
+            EventOperationFlagToString(currentFlag, false).c_str(), EventOperationFlagToString(flag, false).c_str()));
+    evt->SetWaitFlag(flag);
     return impl_->StreamWaitEvent(stm, evt, timeout, flag);
 }
 
@@ -1668,10 +1677,9 @@ rtError_t ApiErrorDecorator::EventDestroySync(Event* evt)
 rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event recording");
-    COND_RETURN_AND_MSG_OUTER(
-        flag != RT_EVENT_RECORD_DEFAULT && flag != RT_EVENT_RECORD_EXTERNAL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
-        "Event recording", "Parameter flag value " + std::to_string(flag),
-        "Only RT_EVENT_RECORD_DEFAULT or RT_EVENT_RECORD_EXTERNAL is supported.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+        ((flag != RT_EVENT_RECORD_DEFAULT) && (flag != RT_EVENT_RECORD_EXTERNAL)), RT_ERROR_INVALID_VALUE,
+        "Event recording", flag, "RT_EVENT_RECORD_DEFAULT(0) or RT_EVENT_RECORD_EXTERNAL(1)");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1683,11 +1691,21 @@ rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, co
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) && (stm->IsCapturing())),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported when the capture stream flag is set.");
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
-        COND_RETURN_WARN(
+        COND_RETURN_AND_MSG_OUTER(
             (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "External event record requires new-mode DDSYNC_NS event, newMode=%d, flag=%" PRIu64 ".", evt->IsNewMode(),
-            evt->GetEventFlag());
+            ErrorCode::EE1016, "Event recording external",
+            "Only events created by rtEventCreateExWithFlag with RT_EVENT_DDSYNC_NS are supported when flag is "
+            "RT_EVENT_RECORD_EXTERNAL");
     }
+    // Record flag一致性仅由ApiError层检查，其他位置不读写该状态。
+    const uint32_t currentFlag = evt->GetRecordFlag();
+    COND_RETURN_AND_MSG_OUTER(
+        ((currentFlag != UINT32_MAX) && (currentFlag != flag)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+        "Event recording",
+        RtFmtMsg(
+            "The record flag must remain consistent for the same event, current flag is %s, input flag is %s",
+            EventOperationFlagToString(currentFlag, true).c_str(), EventOperationFlagToString(flag, true).c_str()));
+    evt->SetRecordFlag(flag);
     const rtError_t error = impl_->EventRecord(evt, stm, flag);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error, "Record event failed.");

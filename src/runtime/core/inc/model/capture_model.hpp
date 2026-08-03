@@ -140,6 +140,8 @@ public:
     void DeleteSingleOperEvent(Event* const event) { (void)singleOperEvents_.erase(event); }
 
     rtError_t ResetCaptureEvents(Stream* const stm) const;
+
+    rtError_t CheckExternalEventConstraints(const Event* const event, bool isRecord) const;
     // 注册capture阶段生成的external record占位任务，replay阶段再实例化真实record资源。
     rtError_t AddExternalRecordEvent(Event* event, uint32_t captureStreamId, uint32_t taskId);
     // 注册capture阶段生成的external wait占位任务，replay阶段再绑定真实producer资源。

@@ -619,7 +619,12 @@ rtError_t SubmitExternalEventTaskCommon(
     CaptureModel* const captureMdl = dynamic_cast<CaptureModel*>(mdl);
     NULL_PTR_RETURN_MSG(captureMdl, RT_ERROR_MODEL_NULL);
 
-    rtError_t error = evt->TrySwitchToSoftwareMode();
+    rtError_t error = captureMdl->CheckExternalEventConstraints(evt, isRecord);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    error = evt->TrySwitchToSoftwareMode();
     ERROR_RETURN_MSG_INNER(error, "Switch event to software mode failed, retCode=%#x.", error);
     error = isRecord ? CreateExternalRecordPlaceholder(stm, submitPlaceholder) :
                        CreateExternalWaitPlaceholder(evt, stm, submitPlaceholder);

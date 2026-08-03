@@ -1294,9 +1294,14 @@ TEST_F(EventTestDavid, EventRecordExternalDispatchesThroughApiImpl)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    MOCKER(CheckCaptureModelSupportExternalEvent)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     EXPECT_EQ(apiImpl.EventRecord(evt, stream_, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_NONE);
 
+    EXPECT_EQ(apiImpl.EventRecord(evt, stream_, RT_EVENT_RECORD_EXTERNAL), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel->externalRecordEventItems_.size(), 1U);
     stream_->SetModel(nullptr);
     stream_->UpdateCaptureStream(nullptr);
@@ -1346,9 +1351,14 @@ TEST_F(EventTestDavid, StreamWaitExternalDispatchesThroughApiImpl)
     captureModel->context_ = stream_->Context_();
 
     ApiImplDavid apiImpl;
+    MOCKER(CheckCaptureModelSupportExternalEvent)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     EXPECT_EQ(apiImpl.StreamWaitEvent(stream_, evt, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_NONE);
 
+    EXPECT_EQ(apiImpl.StreamWaitEvent(stream_, evt, 0U, RT_EVENT_WAIT_EXTERNAL), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel->externalWaitEventItems_.size(), 1U);
     stream_->SetModel(nullptr);
     stream_->UpdateCaptureStream(nullptr);

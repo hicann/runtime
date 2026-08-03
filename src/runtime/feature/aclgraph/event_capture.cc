@@ -75,7 +75,8 @@ rtError_t Event::RecordSoftwareEvent(Stream* const stm)
     PublishSoftwareRecordResource(eventAddr, newEventId);
     (void)MemWriteValueTaskInit(tsk, eventAddr, static_cast<uint64_t>(1U));
     tsk->typeName = "EVENT_RECORD";
-    tsk->type = (!stm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
+    // capture task需按实际所属stream的bind状态选择任务类型。
+    tsk->type = (!tsk->stream->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = this;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;

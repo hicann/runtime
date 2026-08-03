@@ -194,6 +194,11 @@ public:
 
     bool IsHardwareMode(void) const { return isHardwareMode_; }
 
+    uint32_t GetRecordFlag() const { return recordFlag_.Value(); }
+    uint32_t GetWaitFlag() const { return waitFlag_.Value(); }
+    void SetRecordFlag(uint32_t flag) { recordFlag_.Set(flag); }
+    void SetWaitFlag(uint32_t flag) { waitFlag_.Set(flag); }
+
 protected:
     bool AreTaskMapsEmptyLocked();
     Device* device_;
@@ -239,6 +244,9 @@ private:
     std::unordered_map<uint32_t, Notifier*> notifierMap_;
     EventOwner eventOwner_{EventOwner::EVENT_UNKNOWN};
     bool isHardwareMode_{true};
+    // 记录首次通过ApiError层校验的record/wait flag，只用于检查同类型操作的flag一致性。
+    Atomic<uint32_t> recordFlag_{UINT32_MAX};
+    Atomic<uint32_t> waitFlag_{UINT32_MAX};
 };
 } // namespace runtime
 

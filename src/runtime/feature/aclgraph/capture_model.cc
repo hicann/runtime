@@ -33,6 +33,7 @@
 #include "memcpy_c.hpp"
 #include "notify_c.hpp"
 #include <securec.h>
+#include <algorithm>
 
 namespace cce {
 namespace runtime {
@@ -472,9 +473,44 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
 
 rtError_t CaptureModel::ResetCaptureEvents(Stream* const stm) const { return ResetCaptureEventsProc(this, stm); }
 
-rtError_t CaptureModel::AddExternalRecordEvent(Event* event, uint32_t captureStreamId, uint32_t taskId)
+static bool HasExternalEventItem(const std::vector<ExternalEventTaskItem>& items, const Event* const event)
+{
+    return std::any_of(
+        items.begin(), items.end(), [event](const ExternalEventTaskItem& item) { return item.event == event; });
+}
+
+rtError_t CaptureModel::CheckExternalEventConstraints(const Event* const event, bool isRecord) const
 {
     NULL_PTR_RETURN_MSG(event, RT_ERROR_EVENT_NULL);
+    const auto& sameTypeItems = isRecord ? externalRecordEventItems_ : externalWaitEventItems_;
+    // 检查同一Event是否已登记相同类型的external操作。
+    if (isRecord) {
+        COND_RETURN_AND_MSG_OUTER(
+            HasExternalEventItem(sameTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+            "Recording an external event",
+            "The same event can be used with RT_EVENT_RECORD_EXTERNAL only once in the same graph. Use different "
+            "events for multiple external record operations in one graph");
+    } else {
+        COND_RETURN_AND_MSG_OUTER(
+            HasExternalEventItem(sameTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+            "Stream waiting for an external event",
+            "The same event can be used with RT_EVENT_WAIT_EXTERNAL only once in the same graph. Use different "
+            "events for multiple external wait operations in one graph");
+    }
+    // 检查同一Event是否同时登记了record和wait两种external操作。
+    // 同一Event分别下发一次record external和wait external并不涉及record的flag切换或者wait的flag切换，在api层不拦截。
+    const auto& otherTypeItems = isRecord ? externalWaitEventItems_ : externalRecordEventItems_;
+    COND_RETURN_AND_MSG_OUTER(
+        HasExternalEventItem(otherTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+        "Capturing external event synchronization",
+        "The same event cannot be used for both RT_EVENT_RECORD_EXTERNAL and RT_EVENT_WAIT_EXTERNAL in the same "
+        "graph. Use normal capture record/wait inside one graph, or use different graphs for external graph-to-graph "
+        "synchronization");
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::AddExternalRecordEvent(Event* event, uint32_t captureStreamId, uint32_t taskId)
+{
     ExternalEventTaskItem taskRef = {event, captureStreamId, taskId};
     externalRecordEventItems_.push_back(taskRef);
     return RT_ERROR_NONE;
@@ -482,7 +518,6 @@ rtError_t CaptureModel::AddExternalRecordEvent(Event* event, uint32_t captureStr
 
 rtError_t CaptureModel::AddExternalWaitEvent(Event* event, uint32_t captureStreamId, uint32_t taskId)
 {
-    NULL_PTR_RETURN_MSG(event, RT_ERROR_EVENT_NULL);
     ExternalEventTaskItem taskRef = {event, captureStreamId, taskId};
     externalWaitEventItems_.push_back(taskRef);
     return RT_ERROR_NONE;

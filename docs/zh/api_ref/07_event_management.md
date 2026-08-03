@@ -465,10 +465,10 @@ aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t
 
 ### 约束说明
 
-当flag为ACL_EVENT_RECORD_EXTERNAL时，存在如下约束：
+此接口存在如下约束：
 
-- 对于同一个图，在图捕获过程中，同一event不允许同时进行Record和Wait操作。
-- 若event在通过本接口记录之前已被[aclrtRecordEvent](#aclrtRecordEvent)记录过，则本接口返回错误。
+- 对于同一个图，在捕获过程中，同一个Event只能下发一次flag为ACL_EVENT_RECORD_EXTERNAL的record操作或flag为ACL_EVENT_WAIT_EXTERNAL的wait操作。
+- 同一个Event的Record操作不允许flag在ACL_EVENT_RECORD_DEFAULT与ACL_EVENT_RECORD_EXTERNAL之间切换。
 
 <br>
 <br>
@@ -973,10 +973,10 @@ aclError aclrtStreamWaitEventWithFlag(aclrtStream stream, aclrtEvent event, uint
 
 ### 约束说明
 
-当flag为ACL_EVENT_WAIT_EXTERNAL时，存在如下约束：
+此接口存在如下约束：
 
-- 对于同一个图，在图捕获过程中，同一event不允许同时进行Record和Wait操作。
-- 若event在通过本接口记录之前已被[aclrtRecordEvent](#aclrtRecordEvent)记录过，则本接口返回错误。
+- 对于同一个图，在捕获过程中，同一个Event只能下发一次flag为ACL_EVENT_WAIT_EXTERNAL的wait操作或flag为ACL_EVENT_RECORD_EXTERNAL的record操作。
+- 同一个Event的Wait操作不允许flag在ACL_EVENT_WAIT_DEFAULT与ACL_EVENT_WAIT_EXTERNAL之间切换。
 
 <br>
 <br>
