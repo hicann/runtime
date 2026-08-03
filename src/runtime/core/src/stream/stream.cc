@@ -3751,7 +3751,7 @@ rtError_t Stream::UpdateAllPersistentTask()
             workTask->type, workTask->typeName);
     }
 
-    if (totalSendSqeNum == 0U && parentCaptureStream_ != nullptr) {
+    if (totalSendSqeNum == 0U) {
         error = SendNopTask(Context_(), this);
         ERROR_RETURN(error, "construct nop failed, stream_id=%d.", streamId_);
 

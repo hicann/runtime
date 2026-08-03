@@ -1386,12 +1386,6 @@ rtError_t CaptureModel::Update(void)
         ERROR_RETURN(error, "free stream id and realloc stream id failed, stream_id=%d, model_id=%d.", streamId, Id_());
         error = stm->UpdateAllPersistentTask();
         ERROR_RETURN(error, "stream update failed, stream_id=%d, model_id=%d.", streamId, Id_());
-        if (stm->GetDelayRecycleTaskSqeNum() == 0U) {
-            error = Context_()->ModelDelStream(this, stm);
-            ERROR_RETURN(error, "remove stream from model failed, stream_id=%d, model_id=%d.", streamId, Id_());
-            error = Context_()->StreamDestroy(stm, true);
-            ERROR_RETURN(error, "destroy stream failed, stream_id=%d, model_id=%d.", streamId, Id_());
-        }
     }
 
     SetIsSendSqe(false);
@@ -1400,6 +1394,7 @@ rtError_t CaptureModel::Update(void)
         releaseNtyNum);
     return RT_ERROR_NONE;
 }
+
 void CaptureModel::SetModelCacheOpInfoSwitch(const uint32_t status) const
 {
     RT_LOG(
