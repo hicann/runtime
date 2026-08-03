@@ -204,6 +204,77 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitCloseServerFail)
     EXPECT_EQ(false, ret);
 }
 
+// Exit must keep the servers_ entry whose ServerUnInit failed, otherwise the handle is leaked
+// and the next ServerInit opens a server on a device that still has one
+TEST_F(ADX_SERVER_MANAGER_UTEST, ExitKeepServerOnUnInitFail)
+{
+    Adx::AdxServerManager server;
+    std::unique_ptr<Adx::AdxEpoll> epoll = std::unique_ptr<Adx::AdxHdcEpoll>(new Adx::AdxHdcEpoll());
+    EXPECT_EQ(true, server.RegisterEpoll(epoll));
+    std::unique_ptr<Adx::AdxCommOpt> opt = std::unique_ptr<Adx::HdcCommOpt>(new Adx::HdcCommOpt());
+    EXPECT_EQ(true, server.RegisterCommOpt(opt, std::to_string(3))); // 3 -> hdc service type
+    std::map<std::string, std::string> info;
+    info["DeviceId"] = "0";
+    info["ServiceType"] = "0";
+    EXPECT_EQ(true, server.ServerInit(info));
+    EXPECT_EQ(1U, server.servers_.size());
+
+    // let EpollDel fail so ServerUnInit returns false during Exit
+    MOCKER(drvHdcEpollCtl).stubs()
+        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY));
+    EXPECT_EQ(IDE_DAEMON_ERROR, server.Exit());
+    // the entry survives instead of being dropped, so its handle is not leaked
+    EXPECT_EQ(1U, server.servers_.size());
+    // Exit returned before EpollDestroy, so the epoll is still usable for a later retry.
+    // without this assertion the test cannot tell the early return was removed
+    EXPECT_NE(nullptr, server.epoll_.get());
+}
+
+// the retained entry must still be closeable: a later Exit() retries the failed ServerUnInit,
+// which only works because the first Exit() returned before destroying the epoll
+TEST_F(ADX_SERVER_MANAGER_UTEST, ExitRetryClosesRetainedServer)
+{
+    Adx::AdxServerManager server;
+    std::unique_ptr<Adx::AdxEpoll> epoll = std::unique_ptr<Adx::AdxHdcEpoll>(new Adx::AdxHdcEpoll());
+    EXPECT_EQ(true, server.RegisterEpoll(epoll));
+    std::unique_ptr<Adx::AdxCommOpt> opt = std::unique_ptr<Adx::HdcCommOpt>(new Adx::HdcCommOpt());
+    EXPECT_EQ(true, server.RegisterCommOpt(opt, std::to_string(3))); // 3 -> hdc service type
+    std::map<std::string, std::string> info;
+    info["DeviceId"] = "0";
+    info["ServiceType"] = "2";
+    EXPECT_EQ(true, server.ServerInit(info));
+
+    // EpollDel fails the first time, succeeds the second
+    MOCKER(drvHdcEpollCtl).stubs()
+        .will(returnValue(DRV_ERROR_DEVICE_NOT_READY))
+        .then(returnValue(DRV_ERROR_NONE));
+    EXPECT_EQ(IDE_DAEMON_ERROR, server.Exit());
+    EXPECT_EQ(1U, server.servers_.size());
+
+    EXPECT_EQ(IDE_DAEMON_OK, server.Exit());
+    EXPECT_EQ(0U, server.servers_.size());
+}
+
+// the counterpart: when ServerUnInit succeeds, Exit drops the entry and reports success
+TEST_F(ADX_SERVER_MANAGER_UTEST, ExitEraseServerOnUnInitOk)
+{
+    Adx::AdxServerManager server;
+    std::unique_ptr<Adx::AdxEpoll> epoll = std::unique_ptr<Adx::AdxHdcEpoll>(new Adx::AdxHdcEpoll());
+    EXPECT_EQ(true, server.RegisterEpoll(epoll));
+    std::unique_ptr<Adx::AdxCommOpt> opt = std::unique_ptr<Adx::HdcCommOpt>(new Adx::HdcCommOpt());
+    EXPECT_EQ(true, server.RegisterCommOpt(opt, std::to_string(3))); // 3 -> hdc service type
+    std::map<std::string, std::string> info;
+    info["DeviceId"] = "0";
+    info["ServiceType"] = "1";
+    EXPECT_EQ(true, server.ServerInit(info));
+    EXPECT_EQ(1U, server.servers_.size());
+
+    EXPECT_EQ(IDE_DAEMON_OK, server.Exit());
+    EXPECT_EQ(0U, server.servers_.size());
+    // the success path runs to the end and releases the epoll
+    EXPECT_EQ(nullptr, server.epoll_.get());
+}
+
 TEST_F(ADX_SERVER_MANAGER_UTEST, ServerUnInitEpollDeleteFail)
 {    Adx::AdxServerManager server;
     std::map<std::string, std::string> info;

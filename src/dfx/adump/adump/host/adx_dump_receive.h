@@ -9,6 +9,7 @@
  */
 #ifndef ADX_DATA_DUMP_COMPONENT_H
 #define ADX_DATA_DUMP_COMPONENT_H
+#include <atomic>
 #include <map>
 #include <vector>
 #include "adx_component.h"
@@ -28,7 +29,7 @@ private:
     int32_t Receive(const CommHandle &handle, const SharedPtr<MsgProto> &proto);
     void StoreSession(uint32_t deviceId, AdxCommHandle handle);
     void ReleaseSession(uint32_t deviceId, AdxCommHandle handle);
-    bool init_;
+    std::atomic<bool> init_{false};
     std::mutex mutex_;
     std::map<uint32_t, std::vector<AdxCommHandle>> handles_;
 };

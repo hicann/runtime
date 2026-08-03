@@ -16,11 +16,11 @@
 namespace Adx {
 namespace {
 constexpr uint32_t RECONNECT_TIMES = 3U;
+constexpr uint32_t MAX_PROCESS_DRAIN_TIMEOUT = 5000U; // max 5s to wait the process threads over
 }
 
 AdxServerManager::AdxServerManager() noexcept
-    : waitOver_(true),
-      pid_(0),
+    : pid_(0),
       loadMode_(0),
       deviceId_(-1),
       type_(OptType::NR_COMM),
@@ -28,14 +28,13 @@ AdxServerManager::AdxServerManager() noexcept
       epoll_(nullptr),
       handleQue_(DEFAULT_EPOLL_HANDLE_QUEUE_SIZE),
       linkNum_(0),
-      serverInittedFlag_(false)
+      processingNum_(0)
 {
     servers_.clear();
 }
 
 AdxServerManager::AdxServerManager(int32_t loadMode, int32_t deviceId) noexcept
-    : waitOver_(true),
-      pid_(0),
+    : pid_(0),
       loadMode_(loadMode),
       deviceId_(deviceId),
       type_(OptType::NR_COMM),
@@ -43,7 +42,7 @@ AdxServerManager::AdxServerManager(int32_t loadMode, int32_t deviceId) noexcept
       epoll_(nullptr),
       handleQue_(DEFAULT_EPOLL_HANDLE_QUEUE_SIZE),
       linkNum_(0),
-      serverInittedFlag_(false)
+      processingNum_(0)
 {
     servers_.clear();
 }
@@ -146,17 +145,20 @@ bool AdxServerManager::ComponentAdd(std::unique_ptr<AdxComponent> &comp)
         return false;
     }
 
-    auto it = compMap_.find(comp->GetType());
+    const ComponentType type = comp->GetType();
+    std::lock_guard<std::mutex> lck(compMtx_);
+    auto it = compMap_.find(type);
     if (it != compMap_.end()) {
         return false;
     }
-    IDE_LOGI("server manager add component (%d)", static_cast<int32_t>(comp->GetType()));
-    compMap_[comp->GetType()] = std::move(comp);
+    IDE_LOGI("server manager add component (%d)", static_cast<int32_t>(type));
+    compMap_[type] = std::shared_ptr<AdxComponent>(std::move(comp));
     return true;
 }
 
 bool AdxServerManager::ComponentErase(ComponentType type)
 {
+    std::lock_guard<std::mutex> lck(compMtx_);
     auto it = compMap_.find(type);
     if (it == compMap_.end()) {
         return false;
@@ -166,12 +168,20 @@ bool AdxServerManager::ComponentErase(ComponentType type)
     return (compMap_.count(type) == 0);
 }
 
+std::shared_ptr<AdxComponent> AdxServerManager::GetComponent(ComponentType type) const
+{
+    std::lock_guard<std::mutex> lck(compMtx_);
+    auto it = compMap_.find(type);
+    return (it == compMap_.end()) ? nullptr : it->second;
+}
+
 bool AdxServerManager::ComponentInit() const
 {
     if (epoll_ == nullptr) {
         return false;
     }
 
+    std::lock_guard<std::mutex> lck(compMtx_);
     auto it = compMap_.begin();
     while (it != compMap_.end()) {
         (void)it->second->Init();
@@ -193,8 +203,17 @@ void AdxServerManager::HandleConnectEvent(CommHandle handle)
     funcBlock.procFunc = AdxServerManager::ThreadProcess;
     funcBlock.pulArg = this;
     mmThread tid = 0;
+    {
+        std::lock_guard<std::mutex> lck(processMtx_);
+        ++processingNum_;
+    }
     int32_t ret = Thread::CreateDetachTask(tid, funcBlock);
     if (ret != EN_OK) {
+        {
+            std::lock_guard<std::mutex> lck(processMtx_);
+            --processingNum_;
+            processCv_.notify_all();
+        }
         EpollHandle epHandle = ADX_INVALID_HANDLE;
         if (handleQue_.Pop(epHandle) == true) {
             IDE_LOGD("handle queue pop: %lx", epHandle);
@@ -265,6 +284,12 @@ IdeThreadArg AdxServerManager::ThreadProcess(IdeThreadArg arg)
 
 void AdxServerManager::ComponentProcess()
 {
+    const std::shared_ptr<void> processGuard(nullptr, [this](void *) {
+        std::lock_guard<std::mutex> lck(this->processMtx_);
+        --this->processingNum_;
+        this->processCv_.notify_all();
+    });
+
     EpollHandle epHandle = ADX_INVALID_HANDLE;
     IDE_LOGI("process new connect");
     if (handleQue_.Pop(epHandle) == false) {
@@ -331,8 +356,9 @@ bool AdxServerManager::DispatchComponent(CommHandle &handle, SharedPtr<MsgProto>
     ComponentType &comp)
 {
     comp = GetComponentTypeByReqType(static_cast<CmdClassT>(msgPtr->reqType));
-    auto it = compMap_.find(comp);
-    if (it == compMap_.end()) {
+    // hold a reference of the component, it keeps alive until this process is over
+    const std::shared_ptr<AdxComponent> component = GetComponent(comp);
+    if (component == nullptr) {
         IDE_LOGE("Unable to find the corresponding component type(%d)", static_cast<int32_t>(comp));
         return false;
     }
@@ -345,9 +371,9 @@ bool AdxServerManager::DispatchComponent(CommHandle &handle, SharedPtr<MsgProto>
         }
         linkNum_++;
     }
-    std::string compInfo = it->second->GetInfo();
+    std::string compInfo = component->GetInfo();
     IDE_LOGI("begin to process [%s] component", compInfo.c_str());
-    if (it->second->Process(handle, msgPtr) != IDE_DAEMON_OK) {
+    if (component->Process(handle, msgPtr) != IDE_DAEMON_OK) {
         IDE_LOGE("end of processing [%s] component failed, req->type: %u", compInfo.c_str(), msgPtr->reqType);
     } else {
         IDE_LOGI("end of processing [%s] component successfully", compInfo.c_str());
@@ -384,10 +410,12 @@ void AdxServerManager::TimerProcess()
     device->GetAllEnableDevices(loadMode_, deviceId_, devLogIds);
     std::map<std::string, std::string> info;
     info[OPT_SERVICE_KEY] = info_;
+
+    std::lock_guard<std::mutex> lck(serverMtx_);
     for (const auto& deviceId : devLogIds) {
-        auto server = servers_.find(deviceId);
         // filter the device that created HDC server(or not the specified device)
-        if (server != servers_.end() || !(deviceId_ == -1 || std::to_string(deviceId_) == deviceId)) {
+        if (servers_.find(deviceId) != servers_.end() ||
+            !(deviceId_ == -1 || std::to_string(deviceId_) == deviceId)) {
             continue;
         }
 
@@ -431,32 +459,51 @@ int32_t AdxServerManager::Exit()
 {
     serverInittedFlag_ = false;
     if (pid_ == mmGetPid()) { // not fork
+        // Stop the manager thread: Terminate stops accepting new client sessions
         Terminate();
-        // wait epoll wait timeout
+        // Confirm the thread exited
         while (!waitOver_) {
             mmSleep(DEFAULT_EPOLL_TIMEOUT);
         }
     }
 
-    // terminate the running components before close servers(close client sessions)
-    for (auto& component : compMap_) {
-        (void)component.second->Terminate();
-    }
-
-    // finalize the servers(delete epoll and close session)
-    for (auto& server : servers_) {
-        if (!ServerUnInit(server.second)) {
-            return IDE_DAEMON_ERROR;
+    // Stop the components: UnInit stops processing new client sessions,
+    // then Terminate closes blocking client sessions
+    {
+        std::lock_guard<std::mutex> lck(compMtx_);
+        for (auto& component : compMap_) {
+            (void)component.second->UnInit();
+            (void)component.second->Terminate();
         }
     }
-    servers_.clear();
 
-    // finalize the components
-    for (auto& component : compMap_) {
-        (void)component.second->UnInit();
+    // Wait the client session threads over, they are still using the components and the sessions
+    WaitProcessDrained();
+
+    // Finalize the servers(delete epoll and close the listening handle)
+    int32_t serverRet = IDE_DAEMON_OK;
+    {
+        std::lock_guard<std::mutex> lck(serverMtx_);
+        auto it = servers_.begin();
+        while (it != servers_.end()) {
+            if (ServerUnInit(it->second)) {
+                it = servers_.erase(it);
+            } else {
+                serverRet = IDE_DAEMON_ERROR;
+                ++it;
+            }
+        }
     }
-    // make sure no longer use it in ComponentProcess/SubComponentProcess
-    compMap_.clear();
+    if (serverRet != IDE_DAEMON_OK) {
+        return serverRet;
+    }
+
+    // Clear the registered components. shared_ptr(not unique_ptr) is required here: on drain
+    // timeout the straggler thread still holds its reference and destroys the component itself
+    {
+        std::lock_guard<std::mutex> lck(compMtx_);
+        compMap_.clear();
+    }
 
     if (epoll_ != nullptr) {
         if (epoll_->EpollDestroy() != IDE_DAEMON_OK) {
@@ -465,6 +512,16 @@ int32_t AdxServerManager::Exit()
         epoll_ = nullptr;
     }
     return IDE_DAEMON_OK;
+}
+
+void AdxServerManager::WaitProcessDrained()
+{
+    std::unique_lock<std::mutex> lck(processMtx_);
+    if (!processCv_.wait_for(lck, std::chrono::milliseconds(MAX_PROCESS_DRAIN_TIMEOUT),
+        [this]() { return this->processingNum_ == 0U; })) {
+        IDE_LOGW("still have %u component process threads running after waiting %ums",
+            processingNum_, MAX_PROCESS_DRAIN_TIMEOUT);
+    }
 }
 
 void AdxServerManager::SetMode(int32_t loadMode)

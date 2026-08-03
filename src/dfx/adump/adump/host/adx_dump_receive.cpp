@@ -9,6 +9,7 @@
  */
 
 #include "adx_dump_receive.h"
+#include <algorithm>
 #include "mmpa_api.h"
 #include "memory_utils.h"
 #include "adx_dump_record.h"

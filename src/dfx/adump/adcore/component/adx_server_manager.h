@@ -14,6 +14,9 @@
 #include <memory>
 #include <queue>
 #include <mutex>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include "ascend_hal.h"
 #include "common/thread.h"
 #include "bound_queue.h"
@@ -51,21 +54,28 @@ private:
     void HandleConnectEvent(CommHandle handle);
     bool IsLinkOverload(HDC_SESSION session) const;
     bool DispatchComponent(CommHandle &handle, SharedPtr<MsgProto> &msgPtr, HDC_SESSION session, ComponentType &comp);
+    std::shared_ptr<AdxComponent> GetComponent(ComponentType type) const;
+    void WaitProcessDrained();
 private:
-    bool waitOver_;
+    std::atomic<bool> waitOver_{true};
     int32_t pid_;
     int32_t loadMode_; // 0 default, 1 virtual
     int32_t deviceId_; // set -1 is all
     OptType type_;
     std::string info_;
     std::unique_ptr<AdxEpoll> epoll_;
-    std::map<ComponentType, std::unique_ptr<AdxComponent>> compMap_;
+    std::map<ComponentType, std::shared_ptr<AdxComponent>> compMap_;
+    mutable std::mutex compMtx_;
     std::map<std::string, EpollHandle> servers_;
+    mutable std::mutex serverMtx_;
     std::map<std::string, uint32_t> faultyDevices_;
     BoundQueue<EpollHandle> handleQue_;
     int32_t linkNum_;
     std::mutex linkMtx_;
-    bool serverInittedFlag_;
+    std::atomic<bool> serverInittedFlag_{false};
+    uint32_t processingNum_;
+    mutable std::mutex processMtx_;
+    std::condition_variable processCv_;
 };
 }
 #endif
