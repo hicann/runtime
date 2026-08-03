@@ -73,12 +73,12 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
     <!-- end id1 -->
 
     <!-- npu="IPV350" id2 -->
-    IPV350上不支持默认Comtext和默认Stream。
+    IPV350上不支持默认Context和默认Stream。
     <!-- end id2 -->
 - 如果在应用程序中没有调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口，那么在首次调用aclrtCreateContext接口时，系统内部会根据该接口传入的Device ID，为该Device绑定一个默认Stream（一个Device仅绑定一个默认Stream），因此在首次调用aclrtCreateContext接口时，占用的Stream数量 = Device上绑定的默认Stream + Context中包含的Stream。
     
     <!-- npu="IPV350" id3 -->
-    IPV350上不支持默认Comtext和默认Stream。
+    IPV350上不支持默认Context和默认Stream。
     <!-- end id3 -->
 
 <br>

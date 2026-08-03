@@ -21,5 +21,5 @@ Failed to unbind the stream to the model. Failed to unbind stream [1] from model
 
 ## 解决方法
 
-1. 需检查代码逻辑，确保要解绑的Sream已绑定到模型上。
+1. 需检查代码逻辑，确保要解绑的Stream已绑定到模型上。
 2. 需确保模型未在运行。

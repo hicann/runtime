@@ -229,7 +229,7 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 
 ### 约束说明
 
-- 本接口分配的内存不会进行对内容进行初始化。
+- 本接口分配的内存不会对内容进行初始化。
 
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
