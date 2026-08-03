@@ -122,7 +122,7 @@ void XpuTaskUnInitProc(TaskInfo* taskInfo)
         return;
     }
 
-    if (g_taskUnInitFunc[taskInfo->type] != nullptr) {
+    if (g_taskXpuUnInitFunc[taskInfo->type] != nullptr) {
         g_taskXpuUnInitFunc[taskInfo->type](taskInfo);
     }
 }
