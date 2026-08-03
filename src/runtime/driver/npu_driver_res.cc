@@ -1203,7 +1203,7 @@ rtError_t NpuDriver::ReAllocResourceId(
     resAllocInput.tsId = tsId;
     resAllocInput.resourceId = resourceId;
     resAllocInput.res[0U] = priority;
-    resAllocInput.res[1U] = (TSDRV_RES_SPECIFIED_ID | drvFlag);
+    resAllocInput.res[1U] = (static_cast<uint32_t>(TSDRV_RES_SPECIFIED_ID) | drvFlag);
 
     RT_LOG(
         RT_LOG_INFO, "Realloc id begin, device_id=%u, priority=%u, ts_id=%u, resourceId=%u, idType=%d", deviceId,
