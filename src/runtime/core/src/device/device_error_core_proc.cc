@@ -729,59 +729,26 @@ bool HasMteErr(const Device* const dev)
     return hasMteErr;
 }
 
-// 去掉字符串末尾的空格、逗号和句号（任意顺序组合）
-static void TrimTrailingPunct(char* str)
+static std::string ExtractEventStateDesc(const std::string& eventName)
 {
-    if (str == nullptr) {
-        return;
-    }
-    size_t len = strlen(str);
-    while ((len > 0U) && ((str[len - 1U] == ' ') || (str[len - 1U] == '.') || (str[len - 1U] == ','))) {
-        str[len - 1U] = '\0';
-        len--;
-    }
-}
-
-static void ExtractEventStateDesc(const std::string& eventName, char* outBuf, size_t outBufLen)
-{
-    if ((outBuf == nullptr) || (outBufLen == 0U)) {
-        return;
-    }
     const std::string prefix = "event state=";
-    size_t pos = eventName.find(prefix);
-    if (pos == std::string::npos) {
-        (void)snprintf_truncated_s(outBuf, outBufLen, "%s", eventName.c_str());
-        return;
-    }
-    const size_t start = pos + prefix.length();
-    const size_t commaPos = eventName.find(',', start);
-    const size_t end = (commaPos != std::string::npos) ? commaPos : eventName.length();
-    if (start >= end) {
-        outBuf[0] = '\0';
-        return;
-    }
-    const size_t copyLen = end - start;
-    if (copyLen >= outBufLen) {
-        (void)snprintf_truncated_s(outBuf, outBufLen, "%s", eventName.c_str() + start);
-        return;
-    }
-    errno_t ret = strncpy_s(outBuf, outBufLen, eventName.c_str() + start, copyLen);
-    if (ret != EOK) {
-        outBuf[0] = '\0';
-    }
+    const size_t pos = eventName.find(prefix);
+    const size_t start = (pos == std::string::npos) ? 0U : (pos + prefix.length());
+    const size_t end = (pos == std::string::npos) ? std::string::npos : eventName.find(',', start);
+    const std::string stateDesc = eventName.substr(start, (end == std::string::npos) ? std::string::npos : end - start);
+    const size_t lastValid = stateDesc.find_last_not_of(" .,");
+    return (lastValid == std::string::npos) ? "" : stateDesc.substr(0U, lastValid + 1U);
 }
 
 std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName)
 {
+    const std::string stateDesc = ExtractEventStateDesc(eventName);
     constexpr size_t DESC_BUF_LEN = 512U;
     char descBuf[DESC_BUF_LEN] = {0};
-    char stateBuf[RT_DMS_MAX_EVENT_NAME_LENGTH] = {0};
-    ExtractEventStateDesc(eventName, stateBuf, sizeof(stateBuf));
-    TrimTrailingPunct(stateBuf);
     (void)snprintf_truncated_s(
         descBuf, DESC_BUF_LEN,
         "[event_id:0x%x] %s. For details about troubleshooting, see Health Management Error Definition.", eventId,
-        stateBuf);
+        stateDesc.c_str());
     return std::string(descBuf);
 }
 
