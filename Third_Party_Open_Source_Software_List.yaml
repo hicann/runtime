@@ -1,5 +1,5 @@
 json:
-    version: 3.11.3
+    version: 3.12.0
     type: run
 makeself:
     version: release-2.5.0-patch1
