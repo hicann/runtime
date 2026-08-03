@@ -1145,6 +1145,10 @@ rtError_t RawDevice::Start()
         } else {
             RT_LOG(RT_LOG_WARNING, "Driver does not support FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
         }
+    } else {
+        error = Runtime::Instance()->InitOpExecTimeout(this);
+        COND_PROC_GOTO_MSG_INNER((error != RT_ERROR_NONE), ERROR_STOP, ;
+                                 , "Failed to init op execute timeout, error_code=%#x.", static_cast<uint32_t>(error));
     }
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         error = SendTopicMsgVersionToAicpu();
