@@ -24,7 +24,7 @@ TsAicpuSqeAdapter::TsAicpuSqeAdapter() : TsMsgAdapter(), aicpuSqe_({}), invalidS
     aicpusd_info("Adapter initialized: message_format=sqe valid=false.");
 }
 
-bool TsAicpuSqeAdapter::IsAdapterInvaildParameter() const
+bool TsAicpuSqeAdapter::IsAdapterInvalidParameter() const
 {
     return invalidSqe_;
 }

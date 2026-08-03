@@ -34,7 +34,7 @@ TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterVersion0)
     TsMsgAdapterFactory factory;
     auto adapter = factory.CreateAdapter();
     EXPECT_NE(adapter, nullptr);
-    EXPECT_TRUE(adapter->IsAdapterInvaildParameter());
+    EXPECT_TRUE(adapter->IsAdapterInvalidParameter());
 }
 
 TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterVersion1)
@@ -43,7 +43,7 @@ TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterVersion1)
     TsMsgAdapterFactory factory;
     auto adapter = factory.CreateAdapter();
     EXPECT_NE(adapter, nullptr);
-    EXPECT_TRUE(adapter->IsAdapterInvaildParameter());
+    EXPECT_TRUE(adapter->IsAdapterInvalidParameter());
 }
 
 TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterInvalidVersion)
@@ -69,7 +69,7 @@ TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterWithMsgVersion0)
 
     auto adapter = factory.CreateAdapter(msg);
     EXPECT_NE(adapter, nullptr);
-    EXPECT_FALSE(adapter->IsAdapterInvaildParameter());
+    EXPECT_FALSE(adapter->IsAdapterInvalidParameter());
     EXPECT_EQ(adapter->pid_, 1);
     EXPECT_EQ(adapter->cmdType_, AICPU_MODEL_OPERATE);
     EXPECT_EQ(adapter->vfId_, 2);
@@ -92,7 +92,7 @@ TEST_F(TsMsgAdapterFactoryTEST, CreateAdapterWithMsgVersion1)
 
     auto adapter = factory.CreateAdapter(msg);
     EXPECT_NE(adapter, nullptr);
-    EXPECT_FALSE(adapter->IsAdapterInvaildParameter());
+    EXPECT_FALSE(adapter->IsAdapterInvalidParameter());
     EXPECT_EQ(adapter->pid_, 1);
     EXPECT_EQ(adapter->cmdType_, TS_AICPU_MODEL_OPERATE);
     EXPECT_EQ(adapter->vfId_, 2);

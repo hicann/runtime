@@ -21,12 +21,12 @@ int32_t OperatorKernelCommon::SendAICPUSubEvent(char_t * const msg, const uint32
 {
     if (msg == nullptr) {
         aicpusd_err("The message is nullptr");
-        return AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT;
+        return AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT;
     }
 
     if (msgLen == 0U) {
         aicpusd_err("The size of message is zero");
-        return AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT;
+        return AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT;
     }
     event_summary eventInfoSummary = {};
     eventInfoSummary.pid = getpid();

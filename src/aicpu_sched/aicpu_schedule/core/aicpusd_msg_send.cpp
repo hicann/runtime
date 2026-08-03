@@ -140,12 +140,12 @@ int32_t AicpuMsgSend::SendAICPUSubEvent(const char_t * const msg, const uint32_t
     aicpusd_info("Begin to send aicpu subevent, syncflag is %d", static_cast<int32_t>(syncSendFlag));
     if (msg == nullptr) {
         aicpusd_err("The message is null.");
-        return AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT;
+        return AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT;
     }
 
     if (msgLen == 0U) {
         aicpusd_err("The size of message is zero.");
-        return AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT;
+        return AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT;
     }
     event_summary eventInfoSummary = {};
     eventInfoSummary.pid = getpid();

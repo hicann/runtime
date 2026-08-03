@@ -22,7 +22,7 @@ public:
     TsAicpuSqeAdapter();
 
     // invalid parameter
-    bool IsAdapterInvaildParameter() const override;
+    bool IsAdapterInvalidParameter() const override;
 
     // dump
     void GetAicpuDataDumpInfo(AicpuDataDumpInfo& info) override;

@@ -51,7 +51,7 @@ public:
         : TsMsgAdapter(pid, cmdType, vfId, tid, tsId)
     {}
     TestAdapter() : TsMsgAdapter() {}
-    bool IsAdapterInvaildParameter() const override { return false; }
+    bool IsAdapterInvalidParameter() const override { return false; }
     void GetAicpuDataDumpInfo(AicpuDataDumpInfo& info) override {}
     bool IsOpMappingDumpTaskInfoVaild(const AicpuOpMappingDumpTaskInfo& info) const override { return true; }
     void GetAicpuDumpTaskInfo(AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo) override {}

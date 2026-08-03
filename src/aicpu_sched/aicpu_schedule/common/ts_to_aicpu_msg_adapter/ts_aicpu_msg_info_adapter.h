@@ -21,8 +21,8 @@ public:
     TsAicpuMsgInfoAdapter(const TsAicpuMsgInfo& msgInfo);
     TsAicpuMsgInfoAdapter();
 
-    // invaild parameter
-    bool IsAdapterInvaildParameter() const override;
+    // invalid parameter
+    bool IsAdapterInvalidParameter() const override;
 
     //version set
     void GetAicpuMsgVersionInfo(AicpuMsgVersionInfo& info) override;

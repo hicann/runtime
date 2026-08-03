@@ -25,7 +25,7 @@ TsAicpuMsgInfoAdapter::TsAicpuMsgInfoAdapter() : aicpuMsgInfo_({}), invalidMsgIn
     aicpusd_info("Adapter initialized: message_format=msg_info valid=false.");
 }
 
-bool TsAicpuMsgInfoAdapter::IsAdapterInvaildParameter() const
+bool TsAicpuMsgInfoAdapter::IsAdapterInvalidParameter() const
 {
     return invalidMsgInfo_;
 }

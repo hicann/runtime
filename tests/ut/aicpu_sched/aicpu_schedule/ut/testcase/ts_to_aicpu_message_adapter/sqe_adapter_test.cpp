@@ -43,13 +43,13 @@ TEST_F(TsAicpuSqeAdapterTEST, ConstructorWithSqe)
     EXPECT_EQ(adapter.vfId_, 2);
     EXPECT_EQ(adapter.tid_, 3);
     EXPECT_EQ(adapter.tsId_, 4);
-    EXPECT_FALSE(adapter.IsAdapterInvaildParameter());
+    EXPECT_FALSE(adapter.IsAdapterInvalidParameter());
 }
 
 TEST_F(TsAicpuSqeAdapterTEST, DefaultConstructor)
 {
     TsAicpuSqeAdapter adapter;
-    EXPECT_TRUE(adapter.IsAdapterInvaildParameter());
+    EXPECT_TRUE(adapter.IsAdapterInvalidParameter());
 }
 
 TEST_F(TsAicpuSqeAdapterTEST, GetAicpuModelOperateInfo)

@@ -28,14 +28,14 @@ TEST_F(OperatorKernelCommonTest, SendAICPUSubEvent_failed1)
     unsigned int subevent_id = 1;
 
     int ret = OperatorKernelCommon::SendAICPUSubEvent(msg1, msgLen, subevent_id);
-    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT);
 
     char* msg2 = "aa";
     msgLen = 0;
     subevent_id = 1;
 
     ret = OperatorKernelCommon::SendAICPUSubEvent(msg2, msgLen, subevent_id);
-    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT);
 
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(100));
 }

@@ -31,7 +31,7 @@ public:
     int32_t ResponseToTs(hwts_response_t& hwtsResp, uint32_t devId, EVENT_ID eventId, uint32_t subeventId) const;
 
     // invalid parameter
-    virtual bool IsAdapterInvaildParameter() const = 0;
+    virtual bool IsAdapterInvalidParameter() const = 0;
 
     // dump
     virtual void GetAicpuDataDumpInfo(AicpuDataDumpInfo& info) = 0;

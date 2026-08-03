@@ -288,14 +288,14 @@ TEST_F(AICPUScheduleInterfaceTEST, SendAICPUSubEvent_failed1)
 {
     char* msg = nullptr;
     int ret = AicpuMsgSend::SendAICPUSubEvent(msg, 1, 0, 0);
-    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT);
 }
 
 TEST_F(AICPUScheduleInterfaceTEST, SendAICPUSubEvent_failed2)
 {
     char* msg = "test";
     int ret = AicpuMsgSend::SendAICPUSubEvent(msg, 0, 0, 0);
-    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVAILD_EVENT_SUBMIT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INVALID_EVENT_SUBMIT);
 }
 
 TEST_F(AICPUScheduleInterfaceTEST, ProcessQueueNotEmptyEvent)
