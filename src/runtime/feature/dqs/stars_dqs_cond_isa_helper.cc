@@ -745,7 +745,7 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
         .avail_reg1 = r5,
         .avail_reg2 = r8,
         .avail_reg3 = r9};
-    const uint32_t mbufTraceNop =
+    uint32_t mbufTraceNop =
         static_cast<uint32_t>((RtPtrToValue(&(fc.dequeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t));
     ConstructMbufTrace(fc.dequeMbufTracefc, funcCallPara.dequeMbufTracePara, mbufTraceRegInfo, mbufTraceNop);
 
@@ -784,7 +784,7 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
     ConstructStore(r10, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swHandle); /* 把新的handle写到索引为0的地方 */
 
     /* free被覆盖的handle */
-    offset = offsetof(RtStarsDqsBatchDequeueFc, ldrMbuffMangAddr);
+    offset = offsetof(RtStarsDqsBatchDequeueFc, freeHandleStart);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r1, offset, fc.jumpFreeHandle);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beqFreeHandle);
@@ -804,6 +804,18 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
         r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.eqNoDataPorcess); // 继续下一个循环
 
     // free_handle:
+    ConstructNop(fc.freeHandleStart);
+    MbufTraceRegParam mbufFreeTraceParam = {
+        .loop_index_reg = r7,
+        .mbuf_handle_reg = r8,
+        .avail_reg0 = r1,
+        .avail_reg1 = r5,
+        .avail_reg2 = r6,
+        .avail_reg3 = r9};
+    mbufTraceNop =
+        static_cast<uint32_t>((RtPtrToValue(&(fc.freeMbufTraceFc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t));
+    ConstructMbufTrace(fc.freeMbufTraceFc, funcCallPara.freeMbufTracePara, mbufFreeTraceParam, mbufTraceNop);
+
     ConstructLoad(r4, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrMbuffMangAddr);
     ConstructLLWI(r1, AXI_USER_VA_CFG_MASK, fc.llwiAddrMask1);
     ConstructLHWI(r1, AXI_USER_VA_CFG_MASK, fc.lhwiAddrMask1);

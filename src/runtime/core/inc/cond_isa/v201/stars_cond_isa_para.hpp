@@ -76,6 +76,7 @@ struct RtStarsDqsBatchDeqFcPara {
     uint16_t mbufPoolIndexMax;
 
     CondMbufTraceParam dequeMbufTracePara;
+    CondMbufTraceParam freeMbufTracePara;
 };
 
 struct RtStarsDqsPrepareFcPara {

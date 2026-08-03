@@ -125,11 +125,11 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsSetCsrJumpPc jumpNextIteration1;
     RtStarsCondOpBranch eqNoDataPorcess;
 
+    RtStarsCondOpNop freeHandleStart;
+    CondMbufTraceFc freeMbufTraceFc;
     RtStarsCondOpLoad ldrMbuffMangAddr;
-
     RtStarsCondOpLLWI llwiAddrMask1;
     RtStarsCondOpLHWI lhwiAddrMask1;
-
     RtStarsCondOpSystemCsr csrrcMbufManag;
     RtStarsCondOpStore swHanleForFree;
     RtStarsCondOpSystemCsr csrrsMbufManag;

@@ -340,6 +340,33 @@ static uint64_t GetNotifyRecordAddr(bool isRead, const StreamWithDqs* stm)
     return baseAddr + offset;
 }
 
+static void InitFreeMbufTracePara(CondMbufTraceParam& param, uint64_t ctrlSpaceAddr, const uint32_t streamId)
+{
+    size_t offset = offsetof(stars_dqs_ctrl_space_t, input_mbuf_trace_block_size_list);
+    param.traceBlockSizeAddr = ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_ctrl_space_t, input_trace_base_addrs);
+    param.traceBaseAddr = ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_ctrl_space_t, lp_sys_cnt_addr);
+    param.lpSysCntAddr = ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_ctrl_space_t, input_queue_ids);
+    param.qidAddr = ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
+    param.updateTimeOffset = offsetof(dqs_mbuf_cons_trace, cons_free_time);
+
+    offset = offsetof(dqs_mbuf_cons_trace, cons_owner_info);
+    offset = offset + offsetof(dqs_mbuf_owner_info, bits);
+    param.opTypeOffset = offset + offsetof(mbuf_owner_info_ext, op_type);
+    param.opQidOffset = offset + offsetof(mbuf_owner_info_ext, op_qid);
+    param.ownerIdOffset = offset + offsetof(mbuf_owner_info_ext, owner_id);
+    param.opTypeVal = C_CORE_FREE;
+    param.streamId = streamId;
+
+    return;
+}
+
 static rtError_t InitFuncCallParaForDqsBatchDequeueTask(TaskInfo* taskInfo, RtStarsDqsBatchDeqFcPara& fcPara)
 {
     StreamWithDqs* stm = dynamic_cast<StreamWithDqs*>(taskInfo->stream);
@@ -366,6 +393,7 @@ static rtError_t InitFuncCallParaForDqsBatchDequeueTask(TaskInfo* taskInfo, RtSt
 
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     InitDequeMbufTracePara(fcPara.dequeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
+    InitDequeMbufTracePara(fcPara.freeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
 
     RT_LOG(
         RT_LOG_INFO,
@@ -553,33 +581,6 @@ static rtError_t PrepareSqeInfoForDqsZeroCopyTask(TaskInfo* const taskInfo, cons
     return ret;
 }
 
-static void InitFreeMbufTracePara(RtDqsMbufFreeFcPara& fcPara, const uint32_t stream_id)
-{
-    size_t offset = offsetof(stars_dqs_ctrl_space_t, input_mbuf_trace_block_size_list);
-    fcPara.freeMbufTracePara.traceBlockSizeAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
-
-    offset = offsetof(stars_dqs_ctrl_space_t, input_trace_base_addrs);
-    fcPara.freeMbufTracePara.traceBaseAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
-
-    offset = offsetof(stars_dqs_ctrl_space_t, lp_sys_cnt_addr);
-    fcPara.freeMbufTracePara.lpSysCntAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
-
-    offset = offsetof(stars_dqs_ctrl_space_t, input_queue_ids);
-    fcPara.freeMbufTracePara.qidAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
-
-    fcPara.freeMbufTracePara.updateTimeOffset = offsetof(dqs_mbuf_cons_trace, cons_free_time);
-
-    offset = offsetof(dqs_mbuf_cons_trace, cons_owner_info);
-    offset = offset + offsetof(dqs_mbuf_owner_info, bits);
-    fcPara.freeMbufTracePara.opTypeOffset = offset + offsetof(mbuf_owner_info_ext, op_type);
-    fcPara.freeMbufTracePara.opQidOffset = offset + offsetof(mbuf_owner_info_ext, op_qid);
-    fcPara.freeMbufTracePara.ownerIdOffset = offset + offsetof(mbuf_owner_info_ext, owner_id);
-    fcPara.freeMbufTracePara.opTypeVal = C_CORE_FREE;
-    fcPara.freeMbufTracePara.streamId = stream_id;
-
-    return;
-}
-
 static rtError_t InitFuncCallParaForDqsMbufFreeTask(TaskInfo* const taskInfo, RtDqsMbufFreeFcPara& fcPara)
 {
     // 由于执行条件算子下发时，mbuf pool id 还没确定，无法从驱动接口查询，从ctrlSpace中 input_mbuf_free_addrs 获取
@@ -612,7 +613,7 @@ static rtError_t InitFuncCallParaForDqsMbufFreeTask(TaskInfo* const taskInfo, Rt
     fcPara.freePreDotAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
 
     const uint32_t streamId = static_cast<uint32_t>(streamWithDqs->Id_());
-    InitFreeMbufTracePara(fcPara, streamId);
+    InitFreeMbufTracePara(fcPara.freeMbufTracePara, fcPara.ctrlSpaceAddr, streamId);
 
     return RT_ERROR_NONE;
 }
