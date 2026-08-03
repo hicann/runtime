@@ -28,15 +28,16 @@ public:
      * @param selEntities selected entities from group
      * @return FSM_SUCCESS: success, other: failed
      */
-    virtual FsmStatus Search(const uint32_t groupId, const uint64_t transId,
-                             std::vector<EntityPtr> &selEntities, const uint32_t resIndex) = 0;
+    virtual FsmStatus Search(
+        const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr>& selEntities,
+        const uint32_t resIndex) = 0;
 
 private:
-    Strategy(const Strategy &) = delete;
-    Strategy(const Strategy &&) = delete;
-    Strategy &operator = (const Strategy &) = delete;
-    Strategy &operator = (Strategy &&) = delete;
+    Strategy(const Strategy&) = delete;
+    Strategy(const Strategy&&) = delete;
+    Strategy& operator=(const Strategy&) = delete;
+    Strategy& operator=(Strategy&&) = delete;
 };
-}
+} // namespace dgw
 
 #endif

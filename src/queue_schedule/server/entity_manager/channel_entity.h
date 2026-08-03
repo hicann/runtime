@@ -21,36 +21,36 @@ namespace dgw {
 
 // temporily record hccl data
 struct HcclData {
-    uint64_t headSize = 0UL;  // head size
-    uint64_t dataSize = 0UL;  // data size
-    Mbuf *mbuf = nullptr;     // mbuf ptr
-    void *headBuf = nullptr;  // head buff addr
-    uint64_t mbufHeadSize = 0UL;  // head size of mbuf
+    uint64_t headSize = 0UL;     // head size
+    uint64_t dataSize = 0UL;     // data size
+    Mbuf* mbuf = nullptr;        // mbuf ptr
+    void* headBuf = nullptr;     // head buff addr
+    uint64_t mbufHeadSize = 0UL; // head size of mbuf
 };
 
 // request info
 struct RequestInfo {
-    HcclRequest req;     // hccl request
-    bool isLink;         // is link
-    Mbuf *mbuf;          // mbuf addr
-    uint64_t startTick;  // start tick
+    HcclRequest req;    // hccl request
+    bool isLink;        // is link
+    Mbuf* mbuf;         // mbuf addr
+    uint64_t startTick; // start tick
 };
 
 // cached envelope info
 struct EnvelopeInfo {
-    HcclMessage msg;     // hccl recv request msg
-    uint64_t dataSize;   // data size
-    uint64_t probeTick;  // probe tick
+    HcclMessage msg;    // hccl recv request msg
+    uint64_t dataSize;  // data size
+    uint64_t probeTick; // probe tick
 };
 
 class ChannelEntity : public SimpleEntity {
 public:
-    explicit ChannelEntity(const EntityMaterial &material, const uint32_t resIndex);
+    explicit ChannelEntity(const EntityMaterial& material, const uint32_t resIndex);
     ~ChannelEntity() override;
-    ChannelEntity(const ChannelEntity &) = delete;
-    ChannelEntity(const ChannelEntity &&) = delete;
-    ChannelEntity &operator = (const ChannelEntity &) = delete;
-    ChannelEntity &operator = (ChannelEntity &&) = delete;
+    ChannelEntity(const ChannelEntity&) = delete;
+    ChannelEntity(const ChannelEntity&&) = delete;
+    ChannelEntity& operator=(const ChannelEntity&) = delete;
+    ChannelEntity& operator=(ChannelEntity&&) = delete;
 
     /**
      * @brief init comm channel entity
@@ -78,7 +78,7 @@ public:
      * @param probeTick start tick
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus Probe(uint64_t &dataCount, HcclMessage &msg, uint64_t &probeTick);
+    FsmStatus Probe(uint64_t& dataCount, HcclMessage& msg, uint64_t& probeTick);
 
     /**
      * @brief receive data from hccl
@@ -87,7 +87,7 @@ public:
      * @param probeTick probe tick
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ReceiveData(HcclMessage &msg, const uint64_t dataCount, const uint64_t probeTick);
+    FsmStatus ReceiveData(HcclMessage& msg, const uint64_t dataCount, const uint64_t probeTick);
 
     /**
      * @brief process completed request
@@ -99,7 +99,7 @@ public:
      * @brief get front request from uncompleted request queue
      * @return RequestInfo* request
      */
-    RequestInfo *FrontUncompReq();
+    RequestInfo* FrontUncompReq();
 
     /**
      * @brief add cached request count
@@ -119,7 +119,7 @@ public:
      * @brief get the Comm Channel object
      * @return const CommChannel*
      */
-    const CommChannel *GetCommChannel() const;
+    const CommChannel* GetCommChannel() const;
 
     /**
      * @brief get completed req queue id
@@ -138,8 +138,9 @@ public:
 
     // link status
     ChannelLinkStatus linkStatus_;
+
 protected:
-    FsmStatus DoSendData(Mbuf *const mbuf) override;
+    FsmStatus DoSendData(Mbuf* const mbuf) override;
     void PostDeque() override;
 
 private:
@@ -151,7 +152,7 @@ private:
      * @param dataLen data length
      * @return FsmStatus FSM_SUCCESS: success, other: failed
      */
-    FsmStatus AllocMbuf(Mbuf *&mbufPtr, void *&headBuf, void *&dataBuf, const uint64_t dataLen);
+    FsmStatus AllocMbuf(Mbuf*& mbufPtr, void*& headBuf, void*& dataBuf, const uint64_t dataLen);
 
     /**
      * @brief receive mbuf data
@@ -160,7 +161,7 @@ private:
      * @param msg hccl envelope msg
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ReceiveMbufData(HcclMessage &msg);
+    FsmStatus ReceiveMbufData(HcclMessage& msg);
 
     /**
      * @brief receive mbuf head
@@ -169,28 +170,28 @@ private:
      * @param msg hccl envelope msg
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ReceiveMbufHead(HcclMessage &msg);
+    FsmStatus ReceiveMbufHead(HcclMessage& msg);
 
     /**
      * @brief receive data for link
      * @param msg hccl envelope msg
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ReceiveDataForLink(HcclMessage &msg);
+    FsmStatus ReceiveDataForLink(HcclMessage& msg);
 
     /**
      * @brief send mbuf data
      * @param mbuf mbuf
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus SendMbufData(Mbuf * const mbuf);
+    FsmStatus SendMbufData(Mbuf* const mbuf);
 
     /**
      * @brief send mbuf head
      * @param mbuf mbuf
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus SendMbufHead(Mbuf * const mbuf);
+    FsmStatus SendMbufHead(Mbuf* const mbuf);
 
     /**
      * @brief process send completion event
@@ -204,7 +205,7 @@ private:
      * @param mbuf mbuf
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ProcessReceiveCompletion(Mbuf * const mbuf);
+    FsmStatus ProcessReceiveCompletion(Mbuf* const mbuf);
 
     /**
      * @brief send data to establish a link with peer tag
@@ -218,13 +219,13 @@ private:
      * @param reqProcCost request process cost
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ProcessLinkRequest(const HcclRequest &req, const float64_t reqProcCost);
+    FsmStatus ProcessLinkRequest(const HcclRequest& req, const float64_t reqProcCost);
 
-    FsmStatus SendDataWithHccl(void *const dataBuf, const int32_t dataLen, Mbuf *const mbufToRecord);
+    FsmStatus SendDataWithHccl(void* const dataBuf, const int32_t dataLen, Mbuf* const mbufToRecord);
 
     FsmStatus CreateAndSubscribeCompletedQueue();
 
-    FsmStatus DoProbe(uint64_t &dataCount, HcclMessage &msg, uint64_t &probeSuccTick);
+    FsmStatus DoProbe(uint64_t& dataCount, HcclMessage& msg, uint64_t& probeSuccTick);
 
     void UpdateStatisticForBody(const uint64_t reqProcTickCost);
 
@@ -232,7 +233,7 @@ private:
 
 private:
     // comm channel info
-    const CommChannel *channelPtr_;
+    const CommChannel* channelPtr_;
     // channel queue for uncompleted request
     CommChannelQueue<RequestInfo> uncompReqQueue_;
     // drv queue for completed request
@@ -254,5 +255,5 @@ private:
     // probed and processed envelope count(not include cached envelope)
     uint64_t procEnvelopeCount_;
 };
-}
+} // namespace dgw
 #endif

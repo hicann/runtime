@@ -16,12 +16,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-DLLEXPORT drvError_t __attribute__((weak)) halGetVdevNum(uint32_t *num_dev);
-drvError_t __attribute__((weak)) drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
-    unsigned int *host_pid, unsigned int *cp_type);
-DLLEXPORT __attribute__((weak)) drvError_t drvGetLocalDevIDByHostDevID(uint32_t host_dev_id, uint32_t *local_dev_id);
-DLLEXPORT __attribute__((weak)) drvError_t halShrIdGetAttribute(const char *name, enum shrIdAttrType type,
-    struct shrIdAttr *attr);
+DLLEXPORT drvError_t __attribute__((weak)) halGetVdevNum(uint32_t* num_dev);
+drvError_t __attribute__((weak)) drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type);
+DLLEXPORT __attribute__((weak)) drvError_t drvGetLocalDevIDByHostDevID(uint32_t host_dev_id, uint32_t* local_dev_id);
+DLLEXPORT __attribute__((weak)) drvError_t halShrIdGetAttribute(
+    const char* name, enum shrIdAttrType type, struct shrIdAttr* attr);
 #ifdef __cplusplus
 }
 #endif

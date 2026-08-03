@@ -13,9 +13,9 @@
 #include "common/bqs_log.h"
 #include "hccl/hccl_so_manager.h"
 
-HcclResult HcclInitComm(const char_t *rankTableM, uint32_t rank, const CommAttr *attr, HcclComm *comm)
+HcclResult HcclInitComm(const char_t* rankTableM, uint32_t rank, const CommAttr* attr, HcclComm* comm)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclInitComm");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclInitComm");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclInitComm]");
         return HCCL_E_RESERVED;
@@ -25,7 +25,7 @@ HcclResult HcclInitComm(const char_t *rankTableM, uint32_t rank, const CommAttr 
 
 HcclResult HcclFinalizeComm(HcclComm comm)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclFinalizeComm");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclFinalizeComm");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclFinalizeComm]");
         return HCCL_E_RESERVED;
@@ -33,10 +33,9 @@ HcclResult HcclFinalizeComm(HcclComm comm)
     return (PtrToFunctionPtr<void, dgw::HcclFinalizeCommFunc>(func))(comm);
 }
 
-int HcclIsend(void *buffer, int count, HcclDataType dataType,
-              int dstRank, int tag, HcclComm comm, HcclRequest *request)
+int HcclIsend(void* buffer, int count, HcclDataType dataType, int dstRank, int tag, HcclComm comm, HcclRequest* request)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclIsend");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclIsend");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclIsend]");
         return HCCL_E_RESERVED;
@@ -44,9 +43,9 @@ int HcclIsend(void *buffer, int count, HcclDataType dataType,
     return (PtrToFunctionPtr<void, dgw::HcclIsendFunc>(func))(buffer, count, dataType, dstRank, tag, comm, request);
 }
 
-int HcclImrecv(void *buffer, int count, HcclDataType datatype, HcclMessage *msg, HcclRequest *request)
+int HcclImrecv(void* buffer, int count, HcclDataType datatype, HcclMessage* msg, HcclRequest* request)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclImrecv");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclImrecv");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclImrecv]");
         return HCCL_E_RESERVED;
@@ -54,9 +53,9 @@ int HcclImrecv(void *buffer, int count, HcclDataType datatype, HcclMessage *msg,
     return (PtrToFunctionPtr<void, dgw::HcclImrecvFunc>(func))(buffer, count, datatype, msg, request);
 }
 
-int HcclImprobe(int srcRank, int tag, HcclComm comm, int *flag, HcclMessage *msg, HcclStatus *status)
+int HcclImprobe(int srcRank, int tag, HcclComm comm, int* flag, HcclMessage* msg, HcclStatus* status)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclImprobe");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclImprobe");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclImprobe]");
         return HCCL_E_RESERVED;
@@ -64,9 +63,9 @@ int HcclImprobe(int srcRank, int tag, HcclComm comm, int *flag, HcclMessage *msg
     return (PtrToFunctionPtr<void, dgw::HcclImprobeFunc>(func))(srcRank, tag, comm, flag, msg, status);
 }
 
-int HcclGetCount(const HcclStatus *status, HcclDataType dataType, int *count)
+int HcclGetCount(const HcclStatus* status, HcclDataType dataType, int* count)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclGetCount");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclGetCount");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclGetCount]");
         return HCCL_E_RESERVED;
@@ -74,19 +73,20 @@ int HcclGetCount(const HcclStatus *status, HcclDataType dataType, int *count)
     return (PtrToFunctionPtr<void, dgw::HcclGetCountFunc>(func))(status, dataType, count);
 }
 
-int HcclTestSome(int count, HcclRequest requestArray[], int *compCount, int compIndices[], HcclStatus compStatus[])
+int HcclTestSome(int count, HcclRequest requestArray[], int* compCount, int compIndices[], HcclStatus compStatus[])
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclTestSome");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclTestSome");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclTestSome]");
         return HCCL_E_RESERVED;
     }
-    return (PtrToFunctionPtr<void, dgw::HcclTestSomeFunc>(func))(count, requestArray, compCount, compIndices, compStatus);
+    return (PtrToFunctionPtr<void, dgw::HcclTestSomeFunc>(func))(
+        count, requestArray, compCount, compIndices, compStatus);
 }
 
-HcclResult HcclRegisterMemory(HcclComm comm, void *addr, uint64_t size)
+HcclResult HcclRegisterMemory(HcclComm comm, void* addr, uint64_t size)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclRegisterMemory");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclRegisterMemory");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclRegisterMemory]");
         return HCCL_E_RESERVED;
@@ -94,9 +94,9 @@ HcclResult HcclRegisterMemory(HcclComm comm, void *addr, uint64_t size)
     return (PtrToFunctionPtr<void, dgw::HcclRegisterMemoryFunc>(func))(comm, addr, size);
 }
 
-HcclResult HcclUnregisterMemory(HcclComm comm, void *addr)
+HcclResult HcclUnregisterMemory(HcclComm comm, void* addr)
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclUnregisterMemory");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclUnregisterMemory");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclUnregisterMemory]");
         return HCCL_E_RESERVED;
@@ -104,9 +104,9 @@ HcclResult HcclUnregisterMemory(HcclComm comm, void *addr)
     return (PtrToFunctionPtr<void, dgw::HcclUnregisterMemoryFunc>(func))(comm, addr);
 }
 
-HcclResult HcclSetGrpIdCallback(int32_t(*grpIdCallback)(int32_t, int32_t*, int32_t*))
+HcclResult HcclSetGrpIdCallback(int32_t (*grpIdCallback)(int32_t, int32_t*, int32_t*))
 {
-    void * const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclSetGrpIdCallback");
+    void* const func = dgw::HcclSoManager::GetInstance()->GetFunc("HcclSetGrpIdCallback");
     if (func == nullptr) {
         DGW_LOG_ERROR("libhccl.so can't get function [HcclSetGrpIdCallback]");
         return HCCL_E_RESERVED;

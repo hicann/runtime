@@ -14,10 +14,10 @@
 #include "strategy/strategy_manager.h"
 
 namespace dgw {
-FsmStatus BroadcastStrategy::Search(const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr> &selEntities,
-    const uint32_t resIndex)
+FsmStatus BroadcastStrategy::Search(
+    const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr>& selEntities, const uint32_t resIndex)
 {
-    const std::vector<EntityPtr> &entitiesInGroup = EntityManager::Instance(resIndex).GetEntitiesInGroup(groupId);
+    const std::vector<EntityPtr>& entitiesInGroup = EntityManager::Instance(resIndex).GetEntitiesInGroup(groupId);
     if (entitiesInGroup.empty()) {
         DGW_LOG_ERROR("No entities in group, groupId:%u, transId:%lu", groupId, transId);
         return FsmStatus::FSM_FAILED;
@@ -27,4 +27,4 @@ FsmStatus BroadcastStrategy::Search(const uint32_t groupId, const uint64_t trans
 }
 
 REGISTER_STRATEGY(BROADCAST, BroadcastStrategy);
-}
+} // namespace dgw

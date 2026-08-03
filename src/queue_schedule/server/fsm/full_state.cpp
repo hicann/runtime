@@ -15,15 +15,15 @@
 #include "state_manager.h"
 
 namespace dgw {
-FsmStatus FullState::PreProcess(Entity &entity)
+FsmStatus FullState::PreProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_FULL_STATE).c_str(), entity.ToString().c_str());
     dgw::EntityManager::Instance(entity.GetResIndex()).SetExistFullEntity();
-    auto &recvDataObjs = entity.GetRecvDataObjs();
+    auto& recvDataObjs = entity.GetRecvDataObjs();
     if (dgw::EntityManager::Instance(entity.GetResIndex()).ShouldPauseSubscirpiton()) {
-        for (const auto &dataObj : recvDataObjs) {
+        for (const auto& dataObj : recvDataObjs) {
             auto const sendEntity = dataObj->GetSendEntity();
             if (sendEntity != nullptr) {
                 (void)sendEntity->PauseSubscribe(entity);
@@ -33,7 +33,7 @@ FsmStatus FullState::PreProcess(Entity &entity)
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus FullState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus FullState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     if (msg.msgType == InnerMsgType::INNER_MSG_PUSH) {
         return FsmStatus::FSM_SUCCESS;
@@ -45,11 +45,8 @@ FsmStatus FullState::ProcessMessage(Entity &entity, const InnerMessage &msg)
     }
 }
 
-FsmStatus FullState::PostProcess(Entity &entity)
-{
-    return entity.ChangeState(FsmState::FSM_PUSH_STATE);
-}
+FsmStatus FullState::PostProcess(Entity& entity) { return entity.ChangeState(FsmState::FSM_PUSH_STATE); }
 
 REGISTER_STATE(FSM_FULL_STATE, ENTITY_QUEUE, FullState);
 REGISTER_STATE(FSM_FULL_STATE, ENTITY_TAG, FullState);
-}  // namespace dgw
+} // namespace dgw

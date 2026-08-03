@@ -25,10 +25,7 @@ enum class DgwProfInfoType : int32_t {
     PROF_INFO_TYPE_BUTT
 };
 
-inline uint64_t GetTimeStamp()
-{
-    return BqsMsprofApiAdapter::GetInstance().MsprofSysCycleTime();
-}
+inline uint64_t GetTimeStamp() { return BqsMsprofApiAdapter::GetInstance().MsprofSysCycleTime(); }
 
 struct ProfInfo {
     uint32_t type;
@@ -38,19 +35,16 @@ struct ProfInfo {
 
 class BqsMsprofManager {
 public:
-    static BqsMsprofManager &GetInstance();
+    static BqsMsprofManager& GetInstance();
 
-    void InitBqsMsprofManager(const bool initFlag, const std::string &cfgData);
-    void ReportApiPerf(const ProfInfo &profData) const;
-    void ReportEventPerf(const ProfInfo &profData);
+    void InitBqsMsprofManager(const bool initFlag, const std::string& cfgData);
+    void ReportApiPerf(const ProfInfo& profData) const;
+    void ReportEventPerf(const ProfInfo& profData);
 
-    inline bool IsStartProfling() const
-    {
-        return isRun_;
-    }
+    inline bool IsStartProfling() const { return isRun_; }
 
 private:
-    BqsMsprofManager() : isInitMsprof_(false), isRun_(false), agingFlag_(true), requestId_(0U) {};
+    BqsMsprofManager() : isInitMsprof_(false), isRun_(false), agingFlag_(true), requestId_(0U){};
     ~BqsMsprofManager()
     {
         if (!isInitMsprof_) {
@@ -60,25 +54,25 @@ private:
         BQS_LOG_RUN_INFO("[Prof]Start finalize msprof.");
         try {
             (void)BqsMsprofApiAdapter::GetInstance().MsprofFinalize();
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             // pass
         }
 
         isInitMsprof_ = false;
     };
 
-    BqsMsprofManager(const BqsMsprofManager &) = delete;
-    BqsMsprofManager &operator=(const BqsMsprofManager &) = delete;
-    BqsMsprofManager(BqsMsprofManager &&) = delete;
-    BqsMsprofManager &operator=(BqsMsprofManager &&) = delete;
+    BqsMsprofManager(const BqsMsprofManager&) = delete;
+    BqsMsprofManager& operator=(const BqsMsprofManager&) = delete;
+    BqsMsprofManager(BqsMsprofManager&&) = delete;
+    BqsMsprofManager& operator=(BqsMsprofManager&&) = delete;
 
-    ProfStatus InitProf(const std::string &cfgData);
+    ProfStatus InitProf(const std::string& cfgData);
     ProfStatus RegProfCallback() const;
     ProfStatus RegProfType() const;
-    static int32_t ProfCallback(uint32_t type, void *data, uint32_t dataLen);
-    ProfStatus HandleCtrlSwitch(const MsprofCommandHandle &profCmdHandle);
-    ProfStatus HandelCtrlReporter(const MsprofCommandHandle &profCmdHandle) const;
-    ProfStatus HandleCtrlStepInfo(const MsprofCommandHandle &profCmdHandle) const;
+    static int32_t ProfCallback(uint32_t type, void* data, uint32_t dataLen);
+    ProfStatus HandleCtrlSwitch(const MsprofCommandHandle& profCmdHandle);
+    ProfStatus HandelCtrlReporter(const MsprofCommandHandle& profCmdHandle) const;
+    ProfStatus HandleCtrlStepInfo(const MsprofCommandHandle& profCmdHandle) const;
 
     bool isInitMsprof_;
     bool isRun_;

@@ -39,6 +39,5 @@ enum BqsStatus {
     BQS_STATUS_WAIT = 21,
     BQS_STATUS_RETRY = 100,
 };
-}  // namespace bqs
-#endif  // QUEUE_SCHEDULE_BQS_STATUS_H
-
+} // namespace bqs
+#endif // QUEUE_SCHEDULE_BQS_STATUS_H

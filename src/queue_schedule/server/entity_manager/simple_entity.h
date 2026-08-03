@@ -18,35 +18,37 @@ namespace dgw {
 
 class SimpleEntity : public Entity {
 public:
-    explicit SimpleEntity(const EntityMaterial &material, const uint32_t resIndex);
+    explicit SimpleEntity(const EntityMaterial& material, const uint32_t resIndex);
     virtual ~SimpleEntity() = default;
-    SimpleEntity(const SimpleEntity &) = delete;
-    SimpleEntity(const SimpleEntity &&) = delete;
-    SimpleEntity &operator = (const SimpleEntity &) = delete;
-    SimpleEntity &operator = (SimpleEntity &&) = delete;
-    virtual FsmStatus DoDequeueMbuf(void **mbufPtr) const;
+    SimpleEntity(const SimpleEntity&) = delete;
+    SimpleEntity(const SimpleEntity&&) = delete;
+    SimpleEntity& operator=(const SimpleEntity&) = delete;
+    SimpleEntity& operator=(SimpleEntity&&) = delete;
+    virtual FsmStatus DoDequeueMbuf(void** mbufPtr) const;
 
     FsmStatus Dequeue() override;
     FsmStatus ResetSrcState() override;
-    void SelectDstEntities(const uint64_t key, std::vector<Entity*> &toPushDstEntities,
-        std::vector<Entity*> &reprocessDstEntities, std::vector<Entity*> &abnormalDstEntities) override;
+    void SelectDstEntities(
+        const uint64_t key, std::vector<Entity*>& toPushDstEntities, std::vector<Entity*>& reprocessDstEntities,
+        std::vector<Entity*>& abnormalDstEntities) override;
     FsmStatus SendData(const DataObjPtr dataObj) override;
-    FsmStatus PauseSubscribe(const Entity &fullEntity) override;
-    FsmStatus ResumeSubscribe(const Entity &notFullEntity) override;
+    FsmStatus PauseSubscribe(const Entity& fullEntity) override;
+    FsmStatus ResumeSubscribe(const Entity& notFullEntity) override;
     FsmStatus ClearQueue() override;
     bool IsDataPeeked() const override;
     FsmStatus Uninit() override;
+
 protected:
     virtual FsmStatus DoDequeue();
     virtual void PostDeque();
     virtual FsmStatus RefreshWithData();
     virtual Mbuf* PrepareMbufToPush(DataObjPtr dataObj) const;
-    virtual FsmStatus DoSendData(Mbuf *const mbuf);
-    Mbuf* SdmaCopy(Mbuf * const mbuf) const;
-    bqs::SubscribeManager *GetSubscriber() const;
+    virtual FsmStatus DoSendData(Mbuf* const mbuf);
+    Mbuf* SdmaCopy(Mbuf* const mbuf) const;
+    bqs::SubscribeManager* GetSubscriber() const;
     Mbuf* AllocateMbuf(const uint64_t desBufLen) const;
-    FsmStatus SdmaCopyData(void *const srcDataBuf, const uint64_t desBufLen, Mbuf *const mbufPtr) const;
-    FsmStatus SdmaCopyHead(void *const srcHeadBuf, const uint32_t srcHeadBufSize, Mbuf *const mbufPtr) const;
+    FsmStatus SdmaCopyData(void* const srcDataBuf, const uint64_t desBufLen, Mbuf* const mbufPtr) const;
+    FsmStatus SdmaCopyHead(void* const srcHeadBuf, const uint32_t srcHeadBufSize, Mbuf* const mbufPtr) const;
 };
-}
+} // namespace dgw
 #endif

@@ -22,24 +22,24 @@
 namespace bqs {
 class QueueManager {
 public:
-    static QueueManager &GetInstance();
+    static QueueManager& GetInstance();
 
     ~QueueManager();
 
-    QueueManager(const QueueManager &) = delete;
+    QueueManager(const QueueManager&) = delete;
 
-    QueueManager(QueueManager &&) = delete;
+    QueueManager(QueueManager&&) = delete;
 
-    QueueManager &operator=(const QueueManager &) = delete;
+    QueueManager& operator=(const QueueManager&) = delete;
 
-    QueueManager &operator=(QueueManager &&) = delete;
+    QueueManager& operator=(QueueManager&&) = delete;
 
     /**
      * init/create/subscribe buff queue
      * @return BQS_STATUS_OK:success other:failed
      */
-    BqsStatus InitQueueManager(const uint32_t deviceId, const uint32_t groupId, const bool hasAICPU,
-                               const std::string& groupName);
+    BqsStatus InitQueueManager(
+        const uint32_t deviceId, const uint32_t groupId, const bool hasAICPU, const std::string& groupName);
     void InitExtra(const uint32_t deviceIdExtra, const uint32_t groupIdExtra);
 
     BqsStatus InitQueueExtra();
@@ -99,18 +99,12 @@ public:
     /**
      * enable async mem dequeu flag
      */
-    void enableAsyncMemDequeueFlag()
-    {
-        isTriggeredByAsyncMemDequeue_ = true;
-    }
+    void enableAsyncMemDequeueFlag() { isTriggeredByAsyncMemDequeue_ = true; }
 
     /**
      * enable async mem enqueue flag
      */
-    void enableAsyncMemEnqueueFlag()
-    {
-        isTriggeredByAsyncMemEnqueue_ = true;
-    }
+    void enableAsyncMemEnqueueFlag() { isTriggeredByAsyncMemEnqueue_ = true; }
 
     /**
      * work thread init success will notify queue manager
@@ -137,9 +131,9 @@ public:
      * @param queueId queue id
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus CreateAndSubscribeQueue(const char_t * const name, const uint32_t depth, uint32_t &queueId) const;
+    BqsStatus CreateAndSubscribeQueue(const char_t* const name, const uint32_t depth, uint32_t& queueId) const;
 
-    BqsStatus CreateAndSubscribeQueueExtra(const char_t * const name, const uint32_t depth, uint32_t &queueId) const;
+    BqsStatus CreateAndSubscribeQueueExtra(const char_t* const name, const uint32_t depth, uint32_t& queueId) const;
 
     /**
      * destroy queue
@@ -157,23 +151,18 @@ public:
      * @param queueId queue id
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus CreateQueue(const char_t * const name, const uint32_t depth, uint32_t &queueId) const;
+    BqsStatus CreateQueue(const char_t* const name, const uint32_t depth, uint32_t& queueId) const;
 
-    BqsStatus CreateQueue(const char_t * const name, const uint32_t depth, uint32_t &queueId, uint32_t deviceId) const;
+    BqsStatus CreateQueue(const char_t* const name, const uint32_t depth, uint32_t& queueId, uint32_t deviceId) const;
 
     /**
      * @brief get device id
      * @return device id
      */
-    inline uint32_t GetDeviceId() const
-    {
-        return deviceId_;
-    }
+    inline uint32_t GetDeviceId() const { return deviceId_; }
 
-    inline uint32_t GetExtraDeviceId() const
-    {
-        return deviceIdExtra_;
-    }
+    inline uint32_t GetExtraDeviceId() const { return deviceIdExtra_; }
+
 private:
     /**
      * @brief Construct a new Queue Manager object
@@ -183,7 +172,7 @@ private:
     void Clear();
     void ClearQueue(const uint32_t queueId, const QUEUE_EVENT_TYPE eventType) const;
     void MakeUpF2NFMbuf(const uint32_t index);
-    void MakeUpMbuf(Mbuf **mbufPtr) const;
+    void MakeUpMbuf(Mbuf** mbufPtr) const;
 
 private:
     uint32_t deviceId_;
@@ -194,12 +183,12 @@ private:
     uint32_t asyncMemDequeueBuffQId_;
     uint32_t asyncMemEnqueueBuffQId_;
 
-    std::condition_variable cv_;  // condition var to wait queue_schedule init success
+    std::condition_variable cv_; // condition var to wait queue_schedule init success
     std::mutex mutex_;
-    bool initialized_;  // true means queue_schedule has init success
-    bool stopped_;      // true means queue manager has been stopped
+    bool initialized_;           // true means queue_schedule has init success
+    bool stopped_;               // true means queue manager has been stopped
     std::atomic<bool> f2nfQueueEmptyFlag_;
-    Mbuf *mbufForF2nf_;
+    Mbuf* mbufForF2nf_;
     SpinLock f2nfLock_;
     bool relationEventQInitialized_;
     bool fullToNotFullEventQInitialized_;
@@ -209,7 +198,7 @@ private:
     bool relationEventQInitializedExtra_;
     uint32_t fullToNotFullEventQIdExtra_;
     bool fullToNotFullEventQInitializedExtra_;
-    Mbuf *mbufForF2nfExtra_;
+    Mbuf* mbufForF2nfExtra_;
     SpinLock f2nfLockExtra_;
     std::atomic<bool> f2nfQueueEmptyFlagExtra_;
     bool isTriggeredByAsyncMemDequeue_;
@@ -217,5 +206,5 @@ private:
     bool ayncMemBuffEventQInitialized_;
     bool initiallizedExtra_;
 };
-}      // namespace bqs
-#endif  // QUEUE_MANAGER_H
+} // namespace bqs
+#endif // QUEUE_MANAGER_H

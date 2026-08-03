@@ -13,22 +13,23 @@
 #include "fsm/state_define.h"
 
 namespace dgw {
-StateManager &StateManager::Instance()
+StateManager& StateManager::Instance()
 {
     static StateManager instance;
     return instance;
 }
 
-void StateManager::RegisterState(const FsmState id, const EntityType eType, const StateBase *const state,
-                                 const char_t * const idDesc, const char_t * const typeDesc)
+void StateManager::RegisterState(
+    const FsmState id, const EntityType eType, const StateBase* const state, const char_t* const idDesc,
+    const char_t* const typeDesc)
 {
     // Overwrite old when repeating
-    state_[static_cast<size_t>(eType)][static_cast<size_t>(id)] = const_cast<StateBase *>(state);
+    state_[static_cast<size_t>(eType)][static_cast<size_t>(id)] = const_cast<StateBase*>(state);
     stateDesc_[static_cast<size_t>(eType)][static_cast<size_t>(id)] = idDesc;
-    typeDesc_[static_cast<size_t>(eType)]= typeDesc;
+    typeDesc_[static_cast<size_t>(eType)] = typeDesc;
 }
 
-StateBase *StateManager::GetState(const FsmState id, const EntityType eType) const
+StateBase* StateManager::GetState(const FsmState id, const EntityType eType) const
 {
     auto state = state_[static_cast<size_t>(eType)][static_cast<size_t>(id)];
     if (state == nullptr) {
@@ -37,13 +38,10 @@ StateBase *StateManager::GetState(const FsmState id, const EntityType eType) con
     return state;
 }
 
-const std::string &StateManager::GetStateDesc(const FsmState id, const EntityType eType)
+const std::string& StateManager::GetStateDesc(const FsmState id, const EntityType eType)
 {
     return stateDesc_[static_cast<size_t>(eType)][static_cast<size_t>(id)];
 }
 
-const std::string &StateManager::GetTypeDesc(const EntityType eType)
-{
-    return typeDesc_[static_cast<size_t>(eType)];
-}
-}  // namespace dgw
+const std::string& StateManager::GetTypeDesc(const EntityType eType) { return typeDesc_[static_cast<size_t>(eType)]; }
+} // namespace dgw

@@ -49,6 +49,7 @@ set(LOCAL_SRC_FILES
     testcase/dynamic_sched_mgr_utest.cpp
     testcase/qs_proc_mem_statistic_utest.cpp
     testcase/bqs_log_utest.cpp
+    testcase/queue_schedule_low_cov_utest.cpp
     ../stub/dlopen_stub.cpp
     ../stub/easy_comm_stub.cpp
     ../stub/queue_api.cpp
@@ -201,6 +202,42 @@ target_compile_options(queue_schedule_stub_ut PRIVATE
 )
 
 target_compile_definitions(queue_schedule_stub_ut PRIVATE
+    google=ascend_private
+    aicpusd_UT
+    RUN_ON_X86
+)
+
+set(COV_UT_SRC_FILES
+    main_ut.cpp
+    testcase/queue_schedule_cov_utest.cpp
+    ${SRC_PATH}/common/bqs_util.cpp
+    ${SRC_PATH}/stub/driver/ascend_inpackage_hal.cpp
+)
+
+add_executable(queue_schedule_cov_ut
+    ${COV_UT_SRC_FILES}
+)
+
+target_include_directories(queue_schedule_cov_ut PRIVATE
+    ${LOCAL_C_INCLUDES}
+)
+
+target_link_libraries(queue_schedule_cov_ut PRIVATE
+    c_sec
+    ascend_protobuf
+    -rdynamic
+    $<BUILD_INTERFACE:intf_qs_llt_pub>
+    $<BUILD_INTERFACE:slog_headers>
+    -ldl
+    c_sec_headers
+    -lpthread
+)
+
+target_compile_options(queue_schedule_cov_ut PRIVATE
+    ${common_compile_options}
+)
+
+target_compile_definitions(queue_schedule_cov_ut PRIVATE
     google=ascend_private
     aicpusd_UT
     RUN_ON_X86

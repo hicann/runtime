@@ -31,7 +31,7 @@
 
 namespace bqs {
 namespace {
-void *g_aicpuSdlibHandle = nullptr;
+void* g_aicpuSdlibHandle = nullptr;
 const std::string AICPU_SCHEDULER_SO_NAME = "libaicpu_scheduler.so";
 // mutex for condition variable
 std::mutex g_kMtx;
@@ -63,11 +63,11 @@ static void WaitShutdown()
  */
 static void HandleSignal(const int32_t sig)
 {
-    (void) sig;
+    (void)sig;
     bqs::g_kExitFlag = true;
     bqs::g_kCv.notify_one();
 }
-}
+} // namespace
 
 void ReportErrorMsg(const int32_t errCode, const uint32_t deviceId, const pid_t hostPid, const uint32_t vfId)
 {
@@ -84,8 +84,8 @@ void ReportErrorMsg(const int32_t errCode, const uint32_t deviceId, const pid_t 
         }
     }
     BQS_LOG_RUN_INFO("ReportErrorMsg msg is %s.", errStr.c_str());
-    (void) TsdReportStartOrStopErrCode(deviceId, TSD_QS, static_cast<uint32_t>(hostPid), vfId, errStr.c_str(),
-                                       static_cast<uint32_t>(errStr.size()));
+    (void)TsdReportStartOrStopErrCode(
+        deviceId, TSD_QS, static_cast<uint32_t>(hostPid), vfId, errStr.c_str(), static_cast<uint32_t>(errStr.size()));
 }
 
 void RegAicpuSchedulerModuleCallBack()
@@ -176,10 +176,10 @@ void CloseAicpuSdlibHandle()
     }
 }
 
-void GetEnv(const char_t * const envName, std::string &envValue)
+void GetEnv(const char_t* const envName, std::string& envValue)
 {
     const size_t envValueMaxLen = 1024UL * 1024UL;
-    const char_t * const envTemp = std::getenv(envName);
+    const char_t* const envTemp = std::getenv(envName);
     if ((envTemp == nullptr) || (strnlen(envTemp, envValueMaxLen) >= envValueMaxLen)) {
         BQS_LOG_WARN("Get env[%s] failed.", envName);
         return;
@@ -187,14 +187,14 @@ void GetEnv(const char_t * const envName, std::string &envValue)
     envValue = envTemp;
 }
 
-void SetLogLevelWithEnv(bqs::ArgsParser &startParams)
+void SetLogLevelWithEnv(bqs::ArgsParser& startParams)
 {
     std::string envLogLevel;
     std::string envEventLevel;
     GetEnv("ASCEND_GLOBAL_LOG_LEVEL", envLogLevel);
     GetEnv("ASCEND_GLOBAL_EVENT_ENABLE", envEventLevel);
-    BQS_LOG_RUN_INFO("Set log with env, envLogLevel[%s], envEventLevel[%s]",
-                     envLogLevel.c_str(), envEventLevel.c_str());
+    BQS_LOG_RUN_INFO(
+        "Set log with env, envLogLevel[%s], envEventLevel[%s]", envLogLevel.c_str(), envEventLevel.c_str());
     int32_t logLevel;
     int32_t eventLevel;
     if (!TransStrToInt(envLogLevel, logLevel)) {
@@ -206,9 +206,9 @@ void SetLogLevelWithEnv(bqs::ArgsParser &startParams)
     startParams.SetLogLevel(logLevel, eventLevel);
 }
 
-void InitQsInitParams(bqs::InitQsParams &initQsParams, const uint32_t deviceId,
-                      const uint32_t hostPid, const uint32_t vfId,
-                      const std::vector<uint32_t> resVec, const bqs::ArgsParser &startParams)
+void InitQsInitParams(
+    bqs::InitQsParams& initQsParams, const uint32_t deviceId, const uint32_t hostPid, const uint32_t vfId,
+    const std::vector<uint32_t> resVec, const bqs::ArgsParser& startParams)
 {
     initQsParams.deviceId = deviceId;
     initQsParams.enqueGroupId = static_cast<uint32_t>(bqs::EventGroupId::ENQUEUE_GROUP_ID);
@@ -235,7 +235,7 @@ void InitQsInitParams(bqs::InitQsParams &initQsParams, const uint32_t deviceId,
     initQsParams.devIdVec = startParams.GetDevIdVec();
     initQsParams.needAttachGroup = true;
 }
-}
+} // namespace bqs
 
 /**
  * main of queue schedule
@@ -244,9 +244,9 @@ void InitQsInitParams(bqs::InitQsParams &initQsParams, const uint32_t deviceId,
  * @return 0:success, other:failed
  */
 #ifndef aicpusd_UT
-int32_t main(int32_t argc, char_t *argv[])
+int32_t main(int32_t argc, char_t* argv[])
 #else
-int32_t QueueScheduleMain(int32_t argc, char_t *argv[])
+int32_t QueueScheduleMain(int32_t argc, char_t* argv[])
 #endif
 {
     try {
@@ -296,7 +296,7 @@ int32_t QueueScheduleMain(int32_t argc, char_t *argv[])
             waitRet = TsdWaitForShutdown(deviceId, TSD_QS, hostPid, vfId);
         } else {
             // register a signal handler
-            (void) std::signal(SIGTERM, static_cast<sighandler_t>(&bqs::HandleSignal));
+            (void)std::signal(SIGTERM, static_cast<sighandler_t>(&bqs::HandleSignal));
             bqs::WaitShutdown();
         }
         int32_t ret = 0;
@@ -313,7 +313,7 @@ int32_t QueueScheduleMain(int32_t argc, char_t *argv[])
         (void)qsInterface.Destroy();
         BQS_LOG_RUN_INFO("QueueSchedule exit");
         return ret;
-    } catch(...) {
+    } catch (...) {
         BQS_LOG_ERROR("QueueSchedule run exception.");
         return -1;
     }

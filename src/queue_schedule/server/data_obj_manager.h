@@ -24,61 +24,40 @@ using EntityWeakPtr = std::weak_ptr<Entity>;
 
 class DataObj {
 public:
-    explicit DataObj(Entity * const sendEntityPtr, const Mbuf * const mbufPtr);
+    explicit DataObj(Entity* const sendEntityPtr, const Mbuf* const mbufPtr);
 
     ~DataObj() = default;
 
-    DataObj(const DataObj &) = delete;
-    DataObj(const DataObj &&) = delete;
-    DataObj &operator = (const DataObj &) = delete;
-    DataObj &operator = (DataObj &&) = delete;
+    DataObj(const DataObj&) = delete;
+    DataObj(const DataObj&&) = delete;
+    DataObj& operator=(const DataObj&) = delete;
+    DataObj& operator=(DataObj&&) = delete;
 
-    inline bool CopRef() const
-    {
-        return copyRef_;
-    }
+    inline bool CopRef() const { return copyRef_; }
 
-    inline const Mbuf *GetMbuf() const
-    {
-        return mbuf_;
-    }
+    inline const Mbuf* GetMbuf() const { return mbuf_; }
 
-    inline Entity *GetSendEntity() const
-    {
-        return sendEntity_;
-    }
+    inline Entity* GetSendEntity() const { return sendEntity_; }
 
-    void AddRecvEntity(Entity *const recvEntityPtr);
+    void AddRecvEntity(Entity* const recvEntityPtr);
 
-    inline size_t GetRecvEntitySize()
-    {
-        return recvEntities_.size();
-    }
+    inline size_t GetRecvEntitySize() { return recvEntities_.size(); }
 
-    inline std::vector<Entity*>& GetRecvEntities()
-    {
-        return recvEntities_;
-    }
+    inline std::vector<Entity*>& GetRecvEntities() { return recvEntities_; }
 
-    bool RemoveRecvEntity(const Entity * const recvEntityPtr);
+    bool RemoveRecvEntity(const Entity* const recvEntityPtr);
 
     bool UpdateRecvEntities(const EntityPtr group, const EntityPtr elem);
 
-    inline void MaintainMbuf()
-    {
-        maintainMbuf_ = true;
-    }
+    inline void MaintainMbuf() { maintainMbuf_ = true; }
 
-    inline bool ShouldMaintainMbuf() const
-    {
-        return maintainMbuf_;
-    }
+    inline bool ShouldMaintainMbuf() const { return maintainMbuf_; }
 
 private:
-    Entity *sendEntity_;
+    Entity* sendEntity_;
     std::vector<Entity*> recvEntities_;
     const bool copyRef_ = false;
-    const Mbuf *mbuf_ = nullptr;
+    const Mbuf* mbuf_ = nullptr;
     bool maintainMbuf_ = false;
 };
 
@@ -91,14 +70,14 @@ public:
 
     ~DataObjManager() = default;
 
-    DataObjManager(const DataObjManager &) = delete;
-    DataObjManager(const DataObjManager &&) = delete;
-    DataObjManager &operator = (const DataObjManager &) = delete;
-    DataObjManager &operator = (DataObjManager &&) = delete;
+    DataObjManager(const DataObjManager&) = delete;
+    DataObjManager(const DataObjManager&&) = delete;
+    DataObjManager& operator=(const DataObjManager&) = delete;
+    DataObjManager& operator=(DataObjManager&&) = delete;
 
-    static DataObjManager &Instance();
-    DataObjPtr CreateDataObj(Entity * const sendEntityPtr, const Mbuf * const mbufPtr) const;
+    static DataObjManager& Instance();
+    DataObjPtr CreateDataObj(Entity* const sendEntityPtr, const Mbuf* const mbufPtr) const;
 };
-}
+} // namespace dgw
 
 #endif

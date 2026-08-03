@@ -28,20 +28,20 @@ namespace bqs {
 
 class SubscribeManager {
 public:
-    static SubscribeManager &GetInstance();
+    static SubscribeManager& GetInstance();
 
     ~SubscribeManager() = default;
 
-    SubscribeManager(const SubscribeManager &) = delete;
+    SubscribeManager(const SubscribeManager&) = delete;
 
-    SubscribeManager &operator=(const SubscribeManager &) = delete;
+    SubscribeManager& operator=(const SubscribeManager&) = delete;
 
-    SubscribeManager(SubscribeManager &&) = delete;
+    SubscribeManager(SubscribeManager&&) = delete;
 
-    SubscribeManager &operator=(SubscribeManager &&) = delete;
+    SubscribeManager& operator=(SubscribeManager&&) = delete;
 
-    void InitSubscribeManager(const uint32_t deviceId, const uint32_t enqueGroupId,
-        const uint32_t f2nfGroupId, const uint32_t dstDeviceId);
+    void InitSubscribeManager(
+        const uint32_t deviceId, const uint32_t enqueGroupId, const uint32_t f2nfGroupId, const uint32_t dstDeviceId);
 
     /**
      * Subscribe queue group event.
@@ -107,7 +107,6 @@ public:
     SubscribeManager() = default;
 
 private:
-
     /**
      * Resubscribe queue group event.
      * @param queueId queue id
@@ -148,15 +147,15 @@ private:
 
 class Subscribers {
 public:
-    static Subscribers &GetInstance();
-    SubscribeManager *GetSubscribeManager(const uint32_t resId, const uint32_t deviceId);
+    static Subscribers& GetInstance();
+    SubscribeManager* GetSubscribeManager(const uint32_t resId, const uint32_t deviceId);
     // init subscribers which subscribe queue on deviceId to dstDeviceId for each deviceId
-    void InitSubscribeManagers(const std::set<uint32_t> &deviceIds, const uint32_t dstDeviceId);
+    void InitSubscribeManagers(const std::set<uint32_t>& deviceIds, const uint32_t dstDeviceId);
 
 private:
     // resId - deviceId
     std::unordered_map<uint32_t, std::unordered_map<uint32_t, SubscribeManager>> subscribeManagers_;
 };
-}  // namespace bqs
+} // namespace bqs
 
-#endif  // QUEUE_SCHEDULE_SUBSCRIBE_MANAGER_H
+#endif // QUEUE_SCHEDULE_SUBSCRIBE_MANAGER_H

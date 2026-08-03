@@ -46,7 +46,6 @@ repos:
               | dfx/log
               | dfx/msprof
               | dfx/trace
-              | queue_schedule
             )(/|$)
             | stub
             | tests(?:

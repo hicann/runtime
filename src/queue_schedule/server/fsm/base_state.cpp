@@ -11,10 +11,10 @@
 #include "fsm/state_base.h"
 
 namespace dgw {
-FsmStatus StateBase::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus StateBase::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     (void)entity;
     (void)msg;
     return FsmStatus::FSM_SUCCESS;
 }
-}  // namespace dgw
+} // namespace dgw

@@ -21,24 +21,24 @@ class ScheduleConfig {
 public:
     explicit ScheduleConfig() = default;
     virtual ~ScheduleConfig() = default;
-    static ScheduleConfig &GetInstance();
+    static ScheduleConfig& GetInstance();
 
-    void RecordConfig(const uint32_t key, const bqs::DynamicSchedQueueAttr &requestQ,
-        const bqs::DynamicSchedQueueAttr &responseQ);
+    void RecordConfig(
+        const uint32_t key, const bqs::DynamicSchedQueueAttr& requestQ, const bqs::DynamicSchedQueueAttr& responseQ);
 
-    const std::unordered_set<uint32_t> &GetSchedKeys() const;
+    const std::unordered_set<uint32_t>& GetSchedKeys() const;
 
     void StopSched(const uint32_t key);
 
     void RestartSched(const uint32_t key);
 
     const bool IsStopped(const uint32_t key) const;
-    
+
 private:
     std::unordered_set<uint32_t> schedKeys_;
     std::unordered_set<uint32_t> stoppedSchedKeys_;
     std::unordered_map<uint32_t, std::pair<bqs::DynamicSchedQueueAttr, bqs::DynamicSchedQueueAttr>> configMap_;
 };
-}
+} // namespace dgw
 
 #endif

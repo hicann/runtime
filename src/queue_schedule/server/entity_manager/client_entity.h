@@ -16,29 +16,30 @@
 namespace dgw {
 class ClientEntity : public SimpleEntity {
 public:
-    explicit ClientEntity(const EntityMaterial &material, const uint32_t resIndex);
+    explicit ClientEntity(const EntityMaterial& material, const uint32_t resIndex);
     virtual ~ClientEntity() = default;
-    ClientEntity(const ClientEntity &) = delete;
-    ClientEntity(const ClientEntity &&) = delete;
-    ClientEntity &operator = (const ClientEntity &) = delete;
-    ClientEntity &operator = (ClientEntity &&) = delete;
+    ClientEntity(const ClientEntity&) = delete;
+    ClientEntity(const ClientEntity&&) = delete;
+    ClientEntity& operator=(const ClientEntity&) = delete;
+    ClientEntity& operator=(ClientEntity&&) = delete;
 
-    FsmStatus DoDequeueMbuf(void **mbufPtr) const override;
+    FsmStatus DoDequeueMbuf(void** mbufPtr) const override;
     FsmStatus ResetSrcState() override;
     void ResetSrcSubState() override;
     bool IsDataPeeked() const override;
+
 protected:
     FsmStatus DoDequeue() override;
     Mbuf* PrepareMbufToPush(DataObjPtr dataObj) const override;
-    FsmStatus DoSendData(Mbuf *const mbuf) override;
+    FsmStatus DoSendData(Mbuf* const mbuf) override;
     void DoClientDequeue();
-    FsmStatus FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbuf) const;
-    FsmStatus DoClientEnqueue(Mbuf *const mbuf);
-    FsmStatus DoEnqueueMbuf(Mbuf *const mbuf) const;
+    FsmStatus FillMbufWithDeque(const uint64_t deqLen, Mbuf* const mbuf) const;
+    FsmStatus DoClientEnqueue(Mbuf* const mbuf);
+    FsmStatus DoEnqueueMbuf(Mbuf* const mbuf) const;
     void InvokeDequeThread();
-    void InvokeEnqueThread(Mbuf *const mbuf);
+    void InvokeEnqueThread(Mbuf* const mbuf);
 
     AsyncDataState asyncDataState_;
 };
-}
+} // namespace dgw
 #endif

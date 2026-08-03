@@ -22,7 +22,7 @@ extern "C" {
  * @param [in] deployMode : 0 single process 1 muti process 2 muti thread.
  * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
-__attribute__((visibility("default"))) int32_t InitQueueScheduler(const uint32_t deviceId,
-                                                                  const uint32_t reschedInterval);
+__attribute__((visibility("default"))) int32_t InitQueueScheduler(
+    const uint32_t deviceId, const uint32_t reschedInterval);
 }
-#endif  // QUEUEU_SCHEDULE_INTERFACE_H
+#endif // QUEUEU_SCHEDULE_INTERFACE_H

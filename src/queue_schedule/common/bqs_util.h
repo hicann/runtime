@@ -42,9 +42,9 @@ uint64_t GetNowTime();
  * @param [out] envValue : result
  * @return : bool，Whether get the env success
  */
-static inline void GetEnvVal(const std::string &env, std::string &val)
+static inline void GetEnvVal(const std::string& env, std::string& val)
 {
-    const char *const tmpVal = std::getenv(env.c_str());
+    const char* const tmpVal = std::getenv(env.c_str());
     if ((tmpVal == nullptr) || (strnlen(tmpVal, MAX_ENV_CHAR_NUM) >= MAX_ENV_CHAR_NUM)) {
         val = "";
     } else {
@@ -52,7 +52,7 @@ static inline void GetEnvVal(const std::string &env, std::string &val)
     }
 }
 
-static inline bool TransStrToInt(const std::string &para, int32_t &value)
+static inline bool TransStrToInt(const std::string& para, int32_t& value)
 {
     try {
         value = std::stoi(para);
@@ -63,7 +63,7 @@ static inline bool TransStrToInt(const std::string &para, int32_t &value)
     return true;
 }
 
-static inline bool TransStrToull(const std::string &para, uint64_t &value)
+static inline bool TransStrToull(const std::string& para, uint64_t& value)
 {
     try {
         value = std::stoull(para);
@@ -77,14 +77,9 @@ static inline bool TransStrToull(const std::string &para, uint64_t &value)
 // scope guard
 class ScopeGuard {
 public:
-    explicit ScopeGuard(const std::function<void()> exitScope)
-        : exitScope_(exitScope)
-    {}
+    explicit ScopeGuard(const std::function<void()> exitScope) : exitScope_(exitScope) {}
 
-    ~ScopeGuard()
-    {
-        exitScope_();
-    }
+    ~ScopeGuard() { exitScope_(); }
 
 private:
     ScopeGuard(ScopeGuard const&) = delete;
@@ -104,13 +99,11 @@ public:
 
     void Lock()
     {
-        while (lock_.test_and_set()) {}
+        while (lock_.test_and_set()) {
+        }
     }
 
-    void Unlock()
-    {
-        lock_.clear();
-    }
+    void Unlock() { lock_.clear(); }
 
 private:
     SpinLock(SpinLock const&) = delete;
@@ -125,41 +118,29 @@ class GlobalCfg {
 public:
     explicit GlobalCfg() = default;
     virtual ~GlobalCfg() = default;
-    inline static GlobalCfg &GetInstance()
+    inline static GlobalCfg& GetInstance()
     {
         static GlobalCfg globalCfg;
         return globalCfg;
     }
 
-    inline void SetNumaFlag(const bool numaFlag)
-    {
-        numaFlag_ = numaFlag;
-    }
+    inline void SetNumaFlag(const bool numaFlag) { numaFlag_ = numaFlag; }
 
-    inline bool GetNumaFlag() const
-    {
-        return numaFlag_;
-    }
+    inline bool GetNumaFlag() const { return numaFlag_; }
 
     inline void RecordDeviceId(const uint32_t deviceId, const uint32_t resIndex, const uint32_t groupId)
     {
         deviceIdToResIndex_[deviceId] = std::make_pair(resIndex, groupId);
     }
 
-    inline uint32_t GetResIndexByDeviceId(const uint32_t deviceId)
-    {
-        return deviceIdToResIndex_[deviceId].first;
-    }
+    inline uint32_t GetResIndexByDeviceId(const uint32_t deviceId) { return deviceIdToResIndex_[deviceId].first; }
 
-    inline uint32_t GetGroupIdByDeviceId(const uint32_t deviceId)
-    {
-        return deviceIdToResIndex_[deviceId].second;
-    }
+    inline uint32_t GetGroupIdByDeviceId(const uint32_t deviceId) { return deviceIdToResIndex_[deviceId].second; }
 
 private:
     bool numaFlag_{false};
     std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> deviceIdToResIndex_;
 };
 
-}  // namespace bqs
-#endif  // QUEUE_SCHEDULE_BQS_STATUS_H
+} // namespace bqs
+#endif // QUEUE_SCHEDULE_BQS_STATUS_H

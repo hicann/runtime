@@ -34,7 +34,7 @@ const std::string PIPELINE_QUEUE_NAME = "QsPipeQueue";
 constexpr const uint16_t MAJOR_VERSION = 3U;
 constexpr const uint16_t MINOR_VERSION = 0U;
 constexpr const QueueShareAttr ADMIN_QUEUE_ATTR = {1U, 1U, 1U, 0U};
-constexpr const char_t *ROUTER_SERVER_THREAD_NAME_PREFIX = "router_server";
+constexpr const char_t* ROUTER_SERVER_THREAD_NAME_PREFIX = "router_server";
 
 // mapping of request subeventId and response subeventId
 const std::map<int32_t, int32_t> g_reqRspMapping = {
@@ -42,8 +42,7 @@ const std::map<int32_t, int32_t> g_reqRspMapping = {
     {AICPU_BIND_QUEUE_INIT, AICPU_BIND_QUEUE_INIT_RES},
     {AICPU_UNBIND_QUEUE, AICPU_UNBIND_QUEUE_RES},
     {AICPU_QUERY_QUEUE, AICPU_QUERY_QUEUE_RES},
-    {AICPU_QUERY_QUEUE_NUM, AICPU_QUERY_QUEUE_NUM_RES}
-};
+    {AICPU_QUERY_QUEUE_NUM, AICPU_QUERY_QUEUE_NUM_RES}};
 // mapping of request subeventId and qs operate type
 const std::map<uint32_t, QsOperType> g_qsOperation = {
     {static_cast<uint32_t>(AICPU_BIND_QUEUE_INIT), QsOperType::BIND_INIT},
@@ -68,7 +67,7 @@ const std::map<uint32_t, QsOperType> g_qsOperation = {
 
 // 老版驱动结构体——解析数据时需要使用与驱动相同的结构体
 struct old_event_sync_msg {
-    int pid; /* local pid */
+    int pid;                     /* local pid */
     unsigned int dst_engine : 4; /* local engine */
     unsigned int gid : 6;
     unsigned int event_id : 6;
@@ -76,19 +75,39 @@ struct old_event_sync_msg {
     char msg[];
 };
 
-}
+} // namespace
 
-RouterServer::RouterServer() : processing_(false), done_(false), processingExtra_(false), doneExtra_(true),
-                               bindQueueGroupId_(static_cast<uint32_t>(BIND_QUEUE_GROUP_ID)),
-                               running_(false),  deviceId_(0U), srcPid_(-1), srcVersion_(0U),
-                               srcGroupId_(-1), pipelineQueueId_(MAX_QUEUE_ID_NUM), subEventId_(0U),
-                               deployMode_(QueueSchedulerRunMode::MULTI_PROCESS),
-                               retCode_(static_cast<int32_t>(BQS_STATUS_OK)), attachedFlag_(false),
-                               isAicpuEvent_(false), qsRouteListPtr_(nullptr), qsRouterHeadPtr_(nullptr),
-                               qsRouterQueryPtr_(nullptr), drvSyncMsg_(nullptr), aicpuRspHead_(0UL),
-                               f2nfGroupId_(0U), schedPolicy_(0UL), cfgInfoOperator_(nullptr), callHcclFlag_(false),
-                               numaFlag_(false), readyToHandleMsg_(false), manageThreadStatus_(ThreadStatus::NOT_INIT),
-                               needAttachGroup_(false), compatMsg_(false)
+RouterServer::RouterServer()
+    : processing_(false),
+      done_(false),
+      processingExtra_(false),
+      doneExtra_(true),
+      bindQueueGroupId_(static_cast<uint32_t>(BIND_QUEUE_GROUP_ID)),
+      running_(false),
+      deviceId_(0U),
+      srcPid_(-1),
+      srcVersion_(0U),
+      srcGroupId_(-1),
+      pipelineQueueId_(MAX_QUEUE_ID_NUM),
+      subEventId_(0U),
+      deployMode_(QueueSchedulerRunMode::MULTI_PROCESS),
+      retCode_(static_cast<int32_t>(BQS_STATUS_OK)),
+      attachedFlag_(false),
+      isAicpuEvent_(false),
+      qsRouteListPtr_(nullptr),
+      qsRouterHeadPtr_(nullptr),
+      qsRouterQueryPtr_(nullptr),
+      drvSyncMsg_(nullptr),
+      aicpuRspHead_(0UL),
+      f2nfGroupId_(0U),
+      schedPolicy_(0UL),
+      cfgInfoOperator_(nullptr),
+      callHcclFlag_(false),
+      numaFlag_(false),
+      readyToHandleMsg_(false),
+      manageThreadStatus_(ThreadStatus::NOT_INIT),
+      needAttachGroup_(false),
+      compatMsg_(false)
 {}
 
 void RouterServer::Destroy()
@@ -106,40 +125,31 @@ void RouterServer::Destroy()
     manageThreadStatus_ = ThreadStatus::NOT_INIT;
     if (pipelineQueueId_ < MAX_QUEUE_ID_NUM) {
         const auto ret = halQueueDestroy(deviceId_, pipelineQueueId_);
-        BQS_LOG_ERROR_WHEN(ret != DRV_ERROR_NONE,
-                           "[RouterServer]Destroy relation event buff queue error, queue id[%u], ret[%d]",
-                           pipelineQueueId_.load(), static_cast<int32_t>(ret));
+        BQS_LOG_ERROR_WHEN(
+            ret != DRV_ERROR_NONE, "[RouterServer]Destroy relation event buff queue error, queue id[%u], ret[%d]",
+            pipelineQueueId_.load(), static_cast<int32_t>(ret));
     }
     cfgInfoOperator_ = nullptr;
     BQS_LOG_RUN_INFO("[RouterServer]QS Server finish destroy.");
 }
 
-RouterServer::~RouterServer()
-{
-    Destroy();
-}
+RouterServer::~RouterServer() { Destroy(); }
 
-bool RouterServer::GetCallHcclFlag() const
-{
-    return callHcclFlag_;
-}
+bool RouterServer::GetCallHcclFlag() const { return callHcclFlag_; }
 
-uint32_t RouterServer::GetPipelineQueueId() const
-{
-    return pipelineQueueId_;
-}
+uint32_t RouterServer::GetPipelineQueueId() const { return pipelineQueueId_; }
 
-RouterServer &RouterServer::GetInstance()
+RouterServer& RouterServer::GetInstance()
 {
     static RouterServer instance;
     return instance;
 }
 
-void RouterServer::HandleBqsMsg(event_info &info)
+void RouterServer::HandleBqsMsg(event_info& info)
 {
     if (info.comm.event_id != EVENT_QS_MSG) {
-        BQS_LOG_ERROR("[RouterServer]Queue schedule does not support [%d] event",
-                      static_cast<int32_t>(info.comm.event_id));
+        BQS_LOG_ERROR(
+            "[RouterServer]Queue schedule does not support [%d] event", static_cast<int32_t>(info.comm.event_id));
         return;
     }
     subEventId_ = info.comm.subevent_id;
@@ -166,8 +176,9 @@ void RouterServer::HandleBqsMsg(event_info &info)
 
     // aicpu message is not allowed in thread mode.
     if (isAicpuEvent_ && (deployMode_ == QueueSchedulerRunMode::MULTI_THREAD)) {
-        BQS_LOG_ERROR("[RouterServer]Thread mode[%u] does not sopport event[%u] from aicpu.",
-                      static_cast<int32_t>(deployMode_), subEventId_);
+        BQS_LOG_ERROR(
+            "[RouterServer]Thread mode[%u] does not sopport event[%u] from aicpu.", static_cast<int32_t>(deployMode_),
+            subEventId_);
         return;
     }
     PreProcessEvent(info);
@@ -175,7 +186,7 @@ void RouterServer::HandleBqsMsg(event_info &info)
     return;
 }
 
-void RouterServer::PreProcessEvent(const event_info &info)
+void RouterServer::PreProcessEvent(const event_info& info)
 {
     // get event head for responseing by sync interface
     BQS_LOG_INFO("[RouterServer]PreProcess start operation[%u]", subEventId_);
@@ -197,16 +208,16 @@ void RouterServer::PreProcessEvent(const event_info &info)
             break;
         case QsOperType::RELATION_PROCESS: {
             // get message from mbuf, eventid also in mbuf
-            Mbuf *mBuf = nullptr;
+            Mbuf* mBuf = nullptr;
             const auto resultCode = ParseRelationInfo(&mBuf);
             if (resultCode != BQS_STATUS_OK) {
-                BQS_LOG_ERROR("[RouterServer]Get detail message from mbuf failed ret[%d].",
-                              static_cast<int32_t>(resultCode));
+                BQS_LOG_ERROR(
+                    "[RouterServer]Get detail message from mbuf failed ret[%d].", static_cast<int32_t>(resultCode));
                 SendRspEvent(static_cast<int32_t>(resultCode));
                 if ((mBuf != nullptr) && (srcVersion_ != 0U)) {
                     const auto freeRet = halMbufFree(mBuf);
-                    BQS_LOG_ERROR_WHEN(freeRet != static_cast<int32_t>(DRV_ERROR_NONE),
-                                       "Free mbuf failed, ret is %d", freeRet);
+                    BQS_LOG_ERROR_WHEN(
+                        freeRet != static_cast<int32_t>(DRV_ERROR_NONE), "Free mbuf failed, ret is %d", freeRet);
                 }
                 return;
             }
@@ -242,16 +253,18 @@ void RouterServer::PreProcessEvent(const event_info &info)
 
 void RouterServer::ProcessConfigEvent(const QsOperType operType)
 {
-    void *mbuf = nullptr;
+    void* mbuf = nullptr;
     auto drvRet = halQueueDeQueue(deviceId_, pipelineQueueId_, &mbuf);
     if ((drvRet != DRV_ERROR_NONE) || (mbuf == nullptr)) {
-        BQS_LOG_ERROR("halQueueDeQueue from queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(),
-            deviceId_, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "halQueueDeQueue from queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(), deviceId_,
+            static_cast<int32_t>(drvRet));
         SendRspEvent(static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR));
         return;
     }
-    auto resultCode = (cfgInfoOperator_ == nullptr) ? BQS_STATUS_INNER_ERROR :
-        cfgInfoOperator_->ParseConfigEvent(subEventId_, pipelineQueueId_, mbuf, srcVersion_);
+    auto resultCode = (cfgInfoOperator_ == nullptr) ?
+                          BQS_STATUS_INNER_ERROR :
+                          cfgInfoOperator_->ParseConfigEvent(subEventId_, pipelineQueueId_, mbuf, srcVersion_);
     if (resultCode == BQS_STATUS_WAIT) {
         resultCode = WaitSyncMsgProc();
     }
@@ -263,17 +276,17 @@ void RouterServer::ProcessConfigEvent(const QsOperType operType)
         BQS_LOG_INFO("Enque mbuf back");
         drvRet = halQueueEnQueue(deviceId_, pipelineQueueId_, mbuf);
         if (drvRet != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halQueueEnQueue into queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(),
-                deviceId_, static_cast<int32_t>(drvRet));
+            BQS_LOG_ERROR(
+                "halQueueEnQueue into queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(), deviceId_,
+                static_cast<int32_t>(drvRet));
             SendRspEvent(static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR));
             const auto freeRet = halMbufFree(PtrToPtr<void, Mbuf>(mbuf));
-            BQS_LOG_ERROR_WHEN(freeRet != static_cast<int32_t>(DRV_ERROR_NONE),
-                               "Free mbuf failed, ret is %d", freeRet);
+            BQS_LOG_ERROR_WHEN(freeRet != static_cast<int32_t>(DRV_ERROR_NONE), "Free mbuf failed, ret is %d", freeRet);
             return;
         }
     }
-    BQS_LOG_INFO("config for operate[%d] resultCode is %d.", static_cast<int32_t>(operType),
-        static_cast<int32_t>(resultCode));
+    BQS_LOG_INFO(
+        "config for operate[%d] resultCode is %d.", static_cast<int32_t>(operType), static_cast<int32_t>(resultCode));
     SendRspEvent(static_cast<int32_t>(resultCode));
 }
 
@@ -286,7 +299,7 @@ void RouterServer::ProcessQueryLinkStatusEvent()
     SendRspEvent(ret);
 }
 
-void RouterServer::ProcessQueueRelationEvent(Mbuf *mbuf)
+void RouterServer::ProcessQueueRelationEvent(Mbuf* mbuf)
 {
     BqsStatus ret = BQS_STATUS_INNER_ERROR;
     switch (subEventId_) {
@@ -329,12 +342,12 @@ void RouterServer::ProcessQueueRelationEvent(Mbuf *mbuf)
         BQS_LOG_INFO("Enque mbuf back.");
         const auto drvRet = halQueueEnQueue(deviceId_, pipelineQueueId_, mbuf);
         if (drvRet != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halQueueEnQueue into queue[%u] in device[%u] failed, error[%d].", pipelineQueueId_.load(),
-                deviceId_, static_cast<int32_t>(drvRet));
+            BQS_LOG_ERROR(
+                "halQueueEnQueue into queue[%u] in device[%u] failed, error[%d].", pipelineQueueId_.load(), deviceId_,
+                static_cast<int32_t>(drvRet));
             SendRspEvent(static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR));
             const auto freeRet = halMbufFree(mbuf);
-            BQS_LOG_ERROR_WHEN(freeRet != static_cast<int32_t>(DRV_ERROR_NONE),
-                               "Free mbuf failed, ret is %d", freeRet);
+            BQS_LOG_ERROR_WHEN(freeRet != static_cast<int32_t>(DRV_ERROR_NONE), "Free mbuf failed, ret is %d", freeRet);
             return;
         }
     }
@@ -364,12 +377,13 @@ BqsStatus RouterServer::AttachAndInitGroup()
             BQS_LOG_ERROR("[RouterServer] Fail to allocate GroupQueryOutput");
             return BQS_STATUS_INNER_ERROR;
         }
-        GroupQueryOutput &groupInfo = *(groupInfoPtr.get());
+        GroupQueryOutput& groupInfo = *(groupInfoPtr.get());
         uint32_t groupInfoLen = 0U;
         pid_t curPid = drvDeviceGetBareTgid();
         // query group info for current qs process
-        drvRet = halGrpQuery(GRP_QUERY_GROUPS_OF_PROCESS, &curPid, static_cast<uint32_t>(sizeof(curPid)),
-                             reinterpret_cast<void *>(&groupInfo), &groupInfoLen);
+        drvRet = halGrpQuery(
+            GRP_QUERY_GROUPS_OF_PROCESS, &curPid, static_cast<uint32_t>(sizeof(curPid)),
+            reinterpret_cast<void*>(&groupInfo), &groupInfoLen);
         if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
             BQS_LOG_ERROR("[RouterServer]halGrpQuery of qs[%d] failed before attached,ret[%d]", curPid, drvRet);
             return BQS_STATUS_DRIVER_ERROR;
@@ -385,22 +399,23 @@ BqsStatus RouterServer::AttachAndInitGroup()
         }
         const uint32_t groupNum = static_cast<uint32_t>(groupInfoLen / sizeof(groupInfo.grpQueryGroupsOfProcInfo[0]));
         for (uint32_t i = 0U; i < groupNum; ++i) {
-        // attach and initial
+            // attach and initial
             drvRet = halGrpAttach(groupInfo.grpQueryGroupsOfProcInfo[i].groupName, 0);
             if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
-                BQS_LOG_ERROR("[RouterServer]Group[%s] attach failed for slave aicpusd[%d] ret[%d]",
-                              groupInfo.grpQueryGroupsOfProcInfo[i].groupName, curPid, drvRet);
+                BQS_LOG_ERROR(
+                    "[RouterServer]Group[%s] attach failed for slave aicpusd[%d] ret[%d]",
+                    groupInfo.grpQueryGroupsOfProcInfo[i].groupName, curPid, drvRet);
                 return BQS_STATUS_DRIVER_ERROR;
             }
-            BQS_LOG_INFO("[RouterServer] halGrpAttach execute succ. group[%s] was attached by QS",
-                         groupInfo.grpQueryGroupsOfProcInfo[i].groupName);
+            BQS_LOG_INFO(
+                "[RouterServer] halGrpAttach execute succ. group[%s] was attached by QS",
+                groupInfo.grpQueryGroupsOfProcInfo[i].groupName);
         }
     }
     attachedFlag_ = true;
     BuffCfg defaultCfg = {};
     drvRet = halBuffInit(&defaultCfg);
-    if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) &&
-        (drvRet != static_cast<int32_t>(DRV_ERROR_REPEATED_INIT))) {
+    if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) && (drvRet != static_cast<int32_t>(DRV_ERROR_REPEATED_INIT))) {
         BQS_LOG_ERROR("[RouterServer] Buffer initial failed for qs. ret[%d]", drvRet);
         return BQS_STATUS_DRIVER_ERROR;
     }
@@ -411,7 +426,7 @@ BqsStatus RouterServer::AttachAndInitGroup()
 BqsStatus RouterServer::CreateAndGrantPipelineQueue()
 {
     BQS_LOG_INFO("[RouterServer]Create and grant pipeline queue begin.");
-   // do initial process
+    // do initial process
     const std::unique_lock<std::mutex> lk(mutex_);
     QueueAttr queAttr = {};
     std::string nameStr(PIPELINE_QUEUE_NAME);
@@ -425,8 +440,8 @@ BqsStatus RouterServer::CreateAndGrantPipelineQueue()
     }
     const uint32_t curPid = static_cast<uint32_t>(curPidTemp);
     nameStr += std::to_string(curPid);
-    const auto memcpyRet = memcpy_s(queAttr.name, static_cast<uint32_t>(QUEUE_MAX_STR_LEN),
-                                    nameStr.c_str(), nameStr.length() + 1UL);
+    const auto memcpyRet =
+        memcpy_s(queAttr.name, static_cast<uint32_t>(QUEUE_MAX_STR_LEN), nameStr.c_str(), nameStr.length() + 1UL);
     if (memcpyRet != EOK) {
         BQS_LOG_ERROR("[RouterServer]CreateAndGrantPipelineQueue memcpy_s failed, ret=%d.", memcpyRet);
         return BQS_STATUS_INNER_ERROR;
@@ -436,11 +451,12 @@ BqsStatus RouterServer::CreateAndGrantPipelineQueue()
     // create queue
     auto drvRet = halQueueCreate(deviceId_, &queAttr, &queueId);
     if ((drvRet != DRV_ERROR_NONE) || (queueId >= MAX_QUEUE_ID_NUM)) {
-        BQS_LOG_ERROR("[RouterServer]Create queue[%s] error or qID[%u] is invalid, ret[%d]",
-                      PIPELINE_QUEUE_NAME.c_str(), queueId, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "[RouterServer]Create queue[%s] error or qID[%u] is invalid, ret[%d]", PIPELINE_QUEUE_NAME.c_str(), queueId,
+            static_cast<int32_t>(drvRet));
         return BQS_STATUS_DRIVER_ERROR;
     }
-    drvRet =  halQueueAttach(deviceId_, queueId, 0);
+    drvRet = halQueueAttach(deviceId_, queueId, 0);
     if (drvRet != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("Fail to attach queue[%ud], result[%d]", queueId, static_cast<int32_t>(drvRet));
         return BQS_STATUS_DRIVER_ERROR;
@@ -454,15 +470,16 @@ BqsStatus RouterServer::CreateAndGrantPipelineQueue()
 
     drvRet = halQueueGrant(deviceId_, static_cast<int32_t>(queueId), srcPid_, ADMIN_QUEUE_ATTR);
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("[RouterServer]Fail to add queue[%d] authority for aicpusd[%d], result[%d].",
-                      queueId, srcPid_, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "[RouterServer]Fail to add queue[%d] authority for aicpusd[%d], result[%d].", queueId, srcPid_,
+            static_cast<int32_t>(drvRet));
         return BQS_STATUS_DRIVER_ERROR;
     }
     BQS_LOG_RUN_INFO("Success to init pipelineQ[%u].", pipelineQueueId_.load());
     return BQS_STATUS_OK;
 }
 
-BqsStatus RouterServer::ProcessBindInit(const event_info &info)
+BqsStatus RouterServer::ProcessBindInit(const event_info& info)
 {
     if (info.priv.msg_len != sizeof(QsBindInit)) {
         BQS_LOG_ERROR("[RouterServer]Bind initial event message invalid, msgLen[%u]", info.priv.msg_len);
@@ -473,17 +490,18 @@ BqsStatus RouterServer::ProcessBindInit(const event_info &info)
         BQS_LOG_RUN_INFO("Pipeline queue already existed[%d], return pipelienQueueid", pipelineQueueId_.load());
         return BQS_STATUS_OK;
     }
-    const QsBindInit * const bindInitMsg = reinterpret_cast<const QsBindInit *>(info.priv.msg);
+    const QsBindInit* const bindInitMsg = reinterpret_cast<const QsBindInit*>(info.priv.msg);
     aicpuRspHead_ = bindInitMsg->syncEventHead;
     srcPid_ = bindInitMsg->pid;
     srcVersion_ = bindInitMsg->majorVersion;
     srcGroupId_ = static_cast<int32_t>(bindInitMsg->grpId);
-    BQS_LOG_RUN_INFO("[RouterServer]Get hostpid[%d] srcGroup[%d], srcVersion[%u]",
-                     srcPid_, srcGroupId_.load(), srcVersion_);
+    BQS_LOG_RUN_INFO(
+        "[RouterServer]Get hostpid[%d] srcGroup[%d], srcVersion[%u]", srcPid_, srcGroupId_.load(), srcVersion_);
 
     // process mode need to attach group at first
     if (((deployMode_ == QueueSchedulerRunMode::SINGLE_PROCESS) ||
-         (deployMode_ == QueueSchedulerRunMode::MULTI_PROCESS)) && (!attachedFlag_)) {
+         (deployMode_ == QueueSchedulerRunMode::MULTI_PROCESS)) &&
+        (!attachedFlag_)) {
         BQS_LOG_INFO("[RouterServer]start up attach and init group.");
         const auto attachRet = AttachAndInitGroup();
         if (attachRet != BQS_STATUS_OK) {
@@ -511,12 +529,13 @@ BqsStatus RouterServer::ProcessBindInit(const event_info &info)
     if (ret != BQS_STATUS_OK) {
         return ret;
     }
-    BQS_LOG_RUN_INFO("First bind initial success, srcPid[%d], srvGroupId[%d], pipelineQueueId[%u]",
-                     srcPid_, srcGroupId_.load(), pipelineQueueId_.load());
+    BQS_LOG_RUN_INFO(
+        "First bind initial success, srcPid[%d], srvGroupId[%d], pipelineQueueId[%u]", srcPid_, srcGroupId_.load(),
+        pipelineQueueId_.load());
     return BQS_STATUS_OK;
 }
 
-void RouterServer::FillRspContent(QsProcMsgRsp &retRsp, const int32_t resultCode)
+void RouterServer::FillRspContent(QsProcMsgRsp& retRsp, const int32_t resultCode)
 {
     // only aicpu event need fill in aicpuRspHead
     retRsp.syncEventHead = isAicpuEvent_ ? aicpuRspHead_ : 0UL;
@@ -526,14 +545,15 @@ void RouterServer::FillRspContent(QsProcMsgRsp &retRsp, const int32_t resultCode
     if ((subEventId_ == static_cast<uint32_t>(AICPU_BIND_QUEUE_INIT)) ||
         (subEventId_ == static_cast<uint32_t>(ACL_BIND_QUEUE_INIT))) {
         // init message return pipelineID
-        retRsp.retValue = (resultCode == static_cast<int32_t>(BQS_STATUS_OK)) ? pipelineQueueId_.load()
-                                                                              : MAX_QUEUE_ID_NUM;
+        retRsp.retValue =
+            (resultCode == static_cast<int32_t>(BQS_STATUS_OK)) ? pipelineQueueId_.load() : MAX_QUEUE_ID_NUM;
     }
     if ((subEventId_ == static_cast<uint32_t>(AICPU_QUERY_QUEUE_NUM)) ||
         (subEventId_ == static_cast<uint32_t>(ACL_QUERY_QUEUE_NUM))) {
         // query num message return bind num
-        retRsp.retValue = (resultCode != static_cast<int32_t>(BQS_STATUS_OK)) ? 0U :
-            static_cast<uint32_t>(queueRouteQueryList_.size());
+        retRsp.retValue = (resultCode != static_cast<int32_t>(BQS_STATUS_OK)) ?
+                              0U :
+                              static_cast<uint32_t>(queueRouteQueryList_.size());
         queueRouteQueryList_.clear();
     }
     if ((subEventId_ == static_cast<uint32_t>(AICPU_QUERY_QUEUE)) ||
@@ -558,21 +578,20 @@ void RouterServer::SendRspEvent(const int32_t result)
     auto drvRet = DRV_ERROR_NONE;
     if (!isAicpuEvent_) {
         BQS_LOG_INFO("[RouterServer] Do ACL response");
-        qsEvent.dst_engine = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->dst_engine
-                                        : drvSyncMsg_->dst_engine;
+        qsEvent.dst_engine = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->dst_engine :
+                                          drvSyncMsg_->dst_engine;
         qsEvent.policy = ONLY;
-        qsEvent.pid = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->pid
-                                 : drvSyncMsg_->pid;
-        qsEvent.grp_id = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->gid
-                                    : drvSyncMsg_->gid;
-        const int32_t eventId = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->event_id
-                                           : drvSyncMsg_->event_id;
+        qsEvent.pid = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->pid : drvSyncMsg_->pid;
+        qsEvent.grp_id = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->gid : drvSyncMsg_->gid;
+        const int32_t eventId =
+            compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->event_id : drvSyncMsg_->event_id;
         qsEvent.event_id = static_cast<EVENT_ID>(eventId);
-        qsEvent.subevent_id = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->subevent_id
-                                         : drvSyncMsg_->subevent_id;
+        qsEvent.subevent_id = compatMsg_ ? PtrToPtr<event_sync_msg, old_event_sync_msg>(drvSyncMsg_)->subevent_id :
+                                           drvSyncMsg_->subevent_id;
         drvRet = halEschedSubmitEvent(deviceId_, &qsEvent); // drv interface require use 0
         drvSyncMsg_ = nullptr;
-        BQS_LOG_INFO("[SendRspEvent] dst_engine[%u], pid[%d], grp_id[%u], eventId[%d], subevent_id[%u], deviceId[%u]",
+        BQS_LOG_INFO(
+            "[SendRspEvent] dst_engine[%u], pid[%d], grp_id[%u], eventId[%d], subevent_id[%u], deviceId[%u]",
             qsEvent.dst_engine, qsEvent.pid, qsEvent.grp_id, qsEvent.event_id, qsEvent.subevent_id, deviceId_);
     } else {
         BQS_LOG_INFO("[RouterServer] Do AICPU response");
@@ -589,8 +608,9 @@ void RouterServer::SendRspEvent(const int32_t result)
         drvRet = halEschedSubmitEvent(deviceId_, &qsEvent); // drv interface require use 0
         aicpuRspHead_ = 0UL;
     }
-    BQS_LOG_ERROR_WHEN(drvRet != DRV_ERROR_NONE, "[RouterServer]ERROR failed to submit event[%u], result[%d].",
-                       subEventId_, static_cast<int32_t>(drvRet));
+    BQS_LOG_ERROR_WHEN(
+        drvRet != DRV_ERROR_NONE, "[RouterServer]ERROR failed to submit event[%u], result[%d].", subEventId_,
+        static_cast<int32_t>(drvRet));
     BQS_LOG_INFO("[RouterServer]Finish response message subeventid[%u] ret[%d]", subEventId_, result);
     qsRouteListPtr_ = nullptr;
     qsRouterHeadPtr_ = nullptr;
@@ -601,9 +621,9 @@ void RouterServer::SendRspEvent(const int32_t result)
 void RouterServer::ProcessBindQueue(const uint32_t index)
 {
     BQS_LOG_INFO("[RouterServer]Bind relation [add], stage [server:process].");
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
     retCode_ = static_cast<int32_t>(BQS_STATUS_OK);
-    QueueRoute *queueRouteList = qsRouteListPtr_;
+    QueueRoute* queueRouteList = qsRouteListPtr_;
     for (uint32_t i = 0U; i < qsRouterHeadPtr_->routeNum; ++i) {
         if (queueRouteList->status != static_cast<int32_t>(BQS_STATUS_OK)) {
             retCode_ = static_cast<int32_t>(BQS_STATUS_QUEUE_AHTU_ERROR);
@@ -612,10 +632,10 @@ void RouterServer::ProcessBindQueue(const uint32_t index)
             continue;
         }
         // only queue
-        EntityInfo srcEntity = CreateBasicEntityInfo(queueRouteList->srcId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->srcType));
-        EntityInfo dstEntity = CreateBasicEntityInfo(queueRouteList->dstId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->dstType));
+        EntityInfo srcEntity =
+            CreateBasicEntityInfo(queueRouteList->srcId, static_cast<dgw::EntityType>(queueRouteList->srcType));
+        EntityInfo dstEntity =
+            CreateBasicEntityInfo(queueRouteList->dstId, static_cast<dgw::EntityType>(queueRouteList->dstType));
         const auto result = relationInstance.Bind(srcEntity, dstEntity, index);
         if (result == BQS_STATUS_RETRY) {
             queueRouteList = queueRouteList + 1U;
@@ -627,7 +647,8 @@ void RouterServer::ProcessBindQueue(const uint32_t index)
             queueRouteList->status = 1;
         }
         queueRouteList = queueRouteList + 1U;
-        BQS_LOG_RUN_INFO("Bind relation [add], stage [server:process], relation [src:%s, dst:%s, result:%d]",
+        BQS_LOG_RUN_INFO(
+            "Bind relation [add], stage [server:process], relation [src:%s, dst:%s, result:%d]",
             srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(result));
     }
     relationInstance.Order(index);
@@ -637,9 +658,9 @@ void RouterServer::ProcessBindQueue(const uint32_t index)
 void RouterServer::ProcessUnbindQueue(const uint32_t index)
 {
     BQS_LOG_INFO("[RouterServer]Unbind relation [del], stage [server:process].");
-    QueueRoute *queueRouteList = qsRouteListPtr_;
+    QueueRoute* queueRouteList = qsRouteListPtr_;
     retCode_ = static_cast<int32_t>(BQS_STATUS_OK);
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
     for (uint32_t i = 0U; i < qsRouterHeadPtr_->routeNum; ++i) {
         if (queueRouteList->status != static_cast<int32_t>(BQS_STATUS_OK)) {
             retCode_ = static_cast<int32_t>(BQS_STATUS_QUEUE_ID_ERROR);
@@ -647,10 +668,10 @@ void RouterServer::ProcessUnbindQueue(const uint32_t index)
             queueRouteList = queueRouteList + 1U;
             continue;
         }
-        EntityInfo srcEntity = CreateBasicEntityInfo(queueRouteList->srcId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->srcType));
-        EntityInfo dstEntity = CreateBasicEntityInfo(queueRouteList->dstId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->dstType));
+        EntityInfo srcEntity =
+            CreateBasicEntityInfo(queueRouteList->srcId, static_cast<dgw::EntityType>(queueRouteList->srcType));
+        EntityInfo dstEntity =
+            CreateBasicEntityInfo(queueRouteList->dstId, static_cast<dgw::EntityType>(queueRouteList->dstType));
         const auto result = relationInstance.UnBind(srcEntity, dstEntity, index);
         if (result == BQS_STATUS_RETRY) {
             queueRouteList = queueRouteList + 1U;
@@ -662,7 +683,8 @@ void RouterServer::ProcessUnbindQueue(const uint32_t index)
             queueRouteList->status = 0;
         }
         queueRouteList = queueRouteList + 1U;
-        BQS_LOG_RUN_INFO("Bind relation [del], stage [server:process], relation [src %s," \
+        BQS_LOG_RUN_INFO(
+            "Bind relation [del], stage [server:process], relation [src %s,"
             "dst %s, result:%d]",
             srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(result));
     }
@@ -677,8 +699,8 @@ void RouterServer::ProcessUnbindQueue(const uint32_t index)
 void RouterServer::BindMsgProc(const uint32_t index)
 {
     BQS_LOG_INFO("[RouterServer]RouterServer BindMsgProc begin.");
-    auto &processing = (index == 0U) ? processing_ : processingExtra_;
-    auto &done = (index == 0U) ? done_ : doneExtra_;
+    auto& processing = (index == 0U) ? processing_ : processingExtra_;
+    auto& done = (index == 0U) ? done_ : doneExtra_;
 
     const std::unique_lock<std::mutex> lk(mutex_);
     processing = true;
@@ -687,12 +709,13 @@ void RouterServer::BindMsgProc(const uint32_t index)
     if ((subEventId_ == static_cast<uint32_t>(AICPU_BIND_QUEUE)) ||
         (subEventId_ == static_cast<uint32_t>(ACL_BIND_QUEUE))) {
         ProcessBindQueue(index);
-    } else if ((subEventId_ == static_cast<uint32_t>(AICPU_UNBIND_QUEUE)) ||
-               (subEventId_ == static_cast<uint32_t>(ACL_UNBIND_QUEUE))) {
+    } else if (
+        (subEventId_ == static_cast<uint32_t>(AICPU_UNBIND_QUEUE)) ||
+        (subEventId_ == static_cast<uint32_t>(ACL_UNBIND_QUEUE))) {
         ProcessUnbindQueue(index);
     } else if ((subEventId_ == static_cast<uint32_t>(QueueSubEventType::UPDATE_CONFIG))) {
         retCode_ = (cfgInfoOperator_ == nullptr) ? static_cast<int32_t>(BQS_STATUS_INNER_ERROR) :
-            static_cast<int32_t>(cfgInfoOperator_->ProcessUpdateConfig(index));
+                                                   static_cast<int32_t>(cfgInfoOperator_->ProcessUpdateConfig(index));
         BQS_LOG_INFO("[RouterServer] Process update config ret is %d.", retCode_);
     } else {
         BQS_LOG_ERROR("[RouterServer]Invalid subEventId_[%d] in bind relation process.", subEventId_);
@@ -710,7 +733,7 @@ void RouterServer::BindMsgProc(const uint32_t index)
  * Init bqs server, including init easycomm server and bind relation
  * @return BQS_STATUS_OK:success other:failed
  */
-BqsStatus RouterServer::InitRouterServer(const InitQsParams &params)
+BqsStatus RouterServer::InitRouterServer(const InitQsParams& params)
 {
     BQS_LOG_INFO("[RouterServer]RouterServer Init begin");
     (void)signal(SIGPIPE, SIG_IGN);
@@ -740,7 +763,7 @@ BqsStatus RouterServer::InitRouterServer(const InitQsParams &params)
 
         try {
             monitorQsEvent_ = std::thread(&RouterServer::ManageQsEvent, this);
-        } catch(std::exception &threadException) {
+        } catch (std::exception& threadException) {
             BQS_LOG_ERROR("RouterServer Init thread failure, %s", threadException.what());
             return BQS_STATUS_INNER_ERROR;
         }
@@ -759,21 +782,23 @@ BqsStatus RouterServer::InitRouterServer(const InitQsParams &params)
     return BQS_STATUS_OK;
 }
 
-BqsStatus RouterServer::ParseRelationInfo(Mbuf **mbufPtr)
+BqsStatus RouterServer::ParseRelationInfo(Mbuf** mbufPtr)
 {
-    Mbuf *mBuf = nullptr;
-    const auto drvRet = halQueueDeQueue(deviceId_, pipelineQueueId_, PtrToPtr<Mbuf *, void*>(&mBuf));
+    Mbuf* mBuf = nullptr;
+    const auto drvRet = halQueueDeQueue(deviceId_, pipelineQueueId_, PtrToPtr<Mbuf*, void*>(&mBuf));
     if ((drvRet != DRV_ERROR_NONE) || (mBuf == nullptr)) {
-            BQS_LOG_ERROR("[RouterServer]halQueueDeQueue from queue[%u] in device[%u] failed, error[%d]",
-                          pipelineQueueId_.load(), deviceId_, static_cast<int32_t>(drvRet));
-            return BQS_STATUS_DRIVER_ERROR;
+        BQS_LOG_ERROR(
+            "[RouterServer]halQueueDeQueue from queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(),
+            deviceId_, static_cast<int32_t>(drvRet));
+        return BQS_STATUS_DRIVER_ERROR;
     }
     *mbufPtr = mBuf;
     qsRouterHeadPtr_ = nullptr;
-    const auto getBuffRet = halMbufGetBuffAddr(mBuf, reinterpret_cast<void **>(&qsRouterHeadPtr_));
+    const auto getBuffRet = halMbufGetBuffAddr(mBuf, reinterpret_cast<void**>(&qsRouterHeadPtr_));
     if ((getBuffRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (qsRouterHeadPtr_ == nullptr)) {
-        BQS_LOG_ERROR("[RouterServer]halMbufGetBuffAddr from queue[%u] in device[%u] failed, error[%d]",
-                      pipelineQueueId_.load(), deviceId_, getBuffRet);
+        BQS_LOG_ERROR(
+            "[RouterServer]halMbufGetBuffAddr from queue[%u] in device[%u] failed, error[%d]", pipelineQueueId_.load(),
+            deviceId_, getBuffRet);
         return BQS_STATUS_DRIVER_ERROR;
     }
     if (isAicpuEvent_) {
@@ -787,25 +812,27 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf **mbufPtr)
     if ((subEventId_ == static_cast<uint32_t>(AICPU_QUERY_QUEUE)) ||
         (subEventId_ == static_cast<uint32_t>(ACL_QUERY_QUEUE))) {
         if ((((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) + sizeof(QueueRouteQuery)) !=
-             qsRouterHeadPtr_->length) {
-            BQS_LOG_ERROR("[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
-                          qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
+            qsRouterHeadPtr_->length) {
+            BQS_LOG_ERROR(
+                "[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
+                qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
-        qsRouterQueryPtr_ = reinterpret_cast<QueueRouteQuery *>(
-            reinterpret_cast<uint8_t *>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
+        qsRouterQueryPtr_ =
+            reinterpret_cast<QueueRouteQuery*>(reinterpret_cast<uint8_t*>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
         BQS_LOG_INFO("[RouterServer]Get query info success. queryType[%d]", qsRouterQueryPtr_->queryType);
-        qsRouteListPtr_ = reinterpret_cast<QueueRoute *>(
-            reinterpret_cast<uint8_t *>(qsRouterQueryPtr_) + sizeof(QueueRouteQuery));
+        qsRouteListPtr_ =
+            reinterpret_cast<QueueRoute*>(reinterpret_cast<uint8_t*>(qsRouterQueryPtr_) + sizeof(QueueRouteQuery));
     } else {
         if (((qsRouterHeadPtr_->routeNum * sizeof(QueueRoute)) + sizeof(QsRouteHead)) != qsRouterHeadPtr_->length) {
-            BQS_LOG_ERROR("[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
-                          qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
+            BQS_LOG_ERROR(
+                "[RouterServer]RouteNum[%d] is inconsistence with dataLen[%d] in subEventId[%u]",
+                qsRouterHeadPtr_->routeNum, qsRouterHeadPtr_->length, subEventId_);
             return BQS_STATUS_PARAM_INVALID;
         }
         qsRouterQueryPtr_ = nullptr;
-        qsRouteListPtr_ = reinterpret_cast<QueueRoute *>(
-            reinterpret_cast<uint8_t *>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
+        qsRouteListPtr_ =
+            reinterpret_cast<QueueRoute*>(reinterpret_cast<uint8_t*>(qsRouterHeadPtr_) + sizeof(QsRouteHead));
     }
     BQS_LOG_INFO("[RouterServer]Get relation mbuff success, bind/unbind queue num[%d]", qsRouterHeadPtr_->routeNum);
     return BQS_STATUS_OK;
@@ -815,18 +842,20 @@ BqsStatus RouterServer::ParseBindUnbindMsg() const
 {
     BQS_LOG_INFO("[RouterServer]Bind relation [add/del], stage [server:parse and check]");
     auto resultCode = BQS_STATUS_QUEUE_AHTU_ERROR;
-    QueueRoute *queueRouteList = qsRouteListPtr_;
+    QueueRoute* queueRouteList = qsRouteListPtr_;
     for (uint32_t i = 0U; i < qsRouterHeadPtr_->routeNum; ++i) {
-        EntityInfo srcEntity = CreateBasicEntityInfo(queueRouteList->srcId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->srcType));
-        EntityInfo dstEntity = CreateBasicEntityInfo(queueRouteList->dstId,
-                                                     static_cast<dgw::EntityType>(queueRouteList->dstType));
-        BQS_LOG_INFO("[RouterServer]Src[id:%u type:%d] Dst[id:%u type:%d]",
-                     srcEntity.GetId(), static_cast<int32_t>(srcEntity.GetType()),
-                     dstEntity.GetId(), static_cast<int32_t>(dstEntity.GetType()));
+        EntityInfo srcEntity =
+            CreateBasicEntityInfo(queueRouteList->srcId, static_cast<dgw::EntityType>(queueRouteList->srcType));
+        EntityInfo dstEntity =
+            CreateBasicEntityInfo(queueRouteList->dstId, static_cast<dgw::EntityType>(queueRouteList->dstType));
+        BQS_LOG_INFO(
+            "[RouterServer]Src[id:%u type:%d] Dst[id:%u type:%d]", srcEntity.GetId(),
+            static_cast<int32_t>(srcEntity.GetType()), dstEntity.GetId(), static_cast<int32_t>(dstEntity.GetType()));
         if ((srcEntity.GetId() >= MAX_QUEUE_ID_NUM) || (dstEntity.GetId() >= MAX_QUEUE_ID_NUM)) {
-            BQS_LOG_ERROR("[RouterServer]Src[%s] or Dst[%s] is invalid in this "
-                "bind/unbind relation", srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+            BQS_LOG_ERROR(
+                "[RouterServer]Src[%s] or Dst[%s] is invalid in this "
+                "bind/unbind relation",
+                srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
             queueRouteList->status = static_cast<int32_t>(BQS_STATUS_QUEUE_ID_ERROR);
             queueRouteList = queueRouteList + 1;
             continue;
@@ -834,11 +863,14 @@ BqsStatus RouterServer::ParseBindUnbindMsg() const
         // preprocess: do attach queue and check src own read auth, dst own write auth
         if ((subEventId_ == static_cast<uint32_t>(AICPU_BIND_QUEUE)) ||
             (subEventId_ == static_cast<uint32_t>(ACL_BIND_QUEUE))) {
-            const auto ret = (cfgInfoOperator_ == nullptr) ? BQS_STATUS_INNER_ERROR :
-                cfgInfoOperator_->AttachAndCheckQueue(srcEntity, dstEntity);
+            const auto ret = (cfgInfoOperator_ == nullptr) ?
+                                 BQS_STATUS_INNER_ERROR :
+                                 cfgInfoOperator_->AttachAndCheckQueue(srcEntity, dstEntity);
             if (ret != BQS_STATUS_OK) {
-                BQS_LOG_ERROR("[RouterServer]Src[%s] Dst[%s] do attach queue "
-                    "and check auth failed", srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+                BQS_LOG_ERROR(
+                    "[RouterServer]Src[%s] Dst[%s] do attach queue "
+                    "and check auth failed",
+                    srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
                 queueRouteList->status = static_cast<int32_t>(BQS_STATUS_QUEUE_AHTU_ERROR);
                 queueRouteList = queueRouteList + 1;
                 continue;
@@ -852,7 +884,7 @@ BqsStatus RouterServer::ParseBindUnbindMsg() const
     return resultCode;
 }
 
-void RouterServer::FillRoutes(const EntityInfo &src, const EntityInfo &dst, const BindRelationStatus status)
+void RouterServer::FillRoutes(const EntityInfo& src, const EntityInfo& dst, const BindRelationStatus status)
 {
     QueueRoute queueRouteInfo = {};
     queueRouteInfo.srcId = src.GetId();
@@ -863,8 +895,9 @@ void RouterServer::FillRoutes(const EntityInfo &src, const EntityInfo &dst, cons
     queueRouteQueryList_.emplace_back(queueRouteInfo);
 }
 
-void RouterServer::SearchRelation(const MapEnitityInfoToInfoSet &relationMap, const EntityInfo& entityInfo,
-    const BindRelationStatus status, bool bySrc)
+void RouterServer::SearchRelation(
+    const MapEnitityInfoToInfoSet& relationMap, const EntityInfo& entityInfo, const BindRelationStatus status,
+    bool bySrc)
 {
     const auto iter = relationMap.find(entityInfo);
     if (iter == relationMap.end()) {
@@ -888,11 +921,12 @@ void RouterServer::SearchRelation(const MapEnitityInfoToInfoSet &relationMap, co
  * Assembly response of get bind message according to src entity
  * @return Number of query results
  */
-void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t &queryType)
+void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t& queryType)
 {
-    BQS_LOG_INFO("[RouterServer]RouterServer serialize get bind rsponse by entityId[%u], entityType[%d], Type[%d].",
+    BQS_LOG_INFO(
+        "[RouterServer]RouterServer serialize get bind rsponse by entityId[%u], entityType[%d], Type[%d].",
         entityInfo.GetId(), static_cast<int32_t>(entityInfo.GetType()), queryType);
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
     queueRouteQueryList_.clear();
     if ((queryType != static_cast<uint32_t>(BQS_QUERY_TYPE_SRC)) &&
         (queryType != static_cast<uint32_t>(BQS_QUERY_TYPE_DST))) {
@@ -903,11 +937,12 @@ void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32
     if (queryType == static_cast<uint32_t>(BQS_QUERY_TYPE_SRC)) {
         SearchRelation(relationInstance.GetSrcToDstRelation(), entityInfo, BindRelationStatus::RelationBind, true);
         if (numaFlag_) {
-            SearchRelation(relationInstance.GetSrcToDstExtraRelation(), entityInfo,
-                BindRelationStatus::RelationBind, true);
+            SearchRelation(
+                relationInstance.GetSrcToDstExtraRelation(), entityInfo, BindRelationStatus::RelationBind, true);
         }
-        SearchRelation(relationInstance.GetAbnormalSrcToDstRelation(), entityInfo,
-            BindRelationStatus::RelationAbnormalForQError, true);
+        SearchRelation(
+            relationInstance.GetAbnormalSrcToDstRelation(), entityInfo, BindRelationStatus::RelationAbnormalForQError,
+            true);
 
         if (queueRouteQueryList_.empty()) {
             BQS_LOG_WARN("[RouterServer] record does not exist according to src entityId:[%u]", entityInfo.GetId());
@@ -915,26 +950,27 @@ void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32
     } else {
         SearchRelation(relationInstance.GetDstToSrcRelation(), entityInfo, BindRelationStatus::RelationBind, false);
         if (numaFlag_) {
-            SearchRelation(relationInstance.GetDstToSrcExtraRelation(), entityInfo,
-                BindRelationStatus::RelationBind, false);
+            SearchRelation(
+                relationInstance.GetDstToSrcExtraRelation(), entityInfo, BindRelationStatus::RelationBind, false);
         }
-        SearchRelation(relationInstance.GetAbnormalDstToSrcRelation(), entityInfo,
-            BindRelationStatus::RelationAbnormalForQError, false);
+        SearchRelation(
+            relationInstance.GetAbnormalDstToSrcRelation(), entityInfo, BindRelationStatus::RelationAbnormalForQError,
+            false);
     }
     if (queueRouteQueryList_.empty()) {
         BQS_LOG_WARN("RouterServer get relation according to dst:%u failed, record does not exist", entityInfo.GetId());
     }
 }
 
-bool RouterServer::FindRelation(const MapEnitityInfoToInfoSet &relationMap, const EntityInfo& srcInfo,
-    const EntityInfo& dstInfo) const
+bool RouterServer::FindRelation(
+    const MapEnitityInfoToInfoSet& relationMap, const EntityInfo& srcInfo, const EntityInfo& dstInfo) const
 {
     const auto srcIter = relationMap.find(srcInfo);
     return ((srcIter != relationMap.end()) && (srcIter->second.count(dstInfo) != 0UL));
 }
 
-void RouterServer::TransRouteWithEntityInfo(const EntityInfo& srcInfo, const EntityInfo& dstInfo, const int32_t status,
-    QueueRoute &routeInfo) const
+void RouterServer::TransRouteWithEntityInfo(
+    const EntityInfo& srcInfo, const EntityInfo& dstInfo, const int32_t status, QueueRoute& routeInfo) const
 {
     routeInfo.srcId = srcInfo.GetId();
     routeInfo.dstId = dstInfo.GetId();
@@ -947,9 +983,10 @@ void RouterServer::TransRouteWithEntityInfo(const EntityInfo& srcInfo, const Ent
  * Assembly response of get bind message according to dst queueId, one-to-one relation
  * @return NA
  */
-void RouterServer::GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t &queryType)
+void RouterServer::GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t& queryType)
 {
-    BQS_LOG_INFO("[RouterServer]RouterServer serialize get bind rsponse by srcId[%u], srcType[%d], dstId[%u], "
+    BQS_LOG_INFO(
+        "[RouterServer]RouterServer serialize get bind rsponse by srcId[%u], srcType[%d], dstId[%u], "
         "dstType[%d], Type[%u]",
         src.GetId(), static_cast<int32_t>(src.GetType()), dst.GetId(), static_cast<int32_t>(dst.GetType()), queryType);
     queueRouteQueryList_.clear();
@@ -987,21 +1024,21 @@ void RouterServer::GetAllAbnormalBind()
 {
     BQS_LOG_INFO("[RouterServer]RouterServer serialize get all abnormal bind rsponse");
     queueRouteQueryList_.clear();
-    auto &relationInstance = BindRelation::GetInstance();
-    auto &abnormalSrcToDstRelation = relationInstance.GetAbnormalSrcToDstRelation();
+    auto& relationInstance = BindRelation::GetInstance();
+    auto& abnormalSrcToDstRelation = relationInstance.GetAbnormalSrcToDstRelation();
     for (auto iter = abnormalSrcToDstRelation.begin(); iter != abnormalSrcToDstRelation.end(); ++iter) {
-        const auto &src = iter->first;
-        const auto &dstSet = iter->second;
-        for (auto &dst : dstSet) {
+        const auto& src = iter->first;
+        const auto& dstSet = iter->second;
+        for (auto& dst : dstSet) {
             QueueRoute queueRouteInfo = {};
-            TransRouteWithEntityInfo(src, dst, static_cast<int32_t>(BindRelationStatus::RelationAbnormalForQError),
-                queueRouteInfo);
+            TransRouteWithEntityInfo(
+                src, dst, static_cast<int32_t>(BindRelationStatus::RelationAbnormalForQError), queueRouteInfo);
             queueRouteQueryList_.emplace_back(queueRouteInfo);
         }
     }
 }
 
-BqsStatus RouterServer::ProcessGetBindMsg(const uint32_t &queryType, const EntityInfo& src, const EntityInfo& dst)
+BqsStatus RouterServer::ProcessGetBindMsg(const uint32_t& queryType, const EntityInfo& src, const EntityInfo& dst)
 {
     switch (queryType) {
         case BQS_QUERY_TYPE_SRC:
@@ -1018,8 +1055,10 @@ BqsStatus RouterServer::ProcessGetBindMsg(const uint32_t &queryType, const Entit
             GetAllAbnormalBind();
             break;
         default:
-            BQS_LOG_ERROR("[RouterServer]Unsupported query type"
-                "{0:src, 1:dst, 2:src-or-dst, 3:src-and-dst, 100:abnormal-all}:%u", queryType);
+            BQS_LOG_ERROR(
+                "[RouterServer]Unsupported query type"
+                "{0:src, 1:dst, 2:src-or-dst, 3:src-and-dst, 100:abnormal-all}:%u",
+                queryType);
             break;
     }
 
@@ -1029,22 +1068,24 @@ BqsStatus RouterServer::ProcessGetBindMsg(const uint32_t &queryType, const Entit
     }
 
     if (queueRouteQueryList_.size() != qsRouterHeadPtr_->routeNum) {
-        BQS_LOG_ERROR("[RouterServer]Prepare number[%d] is different with real route number[%zu].",
-                      qsRouterHeadPtr_->routeNum,  queueRouteQueryList_.size());
+        BQS_LOG_ERROR(
+            "[RouterServer]Prepare number[%d] is different with real route number[%zu].", qsRouterHeadPtr_->routeNum,
+            queueRouteQueryList_.size());
         return BQS_STATUS_PARAM_INVALID;
     }
     for (size_t i = 0UL; i < qsRouterHeadPtr_->routeNum; i++) {
         *qsRouteListPtr_ = queueRouteQueryList_[i];
-        BQS_LOG_INFO("[RouterServer]Query bind relation srcId[%u] srcType[%d] dstId[%u] dstType[%d]",
-                     qsRouteListPtr_->srcId, static_cast<int32_t>(qsRouteListPtr_->srcType), qsRouteListPtr_->dstId,
-                     static_cast<int32_t>(qsRouteListPtr_->dstType));
+        BQS_LOG_INFO(
+            "[RouterServer]Query bind relation srcId[%u] srcType[%d] dstId[%u] dstType[%d]", qsRouteListPtr_->srcId,
+            static_cast<int32_t>(qsRouteListPtr_->srcType), qsRouteListPtr_->dstId,
+            static_cast<int32_t>(qsRouteListPtr_->dstType));
         qsRouteListPtr_ = qsRouteListPtr_ + 1;
     }
     queueRouteQueryList_.clear();
     return BQS_STATUS_OK;
 }
 
-void RouterServer::ParseGetBindNumMsg(const event_info &info)
+void RouterServer::ParseGetBindNumMsg(const event_info& info)
 {
     BQS_LOG_INFO("[RouterServer]Bind relation number [get], stage [server:process], type [request]");
     if (info.priv.msg_len != sizeof(QueueRouteQuery)) {
@@ -1052,14 +1093,14 @@ void RouterServer::ParseGetBindNumMsg(const event_info &info)
         SendRspEvent(static_cast<int32_t>(BQS_STATUS_PARAM_INVALID));
         return;
     }
-    const QueueRouteQuery * const queueRouteQuery = PtrToPtr<const char_t, const QueueRouteQuery>(info.priv.msg);
+    const QueueRouteQuery* const queueRouteQuery = PtrToPtr<const char_t, const QueueRouteQuery>(info.priv.msg);
     // param syncEventHead is filled by drv when acl (call sync event interface)
     aicpuRspHead_ = isAicpuEvent_ ? queueRouteQuery->syncEventHead : 0UL;
     const uint32_t keyType = queueRouteQuery->queryType;
-    const EntityInfo src = CreateBasicEntityInfo(queueRouteQuery->srcId,
-                                                 static_cast<dgw::EntityType>(queueRouteQuery->srcType));
-    const EntityInfo dst = CreateBasicEntityInfo(queueRouteQuery->dstId,
-                                                 static_cast<dgw::EntityType>(queueRouteQuery->dstType));
+    const EntityInfo src =
+        CreateBasicEntityInfo(queueRouteQuery->srcId, static_cast<dgw::EntityType>(queueRouteQuery->srcType));
+    const EntityInfo dst =
+        CreateBasicEntityInfo(queueRouteQuery->dstId, static_cast<dgw::EntityType>(queueRouteQuery->dstType));
     queueRouteQueryList_.clear();
     const auto ret = ProcessGetBindMsg(keyType, src, dst);
     SendRspEvent(static_cast<int32_t>(ret));
@@ -1074,10 +1115,10 @@ BqsStatus RouterServer::ParseGetBindDetailMsg()
         return BQS_STATUS_INNER_ERROR;
     }
     const uint32_t keyType = qsRouterQueryPtr_->queryType;
-    const EntityInfo src = CreateBasicEntityInfo(qsRouterQueryPtr_->srcId,
-                                                 static_cast<dgw::EntityType>(qsRouterQueryPtr_->srcType));
-    const EntityInfo dst = CreateBasicEntityInfo(qsRouterQueryPtr_->dstId,
-                                                 static_cast<dgw::EntityType>(qsRouterQueryPtr_->dstType));
+    const EntityInfo src =
+        CreateBasicEntityInfo(qsRouterQueryPtr_->srcId, static_cast<dgw::EntityType>(qsRouterQueryPtr_->srcType));
+    const EntityInfo dst =
+        CreateBasicEntityInfo(qsRouterQueryPtr_->dstId, static_cast<dgw::EntityType>(qsRouterQueryPtr_->dstType));
     queueRouteQueryList_.clear();
     const auto ret = ProcessGetBindMsg(keyType, src, dst);
     return ret;
@@ -1088,26 +1129,26 @@ ThreadStatus RouterServer::PrePareForManageThread()
     auto ret = halEschedAttachDevice(deviceId_);
     if ((ret != DRV_ERROR_NONE) && (ret != DRV_ERROR_PROCESS_REPEAT_ADD)) {
         BQS_LOG_ERROR("Failed to attach device[%u] for eSched, result[%d].", deviceId_, static_cast<int32_t>(ret));
-        (void) AttachGroup();
+        (void)AttachGroup();
         return ThreadStatus::INIT_FAIL;
     }
     ret = halEschedCreateGrp(deviceId_, bindQueueGroupId_, GRP_TYPE_BIND_CP_CPU);
     if (ret != DRV_ERROR_NONE) {
         (void)halEschedDettachDevice(deviceId_);
-        BQS_LOG_ERROR("Failed to create bindQueueGroup, groupId[%u] result[%d].",
-            bindQueueGroupId_, static_cast<int32_t>(ret));
-        (void) AttachGroup();
+        BQS_LOG_ERROR(
+            "Failed to create bindQueueGroup, groupId[%u] result[%d].", bindQueueGroupId_, static_cast<int32_t>(ret));
+        (void)AttachGroup();
         return ThreadStatus::INIT_FAIL;
     }
     // subsribe bind/unbind/query event
     const uint64_t eventBitmap = (1UL << static_cast<uint32_t>(EVENT_QS_MSG));
-    BQS_LOG_INFO("[RouterServer]BindQueue group[%u] subscribe event, eventBitmap[%lu]",
-        bindQueueGroupId_, eventBitmap);
+    BQS_LOG_INFO("[RouterServer]BindQueue group[%u] subscribe event, eventBitmap[%lu]", bindQueueGroupId_, eventBitmap);
     ret = halEschedSubscribeEvent(deviceId_, bindQueueGroupId_, 0U, eventBitmap);
     if (ret != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("[RouterServer]halEschedSubscribeEvent failed, groupId[%u] eventBitmap[%lu] result[%d].",
-            bindQueueGroupId_, eventBitmap, static_cast<int32_t>(ret));
-        (void) AttachGroup();
+        BQS_LOG_ERROR(
+            "[RouterServer]halEschedSubscribeEvent failed, groupId[%u] eventBitmap[%lu] result[%d].", bindQueueGroupId_,
+            eventBitmap, static_cast<int32_t>(ret));
+        (void)AttachGroup();
         return ThreadStatus::INIT_FAIL;
     }
 
@@ -1125,7 +1166,7 @@ void RouterServer::ManageQsEvent()
     (void)pthread_setname_np(pthread_self(), ROUTER_SERVER_THREAD_NAME_PREFIX);
 
     if (bqs::GetRunContext() != bqs::RunContext::HOST) {
-        const std::vector<uint32_t> &cpuIds = QueueScheduleInterface::GetInstance().GetCtrlCpuIds();
+        const std::vector<uint32_t>& cpuIds = QueueScheduleInterface::GetInstance().GetCtrlCpuIds();
         // bind thread to ctrl cpu
         const pthread_t threadId = pthread_self();
         (void)BindCpuUtils::SetThreadAffinity(threadId, cpuIds);
@@ -1149,22 +1190,23 @@ void RouterServer::ManageQsEvent()
             if (event.comm.event_id == EVENT_QS_MSG) {
                 HandleBqsMsg(event);
             } else {
-                BQS_LOG_WARN("Thread[%u] process unsupported eventId[%d] subEventId[%u].",
-                    0, static_cast<int32_t>(event.comm.event_id), event.comm.subevent_id);
+                BQS_LOG_WARN(
+                    "Thread[%u] process unsupported eventId[%d] subEventId[%u].", 0,
+                    static_cast<int32_t>(event.comm.event_id), event.comm.subevent_id);
             }
         } else if (schedRet == DRV_ERROR_SCHED_WAIT_TIMEOUT) {
             BQS_LOG_DEBUG("ManageQsEvent bind/unbind/query event waiting timeout");
             continue;
         } else if (schedRet == DRV_ERROR_PARA_ERROR) {
             BQS_LOG_ERROR(
-                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].",
-                deviceId_, bindQueueGroupId_, static_cast<int32_t>(schedRet));
+                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].", deviceId_,
+                bindQueueGroupId_, static_cast<int32_t>(schedRet));
             break;
         } else {
             // LOG ERROR
             BQS_LOG_ERROR(
-                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].",
-                deviceId_, bindQueueGroupId_, static_cast<int32_t>(schedRet));
+                "ManageQsEvent bind/unbind/query event failed, deviceId[%u] groupId[%u] error[%d].", deviceId_,
+                bindQueueGroupId_, static_cast<int32_t>(schedRet));
         }
     }
     BQS_LOG_INFO("[RouterServer] ManageQsEvent of RouterServer thread exit.");
@@ -1174,7 +1216,7 @@ BqsStatus RouterServer::SubscribeBufEvent() const
 {
     BQS_LOG_INFO("[RouterServer] SubscribeBufEvent start.");
     const bool needSubBufEvent =
-        static_cast<bool>(schedPolicy_  & static_cast<uint64_t>(SchedPolicy::POLICY_SUB_BUF_EVENT));
+        static_cast<bool>(schedPolicy_ & static_cast<uint64_t>(SchedPolicy::POLICY_SUB_BUF_EVENT));
     if (!needSubBufEvent) {
         BQS_LOG_INFO("[RouterServer] needSubBufEvent is [%d]", static_cast<int32_t>(needSubBufEvent));
         return BQS_STATUS_OK;
@@ -1212,7 +1254,8 @@ BqsStatus RouterServer::WaitSyncMsgProc()
     }
     if (!done_ || !doneExtra_) {
         QueueManager::GetInstance().LogErrorRelationQueueStatus();
-        BQS_LOG_ERROR("[RouterServer] update config[add/del group, bind/unbind route], stage [server:wait], timeout, "
+        BQS_LOG_ERROR(
+            "[RouterServer] update config[add/del group, bind/unbind route], stage [server:wait], timeout, "
             "relation queue[enqueue cnt:%lu, dequeue cnt:%lu].",
             StatisticManager::GetInstance().GetRelationEnqueCnt(),
             StatisticManager::GetInstance().GetRelationDequeCnt());
@@ -1245,7 +1288,7 @@ bool RouterServer::AttachGroup()
     }
 
     const int32_t halTimeOut = (RunContext::HOST == GetRunContext()) ? 3000 : -1;
-    for (const auto &grpName : groupNameVec) {
+    for (const auto& grpName : groupNameVec) {
         BQS_LOG_RUN_INFO("Begin to halGrpAttach group[%s].", grpName.c_str());
         const auto drvRet = halGrpAttach(grpName.c_str(), halTimeOut);
         if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -1264,4 +1307,4 @@ EntityInfo RouterServer::CreateBasicEntityInfo(const uint32_t id, const dgw::Ent
     return EntityInfo(id, deviceId_, &args);
 }
 
-}  // namespace bqs
+} // namespace bqs

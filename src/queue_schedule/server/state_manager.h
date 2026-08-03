@@ -24,48 +24,50 @@ public:
 
     ~StateManager() = default;
 
-    StateManager(const StateManager &) = delete;
-    StateManager(const StateManager &&) = delete;
-    StateManager &operator = (const StateManager &) = delete;
-    StateManager &operator = (StateManager &&) = delete;
+    StateManager(const StateManager&) = delete;
+    StateManager(const StateManager&&) = delete;
+    StateManager& operator=(const StateManager&) = delete;
+    StateManager& operator=(StateManager&&) = delete;
 
 public:
-    static StateManager &Instance();
+    static StateManager& Instance();
 
-    void RegisterState(const FsmState id, const EntityType eType, const StateBase *const state,
-                       const char_t * const idDesc, const char_t * const typeDesc);
-    StateBase *GetState(const FsmState id, const EntityType eType) const;
-    const std::string &GetStateDesc(const FsmState id, const EntityType eType);
-    const std::string &GetTypeDesc(const EntityType eType);
+    void RegisterState(
+        const FsmState id, const EntityType eType, const StateBase* const state, const char_t* const idDesc,
+        const char_t* const typeDesc);
+    StateBase* GetState(const FsmState id, const EntityType eType) const;
+    const std::string& GetStateDesc(const FsmState id, const EntityType eType);
+    const std::string& GetTypeDesc(const EntityType eType);
 
 private:
-    StateBase *state_[static_cast<size_t>(EntityType::ENTITY_INVALID)]
-        [static_cast<size_t>(FsmState::FSM_INVALID_STATE)] = {{nullptr}};
+    StateBase* state_[static_cast<size_t>(EntityType::ENTITY_INVALID)]
+                     [static_cast<size_t>(FsmState::FSM_INVALID_STATE)] = {{nullptr}};
     std::string stateDesc_[static_cast<size_t>(EntityType::ENTITY_INVALID)]
-        [static_cast<size_t>(FsmState::FSM_INVALID_STATE)] = {{""}};
+                          [static_cast<size_t>(FsmState::FSM_INVALID_STATE)] = {{""}};
     std::string typeDesc_[static_cast<size_t>(EntityType::ENTITY_INVALID)] = {""};
 };
 
 // state registerar
 class StateRegisterar {
 public:
-    StateRegisterar(const FsmState id, const EntityType eType, const StateBase *const state, const char_t *const idDesc,
-                    const char_t *const typeDesc) noexcept
+    StateRegisterar(
+        const FsmState id, const EntityType eType, const StateBase* const state, const char_t* const idDesc,
+        const char_t* const typeDesc) noexcept
     {
         StateManager::Instance().RegisterState(id, eType, state, idDesc, typeDesc);
     }
 
     ~StateRegisterar() = default;
-    StateRegisterar(const StateRegisterar &) = delete;
-    StateRegisterar(const StateRegisterar &&) = delete;
-    StateRegisterar &operator = (const StateRegisterar &) = delete;
-    StateRegisterar &operator = (StateRegisterar &&) = delete;
+    StateRegisterar(const StateRegisterar&) = delete;
+    StateRegisterar(const StateRegisterar&&) = delete;
+    StateRegisterar& operator=(const StateRegisterar&) = delete;
+    StateRegisterar& operator=(StateRegisterar&&) = delete;
 };
 
-#define REGISTER_STATE(id, type, state)                               \
-    static const state g_##state##_##type;                                         \
-    static const StateRegisterar g_##state##_##type##_Register(FsmState::id, EntityType::type, \
-                                                               &g_##state##_##type, #id, #type)
-}
+#define REGISTER_STATE(id, type, state)                         \
+    static const state g_##state##_##type;                      \
+    static const StateRegisterar g_##state##_##type##_Register( \
+        FsmState::id, EntityType::type, &g_##state##_##type, #id, #type)
+} // namespace dgw
 
 #endif

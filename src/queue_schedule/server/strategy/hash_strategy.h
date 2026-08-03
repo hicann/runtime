@@ -18,6 +18,7 @@ class HashStrategy : public Strategy {
 public:
     explicit HashStrategy() = default;
     ~HashStrategy() override = default;
+
 public:
     /**
      * hash search strategy
@@ -26,8 +27,9 @@ public:
      * @param selEntities selected entities from group
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus Search(const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr> &selEntities,
+    FsmStatus Search(
+        const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr>& selEntities,
         const uint32_t resIndex) override;
 };
-}
+} // namespace dgw
 #endif

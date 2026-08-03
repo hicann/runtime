@@ -13,28 +13,21 @@
 #include "entity_manager.h"
 
 namespace dgw {
-DataObj::DataObj(Entity * const sendEntityPtr, const Mbuf * const mbufPtr)
-    : sendEntity_(sendEntityPtr),
-      mbuf_(mbufPtr)
-{
-}
+DataObj::DataObj(Entity* const sendEntityPtr, const Mbuf* const mbufPtr) : sendEntity_(sendEntityPtr), mbuf_(mbufPtr) {}
 
-void DataObj::AddRecvEntity(Entity *const recvEntityPtr)
-{
-    recvEntities_.emplace_back(recvEntityPtr);
-}
+void DataObj::AddRecvEntity(Entity* const recvEntityPtr) { recvEntities_.emplace_back(recvEntityPtr); }
 
-DataObjManager &DataObjManager::Instance()
+DataObjManager& DataObjManager::Instance()
 {
     static DataObjManager ins;
     return ins;
 }
 
-bool DataObj::RemoveRecvEntity(const Entity * const recvEntityPtr)
+bool DataObj::RemoveRecvEntity(const Entity* const recvEntityPtr)
 {
     for (auto iter = recvEntities_.begin(); iter != recvEntities_.end(); iter++) {
         if ((*iter)->Equal(recvEntityPtr)) {
-            (void) recvEntities_.erase(iter);
+            (void)recvEntities_.erase(iter);
             return true;
         }
     }
@@ -50,14 +43,14 @@ bool DataObj::UpdateRecvEntities(const EntityPtr group, const EntityPtr elem)
     return false;
 }
 
-DataObjPtr DataObjManager::CreateDataObj(Entity * const sendEntityPtr, const Mbuf * const mbufPtr) const
+DataObjPtr DataObjManager::CreateDataObj(Entity* const sendEntityPtr, const Mbuf* const mbufPtr) const
 {
     try {
         return std::make_shared<DataObj>(sendEntityPtr, mbufPtr);
-    } catch (std::bad_alloc &error) {
-        (void) error;
+    } catch (std::bad_alloc& error) {
+        (void)error;
         return nullptr;
     }
     return nullptr;
 }
-}  // namespace dgw
+} // namespace dgw

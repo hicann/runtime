@@ -26,13 +26,13 @@ namespace {
 // prevents concurrent execution of multiple clients
 std::mutex g_bqsMutex;
 
-constexpr const char_t *BQS_SERVER_THREAD_NAME_PREFIX = "bqs_server";
+constexpr const char_t* BQS_SERVER_THREAD_NAME_PREFIX = "bqs_server";
 
 /**
  * Message process function, need to send a response to avoid blocking
  * @return NA
  */
-void RpcHandler(const int32_t fd, EzcomRequest * const req)
+void RpcHandler(const int32_t fd, EzcomRequest* const req)
 {
     if (req == nullptr) {
         BQS_LOG_RUN_INFO("Pipe of client has been closed, fd:%d.", fd);
@@ -42,14 +42,14 @@ void RpcHandler(const int32_t fd, EzcomRequest * const req)
 
     const std::unique_lock<std::mutex> lk(g_bqsMutex);
     BQS_LOG_INFO("BqsServer receive a request, id = %u, msg_size = %u", req->id, req->size);
-    BqsServer::GetInstance().HandleBqsReqMsg(req->id, reinterpret_cast<const char_t *>(req->data), req->size);
+    BqsServer::GetInstance().HandleBqsReqMsg(req->id, reinterpret_cast<const char_t*>(req->data), req->size);
     // send response
     BqsServer::GetInstance().SendRspMsg(fd, req->id);
     BQS_LOG_INFO("BqsServer HandleBqsReqMsg a request success, id = %u, msg_size = %u", req->id, req->size);
     return;
 }
 
-void NodeHandlerWrapper(const int32_t fd, const char_t * const clientName, const int32_t nameLen)
+void NodeHandlerWrapper(const int32_t fd, const char_t* const clientName, const int32_t nameLen)
 {
     (void)fd;
     if ((clientName == nullptr) || (nameLen <= 0)) {
@@ -58,15 +58,13 @@ void NodeHandlerWrapper(const int32_t fd, const char_t * const clientName, const
     }
     (void)pthread_setname_np(pthread_self(), BQS_SERVER_THREAD_NAME_PREFIX);
 }
-}  // namespace
+} // namespace
 
-BqsServer::BqsServer() : msgId_(0U), processing_(false), done_(false)
-{}
+BqsServer::BqsServer() : msgId_(0U), processing_(false), done_(false) {}
 
-BqsServer::~BqsServer()
-{}
+BqsServer::~BqsServer() {}
 
-BqsServer &BqsServer::GetInstance()
+BqsServer& BqsServer::GetInstance()
 {
     static BqsServer instance;
     return instance;
@@ -87,11 +85,11 @@ void BqsServer::InitBuff() const
  * Bqs server handle BqsMsg, get/getall deal now, bind/unbind send to work thread to deal
  * @return NA
  */
-void BqsServer::HandleBqsReqMsg(const uint32_t msgId, const char_t * const data, const uint32_t dataSize)
+void BqsServer::HandleBqsReqMsg(const uint32_t msgId, const char_t* const data, const uint32_t dataSize)
 {
     BQS_LOG_INFO("Bind relation, stage [server:receive], type [request], msg [id = %u]", msgId);
     msgId_ = msgId;
-    bqsRespMsg_.Clear();  // init response msg
+    bqsRespMsg_.Clear(); // init response msg
     if (data == nullptr) {
         BQS_LOG_ERROR("Request of BqsClient is nullptr.");
         return;
@@ -108,10 +106,10 @@ void BqsServer::HandleBqsReqMsg(const uint32_t msgId, const char_t * const data,
     }
     const uint32_t parseLength = currMsgSize - BQS_MSG_HEAD_SIZE;
     if (bqsReqMsg_.ParseFromArray(data + BQS_MSG_HEAD_SIZE, static_cast<int32_t>(parseLength))) {
-        BQS_LOG_INFO("BqsServer request msg type{%d:BIND, %d:UNBIND, %d:GET_BIND, %d:GET_ALL_BIND}:%d "
-                     "begin to process",
-                     BQSMsg::BIND, BQSMsg::UNBIND, BQSMsg::GET_BIND, BQSMsg::GET_ALL_BIND,
-                     bqsReqMsg_.msg_type());
+        BQS_LOG_INFO(
+            "BqsServer request msg type{%d:BIND, %d:UNBIND, %d:GET_BIND, %d:GET_ALL_BIND}:%d "
+            "begin to process",
+            BQSMsg::BIND, BQSMsg::UNBIND, BQSMsg::GET_BIND, BQSMsg::GET_ALL_BIND, bqsReqMsg_.msg_type());
         switch (bqsReqMsg_.msg_type()) {
             case BQSMsg::GET_BIND:
                 StatisticManager::GetInstance().GetBindStat();
@@ -156,10 +154,10 @@ void BqsServer::WaitBindMsgProc()
         }
         if (!done_) {
             QueueManager::GetInstance().LogErrorRelationQueueStatus();
-            BQS_LOG_ERROR("Bind relation [add/del], stage [server:wait], msg [id:%u] timeout, relation queue[enqueue "
-                          "cnt:%lu, dequeue cnt:%lu].",
-                msgId_,
-                StatisticManager::GetInstance().GetRelationEnqueCnt(),
+            BQS_LOG_ERROR(
+                "Bind relation [add/del], stage [server:wait], msg [id:%u] timeout, relation queue[enqueue "
+                "cnt:%lu, dequeue cnt:%lu].",
+                msgId_, StatisticManager::GetInstance().GetRelationEnqueCnt(),
                 StatisticManager::GetInstance().GetRelationDequeCnt());
         }
     }
@@ -212,8 +210,10 @@ BqsStatus BqsServer::InitHandler() const
     serverAttr.gid = qsGroupId_;
     const auto err = EzcomCreateServer(&serverAttr);
     if (err < 0) {
-        BQS_LOG_ERROR("Init server failed, another process may have already owned the server. "
-                      "errno = %d.", err);
+        BQS_LOG_ERROR(
+            "Init server failed, another process may have already owned the server. "
+            "errno = %d.",
+            err);
         return BQS_STATUS_EASY_COMM_ERROR;
     }
     return BQS_STATUS_OK;
@@ -223,7 +223,7 @@ BqsStatus BqsServer::InitHandler() const
  * Init bqs server, including init easycomm server and bind relation
  * @return BQS_STATUS_OK:success other:failed
  */
-BqsStatus BqsServer::InitBqsServer(const std::string &qsInitGrpName, const uint32_t deviceId)
+BqsStatus BqsServer::InitBqsServer(const std::string& qsInitGrpName, const uint32_t deviceId)
 {
     BQS_LOG_INFO("BqsServer Init begin.");
 
@@ -249,7 +249,7 @@ void BqsServer::SendRspMsg(const int32_t fd, const uint32_t msgId) const
 
     const uint32_t msgLen = static_cast<uint32_t>(bqsRespMsg_.ByteSizeLong());
     const uint32_t respLength = msgLen + BQS_MSG_HEAD_SIZE;
-    char_t * const respData = new (std::nothrow) char_t[respLength];
+    char_t* const respData = new (std::nothrow) char_t[respLength];
     if (respData == nullptr) {
         BQS_LOG_ERROR("Malloc memory error, respData is nullptr");
         return;
@@ -257,7 +257,7 @@ void BqsServer::SendRspMsg(const int32_t fd, const uint32_t msgId) const
 
     // add msg length to check
     bool isOverflow = false;
-    BqsCheckAssign32UAdd(msgLen, BQS_MSG_HEAD_SIZE, *(reinterpret_cast<uint32_t *>(respData)), isOverflow);
+    BqsCheckAssign32UAdd(msgLen, BQS_MSG_HEAD_SIZE, *(reinterpret_cast<uint32_t*>(respData)), isOverflow);
     if (isOverflow) {
         BQS_LOG_ERROR("msgLen[%u] is too big.", msgLen);
         delete[] respData;
@@ -271,7 +271,7 @@ void BqsServer::SendRspMsg(const int32_t fd, const uint32_t msgId) const
 
     EzcomResponse resp = {0U};
     resp.id = msgId;
-    resp.data = reinterpret_cast<uint8_t *>(respData);
+    resp.data = reinterpret_cast<uint8_t*>(respData);
     resp.size = respLength;
     BQS_LOG_INFO("EzcomSendResponse begin, fd=%d, msgId=%u", fd, msgId);
     int32_t ret = EzcomSendResponse(fd, &resp);
@@ -295,13 +295,13 @@ void BqsServer::SendRspMsg(const int32_t fd, const uint32_t msgId) const
  * Bqs server bind message processing function
  * @return NA
  */
-void BqsServer::ParseBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
+void BqsServer::ParseBindMsg(BQSMsg& requestMsg, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("Bind relation [add], stage [server:process], type [request], msg [id:%u].", msgId_);
-    BQSBindQueueMsgs * const bindQueueMsgs = requestMsg.mutable_bind_queue_msgs();
+    BQSBindQueueMsgs* const bindQueueMsgs = requestMsg.mutable_bind_queue_msgs();
 
-    BQSBindQueueRsps * const bqsBindQueueRspBuff = responseMsg.mutable_resp_msgs();
-    auto &relationInstance = BindRelation::GetInstance();
+    BQSBindQueueRsps* const bqsBindQueueRspBuff = responseMsg.mutable_resp_msgs();
+    auto& relationInstance = BindRelation::GetInstance();
 
     const uint32_t vecSize = static_cast<uint32_t>(bindQueueMsgs->bind_queue_vec_size());
     for (uint32_t i = 0U; i < vecSize; i++) {
@@ -322,10 +322,11 @@ void BqsServer::ParseBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
             BQS_LOG_ERROR("Fail to attach src queue[%u] or dst queue[%u], result[%d]", srcQid, dstQid, drvRet);
             result = BQS_STATUS_DRIVER_ERROR;
         }
-        BQSBindQueueRsp * const bqsBindQueueInfo = bqsBindQueueRspBuff->add_bind_result_vec();
+        BQSBindQueueRsp* const bqsBindQueueInfo = bqsBindQueueRspBuff->add_bind_result_vec();
         bqsBindQueueInfo->set_bind_result(result);
-        BQS_LOG_RUN_INFO("Bind relation [add], stage [server:process], relation [srcQid:%u, dstQid:%u, result:%d]",
-            srcQid, dstQid, result);
+        BQS_LOG_RUN_INFO(
+            "Bind relation [add], stage [server:process], relation [srcQid:%u, dstQid:%u, result:%d]", srcQid, dstQid,
+            result);
     }
     relationInstance.Order();
     return;
@@ -336,15 +337,18 @@ void BqsServer::ParseBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
  * @return unbind result, BQS_STATUS_OK:success other:failed
  */
 
-int32_t BqsServer::UnbindRelation(BindRelation &relationInstance,
-    const BQSQueryMsg::QsQueryType &queryType, EntityInfo &srcId, EntityInfo &dstId) const
+int32_t BqsServer::UnbindRelation(
+    BindRelation& relationInstance, const BQSQueryMsg::QsQueryType& queryType, EntityInfo& srcId,
+    EntityInfo& dstId) const
 {
     int32_t result = BQS_STATUS_INNER_ERROR;
     switch (queryType) {
         case BQSQueryMsg::BQS_QUERY_TYPE_SRC:
             result = relationInstance.UnBindBySrc(srcId);
-            BQS_LOG_RUN_INFO("Bind relation [del], stage [server:process], relation [query type:src, src = %u, "
-                "result = %d]", srcId.GetId(), result);
+            BQS_LOG_RUN_INFO(
+                "Bind relation [del], stage [server:process], relation [query type:src, src = %u, "
+                "result = %d]",
+                srcId.GetId(), result);
             break;
         case BQSQueryMsg::BQS_QUERY_TYPE_DST:
             result = relationInstance.UnBindByDst(dstId);
@@ -369,19 +373,19 @@ int32_t BqsServer::UnbindRelation(BindRelation &relationInstance,
  * Bqs server unbind message processing function
  * @return NA
  */
-void BqsServer::ParseUnbindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
+void BqsServer::ParseUnbindMsg(BQSMsg& requestMsg, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("Bind relation [del], stage [server:process], type [request], msg [id = %u].", msgId_);
-    BQSQueryMsgs * const bqsQueryMsgBuff = requestMsg.mutable_query_msgs();
+    BQSQueryMsgs* const bqsQueryMsgBuff = requestMsg.mutable_query_msgs();
 
-    BQSBindQueueRsps * const bqsBindQueueRspBuff = responseMsg.mutable_resp_msgs();
+    BQSBindQueueRsps* const bqsBindQueueRspBuff = responseMsg.mutable_resp_msgs();
 
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
 
     for (int32_t i = 0; i < bqsQueryMsgBuff->query_msg_vec_size(); i++) {
         BQSQueryMsg bqsQueryInfo = bqsQueryMsgBuff->query_msg_vec(i);
         const BQSQueryMsg::QsQueryType keyType = bqsQueryInfo.key_type();
-        BQSBindQueueMsg * const bindQueueinfo = bqsQueryInfo.mutable_bind_queue_item();
+        BQSBindQueueMsg* const bindQueueinfo = bqsQueryInfo.mutable_bind_queue_item();
 
         const uint32_t srcQid = bindQueueinfo->src_queue_id();
         const uint32_t dstQid = bindQueueinfo->dst_queue_id();
@@ -391,7 +395,7 @@ void BqsServer::ParseUnbindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
         // delete bind relation
         const int32_t result = UnbindRelation(relationInstance, keyType, src, dst);
 
-        BQSBindQueueRsp * const relationProcessRsp = bqsBindQueueRspBuff->add_bind_result_vec();
+        BQSBindQueueRsp* const relationProcessRsp = bqsBindQueueRspBuff->add_bind_result_vec();
         relationProcessRsp->set_bind_result(result);
     }
 
@@ -403,24 +407,24 @@ void BqsServer::ParseUnbindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
  * Assembly response of get bind message according to src queueId
  * @return NA
  */
-void BqsServer::SerializeGetBindRspBySrc(const uint32_t srcId, BQSMsg &responseMsg) const
+void BqsServer::SerializeGetBindRspBySrc(const uint32_t srcId, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("BqsServer serialize get bind rsponse by src begin, srcId:%u", srcId);
     const EntityInfo src(srcId, deviceId_);
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
 
     // Find all dst queue id who has subscribed to the src queue id
-    auto &srcToDstRelation = relationInstance.GetSrcToDstRelation();
+    auto& srcToDstRelation = relationInstance.GetSrcToDstRelation();
     const auto iter = srcToDstRelation.find(src);
 
-    const auto &abnormalSrcToDstRelation = relationInstance.GetAbnormalSrcToDstRelation();
+    const auto& abnormalSrcToDstRelation = relationInstance.GetAbnormalSrcToDstRelation();
     const auto abnormalIter = abnormalSrcToDstRelation.find(src);
     if (iter == srcToDstRelation.end() && abnormalIter == abnormalSrcToDstRelation.end()) {
         BQS_LOG_WARN("BqsServer get relation according to src:%u failed, record does not exist", src.GetId());
         return;
     }
 
-    BQSBindQueueMsgs * const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
     if (iter != srcToDstRelation.end()) {
         FillGetBindRspBySrc(srcId, iter->second, false, bqsBindQueueMsgBuff);
     }
@@ -433,13 +437,14 @@ void BqsServer::SerializeGetBindRspBySrc(const uint32_t srcId, BQSMsg &responseM
  * Fill getBind response by src and dstSet, one-to-one relation
  * @return NA
  */
-void BqsServer::FillGetBindRspBySrc(const uint32_t srcId, const std::unordered_set<EntityInfo, EntityInfoHash> &dstSet,
-    bool isAbnormal, BQSBindQueueMsgs *const bqsBindQueueMsgBuff) const
+void BqsServer::FillGetBindRspBySrc(
+    const uint32_t srcId, const std::unordered_set<EntityInfo, EntityInfoHash>& dstSet, bool isAbnormal,
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff) const
 {
     BQS_LOG_INFO("Bind relation [get], stage [server:process], relation [size:%zu].", dstSet.size());
     int32_t i = 0;
     for (auto setIter = dstSet.begin(); setIter != dstSet.end(); ++setIter) {
-        BQSBindQueueMsg * const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
+        BQSBindQueueMsg* const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
         bqsBindQueueInfo->set_src_queue_id(srcId);
         const EntityInfo dstQ = *setIter;
         bqsBindQueueInfo->set_dst_queue_id(dstQ.GetId());
@@ -454,23 +459,23 @@ void BqsServer::FillGetBindRspBySrc(const uint32_t srcId, const std::unordered_s
  * Assembly response of get bind message according to dst queueId, one-to-one relation
  * @return NA
  */
-void BqsServer::SerializeGetBindRspByDst(const uint32_t dstId, BQSMsg &responseMsg) const
+void BqsServer::SerializeGetBindRspByDst(const uint32_t dstId, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("BqsServer serialize get bind rsponse by dst begin, dstId:%u", dstId);
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
     const EntityInfo dst(dstId, deviceId_);
 
-    auto &dstToSrcRelation = relationInstance.GetDstToSrcRelation();
+    auto& dstToSrcRelation = relationInstance.GetDstToSrcRelation();
     const auto iter = dstToSrcRelation.find(dst);
 
-    const auto &abnormalDstToSrcRelation = relationInstance.GetAbnormalDstToSrcRelation();
+    const auto& abnormalDstToSrcRelation = relationInstance.GetAbnormalDstToSrcRelation();
     const auto abnormalIter = abnormalDstToSrcRelation.find(dst);
     if ((iter == dstToSrcRelation.end()) && (abnormalIter == abnormalDstToSrcRelation.end())) {
         BQS_LOG_WARN("BqsServer get relation according to dst:%u failed, record does not exist", dstId);
         return;
     }
 
-    BQSBindQueueMsgs * const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
     if (iter != dstToSrcRelation.end()) {
         FillGetBindRspByDst(iter->second, dstId, false, bqsBindQueueMsgBuff);
     }
@@ -483,17 +488,19 @@ void BqsServer::SerializeGetBindRspByDst(const uint32_t dstId, BQSMsg &responseM
  * Fill getBind response by srcSet and dst, one-to-one relation
  * @return NA
  */
-void BqsServer::FillGetBindRspByDst(const std::unordered_set<EntityInfo, EntityInfoHash> &srcSet, const uint32_t dstId,
-    bool isAbnormal, BQSBindQueueMsgs *const bqsBindQueueMsgBuff) const
+void BqsServer::FillGetBindRspByDst(
+    const std::unordered_set<EntityInfo, EntityInfoHash>& srcSet, const uint32_t dstId, bool isAbnormal,
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff) const
 {
     BQS_LOG_INFO("Bind relation [get], stage [server:process], relation [size:%zu].", srcSet.size());
     int32_t i = 0;
     for (auto setIter = srcSet.begin(); setIter != srcSet.end(); ++setIter) {
-        BQSBindQueueMsg * const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
+        BQSBindQueueMsg* const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
         bqsBindQueueInfo->set_src_queue_id(setIter->GetId());
         bqsBindQueueInfo->set_dst_queue_id(dstId);
         ++i;
-        BQS_LOG_INFO("Bind relation [get], stage [server:process], relation [abnormal:%d, index:%d, src:%u, dst:%u]",
+        BQS_LOG_INFO(
+            "Bind relation [get], stage [server:process], relation [abnormal:%d, index:%d, src:%u, dst:%u]",
             static_cast<int32_t>(isAbnormal), i, setIter->GetId(), dstId);
     }
 }
@@ -503,7 +510,7 @@ void BqsServer::FillGetBindRspByDst(const std::unordered_set<EntityInfo, EntityI
  * @return NA
  */
 void BqsServer::SerializeGetBindRsp(
-    const BQSQueryMsg::QsQueryType &queryType, const uint32_t srcId, const uint32_t dstId, BQSMsg &responseMsg) const
+    const BQSQueryMsg::QsQueryType& queryType, const uint32_t srcId, const uint32_t dstId, BQSMsg& responseMsg) const
 {
     switch (queryType) {
         case BQSQueryMsg::BQS_QUERY_TYPE_SRC:
@@ -523,13 +530,13 @@ void BqsServer::SerializeGetBindRsp(
  * Bqs server get bind message processing function
  * @return NA
  */
-void BqsServer::ParseGetBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
+void BqsServer::ParseGetBindMsg(BQSMsg& requestMsg, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("Bind relation [get], stage [server:process], type [request], msg [id:%u].", msgId_);
-    BQSQueryMsg * const bqsQueryInfo = requestMsg.mutable_query_msg();
+    BQSQueryMsg* const bqsQueryInfo = requestMsg.mutable_query_msg();
 
     const BQSQueryMsg::QsQueryType keyType = bqsQueryInfo->key_type();
-    BQSBindQueueMsg * const bqsBindQueueInfo = bqsQueryInfo->mutable_bind_queue_item();
+    BQSBindQueueMsg* const bqsBindQueueInfo = bqsQueryInfo->mutable_bind_queue_item();
 
     const uint32_t src = bqsBindQueueInfo->src_queue_id();
     const uint32_t dst = bqsBindQueueInfo->dst_queue_id();
@@ -542,23 +549,23 @@ void BqsServer::ParseGetBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
  * Bqs server get paged bind message processing function
  * @return NA
  */
-void BqsServer::ParseGetPagedBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) const
+void BqsServer::ParseGetPagedBindMsg(BQSMsg& requestMsg, BQSMsg& responseMsg) const
 {
     BQS_LOG_INFO("Bind relation [get_all], stage [server:process], type [request], msg [id:%u].", msgId_);
-    BQSBindQueueMsgs * const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff = responseMsg.mutable_bind_queue_msgs();
 
-    BQSPagedMsg * const pagedMsg = requestMsg.mutable_paged_msg();
+    BQSPagedMsg* const pagedMsg = requestMsg.mutable_paged_msg();
 
-    BQSPagedMsg * const pagedRspMsg = responseMsg.mutable_paged_msg();
+    BQSPagedMsg* const pagedRspMsg = responseMsg.mutable_paged_msg();
 
-    auto &relationInstance = BindRelation::GetInstance();
+    auto& relationInstance = BindRelation::GetInstance();
 
     static std::vector<std::tuple<uint32_t, uint32_t>> relations;
     static uint32_t offsetSave = 0U;
     static uint32_t total = 0U;
     const uint32_t msgOffset = pagedMsg->offset();
     if ((msgOffset == 0U) || (msgOffset < offsetSave) || relations.empty()) {
-        auto &srcToDstRelation = relationInstance.GetSrcToDstRelation();
+        auto& srcToDstRelation = relationInstance.GetSrcToDstRelation();
         RelationsCopy(relations, total, srcToDstRelation);
         AppendRelations(relations, relationInstance.GetAbnormalSrcToDstRelation());
         offsetSave = msgOffset;
@@ -571,15 +578,14 @@ void BqsServer::ParseGetPagedBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) co
     // get bind relation
     uint32_t i = 0U;
     auto iter = relations.begin();
-    BQS_LOG_INFO("Bind relation [get_paged], stage [server:process], relation [offset:%u, limit:%u, size:%u]",
-        pagedMsg->offset(),
-        limit,
-        total);
+    BQS_LOG_INFO(
+        "Bind relation [get_paged], stage [server:process], relation [offset:%u, limit:%u, size:%u]",
+        pagedMsg->offset(), limit, total);
     std::advance(iter, offset);
     while ((iter != relations.end()) && (i < limit)) {
         const uint32_t srcId = std::get<0>(*iter);
         const uint32_t dstId = std::get<1>(*iter);
-        BQSBindQueueMsg * const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
+        BQSBindQueueMsg* const bqsBindQueueInfo = bqsBindQueueMsgBuff->add_bind_queue_vec();
 
         bqsBindQueueInfo->set_src_queue_id(srcId);
         bqsBindQueueInfo->set_dst_queue_id(dstId);
@@ -593,18 +599,18 @@ void BqsServer::ParseGetPagedBindMsg(BQSMsg &requestMsg, BQSMsg &responseMsg) co
  * Copy relation map to a vector container
  * @return NA
  */
-void BqsServer::RelationsCopy(std::vector<std::tuple<uint32_t, uint32_t>> &relations, const uint32_t oldSize,
-    const std::unordered_map<EntityInfo, std::unordered_set<EntityInfo, EntityInfoHash>, EntityInfoHash> &srcMap) const
+void BqsServer::RelationsCopy(
+    std::vector<std::tuple<uint32_t, uint32_t>>& relations, const uint32_t oldSize,
+    const std::unordered_map<EntityInfo, std::unordered_set<EntityInfo, EntityInfoHash>, EntityInfoHash>& srcMap) const
 {
     relations.clear();
     if (oldSize != 0U) {
         relations.reserve(static_cast<std::vector<std::tuple<uint32_t, uint32_t>>::size_type>(oldSize));
     }
-    for (const auto &iter : srcMap) {
-        (void) std::transform(iter.second.begin(), iter.second.end(), std::back_inserter(relations),
-                              [&](const EntityInfo entityInfo) {
-                                  return std::make_pair(iter.first.GetId(), entityInfo.GetId());
-                              });
+    for (const auto& iter : srcMap) {
+        (void)std::transform(
+            iter.second.begin(), iter.second.end(), std::back_inserter(relations),
+            [&](const EntityInfo entityInfo) { return std::make_pair(iter.first.GetId(), entityInfo.GetId()); });
     }
 }
 
@@ -612,15 +618,15 @@ void BqsServer::RelationsCopy(std::vector<std::tuple<uint32_t, uint32_t>> &relat
  * append relations to a vector container
  * @return NA
  */
-void BqsServer::AppendRelations(std::vector<std::tuple<uint32_t, uint32_t>> &relations,
-    const std::unordered_map<EntityInfo, std::unordered_set<EntityInfo, EntityInfoHash>, EntityInfoHash> &srcMap) const
+void BqsServer::AppendRelations(
+    std::vector<std::tuple<uint32_t, uint32_t>>& relations,
+    const std::unordered_map<EntityInfo, std::unordered_set<EntityInfo, EntityInfoHash>, EntityInfoHash>& srcMap) const
 {
-    for (const auto &iter : srcMap) {
-        (void) std::transform(iter.second.begin(), iter.second.end(), std::back_inserter(relations),
-                              [&](const EntityInfo entityInfo) {
-                                  return std::make_pair(iter.first.GetId(), entityInfo.GetId());
-                              });
+    for (const auto& iter : srcMap) {
+        (void)std::transform(
+            iter.second.begin(), iter.second.end(), std::back_inserter(relations),
+            [&](const EntityInfo entityInfo) { return std::make_pair(iter.first.GetId(), entityInfo.GetId()); });
     }
 }
 
-}  // namespace bqs
+} // namespace bqs

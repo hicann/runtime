@@ -26,12 +26,12 @@ constexpr const uint64_t SUPPLY_EVENT_PERIOD = 1UL;
 constexpr const uint64_t WAKEUP_PERIOD_IN_MS = 100UL;
 // 1s = 1000ms
 constexpr const uint64_t MS_IN_ONE_SECOND = 1000UL;
-constexpr const char_t *STATISTIC_THREAD_NAME_PREFIX = "statistic";
+constexpr const char_t* STATISTIC_THREAD_NAME_PREFIX = "statistic";
 // proc mem stat period 10s
 constexpr const uint64_t PROC_MEM_STAT_PERIOD = 10UL;
-}  // namespace
+} // namespace
 
-StatisticManager &StatisticManager::GetInstance()
+StatisticManager& StatisticManager::GetInstance()
 {
     static StatisticManager instance;
     return instance;
@@ -44,190 +44,82 @@ uint64_t StatisticManager::EventScheduleStat(const uint32_t scheduleNum)
     return totalStat_.eventScheduleTimes;
 }
 
-void StatisticManager::EnqueueEventFalseAwakenStat()
-{
-    ++totalStat_.enqueueFalseAwakenTimes;
-}
+void StatisticManager::EnqueueEventFalseAwakenStat() { ++totalStat_.enqueueFalseAwakenTimes; }
 
-uint64_t StatisticManager::GetEventScheduleStat() const
-{
-    return totalStat_.eventScheduleTimes;
-}
+uint64_t StatisticManager::GetEventScheduleStat() const { return totalStat_.eventScheduleTimes; }
 
-void StatisticManager::DaemonEventScheduleStat()
-{
-    ++totalStat_.daemonEventScheduleTimes;
-}
+void StatisticManager::DaemonEventScheduleStat() { ++totalStat_.daemonEventScheduleTimes; }
 
-void StatisticManager::AwakenAdd()
-{
-    ++totalStat_.awakenTimes;
-}
+void StatisticManager::AwakenAdd() { ++totalStat_.awakenTimes; }
 
-uint64_t StatisticManager::GetAwakenTimes() const
-{
-    return totalStat_.awakenTimes;
-}
+uint64_t StatisticManager::GetAwakenTimes() const { return totalStat_.awakenTimes; }
 
-void StatisticManager::AddScheduleEmpty()
-{
-    ++totalStat_.scheduleEmptyTimes;
-}
+void StatisticManager::AddScheduleEmpty() { ++totalStat_.scheduleEmptyTimes; }
 
 void StatisticManager::DataScheduleFailedStat(const uint64_t failedNum)
 {
     totalStat_.dataScheduleFailedTimes += failedNum;
 }
 
-void StatisticManager::RelationEnqueueStat()
-{
-    ++totalStat_.relationEnqueueTimes;
-}
+void StatisticManager::RelationEnqueueStat() { ++totalStat_.relationEnqueueTimes; }
 
-void StatisticManager::RelationDequeueStat()
-{
-    ++totalStat_.relationDequeueTimes;
-}
+void StatisticManager::RelationDequeueStat() { ++totalStat_.relationDequeueTimes; }
 
-uint64_t StatisticManager::GetRelationEnqueCnt() const
-{
-    return totalStat_.relationEnqueueTimes;
-}
+uint64_t StatisticManager::GetRelationEnqueCnt() const { return totalStat_.relationEnqueueTimes; }
 
-uint64_t StatisticManager::GetRelationDequeCnt() const
-{
-    return totalStat_.relationDequeueTimes;
-}
+uint64_t StatisticManager::GetRelationDequeCnt() const { return totalStat_.relationDequeueTimes; }
 
-void StatisticManager::AsynMemEnqueueStat()
-{
-    ++totalStat_.asynMemEnqueueTimes;
-}
+void StatisticManager::AsynMemEnqueueStat() { ++totalStat_.asynMemEnqueueTimes; }
 
-void StatisticManager::AsynMemDequeueStat()
-{
-    ++totalStat_.asynMemDequeueTimes;
-}
+void StatisticManager::AsynMemDequeueStat() { ++totalStat_.asynMemDequeueTimes; }
 
-uint64_t StatisticManager::GetAsynMemEnqueCnt() const
-{
-    return totalStat_.asynMemEnqueueTimes;
-}
+uint64_t StatisticManager::GetAsynMemEnqueCnt() const { return totalStat_.asynMemEnqueueTimes; }
 
-uint64_t StatisticManager::GetAsynMemDequeCnt() const
-{
-    return totalStat_.asynMemDequeueTimes;
-}
+uint64_t StatisticManager::GetAsynMemDequeCnt() const { return totalStat_.asynMemDequeueTimes; }
 
-void StatisticManager::F2nfEnqueueStat()
-{
-    ++totalStat_.f2nfEnqueueTimes;
-}
+void StatisticManager::F2nfEnqueueStat() { ++totalStat_.f2nfEnqueueTimes; }
 
-void StatisticManager::F2nfDequeueStat()
-{
-    ++totalStat_.f2nfDequeueTimes;
-}
+void StatisticManager::F2nfDequeueStat() { ++totalStat_.f2nfDequeueTimes; }
 
-uint64_t StatisticManager::HcclMpiRecvRequestEventStat()
-{
-    return ++totalStat_.hcclMpiRecvRequestEventTimes;
-}
+uint64_t StatisticManager::HcclMpiRecvRequestEventStat() { return ++totalStat_.hcclMpiRecvRequestEventTimes; }
 
-void StatisticManager::HcclMpiRecvReqFalseAwakenStat()
-{
-    ++totalStat_.hcclMpiRecvReqFalseAwakenTimes;
-}
+void StatisticManager::HcclMpiRecvReqFalseAwakenStat() { ++totalStat_.hcclMpiRecvReqFalseAwakenTimes; }
 
-void StatisticManager::HcclMpiRecvReqEmptySchedStat()
-{
-    ++totalStat_.hcclMpiRecvReqEmptySchedTimes;
-}
+void StatisticManager::HcclMpiRecvReqEmptySchedStat() { ++totalStat_.hcclMpiRecvReqEmptySchedTimes; }
 
-void StatisticManager::HcclMpiRecvReqCallbackStat()
-{
-    ++totalStat_.hcclMpiRecvReqCallbackTimes;
-}
+void StatisticManager::HcclMpiRecvReqCallbackStat() { ++totalStat_.hcclMpiRecvReqCallbackTimes; }
 
-uint64_t StatisticManager::HcclMpiSendCompEventStat()
-{
-    return ++totalStat_.hcclMpiSendCompEventTimes;
-}
+uint64_t StatisticManager::HcclMpiSendCompEventStat() { return ++totalStat_.hcclMpiSendCompEventTimes; }
 
-void StatisticManager::HcclMpiSendCompFalseAwakenStat()
-{
-    ++totalStat_.hcclMpiSendCompFalseAwakenTimes;
-}
+void StatisticManager::HcclMpiSendCompFalseAwakenStat() { ++totalStat_.hcclMpiSendCompFalseAwakenTimes; }
 
-void StatisticManager::HcclMpiSendCompEmptySchedStat()
-{
-    ++totalStat_.hcclMpiSendCompEmptySchedTimes;
-}
+void StatisticManager::HcclMpiSendCompEmptySchedStat() { ++totalStat_.hcclMpiSendCompEmptySchedTimes; }
 
-void StatisticManager::HcclMpiSendCompCallbackStat()
-{
-    ++totalStat_.hcclMpiSendCompCallbackTimes;
-}
+void StatisticManager::HcclMpiSendCompCallbackStat() { ++totalStat_.hcclMpiSendCompCallbackTimes; }
 
-uint64_t StatisticManager::HcclMpiRecvCompEventStat()
-{
-    return ++totalStat_.hcclMpiRecvCompEventTimes;
-}
+uint64_t StatisticManager::HcclMpiRecvCompEventStat() { return ++totalStat_.hcclMpiRecvCompEventTimes; }
 
-void StatisticManager::HcclMpiRecvCompFalseAwakenStat()
-{
-    ++totalStat_.hcclMpiRecvCompFalseAwakenTimes;
-}
+void StatisticManager::HcclMpiRecvCompFalseAwakenStat() { ++totalStat_.hcclMpiRecvCompFalseAwakenTimes; }
 
-void StatisticManager::HcclMpiRecvCompEmptySchedStat()
-{
-    ++totalStat_.hcclMpiRecvCompEmptySchedTimes;
-}
+void StatisticManager::HcclMpiRecvCompEmptySchedStat() { ++totalStat_.hcclMpiRecvCompEmptySchedTimes; }
 
-void StatisticManager::HcclMpiRecvCompCallbackStat()
-{
-    ++totalStat_.hcclMpiRecvCompCallbackTimes;
-}
+void StatisticManager::HcclMpiRecvCompCallbackStat() { ++totalStat_.hcclMpiRecvCompCallbackTimes; }
 
-void StatisticManager::F2nfEventStat()
-{
-    ++totalStat_.f2nfEventTimes;
-}
+void StatisticManager::F2nfEventStat() { ++totalStat_.f2nfEventTimes; }
 
-void StatisticManager::F2nfEventFalseAwakenStat()
-{
-    ++totalStat_.f2nfFalseAwakenTimes;
-}
+void StatisticManager::F2nfEventFalseAwakenStat() { ++totalStat_.f2nfFalseAwakenTimes; }
 
-void StatisticManager::HcclMpiRecvSuccStat()
-{
-    ++totalStat_.hcclMpiRecvSuccTimes;
-}
+void StatisticManager::HcclMpiRecvSuccStat() { ++totalStat_.hcclMpiRecvSuccTimes; }
 
-void StatisticManager::HcclMpiRecvFailStat()
-{
-    ++totalStat_.hcclMpiRecvFailTimes;
-}
+void StatisticManager::HcclMpiRecvFailStat() { ++totalStat_.hcclMpiRecvFailTimes; }
 
-void StatisticManager::HcclMpiSendSuccStat()
-{
-    ++totalStat_.hcclMpiSendSuccTimes;
-}
+void StatisticManager::HcclMpiSendSuccStat() { ++totalStat_.hcclMpiSendSuccTimes; }
 
-void StatisticManager::HcclMpiSendFailStat()
-{
-    ++totalStat_.hcclMpiSendFailTimes;
-}
+void StatisticManager::HcclMpiSendFailStat() { ++totalStat_.hcclMpiSendFailTimes; }
 
-void StatisticManager::HcclMpiSendFullStat()
-{
-    ++totalStat_.hcclMpiSendFullTimes;
-}
+void StatisticManager::HcclMpiSendFullStat() { ++totalStat_.hcclMpiSendFullTimes; }
 
-void StatisticManager::HcclMpiF2nfEventStat()
-{
-    ++totalStat_.hcclMpiF2nfEventTimes;
-}
+void StatisticManager::HcclMpiF2nfEventStat() { ++totalStat_.hcclMpiF2nfEventTimes; }
 
 void StatisticManager::MbufAllocStat(const uint64_t size)
 {
@@ -241,15 +133,9 @@ void StatisticManager::MbufFreeStat(const uint64_t size)
     totalStat_.mbufFreeSize += size;
 }
 
-void StatisticManager::RecvReqEventSupplyStat()
-{
-    ++totalStat_.supplyRecvReqEventTimes;
-}
+void StatisticManager::RecvReqEventSupplyStat() { ++totalStat_.supplyRecvReqEventTimes; }
 
-void StatisticManager::DataDequeueStat()
-{
-    ++totalStat_.dataDequeueTimes;
-}
+void StatisticManager::DataDequeueStat() { ++totalStat_.dataDequeueTimes; }
 
 void StatisticManager::DataQueueEnqueueSuccStat()
 {
@@ -257,74 +143,35 @@ void StatisticManager::DataQueueEnqueueSuccStat()
     ++periodStat_.dataEnqueueSuccTimes;
 }
 
-void StatisticManager::DataQueueEnqueueFailStat()
-{
-    ++totalStat_.dataEnqueueFailTimes;
-}
+void StatisticManager::DataQueueEnqueueFailStat() { ++totalStat_.dataEnqueueFailTimes; }
 
-void StatisticManager::DataQueueEnqueueFullStat()
-{
-    ++totalStat_.dataEnqueueFullTimes;
-}
+void StatisticManager::DataQueueEnqueueFullStat() { ++totalStat_.dataEnqueueFullTimes; }
 
-void StatisticManager::BindStat()
-{
-    ++totalStat_.bindTimes;
-}
+void StatisticManager::BindStat() { ++totalStat_.bindTimes; }
 
-void StatisticManager::UnbindStat()
-{
-    ++totalStat_.unbindTimes;
-}
+void StatisticManager::UnbindStat() { ++totalStat_.unbindTimes; }
 
-void StatisticManager::GetBindStat()
-{
-    ++totalStat_.getBindTimes;
-}
+void StatisticManager::GetBindStat() { ++totalStat_.getBindTimes; }
 
-void StatisticManager::GetAllBindStat()
-{
-    ++totalStat_.getAllBindTimes;
-}
+void StatisticManager::GetAllBindStat() { ++totalStat_.getAllBindTimes; }
 
-void StatisticManager::ResponseStat()
-{
-    ++totalStat_.responseTimes;
-}
+void StatisticManager::ResponseStat() { ++totalStat_.responseTimes; }
 
-void StatisticManager::BindNum(const uint32_t bindNum)
-{
-    bindNum_.store(bindNum);
-}
+void StatisticManager::BindNum(const uint32_t bindNum) { bindNum_.store(bindNum); }
 
-void StatisticManager::AbnormalBindNum(const uint32_t bindNum)
-{
-    abnormalBindNum_.store(bindNum);
-}
+void StatisticManager::AbnormalBindNum(const uint32_t bindNum) { abnormalBindNum_.store(bindNum); }
 
-void StatisticManager::SubscribeNum(const uint32_t subscribeNum)
-{
-    subscribeNum_.store(subscribeNum);
-}
+void StatisticManager::SubscribeNum(const uint32_t subscribeNum) { subscribeNum_.store(subscribeNum); }
 
-void StatisticManager::PauseSubscribe()
-{
-    ++pauseSubscribeNum_;
-}
+void StatisticManager::PauseSubscribe() { ++pauseSubscribeNum_; }
 
-void StatisticManager::ResumeSubscribe()
-{
-    --pauseSubscribeNum_;
-}
+void StatisticManager::ResumeSubscribe() { --pauseSubscribeNum_; }
 
-void StatisticManager::RefreshEnqueHeartBeat()
-{
-    ++enqueThreadHearBeat_;
-}
+void StatisticManager::RefreshEnqueHeartBeat() { ++enqueThreadHearBeat_; }
 
-void StatisticManager::StartStatisticManager(const uint32_t abnormalInterval, const uint32_t hostPid,
-                                             const bool numaFlag, const uint32_t deviceIdExtra,
-                                             const uint32_t enqueGroupIdExtra)
+void StatisticManager::StartStatisticManager(
+    const uint32_t abnormalInterval, const uint32_t hostPid, const bool numaFlag, const uint32_t deviceIdExtra,
+    const uint32_t enqueGroupIdExtra)
 {
     runFlag_ = true;
     abnormalInterval_ = abnormalInterval;
@@ -388,7 +235,8 @@ void StatisticManager::DumpStatistic()
     const float64_t avgProcessCostUs = scheduleStatistic_.GetAvgProcessCost();
     scheduleStatistic_.Reset();
 
-    BQS_LOG_RUN_INFO("Statistic info: queue={bind:%u, abnormal_bind:%u, subscribe:%u, pause:%u},"
+    BQS_LOG_RUN_INFO(
+        "Statistic info: queue={bind:%u, abnormal_bind:%u, subscribe:%u, pause:%u},"
         "event={awaken:%lu, aicpu schedule:%lu, "
         "incorrect waken:%lu, control schedule:%lu, period:%lu, %.2f/s}, data={total enqueue:%lu, total dequeue:%lu, "
         "total sched empty:%lu, total n-success:%lu, period:%lu, %.2f/s}, relation queue={enqueue:%lu, dequeue:%lu}, "
@@ -396,15 +244,13 @@ void StatisticManager::DumpStatistic()
         "queue f2nf=[success:%lu, incorrect awaken:%lu, enqueue:%lu, dequeue:%lu], "
         "hcclImrecv=[success:%lu, n-success:%lu], hcclIsend=[success:%lu, full:%lu, n-success:%lu], "
         "supply recv request event times=%lu}, maxProcessCostUs[%.2f/%.2f], maxSchedDelayUs[%.2f], avgCostUs[%.2f].",
-        bindNum_.load(), abnormalBindNum_.load(), subscribeNum_.load(), pauseSubscribeNum_.load(),
-        awakenTimes, eventScheduleTimes,
-        enqueueFlaseAwakenTimes, daemonEventScheduleTimes, periodEventScheduleTimes,
+        bindNum_.load(), abnormalBindNum_.load(), subscribeNum_.load(), pauseSubscribeNum_.load(), awakenTimes,
+        eventScheduleTimes, enqueueFlaseAwakenTimes, daemonEventScheduleTimes, periodEventScheduleTimes,
         static_cast<float64_t>(static_cast<float64_t>(periodEventScheduleTimes) / STATISTIC_PERIOD), dataEnqueueTimes,
         dataDequeueTimes, scheduleEmptyTimes, dataScheduleFailedTimes, periodDataEnqueueTimes,
         static_cast<float64_t>(static_cast<float64_t>(periodDataEnqueueTimes) / STATISTIC_PERIOD), relationEnqueueTimes,
-        relationDequeueTimes, asynMemEnqueueTimes, asynMemDequeueTimes,
-        dataEnqueueSuccTimes, dataEnqueueFailTimes, dataEnqueueFullTimes,
-        f2nfEventTimes, f2nfFalseAwakenTimes, f2nfEnqueueTimes, f2nfDequeueTimes,
+        relationDequeueTimes, asynMemEnqueueTimes, asynMemDequeueTimes, dataEnqueueSuccTimes, dataEnqueueFailTimes,
+        dataEnqueueFullTimes, f2nfEventTimes, f2nfFalseAwakenTimes, f2nfEnqueueTimes, f2nfDequeueTimes,
         mpiRecvSuccTimes, mpiRecvFailTimes, mpiSendSuccTimes, mpiSendFullTimes, mpiSendFailTimes,
         supplyRecvReqEventTimes, maxProcessCostUs, secProcessCostUs, maxScheduleDelayUs, avgProcessCostUs);
 }
@@ -420,36 +266,36 @@ void StatisticManager::ResetStatistic()
 void StatisticManager::DumpChannelStatistic()
 {
     // dump src entity statistic info
-    dgw::CommChannels &srcChannels = dgw::EntityManager::Instance(0U).GetCommChannels(true);
+    dgw::CommChannels& srcChannels = dgw::EntityManager::Instance(0U).GetCommChannels(true);
     (void)pthread_rwlock_rdlock(&srcChannels.lock);
-    for (auto &entity : srcChannels.entities) {
+    for (auto& entity : srcChannels.entities) {
         entity->Dump();
     }
     (void)pthread_rwlock_unlock(&srcChannels.lock);
 
     // dump dst entity statistic info
-    dgw::CommChannels &dstChannels = dgw::EntityManager::Instance(0U).GetCommChannels(false);
+    dgw::CommChannels& dstChannels = dgw::EntityManager::Instance(0U).GetCommChannels(false);
     (void)pthread_rwlock_rdlock(&dstChannels.lock);
-    for (auto &entity : dstChannels.entities) {
+    for (auto& entity : dstChannels.entities) {
         entity->Dump();
     }
     (void)pthread_rwlock_unlock(&dstChannels.lock);
 
     if (numaFlag_) {
         // dump src entity statistic info
-        dgw::CommChannels &srcChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(true);
+        dgw::CommChannels& srcChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(true);
         BQS_LOG_INFO("EntityManager[1]'s srcChannelsExtra size is %zu", srcChannelsExtra.entities.size());
         (void)pthread_rwlock_rdlock(&srcChannelsExtra.lock);
-        for (auto &entity : srcChannelsExtra.entities) {
+        for (auto& entity : srcChannelsExtra.entities) {
             entity->Dump();
         }
         (void)pthread_rwlock_unlock(&srcChannelsExtra.lock);
 
         // dump dst entity statistic info
-        dgw::CommChannels &dstChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(false);
+        dgw::CommChannels& dstChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(false);
         BQS_LOG_INFO("EntityManager[1]'s dstChannelsExtra size is %zu", dstChannelsExtra.entities.size());
         (void)pthread_rwlock_rdlock(&dstChannelsExtra.lock);
-        for (auto &entity : dstChannelsExtra.entities) {
+        for (auto& entity : dstChannelsExtra.entities) {
             entity->Dump();
         }
         (void)pthread_rwlock_unlock(&dstChannelsExtra.lock);
@@ -466,8 +312,10 @@ void StatisticManager::ThreadFunc()
     static uint64_t supplyEventPeriod = SUPPLY_EVENT_PERIOD * MS_IN_ONE_SECOND / WAKEUP_PERIOD_IN_MS;
     static uint64_t procMemPeriod = PROC_MEM_STAT_PERIOD * MS_IN_ONE_SECOND / WAKEUP_PERIOD_IN_MS;
     const uint64_t abnormalCheckPeriod = abnormalInterval_ * MS_IN_ONE_SECOND / WAKEUP_PERIOD_IN_MS;
-    BQS_LOG_INFO("statistic thread start, statisticPeriod [%lu], channelStatisticPeriod[%lu], "
-        "supplyEventPeriod[%lu]", statisticPeriod, channelStatisticPeriod, supplyEventPeriod);
+    BQS_LOG_INFO(
+        "statistic thread start, statisticPeriod [%lu], channelStatisticPeriod[%lu], "
+        "supplyEventPeriod[%lu]",
+        statisticPeriod, channelStatisticPeriod, supplyEventPeriod);
     (void)pthread_setname_np(pthread_self(), STATISTIC_THREAD_NAME_PREFIX);
     uint64_t enqueThreadHeartBeat = 0UL;
     while (runFlag_) {
@@ -509,10 +357,7 @@ void StatisticManager::ThreadFunc()
     BQS_LOG_INFO("statistic thread end.");
 }
 
-void StatisticManager::SetExistEntityFlag(const bool flag)
-{
-    existEntityFlag_.store(flag);
-}
+void StatisticManager::SetExistEntityFlag(const bool flag) { existEntityFlag_.store(flag); }
 
 const uint32_t StatisticManager::AddUnlinkCount()
 {
@@ -526,15 +371,9 @@ const uint32_t StatisticManager::ReduceUnlinkCount()
     return unLinkTagNum_.load();
 }
 
-void StatisticManager::AddTagCount()
-{
-    ++totalTagNum_;
-}
+void StatisticManager::AddTagCount() { ++totalTagNum_; }
 
-void StatisticManager::ReduceTagCount()
-{
-    --totalTagNum_;
-}
+void StatisticManager::ReduceTagCount() { --totalTagNum_; }
 
 void StatisticManager::UpdateScheuleStatistic(const float64_t delay, const float64_t cost)
 {
@@ -542,15 +381,9 @@ void StatisticManager::UpdateScheuleStatistic(const float64_t delay, const float
     scheduleStatistic_.UpdateProcessCost(cost);
 }
 
-void StatisticManager::DumpOutProcMemStatInfo()
-{
-    procMemStat_.PrintOutProcMemInfo(hostPid_);
-}
+void StatisticManager::DumpOutProcMemStatInfo() { procMemStat_.PrintOutProcMemInfo(hostPid_); }
 
-void StatisticManager::RecordProcMemInfo()
-{
-    procMemStat_.StatisticProcMemInfo();
-}
+void StatisticManager::RecordProcMemInfo() { procMemStat_.StatisticProcMemInfo(); }
 
 void ScheduleStatistic::Reset()
 {
@@ -605,4 +438,4 @@ float64_t ScheduleStatistic::GetAvgProcessCost()
     return totalProcessCount_ > 0U ? totalProcessCostUs_ / totalProcessCount_ : totalProcessCostUs_;
 }
 
-}  // namespace bqs
+} // namespace bqs

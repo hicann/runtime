@@ -12,18 +12,15 @@
 
 namespace bqs {
 
-BqsServer::BqsServer()
-{}
+BqsServer::BqsServer() {}
 
-BqsServer::~BqsServer()
-{}
+BqsServer::~BqsServer() {}
 
-BqsServer &BqsServer::GetInstance()
+BqsServer& BqsServer::GetInstance()
 {
     static BqsServer instance;
     return instance;
 }
-
 
 /**
  * Bqs server enqueue bind msg request process
@@ -40,7 +37,7 @@ void BqsServer::BindMsgProc()
  * Init bqs server, including init easycomm server and bind relation
  * @return BQS_STATUS_OK:success other:failed
  */
-BqsStatus BqsServer::InitBqsServer(const std::string &qsInitGrpName, const uint32_t deviceId)
+BqsStatus BqsServer::InitBqsServer(const std::string& qsInitGrpName, const uint32_t deviceId)
 {
     BQS_LOG_INFO("BqsServer Init begin");
     BQS_LOG_INFO("BqsServer Init success qsInitGrpName[%s] deviceId[%u]", qsInitGrpName.c_str(), deviceId);

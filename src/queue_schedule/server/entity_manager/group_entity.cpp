@@ -17,10 +17,10 @@
 namespace dgw {
 
 namespace {
-    constexpr int64_t GROUP_WAIT_TRANSID_TIMEOUT = -1L;
+constexpr int64_t GROUP_WAIT_TRANSID_TIMEOUT = -1L;
 }
 
-GroupEntity::GroupEntity(const EntityMaterial &material, const uint32_t resIndex)
+GroupEntity::GroupEntity(const EntityMaterial& material, const uint32_t resIndex)
     : Entity(material, resIndex), mbufDeviceId_(material.resId), mbufQueueType_(material.queueType)
 {
     groupInfo_.groupId = static_cast<int32_t>(material.id);
@@ -51,8 +51,9 @@ FsmStatus GroupEntity::Dequeue()
     }
 
     // select success
-    DGW_LOG_INFO("Set srcEntity[%u] entity[%u] transId to %lu, routelabel to %u",
-        srcEntityPtr->GetId(), id_, srcEntityPtr->GetTransId(), srcEntityPtr->GetRouteLabel());
+    DGW_LOG_INFO(
+        "Set srcEntity[%u] entity[%u] transId to %lu, routelabel to %u", srcEntityPtr->GetId(), id_,
+        srcEntityPtr->GetTransId(), srcEntityPtr->GetRouteLabel());
     transId_ = srcEntityPtr->GetTransId();
     routeLabel_ = srcEntityPtr->GetRouteLabel();
     mbufDeviceId_ = srcEntityPtr->GetMbufDeviceId();
@@ -65,9 +66,9 @@ FsmStatus GroupEntity::Dequeue()
     return FsmStatus::FSM_SUCCESS;
 }
 
-EntityPtr GroupEntity::SelectSrcEntity(FsmStatus &status)
+EntityPtr GroupEntity::SelectSrcEntity(FsmStatus& status)
 {
-    const std::vector<EntityPtr> &entitiesInGroup = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
+    const std::vector<EntityPtr>& entitiesInGroup = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
     if (entitiesInGroup.empty()) {
         DGW_LOG_ERROR("No entities in group, group id:%u", id_);
         return nullptr;
@@ -77,8 +78,8 @@ EntityPtr GroupEntity::SelectSrcEntity(FsmStatus &status)
     // first schedule, set lastTimestamp
     if (groupInfo_.lastTransId == 0UL) {
         SetGroupInfo(0UL, bqs::GetNowTime());
-        waitTransId = (groupInfo_.localInstanceIndex == 0U) ?
-            groupInfo_.peerInstanceNum : groupInfo_.localInstanceIndex;
+        waitTransId =
+            (groupInfo_.localInstanceIndex == 0U) ? groupInfo_.peerInstanceNum : groupInfo_.localInstanceIndex;
     } else {
         waitTransId = groupInfo_.lastTransId + groupInfo_.peerInstanceNum;
     }
@@ -88,14 +89,15 @@ EntityPtr GroupEntity::SelectSrcEntity(FsmStatus &status)
     // mark whether no entity in group is peeked state
     bool noOneFinishPeekFlag = true;
     // peek every entity in group
-    for (auto &entity : entitiesInGroup) {
+    for (auto& entity : entitiesInGroup) {
         if (entity == nullptr) {
             DGW_LOG_ERROR("Entity is nullptr.");
             return nullptr;
         }
-        DGW_LOG_INFO("[FSM] Begin to peek mbuf from entity[%s] in group:%u, waitTransId:%lu.",
-            entity->ToString().c_str(), id_, waitTransId);
-        
+        DGW_LOG_INFO(
+            "[FSM] Begin to peek mbuf from entity[%s] in group:%u, waitTransId:%lu.", entity->ToString().c_str(), id_,
+            waitTransId);
+
         // peek data from entity in group
         status = PeekFromEntityInGroup(*entity, waitTransId);
         if (status != FsmStatus::FSM_SUCCESS) {
@@ -108,9 +110,10 @@ EntityPtr GroupEntity::SelectSrcEntity(FsmStatus &status)
         }
         noOneFinishPeekFlag = false;
         if (Match(*entity, waitTransId, true)) {
-            DGW_LOG_DEBUG("[FSM] Entity:[%s] state:[%s] transId:[%lu] has been selected from group entity:[%s].",
-                entity->ToString().c_str(), entity->GetStateDesc(FsmState::FSM_PEEK_STATE).c_str(),
-                waitTransId, ToString().c_str());
+            DGW_LOG_DEBUG(
+                "[FSM] Entity:[%s] state:[%s] transId:[%lu] has been selected from group entity:[%s].",
+                entity->ToString().c_str(), entity->GetStateDesc(FsmState::FSM_PEEK_STATE).c_str(), waitTransId,
+                ToString().c_str());
             return entity;
         }
     }
@@ -128,7 +131,8 @@ EntityPtr GroupEntity::SelectSrcEntity(FsmStatus &status)
     return nullptr;
 }
 
-bool GroupEntity::Match(const Entity &entity, const uint64_t waitTransId, bool exactlyMatch) const {
+bool GroupEntity::Match(const Entity& entity, const uint64_t waitTransId, bool exactlyMatch) const
+{
     if ((entity.GetRouteLabel() != 0U) || (groupInfo_.groupPolicy == bqs::GroupPolicy::DYNAMIC)) {
         return true;
     }
@@ -136,7 +140,7 @@ bool GroupEntity::Match(const Entity &entity, const uint64_t waitTransId, bool e
     return exactlyMatch ? (entity.GetTransId() == waitTransId) : (entity.GetTransId() >= waitTransId);
 }
 
-FsmStatus GroupEntity::PeekFromEntityInGroup(Entity &entity, const uint64_t waitTransId) const
+FsmStatus GroupEntity::PeekFromEntityInGroup(Entity& entity, const uint64_t waitTransId) const
 {
     InnerMessage msg;
     msg.msgType = InnerMsgType::INNER_MSG_PUSH;
@@ -147,11 +151,12 @@ FsmStatus GroupEntity::PeekFromEntityInGroup(Entity &entity, const uint64_t wait
                 return FsmStatus::FSM_SUCCESS;
             };
             // not match, free mbuf
-            Mbuf * const mbuf = entity.GetMbuf();
+            Mbuf* const mbuf = entity.GetMbuf();
             if (mbuf != nullptr) {
                 (void)halMbufFree(mbuf);
                 entity.SetMbuf(nullptr);
-                DGW_LOG_RUN_INFO("[FSM] Peek mbuf with transId[%lu] from entity[%s], "
+                DGW_LOG_RUN_INFO(
+                    "[FSM] Peek mbuf with transId[%lu] from entity[%s], "
                     "but wait transId is [%lu], free mbuf!",
                     entity.GetTransId(), entity.ToString().c_str(), waitTransId);
             }
@@ -170,24 +175,25 @@ bool GroupEntity::CheckTimeout(const uint64_t waitTransId) const
 {
     (void)waitTransId;
     if (groupInfo_.timeout <= 0L) {
-        DGW_LOG_INFO("[FSM] no need check timeout, timeoutInterval:%ld, waitTransId:%lu.",
-            groupInfo_.timeout, waitTransId);
+        DGW_LOG_INFO(
+            "[FSM] no need check timeout, timeoutInterval:%ld, waitTransId:%lu.", groupInfo_.timeout, waitTransId);
         return false;
     }
     const uint64_t currTimestamp = bqs::GetNowTime();
     if ((currTimestamp - groupInfo_.lastTimestamp) > static_cast<uint64_t>(groupInfo_.timeout)) {
-        DGW_LOG_INFO("[FSM] timeout, currTimestamp:%lu, lasttimestamp:%lu, timeoutInterval:%ld, waitTransId:%lu.",
-            currTimestamp, groupInfo_.lastTimestamp, groupInfo_.timeout, waitTransId);
+        DGW_LOG_INFO(
+            "[FSM] timeout, currTimestamp:%lu, lasttimestamp:%lu, timeoutInterval:%ld, waitTransId:%lu.", currTimestamp,
+            groupInfo_.lastTimestamp, groupInfo_.timeout, waitTransId);
         return true;
     }
     return false;
 }
 
-EntityPtr GroupEntity::SelectEntityWithMinTransId(const std::vector<EntityPtr> &entities) const
+EntityPtr GroupEntity::SelectEntityWithMinTransId(const std::vector<EntityPtr>& entities) const
 {
     EntityPtr selectedEntity = nullptr;
     uint64_t minTransId = UINT64_MAX;
-    for (auto &entity : entities) {
+    for (auto& entity : entities) {
         if ((entity == nullptr) || !entity->IsDataPeeked()) {
             continue;
         }
@@ -202,24 +208,26 @@ EntityPtr GroupEntity::SelectEntityWithMinTransId(const std::vector<EntityPtr> &
     return selectedEntity;
 }
 
-void GroupEntity::SelectDstEntities(const uint64_t key, std::vector<Entity*> &toPushDstEntities,
-    std::vector<Entity*> &reprocessDstEntities, std::vector<Entity*> &abnormalDstEntities)
+void GroupEntity::SelectDstEntities(
+    const uint64_t key, std::vector<Entity*>& toPushDstEntities, std::vector<Entity*>& reprocessDstEntities,
+    std::vector<Entity*>& abnormalDstEntities)
 {
     if (groupInfo_.groupPolicy == bqs::GroupPolicy::DYNAMIC) {
         reprocessDstEntities.emplace_back(this);
         return;
     }
     // Group entity, use strategy to select dst entities
-    Strategy *const strategy = StrategyManager::GetInstance().GetStrategy(groupInfo_.groupPolicy);
+    Strategy* const strategy = StrategyManager::GetInstance().GetStrategy(groupInfo_.groupPolicy);
     if (strategy == nullptr) {
-        DGW_LOG_ERROR("Strategy in group:%u with policy:%d is null. Please check!", id_,
+        DGW_LOG_ERROR(
+            "Strategy in group:%u with policy:%d is null. Please check!", id_,
             static_cast<int32_t>(groupInfo_.groupPolicy));
         return;
     }
-    DGW_LOG_INFO("Get strategy:%s success.",
-        StrategyManager::GetInstance().GetStrategyDesc(groupInfo_.groupPolicy).c_str());
+    DGW_LOG_INFO(
+        "Get strategy:%s success.", StrategyManager::GetInstance().GetStrategyDesc(groupInfo_.groupPolicy).c_str());
     std::vector<EntityPtr> selEntities;
-    (void) strategy->Search(id_, key, selEntities, resIndex_);
+    (void)strategy->Search(id_, key, selEntities, resIndex_);
     for (auto selEntity : selEntities) {
         if (selEntity->GetCurState() == FsmState::FSM_ERROR_STATE) {
             abnormalDstEntities.emplace_back(this);
@@ -229,7 +237,7 @@ void GroupEntity::SelectDstEntities(const uint64_t key, std::vector<Entity*> &to
     }
 }
 
-void GroupEntity::ReprocessInTryPush(const Entity &srcEntity, DynamicRequestPtr &dynamicRequest, uint32_t &schedCfgKey)
+void GroupEntity::ReprocessInTryPush(const Entity& srcEntity, DynamicRequestPtr& dynamicRequest, uint32_t& schedCfgKey)
 {
     if (groupInfo_.groupPolicy != bqs::GroupPolicy::DYNAMIC) {
         return;
@@ -252,25 +260,22 @@ void GroupEntity::ReprocessInTryPush(const Entity &srcEntity, DynamicRequestPtr 
     schedCfgKey = GetSchedCfgKey();
 }
 
-FsmStatus GroupEntity::AbProcessInTryPush()
-{
-    return ChangeState(FsmState::FSM_ERROR_STATE);
-}
+FsmStatus GroupEntity::AbProcessInTryPush() { return ChangeState(FsmState::FSM_ERROR_STATE); }
 
-FsmStatus GroupEntity::PauseSubscribe(const Entity &fullEntity)
+FsmStatus GroupEntity::PauseSubscribe(const Entity& fullEntity)
 {
     const auto entities = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
-    for (auto &entity : entities) {
+    for (auto& entity : entities) {
         entity->PauseSubscribe(fullEntity);
     }
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus GroupEntity::ResumeSubscribe(const Entity &notFullEntity)
+FsmStatus GroupEntity::ResumeSubscribe(const Entity& notFullEntity)
 {
     const auto entities = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
-    for (auto &entity : entities) {
-        (void) entity->ResumeSubscribe(notFullEntity);
+    for (auto& entity : entities) {
+        (void)entity->ResumeSubscribe(notFullEntity);
     }
     return FsmStatus::FSM_SUCCESS;
 }
@@ -279,7 +284,7 @@ FsmStatus GroupEntity::ClearQueue()
 {
     DGW_LOG_INFO("Entity[%s] clear queue", entityDesc_.c_str());
     const auto entities = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
-    for (auto &entity : entities) {
+    for (auto& entity : entities) {
         const auto ret = entity->ClearQueue();
         if (ret != FsmStatus::FSM_SUCCESS) {
             return ret;
@@ -294,14 +299,14 @@ FsmStatus GroupEntity::MakeSureOutputCompletion()
     DGW_LOG_INFO("Entity[%s] MakeSureOutputCompletion", entityDesc_.c_str());
     FsmStatus ret = FsmStatus::FSM_SUCCESS;
     const auto entities = EntityManager::Instance(resIndex_).GetEntitiesInGroup(id_);
-    for (auto &entity : entities) {
+    for (auto& entity : entities) {
         ret = entity->MakeSureOutputCompletion();
         if (ret != FsmStatus::FSM_SUCCESS) {
             break;
         }
     }
-    DGW_LOG_INFO("Entity[%s] Finish MakeSureOutputCompletion, ret is %d", entityDesc_.c_str(),
-        static_cast<int32_t>(ret));
+    DGW_LOG_INFO(
+        "Entity[%s] Finish MakeSureOutputCompletion, ret is %d", entityDesc_.c_str(), static_cast<int32_t>(ret));
     return ret;
 }
 
@@ -311,14 +316,8 @@ void GroupEntity::SetGroupInfo(const uint64_t lastTransId, const uint64_t lastTi
     groupInfo_.lastTimestamp = lastTimestamp;
 }
 
-uint32_t GroupEntity::GetMbufDeviceId() const
-{
-    return mbufDeviceId_;
-}
+uint32_t GroupEntity::GetMbufDeviceId() const { return mbufDeviceId_; }
 
-uint32_t GroupEntity::GetMbufQueueType() const
-{
-    return mbufQueueType_;
-}
+uint32_t GroupEntity::GetMbufQueueType() const { return mbufQueueType_; }
 
-}
+} // namespace dgw

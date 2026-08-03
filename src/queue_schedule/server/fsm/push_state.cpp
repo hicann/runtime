@@ -19,31 +19,33 @@
 
 namespace dgw {
 
-FsmStatus PushState::PreProcess(Entity &entity)
+FsmStatus PushState::PreProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_PUSH_STATE).c_str(), entity.ToString().c_str());
-    auto &recvDataObjs = entity.GetRecvDataObjs();
+    auto& recvDataObjs = entity.GetRecvDataObjs();
     FsmStatus ret = FsmStatus::FSM_SUCCESS;
     while (!recvDataObjs.empty()) {
-        const auto &dataObj = recvDataObjs.front();
+        const auto& dataObj = recvDataObjs.front();
         if ((dataObj == nullptr) || (dataObj->GetSendEntity() == nullptr)) {
             recvDataObjs.pop_front();
             continue;
         }
 
-        Mbuf * const mbuf = const_cast<Mbuf *>(dataObj->GetMbuf());
-        DGW_LOG_INFO("Begin to sendEntity:[%s] mbuf for entity:[%s].",
-            dataObj->GetSendEntity()->ToString().c_str(), entity.ToString().c_str());
+        Mbuf* const mbuf = const_cast<Mbuf*>(dataObj->GetMbuf());
+        DGW_LOG_INFO(
+            "Begin to sendEntity:[%s] mbuf for entity:[%s].", dataObj->GetSendEntity()->ToString().c_str(),
+            entity.ToString().c_str());
         bqs::ProfileManager::GetInstance(entity.GetResIndex()).AddEnqueueNum();
         ret = entity.SendData(dataObj);
         if (ret == FsmStatus::FSM_KEEP_STATE) {
             return PostProcess(entity);
         }
         if (ret != FsmStatus::FSM_SUCCESS) {
-            DGW_LOG_WARN("Push to %s[%u] in device[%u] failed, error=[%d].",
-                entity.GetTypeDesc().c_str(), entity.GetId(), entity.GetDeviceId(), static_cast<int32_t>(ret));
+            DGW_LOG_WARN(
+                "Push to %s[%u] in device[%u] failed, error=[%d].", entity.GetTypeDesc().c_str(), entity.GetId(),
+                entity.GetDeviceId(), static_cast<int32_t>(ret));
             bqs::StatisticManager::GetInstance().DataScheduleFailedStat();
             if (ret == FsmStatus::FSM_DEST_FULL) {
                 return entity.ChangeState(FsmState::FSM_FULL_STATE);
@@ -54,9 +56,9 @@ FsmStatus PushState::PreProcess(Entity &entity)
             return PostProcess(entity);
         }
 
-        DGW_LOG_INFO("Push to %s[%u] in device[%u], owneredDevId[%u], ret is %d.",
-            entity.GetTypeDesc().c_str(), entity.GetId(), entity.GetDeviceId(), entity.GetDeviceId(),
-            static_cast<int32_t>(ret));
+        DGW_LOG_INFO(
+            "Push to %s[%u] in device[%u], owneredDevId[%u], ret is %d.", entity.GetTypeDesc().c_str(), entity.GetId(),
+            entity.GetDeviceId(), entity.GetDeviceId(), static_cast<int32_t>(ret));
 
         if ((entity.GetMessageType() == InnerMsgType::INNER_MSG_F2NF) &&
             (dgw::EntityManager::Instance(entity.GetResIndex()).ShouldPauseSubscirpiton())) {
@@ -73,11 +75,8 @@ FsmStatus PushState::PreProcess(Entity &entity)
     return PostProcess(entity);
 }
 
-FsmStatus PushState::PostProcess(Entity &entity)
-{
-    return entity.ChangeState(FsmState::FSM_WAIT_PUSH_STATE);
-}
+FsmStatus PushState::PostProcess(Entity& entity) { return entity.ChangeState(FsmState::FSM_WAIT_PUSH_STATE); }
 
 REGISTER_STATE(FSM_PUSH_STATE, ENTITY_QUEUE, PushState);
 REGISTER_STATE(FSM_PUSH_STATE, ENTITY_TAG, PushState);
-}  // namespace dgw
+} // namespace dgw

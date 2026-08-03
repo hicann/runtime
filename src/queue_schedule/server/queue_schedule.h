@@ -30,28 +30,29 @@ public:
      * @param enqueGroupId enqueue group id.
      * @param f2nfGroupId full to not full group id.
      */
-    explicit QueueSchedule(const InitQsParams &params) : deviceId_(params.deviceId),
-                                                         enqueGroupId_(params.enqueGroupId),
-                                                         f2nfGroupId_(params.f2nfGroupId),
-                                                         running_(false),
-                                                         hasAICPU_(true),
-                                                         isZeroSizeAicpuNum_(false),
-                                                         reschedInterval_(params.reschedInterval),
-                                                         runMode_(params.runMode),
-                                                         qsInitGroupName_(params.qsInitGrpName),
-                                                         initQsParams_(params),
-                                                         abnormalInterval_(0U)                                                   
+    explicit QueueSchedule(const InitQsParams& params)
+        : deviceId_(params.deviceId),
+          enqueGroupId_(params.enqueGroupId),
+          f2nfGroupId_(params.f2nfGroupId),
+          running_(false),
+          hasAICPU_(true),
+          isZeroSizeAicpuNum_(false),
+          reschedInterval_(params.reschedInterval),
+          runMode_(params.runMode),
+          qsInitGroupName_(params.qsInitGrpName),
+          initQsParams_(params),
+          abnormalInterval_(0U)
     {}
 
     ~QueueSchedule();
 
-    QueueSchedule(const QueueSchedule &) = delete;
+    QueueSchedule(const QueueSchedule&) = delete;
 
-    QueueSchedule &operator=(const QueueSchedule &) = delete;
+    QueueSchedule& operator=(const QueueSchedule&) = delete;
 
-    QueueSchedule(QueueSchedule &&) = delete;
+    QueueSchedule(QueueSchedule&&) = delete;
 
-    QueueSchedule &operator=(QueueSchedule &&) = delete;
+    QueueSchedule& operator=(QueueSchedule&&) = delete;
 
 public:
     /**
@@ -76,8 +77,9 @@ public:
      * @param bindCpuIndex: bind cpu index
      * @param groupId: wait event group
      */
-    void EnqueueThreadTask(const uint32_t deviceId, const uint32_t threadIndex, const uint32_t bindCpuIndex,
-                           const uint32_t groupId, const uint32_t index);
+    void EnqueueThreadTask(
+        const uint32_t deviceId, const uint32_t threadIndex, const uint32_t bindCpuIndex, const uint32_t groupId,
+        const uint32_t index);
 
     /**
      * full to not full working thread function
@@ -98,30 +100,31 @@ public:
     void WaitForStop();
 
     void ReportAbnormal() const;
+
 private:
     /**
      * handle enqueue event.
      * @param threadIndex thread index
      * @param event event
      */
-    void ProcessEnqueueEvent(const uint32_t threadIndex, const event_info &event, const uint32_t index = 0U,
-        const bool procF2NF = false);
+    void ProcessEnqueueEvent(
+        const uint32_t threadIndex, const event_info& event, const uint32_t index = 0U, const bool procF2NF = false);
 
     /**
      * process enqueue event loop.
      * @param threadIndex thread index
      * @param groupId groupId
      */
-    void LoopProcessEnqueueEvent(const uint32_t threadIndex, const uint32_t deviceId, const uint32_t groupId,
-                                 const uint32_t index);
+    void LoopProcessEnqueueEvent(
+        const uint32_t threadIndex, const uint32_t deviceId, const uint32_t groupId, const uint32_t index);
 
     /**
      * start enqueue thread.
      * @param threadNum thread total num
      * @param aicpuBeginIndex begin index
      */
-    BqsStatus StartThreadGroup(const uint32_t threadNum, const uint32_t deviceId, const uint32_t enqueGroupId,
-                               const uint32_t index);
+    BqsStatus StartThreadGroup(
+        const uint32_t threadNum, const uint32_t deviceId, const uint32_t enqueGroupId, const uint32_t index);
 
     /**
      * start enqueue thread.
@@ -145,29 +148,29 @@ private:
      * process full entity
      * @param entity entity
      */
-    dgw::FsmStatus ProcessDstEntity(const EntityInfo &entity, const uint32_t index) const;
+    dgw::FsmStatus ProcessDstEntity(const EntityInfo& entity, const uint32_t index) const;
 
     /**
      * init drv event scheduler.
      * @return BQS_STATUS_OK: success, other: error
      */
-    BqsStatus InitDrvSchedModule(const uint32_t deviceId, const uint32_t enqueGroupId,
-        const uint32_t f2nfGroupId) const;
+    BqsStatus InitDrvSchedModule(
+        const uint32_t deviceId, const uint32_t enqueGroupId, const uint32_t f2nfGroupId) const;
 
     /**
      * process event
      * @param event esched event info
      */
-    BqsStatus ProcessEvent(const uint32_t threadIndex, event_info &event, const uint32_t index);
+    BqsStatus ProcessEvent(const uint32_t threadIndex, event_info& event, const uint32_t index);
 
-    void CheckIfRecover(uint32_t &errCount, const char_t * const identity, const uint32_t threadIndex,
-        const uint32_t groupId) const;
+    void CheckIfRecover(
+        uint32_t& errCount, const char_t* const identity, const uint32_t threadIndex, const uint32_t groupId) const;
 
     void DynamicSchedule(const uint32_t index) const;
 
     void ProcessFullToNotFullEvent(const uint32_t index);
 
-    BqsStatus InitExtraSchedule(const std::set<uint32_t> &resDevids, uint32_t threadNum);
+    BqsStatus InitExtraSchedule(const std::set<uint32_t>& resDevids, uint32_t threadNum);
 
     /**
      * device chip id.
@@ -246,9 +249,9 @@ private:
      */
     std::atomic_flag f2nfEventAtomicFlag_ = ATOMIC_FLAG_INIT;
 
-    bool aicpuFeatureDisableRecvRequestEvent_ {false};
+    bool aicpuFeatureDisableRecvRequestEvent_{false};
 
-    bool aicpuFeatureSetPidPriority_ {false};
+    bool aicpuFeatureSetPidPriority_{false};
 
     uint32_t abnormalInterval_;
 };

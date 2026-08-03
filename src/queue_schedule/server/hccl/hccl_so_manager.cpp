@@ -16,7 +16,7 @@
 
 namespace dgw {
 
-HcclSoManager *HcclSoManager::GetInstance()
+HcclSoManager* HcclSoManager::GetInstance()
 {
     static HcclSoManager hcclSoIns;
     return &hcclSoIns;
@@ -33,14 +33,13 @@ void HcclSoManager::LoadSo()
         DGW_LOG_RUN_WARN("Failed to dlopen libhccd.so for: %s", dlerror());
         return;
     }
-    const std::vector<std::string> funcName = {"HcclInitComm", "HcclFinalizeComm",
-                                               "HcclIsend", "HcclImrecv", "HcclImprobe", "HcclGetCount",
-                                               "HcclTestSome", "HcclRegisterMemory", "HcclUnregisterMemory",
-                                               "HcclSetGrpIdCallback"};
+    const std::vector<std::string> funcName = {
+        "HcclInitComm", "HcclFinalizeComm", "HcclIsend",          "HcclImrecv",           "HcclImprobe",
+        "HcclGetCount", "HcclTestSome",     "HcclRegisterMemory", "HcclUnregisterMemory", "HcclSetGrpIdCallback"};
     for (auto iter = funcName.begin(); iter != funcName.end(); iter++) {
-        void *func = dlsym(soHandle_, iter->c_str());
+        void* func = dlsym(soHandle_, iter->c_str());
         if (func != nullptr) {
-            (void) funcMap_.insert(make_pair(*iter, func));
+            (void)funcMap_.insert(make_pair(*iter, func));
         } else {
             DGW_LOG_ERROR("Failed to get function [%s]", iter->c_str());
         }
@@ -57,7 +56,7 @@ void HcclSoManager::UnloadSo()
     }
 }
 
-void *HcclSoManager::GetFunc(const std::string &name) const
+void* HcclSoManager::GetFunc(const std::string& name) const
 {
     const auto it = funcMap_.find(name);
     if (it != funcMap_.end()) {
@@ -66,8 +65,5 @@ void *HcclSoManager::GetFunc(const std::string &name) const
     return nullptr;
 }
 
-HcclSoManager::~HcclSoManager()
-{
-    UnloadSo();
-}
-}
+HcclSoManager::~HcclSoManager() { UnloadSo(); }
+} // namespace dgw

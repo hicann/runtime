@@ -12,24 +12,23 @@
 
 namespace dgw {
 namespace {
-    const std::string UNKNOWN_POLICY = "";
+const std::string UNKNOWN_POLICY = "";
 }
-StrategyManager &StrategyManager::GetInstance()
+StrategyManager& StrategyManager::GetInstance()
 {
     static StrategyManager instance;
     return instance;
 }
 
-void StrategyManager::RegisterStrategy(const bqs::GroupPolicy policy,
-                                       Strategy * strategy,
-                                       const char_t * const strategyDesc)
+void StrategyManager::RegisterStrategy(
+    const bqs::GroupPolicy policy, Strategy* strategy, const char_t* const strategyDesc)
 {
     // Overwrite old when repeating
     strategy_[policy] = strategy;
     strategyDesc_[policy] = strategyDesc;
 }
 
-Strategy *StrategyManager::GetStrategy(const bqs::GroupPolicy policy) const
+Strategy* StrategyManager::GetStrategy(const bqs::GroupPolicy policy) const
 {
     const auto iter = strategy_.find(policy);
     if (iter != strategy_.end()) {
@@ -39,7 +38,7 @@ Strategy *StrategyManager::GetStrategy(const bqs::GroupPolicy policy) const
     return nullptr;
 }
 
-const std::string &StrategyManager::GetStrategyDesc(const bqs::GroupPolicy policy) const
+const std::string& StrategyManager::GetStrategyDesc(const bqs::GroupPolicy policy) const
 {
     const auto iter = strategyDesc_.find(policy);
     if (iter != strategyDesc_.end()) {
@@ -48,4 +47,4 @@ const std::string &StrategyManager::GetStrategyDesc(const bqs::GroupPolicy polic
     DGW_LOG_ERROR("[FSM] Failed policy:%d.", static_cast<int32_t>(policy));
     return UNKNOWN_POLICY;
 }
-}  // namespace dgw
+} // namespace dgw

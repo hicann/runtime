@@ -15,14 +15,11 @@
 namespace dgw {
 
 namespace {
-    constexpr uint32_t FLAG_DEVICEID_OFFSET = 32U;
-    constexpr uint32_t MBUF_ALLOC_ALIGN = 64U;
-}
+constexpr uint32_t FLAG_DEVICEID_OFFSET = 32U;
+constexpr uint32_t MBUF_ALLOC_ALIGN = 64U;
+} // namespace
 
-SimpleEntity::SimpleEntity(const EntityMaterial &material, const uint32_t resIndex)
-    : Entity(material, resIndex)
-{
-}
+SimpleEntity::SimpleEntity(const EntityMaterial& material, const uint32_t resIndex) : Entity(material, resIndex) {}
 
 FsmStatus SimpleEntity::Dequeue()
 {
@@ -64,12 +61,9 @@ FsmStatus SimpleEntity::Dequeue()
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus SimpleEntity::DoDequeue()
-{
-    return DoDequeueMbuf(PtrToPtr<Mbuf *, void*>(&mbuf_));
-}
+FsmStatus SimpleEntity::DoDequeue() { return DoDequeueMbuf(PtrToPtr<Mbuf*, void*>(&mbuf_)); }
 
-FsmStatus SimpleEntity::DoDequeueMbuf(void **mbufPtr) const
+FsmStatus SimpleEntity::DoDequeueMbuf(void** mbufPtr) const
 {
     const uint32_t queueId = GetQueueId();
     const auto ret = halQueueDeQueue(deviceId_, queueId, mbufPtr);
@@ -78,8 +72,8 @@ FsmStatus SimpleEntity::DoDequeueMbuf(void **mbufPtr) const
         return FsmStatus::FSM_SRC_EMPTY;
     }
     if ((ret != DRV_ERROR_NONE) || (*mbufPtr == nullptr)) {
-        DGW_LOG_ERROR("DeQueue from queueId[%u] on device[%u] failed, ret:[%d]",
-            queueId, deviceId_, static_cast<int32_t>(ret));
+        DGW_LOG_ERROR(
+            "DeQueue from queueId[%u] on device[%u] failed, ret:[%d]", queueId, deviceId_, static_cast<int32_t>(ret));
         if (ret == DRV_ERROR_NOT_EXIST) {
             return FsmStatus::FSM_ERROR_PENDING;
         }
@@ -88,10 +82,7 @@ FsmStatus SimpleEntity::DoDequeueMbuf(void **mbufPtr) const
     return FsmStatus::FSM_SUCCESS;
 }
 
-void SimpleEntity::PostDeque()
-{
-    return;
-}
+void SimpleEntity::PostDeque() { return; }
 
 FsmStatus SimpleEntity::RefreshWithData()
 {
@@ -101,7 +92,7 @@ FsmStatus SimpleEntity::RefreshWithData()
 
     // src entity is group entity or dst entities has group entity
     // get transId
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     uint32_t headBufSize = 0U;
     const auto drvRet = halMbufGetPrivInfo(mbuf_, &headBuf, &headBufSize);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -114,19 +105,17 @@ FsmStatus SimpleEntity::RefreshWithData()
     }
 
     const uint32_t offset = headBufSize - static_cast<uint32_t>(sizeof(bqs::IdentifyInfo));
-    bqs::IdentifyInfo * const info = PtrToPtr<void, bqs::IdentifyInfo>(ValueToPtr(PtrToValue(headBuf) + offset));
+    bqs::IdentifyInfo* const info = PtrToPtr<void, bqs::IdentifyInfo>(ValueToPtr(PtrToValue(headBuf) + offset));
     transId_ = info->transId;
     routeLabel_ = info->routeLabel;
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus SimpleEntity::ResetSrcState()
-{
-    return ChangeState(FsmState::FSM_IDLE_STATE);
-}
+FsmStatus SimpleEntity::ResetSrcState() { return ChangeState(FsmState::FSM_IDLE_STATE); }
 
-void SimpleEntity::SelectDstEntities(const uint64_t key, std::vector<Entity*> &toPushDstEntities,
-    std::vector<Entity*> &reprocessDstEntities, std::vector<Entity*> &abnormalDstEntities)
+void SimpleEntity::SelectDstEntities(
+    const uint64_t key, std::vector<Entity*>& toPushDstEntities, std::vector<Entity*>& reprocessDstEntities,
+    std::vector<Entity*>& abnormalDstEntities)
 {
     (void)key;
     (void)reprocessDstEntities;
@@ -136,7 +125,7 @@ void SimpleEntity::SelectDstEntities(const uint64_t key, std::vector<Entity*> &t
 
 FsmStatus SimpleEntity::SendData(const DataObjPtr dataObj)
 {
-    Mbuf *const mbufToPush = PrepareMbufToPush(dataObj);
+    Mbuf* const mbufToPush = PrepareMbufToPush(dataObj);
     if (mbufToPush == nullptr) {
         return FsmStatus::FSM_FAILED;
     }
@@ -144,7 +133,7 @@ FsmStatus SimpleEntity::SendData(const DataObjPtr dataObj)
     if (sendRet == FsmStatus::FSM_SUCCESS) {
         statInfo_.enqueueSuccTimes++;
     } else if (sendRet != FsmStatus::FSM_KEEP_STATE) {
-        Mbuf * const mbuf = const_cast<Mbuf *>(dataObj->GetMbuf());
+        Mbuf* const mbuf = const_cast<Mbuf*>(dataObj->GetMbuf());
         if (mbufToPush != mbuf) {
             (void)halMbufFree(mbufToPush);
         }
@@ -152,23 +141,24 @@ FsmStatus SimpleEntity::SendData(const DataObjPtr dataObj)
     return sendRet;
 }
 
-Mbuf *SimpleEntity::PrepareMbufToPush(DataObjPtr dataObj) const
+Mbuf* SimpleEntity::PrepareMbufToPush(DataObjPtr dataObj) const
 {
-    Entity *const sendEntity = dataObj->GetSendEntity();
-    Mbuf * const mbuf = const_cast<Mbuf *>(dataObj->GetMbuf());
+    Entity* const sendEntity = dataObj->GetSendEntity();
+    Mbuf* const mbuf = const_cast<Mbuf*>(dataObj->GetMbuf());
 
     if ((sendEntity->GetMbufQueueType() != bqs::CLIENT_Q) && (GetDeviceId() != sendEntity->GetMbufDeviceId())) {
         return SdmaCopy(mbuf);
     }
     if (dataObj->GetRecvEntitySize() > 1U) {
-        Mbuf *copyMbuf = nullptr;
-        auto &profileInstance = bqs::ProfileManager::GetInstance(resIndex_);
+        Mbuf* copyMbuf = nullptr;
+        auto& profileInstance = bqs::ProfileManager::GetInstance(resIndex_);
         const uint64_t copyBegin = profileInstance.GetCpuTick();
         const int32_t drvRet = halMbufCopyRef(mbuf, &copyMbuf);
         profileInstance.AddCopyTotalCost(profileInstance.GetCpuTick() - copyBegin);
         if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (copyMbuf == nullptr)) {
-            BQS_LOG_RUN_WARN("MbufCopy failed when from queue[%u] to queue[%u] in device[%u], error=[%d].",
-                sendEntity->GetId(), GetId(), GetDeviceId(), drvRet);
+            BQS_LOG_RUN_WARN(
+                "MbufCopy failed when from queue[%u] to queue[%u] in device[%u], error=[%d].", sendEntity->GetId(),
+                GetId(), GetDeviceId(), drvRet);
             bqs::StatisticManager::GetInstance().DataScheduleFailedStat();
         }
         return copyMbuf;
@@ -178,11 +168,12 @@ Mbuf *SimpleEntity::PrepareMbufToPush(DataObjPtr dataObj) const
     return mbuf;
 }
 
-FsmStatus SimpleEntity::DoSendData(Mbuf *const mbuf)
+FsmStatus SimpleEntity::DoSendData(Mbuf* const mbuf)
 {
     const auto ret = halQueueEnQueue(deviceId_, id_, mbuf);
-    DGW_LOG_INFO("%s halQueueEnQueue queue id:[%u] device id:[%u] result:[%d].",
-        entityDesc_.c_str(), id_, deviceId_, static_cast<int32_t>(ret));
+    DGW_LOG_INFO(
+        "%s halQueueEnQueue queue id:[%u] device id:[%u] result:[%d].", entityDesc_.c_str(), id_, deviceId_,
+        static_cast<int32_t>(ret));
     if (ret == DRV_ERROR_NONE) {
         bqs::StatisticManager::GetInstance().DataQueueEnqueueSuccStat();
         return FsmStatus::FSM_SUCCESS;
@@ -202,7 +193,7 @@ FsmStatus SimpleEntity::DoSendData(Mbuf *const mbuf)
     return FsmStatus::FSM_FAILED;
 }
 
-Mbuf* SimpleEntity::SdmaCopy(Mbuf * const mbuf) const
+Mbuf* SimpleEntity::SdmaCopy(Mbuf* const mbuf) const
 {
     // 调用sdma拷贝
     uint64_t desBufLen = 0;
@@ -211,13 +202,13 @@ Mbuf* SimpleEntity::SdmaCopy(Mbuf * const mbuf) const
         BQS_LOG_ERROR("halMbufGetDataLen error ret=[%d]", retHal);
         return nullptr;
     }
-    void *srcDataBuf = nullptr;
+    void* srcDataBuf = nullptr;
     auto drvRet = halMbufGetBuffAddr(mbuf, &srcDataBuf);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (srcDataBuf == nullptr)) {
         DGW_LOG_ERROR("Fail to get buff addr for mbuf, ret=[%d]", drvRet);
         return nullptr;
     }
-    void *srcHeadBuf = nullptr;
+    void* srcHeadBuf = nullptr;
     uint32_t srcHeadBufSize = 0U;
     drvRet = halMbufGetPrivInfo(mbuf, &srcHeadBuf, &srcHeadBufSize);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -225,7 +216,7 @@ Mbuf* SimpleEntity::SdmaCopy(Mbuf * const mbuf) const
         return nullptr;
     }
 
-    Mbuf *mbufPtr = AllocateMbuf(desBufLen);
+    Mbuf* mbufPtr = AllocateMbuf(desBufLen);
     if (mbufPtr == nullptr) {
         BQS_LOG_ERROR("Allocate Mbuf fail.");
         return nullptr;
@@ -249,15 +240,15 @@ Mbuf* SimpleEntity::SdmaCopy(Mbuf * const mbuf) const
 
 Mbuf* SimpleEntity::AllocateMbuf(const uint64_t desBufLen) const
 {
-    uint64_t flag = (static_cast<uint64_t>(deviceId_) << FLAG_DEVICEID_OFFSET) |
-        static_cast<uint64_t>(BUFF_SP_NORMAL);
+    uint64_t flag = (static_cast<uint64_t>(deviceId_) << FLAG_DEVICEID_OFFSET) | static_cast<uint64_t>(BUFF_SP_NORMAL);
     int32_t memGroupId = 0;
-    Mbuf *mbufPtr = nullptr;
+    Mbuf* mbufPtr = nullptr;
     // alignSize use 64
     auto drvRet = halMbufAllocEx(desBufLen, MBUF_ALLOC_ALIGN, flag, memGroupId, &mbufPtr);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || mbufPtr == nullptr) {
-        BQS_LOG_ERROR("halMbufAllocEx failed, drvRet=%d, dataSize=%lu, flag=%lu, groupId=%d.", drvRet, desBufLen,
-            flag, memGroupId);
+        BQS_LOG_ERROR(
+            "halMbufAllocEx failed, drvRet=%d, dataSize=%lu, flag=%lu, groupId=%d.", drvRet, desBufLen, flag,
+            memGroupId);
         return nullptr;
     }
     drvRet = halMbufSetDataLen(mbufPtr, desBufLen);
@@ -269,9 +260,9 @@ Mbuf* SimpleEntity::AllocateMbuf(const uint64_t desBufLen) const
     return mbufPtr;
 }
 
-FsmStatus SimpleEntity::SdmaCopyData(void *const srcDataBuf, const uint64_t desBufLen, Mbuf *const mbufPtr) const
+FsmStatus SimpleEntity::SdmaCopyData(void* const srcDataBuf, const uint64_t desBufLen, Mbuf* const mbufPtr) const
 {
-    void *dstDataBuf = nullptr;
+    void* dstDataBuf = nullptr;
     auto drvRet = halMbufGetBuffAddr(mbufPtr, &dstDataBuf);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (dstDataBuf == nullptr)) {
         DGW_LOG_ERROR("Fail to get buff addr for mbuf, ret=[%d].", drvRet);
@@ -285,9 +276,9 @@ FsmStatus SimpleEntity::SdmaCopyData(void *const srcDataBuf, const uint64_t desB
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus SimpleEntity::SdmaCopyHead(void *const srcHeadBuf, const uint32_t srcHeadBufSize, Mbuf *const mbufPtr) const
+FsmStatus SimpleEntity::SdmaCopyHead(void* const srcHeadBuf, const uint32_t srcHeadBufSize, Mbuf* const mbufPtr) const
 {
-    void *dstHeadBuf = nullptr;
+    void* dstHeadBuf = nullptr;
     uint32_t dstHeadBufSize = 0U;
     auto drvRet = halMbufGetPrivInfo(mbufPtr, &dstHeadBuf, &dstHeadBufSize);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -306,25 +297,27 @@ FsmStatus SimpleEntity::SdmaCopyHead(void *const srcHeadBuf, const uint32_t srcH
     return FsmStatus::FSM_SUCCESS;
 }
 
-bqs::SubscribeManager *SimpleEntity::GetSubscriber() const
+bqs::SubscribeManager* SimpleEntity::GetSubscriber() const
 {
-    bqs::SubscribeManager * const subscribeManager =
+    bqs::SubscribeManager* const subscribeManager =
         bqs::Subscribers::GetInstance().GetSubscribeManager(resIndex_, deviceId_);
     if (subscribeManager == nullptr) {
-        DGW_LOG_ERROR("Failed to find subscribeManager for resIndex: %u, device: %u, queueType: %d",
-            resIndex_, deviceId_, static_cast<int32_t>(queueType_));
+        DGW_LOG_ERROR(
+            "Failed to find subscribeManager for resIndex: %u, device: %u, queueType: %d", resIndex_, deviceId_,
+            static_cast<int32_t>(queueType_));
     }
     return subscribeManager;
 }
 
-FsmStatus SimpleEntity::PauseSubscribe(const Entity &fullEntity)
+FsmStatus SimpleEntity::PauseSubscribe(const Entity& fullEntity)
 {
     if (subscribeStatus_ == SubscribeStatus::SUBSCRIBE_PAUSE) {
         DGW_LOG_WARN("No need to pause subscribe for entity[%s].", entityDesc_.c_str());
         return FsmStatus::FSM_SUCCESS;
     }
-    DGW_LOG_INFO("[FSM] Pause subscribe src entity[%s] because dst entity[id:%u, type:%s] full.",
-        entityDesc_.c_str(), fullEntity.GetId(), fullEntity.GetTypeDesc().c_str());
+    DGW_LOG_INFO(
+        "[FSM] Pause subscribe src entity[%s] because dst entity[id:%u, type:%s] full.", entityDesc_.c_str(),
+        fullEntity.GetId(), fullEntity.GetTypeDesc().c_str());
     subscribeStatus_ = SubscribeStatus::SUBSCRIBE_PAUSE;
 
     const auto subscriber = GetSubscriber();
@@ -335,14 +328,15 @@ FsmStatus SimpleEntity::PauseSubscribe(const Entity &fullEntity)
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus SimpleEntity::ResumeSubscribe(const Entity &notFullEntity)
+FsmStatus SimpleEntity::ResumeSubscribe(const Entity& notFullEntity)
 {
     if (subscribeStatus_ == SubscribeStatus::SUBSCRIBE_RESUME) {
         DGW_LOG_WARN("No need to resume subscribe for entity[%s].", entityDesc_.c_str());
         return FsmStatus::FSM_SUCCESS;
     }
-    DGW_LOG_INFO("[FSM] Resume subscribe src entity[%s] because dst entity[id:%u, type:%s] not full.",
-        entityDesc_.c_str(), notFullEntity.GetId(), notFullEntity.GetTypeDesc().c_str());
+    DGW_LOG_INFO(
+        "[FSM] Resume subscribe src entity[%s] because dst entity[id:%u, type:%s] not full.", entityDesc_.c_str(),
+        notFullEntity.GetId(), notFullEntity.GetTypeDesc().c_str());
     subscribeStatus_ = SubscribeStatus::SUBSCRIBE_RESUME;
     const auto subscriber = GetSubscriber();
     if (subscriber == nullptr) {
@@ -356,23 +350,24 @@ FsmStatus SimpleEntity::ClearQueue()
 {
     DGW_LOG_INFO("Entity[%s] clear queue", entityDesc_.c_str());
     do {
-        void *mbuf = nullptr;
+        void* mbuf = nullptr;
         const auto dequeRet = DoDequeueMbuf(&mbuf);
         if (dequeRet == FsmStatus::FSM_SRC_EMPTY) {
             break;
         }
 
         if ((dequeRet != FsmStatus::FSM_SUCCESS) || (mbuf == nullptr)) {
-            DGW_LOG_ERROR("DeQueue from queueId[%u] in device[%u] failed, ret:[%d]",
-                GetQueueId(), deviceId_, static_cast<int32_t>(dequeRet));
+            DGW_LOG_ERROR(
+                "DeQueue from queueId[%u] in device[%u] failed, ret:[%d]", GetQueueId(), deviceId_,
+                static_cast<int32_t>(dequeRet));
             return FsmStatus::FSM_FAILED;
         }
-        (void) halMbufFree(PtrToPtr<void, Mbuf>(mbuf));
+        (void)halMbufFree(PtrToPtr<void, Mbuf>(mbuf));
     } while (true);
 
     for (auto sendDataObj : sendDataObjs_) {
         for (auto recvEntity : sendDataObj->GetRecvEntities()) {
-            auto &recvObjs = recvEntity->GetRecvDataObjs();
+            auto& recvObjs = recvEntity->GetRecvDataObjs();
             for (auto iter = recvObjs.begin(); iter != recvObjs.end();) {
                 if (Equal((*iter)->GetSendEntity())) {
                     auto tempIter = iter;
@@ -389,16 +384,14 @@ FsmStatus SimpleEntity::ClearQueue()
     return FsmStatus::FSM_SUCCESS;
 }
 
-bool SimpleEntity::IsDataPeeked() const
-{
-    return (curState_ == FsmState::FSM_PEEK_STATE);
-}
+bool SimpleEntity::IsDataPeeked() const { return (curState_ == FsmState::FSM_PEEK_STATE); }
 
 FsmStatus SimpleEntity::Uninit()
 {
-    DGW_LOG_RUN_INFO("[%s] has dequeued[%lu], enqueued[%lu].", entityDesc_.c_str(), statInfo_.dequeueSuccTimes,
+    DGW_LOG_RUN_INFO(
+        "[%s] has dequeued[%lu], enqueued[%lu].", entityDesc_.c_str(), statInfo_.dequeueSuccTimes,
         statInfo_.enqueueSuccTimes);
     return FsmStatus::FSM_SUCCESS;
 }
 
-}
+} // namespace dgw

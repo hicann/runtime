@@ -37,19 +37,19 @@ enum class ThreadStatus : uint32_t {
 
 class RouterServer {
 public:
-    static RouterServer &GetInstance();
+    static RouterServer& GetInstance();
 
     /**
      * Init bqs server, including init easycomm server
      * @return BQS_STATUS_OK:success other:failed
      */
-    BqsStatus InitRouterServer(const InitQsParams &params);
+    BqsStatus InitRouterServer(const InitQsParams& params);
 
     /**
      * Bqs server handle BqsMsg, get/getall deal now, bind/unbind send to work thread to deal
      * @return NA
      */
-    void HandleBqsMsg(event_info &info);
+    void HandleBqsMsg(event_info& info);
 
     /**
      * Bqs server enqueue bind msg request process
@@ -83,13 +83,13 @@ private:
 
     ~RouterServer();
 
-    RouterServer(const RouterServer &) = delete;
+    RouterServer(const RouterServer&) = delete;
 
-    RouterServer(RouterServer &&) = delete;
+    RouterServer(RouterServer&&) = delete;
 
-    RouterServer &operator=(const RouterServer &) = delete;
+    RouterServer& operator=(const RouterServer&) = delete;
 
-    RouterServer &operator=(RouterServer &&) = delete;
+    RouterServer& operator=(RouterServer&&) = delete;
     /**
      * Bqs server wait work thread to process msg
      * @return NA
@@ -107,12 +107,12 @@ private:
      *                                                       qsRouterQueryPtr_ qsRouteListPtr_)
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ParseRelationInfo(Mbuf **mbufPtr);
+    BqsStatus ParseRelationInfo(Mbuf** mbufPtr);
     /**
      * Bqs server bind query info from message
      * @return NA
      */
-    void ParseGetBindNumMsg(const event_info &info);
+    void ParseGetBindNumMsg(const event_info& info);
     /**
      * Bqs server get bind message from mbuff
      * @return NA
@@ -122,13 +122,13 @@ private:
      * Bqs server get bind message by single queueid processing function
      * @return Number of query results
      */
-    void GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t &queryType);
+    void GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t& queryType);
 
     /**
      * Bqs server get bind message by double queueid processing function
      * @return NA
      */
-    void GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t &queryType);
+    void GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t& queryType);
 
     void GetAllAbnormalBind();
 
@@ -136,7 +136,7 @@ private:
      * Bqs server prcess get bind message and put data in buff
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ProcessGetBindMsg(const uint32_t &queryType, const EntityInfo& src, const EntityInfo& dst);
+    BqsStatus ProcessGetBindMsg(const uint32_t& queryType, const EntityInfo& src, const EntityInfo& dst);
 
     /**
      * Lisening bind/unbind/query message from aicpu-sd or acl
@@ -148,7 +148,7 @@ private:
      * process bind initial
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ProcessBindInit(const event_info &info);
+    BqsStatus ProcessBindInit(const event_info& info);
 
     /**
      * process bind queue event
@@ -172,13 +172,13 @@ private:
      * process event info
      * @return NA
      */
-    void PreProcessEvent(const event_info &info);
+    void PreProcessEvent(const event_info& info);
 
     /**
      * process bind/unbind/query event
      * @return NA
      */
-    void ProcessQueueRelationEvent(Mbuf *mbuf);
+    void ProcessQueueRelationEvent(Mbuf* mbuf);
 
     /**
      * create queue for communicate between process
@@ -196,7 +196,7 @@ private:
      * Construct a response message.
      * @return NA
      */
-    void FillRspContent(QsProcMsgRsp &retRsp, const int32_t resultCode);
+    void FillRspContent(QsProcMsgRsp& retRsp, const int32_t resultCode);
 
     /**
      * subscribe buf event
@@ -210,7 +210,7 @@ private:
      */
     BqsStatus WaitSyncMsgProc();
 
-    void FillRoutes(const EntityInfo &src, const EntityInfo &dst, const BindRelationStatus status);
+    void FillRoutes(const EntityInfo& src, const EntityInfo& dst, const BindRelationStatus status);
 
     void ProcessConfigEvent(const QsOperType operType);
 
@@ -222,43 +222,45 @@ private:
 
     EntityInfo CreateBasicEntityInfo(const uint32_t id, const dgw::EntityType eType) const;
 
-    void SearchRelation(const MapEnitityInfoToInfoSet &relationMap, const EntityInfo& entityInfo,
-        const BindRelationStatus status, bool bySrc);
+    void SearchRelation(
+        const MapEnitityInfoToInfoSet& relationMap, const EntityInfo& entityInfo, const BindRelationStatus status,
+        bool bySrc);
 
-    bool FindRelation(const MapEnitityInfoToInfoSet &relationMap, const EntityInfo& srcInfo, const EntityInfo& dstInfo) const;
+    bool FindRelation(
+        const MapEnitityInfoToInfoSet& relationMap, const EntityInfo& srcInfo, const EntityInfo& dstInfo) const;
 
-    void TransRouteWithEntityInfo(const EntityInfo& srcInfo, const EntityInfo& dstInfo, const int32_t status,
-        QueueRoute &routeInfo) const;
+    void TransRouteWithEntityInfo(
+        const EntityInfo& srcInfo, const EntityInfo& dstInfo, const int32_t status, QueueRoute& routeInfo) const;
 
 private:
     std::condition_variable cv_; // condition var to wait work thread process
     std::mutex mutex_;
-    bool processing_;  // work thread is processing the bind request
-    bool done_;        // work thread has finished the bind request
+    bool processing_;            // work thread is processing the bind request
+    bool done_;                  // work thread has finished the bind request
     bool processingExtra_;
     bool doneExtra_;
 
-    std::thread monitorQsEvent_; // listening bind/unbind/query event from aicpusd or app process
-    uint32_t bindQueueGroupId_; // for recieving and sending bind/unbind/query event
-    bool running_; // running flag
-    uint32_t deviceId_; // device ID
+    std::thread monitorQsEvent_;                  // listening bind/unbind/query event from aicpusd or app process
+    uint32_t bindQueueGroupId_;                   // for recieving and sending bind/unbind/query event
+    bool running_;                                // running flag
+    uint32_t deviceId_;                           // device ID
 
-    int32_t srcPid_; // Pid of source process for event commucation
+    int32_t srcPid_;                              // Pid of source process for event commucation
     uint16_t srcVersion_;
-    std::atomic<int32_t> srcGroupId_; // groupId of of source process for event commucation
-    std::atomic<uint32_t> pipelineQueueId_; // queue for bind unbind query message data
-    uint32_t subEventId_; // type of event
+    std::atomic<int32_t> srcGroupId_;             // groupId of of source process for event commucation
+    std::atomic<uint32_t> pipelineQueueId_;       // queue for bind unbind query message data
+    uint32_t subEventId_;                         // type of event
     std::vector<QueueRoute> queueRouteQueryList_; // bind relation and status list for query event
-    QueueSchedulerRunMode deployMode_; // 0:single process 1:allow multiple process 2:thread mode
-    int32_t retCode_; // bind unbind result
-    bool attachedFlag_; // current process need to attach group or not
-    bool isAicpuEvent_; // event from aicpu
-    QueueRoute *qsRouteListPtr_; // bind unbind query msg pointer
-    QsRouteHead *qsRouterHeadPtr_; // bind unbind query msg header pointer
-    QueueRouteQuery *qsRouterQueryPtr_; // query msg pointer
-    event_sync_msg *drvSyncMsg_; // event head from acl request by calling sync event interface
-    uint64_t aicpuRspHead_; // event head from aicpu
-    std::string qsInitGroupName_; // group name send from parameters
+    QueueSchedulerRunMode deployMode_;            // 0:single process 1:allow multiple process 2:thread mode
+    int32_t retCode_;                             // bind unbind result
+    bool attachedFlag_;                           // current process need to attach group or not
+    bool isAicpuEvent_;                           // event from aicpu
+    QueueRoute* qsRouteListPtr_;                  // bind unbind query msg pointer
+    QsRouteHead* qsRouterHeadPtr_;                // bind unbind query msg header pointer
+    QueueRouteQuery* qsRouterQueryPtr_;           // query msg pointer
+    event_sync_msg* drvSyncMsg_;                  // event head from acl request by calling sync event interface
+    uint64_t aicpuRspHead_;                       // event head from aicpu
+    std::string qsInitGroupName_;                 // group name send from parameters
     uint32_t f2nfGroupId_;
     uint64_t schedPolicy_;
     // config info operator
@@ -269,7 +271,7 @@ private:
     bool readyToHandleMsg_;
     std::mutex manageThreadMutex_;
     std::condition_variable manageThreadCv_; // condition var to wait manage thread to ready
-    ThreadStatus manageThreadStatus_;  // 0:uninit, 1:success, 2:failed
+    ThreadStatus manageThreadStatus_;        // 0:uninit, 1:success, 2:failed
     bool needAttachGroup_;
     bool compatMsg_;
 };

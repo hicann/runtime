@@ -19,16 +19,16 @@ public:
     explicit IdleState() noexcept = default;
     virtual ~IdleState() override = default;
 
-    FsmStatus PreProcess(Entity &entity) override;
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
-    FsmStatus PostProcess(Entity &entity) override;
-    FsmStatus ProcessWaitingData(Entity &entity) const;
+    FsmStatus PreProcess(Entity& entity) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
+    FsmStatus PostProcess(Entity& entity) override;
+    FsmStatus ProcessWaitingData(Entity& entity) const;
 
 private:
-    IdleState(const IdleState &) = delete;
-    IdleState(const IdleState &&) = delete;
-    IdleState &operator = (const IdleState &) = delete;
-    IdleState &operator = (IdleState &&) = delete;
+    IdleState(const IdleState&) = delete;
+    IdleState(const IdleState&&) = delete;
+    IdleState& operator=(const IdleState&) = delete;
+    IdleState& operator=(IdleState&&) = delete;
 };
 
 class GroupIdleState : public IdleState {
@@ -36,7 +36,7 @@ public:
     explicit GroupIdleState() noexcept = default;
     ~GroupIdleState() override = default;
 
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
 };
-}
+} // namespace dgw
 #endif

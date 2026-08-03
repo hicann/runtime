@@ -19,12 +19,12 @@ namespace {
 uint32_t g_dequeueFailtimes = 0U;
 constexpr uint32_t FAIL_PRINT_THRESHOLD = 10U;
 constexpr uint32_t DYNAMIC_SCHEDULE_THRESHOLD = 100U;
-}  // namespace
+} // namespace
 
-FsmStatus IdleState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus IdleState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
-    DGW_LOG_INFO("[FSM] Entity qid:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity qid:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_IDLE_STATE).c_str(), entity.ToString().c_str());
     (void)msg;
     entity.ResetScheduleCount();
@@ -32,15 +32,17 @@ FsmStatus IdleState::ProcessMessage(Entity &entity, const InnerMessage &msg)
         DGW_LOG_INFO("Enitity[%s] ProcessWaitingData", entity.ToString().c_str());
         const auto processRet = ProcessWaitingData(entity);
         if ((processRet != FsmStatus::FSM_SUCCESS) || (entity.GetSendDataObjs().size() > DYNAMIC_SCHEDULE_THRESHOLD)) {
-            DGW_LOG_WARN("processRet is %d, cached data size is %zu",
-                static_cast<int32_t>(processRet), entity.GetSendDataObjs().size());
+            DGW_LOG_WARN(
+                "processRet is %d, cached data size is %zu", static_cast<int32_t>(processRet),
+                entity.GetSendDataObjs().size());
             return processRet;
         }
     }
 
     int32_t srcStatus = static_cast<int32_t>(QUEUE_NORMAL);
-    const auto ret = halQueueGetStatus(entity.GetDeviceId(), entity.GetQueueId(),
-        QUERY_QUEUE_STATUS, static_cast<uint32_t>(sizeof(uint32_t)), &srcStatus);
+    const auto ret = halQueueGetStatus(
+        entity.GetDeviceId(), entity.GetQueueId(), QUERY_QUEUE_STATUS, static_cast<uint32_t>(sizeof(uint32_t)),
+        &srcStatus);
     if (ret != DRV_ERROR_NONE) {
         g_dequeueFailtimes++;
         if ((ret == DRV_ERROR_NOT_EXIST) ||
@@ -48,7 +50,8 @@ FsmStatus IdleState::ProcessMessage(Entity &entity, const InnerMessage &msg)
             return entity.ChangeState(FsmState::FSM_ERROR_STATE);
         } else {
             if (g_dequeueFailtimes < FAIL_PRINT_THRESHOLD) {
-                DGW_LOG_ERROR("halQueueGetStatus failed, queueId=[%u], ret=[%d].", entity.GetQueueId(),
+                DGW_LOG_ERROR(
+                    "halQueueGetStatus failed, queueId=[%u], ret=[%d].", entity.GetQueueId(),
                     static_cast<int32_t>(ret));
             }
 
@@ -64,20 +67,17 @@ FsmStatus IdleState::ProcessMessage(Entity &entity, const InnerMessage &msg)
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus IdleState::PostProcess(Entity &entity)
-{
-    return entity.ChangeState(FsmState::FSM_PEEK_STATE);
-}
+FsmStatus IdleState::PostProcess(Entity& entity) { return entity.ChangeState(FsmState::FSM_PEEK_STATE); }
 
-FsmStatus IdleState::PreProcess(Entity &entity)
+FsmStatus IdleState::PreProcess(Entity& entity)
 {
     (void)entity;
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus IdleState::ProcessWaitingData(Entity &entity) const
+FsmStatus IdleState::ProcessWaitingData(Entity& entity) const
 {
-    auto &sendDataObjs = entity.GetSendDataObjs();
+    auto& sendDataObjs = entity.GetSendDataObjs();
     auto sendDataCount = sendDataObjs.size();
     DGW_LOG_INFO("Entity[%s] current send objects is %zu", entity.ToString().c_str(), sendDataCount);
     do {
@@ -85,7 +85,7 @@ FsmStatus IdleState::ProcessWaitingData(Entity &entity) const
         if (sendDataCount == 0U) {
             break;
         }
-        auto &sendDataObj = sendDataObjs.front();
+        auto& sendDataObj = sendDataObjs.front();
         // process sendDataObj, when data bonding to this obj was sent completely,
         // the sendDataObj will be removed from sendDataObjs, then sendDataObjs's size will decrease
         // and we should process the sendDataObjs following
@@ -95,8 +95,8 @@ FsmStatus IdleState::ProcessWaitingData(Entity &entity) const
                 processableRecvEntities.emplace_back(elem);
             }
         }
-        DGW_LOG_INFO("Entity[%s] has %zu recvEntity to process", entity.ToString().c_str(),
-            processableRecvEntities.size());
+        DGW_LOG_INFO(
+            "Entity[%s] has %zu recvEntity to process", entity.ToString().c_str(), processableRecvEntities.size());
         InnerMessage msg;
         msg.msgType = InnerMsgType::INNER_MSG_PUSH;
         for (auto recvEntityPtr : processableRecvEntities) {
@@ -111,7 +111,7 @@ FsmStatus IdleState::ProcessWaitingData(Entity &entity) const
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus GroupIdleState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus GroupIdleState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     (void)msg;
     entity.ResetScheduleCount();
@@ -119,8 +119,9 @@ FsmStatus GroupIdleState::ProcessMessage(Entity &entity, const InnerMessage &msg
         DGW_LOG_INFO("Enitity[%s] ProcessWaitingData", entity.ToString().c_str());
         const auto processRet = ProcessWaitingData(entity);
         if ((processRet != FsmStatus::FSM_SUCCESS) || (entity.GetSendDataObjs().size() > DYNAMIC_SCHEDULE_THRESHOLD)) {
-            DGW_LOG_WARN("processRet is %d, cached data size is %zu",
-                static_cast<int32_t>(processRet), entity.GetSendDataObjs().size());
+            DGW_LOG_WARN(
+                "processRet is %d, cached data size is %zu", static_cast<int32_t>(processRet),
+                entity.GetSendDataObjs().size());
             return processRet;
         }
     }
@@ -130,4 +131,4 @@ FsmStatus GroupIdleState::ProcessMessage(Entity &entity, const InnerMessage &msg
 REGISTER_STATE(FSM_IDLE_STATE, ENTITY_QUEUE, IdleState);
 REGISTER_STATE(FSM_IDLE_STATE, ENTITY_TAG, IdleState);
 REGISTER_STATE(FSM_IDLE_STATE, ENTITY_GROUP, GroupIdleState);
-}  // namespace dgw
+} // namespace dgw

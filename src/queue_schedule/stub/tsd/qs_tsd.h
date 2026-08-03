@@ -16,20 +16,20 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 /**
-* @ingroup  Tsdaemon.
-*
-* Identifies that HCCP or Compute_process is waiting for
-* Tsdaemon to issue a shutdown command.
-*/
+ * @ingroup  Tsdaemon.
+ *
+ * Identifies that HCCP or Compute_process is waiting for
+ * Tsdaemon to issue a shutdown command.
+ */
 typedef enum {
-    TSD_HCCP = 0,    /**< HCCP*/
-    TSD_COMPUTE = 1, /**< Compute_process*/
+    TSD_HCCP = 0,           /**< HCCP*/
+    TSD_COMPUTE = 1,        /**< Compute_process*/
     TSD_CUSTOM_COMPUTE = 2, /**< Custom Compute_process*/
     TSD_QS = 3,
-    TSD_WAITTYPE_MAX /**< Max*/
+    TSD_WAITTYPE_MAX        /**< Max*/
 } TsdWaitType;
 
 typedef enum {
@@ -56,20 +56,20 @@ typedef enum {
 
 #define MAX_EVENT_PRI_MSG_LENGTH (96U)
 struct TsdSubEventInfo {
-    uint32_t deviceId;                    // device id
-    uint32_t srcPid;                      // send process pid
-    uint32_t dstPid;                      // receive process pid
-    uint32_t hostPid;                     // host pid
-    uint8_t  vfId;                        // vf id
-    uint8_t  rsv;                         // reserve
-    uint16_t reqId;                       // req Id
-    uint32_t procType;                    // process type
-    uint32_t eventType;                   // event type
-    uint32_t startProcPid;                // startup process pid
+    uint32_t deviceId;                     // device id
+    uint32_t srcPid;                       // send process pid
+    uint32_t dstPid;                       // receive process pid
+    uint32_t hostPid;                      // host pid
+    uint8_t vfId;                          // vf id
+    uint8_t rsv;                           // reserve
+    uint16_t reqId;                        // req Id
+    uint32_t procType;                     // process type
+    uint32_t eventType;                    // event type
+    uint32_t startProcPid;                 // startup process pid
     char priMsg[MAX_EVENT_PRI_MSG_LENGTH]; // so name
 };
 
-typedef int32_t (* SubProcEventCallBackFuncInfo)(const struct TsdSubEventInfo * const msg);
+typedef int32_t (*SubProcEventCallBackFuncInfo)(const struct TsdSubEventInfo* const msg);
 
 struct SubProcEventCallBackInfo {
     uint32_t eventType;
@@ -77,71 +77,70 @@ struct SubProcEventCallBackInfo {
 };
 
 /**
-* @ingroup TsdWaitForShutdown
-* @brief Wait for the TSD process to issue the shutdown command
-*
-* @par Function
-* Wait for the TSD process to issue the shutdown command
-*
-* @param NA
-* @param deviceId [IN] type #unsigned int. Physical device ID
-* @param waitType [IN] type #TsdWaitType. HCCP or CP
-* @param hostPid [IN] type #unsigned int. Host pid
-* @param vfId [IN] type #unsigned int. Virtual force Id
-* @retval 0 Success
-* @retval OtherValues 0 Fail
-*
-* @par Dependency
-* @li libtsdppc.so: Library to which the interface belongs.
-* @li tsd.h: Header file where the interface declaration is located.
-*/
-int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
-                           const uint32_t hostPid, const uint32_t vfId);
+ * @ingroup TsdWaitForShutdown
+ * @brief Wait for the TSD process to issue the shutdown command
+ *
+ * @par Function
+ * Wait for the TSD process to issue the shutdown command
+ *
+ * @param NA
+ * @param deviceId [IN] type #unsigned int. Physical device ID
+ * @param waitType [IN] type #TsdWaitType. HCCP or CP
+ * @param hostPid [IN] type #unsigned int. Host pid
+ * @param vfId [IN] type #unsigned int. Virtual force Id
+ * @retval 0 Success
+ * @retval OtherValues 0 Fail
+ *
+ * @par Dependency
+ * @li libtsdppc.so: Library to which the interface belongs.
+ * @li tsd.h: Header file where the interface declaration is located.
+ */
+int32_t TsdWaitForShutdown(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId);
 
-int32_t TsdReportStartOrStopErrCode(const uint32_t deviceId, const TsdWaitType waitType,
-                                    const uint32_t hostPid, const uint32_t vfId,
-                                    const char *errCode, const uint32_t errLen);
-
-/**
-* @ingroup tsd_event_client
-* @brief reg event call back func to tsdclient
-* @param [in] SubProcEventCallBackInfo : event id, callbackfunc
-* @return TSD_OK: success, other: error code
-*/
-int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo *regInfo);
+int32_t TsdReportStartOrStopErrCode(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const char* errCode, const uint32_t errLen);
 
 /**
-* @ingroup tsd_event_client
-* @brief unreg event call back func to tsdclient
-* @param [in]  : event id
-* @return void
-*/
+ * @ingroup tsd_event_client
+ * @brief reg event call back func to tsdclient
+ * @param [in] SubProcEventCallBackInfo : event id, callbackfunc
+ * @return TSD_OK: success, other: error code
+ */
+int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo* regInfo);
+
+/**
+ * @ingroup tsd_event_client
+ * @brief unreg event call back func to tsdclient
+ * @param [in]  : event id
+ * @return void
+ */
 void UnRegEventMsgCallBackFunc(const uint32_t eventType);
 
 /**
-* @ingroup tsd_event_client
-* @brief reg event call back func to tsdclient
-* @param [in] SubProcEventCallBackInfo : event id, callbackfunc
-* @return TSD_OK: success, other: error code
-*/
+ * @ingroup tsd_event_client
+ * @brief reg event call back func to tsdclient
+ * @param [in] SubProcEventCallBackInfo : event id, callbackfunc
+ * @return TSD_OK: success, other: error code
+ */
 
 /**
-* @ingroup tsd_event_client
-* @brief sub module send start success message to tsd
-* @param [in] deviceId : device id
-* @param [in] waitType : process type
-* @param [in] hostPid :  host pid
-* @param [in] vfId : vf id
-* @param [in] eventType : eventType
-* @return TSD_OK: success, other: error code
-*/
-int32_t SubModuleProcessResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                                 const uint32_t hostPid, const uint32_t vfId,
-                                 const uint32_t eventType);
+ * @ingroup tsd_event_client
+ * @brief sub module send start success message to tsd
+ * @param [in] deviceId : device id
+ * @param [in] waitType : process type
+ * @param [in] hostPid :  host pid
+ * @param [in] vfId : vf id
+ * @param [in] eventType : eventType
+ * @return TSD_OK: success, other: error code
+ */
+int32_t SubModuleProcessResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const uint32_t eventType);
 
-int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType,
-                   const uint32_t hostPid, const uint32_t vfId);
+int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
-#endif  // INC_TDT_QS_TSD_H_
+#endif // __cplusplus
+#endif // INC_TDT_QS_TSD_H_

@@ -25,7 +25,7 @@ constexpr uint32_t MAX_PARAM_NUM = 12U;
 const std::string ENV_NAME_REG_ASCEND_MONITOR = "REGISTER_TO_ASCENDMONITOR";
 } // namespace
 
-void SubModuleInterface::SetTsdEventKey(const struct TsdSubEventInfo * const eventInfo)
+void SubModuleInterface::SetTsdEventKey(const struct TsdSubEventInfo* const eventInfo)
 {
     tsdEventKey_.deviceId = eventInfo->deviceId;
     tsdEventKey_.hostPid = eventInfo->hostPid;
@@ -35,8 +35,8 @@ void SubModuleInterface::SetTsdEventKey(const struct TsdSubEventInfo * const eve
 std::string SubModuleInterface::BuildArgsFilePath() const
 {
     const uint32_t curPid = static_cast<uint32_t>(getpid());
-    const std::string fileName = "queue_schedule_start_param_" + std::to_string(tsdEventKey_.deviceId) +
-                                 "_" + std::to_string(tsdEventKey_.vfId) + "_" + std::to_string(curPid);
+    const std::string fileName = "queue_schedule_start_param_" + std::to_string(tsdEventKey_.deviceId) + "_" +
+                                 std::to_string(tsdEventKey_.vfId) + "_" + std::to_string(curPid);
     std::string pathFreFix = "/home/HwHiAiUser/";
     std::string inputStr;
     GetEnvVal(ENV_NAME_REG_ASCEND_MONITOR, inputStr);
@@ -47,7 +47,7 @@ std::string SubModuleInterface::BuildArgsFilePath() const
     return pathFreFix.append(fileName);
 }
 
-void SubModuleInterface::DeleteArgsFile(const std::string &argsFilePath)
+void SubModuleInterface::DeleteArgsFile(const std::string& argsFilePath)
 {
     const int32_t ret = remove(argsFilePath.c_str());
     if (ret != 0) {
@@ -58,10 +58,10 @@ void SubModuleInterface::DeleteArgsFile(const std::string &argsFilePath)
     BQS_LOG_RUN_INFO("Remove file[%s] success", argsFilePath.c_str());
 }
 
-bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParams) const
+bool SubModuleInterface::ParseArgsFromFile(ArgsParser& startParams) const
 {
     const std::string argsFilePath = BuildArgsFilePath();
-    ScopeGuard fileDelGuard([&argsFilePath] () { DeleteArgsFile(argsFilePath); });
+    ScopeGuard fileDelGuard([&argsFilePath]() { DeleteArgsFile(argsFilePath); });
 
     std::ifstream argsFile;
     argsFile.open(argsFilePath, std::ifstream::in);
@@ -69,7 +69,7 @@ bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParams) const
         BQS_LOG_ERROR("Start file[%s] open failed, reason=%s", argsFilePath.c_str(), strerror(errno));
         return false;
     }
-    ScopeGuard fileCloseGuard([&argsFile] () { argsFile.close(); });
+    ScopeGuard fileCloseGuard([&argsFile]() { argsFile.close(); });
 
     uint32_t item = 0U;
     std::vector<std::string> fileLines;
@@ -82,7 +82,7 @@ bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParams) const
     return startParams.ParseArgs(fileLines);
 }
 
-bool SubModuleInterface::QsSubModuleAttachGroup(const ArgsParser &startParams)
+bool SubModuleInterface::QsSubModuleAttachGroup(const ArgsParser& startParams)
 {
     BQS_LOG_INFO("Begin to attach group.");
     if (!startParams.GetWithGroupName()) {
@@ -103,7 +103,7 @@ bool SubModuleInterface::QsSubModuleAttachGroup(const ArgsParser &startParams)
     }
     // if run context is host, halGrpAttach time out cannot be 0
     const int32_t halTimeOut = (bqs::GetRunContext() == bqs::RunContext::HOST) ? 3000 : -1;
-    for (const auto &grpName : groupNameVec) {
+    for (const auto& grpName : groupNameVec) {
         const auto drvRet = halGrpAttach(grpName.c_str(), halTimeOut);
         if (drvRet != DRV_ERROR_NONE) {
             BQS_LOG_ERROR("halGrpAttach group[%s] failed. ret[%d]", grpName.c_str(), drvRet);
@@ -114,7 +114,7 @@ bool SubModuleInterface::QsSubModuleAttachGroup(const ArgsParser &startParams)
     return true;
 }
 
-void SubModuleInterface::QsSubModuleInitQsInitParams(InitQsParams &initQsParams, const ArgsParser &startParams)
+void SubModuleInterface::QsSubModuleInitQsInitParams(InitQsParams& initQsParams, const ArgsParser& startParams)
 {
     initQsParams.deviceId = startParams.GetDeviceId();
     initQsParams.enqueGroupId = EventGroupId::ENQUEUE_GROUP_ID;
@@ -134,8 +134,7 @@ void SubModuleInterface::QsSubModuleInitQsInitParams(InitQsParams &initQsParams,
 
 int32_t SubModuleInterface::SendSubModuleRsponse(const uint32_t eventType) const
 {
-    return SubModuleProcessResponse(tsdEventKey_.deviceId, TSD_QS, tsdEventKey_.hostPid,
-                                    tsdEventKey_.vfId, eventType);
+    return SubModuleProcessResponse(tsdEventKey_.deviceId, TSD_QS, tsdEventKey_.hostPid, tsdEventKey_.vfId, eventType);
 }
 
 void SubModuleInterface::ReportErrMsgToTsd(const int32_t errCode) const
@@ -153,12 +152,12 @@ void SubModuleInterface::ReportErrMsgToTsd(const int32_t errCode) const
         }
     }
     BQS_LOG_RUN_WARN("ReportErrorMsg msg is %s.", errStr.c_str());
-    (void) TsdReportStartOrStopErrCode(tsdEventKey_.deviceId, TSD_QS, tsdEventKey_.hostPid,
-                                       tsdEventKey_.vfId, errStr.c_str(),
-                                       static_cast<uint32_t>(errStr.size()));
+    (void)TsdReportStartOrStopErrCode(
+        tsdEventKey_.deviceId, TSD_QS, tsdEventKey_.hostPid, tsdEventKey_.vfId, errStr.c_str(),
+        static_cast<uint32_t>(errStr.size()));
 }
 
-int32_t SubModuleInterface::StartQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo)
+int32_t SubModuleInterface::StartQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo)
 {
     BQS_LOG_RUN_INFO("enter queue schedule sub module start process.");
     // set event key
@@ -201,7 +200,7 @@ int32_t SubModuleInterface::StartQueueScheduleModule(const struct TsdSubEventInf
     return rspRet;
 }
 
-int32_t SubModuleInterface::StopQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo)
+int32_t SubModuleInterface::StopQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo)
 {
     (void)eventInfo;
     BQS_LOG_RUN_INFO("enter queue schedule sub module stop process.");
@@ -227,12 +226,12 @@ int32_t SubModuleInterface::StopQueueScheduleModule(const struct TsdSubEventInfo
 } // namespace bqs
 
 extern "C" {
-int32_t StartQueueScheduleModule(const struct TsdSubEventInfo *const eventInfo)
+int32_t StartQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo)
 {
     return bqs::SubModuleInterface::GetInstance().StartQueueScheduleModule(eventInfo);
 }
 
-int32_t StopQueueScheduleModule(const struct TsdSubEventInfo *const eventInfo)
+int32_t StopQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo)
 {
     return bqs::SubModuleInterface::GetInstance().StopQueueScheduleModule(eventInfo);
 }

@@ -29,20 +29,20 @@ public:
     BqsMsprofApiAdapter();
     ~BqsMsprofApiAdapter() = default;
 
-    static BqsMsprofApiAdapter &GetInstance();
-    ProfStatus MsprofInit(uint32_t dataType, void *data, uint32_t dataLen) const;
+    static BqsMsprofApiAdapter& GetInstance();
+    ProfStatus MsprofInit(uint32_t dataType, void* data, uint32_t dataLen) const;
     ProfStatus MsprofFinalize() const;
-    ProfStatus MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName) const;
+    ProfStatus MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName) const;
     ProfStatus MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) const;
-    ProfStatus MsprofReportApi(uint32_t agingFlag, const MsprofApi *api) const;
-    ProfStatus MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event) const;
+    ProfStatus MsprofReportApi(uint32_t agingFlag, const MsprofApi* api) const;
+    ProfStatus MsprofReportEvent(uint32_t agingFlag, const MsprofEvent* event) const;
     uint64_t MsprofSysCycleTime() const;
 
 private:
-    BqsMsprofApiAdapter(const BqsMsprofApiAdapter &) = delete;
-    BqsMsprofApiAdapter &operator=(const BqsMsprofApiAdapter &) = delete;
-    BqsMsprofApiAdapter(BqsMsprofApiAdapter &&) = delete;
-    BqsMsprofApiAdapter &operator=(BqsMsprofApiAdapter &&) = delete;
+    BqsMsprofApiAdapter(const BqsMsprofApiAdapter&) = delete;
+    BqsMsprofApiAdapter& operator=(const BqsMsprofApiAdapter&) = delete;
+    BqsMsprofApiAdapter(BqsMsprofApiAdapter&&) = delete;
+    BqsMsprofApiAdapter& operator=(BqsMsprofApiAdapter&&) = delete;
 };
 } // namespace bqs
 

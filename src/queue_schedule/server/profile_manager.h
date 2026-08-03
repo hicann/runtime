@@ -63,8 +63,8 @@ struct SchedInfoTrack {
 
 // recv request info track, only called in RECEIVE_REQUEST_PROCESSED thread
 struct EnvelopeProbeTrack {
-    uint64_t schedTimes;  // event scheduled times
-    uint64_t schedDelay;  // event scheduled delay
+    uint64_t schedTimes; // event scheduled times
+    uint64_t schedDelay; // event scheduled delay
     uint64_t hcclImprobeNum;
     uint64_t totalHcclImprobeCost;
     uint64_t maxHcclImprobeCost;
@@ -81,8 +81,8 @@ struct EnvelopeProbeTrack {
 
 // test some info track, called in RECEIVE_COMPLETION or SEND_COMPLETION thread
 struct TestSomeInfoTrack {
-    uint64_t schedTimes;  // event scheduled times
-    uint64_t schedDelay;  // event scheduled delay
+    uint64_t schedTimes; // event scheduled times
+    uint64_t schedDelay; // event scheduled delay
     uint64_t hcclTestSomeNum;
     uint64_t totalHcclTestSomeCost;
     uint64_t maxHcclTestSomeCost;
@@ -99,15 +99,15 @@ struct TestSomeInfoTrack {
 
 class ProfileManager {
 public:
-    static ProfileManager &GetInstance(const uint32_t resIndex = 0U);
+    static ProfileManager& GetInstance(const uint32_t resIndex = 0U);
 
-    ProfileManager(const ProfileManager &) = delete;
+    ProfileManager(const ProfileManager&) = delete;
 
-    ProfileManager(ProfileManager &&) = delete;
+    ProfileManager(ProfileManager&&) = delete;
 
-    ProfileManager &operator=(const ProfileManager &) = delete;
+    ProfileManager& operator=(const ProfileManager&) = delete;
 
-    ProfileManager &operator=(ProfileManager &&) = delete;
+    ProfileManager& operator=(ProfileManager&&) = delete;
 
     inline uint64_t GetCpuTick() const
     {
@@ -133,10 +133,7 @@ public:
         return freq;
     };
 
-    inline float64_t GetTimeCost(const uint64_t tick) const
-    {
-        return static_cast<float64_t>(tick) / oneUsForTick_;
-    }
+    inline float64_t GetTimeCost(const uint64_t tick) const { return static_cast<float64_t>(tick) / oneUsForTick_; }
 
     void InitProfileManager(const uint32_t deviceId);
 
@@ -292,14 +289,14 @@ private:
 
     ~ProfileManager() = default;
 
-    inline void GetAsmSysFreq(uint64_t &freq) const
+    inline void GetAsmSysFreq(uint64_t& freq) const
     {
 #ifndef RUN_ON_X86
         asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(freq) :);
 #endif
     }
 
-    inline void GetAsmCpuTick(uint64_t &tick) const
+    inline void GetAsmCpuTick(uint64_t& tick) const
     {
 #ifndef RUN_ON_X86
         asm volatile("mrs %0, CNTVCT_EL0" : "=r"(tick) :);
@@ -326,7 +323,7 @@ private:
     TestSomeInfoTrack recvCompEventTrack_;
     // send completion info track
     TestSomeInfoTrack sendCompEventTrack_;
-    //need strict profiling threshold
+    // need strict profiling threshold
     bool aicpuFeatureUseErrorLogThreshold_;
     // recv request event count
     std::atomic<uint64_t> recvReqEventCount_;
@@ -337,5 +334,5 @@ private:
     // enqueue event count
     std::atomic<uint64_t> enqueueEventCount_;
 };
-}      // namespace bqs
-#endif  // PROFILE_MANAGER_H
+} // namespace bqs
+#endif // PROFILE_MANAGER_H

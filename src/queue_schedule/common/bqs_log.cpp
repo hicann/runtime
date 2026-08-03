@@ -18,25 +18,25 @@
 #include "bqs_util.h"
 
 namespace bqs {
-constexpr const char *NPU_LOG_SO_NAME = "/runtime/lib64/libunified_dlog.so";
-constexpr const char *ALOG_SO_NAME = "/runtime/lib64/libascendalog.so";
+constexpr const char* NPU_LOG_SO_NAME = "/runtime/lib64/libunified_dlog.so";
+constexpr const char* ALOG_SO_NAME = "/runtime/lib64/libascendalog.so";
 constexpr const uint32_t LOG_BUFFER_MAX = 1024U;
-void *hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_MAXID)];
-using CheckLogLevelFunc = int32_t (int32_t, int32_t);
-using DlogRecordFunc = void (int32_t, int32_t, const char *, ...);
-using DlogSetLevelFunc = int32_t (int32_t, int32_t, int32_t);
-using DlogSetAttrFunc = int32_t (LogAttr);
+void* hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_MAXID)];
+using CheckLogLevelFunc = int32_t(int32_t, int32_t);
+using DlogRecordFunc = void(int32_t, int32_t, const char*, ...);
+using DlogSetLevelFunc = int32_t(int32_t, int32_t, int32_t);
+using DlogSetAttrFunc = int32_t(LogAttr);
 
-HostQsLog &HostQsLog::GetInstance()
+HostQsLog& HostQsLog::GetInstance()
 {
     static HostQsLog instance;
     return instance;
 }
 
-void *HostQsLog::OpenLogSoOne(std::string ascendAicpuPath, const char *soName) const
+void* HostQsLog::OpenLogSoOne(std::string ascendAicpuPath, const char* soName) const
 {
     std::string hostLogSoPath = ascendAicpuPath.append(soName);
-    std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
+    std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
         return nullptr;
     }
@@ -45,16 +45,16 @@ void *HostQsLog::OpenLogSoOne(std::string ascendAicpuPath, const char *soName) c
     if (eRet != EOK) {
         return nullptr;
     }
- 
+
     if (realpath(hostLogSoPath.data(), path.get()) == nullptr) {
         return nullptr;
     }
-    void *logSoHandle = dlopen(path.get(), static_cast<int32_t>(
-                               static_cast<uint32_t>(RTLD_LAZY) | (static_cast<uint32_t>(RTLD_GLOBAL))));
+    void* logSoHandle = dlopen(
+        path.get(), static_cast<int32_t>(static_cast<uint32_t>(RTLD_LAZY) | (static_cast<uint32_t>(RTLD_GLOBAL))));
     return logSoHandle;
 }
 
-void *HostQsLog::OpenLogSo() const
+void* HostQsLog::OpenLogSo() const
 {
     if (!bqs::FeatureCtrl::IsHostQs()) {
         return nullptr;
@@ -64,7 +64,7 @@ void *HostQsLog::OpenLogSo() const
     if (ascendAicpuPath.empty()) {
         return nullptr;
     }
-    void *logSoHandle = OpenLogSoOne(ascendAicpuPath, NPU_LOG_SO_NAME);
+    void* logSoHandle = OpenLogSoOne(ascendAicpuPath, NPU_LOG_SO_NAME);
     if (logSoHandle == nullptr) {
         logSoHandle = OpenLogSoOne(ascendAicpuPath, ALOG_SO_NAME);
     }
@@ -81,12 +81,12 @@ void *HostQsLog::OpenLogSo() const
     return logSoHandle;
 }
 
-void HostQsLog::LogPrintNormal(const int32_t moduleId, const int32_t level, const char *fmt, ...) const
+void HostQsLog::LogPrintNormal(const int32_t moduleId, const int32_t level, const char* fmt, ...) const
 {
     if ((hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)] != nullptr) &&
         (hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)] != nullptr)) {
-        CheckLogLevelFunc *checkLogLevel = PtrToPtr<void, CheckLogLevelFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)]);
+        CheckLogLevelFunc* checkLogLevel =
+            PtrToPtr<void, CheckLogLevelFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)]);
         if (checkLogLevel(moduleId, level) != 1) {
             return;
         }
@@ -95,13 +95,13 @@ void HostQsLog::LogPrintNormal(const int32_t moduleId, const int32_t level, cons
         va_start(args, fmt);
         vsnprintf_s(buffer, sizeof(buffer), LOG_BUFFER_MAX, fmt, args);
         va_end(args);
-        DlogRecordFunc *dlogRecord = PtrToPtr<void, DlogRecordFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)]);
+        DlogRecordFunc* dlogRecord =
+            PtrToPtr<void, DlogRecordFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)]);
         dlogRecord(moduleId, level, buffer);
     }
 }
 
-void HostQsLog::LogPrintError(const int32_t moduleId, const char *fmt, ...) const
+void HostQsLog::LogPrintError(const int32_t moduleId, const char* fmt, ...) const
 {
     if (hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)] != nullptr) {
         char buffer[LOG_BUFFER_MAX];
@@ -109,8 +109,8 @@ void HostQsLog::LogPrintError(const int32_t moduleId, const char *fmt, ...) cons
         va_start(args, fmt);
         vsnprintf_s(buffer, sizeof(buffer), LOG_BUFFER_MAX, fmt, args);
         va_end(args);
-        DlogRecordFunc *dlogRecord = PtrToPtr<void, DlogRecordFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)]);        
+        DlogRecordFunc* dlogRecord =
+            PtrToPtr<void, DlogRecordFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGRECORD)]);
         dlogRecord(moduleId, DLOG_ERROR, buffer);
     }
 }
@@ -118,8 +118,8 @@ void HostQsLog::LogPrintError(const int32_t moduleId, const char *fmt, ...) cons
 void HostQsLog::DlogSetLevel(const int32_t logLevel, const int32_t eventLevel) const
 {
     if (hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETLEVEL)] != nullptr) {
-        DlogSetLevelFunc *dlogSetLevel = PtrToPtr<void, DlogSetLevelFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETLEVEL)]);
+        DlogSetLevelFunc* dlogSetLevel =
+            PtrToPtr<void, DlogSetLevelFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETLEVEL)]);
         if (dlogSetLevel(-1, logLevel, eventLevel) != 0) {
             BQS_LOG_WARN_HOST("Set log level failed");
         }
@@ -129,8 +129,8 @@ void HostQsLog::DlogSetLevel(const int32_t logLevel, const int32_t eventLevel) c
 void HostQsLog::DlogSetAttr(const LogAttr logAttrInfo) const
 {
     if (hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETATTR)] != nullptr) {
-        DlogSetAttrFunc *dlogSetAttr = PtrToPtr<void, DlogSetAttrFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETATTR)]);
+        DlogSetAttrFunc* dlogSetAttr =
+            PtrToPtr<void, DlogSetAttrFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_DLOGSETATTR)]);
         if (dlogSetAttr(logAttrInfo) != 0) {
             BQS_LOG_WARN_HOST("Set log attr failed");
         }
@@ -140,8 +140,8 @@ void HostQsLog::DlogSetAttr(const LogAttr logAttrInfo) const
 bool HostQsLog::CheckLogLevelHost(const int32_t moduleId, const int32_t logLevel) const
 {
     if (hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)] != nullptr) {
-        CheckLogLevelFunc *checkLogLevel = PtrToPtr<void, CheckLogLevelFunc>(
-            hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)]);
+        CheckLogLevelFunc* checkLogLevel =
+            PtrToPtr<void, CheckLogLevelFunc>(hostQsFuncMap[static_cast<uint32_t>(QsLogFuncId::FUNC_CHECKLOGLEVEL)]);
         if (checkLogLevel(moduleId, logLevel) == 1) {
             return true;
         }
@@ -158,14 +158,14 @@ bool HostQsLog::CheckLogLevel(const int32_t moduleId, const int32_t logLevel) co
     } else {
         if (CheckLogLevelAicpu(moduleId, logLevel)) {
             return true;
-        }   
+        }
     }
     return false;
 }
-}
+} // namespace bqs
 
 namespace {
-void *g_logSoHandle = nullptr;
+void* g_logSoHandle = nullptr;
 }
 
 static void __attribute__((constructor)) QsLogInit(void)

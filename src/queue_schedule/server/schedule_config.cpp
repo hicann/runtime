@@ -12,36 +12,24 @@
 
 namespace dgw {
 
-ScheduleConfig &ScheduleConfig::GetInstance()
+ScheduleConfig& ScheduleConfig::GetInstance()
 {
     static ScheduleConfig schedCfg;
     return schedCfg;
 }
 
 void ScheduleConfig::RecordConfig(
-    const uint32_t key, const bqs::DynamicSchedQueueAttr &requestQ, const bqs::DynamicSchedQueueAttr &responseQ)
+    const uint32_t key, const bqs::DynamicSchedQueueAttr& requestQ, const bqs::DynamicSchedQueueAttr& responseQ)
 {
     schedKeys_.insert(key);
     configMap_[key] = std::make_pair(requestQ, responseQ);
 }
 
-const std::unordered_set<uint32_t> &ScheduleConfig::GetSchedKeys() const
-{
-    return schedKeys_;
-}
+const std::unordered_set<uint32_t>& ScheduleConfig::GetSchedKeys() const { return schedKeys_; }
 
-void ScheduleConfig::StopSched(const uint32_t key)
-{
-    stoppedSchedKeys_.insert(key);
-}
+void ScheduleConfig::StopSched(const uint32_t key) { stoppedSchedKeys_.insert(key); }
 
-void ScheduleConfig::RestartSched(const uint32_t key)
-{
-    stoppedSchedKeys_.erase(key);
-}
+void ScheduleConfig::RestartSched(const uint32_t key) { stoppedSchedKeys_.erase(key); }
 
-const bool ScheduleConfig::IsStopped(const uint32_t key) const
-{
-    return stoppedSchedKeys_.count(key) > 0U;
-}
-}
+const bool ScheduleConfig::IsStopped(const uint32_t key) const { return stoppedSchedKeys_.count(key) > 0U; }
+} // namespace dgw

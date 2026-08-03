@@ -20,12 +20,12 @@ public:
 
     virtual ~ErrorState() = default;
 
-    FsmStatus PreProcess(Entity &entity) override;
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PreProcess(Entity& entity) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
+    FsmStatus PostProcess(Entity& entity) override;
 
-    void ProcessAbnormalEntity(Entity &entity) const;
+    void ProcessAbnormalEntity(Entity& entity) const;
 };
-}
+} // namespace dgw
 
 #endif

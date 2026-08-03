@@ -21,15 +21,14 @@ namespace dgw {
 // max queue depth
 constexpr uint32_t MAX_QUEUE_DEPTH = 8U * 1024U * 2U + 1U;
 
-template<typename T>
+template <typename T>
 class CommChannelQueue {
 public:
     /**
      * @brief Construct a new Comm Channel Queue object
      * @param depth queue depth
      */
-    explicit CommChannelQueue() : depth_(1U), head_(0U), tail_(0U), ring_(nullptr)
-    {}
+    explicit CommChannelQueue() : depth_(1U), head_(0U), tail_(0U), ring_(nullptr) {}
 
     /**
      * @brief Destroy the Comm Channel Queue object
@@ -38,15 +37,15 @@ public:
     {
         try {
             Uninit();
-        } catch(...) {
+        } catch (...) {
             BQS_LOG_ERROR("CommChannelQueue destructor exception.");
         }
     }
 
-    CommChannelQueue(const CommChannelQueue &) = delete;
-    CommChannelQueue(const CommChannelQueue &&) = delete;
-    CommChannelQueue &operator = (const CommChannelQueue &) = delete;
-    CommChannelQueue &operator = (CommChannelQueue &&) = delete;
+    CommChannelQueue(const CommChannelQueue&) = delete;
+    CommChannelQueue(const CommChannelQueue&&) = delete;
+    CommChannelQueue& operator=(const CommChannelQueue&) = delete;
+    CommChannelQueue& operator=(CommChannelQueue&&) = delete;
 
     /**
      * @brief init queue
@@ -79,7 +78,7 @@ public:
     void Uninit()
     {
         if (ring_ != nullptr) {
-            delete []ring_;
+            delete[] ring_;
             ring_ = nullptr;
             BQS_LOG_DEBUG("Success to free memory[%zu].", sizeof(T) * depth_);
         }
@@ -94,10 +93,9 @@ public:
      * @param buff buff
      * @return current enqueue success count, 0 failed
      */
-    int32_t Push(T &buff)
+    int32_t Push(T& buff)
     {
-        BQS_LOG_DEBUG("Push queue, head:[%u], tail:[%u], depth:[%u].",
-            head_.load(), tail_.load(), depth_);
+        BQS_LOG_DEBUG("Push queue, head:[%u], tail:[%u], depth:[%u].", head_.load(), tail_.load(), depth_);
         if (IsFull()) {
             return 0;
         }
@@ -111,10 +109,10 @@ public:
      * @brief get first element from queue
      * @return T* first element
      */
-    T *Front()
+    T* Front()
     {
-        BQS_LOG_DEBUG("Get front element from queue, head:[%u], tail:[%u], depth:[%u].",
-            head_.load(), tail_.load(), depth_);
+        BQS_LOG_DEBUG(
+            "Get front element from queue, head:[%u], tail:[%u], depth:[%u].", head_.load(), tail_.load(), depth_);
         if (IsEmpty()) {
             return nullptr;
         }
@@ -127,8 +125,7 @@ public:
      */
     int32_t Pop()
     {
-        BQS_LOG_DEBUG("Pop queue, head:[%u], tail:[%u], depth:[%u].",
-            head_.load(), tail_.load(), depth_);
+        BQS_LOG_DEBUG("Pop queue, head:[%u], tail:[%u], depth:[%u].", head_.load(), tail_.load(), depth_);
         if (IsEmpty()) {
             return 0;
         }
@@ -143,8 +140,7 @@ public:
      */
     bool IsEmpty() const
     {
-        BQS_LOG_DEBUG("Check queue empty, head:[%u], tail:[%u], depth:[%u].",
-            head_.load(), tail_.load(), depth_);
+        BQS_LOG_DEBUG("Check queue empty, head:[%u], tail:[%u], depth:[%u].", head_.load(), tail_.load(), depth_);
         return (head_ == tail_);
     }
 
@@ -154,8 +150,7 @@ public:
      */
     bool IsFull() const
     {
-        BQS_LOG_DEBUG("Check queue full, head:[%u], tail:[%u], depth:[%u].",
-            head_.load(), tail_.load(), depth_);
+        BQS_LOG_DEBUG("Check queue full, head:[%u], tail:[%u], depth:[%u].", head_.load(), tail_.load(), depth_);
         return (((tail_ + 1) % depth_) == head_);
     }
 
@@ -163,10 +158,7 @@ public:
      * @brief get queue elements count
      * @return queue elements count
      */
-    uint32_t Size() const
-    {
-        return ((tail_ - head_) + depth_) % depth_;
-    }
+    uint32_t Size() const { return ((tail_ - head_) + depth_) % depth_; }
 
 private:
     // max store (depth_ - 1) elements
@@ -175,7 +167,7 @@ private:
     // tail: point to the released ring position
     std::atomic<uint32_t> head_;
     std::atomic<uint32_t> tail_;
-    T *ring_;
+    T* ring_;
 };
 } // namespace dgw
 #endif

@@ -23,18 +23,16 @@ public:
     explicit StrategyManager() = default;
     ~StrategyManager() = default;
 
-    StrategyManager(const StrategyManager &) = delete;
-    StrategyManager(const StrategyManager &&) = delete;
-    StrategyManager &operator = (const StrategyManager &) = delete;
-    StrategyManager &operator = (StrategyManager &&) = delete;
+    StrategyManager(const StrategyManager&) = delete;
+    StrategyManager(const StrategyManager&&) = delete;
+    StrategyManager& operator=(const StrategyManager&) = delete;
+    StrategyManager& operator=(StrategyManager&&) = delete;
 
 public:
-    static StrategyManager &GetInstance();
-    void RegisterStrategy(const bqs::GroupPolicy policy,
-                          Strategy*  strategy,
-                          const char_t * const strategyDesc);
-    Strategy *GetStrategy(const bqs::GroupPolicy policy) const;
-    const std::string &GetStrategyDesc(const bqs::GroupPolicy policy) const;
+    static StrategyManager& GetInstance();
+    void RegisterStrategy(const bqs::GroupPolicy policy, Strategy* strategy, const char_t* const strategyDesc);
+    Strategy* GetStrategy(const bqs::GroupPolicy policy) const;
+    const std::string& GetStrategyDesc(const bqs::GroupPolicy policy) const;
 
 private:
     std::map<bqs::GroupPolicy, Strategy*> strategy_;
@@ -44,20 +42,20 @@ private:
 // strategy register
 class StrategyRegister {
 public:
-    StrategyRegister(const bqs::GroupPolicy policy, Strategy * strategy, const char_t * const strategyDesc)
+    StrategyRegister(const bqs::GroupPolicy policy, Strategy* strategy, const char_t* const strategyDesc)
     {
         StrategyManager::GetInstance().RegisterStrategy(policy, strategy, strategyDesc);
     }
 
     ~StrategyRegister() = default;
-    StrategyRegister(const StrategyRegister &) = delete;
-    StrategyRegister(const StrategyRegister &&) = delete;
-    StrategyRegister &operator = (const StrategyRegister &) = delete;
-    StrategyRegister &operator = (StrategyRegister &&) = delete;
+    StrategyRegister(const StrategyRegister&) = delete;
+    StrategyRegister(const StrategyRegister&&) = delete;
+    StrategyRegister& operator=(const StrategyRegister&) = delete;
+    StrategyRegister& operator=(StrategyRegister&&) = delete;
 };
 
-#define REGISTER_STRATEGY(policy, strategy)       \
-    strategy g_##strategy;                        \
+#define REGISTER_STRATEGY(policy, strategy) \
+    strategy g_##strategy;                  \
     StrategyRegister g_##strategy##_register(bqs::GroupPolicy::policy, &g_##strategy, #policy)
-}
+} // namespace dgw
 #endif

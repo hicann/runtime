@@ -19,7 +19,7 @@
 #include "fsm/state_define.h"
 #include "proto/dynamic_sched_message.pb.h"
 
-namespace dgw{
+namespace dgw {
 class DynamicSchedMgr {
 public:
     struct SrcQueueInfo {
@@ -64,26 +64,28 @@ public:
     };
 
 public:
-    static DynamicSchedMgr &GetInstance(uint32_t deviceId = 0U);
-    FsmStatus AddRootModelInfo(const RootModelInfo &rootModelInfo);
+    static DynamicSchedMgr& GetInstance(uint32_t deviceId = 0U);
+    FsmStatus AddRootModelInfo(const RootModelInfo& rootModelInfo);
     void DeleteQueue(const uint32_t globalLogicId, const uint32_t rootModelId);
     void UpdateNodeId(const int32_t nodeId);
-    FsmStatus SendRequest(const uint32_t rootModelId, const std::vector<RequestInfo> &requests);
-    FsmStatus GetResponse(const uint32_t rootModelId, std::vector<ResponseInfo> &responses);
+    FsmStatus SendRequest(const uint32_t rootModelId, const std::vector<RequestInfo>& requests);
+    FsmStatus GetResponse(const uint32_t rootModelId, std::vector<ResponseInfo>& responses);
     FsmStatus ClearCacheRouteResult();
-    static inline uint64_t DynamicSchedNow() {
+    static inline uint64_t DynamicSchedNow()
+    {
         static auto zero = std::chrono::system_clock::now();
-        auto us = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now() - zero).count();
+        auto us = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - zero).count();
         return uint64_t(us);
     }
     void DynamicSchedDurationEnd(uint64_t begin);
     void DynamicSchedDurationPrint();
+
 private:
     struct CacheRouteKey {
         SrcQueueInfo srcQueueInfo;
         DstGroupInfo dstGroupInfo;
-        bool operator<(const CacheRouteKey &other) const {
+        bool operator<(const CacheRouteKey& other) const
+        {
             if (srcQueueInfo.rootModelId < other.srcQueueInfo.rootModelId) {
                 return true;
             }
@@ -100,18 +102,20 @@ private:
         }
     };
     struct CacheRouteValue {
-      GroupResult result;
-      uint32_t num;
+        GroupResult result;
+        uint32_t num;
     };
-    void GenerateRequest(const std::vector<RequestInfo> &requests,
-                         const int32_t centerResponseQueIdx,
-                         dynamic::FlowgwRequest &flowgwRequest) const;
-    void PrintRequestLog(const dynamic::FlowgwRequest &flowgwRequest) const;
-    void PrintResponseLog(const dynamic::FlowgwResponse &flowgwResponse) const;
-    void SendRequestToCacheResult(const std::vector<RequestInfo> &requests, std::vector<RequestInfo> &requestsAfterCache);
-    void UpdateCacheResult(const ResponseInfo &getResponseInfo);
-    void GetResponseFromCacheResult(std::vector<ResponseInfo> &responses);
-    FsmStatus EnqueueRequest(const dynamic::FlowgwRequest &flowgwRequest, const uint32_t deviceId, const uint32_t queueId) const;
+    void GenerateRequest(
+        const std::vector<RequestInfo>& requests, const int32_t centerResponseQueIdx,
+        dynamic::FlowgwRequest& flowgwRequest) const;
+    void PrintRequestLog(const dynamic::FlowgwRequest& flowgwRequest) const;
+    void PrintResponseLog(const dynamic::FlowgwResponse& flowgwResponse) const;
+    void SendRequestToCacheResult(
+        const std::vector<RequestInfo>& requests, std::vector<RequestInfo>& requestsAfterCache);
+    void UpdateCacheResult(const ResponseInfo& getResponseInfo);
+    void GetResponseFromCacheResult(std::vector<ResponseInfo>& responses);
+    FsmStatus EnqueueRequest(
+        const dynamic::FlowgwRequest& flowgwRequest, const uint32_t deviceId, const uint32_t queueId) const;
 
     int32_t nodeId_;
     std::unordered_map<uint32_t, RootModelInfo> rootModelInfos_;
@@ -124,5 +128,5 @@ private:
     uint64_t durationSize_ = 0ULL;
     uint64_t call_ = 0ULL;
 };
-}
+} // namespace dgw
 #endif

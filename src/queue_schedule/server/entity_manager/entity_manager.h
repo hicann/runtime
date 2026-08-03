@@ -32,11 +32,11 @@ constexpr uint32_t EVENT_RECV_COMPLETION_MSG = static_cast<uint32_t>(EVENT_ID::E
 constexpr uint32_t EVENT_CONGESTION_RELIEF_MSG = static_cast<uint32_t>(EVENT_ID::EVENT_USR_START) + 3U;
 
 struct CommChannels {
-    std::vector<ChannelEntityPtr> entities;     // comm channel vector
-    std::vector<HcclRequest> requests;   // requests
-    std::vector<int32_t> compIndices;    // comp indices: when testsome, completed request index in requests
-    std::vector<HcclStatus> compStatus;  // comp status: when testsome, status of completed request
-    pthread_rwlock_t lock = PTHREAD_RWLOCK_INITIALIZER;  // lock for comm channel vector
+    std::vector<ChannelEntityPtr> entities; // comm channel vector
+    std::vector<HcclRequest> requests;      // requests
+    std::vector<int32_t> compIndices;       // comp indices: when testsome, completed request index in requests
+    std::vector<HcclStatus> compStatus;     // comp status: when testsome, status of completed request
+    pthread_rwlock_t lock = PTHREAD_RWLOCK_INITIALIZER; // lock for comm channel vector
 };
 
 using MapIdToEntityVector = std::map<uint32_t, std::vector<EntityPtr>>;
@@ -45,18 +45,15 @@ using GroupEntityMap = std::map<uint32_t, std::vector<EntityPtr>>;
 
 class EntityManager {
 public:
-    explicit EntityManager(const uint32_t resIndex)
-    {
-        resIndex_ = resIndex;
-    }
+    explicit EntityManager(const uint32_t resIndex) { resIndex_ = resIndex; }
     ~EntityManager();
 
-    EntityManager(const EntityManager &) = delete;
-    EntityManager(const EntityManager &&) = delete;
-    EntityManager &operator = (const EntityManager &) = delete;
-    EntityManager &operator = (EntityManager &&) = delete;
+    EntityManager(const EntityManager&) = delete;
+    EntityManager(const EntityManager&&) = delete;
+    EntityManager& operator=(const EntityManager&) = delete;
+    EntityManager& operator=(EntityManager&&) = delete;
 
-    static EntityManager &Instance(const uint32_t resIndex = 0U);
+    static EntityManager& Instance(const uint32_t resIndex = 0U);
 
     /**
      * get entity by id
@@ -64,11 +61,13 @@ public:
      * @param id: entity id
      * @return entity pointer
      */
-    EntityPtr GetEntityById(const uint32_t queueType, const uint32_t deviceId, const EntityType eType,
-                            const uint32_t id, const EntityDirection direction);
+    EntityPtr GetEntityById(
+        const uint32_t queueType, const uint32_t deviceId, const EntityType eType, const uint32_t id,
+        const EntityDirection direction);
 
-    EntityPtr DoGetEntity(const uint32_t queueType, const uint32_t deviceId, const EntityType eType,
-                          const uint32_t id, const EntityDirection direction);
+    EntityPtr DoGetEntity(
+        const uint32_t queueType, const uint32_t deviceId, const EntityType eType, const uint32_t id,
+        const EntityDirection direction);
 
     EntityPtr GetSrcEntityByGlobalId(const uint32_t key, const uint32_t globalId) const;
 
@@ -78,7 +77,7 @@ public:
      * @param groupId: group id
      * @return const std::vector<EntityPtr> &
      */
-    const std::vector<EntityPtr> &GetEntitiesInGroup(const uint32_t groupId);
+    const std::vector<EntityPtr>& GetEntitiesInGroup(const uint32_t groupId);
 
     /**
      * create group
@@ -105,7 +104,7 @@ public:
      * @param groupPolicy group policy, only for group
      * @return return EntityPtr
      */
-    EntityPtr CreateEntity(const EntityMaterial &material);
+    EntityPtr CreateEntity(const EntityMaterial& material);
 
     /**
      * delete entity
@@ -113,15 +112,16 @@ public:
      * @param id queue id or tag id or group id
      * @return FsmStatus FSM_SUCCESS: success, other: failed
      */
-    FsmStatus DeleteEntity(const uint32_t queueType, const uint32_t deviceId,
-                           const EntityType eType, const uint32_t id,  const EntityDirection direction);
+    FsmStatus DeleteEntity(
+        const uint32_t queueType, const uint32_t deviceId, const EntityType eType, const uint32_t id,
+        const EntityDirection direction);
 
     /**
      * probe source comm channel
      * @param procFunc process function
      * @return FsmStatus FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ProbeSrcCommChannel(const std::function<FsmStatus(const ChannelEntityPtr &, uint32_t &)> procFunc);
+    FsmStatus ProbeSrcCommChannel(const std::function<FsmStatus(const ChannelEntityPtr&, uint32_t&)> procFunc);
 
     /**
      * check and supply recv request event
@@ -137,14 +137,14 @@ public:
      * @param isSrc is src
      * @return FsmStatus FSM_SUCCESS: success, other: failed
      */
-    FsmStatus TestSomeCommChannels(const std::function<FsmStatus(CommChannels &, uint32_t &, uint32_t &)> procFunc,
-                                   const bool isSrc);
+    FsmStatus TestSomeCommChannels(
+        const std::function<FsmStatus(CommChannels&, uint32_t&, uint32_t&)> procFunc, const bool isSrc);
 
     /**
      * erase comm channel from src/dst comm channels
      * @param isSrc is source entity
      */
-    FsmStatus EraseCommChannel(const EntityPtr &entity, const bool isSrc);
+    FsmStatus EraseCommChannel(const EntityPtr& entity, const bool isSrc);
 
     /**
      * insert comm channel to src/dst comm channels
@@ -152,14 +152,14 @@ public:
      * @param isSrc is source entity
      * @return FsmStatus FSM_SUCCESS: success, other: failed
      */
-    FsmStatus InsertCommChannel(const ChannelEntityPtr &entity, const bool isSrc);
+    FsmStatus InsertCommChannel(const ChannelEntityPtr& entity, const bool isSrc);
 
     /**
      * @brief Get comm channels
      * @param isSrc is source entity
      * @return const CommChannels& src or dst comm channels
      */
-    CommChannels &GetCommChannels(const bool isSrc);
+    CommChannels& GetCommChannels(const bool isSrc);
 
     /**
      * @brief supply event
@@ -180,35 +180,23 @@ public:
      * @brief show whether some entity has been full
      * @return true: yes, false: no
      */
-    inline bool IsExistFullEntity() const
-    {
-        return existFull_;
-    }
+    inline bool IsExistFullEntity() const { return existFull_; }
 
     /**
      * @brief mark some entity has been full
      */
-    inline void SetExistFullEntity()
-    {
-        existFull_ = true;
-    }
+    inline void SetExistFullEntity() { existFull_ = true; }
 
     /**
      * @brief show whether some entity has been Async Mem Buff
      * @return true: yes, false: no
      */
-    inline bool IsExistAsyncMemEntity() const
-    {
-        return existDstAsyncMem_;
-    }
+    inline bool IsExistAsyncMemEntity() const { return existDstAsyncMem_; }
 
     /**
      * @brief mark some entity has been Async Mem Buff
      */
-    inline void SetExistAsyncMemEntity()
-    {
-        existDstAsyncMem_ = true;
-    }
+    inline void SetExistAsyncMemEntity() { existDstAsyncMem_ = true; }
 
     /**
      * @brief set subscription_pause_policy for full queue
@@ -222,13 +210,9 @@ public:
      * @brief whether pause subscription
      * @return true: yes, false: no
      */
-    inline bool ShouldPauseSubscirpiton() const
-    {
-        return pauseSubscriptionWhenFull_;
-    }
+    inline bool ShouldPauseSubscirpiton() const { return pauseSubscriptionWhenFull_; }
 
-    void CleanEntityMap(const uint32_t queueType, const uint32_t deviceId, const EntityType eType,
-        const uint32_t id);
+    void CleanEntityMap(const uint32_t queueType, const uint32_t deviceId, const EntityType eType, const uint32_t id);
 
 private:
     /**
@@ -240,9 +224,9 @@ private:
      * @param groupPolicy group policy, only for group
      * @return EntityPtr
      */
-    EntityPtr AllocEntity(const EntityMaterial &material) const;
+    EntityPtr AllocEntity(const EntityMaterial& material) const;
 
-    void DoAllocEntity(const EntityMaterial &material, EntityPtr &entity) const;
+    void DoAllocEntity(const EntityMaterial& material, EntityPtr& entity) const;
 
     FsmStatus SupplyEventForRecvRequest(uint32_t msgType);
 
@@ -261,5 +245,5 @@ private:
     std::map<uint64_t, EntityPtr> globalIdToDstEntity_;
     bool existDstAsyncMem_{false};
 };
-}
+} // namespace dgw
 #endif

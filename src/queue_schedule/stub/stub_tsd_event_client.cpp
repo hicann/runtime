@@ -11,22 +11,22 @@
 #include "tsd.h"
 #include <iostream>
 
-int32_t SendUpdateProfilingRspToTsd(const uint32_t deviceId, const uint32_t waitType,
-                                    const uint32_t hostPid, const uint32_t vfId)
+int32_t SendUpdateProfilingRspToTsd(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     return 0;
 }
 
-int32_t CreateOrFindCustPid(const uint32_t deviceId, const uint32_t loadLibNum,
-    const char * const loadLibName[], const uint32_t hostPid, const uint32_t vfId, const char *groupNameList,
-    const uint32_t groupNameNum, int32_t *custProcPid, bool *firstStart)
+int32_t CreateOrFindCustPid(
+    const uint32_t deviceId, const uint32_t loadLibNum, const char* const loadLibName[], const uint32_t hostPid,
+    const uint32_t vfId, const char* groupNameList, const uint32_t groupNameNum, int32_t* custProcPid, bool* firstStart)
 {
     return 0;
 }
 
-int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
-                               const uint32_t hostPid, const uint32_t vfId,
-                               const struct SubProcScheduleModeInfo *scheInfo)
+int32_t SetSubProcScheduleMode(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId,
+    const struct SubProcScheduleModeInfo* scheInfo)
 {
     (void)deviceId;
     (void)waitType;
@@ -38,45 +38,64 @@ int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
 
 extern "C" {
 // 修正函数签名，与头文件一致
-int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo *regInfo) {
+int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo* regInfo)
+{
     (void)regInfo;
     std::cout << "STUB: RegEventMsgCallBackFunc called" << std::endl;
-    return 0;  // 返回 int32_t
+    return 0; // 返回 int32_t
 }
 
-void UnRegEventMsgCallBackFunc(const uint32_t eventType) {
+void UnRegEventMsgCallBackFunc(const uint32_t eventType)
+{
     (void)eventType;
     std::cout << "STUB: UnRegEventMsgCallBackFunc called" << std::endl;
 }
 
-int32_t TsdReportStartOrStopErrCode(const uint32_t deviceId, const TsdWaitType waitType,
-                                   const uint32_t hostPid, const uint32_t vfId, 
-                                   const char* msg, uint32_t msgLen) {
-    (void)deviceId; (void)waitType; (void)hostPid; (void)vfId; (void)msg; (void)msgLen;
+int32_t TsdReportStartOrStopErrCode(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId, const char* msg,
+    uint32_t msgLen)
+{
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
+    (void)msg;
+    (void)msgLen;
     std::cout << "STUB: TsdReportStartOrStopErrCode called" << std::endl;
-    return 0;  // 返回 int32_t
+    return 0; // 返回 int32_t
 }
 
-int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
-                          const uint32_t hostPid, const uint32_t vfId) {
-    (void)deviceId; (void)waitType; (void)hostPid; (void)vfId;
+int32_t TsdWaitForShutdown(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
+{
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
     std::cout << "STUB: TsdWaitForShutdown called" << std::endl;
-    return 0;  // 返回 int32_t
+    return 0; // 返回 int32_t
 }
 
-int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType,
-                  const uint32_t hostPid, const uint32_t vfId) {
-    (void)deviceId; (void)waitType; (void)hostPid; (void)vfId;
+int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
+{
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
     std::cout << "STUB: TsdDestroy called" << std::endl;
-    return 0;  // 返回 int32_t
+    return 0; // 返回 int32_t
 }
 
-int32_t SubModuleProcessResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                                const uint32_t hostPid, const uint32_t vfId, 
-                                uint32_t response) {
-    (void)deviceId; (void)waitType; (void)hostPid; (void)vfId; (void)response;
+int32_t SubModuleProcessResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId, uint32_t response)
+{
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
+    (void)response;
     std::cout << "STUB: SubModuleProcessResponse called" << std::endl;
-    return 0;  // 返回 int32_t
+    return 0; // 返回 int32_t
 }
 
 } // extern "C"

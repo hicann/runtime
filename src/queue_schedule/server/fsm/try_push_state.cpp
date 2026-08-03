@@ -15,10 +15,10 @@
 #include "state_manager.h"
 
 namespace dgw {
-FsmStatus TryPushState::PreProcess(Entity &entity)
+FsmStatus TryPushState::PreProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_TRY_PUSH_STATE).c_str(), entity.ToString().c_str());
 
     // use entity to find routes
@@ -27,10 +27,10 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
     args.queueType = entity.GetQueueType();
     bqs::EntityInfo entityInfo(entity.GetId(), entity.GetDeviceId(), &args);
     // get ordered subscribe queue
-    auto &srcToDstRelation = (entity.GetResIndex() == 0U) ? bqs::BindRelation::GetInstance().GetSrcToDstRelation() :
-        bqs::BindRelation::GetInstance().GetSrcToDstExtraRelation();
-    bqs::ProfileManager::GetInstance(entity.GetResIndex()).
-        SetSrcQueueNum(static_cast<uint32_t>(srcToDstRelation.size()));
+    auto& srcToDstRelation = (entity.GetResIndex() == 0U) ? bqs::BindRelation::GetInstance().GetSrcToDstRelation() :
+                                                            bqs::BindRelation::GetInstance().GetSrcToDstExtraRelation();
+    bqs::ProfileManager::GetInstance(entity.GetResIndex())
+        .SetSrcQueueNum(static_cast<uint32_t>(srcToDstRelation.size()));
     const auto iter = srcToDstRelation.find(entityInfo);
     if (iter == srcToDstRelation.end()) {
         DGW_LOG_WARN("Can't find dst entities for entity:%u", entity.GetId());
@@ -40,18 +40,19 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
     std::vector<Entity*> dstEntitiesCanPush;
     std::vector<Entity*> reprocessDstEntities;
     std::vector<Entity*> abnormalDstEntities;
-    for (auto &dst : iter->second) {
+    for (auto& dst : iter->second) {
         const auto dstEntity = dst.GetEntity();
         if (dstEntity == nullptr) {
             DGW_LOG_WARN("[FSM] Recv entity is nullptr, id:[%u].", dst.GetId());
             continue;
         }
         DGW_LOG_INFO("Find dst entity, id:[%u] type:[%s].", dstEntity->GetId(), dstEntity->GetTypeDesc().c_str());
-        dstEntity->SelectDstEntities(entity.GetTransId() + entity.GetRouteLabel(), dstEntitiesCanPush,
-            reprocessDstEntities, abnormalDstEntities);
+        dstEntity->SelectDstEntities(
+            entity.GetTransId() + entity.GetRouteLabel(), dstEntitiesCanPush, reprocessDstEntities,
+            abnormalDstEntities);
     }
 
-    Mbuf *const mbuf = entity.GetMbuf();
+    Mbuf* const mbuf = entity.GetMbuf();
     // check if current data is the first one to process{entity.sendObject size == 0}
     const bool firstData = (entity.GetSendDataObjs().size() == 0U);
     auto dataObj = DataObjManager::Instance().CreateDataObj(&entity, mbuf);
@@ -60,7 +61,7 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
         return FsmStatus::FSM_SUCCESS;
     }
     std::vector<Entity*> dstEntitiesToPush;
-    for (auto canPushDstEntity: dstEntitiesCanPush) {
+    for (auto canPushDstEntity : dstEntitiesCanPush) {
         dataObj->AddRecvEntity(canPushDstEntity);
         if (!firstData) {
             // 前序数据未完成发送，当前数据不能发送
@@ -87,7 +88,7 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
     InnerMessage msg;
     msg.msgType = InnerMsgType::INNER_MSG_PUSH;
     FsmStatus processRet = FsmStatus::FSM_SUCCESS;
-    for (auto entityToPush: dstEntitiesToPush) {
+    for (auto entityToPush : dstEntitiesToPush) {
         // schedule each receiving entity
         (void)entityToPush->AddDataObjToRecvList(dataObj);
         if (entityToPush->ProcessMessage(msg) == FsmStatus::FSM_ERROR) {
@@ -96,7 +97,7 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
         };
     }
 
-    for (auto abnormalEntity: abnormalDstEntities) {
+    for (auto abnormalEntity : abnormalDstEntities) {
         if (abnormalEntity->AbProcessInTryPush() == FsmStatus::FSM_ERROR) {
             processRet = FsmStatus::FSM_ERROR;
         }
@@ -110,19 +111,19 @@ FsmStatus TryPushState::PreProcess(Entity &entity)
     return PostProcess(entity);
 }
 
-FsmStatus TryPushState::SendRequestForDynamicGroup(const DynamicRequestPtr dynamicRequest, const uint32_t schedCfgKey,
-    Entity &entity) const
+FsmStatus TryPushState::SendRequestForDynamicGroup(
+    const DynamicRequestPtr dynamicRequest, const uint32_t schedCfgKey, Entity& entity) const
 {
     if (dynamicRequest == nullptr) {
         return FsmStatus::FSM_SUCCESS;
     }
     std::vector<DynamicSchedMgr::RequestInfo> dynamicRequests;
     dynamicRequests.emplace_back(*dynamicRequest);
-    const auto requestRet = DynamicSchedMgr::GetInstance(entity.GetResIndex()).
-        SendRequest(schedCfgKey, dynamicRequests);
+    const auto requestRet =
+        DynamicSchedMgr::GetInstance(entity.GetResIndex()).SendRequest(schedCfgKey, dynamicRequests);
     if (requestRet != FsmStatus::FSM_SUCCESS) {
-        DGW_LOG_WARN("Entity:[%s] sendRequest fail, ret is %d.",
-            entity.ToString().c_str(), static_cast<int32_t>(requestRet));
+        DGW_LOG_WARN(
+            "Entity:[%s] sendRequest fail, ret is %d.", entity.ToString().c_str(), static_cast<int32_t>(requestRet));
         return requestRet;
     }
     DGW_LOG_INFO("Entity[%s] SetWaitDecisionState to true", entity.ToString().c_str());
@@ -131,18 +132,15 @@ FsmStatus TryPushState::SendRequestForDynamicGroup(const DynamicRequestPtr dynam
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus TryPushState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus TryPushState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     (void)msg;
     return PreProcess(entity);
 }
 
-FsmStatus TryPushState::PostProcess(Entity &entity)
-{
-    return entity.ChangeState(FsmState::FSM_PEEK_STATE);
-}
+FsmStatus TryPushState::PostProcess(Entity& entity) { return entity.ChangeState(FsmState::FSM_PEEK_STATE); }
 
 REGISTER_STATE(FSM_TRY_PUSH_STATE, ENTITY_QUEUE, TryPushState);
 REGISTER_STATE(FSM_TRY_PUSH_STATE, ENTITY_TAG, TryPushState);
 REGISTER_STATE(FSM_TRY_PUSH_STATE, ENTITY_GROUP, TryPushState);
-}  // namespace dgw
+} // namespace dgw

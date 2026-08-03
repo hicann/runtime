@@ -12,10 +12,7 @@
 #include <sys/time.h>
 
 namespace bqs {
-RunContext GetRunContext()
-{
-    return RunContext::HOST;
-}
+RunContext GetRunContext() { return RunContext::HOST; }
 
 uint64_t GetNowTime()
 {
@@ -26,4 +23,4 @@ uint64_t GetNowTime()
     }
     return timestamp;
 }
-}
+} // namespace bqs

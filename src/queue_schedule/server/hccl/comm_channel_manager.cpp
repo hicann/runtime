@@ -11,36 +11,36 @@
 #include "hccl/comm_channel_manager.h"
 
 namespace dgw {
-    CommChannelManager &CommChannelManager::GetInstance()
-    {
-        static CommChannelManager instance;
-        return instance;
-    }
+CommChannelManager& CommChannelManager::GetInstance()
+{
+    static CommChannelManager instance;
+    return instance;
+}
 
-    uint32_t CommChannelManager::GetCommChannelId(const CommChannel &channel, const CommChannel *&channelPtr)
-    {
-        const std::lock_guard<std::mutex> commChannelLock(commChannelMapMutex_);
-        const auto iter = commChannelMap_.find(channel);
-        if (iter != commChannelMap_.end()) {
-            channelPtr = &(iter->first);
-            return iter->second;
-        }
-        // generate channel id
-        static uint32_t channelId = 0U;
-        const auto result = commChannelMap_.emplace(std::make_pair(channel, channelId));
-        channelPtr = &(result.first->first);
-        return channelId++;
+uint32_t CommChannelManager::GetCommChannelId(const CommChannel& channel, const CommChannel*& channelPtr)
+{
+    const std::lock_guard<std::mutex> commChannelLock(commChannelMapMutex_);
+    const auto iter = commChannelMap_.find(channel);
+    if (iter != commChannelMap_.end()) {
+        channelPtr = &(iter->first);
+        return iter->second;
     }
+    // generate channel id
+    static uint32_t channelId = 0U;
+    const auto result = commChannelMap_.emplace(std::make_pair(channel, channelId));
+    channelPtr = &(result.first->first);
+    return channelId++;
+}
 
-    FsmStatus CommChannelManager::DeleteCommChannel(const CommChannel &channel)
-    {
-        const std::lock_guard<std::mutex> commChannelLock(commChannelMapMutex_);
-        const auto iter = commChannelMap_.find(channel);
-        if (iter == commChannelMap_.end()) {
-            BQS_LOG_WARN("Not find channel[%s] in commChannelMap_.", channel.ToString().c_str());
-            return FsmStatus::FSM_SUCCESS;
-        }
-        (void)commChannelMap_.erase(iter);
+FsmStatus CommChannelManager::DeleteCommChannel(const CommChannel& channel)
+{
+    const std::lock_guard<std::mutex> commChannelLock(commChannelMapMutex_);
+    const auto iter = commChannelMap_.find(channel);
+    if (iter == commChannelMap_.end()) {
+        BQS_LOG_WARN("Not find channel[%s] in commChannelMap_.", channel.ToString().c_str());
         return FsmStatus::FSM_SUCCESS;
     }
+    (void)commChannelMap_.erase(iter);
+    return FsmStatus::FSM_SUCCESS;
 }
+} // namespace dgw

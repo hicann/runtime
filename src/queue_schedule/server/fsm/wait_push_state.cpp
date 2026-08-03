@@ -14,32 +14,30 @@
 #include "state_manager.h"
 
 namespace dgw {
-FsmStatus WaitPushState::PreProcess(Entity &entity)
+FsmStatus WaitPushState::PreProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_WAIT_PUSH_STATE).c_str(), entity.ToString().c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus WaitPushState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus WaitPushState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     if (msg.msgType == InnerMsgType::INNER_MSG_PUSH) {
         return PostProcess(entity);
     }
 
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s] ignore msg:[%s].", entity.GetId(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s] ignore msg:[%s].", entity.GetId(),
         entity.GetTypeDesc().c_str(), entity.GetStateDesc(FsmState::FSM_WAIT_PUSH_STATE).c_str(),
         entity.ToString().c_str(), GetMsgDesc(msg));
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus WaitPushState::PostProcess(Entity &entity)
-{
-    return entity.ChangeState(FsmState::FSM_PUSH_STATE);
-}
+FsmStatus WaitPushState::PostProcess(Entity& entity) { return entity.ChangeState(FsmState::FSM_PUSH_STATE); }
 
 REGISTER_STATE(FSM_WAIT_PUSH_STATE, ENTITY_QUEUE, WaitPushState);
 REGISTER_STATE(FSM_WAIT_PUSH_STATE, ENTITY_TAG, WaitPushState);
 REGISTER_STATE(FSM_WAIT_PUSH_STATE, ENTITY_GROUP, WaitPushState);
-}  // namespace dgw
+} // namespace dgw

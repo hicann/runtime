@@ -10,8 +10,8 @@
 
 #include "qs_tsd.h"
 #include <string>
-int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
-                           const uint32_t hostPid, const uint32_t vfId)
+int32_t TsdWaitForShutdown(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     (void)deviceId;
     (void)waitType;
@@ -20,9 +20,9 @@ int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
     return 0;
 }
 
-int32_t TsdReportStartOrStopErrCode(const uint32_t deviceId, const TsdWaitType waitType,
-                                    const uint32_t hostPid, const uint32_t vfId,
-                                    const char *errCode, const uint32_t errLen)
+int32_t TsdReportStartOrStopErrCode(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const char* errCode, const uint32_t errLen)
 {
     (void)deviceId;
     (void)waitType;
@@ -33,7 +33,7 @@ int32_t TsdReportStartOrStopErrCode(const uint32_t deviceId, const TsdWaitType w
     return 0;
 }
 
-int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo *regInfo)
+int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo* regInfo)
 {
     (void)regInfo;
     return 0;
@@ -45,9 +45,9 @@ void UnRegEventMsgCallBackFunc(const uint32_t eventType)
     return;
 }
 
-int32_t SubModuleProcessResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                                 const uint32_t hostPid, const uint32_t vfId,
-                                 const uint32_t eventType)
+int32_t SubModuleProcessResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const uint32_t eventType)
 {
     (void)deviceId;
     (void)waitType;
@@ -57,8 +57,7 @@ int32_t SubModuleProcessResponse(const uint32_t deviceId, const TsdWaitType wait
     return 0;
 }
 
-int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType,
-                   const uint32_t hostPid, const uint32_t vfId)
+int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     (void)deviceId;
     (void)waitType;

@@ -30,25 +30,24 @@ using MsprofRegisterCallbackFunc = int32_t (*)(uint32_t, ProfCommandHandle);
 using MsprofReportApiFunc = int32_t (*)(uint32_t, const MsprofApi*);
 using MsprofReportEventFunc = int32_t (*)(uint32_t, const MsprofEvent*);
 using MsprofSysCycleTimeFunc = uint64_t (*)();
-}
+} // namespace
 
 BqsMsprofApiAdapter::BqsMsprofApiAdapter()
-    : SoManager(MsprofSoName, {MsprofInitFuncName, MsprofFinalizeFuncName,
-                               MsprofRegTypeInfoFuncName, MsprofRegisterCallbackFuncName,
-                               MsprofReportApiFuncName, MsprofReportEventFuncName,
-                               MsprofSysCycleTimeFuncName})
-{
-}
+    : SoManager(
+          MsprofSoName,
+          {MsprofInitFuncName, MsprofFinalizeFuncName, MsprofRegTypeInfoFuncName, MsprofRegisterCallbackFuncName,
+           MsprofReportApiFuncName, MsprofReportEventFuncName, MsprofSysCycleTimeFuncName})
+{}
 
-BqsMsprofApiAdapter &BqsMsprofApiAdapter::GetInstance()
+BqsMsprofApiAdapter& BqsMsprofApiAdapter::GetInstance()
 {
     static BqsMsprofApiAdapter instance;
     return instance;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void *data, uint32_t dataLen) const
+ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void* data, uint32_t dataLen) const
 {
-    void *funcHandle = GetFuncHandle(MsprofInitFuncName);
+    void* funcHandle = GetFuncHandle(MsprofInitFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -64,7 +63,7 @@ ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void *data, uint32
 
 ProfStatus BqsMsprofApiAdapter::MsprofFinalize() const
 {
-    void *funcHandle = GetFuncHandle(MsprofFinalizeFuncName);
+    void* funcHandle = GetFuncHandle(MsprofFinalizeFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -78,9 +77,9 @@ ProfStatus BqsMsprofApiAdapter::MsprofFinalize() const
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName) const
+ProfStatus BqsMsprofApiAdapter::MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName) const
 {
-    void *funcHandle = GetFuncHandle(MsprofRegTypeInfoFuncName);
+    void* funcHandle = GetFuncHandle(MsprofRegTypeInfoFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -96,7 +95,7 @@ ProfStatus BqsMsprofApiAdapter::MsprofRegTypeInfo(uint16_t level, uint32_t typeI
 
 ProfStatus BqsMsprofApiAdapter::MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) const
 {
-    void *funcHandle = GetFuncHandle(MsprofRegisterCallbackFuncName);
+    void* funcHandle = GetFuncHandle(MsprofRegisterCallbackFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -110,9 +109,9 @@ ProfStatus BqsMsprofApiAdapter::MsprofRegisterCallback(uint32_t moduleId, ProfCo
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofReportApi(uint32_t agingFlag, const MsprofApi *api) const
+ProfStatus BqsMsprofApiAdapter::MsprofReportApi(uint32_t agingFlag, const MsprofApi* api) const
 {
-    void *funcHandle = GetFuncHandle(MsprofReportApiFuncName);
+    void* funcHandle = GetFuncHandle(MsprofReportApiFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -126,9 +125,9 @@ ProfStatus BqsMsprofApiAdapter::MsprofReportApi(uint32_t agingFlag, const Msprof
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event) const
+ProfStatus BqsMsprofApiAdapter::MsprofReportEvent(uint32_t agingFlag, const MsprofEvent* event) const
 {
-    void *funcHandle = GetFuncHandle(MsprofReportEventFuncName);
+    void* funcHandle = GetFuncHandle(MsprofReportEventFuncName);
     if (funcHandle == nullptr) {
         return ProfStatus::PROF_MSPROF_API_NULLPTR;
     }
@@ -144,7 +143,7 @@ ProfStatus BqsMsprofApiAdapter::MsprofReportEvent(uint32_t agingFlag, const Mspr
 
 uint64_t BqsMsprofApiAdapter::MsprofSysCycleTime() const
 {
-    void *funcHandle = GetFuncHandle(MsprofSysCycleTimeFuncName);
+    void* funcHandle = GetFuncHandle(MsprofSysCycleTimeFuncName);
     if (funcHandle == nullptr) {
         return 0UL;
     }

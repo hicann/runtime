@@ -26,61 +26,67 @@ namespace bqs {
 namespace {
 sem_t g_sem;
 bool g_semInited = false;
-}
+} // namespace
 
-static drvError_t GetCpuInfo(const uint32_t deviceId, CpuInfo &cpuInfo)
+static drvError_t GetCpuInfo(const uint32_t deviceId, CpuInfo& cpuInfo)
 {
-    drvError_t ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_CCPU),
-                                      static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.ccpuNum));
+    drvError_t ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_CCPU), static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.ccpuNum));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_DCPU),
-                           static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.dcpuNum));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_DCPU), static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.dcpuNum));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_AICPU),
-                           static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.aicpuNum));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_AICPU), static_cast<int32_t>(INFO_TYPE_CORE_NUM),
+        &(cpuInfo.aicpuNum));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_TSCPU),
-                           static_cast<int32_t>(INFO_TYPE_CORE_NUM), &(cpuInfo.tscpuNum));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_TSCPU), static_cast<int32_t>(INFO_TYPE_CORE_NUM),
+        &(cpuInfo.tscpuNum));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_CCPU),
-                           static_cast<int32_t>(INFO_TYPE_OS_SCHED), &(cpuInfo.ccpuOsSched));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_CCPU), static_cast<int32_t>(INFO_TYPE_OS_SCHED),
+        &(cpuInfo.ccpuOsSched));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_DCPU),
-                           static_cast<int32_t>(INFO_TYPE_OS_SCHED), &(cpuInfo.dcpuOsSched));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_DCPU), static_cast<int32_t>(INFO_TYPE_OS_SCHED),
+        &(cpuInfo.dcpuOsSched));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_AICPU),
-                           static_cast<int32_t>(INFO_TYPE_OS_SCHED), &(cpuInfo.aicpuOsSched));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_AICPU), static_cast<int32_t>(INFO_TYPE_OS_SCHED),
+        &(cpuInfo.aicpuOsSched));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
     }
 
-    ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_TSCPU),
-                           static_cast<int32_t>(INFO_TYPE_OS_SCHED), &(cpuInfo.tscpuOsSched));
+    ret = halGetDeviceInfo(
+        deviceId, static_cast<int32_t>(MODULE_TYPE_TSCPU), static_cast<int32_t>(INFO_TYPE_OS_SCHED),
+        &(cpuInfo.tscpuOsSched));
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("get device[%u] cpu info failed, ret = %d.", deviceId, static_cast<int32_t>(ret));
         return ret;
@@ -149,8 +155,9 @@ BqsStatus BindCpuUtils::WriteTidToCpuSet()
     // when the kernel initializes the process, the processing mode of SIGCHLD signal is SIG_IGN.
     const int32_t ret = system(command.c_str());
     if (ret != 0) {
-        BQS_LOG_WARN("write tid[%d] to /sys/fs/cgroup/cpuset/AICPU/tasks failed, ret[%d], strerror[%s]",
-            tid, ret, strerror(errno));
+        BQS_LOG_WARN(
+            "write tid[%d] to /sys/fs/cgroup/cpuset/AICPU/tasks failed, ret[%d], strerror[%s]", tid, ret,
+            strerror(errno));
         return BQS_STATUS_INNER_ERROR;
     }
 
@@ -191,11 +198,11 @@ BqsStatus BindCpuUtils::BindAicpuBySelf(uint32_t bindCpuIndex)
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindCpuUtils::SetThreadAffinity(const pthread_t &threadId, const std::vector<uint32_t> &cpuIds)
+BqsStatus BindCpuUtils::SetThreadAffinity(const pthread_t& threadId, const std::vector<uint32_t>& cpuIds)
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    for (const auto cpuId: cpuIds) {
+    for (const auto cpuId : cpuIds) {
         CPU_SET(cpuId, &cpuset);
         BQS_LOG_INFO("prepare bind threadId=%lu to cpuId=%u", threadId, static_cast<uint32_t>(cpuId));
     }
@@ -228,8 +235,7 @@ BqsStatus BindCpuUtils::BindAicpuByPm(const uint32_t bindCpuIndex)
     coreAffinity.push_back(bindCpuIndex);
     const auto ret = ProcMgrBindThread(tid, coreAffinity);
     if (ret != 0U) {
-        BQS_LOG_ERROR("set affinity failed ret[%d], aicpu bindCpuIndex[%u], tid[%u]",
-            ret, bindCpuIndex, tid);
+        BQS_LOG_ERROR("set affinity failed ret[%d], aicpu bindCpuIndex[%u], tid[%u]", ret, bindCpuIndex, tid);
         return BQS_STATUS_INNER_ERROR;
     }
     return BQS_STATUS_OK;
@@ -238,7 +244,7 @@ BqsStatus BindCpuUtils::BindAicpuByPm(const uint32_t bindCpuIndex)
 BqsStatus BindCpuUtils::BindAicpu(const uint32_t bindCpuIndex)
 {
     std::string cpuSetFlag;
-    const char * const envValue = std::getenv("PROCMGR_AICPU_CPUSET");
+    const char* const envValue = std::getenv("PROCMGR_AICPU_CPUSET");
     if (envValue != nullptr) {
         cpuSetFlag = std::string(envValue);
     }
@@ -246,12 +252,14 @@ BqsStatus BindCpuUtils::BindAicpu(const uint32_t bindCpuIndex)
     BqsStatus res = BQS_STATUS_OK;
     if (cpuSetFlag == "1") {
         res = BindAicpuByPm(bindCpuIndex);
-        BQS_LOG_RUN_INFO("Qs bind tid by pm, cpuSetFlag:[%s], index[%u], res[%d].",
-                         cpuSetFlag.c_str(), bindCpuIndex, static_cast<int32_t>(res));
+        BQS_LOG_RUN_INFO(
+            "Qs bind tid by pm, cpuSetFlag:[%s], index[%u], res[%d].", cpuSetFlag.c_str(), bindCpuIndex,
+            static_cast<int32_t>(res));
     } else {
         res = BindAicpuBySelf(bindCpuIndex);
-        BQS_LOG_RUN_INFO("Qs bind tid by self, cpuSetFlag:[%s] index[%u], res[%d].",
-                         cpuSetFlag.c_str(), bindCpuIndex, static_cast<int32_t>(res));
+        BQS_LOG_RUN_INFO(
+            "Qs bind tid by self, cpuSetFlag:[%s] index[%u], res[%d].", cpuSetFlag.c_str(), bindCpuIndex,
+            static_cast<int32_t>(res));
     }
     return res;
 }
@@ -271,9 +279,9 @@ void BindCpuUtils::SetThreadFIFO(const uint32_t deviceId)
     }
 }
 
-BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint32_t> &aiCpuIds,
-                                      std::vector<uint32_t> &ctrlCpuIds, uint32_t &coreNumPerDev, uint32_t &aicpuNum,
-                                      uint32_t &aicpuBaseId)
+BqsStatus BindCpuUtils::GetDevCpuInfo(
+    const uint32_t deviceId, std::vector<uint32_t>& aiCpuIds, std::vector<uint32_t>& ctrlCpuIds,
+    uint32_t& coreNumPerDev, uint32_t& aicpuNum, uint32_t& aicpuBaseId)
 {
     CpuInfo cpuInfo = {};
     uint32_t deviceIdTmp = deviceId;
@@ -306,8 +314,8 @@ BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint3
         if (cpuInfo.dcpuOsSched != 0U) {
             aicpuBaseId += cpuInfo.dcpuNum;
         }
-        BQS_LOG_INFO("get device[%u] aicpu cpu info success, aicpuBaseId[%u], aicpuNum[%u]",
-                     deviceIdTmp, aicpuBaseId, aicpuNum);
+        BQS_LOG_INFO(
+            "get device[%u] aicpu cpu info success, aicpuBaseId[%u], aicpuNum[%u]", deviceIdTmp, aicpuBaseId, aicpuNum);
     } else {
         int64_t aicpuNumTmp = 0;
         int64_t aicpuBitMap = 0;
@@ -318,8 +326,9 @@ BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint3
             ret = halGetDeviceInfo(deviceId, MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, &aicpuNumTmp) +
                   halGetDeviceInfo(deviceId, MODULE_TYPE_AICPU, INFO_TYPE_OCCUPY, &aicpuBitMap);
         }
-        BQS_LOG_INFO("get device[%u] aicpu cpu info success, aicpuBitMap[%ld], aicpuNum[%ld]",
-                     deviceId, aicpuBitMap, aicpuNumTmp);
+        BQS_LOG_INFO(
+            "get device[%u] aicpu cpu info success, aicpuBitMap[%ld], aicpuNum[%ld]", deviceId, aicpuBitMap,
+            aicpuNumTmp);
         aicpuNum = aicpuNumTmp;
         aiCpuIds.clear();
         uint32_t id = 0;
@@ -332,8 +341,9 @@ BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint3
         }
     }
 
-    BQS_LOG_INFO("get device[%u] ctrl cpu info success, ccpuNum[%ld], ccpuOsSched[%ld]",
-                 deviceId, cpuInfo.ccpuNum, cpuInfo.ccpuOsSched);
+    BQS_LOG_INFO(
+        "get device[%u] ctrl cpu info success, ccpuNum[%ld], ccpuOsSched[%ld]", deviceId, cpuInfo.ccpuNum,
+        cpuInfo.ccpuOsSched);
     if (cpuInfo.ccpuOsSched > 0L && !FeatureCtrl::IsVfModeDie1(deviceId)) {
         for (auto i = 0L; i < cpuInfo.ccpuNum; i++) {
             ctrlCpuIds.emplace_back(coreNumPerDev * deviceId + static_cast<uint32_t>(i));
@@ -376,4 +386,4 @@ bool BindCpuUtils::AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     BQS_LOG_RUN_INFO("Add to cgroup successfully, cmd:[%s].", command.c_str());
     return true;
 }
-}  // namespace bqs
+} // namespace bqs

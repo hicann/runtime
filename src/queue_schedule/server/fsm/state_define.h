@@ -31,25 +31,17 @@ enum class FsmStatus : int32_t {
     FSM_SRC_EMPTY
 };
 
-enum class InnerMsgType : int32_t {
-    INNER_MSG_PUSH = 0,
-    INNER_MSG_F2NF,
-    INNER_MSG_RECOVER,
-    INNER_MSG_INVALID
-};
+enum class InnerMsgType : int32_t { INNER_MSG_PUSH = 0, INNER_MSG_F2NF, INNER_MSG_RECOVER, INNER_MSG_INVALID };
 
 struct InnerMessage {
     InnerMsgType msgType = InnerMsgType::INNER_MSG_INVALID;
 };
 
-inline const char_t *GetMsgDesc(const InnerMessage &msg)
+inline const char_t* GetMsgDesc(const InnerMessage& msg)
 {
     if ((msg.msgType >= InnerMsgType::INNER_MSG_PUSH) && (msg.msgType <= InnerMsgType::INNER_MSG_RECOVER)) {
-        const char_t * const msgDesc[static_cast<int32_t>(InnerMsgType::INNER_MSG_INVALID)] = {
-            "PUSH",
-            "F2NF",
-            "RECOVER"
-        };
+        const char_t* const msgDesc[static_cast<int32_t>(InnerMsgType::INNER_MSG_INVALID)] = {
+            "PUSH", "F2NF", "RECOVER"};
 
         return msgDesc[static_cast<int32_t>(msg.msgType)];
     } else {
@@ -57,26 +49,14 @@ inline const char_t *GetMsgDesc(const InnerMessage &msg)
     }
 }
 
-enum class EntityType : int32_t {
-    ENTITY_QUEUE = 0,
-    ENTITY_TAG,
-    ENTITY_GROUP,
-    ENTITY_INVALID
-};
+enum class EntityType : int32_t { ENTITY_QUEUE = 0, ENTITY_TAG, ENTITY_GROUP, ENTITY_INVALID };
 
-enum class EntityDirection : int32_t {
-    DIRECTION_SEND = 0,
-    DIRECTION_RECV,
-    DIRECTION_INVALID
-};
+enum class EntityDirection : int32_t { DIRECTION_SEND = 0, DIRECTION_RECV, DIRECTION_INVALID };
 
-inline const char_t *GetDirectionDesc(const EntityDirection direction)
+inline const char_t* GetDirectionDesc(const EntityDirection direction)
 {
     if ((direction >= EntityDirection::DIRECTION_SEND) && (direction <= EntityDirection::DIRECTION_RECV)) {
-        const char_t * const directionDesc[static_cast<int32_t>(EntityDirection::DIRECTION_INVALID)] = {
-            "SEND",
-            "RECV"
-        };
+        const char_t* const directionDesc[static_cast<int32_t>(EntityDirection::DIRECTION_INVALID)] = {"SEND", "RECV"};
 
         return directionDesc[static_cast<int32_t>(direction)];
     } else {
@@ -104,11 +84,7 @@ enum class AsyncDataState : int32_t {
     FSM_ASYNC_DATA_INVALID
 };
 
-enum class SubscribeStatus : int32_t {
-    SUBSCRIBE_PAUSE = 0,
-    SUBSCRIBE_RESUME,
-    SUBSCRIBE_INVALID
-};
+enum class SubscribeStatus : int32_t { SUBSCRIBE_PAUSE = 0, SUBSCRIBE_RESUME, SUBSCRIBE_INVALID };
 
 enum class BufEventType : int32_t {
     BUF_EVENT_DEL = 0,
@@ -120,5 +96,5 @@ enum class ChannelLinkStatus : int32_t {
     CONNECTED,
     ABNORMAL,
 };
-}
+} // namespace dgw
 #endif

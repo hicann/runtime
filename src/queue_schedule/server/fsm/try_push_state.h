@@ -20,15 +20,15 @@ public:
     explicit TryPushState() noexcept = default;
     ~TryPushState() override = default;
 
-    FsmStatus PreProcess(Entity &entity) override;
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PreProcess(Entity& entity) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
+    FsmStatus PostProcess(Entity& entity) override;
     // not keep this state, so no need override ProcessMessage API
 
 protected:
-    FsmStatus SendRequestForDynamicGroup(const DynamicRequestPtr dynamicRequest, const uint32_t schedCfgKey,
-        Entity &entity) const;
+    FsmStatus SendRequestForDynamicGroup(
+        const DynamicRequestPtr dynamicRequest, const uint32_t schedCfgKey, Entity& entity) const;
 };
-}
+} // namespace dgw
 
 #endif

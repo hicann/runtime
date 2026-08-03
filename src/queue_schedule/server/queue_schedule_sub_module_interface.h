@@ -27,31 +27,28 @@ public:
         uint32_t vfId;
     };
 
-    static SubModuleInterface &GetInstance()
+    static SubModuleInterface& GetInstance()
     {
         static SubModuleInterface instance;
         return instance;
     }
-    int32_t StartQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo);
-    int32_t StopQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo);
+    int32_t StartQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo);
+    int32_t StopQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo);
 
-    inline bool GetStartFlag() const
-    {
-        return startFlag_.load();
-    }
+    inline bool GetStartFlag() const { return startFlag_.load(); }
 
-    static bool QsSubModuleAttachGroup(const ArgsParser &startParams);
+    static bool QsSubModuleAttachGroup(const ArgsParser& startParams);
 
 private:
     SubModuleInterface() = default;
     ~SubModuleInterface() = default;
 
-    void SetTsdEventKey(const struct TsdSubEventInfo * const eventInfo);
-    bool ParseArgsFromFile(ArgsParser &startParams) const;
+    void SetTsdEventKey(const struct TsdSubEventInfo* const eventInfo);
+    bool ParseArgsFromFile(ArgsParser& startParams) const;
     std::string BuildArgsFilePath() const;
-    static void DeleteArgsFile(const std::string &argsFilePath);
+    static void DeleteArgsFile(const std::string& argsFilePath);
     int32_t SendSubModuleRsponse(const uint32_t eventType) const;
-    void QsSubModuleInitQsInitParams(InitQsParams &initQsParams, const ArgsParser &startParams);
+    void QsSubModuleInitQsInitParams(InitQsParams& initQsParams, const ArgsParser& startParams);
     void ReportErrMsgToTsd(const int32_t errCode) const;
     TsdEventKey tsdEventKey_;
     std::atomic<bool> startFlag_;
@@ -59,10 +56,9 @@ private:
 
 } // namespace bqs
 
-extern "C"
-{
-__attribute__((visibility("default"))) int32_t StartQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo);
-__attribute__((visibility("default"))) int32_t StopQueueScheduleModule(const struct TsdSubEventInfo * const eventInfo);
+extern "C" {
+__attribute__((visibility("default"))) int32_t StartQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo);
+__attribute__((visibility("default"))) int32_t StopQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo);
 }
 
 #endif // QUEUE_SCHEDULE_SUB_MODULE_INTERFACE_H

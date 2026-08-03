@@ -15,14 +15,14 @@
 #include "bqs_util.h"
 
 namespace bqs {
-SubscribeManager &SubscribeManager::GetInstance()
+SubscribeManager& SubscribeManager::GetInstance()
 {
     static SubscribeManager instance;
     return instance;
 }
 
-void SubscribeManager::InitSubscribeManager(const uint32_t deviceId, const uint32_t enqueGroupId,
-                                            const uint32_t f2nfGroupId, const uint32_t dstDeviceId)
+void SubscribeManager::InitSubscribeManager(
+    const uint32_t deviceId, const uint32_t enqueGroupId, const uint32_t f2nfGroupId, const uint32_t dstDeviceId)
 {
     deviceId_ = deviceId;
     enqueGroupId_ = enqueGroupId;
@@ -43,14 +43,15 @@ BqsStatus SubscribeManager::Subscribe(uint32_t queueId)
 
     const auto ret = EnhancedSubscribe(queueId, QUEUE_ENQUE_EVENT);
     if ((ret != DRV_ERROR_NONE) && (ret != DRV_ERROR_QUEUE_RE_SUBSCRIBED)) {
-        BQS_LOG_ERROR("halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.",
-                      queueId, deviceId_, enqueGroupId_, static_cast<int32_t>(ret));
+        BQS_LOG_ERROR(
+            "halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.", queueId, deviceId_, enqueGroupId_,
+            static_cast<int32_t>(ret));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
     if ((ret == DRV_ERROR_QUEUE_RE_SUBSCRIBED) && (Resubscribe(queueId) != BQS_STATUS_OK)) {
-        BQS_LOG_ERROR("ReSubscribeBuffQueue queue[%u] on device[%u] in group[%u] failed.",
-            queueId, deviceId_, enqueGroupId_);
+        BQS_LOG_ERROR(
+            "ReSubscribeBuffQueue queue[%u] on device[%u] in group[%u] failed.", queueId, deviceId_, enqueGroupId_);
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -69,8 +70,9 @@ BqsStatus SubscribeManager::UpdateSubscribe(const uint32_t queueId)
 
     const auto status = EnhancedSubscribe(queueId, QUEUE_ENQUE_EVENT);
     if ((status != DRV_ERROR_NONE) && (status != DRV_ERROR_QUEUE_RE_SUBSCRIBED)) {
-        BQS_LOG_ERROR("halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.",
-                      queueId, deviceId_, enqueGroupId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.", queueId, deviceId_, enqueGroupId_,
+            static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -101,11 +103,13 @@ BqsStatus SubscribeManager::Unsubscribe(const uint32_t queueId)
         if (status == DRV_ERROR_NONE) {
             BQS_LOG_INFO("halQueueUnsubscribe queue[%u] on device[%u] success.", queueId, deviceId_);
         } else if (status == DRV_ERROR_NOT_EXIST) {
-            BQS_LOG_RUN_WARN("halQueueUnsubscribe return abnormal, queue[%u], device[%u], ret[%d].",
-                             queueId, deviceId_, static_cast<int32_t>(status));
+            BQS_LOG_RUN_WARN(
+                "halQueueUnsubscribe return abnormal, queue[%u], device[%u], ret[%d].", queueId, deviceId_,
+                static_cast<int32_t>(status));
         } else {
-            BQS_LOG_ERROR("halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.",
-                queueId, deviceId_, static_cast<int32_t>(status));
+            BQS_LOG_ERROR(
+                "halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.", queueId, deviceId_,
+                static_cast<int32_t>(status));
             return BQS_STATUS_DRIVER_ERROR;
         }
     } else {
@@ -119,17 +123,18 @@ BqsStatus SubscribeManager::Unsubscribe(const uint32_t queueId)
 BqsStatus SubscribeManager::Resubscribe(const uint32_t queueId) const
 {
     auto status = EnhancedUnSubscribe(queueId, QUEUE_ENQUE_EVENT);
-    if ((status != DRV_ERROR_NONE) &&
-        (status != DRV_ERROR_NOT_EXIST)) {
-        BQS_LOG_ERROR("halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.", queueId, deviceId_,
+    if ((status != DRV_ERROR_NONE) && (status != DRV_ERROR_NOT_EXIST)) {
+        BQS_LOG_ERROR(
+            "halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.", queueId, deviceId_,
             static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
     status = EnhancedSubscribe(queueId, QUEUE_ENQUE_EVENT);
     if (status != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.",
-                      queueId, deviceId_, enqueGroupId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.", queueId, deviceId_, enqueGroupId_,
+            static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
     return BQS_STATUS_OK;
@@ -147,19 +152,21 @@ BqsStatus SubscribeManager::PauseSubscribe(const uint32_t queueId, const uint32_
         const auto status = EnhancedUnSubscribe(queueId, QUEUE_ENQUE_EVENT);
         if ((status != DRV_ERROR_NONE) && (status != DRV_ERROR_NOT_EXIST)) {
             if (idleLog) {
-                BQS_LOG_ERROR("halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.",
-                    queueId, deviceId_, static_cast<int32_t>(status));
+                BQS_LOG_ERROR(
+                    "halQueueUnsubscribe queue[%u] on device[%u] failed, ret=%d.", queueId, deviceId_,
+                    static_cast<int32_t>(status));
             }
             return BQS_STATUS_DRIVER_ERROR;
         }
         findRet->second = false;
         StatisticManager::GetInstance().PauseSubscribe();
-        BQS_LOG_INFO("Pause subscribe queue[%u] on device[%u] as queue or tag[%u] full or get status not success.",
-            queueId, deviceId_, fullId);
+        BQS_LOG_INFO(
+            "Pause subscribe queue[%u] on device[%u] as queue or tag[%u] full or get status not success.", queueId,
+            deviceId_, fullId);
     } else {
         if (idleLog) {
-            BQS_LOG_INFO("queue[%u] on device[%u] is pause subscribed, no need to pause subscribe.",
-                queueId, deviceId_);
+            BQS_LOG_INFO(
+                "queue[%u] on device[%u] is pause subscribed, no need to pause subscribe.", queueId, deviceId_);
         }
     }
     return BQS_STATUS_OK;
@@ -178,14 +185,16 @@ BqsStatus SubscribeManager::ResumeSubscribe(const uint32_t queueId, const uint32
     } else {
         const auto status = EnhancedSubscribe(queueId, QUEUE_ENQUE_EVENT);
         if (status != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.",
-                queueId, deviceId_, enqueGroupId_, static_cast<int32_t>(status));
+            BQS_LOG_ERROR(
+                "halQueueSubscribe queue[%u] on device[%u] in group[%u] failed, ret=%d.", queueId, deviceId_,
+                enqueGroupId_, static_cast<int32_t>(status));
             return BQS_STATUS_DRIVER_ERROR;
         }
         findRet->second = true;
         StatisticManager::GetInstance().ResumeSubscribe();
-        BQS_LOG_INFO("Resume subscribe queue[%u] on device[%u] as queue or tag[%u] be not full success.",
-            queueId, deviceId_, notFullId);
+        BQS_LOG_INFO(
+            "Resume subscribe queue[%u] on device[%u] as queue or tag[%u] be not full success.", queueId, deviceId_,
+            notFullId);
     }
     return BQS_STATUS_OK;
 }
@@ -194,15 +203,17 @@ BqsStatus SubscribeManager::SubscribeFullToNotFull(uint32_t queueId)
 {
     const auto findRet = fullToNotFullQueuesSets_.find(queueId);
     if (findRet != fullToNotFullQueuesSets_.end()) {
-        BQS_LOG_INFO("queue[%u] on device[%u] full to not full event is subscribed, no need to unsubscribe.",
-            queueId, deviceId_);
+        BQS_LOG_INFO(
+            "queue[%u] on device[%u] full to not full event is subscribed, no need to unsubscribe.", queueId,
+            deviceId_);
         return BQS_STATUS_OK;
     }
 
     const auto status = EnhancedSubscribe(queueId, QUEUE_F2NF_EVENT);
     if ((status != DRV_ERROR_NONE) && (status != DRV_ERROR_QUEUE_RE_SUBSCRIBED)) {
-        BQS_LOG_ERROR("halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] failed, ret=%d.",
-            queueId, f2nfGroupId_, deviceId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] failed, ret=%d.", queueId, f2nfGroupId_,
+            deviceId_, static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -211,8 +222,8 @@ BqsStatus SubscribeManager::SubscribeFullToNotFull(uint32_t queueId)
         return BQS_STATUS_DRIVER_ERROR;
     }
     (void)fullToNotFullQueuesSets_.emplace(queueId);
-    BQS_LOG_INFO("halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] success.",
-        queueId, f2nfGroupId_, deviceId_);
+    BQS_LOG_INFO(
+        "halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] success.", queueId, f2nfGroupId_, deviceId_);
     return BQS_STATUS_OK;
 }
 
@@ -220,15 +231,17 @@ BqsStatus SubscribeManager::UpdateSubscribeFullToNotFull(const uint32_t queueId)
 {
     const auto findRet = fullToNotFullQueuesSets_.find(queueId);
     if (findRet == fullToNotFullQueuesSets_.end()) {
-        BQS_LOG_INFO("queue[%u] on device[%u] full to not full event is not subscribed, no need to update subscribe.",
-            queueId, deviceId_);
+        BQS_LOG_INFO(
+            "queue[%u] on device[%u] full to not full event is not subscribed, no need to update subscribe.", queueId,
+            deviceId_);
         return BQS_STATUS_OK;
     }
 
     const auto ret = EnhancedSubscribe(queueId, QUEUE_F2NF_EVENT);
     if ((ret != DRV_ERROR_NONE) && (ret != DRV_ERROR_QUEUE_RE_SUBSCRIBED)) {
-        BQS_LOG_ERROR("halQueueSubF2NFEvent for queue[%u] on device[%u] in group[%u] failed, ret=%d.",
-            queueId, deviceId_, f2nfGroupId_, static_cast<int32_t>(ret));
+        BQS_LOG_ERROR(
+            "halQueueSubF2NFEvent for queue[%u] on device[%u] in group[%u] failed, ret=%d.", queueId, deviceId_,
+            f2nfGroupId_, static_cast<int32_t>(ret));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -236,8 +249,9 @@ BqsStatus SubscribeManager::UpdateSubscribeFullToNotFull(const uint32_t queueId)
         BQS_LOG_ERROR("ReHalQueueSubEvent queue[%u] on device[%u] failed.", queueId, deviceId_);
         return BQS_STATUS_DRIVER_ERROR;
     }
-    BQS_LOG_INFO("UpdateSubscribeFullToNotFull for queue[%u] on device[%u] in group[%u] success.",
-        queueId, deviceId_, f2nfGroupId_);
+    BQS_LOG_INFO(
+        "UpdateSubscribeFullToNotFull for queue[%u] on device[%u] in group[%u] success.", queueId, deviceId_,
+        f2nfGroupId_);
     return BQS_STATUS_OK;
 }
 
@@ -245,8 +259,9 @@ BqsStatus SubscribeManager::UnsubscribeFullToNotFull(const uint32_t queueId)
 {
     const auto findRet = fullToNotFullQueuesSets_.find(queueId);
     if (findRet == fullToNotFullQueuesSets_.end()) {
-        BQS_LOG_INFO("queue[%u] on device[%u] full to not full event is not subscribed, no need to unsubscribe.",
-            queueId, deviceId_);
+        BQS_LOG_INFO(
+            "queue[%u] on device[%u] full to not full event is not subscribed, no need to unsubscribe.", queueId,
+            deviceId_);
         return BQS_STATUS_OK;
     }
 
@@ -254,11 +269,13 @@ BqsStatus SubscribeManager::UnsubscribeFullToNotFull(const uint32_t queueId)
     if (status == DRV_ERROR_NONE) {
         BQS_LOG_INFO("halQueueUnsubEvent for queue[%u] on device[%u] success.", queueId, deviceId_);
     } else if ((status == DRV_ERROR_NOT_EXIST) || (status == DRV_ERROR_PERMISSION)) {
-        BQS_LOG_WARN("halQueueUnsubF2NFEvent return abnormal, queue[%u] on device[%u], ret=%d.",
-                         queueId, deviceId_, static_cast<int32_t>(status));
+        BQS_LOG_WARN(
+            "halQueueUnsubF2NFEvent return abnormal, queue[%u] on device[%u], ret=%d.", queueId, deviceId_,
+            static_cast<int32_t>(status));
     } else {
-        BQS_LOG_ERROR("halQueueUnsubEvent for queue[%u] on device[%u] failed, ret=%d.",
-            queueId, deviceId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueUnsubEvent for queue[%u] on device[%u] failed, ret=%d.", queueId, deviceId_,
+            static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
     (void)fullToNotFullQueuesSets_.erase(findRet);
@@ -269,15 +286,17 @@ BqsStatus SubscribeManager::ResubscribeF2NF(const uint32_t queueId) const
 {
     auto status = EnhancedUnSubscribe(queueId, QUEUE_F2NF_EVENT);
     if ((status != DRV_ERROR_NONE) && (status != DRV_ERROR_NOT_EXIST)) {
-        BQS_LOG_ERROR("halQueueUnsubF2NFEvent for queue[%u], deviceId[%u] failed, ret=%d.",
-            queueId, deviceId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueUnsubF2NFEvent for queue[%u], deviceId[%u] failed, ret=%d.", queueId, deviceId_,
+            static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
     status = EnhancedSubscribe(queueId, QUEUE_F2NF_EVENT);
     if (status != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] failed, ret=%d.",
-            queueId, f2nfGroupId_, deviceId_, static_cast<int32_t>(status));
+        BQS_LOG_ERROR(
+            "halQueueSubF2NFEvent for queue[%u] in group[%u], deviceId[%u] failed, ret=%d.", queueId, f2nfGroupId_,
+            deviceId_, static_cast<int32_t>(status));
         return BQS_STATUS_DRIVER_ERROR;
     }
     return BQS_STATUS_OK;
@@ -286,8 +305,9 @@ BqsStatus SubscribeManager::ResubscribeF2NF(const uint32_t queueId) const
 drvError_t SubscribeManager::DefalutSubscribe(const uint32_t queueId, const QUEUE_EVENT_TYPE eventType) const
 {
     if (deviceId_ != dstDeviceId_) {
-        BQS_LOG_ERROR("Subscribe queue[%u] on device[%u] to device[%u] failed because it is not supported.",
-            queueId, deviceId_, dstDeviceId_);
+        BQS_LOG_ERROR(
+            "Subscribe queue[%u] on device[%u] to device[%u] failed because it is not supported.", queueId, deviceId_,
+            dstDeviceId_);
         return DRV_ERROR_NOT_SUPPORT;
     }
 
@@ -317,7 +337,8 @@ drvError_t SubscribeManager::EnhancedSubscribe(const uint32_t queueId, const QUE
         if (eventType == QUEUE_ENQUE_EVENT) {
             queSubParm.queType = QUEUE_TYPE_GROUP;
         }
-        BQS_LOG_RUN_INFO("Subscribe event[%d] of queue[%u] on device[%u] to group[%u] on resDevice[%u]",
+        BQS_LOG_RUN_INFO(
+            "Subscribe event[%d] of queue[%u] on device[%u] to group[%u] on resDevice[%u]",
             static_cast<int32_t>(eventType), queueId, deviceId_, enqueGroupId_, dstDeviceId_);
         return halQueueSubEvent(&queSubParm);
     }
@@ -352,13 +373,13 @@ drvError_t SubscribeManager::EnhancedUnSubscribe(const uint32_t queueId, const Q
     return DefalutUnSubscribe(queueId, eventType);
 }
 
-Subscribers &Subscribers::GetInstance()
+Subscribers& Subscribers::GetInstance()
 {
     static Subscribers instance;
     return instance;
 }
 
-void Subscribers::InitSubscribeManagers(const std::set<uint32_t> &deviceIds, const uint32_t dstDeviceId)
+void Subscribers::InitSubscribeManagers(const std::set<uint32_t>& deviceIds, const uint32_t dstDeviceId)
 {
     const uint32_t resId = GlobalCfg::GetInstance().GetResIndexByDeviceId(dstDeviceId);
     const uint32_t groupId = GlobalCfg::GetInstance().GetGroupIdByDeviceId(dstDeviceId);
@@ -367,7 +388,7 @@ void Subscribers::InitSubscribeManagers(const std::set<uint32_t> &deviceIds, con
     }
 }
 
-SubscribeManager *Subscribers::GetSubscribeManager(const uint32_t resId, const uint32_t deviceId)
+SubscribeManager* Subscribers::GetSubscribeManager(const uint32_t resId, const uint32_t deviceId)
 {
     const auto resIdIter = subscribeManagers_.find(resId);
     if (resIdIter == subscribeManagers_.end()) {

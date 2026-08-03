@@ -26,74 +26,77 @@ namespace {
 constexpr const uint32_t RELATION_UPPER_BOUND = 65536U;
 } // namespace
 
-BindRelation &BindRelation::GetInstance()
+BindRelation& BindRelation::GetInstance()
 {
     static BindRelation instance;
     return instance;
 }
 
-BqsStatus BindRelation::CheckMultiLayerBind(const EntityInfo& srcEntity, const EntityInfo& dstEntity,
-    const uint32_t index) const
+BqsStatus BindRelation::CheckMultiLayerBind(
+    const EntityInfo& srcEntity, const EntityInfo& dstEntity, const uint32_t index) const
 {
-    const MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
-    const MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    const MapEnitityInfoToInfoSet& srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    const MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
 
     const auto srcToDstIter = srcToDstRelation.find(dstEntity);
     if (srcToDstIter != srcToDstRelation.end()) {
         auto dstSets = srcToDstIter->second;
         for (auto itDst = dstSets.begin(); itDst != dstSets.end(); ++itDst) {
             if ((*itDst).GetType() == dgw::EntityType::ENTITY_TAG) {
-                BQS_LOG_WARN("Bind relation[%s->%s] ignore check multi layer bind.",
-                    (srcToDstIter->first).ToString().c_str(), (*itDst).ToString().c_str());
+                BQS_LOG_WARN(
+                    "Bind relation[%s->%s] ignore check multi layer bind.", (srcToDstIter->first).ToString().c_str(),
+                    (*itDst).ToString().c_str());
                 return BQS_STATUS_OK;
             }
         }
 
-        BQS_LOG_ERROR("Bind relation[%s->*] already exists, can't add relation [%s->%s], suggest to add "
+        BQS_LOG_ERROR(
+            "Bind relation[%s->*] already exists, can't add relation [%s->%s], suggest to add "
             "relation[%s->*] directly.",
-            (srcToDstIter->first).ToString().c_str(), srcEntity.ToString().c_str(),
-            dstEntity.ToString().c_str(), srcEntity.ToString().c_str());
+            (srcToDstIter->first).ToString().c_str(), srcEntity.ToString().c_str(), dstEntity.ToString().c_str(),
+            srcEntity.ToString().c_str());
         return BQS_STATUS_PARAM_INVALID;
     }
 
     const auto dstToSrcIter = dstToSrcRelation.find(srcEntity);
     if (dstToSrcIter != dstToSrcRelation.end()) {
-        BQS_LOG_ERROR("Bind relation[*->%s] already exists, can't add relation [%s->%s], suggest to add "
+        BQS_LOG_ERROR(
+            "Bind relation[*->%s] already exists, can't add relation [%s->%s], suggest to add "
             "relation[*->%s] directly.",
-            (dstToSrcIter->first).ToString().c_str(), srcEntity.ToString().c_str(),
-            dstEntity.ToString().c_str(), dstEntity.ToString().c_str());
+            (dstToSrcIter->first).ToString().c_str(), srcEntity.ToString().c_str(), dstEntity.ToString().c_str(),
+            dstEntity.ToString().c_str());
         return BQS_STATUS_PARAM_INVALID;
     }
     return BQS_STATUS_OK;
 }
 
-
-BqsStatus BindRelation::CheckEntityExistInGroup(const EntityInfo& src, const EntityInfo& dst,
-    const uint32_t resIndex) const
+BqsStatus BindRelation::CheckEntityExistInGroup(
+    const EntityInfo& src, const EntityInfo& dst, const uint32_t resIndex) const
 {
     if (src.GetType() == dgw::EntityType::ENTITY_GROUP) {
-        const auto &entitiesInGroup = GetEntitiesInGroup(src.GetId());
+        const auto& entitiesInGroup = GetEntitiesInGroup(src.GetId());
         for (auto iter = entitiesInGroup.begin(); iter != entitiesInGroup.end(); ++iter) {
-            const auto &element = (*(*iter));
+            const auto& element = (*(*iter));
             if (dst == element) {
-                BQS_LOG_ERROR("dst entity[%s] has exist in src group entity[%s].",
-                    dst.ToString().c_str(), src.ToString().c_str());
+                BQS_LOG_ERROR(
+                    "dst entity[%s] has exist in src group entity[%s].", dst.ToString().c_str(),
+                    src.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
             const auto existSrcEntity = dgw::EntityManager::Instance(resIndex).GetEntityById(
-                element.GetQueueType(), element.GetDeviceId(), element.GetType(),
-                element.GetId(), dgw::EntityDirection::DIRECTION_SEND);
+                element.GetQueueType(), element.GetDeviceId(), element.GetType(), element.GetId(),
+                dgw::EntityDirection::DIRECTION_SEND);
             if ((existSrcEntity != nullptr) &&
                 (existSrcEntity->GetHostGroupId() != static_cast<int32_t>(src.GetId()))) {
-                BQS_LOG_ERROR("Entity[%s] in group[%s] exists in other src side.",
-                    element.ToString().c_str(), src.ToString().c_str());
+                BQS_LOG_ERROR(
+                    "Entity[%s] in group[%s] exists in other src side.", element.ToString().c_str(),
+                    src.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
         }
     } else {
-        const auto srcEntityPtr = dgw::EntityManager::Instance(resIndex).
-            GetEntityById(src.GetQueueType(), src.GetDeviceId(), src.GetType(),
-                          src.GetId(), dgw::EntityDirection::DIRECTION_SEND);
+        const auto srcEntityPtr = dgw::EntityManager::Instance(resIndex).GetEntityById(
+            src.GetQueueType(), src.GetDeviceId(), src.GetType(), src.GetId(), dgw::EntityDirection::DIRECTION_SEND);
         if (srcEntityPtr != nullptr) {
             const int32_t groupId = srcEntityPtr->GetHostGroupId();
             if (groupId != dgw::INVALID_GROUP_ID) {
@@ -105,28 +108,29 @@ BqsStatus BindRelation::CheckEntityExistInGroup(const EntityInfo& src, const Ent
     }
 
     if (dst.GetType() == dgw::EntityType::ENTITY_GROUP) {
-        const auto &entitiesInGroup = GetEntitiesInGroup(dst.GetId());
+        const auto& entitiesInGroup = GetEntitiesInGroup(dst.GetId());
         for (auto iter = entitiesInGroup.begin(); iter != entitiesInGroup.end(); ++iter) {
-            const auto &element = (*(*iter));
+            const auto& element = (*(*iter));
             if (src == element) {
-                BQS_LOG_ERROR("src entity[%s] has exist in dst group entity[%s].",
-                    src.ToString().c_str(), dst.ToString().c_str());
+                BQS_LOG_ERROR(
+                    "src entity[%s] has exist in dst group entity[%s].", src.ToString().c_str(),
+                    dst.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
-            const auto existDstEntity = dgw::EntityManager::Instance(resIndex).
-                GetEntityById(element.GetQueueType(), element.GetDeviceId(), element.GetType(),
-                              element.GetId(), dgw::EntityDirection::DIRECTION_RECV);
+            const auto existDstEntity = dgw::EntityManager::Instance(resIndex).GetEntityById(
+                element.GetQueueType(), element.GetDeviceId(), element.GetType(), element.GetId(),
+                dgw::EntityDirection::DIRECTION_RECV);
             if ((existDstEntity != nullptr) &&
                 (existDstEntity->GetHostGroupId() != static_cast<int32_t>(dst.GetId()))) {
-                BQS_LOG_ERROR("Entity[%s] in group[%s] exists in other dst side.",
-                    element.ToString().c_str(), dst.ToString().c_str());
+                BQS_LOG_ERROR(
+                    "Entity[%s] in group[%s] exists in other dst side.", element.ToString().c_str(),
+                    dst.ToString().c_str());
                 return BQS_STATUS_PARAM_INVALID;
             }
         }
     } else {
-        const auto dstEntityPtr = dgw::EntityManager::Instance(resIndex).
-            GetEntityById(dst.GetQueueType(), dst.GetDeviceId(), dst.GetType(),
-                          dst.GetId(), dgw::EntityDirection::DIRECTION_RECV);
+        const auto dstEntityPtr = dgw::EntityManager::Instance(resIndex).GetEntityById(
+            dst.GetQueueType(), dst.GetDeviceId(), dst.GetType(), dst.GetId(), dgw::EntityDirection::DIRECTION_RECV);
         if (dstEntityPtr != nullptr) {
             const int32_t groupId = dstEntityPtr->GetHostGroupId();
             if (groupId != dgw::INVALID_GROUP_ID) {
@@ -139,11 +143,12 @@ BqsStatus BindRelation::CheckEntityExistInGroup(const EntityInfo& src, const Ent
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::CheckBind(const EntityInfo& srcEntity, const EntityInfo& dstEntity,
-    const uint32_t resIndex, uint32_t &index) const
+BqsStatus BindRelation::CheckBind(
+    const EntityInfo& srcEntity, const EntityInfo& dstEntity, const uint32_t resIndex, uint32_t& index) const
 {
     if (srcEntity == dstEntity) {
-        BQS_LOG_ERROR("Bind relation[%s->%s] failed, as can't bind to self.", srcEntity.ToString().c_str(),
+        BQS_LOG_ERROR(
+            "Bind relation[%s->%s] failed, as can't bind to self.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         return BQS_STATUS_PARAM_INVALID;
     }
@@ -154,31 +159,35 @@ BqsStatus BindRelation::CheckBind(const EntityInfo& srcEntity, const EntityInfo&
     }
 
     if (resIndex != index) {
-        BQS_LOG_INFO("relation[%s->%s] should be processed by threads[%u] while current threads[%u]",
+        BQS_LOG_INFO(
+            "relation[%s->%s] should be processed by threads[%u] while current threads[%u]",
             srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), index, resIndex);
         return BQS_STATUS_OK;
     }
 
-    const MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    const MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     if (dstToSrcRelation.size() >= RELATION_UPPER_BOUND) {
-        BQS_LOG_ERROR("Bind relation[%u->%u] failed, as the maximum number of relation supported is %u, "
+        BQS_LOG_ERROR(
+            "Bind relation[%u->%u] failed, as the maximum number of relation supported is %u, "
             "current number is %zu.",
             srcEntity.GetId(), dstEntity.GetId(), RELATION_UPPER_BOUND, dstToSrcRelation.size());
         return BQS_STATUS_INNER_ERROR;
     }
     const auto dstToSrcIter = dstToSrcRelation.find(dstEntity);
     if ((dstToSrcIter != dstToSrcRelation.end()) && (dstToSrcIter->second.count(srcEntity) != 0U)) {
-        BQS_LOG_WARN("Bind relation[%s->%s] already exists, no need bind.", srcEntity.ToString().c_str(),
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] already exists, no need bind.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         (void)UpdateSubscribeEvent(srcEntity, EventType::ENQUEUE, index);
         (void)UpdateSubscribeEvent(dstEntity, EventType::F2NF, index);
         return BQS_STATUS_OK;
     }
 
-    const auto &abnormalDstToSrcIter = abnormalDstToSrc_.find(dstEntity);
+    const auto& abnormalDstToSrcIter = abnormalDstToSrc_.find(dstEntity);
     if ((abnormalDstToSrcIter != abnormalDstToSrc_.end()) && (abnormalDstToSrcIter->second.count(srcEntity) != 0U)) {
-        BQS_LOG_WARN("Bind relation[%s->%s] already exists in abnormal bind relations, cannot bind.",
-                     srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] already exists in abnormal bind relations, cannot bind.",
+            srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
         return BQS_STATUS_OK;
     }
 
@@ -195,8 +204,8 @@ BqsStatus BindRelation::CheckBind(const EntityInfo& srcEntity, const EntityInfo&
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::SetEntityPtr(EntityInfo &entityInfo, const dgw::EntityDirection direction,
-    const uint32_t index) const
+BqsStatus BindRelation::SetEntityPtr(
+    EntityInfo& entityInfo, const dgw::EntityDirection direction, const uint32_t index) const
 {
     if (entityInfo.GetEntity() != nullptr) {
         return BQS_STATUS_OK;
@@ -212,27 +221,28 @@ BqsStatus BindRelation::SetEntityPtr(EntityInfo &entityInfo, const dgw::EntityDi
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::AddSrcToDst(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t index)
+BqsStatus BindRelation::AddSrcToDst(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t index)
 {
     BqsStatus ret = BQS_STATUS_OK;
     if ((SetEntityPtr(srcEntity, dgw::EntityDirection::DIRECTION_SEND, index) != BQS_STATUS_OK) ||
         (SetEntityPtr(dstEntity, dgw::EntityDirection::DIRECTION_RECV, index) != BQS_STATUS_OK)) {
-        BQS_LOG_ERROR("Bind relation add [%s->%s] failed becuause of missing entity.",
-                      srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+        BQS_LOG_ERROR(
+            "Bind relation add [%s->%s] failed becuause of missing entity.", srcEntity.ToString().c_str(),
+            dstEntity.ToString().c_str());
         return BQS_STATUS_INNER_ERROR;
     }
 
-    MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    MapEnitityInfoToInfoSet& srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
     const auto iter = srcToDstRelation.find(srcEntity);
     if (iter == srcToDstRelation.end()) {
         ret = SubscribeEvent(srcEntity, EventType::ENQUEUE, index);
         if (ret != BQS_STATUS_OK) {
-            BQS_LOG_ERROR("Bind relation add [%s->%s] failed, as subscribe failed, ret=%d.",
-                srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+            BQS_LOG_ERROR(
+                "Bind relation add [%s->%s] failed, as subscribe failed, ret=%d.", srcEntity.ToString().c_str(),
+                dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
             return ret;
         } else {
-            (void)srcToDstRelation.emplace(
-                std::make_pair(srcEntity, EntityInfoSet{ dstEntity }));
+            (void)srcToDstRelation.emplace(std::make_pair(srcEntity, EntityInfoSet{dstEntity}));
         }
     } else {
         (void)iter->second.emplace(dstEntity);
@@ -241,27 +251,28 @@ BqsStatus BindRelation::AddSrcToDst(EntityInfo &srcEntity, EntityInfo &dstEntity
     return ret;
 }
 
-BqsStatus BindRelation::AddDstToSrc(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t index)
+BqsStatus BindRelation::AddDstToSrc(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t index)
 {
     BqsStatus ret = BQS_STATUS_OK;
 
     if ((SetEntityPtr(srcEntity, dgw::EntityDirection::DIRECTION_SEND, index) != BQS_STATUS_OK) ||
         (SetEntityPtr(dstEntity, dgw::EntityDirection::DIRECTION_RECV, index) != BQS_STATUS_OK)) {
-        BQS_LOG_ERROR("Bind relation add [%s->%s] failed becuause of missing entity.",
-                      srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+        BQS_LOG_ERROR(
+            "Bind relation add [%s->%s] failed becuause of missing entity.", srcEntity.ToString().c_str(),
+            dstEntity.ToString().c_str());
         return BQS_STATUS_INNER_ERROR;
     }
 
-    MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     const auto iter = dstToSrcRelation.find(dstEntity);
     if (iter == dstToSrcRelation.end()) {
         ret = SubscribeEvent(dstEntity, EventType::F2NF, index);
         if (ret != BQS_STATUS_OK) {
-            BQS_LOG_ERROR("Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.",
-                srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+            BQS_LOG_ERROR(
+                "Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.", srcEntity.ToString().c_str(),
+                dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
         } else {
-            (void)dstToSrcRelation.emplace(
-                std::make_pair(dstEntity, EntityInfoSet{ srcEntity }));
+            (void)dstToSrcRelation.emplace(std::make_pair(dstEntity, EntityInfoSet{srcEntity}));
         }
     } else {
         (void)iter->second.emplace(srcEntity);
@@ -272,10 +283,11 @@ BqsStatus BindRelation::AddDstToSrc(EntityInfo &srcEntity, EntityInfo &dstEntity
 BqsStatus BindRelation::DelSrcToDst(const EntityInfo& srcEntity, const EntityInfo& dstEntity, const uint32_t index)
 {
     auto ret = BQS_STATUS_OK;
-    MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    MapEnitityInfoToInfoSet& srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
     const auto iter = srcToDstRelation.find(srcEntity);
     if (iter == srcToDstRelation.end()) {
-        BQS_LOG_WARN("Bind relation[%s->%s] dst doesn't exist, no need unbind.", srcEntity.ToString().c_str(),
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] dst doesn't exist, no need unbind.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         return BQS_STATUS_OK;
     }
@@ -286,17 +298,18 @@ BqsStatus BindRelation::DelSrcToDst(const EntityInfo& srcEntity, const EntityInf
         BQS_LOG_INFO("delete route [%s->*]", srcEntity.ToString().c_str());
         (void)srcToDstRelation.erase(iter);
     }
-    
+
     return ret;
 }
 
 BqsStatus BindRelation::DelDstToSrc(const EntityInfo& srcEntity, const EntityInfo& dstEntity, const uint32_t index)
 {
-    MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     auto ret = BQS_STATUS_OK;
     const auto iter = dstToSrcRelation.find(dstEntity);
     if (iter == dstToSrcRelation.end()) {
-        BQS_LOG_WARN("Bind relation[%s->%s] dst doesn't exist, no need unbind.", srcEntity.ToString().c_str(),
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] dst doesn't exist, no need unbind.", srcEntity.ToString().c_str(),
             dstEntity.ToString().c_str());
         return BQS_STATUS_OK;
     }
@@ -310,7 +323,7 @@ BqsStatus BindRelation::DelDstToSrc(const EntityInfo& srcEntity, const EntityInf
     return ret;
 }
 
-BqsStatus BindRelation::Bind(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t resIndex)
+BqsStatus BindRelation::Bind(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t resIndex)
 {
     uint32_t index = 0;
     auto ret = CheckBind(srcEntity, dstEntity, resIndex, index);
@@ -329,28 +342,30 @@ BqsStatus BindRelation::Bind(EntityInfo &srcEntity, EntityInfo &dstEntity, const
 
     ret = AddSrcToDst(srcEntity, dstEntity, index);
     if (ret != BQS_STATUS_OK) {
-        (void) DeleteEntity(srcEntity, true, index);
-        (void) DeleteEntity(dstEntity, false, index);
+        (void)DeleteEntity(srcEntity, true, index);
+        (void)DeleteEntity(dstEntity, false, index);
         return ret;
     }
 
     ret = AddDstToSrc(srcEntity, dstEntity, index);
     if (ret != BQS_STATUS_OK) {
         // roll back
-        (void) DelSrcToDst(srcEntity, dstEntity, index);
-        (void) DeleteEntity(srcEntity, true, index);
-        (void) DeleteEntity(dstEntity, false, index);
-        BQS_LOG_ERROR("Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.",
-            srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+        (void)DelSrcToDst(srcEntity, dstEntity, index);
+        (void)DeleteEntity(srcEntity, true, index);
+        (void)DeleteEntity(dstEntity, false, index);
+        BQS_LOG_ERROR(
+            "Bind relation add [%s->%s] failed, as subscribe f2nf failed, ret=%d.", srcEntity.ToString().c_str(),
+            dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
         return ret;
     }
 
-    BQS_LOG_RUN_INFO("Bind relation add {src[%s]->dst[%s]} success on resIndex[%u].",
-        srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), resIndex);
+    BQS_LOG_RUN_INFO(
+        "Bind relation add {src[%s]->dst[%s]} success on resIndex[%u].", srcEntity.ToString().c_str(),
+        dstEntity.ToString().c_str(), resIndex);
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::UnBind(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t resIndex)
+BqsStatus BindRelation::UnBind(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t resIndex)
 {
     // check unbind for src and dst entity
     auto ret = CheckUnBind(srcEntity);
@@ -380,15 +395,16 @@ BqsStatus BindRelation::UnBind(EntityInfo &srcEntity, EntityInfo &dstEntity, con
         }
     }
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Bind relation del [%s->%s] failed, bqsStatus=%d.",
-            srcEntity.ToString().c_str(), dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
+        BQS_LOG_ERROR(
+            "Bind relation del [%s->%s] failed, bqsStatus=%d.", srcEntity.ToString().c_str(),
+            dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
         return ret;
     }
 
     // no roll back if delete entity failed
     // check src entity whether exist multi bind
-    auto &srcToDstRelation = (resIndex == 0U) ? srcToDstRelation_ : srcToDstRelationExtra_;
-    auto &dstToSrcRelation = (resIndex == 0U) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    auto& srcToDstRelation = (resIndex == 0U) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    auto& dstToSrcRelation = (resIndex == 0U) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     const auto srcIter = srcToDstRelation.find(srcEntity);
     if (srcIter == srcToDstRelation.end()) {
         (void)DeleteEntity(srcEntity, true, resIndex);
@@ -420,7 +436,7 @@ BqsStatus BindRelation::UnBindRelationBySrc(const EntityInfo& srcEntity)
         return BQS_STATUS_OK;
     }
 
-    MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    MapEnitityInfoToInfoSet& srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
     const auto srcToDstIter = srcToDstRelation.find(srcEntity);
     if (srcToDstIter == srcToDstRelation.end()) {
         BQS_LOG_WARN("No relation [%s->*] exists, no need unbind", srcEntity.ToString().c_str());
@@ -429,13 +445,13 @@ BqsStatus BindRelation::UnBindRelationBySrc(const EntityInfo& srcEntity)
 
     const auto ret = UnsubscribeEvent(srcEntity, EventType::ENQUEUE, index);
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Unsubscribe queue[%s] failed, bqsStatus=%d.", srcEntity.ToString().c_str(),
-            static_cast<int32_t>(ret));
+        BQS_LOG_ERROR(
+            "Unsubscribe queue[%s] failed, bqsStatus=%d.", srcEntity.ToString().c_str(), static_cast<int32_t>(ret));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
-    MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
-    for (const auto &dstEntity : srcToDstIter->second) {
+    MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    for (const auto& dstEntity : srcToDstIter->second) {
         (void)DelDstToSrc(srcEntity, dstEntity, index);
         // delete dst entity
         const auto dstIter = dstToSrcRelation.find(dstEntity);
@@ -464,7 +480,7 @@ BqsStatus BindRelation::UnBindRelationByDst(const EntityInfo& dstEntity)
         return BQS_STATUS_OK;
     }
 
-    MapEnitityInfoToInfoSet &dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    MapEnitityInfoToInfoSet& dstToSrcRelation = (index == 0) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
     const auto dstToSrcIter = dstToSrcRelation.find(dstEntity);
     if (dstToSrcIter == dstToSrcRelation.end()) {
         BQS_LOG_WARN("No bind relation[*->%s] exists, no need unbind.", dstEntity.ToString().c_str());
@@ -473,13 +489,14 @@ BqsStatus BindRelation::UnBindRelationByDst(const EntityInfo& dstEntity)
 
     auto ret = UnsubscribeEvent(dstEntity, EventType::F2NF, index);
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("UnsubscribeFullToNotFull queue[%s] failed, bqsStatus=%d.", dstEntity.ToString().c_str(),
+        BQS_LOG_ERROR(
+            "UnsubscribeFullToNotFull queue[%s] failed, bqsStatus=%d.", dstEntity.ToString().c_str(),
             static_cast<int32_t>(ret));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
-    MapEnitityInfoToInfoSet &srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
-    for (const auto &srcEntity : dstToSrcIter->second) {
+    MapEnitityInfoToInfoSet& srcToDstRelation = (index == 0) ? srcToDstRelation_ : srcToDstRelationExtra_;
+    for (const auto& srcEntity : dstToSrcIter->second) {
         ret = DelSrcToDst(srcEntity, dstEntity, index);
         if (ret != BQS_STATUS_OK) {
             break;
@@ -496,8 +513,8 @@ BqsStatus BindRelation::UnBindRelationByDst(const EntityInfo& dstEntity)
         // delete dst entity
         (void)DeleteEntity(dstEntity, false, index);
     } else {
-        BQS_LOG_ERROR("Bind relation del [*->%s] failed, bqsStatus=%d.", dstEntity.ToString().c_str(),
-            static_cast<int32_t>(ret));
+        BQS_LOG_ERROR(
+            "Bind relation del [*->%s] failed, bqsStatus=%d.", dstEntity.ToString().c_str(), static_cast<int32_t>(ret));
     }
 
     return ret;
@@ -517,8 +534,9 @@ void BindRelation::Order(const uint32_t index)
     }
 }
 
-void BindRelation::OrderOneTable(std::vector<EntityInfo> &orderedSubscribeQueueId,
-    const MapEnitityInfoToInfoSet &srcToDstRelation, const MapEnitityInfoToInfoSet &dstToSrcRelation)
+void BindRelation::OrderOneTable(
+    std::vector<EntityInfo>& orderedSubscribeQueueId, const MapEnitityInfoToInfoSet& srcToDstRelation,
+    const MapEnitityInfoToInfoSet& dstToSrcRelation)
 {
     isHasLoop_ = false;
     orderedSubscribeQueueId.clear();
@@ -527,12 +545,12 @@ void BindRelation::OrderOneTable(std::vector<EntityInfo> &orderedSubscribeQueueI
 
     // as queue input edge is only one, so we can use order by traverse
     std::queue<EntityInfo> subscribeQueue;
-    for (auto &iter : srcToDstRelation) {
+    for (auto& iter : srcToDstRelation) {
         // No input queue is head queue
         if (dstToSrcRelation.count(iter.first) == 0U) {
             (void)subscribeQueue.emplace(iter.first);
         }
-        for (const auto &dstQ : iter.second) {
+        for (const auto& dstQ : iter.second) {
             const auto degIter = inDegrees.find(dstQ);
             if (degIter != inDegrees.end()) {
                 degIter->second++;
@@ -546,7 +564,7 @@ void BindRelation::OrderOneTable(std::vector<EntityInfo> &orderedSubscribeQueueI
     while (!subscribeQueue.empty()) {
         auto queueId = subscribeQueue.front();
         subscribeQueue.pop();
-        const auto &dstQueueIter = srcToDstRelation.find(queueId);
+        const auto& dstQueueIter = srcToDstRelation.find(queueId);
         if (dstQueueIter == srcToDstRelation.end()) {
             continue;
         }
@@ -561,53 +579,39 @@ void BindRelation::OrderOneTable(std::vector<EntityInfo> &orderedSubscribeQueueI
     }
 
     if (orderedSubscribeQueueId.size() != srcToDstRelation.size()) {
-        BQS_LOG_ERROR("orderedSubscribeQueueId.size is [%zu] is not equal to srcToDstRelation.size[%zu], "
+        BQS_LOG_ERROR(
+            "orderedSubscribeQueueId.size is [%zu] is not equal to srcToDstRelation.size[%zu], "
             "may be with loop in bind relation, use unordered instead.",
             orderedSubscribeQueueId.size(), srcToDstRelation.size());
         isHasLoop_ = true;
         orderedSubscribeQueueId.clear();
-        for (auto &srcToDstIter : srcToDstRelation) {
+        for (auto& srcToDstIter : srcToDstRelation) {
             (void)orderedSubscribeQueueId.emplace_back(srcToDstIter.first);
         }
     }
 }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetSrcToDstRelation() const
-{
-    return srcToDstRelation_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetSrcToDstRelation() const { return srcToDstRelation_; }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetDstToSrcRelation() const
-{
-    return dstToSrcRelation_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetDstToSrcRelation() const { return dstToSrcRelation_; }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetAbnormalSrcToDstRelation() const
-{
-    return abnormalSrcToDst_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetAbnormalSrcToDstRelation() const { return abnormalSrcToDst_; }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetAbnormalDstToSrcRelation() const
-{
-    return abnormalDstToSrc_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetAbnormalDstToSrcRelation() const { return abnormalDstToSrc_; }
 
-const std::vector<EntityInfo> &BindRelation::GetOrderedSubscribeQueueId() const
-{
-    return orderedSubscribeQueueId_;
-}
+const std::vector<EntityInfo>& BindRelation::GetOrderedSubscribeQueueId() const { return orderedSubscribeQueueId_; }
 
 uint32_t BindRelation::CountBinds() const
 {
-    uint32_t bindCount = std::accumulate(std::begin(srcToDstRelation_), std::end(srcToDstRelation_), 0U,
-        [](const uint32_t previous,
-        const std::pair<EntityInfo, EntityInfoSet> &dstQueueId) {
+    uint32_t bindCount = std::accumulate(
+        std::begin(srcToDstRelation_), std::end(srcToDstRelation_), 0U,
+        [](const uint32_t previous, const std::pair<EntityInfo, EntityInfoSet>& dstQueueId) {
             return previous + static_cast<uint32_t>(dstQueueId.second.size());
         });
     if (GlobalCfg::GetInstance().GetNumaFlag()) {
-        bindCount += std::accumulate(std::begin(srcToDstRelationExtra_), std::end(srcToDstRelationExtra_), 0U,
-            [](const uint32_t previous,
-            const std::pair<EntityInfo, EntityInfoSet> &dstQueueId) {
+        bindCount += std::accumulate(
+            std::begin(srcToDstRelationExtra_), std::end(srcToDstRelationExtra_), 0U,
+            [](const uint32_t previous, const std::pair<EntityInfo, EntityInfoSet>& dstQueueId) {
                 return previous + static_cast<uint32_t>(dstQueueId.second.size());
             });
     }
@@ -616,15 +620,15 @@ uint32_t BindRelation::CountBinds() const
 
 uint32_t BindRelation::CountAbnormalBinds() const
 {
-    const uint32_t bindCount = std::accumulate(std::begin(abnormalSrcToDst_), std::end(abnormalSrcToDst_), 0U,
-        [](const uint32_t previous,
-        const std::pair<EntityInfo, EntityInfoSet> &abnormalBinds) {
+    const uint32_t bindCount = std::accumulate(
+        std::begin(abnormalSrcToDst_), std::end(abnormalSrcToDst_), 0U,
+        [](const uint32_t previous, const std::pair<EntityInfo, EntityInfoSet>& abnormalBinds) {
             return previous + static_cast<uint32_t>(abnormalBinds.second.size());
         });
     return bindCount;
 }
 
-BqsStatus BindRelation::CreateGroup(const std::vector<EntityInfoPtr> &entities, uint32_t &groupId)
+BqsStatus BindRelation::CreateGroup(const std::vector<EntityInfoPtr>& entities, uint32_t& groupId)
 {
     if (entities.empty()) {
         BQS_LOG_ERROR("entity is empty.");
@@ -646,9 +650,9 @@ BqsStatus BindRelation::DeleteGroup(const uint32_t groupId)
 {
     const auto indexIter = group2ResIndex_.find(groupId);
     if (indexIter != group2ResIndex_.end()) {
-        const MapEnitityInfoToInfoSet &srcToDstRelation =
+        const MapEnitityInfoToInfoSet& srcToDstRelation =
             (indexIter->second.first == 0U) ? srcToDstRelation_ : srcToDstRelationExtra_;
-        const MapEnitityInfoToInfoSet &dstToSrcRelation =
+        const MapEnitityInfoToInfoSet& dstToSrcRelation =
             (indexIter->second.first == 0U) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
         OptionalArg args = {};
         args.eType = dgw::EntityType::ENTITY_GROUP;
@@ -672,26 +676,26 @@ BqsStatus BindRelation::DeleteGroup(const uint32_t groupId)
     }
     (void)allGroupConfig_.erase(iter);
     if (indexIter != group2ResIndex_.end()) {
-        (void) group2ResIndex_.erase(indexIter);
+        (void)group2ResIndex_.erase(indexIter);
     }
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::CreateEntity(const EntityInfo &src, const EntityInfo &dst, const uint32_t resIndex)
+BqsStatus BindRelation::CreateEntity(const EntityInfo& src, const EntityInfo& dst, const uint32_t resIndex)
 {
     // when one src entity bind with multi dst entities, src entity may has been created
     const auto srcRet = CreateEntity(src, true, resIndex);
     if ((srcRet != BQS_STATUS_OK) && (srcRet != BQS_STATUS_ENTITY_EXIST)) {
         // roolback
-        (void) DeleteEntity(src, true, resIndex);
+        (void)DeleteEntity(src, true, resIndex);
         return srcRet;
     }
     const auto dstRet = CreateEntity(dst, false, resIndex);
     if ((dstRet != BQS_STATUS_OK) && (dstRet != BQS_STATUS_ENTITY_EXIST)) {
         // roolback
-        (void) DeleteEntity(dst, false, resIndex);
+        (void)DeleteEntity(dst, false, resIndex);
         if (srcRet == BQS_STATUS_ENTITY_EXIST) {
-            (void) DeleteEntity(src, true, resIndex);
+            (void)DeleteEntity(src, true, resIndex);
         }
         return dstRet;
     }
@@ -709,18 +713,19 @@ BqsStatus BindRelation::CreateEntity(const EntityInfo &src, const EntityInfo &ds
     // if dst entity is group, src entity need get transId
     if (dst.GetType() == dgw::EntityType::ENTITY_GROUP) {
         srcEntity->SetNeedTransId(true);
-        BQS_LOG_INFO("entity[%s] need get transId when scheduled because dst entity[%s].",
-            src.ToString().c_str(), dst.ToString().c_str());
+        BQS_LOG_INFO(
+            "entity[%s] need get transId when scheduled because dst entity[%s].", src.ToString().c_str(),
+            dst.ToString().c_str());
         return BQS_STATUS_OK;
     }
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::CreateEntity(const EntityInfo &info, const bool isSrc, const uint32_t resIndex)
+BqsStatus BindRelation::CreateEntity(const EntityInfo& info, const bool isSrc, const uint32_t resIndex)
 {
     // check entity exist
-    const dgw::EntityDirection direction = isSrc ? dgw::EntityDirection::DIRECTION_SEND :
-                                                   dgw::EntityDirection::DIRECTION_RECV;
+    const dgw::EntityDirection direction =
+        isSrc ? dgw::EntityDirection::DIRECTION_SEND : dgw::EntityDirection::DIRECTION_RECV;
     const auto entity = dgw::EntityManager::Instance(resIndex).GetEntityById(
         info.GetQueueType(), info.GetDeviceId(), info.GetType(), info.GetId(), direction);
     if (entity != nullptr) {
@@ -751,22 +756,21 @@ BqsStatus BindRelation::CreateEntity(const EntityInfo &info, const bool isSrc, c
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::CreateEntityForGroup(const EntityInfo &groupEntity, const bool isSrc,
-    const uint32_t resIndex)
+BqsStatus BindRelation::CreateEntityForGroup(const EntityInfo& groupEntity, const bool isSrc, const uint32_t resIndex)
 {
     const uint32_t groupId = groupEntity.GetId();
     BQS_LOG_INFO("Begin to create entityPtr for group[%u].", groupId);
-    const std::vector<EntityInfoPtr> &entities = GetEntitiesInGroup(groupId);
+    const std::vector<EntityInfoPtr>& entities = GetEntitiesInGroup(groupId);
     if (entities.empty()) {
         BQS_LOG_ERROR("group %u does not exist.", groupId);
         return BQS_STATUS_INNER_ERROR;
     }
 
-    const dgw::EntityDirection direction = isSrc ? dgw::EntityDirection::DIRECTION_SEND :
-                                                   dgw::EntityDirection::DIRECTION_RECV;
+    const dgw::EntityDirection direction =
+        isSrc ? dgw::EntityDirection::DIRECTION_SEND : dgw::EntityDirection::DIRECTION_RECV;
     std::vector<dgw::EntityPtr> entityPtrVec;
     // create entity in group
-    for (auto &info : entities) {
+    for (auto& info : entities) {
         dgw::EntityMaterial material = {};
         material.eType = info->GetType();
         material.direction = direction;
@@ -817,11 +821,11 @@ BqsStatus BindRelation::CreateEntityForGroup(const EntityInfo &groupEntity, cons
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::DeleteEntity(const EntityInfo &info, const bool isSrc, const uint32_t resIndex) const
+BqsStatus BindRelation::DeleteEntity(const EntityInfo& info, const bool isSrc, const uint32_t resIndex) const
 {
     BQS_LOG_INFO("DeleteEntity: %s", info.ToString().c_str());
-    const dgw::EntityDirection direction = isSrc ? dgw::EntityDirection::DIRECTION_SEND :
-                                                   dgw::EntityDirection::DIRECTION_RECV;
+    const dgw::EntityDirection direction =
+        isSrc ? dgw::EntityDirection::DIRECTION_SEND : dgw::EntityDirection::DIRECTION_RECV;
     // group
     if (info.GetType() == dgw::EntityType::ENTITY_GROUP) {
         return DeleteEntityForGroup(info.GetQueueType(), info.GetDeviceId(), info.GetId(), direction, resIndex);
@@ -841,8 +845,8 @@ BqsStatus BindRelation::DeleteEntityForGroup(
     const uint32_t resIndex) const
 {
     // delete group entity
-    dgw::FsmStatus ret = dgw::EntityManager::Instance(resIndex).
-        DeleteEntity(queueType, deviceId, dgw::EntityType::ENTITY_GROUP, groupId, direction);
+    dgw::FsmStatus ret = dgw::EntityManager::Instance(resIndex).DeleteEntity(
+        queueType, deviceId, dgw::EntityType::ENTITY_GROUP, groupId, direction);
     if (ret != dgw::FsmStatus::FSM_SUCCESS) {
         BQS_LOG_ERROR("Delete group entity[%u] failed.", groupId);
         return BQS_STATUS_INNER_ERROR;
@@ -854,8 +858,8 @@ BqsStatus BindRelation::DeleteEntityForGroup(
         return BQS_STATUS_INNER_ERROR;
     }
     // delete entity in group
-    const std::vector<EntityInfoPtr> &entities = GetEntitiesInGroup(groupId);
-    for (auto &info : entities) {
+    const std::vector<EntityInfoPtr>& entities = GetEntitiesInGroup(groupId);
+    for (auto& info : entities) {
         ret = dgw::EntityManager::Instance(resIndex).DeleteEntity(
             info->GetQueueType(), info->GetDeviceId(), info->GetType(), info->GetId(), direction);
         if (ret != dgw::FsmStatus::FSM_SUCCESS) {
@@ -877,7 +881,7 @@ uint32_t BindRelation::GenerateGroupId()
     return currGroupId;
 }
 
-const std::vector<EntityInfoPtr> &BindRelation::GetEntitiesInGroup(const uint32_t groupId) const
+const std::vector<EntityInfoPtr>& BindRelation::GetEntitiesInGroup(const uint32_t groupId) const
 {
     static const std::vector<EntityInfoPtr> emptyVec;
     const auto iter = allGroupConfig_.find(groupId);
@@ -887,39 +891,39 @@ const std::vector<EntityInfoPtr> &BindRelation::GetEntitiesInGroup(const uint32_
     return emptyVec;
 }
 
-BqsStatus BindRelation::SubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-    const uint32_t index) const
+BqsStatus BindRelation::SubscribeEvent(
+    const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index) const
 {
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_QUEUE) {
         const uint32_t SubQueueType = subscribeEntity.GetQueueType();
         const auto subscribeManager =
             Subscribers::GetInstance().GetSubscribeManager(index, subscribeEntity.GetDeviceId());
         if (subscribeManager == nullptr) {
-            DGW_LOG_ERROR("Failed to find subscribeManager for isHost:%d, resIndex: %u, device: %u",
-                SubQueueType == bqs::LOCAL_Q, index, subscribeEntity.GetDeviceId());
+            DGW_LOG_ERROR(
+                "Failed to find subscribeManager for isHost:%d, resIndex: %u, device: %u", SubQueueType == bqs::LOCAL_Q,
+                index, subscribeEntity.GetDeviceId());
             return BQS_STATUS_INNER_ERROR;
         }
-        return (eventType == EventType::ENQUEUE) ?
-            subscribeManager->Subscribe(subscribeEntity.GetId()) :
-            subscribeManager->SubscribeFullToNotFull(subscribeEntity.GetId());
+        return (eventType == EventType::ENQUEUE) ? subscribeManager->Subscribe(subscribeEntity.GetId()) :
+                                                   subscribeManager->SubscribeFullToNotFull(subscribeEntity.GetId());
     }
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_GROUP) {
         const auto entitiesInGroup = GetEntitiesInGroup(subscribeEntity.GetId());
-        for (const auto &entity : entitiesInGroup) {
+        for (const auto& entity : entitiesInGroup) {
             if (entity->GetType() != dgw::EntityType::ENTITY_QUEUE) {
                 continue;
             }
             const uint32_t queuType = entity->GetQueueType();
-            const auto subscribeManager =
-                Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
+            const auto subscribeManager = Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
             if (subscribeManager == nullptr) {
-                DGW_LOG_ERROR("Failed to find subscribeManager for ishost: %d, resIndex: %u, device: %u",
+                DGW_LOG_ERROR(
+                    "Failed to find subscribeManager for ishost: %d, resIndex: %u, device: %u",
                     queuType == bqs::LOCAL_Q, index, entity->GetDeviceId());
                 return BQS_STATUS_INNER_ERROR;
             }
             const auto ret = (eventType == EventType::ENQUEUE) ?
-                subscribeManager->Subscribe(entity->GetId()) :
-                subscribeManager->SubscribeFullToNotFull(entity->GetId());
+                                 subscribeManager->Subscribe(entity->GetId()) :
+                                 subscribeManager->SubscribeFullToNotFull(entity->GetId());
             if (ret != BQS_STATUS_OK) {
                 BQS_LOG_ERROR("Subscribe queue[%u] in group[%u] failed.", entity->GetId(), subscribeEntity.GetId());
                 return ret;
@@ -930,39 +934,38 @@ BqsStatus BindRelation::SubscribeEvent(const EntityInfo &subscribeEntity, const 
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::UnsubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-    const uint32_t index) const
+BqsStatus BindRelation::UnsubscribeEvent(
+    const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index) const
 {
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_QUEUE) {
         const uint32_t SubQueueType = subscribeEntity.GetQueueType();
         const auto subscribeManager =
-        Subscribers::GetInstance().GetSubscribeManager(index, subscribeEntity.GetDeviceId());
+            Subscribers::GetInstance().GetSubscribeManager(index, subscribeEntity.GetDeviceId());
         if (subscribeManager == nullptr) {
-            DGW_LOG_ERROR("Failed to find subscribeManager for SubQueueType: %u resIndex: %u, device: %u",
-                SubQueueType, index, subscribeEntity.GetDeviceId());
+            DGW_LOG_ERROR(
+                "Failed to find subscribeManager for SubQueueType: %u resIndex: %u, device: %u", SubQueueType, index,
+                subscribeEntity.GetDeviceId());
             return BQS_STATUS_INNER_ERROR;
         }
-        return (eventType == EventType::ENQUEUE) ?
-            subscribeManager->Unsubscribe(subscribeEntity.GetId()) :
-            subscribeManager->UnsubscribeFullToNotFull(subscribeEntity.GetId());
+        return (eventType == EventType::ENQUEUE) ? subscribeManager->Unsubscribe(subscribeEntity.GetId()) :
+                                                   subscribeManager->UnsubscribeFullToNotFull(subscribeEntity.GetId());
     }
     auto result = BQS_STATUS_OK;
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_GROUP) {
         const auto entitiesInGroup = GetEntitiesInGroup(subscribeEntity.GetId());
-        for (const auto &entity : entitiesInGroup) {
+        for (const auto& entity : entitiesInGroup) {
             if (entity->GetType() != dgw::EntityType::ENTITY_QUEUE) {
                 continue;
             }
-            const auto subscribeManager =
-                Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
+            const auto subscribeManager = Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
             if (subscribeManager == nullptr) {
-                DGW_LOG_ERROR("Failed to find subscribeManager for resIndex: %u, device: %u",
-                    index, entity->GetDeviceId());
+                DGW_LOG_ERROR(
+                    "Failed to find subscribeManager for resIndex: %u, device: %u", index, entity->GetDeviceId());
                 return BQS_STATUS_INNER_ERROR;
             }
             const auto ret = (eventType == EventType::ENQUEUE) ?
-                subscribeManager->Unsubscribe(entity->GetId()) :
-                subscribeManager->UnsubscribeFullToNotFull(entity->GetId());
+                                 subscribeManager->Unsubscribe(entity->GetId()) :
+                                 subscribeManager->UnsubscribeFullToNotFull(entity->GetId());
             if (ret != BQS_STATUS_OK) {
                 result = ret;
                 BQS_LOG_ERROR("Unsubscribe queue[%u] in group[%u] failed.", entity->GetId(), subscribeEntity.GetId());
@@ -972,57 +975,55 @@ BqsStatus BindRelation::UnsubscribeEvent(const EntityInfo &subscribeEntity, cons
     return result;
 }
 
-BqsStatus BindRelation::UpdateSubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-    const uint32_t index) const
+BqsStatus BindRelation::UpdateSubscribeEvent(
+    const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index) const
 {
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_QUEUE) {
         const auto subscribeManager =
-                Subscribers::GetInstance().GetSubscribeManager(index, subscribeEntity.GetDeviceId());
+            Subscribers::GetInstance().GetSubscribeManager(index, subscribeEntity.GetDeviceId());
         if (subscribeManager == nullptr) {
-            DGW_LOG_ERROR("Failed to find subscribeManager for resIndex: %u, device: %u",
-                index, subscribeEntity.GetDeviceId());
+            DGW_LOG_ERROR(
+                "Failed to find subscribeManager for resIndex: %u, device: %u", index, subscribeEntity.GetDeviceId());
             return BQS_STATUS_INNER_ERROR;
         }
         return (eventType == EventType::ENQUEUE) ?
-            subscribeManager->UpdateSubscribe(subscribeEntity.GetId()) :
-            subscribeManager->UpdateSubscribeFullToNotFull(subscribeEntity.GetId());
+                   subscribeManager->UpdateSubscribe(subscribeEntity.GetId()) :
+                   subscribeManager->UpdateSubscribeFullToNotFull(subscribeEntity.GetId());
     }
     auto result = BQS_STATUS_OK;
     if (subscribeEntity.GetType() == dgw::EntityType::ENTITY_GROUP) {
         const auto entitiesInGroup = GetEntitiesInGroup(subscribeEntity.GetId());
-        for (const auto &entity : entitiesInGroup) {
+        for (const auto& entity : entitiesInGroup) {
             if (entity->GetType() != dgw::EntityType::ENTITY_QUEUE) {
                 continue;
             }
-            const auto subscribeManager =
-                Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
+            const auto subscribeManager = Subscribers::GetInstance().GetSubscribeManager(index, entity->GetDeviceId());
             if (subscribeManager == nullptr) {
-                DGW_LOG_ERROR("Failed to find subscribeManager for resIndex: %u, device: %u",
-                    index, entity->GetDeviceId());
+                DGW_LOG_ERROR(
+                    "Failed to find subscribeManager for resIndex: %u, device: %u", index, entity->GetDeviceId());
                 return BQS_STATUS_INNER_ERROR;
             }
             const auto ret = (eventType == EventType::ENQUEUE) ?
-                subscribeManager->UpdateSubscribe(entity->GetId()) :
-                subscribeManager->UpdateSubscribeFullToNotFull(entity->GetId());
+                                 subscribeManager->UpdateSubscribe(entity->GetId()) :
+                                 subscribeManager->UpdateSubscribeFullToNotFull(entity->GetId());
             if (ret != BQS_STATUS_OK) {
                 result = ret;
-                BQS_LOG_ERROR("Subscribe queue[%u] in group[%u] failed.",
-                    entity->GetId(), subscribeEntity.GetId());
+                BQS_LOG_ERROR("Subscribe queue[%u] in group[%u] failed.", entity->GetId(), subscribeEntity.GetId());
             }
         }
     }
     return result;
 }
 
-BqsStatus BindRelation::CheckUnBind(const EntityInfo &entity) const
+BqsStatus BindRelation::CheckUnBind(const EntityInfo& entity) const
 {
     (void)entity;
     return BQS_STATUS_OK;
 }
 
-void BindRelation::MarkAbnormalSrc(const EntityInfo &srcEntity)
+void BindRelation::MarkAbnormalSrc(const EntityInfo& srcEntity)
 {
-    const auto &iter = srcToDstRelation_.find(srcEntity);
+    const auto& iter = srcToDstRelation_.find(srcEntity);
     if (iter == srcToDstRelation_.end()) {
         BQS_LOG_WARN("No relation [%s->*] exists, no need mark", srcEntity.ToString().c_str());
         return;
@@ -1030,7 +1031,7 @@ void BindRelation::MarkAbnormalSrc(const EntityInfo &srcEntity)
         auto abnormalSrc = iter->first;
         abnormalSrc.SetEntity(nullptr);
 
-        auto &abnormalDstSet = iter->second;
+        auto& abnormalDstSet = iter->second;
         for (auto abnormalDst : abnormalDstSet) {
             abnormalDst.SetEntity(nullptr);
             abnormalSrcToDst_[abnormalSrc].emplace(abnormalDst);
@@ -1040,9 +1041,9 @@ void BindRelation::MarkAbnormalSrc(const EntityInfo &srcEntity)
     }
 }
 
-void BindRelation::MarkAbnormalDst(const EntityInfo &dstEntity)
+void BindRelation::MarkAbnormalDst(const EntityInfo& dstEntity)
 {
-    const auto &iter = dstToSrcRelation_.find(dstEntity);
+    const auto& iter = dstToSrcRelation_.find(dstEntity);
     if (iter == dstToSrcRelation_.end()) {
         BQS_LOG_WARN("No relation [*->%s] exists, no need mark", dstEntity.ToString().c_str());
         return;
@@ -1050,7 +1051,7 @@ void BindRelation::MarkAbnormalDst(const EntityInfo &dstEntity)
         auto abnormalDst = iter->first;
         abnormalDst.SetEntity(nullptr);
 
-        const auto &abnormalSrcSet = iter->second;
+        const auto& abnormalSrcSet = iter->second;
         for (auto abnormalSrc : abnormalSrcSet) {
             abnormalSrc.SetEntity(nullptr);
             abnormalDstToSrc_[abnormalDst].emplace(abnormalSrc);
@@ -1060,12 +1061,13 @@ void BindRelation::MarkAbnormalDst(const EntityInfo &dstEntity)
     }
 }
 
-void BindRelation::DelAbnormalSrcToDst(const EntityInfo &srcEntity, const EntityInfo &dstEntity)
+void BindRelation::DelAbnormalSrcToDst(const EntityInfo& srcEntity, const EntityInfo& dstEntity)
 {
     const auto iter = abnormalSrcToDst_.find(srcEntity);
     if (iter == abnormalSrcToDst_.end()) {
-        BQS_LOG_WARN("Bind relation[%s->%s] dst doesn't exist in abnormal bind relations, no need unbind.",
-                     srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] dst doesn't exist in abnormal bind relations, no need unbind.",
+            srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
         return;
     }
 
@@ -1075,12 +1077,13 @@ void BindRelation::DelAbnormalSrcToDst(const EntityInfo &srcEntity, const Entity
     }
 }
 
-void BindRelation::DelAbnormalDstToSrc(const EntityInfo &srcEntity, const EntityInfo &dstEntity)
+void BindRelation::DelAbnormalDstToSrc(const EntityInfo& srcEntity, const EntityInfo& dstEntity)
 {
     const auto iter = abnormalDstToSrc_.find(dstEntity);
     if (iter == abnormalDstToSrc_.end()) {
-        BQS_LOG_WARN("Bind relation[%s->%s] dst doesn't exist in abnormal bind relations, no need unbind.",
-                     srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
+        BQS_LOG_WARN(
+            "Bind relation[%s->%s] dst doesn't exist in abnormal bind relations, no need unbind.",
+            srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
         return;
     }
 
@@ -1090,32 +1093,32 @@ void BindRelation::DelAbnormalDstToSrc(const EntityInfo &srcEntity, const Entity
     }
 }
 
-void BindRelation::UnBindAbnormalRelationBySrc(const EntityInfo &srcEntity)
+void BindRelation::UnBindAbnormalRelationBySrc(const EntityInfo& srcEntity)
 {
     const auto srcToDstIter = abnormalSrcToDst_.find(srcEntity);
     if (srcToDstIter == abnormalSrcToDst_.end()) {
-        BQS_LOG_WARN("No relation [%s->*] exists in abnormal bind relation, no need unbind",
-                     srcEntity.ToString().c_str());
+        BQS_LOG_WARN(
+            "No relation [%s->*] exists in abnormal bind relation, no need unbind", srcEntity.ToString().c_str());
         return;
     }
 
-    for (const auto &dstEntity : srcToDstIter->second) {
+    for (const auto& dstEntity : srcToDstIter->second) {
         DelAbnormalDstToSrc(srcEntity, dstEntity);
     }
 
     (void)abnormalSrcToDst_.erase(srcToDstIter);
 }
 
-void BindRelation::UnBindAbnormalRelationByDst(const EntityInfo &dstEntity)
+void BindRelation::UnBindAbnormalRelationByDst(const EntityInfo& dstEntity)
 {
     const auto dstToSrcIter = abnormalDstToSrc_.find(dstEntity);
     if (dstToSrcIter == abnormalDstToSrc_.end()) {
-        BQS_LOG_WARN("No bind relation[*->%s] exists in abnormal bind relations, no need unbind.",
-                     dstEntity.ToString().c_str());
+        BQS_LOG_WARN(
+            "No bind relation[*->%s] exists in abnormal bind relations, no need unbind.", dstEntity.ToString().c_str());
         return;
     }
 
-    for (const auto &srcEntity : dstToSrcIter->second) {
+    for (const auto& srcEntity : dstToSrcIter->second) {
         DelAbnormalSrcToDst(srcEntity, dstEntity);
     }
 
@@ -1124,8 +1127,8 @@ void BindRelation::UnBindAbnormalRelationByDst(const EntityInfo &dstEntity)
 
 BqsStatus BindRelation::ClearInputQueue(const uint32_t index, const std::unordered_set<uint32_t>& keySet)
 {
-    const auto &inputQueues = (index == 0U) ? orderedSubscribeQueueId_ : orderedSubscribeQueueIdExtra_;
-    for (const auto &info: inputQueues) {
+    const auto& inputQueues = (index == 0U) ? orderedSubscribeQueueId_ : orderedSubscribeQueueIdExtra_;
+    for (const auto& info : inputQueues) {
         if (keySet.count(info.GetSchedCfgKey()) == 0U) {
             continue;
         }
@@ -1144,9 +1147,9 @@ BqsStatus BindRelation::ClearInputQueue(const uint32_t index, const std::unorder
 
 BqsStatus BindRelation::MakeSureOutputCompletion(const uint32_t index, const std::unordered_set<uint32_t>& keySet)
 {
-    const auto &dstToSrcRelation = (index == 0U) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
-    for (const auto &dstItem: dstToSrcRelation) {
-        auto &dst = dstItem.first;
+    const auto& dstToSrcRelation = (index == 0U) ? dstToSrcRelation_ : dstToSrcRelationExtra_;
+    for (const auto& dstItem : dstToSrcRelation) {
+        auto& dst = dstItem.first;
         if (keySet.count(dst.GetSchedCfgKey()) == 0U) {
             continue;
         }
@@ -1163,8 +1166,8 @@ BqsStatus BindRelation::MakeSureOutputCompletion(const uint32_t index, const std
     return BQS_STATUS_OK;
 }
 
-BqsStatus BindRelation::GetBindRelationIndex(const EntityInfo &srcEntity, const EntityInfo &dstEntity,
-    uint32_t &index) const
+BqsStatus BindRelation::GetBindRelationIndex(
+    const EntityInfo& srcEntity, const EntityInfo& dstEntity, uint32_t& index) const
 {
     if (!GlobalCfg::GetInstance().GetNumaFlag()) {
         index = 0U;
@@ -1195,7 +1198,7 @@ BqsStatus BindRelation::GetBindRelationIndex(const EntityInfo &srcEntity, const 
     return BQS_STATUS_PARAM_INVALID;
 }
 
-BqsStatus BindRelation::GetBindIndexBySrc(const EntityInfo &srcEntity, uint32_t &index) const
+BqsStatus BindRelation::GetBindIndexBySrc(const EntityInfo& srcEntity, uint32_t& index) const
 {
     if (!GlobalCfg::GetInstance().GetNumaFlag()) {
         index = 0U;
@@ -1216,7 +1219,7 @@ BqsStatus BindRelation::GetBindIndexBySrc(const EntityInfo &srcEntity, uint32_t 
     return BQS_STATUS_PARAM_INVALID;
 }
 
-BqsStatus BindRelation::GetBindIndexByDst(const EntityInfo &srcEntity, uint32_t &index) const
+BqsStatus BindRelation::GetBindIndexByDst(const EntityInfo& srcEntity, uint32_t& index) const
 {
     if (!GlobalCfg::GetInstance().GetNumaFlag()) {
         index = 0U;
@@ -1237,23 +1240,18 @@ BqsStatus BindRelation::GetBindIndexByDst(const EntityInfo &srcEntity, uint32_t 
     return BQS_STATUS_PARAM_INVALID;
 }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetSrcToDstExtraRelation() const
-{
-    return srcToDstRelationExtra_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetSrcToDstExtraRelation() const { return srcToDstRelationExtra_; }
 
-const MapEnitityInfoToInfoSet &BindRelation::GetDstToSrcExtraRelation() const
-{
-    return dstToSrcRelationExtra_;
-}
+const MapEnitityInfoToInfoSet& BindRelation::GetDstToSrcExtraRelation() const { return dstToSrcRelationExtra_; }
 
-const std::vector<EntityInfo> &BindRelation::GetOrderedSubscribeQueueIdExtra() const
+const std::vector<EntityInfo>& BindRelation::GetOrderedSubscribeQueueIdExtra() const
 {
     return orderedSubscribeQueueIdExtra_;
 }
 
-void BindRelation::AppendAbnormalEntity(const EntityInfo &info, const dgw::EntityDirection direction,
-    const uint32_t index) {
+void BindRelation::AppendAbnormalEntity(
+    const EntityInfo& info, const dgw::EntityDirection direction, const uint32_t index)
+{
     if (index == 0) {
         if (direction == dgw::EntityDirection::DIRECTION_SEND) {
             abnormalSrc_.emplace_back(info);
@@ -1263,7 +1261,8 @@ void BindRelation::AppendAbnormalEntity(const EntityInfo &info, const dgw::Entit
     }
 }
 
-void BindRelation::ClearAbnormalEntityInfo(const uint32_t index) {
+void BindRelation::ClearAbnormalEntityInfo(const uint32_t index)
+{
     if (index == 0) {
         abnormalSrc_.clear();
         abnormalDst_.clear();
@@ -1274,15 +1273,15 @@ void BindRelation::UpdateRelation(const uint32_t index)
 {
     if (index == 0) {
         if (abnormalSrc_.empty() && abnormalDst_.empty()) {
-        return;
+            return;
         }
 
-        for (const auto &abnormalSrc : abnormalSrc_) {
+        for (const auto& abnormalSrc : abnormalSrc_) {
             MarkAbnormalSrc(abnormalSrc);
             UnBindRelationBySrc(abnormalSrc);
         }
 
-        for (const auto &abnormalDst : abnormalDst_) {
+        for (const auto& abnormalDst : abnormalDst_) {
             MarkAbnormalDst(abnormalDst);
             UnBindRelationByDst(abnormalDst);
         }
@@ -1293,4 +1292,4 @@ void BindRelation::UpdateRelation(const uint32_t index)
         abnormalDst_.clear();
     }
 }
-}  // namespace bqs
+} // namespace bqs

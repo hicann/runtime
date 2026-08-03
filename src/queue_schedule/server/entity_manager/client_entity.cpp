@@ -17,7 +17,7 @@
 
 namespace dgw {
 
-ClientEntity::ClientEntity(const EntityMaterial &material, const uint32_t resIndex)
+ClientEntity::ClientEntity(const EntityMaterial& material, const uint32_t resIndex)
     : SimpleEntity(material, resIndex), asyncDataState_(AsyncDataState::FSM_ASYNC_DATA_INIT)
 {
     (void)entityDesc_.append(", data state:").append(std::to_string(static_cast<int32_t>(asyncDataState_)));
@@ -36,7 +36,7 @@ FsmStatus ClientEntity::DoDequeue()
     asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_WAIT;
     try {
         InvokeDequeThread();
-    } catch(std::exception &e) {
+    } catch (std::exception& e) {
         DGW_LOG_ERROR("create async mem buff thread object failed, %s", e.what());
         asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
         return FsmStatus::FSM_FAILED;
@@ -52,7 +52,7 @@ void ClientEntity::InvokeDequeThread()
 
 void ClientEntity::DoClientDequeue()
 {
-    if(DoDequeueMbuf(PtrToPtr<Mbuf *, void*>(&mbuf_)) != FsmStatus::FSM_SUCCESS) {
+    if (DoDequeueMbuf(PtrToPtr<Mbuf*, void*>(&mbuf_)) != FsmStatus::FSM_SUCCESS) {
         asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
         return;
     }
@@ -62,12 +62,13 @@ void ClientEntity::DoClientDequeue()
     bqs::QueueManager::GetInstance().enableAsyncMemDequeueFlag();
     const auto bqsRet = bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent();
     if (bqsRet != bqs::BQS_STATUS_OK) {
-        DGW_LOG_ERROR("failed to EnqueueAsynMemBuffEvent for entity[%s], ret[%d].", entityDesc_.c_str(),
+        DGW_LOG_ERROR(
+            "failed to EnqueueAsynMemBuffEvent for entity[%s], ret[%d].", entityDesc_.c_str(),
             static_cast<int32_t>(bqsRet));
     }
 }
 
-FsmStatus ClientEntity::DoDequeueMbuf(void **mbufPtr) const
+FsmStatus ClientEntity::DoDequeueMbuf(void** mbufPtr) const
 {
     DGW_LOG_INFO("Entity[%s] Start AsyncMemBuffDeQueueEvent", entityDesc_.c_str());
     const uint32_t deviceId = GetDeviceId();
@@ -75,8 +76,8 @@ FsmStatus ClientEntity::DoDequeueMbuf(void **mbufPtr) const
 
     // q empty idle
     int32_t srcStatus = static_cast<int32_t>(QUEUE_NORMAL);
-    auto ret = halQueueGetStatus(deviceId, queueId, QUERY_QUEUE_STATUS,
-                                 static_cast<uint32_t>(sizeof(uint32_t)), &srcStatus);
+    auto ret =
+        halQueueGetStatus(deviceId, queueId, QUERY_QUEUE_STATUS, static_cast<uint32_t>(sizeof(uint32_t)), &srcStatus);
     if (ret != DRV_ERROR_NONE) {
         DGW_LOG_WARN("queue[%u] on device[%u] halQueueGetStatus ret=%d", queueId, deviceId, static_cast<int32_t>(ret));
         return (ret == DRV_ERROR_NOT_EXIST) ? FsmStatus::FSM_ERROR_PENDING : FsmStatus::FSM_FAILED;
@@ -91,14 +92,15 @@ FsmStatus ClientEntity::DoDequeueMbuf(void **mbufPtr) const
     uint64_t deqLen = 0U;
     ret = halQueuePeek(deviceId, queueId, &deqLen, -1);
     if ((ret != DRV_ERROR_NONE) || (deqLen == 0U)) {
-        DGW_LOG_ERROR("halQueuePeek from queue[%u] in device[%u] failed, ret[%d], deqLen[%lu]",
-            queueId, deviceId, static_cast<int32_t>(ret), deqLen);
+        DGW_LOG_ERROR(
+            "halQueuePeek from queue[%u] in device[%u] failed, ret[%d], deqLen[%lu]", queueId, deviceId,
+            static_cast<int32_t>(ret), deqLen);
         return (ret == DRV_ERROR_NOT_EXIST) ? FsmStatus::FSM_ERROR_PENDING : FsmStatus::FSM_FAILED;
     }
     DGW_LOG_INFO("Entity[%s] Finish halQueuePeek", entityDesc_.c_str());
 
     // alloc mbuf
-    Mbuf *mbuf = nullptr;
+    Mbuf* mbuf = nullptr;
     int32_t retCode = halMbufAlloc(deqLen, &mbuf);
     if ((retCode != DRV_ERROR_NONE) || (mbuf == nullptr)) {
         DGW_LOG_ERROR("halMbufAlloc fail for entity[%s], size[%zu], ret=[%d].", entityDesc_.c_str(), deqLen, retCode);
@@ -114,7 +116,7 @@ FsmStatus ClientEntity::DoDequeueMbuf(void **mbufPtr) const
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbuf) const
+FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf* const mbuf) const
 {
     // setdatalen
     auto retCode = halMbufSetDataLen(mbuf, deqLen);
@@ -124,7 +126,7 @@ FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbu
     }
 
     // get mbuf head
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     uint32_t headBufSize = 0U;
     retCode = halMbufGetPrivInfo(mbuf, &headBuf, &headBufSize);
     if (retCode != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -137,7 +139,7 @@ FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbu
     }
 
     // get mbuf data
-    void *dataPtr = nullptr;
+    void* dataPtr = nullptr;
     retCode = halMbufGetBuffAddr(mbuf, &dataPtr);
     if ((retCode != static_cast<int32_t>(DRV_ERROR_NONE)) || (dataPtr == nullptr)) {
         DGW_LOG_ERROR("Failed to get data or data is nullptr, retCode[%d].", retCode);
@@ -146,10 +148,10 @@ FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbu
 
     const size_t totalLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
     std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow) char_t[totalLen], std::default_delete<char_t[]>());
-    DGW_CHECK((vecUniquePtr != nullptr), FsmStatus::FSM_FAILED,
-        "failed to alloc memory for buffIovec, size[%zu].", totalLen);
+    DGW_CHECK(
+        (vecUniquePtr != nullptr), FsmStatus::FSM_FAILED, "failed to alloc memory for buffIovec, size[%zu].", totalLen);
 
-    buff_iovec * const buffIovec = PtrToPtr<char_t, buff_iovec>(vecUniquePtr.get());
+    buff_iovec* const buffIovec = PtrToPtr<char_t, buff_iovec>(vecUniquePtr.get());
     buffIovec->context_base = headBuf;
     buffIovec->context_len = headBufSize;
     buffIovec->count = 1U;
@@ -157,8 +159,8 @@ FsmStatus ClientEntity::FillMbufWithDeque(const uint64_t deqLen, Mbuf *const mbu
     buffIovec->ptr[0U].len = deqLen;
     const auto ret = halQueueDeQueueBuff(deviceId_, id_, buffIovec, -1);
     if (ret != DRV_ERROR_NONE) {
-        DGW_LOG_ERROR("halQueueDeQueueBuff queue[%u] on device[%u] fail, ret is %d.", id_, deviceId_,
-            static_cast<int32_t>(ret));
+        DGW_LOG_ERROR(
+            "halQueueDeQueueBuff queue[%u] on device[%u] fail, ret is %d.", id_, deviceId_, static_cast<int32_t>(ret));
         return FsmStatus::FSM_FAILED;
     }
 
@@ -171,18 +173,15 @@ FsmStatus ClientEntity::ResetSrcState()
     return ChangeState(FsmState::FSM_IDLE_STATE);
 }
 
-void ClientEntity::ResetSrcSubState()
-{
-    asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
-}
+void ClientEntity::ResetSrcSubState() { asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT; }
 
-Mbuf *ClientEntity::PrepareMbufToPush(DataObjPtr dataObj) const
+Mbuf* ClientEntity::PrepareMbufToPush(DataObjPtr dataObj) const
 {
-    Mbuf * const mbuf = const_cast<Mbuf *>(dataObj->GetMbuf());
+    Mbuf* const mbuf = const_cast<Mbuf*>(dataObj->GetMbuf());
     return mbuf;
 }
 
-FsmStatus ClientEntity::DoSendData(Mbuf *const mbuf)
+FsmStatus ClientEntity::DoSendData(Mbuf* const mbuf)
 {
     if (asyncDataState_ == AsyncDataState::FSM_ASYNC_DATA_WAIT) {
         return FsmStatus::FSM_KEEP_STATE;
@@ -195,7 +194,7 @@ FsmStatus ClientEntity::DoSendData(Mbuf *const mbuf)
     asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_WAIT;
     try {
         InvokeEnqueThread(mbuf);
-    } catch(std::exception &e) {
+    } catch (std::exception& e) {
         DGW_LOG_ERROR("create aync mem buff thread object failed, %s", e.what());
         asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
         return FsmStatus::FSM_FAILED;
@@ -203,13 +202,13 @@ FsmStatus ClientEntity::DoSendData(Mbuf *const mbuf)
     return FsmStatus::FSM_KEEP_STATE;
 }
 
-void ClientEntity::InvokeEnqueThread(Mbuf *const mbuf)
+void ClientEntity::InvokeEnqueThread(Mbuf* const mbuf)
 {
     std::thread th(&ClientEntity::DoClientEnqueue, this, mbuf);
     th.detach();
 }
 
-FsmStatus ClientEntity::DoClientEnqueue(Mbuf *const mbuf)
+FsmStatus ClientEntity::DoClientEnqueue(Mbuf* const mbuf)
 {
     DGW_LOG_INFO("Entity[%s] Start AsyncMemBuffEnQueueEvent", entityDesc_.c_str());
     const auto ret = DoEnqueueMbuf(mbuf);
@@ -217,7 +216,7 @@ FsmStatus ClientEntity::DoClientEnqueue(Mbuf *const mbuf)
         if (ret == FsmStatus::FSM_DEST_FULL) {
             bqs::StatisticManager::GetInstance().DataQueueEnqueueFullStat();
         } else {
-           bqs::StatisticManager::GetInstance().DataQueueEnqueueFailStat();
+            bqs::StatisticManager::GetInstance().DataQueueEnqueueFailStat();
         }
         asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
     } else {
@@ -235,10 +234,10 @@ FsmStatus ClientEntity::DoClientEnqueue(Mbuf *const mbuf)
     return ret;
 }
 
-FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
+FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf* const mbuf) const
 {
     // get mbuf head
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     uint32_t headBufSize = 0U;
     auto ret = halMbufGetPrivInfo(mbuf, &headBuf, &headBufSize);
     if (ret != DRV_ERROR_NONE) {
@@ -259,7 +258,7 @@ FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
     }
 
     // get mbuf data
-    void *dataPtr = nullptr;
+    void* dataPtr = nullptr;
     retCode = halMbufGetBuffAddr(mbuf, &dataPtr);
     if ((retCode != static_cast<int32_t>(DRV_ERROR_NONE)) || (dataPtr == nullptr)) {
         DGW_LOG_ERROR("Failed to get data or data is nullptr, ret[%d].", retCode);
@@ -268,10 +267,10 @@ FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
 
     const size_t totalLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
     std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow) char_t[totalLen], std::default_delete<char_t[]>());
-    DGW_CHECK((vecUniquePtr != nullptr), FsmStatus::FSM_FAILED,
-        "failed to alloc memory for buffIovec, size[%zu].", totalLen);
+    DGW_CHECK(
+        (vecUniquePtr != nullptr), FsmStatus::FSM_FAILED, "failed to alloc memory for buffIovec, size[%zu].", totalLen);
 
-    buff_iovec * const buffIovec = PtrToPtr<char_t, buff_iovec>(vecUniquePtr.get());
+    buff_iovec* const buffIovec = PtrToPtr<char_t, buff_iovec>(vecUniquePtr.get());
     buffIovec->context_base = headBuf;
     buffIovec->context_len = headBufSize;
     buffIovec->count = 1U;
@@ -279,8 +278,9 @@ FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
     buffIovec->ptr[0U].len = dataLen;
     DGW_LOG_INFO("Entity[%s] Begin halQueueEnQueueBuff", entityDesc_.c_str());
     ret = halQueueEnQueueBuff(deviceId_, id_, buffIovec, -1);
-    DGW_LOG_INFO("entity:[%s] halQueueEnQueueBuff queue id:[%u] device id:[%u] result:[%d].",
-        entityDesc_.c_str(), id_, deviceId_, static_cast<int32_t>(ret));
+    DGW_LOG_INFO(
+        "entity:[%s] halQueueEnQueueBuff queue id:[%u] device id:[%u] result:[%d].", entityDesc_.c_str(), id_,
+        deviceId_, static_cast<int32_t>(ret));
     if (ret == DRV_ERROR_QUEUE_FULL) {
         DGW_LOG_WARN("halQueueEnQueue queue id:[%u] on device:[%u] FULL!!!!.", id_, deviceId_);
         return FsmStatus::FSM_DEST_FULL;
@@ -292,9 +292,6 @@ FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
     return FsmStatus::FSM_SUCCESS;
 }
 
-bool ClientEntity::IsDataPeeked() const
-{
-    return (asyncDataState_ == AsyncDataState::FSM_ASYNC_ENTITY_DONE);
-}
+bool ClientEntity::IsDataPeeked() const { return (asyncDataState_ == AsyncDataState::FSM_ASYNC_ENTITY_DONE); }
 
-}
+} // namespace dgw

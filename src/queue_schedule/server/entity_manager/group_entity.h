@@ -17,31 +17,32 @@
 namespace dgw {
 
 struct GroupEntityInfo {
-    int32_t groupId;               // group id
-    bqs::GroupPolicy groupPolicy;  // group policy
-    int64_t timeout;               // timeout interval, us
-    uint64_t lastTransId;          // last route label
-    uint64_t lastTimestamp;        // timestamp of last data migration, us
+    int32_t groupId;              // group id
+    bqs::GroupPolicy groupPolicy; // group policy
+    int64_t timeout;              // timeout interval, us
+    uint64_t lastTransId;         // last route label
+    uint64_t lastTimestamp;       // timestamp of last data migration, us
     uint32_t peerInstanceNum;
     uint32_t localInstanceIndex;
 };
 
 class GroupEntity : public Entity {
 public:
-    explicit GroupEntity(const EntityMaterial &material, const uint32_t resIndex);
+    explicit GroupEntity(const EntityMaterial& material, const uint32_t resIndex);
     virtual ~GroupEntity() = default;
-    GroupEntity(const GroupEntity &) = delete;
-    GroupEntity(const GroupEntity &&) = delete;
-    GroupEntity &operator = (const GroupEntity &) = delete;
-    GroupEntity &operator = (GroupEntity &&) = delete;
+    GroupEntity(const GroupEntity&) = delete;
+    GroupEntity(const GroupEntity&&) = delete;
+    GroupEntity& operator=(const GroupEntity&) = delete;
+    GroupEntity& operator=(GroupEntity&&) = delete;
 
     FsmStatus Dequeue() override;
-    void SelectDstEntities(const uint64_t key, std::vector<Entity*> &toPushDstEntities,
-        std::vector<Entity*> &reprocessDstEntities, std::vector<Entity*> &abnormalDstEntities) override;
-    void ReprocessInTryPush(const Entity &srcEntity, DynamicRequestPtr &dynamicRequest, uint32_t &schedCfgKey) override;
+    void SelectDstEntities(
+        const uint64_t key, std::vector<Entity*>& toPushDstEntities, std::vector<Entity*>& reprocessDstEntities,
+        std::vector<Entity*>& abnormalDstEntities) override;
+    void ReprocessInTryPush(const Entity& srcEntity, DynamicRequestPtr& dynamicRequest, uint32_t& schedCfgKey) override;
     FsmStatus AbProcessInTryPush() override;
-    FsmStatus PauseSubscribe(const Entity &fullEntity) override;
-    FsmStatus ResumeSubscribe(const Entity &notFullEntity) override;
+    FsmStatus PauseSubscribe(const Entity& fullEntity) override;
+    FsmStatus ResumeSubscribe(const Entity& notFullEntity) override;
     FsmStatus ClearQueue() override;
     FsmStatus MakeSureOutputCompletion() override;
     uint32_t GetMbufDeviceId() const override;
@@ -49,15 +50,15 @@ public:
 
 private:
     void SetGroupInfo(const uint64_t lastTransId, const uint64_t lastTimestamp);
-    EntityPtr SelectSrcEntity(FsmStatus &status);
-    bool Match(const Entity &entity, const uint64_t waitTransId, bool exactlyMatch) const;
-    FsmStatus PeekFromEntityInGroup(Entity &entity, const uint64_t waitTransId) const;
+    EntityPtr SelectSrcEntity(FsmStatus& status);
+    bool Match(const Entity& entity, const uint64_t waitTransId, bool exactlyMatch) const;
+    FsmStatus PeekFromEntityInGroup(Entity& entity, const uint64_t waitTransId) const;
     bool CheckTimeout(const uint64_t waitTransId) const;
-    EntityPtr SelectEntityWithMinTransId(const std::vector<EntityPtr> &entities) const;
+    EntityPtr SelectEntityWithMinTransId(const std::vector<EntityPtr>& entities) const;
 
     GroupEntityInfo groupInfo_;
     uint32_t mbufDeviceId_;
     uint32_t mbufQueueType_;
 };
-}
+} // namespace dgw
 #endif

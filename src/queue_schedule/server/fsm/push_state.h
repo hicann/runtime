@@ -13,21 +13,21 @@
 
 #include "fsm/state_base.h"
 
-
 namespace dgw {
 class PushState : public StateBase {
 public:
     explicit PushState() noexcept = default;
     ~PushState() override = default;
 
-    FsmStatus PreProcess(Entity &entity) override;
+    FsmStatus PreProcess(Entity& entity) override;
     // not keep this state, so no need ProcessMessage API
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PostProcess(Entity& entity) override;
+
 private:
-    PushState(const PushState &) = delete;
-    PushState(const PushState &&) = delete;
-    PushState &operator = (const PushState &) = delete;
-    PushState &operator = (PushState &&) = delete;
+    PushState(const PushState&) = delete;
+    PushState(const PushState&&) = delete;
+    PushState& operator=(const PushState&) = delete;
+    PushState& operator=(PushState&&) = delete;
 };
-}
+} // namespace dgw
 #endif

@@ -22,17 +22,17 @@
 
 namespace bqs {
 namespace {
-constexpr const char_t *RELATION_QUEUE_NAME = "QSRelationEvent";
-constexpr const char_t *F2NF_QUEUE_NAME = "QSF2NFEvent";
-constexpr const char_t *ASYNC_MEM_BUFF_DEQ_QUEUE_NAME = "QSAsyncMemDeBuffEvent";
-constexpr const char_t *ASYNC_MEM_BUFF_ENQ_QUEUE_NAME = "QSAsyncMemEnBuffEvent";
+constexpr const char_t* RELATION_QUEUE_NAME = "QSRelationEvent";
+constexpr const char_t* F2NF_QUEUE_NAME = "QSF2NFEvent";
+constexpr const char_t* ASYNC_MEM_BUFF_DEQ_QUEUE_NAME = "QSAsyncMemDeBuffEvent";
+constexpr const char_t* ASYNC_MEM_BUFF_ENQ_QUEUE_NAME = "QSAsyncMemEnBuffEvent";
 // relation message type enqueue message length
 constexpr const uint32_t BIND_EVENT_MSG_LENGTH(1U);
 constexpr const uint32_t MAX_QUEUE_DEPTH = 8U * 1024U;
 constexpr const uint32_t MAX_DEQUEUE_COUNT = MAX_QUEUE_DEPTH;
-constexpr const char_t *RELATION_QUEUE_NAME_EXTRA = "QSRelationEventExtra";
-constexpr const char_t *F2NF_QUEUE_NAME_EXTRA = "QSF2NFEventExtra";
-}  // namespace
+constexpr const char_t* RELATION_QUEUE_NAME_EXTRA = "QSRelationEventExtra";
+constexpr const char_t* F2NF_QUEUE_NAME_EXTRA = "QSF2NFEventExtra";
+} // namespace
 
 QueueManager::QueueManager()
     : deviceId_(0U),
@@ -61,26 +61,23 @@ QueueManager::QueueManager()
       initiallizedExtra_(false)
 {}
 
-QueueManager::~QueueManager()
-{
-    Clear();
-}
+QueueManager::~QueueManager() { Clear(); }
 
-QueueManager &QueueManager::GetInstance()
+QueueManager& QueueManager::GetInstance()
 {
     static QueueManager instance;
     return instance;
 }
 
-BqsStatus QueueManager::CreateQueue(const char_t * const name, const uint32_t depth, uint32_t &queueId,
-    uint32_t deviceId) const
+BqsStatus QueueManager::CreateQueue(
+    const char_t* const name, const uint32_t depth, uint32_t& queueId, uint32_t deviceId) const
 {
     std::string nameStr(name);
     const auto curPid = static_cast<uint32_t>(drvDeviceGetBareTgid());
     nameStr += std::to_string(curPid);
     QueueAttr queAttr = {};
-    const auto memcpyRet = memcpy_s(queAttr.name, static_cast<uint32_t>(QUEUE_MAX_STR_LEN),
-                                    nameStr.c_str(), nameStr.length());
+    const auto memcpyRet =
+        memcpy_s(queAttr.name, static_cast<uint32_t>(QUEUE_MAX_STR_LEN), nameStr.c_str(), nameStr.length());
     if (memcpyRet != EOK) {
         BQS_LOG_ERROR("CreateAndSubscribeQueue memcpy_s failed, ret[%d].", memcpyRet);
         return BQS_STATUS_INNER_ERROR;
@@ -106,18 +103,16 @@ BqsStatus QueueManager::CreateQueue(const char_t * const name, const uint32_t de
     return BQS_STATUS_OK;
 }
 
-BqsStatus QueueManager::CreateQueue(const char_t * const name, const uint32_t depth, uint32_t &queueId) const
+BqsStatus QueueManager::CreateQueue(const char_t* const name, const uint32_t depth, uint32_t& queueId) const
 {
     return CreateQueue(name, depth, queueId, deviceId_);
 }
 
-BqsStatus QueueManager::CreateAndSubscribeQueue(const char_t * const name,
-                                                const uint32_t depth, uint32_t &queueId) const
+BqsStatus QueueManager::CreateAndSubscribeQueue(const char_t* const name, const uint32_t depth, uint32_t& queueId) const
 {
     const BqsStatus ret = CreateQueue(name, depth, queueId);
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Create buff queue[name:%s, depth:%u] failed, ret=%d.",
-                      name, depth, static_cast<int32_t>(ret));
+        BQS_LOG_ERROR("Create buff queue[name:%s, depth:%u] failed, ret=%d.", name, depth, static_cast<int32_t>(ret));
         return ret;
     }
 
@@ -136,42 +131,41 @@ BqsStatus QueueManager::CreateAndSubscribeQueue(const char_t * const name,
     }
 
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("Subscribe buff queue[name:%s, id:%u] failed, deviceId[%u], groupId[%u], ret=%d.",
-            name, queueId, deviceId_, groupId_, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "Subscribe buff queue[name:%s, id:%u] failed, deviceId[%u], groupId[%u], ret=%d.", name, queueId, deviceId_,
+            groupId_, static_cast<int32_t>(drvRet));
         (void)DestroyQueue(queueId);
         return BQS_STATUS_DRIVER_ERROR;
     }
-    BQS_LOG_INFO("Subscribe buff queue[name:%s, id:%u] success, deviceId[%u], groupId[%u]",
-                 name, queueId, deviceId_, groupId_);
+    BQS_LOG_INFO(
+        "Subscribe buff queue[name:%s, id:%u] success, deviceId[%u], groupId[%u]", name, queueId, deviceId_, groupId_);
     return BQS_STATUS_OK;
 }
 
-BqsStatus QueueManager::CreateAndSubscribeQueueExtra(const char_t * const name,
-    const uint32_t depth, uint32_t &queueId) const
+BqsStatus QueueManager::CreateAndSubscribeQueueExtra(
+    const char_t* const name, const uint32_t depth, uint32_t& queueId) const
 {
     const BqsStatus ret = CreateQueue(name, depth, queueId, deviceIdExtra_);
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Create buff queue[name:%s, depth:%u] failed, ret=%d.",
-                      name, depth, static_cast<int32_t>(ret));
+        BQS_LOG_ERROR("Create buff queue[name:%s, depth:%u] failed, ret=%d.", name, depth, static_cast<int32_t>(ret));
         return ret;
     }
 
     const drvError_t drvRet = halQueueSubscribe(deviceIdExtra_, queueId, groupIdExtra_, QUEUE_TYPE_GROUP);
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("Subscribe buff queue[name:%s, id:%u] failed, deviceId[%u], groupId[%u], ret=%d.",
-            name, queueId, deviceIdExtra_, groupIdExtra_, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "Subscribe buff queue[name:%s, id:%u] failed, deviceId[%u], groupId[%u], ret=%d.", name, queueId,
+            deviceIdExtra_, groupIdExtra_, static_cast<int32_t>(drvRet));
         (void)DestroyQueue(queueId, deviceIdExtra_);
         return BQS_STATUS_DRIVER_ERROR;
     }
-    BQS_LOG_INFO("Subscribe buff queue[name:%s, id:%u] success, deviceId[%u], groupId[%u].",
-                 name, queueId, deviceIdExtra_, groupIdExtra_);
+    BQS_LOG_INFO(
+        "Subscribe buff queue[name:%s, id:%u] success, deviceId[%u], groupId[%u].", name, queueId, deviceIdExtra_,
+        groupIdExtra_);
     return BQS_STATUS_OK;
 }
 
-BqsStatus QueueManager::DestroyQueue(const uint32_t queueId) const
-{
-    return DestroyQueue(queueId, deviceId_);
-}
+BqsStatus QueueManager::DestroyQueue(const uint32_t queueId) const { return DestroyQueue(queueId, deviceId_); }
 
 BqsStatus QueueManager::DestroyQueue(const uint32_t queueId, uint32_t deviceId) const
 {
@@ -208,15 +202,15 @@ BqsStatus QueueManager::UnsubscribeQueue(const uint32_t queueId, const QUEUE_EVE
  * init/create/subscribe buff queue
  * @return BQS_STATUS_OK:success other:failed
  */
-BqsStatus QueueManager::InitQueueManager(const uint32_t deviceId, const uint32_t groupId, const bool hasAICPU,
-                                         const std::string& groupName)
+BqsStatus QueueManager::InitQueueManager(
+    const uint32_t deviceId, const uint32_t groupId, const bool hasAICPU, const std::string& groupName)
 {
     (void)hasAICPU;
     deviceId_ = deviceId;
     groupId_ = groupId;
     grpName_ = groupName;
-    BQS_LOG_INFO("QueueManager init begin, deviceId[%u], groupId[%u], groupName[%s].", deviceId, groupId,
-                 grpName_.c_str());
+    BQS_LOG_INFO(
+        "QueueManager init begin, deviceId[%u], groupId[%u], groupName[%s].", deviceId, groupId, grpName_.c_str());
 
     if (!groupName.empty()) {
         const auto queueInitRet = InitQueue();
@@ -229,7 +223,6 @@ BqsStatus QueueManager::InitQueueManager(const uint32_t deviceId, const uint32_t
     BQS_LOG_INFO("QueueManager init success, deviceId[%u], groupId[%u].", deviceId, groupId);
     return BQS_STATUS_OK;
 }
-
 
 void QueueManager::InitExtra(const uint32_t deviceIdExtra, const uint32_t groupIdExtra)
 {
@@ -446,7 +439,7 @@ BqsStatus QueueManager::EnqueueRelationEventToQ(const uint32_t deviceId, const u
 {
     BQS_LOG_INFO("QueueManager EnqueueRelationEvent begin");
 
-    Mbuf *mbufPtr = nullptr;
+    Mbuf* mbufPtr = nullptr;
     int32_t ret = halMbufAlloc(BIND_EVENT_MSG_LENGTH, &mbufPtr);
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("halMbufAlloc error, queue id:[%u], ret=[%d]", relationEventQ, ret);
@@ -471,12 +464,12 @@ BqsStatus QueueManager::EnqueueRelationEventToQ(const uint32_t deviceId, const u
 bool QueueManager::HandleRelationEvent(const uint32_t index) const
 {
     bool dequeue = false;
-    Mbuf *mbufPtr = nullptr;
+    Mbuf* mbufPtr = nullptr;
     int32_t ret = DRV_ERROR_NONE;
     auto deviceId = (index == 0U) ? deviceId_ : deviceIdExtra_;
     auto relationEventQId = (index == 0U) ? relationEventQId_ : relationEventQIdExtra_;
     while (true) {
-        ret = halQueueDeQueue(deviceId, relationEventQId, PtrToPtr< Mbuf *, void *>(&mbufPtr));
+        ret = halQueueDeQueue(deviceId, relationEventQId, PtrToPtr<Mbuf*, void*>(&mbufPtr));
         if (ret == DRV_ERROR_QUEUE_EMPTY) {
             break;
         }
@@ -507,7 +500,7 @@ bool QueueManager::HandleRelationEvent(const uint32_t index) const
     return dequeue;
 }
 
-void QueueManager::MakeUpMbuf(Mbuf **mbufPtr) const
+void QueueManager::MakeUpMbuf(Mbuf** mbufPtr) const
 {
     // malloc mbuf for f2nf queue
     const size_t mbufLen = sizeof(EntityInfo);
@@ -516,7 +509,7 @@ void QueueManager::MakeUpMbuf(Mbuf **mbufPtr) const
         BQS_LOG_ERROR("Failed to malloc mbuf, ret=[%d]", drvRet);
         return;
     }
-    Mbuf* &mbuf = *mbufPtr;
+    Mbuf*& mbuf = *mbufPtr;
     drvRet = halMbufSetDataLen(mbuf, mbufLen);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
         BQS_LOG_ERROR("Set data len for mbuf failed, dataLen:[%zu], ret=[%d]", mbufLen, drvRet);
@@ -549,11 +542,11 @@ void QueueManager::MakeUpF2NFMbuf(const uint32_t index)
 BqsStatus QueueManager::EnqueueFullToNotFullEvent(const uint32_t index)
 {
     MakeUpF2NFMbuf(index);
-    auto &f2nfLock = (index == 0U) ? f2nfLock_ : f2nfLockExtra_;
-    auto &mbufForF2nf = (index == 0U) ? mbufForF2nf_ : mbufForF2nfExtra_;
-    auto &f2nfQueueEmptyFlag = (index == 0U) ? f2nfQueueEmptyFlag_ : f2nfQueueEmptyFlagExtra_;
-    auto &deviceId = (index == 0U) ? deviceId_ : deviceIdExtra_;
-    auto &fullToNotFullEventQId = (index == 0U) ? fullToNotFullEventQId_ : fullToNotFullEventQIdExtra_;
+    auto& f2nfLock = (index == 0U) ? f2nfLock_ : f2nfLockExtra_;
+    auto& mbufForF2nf = (index == 0U) ? mbufForF2nf_ : mbufForF2nfExtra_;
+    auto& f2nfQueueEmptyFlag = (index == 0U) ? f2nfQueueEmptyFlag_ : f2nfQueueEmptyFlagExtra_;
+    auto& deviceId = (index == 0U) ? deviceId_ : deviceIdExtra_;
+    auto& fullToNotFullEventQId = (index == 0U) ? fullToNotFullEventQId_ : fullToNotFullEventQIdExtra_;
 
     if (mbufForF2nf == nullptr) {
         BQS_LOG_ERROR("Failed to malloc mbuf for f2nf event, index is %u.", index);
@@ -590,15 +583,15 @@ BqsStatus QueueManager::EnqueueFullToNotFullEvent(const uint32_t index)
 bool QueueManager::HandleFullToNotFullEvent(const uint32_t index)
 {
     uint32_t dequeueCount = 0U;
-    auto &f2nfLock = (index == 0U) ? f2nfLock_ : f2nfLockExtra_;
-    auto &mbufForF2nf = (index == 0U) ? mbufForF2nf_ : mbufForF2nfExtra_;
-    auto &f2nfQueueEmptyFlag = (index == 0U) ? f2nfQueueEmptyFlag_ : f2nfQueueEmptyFlagExtra_;
-    auto &deviceId = (index == 0U) ? deviceId_ : deviceIdExtra_;
-    auto &fullToNotFullEventQId = (index == 0U) ? fullToNotFullEventQId_ : fullToNotFullEventQIdExtra_;
+    auto& f2nfLock = (index == 0U) ? f2nfLock_ : f2nfLockExtra_;
+    auto& mbufForF2nf = (index == 0U) ? mbufForF2nf_ : mbufForF2nfExtra_;
+    auto& f2nfQueueEmptyFlag = (index == 0U) ? f2nfQueueEmptyFlag_ : f2nfQueueEmptyFlagExtra_;
+    auto& deviceId = (index == 0U) ? deviceId_ : deviceIdExtra_;
+    auto& fullToNotFullEventQId = (index == 0U) ? fullToNotFullEventQId_ : fullToNotFullEventQIdExtra_;
 
     f2nfLock.Lock();
     while (dequeueCount <= MAX_DEQUEUE_COUNT) {
-        void *dequeuedMbuf = nullptr;
+        void* dequeuedMbuf = nullptr;
         const int32_t ret = halQueueDeQueue(deviceId, fullToNotFullEventQId, &dequeuedMbuf);
         if (ret == DRV_ERROR_QUEUE_EMPTY) {
             break;
@@ -626,11 +619,11 @@ BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
 {
     // avoid parallel halEnQueue
     std::lock_guard<std::mutex> lock(mutex_);
-    Mbuf *mbufPtr = nullptr;
+    Mbuf* mbufPtr = nullptr;
     int32_t ret = halMbufAlloc(BIND_EVENT_MSG_LENGTH, &mbufPtr);
     if (ret != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("halMbufAlloc error, queue id:[%u]/[%u], ret=[%d]",
-                      asyncMemDequeueBuffQId_, asyncMemEnqueueBuffQId_, ret);
+        BQS_LOG_ERROR(
+            "halMbufAlloc error, queue id:[%u]/[%u], ret=[%d]", asyncMemDequeueBuffQId_, asyncMemEnqueueBuffQId_, ret);
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -661,7 +654,7 @@ BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
 bool QueueManager::HandleAsynMemBuffEvent(const uint32_t index)
 {
     (void)index;
-    Mbuf *mbufPtr = nullptr;
+    Mbuf* mbufPtr = nullptr;
     int32_t ret = DRV_ERROR_RESERVED;
     bool isTriggered = false;
     while (true) {
@@ -669,13 +662,13 @@ bool QueueManager::HandleAsynMemBuffEvent(const uint32_t index)
         if (isTriggeredByAsyncMemDequeue_) {
             isTriggered = true;
             asyncMemBuffQId = asyncMemDequeueBuffQId_;
-            ret = halQueueDeQueue(deviceId_, asyncMemDequeueBuffQId_, PtrToPtr<Mbuf *, void *>(&mbufPtr));
+            ret = halQueueDeQueue(deviceId_, asyncMemDequeueBuffQId_, PtrToPtr<Mbuf*, void*>(&mbufPtr));
         }
 
         if (isTriggeredByAsyncMemEnqueue_) {
             isTriggered = true;
             asyncMemBuffQId = asyncMemEnqueueBuffQId_;
-            ret = halQueueDeQueue(deviceId_, asyncMemEnqueueBuffQId_, PtrToPtr<Mbuf *, void *>(&mbufPtr));
+            ret = halQueueDeQueue(deviceId_, asyncMemEnqueueBuffQId_, PtrToPtr<Mbuf*, void*>(&mbufPtr));
         }
 
         if (ret == DRV_ERROR_QUEUE_EMPTY || ret == DRV_ERROR_RESERVED) {
@@ -704,31 +697,27 @@ bool QueueManager::HandleAsynMemBuffEvent(const uint32_t index)
     return true;
 }
 
-void QueueManager::LogErrorRelationQueueStatus() const
-{
-    LogErrorQueueStatus(relationEventQId_);
-}
+void QueueManager::LogErrorRelationQueueStatus() const { LogErrorQueueStatus(relationEventQId_); }
 
 void QueueManager::LogErrorQueueStatus(const uint32_t queueId) const
 {
     QueueInfo queueInfoObj;
     auto ret = halQueueQueryInfo(deviceId_, queueId, &queueInfoObj);
     if (ret == DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("halQueueQueryInfo get queue info, deviceId_:%u, "
-                      "queueId:%u, size:%d, depth:%d, status:%d, workMode:%d, "
-                      "type:%d, subGroupId:%d,subPid:%d, subF2NFGroupId:%d, "
-                      "subF2NFPid:%d, enqueCnt:%llu, dequeCnt:%llu, "
-                      "enqueFailCnt:%llu, dequeFailCnt:%llu, enqueEventOk:%llu, "
-                      "enqueEventFail:%llu, f2nfEventOk:%llu, f2nfEventFail:%llu, "
-                      "lastEnqueTime.tv_sec:%ld, lastEnqueTime.tv_usec:%ld, "
-                      "lastDequeTime.tv_sec:%ld, lastDequeTime.tv_usec:%ld.",
-            deviceId_, queueInfoObj.id, queueInfoObj.size, queueInfoObj.depth,
-            queueInfoObj.status, queueInfoObj.workMode, queueInfoObj.type,
-            queueInfoObj.subGroupId, queueInfoObj.subPid, queueInfoObj.subF2NFGroupId,
-            queueInfoObj.subF2NFPid, queueInfoObj.stat.enqueCnt,
-            queueInfoObj.stat.dequeCnt, queueInfoObj.stat.enqueFailCnt,
-            queueInfoObj.stat.dequeFailCnt, queueInfoObj.stat.enqueEventOk,
-            queueInfoObj.stat.enqueEventFail, queueInfoObj.stat.f2nfEventOk,
+        BQS_LOG_ERROR(
+            "halQueueQueryInfo get queue info, deviceId_:%u, "
+            "queueId:%u, size:%d, depth:%d, status:%d, workMode:%d, "
+            "type:%d, subGroupId:%d,subPid:%d, subF2NFGroupId:%d, "
+            "subF2NFPid:%d, enqueCnt:%llu, dequeCnt:%llu, "
+            "enqueFailCnt:%llu, dequeFailCnt:%llu, enqueEventOk:%llu, "
+            "enqueEventFail:%llu, f2nfEventOk:%llu, f2nfEventFail:%llu, "
+            "lastEnqueTime.tv_sec:%ld, lastEnqueTime.tv_usec:%ld, "
+            "lastDequeTime.tv_sec:%ld, lastDequeTime.tv_usec:%ld.",
+            deviceId_, queueInfoObj.id, queueInfoObj.size, queueInfoObj.depth, queueInfoObj.status,
+            queueInfoObj.workMode, queueInfoObj.type, queueInfoObj.subGroupId, queueInfoObj.subPid,
+            queueInfoObj.subF2NFGroupId, queueInfoObj.subF2NFPid, queueInfoObj.stat.enqueCnt,
+            queueInfoObj.stat.dequeCnt, queueInfoObj.stat.enqueFailCnt, queueInfoObj.stat.dequeFailCnt,
+            queueInfoObj.stat.enqueEventOk, queueInfoObj.stat.enqueEventFail, queueInfoObj.stat.f2nfEventOk,
             queueInfoObj.stat.f2nfEventFail, queueInfoObj.stat.lastEnqueTime.tv_sec,
             queueInfoObj.stat.lastEnqueTime.tv_usec, queueInfoObj.stat.lastDequeTime.tv_sec,
             queueInfoObj.stat.lastDequeTime.tv_usec);
@@ -744,4 +733,4 @@ void QueueManager::LogErrorQueueStatus(const uint32_t queueId) const
         BQS_LOG_ERROR("halQueueGetStatus failed, queueId:[%u], ret:[%d].", queueId, ret);
     }
 }
-}  // namespace bqs
+} // namespace bqs

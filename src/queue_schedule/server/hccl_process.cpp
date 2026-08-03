@@ -23,13 +23,13 @@ namespace {
 // call hccl api max count when processing one event
 constexpr uint32_t GET_DATA_THRESHOLD = 100U;
 // supply hccl events
-const std::vector<uint32_t> g_supplyEvents = {EVENT_RECV_REQUEST_MSG,
-    EVENT_SEND_COMPLETION_MSG, EVENT_RECV_COMPLETION_MSG};
+const std::vector<uint32_t> g_supplyEvents = {
+    EVENT_RECV_REQUEST_MSG, EVENT_SEND_COMPLETION_MSG, EVENT_RECV_COMPLETION_MSG};
 // link setup timeout gap
 constexpr float64_t LINK_SET_UP_TIMEOUE = 60000000.0;
-}
+} // namespace
 
-HcclProcess &HcclProcess::GetInstance()
+HcclProcess& HcclProcess::GetInstance()
 {
     static HcclProcess instance;
     instance.Init();
@@ -45,15 +45,15 @@ void HcclProcess::Init()
     inited_ = true;
 }
 
-FsmStatus HcclProcess::ProcessRecvRequestEvent(const event_info &event, const uint32_t deviceId,
-    const uint32_t resIndex)
+FsmStatus HcclProcess::ProcessRecvRequestEvent(
+    const event_info& event, const uint32_t deviceId, const uint32_t resIndex)
 {
     if (oneTrackEventEnabled_) {
         return FsmStatus::FSM_SUCCESS;
     }
     auto ret = FsmStatus::FSM_SUCCESS;
-    auto &recvRequestEventAtomicFlag = (resIndex == 0U) ?
-        recvRequestEventAtomicFlag_ : recvRequestEventAtomicFlagExtra_;
+    auto& recvRequestEventAtomicFlag =
+        (resIndex == 0U) ? recvRequestEventAtomicFlag_ : recvRequestEventAtomicFlagExtra_;
     if (!recvRequestEventAtomicFlag.test_and_set()) {
         DGW_LOG_INFO("Begin to process recv request event.");
         // init profiling data
@@ -62,8 +62,8 @@ FsmStatus HcclProcess::ProcessRecvRequestEvent(const event_info &event, const ui
         const uint64_t schedTimes = bqs::StatisticManager::GetInstance().HcclMpiRecvRequestEventStat();
         bqs::ProfileManager::GetInstance(resIndex).InitMarkerForRecvReqEvent(schedTimes, schedDelay);
         // process recv request
-        const std::function<FsmStatus(const ChannelEntityPtr &, uint32_t &)> probeFunc =
-            [this](const ChannelEntityPtr &entity, uint32_t &probeCount) -> FsmStatus {
+        const std::function<FsmStatus(const ChannelEntityPtr&, uint32_t&)> probeFunc =
+            [this](const ChannelEntityPtr& entity, uint32_t& probeCount) -> FsmStatus {
             return ProbeCommChannel(entity, probeCount);
         };
         ret = EntityManager::Instance(resIndex).ProbeSrcCommChannel(probeFunc);
@@ -84,14 +84,14 @@ FsmStatus HcclProcess::ProcessRecvRequestEvent(const event_info &event, const ui
     return ret;
 }
 
-FsmStatus HcclProcess::ProcessSendCompletionEvent(const event_info &event, const uint32_t deviceId,
-    const uint32_t resIndex)
+FsmStatus HcclProcess::ProcessSendCompletionEvent(
+    const event_info& event, const uint32_t deviceId, const uint32_t resIndex)
 {
     if (oneTrackEventEnabled_) {
         return FsmStatus::FSM_SUCCESS;
     }
     auto ret = FsmStatus::FSM_SUCCESS;
-    auto &sendCompEventAtomicFlag = (resIndex == 0U) ? sendCompEventAtomicFlag_ : sendCompEventAtomicFlagExtra_;
+    auto& sendCompEventAtomicFlag = (resIndex == 0U) ? sendCompEventAtomicFlag_ : sendCompEventAtomicFlagExtra_;
     if (!sendCompEventAtomicFlag.test_and_set()) {
         DGW_LOG_INFO("Begin to process send completion event.");
         // init profiling data
@@ -100,8 +100,8 @@ FsmStatus HcclProcess::ProcessSendCompletionEvent(const event_info &event, const
         const uint64_t schedTimes = bqs::StatisticManager::GetInstance().HcclMpiSendCompEventStat();
         bqs::ProfileManager::GetInstance(resIndex).InitMarkerForSendCompEvent(schedTimes, schedDelay);
         // process send comppletion
-        const std::function<FsmStatus(CommChannels &, uint32_t &, uint32_t &)> testSomeFunc =
-            [this](CommChannels &channels, uint32_t &totalCompCount, uint32_t &resIndexTmp) -> FsmStatus {
+        const std::function<FsmStatus(CommChannels&, uint32_t&, uint32_t&)> testSomeFunc =
+            [this](CommChannels& channels, uint32_t& totalCompCount, uint32_t& resIndexTmp) -> FsmStatus {
             return TestSomeCommChannels(channels, false, totalCompCount, resIndexTmp);
         };
         ret = EntityManager::Instance(resIndex).TestSomeCommChannels(testSomeFunc, false);
@@ -121,11 +121,11 @@ FsmStatus HcclProcess::ProcessSendCompletionEvent(const event_info &event, const
     return ret;
 }
 
-FsmStatus HcclProcess::ProcessRecvCompletionEvent(const event_info &event, const uint32_t deviceId,
-    const uint32_t resIndex)
+FsmStatus HcclProcess::ProcessRecvCompletionEvent(
+    const event_info& event, const uint32_t deviceId, const uint32_t resIndex)
 {
     auto ret = FsmStatus::FSM_SUCCESS;
-    auto &recvCompEventAtomicFlag = (resIndex == 0U) ? recvCompEventAtomicFlag_ : recvCompEventAtomicFlagExtra_;
+    auto& recvCompEventAtomicFlag = (resIndex == 0U) ? recvCompEventAtomicFlag_ : recvCompEventAtomicFlagExtra_;
     if (!recvCompEventAtomicFlag.test_and_set()) {
         DGW_LOG_INFO("Begin to process recv completion event.deviceId[%u]", deviceId);
         // init profiling data
@@ -134,23 +134,23 @@ FsmStatus HcclProcess::ProcessRecvCompletionEvent(const event_info &event, const
         const uint64_t schedTimes = bqs::StatisticManager::GetInstance().HcclMpiRecvCompEventStat();
         bqs::ProfileManager::GetInstance(resIndex).InitMarkerForRecvCompEvent(schedTimes, schedDelay);
         // process recv completion event
-        const std::function<FsmStatus(CommChannels &, uint32_t &, uint32_t &)> testSomeFunc =
-            [this](CommChannels &channels, uint32_t &totalCompCount, uint32_t &resIndexTmp) -> FsmStatus {
+        const std::function<FsmStatus(CommChannels&, uint32_t&, uint32_t&)> testSomeFunc =
+            [this](CommChannels& channels, uint32_t& totalCompCount, uint32_t& resIndexTmp) -> FsmStatus {
             return TestSomeCommChannels(channels, true, totalCompCount, resIndexTmp);
         };
         ret = EntityManager::Instance(resIndex).TestSomeCommChannels(testSomeFunc, true);
 
         if (oneTrackEventEnabled_) {
             // process send comppletion
-            const std::function<FsmStatus(CommChannels &, uint32_t &, uint32_t &)> testSomeSendFunc =
-                [this](CommChannels &channels, uint32_t &totalCompCount, uint32_t &resIndexTmp) -> FsmStatus {
+            const std::function<FsmStatus(CommChannels&, uint32_t&, uint32_t&)> testSomeSendFunc =
+                [this](CommChannels& channels, uint32_t& totalCompCount, uint32_t& resIndexTmp) -> FsmStatus {
                 return TestSomeCommChannels(channels, false, totalCompCount, resIndexTmp);
             };
             (void)EntityManager::Instance(resIndex).TestSomeCommChannels(testSomeSendFunc, false);
 
             // process recv request
-            const std::function<FsmStatus(const ChannelEntityPtr &, uint32_t &)> probeFunc =
-                [this](const ChannelEntityPtr &entity, uint32_t &probeCount) -> FsmStatus {
+            const std::function<FsmStatus(const ChannelEntityPtr&, uint32_t&)> probeFunc =
+                [this](const ChannelEntityPtr& entity, uint32_t& probeCount) -> FsmStatus {
                 return ProbeCommChannel(entity, probeCount);
             };
             (void)EntityManager::Instance(resIndex).ProbeSrcCommChannel(probeFunc);
@@ -172,26 +172,27 @@ FsmStatus HcclProcess::ProcessRecvCompletionEvent(const event_info &event, const
     return ret;
 }
 
-FsmStatus HcclProcess::ProcessCongestionReliefEvent(const event_info &event, const uint32_t deviceId,
-    const uint32_t resIndex) const
+FsmStatus HcclProcess::ProcessCongestionReliefEvent(
+    const event_info& event, const uint32_t deviceId, const uint32_t resIndex) const
 {
-    (void) deviceId;
+    (void)deviceId;
     (void)event;
-    (void) resIndex;
+    (void)resIndex;
     DGW_LOG_ERROR("WARNING! Receive congestion relief event!");
     bqs::StatisticManager::GetInstance().HcclMpiF2nfEventStat();
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus HcclProcess::TestSomeCommChannels(CommChannels &channels, const bool isSrc, uint32_t &totalCompCount,
-    const uint32_t resIndex) const
+FsmStatus HcclProcess::TestSomeCommChannels(
+    CommChannels& channels, const bool isSrc, uint32_t& totalCompCount, const uint32_t resIndex) const
 {
-    auto &entities = channels.entities;
-    auto &requests = channels.requests;
+    auto& entities = channels.entities;
+    auto& requests = channels.requests;
     // check request count
     if (entities.size() > requests.capacity()) {
-        DGW_LOG_ERROR("WARNING: Please check requests capacity[%zu] which is less than entities size[%zu].",
-            requests.capacity(), entities.size());
+        DGW_LOG_ERROR(
+            "WARNING: Please check requests capacity[%zu] which is less than entities size[%zu].", requests.capacity(),
+            entities.size());
         return FsmStatus::FSM_FAILED;
     }
 
@@ -203,7 +204,7 @@ FsmStatus HcclProcess::TestSomeCommChannels(CommChannels &channels, const bool i
         bool allNullReq = true;
         size_t index = 0UL;
         for (auto iter = entities.begin(); iter != entities.end(); ++iter) {
-            const RequestInfo * const hcclReq = (*iter)->FrontUncompReq();
+            const RequestInfo* const hcclReq = (*iter)->FrontUncompReq();
             if (((*iter)->linkStatus_ == ChannelLinkStatus::ABNORMAL) || (hcclReq == nullptr)) {
                 requests[index++] = HCCL_REQUEST_NULL;
             } else {
@@ -229,11 +230,11 @@ FsmStatus HcclProcess::TestSomeCommChannels(CommChannels &channels, const bool i
         }
         // call HcclTestSome
         int32_t compCount = 0;
-        auto &compIndices = channels.compIndices;
-        auto &compStatus = channels.compStatus;
+        auto& compIndices = channels.compIndices;
+        auto& compStatus = channels.compStatus;
         const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex).GetCpuTick();
-        const auto hcclRet = HcclTestSome(static_cast<int32_t>(entities.size()), requests.data(),
-                                          &compCount, compIndices.data(), compStatus.data());
+        const auto hcclRet = HcclTestSome(
+            static_cast<int32_t>(entities.size()), requests.data(), &compCount, compIndices.data(), compStatus.data());
         bqs::ProfileManager::GetInstance(resIndex).AddHcclTestSomeCost(
             bqs::ProfileManager::GetInstance(resIndex).GetCpuTick() - begin, isSrc);
         if (hcclRet == static_cast<int32_t>(HCCL_E_IN_STATUS)) {
@@ -261,18 +262,20 @@ FsmStatus HcclProcess::TestSomeCommChannels(CommChannels &channels, const bool i
     return ret;
 }
 
-FsmStatus HcclProcess::ProcTestSomeResults(const int32_t compCount, CommChannels &channels, int32_t hcclRet) const
+FsmStatus HcclProcess::ProcTestSomeResults(const int32_t compCount, CommChannels& channels, int32_t hcclRet) const
 {
     for (size_t i = 0UL; i < static_cast<size_t>(compCount); i++) {
         const size_t reqIdx = static_cast<size_t>(channels.compIndices[i]);
-        HcclStatus &status = channels.compStatus[i];
-        ChannelEntityPtr &entity = channels.entities[reqIdx];
+        HcclStatus& status = channels.compStatus[i];
+        ChannelEntityPtr& entity = channels.entities[reqIdx];
         // check status
         if (status.error != 0) {
-            DGW_LOG_ERROR("Comm channel[%s] test some failed, status:[rank:%d, tag:%d, error:%d], hcclRet[%d].",
+            DGW_LOG_ERROR(
+                "Comm channel[%s] test some failed, status:[rank:%d, tag:%d, error:%d], hcclRet[%d].",
                 entity->ToString().c_str(), status.srcRank, status.tag, status.error, hcclRet);
             if (((status.error == static_cast<int32_t>(HCCL_E_TCP_TRANSFER)) ||
-                 (status.error == static_cast<int32_t>(HCCL_E_ROCE_TRANSFER))) && (hcclRet == HCCL_E_IN_STATUS)) {
+                 (status.error == static_cast<int32_t>(HCCL_E_ROCE_TRANSFER))) &&
+                (hcclRet == HCCL_E_IN_STATUS)) {
                 entity->linkStatus_ = ChannelLinkStatus::ABNORMAL;
                 DGW_LOG_RUN_INFO("set entity link status is abnormal.");
             }
@@ -284,7 +287,7 @@ FsmStatus HcclProcess::ProcTestSomeResults(const int32_t compCount, CommChannels
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus HcclProcess::ProbeCommChannel(const ChannelEntityPtr &entity, uint32_t &probeCount) const
+FsmStatus HcclProcess::ProbeCommChannel(const ChannelEntityPtr& entity, uint32_t& probeCount) const
 {
     if (entity == nullptr) {
         probeCount = 0U;
@@ -316,8 +319,9 @@ FsmStatus HcclProcess::ProbeCommChannel(const ChannelEntityPtr &entity, uint32_t
         }
     }
     probeCount = reqTotalCount;
-    DGW_LOG_INFO("Probe comm channel success, total count is [%u], envelope cached count is [%u], entity:[%s].",
-        reqTotalCount, envelopeCacheCount, entity->ToString().c_str());
+    DGW_LOG_INFO(
+        "Probe comm channel success, total count is [%u], envelope cached count is [%u], entity:[%s].", reqTotalCount,
+        envelopeCacheCount, entity->ToString().c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
@@ -341,12 +345,12 @@ FsmStatus HcclProcess::SupplyEvents(const uint32_t resIndex) const
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus HcclProcess::ReplyHcclEvent(const event_info &event, const uint32_t deviceId) const
+FsmStatus HcclProcess::ReplyHcclEvent(const event_info& event, const uint32_t deviceId) const
 {
     const uint32_t eventId = static_cast<uint32_t>(event.comm.event_id);
     // ack event
-    const auto drvRet = halEschedAckEvent(deviceId,
-        static_cast<EVENT_ID>(eventId), event.comm.subevent_id, nullptr, 0U);
+    const auto drvRet =
+        halEschedAckEvent(deviceId, static_cast<EVENT_ID>(eventId), event.comm.subevent_id, nullptr, 0U);
     if (drvRet != DRV_ERROR_NONE) {
         DGW_LOG_ERROR("Failed to reply event[%u], deviceId[%u], ret is %d.", eventId, deviceId, drvRet);
         return FsmStatus::FSM_FAILED;
@@ -375,14 +379,15 @@ FsmStatus HcclProcess::ReplyHcclEvent(const event_info &event, const uint32_t de
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus HcclProcess::PreProcessSetUplinkReq(const RequestInfo * const hcclReq) const
+FsmStatus HcclProcess::PreProcessSetUplinkReq(const RequestInfo* const hcclReq) const
 {
     const uint64_t curTick = bqs::ProfileManager::GetInstance().GetCpuTick();
     if (curTick >= hcclReq->startTick) {
         const auto timeCost = bqs::ProfileManager::GetInstance().GetTimeCost(curTick - hcclReq->startTick);
         if (timeCost >= LINK_SET_UP_TIMEOUE) {
-            DGW_LOG_ERROR("curtick:%lu, setuptick:%lu, threshold:%.2fus, linkSetUp timeout:%.2fus.", curTick,
-                          hcclReq->startTick, LINK_SET_UP_TIMEOUE, timeCost);
+            DGW_LOG_ERROR(
+                "curtick:%lu, setuptick:%lu, threshold:%.2fus, linkSetUp timeout:%.2fus.", curTick, hcclReq->startTick,
+                LINK_SET_UP_TIMEOUE, timeCost);
             return FsmStatus::FSM_FAILED;
         }
         return FsmStatus::FSM_SUCCESS;
@@ -390,4 +395,4 @@ FsmStatus HcclProcess::PreProcessSetUplinkReq(const RequestInfo * const hcclReq)
     DGW_LOG_ERROR("cur tick:%lu is smaller than SetUpTick:%lu.", curTick, hcclReq->startTick);
     return FsmStatus::FSM_FAILED;
 }
-}  // namespace dgw
+} // namespace dgw

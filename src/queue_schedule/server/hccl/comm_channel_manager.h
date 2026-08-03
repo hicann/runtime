@@ -23,18 +23,31 @@ public:
     CommChannel() = delete;
     ~CommChannel() = default;
 
-    explicit CommChannel(const HcclComm handle = nullptr, const uint32_t localTagId = 0U,
-        const uint32_t peerTagId = 0U, const uint32_t localRankId = 0U, const uint32_t peerRankId = 0U,
-        const uint32_t localTagDepth = 0U, const uint32_t peerTagDepth = 0U)
-        : handle_(handle), localTagId_(localTagId), peerTagId_(peerTagId), localRankId_(localRankId),
-          peerRankId_(peerRankId), localTagDepth_(localTagDepth), peerTagDepth_(peerTagDepth)
+    explicit CommChannel(
+        const HcclComm handle = nullptr, const uint32_t localTagId = 0U, const uint32_t peerTagId = 0U,
+        const uint32_t localRankId = 0U, const uint32_t peerRankId = 0U, const uint32_t localTagDepth = 0U,
+        const uint32_t peerTagDepth = 0U)
+        : handle_(handle),
+          localTagId_(localTagId),
+          peerTagId_(peerTagId),
+          localRankId_(localRankId),
+          peerRankId_(peerRankId),
+          localTagDepth_(localTagDepth),
+          peerTagDepth_(peerTagDepth)
     {
-        (void)channelDesc_.append("handle:").append(std::to_string(PtrToValue(handle_)))
-            .append(", rank:").append(std::to_string(localRankId_)).append("->").append(std::to_string(peerRankId_))
-            .append(", tag:").append(std::to_string(localTagId_)).append("->").append(std::to_string(peerTagId_));
+        (void)channelDesc_.append("handle:")
+            .append(std::to_string(PtrToValue(handle_)))
+            .append(", rank:")
+            .append(std::to_string(localRankId_))
+            .append("->")
+            .append(std::to_string(peerRankId_))
+            .append(", tag:")
+            .append(std::to_string(localTagId_))
+            .append("->")
+            .append(std::to_string(peerTagId_));
     }
 
-    bool operator==(const CommChannel &commChannel) const
+    bool operator==(const CommChannel& commChannel) const
     {
         if (handle_ != commChannel.handle_) {
             return false;
@@ -54,38 +67,14 @@ public:
         return true;
     }
 
-    inline HcclComm GetHandle() const
-    {
-        return handle_;
-    }
-    inline uint32_t GetLocalTagId() const
-    {
-        return localTagId_;
-    }
-    inline uint32_t GetPeerTagId() const
-    {
-        return peerTagId_;
-    }
-    inline uint32_t GetLocalRankId() const
-    {
-        return localRankId_;
-    }
-    inline uint32_t GetPeerRankId() const
-    {
-        return peerRankId_;
-    }
-    inline uint32_t GetLocalTagDepth() const
-    {
-        return localTagDepth_;
-    }
-    inline uint32_t GetPeerTagDepth() const
-    {
-        return peerTagDepth_;
-    }
-    inline const std::string &ToString() const
-    {
-        return channelDesc_;
-    }
+    inline HcclComm GetHandle() const { return handle_; }
+    inline uint32_t GetLocalTagId() const { return localTagId_; }
+    inline uint32_t GetPeerTagId() const { return peerTagId_; }
+    inline uint32_t GetLocalRankId() const { return localRankId_; }
+    inline uint32_t GetPeerRankId() const { return peerRankId_; }
+    inline uint32_t GetLocalTagDepth() const { return localTagDepth_; }
+    inline uint32_t GetPeerTagDepth() const { return peerTagDepth_; }
+    inline const std::string& ToString() const { return channelDesc_; }
 
 private:
     HcclComm handle_;
@@ -101,7 +90,7 @@ private:
 
 class CommChannelHash {
 public:
-    size_t operator()(const CommChannel &channel) const
+    size_t operator()(const CommChannel& channel) const
     {
         return std::hash<uint64_t>()(PtrToValue(channel.GetHandle())) ^
                std::hash<uint32_t>()(channel.GetLocalRankId()) ^ std::hash<uint32_t>()(channel.GetPeerRankId()) ^
@@ -115,7 +104,7 @@ public:
      * @brief Get the Instance object
      * @return object of CommChannelManager
      */
-    static CommChannelManager &GetInstance();
+    static CommChannelManager& GetInstance();
 
     /**
      * @brief Destroy the Comm Channel Manager object
@@ -128,14 +117,14 @@ public:
      * @param channelPtr comm channel ptr in commChannelMap_
      * @return comm channel id.
      */
-    uint32_t GetCommChannelId(const CommChannel &channel, const CommChannel *&channelPtr);
+    uint32_t GetCommChannelId(const CommChannel& channel, const CommChannel*& channelPtr);
 
     /**
      * @brief Delete comm channel
      * @param channel comm channel
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus DeleteCommChannel(const CommChannel &channel);
+    FsmStatus DeleteCommChannel(const CommChannel& channel);
 
 private:
     /**
@@ -148,5 +137,5 @@ private:
     // comm channel map mutex
     std::mutex commChannelMapMutex_;
 };
-}
+} // namespace dgw
 #endif

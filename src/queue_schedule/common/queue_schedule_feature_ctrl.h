@@ -22,14 +22,14 @@ public:
      * @return true-支持, false-不支持
      */
     static bool IsSupportSetVisibleDevices(int64_t chip);
-    
+
     /**
      * @brief 检查是否设置线程FIFO调度
      * @param deviceId 设备ID
      * @return true-需要设置, false-不需要设置
      */
     static bool ShouldSetThreadFIFO(uint32_t deviceId);
-    
+
     /**
      * @brief 检查是否添加到控制组(cgroup)
      * @param deviceId 设备ID

@@ -48,24 +48,30 @@ public:
     EntityInfo() = delete;
     ~EntityInfo() = default;
 
-    explicit EntityInfo(const uint32_t id, const uint32_t deviceId, const OptionalArg *const args = nullptr)
+    explicit EntityInfo(const uint32_t id, const uint32_t deviceId, const OptionalArg* const args = nullptr)
         : id_(id), deviceId_(deviceId)
     {
         if (args != nullptr) {
             optionalArgs_ = *args;
         }
-        (void)entityDesc_.append("qid:").append(std::to_string(id_))
-            .append(", type:").append(std::to_string(static_cast<int32_t>(optionalArgs_.eType)))
-            .append(", globalId:").append(std::to_string(optionalArgs_.globalId))
-            .append(", schedCfgKey:").append(std::to_string(optionalArgs_.schedCfgKey))
-            .append(", queue type:").append(std::to_string(optionalArgs_.queueType))
-            .append(", deviceId:").append(std::to_string(deviceId_));
+        (void)entityDesc_.append("qid:")
+            .append(std::to_string(id_))
+            .append(", type:")
+            .append(std::to_string(static_cast<int32_t>(optionalArgs_.eType)))
+            .append(", globalId:")
+            .append(std::to_string(optionalArgs_.globalId))
+            .append(", schedCfgKey:")
+            .append(std::to_string(optionalArgs_.schedCfgKey))
+            .append(", queue type:")
+            .append(std::to_string(optionalArgs_.queueType))
+            .append(", deviceId:")
+            .append(std::to_string(deviceId_));
         if (optionalArgs_.channelPtr != nullptr) {
             (void)entityDesc_.append(", ").append(optionalArgs_.channelPtr->ToString());
         }
     }
 
-    bool operator==(const EntityInfo &entityInfo) const
+    bool operator==(const EntityInfo& entityInfo) const
     {
         if (id_ != entityInfo.id_) {
             return false;
@@ -82,72 +88,30 @@ public:
         return true;
     }
 
-    inline uint32_t GetId() const
-    {
-        return id_;
-    }
-    inline dgw::EntityType GetType() const
-    {
-        return optionalArgs_.eType;
-    }
-    inline bqs::GroupPolicy GetGroupPolicy() const
-    {
-        return optionalArgs_.policy;
-    }
-    inline const dgw::CommChannel *GetCommChannel() const
-    {
-        return optionalArgs_.channelPtr;
-    }
+    inline uint32_t GetId() const { return id_; }
+    inline dgw::EntityType GetType() const { return optionalArgs_.eType; }
+    inline bqs::GroupPolicy GetGroupPolicy() const { return optionalArgs_.policy; }
+    inline const dgw::CommChannel* GetCommChannel() const { return optionalArgs_.channelPtr; }
 
-    inline const dgw::EntityPtr &GetEntity() const
-    {
-        return entity_;
-    }
+    inline const dgw::EntityPtr& GetEntity() const { return entity_; }
 
-    inline void SetEntity(const dgw::EntityPtr &entity)
-    {
-        entity_ = entity;
-    }
+    inline void SetEntity(const dgw::EntityPtr& entity) { entity_ = entity; }
 
-    inline const std::string &ToString() const
-    {
-        return entityDesc_;
-    }
+    inline const std::string& ToString() const { return entityDesc_; }
 
-    inline uint32_t GetPeerInstanceNum() const
-    {
-        return optionalArgs_.peerInstanceNum;
-    }
+    inline uint32_t GetPeerInstanceNum() const { return optionalArgs_.peerInstanceNum; }
 
-    inline uint32_t GetLocalInstanceIndex() const
-    {
-        return optionalArgs_.localInstanceIndex;
-    }
+    inline uint32_t GetLocalInstanceIndex() const { return optionalArgs_.localInstanceIndex; }
 
-    inline uint32_t GetGlobalId() const
-    {
-        return optionalArgs_.globalId;
-    }
+    inline uint32_t GetGlobalId() const { return optionalArgs_.globalId; }
 
-    inline uint32_t GetUuId() const
-    {
-        return optionalArgs_.uuId;
-    }
+    inline uint32_t GetUuId() const { return optionalArgs_.uuId; }
 
-    inline uint32_t GetSchedCfgKey() const
-    {
-        return optionalArgs_.schedCfgKey;
-    }
+    inline uint32_t GetSchedCfgKey() const { return optionalArgs_.schedCfgKey; }
 
-    inline uint32_t GetDeviceId() const
-    {
-        return deviceId_;
-    }
+    inline uint32_t GetDeviceId() const { return deviceId_; }
 
-    inline uint32_t GetQueueType() const
-    {
-        return optionalArgs_.queueType;
-    }
+    inline uint32_t GetQueueType() const { return optionalArgs_.queueType; }
 
 private:
     uint32_t id_;
@@ -159,7 +123,7 @@ private:
 
 class EntityInfoHash {
 public:
-    size_t operator()(const EntityInfo &info) const
+    size_t operator()(const EntityInfo& info) const
     {
         return std::hash<uint32_t>()(info.GetId()) ^ std::hash<uint16_t>()(static_cast<uint16_t>(info.GetType()));
     }
@@ -171,17 +135,17 @@ using MapEnitityInfoToInfoSet = std::unordered_map<EntityInfo, EntityInfoSet, En
 
 class BindRelation {
 public:
-    static BindRelation &GetInstance();
+    static BindRelation& GetInstance();
 
     ~BindRelation() = default;
 
-    BindRelation(const BindRelation &) = delete;
+    BindRelation(const BindRelation&) = delete;
 
-    BindRelation &operator=(const BindRelation &) = delete;
+    BindRelation& operator=(const BindRelation&) = delete;
 
-    BindRelation(BindRelation &&) = delete;
+    BindRelation(BindRelation&&) = delete;
 
-    BindRelation &operator=(BindRelation &&) = delete;
+    BindRelation& operator=(BindRelation&&) = delete;
 
     /**
      * create relation srcEntity->dstEntity.
@@ -189,7 +153,7 @@ public:
      * @param dstEntity destination queue
      * @return BQS_STATUS_OK:success, other:failed
      */
-    BqsStatus Bind(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t resIndex = 0U);
+    BqsStatus Bind(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t resIndex = 0U);
 
     /**
      * delete relation srcEntity->dstEntity.
@@ -197,7 +161,7 @@ public:
      * @param dstEntity destination queue id
      * @return BQS_STATUS_OK:success, other:failed
      */
-    BqsStatus UnBind(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t resIndex = 0U);
+    BqsStatus UnBind(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t resIndex = 0U);
 
     /**
      * delete relation srcEntity->*.
@@ -224,7 +188,7 @@ public:
      * @param groupId group id
      * @return BQS_STATUS_OK:success, other:failed
      */
-    BqsStatus CreateGroup(const std::vector<EntityInfoPtr> &entities, uint32_t &groupId);
+    BqsStatus CreateGroup(const std::vector<EntityInfoPtr>& entities, uint32_t& groupId);
 
     /**
      * delete group.
@@ -237,19 +201,19 @@ public:
      * get src to destination relation.
      * @return src to destination relation
      */
-    const MapEnitityInfoToInfoSet &GetSrcToDstRelation() const;
+    const MapEnitityInfoToInfoSet& GetSrcToDstRelation() const;
 
     /* *
      * get destination to src relation.
      * @return destination to src relation
      */
-    const MapEnitityInfoToInfoSet &GetDstToSrcRelation() const;
+    const MapEnitityInfoToInfoSet& GetDstToSrcRelation() const;
 
     /* *
      * Get ordered subscribe queue.
      * @return ordered subscribe queue id
      */
-    const std::vector<EntityInfo> &GetOrderedSubscribeQueueId() const;
+    const std::vector<EntityInfo>& GetOrderedSubscribeQueueId() const;
 
     /**
      * Get bind size.
@@ -267,29 +231,29 @@ public:
      * Get group config.
      * @return endpoint entity info in current group
      */
-    const std::vector<EntityInfoPtr> &GetEntitiesInGroup(const uint32_t groupId) const;
+    const std::vector<EntityInfoPtr>& GetEntitiesInGroup(const uint32_t groupId) const;
 
-    BqsStatus UnBindRelationBySrc(const EntityInfo &srcEntity);
+    BqsStatus UnBindRelationBySrc(const EntityInfo& srcEntity);
 
-    BqsStatus UnBindRelationByDst(const EntityInfo &dstEntity);
+    BqsStatus UnBindRelationByDst(const EntityInfo& dstEntity);
 
-    void MarkAbnormalSrc(const EntityInfo &srcEntity);
+    void MarkAbnormalSrc(const EntityInfo& srcEntity);
 
-    void MarkAbnormalDst(const EntityInfo &dstEntity);
+    void MarkAbnormalDst(const EntityInfo& dstEntity);
 
-    const MapEnitityInfoToInfoSet &GetAbnormalSrcToDstRelation() const;
+    const MapEnitityInfoToInfoSet& GetAbnormalSrcToDstRelation() const;
 
-    const MapEnitityInfoToInfoSet &GetAbnormalDstToSrcRelation() const;
+    const MapEnitityInfoToInfoSet& GetAbnormalDstToSrcRelation() const;
 
-    BqsStatus GetBindRelationIndex(const EntityInfo &srcEntity, const EntityInfo &dstEntity, uint32_t &index) const;
+    BqsStatus GetBindRelationIndex(const EntityInfo& srcEntity, const EntityInfo& dstEntity, uint32_t& index) const;
 
-    const MapEnitityInfoToInfoSet &GetSrcToDstExtraRelation() const;
+    const MapEnitityInfoToInfoSet& GetSrcToDstExtraRelation() const;
 
-    const MapEnitityInfoToInfoSet &GetDstToSrcExtraRelation() const;
+    const MapEnitityInfoToInfoSet& GetDstToSrcExtraRelation() const;
 
-    const std::vector<EntityInfo> &GetOrderedSubscribeQueueIdExtra() const;
+    const std::vector<EntityInfo>& GetOrderedSubscribeQueueIdExtra() const;
 
-    BqsStatus GetBindIndexBySrc(const EntityInfo &srcEntity, uint32_t &index) const;
+    BqsStatus GetBindIndexBySrc(const EntityInfo& srcEntity, uint32_t& index) const;
 
     BqsStatus ClearInputQueue(const uint32_t index, const std::unordered_set<uint32_t>& keySet);
 
@@ -297,7 +261,7 @@ public:
 
     void ClearAbnormalEntityInfo(const uint32_t index);
 
-    void AppendAbnormalEntity(const EntityInfo &info, const dgw::EntityDirection direction, const uint32_t index);
+    void AppendAbnormalEntity(const EntityInfo& info, const dgw::EntityDirection direction, const uint32_t index);
 
     void UpdateRelation(const uint32_t index);
 
@@ -310,8 +274,8 @@ private:
      * @param dstEntity destination queue id
      * @return BQS_STATUS_OK:success, other:failed
      */
-    BqsStatus CheckBind(const EntityInfo& srcEntity, const EntityInfo& dstEntity,
-        const uint32_t resIndex, uint32_t &index) const;
+    BqsStatus CheckBind(
+        const EntityInfo& srcEntity, const EntityInfo& dstEntity, const uint32_t resIndex, uint32_t& index) const;
 
     /**
      * check whether exist multi-layer bind relation.
@@ -343,7 +307,7 @@ private:
      * @param dstEntity destination queue id
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus AddSrcToDst(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t index = 0U);
+    BqsStatus AddSrcToDst(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t index = 0U);
 
     /**
      * del relation from dstToSrcRelation_
@@ -359,7 +323,7 @@ private:
      * @param dstEntity destination queue id
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus AddDstToSrc(EntityInfo &srcEntity, EntityInfo &dstEntity, const uint32_t index = 0U);
+    BqsStatus AddDstToSrc(EntityInfo& srcEntity, EntityInfo& dstEntity, const uint32_t index = 0U);
 
     /**
      * generate group id
@@ -373,7 +337,7 @@ private:
      * @param dst dst entity info
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus CreateEntity(const EntityInfo &src, const EntityInfo &dst, const uint32_t resIndex = 0U);
+    BqsStatus CreateEntity(const EntityInfo& src, const EntityInfo& dst, const uint32_t resIndex = 0U);
 
     /**
      * Create entity
@@ -381,7 +345,7 @@ private:
      * @param isSrc is src
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus CreateEntity(const EntityInfo &info, const bool isSrc, const uint32_t resIndex);
+    BqsStatus CreateEntity(const EntityInfo& info, const bool isSrc, const uint32_t resIndex);
 
     /**
      * create entity for group
@@ -389,22 +353,23 @@ private:
      * @param isSrc is src
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus CreateEntityForGroup(const EntityInfo &groupEntity, const bool isSrc, const uint32_t resIndex);
+    BqsStatus CreateEntityForGroup(const EntityInfo& groupEntity, const bool isSrc, const uint32_t resIndex);
 
     /**
      * Delete entity
      * @param info entity info
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus DeleteEntity(const EntityInfo &info, const bool isSrc, const uint32_t resIndex = 0U) const;
+    BqsStatus DeleteEntity(const EntityInfo& info, const bool isSrc, const uint32_t resIndex = 0U) const;
 
     /**
      * delete entity for group
      * @param groupId group id
      * @return BQS_STATUS_OK:success, other:exist
      */
-    BqsStatus DeleteEntityForGroup(const uint32_t queueType, const uint32_t deviceId,
-        const uint32_t groupId, const dgw::EntityDirection direction, const uint32_t resIndex) const;
+    BqsStatus DeleteEntityForGroup(
+        const uint32_t queueType, const uint32_t deviceId, const uint32_t groupId, const dgw::EntityDirection direction,
+        const uint32_t resIndex) const;
 
     /**
      * subscribe event
@@ -412,8 +377,7 @@ private:
      * @param eventType event type
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus SubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-        const uint32_t index) const;
+    BqsStatus SubscribeEvent(const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index) const;
 
     /**
      * unsubscribe event
@@ -421,8 +385,8 @@ private:
      * @param eventType event type
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus UnsubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-        const uint32_t index) const;
+    BqsStatus UnsubscribeEvent(
+        const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index) const;
 
     /**
      * update subscribe event
@@ -430,36 +394,36 @@ private:
      * @param eventType event type
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus UpdateSubscribeEvent(const EntityInfo &subscribeEntity, const EventType eventType,
-        const uint32_t index = 0U) const;
+    BqsStatus UpdateSubscribeEvent(
+        const EntityInfo& subscribeEntity, const EventType eventType, const uint32_t index = 0U) const;
 
     /**
      * check whether can execute unbind for entity
      * @param entity entity info
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus CheckUnBind(const EntityInfo &entity) const;
+    BqsStatus CheckUnBind(const EntityInfo& entity) const;
 
     /**
      * set entityptr for entityInfo
      * @param entitiInfo to expand
      * @return BQS_STATUS_OK: success, other: failed
      */
-    BqsStatus SetEntityPtr(EntityInfo &entityInfo, const dgw::EntityDirection direction, const uint32_t index) const;
+    BqsStatus SetEntityPtr(EntityInfo& entityInfo, const dgw::EntityDirection direction, const uint32_t index) const;
 
-    void UnBindAbnormalRelationBySrc(const EntityInfo &srcEntity);
+    void UnBindAbnormalRelationBySrc(const EntityInfo& srcEntity);
 
-    void UnBindAbnormalRelationByDst(const EntityInfo &dstEntity);
+    void UnBindAbnormalRelationByDst(const EntityInfo& dstEntity);
 
-    void DelAbnormalSrcToDst(const EntityInfo &srcEntity, const EntityInfo &dstEntity);
+    void DelAbnormalSrcToDst(const EntityInfo& srcEntity, const EntityInfo& dstEntity);
 
-    void DelAbnormalDstToSrc(const EntityInfo &srcEntity, const EntityInfo &dstEntity);
+    void DelAbnormalDstToSrc(const EntityInfo& srcEntity, const EntityInfo& dstEntity);
 
-    BqsStatus GetBindIndexByDst(const EntityInfo &srcEntity, uint32_t &index) const;
+    BqsStatus GetBindIndexByDst(const EntityInfo& srcEntity, uint32_t& index) const;
 
-    void OrderOneTable(std::vector<EntityInfo> &orderedSubscribeQueueId,
-        const MapEnitityInfoToInfoSet &srcToDstRelation,
-        const MapEnitityInfoToInfoSet &dstToSrcRelation);
+    void OrderOneTable(
+        std::vector<EntityInfo>& orderedSubscribeQueueId, const MapEnitityInfoToInfoSet& srcToDstRelation,
+        const MapEnitityInfoToInfoSet& dstToSrcRelation);
 
     // a queue can be bound to multi queue.
     MapEnitityInfoToInfoSet srcToDstRelation_;
@@ -486,7 +450,7 @@ private:
     // spin lock for generate group id
     SpinLock lockForGroup_;
 
-     // a queue can be bound to multi queue.
+    // a queue can be bound to multi queue.
     MapEnitityInfoToInfoSet srcToDstRelationExtra_;
 
     // a queue can bind to only one queue
@@ -497,5 +461,5 @@ private:
     std::vector<EntityInfo> abnormalSrc_;
     std::vector<EntityInfo> abnormalDst_;
 };
-}  // namespace bqs
-#endif  // QUEUE_SCHEDULE_BIND_RELATION_H
+} // namespace bqs
+#endif // QUEUE_SCHEDULE_BIND_RELATION_H

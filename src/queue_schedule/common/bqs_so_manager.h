@@ -18,9 +18,8 @@
 namespace bqs {
 class SoManager {
 public:
-    SoManager(const std::string &soName, const std::vector<std::string> &funcNames) : soName_(soName),
-                                                                                      soHandle_(nullptr),
-                                                                                      funcHandleMap_({})
+    SoManager(const std::string& soName, const std::vector<std::string>& funcNames)
+        : soName_(soName), soHandle_(nullptr), funcHandleMap_({})
     {
         OpenSo();
         if (soHandle_ != nullptr) {
@@ -28,28 +27,25 @@ public:
         }
     };
 
-    ~SoManager()
-    {
-        CloseSo();
-    }
+    ~SoManager() { CloseSo(); }
 
-    void *GetFuncHandle(const std::string &funcName) const;
+    void* GetFuncHandle(const std::string& funcName) const;
 
     bool IsSoLoad() const;
 
 private:
-    SoManager(const SoManager &) = delete;
-    SoManager &operator=(const SoManager &) = delete;
-    SoManager(SoManager &&) = delete;
-    SoManager &operator=(SoManager &&) = delete;
+    SoManager(const SoManager&) = delete;
+    SoManager& operator=(const SoManager&) = delete;
+    SoManager(SoManager&&) = delete;
+    SoManager& operator=(SoManager&&) = delete;
 
     void OpenSo();
     void CloseSo();
-    void BatchLoadFunc(const std::vector<std::string> &funcNames);
-    void *GetFuncHandleFromSo(const std::string &funcName) const;
+    void BatchLoadFunc(const std::vector<std::string>& funcNames);
+    void* GetFuncHandleFromSo(const std::string& funcName) const;
 
     std::string soName_;
-    void *soHandle_;
+    void* soHandle_;
     std::map<std::string, void*> funcHandleMap_;
 };
 } // namespace bqs

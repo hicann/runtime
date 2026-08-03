@@ -32,7 +32,6 @@ struct CpuInfo {
  */
 class BindCpuUtils {
 public:
-
     /**
      * bind aicpu.
      * @param bindCpuIndex bind aicpu index
@@ -46,7 +45,7 @@ public:
      * @param [in] cpuIds : cpu ids
      * @return BQS_STATUS_OK:success, other:failed
      */
-    static BqsStatus SetThreadAffinity(const pthread_t &threadId, const std::vector<uint32_t> &cpuIds);
+    static BqsStatus SetThreadAffinity(const pthread_t& threadId, const std::vector<uint32_t>& cpuIds);
 
     /**
      * Init semaphore.
@@ -81,9 +80,9 @@ public:
      * Get cpu info.
      * @return BQS_STATUS_OK:success, other:failed
      */
-    static BqsStatus GetDevCpuInfo(const uint32_t deviceId, std::vector<uint32_t> &aiCpuIds,
-                                   std::vector<uint32_t> &ctrlCpuIds, uint32_t &coreNumPerDev, uint32_t &aicpuNum,
-                                   uint32_t &aicpuBaseId);
+    static BqsStatus GetDevCpuInfo(
+        const uint32_t deviceId, std::vector<uint32_t>& aiCpuIds, std::vector<uint32_t>& ctrlCpuIds,
+        uint32_t& coreNumPerDev, uint32_t& aicpuNum, uint32_t& aicpuBaseId);
 
     /**
      * AddToCgroup
@@ -116,6 +115,6 @@ private:
      */
     static BqsStatus BindAicpuByPm(const uint32_t bindCpuIndex);
 };
-}  // namespace bqs
+} // namespace bqs
 
-#endif  // QUEUE_SCHEDULE_BIND_CPU_UTILS_H
+#endif // QUEUE_SCHEDULE_BIND_CPU_UTILS_H

@@ -35,4 +35,4 @@ inline bool CheckLogLevelAicpu(const int32_t moduleId, const int32_t logLevel)
 }
 #endif // LOG_CPP
 #endif // __cplusplus
-#endif  // COMMON_BQS_WEAK_LOG_H
+#endif // COMMON_BQS_WEAK_LOG_H

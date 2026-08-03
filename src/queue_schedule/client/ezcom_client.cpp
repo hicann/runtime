@@ -28,7 +28,7 @@ std::atomic<bool> EzcomClient::initFlag_(false);
  * Create instance of EzcomClient.
  * @return EzcomClient*: success
  */
-EzcomClient *EzcomClient::GetInstance(const int32_t fd)
+EzcomClient* EzcomClient::GetInstance(const int32_t fd)
 {
     const std::lock_guard<std::mutex> lk(g_ezClientMut);
     if (!initFlag_) {
@@ -43,7 +43,7 @@ EzcomClient *EzcomClient::GetInstance(const int32_t fd)
  * Assembly bind BQSMsg message
  * @return BQS_STATUS_OK: success, other: error
  */
-BqsStatus EzcomClient::SerializeBindMsg(const std::vector<BQSBindQueueItem> &bindQueueVec, BQSMsg &bqsClientMsg) const
+BqsStatus EzcomClient::SerializeBindMsg(const std::vector<BQSBindQueueItem>& bindQueueVec, BQSMsg& bqsClientMsg) const
 {
     BQS_LOG_INFO("Bind relation [add], stage [client], type [request], relation [size:%zu]", bindQueueVec.size());
     if (bindQueueVec.empty()) {
@@ -52,14 +52,15 @@ BqsStatus EzcomClient::SerializeBindMsg(const std::vector<BQSBindQueueItem> &bin
     }
 
     bqsClientMsg.set_msg_type(BQSMsg::BIND);
-    BQSBindQueueMsgs * const bqsBindQueueMsgBuff = bqsClientMsg.mutable_bind_queue_msgs();
+    BQSBindQueueMsgs* const bqsBindQueueMsgBuff = bqsClientMsg.mutable_bind_queue_msgs();
 
     for (size_t i = 0U; i < bindQueueVec.size(); i++) {
-        BQSBindQueueMsg * const bqsBindQueueEzMsg = bqsBindQueueMsgBuff->add_bind_queue_vec();
+        BQSBindQueueMsg* const bqsBindQueueEzMsg = bqsBindQueueMsgBuff->add_bind_queue_vec();
 
         bqsBindQueueEzMsg->set_src_queue_id(bindQueueVec[i].srcQueueId_);
         bqsBindQueueEzMsg->set_dst_queue_id(bindQueueVec[i].dstQueueId_);
-        BQS_LOG_INFO("Bind relation [add], stage [client], type [request], relation [src:%u, dst:%u]",
+        BQS_LOG_INFO(
+            "Bind relation [add], stage [client], type [request], relation [src:%u, dst:%u]",
             bindQueueVec[i].srcQueueId_, bindQueueVec[i].dstQueueId_);
     }
     return BQS_STATUS_OK;
@@ -69,7 +70,7 @@ BqsStatus EzcomClient::SerializeBindMsg(const std::vector<BQSBindQueueItem> &bin
  * Send BQSMsg message to server
  * @return BQS_STATUS_OK: success, other: error
  */
-BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) const
+BqsStatus EzcomClient::SendBqsMsg(const BQSMsg& bqsReqMsg, BQSMsg& bqsRespMsg) const
 {
     const uint32_t bqsMsgLen = static_cast<uint32_t>(bqsReqMsg.ByteSizeLong());
     uint32_t reqLength = 0U;
@@ -99,7 +100,7 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
     }
 
     EzcomRequest req = {.id = 0U, .data = PtrToPtr<char_t, uint8_t>(reqData.get()), .size = reqLength};
-    struct EzcomResponse resp = { 0U };
+    struct EzcomResponse resp = {0U};
     // Send msg and get response
     BQS_LOG_INFO("EzcomRPCSync begin, fd:%d, msg size:%u", clientFd_, reqLength);
     int32_t err = EzcomRPCSync(clientFd_, &req, &resp);
@@ -122,8 +123,8 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
     }
 
     if (resp.size < BQS_MSG_HEAD_SIZE) {
-        BQS_LOG_ERROR("EasyRPCSync response size:%u error, should be not less than head size:%u.", resp.size,
-            BQS_MSG_HEAD_SIZE);
+        BQS_LOG_ERROR(
+            "EasyRPCSync response size:%u error, should be not less than head size:%u.", resp.size, BQS_MSG_HEAD_SIZE);
         return BQS_STATUS_EASY_COMM_ERROR;
     }
 
@@ -137,7 +138,7 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
     }
 
     // Parse response msg to BQSMsg
-    char_t * const respData = PtrToPtr<uint8_t, char_t>(resp.data);
+    char_t* const respData = PtrToPtr<uint8_t, char_t>(resp.data);
     const uint32_t parseLength = currMsgSize - BQS_MSG_HEAD_SIZE;
     if (!bqsRespMsg.ParseFromArray(respData + BQS_MSG_HEAD_SIZE, static_cast<int32_t>(parseLength))) {
         BQS_LOG_ERROR("parse bqsRespMsg fail.");
@@ -150,12 +151,13 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
  * Parse bind response BQSMsg message
  * @return number of bind relation success
  */
-uint32_t EzcomClient::ParseBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t EzcomClient::ParseBindRespMsg(BQSMsg& bqsRespMsg, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     uint32_t bindNum = 0U;
-    const BQSBindQueueRsps * const bqsBindQueueRspBuff = bqsRespMsg.mutable_resp_msgs();
+    const BQSBindQueueRsps* const bqsBindQueueRspBuff = bqsRespMsg.mutable_resp_msgs();
 
-    BQS_LOG_INFO("Bind relation [add/del], stage [client], type [response], relation [size:%d]",
+    BQS_LOG_INFO(
+        "Bind relation [add/del], stage [client], type [response], relation [size:%d]",
         bqsBindQueueRspBuff->bind_result_vec_size());
     for (int32_t i = 0; i < bqsBindQueueRspBuff->bind_result_vec_size(); i++) {
         const BQSBindQueueRsp bqsBindQueueEzRsp = bqsBindQueueRspBuff->bind_result_vec(i);
@@ -163,8 +165,8 @@ uint32_t EzcomClient::ParseBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBindQu
         bindResultVec.push_back(bindResult);
 
         const int32_t result = bqsBindQueueEzRsp.bind_result();
-        BQS_LOG_INFO("Bind relation [add/del], stage [client], type [response], relation [index:%d, result:%d].", i,
-            result);
+        BQS_LOG_INFO(
+            "Bind relation [add/del], stage [client], type [response], relation [index:%d, result:%d].", i, result);
         if (result == BQS_STATUS_OK) {
             bindNum++;
         }
@@ -176,7 +178,7 @@ uint32_t EzcomClient::ParseBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBindQu
  * Assembly unbind BQSMsg message
  * @return BQS_STATUS_OK: success, other: failed
  */
-BqsStatus EzcomClient::SerializeUnbindMsg(const std::vector<BQSQueryPara> &bqsQueryParaVec, BQSMsg &bqsClientMsg) const
+BqsStatus EzcomClient::SerializeUnbindMsg(const std::vector<BQSQueryPara>& bqsQueryParaVec, BQSMsg& bqsClientMsg) const
 {
     BQS_LOG_INFO("Bind relation [del], stage [client], type [request], relation [size:%zu]", bqsQueryParaVec.size());
     if (bqsQueryParaVec.size() == 0U) {
@@ -185,18 +187,19 @@ BqsStatus EzcomClient::SerializeUnbindMsg(const std::vector<BQSQueryPara> &bqsQu
     }
 
     bqsClientMsg.set_msg_type(BQSMsg::UNBIND);
-    BQSQueryMsgs * const bqsQueryMsgBuff = bqsClientMsg.mutable_query_msgs();
+    BQSQueryMsgs* const bqsQueryMsgBuff = bqsClientMsg.mutable_query_msgs();
 
     for (size_t i = 0U; i < bqsQueryParaVec.size(); i++) {
-        BQSQueryMsg * const bqsQueryEzMsg = bqsQueryMsgBuff->add_query_msg_vec();
+        BQSQueryMsg* const bqsQueryEzMsg = bqsQueryMsgBuff->add_query_msg_vec();
 
         bqsQueryEzMsg->set_key_type(static_cast<BQSQueryMsg::QsQueryType>(bqsQueryParaVec[i].keyType_));
-        BQSBindQueueMsg * const bqsBindQueueEzMsg = bqsQueryEzMsg->mutable_bind_queue_item();
+        BQSBindQueueMsg* const bqsBindQueueEzMsg = bqsQueryEzMsg->mutable_bind_queue_item();
 
         bqsBindQueueEzMsg->set_src_queue_id(bqsQueryParaVec[i].bqsBindQueueItem_.srcQueueId_);
         bqsBindQueueEzMsg->set_dst_queue_id(bqsQueryParaVec[i].bqsBindQueueItem_.dstQueueId_);
 
-        BQS_LOG_INFO("Bind relation [del], stage [client], type [request], relation [type{0:src, 1:dst, 2:src-dst}:%d, "
+        BQS_LOG_INFO(
+            "Bind relation [del], stage [client], type [request], relation [type{0:src, 1:dst, 2:src-dst}:%d, "
             "src:%u, dst:%u]",
             bqsQueryParaVec[i].keyType_, bqsQueryParaVec[i].bqsBindQueueItem_.srcQueueId_,
             bqsQueryParaVec[i].bqsBindQueueItem_.dstQueueId_);
@@ -208,18 +211,19 @@ BqsStatus EzcomClient::SerializeUnbindMsg(const std::vector<BQSQueryPara> &bqsQu
  * Assembly get bind BQSMsg message
  * @return BQS_STATUS_OK: success, other: failed
  */
-BqsStatus EzcomClient::SerializeGetBindMsg(const BQSQueryPara &queryPara, BQSMsg &bqsClientMsg) const
+BqsStatus EzcomClient::SerializeGetBindMsg(const BQSQueryPara& queryPara, BQSMsg& bqsClientMsg) const
 {
     BQS_LOG_INFO("Bind relation [get], stage [client], type [request]");
     bqsClientMsg.set_msg_type(BQSMsg::GET_BIND);
-    BQSQueryMsg * const bqsQueryEzMsg = bqsClientMsg.mutable_query_msg();
+    BQSQueryMsg* const bqsQueryEzMsg = bqsClientMsg.mutable_query_msg();
 
     bqsQueryEzMsg->set_key_type(static_cast<BQSQueryMsg::QsQueryType>(queryPara.keyType_));
-    BQSBindQueueMsg * const bqsBindQueueEzMsg = bqsQueryEzMsg->mutable_bind_queue_item();
+    BQSBindQueueMsg* const bqsBindQueueEzMsg = bqsQueryEzMsg->mutable_bind_queue_item();
 
     bqsBindQueueEzMsg->set_src_queue_id(queryPara.bqsBindQueueItem_.srcQueueId_);
     bqsBindQueueEzMsg->set_dst_queue_id(queryPara.bqsBindQueueItem_.dstQueueId_);
-    BQS_LOG_INFO("Bind relation [get], stage [client], type [request], relation [type{0:src, 1:dst, 2:src-dst}:%d, "
+    BQS_LOG_INFO(
+        "Bind relation [get], stage [client], type [request], relation [type{0:src, 1:dst, 2:src-dst}:%d, "
         "src:%u, dst:%u]",
         queryPara.keyType_, queryPara.bqsBindQueueItem_.srcQueueId_, queryPara.bqsBindQueueItem_.dstQueueId_);
     return BQS_STATUS_OK;
@@ -229,19 +233,16 @@ BqsStatus EzcomClient::SerializeGetBindMsg(const BQSQueryPara &queryPara, BQSMsg
  * Parse get bind response BQSMsg message
  * @return number of bind relation
  */
-uint32_t EzcomClient::ParseGetBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBindQueueItem> &bindQueueVec) const
+uint32_t EzcomClient::ParseGetBindRespMsg(BQSMsg& bqsRespMsg, std::vector<BQSBindQueueItem>& bindQueueVec) const
 {
     uint32_t bindNum = 0U;
-    const BQSBindQueueMsgs * const bqsBindQueueMsgBuff = bqsRespMsg.mutable_bind_queue_msgs();
+    const BQSBindQueueMsgs* const bqsBindQueueMsgBuff = bqsRespMsg.mutable_bind_queue_msgs();
 
     bindNum = static_cast<uint32_t>(bqsBindQueueMsgBuff->bind_queue_vec_size());
     BQS_LOG_INFO("Bind relation [get], stage [client], type [response], relation [size:%u]", bindNum);
     for (uint32_t i = 0U; i < bindNum; i++) {
         const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int32_t>(i));
-        const BQSBindQueueItem bindItem = {
-            bqsBindQueueEzMsg.src_queue_id(),
-            bqsBindQueueEzMsg.dst_queue_id()
-        };
+        const BQSBindQueueItem bindItem = {bqsBindQueueEzMsg.src_queue_id(), bqsBindQueueEzMsg.dst_queue_id()};
         bindQueueVec.push_back(bindItem);
         BQS_LOG_INFO(
             "Bind relation [get], stage [client], type [response], relation [index:%u, src:%u, dst:%u]", i,
@@ -254,11 +255,11 @@ uint32_t EzcomClient::ParseGetBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBin
  * Assembly get paged bind BQSMsg message
  * @return BQS_STATUS_OK: success, other: failed
  */
-BqsStatus EzcomClient::SerializeGetPagedBindMsg(const uint32_t offset, const uint32_t limit, BQSMsg &bqsClientMsg) const
+BqsStatus EzcomClient::SerializeGetPagedBindMsg(const uint32_t offset, const uint32_t limit, BQSMsg& bqsClientMsg) const
 {
     BQS_LOG_INFO("Bind relation [get_paged], stage [client], type [request]");
     bqsClientMsg.set_msg_type(BQSMsg::GET_ALL_BIND);
-    BQSPagedMsg * const bqsPagedEzMsg = bqsClientMsg.mutable_paged_msg();
+    BQSPagedMsg* const bqsPagedEzMsg = bqsClientMsg.mutable_paged_msg();
     bqsPagedEzMsg->set_offset(offset);
     bqsPagedEzMsg->set_limit(limit);
     return BQS_STATUS_OK;
@@ -268,23 +269,20 @@ BqsStatus EzcomClient::SerializeGetPagedBindMsg(const uint32_t offset, const uin
  * Parse get paged bind response BQSMsg message
  * @return number of bind relation
  */
-uint32_t EzcomClient::ParseGetPagedBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBindQueueItem> &bindQueueVec,
-    uint32_t &total) const
+uint32_t EzcomClient::ParseGetPagedBindRespMsg(
+    BQSMsg& bqsRespMsg, std::vector<BQSBindQueueItem>& bindQueueVec, uint32_t& total) const
 {
     uint32_t bindNum = 0U;
-    const BQSBindQueueMsgs * const bqsBindQueueMsgBuff = bqsRespMsg.mutable_bind_queue_msgs();
+    const BQSBindQueueMsgs* const bqsBindQueueMsgBuff = bqsRespMsg.mutable_bind_queue_msgs();
 
-    const BQSPagedMsg * const bqsPagedEzMsg = bqsRespMsg.mutable_paged_msg();
+    const BQSPagedMsg* const bqsPagedEzMsg = bqsRespMsg.mutable_paged_msg();
     total = bqsPagedEzMsg->total();
 
     bindNum = static_cast<uint32_t>(bqsBindQueueMsgBuff->bind_queue_vec_size());
     BQS_LOG_INFO("Bind relation [get_paged], stage [client], type [response], relation [size:%u]", bindNum);
     for (uint32_t i = 0U; i < bindNum; i++) {
         const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int32_t>(i));
-        const BQSBindQueueItem bindItem = {
-            bqsBindQueueEzMsg.src_queue_id(),
-            bqsBindQueueEzMsg.dst_queue_id()
-        };
+        const BQSBindQueueItem bindItem = {bqsBindQueueEzMsg.src_queue_id(), bqsBindQueueEzMsg.dst_queue_id()};
         bindQueueVec.push_back(bindItem);
         BQS_LOG_INFO(
             "Bind relation [get_paged], stage [client], type [response], relation [index:%u, src:%u, dst:%u]", i,

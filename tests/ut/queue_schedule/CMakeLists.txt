@@ -37,5 +37,6 @@ add_subdirectory(st)
 set(QUEUE_SCHEDULE_UT_TARGET
   queue_schedule_main_ut
   queue_schedule_stub_ut
+  queue_schedule_cov_ut
 )
 add_custom_target(queue_schedule_ut DEPENDS ${QUEUE_SCHEDULE_UT_TARGET})

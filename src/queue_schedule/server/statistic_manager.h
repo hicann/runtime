@@ -97,7 +97,8 @@ struct EntityStatisticInfo {
           minCompletionGapTickForBody(0UL),
           totalCompletionGapTickForBody(0UL),
           totalCompletionCountForBody(0UL),
-          enqueueSuccTimes(0UL) {}
+          enqueueSuccTimes(0UL)
+    {}
 };
 
 struct StatisticInfo {
@@ -194,10 +195,7 @@ struct StatisticInfo {
     // supply recv request event times
     std::atomic<uint64_t> supplyRecvReqEventTimes;
 
-    StatisticInfo()
-    {
-        Reset();
-    }
+    StatisticInfo() { Reset(); }
 
     void Reset()
     {
@@ -252,10 +250,7 @@ struct StatisticInfo {
 
 class ScheduleStatistic {
 public:
-    ScheduleStatistic()
-    {
-        Reset();
-    };
+    ScheduleStatistic() { Reset(); };
 
     ~ScheduleStatistic() = default;
 
@@ -284,17 +279,17 @@ private:
 
 class StatisticManager {
 public:
-    static StatisticManager &GetInstance();
+    static StatisticManager& GetInstance();
 
     ~StatisticManager();
 
-    StatisticManager(const StatisticManager &) = delete;
+    StatisticManager(const StatisticManager&) = delete;
 
-    StatisticManager &operator=(const StatisticManager &) = delete;
+    StatisticManager& operator=(const StatisticManager&) = delete;
 
-    StatisticManager(StatisticManager &&) = delete;
+    StatisticManager(StatisticManager&&) = delete;
 
-    StatisticManager &operator=(StatisticManager &&) = delete;
+    StatisticManager& operator=(StatisticManager&&) = delete;
 
 public:
     /**
@@ -568,7 +563,8 @@ public:
     /**
      * start dump static thread.
      */
-    void StartStatisticManager(const uint32_t abnormalInterval, const uint32_t hostPid, const bool numaFlag = false,
+    void StartStatisticManager(
+        const uint32_t abnormalInterval, const uint32_t hostPid, const bool numaFlag = false,
         const uint32_t deviceIdExtra = 0U, const uint32_t enqueGroupIdExtra = 0U);
 
     /**
@@ -666,5 +662,5 @@ private:
     QsProcMemStatistic procMemStat_;
     uint32_t hostPid_{0U};
 };
-}  // namespace bqs
-#endif  // QUEUE_SCHEDULE_STATISTIC_MANAGER_H
+} // namespace bqs
+#endif // QUEUE_SCHEDULE_STATISTIC_MANAGER_H

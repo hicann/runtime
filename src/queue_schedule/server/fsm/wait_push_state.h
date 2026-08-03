@@ -20,10 +20,10 @@ public:
 
     virtual ~WaitPushState() = default;
 
-    FsmStatus PreProcess(Entity &entity) override;
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PreProcess(Entity& entity) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
+    FsmStatus PostProcess(Entity& entity) override;
 };
-}
+} // namespace dgw
 
 #endif

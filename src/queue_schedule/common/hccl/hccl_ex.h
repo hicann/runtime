@@ -60,19 +60,17 @@ extern HcclResult HcclRegisterMemory(HcclComm comm, void* buffer, uint64_t size)
 
 extern HcclResult HcclUnregisterMemory(HcclComm comm, void* buffer);
 
-extern int HcclIsend(void* buffer, int count, HcclDataType dataType, int dstRank, int tag,
-    HcclComm comm, HcclRequest* request);
+extern int HcclIsend(
+    void* buffer, int count, HcclDataType dataType, int dstRank, int tag, HcclComm comm, HcclRequest* request);
 
-extern int HcclImrecv(void* buffer, int count, HcclDataType dataType, HcclMessage *msg,
-    HcclRequest* request);
+extern int HcclImrecv(void* buffer, int count, HcclDataType dataType, HcclMessage* msg, HcclRequest* request);
 
-extern int HcclImprobe(int srcRank, int tag, HcclComm comm, int* flag,
-    HcclMessage* msg, HcclStatus* status);
+extern int HcclImprobe(int srcRank, int tag, HcclComm comm, int* flag, HcclMessage* msg, HcclStatus* status);
 
 extern int HcclGetCount(const HcclStatus* status, HcclDataType dataType, int* count);
 
-extern int HcclTestSome(int count, HcclRequest requestArray[], int* compCount,
-    int compIndices[], HcclStatus compStatus[]);
+extern int HcclTestSome(
+    int count, HcclRequest requestArray[], int* compCount, int compIndices[], HcclStatus compStatus[]);
 
 /**
  * @ingroup raw communication
@@ -171,8 +169,8 @@ extern HcclResult HcclRawImprobe(HcclConn conn, int* flag, HcclMessage* msg, Hcc
  */
 extern HcclResult HcclRawImrecv(void* buf, int count, HcclDataType datatype, HcclMessage* msg, HcclRequest* request);
 
-extern HcclResult HcclRawImrecvScatter(void* buf[], int count[], int bufCount, HcclDataType datatype,
-    HcclMessage* msg, HcclRequest* request);
+extern HcclResult HcclRawImrecvScatter(
+    void* buf[], int count[], int bufCount, HcclDataType datatype, HcclMessage* msg, HcclRequest* request);
 
 /**
  * @ingroup raw communication
@@ -188,11 +186,10 @@ extern HcclResult HcclRawGetCount(const HcclStatus* status, HcclDataType dataTyp
  * @param [in|out]  all params same as HcclIsend
  * @return same as HcclTestSome
  */
-extern HcclResult HcclRawTestSome(int count, HcclRequest requestArray[], int* compCount,
-    int compIndices[], HcclStatus compStatus[]);
+extern HcclResult HcclRawTestSome(
+    int count, HcclRequest requestArray[], int* compCount, int compIndices[], HcclStatus compStatus[]);
 
-
-extern HcclResult HcclSetGrpIdCallback(int (*grpIdCallback)(int tag, int *grpId, int *devId));
+extern HcclResult HcclSetGrpIdCallback(int (*grpIdCallback)(int tag, int* grpId, int* devId));
 
 // commContext
 extern HcclResult HcclCreateComResource(const char* commName, u32 streamMode, void** commContext);
@@ -203,35 +200,35 @@ extern HcclResult HcclAllocComResource(HcclComm comm, u32 streamMode, void** com
 
 extern HcclResult HcclAllocComResourceByTiling(HcclComm comm, void* stream, void* Mc2Tiling, void** commContext);
 
-extern HcclResult HcclGetAicpuOpStreamAndNotify(HcclComm comm, rtStream_t* opstream, u8 aicpuNotifyNum,
-    void** aicpuNotify);
+extern HcclResult HcclGetAicpuOpStreamAndNotify(
+    HcclComm comm, rtStream_t* opstream, u8 aicpuNotifyNum, void** aicpuNotify);
 
-extern HcclResult HcclGetTopoDesc(HcclComm comm, HcclTopoDescs *topoDescs, uint32_t topoSize);
-
-/**
-* @brief Register memory for communicator
-* @param comm A pointer identifying the communication resource
-* @param addr The address of the window memory to register
-* @param size The size in bytes of the window memory
-* @param handle Pointer to store the handle identifying the registered memory
-* @param flag Reserved parameters, default to 0
-*/
-extern HcclResult HcclCommRegister(HcclComm comm, void* addr, uint64_t size, void **handle, uint32_t flag);
+extern HcclResult HcclGetTopoDesc(HcclComm comm, HcclTopoDescs* topoDescs, uint32_t topoSize);
 
 /**
-* @brief Unregister memory for communicator
-* @param comm A pointer identifying the communication resource
-* @param handle The handle of memory registered by @ref HcclCommRegister()
-*/
+ * @brief Register memory for communicator
+ * @param comm A pointer identifying the communication resource
+ * @param addr The address of the window memory to register
+ * @param size The size in bytes of the window memory
+ * @param handle Pointer to store the handle identifying the registered memory
+ * @param flag Reserved parameters, default to 0
+ */
+extern HcclResult HcclCommRegister(HcclComm comm, void* addr, uint64_t size, void** handle, uint32_t flag);
+
+/**
+ * @brief Unregister memory for communicator
+ * @param comm A pointer identifying the communication resource
+ * @param handle The handle of memory registered by @ref HcclCommRegister()
+ */
 extern HcclResult HcclCommDeregister(HcclComm comm, void* handle);
 
 /**
-* @brief Exchange user memory with peer ranks
-* @param comm A pointer identifying the communication resource
-* @param handle The handle of memory registered by @ref HcclCommRegister()
-* @param peerRanks Array of destination ranks to exchange with
-* @param peerRankNum Number of destination ranks in the peerRanks array
-*/
+ * @brief Exchange user memory with peer ranks
+ * @param comm A pointer identifying the communication resource
+ * @param handle The handle of memory registered by @ref HcclCommRegister()
+ * @param peerRanks Array of destination ranks to exchange with
+ * @param peerRankNum Number of destination ranks in the peerRanks array
+ */
 extern HcclResult HcclCommExchangeMem(HcclComm comm, void* windowHandle, uint32_t* peerRanks, uint32_t peerRankNum);
 #ifdef __cplusplus
 }

@@ -9,8 +9,8 @@
  */
 
 #include "driver/ascend_hal.h"
-DLLEXPORT drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
-                                            unsigned int *host_pid, unsigned int *cp_type)
+DLLEXPORT drvError_t drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type)
 {
     (void)pid;
     (void)chip_id;

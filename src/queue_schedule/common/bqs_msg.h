@@ -74,6 +74,6 @@ struct InitQsParams {
     std::vector<uint32_t> devIdVec;
     bool needAttachGroup;
 };
-}  // namespace bqs
+} // namespace bqs
 
-#endif  // QUEUE_SCHEDULE_BQS_MSG_H
+#endif // QUEUE_SCHEDULE_BQS_MSG_H

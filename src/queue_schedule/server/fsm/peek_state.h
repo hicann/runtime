@@ -20,18 +20,18 @@ public:
     ~PeekState() override = default;
 
 public:
-    FsmStatus PreProcess(Entity &entity) override;
-    FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg) override;
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PreProcess(Entity& entity) override;
+    FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg) override;
+    FsmStatus PostProcess(Entity& entity) override;
 
 protected:
-    FsmStatus DeQueue(Entity &entity) const;
+    FsmStatus DeQueue(Entity& entity) const;
 
 private:
-    PeekState(const PeekState &) = delete;
-    PeekState(const PeekState &&) = delete;
-    PeekState &operator = (const PeekState &) = delete;
-    PeekState &operator = (PeekState &&) = delete;
+    PeekState(const PeekState&) = delete;
+    PeekState(const PeekState&&) = delete;
+    PeekState& operator=(const PeekState&) = delete;
+    PeekState& operator=(PeekState&&) = delete;
 };
 
 class GroupPeekState : public PeekState {
@@ -39,7 +39,7 @@ public:
     explicit GroupPeekState() noexcept = default;
     ~GroupPeekState() override = default;
 
-    FsmStatus PostProcess(Entity &entity) override;
+    FsmStatus PostProcess(Entity& entity) override;
 };
-}
+} // namespace dgw
 #endif

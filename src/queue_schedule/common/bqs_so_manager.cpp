@@ -14,28 +14,25 @@
 #include "bqs_log.h"
 
 namespace bqs {
-void *SoManager::GetFuncHandle(const std::string &funcName) const
+void* SoManager::GetFuncHandle(const std::string& funcName) const
 {
     if (soHandle_ == nullptr) {
-        BQS_LOG_ERROR("Get func handle failed by so handle is nullptr, soName=%s, funcName=%s.",
-                      soName_.c_str(), funcName.c_str());
+        BQS_LOG_ERROR(
+            "Get func handle failed by so handle is nullptr, soName=%s, funcName=%s.", soName_.c_str(),
+            funcName.c_str());
         return nullptr;
     }
 
-    const auto &iter = funcHandleMap_.find(funcName);
+    const auto& iter = funcHandleMap_.find(funcName);
     if (iter == funcHandleMap_.end()) {
-        BQS_LOG_ERROR("Func not loaded during init, soName=%s, funcName=%s.",
-                      soName_.c_str(), funcName.c_str());
+        BQS_LOG_ERROR("Func not loaded during init, soName=%s, funcName=%s.", soName_.c_str(), funcName.c_str());
         return nullptr;
     }
 
     return iter->second;
 }
 
-bool SoManager::IsSoLoad() const
-{
-    return soHandle_ != nullptr;
-}
+bool SoManager::IsSoLoad() const { return soHandle_ != nullptr; }
 
 void SoManager::OpenSo()
 {
@@ -67,15 +64,15 @@ void SoManager::CloseSo()
     return;
 }
 
-void SoManager::BatchLoadFunc(const std::vector<std::string> &funcNames)
+void SoManager::BatchLoadFunc(const std::vector<std::string>& funcNames)
 {
     if (soHandle_ == nullptr) {
         BQS_LOG_ERROR("Get func handle failed by so handle is nullptr, soName=%s.", soName_.c_str());
         return;
     }
 
-    for (const std::string &funcName: funcNames) {
-        void *funcPtr = GetFuncHandleFromSo(funcName);
+    for (const std::string& funcName : funcNames) {
+        void* funcPtr = GetFuncHandleFromSo(funcName);
         if (funcPtr != nullptr) {
             (void)funcHandleMap_.emplace(funcName, funcPtr);
         }
@@ -84,12 +81,13 @@ void SoManager::BatchLoadFunc(const std::vector<std::string> &funcNames)
     return;
 }
 
-void *SoManager::GetFuncHandleFromSo(const std::string &funcName) const
+void* SoManager::GetFuncHandleFromSo(const std::string& funcName) const
 {
-    void *funcPtr = dlsym(soHandle_, funcName.c_str());
+    void* funcPtr = dlsym(soHandle_, funcName.c_str());
     if (funcPtr == nullptr) {
-        BQS_LOG_ERROR("Get func handle from so failed, soName=%s, funcName=%s, error=%s.",
-                      soName_.c_str(), funcName.c_str(), dlerror());
+        BQS_LOG_ERROR(
+            "Get func handle from so failed, soName=%s, funcName=%s, error=%s.", soName_.c_str(), funcName.c_str(),
+            dlerror());
         return nullptr;
     }
 

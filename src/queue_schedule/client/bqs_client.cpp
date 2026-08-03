@@ -25,10 +25,10 @@ const int32_t CONNECT_WAIT_TIME_OUT = 10000; // 10s
 const uint32_t MAX_CONNECT_CALL_TIMES = 100U;
 const uint32_t TIMEOUT_CONNECT_CALL_TIMES = 10U;
 const uint32_t CONNECT_CALL_TIME_INTERVAL = 100U; // 100ms
-using MsgHandler = void (*)(int32_t fd, struct EzcomRequest *req);
+using MsgHandler = void (*)(int32_t fd, struct EzcomRequest* req);
 const uint32_t MAX_PAGED_QUEUE_RELATION = 300U;
 const int32_t EZCOMSERVER_NOT_START = -2;
-}
+} // namespace
 
 namespace bqs {
 std::mutex BqsClient::mutex_;
@@ -68,8 +68,8 @@ int32_t BqsClient::Destroy() const
  * Create instance of BqsClient.
  * @return BqsClient*: success, nullptr: error
  */
-BqsClient *BqsClient::GetInstance(const char_t * const serverProcName,
-    const uint32_t procNameLen, const ExeceptionCallback fn)
+BqsClient* BqsClient::GetInstance(
+    const char_t* const serverProcName, const uint32_t procNameLen, const ExeceptionCallback fn)
 {
     if (serverProcName == nullptr) {
         BQS_LOG_ERROR("BqsClient make instance failed, server name is null");
@@ -86,8 +86,9 @@ BqsClient *BqsClient::GetInstance(const char_t * const serverProcName,
     {
         const std::unique_lock<std::mutex> bqsLock(mutex_);
         if (!initFlag_) {
-            BQS_LOG_RUN_INFO("BqsClient EzcomCreateClient begin, server name:%s, serverCreateTryTime:%u",
-                             serverProcNameTmp.c_str(), MAX_CONNECT_CALL_TIMES);
+            BQS_LOG_RUN_INFO(
+                "BqsClient EzcomCreateClient begin, server name:%s, serverCreateTryTime:%u", serverProcNameTmp.c_str(),
+                MAX_CONNECT_CALL_TIMES);
             uint32_t connectTime = 1U;
             uint32_t serverCreateTryTime = 1U;
             struct EzcomAttr clientAttr;
@@ -115,15 +116,17 @@ BqsClient *BqsClient::GetInstance(const char_t * const serverProcName,
                 }
 
                 if (clientFd_ <= 0) {
-                    BQS_LOG_ERROR("EzcomTimedConnectServer failed, err:%d, connect times:%u, serverCreateTryTime:%u",
-                                  clientFd_, connectTime, serverCreateTryTime);
+                    BQS_LOG_ERROR(
+                        "EzcomTimedConnectServer failed, err:%d, connect times:%u, serverCreateTryTime:%u", clientFd_,
+                        connectTime, serverCreateTryTime);
                     return nullptr;
                 }
                 break;
             }
 
-            BQS_LOG_RUN_INFO("BqsClient EzcomCreateClient success, server name:%s, connect times:%u",
-                serverProcNameTmp.c_str(), connectTime);
+            BQS_LOG_RUN_INFO(
+                "BqsClient EzcomCreateClient success, server name:%s, connect times:%u", serverProcNameTmp.c_str(),
+                connectTime);
 
             initFlag_ = true;
         }
@@ -138,8 +141,8 @@ BqsClient *BqsClient::GetInstance(const char_t * const serverProcName,
  * Add bind relation, support batch bind.
  * @return Number of bind relation success, record already exists indicate successfully add
  */
-uint32_t BqsClient::BindQueue(const std::vector<BQSBindQueueItem> &bindQueueVec,
-    std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::BindQueue(
+    const std::vector<BQSBindQueueItem>& bindQueueVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     BQS_LOG_INFO("BqsClient BindQueue begin, vector size:%zu", bindQueueVec.size());
     if (bindQueueVec.size() > MAX_PAGED_QUEUE_RELATION) {
@@ -163,8 +166,8 @@ uint32_t BqsClient::BindQueue(const std::vector<BQSBindQueueItem> &bindQueueVec,
     }
 }
 
-uint32_t BqsClient::DoBindQueue(const std::vector<BQSBindQueueItem> &bindQueueVec,
-    std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::DoBindQueue(
+    const std::vector<BQSBindQueueItem>& bindQueueVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     BQS_LOG_INFO("BqsClient DoBindQueue begin, vector size:%zu", bindQueueVec.size());
     BQSMsg bqsReqMsg = {};
@@ -183,8 +186,8 @@ uint32_t BqsClient::DoBindQueue(const std::vector<BQSBindQueueItem> &bindQueueVe
  * Delete bind relation, support batch unbind according to src queueId or dst queueId or src-dst queueId
  * @return Number of unbind relation success, record not exists indicate successfully delete
  */
-uint32_t BqsClient::UnbindQueue(const std::vector<BQSQueryPara> &bqsQueryParaVec,
-    std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::UnbindQueue(
+    const std::vector<BQSQueryPara>& bqsQueryParaVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     BQS_LOG_INFO("BqsClient UnbindQueue begin, vector size:%zu", bqsQueryParaVec.size());
     if (bqsQueryParaVec.size() > MAX_PAGED_QUEUE_RELATION) {
@@ -208,8 +211,8 @@ uint32_t BqsClient::UnbindQueue(const std::vector<BQSQueryPara> &bqsQueryParaVec
     }
 }
 
-uint32_t BqsClient::DoUnbindQueue(const std::vector<BQSQueryPara> &bqsQueryParaVec,
-    std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::DoUnbindQueue(
+    const std::vector<BQSQueryPara>& bqsQueryParaVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     BQS_LOG_INFO("BqsClient DoUnbindQueue begin, vector size:%zu", bqsQueryParaVec.size());
     BQSMsg bqsReqMsg = {};
@@ -228,7 +231,7 @@ uint32_t BqsClient::DoUnbindQueue(const std::vector<BQSQueryPara> &bqsQueryParaV
  * Get bind relation, support get bind according to src queueId or dst queueId
  * @return Number of get bind relation success
  */
-uint32_t BqsClient::GetBindQueue(const BQSQueryPara &queryPara, std::vector<BQSBindQueueItem> &bindQueueVec) const
+uint32_t BqsClient::GetBindQueue(const BQSQueryPara& queryPara, std::vector<BQSBindQueueItem>& bindQueueVec) const
 {
     BQS_LOG_INFO("BqsClient GetBindQueue begin");
     BQSMsg bqsReqMsg = {};
@@ -247,8 +250,8 @@ uint32_t BqsClient::GetBindQueue(const BQSQueryPara &queryPara, std::vector<BQSB
  * Get paged bind relation
  * @return Number of get bind relation success
  */
-uint32_t BqsClient::GetPagedBindQueue(const uint32_t offset, const uint32_t limit,
-    std::vector<BQSBindQueueItem> &bindQueueVec, uint32_t &total) const
+uint32_t BqsClient::GetPagedBindQueue(
+    const uint32_t offset, const uint32_t limit, std::vector<BQSBindQueueItem>& bindQueueVec, uint32_t& total) const
 {
     BQS_LOG_INFO("BqsClient GetPagedBindQueue begin, offset:%u, limit:%u.", offset, limit);
     BQSMsg bqsReqMsg = {};
@@ -267,7 +270,7 @@ uint32_t BqsClient::GetPagedBindQueue(const uint32_t offset, const uint32_t limi
  * Get all bind relation
  * @return Number of get bind relation success
  */
-uint32_t BqsClient::GetAllBindQueue(std::vector<BQSBindQueueItem> &bindQueueVec) const
+uint32_t BqsClient::GetAllBindQueue(std::vector<BQSBindQueueItem>& bindQueueVec) const
 {
     BQS_LOG_INFO("BqsClient GetAllBindQueue begin");
     uint32_t offset = 0U;
@@ -294,23 +297,23 @@ uint32_t BqsClient::GetAllBindQueue(std::vector<BQSBindQueueItem> &bindQueueVec)
     return offset;
 }
 
-uint32_t BqsClient::BindQueueMbufPool(const std::vector<BQSBindQueueMbufPoolItem> &bindQueueVec,
-                                      std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::BindQueueMbufPool(
+    const std::vector<BQSBindQueueMbufPoolItem>& bindQueueVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     (void)(bindQueueVec);
     (void)(bindResultVec);
     return 0;
 }
 
-uint32_t BqsClient::UnbindQueueMbufPool(const std::vector<BQSUnbindQueueMbufPoolItem> &bindQueueVec,
-                             std::vector<BQSBindQueueResult> &bindResultVec) const
+uint32_t BqsClient::UnbindQueueMbufPool(
+    const std::vector<BQSUnbindQueueMbufPoolItem>& bindQueueVec, std::vector<BQSBindQueueResult>& bindResultVec) const
 {
     (void)(bindQueueVec);
     (void)(bindResultVec);
     return 0;
 }
 
-uint32_t BqsClient::BindQueueInterChip(BindQueueInterChipInfo &interChipInfo) const
+uint32_t BqsClient::BindQueueInterChip(BindQueueInterChipInfo& interChipInfo) const
 {
     (void)(interChipInfo);
     return 0;

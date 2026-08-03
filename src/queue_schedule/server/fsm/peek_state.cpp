@@ -14,10 +14,10 @@
 #include "state_manager.h"
 namespace dgw {
 
-FsmStatus PeekState::PreProcess(Entity &entity)
+FsmStatus PeekState::PreProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_PEEK_STATE).c_str(), entity.ToString().c_str());
     FsmStatus status = entity.Dequeue();
     if (status == FsmStatus::FSM_FAILED) {
@@ -31,14 +31,14 @@ FsmStatus PeekState::PreProcess(Entity &entity)
     }
 }
 
-FsmStatus PeekState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus PeekState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
     (void)msg;
     // deque and schedule next data
     return PreProcess(entity);
 }
 
-FsmStatus PeekState::PostProcess(Entity &entity)
+FsmStatus PeekState::PostProcess(Entity& entity)
 {
     // entity in group not need change to TRY_PUSH state, group need change to TRY_PUSH state
     if (entity.GetHostGroupId() != -1) {
@@ -51,7 +51,7 @@ FsmStatus PeekState::PostProcess(Entity &entity)
     return entity.ChangeState(FsmState::FSM_TRY_PUSH_STATE);
 }
 
-FsmStatus GroupPeekState::PostProcess(Entity &entity)
+FsmStatus GroupPeekState::PostProcess(Entity& entity)
 {
     // change to TRY_PUSH state
     return entity.ChangeState(FsmState::FSM_TRY_PUSH_STATE);
@@ -60,4 +60,4 @@ FsmStatus GroupPeekState::PostProcess(Entity &entity)
 REGISTER_STATE(FSM_PEEK_STATE, ENTITY_QUEUE, PeekState);
 REGISTER_STATE(FSM_PEEK_STATE, ENTITY_TAG, PeekState);
 REGISTER_STATE(FSM_PEEK_STATE, ENTITY_GROUP, GroupPeekState);
-}  // namespace dgw
+} // namespace dgw

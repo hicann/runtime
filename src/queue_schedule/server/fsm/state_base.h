@@ -19,16 +19,16 @@ public:
     explicit StateBase() noexcept = default;
     virtual ~StateBase() = default;
 
-    virtual FsmStatus PreProcess(Entity &entity) = 0;
-    virtual FsmStatus ProcessMessage(Entity &entity, const InnerMessage &msg);
-    virtual FsmStatus PostProcess(Entity &entity) = 0;
+    virtual FsmStatus PreProcess(Entity& entity) = 0;
+    virtual FsmStatus ProcessMessage(Entity& entity, const InnerMessage& msg);
+    virtual FsmStatus PostProcess(Entity& entity) = 0;
 
 private:
-    StateBase(const StateBase &) = delete;
-    StateBase(const StateBase &&) = delete;
-    StateBase &operator = (const StateBase &) = delete;
-    StateBase &operator = (StateBase &&) = delete;
+    StateBase(const StateBase&) = delete;
+    StateBase(const StateBase&&) = delete;
+    StateBase& operator=(const StateBase&) = delete;
+    StateBase& operator=(StateBase&&) = delete;
 };
-}
+} // namespace dgw
 
 #endif

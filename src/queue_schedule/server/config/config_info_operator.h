@@ -35,8 +35,8 @@ public:
      * @param queueId queue id
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ParseConfigEvent(const uint32_t subEventId, const uint32_t queueId, void *mbuf,
-        const uint16_t clientVersion);
+    BqsStatus ParseConfigEvent(
+        const uint32_t subEventId, const uint32_t queueId, void* mbuf, const uint16_t clientVersion);
 
     /**
      * process update config
@@ -53,15 +53,14 @@ public:
     BqsStatus AttachAndCheckQueue(const EntityInfo& src, const EntityInfo& dst) const;
 
 private:
-
     // not allow copy constructor and assignment operators
-    ConfigInfoOperator(const ConfigInfoOperator &) = delete;
+    ConfigInfoOperator(const ConfigInfoOperator&) = delete;
 
-    ConfigInfoOperator &operator=(const ConfigInfoOperator &) = delete;
+    ConfigInfoOperator& operator=(const ConfigInfoOperator&) = delete;
 
-    ConfigInfoOperator(ConfigInfoOperator &&) = delete;
+    ConfigInfoOperator(ConfigInfoOperator&&) = delete;
 
-    ConfigInfoOperator &operator=(ConfigInfoOperator &&) = delete;
+    ConfigInfoOperator& operator=(ConfigInfoOperator&&) = delete;
 
     /**
      * process update routes
@@ -127,7 +126,7 @@ private:
      * @param isSrc is src queue
      * @return BQS_STATUS_OK:success, other:failed.
      */
-    BqsStatus CheckQueueAuth(const EntityInfo &info, const bool isSrc) const;
+    BqsStatus CheckQueueAuth(const EntityInfo& info, const bool isSrc) const;
 
     /**
      * check queue auth for group
@@ -142,7 +141,7 @@ private:
      * @param info entity info
      * @return BQS_STATUS_OK:success, other:failed
      */
-    BqsStatus AttachQueue(const EntityInfo &info) const;
+    BqsStatus AttachQueue(const EntityInfo& info) const;
 
     /**
      * attach queue in group
@@ -199,7 +198,7 @@ private:
      * @param onlyQryNum only query num
      * @return BQS_STATUS_OK:success, other:failed.
      */
-    BqsStatus QueryRoutesBySrc(const uintptr_t mbufData, const EntityInfo &src, const bool onlyQryNum) const;
+    BqsStatus QueryRoutesBySrc(const uintptr_t mbufData, const EntityInfo& src, const bool onlyQryNum) const;
 
     /**
      * query route by dst
@@ -208,7 +207,7 @@ private:
      * @param onlyQryNum only query num
      * @return BQS_STATUS_OK:success, other:failed.
      */
-    BqsStatus QueryRoutesByDst(const uintptr_t mbufData, const EntityInfo &dst, const bool onlyQryNum) const;
+    BqsStatus QueryRoutesByDst(const uintptr_t mbufData, const EntityInfo& dst, const bool onlyQryNum) const;
 
     /**
      * query route by src and dst
@@ -218,8 +217,8 @@ private:
      * @param onlyQryNum only query num
      * @return BQS_STATUS_OK:success, other:failed.
      */
-    BqsStatus QueryRoutesBySrcAndDst(const uintptr_t mbufData, const EntityInfo &src,
-                                     const EntityInfo &dst, const bool onlyQryNum) const;
+    BqsStatus QueryRoutesBySrcAndDst(
+        const uintptr_t mbufData, const EntityInfo& src, const EntityInfo& dst, const bool onlyQryNum) const;
 
     /**
      * query all routes
@@ -245,8 +244,9 @@ private:
      * @param onlyQryNum only query num
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus SaveQueryResult(std::list<std::pair<const EntityInfo *, const EntityInfo *>> &routeList,
-                              const uintptr_t mbufData, const bool onlyQryNum) const;
+    BqsStatus SaveQueryResult(
+        std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList, const uintptr_t mbufData,
+        const bool onlyQryNum) const;
 
     /**
      * convert to route
@@ -255,7 +255,7 @@ private:
      * @param route route
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ConvertToRoute(const EntityInfo &src, const EntityInfo &dst, Route &route) const;
+    BqsStatus ConvertToRoute(const EntityInfo& src, const EntityInfo& dst, Route& route) const;
 
     /**
      * convert to endpoint
@@ -263,7 +263,7 @@ private:
      * @param endpoint endpoint
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus ConvertToEndpoint(const EntityInfo &entity, Endpoint &endpoint) const;
+    BqsStatus ConvertToEndpoint(const EntityInfo& entity, Endpoint& endpoint) const;
 
     /**
      * create entity info
@@ -271,7 +271,7 @@ private:
      * @param isQry is query
      * @return entity info pointer
      */
-    EntityInfoPtr CreateEntityInfo(const Endpoint &endpoint, const bool isQry) const;
+    EntityInfoPtr CreateEntityInfo(const Endpoint& endpoint, const bool isQry) const;
 
     /**
      * process add group
@@ -297,14 +297,14 @@ private:
      * @param isQry is query
      * @return BQS_STATUS_OK: success, other: failed.
      */
-    BqsStatus CheckCommChannelAttr(const CommChannelAttr &attr, const bool isQry) const;
+    BqsStatus CheckCommChannelAttr(const CommChannelAttr& attr, const bool isQry) const;
 
     BqsStatus QueryGroupAllocInfo();
 
-    void SplitStringWithDelimeter(const std::string rawStr, const char_t delimeter,
-        std::vector<std::string> &results) const;
+    void SplitStringWithDelimeter(
+        const std::string rawStr, const char_t delimeter, std::vector<std::string>& results) const;
 
-    BqsStatus QureySelfMemGroup(std::vector<std::string> &groupNames) const;
+    BqsStatus QureySelfMemGroup(std::vector<std::string>& groupNames) const;
 
     BqsStatus ProcessUpdateHcclProtocol() const;
 
@@ -314,18 +314,21 @@ private:
 
     BqsStatus ProcessRestartSchedule(const uint32_t index) const;
 
-    void QueryRoutesBySrcFromRelation(const EntityInfo &src, const MapEnitityInfoToInfoSet &srcToDstRelation,
-        std::list<std::pair<const EntityInfo*, const EntityInfo*>> &routeList) const;
+    void QueryRoutesBySrcFromRelation(
+        const EntityInfo& src, const MapEnitityInfoToInfoSet& srcToDstRelation,
+        std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList) const;
 
-    void QueryRoutesByDstFromRelation(const EntityInfo &dst, const MapEnitityInfoToInfoSet &dstToSrcRelation,
-        std::list<std::pair<const EntityInfo*, const EntityInfo*>> &routeList) const;
+    void QueryRoutesByDstFromRelation(
+        const EntityInfo& dst, const MapEnitityInfoToInfoSet& dstToSrcRelation,
+        std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList) const;
 
     uint32_t ParseDeviceId(const uint32_t rawDeviceId) const;
 
-    BqsStatus SubscribeQueueEvent(const bool isLocalQ, const uint32_t queueId, const uint32_t deviceId,
-        const uint32_t resIndex, const bool isEnqueue) const;
+    BqsStatus SubscribeQueueEvent(
+        const bool isLocalQ, const uint32_t queueId, const uint32_t deviceId, const uint32_t resIndex,
+        const bool isEnqueue) const;
 
-    bool IsSvmShareGrp(const std::string &grpName) const;
+    bool IsSvmShareGrp(const std::string& grpName) const;
 
     // define struct for store update config info
     struct UpdateCfgInfo {
@@ -334,13 +337,13 @@ private:
         // mbuf data len
         uint64_t dataLen;
         // config info
-        ConfigInfo *cfgInfo;
+        ConfigInfo* cfgInfo;
         // routes
-        std::vector<Route *> routes;
+        std::vector<Route*> routes;
         // endpoints in group
-        std::vector<Endpoint *> endpointsInGroup;
+        std::vector<Endpoint*> endpointsInGroup;
         // results
-        std::vector<CfgRetInfo *> results;
+        std::vector<CfgRetInfo*> results;
         // entities in routes: after transform
         std::vector<std::pair<EntityInfoPtr, EntityInfoPtr>> entitiesInRoutes;
         // entities in group: after tranform
@@ -356,4 +359,4 @@ private:
     uint16_t clientVersion_;
 };
 } // namespace bqs
-#endif  // CONFIG_INFO_OPERATOR_H
+#endif // CONFIG_INFO_OPERATOR_H

@@ -29,7 +29,7 @@ public:
      * get the instance object
      * @return HcclProcess&
      */
-    static HcclProcess &GetInstance();
+    static HcclProcess& GetInstance();
 
     ~HcclProcess() = default;
 
@@ -38,29 +38,29 @@ public:
      * @param event event info
      * @return FsmStatus FSM_SUCCESS:success other:failed
      */
-    FsmStatus ProcessRecvRequestEvent(const event_info &event, const uint32_t deviceId, const uint32_t resIndex);
+    FsmStatus ProcessRecvRequestEvent(const event_info& event, const uint32_t deviceId, const uint32_t resIndex);
 
     /**
      * process send completion event
      * @param event event info
      * @return FsmStatus FSM_SUCCESS:success other:failed
      */
-    FsmStatus ProcessSendCompletionEvent(const event_info &event, const uint32_t deviceId, const uint32_t resIndex);
+    FsmStatus ProcessSendCompletionEvent(const event_info& event, const uint32_t deviceId, const uint32_t resIndex);
 
     /**
      * process recv completion event
      * @param event event info
      * @return FsmStatus FSM_SUCCESS:success other:failed
      */
-    FsmStatus ProcessRecvCompletionEvent(const event_info &event, const uint32_t deviceId, const uint32_t resIndex);
+    FsmStatus ProcessRecvCompletionEvent(const event_info& event, const uint32_t deviceId, const uint32_t resIndex);
 
     /**
      * process hccl f2nf event
      * @param event event info
      * @return FsmStatus FSM_SUCCESS:success other:failed
      */
-    FsmStatus ProcessCongestionReliefEvent(const event_info &event, const uint32_t deviceId,
-        const uint32_t resIndex) const;
+    FsmStatus ProcessCongestionReliefEvent(
+        const event_info& event, const uint32_t deviceId, const uint32_t resIndex) const;
 
     /**
      * supply all hccl event
@@ -70,10 +70,10 @@ public:
 
 private:
     explicit HcclProcess() = default;
-    HcclProcess(const HcclProcess &) = delete;
-    HcclProcess(const HcclProcess &&) = delete;
-    HcclProcess &operator = (const HcclProcess &) = delete;
-    HcclProcess &operator = (HcclProcess &&) = delete;
+    HcclProcess(const HcclProcess&) = delete;
+    HcclProcess(const HcclProcess&&) = delete;
+    HcclProcess& operator=(const HcclProcess&) = delete;
+    HcclProcess& operator=(HcclProcess&&) = delete;
     void Init();
 
     /**
@@ -83,8 +83,8 @@ private:
      * @param totalCompCount total completed count
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus TestSomeCommChannels(CommChannels &channels, const bool isSrc, uint32_t &totalCompCount,
-        const uint32_t resIndex) const;
+    FsmStatus TestSomeCommChannels(
+        CommChannels& channels, const bool isSrc, uint32_t& totalCompCount, const uint32_t resIndex) const;
 
     /**
      * @brief process test some results
@@ -92,7 +92,7 @@ private:
      * @param channels comm channels
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ProcTestSomeResults(const int32_t compCount, CommChannels &channels, int32_t hcclRet) const;
+    FsmStatus ProcTestSomeResults(const int32_t compCount, CommChannels& channels, int32_t hcclRet) const;
 
     /**
      * @brief probe comm channel
@@ -100,16 +100,16 @@ private:
      * @param probeCount probe count
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ProbeCommChannel(const ChannelEntityPtr &entity, uint32_t &probeCount) const;
+    FsmStatus ProbeCommChannel(const ChannelEntityPtr& entity, uint32_t& probeCount) const;
 
     /**
      * @brief reply hccl event
      * @param event hccl event
      * @return FSM_SUCCESS: success, other: failed
      */
-    FsmStatus ReplyHcclEvent(const event_info &event, const uint32_t deviceId) const;
+    FsmStatus ReplyHcclEvent(const event_info& event, const uint32_t deviceId) const;
 
-    FsmStatus PreProcessSetUplinkReq(const RequestInfo * const hcclReq) const;
+    FsmStatus PreProcessSetUplinkReq(const RequestInfo* const hcclReq) const;
 
     // mutual exclusion lock for recv request event
     std::atomic_flag recvRequestEventAtomicFlag_ = ATOMIC_FLAG_INIT;
@@ -123,5 +123,5 @@ private:
     bool inited_{false};
     bool oneTrackEventEnabled_{false};
 };
-}
+} // namespace dgw
 #endif

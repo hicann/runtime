@@ -15,25 +15,25 @@
 #include "state_manager.h"
 
 namespace dgw {
-FsmStatus ErrorState::PreProcess(Entity &entity)
+FsmStatus ErrorState::PreProcess(Entity& entity)
 {
-    DGW_LOG_RUN_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_RUN_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_ERROR_STATE).c_str(), entity.ToString().c_str());
     ProcessAbnormalEntity(entity);
     return FsmStatus::FSM_ERROR;
 }
 
-FsmStatus ErrorState::ProcessMessage(Entity &entity, const InnerMessage &msg)
+FsmStatus ErrorState::ProcessMessage(Entity& entity, const InnerMessage& msg)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] msg:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(), entity.GetStateDesc(FsmState::FSM_ERROR_STATE).c_str(),
-        GetMsgDesc(msg), entity.ToString().c_str());
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] msg:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
+        entity.GetStateDesc(FsmState::FSM_ERROR_STATE).c_str(), GetMsgDesc(msg), entity.ToString().c_str());
     if (msg.msgType == InnerMsgType::INNER_MSG_RECOVER) {
         return PostProcess(entity);
     }
     // discard the data
-    auto &recvDataObjs = entity.GetRecvDataObjs();
+    auto& recvDataObjs = entity.GetRecvDataObjs();
     while (!recvDataObjs.empty()) {
         const auto dataObj = recvDataObjs.front();
         if ((dataObj != nullptr) && (dataObj->GetSendEntity() != nullptr)) {
@@ -45,17 +45,17 @@ FsmStatus ErrorState::ProcessMessage(Entity &entity, const InnerMessage &msg)
     return FsmStatus::FSM_ERROR;
 }
 
-FsmStatus ErrorState::PostProcess(Entity &entity)
+FsmStatus ErrorState::PostProcess(Entity& entity)
 {
-    DGW_LOG_INFO("[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].",
-        entity.GetId(), entity.GetTypeDesc().c_str(),
+    DGW_LOG_INFO(
+        "[FSM] Entity id:[%u] type:[%s] state:[%s] desc:[%s].", entity.GetId(), entity.GetTypeDesc().c_str(),
         entity.GetStateDesc(FsmState::FSM_ERROR_STATE).c_str(), entity.ToString().c_str());
     return entity.ChangeState(FsmState::FSM_PUSH_STATE);
 }
 
-void ErrorState::ProcessAbnormalEntity(Entity &entity) const
+void ErrorState::ProcessAbnormalEntity(Entity& entity) const
 {
-    auto &bindRelationObj = bqs::BindRelation::GetInstance();
+    auto& bindRelationObj = bqs::BindRelation::GetInstance();
     bqs::OptionalArg args = {};
     args.eType = entity.GetType();
     args.queueType = entity.GetQueueType();
@@ -66,4 +66,4 @@ void ErrorState::ProcessAbnormalEntity(Entity &entity) const
 REGISTER_STATE(FSM_ERROR_STATE, ENTITY_QUEUE, ErrorState);
 REGISTER_STATE(FSM_ERROR_STATE, ENTITY_TAG, ErrorState);
 REGISTER_STATE(FSM_ERROR_STATE, ENTITY_GROUP, ErrorState);
-}  // namespace dgw
+} // namespace dgw

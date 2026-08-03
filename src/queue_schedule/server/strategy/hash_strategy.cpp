@@ -14,10 +14,10 @@
 #include "strategy/strategy_manager.h"
 
 namespace dgw {
-FsmStatus HashStrategy::Search(const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr> &selEntities,
-    const uint32_t resIndex)
+FsmStatus HashStrategy::Search(
+    const uint32_t groupId, const uint64_t transId, std::vector<EntityPtr>& selEntities, const uint32_t resIndex)
 {
-    const std::vector<EntityPtr> &entitiesInGroup = EntityManager::Instance(resIndex).GetEntitiesInGroup(groupId);
+    const std::vector<EntityPtr>& entitiesInGroup = EntityManager::Instance(resIndex).GetEntitiesInGroup(groupId);
     if (entitiesInGroup.empty()) {
         DGW_LOG_ERROR("No entities in group, groupId:%u, transId:%lu", groupId, transId);
         return FsmStatus::FSM_FAILED;
@@ -28,12 +28,13 @@ FsmStatus HashStrategy::Search(const uint32_t groupId, const uint64_t transId, s
     }
 
     const uint64_t idx = transId % entitiesInGroup.size();
-    auto &selEntity = entitiesInGroup[idx];
+    auto& selEntity = entitiesInGroup[idx];
     selEntities.push_back(selEntity);
-    DGW_LOG_DEBUG("Select entity id:%u type:%s from group:%u success, index:%lu.",
-        selEntity->GetId(), selEntity->GetTypeDesc().c_str(), groupId, idx);
+    DGW_LOG_DEBUG(
+        "Select entity id:%u type:%s from group:%u success, index:%lu.", selEntity->GetId(),
+        selEntity->GetTypeDesc().c_str(), groupId, idx);
     return FsmStatus::FSM_SUCCESS;
 }
 
 REGISTER_STRATEGY(HASH, HashStrategy);
-}
+} // namespace dgw

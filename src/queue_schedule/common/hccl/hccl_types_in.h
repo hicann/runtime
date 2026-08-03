@@ -21,51 +21,51 @@ extern "C" {
  * @brief HCCL functions return value definition
  */
 typedef enum {
-    HCCL_SUCCESS = 0,               /**< success */
-    HCCL_E_PARA = 1,                /**< parameter error */
-    HCCL_E_PTR = 2,                 /**< empty pointer */
-    HCCL_E_MEMORY = 3,              /**< memory error */
-    HCCL_E_INTERNAL = 4,            /**< internal error */
-    HCCL_E_NOT_SUPPORT = 5,         /**< feature not supported */
-    HCCL_E_NOT_FOUND = 6,           /**< not found specific resource */
-    HCCL_E_UNAVAIL = 7,             /**< resource unavailable */
-    HCCL_E_SYSCALL = 8,             /**< call system interface error */
-    HCCL_E_TIMEOUT = 9,             /**< timeout */
-    HCCL_E_OPEN_FILE_FAILURE = 10,  /**< open file fail */
-    HCCL_E_TCP_CONNECT = 11,        /**< tcp connect fail */
-    HCCL_E_ROCE_CONNECT = 12,       /**< roce connect fail */
-    HCCL_E_TCP_TRANSFER = 13,       /**< tcp transfer fail */
-    HCCL_E_ROCE_TRANSFER = 14,      /**< roce transfer fail */
-    HCCL_E_RUNTIME = 15,            /**< call runtime api fail */
-    HCCL_E_DRV = 16,                /**< call driver api fail */
-    HCCL_E_PROFILING = 17,          /**< call profiling api fail */
-    HCCL_E_CCE = 18,                /**< call cce api fail */
-    HCCL_E_NETWORK = 19,            /**< call network api fail */
-    HCCL_E_AGAIN = 20,              /**< try again */
-    HCCL_E_REMOTE = 21,             /**< error cqe */
-    HCCL_E_SUSPENDING = 22,         /**< error communicator suspending*/
-    HCCL_E_IN_STATUS = 1041,        /**< The error information is in the status. */
-    HCCL_E_RESERVED                 /**< reserved */
+    HCCL_SUCCESS = 0,              /**< success */
+    HCCL_E_PARA = 1,               /**< parameter error */
+    HCCL_E_PTR = 2,                /**< empty pointer */
+    HCCL_E_MEMORY = 3,             /**< memory error */
+    HCCL_E_INTERNAL = 4,           /**< internal error */
+    HCCL_E_NOT_SUPPORT = 5,        /**< feature not supported */
+    HCCL_E_NOT_FOUND = 6,          /**< not found specific resource */
+    HCCL_E_UNAVAIL = 7,            /**< resource unavailable */
+    HCCL_E_SYSCALL = 8,            /**< call system interface error */
+    HCCL_E_TIMEOUT = 9,            /**< timeout */
+    HCCL_E_OPEN_FILE_FAILURE = 10, /**< open file fail */
+    HCCL_E_TCP_CONNECT = 11,       /**< tcp connect fail */
+    HCCL_E_ROCE_CONNECT = 12,      /**< roce connect fail */
+    HCCL_E_TCP_TRANSFER = 13,      /**< tcp transfer fail */
+    HCCL_E_ROCE_TRANSFER = 14,     /**< roce transfer fail */
+    HCCL_E_RUNTIME = 15,           /**< call runtime api fail */
+    HCCL_E_DRV = 16,               /**< call driver api fail */
+    HCCL_E_PROFILING = 17,         /**< call profiling api fail */
+    HCCL_E_CCE = 18,               /**< call cce api fail */
+    HCCL_E_NETWORK = 19,           /**< call network api fail */
+    HCCL_E_AGAIN = 20,             /**< try again */
+    HCCL_E_REMOTE = 21,            /**< error cqe */
+    HCCL_E_SUSPENDING = 22,        /**< error communicator suspending*/
+    HCCL_E_IN_STATUS = 1041,       /**< The error information is in the status. */
+    HCCL_E_RESERVED                /**< reserved */
 } HcclResult;
 
 /**
  * @brief handle to HCCL communicator
  */
-typedef void *HcclComm;
+typedef void* HcclComm;
 
 /**
  * @brief handle to HCCL Connection
  */
-typedef void *HcclConn;
+typedef void* HcclConn;
 
 /**
  * @brief HCCL Reduction opperation
  */
 typedef enum {
-    HCCL_REDUCE_SUM = 0,    /**< sum */
-    HCCL_REDUCE_PROD = 1,   /**< prod */
-    HCCL_REDUCE_MAX = 2,    /**< max */
-    HCCL_REDUCE_MIN = 3,    /**< min */
+    HCCL_REDUCE_SUM = 0,       /**< sum */
+    HCCL_REDUCE_PROD = 1,      /**< prod */
+    HCCL_REDUCE_MAX = 2,       /**< max */
+    HCCL_REDUCE_MIN = 3,       /**< min */
     HCCL_REDUCE_RESERVED = 255 /**< reserved */
 } HcclReduceOp;
 
@@ -73,28 +73,28 @@ typedef enum {
  * @brief HCCL data type
  */
 typedef enum {
-    HCCL_DATA_TYPE_INT8 = 0,    /**< int8 */
-    HCCL_DATA_TYPE_INT16 = 1,   /**< int16 */
-    HCCL_DATA_TYPE_INT32 = 2,   /**< int32 */
-    HCCL_DATA_TYPE_FP16 = 3,    /**< fp16 */
-    HCCL_DATA_TYPE_FP32 = 4,    /**< fp32 */
-    HCCL_DATA_TYPE_INT64 = 5,    /**< int64 */
+    HCCL_DATA_TYPE_INT8 = 0,      /**< int8 */
+    HCCL_DATA_TYPE_INT16 = 1,     /**< int16 */
+    HCCL_DATA_TYPE_INT32 = 2,     /**< int32 */
+    HCCL_DATA_TYPE_FP16 = 3,      /**< fp16 */
+    HCCL_DATA_TYPE_FP32 = 4,      /**< fp32 */
+    HCCL_DATA_TYPE_INT64 = 5,     /**< int64 */
     HCCL_DATA_TYPE_UINT64 = 6,    /**< uint64 */
-    HCCL_DATA_TYPE_UINT8 = 7,    /**< uint8 */
-    HCCL_DATA_TYPE_UINT16 = 8,   /**< uint16 */
-    HCCL_DATA_TYPE_UINT32 = 9,   /**< uint32 */
-    HCCL_DATA_TYPE_FP64 = 10, /**< fp64 */
+    HCCL_DATA_TYPE_UINT8 = 7,     /**< uint8 */
+    HCCL_DATA_TYPE_UINT16 = 8,    /**< uint16 */
+    HCCL_DATA_TYPE_UINT32 = 9,    /**< uint32 */
+    HCCL_DATA_TYPE_FP64 = 10,     /**< fp64 */
     HCCL_DATA_TYPE_BFP16 = 11,    /**< bfp16 */
     HCCL_DATA_TYPE_INT128 = 12,   /**< int128 */
     HCCL_DATA_TYPE_HIF8 = 13,     /**< hif8 */
     HCCL_DATA_TYPE_FP8E4M3 = 14,  /**< fp8e4m3 */
     HCCL_DATA_TYPE_FP8E5M2 = 15,  /**< fp8e5m2 */
-    HCCL_DATA_TYPE_RESERVED = 255    /**< reserved */
+    HCCL_DATA_TYPE_RESERVED = 255 /**< reserved */
 } HcclDataType;
 
 const uint32_t HCCL_COMM_CONFIG_INFO_BYTES = 24;
 const uint32_t COMM_NAME_MAX_LENGTH = 128; // group name max length
-const uint32_t UDI_MAX_LENGTH = 128; // UDI max length
+const uint32_t UDI_MAX_LENGTH = 128;       // UDI max length
 // 0xffffffff表示用户未配置TC或SL
 const uint32_t HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET = 0xffffffff;
 const uint32_t HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET = 0xffffffff;
@@ -110,7 +110,7 @@ typedef struct HcclCommConfigDef {
     uint32_t hcclRdmaServiceLevel;
 } HcclCommConfig;
 
-const uint32_t HCCL_ROOT_INFO_BYTES =  4108; // 4108: root info length
+const uint32_t HCCL_ROOT_INFO_BYTES = 4108; // 4108: root info length
 /**
  * @brief HCCL root info
  */

@@ -20,21 +20,21 @@
 namespace dgw {
 
 namespace {
-    // probe comm channel failed
-    constexpr int32_t PROBE_COMM_CHANNEL_FAILED = 0;
-    // comm channel queue name prefix
-    constexpr const char_t *COMM_CHANNEL_QUEUE_NAME_PREFIX = "CommChannelQueue_";
-    // request process completed time cost threshold (us) maybe 500000us
-    constexpr float64_t REQ_COMP_TIME_COST_THRESHOLD = 500000.0;
-    // envelope processed time cost threshold (us)
-    constexpr float64_t ENVELOPE_PROC_TIME_COST_THRESHOLD = 500000.0;
-    // count threshold for print error (first improbe and testsome cost too long time, no need check)
-    const uint64_t COUNT_THRESHOLD_FOR_PRINT_ERROR = 10UL;
-    const uint32_t CHECK_SEND_COMPLETION_INTERVAL_US = 100U;
-    const uint32_t CHECK_SEND_COMPLETION_LIMIT_US = 100000U;  // 100ms
-}
+// probe comm channel failed
+constexpr int32_t PROBE_COMM_CHANNEL_FAILED = 0;
+// comm channel queue name prefix
+constexpr const char_t* COMM_CHANNEL_QUEUE_NAME_PREFIX = "CommChannelQueue_";
+// request process completed time cost threshold (us) maybe 500000us
+constexpr float64_t REQ_COMP_TIME_COST_THRESHOLD = 500000.0;
+// envelope processed time cost threshold (us)
+constexpr float64_t ENVELOPE_PROC_TIME_COST_THRESHOLD = 500000.0;
+// count threshold for print error (first improbe and testsome cost too long time, no need check)
+const uint64_t COUNT_THRESHOLD_FOR_PRINT_ERROR = 10UL;
+const uint32_t CHECK_SEND_COMPLETION_INTERVAL_US = 100U;
+const uint32_t CHECK_SEND_COMPLETION_LIMIT_US = 100000U; // 100ms
+} // namespace
 
-ChannelEntity::ChannelEntity(const EntityMaterial &material, const uint32_t resIndex)
+ChannelEntity::ChannelEntity(const EntityMaterial& material, const uint32_t resIndex)
     : SimpleEntity(material, resIndex),
       linkStatus_(ChannelLinkStatus::UNCONNECTED),
       channelPtr_(material.channel),
@@ -50,10 +50,7 @@ ChannelEntity::ChannelEntity(const EntityMaterial &material, const uint32_t resI
     }
 }
 
-ChannelEntity::~ChannelEntity()
-{
-    DGW_LOG_RUN_INFO("Success to destruct tag entity[%s].", entityDesc_.c_str());
-}
+ChannelEntity::~ChannelEntity() { DGW_LOG_RUN_INFO("Success to destruct tag entity[%s].", entityDesc_.c_str()); }
 
 FsmStatus ChannelEntity::Init(const FsmState state, const EntityDirection direction)
 {
@@ -62,7 +59,7 @@ FsmStatus ChannelEntity::Init(const FsmState state, const EntityDirection direct
         return FsmStatus::FSM_FAILED;
     }
 
-    (void) SimpleEntity::Init(state, direction);
+    (void)SimpleEntity::Init(state, direction);
 
     // calculate maxCachedReqCount_
     maxCachedReqCount_ = channelPtr_->GetLocalTagDepth() * 2U;
@@ -99,8 +96,8 @@ FsmStatus ChannelEntity::Init(const FsmState state, const EntityDirection direct
     // add unlink tag count
     const uint32_t unlinkTagCount = bqs::StatisticManager::GetInstance().AddUnlinkCount();
     bqs::StatisticManager::GetInstance().AddTagCount();
-    DGW_LOG_RUN_INFO("Success to init entity:[%s], current unlink tag count is [%u].",
-        entityDesc_.c_str(), unlinkTagCount);
+    DGW_LOG_RUN_INFO(
+        "Success to init entity:[%s], current unlink tag count is [%u].", entityDesc_.c_str(), unlinkTagCount);
     return FsmStatus::FSM_SUCCESS;
 }
 
@@ -110,11 +107,11 @@ FsmStatus ChannelEntity::CreateAndSubscribeCompletedQueue()
     std::string queueName(COMM_CHANNEL_QUEUE_NAME_PREFIX);
     (void)queueName.append(std::to_string(id_)).append("_");
     const uint32_t compQueDepth = channelPtr_->GetLocalTagDepth() + 1U;
-    auto bqsRet = bqs::QueueManager::GetInstance()
-        .CreateQueue(queueName.c_str(), compQueDepth, compReqQueueId_, deviceId_);
+    auto bqsRet =
+        bqs::QueueManager::GetInstance().CreateQueue(queueName.c_str(), compQueDepth, compReqQueueId_, deviceId_);
     if (bqsRet != bqs::BqsStatus::BQS_STATUS_OK) {
-        DGW_LOG_ERROR("Create completed queue failed, queueName[%s], ret[%d].", queueName.c_str(),
-                        static_cast<int32_t>(bqsRet));
+        DGW_LOG_ERROR(
+            "Create completed queue failed, queueName[%s], ret[%d].", queueName.c_str(), static_cast<int32_t>(bqsRet));
         return FsmStatus::FSM_FAILED;
     }
     const auto subscriber = GetSubscriber();
@@ -123,8 +120,9 @@ FsmStatus ChannelEntity::CreateAndSubscribeCompletedQueue()
     }
     bqsRet = subscriber->Subscribe(compReqQueueId_);
     if (bqsRet != bqs::BqsStatus::BQS_STATUS_OK) {
-        DGW_LOG_ERROR("Subscribe completed queue failed, queueName[%s], queueId[%u], ret[%d].",
-            queueName.c_str(), compReqQueueId_, static_cast<int32_t>(bqsRet));
+        DGW_LOG_ERROR(
+            "Subscribe completed queue failed, queueName[%s], queueId[%u], ret[%d].", queueName.c_str(),
+            compReqQueueId_, static_cast<int32_t>(bqsRet));
         return FsmStatus::FSM_FAILED;
     }
     return FsmStatus::FSM_SUCCESS;
@@ -134,7 +132,7 @@ FsmStatus ChannelEntity::Uninit()
 {
     // clear mbuf
     while (!uncompReqQueue_.IsEmpty()) {
-        RequestInfo * const uncompReq = uncompReqQueue_.Front();
+        RequestInfo* const uncompReq = uncompReqQueue_.Front();
         if (uncompReq == nullptr) {
             DGW_LOG_ERROR("Failed to get front from uncompleted req queue, entity:[%s].", entityDesc_.c_str());
             break;
@@ -158,7 +156,7 @@ FsmStatus ChannelEntity::Uninit()
     uncompReqQueue_.Uninit();
     if (direction_ == EntityDirection::DIRECTION_SEND) {
         cachedEnvelopeQueue_.Uninit();
-         const auto subscriber = GetSubscriber();
+        const auto subscriber = GetSubscriber();
         if (subscriber == nullptr) {
             return FsmStatus::FSM_FAILED;
         }
@@ -173,7 +171,7 @@ FsmStatus ChannelEntity::Uninit()
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::Probe(uint64_t &dataCount, HcclMessage &msg, uint64_t &probeTick)
+FsmStatus ChannelEntity::Probe(uint64_t& dataCount, HcclMessage& msg, uint64_t& probeTick)
 {
     bool cachedEnvelopeQueEmpty = true;
     // check cached envelope queue empty
@@ -185,13 +183,16 @@ FsmStatus ChannelEntity::Probe(uint64_t &dataCount, HcclMessage &msg, uint64_t &
             dataCount = info->dataSize;
             probeTick = info->probeTick;
             (void)cachedEnvelopeQueue_.Pop();
-            DGW_LOG_INFO("Get cached envelope for comm channel[%s], rest envelope size is [%u].",
-                entityDesc_.c_str(), cachedEnvelopeQueue_.Size());
+            DGW_LOG_INFO(
+                "Get cached envelope for comm channel[%s], rest envelope size is [%u].", entityDesc_.c_str(),
+                cachedEnvelopeQueue_.Size());
             return FsmStatus::FSM_SUCCESS;
         }
         if (cachedEnvelopeQueue_.IsFull()) {
-            DGW_LOG_INFO("Cached req count of comm channel[%s] is up to [%u] and cachedEnvelopeQueue is up to [%u],"
-                "then skip probe.", entityDesc_.c_str(), maxCachedReqCount_, cachedEnvelopeQueue_.Size());
+            DGW_LOG_INFO(
+                "Cached req count of comm channel[%s] is up to [%u] and cachedEnvelopeQueue is up to [%u],"
+                "then skip probe.",
+                entityDesc_.c_str(), maxCachedReqCount_, cachedEnvelopeQueue_.Size());
             return FsmStatus::FSM_FAILED;
         }
         cachedEnvelopeQueEmpty = false;
@@ -211,7 +212,8 @@ FsmStatus ChannelEntity::Probe(uint64_t &dataCount, HcclMessage &msg, uint64_t &
     if ((!cachedEnvelopeQueEmpty) || (!AddCachedReqCount())) {
         EnvelopeInfo info = {.msg = msg, .dataSize = dataCount, .probeTick = probeSuccTick};
         if (cachedEnvelopeQueue_.Push(info) != 1) {
-            DGW_LOG_ERROR("Unhandle error! cached req count of channel[%s] is up to max[%u], but cache envelope failed!"
+            DGW_LOG_ERROR(
+                "Unhandle error! cached req count of channel[%s] is up to max[%u], but cache envelope failed!"
                 " Current cache envelope count is [%u].",
                 entityDesc_.c_str(), maxCachedReqCount_, cachedEnvelopeQueue_.Size());
             return FsmStatus::FSM_FAILED;
@@ -225,16 +227,16 @@ FsmStatus ChannelEntity::Probe(uint64_t &dataCount, HcclMessage &msg, uint64_t &
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::DoProbe(uint64_t &dataCount, HcclMessage &msg, uint64_t &probeSuccTick)
+FsmStatus ChannelEntity::DoProbe(uint64_t& dataCount, HcclMessage& msg, uint64_t& probeSuccTick)
 {
     // probe src tag
     DGW_LOG_DEBUG("Begin to probe comm channel[%s].", entityDesc_.c_str());
     HcclStatus status = {};
     int32_t probeFlag = PROBE_COMM_CHANNEL_FAILED;
     const uint64_t probeBegin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
-    auto hcclRet = HcclImprobe(static_cast<int32_t>(channelPtr_->GetPeerRankId()),
-                               static_cast<int32_t>(channelPtr_->GetPeerTagId()),
-                               channelPtr_->GetHandle(), &probeFlag, &msg, &status);
+    auto hcclRet = HcclImprobe(
+        static_cast<int32_t>(channelPtr_->GetPeerRankId()), static_cast<int32_t>(channelPtr_->GetPeerTagId()),
+        channelPtr_->GetHandle(), &probeFlag, &msg, &status);
     bqs::ProfileManager::GetInstance(resIndex_).AddHcclImprobeCost(
         bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - probeBegin);
     statInfo_.hcclImprobeTotalTimes++;
@@ -272,9 +274,9 @@ FsmStatus ChannelEntity::DoProbe(uint64_t &dataCount, HcclMessage &msg, uint64_t
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::AllocMbuf(Mbuf *&mbufPtr, void *&headBuf, void *&dataBuf, const uint64_t dataLen)
+FsmStatus ChannelEntity::AllocMbuf(Mbuf*& mbufPtr, void*& headBuf, void*& dataBuf, const uint64_t dataLen)
 {
-    bqs::ProfInfo reportData = { };
+    bqs::ProfInfo reportData = {};
     if (bqs::BqsMsprofManager::GetInstance().IsStartProfling()) {
         reportData.type = static_cast<uint32_t>(bqs::DgwProfInfoType::ALLOC_MBUF);
         reportData.itemId = transId_;
@@ -283,8 +285,8 @@ FsmStatus ChannelEntity::AllocMbuf(Mbuf *&mbufPtr, void *&headBuf, void *&dataBu
 
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     int32_t ret = halMbufAlloc(dataLen, &mbufPtr);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddMbufAllocCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddMbufAllocCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     bqs::BqsMsprofManager::GetInstance().ReportApiPerf(reportData);
     if (ret != static_cast<int32_t>(DRV_ERROR_NONE)) {
         DGW_LOG_ERROR("Failed to call halMbufAlloc, dataLen:[%lu], ret=[%d].", dataLen, ret);
@@ -318,7 +320,7 @@ FsmStatus ChannelEntity::AllocMbuf(Mbuf *&mbufPtr, void *&headBuf, void *&dataBu
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::ReceiveData(HcclMessage &msg, const uint64_t dataCount, const uint64_t probeTick)
+FsmStatus ChannelEntity::ReceiveData(HcclMessage& msg, const uint64_t dataCount, const uint64_t probeTick)
 {
     // process link message
     if (dataCount == 0UL) {
@@ -329,8 +331,9 @@ FsmStatus ChannelEntity::ReceiveData(HcclMessage &msg, const uint64_t dataCount,
     const auto timeCost = bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(
         bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - probeTick);
     if ((timeCost > ENVELOPE_PROC_TIME_COST_THRESHOLD) && (procEnvelopeCount_ > COUNT_THRESHOLD_FOR_PRINT_ERROR)) {
-        DGW_LOG_RUN_INFO("Time cost to process envelope is %.2fus, count:[%lu], entity:[%s].",
-            timeCost, procEnvelopeCount_, entityDesc_.c_str());
+        DGW_LOG_RUN_INFO(
+            "Time cost to process envelope is %.2fus, count:[%lu], entity:[%s].", timeCost, procEnvelopeCount_,
+            entityDesc_.c_str());
     }
 
     bool isMbufData = true;
@@ -351,41 +354,44 @@ FsmStatus ChannelEntity::ReceiveData(HcclMessage &msg, const uint64_t dataCount,
     return ReceiveMbufHead(msg);
 }
 
-FsmStatus ChannelEntity::ReceiveDataForLink(HcclMessage &msg)
+FsmStatus ChannelEntity::ReceiveDataForLink(HcclMessage& msg)
 {
     HcclRequest request;
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     const auto hcclRet = HcclImrecv(nullptr, 0, HCCL_DATA_TYPE_INT8, &msg, &request);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclImrecvCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclImrecvCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     if (hcclRet != HCCL_SUCCESS) {
         // unable to handle irecv error
         bqs::StatisticManager::GetInstance().HcclMpiRecvFailStat();
-        DGW_LOG_ERROR("Fail to call HcclImrecv to recv link zero data, entity:[%s], ret:[%d].",
-            entityDesc_.c_str(), hcclRet);
+        DGW_LOG_ERROR(
+            "Fail to call HcclImrecv to recv link zero data, entity:[%s], ret:[%d].", entityDesc_.c_str(), hcclRet);
         return FsmStatus::FSM_FAILED;
     }
     bqs::StatisticManager::GetInstance().HcclMpiRecvSuccStat();
 
     // save request, unable to handle enqueue failure
-    RequestInfo req = {.req = request, .isLink = true, .mbuf = nullptr,
-                       .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
+    RequestInfo req = {
+        .req = request,
+        .isLink = true,
+        .mbuf = nullptr,
+        .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
     const int32_t count = uncompReqQueue_.Push(req);
     if (count == 0) {
-        DGW_LOG_ERROR("Unhandled error! Failed to enqueue uncompleted request for link establishment, entity[%s].",
+        DGW_LOG_ERROR(
+            "Unhandled error! Failed to enqueue uncompleted request for link establishment, entity[%s].",
             entityDesc_.c_str());
         return FsmStatus::FSM_FAILED;
     }
-    DGW_LOG_RUN_INFO("Success to receive zero data for link establishment, entity:[%s].",
-        entityDesc_.c_str());
+    DGW_LOG_RUN_INFO("Success to receive zero data for link establishment, entity:[%s].", entityDesc_.c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage &msg)
+FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage& msg)
 {
-    Mbuf *mbuf = nullptr;
-    void *headBuf = nullptr;
-    void *dataBuf = nullptr;
+    Mbuf* mbuf = nullptr;
+    void* headBuf = nullptr;
+    void* dataBuf = nullptr;
     const uint64_t dataSize = hcclData_.dataSize;
     const auto ret = AllocMbuf(mbuf, headBuf, dataBuf, dataSize);
     if (ret != FsmStatus::FSM_SUCCESS) {
@@ -400,8 +406,8 @@ FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage &msg)
     HcclRequest request;
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     const auto hcclRet = HcclImrecv(dataBuf, static_cast<int32_t>(dataSize), HCCL_DATA_TYPE_INT8, &msg, &request);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclImrecvCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclImrecvCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     if (hcclRet != static_cast<int32_t>(HCCL_SUCCESS)) {
         DGW_LOG_ERROR("HcclImrecv fail for entity:[%s], ret:[%d].", entityDesc_.c_str(), hcclRet);
         statInfo_.hcclImrecvFailTimes++;
@@ -411,33 +417,37 @@ FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage &msg)
     }
     statInfo_.hcclImrecvSuccTimes++;
     bqs::StatisticManager::GetInstance().HcclMpiRecvSuccStat();
-    DGW_LOG_INFO("Success to call HcclImrecv to recv data, data size:[%lu], "
-        "entity:[%s]", dataSize, entityDesc_.c_str());
+    DGW_LOG_INFO(
+        "Success to call HcclImrecv to recv data, data size:[%lu], "
+        "entity:[%s]",
+        dataSize, entityDesc_.c_str());
 
     // save request, unable to handle enqueue failure
-    RequestInfo req = {.req = request, .isLink = false, .mbuf = nullptr,
-                       .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
+    RequestInfo req = {
+        .req = request,
+        .isLink = false,
+        .mbuf = nullptr,
+        .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
     const int32_t count = uncompReqQueue_.Push(req);
     if (count == 0) {
         DGW_LOG_ERROR("Unhandled error! Failed to enqueue uncompleted request for entity[%s].", entityDesc_.c_str());
         return FsmStatus::FSM_FAILED;
     }
     statInfo_.uncompReqQueuePushTimes++;
-    DGW_LOG_INFO("Success to enqueue uncompleted request and mbuf for entity[%s]",
-        entityDesc_.c_str());
+    DGW_LOG_INFO("Success to enqueue uncompleted request and mbuf for entity[%s]", entityDesc_.c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::ReceiveMbufHead(HcclMessage &msg)
+FsmStatus ChannelEntity::ReceiveMbufHead(HcclMessage& msg)
 {
     // call hccl irecv api
     HcclRequest request;
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
-    const auto hcclRet = HcclImrecv(hcclData_.headBuf, static_cast<int32_t>(hcclData_.mbufHeadSize),
-                                    HCCL_DATA_TYPE_INT8, &msg, &request);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclImrecvCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
-    Mbuf * const mbuf = hcclData_.mbuf;
+    const auto hcclRet = HcclImrecv(
+        hcclData_.headBuf, static_cast<int32_t>(hcclData_.mbufHeadSize), HCCL_DATA_TYPE_INT8, &msg, &request);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclImrecvCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    Mbuf* const mbuf = hcclData_.mbuf;
     if (hcclRet != static_cast<int32_t>(HCCL_SUCCESS)) {
         DGW_LOG_ERROR("HcclImrecv fail for entity:[%s], ret:[%d].", entityDesc_.c_str(), hcclRet);
         statInfo_.hcclImrecvFailTimes++;
@@ -459,25 +469,27 @@ FsmStatus ChannelEntity::ReceiveMbufHead(HcclMessage &msg)
     hcclData_.headBuf = nullptr;
     hcclData_.mbufHeadSize = 0UL;
     // save request, unable to handle enqueue failure
-    RequestInfo req = {.req = request, .isLink = false, .mbuf = mbuf,
-                       .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
+    RequestInfo req = {
+        .req = request,
+        .isLink = false,
+        .mbuf = mbuf,
+        .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
     const int32_t count = uncompReqQueue_.Push(req);
     if (count == 0) {
         return FsmStatus::FSM_FAILED;
     }
     statInfo_.uncompReqQueuePushTimes++;
-    DGW_LOG_INFO("Success to enqueue uncompleted request and mbuf for entity[%s].",
-        entityDesc_.c_str());
+    DGW_LOG_INFO("Success to enqueue uncompleted request and mbuf for entity[%s].", entityDesc_.c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::DoSendData(Mbuf *const mbuf)
+FsmStatus ChannelEntity::DoSendData(Mbuf* const mbuf)
 {
     if (linkStatus_ == ChannelLinkStatus::ABNORMAL) {
         DGW_LOG_ERROR("channel is abnormal send data failed.");
         return FsmStatus::FSM_ERROR_PENDING;
     }
-    bqs::ProfInfo reportData = { };
+    bqs::ProfInfo reportData = {};
     if (bqs::BqsMsprofManager::GetInstance().IsStartProfling()) {
         reportData.type = static_cast<uint32_t>(bqs::DgwProfInfoType::HCCL_TRANS_DATA);
         reportData.itemId = transId_;
@@ -503,7 +515,7 @@ FsmStatus ChannelEntity::DoSendData(Mbuf *const mbuf)
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::SendDataWithHccl(void *const dataBuf, const int32_t dataLen, Mbuf *const mbufToRecord)
+FsmStatus ChannelEntity::SendDataWithHccl(void* const dataBuf, const int32_t dataLen, Mbuf* const mbufToRecord)
 {
     HcclRequest req = nullptr;
     HcclComm handle = channelPtr_->GetHandle();
@@ -511,12 +523,13 @@ FsmStatus ChannelEntity::SendDataWithHccl(void *const dataBuf, const int32_t dat
     const int32_t tagId = static_cast<int32_t>(channelPtr_->GetPeerTagId());
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     const auto hcclRet = HcclIsend(dataBuf, dataLen, HCCL_DATA_TYPE_INT8, rankId, tagId, handle, &req);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclIsendCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclIsendCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     if (hcclRet == static_cast<int32_t>(HCCL_E_AGAIN)) {
         statInfo_.hcclIsendFullTimes++;
         bqs::StatisticManager::GetInstance().HcclMpiSendFullStat();
-        DGW_LOG_WARN("Failed to call HcclIsendWithEvent to send data for mbuf, tag full, entity:[%s], ret=[%d]",
+        DGW_LOG_WARN(
+            "Failed to call HcclIsendWithEvent to send data for mbuf, tag full, entity:[%s], ret=[%d]",
             entityDesc_.c_str(), hcclRet);
         return FsmStatus::FSM_DEST_FULL;
     }
@@ -530,8 +543,11 @@ FsmStatus ChannelEntity::SendDataWithHccl(void *const dataBuf, const int32_t dat
     bqs::StatisticManager::GetInstance().HcclMpiSendSuccStat();
 
     // cache request
-    RequestInfo reqInfo = {.req = req, .isLink = false, .mbuf = mbufToRecord,
-                           .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
+    RequestInfo reqInfo = {
+        .req = req,
+        .isLink = false,
+        .mbuf = mbufToRecord,
+        .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
     const int32_t count = uncompReqQueue_.Push(reqInfo);
     if (count == 0) {
         DGW_LOG_ERROR("entity:[%s] fail to push req into uncompReqQueue.", entityDesc_.c_str());
@@ -541,7 +557,7 @@ FsmStatus ChannelEntity::SendDataWithHccl(void *const dataBuf, const int32_t dat
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::SendMbufData(Mbuf * const mbuf)
+FsmStatus ChannelEntity::SendMbufData(Mbuf* const mbuf)
 {
     // check uncompleted req queue full
     if (uncompReqQueue_.IsFull()) {
@@ -559,7 +575,7 @@ FsmStatus ChannelEntity::SendMbufData(Mbuf * const mbuf)
         }
     }
 
-    void *dataBuf = nullptr;
+    void* dataBuf = nullptr;
     drvRet = halMbufGetBuffAddr(mbuf, &dataBuf);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (dataBuf == nullptr)) {
         DGW_LOG_ERROR("Fail to get buff addr for mbuf, entity:[%s], ret=[%d]", entityDesc_.c_str(), drvRet);
@@ -573,12 +589,12 @@ FsmStatus ChannelEntity::SendMbufData(Mbuf * const mbuf)
         return sendRet;
     }
 
-    DGW_LOG_INFO("Success to call HcclIsend to send data for mbuf, entity:[%s], len:[%lu].",
-        entityDesc_.c_str(), dataLen);
+    DGW_LOG_INFO(
+        "Success to call HcclIsend to send data for mbuf, entity:[%s], len:[%lu].", entityDesc_.c_str(), dataLen);
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::SendMbufHead(Mbuf * const mbuf)
+FsmStatus ChannelEntity::SendMbufHead(Mbuf* const mbuf)
 {
     // check uncompleted req queue full
     if (uncompReqQueue_.IsFull()) {
@@ -587,7 +603,7 @@ FsmStatus ChannelEntity::SendMbufHead(Mbuf * const mbuf)
     }
 
     uint32_t headSize = 0U;
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     const auto drvRet = halMbufGetPrivInfo(mbuf, &headBuf, &headSize);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
         DGW_LOG_ERROR("Failed to get head info from mbuf, ret[%d].", drvRet);
@@ -600,8 +616,8 @@ FsmStatus ChannelEntity::SendMbufHead(Mbuf * const mbuf)
         return sendRet;
     }
 
-    DGW_LOG_INFO("Success to call HcclIsend to send head for mbuf, entity:[%s], len:[%u].",
-        entityDesc_.c_str(), headSize);
+    DGW_LOG_INFO(
+        "Success to call HcclIsend to send head for mbuf, entity:[%s], len:[%u].", entityDesc_.c_str(), headSize);
     return FsmStatus::FSM_SUCCESS;
 }
 
@@ -609,14 +625,14 @@ FsmStatus ChannelEntity::SendDataForLink()
 {
     HcclRequest req;
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
-    const auto hcclRet = HcclIsend(nullptr, 0, HCCL_DATA_TYPE_INT8,
-                                   static_cast<int32_t>(channelPtr_->GetPeerRankId()),
-                                   static_cast<int32_t>(channelPtr_->GetPeerTagId()),
-                                   channelPtr_->GetHandle(), &req);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclIsendCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    const auto hcclRet = HcclIsend(
+        nullptr, 0, HCCL_DATA_TYPE_INT8, static_cast<int32_t>(channelPtr_->GetPeerRankId()),
+        static_cast<int32_t>(channelPtr_->GetPeerTagId()), channelPtr_->GetHandle(), &req);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclIsendCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     if (hcclRet != HCCL_SUCCESS) {
-        DGW_LOG_ERROR("Failed to call HcclIsend to send zero data for link establishment, entity:[%s], ret=[%d]",
+        DGW_LOG_ERROR(
+            "Failed to call HcclIsend to send zero data for link establishment, entity:[%s], ret=[%d]",
             entityDesc_.c_str(), hcclRet);
         bqs::StatisticManager::GetInstance().HcclMpiSendFailStat();
         return FsmStatus::FSM_FAILED;
@@ -624,20 +640,22 @@ FsmStatus ChannelEntity::SendDataForLink()
     bqs::StatisticManager::GetInstance().HcclMpiSendSuccStat();
 
     // cache request
-    RequestInfo reqInfo = {.req = req, .isLink = true, .mbuf = nullptr,
-                           .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
+    RequestInfo reqInfo = {
+        .req = req,
+        .isLink = true,
+        .mbuf = nullptr,
+        .startTick = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick()};
     const int32_t count = uncompReqQueue_.Push(reqInfo);
     if (count == 0) {
         return FsmStatus::FSM_FAILED;
     }
-    DGW_LOG_INFO("Success to send zero data for link establishment, entity:[%s].",
-        entityDesc_.c_str());
+    DGW_LOG_INFO("Success to send zero data for link establishment, entity:[%s].", entityDesc_.c_str());
     return FsmStatus::FSM_SUCCESS;
 }
 
 FsmStatus ChannelEntity::ProcessCompReq()
 {
-    RequestInfo * const uncompReq = uncompReqQueue_.Front();
+    RequestInfo* const uncompReq = uncompReqQueue_.Front();
     if (uncompReq == nullptr) {
         DGW_LOG_ERROR("Failed to get front from uncompleted req queue, entity:[%s].", entityDesc_.c_str());
         return FsmStatus::FSM_FAILED;
@@ -657,8 +675,9 @@ FsmStatus ChannelEntity::ProcessCompReq()
     // process request of data send/receive
     compReqCount_++;
     if ((reqProcCost > REQ_COMP_TIME_COST_THRESHOLD) && (compReqCount_ > COUNT_THRESHOLD_FOR_PRINT_ERROR)) {
-        DGW_LOG_RUN_INFO("Time cost to complete request is %.2fus, count:[%lu], entity:[%s], isSrc[%d].",
-            reqProcCost, compReqCount_, entityDesc_.c_str(), static_cast<int32_t>(isSrc));
+        DGW_LOG_RUN_INFO(
+            "Time cost to complete request is %.2fus, count:[%lu], entity:[%s], isSrc[%d].", reqProcCost, compReqCount_,
+            entityDesc_.c_str(), static_cast<int32_t>(isSrc));
     }
 
     statInfo_.hcclTestSomeSuccTimes++;
@@ -668,8 +687,7 @@ FsmStatus ChannelEntity::ProcessCompReq()
         DGW_LOG_ERROR("Failed to pop request from uncompleted req queue, entity:[%s].", entityDesc_.c_str());
     } else {
         statInfo_.uncompReqQueuePopTimes++;
-        DGW_LOG_DEBUG("Success to pop request from uncompleted req queue, entity:[%s].",
-            entityDesc_.c_str());
+        DGW_LOG_DEBUG("Success to pop request from uncompleted req queue, entity:[%s].", entityDesc_.c_str());
     }
     // no need to process when mbuf is nullptr
     if (mbuf == nullptr) {
@@ -689,8 +707,7 @@ void ChannelEntity::UpdateStatisticForBody(const uint64_t reqProcTickCost)
     if (reqProcTickCost > statInfo_.maxCompletionGapTickForBody) {
         statInfo_.maxCompletionGapTickForBody = reqProcTickCost;
     }
-    if ((reqProcTickCost < statInfo_.minCompletionGapTickForBody) ||
-        statInfo_.totalCompletionCountForBody == 0U) {
+    if ((reqProcTickCost < statInfo_.minCompletionGapTickForBody) || statInfo_.totalCompletionCountForBody == 0U) {
         statInfo_.minCompletionGapTickForBody = reqProcTickCost;
     }
     statInfo_.totalCompletionGapTickForBody += reqProcTickCost;
@@ -702,18 +719,14 @@ void ChannelEntity::UpdateStatisticForHead(const uint64_t reqProcTickCost)
     if (reqProcTickCost > statInfo_.maxCompletionGapTickForHead) {
         statInfo_.maxCompletionGapTickForHead = reqProcTickCost;
     }
-    if ((reqProcTickCost < statInfo_.minCompletionGapTickForHead) ||
-        (statInfo_.totalCompletionCountForHead == 0U)) {
+    if ((reqProcTickCost < statInfo_.minCompletionGapTickForHead) || (statInfo_.totalCompletionCountForHead == 0U)) {
         statInfo_.minCompletionGapTickForHead = reqProcTickCost;
     }
     statInfo_.totalCompletionGapTickForHead += reqProcTickCost;
     ++statInfo_.totalCompletionCountForHead;
 }
 
-RequestInfo *ChannelEntity::FrontUncompReq()
-{
-    return uncompReqQueue_.Front();
-}
+RequestInfo* ChannelEntity::FrontUncompReq() { return uncompReqQueue_.Front(); }
 
 bool ChannelEntity::AddCachedReqCount()
 {
@@ -727,14 +740,15 @@ bool ChannelEntity::AddCachedReqCount()
 
     if (cachedReqCount_ >= maxCachedReqCount_) {
         cachedReqCountLock.Unlock();
-        DGW_LOG_INFO("cached req count[%u] for entity[%s] is up to max[%u].",
-            cachedReqCount_, entityDesc_.c_str(), maxCachedReqCount_);
+        DGW_LOG_INFO(
+            "cached req count[%u] for entity[%s] is up to max[%u].", cachedReqCount_, entityDesc_.c_str(),
+            maxCachedReqCount_);
         return false;
     }
     ++cachedReqCount_;
     cachedReqCountLock.Unlock();
-    DGW_LOG_DEBUG("Success to add cached req count for entity[%s], current count:[%u].",
-        entityDesc_.c_str(), cachedReqCount_);
+    DGW_LOG_DEBUG(
+        "Success to add cached req count for entity[%s], current count:[%u].", entityDesc_.c_str(), cachedReqCount_);
     return true;
 }
 
@@ -748,20 +762,14 @@ bool ChannelEntity::ReduceCachedReqCount()
     }
     --cachedReqCount_;
     cachedReqCountLock.Unlock();
-    DGW_LOG_DEBUG("Success to reduce cached req count for entity[%s], current count:[%u].",
-        entityDesc_.c_str(), cachedReqCount_);
+    DGW_LOG_DEBUG(
+        "Success to reduce cached req count for entity[%s], current count:[%u].", entityDesc_.c_str(), cachedReqCount_);
     return true;
 }
 
-const CommChannel *ChannelEntity::GetCommChannel() const
-{
-    return channelPtr_;
-}
+const CommChannel* ChannelEntity::GetCommChannel() const { return channelPtr_; }
 
-uint32_t ChannelEntity::GetQueueId() const
-{
-    return compReqQueueId_;
-}
+uint32_t ChannelEntity::GetQueueId() const { return compReqQueueId_; }
 
 bool ChannelEntity::CheckRecvReqEventContinue()
 {
@@ -772,8 +780,9 @@ bool ChannelEntity::CheckRecvReqEventContinue()
     cachedReqCountLock.Lock();
     flag = (cachedReqCount_ != maxCachedReqCount_) ? true : false;
     cachedReqCountLock.Unlock();
-    DGW_LOG_DEBUG("Check entity[%s] to supply receive request event, flag:[%d].",
-        entityDesc_.c_str(), static_cast<int32_t>(flag));
+    DGW_LOG_DEBUG(
+        "Check entity[%s] to supply receive request event, flag:[%d].", entityDesc_.c_str(),
+        static_cast<int32_t>(flag));
     return flag;
 }
 
@@ -782,18 +791,19 @@ FsmStatus ChannelEntity::ProcessSendCompletion(Mbuf* mbuf)
     uint64_t dataLen = 0UL;
     auto drvRet = halMbufGetBuffSize(mbuf, &dataLen);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
-        DGW_LOG_ERROR("Unhandled error!! Fail to get buff size for mbuf, entity:[%s], ret=[%d]",
-            entityDesc_.c_str(), drvRet);
+        DGW_LOG_ERROR(
+            "Unhandled error!! Fail to get buff size for mbuf, entity:[%s], ret=[%d]", entityDesc_.c_str(), drvRet);
     }
 
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     MbufTypeInfo typeInfo = {};
     uint32_t outLen = sizeof(typeInfo);
-    drvRet = halBuffGetInfo(BUFF_GET_MBUF_TYPE_INFO, PtrToPtr<Mbuf*, void>(&mbuf),
-        static_cast<uint32_t>(sizeof(mbuf)), PtrToPtr<MbufTypeInfo, void>(&typeInfo), &outLen);
+    drvRet = halBuffGetInfo(
+        BUFF_GET_MBUF_TYPE_INFO, PtrToPtr<Mbuf*, void>(&mbuf), static_cast<uint32_t>(sizeof(mbuf)),
+        PtrToPtr<MbufTypeInfo, void>(&typeInfo), &outLen);
     if ((drvRet == static_cast<int32_t>(DRV_ERROR_NONE)) &&
         (typeInfo.type == static_cast<uint32_t>(MBUF_CREATE_BY_BUILD))) {
-        void *buff = nullptr;
+        void* buff = nullptr;
         uint64_t len = 0U;
         drvRet = halMbufUnBuild(mbuf, &buff, &len);
         if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
@@ -810,19 +820,18 @@ FsmStatus ChannelEntity::ProcessSendCompletion(Mbuf* mbuf)
         DGW_LOG_INFO("Free mbuf.");
     }
 
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddMbufFreeCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddMbufFreeCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     statInfo_.freeMbufTimes++;
     bqs::StatisticManager::GetInstance().MbufFreeStat(dataLen);
-    DGW_LOG_INFO("Success to free mbuf for entity[%s] when processing send completion event.",
-        entityDesc_.c_str());
-    
+    DGW_LOG_INFO("Success to free mbuf for entity[%s] when processing send completion event.", entityDesc_.c_str());
+
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::ProcessReceiveCompletion(Mbuf * const mbuf)
+FsmStatus ChannelEntity::ProcessReceiveCompletion(Mbuf* const mbuf)
 {
-    bqs::ProfInfo reportData = { };
+    bqs::ProfInfo reportData = {};
     if (bqs::BqsMsprofManager::GetInstance().IsStartProfling()) {
         reportData.type = static_cast<uint32_t>(bqs::DgwProfInfoType::ENQUEUE_DATA);
         reportData.itemId = transId_;
@@ -839,15 +848,17 @@ FsmStatus ChannelEntity::ProcessReceiveCompletion(Mbuf * const mbuf)
     const uint64_t begin = bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick();
     const auto drvRet = halQueueEnQueue(deviceId_, compReqQueueId_, PtrToPtr<void, Mbuf>(mbuf));
 
-    DGW_LOG_INFO("%s halQueueEnQueue queue id:[%u] device id:[%u] result:[%d].",
-        entityDesc_.c_str(), compReqQueueId_, deviceId_, static_cast<int32_t>(drvRet));
+    DGW_LOG_INFO(
+        "%s halQueueEnQueue queue id:[%u] device id:[%u] result:[%d].", entityDesc_.c_str(), compReqQueueId_, deviceId_,
+        static_cast<int32_t>(drvRet));
     bqs::BqsMsprofManager::GetInstance().ReportApiPerf(reportData);
-    bqs::ProfileManager::GetInstance(resIndex_).
-        AddHcclEnqueueCost(bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
+    bqs::ProfileManager::GetInstance(resIndex_).AddHcclEnqueueCost(
+        bqs::ProfileManager::GetInstance(resIndex_).GetCpuTick() - begin);
     if (drvRet != DRV_ERROR_NONE) {
         statInfo_.hcclEnqueueFailTimes++;
-        DGW_LOG_ERROR("Drop mbuf! Failed to enqueue completed req mbuf, entity:[%s], ret:[%d].",
-            entityDesc_.c_str(), static_cast<int32_t>(drvRet));
+        DGW_LOG_ERROR(
+            "Drop mbuf! Failed to enqueue completed req mbuf, entity:[%s], ret:[%d].", entityDesc_.c_str(),
+            static_cast<int32_t>(drvRet));
         (void)halMbufFree(mbuf);
         return FsmStatus::FSM_FAILED;
     }
@@ -855,12 +866,13 @@ FsmStatus ChannelEntity::ProcessReceiveCompletion(Mbuf * const mbuf)
     return FsmStatus::FSM_SUCCESS;
 }
 
-FsmStatus ChannelEntity::ProcessLinkRequest(const HcclRequest &req, const float64_t reqProcCost)
+FsmStatus ChannelEntity::ProcessLinkRequest(const HcclRequest& req, const float64_t reqProcCost)
 {
     (void)req;
     (void)reqProcCost;
-    DGW_LOG_RUN_INFO("Time cost to complete link request is %.2fus, entity:[%s], isSrc[%d].",
-        reqProcCost, entityDesc_.c_str(), (direction_ == EntityDirection::DIRECTION_SEND));
+    DGW_LOG_RUN_INFO(
+        "Time cost to complete link request is %.2fus, entity:[%s], isSrc[%d].", reqProcCost, entityDesc_.c_str(),
+        (direction_ == EntityDirection::DIRECTION_SEND));
 
     // pop request: pop failed, unhandled error
     const int32_t count = uncompReqQueue_.Pop();
@@ -869,13 +881,13 @@ FsmStatus ChannelEntity::ProcessLinkRequest(const HcclRequest &req, const float6
         return FsmStatus::FSM_FAILED;
     }
 
-    DGW_LOG_INFO("Success to pop link request from uncompleted req queue, entity:[%s].",
-        entityDesc_.c_str());
+    DGW_LOG_INFO("Success to pop link request from uncompleted req queue, entity:[%s].", entityDesc_.c_str());
 
     linkStatus_ = dgw::ChannelLinkStatus::CONNECTED;
     const uint32_t unlinkTagCount = bqs::StatisticManager::GetInstance().ReduceUnlinkCount();
-    DGW_LOG_RUN_INFO("Success to establish a link for entity:[%s], current unlink tag count is [%u]",
-        entityDesc_.c_str(), unlinkTagCount);
+    DGW_LOG_RUN_INFO(
+        "Success to establish a link for entity:[%s], current unlink tag count is [%u]", entityDesc_.c_str(),
+        unlinkTagCount);
     return FsmStatus::FSM_SUCCESS;
 }
 
@@ -886,35 +898,36 @@ void ChannelEntity::Dump() const
         bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.maxCompletionGapTickForBody);
     const auto minCompletionGapForBody =
         bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.minCompletionGapTickForBody);
-    const auto avgCompletionGapForBody = (statInfo_.totalCompletionCountForBody == 0U) ? 0.0 :
-        bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.totalCompletionGapTickForBody) /
-            statInfo_.totalCompletionCountForBody;
+    const auto avgCompletionGapForBody =
+        (statInfo_.totalCompletionCountForBody == 0U) ?
+            0.0 :
+            bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.totalCompletionGapTickForBody) /
+                statInfo_.totalCompletionCountForBody;
     const auto maxCompletionGapForHead =
         bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.maxCompletionGapTickForHead);
     const auto minCompletionGapForHead =
         bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.minCompletionGapTickForHead);
-    const auto avgCompletionGapForHead = (statInfo_.totalCompletionCountForHead == 0U) ? 0.0 :
-        bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.totalCompletionGapTickForHead) /
-            statInfo_.totalCompletionCountForHead;
-    DGW_LOG_RUN_INFO("%s entity statistic info: desc=[%s], HcclImprobe=[succ:%lu, fail:%lu, total:%lu], "
+    const auto avgCompletionGapForHead =
+        (statInfo_.totalCompletionCountForHead == 0U) ?
+            0.0 :
+            bqs::ProfileManager::GetInstance(resIndex_).GetTimeCost(statInfo_.totalCompletionGapTickForHead) /
+                statInfo_.totalCompletionCountForHead;
+    DGW_LOG_RUN_INFO(
+        "%s entity statistic info: desc=[%s], HcclImprobe=[succ:%lu, fail:%lu, total:%lu], "
         "alloc mbuf=[%lu], HcclImrecv=[succ:%lu, fail:%lu], HcclTestSome=[succ:%lu], "
         "uncompReqQueue=[push:%lu, pop:%lu], bodyCostUs=[max: %.2f, avg: %.2f, min: %.2f], "
         "headCostUs=[max: %.2f, avg: %.2f, min: %.2f], "
         "HcclIsend=[succ:%lu, full:%lu, fail:%lu], "
         "free mbuf=[%lu], hccl enqueue=[succ:%lu, fail:%lu], dequeue=[succ:%lu, fail:%lu], "
         "cached envelope=[%u], link status=[%d].",
-        desc.c_str(), entityDesc_.c_str(), statInfo_.hcclImprobeSuccTimes,
-        statInfo_.hcclImprobeFailTimes, statInfo_.hcclImprobeTotalTimes,
-        statInfo_.allocMbufTimes, statInfo_.hcclImrecvSuccTimes,
-        statInfo_.hcclImrecvFailTimes, statInfo_.hcclTestSomeSuccTimes,
-        statInfo_.uncompReqQueuePushTimes, statInfo_.uncompReqQueuePopTimes,
-        maxCompletionGapForBody, avgCompletionGapForBody, minCompletionGapForBody,
-        maxCompletionGapForHead, avgCompletionGapForHead, minCompletionGapForHead,
-        statInfo_.hcclIsendSuccTimes, statInfo_.hcclIsendFullTimes,
-        statInfo_.hcclIsendFailTimes, statInfo_.freeMbufTimes,
-        statInfo_.hcclEnqueueSuccTimes, statInfo_.hcclEnqueueFailTimes,
-        statInfo_.dequeueSuccTimes, statInfo_.dequeueFailTimes, cachedEnvelopeQueue_.Size(),
-        static_cast<int32_t>(linkStatus_));
+        desc.c_str(), entityDesc_.c_str(), statInfo_.hcclImprobeSuccTimes, statInfo_.hcclImprobeFailTimes,
+        statInfo_.hcclImprobeTotalTimes, statInfo_.allocMbufTimes, statInfo_.hcclImrecvSuccTimes,
+        statInfo_.hcclImrecvFailTimes, statInfo_.hcclTestSomeSuccTimes, statInfo_.uncompReqQueuePushTimes,
+        statInfo_.uncompReqQueuePopTimes, maxCompletionGapForBody, avgCompletionGapForBody, minCompletionGapForBody,
+        maxCompletionGapForHead, avgCompletionGapForHead, minCompletionGapForHead, statInfo_.hcclIsendSuccTimes,
+        statInfo_.hcclIsendFullTimes, statInfo_.hcclIsendFailTimes, statInfo_.freeMbufTimes,
+        statInfo_.hcclEnqueueSuccTimes, statInfo_.hcclEnqueueFailTimes, statInfo_.dequeueSuccTimes,
+        statInfo_.dequeueFailTimes, cachedEnvelopeQueue_.Size(), static_cast<int32_t>(linkStatus_));
 }
 
 FsmStatus ChannelEntity::MakeSureOutputCompletion()
@@ -924,8 +937,8 @@ FsmStatus ChannelEntity::MakeSureOutputCompletion()
     uint32_t totalWaitUs = 0U;
     while (!uncompReqQueue_.IsEmpty()) {
         if (totalWaitUs >= CHECK_SEND_COMPLETION_LIMIT_US) {
-            DGW_LOG_RUN_INFO("Entity[%s] fail to finish sending in [%u] us", entityDesc_.c_str(),
-                CHECK_SEND_COMPLETION_LIMIT_US);
+            DGW_LOG_RUN_INFO(
+                "Entity[%s] fail to finish sending in [%u] us", entityDesc_.c_str(), CHECK_SEND_COMPLETION_LIMIT_US);
             ret = FsmStatus::FSM_FAILED;
             break;
         }
@@ -933,8 +946,9 @@ FsmStatus ChannelEntity::MakeSureOutputCompletion()
         totalWaitUs += CHECK_SEND_COMPLETION_INTERVAL_US;
     }
 
-    DGW_LOG_INFO("Entity[%s] Finish to wait send completion, cost [%u] us, left [%u] requests", entityDesc_.c_str(),
-        totalWaitUs, uncompReqQueue_.Size());
+    DGW_LOG_INFO(
+        "Entity[%s] Finish to wait send completion, cost [%u] us, left [%u] requests", entityDesc_.c_str(), totalWaitUs,
+        uncompReqQueue_.Size());
     while (!uncompReqQueue_.IsEmpty()) {
         uncompReqQueue_.Pop();
     }
@@ -946,9 +960,10 @@ void ChannelEntity::PostDeque()
     const bool firstRet = ReduceCachedReqCount();
     const bool secondRet = ReduceCachedReqCount();
     if ((!firstRet) || (!secondRet)) {
-        DGW_LOG_ERROR("Unhandled error! Reduce cached req count failed! first ret:[%d], second ret:[%d].",
+        DGW_LOG_ERROR(
+            "Unhandled error! Reduce cached req count failed! first ret:[%d], second ret:[%d].",
             static_cast<int32_t>(firstRet), static_cast<int32_t>(secondRet));
     }
 }
 
-}
+} // namespace dgw

@@ -19,13 +19,13 @@ namespace {
 const std::string PROFILING_RESULT_DIR = "/var/log/npu/profiling/";
 }
 
-BqsMsprofManager &BqsMsprofManager::GetInstance()
+BqsMsprofManager& BqsMsprofManager::GetInstance()
 {
     static BqsMsprofManager instance;
     return instance;
 }
 
-void BqsMsprofManager::InitBqsMsprofManager(const bool initFlag, const std::string &cfgData)
+void BqsMsprofManager::InitBqsMsprofManager(const bool initFlag, const std::string& cfgData)
 {
     if (!initFlag) {
         DGW_LOG_RUN_INFO("[Prof]Profiling flag set to false, will not start.");
@@ -73,7 +73,7 @@ ProfStatus BqsMsprofManager::RegProfCallback() const
     return ret;
 }
 
-ProfStatus BqsMsprofManager::InitProf(const std::string &cfgData)
+ProfStatus BqsMsprofManager::InitProf(const std::string& cfgData)
 {
     std::shared_ptr<MsprofCommandHandleParams> profCfg = std::make_shared<MsprofCommandHandleParams>();
     if (profCfg == nullptr) {
@@ -101,18 +101,19 @@ ProfStatus BqsMsprofManager::InitProf(const std::string &cfgData)
     profCfg->storageLimit = UINT32_MAX;
 
     ProfStatus profRet = BqsMsprofApiAdapter::GetInstance().MsprofInit(
-        static_cast<uint32_t>(MSPROF_CTRL_INIT_PURE_CPU),
-        profCfg.get(), sizeof(*profCfg));
+        static_cast<uint32_t>(MSPROF_CTRL_INIT_PURE_CPU), profCfg.get(), sizeof(*profCfg));
     if (profRet != ProfStatus::PROF_SUCCESS) {
-        DGW_LOG_ERROR("[Prof]Init msprof failed, ret=%d, profData=%s, profPath=%s, storageLimit=%u.",
-                      static_cast<int32_t>(profRet), profCfg->profData, profCfg->path, profCfg->storageLimit);
+        DGW_LOG_ERROR(
+            "[Prof]Init msprof failed, ret=%d, profData=%s, profPath=%s, storageLimit=%u.",
+            static_cast<int32_t>(profRet), profCfg->profData, profCfg->path, profCfg->storageLimit);
         return profRet;
     }
 
     isInitMsprof_ = true;
 
-    DGW_LOG_RUN_INFO("[Prof]Init msprof success, profData=%s, profPath=%s, storageLimit=%u.",
-                  profCfg->profData, profCfg->path, profCfg->storageLimit);
+    DGW_LOG_RUN_INFO(
+        "[Prof]Init msprof success, profData=%s, profPath=%s, storageLimit=%u.", profCfg->profData, profCfg->path,
+        profCfg->storageLimit);
 
     return ProfStatus::PROF_SUCCESS;
 }
@@ -125,14 +126,14 @@ ProfStatus BqsMsprofManager::RegProfType() const
         {"FlowGwEnqueueData", DgwProfInfoType::ENQUEUE_DATA},
     };
 
-    for (const auto &name_pair : namesToProfTypes) {
+    for (const auto& name_pair : namesToProfTypes) {
         const ProfStatus ret = BqsMsprofApiAdapter::GetInstance().MsprofRegTypeInfo(
-            static_cast<uint16_t>(MSPROF_REPORT_MODEL_LEVEL),
-            static_cast<int32_t>(name_pair.second),
+            static_cast<uint16_t>(MSPROF_REPORT_MODEL_LEVEL), static_cast<int32_t>(name_pair.second),
             name_pair.first.c_str());
         if (ret != ProfStatus::PROF_SUCCESS) {
-            DGW_LOG_ERROR("[Prof]Regist profiling type failed, ret=%d, typeId=%d, typeName=%s.",
-                          static_cast<int32_t>(ret), static_cast<int32_t>(name_pair.second), name_pair.first.c_str());
+            DGW_LOG_ERROR(
+                "[Prof]Regist profiling type failed, ret=%d, typeId=%d, typeName=%s.", static_cast<int32_t>(ret),
+                static_cast<int32_t>(name_pair.second), name_pair.first.c_str());
             return ProfStatus::PROF_FAIL;
         }
     }
@@ -142,7 +143,7 @@ ProfStatus BqsMsprofManager::RegProfType() const
     return ProfStatus::PROF_SUCCESS;
 }
 
-int32_t BqsMsprofManager::ProfCallback(uint32_t type, void *data, uint32_t dataLen)
+int32_t BqsMsprofManager::ProfCallback(uint32_t type, void* data, uint32_t dataLen)
 {
     DGW_LOG_RUN_INFO("[Prof]Queue schedule start process profiling callback, type=%u.", type);
 
@@ -151,7 +152,7 @@ int32_t BqsMsprofManager::ProfCallback(uint32_t type, void *data, uint32_t dataL
         return static_cast<int32_t>(ProfStatus::PROF_INVALID_PARA);
     }
 
-    const MsprofCommandHandle *const profCmdHandle = static_cast<MsprofCommandHandle *>(data);
+    const MsprofCommandHandle* const profCmdHandle = static_cast<MsprofCommandHandle*>(data);
     ProfStatus ret = ProfStatus::PROF_SUCCESS;
     switch (type) {
         case static_cast<uint32_t>(PROF_CTRL_SWITCH):
@@ -171,7 +172,7 @@ int32_t BqsMsprofManager::ProfCallback(uint32_t type, void *data, uint32_t dataL
     return static_cast<int32_t>(ret);
 }
 
-ProfStatus BqsMsprofManager::HandleCtrlSwitch(const MsprofCommandHandle &profCmdHandle)
+ProfStatus BqsMsprofManager::HandleCtrlSwitch(const MsprofCommandHandle& profCmdHandle)
 {
     const uint32_t type = profCmdHandle.type;
     DGW_LOG_INFO("[Prof]Start process prof ctrl switch, type=%u.", type);
@@ -197,21 +198,21 @@ ProfStatus BqsMsprofManager::HandleCtrlSwitch(const MsprofCommandHandle &profCmd
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofManager::HandelCtrlReporter(const MsprofCommandHandle &profCmdHandle) const
+ProfStatus BqsMsprofManager::HandelCtrlReporter(const MsprofCommandHandle& profCmdHandle) const
 {
     (void)profCmdHandle;
     DGW_LOG_INFO("[Prof]Start process prof ctrl reporter.");
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofManager::HandleCtrlStepInfo(const MsprofCommandHandle &profCmdHandle) const
+ProfStatus BqsMsprofManager::HandleCtrlStepInfo(const MsprofCommandHandle& profCmdHandle) const
 {
     (void)profCmdHandle;
     DGW_LOG_INFO("[Prof]Start process prof ctrl step info.");
     return ProfStatus::PROF_SUCCESS;
 }
 
-void BqsMsprofManager::ReportApiPerf(const ProfInfo &profData) const
+void BqsMsprofManager::ReportApiPerf(const ProfInfo& profData) const
 {
     if (!isRun_) {
         return;
@@ -236,7 +237,7 @@ void BqsMsprofManager::ReportApiPerf(const ProfInfo &profData) const
     return;
 }
 
-void BqsMsprofManager::ReportEventPerf(const ProfInfo &profData)
+void BqsMsprofManager::ReportEventPerf(const ProfInfo& profData)
 {
     if (!isRun_) {
         return;
@@ -253,12 +254,14 @@ void BqsMsprofManager::ReportEventPerf(const ProfInfo &profData)
 
     const ProfStatus ret = BqsMsprofApiAdapter::GetInstance().MsprofReportEvent(agingFlag_, &reportData);
     if (ret != ProfStatus::PROF_SUCCESS) {
-        DGW_LOG_ERROR("[Prof]Report event failed, ret=%d, requestId=%u, itemId=%lu.",
-                      static_cast<int32_t>(ret), reportData.requestId, reportData.itemId);
+        DGW_LOG_ERROR(
+            "[Prof]Report event failed, ret=%d, requestId=%u, itemId=%lu.", static_cast<int32_t>(ret),
+            reportData.requestId, reportData.itemId);
     }
 
-    DGW_LOG_INFO("[Prof]Send event perf success, requestId=%u, itemId=%lu, timeStamp=%lu.",
-                 reportData.requestId, reportData.itemId, reportData.timeStamp);
+    DGW_LOG_INFO(
+        "[Prof]Send event perf success, requestId=%u, itemId=%lu, timeStamp=%lu.", reportData.requestId,
+        reportData.itemId, reportData.timeStamp);
 
     return;
 }

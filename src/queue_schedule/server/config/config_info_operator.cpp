@@ -35,39 +35,38 @@ constexpr size_t MAX_ROUTES_NUM = 8000UL;
 constexpr uint32_t MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP = 1000U;
 // max tag depth: hccl tag depth is 1024, so here is 1024/2
 constexpr uint32_t MAX_TAG_DEPTH = 512U;
-constexpr uint64_t INITIAL_MEMORY_SIZE = 5UL * 1024UL * 1024UL * 1024UL;  // 5G
+constexpr uint64_t INITIAL_MEMORY_SIZE = 5UL * 1024UL * 1024UL * 1024UL; // 5G
 constexpr uint16_t RESOURCE_ID_HOST_DEVICE_BIT_NUM = 14;
 constexpr uint16_t RESOURCE_ID_ENABLE_BIT_MASK = 0x8000;
 constexpr uint16_t ROUCE_ID_DEVICE_ID_DATA_MASK = 0x3FFF;
 const std::unordered_set<int32_t> CMD_PROCESSED_BY_ALL_RES = {
-    static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_BIND_ROUTE),
-    static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_UNBIND_ROUTE),
+    static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_BIND_ROUTE), static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_UNBIND_ROUTE),
     static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_STOP_SCHEDULE),
     static_cast<int32_t>(ConfigCmd::DGW_CFG_CMD_CLEAR_AND_RESTART_SCHEDULE)};
-}
+} // namespace
 
 ConfigInfoOperator::ConfigInfoOperator(const uint32_t deviceId, const std::string groupNames)
     : deviceId_(deviceId), groupNames_(groupNames), clientVersion_(0U)
 {}
 
-BqsStatus ConfigInfoOperator::ParseConfigEvent(const uint32_t subEventId, const uint32_t queueId, void *mbuf,
-    const uint16_t clientVersion)
+BqsStatus ConfigInfoOperator::ParseConfigEvent(
+    const uint32_t subEventId, const uint32_t queueId, void* mbuf, const uint16_t clientVersion)
 {
     clientVersion_ = clientVersion;
     // get data buffer from mbuf
-    void *mbufData = nullptr;
+    void* mbufData = nullptr;
     auto getBuffRet = halMbufGetBuffAddr(PtrToPtr<void, Mbuf>(mbuf), &mbufData);
     if ((getBuffRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (mbufData == nullptr)) {
-        BQS_LOG_ERROR("halMbufGetBuffAddr from queue[%u] in device[%u] failed, error[%d]",
-            queueId, deviceId_, getBuffRet);
+        BQS_LOG_ERROR(
+            "halMbufGetBuffAddr from queue[%u] in device[%u] failed, error[%d]", queueId, deviceId_, getBuffRet);
         return BQS_STATUS_DRIVER_ERROR;
     }
     // get mbuf len
     uint64_t dataLen = 0UL;
     getBuffRet = halMbufGetDataLen(PtrToPtr<void, Mbuf>(mbuf), &dataLen);
     if (getBuffRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
-        BQS_LOG_ERROR("halMbufGetDataLen from queue[%u] in device[%u] failed, error[%d]",
-            queueId, deviceId_, getBuffRet);
+        BQS_LOG_ERROR(
+            "halMbufGetDataLen from queue[%u] in device[%u] failed, error[%d]", queueId, deviceId_, getBuffRet);
         return BQS_STATUS_DRIVER_ERROR;
     }
 
@@ -109,7 +108,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateConfig(const uint32_t index)
 {
     BQS_LOG_INFO("Update config[add/del group, bind/unbind route], stage [server:process]");
     // no need to check cfgInfo and updateCfgInfo_ nullptr
-    ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
+    ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
     if ((CMD_PROCESSED_BY_ALL_RES.count(static_cast<int32_t>(cfgInfo->cmd)) == 0U) && (index != 0U)) {
         BQS_LOG_INFO("Thread[%u] need not process cmd[%d]", index, static_cast<int32_t>(cfgInfo->cmd));
         return BQS_STATUS_OK;
@@ -161,7 +160,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateConfig(const uint32_t index)
 
 BqsStatus ConfigInfoOperator::QueryConfig(const uintptr_t mbufData, const uint64_t dataLen) const
 {
-    ConfigQuery * const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
+    ConfigQuery* const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
     if (cfgQry->mode == QueryMode::DGW_QUERY_MODE_GROUP) {
         return QueryGroup(mbufData, dataLen, false);
     }
@@ -170,15 +169,15 @@ BqsStatus ConfigInfoOperator::QueryConfig(const uintptr_t mbufData, const uint64
 
 BqsStatus ConfigInfoOperator::QueryConfigNum(const uintptr_t mbufData, const uint64_t dataLen) const
 {
-    ConfigQuery * const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
+    ConfigQuery* const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
     if (cfgQry->mode == QueryMode::DGW_QUERY_MODE_GROUP) {
         return QueryGroup(mbufData, dataLen, true);
     }
     return QueryRoutes(mbufData, dataLen, true);
 }
 
-void ConfigInfoOperator::SplitStringWithDelimeter(const std::string rawStr, const char_t delimeter,
-                                                  std::vector<std::string> &results) const
+void ConfigInfoOperator::SplitStringWithDelimeter(
+    const std::string rawStr, const char_t delimeter, std::vector<std::string>& results) const
 {
     if (rawStr.empty()) {
         BQS_LOG_INFO("str to split is empty");
@@ -206,10 +205,11 @@ BqsStatus ConfigInfoOperator::QueryGroupAllocInfo()
     } else {
         SplitStringWithDelimeter(groupNames_, ',', groupNames);
     }
-    for (const auto &groupName: groupNames) {
+    for (const auto& groupName : groupNames) {
         GrpQueryGroupAddrPara queryPara = {};
-        const errno_t eRet = memcpy_s(queryPara.grpName, BUFF_GRP_NAME_LEN,
-            PtrToPtr<const char, const void>(groupName.c_str()) , strlen(groupName.c_str()) + 1);
+        const errno_t eRet = memcpy_s(
+            queryPara.grpName, BUFF_GRP_NAME_LEN, PtrToPtr<const char, const void>(groupName.c_str()),
+            strlen(groupName.c_str()) + 1);
         if (eRet != EOK) {
             BQS_LOG_ERROR("Failed to memcpy, ret[%d].", eRet);
             grpAllocInfos_.clear();
@@ -219,11 +219,13 @@ BqsStatus ConfigInfoOperator::QueryGroupAllocInfo()
 
         GrpQueryGroupAddrInfo queryResults[BUFF_GROUP_ADDR_MAX_NUM] = {};
         uint32_t resultSize = 0U;
-        const auto drvRet = halGrpQuery(GRP_QUERY_GROUP_ADDR_INFO, &queryPara,
-            static_cast<uint32_t>(sizeof(queryPara)), &queryResults[0U], &resultSize);
+        const auto drvRet = halGrpQuery(
+            GRP_QUERY_GROUP_ADDR_INFO, &queryPara, static_cast<uint32_t>(sizeof(queryPara)), &queryResults[0U],
+            &resultSize);
         if ((drvRet != DRV_ERROR_NONE) || (static_cast<size_t>(resultSize) < sizeof(GrpQueryGroupAddrInfo))) {
-            BQS_LOG_ERROR("Failed to halGrpQuery for group[%s], device[%u], ret[%d], resultSize[%u]",
-                queryPara.grpName, queryPara.devId, static_cast<int32_t>(drvRet), resultSize);
+            BQS_LOG_ERROR(
+                "Failed to halGrpQuery for group[%s], device[%u], ret[%d], resultSize[%u]", queryPara.grpName,
+                queryPara.devId, static_cast<int32_t>(drvRet), resultSize);
             grpAllocInfos_.clear();
             return BQS_STATUS_DRIVER_ERROR;
         }
@@ -236,18 +238,19 @@ BqsStatus ConfigInfoOperator::QueryGroupAllocInfo()
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::QureySelfMemGroup(std::vector<std::string> &groupNames) const
+BqsStatus ConfigInfoOperator::QureySelfMemGroup(std::vector<std::string>& groupNames) const
 {
     std::unique_ptr<GroupQueryOutput> groupInfoPtr(new (std::nothrow) GroupQueryOutput());
     if (groupInfoPtr == nullptr) {
         BQS_LOG_ERROR("Fail to allocate GroupQueryOutput");
         return BQS_STATUS_INNER_ERROR;
     }
-    GroupQueryOutput &groupInfo = *(groupInfoPtr.get());
+    GroupQueryOutput& groupInfo = *(groupInfoPtr.get());
     uint32_t groupInfoLen = 0U;
     pid_t curPid = drvDeviceGetBareTgid();
     // query group info for current qs process
-    auto drvRet = halGrpQuery(GRP_QUERY_GROUPS_OF_PROCESS, &curPid, static_cast<uint32_t>(sizeof(curPid)),
+    auto drvRet = halGrpQuery(
+        GRP_QUERY_GROUPS_OF_PROCESS, &curPid, static_cast<uint32_t>(sizeof(curPid)),
         PtrToPtr<GroupQueryOutput, void>(&groupInfo), &groupInfoLen);
     if (drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) {
         BQS_LOG_ERROR("halGrpQuery of qs[%d] failed, ret[%d]", curPid, drvRet);
@@ -272,7 +275,7 @@ BqsStatus ConfigInfoOperator::QureySelfMemGroup(std::vector<std::string> &groupN
     return BQS_STATUS_OK;
 }
 
-bool ConfigInfoOperator::IsSvmShareGrp(const std::string &grpName) const
+bool ConfigInfoOperator::IsSvmShareGrp(const std::string& grpName) const
 {
     return grpName.find("svm_share_grp") != std::string::npos;
 }
@@ -283,7 +286,7 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
     if (queryGroupRet != BQS_STATUS_OK) {
         return queryGroupRet;
     }
-    HcomHandleInfo * const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
+    HcomHandleInfo* const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
     if (info->rankTableLen == 0UL) {
         BQS_LOG_ERROR("Invalid rank table len[%lu].", info->rankTableLen);
         return BQS_STATUS_PARAM_INVALID;
@@ -311,7 +314,7 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
     }
 
     // get rank table
-    char_t * const rankTablePtr = PtrToPtr<void, char>(ValueToPtr(mbufData + sizeof(HcomHandleInfo)));
+    char_t* const rankTablePtr = PtrToPtr<void, char>(ValueToPtr(mbufData + sizeof(HcomHandleInfo)));
     const std::string rankTable(rankTablePtr, info->rankTableLen);
 
     auto result = BQS_STATUS_OK;
@@ -324,11 +327,12 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
         result = BQS_STATUS_HCCL_ERROR;
         BQS_LOG_ERROR("Failed to create hcom handle, hccl ret is[%d].", static_cast<int32_t>(hcclRet));
     } else {
-        for (const auto &grpAllocInfo: grpAllocInfos_) {
+        for (const auto& grpAllocInfo : grpAllocInfos_) {
             const uint64_t memorySize = (bqs::RunContext::HOST != bqs::GetRunContext()) ?
-                static_cast<uint64_t>(grpAllocInfo.size) : INITIAL_MEMORY_SIZE;
-            const auto registerRet = HcclRegisterMemory(hcomHandle,
-                ValueToPtr(static_cast<uint64_t>(grpAllocInfo.addr)), memorySize);
+                                            static_cast<uint64_t>(grpAllocInfo.size) :
+                                            INITIAL_MEMORY_SIZE;
+            const auto registerRet =
+                HcclRegisterMemory(hcomHandle, ValueToPtr(static_cast<uint64_t>(grpAllocInfo.addr)), memorySize);
             if (registerRet != HCCL_SUCCESS) {
                 result = BQS_STATUS_HCCL_ERROR;
                 BQS_LOG_ERROR("Failed to register memory, hccl ret is[%d].", static_cast<int32_t>(registerRet));
@@ -344,8 +348,8 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
     }
 
     // write result to mbuf
-    CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(
-        ValueToPtr(mbufData + sizeof(HcomHandleInfo) + info->rankTableLen));
+    CfgRetInfo* const retInfo =
+        PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(HcomHandleInfo) + info->rankTableLen));
     retInfo->retCode = static_cast<int32_t>(result);
 
     return BQS_STATUS_OK;
@@ -353,11 +357,11 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
 
 BqsStatus ConfigInfoOperator::DestroyHcomHandle(const uintptr_t mbufData, const uint64_t dataLen) const
 {
-    HcomHandleInfo * const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
+    HcomHandleInfo* const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
     // check dataLen
     bool overFlow = false;
-    uint64_t cfgLen = BqsCheckAssign64UAdd(static_cast<uint64_t>(sizeof(HcomHandleInfo) + sizeof(CfgRetInfo)),
-        info->rankTableLen, overFlow);
+    uint64_t cfgLen = BqsCheckAssign64UAdd(
+        static_cast<uint64_t>(sizeof(HcomHandleInfo) + sizeof(CfgRetInfo)), info->rankTableLen, overFlow);
     if (overFlow || (dataLen < cfgLen)) {
         BQS_LOG_ERROR("dataLen[%lu] is invalid, cfgLen is [%lu].", dataLen, cfgLen);
         return BQS_STATUS_PARAM_INVALID;
@@ -370,9 +374,9 @@ BqsStatus ConfigInfoOperator::DestroyHcomHandle(const uintptr_t mbufData, const 
         return BQS_STATUS_PARAM_INVALID;
     }
     BQS_LOG_RUN_INFO("Begin to Destroy hcom handle[%lu].", info->hcomHandle);
-    for (const auto &grpAllocInfo: grpAllocInfos_) {
-        const auto unRegisterRet = HcclUnregisterMemory(hcomHandle,
-            ValueToPtr(static_cast<uint64_t>(grpAllocInfo.addr)));
+    for (const auto& grpAllocInfo : grpAllocInfos_) {
+        const auto unRegisterRet =
+            HcclUnregisterMemory(hcomHandle, ValueToPtr(static_cast<uint64_t>(grpAllocInfo.addr)));
         if (unRegisterRet != HCCL_SUCCESS) {
             BQS_LOG_ERROR("Failed to unRegister memory, hccl ret is[%d].", static_cast<int32_t>(unRegisterRet));
         }
@@ -391,8 +395,8 @@ BqsStatus ConfigInfoOperator::DestroyHcomHandle(const uintptr_t mbufData, const 
     BQS_LOG_RUN_INFO("After HcclFinalizeComm when Destroy hcom handle[%lu].", info->hcomHandle);
 
     // write result to mbuf
-    CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(
-        ValueToPtr(mbufData + sizeof(HcomHandleInfo) + info->rankTableLen));
+    CfgRetInfo* const retInfo =
+        PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(HcomHandleInfo) + info->rankTableLen));
     retInfo->retCode = static_cast<int32_t>(result);
 
     bqs::StatisticManager::GetInstance().ResetStatistic();
@@ -410,14 +414,15 @@ BqsStatus ConfigInfoOperator::QueryGroup(const uintptr_t mbufData, const uint64_
         return BQS_STATUS_PARAM_INVALID;
     }
     // no need check cfgQry nullptr
-    ConfigQuery * const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
+    ConfigQuery* const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
     const uint32_t groupId = static_cast<uint32_t>(cfgQry->qry.groupQry.groupId);
-    auto &entitiesInGroup = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
+    auto& entitiesInGroup = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
 
     const size_t endpointNum = onlyQryNum ? 0UL : cfgQry->qry.routeQry.routeNum;
     // check total len
-    const size_t totalLen = onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
-        (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (endpointNum * sizeof(Endpoint)) + sizeof(CfgRetInfo));
+    const size_t totalLen =
+        onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
+                     (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (endpointNum * sizeof(Endpoint)) + sizeof(CfgRetInfo));
     if (dataLen != totalLen) {
         BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal with totalLen[%zu].", dataLen, totalLen);
         return BQS_STATUS_PARAM_INVALID;
@@ -425,30 +430,31 @@ BqsStatus ConfigInfoOperator::QueryGroup(const uintptr_t mbufData, const uint64_
 
     if (onlyQryNum) {
         cfgQry->qry.groupQry.endpointNum = static_cast<uint32_t>(entitiesInGroup.size());
-        CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(ConfigQuery)));
-        retInfo->retCode = (cfgQry->qry.groupQry.endpointNum == 0U) ?
-            static_cast<int32_t>(BQS_STATUS_GROUP_NOT_EXIST) : static_cast<int32_t>(BQS_STATUS_OK);
+        CfgRetInfo* const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(ConfigQuery)));
+        retInfo->retCode = (cfgQry->qry.groupQry.endpointNum == 0U) ? static_cast<int32_t>(BQS_STATUS_GROUP_NOT_EXIST) :
+                                                                      static_cast<int32_t>(BQS_STATUS_OK);
         BQS_LOG_INFO("endpointNum is %u in group[%u].", cfgQry->qry.groupQry.endpointNum, groupId);
         return BQS_STATUS_OK;
     }
 
     // check number
     const uintptr_t results = mbufData + (totalLen - sizeof(CfgRetInfo));
-    CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
+    CfgRetInfo* const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
     if (endpointNum != entitiesInGroup.size()) {
         retInfo->retCode = static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
-        BQS_LOG_ERROR("endpoint num in group[%u] info is [%zu], but searched endpoint num is [%zu].",
-            groupId, endpointNum, entitiesInGroup.size());
+        BQS_LOG_ERROR(
+            "endpoint num in group[%u] info is [%zu], but searched endpoint num is [%zu].", groupId, endpointNum,
+            entitiesInGroup.size());
         return BQS_STATUS_PARAM_INVALID;
     }
 
     BQS_LOG_INFO("Group [get], stage [server:process], relation [size:%zu]", entitiesInGroup.size());
     // convert and record route
-    Endpoint * const endpoints =
+    Endpoint* const endpoints =
         PtrToPtr<void, Endpoint>(ValueToPtr(mbufData + sizeof(ConfigQuery) + sizeof(ConfigInfo)));
     size_t idx = 0UL;
-    for (auto &entity : entitiesInGroup) {
-        Endpoint * const endpoint = PtrAdd<Endpoint>(endpoints, endpointNum, idx);
+    for (auto& entity : entitiesInGroup) {
+        Endpoint* const endpoint = PtrAdd<Endpoint>(endpoints, endpointNum, idx);
         (void)ConvertToEndpoint(*entity, *endpoint);
         idx++;
     }
@@ -464,12 +470,13 @@ BqsStatus ConfigInfoOperator::QueryRoutes(const uintptr_t mbufData, const uint64
         return BQS_STATUS_PARAM_INVALID;
     }
     // no need check cfgQry nullptr
-    ConfigQuery * const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
+    ConfigQuery* const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
 
     const size_t routeNum = onlyQryNum ? 0UL : cfgQry->qry.routeQry.routeNum;
     // check total len
-    const size_t totalLen = onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
-        (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (routeNum * sizeof(Route)) + sizeof(CfgRetInfo));
+    const size_t totalLen =
+        onlyQryNum ? (sizeof(ConfigQuery) + sizeof(CfgRetInfo)) :
+                     (sizeof(ConfigQuery) + sizeof(ConfigInfo) + (routeNum * sizeof(Route)) + sizeof(CfgRetInfo));
     if (dataLen != totalLen) {
         BQS_LOG_ERROR("mbuf dataLen[%lu] is not equal with totalLen[%zu].", dataLen, totalLen);
         return BQS_STATUS_PARAM_INVALID;
@@ -495,23 +502,23 @@ BqsStatus ConfigInfoOperator::QueryRoutes(const uintptr_t mbufData, const uint64
             const EntityInfoPtr src = CreateEntityInfo(cfgQry->qry.routeQry.src, true);
             const EntityInfoPtr dst = CreateEntityInfo(cfgQry->qry.routeQry.dst, true);
             ret = ((src == nullptr) || (dst == nullptr)) ? BQS_STATUS_FAILED :
-                QueryRoutesBySrcAndDst(mbufData, *src, *dst, onlyQryNum);
+                                                           QueryRoutesBySrcAndDst(mbufData, *src, *dst, onlyQryNum);
             break;
         }
         default: {
             ret = BQS_STATUS_PARAM_INVALID;
-            BQS_LOG_ERROR("Unsupported query type{0:src, 1:dst, 2:src-and-dst 3:all}:%d",
-                static_cast<int32_t>(cfgQry->mode));
+            BQS_LOG_ERROR(
+                "Unsupported query type{0:src, 1:dst, 2:src-and-dst 3:all}:%d", static_cast<int32_t>(cfgQry->mode));
             break;
         }
     }
     return ret;
 }
 
-BqsStatus ConfigInfoOperator::QueryRoutesBySrc(const uintptr_t mbufData, const EntityInfo &src,
-                                               const bool onlyQryNum) const
+BqsStatus ConfigInfoOperator::QueryRoutesBySrc(
+    const uintptr_t mbufData, const EntityInfo& src, const bool onlyQryNum) const
 {
-    std::list<std::pair<const EntityInfo *, const EntityInfo *>> routeList;
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>> routeList;
 
     QueryRoutesBySrcFromRelation(src, BindRelation::GetInstance().GetSrcToDstRelation(), routeList);
     if (GlobalCfg::GetInstance().GetNumaFlag()) {
@@ -521,27 +528,28 @@ BqsStatus ConfigInfoOperator::QueryRoutesBySrc(const uintptr_t mbufData, const E
     return SaveQueryResult(routeList, mbufData, onlyQryNum);
 }
 
-void ConfigInfoOperator::QueryRoutesBySrcFromRelation(const EntityInfo &src,
-    const MapEnitityInfoToInfoSet &srcToDstRelation,
-    std::list<std::pair<const EntityInfo*, const EntityInfo*>> &routeList) const
+void ConfigInfoOperator::QueryRoutesBySrcFromRelation(
+    const EntityInfo& src, const MapEnitityInfoToInfoSet& srcToDstRelation,
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList) const
 {
     const auto iter = srcToDstRelation.find(src);
     if (iter == srcToDstRelation.end()) {
-        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
-                     static_cast<int32_t>(src.GetType()));
+        BQS_LOG_WARN(
+            "Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
+            static_cast<int32_t>(src.GetType()));
     } else {
         // generate route list
-        const auto &dstSet = iter->second;
+        const auto& dstSet = iter->second;
         for (auto dstIter = dstSet.begin(); dstIter != dstSet.end(); ++dstIter) {
             routeList.emplace_back(std::make_pair(&src, &(*dstIter)));
         }
     }
 }
 
-BqsStatus ConfigInfoOperator::QueryRoutesByDst(const uintptr_t mbufData, const EntityInfo &dst,
-                                               const bool onlyQryNum) const
+BqsStatus ConfigInfoOperator::QueryRoutesByDst(
+    const uintptr_t mbufData, const EntityInfo& dst, const bool onlyQryNum) const
 {
-    std::list<std::pair<const EntityInfo *, const EntityInfo *>> routeList;
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>> routeList;
 
     QueryRoutesByDstFromRelation(dst, BindRelation::GetInstance().GetDstToSrcRelation(), routeList);
     if (GlobalCfg::GetInstance().GetNumaFlag()) {
@@ -551,16 +559,17 @@ BqsStatus ConfigInfoOperator::QueryRoutesByDst(const uintptr_t mbufData, const E
     return SaveQueryResult(routeList, mbufData, onlyQryNum);
 }
 
-void ConfigInfoOperator::QueryRoutesByDstFromRelation(const EntityInfo &dst,
-    const MapEnitityInfoToInfoSet &dstToSrcRelation,
-    std::list<std::pair<const EntityInfo*, const EntityInfo*>> &routeList) const
+void ConfigInfoOperator::QueryRoutesByDstFromRelation(
+    const EntityInfo& dst, const MapEnitityInfoToInfoSet& dstToSrcRelation,
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList) const
 {
     const auto iter = dstToSrcRelation.find(dst);
     if (iter == dstToSrcRelation.end()) {
-        BQS_LOG_WARN("Record does not exist according to dst Id:[%u] type:[%d]", dst.GetId(),
-                     static_cast<int32_t>(dst.GetType()));
+        BQS_LOG_WARN(
+            "Record does not exist according to dst Id:[%u] type:[%d]", dst.GetId(),
+            static_cast<int32_t>(dst.GetType()));
     } else {
-        const auto &srcSet = iter->second;
+        const auto& srcSet = iter->second;
         // generate route list
         for (auto srcIter = srcSet.begin(); srcIter != srcSet.end(); ++srcIter) {
             routeList.emplace_back(std::make_pair(&(*srcIter), &dst));
@@ -568,17 +577,17 @@ void ConfigInfoOperator::QueryRoutesByDstFromRelation(const EntityInfo &dst,
     }
 }
 
-BqsStatus ConfigInfoOperator::QueryRoutesBySrcAndDst(const uintptr_t mbufData, const EntityInfo &src,
-                                                     const EntityInfo &dst, const bool onlyQryNum) const
+BqsStatus ConfigInfoOperator::QueryRoutesBySrcAndDst(
+    const uintptr_t mbufData, const EntityInfo& src, const EntityInfo& dst, const bool onlyQryNum) const
 {
     uint32_t searchedRouteNum = 0U;
-    auto &srcToDstRelation = BindRelation::GetInstance().GetSrcToDstRelation();
+    auto& srcToDstRelation = BindRelation::GetInstance().GetSrcToDstRelation();
     const auto iter = srcToDstRelation.find(src);
     if ((iter != srcToDstRelation.end()) && (iter->second.count(dst) != 0UL)) {
         searchedRouteNum = 1U;
     } else {
         if (GlobalCfg::GetInstance().GetNumaFlag()) {
-            const auto &srcToDstRelationTmp = BindRelation::GetInstance().GetSrcToDstExtraRelation();
+            const auto& srcToDstRelationTmp = BindRelation::GetInstance().GetSrcToDstExtraRelation();
             const auto it = srcToDstRelationTmp.find(src);
             if ((it != srcToDstRelationTmp.end()) && (it->second.count(dst) != 0UL)) {
                 searchedRouteNum = 1U;
@@ -587,12 +596,13 @@ BqsStatus ConfigInfoOperator::QueryRoutesBySrcAndDst(const uintptr_t mbufData, c
     }
 
     // generate route list
-    std::list<std::pair<const EntityInfo *, const EntityInfo *>> routeList;
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>> routeList;
     if (searchedRouteNum != 0U) {
         routeList.emplace_back(std::make_pair(&src, &dst));
     } else {
-        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
-                     static_cast<int32_t>(src.GetType()));
+        BQS_LOG_WARN(
+            "Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
+            static_cast<int32_t>(src.GetType()));
     }
     return SaveQueryResult(routeList, mbufData, onlyQryNum);
 }
@@ -600,20 +610,20 @@ BqsStatus ConfigInfoOperator::QueryRoutesBySrcAndDst(const uintptr_t mbufData, c
 BqsStatus ConfigInfoOperator::QueryAllRoutes(const uintptr_t mbufData, const bool onlyQryNum) const
 {
     // gennerate route list
-    std::list<std::pair<const EntityInfo *, const EntityInfo *>> routeList;
-    auto &srcToDstRelation = BindRelation::GetInstance().GetSrcToDstRelation();
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>> routeList;
+    auto& srcToDstRelation = BindRelation::GetInstance().GetSrcToDstRelation();
     for (auto iter = srcToDstRelation.begin(); iter != srcToDstRelation.end(); ++iter) {
-        const auto &dstSet = iter->second;
-        for (auto &dst : dstSet) {
+        const auto& dstSet = iter->second;
+        for (auto& dst : dstSet) {
             routeList.emplace_back(std::make_pair(&(iter->first), &dst));
         }
     }
 
     if (GlobalCfg::GetInstance().GetNumaFlag()) {
-        const auto &srcToDstRelationTmp = BindRelation::GetInstance().GetSrcToDstExtraRelation();
+        const auto& srcToDstRelationTmp = BindRelation::GetInstance().GetSrcToDstExtraRelation();
         for (auto iter = srcToDstRelationTmp.begin(); iter != srcToDstRelationTmp.end(); ++iter) {
-            const auto &dstSet = iter->second;
-            for (auto &dst : dstSet) {
+            const auto& dstSet = iter->second;
+            for (auto& dst : dstSet) {
                 routeList.emplace_back(std::make_pair(&(iter->first), &dst));
             }
         }
@@ -622,15 +632,16 @@ BqsStatus ConfigInfoOperator::QueryAllRoutes(const uintptr_t mbufData, const boo
     return SaveQueryResult(routeList, mbufData, onlyQryNum);
 }
 
-BqsStatus ConfigInfoOperator::SaveQueryResult(std::list<std::pair<const EntityInfo *, const EntityInfo *>> &routeList,
-                                              const uintptr_t mbufData, const bool onlyQryNum) const
+BqsStatus ConfigInfoOperator::SaveQueryResult(
+    std::list<std::pair<const EntityInfo*, const EntityInfo*>>& routeList, const uintptr_t mbufData,
+    const bool onlyQryNum) const
 {
     // no need check cfgQry nullptr
-    ConfigQuery * const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
+    ConfigQuery* const cfgQry = PtrToPtr<void, ConfigQuery>(ValueToPtr(mbufData));
     const size_t totalRouteNum = routeList.size();
     if (onlyQryNum) {
         cfgQry->qry.routeQry.routeNum = static_cast<uint32_t>(totalRouteNum);
-        CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(ConfigQuery)));
+        CfgRetInfo* const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(mbufData + sizeof(ConfigQuery)));
         retInfo->retCode = static_cast<int32_t>(BQS_STATUS_OK);
         return BQS_STATUS_OK;
     }
@@ -638,7 +649,7 @@ BqsStatus ConfigInfoOperator::SaveQueryResult(std::list<std::pair<const EntityIn
     // check number
     const size_t routeNum = static_cast<size_t>(cfgQry->qry.routeQry.routeNum);
     const uintptr_t results = mbufData + sizeof(ConfigQuery) + sizeof(ConfigInfo) + (routeNum * sizeof(Route));
-    CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
+    CfgRetInfo* const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
     if (routeNum != totalRouteNum) {
         retInfo->retCode = static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
         BQS_LOG_ERROR("Route num in query info is [%lu], but searched route num is [%lu].", routeNum, totalRouteNum);
@@ -646,10 +657,10 @@ BqsStatus ConfigInfoOperator::SaveQueryResult(std::list<std::pair<const EntityIn
     }
 
     // convert and record route
-    Route * const routes = PtrToPtr<void, Route>(ValueToPtr(mbufData + sizeof(ConfigQuery) + sizeof(ConfigInfo)));
+    Route* const routes = PtrToPtr<void, Route>(ValueToPtr(mbufData + sizeof(ConfigQuery) + sizeof(ConfigInfo)));
     size_t idx = 0UL;
     for (auto iter = routeList.begin(); iter != routeList.end(); ++iter) {
-        Route * const route = PtrAdd<Route>(routes, routeNum, idx);
+        Route* const route = PtrAdd<Route>(routes, routeNum, idx);
         (void)ConvertToRoute(*(iter->first), *(iter->second), *route);
         idx++;
     }
@@ -657,7 +668,7 @@ BqsStatus ConfigInfoOperator::SaveQueryResult(std::list<std::pair<const EntityIn
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::ConvertToRoute(const EntityInfo &src, const EntityInfo &dst, Route &route) const
+BqsStatus ConfigInfoOperator::ConvertToRoute(const EntityInfo& src, const EntityInfo& dst, Route& route) const
 {
     route.status = RouteStatus::ACTIVE;
     (void)ConvertToEndpoint(src, route.src);
@@ -665,7 +676,7 @@ BqsStatus ConfigInfoOperator::ConvertToRoute(const EntityInfo &src, const Entity
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::ConvertToEndpoint(const EntityInfo &entity, Endpoint &endpoint) const
+BqsStatus ConfigInfoOperator::ConvertToEndpoint(const EntityInfo& entity, Endpoint& endpoint) const
 {
     auto ret = BQS_STATUS_OK;
     endpoint.status = EndpointStatus::AVAILABLE;
@@ -687,8 +698,8 @@ BqsStatus ConfigInfoOperator::ConvertToEndpoint(const EntityInfo &entity, Endpoi
         }
         case dgw::EntityType::ENTITY_TAG: {
             endpoint.type = EndpointType::COMM_CHANNEL;
-            CommChannelAttr &attr = endpoint.attr.channelAttr;
-            const dgw::CommChannel * const channel = entity.GetCommChannel();
+            CommChannelAttr& attr = endpoint.attr.channelAttr;
+            const dgw::CommChannel* const channel = entity.GetCommChannel();
             if (channel != nullptr) {
                 attr.handle = PtrToValue(channel->GetHandle());
                 attr.localTagId = channel->GetLocalTagId();
@@ -709,7 +720,7 @@ BqsStatus ConfigInfoOperator::ConvertToEndpoint(const EntityInfo &entity, Endpoi
     return ret;
 }
 
-EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, const bool isQry) const
+EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint& endpoint, const bool isQry) const
 {
     uint32_t id = 0U;
     uint32_t localDeviceId = deviceId_;
@@ -719,9 +730,9 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, con
     args.globalId = endpoint.globalId;
     args.uuId = endpoint.modelId;
 
-    dgw::EntityType &eType = args.eType;
-    bqs::GroupPolicy &policy = args.policy;
-    const dgw::CommChannel* &channelPtr = args.channelPtr;
+    dgw::EntityType& eType = args.eType;
+    bqs::GroupPolicy& policy = args.policy;
+    const dgw::CommChannel*& channelPtr = args.channelPtr;
     auto ret = BQS_STATUS_OK;
     switch (endpoint.type) {
         case EndpointType::QUEUE: {
@@ -736,12 +747,12 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, con
         }
         case EndpointType::COMM_CHANNEL: {
             eType = dgw::EntityType::ENTITY_TAG;
-            const CommChannelAttr &attr = endpoint.attr.channelAttr;
+            const CommChannelAttr& attr = endpoint.attr.channelAttr;
             ret = CheckCommChannelAttr(attr, isQry);
             if (ret == BQS_STATUS_OK) {
-                const dgw::CommChannel channel(ValueToPtr(attr.handle), attr.localTagId, attr.peerTagId,
-                                               attr.localRankId, attr.peerRankId, attr.localTagDepth,
-                                               attr.peerTagDepth);
+                const dgw::CommChannel channel(
+                    ValueToPtr(attr.handle), attr.localTagId, attr.peerTagId, attr.localRankId, attr.peerRankId,
+                    attr.localTagDepth, attr.peerTagDepth);
                 id = dgw::CommChannelManager::GetInstance().GetCommChannelId(channel, channelPtr);
             }
             break;
@@ -771,12 +782,13 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, con
         localDeviceId = (endpoint.resId & ROUCE_ID_DEVICE_ID_DATA_MASK);
     }
 
-    uint32_t &queueType = args.queueType;
+    uint32_t& queueType = args.queueType;
     if (endpoint.type == EndpointType::MEM_QUEUE) {
         // parse hostQ and device belonged
         bool isHostQueue = (((endpoint.resId >> RESOURCE_ID_HOST_DEVICE_BIT_NUM) & 1) != 0) ? true : false;
         uint32_t onwerDeviceId = ((endpoint.resId & RESOURCE_ID_ENABLE_BIT_MASK) != 0U) ?
-                                  (endpoint.resId & ROUCE_ID_DEVICE_ID_DATA_MASK) : deviceId_;
+                                     (endpoint.resId & ROUCE_ID_DEVICE_ID_DATA_MASK) :
+                                     deviceId_;
         localDeviceId = onwerDeviceId;
         queueType = endpoint.attr.memQueueAttr.queueType;
         if ((bqs::GetRunContext() != bqs::RunContext::HOST) && (&drvGetLocalDevIDByHostDevID != nullptr)) {
@@ -786,9 +798,10 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, con
                 localDeviceId = onwerDeviceId;
             }
         }
-        BQS_LOG_INFO("[CreateEntityInfo] qid=%u, endpoint.resId=%u, isHostQueue=%d, "
-                     "onwerDeviceId=%u, localDeviceId=%u, queueType=%u",
-                     id, endpoint.resId, isHostQueue, onwerDeviceId, localDeviceId, queueType);
+        BQS_LOG_INFO(
+            "[CreateEntityInfo] qid=%u, endpoint.resId=%u, isHostQueue=%d, "
+            "onwerDeviceId=%u, localDeviceId=%u, queueType=%u",
+            id, endpoint.resId, isHostQueue, onwerDeviceId, localDeviceId, queueType);
     }
 
     // create entity info ptr
@@ -796,8 +809,7 @@ EntityInfoPtr ConfigInfoOperator::CreateEntityInfo(const Endpoint &endpoint, con
     try {
         entityPtr = std::make_shared<EntityInfo>(id, localDeviceId, &args);
     } catch (...) {
-        BQS_LOG_ERROR("Create entity info ptr failed, id[%u], type[%d].",
-            id, static_cast<int32_t>(eType));
+        BQS_LOG_ERROR("Create entity info ptr failed, id[%u], type[%d].", id, static_cast<int32_t>(eType));
     }
 
     BQS_LOG_INFO("Create entity success: %s", entityPtr->ToString().c_str());
@@ -810,8 +822,9 @@ BqsStatus ConfigInfoOperator::AttachAndCheckQueue(const EntityInfo& src, const E
     auto dstRet = AttachQueue(dst);
     auto ret = (srcRet != BQS_STATUS_OK) ? srcRet : dstRet;
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Fail to attach src[%s] or dst[%s], srcRet[%d], dstRet[%d].",
-            src.ToString().c_str(), dst.ToString().c_str(), static_cast<int32_t>(srcRet), static_cast<int32_t>(dstRet));
+        BQS_LOG_ERROR(
+            "Fail to attach src[%s] or dst[%s], srcRet[%d], dstRet[%d].", src.ToString().c_str(),
+            dst.ToString().c_str(), static_cast<int32_t>(srcRet), static_cast<int32_t>(dstRet));
         return ret;
     }
 
@@ -819,14 +832,15 @@ BqsStatus ConfigInfoOperator::AttachAndCheckQueue(const EntityInfo& src, const E
     dstRet = CheckQueueAuth(dst, false);
     ret = (srcRet != BQS_STATUS_OK) ? srcRet : dstRet;
     if (ret != BQS_STATUS_OK) {
-        BQS_LOG_ERROR("Fail to check src[%s] or dst[%s] queue auth, srcRet[%d], dstRet[%d].",
-            src.ToString().c_str(), dst.ToString().c_str(), static_cast<int32_t>(srcRet), static_cast<int32_t>(dstRet));
+        BQS_LOG_ERROR(
+            "Fail to check src[%s] or dst[%s] queue auth, srcRet[%d], dstRet[%d].", src.ToString().c_str(),
+            dst.ToString().c_str(), static_cast<int32_t>(srcRet), static_cast<int32_t>(dstRet));
         return ret;
     }
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::AttachQueue(const EntityInfo &info) const
+BqsStatus ConfigInfoOperator::AttachQueue(const EntityInfo& info) const
 {
     auto ret = BQS_STATUS_OK;
     switch (info.GetType()) {
@@ -836,8 +850,9 @@ BqsStatus ConfigInfoOperator::AttachQueue(const EntityInfo &info) const
         case dgw::EntityType::ENTITY_QUEUE: {
             const auto drvRet = halQueueAttach(info.GetDeviceId(), info.GetId(), 0);
             if (drvRet != DRV_ERROR_NONE) {
-                BQS_LOG_ERROR("Fail to attach queue[%s], device[%u], ret[%d]", info.ToString().c_str(),
-                              info.GetDeviceId(), static_cast<int32_t>(drvRet));
+                BQS_LOG_ERROR(
+                    "Fail to attach queue[%s], device[%u], ret[%d]", info.ToString().c_str(), info.GetDeviceId(),
+                    static_cast<int32_t>(drvRet));
                 ret = BQS_STATUS_DRIVER_ERROR;
             }
             break;
@@ -857,12 +872,12 @@ BqsStatus ConfigInfoOperator::AttachQueue(const EntityInfo &info) const
 
 BqsStatus ConfigInfoOperator::AttachQueueInGroup(const uint32_t groupId) const
 {
-    auto &entitiesInGroup = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
+    auto& entitiesInGroup = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
     if (entitiesInGroup.empty()) {
         BQS_LOG_ERROR("Group[%u] does not exist.", groupId);
         return BQS_STATUS_GROUP_NOT_EXIST;
     }
-    for (const auto &info : entitiesInGroup) {
+    for (const auto& info : entitiesInGroup) {
         if (info == nullptr) {
             BQS_LOG_ERROR("EntityInfo in Group[%u] is nullptr.", groupId);
             return BQS_STATUS_INNER_ERROR;
@@ -871,8 +886,9 @@ BqsStatus ConfigInfoOperator::AttachQueueInGroup(const uint32_t groupId) const
         if (info->GetType() == dgw::EntityType::ENTITY_QUEUE) {
             const auto drvRet = halQueueAttach(info->GetDeviceId(), info->GetId(), 0);
             if (drvRet != DRV_ERROR_NONE) {
-                BQS_LOG_ERROR("Fail to attach queue[%s] in group[%u], ret[%d]",
-                    info->ToString().c_str(), groupId, static_cast<int32_t>(drvRet));
+                BQS_LOG_ERROR(
+                    "Fail to attach queue[%s] in group[%u], ret[%d]", info->ToString().c_str(), groupId,
+                    static_cast<int32_t>(drvRet));
                 return BQS_STATUS_DRIVER_ERROR;
             }
         }
@@ -900,16 +916,17 @@ BqsStatus ConfigInfoOperator::PreprocessUpdateCfgInfo(const uintptr_t mbufData, 
 
 BqsStatus ConfigInfoOperator::CheckFlowQueueAuth() const
 {
-    ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
+    ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
     // create group no need attach queue and check queue auth
     if (cfgInfo->cmd == ConfigCmd::DGW_CFG_CMD_BIND_ROUTE) {
         size_t idx = 0UL;
-        for (auto &entityPair : updateCfgInfo_->entitiesInRoutes) {
+        for (auto& entityPair : updateCfgInfo_->entitiesInRoutes) {
             // do attach queue and check src own read auth, dst own write auth
             const auto ret = AttachAndCheckQueue(*(entityPair.first), *(entityPair.second));
             if (ret != BQS_STATUS_OK) {
-                BQS_LOG_ERROR("Src[%s] Dst[%s] do attach queue and check auth failed",
-                    entityPair.first->ToString().c_str(), entityPair.second->ToString().c_str());
+                BQS_LOG_ERROR(
+                    "Src[%s] Dst[%s] do attach queue and check auth failed", entityPair.first->ToString().c_str(),
+                    entityPair.second->ToString().c_str());
             }
             updateCfgInfo_->results[idx]->retCode = static_cast<int32_t>(ret);
             idx++;
@@ -918,7 +935,7 @@ BqsStatus ConfigInfoOperator::CheckFlowQueueAuth() const
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::CheckQueueAuth(const EntityInfo &info, const bool isSrc) const
+BqsStatus ConfigInfoOperator::CheckQueueAuth(const EntityInfo& info, const bool isSrc) const
 {
     if (info.GetType() == dgw::EntityType::ENTITY_QUEUE) {
         if (info.GetQueueType() == bqs::CLIENT_Q) {
@@ -935,8 +952,8 @@ BqsStatus ConfigInfoOperator::CheckQueueAuth(const EntityInfo &info, const bool 
 
 BqsStatus ConfigInfoOperator::CheckQueueAuthForGroup(const uint32_t groupId, const bool isSrc) const
 {
-    auto &entityVec = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
-    for (const auto &entityInfoPtr : entityVec) {
+    auto& entityVec = BindRelation::GetInstance().GetEntitiesInGroup(groupId);
+    for (const auto& entityInfoPtr : entityVec) {
         if (entityInfoPtr == nullptr) {
             BQS_LOG_ERROR("EntityInfo in Group[%u] is nullptr.", groupId);
             return BQS_STATUS_INNER_ERROR;
@@ -966,20 +983,19 @@ BqsStatus ConfigInfoOperator::CheckQueueAuth(const uint32_t queueId, const uint3
     QueueQueryInputPara inputPara = {&queAttr, static_cast<uint32_t>(sizeof(queAttr))};
     const auto drvRet = halQueueQuery(resId, QUEUE_QUERY_QUE_ATTR_OF_CUR_PROC, &inputPara, &outputPara);
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("Fail to query queue info, queue[%u], resId[%u], ret[%d]",
-            queueId, resId, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "Fail to query queue info, queue[%u], resId[%u], ret[%d]", queueId, resId, static_cast<int32_t>(drvRet));
         return BQS_STATUS_DRIVER_ERROR;
     }
 
     const uint32_t authValue = isSrc ? static_cast<uint32_t>(output.get()->queQueryQueueAttrInfo.attr.read) :
-        static_cast<uint32_t>(output.get()->queQueryQueueAttrInfo.attr.write);
+                                       static_cast<uint32_t>(output.get()->queQueryQueueAttrInfo.attr.write);
     if (authValue == 0U) {
-        BQS_LOG_ERROR("Queue[%u] res[%u] did not own needed authority, isSrc[%d].",
-            queueId, resId, static_cast<int32_t>(isSrc));
+        BQS_LOG_ERROR(
+            "Queue[%u] res[%u] did not own needed authority, isSrc[%d].", queueId, resId, static_cast<int32_t>(isSrc));
         return BQS_STATUS_QUEUE_AHTU_ERROR;
     }
-    BQS_LOG_INFO("Queue[%u] res[%u] check authority success, isSrc[%d]",
-        queueId, resId, static_cast<int32_t>(isSrc));
+    BQS_LOG_INFO("Queue[%u] res[%u] check authority success, isSrc[%d]", queueId, resId, static_cast<int32_t>(isSrc));
     return BQS_STATUS_OK;
 }
 
@@ -991,7 +1007,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordUpdateCfgInfo(const uintptr_t mbufDa
         return BQS_STATUS_PARAM_INVALID;
     }
     // check cfgInfo
-    ConfigInfo * const cfgInfo = PtrToPtr<void, ConfigInfo>(ValueToPtr(mbufData));
+    ConfigInfo* const cfgInfo = PtrToPtr<void, ConfigInfo>(ValueToPtr(mbufData));
     if (cfgInfo == nullptr) {
         BQS_LOG_ERROR("cfgInfo is nullptr.");
         return BQS_STATUS_PARAM_INVALID;
@@ -1051,7 +1067,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordUpdateCfgInfo(const uintptr_t mbufDa
 
 BqsStatus ConfigInfoOperator::CheckAndRecordRouteInfo() const
 {
-    const ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
+    const ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
     const size_t routeNum = static_cast<size_t>(cfgInfo->cfg.routesCfg.routeNum);
     // check route num
     if ((routeNum == 0UL) || (routeNum > MAX_ROUTES_NUM)) {
@@ -1066,15 +1082,15 @@ BqsStatus ConfigInfoOperator::CheckAndRecordRouteInfo() const
         return BQS_STATUS_PARAM_INVALID;
     }
 
-    auto &routeVec = updateCfgInfo_->routes;
-    auto &resultVec = updateCfgInfo_->results;
-    auto &entityPairVec = updateCfgInfo_->entitiesInRoutes;
+    auto& routeVec = updateCfgInfo_->routes;
+    auto& resultVec = updateCfgInfo_->results;
+    auto& entityPairVec = updateCfgInfo_->entitiesInRoutes;
     const uintptr_t routesAddr = updateCfgInfo_->mbufData + sizeof(ConfigInfo);
-    Route * const routes = PtrToPtr<void, Route>(ValueToPtr(routesAddr));
-    CfgRetInfo * const results = PtrToPtr<void, CfgRetInfo>(ValueToPtr(routesAddr + (routeNum * sizeof(Route))));
+    Route* const routes = PtrToPtr<void, Route>(ValueToPtr(routesAddr));
+    CfgRetInfo* const results = PtrToPtr<void, CfgRetInfo>(ValueToPtr(routesAddr + (routeNum * sizeof(Route))));
     for (size_t idx = 0UL; idx < routeNum; idx++) {
-        Route * const route = PtrAdd<Route>(routes, routeNum, idx);
-        CfgRetInfo * const result = PtrAdd<CfgRetInfo>(results, routeNum, idx);
+        Route* const route = PtrAdd<Route>(routes, routeNum, idx);
+        CfgRetInfo* const result = PtrAdd<CfgRetInfo>(results, routeNum, idx);
         // initialize retCode
         result->retCode = static_cast<int32_t>(BQS_STATUS_OK);
         routeVec.emplace_back(route);
@@ -1093,12 +1109,12 @@ BqsStatus ConfigInfoOperator::CheckAndRecordRouteInfo() const
 
 BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
 {
-    const ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
+    const ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
     const size_t endpointNum = static_cast<size_t>(cfgInfo->cfg.groupCfg.endpointNum);
     // check endpoint num
     if ((endpointNum == 0UL) || (endpointNum > MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP)) {
-        BQS_LOG_ERROR("Group num[%zu] is invalid, max allowed value is [%u].",
-            endpointNum, MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP);
+        BQS_LOG_ERROR(
+            "Group num[%zu] is invalid, max allowed value is [%u].", endpointNum, MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP);
         return BQS_STATUS_PARAM_INVALID;
     }
 
@@ -1110,19 +1126,19 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
         return BQS_STATUS_PARAM_INVALID;
     }
 
-    auto &endpointVec = updateCfgInfo_->endpointsInGroup;
-    auto &resultVec = updateCfgInfo_->results;
-    auto &entityVec = updateCfgInfo_->entitiesInGroup;
+    auto& endpointVec = updateCfgInfo_->endpointsInGroup;
+    auto& resultVec = updateCfgInfo_->results;
+    auto& entityVec = updateCfgInfo_->entitiesInGroup;
     const uintptr_t endpointsAddr = updateCfgInfo_->mbufData + sizeof(ConfigInfo);
-    Endpoint * const endpoints = PtrToPtr<void, Endpoint>(ValueToPtr(endpointsAddr));
+    Endpoint* const endpoints = PtrToPtr<void, Endpoint>(ValueToPtr(endpointsAddr));
     const uintptr_t results = endpointsAddr + (endpointNum * sizeof(Endpoint));
     // only one result
-    CfgRetInfo * const result = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
+    CfgRetInfo* const result = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
     resultVec.emplace_back(result);
 
     std::set<std::tuple<const uint32_t, const bool, const uint32_t, const dgw::EntityType>> entitySet;
     for (size_t idx = 0UL; idx < endpointNum; idx++) {
-        Endpoint * const endpoint = PtrAdd<Endpoint>(endpoints, endpointNum, idx);
+        Endpoint* const endpoint = PtrAdd<Endpoint>(endpoints, endpointNum, idx);
         endpointVec.emplace_back(endpoint);
         // create entity info ptr
         EntityInfoPtr entity = CreateEntityInfo(*endpoint, false);
@@ -1136,7 +1152,8 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
         }
         entityVec.emplace_back(entity);
         uint32_t deviceId = ((endpoint->resId & RESOURCE_ID_ENABLE_BIT_MASK) != 0U) ?
-                             (endpoint->resId & ROUCE_ID_DEVICE_ID_DATA_MASK) : deviceId_;
+                                (endpoint->resId & ROUCE_ID_DEVICE_ID_DATA_MASK) :
+                                deviceId_;
         bool isHostQueue = (((endpoint->resId >> RESOURCE_ID_HOST_DEVICE_BIT_NUM) & 1) != 0U) ? true : false;
         (void)entitySet.emplace(std::make_tuple(deviceId, isHostQueue, entity->GetId(), entity->GetType()));
     }
@@ -1149,10 +1166,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
     return BQS_STATUS_OK;
 }
 
-BqsStatus ConfigInfoOperator::CheckAndRecordCfgInfo() const
-{
-    return CheckAndRecordCommonCfg(sizeof(ConfigInfo));
-}
+BqsStatus ConfigInfoOperator::CheckAndRecordCfgInfo() const { return CheckAndRecordCommonCfg(sizeof(ConfigInfo)); }
 
 BqsStatus ConfigInfoOperator::CheckAndRecordCommonCfg(const size_t resultOffset) const
 {
@@ -1164,10 +1178,10 @@ BqsStatus ConfigInfoOperator::CheckAndRecordCommonCfg(const size_t resultOffset)
         return BQS_STATUS_PARAM_INVALID;
     }
 
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
     // only one result
     const uintptr_t results = updateCfgInfo_->mbufData + resultOffset;
-    CfgRetInfo * const result = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
+    CfgRetInfo* const result = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
     resultVec.emplace_back(result);
     BQS_LOG_INFO("CheckAndRecordCommonCfg for %zu", resultOffset);
     return BQS_STATUS_OK;
@@ -1175,7 +1189,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordCommonCfg(const size_t resultOffset)
 
 BqsStatus ConfigInfoOperator::CheckAndRecordRedeployCfg() const
 {
-    const ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
+    const ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
     const size_t rootModelIdsLen = cfgInfo->cfg.reDeployCfg.rootModelNum * sizeof(uint32_t);
     return CheckAndRecordCommonCfg(rootModelIdsLen + sizeof(ConfigInfo));
 }
@@ -1183,15 +1197,15 @@ BqsStatus ConfigInfoOperator::CheckAndRecordRedeployCfg() const
 BqsStatus ConfigInfoOperator::ProcessUpdateRoutes(const uint32_t index) const
 {
     // no need to check cfgInfo and updateCfgInfo_ nullptr
-    ConfigInfo * const cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
-    auto &entityPairVec = updateCfgInfo_->entitiesInRoutes;
+    ConfigInfo* const cfgInfo = updateCfgInfo_->cfgInfo;
+    auto& resultVec = updateCfgInfo_->results;
+    auto& entityPairVec = updateCfgInfo_->entitiesInRoutes;
 
     auto returnCode = BQS_STATUS_OK;
     size_t idx = 0UL;
-    for (auto &entityPair : entityPairVec) {
+    for (auto& entityPair : entityPairVec) {
         // check preprocess result
-        CfgRetInfo * const retInfo = resultVec[idx];
+        CfgRetInfo* const retInfo = resultVec[idx];
         idx++;
         const auto preRet = static_cast<BqsStatus>(retInfo->retCode);
         if (preRet != BQS_STATUS_OK) {
@@ -1200,17 +1214,19 @@ BqsStatus ConfigInfoOperator::ProcessUpdateRoutes(const uint32_t index) const
         }
         // create entity info
         const auto ret = (cfgInfo->cmd == ConfigCmd::DGW_CFG_CMD_BIND_ROUTE) ?
-            BindRelation::GetInstance().Bind(*(entityPair.first), *(entityPair.second), index) :
-            BindRelation::GetInstance().UnBind(*(entityPair.first), *(entityPair.second), index);
+                             BindRelation::GetInstance().Bind(*(entityPair.first), *(entityPair.second), index) :
+                             BindRelation::GetInstance().UnBind(*(entityPair.first), *(entityPair.second), index);
         if (ret == BQS_STATUS_RETRY) {
             continue;
         }
 
         retInfo->retCode = static_cast<int32_t>(ret);
         returnCode = (returnCode == BQS_STATUS_OK) ? ret : returnCode;
-        BQS_LOG_RUN_INFO("Bind/unbind relation operate, cmd[%d], stage[server:process],"
-            "relation[src:%s, dst:%s, result:%d]", static_cast<int32_t>(cfgInfo->cmd),
-            entityPair.first->ToString().c_str(), entityPair.second->ToString().c_str(), static_cast<int32_t>(ret));
+        BQS_LOG_RUN_INFO(
+            "Bind/unbind relation operate, cmd[%d], stage[server:process],"
+            "relation[src:%s, dst:%s, result:%d]",
+            static_cast<int32_t>(cfgInfo->cmd), entityPair.first->ToString().c_str(),
+            entityPair.second->ToString().c_str(), static_cast<int32_t>(ret));
     }
     BindRelation::GetInstance().Order(index);
     return returnCode;
@@ -1221,8 +1237,8 @@ BqsStatus ConfigInfoOperator::ProcessAddGroup() const
     // no need to check cfgInfo and updateCfgInfo_ nullptr
     // get endpoint number
     auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
-    auto &entityVec = updateCfgInfo_->entitiesInGroup;
+    auto& resultVec = updateCfgInfo_->results;
+    auto& entityVec = updateCfgInfo_->entitiesInGroup;
 
     // create group
     uint32_t groupId = 0U;
@@ -1233,7 +1249,8 @@ BqsStatus ConfigInfoOperator::ProcessAddGroup() const
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
 
-    BQS_LOG_RUN_INFO("Add group operate, cmd[%d], stage[server:process], endpointNum[%zu], groupId[%u], result:[%d]",
+    BQS_LOG_RUN_INFO(
+        "Add group operate, cmd[%d], stage[server:process], endpointNum[%zu], groupId[%u], result:[%d]",
         static_cast<int32_t>(cfgInfo->cmd), entityVec.size(), groupId, static_cast<int32_t>(retCode));
     return retCode;
 }
@@ -1242,7 +1259,7 @@ BqsStatus ConfigInfoOperator::ProcessDelGroup() const
 {
     // get endpoint number
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
     const uint32_t groupId = static_cast<uint32_t>(cfgInfo->cfg.groupCfg.groupId);
 
     // delete group
@@ -1250,7 +1267,8 @@ BqsStatus ConfigInfoOperator::ProcessDelGroup() const
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
 
-    BQS_LOG_RUN_INFO("Delete group operate, cmd[%d], stage[server:process], groupId[%u], result:[%d]",
+    BQS_LOG_RUN_INFO(
+        "Delete group operate, cmd[%d], stage[server:process], groupId[%u], result:[%d]",
         static_cast<int32_t>(cfgInfo->cmd), groupId, static_cast<int32_t>(retCode));
     return retCode;
 }
@@ -1259,7 +1277,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateProfiling() const
 {
     // get prof mode
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
     const ProfilingMode mode = cfgInfo->cfg.profCfg.profMode;
     // set prof mode
     auto retCode = ProfileManager::GetInstance(0U).UpdateProfilingMode(mode);
@@ -1268,7 +1286,8 @@ BqsStatus ConfigInfoOperator::ProcessUpdateProfiling() const
     }
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
-    BQS_LOG_RUN_INFO("Update profiling operate, cmd[%d], stage[server:process], profiling mode[%u], result:[%d]",
+    BQS_LOG_RUN_INFO(
+        "Update profiling operate, cmd[%d], stage[server:process], profiling mode[%u], result:[%d]",
         static_cast<int32_t>(cfgInfo->cmd), static_cast<uint32_t>(mode), static_cast<int32_t>(retCode));
     return retCode;
 }
@@ -1276,7 +1295,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateProfiling() const
 BqsStatus ConfigInfoOperator::ProcessUpdateHcclProtocol() const
 {
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
     const HcclProtocolType protocol = cfgInfo->cfg.hcclProtocolCfg.protocol;
 
     // set protocol
@@ -1300,7 +1319,8 @@ BqsStatus ConfigInfoOperator::ProcessUpdateHcclProtocol() const
     }
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
-    BQS_LOG_RUN_INFO("Update hccl_protocol operate, cmd[%d], stage[server:process], protocol[%d], result:[%d]",
+    BQS_LOG_RUN_INFO(
+        "Update hccl_protocol operate, cmd[%d], stage[server:process], protocol[%d], result:[%d]",
         static_cast<int32_t>(cfgInfo->cmd), static_cast<int32_t>(protocol), static_cast<int32_t>(retCode));
     return retCode;
 }
@@ -1309,10 +1329,10 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
 {
     BQS_LOG_INFO("ProcessInitDynamicSched");
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
 
     const uintptr_t dynamicSchedCfgAddr = updateCfgInfo_->mbufData + sizeof(ConfigInfo);
-    const DynamicSchedConfigV2 * const dynamicCfg =
+    const DynamicSchedConfigV2* const dynamicCfg =
         PtrToPtr<void, DynamicSchedConfigV2>(ValueToPtr(dynamicSchedCfgAddr));
 
     BqsStatus retCode = BQS_STATUS_OK;
@@ -1321,15 +1341,17 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
 
     auto drvRet = halQueueAttach(localRequestQDeviceId, dynamicCfg->requestQ.queueId, 0);
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("Fail to attach queue[%u], device[%u], ret[%d]", dynamicCfg->requestQ.queueId,
-                      localRequestQDeviceId, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "Fail to attach queue[%u], device[%u], ret[%d]", dynamicCfg->requestQ.queueId, localRequestQDeviceId,
+            static_cast<int32_t>(drvRet));
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR);
         return BQS_STATUS_DRIVER_ERROR;
     }
     drvRet = halQueueAttach(localResponseDeviceId, dynamicCfg->responseQ.queueId, 0);
     if (drvRet != DRV_ERROR_NONE) {
-        BQS_LOG_ERROR("Fail to attach queue[%u], device[%u], ret[%d]", dynamicCfg->responseQ.queueId,
-                      localResponseDeviceId, static_cast<int32_t>(drvRet));
+        BQS_LOG_ERROR(
+            "Fail to attach queue[%u], device[%u], ret[%d]", dynamicCfg->responseQ.queueId, localResponseDeviceId,
+            static_cast<int32_t>(drvRet));
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR);
         return BQS_STATUS_DRIVER_ERROR;
     }
@@ -1347,7 +1369,8 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
     }
     const auto addCfgRet = dgw::DynamicSchedMgr::GetInstance(resIndex).AddRootModelInfo(schedCfgInfo);
     if (addCfgRet != dgw::FsmStatus::FSM_SUCCESS) {
-        BQS_LOG_ERROR("Fail to add dynamic sched config, rootModelId[%u], ret[%d]", schedCfgInfo.rootModelId,
+        BQS_LOG_ERROR(
+            "Fail to add dynamic sched config, rootModelId[%u], ret[%d]", schedCfgInfo.rootModelId,
             static_cast<int32_t>(addCfgRet));
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_DYNAMIC_SCHEDULE_ERROR);
         return BQS_STATUS_DYNAMIC_SCHEDULE_ERROR;
@@ -1357,28 +1380,32 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
     QueueSetInput inPut;
     inPut.queSetWorkMode.qid = schedCfgInfo.responseQue.queueId;
     inPut.queSetWorkMode.workMode = QUEUE_MODE_PUSH;
-    inPutParam.inBuff = static_cast<void *>(&inPut);
+    inPutParam.inBuff = static_cast<void*>(&inPut);
     inPutParam.inLen = static_cast<uint32_t>(sizeof(QueueSetInput));
     drvRet = halQueueSet(0U, QUEUE_SET_WORK_MODE, &inPutParam);
     BQS_LOG_RUN_INFO("Set queue[%u] work mode to push for dynamic schedule.", schedCfgInfo.responseQue.queueId);
 
-    if ((SubscribeQueueEvent(!schedCfgInfo.requestQue.isClientQ, schedCfgInfo.requestQue.queueId,
-        schedCfgInfo.requestQue.deviceId, resIndex, false) != BQS_STATUS_OK) ||
-        (SubscribeQueueEvent(!schedCfgInfo.responseQue.isClientQ, schedCfgInfo.responseQue.queueId,
-        schedCfgInfo.responseQue.deviceId, resIndex, true) != BQS_STATUS_OK)) {
-        BQS_LOG_ERROR("Fail to subscribe enque event of [qid:%u-deviceId:%u-isclientQ:%d] or "
+    if ((SubscribeQueueEvent(
+             !schedCfgInfo.requestQue.isClientQ, schedCfgInfo.requestQue.queueId, schedCfgInfo.requestQue.deviceId,
+             resIndex, false) != BQS_STATUS_OK) ||
+        (SubscribeQueueEvent(
+             !schedCfgInfo.responseQue.isClientQ, schedCfgInfo.responseQue.queueId, schedCfgInfo.responseQue.deviceId,
+             resIndex, true) != BQS_STATUS_OK)) {
+        BQS_LOG_ERROR(
+            "Fail to subscribe enque event of [qid:%u-deviceId:%u-isclientQ:%d] or "
             "subscribe f2nf of [qid:%u-deviceId:%u-isclientQ:%d]",
             schedCfgInfo.responseQue.queueId, schedCfgInfo.responseQue.deviceId, schedCfgInfo.responseQue.isClientQ,
             schedCfgInfo.requestQue.queueId, schedCfgInfo.requestQue.deviceId, schedCfgInfo.responseQue.isClientQ);
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         return BQS_STATUS_INNER_ERROR;
     }
-    dgw::ScheduleConfig::GetInstance().
-        RecordConfig(dynamicCfg->rootModelId, schedCfgInfo.requestQue, schedCfgInfo.responseQue);
+    dgw::ScheduleConfig::GetInstance().RecordConfig(
+        dynamicCfg->rootModelId, schedCfgInfo.requestQue, schedCfgInfo.responseQue);
 
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
-    BQS_LOG_RUN_INFO("Init dynamicSched[%u] operate, cmd[%d], stage[server:process], rootModelId[%u], result:[%d]",
+    BQS_LOG_RUN_INFO(
+        "Init dynamicSched[%u] operate, cmd[%d], stage[server:process], rootModelId[%u], result:[%d]",
         localRequestQDeviceId, static_cast<int32_t>(cfgInfo->cmd), dynamicCfg->rootModelId,
         static_cast<int32_t>(retCode));
     return retCode;
@@ -1397,29 +1424,30 @@ uint32_t ConfigInfoOperator::ParseDeviceId(const uint32_t rawDeviceId) const
     return localDeviceId;
 }
 
-BqsStatus ConfigInfoOperator::SubscribeQueueEvent(const bool isLocalQ, const uint32_t queueId, const uint32_t deviceId,
-    const uint32_t resIndex, const bool isEnqueue) const
+BqsStatus ConfigInfoOperator::SubscribeQueueEvent(
+    const bool isLocalQ, const uint32_t queueId, const uint32_t deviceId, const uint32_t resIndex,
+    const bool isEnqueue) const
 {
     const auto subscribeManager = Subscribers::GetInstance().GetSubscribeManager(resIndex, deviceId);
     if (subscribeManager == nullptr) {
-        BQS_LOG_ERROR("Failed to find subscribeManager for isLocalQ:%d, device: %u, resIndex: %u",
-            static_cast<int32_t>(isLocalQ), deviceId, resIndex);
+        BQS_LOG_ERROR(
+            "Failed to find subscribeManager for isLocalQ:%d, device: %u, resIndex: %u", static_cast<int32_t>(isLocalQ),
+            deviceId, resIndex);
         return BQS_STATUS_INNER_ERROR;
     }
-    return isEnqueue ? subscribeManager->Subscribe(queueId) :
-        subscribeManager->SubscribeFullToNotFull(queueId);
+    return isEnqueue ? subscribeManager->Subscribe(queueId) : subscribeManager->SubscribeFullToNotFull(queueId);
 }
 
-BqsStatus ConfigInfoOperator::CheckCommChannelAttr(const CommChannelAttr &attr, const bool isQry) const
+BqsStatus ConfigInfoOperator::CheckCommChannelAttr(const CommChannelAttr& attr, const bool isQry) const
 {
     if (attr.localTagId != attr.peerTagId) {
-        BQS_LOG_ERROR("Local tag id[%u] is not equal with peer tag id[%u]. Please check!",
-            attr.localTagId, attr.peerTagId);
+        BQS_LOG_ERROR(
+            "Local tag id[%u] is not equal with peer tag id[%u]. Please check!", attr.localTagId, attr.peerTagId);
         return BQS_STATUS_PARAM_INVALID;
     }
     if (attr.localRankId == attr.peerRankId) {
-        BQS_LOG_ERROR("local rank id[%u] is equal with peer rank id[%u]. Please check!",
-            attr.localRankId, attr.peerRankId);
+        BQS_LOG_ERROR(
+            "local rank id[%u] is equal with peer rank id[%u]. Please check!", attr.localRankId, attr.peerRankId);
         return BQS_STATUS_PARAM_INVALID;
     }
     if (isQry) {
@@ -1441,10 +1469,10 @@ BqsStatus ConfigInfoOperator::ProcessStopSchedule(const uint32_t index) const
 {
     BQS_LOG_RUN_INFO("ProcessStopSchedule");
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
 
     const uintptr_t rootModelIdsAddr = updateCfgInfo_->mbufData + sizeof(ConfigInfo);
-    const uint32_t * const rootModelIds = PtrToPtr<void, uint32_t>(ValueToPtr(rootModelIdsAddr));
+    const uint32_t* const rootModelIds = PtrToPtr<void, uint32_t>(ValueToPtr(rootModelIdsAddr));
     const uint32_t rootModelNum = cfgInfo->cfg.reDeployCfg.rootModelNum;
 
     if ((rootModelNum != 0U) && (rootModelIds == nullptr)) {
@@ -1471,10 +1499,10 @@ BqsStatus ConfigInfoOperator::ProcessRestartSchedule(const uint32_t index) const
 {
     BQS_LOG_RUN_INFO("ProcessRestartSchedule");
     const auto cfgInfo = updateCfgInfo_->cfgInfo;
-    auto &resultVec = updateCfgInfo_->results;
+    auto& resultVec = updateCfgInfo_->results;
 
     const uintptr_t rootModelIdsAddr = updateCfgInfo_->mbufData + sizeof(ConfigInfo);
-    const uint32_t * const rootModelIds = PtrToPtr<void, uint32_t>(ValueToPtr(rootModelIdsAddr));
+    const uint32_t* const rootModelIds = PtrToPtr<void, uint32_t>(ValueToPtr(rootModelIdsAddr));
     const uint32_t rootModelNum = cfgInfo->cfg.reDeployCfg.rootModelNum;
 
     if ((rootModelNum != 0U) && (rootModelIds == nullptr)) {
@@ -1502,4 +1530,4 @@ BqsStatus ConfigInfoOperator::ProcessRestartSchedule(const uint32_t index) const
     BQS_LOG_RUN_INFO("Finish ProcessRestartSchedule");
     return ret;
 }
-}
+} // namespace bqs

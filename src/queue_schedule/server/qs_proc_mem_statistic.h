@@ -16,36 +16,37 @@
 #include "common/bqs_log.h"
 
 namespace bqs {
-    struct ProcMemStatInfo {
-        uint64_t memAvg;
-        uint64_t memHwm;
-        uint64_t statCnt;
-        uint64_t memTotal;
-        ProcMemStatInfo() : memAvg(0UL), memHwm(0UL), statCnt(0UL), memTotal(0UL) {}
-    };
+struct ProcMemStatInfo {
+    uint64_t memAvg;
+    uint64_t memHwm;
+    uint64_t statCnt;
+    uint64_t memTotal;
+    ProcMemStatInfo() : memAvg(0UL), memHwm(0UL), statCnt(0UL), memTotal(0UL) {}
+};
 
-    class QsProcMemStatistic {
-    public:
-        QsProcMemStatistic();
-        virtual ~QsProcMemStatistic();
-        void StatisticProcMemInfo();
-        bool InitProcMemStatistic();
-        void PrintOutProcMemInfo(const uint32_t hostPid);
-    private:
-        void StatisticProcSvmMemInfo();
-        void StatisticProcXsMemInfo();
-        void StatisticProcOsMemInfo();
-        bool GetXsMemInfoFromFile(uint64_t &xsMemValue);
-        bool GetOsMemInfoFromFile(uint64_t &rssValue, uint64_t &hwmValue);
-        bool GetSvmInfoFromFile(uint64_t &svmValue);
-        ProcMemStatInfo rssMem_;
-        ProcMemStatInfo svmMem_;
-        ProcMemStatInfo xsMem_;
-        std::string rssMemCfgFile_;
-        std::string svmMemCfgFile_;
-        std::string xsMemCfgFile_;
-        bool runDevice_;
-        pid_t curPid_;
-    };
-}
+class QsProcMemStatistic {
+public:
+    QsProcMemStatistic();
+    virtual ~QsProcMemStatistic();
+    void StatisticProcMemInfo();
+    bool InitProcMemStatistic();
+    void PrintOutProcMemInfo(const uint32_t hostPid);
+
+private:
+    void StatisticProcSvmMemInfo();
+    void StatisticProcXsMemInfo();
+    void StatisticProcOsMemInfo();
+    bool GetXsMemInfoFromFile(uint64_t& xsMemValue);
+    bool GetOsMemInfoFromFile(uint64_t& rssValue, uint64_t& hwmValue);
+    bool GetSvmInfoFromFile(uint64_t& svmValue);
+    ProcMemStatInfo rssMem_;
+    ProcMemStatInfo svmMem_;
+    ProcMemStatInfo xsMem_;
+    std::string rssMemCfgFile_;
+    std::string svmMemCfgFile_;
+    std::string xsMemCfgFile_;
+    bool runDevice_;
+    pid_t curPid_;
+};
+} // namespace bqs
 #endif

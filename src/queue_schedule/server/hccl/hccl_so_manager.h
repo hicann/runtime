@@ -18,24 +18,23 @@
 #include "common/bqs_log.h"
 
 namespace dgw {
-using HcclInitCommFunc = HcclResult (*)(const char_t *, uint32_t, const CommAttr *, HcclComm *);
+using HcclInitCommFunc = HcclResult (*)(const char_t*, uint32_t, const CommAttr*, HcclComm*);
 using HcclFinalizeCommFunc = HcclResult (*)(HcclComm);
 
 // MPI API
-using HcclIsendFunc = int32_t(*)(void *, int32_t, HcclDataType, int32_t, int32_t, HcclComm, HcclRequest *);
-using HcclImrecvFunc = int32_t(*)(void *, int32_t, HcclDataType, HcclMessage *, HcclRequest *);
-using HcclImprobeFunc = int32_t(*)(int32_t, int32_t, HcclComm, int32_t *, HcclMessage *, HcclStatus *);
-using HcclGetCountFunc = int32_t(*)(const HcclStatus *, HcclDataType, int32_t *);
-using HcclTestSomeFunc = int32_t(*)(int32_t, HcclRequest[], int32_t *, int32_t[], HcclStatus[]);
+using HcclIsendFunc = int32_t (*)(void*, int32_t, HcclDataType, int32_t, int32_t, HcclComm, HcclRequest*);
+using HcclImrecvFunc = int32_t (*)(void*, int32_t, HcclDataType, HcclMessage*, HcclRequest*);
+using HcclImprobeFunc = int32_t (*)(int32_t, int32_t, HcclComm, int32_t*, HcclMessage*, HcclStatus*);
+using HcclGetCountFunc = int32_t (*)(const HcclStatus*, HcclDataType, int32_t*);
+using HcclTestSomeFunc = int32_t (*)(int32_t, HcclRequest[], int32_t*, int32_t[], HcclStatus[]);
 
 using HcclRegisterMemoryFunc = HcclResult (*)(HcclComm, void*, uint64_t);
 using HcclUnregisterMemoryFunc = HcclResult (*)(HcclComm, void*);
-using HcclSetGrpIdCallback = HcclResult (*)(int32_t(*)(int32_t, int32_t*, int32_t*));
-
+using HcclSetGrpIdCallback = HcclResult (*)(int32_t (*)(int32_t, int32_t*, int32_t*));
 
 class HcclSoManager {
 public:
-    static HcclSoManager *GetInstance();
+    static HcclSoManager* GetInstance();
 
     virtual ~HcclSoManager();
 
@@ -54,13 +53,13 @@ public:
      * @param name hccl function name
      * @return void *
      */
-    void *GetFunc(const std::string &name) const;
+    void* GetFunc(const std::string& name) const;
 
 private:
     HcclSoManager() = default;
 
-    std::unordered_map<std::string, void *> funcMap_;
-    void *soHandle_ = nullptr;
+    std::unordered_map<std::string, void*> funcMap_;
+    void* soHandle_ = nullptr;
 };
-}
+} // namespace dgw
 #endif // HCCL_SO_MANAGER_H
