@@ -642,7 +642,7 @@ rtError_t DeviceErrorProc::ProcErrorInfoWithoutLock(const TaskInfo* const taskPt
     const uint64_t beginTime = static_cast<uint64_t>(GetWallUs());
     while (cycleTimes != 0U) {
         devDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-        NULL_PTR_RETURN(devDrv, RT_ERROR_DEVICE_NULL);
+        NULL_PTR_RETURN(devDrv, RT_ERROR_DEVICE_RINGBUFFER_NO_DATA);
         error = devDrv->MemCopySync(hostAddr.get(), destMax, devMem, copySize, RT_MEMCPY_DEVICE_TO_HOST, false);
         ERROR_RETURN(
             error, "Failed to Memcpy from dev to host, destMax=%" PRIu64 ", copy size=%" PRIu64, destMax, copySize);
@@ -661,7 +661,7 @@ rtError_t DeviceErrorProc::ProcErrorInfoWithoutLock(const TaskInfo* const taskPt
     ERROR_RETURN(error, "Find error in ringbuffer!");
 
     devDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN(devDrv, RT_ERROR_DEVICE_NULL);
+    NULL_PTR_RETURN(devDrv, RT_ERROR_DEVICE_RINGBUFFER_NO_DATA);
 
     const uint32_t tail = ctrlInfo->tail;
     const uint32_t head = ctrlInfo->head;
@@ -713,13 +713,11 @@ rtError_t DeviceErrorProc::ProcTaskErrorWithoutLock(const TaskInfo* const taskPt
                                (false) :
                                ((taskPtr->type != TS_TASK_TYPE_KERNEL_AICPU) && !taskPtr->stream->isForceRecycle_);
     // 至少执行一次，返回失败、或尝试超时12s、或传入task为null，或为aicputask，或取到task的ringbuffer信息后，退出
-    // 如task的ringbuffer信息还没获取到，同时ringbuffer中无数据，则不退出循环，继续尝试
     const bool isTimeoutMs = Runtime::Instance()->IsSupportOpTimeoutMs();
     do {
         error = ProcErrorInfoWithoutLock(taskPtr, isPrintTaskInfo);
         isTimeOut = (GetWallUs() - beginTime) > 12000000ULL; // 12s
-    } while ((error == RT_ERROR_NONE || error == RT_ERROR_DEVICE_RINGBUFFER_NO_DATA) && !isTimeOut && needCheck &&
-             (taskPtr->isRingbufferGet == 0U) && (!isTimeoutMs));
+    } while ((error == RT_ERROR_NONE) && !isTimeOut && needCheck && (taskPtr->isRingbufferGet == 0U) && (!isTimeoutMs));
     return error;
 }
 
