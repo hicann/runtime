@@ -114,6 +114,9 @@
       "Value %s for environment variable %s is invalid. "                                                          \
       "Expected value: %s. ErrorCode=EE2002.\n",                                                                   \
       DLOG_ERROR)                                                                                                  \
+    /* EE4002 - Model_Unbinding_Errors */                                                                          \
+    X(EE4002, "EE4002", ("extend_info"), "Failed to unbind the stream to the model. %s. ErrorCode=EE4002.\n",      \
+      DLOG_ERROR)                                                                                                  \
     /* EZ2001 - Execution_Error (RAS Fault) */                                                                     \
     X(EZ2001, "EZ2001", ("aicore_error_info", "fault_type", "fault_info"),                                         \
       "%s\nFault %s occurs in the system: %s ErrorCode=EZ2001.\n", DLOG_ERROR)                                     \

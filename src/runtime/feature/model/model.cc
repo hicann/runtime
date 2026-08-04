@@ -636,12 +636,10 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
     RT_LOG(RT_LOG_DEBUG, "unbind stream start, stream_id=%d, model_id=%d.", streamId, id_);
 
     streamIn->SetLatestModlId(id_);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_AND_MSG_OUTER(
         streamIn->GetModelNum() == 0 || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)),
-        RT_ERROR_STREAM_MODEL,
-        "Failed to unbind the stream from the model. The specified stream is not bound to the current model. "
-        "stream_id=%d, specified model_id=%d.",
-        streamId, id_);
+        RT_ERROR_STREAM_MODEL, ErrorCode::EE4002,
+        RtFmtMsg("The specified stream (stream_id=%d) is not bound to the current model (model_id=%d)", streamId, id_));
 
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {
@@ -847,9 +845,14 @@ rtError_t Model::ConfigSqTail(void) const
 
 rtError_t Model::BuildSqCqForAutoSplit()
 {
-    COND_RETURN_ERROR_MSG_INNER(
-        static_cast<uint32_t>(StreamList_().size()) == 0U, RT_ERROR_MODEL_STREAM,
-        "The model does not contain any stream.");
+    COND_RETURN_AND_MSG_OUTER(
+        static_cast<uint32_t>(StreamList_().size()) == 0U, RT_ERROR_MODEL_STREAM, ErrorCode::EE1018,
+        "Ending model running instance build",
+        RtFmtMsg(
+            "The model running instance (model_id=%u) does not contain any stream. Before ending model running "
+            "instance build, you need to call the aclmdlRIBindStream API to bind a stream to the model running "
+            "instance.",
+            Id_()));
     Device* const dev = Context_()->Device_();
     uint32_t streamNum = 0U;
     rtError_t error;
@@ -965,18 +968,31 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
     const bool isNeedLoadAicpuModel = NeedLoadAicpuModelTask();
     Device* const dev = context_->Device_();
     if (isNeedLoadAicpuModel) {
-        COND_RETURN_ERROR_MSG_INNER(
-            endGraphNum_ != 1U, RT_ERROR_MODEL_ENDGRAPH, "Value %u for endGraphNum is invalid. Expect value: 1.",
-            endGraphNum_);
+        COND_RETURN_AND_MSG_OUTER(
+            endGraphNum_ != 1U, RT_ERROR_MODEL_ENDGRAPH, ErrorCode::EE1018, "Ending model running instance build",
+            "Before ending model running instance build, you need to call the aclmdlRIEndTask API to mark task "
+            "delivery end in the stream.");
         error = context_->StreamCreate(static_cast<uint32_t>(RT_STREAM_PRIORITY_DEFAULT), 0U, &stream);
         ERROR_RETURN_MSG_INNER(error, "Failed to create model load stream, retCode=%#x.", static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_DEBUG, "create a aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
     } else if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "The model does not contain any stream.");
+        COND_RETURN_AND_MSG_OUTER(
+            streams_.empty(), RT_ERROR_MODEL_STREAM, ErrorCode::EE1018, "Ending model running instance build",
+            RtFmtMsg(
+                "The model running instance (model_id=%u) does not contain any stream. Before ending model running "
+                "instance build, you need to call the aclmdlRIBindStream API to bind a stream to the model running "
+                "instance.",
+                Id_()));
         stream = context_->GetCtrlSQStream();
         RT_LOG(RT_LOG_DEBUG, "use ctrl sq for model load");
     } else {
-        COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "The model does not contain any stream.");
+        COND_RETURN_AND_MSG_OUTER(
+            streams_.empty(), RT_ERROR_MODEL_STREAM, ErrorCode::EE1018, "Ending model running instance build",
+            RtFmtMsg(
+                "The model running instance (model_id=%u) does not contain any stream. Before ending model running "
+                "instance build, you need to call the aclmdlRIBindStream API to bind a stream to the model running "
+                "instance.",
+                Id_()));
         stream = context_->DefaultStream_();
         RT_LOG(RT_LOG_DEBUG, "use default stream for model load");
     }
@@ -1387,9 +1403,9 @@ rtError_t Model::Execute(Stream* const stm, int32_t timeout)
     rtError_t error = RT_ERROR_NONE;
     Stream* curStm = stm;
 
-    COND_RETURN_ERROR_MSG_INNER(
-        (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT,
-        "Stream does not belong to the current context, stream_id=%u.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(
+        (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT, ErrorCode::EE1010, "Model",
+        "stream", RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", curStm->Id_(), curStm->Context_(), context_));
 
     COND_RETURN_ERROR(
         (GetModelExecutorType() == EXECUTOR_AICPU) && (queueInfo_.size() > 0UL), RT_ERROR_MODEL_EXE_FAILED,
@@ -1503,9 +1519,9 @@ rtError_t Model::ExecuteAsync(Stream* const stm)
 {
     rtError_t error = RT_ERROR_NONE;
     Stream* curStm = stm;
-    COND_RETURN_ERROR_MSG_INNER(
-        (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT,
-        "Stream does not belong to the current context, stream_id=%u.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(
+        (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT, ErrorCode::EE1010, "Model",
+        "stream", RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", curStm->Id_(), curStm->Context_(), context_));
     COND_RETURN_WARN(
         GetModelExecutorType() == EXECUTOR_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT, "feature does not support!");
 

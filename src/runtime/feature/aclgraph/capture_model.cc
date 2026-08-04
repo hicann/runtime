@@ -527,10 +527,9 @@ rtError_t CaptureModel::AllocateExternalRefreshTable()
 {
     externalEventRefreshHostTemplate_ = std::shared_ptr<uint8_t[]>(
         new (std::nothrow) uint8_t[externalEventRefreshLayout_.totalSize](), std::default_delete<uint8_t[]>());
-    COND_RETURN_ERROR_MSG_INNER(
-        externalEventRefreshHostTemplate_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Allocate external refresh host template failed, model_id=%u, size=%lu.", Id_(),
-        externalEventRefreshLayout_.totalSize);
+    COND_RETURN_AND_MSG_OUTER(
+        externalEventRefreshHostTemplate_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        externalEventRefreshLayout_.totalSize, "new");
     Device* const dev = Context_()->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     Driver* const driver = dev->Driver_();
