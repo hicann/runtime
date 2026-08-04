@@ -28,6 +28,7 @@ echo "2. download businesscode"
 wget -nv ${smoke_run_file_url}
 filename=$(basename "${smoke_run_file_url}")
 set +e
+rm -rf /home/jenkins/opensource/json
 yes "y" | bash ${filename} --full --install-path=/usr/local/Ascend --quiet
 path=$(pwd)
 source /usr/local/Ascend/cann/set_env.sh

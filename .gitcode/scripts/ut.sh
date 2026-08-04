@@ -25,6 +25,7 @@ echo $(grep -E "^VERSION_ID=" /etc/os-release | cut -d'"' -f2)
 sudo update-alternatives --set gcc /usr/bin/gcc-14
 set +e
 gcc --version
+rm -rf /home/jenkins/opensource/json
 source /home/jenkins/Ascend/cann/bin/setenv.bash
 if [ "${TARGET_BRANCH}" = "master" ];then
     case "${ge_st_rt2}" in
