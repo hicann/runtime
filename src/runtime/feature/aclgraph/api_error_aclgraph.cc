@@ -193,12 +193,12 @@ rtError_t ApiErrorDecorator::ModelCondHandleCreate(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         static_cast<uint32_t>(flag) > RT_COND_HANDLE_ASSIGN_DEFAULT, RT_ERROR_INVALID_VALUE,
-        CondHandleFlagToString(flag), "flag", "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
+        "Conditional handle creation", flag, "[0, " + std::to_string(RT_COND_HANDLE_ASSIGN_DEFAULT) + "]");
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
-        "rtModelCondHandleCreate", "The modelRI create condition handle", "The modelRI is not a ACL Graph");
+        "Conditional handle creation", "The modelRI create condition handle", "The modelRI is not a ACL Graph");
 
     return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
 }
@@ -215,14 +215,15 @@ rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle* const handle,
 rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* const stm, uint32_t flags)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (static_cast<uint32_t>(params.type) > RT_COND_TASK_TYPE_SWITCH), RT_ERROR_INVALID_VALUE,
-        CondTaskTypeToString(params.type), "params.type", "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
+        "Adding a conditional task to a stream", params.type, "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (params.size == 0), RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream", params.size,
         "(0, UINT32_MAX]");
-    COND_RETURN_AND_MSG_RESERVED_PARAM(
-        (flags != 0), RT_ERROR_INVALID_VALUE, "flags", "flags is reserved parameter and must be 0");
+    COND_RETURN_AND_MSG_OUTER(
+        (flags != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Adding a conditional task to a stream", "flags",
+        "flags is reserved parameter and must be 0");
 
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         params.handle, RT_ERROR_INVALID_VALUE, "Adding a conditional task to a stream");

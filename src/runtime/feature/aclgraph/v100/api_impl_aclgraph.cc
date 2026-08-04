@@ -189,7 +189,7 @@ rtError_t ApiImpl::ModelCondHandleCreate(
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(captureModel, RT_ERROR_INVALID_VALUE, "Conditional handle creation");
     COND_RETURN_AND_MSG_OUTER(
-        !(captureModel->IsCaptureActive()), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtModelCondHandleCreate",
+        !(captureModel->IsCaptureActive()), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Conditional handle creation",
         "modelRI", RtFmtMsg("ModelRI (model_id=%d) is not in the capture stage", mdl->Id_()));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);

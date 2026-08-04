@@ -257,21 +257,23 @@ rtError_t CheckCondTaskParamsSize(rtCondTaskParams params)
     RT_LOG(RT_LOG_DEBUG, "condition type=%u, condition size=%u", params.type, params.size);
     switch (params.type) {
         case RT_COND_TASK_TYPE_IF:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
                 (params.size != RT_COND_NUMBER_ONE) && (params.size != RT_COND_NUMBER_TWO), RT_ERROR_INVALID_VALUE,
-                params.size, "1 or 2");
+                "Check conditional task parameters", params.size, "1 or 2");
             return RT_ERROR_NONE;
         case RT_COND_TASK_TYPE_WHILE:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-                params.size != RT_COND_NUMBER_ONE, RT_ERROR_INVALID_VALUE, params.size, "1");
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+                params.size != RT_COND_NUMBER_ONE, RT_ERROR_INVALID_VALUE, "Check conditional task parameters",
+                params.size, "1");
             return RT_ERROR_NONE;
         case RT_COND_TASK_TYPE_SWITCH:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-                params.size == RT_COND_NUMBER_ZERO, RT_ERROR_INVALID_VALUE, params.size, "greater than 0");
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+                params.size == RT_COND_NUMBER_ZERO, RT_ERROR_INVALID_VALUE, "Check conditional task parameters",
+                params.size, "greater than 0");
             return RT_ERROR_NONE;
         default:
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-                true, RT_ERROR_INVALID_VALUE, CondTaskTypeToString(params.type), "params.type",
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+                true, RT_ERROR_INVALID_VALUE, "Check conditional task parameters", params.type,
                 "[0, " + std::to_string(RT_COND_TASK_TYPE_SWITCH) + "]");
     }
 }
