@@ -175,13 +175,22 @@ rtError_t UbArgManage::LoadSimtArgsFromArray(
     }
 
     void* argsBuffer = result->hostAddr;
+    const uint64_t syncCounter = 0ULL;
+    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        RT_LOG(RT_LOG_ERROR, "memcpy sync counter failed, size=%u, ret=%d.", SIMT_SYNC_COUNTER_SIZE, ret);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {simtArgsArray->blockDim.z, simtArgsArray->blockDim.y,
                                                         simtArgsArray->blockDim.x, simtArgsArray->gridDim.z,
                                                         simtArgsArray->gridDim.y,  simtArgsArray->gridDim.x};
-    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    void* implicitDataStart = static_cast<char*>(argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
+    ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
     if (ret != EOK) {
         FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_IMPLICIT_PARAM_SIZE, ret);
+        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_DIM_PARAM_SIZE, ret);
         return RT_ERROR_SEC_HANDLE;
     }
 
@@ -207,13 +216,22 @@ rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool, SimtArgsHost* sim
     }
 
     void* argsBuffer = result->hostAddr;
+    const uint64_t syncCounter = 0ULL;
+    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        RT_LOG(RT_LOG_ERROR, "memcpy sync counter failed, size=%u, ret=%d.", SIMT_SYNC_COUNTER_SIZE, ret);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {simtArgsHost->blockDim.z, simtArgsHost->blockDim.y,
                                                         simtArgsHost->blockDim.x, simtArgsHost->gridDim.z,
                                                         simtArgsHost->gridDim.y,  simtArgsHost->gridDim.x};
-    errno_t ret = memcpy_s(argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    void* implicitDataStart = static_cast<char*>(argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
+    ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
     if (ret != EOK) {
         FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_IMPLICIT_PARAM_SIZE, ret);
+        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_DIM_PARAM_SIZE, ret);
         return RT_ERROR_SEC_HANDLE;
     }
 

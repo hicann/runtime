@@ -170,9 +170,17 @@ rtError_t PcieArgManage::PrepareSimtArgsBuffer(
         return RT_ERROR_MEMORY_ALLOCATION;
     }
 
+    const uint64_t syncCounter = 0ULL;
+    errno_t ret = memcpy_s(*argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
+    if (ret != EOK) {
+        FreeFail(result);
+        return RT_ERROR_SEC_HANDLE;
+    }
+
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {blockDim.z, blockDim.y, blockDim.x,
                                                         gridDim.z,  gridDim.y,  gridDim.x};
-    errno_t ret = memcpy_s(*argsBuffer, totalArgsSize, implicitData, SIMT_IMPLICIT_PARAM_SIZE);
+    void* implicitDataStart = static_cast<char*>(*argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
+    ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
     if (ret != EOK) {
         FreeFail(result);
         return RT_ERROR_SEC_HANDLE;
