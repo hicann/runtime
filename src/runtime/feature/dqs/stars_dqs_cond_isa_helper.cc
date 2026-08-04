@@ -1558,9 +1558,8 @@ static void ConstructInterChipPreProcErrPath(
 
     ConstructStore(r8, r10, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrTrace);
 
-    // 0x80000000U [31]bit == 1, stars aa safety force inject to notify dst chip
-    ConstructLLWI(r6, 0x80000000ULL, fc.llwiErrNotifyVal);
-    ConstructLHWI(r6, 0x80000000ULL, fc.lhwiErrNotifyVal);
+    ConstructLLWI(r6, 0x1ULL, fc.llwiErrNotifyVal);
+    ConstructLHWI(r6, 0x1ULL, fc.lhwiErrNotifyVal);
     ConstructStore(r9, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrNotify);
 
     ConstructLoad(r8, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrErrTraceRb);
