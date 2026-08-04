@@ -181,11 +181,17 @@ bool AdxServerManager::ComponentInit() const
         return false;
     }
 
-    std::lock_guard<std::mutex> lck(compMtx_);
-    auto it = compMap_.begin();
-    while (it != compMap_.end()) {
-        (void)it->second->Init();
-        it++;
+    // Snapshot under lock, call Init() outside to avoid re-entering compMtx_(eg: LibLoadServerInit)
+    std::vector<std::shared_ptr<AdxComponent>> snapshot;
+    {
+        std::lock_guard<std::mutex> lck(compMtx_);
+        snapshot.reserve(compMap_.size());
+        for (const auto& item : compMap_) {
+            snapshot.push_back(item.second);
+        }
+    }
+    for (auto& component : snapshot) {
+        (void)component->Init();
     }
     IDE_LOGI("server manager components init successfully");
     return true;
@@ -469,12 +475,17 @@ int32_t AdxServerManager::Exit()
 
     // Stop the components: UnInit stops processing new client sessions,
     // then Terminate closes blocking client sessions
+    std::vector<std::shared_ptr<AdxComponent>> stopSnapshot;
     {
         std::lock_guard<std::mutex> lck(compMtx_);
-        for (auto& component : compMap_) {
-            (void)component.second->UnInit();
-            (void)component.second->Terminate();
+        stopSnapshot.reserve(compMap_.size());
+        for (auto& item : compMap_) {
+            stopSnapshot.push_back(item.second);
         }
+    }
+    for (auto& component : stopSnapshot) {
+        (void)component->UnInit();
+        (void)component->Terminate();
     }
 
     // Wait the client session threads over, they are still using the components and the sessions
