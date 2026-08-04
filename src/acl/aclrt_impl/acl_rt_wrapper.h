@@ -23,6 +23,8 @@
     _(aclError, aclrtPeekAtLastError, (aclrtLastErrLevel level), (level))                                              \
     _(aclError, aclrtGetLastError, (aclrtLastErrLevel level), (level))                                                 \
     _(aclError, aclrtSetExceptionInfoCallback, (aclrtExceptionInfoCallback callback), (callback))                      \
+    _(aclError, aclrtExceptionInfoCallbackRegister, (aclrtExceptionInfoCallback callback), (callback))                 \
+    _(aclError, aclrtExceptionInfoCallbackUnregister, (aclrtExceptionInfoCallback callback), (callback))               \
     _(uint32_t, aclrtGetTaskIdFromExceptionInfo, (const aclrtExceptionInfo* info), (info))                             \
     _(uint32_t, aclrtGetStreamIdFromExceptionInfo, (const aclrtExceptionInfo* info), (info))                           \
     _(uint32_t, aclrtGetThreadIdFromExceptionInfo, (const aclrtExceptionInfo* info), (info))                           \

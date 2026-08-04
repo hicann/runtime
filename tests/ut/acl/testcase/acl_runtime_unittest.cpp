@@ -52,6 +52,10 @@ uint64_t GetResourceCounterValue(ResourceType resourceType, ApplyReleaseType app
 {
     return ResourceStatistics::GetInstance().counter_[resourceType].appplyReleaseValue[applyReleaseType].load();
 }
+
+void TestExceptionInfoCallback(aclrtExceptionInfo* exceptionInfo) { (void)exceptionInfo; }
+
+void TestExceptionInfoCallbackB(aclrtExceptionInfo* exceptionInfo) { (void)exceptionInfo; }
 } // namespace
 
 namespace acl {
@@ -2510,6 +2514,64 @@ TEST_F(UTEST_ACL_Runtime, aclrtSetExceptionInfoCallbackFailedTest)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, _)).WillOnce(Return((1)));
     aclError ret = aclrtSetExceptionInfoCallback(callback);
     EXPECT_EQ(ret, 1);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtExceptionInfoCallbackRegisterTest)
+{
+    std::string callbackARegName;
+    std::string callbackBRegName;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, TestExceptionInfoCallback))
+        .Times(2)
+        .WillRepeatedly(Invoke([&callbackARegName](const char* regName, rtTaskFailCallback) {
+            const std::string currentRegName(regName);
+            if (callbackARegName.empty()) {
+                callbackARegName = currentRegName;
+            } else {
+                EXPECT_EQ(currentRegName, callbackARegName);
+            }
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, TestExceptionInfoCallbackB))
+        .WillOnce(Invoke([&callbackBRegName](const char* regName, rtTaskFailCallback) {
+            callbackBRegName = regName;
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(TestExceptionInfoCallback), ACL_SUCCESS);
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(TestExceptionInfoCallbackB), ACL_SUCCESS);
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(TestExceptionInfoCallback), ACL_SUCCESS);
+    EXPECT_THAT(callbackARegName, StartsWith("__ACLRT_EXCEPTION_CALLBACK_REGISTER__:ASCENDCL:"));
+    EXPECT_NE(callbackARegName, callbackBRegName);
+
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(nullptr), ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, TestExceptionInfoCallback))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(TestExceptionInfoCallback), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtExceptionInfoCallbackUnregisterTest)
+{
+    std::string registerName;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, TestExceptionInfoCallback))
+        .WillOnce(Invoke([&registerName](const char* regName, rtTaskFailCallback) {
+            registerName = regName;
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_EQ(aclrtExceptionInfoCallbackRegister(TestExceptionInfoCallback), ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, nullptr))
+        .WillOnce(Invoke([&registerName](const char* regName, rtTaskFailCallback callback) {
+            EXPECT_EQ(regName, registerName);
+            EXPECT_EQ(callback, nullptr);
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_EQ(aclrtExceptionInfoCallbackUnregister(TestExceptionInfoCallback), ACL_SUCCESS);
+
+    EXPECT_EQ(aclrtExceptionInfoCallbackUnregister(nullptr), ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegTaskFailCallbackByModule(_, nullptr))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclrtExceptionInfoCallbackUnregister(TestExceptionInfoCallback), ACL_ERROR_RT_PARAM_INVALID);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtMemcpy2dTest)

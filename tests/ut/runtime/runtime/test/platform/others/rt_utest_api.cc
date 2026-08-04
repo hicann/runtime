@@ -16,6 +16,30 @@
 #include "npu_driver.hpp"
 #include "memset_common.h"
 #include "memcpy_c.hpp"
+#include <atomic>
+
+namespace {
+constexpr const char_t* TASK_FAIL_CALLBACK_TEST_MODULE = "ASCENDCL";
+std::atomic<uint32_t> g_taskFailCallbackACount{0U};
+std::atomic<uint32_t> g_taskFailCallbackBCount{0U};
+
+void TaskFailCallbackA(rtExceptionInfo_t* exceptionInfo)
+{
+    (void)exceptionInfo;
+    ++g_taskFailCallbackACount;
+}
+
+void TaskFailCallbackB(rtExceptionInfo_t* exceptionInfo)
+{
+    (void)exceptionInfo;
+    ++g_taskFailCallbackBCount;
+}
+
+std::string MakeTaskFailCallbackRegName(const char_t* moduleName, const void* callback)
+{
+    return std::string(moduleName) + ":" + std::to_string(RtPtrToValue(callback));
+}
+} // namespace
 
 static rtError_t IpcOpenNotifyStubSucc(
     cce::runtime::ApiImpl* api, Notify** const retNotify, const char_t* const name, uint32_t flag)
@@ -687,6 +711,67 @@ TEST_F(ApiTest, TaskFailCallBackManager_NotifyException)
     exceptionRegMap[key].push_back(regInfo);
     TaskFailCallBackNotify(&exceptionInfo);
     EXPECT_EQ(g_exception_device_id, 0);
+}
+
+TEST_F(ApiTest, TaskFailCallbackMultipleRegisterAndLegacyCoexist)
+{
+    TaskFailCallBackManager manager;
+    g_taskFailCallbackACount = 0U;
+    g_taskFailCallbackBCount = 0U;
+    rtExceptionInfo_t exceptionInfo = {};
+    void* const callbackA = RtPtrToPtr<void*>(TaskFailCallbackA);
+    void* const callbackB = RtPtrToPtr<void*>(TaskFailCallbackB);
+    const std::string regNameA = MakeTaskFailCallbackRegName(TASK_FAIL_CALLBACK_TEST_MODULE, callbackA);
+    const std::string regNameB = MakeTaskFailCallbackRegName(TASK_FAIL_CALLBACK_TEST_MODULE, callbackB);
+
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            TASK_FAIL_CALLBACK_TEST_MODULE, callbackB, nullptr,
+            TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            regNameA.c_str(), callbackA, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            regNameB.c_str(), callbackB, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            regNameA.c_str(), callbackA, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+
+    manager.Notify(&exceptionInfo);
+    EXPECT_EQ(g_taskFailCallbackACount.load(), 1U);
+    EXPECT_EQ(g_taskFailCallbackBCount.load(), 2U);
+
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            regNameA.c_str(), nullptr, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    manager.Notify(&exceptionInfo);
+    EXPECT_EQ(g_taskFailCallbackACount.load(), 1U);
+    EXPECT_EQ(g_taskFailCallbackBCount.load(), 4U);
+
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            TASK_FAIL_CALLBACK_TEST_MODULE, nullptr, nullptr,
+            TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            TASK_FAIL_CALLBACK_TEST_MODULE, nullptr, nullptr,
+            TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
+    manager.Notify(&exceptionInfo);
+    EXPECT_EQ(g_taskFailCallbackACount.load(), 1U);
+    EXPECT_EQ(g_taskFailCallbackBCount.load(), 5U);
+
+    EXPECT_EQ(
+        manager.RegTaskFailCallback(
+            regNameB.c_str(), nullptr, nullptr, TaskFailCallbackType::RT_REG_TASK_FAIL_CALLBACK_BY_MODULE),
+        RT_ERROR_NONE);
 }
 
 TEST_F(ApiTest, stub_acl_interfaces)

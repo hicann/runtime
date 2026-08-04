@@ -21,7 +21,14 @@
 
 namespace {
 constexpr uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
+constexpr char ACLRT_EXCEPTION_CALLBACK_REG_PREFIX[] = "__ACLRT_EXCEPTION_CALLBACK_REGISTER__:";
+
+std::string MakeExceptionCallbackRegName(rtTaskFailCallback callback)
+{
+    return std::string(ACLRT_EXCEPTION_CALLBACK_REG_PREFIX) + acl::ACL_MODULE_NAME + ":" +
+           std::to_string(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(callback)));
 }
+} // namespace
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +47,29 @@ aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
     ACL_LOG_INFO("start to execute aclrtSetExceptionInfoCallback.");
     ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME, static_cast<rtTaskFailCallback>(callback)));
     ACL_LOG_INFO("successfully execute aclrtSetExceptionInfoCallback");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtExceptionInfoCallbackRegisterImpl(aclrtExceptionInfoCallback callback)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtExceptionInfoCallbackRegister);
+    ACL_LOG_INFO("start to execute aclrtExceptionInfoCallbackRegister.");
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(callback, ACL_ERROR_RT_PARAM_INVALID);
+    const auto rtCallback = static_cast<rtTaskFailCallback>(callback);
+    const std::string regName = MakeExceptionCallbackRegName(rtCallback);
+    ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(regName.c_str(), rtCallback));
+    ACL_LOG_INFO("successfully execute aclrtExceptionInfoCallbackRegister");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtExceptionInfoCallbackUnregisterImpl(aclrtExceptionInfoCallback callback)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtExceptionInfoCallbackUnregister);
+    ACL_LOG_INFO("start to execute aclrtExceptionInfoCallbackUnregister.");
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(callback, ACL_ERROR_RT_PARAM_INVALID);
+    const std::string regName = MakeExceptionCallbackRegName(static_cast<rtTaskFailCallback>(callback));
+    ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(regName.c_str(), nullptr));
+    ACL_LOG_INFO("successfully execute aclrtExceptionInfoCallbackUnregister");
     return ACL_SUCCESS;
 }
 

@@ -1192,6 +1192,35 @@ ACL_FUNC_VISIBILITY aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCal
 
 /**
  * @ingroup AscendCL
+ * @brief Register a callback function to handle exception information
+ *
+ * @param callback [IN] callback function to handle exception information
+ *
+ * @note Multiple callback functions can be registered. A callback is identified by its function pointer value.
+ * Registering the same callback function more than once succeeds without adding duplicate notifications.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback);
+
+/**
+ * @ingroup AscendCL
+ * @brief Unregister a callback function that handles exception information
+ *
+ * @param callback [IN] callback function to unregister
+ *
+ * @note Unregistering a callback that is not registered succeeds without taking any action. This interface does not
+ * wait for callback invocations that have already been captured or are running. The caller must keep the callback code
+ * valid until all in-flight invocations have completed.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback);
+
+/**
+ * @ingroup AscendCL
  * @brief Get task id from exception information
  *
  * @param info [IN]   pointer of exception information

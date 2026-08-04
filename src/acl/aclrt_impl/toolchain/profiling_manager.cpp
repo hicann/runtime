@@ -328,6 +328,8 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclmdlRIAddCondTask, "aclmdlRIAddCondTask"},
     {AclProfType::AclmdlRICaptureToModelRIBegin, "aclmdlRICaptureToModelRIBegin"},
     {AclProfType::AclrtDeviceL2CacheFlush, "aclrtDeviceL2CacheFlush"},
+    {AclProfType::AclrtExceptionInfoCallbackRegister, "aclrtExceptionInfoCallbackRegister"},
+    {AclProfType::AclrtExceptionInfoCallbackUnregister, "aclrtExceptionInfoCallbackUnregister"},
 };
 
 aclError RegisterType(const uint32_t index)
