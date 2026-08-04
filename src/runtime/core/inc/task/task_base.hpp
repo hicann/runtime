@@ -197,27 +197,30 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_MEM_WAIT_VALUE = 114,     /* mem wait value task */
     TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY = 115,
     // DQS Task
-    TS_TASK_TYPE_DQS_ENQUEUE = 116,             /* dqs enqueue*/
-    TS_TASK_TYPE_DQS_DEQUEUE = 117,             /* dqs dequeue*/
-    TS_TASK_TYPE_DQS_PREPARE = 118,             /* dqs prepare */
-    TS_TASK_TYPE_DQS_ZERO_COPY = 119,           /* dqs zero copy */
-    TS_TASK_TYPE_DQS_SCHED_END = 120,           /* dqs sched end */
-    TS_TASK_TYPE_DQS_MBUF_FREE = 121,           /* dqs mbuf free*/
-    TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC = 122,  /* dqs inter chip pre-proc */
-    TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC = 123, /* dqs inter chip post-proc */
-    TS_TASK_TYPE_DQS_ADSPC = 124,               /* dqs adspc task */
-    TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION = 125,  /* send tsfw-aicpu msg version to aicpu */
-    TS_TASK_TYPE_CAPTURE_RECORD = 126,          /* mem write value task */
-    TS_TASK_TYPE_CAPTURE_WAIT = 127,            /* mem wait value task */
-    TS_TASK_TYPE_DQS_BATCH_DEQUEUE = 128,       /* dqs batch dequeue*/
-    TS_TASK_TYPE_IPC_RECORD = 129,              /* ipc record task */
-    TS_TASK_TYPE_IPC_WAIT = 130,                /* ipc wait task */
-    TS_TASK_TYPE_DQS_CONDITION_COPY = 131,      /* dqs condition copy*/
-    TS_TASK_TYPE_DQS_FRAME_ALIGN = 132,         /* dqs frame align */
-    TS_TASK_TYPE_CAPTURE_CONDITION = 133,       /* capture condition task */
-    TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL = 134, /* external event record placeholder */
-    TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL = 135,   /* external event wait placeholder */
-    TS_TASK_TYPE_RESERVED = 136,
+    TS_TASK_TYPE_DQS_ENQUEUE = 116,                    /* dqs enqueue*/
+    TS_TASK_TYPE_DQS_DEQUEUE = 117,                    /* dqs dequeue*/
+    TS_TASK_TYPE_DQS_PREPARE = 118,                    /* dqs prepare */
+    TS_TASK_TYPE_DQS_ZERO_COPY = 119,                  /* dqs zero copy */
+    TS_TASK_TYPE_DQS_SCHED_END = 120,                  /* dqs sched end */
+    TS_TASK_TYPE_DQS_MBUF_FREE = 121,                  /* dqs mbuf free*/
+    TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC = 122,         /* dqs inter chip pre-proc */
+    TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC = 123,        /* dqs inter chip post-proc */
+    TS_TASK_TYPE_DQS_ADSPC = 124,                      /* dqs adspc task */
+    TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION = 125,         /* send tsfw-aicpu msg version to aicpu */
+    TS_TASK_TYPE_CAPTURE_RECORD = 126,                 /* mem write value task */
+    TS_TASK_TYPE_CAPTURE_WAIT = 127,                   /* mem wait value task */
+    TS_TASK_TYPE_DQS_BATCH_DEQUEUE = 128,              /* dqs batch dequeue*/
+    TS_TASK_TYPE_IPC_RECORD = 129,                     /* ipc record task */
+    TS_TASK_TYPE_IPC_WAIT = 130,                       /* ipc wait task */
+    TS_TASK_TYPE_DQS_CONDITION_COPY = 131,             /* dqs condition copy*/
+    TS_TASK_TYPE_DQS_FRAME_ALIGN = 132,                /* dqs frame align */
+    TS_TASK_TYPE_CAPTURE_CONDITION = 133,              /* capture condition task */
+    TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL = 134,        /* external event record placeholder */
+    TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL = 135,          /* external event wait placeholder */
+    TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC = 136,     /* model serial sched preproc */
+    TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT = 137, /* model serial sched notify wait */
+    TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC = 138,    /* model serial sched postproc */
+    TS_TASK_TYPE_RESERVED = 139,
 } tsTaskType_t;
 
 enum class ProfTaskType : uint16_t {

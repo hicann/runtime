@@ -84,7 +84,7 @@ static inline rtError_t GetDqsInterChipTaskInitInfo(
     return RT_ERROR_NONE;
 }
 
-static void RollbackAndRecycle(TaskInfo* task, Stream* const stm, uint32_t pos)
+void RollbackAndRecycle(TaskInfo* task, Stream* const stm, uint32_t pos)
 {
     TaskUnInitProc(task);
     TaskRollBack(stm, pos);

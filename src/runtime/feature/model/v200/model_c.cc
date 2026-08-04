@@ -7,21 +7,26 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef __CCE_RUNTIME_DQS_C_HPP__
-#define __CCE_RUNTIME_DQS_C_HPP__
-
-#include "task_info.hpp"
-#include "task_dqs.hpp"
+#include "model_c.hpp"
 
 namespace cce {
 namespace runtime {
 
-constexpr uint32_t RT_DEFAULT_POS = 0xFFFFU;
+rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model)
+{
+    UNUSED(stm);
+    UNUSED(notify);
+    UNUSED(model);
+    return RT_ERROR_NONE;
+}
 
-void RollbackAndRecycle(TaskInfo* task, Stream* const stm, uint32_t pos);
-rtError_t DqsLaunchTask(Stream* const stm, const rtDqsTaskCfg_t* const taskCfg);
+rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model)
+{
+    UNUSED(stm);
+    UNUSED(notify);
+    UNUSED(model);
+    return RT_ERROR_NONE;
+}
 
 } // namespace runtime
 } // namespace cce
-
-#endif // __CCE_RUNTIME_DQS_C_HPP__

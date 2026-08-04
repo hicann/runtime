@@ -20,6 +20,7 @@
 #include "stars_david.hpp"
 #include "ascend_hal_define.h"
 #include "stars_cond_isa_para.hpp"
+#include "model_serial_sched_task.hpp"
 #include "runtime_task_manager.h"
 
 namespace cce {
@@ -1958,6 +1959,36 @@ static bool DqsTaskRegister()
         .setResultFunc = nullptr,
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
+    TaskFuncSingle modelSerialSchedPreProcTaskFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelSerialSchedPreProcTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &StarsSetResultForModelSerialSchedTask,
+    };
+    TaskFuncSingle modelSerialSchedNotifyWaitTaskFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelSerialSchedNotifyWaitTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle modelSerialSchedPostProcTaskFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForModelSerialSchedPostProcTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &StarsSetResultForModelSerialSchedTask,
+    };
 
     const auto& chips = GetV201Chips();
     for (const auto chip : chips) {
@@ -1973,6 +2004,9 @@ static bool DqsTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_DQS_BATCH_DEQUEUE, dqsBatchDequeueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DQS_CONDITION_COPY, dqsConditionCopyFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DQS_FRAME_ALIGN, dqsFrameAlignFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, modelSerialSchedPreProcTaskFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, modelSerialSchedNotifyWaitTaskFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, modelSerialSchedPostProcTaskFuncs);
     }
 
     RegDavidSqeFunc(TS_TASK_TYPE_DQS_MBUF_FREE, &ConstructSqeForDqsMbufFreeTask);
@@ -1987,6 +2021,9 @@ static bool DqsTaskRegister()
     RegDavidSqeFunc(TS_TASK_TYPE_DQS_BATCH_DEQUEUE, &ConstructSqeForDqsBatchDequeueTask);
     RegDavidSqeFunc(TS_TASK_TYPE_DQS_CONDITION_COPY, &ConstructSqeForDqsConditionCopyTask);
     RegDavidSqeFunc(TS_TASK_TYPE_DQS_FRAME_ALIGN, &ConstructSqeForDqsFrameAlignTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, &ConstructSqeForModelSerialSchedPreProcTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, &ConstructSqeForModelSerialSchedNotifyWaitTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, &ConstructSqeForModelSerialSchedPostProcTask);
 
     return true;
 }

@@ -37,7 +37,7 @@ rtError_t SetTimeoutConfigTaskSubmitDavid(Stream* const stm, const rtTaskTimeout
 
 rtError_t AicpuMdlDestroy(Model* const mdl);
 
-rtError_t ModelSubmitExecuteTask(Model* const mdl, Stream* const streamIn);
+rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream* const streamIn);
 
 rtError_t ModelLoadCompleteByStream(Model* const mdl);
 
@@ -48,6 +48,8 @@ rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bo
 rtError_t NtyWait(
     Notify* const inNotify, Stream* const streamIn, const uint32_t timeOut, const bool isEndGraphNotify = false,
     Model* const captureModel = nullptr, std::vector<EventResource>* externalWaitRetainedResources = nullptr);
+
+rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model);
 
 rtError_t SyncGetDeviceMsg(
     Device* const dev, const void* const devMemAddr, const uint32_t devMemSize, const rtGetDevMsgType_t getDevMsgType);

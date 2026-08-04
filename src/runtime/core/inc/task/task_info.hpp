@@ -164,6 +164,7 @@ typedef struct tagTaskInfoStru {
         SqeUpdateTaskInfo sqeUpdateTask;
 
         CaptureConditionTaskInfo captureConditionTask;
+        ModelSerialSchedTaskInfo modelSerialSchedTask;
     } u;
 
     rtPkgDesc pkgStat[RT_PACKAGE_TYPE_BUTT];

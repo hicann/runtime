@@ -570,7 +570,7 @@ TEST_F(TinyStubTest, task_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = AicpuMdlDestroy(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = ModelSubmitExecuteTask(nullptr, nullptr);
+    ret = ModelSubmitExecuteTask(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = ModelLoadCompleteByStream(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

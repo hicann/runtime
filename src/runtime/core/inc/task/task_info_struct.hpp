@@ -522,6 +522,16 @@ struct CaptureConditionTaskInfo {
     uint64_t jumpBackFunCallMemSize;  // FunctionCall 指令大小
 };
 
+struct ModelSerialSchedTaskInfo {
+    uint32_t modelId;
+    uint32_t modelPriority;
+    uint32_t notifyId;
+    uint32_t sqId;
+    uint32_t pid;
+    uint32_t groupId;
+    uint32_t exeSqId;
+};
+
 } // namespace runtime
 } // namespace cce
 #endif // CCE_RUNTIME_TASK_INFO_STRUCT_HPP

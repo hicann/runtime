@@ -716,7 +716,8 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/feature/model/model.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/feature/model/v200/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/v200_base/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/v200/model_c.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_adapt_v200.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_model_adapt_v200.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc
@@ -1537,6 +1538,7 @@ set(runtimeut_v201_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_checker.cc
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_task.cc
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_c.cc
+    ${TOP_DIR}/src/runtime/feature/dqs/model_serial_sched_task.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/memory_corruption_checker.cc
@@ -1597,7 +1599,8 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/feature/model/model.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/feature/model/v200/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/v200_base/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/v201/model_c.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_adapt_v200.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_model_adapt_v200.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc

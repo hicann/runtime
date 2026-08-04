@@ -87,7 +87,8 @@ enum rtDavidNotifySubType {
     NOTIFY_SUB_TYPE_EVENT_USE_COUNT_NOTIFY_WAIT = 7U,
     NOTIFY_SUB_TYPE_EVENT_RESET_USE_SINGLE_NOTIFY = 8U,
     NOTIFY_SUB_TYPE_EVENT_RESET_USE_COUNT_NOTIFY = 9U,
-    NOTIFY_SUB_TYPE_MAX = 10U
+    NOTIFY_SUB_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT = 10U,
+    NOTIFY_SUB_TYPE_MAX = 11U
 };
 
 enum class DavidTaskMapType : std::uint8_t { TASK_MAP_TYPE_RECORD_RESET_MAP = 0U, TASK_MAP_TYPE_WAIT_MAP = 1U };
@@ -473,6 +474,7 @@ union rtDavidSqe_t {
     RtDavidStarsCcuSqe ccuSqe;
     RtDavidStarsCcuSqe32B ccuSqe32B[2];
     RtDavidStarsDqsSchedEndSqe dqsSchedEndSqe;
+    RtDavidStarsAicpuDqsSqe aicpuDqsSqe;
 };
 
 #pragma pack(pop)

@@ -21,9 +21,11 @@ rtError_t ModelDebugUnRegister(Model* const mdl, Stream* const dftStm);
 rtError_t MdlTaskUpdate(const Stream* const desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para);
 rtError_t ModelLoadCompleteByStream(Model* const mdl);
 rtError_t AicpuMdlDestroy(Model* const mdl);
-rtError_t ModelSubmitExecuteTask(Model* const mdl, Stream* const streamIn);
+rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream* const streamIn);
 rtError_t MdlAbort(Model* const mdl);
 rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t flags);
+rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model);
+rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model);
 rtError_t MdlBindTaskSubmit(Model* const mdl, Stream* const streamIn, const uint32_t flag);
 rtError_t MdlUnBindTaskSubmit(Model* const mdl, Stream* const streamIn, const bool force);
 } // namespace runtime

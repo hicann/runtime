@@ -146,6 +146,10 @@ rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* cons
     // Resume scheduling
     if (taskInfo->type == static_cast<uint16_t>(TS_TASK_TYPE_MODEL_EXECUTE)) {
         offset = 2U; // if model execute sqe, need skip model_execute and wait_end_graph sqe
+    } else if (taskInfo->type == static_cast<uint16_t>(TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC)) {
+        offset = 5U;
+    } else if (taskInfo->type == static_cast<uint16_t>(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT)) {
+        offset = 4U;
     } else if (IsNeedMoveMultipleSteps(taskInfo->type)) {
         offset = GetSendDavidSqeNum(taskInfo);
     } else {

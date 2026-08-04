@@ -138,6 +138,7 @@ set(libruntime_v201_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v201/task_checker.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v201.cc
     ${RUNTIME_FEATURE_DIR}/dqs/dqs_c.cc
+    ${RUNTIME_FEATURE_DIR}/dqs/model_serial_sched_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v201.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v201.cc
@@ -278,7 +279,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/model/model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
-    ${RUNTIME_FEATURE_DIR}/model/v200/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v200_base/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
@@ -377,6 +378,7 @@ set(libruntime_v200_src_files
     ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
     ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
     ${RUNTIME_FEATURE_DIR}/xpu/runtime_xpu_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v200/model_c.cc
     ${libruntime_v200_task_src_files}
     ${libruntime_v200_context_src_files}
     ${libruntime_v200_stream_src_files}
@@ -409,6 +411,7 @@ set(libruntime_v201_src_files
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/v200_base/device_snapshot_adapter.cc
+    ${RUNTIME_FEATURE_DIR}/model/v201/model_c.cc
     ${libruntime_v201_task_src_files}
     ${libruntime_v200_context_src_files}
     ${libruntime_v201_stream_src_files}

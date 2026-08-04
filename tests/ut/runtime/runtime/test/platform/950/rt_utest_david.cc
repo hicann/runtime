@@ -2242,11 +2242,14 @@ TEST_F(DavidTaskTest, construct_ccu_launch_0)
 
 TEST_F(DavidTaskTest, construct_davidsqe_notify_subtype)
 {
-    const char_t* res1 = GetNotifySubType(10);
+    const char_t* res1 = GetNotifySubType(11);
     EXPECT_EQ(strcmp(res1, "unknown"), 0);
 
     const char_t* res2 = GetNotifySubType(0);
     EXPECT_EQ(strcmp(res2, "single notify record"), 0);
+
+    const char_t* res3 = GetNotifySubType(10);
+    EXPECT_EQ(strcmp(res3, "model serial sched notify wait"), 0);
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_notify)

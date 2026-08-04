@@ -166,6 +166,47 @@ struct RtDavidStarsAicpuKernelSqe {
     /* word15 */
     uint32_t destPid;
 };
+
+struct RtDavidStarsAicpuDqsSqe {
+    /* word0-1 */
+    rtDavidStarsSqeHeader_t header;
+
+    /* word2 */
+    AicpuResv resv;
+    uint16_t kernelType : 7;
+    uint16_t batchMode : 1;
+    uint16_t topicType : 4;
+    uint16_t qos : 3;
+    uint16_t res2 : 1;
+
+    /* word3 */
+    uint16_t sqeIndex;
+    uint8_t kernelCredit;
+    uint8_t res3 : 5;
+    uint8_t sqeLength : 3;
+
+    /* words4-13 use reserved field */
+    uint32_t magic;
+    uint32_t subType : 8;
+    uint32_t modelPriority : 8;
+    uint32_t exeSqId : 16;
+    uint32_t modelId : 16;
+    uint32_t notifyId : 16;
+    uint32_t userGroupId : 16;
+    uint32_t sqId : 16;
+    uint32_t pid;
+    uint32_t res1[5];
+
+    /* word14 */
+    uint32_t subTopicId : 12;
+    uint32_t topicId : 6;
+    uint32_t groupId : 6;
+    uint32_t usrDataLen : 8;
+
+    /* word15 */
+    uint32_t destPid;
+};
+
 #pragma pack(pop)
 } // namespace runtime
 } // namespace cce

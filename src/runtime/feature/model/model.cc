@@ -1164,6 +1164,9 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
         error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
         ERROR_RETURN_MSG_INNER(error, "Failed to wait notify, retCode=%#x.", static_cast<uint32_t>(error));
 
+        error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
+        ERROR_RETURN_MSG_INNER(error, "Model serial sched post proc failed, stream_id=%d.", stm->Id_());
+
         error = stm->Synchronize(false, timeout);
         ERROR_RETURN_MSG_INNER(
             error, "Fail to synchronize forbidden stream, retCode=%#x.", static_cast<uint32_t>(error));
@@ -1239,7 +1242,7 @@ rtError_t Model::GetStreamToSyncExecute(int32_t timeout)
 rtError_t Model::SubmitExecuteTask(Stream* const streamIn)
 {
     if (streamIn->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-        return ModelSubmitExecuteTask(this, streamIn);
+        return ModelSubmitExecuteTask(this, endGraphNotify_, streamIn);
     }
     // private func, the caller guarantees that the pointer is not nullptr
     Device* const dev = context_->Device_();
@@ -1352,6 +1355,9 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
             error = NtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
         }
         ERROR_RETURN_MSG_INNER(error, "Failed to wait notify, retCode=%#x.", static_cast<uint32_t>(error));
+
+        error = ModelSerialSchedPostProc(stm, endGraphNotify_, this);
+        ERROR_RETURN_MSG_INNER(error, "Model serial sched post proc failed, stream_id=%d.", stm->Id_());
     }
 
     if (isDelTmpStream) {

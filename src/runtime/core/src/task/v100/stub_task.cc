@@ -59,9 +59,10 @@ rtError_t AicpuMdlDestroy(Model* const mdl)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ModelSubmitExecuteTask(Model* const mdl, Stream* const streamIn)
+rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream* const streamIn)
 {
     UNUSED(streamIn);
+    UNUSED(notify);
     UNUSED(mdl);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
@@ -93,6 +94,14 @@ rtError_t NtyWait(
     Model* const captureModel, std::vector<EventResource>* externalWaitRetainedResources)
 {
     return inNotify->Wait(streamIn, timeOut, isEndGraphNotify, captureModel, externalWaitRetainedResources);
+}
+
+rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Model* const model)
+{
+    UNUSED(stm);
+    UNUSED(notify);
+    UNUSED(model);
+    return RT_ERROR_NONE;
 }
 
 rtError_t SyncGetDevMsg(

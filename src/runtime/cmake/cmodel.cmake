@@ -546,7 +546,8 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
-    ${RUNTIME_FEATURE_DIR}/model/v200/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v200_base/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v200/model_c.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc

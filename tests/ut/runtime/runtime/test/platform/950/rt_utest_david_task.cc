@@ -572,7 +572,7 @@ TEST_F(TaskTestDavid, TestModelSubmitExecuteTask)
     RtIniAttributes iniAttrs = {};
     iniAttrs.ioDieNum = 2U;
     ((Runtime*)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
-    ret = ModelSubmitExecuteTask(mdl, stm);
+    ret = ModelSubmitExecuteTask(mdl, nullptr, stm);
     EXPECT_EQ(ret, RT_ERROR_MODEL_EXECUTOR);
 
     ret = rtModelDestroy(model);
@@ -596,7 +596,7 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     mdl->SetFirstExecute(false);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    ret = ModelSubmitExecuteTask(mdl, stm);
+    ret = ModelSubmitExecuteTask(mdl, nullptr, stm);
     EXPECT_EQ(ret, RT_ERROR_MODEL_EXECUTOR);
     UbAsyncJettyInfo info = {};
     info.jettyId = 1;
@@ -608,7 +608,7 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     mdl->SetD2dJettyInfo(info);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    ret = ModelSubmitExecuteTask(mdl, stm);
+    ret = ModelSubmitExecuteTask(mdl, nullptr, stm);
     EXPECT_EQ(ret, RT_ERROR_MODEL_EXECUTOR);
 
     ret = rtModelDestroy(model);

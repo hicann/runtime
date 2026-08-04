@@ -69,6 +69,7 @@
 #include "profiler.hpp"
 #include "../../task_test_helper.h"
 #include "aic_aiv_sqe_common.hpp"
+#include "model_serial_sched_task.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1852,4 +1853,134 @@ TEST_F(TaskTestV201, ProcReportIsDvppErrorAndRetryTest)
 
     rtError_t error = ProcReportIsDvppErrorAndRetry(report, &task);
     EXPECT_EQ(error, false);
+}
+
+TEST_F(TaskTestV201, Test_ConstructSqeForModelSerialSchedTask)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    ModelSerialSchedTaskInfo modelTask = {};
+    modelTask.modelId = 1U;
+    modelTask.modelPriority = 2U;
+    modelTask.notifyId = 3U;
+    modelTask.sqId = 4U;
+    modelTask.pid = 5U;
+    modelTask.groupId = 6U;
+    task.u.modelSerialSchedTask = modelTask;
+
+    rtDavidSqe_t davidSqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+
+    ConstructSqeForModelSerialSchedPreProcTask(&task, static_cast<void*>(&davidSqe), sqeInfo);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.header.type, RT_DAVID_SQE_TYPE_AICPU_H);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.modelId, 1U);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.modelPriority, 2U);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.notifyId, 3U);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.sqId, 4U);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.pid, 5U);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.userGroupId, 6U);
+
+    ConstructSqeForModelSerialSchedPostProcTask(&task, static_cast<void*>(&davidSqe), sqeInfo);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.header.type, RT_DAVID_SQE_TYPE_AICPU_H);
+    EXPECT_EQ(davidSqe.aicpuDqsSqe.modelId, 1U);
+
+    ConstructSqeForModelSerialSchedNotifyWaitTask(&task, static_cast<void*>(&davidSqe), sqeInfo);
+    EXPECT_EQ(davidSqe.notifySqe.header.type, RT_DAVID_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(davidSqe.notifySqe.notifyId, 3U);
+    EXPECT_EQ(davidSqe.notifySqe.clrFlag, true);
+    EXPECT_EQ(davidSqe.notifySqe.cntFlag, false);
+}
+
+TEST_F(TaskTestV201, Test_PrintErrorInfoForModelSerialSchedTask)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    ModelSerialSchedTaskInfo modelTask = {};
+    modelTask.modelId = 10U;
+    modelTask.modelPriority = 20U;
+    modelTask.notifyId = 30U;
+    modelTask.sqId = 40U;
+    modelTask.pid = 50U;
+    modelTask.groupId = 60U;
+    task.u.modelSerialSchedTask = modelTask;
+
+    PrintErrorInfoForModelSerialSchedPreProcTask(&task, 0U);
+    PrintErrorInfoForModelSerialSchedNotifyWaitTask(&task, 0U);
+    PrintErrorInfoForModelSerialSchedPostProcTask(&task, 0U);
+}
+
+TEST_F(TaskTestV201, Test_StarsSetResultForModelSerialSchedTask)
+{
+    TaskInfo task = {};
+    rtLogicCqReport_t logicCq = {};
+
+    task.type = TS_TASK_TYPE_DQS_ENQUEUE;
+    logicCq.errorCode = TS_ERROR_TASK_TIMEOUT;
+    StarsSetResultForModelSerialSchedTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, 0U);
+
+    task.type = TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC;
+    logicCq.errorCode = TS_ERROR_TASK_TIMEOUT;
+    StarsSetResultForModelSerialSchedTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, static_cast<uint32_t>(TS_ERROR_TASK_TIMEOUT));
+
+    task.errorCode = 0U;
+    task.type = TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC;
+    logicCq.errorCode = TS_ERROR_TASK_TIMEOUT;
+    StarsSetResultForModelSerialSchedTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, static_cast<uint32_t>(TS_ERROR_TASK_TIMEOUT));
+
+    task.errorCode = 0U;
+    task.type = TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC;
+    logicCq.errorCode = static_cast<uint32_t>(1U << RT_AICPU_ERROR_CODE_BIT_MOVE);
+    StarsSetResultForModelSerialSchedTask(&task, logicCq);
+    EXPECT_EQ(task.errorCode, static_cast<uint32_t>(TS_ERROR_TASK_EXCEPTION));
+}
+
+TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_EmptyHeadStream)
+{
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    Notify* notify = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notify, nullptr);
+
+    TaskInfo task = {};
+    TaskInfo* tmpTask = &task;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().with(outBoundP(&tmpTask)).will(returnValue(RT_ERROR_NONE));
+
+    ret = ModelSerialSchedPreProc(stream_, notify, mdl);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    delete notify;
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_EmptyHeadStream)
+{
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    Notify* notify = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notify, nullptr);
+
+    TaskInfo task = {};
+    TaskInfo* tmpTask = &task;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().with(outBoundP(&tmpTask)).will(returnValue(RT_ERROR_NONE));
+
+    ret = ModelSerialSchedPostProc(stream_, notify, mdl);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    delete notify;
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }

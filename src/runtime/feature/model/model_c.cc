@@ -277,7 +277,7 @@ static rtError_t AsyncJettyToHead(const Model* const mdl, Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-rtError_t ModelSubmitExecuteTask(Model* const mdl, Stream* const streamIn)
+rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream* const streamIn)
 {
     /* UB互连场景下如果模型中下过H2D/D2H/跨片D2D，需要先下UB DB任务 */
     rtError_t error = AsyncJettyToHead(mdl, streamIn);
@@ -294,6 +294,12 @@ rtError_t ModelSubmitExecuteTask(Model* const mdl, Stream* const streamIn)
     COND_RETURN_ERROR_MSG_INNER(
         (executeType > EXECUTOR_AICPU), RT_ERROR_MODEL_EXECUTOR, "Unsupported executor type=%u, modelId=%u.",
         executeType, mdl->Id_());
+
+    if (executeType != EXECUTOR_AICPU) {
+        error = ModelSerialSchedPreProc(streamIn, notify, mdl);
+        COND_RETURN_ERROR_MSG_INNER(
+            error != RT_ERROR_NONE, error, "Model serial sched pre proc failed, stream_id=%d.", streamIn->Id_());
+    }
 
     TaskInfo* exeTask = nullptr;
     error = CheckTaskCanSend(streamIn);

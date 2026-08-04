@@ -27,6 +27,7 @@ static std::vector<const char_t*> g_notifySubTypeStr = {
     "event wait use count notify",
     "event reset use single notify",
     "event reset use count notify",
+    "model serial sched notify wait",
 };
 
 const char_t* GetNotifySubType(const uint16_t subType)
