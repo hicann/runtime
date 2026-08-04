@@ -229,7 +229,7 @@ The third-party open-source software dependencies for runtime compilation are as
 | mockcpp_patch | 2.7-h5 | [mockcpp-2.7-h5.patch](https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch) |
 | protobuf | 25.1 | [protobuf-25.1.tar.gz](https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz) |
 | makeself | 2.5.0 | [makeself-release-2.5.0-patch1.tar.gz](https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz) |
-| cann-cmake | master-026 | [cmake-master-026.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-026.tar.gz) |
+| cann-cmake | master-044 | [cmake-master-044.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-044.tar.gz) |
 
 > [!NOTE]
 > If you download from other addresses, ensure that the version numbers are consistent.
