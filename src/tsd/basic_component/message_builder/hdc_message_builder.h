@@ -86,10 +86,9 @@ struct MessageContext {
 
     // ---- Normal check-code with plugin version (per-call, TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL) ----
     // Optional: when version is non-empty, a host_plugin_versions entry is appended.
-    struct {
+    struct HostPluginVersion {
         std::string version;
         std::string timestamp;
-        bool Empty() const { return version.empty() && timestamp.empty(); }
     } hostPluginVersion;
 
     // ---- Capability query (per-call) ----
@@ -119,6 +118,11 @@ struct MessageContext {
     std::vector<std::pair<std::string, std::string>> subProcEnvList; // (env_name, env_value)
     std::vector<std::string> subProcExtParamList;
 };
+
+inline bool HostPluginVersionEmpty(const MessageContext::HostPluginVersion& v)
+{
+    return v.version.empty() && v.timestamp.empty();
+}
 
 // Pure HDC message assembler.
 // Responsibility scope: given an immutable MessageContext + per-call inputs,

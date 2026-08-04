@@ -398,12 +398,12 @@ bool IsCurrentVfMode(const uint32_t deviceId, const uint32_t vfId)
 
 std::string ExtractSubString(const std::string& input, const std::string& begin, const std::string& end)
 {
-    size_t pos = input.find(begin);
+    const size_t pos = input.find(begin);
     if (pos == std::string::npos) {
         return "";
     }
-    size_t left = pos + begin.length();
-    size_t right = input.find(end, left);
+    const size_t left = pos + begin.length();
+    const size_t right = input.find(end, left);
     if (right == std::string::npos) {
         return "";
     }

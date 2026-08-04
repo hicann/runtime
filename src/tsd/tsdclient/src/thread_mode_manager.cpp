@@ -187,7 +187,7 @@ TSD_StatusT ThreadModeManager::Close(const uint32_t flag)
     return ret;
 }
 
-TSD_StatusT ThreadModeManager::UpdateProfilingConf(const uint32_t& flag)
+TSD_StatusT ThreadModeManager::UpdateProfilingConf(const uint32_t flag)
 {
     TSD_StatusT ret = TSD_OK;
     if (handle_ == nullptr) {
@@ -397,7 +397,7 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
         return TSD_INTERNAL_ERROR;
     }
 
-    TSD_StatusT ret = LoadAdprofLibrary();
+    const TSD_StatusT ret = LoadAdprofLibrary();
     if (ret != TSD_OK) {
         return ret;
     }

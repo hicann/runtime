@@ -28,7 +28,7 @@ const std::string EXTEND_PACKAGE_PATTERN = "^Ascend([0-9]{3}(rc)?(P)?)?-aicpu_ex
 const std::string ASCENDCPP_PACKAGE_PATTERN = "^transformer_tile_fwk_aicpu_kernel\\.tar\\.gz$";
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 const std::string QUEUE_SCHEDULE_SO = "libqueue_schedule.so";
-const int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
+constexpr int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
 } // namespace
 
 namespace tsd {
@@ -118,7 +118,7 @@ bool PackageEnvInfo::GetShortSocVersion(std::string& shortSocVersion) const
         TSD_RUN_WARN("get soc_version by halGetSocVersion failed");
         return false;
     }
-    TSD_INFO("get soc_version:%s", socVersion);
+    TSD_INFO("get soc_version:%s", &socVersion[0]);
     (void)fe::PlatformInfoManager::Instance().InitializePlatformInfo();
     fe::OptionalInfos optionalInfos;
     fe::PlatFormInfos platformInfos;
@@ -269,7 +269,7 @@ bool PackageEnvInfo::CheckPackageExists(const bool loadAicpuKernelFlag)
         packageTypes.push_back(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL));
     }
     packageTypes.push_back(static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP));
-    for (const auto packageType : packageTypes) {
+    for (const uint32_t packageType : packageTypes) {
         if (CheckPackageExistsOnce(packageType)) {
             TSD_INFO("[TsdClient][deviceId=%u] get package successfully, packageType[%u]", logicDeviceId_, packageType);
             hasPackage = true;

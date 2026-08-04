@@ -15,31 +15,16 @@ namespace tsd {
 PackageManager::PackageManager(
     uint32_t logicDeviceId, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, uint32_t platInfoMode,
     bool isAdcEnv, uint32_t chipType)
-    : getCheckCodeRetrySupport_(false),
-      deviceIdle_(false),
-      loadPackageErrorMsg_(""),
-      envInfo_(logicDeviceId, platInfoMode, isAdcEnv, chipType),
+    : envInfo_(logicDeviceId, platInfoMode, isAdcEnv, chipType),
       hashStore_(),
-      pluginVersion_(envInfo_, hashStore_, pkgRspCode_),
-      packageName_(envInfo_.packageName_),
-      pkgHostHashValue_(hashStore_.pkgHostHashValue_),
-      pkgDeviceHashValue_(hashStore_.pkgDeviceHashValue_),
+      ctx_(),
+      pluginVersion_(envInfo_, hashStore_, ctx_),
       commAgent_(commAgent),
       capabilityMgr_(capabilityMgr),
-      devicePluginVersions_(pluginVersion_.devicePluginVersions_),
-      pluginUpdateStrategy_(pluginVersion_.pluginUpdateStrategy_),
-      hasComputedPluginStrategy_(pluginVersion_.hasComputedPluginStrategy_),
-      sender_(*this, commAgent_, capabilityMgr_, envInfo_, hashStore_, deviceIdle_, getCheckCodeRetrySupport_),
-      checkCodeSvc_(
-          *this, commAgent_, capabilityMgr_, envInfo_, hashStore_, pkgRspCode_, getCheckCodeRetrySupport_,
-          loadPackageErrorMsg_),
-      loader_(*this, commAgent_, capabilityMgr_, envInfo_, hashStore_, pkgRspCode_, loadPackageErrorMsg_),
-      aicpuPackageExistInDevice_(loader_.aicpuPackageExistInDevice_),
-      packagePeerCheckCode_(checkCodeSvc_.peerCheckCode_),
-      packageHostCheckCode_(checkCodeSvc_.hostCheckCode_)
+      checkCodeSvc_(commAgent_, capabilityMgr_, envInfo_, hashStore_, ctx_),
+      sender_(commAgent_, capabilityMgr_, envInfo_, hashStore_, ctx_, checkCodeSvc_),
+      loader_(commAgent_, capabilityMgr_, envInfo_, hashStore_, ctx_, sender_, checkCodeSvc_, pluginVersion_)
 {}
-
-PackageManager::~PackageManager() {}
 
 void PackageManager::ResetOnClose() { loader_.Reset(); }
 

@@ -146,7 +146,7 @@ TEST_F(ClientManagerTest, GetPackagePathSucc)
     MOCKER(mmSysGetEnv).stubs().will(returnValue(&envpath[0U]));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     std::string env = "";
-    ClientManager::GetInstance(0)->GetPackagePath(env, 0U);
+    ClientManager::GetInstance(0)->envInfo_.GetPackagePath(env, 0U);
     EXPECT_EQ(env, "/home/opp/Ascend310/aicpu/");
 }
 
@@ -284,7 +284,7 @@ TEST_F(ClientManagerTest, GetPackagePathFail)
 {
     MOCKER_CPP(&PackageEnvInfo::GetPackageTitle).stubs().will(returnValue(false));
     std::string kernelPath;
-    const bool ret = ClientManager::GetInstance(0)->GetPackagePath(kernelPath, 0U);
+    const bool ret = ClientManager::GetInstance(0)->envInfo_.GetPackagePath(kernelPath, 0U);
     EXPECT_EQ(ret, false);
 }
 

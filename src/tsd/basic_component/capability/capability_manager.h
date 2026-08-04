@@ -13,7 +13,6 @@
 
 #include "device_comm_agent.h"
 #include "hdc_message_builder.h"
-#include "inc/client_manager.h"
 #include "basic_define.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/tsd_client.h" // SubProcType

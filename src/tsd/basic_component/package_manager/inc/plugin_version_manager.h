@@ -15,8 +15,9 @@
 #include "package_process_config.h"
 #include "package_env_info.h"
 #include "package_hash_store.h"
+#include "package_context.h"
 #include "hdc_message_builder.h"
-#include "inc/client_manager.h"
+#include "basic_define.h"
 #include "proto/tsd_message.pb.h"
 
 #include <map>
@@ -26,7 +27,7 @@ namespace tsd {
 
 class PluginVersionManager {
 public:
-    PluginVersionManager(PackageEnvInfo& envInfo, PackageHashStore& hashStore, ResponseCode& pkgRspCode);
+    PluginVersionManager(PackageEnvInfo& envInfo, PackageHashStore& hashStore, PackageContext& ctx);
     ~PluginVersionManager() = default;
 
     bool IsCompatPluginPackage(const PackConfDetail& detail) const;
@@ -35,15 +36,19 @@ public:
     bool CompareHostDeviceCompatPluginVersion(const std::string& pkgPureName);
     void HandleDevicePluginVersionRsp(const HDCMessage& msg);
 
-    // 状态（public 供 Facade 引用别名访问）
+    std::map<std::string, PluginPkgVersion>& GetDevicePluginVersions() { return devicePluginVersions_; }
+    const std::map<std::string, PluginPkgVersion>& GetDevicePluginVersions() const { return devicePluginVersions_; }
+    void SetPluginUpdateStrategy(PluginUpdateStrategy s) { pluginUpdateStrategy_ = s; }
+    bool HasComputedPluginStrategy() const { return hasComputedPluginStrategy_; }
+    void SetHasComputedPluginStrategy(bool v) { hasComputedPluginStrategy_ = v; }
+
+private:
     std::map<std::string, PluginPkgVersion> devicePluginVersions_;
     PluginUpdateStrategy pluginUpdateStrategy_ = PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE;
     bool hasComputedPluginStrategy_ = false;
-
-private:
     PackageEnvInfo& envInfo_;
     PackageHashStore& hashStore_;
-    ResponseCode& pkgRspCode_;
+    PackageContext& ctx_;
 };
 
 } // namespace tsd

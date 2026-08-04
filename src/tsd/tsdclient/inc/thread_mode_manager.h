@@ -57,7 +57,7 @@ public:
      * @param flag : control number
      * @return TSD_OK when SUCCESS
      */
-    TSD_StatusT UpdateProfilingConf(const uint32_t& flag) override;
+    TSD_StatusT UpdateProfilingConf(const uint32_t flag) override;
 
     TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo) override;
 

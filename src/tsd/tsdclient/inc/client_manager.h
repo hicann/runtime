@@ -7,8 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef INNER_INC_CLIENT_MANAGER_H
-#define INNER_INC_CLIENT_MANAGER_H
+#ifndef TSD_CLIENT_MANAGER_H
+#define TSD_CLIENT_MANAGER_H
 
 #include <mmpa/mmpa_api.h>
 #include <vector>
@@ -21,38 +21,8 @@
 #define TSD_PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)
 
 namespace tsd {
-enum class ProfilingMode {
-    PROFILING_CLOSE = 0,
-    PROFILING_OPEN,
-};
-
-enum class RunningMode {
-    UNSET_MODE = 0,
-    PROCESS_MODE,
-    THREAD_MODE,
-};
-
-typedef enum tagChipType {
-    CHIP_BEGIN = 0,
-    CHIP_MINI = CHIP_BEGIN,
-    CHIP_ASCEND_910A = 1,
-    CHIP_ADC = 2,
-    CHIP_DC = 4,
-    CHIP_ASCEND_910B = 5,
-    CHIP_MINI_V3 = 7,
-    CHIP_AS31XM1 = 11,
-    CHIP_610LITE = 12,
-    CHIP_ASCEND_950 = 15,
-    CHIP_CLOUD_V5 = 16,
-    CHIP_MC62CM12A = 17, /* MC62CM12A */
-    CHIP_MC32DM11A = 18, /* CHIP_MC32DM11A */
-    CHIP_ASCEND_350 = 19,
-    CHIP_END
-} ChipType_t;
 
 // 返回给tsdclient的open/close确认码
-enum class ResponseCode { SUCCESS = 0, FAIL = 1 };
-
 class ClientManager {
 public:
     /**
@@ -78,7 +48,7 @@ public:
      * @ingroup ClientManager
      * @brief 构造函数
      */
-    explicit ClientManager(const uint32_t& deviceId);
+    explicit ClientManager(const uint32_t deviceId);
 
     /**
      * @ingroup ClientManager
@@ -117,7 +87,7 @@ public:
      * @param [in] flag:  profiling 标志位
      * @return TSD_OK:成功 或者其他错误码
      */
-    virtual TSD_StatusT UpdateProfilingConf(const uint32_t& flag) = 0;
+    virtual TSD_StatusT UpdateProfilingConf(const uint32_t flag) = 0;
 
     /**
      * @ingroup ClientManager
@@ -230,18 +200,6 @@ private:
     ClientManager& operator=(const ClientManager&) = delete;
     ClientManager& operator=(ClientManager&) = delete;
     ClientManager& operator=(ClientManager&&) = delete;
-    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const
-
-    {
-        return envInfo_.GetPackagePath(packagePath, packageType);
-    }
-    bool CheckPackageExistsOnce(const uint32_t packageType) { return envInfo_.CheckPackageExistsOnce(packageType); }
-    std::vector<std::string> ScanAndMatchPackages(const std::string& packagePath, const uint32_t packageType) const
-
-    {
-        return envInfo_.ScanAndMatchPackages(packagePath, packageType);
-    }
-    std::string (&packagePattern_)[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 };
 } // namespace tsd
-#endif // INNER_INC_CLIENT_MANAGER_H
+#endif // TSD_CLIENT_MANAGER_H

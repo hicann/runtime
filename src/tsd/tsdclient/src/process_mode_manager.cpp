@@ -201,11 +201,9 @@ TSD_StatusT ProcessModeManager::GetHdcConctStatus(int32_t& hdcSessStat)
     return tsdCtrl_.GetHdcConctStatus(hdcSessStat);
 }
 
-TSD_StatusT ProcessModeManager::UpdateProfilingConf(const uint32_t& flag) { return tsdCtrl_.UpdateProfilingConf(flag); }
+TSD_StatusT ProcessModeManager::UpdateProfilingConf(const uint32_t flag) { return tsdCtrl_.UpdateProfilingConf(flag); }
 
 TSD_StatusT ProcessModeManager::InitQs(const InitFlowGwInfo* const initInfo) { return tsdCtrl_.InitQs(initInfo); }
-
-ProcessModeManager::~ProcessModeManager() {}
 
 TSD_StatusT ProcessModeManager::CapabilityGet(const int32_t type, const uint64_t ptr)
 {
@@ -284,7 +282,7 @@ TSD_StatusT ProcessModeManager::CloseNetService()
         return TsdClose(0U);
     } else {
         ProcStatusParam closeList;
-        closeList.pid = tsdCtrl_.GetHccpPid();
+        closeList.pid = static_cast<pid_t>(tsdCtrl_.GetHccpPid());
         closeList.curStat = SubProcessStatus::SUB_PROCESS_STATUS_NORMAL;
         closeList.procType = SubProcType::TSD_SUB_PROC_HCCP;
         return subProcCtrl_.CloseSubProcList(&closeList, 1U);

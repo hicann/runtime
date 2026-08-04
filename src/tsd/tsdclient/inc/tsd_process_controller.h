@@ -35,20 +35,20 @@ public:
         DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageManager& packageMgr,
         ProcessSharedContext& sharedCtx, uint32_t aicpuDeviceMode);
 
-    TSD_StatusT Open(uint32_t rankSize);
+    TSD_StatusT Open(const uint32_t rankSize);
     TSD_StatusT OpenAicpuSd();
-    TSD_StatusT OpenProcess(uint32_t rankSize);
+    TSD_StatusT OpenProcess(const uint32_t rankSize);
     TSD_StatusT Close(uint32_t flag);
     TSD_StatusT GetHdcConctStatus(int32_t& hdcSessStat);
     TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo);
-    TSD_StatusT UpdateProfilingConf(const uint32_t& flag);
+    TSD_StatusT UpdateProfilingConf(const uint32_t flag);
 
     TSD_StatusT InitTsdClient();
-    TSD_StatusT WaitRsp(uint32_t timeout, bool ignoreRecvErr = false, bool isClose = false);
+    TSD_StatusT WaitRsp(const uint32_t timeout, const bool ignoreRecvErr = false, const bool isClose = false);
     MessageContext BuildBaseMessageContext() const;
 
-    void SetTsdStartInfo(bool cpStatus, bool hccpStatus, bool qsStatus);
-    bool CheckNeedToOpen(uint32_t rankSize, TsdStartStatusInfo& startInfo);
+    void SetTsdStartInfo(const bool cpStatus, const bool hccpStatus, const bool qsStatus);
+    bool CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo);
 
     TSD_StatusT ProcessQueueForAdc();
     TSD_StatusT SyncQueueAuthority() const;
@@ -75,16 +75,16 @@ private:
         uint32_t quickCloseFlag : 1;
         uint32_t res : 31;
     };
-    enum TsdCloseMode { QUICK_CLOSE_MODE = 1 };
+    enum class TsdCloseMode : uint32_t { QUICK_CLOSE_MODE = 1 };
 
-    TSD_StatusT SendOpenMsg(uint32_t rankSize, TsdStartStatusInfo startInfo);
+    TSD_StatusT SendOpenMsg(const uint32_t rankSize, const TsdStartStatusInfo startInfo);
     TSD_StatusT SendCloseMsg();
-    TSD_StatusT SendUpdateProfilingMsg(uint32_t flag);
-    TSD_StatusT ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo);
-    TSD_StatusT ConstructCloseMsg(HDCMessage& msg);
+    TSD_StatusT SendUpdateProfilingMsg(const uint32_t flag);
+    TSD_StatusT ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo) const;
+    TSD_StatusT ConstructCloseMsg(HDCMessage& msg) const;
     TSD_StatusT MapFailCodeToStatus() const;
-    std::string BuildWaitRspErrReport(TSD_StatusT recvRet) const;
-    void ParseTsdCloseFlag(uint32_t flag, TsdCloseFlag& tsdCloseFlag) const;
+    std::string BuildWaitRspErrReport(const TSD_StatusT recvRet) const;
+    void ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag& tsdCloseFlag) const;
     TSD_StatusT LoadPackagesToDevice();
     TSD_StatusT WaitOpenRsp(const uint32_t rankSize);
     void LogOpenProcessDuration(

@@ -188,7 +188,7 @@ TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, cons
         commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
     HDCMessage msg;
     MessageContext ctx = tsdCtrl_.BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(arrayLen);
+    ctx.subProcPidList.reserve(static_cast<size_t>(arrayLen));
     for (uint32_t index = 0; index < arrayLen; index++) {
         ctx.subProcPidList.push_back(static_cast<uint32_t>(pidInfo[index].pid));
     }
@@ -219,8 +219,8 @@ TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo,
     TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null");
     HDCMessage msg;
     MessageContext ctx = tsdCtrl_.BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(arrayLen);
-    ctx.subProcTypeList.reserve(arrayLen);
+    ctx.subProcPidList.reserve(static_cast<size_t>(arrayLen));
+    ctx.subProcTypeList.reserve(static_cast<size_t>(arrayLen));
     for (uint32_t index = 0; index < arrayLen; index++) {
         ctx.subProcPidList.push_back(static_cast<uint32_t>(pidInfo[index].pid));
         ctx.subProcTypeList.push_back(static_cast<uint32_t>(pidInfo[index].procType));
@@ -296,7 +296,7 @@ TSD_StatusT SubProcessController::CloseSubProcList(const ProcStatusParam* closeL
         TSD_RUN_INFO("device comm client is null, skip close sub proc list");
         return TSD_HDC_CLIENT_CLOSED_EXTERNAL;
     }
-    if (!TSD_BITMAP_GET(capabilityMgr_.GetTsdSupportLevel(), TSD_SUPPORT_CLOSE_LIST_BIT)) {
+    if (TSD_BITMAP_GET(capabilityMgr_.GetTsdSupportLevel(), TSD_SUPPORT_CLOSE_LIST_BIT) == 0U) {
         TSD_StatusT singleCloseRet = TSD_OK;
         for (uint32_t index = 0U; index < listSize; index++) {
             if (CloseSubProc(closeList[index].pid) != TSD_OK) {
@@ -336,8 +336,8 @@ TSD_StatusT SubProcessController::ExecuteClosePidList(
     TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null");
     HDCMessage msg;
     MessageContext ctx = tsdCtrl_.BuildBaseMessageContext();
-    ctx.subProcPidList.reserve(pidCnt);
-    ctx.subProcTypeList.reserve(pidCnt);
+    ctx.subProcPidList.reserve(static_cast<size_t>(pidCnt));
+    ctx.subProcTypeList.reserve(static_cast<size_t>(pidCnt));
     for (uint32_t index = 0U; index < pidCnt; index++) {
         const uint32_t curPid = static_cast<uint32_t>(closeList[index + startIndex].pid);
         const uint32_t curType = static_cast<uint32_t>(closeList[index + startIndex].procType);

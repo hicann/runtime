@@ -13,9 +13,8 @@
 
 namespace tsd {
 
-PluginVersionManager::PluginVersionManager(
-    PackageEnvInfo& envInfo, PackageHashStore& hashStore, ResponseCode& pkgRspCode)
-    : envInfo_(envInfo), hashStore_(hashStore), pkgRspCode_(pkgRspCode)
+PluginVersionManager::PluginVersionManager(PackageEnvInfo& envInfo, PackageHashStore& hashStore, PackageContext& ctx)
+    : envInfo_(envInfo), hashStore_(hashStore), ctx_(ctx)
 {}
 
 bool PluginVersionManager::IsCompatPluginPackage(const PackConfDetail& detail) const
@@ -30,7 +29,7 @@ PluginUpdateStrategy PluginVersionManager::GetPluginUpdateStrategy()
     }
 
     int64_t flag = 0;
-    auto drvRet =
+    const auto drvRet =
         halGetDeviceInfo(envInfo_.GetLogicDeviceId(), MODULE_TYPE_SYSTEM, INFO_TYPE_SWPLUGIN_UPGRADE_POLICY, &flag);
     if (drvRet != DRV_ERROR_NONE) {
         TSD_RUN_WARN(
@@ -91,10 +90,10 @@ bool PluginVersionManager::CompareHostDeviceCompatPluginVersion(const std::strin
             deviceInfo.timestamp.c_str());
         return true;
     }
+    const char* const cmpStr = (cmp < 0) ? "older than" : "equals";
     TSD_RUN_INFO(
-        "host plugin pkg:%s %s device, skip. host[%s/%s] device[%s/%s]", pkgPureName.c_str(),
-        (cmp < 0 ? "older than" : "equals"), hostInfo.version.c_str(), hostInfo.timestamp.c_str(),
-        deviceInfo.version.c_str(), deviceInfo.timestamp.c_str());
+        "host plugin pkg:%s %s device, skip. host[%s/%s] device[%s/%s]", pkgPureName.c_str(), cmpStr,
+        hostInfo.version.c_str(), hostInfo.timestamp.c_str(), deviceInfo.version.c_str(), deviceInfo.timestamp.c_str());
     return false;
 }
 
@@ -111,7 +110,7 @@ void PluginVersionManager::HandleDevicePluginVersionRsp(const HDCMessage& msg)
             "device plugin pkg:%s version:%s timestamp:%s", info.package_name().c_str(), ver.version.c_str(),
             ver.timestamp.c_str());
     }
-    pkgRspCode_ = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
+    ctx_.pkgRspCode = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
     TSD_RUN_INFO("device plugin info rsp, pkgCount:%d", msg.device_plugin_versions_size());
 }
 

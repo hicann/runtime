@@ -48,6 +48,38 @@ enum class TsdLoadPackageType : uint32_t {
     TSD_PKG_TYPE_MAX = 32U
 };
 
+enum class ProfilingMode {
+    PROFILING_CLOSE = 0,
+    PROFILING_OPEN,
+};
+
+enum class RunningMode {
+    UNSET_MODE = 0,
+    PROCESS_MODE,
+    THREAD_MODE,
+};
+
+typedef enum tagChipType {
+    CHIP_BEGIN = 0,
+    CHIP_MINI = CHIP_BEGIN,
+    CHIP_ASCEND_910A = 1,
+    CHIP_ADC = 2,
+    CHIP_DC = 4,
+    CHIP_ASCEND_910B = 5,
+    CHIP_MINI_V3 = 7,
+    CHIP_AS31XM1 = 11,
+    CHIP_610LITE = 12,
+    CHIP_ASCEND_950 = 15,
+    CHIP_CLOUD_V5 = 16,
+    CHIP_MC62CM12A = 17, /* MC62CM12A */
+    CHIP_MC32DM11A = 18, /* CHIP_MC32DM11A */
+    CHIP_ASCEND_350 = 19,
+    CHIP_END
+} ChipType_t;
+
+// 返回给tsdclient的open/close确认码
+enum class ResponseCode { SUCCESS = 0, FAIL = 1 };
+
 struct BaseInfo {
     uint32_t deviceId;
     uint32_t hostPid;

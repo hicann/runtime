@@ -15,23 +15,26 @@
 #include "capability_manager.h"
 #include "package_env_info.h"
 #include "package_hash_store.h"
+#include "package_context.h"
 #include "package_process_config.h"
 #include "hdc_message_builder.h"
 #include "proto/tsd_message.pb.h"
 #include "basic_define.h"
-#include "inc/client_manager.h"
 
 #include <string>
 
 namespace tsd {
 
-class PackageManager;
+class PackageSender;
+class PackageCheckCodeService;
+class PluginVersionManager;
 
 class PackageLoader {
 public:
     PackageLoader(
-        PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-        PackageHashStore& hashStore, ResponseCode& pkgRspCode, std::string& loadPackageErrorMsg);
+        DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
+        PackageHashStore& hashStore, PackageContext& ctx, PackageSender& sender, PackageCheckCodeService& checkCodeSvc,
+        PluginVersionManager& pluginVersion);
     ~PackageLoader() = default;
 
     TSD_StatusT LoadSysOpKernel();
@@ -58,7 +61,8 @@ public:
 
     void Reset();
 
-    bool aicpuPackageExistInDevice_ = false;
+    bool IsAicpuPackageExistInDevice() const { return ctx_.aicpuPackageExistInDevice; }
+    void SetAicpuPackageExistInDevice(bool v) { ctx_.aicpuPackageExistInDevice = v; }
 
 private:
     TSD_StatusT LoadHsPkgToDevice(
@@ -68,13 +72,14 @@ private:
     TSD_StatusT SendAllPackagesToPeer();
     bool hasSendConfigFile_ = false;
 
-    PackageManager& mgr_;
     DeviceCommAgent& commAgent_;
     CapabilityManager& capabilityMgr_;
     PackageEnvInfo& envInfo_;
     PackageHashStore& hashStore_;
-    ResponseCode& pkgRspCode_;
-    std::string& loadPackageErrorMsg_;
+    PackageContext& ctx_;
+    PackageSender& sender_;
+    PackageCheckCodeService& checkCodeSvc_;
+    PluginVersionManager& pluginVersion_;
 };
 
 } // namespace tsd

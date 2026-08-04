@@ -15,6 +15,7 @@
 #include "capability_manager.h"
 #include "package_env_info.h"
 #include "package_hash_store.h"
+#include "package_context.h"
 #include "hdc_message_builder.h"
 #include "proto/tsd_message.pb.h"
 #include "basic_define.h"
@@ -24,18 +25,18 @@
 
 namespace tsd {
 
-class PackageManager;
+class PackageCheckCodeService;
 
 class PackageSender {
 public:
     PackageSender(
-        PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-        PackageHashStore& hashStore, bool& deviceIdle, bool& getCheckCodeRetrySupport);
+        DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
+        PackageHashStore& hashStore, PackageContext& ctx, PackageCheckCodeService& checkCodeSvc);
     ~PackageSender() = default;
 
     TSD_StatusT SendAICPUPackage(const int32_t peerNode, const std::string& path);
     TSD_StatusT SendAICPUPackageSimple(
-        const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath);
+        const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath) const;
     TSD_StatusT SendHostPackageComplex(
         const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
         const std::function<bool(void)>& compareCallBack, bool useCannPath);
@@ -45,19 +46,18 @@ public:
     TSD_StatusT SendCommonPackage(const int32_t peerNode, const std::string& path, const uint32_t packageType);
     TSD_StatusT SendFileToDevice(
         const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen,
-        const bool addPreFix = false);
+        const bool addPreFix = false) const;
     TSD_StatusT CompareAndSendCommonSinkPkg(
         const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode,
         const std::string& orgFile, const std::string& dstFile);
 
 private:
-    PackageManager& mgr_;
     DeviceCommAgent& commAgent_;
     CapabilityManager& capabilityMgr_;
     PackageEnvInfo& envInfo_;
     PackageHashStore& hashStore_;
-    bool& deviceIdle_;
-    bool& getCheckCodeRetrySupport_;
+    PackageContext& ctx_;
+    PackageCheckCodeService& checkCodeSvc_;
 };
 
 } // namespace tsd

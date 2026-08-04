@@ -9,7 +9,6 @@
  */
 
 #include "package_check_code_service.h"
-#include "package_manager.h"
 #include "tsd_log.h"
 #include "tsd/status.h"
 #include "tsd_scope_guard.h"
@@ -29,8 +28,8 @@ struct CheckCodeRspHandler {
 
 void HandleSingleCheckCodeRsp(tsd::PackageCheckCodeService& svc, const HDCMessage& msg, tsd::TsdLoadPackageType pkgType)
 {
-    svc.peerCheckCode_[static_cast<uint32_t>(pkgType)] = msg.check_code();
-    svc.pkgRspCode_ = ((msg.tsd_rsp_code() == 0U) ? tsd::ResponseCode::SUCCESS : tsd::ResponseCode::FAIL);
+    svc.SetPeerCheckCode(static_cast<uint32_t>(pkgType), msg.check_code());
+    svc.GetPkgRspCode() = ((msg.tsd_rsp_code() == 0U) ? tsd::ResponseCode::SUCCESS : tsd::ResponseCode::FAIL);
 }
 
 void HandleRuntimeCheckCodeRsp(tsd::PackageCheckCodeService& svc, const HDCMessage& msg)
@@ -45,39 +44,26 @@ void HandleDshapeCheckCodeRsp(tsd::PackageCheckCodeService& svc, const HDCMessag
 
 void HandleMultiCheckCodeRsp(tsd::PackageCheckCodeService& svc, const HDCMessage& msg)
 {
-    svc.peerCheckCode_[static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)] = msg.check_code();
-    svc.peerCheckCode_[static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)] =
-        msg.extendpkg_check_code();
-    svc.peerCheckCode_[static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)] =
-        msg.ascendcpppkg_check_code();
+    svc.SetPeerCheckCode(static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL), msg.check_code());
+    svc.SetPeerCheckCode(
+        static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL), msg.extendpkg_check_code());
+    svc.SetPeerCheckCode(
+        static_cast<uint32_t>(tsd::TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP), msg.ascendcpppkg_check_code());
 }
 
-const CheckCodeRspHandler CHECK_CODE_RSP_HANDLERS[] = {
-    {HDCMessage::TSD_GET_DEVICE_RUNTIME_CHECKCODE_RSP, HandleRuntimeCheckCodeRsp},
-    {HDCMessage::TSD_GET_DEVICE_DSHAPE_CHECKCODE_RSP, HandleDshapeCheckCodeRsp},
-    {HDCMessage::TSD_CHECK_PACKAGE_RETRY_RSP, HandleMultiCheckCodeRsp},
-    {HDCMessage::TSD_CHECK_PACKAGE_RSP, HandleMultiCheckCodeRsp},
+constexpr const CheckCodeRspHandler CHECK_CODE_RSP_HANDLERS[] = {
+    {HDCMessage::TSD_GET_DEVICE_RUNTIME_CHECKCODE_RSP, &HandleRuntimeCheckCodeRsp},
+    {HDCMessage::TSD_GET_DEVICE_DSHAPE_CHECKCODE_RSP, &HandleDshapeCheckCodeRsp},
+    {HDCMessage::TSD_CHECK_PACKAGE_RETRY_RSP, &HandleMultiCheckCodeRsp},
+    {HDCMessage::TSD_CHECK_PACKAGE_RSP, &HandleMultiCheckCodeRsp},
 };
 } // namespace
 
 PackageCheckCodeService::PackageCheckCodeService(
-    PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-    PackageHashStore& hashStore, ResponseCode& pkgRspCode, bool& getCheckCodeRetrySupport,
-    std::string& loadPackageErrorMsg)
-    : mgr_(mgr),
-      commAgent_(commAgent),
-      capabilityMgr_(capabilityMgr),
-      envInfo_(envInfo),
-      hashStore_(hashStore),
-      pkgRspCode_(pkgRspCode),
-      getCheckCodeRetrySupport_(getCheckCodeRetrySupport),
-      loadPackageErrorMsg_(loadPackageErrorMsg)
-{
-    for (uint32_t index = 0U; index < static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX); index++) {
-        peerCheckCode_[index] = 0U;
-        hostCheckCode_[index] = 0U;
-    }
-}
+    DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo, PackageHashStore& hashStore,
+    PackageContext& ctx)
+    : commAgent_(commAgent), capabilityMgr_(capabilityMgr), envInfo_(envInfo), hashStore_(hashStore), ctx_(ctx)
+{}
 
 TSD_StatusT PackageCheckCodeService::InitTsdClient()
 {
@@ -91,11 +77,11 @@ TSD_StatusT PackageCheckCodeService::InitTsdClient()
 TSD_StatusT PackageCheckCodeService::WaitPkgRsp(const uint32_t timeout, const bool ignoreRecvErr)
 {
     const TSD_StatusT ret = commAgent_.RecvData(ignoreRecvErr, timeout);
-    if ((ret != TSD_OK) || (static_cast<uint32_t>(pkgRspCode_) != 0U)) {
+    if ((ret != TSD_OK) || (static_cast<uint32_t>(ctx_.pkgRspCode) != 0U)) {
         if (!ignoreRecvErr) {
             TSD_ERROR(
                 "tsd package wait response fail, ret[%u], rspCode[%u]", static_cast<uint32_t>(ret),
-                static_cast<uint32_t>(pkgRspCode_));
+                static_cast<uint32_t>(ctx_.pkgRspCode));
         }
         return TSD_INTERNAL_ERROR;
     }
@@ -122,7 +108,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCodeOnce(const HDCMessage& ms
 
 TSD_StatusT PackageCheckCodeService::PrepareForCheckCode()
 {
-    const TSD_StatusT ret = mgr_.InitTsdClient();
+    const TSD_StatusT ret = this->InitTsdClient();
     if (ret != TSD_OK) {
         TSD_RUN_WARN("[PackageManager][deviceId=%u] init failed for send aicpu package", envInfo_.GetLogicDeviceId());
         if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
@@ -137,13 +123,13 @@ TSD_StatusT PackageCheckCodeService::PrepareForCheckCode()
 
 TSD_StatusT PackageCheckCodeService::GetDeviceCheckCode()
 {
-    if (mgr_.aicpuPackageExistInDevice_) {
+    if (ctx_.aicpuPackageExistInDevice) {
         TSD_RUN_INFO(
             "[PackageManager][deviceId=%u] aicpu package already exist in device", envInfo_.GetLogicDeviceId());
         return TSD_AICPUPACKAGE_EXISTED;
     }
 
-    TSD_StatusT ret = mgr_.PrepareForCheckCode();
+    const TSD_StatusT ret = this->PrepareForCheckCode();
     if (ret != TSD_OK) {
         return ret;
     }
@@ -155,17 +141,17 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCode()
 
     if (!versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE)) {
         TSD_RUN_INFO("[TsdClient] Device does not support search check_code before send aicpu package.");
-        mgr_.aicpuPackageExistInDevice_ = true;
+        ctx_.aicpuPackageExistInDevice = true;
         return TSD_OK;
     }
 
     MessageContext ctx{};
     ctx.logicDeviceId = envInfo_.GetLogicDeviceId();
     ctx.asan = IsAsanMmSysEnv();
-    ctx.checkCode = hostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)];
+    ctx.checkCode = ctx_.hostCheckCode[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL)];
     ctx.extendpkgCheckCode =
-        hostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)];
-    ctx.ascendcppCheckCode = hostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)];
+        ctx_.hostCheckCode[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL)];
+    ctx.ascendcppCheckCode = ctx_.hostCheckCode[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)];
     HDCMessage msg;
     if (HdcMessageBuilder::BuildCheckPackage(msg, ctx) != TSD_OK) {
         TSD_ERROR("build check package msg failed");
@@ -174,13 +160,13 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCode()
     SetHostCheckCode(msg, TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
     SetHostCheckCode(msg, TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL);
     SetHostCheckCode(msg, TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP);
-    if (mgr_.GetDeviceCheckCodeOnce(msg) != TSD_OK) {
+    if (this->GetDeviceCheckCodeOnce(msg) != TSD_OK) {
         TSD_ERROR("get check code once failed.");
         return TSD_INTERNAL_ERROR;
     }
-    mgr_.GetDeviceCheckCodeRetrySupport();
+    this->GetDeviceCheckCodeRetrySupport();
 
-    mgr_.aicpuPackageExistInDevice_ = true;
+    ctx_.aicpuPackageExistInDevice = true;
 
     return TSD_OK;
 }
@@ -193,17 +179,17 @@ void PackageCheckCodeService::GetDeviceCheckCodeRetrySupport()
         TSD_ERROR("no VersionVerify available.");
         return;
     }
-    getCheckCodeRetrySupport_ = versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
+    ctx_.getCheckCodeRetrySupport = versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
 }
 
 TSD_StatusT PackageCheckCodeService::GetDeviceCheckCodeRetry(const HDCMessage& msg)
 {
-    TSD_StatusT ret = mgr_.PrepareForCheckCode();
+    const TSD_StatusT ret = this->PrepareForCheckCode();
     if (ret != TSD_OK) {
         return ret;
     }
     const ScopeGuard destroySessionGuard([this]() { this->commAgent_.ReleaseDeviceConnection(); });
-    if (mgr_.GetDeviceCheckCodeOnce(msg) != TSD_OK) {
+    if (this->GetDeviceCheckCodeOnce(msg) != TSD_OK) {
         TSD_ERROR("get check code once failed.");
         return TSD_INTERNAL_ERROR;
     }
@@ -213,20 +199,20 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCodeRetry(const HDCMessage& m
 void PackageCheckCodeService::SetHostCheckCode(HDCMessage& msg, TsdLoadPackageType type)
 {
     const uint32_t packageType = static_cast<uint32_t>(type);
-    if (envInfo_.packageName_[packageType].empty()) {
+    if (envInfo_.GetPackageNameRef(packageType).empty()) {
         return;
     }
-    const std::string orgFile = envInfo_.packagePath_[packageType] + envInfo_.packageName_[packageType];
-    hostCheckCode_[packageType] = CalFileSize(orgFile.c_str());
+    const std::string orgFile = envInfo_.GetPackagePathRef(packageType) + envInfo_.GetPackageNameRef(packageType);
+    ctx_.hostCheckCode[packageType] = static_cast<uint32_t>(CalFileSize(orgFile.c_str()));
     switch (type) {
         case TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL:
-            msg.set_check_code(hostCheckCode_[packageType]);
+            msg.set_check_code(ctx_.hostCheckCode[packageType]);
             break;
         case TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL:
-            msg.set_extendpkg_check_code(hostCheckCode_[packageType]);
+            msg.set_extendpkg_check_code(ctx_.hostCheckCode[packageType]);
             break;
         case TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP:
-            msg.set_ascendcpppkg_check_code(hostCheckCode_[packageType]);
+            msg.set_ascendcpppkg_check_code(ctx_.hostCheckCode[packageType]);
             break;
         default:
             break;
@@ -237,7 +223,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceHsPkgCheckCode(
     const uint32_t checkCode, const HDCMessage::MsgType msgType, const bool beforeSendFlag,
     const MessageContext& baseCtx)
 {
-    TSD_StatusT ret = mgr_.InitTsdClient();
+    TSD_StatusT ret = this->InitTsdClient();
     if (ret != TSD_OK) {
         TSD_ERROR("InitTsdClient failed");
         return TSD_INTERNAL_ERROR;
@@ -260,7 +246,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceHsPkgCheckCode(
     TSD_RUN_INFO(
         "[TsdClient][deviceId=%u] [sessionId=%u] wait package info response msgType:%u", envInfo_.GetLogicDeviceId(),
         commAgent_.GetSessionId(), static_cast<uint32_t>(msgType));
-    ret = mgr_.WaitPkgRsp(HELPER_PKG_LOAD_TIMEOUT);
+    ret = this->WaitPkgRsp(HELPER_PKG_LOAD_TIMEOUT);
     if (ret != TSD_OK) {
         if (beforeSendFlag) {
             TSD_RUN_INFO("not receive TSD_CHECK_PACKAGE rsp msg, just send pkg to server");
@@ -276,7 +262,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceHsPkgCheckCode(
 TSD_StatusT PackageCheckCodeService::GetCannHsPkgCheckCode(
     const std::string& pkgPureName, const std::string& hostPkgHash, const MessageContext& baseCtx)
 {
-    TSD_StatusT ret = mgr_.InitTsdClient();
+    TSD_StatusT ret = this->InitTsdClient();
     if (ret != TSD_OK) {
         TSD_ERROR("InitTsdClient failed");
         return TSD_INTERNAL_ERROR;
@@ -302,7 +288,7 @@ TSD_StatusT PackageCheckCodeService::GetCannHsPkgCheckCode(
     TSD_RUN_INFO(
         "[TsdClient][deviceId=%u] [sessionId=%u] wait cann package info response for %s", envInfo_.GetLogicDeviceId(),
         commAgent_.GetSessionId(), pkgPureName.c_str());
-    ret = mgr_.WaitPkgRsp(DRIVER_EXTEND_MAX_PROCESS_TIME * 1000U);
+    ret = this->WaitPkgRsp(DRIVER_EXTEND_MAX_PROCESS_TIME * 1000U);
     if (ret != TSD_OK) {
         TSD_ERROR("Wait response for package %s failed", pkgPureName.c_str());
         return TSD_INTERNAL_ERROR;
@@ -322,14 +308,14 @@ void PackageCheckCodeService::HandleNormalPackageCheckCodeRsp(const HDCMessage& 
     if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_COMMON_SINK)) {
         hashStore_.StoreAllPkgHashValue(msg);
     } else {
-        peerCheckCode_[packageType] = msg.check_code();
+        ctx_.peerCheckCode[packageType] = msg.check_code();
     }
-    mgr_.deviceIdle_ = msg.device_idle();
-    if (!mgr_.deviceIdle_) {
+    ctx_.deviceIdle = msg.device_idle();
+    if (!ctx_.deviceIdle) {
         TSD_RUN_WARN("device has process is running, skip load driver extend package");
     }
-    pkgRspCode_ = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
-    loadPackageErrorMsg_ = msg.error_info().error_log();
+    ctx_.pkgRspCode = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
+    ctx_.loadPackageErrorMsg = msg.error_info().error_log();
 }
 
 void PackageCheckCodeService::HandleCannHsCheckCodeRsp(const HDCMessage& msg)
@@ -341,8 +327,8 @@ void PackageCheckCodeService::HandleCannHsCheckCodeRsp(const HDCMessage& msg)
     std::string pkgName = msg.package_hash_code_list(0).package_name();
     std::string deviceHashValue = msg.package_hash_code_list(0).hash_code();
     hashStore_.SetDeviceCommonSinkPackHashValue(pkgName, deviceHashValue);
-    pkgRspCode_ = (msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL;
-    TSD_INFO("Set check code for %s success. rsp=%u", pkgName.c_str(), pkgRspCode_);
+    ctx_.pkgRspCode = (msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL;
+    TSD_INFO("Set check code for %s success. rsp=%u", pkgName.c_str(), ctx_.pkgRspCode);
 }
 
 void PackageCheckCodeService::SaveDeviceCheckCode(const HDCMessage& msg)

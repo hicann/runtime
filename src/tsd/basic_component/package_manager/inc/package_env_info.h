@@ -49,7 +49,33 @@ public:
     std::string GetTrustedBasePath(bool useV2) const;
     TSD_StatusT GetTrustedBasePathFromDevice(int32_t& peerNode, std::string& dstDirPreFix) const;
 
-    // 状态（public 供 Facade 引用别名访问）
+    const std::string& GetHostSoPath() const { return hostSoPath_; }
+    void SetHostSoPath(const std::string& path) { hostSoPath_ = path; }
+    std::string& GetPackageNameRef(uint32_t type) { return packageName_[type]; }
+    const std::string& GetPackageNameRef(uint32_t type) const { return packageName_[type]; }
+    std::string& GetPackagePathRef(uint32_t type) { return packagePath_[type]; }
+    const std::string& GetPackagePathRef(uint32_t type) const { return packagePath_[type]; }
+    std::string& GetPackagePatternRef(uint32_t type) { return packagePattern_[type]; }
+    const std::string& GetPackagePatternRef(uint32_t type) const { return packagePattern_[type]; }
+    // 供 ClientManager 引用成员绑定（Facade 模式遗留）
+    std::string (&GetPackageNameArr())[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)]
+    {
+        return packageName_;
+    }
+    std::string (&GetPackagePathArr())[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)]
+    {
+        return packagePath_;
+    }
+    std::string (&GetPackagePatternArr())[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)]
+    {
+        return packagePattern_;
+    }
+
+    bool CheckPackageExistsOnce(const uint32_t packageType);
+    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const;
+    std::vector<std::string> ScanAndMatchPackages(const std::string& pkgPath, const uint32_t packageType) const;
+
+private:
     uint32_t platInfoMode_;
     bool isAdcEnv_;
     uint32_t chipType_;
@@ -57,12 +83,6 @@ public:
     std::string packageName_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
     std::string packagePath_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
     std::string packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
-
-    bool CheckPackageExistsOnce(const uint32_t packageType);
-    bool GetPackagePath(std::string& packagePath, const uint32_t packageType) const;
-    std::vector<std::string> ScanAndMatchPackages(const std::string& pkgPath, const uint32_t packageType) const;
-
-private:
     uint32_t logicDeviceId_;
 };
 

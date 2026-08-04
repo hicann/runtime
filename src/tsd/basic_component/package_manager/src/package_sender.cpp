@@ -9,7 +9,7 @@
  */
 
 #include "package_sender.h"
-#include "package_manager.h"
+#include "package_check_code_service.h"
 #include <string>
 #include <sys/file.h>
 #include "weak_ascend_hal.h"
@@ -29,19 +29,18 @@ constexpr uint32_t DRIVER_EXTEND_MAX_PROCESS_TIME = 140U;
 namespace tsd {
 
 PackageSender::PackageSender(
-    PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-    PackageHashStore& hashStore, bool& deviceIdle, bool& getCheckCodeRetrySupport)
-    : mgr_(mgr),
-      commAgent_(commAgent),
+    DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo, PackageHashStore& hashStore,
+    PackageContext& ctx, PackageCheckCodeService& checkCodeSvc)
+    : commAgent_(commAgent),
       capabilityMgr_(capabilityMgr),
       envInfo_(envInfo),
       hashStore_(hashStore),
-      deviceIdle_(deviceIdle),
-      getCheckCodeRetrySupport_(getCheckCodeRetrySupport)
+      ctx_(ctx),
+      checkCodeSvc_(checkCodeSvc)
 {}
 
 TSD_StatusT PackageSender::SendAICPUPackageSimple(
-    const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath)
+    const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, bool useCannPath) const
 {
     TSD_RUN_INFO(
         "[TsdClient][deviceId=%u] no equal to begin send file[%s] to [%s]", envInfo_.GetLogicDeviceId(),
@@ -77,7 +76,7 @@ TSD_StatusT PackageSender::SendMsgAndHostPackage(
     const std::function<bool(void)>& compareCallBack, bool useCannPath)
 {
     msg.set_wait_flag(false);
-    TSD_StatusT ret = mgr_.GetDeviceCheckCodeRetry(msg);
+    TSD_StatusT ret = checkCodeSvc_.GetDeviceCheckCodeRetry(msg);
     if (ret != TSD_OK) {
         if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
             return ret;
@@ -89,13 +88,13 @@ TSD_StatusT PackageSender::SendMsgAndHostPackage(
         return TSD_OK;
     }
 
-    if (mgr_.SendAICPUPackageSimple(peerNode, orgFile, dstFile, useCannPath) != TSD_OK) {
+    if (this->SendAICPUPackageSimple(peerNode, orgFile, dstFile, useCannPath) != TSD_OK) {
         REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
         return TSD_INTERNAL_ERROR;
     }
 
     msg.set_wait_flag(true);
-    ret = mgr_.GetDeviceCheckCodeRetry(msg);
+    ret = checkCodeSvc_.GetDeviceCheckCodeRetry(msg);
     if (ret != TSD_OK) {
         if (ret >= TSD_SUBPROCESS_NUM_EXCEED_THE_LIMIT) {
             return ret;
@@ -110,20 +109,20 @@ TSD_StatusT PackageSender::SendHostPackageComplex(
     const int32_t peerNode, const std::string& orgFile, const std::string& dstFile, HDCMessage& msg,
     const std::function<bool(void)>& compareCallBack, bool useCannPath)
 {
-    if (envInfo_.hostSoPath_.empty()) {
-        return mgr_.SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
+    if (envInfo_.GetHostSoPath().empty()) {
+        return this->SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
     }
     const std::string mutexFileName = envInfo_.GetCurHostMutexFile(useCannPath);
-    const std::string mutexFile = envInfo_.hostSoPath_ + mutexFileName;
+    const std::string mutexFile = envInfo_.GetHostSoPath() + mutexFileName;
     TSD_RUN_INFO("get host mutex file:%s, logicDeviceId:%u", mutexFile.c_str(), envInfo_.GetLogicDeviceId());
     if (!CheckRealPath(mutexFile)) {
         TSD_INFO("Cannot get realpath of mutexFile[%s]", mutexFile.c_str());
-        return mgr_.SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
+        return this->SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
     }
     const int32_t fileData = open(mutexFile.c_str(), O_RDONLY);
     if (fileData < 0) {
         TSD_INFO("Opening qs so [%s] was not successful, reason[%s]", mutexFile.c_str(), SafeStrerror().c_str());
-        return mgr_.SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
+        return this->SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
     } else {
         TSD_INFO("Open qs so [%s] success", mutexFile.c_str());
     }
@@ -135,57 +134,56 @@ TSD_StatusT PackageSender::SendHostPackageComplex(
     }
 
     const ScopeGuard fileLockGuard([&fileData]() { (void)flock(fileData, LOCK_UN); });
-    return mgr_.SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
+    return this->SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
 }
 
 TSD_StatusT PackageSender::SendAICPUPackage(const int32_t peerNode, const std::string& path)
 {
-    const uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
-    if (envInfo_.packageName_[packageType].empty()) {
+    constexpr uint32_t packageType = static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_KERNEL);
+    if (envInfo_.GetPackageNameRef(packageType).empty()) {
         TSD_RUN_INFO(
             "[TsdClient][deviceId_=%u] aicpu package is not existed, skip send package", envInfo_.GetLogicDeviceId());
         return TSD_OK;
     }
 
-    if (mgr_.packageHostCheckCode_[packageType] == mgr_.packagePeerCheckCode_[packageType]) {
+    if (ctx_.hostCheckCode[packageType] == ctx_.peerCheckCode[packageType]) {
         TSD_RUN_INFO(
             "[TsdClient][deviceId_=%u] the checksum of host package[%u] is the same as device[%u], skip send package.",
-            envInfo_.GetLogicDeviceId(), mgr_.packageHostCheckCode_[packageType],
-            mgr_.packagePeerCheckCode_[packageType]);
+            envInfo_.GetLogicDeviceId(), ctx_.hostCheckCode[packageType], ctx_.peerCheckCode[packageType]);
         return TSD_OK;
     }
 
-    const std::string orgFile = envInfo_.packagePath_[packageType] + envInfo_.packageName_[packageType];
+    const std::string orgFile = envInfo_.GetPackagePathRef(packageType) + envInfo_.GetPackageNameRef(packageType);
     const std::string dstFile =
-        path + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + envInfo_.packageName_[packageType];
-    if ((!getCheckCodeRetrySupport_) || (IsAsanMmSysEnv()) || (IsFpgaMmSysEnv())) {
-        return mgr_.SendAICPUPackageSimple(peerNode, orgFile, dstFile, false);
+        path + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + envInfo_.GetPackageNameRef(packageType);
+    if ((!ctx_.getCheckCodeRetrySupport) || (IsAsanMmSysEnv()) || (IsFpgaMmSysEnv())) {
+        return this->SendAICPUPackageSimple(peerNode, orgFile, dstFile, false);
     } else {
         MessageContext ctx{};
         ctx.logicDeviceId = envInfo_.GetLogicDeviceId();
-        ctx.checkCode = mgr_.packageHostCheckCode_[packageType];
+        ctx.checkCode = ctx_.hostCheckCode[packageType];
         ctx.packageType = packageType;
         HDCMessage msg;
         if (HdcMessageBuilder::BuildCheckPackageRetry(msg, ctx) != TSD_OK) {
             return TSD_INTERNAL_ERROR;
         }
         auto aicpuPkgCompareMethd = [this, packageType]() {
-            if (mgr_.packageHostCheckCode_[packageType] == mgr_.packagePeerCheckCode_[packageType]) {
+            if (ctx_.hostCheckCode[packageType] == ctx_.peerCheckCode[packageType]) {
                 TSD_INFO(
                     "[TsdClient] after lock, the checksum of aicpu package[%u] is same as device[%u], skip send",
-                    mgr_.packageHostCheckCode_[packageType], mgr_.packagePeerCheckCode_[packageType]);
+                    ctx_.hostCheckCode[packageType], ctx_.peerCheckCode[packageType]);
                 return true;
             }
             return false;
         };
-        return mgr_.SendHostPackageComplex(peerNode, orgFile, dstFile, msg, aicpuPkgCompareMethd, false);
+        return this->SendHostPackageComplex(peerNode, orgFile, dstFile, msg, aicpuPkgCompareMethd, false);
     }
 }
 
 TSD_StatusT PackageSender::SendCommonPackage(
     const int32_t peerNode, const std::string& path, const uint32_t packageType)
 {
-    if (envInfo_.packageName_[packageType].empty()) {
+    if (envInfo_.GetPackageNameRef(packageType).empty()) {
         TSD_RUN_INFO(
             "[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", envInfo_.GetLogicDeviceId(),
             packageType);
@@ -197,39 +195,41 @@ TSD_StatusT PackageSender::SendCommonPackage(
         supportLevelName = TSD_SUPPORT_EXTEND_PKG;
     } else if (packageType == static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP)) {
         supportLevelName = TSD_SUPPORT_ASCENDCPP_PKG;
+    } else {
+        TSD_RUN_WARN("unsupported packageType:%u", packageType);
+        return TSD_OK;
     }
     if (TSD_BITMAP_GET(capabilityMgr_.GetTsdSupportLevel(), supportLevelName) == 0U) {
-        mgr_.packageHostCheckCode_[packageType] = 0U;
+        ctx_.hostCheckCode[packageType] = 0U;
         TSD_RUN_INFO(
             "[TsdClient][deviceId_=%u] device does not support, skip send, packageType[%u]",
             envInfo_.GetLogicDeviceId(), packageType);
         return TSD_OK;
     }
 
-    if (mgr_.packageHostCheckCode_[packageType] == mgr_.packagePeerCheckCode_[packageType]) {
+    if (ctx_.hostCheckCode[packageType] == ctx_.peerCheckCode[packageType]) {
         TSD_INFO(
             "[TsdClient][deviceId_=%u] the checksum of host package[%u] is same as device[%u], skip send package, "
             "packageType[%u]",
-            envInfo_.GetLogicDeviceId(), mgr_.packageHostCheckCode_[packageType],
-            mgr_.packagePeerCheckCode_[packageType], packageType);
+            envInfo_.GetLogicDeviceId(), ctx_.hostCheckCode[packageType], ctx_.peerCheckCode[packageType], packageType);
         return TSD_OK;
     }
 
-    const std::string orgFile = envInfo_.packagePath_[packageType] + envInfo_.packageName_[packageType];
+    const std::string orgFile = envInfo_.GetPackagePathRef(packageType) + envInfo_.GetPackageNameRef(packageType);
     const std::string dstFile =
-        path + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + envInfo_.packageName_[packageType];
+        path + "/" + std::to_string(commAgent_.GetProcSign().tgid) + "_" + envInfo_.GetPackageNameRef(packageType);
     TSD_INFO(
         "[TsdClient][deviceId=%u] hostCheckCode[%u] no equal to deviceCheckCode[%u], begin send file[%s] to [%s], "
         "packageType[%u]",
-        envInfo_.GetLogicDeviceId(), mgr_.packageHostCheckCode_[packageType], mgr_.packagePeerCheckCode_[packageType],
-        orgFile.c_str(), dstFile.c_str(), packageType);
+        envInfo_.GetLogicDeviceId(), ctx_.hostCheckCode[packageType], ctx_.peerCheckCode[packageType], orgFile.c_str(),
+        dstFile.c_str(), packageType);
     const auto ret = drvHdcSendFile(
         peerNode, static_cast<int32_t>(envInfo_.GetLogicDeviceId()), orgFile.c_str(), dstFile.c_str(), nullptr);
     if (ret != DRV_ERROR_NONE) {
         TSD_ERROR(
             "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed, ret[%d], packageType[%u]",
             envInfo_.GetLogicDeviceId(), orgFile.c_str(), dstFile.c_str(), ret, packageType);
-        mgr_.packageHostCheckCode_[packageType] = 0U;
+        ctx_.hostCheckCode[packageType] = 0U;
         return TSD_INTERNAL_ERROR;
     }
     TSD_INFO(
@@ -240,7 +240,7 @@ TSD_StatusT PackageSender::SendCommonPackage(
 
 TSD_StatusT PackageSender::SendFileToDevice(
     const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen,
-    const bool addPreFix)
+    const bool addPreFix) const
 {
     TSD_RUN_INFO(
         "[TsdClient] [deviceId=%u][pathLen=%llu] SendFileToDevice enter", envInfo_.GetLogicDeviceId(), pathLen);
@@ -310,12 +310,12 @@ TSD_StatusT PackageSender::CompareAndSendCommonSinkPkg(
             TSD_INFO(
                 "checksum of driver package[%s] is same as device[%u], idle[%d], skip send",
                 hashStore_.GetHostCommonSinkPackHashValue(pkgPureName).c_str(), envInfo_.GetLogicDeviceId(),
-                deviceIdle_);
+                ctx_.deviceIdle);
             return true;
         }
         return false;
     };
-    if (mgr_.SendHostPackageComplex(peerNode, orgFile, dstFile, msg, commonSinkPkgCompareMethd, true) != TSD_OK) {
+    if (this->SendHostPackageComplex(peerNode, orgFile, dstFile, msg, commonSinkPkgCompareMethd, true) != TSD_OK) {
         TSD_ERROR("send common sink package to device failed");
         return TSD_INTERNAL_ERROR;
     }

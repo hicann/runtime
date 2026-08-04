@@ -32,6 +32,12 @@ public:
     void StoreAllPkgHashValue(const HDCMessage& msg);
     void Clear();
 
+    std::map<std::string, std::string>& GetPkgHostHashValue() { return pkgHostHashValue_; }
+    const std::map<std::string, std::string>& GetPkgHostHashValue() const { return pkgHostHashValue_; }
+    std::map<std::string, std::string>& GetPkgDeviceHashValue() { return pkgDeviceHashValue_; }
+    const std::map<std::string, std::string>& GetPkgDeviceHashValue() const { return pkgDeviceHashValue_; }
+
+private:
     std::map<std::string, std::string> pkgHostHashValue_;
     std::map<std::string, std::string> pkgDeviceHashValue_;
 };

@@ -9,7 +9,9 @@
  */
 
 #include "package_loader.h"
-#include "package_manager.h"
+#include "package_sender.h"
+#include "package_check_code_service.h"
+#include "plugin_version_manager.h"
 #include <string>
 #include <vector>
 #include "driver/ascend_hal.h"
@@ -64,6 +66,8 @@ std::string ConstructVerifyPkgErrorReason(const std::string& loadPackageErrorMsg
         reason = "Signature verification failed. The possible cause is that a multi-bit ECC error occurred "
                  "on the device or the software package has been tampered with. Obtain the device log, check whether "
                  "ECC errors are reported, and contact technical support at https://www.hiascend.com/support";
+    } else {
+        TSD_RUN_WARN("unsupported verify error message");
     }
     return reason;
 }
@@ -72,20 +76,22 @@ std::string ConstructVerifyPkgErrorReason(const std::string& loadPackageErrorMsg
 namespace tsd {
 
 PackageLoader::PackageLoader(
-    PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-    PackageHashStore& hashStore, ResponseCode& pkgRspCode, std::string& loadPackageErrorMsg)
-    : mgr_(mgr),
-      commAgent_(commAgent),
+    DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo, PackageHashStore& hashStore,
+    PackageContext& ctx, PackageSender& sender, PackageCheckCodeService& checkCodeSvc,
+    PluginVersionManager& pluginVersion)
+    : commAgent_(commAgent),
       capabilityMgr_(capabilityMgr),
       envInfo_(envInfo),
       hashStore_(hashStore),
-      pkgRspCode_(pkgRspCode),
-      loadPackageErrorMsg_(loadPackageErrorMsg)
+      ctx_(ctx),
+      sender_(sender),
+      checkCodeSvc_(checkCodeSvc),
+      pluginVersion_(pluginVersion)
 {}
 
 void PackageLoader::Reset()
 {
-    aicpuPackageExistInDevice_ = false;
+    SetAicpuPackageExistInDevice(false);
     hasSendConfigFile_ = false;
     hashStore_.Clear();
 }
@@ -93,12 +99,12 @@ void PackageLoader::Reset()
 TSD_StatusT PackageLoader::LoadSysOpKernel()
 {
     const bool loadAicpuKernelFlag = ShouldLoadLegacyPackage();
-    if (!mgr_.CheckPackageExists(loadAicpuKernelFlag)) {
+    if (!envInfo_.CheckPackageExists(loadAicpuKernelFlag)) {
         TSD_RUN_INFO("[TsdClient][logicDeviceId_=%u] cannot find aicpu packages", envInfo_.GetLogicDeviceId());
         return TSD_OK;
     }
 
-    TSD_StatusT ret = mgr_.GetDeviceCheckCode();
+    const TSD_StatusT ret = checkCodeSvc_.GetDeviceCheckCode();
     if (ret == TSD_AICPUPACKAGE_EXISTED) {
         return TSD_OK;
     }
@@ -142,14 +148,14 @@ TSD_StatusT PackageLoader::SendAllPackagesToPeer()
     }
     const std::string basePath(drvPath);
 
-    TSD_StatusT ret = mgr_.SendAICPUPackage(peerNode, basePath);
+    TSD_StatusT ret = sender_.SendAICPUPackage(peerNode, basePath);
     if (ret != TSD_OK) {
         REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
         TSD_ERROR("[TsdClient][deviceId=%u] send aicpu package to device failed", envInfo_.GetLogicDeviceId());
         return ret;
     }
 
-    ret = mgr_.SendCommonPackage(
+    ret = sender_.SendCommonPackage(
         peerNode, basePath, static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL));
     if (ret != TSD_OK) {
         REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
@@ -157,7 +163,8 @@ TSD_StatusT PackageLoader::SendAllPackagesToPeer()
         return ret;
     }
 
-    ret = mgr_.SendCommonPackage(peerNode, basePath, static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP));
+    ret = sender_.SendCommonPackage(
+        peerNode, basePath, static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP));
     if (ret != TSD_OK) {
         TSD_ERROR("[TsdClient][deviceId=%u] send ascendcpp package to device failed", envInfo_.GetLogicDeviceId());
     }
@@ -186,19 +193,19 @@ TSD_StatusT PackageLoader::LoadHsPkgToDevice(
             "[TsdClient] file[%s] does not exist, deviceId[%u]", fullPkgPath.c_str(), envInfo_.GetLogicDeviceId());
         return TSD_INTERNAL_ERROR;
     }
-    mgr_.packagePeerCheckCode_[static_cast<uint32_t>(pkgType)] = 0U;
-    const uint32_t checkCode = CalFileSize(fullPkgPath.c_str());
+    checkCodeSvc_.SetPeerCheckCode(static_cast<uint32_t>(pkgType), 0U);
+    const uint32_t checkCode = static_cast<uint32_t>(CalFileSize(fullPkgPath.c_str()));
     const auto ret =
-        mgr_.SendFileToDevice(basePath.c_str(), basePath.length(), pkgName.c_str(), pkgName.length(), true);
+        sender_.SendFileToDevice(basePath.c_str(), basePath.length(), pkgName.c_str(), pkgName.length(), true);
     TSD_CHECK(ret == TSD_OK, ret, "send pkg to device failed.");
-    if (mgr_.GetDeviceHsPkgCheckCode(checkCode, msgType, false, baseCtx) != TSD_OK) {
+    if (checkCodeSvc_.GetDeviceHsPkgCheckCode(checkCode, msgType, false, baseCtx) != TSD_OK) {
         TSD_ERROR("GetDeviceHsPkgCheckCode failed");
         return TSD_INTERNAL_ERROR;
     }
-    if (checkCode != mgr_.packagePeerCheckCode_[static_cast<uint32_t>(pkgType)]) {
+    if (checkCode != checkCodeSvc_.GetPeerCheckCode(static_cast<uint32_t>(pkgType))) {
         TSD_ERROR(
             "checode verify is failed checkCode:%u, peerCheckCode:%u", checkCode,
-            mgr_.packagePeerCheckCode_[static_cast<uint32_t>(pkgType)]);
+            checkCodeSvc_.GetPeerCheckCode(static_cast<uint32_t>(pkgType)));
         return TSD_INTERNAL_ERROR;
     }
     return TSD_OK;
@@ -208,12 +215,12 @@ TSD_StatusT PackageLoader::LoadRuntimePkgToDevice(const MessageContext& baseCtx)
 {
     if (capabilityMgr_.IsSupportCommonSink() && (&drvHdcSendFileV2 != nullptr) &&
         (&drvHdcGetTrustedBasePathV2 != nullptr)) {
-        (void)mgr_.LoadPackageConfigInfoToDevice(false);
-        if (mgr_.LoadCannHsPkgToDevice(UDF_PKG_NAME, baseCtx) != TSD_OK) {
+        (void)this->LoadPackageConfigInfoToDevice(false);
+        if (this->LoadCannHsPkgToDevice(UDF_PKG_NAME, baseCtx) != TSD_OK) {
             TSD_ERROR("Load package failed, package:%s", UDF_PKG_NAME.c_str());
             return TSD_INTERNAL_ERROR;
         }
-        if (mgr_.LoadCannHsPkgToDevice(HCCD_PKG_NAME, baseCtx) != TSD_OK) {
+        if (this->LoadCannHsPkgToDevice(HCCD_PKG_NAME, baseCtx) != TSD_OK) {
             TSD_ERROR("Load package failed, package:%s", HCCD_PKG_NAME.c_str());
             return TSD_INTERNAL_ERROR;
         }
@@ -228,7 +235,7 @@ TSD_StatusT PackageLoader::LoadRuntimePkgToDevice(const MessageContext& baseCtx)
 
 TSD_StatusT PackageLoader::LoadCannHsPkgToDevice(const std::string& pkgPureName, const MessageContext& baseCtx)
 {
-    int32_t peerNode = 0;
+    const int32_t peerNode = 0;
     const std::string dstDirPreFix = envInfo_.GetTrustedBasePath(true);
 
     PackageProcessConfig* pkgConInst = PackageProcessConfig::GetInstance();
@@ -245,17 +252,17 @@ TSD_StatusT PackageLoader::LoadCannHsPkgToDevice(const std::string& pkgPureName,
 
     const std::string hostHash = CalFileSha256HashValue(orgFile);
     hashStore_.SetHostCommonSinkPackHashValue(pkgPureName, hostHash);
-    if (mgr_.IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
+    if (hashStore_.IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
         TSD_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
         return TSD_OK;
     }
 
-    if (mgr_.LoadFileAndWaitRsp(pkgPureName, hostHash, peerNode, orgFile, dstFile, baseCtx) != TSD_OK) {
+    if (this->LoadFileAndWaitRsp(pkgPureName, hostHash, peerNode, orgFile, dstFile, baseCtx) != TSD_OK) {
         TSD_ERROR("compare and send package to device failed");
         return TSD_INTERNAL_ERROR;
     }
 
-    if (static_cast<uint32_t>(pkgRspCode_) != 0U) {
+    if (static_cast<uint32_t>(ctx_.pkgRspCode) != 0U) {
         TSD_ERROR("host and device check code compare failed, package:%s", pkgPureName.c_str());
         return TSD_INTERNAL_ERROR;
     }
@@ -268,12 +275,12 @@ TSD_StatusT PackageLoader::LoadFileAndWaitRsp(
     const std::string& pkgPureName, const std::string& hostPkgHash, const int32_t peerNode, const std::string& orgFile,
     const std::string& dstFile, const MessageContext& baseCtx)
 {
-    if (mgr_.SendAICPUPackageSimple(peerNode, orgFile, dstFile, true) != TSD_OK) {
+    if (sender_.SendAICPUPackageSimple(peerNode, orgFile, dstFile, true) != TSD_OK) {
         TSD_ERROR("send package to device failed, package:%s", pkgPureName.c_str());
         return TSD_INTERNAL_ERROR;
     }
 
-    if (mgr_.GetCannHsPkgCheckCode(pkgPureName, hostPkgHash, baseCtx) != TSD_OK) {
+    if (checkCodeSvc_.GetCannHsPkgCheckCode(pkgPureName, hostPkgHash, baseCtx) != TSD_OK) {
         TSD_ERROR("get check code from device failed, package:%s", pkgPureName.c_str());
         return TSD_INTERNAL_ERROR;
     }
@@ -303,10 +310,10 @@ TSD_StatusT PackageLoader::LoadOmFileToDevice(
         TSD_ERROR("input str is invalid reason:%s", e.what());
         return TSD_INTERNAL_ERROR;
     }
-    auto ret = mgr_.SendFileToDevice(filePath, pathLen, fileName, fileNameLen, true);
+    auto ret = sender_.SendFileToDevice(filePath, pathLen, fileName, fileNameLen, true);
     TSD_CHECK(ret == TSD_OK, ret, "SendFileToDevice failed.");
 
-    ret = mgr_.InitTsdClient();
+    ret = checkCodeSvc_.InitTsdClient();
     TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
     TSD_CHECK_NULLPTR(commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_FOUND, "devCommClient_ is null in send function");
     std::string curFile(fileName, fileNameLen);
@@ -320,7 +327,7 @@ TSD_StatusT PackageLoader::LoadOmFileToDevice(
     TSD_CHECK(ret == TSD_OK, ret, "build TSD_OM_PKG_DECOMPRESS_STATUS msg failed.");
     ret = commAgent_.SendMsg(msg);
     TSD_CHECK(ret == TSD_OK, ret, "send TSD_OM_PKG_DECOMPRESS_STATUS msg failed.");
-    ret = mgr_.WaitPkgRsp(OMFILE_LOAD_TIMEOUT);
+    ret = checkCodeSvc_.WaitPkgRsp(OMFILE_LOAD_TIMEOUT);
     TSD_CHECK(ret == TSD_OK, ret, "Wait TSD_OM_PKG_DECOMPRESS_STATUS response from device failed.");
     TSD_INFO("LoadOmFileToDevice success filepath:%s, filename:%s", filePath, fileName);
     return TSD_OK;
@@ -330,18 +337,18 @@ TSD_StatusT PackageLoader::LoadFileToDevice(
     const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen,
     const MessageContext& baseCtx)
 {
-    if (!mgr_.IsOkToLoadFileToDevice(fileName, fileNameLen)) {
+    if (!this->IsOkToLoadFileToDevice(fileName, fileNameLen)) {
         TSD_ERROR("IsOkToLoadFileToDevice is false");
         return TSD_INTERNAL_ERROR;
     }
     const std::string loadFile(fileName, fileNameLen);
     TSD_RUN_INFO("begin load file:%s", loadFile.c_str());
     if (loadFile == RUNTIME_PKG_NAME) {
-        return mgr_.LoadRuntimePkgToDevice(baseCtx);
+        return this->LoadRuntimePkgToDevice(baseCtx);
     } else if (loadFile == DSHAPE_PKG_NAME) {
-        return mgr_.LoadDShapePkgToDevice(baseCtx);
+        return this->LoadDShapePkgToDevice(baseCtx);
     } else {
-        return mgr_.LoadOmFileToDevice(filePath, pathLen, fileName, fileNameLen, baseCtx);
+        return this->LoadOmFileToDevice(filePath, pathLen, fileName, fileNameLen, baseCtx);
     }
 }
 
@@ -379,7 +386,7 @@ TSD_StatusT PackageLoader::LoadPackageConfigInfoToDevice(const bool hasPluginVer
         return TSD_OK;
     }
 
-    TSD_StatusT ret = mgr_.InitTsdClient();
+    TSD_StatusT ret = checkCodeSvc_.InitTsdClient();
     if (ret != TSD_OK) {
         TSD_ERROR("[TsdClient][deviceId_=%u] InitTsdClient failed, ret[%d]", envInfo_.GetLogicDeviceId(), ret);
         return TSD_INTERNAL_ERROR;
@@ -455,7 +462,7 @@ TSD_StatusT PackageLoader::LoadSinglePackageToDevice(
     std::string orgFile;
     std::string dstFile = dstDirPreFix;
     TSD_RUN_INFO("begin to load package:%s to device:%u", pkgPureName.c_str(), envInfo_.GetLogicDeviceId());
-    if ((!detail.loadAsPerSocFlag) && (!mgr_.SupportLoadPkg(pkgPureName))) {
+    if ((!detail.loadAsPerSocFlag) && (!this->SupportLoadPkg(pkgPureName))) {
         TSD_RUN_INFO(
             "current package:%s does not need to load to device:%u", pkgPureName.c_str(), envInfo_.GetLogicDeviceId());
         return TSD_OK;
@@ -476,19 +483,19 @@ TSD_StatusT PackageLoader::LoadSinglePackageToDevice(
     }
     const std::string hostPkgHash = CalFileSha256HashValue(orgFile);
     hashStore_.SetHostCommonSinkPackHashValue(pkgPureName, hostPkgHash);
-    if (mgr_.IsCompatPluginPackage(detail) && !mgr_.ShouldLoadCompatPluginPkg(pkgPureName)) {
+    if (pluginVersion_.IsCompatPluginPackage(detail) && !pluginVersion_.ShouldLoadCompatPluginPkg(pkgPureName)) {
         TSD_RUN_INFO("skip load compat plugin package:%s by version/strategy check", pkgPureName.c_str());
         return TSD_OK;
     }
-    if (!mgr_.IsCompatPluginPackage(detail) && mgr_.IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
+    if (!pluginVersion_.IsCompatPluginPackage(detail) && hashStore_.IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
         TSD_RUN_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
         return TSD_OK;
     }
-    if (mgr_.CompareAndSendCommonSinkPkg(pkgPureName, hostPkgHash, peerNode, orgFile, dstFile) != TSD_OK) {
+    if (sender_.CompareAndSendCommonSinkPkg(pkgPureName, hostPkgHash, peerNode, orgFile, dstFile) != TSD_OK) {
         TSD_ERROR("compare and send package to device failed package:%s", pkgPureName.c_str());
         return TSD_INTERNAL_ERROR;
     }
-    if (static_cast<uint32_t>(pkgRspCode_) != 0U) {
+    if (static_cast<uint32_t>(ctx_.pkgRspCode) != 0U) {
         this->ReportSinkPkgRspError(pkgPureName);
         return TSD_INTERNAL_ERROR;
     }
@@ -499,18 +506,18 @@ TSD_StatusT PackageLoader::LoadSinglePackageToDevice(
 void PackageLoader::ReportSinkPkgRspError(const std::string& pkgPureName)
 {
     bool reportedFlag = false;
-    if (!loadPackageErrorMsg_.empty()) {
-        TSD_ERROR("[Device error message] %s", loadPackageErrorMsg_.c_str());
-        const bool isCmsVerifyFail = (loadPackageErrorMsg_.find("cms verify failed") != std::string::npos);
+    if (!ctx_.loadPackageErrorMsg.empty()) {
+        TSD_ERROR("[Device error message] %s", ctx_.loadPackageErrorMsg.c_str());
+        const bool isCmsVerifyFail = (ctx_.loadPackageErrorMsg.find("cms verify failed") != std::string::npos);
         const std::string reason =
-            isCmsVerifyFail ? ConstructVerifyPkgErrorReason(loadPackageErrorMsg_) : std::string{};
+            isCmsVerifyFail ? ConstructVerifyPkgErrorReason(ctx_.loadPackageErrorMsg) : std::string{};
         if (!reason.empty()) {
             const std::vector<std::string> keys{"package_name", "reason"};
             const std::vector<std::string> values{pkgPureName, reason};
             REPORT_INPUT_ERROR("E30009", keys, values);
             reportedFlag = true;
         }
-        loadPackageErrorMsg_ = "";
+        ctx_.loadPackageErrorMsg = "";
     }
     if (!reportedFlag) {
         REPORT_INPUT_ERROR("E39011", std::vector<std::string>{"package_name"}, std::vector<std::string>{pkgPureName});
@@ -536,7 +543,7 @@ TSD_StatusT PackageLoader::LoadPackageToDeviceByConfig()
     std::map<std::string, PackConfDetail> configMap = pkgConInst->GetAllPackageConfigInfo();
 
     for (auto& entry : configMap) {
-        if (mgr_.LoadSinglePackageToDevice(entry.first, entry.second, peerNode, dstDirPreFix) != TSD_OK) {
+        if (this->LoadSinglePackageToDevice(entry.first, entry.second, peerNode, dstDirPreFix) != TSD_OK) {
             return TSD_INTERNAL_ERROR;
         }
     }

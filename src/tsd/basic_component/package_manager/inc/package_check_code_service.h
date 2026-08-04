@@ -15,23 +15,20 @@
 #include "capability_manager.h"
 #include "package_env_info.h"
 #include "package_hash_store.h"
+#include "package_context.h"
 #include "hdc_message_builder.h"
 #include "proto/tsd_message.pb.h"
 #include "basic_define.h"
-#include "inc/client_manager.h"
 
 #include <string>
 
 namespace tsd {
 
-class PackageManager;
-
 class PackageCheckCodeService {
 public:
     PackageCheckCodeService(
-        PackageManager& mgr, DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
-        PackageHashStore& hashStore, ResponseCode& pkgRspCode, bool& getCheckCodeRetrySupport,
-        std::string& loadPackageErrorMsg);
+        DeviceCommAgent& commAgent, CapabilityManager& capabilityMgr, PackageEnvInfo& envInfo,
+        PackageHashStore& hashStore, PackageContext& ctx);
     ~PackageCheckCodeService() = default;
 
     TSD_StatusT InitTsdClient();
@@ -49,22 +46,21 @@ public:
     void HandleNormalPackageCheckCodeRsp(const HDCMessage& msg);
     void HandleCannHsCheckCodeRsp(const HDCMessage& msg);
     void SaveDeviceCheckCode(const HDCMessage& msg);
-    uint32_t GetHostCheckCode(TsdLoadPackageType type) const { return hostCheckCode_[static_cast<uint32_t>(type)]; }
-
-    uint32_t peerCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
-    uint32_t hostCheckCode_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
-    ResponseCode& pkgRspCode_;
+    uint32_t GetHostCheckCode(TsdLoadPackageType type) const { return ctx_.hostCheckCode[static_cast<uint32_t>(type)]; }
+    uint32_t GetPeerCheckCode(uint32_t type) const { return ctx_.peerCheckCode[type]; }
+    void SetPeerCheckCode(uint32_t type, uint32_t code) { ctx_.peerCheckCode[type] = code; }
+    void SetHostCheckCodeByIndex(uint32_t type, uint32_t code) { ctx_.hostCheckCode[type] = code; }
+    ResponseCode& GetPkgRspCode() { return ctx_.pkgRspCode; }
+    const ResponseCode& GetPkgRspCode() const { return ctx_.pkgRspCode; }
 
 private:
     void SetHostCheckCode(HDCMessage& msg, TsdLoadPackageType type);
 
-    PackageManager& mgr_;
     DeviceCommAgent& commAgent_;
     CapabilityManager& capabilityMgr_;
     PackageEnvInfo& envInfo_;
     PackageHashStore& hashStore_;
-    bool& getCheckCodeRetrySupport_;
-    std::string& loadPackageErrorMsg_;
+    PackageContext& ctx_;
 };
 
 } // namespace tsd

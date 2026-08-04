@@ -134,12 +134,12 @@ void TsdProcessController::LogOpenProcessDuration(
         std::chrono::duration_cast<std::chrono::milliseconds>(finOpen - beginOpen).count());
 }
 
-TSD_StatusT TsdProcessController::ConstructCloseMsg(HDCMessage& msg)
+TSD_StatusT TsdProcessController::ConstructCloseMsg(HDCMessage& msg) const
 {
     return HdcMessageBuilder::BuildClose(msg, BuildBaseMessageContext());
 }
 
-TSD_StatusT TsdProcessController::Close(const uint32_t flag)
+TSD_StatusT TsdProcessController::Close(uint32_t flag)
 {
     if (!commAgent_.IsInit()) {
         TSD_RUN_INFO("[TsdClient] tsd client no need to close");
@@ -149,7 +149,7 @@ TSD_StatusT TsdProcessController::Close(const uint32_t flag)
         commAgent_.GetDeviceComm(), TSD_INSTANCE_NOT_INITIALED, "[TsdClient] devCommClient_ is null in Close function");
     TsdCloseFlag tsdCloseFlag = {};
     ParseTsdCloseFlag(flag, tsdCloseFlag);
-    if (tsdCloseFlag.quickCloseFlag != QUICK_CLOSE_MODE) {
+    if (tsdCloseFlag.quickCloseFlag != static_cast<uint32_t>(TsdCloseMode::QUICK_CLOSE_MODE)) {
         TSD_RUN_INFO(
             "[TsdClient] Close [deviceId=%u][sessionId=%u] hccp and computer enter", sharedCtx_.logicDeviceId,
             commAgent_.GetSessionId());
@@ -170,7 +170,7 @@ TSD_StatusT TsdProcessController::Close(const uint32_t flag)
     commAgent_.ReleaseDeviceConnection();
     sharedCtx_.rspCode = ResponseCode::FAIL;
     isStartedHccp_ = false;
-    hccpPid_ = 0;
+    hccpPid_ = 0U;
     SetTsdStartInfo(false, false, false);
     packageMgr_.ResetOnClose();
     TSD_RUN_INFO(
@@ -260,13 +260,19 @@ MessageContext TsdProcessController::BuildBaseMessageContext() const
     ctx.aicpuExtendKernelCheckCode = packageMgr_.GetHostCheckCode(TsdLoadPackageType::TSD_PKG_TYPE_AICPU_EXTEND_KERNEL);
     ctx.ascendcppCheckCode = packageMgr_.GetHostCheckCode(TsdLoadPackageType::TSD_PKG_TYPE_ASCENDCPP);
     ctx.aicpuDeviceMode = aicpuDeviceMode_;
-    ctx.aicpuSchedMode = static_cast<SchedMode>(sharedCtx_.aicpuSchedMode);
+    if (sharedCtx_.aicpuSchedMode >= static_cast<uint64_t>(AICPU_SCHED_MODE_INVALID)) {
+        TSD_RUN_WARN(
+            "[TsdClient] invalid aicpuSchedMode:%llu", static_cast<unsigned long long>(sharedCtx_.aicpuSchedMode));
+        ctx.aicpuSchedMode = AICPU_SCHED_MODE_INTERRUPT;
+    } else {
+        ctx.aicpuSchedMode = static_cast<SchedMode>(sharedCtx_.aicpuSchedMode);
+    }
     ctx.qsInitGroupName = qsInitGrpName_;
     ctx.schedPolicy = schedPolicy_;
     return ctx;
 }
 
-TSD_StatusT TsdProcessController::ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo)
+TSD_StatusT TsdProcessController::ConstructOpenMsg(HDCMessage& hdcMsg, const TsdStartStatusInfo& startInfo) const
 {
     MessageContext ctx = BuildBaseMessageContext();
     ctx.startHccp = startInfo.startHccp_;
@@ -331,7 +337,7 @@ TSD_StatusT TsdProcessController::SendCloseMsg()
     return TSD_OK;
 }
 
-TSD_StatusT TsdProcessController::UpdateProfilingConf(const uint32_t& flag)
+TSD_StatusT TsdProcessController::UpdateProfilingConf(const uint32_t flag)
 {
     TSD_RUN_INFO(
         "[TsdClient] Update profiling mode [deviceId=%u][sessionId=%u][flag=%u]", sharedCtx_.logicDeviceId,
@@ -454,7 +460,7 @@ bool TsdProcessController::CheckNeedToOpen(const uint32_t rankSize, TsdStartStat
 void TsdProcessController::ParseTsdCloseFlag(const uint32_t flag, TsdCloseFlag& tsdCloseFlag) const
 {
     TSD_RUN_INFO("Parse tsd close flag [%u]", flag);
-    tsdCloseFlag.quickCloseFlag = TSD_BITMAP_GET(flag, 0U);
+    tsdCloseFlag.quickCloseFlag = static_cast<uint32_t>(TSD_BITMAP_GET(flag, 0U));
     return;
 }
 

@@ -78,13 +78,12 @@ bool ClientManager::CheckDestructFlag(const uint32_t logicDevId)
     }
 }
 
-ClientManager::ClientManager(const uint32_t& deviceId)
+ClientManager::ClientManager(const uint32_t deviceId)
     : logicDeviceId_(deviceId),
       profilingMode_(ProfilingMode::PROFILING_CLOSE),
       envInfo_(deviceId, g_platInfo.onlineStatus, g_platInfo.isAdcEnv, static_cast<uint32_t>(g_platInfo.chipType)),
-      packagePath_(envInfo_.packagePath_),
-      packageName_(envInfo_.packageName_),
-      packagePattern_(envInfo_.packagePattern_)
+      packagePath_(envInfo_.GetPackagePathArr()),
+      packageName_(envInfo_.GetPackageNameArr())
 {
     GetProfilingMode();
 }

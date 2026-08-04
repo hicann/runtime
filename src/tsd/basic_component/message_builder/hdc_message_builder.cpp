@@ -298,7 +298,7 @@ TSD_StatusT HdcMessageBuilder::BuildNormalCheckCode(HDCMessage& msg, const Messa
     }
     pkgHostInfo->set_package_name(ctx.packageName);
     pkgHostInfo->set_hash_code(ctx.hashCode);
-    if (!ctx.hostPluginVersion.Empty()) {
+    if (!HostPluginVersionEmpty(ctx.hostPluginVersion)) {
         PluginPackageVersionInfo* const info = msg.add_host_plugin_versions();
         if (info == nullptr) {
             TSD_ERROR("add host plugin versions error");

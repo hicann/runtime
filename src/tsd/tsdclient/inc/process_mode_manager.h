@@ -36,7 +36,7 @@ public:
 
     TSD_StatusT GetHdcConctStatus(int32_t& hdcSessStat) override;
 
-    TSD_StatusT UpdateProfilingConf(const uint32_t& flag) override;
+    TSD_StatusT UpdateProfilingConf(const uint32_t flag) override;
 
     TSD_StatusT InitQs(const InitFlowGwInfo* const initInfo) override;
 
@@ -50,7 +50,7 @@ public:
 
     void Destroy() override;
 
-    virtual ~ProcessModeManager() override;
+    ~ProcessModeManager() override = default;
 
     TSD_StatusT LoadFileToDevice(
         const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName,
