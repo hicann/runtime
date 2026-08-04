@@ -91,9 +91,13 @@ rtError_t ApiImplDavid::CaptureRecordEvent(Context* const ctx, Event* const evt,
     ERROR_RETURN_MSG_INNER(
         error, "Create capture event failed, stream_id=%d, event_id=%d, error=%d.", stm->Id_(), evt->EventId_(), error);
 
-    COND_RETURN_ERROR_MSG_INNER(
-        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT,
-        "Capture event and capture stream is cross-model.");
+    COND_RETURN_AND_MSG_OUTER(
+        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT, ErrorCode::EE1016,
+        "Event recording in capture mode",
+        RtFmtMsg(
+            "The model (model_id=%u) where the event wait task is located is "
+            "inconsistent with the model (stream_id=%d, model_id=%u) where the event record task is located",
+            captureEvt->GetCaptureStream()->Model_()->Id_(), stm->Id_(), captureStm->Model_()->Id_()));
 
     if (captureEvt->IsHardwareMode()) {
         error = EvtRecord(captureEvt, stm);
@@ -122,9 +126,13 @@ rtError_t ApiImplDavid::CaptureResetEvent(const Event* const evt, Stream* const 
     const Stream* const captureStm = stm->GetCaptureStream();
     NULL_STREAM_PTR_RETURN_MSG(captureStm);
 
-    COND_RETURN_ERROR_MSG_INNER(
-        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT,
-        "Capture event and capture stream is cross-model.");
+    COND_RETURN_AND_MSG_OUTER(
+        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT, ErrorCode::EE1016,
+        "Event resetting in capture mode",
+        RtFmtMsg(
+            "The model (model_id=%u) where the event reset task is located is "
+            "inconsistent with the model (model_id=%u) where the stream (stream_id=%d) is located",
+            captureEvt->GetCaptureStream()->Model_()->Id_(), captureStm->Model_()->Id_(), stm->Id_()));
 
     rtError_t error;
     if (captureEvt->IsHardwareMode()) {
@@ -158,9 +166,13 @@ rtError_t ApiImplDavid::CaptureWaitEvent(
     ERROR_RETURN_MSG_INNER(
         error, "Create capture event failed, stream_id=%d, event_id=%d, error=%d.", stm->Id_(), evt->EventId_(), error);
 
-    COND_RETURN_ERROR_MSG_INNER(
-        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT,
-        "Capture event and capture stream is cross-model.");
+    COND_RETURN_AND_MSG_OUTER(
+        IsCrossCaptureModel(captureEvt, captureStm), RT_ERROR_STREAM_CAPTURE_CONFLICT, ErrorCode::EE1016,
+        "Triggering event waiting in capture mode",
+        RtFmtMsg(
+            "The model (model_id=%u) where the event record task is located is "
+            "inconsistent with the model (stream_id=%d, model_id=%u) where the event wait task is located",
+            captureEvt->GetCaptureStream()->Model_()->Id_(), stm->Id_(), captureStm->Model_()->Id_()));
     if (captureEvt->IsHardwareMode()) {
         error = EvtWait(captureEvt, stm, timeout);
     } else {

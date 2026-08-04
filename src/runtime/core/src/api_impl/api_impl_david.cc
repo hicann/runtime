@@ -627,8 +627,8 @@ rtError_t ApiImplDavid::StreamWaitEvent(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
-            (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
-            "Triggering stream event waiting", RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+            (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, "Triggering event waiting",
+            RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
         const rtError_t supportRet = CheckCaptureModelSupportExternalEvent(curStm->Device_(), false);
         if (supportRet != RT_ERROR_NONE) {
             return supportRet;

@@ -1645,8 +1645,8 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
 
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
-            (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016,
-            "Triggering stream event waiting", RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
+            (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, "Triggering event waiting",
+            RtFmtMsg("Stream %d is not in the capture stage", curStm->Id_()));
 
         const rtError_t supportRet = CheckCaptureModelSupportExternalEvent(curStm->Device_(), false);
         if (supportRet != RT_ERROR_NONE) {
@@ -1659,14 +1659,14 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
     if (evt->IsCapturing()) {
         COND_RETURN_AND_MSG_OUTER(
             !StreamFlagIsSupportCapture(curStm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
-            "Triggering stream event waiting", std::to_string(curStm->Flags()), "stream flag",
+            "Triggering event waiting", std::to_string(curStm->Flags()), "stream flag",
             RtFmtMsg("Stream (stream_id=%d) does not support the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(
             curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017,
-            "Triggering stream event waiting", "stream",
+            "Triggering event waiting", "stream",
             RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_AND_MSG_OUTER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Triggering stream event waiting",
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Triggering event waiting",
             std::to_string(evt->GetEventFlag()), "event flag",
             RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());

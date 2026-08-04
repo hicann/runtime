@@ -409,8 +409,7 @@ rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
 {
     const uint32_t deviceId = device_->Id_();
     *notify = new (std::nothrow) Notify(deviceId, device_->DevGetTsId());
-    COND_RETURN_ERROR_MSG_CALL(
-        ERR_MODULE_SYSTEM, *notify == nullptr, RT_ERROR_NOTIFY_NEW, "Notify create failed, new notify failed.");
+    COND_RETURN_AND_MSG_OUTER(*notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
 
     (*notify)->SetNotifyFlag(flag);
     const rtError_t error = (*notify)->Setup();
@@ -511,7 +510,7 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
     const rtStreamCaptureStatus status = stm->GetCaptureStatus();
     /* check capture status */
     COND_RETURN_AND_MSG_OUTER(
-        status == RT_STREAM_CAPTURE_STATUS_NONE, RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1018, "rtStreamEndCapture",
+        status == RT_STREAM_CAPTURE_STATUS_NONE, RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1018, "Stream end capture",
         RtFmtMsg(
             "The stream (stream_id=%d) is not in capture status, call rtStreamBeginCapture API to capture stream first",
             stm->Id_()));
@@ -540,12 +539,18 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
     }
 
     CaptureModel* captureModelTmp = RtPtrToPtr<CaptureModel*, Model*>(captureModel);
-    if (status == RT_STREAM_CAPTURE_STATUS_INVALIDATED || captureModelTmp->IsCaptureInvalid()) {
-        RT_LOG(
-            RT_LOG_ERROR, "current capture is invalid, device_id=%u, origin stream_id=%d.", device_->Id_(), stm->Id_());
-        ClearCaptureModel(this, stm, captureModel);
-        return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        status == RT_STREAM_CAPTURE_STATUS_INVALIDATED, RT_ERROR_STREAM_CAPTURE_INVALIDATED, ErrorCode::EE1016,
+        ClearCaptureModel(this, stm, captureModel), "Stream end capture",
+        RtFmtMsg(
+            "The current stream (stream_id=%d, model_id=%u) is invalid because an error occurred during model capture",
+            stm->Id_(), captureModel->Id_()));
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        captureModelTmp->IsCaptureInvalid(), RT_ERROR_STREAM_CAPTURE_INVALIDATED, ErrorCode::EE1016,
+        ClearCaptureModel(this, stm, captureModel), "Stream end capture",
+        RtFmtMsg(
+            "The current model (model_id=%u) is invalid because an error occurred during model capture",
+            captureModel->Id_()));
 
     const bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
 
@@ -776,8 +781,8 @@ rtError_t Context::StreamBeginTaskGrp(Stream* const stm)
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
 
     std::unique_ptr<TaskGroup> taskGrp(new (std::nothrow) TaskGroup);
-    COND_RETURN_ERROR_MSG_CALL(
-        ERR_MODULE_SYSTEM, taskGrp == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Create task group object failed.");
+    COND_RETURN_AND_MSG_OUTER(
+        taskGrp == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(TaskGroup), "new");
 
     const uint8_t prefetchCnt = stm->Device_()->GetDevProperties().taskPrefetchCount;
     for (uint8_t idx = 0; idx < prefetchCnt; idx++) {
@@ -960,8 +965,7 @@ rtError_t Context::StreamAddCondTask(CondHandle* condHandle, rtCondTaskParams pa
     Notify* notify = condHandle->GetSubModelNotify();
     if (notify == nullptr) {
         notify = new (std::nothrow) Notify(device_->Id_(), device_->DevGetTsId());
-        COND_RETURN_AND_MSG_OUTER(
-            notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, std::to_string(sizeof(Notify)).c_str(), "new");
+        COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify), "new");
         error = notify->SetupWithoutAllocNtyId();
         COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
     }

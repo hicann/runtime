@@ -1381,15 +1381,15 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream* const stm, bool flag)
 rtError_t ApiErrorDecorator::StreamWaitEvent(
     Stream* const stm, Event* const evt, const uint32_t timeout, const uint32_t flag)
 {
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering stream event waiting");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering event waiting");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         ((flag != RT_EVENT_WAIT_DEFAULT) && (flag != RT_EVENT_WAIT_EXTERNAL)), RT_ERROR_INVALID_VALUE,
-        "Triggering stream event waiting", flag, "RT_EVENT_WAIT_DEFAULT(0) or RT_EVENT_WAIT_EXTERNAL(1)");
+        "Triggering event waiting", flag, "RT_EVENT_WAIT_DEFAULT(0) or RT_EVENT_WAIT_EXTERNAL(1)");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
           ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Triggering stream event waiting",
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Triggering event waiting",
         "Parameter evt.eventFlag_ value " + std::to_string(evt->GetEventFlag()),
         "Device-only events can be called only on the device");
     COND_RETURN_WARN(
@@ -1401,7 +1401,7 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
-            ErrorCode::EE1016, "Triggering stream event waiting external",
+            ErrorCode::EE1016, "Triggering external event waiting",
             "Only events created by rtEventCreateExWithFlag with RT_EVENT_DDSYNC_NS are supported when flag is "
             "RT_EVENT_WAIT_EXTERNAL");
     }
@@ -1409,7 +1409,7 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     const uint32_t currentFlag = evt->GetWaitFlag();
     COND_RETURN_AND_MSG_OUTER(
         ((currentFlag != UINT32_MAX) && (currentFlag != flag)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
-        "Triggering stream event waiting",
+        "Triggering event waiting",
         RtFmtMsg(
             "The wait flag must remain consistent for the same event, current flag is %s, input flag is %s",
             EventOperationFlagToString(currentFlag, false).c_str(), EventOperationFlagToString(flag, false).c_str()));
