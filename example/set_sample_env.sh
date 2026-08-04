@@ -45,7 +45,7 @@ _set_soc_normalize() {
 }
 
 _set_soc_is_valid() {
-    [[ -n "$1" && "$1" =~ ^[A-Za-z0-9_]+$ ]]
+    [[ -n "$1" && "$1" =~ ^[A-Za-z0-9_-]+$ ]]
 }
 
 _set_soc_get_arch_dir() {
@@ -218,7 +218,7 @@ _set_soc_detect_by_acl() {
         return 1
     fi
 
-    soc_version="$(printf "%s\n" "${output}" | awk '/^[A-Za-z0-9_]+$/ { print; exit }')"
+    soc_version="$(printf "%s\n" "${output}" | awk '/^[A-Za-z0-9_-]+$/ { print; exit }')"
     soc_version="$(_set_soc_normalize "${soc_version}")"
     if _set_soc_is_valid "${soc_version}"; then
         _set_soc_detected_version="${soc_version}"
