@@ -26,13 +26,12 @@ namespace AicpuSchedule {
 namespace {
 const std::string CFG_LOG_ADDR = "CfgLogAddr";
 const std::string DUMP_DATA_INFO = "DumpDataInfo";
-}  // namespace
+} // namespace
 
-int32_t CfgLogAddrTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t CfgLogAddrTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel CfgLogAddr event.");
-    const auto cfgMsg =
-        PtrToPtr<void, aicpu::AicpuConfigMsg>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    const auto cfgMsg = PtrToPtr<void, aicpu::AicpuConfigMsg>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
     if (cfgMsg == nullptr) {
         aicpusd_err("param base for config log is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -42,15 +41,14 @@ int32_t CfgLogAddrTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel dump data event");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     // dump op has two param, one is protobuf addr
     constexpr uint32_t singleOpDumpParamNum = 2U;
-    constexpr size_t len =  sizeof(aicpu::AicpuParamHead) + (singleOpDumpParamNum * sizeof(uint64_t));
-    const aicpu::AicpuParamHead * const paramHead =
-        PtrToPtr<void, aicpu::AicpuParamHead>(ValueToPtr(kernel.paramBase));
+    constexpr size_t len = sizeof(aicpu::AicpuParamHead) + (singleOpDumpParamNum * sizeof(uint64_t));
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<void, aicpu::AicpuParamHead>(ValueToPtr(kernel.paramBase));
     if (paramHead == nullptr) {
         aicpusd_err("paramHead for DumpDataKernel is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -61,11 +59,9 @@ int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
-    const auto ioAddrBase = 
-        PtrToPtr<void, uint64_t>(ValueToPtr(kernel.paramBase + sizeof(aicpu::AicpuParamHead)));
+    const auto ioAddrBase = PtrToPtr<void, uint64_t>(ValueToPtr(kernel.paramBase + sizeof(aicpu::AicpuParamHead)));
     const uint64_t opMappingInfoAddr = ioAddrBase[0];
-    const uint64_t * const lenAddr = 
-        PtrToPtr<void, uint64_t>(ValueToPtr(ioAddrBase[1]));
+    const uint64_t* const lenAddr = PtrToPtr<void, uint64_t>(ValueToPtr(ioAddrBase[1]));
     if (lenAddr == nullptr) {
         aicpusd_err("data dump proto length address is null");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -75,10 +71,10 @@ int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     const uint64_t opMappingInfoLen = *lenAddr;
     aicpusd_info("Proto len[%llu] from address[%llu]", opMappingInfoLen, opMappingInfoAddr);
 
-    const AicpuSchedule::OpDumpTaskManager &dumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
+    const AicpuSchedule::OpDumpTaskManager& dumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
     return dumpTaskMgr.DumpOpInfoForUnknowShape(opMappingInfoAddr, opMappingInfoLen);
 }
 
 REGISTER_HWTS_KERNEL(CFG_LOG_ADDR, CfgLogAddrTsKernel);
 REGISTER_HWTS_KERNEL(DUMP_DATA_INFO, DumpDataInfoTsKernel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

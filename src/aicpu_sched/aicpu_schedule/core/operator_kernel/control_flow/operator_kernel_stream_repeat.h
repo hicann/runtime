@@ -13,13 +13,12 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelStreamRepeat : public OperatorKernel {
 public:
     OperatorKernelStreamRepeat() = default;
     ~OperatorKernelStreamRepeat() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_STREAM_REPEAT_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_STREAM_REPEAT_H

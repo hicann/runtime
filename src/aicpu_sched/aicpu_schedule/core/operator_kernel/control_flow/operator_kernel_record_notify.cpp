@@ -19,20 +19,21 @@
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_RECORD_NOTIFY = "recordNotify";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelRecordNotify::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelRecordNotify::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto info = PtrToPtr<void, TsAicpuNotify>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (info == nullptr) {
-        aicpusd_err("ModelRecord kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-                    taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelRecord kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return DoCompute(info->notify_id, taskContext);
 }
 
-int32_t OperatorKernelRecordNotify::DoCompute(const uint32_t notifyId, const RunContext &taskContext) const
+int32_t OperatorKernelRecordNotify::DoCompute(const uint32_t notifyId, const RunContext& taskContext) const
 {
     // now only support notify aicpusd, when and tsid in TsAicpuNotify, it can notify hwts.
     bool hasWait = false;
@@ -45,9 +46,10 @@ int32_t OperatorKernelRecordNotify::DoCompute(const uint32_t notifyId, const Run
     AICPUSubEventInfo subEventInfo = {};
     subEventInfo.modelId = taskContext.modelId;
     subEventInfo.para.streamInfo.streamId = waitStreamId;
-    return OperatorKernelCommon::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)), AICPU_SUB_EVENT_RECOVERY_STREAM);
+    return OperatorKernelCommon::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_RECOVERY_STREAM);
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_RECORD_NOTIFY, OperatorKernelRecordNotify);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

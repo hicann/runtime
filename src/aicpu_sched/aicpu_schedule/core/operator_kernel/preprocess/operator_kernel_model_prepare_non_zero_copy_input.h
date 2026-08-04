@@ -13,16 +13,16 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelPrepareNonZeroCopyInput : public OperatorKernel {
 public:
     OperatorKernelModelPrepareNonZeroCopyInput() = default;
     ~OperatorKernelModelPrepareNonZeroCopyInput() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    uint32_t DoCompute(const InputCopyAddrMapInfo &mapInfo, const RunContext &taskContext) const;
+    uint32_t DoCompute(const InputCopyAddrMapInfo& mapInfo, const RunContext& taskContext) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_PREPARE_NON_ZERO_COPY_INPUT_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_PREPARE_NON_ZERO_COPY_INPUT_H

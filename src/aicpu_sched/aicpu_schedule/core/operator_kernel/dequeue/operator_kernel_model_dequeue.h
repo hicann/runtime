@@ -14,16 +14,16 @@
 #include "operator_kernel.h"
 #include "operator_kernel_dequeue_base.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelDequeue : public OperatorKernel, public OperatorKernelDequeueBase {
 public:
     OperatorKernelModelDequeue() = default;
     ~OperatorKernelModelDequeue() override = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    uint32_t DoModelDequeue(BufEnQueueInfo &bufInfo, const RunContext &taskContext) const;
+    uint32_t DoModelDequeue(BufEnQueueInfo& bufInfo, const RunContext& taskContext) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_DEQUEUE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_DEQUEUE_H

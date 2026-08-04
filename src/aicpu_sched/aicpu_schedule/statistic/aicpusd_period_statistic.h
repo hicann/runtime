@@ -21,24 +21,25 @@
 #include "aicpu_context.h"
 
 namespace AicpuSchedule {
-    class AicpuSdPeriodStatistic {
-    public:
-        static AicpuSdPeriodStatistic &GetInstance();
-        void InitStatistic(const uint32_t deviceId, const uint32_t hostPid, const aicpu::AicpuRunMode runMode);
-        void StopStatistic();
-        void PrintOutStatisticInfo(const aicpu::AicpuRunMode runMode);
-        int32_t SetThreadAffinity() const;
-    private:
-        AicpuSdPeriodStatistic();
-        void DoStatistic() noexcept;
-        virtual ~AicpuSdPeriodStatistic();
-        std::atomic<bool> initFlag_;
-        bool runningFlag_;
-        uint32_t deviceId_;
-        uint32_t hostPid_;
-        std::thread statThread_;
-        std::mutex initMutex_;
-        AicpuSdProcMemStatistic procMemInfo_;
-    };
-}
+class AicpuSdPeriodStatistic {
+public:
+    static AicpuSdPeriodStatistic& GetInstance();
+    void InitStatistic(const uint32_t deviceId, const uint32_t hostPid, const aicpu::AicpuRunMode runMode);
+    void StopStatistic();
+    void PrintOutStatisticInfo(const aicpu::AicpuRunMode runMode);
+    int32_t SetThreadAffinity() const;
+
+private:
+    AicpuSdPeriodStatistic();
+    void DoStatistic() noexcept;
+    virtual ~AicpuSdPeriodStatistic();
+    std::atomic<bool> initFlag_;
+    bool runningFlag_;
+    uint32_t deviceId_;
+    uint32_t hostPid_;
+    std::thread statThread_;
+    std::mutex initMutex_;
+    AicpuSdProcMemStatistic procMemInfo_;
+};
+} // namespace AicpuSchedule
 #endif

@@ -10,9 +10,8 @@
 #include "core/aicpusd_interface_process.h"
 
 namespace AicpuSchedule {
-namespace {
-}  // namespace
-}  // namespace AicpuSchedule
+namespace {} // namespace
+} // namespace AicpuSchedule
 
 /**
  * main of compute process.
@@ -22,9 +21,9 @@ namespace {
  */
 #ifndef aicpusd_UT
 
-int32_t main(int32_t argc, char_t *argv[])
+int32_t main(int32_t argc, char_t* argv[])
 #else
-int32_t ComputeProcessMain(int32_t argc, char_t *argv[])
+int32_t ComputeProcessMain(int32_t argc, char_t* argv[])
 #endif
 {
     return AicpuSchedule::AicpuScheduleInterface::GetInstance().CustAicpuMainProcess(argc, argv);

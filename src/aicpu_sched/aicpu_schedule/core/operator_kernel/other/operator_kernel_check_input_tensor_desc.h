@@ -13,19 +13,20 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelCheckInputTensorDesc : public OperatorKernel {
 public:
     OperatorKernelCheckInputTensorDesc() = default;
     ~OperatorKernelCheckInputTensorDesc() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t CheckInputTensorDesc(const uint64_t shapeValidationAddr, const uint64_t index,
-                                 const ModelConfigTensorDesc &modelTensorDesc,  uint64_t &curSize) const;
-    int32_t CheckShapeInfo(const ModelConfigTensorDesc &modelTensorDesc, const RuntimeTensorDesc &tensorDesc) const;
-    void PrintErrShapeInfo(const ModelConfigTensorDesc &modelTensorDesc, const RuntimeTensorDesc &tensorDesc) const;
-    int32_t CheckMsgType(Mbuf **const mbufPtr) const;
+    int32_t CheckInputTensorDesc(
+        const uint64_t shapeValidationAddr, const uint64_t index, const ModelConfigTensorDesc& modelTensorDesc,
+        uint64_t& curSize) const;
+    int32_t CheckShapeInfo(const ModelConfigTensorDesc& modelTensorDesc, const RuntimeTensorDesc& tensorDesc) const;
+    void PrintErrShapeInfo(const ModelConfigTensorDesc& modelTensorDesc, const RuntimeTensorDesc& tensorDesc) const;
+    int32_t CheckMsgType(Mbuf** const mbufPtr) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_CHECK_INPUT_TENSOR_DESC_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_CHECK_INPUT_TENSOR_DESC_H

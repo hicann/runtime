@@ -21,66 +21,64 @@
 #include "ae_so_manager.hpp"
 
 namespace cce {
-    class AIKernelsLibAiCpu : public cce::AIKernelsLibBase {
-    public:
-        ~AIKernelsLibAiCpu() override = default;
-        /**
-         * SINGLETON object get interface
-         */
-        static AIKernelsLibAiCpu *GetInstance();
+class AIKernelsLibAiCpu : public cce::AIKernelsLibBase {
+public:
+    ~AIKernelsLibAiCpu() override = default;
+    /**
+     * SINGLETON object get interface
+     */
+    static AIKernelsLibAiCpu* GetInstance();
 
-        /**
-         * SINGLETON object destroy interface
-         */
-        static void DestroyInstance();
+    /**
+     * SINGLETON object destroy interface
+     */
+    static void DestroyInstance();
 
-        /**
-         * Implement get kernelName and kernelSoName
-         */
-        aeStatus_t GetKernelNameAndKernelSoName(char_t *kernelName, char_t *kernelSoName,
-                                                const char_t *paramKernelSo,
-                                                const aicpu::HwtsCceKernel *cceKernelBase) const;
+    /**
+     * Implement get kernelName and kernelSoName
+     */
+    aeStatus_t GetKernelNameAndKernelSoName(
+        char_t* kernelName, char_t* kernelSoName, const char_t* paramKernelSo,
+        const aicpu::HwtsCceKernel* cceKernelBase) const;
 
-        /**
-         * Implement call a aicpu op kernel interface
-         */
-        int32_t CallKernelApi(const aicpu::KernelType kernelType, const void * const kernelBase) override;
+    /**
+     * Implement call a aicpu op kernel interface
+     */
+    int32_t CallKernelApi(const aicpu::KernelType kernelType, const void* const kernelBase) override;
 
-        /**
-         * Batch load kernel so
-         */
-        aeStatus_t BatchLoadKernelSo(const aicpu::KernelType kernelType,
-                                     std::vector<std::string> &soVec) override;
+    /**
+     * Batch load kernel so
+     */
+    aeStatus_t BatchLoadKernelSo(const aicpu::KernelType kernelType, std::vector<std::string>& soVec) override;
 
-        /**
-         * Close so
-         */
-        aeStatus_t CloseSo(const char_t * const soName) override;
+    /**
+     * Close so
+     */
+    aeStatus_t CloseSo(const char_t* const soName) override;
 
-        void DeleteSoInWhiteList(const std::string &soName);
+    void DeleteSoInWhiteList(const std::string& soName);
 
-        aeStatus_t AddSoInWhiteList(const std::string &soName);
+    aeStatus_t AddSoInWhiteList(const std::string& soName);
 
-    private:
-        AIKernelsLibAiCpu() = default;
+private:
+    AIKernelsLibAiCpu() = default;
 
-        /**
-         * Transform kernel error code
-         */
-        aeStatus_t TransformKernelErrorCode(const uint32_t errCode, const char_t * const kernelName, const char_t * const soName) const;
+    /**
+     * Transform kernel error code
+     */
+    aeStatus_t TransformKernelErrorCode(
+        const uint32_t errCode, const char_t* const kernelName, const char_t* const soName) const;
 
-        /**
-         * Run aicpu profiling
-         */
-        uint32_t RunAicpuFunc(const void* const kernelBase,
-                              void* const funcAddr,
-                              const char_t* const funcName) const;
+    /**
+     * Run aicpu profiling
+     */
+    uint32_t RunAicpuFunc(const void* const kernelBase, void* const funcAddr, const char_t* const funcName) const;
 
-    private:
-        static AIKernelsLibAiCpu *instance_;     // SINGLETON object
-        static std::mutex mtx_;                  // Mutex lock to protect SINGLETON object create or destroy
-        std::mutex soWhiteListMtx_;
-        std::map<std::string, std::string> soWhiteList_;
-    };
-}
+private:
+    static AIKernelsLibAiCpu* instance_; // SINGLETON object
+    static std::mutex mtx_;              // Mutex lock to protect SINGLETON object create or destroy
+    std::mutex soWhiteListMtx_;
+    std::map<std::string, std::string> soWhiteList_;
+};
+} // namespace cce
 #endif

@@ -18,17 +18,17 @@
 #include <cerrno>
 
 namespace aicpu {
-SharderNonBlock::SharderNonBlock() : cpuCoreNum_(0U),
-                                     randomKernelScheduler_(nullptr),
-                                     splitKernelScheduler_(nullptr),
-                                     splitKernelGetProcesser_(nullptr),
-                                     parallelId_(0U)
-{
-}
+SharderNonBlock::SharderNonBlock()
+    : cpuCoreNum_(0U),
+      randomKernelScheduler_(nullptr),
+      splitKernelScheduler_(nullptr),
+      splitKernelGetProcesser_(nullptr),
+      parallelId_(0U)
+{}
 
-void SharderNonBlock::Register(const uint32_t cpuCoreNum, const RandomKernelScheduler &randomKernelScheduler,
-                               const SplitKernelScheduler &splitKernelScheduler,
-                               const SplitKernelGetProcesser &splitKernelGetProcesser)
+void SharderNonBlock::Register(
+    const uint32_t cpuCoreNum, const RandomKernelScheduler& randomKernelScheduler,
+    const SplitKernelScheduler& splitKernelScheduler, const SplitKernelGetProcesser& splitKernelGetProcesser)
 {
     (void)cpuCoreNum;
     (void)randomKernelScheduler;
@@ -36,9 +36,9 @@ void SharderNonBlock::Register(const uint32_t cpuCoreNum, const RandomKernelSche
     (void)splitKernelGetProcesser;
 }
 
-SharderNonBlock &SharderNonBlock::GetInstance()
+SharderNonBlock& SharderNonBlock::GetInstance()
 {
     static SharderNonBlock sharderNonBlock;
     return sharderNonBlock;
 }
-}
+} // namespace aicpu

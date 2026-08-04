@@ -19,35 +19,35 @@ class EndGraphTsKernel : public HwTsKernelHandler {
 public:
     EndGraphTsKernel() = default;
     ~EndGraphTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class RecordNotifyTsKernel : public HwTsKernelHandler {
 public:
     RecordNotifyTsKernel() = default;
     ~RecordNotifyTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ActiveEntryStreamTsKernel : public HwTsKernelHandler {
 public:
     ActiveEntryStreamTsKernel() = default;
     ~ActiveEntryStreamTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ModelStopTsKernel : public HwTsKernelHandler {
 public:
     ModelStopTsKernel() = default;
     ~ModelStopTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ModelClearAndRestartTsKernel : public HwTsKernelHandler {
 public:
     ModelClearAndRestartTsKernel() = default;
     ~ModelClearAndRestartTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_MODEL_CONTROL_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_MODEL_CONTROL_H

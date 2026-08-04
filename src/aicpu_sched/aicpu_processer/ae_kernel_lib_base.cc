@@ -11,15 +11,15 @@
 #include "ae_kernel_lib_base.hpp"
 
 namespace cce {
-    aeStatus_t AIKernelsLibBase::Init()
-    {
-        uint32_t tempRunMode;
-        const aicpu::status_t status = aicpu::GetAicpuRunMode(tempRunMode);
-        if (status != aicpu::AICPU_ERROR_NONE) {
-            runMode_ = aicpu::PROCESS_PCIE_MODE;
-            AE_RUN_WARN_LOG(AE_MODULE_ID, "Get current aicpu ctx failed. Default run mode is %u.", runMode_);
-        }
-        runMode_ = static_cast<aicpu::AicpuRunMode>(tempRunMode);
-        return soMngr_.Init();
+aeStatus_t AIKernelsLibBase::Init()
+{
+    uint32_t tempRunMode;
+    const aicpu::status_t status = aicpu::GetAicpuRunMode(tempRunMode);
+    if (status != aicpu::AICPU_ERROR_NONE) {
+        runMode_ = aicpu::PROCESS_PCIE_MODE;
+        AE_RUN_WARN_LOG(AE_MODULE_ID, "Get current aicpu ctx failed. Default run mode is %u.", runMode_);
     }
+    runMode_ = static_cast<aicpu::AicpuRunMode>(tempRunMode);
+    return soMngr_.Init();
 }
+} // namespace cce

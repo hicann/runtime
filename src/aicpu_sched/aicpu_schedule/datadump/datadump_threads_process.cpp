@@ -44,7 +44,8 @@ ComputeProcess::ComputeProcess()
       profilingMode_(PROFILING_CLOSE),
       vfId_(0U),
       isStartTdtFlag_(false),
-      runMode_(aicpu::AicpuRunMode::THREAD_MODE) {}
+      runMode_(aicpu::AicpuRunMode::THREAD_MODE)
+{}
 
 ComputeProcess& ComputeProcess::GetInstance()
 {
@@ -52,20 +53,18 @@ ComputeProcess& ComputeProcess::GetInstance()
     return instance;
 }
 
-int32_t ComputeProcess::Start(const std::vector<uint32_t> &deviceVec,
-                              const pid_t hostPid,
-                              const std::string &pidSign,
-                              const uint32_t profilMode,
-                              const uint32_t vfId,
-                              const aicpu::AicpuRunMode runMode)
+int32_t ComputeProcess::Start(
+    const std::vector<uint32_t>& deviceVec, const pid_t hostPid, const std::string& pidSign, const uint32_t profilMode,
+    const uint32_t vfId, const aicpu::AicpuRunMode runMode)
 {
-    aicpusd_info("Aicpu scheduler start, hostpid[%d], profilingMode[%u], runMode[%u], vfId[%u].",
-                 hostPid, profilMode, runMode, vfId);
+    aicpusd_info(
+        "Aicpu scheduler start, hostpid[%d], profilingMode[%u], runMode[%u], vfId[%u].", hostPid, profilMode, runMode,
+        vfId);
     if (deviceVec.empty()) {
         aicpusd_err("device vector is empty.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    const AicpuSchedule::AicpuDrvManager &drvMgr = AicpuSchedule::AicpuDrvManager::GetInstance();
+    const AicpuSchedule::AicpuDrvManager& drvMgr = AicpuSchedule::AicpuDrvManager::GetInstance();
     deviceVec_ = deviceVec;
     aicpuNum_ = drvMgr.GetAicpuNum();
     hostPid_ = hostPid;
@@ -80,12 +79,11 @@ int32_t ComputeProcess::Start(const std::vector<uint32_t> &deviceVec,
         aicpusd_err("Drv create aicpu work tasks failed, ret[%d].", ret);
         return ret;
     }
-    aicpusd_info("Aicpu scheduler start successfully, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%u].",
-                 deviceVec_[FIRST_INDEX], hostPid, profilMode, runMode_);
+    aicpusd_info(
+        "Aicpu scheduler start successfully, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%u].",
+        deviceVec_[FIRST_INDEX], hostPid, profilMode, runMode_);
     return AICPU_SCHEDULE_OK;
 }
 
-void ComputeProcess::Stop()
-{
-}
-}
+void ComputeProcess::Stop() {}
+} // namespace AicpuSchedule

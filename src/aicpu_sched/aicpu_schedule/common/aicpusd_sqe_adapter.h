@@ -105,10 +105,16 @@ public:
     };
 
     struct AicpuRecordInfo {
-        AicpuRecordInfo(uint32_t recordId, uint8_t recordType, uint16_t retCode, uint8_t tsId, uint32_t taskId,
-            uint16_t streamId, uint32_t devId)
-            : record_id(recordId), record_type(recordType), ret_code(retCode), ts_id(tsId), fault_task_id(taskId),
-              fault_stream_id(streamId), dev_id(devId){};
+        AicpuRecordInfo(
+            uint32_t recordId, uint8_t recordType, uint16_t retCode, uint8_t tsId, uint32_t taskId, uint16_t streamId,
+            uint32_t devId)
+            : record_id(recordId),
+              record_type(recordType),
+              ret_code(retCode),
+              ts_id(tsId),
+              fault_task_id(taskId),
+              fault_stream_id(streamId),
+              dev_id(devId){};
         volatile uint32_t record_id;
         volatile uint8_t record_type;
         volatile uint16_t ret_code;
@@ -142,19 +148,19 @@ public:
     };
 #pragma pack(pop)
 
-    AicpuSqeAdapter(const TsAicpuSqe &sqe, const int16_t version);
+    AicpuSqeAdapter(const TsAicpuSqe& sqe, const int16_t version);
 
-    AicpuSqeAdapter(const TsAicpuMsgInfo &msgInfo, const int16_t version);
+    AicpuSqeAdapter(const TsAicpuMsgInfo& msgInfo, const int16_t version);
 
     AicpuSqeAdapter(const int16_t version);
 
-    AicpuSqeAdapter(const AicpuSqeAdapter &) = delete;
+    AicpuSqeAdapter(const AicpuSqeAdapter&) = delete;
 
-    AicpuSqeAdapter(AicpuSqeAdapter &&) = delete;
+    AicpuSqeAdapter(AicpuSqeAdapter&&) = delete;
 
-    AicpuSqeAdapter &operator=(const AicpuSqeAdapter &) = delete;
+    AicpuSqeAdapter& operator=(const AicpuSqeAdapter&) = delete;
 
-    AicpuSqeAdapter &operator=(AicpuSqeAdapter &&) = delete;
+    AicpuSqeAdapter& operator=(AicpuSqeAdapter&&) = delete;
 
     ~AicpuSqeAdapter() = default;
 
@@ -164,31 +170,31 @@ public:
 
     bool IsAdapterInvalidParameter() const;
 
-    void GetAicpuDataDumpInfo(AicpuDataDumpInfo &info);
+    void GetAicpuDataDumpInfo(AicpuDataDumpInfo& info);
 
     int32_t AicpuDumpResponseToTs(const int32_t ret);
 
-    bool IsOpMappingDumpTaskInfoVaild(const AicpuOpMappingDumpTaskInfo &info) const;
+    bool IsOpMappingDumpTaskInfoVaild(const AicpuOpMappingDumpTaskInfo& info) const;
 
-    void GetAicpuDumpTaskInfo(AicpuOpMappingDumpTaskInfo &opmappingInfo, AicpuDumpTaskInfo &dumpTaskInfo);
+    void GetAicpuDumpTaskInfo(AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo);
 
-    void GetAicpuDumpFFTSPlusDataInfo(AicpuDumpFFTSPlusDataInfo &info);
+    void GetAicpuDumpFFTSPlusDataInfo(AicpuDumpFFTSPlusDataInfo& info);
 
-    void GetAicpuModelOperateInfo(AicpuModelOperateInfo &info);
+    void GetAicpuModelOperateInfo(AicpuModelOperateInfo& info);
 
     int32_t AicpuModelOperateResponseToTs(const int32_t ret, const uint32_t subEvent);
 
-    void GetAicpuTaskReportInfo(AicpuTaskReportInfo &info);
+    void GetAicpuTaskReportInfo(AicpuTaskReportInfo& info);
 
-    int32_t ErrorMsgResponseToTs(ErrMsgRspInfo &rspInfo);
+    int32_t ErrorMsgResponseToTs(ErrMsgRspInfo& rspInfo);
 
-    void AicpuActiveStreamSetMsg(ActiveStreamInfo &info);
+    void AicpuActiveStreamSetMsg(ActiveStreamInfo& info);
 
     int32_t GetAicpuNotifyResponse();
 
     int32_t AicpuMsgVersionResponseToTs(const int32_t ret);
 
-    void GetAicpuDataDumpInfoLoad(AicpuDataDumpInfoLoad &info);
+    void GetAicpuDataDumpInfoLoad(AicpuDataDumpInfoLoad& info);
 
     int32_t AicpuDataDumpLoadResponseToTs(const int32_t ret);
 
@@ -198,89 +204,89 @@ public:
 
     int32_t AicpuRecordResponseToTs();
 
-    void GetAicpuTimeOutConfigInfo(AicpuTimeOutConfigInfo &info);
+    void GetAicpuTimeOutConfigInfo(AicpuTimeOutConfigInfo& info);
 
     int32_t AicpuTimeOutConfigResponseToTs(const int32_t ret);
 
-    void GetAicpuInfoLoad(AicpuInfoLoad &info);
+    void GetAicpuInfoLoad(AicpuInfoLoad& info);
 
     int32_t AicpuInfoLoadResponseToTs(const int32_t ret);
 
-    void GetAicErrReportInfo(AicErrReportInfo &info);
+    void GetAicErrReportInfo(AicErrReportInfo& info);
 
-    void GetAicpuMsgVersionInfo(AicpuMsgVersionInfo &info);
+    void GetAicpuMsgVersionInfo(AicpuMsgVersionInfo& info);
 
-    int32_t AicpuRecordResponseToTs(AicpuRecordInfo &info);
+    int32_t AicpuRecordResponseToTs(AicpuRecordInfo& info);
 
 private:
-    void GetAicErrReportInfoV0(AicErrReportInfo &info);
+    void GetAicErrReportInfoV0(AicErrReportInfo& info);
 
-    void GetAicErrReportInfoV1(AicErrReportInfo &info);
+    void GetAicErrReportInfoV1(AicErrReportInfo& info);
 
-    void GetAicpuModelOperateInfoV0(AicpuModelOperateInfo &info);
+    void GetAicpuModelOperateInfoV0(AicpuModelOperateInfo& info);
 
-    void GetAicpuModelOperateInfoV1(AicpuModelOperateInfo &info);
+    void GetAicpuModelOperateInfoV1(AicpuModelOperateInfo& info);
 
     int32_t AicpuModelOperateResponseToTsV0(const int32_t ret, const uint32_t subEvent);
 
     int32_t AicpuModelOperateResponseToTsV1(const int32_t ret, const uint32_t subEvent);
 
-    void GetAicpuDataDumpInfoV0(AicpuDataDumpInfo &info);
+    void GetAicpuDataDumpInfoV0(AicpuDataDumpInfo& info);
 
-    void GetAicpuDataDumpInfoV1(AicpuDataDumpInfo &info);
+    void GetAicpuDataDumpInfoV1(AicpuDataDumpInfo& info);
 
-    void GetAicpuDumpTaskInfoV0(AicpuOpMappingDumpTaskInfo &opmappingInfo, AicpuDumpTaskInfo &dumpTaskInfo);
+    void GetAicpuDumpTaskInfoV0(AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo);
 
-    void GetAicpuDumpTaskInfoV1(AicpuOpMappingDumpTaskInfo &opmappingInfo, AicpuDumpTaskInfo &dumpTaskInfo);
+    void GetAicpuDumpTaskInfoV1(AicpuOpMappingDumpTaskInfo& opmappingInfo, AicpuDumpTaskInfo& dumpTaskInfo);
 
     int32_t AicpuDumpResponseToTsV1(const int32_t ret);
 
     int32_t AicpuDumpResponseToTsV0(const int32_t ret);
 
-    void GetAicpuDataDumpInfoLoadV0(AicpuDataDumpInfoLoad &info);
+    void GetAicpuDataDumpInfoLoadV0(AicpuDataDumpInfoLoad& info);
 
-    void GetAicpuDataDumpInfoLoadV1(AicpuDataDumpInfoLoad &info);
+    void GetAicpuDataDumpInfoLoadV1(AicpuDataDumpInfoLoad& info);
 
     int32_t AicpuDataDumpLoadResponseToTsV1(const int32_t ret);
 
     int32_t AicpuDataDumpLoadResponseToTsV0(const int32_t ret);
 
-    void GetAicpuTaskReportInfoV0(AicpuTaskReportInfo &info);
+    void GetAicpuTaskReportInfoV0(AicpuTaskReportInfo& info);
 
-    void GetAicpuTaskReportInfoV1(AicpuTaskReportInfo &info);
+    void GetAicpuTaskReportInfoV1(AicpuTaskReportInfo& info);
 
-    int32_t ErrorMsgResponseToTsV0(ErrMsgRspInfo &rspInfo);
+    int32_t ErrorMsgResponseToTsV0(ErrMsgRspInfo& rspInfo);
 
-    int32_t ErrorMsgResponseToTsV1(ErrMsgRspInfo &rspInfo);
+    int32_t ErrorMsgResponseToTsV1(ErrMsgRspInfo& rspInfo);
 
     int32_t AicpuTimeOutConfigResponseToTsV0(const int32_t ret);
 
     int32_t AicpuTimeOutConfigResponseToTsV1(const int32_t ret);
 
-    void GetAicpuInfoLoadV0(AicpuInfoLoad &info);
+    void GetAicpuInfoLoadV0(AicpuInfoLoad& info);
 
-    void GetAicpuInfoLoadV1(AicpuInfoLoad &info);
+    void GetAicpuInfoLoadV1(AicpuInfoLoad& info);
 
     int32_t AicpuInfoLoadResponseToTsV0(const int32_t ret);
 
     int32_t AicpuInfoLoadResponseToTsV1(const int32_t ret);
 
-    int32_t AicpuRecordResponseToTsV0(AicpuRecordInfo &info);
+    int32_t AicpuRecordResponseToTsV0(AicpuRecordInfo& info);
 
-    int32_t AicpuRecordResponseToTsV1(AicpuRecordInfo &info);
+    int32_t AicpuRecordResponseToTsV1(AicpuRecordInfo& info);
 
-    void AicpuActiveStreamSetMsgV0(ActiveStreamInfo &info);
+    void AicpuActiveStreamSetMsgV0(ActiveStreamInfo& info);
 
-    void AicpuActiveStreamSetMsgV1(ActiveStreamInfo &info);
+    void AicpuActiveStreamSetMsgV1(ActiveStreamInfo& info);
 
-    int32_t ResponseToTs(TsAicpuSqe &aicpuSqe, unsigned int handleId, unsigned int devId, unsigned int tsId) const;
+    int32_t ResponseToTs(TsAicpuSqe& aicpuSqe, unsigned int handleId, unsigned int devId, unsigned int tsId) const;
 
     int32_t ResponseToTs(
-        TsAicpuMsgInfo &aicpuMsgInfo, unsigned int handleId, unsigned int devId, unsigned int tsId) const;
+        TsAicpuMsgInfo& aicpuMsgInfo, unsigned int handleId, unsigned int devId, unsigned int tsId) const;
 
-    int32_t ResponseToTs(hwts_response_t &hwtsResp, uint32_t devId, EVENT_ID eventId, uint32_t subeventId) const;
+    int32_t ResponseToTs(hwts_response_t& hwtsResp, uint32_t devId, EVENT_ID eventId, uint32_t subeventId) const;
 
-    using getModelOperateInfoFunc = void (AicpuSqeAdapter::*)(AicpuModelOperateInfo &);
+    using getModelOperateInfoFunc = void (AicpuSqeAdapter::*)(AicpuModelOperateInfo&);
 
     using getRspFunc = int32_t (AicpuSqeAdapter::*)(const int32_t);
 
@@ -290,21 +296,21 @@ private:
 
     std::map<uint16_t, getModelOperateRspFunc> getModelOperateRspFuncMap_;
 
-    using getDataDumpInfoFunc = void (AicpuSqeAdapter::*)(AicpuDataDumpInfo &);
+    using getDataDumpInfoFunc = void (AicpuSqeAdapter::*)(AicpuDataDumpInfo&);
 
     std::map<uint16_t, getDataDumpInfoFunc> getDataDumpInfoFuncMap_;
 
     std::map<uint16_t, getRspFunc> getDataDumpRspFuncMap_;
 
-    using getDataDumpLoadInfoFunc = void (AicpuSqeAdapter::*)(AicpuDataDumpInfoLoad &);
+    using getDataDumpLoadInfoFunc = void (AicpuSqeAdapter::*)(AicpuDataDumpInfoLoad&);
 
     std::map<uint16_t, getDataDumpLoadInfoFunc> getDataDumpLoadInfoFuncMap_;
 
     std::map<uint16_t, getRspFunc> getDataDumpLoadRspFuncMap_;
 
-    using getTaskReportInfoFunc = void (AicpuSqeAdapter::*)(AicpuTaskReportInfo &);
+    using getTaskReportInfoFunc = void (AicpuSqeAdapter::*)(AicpuTaskReportInfo&);
 
-    using getErrorMsgRspFunc = int32_t (AicpuSqeAdapter::*)(ErrMsgRspInfo &);
+    using getErrorMsgRspFunc = int32_t (AicpuSqeAdapter::*)(ErrMsgRspInfo&);
 
     std::map<uint16_t, getTaskReportInfoFunc> getTaskReportInfoFuncMap_;
 
@@ -312,25 +318,25 @@ private:
 
     std::map<uint16_t, getRspFunc> getTimeOutConfigRspFuncMap_;
 
-    using getLoadInfoFunc = void (AicpuSqeAdapter::*)(AicpuInfoLoad &);
+    using getLoadInfoFunc = void (AicpuSqeAdapter::*)(AicpuInfoLoad&);
 
     std::map<uint16_t, getLoadInfoFunc> getLoadInfoFuncMap_;
 
     std::map<uint16_t, getRspFunc> getInfoLoadRspFuncMap_;
 
-    using getDumpTaskInfoFunc = void (AicpuSqeAdapter::*)(AicpuOpMappingDumpTaskInfo &, AicpuDumpTaskInfo &);
+    using getDumpTaskInfoFunc = void (AicpuSqeAdapter::*)(AicpuOpMappingDumpTaskInfo&, AicpuDumpTaskInfo&);
 
     std::map<uint16_t, getDumpTaskInfoFunc> getDumpTaskInfoFuncMap_;
 
-    using getRecordRspFunc = int32_t (AicpuSqeAdapter::*)(AicpuRecordInfo &);
+    using getRecordRspFunc = int32_t (AicpuSqeAdapter::*)(AicpuRecordInfo&);
 
     std::map<uint16_t, getRecordRspFunc> getRecordRspFuncMap_;
 
-    using activeStreamSetMsgFunc = void (AicpuSqeAdapter::*)(ActiveStreamInfo &);
+    using activeStreamSetMsgFunc = void (AicpuSqeAdapter::*)(ActiveStreamInfo&);
 
     std::map<uint16_t, activeStreamSetMsgFunc> activeStreamSetMsgFuncMap_;
 
-    using getAicErrReportInfoFunc = void (AicpuSqeAdapter::*)(AicErrReportInfo &);
+    using getAicErrReportInfoFunc = void (AicpuSqeAdapter::*)(AicErrReportInfo&);
 
     std::map<uint16_t, getAicErrReportInfoFunc> getAicErrReportInfoFuncMap_;
 
@@ -344,9 +350,9 @@ private:
 
     uint8_t ts_id_ = 0U;
 
-    TsAicpuSqe sqe_ = { };
+    TsAicpuSqe sqe_ = {};
 
-    TsAicpuMsgInfo msg_Info_ = { };
+    TsAicpuMsgInfo msg_Info_ = {};
 
     uint16_t version_ = 0U;
 
@@ -355,5 +361,5 @@ private:
     bool invalid_sqe_ = false;
 };
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 #endif

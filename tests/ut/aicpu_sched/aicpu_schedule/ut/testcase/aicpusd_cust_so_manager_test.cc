@@ -13,6 +13,7 @@
 #include <securec.h>
 #include <stdlib.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "aicpusd_status.h"
@@ -25,6 +26,24 @@
 
 using namespace AicpuSchedule;
 using namespace aicpu;
+
+namespace {
+std::string MakeTempDir()
+{
+    char tmpDir[] = "/tmp/aicpu_cust_so_test_XXXXXX";
+    char* const dir = mkdtemp(tmpDir);
+    return (dir == nullptr) ? "" : std::string(dir);
+}
+
+void RemoveTempDir(const std::string& dir)
+{
+    if (dir.empty()) {
+        return;
+    }
+    const std::string command = "rm -rf " + dir;
+    (void)system(command.c_str());
+}
+} // namespace
 
 class AicpuCustSoManagerTEST : public testing::Test {
 protected:
@@ -592,4 +611,54 @@ TEST_F(AicpuCustSoManagerTEST, FileLockerFailTest)
     MOCKER(close).stubs().will(returnValue(-1));
     fileLock.LockFileLocker();
     fileLock.UnlockFileLocker();
+}
+
+TEST_F(AicpuCustSoManagerTEST, GenerateFileHashInfoSuccess)
+{
+    const std::string tempDir = MakeTempDir();
+    ASSERT_FALSE(tempDir.empty());
+    const std::string filePath = tempDir + "/libtest.so";
+    {
+        std::ofstream file(filePath, std::ios::binary);
+        file << "hash-data";
+    }
+
+    HashCalculator calculator;
+    FileHashInfo fileInfo = {};
+    const int32_t ret = calculator.GenerateFileHashInfo(filePath, fileInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(fileInfo.filePath, filePath);
+    EXPECT_EQ(fileInfo.fileSize, strlen("hash-data"));
+
+    RemoveTempDir(tempDir);
+}
+
+TEST_F(AicpuCustSoManagerTEST, UpdateCacheWithRealFile)
+{
+    const std::string tempDir = MakeTempDir();
+    ASSERT_FALSE(tempDir.empty());
+    const std::string rootPath = tempDir + "/";
+    const std::string libDir = rootPath + "lib";
+    ASSERT_EQ(mkdir(libDir.c_str(), 0750), 0);
+    const std::string filePath = libDir + "/libcache.so";
+    {
+        std::ofstream file(filePath, std::ios::binary);
+        file << "cache-data";
+    }
+
+    HashCalculator calculator;
+    calculator.soRootPath_ = rootPath;
+
+    std::vector<std::string> fileNames;
+    EXPECT_EQ(calculator.GetFileNameInDir(fileNames), AICPU_SCHEDULE_OK);
+    ASSERT_FALSE(fileNames.empty());
+
+    calculator.UpdateCache();
+    EXPECT_TRUE(calculator.IsFileInCache(filePath));
+
+    const size_t cacheSize = calculator.cache_.size();
+    calculator.UpdateCache();
+    EXPECT_EQ(calculator.cache_.size(), cacheSize);
+
+    RemoveTempDir(tempDir);
 }

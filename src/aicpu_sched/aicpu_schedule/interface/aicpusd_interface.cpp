@@ -32,7 +32,7 @@ extern "C" {
  * @param [in] ptr : the address of the task and stream info
  * @return AICPU_SCHEDULE_OK: success  other: error code
  */
-int32_t AICPUModelLoad(void *ptr)
+int32_t AICPUModelLoad(void* ptr)
 {
     aicpusd_info("Begin store task information of model.");
     const int32_t ret = AicpuSchedule::AicpuScheduleInterface::GetInstance().LoadProcess(ptr);
@@ -83,7 +83,7 @@ int32_t AICPUModelExecute(uint32_t modelId)
  * @param [out] drvEventAck : event ack.
  * @return 0: success, other: error code
  */
-int32_t AICPUExecuteTask(struct event_info *drvEventInfo, struct event_ack *drvEventAck)
+int32_t AICPUExecuteTask(struct event_info* drvEventInfo, struct event_ack* drvEventAck)
 {
     if ((drvEventInfo == nullptr) || (drvEventAck == nullptr)) {
         return AICPU_SCHEDULE_FAIL;
@@ -101,7 +101,7 @@ int32_t AICPUExecuteTask(struct event_info *drvEventInfo, struct event_ack *drvE
  * @param [in] soName : so name.
  * @return 0: success, other: error code
  */
-int32_t AICPUPreOpenKernels(const char *soName)
+int32_t AICPUPreOpenKernels(const char* soName)
 {
     if (soName == nullptr) {
         aicpusd_err("So name is null. Please check!");
@@ -110,7 +110,7 @@ int32_t AICPUPreOpenKernels(const char *soName)
 
     // load so
     const uint32_t loadSoNum = 1U;
-    const char *soNames[loadSoNum] = {soName};
+    const char* soNames[loadSoNum] = {soName};
     const aeStatus_t ret = aeBatchLoadKernelSo(aicpu::KERNEL_TYPE_AICPU, loadSoNum, &soNames[0U]);
     if (ret != AE_STATUS_SUCCESS) {
         aicpusd_err("Failed to preload aicpu so %s. Please check.", soName);
@@ -169,12 +169,8 @@ int32_t InitAICPUScheduler(const uint32_t deviceId, const pid_t hostPid, const P
         pidSign.sign[0U] = '\0';
     }
     aicpusd_info("Get process sign success");
-    return AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(deviceVec,
-                                                                                   hostPid,
-                                                                                   pidSign.sign,
-                                                                                   profilingMode,
-                                                                                   0U,
-                                                                                   false);
+    return AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(
+        deviceVec, hostPid, pidSign.sign, profilingMode, 0U, false);
 }
 
 /**
@@ -187,14 +183,14 @@ int32_t InitAICPUScheduler(const uint32_t deviceId, const pid_t hostPid, const P
 int32_t UpdateProfilingMode(uint32_t deviceId, pid_t hostPid, uint32_t flag)
 {
     // set or unset mode
-    const bool isStart = (flag & (static_cast<uint32_t>(1U) <<
-                          static_cast<uint32_t>(aicpu::PROFILING_FEATURE_SWITCH))) > 0U;
+    const bool isStart =
+        (flag & (static_cast<uint32_t>(1U) << static_cast<uint32_t>(aicpu::PROFILING_FEATURE_SWITCH))) > 0U;
     // if set or unset kernel profiling mode
-    const bool kernelMode = (flag & (static_cast<uint32_t>(1U) <<
-                             static_cast<uint32_t>(aicpu::PROFILING_FEATURE_KERNEL_MODE))) > 0U;
+    const bool kernelMode =
+        (flag & (static_cast<uint32_t>(1U) << static_cast<uint32_t>(aicpu::PROFILING_FEATURE_KERNEL_MODE))) > 0U;
     // if set or unset model profiling mode
-    const bool modelMode = (flag & (static_cast<uint32_t>(1U) <<
-                            static_cast<uint32_t>(aicpu::PROFILING_FEATURE_MODEL_MODE))) > 0U;
+    const bool modelMode =
+        (flag & (static_cast<uint32_t>(1U) << static_cast<uint32_t>(aicpu::PROFILING_FEATURE_MODEL_MODE))) > 0U;
     ProfilingMode mode = PROFILING_CLOSE;
     bool isModelModeOn = false;
     aicpu::LoadProfilingLib();
@@ -209,8 +205,10 @@ int32_t UpdateProfilingMode(uint32_t deviceId, pid_t hostPid, uint32_t flag)
     if (modelMode) {
         AicpuSchedule::ComputeProcess::GetInstance().UpdateProfilingModelMode(isModelModeOn);
     }
-    aicpusd_info("Begin to update aicpu profiling mode, flag[%lu], deviceId[%u], hostPid[%d], isStart[%d], mode[%d],"
-                 " isModelModeOn[%d].", flag, deviceId, hostPid, isStart, mode, isModelModeOn);
+    aicpusd_info(
+        "Begin to update aicpu profiling mode, flag[%lu], deviceId[%u], hostPid[%d], isStart[%d], mode[%d],"
+        " isModelModeOn[%d].",
+        flag, deviceId, hostPid, isStart, mode, isModelModeOn);
     return AicpuSchedule::AICPU_SCHEDULE_OK;
 }
 
@@ -235,10 +233,7 @@ int32_t StopAICPUScheduler(uint32_t deviceId, pid_t hostPid)
  * @brief Check if the scheduling module stops running
  * @return true or false
  */
-bool AicpuIsStoped()
-{
-    return !AicpuSchedule::AicpuEventManager::GetInstance().GetRunningFlag();
-}
+bool AicpuIsStoped() { return !AicpuSchedule::AicpuEventManager::GetInstance().GetRunningFlag(); }
 
 /**
  * @brief it is used to load op mapping info for data dump.
@@ -246,9 +241,9 @@ bool AicpuIsStoped()
  * @param [in] len : The length of info
  * @return AICPU_SCHEDULE_OK: success  other: error code in StatusCode
  */
-int32_t LoadOpMappingInfo(const void *infoAddr, uint32_t len)
+int32_t LoadOpMappingInfo(const void* infoAddr, uint32_t len)
 {
-    AicpuSchedule::OpDumpTaskManager &opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
+    AicpuSchedule::OpDumpTaskManager& opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
     AicpuSchedule::AicpuSqeAdapter aicpuSqeAdapter(0UL);
     return opDumpTaskMgr.LoadOpMappingInfo(PtrToPtr<const void, const char_t>(infoAddr), len, aicpuSqeAdapter);
 }
@@ -268,7 +263,7 @@ int32_t AicpuSetMsprofReporterCallback(MsprofReporterCallback reportCallback)
  * @param [in] initParam : init param ptr.
  * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
-int32_t InitCpuScheduler(const CpuSchedInitParam * const initParam)
+int32_t InitCpuScheduler(const CpuSchedInitParam* const initParam)
 {
     aicpusd_run_info("InitAICPUScheduler in heterogeneo1us mode.");
     AicpuSchedule::SetCpuMode(true);
@@ -276,9 +271,7 @@ int32_t InitCpuScheduler(const CpuSchedInitParam * const initParam)
         aicpusd_err("Init Param is null. Please check!");
         return AICPU_SCHEDULE_FAIL;
     }
-    return InitAICPUScheduler(initParam->deviceId,
-                              initParam->hostPid,
-                              initParam->profilingMode);
+    return InitAICPUScheduler(initParam->deviceId, initParam->hostPid, initParam->profilingMode);
 }
 
 /**
@@ -299,7 +292,7 @@ int32_t StopCPUScheduler(const uint32_t deviceId, const pid_t hostPid)
  * @param [in] ptr : the address of the model info
  * @return AICPU_SCHEDULE_OK: success  other: error code
  */
-int32_t AicpuLoadModelWithQ(void *ptr)
+int32_t AicpuLoadModelWithQ(void* ptr)
 {
     aicpusd_info("Begin to load model with queue.");
     const int32_t ret = AicpuSchedule::AicpuScheduleInterface::GetInstance().LoadModelWithQueue(ptr);
@@ -310,7 +303,7 @@ int32_t AicpuLoadModelWithQ(void *ptr)
     return AICPU_SCHEDULE_SUCCESS;
 }
 
-int32_t AicpuLoadModel(void *ptr)
+int32_t AicpuLoadModel(void* ptr)
 {
     aicpusd_info("Begin to load model with event.");
     const int32_t ret = AicpuSchedule::AicpuScheduleInterface::GetInstance().LoadModelWithEvent(ptr);
@@ -321,18 +314,14 @@ int32_t AicpuLoadModel(void *ptr)
     return static_cast<int32_t>(AICPU_SCHEDULE_SUCCESS);
 }
 
-void AicpuReportNotifyInfo(const aicpu::AsyncNotifyInfo &notifyInfo)
+void AicpuReportNotifyInfo(const aicpu::AsyncNotifyInfo& notifyInfo)
 {
     AicpuSchedule::AicpuMsgSend::AicpuReportNotifyInfo(notifyInfo);
 }
 
-uint32_t AicpuGetTaskDefaultTimeout()
-{
-    return AicpuSchedule::AicpuMonitor::GetInstance().GetTaskDefaultTimeout();
-}
+uint32_t AicpuGetTaskDefaultTimeout() { return AicpuSchedule::AicpuMonitor::GetInstance().GetTaskDefaultTimeout(); }
 
-void RegLastwordCallback(const std::string mark,
-    std::function<void ()> callback, std::function<void ()> &cancelReg)
+void RegLastwordCallback(const std::string mark, std::function<void()> callback, std::function<void()>& cancelReg)
 {
     AicpuSchedule::AicpusdLastword::GetInstance().RegLastwordCallback(mark, callback, cancelReg);
 }
@@ -342,7 +331,7 @@ void RegLastwordCallback(const std::string mark,
  * @param [in] ptr : ptr which point to ReDeployConfig.
  * @return AICPU_SCHEDULE_OK: success  other: error code
  */
-int32_t AICPUModelStop(const ReDeployConfig * const ptr)
+int32_t AICPUModelStop(const ReDeployConfig* const ptr)
 {
     aicpusd_run_info("Begin stop model.");
     if (ptr == nullptr) {
@@ -350,7 +339,7 @@ int32_t AICPUModelStop(const ReDeployConfig * const ptr)
         return AICPU_SCHEDULE_FAIL;
     }
     const uint32_t modelIdNum = ptr->modelIdNum;
-    const uint32_t *const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(ptr->modelIdsAddr));
+    const uint32_t* const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(ptr->modelIdsAddr));
     if ((modelIdNum != 0U) && (modelIds == nullptr)) {
         aicpusd_err("AICPUModelStop modelIds is null");
         return AICPU_SCHEDULE_FAIL;
@@ -372,7 +361,7 @@ int32_t AICPUModelStop(const ReDeployConfig * const ptr)
  * @param [in] ptr : ptr which point to ReDeployConfig.
  * @return AICPU_SCHEDULE_OK: success  other: error code
  */
-int32_t AICPUModelClearInputAndRestart(const ReDeployConfig * const ptr)
+int32_t AICPUModelClearInputAndRestart(const ReDeployConfig* const ptr)
 {
     aicpusd_run_info("Begin ClearInputAndRestart model.");
     if (ptr == nullptr) {
@@ -380,7 +369,7 @@ int32_t AICPUModelClearInputAndRestart(const ReDeployConfig * const ptr)
         return AICPU_SCHEDULE_FAIL;
     }
     const uint32_t modelIdNum = ptr->modelIdNum;
-    const uint32_t *const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(ptr->modelIdsAddr));
+    const uint32_t* const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(ptr->modelIdsAddr));
     if ((modelIdNum != 0U) && (modelIds == nullptr)) {
         aicpusd_err("AICPUModelClearInputAndRestart modelIds is null");
         return AICPU_SCHEDULE_FAIL;
@@ -409,30 +398,31 @@ int32_t AICPUModelClearInputAndRestart(const ReDeployConfig * const ptr)
  * @param [in] cfgPtr : cfgPtr which point to CheckKernelSupportedConfig.
  * @return AICPU_SCHEDULE_OK: supported  other: not supported
  */
-int32_t CheckKernelSupported(const CheckKernelSupportedConfig * const cfgPtr)
+int32_t CheckKernelSupported(const CheckKernelSupportedConfig* const cfgPtr)
 {
     aicpusd_run_info("begin run CheckKernelSupported model.");
     if (cfgPtr == nullptr) {
         aicpusd_err("CheckKernelSupported cfgPtr is null");
         return AICPU_SCHEDULE_FAIL;
     }
-    const char *const kernelName = PtrToPtr<void, char_t>(ValueToPtr(cfgPtr->kernelNameAddr));
+    const char* const kernelName = PtrToPtr<void, char_t>(ValueToPtr(cfgPtr->kernelNameAddr));
     const uint32_t kernelNameLen = cfgPtr->kernelNameLen;
-    uint32_t *resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(cfgPtr->checkResultAddr));
+    uint32_t* resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(cfgPtr->checkResultAddr));
     if ((kernelName == nullptr) || (kernelNameLen == 0) || (resultAddr == nullptr)) {
         aicpusd_err("CheckKernelSupportedConfig params error");
         return AICPU_SCHEDULE_FAIL;
     }
     std::string operatorKernelName(kernelName, kernelNameLen);
     aicpusd_run_info("Task kernel name[%s].", operatorKernelName.c_str());
-    const int32_t retCode = AicpuSchedule::AicpuScheduleInterface::GetInstance().CheckKernelSupported(operatorKernelName);
+    const int32_t retCode =
+        AicpuSchedule::AicpuScheduleInterface::GetInstance().CheckKernelSupported(operatorKernelName);
     *resultAddr = static_cast<uint32_t>(retCode);
     aicpusd_run_info("finished run CheckKernelSupported model retCode[%d].", retCode);
     return AICPU_SCHEDULE_SUCCESS;
 }
 
-int32_t AICPUModelProcessDataException(const DataFlowExceptionNotify *const exceptionInfo)
+int32_t AICPUModelProcessDataException(const DataFlowExceptionNotify* const exceptionInfo)
 {
-    return  AicpuSchedule::AicpuScheduleInterface::GetInstance().ProcessException(exceptionInfo);
+    return AicpuSchedule::AicpuScheduleInterface::GetInstance().ProcessException(exceptionInfo);
 }
 }

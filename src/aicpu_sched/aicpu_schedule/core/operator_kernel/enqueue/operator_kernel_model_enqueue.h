@@ -14,14 +14,13 @@
 #include "operator_kernel.h"
 #include "operator_kernel_enqueue_base.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelEnqueue : public OperatorKernel, public OperatorKernelEnqueueBase {
 public:
     OperatorKernelModelEnqueue() = default;
     ~OperatorKernelModelEnqueue() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_ENQUEUE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_ENQUEUE_H

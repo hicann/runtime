@@ -7,10 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef AICPU_CUST_SD_MC2_MAINTENANCE_THREAD_H
 #define AICPU_CUST_SD_MC2_MAINTENANCE_THREAD_H
- 
+
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -21,7 +21,7 @@
 #include "aicpu_mc2_maintenance_thread.h"
 
 namespace AicpuSchedule {
-    constexpr uint32_t RESERVED_SIZE = 92U;
+constexpr uint32_t RESERVED_SIZE = 92U;
 #pragma pack(push, 1)
 // CreateCtrlThreadArgs size is MAX_EVENT_PRI_MSG_LENGTH
 struct CreateCtrlThreadArgs {
@@ -32,76 +32,77 @@ struct CreateCtrlThreadArgs {
 class AicpuCustMc2MaintenanceThread {
 public:
     /*
-    * 实例获取
-    */
-    static AicpuCustMc2MaintenanceThread &GetInstance(uint32_t type);
- 
+     * 实例获取
+     */
+    static AicpuCustMc2MaintenanceThread& GetInstance(uint32_t type);
+
     /*
-    * 完成CustMc2，模块的初始化，包括event模块初始化，以及回调线程拉起
-    */
-    int32_t InitCustMc2MaintenanceProcess(AicpuMC2MaintenanceFuncPtr loopFun,
-        void *paramLoopFun, AicpuMC2MaintenanceFuncPtr stopNotifyFun, void *paramStopFun);
- 
+     * 完成CustMc2，模块的初始化，包括event模块初始化，以及回调线程拉起
+     */
+    int32_t InitCustMc2MaintenanceProcess(
+        AicpuMC2MaintenanceFuncPtr loopFun, void* paramLoopFun, AicpuMC2MaintenanceFuncPtr stopNotifyFun,
+        void* paramStopFun);
+
     /*
-    * 销毁资源
-    */
+     * 销毁资源
+     */
     void UnitCustMc2MaintenanceProcess();
     /*
-    * 注册回调函数
-    */
-    int32_t RegisterProcessEventFunc(AicpuMC2MaintenanceFuncPtr funPtr, void *param);
+     * 注册回调函数
+     */
+    int32_t RegisterProcessEventFunc(AicpuMC2MaintenanceFuncPtr funPtr, void* param);
     /*
-    * 注册回调函数终止函数
-    */
-    int32_t RegisterStopProcessEventFunc(AicpuMC2MaintenanceFuncPtr funPtr, void *param);
+     * 注册回调函数终止函数
+     */
+    int32_t RegisterStopProcessEventFunc(AicpuMC2MaintenanceFuncPtr funPtr, void* param);
     /*
-    * 创建并启动CustMc2维测线程
-    */
+     * 创建并启动CustMc2维测线程
+     */
     int32_t CreateCustMc2MaintenanceThread();
 
 private:
     /*
-    * 给主线程发送启动CustMc2维测线程的事件
-    */
+     * 给主线程发送启动CustMc2维测线程的事件
+     */
     void SendCustMc2CreateThreadMsgToMain() const;
     /*
-    * CustMc2Maintenance 线程初始化
-    */
+     * CustMc2Maintenance 线程初始化
+     */
     void StartProcessEvent();
- 
+
     /*
-    * CustMc2Maintenance 线程绑核，绑核到ccpu上
-    */
+     * CustMc2Maintenance 线程绑核，绑核到ccpu上
+     */
     int32_t SetCustMc2MaintenanceThreadAffinity();
 
     /*
-    * CustMc2Maintenance 线程回调函数执行
-    */
+     * CustMc2Maintenance 线程回调函数执行
+     */
     void ProcessEventFunc() const;
     /*
-    * CustMc2Maintenance 清理资源
-    */
+     * CustMc2Maintenance 清理资源
+     */
     void ClearCustMc2MaintenanceProcess();
     /*
-    * CustMc2Maintenance 线程回调函数停止
-    */
+     * CustMc2Maintenance 线程回调函数停止
+     */
     void StopProcessEventFunc() const;
 
     AicpuCustMc2MaintenanceThread(uint32_t type);
     ~AicpuCustMc2MaintenanceThread();
-    AicpuCustMc2MaintenanceThread(const AicpuCustMc2MaintenanceThread &) = delete;
-    AicpuCustMc2MaintenanceThread &operator = (const AicpuCustMc2MaintenanceThread &) = delete;
+    AicpuCustMc2MaintenanceThread(const AicpuCustMc2MaintenanceThread&) = delete;
+    AicpuCustMc2MaintenanceThread& operator=(const AicpuCustMc2MaintenanceThread&) = delete;
     std::atomic<bool> initFlag_;
     std::thread processThread_;
     std::mutex initMutex_;
     sem_t workerSme_;
     uint64_t threadId_;
     AicpuMC2MaintenanceFuncPtr processEventFuncPtr_;
-    void *processEventFuncParam_;
+    void* processEventFuncParam_;
     AicpuMC2MaintenanceFuncPtr stopProcessEventFuncPtr_;
-    void *stopProcessEventFuncParam_;
+    void* stopProcessEventFuncParam_;
     uint32_t type_;
 };
-}
+} // namespace AicpuSchedule
 
 #endif // AICPU_CUST_SD_MC2_MAINTENANCE_THREAD_H

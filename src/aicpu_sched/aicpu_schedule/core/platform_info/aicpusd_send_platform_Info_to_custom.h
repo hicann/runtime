@@ -28,18 +28,19 @@
 namespace AicpuSchedule {
 class AicpuSdLoadPlatformInfoProcess {
 public:
-    static AicpuSdLoadPlatformInfoProcess &GetInstance();
-    int32_t SendLoadPlatformInfoMessageToCustSync(const uint8_t * const msg, const uint32_t len) const;
+    static AicpuSdLoadPlatformInfoProcess& GetInstance();
+    int32_t SendLoadPlatformInfoMessageToCustSync(const uint8_t* const msg, const uint32_t len) const;
     void LoadPlatformInfoSemPost();
-    int32_t SendMsgToMain(const void * const msg, const uint32_t len);
+    int32_t SendMsgToMain(const void* const msg, const uint32_t len);
     sem_t loadPlatformInfoProcessSem_;
 };
-}
+} // namespace AicpuSchedule
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-    __attribute__((visibility("default"))) __attribute__((weak)) int32_t SendLoadPlatformInfoToCust(const struct TsdSubEventInfo * const msg);
+#endif // __cplusplus
+__attribute__((visibility("default"))) __attribute__((weak)) int32_t SendLoadPlatformInfoToCust(
+    const struct TsdSubEventInfo* const msg);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 #endif // AICPU_SEND_PLATFORM_INFO_TO_CUSTOM_H

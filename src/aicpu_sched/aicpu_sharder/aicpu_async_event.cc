@@ -22,17 +22,17 @@ struct AsyncEventInfo {
     uint32_t eventId;
     uint32_t subEventId;
 
-    bool operator == (const AsyncEventInfo &info) const
+    bool operator==(const AsyncEventInfo& info) const
     {
         return (eventId == info.eventId) && (subEventId == info.subEventId);
     }
-    friend bool operator < (const AsyncEventInfo &info1, const AsyncEventInfo &info2);
+    friend bool operator<(const AsyncEventInfo& info1, const AsyncEventInfo& info2);
 };
 
-inline bool operator < (const AsyncEventInfo &info1, const AsyncEventInfo &info2)
+inline bool operator<(const AsyncEventInfo& info1, const AsyncEventInfo& info2)
 {
     return (info1.eventId < info2.eventId) ||
-        ((info1.eventId == info2.eventId) && (info1.subEventId < info2.subEventId));
+           ((info1.eventId == info2.eventId) && (info1.subEventId < info2.subEventId));
 }
 
 struct AsyncTaskInfo {
@@ -50,20 +50,19 @@ struct AsyncTaskInfo {
 std::mutex g_mapMutex;
 std::map<AsyncEventInfo, AsyncTaskInfo> g_asyncTaskMap;
 
-
 struct OpInfo {
     uint64_t taskId;
     uint32_t streamId;
     uint32_t threadIndex;
 
-    bool operator == (const OpInfo &info) const
+    bool operator==(const OpInfo& info) const
     {
         return (taskId == info.taskId) && (streamId == info.streamId) && (threadIndex == info.threadIndex);
     }
-    friend bool operator < (const OpInfo &info1, const OpInfo &info2);
+    friend bool operator<(const OpInfo& info1, const OpInfo& info2);
 };
 
-inline bool operator < (const OpInfo &info1, const OpInfo &info2)
+inline bool operator<(const OpInfo& info1, const OpInfo& info2)
 {
     if (info1.taskId != info2.taskId) {
         return info1.taskId < info2.taskId;
@@ -81,14 +80,15 @@ inline bool operator < (const OpInfo &info1, const OpInfo &info2)
 std::mutex g_opMapMutex;
 std::map<AsyncEventInfo, std::map<OpInfo, EventProcessCallBack>> g_opAsyncTaskMap;
 
-bool GenTaskInfoFromCtx(AsyncTaskInfo &taskInfo)
+bool GenTaskInfoFromCtx(AsyncTaskInfo& taskInfo)
 {
     (void)aicpu::GetTaskAndStreamId(taskInfo.taskId, taskInfo.streamId);
     std::string waitIdValue;
     auto status = aicpu::GetThreadLocalCtx(aicpu::CONTEXT_KEY_WAIT_ID, waitIdValue);
     if (status != aicpu::AICPU_ERROR_NONE) {
-        AICPUE_LOGE("GetThreadLocalCtx failed, ret=%d, key=%s.", static_cast<int32_t>(status),
-                    aicpu::CONTEXT_KEY_WAIT_ID.c_str());
+        AICPUE_LOGE(
+            "GetThreadLocalCtx failed, ret=%d, key=%s.", static_cast<int32_t>(status),
+            aicpu::CONTEXT_KEY_WAIT_ID.c_str());
         return false;
     }
     int32_t waitId = 0;
@@ -102,8 +102,9 @@ bool GenTaskInfoFromCtx(AsyncTaskInfo &taskInfo)
     std::string waitTypeValue;
     status = aicpu::GetThreadLocalCtx(aicpu::CONTEXT_KEY_WAIT_TYPE, waitTypeValue);
     if (status != aicpu::AICPU_ERROR_NONE) {
-        AICPUE_LOGE("GetThreadLocalCtx failed, ret=%d, key=%s.", static_cast<int32_t>(status),
-                    aicpu::CONTEXT_KEY_WAIT_TYPE.c_str());
+        AICPUE_LOGE(
+            "GetThreadLocalCtx failed, ret=%d, key=%s.", static_cast<int32_t>(status),
+            aicpu::CONTEXT_KEY_WAIT_TYPE.c_str());
         return false;
     }
     int32_t waitType = 0;
@@ -115,7 +116,7 @@ bool GenTaskInfoFromCtx(AsyncTaskInfo &taskInfo)
     }
     taskInfo.waitType = static_cast<uint8_t>(waitType);
     if (&aicpu::aicpuGetProfContext != nullptr) {
-        const aicpu::aicpuProfContext_t &aicpuProfCtx = aicpu::aicpuGetProfContext();
+        const aicpu::aicpuProfContext_t& aicpuProfCtx = aicpu::aicpuGetProfContext();
         taskInfo.startTick = aicpuProfCtx.tickBeforeRun;
     }
     status = aicpu::GetOpname(aicpu::GetAicpuThreadIndex(), taskInfo.opName);
@@ -125,24 +126,21 @@ bool GenTaskInfoFromCtx(AsyncTaskInfo &taskInfo)
     }
     return true;
 }
-}
+} // namespace
 
 AsyncEventManager::AsyncEventManager() : notifyFunc_(nullptr) {}
 
 AsyncEventManager::~AsyncEventManager() {}
 
-AsyncEventManager &AsyncEventManager::GetInstance()
+AsyncEventManager& AsyncEventManager::GetInstance()
 {
     static AsyncEventManager asyncEventMgr;
     return asyncEventMgr;
 }
 
-void AsyncEventManager::Register(const NotifyFunc &notify)
-{
-    notifyFunc_ = notify;
-}
+void AsyncEventManager::Register(const NotifyFunc& notify) { notifyFunc_ = notify; }
 
-void AsyncEventManager::NotifyWait(void * const notifyParam, const uint32_t paramLen)
+void AsyncEventManager::NotifyWait(void* const notifyParam, const uint32_t paramLen)
 {
     if (notifyFunc_ != nullptr) {
         notifyFunc_(notifyParam, paramLen);
@@ -150,8 +148,8 @@ void AsyncEventManager::NotifyWait(void * const notifyParam, const uint32_t para
     return;
 }
 
-bool AsyncEventManager::RegEventCb(const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack &cb,
-    const int32_t times)
+bool AsyncEventManager::RegEventCb(
+    const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack& cb, const int32_t times)
 {
     if (cb == nullptr) {
         AICPUE_LOGE("AsyncEventManager RegEventCb failed, cb is nullptr.");
@@ -178,10 +176,11 @@ bool AsyncEventManager::RegEventCb(const uint32_t eventId, const uint32_t subEve
         g_asyncTaskMap[info] = taskInfo;
     }
 
-    AICPUE_LOGI("AsyncEventManager RegEventCb success, event_id[%u], subeventId[%u], taskId[%lu],"
-                " streamId[%u], waitType[%u], waitId[%u], opName[%s], startTick[%lu].",
-                eventId, subEventId, taskInfo.taskId, taskInfo.streamId, static_cast<uint32_t>(taskInfo.waitType),
-                taskInfo.waitId, taskInfo.opName.c_str(), taskInfo.startTick);
+    AICPUE_LOGI(
+        "AsyncEventManager RegEventCb success, event_id[%u], subeventId[%u], taskId[%lu],"
+        " streamId[%u], waitType[%u], waitId[%u], opName[%s], startTick[%lu].",
+        eventId, subEventId, taskInfo.taskId, taskInfo.streamId, static_cast<uint32_t>(taskInfo.waitType),
+        taskInfo.waitId, taskInfo.opName.c_str(), taskInfo.startTick);
     return true;
 }
 
@@ -203,7 +202,7 @@ void AsyncEventManager::UnregEventCb(const uint32_t eventId, const uint32_t subE
     AICPUE_LOGI("AsyncEventManager UnregEventCb success, eventId[%u], subEventId[%u]", eventId, subEventId);
 }
 
-void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subEventId, void * const param)
+void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subEventId, void* const param)
 {
     AICPUE_LOGI("AsyncEventManager proc eventId = %d, subEventId = %d", eventId, subEventId);
     AsyncEventInfo info;
@@ -230,11 +229,13 @@ void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subE
     return;
 }
 
-bool AsyncEventManager::RegOpEventCb(const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack &cb)
-const {
+bool AsyncEventManager::RegOpEventCb(
+    const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack& cb) const
+{
     if (cb == nullptr) {
-        AICPUE_LOGE("AsyncEventManager RegOpEventCb on eventId[%u], subeventId[%u] failed, cb is nullptr.",
-            eventId, subEventId);
+        AICPUE_LOGE(
+            "AsyncEventManager RegOpEventCb on eventId[%u], subeventId[%u] failed, cb is nullptr.", eventId,
+            subEventId);
         return false;
     }
     AsyncEventInfo info = {};
@@ -245,10 +246,11 @@ const {
     opInfo.threadIndex = aicpu::GetAicpuThreadIndex();
     {
         const std::unique_lock<std::mutex> lk(g_opMapMutex);
-        auto &opMap = g_opAsyncTaskMap[info];
+        auto& opMap = g_opAsyncTaskMap[info];
         const auto iter = opMap.find(opInfo);
         if (iter != opMap.end()) {
-            AICPUE_LOGE("AsyncEventManager RegOpEventCb failed for streamId[%u], taskId[%lu], threadIndex[%u]"
+            AICPUE_LOGE(
+                "AsyncEventManager RegOpEventCb failed for streamId[%u], taskId[%lu], threadIndex[%u]"
                 " has been registered on eventId[%u], subeventId[%u].",
                 opInfo.streamId, opInfo.taskId, opInfo.threadIndex, eventId, subEventId);
             return false;
@@ -256,8 +258,10 @@ const {
         opMap[opInfo] = cb;
     }
 
-    AICPUE_LOGI("AsyncEventManager RegOpEventCb success, event_id[%u], subeventId[%u], taskId[%lu], streamId[%u],"
-                " threadIndex[%u].", eventId, subEventId, opInfo.taskId, opInfo.streamId, opInfo.threadIndex);
+    AICPUE_LOGI(
+        "AsyncEventManager RegOpEventCb success, event_id[%u], subeventId[%u], taskId[%lu], streamId[%u],"
+        " threadIndex[%u].",
+        eventId, subEventId, opInfo.taskId, opInfo.streamId, opInfo.threadIndex);
     return true;
 }
 
@@ -276,10 +280,11 @@ void AsyncEventManager::UnregOpEventCb(const uint32_t eventId, const uint32_t su
     OpInfo opInfo = {};
     (void)aicpu::GetTaskAndStreamId(opInfo.taskId, opInfo.streamId);
     opInfo.threadIndex = aicpu::GetAicpuThreadIndex();
-    auto &opMap = iter->second;
+    auto& opMap = iter->second;
     const auto opIter = opMap.find(opInfo);
     if (opIter == opMap.end()) {
-        AICPUE_LOGW("AsyncEventManager pass call UnregOpEventCb with streamId[%u], taskId[%lu], threadIndex[%u].",
+        AICPUE_LOGW(
+            "AsyncEventManager pass call UnregOpEventCb with streamId[%u], taskId[%lu], threadIndex[%u].",
             opInfo.streamId, opInfo.taskId, opInfo.threadIndex);
         return;
     }
@@ -287,11 +292,13 @@ void AsyncEventManager::UnregOpEventCb(const uint32_t eventId, const uint32_t su
     if (opMap.empty()) {
         (void)g_opAsyncTaskMap.erase(iter);
     }
-    AICPUE_LOGI("AsyncEventManager UnregEventCb success, eventId[%u], subEventId[%u], streamId[%u], taskId[%lu],"
-                " threadIndex[%u].", eventId, subEventId, opInfo.streamId, opInfo.taskId, opInfo.threadIndex);
+    AICPUE_LOGI(
+        "AsyncEventManager UnregEventCb success, eventId[%u], subEventId[%u], streamId[%u], taskId[%lu],"
+        " threadIndex[%u].",
+        eventId, subEventId, opInfo.streamId, opInfo.taskId, opInfo.threadIndex);
 }
 
-void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t subEventId, void * const param) const
+void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t subEventId, void* const param) const
 {
     AICPUE_LOGI("AsyncEventManager ProcessOpEvent eventId = %u, subEventId = %u", eventId, subEventId);
     AsyncEventInfo info = {};
@@ -304,12 +311,13 @@ void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t su
             AICPUE_LOGW("AsyncEventManager no async task to deal with.");
             return;
         }
-        const auto &opMap = iter->second;
-        for (auto &kv : opMap) {
-            const auto &opInfo = kv.first;
+        const auto& opMap = iter->second;
+        for (auto& kv : opMap) {
+            const auto& opInfo = kv.first;
             EventProcessCallBack taskCb = kv.second;
-            AICPUE_LOGI("AsyncEventManager ProcessOpEvent for streamId[%u], taskId[%lu], threadIndex[%u]",
-                        opInfo.streamId, opInfo.taskId, opInfo.threadIndex);
+            AICPUE_LOGI(
+                "AsyncEventManager ProcessOpEvent for streamId[%u], taskId[%lu], threadIndex[%u]", opInfo.streamId,
+                opInfo.taskId, opInfo.threadIndex);
             taskCb(param);
         }
     }
@@ -318,20 +326,19 @@ void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t su
 }
 } // namespace aicpu
 
-
-void AicpuNotifyWait(void *notifyParam, const uint32_t paramLen)
+void AicpuNotifyWait(void* notifyParam, const uint32_t paramLen)
 {
     aicpu::AsyncEventManager::GetInstance().NotifyWait(notifyParam, paramLen);
     return;
 }
 
-bool AicpuRegEventCb(const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack &cb)
+bool AicpuRegEventCb(const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack& cb)
 {
     return aicpu::AsyncEventManager::GetInstance().RegEventCb(eventId, subEventId, cb);
 }
 
-bool AicpuRegEventCbWithTimes(const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack &cb,
-                              const int32_t times)
+bool AicpuRegEventCbWithTimes(
+    const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack& cb, const int32_t times)
 {
     return aicpu::AsyncEventManager::GetInstance().RegEventCb(eventId, subEventId, cb, times);
 }
@@ -341,7 +348,7 @@ void AicpuUnregEventCb(const uint32_t eventId, const uint32_t subEventId)
     aicpu::AsyncEventManager::GetInstance().UnregEventCb(eventId, subEventId);
 }
 
-bool AicpuRegOpEventCb(const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack &cb)
+bool AicpuRegOpEventCb(const uint32_t eventId, const uint32_t subEventId, const aicpu::EventProcessCallBack& cb)
 {
     return aicpu::AsyncEventManager::GetInstance().RegOpEventCb(eventId, subEventId, cb);
 }

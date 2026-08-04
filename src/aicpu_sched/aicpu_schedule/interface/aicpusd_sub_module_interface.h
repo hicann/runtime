@@ -24,30 +24,27 @@ public:
         uint32_t vfId;
     };
 
-    static SubModuleInterface &GetInstance()
+    static SubModuleInterface& GetInstance()
     {
         static SubModuleInterface instance;
         return instance;
     }
-    int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo * const eventInfo);
-    int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo * const eventInfo);
+    int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
+    int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
 
-    inline bool GetStartFlag() const
-    {
-        return startFlag_.load();
-    }
+    inline bool GetStartFlag() const { return startFlag_.load(); }
 
 private:
     SubModuleInterface() = default;
     ~SubModuleInterface() = default;
 
-    void SetTsdEventKey(const struct TsdSubEventInfo * const eventInfo);
-    bool ParseArgsFromFile(ArgsParser &startParas) const;
+    void SetTsdEventKey(const struct TsdSubEventInfo* const eventInfo);
+    bool ParseArgsFromFile(ArgsParser& startParas) const;
     std::string BuildArgsFilePath() const;
-    static void DeleteArgsFile(const std::string &argsFilePath);
+    static void DeleteArgsFile(const std::string& argsFilePath);
 
     void ReportErrMsgToTsd(const int32_t errCode) const;
-    static bool AttachHostGroup(const ArgsParser &startParas);
+    static bool AttachHostGroup(const ArgsParser& startParas);
     void SendPidQosMsgToTsd(const uint32_t pidQos) const;
     int32_t SendSubModuleRsponse(const uint32_t eventType) const;
 
@@ -57,10 +54,9 @@ private:
 
 } // namespace AicpuSchedule
 
-extern "C"
-{
-__attribute__((visibility("default"))) int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo *const eventInfo);
-__attribute__((visibility("default"))) int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo *const eventInfo);
+extern "C" {
+__attribute__((visibility("default"))) int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
+__attribute__((visibility("default"))) int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo);
 }
 
 #endif // INTERFACE_AICPUSD_SUB_MODULE_INTERFACE_H

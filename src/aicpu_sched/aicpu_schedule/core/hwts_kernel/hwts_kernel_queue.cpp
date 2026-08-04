@@ -23,9 +23,9 @@ const std::string CREATE_QUEUE = "CreateQueue";
 const std::string DESTROY_QUEUE = "DestroyQueue";
 constexpr uint64_t TO_US = 1000000UL;
 constexpr GroupShareAttr GROUP_WITH_ALL_ATTR = {1U, 1U, 1U, 1U, 0U}; // admin + read + write + alloc
-}  // namespace
+} // namespace
 
-int32_t CreateQueueTsKernel::DoQueueSubscrible(const QueueAttr &queAttr, uint32_t *queueId) const
+int32_t CreateQueueTsKernel::DoQueueSubscrible(const QueueAttr& queAttr, uint32_t* queueId) const
 {
     const uint32_t deviceId = AicpuDrvManager::GetInstance().GetDeviceId();
     auto drvRet = halQueueInit(deviceId);
@@ -49,15 +49,15 @@ int32_t CreateQueueTsKernel::DoQueueSubscrible(const QueueAttr &queAttr, uint32_
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t CreateQueueTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t CreateQueueTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     // create queue op param : queueId(uint64_t) + queueName(128 char) + queueDepth(uint32_t)
-    constexpr size_t len = sizeof(aicpu::AicpuParamHead) + sizeof(uint64_t) +
-                           static_cast<size_t>(QUEUE_MAX_STR_LEN) + sizeof(uint32_t);
+    constexpr size_t len =
+        sizeof(aicpu::AicpuParamHead) + sizeof(uint64_t) + static_cast<size_t>(QUEUE_MAX_STR_LEN) + sizeof(uint32_t);
     size_t offset = sizeof(aicpu::AicpuParamHead);
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
-    const aicpu::AicpuParamHead * const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
         aicpusd_err("ParamHead for create queue is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -81,8 +81,8 @@ int32_t CreateQueueTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     const auto queueName = PtrAdd<const char_t>(baseAddr, static_cast<size_t>(paramHead->length), offset);
 
     QueueAttr queAttr = {};
-    const auto memcpyRet = memcpy_s(queAttr.name, static_cast<size_t>(QUEUE_MAX_STR_LEN),
-                                    queueName, static_cast<size_t>(QUEUE_MAX_STR_LEN));
+    const auto memcpyRet = memcpy_s(
+        queAttr.name, static_cast<size_t>(QUEUE_MAX_STR_LEN), queueName, static_cast<size_t>(QUEUE_MAX_STR_LEN));
     if (memcpyRet != EOK) {
         aicpusd_err("Memcpy_s failed, ret=%d.", memcpyRet);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
@@ -125,15 +125,13 @@ int32_t CreateQueueTsKernel::CreateGrp() const
         // 2.add current process to new group
         drvRet = halGrpAddProc(groupName.c_str(), curPid, GROUP_WITH_ALL_ATTR);
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_err("Add group[%s] for master aicpusd[%d] failed, ret[%d]",
-                groupName.c_str(), curPid, drvRet);
+            aicpusd_err("Add group[%s] for master aicpusd[%d] failed, ret[%d]", groupName.c_str(), curPid, drvRet);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
 
         drvRet = halGrpAttach(groupName.c_str(), 0);
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_err("Attach group[%s] for master aicpusd[%d] failed, ret[%d]",
-                groupName.c_str(), curPid, drvRet);
+            aicpusd_err("Attach group[%s] for master aicpusd[%d] failed, ret[%d]", groupName.c_str(), curPid, drvRet);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
 
@@ -207,14 +205,14 @@ int32_t CreateQueueTsKernel::ResubscribeF2NF(const uint32_t deviceId, const uint
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t DestroyQueueTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t DestroyQueueTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     // destroy queue op param : queueId(uint32_t)
-    constexpr uint64_t len =  sizeof(aicpu::AicpuParamHead) + sizeof(uint32_t);
+    constexpr uint64_t len = sizeof(aicpu::AicpuParamHead) + sizeof(uint32_t);
     constexpr uint64_t offset = sizeof(aicpu::AicpuParamHead);
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
-    const aicpu::AicpuParamHead * const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
         aicpusd_err("ParamHead for DumpDataKernel is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -252,4 +250,4 @@ int32_t DestroyQueueTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
 
 REGISTER_HWTS_KERNEL(CREATE_QUEUE, CreateQueueTsKernel);
 REGISTER_HWTS_KERNEL(DESTROY_QUEUE, DestroyQueueTsKernel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

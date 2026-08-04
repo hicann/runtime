@@ -19,36 +19,37 @@
 #include "aicpusd_context.h"
 
 namespace AicpuSchedule {
-    struct ProcMemStatInfo {
-        uint64_t memAvg;
-        uint64_t memHwm;
-        uint64_t statCnt;
-        uint64_t memTotal;
-        ProcMemStatInfo() : memAvg(0UL), memHwm(0UL), statCnt(0UL), memTotal(0UL) {}
-    };
+struct ProcMemStatInfo {
+    uint64_t memAvg;
+    uint64_t memHwm;
+    uint64_t statCnt;
+    uint64_t memTotal;
+    ProcMemStatInfo() : memAvg(0UL), memHwm(0UL), statCnt(0UL), memTotal(0UL) {}
+};
 
-    class AicpuSdProcMemStatistic {
-    public:
-        AicpuSdProcMemStatistic();
-        virtual ~AicpuSdProcMemStatistic();
-        void StatisticProcMemInfo();
-        bool InitProcMemStatistic();
-        void PrintOutProcMemInfo(const uint32_t hostPid);
-    private:
-        void StatisticProcSvmMemInfo();
-        void StatisticProcXsMemInfo();
-        void StatisticProcOsMemInfo();
-        bool GetXsMemInfoFromFile(uint64_t &xsMemValue);
-        bool GetOsMemInfoFromFile(uint64_t &rssValue, uint64_t &hwmValue);
-        bool GetSvmInfoFromFile(uint64_t &svmValue);
-        ProcMemStatInfo rssMem_;
-        ProcMemStatInfo svmMem_;
-        ProcMemStatInfo xsMem_;
-        std::string rssMemCfgFile_;
-        std::string svmMemCfgFile_;
-        std::string xsMemCfgFile_;
-        DeployContext deployCtx_;
-        pid_t curPid_;
-    };
-}
+class AicpuSdProcMemStatistic {
+public:
+    AicpuSdProcMemStatistic();
+    virtual ~AicpuSdProcMemStatistic();
+    void StatisticProcMemInfo();
+    bool InitProcMemStatistic();
+    void PrintOutProcMemInfo(const uint32_t hostPid);
+
+private:
+    void StatisticProcSvmMemInfo();
+    void StatisticProcXsMemInfo();
+    void StatisticProcOsMemInfo();
+    bool GetXsMemInfoFromFile(uint64_t& xsMemValue);
+    bool GetOsMemInfoFromFile(uint64_t& rssValue, uint64_t& hwmValue);
+    bool GetSvmInfoFromFile(uint64_t& svmValue);
+    ProcMemStatInfo rssMem_;
+    ProcMemStatInfo svmMem_;
+    ProcMemStatInfo xsMem_;
+    std::string rssMemCfgFile_;
+    std::string svmMemCfgFile_;
+    std::string xsMemCfgFile_;
+    DeployContext deployCtx_;
+    pid_t curPid_;
+};
+} // namespace AicpuSchedule
 #endif

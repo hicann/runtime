@@ -24,4 +24,4 @@ LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) CheckLogLevel(int32_t moduleId
 }
 #endif // LOG_CPP
 #endif // __cplusplus
-#endif  // AICPU_SHARDER_WEAK_LOG_H
+#endif // AICPU_SHARDER_WEAK_LOG_H

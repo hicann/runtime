@@ -62,6 +62,7 @@ public:
 
     // record
     int32_t AicpuRecordResponseToTs(AicpuRecordInfo& info) override;
+
 private:
     TsAicpuSqe aicpuSqe_;
     bool invalidSqe_;

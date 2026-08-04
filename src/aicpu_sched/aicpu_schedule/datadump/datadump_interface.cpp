@@ -61,12 +61,8 @@ int32_t InitAICPUDatadump(const uint32_t deviceId, const pid_t hostPid)
         pidSign.sign[0U] = '\0';
     }
     aicpusd_info("Get process sign success");
-    return AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(deviceVec,
-                                                                                   hostPid,
-                                                                                   pidSign.sign,
-                                                                                   PROFILING_CLOSE,
-                                                                                   0U,
-                                                                                   false);
+    return AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(
+        deviceVec, hostPid, pidSign.sign, PROFILING_CLOSE, 0U, false);
 }
 
 int32_t StopAICPUDatadump(uint32_t deviceId, pid_t hostPid)

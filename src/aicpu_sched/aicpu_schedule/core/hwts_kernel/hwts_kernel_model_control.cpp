@@ -22,16 +22,14 @@ const std::string RECORD_NOTIFY = "recordNotify";
 const std::string ACTIVE_ENTRY_STREAM = "activeEntryStream";
 const std::string MODEL_STOP = "AICPUModelStop";
 const std::string MODEL_CLEAR_RESTART = "AICPUModelClearInputAndRestart";
-}  // namespace
+} // namespace
 
-int32_t EndGraphTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t EndGraphTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel end graph");
-    const auto modelIdPtr =
-        PtrToPtr<void, uint32_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
     if (modelIdPtr == nullptr) {
-        aicpusd_err("ModelEndGraph taskInfo paramBase is null, kernelType[%u].",
-                    tsKernelInfo.kernelType);
+        aicpusd_err("ModelEndGraph taskInfo paramBase is null, kernelType[%u].", tsKernelInfo.kernelType);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -41,13 +39,11 @@ int32_t EndGraphTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return HwTsKernelCommon::ProcessEndGraph(modelId);
 }
 
-int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const auto info =
-        PtrToPtr<void, TsAicpuNotify>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    const auto info = PtrToPtr<void, TsAicpuNotify>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
     if (info == nullptr) {
-        aicpusd_err("ModelRecord taskInfo paramBase is null, kernelType[%u].",
-                    tsKernelInfo.kernelType);
+        aicpusd_err("ModelRecord taskInfo paramBase is null, kernelType[%u].", tsKernelInfo.kernelType);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -64,8 +60,7 @@ int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     uint32_t modelId = 0U;
     auto ret = ModelStreamManager::GetInstance().GetStreamModelId(waitStreamId, modelId);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("ModelRecord[%u] need active stream[%u] but find modelId failed.",
-                    info->notify_id, waitStreamId);
+        aicpusd_err("ModelRecord[%u] need active stream[%u] but find modelId failed.", info->notify_id, waitStreamId);
         return ret;
     }
 
@@ -73,11 +68,9 @@ int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     AICPUSubEventInfo aicpuSubEventInfo = {};
     aicpuSubEventInfo.modelId = modelId;
     aicpuSubEventInfo.para.streamInfo.streamId = waitStreamId;
-    ret = AicpuMsgSend::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, const char_t>(&aicpuSubEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
-        AICPU_SUB_EVENT_RECOVERY_STREAM,
-        CP_DEFAULT_GROUP_ID,
-        false);
+    ret = AicpuMsgSend::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, const char_t>(&aicpuSubEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_RECOVERY_STREAM, CP_DEFAULT_GROUP_ID, false);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to process ts notify[%u] event, ret[%d].", info->notify_id, ret);
         return ret;
@@ -87,13 +80,11 @@ int32_t RecordNotifyTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t ActiveEntryStreamTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ActiveEntryStreamTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const auto streamIdPtr =
-        PtrToPtr<void, uint32_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    const auto streamIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
     if (streamIdPtr == nullptr) {
-        aicpusd_err("ModelActiveEntryStream taskInfo paramBase is null, kernelType[%u].",
-                    tsKernelInfo.kernelType);
+        aicpusd_err("ModelActiveEntryStream taskInfo paramBase is null, kernelType[%u].", tsKernelInfo.kernelType);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -108,11 +99,9 @@ int32_t ActiveEntryStreamTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelIn
     AICPUSubEventInfo aicpuSubEventInfo = {};
     aicpuSubEventInfo.modelId = modelId;
     aicpuSubEventInfo.para.streamInfo.streamId = *streamIdPtr;
-    ret = AicpuMsgSend::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, const char_t>(&aicpuSubEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
-        AICPU_SUB_EVENT_ACTIVE_STREAM,
-        CP_DEFAULT_GROUP_ID,
-        false);
+    ret = AicpuMsgSend::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, const char_t>(&aicpuSubEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_ACTIVE_STREAM, CP_DEFAULT_GROUP_ID, false);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to process ts active stream[%u] event, ret[%d].", *streamIdPtr, ret);
         return ret;
@@ -121,13 +110,13 @@ int32_t ActiveEntryStreamTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelIn
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t ModelStopTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ModelStopTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_run_info("Begin to process ts kernel ModelStop event.");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     const auto cfg = PtrToPtr<void, ReDeployConfig>(ValueToPtr(kernel.paramBase));
     const uint32_t modelIdNum = cfg->modelIdNum;
-    const uint32_t *const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(cfg->modelIdsAddr));
+    const uint32_t* const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(cfg->modelIdsAddr));
     if ((modelIdNum != 0U) && (modelIds == nullptr)) {
         aicpusd_err("TsKernelModelStop modelIds is null");
         return AICPU_SCHEDULE_FAIL;
@@ -146,13 +135,13 @@ int32_t ModelStopTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t ModelClearAndRestartTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ModelClearAndRestartTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_run_info("Begin to process ts kernel ModelClearInputAndRestart event.");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     const auto cfg = PtrToPtr<void, ReDeployConfig>(ValueToPtr(kernel.paramBase));
     const uint32_t modelIdNum = cfg->modelIdNum;
-    const uint32_t *const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(cfg->modelIdsAddr));
+    const uint32_t* const modelIds = PtrToPtr<void, uint32_t>(ValueToPtr(cfg->modelIdsAddr));
     if ((modelIdNum != 0U) && (modelIds == nullptr)) {
         aicpusd_err("TsKernelModelClearInputAndRestart modelIds is null");
         return AICPU_SCHEDULE_FAIL;
@@ -174,8 +163,8 @@ int32_t ModelClearAndRestartTsKernel::Compute(const aicpu::HwtsTsKernel &tsKerne
         aicpusd_info("Restart model[%u] success", modelIds[i]);
     }
 
-    aicpusd_run_info("Finish to process ts kernel ModelClearInputAndRestart event, [%u] model had been processed.",
-        modelIdNum);
+    aicpusd_run_info(
+        "Finish to process ts kernel ModelClearInputAndRestart event, [%u] model had been processed.", modelIdNum);
     return AICPU_SCHEDULE_OK;
 }
 
@@ -184,4 +173,4 @@ REGISTER_HWTS_KERNEL(RECORD_NOTIFY, RecordNotifyTsKernel);
 REGISTER_HWTS_KERNEL(ACTIVE_ENTRY_STREAM, ActiveEntryStreamTsKernel);
 REGISTER_HWTS_KERNEL(MODEL_STOP, ModelStopTsKernel);
 REGISTER_HWTS_KERNEL(MODEL_CLEAR_RESTART, ModelClearAndRestartTsKernel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

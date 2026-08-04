@@ -23,14 +23,13 @@ const std::string DELETE_CUSTOP = "deleteCustOp";
 constexpr uint32_t MAX_CUSTOM_SO_NUM = 1024U;
 constexpr uint32_t CCPU_DEFAULT_GROUP_ID = 30U;
 constexpr GroupShareAttr GROUP_WITH_ALL_ATTR = {1U, 1U, 1U, 1U, 0U}; // admin + read + write + alloc
-}  // namespace
-
+} // namespace
 
 std::mutex LoadOpFromBuffTsKernel::mutexForStartCustProcess_;
 std::set<std::string> LoadOpFromBuffTsKernel::alreadyLoadSoName_;
 
 int32_t CustOperationCommon::SendCtrlCpuMsg(
-    int32_t custAicpuPid, const uint32_t eventType, char_t *msg, const uint32_t msgLen) const
+    int32_t custAicpuPid, const uint32_t eventType, char_t* msg, const uint32_t msgLen) const
 {
     event_summary eventInfoSummary = {};
     eventInfoSummary.pid = custAicpuPid;
@@ -46,8 +45,7 @@ int32_t CustOperationCommon::SendCtrlCpuMsg(
         eventInfoSummary.dst_engine = static_cast<uint32_t>(CCPU_HOST);
         aicpusd_info("SendCtrlCpuMsg to dst engine: %u", eventInfoSummary.dst_engine);
     }
-    const drvError_t ret = halEschedSubmitEvent(AicpuDrvManager::GetInstance().GetDeviceId(),
-                                                &eventInfoSummary);
+    const drvError_t ret = halEschedSubmitEvent(AicpuDrvManager::GetInstance().GetDeviceId(), &eventInfoSummary);
     if (ret != DRV_ERROR_NONE) {
         aicpusd_err("Failed to submit aicpu event. ret is %d.", ret);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
@@ -56,7 +54,7 @@ int32_t CustOperationCommon::SendCtrlCpuMsg(
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t CustOperationCommon::GetGroupNameInfo(std::vector<std::string> &groupNameList, std::string &groupNameStr) const
+int32_t CustOperationCommon::GetGroupNameInfo(std::vector<std::string>& groupNameList, std::string& groupNameStr) const
 {
     const pid_t curPid = drvDeviceGetBareTgid();
     std::map<std::string, GroupShareAttr> buffGrpInfo = {};
@@ -66,7 +64,7 @@ int32_t CustOperationCommon::GetGroupNameInfo(std::vector<std::string> &groupNam
         return ret;
     }
 
-    for (const auto &groupInfo : buffGrpInfo) {
+    for (const auto& groupInfo : buffGrpInfo) {
         if (groupInfo.second.admin == 1U) {
             groupNameList.emplace_back(groupInfo.first);
             groupNameStr = groupNameStr + groupInfo.first + ",";
@@ -77,8 +75,7 @@ int32_t CustOperationCommon::GetGroupNameInfo(std::vector<std::string> &groupNam
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t CustOperationCommon::StartCustProcess(
-    const uint32_t loadLibNum, const char_t *const loadLibName[]) const
+int32_t CustOperationCommon::StartCustProcess(const uint32_t loadLibNum, const char_t* const loadLibName[]) const
 {
     // 01-Get group name of current process
     std::vector<std::string> groupNameList = {};
@@ -109,13 +106,15 @@ int32_t CustOperationCommon::StartCustProcess(
         tdtStatus = CreateOrFindCustPidEx(&para);
     } else {
         aicpusd_info("Create or find custom pid by CreateOrFindCustPid, load so event will be send to tsd.");
-        tdtStatus = CreateOrFindCustPid(AicpuDrvManager::GetInstance().GetDeviceId(), loadLibNum,
-            loadLibName, static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
+        tdtStatus = CreateOrFindCustPid(
+            AicpuDrvManager::GetInstance().GetDeviceId(), loadLibNum, loadLibName,
+            static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
             AicpuDrvManager::GetInstance().GetVfId(), groupNameStr.c_str(), validGroupNum, &custAicpuPid, &firstStart);
     }
     if ((tdtStatus != 0) || (custAicpuPid < 0)) {
-        aicpusd_err("Call tdt interface to create or find custom process pid failed, error[%d] pid[%d].",
-                    tdtStatus, custAicpuPid);
+        aicpusd_err(
+            "Call tdt interface to create or find custom process pid failed, error[%d] pid[%d].", tdtStatus,
+            custAicpuPid);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
@@ -126,7 +125,7 @@ int32_t CustOperationCommon::StartCustProcess(
     }
 
     // 03-add group for cust aicpu
-    for (const auto &grpName : groupNameList) {
+    for (const auto& grpName : groupNameList) {
         const auto drvRet = halGrpAddProc(grpName.c_str(), custAicpuPid, GROUP_WITH_ALL_ATTR);
         if (drvRet != DRV_ERROR_NONE) {
             aicpusd_err("Add group[%s] for cust aicpusd failed, ret[%d]", grpName.c_str(), drvRet);
@@ -147,12 +146,14 @@ int32_t CustOperationCommon::StartCustProcess(
     }
     if (&CreateOrFindCustPidEx != nullptr) {
         aicpusd_run_info("Begin to notify open custom so event to cust ctrl cpu, custAicpuPid[%d]", custAicpuPid);
-        int32_t notifyRet = AicpuNotifyLoadSoEventToCustCtrlCpu(AicpuDrvManager::GetInstance().GetDeviceId(),
+        int32_t notifyRet = AicpuNotifyLoadSoEventToCustCtrlCpu(
+            AicpuDrvManager::GetInstance().GetDeviceId(),
             static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
             AicpuDrvManager::GetInstance().GetVfId(), custAicpuPid, loadLibNum, loadLibName);
         if (notifyRet != 0) {
-            aicpusd_warn("Aicpu notify open custom so event to cust ctrl aicpu failed, error[%d] pid[%d].",
-                         notifyRet, custAicpuPid);
+            aicpusd_warn(
+                "Aicpu notify open custom so event to cust ctrl aicpu failed, error[%d] pid[%d].", notifyRet,
+                custAicpuPid);
         }
     }
 
@@ -160,17 +161,16 @@ int32_t CustOperationCommon::StartCustProcess(
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(const uint32_t deviceId, const uint32_t hostPid,
-                                                                 const uint32_t vfId, const int32_t custAicpuPid,
-                                                                 const uint32_t loadLibNum,
-                                                                 const char_t * const loadLibName[]) const
+int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(
+    const uint32_t deviceId, const uint32_t hostPid, const uint32_t vfId, const int32_t custAicpuPid,
+    const uint32_t loadLibNum, const char_t* const loadLibName[]) const
 {
     if ((loadLibNum > 0U) && (loadLibName == nullptr)) {
         aicpusd_err("Load lib name is nullptr, loadLibNum=%u, hostPid=%u", loadLibNum, hostPid);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     for (uint32_t i = 0U; i < loadLibNum; i++) {
-        TsdSubEventInfo info = { };
+        TsdSubEventInfo info = {};
         info.deviceId = deviceId;
         info.srcPid = static_cast<uint32_t>(getpid());
         info.dstPid = custAicpuPid;
@@ -183,7 +183,7 @@ int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(const uint32_t 
             aicpusd_err("Copy %s failed, error[%d]", loadLibName[i], errRet);
             return AICPU_SCHEDULE_ERROR_INNER_ERROR;
         }
-        event_summary event = { };
+        event_summary event = {};
         event.dst_engine = CCPU_DEVICE;
         event.policy = ONLY;
         event.pid = custAicpuPid;
@@ -195,20 +195,24 @@ int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(const uint32_t 
         aicpusd_info("msg[%s], msglen[%u]", event.msg, event.msg_len);
         const drvError_t ret = halEschedSubmitEvent(deviceId, &event);
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_run_warn("Sending open custom so event to custom ctrl cpu was not successful, deviceId[%u], "
-                             "errcode[%d], please check so name length", deviceId, ret);
+            aicpusd_run_warn(
+                "Sending open custom so event to custom ctrl cpu was not successful, deviceId[%u], "
+                "errcode[%d], please check so name length",
+                deviceId, ret);
         } else {
             aicpusd_info("Aicpu send open custom so event to custom ctrl cpu success.");
         }
-        aicpusd_run_info("Notify custom soName info on deviceId[%u] hostpid[%u] vfId[%u] index[%u] soName[%s] success.",
-                         deviceId, hostPid, vfId, i, loadLibName[i]);
+        aicpusd_run_info(
+            "Notify custom soName info on deviceId[%u] hostpid[%u] vfId[%u] index[%u] soName[%s] success.", deviceId,
+            hostPid, vfId, i, loadLibName[i]);
     }
-    aicpusd_run_info("End AicpuNotifyLoadSoEventToCustCtrlCpu on deviceId[%u] hostPid[%u] vfId[%u] soNum[%u].",
-                     deviceId, hostPid, vfId, loadLibNum);
+    aicpusd_run_info(
+        "End AicpuNotifyLoadSoEventToCustCtrlCpu on deviceId[%u] hostPid[%u] vfId[%u] soNum[%u].", deviceId, hostPid,
+        vfId, loadLibNum);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_run_info("Begin to process ts kernel loadOpFromBuf");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
@@ -216,8 +220,7 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
-    const auto paramKernelName =
-        PtrToPtr<void, char_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.kernelName));
+    const auto paramKernelName = PtrToPtr<void, char_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.kernelName));
     if (paramKernelName == nullptr) {
         aicpusd_err("Process LoadOpFromBuf failed as the name of kernel is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -242,7 +245,7 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     if (runMode != aicpu::AicpuRunMode::THREAD_MODE) {
         const std::lock_guard<std::mutex> lk(mutexForStartCustProcess_);
         constexpr uint32_t soNum = 1U;
-        const char_t *soNames[soNum] = {realSoName.data()};
+        const char_t* soNames[soNum] = {realSoName.data()};
         auto it = alreadyLoadSoName_.insert(realSoName);
         if (it.second == true) {
             const int32_t startRet = StartCustProcess(soNum, &soNames[0UL]);
@@ -260,7 +263,7 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
 }
 
 int32_t BatchLoadSoFromBuffTsKernel::TryToStartCustProcess(
-    const std::unique_ptr<const char_t *[]> &soNames, const uint32_t soNum) const
+    const std::unique_ptr<const char_t*[]>& soNames, const uint32_t soNum) const
 {
     // if have cust pid, create or find cust pid
     uint32_t runMode = 0U;
@@ -281,7 +284,7 @@ int32_t BatchLoadSoFromBuffTsKernel::TryToStartCustProcess(
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel BatchLoadOpFromBuf event.");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
@@ -289,8 +292,7 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernel
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
-    const auto paramKernelName = 
-        PtrToPtr<void, char_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.kernelName));
+    const auto paramKernelName = PtrToPtr<void, char_t>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.kernelName));
     if (paramKernelName == nullptr) {
         aicpusd_err("Process BatchLoadOpFromBuf failed as the name of kernel is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -312,7 +314,7 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernel
     }
 
     aicpusd_info("BatchLoadOpFromBuf soNum is %u.", soNum);
-    const std::unique_ptr<const char_t *[]> soNames(new (std::nothrow) const char_t *[soNum]);
+    const std::unique_ptr<const char_t*[]> soNames(new (std::nothrow) const char_t*[soNum]);
     if (soNames == nullptr) {
         aicpusd_err("BatchLoadOpFromBuf kernel malloc for so names array failed, so number[%u]", soNum);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -321,8 +323,7 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernel
     std::vector<std::string> soNameVec;
     for (uint32_t i = 0U; i < soNum; i++) {
         std::string realSoName;
-        LoadOpFromBufArgs * const custSo =
-            PtrToPtr<void, LoadOpFromBufArgs>(ValueToPtr(custSoInfo)) + i;
+        LoadOpFromBufArgs* const custSo = PtrToPtr<void, LoadOpFromBufArgs>(ValueToPtr(custSoInfo)) + i;
         const int32_t ret = AicpuCustSoManager::GetInstance().CheckAndCreateSoFile(custSo, realSoName);
         if (ret != AICPU_SCHEDULE_OK) {
             return ret;
@@ -340,7 +341,7 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernel
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel deleteCustOp event.");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
@@ -363,8 +364,7 @@ int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     for (uint32_t i = 0U; i < soNum; i++) {
-        LoadOpFromBufArgs * const custSo =
-            PtrToPtr<void, LoadOpFromBufArgs>(ValueToPtr(custSoInfo)) + i;
+        LoadOpFromBufArgs* const custSo = PtrToPtr<void, LoadOpFromBufArgs>(ValueToPtr(custSoInfo)) + i;
         const int32_t ret = AicpuCustSoManager::GetInstance().CheckAndDeleteSoFile(custSo);
         if (ret != AICPU_SCHEDULE_OK) {
             return ret;
@@ -380,4 +380,4 @@ int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
 REGISTER_HWTS_KERNEL(LOADOP_FROM_BUFF, LoadOpFromBuffTsKernel);
 REGISTER_HWTS_KERNEL(BATCH_LOADSO_FROM_BUFF, BatchLoadSoFromBuffTsKernel);
 REGISTER_HWTS_KERNEL(DELETE_CUSTOP, DeleteCustOpTsKernel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

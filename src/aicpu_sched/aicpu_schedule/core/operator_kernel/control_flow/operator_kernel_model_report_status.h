@@ -14,19 +14,20 @@
 #include <vector>
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelReportStatus : public OperatorKernel {
 public:
     OperatorKernelModelReportStatus() = default;
     ~OperatorKernelModelReportStatus() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    using FillFunc = std::function<int32_t(void *const buffer, const size_t size)>;
-    int32_t ModelReportStatus(const uint32_t modelUuid, const QueueAttrs &schedOutputQueue,
-                              const std::vector<QueueAttrs> &inputQueues, const RunContext &taskContext) const;
-    int32_t EnqueueStatus(const uint32_t deviceId, const uint32_t queueId, const size_t reqSize,
-                          const FillFunc &fillFunc) const;
+    using FillFunc = std::function<int32_t(void* const buffer, const size_t size)>;
+    int32_t ModelReportStatus(
+        const uint32_t modelUuid, const QueueAttrs& schedOutputQueue, const std::vector<QueueAttrs>& inputQueues,
+        const RunContext& taskContext) const;
+    int32_t EnqueueStatus(
+        const uint32_t deviceId, const uint32_t queueId, const size_t reqSize, const FillFunc& fillFunc) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_REPORT_STATUS_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_REPORT_STATUS_H

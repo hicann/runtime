@@ -15,7 +15,7 @@
 namespace AicpuSchedule {
 class TsMsgAdapterFactory {
 public:
-    std::unique_ptr<TsMsgAdapter> CreateAdapter(const char_t *msg) const;
+    std::unique_ptr<TsMsgAdapter> CreateAdapter(const char_t* msg) const;
     std::unique_ptr<TsMsgAdapter> CreateAdapter() const;
     TsMsgAdapterFactory(const TsMsgAdapterFactory&) = delete;
     TsMsgAdapterFactory(TsMsgAdapterFactory&&) = delete;

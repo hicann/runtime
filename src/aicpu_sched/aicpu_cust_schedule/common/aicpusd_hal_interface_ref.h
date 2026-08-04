@@ -15,15 +15,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-DV_ONLINE DVresult __attribute__((weak)) halMemBindSibling(int hostPid, int aicpuPid,
-    unsigned int vfid, unsigned int dev_id, unsigned int flag);
-drvError_t __attribute__((weak)) halGetVdevNum(uint32_t *num_dev);
+DV_ONLINE DVresult __attribute__((weak))
+halMemBindSibling(int hostPid, int aicpuPid, unsigned int vfid, unsigned int dev_id, unsigned int flag);
+drvError_t __attribute__((weak)) halGetVdevNum(uint32_t* num_dev);
 drvError_t __attribute__((weak)) halBindCgroup(BIND_CGROUP_TYPE bindType);
-drvError_t __attribute__((weak)) drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
-    unsigned int *host_pid, unsigned int *cp_type);
+drvError_t __attribute__((weak)) drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type);
 drvError_t __attribute__((weak)) halDrvEventThreadInit(unsigned int devId);
 drvError_t __attribute__((weak)) halDrvEventThreadUninit(unsigned int devId);
-drvError_t __attribute__((weak))halGetSocVersion(uint32_t devId, char *socVersion, uint32_t len);
+drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char* socVersion, uint32_t len);
 #ifdef __cplusplus
 }
 #endif

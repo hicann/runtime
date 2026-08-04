@@ -14,16 +14,16 @@
 #include "aicpusd_model_execute.h"
 #include "aicpusd_resource_manager.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_LOCK_TABLE = "lockTable";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    aicpusd_info("Start ModelLockTable. modelId=%u, streamId=%u, taskId=%u.",
-                 taskContext.modelId, kernelTaskInfo.streamID, kernelTaskInfo.taskID);
+    aicpusd_info(
+        "Start ModelLockTable. modelId=%u, streamId=%u, taskId=%u.", taskContext.modelId, kernelTaskInfo.streamID,
+        kernelTaskInfo.taskID);
     if (kernelTaskInfo.paraBase == 0UL) {
         aicpusd_err("kernelTaskInfo.paraBase is null");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -31,20 +31,21 @@ int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo &kernelTaskInfo, co
 
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
-        aicpusd_err("Cannot get model by modelId:[%u], streamId[%u], taskId[%u].",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "Cannot get model by modelId:[%u], streamId[%u], taskId[%u].", taskContext.modelId, taskContext.streamId,
+            kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
-    const LockTableTaskParam * const lockParam =
-        PtrToPtr<void, LockTableTaskParam>(ValueToPtr(kernelTaskInfo.paraBase));
+    const LockTableTaskParam* const lockParam = PtrToPtr<void, LockTableTaskParam>(ValueToPtr(kernelTaskInfo.paraBase));
     const int32_t lockType = lockParam->lockType;
     const uint32_t tableId = lockParam->tableId;
 
     const auto triedTable = model->GetTableTryLock();
     if ((triedTable != INVALID_TABLE_ID) && (triedTable != static_cast<int64_t>(tableId))) {
-        aicpusd_err("model[%u] was tring to lock table[%d], cannot try to lock table[%u]",
-            taskContext.modelId, triedTable, tableId);
+        aicpusd_err(
+            "model[%u] was tring to lock table[%d], cannot try to lock table[%u]", taskContext.modelId, triedTable,
+            tableId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     model->SetTableTryLock(static_cast<int64_t>(tableId));
@@ -69,11 +70,11 @@ int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo &kernelTaskInfo, co
         }
 
         bool needWait = false;
-        EventWaitManager::TableUnlockWaitManager().WaitEvent(static_cast<size_t>(taskContext.modelId),
-            taskContext.streamId, needWait);
+        EventWaitManager::TableUnlockWaitManager().WaitEvent(
+            static_cast<size_t>(taskContext.modelId), taskContext.streamId, needWait);
         if (needWait) {
             // pending
-            bool * const pending = const_cast<bool *>(&taskContext.pending);
+            bool* const pending = const_cast<bool*>(&taskContext.pending);
             *pending = true;
             break;
         }
@@ -82,6 +83,5 @@ int32_t OperatorKernelLockTable::Compute(const AicpuTaskInfo &kernelTaskInfo, co
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_LOCK_TABLE, OperatorKernelLockTable);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

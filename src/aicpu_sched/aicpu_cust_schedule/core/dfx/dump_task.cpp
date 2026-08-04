@@ -49,20 +49,19 @@ OpDumpTask::OpDumpTask(const int32_t hostPid, const uint32_t deviceId)
       offset_(0U),
       skipAddressConversion_(false),
       hostPid_(hostPid),
-      deviceId_(deviceId) { }
+      deviceId_(deviceId)
+{}
 
-static inline void ReplaceStringElem(std::string &str)
+static inline void ReplaceStringElem(std::string& str)
 {
-    (void)for_each(str.begin(), str.end(),
-        [](char_t &ch) {
-            if ((ch == ' ') ||
-                (ch == '.') ||
-                (ch == '/') ||
-                (ch == '\\')) { ch = '_'; }
-        });
+    (void)for_each(str.begin(), str.end(), [](char_t& ch) {
+        if ((ch == ' ') || (ch == '.') || (ch == '/') || (ch == '\\')) {
+            ch = '_';
+        }
+    });
 }
 
-StatusCode OpDumpTask::GetDumpNumber(uint64_t &dumpNum)
+StatusCode OpDumpTask::GetDumpNumber(uint64_t& dumpNum)
 {
     if (optionalParam_.hasStepId) {
         if (optionalParam_.stepIdAddr == nullptr) {
@@ -90,8 +89,9 @@ StatusCode OpDumpTask::GetDumpNumber(uint64_t &dumpNum)
             loopCond = *(optionalParam_.loopCondAddr);
             aicpusd_info("op name[%s], loop cond is[%llu]", opName_.c_str(), loopCond);
         }
-        aicpusd_info("op name[%s], step id[%llu], iterations per loop[%llu], loop cond[%llu]",
-            opName_.c_str(), stepId, iterationsPerLoop, loopCond);
+        aicpusd_info(
+            "op name[%s], step id[%llu], iterations per loop[%llu], loop cond[%llu]", opName_.c_str(), stepId,
+            iterationsPerLoop, loopCond);
         // overflow does not matter
         dumpNum = (stepId * (iterationsPerLoop + 1U)) + loopCond;
     } else {
@@ -101,13 +101,12 @@ StatusCode OpDumpTask::GetDumpNumber(uint64_t &dumpNum)
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::PreProcessOutput(const aicpu::dump::Task &task,
-                                        ::toolkit::dumpdata::DumpData &dumpData)
+StatusCode OpDumpTask::PreProcessOutput(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData)
 {
-    const auto &outputsFromMapInfo = task.output();
+    const auto& outputsFromMapInfo = task.output();
     for (int32_t index = 0; index < outputsFromMapInfo.size(); ++index) {
-        const auto &item = outputsFromMapInfo.at(index);
-        ::toolkit::dumpdata::OpOutput * const opOutput = dumpData.add_output();
+        const auto& item = outputsFromMapInfo.at(index);
+        ::toolkit::dumpdata::OpOutput* const opOutput = dumpData.add_output();
         if (opOutput == nullptr) {
             aicpusd_err("op name[%s], call protobuf function to add output elem failed", opName_.c_str());
             return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -117,29 +116,31 @@ StatusCode OpDumpTask::PreProcessOutput(const aicpu::dump::Task &task,
         opOutput->set_format(static_cast<::toolkit::dumpdata::OutputFormat>(ge::GetPrimaryFormat(format)));
         opOutput->set_sub_format(ge::GetSubFormat(format));
         const auto dims = item.shape().dim();
-        ::toolkit::dumpdata::Shape * const outShape = opOutput->mutable_shape();
+        ::toolkit::dumpdata::Shape* const outShape = opOutput->mutable_shape();
         for (const auto dim : dims) {
             outShape->add_dim(dim);
         }
         const auto originalDims = item.origin_shape().dim();
-        ::toolkit::dumpdata::Shape * const outOriginalShape = opOutput->mutable_original_shape();
+        ::toolkit::dumpdata::Shape* const outOriginalShape = opOutput->mutable_original_shape();
         for (const auto dim : originalDims) {
             outOriginalShape->add_dim(dim);
         }
         if (!item.original_name().empty()) {
-            ::toolkit::dumpdata::OriginalOp * const orgOp = opOutput->mutable_original_op();
+            ::toolkit::dumpdata::OriginalOp* const orgOp = opOutput->mutable_original_op();
             orgOp->set_name(item.original_name());
             orgOp->set_output_index(static_cast<uint32_t>(item.original_output_index()));
             orgOp->set_data_type(static_cast<::toolkit::dumpdata::OutputDataType>(item.original_output_data_type()));
             orgOp->set_format(static_cast<::toolkit::dumpdata::OutputFormat>(item.original_output_format()));
         }
-        const auto &dim_rangeFromOutput = item.dim_range();
+        const auto& dim_rangeFromOutput = item.dim_range();
         for (int32_t i = 0; i < dim_rangeFromOutput.size(); ++i) {
-            const auto &item = dim_rangeFromOutput.at(i);
-            ::toolkit::dumpdata::DimRange * const dimRange = opOutput->add_dim_range();
+            const auto& item = dim_rangeFromOutput.at(i);
+            ::toolkit::dumpdata::DimRange* const dimRange = opOutput->add_dim_range();
             if (dimRange == nullptr) {
-                aicpusd_err("op name[%s], call protobuf function to add dim_range elem failed, i[%d],"
-                            " dim_range_size[%zu]", opName_.c_str(), i, dim_rangeFromOutput.size());
+                aicpusd_err(
+                    "op name[%s], call protobuf function to add dim_range elem failed, i[%d],"
+                    " dim_range_size[%zu]",
+                    opName_.c_str(), i, dim_rangeFromOutput.size());
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
             dimRange->set_dim_start(item.dim_start());
@@ -152,13 +153,12 @@ StatusCode OpDumpTask::PreProcessOutput(const aicpu::dump::Task &task,
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::PreProcessInput(const aicpu::dump::Task &task,
-                                       ::toolkit::dumpdata::DumpData &dumpData)
+StatusCode OpDumpTask::PreProcessInput(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData)
 {
-    const auto &inputsFromMapInfo = task.input();
+    const auto& inputsFromMapInfo = task.input();
     for (int32_t i = 0; i < inputsFromMapInfo.size(); ++i) {
-        const auto &item = inputsFromMapInfo.at(i);
-        ::toolkit::dumpdata::OpInput * const opInput = dumpData.add_input();
+        const auto& item = inputsFromMapInfo.at(i);
+        ::toolkit::dumpdata::OpInput* const opInput = dumpData.add_input();
         if (opInput == nullptr) {
             aicpusd_err("op name[%s], call protobuf function to add input elem failed", opName_.c_str());
             return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -168,12 +168,12 @@ StatusCode OpDumpTask::PreProcessInput(const aicpu::dump::Task &task,
         opInput->set_format(static_cast<::toolkit::dumpdata::OutputFormat>(ge::GetPrimaryFormat(format)));
         opInput->set_sub_format(ge::GetSubFormat(format));
         const auto dims = item.shape().dim();
-        ::toolkit::dumpdata::Shape * const inShape = opInput->mutable_shape();
+        ::toolkit::dumpdata::Shape* const inShape = opInput->mutable_shape();
         for (const auto dim : dims) {
             inShape->add_dim(dim);
         }
         const auto originalDims = item.origin_shape().dim();
-        ::toolkit::dumpdata::Shape * const inOriginalShape = opInput->mutable_original_shape();
+        ::toolkit::dumpdata::Shape* const inOriginalShape = opInput->mutable_original_shape();
         for (const auto dim : originalDims) {
             inOriginalShape->add_dim(dim);
         }
@@ -185,13 +185,12 @@ StatusCode OpDumpTask::PreProcessInput(const aicpu::dump::Task &task,
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::PreProcessOpBuffer(const aicpu::dump::Task &task,
-                                          ::toolkit::dumpdata::DumpData &dumpData)
+StatusCode OpDumpTask::PreProcessOpBuffer(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData)
 {
-    const auto &opsBufferFromMapInfo = task.buffer();
+    const auto& opsBufferFromMapInfo = task.buffer();
     for (int32_t i = 0; i < opsBufferFromMapInfo.size(); ++i) {
-        const auto &item = opsBufferFromMapInfo.at(i);
-        ::toolkit::dumpdata::OpBuffer * const opBuffer = dumpData.add_buffer();
+        const auto& item = opsBufferFromMapInfo.at(i);
+        ::toolkit::dumpdata::OpBuffer* const opBuffer = dumpData.add_buffer();
         if (opBuffer == nullptr) {
             aicpusd_err("op name[%s], call protobuf function to add op buffer elem failed", opName_.c_str());
             return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -205,13 +204,12 @@ StatusCode OpDumpTask::PreProcessOpBuffer(const aicpu::dump::Task &task,
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::PreProcessWorkspace(const aicpu::dump::Task &task,
-                                           ::toolkit::dumpdata::DumpData &dumpData)
+StatusCode OpDumpTask::PreProcessWorkspace(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData)
 {
-    const auto &opsWorkspaceFromMapInfo = task.space();
+    const auto& opsWorkspaceFromMapInfo = task.space();
     for (int64_t i = 0; i < opsWorkspaceFromMapInfo.size(); ++i) {
-        const auto &item = opsWorkspaceFromMapInfo.at(i);
-        ::toolkit::dumpdata::Workspace * const opWorkspace = dumpData.add_space();
+        const auto& item = opsWorkspaceFromMapInfo.at(i);
+        ::toolkit::dumpdata::Workspace* const opWorkspace = dumpData.add_space();
         if (opWorkspace == nullptr) {
             aicpusd_err("op name[%s], call protobuf function to add op Workspace elem failed", opName_.c_str());
             return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
@@ -225,15 +223,14 @@ StatusCode OpDumpTask::PreProcessWorkspace(const aicpu::dump::Task &task,
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
-                                               const std::string &basePath,
-                                               const MappingInfoOptionalParam &param,
-                                               const DumpStep &dumpStep,
-                                               const bool skipAddressConversion)
+StatusCode OpDumpTask::PreProcessOpMappingInfo(
+    const aicpu::dump::Task& task, const std::string& basePath, const MappingInfoOptionalParam& param,
+    const DumpStep& dumpStep, const bool skipAddressConversion)
 {
-    aicpusd_info("Base path[%s], has model name[%d], model name[%s], has model id[%d], model id[%u].",
-                 basePath.c_str(), static_cast<int32_t>(param.hasModelName), param.modelName.c_str(),
-                 static_cast<int32_t>(param.hasModelId), param.modelId);
+    aicpusd_info(
+        "Base path[%s], has model name[%d], model name[%s], has model id[%d], model id[%u].", basePath.c_str(),
+        static_cast<int32_t>(param.hasModelName), param.modelName.c_str(), static_cast<int32_t>(param.hasModelId),
+        param.modelId);
     aicpusd_debug("task info[%s].", task.DebugString().c_str());
     const std::lock_guard<std::mutex> queLock(dumpMtx_);
     baseDumpPath_ = basePath;
@@ -241,8 +238,8 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
     dumpStep_ = dumpStep;
     skipAddressConversion_ = skipAddressConversion;
     // single op no task id and stream id
-    taskInfo_.taskId_ = (skipAddressConversion_ && optionalParam_.hasStepId)? 0U : task.task_id();
-    taskInfo_.streamId_ = (skipAddressConversion_ && optionalParam_.hasStepId)? 0U : task.stream_id();
+    taskInfo_.taskId_ = (skipAddressConversion_ && optionalParam_.hasStepId) ? 0U : task.task_id();
+    taskInfo_.streamId_ = (skipAddressConversion_ && optionalParam_.hasStepId) ? 0U : task.stream_id();
     endGraph_ = task.end_graph();
 
     ::toolkit::dumpdata::DumpData dumpData;
@@ -267,21 +264,21 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
     opName_ = task.op().op_name();
     opType_ = task.op().op_type();
     dumpData.set_op_name(opName_);
-    aicpusd_info("[stream id:%u, task id:%u], op name[%s], op type[%s]",
-        taskInfo_.streamId_, taskInfo_.taskId_, opName_.c_str(), opType_.c_str());
+    aicpusd_info(
+        "[stream id:%u, task id:%u], op name[%s], op type[%s]", taskInfo_.streamId_, taskInfo_.taskId_, opName_.c_str(),
+        opType_.c_str());
     baseDumpData_ = std::move(dumpData);
     taskDumpNum_ = 0U;
 
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                        const std::string &path,
-                                        const IDE_SESSION ideSession)
+StatusCode OpDumpTask::ProcessInputDump(
+    const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int32_t i = 0; i < dumpData.input_size(); ++i) {
-        auto &input = dumpData.input(i);
+        auto& input = dumpData.input(i);
         const uint64_t len = input.size();
         if (len == 0U) {
             aicpusd_info("op name[%s], input[%d] data size is zero", opName_.c_str(), i);
@@ -295,7 +292,7 @@ StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dum
                 continue;
             }
             // baseAddr is a pointer point to data addr
-            dataAddr = *(PtrToPtr<void ,uint64_t>(ValueToPtr(baseAddr)));
+            dataAddr = *(PtrToPtr<void, uint64_t>(ValueToPtr(baseAddr)));
         }
         aicpusd_info("op name[%s], input[%d] size[%llu]", opName_.c_str(), i, len);
         if (dataAddr == 0U) {
@@ -307,24 +304,23 @@ StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dum
             const uint64_t emptyBufferSize = buffSize_ - offset_;
             const uint64_t actSize = std::min(emptyBufferSize, len - innerOffset);
             const uint64_t srcAddr = dataAddr + innerOffset;
-            aicpusd_info("op name[%s], begin to copy data from HBM to DDR for input[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
-            const errno_t eRet = memcpy_s(buff_.get() + offset_,
-                                          emptyBufferSize,
-                                          ValueToPtr(srcAddr),
-                                          actSize);
+            aicpusd_info(
+                "op name[%s], begin to copy data from HBM to DDR for input[%d], size[%llu]", opName_.c_str(), i,
+                actSize);
+            const errno_t eRet = memcpy_s(buff_.get() + offset_, emptyBufferSize, ValueToPtr(srcAddr), actSize);
             if (eRet != EOK) {
-                aicpusd_err("op name[%s], input[%d] memcpy failed, desSize[%llu], srcSize[%llu]", opName_.c_str(), i,
-                            emptyBufferSize, actSize);
+                aicpusd_err(
+                    "op name[%s], input[%d] memcpy failed, desSize[%llu], srcSize[%llu]", opName_.c_str(), i,
+                    emptyBufferSize, actSize);
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
-            aicpusd_info("op name[%s], end of copy data from HBM to DDR for input[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
+            aicpusd_info(
+                "op name[%s], end of copy data from HBM to DDR for input[%d], size[%llu]", opName_.c_str(), i, actSize);
             offset_ += actSize;
             innerOffset += actSize;
             dumpedSize += actSize;
             const bool isLastSilce = (dumpedSize == inputTotalSize_) && (outputTotalSize_ == 0U) &&
-                (opBufferTotalSize_ == 0U)  && (opWorkspaceTotalSize_ == 0U);
+                                     (opBufferTotalSize_ == 0U) && (opWorkspaceTotalSize_ == 0U);
             if ((offset_ >= buffSize_) || isLastSilce) {
                 const StatusCode ret = Dump(path, buff_.get(), offset_, ideSession, isLastSilce);
                 if (ret != AICPU_SCHEDULE_OK) {
@@ -339,13 +335,12 @@ StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dum
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                         const std::string &path,
-                                         const IDE_SESSION ideSession)
+StatusCode OpDumpTask::ProcessOutputDump(
+    const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int32_t i = 0; i < dumpData.output_size(); ++i) {
-        auto &output = dumpData.output(i);
+        auto& output = dumpData.output(i);
         const uint64_t len = output.size();
         if (len == 0U) {
             aicpusd_info("op name[%s], output[%d] data size is zero", opName_.c_str(), i);
@@ -373,23 +368,24 @@ StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &du
             const uint64_t emptyBufferSize = buffSize_ - offset_;
             const uint64_t actSize = std::min(emptyBufferSize, len - innerOffset);
             const uint64_t srcAddr = dataAddr + innerOffset;
-            aicpusd_info("op name[%s], begin to copy data from HBM to DDR for output[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
-            const errno_t eRet = memcpy_s(buff_.get() + offset_,
-                                          emptyBufferSize,
-                                          ValueToPtr(srcAddr),
-                                          actSize);
+            aicpusd_info(
+                "op name[%s], begin to copy data from HBM to DDR for output[%d], size[%llu]", opName_.c_str(), i,
+                actSize);
+            const errno_t eRet = memcpy_s(buff_.get() + offset_, emptyBufferSize, ValueToPtr(srcAddr), actSize);
             if (eRet != EOK) {
-                aicpusd_err("op name[%s], output[%d] memcpy failed, des[%llu], src[%llu]", opName_.c_str(), i,
+                aicpusd_err(
+                    "op name[%s], output[%d] memcpy failed, des[%llu], src[%llu]", opName_.c_str(), i,
                     PtrToValue(buff_.get() + offset_), srcAddr);
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
-            aicpusd_info("op name[%s], end of copy data from HBM to DDR for output[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
+            aicpusd_info(
+                "op name[%s], end of copy data from HBM to DDR for output[%d], size[%llu]", opName_.c_str(), i,
+                actSize);
             offset_ += actSize;
             innerOffset += actSize;
             dumpedSize += actSize;
-            const bool isLastSilce = (offset_ >= buffSize_) ||
+            const bool isLastSilce =
+                (offset_ >= buffSize_) ||
                 ((dumpedSize == outputTotalSize_) && (opBufferTotalSize_ == 0U) && (opWorkspaceTotalSize_ == 0U));
             if (isLastSilce) {
                 const StatusCode ret = Dump(path, buff_.get(), offset_, ideSession, isLastSilce);
@@ -406,13 +402,12 @@ StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &du
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                           const std::string &path,
-                                           const IDE_SESSION ideSession)
+StatusCode OpDumpTask::ProcessOpBufferDump(
+    const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int32_t i = 0; i < dumpData.buffer_size(); ++i) {
-        auto &buffer = dumpData.buffer(i);
+        auto& buffer = dumpData.buffer(i);
         if (buffer.size() == 0U) {
             aicpusd_info("op name[%s], op buffer[%d] data size is zero", opName_.c_str(), i);
             continue;
@@ -427,24 +422,24 @@ StatusCode OpDumpTask::ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &
             const uint64_t emptyBufferSize = buffSize_ - offset_;
             const uint64_t actSize = std::min(emptyBufferSize, buffer.size() - innerOffset);
             const uint64_t srcAddr = opBufferAddr_[opBufferAddrIndex] + innerOffset;
-            aicpusd_info("op name[%s], begin to copy data from HBM to DDR for op buffer[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
-            const errno_t eRet = memcpy_s(buff_.get() + offset_,
-                                          emptyBufferSize,
-                                          ValueToPtr(srcAddr),
-                                          actSize);
+            aicpusd_info(
+                "op name[%s], begin to copy data from HBM to DDR for op buffer[%d], size[%llu]", opName_.c_str(), i,
+                actSize);
+            const errno_t eRet = memcpy_s(buff_.get() + offset_, emptyBufferSize, ValueToPtr(srcAddr), actSize);
             if (eRet != EOK) {
-                aicpusd_err("op name[%s], op buffer[%d] memcpy failed, desSize[%llu], srcSize[%llu]",
-                            opName_.c_str(), i, emptyBufferSize, actSize);
+                aicpusd_err(
+                    "op name[%s], op buffer[%d] memcpy failed, desSize[%llu], srcSize[%llu]", opName_.c_str(), i,
+                    emptyBufferSize, actSize);
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
-            aicpusd_info("op name[%s], end of copy data from HBM to DDR for op buffer[%d], size[%llu]",
-                         opName_.c_str(), i, actSize);
+            aicpusd_info(
+                "op name[%s], end of copy data from HBM to DDR for op buffer[%d], size[%llu]", opName_.c_str(), i,
+                actSize);
             offset_ += actSize;
             innerOffset += actSize;
             dumpedSize += actSize;
-            const bool isLastSilce = (offset_ >= buffSize_) ||
-                ((dumpedSize == opBufferTotalSize_) && (opWorkspaceTotalSize_ == 0U));
+            const bool isLastSilce =
+                (offset_ >= buffSize_) || ((dumpedSize == opBufferTotalSize_) && (opWorkspaceTotalSize_ == 0U));
             if (isLastSilce) {
                 const StatusCode ret = Dump(path, buff_.get(), offset_, ideSession, isLastSilce);
                 if (ret != AICPU_SCHEDULE_OK) {
@@ -459,13 +454,12 @@ StatusCode OpDumpTask::ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                              const std::string &path,
-                                              const IDE_SESSION ideSession)
+StatusCode OpDumpTask::ProcessOpWorkspaceDump(
+    const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int64_t i = 0; i < dumpData.space_size(); ++i) {
-        auto &space = dumpData.space(i);
+        auto& space = dumpData.space(i);
         if (space.size() == 0U) {
             aicpusd_err("op name[%s], op space[%d] data size is zero", opName_.c_str(), i);
             continue;
@@ -480,20 +474,21 @@ StatusCode OpDumpTask::ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpDat
             const uint64_t emptyWorkspaceSize = buffSize_ - offset_;
             const uint64_t actSize = std::min(emptyWorkspaceSize, space.size() - innerOffset);
             const uint64_t srcAddr = opWorkspaceAddr_[opWorkspaceAddrIndex] + innerOffset;
-            aicpusd_info("op name[%s], begin to copy data from HBM to DDR for spaceIndex[%d]," \
-                         " srcSize[%llu], innerOffset[%llu], offset[%llu], dstSize[%llu]",
-                         opName_.c_str(), i, actSize, innerOffset, offset_, emptyWorkspaceSize);
-            const errno_t eRet = memcpy_s(buff_.get() + offset_,
-                                          emptyWorkspaceSize,
-                                          PtrToPtr<void, char_t>(ValueToPtr(srcAddr)),
-                                          actSize);
+            aicpusd_info(
+                "op name[%s], begin to copy data from HBM to DDR for spaceIndex[%d],"
+                " srcSize[%llu], innerOffset[%llu], offset[%llu], dstSize[%llu]",
+                opName_.c_str(), i, actSize, innerOffset, offset_, emptyWorkspaceSize);
+            const errno_t eRet = memcpy_s(
+                buff_.get() + offset_, emptyWorkspaceSize, PtrToPtr<void, char_t>(ValueToPtr(srcAddr)), actSize);
             if (eRet != EOK) {
-                aicpusd_err("op name[%s], op spaceIndex[%d] memcpy failed, dstSize[%llu], srcSize[%llu]",
-                            opName_.c_str(), i, emptyWorkspaceSize, actSize);
+                aicpusd_err(
+                    "op name[%s], op spaceIndex[%d] memcpy failed, dstSize[%llu], srcSize[%llu]", opName_.c_str(), i,
+                    emptyWorkspaceSize, actSize);
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
-            aicpusd_info("op name[%s], op spaceIndex[%d] end copy, dstSize[%llu], srcSize[%llu]",
-                         opName_.c_str(), i, emptyWorkspaceSize, actSize);
+            aicpusd_info(
+                "op name[%s], op spaceIndex[%d] end copy, dstSize[%llu], srcSize[%llu]", opName_.c_str(), i,
+                emptyWorkspaceSize, actSize);
             offset_ += actSize;
             innerOffset += actSize;
             dumpedSize += actSize;
@@ -513,22 +508,21 @@ StatusCode OpDumpTask::ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpDat
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::Dump(const std::string &path,
-                            char_t * const data,
-                            const uint64_t len,
-                            const IDE_SESSION ideSession,
-                            const bool isLastSlice) const
+StatusCode OpDumpTask::Dump(
+    const std::string& path, char_t* const data, const uint64_t len, const IDE_SESSION ideSession,
+    const bool isLastSlice) const
 {
     if (ideSession != nullptr) {
         IdeDumpChunk ideDumpChunk = {};
-        ideDumpChunk.fileName = const_cast<char_t *>(path.c_str());
-        ideDumpChunk.dataBuf = reinterpret_cast<uint8_t *>(data);
+        ideDumpChunk.fileName = const_cast<char_t*>(path.c_str());
+        ideDumpChunk.dataBuf = reinterpret_cast<uint8_t*>(data);
         ideDumpChunk.bufLen = static_cast<uint32_t>(len);
         ideDumpChunk.isLastChunk = isLastSlice ? 1U : 0U;
-        ideDumpChunk.offset = -1;  // append
+        ideDumpChunk.offset = -1; // append
         ideDumpChunk.flag = IDE_DUMP_NONE_FLAG;
-        aicpusd_info("op name[%s], start to call IdeDumpData, size[%u], isLastChunk[%u]",
-                     opName_.c_str(), len, ideDumpChunk.isLastChunk);
+        aicpusd_info(
+            "op name[%s], start to call IdeDumpData, size[%u], isLastChunk[%u]", opName_.c_str(), len,
+            ideDumpChunk.isLastChunk);
         const IdeErrorT ideState = IdeDumpData(ideSession, &ideDumpChunk);
         if (ideState != IDE_DAEMON_NONE_ERROR) {
             aicpusd_err("op name[%s], call IdeDumpData failed, size[%u].", opName_.c_str(), len);
@@ -542,8 +536,7 @@ StatusCode OpDumpTask::Dump(const std::string &path,
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode OpDumpTask::DumpOpInfo(const uint32_t streamId, const uint32_t taskId,
-                                  const std::string &dumpDebugInfo)
+StatusCode OpDumpTask::DumpOpInfo(const uint32_t streamId, const uint32_t taskId, const std::string& dumpDebugInfo)
 {
     const std::lock_guard<std::mutex> queLock(dumpMtx_);
     uint64_t dumpNumber = 0U;
@@ -558,13 +551,14 @@ StatusCode OpDumpTask::DumpOpInfo(const uint32_t streamId, const uint32_t taskId
     baseDumpData_.set_dump_time(nowTime);
 
     if ((baseDumpData_.ByteSizeLong() > static_cast<uint64_t>(INT_MAX)) || (baseDumpData_.ByteSizeLong() == 0U)) {
-        aicpusd_err("op name[%s], dump data size[%zuB] should be in [1B, 2GB)].",
-            opName_.c_str(), baseDumpData_.ByteSizeLong());
+        aicpusd_err(
+            "op name[%s], dump data size[%zuB] should be in [1B, 2GB)].", opName_.c_str(),
+            baseDumpData_.ByteSizeLong());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     aicpusd_info("op name[%s], proto buffer total bytes[%llu]", opName_.c_str(), baseDumpData_.ByteSizeLong());
-    buffSize_ = baseDumpData_.ByteSizeLong() + sizeof(uint64_t) +
-                inputTotalSize_ + outputTotalSize_ + opBufferTotalSize_ + opWorkspaceTotalSize_;
+    buffSize_ = baseDumpData_.ByteSizeLong() + sizeof(uint64_t) + inputTotalSize_ + outputTotalSize_ +
+                opBufferTotalSize_ + opWorkspaceTotalSize_;
     buffSize_ = std::min(buffSize_, DUMP_SLICE_SIZE);
     buffSize_ = std::max(buffSize_, baseDumpData_.ByteSizeLong() + sizeof(uint64_t));
     buff_.reset(new (std::nothrow) char_t[buffSize_]);
@@ -573,15 +567,16 @@ StatusCode OpDumpTask::DumpOpInfo(const uint32_t streamId, const uint32_t taskId
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     // for memory statistic
-    aicpusd_memory_log("op name[%s], MallocMemory, func=new, size=%llu, purpose=data dump buffer",
-                       opName_.c_str(), buffSize_);
-    uint64_t * const sizePtr = PtrToPtr<char_t, uint64_t>(buff_.get());
+    aicpusd_memory_log(
+        "op name[%s], MallocMemory, func=new, size=%llu, purpose=data dump buffer", opName_.c_str(), buffSize_);
+    uint64_t* const sizePtr = PtrToPtr<char_t, uint64_t>(buff_.get());
     *sizePtr = baseDumpData_.ByteSizeLong();
     offset_ = sizeof(uint64_t);
-    if (!baseDumpData_.SerializeToArray(buff_.get() + sizeof(uint64_t),
-        static_cast<int32_t>(baseDumpData_.ByteSizeLong()))) {
-        aicpusd_err("op name[%s], serialize dump data to string failed, data size[%zuB].",
-            opName_.c_str(), baseDumpData_.ByteSizeLong());
+    if (!baseDumpData_.SerializeToArray(
+            buff_.get() + sizeof(uint64_t), static_cast<int32_t>(baseDumpData_.ByteSizeLong()))) {
+        aicpusd_err(
+            "op name[%s], serialize dump data to string failed, data size[%zuB].", opName_.c_str(),
+            baseDumpData_.ByteSizeLong());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     offset_ += baseDumpData_.ByteSizeLong();
@@ -594,8 +589,8 @@ StatusCode OpDumpTask::DumpOpInfo(const uint32_t streamId, const uint32_t taskId
     return DoDump(dumpFilePath, dumpDebugFilePath, dumpDebugInfo);
 }
 
-StatusCode OpDumpTask::DoDump(const std::string &dumpFilePath, const std::string &dumpDebugFilePath,
-                              const std::string &dumpDebugInfo)
+StatusCode OpDumpTask::DoDump(
+    const std::string& dumpFilePath, const std::string& dumpDebugFilePath, const std::string& dumpDebugInfo)
 {
     aicpusd_info("op name[%s], start to dump data, path[%s]", opName_.c_str(), dumpFilePath.c_str());
     // the port is not used in ide module, just for privateInfo format check
@@ -606,9 +601,7 @@ StatusCode OpDumpTask::DoDump(const std::string &dumpFilePath, const std::string
         aicpusd_err("op name[%s], call IdeDumpStart failed, path[%s].", opName_.c_str(), dumpFilePath.c_str());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
-    const ScopeGuard ideSessGuard([&ideSession]() {
-            IdeDumpEnd(ideSession);
-        });
+    const ScopeGuard ideSessGuard([&ideSession]() { IdeDumpEnd(ideSession); });
     StatusCode ret = AICPU_SCHEDULE_OK;
     if (offset_ == buffSize_) {
         ret = Dump(dumpFilePath, buff_.get(), buffSize_, ideSession, false);
@@ -639,11 +632,10 @@ StatusCode OpDumpTask::DoDump(const std::string &dumpFilePath, const std::string
     buff_.reset(nullptr);
 
     if (!(dumpDebugInfo.empty())) {
-        ret = Dump(dumpDebugFilePath, const_cast<char_t *>(dumpDebugInfo.c_str()),
-                   dumpDebugInfo.size(), ideSession, true);
+        ret =
+            Dump(dumpDebugFilePath, const_cast<char_t*>(dumpDebugInfo.c_str()), dumpDebugInfo.size(), ideSession, true);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("op name[%s], dump debug info failed, path[%s].", opName_.c_str(),
-                        dumpDebugFilePath.c_str());
+            aicpusd_err("op name[%s], dump debug info failed, path[%s].", opName_.c_str(), dumpDebugFilePath.c_str());
             return ret;
         }
     }
@@ -658,12 +650,9 @@ void OpDumpTask::UpdateDumpNum()
     aicpusd_info("op name[%s], dump number is updated, dump number[%llu].", opName_.c_str(), taskDumpNum_);
 }
 
-bool OpDumpTask::IsEndGraph() const
-{
-    return endGraph_;
-}
+bool OpDumpTask::IsEndGraph() const { return endGraph_; }
 
-bool OpDumpTask::GetModelId(uint32_t &modelId) const
+bool OpDumpTask::GetModelId(uint32_t& modelId) const
 {
     if (optionalParam_.hasModelId) {
         modelId = optionalParam_.modelId;
@@ -672,10 +661,7 @@ bool OpDumpTask::GetModelId(uint32_t &modelId) const
     return false;
 }
 
-std::string OpDumpTask::GetOpName() const
-{
-    return opName_;
-}
+std::string OpDumpTask::GetOpName() const { return opName_; }
 
 bool OpDumpTask::NeedDump(const uint64_t step)
 {
@@ -698,14 +684,14 @@ bool OpDumpTask::NeedDump(const uint64_t step)
         }
     }
     if (!stepNeedDump) {
-        aicpusd_run_info("op name[%s], the step[%llu] is not in dump list %s.",
-            opName_.c_str(), step, dumpStep_.DebugString().c_str());
+        aicpusd_run_info(
+            "op name[%s], the step[%llu] is not in dump list %s.", opName_.c_str(), step,
+            dumpStep_.DebugString().c_str());
         return false;
     }
 
-    if ((inputTotalSize_ == 0U) &&
-        (outputTotalSize_ == 0U) &&
-        (opBufferTotalSize_ == 0U) && (opWorkspaceTotalSize_ == 0U)) {
+    if ((inputTotalSize_ == 0U) && (outputTotalSize_ == 0U) && (opBufferTotalSize_ == 0U) &&
+        (opWorkspaceTotalSize_ == 0U)) {
         aicpusd_run_info("op name[%s], no data need to dump.", opName_.c_str());
         return false;
     }
@@ -713,8 +699,9 @@ bool OpDumpTask::NeedDump(const uint64_t step)
     return true;
 }
 
-std::string OpDumpTask::DumpPath(const uint64_t nowTime, const uint64_t dumpNumber,
-                                 const uint32_t streamId, const uint32_t taskId, const bool debugFlag)
+std::string OpDumpTask::DumpPath(
+    const uint64_t nowTime, const uint64_t dumpNumber, const uint32_t streamId, const uint32_t taskId,
+    const bool debugFlag)
 {
     std::ostringstream oss;
     oss << baseDumpPath_;
@@ -739,8 +726,8 @@ std::string OpDumpTask::DumpPath(const uint64_t nowTime, const uint64_t dumpNumb
     if ((streamId != INVALID_VAL) && (taskId != INVALID_VAL)) {
         oss << "/" << opType << "." << opName << "." << taskId << "." << streamId << "." << nowTime;
     } else {
-        oss << "/" << opType << "." << opName << "." << taskInfo_.taskId_ << "."
-            << taskInfo_.streamId_ << "." << nowTime;
+        oss << "/" << opType << "." << opName << "." << taskInfo_.taskId_ << "." << taskInfo_.streamId_ << "."
+            << nowTime;
     }
     return oss.str();
 }
@@ -764,14 +751,14 @@ std::string DumpStep::DebugString()
     return oss.str();
 }
 
-OpDumpTaskManager &OpDumpTaskManager::GetInstance()
+OpDumpTaskManager& OpDumpTaskManager::GetInstance()
 {
     static OpDumpTaskManager instance;
     return instance;
 }
 
-void OpDumpTaskManager::GetOptionalParam(const aicpu::dump::OpMappingInfo &opMappingInfo,
-                                         MappingInfoOptionalParam &optionalParam) const
+void OpDumpTaskManager::GetOptionalParam(
+    const aicpu::dump::OpMappingInfo& opMappingInfo, MappingInfoOptionalParam& optionalParam) const
 {
     if (opMappingInfo.model_name_param_case() == aicpu::dump::OpMappingInfo::kModelName) {
         optionalParam.modelName = opMappingInfo.model_name();
@@ -783,8 +770,7 @@ void OpDumpTaskManager::GetOptionalParam(const aicpu::dump::OpMappingInfo &opMap
         optionalParam.hasModelId = true;
     }
     if (opMappingInfo.step_id_case() == aicpu::dump::OpMappingInfo::kStepIdAddr) {
-        optionalParam.stepIdAddr =
-            PtrToPtr<void, uint64_t>(ValueToPtr(opMappingInfo.step_id_addr()));
+        optionalParam.stepIdAddr = PtrToPtr<void, uint64_t>(ValueToPtr(opMappingInfo.step_id_addr()));
         optionalParam.hasStepId = true;
     }
     if (opMappingInfo.iterations_per_loop_case() == aicpu::dump::OpMappingInfo::kIterationsPerLoopAddr) {
@@ -793,13 +779,12 @@ void OpDumpTaskManager::GetOptionalParam(const aicpu::dump::OpMappingInfo &opMap
         optionalParam.hasIterationsPerLoop = true;
     }
     if (opMappingInfo.loop_cond_case() == aicpu::dump::OpMappingInfo::kLoopCondAddr) {
-        optionalParam.loopCondAddr =
-            PtrToPtr<void, uint64_t>(ValueToPtr(opMappingInfo.loop_cond_addr()));
+        optionalParam.loopCondAddr = PtrToPtr<void, uint64_t>(ValueToPtr(opMappingInfo.loop_cond_addr()));
         optionalParam.hasLoopCond = true;
     }
 }
 
-int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo &opMappingInfo)
+int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo& opMappingInfo)
 {
     const std::string dumpPath = opMappingInfo.dump_path();
     MappingInfoOptionalParam optionalParam;
@@ -854,7 +839,7 @@ int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo &opMappingInfo)
     return AICPU_SCHEDULE_OK;
 }
 
-void OpDumpTaskManager::UnloadClearTaskInfo(const TaskInfo &taskInfo)
+void OpDumpTaskManager::UnloadClearTaskInfo(const TaskInfo& taskInfo)
 {
     const auto range = dumpTaskMap_.equal_range(taskInfo);
     if (range.first != range.second) {
@@ -866,7 +851,7 @@ void OpDumpTaskManager::UnloadClearTaskInfo(const TaskInfo &taskInfo)
     return;
 }
 
-int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo &opMappingInfo)
+int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo& opMappingInfo)
 {
     const std::lock_guard<std::mutex> mapLock(dumpTaskMapMtx_);
     for (int32_t i = 0; i < opMappingInfo.task_size(); ++i) {
@@ -875,8 +860,7 @@ int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo &opMappingInf
         const uint32_t streamId = task.stream_id();
         const TaskInfo taskInfo(streamId, taskId);
         UnloadClearTaskInfo(taskInfo);
-        aicpusd_info("Unload op mapping info, stream id[%u], task id[%u].",
-            streamId, taskId);
+        aicpusd_info("Unload op mapping info, stream id[%u], task id[%u].", streamId, taskId);
     }
     MappingInfoOptionalParam optionalParam;
     GetOptionalParam(opMappingInfo, optionalParam);
@@ -888,8 +872,9 @@ int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo &opMappingInf
         }
         for (const auto taskInfo : iter->second) {
             UnloadClearTaskInfo(taskInfo);
-            aicpusd_info("Check and clean data dump task resource, stream id[%u], task id[%u].",
-                taskInfo.streamId_, taskInfo.taskId_);
+            aicpusd_info(
+                "Check and clean data dump task resource, stream id[%u], task id[%u].", taskInfo.streamId_,
+                taskInfo.taskId_);
         }
         (void)modelIdToTask_.erase(iter);
         aicpusd_info("Unloaded model id[%u] successfully", optionalParam.modelId);
@@ -897,7 +882,7 @@ int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo &opMappingInf
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t * const infoAddr, const uint32_t len)
+int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t* const infoAddr, const uint32_t len)
 {
     aicpusd_info("Load op mapping info, size[%u].", len);
     if (infoAddr == nullptr) {
@@ -922,9 +907,9 @@ int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t * const infoAddr, cons
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OpDumpTaskManager::DumpOpInfo(const uint32_t streamId, const uint32_t taskId,
-                                      const uint32_t streamId1, const uint32_t taskId1,
-                                      const std::string &dumpDebugInfo)
+int32_t OpDumpTaskManager::DumpOpInfo(
+    const uint32_t streamId, const uint32_t taskId, const uint32_t streamId1, const uint32_t taskId1,
+    const std::string& dumpDebugInfo)
 {
     const TaskInfo taskInfo(streamId, taskId);
     dumpTaskMapMtx_.lock();
@@ -941,14 +926,16 @@ int32_t OpDumpTaskManager::DumpOpInfo(const uint32_t streamId, const uint32_t ta
         }
         int32_t ret = AICPU_SCHEDULE_OK;
         dumpTaskMapMtx_.unlock();
-        aicpusd_run_info("require to dump op info, stream id=%u, task id=%u, task number=%zu",
-            streamId, taskId, opDumptasks.size());
+        aicpusd_run_info(
+            "require to dump op info, stream id=%u, task id=%u, task number=%zu", streamId, taskId, opDumptasks.size());
         for (auto item : opDumptasks) {
-            aicpusd_run_info("start to dump op info, stream id=%u, task id=%u, op name=%s",
-                streamId, taskId, item->GetOpName().c_str());
+            aicpusd_run_info(
+                "start to dump op info, stream id=%u, task id=%u, op name=%s", streamId, taskId,
+                item->GetOpName().c_str());
             ret = item->DumpOpInfo(streamId1, taskId1, dumpDebugInfo);
-            aicpusd_run_info("end of dump op info, result=%d, stream id=%u, task id=%u, op name=%s",
-                ret, streamId, taskId, item->GetOpName().c_str());
+            aicpusd_run_info(
+                "end of dump op info, result=%d, stream id=%u, task id=%u, op name=%s", ret, streamId, taskId,
+                item->GetOpName().c_str());
             if (ret != AICPU_SCHEDULE_OK) {
                 return ret;
             }
@@ -959,8 +946,8 @@ int32_t OpDumpTaskManager::DumpOpInfo(const uint32_t streamId, const uint32_t ta
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(const uint64_t opMappingInfoAddr,
-                                                    const uint64_t opMappingInfoLen) const
+int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(
+    const uint64_t opMappingInfoAddr, const uint64_t opMappingInfoLen) const
 {
     aicpusd_info("load op mapping info for single op or unknown shape op, size[%llu]", opMappingInfoLen);
     if (opMappingInfoAddr == 0U) {
@@ -968,8 +955,7 @@ int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(const uint64_t opMappingInfo
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     aicpu::dump::OpMappingInfo opMappingInfo;
-    const std::string protoInfo(PtrToPtr<const void, const char_t>(ValueToPtr(opMappingInfoAddr)),
-        opMappingInfoLen);
+    const std::string protoInfo(PtrToPtr<const void, const char_t>(ValueToPtr(opMappingInfoAddr)), opMappingInfoLen);
     const bool parseRet = opMappingInfo.ParseFromString(protoInfo);
     if (!parseRet) {
         aicpusd_err("parse op mapping info failed, size[%u]", opMappingInfoLen);
@@ -977,14 +963,15 @@ int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(const uint64_t opMappingInfo
     }
     const int32_t taskSize = opMappingInfo.task_size();
     if (taskSize != 1) {
-        aicpusd_err("task number[%d] should be only one, op mapping info: %s",
-            opMappingInfo.task_size(), opMappingInfo.DebugString().c_str());
+        aicpusd_err(
+            "task number[%d] should be only one, op mapping info: %s", opMappingInfo.task_size(),
+            opMappingInfo.DebugString().c_str());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     return DoDump(opMappingInfo);
 }
 
-int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo &opMappingInfo) const
+int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo& opMappingInfo) const
 {
     const std::string dumpPath = opMappingInfo.dump_path();
     MappingInfoOptionalParam optionalParam;
@@ -1000,7 +987,7 @@ int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo &opMappingInf
     std::shared_ptr<OpDumpTask> opDumpTaskPtr = nullptr;
     try {
         opDumpTaskPtr = std::make_shared<OpDumpTask>(hostPid, deviceId);
-    } catch (const std::bad_alloc &err) {
+    } catch (const std::bad_alloc& err) {
         aicpusd_err("malloc memory for OpDumpTask object failed, reason is [%s]", err.what());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     } catch (...) {
@@ -1014,14 +1001,9 @@ int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo &opMappingInf
     }
     int32_t ret = AICPU_SCHEDULE_OK;
     const aicpu::dump::Task task = opMappingInfo.task(0);
-    ret = opDumpTaskPtr->PreProcessOpMappingInfo(task,
-                                                 dumpPath,
-                                                 optionalParam,
-                                                 dumpStep,
-                                                 true);
+    ret = opDumpTaskPtr->PreProcessOpMappingInfo(task, dumpPath, optionalParam, dumpStep, true);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("pre process op mapping info failed, op mapping info: %s",
-            opMappingInfo.DebugString().c_str());
+        aicpusd_err("pre process op mapping info failed, op mapping info: %s", opMappingInfo.DebugString().c_str());
         return ret;
     }
     auto startTime = std::chrono::steady_clock::now();
@@ -1029,15 +1011,16 @@ int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo &opMappingInf
     ret = opDumpTaskPtr->DumpOpInfo();
     auto endTime = std::chrono::steady_clock::now();
     double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
-    aicpusd_run_info("end of dump op info, result=%d, op name=%s, cost time is [%.2lf]us",
-        ret, opDumpTaskPtr->GetOpName().c_str(), drUs);
+    aicpusd_run_info(
+        "end of dump op info, result=%d, op name=%s, cost time is [%.2lf]us", ret, opDumpTaskPtr->GetOpName().c_str(),
+        drUs);
     UNUSED(drUs);
     return ret;
 }
 
-void OpDumpTaskManager::ProcessEndGraph(const std::vector<std::shared_ptr<OpDumpTask>> &opDumptasks)
+void OpDumpTaskManager::ProcessEndGraph(const std::vector<std::shared_ptr<OpDumpTask>>& opDumptasks)
 {
-    for (const auto &item  : opDumptasks) {
+    for (const auto& item : opDumptasks) {
         if (item->IsEndGraph()) {
             uint32_t modelId;
             if (item->GetModelId(modelId)) {
@@ -1056,7 +1039,7 @@ void OpDumpTaskManager::UpdateDumpNumByModelId(const uint32_t modelId)
         const std::lock_guard<std::mutex> mapLock(dumpTaskMapMtx_);
         const auto iter = modelIdToTask_.find(modelId);
         if (iter != modelIdToTask_.end()) {
-            for (auto &taskInfo : iter->second) {
+            for (auto& taskInfo : iter->second) {
                 const auto range = dumpTaskMap_.equal_range(taskInfo);
                 for (auto item = range.first; item != range.second; ++item) {
                     std::shared_ptr<OpDumpTask> opDumpTask = item->second;
@@ -1066,12 +1049,12 @@ void OpDumpTaskManager::UpdateDumpNumByModelId(const uint32_t modelId)
         }
     }
 
-    for (auto &dumpTask : opDumptasks) {
+    for (auto& dumpTask : opDumptasks) {
         dumpTask->UpdateDumpNum();
     }
 }
 
-static void DoSplit(const std::string &externStr, std::vector<std::string> &ret, const std::string &delim)
+static void DoSplit(const std::string& externStr, std::vector<std::string>& ret, const std::string& delim)
 {
     size_t i = 0UL;
     while (i < externStr.size()) {
@@ -1087,7 +1070,7 @@ static void DoSplit(const std::string &externStr, std::vector<std::string> &ret,
     }
 }
 
-static std::vector<std::string> Split(const std::string &str, const std::string &delim)
+static std::vector<std::string> Split(const std::string& str, const std::string& delim)
 {
     std::vector<std::string> ret;
     if (!str.empty()) {
@@ -1097,7 +1080,7 @@ static std::vector<std::string> Split(const std::string &str, const std::string 
     return ret;
 }
 
-bool OpDumpTaskManager::MatchAndInsert(const std::string &step, DumpStep &tmpDumpStep) const
+bool OpDumpTaskManager::MatchAndInsert(const std::string& step, DumpStep& tmpDumpStep) const
 {
     // smatch result
     const std::regex singleStepPatten("(\\s*)(\\d+)(\\s*)");
@@ -1122,20 +1105,21 @@ bool OpDumpTaskManager::MatchAndInsert(const std::string &step, DumpStep &tmpDum
     return true;
 }
 
-bool OpDumpTaskManager::GetDumpStepFromString(const std::string &str, DumpStep &dumpStep) const
+bool OpDumpTaskManager::GetDumpStepFromString(const std::string& str, DumpStep& dumpStep) const
 {
     // split by |, such as "0|5-10"
     aicpusd_info("Step need to dump[%s].", str.c_str());
     const std::vector<std::string> steps = Split(str, "|");
     DumpStep tmpDumpStep;
-    for (const auto &step : steps) {
+    for (const auto& step : steps) {
         try {
             if (!MatchAndInsert(step, tmpDumpStep)) {
                 return false;
             }
-        } catch (std::out_of_range &e) {
-            aicpusd_err("out of range of uint64_max[%llu], invalid step[%s], msg[%s], please check.",
-                        UINT64_MAX, step.c_str(), e.what());
+        } catch (std::out_of_range& e) {
+            aicpusd_err(
+                "out of range of uint64_max[%llu], invalid step[%s], msg[%s], please check.", UINT64_MAX, step.c_str(),
+                e.what());
             return false;
         } catch (...) {
             aicpusd_err("invalid step[%s], please check.", step.c_str());
@@ -1153,4 +1137,4 @@ void OpDumpTaskManager::ClearResource()
     dumpTaskMap_.clear();
     modelIdToTask_.clear();
 }
-}  // namespace aicpu
+} // namespace AicpuSchedule

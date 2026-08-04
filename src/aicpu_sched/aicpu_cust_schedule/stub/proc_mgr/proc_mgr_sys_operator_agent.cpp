@@ -10,10 +10,10 @@
 #include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 
 namespace AicpuSchedule {
-    uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity)
-    {
-        (void)threadId;
-        (void)coreAffinity;
-        return 0U;
-    }
+uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity)
+{
+    (void)threadId;
+    (void)coreAffinity;
+    return 0U;
 }
+} // namespace AicpuSchedule

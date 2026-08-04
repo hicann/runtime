@@ -1455,6 +1455,133 @@ TEST_F(AICPUCustScheduleTEST, PreProcessWorkspaceSuccessTest)
     EXPECT_EQ(opDumpTask.PreProcessWorkspace(task, dumpData), AICPU_SCHEDULE_OK);
 }
 
+TEST_F(AICPUCustScheduleTEST, OpDumpTaskGetDumpNumberLoopCondNullTest)
+{
+    OpDumpTask task(0, 0);
+    uint64_t dumpNum = 0U;
+    uint64_t stepId = 5U;
+    uint64_t iterationsPerLoop = 6U;
+
+    task.optionalParam_.hasStepId = true;
+    task.optionalParam_.stepIdAddr = &stepId;
+    task.optionalParam_.hasIterationsPerLoop = true;
+    task.optionalParam_.iterationsPerLoopAddr = &iterationsPerLoop;
+    task.optionalParam_.hasLoopCond = true;
+    task.optionalParam_.loopCondAddr = nullptr;
+    EXPECT_EQ(task.GetDumpNumber(dumpNum), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    uint64_t loopCond = 4U;
+    task.optionalParam_.loopCondAddr = &loopCond;
+    EXPECT_EQ(task.GetDumpNumber(dumpNum), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(dumpNum, 39U);
+}
+
+TEST_F(AICPUCustScheduleTEST, OpDumpTaskPreProcessInputSuccessWithShapeTest)
+{
+    OpDumpTask task(0, 0);
+    aicpu::dump::Task mappingTask;
+    aicpu::dump::Input* input = mappingTask.add_input();
+    ASSERT_NE(input, nullptr);
+
+    input->set_data_type(7);
+    input->set_format(0);
+    input->set_address(0x3100U);
+    input->set_size(48U);
+
+    aicpu::dump::Shape* shape = input->mutable_shape();
+    ASSERT_NE(shape, nullptr);
+    shape->add_dim(3);
+    shape->add_dim(4);
+
+    aicpu::dump::Shape* originShape = input->mutable_origin_shape();
+    ASSERT_NE(originShape, nullptr);
+    originShape->add_dim(12);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    const auto ret = task.PreProcessInput(mappingTask, dumpData);
+
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    ASSERT_EQ(dumpData.input_size(), 1);
+    EXPECT_EQ(dumpData.input(0).shape().dim_size(), 2);
+    EXPECT_EQ(dumpData.input(0).original_shape().dim_size(), 1);
+    EXPECT_EQ(task.inputsBaseAddr_.size(), 1U);
+    EXPECT_EQ(task.inputTotalSize_, 48U);
+}
+
+TEST_F(AICPUCustScheduleTEST, OpDumpTaskPreProcessBufferAndWorkspaceDirectTest)
+{
+    OpDumpTask task(0, 0);
+    aicpu::dump::Task mappingTask;
+    aicpu::dump::OpBuffer* buffer = mappingTask.add_buffer();
+    ASSERT_NE(buffer, nullptr);
+    buffer->set_buffer_type(aicpu::dump::BufferType::L1);
+    buffer->set_address(0x5100U);
+    buffer->set_size(96U);
+
+    aicpu::dump::Workspace* workspace = mappingTask.add_space();
+    ASSERT_NE(workspace, nullptr);
+    workspace->set_type(aicpu::dump::Workspace::LOG);
+    workspace->set_data_addr(0x6100U);
+    workspace->set_size(128U);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    EXPECT_EQ(task.PreProcessOpBuffer(mappingTask, dumpData), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(task.PreProcessWorkspace(mappingTask, dumpData), AICPU_SCHEDULE_OK);
+
+    ASSERT_EQ(dumpData.buffer_size(), 1);
+    ASSERT_EQ(dumpData.space_size(), 1);
+    EXPECT_EQ(task.opBufferTotalSize_, 96U);
+    EXPECT_EQ(task.opWorkspaceTotalSize_, 128U);
+    EXPECT_EQ(task.opBufferAddr_[0], 0x5100U);
+    EXPECT_EQ(task.opWorkspaceAddr_[0], 0x6100U);
+}
+
+TEST_F(AICPUCustScheduleTEST, OpDumpTaskNeedDumpBranchTest)
+{
+    OpDumpTask task(0, 0);
+    task.endGraph_ = true;
+    EXPECT_FALSE(task.NeedDump(1U));
+
+    task.endGraph_ = false;
+    task.dumpStep_.singleStep.insert(2U);
+    EXPECT_FALSE(task.NeedDump(1U));
+
+    task.inputTotalSize_ = 8U;
+    EXPECT_TRUE(task.NeedDump(2U));
+
+    task.dumpStep_.singleStep.clear();
+    task.dumpStep_.intervalStep.push_back({4U, 6U});
+    EXPECT_TRUE(task.NeedDump(5U));
+
+    task.inputTotalSize_ = 0U;
+    task.outputTotalSize_ = 0U;
+    task.opBufferTotalSize_ = 0U;
+    task.opWorkspaceTotalSize_ = 0U;
+    EXPECT_FALSE(task.NeedDump(5U));
+}
+
+TEST_F(AICPUCustScheduleTEST, OpDumpTaskDumpPathBranchTest)
+{
+    OpDumpTask task(0, 0);
+    task.baseDumpPath_ = "/tmp/cust_dump";
+    task.opName_ = "op n.a/m\\e";
+    task.opType_ = "type n.a/m\\e";
+    task.taskInfo_ = TaskInfo(11U, 22U);
+    task.optionalParam_.hasModelName = true;
+    task.optionalParam_.modelName = "model";
+    task.optionalParam_.hasModelId = true;
+    task.optionalParam_.modelId = 9U;
+    task.skipAddressConversion_ = true;
+
+    const std::string singleOpPath = task.DumpPath(100U, 3U, INVALID_VAL, INVALID_VAL, false);
+    EXPECT_NE(singleOpPath.find("/tmp/cust_dump/model/9/type_n_a_m_e.op_n_a_m_e.22.11.100"), std::string::npos);
+
+    task.optionalParam_.hasStepId = true;
+    const std::string debugPath = task.DumpPath(200U, 4U, 33U, 44U, true);
+    EXPECT_NE(debugPath.find("/tmp/cust_dump/model/9/4/"), std::string::npos);
+    EXPECT_NE(debugPath.find("type_n_a_m_e.op_n_a_m_eDebug.44.33.200"), std::string::npos);
+}
+
 // 此用例请务必保证最后执行，可能影响其余用例的正常运行
 TEST_F(AICPUCustScheduleTEST, MainTestWithVf)
 {

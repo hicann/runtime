@@ -197,6 +197,93 @@ TEST_F(AicpuDumpTaskTest, GetDataFormatStrTest)
     EXPECT_STREQ(ret.c_str(), "-");
 }
 
+TEST_F(AicpuDumpTaskTest, GetDataFormatStrKnownValuesTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    const std::vector<std::pair<::toolkit::dumpdata::OutputFormat, std::string>> testCases = {
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NCHW, "NCHW"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NHWC, "NHWC"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_ND, "ND"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NC1HWC0, "NC1HWC0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_Z, "FRACTAL_Z"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NC1C0HWPAD, "NC1C0HWPAD"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NHWC1C0, "NHWC1C0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FSR_NCHW, "FSR_NCHW"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_DECONV, "FRACTAL_DECONV"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_C1HWNC0, "C1HWNC0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_DECONV_TRANSPOSE, "FRACTAL_DECONV_TRANSPOSE"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_DECONV_SP_STRIDE_TRANS, "FRACTAL_DECONV_SP_STRIDE_TRANS"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NC1HWC0_C04, "NC1HWC0_C04"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_Z_C04, "FRACTAL_Z_C04"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_CHWN, "CHWN"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_DECONV_SP_STRIDE8_TRANS, "FRACTAL_DECONV_SP_STRIDE8_TRANS"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HWCN, "HWCN"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NC1KHKWHWC0, "NC1KHKWHWC0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_BN_WEIGHT, "BN_WEIGHT"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FILTER_HWCK, "FILTER_HWCK"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HASHTABLE_LOOKUP_LOOKUPS, "HASHTABLE_LOOKUP_LOOKUPS"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HASHTABLE_LOOKUP_KEYS, "HASHTABLE_LOOKUP_KEYS"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HASHTABLE_LOOKUP_VALUE, "HASHTABLE_LOOKUP_VALUE"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HASHTABLE_LOOKUP_OUTPUT, "HASHTABLE_LOOKUP_OUTPUT"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_HASHTABLE_LOOKUP_HITS, "HASHTABLE_LOOKUP_HITS"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_C1HWNCoC0, "C1HWNCoC0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_MD, "MD"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NDHWC, "NDHWC"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_ZZ, "FRACTAL_ZZ"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_NZ, "FRACTAL_NZ"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NCDHW, "NCDHW"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_DHWCN, "DHWCN"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NDC1HWC0, "NDC1HWC0"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_Z_3D, "FRACTAL_Z_3D"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_CN, "CN"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_NC, "NC"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_DHWNC, "DHWNC"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_Z_3D_TRANSPOSE, "FRACTAL_Z_3D_TRANSPOSE"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_ZN_LSTM, "FRACTAL_ZN_LSTM"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_FRACTAL_Z_G, "FRACTAL_Z_G"},
+        {::toolkit::dumpdata::OutputFormat::FORMAT_RESERVED, "RESERVED"}};
+
+    for (const auto& item : testCases) {
+        EXPECT_EQ(opDumpTask->GetDataFormatStr(item.first), item.second);
+    }
+}
+
+TEST_F(AicpuDumpTaskTest, GetDataTypeStrKnownValuesTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    const std::vector<std::pair<::toolkit::dumpdata::OutputDataType, std::string>> testCases = {
+        {::toolkit::dumpdata::OutputDataType::DT_UNDEFINED, "DT_UNDEFINED"},
+        {::toolkit::dumpdata::OutputDataType::DT_FLOAT, "DT_FLOAT"},
+        {::toolkit::dumpdata::OutputDataType::DT_FLOAT16, "DT_FLOAT16"},
+        {::toolkit::dumpdata::OutputDataType::DT_INT8, "DT_INT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_UINT8, "DT_UINT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_INT16, "DT_INT16"},
+        {::toolkit::dumpdata::OutputDataType::DT_UINT16, "DT_UINT16"},
+        {::toolkit::dumpdata::OutputDataType::DT_INT32, "DT_INT32"},
+        {::toolkit::dumpdata::OutputDataType::DT_INT64, "DT_INT64"},
+        {::toolkit::dumpdata::OutputDataType::DT_UINT32, "DT_UINT32"},
+        {::toolkit::dumpdata::OutputDataType::DT_UINT64, "DT_UINT64"},
+        {::toolkit::dumpdata::OutputDataType::DT_BOOL, "DT_BOOL"},
+        {::toolkit::dumpdata::OutputDataType::DT_DOUBLE, "DT_DOUBLE"},
+        {::toolkit::dumpdata::OutputDataType::DT_STRING, "DT_STRING"},
+        {::toolkit::dumpdata::OutputDataType::DT_DUAL_SUB_INT8, "DT_DUAL_SUB_INT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_DUAL_SUB_UINT8, "DT_DUAL_SUB_UINT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_COMPLEX64, "DT_COMPLEX64"},
+        {::toolkit::dumpdata::OutputDataType::DT_COMPLEX128, "DT_COMPLEX128"},
+        {::toolkit::dumpdata::OutputDataType::DT_QINT8, "DT_QINT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_QINT16, "DT_QINT16"},
+        {::toolkit::dumpdata::OutputDataType::DT_QINT32, "DT_QINT32"},
+        {::toolkit::dumpdata::OutputDataType::DT_QUINT8, "DT_QUINT8"},
+        {::toolkit::dumpdata::OutputDataType::DT_QUINT16, "DT_QUINT16"},
+        {::toolkit::dumpdata::OutputDataType::DT_RESOURCE, "DT_RESOURCE"},
+        {::toolkit::dumpdata::OutputDataType::DT_STRING_REF, "DT_STRING_REF"},
+        {::toolkit::dumpdata::OutputDataType::DT_DUAL, "DT_DUAL"}};
+
+    for (const auto& item : testCases) {
+        EXPECT_EQ(opDumpTask->GetDataTypeStr(item.first), item.second);
+    }
+}
+
 TEST_F(AicpuDumpTaskTest, GenerateDataStatsInfoTestFloat)
 {
     const uint32_t dataLen = 10U;
@@ -1331,6 +1418,150 @@ TEST_F(AicpuDumpTaskTest, GetInputDataAddrLogTest)
     uint64_t dataAddr = 0U;
     opDumpTask->GetInputDataAddr(dataAddr, 0);
     EXPECT_EQ(dataAddr, testAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetDumpNumberOptionalParamBranchTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    uint64_t dumpNum = 0U;
+
+    opDumpTask->optionalParam_.hasStepId = true;
+    opDumpTask->optionalParam_.stepIdAddr = nullptr;
+    EXPECT_EQ(opDumpTask->GetDumpNumber(dumpNum), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    uint64_t stepId = 3U;
+    opDumpTask->optionalParam_.stepIdAddr = &stepId;
+    opDumpTask->optionalParam_.hasIterationsPerLoop = true;
+    opDumpTask->optionalParam_.iterationsPerLoopAddr = nullptr;
+    EXPECT_EQ(opDumpTask->GetDumpNumber(dumpNum), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    uint64_t iterationsPerLoop = 4U;
+    opDumpTask->optionalParam_.iterationsPerLoopAddr = &iterationsPerLoop;
+    opDumpTask->optionalParam_.hasLoopCond = true;
+    opDumpTask->optionalParam_.loopCondAddr = nullptr;
+    EXPECT_EQ(opDumpTask->GetDumpNumber(dumpNum), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    uint64_t loopCond = 2U;
+    opDumpTask->optionalParam_.loopCondAddr = &loopCond;
+    EXPECT_EQ(opDumpTask->GetDumpNumber(dumpNum), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(dumpNum, 17U);
+}
+
+TEST_F(AicpuDumpTaskTest, PreProcessNoTilingInputOutputBranchTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    aicpu::dump::Task task;
+    aicpu::dump::Input* input = task.add_input();
+    ASSERT_NE(input, nullptr);
+    input->set_data_type(7);
+    input->set_format(0);
+    input->set_address(0x3000U);
+    input->set_addr_type(aicpu::dump::AddressType::NOTILING_ADDR);
+    input->set_size(64U);
+    input->set_offset(4U);
+    input->mutable_shape()->add_dim(8);
+    input->mutable_origin_shape()->add_dim(16);
+
+    aicpu::dump::Output* output = task.add_output();
+    ASSERT_NE(output, nullptr);
+    output->set_data_type(7);
+    output->set_format(0);
+    output->set_address(0x4000U);
+    output->set_addr_type(aicpu::dump::AddressType::NOTILING_ADDR);
+    output->set_size(128U);
+    output->set_offset(8U);
+    output->mutable_shape()->add_dim(32);
+    output->mutable_origin_shape()->add_dim(64);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    EXPECT_EQ(opDumpTask->PreProcessInput(task, dumpData), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(opDumpTask->PreProcessOutput(task, dumpData), AICPU_SCHEDULE_OK);
+
+    ASSERT_EQ(dumpData.input_size(), 1);
+    ASSERT_EQ(dumpData.output_size(), 1);
+    EXPECT_EQ(dumpData.input(0).shape().dim_size(), 0);
+    EXPECT_EQ(dumpData.output(0).shape().dim_size(), 0);
+    EXPECT_EQ(opDumpTask->inputTotalSize_, 0U);
+    EXPECT_EQ(opDumpTask->outputTotalSize_, 0U);
+    EXPECT_EQ(opDumpTask->inputsSize_[0], 64U);
+    EXPECT_EQ(opDumpTask->outputSize_[0], 128U);
+    EXPECT_EQ(opDumpTask->inputsShape_[0].size(), 0U);
+    EXPECT_EQ(opDumpTask->outputsShape_[0].size(), 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, PreProcessBufferAndWorkspaceBranchTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    aicpu::dump::Task task;
+    aicpu::dump::OpBuffer* buffer = task.add_buffer();
+    ASSERT_NE(buffer, nullptr);
+    buffer->set_buffer_type(aicpu::dump::BufferType::L1);
+    buffer->set_address(0x5000U);
+    buffer->set_size(256U);
+
+    aicpu::dump::Workspace* workspace = task.add_space();
+    ASSERT_NE(workspace, nullptr);
+    workspace->set_type(aicpu::dump::Workspace::LOG);
+    workspace->set_data_addr(0x6000U);
+    workspace->set_size(512U);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    EXPECT_EQ(opDumpTask->PreProcessOpBuffer(task, dumpData), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(opDumpTask->PreProcessWorkspace(task, dumpData), AICPU_SCHEDULE_OK);
+
+    ASSERT_EQ(dumpData.buffer_size(), 1);
+    ASSERT_EQ(dumpData.space_size(), 1);
+    EXPECT_EQ(opDumpTask->opBufferTotalSize_, 256U);
+    EXPECT_EQ(opDumpTask->opWorkspaceTotalSize_, 512U);
+    EXPECT_EQ(opDumpTask->opBufferAddr_[0], 0x5000U);
+    EXPECT_EQ(opDumpTask->opWorkspaceAddr_[0], 0x6000U);
+    EXPECT_EQ(opDumpTask->opWorkspaceSize_[0], 512U);
+}
+
+TEST_F(AicpuDumpTaskTest, NeedDumpBranchTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->endGraph_ = true;
+    EXPECT_FALSE(opDumpTask->NeedDump(1U));
+
+    opDumpTask->endGraph_ = false;
+    opDumpTask->dumpStep_.singleStep.insert(1U);
+    opDumpTask->optionalParam_.hasStepId = false;
+    EXPECT_FALSE(opDumpTask->NeedDump(1U));
+
+    opDumpTask->optionalParam_.hasStepId = true;
+    opDumpTask->inputTotalSize_ = 8U;
+    EXPECT_TRUE(opDumpTask->NeedDump(1U));
+    EXPECT_FALSE(opDumpTask->NeedDump(2U));
+
+    opDumpTask->dumpStep_.singleStep.clear();
+    opDumpTask->dumpStep_.intervalStep.push_back({3U, 5U});
+    EXPECT_TRUE(opDumpTask->NeedDump(4U));
+
+    opDumpTask->inputTotalSize_ = 0U;
+    opDumpTask->outputTotalSize_ = 0U;
+    opDumpTask->opBufferTotalSize_ = 0U;
+    opDumpTask->opWorkspaceTotalSize_ = 0U;
+    EXPECT_FALSE(opDumpTask->NeedDump(4U));
+}
+
+TEST_F(AicpuDumpTaskTest, DumpPathBranchTest)
+{
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 2);
+    opDumpTask->baseDumpPath_ = "/tmp/dump";
+    opDumpTask->opName_ = "op n.a/m\\e";
+    opDumpTask->opType_ = "type n.a/m\\e";
+    opDumpTask->optionalParam_.hasModelName = true;
+    opDumpTask->optionalParam_.modelName = "model";
+    opDumpTask->optionalParam_.hasModelId = true;
+    opDumpTask->optionalParam_.modelId = 7U;
+    opDumpTask->optionalParam_.hasStepId = true;
+
+    const DumpFileName dumpFileName(10U, 20U, 30U, 40U);
+    const std::string path = opDumpTask->DumpPath(100U, 3U, dumpFileName, true);
+    EXPECT_NE(path.find("/tmp/dump/model/7/3/"), std::string::npos);
+    EXPECT_NE(path.find("type_n_a_m_e.op_n_a_m_eDebug.20.10.100"), std::string::npos);
+    EXPECT_NE(path.find(".30.40.2"), std::string::npos);
 }
 
 TEST_F(AicpuDumpTaskTest, GetInputDataAddrBaseAddrZeroTest)

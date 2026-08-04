@@ -30,7 +30,7 @@ extern "C" {
 #endif
 #endif // __cplusplus
 LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) CheckLogLevel(int32_t moduleId, int32_t logLevel);
-LOG_FUNC_VISIBILITY void __attribute((weak)) DlogRecord(int32_t moduleId, int32_t level, const char *fmt, ...);
+LOG_FUNC_VISIBILITY void __attribute((weak)) DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...);
 #ifdef __cplusplus
 #ifndef LOG_CPP
 }
@@ -42,9 +42,9 @@ constexpr uint8_t AICPU_PROF_VERSION = 0U;
 constexpr uint32_t MODEL_EXECUTE_START = 0U;
 constexpr uint32_t MODEL_EXECUTE_END = 1U;
 
-constexpr uint32_t PROFILING_FEATURE_SWITCH = 0U;       // bit0 means profiling start or profiling stop
-constexpr uint32_t PROFILING_FEATURE_KERNEL_MODE = 1U;  // bit1 means profiling mode of kernel
-constexpr uint32_t PROFILING_FEATURE_MODEL_MODE = 2U;   // bit2 means profiling mode of model
+constexpr uint32_t PROFILING_FEATURE_SWITCH = 0U;      // bit0 means profiling start or profiling stop
+constexpr uint32_t PROFILING_FEATURE_KERNEL_MODE = 1U; // bit1 means profiling mode of kernel
+constexpr uint32_t PROFILING_FEATURE_MODEL_MODE = 2U;  // bit2 means profiling mode of model
 
 union ProfData {
     ProfData() {}
@@ -65,37 +65,38 @@ inline uint64_t ProfGetTid()
     return TID;
 }
 
-#define AICPU_LOG_DEBUG(format, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_debug(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                 \
+#define AICPU_LOG_DEBUG(format, ...)                                                                \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                  \
+        dlog_debug(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__); \
     }
-#define AICPU_LOG_INFO(format, ...)                                                                                 \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_info(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                  \
+#define AICPU_LOG_INFO(format, ...)                                                                \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                 \
+        dlog_info(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__); \
     }
-#define AICPU_LOG_WARN(format, ...)                                                                                 \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_warn(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                  \
+#define AICPU_LOG_WARN(format, ...)                                                                \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                 \
+        dlog_warn(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__); \
     }
-#define AICPU_LOG_ERROR(format, ...)                                                                                \
-    if (&DlogRecord != nullptr) {                                                                                   \
-        dlog_error(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                 \
+#define AICPU_LOG_ERROR(format, ...)                                                                \
+    if (&DlogRecord != nullptr) {                                                                   \
+        dlog_error(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__); \
     }
-#define AICPU_RUN_INFO(format, ...)                                                                                 \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_info(static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)),        \
-                  "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                                                \
+#define AICPU_RUN_INFO(format, ...)                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                     \
+        dlog_info(                                                                                     \
+            static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)), \
+            "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                                         \
     }
 
-#define AICPU_LOG_WHEN(cond, log, ...)         \
-    if (cond) {                          \
+#define AICPU_LOG_WHEN(cond, log, ...)      \
+    if (cond) {                             \
         AICPU_LOG_ERROR(log, ##__VA_ARGS__) \
     }
 
-#define AICPU_RCHECK(cond, ret, log, ...)      \
-    if (!(cond)) {                       \
+#define AICPU_RCHECK(cond, ret, log, ...)   \
+    if (!(cond)) {                          \
         AICPU_LOG_ERROR(log, ##__VA_ARGS__) \
-        return ret;                      \
+        return ret;                         \
     }
 
 class ProfMessage;
@@ -188,7 +189,7 @@ History       : NA
 Modification  : Created function
 
 *****************************************************************************/
-void __attribute__((weak)) GetMicrosAndSysTick(uint64_t &micros, uint64_t &tick);
+void __attribute__((weak)) GetMicrosAndSysTick(uint64_t& micros, uint64_t& tick);
 /*****************************************************************************
 Prototype     : InitProfiling
 Description   : it is used to initialize the ProfilingAdp object and
@@ -236,7 +237,7 @@ History       : NA
 Modification  : Created function
 
 *****************************************************************************/
-void __attribute__((weak)) SendToProfiling(const std::string &sendData, const std::string &mark);
+void __attribute__((weak)) SendToProfiling(const std::string& sendData, const std::string& mark);
 /*****************************************************************************
 Prototype     : UpdateMode
 Description   : it is used to provide interface to DP module which can update profiling mode
@@ -376,47 +377,44 @@ Modification  : Created function
 std::shared_ptr<ProfMessage> __attribute__((weak)) GetProfHandle();
 #endif
 
-enum class ProfStatusCode : int32_t {
-    PROFILINE_FAILED = -1,
-    PROFILINE_SUCCESS = 0
-};
+enum class ProfStatusCode : int32_t { PROFILINE_FAILED = -1, PROFILINE_SUCCESS = 0 };
 
 class ProfModelMessage : public std::basic_ostringstream<char_t> {
 public:
-    explicit ProfModelMessage(const char_t *tag) : std::basic_ostringstream<char_t>(), tag_(tag),
-                                                   sendData_(), deviceId_(UINT16_MAX) {};
+    explicit ProfModelMessage(const char_t* tag)
+        : std::basic_ostringstream<char_t>(), tag_(tag), sendData_(), deviceId_(UINT16_MAX){};
     virtual ~ProfModelMessage() = default;
-    ProfModelMessage *SetDataTagId(const uint16_t dataTagId)
+    ProfModelMessage* SetDataTagId(const uint16_t dataTagId)
     {
         sendData_.aicpuModelProfData.dataTag = dataTagId;
         return this;
     }
-    ProfModelMessage *SetAicpuModelIterId(const uint16_t indexId)
+    ProfModelMessage* SetAicpuModelIterId(const uint16_t indexId)
     {
         sendData_.aicpuModelProfData.indexId = indexId;
         return this;
     }
-    ProfModelMessage *SetAicpuModelTimeStamp(const uint64_t timeStamp)
+    ProfModelMessage* SetAicpuModelTimeStamp(const uint64_t timeStamp)
     {
         sendData_.aicpuModelProfData.timeStamp = timeStamp;
         return this;
     }
-    ProfModelMessage *SetAicpuModelId(const uint32_t modelId)
+    ProfModelMessage* SetAicpuModelId(const uint32_t modelId)
     {
         sendData_.aicpuModelProfData.modelId = modelId;
         return this;
     }
-    ProfModelMessage *SetAicpuTagId(const uint16_t tagId)
+    ProfModelMessage* SetAicpuTagId(const uint16_t tagId)
     {
         sendData_.aicpuModelProfData.tagId = tagId;
         return this;
     }
-    ProfModelMessage *SetEventId(const uint16_t eventId)
+    ProfModelMessage* SetEventId(const uint16_t eventId)
     {
         sendData_.aicpuModelProfData.eventId = eventId;
         return this;
     }
-    ProfModelMessage *SetDeviceId(const uint32_t deviceId)
+    ProfModelMessage* SetDeviceId(const uint32_t deviceId)
     {
         deviceId_ = deviceId;
         return this;
@@ -427,11 +425,12 @@ public:
 
     int32_t SendProfModelMessageWithOldChannel();
 
-    void BuildProfModelAdditionalData(MsprofAdditionalInfo &reportData);
+    void BuildProfModelAdditionalData(MsprofAdditionalInfo& reportData);
+
 private:
     ProfModelMessage(const ProfModelMessage&) = delete;
     ProfModelMessage& operator=(const ProfModelMessage&) = delete;
-    const char_t *tag_;
+    const char_t* tag_;
     ProfModelData sendData_;
     uint32_t deviceId_;
 };
@@ -440,161 +439,160 @@ class ProfMessage : public std::basic_ostringstream<char_t> {
 public:
     explicit ProfMessage(const char_t* tag);
     virtual ~ProfMessage();
-    ProfMessage *SetAicpuMagicNumber(const uint16_t aicpuMagicNumber)
+    ProfMessage* SetAicpuMagicNumber(const uint16_t aicpuMagicNumber)
     {
         sendData_.aicpuProfData.magicNumber = aicpuMagicNumber;
         return this;
     }
-    ProfMessage *SetAicpuDataTag(const uint16_t aicpuDataTag)
+    ProfMessage* SetAicpuDataTag(const uint16_t aicpuDataTag)
     {
         sendData_.aicpuProfData.dataTag = aicpuDataTag;
         return this;
     }
-    ProfMessage *SetStreamId(const uint16_t streamId)
+    ProfMessage* SetStreamId(const uint16_t streamId)
     {
         sendData_.aicpuProfData.streamId = streamId;
         return this;
     }
-    ProfMessage *SetTaskId(const uint16_t taskId)
+    ProfMessage* SetTaskId(const uint16_t taskId)
     {
         sendData_.aicpuProfData.taskId = taskId;
         return this;
     }
-    ProfMessage *SetRunStartTime(const uint64_t runStartTime)
+    ProfMessage* SetRunStartTime(const uint64_t runStartTime)
     {
         sendData_.aicpuProfData.runStartTime = runStartTime;
         return this;
     }
-    ProfMessage *SetRunStartTick(const uint64_t runStartTick)
+    ProfMessage* SetRunStartTick(const uint64_t runStartTick)
     {
         sendData_.aicpuProfData.runStartTick = runStartTick;
         return this;
     }
-    ProfMessage *SetComputeStartTime(const uint64_t computeStartTime)
+    ProfMessage* SetComputeStartTime(const uint64_t computeStartTime)
     {
         sendData_.aicpuProfData.computeStartTime = computeStartTime;
         return this;
     }
-    ProfMessage *SetMemcpyStartTime(const uint64_t memcpyStartTime)
+    ProfMessage* SetMemcpyStartTime(const uint64_t memcpyStartTime)
     {
         sendData_.aicpuProfData.memcpyStartTime = memcpyStartTime;
         return this;
     }
-    ProfMessage *SetMemcpyEndTime(const uint64_t memcpyEndTime)
+    ProfMessage* SetMemcpyEndTime(const uint64_t memcpyEndTime)
     {
         sendData_.aicpuProfData.memcpyEndTime = memcpyEndTime;
         return this;
     }
-    ProfMessage *SetRunEndTime(const uint64_t runEndTime)
+    ProfMessage* SetRunEndTime(const uint64_t runEndTime)
     {
         sendData_.aicpuProfData.runEndTime = runEndTime;
         return this;
     }
-    ProfMessage *SetRunEndTick(const uint64_t runEndTick)
+    ProfMessage* SetRunEndTick(const uint64_t runEndTick)
     {
         sendData_.aicpuProfData.runEndTick = runEndTick;
         return this;
     }
-    ProfMessage *SetThreadId(const uint32_t threadId)
+    ProfMessage* SetThreadId(const uint32_t threadId)
     {
         sendData_.aicpuProfData.threadId = threadId;
         return this;
     }
-    ProfMessage *SetDeviceId(const uint32_t deviceId)
+    ProfMessage* SetDeviceId(const uint32_t deviceId)
     {
         sendData_.aicpuProfData.deviceId = deviceId;
         return this;
     }
-    ProfMessage *SetKernelType(const uint32_t aicpuKernelType)
+    ProfMessage* SetKernelType(const uint32_t aicpuKernelType)
     {
         sendData_.aicpuProfData.kernelType = aicpuKernelType;
         return this;
     }
-    ProfMessage *SetSubmitTick(const uint64_t submitTick)
+    ProfMessage* SetSubmitTick(const uint64_t submitTick)
     {
         sendData_.aicpuProfData.submitTick = submitTick;
         return this;
     }
-    ProfMessage *SetScheduleTick(const uint64_t scheduleTick)
+    ProfMessage* SetScheduleTick(const uint64_t scheduleTick)
     {
         sendData_.aicpuProfData.scheduleTick = scheduleTick;
         return this;
     }
-    ProfMessage *SetTickBeforeRun(const uint64_t tickBeforeRun)
+    ProfMessage* SetTickBeforeRun(const uint64_t tickBeforeRun)
     {
         sendData_.aicpuProfData.tickBeforeRun = tickBeforeRun;
         return this;
     }
-    ProfMessage *SetTickAfterRun(const uint64_t tickAfterRun)
+    ProfMessage* SetTickAfterRun(const uint64_t tickAfterRun)
     {
         sendData_.aicpuProfData.tickAfterRun = tickAfterRun;
         return this;
     }
-    ProfMessage *SetDispatchTime(const uint32_t dispatchTime)
+    ProfMessage* SetDispatchTime(const uint32_t dispatchTime)
     {
         sendData_.aicpuProfData.dispatchTime = dispatchTime;
         return this;
     }
-    ProfMessage *SetTotalTime(const uint32_t totalTime)
+    ProfMessage* SetTotalTime(const uint32_t totalTime)
     {
         sendData_.aicpuProfData.totalTime = totalTime;
         return this;
     }
-    ProfMessage *SetFFTSThreadId(const uint16_t fftsThreadId)
+    ProfMessage* SetFFTSThreadId(const uint16_t fftsThreadId)
     {
         sendData_.aicpuProfData.fftsThreadId = fftsThreadId;
         return this;
     }
-    ProfMessage *SetVersion(const uint8_t aicpuProfVersion)
+    ProfMessage* SetVersion(const uint8_t aicpuProfVersion)
     {
         sendData_.aicpuProfData.version = aicpuProfVersion;
         return this;
     }
-    ProfMessage *SetDPMagicNumber(const uint16_t dPMagicNumber)
+    ProfMessage* SetDPMagicNumber(const uint16_t dPMagicNumber)
     {
         sendData_.dPProfData.magicNumber = dPMagicNumber;
         return this;
     }
-    ProfMessage *SetDPDataTag(const uint16_t dPDataTag)
+    ProfMessage* SetDPDataTag(const uint16_t dPDataTag)
     {
         sendData_.dPProfData.dataTag = dPDataTag;
         return this;
     }
-    ProfMessage *SetAction(const std::string &action)
+    ProfMessage* SetAction(const std::string& action)
     {
-        const auto ret = strcpy_s(sendData_.dPProfData.action,
-                                  static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN),
-                                  action.c_str());
+        const auto ret =
+            strcpy_s(sendData_.dPProfData.action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN), action.c_str());
         if (ret != EOK) {
             AICPU_LOG_WARN("Copy action[%s] failed, ret=[%d].", action.c_str(), ret);
         }
         return this;
     }
-    ProfMessage *SetSource(const std::string &source)
+    ProfMessage* SetSource(const std::string& source)
     {
-        const auto ret = strcpy_s(sendData_.dPProfData.source,
-                                  static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN),
-                                  source.c_str());
+        const auto ret =
+            strcpy_s(sendData_.dPProfData.source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN), source.c_str());
         if (ret != EOK) {
             AICPU_LOG_WARN("Copy source[%s] failed, ret=[%d].", source.c_str(), ret);
         }
         return this;
     }
-    ProfMessage *SetIndex(const uint64_t queueIndex)
+    ProfMessage* SetIndex(const uint64_t queueIndex)
     {
         sendData_.dPProfData.index = queueIndex;
         return this;
     }
-    ProfMessage *SetSize(const uint64_t size)
+    ProfMessage* SetSize(const uint64_t size)
     {
         sendData_.dPProfData.size = size;
         return this;
     }
-    ProfMessage *SetTimeStamp(const uint64_t timeStamp)
+    ProfMessage* SetTimeStamp(const uint64_t timeStamp)
     {
         sendData_.dPProfData.timeStamp = timeStamp;
         return this;
     }
+
 private:
     ProfMessage(const ProfMessage&) = delete;
     ProfMessage& operator=(const ProfMessage&) = delete;
@@ -604,9 +602,9 @@ private:
 // Micros for calling the profiling interface friendly
 // eg. `PROF(CCECPU) << "My id: " << 5;` will send `[timestap] My id: 5` to profing data
 // which timestap is when this micros call
-#define PROF(tag) \
+#define PROF(tag)                  \
     if (aicpu::IsProfilingValid()) \
-        aicpu::ProfMessage(#tag)
+    aicpu::ProfMessage(#tag)
 
 } // namespace aicpu
 #endif

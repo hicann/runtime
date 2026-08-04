@@ -28,36 +28,18 @@ namespace aicpu {
 extern "C" {
 #endif
 
-bool IsProfOpen()
-{
-    return false;
-}
+bool IsProfOpen() { return false; }
 
-bool IsModelProfOpen()
-{
-    return false;
-}
+bool IsModelProfOpen() { return false; }
 
-void UpdateMode(bool mode) 
-{
-    (void)mode;
-}
-void UpdateModelMode(const bool mode) 
-{
-    (void)mode;
-}
+void UpdateMode(bool mode) { (void)mode; }
+void UpdateModelMode(const bool mode) { (void)mode; }
 
-uint64_t GetSystemTick()
-{
-    return 0;
-}
+uint64_t GetSystemTick() { return 0; }
 
-uint64_t GetSystemTickFreq()
-{
-    return 0;
-}
+uint64_t GetSystemTickFreq() { return 0; }
 
-void SendToProfiling(const std::string &sendData, const std::string &mark)
+void SendToProfiling(const std::string& sendData, const std::string& mark)
 {
     UNUSED(sendData);
     UNUSED(mark);
@@ -69,14 +51,9 @@ int32_t SetProfHandle(std::shared_ptr<ProfMessage> prof)
     return 0;
 }
 
-uint64_t NowMicros()
-{
-    return 1;
-}
+uint64_t NowMicros() { return 1; }
 
-void ReleaseProfiling()
-{
-}
+void ReleaseProfiling() {}
 
 void InitProfiling(const uint32_t deviceId, const pid_t hostPid, const uint32_t channelId)
 {
@@ -92,29 +69,17 @@ void InitProfilingDataInfo(const uint32_t deviceId, const pid_t hostPid, const u
     UNUSED(channelId);
 }
 
-void SetProfilingFlagForKFC(const uint32_t flag)
-{
-    UNUSED(flag);
-}
-void LoadProfilingLib()
-{
-}
+void SetProfilingFlagForKFC(const uint32_t flag) { UNUSED(flag); }
+void LoadProfilingLib() {}
 #ifdef __cplusplus
 }
 #endif
 
-ProfMessage::ProfMessage(const char* tag) : tag_(tag)
-{
-}
+ProfMessage::ProfMessage(const char* tag) : tag_(tag) {}
 
-ProfMessage::~ProfMessage()
-{
-}
+ProfMessage::~ProfMessage() {}
 
-int32_t ProfModelMessage::ReportProfModelMessage()
-{
-    return 0;
-}
+int32_t ProfModelMessage::ReportProfModelMessage() { return 0; }
 
 int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
 {
@@ -123,15 +88,13 @@ int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
 }
 } // namespace aicpu
 
-int32_t aeCallInterface(const void * const addr)
+int32_t aeCallInterface(const void* const addr)
 {
     UNUSED(addr);
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType,
-                               const uint32_t loadSoNum,
-                               const char * const * const soNames)
+aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType, const uint32_t loadSoNum, const char* const* const soNames)
 {
     UNUSED(kernelType);
     UNUSED(loadSoNum);
@@ -139,14 +102,14 @@ aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType,
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t aeCloseSo(uint32_t kernelType, const char *soName)
+aeStatus_t aeCloseSo(uint32_t kernelType, const char* soName)
 {
     UNUSED(kernelType);
     UNUSED(soName);
     return AE_STATUS_SUCCESS;
 }
 
-drvError_t drvHdcGetCapacity(struct drvHdcCapacity *capacity)
+drvError_t drvHdcGetCapacity(struct drvHdcCapacity* capacity)
 {
     UNUSED(capacity);
     return DRV_ERROR_NONE;
@@ -161,8 +124,8 @@ int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const ui
     return 0;
 }
 
-int32_t StartupResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                        const uint32_t hostPid, const uint32_t vfId)
+int32_t StartupResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     UNUSED(deviceId);
     UNUSED(waitType);
@@ -177,31 +140,26 @@ int32_t WaitForShutDown(const uint32_t deviceId)
     return 0;
 }
 
-int32_t StopWaitForCustAicpu()
-{
-    return 0;
-}
+int32_t StopWaitForCustAicpu() { return 0; }
 
 namespace AicpuSchedule {
-StatusCode GetAicpuDeployContext(DeployContext &deployContext)
+StatusCode GetAicpuDeployContext(DeployContext& deployContext)
 {
     deployContext = DeployContext::HOST;
     return AICPU_SCHEDULE_OK;
 }
 
-OpDumpTaskManager &OpDumpTaskManager::GetInstance()
+OpDumpTaskManager& OpDumpTaskManager::GetInstance()
 {
     static OpDumpTaskManager instance;
     return instance;
 }
 
-void OpDumpTaskManager::ClearResource()
-{
-}
+void OpDumpTaskManager::ClearResource() {}
 
-int32_t OpDumpTaskManager::DumpOpInfo(TaskInfoExt &dumpTaskInfo,
-                                      const uint32_t streamId, const uint32_t taskId,
-                                      const uint32_t contextId, const uint32_t threadId) 
+int32_t OpDumpTaskManager::DumpOpInfo(
+    TaskInfoExt& dumpTaskInfo, const uint32_t streamId, const uint32_t taskId, const uint32_t contextId,
+    const uint32_t threadId)
 {
     UNUSED(dumpTaskInfo);
     UNUSED(streamId);
@@ -209,9 +167,9 @@ int32_t OpDumpTaskManager::DumpOpInfo(TaskInfoExt &dumpTaskInfo,
     UNUSED(contextId);
     UNUSED(threadId);
     return AICPU_SCHEDULE_OK;
-} 
-int32_t OpDumpTaskManager::DumpOpInfo(const uint32_t streamId, const uint32_t taskId,
-                                      const uint32_t streamId1, const uint32_t taskId1)
+}
+int32_t OpDumpTaskManager::DumpOpInfo(
+    const uint32_t streamId, const uint32_t taskId, const uint32_t streamId1, const uint32_t taskId1)
 {
     UNUSED(streamId);
     UNUSED(taskId);
@@ -220,39 +178,37 @@ int32_t OpDumpTaskManager::DumpOpInfo(const uint32_t streamId, const uint32_t ta
     return AICPU_SCHEDULE_OK;
 }
 
-
-int32_t OpDumpTaskManager::DumpOpInfo(TaskInfoExt &dumpTaskInfo,
-                                      const DumpFileName &dumpFileName)
+int32_t OpDumpTaskManager::DumpOpInfo(TaskInfoExt& dumpTaskInfo, const DumpFileName& dumpFileName)
 {
     UNUSED(dumpTaskInfo);
     UNUSED(dumpFileName);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(const uint64_t opMappingInfoAddr,
-                                                    const uint64_t opMappingInfoLen) const
+int32_t OpDumpTaskManager::DumpOpInfoForUnknowShape(
+    const uint64_t opMappingInfoAddr, const uint64_t opMappingInfoLen) const
 {
     UNUSED(opMappingInfoAddr);
     UNUSED(opMappingInfoLen);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t * const infoAddr, const uint32_t len,
-                                             AicpuSqeAdapter &aicpuSqeAdapter)
+int32_t OpDumpTaskManager::LoadOpMappingInfo(
+    const char_t* const infoAddr, const uint32_t len, AicpuSqeAdapter& aicpuSqeAdapter)
 {
     UNUSED(infoAddr);
     UNUSED(len);
     UNUSED(aicpuSqeAdapter);
     return AICPU_SCHEDULE_OK;
 }
-int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t * const infoAddr, const uint32_t len) 
+int32_t OpDumpTaskManager::LoadOpMappingInfo(const char_t* const infoAddr, const uint32_t len)
 {
     UNUSED(infoAddr);
     UNUSED(len);
     return AICPU_SCHEDULE_OK;
 }
 
-DumpSessionManager &DumpSessionManager::GetInstance()
+DumpSessionManager& DumpSessionManager::GetInstance()
 {
     static DumpSessionManager instance;
     return instance;
@@ -287,87 +243,72 @@ IDE_SESSION DumpSessionManager::CreateIdeDumpSession(int32_t hostPid, uint32_t d
     return nullptr;
 }
 
-int32_t AicpuQueueEventProcess::ProcessQsMsg(const event_info &event)
+int32_t AicpuQueueEventProcess::ProcessQsMsg(const event_info& event)
 {
     UNUSED(event);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t AicpuQueueEventProcess::ProcessDrvMsg(const event_info &event)
+int32_t AicpuQueueEventProcess::ProcessDrvMsg(const event_info& event)
 {
     UNUSED(event);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t AicpuQueueEventProcess::ProcessProxyMsg(const event_info &event)
+int32_t AicpuQueueEventProcess::ProcessProxyMsg(const event_info& event)
 {
     UNUSED(event);
     return AICPU_SCHEDULE_OK;
 }
 
-AicpuQueueEventProcess &AicpuQueueEventProcess::GetInstance()
+AicpuQueueEventProcess& AicpuQueueEventProcess::GetInstance()
 {
     static AicpuQueueEventProcess instance;
     return instance;
 }
 
 namespace mpi {
-MpiDvppStatisticManager &MpiDvppStatisticManager::Instance()
+MpiDvppStatisticManager& MpiDvppStatisticManager::Instance()
 {
     static MpiDvppStatisticManager statisticManagerInstance;
     return statisticManagerInstance;
 }
 
-MpiDvppStatisticManager::~MpiDvppStatisticManager()
-{
-}
+MpiDvppStatisticManager::~MpiDvppStatisticManager() {}
 
-int32_t MpiDvppStatisticManager::PrintStatisticInfo() const
-{
-    return AicpuSchedule::AICPU_SCHEDULE_OK;
-}
+int32_t MpiDvppStatisticManager::PrintStatisticInfo() const { return AicpuSchedule::AICPU_SCHEDULE_OK; }
 
-void MpiDvppStatisticManager::Record()
-{
-}
+void MpiDvppStatisticManager::Record() {}
 
-void MpiDvppStatisticManager::InitMpiDvpp()
-{
-}
+void MpiDvppStatisticManager::InitMpiDvpp() {}
 
-void MpiDvppStatisticManager::OnPulse(const MpiDvppTimePoint &nowTimePoint)
-{
-    UNUSED(nowTimePoint);
-}
-} // namepsace mpi
+void MpiDvppStatisticManager::OnPulse(const MpiDvppTimePoint& nowTimePoint) { UNUSED(nowTimePoint); }
+} // namespace mpi
 
-bool TaskQueue::Enqueue(const aicpu::Closure &closure)
+bool TaskQueue::Enqueue(const aicpu::Closure& closure)
 {
     UNUSED(closure);
     return true;
 }
 
-bool TaskQueue::Dequeue(aicpu::Closure &closure)
+bool TaskQueue::Dequeue(aicpu::Closure& closure)
 {
     UNUSED(closure);
     return true;
 }
 
-void TaskQueue::Clear()
-{
-}
+void TaskQueue::Clear() {}
 
-std::string TaskQueue::DebugString() {return "";}
+std::string TaskQueue::DebugString() { return ""; }
 
-bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo &taskInfo,
-                           const std::queue<aicpu::Closure> &queue)
+bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& queue)
 {
     UNUSED(taskInfo);
     UNUSED(queue);
     return true;
 }
 
-bool TaskMap::PopTask(const AICPUSharderTaskInfo &taskInfo, aicpu::Closure &closure)
+bool TaskMap::PopTask(const AICPUSharderTaskInfo& taskInfo, aicpu::Closure& closure)
 {
     UNUSED(taskInfo);
     UNUSED(closure);
@@ -376,7 +317,7 @@ bool TaskMap::PopTask(const AICPUSharderTaskInfo &taskInfo, aicpu::Closure &clos
 
 void TaskMap::Clear() {}
 
-std::string TaskMap::DebugString() {return "";}
+std::string TaskMap::DebugString() { return ""; }
 
 } // namespace AicpuSchedule
 
@@ -385,27 +326,27 @@ AsyncEventManager::AsyncEventManager() {}
 
 AsyncEventManager::~AsyncEventManager() {}
 
-AsyncEventManager &AsyncEventManager::GetInstance()
+AsyncEventManager& AsyncEventManager::GetInstance()
 {
     static AsyncEventManager asyncEventManager;
     return asyncEventManager;
 }
 
-void AsyncEventManager::Register(const NotifyFunc &notify)
+void AsyncEventManager::Register(const NotifyFunc& notify)
 {
     UNUSED(notify);
     return;
 }
 
-void AsyncEventManager::NotifyWait(void *notifyParam, const uint32_t paramLen)
+void AsyncEventManager::NotifyWait(void* notifyParam, const uint32_t paramLen)
 {
     UNUSED(notifyParam);
     UNUSED(paramLen);
     return;
 }
 
-bool AsyncEventManager::RegEventCb(const uint32_t eventId, const uint32_t subEventId,
-                                   const EventProcessCallBack &cb, const int32_t times)
+bool AsyncEventManager::RegEventCb(
+    const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack& cb, const int32_t times)
 {
     UNUSED(eventId);
     UNUSED(subEventId);
@@ -414,7 +355,7 @@ bool AsyncEventManager::RegEventCb(const uint32_t eventId, const uint32_t subEve
     return true;
 }
 
-void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subEventId, void *param)
+void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subEventId, void* param)
 {
     UNUSED(eventId);
     UNUSED(subEventId);
@@ -422,8 +363,9 @@ void AsyncEventManager::ProcessEvent(const uint32_t eventId, const uint32_t subE
     return;
 }
 
-bool AsyncEventManager::RegOpEventCb(const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack &cb)
-const {
+bool AsyncEventManager::RegOpEventCb(
+    const uint32_t eventId, const uint32_t subEventId, const EventProcessCallBack& cb) const
+{
     UNUSED(eventId);
     UNUSED(subEventId);
     UNUSED(cb);
@@ -436,7 +378,7 @@ void AsyncEventManager::UnregOpEventCb(const uint32_t eventId, const uint32_t su
     UNUSED(subEventId);
 }
 
-void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t subEventId, void * const param) const
+void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t subEventId, void* const param) const
 {
     UNUSED(eventId);
     UNUSED(subEventId);
@@ -445,58 +387,52 @@ void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t su
 } // namespace aicpu
 
 namespace DataPreprocess {
-    TaskQueueMgr& TaskQueueMgr::GetInstance()
-    {
-        static TaskQueueMgr instance;
-        return instance;
-    }
+TaskQueueMgr& TaskQueueMgr::GetInstance()
+{
+    static TaskQueueMgr instance;
+    return instance;
+}
 
-    TaskQueueMgr::TaskQueueMgr() {}
-    TaskQueueMgr::~TaskQueueMgr() {}
-    void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) 
-    {
-        UNUSED(eventId);
-    }
+TaskQueueMgr::TaskQueueMgr() {}
+TaskQueueMgr::~TaskQueueMgr() {}
+void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) { UNUSED(eventId); }
 } // namespace DataPreprocess
 
 namespace tdt {
-    int32_t TDTServerInit(const uint32_t deviceID, const std::list<uint32_t>& bindCoreList)
-    {
-        UNUSED(deviceID);
-        UNUSED(bindCoreList);
-        return 0;
-    }
+int32_t TDTServerInit(const uint32_t deviceID, const std::list<uint32_t>& bindCoreList)
+{
+    UNUSED(deviceID);
+    UNUSED(bindCoreList);
+    return 0;
+}
 
-    int32_t TDTServerStop()
-    {
-        return 0;
-    }
+int32_t TDTServerStop() { return 0; }
 
-    StatusFactory* StatusFactory::GetInstance()
-    {
-        static StatusFactory instance;
-        return &instance;
-    }
+StatusFactory* StatusFactory::GetInstance()
+{
+    static StatusFactory instance;
+    return &instance;
+}
 
-    void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc) 
-    {
-        UNUSED(err);
-        UNUSED(desc);
-    }
+void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc)
+{
+    UNUSED(err);
+    UNUSED(desc);
+}
 
-    std::string StatusFactory::GetErrDesc(const uint32_t err)
-    {
-        UNUSED(err);
-        return "";
-    }
+std::string StatusFactory::GetErrDesc(const uint32_t err)
+{
+    UNUSED(err);
+    return "";
+}
 
-    std::string StatusFactory::GetErrCodeDesc(uint32_t errCode)
-    {
-        UNUSED(errCode);
-        return "";
-    }
+std::string StatusFactory::GetErrCodeDesc(uint32_t errCode)
+{
+    UNUSED(errCode);
+    return "";
+}
 
-    StatusFactory::StatusFactory() {}
+StatusFactory::StatusFactory() {}
 } // namespace tdt
 
 int halTsDevRecord(unsigned int devId, unsigned int tsId, unsigned int record_type, unsigned int record_Id)
@@ -512,9 +448,9 @@ int halTsDevRecord(unsigned int devId, unsigned int tsId, unsigned int record_ty
 extern "C" {
 #endif
 
-int32_t CreateOrFindCustPid(const uint32_t deviceId, const uint32_t loadLibNum,
-    const char * const loadLibName[], const uint32_t hostPid, const uint32_t vfId, const char *groupNameList,
-    const uint32_t groupNameNum, int32_t *custProcPid, bool *firstStart)
+int32_t CreateOrFindCustPid(
+    const uint32_t deviceId, const uint32_t loadLibNum, const char* const loadLibName[], const uint32_t hostPid,
+    const uint32_t vfId, const char* groupNameList, const uint32_t groupNameNum, int32_t* custProcPid, bool* firstStart)
 {
     UNUSED(deviceId);
     UNUSED(loadLibNum);
@@ -528,8 +464,7 @@ int32_t CreateOrFindCustPid(const uint32_t deviceId, const uint32_t loadLibNum,
     return 0;
 }
 
-int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen,
-    unsigned int handleId)
+int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId)
 {
     UNUSED(devId);
     UNUSED(tsId);
@@ -539,9 +474,8 @@ int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char *msg, unsigned
     return 0;
 }
 
-
-int32_t SendUpdateProfilingRspToTsd(const uint32_t deviceId, const uint32_t waitType,
-                                    const uint32_t hostPid, const uint32_t vfId)
+int32_t SendUpdateProfilingRspToTsd(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     UNUSED(deviceId);
     UNUSED(waitType);
@@ -549,9 +483,9 @@ int32_t SendUpdateProfilingRspToTsd(const uint32_t deviceId, const uint32_t wait
     UNUSED(vfId);
     return 0;
 }
-int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
-                               const uint32_t hostPid, const uint32_t vfId,
-                               const struct SubProcScheduleModeInfo *scheInfo)
+int32_t SetSubProcScheduleMode(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId,
+    const struct SubProcScheduleModeInfo* scheInfo)
 {
     UNUSED(deviceId);
     UNUSED(waitType);
@@ -563,4 +497,3 @@ int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
 #ifdef __cplusplus
 }
 #endif
-

@@ -15,43 +15,43 @@
 #include "ascend_hal.h"
 #include "type_def.h"
 namespace AicpuSchedule {
-    class AicpuMemInfoProcess {
-    public:
-        /**
-         * @brief get memzoneinfo for setting mbuf
-         * @param [in] BuffCfg: buffCfg
-         * @return AICPU_SCHEDULE_OK: success
-         */
-        static StatusCode GetMemZoneInfo(BuffCfg &buffCfg);
+class AicpuMemInfoProcess {
+public:
+    /**
+     * @brief get memzoneinfo for setting mbuf
+     * @param [in] BuffCfg: buffCfg
+     * @return AICPU_SCHEDULE_OK: success
+     */
+    static StatusCode GetMemZoneInfo(BuffCfg& buffCfg);
 
-        /**
-         * @brief read the memzone cfg file which is json format.
-         * @param [in] string: filePath
-         * @param [in] json: jsonRead
-         * @return AICPU_SCHEDULE_OK: success
-         */
-        static StatusCode ReadJsonFile(const std::string &filePath, nlohmann::json &jsonRead);
+    /**
+     * @brief read the memzone cfg file which is json format.
+     * @param [in] string: filePath
+     * @param [in] json: jsonRead
+     * @return AICPU_SCHEDULE_OK: success
+     */
+    static StatusCode ReadJsonFile(const std::string& filePath, nlohmann::json& jsonRead);
 
-        /**
-         * @brief parse the cfg data from json input to BuffCfg.
-         * @param [in] json: input
-         * @param [in] BuffCfg: output
-         * @return AICPU_SCHEDULE_OK: success
-         */
-        static StatusCode ParseCfgData(const nlohmann::json &input,  BuffCfg &output);
+    /**
+     * @brief parse the cfg data from json input to BuffCfg.
+     * @param [in] json: input
+     * @param [in] BuffCfg: output
+     * @return AICPU_SCHEDULE_OK: success
+     */
+    static StatusCode ParseCfgData(const nlohmann::json& input, BuffCfg& output);
 
-        /**
-         * @brief check the cfg file path.
-         * @param [in] string: cfgFullfilePath
-         * @return AICPU_SCHEDULE_OK: success
-         */
-        static StatusCode CheckPathValid(const std::string &cfgFullPath);
+    /**
+     * @brief check the cfg file path.
+     * @param [in] string: cfgFullfilePath
+     * @return AICPU_SCHEDULE_OK: success
+     */
+    static StatusCode CheckPathValid(const std::string& cfgFullPath);
 
-        /**
-         * @brief check aicpu run mode.
-         * @return AICPU_SCHEDULE_OK: success
-         */
-        static StatusCode CheckRunMode();
-    };
-}
+    /**
+     * @brief check aicpu run mode.
+     * @return AICPU_SCHEDULE_OK: success
+     */
+    static StatusCode CheckRunMode();
+};
+} // namespace AicpuSchedule
 #endif // CORE_AICPUSD_JSON_READ_H

@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef CORE_AICPUSD_MC2_MAINTENANCE_THREAD_API_H
 #define CORE_AICPUSD_MC2_MAINTENANCE_THREAD_API_H
 #include <cstdint>
@@ -16,9 +16,10 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-    __attribute__((visibility("default"))) __attribute__((weak)) int32_t CreateMc2MantenanceThread(const struct TsdSubEventInfo * const msg);
+#endif // __cplusplus
+__attribute__((visibility("default"))) __attribute__((weak)) int32_t CreateMc2MantenanceThread(
+    const struct TsdSubEventInfo* const msg);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 #endif

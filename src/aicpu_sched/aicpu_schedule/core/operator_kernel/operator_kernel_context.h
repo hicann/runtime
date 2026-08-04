@@ -14,7 +14,6 @@
 #include "type_def.h"
 #include "aicpusd_common.h"
 
-
 namespace AicpuSchedule {
 constexpr size_t MBUF_HEAD_MAX_SIZE = 256U;
 constexpr uint32_t MBUF_HEAD_END_OF_SEQUENCE_POS = 128U;
@@ -32,10 +31,7 @@ constexpr int64_t DIM_NUM_ONE = 1;
 constexpr int64_t DIM_NUM_TWO = 2;
 constexpr uint8_t MBUF_HEAD_DATA_FLAG_MASK = 0x01U;
 
-enum class DataFlag {
-    DFLOW_HAS_DATA_FLAG = 0,
-    DFLOW_NULL_DATA_FLAG = 1
-};
+enum class DataFlag { DFLOW_HAS_DATA_FLAG = 0, DFLOW_NULL_DATA_FLAG = 1 };
 
 struct MbufHeadMsg {
     uint64_t transId;
@@ -44,13 +40,13 @@ struct MbufHeadMsg {
     int32_t retCode;
     uint64_t startTime;
     uint64_t endTime;
-    uint32_t flags; // EOS, SEG contrl flag ect.
+    uint32_t flags;   // EOS, SEG contrl flag ect.
     uint8_t dataFlag; // 0 bit is data flag. 1 is null data, 0 is has data.
     char rsv0[3];
     int32_t workerId;
     uint32_t stepId;
     char rsv[8];
-    uint32_t dataLabel;     // use for data align
+    uint32_t dataLabel; // use for data align
     uint32_t routeLabel;
 
     std::string DebugString() const
@@ -74,9 +70,9 @@ struct MbufHeadMsg {
 };
 
 enum class MsgType : uint16_t {
-    MSG_TYPE_TENSOR_DATA = 0,   // tensor data msg type
-    MSG_TYPE_RAW_MSG = 1,       // raw data msg type
-    MSG_TYPE_TENSOR_LIST = 2,   // raw data msg type
+    MSG_TYPE_TENSOR_DATA = 0, // tensor data msg type
+    MSG_TYPE_RAW_MSG = 1,     // raw data msg type
+    MSG_TYPE_TENSOR_LIST = 2, // raw data msg type
     MSG_TYPE_USER_DEFINE_START = 1024
 };
 
@@ -85,6 +81,6 @@ struct FusionInfo {
     uint64_t lastDataOffset;
     int32_t lastFusionOffset;
 };
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // OPERATOR_KERNEL_CONTEXT_H
+#endif // OPERATOR_KERNEL_CONTEXT_H

@@ -22,7 +22,7 @@
 #include "driver/ascend_hal_define.h"
 
 namespace DataPreprocess {
-using Closure = std::function<void ()>;
+using Closure = std::function<void()>;
 
 enum TaskQueuePriority {
     TASK_QUEUE_LOW_PRIORITY = 0,
@@ -30,10 +30,7 @@ enum TaskQueuePriority {
     TASK_QUEUE_MAX_PRIORITY,
 };
 
-enum TaskEventID {
-    TASK_QUEUE_LOW_EVENT_ID = 1,
-    TASK_QUEUE_HIGH_EVENT_ID
-};
+enum TaskEventID { TASK_QUEUE_LOW_EVENT_ID = 1, TASK_QUEUE_HIGH_EVENT_ID };
 
 struct TaskInfo {
     std::string name;
@@ -48,7 +45,7 @@ public:
     Output       : NA
     Return Value : TaskQueueMgr instance
     *****************************************************************************/
-    static TaskQueueMgr &GetInstance();
+    static TaskQueueMgr& GetInstance();
 
     /*****************************************************************************
     Description  : init the task queue fd
@@ -58,7 +55,7 @@ public:
                  : allEventfdSets
     Return Value : true or false
     *****************************************************************************/
-    bool InitTaskQueueFd(int32_t &maxEventfd, fd_set &allEventfdSets);
+    bool InitTaskQueueFd(int32_t& maxEventfd, fd_set& allEventfdSets);
 
     /*****************************************************************************
      Description  : close the task queue fd
@@ -82,9 +79,7 @@ public:
                  : task name
     Output       : NA
     *****************************************************************************/
-    void TaskEnqueue(const TaskQueuePriority priority,
-                     const Closure taskFunc,
-                     const std::string &taskName);
+    void TaskEnqueue(const TaskQueuePriority priority, const Closure taskFunc, const std::string& taskName);
 
     /*****************************************************************************
     Description  : enqueue the closure func by different priority
@@ -94,9 +89,7 @@ public:
     Output       : NA
     Return Value : NA
     *****************************************************************************/
-    void TaskOnlyEnqueue(const TaskQueuePriority priority,
-                         const Closure taskFunc,
-                         const std::string &taskName);
+    void TaskOnlyEnqueue(const TaskQueuePriority priority, const Closure taskFunc, const std::string& taskName);
 
     /*****************************************************************************
     Description  : execute the closure function directly
@@ -105,7 +98,7 @@ public:
     Output       : NA
     Return Value : NA
     *****************************************************************************/
-    void TaskDirectExecute(const Closure taskFunc, const std::string &taskName) const;
+    void TaskDirectExecute(const Closure taskFunc, const std::string& taskName) const;
 
     /*****************************************************************************
     Description  : preprocess event
@@ -113,7 +106,7 @@ public:
     Output       : NA
     Return Value : NA
     *****************************************************************************/
-    void OnPreprocessEvent(const fd_set &eventfdSets);
+    void OnPreprocessEvent(const fd_set& eventfdSets);
 
     /*****************************************************************************
     Description  : preprocess event
@@ -153,8 +146,8 @@ private:
     TaskQueueMgr();
     ~TaskQueueMgr();
     // not allow copy constructor and assignment operators
-    TaskQueueMgr(const TaskQueueMgr &) = delete;
-    TaskQueueMgr &operator=(const TaskQueueMgr &) = delete;
+    TaskQueueMgr(const TaskQueueMgr&) = delete;
+    TaskQueueMgr& operator=(const TaskQueueMgr&) = delete;
 #ifndef TASK_SCHEDULE_BY_COMPUTE_PROCESS
     void SubmitEventToTs(const TaskQueuePriority priority);
 #endif

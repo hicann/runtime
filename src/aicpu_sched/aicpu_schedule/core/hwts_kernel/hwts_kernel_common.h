@@ -39,6 +39,6 @@ private:
     HwTsKernelCommon(HwTsKernelCommon&&) = delete;
     HwTsKernelCommon& operator=(HwTsKernelCommon&&) = delete;
 };
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // HWTS_KERNEL_COMMON_H
+#endif // HWTS_KERNEL_COMMON_H

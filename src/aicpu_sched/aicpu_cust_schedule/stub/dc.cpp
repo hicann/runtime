@@ -57,7 +57,7 @@ drvError_t halQueueUnsubF2NFEvent(unsigned int devid, unsigned int qid)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halQueueDeQueue(unsigned int devId, unsigned int qid, void **mbuf)
+drvError_t halQueueDeQueue(unsigned int devId, unsigned int qid, void** mbuf)
 {
     (void)devId;
     (void)qid;
@@ -65,7 +65,7 @@ drvError_t halQueueDeQueue(unsigned int devId, unsigned int qid, void **mbuf)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halQueueEnQueue(unsigned int devId, unsigned int qid, void *mbuf)
+drvError_t halQueueEnQueue(unsigned int devId, unsigned int qid, void* mbuf)
 {
     (void)devId;
     (void)qid;
@@ -73,20 +73,20 @@ drvError_t halQueueEnQueue(unsigned int devId, unsigned int qid, void *mbuf)
     return DRV_ERROR_NONE;
 }
 
-int halMbufAlloc(unsigned int size, Mbuf **mbuf)
+int halMbufAlloc(unsigned int size, Mbuf** mbuf)
 {
     (void)size;
     (void)mbuf;
     return DRV_ERROR_NONE;
 }
 
-int halMbufFree(Mbuf *mbuf)
+int halMbufFree(Mbuf* mbuf)
 {
     (void)mbuf;
     return DRV_ERROR_NONE;
 }
 
-int halMbufGetPrivInfo (Mbuf *mbuf,  void **priv, unsigned int *size)
+int halMbufGetPrivInfo(Mbuf* mbuf, void** priv, unsigned int* size)
 {
     (void)mbuf;
     (void)priv;
@@ -94,15 +94,14 @@ int halMbufGetPrivInfo (Mbuf *mbuf,  void **priv, unsigned int *size)
     return DRV_ERROR_NONE;
 }
 
-int buff_get_phy_addr (void *buf, unsigned long long *phyAddr)
+int buff_get_phy_addr(void* buf, unsigned long long* phyAddr)
 {
     (void)buf;
     (void)phyAddr;
     return 0;
 }
 
-int halGrpQuery(GroupQueryCmdType cmd,
-    void *inBuff, unsigned int inLen, void *outBuff, unsigned int *outLen)
+int halGrpQuery(GroupQueryCmdType cmd, void* inBuff, unsigned int inLen, void* outBuff, unsigned int* outLen)
 {
     (void)cmd;
     (void)inBuff;
@@ -112,7 +111,7 @@ int halGrpQuery(GroupQueryCmdType cmd,
     return DRV_ERROR_NONE;
 }
 
-int halGrpAddProc(const char *name, int pid, GroupShareAttr attr)
+int halGrpAddProc(const char* name, int pid, GroupShareAttr attr)
 {
     (void)name;
     (void)pid;
@@ -120,68 +119,65 @@ int halGrpAddProc(const char *name, int pid, GroupShareAttr attr)
     return DRV_ERROR_NONE;
 }
 
-int halGrpAttach(const char *name, int timeout)
+int halGrpAttach(const char* name, int timeout)
 {
     (void)name;
     (void)timeout;
     return DRV_ERROR_NONE;
 }
 
-int halBuffInit(BuffCfg *cfg)
+int halBuffInit(BuffCfg* cfg)
 {
     (void)cfg;
     return DRV_ERROR_NONE;
 }
 namespace DataPreprocess {
-    TaskQueueMgr& TaskQueueMgr::GetInstance()
-    {
-        static TaskQueueMgr instance;
-        return instance;
-    }
-
-    TaskQueueMgr::TaskQueueMgr()
-    {
-        for (int32_t i = TASK_QUEUE_LOW_PRIORITY; i < TASK_QUEUE_MAX_PRIORITY; ++i) {
-            preprocessEventfds_[i] = -1; // initialize fd
-        }
-    }
-    TaskQueueMgr::~TaskQueueMgr() {}
-    void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) {}
+TaskQueueMgr& TaskQueueMgr::GetInstance()
+{
+    static TaskQueueMgr instance;
+    return instance;
 }
-#ifdef  __cplusplus
+
+TaskQueueMgr::TaskQueueMgr()
+{
+    for (int32_t i = TASK_QUEUE_LOW_PRIORITY; i < TASK_QUEUE_MAX_PRIORITY; ++i) {
+        preprocessEventfds_[i] = -1; // initialize fd
+    }
+}
+TaskQueueMgr::~TaskQueueMgr() {}
+void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) {}
+} // namespace DataPreprocess
+#ifdef __cplusplus
 namespace tdt {
-    int32_t TDTServerInit(const uint32_t deviceID, const std::list<uint32_t>& bindCoreList)
-    {
-        (void)deviceID;
-        (void)bindCoreList;
-        return 0;
-    }
-
-    int32_t TDTServerStop()
-    {
-        return 0;
-    }
-
-    StatusFactory* StatusFactory::GetInstance()
-    {
-        static StatusFactory instance_;
-        return &instance_;
-    }
-
-    void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc) {}
-
-    std::string StatusFactory::GetErrDesc(const uint32_t err)
-    {
-        (void)err;
-        return "";
-    }
-
-    std::string StatusFactory::GetErrCodeDesc(uint32_t errCode)
-    {
-        (void)errCode;
-        return "";
-    }
-
-    StatusFactory::StatusFactory() {}
+int32_t TDTServerInit(const uint32_t deviceID, const std::list<uint32_t>& bindCoreList)
+{
+    (void)deviceID;
+    (void)bindCoreList;
+    return 0;
 }
+
+int32_t TDTServerStop() { return 0; }
+
+StatusFactory* StatusFactory::GetInstance()
+{
+    static StatusFactory instance_;
+    return &instance_;
+}
+
+void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc) {}
+
+std::string StatusFactory::GetErrDesc(const uint32_t err)
+{
+    (void)err;
+    return "";
+}
+
+std::string StatusFactory::GetErrCodeDesc(uint32_t errCode)
+{
+    (void)errCode;
+    return "";
+}
+
+StatusFactory::StatusFactory() {}
+} // namespace tdt
 #endif

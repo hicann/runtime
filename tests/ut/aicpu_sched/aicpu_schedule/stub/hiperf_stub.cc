@@ -14,7 +14,26 @@ void InitMarker() {}
 
 void FiniMarker() {}
 namespace Hiva {
-uint64_t MarkerAicpuScheduler(Hiva::KernelTrack& m) { return 0; }
+namespace {
+uint32_t g_markerMode = 0U;
+}
+
+void SetMarkerMode(const uint32_t mode) { g_markerMode = mode; }
+
+uint64_t MarkerAicpuScheduler(Hiva::KernelTrack& m)
+{
+    m.modelId = 1;
+    m.rawStamp.tv_sec = 2;
+    m.rawStamp.tv_nsec = 3;
+    if (g_markerMode == 1U) {
+        m.activeStream = 10UL;
+        m.endGraph = 0UL;
+    } else if (g_markerMode == 2U) {
+        m.activeStream = 0UL;
+        m.endGraph = 20UL;
+    }
+    return 0;
+}
 
 uint32_t PerfDurationBegin(const uint64_t seq, const uint64_t begin) { return 0; }
 

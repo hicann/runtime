@@ -13,21 +13,23 @@
 namespace {
 // list queue max size 1024
 constexpr uint32_t MAX_TASK_QUEUE_SIZE = 1024U;
-}
+} // namespace
 
 namespace AicpuSchedule {
-bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo &taskInfo, const std::queue<aicpu::Closure> &queue)
+bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& queue)
 {
     const std::lock_guard<std::mutex> lk(mapMutex_);
-    const auto &iter = taskMap_.find(taskInfo);
+    const auto& iter = taskMap_.find(taskInfo);
     if (iter == taskMap_.end()) {
         (void)taskMap_.emplace(taskInfo, queue);
         return true;
     }
-    
+
     if (!iter->second.empty()) {
-        aicpusd_err("Try to add new task queue, but last queue is not been consumed. parallelId=%u, "
-                    "size=%lu, shardNum=%ld", taskInfo.parallelId, iter->second.size(), taskInfo.shardNum);
+        aicpusd_err(
+            "Try to add new task queue, but last queue is not been consumed. parallelId=%u, "
+            "size=%lu, shardNum=%ld",
+            taskInfo.parallelId, iter->second.size(), taskInfo.shardNum);
         return false;
     }
 
@@ -36,16 +38,16 @@ bool TaskMap::BatchAddTask(const AICPUSharderTaskInfo &taskInfo, const std::queu
     return true;
 }
 
-bool TaskMap::PopTask(const AICPUSharderTaskInfo &taskInfo, aicpu::Closure &closure)
+bool TaskMap::PopTask(const AICPUSharderTaskInfo& taskInfo, aicpu::Closure& closure)
 {
     const std::lock_guard<std::mutex> lk(mapMutex_);
-    const auto &iter = taskMap_.find(taskInfo);
+    const auto& iter = taskMap_.find(taskInfo);
     if (iter == taskMap_.end()) {
         aicpusd_run_warn("Get task from map failed. parallelId=%u", taskInfo.parallelId);
         return false;
     }
 
-    auto &taskQueue = iter->second;
+    auto& taskQueue = iter->second;
     if (taskQueue.empty()) {
         aicpusd_run_warn("Pop task queue from empty.");
         return false;
@@ -65,7 +67,7 @@ void TaskMap::Clear()
 {
     const std::lock_guard<std::mutex> lk(mapMutex_);
     for (auto iter = taskMap_.begin(); iter != taskMap_.end(); ++iter) {
-        auto &taskQueue = iter->second;
+        auto& taskQueue = iter->second;
         while (!taskQueue.empty()) {
             taskQueue.pop();
         }
@@ -79,15 +81,14 @@ std::string TaskMap::DebugString()
     std::ostringstream oss;
     oss << "Split kernel TaskMapSize=" << taskMap_.size() << ". ";
     uint32_t i = 0U;
-    for (const auto &iter : taskMap_) {
-        oss << "task=" << i++ << ", parallelId=" << iter.first.parallelId
-            << ", size=" << iter.second.size()
+    for (const auto& iter : taskMap_) {
+        oss << "task=" << i++ << ", parallelId=" << iter.first.parallelId << ", size=" << iter.second.size()
             << ", shardNum=" << iter.first.shardNum;
     }
     return oss.str();
 }
 
-bool TaskQueue::Enqueue(const aicpu::Closure &closure)
+bool TaskQueue::Enqueue(const aicpu::Closure& closure)
 {
     const std::lock_guard<std::mutex> queLock(mtxQue_);
     if (taskQueue_.size() >= MAX_TASK_QUEUE_SIZE) {
@@ -98,7 +99,7 @@ bool TaskQueue::Enqueue(const aicpu::Closure &closure)
     return true;
 }
 
-bool TaskQueue::Dequeue(aicpu::Closure &closure)
+bool TaskQueue::Dequeue(aicpu::Closure& closure)
 {
     const std::lock_guard<std::mutex> queLock(mtxQue_);
     if (taskQueue_.empty()) {
@@ -125,4 +126,4 @@ std::string TaskQueue::DebugString()
     oss << "queueSize=" << taskQueue_.size();
     return oss.str();
 }
-}
+} // namespace AicpuSchedule

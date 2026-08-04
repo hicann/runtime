@@ -11,12 +11,11 @@
 #include "operator_kernel.h"
 #include "operator_kernel_register.h"
 
-
 namespace AicpuSchedule {
-bool RegistOperatorKernel(const std::string &type, const KernelCreatorFunc &func)
+bool RegistOperatorKernel(const std::string& type, const KernelCreatorFunc& func)
 {
     OperatorKernelRegister::Registerar typeRegister(type, func);
     return true;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

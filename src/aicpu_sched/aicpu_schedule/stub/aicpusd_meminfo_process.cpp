@@ -11,9 +11,9 @@
 #include "aicpusd_meminfo_process.h"
 
 namespace AicpuSchedule {
-    int32_t AicpuMemInfoProcess::GetMemZoneInfo(BuffCfg &buffCfg)
-    {
-        buffCfg = {};
-        return AICPU_SCHEDULE_OK;
-    }
+int32_t AicpuMemInfoProcess::GetMemZoneInfo(BuffCfg& buffCfg)
+{
+    buffCfg = {};
+    return AICPU_SCHEDULE_OK;
 }
+} // namespace AicpuSchedule

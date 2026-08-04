@@ -14,8 +14,7 @@
 #include "aicpusd_msg_send.h"
 #include "aicpusd_drv_manager.h"
 
-namespace {
-}
+namespace {}
 
 namespace AicpuSchedule {
 int32_t HwTsKernelCommon::ProcessEndGraph(const uint32_t modelId)
@@ -25,12 +24,12 @@ int32_t HwTsKernelCommon::ProcessEndGraph(const uint32_t modelId)
         aicpusd_err("Receive model[%u] EndGraph msg, but no model found.", modelId);
         return AICPU_SCHEDULE_ERROR_MODEL_NOT_FOUND;
     }
- 
+
     auto ret = model->EndGraph();
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_run_warn("model[%u] endGraph failed, ret[%d].", modelId, ret);
     }
- 
+
     bool hasWait = false;
     uint32_t waitStreamId = 0U;
     EventWaitManager::EndGraphWaitManager().Event(static_cast<size_t>(modelId), hasWait, waitStreamId);
@@ -39,11 +38,9 @@ int32_t HwTsKernelCommon::ProcessEndGraph(const uint32_t modelId)
         AICPUSubEventInfo subEventInfo = {};
         subEventInfo.modelId = modelId;
         subEventInfo.para.streamInfo.streamId = waitStreamId;
-        ret = AicpuMsgSend::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, const char_t>(&subEventInfo),
-            static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
-            AICPU_SUB_EVENT_RECOVERY_STREAM,
-            CP_DEFAULT_GROUP_ID,
-            false);
+        ret = AicpuMsgSend::SendAICPUSubEvent(
+            PtrToPtr<AICPUSubEventInfo, const char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+            AICPU_SUB_EVENT_RECOVERY_STREAM, CP_DEFAULT_GROUP_ID, false);
         if (ret != AICPU_SCHEDULE_OK) {
             aicpusd_err("Failed to process end graph, ret[%d].", ret);
         }
@@ -51,4 +48,4 @@ int32_t HwTsKernelCommon::ProcessEndGraph(const uint32_t modelId)
     return AICPU_SCHEDULE_OK;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

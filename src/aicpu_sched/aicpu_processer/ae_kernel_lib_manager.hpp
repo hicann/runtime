@@ -25,16 +25,16 @@ class AIKernelsLibManger {
 public:
     ~AIKernelsLibManger() = default;
     // Get a special AIKernelLIb
-    static aeStatus_t GetKernelLib(const aicpu::KernelType kernelType, AIKernelsLibBase *&kernelLib);
-    static void ClearKernelLib(const aicpu::KernelType kernelType); //Clear a special AIKernelLIb in manager.
-    static aeStatus_t BatchLoadKernelSo(const aicpu::KernelType kernelType, const uint32_t loadSoNum, const char_t * const * const soNames
-);
-    static aeStatus_t AddSoInWhiteList(const char_t * const soName);
-    static void DelteSoInWhiteList(const char_t * const soName);
+    static aeStatus_t GetKernelLib(const aicpu::KernelType kernelType, AIKernelsLibBase*& kernelLib);
+    static void ClearKernelLib(const aicpu::KernelType kernelType); // Clear a special AIKernelLIb in manager.
+    static aeStatus_t BatchLoadKernelSo(
+        const aicpu::KernelType kernelType, const uint32_t loadSoNum, const char_t* const* const soNames);
+    static aeStatus_t AddSoInWhiteList(const char_t* const soName);
+    static void DelteSoInWhiteList(const char_t* const soName);
 
 private:
     AIKernelsLibManger() = default;
 };
 
-}
+} // namespace cce
 #endif

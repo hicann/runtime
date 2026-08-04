@@ -27,7 +27,7 @@ const std::string ERROR_MSG_CGROUP_FAILED = "E30007";
 const std::string ERROR_MSG_AICPU_INIT_FAILED = "E39004";
 } // namespace
 
-int32_t SubModuleInterface::StartAicpuSchedulerModule(const struct TsdSubEventInfo * const eventInfo)
+int32_t SubModuleInterface::StartAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo)
 {
     aicpusd_run_info("Enter aicpu schedule sub module start process.");
     // set event key
@@ -44,13 +44,14 @@ int32_t SubModuleInterface::StartAicpuSchedulerModule(const struct TsdSubEventIn
     AicpuProfiler::ProfilerAgentInit();
     AicpuEventManager::GetInstance().InitEventMgr(false, true, 0U);
     const std::vector<uint32_t> deviceVec(1, tsdEventKey_.deviceId);
-    const int32_t ret = AicpuScheduleInterface::GetInstance().InitAICPUScheduler(deviceVec, tsdEventKey_.hostPid,
-        startParas.GetPidSign(), startParas.GetProfilingMode(), tsdEventKey_.vfId, true);
+    const int32_t ret = AicpuScheduleInterface::GetInstance().InitAICPUScheduler(
+        deviceVec, tsdEventKey_.hostPid, startParas.GetPidSign(), startParas.GetProfilingMode(), tsdEventKey_.vfId,
+        true);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Aicpu schedule start failed, ret[%d].", ret);
         ReportErrMsgToTsd(ret);
-        (void)AicpuScheduleInterface::GetInstance().StopAICPUScheduler(deviceVec,
-                                                                       static_cast<pid_t>(tsdEventKey_.hostPid));
+        (void)AicpuScheduleInterface::GetInstance().StopAICPUScheduler(
+            deviceVec, static_cast<pid_t>(tsdEventKey_.hostPid));
         return -1;
     }
 
@@ -77,7 +78,7 @@ int32_t SubModuleInterface::StartAicpuSchedulerModule(const struct TsdSubEventIn
     return 0;
 }
 
-int32_t SubModuleInterface::StopAicpuSchedulerModule(const struct TsdSubEventInfo *const eventInfo)
+int32_t SubModuleInterface::StopAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo)
 {
     aicpusd_run_info("Enter aicpu schedule sub module stop process.");
     if (!startFlag_.load()) {
@@ -87,8 +88,7 @@ int32_t SubModuleInterface::StopAicpuSchedulerModule(const struct TsdSubEventInf
 
     SetTsdEventKey(eventInfo);
     const std::vector<uint32_t> deviceVec(1, tsdEventKey_.deviceId);
-    (void)AicpuScheduleInterface::GetInstance().StopAICPUScheduler(deviceVec,
-                                                                   static_cast<pid_t>(tsdEventKey_.hostPid));
+    (void)AicpuScheduleInterface::GetInstance().StopAICPUScheduler(deviceVec, static_cast<pid_t>(tsdEventKey_.hostPid));
     aicpusd_run_info("Aicpu schedule stopped.");
     const int32_t rspRet = SendSubModuleRsponse(TSD_EVENT_STOP_AICPU_SD_MODULE_RSP);
     if (rspRet != 0) {
@@ -101,17 +101,17 @@ int32_t SubModuleInterface::StopAicpuSchedulerModule(const struct TsdSubEventInf
     return AICPU_SCHEDULE_SUCCESS;
 }
 
-void SubModuleInterface::SetTsdEventKey(const struct TsdSubEventInfo * const eventInfo)
+void SubModuleInterface::SetTsdEventKey(const struct TsdSubEventInfo* const eventInfo)
 {
     tsdEventKey_.deviceId = eventInfo->deviceId;
     tsdEventKey_.hostPid = eventInfo->hostPid;
     tsdEventKey_.vfId = eventInfo->vfId;
 }
 
-bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParas) const
+bool SubModuleInterface::ParseArgsFromFile(ArgsParser& startParas) const
 {
     const std::string argsFilePath = BuildArgsFilePath();
-    ScopeGuard fileDelGuard([&argsFilePath] () { DeleteArgsFile(argsFilePath); });
+    ScopeGuard fileDelGuard([&argsFilePath]() { DeleteArgsFile(argsFilePath); });
 
     std::ifstream argsFile;
     argsFile.open(argsFilePath, std::ifstream::in);
@@ -119,7 +119,7 @@ bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParas) const
         aicpusd_err("Start file[%s] open failed, reason=%s", argsFilePath.c_str(), strerror(errno));
         return false;
     }
-    ScopeGuard fileCloseGuard([&argsFile] () { argsFile.close(); });
+    ScopeGuard fileCloseGuard([&argsFile]() { argsFile.close(); });
 
     uint32_t item = 0U;
     std::vector<std::string> fileLines;
@@ -135,8 +135,8 @@ bool SubModuleInterface::ParseArgsFromFile(ArgsParser &startParas) const
 std::string SubModuleInterface::BuildArgsFilePath() const
 {
     const uint32_t curPid = static_cast<uint32_t>(getpid());
-    const std::string fileName = "aicpu_sd_start_param_" + std::to_string(tsdEventKey_.deviceId) +
-                                 "_" + std::to_string(tsdEventKey_.vfId) + "_" + std::to_string(curPid);
+    const std::string fileName = "aicpu_sd_start_param_" + std::to_string(tsdEventKey_.deviceId) + "_" +
+                                 std::to_string(tsdEventKey_.vfId) + "_" + std::to_string(curPid);
     std::string pathFreFix = "/home/HwHiAiUser/";
     if (AicpuUtil::IsEnvValEqual(ENV_NAME_REG_ASCEND_MONITOR, "0")) {
         pathFreFix = "/home/mdc/";
@@ -145,7 +145,7 @@ std::string SubModuleInterface::BuildArgsFilePath() const
     return pathFreFix.append(fileName);
 }
 
-void SubModuleInterface::DeleteArgsFile(const std::string &argsFilePath)
+void SubModuleInterface::DeleteArgsFile(const std::string& argsFilePath)
 {
     const int32_t ret = remove(argsFilePath.c_str());
     if (ret != 0) {
@@ -162,28 +162,27 @@ void SubModuleInterface::ReportErrMsgToTsd(const int32_t errCode) const
         {AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID, ERROR_MSG_INVALID_PARAM},
         {AICPU_SCHEDULE_ERROR_DRV_ERR, ERROR_MSG_DRV_ERROR},
         {AICPU_SCHEDULE_ERROR_CGROUP_FAILED, ERROR_MSG_CGROUP_FAILED},
-        {AICPU_SCHEDULE_ERROR_INIT_FAILED, ERROR_MSG_AICPU_INIT_FAILED}
-    };
+        {AICPU_SCHEDULE_ERROR_INIT_FAILED, ERROR_MSG_AICPU_INIT_FAILED}};
     std::string errStr = ERROR_MSG_AICPU_INIT_FAILED;
-    const auto &iter = errStrMaps.find(errCode);
+    const auto& iter = errStrMaps.find(errCode);
     if (iter != errStrMaps.end()) {
         errStr = iter->second;
     }
 
-    const int32_t ret = TsdReportStartOrStopErrCode(tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid,
-                                                    tsdEventKey_.vfId, errStr.c_str(),
-                                                    static_cast<uint32_t>(errStr.size()));
+    const int32_t ret = TsdReportStartOrStopErrCode(
+        tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid, tsdEventKey_.vfId, errStr.c_str(),
+        static_cast<uint32_t>(errStr.size()));
     if (ret != 0) {
         aicpusd_err("ReportErrorMsgToTsd failed. ret=%d", ret);
     }
 }
 
-bool SubModuleInterface::AttachHostGroup(const ArgsParser &startParas)
+bool SubModuleInterface::AttachHostGroup(const ArgsParser& startParas)
 {
     // Only attach group which is in aicpu group but not in qs group
     std::vector<std::string> grpNameList = startParas.GetGrpNameList();
     const std::vector<std::string> qsGrpNameList = startParas.GetQsGrpNameList();
-    for (const auto &key : qsGrpNameList) {
+    for (const auto& key : qsGrpNameList) {
         const auto iter = std::remove(grpNameList.begin(), grpNameList.end(), key);
         grpNameList.erase(iter, grpNameList.end());
     }
@@ -199,7 +198,7 @@ bool SubModuleInterface::AttachHostGroup(const ArgsParser &startParas)
         return false;
     }
 
-    for (const std::string &iter : grpNameList) {
+    for (const std::string& iter : grpNameList) {
         const auto drvRet = halGrpAttach(iter.c_str(), -1);
         if (drvRet != DRV_ERROR_NONE) {
             aicpusd_err("halGrpAttach group[%s] failed. ret[%d]", iter.c_str(), drvRet);
@@ -216,24 +215,25 @@ void SubModuleInterface::SendPidQosMsgToTsd(const uint32_t pidQos) const
     TsdCapabilityMsgInfo qosPidMsg;
     qosPidMsg.subCapabityType = TSD_EVENT_GET_CAPABILITY;
     qosPidMsg.resultInfo = pidQos;
-    ReportMsgToTsd(tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid, tsdEventKey_.vfId,
-                   PtrToPtr<TsdCapabilityMsgInfo, const char_t>(&qosPidMsg));
+    ReportMsgToTsd(
+        tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid, tsdEventKey_.vfId,
+        PtrToPtr<TsdCapabilityMsgInfo, const char_t>(&qosPidMsg));
 }
 
 int32_t SubModuleInterface::SendSubModuleRsponse(const uint32_t eventType) const
 {
-    return SubModuleProcessResponse(tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid,
-                                    tsdEventKey_.vfId, eventType);
+    return SubModuleProcessResponse(
+        tsdEventKey_.deviceId, TSD_COMPUTE, tsdEventKey_.hostPid, tsdEventKey_.vfId, eventType);
 }
 } // namespace AicpuSchedule
 
 extern "C" {
-int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo *const eventInfo)
+int32_t StartAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo)
 {
     return AicpuSchedule::SubModuleInterface::GetInstance().StartAicpuSchedulerModule(eventInfo);
 }
 
-int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo *const eventInfo)
+int32_t StopAicpuSchedulerModule(const struct TsdSubEventInfo* const eventInfo)
 {
     return AicpuSchedule::SubModuleInterface::GetInstance().StopAicpuSchedulerModule(eventInfo);
 }

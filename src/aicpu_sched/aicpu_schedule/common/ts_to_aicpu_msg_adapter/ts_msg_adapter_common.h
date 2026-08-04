@@ -108,7 +108,7 @@ struct AicpuRecordInfo {
           ts_id(tsId),
           fault_task_id(taskId),
           fault_stream_id(streamId),
-          dev_id(devId) {};
+          dev_id(devId){};
     volatile uint32_t record_id;
     volatile uint8_t record_type;
     volatile uint16_t ret_code;
@@ -121,7 +121,7 @@ struct AicpuRecordInfo {
 struct ActiveStreamInfo {
     ActiveStreamInfo() = default;
     ActiveStreamInfo(uint16_t streamId, uint8_t tsId, uint64_t aicpuStamp, uint32_t deviceId, uint32_t handleId)
-        : stream_id(streamId), ts_id(tsId), aicpu_stamp(aicpuStamp), device_id(deviceId), handle_id(handleId) {};
+        : stream_id(streamId), ts_id(tsId), aicpu_stamp(aicpuStamp), device_id(deviceId), handle_id(handleId){};
     volatile uint16_t stream_id;
     volatile uint8_t ts_id;
     volatile uint64_t aicpu_stamp;
@@ -133,7 +133,7 @@ struct ActiveStreamInfo {
 struct ErrMsgRspInfo {
     ErrMsgRspInfo() = default;
     ErrMsgRspInfo(uint32_t off, uint32_t errCode, uint32_t streamId, uint32_t taskId, uint32_t modelId, uint32_t tsId)
-        : offset(off), err_code(errCode), stream_id(streamId), task_id(taskId), model_id(modelId), ts_id(tsId) {};
+        : offset(off), err_code(errCode), stream_id(streamId), task_id(taskId), model_id(modelId), ts_id(tsId){};
     uint32_t offset;
     uint32_t err_code;
     uint32_t stream_id;

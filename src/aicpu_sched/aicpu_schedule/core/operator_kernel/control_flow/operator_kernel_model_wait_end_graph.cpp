@@ -16,24 +16,25 @@
 #include "aicpusd_model_statistic.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_WAIT_END_GRAPH = "modelWaitEndGraph";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelWaitEndGraph::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelWaitEndGraph::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
+    const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (modelIdPtr == nullptr) {
-        aicpusd_err("ModelWaitEndGraph kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelWaitEndGraph kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     const uint32_t modelId = *modelIdPtr;
     if (*modelIdPtr != taskContext.modelId) {
-        aicpusd_warn("ModelWaitEndGraph kernelTaskInfo modelId[%u] is diff with context, "
+        aicpusd_warn(
+            "ModelWaitEndGraph kernelTaskInfo modelId[%u] is diff with context, "
             "modelId[%u], streamId[%u], taskId[%u]",
             modelId, taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
     }
@@ -42,7 +43,7 @@ const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_
     bool needWait = false;
     EventWaitManager::EndGraphWaitManager().WaitEvent(static_cast<size_t>(modelId), taskContext.streamId, needWait);
     if (needWait) {
-        bool * const pending = const_cast<bool *>(&taskContext.pending);
+        bool* const pending = const_cast<bool*>(&taskContext.pending);
         *pending = true;
     } else {
         AicpuSdModelStatistic::GetInstance().StatNNModelExecTime(modelId);
@@ -53,4 +54,4 @@ const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_WAIT_END_GRAPH, OperatorKernelModelWaitEndGraph);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

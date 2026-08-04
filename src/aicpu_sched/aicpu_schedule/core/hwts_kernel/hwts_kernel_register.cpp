@@ -14,13 +14,14 @@
 #include "aicpusd_model_err_process.h"
 
 namespace AicpuSchedule {
-HwTsKernelRegister &HwTsKernelRegister::Instance()
+HwTsKernelRegister& HwTsKernelRegister::Instance()
 {
     static HwTsKernelRegister instance;
     return instance;
 }
 
-int32_t HwTsKernelRegister::RunTsKernelTaskProcess(const aicpu::HwtsTsKernel &tsKernelInfo, const std::string &kernelName)
+int32_t HwTsKernelRegister::RunTsKernelTaskProcess(
+    const aicpu::HwtsTsKernel& tsKernelInfo, const std::string& kernelName)
 {
     std::shared_ptr<HwTsKernelHandler> kernel = GetTsKernelTaskProcess(kernelName);
     if (kernel == nullptr) {
@@ -38,7 +39,7 @@ int32_t HwTsKernelRegister::RunTsKernelTaskProcess(const aicpu::HwtsTsKernel &ts
     return ret;
 }
 
-int32_t HwTsKernelRegister::CheckTsKernelSupported(const std::string &kernelName)
+int32_t HwTsKernelRegister::CheckTsKernelSupported(const std::string& kernelName)
 {
     std::shared_ptr<HwTsKernelHandler> kernel = GetTsKernelTaskProcess(kernelName);
     if (kernel == nullptr) {
@@ -50,7 +51,7 @@ int32_t HwTsKernelRegister::CheckTsKernelSupported(const std::string &kernelName
     return AICPU_SCHEDULE_OK;
 }
 
-std::shared_ptr<HwTsKernelHandler> HwTsKernelRegister::GetTsKernelTaskProcess(const std::string &opType)
+std::shared_ptr<HwTsKernelHandler> HwTsKernelRegister::GetTsKernelTaskProcess(const std::string& opType)
 {
     std::map<std::string, std::shared_ptr<HwTsKernelHandler>>::iterator iter = tsKernelInstMap_.find(opType);
     if (iter != tsKernelInstMap_.end()) {
@@ -60,18 +61,15 @@ std::shared_ptr<HwTsKernelHandler> HwTsKernelRegister::GetTsKernelTaskProcess(co
     return std::shared_ptr<HwTsKernelHandler>(nullptr);
 }
 
-HwTsKernelRegister::Registerar::Registerar(
-    const std::string &kernelType, const HwTsKernelCreatorFunc &func)
+HwTsKernelRegister::Registerar::Registerar(const std::string& kernelType, const HwTsKernelCreatorFunc& func)
 {
     HwTsKernelRegister::Instance().Register(kernelType, func);
 }
 
-void HwTsKernelRegister::Register(
-    const std::string &kernelType, const HwTsKernelCreatorFunc &func)
+void HwTsKernelRegister::Register(const std::string& kernelType, const HwTsKernelCreatorFunc& func)
 {
     std::unique_lock<std::mutex> lock(hwtsKernelMapMutex_);
-    std::map<std::string, std::shared_ptr<HwTsKernelHandler>>::iterator iter =
-        tsKernelInstMap_.find(kernelType);
+    std::map<std::string, std::shared_ptr<HwTsKernelHandler>>::iterator iter = tsKernelInstMap_.find(kernelType);
     if (iter != tsKernelInstMap_.end()) {
         aicpusd_run_warn("Hwts Kernel[%s] creator already exist.", kernelType.c_str());
         return;
@@ -83,4 +81,4 @@ void HwTsKernelRegister::Register(
     return;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

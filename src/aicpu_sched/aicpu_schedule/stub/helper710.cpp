@@ -11,10 +11,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-drvError_t halGetVdevNum(uint32_t *num_dev)
-{
-    return DRV_ERROR_NONE;
-}
+drvError_t halGetVdevNum(uint32_t* num_dev) { return DRV_ERROR_NONE; }
 #ifdef __cplusplus
 }
 #endif

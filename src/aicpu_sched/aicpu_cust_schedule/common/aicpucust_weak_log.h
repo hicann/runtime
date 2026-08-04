@@ -27,4 +27,4 @@ LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) DlogSetAttr(LogAttr logAttrInf
 }
 #endif // LOG_CPP
 #endif // __cplusplus
-#endif  // AICPUCUST_WEAK_LOG_H
+#endif // AICPUCUST_WEAK_LOG_H

@@ -15,7 +15,7 @@
 
 namespace AicpuSchedule {
 namespace {
-const std::string SOMA_MEM_MNG = "SomaMemMng";  // runtime fill kernelName && opName
+const std::string SOMA_MEM_MNG = "SomaMemMng"; // runtime fill kernelName && opName
 }
 
 enum class SomaOpType : int32_t {
@@ -23,23 +23,24 @@ enum class SomaOpType : int32_t {
     SOMA_OP_FREE = 1,
 };
 
-int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     const auto Mng = PtrToPtr<void, SomaMemMng>(ValueToPtr(kernel.paramBase));
     auto op = static_cast<SomaOpType>(Mng->memAsyncOpType);
-    soma_mem_pool_t pool = {
-        .poolId = Mng->mempoolId,
-        .devId = Mng->deviceId
-    };
+    soma_mem_pool_t pool = {.poolId = Mng->mempoolId, .devId = Mng->deviceId};
     drvError_t ret = DRV_ERROR_NONE;
     switch (op) {
         case SomaOpType::SOMA_OP_MALLOC:
-            aicpusd_info("SOMA: malloc deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u.", Mng->deviceId, Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD);
+            aicpusd_info(
+                "SOMA: malloc deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u.", Mng->deviceId,
+                Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD);
             ret = halMemPoolMalloc(pool, Mng->va, Mng->size, Mng->memAsyncSubCMD);
             break;
         case SomaOpType::SOMA_OP_FREE:
-            aicpusd_info("SOMA: free deviceId=%u,mempoolId=%llx,va=%llx,memAsyncSubCMD=%u.", Mng->deviceId, Mng->mempoolId, Mng->va, Mng->memAsyncSubCMD);
+            aicpusd_info(
+                "SOMA: free deviceId=%u,mempoolId=%llx,va=%llx,memAsyncSubCMD=%u.", Mng->deviceId, Mng->mempoolId,
+                Mng->va, Mng->memAsyncSubCMD);
             ret = halMemPoolFree(pool, Mng->va, Mng->size, Mng->memAsyncSubCMD);
             break;
         default:
@@ -48,8 +49,11 @@ int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
             break;
     }
     if (ret != DRV_ERROR_NONE) {
-        aicpusd_err("Ts Kernel SomaMemMng Compute failed, OpType [%d] had been processed, malloc deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u, errcode=%d", 
-            static_cast<int32_t>(op), Mng->deviceId, Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD, static_cast<int32_t>(ret));
+        aicpusd_err(
+            "Ts Kernel SomaMemMng Compute failed, OpType [%d] had been processed, malloc "
+            "deviceId=%u,mempoolId=%llx,va=%llx,size=%llu,memAsyncSubCMD=%u, errcode=%d",
+            static_cast<int32_t>(op), Mng->deviceId, Mng->mempoolId, Mng->va, Mng->size, Mng->memAsyncSubCMD,
+            static_cast<int32_t>(ret));
         return AICPU_SCHEDULE_FAIL;
     }
     aicpusd_debug(
@@ -59,4 +63,4 @@ int32_t SomaMemMngTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
 
 REGISTER_HWTS_KERNEL(SOMA_MEM_MNG, SomaMemMngTsKernel);
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

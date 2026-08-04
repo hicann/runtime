@@ -13,13 +13,12 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelActiveModel : public OperatorKernel {
 public:
     OperatorKernelActiveModel() = default;
     ~OperatorKernelActiveModel() override = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_ACTIVE_MODEL_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_ACTIVE_MODEL_H

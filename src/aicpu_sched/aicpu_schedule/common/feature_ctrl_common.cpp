@@ -23,4 +23,4 @@ uint16_t FeatureCtrl::tsMsgVersion_ = 0;
 std::atomic<bool> FeatureCtrl::isSetTsMsgVersion_ = false;
 bool FeatureCtrl::aicpuFeatureUseMsqV2_ = false;
 AicpuSchedMode FeatureCtrl::aicpuSchedMode_ = SCHED_MODE_INTERRUPT;
-}
+} // namespace AicpuSchedule

@@ -10,7 +10,7 @@
 #include "ts_msg_adapter_factory.h"
 #include "ts_msg_adapter_common.h"
 namespace AicpuSchedule {
-std::unique_ptr<TsMsgAdapter> TsMsgAdapterFactory::CreateAdapter(const char_t *msg) const
+std::unique_ptr<TsMsgAdapter> TsMsgAdapterFactory::CreateAdapter(const char_t* msg) const
 {
     if (msg == nullptr) {
         aicpusd_err("Create adapter failed: input_message=null.");
@@ -23,7 +23,7 @@ std::unique_ptr<TsMsgAdapter> TsMsgAdapterFactory::CreateAdapter(const char_t *m
             return std::make_unique<TsAicpuSqeAdapter>(*sqe);
         }
         case VERSION_1: {
-            const TsAicpuMsgInfo * const msgInfo = PtrToPtr<const char_t, const TsAicpuMsgInfo>(msg);
+            const TsAicpuMsgInfo* const msgInfo = PtrToPtr<const char_t, const TsAicpuMsgInfo>(msg);
             return std::make_unique<TsAicpuMsgInfoAdapter>(*msgInfo);
         }
         default:

@@ -20,7 +20,7 @@
 
 namespace AicpuSchedule {
 struct HashKey {
-    std::size_t operator() (const AICPUSharderTaskInfo &sharderTaskInfo) const noexcept
+    std::size_t operator()(const AICPUSharderTaskInfo& sharderTaskInfo) const noexcept
     {
         std::size_t h1 = std::hash<uint32_t>()(sharderTaskInfo.parallelId);
         return h1;
@@ -32,16 +32,16 @@ public:
     TaskMap() = default;
     ~TaskMap() = default;
 
-    bool BatchAddTask(const AICPUSharderTaskInfo &taskInfo, const std::queue<aicpu::Closure> &queue);
-    bool PopTask(const AICPUSharderTaskInfo &taskInfo, aicpu::Closure &closure);
+    bool BatchAddTask(const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& queue);
+    bool PopTask(const AICPUSharderTaskInfo& taskInfo, aicpu::Closure& closure);
     void Clear();
     std::string DebugString();
 
 private:
-    TaskMap(const TaskMap &) = delete;
-    TaskMap &operator=(const TaskMap &) = delete;
-    TaskMap(TaskMap &&) = delete;
-    TaskMap &operator=(TaskMap &&) = delete;
+    TaskMap(const TaskMap&) = delete;
+    TaskMap& operator=(const TaskMap&) = delete;
+    TaskMap(TaskMap&&) = delete;
+    TaskMap& operator=(TaskMap&&) = delete;
 
     std::mutex mapMutex_;
     std::unordered_map<AICPUSharderTaskInfo, std::queue<aicpu::Closure>, HashKey> taskMap_;
@@ -52,19 +52,19 @@ public:
     TaskQueue() = default;
     ~TaskQueue() = default;
 
-    bool Enqueue(const aicpu::Closure &closure);
-    bool Dequeue(aicpu::Closure &closure);
+    bool Enqueue(const aicpu::Closure& closure);
+    bool Dequeue(aicpu::Closure& closure);
     void Clear();
     std::string DebugString();
 
 private:
-    TaskQueue(const TaskQueue &) = delete;
-    TaskQueue &operator=(const TaskQueue &) = delete;
+    TaskQueue(const TaskQueue&) = delete;
+    TaskQueue& operator=(const TaskQueue&) = delete;
     TaskQueue(TaskQueue&&) = delete;
     TaskQueue& operator=(TaskQueue&&) = delete;
 
     std::mutex mtxQue_;
     std::queue<aicpu::Closure> taskQueue_;
 };
-}
+} // namespace AicpuSchedule
 #endif

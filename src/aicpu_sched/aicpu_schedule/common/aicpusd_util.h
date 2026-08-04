@@ -40,15 +40,13 @@ const std::string ENV_NAME_REG_ASCEND_MONITOR = "REGISTER_TO_ASCENDMONITOR";
 const std::string ENV_NAME_CUST_SO_PATH = "ASCEND_CUST_AICPU_KERNEL_CACHE_PATH";
 class ScopeGuard {
 public:
-    explicit ScopeGuard(const std::function<void()> exitScope)
-        : exitScope_(exitScope)
-    {}
+    explicit ScopeGuard(const std::function<void()> exitScope) : exitScope_(exitScope) {}
 
     ~ScopeGuard()
     {
         try {
             exitScope_();
-        } catch (std::exception &funcException) {
+        } catch (std::exception& funcException) {
             aicpusd_err("ScopeGuard Destruct Failed, %s", funcException.what());
         }
     }
@@ -62,9 +60,7 @@ private:
     std::function<void()> exitScope_;
 };
 
-inline uint64_t TickInterval2Microsecond(const uint64_t tickStart,
-                                         const uint64_t tickEnd,
-                                         const uint64_t tickFreq)
+inline uint64_t TickInterval2Microsecond(const uint64_t tickStart, const uint64_t tickEnd, const uint64_t tickFreq)
 {
     if ((tickFreq == 0ULL) || (tickEnd <= tickStart)) {
         return 0UL;
@@ -89,13 +85,14 @@ public:
      */
     static int32_t TransformInnerErrCode(const int32_t errCode)
     {
-        return ((errCode > AICPU_SCHEDULE_ERROR_RESERVED) ||
-                (errCode < AICPU_SCHEDULE_OK)) ? AICPU_SCHEDULE_ERROR_INNER_ERROR : errCode;
+        return ((errCode > AICPU_SCHEDULE_ERROR_RESERVED) || (errCode < AICPU_SCHEDULE_OK)) ?
+                   AICPU_SCHEDULE_ERROR_INNER_ERROR :
+                   errCode;
     }
 
-    static void SetProfData(const std::shared_ptr<aicpu::ProfMessage> &profMsg,
-                            const aicpu::aicpuProfContext_t &aicpuProfCtx,
-                            const ProfIdentity &profIdentity)
+    static void SetProfData(
+        const std::shared_ptr<aicpu::ProfMessage>& profMsg, const aicpu::aicpuProfContext_t& aicpuProfCtx,
+        const ProfIdentity& profIdentity)
     {
         if (profMsg != nullptr) {
             // Phase of determining whether the operator is an asynchronous operator
@@ -109,26 +106,30 @@ public:
             if (!isPhaseOne) {
                 const uint64_t tickAfterRun = aicpu::GetSystemTick();
                 const uint64_t tickFreq = aicpu::GetSystemTickFreq();
-                const uint64_t dispatchTime = TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick,
-                                                                       aicpuProfCtx.tickBeforeRun,
-                                                                       tickFreq);
+                const uint64_t dispatchTime =
+                    TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick, aicpuProfCtx.tickBeforeRun, tickFreq);
                 const uint64_t totalTime = TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick, tickAfterRun, tickFreq);
                 (void)profMsg->SetAicpuMagicNumber(static_cast<uint16_t>(MSPROF_DATA_HEAD_MAGIC_NUM))
                     ->SetAicpuDataTag(static_cast<uint16_t>(MSPROF_AICPU_DATA_TAG))
                     ->SetStreamId(static_cast<uint16_t>(profIdentity.streamId))
-                    ->SetTaskId(static_cast<uint16_t>(profIdentity.taskId))->SetThreadId(profIdentity.threadIndex)
+                    ->SetTaskId(static_cast<uint16_t>(profIdentity.taskId))
+                    ->SetThreadId(profIdentity.threadIndex)
                     ->SetDeviceId(profIdentity.deviceId)
-                    ->SetKernelType(aicpuProfCtx.kernelType)->SetSubmitTick(aicpuProfCtx.drvSubmitTick)
-                    ->SetScheduleTick(aicpuProfCtx.drvSchedTick)->SetTickBeforeRun(aicpuProfCtx.tickBeforeRun)
-                    ->SetTickAfterRun(tickAfterRun)->SetDispatchTime(static_cast<uint32_t>(dispatchTime))
-                    ->SetTotalTime(static_cast<uint32_t>(totalTime))->SetVersion(aicpu::AICPU_PROF_VERSION);
+                    ->SetKernelType(aicpuProfCtx.kernelType)
+                    ->SetSubmitTick(aicpuProfCtx.drvSubmitTick)
+                    ->SetScheduleTick(aicpuProfCtx.drvSchedTick)
+                    ->SetTickBeforeRun(aicpuProfCtx.tickBeforeRun)
+                    ->SetTickAfterRun(tickAfterRun)
+                    ->SetDispatchTime(static_cast<uint32_t>(dispatchTime))
+                    ->SetTotalTime(static_cast<uint32_t>(totalTime))
+                    ->SetVersion(aicpu::AICPU_PROF_VERSION);
             }
             (void)aicpu::SetProfHandle(nullptr);
             (void)aicpu::SetThreadLocalCtx(aicpu::CONTEXT_KEY_PHASE_ONE_FLAG, "False");
         }
     }
 
-    static int32_t NumElements(const int64_t * const shape, const int64_t dimSize, int64_t &elementNum)
+    static int32_t NumElements(const int64_t* const shape, const int64_t dimSize, int64_t& elementNum)
     {
         if (shape == nullptr) {
             aicpusd_err("Shape is nullptr.");
@@ -152,8 +153,8 @@ public:
         return AICPU_SCHEDULE_OK;
     }
 
-    static int32_t CalcDataSizeByShape(const int64_t * const shape, const int64_t dimSize,
-                                       const int64_t dtype, int64_t &dataSize)
+    static int32_t CalcDataSizeByShape(
+        const int64_t* const shape, const int64_t dimSize, const int64_t dtype, int64_t& dataSize)
     {
         int64_t elementNum = 0;
         const int32_t ret = NumElements(shape, dimSize, elementNum);
@@ -177,17 +178,12 @@ public:
      * @param [out] result : exception type.
      * @return has any exception, true if has
      */
-    static bool CheckOverflow(int32_t &result)
+    static bool CheckOverflow(int32_t& result)
     {
         (void)result;
 #if (defined __ARM_ARCH) || (defined PLATFORM_AARCH64)
         int64_t regContent;
-        __asm volatile(
-          "MRS %0, FPSR"
-          : "=r" (regContent)
-          :
-          : "memory"
-        );
+        __asm volatile("MRS %0, FPSR" : "=r"(regContent) : : "memory");
         aicpusd_info("Read FPSR:[%d].", regContent);
         if (regContent & (1UL << 3UL)) { // UFC(3)
             result = AICPU_SCHEDULE_ERROR_UNDERFLOW;
@@ -211,10 +207,9 @@ public:
     {
 #if (defined __ARM_ARCH) || (defined PLATFORM_AARCH64)
         aicpusd_info("Reset FPSR.");
-        __asm volatile(
-              "BIC x0, x0, #0xffffffff \n\t"
-              "MSR FPSR, x0":::"x0"
-        );
+        __asm volatile("BIC x0, x0, #0xffffffff \n\t"
+                       "MSR FPSR, x0" ::
+                           : "x0");
 #endif
     }
 
@@ -225,13 +220,13 @@ public:
      * @param [in] val : env value
      * @return bool: true, if env val is not nullptr; otherwise, false
      */
-    __attribute__((visibility("default"))) static bool GetEnvVal(const std::string &env, std::string &val)
+    __attribute__((visibility("default"))) static bool GetEnvVal(const std::string& env, std::string& val)
     {
         if (env.empty()) {
             return false;
         }
 
-        const char *const tmpVal = std::getenv(env.c_str());
+        const char* const tmpVal = std::getenv(env.c_str());
         if ((tmpVal == nullptr) || (strnlen(tmpVal, MAX_ENV_CHAR_NUM) >= MAX_ENV_CHAR_NUM)) {
             val = "";
             return false;
@@ -248,8 +243,8 @@ public:
      * @param [in] expectVal : expected env value
      * @return bool: true, if env val is same as expected value; otherwise, false
      */
-    __attribute__((visibility("default"))) static bool IsEnvValEqual(const std::string &env,
-                                                                     const std::string &expectVal)
+    __attribute__((visibility("default"))) static bool IsEnvValEqual(
+        const std::string& env, const std::string& expectVal)
     {
         std::string getedEnvVal;
         const bool ret = GetEnvVal(env, getedEnvVal);
@@ -273,7 +268,7 @@ public:
         return false;
     }
 
-    static bool TransStrToInt(const std::string &para, int32_t &value)
+    static bool TransStrToInt(const std::string& para, int32_t& value)
     {
         try {
             value = std::stoi(para);
@@ -284,7 +279,7 @@ public:
         return true;
     }
 
-    static bool TransStrToUint(const std::string &para, uint32_t &value)
+    static bool TransStrToUint(const std::string& para, uint32_t& value)
     {
         try {
             value = std::stoul(para);
@@ -295,7 +290,7 @@ public:
         return true;
     }
 
-    static bool TransStrToull(const std::string &para, uint64_t &value)
+    static bool TransStrToull(const std::string& para, uint64_t& value)
     {
         try {
             value = std::stoull(para);
@@ -313,7 +308,7 @@ public:
      * @param [in] mode : pattern
      * @return check code
      */
-    static bool ValidateStr(const std::string &str, const std::string &mode)
+    static bool ValidateStr(const std::string& str, const std::string& mode)
     {
         regex_t reg;
         int32_t ret = regcomp(&reg, mode.c_str(), REG_EXTENDED | REG_NOSUB);
@@ -330,7 +325,7 @@ public:
         return true;
     }
 
-    static int32_t ExecuteCmd(const std::string &cmd)
+    static int32_t ExecuteCmd(const std::string& cmd)
     {
         /**
          * system() may fail due to  "No child processes".
@@ -365,13 +360,13 @@ public:
 
     static std::string GetDTypeString(const ge::DataType curDtype);
 
-    static void UpdateMinData(uint64_t &dstData, const uint64_t srcData)
+    static void UpdateMinData(uint64_t& dstData, const uint64_t srcData)
     {
         if (((dstData > srcData) && (srcData != 0UL)) || (dstData == 0UL)) {
             dstData = srcData;
         }
     }
-    static void UpdateMaxAndSubMaxData(uint64_t &maxData, uint64_t &subMaxData, const uint64_t srcData)
+    static void UpdateMaxAndSubMaxData(uint64_t& maxData, uint64_t& subMaxData, const uint64_t srcData)
     {
         if (srcData > maxData) {
             subMaxData = maxData;
@@ -383,7 +378,7 @@ public:
         }
     }
 
-    static bool BiggerMemCpy(void *dstAddr, const size_t dstLen, const void *srcAddr, const size_t srcLen)
+    static bool BiggerMemCpy(void* dstAddr, const size_t dstLen, const void* srcAddr, const size_t srcLen)
     {
         if ((dstAddr == nullptr) || (srcAddr == nullptr)) {
             aicpusd_err("BiggerMemCpy input param is null.");
@@ -437,8 +432,9 @@ public:
 
         const uint64_t sysTickFreq = aicpu::GetSystemTickFreq();
         if (sysTickFreq > (UINT64_MAX / static_cast<uint64_t>(timeout))) {
-            aicpusd_err("Invalid timeout[%u] value send by ts resulting in unsigned long reverse. freq[%lu]",
-                        timeout, sysTickFreq);
+            aicpusd_err(
+                "Invalid timeout[%u] value send by ts resulting in unsigned long reverse. freq[%lu]", timeout,
+                sysTickFreq);
             return false;
         }
 
@@ -486,13 +482,11 @@ public:
 
     void Lock()
     {
-        while (lock_.test_and_set()) {}
+        while (lock_.test_and_set()) {
+        }
     }
 
-    void Unlock()
-    {
-        lock_.clear();
-    }
+    void Unlock() { lock_.clear(); }
 
 private:
     SpinLock(const SpinLock&) = delete;
@@ -514,7 +508,6 @@ inline uint64_t GetCurrentTime()
     return ret;
 }
 
-} // namespace aicpu
+} // namespace AicpuSchedule
 
 #endif // COMMON_AICPUSD_UTIL_H
-

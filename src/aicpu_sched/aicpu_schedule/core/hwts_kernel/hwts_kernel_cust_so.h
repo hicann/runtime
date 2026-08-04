@@ -23,19 +23,20 @@ class CustOperationCommon {
 public:
     CustOperationCommon() = default;
     virtual ~CustOperationCommon() = default;
-    int32_t SendCtrlCpuMsg(int32_t custAicpuPid, const uint32_t eventType, char_t *msg, const uint32_t msgLen) const;
-    int32_t StartCustProcess(const uint32_t loadLibNum, const char_t *const loadLibName[]) const;
-    int32_t GetGroupNameInfo(std::vector<std::string> &groupNameList, std::string &groupNameStr) const;
-    int32_t AicpuNotifyLoadSoEventToCustCtrlCpu(const uint32_t deviceId, const uint32_t hostPid, const uint32_t vfId,
-                                                const int32_t custAicpuPid, const uint32_t loadLibNum,
-                                                const char_t * const loadLibName[]) const;
+    int32_t SendCtrlCpuMsg(int32_t custAicpuPid, const uint32_t eventType, char_t* msg, const uint32_t msgLen) const;
+    int32_t StartCustProcess(const uint32_t loadLibNum, const char_t* const loadLibName[]) const;
+    int32_t GetGroupNameInfo(std::vector<std::string>& groupNameList, std::string& groupNameStr) const;
+    int32_t AicpuNotifyLoadSoEventToCustCtrlCpu(
+        const uint32_t deviceId, const uint32_t hostPid, const uint32_t vfId, const int32_t custAicpuPid,
+        const uint32_t loadLibNum, const char_t* const loadLibName[]) const;
 };
 
 class LoadOpFromBuffTsKernel : public HwTsKernelHandler, public CustOperationCommon {
 public:
     LoadOpFromBuffTsKernel() = default;
     ~LoadOpFromBuffTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
+
 private:
     static std::mutex mutexForStartCustProcess_;
     static std::set<std::string> alreadyLoadSoName_;
@@ -45,17 +46,17 @@ class BatchLoadSoFromBuffTsKernel : public HwTsKernelHandler, public CustOperati
 public:
     BatchLoadSoFromBuffTsKernel() = default;
     ~BatchLoadSoFromBuffTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 
 private:
-    int32_t TryToStartCustProcess(const std::unique_ptr<const char_t *[]> &soNames, const uint32_t soNum) const;
+    int32_t TryToStartCustProcess(const std::unique_ptr<const char_t*[]>& soNames, const uint32_t soNum) const;
 };
 
 class DeleteCustOpTsKernel : public HwTsKernelHandler {
 public:
     DeleteCustOpTsKernel() = default;
     ~DeleteCustOpTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_CUST_SO_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_CUST_SO_H

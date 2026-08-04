@@ -12,11 +12,10 @@
 #include "hwts_kernel_register.h"
 
 namespace AicpuSchedule {
-bool RegisterHwTsKernel(
-    const std::string &kernelType, const HwTsKernelCreatorFunc &func)
+bool RegisterHwTsKernel(const std::string& kernelType, const HwTsKernelCreatorFunc& func)
 {
     HwTsKernelRegister::Registerar typeRegister(kernelType, func);
     return true;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

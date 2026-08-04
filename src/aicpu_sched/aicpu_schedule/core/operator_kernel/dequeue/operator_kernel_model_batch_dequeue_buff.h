@@ -14,24 +14,25 @@
 #include "operator_kernel.h"
 #include "operator_kernel_dequeue_base.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelBatchDequeueBuff : public OperatorKernel, public OperatorKernelDequeueBase {
 public:
     OperatorKernelModelBatchDequeueBuff() = default;
     ~OperatorKernelModelBatchDequeueBuff() override = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
-    int32_t ModelAttachAndDequeueBuff(BufEnQueueBuffInfo &queueInfo, const RunContext &taskContext,
-        bool tryOnce=false) const;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+    int32_t ModelAttachAndDequeueBuff(
+        BufEnQueueBuffInfo& queueInfo, const RunContext& taskContext, bool tryOnce = false) const;
+
 private:
-    int32_t CheckAndParseBatchDeqBufParams(const BatchDequeueBuffDesc *const batchDeqBufDesc,
-                                           const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext,
-                                           BatchDequeueBuffInfo &batchDeqBufInfo) const;
-    int32_t ModelDequeueBuffTaskKernel(BufEnQueueBuffInfo &bufInfo, const RunContext &taskContext,
-        bool tryOnce=false) const;
-    int32_t DequeueBuff(BufEnQueueBuffInfo &bufInfo, const RunContext &taskContext, const uint64_t respLen,
-                        const uint32_t queueId, const int32_t deviceId) const;
-    int32_t AlignBatchDequeueBuff(BatchDequeueBuffInfo &batchDeqBufInfo, const RunContext &taskContext) const;
+    int32_t CheckAndParseBatchDeqBufParams(
+        const BatchDequeueBuffDesc* const batchDeqBufDesc, const AicpuTaskInfo& kernelTaskInfo,
+        const RunContext& taskContext, BatchDequeueBuffInfo& batchDeqBufInfo) const;
+    int32_t ModelDequeueBuffTaskKernel(
+        BufEnQueueBuffInfo& bufInfo, const RunContext& taskContext, bool tryOnce = false) const;
+    int32_t DequeueBuff(
+        BufEnQueueBuffInfo& bufInfo, const RunContext& taskContext, const uint64_t respLen, const uint32_t queueId,
+        const int32_t deviceId) const;
+    int32_t AlignBatchDequeueBuff(BatchDequeueBuffInfo& batchDeqBufInfo, const RunContext& taskContext) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_BATCH_DEQUEUE_BUFF_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_BATCH_DEQUEUE_BUFF_H

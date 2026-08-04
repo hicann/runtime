@@ -13,17 +13,18 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelDynOutputPostProcess : public OperatorKernel {
 public:
     OperatorKernelDynOutputPostProcess() = default;
     ~OperatorKernelDynOutputPostProcess() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t DoCompute(const ProcessOutputInfo &outputInfo, const RunContext &taskContext) const;
-    int32_t CopyTensorDescAndDataBuf(const RuntimeTensorDesc * const srcTensorDesc, const uint32_t srcDataSize,
-                                     Mbuf * const outMBuf, const uint32_t dstdataSize) const;
+    int32_t DoCompute(const ProcessOutputInfo& outputInfo, const RunContext& taskContext) const;
+    int32_t CopyTensorDescAndDataBuf(
+        const RuntimeTensorDesc* const srcTensorDesc, const uint32_t srcDataSize, Mbuf* const outMBuf,
+        const uint32_t dstdataSize) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_DYN_OUTPUT_POST_PROCESS_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_DYN_OUTPUT_POST_PROCESS_H

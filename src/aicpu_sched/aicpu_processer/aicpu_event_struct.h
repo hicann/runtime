@@ -11,21 +11,20 @@
 #ifndef AICPU_EVENT_STRUCT_H
 #define AICPU_EVENT_STRUCT_H
 
-
 #include <cstdint>
 #include "ascend_hal.h"
 
 namespace aicpu {
 
 struct HwtsCceKernel {
-    uint64_t  kernelName;  // The cce op kernel  function name in kernel so which want to be called
-    uint64_t  kernelSo;    // The so file which contains cce op kernel function
-    uint64_t  paramBase;   // The param tranmit to cce op kernel
-    uint64_t  l2VaddrBase; // The param tranmit to cce op kernel
-    uint32_t  blockId;     // The param tranmit to cce op kernel
-    uint32_t  blockNum;    // The param tranmit to cce op kernel
-    uint32_t  l2Size;      // The page num used in l2 buffer
-    uint32_t  l2InMain;    // The param tranmit to cce op kernel
+    uint64_t kernelName;  // The cce op kernel  function name in kernel so which want to be called
+    uint64_t kernelSo;    // The so file which contains cce op kernel function
+    uint64_t paramBase;   // The param tranmit to cce op kernel
+    uint64_t l2VaddrBase; // The param tranmit to cce op kernel
+    uint32_t blockId;     // The param tranmit to cce op kernel
+    uint32_t blockNum;    // The param tranmit to cce op kernel
+    uint32_t l2Size;      // The page num used in l2 buffer
+    uint32_t l2InMain;    // The param tranmit to cce op kernel
 };
 
 struct HwtsFwkKernel {
@@ -55,6 +54,6 @@ enum KernelType {
     KERNEL_TYPE_RESERVED
 };
 
-}  // namespace
+} // namespace aicpu
 
 #endif

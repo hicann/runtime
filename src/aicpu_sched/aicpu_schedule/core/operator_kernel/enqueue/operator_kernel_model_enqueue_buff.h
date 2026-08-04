@@ -14,17 +14,18 @@
 #include "operator_kernel.h"
 #include "operator_kernel_enqueue_base.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelEnqueueBuff : public OperatorKernel, public OperatorKernelEnqueueBase {
 public:
     OperatorKernelModelEnqueueBuff() = default;
     ~OperatorKernelModelEnqueueBuff() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t ModelEnqueueBuff(BufEnQueueBuffInfo &bufInfo, const RunContext &taskContext) const;
-    int32_t QueueEnQueueBuff(const uint32_t deviceId, const uint32_t queueId, Mbuf *const mbuf, void *const headBuf,
-                             const uint32_t headSize) const;
+    int32_t ModelEnqueueBuff(BufEnQueueBuffInfo& bufInfo, const RunContext& taskContext) const;
+    int32_t QueueEnQueueBuff(
+        const uint32_t deviceId, const uint32_t queueId, Mbuf* const mbuf, void* const headBuf,
+        const uint32_t headSize) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_ENQUEUE_BUFF_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_ENQUEUE_BUFF_H

@@ -45,13 +45,13 @@ enum aeStatus_t {
  * @param [in] addr     void *,  should be STR_KERNEL * format
  * @return int32_t
  */
-int32_t aeCallInterface(const void * const addr);
+int32_t aeCallInterface(const void* const addr);
 
 /**
  * @ingroup aicpu engine
  * @brief aeClear: a interface to clear all ai kernel lib
  * @return aeStatus_t
-*/
+ */
 void aeClear();
 
 /**
@@ -63,8 +63,7 @@ void aeClear();
  * @param [in] soNames    load so names
  * @return aeStatus_t
  */
-aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType, const uint32_t loadSoNum,
-                               const char_t * const * const soNames);
+aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType, const uint32_t loadSoNum, const char_t* const* const soNames);
 
 /**
  * @ingroup aicpu engine
@@ -74,7 +73,7 @@ aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType, const uint32_t loadSoN
  * @param [in] soName     load so name
  * @return aeStatus_t
  */
-aeStatus_t aeCloseSo(const uint32_t kernelType, const char_t * const soName);
+aeStatus_t aeCloseSo(const uint32_t kernelType, const char_t* const soName);
 
 /**
  * @ingroup aicpu engine
@@ -83,8 +82,7 @@ aeStatus_t aeCloseSo(const uint32_t kernelType, const char_t * const soName);
  * @param [in] soName     add so name
  * @return aeStatus_t
  */
-aeStatus_t __attribute__((weak)) AeAddSoInWhiteList(const char_t * const soName);
-
+aeStatus_t __attribute__((weak)) AeAddSoInWhiteList(const char_t* const soName);
 
 /**
  * @ingroup aicpu engine
@@ -93,9 +91,9 @@ aeStatus_t __attribute__((weak)) AeAddSoInWhiteList(const char_t * const soName)
  * @param [in] soName     delete so name
  * @return void
  */
-void __attribute__((weak)) AeDeleteSoInWhiteList(const char_t * const soName);
+void __attribute__((weak)) AeDeleteSoInWhiteList(const char_t* const soName);
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // AICPU_ENGINE_H
+#endif // AICPU_ENGINE_H

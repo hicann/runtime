@@ -15,24 +15,24 @@
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_model_execute.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_REPORT_STATUS = "modelReportStatus";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelReportStatus::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelReportStatus::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    const ReportStatusInfo * const bufInfo =
+    const ReportStatusInfo* const bufInfo =
         PtrToPtr<void, ReportStatusInfo>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (bufInfo == nullptr) {
-        aicpusd_err("ModelReportStatus kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelReportStatus kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     std::vector<QueueAttrs> inputQueues;
     // 1 means queue info memory is after ReportStatusInfo memory
-    const QueueAttrs *queuePtr = reinterpret_cast<const QueueAttrs *>(bufInfo + 1);
+    const QueueAttrs* queuePtr = reinterpret_cast<const QueueAttrs*>(bufInfo + 1);
     for (uint32_t idx = 0U; idx < bufInfo->inputNum; idx++) {
         inputQueues.emplace_back(*queuePtr);
         queuePtr++;
@@ -41,29 +41,30 @@ int32_t OperatorKernelModelReportStatus::Compute(const AicpuTaskInfo &kernelTask
     return ret;
 }
 
-int32_t OperatorKernelModelReportStatus::ModelReportStatus(const uint32_t modelUuid, const QueueAttrs &schedOutputQueue,
-                                                           const std::vector<QueueAttrs> &inputQueues,
-                                                           const RunContext &taskContext) const
+int32_t OperatorKernelModelReportStatus::ModelReportStatus(
+    const uint32_t modelUuid, const QueueAttrs& schedOutputQueue, const std::vector<QueueAttrs>& inputQueues,
+    const RunContext& taskContext) const
 {
-    AicpuModel *const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    AicpuModel* const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
         aicpusd_err("cannot get model by modelId:[%u]!", taskContext.modelId);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
-    uint32_t &inputConsumeNum = model->GetInputConsumeNumRef();
+    uint32_t& inputConsumeNum = model->GetInputConsumeNumRef();
     inputConsumeNum++;
     // construct SubmodelStatus protobuf object
     const auto deviceId = AicpuDrvManager::GetInstance().GetDeviceId();
     aicpu::dynamci_sched::SubmodelStatus submodelStatus;
     submodelStatus.set_model_uuid(modelUuid);
-    for (const auto &inputQueue : inputQueues) {
+    for (const auto& inputQueue : inputQueues) {
         const uint32_t inputQueueId = inputQueue.queueId;
         uint32_t queueDepth = UINT32_MAX;
         QueueInfo queueInfo;
         const auto drvRet = halQueueQueryInfo(deviceId, inputQueueId, &queueInfo);
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_info("Querying queue info was not successful, queue id[%u], device id[%u], ret[%d].",
-                inputQueueId, deviceId, drvRet);
+            aicpusd_info(
+                "Querying queue info was not successful, queue id[%u], device id[%u], ret[%d].", inputQueueId, deviceId,
+                drvRet);
         } else {
             queueDepth = static_cast<size_t>(queueInfo.size);
         }
@@ -78,7 +79,7 @@ int32_t OperatorKernelModelReportStatus::ModelReportStatus(const uint32_t modelU
     }
     // enqueue
     const size_t reqSize = submodelStatus.ByteSizeLong();
-    const FillFunc fillFunc = [&submodelStatus](void *const buffer, const size_t size) {
+    const FillFunc fillFunc = [&submodelStatus](void* const buffer, const size_t size) {
         if (submodelStatus.SerializeToArray(buffer, static_cast<int32_t>(size))) {
             return AICPU_SCHEDULE_OK;
         }
@@ -89,26 +90,26 @@ int32_t OperatorKernelModelReportStatus::ModelReportStatus(const uint32_t modelU
     if (ret == AICPU_SCHEDULE_OK) {
         inputConsumeNum = 0U;
     } else if (ret != AICPU_SCHEDULE_ERROR_QUEUE_FULL) {
-        aicpusd_err("enqueue failed, deviceId[%u], queueId[%u], ret[%d].",
-            deviceId, schedOutputQueue.queueId, ret);
+        aicpusd_err("enqueue failed, deviceId[%u], queueId[%u], ret[%d].", deviceId, schedOutputQueue.queueId, ret);
         return ret;
     }
-    aicpusd_info("Dynamic sched report status, ret[%d], status[%s], deviceId[%u], queueId[%u]",
-        ret, submodelStatus.DebugString().c_str(), deviceId, schedOutputQueue.queueId);
+    aicpusd_info(
+        "Dynamic sched report status, ret[%d], status[%s], deviceId[%u], queueId[%u]", ret,
+        submodelStatus.DebugString().c_str(), deviceId, schedOutputQueue.queueId);
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelModelReportStatus::EnqueueStatus(const uint32_t deviceId, const uint32_t queueId,
-                                                       const size_t reqSize, const FillFunc &fillFunc) const
+int32_t OperatorKernelModelReportStatus::EnqueueStatus(
+    const uint32_t deviceId, const uint32_t queueId, const size_t reqSize, const FillFunc& fillFunc) const
 {
     // alloc mbuf
-    Mbuf *mbuf = nullptr;
+    Mbuf* mbuf = nullptr;
     auto drvRet = halMbufAlloc(reqSize, &mbuf);
     if (drvRet != DRV_ERROR_NONE) {
         aicpusd_err("halMbufAlloc failed, drvRet=%d, dataSize=%lu.", drvRet, reqSize);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
-    auto mbufDeleter = [](Mbuf *buf) { (void)halMbufFree(buf); };
+    auto mbufDeleter = [](Mbuf* buf) { (void)halMbufFree(buf); };
     std::unique_ptr<Mbuf, decltype(mbufDeleter)> mbufGuard(mbuf, mbufDeleter);
     drvRet = halMbufSetDataLen(mbuf, reqSize);
     if (drvRet != DRV_ERROR_NONE) {
@@ -116,7 +117,7 @@ int32_t OperatorKernelModelReportStatus::EnqueueStatus(const uint32_t deviceId, 
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
     // write mbuf data
-    void *buffAddr = nullptr;
+    void* buffAddr = nullptr;
     drvRet = halMbufGetBuffAddr(mbuf, &buffAddr);
     if (drvRet != DRV_ERROR_NONE || buffAddr == nullptr) {
         aicpusd_err("Failed to get buff addr, ret[%d].", drvRet);
@@ -140,6 +141,5 @@ int32_t OperatorKernelModelReportStatus::EnqueueStatus(const uint32_t deviceId, 
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_REPORT_STATUS, OperatorKernelModelReportStatus);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

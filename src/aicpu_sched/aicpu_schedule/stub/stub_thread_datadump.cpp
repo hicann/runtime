@@ -18,99 +18,97 @@
 #include "aicpusd_drv_manager.h"
 
 namespace AicpuSchedule {
-    AicpuMonitor::AicpuMonitor() {}
-    AicpuMonitor &AicpuMonitor::GetInstance()
-    {
-        static AicpuMonitor instance;
-        return instance;
-    }
-    AicpuMonitor::~AicpuMonitor() {}
-    void AicpuMonitor::DisableModelTimeout() {}
+AicpuMonitor::AicpuMonitor() {}
+AicpuMonitor& AicpuMonitor::GetInstance()
+{
+    static AicpuMonitor instance;
+    return instance;
 }
+AicpuMonitor::~AicpuMonitor() {}
+void AicpuMonitor::DisableModelTimeout() {}
+} // namespace AicpuSchedule
 namespace tdt {
-    StatusFactory* StatusFactory::GetInstance()
-    {
-        static StatusFactory instance_;
-        return &instance_;
-    }
-    void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc) {}
-    StatusFactory::StatusFactory() {}
+StatusFactory* StatusFactory::GetInstance()
+{
+    static StatusFactory instance_;
+    return &instance_;
 }
+void StatusFactory::RegisterErrorNo(const uint32_t err, const std::string& desc) {}
+StatusFactory::StatusFactory() {}
+} // namespace tdt
 
 namespace {
-    // current thread context
-    thread_local aicpu::aicpuContext_t g_curCtx;
-}
+// current thread context
+thread_local aicpu::aicpuContext_t g_curCtx;
+} // namespace
 
 namespace aicpu {
-__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t* ctx)
 {
     aicpusd_info("Aicpu set ctx in stub func[%s].", __func__);
     g_curCtx = *ctx;
     return AICPU_ERROR_NONE;
 }
 
-__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t* ctx)
 {
     aicpusd_info("Aicpu get ctx in stub func[%s].", __func__);
     *ctx = g_curCtx;
     return AICPU_ERROR_NONE;
 }
-}
+} // namespace aicpu
 
 namespace AicpuSchedule {
-    BufManager &BufManager::GetInstance()
-    {
-        static BufManager instance;
-        return instance;
-    }
-    ModelStreamManager &ModelStreamManager::GetInstance()
-    {
-        static ModelStreamManager instance;
-        return instance;
-    }
-    void BufManager::InitBufManager()
-    {
-    }
-    EventWaitManager &EventWaitManager::NotifyWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager notifyWaitInstance("Notify", waitIdCount);
-        return notifyWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::EndGraphWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager endGraphWaitInstance("EndGraph", waitIdCount);
-        return endGraphWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::QueueNotEmptyWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager queueNotEmptyWaitInstance("QueueNotEmpty", waitIdCount);
-        return queueNotEmptyWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::QueueNotFullWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager queueNotFullWaitInstance("QueueNotFull", waitIdCount);
-        return queueNotFullWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::PrepareMemWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager prepareMemWaitInstance("PrepareMem", waitIdCount);
-        return prepareMemWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::AnyQueNotEmptyWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager anyQueNotEmptyWaitInstance("AnyQueNotEmpty", waitIdCount);
-        return anyQueNotEmptyWaitInstance;
-    }
-
-    EventWaitManager &EventWaitManager::TableUnlockWaitManager(const uint32_t waitIdCount)
-    {
-        static EventWaitManager tableUnlockWaitInstance("TableUnlock", waitIdCount);
-        return tableUnlockWaitInstance;
-    }
+BufManager& BufManager::GetInstance()
+{
+    static BufManager instance;
+    return instance;
 }
+ModelStreamManager& ModelStreamManager::GetInstance()
+{
+    static ModelStreamManager instance;
+    return instance;
+}
+void BufManager::InitBufManager() {}
+EventWaitManager& EventWaitManager::NotifyWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager notifyWaitInstance("Notify", waitIdCount);
+    return notifyWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::EndGraphWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager endGraphWaitInstance("EndGraph", waitIdCount);
+    return endGraphWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::QueueNotEmptyWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager queueNotEmptyWaitInstance("QueueNotEmpty", waitIdCount);
+    return queueNotEmptyWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::QueueNotFullWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager queueNotFullWaitInstance("QueueNotFull", waitIdCount);
+    return queueNotFullWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::PrepareMemWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager prepareMemWaitInstance("PrepareMem", waitIdCount);
+    return prepareMemWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::AnyQueNotEmptyWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager anyQueNotEmptyWaitInstance("AnyQueNotEmpty", waitIdCount);
+    return anyQueNotEmptyWaitInstance;
+}
+
+EventWaitManager& EventWaitManager::TableUnlockWaitManager(const uint32_t waitIdCount)
+{
+    static EventWaitManager tableUnlockWaitInstance("TableUnlock", waitIdCount);
+    return tableUnlockWaitInstance;
+}
+} // namespace AicpuSchedule

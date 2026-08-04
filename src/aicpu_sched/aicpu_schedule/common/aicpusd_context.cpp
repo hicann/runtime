@@ -11,23 +11,17 @@
 
 namespace AicpuSchedule {
 namespace {
-    // cpu mode
-    bool g_cpuMode = false;
-}
+// cpu mode
+bool g_cpuMode = false;
+} // namespace
 
-StatusCode GetAicpuDeployContext(DeployContext &deployCtx)
+StatusCode GetAicpuDeployContext(DeployContext& deployCtx)
 {
     deployCtx = DeployContext::DEVICE;
     return AICPU_SCHEDULE_OK;
 }
 
-void SetCpuMode(const bool cpuMode)
-{
-    g_cpuMode = cpuMode;
-}
+void SetCpuMode(const bool cpuMode) { g_cpuMode = cpuMode; }
 
-bool GetCpuMode()
-{
-    return g_cpuMode;
-}
+bool GetCpuMode() { return g_cpuMode; }
 } // namespace AicpuSchedule

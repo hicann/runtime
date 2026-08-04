@@ -9,7 +9,7 @@
  */
 #include "aicpusd_util.h"
 namespace AicpuSchedule {
-const std::map<ge::DataType, std::string> DTYPE_NAMES {
+const std::map<ge::DataType, std::string> DTYPE_NAMES{
     {ge::DataType::DT_FLOAT, "DT_FLOAT"},
     {ge::DataType::DT_FLOAT16, "DT_FLOAT16"},
     {ge::DataType::DT_INT8, "DT_INT8"},
@@ -44,12 +44,12 @@ const std::map<ge::DataType, std::string> DTYPE_NAMES {
     {ge::DataType::DT_UINT2, "DT_UINT2"},
     {ge::DataType::DT_COMPLEX32, "DT_COMPLEX32"}};
 
-    std::string AicpuUtil::GetDTypeString(const ge::DataType curDtype)
-    {
-        auto iter = DTYPE_NAMES.find(curDtype);
-        if (iter != DTYPE_NAMES.end()) {
-            return iter->second;
-        }
-        return "DT_UNDEFINED";
+std::string AicpuUtil::GetDTypeString(const ge::DataType curDtype)
+{
+    auto iter = DTYPE_NAMES.find(curDtype);
+    if (iter != DTYPE_NAMES.end()) {
+        return iter->second;
     }
+    return "DT_UNDEFINED";
 }
+} // namespace AicpuSchedule

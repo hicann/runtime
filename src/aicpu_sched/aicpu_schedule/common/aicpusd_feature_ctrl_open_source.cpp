@@ -15,7 +15,7 @@
 #include "aicpusd_info.h"
 #include "aicpusd_status.h"
 #include "aicpusd_common.h"
-#define AICPU_PLAT_GET_CHIP(type)           (((type) >> 8U) & 0xffU)
+#define AICPU_PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)
 namespace AicpuSchedule {
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 
@@ -67,7 +67,7 @@ void FeatureCtrl::InitMsqEnableStatus(const uint32_t deviceId)
     } else if (ret != DRV_ERROR_NONE) {
         aicpusd_run_warn("Get aicpu schedule mode not success, ret[%d], device id[%d]", ret, deviceId);
     }
-    switch(cpuSchedMode) {
+    switch (cpuSchedMode) {
         case HAL_NORMAL_MODE:
             aicpuSchedMode_ = SCHED_MODE_INTERRUPT;
             break;
@@ -76,86 +76,41 @@ void FeatureCtrl::InitMsqEnableStatus(const uint32_t deviceId)
             break;
         default:
             aicpuSchedMode_ = SCHED_MODE_INTERRUPT;
-            aicpusd_run_warn("The aicpu schedule mode is not correct, will set to default mode, mode[%d]",
-                             cpuSchedMode);
+            aicpusd_run_warn(
+                "The aicpu schedule mode is not correct, will set to default mode, mode[%d]", cpuSchedMode);
     }
     const std::string modeStr = (aicpuSchedMode_ == SCHED_MODE_MSGQ) ? "message queue" : "interrupt";
     aicpusd_run_info("The aicpu schedule mode is %s", modeStr.c_str());
 }
 
-bool FeatureCtrl::IsAosCore()
-{
-    return false;
-}
+bool FeatureCtrl::IsAosCore() { return false; }
 
-bool FeatureCtrl::ShouldAddtocGroup()
-{
-    return aicpuFeatureAddToCGroup_;
-}
+bool FeatureCtrl::ShouldAddtocGroup() { return aicpuFeatureAddToCGroup_; }
 
-bool FeatureCtrl::ShouldSkipSupplyEvent()
-{
-    return false;
-}
+bool FeatureCtrl::ShouldSkipSupplyEvent() { return false; }
 
-bool FeatureCtrl::IsBindPidByHal()
-{
-    return aicpuFeatureBindPidByHal_;
-}
+bool FeatureCtrl::IsBindPidByHal() { return aicpuFeatureBindPidByHal_; }
 
-bool FeatureCtrl::IsHeterogeneousProduct()
-{
-    return false;
-}
+bool FeatureCtrl::IsHeterogeneousProduct() { return false; }
 
-bool FeatureCtrl::IsNoNeedDumpOpDebugProduct()
-{
-    return false;
-}
+bool FeatureCtrl::IsNoNeedDumpOpDebugProduct() { return false; }
 
-bool FeatureCtrl::IsDoubleDieProduct()
-{
-    return aicpuFeatureDoubleDieProduct_;
-}
+bool FeatureCtrl::IsDoubleDieProduct() { return aicpuFeatureDoubleDieProduct_; }
 
-bool FeatureCtrl::BindCpuOnlyOneDevice()
-{
-    return false;
-}
+bool FeatureCtrl::BindCpuOnlyOneDevice() { return false; }
 
-bool FeatureCtrl::IfCheckEventSender()
-{
-    return aicpuFeatureCheckEventSender_;
-}
+bool FeatureCtrl::IfCheckEventSender() { return aicpuFeatureCheckEventSender_; }
 
-bool FeatureCtrl::IsUseMsqV2()
-{
-    return aicpuFeatureUseMsqV2_;
-}
+bool FeatureCtrl::IsUseMsqV2() { return aicpuFeatureUseMsqV2_; }
 
-bool FeatureCtrl::ShouldInitDrvThread()
-{
-    return aicpuFeatureInitDrvScheModule_;
-}
+bool FeatureCtrl::ShouldInitDrvThread() { return aicpuFeatureInitDrvScheModule_; }
 
-bool FeatureCtrl::ShouldLoadExtendKernelSo()
-{
-    return aicpuFeatureLoadExtendKernelSo_;
-}
+bool FeatureCtrl::ShouldLoadExtendKernelSo() { return aicpuFeatureLoadExtendKernelSo_; }
 
-bool FeatureCtrl::ShouldSubmitTaskOneByOne()
-{
-    return aicpuFeatureSubmitTaskOneByOne_;
-}
+bool FeatureCtrl::ShouldSubmitTaskOneByOne() { return aicpuFeatureSubmitTaskOneByOne_; }
 
-bool FeatureCtrl::ShouldMonitorWork()
-{
-    return aicpuFeatureMonitorWork_;
-}
+bool FeatureCtrl::ShouldMonitorWork() { return aicpuFeatureMonitorWork_; }
 
-bool FeatureCtrl::ShouldSetModuleNullData()
-{
-    return aicpuFeatureSetModelNullData_;
-}
+bool FeatureCtrl::ShouldSetModuleNullData() { return aicpuFeatureSetModelNullData_; }
 
 } // namespace AicpuSchedule

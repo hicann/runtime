@@ -15,9 +15,8 @@
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_model_execute.h"
 
-
 namespace AicpuSchedule {
-int32_t OperatorKernelCommon::SendAICPUSubEvent(char_t * const msg, const uint32_t msgLen, const uint32_t subEventId)
+int32_t OperatorKernelCommon::SendAICPUSubEvent(char_t* const msg, const uint32_t msgLen, const uint32_t subEventId)
 {
     if (msg == nullptr) {
         aicpusd_err("The message is nullptr");
@@ -40,15 +39,15 @@ int32_t OperatorKernelCommon::SendAICPUSubEvent(char_t * const msg, const uint32
     return AICPU_SCHEDULE_OK;
 }
 
-void OperatorKernelCommon::TraceQueueData(const RunContext &taskContext, void * const headBuf, const uint32_t headSize,
-                                          const char_t* const marker)
+void OperatorKernelCommon::TraceQueueData(
+    const RunContext& taskContext, void* const headBuf, const uint32_t headSize, const char_t* const marker)
 {
-    MbufHeadMsg * const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
+    MbufHeadMsg* const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
     DoTraceQueueData(taskContext, msg, marker);
 }
 
-MbufHeadMsg *OperatorKernelCommon::GetHeadMsgForTrace(void * const headBuf, const size_t headSize,
-    const char_t *const marker)
+MbufHeadMsg* OperatorKernelCommon::GetHeadMsgForTrace(
+    void* const headBuf, const size_t headSize, const char_t* const marker)
 {
     if (&CheckLogLevel != nullptr) {
         if (CheckLogLevel(static_cast<int32_t>(CCECPU), DLOG_INFO) != 1) {
@@ -60,13 +59,13 @@ MbufHeadMsg *OperatorKernelCommon::GetHeadMsgForTrace(void * const headBuf, cons
         return nullptr;
     }
 
-    MbufHeadMsg * const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf),
-        MBUF_HEAD_MAX_SIZE, headSize - sizeof(MbufHeadMsg)));
+    MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(
+        PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, headSize - sizeof(MbufHeadMsg)));
     return msg;
 }
 
-void OperatorKernelCommon::DoTraceQueueData(const RunContext &taskContext, const MbufHeadMsg *const msg,
-    const char_t *const marker)
+void OperatorKernelCommon::DoTraceQueueData(
+    const RunContext& taskContext, const MbufHeadMsg* const msg, const char_t* const marker)
 {
     if (msg == nullptr) {
         return;
@@ -74,20 +73,22 @@ void OperatorKernelCommon::DoTraceQueueData(const RunContext &taskContext, const
     if (std::strncmp("Dequeued", marker, DEQUEUED_SIZE) == 0) {
         const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
         if (model == nullptr) {
-            aicpusd_err("Cannot get model by modelId:[%u], streamId[%u], transId[%lu].", taskContext.modelId,
-                        taskContext.streamId, msg->transId);
+            aicpusd_err(
+                "Cannot get model by modelId:[%u], streamId[%u], transId[%lu].", taskContext.modelId,
+                taskContext.streamId, msg->transId);
             return;
         }
         (void)model->SetModelTransId(msg->transId);
     }
-    aicpusd_info("%s: transId[%lu], routeLabel[%u], retCode[%d], modelId[%u], streamId[%u]", marker, msg->transId,
+    aicpusd_info(
+        "%s: transId[%lu], routeLabel[%u], retCode[%d], modelId[%u], streamId[%u]", marker, msg->transId,
         msg->routeLabel, msg->retCode, taskContext.modelId, taskContext.streamId);
 }
 
-std::shared_ptr<MbufHeadMsg> OperatorKernelCommon::BackupHeadMsg(void * const headBuf, const uint32_t headSize,
-    const char_t* const marker)
+std::shared_ptr<MbufHeadMsg> OperatorKernelCommon::BackupHeadMsg(
+    void* const headBuf, const uint32_t headSize, const char_t* const marker)
 {
-    MbufHeadMsg * const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
+    MbufHeadMsg* const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
     if (msg == nullptr) {
         return nullptr;
     }
@@ -102,8 +103,8 @@ std::shared_ptr<MbufHeadMsg> OperatorKernelCommon::BackupHeadMsg(void * const he
     return backupMsg;
 }
 
-int32_t OperatorKernelCommon::CopyMbufHeadInfo(const void * const srcHeaderBuf, const uint32_t srcHeadSize,
-                                               Mbuf *destMbuf)
+int32_t OperatorKernelCommon::CopyMbufHeadInfo(
+    const void* const srcHeaderBuf, const uint32_t srcHeadSize, Mbuf* destMbuf)
 {
     if (srcHeaderBuf == nullptr) {
         aicpusd_err("malloc srcHeaderBuf is nullptr.");
@@ -114,7 +115,7 @@ int32_t OperatorKernelCommon::CopyMbufHeadInfo(const void * const srcHeaderBuf, 
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
-    void *destHeaderBuf = nullptr;
+    void* destHeaderBuf = nullptr;
     uint32_t destHeadSize = 0U;
     const auto ret = halMbufGetPrivInfo(destMbuf, &destHeaderBuf, &destHeadSize);
     if (ret != DRV_ERROR_NONE) {
@@ -143,13 +144,13 @@ int32_t OperatorKernelCommon::CopyMbufHeadInfo(const void * const srcHeaderBuf, 
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCommon::GetMbufDataPtr(const uint64_t srcAddr, void **dataAddrPtr)
+int32_t OperatorKernelCommon::GetMbufDataPtr(const uint64_t srcAddr, void** dataAddrPtr)
 {
     if (dataAddrPtr == nullptr) {
         aicpusd_err("Mbuf data ptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    const auto mbufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(srcAddr));
+    const auto mbufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(srcAddr));
     if (mbufPptr == nullptr) {
         aicpusd_err("mbufPptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -167,8 +168,8 @@ int32_t OperatorKernelCommon::GetMbufDataPtr(const uint64_t srcAddr, void **data
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCommon::UpdateDataPtr(const uint64_t mbufAddr, const int32_t fusionOffset,
-                                            void *&dataPtr, uint64_t &totalOffset)
+int32_t OperatorKernelCommon::UpdateDataPtr(
+    const uint64_t mbufAddr, const int32_t fusionOffset, void*& dataPtr, uint64_t& totalOffset)
 {
     uint64_t dataSize = 0UL;
     int32_t ret = OperatorKernelCommon::GetMbufDataSize(mbufAddr, dataSize);
@@ -189,7 +190,7 @@ int32_t OperatorKernelCommon::UpdateDataPtr(const uint64_t mbufAddr, const int32
     return ret;
 }
 
-int32_t OperatorKernelCommon::DoUpdateDataPtr(FusionInfo &info, const int32_t fusionOffset, void *&dataPtr)
+int32_t OperatorKernelCommon::DoUpdateDataPtr(FusionInfo& info, const int32_t fusionOffset, void*& dataPtr)
 {
     if (fusionOffset < info.lastFusionOffset) {
         aicpusd_err("Invalid fusionOffset[%d] vs lastFusionOffset[%d].", fusionOffset, info.lastFusionOffset);
@@ -206,16 +207,18 @@ int32_t OperatorKernelCommon::DoUpdateDataPtr(FusionInfo &info, const int32_t fu
         totalOffset += sizeof(RuntimeTensorDesc);
 
         if (tensorDesc->dataSize > info.dataSize - totalOffset) {
-            aicpusd_err("Tensor dataSize[%lu] is invalid, must <= mbuf dataSize[%lu] - offset[%lu].",
-                tensorDesc->dataSize, info.dataSize, totalOffset);
+            aicpusd_err(
+                "Tensor dataSize[%lu] is invalid, must <= mbuf dataSize[%lu] - offset[%lu].", tensorDesc->dataSize,
+                info.dataSize, totalOffset);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         totalOffset += tensorDesc->dataSize;
     }
     aicpusd_info("Fusion offset index = %d, total offset byte size = %lu.", fusionOffset, totalOffset);
     if (totalOffset > info.dataSize - sizeof(RuntimeTensorDesc)) {
-        aicpusd_err("Fusion offset[%lu] is invalid, must <= data size[%u] - %zu.",
-            totalOffset, info.dataSize, sizeof(RuntimeTensorDesc));
+        aicpusd_err(
+            "Fusion offset[%lu] is invalid, must <= data size[%u] - %zu.", totalOffset, info.dataSize,
+            sizeof(RuntimeTensorDesc));
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     dataPtr = PtrToPtr<uint8_t, void>(baseAddr + totalOffset);
@@ -224,9 +227,9 @@ int32_t OperatorKernelCommon::DoUpdateDataPtr(FusionInfo &info, const int32_t fu
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCommon::GetMbufDataSize(const uint64_t srcAddr, uint64_t &dataSize)
+int32_t OperatorKernelCommon::GetMbufDataSize(const uint64_t srcAddr, uint64_t& dataSize)
 {
-    const auto mbufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(srcAddr));
+    const auto mbufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(srcAddr));
     if (mbufPptr == nullptr) {
         aicpusd_err("mbufPptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -244,8 +247,8 @@ int32_t OperatorKernelCommon::GetMbufDataSize(const uint64_t srcAddr, uint64_t &
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCommon::ParseTensorDescAndCalcDataSize(const RuntimeTensorDesc * const srcTensorDesc,
-                                                             uint32_t &dataSize)
+int32_t OperatorKernelCommon::ParseTensorDescAndCalcDataSize(
+    const RuntimeTensorDesc* const srcTensorDesc, uint32_t& dataSize)
 {
     if (srcTensorDesc->shape[0] > MAX_DIM_SIZE) {
         aicpusd_err("Max shape size[%lld], but got shape size[%lld]", MAX_DIM_SIZE, srcTensorDesc->shape[0]);
@@ -253,8 +256,8 @@ int32_t OperatorKernelCommon::ParseTensorDescAndCalcDataSize(const RuntimeTensor
     }
 
     int64_t size = 0;
-    const int32_t ret = AicpuUtil::CalcDataSizeByShape(&(srcTensorDesc->shape[1]), srcTensorDesc->shape[0],
-        srcTensorDesc->dtype, size);
+    const int32_t ret =
+        AicpuUtil::CalcDataSizeByShape(&(srcTensorDesc->shape[1]), srcTensorDesc->shape[0], srcTensorDesc->dtype, size);
     if ((ret != AICPU_SCHEDULE_OK) || (size < 0) || (size > static_cast<int64_t>(UINT32_MAX))) {
         aicpusd_err("Get data size by shape failed, ret[%d], size[%lld]", ret, size);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -263,8 +266,8 @@ int32_t OperatorKernelCommon::ParseTensorDescAndCalcDataSize(const RuntimeTensor
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCommon::GetMbufAddrAndSize(Mbuf *mbuf, void **dataPptr, uint64_t *dataLenPtr, uint32_t modelId,
-                                                 bool allowOnlyDesc)
+int32_t OperatorKernelCommon::GetMbufAddrAndSize(
+    Mbuf* mbuf, void** dataPptr, uint64_t* dataLenPtr, uint32_t modelId, bool allowOnlyDesc)
 {
     if (mbuf == nullptr) {
         aicpusd_err("null mbuf for model[%u]", modelId);
@@ -273,8 +276,9 @@ int32_t OperatorKernelCommon::GetMbufAddrAndSize(Mbuf *mbuf, void **dataPptr, ui
     const uint64_t dataLenThreshold = allowOnlyDesc ? sizeof(RuntimeTensorDesc) : sizeof(RuntimeTensorDesc) + 1U;
     auto ret = halMbufGetBuffSize(mbuf, dataLenPtr);
     if ((ret != static_cast<int32_t>(DRV_ERROR_NONE)) || (*dataLenPtr < dataLenThreshold)) {
-        aicpusd_err("Fail to get buff size for mbuf, model:[%u], ret=[%d], dataLen[%u] vs dataLenThreshold[%u]",
-                    modelId, ret, *dataLenPtr, dataLenThreshold);
+        aicpusd_err(
+            "Fail to get buff size for mbuf, model:[%u], ret=[%d], dataLen[%u] vs dataLenThreshold[%u]", modelId, ret,
+            *dataLenPtr, dataLenThreshold);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
 
@@ -287,4 +291,4 @@ int32_t OperatorKernelCommon::GetMbufAddrAndSize(Mbuf *mbuf, void **dataPptr, ui
     return AICPU_SCHEDULE_OK;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

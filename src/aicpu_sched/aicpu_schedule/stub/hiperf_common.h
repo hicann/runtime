@@ -16,8 +16,8 @@
 namespace Hiva {
 struct KernelTrack {
     uint64_t opStamp;
-    int     pid;
-    int     tid;
+    int pid;
+    int tid;
     int32_t eventId;
     int32_t uniqueId;
     int32_t sensorId;
@@ -42,5 +42,5 @@ struct KernelTrack {
     uint64_t procEventEnd;
     uint32_t tsStreamId;
 };
-}
+} // namespace Hiva
 #endif

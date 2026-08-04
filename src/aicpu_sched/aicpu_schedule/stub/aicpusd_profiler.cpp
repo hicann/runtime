@@ -12,41 +12,36 @@
 #include "aicpusd_common.h"
 
 namespace AicpuSchedule {
-    /**
-     * @ingroup AicpuProfiler
-     * @brief it is used to construct a object of AicpuScheduleCore.
-     */
-    AicpuProfiler::AicpuProfiler() noexcept
-        : pid_(0),
-          tid_(0),
-          kernelTrack_({}),
-          frequence_(0.0),
-          hiperfExisted_(false),
-          accessHiperfSo_(false),
-          oneMsForTick_(0UL),
-          tenMsForTick_(0UL) {}
+/**
+ * @ingroup AicpuProfiler
+ * @brief it is used to construct a object of AicpuScheduleCore.
+ */
+AicpuProfiler::AicpuProfiler() noexcept
+    : pid_(0),
+      tid_(0),
+      kernelTrack_({}),
+      frequence_(0.0),
+      hiperfExisted_(false),
+      accessHiperfSo_(false),
+      oneMsForTick_(0UL),
+      tenMsForTick_(0UL)
+{}
 
-    void AicpuProfiler::Uninit() {}
+void AicpuProfiler::Uninit() {}
 
-    void AicpuProfiler::InitProfiler(pid_t pid, pid_t tid)
-    {
-        pid_ = pid;
-        tid_ = tid;
-    }
-
-    void AicpuProfiler::ProfilerAgentInit() {}
-
-    void AicpuProfiler::Profiler() {}
-
-    uint64_t AicpuProfiler::SchedGetCurCpuTick(void) const
-    {
-        return 0UL;
-    }
-
-    uint64_t AicpuProfiler::GetAicpuSysFreq() const
-    {
-        return 1UL;
-    }
-
-    thread_local AicpuProfiler g_aicpuProfiler;
+void AicpuProfiler::InitProfiler(pid_t pid, pid_t tid)
+{
+    pid_ = pid;
+    tid_ = tid;
 }
+
+void AicpuProfiler::ProfilerAgentInit() {}
+
+void AicpuProfiler::Profiler() {}
+
+uint64_t AicpuProfiler::SchedGetCurCpuTick(void) const { return 0UL; }
+
+uint64_t AicpuProfiler::GetAicpuSysFreq() const { return 1UL; }
+
+thread_local AicpuProfiler g_aicpuProfiler;
+} // namespace AicpuSchedule

@@ -15,22 +15,23 @@
 #include "platform_infos_def.h"
 namespace aicpu {
 struct PlatformInfoArgs {
-  uint64_t input_data_info;
-  uint64_t input_data_len;
-  uint64_t platform_instance;
+    uint64_t input_data_info;
+    uint64_t input_data_len;
+    uint64_t platform_instance;
 };
 
 class PlatformRebuild {
- public:
-  static PlatformRebuild &GetInstance();
-  int32_t ProcessPlatformInfoMsg(const uint64_t info_args, const uint32_t info_len);
- private:
-  PlatformRebuild() = default;
-  ~PlatformRebuild() = default;
-  PlatformRebuild(const PlatformRebuild &) = delete;
-  PlatformRebuild(PlatformRebuild &&) = delete;
-  PlatformRebuild &operator=(const PlatformRebuild &) = delete;
-  PlatformRebuild &operator=(PlatformRebuild &&) = delete;
+public:
+    static PlatformRebuild& GetInstance();
+    int32_t ProcessPlatformInfoMsg(const uint64_t info_args, const uint32_t info_len);
+
+private:
+    PlatformRebuild() = default;
+    ~PlatformRebuild() = default;
+    PlatformRebuild(const PlatformRebuild&) = delete;
+    PlatformRebuild(PlatformRebuild&&) = delete;
+    PlatformRebuild& operator=(const PlatformRebuild&) = delete;
+    PlatformRebuild& operator=(PlatformRebuild&&) = delete;
 };
-}  // namespace aicpu
+} // namespace aicpu
 #endif // AICPU_KERNEL_LOAD_PLATFORM_INFO_H

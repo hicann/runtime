@@ -15,13 +15,13 @@
 #include <sys/types.h>
 
 namespace AicpuSchedule {
-    /**
-    * @brief      : bind thread api
-    * @param [in] : thread id
-    * @param [in] : core affinity
-    * @param [out]: void
-    * @return     : 0: success, > 0 : failed
-    */
-    uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity);
-}
+/**
+ * @brief      : bind thread api
+ * @param [in] : thread id
+ * @param [in] : core affinity
+ * @param [out]: void
+ * @return     : 0: success, > 0 : failed
+ */
+uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity);
+} // namespace AicpuSchedule
 #endif

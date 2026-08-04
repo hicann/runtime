@@ -15,26 +15,27 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_END_GRAPH = "endGraph";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelEndGraph::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelEndGraph::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (modelIdPtr == nullptr) {
-        aicpusd_err("ModelEndGraph kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelEndGraph kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     const uint32_t modelId = *modelIdPtr;
     if (modelId != taskContext.modelId) {
-        aicpusd_warn("ModelEndGraph kernelTaskInfo modelId[%u] is diff with context, "
-                     "modelId[%u], streamId[%u], taskId[%u]", modelId, taskContext.modelId, taskContext.streamId,
-                     kernelTaskInfo.taskID);
+        aicpusd_warn(
+            "ModelEndGraph kernelTaskInfo modelId[%u] is diff with context, "
+            "modelId[%u], streamId[%u], taskId[%u]",
+            modelId, taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
     }
 
     aicpusd_info("Begin to execute EndGraph. modelId[%u].", modelId);
@@ -45,8 +46,9 @@ int32_t OperatorKernelEndGraph::Compute(const AicpuTaskInfo &kernelTaskInfo, con
         AICPUSubEventInfo subEventInfo = {};
         subEventInfo.modelId = modelId;
         subEventInfo.para.streamInfo.streamId = waitStreamId;
-        const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo),
-            static_cast<uint32_t>(sizeof(AICPUSubEventInfo)), AICPU_SUB_EVENT_RECOVERY_STREAM);
+        const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(
+            PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+            AICPU_SUB_EVENT_RECOVERY_STREAM);
         return ret;
     }
 
@@ -54,4 +56,4 @@ int32_t OperatorKernelEndGraph::Compute(const AicpuTaskInfo &kernelTaskInfo, con
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_END_GRAPH, OperatorKernelEndGraph);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

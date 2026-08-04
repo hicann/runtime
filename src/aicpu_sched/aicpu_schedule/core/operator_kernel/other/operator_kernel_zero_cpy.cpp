@@ -13,48 +13,50 @@
 #include "aicpusd_status.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_ZERO_CPY = "zeroCpy";
 const std::string KERNEL_ZERO_CPY_V2 = "zeroCpyV2";
 const std::string KERNEL_CPU_ZERO_CPY = "cpuZeroCpy";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelZeroCpy::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelZeroCpy::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    AddrMapInfo *mapInfo = PtrToPtr<void, AddrMapInfo>(ValueToPtr(kernelTaskInfo.paraBase));
+    AddrMapInfo* mapInfo = PtrToPtr<void, AddrMapInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (mapInfo == nullptr) {
-        aicpusd_err("ModelZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
-    const uint64_t *const srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo->srcAddrList));
-    const uint64_t *const dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo->dstAddrList));
+    const uint64_t* const srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo->srcAddrList));
+    const uint64_t* const dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo->dstAddrList));
     if ((srcAddrList == nullptr) || (dstAddrList == nullptr)) {
-        aicpusd_err("Failed to zero copy, srcAddrList or dstAddrList is null, modelId[%u], streamId[%u]",
-            taskContext.modelId, taskContext.streamId);
+        aicpusd_err(
+            "Failed to zero copy, srcAddrList or dstAddrList is null, modelId[%u], streamId[%u]", taskContext.modelId,
+            taskContext.streamId);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     for (uint32_t i = 0U; i < mapInfo->addrNum; i++) {
-        void *dataPtr = nullptr;
+        void* dataPtr = nullptr;
         const int32_t ret = OperatorKernelCommon::GetMbufDataPtr(srcAddrList[i], &dataPtr);
         if (ret != AICPU_SCHEDULE_OK) {
             aicpusd_err("Failed to get mbuf data addr. srcAddrList[%u] is [%lu].", i, srcAddrList[i]);
             return ret;
         }
-        const auto dstPtr = reinterpret_cast<void **>(static_cast<uintptr_t>(dstAddrList[i]));
+        const auto dstPtr = reinterpret_cast<void**>(static_cast<uintptr_t>(dstAddrList[i]));
         *dstPtr = dataPtr;
     }
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelZeroCpyV2::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelZeroCpyV2::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    AddrMapInfoV2 * const mapInfo = reinterpret_cast<AddrMapInfoV2 *>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
+    AddrMapInfoV2* const mapInfo = reinterpret_cast<AddrMapInfoV2*>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
     if (mapInfo == nullptr) {
-        aicpusd_err("ModelDynZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelDynZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -62,20 +64,25 @@ int32_t OperatorKernelZeroCpyV2::Compute(const AicpuTaskInfo &kernelTaskInfo, co
     return DoCompute(*mapInfo, taskContext);
 }
 
-int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2 &mapInfo, const RunContext &taskContext) const
+int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2& mapInfo, const RunContext& taskContext) const
 {
-    const uint64_t * const srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.srcAddrList)));
-    const uint64_t * const dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.dstAddrList)));
-    const int32_t * const isNoTilingList = PtrToPtr<void, int32_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.isNoTilingList)));
+    const uint64_t* const srcAddrList =
+        PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.srcAddrList)));
+    const uint64_t* const dstAddrList =
+        PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.dstAddrList)));
+    const int32_t* const isNoTilingList =
+        PtrToPtr<void, int32_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo.isNoTilingList)));
     if ((srcAddrList == nullptr) || (dstAddrList == nullptr) || (isNoTilingList == nullptr)) {
-        aicpusd_err("Failed to zero copy, srcAddrList, dstAddrList or isNoTilingList is null, "
-                    "modelId[%u], streamId[%u]", taskContext.modelId, taskContext.streamId);
+        aicpusd_err(
+            "Failed to zero copy, srcAddrList, dstAddrList or isNoTilingList is null, "
+            "modelId[%u], streamId[%u]",
+            taskContext.modelId, taskContext.streamId);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
     std::vector<int32_t> fusionOffsets(mapInfo.addrNum);
     if (mapInfo.len >= sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t)) {
-        const uint64_t *const fusionOffsetListAddr =
+        const uint64_t* const fusionOffsetListAddr =
             PtrToPtr<char, uint64_t>(mapInfo.extendInfo + sizeof(uint32_t) + sizeof(uint64_t));
         const int32_t ret = ResolveFusionOffsets(fusionOffsetListAddr, mapInfo.addrNum, fusionOffsets);
         if (ret != AICPU_SCHEDULE_OK) {
@@ -86,7 +93,7 @@ int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2 &mapInfo, const RunCont
 
     std::unordered_map<uint64_t, FusionInfo> fusionMap;
     for (uint32_t i = 0U; i < mapInfo.addrNum; i++) {
-        void *srcDataPtr = nullptr;
+        void* srcDataPtr = nullptr;
         auto result = OperatorKernelCommon::GetMbufDataPtr(srcAddrList[i], &srcDataPtr);
         if (result != AICPU_SCHEDULE_OK) {
             aicpusd_err("Failed to get mbuf data addr. srcAddrList[%u] is [%lu].", i, srcAddrList[i]);
@@ -100,16 +107,16 @@ int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2 &mapInfo, const RunCont
                 return result;
             }
         }
-        const auto dstPtr = reinterpret_cast<void **>(static_cast<uintptr_t>(dstAddrList[i]));
+        const auto dstPtr = reinterpret_cast<void**>(static_cast<uintptr_t>(dstAddrList[i]));
         *dstPtr = srcDataPtr;
         // if notiling will not skip
         if (isNoTilingList[i] != 0) {
-            RuntimeTensorDesc * const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(srcDataPtr);
+            RuntimeTensorDesc* const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(srcDataPtr);
             tensorDesc->dataAddr =
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(srcDataPtr) + sizeof(RuntimeTensorDesc));
-            const int32_t *destIsTilingList = nullptr;
+            const int32_t* destIsTilingList = nullptr;
             if (mapInfo.len >= sizeof(uint32_t) + sizeof(uint64_t)) {
-                const uint64_t *const destIsTilingListPtr =
+                const uint64_t* const destIsTilingListPtr =
                     PtrToPtr<char, uint64_t>(mapInfo.extendInfo + sizeof(uint32_t));
                 destIsTilingList = PtrToPtr<void, int32_t>(ValueToPtr(*destIsTilingListPtr));
             }
@@ -120,21 +127,23 @@ int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2 &mapInfo, const RunCont
             const uint32_t skipSize = *(PtrToPtr<char, uint32_t>(mapInfo.extendInfo));
             const uint64_t baseAddr = PtrToValue(srcDataPtr);
             if ((UINT64_MAX - baseAddr) < static_cast<uint64_t>(skipSize)) {
-                aicpusd_err("AddrMapInfoV2 extendInfo skip size[%u] + baseAddr will overflow, modelId[%u], "
-                    "streamId[%u].", skipSize, taskContext.modelId, taskContext.streamId);
+                aicpusd_err(
+                    "AddrMapInfoV2 extendInfo skip size[%u] + baseAddr will overflow, modelId[%u], "
+                    "streamId[%u].",
+                    skipSize, taskContext.modelId, taskContext.streamId);
                 return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
             }
             *dstPtr = ValueToPtr(baseAddr + static_cast<uint64_t>(skipSize));
-        } else {}
+        } else {
+        }
 
         aicpusd_info("Zero cpy task success, addr index[%u], is notiling[%d].", i, isNoTilingList[i]);
     }
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelZeroCpyV2::ResolveFusionOffsets(const uint64_t *const fusionOffsetListAddr,
-                                                      const uint32_t addrNum,
-                                                      std::vector<int32_t> &fusionOffsets) const
+int32_t OperatorKernelZeroCpyV2::ResolveFusionOffsets(
+    const uint64_t* const fusionOffsetListAddr, const uint32_t addrNum, std::vector<int32_t>& fusionOffsets) const
 {
     if (fusionOffsetListAddr == nullptr) {
         aicpusd_err("The fusion offset list addr is null.");
@@ -152,16 +161,18 @@ int32_t OperatorKernelZeroCpyV2::ResolveFusionOffsets(const uint64_t *const fusi
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelZeroCpyV2::UpdateDataPtrExtend(const uint64_t mbufAddr, const int32_t fusionOffset, void *&dataPtr,
-                                                     std::unordered_map<uint64_t, FusionInfo> &fusionMap) const
+int32_t OperatorKernelZeroCpyV2::UpdateDataPtrExtend(
+    const uint64_t mbufAddr, const int32_t fusionOffset, void*& dataPtr,
+    std::unordered_map<uint64_t, FusionInfo>& fusionMap) const
 {
     const auto iter = fusionMap.find(mbufAddr);
     if (iter == fusionMap.end()) {
         uint64_t dataSize = 0UL;
         const int32_t ret = OperatorKernelCommon::GetMbufDataSize(mbufAddr, dataSize);
         if ((ret != AICPU_SCHEDULE_OK) || (dataSize < sizeof(RuntimeTensorDesc))) {
-            aicpusd_err("Failed to get mbuf data size, ret = %d, dataSize[%lu] vs threshold[%zu]",
-                ret, dataSize, sizeof(RuntimeTensorDesc));
+            aicpusd_err(
+                "Failed to get mbuf data size, ret = %d, dataSize[%lu] vs threshold[%zu]", ret, dataSize,
+                sizeof(RuntimeTensorDesc));
             return (ret != AICPU_SCHEDULE_OK) ? ret : AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         FusionInfo info = {};
@@ -169,7 +180,7 @@ int32_t OperatorKernelZeroCpyV2::UpdateDataPtrExtend(const uint64_t mbufAddr, co
         fusionMap[mbufAddr] = info;
     }
 
-    auto &fusionInfo = fusionMap[mbufAddr];
+    auto& fusionInfo = fusionMap[mbufAddr];
     if (fusionInfo.lastFusionOffset > fusionOffset) {
         fusionInfo.lastFusionOffset = 0;
         fusionInfo.lastDataOffset = 0U;
@@ -178,33 +189,36 @@ int32_t OperatorKernelZeroCpyV2::UpdateDataPtrExtend(const uint64_t mbufAddr, co
     return OperatorKernelCommon::DoUpdateDataPtr(fusionInfo, fusionOffset, dataPtr);
 }
 
-int32_t OperatorKernelCpuZeroCpy::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelCpuZeroCpy::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    AddrMapInfo *mapInfo = reinterpret_cast<AddrMapInfo *>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
+    AddrMapInfo* mapInfo = reinterpret_cast<AddrMapInfo*>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
     if (mapInfo == nullptr) {
-        aicpusd_err("ModelZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelZeroCpy kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    const uint64_t *const srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo->srcAddrList)));
-    const uint64_t *const dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo->dstAddrList)));
+    const uint64_t* const srcAddrList =
+        PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo->srcAddrList)));
+    const uint64_t* const dstAddrList =
+        PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(mapInfo->dstAddrList)));
     if ((srcAddrList == nullptr) || (dstAddrList == nullptr)) {
-        aicpusd_err("Failed to zero copy, srcAddrList or dstAddrList is null, modelId[%u], streamId[%u]",
-            taskContext.modelId, taskContext.streamId);
+        aicpusd_err(
+            "Failed to zero copy, srcAddrList or dstAddrList is null, modelId[%u], streamId[%u]", taskContext.modelId,
+            taskContext.streamId);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     aicpusd_info("copy from %p to %p", srcAddrList, dstAddrList);
     for (uint32_t i = 0U; i < mapInfo->addrNum; i++) {
-        const auto dstPtr = reinterpret_cast<void **>(ValueToPtr(dstAddrList[static_cast<size_t>(i)]));
-        const auto srcPtr = reinterpret_cast<void **>(ValueToPtr(srcAddrList[static_cast<size_t>(i)]));
+        const auto dstPtr = reinterpret_cast<void**>(ValueToPtr(dstAddrList[static_cast<size_t>(i)]));
+        const auto srcPtr = reinterpret_cast<void**>(ValueToPtr(srcAddrList[static_cast<size_t>(i)]));
         *dstPtr = *srcPtr;
         aicpusd_info("copy element %p, srcPptr %p, dstPptr %p", *dstPtr, srcPtr, dstPtr);
     }
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_ZERO_CPY, OperatorKernelZeroCpy);
 REGISTER_OPERATOR_KERNEL(KERNEL_ZERO_CPY_V2, OperatorKernelZeroCpyV2);
 REGISTER_OPERATOR_KERNEL(KERNEL_CPU_ZERO_CPY, OperatorKernelCpuZeroCpy);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

@@ -16,42 +16,43 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_DYN_OUTPUT_POST_PROCESS = "dynOutputPostProcess";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelDynOutputPostProcess::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelDynOutputPostProcess::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    ProcessOutputInfo * const info = reinterpret_cast<ProcessOutputInfo *>(
-        static_cast<uintptr_t>(kernelTaskInfo.paraBase));
+    ProcessOutputInfo* const info =
+        reinterpret_cast<ProcessOutputInfo*>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
     if (info == nullptr) {
-        aicpusd_err("ModelDynPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-                    taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelDynPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return DoCompute(*info, taskContext);
 }
 
-int32_t OperatorKernelDynOutputPostProcess::DoCompute(const ProcessOutputInfo &outputInfo,
-                                                      const RunContext &taskContext) const
+int32_t OperatorKernelDynOutputPostProcess::DoCompute(
+    const ProcessOutputInfo& outputInfo, const RunContext& taskContext) const
 {
     // point to Mbuf * address
-    Mbuf * const * const inMBuf = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(outputInfo.inMBuf));
-    Mbuf ** const outMBuf = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(outputInfo.outMBuf));
-    const RuntimeTensorDesc * const srcTensorDesc =
-        reinterpret_cast<RuntimeTensorDesc *>(static_cast<uintptr_t>(outputInfo.srcPtr));
+    Mbuf* const* const inMBuf = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(outputInfo.inMBuf));
+    Mbuf** const outMBuf = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(outputInfo.outMBuf));
+    const RuntimeTensorDesc* const srcTensorDesc =
+        reinterpret_cast<RuntimeTensorDesc*>(static_cast<uintptr_t>(outputInfo.srcPtr));
     const bool inOrOutMbufIsNull = ((inMBuf == nullptr) || (outMBuf == nullptr) || (srcTensorDesc == nullptr));
     if (inOrOutMbufIsNull) {
-        aicpusd_err("ProcessOutput param inMBuf, outMBuf or srcPtr is null, inMBuf[%llx], outMbuf[%llx], srcPtr[%llx].",
-                    outputInfo.inMBuf, outputInfo.outMBuf, outputInfo.srcPtr);
+        aicpusd_err(
+            "ProcessOutput param inMBuf, outMBuf or srcPtr is null, inMBuf[%llx], outMbuf[%llx], srcPtr[%llx].",
+            outputInfo.inMBuf, outputInfo.outMBuf, outputInfo.srcPtr);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     // parse tensor desc and calculate shape size
     uint32_t dataSize = 0U;
-    AicpuModel * const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    AicpuModel* const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
         aicpusd_err("Model[%u] prepare dynamic output task failed, no model found.", taskContext.modelId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -66,8 +67,8 @@ int32_t OperatorKernelDynOutputPostProcess::DoCompute(const ProcessOutputInfo &o
     }
 
     // alloc data buffer
-    *outMBuf = BufManager::GetInstance().MallocAndGuardBuf(dataSize + static_cast<uint32_t>(sizeof(RuntimeTensorDesc)),
-        taskContext.modelId);
+    *outMBuf = BufManager::GetInstance().MallocAndGuardBuf(
+        dataSize + static_cast<uint32_t>(sizeof(RuntimeTensorDesc)), taskContext.modelId);
     if (*outMBuf == nullptr) {
         aicpusd_err("Failed to alloc mbuf, dataSize[%u], modelId[%u].", dataSize, taskContext.modelId);
         AicpuMonitor::GetInstance().SendKillMsgToTsd();
@@ -75,7 +76,7 @@ int32_t OperatorKernelDynOutputPostProcess::DoCompute(const ProcessOutputInfo &o
     }
 
     // copy mbuf head info
-    void *inputHeaderBuf = nullptr;
+    void* inputHeaderBuf = nullptr;
     uint32_t inputHeadSize = 0U;
     const auto drvRet = halMbufGetPrivInfo(*inMBuf, &inputHeaderBuf, &inputHeadSize);
     if (drvRet != DRV_ERROR_NONE) {
@@ -88,15 +89,15 @@ int32_t OperatorKernelDynOutputPostProcess::DoCompute(const ProcessOutputInfo &o
         return ret;
     }
     // copy tensor desc and data buffer
-    return CopyTensorDescAndDataBuf(srcTensorDesc, dataSize, *outMBuf,
-        dataSize + static_cast<uint32_t>(sizeof(RuntimeTensorDesc)));
+    return CopyTensorDescAndDataBuf(
+        srcTensorDesc, dataSize, *outMBuf, dataSize + static_cast<uint32_t>(sizeof(RuntimeTensorDesc)));
 }
 
-int32_t OperatorKernelDynOutputPostProcess::CopyTensorDescAndDataBuf(const RuntimeTensorDesc * const srcTensorDesc,
-                                                                     const uint32_t srcDataSize, Mbuf * const outMBuf,
-                                                                     const uint32_t dstdataSize) const
+int32_t OperatorKernelDynOutputPostProcess::CopyTensorDescAndDataBuf(
+    const RuntimeTensorDesc* const srcTensorDesc, const uint32_t srcDataSize, Mbuf* const outMBuf,
+    const uint32_t dstdataSize) const
 {
-    void *basePtr = nullptr;
+    void* basePtr = nullptr;
     const auto ret = halMbufGetBuffAddr(outMBuf, &basePtr);
     if ((ret != DRV_ERROR_NONE) || (basePtr == nullptr)) {
         aicpusd_err("Failed to call halMbufGetBuffAddr, ret[%d].", ret);
@@ -109,10 +110,10 @@ int32_t OperatorKernelDynOutputPostProcess::CopyTensorDescAndDataBuf(const Runti
         return AICPU_SCHEDULE_ERROR_SAFE_FUNCTION_ERR;
     }
     if (srcDataSize != 0U) {
-        uint8_t * const dataPtr = static_cast<uint8_t *>(basePtr) + sizeof(RuntimeTensorDesc);
-        eRet = memcpy_s(dataPtr, static_cast<size_t>(dstdataSize) - sizeof(RuntimeTensorDesc),
-                        reinterpret_cast<void *>(static_cast<uintptr_t>(srcTensorDesc->dataAddr)),
-                        static_cast<size_t>(srcDataSize));
+        uint8_t* const dataPtr = static_cast<uint8_t*>(basePtr) + sizeof(RuntimeTensorDesc);
+        eRet = memcpy_s(
+            dataPtr, static_cast<size_t>(dstdataSize) - sizeof(RuntimeTensorDesc),
+            reinterpret_cast<void*>(static_cast<uintptr_t>(srcTensorDesc->dataAddr)), static_cast<size_t>(srcDataSize));
         if (eRet != EOK) {
             aicpusd_err("Failed to memcpy_s for data buffer, ret[%d].", eRet);
             return AICPU_SCHEDULE_ERROR_SAFE_FUNCTION_ERR;
@@ -122,4 +123,4 @@ int32_t OperatorKernelDynOutputPostProcess::CopyTensorDescAndDataBuf(const Runti
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_DYN_OUTPUT_POST_PROCESS, OperatorKernelDynOutputPostProcess);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

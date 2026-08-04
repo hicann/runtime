@@ -23,16 +23,16 @@ AicpuSoManager::~AicpuSoManager()
     CloseSo();
 }
 
-AicpuSoManager &AicpuSoManager::GetInstance()
+AicpuSoManager& AicpuSoManager::GetInstance()
 {
     static AicpuSoManager instance;
     return instance;
 }
 
-bool AicpuSoManager::OpenSo(const std::string &soFile)
+bool AicpuSoManager::OpenSo(const std::string& soFile)
 {
     // Use API in glibc to open the so lib, load this so to process.
-    std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
+    std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
         aicpusd_err("Alloc memory for path failed.");
         return false;
@@ -49,9 +49,10 @@ bool AicpuSoManager::OpenSo(const std::string &soFile)
         return false;
     }
     aicpusd_info("Open so %s begin.", path.get());
-    soHandle_ = dlopen(path.get(),
-        static_cast<int32_t>((static_cast<uint32_t>(RTLD_LAZY)) | (static_cast<uint32_t>(RTLD_NODELETE)) |
-        (static_cast<uint32_t>(RTLD_GLOBAL))));
+    soHandle_ = dlopen(
+        path.get(), static_cast<int32_t>(
+                        (static_cast<uint32_t>(RTLD_LAZY)) | (static_cast<uint32_t>(RTLD_NODELETE)) |
+                        (static_cast<uint32_t>(RTLD_GLOBAL))));
     if (soHandle_ == nullptr) {
         aicpusd_err("Open so %s failed", path.get());
         return false;
@@ -84,8 +85,7 @@ void AicpuSoManager::SetDeviceIdToDvpp(uint32_t deviceId)
     }
 
     using SetDeviceIdFunc = int32_t (*)(uint32_t);
-    SetDeviceIdFunc funcSetDeviceId =
-        reinterpret_cast<SetDeviceIdFunc>(dlsym(soHandle_, "HiMpiSysSetDeviceId"));
+    SetDeviceIdFunc funcSetDeviceId = reinterpret_cast<SetDeviceIdFunc>(dlsym(soHandle_, "HiMpiSysSetDeviceId"));
     if (funcSetDeviceId == nullptr) {
         aicpusd_err("cannot find HiMpiSysSetDeviceId");
         return;
@@ -96,4 +96,4 @@ void AicpuSoManager::SetDeviceIdToDvpp(uint32_t deviceId)
         aicpusd_err("HiMpiSysSetDeviceId fail");
     }
 }
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

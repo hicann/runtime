@@ -22,280 +22,281 @@
 #include "aicpusd_util.h"
 
 namespace AicpuSchedule {
+/**
+ * @brief Guard for MBuf.
+ */
+class BufManager {
+public:
     /**
-     * @brief Guard for MBuf.
+     * @brief get BufManager instance.
+     * @return instance
      */
-    class BufManager {
-    public:
-        /**
-         * @brief get BufManager instance.
-         * @return instance
-         */
-        static BufManager &GetInstance();
+    static BufManager& GetInstance();
 
-        ~BufManager() = default;
-
-        /**
-         * @brief Guard buf.
-         * BufManager take ownership of buf.
-         * @param mbuf mbuf for guard.
-         * @param modelId buf for model
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        int32_t GuardBuf(Mbuf *const mbuf, const uint32_t modelId);
-
-        /**
-         * @brief Malloc and guard buf
-         * BufManager malloc and take ownership of buf.
-         * @param allocSize buf size
-         * @param modelId buf for model
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        Mbuf *MallocAndGuardBuf(const uint32_t allocSize, const uint32_t modelId);
-
-        Mbuf *MallocAndGuardBufU64(const uint64_t allocSize, const uint32_t modelId);
-
-        /**
-         * @brief Malloc and guard buf list
-         * BufManager malloc and take ownership of buf list.
-         * @param sizeList buf size list
-         * @param len sizeList length
-         * @param modelId buf for model
-         * @param isLinkMbuf is link mbuf
-         * @param mbufPtrStore output all mbuf here, if isLinkMbuf is true, the first is mbuflist head
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        int32_t MallocAndGuardBufList(const uint32_t * const sizeList, const uint32_t len, const uint32_t modelId,
-                                      const bool isLinkMbuf, Mbuf ** const mbufPtrStore);
-
-        /**
-         * @brief UnGuard buf.
-         * BufManager releases ownership of buf.
-         * @param modelId model id
-         * @param mbuf UnGuard buf
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        int32_t UnGuardBuf(const uint32_t modelId, const Mbuf *const mbuf);
-
-        /**
-         * @brief free all buf in model.
-         * @param modelId model id
-         */
-        void FreeBuf(const uint32_t modelId);
-
-        /**
-         * @brief free all buf.
-         */
-        void FreeAllBuf();
-
-        // Init memzone info
-        void InitBufManager();
-
-        // not allow copy constructor and assignment operators
-        BufManager(const BufManager &) = delete;
-
-        BufManager &operator=(const BufManager &) = delete;
-
-        BufManager(BufManager &&) = delete;
-
-        BufManager &&operator=(BufManager &&) = delete;
-
-    private:
-        BufManager() = default;
-
-        /**
-         * @brief Malloc buf
-         * BufManager malloc and take ownership of buf.
-         * @param allocSize buf size
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        Mbuf *MallocBuf(const uint32_t allocSize);
-
-        Mbuf *MallocBufU64(const uint64_t allocSize);
-
-        /**
-         * @brief BufManager malloc and append mbuf
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        int32_t MallocAndAppend(const uint32_t * const sizeList, const uint32_t idx, const uint32_t modelId,
-            Mbuf *&mbuf, Mbuf *&mbufListHead);
-
-        // record mbufs belong to model, no mutex
-        std::list<Mbuf *> modelBufs_[MAX_MODEL_COUNT];
-
-        SpinLock lockForModels_[MAX_MODEL_COUNT];
-        // record mbufs memzone info
-        BuffCfg buffConfig_;
-    };
+    ~BufManager() = default;
 
     /**
-     * @brief Event wait manager.
+     * @brief Guard buf.
+     * BufManager take ownership of buf.
+     * @param mbuf mbuf for guard.
+     * @param modelId buf for model
+     * @return AICPU_SCHEDULE_OK:success, other failed.
      */
-    class EventWaitManager {
-    public:
-        static EventWaitManager &NotifyWaitManager(const uint32_t waitIdCount = MAX_NOTIFY_COUNT);
-
-        static EventWaitManager &EndGraphWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
-
-        static EventWaitManager &QueueNotEmptyWaitManager(const uint32_t waitIdCount = DEFAULT_QUEUE_COUNT);
-
-        static EventWaitManager &QueueNotFullWaitManager(const uint32_t waitIdCount = DEFAULT_QUEUE_COUNT);
-
-        static EventWaitManager &PrepareMemWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
-
-        static EventWaitManager &AnyQueNotEmptyWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
-
-        static EventWaitManager &TableUnlockWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
-
-        ~EventWaitManager() = default;
-
-        // not allow copy constructor and assignment operators
-        EventWaitManager(const EventWaitManager &) = delete;
-
-        EventWaitManager &operator=(const EventWaitManager &) = delete;
-
-        EventWaitManager(EventWaitManager &&) = delete;
-
-        EventWaitManager &&operator=(EventWaitManager &&) = delete;
-
-        /**
-         * @brief Get wait stream or save notify state
-         * @param eventWaitId wait id.
-         * @param hasWait some stream is waiting
-         * @param waitStreamId wait stream id, valid only when hasWaitStream is true
-         */
-        void Event(const size_t eventWaitId, bool &hasWait, uint32_t &waitStreamId);
-
-        /**
-         * @brief when event is come, clear event state,
-         * or else save wait stream info and return need wait
-         * @param eventWaitId wait id
-         * @param waitStreamId wait stream id
-         * @param needWait if event state is true, set needWait to true;
-         */
-        void WaitEvent(const size_t eventWaitId, const uint32_t waitStreamId, bool &needWait);
-
-        /**
-         * @brief reset specified event state
-         * @param eventWaitId wait id
-         */
-        void ResetEventState(const size_t eventWaitId);
-
-        /**
-         * @brief clear specified record
-         * @param eventWaitId wait id
-         * @return AICPU_SCHEDULE_OK: success, other: failed
-         */
-        __attribute__((visibility("hidden")))
-        int32_t ClearBatch(const std::unordered_set<size_t> &waitIds);
-
-        /**
-         * @brief check eventState_ and waitStream_ length
-         */
-        bool CheckEvent(const bool eventStateNeedCheck, const bool waitStreamNeedCheck, const size_t length);
-
-        void GetWaitingEvent(std::vector<size_t> &eventWaitIds);
-
-    private:
-        EventWaitManager(const std::string &eventType,
-                         const uint32_t waitIdCount) : eventType_(eventType),
-                                                       count_(waitIdCount),
-                                                       eventState_(static_cast<uint64_t>(waitIdCount), false),
-                                                       waitStream_(static_cast<uint64_t>(waitIdCount), UINT32_MAX),
-                                                       waitCount_(0) {}
-
-        // event type
-        const std::string eventType_;
-
-        // count
-        const uint32_t count_;
-
-        // true means event come
-        std::vector<bool> eventState_;
-
-        // record wait stream id
-        std::vector<uint32_t> waitStream_;
-
-        // protect eventState_, waitStream_
-        std::mutex waitMutex_;
-
-        int32_t waitCount_;
-    };
+    int32_t GuardBuf(Mbuf* const mbuf, const uint32_t modelId);
 
     /**
-       * @brief model stream manager.
-       */
-    class ModelStreamManager {
-    public:
-        static ModelStreamManager &GetInstance();
+     * @brief Malloc and guard buf
+     * BufManager malloc and take ownership of buf.
+     * @param allocSize buf size
+     * @param modelId buf for model
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    Mbuf* MallocAndGuardBuf(const uint32_t allocSize, const uint32_t modelId);
 
-        ~ModelStreamManager() = default;
+    Mbuf* MallocAndGuardBufU64(const uint64_t allocSize, const uint32_t modelId);
 
-        // not allow copy constructor and assignment operators
-        ModelStreamManager(const ModelStreamManager &) = delete;
+    /**
+     * @brief Malloc and guard buf list
+     * BufManager malloc and take ownership of buf list.
+     * @param sizeList buf size list
+     * @param len sizeList length
+     * @param modelId buf for model
+     * @param isLinkMbuf is link mbuf
+     * @param mbufPtrStore output all mbuf here, if isLinkMbuf is true, the first is mbuflist head
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    int32_t MallocAndGuardBufList(
+        const uint32_t* const sizeList, const uint32_t len, const uint32_t modelId, const bool isLinkMbuf,
+        Mbuf** const mbufPtrStore);
 
-        ModelStreamManager &operator=(const ModelStreamManager &) = delete;
+    /**
+     * @brief UnGuard buf.
+     * BufManager releases ownership of buf.
+     * @param modelId model id
+     * @param mbuf UnGuard buf
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    int32_t UnGuardBuf(const uint32_t modelId, const Mbuf* const mbuf);
 
-        ModelStreamManager(ModelStreamManager &&) = delete;
+    /**
+     * @brief free all buf in model.
+     * @param modelId model id
+     */
+    void FreeBuf(const uint32_t modelId);
 
-        ModelStreamManager &&operator=(ModelStreamManager &&) = delete;
+    /**
+     * @brief free all buf.
+     */
+    void FreeAllBuf();
 
-        void Reg(const uint32_t modelId, const std::vector<StreamInfo> &streams);
+    // Init memzone info
+    void InitBufManager();
 
-        void UnReg(const uint32_t modelId, const std::vector<StreamInfo> &streams);
+    // not allow copy constructor and assignment operators
+    BufManager(const BufManager&) = delete;
 
-        int32_t GetStreamFlag(const uint32_t streamId, uint32_t &streamFlag);
+    BufManager& operator=(const BufManager&) = delete;
 
-        int32_t GetStreamModelId(const uint32_t streamId, uint32_t &modelId);
+    BufManager(BufManager&&) = delete;
 
-    private:
-        ModelStreamManager() = default;
+    BufManager&& operator=(BufManager&&) = delete;
 
-        mutable std::mutex streamInfoMtx_;
-        // streamId: {modelId, streamFlag}
-        std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> streamInfos_;
-    };
+private:
+    BufManager() = default;
 
-    class RwLock {
-    public:
-        RwLock() = default;
+    /**
+     * @brief Malloc buf
+     * BufManager malloc and take ownership of buf.
+     * @param allocSize buf size
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    Mbuf* MallocBuf(const uint32_t allocSize);
 
-        ~RwLock() = default;
+    Mbuf* MallocBufU64(const uint64_t allocSize);
 
-        void Init();
+    /**
+     * @brief BufManager malloc and append mbuf
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    int32_t MallocAndAppend(
+        const uint32_t* const sizeList, const uint32_t idx, const uint32_t modelId, Mbuf*& mbuf, Mbuf*& mbufListHead);
 
-        bool RdLock();
+    // record mbufs belong to model, no mutex
+    std::list<Mbuf*> modelBufs_[MAX_MODEL_COUNT];
 
-        bool WrLock();
+    SpinLock lockForModels_[MAX_MODEL_COUNT];
+    // record mbufs memzone info
+    BuffCfg buffConfig_;
+};
 
-        void UnLock();
+/**
+ * @brief Event wait manager.
+ */
+class EventWaitManager {
+public:
+    static EventWaitManager& NotifyWaitManager(const uint32_t waitIdCount = MAX_NOTIFY_COUNT);
 
-    private:
-        std::mutex mu_;
-        uint32_t readCount_;
-        uint32_t writeCount_;
-    };
+    static EventWaitManager& EndGraphWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
 
-    class TableLockManager {
-    public:
-        static TableLockManager &GetInstance();
+    static EventWaitManager& QueueNotEmptyWaitManager(const uint32_t waitIdCount = DEFAULT_QUEUE_COUNT);
 
-        ~TableLockManager() = default;
+    static EventWaitManager& QueueNotFullWaitManager(const uint32_t waitIdCount = DEFAULT_QUEUE_COUNT);
 
-        bool RdLockTable(const uint32_t tableId);
+    static EventWaitManager& PrepareMemWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
 
-        bool WrLockTable(const uint32_t tableId);
+    static EventWaitManager& AnyQueNotEmptyWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
 
-        void UnLockTable(const uint32_t tableId);
+    static EventWaitManager& TableUnlockWaitManager(const uint32_t waitIdCount = MAX_MODEL_COUNT);
 
-    private:
-        TableLockManager() = default;
+    ~EventWaitManager() = default;
 
-        RwLock &GetTableLock(const uint32_t tableId);
+    // not allow copy constructor and assignment operators
+    EventWaitManager(const EventWaitManager&) = delete;
 
-        std::mutex mutexForLockMap_;
-        std::unordered_map<uint32_t, RwLock> tableLocks_;
-    };
-}
+    EventWaitManager& operator=(const EventWaitManager&) = delete;
+
+    EventWaitManager(EventWaitManager&&) = delete;
+
+    EventWaitManager&& operator=(EventWaitManager&&) = delete;
+
+    /**
+     * @brief Get wait stream or save notify state
+     * @param eventWaitId wait id.
+     * @param hasWait some stream is waiting
+     * @param waitStreamId wait stream id, valid only when hasWaitStream is true
+     */
+    void Event(const size_t eventWaitId, bool& hasWait, uint32_t& waitStreamId);
+
+    /**
+     * @brief when event is come, clear event state,
+     * or else save wait stream info and return need wait
+     * @param eventWaitId wait id
+     * @param waitStreamId wait stream id
+     * @param needWait if event state is true, set needWait to true;
+     */
+    void WaitEvent(const size_t eventWaitId, const uint32_t waitStreamId, bool& needWait);
+
+    /**
+     * @brief reset specified event state
+     * @param eventWaitId wait id
+     */
+    void ResetEventState(const size_t eventWaitId);
+
+    /**
+     * @brief clear specified record
+     * @param eventWaitId wait id
+     * @return AICPU_SCHEDULE_OK: success, other: failed
+     */
+    __attribute__((visibility("hidden"))) int32_t ClearBatch(const std::unordered_set<size_t>& waitIds);
+
+    /**
+     * @brief check eventState_ and waitStream_ length
+     */
+    bool CheckEvent(const bool eventStateNeedCheck, const bool waitStreamNeedCheck, const size_t length);
+
+    void GetWaitingEvent(std::vector<size_t>& eventWaitIds);
+
+private:
+    EventWaitManager(const std::string& eventType, const uint32_t waitIdCount)
+        : eventType_(eventType),
+          count_(waitIdCount),
+          eventState_(static_cast<uint64_t>(waitIdCount), false),
+          waitStream_(static_cast<uint64_t>(waitIdCount), UINT32_MAX),
+          waitCount_(0)
+    {}
+
+    // event type
+    const std::string eventType_;
+
+    // count
+    const uint32_t count_;
+
+    // true means event come
+    std::vector<bool> eventState_;
+
+    // record wait stream id
+    std::vector<uint32_t> waitStream_;
+
+    // protect eventState_, waitStream_
+    std::mutex waitMutex_;
+
+    int32_t waitCount_;
+};
+
+/**
+ * @brief model stream manager.
+ */
+class ModelStreamManager {
+public:
+    static ModelStreamManager& GetInstance();
+
+    ~ModelStreamManager() = default;
+
+    // not allow copy constructor and assignment operators
+    ModelStreamManager(const ModelStreamManager&) = delete;
+
+    ModelStreamManager& operator=(const ModelStreamManager&) = delete;
+
+    ModelStreamManager(ModelStreamManager&&) = delete;
+
+    ModelStreamManager&& operator=(ModelStreamManager&&) = delete;
+
+    void Reg(const uint32_t modelId, const std::vector<StreamInfo>& streams);
+
+    void UnReg(const uint32_t modelId, const std::vector<StreamInfo>& streams);
+
+    int32_t GetStreamFlag(const uint32_t streamId, uint32_t& streamFlag);
+
+    int32_t GetStreamModelId(const uint32_t streamId, uint32_t& modelId);
+
+private:
+    ModelStreamManager() = default;
+
+    mutable std::mutex streamInfoMtx_;
+    // streamId: {modelId, streamFlag}
+    std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> streamInfos_;
+};
+
+class RwLock {
+public:
+    RwLock() = default;
+
+    ~RwLock() = default;
+
+    void Init();
+
+    bool RdLock();
+
+    bool WrLock();
+
+    void UnLock();
+
+private:
+    std::mutex mu_;
+    uint32_t readCount_;
+    uint32_t writeCount_;
+};
+
+class TableLockManager {
+public:
+    static TableLockManager& GetInstance();
+
+    ~TableLockManager() = default;
+
+    bool RdLockTable(const uint32_t tableId);
+
+    bool WrLockTable(const uint32_t tableId);
+
+    void UnLockTable(const uint32_t tableId);
+
+private:
+    TableLockManager() = default;
+
+    RwLock& GetTableLock(const uint32_t tableId);
+
+    std::mutex mutexForLockMap_;
+    std::unordered_map<uint32_t, RwLock> tableLocks_;
+};
+} // namespace AicpuSchedule
 
 #endif // CORE_AICPUSD_RESOURCE_MANAGER_H

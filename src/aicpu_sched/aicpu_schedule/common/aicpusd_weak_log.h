@@ -41,4 +41,4 @@ inline int32_t DlogSetAttrAicpu(const LogAttr logAttrInfo)
 }
 #endif // LOG_CPP
 #endif // __cplusplus
-#endif  // AICPUSD_WEAK_LOG_H
+#endif // AICPUSD_WEAK_LOG_H

@@ -20,27 +20,25 @@ namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_ACTIVE_MODEL = "activeModel";
 constexpr uint32_t GE_GROUP_ID = 10U;
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelActiveModel::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelActiveModel::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(kernelTaskInfo.paraBase));
     if (modelIdPtr == nullptr) {
-        aicpusd_err("ModelActive kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelActive kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     aicpusd_info("Begin to active modelId[%u].", *modelIdPtr);
     AICPUSubEventInfo subEventInfo = {};
     subEventInfo.modelId = taskContext.modelId;
-    return AicpuMsgSend::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, const char_t>(&subEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
-        AICPU_SUB_EVENT_ACTIVE_MODEL,
-        GE_GROUP_ID,
-        true);
+    return AicpuMsgSend::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, const char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_ACTIVE_MODEL, GE_GROUP_ID, true);
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_ACTIVE_MODEL, OperatorKernelActiveModel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

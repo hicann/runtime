@@ -14,16 +14,16 @@
 #include "operator_kernel.h"
 #include "aicpusd_sqe_adapter.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelActiveEntryStream : public OperatorKernel {
 public:
     OperatorKernelActiveEntryStream() = default;
     ~OperatorKernelActiveEntryStream() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t DoCompute(const uint32_t streamId, const RunContext &taskContext) const;
+    int32_t DoCompute(const uint32_t streamId, const RunContext& taskContext) const;
     int32_t SubmitEndGraph(const uint32_t modelId) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_ACTIVE_ENTRY_STREAM_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_ACTIVE_ENTRY_STREAM_H

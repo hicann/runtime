@@ -23,7 +23,7 @@ enum class DeployContext {
  * @param [in]deployContext aicpu deploy context
  * @return status whether this operation success
  */
-StatusCode GetAicpuDeployContext(DeployContext &deployCtx);
+StatusCode GetAicpuDeployContext(DeployContext& deployCtx);
 
 /**
  * set cpu mode(whether InitCpuScheduler is called or not).

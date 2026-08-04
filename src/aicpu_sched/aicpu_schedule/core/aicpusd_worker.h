@@ -25,7 +25,7 @@ namespace AicpuSchedule {
 constexpr int32_t EXECUTE_CMD_ERROR = 127; // 与system实现保持一致
 class ThreadPool {
 public:
-    static ThreadPool &Instance();
+    static ThreadPool& Instance();
 
     int32_t CreateWorker(const AicpuSchedMode schedMode);
 
@@ -40,9 +40,10 @@ public:
 
     void SetThreadSchedModeByTsd();
     ThreadPool(const ThreadPool&) = delete;
-    ThreadPool &operator=(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
     ThreadPool(const ThreadPool&&) = delete;
-    ThreadPool &operator=(const ThreadPool&&) = delete;
+    ThreadPool& operator=(const ThreadPool&&) = delete;
+
 private:
     ThreadPool();
     ~ThreadPool();
@@ -69,5 +70,5 @@ private:
     bool hasAicpu_ = true;
     AicpuSchedMode schedMode_ = SCHED_MODE_INTERRUPT;
 };
-}  // namespace AicpuSchedule
-#endif  // AICPUSD_WORKER_H
+} // namespace AicpuSchedule
+#endif // AICPUSD_WORKER_H

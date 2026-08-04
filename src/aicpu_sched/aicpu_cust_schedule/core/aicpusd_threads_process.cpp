@@ -31,7 +31,8 @@ ComputeProcess::ComputeProcess()
       profilingMode_(PROFILING_CLOSE),
       aicpuPid_(-1),
       vfId_(0U),
-      runMode_(aicpu::AicpuRunMode::THREAD_MODE) {}
+      runMode_(aicpu::AicpuRunMode::THREAD_MODE)
+{}
 
 ComputeProcess& ComputeProcess::GetInstance()
 {
@@ -48,21 +49,20 @@ void ComputeProcess::UpdateProfilingSetting(uint32_t flag)
     if (kernelFlag) {
         aicpu::UpdateMode(profilingMode == PROFILING_OPEN);
     }
-    aicpusd_info("Update aicpu profiling mode success, flag[%u], profilingMode[%u], kernelFlag[%d],",
-                 flag, profilingMode, kernelFlag);
+    aicpusd_info(
+        "Update aicpu profiling mode success, flag[%u], profilingMode[%u], kernelFlag[%d],", flag, profilingMode,
+        kernelFlag);
 }
 
-int32_t ComputeProcess::Start(const uint32_t deviceId,
-                              const pid_t hostPid,
-                              const uint32_t profilingMode,
-                              const pid_t aicpuPid,
-                              const uint32_t vfId,
-                              const aicpu::AicpuRunMode runMode)
+int32_t ComputeProcess::Start(
+    const uint32_t deviceId, const pid_t hostPid, const uint32_t profilingMode, const pid_t aicpuPid,
+    const uint32_t vfId, const aicpu::AicpuRunMode runMode)
 {
-    aicpusd_info("AicpuCustSd start, deviceId[%u] hostpid[%d] profilingMode[%u] aicpuPid[%d] runMode[%d] vfId[%u].",
-        deviceId, hostPid, profilingMode, aicpuPid, static_cast<int32_t>(runMode), vfId);
+    aicpusd_info(
+        "AicpuCustSd start, deviceId[%u] hostpid[%d] profilingMode[%u] aicpuPid[%d] runMode[%d] vfId[%u].", deviceId,
+        hostPid, profilingMode, aicpuPid, static_cast<int32_t>(runMode), vfId);
 
-    const AicpuSchedule::AicpuDrvManager &drvMgr = AicpuSchedule::AicpuDrvManager::GetInstance();
+    const AicpuSchedule::AicpuDrvManager& drvMgr = AicpuSchedule::AicpuDrvManager::GetInstance();
     aicpuNum_ = drvMgr.GetAicpuNum();
 
     deviceId_ = deviceId;
@@ -84,19 +84,22 @@ int32_t ComputeProcess::Start(const uint32_t deviceId,
         if (AicpuSchedule::AicpuDrvManager::GetInstance().GetSafeVerifyFlag()) {
             drvRet = halMemBindSibling(hostPid, aicpuPid, vfId_, deviceId, SVM_MEM_BIND_SVM_GRP);
         } else {
-            //new
+            // new
             aicpusd_info("open prof so and bind sp group without alloc permission.");
             aicpu::LoadProfilingLib();
-            drvRet = halMemBindSibling(hostPid, aicpuPid, vfId_, deviceId, SVM_MEM_BIND_SVM_GRP | SVM_MEM_BIND_SP_GRP_NO_ALLOC);
+            drvRet = halMemBindSibling(
+                hostPid, aicpuPid, vfId_, deviceId, SVM_MEM_BIND_SVM_GRP | SVM_MEM_BIND_SP_GRP_NO_ALLOC);
         }
 
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_err("Failed to halMemBindSibling, hostpid[%d], aicpusd pid[%d], deviceId[%u], vfId[%u], ret[%d].",
-                        hostPid, aicpuPid, deviceId, vfId, drvRet);
+            aicpusd_err(
+                "Failed to halMemBindSibling, hostpid[%d], aicpusd pid[%d], deviceId[%u], vfId[%u], ret[%d].", hostPid,
+                aicpuPid, deviceId, vfId, drvRet);
             return static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR);
         }
-        aicpusd_info("Bind Sibling pid success, hostpid[%d] aicpusd pid[%d] deviceId[%u] vfId[%u].",
-            hostPid, aicpuPid, deviceId, vfId);
+        aicpusd_info(
+            "Bind Sibling pid success, hostpid[%d] aicpusd pid[%d] deviceId[%u] vfId[%u].", hostPid, aicpuPid, deviceId,
+            vfId);
     }
     aicpu::InitProfilingDataInfo(deviceId_, hostPid, CHANNEL_CUS_AICPU);
     UpdateProfilingSetting(profilingMode);
@@ -118,34 +121,30 @@ int32_t ComputeProcess::Start(const uint32_t deviceId,
         aicpusd_err("Drv create aicpu work tasks failed, ret[%d].", aicpuStartRet);
         return static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR);
     }
-    AicpuCustDumpProcess::GetInstance().InitDumpProcess(deviceId,
-                                                        AicpuDrvManager::GetInstance().GetAicpuNum());
-    aicpusd_info("Aicpu custom scheduler start succeed, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%d].",
-        deviceId, hostPid, profilingMode, runMode_);
+    AicpuCustDumpProcess::GetInstance().InitDumpProcess(deviceId, AicpuDrvManager::GetInstance().GetAicpuNum());
+    aicpusd_info(
+        "Aicpu custom scheduler start succeed, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%d].", deviceId,
+        hostPid, profilingMode, runMode_);
     return static_cast<int32_t>(ComputProcessRetCode::CP_RET_SUCCESS);
 }
 
 uint32_t ComputeProcess::RegisterScheduleTask()
 {
-    const auto randomKernelScheduler = [this] (const aicpu::Closure &task) {
-        return SubmitRandomKernelTask(task);
-    };
-    const auto splitKernelScheduler = [this] (const uint32_t parallelId, const int64_t shardNum,
-                                              const std::queue<aicpu::Closure> &taskQueue) {
-        const AICPUSharderTaskInfo taskInfo = {.parallelId=parallelId, .shardNum=shardNum};
-        return SubmitSplitKernelTask(taskInfo, taskQueue);
-    };
-    const auto splitKernelGetProcesser = [this] () {
-        return GetAndDoSplitKernelTask();
-    };
+    const auto randomKernelScheduler = [this](const aicpu::Closure& task) { return SubmitRandomKernelTask(task); };
+    const auto splitKernelScheduler =
+        [this](const uint32_t parallelId, const int64_t shardNum, const std::queue<aicpu::Closure>& taskQueue) {
+            const AICPUSharderTaskInfo taskInfo = {.parallelId = parallelId, .shardNum = shardNum};
+            return SubmitSplitKernelTask(taskInfo, taskQueue);
+        };
+    const auto splitKernelGetProcesser = [this]() { return GetAndDoSplitKernelTask(); };
 
-    aicpu::SharderNonBlock::GetInstance().Register(aicpuNum_, randomKernelScheduler, splitKernelScheduler,
-                                                   splitKernelGetProcesser);
+    aicpu::SharderNonBlock::GetInstance().Register(
+        aicpuNum_, randomKernelScheduler, splitKernelScheduler, splitKernelGetProcesser);
 
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t ComputeProcess::SubmitRandomKernelTask(const aicpu::Closure &task)
+uint32_t ComputeProcess::SubmitRandomKernelTask(const aicpu::Closure& task)
 {
     if (!randomKernelTask_.Enqueue(task)) {
         aicpusd_err("Add random kernel task failed.");
@@ -168,8 +167,8 @@ uint32_t ComputeProcess::SubmitRandomKernelTask(const aicpu::Closure &task)
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t ComputeProcess::SubmitSplitKernelTask(const AICPUSharderTaskInfo &taskInfo,
-                                               const std::queue<aicpu::Closure> &taskQueue)
+uint32_t ComputeProcess::SubmitSplitKernelTask(
+    const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& taskQueue)
 {
     if (!splitKernelTask_.BatchAddTask(taskInfo, taskQueue)) {
         aicpusd_err("Add split kernel task to map failed, parallelId=%u", taskInfo.parallelId);
@@ -183,25 +182,25 @@ uint32_t ComputeProcess::SubmitSplitKernelTask(const AICPUSharderTaskInfo &taskI
         ret = SubmitBatchSplitKernelEventDc(taskInfo);
     }
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Submit batch split kernel event failed. parallelId=%u, submitNum=%ld",
-                    taskInfo.parallelId, taskInfo.shardNum);
+        aicpusd_err(
+            "Submit batch split kernel event failed. parallelId=%u, submitNum=%ld", taskInfo.parallelId,
+            taskInfo.shardNum);
         return ret;
     }
 
-    aicpusd_info("Submit split kernel event success. parallelId=%u, submitNum=%ld",
-                 taskInfo.parallelId, taskInfo.shardNum);
+    aicpusd_info(
+        "Submit split kernel event success. parallelId=%u, submitNum=%ld", taskInfo.parallelId, taskInfo.shardNum);
 
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t ComputeProcess::SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo &taskInfo) const
+uint32_t ComputeProcess::SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo& taskInfo) const
 {
     const uint32_t submitNum = static_cast<uint32_t>(taskInfo.shardNum);
     for (uint32_t i = 0U; i < submitNum; ++i) {
         const uint32_t ret = SubmitOneSplitKernelEvent(taskInfo);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("Submit single split kernel event failed. parallelId=%u, i=%u",
-                        taskInfo.parallelId, i);
+            aicpusd_err("Submit single split kernel event failed. parallelId=%u, i=%u", taskInfo.parallelId, i);
             return ret;
         }
     }
@@ -209,7 +208,7 @@ uint32_t ComputeProcess::SubmitBatchSplitKernelEventOneByOne(const AICPUSharderT
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t ComputeProcess::SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo &taskInfo)
+uint32_t ComputeProcess::SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo& taskInfo)
 {
     AICPUSubEventInfo aicpuEventInfo = {};
     aicpuEventInfo.para.sharderTaskInfo = taskInfo;
@@ -220,26 +219,30 @@ uint32_t ComputeProcess::SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInf
     eventInfoSummary.msg_len = static_cast<uint32_t>(sizeof(AICPUSubEventInfo));
     uint32_t submitSuccessNum = 0U;
     const uint32_t submitNum = static_cast<uint32_t>(taskInfo.shardNum);
-    const int32_t drvRet = halEschedSubmitEventBatch(deviceId_, SHARED_EVENT_ENTRY,
-                                                     &eventInfoSummary, submitNum, &submitSuccessNum);
+    const int32_t drvRet =
+        halEschedSubmitEventBatch(deviceId_, SHARED_EVENT_ENTRY, &eventInfoSummary, submitNum, &submitSuccessNum);
     if ((drvRet == DRV_ERROR_NONE) && (submitSuccessNum == submitNum)) {
-        aicpusd_info("Batch submit split kernel event success, parallelId=%u, submitNum=%u",
-                     taskInfo.parallelId, submitNum);
+        aicpusd_info(
+            "Batch submit split kernel event success, parallelId=%u, submitNum=%u", taskInfo.parallelId, submitNum);
         return AICPU_SCHEDULE_OK;
     }
 
     /*
      * The queue depth of event schedule is only dozens. If too many split kernel event are submited,
-     * the queue will be full. Therefore, the main thread needs to process the task sending failure. 
+     * the queue will be full. Therefore, the main thread needs to process the task sending failure.
      */
-    aicpusd_warn("Batch submit some of split kernel event success, ret=%d, parallelId=%u, submitNum=%u, "
-                 "submitSuccessNum=%u", drvRet, taskInfo.parallelId, submitNum, submitSuccessNum);
+    aicpusd_warn(
+        "Batch submit some of split kernel event success, ret=%d, parallelId=%u, submitNum=%u, "
+        "submitSuccessNum=%u",
+        drvRet, taskInfo.parallelId, submitNum, submitSuccessNum);
 
     const uint32_t remainNum = (drvRet == DRV_ERROR_NONE) ? submitNum - submitSuccessNum : submitNum;
     for (uint32_t i = 0U; i < remainNum; ++i) {
         if (!DoSplitKernelTask(taskInfo)) {
-            aicpusd_err("Run single task failed after batch submit fail, parallelId=%u, submitNum=%u, "
-                        "remainNum=%u, i=%u", taskInfo.parallelId, submitNum, remainNum, i);
+            aicpusd_err(
+                "Run single task failed after batch submit fail, parallelId=%u, submitNum=%u, "
+                "remainNum=%u, i=%u",
+                taskInfo.parallelId, submitNum, remainNum, i);
             return AICPU_SCHEDULE_ERROR_INNER_ERROR;
         }
     }
@@ -247,7 +250,7 @@ uint32_t ComputeProcess::SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInf
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t ComputeProcess::SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo &taskInfo) const
+uint32_t ComputeProcess::SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo& taskInfo) const
 {
     AICPUSubEventInfo aicpuEventInfo = {};
     aicpuEventInfo.para.sharderTaskInfo = taskInfo;
@@ -259,8 +262,7 @@ uint32_t ComputeProcess::SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo &t
 
     const int32_t drvRet = halEschedSubmitEvent(deviceId_, &eventInfoSummary);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("Submit split kernel event failed. ret=%d, parallelId=%u",
-                    drvRet, taskInfo.parallelId);
+        aicpusd_err("Submit split kernel event failed. ret=%d, parallelId=%u", drvRet, taskInfo.parallelId);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
 
@@ -271,8 +273,8 @@ bool ComputeProcess::GetAndDoSplitKernelTask()
 {
     event_info eventInfo = {};
     const uint32_t threadIndex = aicpu::GetAicpuThreadIndex();
-    const int32_t retVal = halEschedGetEvent(deviceId_, AicpuSchedule::DEFAULT_GROUP_ID, threadIndex,
-                                             EVENT_SPLIT_KERNEL, &eventInfo);
+    const int32_t retVal =
+        halEschedGetEvent(deviceId_, AicpuSchedule::DEFAULT_GROUP_ID, threadIndex, EVENT_SPLIT_KERNEL, &eventInfo);
     if (retVal == DRV_ERROR_NO_EVENT) {
         return true;
     }
@@ -281,27 +283,28 @@ bool ComputeProcess::GetAndDoSplitKernelTask()
         return false;
     }
 
-    const AICPUSubEventInfo * const subEventInfo = PtrToPtr<const char_t, const AICPUSubEventInfo>(eventInfo.priv.msg);
-    aicpusd_info("Begin to process split kernel event. parallelId=%u, threadIdx=%u, type=get",
-                 subEventInfo->para.sharderTaskInfo.parallelId, threadIndex);
+    const AICPUSubEventInfo* const subEventInfo = PtrToPtr<const char_t, const AICPUSubEventInfo>(eventInfo.priv.msg);
+    aicpusd_info(
+        "Begin to process split kernel event. parallelId=%u, threadIdx=%u, type=get",
+        subEventInfo->para.sharderTaskInfo.parallelId, threadIndex);
 
     return DoSplitKernelTask(subEventInfo->para.sharderTaskInfo);
 }
 
-bool ComputeProcess::DoSplitKernelTask(const AICPUSharderTaskInfo &taskInfo)
+bool ComputeProcess::DoSplitKernelTask(const AICPUSharderTaskInfo& taskInfo)
 {
     aicpu::Closure task;
     if (!splitKernelTask_.PopTask(taskInfo, task)) {
-        aicpusd_run_warn("Get split kernel task from map failed, parallelId=%u, %s",
-                         taskInfo.parallelId, splitKernelTask_.DebugString().c_str());
+        aicpusd_run_warn(
+            "Get split kernel task from map failed, parallelId=%u, %s", taskInfo.parallelId,
+            splitKernelTask_.DebugString().c_str());
         return true;
     }
 
     try {
         task();
-    } catch (std::exception &e) {
-        aicpusd_err("Run split kernel task failed. parallelId=%u, exception=%s",
-                    taskInfo.parallelId, e.what());
+    } catch (std::exception& e) {
+        aicpusd_err("Run split kernel task failed. parallelId=%u, exception=%s", taskInfo.parallelId, e.what());
         return false;
     }
 
@@ -312,14 +315,13 @@ bool ComputeProcess::DoRandomKernelTask()
 {
     aicpu::Closure task;
     if (!randomKernelTask_.Dequeue(task)) {
-        aicpusd_err("Get random kernel task from map failed, %s",
-                    randomKernelTask_.DebugString().c_str());
+        aicpusd_err("Get random kernel task from map failed, %s", randomKernelTask_.DebugString().c_str());
         return false;
     }
 
     try {
         task();
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         aicpusd_err("Run random kernel task failed. exception=%s", e.what());
         return false;
     }
@@ -335,4 +337,4 @@ void ComputeProcess::Stop()
         aicpu::ReleaseProfiling();
     }
 }
-}
+} // namespace AicpuSchedule

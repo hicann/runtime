@@ -29,4 +29,4 @@ __attribute__((visibility("default"))) int32_t InitAICPUDatadump(const uint32_t 
  */
 __attribute__((visibility("default"))) int32_t StopAICPUDatadump(uint32_t deviceId, pid_t hostPid);
 }
-#endif  // INC_DATADUMP_INTERFACE_H
+#endif // INC_DATADUMP_INTERFACE_H

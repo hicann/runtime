@@ -19,15 +19,12 @@ DataPreprocess::TaskQueueMgr::TaskQueueMgr()
 }
 DataPreprocess::TaskQueueMgr::~TaskQueueMgr() {}
 
-TaskQueueMgr &DataPreprocess::TaskQueueMgr::GetInstance()
+TaskQueueMgr& DataPreprocess::TaskQueueMgr::GetInstance()
 {
     static TaskQueueMgr instance;
     return instance;
 }
 
-void DataPreprocess::TaskQueueMgr::OnPreprocessEvent(uint32_t eventId)
-{
-    return;
-}
+void DataPreprocess::TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) { return; }
 
 } // namespace DataPreprocess

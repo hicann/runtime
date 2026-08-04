@@ -23,7 +23,6 @@ constexpr const uint32_t VDEVICE_MAX_CPU_NUM = 64U;
 
 class FeatureCtrl {
 public:
-
     static void Init(const int64_t hardwareVersion, const uint32_t deviceId);
 
     static bool IsDoubleDieProduct();
@@ -63,7 +62,7 @@ public:
         }
     }
 
-    static inline void SetTsMsgVersion(uint16_t version)         
+    static inline void SetTsMsgVersion(uint16_t version)
     {
         if (isSetTsMsgVersion_) {
             return;
@@ -73,12 +72,9 @@ public:
         return;
     }
 
-    static inline uint16_t GetTsMsgVersion() 
-    {
-        return tsMsgVersion_;
-    }
+    static inline uint16_t GetTsMsgVersion() { return tsMsgVersion_; }
 
-    static inline void ClearTsMsgVersionInfo() 
+    static inline void ClearTsMsgVersionInfo()
     {
         tsMsgVersion_ = 0;
         isSetTsMsgVersion_ = false;

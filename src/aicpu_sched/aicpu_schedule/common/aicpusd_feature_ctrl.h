@@ -46,11 +46,11 @@ public:
 
     static bool IsUseMsqV2();
 
-    static bool ShouldInitDrvThread(); 
+    static bool ShouldInitDrvThread();
 
-    static bool ShouldLoadExtendKernelSo(); 
+    static bool ShouldLoadExtendKernelSo();
 
-    static bool ShouldSubmitTaskOneByOne(); 
+    static bool ShouldSubmitTaskOneByOne();
 
     static bool ShouldMonitorWork();
 
@@ -83,7 +83,7 @@ public:
         }
     }
 
-    static inline void SetTsMsgVersion(uint16_t version)         
+    static inline void SetTsMsgVersion(uint16_t version)
     {
         if (isSetTsMsgVersion_) {
             return;
@@ -93,21 +93,15 @@ public:
         return;
     }
 
-    static inline uint16_t GetTsMsgVersion() 
-    {
-        return tsMsgVersion_;
-    }
+    static inline uint16_t GetTsMsgVersion() { return tsMsgVersion_; }
 
-    static inline void ClearTsMsgVersionInfo() 
+    static inline void ClearTsMsgVersionInfo()
     {
         tsMsgVersion_ = 0;
         isSetTsMsgVersion_ = false;
     }
 
-    static inline AicpuSchedMode GetAicpuSchedMode()
-    {
-        return aicpuSchedMode_;
-    }
+    static inline AicpuSchedMode GetAicpuSchedMode() { return aicpuSchedMode_; }
 
 private:
     FeatureCtrl() = default;

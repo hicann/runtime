@@ -18,7 +18,6 @@
 #include "aicpusd_feature_ctrl.h"
 #include "aicpusd_msq_operator_manager.h"
 
-
 namespace AicpuSchedule {
 namespace {
 enum class MsqDataSize : uint32_t {
@@ -37,21 +36,21 @@ enum class CqeStatus : uint16_t {
 
 constexpr uint32_t HARD_THREAD_NUM_PER_CPU = 2U;
 constexpr uint32_t CQE_SIZE = 4U;
-}
+} // namespace
 
 thread_local MessageQueue::MsqStatusFunc MessageQueue::readMsqStatusFunc_ = nullptr;
 thread_local MessageQueue::MsqDataFunc MessageQueue::readMsqDataFunc_ = nullptr;
 thread_local MessageQueue::MsqRspFunc MessageQueue::sendMsqRspFunc_ = nullptr;
-thread_local uint32_t *MessageQueue::cqeAddr_ = nullptr;
+thread_local uint32_t* MessageQueue::cqeAddr_ = nullptr;
 std::shared_ptr<MsqImpl> MessageQueue::impl_ = nullptr;
 
-MessageQueue &MessageQueue::GetInstance()
+MessageQueue& MessageQueue::GetInstance()
 {
     static MessageQueue instance;
     return instance;
 }
 
-int32_t MessageQueue::InitMessageQueue(const uint32_t deviceId, const std::vector<uint32_t> &aicpuPhyIds)
+int32_t MessageQueue::InitMessageQueue(const uint32_t deviceId, const std::vector<uint32_t>& aicpuPhyIds)
 {
     int32_t ret = AICPU_SCHEDULE_OK;
     deviceId_ = deviceId;
@@ -69,8 +68,8 @@ int32_t MessageQueue::InitMessageQueue(const uint32_t deviceId, const std::vecto
         return ret;
     }
 
-    aicpusd_run_info("Init message queue success, deviceId=%u, mode=%d",
-                     deviceId, static_cast<int32_t>(FeatureCtrl::IsUseMsqV2()));
+    aicpusd_run_info(
+        "Init message queue success, deviceId=%u, mode=%d", deviceId, static_cast<int32_t>(FeatureCtrl::IsUseMsqV2()));
 
     return AICPU_SCHEDULE_OK;
 }
@@ -103,7 +102,7 @@ int32_t MessageQueue::InitCqeBaseAddr()
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t *MessageQueue::MapResAddr(const res_addr_type resType) const
+uint32_t* MessageQueue::MapResAddr(const res_addr_type resType) const
 {
     if (&halResAddrMap == nullptr) {
         aicpusd_err("Get resource address failed by nullptr");
@@ -123,8 +122,7 @@ uint32_t *MessageQueue::MapResAddr(const res_addr_type resType) const
         return nullptr;
     }
 
-    aicpusd_info("Get resource address success, type=%u, deviceId=%u, va=0x%x, len=%u",
-                 resType, deviceId_, va, len);
+    aicpusd_info("Get resource address success, type=%u, deviceId=%u, va=0x%x, len=%u", resType, deviceId_, va, len);
 
     return PtrToPtr<void, uint32_t>(ValueToPtr(va));
 }
@@ -188,15 +186,9 @@ int32_t MessageQueue::ResetMessageQueueStatus(const size_t threadIndex) const
     return ret;
 }
 
-int32_t MessageQueue::ResetMsqT0Status() const
-{
-    return impl_->ResetMsqT0Status();
-}
+int32_t MessageQueue::ResetMsqT0Status() const { return impl_->ResetMsqT0Status(); }
 
-int32_t MessageQueue::ResetMsqT1Status() const
-{
-    return impl_->ResetMsqT1Status();
-}
+int32_t MessageQueue::ResetMsqT1Status() const { return impl_->ResetMsqT1Status(); }
 
 int32_t MessageQueue::InitMessageQueueStatusReadFunc(const size_t threadIndex) const
 {
@@ -209,15 +201,9 @@ int32_t MessageQueue::InitMessageQueueStatusReadFunc(const size_t threadIndex) c
     return AICPU_SCHEDULE_OK;
 }
 
-MsqStatus MessageQueue::ReadMsqT0Status()
-{
-    return impl_->ReadMsqT0Status();
-}
- 
-MsqStatus MessageQueue::ReadMsqT1Status()
-{
-    return impl_->ReadMsqT1Status();
-}
+MsqStatus MessageQueue::ReadMsqT0Status() { return impl_->ReadMsqT0Status(); }
+
+MsqStatus MessageQueue::ReadMsqT1Status() { return impl_->ReadMsqT1Status(); }
 
 int32_t MessageQueue::InitMessageQueueDataReadFunc(const size_t threadIndex) const
 {
@@ -230,15 +216,9 @@ int32_t MessageQueue::InitMessageQueueDataReadFunc(const size_t threadIndex) con
     return AICPU_SCHEDULE_OK;
 }
 
-void MessageQueue::ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas)
-{
-    impl_->ReadMsqT0Data(msgSize, datas);
-}
- 
-void MessageQueue::ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas)
-{
-    impl_->ReadMsqT1Data(msgSize, datas);
-}
+void MessageQueue::ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) { impl_->ReadMsqT0Data(msgSize, datas); }
+
+void MessageQueue::ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) { impl_->ReadMsqT1Data(msgSize, datas); }
 
 int32_t MessageQueue::InitMessageQueueRspFunc(const size_t threadIndex) const
 {
@@ -251,21 +231,16 @@ int32_t MessageQueue::InitMessageQueueRspFunc(const size_t threadIndex) const
     return AICPU_SCHEDULE_OK;
 }
 
-void MessageQueue::SendMsqT0Response()
-{
-    impl_->SendMsqT0Response();
-}
+void MessageQueue::SendMsqT0Response() { impl_->SendMsqT0Response(); }
 
-void MessageQueue::SendMsqT1Response()
-{
-    impl_->SendMsqT1Response();
-}
+void MessageQueue::SendMsqT1Response() { impl_->SendMsqT1Response(); }
 
 int32_t MessageQueue::InitCqeAddr(const size_t threadIndex) const
 {
     if (threadIndex >= aicpuPhyIds_.size()) {
-        aicpusd_err("Init cqe addr failed, threadIdx larger than aicpuPhyIds size, threadIndex=%zu, size=%zu",
-                    threadIndex, aicpuPhyIds_.size());
+        aicpusd_err(
+            "Init cqe addr failed, threadIdx larger than aicpuPhyIds size, threadIndex=%zu, size=%zu", threadIndex,
+            aicpuPhyIds_.size());
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -307,14 +282,13 @@ void MessageQueue::SetCQE(const uint32_t errCode, const uint32_t status)
     const uint32_t cqeStatus = (status == 0U) ? static_cast<uint32_t>(CqeStatus::CQE_STATUS_OK) :
                                                 static_cast<uint32_t>(CqeStatus::CQE_STATUS_EXCEPTION);
 
-    aicpusd_info("Begin to set cqe, va=0x%x, errCode=%u, status=%u, cqeStatus=%u",
-                  cqeAddr_, errCode, status, cqeStatus);
+    aicpusd_info(
+        "Begin to set cqe, va=0x%x, errCode=%u, status=%u, cqeStatus=%u", cqeAddr_, errCode, status, cqeStatus);
     *cqeAddr_ = ((errCode << 16U) | (cqeStatus));
-    aicpusd_info("End to set cqe, va=0x%x, errCode=%u, status=%u, cqeStatus=%u",
-                  cqeAddr_, errCode, status, cqeStatus);
+    aicpusd_info("End to set cqe, va=0x%x, errCode=%u, status=%u, cqeStatus=%u", cqeAddr_, errCode, status, cqeStatus);
 }
 
-bool MessageQueue::WaitMsqInfoOnce(MsqDatas &datas)
+bool MessageQueue::WaitMsqInfoOnce(MsqDatas& datas)
 {
     const MsqStatus status = readMsqStatusFunc_();
     if (status.valid == 0U) {
@@ -335,10 +309,7 @@ void MessageQueue::WaitForEvent()
     return;
 }
 
-bool MessageQueue::IsUseMsqT0(const size_t threadIndex)
-{
-    return ((threadIndex % HARD_THREAD_NUM_PER_CPU) == 0U);
-}
+bool MessageQueue::IsUseMsqT0(const size_t threadIndex) { return ((threadIndex % HARD_THREAD_NUM_PER_CPU) == 0U); }
 
 int32_t MsqImplV1::ResetMsqT0Status() const
 {
@@ -352,17 +323,11 @@ int32_t MsqImplV1::ResetMsqT1Status() const
     return AICPU_SCHEDULE_OK;
 }
 
-MsqStatus MsqImplV1::ReadMsqT0Status() const
-{
-    return MsqOperatorManager::CallV1ReadT0Status();
-}
+MsqStatus MsqImplV1::ReadMsqT0Status() const { return MsqOperatorManager::CallV1ReadT0Status(); }
 
-MsqStatus MsqImplV1::ReadMsqT1Status() const
-{
-    return MsqOperatorManager::CallV1ReadT1Status();
-}
+MsqStatus MsqImplV1::ReadMsqT1Status() const { return MsqOperatorManager::CallV1ReadT1Status(); }
 
-void MsqImplV1::ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas) const
+void MsqImplV1::ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
         aicpusd_err("Message size is 0");
@@ -372,7 +337,7 @@ void MsqImplV1::ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas) const
     MsqOperatorManager::CallV1ReadT0Data(msgSize, &datas);
 }
 
-void MsqImplV1::ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas) const
+void MsqImplV1::ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
         aicpusd_err("Message size is 0");
@@ -405,12 +370,9 @@ int32_t MsqImplV2::ResetMsqT1Status() const
     return AICPU_SCHEDULE_OK;
 }
 
-MsqStatus MsqImplV2::ReadMsqT1Status() const
-{
-    return MsqOperatorManager::CallV2ReadT1Status();
-}
+MsqStatus MsqImplV2::ReadMsqT1Status() const { return MsqOperatorManager::CallV2ReadT1Status(); }
 
-void MsqImplV2::ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas) const
+void MsqImplV2::ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
         aicpusd_err("Message size is 0");

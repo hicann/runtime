@@ -16,13 +16,12 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
-int32_t OperatorKernelDequeueBase::DequeueTask(BufEnQueueInfo &bufInfo, const RunContext &taskContext,
-                                                const bool needPending) const
+int32_t OperatorKernelDequeueBase::DequeueTask(
+    BufEnQueueInfo& bufInfo, const RunContext& taskContext, const bool needPending) const
 {
-    void *taskMBuf = nullptr;
-    Mbuf ** const mBufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(bufInfo.mBufPtr));
+    void* taskMBuf = nullptr;
+    Mbuf** const mBufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(bufInfo.mBufPtr));
     if (mBufPptr == nullptr) {
         aicpusd_err("param mBufPptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -38,8 +37,8 @@ int32_t OperatorKernelDequeueBase::DequeueTask(BufEnQueueInfo &bufInfo, const Ru
         ret = halQueueDeQueue(deviceId, queueId, &taskMBuf);
         if (ret == DRV_ERROR_NONE) {
             // guard taskMBuf
-            const auto guardRet = BufManager::GetInstance().GuardBuf(reinterpret_cast<Mbuf *>(taskMBuf),
-                                                                     taskContext.modelId);
+            const auto guardRet =
+                BufManager::GetInstance().GuardBuf(reinterpret_cast<Mbuf*>(taskMBuf), taskContext.modelId);
             if (guardRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("BufManager guard dequeue failed, modelId[%u], ret[%d].", taskContext.modelId, guardRet);
                 return guardRet;
@@ -51,11 +50,11 @@ int32_t OperatorKernelDequeueBase::DequeueTask(BufEnQueueInfo &bufInfo, const Ru
             if (needPending) {
                 bool needWait = false;
                 // if exist NotEmptyEvent, needWait return true and not record wait stream
-                EventWaitManager::QueueNotEmptyWaitManager().
-                    WaitEvent(static_cast<size_t>(queueId), streamId, needWait);
+                EventWaitManager::QueueNotEmptyWaitManager().WaitEvent(
+                    static_cast<size_t>(queueId), streamId, needWait);
                 if (needWait) {
                     aicpusd_run_info("%s pending, queueId:%u, streamId:%u.", __func__, queueId, streamId);
-                    bool *pending = const_cast<bool *>(&taskContext.pending);
+                    bool* pending = const_cast<bool*>(&taskContext.pending);
                     *pending = true;
                     return AICPU_SCHEDULE_OK;
                 }
@@ -71,7 +70,7 @@ int32_t OperatorKernelDequeueBase::DequeueTask(BufEnQueueInfo &bufInfo, const Ru
     *mBufPptr = PtrToPtr<void, Mbuf>(taskMBuf);
 
     uint32_t headSize = 0U;
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     const auto drvRet = halMbufGetPrivInfo(*mBufPptr, &headBuf, &headSize);
     if (drvRet != DRV_ERROR_NONE) {
         aicpusd_err("Failed to get head info in input information, ret[%d].", drvRet);
@@ -86,17 +85,18 @@ int32_t OperatorKernelDequeueBase::DequeueTask(BufEnQueueInfo &bufInfo, const Ru
     return AICPU_SCHEDULE_OK;
 }
 
-void OperatorKernelDequeueBase::ProcessMbufHeadInDequeueTask(const uint32_t modelId, void * const headBuf,
-                                                             const uint32_t headSize) const
+void OperatorKernelDequeueBase::ProcessMbufHeadInDequeueTask(
+    const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
     if ((headBuf == nullptr) || (static_cast<size_t>(headSize) < sizeof(MbufHeadMsg))) {
-        aicpusd_debug("Skip process mbuf head msg. modelId=%u, headSize=%u, baseSize=%lu",
-                      modelId, headSize, sizeof(MbufHeadMsg));
+        aicpusd_debug(
+            "Skip process mbuf head msg. modelId=%u, headSize=%u, baseSize=%lu", modelId, headSize,
+            sizeof(MbufHeadMsg));
         return;
     }
 
-    MbufHeadMsg * const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf),
-                              MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
+    MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+        PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
 
     SetModelNullData(modelId, msg);
     SetModelRetCode(modelId, msg);
@@ -105,8 +105,8 @@ void OperatorKernelDequeueBase::ProcessMbufHeadInDequeueTask(const uint32_t mode
     return;
 }
 
-void OperatorKernelDequeueBase::SetModelEndOfSequence(const uint32_t modelId, void * const headBuf,
-                                                      const uint32_t headSize) const
+void OperatorKernelDequeueBase::SetModelEndOfSequence(
+    const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
     if (model == nullptr) {
@@ -114,8 +114,8 @@ void OperatorKernelDequeueBase::SetModelEndOfSequence(const uint32_t modelId, vo
     }
 
     if ((headBuf != nullptr) && (headSize > MBUF_HEAD_END_OF_SEQUENCE_POS)) {
-        const uint8_t * const endOfSequence = PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE,
-            static_cast<size_t>(MBUF_HEAD_END_OF_SEQUENCE_POS));
+        const uint8_t* const endOfSequence = PtrAdd<uint8_t>(
+            PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, static_cast<size_t>(MBUF_HEAD_END_OF_SEQUENCE_POS));
         if (*endOfSequence == END_OF_SEQUENCE_FLAG) {
             model->SetModelEndOfSequence();
             aicpusd_info("Set model end of sequence success.");
@@ -123,7 +123,7 @@ void OperatorKernelDequeueBase::SetModelEndOfSequence(const uint32_t modelId, vo
     }
 }
 
-void OperatorKernelDequeueBase::SetModelNullData(const uint32_t modelId, const MbufHeadMsg * const headMsg) const
+void OperatorKernelDequeueBase::SetModelNullData(const uint32_t modelId, const MbufHeadMsg* const headMsg) const
 {
     if (!FeatureCtrl::ShouldSetModuleNullData()) {
         aicpusd_info("skip SetModelNullData");
@@ -144,7 +144,7 @@ void OperatorKernelDequeueBase::SetModelNullData(const uint32_t modelId, const M
     return;
 }
 
-void OperatorKernelDequeueBase::SetModelRetCode(const uint32_t modelId, const MbufHeadMsg * const headMsg) const
+void OperatorKernelDequeueBase::SetModelRetCode(const uint32_t modelId, const MbufHeadMsg* const headMsg) const
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
     if (model == nullptr) {
@@ -165,7 +165,7 @@ void OperatorKernelDequeueBase::SetModelRetCode(const uint32_t modelId, const Mb
     return;
 }
 
-void OperatorKernelDequeueBase::SetMbufStepId(const uint32_t modelId, MbufHeadMsg * const headMsg) const
+void OperatorKernelDequeueBase::SetMbufStepId(const uint32_t modelId, MbufHeadMsg* const headMsg) const
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
     if (model == nullptr) {
@@ -181,8 +181,8 @@ void OperatorKernelDequeueBase::SetMbufStepId(const uint32_t modelId, MbufHeadMs
     } else {
         // get step id from mbuf head and refresh global step id
         if (info.stepIdAddr != nullptr) {
-            aicpusd_debug("get mbuf head. modelId=%u, before=%lu, after=%u",
-                          modelId, *info.stepIdAddr, headMsg->stepId);
+            aicpusd_debug(
+                "get mbuf head. modelId=%u, before=%lu, after=%u", modelId, *info.stepIdAddr, headMsg->stepId);
             if (*info.stepIdAddr <= headMsg->stepId) {
                 *info.stepIdAddr = headMsg->stepId;
             }
@@ -192,32 +192,33 @@ void OperatorKernelDequeueBase::SetMbufStepId(const uint32_t modelId, MbufHeadMs
     return;
 }
 
-int32_t OperatorKernelDequeueBase::AlignTimestamp(BatchDequeueInfo &batchDeqInfo, const RunContext &taskContext,
-                                                  uint32_t &maxAlignTimestamp, uint32_t &minAlignTimestamp,
-                                                  uint32_t &minTimestampIndex)
+int32_t OperatorKernelDequeueBase::AlignTimestamp(
+    BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext, uint32_t& maxAlignTimestamp,
+    uint32_t& minAlignTimestamp, uint32_t& minTimestampIndex)
 {
     uint32_t minTimestamp = UINT32_MAX;
     for (uint32_t i = 0U; i < batchDeqInfo.inputNums; ++i) {
         // mbuf and mbufHead has been checked in dequeue, not nullptr
-        Mbuf ** const mbufpPtr = PtrToPtr<void, Mbuf*>(ValueToPtr(batchDeqInfo.mbufAddrs[i]));
+        Mbuf** const mbufpPtr = PtrToPtr<void, Mbuf*>(ValueToPtr(batchDeqInfo.mbufAddrs[i]));
         uint32_t headSize = 0U;
-        void *headBuf = nullptr;
-        (void) halMbufGetPrivInfo(*mbufpPtr, &headBuf, &headSize);
+        void* headBuf = nullptr;
+        (void)halMbufGetPrivInfo(*mbufpPtr, &headBuf, &headSize);
         if (headBuf == nullptr || static_cast<size_t>(headSize) < sizeof(MbufHeadMsg)) {
             aicpusd_err("Mbuf head is error headSize[%u]", headSize);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
-        const MbufHeadMsg * const curHeadInfo = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+        const MbufHeadMsg* const curHeadInfo = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
             PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
         if (curHeadInfo->startTime != curHeadInfo->endTime) {
-            aicpusd_err("Mbuf head starttime[%llu] and endtime[%llu] not equal",
-                        curHeadInfo->startTime, curHeadInfo->endTime);
+            aicpusd_err(
+                "Mbuf head starttime[%llu] and endtime[%llu] not equal", curHeadInfo->startTime, curHeadInfo->endTime);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         const uint32_t curTimeStamp = static_cast<uint32_t>(curHeadInfo->startTime);
         if (curTimeStamp < batchDeqInfo.alignOffsets[i]) {
-            aicpusd_err("Mbuf head timestamp[%u] < alignOffset[%u], modelId[%u], streamId[%u]",
-                curTimeStamp, batchDeqInfo.alignOffsets[i], taskContext.modelId, taskContext.streamId);
+            aicpusd_err(
+                "Mbuf head timestamp[%u] < alignOffset[%u], modelId[%u], streamId[%u]", curTimeStamp,
+                batchDeqInfo.alignOffsets[i], taskContext.modelId, taskContext.streamId);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         const uint32_t timeAlign = curTimeStamp - batchDeqInfo.alignOffsets[i];
@@ -235,4 +236,4 @@ int32_t OperatorKernelDequeueBase::AlignTimestamp(BatchDequeueInfo &batchDeqInfo
     return AICPU_SCHEDULE_OK;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

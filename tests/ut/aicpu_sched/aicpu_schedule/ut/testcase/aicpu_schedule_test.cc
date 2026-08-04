@@ -877,6 +877,68 @@ TEST_F(AICPUScheduleTEST, EventDistributionTest)
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_NOT_FOUND_CMD_TYPE);
 }
 
+TEST_F(AICPUScheduleTEST, ExecuteProcessModelExecuteFail)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    MOCKER_CPP(&AicpuModel::ModelExecute).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED));
+
+    const int32_t ret = AicpuEventManager::GetInstance().ExecuteProcess(0U);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED);
+}
+
+TEST_F(AICPUScheduleTEST, TsControlExecuteProcessModelExecuteFail)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    MOCKER_CPP(&AicpuModel::ModelExecute).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED));
+
+    const int32_t ret = AicpuEventManager::GetInstance().TsControlExecuteProcess(0U);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED);
+}
+
+TEST_F(AICPUScheduleTEST, TsControlTaskAbortModelAbortBranch)
+{
+    AicpuModel aicpuModel;
+    AicpuSqeAdapter::AicpuModelOperateInfo info = {};
+    info.model_id = 1U;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    MOCKER_CPP(&AicpuModel::ModelAbort).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED));
+
+    const int32_t ret = AicpuEventManager::GetInstance().TsControlTaskAbort(info);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED);
+}
+
+TEST_F(AICPUScheduleTEST, ProcessHWTSControlEventVersionNotFound)
+{
+    event_info eventInfo = g_event;
+    MOCKER_CPP(&FeatureCtrl::GetTsMsgVersion).stubs().will(returnValue(static_cast<uint16_t>(9U)));
+
+    const int32_t ret = AicpuEventManager::GetInstance().ProcessHWTSControlEvent(eventInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_NOT_FOUND_VERSION);
+}
+
+TEST_F(AICPUScheduleTEST, ProcessHWTSKernelEventParseFail)
+{
+    event_info eventInfo = g_event;
+    eventInfo.comm.event_id = EVENT_TS_HWTS_KERNEL;
+    eventInfo.comm.subevent_id = EVENT_TS_HWTS_KERNEL;
+    hwts_ts_task eventMsg = {};
+    eventMsg.kernel_info.kernel_type = 100U;
+    eventInfo.priv.msg_len = sizeof(eventMsg);
+    ASSERT_EQ(memcpy_s(eventInfo.priv.msg, EVENT_MAX_MSG_LEN, &eventMsg, sizeof(eventMsg)), EOK);
+
+    const int32_t ret = AicpuEventManager::GetInstance().ProcessHWTSKernelEvent(eventInfo, 0U);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
+
+TEST_F(AICPUScheduleTEST, LoopProcessAlreadyStopped)
+{
+    AicpuEventManager::GetInstance().runningFlag_ = false;
+    AicpuEventManager::GetInstance().LoopProcess(0U);
+    EXPECT_FALSE(AicpuEventManager::GetInstance().runningFlag_);
+}
+
 TEST_F(AICPUScheduleTEST, ProcessHWTSControlEventTest)
 {
     MOCKER_CPP(&AicpuSdCustDumpProcess::InitCustDumpProcess).stubs().will(returnValue(0));

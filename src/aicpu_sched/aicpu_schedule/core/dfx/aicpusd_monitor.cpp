@@ -33,13 +33,13 @@ constexpr uint64_t AICPU_TASK_TIMEOUT_LONG = 60UL;
 constexpr uint64_t AICPU_TASK_TIMEOUT_FPGA = 2800UL;
 constexpr const uint32_t MONITOR_SLEEP_INTERVAL = 100000U; // 100ms
 #ifndef aicpusd_UT
-constexpr const uint32_t MONITOR_TIMEOUT_COUNT = 10U; // 1s
-constexpr const uint32_t MONITOR_SUPPLYENQUE_COUNT = 20U; // 2s
+constexpr const uint32_t MONITOR_TIMEOUT_COUNT = 10U;      // 1s
+constexpr const uint32_t MONITOR_SUPPLYENQUE_COUNT = 20U;  // 2s
 #else
 constexpr const uint32_t MONITOR_TIMEOUT_COUNT = 1U;
 constexpr const uint32_t MONITOR_SUPPLYENQUE_COUNT = 1U;
 #endif
-}
+} // namespace
 
 namespace AicpuSchedule {
 /**
@@ -75,7 +75,7 @@ AicpuMonitor::~AicpuMonitor()
         StopMonitor();
     }
     aicpusd_info("AicpuMonitor join begin");
-    for (auto &monitorThread : th_) {
+    for (auto& monitorThread : th_) {
         if (monitorThread.joinable()) {
             monitorThread.join();
         }
@@ -83,7 +83,7 @@ AicpuMonitor::~AicpuMonitor()
     aicpusd_info("AicpuMonitor join end");
 }
 
-AicpuMonitor &AicpuMonitor::GetInstance()
+AicpuMonitor& AicpuMonitor::GetInstance()
 {
     static AicpuMonitor instance;
     return instance;
@@ -154,8 +154,8 @@ int32_t AicpuMonitor::InitMonitor(const uint32_t devId, const bool isOnline)
 
     InitAsyncOpTimer();
 
-    aicpusd_run_info("Init aicpu monitor successfully, taskTimeout=%lus, tickFreq=%lu.",
-                     taskTimeout_, aicpu::GetSystemTickFreq());
+    aicpusd_run_info(
+        "Init aicpu monitor successfully, taskTimeout=%lus, tickFreq=%lu.", taskTimeout_, aicpu::GetSystemTickFreq());
     return AICPU_SCHEDULE_OK;
 }
 
@@ -167,16 +167,15 @@ void AicpuMonitor::InitAsyncOpTimer()
         return SetOpTimerStartTime(timerHandle, timeInS);
     };
 
-    const auto stopTimerCbk = [this](const aicpu::TimerHandle timerHandle) {
-        return SetOpTimerEndTime(timerHandle);
-    };
+    const auto stopTimerCbk = [this](const aicpu::TimerHandle timerHandle) { return SetOpTimerEndTime(timerHandle); };
 
     aicpu::AicpuTimer::GetInstance().RegistMonitorFunc(startTimerCbk, stopTimerCbk);
 }
 
 void AicpuMonitor::SendKillMsgToTsd() const
 {
-    aicpusd_run_info("dev[%u] send msg to tsdaemon, tsdaemon will kill aicpu-sd process[%u]", deviceId_,
+    aicpusd_run_info(
+        "dev[%u] send msg to tsdaemon, tsdaemon will kill aicpu-sd process[%u]", deviceId_,
         static_cast<uint32_t>(getpid()));
     AicpusdLastword::GetInstance().LastwordCallback();
     // flush cache log to slogd
@@ -188,14 +187,15 @@ void AicpuMonitor::SendKillMsgToTsd() const
         aicpusd_run_info("offline mode no need send msg to tsd");
         return;
     }
-    const int32_t ret = TsdDestroy(deviceId_, TSD_COMPUTE,
-        static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()), AicpuDrvManager::GetInstance().GetVfId());
+    const int32_t ret = TsdDestroy(
+        deviceId_, TSD_COMPUTE, static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid()),
+        AicpuDrvManager::GetInstance().GetVfId());
     if (ret != 0) {
         aicpusd_err("dev[%u] send abnormal msg to tsdaemon failed, ret[%d]", deviceId_, ret);
     }
 }
 
-void AicpuMonitor::SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor &taskInfo) const
+void AicpuMonitor::SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor& taskInfo) const
 {
     if ((threadIndex < aicpuCoreNum_) && online_) {
         monitorTaskInfo_[static_cast<uint64_t>(threadIndex)] = taskInfo;
@@ -204,8 +204,7 @@ void AicpuMonitor::SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMoni
 
 int32_t AicpuMonitor::SetTaskTimeoutFlag()
 {
-    taskTimeout_ = FeatureCtrl::IsDoubleDieProduct() ?
-                   AICPU_TASK_TIMEOUT_LONG : AICPU_TASK_TIMEOUT;
+    taskTimeout_ = FeatureCtrl::IsDoubleDieProduct() ? AICPU_TASK_TIMEOUT_LONG : AICPU_TASK_TIMEOUT;
     taskTimeoutTick_ = taskTimeout_ * aicpu::GetSystemTickFreq();
     if (AicpuUtil::IsEnvValEqual(ENV_NAME_DATAMASTER_RUN_MODE, "1") ||
         AicpuUtil::IsEnvValEqual(ENV_NAME_DATAMASTER_RUN_MODE, "2")) {
@@ -238,7 +237,7 @@ int32_t AicpuMonitor::SetModelTimeoutFlag()
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         modelTimeoutTick_ = modelTimeout * frep;
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         aicpusd_err("Convert AICPU_MODEL_TIMEOUT[%s]s to number failed, %s", timeoutFlag.c_str(), e.what());
         return AICPU_SCHEDULE_ERROR_COMMON_ERROR;
     }
@@ -318,7 +317,7 @@ void AicpuMonitor::SetOpTimerEndTime(const aicpu::TimerHandle timerId)
     }
 }
 
-void AicpuMonitor::Work(AicpuMonitor *const monitor)
+void AicpuMonitor::Work(AicpuMonitor* const monitor)
 {
     std::once_flag exeOnce;
     uint32_t count = 0;
@@ -340,7 +339,7 @@ void AicpuMonitor::Work(AicpuMonitor *const monitor)
                 monitor->HandleModelTimeout();
                 monitor->HandleOpTimeout();
             }
-            if (FeatureCtrl::ShouldMonitorWork() ) {
+            if (FeatureCtrl::ShouldMonitorWork()) {
                 AicpuPulseNotify();
             }
             std::call_once(exeOnce, [&]() {
@@ -362,7 +361,7 @@ void AicpuMonitor::Work(AicpuMonitor *const monitor)
                 }
                 aicpusd_info("supply enque event for model[%u].", waitId);
             }
-            eventWaitIds.clear();           
+            eventWaitIds.clear();
         }
         count++;
         if (count == MONITOR_SUPPLYENQUE_COUNT) {
@@ -387,7 +386,7 @@ int32_t AicpuMonitor::Run()
     try {
         std::thread monitorThread(&AicpuMonitor::Work, this);
         th_.emplace_back(std::move(monitorThread));
-    } catch (std::exception &threadException) {
+    } catch (std::exception& threadException) {
         (void)sem_destroy(&sem_);
         aicpusd_err("create aicpu monitor thread object failed, %s", threadException.what());
         return AICPU_SCHEDULE_ERROR_COMMON_ERROR;
@@ -414,7 +413,7 @@ void AicpuMonitor::StopMonitor()
     aicpusd_info("Begin to stop aicpu monitor");
     const std::unique_lock<std::mutex> lk(mutex_);
     done_ = true;
-    for (auto &thead : th_) {
+    for (auto& thead : th_) {
         if (thead.joinable()) {
             thead.join();
         }
@@ -432,8 +431,9 @@ void AicpuMonitor::SetOpExecuteTimeOut(const uint32_t timeOutEn, const uint32_t 
         tsOpTimeOut_ = opExecuteTimeOut;
         taskTimeoutTick_ = opExecuteTimeOut * aicpu::GetSystemTickFreq();
         taskTimeoutFlag_ = true;
-        aicpusd_run_info("Get enable op execute timeout config from ts. timeout[%u]s tickFrequency[%lu]",
-                         tsOpTimeOut_.load(), taskTimeoutTick_.load());
+        aicpusd_run_info(
+            "Get enable op execute timeout config from ts. timeout[%u]s tickFrequency[%lu]", tsOpTimeOut_.load(),
+            taskTimeoutTick_.load());
     } else {
         tsTimeoutEnable_ = false;
         (void)SetTaskTimeoutFlag();
@@ -463,13 +463,14 @@ void AicpuMonitor::HandleTaskTimeout()
             std::string opname;
             (void)aicpu::GetOpname(i, opname);
             std::ostringstream oss;
-            oss << "Send timeout to tsdaemon, tsdaemon will kill aicpu-sd process, thread index[" << i <<
-                "], op name[" << opname << "]";
+            oss << "Send timeout to tsdaemon, tsdaemon will kill aicpu-sd process, thread index[" << i << "], op name["
+                << opname << "]";
             if (monitorTaskInfo_[static_cast<uint64_t>(i)].isHwts) {
                 oss << ", " << MonitorDebug::MonitorDebugString(monitorTaskInfo_[static_cast<uint64_t>(i)]);
             }
-            aicpusd_err("%s, nowTick:%llu, startTick:%llu, timeOut:%llu, tickFreq:%llu.", oss.str().c_str(),
-                        nowTick, startTick, taskTimeoutTick_.load(), aicpu::GetSystemTickFreq());
+            aicpusd_err(
+                "%s, nowTick:%llu, startTick:%llu, timeOut:%llu, tickFreq:%llu.", oss.str().c_str(), nowTick, startTick,
+                taskTimeoutTick_.load(), aicpu::GetSystemTickFreq());
             aicpusd_run_info("%s", ComputeProcess::GetInstance().DebugString().c_str());
             SendKillMsgToTsd();
             return;
@@ -498,18 +499,19 @@ void AicpuMonitor::HandleOpTimeout()
     {
         const std::lock_guard<std::mutex> lk(opTimerMapMutex_);
         const uint64_t nowTick = aicpu::GetSystemTick();
-        for (auto &timer : opTimer_) {
+        for (auto& timer : opTimer_) {
             const auto runFlag = timer.second->GetRunFlag();
             const auto startTick = timer.second->GetStartTick();
-            const auto timeoutTick = timer.second->GetTimeTick() == 0 ? taskTimeoutTick_.load() :
-                                     timer.second->GetTimeTick();
+            const auto timeoutTick =
+                timer.second->GetTimeTick() == 0 ? taskTimeoutTick_.load() : timer.second->GetTimeTick();
             if (runFlag && (nowTick > startTick) && ((nowTick - startTick) >= timeoutTick)) {
                 timerId = timer.first;
                 isTimeout = true;
                 std::ostringstream oss;
                 oss << "Op timeout occurred, timer id[" << timerId << "]";
-                aicpusd_err("%s, nowTick:%llu, startTick:%llu, timeOut:%llu, tickFreq:%llu.", oss.str().c_str(),
-                            nowTick, startTick, taskTimeoutTick_.load(), aicpu::GetSystemTickFreq());
+                aicpusd_err(
+                    "%s, nowTick:%llu, startTick:%llu, timeOut:%llu, tickFreq:%llu.", oss.str().c_str(), nowTick,
+                    startTick, taskTimeoutTick_.load(), aicpu::GetSystemTickFreq());
                 aicpu::AicpuTimer::GetInstance().CallTimeoutCallback(timerId);
             }
         }
@@ -527,7 +529,8 @@ void AicpuMonitor::HandleModelTimeout()
     if (modelTimeoutFlag_) {
         const uint64_t nowTick = aicpu::GetSystemTick();
         for (uint32_t modelId = 0U; modelId < MAX_MODEL_COUNT; ++modelId) {
-            const TaskTimer timer(modelTimer_[static_cast<uint64_t>(modelId)].GetStartTick(),
+            const TaskTimer timer(
+                modelTimer_[static_cast<uint64_t>(modelId)].GetStartTick(),
                 modelTimer_[static_cast<uint64_t>(modelId)].GetRunFlag());
             if (timer.GetRunFlag() && (nowTick > timer.GetStartTick()) &&
                 ((nowTick - timer.GetStartTick()) >= modelTimeoutTick_)) {
@@ -540,13 +543,7 @@ void AicpuMonitor::HandleModelTimeout()
     }
 }
 
-void AicpuMonitor::DisableModelTimeout()
-{
-    modelTimeoutFlag_ = false;
-}
+void AicpuMonitor::DisableModelTimeout() { modelTimeoutFlag_ = false; }
 
-uint32_t AicpuMonitor::GetTaskDefaultTimeout() const
-{
-    return tsTimeoutEnable_ ? tsOpTimeOut_.load() : taskTimeout_;
-}
+uint32_t AicpuMonitor::GetTaskDefaultTimeout() const { return tsTimeoutEnable_ ? tsOpTimeOut_.load() : taskTimeout_; }
 } // namespace AicpuSchedule

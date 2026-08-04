@@ -13,15 +13,15 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelMarkStep : public OperatorKernel {
 public:
     OperatorKernelMarkStep() = default;
     ~OperatorKernelMarkStep() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t CheckMarkStepPara(const MarkStepInfo * const markStepInfo) const;
+    int32_t CheckMarkStepPara(const MarkStepInfo* const markStepInfo) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MARK_STEP_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MARK_STEP_H

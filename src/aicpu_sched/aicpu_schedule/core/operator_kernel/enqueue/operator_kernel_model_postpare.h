@@ -14,16 +14,16 @@
 #include "operator_kernel.h"
 #include "operator_kernel_model_batch_enqueue.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelPostpare : public OperatorKernelModelBatchEnqueue {
 public:
     OperatorKernelModelPostpare() = default;
     ~OperatorKernelModelPostpare() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    bool CheckPointListNullptr(const uint64_t * const pointList, const uint32_t pointSize) const;
-    int32_t DoPostpare(AicpuPostpareInfo &msgInfo, const RunContext &taskContext) const;
+    bool CheckPointListNullptr(const uint64_t* const pointList, const uint32_t pointSize) const;
+    int32_t DoPostpare(AicpuPostpareInfo& msgInfo, const RunContext& taskContext) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_POSTPARE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_POSTPARE_H

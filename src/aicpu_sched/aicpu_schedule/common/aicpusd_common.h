@@ -34,22 +34,22 @@ using AicpuModelInfo = rtAicpuModelInfo_t;
 using QueInfo = rtModelQueueInfo_t;
 using TsAicpuModelOperate = ts_aicpu_model_operate_t;
 using TsAicpuModelOperateMsg = ts_aicpu_model_operate_msg_t;
-using TsAicpuMsgVersion =  ts_aicpu_msg_version_t;
+using TsAicpuMsgVersion = ts_aicpu_msg_version_t;
 using TsToAicpuTaskReport = ts_to_aicpu_task_report_t;
-using TsToAicpuTaskReportMsg  = ts_to_aicpu_task_report_msg_t;
+using TsToAicpuTaskReportMsg = ts_to_aicpu_task_report_msg_t;
 using TsAicpuNotify = ts_aicpu_notify_t;
-using TsAicpuSqe = ts_aicpu_sqe_t; // v0
+using TsAicpuSqe = ts_aicpu_sqe_t;          // v0
 using TsAicpuMsgInfo = ts_aicpu_msg_info_t; // v1
 using TsToAicpuDataDump = ts_to_aicpu_datadump_t;
 using TsToAicpuNormalDataDumpMsg = ts_to_aicpu_normal_datadump_msg_t;
-using TsToAicpuDebugDataDumpMsg =  ts_to_aicpu_debug_datadump_msg_t;
+using TsToAicpuDebugDataDumpMsg = ts_to_aicpu_debug_datadump_msg_t;
 using TsToAicpuDataDumpInfoLoad = ts_to_aicpu_datadumploadinfo_t;
 using TsToAicpuDataDumpInfoloadMsg = ts_to_aicpu_datadump_info_load_msg_t;
-using TsAicpuResponseMsg =  ts_aicpu_response_msg_t;
+using TsAicpuResponseMsg = ts_aicpu_response_msg_t;
 using TsToAicpuFFTSPlusDataDump = ts_to_aicpu_ffts_plus_datadump_t;
-using TsToAicpuTimeOutConfig =  ts_to_aicpu_timeout_config_t;
-using TsToAicpuInfoLoad =  ts_to_aicpu_loadinfo_t;
-using TsToAicpuInfoLoadMsg  =  ts_to_aicpu_info_load_msg_t;
+using TsToAicpuTimeOutConfig = ts_to_aicpu_timeout_config_t;
+using TsToAicpuInfoLoad = ts_to_aicpu_loadinfo_t;
+using TsToAicpuInfoLoadMsg = ts_to_aicpu_info_load_msg_t;
 using TsToAicpuAicErrReport = ts_to_aicpu_aic_err_report_t;
 using TsToAicpuAicErrMsgReport = ts_to_aicpu_aic_err_msg_t;
 using TsDrvCtrlMsg = tsdrv_ctrl_msg;
@@ -96,8 +96,8 @@ constexpr uint32_t MAX_MARK_STEP_RESERVE = 30U;
 constexpr uint32_t MAX_REMOTE_COMMON_TASK_BUFF_LEN = 8U;
 constexpr uint32_t MAX_SAVE_TASK_BUFF_LEN = 2U;
 
-#define VM_QOS_PROCESS_STARTUP    _IOW('Q', 0x0, int32_t) // 'Q' is a magic number
-#define VM_QOS_PROCESS_SUSPEND    _IOW('Q', 0x1, int32_t)
+#define VM_QOS_PROCESS_STARTUP _IOW('Q', 0x0, int32_t) // 'Q' is a magic number
+#define VM_QOS_PROCESS_SUSPEND _IOW('Q', 0x1, int32_t)
 struct VfMsgInfo {
     uint32_t deviceId;
     uint32_t vfId;
@@ -193,7 +193,7 @@ using AicpuPostpareInfo = AicpuPrepareInfo;
 
 struct ModelPrepareData {
     uint32_t dequeueIndex;
-    void *lastInputMbuflistPtr;
+    void* lastInputMbuflistPtr;
 };
 
 struct ModelPostpareData {
@@ -201,15 +201,15 @@ struct ModelPostpareData {
 };
 
 struct BufEnQueueInfo {
-    uint32_t queueID;          // 算子的输入，队列id，由模型编译时填入
-    uint64_t mBufPtr;          // 一个二级指针，指向Mbuf的指针
+    uint32_t queueID; // 算子的输入，队列id，由模型编译时填入
+    uint64_t mBufPtr; // 一个二级指针，指向Mbuf的指针
 };
 
 struct QueueAttrs {
     uint32_t queueId;
     int32_t deviceType; // CPU NPU
     int32_t deviceId;
-    uint32_t logicId {0U};
+    uint32_t logicId{0U};
 };
 
 struct ReportStatusInfo {
@@ -221,7 +221,7 @@ struct ReportStatusInfo {
 struct MarkStepInfo {
     uint32_t groupTotalCount;
     uint32_t groupIndex;
-    uint32_t dataGwRule;  // gw策略，当前固定取枚举值0，方便后续扩展
+    uint32_t dataGwRule; // gw策略，当前固定取枚举值0，方便后续扩展
     uint64_t stepIdAddr;
     uint64_t reserv0; // 兼容性原因：新CANN+老Driver无法解决CheckMarkStepPara报错，因此第一个预留
     uint8_t headFlag; // 1 not is head flag, 0 is head flag
@@ -230,10 +230,10 @@ struct MarkStepInfo {
 };
 
 struct ProcessOutputInfo {
-    uint32_t dataSize;        // 输入，需要outputTensor内存大小
-    uint64_t srcPtr;          // 输入，一个二级指针，模型outputTensor地址
-    uint64_t inMBuf;          // 输入，buff指针，用于获取header填充输出buff的头部
-    uint64_t outMBuf;         // 输出，申请的输出数据buff指针
+    uint32_t dataSize; // 输入，需要outputTensor内存大小
+    uint64_t srcPtr;   // 输入，一个二级指针，模型outputTensor地址
+    uint64_t inMBuf;   // 输入，buff指针，用于获取header填充输出buff的头部
+    uint64_t outMBuf;  // 输出，申请的输出数据buff指针
 };
 
 enum class ThreadStatus {
@@ -283,66 +283,63 @@ enum class BindQueueInitStatus {
     INITED,
 };
 
-enum class CpType {
-    MASTER,
-    SLAVE
-};
+enum class CpType { MASTER, SLAVE };
 
 struct CallbackMsg {
     event_info event;
-    Mbuf *buff;
+    Mbuf* buff;
 };
 
 struct BatchDequeueDesc {
     uint32_t inputNums;
     uint32_t alignInterval;
     uint64_t alignOffsetsAddr; // the address of uint32_t array which size is inputNums
-    uint64_t queueIdsAddr; // the address of uint32_t array which size is inputNums
-    uint64_t mbufAddrsAddr; // the address of uint64_t array which size is inputNums
+    uint64_t queueIdsAddr;     // the address of uint32_t array which size is inputNums
+    uint64_t mbufAddrsAddr;    // the address of uint64_t array which size is inputNums
 };
 
 struct BatchDequeueInfo {
     uint32_t inputNums;
     uint32_t alignInterval;
-    uint32_t *alignOffsets; // the pointer of uint32_t array which size is inputNums
-    uint32_t *queueIds; // the pointer of uint32_t array which size is inputNums
-    uint64_t *mbufAddrs; // the pointer of uint64_t array which size is inputNums
+    uint32_t* alignOffsets; // the pointer of uint32_t array which size is inputNums
+    uint32_t* queueIds;     // the pointer of uint32_t array which size is inputNums
+    uint64_t* mbufAddrs;    // the pointer of uint64_t array which size is inputNums
 };
 
 constexpr size_t RESERVED_PARAMS_NUM = 128U;
 struct PrepareMemTaskParam {
-    uint32_t modelId;            // model id
-    uint64_t inBuffSize;        // input buffer size
-    uint64_t outBuffSize;       // output buffer size
-    uint32_t inBuffNum;         // in buff num
-    uint32_t outBuffNum;        // out buff num
-    uint64_t inBuffPtr;         // input buffer(mbuf) secondary pointer
-    uint64_t outBuffPtr;        // output buffer(mbuf) secondary pointer
+    uint32_t modelId;     // model id
+    uint64_t inBuffSize;  // input buffer size
+    uint64_t outBuffSize; // output buffer size
+    uint32_t inBuffNum;   // in buff num
+    uint32_t outBuffNum;  // out buff num
+    uint64_t inBuffPtr;   // input buffer(mbuf) secondary pointer
+    uint64_t outBuffPtr;  // output buffer(mbuf) secondary pointer
     uint64_t reserved[RESERVED_PARAMS_NUM];
 };
 
 struct GetRemoteReqTaskParam {
-    uint32_t modelId;             // model id
-    uint64_t inBuffPtr;          // input buffer(mbuf) secondary pointer
-    uint32_t inBuffNum;        // input buffer index
-    bool syncFlag;                // sync flag (false: async, true: sync)
+    uint32_t modelId;   // model id
+    uint64_t inBuffPtr; // input buffer(mbuf) secondary pointer
+    uint32_t inBuffNum; // input buffer index
+    bool syncFlag;      // sync flag (false: async, true: sync)
     uint64_t embeddingDim;
     uint64_t reserved[RESERVED_PARAMS_NUM - 1];
 };
 
 struct SetRemoteRespTaskParam {
-    uint32_t modelId;             // model id
-    uint64_t inBuffPtr;          // input buffer(mbuf) secondary pointer
-    uint32_t inBuffNum;        // input buffer index
-    uint64_t outBuffPtr;         // output buffer(mbuf) secondary pointer
-    uint32_t outBuffNum;       // output buffer index
-    bool syncFlag;                // sync flag (false: async, true: sync)
+    uint32_t modelId;    // model id
+    uint64_t inBuffPtr;  // input buffer(mbuf) secondary pointer
+    uint32_t inBuffNum;  // input buffer index
+    uint64_t outBuffPtr; // output buffer(mbuf) secondary pointer
+    uint32_t outBuffNum; // output buffer index
+    bool syncFlag;       // sync flag (false: async, true: sync)
     uint64_t reserved[RESERVED_PARAMS_NUM];
 };
 
 struct StreamRepeatTaskParam {
-    uint32_t modelId;             // model id
-    uint32_t streamId;            // stream id
+    uint32_t modelId;  // model id
+    uint32_t streamId; // stream id
 };
 
 struct BatchSendRecvTaskParam {
@@ -361,17 +358,17 @@ struct RemoteCommTaskParm {
 
 struct GatherDequeParam {
     uint32_t inputNums;
-    int32_t  inputsAlignTimeout; // 数据缓存超时清理时间，(单位ms), 配置-1永不超时
-    uint32_t  inputsAlignMaxCacheNum; // 数据匹配最大缓存数量
+    int32_t inputsAlignTimeout;      // 数据缓存超时清理时间，(单位ms), 配置-1永不超时
+    uint32_t inputsAlignMaxCacheNum; // 数据匹配最大缓存数量
     uint32_t inputsAlignDropout; // 当数据超过max_buf_num或超时后数据是否丢弃，默认为0, 非0值代表丢弃
-    uint64_t queueIdsAddr; // 指向的数据类型uint32 the address of uint64_t array which size is inputNums
-    uint64_t mbufAddrsAddr; // 指向的数据类型unitptr the address of uint64_t array which size is inputNums
-    uint64_t deviceIdAddr; // 指向的数据类型uint32 ;
+    uint64_t queueIdsAddr;       // 指向的数据类型uint32 the address of uint64_t array which size is inputNums
+    uint64_t mbufAddrsAddr;  // 指向的数据类型unitptr the address of uint64_t array which size is inputNums
+    uint64_t deviceIdAddr;   // 指向的数据类型uint32 ;
     uint64_t deviceTypeAddr; // 指向的数据类型uint32  0 NPU 1 CPU
 };
 
 struct LockTableTaskParam {
-    int32_t lockType;  // 0:rdlock 1:rwlock
+    int32_t lockType; // 0:rdlock 1:rwlock
     uint32_t tableId;
 };
 
@@ -387,7 +384,7 @@ struct RuntimeTensorDesc {
     uint64_t dataAddr;
     int64_t dataOffsetSize;
     int64_t dtype;
-    int64_t shape[MAX_DIM_SIZE + 1]; // shape:Dim_Num|DIM0|DIM1|...|DIM31
+    int64_t shape[MAX_DIM_SIZE + 1];         // shape:Dim_Num|DIM0|DIM1|...|DIM31
     int64_t originalShape[MAX_DIM_SIZE + 1]; // original_shape:Dim_Num|DIM0|DIM1|...|DIM31
     int64_t format;
     int64_t subFormat;
@@ -397,29 +394,29 @@ struct RuntimeTensorDesc {
 
 struct ModelConfigTensorDesc {
     int64_t dtype;
-    int64_t shape[MAX_DIM_SIZE + 1];  // shape:Dim_Num|DIM0|DIM1|...|DIM31
+    int64_t shape[MAX_DIM_SIZE + 1]; // shape:Dim_Num|DIM0|DIM1|...|DIM31
 };
 
 struct PrepareDynamicInputOutputKernelArgs {
-    uint32_t inputsNum;                 // inputs number
-    uint32_t outputsNum;                // outputs number
-    uint64_t inputDynamicFlagsAddr;   // address of uint32_t array witch size is inputs_num and value is dynamic flag
-    uint64_t outputTensorSizesAddr;   // address of int64_t array witch size is outputs_num and value is tensor size
-    uint64_t inputMbufAddrsAddr;      // address of uint64_t array witch size is inputs_num and value is mbuf addr
-    uint64_t outputMbufAddrsAddr;     // address of uint64_t array witch size is outputs_num and value is mbuf addr
-    uint64_t inputFusionOffsetsAddr;  // address of uint32_t array witch size is inputs_num and value is fusion offset
-    uint64_t reqMsgMbufAddr;          // request message mbuf addr
+    uint32_t inputsNum;              // inputs number
+    uint32_t outputsNum;             // outputs number
+    uint64_t inputDynamicFlagsAddr;  // address of uint32_t array witch size is inputs_num and value is dynamic flag
+    uint64_t outputTensorSizesAddr;  // address of int64_t array witch size is outputs_num and value is tensor size
+    uint64_t inputMbufAddrsAddr;     // address of uint64_t array witch size is inputs_num and value is mbuf addr
+    uint64_t outputMbufAddrsAddr;    // address of uint64_t array witch size is outputs_num and value is mbuf addr
+    uint64_t inputFusionOffsetsAddr; // address of uint32_t array witch size is inputs_num and value is fusion offset
+    uint64_t reqMsgMbufAddr;         // request message mbuf addr
 };
 
 struct PostprocessDynamicOutputKernelArgs {
-    uint32_t inputsNum;                 // inputs number
-    uint32_t outputsNum;                // outputs number
-    uint64_t respMsgMbufAddr;         // response message mbuf addr
-    uint64_t inputMbufAddrsAddr;      // address of uint64_t array witch size is inputs_num and value is mbuf addr,
-    uint64_t outputMbufAddrsAddr;     // address of uint64_t array witch size is outputs_num and value is mbuf addr
-    uint64_t outputDynamicFlagsAddr;  // address of uint32_t array witch size is outputs_num and value is dynamic flag
-    uint64_t outputStaticTensorDescAddr;  // address of uint64_t array witch value is static output tensor desc and
-                                          // size is static outputs num
+    uint32_t inputsNum;              // inputs number
+    uint32_t outputsNum;             // outputs number
+    uint64_t respMsgMbufAddr;        // response message mbuf addr
+    uint64_t inputMbufAddrsAddr;     // address of uint64_t array witch size is inputs_num and value is mbuf addr,
+    uint64_t outputMbufAddrsAddr;    // address of uint64_t array witch size is outputs_num and value is mbuf addr
+    uint64_t outputDynamicFlagsAddr; // address of uint32_t array witch size is outputs_num and value is dynamic flag
+    uint64_t outputStaticTensorDescAddr; // address of uint64_t array witch value is static output tensor desc and
+                                         // size is static outputs num
 };
 
 struct ShapeValidation {
@@ -434,27 +431,27 @@ struct ShapeValidationInfo {
 };
 
 struct BufEnQueueBuffInfo {
-    uint32_t queueID;  // 算子的输入，队列id，由模型编译时填入
+    uint32_t queueID; // 算子的输入，队列id，由模型编译时填入
     int32_t deviceId;
-    uint64_t mBufPtr;  // 一个二级指针，指向Mbuf的指针
+    uint64_t mBufPtr; // 一个二级指针，指向Mbuf的指针
 };
 
 struct BatchDequeueBuffDesc {
     uint32_t inputNums;
     uint32_t alignInterval;
     uint64_t alignOffsetsAddr; // the address of uint32_t array which size is inputNums
-    uint64_t queueIdsAddr; // the address of uint32_t array which size is inputNums
-    uint64_t mbufAddrsAddr; // the address of uint64_t array which size is inputNums
+    uint64_t queueIdsAddr;     // the address of uint32_t array which size is inputNums
+    uint64_t mbufAddrsAddr;    // the address of uint64_t array which size is inputNums
     uint64_t deviceIdAddr;
 };
 
 struct BatchDequeueBuffInfo {
     uint32_t inputNums;
     uint32_t alignInterval;
-    uint32_t *alignOffsets; // the pointer of uint32_t array which size is inputNums
-    uint32_t *queueIds; // the pointer of uint32_t array which size is inputNums
-    uint64_t *mbufAddrs; // the pointer of uint64_t array which size is inputNums
-    int32_t *deviceIds;
+    uint32_t* alignOffsets; // the pointer of uint32_t array which size is inputNums
+    uint32_t* queueIds;     // the pointer of uint32_t array which size is inputNums
+    uint64_t* mbufAddrs;    // the pointer of uint64_t array which size is inputNums
+    int32_t* deviceIds;
 };
 
 #pragma pack(pop)
@@ -462,7 +459,7 @@ struct BatchDequeueBuffInfo {
 constexpr uint32_t AICPU_TOPIC_USER_DATA_LEN = 10U;
 struct AicpuTopicMailbox {
     // word 0
-    uint8_t  mailboxId;
+    uint8_t mailboxId;
     uint32_t vfid : 6;
     uint16_t rspMode : 1;
     uint16_t satMode : 1;
@@ -491,6 +488,5 @@ struct AicpuTopicMailbox {
     uint16_t res1 : 11;
     uint16_t tqId;
 };
-}
+} // namespace AicpuSchedule
 #endif
-

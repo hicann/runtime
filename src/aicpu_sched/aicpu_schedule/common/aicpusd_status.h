@@ -31,7 +31,7 @@ using StatusCode = int32_t;
 constexpr int32_t AICPU_SCHEDULE_OK = 0;
 constexpr int32_t AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID = 21001;
 constexpr int32_t AICPU_SCHEDULE_ERROR_DUMP_FAILED = 21002;
-constexpr int32_t AICPU_SCHEDULE_ERROR_FROM_DRV =  21003;
+constexpr int32_t AICPU_SCHEDULE_ERROR_FROM_DRV = 21003;
 constexpr int32_t AICPU_SCHEDULE_ERROR_TOOL_ERR = 21004;
 constexpr int32_t AICPU_SCHEDULE_ERROR_NOT_FOUND_LOGICAL_TASK = 21005;
 constexpr int32_t AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED = 21006;
@@ -75,7 +75,6 @@ constexpr int32_t AICPU_SCHEDULE_ERROR_NOT_FOUND_VERSION = 21217;
 constexpr int32_t AICPU_SCHEDULE_ERROR_INVALID_MAGIC_NUM = 21218;
 constexpr int32_t AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION = 21219;
 
-
 // error code for queue scheduler process
 constexpr int32_t AICPU_SCHEDULE_CALL_DRIVER_ERROR = 21300;
 constexpr int32_t AICPU_SCHEDULE_ERROR_GRANT_QUEUE_FAILED = 21301;
@@ -102,14 +101,15 @@ constexpr int32_t AICPU_SCHEDULE_ERROR_GET_RUN_MODE_FAILED = 21403;
 
 // error code for hccl
 constexpr int32_t AICPU_SCHEDULE_ERROR_CALL_HCCL = 21500;
-}
+} // namespace AicpuSchedule
 
 #ifdef ONLY_ERROR
 
-#define aicpusd_err(fmt, ...) \
-    if (&DlogRecord != nullptr) {    \
-        dlog_error(static_cast<int32_t>(CCECPU), "[%s][tid:%llu]" fmt, &__FUNCTION__[0], \
-                   AicpuSchedule::GetTid(), ##__VA_ARGS__);   \
+#define aicpusd_err(fmt, ...)                                                                              \
+    if (&DlogRecord != nullptr) {                                                                          \
+        dlog_error(                                                                                        \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu]" fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                \
     }
 
 #define aicpusd_warn(fmt, ...)
@@ -120,63 +120,69 @@ constexpr int32_t AICPU_SCHEDULE_ERROR_CALL_HCCL = 21500;
 #define aicpusd_run_warn(fmt, ...)
 
 #else
-#define aicpusd_err(fmt, ...)   \
-    if (&DlogRecord != nullptr) {    \
-        dlog_error(static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, \
-                   &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__); \
+#define aicpusd_err(fmt, ...)                                                                               \
+    if (&DlogRecord != nullptr) {                                                                           \
+        dlog_error(                                                                                         \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                 \
     }
 
-#define aicpusd_warn(fmt, ...)  \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_warn(static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, \
-                  &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_warn(fmt, ...)                                                                              \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                          \
+        dlog_warn(                                                                                          \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                 \
     }
 
-#define aicpusd_info(fmt, ...)  \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_info(static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, \
-                  &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_info(fmt, ...)                                                                              \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                          \
+        dlog_info(                                                                                          \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                 \
     }
 
-#define aicpusd_debug(fmt, ...) \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_debug(static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, \
-                   &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_debug(fmt, ...)                                                                             \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                          \
+        dlog_debug(                                                                                         \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                 \
     }
 
-#define aicpusd_memory_log(fmt, ...)  \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_info(static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, \
-                  &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_memory_log(fmt, ...)                                                                        \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                          \
+        dlog_info(                                                                                          \
+            static_cast<int32_t>(CCECPU), "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), \
+            ##__VA_ARGS__);                                                                                 \
     }
 
-#define aicpusd_run_info(fmt, ...)  \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_info(static_cast<int32_t>(static_cast<uint32_t>(CCECPU) |  \
-                  static_cast<uint32_t>(RUN_LOG_MASK)), \
-                  "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_run_info(fmt, ...)                                                                     \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                     \
+        dlog_info(                                                                                     \
+            static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)), \
+            "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);          \
     }
 
-#define aicpusd_run_warn(fmt, ...)  \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {  \
-        dlog_warn(static_cast<int32_t>(static_cast<uint32_t>(CCECPU) |  \
-                  static_cast<uint32_t>(RUN_LOG_MASK)), \
-                  "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);  \
+#define aicpusd_run_warn(fmt, ...)                                                                     \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                     \
+        dlog_warn(                                                                                     \
+            static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)), \
+            "[%s][tid:%llu] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), ##__VA_ARGS__);          \
     }
 #endif
 
-#define UNUSED(expr) do { \
-    (void)(expr); \
-} while (false)
+#define UNUSED(expr)  \
+    do {              \
+        (void)(expr); \
+    } while (false)
 
 // 注意: 该宏第一项Condition是期望为真，否则将进行后续的返回和日志记录
-#define AICPUSD_CHECK(condition, retValue, log, ...)                            \
-    do {                                                                        \
-        const bool cond = (condition);                                          \
-        if (!cond) {                                                            \
-            aicpusd_err(log, ##__VA_ARGS__);                                    \
-            return (retValue);                                                  \
-        }                                                                       \
+#define AICPUSD_CHECK(condition, retValue, log, ...) \
+    do {                                             \
+        const bool cond = (condition);               \
+        if (!cond) {                                 \
+            aicpusd_err(log, ##__VA_ARGS__);         \
+            return (retValue);                       \
+        }                                            \
     } while (false)
 
 #endif

@@ -13,40 +13,40 @@
 #include "aicpusd_status.h"
 #include "aicpusd_model_execute.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_STREAM_REPEAT = "streamRepeat";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelStreamRepeat::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelStreamRepeat::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    aicpusd_info("Start repeat model stream. modelId=%u, streamId=%u, taskId=%u",
-                 taskContext.modelId, kernelTaskInfo.streamID, kernelTaskInfo.taskID);
-    const StreamRepeatTaskParam * const repeatStreamInfo =
+    aicpusd_info(
+        "Start repeat model stream. modelId=%u, streamId=%u, taskId=%u", taskContext.modelId, kernelTaskInfo.streamID,
+        kernelTaskInfo.taskID);
+    const StreamRepeatTaskParam* const repeatStreamInfo =
         PtrToPtr<void, StreamRepeatTaskParam>(ValueToPtr(kernelTaskInfo.paraBase));
     if (repeatStreamInfo == nullptr) {
-        aicpusd_err("Model repeat stream info is nullptr. modelId=%u, streamId=%u, taskId=%u",
-                    taskContext.modelId, kernelTaskInfo.streamID, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "Model repeat stream info is nullptr. modelId=%u, streamId=%u, taskId=%u", taskContext.modelId,
+            kernelTaskInfo.streamID, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     if ((repeatStreamInfo->modelId != taskContext.modelId) || (repeatStreamInfo->streamId != taskContext.streamId)) {
-        aicpusd_warn("Model repeat stream is diff with context. rptModelId=%u, modelId=%u, rptStreamId=%u, streamId=%u",
-                     repeatStreamInfo->modelId, taskContext.modelId,
-                     repeatStreamInfo->streamId, taskContext.streamId);
+        aicpusd_warn(
+            "Model repeat stream is diff with context. rptModelId=%u, modelId=%u, rptStreamId=%u, streamId=%u",
+            repeatStreamInfo->modelId, taskContext.modelId, repeatStreamInfo->streamId, taskContext.streamId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
-    const AicpuModel *model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    const AicpuModel* model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if ((model != nullptr) && (model->GetModelRetCode() != 0) && (model->AbnormalNeedBreak())) {
         aicpusd_err("Model stream repeat failed, model execute failed. modelId=%d.", taskContext.modelId);
         return AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED;
     }
-    *(const_cast<int32_t *>(&taskContext.gotoTaskIndex)) = 0;
+    *(const_cast<int32_t*>(&taskContext.gotoTaskIndex)) = 0;
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_STREAM_REPEAT, OperatorKernelStreamRepeat);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

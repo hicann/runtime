@@ -15,22 +15,23 @@
 #include "aicpusd_resource_manager.h"
 #include "control_flow/operator_kernel_model_repeat.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_POSTPARE = "modelPostpare";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelPostpare::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelPostpare::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     auto postpareInfo = PtrToPtr<void, AicpuPostpareInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (postpareInfo == nullptr) {
-        aicpusd_err("ModelPostpare kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u].",
+        aicpusd_err(
+            "ModelPostpare kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u].",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (postpareInfo->aicpuPareInfoSize != sizeof(AicpuPostpareInfo)) {
-        aicpusd_err("Failed check AicpuPostpareInfo size. msgInfo.aicpuPareInfoSize is [%u], "
+        aicpusd_err(
+            "Failed check AicpuPostpareInfo size. msgInfo.aicpuPareInfoSize is [%u], "
             "calc AicpuPostpareInfo is [%zu].",
             postpareInfo->aicpuPareInfoSize, sizeof(AicpuPostpareInfo));
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -51,8 +52,9 @@ int32_t OperatorKernelModelPostpare::Compute(const AicpuTaskInfo &kernelTaskInfo
         aicpusd_err("mbufPtrlist pointers is nullptr!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    if (!CheckPointListNullptr(PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(postpareInfo->mbufPtrlist))),
-        postpareInfo->outQueueNum)) {
+    if (!CheckPointListNullptr(
+            PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(postpareInfo->mbufPtrlist))),
+            postpareInfo->outQueueNum)) {
         aicpusd_err("mbufPtrlist has null pointers!");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -60,7 +62,7 @@ int32_t OperatorKernelModelPostpare::Compute(const AicpuTaskInfo &kernelTaskInfo
     return DoPostpare(*postpareInfo, taskContext);
 }
 
-bool OperatorKernelModelPostpare::CheckPointListNullptr(const uint64_t * const pointList, const uint32_t pointSize) const
+bool OperatorKernelModelPostpare::CheckPointListNullptr(const uint64_t* const pointList, const uint32_t pointSize) const
 {
     for (uint32_t i = 0U; i < pointSize; i++) {
         if (*(pointList + i) == 0UL) {
@@ -70,11 +72,11 @@ bool OperatorKernelModelPostpare::CheckPointListNullptr(const uint64_t * const p
     return true;
 }
 
-int32_t OperatorKernelModelPostpare::DoPostpare(AicpuPostpareInfo &msgInfo, const RunContext &taskContext) const
+int32_t OperatorKernelModelPostpare::DoPostpare(AicpuPostpareInfo& msgInfo, const RunContext& taskContext) const
 {
     // force convert to mbuf** or uint64_t *
-    uint64_t * const mbufPtrlist = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(msgInfo.mbufPtrlist)));
-    const uint32_t * const outQueueIdList =
+    uint64_t* const mbufPtrlist = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(msgInfo.mbufPtrlist)));
+    const uint32_t* const outQueueIdList =
         PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(msgInfo.outQueueIdList)));
 
     std::vector<uint64_t> mbufPtrVector;
@@ -89,6 +91,5 @@ int32_t OperatorKernelModelPostpare::DoPostpare(AicpuPostpareInfo &msgInfo, cons
     return OperatorKernelModelRepeat::SendModelRepeatEvent(taskContext.modelId);
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_POSTPARE, OperatorKernelModelPostpare);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

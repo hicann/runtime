@@ -13,18 +13,17 @@
 
 #include "operator_kernel_context.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelEnqueueBase {
 public:
     OperatorKernelEnqueueBase() = default;
-    virtual ~OperatorKernelEnqueueBase() {};
+    virtual ~OperatorKernelEnqueueBase(){};
 
-    int32_t EnqueueTask(BufEnQueueInfo &bufInfo, const RunContext &taskContext) const;
-    void SetMbufRetCode(const uint32_t modelId, void * const headBuf, const uint32_t headSize) const;
-    void SetMbufEndOfSequence(const uint32_t modelId, void * const headBuf, const uint32_t headSize) const;
-    void SetMbufNullData(const uint32_t modelId, void * const headBuf, const uint32_t headSize) const;
+    int32_t EnqueueTask(BufEnQueueInfo& bufInfo, const RunContext& taskContext) const;
+    void SetMbufRetCode(const uint32_t modelId, void* const headBuf, const uint32_t headSize) const;
+    void SetMbufEndOfSequence(const uint32_t modelId, void* const headBuf, const uint32_t headSize) const;
+    void SetMbufNullData(const uint32_t modelId, void* const headBuf, const uint32_t headSize) const;
 };
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // OPERATOR_KERNEL_ENQUEUE_BASE_H
+#endif // OPERATOR_KERNEL_ENQUEUE_BASE_H

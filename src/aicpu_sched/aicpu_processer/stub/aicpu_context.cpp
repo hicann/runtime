@@ -12,22 +12,13 @@
 #include <unistd.h>
 
 namespace aicpu {
-status_t SetOpname(const std::string &opname)
-{
-    return AICPU_ERROR_NONE;
-}
+status_t SetOpname(const std::string& opname) { return AICPU_ERROR_NONE; }
 
-status_t SetThreadLocalCtx(const std::string &key, const std::string &value)
-{
-    return AICPU_ERROR_NONE;
-}
+status_t SetThreadLocalCtx(const std::string& key, const std::string& value) { return AICPU_ERROR_NONE; }
 
-status_t GetThreadLocalCtx(const std::string &key, std::string &value)
-{
-    return AICPU_ERROR_NONE;
-}
+status_t GetThreadLocalCtx(const std::string& key, std::string& value) { return AICPU_ERROR_NONE; }
 
-status_t aicpuGetContext(aicpuContext_t *ctx)
+status_t aicpuGetContext(aicpuContext_t* ctx)
 {
     if (ctx != nullptr) {
         ctx->deviceId = 0;
@@ -38,29 +29,17 @@ status_t aicpuGetContext(aicpuContext_t *ctx)
     return AICPU_ERROR_NONE;
 }
 
-status_t GetAicpuRunMode(uint32_t &runMode)
+status_t GetAicpuRunMode(uint32_t& runMode)
 {
     runMode = aicpu::THREAD_MODE;
     return AICPU_ERROR_NONE;
 }
 
-uint32_t GetUniqueVfId()
-{
-    return 0U;
-}
+uint32_t GetUniqueVfId() { return 0U; }
 
-void SetUniqueVfId(const uint32_t uniqueVfId)
-{
-    (void)uniqueVfId;
-}
+void SetUniqueVfId(const uint32_t uniqueVfId) { (void)uniqueVfId; }
 
-void SetCustAicpuSdFlag(const bool isCustAicpuSdFlag)
-{
-    (void)isCustAicpuSdFlag;
-}
+void SetCustAicpuSdFlag(const bool isCustAicpuSdFlag) { (void)isCustAicpuSdFlag; }
 
-bool IsCustAicpuSd()
-{
-    return false;
-}
-}  // namespace aicpu
+bool IsCustAicpuSd() { return false; }
+} // namespace aicpu

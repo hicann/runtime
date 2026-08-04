@@ -14,20 +14,21 @@
 #include "operator_kernel.h"
 #include "operator_kernel_context.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelPrepareOutputBase {
 public:
     OperatorKernelPrepareOutputBase() = default;
-    virtual ~OperatorKernelPrepareOutputBase() {};
+    virtual ~OperatorKernelPrepareOutputBase(){};
 
-    int32_t PrepareOutput(ProcessOutputInfo &outputInfo, const RunContext &taskContext, const bool zeroCpy,
-                          RuntimeTensorDesc *const tensorDesc) const;
-    int32_t PrepareOutWithTensorDesc(const AicpuTaskInfo &kernelTaskInfo, const bool zeroCpy,
-                                     const RunContext &taskContext) const;
+    int32_t PrepareOutput(
+        ProcessOutputInfo& outputInfo, const RunContext& taskContext, const bool zeroCpy,
+        RuntimeTensorDesc* const tensorDesc) const;
+    int32_t PrepareOutWithTensorDesc(
+        const AicpuTaskInfo& kernelTaskInfo, const bool zeroCpy, const RunContext& taskContext) const;
+
 private:
-    int32_t PrepareOutputNonZeroCpy(const ProcessOutputInfo &outputInfo, Mbuf * const outMBuf,
-                                    RuntimeTensorDesc *const tensorDesc) const;
+    int32_t PrepareOutputNonZeroCpy(
+        const ProcessOutputInfo& outputInfo, Mbuf* const outMBuf, RuntimeTensorDesc* const tensorDesc) const;
     int32_t GetStaticNNOutPutIndex(const uint32_t modelId) const;
     void MarkStaticNNOutPutIndex(const uint32_t modelId) const;
 };
@@ -37,7 +38,7 @@ public:
     OperatorKernelModelPrepareOutput() = default;
     ~OperatorKernelModelPrepareOutput() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
 class OperatorKernelModelPrepareOutputWithTensorDesc : public OperatorKernel, public OperatorKernelPrepareOutputBase {
@@ -45,7 +46,7 @@ public:
     OperatorKernelModelPrepareOutputWithTensorDesc() = default;
     ~OperatorKernelModelPrepareOutputWithTensorDesc() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
 class OperatorKernelBufferPrepareOutput : public OperatorKernel, public OperatorKernelPrepareOutputBase {
@@ -53,7 +54,7 @@ public:
     OperatorKernelBufferPrepareOutput() = default;
     ~OperatorKernelBufferPrepareOutput() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
 class OperatorKernelBufferPrepareOutputWithTensorDesc : public OperatorKernel, public OperatorKernelPrepareOutputBase {
@@ -61,9 +62,9 @@ public:
     OperatorKernelBufferPrepareOutputWithTensorDesc() = default;
     ~OperatorKernelBufferPrepareOutputWithTensorDesc() = default;
 
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // OPERATOR_KERNEL_PREPARE_OUTPUT_H
+#endif // OPERATOR_KERNEL_PREPARE_OUTPUT_H

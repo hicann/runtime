@@ -12,10 +12,10 @@
 #include "aicpusd_status.h"
 
 namespace aicpu {
-    bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
-    {
-        UNUSED(vfId);
-        UNUSED(deviceId);
-        return true;
-    }
+bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
+{
+    UNUSED(vfId);
+    UNUSED(deviceId);
+    return true;
 }
+} // namespace aicpu

@@ -15,33 +15,34 @@
 #include <unordered_map>
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelZeroCpy : public OperatorKernel {
 public:
     OperatorKernelZeroCpy() = default;
     ~OperatorKernelZeroCpy() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
 class OperatorKernelZeroCpyV2 : public OperatorKernel {
 public:
     OperatorKernelZeroCpyV2() = default;
     ~OperatorKernelZeroCpyV2() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t DoCompute(AddrMapInfoV2 &mapInfo, const RunContext &taskContext) const;
-    int32_t ResolveFusionOffsets(const uint64_t *const fusionOffsetListAddr, const uint32_t addrNum,
-                                 std::vector<int32_t> &fusionOffsets) const;
-    int32_t UpdateDataPtrExtend(const uint64_t mbufAddr, const int32_t fusionOffset, void *&dataPtr,
-                                std::unordered_map<uint64_t, FusionInfo> &fusionMap) const;
+    int32_t DoCompute(AddrMapInfoV2& mapInfo, const RunContext& taskContext) const;
+    int32_t ResolveFusionOffsets(
+        const uint64_t* const fusionOffsetListAddr, const uint32_t addrNum, std::vector<int32_t>& fusionOffsets) const;
+    int32_t UpdateDataPtrExtend(
+        const uint64_t mbufAddr, const int32_t fusionOffset, void*& dataPtr,
+        std::unordered_map<uint64_t, FusionInfo>& fusionMap) const;
 };
 
 class OperatorKernelCpuZeroCpy : public OperatorKernel {
 public:
     OperatorKernelCpuZeroCpy() = default;
     ~OperatorKernelCpuZeroCpy() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_ZERO_CPY_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_ZERO_CPY_H

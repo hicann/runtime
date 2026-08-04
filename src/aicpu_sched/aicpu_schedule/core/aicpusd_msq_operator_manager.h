@@ -21,8 +21,8 @@ class MsqOperatorManager {
 public:
     MsqOperatorManager() = delete;
     ~MsqOperatorManager() = delete;
-    MsqOperatorManager(const MsqOperatorManager &) = delete;
-    MsqOperatorManager &operator=(const MsqOperatorManager &) = delete;
+    MsqOperatorManager(const MsqOperatorManager&) = delete;
+    MsqOperatorManager& operator=(const MsqOperatorManager&) = delete;
 
     static int32_t Init();
     static void Finalize();
@@ -31,29 +31,29 @@ public:
     static void CallV1ResetT1Status();
     static MsqStatus CallV1ReadT0Status();
     static MsqStatus CallV1ReadT1Status();
-    static void CallV1ReadT0Data(uint32_t msgSize, MsqDatas *datas);
-    static void CallV1ReadT1Data(uint32_t msgSize, MsqDatas *datas);
+    static void CallV1ReadT0Data(uint32_t msgSize, MsqDatas* datas);
+    static void CallV1ReadT1Data(uint32_t msgSize, MsqDatas* datas);
     static void CallV1SendT0Response();
     static void CallV1SendT1Response();
 
     static void CallV2ResetT0Status();
     static void CallV2ResetT1Status();
     static MsqStatus CallV2ReadT1Status();
-    static void CallV2ReadT1Data(uint32_t msgSize, MsqDatas *datas);
+    static void CallV2ReadT1Data(uint32_t msgSize, MsqDatas* datas);
     static void CallV2SendT1Response();
     static void CallWait();
 
 private:
     using MsqResetFunc = void (*)();
     using MsqReadStatusFunc = MsqStatus (*)();
-    using MsqReadDataFunc = void (*)(uint32_t, MsqDatas *);
+    using MsqReadDataFunc = void (*)(uint32_t, MsqDatas*);
     using MsqSendRspFunc = void (*)();
     using RawFuncPtr = void (*)();
     using WaitFunc = void (*)();
 
     static bool LoadAllSymbols();
 
-    static void *handle_;
+    static void* handle_;
     static bool inited_;
     static std::mutex mutex_;
 
@@ -73,6 +73,6 @@ private:
     static MsqSendRspFunc v2SendT1Response_;
     static WaitFunc waitFunc_;
 };
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
 #endif

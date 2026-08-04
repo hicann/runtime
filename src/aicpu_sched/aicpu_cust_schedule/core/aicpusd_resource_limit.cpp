@@ -47,7 +47,9 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     while (tryTimes <= MAX_EXECUTE_TRY_TIMES) {
         status = AicpuSchedule::AicpuUtil::ExecuteCmd(command);
         if (status != 0) {
-            aicpusd_run_warn("Adding aicpu custom process to cgroup was not successful, ret:[%d], cmd:[%s].", status, command.c_str());
+            aicpusd_run_warn(
+                "Adding aicpu custom process to cgroup was not successful, ret:[%d], cmd:[%s].", status,
+                command.c_str());
             (void)usleep(SLEEP_100_MSECS);
         } else {
             aicpusd_info("Add aicpu custom process to cgroup successfully, cmd:[%s]", command.c_str());
@@ -58,4 +60,4 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     aicpusd_run_info("Add aicpu custom process to cgroup finished, cmd:[%s]", command.c_str());
     return true;
 }
-}
+} // namespace aicpu

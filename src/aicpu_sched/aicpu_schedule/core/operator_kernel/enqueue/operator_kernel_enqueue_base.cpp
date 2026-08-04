@@ -16,18 +16,18 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
-int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo &bufInfo, const RunContext &taskContext) const
+int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo& bufInfo, const RunContext& taskContext) const
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if ((model != nullptr) && (model->GetModelRetCode() != 0) && (!model->AbnormalNeedEnqueue())) {
-        aicpusd_info("Model execution was not successful, no need to enqueue. modelId=%u, modelRetCode=%d.",
-                     taskContext.modelId, model->GetModelRetCode());
+        aicpusd_info(
+            "Model execution was not successful, no need to enqueue. modelId=%u, modelRetCode=%d.", taskContext.modelId,
+            model->GetModelRetCode());
         return AICPU_SCHEDULE_OK;
     }
 
-    auto mBufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(bufInfo.mBufPtr));
+    auto mBufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(bufInfo.mBufPtr));
     if (mBufPptr == nullptr) {
         aicpusd_err("param mBufPptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -37,7 +37,7 @@ int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo &bufInfo, const Ru
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     uint32_t headSize = 0U;
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     const auto ret = halMbufGetPrivInfo(*mBufPptr, &headBuf, &headSize);
     if (ret != DRV_ERROR_NONE) {
         aicpusd_err("Failed to get head info in input information, ret[%d].", ret);
@@ -58,15 +58,15 @@ int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo &bufInfo, const Ru
     do {
         const auto drvRet = halQueueEnQueue(deviceId, queueId, *mBufPptr);
         if (drvRet == DRV_ERROR_NONE) {
-                AicpuModel * const modelPtr = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
-                if (modelPtr == nullptr) {
-                    aicpusd_err("cannot get aicpuModel by modelId:[%u]!", taskContext.modelId);
-                    return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
-                }
+            AicpuModel* const modelPtr = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+            if (modelPtr == nullptr) {
+                aicpusd_err("cannot get aicpuModel by modelId:[%u]!", taskContext.modelId);
+                return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+            }
             const auto guardRet = modelPtr->UnGardModelBuf(*mBufPptr);
             if (guardRet != AICPU_SCHEDULE_OK) {
-                aicpusd_warn("BufManager unguard enqueued failed, modelId[%u], drvRet[%d].", taskContext.modelId,
-                    guardRet);
+                aicpusd_warn(
+                    "BufManager unguard enqueued failed, modelId[%u], drvRet[%d].", taskContext.modelId, guardRet);
             }
             break;
         } else if (drvRet == DRV_ERROR_QUEUE_FULL) {
@@ -76,7 +76,7 @@ int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo &bufInfo, const Ru
             EventWaitManager::QueueNotFullWaitManager().WaitEvent(static_cast<size_t>(queueId), streamId, needWait);
             if (needWait) {
                 aicpusd_run_info("ModelEnqueueTaskKernel pending, queueId:%u, streamId:%u.", queueId, streamId);
-                bool *pending = const_cast<bool *>(&taskContext.pending);
+                bool* pending = const_cast<bool*>(&taskContext.pending);
                 *pending = true;
                 return AICPU_SCHEDULE_OK;
             }
@@ -89,8 +89,8 @@ int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo &bufInfo, const Ru
     return AICPU_SCHEDULE_OK;
 }
 
-void OperatorKernelEnqueueBase::SetMbufRetCode(const uint32_t modelId, void * const headBuf,
-                                               const uint32_t headSize) const
+void OperatorKernelEnqueueBase::SetMbufRetCode(
+    const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
     if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg))) {
         int32_t retCode = 0;
@@ -101,35 +101,37 @@ void OperatorKernelEnqueueBase::SetMbufRetCode(const uint32_t modelId, void * co
                 return;
             }
         }
-        MbufHeadMsg * const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf),
-            MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
+        MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+            PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
         msg->retCode = retCode;
     }
 }
 
-void OperatorKernelEnqueueBase::SetMbufEndOfSequence(const uint32_t modelId, void * const headBuf,
-                                                     const uint32_t headSize) const
+void OperatorKernelEnqueueBase::SetMbufEndOfSequence(
+    const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
     if ((headBuf != nullptr) && (headSize > MBUF_HEAD_END_OF_SEQUENCE_POS)) {
         const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
         if ((model != nullptr) && (model->IsEndOfSequence())) {
-            uint8_t * const ret = PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE,
+            uint8_t* const ret = PtrAdd<uint8_t>(
+                PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE,
                 static_cast<size_t>(MBUF_HEAD_END_OF_SEQUENCE_POS));
             *ret = END_OF_SEQUENCE_FLAG;
         }
     }
 }
 
-void OperatorKernelEnqueueBase::SetMbufNullData(const uint32_t modelId, void * const headBuf,
-                                                const uint32_t headSize) const
+void OperatorKernelEnqueueBase::SetMbufNullData(
+    const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
     if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg))) {
         const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
         if ((model != nullptr) && model->GetNullDataFlag()) {
-            MbufHeadMsg * const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf),
-                MBUF_HEAD_MAX_SIZE, static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
+            MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+                PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE,
+                static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
             msg->dataFlag |= MBUF_HEAD_DATA_FLAG_MASK;
         }
     }
 }
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

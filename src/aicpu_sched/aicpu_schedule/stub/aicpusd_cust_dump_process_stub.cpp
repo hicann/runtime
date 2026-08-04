@@ -21,122 +21,107 @@
 #include "aicpusd_send_platform_Info_to_custom.h"
 
 namespace AicpuSchedule {
-    namespace {
-        // aicpusd 与 custaicpusd 是同样的groupid
-        constexpr const uint32_t DATA_DUMP_GRUOP_ID = 31U;
-        constexpr const uint32_t DATA_DUMP_THREAD_INDEX = 0U;
-        constexpr const int32_t  DATA_DUMP_TIMEOUT_INTERVAL = 3000;
-        constexpr const uint32_t SLEEP_USECS = 50000U;
-        constexpr const uint64_t DATA_DUMP_EVENT_MASK = (1ULL << static_cast<uint32_t>(EVENT_CCPU_CTRL_MSG));
-    };
-    AicpuSdLoadPlatformInfoProcess &AicpuSdLoadPlatformInfoProcess::GetInstance()
-    {
-        static AicpuSdLoadPlatformInfoProcess instance;
-        return instance;
-    }
-    int32_t AicpuSdLoadPlatformInfoProcess::SendLoadPlatformInfoMessageToCustSync(const uint8_t * const msg, const uint32_t len) const
-    {
-        UNUSED(msg);
-        UNUSED(len);
-        return AICPU_SCHEDULE_OK;
-    }
-    void AicpuSdLoadPlatformInfoProcess::LoadPlatformInfoSemPost()
-    {
-        UNUSED(loadPlatformInfoProcessSem_);
-        return;
-    }
-    int32_t AicpuSdLoadPlatformInfoProcess::SendMsgToMain(const void * const msg, const uint32_t len)
-    {
-        UNUSED(msg);
-        UNUSED(len);
-        sem_init(&loadPlatformInfoProcessSem_, 0, 0U);
-        sem_destroy(&loadPlatformInfoProcessSem_);
-        return AICPU_SCHEDULE_OK;
-    }
-    AicpuSdCustDumpProcess::~AicpuSdCustDumpProcess()
-    {
-        UnitCustDataDumpProcess();
-    }
-
-    AicpuSdCustDumpProcess &AicpuSdCustDumpProcess::GetInstance()
-    {
-        static AicpuSdCustDumpProcess instance;
-        return instance;
-    }
-
-    AicpuSdCustDumpProcess::AicpuSdCustDumpProcess()
-        : deviceId_(0U), runningFlag_(true), initFlag_(false)
-    {
-    }
-
-    int32_t AicpuSdCustDumpProcess::InitCustDumpProcess(
-        const uint32_t deviceId, const aicpu::AicpuRunMode runMode)
-    {
-        initFlag_ = false;
-        UNUSED(deviceId);
-        UNUSED(runMode);
-        return 0;
-    }
-
-    int32_t AicpuSdCustDumpProcess::SetDataDumpThreadAffinity() const
-    {
-        return 0;
-    }
-
-    void AicpuSdCustDumpProcess::StartProcessEvent()
-    {
-    }
- 
-    void AicpuSdCustDumpProcess::LoopProcessEvent()
-    {
-    }
- 
-    int32_t AicpuSdCustDumpProcess::ProcessMessage(const int32_t timeout)
-    {
-        UNUSED(timeout);
-        return 0;
-    }
-
-    void AicpuSdCustDumpProcess::UnitCustDataDumpProcess()
-    {
-    }
-
-    int32_t AicpuSdCustDumpProcess::DoCustDatadumpTask(const event_info &drvEventInfo) const
-    {
-        UNUSED(drvEventInfo);
-        return AICPU_SCHEDULE_OK;
-    }
-    int32_t AicpuSdCustDumpProcess::DoUdfDatadumpTask(const event_info &drvEventInfo) const
-    {
-        UNUSED(drvEventInfo);
-        return AICPU_SCHEDULE_OK;
-    }
-    int32_t AicpuSdCustDumpProcess::DatadumpTaskProcess(const event_info &drvEventInfo) const
-    {
-        UNUSED(drvEventInfo);
-        return AICPU_SCHEDULE_OK;
-    }
-    int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(const char_t * const msg,
-        const uint32_t len, struct event_proc_result &rsp) const
-    {
-        UNUSED(msg);
-        UNUSED(len);
-        UNUSED(rsp);
-        return AICPU_SCHEDULE_OK;
-    }
-    bool AicpuSdCustDumpProcess::IsValidUdf(const int32_t sendPid) const
-    {
-        UNUSED(sendPid);
-        return true;
-    }
-
-    bool AicpuSdCustDumpProcess::IsValidCustAicpu(const int32_t sendPid) const
-    {
-        UNUSED(sendPid);
-        return true;
-    }
+namespace {
+// aicpusd 与 custaicpusd 是同样的groupid
+constexpr const uint32_t DATA_DUMP_GRUOP_ID = 31U;
+constexpr const uint32_t DATA_DUMP_THREAD_INDEX = 0U;
+constexpr const int32_t DATA_DUMP_TIMEOUT_INTERVAL = 3000;
+constexpr const uint32_t SLEEP_USECS = 50000U;
+constexpr const uint64_t DATA_DUMP_EVENT_MASK = (1ULL << static_cast<uint32_t>(EVENT_CCPU_CTRL_MSG));
+}; // namespace
+AicpuSdLoadPlatformInfoProcess& AicpuSdLoadPlatformInfoProcess::GetInstance()
+{
+    static AicpuSdLoadPlatformInfoProcess instance;
+    return instance;
 }
-int32_t CreateDatadumpThread(const struct TsdSubEventInfo * const msg)
+int32_t AicpuSdLoadPlatformInfoProcess::SendLoadPlatformInfoMessageToCustSync(
+    const uint8_t* const msg, const uint32_t len) const
+{
+    UNUSED(msg);
+    UNUSED(len);
+    return AICPU_SCHEDULE_OK;
+}
+void AicpuSdLoadPlatformInfoProcess::LoadPlatformInfoSemPost()
+{
+    UNUSED(loadPlatformInfoProcessSem_);
+    return;
+}
+int32_t AicpuSdLoadPlatformInfoProcess::SendMsgToMain(const void* const msg, const uint32_t len)
+{
+    UNUSED(msg);
+    UNUSED(len);
+    sem_init(&loadPlatformInfoProcessSem_, 0, 0U);
+    sem_destroy(&loadPlatformInfoProcessSem_);
+    return AICPU_SCHEDULE_OK;
+}
+AicpuSdCustDumpProcess::~AicpuSdCustDumpProcess() { UnitCustDataDumpProcess(); }
+
+AicpuSdCustDumpProcess& AicpuSdCustDumpProcess::GetInstance()
+{
+    static AicpuSdCustDumpProcess instance;
+    return instance;
+}
+
+AicpuSdCustDumpProcess::AicpuSdCustDumpProcess() : deviceId_(0U), runningFlag_(true), initFlag_(false) {}
+
+int32_t AicpuSdCustDumpProcess::InitCustDumpProcess(const uint32_t deviceId, const aicpu::AicpuRunMode runMode)
+{
+    initFlag_ = false;
+    UNUSED(deviceId);
+    UNUSED(runMode);
+    return 0;
+}
+
+int32_t AicpuSdCustDumpProcess::SetDataDumpThreadAffinity() const { return 0; }
+
+void AicpuSdCustDumpProcess::StartProcessEvent() {}
+
+void AicpuSdCustDumpProcess::LoopProcessEvent() {}
+
+int32_t AicpuSdCustDumpProcess::ProcessMessage(const int32_t timeout)
+{
+    UNUSED(timeout);
+    return 0;
+}
+
+void AicpuSdCustDumpProcess::UnitCustDataDumpProcess() {}
+
+int32_t AicpuSdCustDumpProcess::DoCustDatadumpTask(const event_info& drvEventInfo) const
+{
+    UNUSED(drvEventInfo);
+    return AICPU_SCHEDULE_OK;
+}
+int32_t AicpuSdCustDumpProcess::DoUdfDatadumpTask(const event_info& drvEventInfo) const
+{
+    UNUSED(drvEventInfo);
+    return AICPU_SCHEDULE_OK;
+}
+int32_t AicpuSdCustDumpProcess::DatadumpTaskProcess(const event_info& drvEventInfo) const
+{
+    UNUSED(drvEventInfo);
+    return AICPU_SCHEDULE_OK;
+}
+int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
+    const char_t* const msg, const uint32_t len, struct event_proc_result& rsp) const
+{
+    UNUSED(msg);
+    UNUSED(len);
+    UNUSED(rsp);
+    return AICPU_SCHEDULE_OK;
+}
+bool AicpuSdCustDumpProcess::IsValidUdf(const int32_t sendPid) const
+{
+    UNUSED(sendPid);
+    return true;
+}
+
+bool AicpuSdCustDumpProcess::IsValidCustAicpu(const int32_t sendPid) const
+{
+    UNUSED(sendPid);
+    return true;
+}
+} // namespace AicpuSchedule
+int32_t CreateDatadumpThread(const struct TsdSubEventInfo* const msg)
 {
     UNUSED(msg);
     return AicpuSchedule::AICPU_SCHEDULE_OK;

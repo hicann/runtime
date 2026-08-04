@@ -20,46 +20,48 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_ACTIVE_ENTRY_STREAM = "activeEntryStream";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelActiveEntryStream::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelActiveEntryStream::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto streamIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (streamIdPtr == nullptr) {
-        aicpusd_err("ModelActiveEntryStream kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelActiveEntryStream kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return DoCompute(*streamIdPtr, taskContext);
 }
 
-int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, const RunContext &taskContext) const
+int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, const RunContext& taskContext) const
 {
     aicpusd_info("Begin to active ModeId[%u] streamId[%u].", taskContext.modelId, streamId);
     uint32_t streamFlag = 0U;
     auto ret = ModelStreamManager::GetInstance().GetStreamFlag(streamId, streamFlag);
     if (ret != AICPU_SCHEDULE_OK) {
-        aicpusd_err("Model active stream[%u] is not found, modelId[%u], streamId[%u]", streamId, taskContext.modelId,
+        aicpusd_err(
+            "Model active stream[%u] is not found, modelId[%u], streamId[%u]", streamId, taskContext.modelId,
             taskContext.streamId);
         return ret;
     }
 
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
-        aicpusd_err("Model active entry stream failed by no model found, modelId=%u, streamId=%u",
-                    taskContext.modelId, streamId);
+        aicpusd_err(
+            "Model active entry stream failed by no model found, modelId=%u, streamId=%u", taskContext.modelId,
+            streamId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
-    if (((model->GetModelRetCode() != 0) && model->AbnormalEnabled()) ||
-        model->GetNullDataFlag()) {
-        aicpusd_run_info("Model no need active stream[%u]. modelId[%u], streamId[%u], modelRetCode=%d, nullFlag=%d",
-                         streamId, taskContext.modelId, taskContext.streamId, model->GetModelRetCode(),
-                         static_cast<int32_t>(model->GetNullDataFlag()));
+    if (((model->GetModelRetCode() != 0) && model->AbnormalEnabled()) || model->GetNullDataFlag()) {
+        aicpusd_run_info(
+            "Model no need active stream[%u]. modelId[%u], streamId[%u], modelRetCode=%d, nullFlag=%d", streamId,
+            taskContext.modelId, taskContext.streamId, model->GetModelRetCode(),
+            static_cast<int32_t>(model->GetNullDataFlag()));
         return SubmitEndGraph(taskContext.modelId);
     }
 
@@ -67,9 +69,10 @@ int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, cons
 
     if ((streamFlag & AICPU_STREAM_INDEX) != 0U) {
         if (taskContext.executeInline) {
-            aicpusd_info("ModelId[%u] switch to RunContext streamId from [%u] to [%u].", taskContext.modelId,
+            aicpusd_info(
+                "ModelId[%u] switch to RunContext streamId from [%u] to [%u].", taskContext.modelId,
                 taskContext.streamId, streamId);
-            uint32_t *contextStreamId = const_cast<uint32_t *>(&taskContext.streamId);
+            uint32_t* contextStreamId = const_cast<uint32_t*>(&taskContext.streamId);
             *contextStreamId = streamId;
             return AICPU_SCHEDULE_OK;
         } else {
@@ -77,8 +80,9 @@ int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, cons
             AICPUSubEventInfo subEventInfo = {};
             subEventInfo.modelId = taskContext.modelId;
             subEventInfo.para.streamInfo.streamId = streamId;
-            ret = OperatorKernelCommon::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo),
-                static_cast<uint32_t>(sizeof(AICPUSubEventInfo)), AICPU_SUB_EVENT_ACTIVE_STREAM);
+            ret = OperatorKernelCommon::SendAICPUSubEvent(
+                PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+                AICPU_SUB_EVENT_ACTIVE_STREAM);
             return ret;
         }
     } else {
@@ -88,11 +92,13 @@ int32_t OperatorKernelActiveEntryStream::DoCompute(const uint32_t streamId, cons
         g_aicpuProfiler.SetTsStreamId(streamId);
         AicpuSqeAdapter aicpuSqeAdapter(FeatureCtrl::GetTsMsgVersion());
         const uint32_t deviceId = AicpuDrvManager::GetInstance().GetDeviceId();
-        aicpusd_info("Begin to active drv ts stream, tsId[%u], tsStreamId[%u], modelId[%u], streamId[%u], pid[%u],"
-                     "devId[%u].", tsId, streamId, taskContext.modelId, taskContext.streamId, pid, deviceId);
-        AicpuSqeAdapter::ActiveStreamInfo activateInfo(static_cast<uint16_t>(streamId), static_cast<uint8_t>(tsId),
-                                                       g_aicpuProfiler.GetKernelTrack().procEventStart, deviceId,
-                                                       taskContext.modelId);
+        aicpusd_info(
+            "Begin to active drv ts stream, tsId[%u], tsStreamId[%u], modelId[%u], streamId[%u], pid[%u],"
+            "devId[%u].",
+            tsId, streamId, taskContext.modelId, taskContext.streamId, pid, deviceId);
+        AicpuSqeAdapter::ActiveStreamInfo activateInfo(
+            static_cast<uint16_t>(streamId), static_cast<uint8_t>(tsId),
+            g_aicpuProfiler.GetKernelTrack().procEventStart, deviceId, taskContext.modelId);
         aicpuSqeAdapter.AicpuActiveStreamSetMsg(activateInfo);
         model->IncreaseActiveStreamNum();
     }
@@ -107,10 +113,11 @@ int32_t OperatorKernelActiveEntryStream::SubmitEndGraph(const uint32_t modelId) 
     AICPUSubEventInfo subEventInfo = {};
     subEventInfo.modelId = modelId;
     subEventInfo.para.endGraphInfo.result = 0;
-    const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)), AICPU_SUB_EVENT_END_GRAPH);
+    const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_END_GRAPH);
     return ret;
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_ACTIVE_ENTRY_STREAM, OperatorKernelActiveEntryStream);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

@@ -1954,3 +1954,97 @@ TEST_F(AicpusdQueueEventProcessTest, DoProcessProxyMsg_AllocCache_Success)
 
     EXPECT_EQ(rsp.retCode, AICPU_SCHEDULE_OK);
 }
+
+TEST_F(AicpusdQueueEventProcessTest, ProcessBindQueueInitRepeatedByLock)
+{
+    AicpuQueueEventProcess instance;
+    instance.initPipeline_ = BindQueueInitStatus::UNINIT;
+    instance.lockInit_.test_and_set();
+
+    event_info event = {};
+    const int32_t ret = instance.ProcessBindQueueInit(event);
+
+    instance.lockInit_.clear();
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_REPEATED_BIND_QUEUE_INIT);
+}
+
+TEST_F(AicpusdQueueEventProcessTest, CheckAndInitParamWithMbufRouteLengthInvalid)
+{
+    AicpuQueueEventProcess instance;
+    instance.initPipeline_ = BindQueueInitStatus::INITED;
+
+    char routeBuff[sizeof(QsRouteHead) + sizeof(QueueRoute)] = {};
+    QsRouteHead* const routeHead = reinterpret_cast<QsRouteHead*>(routeBuff);
+    routeHead->routeNum = 1U;
+    routeHead->length = sizeof(QsRouteHead);
+
+    QueueRouteList routeList = {0U, reinterpret_cast<uintptr_t>(routeBuff)};
+    event_info event = {};
+    event.priv.msg_len = sizeof(routeList);
+    ASSERT_EQ(memcpy_s(event.priv.msg, EVENT_MAX_MSG_LEN, &routeList, sizeof(routeList)), EOK);
+
+    const QueueRouteList* msg = nullptr;
+    QsRouteHead* outRouteHead = nullptr;
+    const int32_t ret = instance.CheckAndInitParamWithMbuf(event, msg, outRouteHead);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
+TEST_F(AicpusdQueueEventProcessTest, ProcessQueueEventWithMbufAddAuthReadFail)
+{
+    AicpuQueueEventProcess instance;
+    instance.initPipeline_ = BindQueueInitStatus::INITED;
+
+    char routeBuff[sizeof(QsRouteHead) + sizeof(QueueRoute)] = {};
+    QsRouteHead* const routeHead = reinterpret_cast<QsRouteHead*>(routeBuff);
+    routeHead->routeNum = 1U;
+    routeHead->length = sizeof(routeBuff);
+    QueueRoute* const route = reinterpret_cast<QueueRoute*>(routeBuff + sizeof(QsRouteHead));
+    route->srcId = 10U;
+    route->dstId = 11U;
+
+    QueueRouteList routeList = {0U, reinterpret_cast<uintptr_t>(routeBuff)};
+    event_info event = {};
+    event.priv.msg_len = sizeof(routeList);
+    ASSERT_EQ(memcpy_s(event.priv.msg, EVENT_MAX_MSG_LEN, &routeList, sizeof(routeList)), EOK);
+
+    MOCKER(halQueueGrant).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
+    const int32_t ret = instance.ProcessQueueEventWithMbuf(event, AICPU_BIND_QUEUE);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
+
+TEST_F(AicpusdQueueEventProcessTest, AddQueueAuthToQsWriteGrantFail)
+{
+    AicpuQueueEventProcess instance;
+    QueueRoute route = {};
+    route.srcId = 20U;
+    route.dstId = 21U;
+
+    MOCKER(halQueueGrant).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(DRV_ERROR_INNER_ERR));
+    const int32_t ret = instance.AddQueueAuthToQs(&route, 1U);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
+
+TEST_F(AicpusdQueueEventProcessTest, QueryQsPidFail)
+{
+    AicpuQueueEventProcess instance;
+    MOCKER(halQueryDevpid).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
+    EXPECT_EQ(instance.QueryQsPid(), AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
+
+TEST_F(AicpusdQueueEventProcessTest, GetOrCreateGroupAlreadyCachedAndSlaveAttach)
+{
+    AicpuQueueEventProcess cachedInstance;
+    cachedInstance.grpName_ = "cached_group";
+    std::string outGroupName;
+    EXPECT_EQ(cachedInstance.GetOrCreateGroup(outGroupName), AICPU_SCHEDULE_OK);
+    EXPECT_EQ(outGroupName, "cached_group");
+
+    AicpuQueueEventProcess slaveInstance;
+    std::map<std::string, GroupShareAttr> grpInfos = {{"slave_group", {0}}};
+    MOCKER_CPP(&AicpuDrvManager::QueryProcBuffInfo)
+        .stubs()
+        .with(mockcpp::any(), outBound(grpInfos))
+        .will(returnValue(0));
+    MOCKER_CPP(&AicpuQueueEventProcess::AttachGroupForSlave).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    EXPECT_EQ(slaveInstance.GetOrCreateGroup(outGroupName), AICPU_SCHEDULE_OK);
+}

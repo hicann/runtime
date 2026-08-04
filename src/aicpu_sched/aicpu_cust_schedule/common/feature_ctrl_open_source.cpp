@@ -13,7 +13,7 @@
 #include "aicpusd_hal_interface_ref.h"
 #include "aicpusd_status.h"
 #include "aicpusd_common.h"
-#define AICPU_PLAT_GET_CHIP(type)           (((type) >> 8U) & 0xffU)
+#define AICPU_PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)
 namespace AicpuSchedule {
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 
@@ -45,29 +45,13 @@ void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
     }
 }
 
-bool FeatureCtrl::IsDoubleDieProduct() 
-{
-    return aicpuFeatureDoubleDieProduct_;
-}
+bool FeatureCtrl::IsDoubleDieProduct() { return aicpuFeatureDoubleDieProduct_; }
 
-bool FeatureCtrl::IsBindPidByHal()
-{
-    return aicpuFeatureBindPidByHal_;
-}
+bool FeatureCtrl::IsBindPidByHal() { return aicpuFeatureBindPidByHal_; }
 
-bool FeatureCtrl::IsAosCore()
-{
-    return false;
-}
+bool FeatureCtrl::IsAosCore() { return false; }
 
-bool FeatureCtrl::ShouldInitDrvThread()
-{
-    return aicpuFeatureInitDrvScheModule_;
-}
+bool FeatureCtrl::ShouldInitDrvThread() { return aicpuFeatureInitDrvScheModule_; }
 
-bool FeatureCtrl::ShouldSubmitTaskOneByOne() 
-{
-    return aicpuFeatureSubmitTaskOneByOne_;
-}
+bool FeatureCtrl::ShouldSubmitTaskOneByOne() { return aicpuFeatureSubmitTaskOneByOne_; }
 } // namespace AicpuSchedule
-

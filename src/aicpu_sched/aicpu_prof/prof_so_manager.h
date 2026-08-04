@@ -17,15 +17,16 @@
 #include "prof_dev_api.h"
 
 namespace aicpu {
-using ProfAicpuStartRegisterFunc = int32_t (*)(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para);
+using ProfAicpuStartRegisterFunc = int32_t (*)(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para);
 using ProfReportDataFunc = int32_t (*)(VOID_PTR data, uint32_t len);
 using ProfReportAdditionalInfoFunc = int32_t (*)(uint32_t agingFlag, const VOID_PTR data, uint32_t length);
 using ProfAdprofAicpuStopFunc = int32_t (*)();
 
 using ProfMsprofInitFunc = int32_t (*)(uint32_t dataType, VOID_PTR data, uint32_t dataLen);
-using ProfMsprofReportAdditionalInfoFunc = int32_t (*)(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length);
+using ProfMsprofReportAdditionalInfoFunc =
+    int32_t (*)(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length);
 
-int32_t AdprofAicpuStartRegisterFunc(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para);
+int32_t AdprofAicpuStartRegisterFunc(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para);
 
 int32_t AdprofReportDataFunc(VOID_PTR data, uint32_t len);
 
@@ -39,7 +40,7 @@ int32_t MsprofReportAdditionalInfoFunc(uint32_t nonPersistantFlag, const VOID_PT
 
 class ProfSoManager {
 public:
-    static ProfSoManager *GetInstance();
+    static ProfSoManager* GetInstance();
 
     virtual ~ProfSoManager();
 
@@ -58,18 +59,18 @@ public:
      * @param name msprof function name
      * @return void *
      */
-    void *GetFunc(const std::string &name) const;
+    void* GetFunc(const std::string& name) const;
 
 private:
     /**
      * Init Function Map
      */
-    void InitFunctionMap(const std::vector<std::string> &funcName);
+    void InitFunctionMap(const std::vector<std::string>& funcName);
     ProfSoManager() = default;
 
-    std::unordered_map<std::string, void *> funcMap_;
-    
-    void *soHandle_ = nullptr;
+    std::unordered_map<std::string, void*> funcMap_;
+
+    void* soHandle_ = nullptr;
     std::mutex profMtx_;
 };
 

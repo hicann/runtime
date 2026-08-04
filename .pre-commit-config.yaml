@@ -41,8 +41,7 @@ repos:
             )
             | scripts
             | src/(
-              aicpu_sched
-              | dfx/adump
+              dfx/adump
               | dfx/log
               | dfx/msprof
               | dfx/trace

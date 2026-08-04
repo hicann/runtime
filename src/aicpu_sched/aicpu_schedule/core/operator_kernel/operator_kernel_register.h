@@ -16,43 +16,42 @@
 #include <functional>
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class AICPU_VISIBILITY OperatorKernelRegister {
 public:
-    OperatorKernelRegister() : kernelInstMap_() {};
+    OperatorKernelRegister() : kernelInstMap_(){};
     ~OperatorKernelRegister() = default;
 
-    static OperatorKernelRegister &Instance();
+    static OperatorKernelRegister& Instance();
 
-    int32_t RunOperatorKernel(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext);
-    int32_t CheckOperatorKernelSupported(const std::string &kernelName);
+    int32_t RunOperatorKernel(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext);
+    int32_t CheckOperatorKernelSupported(const std::string& kernelName);
 
     class Registerar {
     public:
-        Registerar(const std::string &type, const KernelCreatorFunc &fun);
+        Registerar(const std::string& type, const KernelCreatorFunc& fun);
         ~Registerar() = default;
 
-        Registerar(const Registerar &) = delete;
-        Registerar(Registerar &&) = delete;
-        Registerar &operator=(const Registerar &) = delete;
-        Registerar &operator=(Registerar &&) = delete;
+        Registerar(const Registerar&) = delete;
+        Registerar(Registerar&&) = delete;
+        Registerar& operator=(const Registerar&) = delete;
+        Registerar& operator=(Registerar&&) = delete;
     };
 
 private:
-    OperatorKernelRegister(const OperatorKernelRegister &) = delete;
-    OperatorKernelRegister(OperatorKernelRegister &&) = delete;
-    OperatorKernelRegister &operator=(const OperatorKernelRegister &) = delete;
-    OperatorKernelRegister &operator=(OperatorKernelRegister &&) = delete;
+    OperatorKernelRegister(const OperatorKernelRegister&) = delete;
+    OperatorKernelRegister(OperatorKernelRegister&&) = delete;
+    OperatorKernelRegister& operator=(const OperatorKernelRegister&) = delete;
+    OperatorKernelRegister& operator=(OperatorKernelRegister&&) = delete;
 
-    std::shared_ptr<OperatorKernel> GetOperatorKernel(const std::string &opType);
-    void Register(const std::string &type, const KernelCreatorFunc &fun);
+    std::shared_ptr<OperatorKernel> GetOperatorKernel(const std::string& opType);
+    void Register(const std::string& type, const KernelCreatorFunc& fun);
 
     std::mutex kernelInstMapMutex_;
     // To accelerate, each types of kernel only have one inst
     std::map<std::string, std::shared_ptr<OperatorKernel>> kernelInstMap_;
 };
 
-};  // namespace AicpuSchedule
+};     // namespace AicpuSchedule
 
-#endif  // OPERATOR_KERNEL_REGISTER_H
+#endif // OPERATOR_KERNEL_REGISTER_H

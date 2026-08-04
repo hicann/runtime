@@ -19,20 +19,17 @@ namespace mpi {
 namespace {
 // time interval of print mpi dvpp event
 constexpr uint32_t PRINT_MPI_DVPP_RECORD_IN_SECOND = 5U;
-}
+} // namespace
 
-MpiDvppStatisticManager &MpiDvppStatisticManager::Instance()
+MpiDvppStatisticManager& MpiDvppStatisticManager::Instance()
 {
     static MpiDvppStatisticManager statisticManagerInstance;
     return statisticManagerInstance;
 }
 
-MpiDvppStatisticManager::~MpiDvppStatisticManager()
-{
-    (void)PrintStatisticInfo();
-}
+MpiDvppStatisticManager::~MpiDvppStatisticManager() { (void)PrintStatisticInfo(); }
 
-void MpiDvppStatisticManager::OnPulse(const MpiDvppTimePoint &nowTimePoint)
+void MpiDvppStatisticManager::OnPulse(const MpiDvppTimePoint& nowTimePoint)
 {
     const float64_t duration = std::chrono::duration<float64_t>(nowTimePoint - lastTimePoint_).count();
     if (round(duration) < static_cast<float64_t>(PRINT_MPI_DVPP_RECORD_IN_SECOND)) {
@@ -48,10 +45,7 @@ int32_t MpiDvppStatisticManager::PrintStatisticInfo() const
     return AicpuSchedule::AICPU_SCHEDULE_OK;
 }
 
-void MpiDvppStatisticManager::Record()
-{
-    mpiEventStatistic_++;
-}
+void MpiDvppStatisticManager::Record() { mpiEventStatistic_++; }
 
 void MpiDvppStatisticManager::InitMpiDvpp()
 {
@@ -63,7 +57,7 @@ void MpiDvppStatisticManager::InitMpiDvpp()
         }
     }
 }
-MpiDvppPulseListener *MpiDvppPulse::pulseListener_ = &MpiDvppStatisticManager::Instance();
+MpiDvppPulseListener* MpiDvppPulse::pulseListener_ = &MpiDvppStatisticManager::Instance();
 
 void MpiDvppPulse::MpiDvppPulseNotify()
 {
@@ -71,4 +65,4 @@ void MpiDvppPulse::MpiDvppPulseNotify()
     pulseListener_->OnPulse(nowTime);
 }
 } // namespace mpi
-}
+} // namespace AicpuSchedule

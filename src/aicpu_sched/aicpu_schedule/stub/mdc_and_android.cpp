@@ -14,15 +14,9 @@ namespace aicpu {
 #ifdef __cplusplus
 extern "C" {
 #endif
-bool IsModelProfOpen()
-{
-    return false;
-}
+bool IsModelProfOpen() { return false; }
 
-bool IsProfOpen()
-{
-    return false;
-}
+bool IsProfOpen() { return false; }
 
 void UpdateModelMode(const bool mode)
 {
@@ -30,10 +24,7 @@ void UpdateModelMode(const bool mode)
     return;
 }
 
-void UpdateMode(const bool mode)
-{
-    (void)mode;
-}
+void UpdateMode(const bool mode) { (void)mode; }
 
 uint64_t GetSystemTick()
 {
@@ -44,7 +35,7 @@ uint64_t GetSystemTick()
     return cnt;
 }
 
-void SendToProfiling(const std::string &sendData, const std::string &mark)
+void SendToProfiling(const std::string& sendData, const std::string& mark)
 {
     (void)sendData;
     (void)mark;
@@ -65,10 +56,7 @@ int32_t SetProfHandle(const std::shared_ptr<ProfMessage> profMsg)
     return 0;
 }
 
-uint64_t NowMicros()
-{
-    return 1UL;
-}
+uint64_t NowMicros() { return 1UL; }
 
 void ReleaseProfiling() {}
 
@@ -86,16 +74,10 @@ void InitProfiling(const uint32_t deviceId, const pid_t hostPid, const uint32_t 
     (void)channelId;
 }
 
-void SetProfilingFlagForKFC(const uint32_t flag)
-{
-    (void)flag;
-}
+void SetProfilingFlagForKFC(const uint32_t flag) { (void)flag; }
 void LoadProfilingLib() {}
 
-bool IsSupportedProfData()
-{
-    return false;
-}
+bool IsSupportedProfData() { return false; }
 
 int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
 {
@@ -107,11 +89,7 @@ int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
 }
 #endif
 
-ProfMessage::ProfMessage(const char_t *tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_()
-{
-}
+ProfMessage::ProfMessage(const char_t* tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_() {}
 
-ProfMessage::~ProfMessage()
-{
-}
-}
+ProfMessage::~ProfMessage() {}
+} // namespace aicpu

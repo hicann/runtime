@@ -13,14 +13,14 @@
 
 #include "hwts_kernel.h"
 
-namespace AicpuSchedule { 
+namespace AicpuSchedule {
 
 class SomaMemMngTsKernel final : public HwTsKernelHandler {
 public:
     SomaMemMngTsKernel() = default;
     ~SomaMemMngTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_SOMA_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_SOMA_H

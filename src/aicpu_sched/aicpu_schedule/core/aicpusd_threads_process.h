@@ -28,7 +28,7 @@ public:
      * Get instance.
      * @return instance.
      */
-    static ComputeProcess &GetInstance();
+    static ComputeProcess& GetInstance();
 
     /**
      * start compute process.
@@ -40,9 +40,9 @@ public:
      * @param  runMode        aicpu run mode
      * @return 0:success, other:fail
      */
-    int32_t Start(const std::vector<uint32_t> &deviceVec,
-                  const pid_t hostPid, const std::string &pidSign,
-                  const uint32_t profilMode, const uint32_t vfId, const aicpu::AicpuRunMode runMode);
+    int32_t Start(
+        const std::vector<uint32_t>& deviceVec, const pid_t hostPid, const std::string& pidSign,
+        const uint32_t profilMode, const uint32_t vfId, const aicpu::AicpuRunMode runMode);
     /**
      * stop compute process.
      */
@@ -59,7 +59,7 @@ public:
     void UpdateProfilingModelMode(const bool mode) const;
 
     std::string DebugString();
-    bool DoSplitKernelTask(const AICPUSharderTaskInfo &taskInfo);
+    bool DoSplitKernelTask(const AICPUSharderTaskInfo& taskInfo);
     bool DoRandomKernelTask();
 
 private:
@@ -67,8 +67,8 @@ private:
     ~ComputeProcess() = default;
 
     // not allow copy constructor and assignment operators
-    ComputeProcess(ComputeProcess &) = delete;
-    ComputeProcess &operator = (ComputeProcess &) = delete;
+    ComputeProcess(ComputeProcess&) = delete;
+    ComputeProcess& operator=(ComputeProcess&) = delete;
 
     /**
      * start tdt server.
@@ -86,12 +86,11 @@ private:
      */
     int32_t RegisterScheduleTask();
 
-    uint32_t SubmitRandomKernelTask(const aicpu::Closure &task);
-    uint32_t SubmitSplitKernelTask(const AICPUSharderTaskInfo &taskInfo,
-                                   const std::queue<aicpu::Closure> &taskQueue);
-    uint32_t SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo &taskInfo) const;
-    uint32_t SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo &taskInfo);
-    uint32_t SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo &taskInfo) const;
+    uint32_t SubmitRandomKernelTask(const aicpu::Closure& task);
+    uint32_t SubmitSplitKernelTask(const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& taskQueue);
+    uint32_t SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo& taskInfo) const;
+    uint32_t SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo& taskInfo);
+    uint32_t SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo& taskInfo) const;
     bool GetAndDoSplitKernelTask();
 
     int32_t MemorySvmDevice();
@@ -133,6 +132,6 @@ private:
     // aicpu run mode
     aicpu::AicpuRunMode runMode_;
 };
-}
+} // namespace AicpuSchedule
 
 #endif

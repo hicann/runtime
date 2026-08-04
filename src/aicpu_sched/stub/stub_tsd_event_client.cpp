@@ -9,22 +9,22 @@
  */
 #include "tsd.h"
 
-int32_t SendUpdateProfilingRspToTsd(const uint32_t deviceId, const uint32_t waitType,
-                                    const uint32_t hostPid, const uint32_t vfId)
+int32_t SendUpdateProfilingRspToTsd(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     return 0;
 }
 
-int32_t CreateOrFindCustPid(const uint32_t deviceId, const uint32_t loadLibNum,
-    const char * const loadLibName[], const uint32_t hostPid, const uint32_t vfId, const char *groupNameList,
-    const uint32_t groupNameNum, int32_t *custProcPid, bool *firstStart)
+int32_t CreateOrFindCustPid(
+    const uint32_t deviceId, const uint32_t loadLibNum, const char* const loadLibName[], const uint32_t hostPid,
+    const uint32_t vfId, const char* groupNameList, const uint32_t groupNameNum, int32_t* custProcPid, bool* firstStart)
 {
     return 0;
 }
 
-int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
-                               const uint32_t hostPid, const uint32_t vfId,
-                               const struct SubProcScheduleModeInfo *scheInfo)
+int32_t SetSubProcScheduleMode(
+    const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId,
+    const struct SubProcScheduleModeInfo* scheInfo)
 {
     (void)deviceId;
     (void)waitType;
@@ -34,72 +34,60 @@ int32_t SetSubProcScheduleMode(const uint32_t deviceId, const uint32_t waitType,
     return 0;
 }
 
-int32_t ReportMsgToTsd(const uint32_t deviceId, const TsdWaitType waitType,
-                       const uint32_t hostPid, const uint32_t vfId,
-                       const char * const msgInfo)
+int32_t ReportMsgToTsd(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const char* const msgInfo)
 {
     return 0;
 }
 
-int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo *regInfo)
+int32_t RegEventMsgCallBackFunc(const struct SubProcEventCallBackInfo* regInfo) { return 0; }
+
+void UnRegEventMsgCallBackFunc(const uint32_t eventType) { return; }
+
+int32_t TsdReportStartOrStopErrCode(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const char* errCode, const uint32_t errLen)
 {
     return 0;
 }
 
-void UnRegEventMsgCallBackFunc(const uint32_t eventType)
-{
-    return;
-}
-
-int32_t TsdReportStartOrStopErrCode(const uint32_t deviceId, const TsdWaitType waitType,
-                                    const uint32_t hostPid, const uint32_t vfId,
-                                    const char *errCode, const uint32_t errLen)
+int32_t StartupResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     return 0;
 }
 
-int32_t StartupResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                        const uint32_t hostPid, const uint32_t vfId)
+int32_t WaitForShutDown(const uint32_t deviceId) { return 0; }
+
+int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     return 0;
 }
 
-int32_t WaitForShutDown(const uint32_t deviceId)
+int32_t StopWaitForCustAicpu() { return 0; }
+
+int32_t SubModuleProcessResponse(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId,
+    const uint32_t eventType)
 {
     return 0;
 }
 
-int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType,
-                   const uint32_t hostPid, const uint32_t vfId)
+int32_t StartUpRspAndWaitProcess(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
     return 0;
 }
 
-int32_t StopWaitForCustAicpu()
-{
-    return 0;
-}
+int32_t SetDstTsdEventPid(const uint32_t dstPid) { return 0; }
 
-int32_t SubModuleProcessResponse(const uint32_t deviceId, const TsdWaitType waitType,
-                                 const uint32_t hostPid, const uint32_t vfId,
-                                 const uint32_t eventType)
+int32_t TsdWaitForShutdown(
+    const uint32_t deviceId, const TsdWaitType waitType, const uint32_t hostPid, const uint32_t vfId)
 {
-    return 0;
-}
-
-int32_t StartUpRspAndWaitProcess(const uint32_t deviceId, const TsdWaitType waitType,
-                                 const uint32_t hostPid, const uint32_t vfId)
-{
-    return 0;
-}
-
-int32_t SetDstTsdEventPid(const uint32_t dstPid)
-{
-    return 0;
-}
-
-int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
-                          const uint32_t hostPid, const uint32_t vfId) {
-    (void)deviceId; (void)waitType; (void)hostPid; (void)vfId;
-    return 0;  // 返回 int32_t
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
+    return 0; // 返回 int32_t
 }

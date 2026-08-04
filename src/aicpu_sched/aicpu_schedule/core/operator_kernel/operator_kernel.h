@@ -19,16 +19,16 @@
 namespace AicpuSchedule {
 class AICPU_VISIBILITY OperatorKernel {
 public:
-    virtual int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) = 0;
+    virtual int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) = 0;
     virtual ~OperatorKernel() {}
 };
 
 using KernelCreatorFunc = std::function<std::shared_ptr<OperatorKernel>(void)>;
 
-AICPU_VISIBILITY bool RegistOperatorKernel(const std::string &type, const KernelCreatorFunc &fun);
+AICPU_VISIBILITY bool RegistOperatorKernel(const std::string& type, const KernelCreatorFunc& fun);
 
 template <typename T, typename... Args>
-static inline std::shared_ptr<T> MakeShared(Args &&...args)
+static inline std::shared_ptr<T> MakeShared(Args&&... args)
 {
     using T_NC = typename std::remove_const<T>::type;
     std::shared_ptr<T> ret(new (std::nothrow) T_NC(std::forward<Args>(args)...));
@@ -44,6 +44,6 @@ static inline std::shared_ptr<T> MakeShared(Args &&...args)
     }                                                         \
     bool g_##type##_Kernel_Creator __attribute__((unused)) = RegistOperatorKernel(type, Creator_##type##_Kernel)
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // OPERATOR_KERNEL_H
+#endif // OPERATOR_KERNEL_H

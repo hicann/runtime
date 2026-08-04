@@ -14,15 +14,15 @@
 #include "operator_kernel.h"
 #include "operator_kernel_enqueue_base.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelBatchEnqueue : public OperatorKernel, public OperatorKernelEnqueueBase {
 public:
     OperatorKernelModelBatchEnqueue() = default;
     ~OperatorKernelModelBatchEnqueue() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
-    int32_t BatchEnque(const RunContext &taskContext, const uint64_t * const mbufPtrlist,
-                       const uint32_t * const outQueueIdList, const uint32_t outQueueNum) const;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+    int32_t BatchEnque(
+        const RunContext& taskContext, const uint64_t* const mbufPtrlist, const uint32_t* const outQueueIdList,
+        const uint32_t outQueueNum) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_BATCH_ENQUEUE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_BATCH_ENQUEUE_H

@@ -421,6 +421,72 @@ target_link_libraries(aicpu_aicpuschedule_utest_host_cpu PRIVATE
     json
 )
 
+add_library(aicpusd_fake_hccd SHARED
+    testcase/aicpusd_fake_hccl_so.cc
+)
+
+add_library(aicpusd_fake_hccl_heterog SHARED
+    testcase/aicpusd_fake_hccl_so.cc
+)
+
+set_target_properties(aicpusd_fake_hccd PROPERTIES
+    OUTPUT_NAME hccd
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+set_target_properties(aicpusd_fake_hccl_heterog PROPERTIES
+    OUTPUT_NAME hccl_heterog
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_executable(aicpu_aicpuschedule_stub_coverage_utest
+    ${SRC_PATH}/stub/aicpusd_meminfo_process.cpp
+    ${SRC_PATH}/stub/aicpusd_interface.cpp
+    ${SRC_PATH}/stub/stub_dp.cpp
+    ${SRC_PATH}/common/aicpusd_hccl_api.cpp
+    ${SRC_PATH}/stub/stub_shard.cpp
+    ${SRC_PATH}/stub/helper710.cpp
+    ${AICPU_SCHED_PATH}/stub/adump_stub.cpp
+    ${SRC_PATH}/core/dfx/aicpusd_profiler.cpp
+    ${SRC_PATH}/stub/aicpusd_stub_tdtserver.cpp
+    ${SRC_PATH}/stub/mdc_and_android.cpp
+    ${AICPU_SCHED_PATH}/stub/stub_tsd_event_client.cpp
+    ${RUNTIME_DIR}/tests/ut/aicpu_sched/aicpu_schedule/stub/driver_host_stub.cpp
+    ${RUNTIME_DIR}/tests/ut/aicpu_sched/aicpu_schedule/stub/hiperf_stub.cc
+    ${RUNTIME_DIR}/tests/ut/aicpu_sched/aicpu_schedule/stub/slog_stub.cpp
+    testcase/aicpusd_profiler_access_wrapper.cc
+    testcase/aicpusd_stub_coverage_test.cc
+    main_ut.cc
+)
+
+add_dependencies(aicpu_aicpuschedule_stub_coverage_utest
+    aicpusd_fake_hccd
+    aicpusd_fake_hccl_heterog
+)
+
+target_include_directories(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
+    ${RUNTIME_DIR}/tests/ut/aicpu_sched/aicpu_schedule/ut/testcase
+    ${COMMON_C_INCLUDES}
+    ${SRC_PATH}/stub
+    ${RUNTIME_DIR}/pkg_inc/dump
+    ${RUNTIME_DIR}/output/third_party/json/include
+)
+
+target_compile_definitions(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
+    ${COMMON_DEF}
+)
+
+target_link_options(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
+    "-Wl,-rpath,$ORIGIN"
+    "-Wl,--wrap=access"
+)
+
+target_link_libraries(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
+    ${COMMON_C_LINK}
+    aicpusd_fake_hccd
+    json
+)
+
 add_executable(aicpu_thread_datadump_utest
     ${SRC_PATH}/datadump/datadump_interface.cpp
     ${SRC_PATH}/common/aicpusd_sqe_adapter.cpp
@@ -561,4 +627,3 @@ target_link_libraries(aicpu_sched_sim_utest PRIVATE
     ${COMMON_C_LINK}
     json
 )
-

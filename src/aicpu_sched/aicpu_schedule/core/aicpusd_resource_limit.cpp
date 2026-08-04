@@ -39,11 +39,11 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
         command = "cd /usr/local/Ascend/driver/tools/ && sudo ./tsdaemon_add_to_usermemory.sh";
     }
     command.append(" memory ")
-           .append(std::to_string(pid))
-           .append(" ")
-           .append(std::to_string(deviceId))
-           .append(" ")
-           .append(std::to_string(vfId));
+        .append(std::to_string(pid))
+        .append(" ")
+        .append(std::to_string(deviceId))
+        .append(" ")
+        .append(std::to_string(vfId));
 
     int32_t status = -1;
     uint32_t tryTimes = 0;
@@ -61,4 +61,4 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     aicpusd_run_info("Add to cgroup finished, cmd:[%s].", command.c_str());
     return true;
 }
-}
+} // namespace AicpuSchedule

@@ -33,30 +33,12 @@ public:
     TaskTimer(const uint64_t tick, const bool isRun) : startTick(tick), runFlag(isRun), timeInTick(0UL) {}
     ~TaskTimer() = default;
 
-    inline uint64_t GetStartTick() const
-    {
-        return startTick.load();
-    };
-    inline bool GetRunFlag() const
-    {
-        return runFlag.load();
-    };
-    inline void SetStartTick(const uint64_t tick)
-    {
-        startTick = tick;
-    };
-    inline void SetRunFlag(const bool isRun)
-    {
-        runFlag = isRun;
-    };
-    inline void SetTimeTick(const uint32_t timeS)
-    {
-        timeInTick = timeS * aicpu::GetSystemTickFreq();
-    };
-    inline uint64_t GetTimeTick() const
-    {
-        return timeInTick;
-    };
+    inline uint64_t GetStartTick() const { return startTick.load(); };
+    inline bool GetRunFlag() const { return runFlag.load(); };
+    inline void SetStartTick(const uint64_t tick) { startTick = tick; };
+    inline void SetRunFlag(const bool isRun) { runFlag = isRun; };
+    inline void SetTimeTick(const uint32_t timeS) { timeInTick = timeS * aicpu::GetSystemTickFreq(); };
+    inline uint64_t GetTimeTick() const { return timeInTick; };
 
 private:
     std::atomic<uint64_t> startTick;
@@ -73,7 +55,7 @@ struct TaskInfoForMonitor {
 
 class MonitorDebug {
 public:
-    static std::string MonitorDebugString(const TaskInfoForMonitor &monitor)
+    static std::string MonitorDebugString(const TaskInfoForMonitor& monitor)
     {
         std::ostringstream oss;
         oss << "serialNo=" << monitor.serialNo << ", stream_id=" << monitor.streamId << ", task_id=" << monitor.taskId;
@@ -83,11 +65,11 @@ public:
 
 class AicpuMonitor {
 public:
-    static AicpuMonitor &GetInstance();
+    static AicpuMonitor& GetInstance();
 
     int32_t InitMonitor(const uint32_t devId, const bool isOnline);
 
-    void SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor &taskInfo) const;
+    void SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor& taskInfo) const;
 
     void SetTaskStartTime(const uint32_t taskId);
     void SetTaskEndTime(const uint32_t taskId);
@@ -110,15 +92,15 @@ public:
 private:
     AicpuMonitor();
 
-    AicpuMonitor(const AicpuMonitor &) = delete;
+    AicpuMonitor(const AicpuMonitor&) = delete;
 
-    AicpuMonitor &operator = (const AicpuMonitor &) = delete;
+    AicpuMonitor& operator=(const AicpuMonitor&) = delete;
 
     int32_t InitTimer();
     int32_t SetTaskTimeoutFlag();
     int32_t SetModelTimeoutFlag();
     void InitAsyncOpTimer();
-    static void Work(AicpuMonitor *const monitor);
+    static void Work(AicpuMonitor* const monitor);
     void HandleTaskTimeout();
     void HandleModelTimeout();
     void HandleOpTimeout();
@@ -153,6 +135,6 @@ private:
     std::atomic<bool> opTimeoutFlag_;
     std::mutex opTimerMapMutex_;
 };
-}
+} // namespace AicpuSchedule
 
 #endif // CORE_AICPUSD_MONITOR_H

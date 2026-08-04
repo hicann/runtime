@@ -19,13 +19,12 @@
 namespace AicpuSchedule {
 class AicpusdLastword {
 public:
-    static AicpusdLastword &GetInstance()
+    static AicpusdLastword& GetInstance()
     {
         static AicpusdLastword instance;
         return instance;
     }
-    void RegLastwordCallback(const std::string mark, std::function<void ()> callback,
-        std::function<void ()> &cancelReg);
+    void RegLastwordCallback(const std::string mark, std::function<void()> callback, std::function<void()>& cancelReg);
     void LastwordCallback();
 
 private:
@@ -33,5 +32,5 @@ private:
     uint64_t lastwordKey_ = 0;
     std::map<uint64_t, std::pair<std::string, std::function<void()>>> lastwords_;
 };
-}
+} // namespace AicpuSchedule
 #endif // CORE_AICPUSD_LASTWORD_H

@@ -12,33 +12,33 @@
 #include "aicpusd_status.h"
 #include "aicpusd_resource_manager.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_WAIT_NOTIFY = "waitNotify";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelWaitNotify::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelWaitNotify::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto info = PtrToPtr<void, TsAicpuNotify>(ValueToPtr(kernelTaskInfo.paraBase));
     if (info == nullptr) {
-        aicpusd_err("ModelWait kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelWait kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return DoCompute(info->notify_id, taskContext);
 }
 
-int32_t OperatorKernelWaitNotify::DoCompute(const uint32_t notifyId, const RunContext &taskContext) const
+int32_t OperatorKernelWaitNotify::DoCompute(const uint32_t notifyId, const RunContext& taskContext) const
 {
     bool needWait = false;
     EventWaitManager::NotifyWaitManager().WaitEvent(static_cast<size_t>(notifyId), taskContext.streamId, needWait);
     if (needWait) {
-        bool * const pending = const_cast<bool *>(&taskContext.pending);
+        bool* const pending = const_cast<bool*>(&taskContext.pending);
         *pending = true;
     }
     return AICPU_SCHEDULE_OK;
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_WAIT_NOTIFY, OperatorKernelWaitNotify);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

@@ -38,7 +38,7 @@ AicpuMonitor::AicpuMonitor()
  */
 AicpuMonitor::~AicpuMonitor() {}
 
-AicpuMonitor &AicpuMonitor::GetInstance()
+AicpuMonitor& AicpuMonitor::GetInstance()
 {
     static AicpuMonitor instance;
     return instance;
@@ -51,12 +51,9 @@ int32_t AicpuMonitor::InitMonitor(const uint32_t deviceId, const bool online)
     return AICPU_SCHEDULE_OK;
 }
 
-void AicpuMonitor::SendKillMsgToTsd() const
-{
-    return;
-}
+void AicpuMonitor::SendKillMsgToTsd() const { return; }
 
-void AicpuMonitor::SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor &taskInfo) const
+void AicpuMonitor::SetTaskInfo(const uint32_t threadIndex, const TaskInfoForMonitor& taskInfo) const
 {
     UNUSED(threadIndex);
     UNUSED(taskInfo);
@@ -70,57 +67,27 @@ void AicpuMonitor::SetOpExecuteTimeOut(const uint32_t timeOutEn, const uint32_t 
     return;
 }
 
-void AicpuMonitor::SetTaskStartTime(const uint32_t index) 
-{
-    UNUSED(index);
-}
+void AicpuMonitor::SetTaskStartTime(const uint32_t index) { UNUSED(index); }
 
-void AicpuMonitor::SetTaskEndTime(const uint32_t index) 
-{
-    UNUSED(index);
-}
+void AicpuMonitor::SetTaskEndTime(const uint32_t index) { UNUSED(index); }
 
-void AicpuMonitor::SetAicpuStreamTaskStartTime(const uint32_t taskId) 
-{
-    UNUSED(taskId);
-}
+void AicpuMonitor::SetAicpuStreamTaskStartTime(const uint32_t taskId) { UNUSED(taskId); }
 
-void AicpuMonitor::SetAicpuStreamTaskEndTime(const uint32_t taskId) 
-{
-    UNUSED(taskId);
-}
+void AicpuMonitor::SetAicpuStreamTaskEndTime(const uint32_t taskId) { UNUSED(taskId); }
 
-void AicpuMonitor::SetModelStartTime(const uint32_t modelId) 
-{
-    UNUSED(modelId);
-}
+void AicpuMonitor::SetModelStartTime(const uint32_t modelId) { UNUSED(modelId); }
 
-void AicpuMonitor::SetModelEndTime(const uint32_t modelId) 
-{
-    UNUSED(modelId);
-}
+void AicpuMonitor::SetModelEndTime(const uint32_t modelId) { UNUSED(modelId); }
 
-int32_t AicpuMonitor::Run()
-{
-    return AICPU_SCHEDULE_OK;
-}
+int32_t AicpuMonitor::Run() { return AICPU_SCHEDULE_OK; }
 
 void AicpuMonitor::StopMonitor() {}
 
-int32_t AicpuMonitor::SetTaskTimeoutFlag()
-{
-    return AICPU_SCHEDULE_OK;
-}
+int32_t AicpuMonitor::SetTaskTimeoutFlag() { return AICPU_SCHEDULE_OK; }
 
-int32_t AicpuMonitor::SetModelTimeoutFlag()
-{
-    return AICPU_SCHEDULE_OK;
-}
+int32_t AicpuMonitor::SetModelTimeoutFlag() { return AICPU_SCHEDULE_OK; }
 
-void AicpuMonitor::Work(AicpuMonitor *monitor) 
-{
-    UNUSED(monitor);
-}
+void AicpuMonitor::Work(AicpuMonitor* monitor) { UNUSED(monitor); }
 
 void AicpuMonitor::HandleTaskTimeout() {}
 
@@ -128,28 +95,19 @@ void AicpuMonitor::HandleModelTimeout() {}
 
 void AicpuMonitor::DisableModelTimeout() {}
 
-void AicpuMonitor::SetOpTimerStartTime(const aicpu::TimerHandle timerId, const uint32_t timeInS) 
+void AicpuMonitor::SetOpTimerStartTime(const aicpu::TimerHandle timerId, const uint32_t timeInS)
 {
     UNUSED(timerId);
     UNUSED(timeInS);
 }
 
-void AicpuMonitor::SetOpTimerEndTime(const aicpu::TimerHandle timerId) 
-{
-    UNUSED(timerId);
-}
+void AicpuMonitor::SetOpTimerEndTime(const aicpu::TimerHandle timerId) { UNUSED(timerId); }
 
 void AicpuMonitor::HandleOpTimeout() {}
 
 void AicpuMonitor::InitAsyncOpTimer() {}
 
-uint32_t AicpuMonitor::GetTaskDefaultTimeout() const
-{
-    return 0U;
-}
+uint32_t AicpuMonitor::GetTaskDefaultTimeout() const { return 0U; }
 
-void AicpuMonitor::SetOpTimeoutFlag(const bool flag) 
-{
-    UNUSED(flag);
-}
-}
+void AicpuMonitor::SetOpTimeoutFlag(const bool flag) { UNUSED(flag); }
+} // namespace AicpuSchedule

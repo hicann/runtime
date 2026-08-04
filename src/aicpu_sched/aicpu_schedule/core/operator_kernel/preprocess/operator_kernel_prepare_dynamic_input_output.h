@@ -14,38 +14,39 @@
 #include <vector>
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class PrepareDynamicInputOutputBase {
 public:
     PrepareDynamicInputOutputBase() = default;
     ~PrepareDynamicInputOutputBase() = default;
-    int32_t PrepareDynamicInputOutput(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext,
-                                      const bool hostAllocDynamicOutput) const;
-private:
-    int32_t AllocateAndInitOutput(const PrepareDynamicInputOutputKernelArgs * const param,
-                                  const RunContext &taskContext, std::vector<Mbuf *> &mbufsToFree,
-                                  const bool hostAllocDynamicOutput) const;
-    int32_t PrepareReqMsg(const PrepareDynamicInputOutputKernelArgs * const param, const RunContext &taskContext,
-                          std::vector<Mbuf *> &mbufsToFree, const bool hostAllocDynamicOutput) const;
-    int32_t UpdateReqMsgHead(Mbuf *const reqMbuf, const uint64_t * const inputPptrs, const uint32_t inputNum,
-                             const RunContext &taskContext) const;
-    void ExtractHeadInfo(Mbuf *const mbuf, int32_t &retCode, bool &nullDataFlag, bool &isEndofSequence) const;
-};
+    int32_t PrepareDynamicInputOutput(
+        const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext, const bool hostAllocDynamicOutput) const;
 
+private:
+    int32_t AllocateAndInitOutput(
+        const PrepareDynamicInputOutputKernelArgs* const param, const RunContext& taskContext,
+        std::vector<Mbuf*>& mbufsToFree, const bool hostAllocDynamicOutput) const;
+    int32_t PrepareReqMsg(
+        const PrepareDynamicInputOutputKernelArgs* const param, const RunContext& taskContext,
+        std::vector<Mbuf*>& mbufsToFree, const bool hostAllocDynamicOutput) const;
+    int32_t UpdateReqMsgHead(
+        Mbuf* const reqMbuf, const uint64_t* const inputPptrs, const uint32_t inputNum,
+        const RunContext& taskContext) const;
+    void ExtractHeadInfo(Mbuf* const mbuf, int32_t& retCode, bool& nullDataFlag, bool& isEndofSequence) const;
+};
 
 class OperatorKernelPrepareDynamicInputOutput : public OperatorKernel, public PrepareDynamicInputOutputBase {
 public:
     OperatorKernelPrepareDynamicInputOutput() = default;
     ~OperatorKernelPrepareDynamicInputOutput() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
 
 class OperatorKernelPrepareDynamicInputOutputV2 : public OperatorKernel, public PrepareDynamicInputOutputBase {
 public:
     OperatorKernelPrepareDynamicInputOutputV2() = default;
     ~OperatorKernelPrepareDynamicInputOutputV2() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_PREPARE_DYNAMIC_INPUT_OUTPUT_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_PREPARE_DYNAMIC_INPUT_OUTPUT_H

@@ -48,9 +48,9 @@ std::vector<std::map<std::string, std::string>> g_profThreadCtx;
 std::mutex g_debugMutex;
 std::vector<std::map<std::string, std::string>> g_debugThreadCtx;
 std::mutex g_funcMapMutex;
-std::map<uint32_t, std::map<uint32_t, std::pair<std::function<void(void *)>, bool>>> g_funcMap;
+std::map<uint32_t, std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>> g_funcMap;
 
-std::map<std::string, std::string> &GetThreadCtx(const aicpu::CtxType type, const uint32_t threadIndex)
+std::map<std::string, std::string>& GetThreadCtx(const aicpu::CtxType type, const uint32_t threadIndex)
 {
     const size_t thredId = static_cast<size_t>(threadIndex);
     if (type == aicpu::CTX_DEBUG) {
@@ -76,19 +76,19 @@ std::map<std::string, std::string> &GetThreadCtx(const aicpu::CtxType type, cons
 } // namespace
 
 namespace aicpu {
-__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t* ctx)
 {
     g_curCtx = *ctx;
     return AICPU_ERROR_NONE;
 }
 
-__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t* ctx)
 {
     *ctx = g_curCtx;
     return AICPU_ERROR_NONE;
 }
 
-void GetSqeId(const uint32_t num, uint32_t &start, uint32_t &end)
+void GetSqeId(const uint32_t num, uint32_t& start, uint32_t& end)
 {
     std::lock_guard<std::mutex> lk(g_sqeIdMtx);
     start = g_sqeId;
@@ -110,16 +110,13 @@ void GetSqeId(const uint32_t num, uint32_t &start, uint32_t &end)
     return;
 }
 
-status_t aicpuSetProfContext(const aicpuProfContext_t &ctx)
+status_t aicpuSetProfContext(const aicpuProfContext_t& ctx)
 {
     g_curProfCtx = ctx;
     return AICPU_ERROR_NONE;
 }
 
-const aicpuProfContext_t &aicpuGetProfContext()
-{
-    return g_curProfCtx;
-}
+const aicpuProfContext_t& aicpuGetProfContext() { return g_curProfCtx; }
 
 status_t InitTaskMonitorContext(uint32_t aicpuCoreCnt)
 {
@@ -146,12 +143,9 @@ status_t SetAicpuThreadIndex(uint32_t threadIndex)
     return AICPU_ERROR_NONE;
 }
 
-uint32_t GetAicpuThreadIndex()
-{
-    return g_threadIndex;
-}
+uint32_t GetAicpuThreadIndex() { return g_threadIndex; }
 
-status_t SetOpname(const std::string &opname)
+status_t SetOpname(const std::string& opname)
 {
     if ((g_opsname != nullptr) && (g_threadIndex < g_aicpuCoreCnt)) {
         AICPUE_LOGI("set op name to %s for thread[%u]", opname.c_str(), g_threadIndex);
@@ -159,12 +153,14 @@ status_t SetOpname(const std::string &opname)
         return AICPU_ERROR_NONE;
     }
     // maintenance function, if failed just print event log
-    AICPUE_RUN_LOGW("set op name[%s] failed, thread index[%u] should be less than total aicpu core count[%u],"
-        " and ops name array addr cannot null", opname.c_str(), g_threadIndex, g_aicpuCoreCnt);
+    AICPUE_RUN_LOGW(
+        "set op name[%s] failed, thread index[%u] should be less than total aicpu core count[%u],"
+        " and ops name array addr cannot null",
+        opname.c_str(), g_threadIndex, g_aicpuCoreCnt);
     return AICPU_ERROR_NONE;
 }
 
-status_t GetOpname(uint32_t threadIndex, std::string &opname)
+status_t GetOpname(uint32_t threadIndex, std::string& opname)
 {
     if ((g_opsname != nullptr) && (threadIndex < g_aicpuCoreCnt)) {
         opname = g_opsname[static_cast<size_t>(threadIndex)];
@@ -172,8 +168,10 @@ status_t GetOpname(uint32_t threadIndex, std::string &opname)
     }
     opname = "null";
     // maintenance function, if failed just print event log
-    AICPUE_RUN_LOGW("get op name failed, thread index[%u] should be less than total aicpu core count[%u],"
-        " and ops name array addr cannot null", g_threadIndex, g_aicpuCoreCnt);
+    AICPUE_RUN_LOGW(
+        "get op name failed, thread index[%u] should be less than total aicpu core count[%u],"
+        " and ops name array addr cannot null",
+        g_threadIndex, g_aicpuCoreCnt);
     return AICPU_ERROR_NONE;
 }
 
@@ -185,7 +183,7 @@ status_t SetTaskAndStreamId(uint64_t taskId, uint32_t streamId)
     return AICPU_ERROR_NONE;
 }
 
-status_t GetTaskAndStreamId(uint64_t &taskId, uint32_t &streamId)
+status_t GetTaskAndStreamId(uint64_t& taskId, uint32_t& streamId)
 {
     taskId = g_streamAndTaskId.taskId;
     streamId = g_streamAndTaskId.streamId;
@@ -201,15 +199,9 @@ status_t SetBlockIdxAndBlockNum(uint32_t blockIdx, uint32_t blockNum)
     return AICPU_ERROR_NONE;
 }
 
-uint32_t GetBlockIdx()
-{
-    return g_blockIdx;
-}
+uint32_t GetBlockIdx() { return g_blockIdx; }
 
-uint32_t GetBlockNum()
-{
-    return g_blockNum;
-}
+uint32_t GetBlockNum() { return g_blockNum; }
 
 status_t SetAicpuRunMode(uint32_t runMode)
 {
@@ -218,13 +210,13 @@ status_t SetAicpuRunMode(uint32_t runMode)
     return AICPU_ERROR_NONE;
 }
 
-status_t GetAicpuRunMode(uint32_t &runMode)
+status_t GetAicpuRunMode(uint32_t& runMode)
 {
     runMode = g_runMode;
     return AICPU_ERROR_NONE;
 }
 
-status_t SetThreadLocalCtx(const std::string &key, const std::string &value)
+status_t SetThreadLocalCtx(const std::string& key, const std::string& value)
 {
     if (key.empty()) {
         AICPUE_LOGE("set thread local context failed, key is empty");
@@ -232,14 +224,14 @@ status_t SetThreadLocalCtx(const std::string &key, const std::string &value)
     }
     try {
         g_threadLocalAicpuCtx[key] = value;
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         AICPUE_LOGE("set thread local context failed, %s", e.what());
         return AICPU_ERROR_FAILED;
     }
     return AICPU_ERROR_NONE;
 }
 
-status_t GetThreadLocalCtx(const std::string &key, std::string &value)
+status_t GetThreadLocalCtx(const std::string& key, std::string& value)
 {
     if (key.empty()) {
         AICPUE_LOGE("get thread local context failed, key is empty");
@@ -254,7 +246,7 @@ status_t GetThreadLocalCtx(const std::string &key, std::string &value)
     return AICPU_ERROR_FAILED;
 }
 
-status_t RemoveThreadLocalCtx(const std::string &key)
+status_t RemoveThreadLocalCtx(const std::string& key)
 {
     const auto iter = g_threadLocalAicpuCtx.find(key);
     if (iter != g_threadLocalAicpuCtx.end()) {
@@ -265,43 +257,48 @@ status_t RemoveThreadLocalCtx(const std::string &key)
     return AICPU_ERROR_FAILED;
 }
 
-const std::map<std::string, std::string> &GetAllThreadCtxInfo(aicpu::CtxType type, uint32_t threadIndex)
+const std::map<std::string, std::string>& GetAllThreadCtxInfo(aicpu::CtxType type, uint32_t threadIndex)
 {
     AICPUE_LOGI("Get all thread ctx info begin, thread index:%u", threadIndex);
-    auto &ctx = GetThreadCtx(type, threadIndex);
+    auto& ctx = GetThreadCtx(type, threadIndex);
     return ctx;
 }
 
-status_t RegisterEventCallback(const uint32_t eventId, const uint32_t subeventId,
-                               std::function<void(void *)> func,
-                               const bool isNeedClear)
+status_t RegisterEventCallback(
+    const uint32_t eventId, const uint32_t subeventId, std::function<void(void*)> func, const bool isNeedClear)
 {
     const std::lock_guard<std::mutex> locker(g_funcMapMutex);
-    std::map<uint32_t, std::pair<std::function<void(void *)>, bool>> &subMap = g_funcMap[eventId];
+    std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>& subMap = g_funcMap[eventId];
     const auto it = subMap.insert({subeventId, {func, isNeedClear}});
     if (!it.second) {
-        AICPUE_LOGE("register event call function failed, repulicate register callback "
-                    "function by eventId[%u] subeventId[%u]", eventId, subeventId);
+        AICPUE_LOGE(
+            "register event call function failed, repulicate register callback "
+            "function by eventId[%u] subeventId[%u]",
+            eventId, subeventId);
         return AICPU_ERROR_FAILED;
     }
     return AICPU_ERROR_NONE;
 }
 
-status_t DoEventCallback(const uint32_t eventId, const uint32_t subeventId, void * const param)
+status_t DoEventCallback(const uint32_t eventId, const uint32_t subeventId, void* const param)
 {
     const std::lock_guard<std::mutex> locker(g_funcMapMutex);
     const auto iter = g_funcMap.find(eventId);
     if (iter == g_funcMap.end()) {
-        AICPUE_RUN_LOGW("do event callback function failed, cannot find callback function by "
-                        "eventId[%u] subeventId[%u]", eventId, subeventId);
+        AICPUE_RUN_LOGW(
+            "do event callback function failed, cannot find callback function by "
+            "eventId[%u] subeventId[%u]",
+            eventId, subeventId);
         return AICPU_ERROR_FAILED;
     }
 
-    std::map<uint32_t, std::pair<std::function<void(void *)>, bool>> &subMap = iter->second;
+    std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>& subMap = iter->second;
     const auto subIter = subMap.find(subeventId);
     if (subIter == subMap.end()) {
-        AICPUE_RUN_LOGW("do event callback function failed, cannot find callback function by "
-                        "eventId[%u] subeventId[%u]", eventId, subeventId);
+        AICPUE_RUN_LOGW(
+            "do event callback function failed, cannot find callback function by "
+            "eventId[%u] subeventId[%u]",
+            eventId, subeventId);
         return AICPU_ERROR_FAILED;
     }
     ((subIter->second).first)(param);
@@ -317,16 +314,20 @@ status_t UnRegisterCallback(const uint32_t eventId, const uint32_t subeventId)
     const std::lock_guard<std::mutex> locker(g_funcMapMutex);
     const auto iter = g_funcMap.find(eventId);
     if (iter == g_funcMap.end()) {
-        AICPUE_RUN_LOGW("skip unregister event callback function, cannot find callback function by eventId[%u] "
-                        "subeventId[%u]", eventId, subeventId);
+        AICPUE_RUN_LOGW(
+            "skip unregister event callback function, cannot find callback function by eventId[%u] "
+            "subeventId[%u]",
+            eventId, subeventId);
         return AICPU_ERROR_NONE;
     }
 
-    std::map<uint32_t, std::pair<std::function<void(void *)>, bool>> &subMap = iter->second;
+    std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>& subMap = iter->second;
     const auto subIter = subMap.find(subeventId);
     if (subIter == subMap.end()) {
-        AICPUE_RUN_LOGW("skip unregister event callback function, cannot find callback function by eventId[%u] "
-                        "subeventId[%u]", eventId, subeventId);
+        AICPUE_RUN_LOGW(
+            "skip unregister event callback function, cannot find callback function by eventId[%u] "
+            "subeventId[%u]",
+            eventId, subeventId);
         return AICPU_ERROR_NONE;
     }
     (void)subMap.erase(subIter);
@@ -334,17 +335,16 @@ status_t UnRegisterCallback(const uint32_t eventId, const uint32_t subeventId)
 }
 
 using AicpuStreamDvpp = struct {
-    uint8_t *dvppBuff;
+    uint8_t* dvppBuff;
     uint64_t dvppBuffLen;
     int32_t channelId;
 };
 
 static pthread_rwlock_t g_streamAndChannelMapLock[AICPU_DVPP_CHL_BUTT] = {
-    PTHREAD_RWLOCK_INITIALIZER,
-    PTHREAD_RWLOCK_INITIALIZER};
+    PTHREAD_RWLOCK_INITIALIZER, PTHREAD_RWLOCK_INITIALIZER};
 static std::map<uint32_t, AicpuStreamDvpp> g_streamAndChannelMap[AICPU_DVPP_CHL_BUTT];
 
-void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t buffLen, uint8_t *buff)
+void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t buffLen, uint8_t* buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
@@ -369,8 +369,8 @@ void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t b
     return;
 }
 
-void SetStreamDvppBuffByStreamId(const AicpuDvppChlType chlType, const uint32_t streamId,
-                                 const uint64_t buffLen, uint8_t *buff)
+void SetStreamDvppBuffByStreamId(
+    const AicpuDvppChlType chlType, const uint32_t streamId, const uint64_t buffLen, uint8_t* buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
@@ -388,7 +388,7 @@ void SetStreamDvppBuffByStreamId(const AicpuDvppChlType chlType, const uint32_t 
     return;
 }
 
-void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t **buff, uint64_t *buffLen)
+void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t** buff, uint64_t* buffLen)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
@@ -413,7 +413,7 @@ void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t **buff, u
     return;
 }
 
-void GetDvppBufAndLenByStreamId(const uint32_t streamId, const AicpuDvppChlType chlType, uint8_t **buff)
+void GetDvppBufAndLenByStreamId(const uint32_t streamId, const AicpuDvppChlType chlType, uint8_t** buff)
 {
     if (chlType >= AICPU_DVPP_CHL_BUTT) {
         AICPUE_LOGE("chlType is invalid, chlType[%d].", static_cast<int32_t>(chlType));
@@ -499,91 +499,67 @@ int32_t UnInitStreamDvppChannel(uint32_t streamId, AicpuDvppChlType chlType)
     return streamChannel;
 }
 
-uint32_t GetUniqueVfId()
-{
-    return g_uniqueVfId;
-}
+uint32_t GetUniqueVfId() { return g_uniqueVfId; }
 
-void SetUniqueVfId(const uint32_t uniqueVfId)
-{
-    g_uniqueVfId = uniqueVfId;
-}
+void SetUniqueVfId(const uint32_t uniqueVfId) { g_uniqueVfId = uniqueVfId; }
 
-void SetCustAicpuSdFlag(const bool isCustAicpuSdFlag)
-{
-    g_isCustAicpuSd = isCustAicpuSdFlag;
-}
+void SetCustAicpuSdFlag(const bool isCustAicpuSdFlag) { g_isCustAicpuSd = isCustAicpuSdFlag; }
 
-bool IsCustAicpuSd()
-{
-    return g_isCustAicpuSd;
-}
+bool IsCustAicpuSd() { return g_isCustAicpuSd; }
 } // namespace aicpu
 
-aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string &key, const std::string &value)
+aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string& key, const std::string& value)
 {
     if (key.empty()) {
         AICPUE_LOGE("Set thread context failed, context type[%d], key is empty", static_cast<int32_t>(type));
         return aicpu::AICPU_ERROR_FAILED;
     }
 
-    auto &ctx = GetThreadCtx(type, g_threadIndex);
+    auto& ctx = GetThreadCtx(type, g_threadIndex);
     try {
         ctx[key] = value;
-    } catch (std::exception &aicpuExp) {
+    } catch (std::exception& aicpuExp) {
         AICPUE_LOGE("Set thread context failed, context type[%d], %s", static_cast<int32_t>(type), aicpuExp.what());
         return aicpu::AICPU_ERROR_FAILED;
     }
     return aicpu::AICPU_ERROR_NONE;
 }
 
-aicpu::status_t GetThreadCtxInfo(aicpu::CtxType type, const std::string &key, std::string &value)
+aicpu::status_t GetThreadCtxInfo(aicpu::CtxType type, const std::string& key, std::string& value)
 {
     if (key.empty()) {
         AICPUE_LOGE("Get thread context failed, context type[%d], key is empty", static_cast<int32_t>(type));
         return aicpu::AICPU_ERROR_FAILED;
     }
 
-    auto &ctx = GetThreadCtx(type, g_threadIndex);
+    auto& ctx = GetThreadCtx(type, g_threadIndex);
     const auto iter = ctx.find(key);
     if (iter != ctx.end()) {
         value = iter->second;
         return aicpu::AICPU_ERROR_NONE;
     }
-    AICPUE_LOGE("Get thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type),
-                key.c_str());
+    AICPUE_LOGE(
+        "Get thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type), key.c_str());
     return aicpu::AICPU_ERROR_FAILED;
 }
 
-aicpu::status_t RemoveThreadCtxInfo(aicpu::CtxType type, const std::string &key)
+aicpu::status_t RemoveThreadCtxInfo(aicpu::CtxType type, const std::string& key)
 {
-    auto &ctx = GetThreadCtx(type, g_threadIndex);
+    auto& ctx = GetThreadCtx(type, g_threadIndex);
     const auto iter = ctx.find(key);
     if (iter != ctx.end()) {
         (void)ctx.erase(iter);
         return aicpu::AICPU_ERROR_NONE;
     }
-    AICPUE_LOGE("Remove thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type),
-                key.c_str());
+    AICPUE_LOGE(
+        "Remove thread context failed, context type[%d], no such key[%s]", static_cast<int32_t>(type), key.c_str());
     return aicpu::AICPU_ERROR_FAILED;
 }
 
-uint32_t AicpuGetBlockIdx()
-{
-    return g_blockIdx;
-}
+uint32_t AicpuGetBlockIdx() { return g_blockIdx; }
 
-uint32_t AicpuGetBlockNum()
-{
-    return g_blockNum;
-}
+uint32_t AicpuGetBlockNum() { return g_blockNum; }
 
-uint64_t AicpuGetTaskId()
-{
-    return g_streamAndTaskId.taskId;
-}
+uint64_t AicpuGetTaskId() { return g_streamAndTaskId.taskId; }
 
-uint32_t AicpuGetStreamId()
-{
-    return g_streamAndTaskId.streamId;
-}
+uint32_t AicpuGetStreamId() { return g_streamAndTaskId.streamId; }

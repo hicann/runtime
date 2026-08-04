@@ -19,25 +19,25 @@
 namespace AicpuSchedule {
 class CustomOpExecutor {
 public:
-    __attribute__((visibility("default"))) static CustomOpExecutor &GetInstance();
+    __attribute__((visibility("default"))) static CustomOpExecutor& GetInstance();
 
-    __attribute__((visibility("default"))) void InitOpExecutor(const pid_t pid, const std::string &custSoPath);
+    __attribute__((visibility("default"))) void InitOpExecutor(const pid_t pid, const std::string& custSoPath);
 
-    int32_t OpenKernelSo(const event_info_priv &privEventInfo) const;
+    int32_t OpenKernelSo(const event_info_priv& privEventInfo) const;
 
-    static int32_t OpenKernelSoByAicpuEvent(const struct TsdSubEventInfo * const msg);
+    static int32_t OpenKernelSoByAicpuEvent(const struct TsdSubEventInfo* const msg);
 
-    int32_t ExecuteKernel(aicpu::HwtsTsKernel &tsKernelInfo) const;
+    int32_t ExecuteKernel(aicpu::HwtsTsKernel& tsKernelInfo) const;
 
 private:
     CustomOpExecutor() = default;
     ~CustomOpExecutor() = default;
 
-    CustomOpExecutor(const CustomOpExecutor &) = delete;
-    CustomOpExecutor &operator=(const CustomOpExecutor &) = delete;
+    CustomOpExecutor(const CustomOpExecutor&) = delete;
+    CustomOpExecutor& operator=(const CustomOpExecutor&) = delete;
 
     // pid of host process
     pid_t hostPid_ = -1;
 };
-}
+} // namespace AicpuSchedule
 #endif // CORE_AICPUSD_OP_EXECUTOR_H

@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     (void)devId;
     aicpusd_info("Get host aicpu num in stub func[%s].", __func__);
@@ -40,8 +40,8 @@ drvError_t drvBindHostPid(struct drvBindHostpidInfo info)
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
-                                  unsigned int *host_pid, unsigned int *cp_type)
+drvError_t drvQueryProcessHostPid(
+    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type)
 {
     (void)pid;
     (void)chip_id;
@@ -60,7 +60,7 @@ DVresult halMemInitSvmDevice(int hostpid, unsigned int vfid, unsigned int dev_id
     return DRV_ERROR_NONE;
 }
 
-int halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num)
+int halGetDeviceVfMax(unsigned int devId, unsigned int* vf_max_num)
 {
     aicpusd_info("Get device max vf in stub func[%s].", __func__);
     (void)devId;
@@ -68,7 +68,7 @@ int halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num)
     return DRV_ERROR_NONE;
 }
 
-int halGetDeviceVfList(unsigned int devId, unsigned int *vf_list, unsigned int list_len, unsigned int *vf_num)
+int halGetDeviceVfList(unsigned int devId, unsigned int* vf_list, unsigned int list_len, unsigned int* vf_num)
 {
     aicpusd_info("Get device vf list in stub func[%s].", __func__);
     (void)devId;

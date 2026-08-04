@@ -27,134 +27,132 @@
 #include "aicpusd_model.h"
 
 namespace AicpuSchedule {
-    struct AicpuModelConfig {
-        int32_t version;
-        uint32_t geModelId;
-        uint32_t runtimeModelId;
-        int32_t abnormalBreak;
-        int32_t abnormalEnqueue;
-        int32_t outputMsgQueue;
-        int32_t inputMsgQueue;
-        int8_t rsv[36];
-    };
+struct AicpuModelConfig {
+    int32_t version;
+    uint32_t geModelId;
+    uint32_t runtimeModelId;
+    int32_t abnormalBreak;
+    int32_t abnormalEnqueue;
+    int32_t outputMsgQueue;
+    int32_t inputMsgQueue;
+    int8_t rsv[36];
+};
 
-    struct AicpuModelShapeConfig {
-        int32_t version;
-        uint32_t geModelId;
-        uint32_t runtimeModelId;
-        uint32_t tensortlvLen;
-        uint64_t tlvDataAddr;
-        int8_t rsv[40];
-    };
+struct AicpuModelShapeConfig {
+    int32_t version;
+    uint32_t geModelId;
+    uint32_t runtimeModelId;
+    uint32_t tensortlvLen;
+    uint64_t tlvDataAddr;
+    int8_t rsv[40];
+};
 
-    // tlv struct
-    struct TlvHead {
-        uint32_t type;
-        uint32_t len;
-        uint8_t data[0];
-    };
+// tlv struct
+struct TlvHead {
+    uint32_t type;
+    uint32_t len;
+    uint8_t data[0];
+};
 
-    class AicpuModelManager {
-    public:
-        static AicpuModelManager &GetInstance();
+class AicpuModelManager {
+public:
+    static AicpuModelManager& GetInstance();
 
-        int32_t ModelLoad(const AicpuModelInfo * const modelInfo,  const ModelCfgInfo * const cfgInfo = nullptr);
+    int32_t ModelLoad(const AicpuModelInfo* const modelInfo, const ModelCfgInfo* const cfgInfo = nullptr);
 
-        AicpuModel *GetModel(const uint32_t modelId);
+    AicpuModel* GetModel(const uint32_t modelId);
 
-        AicpuModel *GetModelByStreamId(const uint32_t streamId);
+    AicpuModel* GetModelByStreamId(const uint32_t streamId);
 
-        AicpuModel *GetModelByQueueId(const uint32_t queueId);
+    AicpuModel* GetModelByQueueId(const uint32_t queueId);
 
-        std::vector<AicpuModel*> GetModelsByTableId(const uint32_t tableId);
+    std::vector<AicpuModel*> GetModelsByTableId(const uint32_t tableId);
 
-        StatusCode ParseModelConfigTensorDesc(const AicpuModelShapeConfig &cfg);
+    StatusCode ParseModelConfigTensorDesc(const AicpuModelShapeConfig& cfg);
 
-        StatusCode GetModelConfigShape(const uint32_t modelId, std::vector<ModelConfigTensorDesc> &tensorDescArr);
+    StatusCode GetModelConfigShape(const uint32_t modelId, std::vector<ModelConfigTensorDesc>& tensorDescArr);
 
-        void ModelConfigClear(const uint32_t modelId);
+    void ModelConfigClear(const uint32_t modelId);
 
-        /**
-         * @brief call it when process exit.
-         * @return AICPU_SCHEDULE_OK:success, other failed.
-         */
-        int32_t Exit();
+    /**
+     * @brief call it when process exit.
+     * @return AICPU_SCHEDULE_OK:success, other failed.
+     */
+    int32_t Exit();
 
-        AicpuModelStatus GetModelStatus(const uint32_t modelId) const;
+    AicpuModelStatus GetModelStatus(const uint32_t modelId) const;
 
-        StatusCode TransModelInfo(const void * const ptr,
-                                  AicpuModelInfo &aicpuModelInfo,
-                                  std::vector<AicpuTaskInfo> &aicpuTaskInfos,
-                                  std::vector<StreamInfo> &streamInfos,
-                                  std::vector<QueInfo> &queInfos,
-                                  std::vector<ModelCfgInfo> *const modelcfgs = nullptr);
-        /**
-        * @ingroup ProcessExtInfoCfgMsg
-        * @brief it is used to process the config of ge model id or other extension info.
-        * @param [in] cfgInfo : the config info of extension info.
-        */
-        StatusCode ProcessExtInfoCfgMsg(const aicpu::AicpuExtendInfo &cfgInfo);
+    StatusCode TransModelInfo(
+        const void* const ptr, AicpuModelInfo& aicpuModelInfo, std::vector<AicpuTaskInfo>& aicpuTaskInfos,
+        std::vector<StreamInfo>& streamInfos, std::vector<QueInfo>& queInfos,
+        std::vector<ModelCfgInfo>* const modelcfgs = nullptr);
+    /**
+     * @ingroup ProcessExtInfoCfgMsg
+     * @brief it is used to process the config of ge model id or other extension info.
+     * @param [in] cfgInfo : the config info of extension info.
+     */
+    StatusCode ProcessExtInfoCfgMsg(const aicpu::AicpuExtendInfo& cfgInfo);
 
-        /**
-        * @ingroup ProcessModelConfigMsg
-        * @brief it is used to process the config of ge model.
-        * @param [in] cfg : the config of model.
-        */
-        StatusCode ProcessModelConfigMsg(const AicpuModelConfig &cfg);
+    /**
+     * @ingroup ProcessModelConfigMsg
+     * @brief it is used to process the config of ge model.
+     * @param [in] cfg : the config of model.
+     */
+    StatusCode ProcessModelConfigMsg(const AicpuModelConfig& cfg);
 
-        /**
-        * @ingroup ProcessModelShapeConfigMsg
-        * @brief it is used to process the shape config of ge model.
-        * @param [in] cfg : the shape config of model.
-        */
-        StatusCode ProcessModelShapeConfigMsg(const AicpuModelShapeConfig &cfg);
+    /**
+     * @ingroup ProcessModelShapeConfigMsg
+     * @brief it is used to process the shape config of ge model.
+     * @param [in] cfg : the shape config of model.
+     */
+    StatusCode ProcessModelShapeConfigMsg(const AicpuModelShapeConfig& cfg);
 
-        ~AicpuModelManager() = default;
+    ~AicpuModelManager() = default;
 
-        // not allow copy constructor and assignment operators
-        AicpuModelManager(const AicpuModelManager &) = delete;
+    // not allow copy constructor and assignment operators
+    AicpuModelManager(const AicpuModelManager&) = delete;
 
-        AicpuModelManager &operator=(const AicpuModelManager &) = delete;
+    AicpuModelManager& operator=(const AicpuModelManager&) = delete;
 
-        AicpuModelManager(AicpuModelManager &&) = delete;
+    AicpuModelManager(AicpuModelManager&&) = delete;
 
-        AicpuModelManager &&operator=(AicpuModelManager &&) = delete;
+    AicpuModelManager&& operator=(AicpuModelManager&&) = delete;
 
-        uint32_t GetExtModelId(const uint32_t modelId);
+    uint32_t GetExtModelId(const uint32_t modelId);
 
-        bool AbnormalBreak(const uint32_t modelId);
+    bool AbnormalBreak(const uint32_t modelId);
 
-        bool AbnormalEnqueue(const uint32_t modelId);
+    bool AbnormalEnqueue(const uint32_t modelId);
 
-        bool AbnormalEnabled(const uint32_t modelId);
+    bool AbnormalEnabled(const uint32_t modelId);
 
-        StatusCode ProcessModelPriorityMsg(const AicpuPriInfo &cfg, const bool isProcessMode);
+    StatusCode ProcessModelPriorityMsg(const AicpuPriInfo& cfg, const bool isProcessMode);
 
-        StatusCode SetPidPriority(const AicpuPriInfo &cfg, const std::vector<uint32_t> &deviceVec);
+    StatusCode SetPidPriority(const AicpuPriInfo& cfg, const std::vector<uint32_t>& deviceVec);
 
-        StatusCode SetEventPriority(const AicpuPriInfo &cfg, const std::vector<uint32_t> &deviceVec);
+    StatusCode SetEventPriority(const AicpuPriInfo& cfg, const std::vector<uint32_t>& deviceVec);
 
-        StatusCode GetModelMsgQueues(const uint32_t modelId, const bool isInput, int32_t &queueId) const;
+    StatusCode GetModelMsgQueues(const uint32_t modelId, const bool isInput, int32_t& queueId) const;
 
-        static bool IsUsed();
+    static bool IsUsed();
 
-    private:
-        AicpuModelManager();
-        StatusCode CheckModelConfigShape(const uint32_t type, const uint32_t tlvLen, int32_t &unparseLen) const;
-        StatusCode CheckModelConfigDtype(const TlvHead tlvHeadAddr, int32_t &unparseLen) const;
+private:
+    AicpuModelManager();
+    StatusCode CheckModelConfigShape(const uint32_t type, const uint32_t tlvLen, int32_t& unparseLen) const;
+    StatusCode CheckModelConfigDtype(const TlvHead tlvHeadAddr, int32_t& unparseLen) const;
 
-        AicpuModel allModel_[MAX_MODEL_COUNT];
-        uint32_t extModelIds_[MAX_MODEL_COUNT]{};
-        int32_t abnormalBreaks_[MAX_MODEL_COUNT]{};
-        int32_t abnormalEnqueues_[MAX_MODEL_COUNT]{};
-        int32_t abnormalFlags_[MAX_MODEL_COUNT]{};
-        std::unordered_map<uint32_t, std::vector<ModelConfigTensorDesc>> tensorDescMap_;
-        std::unordered_map<uint32_t, std::pair<int32_t, int32_t>> msgQMap_;
-        int32_t curPidPri_ = INVALID_ESCAPE_PRI_VALUE;
-        int32_t curEventPri_ = INVALID_ESCAPE_PRI_VALUE;
-        std::mutex mutexForSetPidPri_;
-        std::mutex mutexForSetEvnPri_;
-        static bool isUsed_;
-    };
-}
+    AicpuModel allModel_[MAX_MODEL_COUNT];
+    uint32_t extModelIds_[MAX_MODEL_COUNT]{};
+    int32_t abnormalBreaks_[MAX_MODEL_COUNT]{};
+    int32_t abnormalEnqueues_[MAX_MODEL_COUNT]{};
+    int32_t abnormalFlags_[MAX_MODEL_COUNT]{};
+    std::unordered_map<uint32_t, std::vector<ModelConfigTensorDesc>> tensorDescMap_;
+    std::unordered_map<uint32_t, std::pair<int32_t, int32_t>> msgQMap_;
+    int32_t curPidPri_ = INVALID_ESCAPE_PRI_VALUE;
+    int32_t curEventPri_ = INVALID_ESCAPE_PRI_VALUE;
+    std::mutex mutexForSetPidPri_;
+    std::mutex mutexForSetEvnPri_;
+    static bool isUsed_;
+};
+} // namespace AicpuSchedule
 #endif // MAIN_AICPUSD_MODEL_EXECUTE_H

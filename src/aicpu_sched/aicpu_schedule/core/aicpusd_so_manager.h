@@ -20,7 +20,7 @@ class AicpuSoManager {
 public:
     AicpuSoManager() = default;
     ~AicpuSoManager();
-    static AicpuSoManager &GetInstance();
+    static AicpuSoManager& GetInstance();
 
     /**
      * @brief set deviceId to dvpp
@@ -30,11 +30,11 @@ public:
     void SetDeviceIdToDvpp(uint32_t deviceId);
 
 private:
-    bool OpenSo(const std::string &soFile);
+    bool OpenSo(const std::string& soFile);
     void CloseSo();
     // so hande which opened by dlopen
     std::mutex soMutex_;
-    void *soHandle_ = nullptr;
+    void* soHandle_ = nullptr;
 };
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 #endif

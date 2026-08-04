@@ -25,33 +25,31 @@
 namespace AicpuSchedule {
 class AICPU_VISIBILITY HwTsKernelHandler {
 public:
-    virtual int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) = 0;
+    virtual int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) = 0;
     virtual ~HwTsKernelHandler() = default;
 };
 
 using HwTsKernelCreatorFunc = std::function<std::shared_ptr<HwTsKernelHandler>(void)>;
 
-AICPU_VISIBILITY bool RegisterHwTsKernel(const std::string &kernelType, const HwTsKernelCreatorFunc &func);
+AICPU_VISIBILITY bool RegisterHwTsKernel(const std::string& kernelType, const HwTsKernelCreatorFunc& func);
 
 template <typename T, typename... Args>
-inline std::shared_ptr<T> MakeHwTsKernelShared(Args &&...args)
+inline std::shared_ptr<T> MakeHwTsKernelShared(Args&&... args)
 {
     using T_NC = typename std::remove_const<T>::type;
     return std::make_shared<T_NC>(std::forward<Args>(args)...);
 }
 
-template<typename T>
+template <typename T>
 class CreatorFunction {
 public:
-    std::shared_ptr<HwTsKernelHandler> operator()() const {
-        return MakeHwTsKernelShared<T>();
-    }
+    std::shared_ptr<HwTsKernelHandler> operator()() const { return MakeHwTsKernelShared<T>(); }
 };
 
 #define REGISTER_HWTS_KERNEL(kernelType, clazz)                      \
     bool g_##kernelType##_TsKernel_Creator __attribute__((unused)) = \
         RegisterHwTsKernel((kernelType), (CreatorFunction<clazz>()))
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 
-#endif  // HWTS_KERNEL_H
+#endif // HWTS_KERNEL_H

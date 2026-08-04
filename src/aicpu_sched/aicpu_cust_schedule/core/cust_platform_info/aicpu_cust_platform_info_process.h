@@ -25,25 +25,27 @@
 #include "aicpu_context.h"
 
 namespace AicpuSchedule {
-using AicpuPlatformFuncPtr = int32_t(*)(uint64_t, uint32_t);
+using AicpuPlatformFuncPtr = int32_t (*)(uint64_t, uint32_t);
 class AicpuCustomSdLoadPlatformInfoProcess {
 public:
     AicpuPlatformFuncPtr GetAicpuPlatformFuncPtr();
     AicpuCustomSdLoadPlatformInfoProcess();
     ~AicpuCustomSdLoadPlatformInfoProcess();
-    static AicpuCustomSdLoadPlatformInfoProcess &GetInstance();
-    int32_t ProcessLoadPlatform(const uint8_t * const msgInfo, const uint32_t infoLen);
-    int32_t DoSubmitEventSync(const uint8_t * const msg, const uint32_t len, struct event_proc_result &rsp) const;
+    static AicpuCustomSdLoadPlatformInfoProcess& GetInstance();
+    int32_t ProcessLoadPlatform(const uint8_t* const msgInfo, const uint32_t infoLen);
+    int32_t DoSubmitEventSync(const uint8_t* const msg, const uint32_t len, struct event_proc_result& rsp) const;
+
 private:
     std::mutex mutexForPlatformPtr;
     AicpuPlatformFuncPtr platformFuncPtr;
 };
-}
+} // namespace AicpuSchedule
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-    __attribute__((visibility("default"))) __attribute__((weak)) int32_t CustProcessLoadPlatform(const struct event_info * const msg);
+#endif // __cplusplus
+__attribute__((visibility("default"))) __attribute__((weak)) int32_t CustProcessLoadPlatform(
+    const struct event_info* const msg);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 #endif // AICPU_CUST_PLATFORM_INFO_PROCESS_H

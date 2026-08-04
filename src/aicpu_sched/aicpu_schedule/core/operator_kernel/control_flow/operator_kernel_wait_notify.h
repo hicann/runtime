@@ -13,15 +13,15 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelWaitNotify : public OperatorKernel {
 public:
     OperatorKernelWaitNotify() = default;
     ~OperatorKernelWaitNotify() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    int32_t DoCompute(const uint32_t notifyId, const RunContext &taskContext) const;
+    int32_t DoCompute(const uint32_t notifyId, const RunContext& taskContext) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_WAIT_NOTIFY_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_WAIT_NOTIFY_H

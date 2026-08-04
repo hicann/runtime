@@ -13,20 +13,20 @@
 #include "aicpusd_status.h"
 #include "aicpusd_profiler.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_DEQUEUE = "modelDequeue";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelDequeue::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelDequeue::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     aicpusd_info("Begin to dequeue. modelId[%u]", taskContext.modelId);
-    BufEnQueueInfo * const bufInfo =
+    BufEnQueueInfo* const bufInfo =
         PtrToPtr<void, BufEnQueueInfo>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (bufInfo == nullptr) {
-        aicpusd_err("ModelDequeue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-                    taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelDequeue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     g_aicpuProfiler.SetDqStart();
@@ -36,9 +36,10 @@ int32_t OperatorKernelModelDequeue::Compute(const AicpuTaskInfo &kernelTaskInfo,
     return ret;
 }
 
-uint32_t OperatorKernelModelDequeue::DoModelDequeue(BufEnQueueInfo &bufInfo, const RunContext &taskContext) const {
+uint32_t OperatorKernelModelDequeue::DoModelDequeue(BufEnQueueInfo& bufInfo, const RunContext& taskContext) const
+{
     return DequeueTask(bufInfo, taskContext, true);
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_DEQUEUE, OperatorKernelModelDequeue);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

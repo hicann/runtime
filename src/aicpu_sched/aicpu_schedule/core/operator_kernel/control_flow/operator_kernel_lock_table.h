@@ -13,13 +13,12 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelLockTable : public OperatorKernel {
 public:
     OperatorKernelLockTable() = default;
     ~OperatorKernelLockTable() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_LOCK_TABLE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_LOCK_TABLE_H

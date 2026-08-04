@@ -28,26 +28,28 @@ constexpr uint32_t INVALID_VAL = 65535U;
 constexpr uint8_t STARS_DATADUMP_LOAD_INFO = 8;
 
 struct MappingInfoOptionalParam {
-    MappingInfoOptionalParam() : hasModelName(false),
-                                 hasModelId(false),
-                                 modelId(0U),
-                                 hasStepId(false),
-                                 stepIdAddr(nullptr),
-                                 hasIterationsPerLoop(false),
-                                 iterationsPerLoopAddr(nullptr),
-                                 hasLoopCond(false),
-                                 loopCondAddr(nullptr) {}
+    MappingInfoOptionalParam()
+        : hasModelName(false),
+          hasModelId(false),
+          modelId(0U),
+          hasStepId(false),
+          stepIdAddr(nullptr),
+          hasIterationsPerLoop(false),
+          iterationsPerLoopAddr(nullptr),
+          hasLoopCond(false),
+          loopCondAddr(nullptr)
+    {}
 
     bool hasModelName;
     std::string modelName;
     bool hasModelId;
     uint32_t modelId;
     bool hasStepId;
-    uint64_t *stepIdAddr;
+    uint64_t* stepIdAddr;
     bool hasIterationsPerLoop;
-    uint64_t *iterationsPerLoopAddr;
+    uint64_t* iterationsPerLoopAddr;
     bool hasLoopCond;
-    uint64_t *loopCondAddr;
+    uint64_t* loopCondAddr;
 };
 
 struct IntervalStep {
@@ -62,18 +64,16 @@ struct DumpStep {
 };
 
 struct TaskInfo {
-    TaskInfo() : streamId_(0U),
-                 taskId_(0U) {};
+    TaskInfo() : streamId_(0U), taskId_(0U){};
 
-    TaskInfo(const uint32_t streamId, const uint32_t taskId) : streamId_(streamId),
-                                                               taskId_(taskId) {};
+    TaskInfo(const uint32_t streamId, const uint32_t taskId) : streamId_(streamId), taskId_(taskId){};
 
     uint32_t streamId_;
     uint32_t taskId_;
-    friend bool operator < (const TaskInfo &item1, const TaskInfo &item2);
+    friend bool operator<(const TaskInfo& item1, const TaskInfo& item2);
 };
 
-inline bool operator < (const TaskInfo &item1, const TaskInfo &item2)
+inline bool operator<(const TaskInfo& item1, const TaskInfo& item2)
 {
     if (item1.streamId_ == item2.streamId_) {
         return item1.taskId_ < item2.taskId_;
@@ -86,7 +86,7 @@ public:
     explicit OpDumpTask(const int32_t hostPid, const uint32_t deviceId);
     ~OpDumpTask() = default;
 
-     /**
+    /**
      * Preprocess op mapping info.
      * @param  task task info from op mapping info
      * @param  basePath base dump path
@@ -95,25 +95,24 @@ public:
      * @param  skipAddressConversion indicates whether to skip address conversion based on addrtype
      * @return whather preprocess success
      */
-    StatusCode PreProcessOpMappingInfo(const aicpu::dump::Task &task,
-                                       const std::string &basePath,
-                                       const MappingInfoOptionalParam &param,
-                                       const DumpStep &dumpStep,
-                                       const bool skipAddressConversion = false);
+    StatusCode PreProcessOpMappingInfo(
+        const aicpu::dump::Task& task, const std::string& basePath, const MappingInfoOptionalParam& param,
+        const DumpStep& dumpStep, const bool skipAddressConversion = false);
 
     /**
      * Deal with dump info event.
      * @return whather dump success
      */
-    StatusCode DumpOpInfo(const uint32_t streamId = INVALID_VAL, const uint32_t taskId = INVALID_VAL,
-                          const std::string &dumpDebugInfo = "");
+    StatusCode DumpOpInfo(
+        const uint32_t streamId = INVALID_VAL, const uint32_t taskId = INVALID_VAL,
+        const std::string& dumpDebugInfo = "");
 
     /**
      * Get model id of this task.
      * @param  modelId model id
      * @return whather get model id success
      */
-    bool GetModelId(uint32_t &modelId) const;
+    bool GetModelId(uint32_t& modelId) const;
 
     /**
      * Check this task is end graph task or not.
@@ -145,7 +144,7 @@ private:
      * @param  dumpNum task dump number
      * @return whather get dump param success
      */
-    StatusCode GetDumpNumber(uint64_t &dumpNum);
+    StatusCode GetDumpNumber(uint64_t& dumpNum);
 
     /**
      * This step need dump or not
@@ -154,44 +153,35 @@ private:
      */
     bool NeedDump(const uint64_t step);
 
-    StatusCode PreProcessOutput(const aicpu::dump::Task &task,
-                                ::toolkit::dumpdata::DumpData &dumpData);
+    StatusCode PreProcessOutput(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData);
 
-    StatusCode PreProcessInput(const aicpu::dump::Task &task,
-                               ::toolkit::dumpdata::DumpData &dumpData);
+    StatusCode PreProcessInput(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData);
 
-    StatusCode PreProcessOpBuffer(const aicpu::dump::Task &task,
-                                  ::toolkit::dumpdata::DumpData &dumpData);
-    StatusCode PreProcessWorkspace(const aicpu::dump::Task &task,
-                                   ::toolkit::dumpdata::DumpData &dumpData);
-    StatusCode ProcessInputDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                const std::string &path,
-                                const IDE_SESSION ideSession);
+    StatusCode PreProcessOpBuffer(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData);
+    StatusCode PreProcessWorkspace(const aicpu::dump::Task& task, ::toolkit::dumpdata::DumpData& dumpData);
+    StatusCode ProcessInputDump(
+        const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession);
 
-    StatusCode ProcessOutputDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                 const std::string &path,
-                                 const IDE_SESSION ideSession);
+    StatusCode ProcessOutputDump(
+        const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession);
 
-    StatusCode ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                   const std::string &path,
-                                   const IDE_SESSION ideSession);
+    StatusCode ProcessOpBufferDump(
+        const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession);
 
-    StatusCode ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpData &dumpData,
-                                      const std::string &path,
-                                      const IDE_SESSION ideSession);
+    StatusCode ProcessOpWorkspaceDump(
+        const ::toolkit::dumpdata::DumpData& dumpData, const std::string& path, const IDE_SESSION ideSession);
 
-    StatusCode Dump(const std::string &path,
-                    char_t * const data,
-                    const uint64_t len,
-                    const IDE_SESSION ideSession,
-                    const bool isLastSlice) const;
+    StatusCode Dump(
+        const std::string& path, char_t* const data, const uint64_t len, const IDE_SESSION ideSession,
+        const bool isLastSlice) const;
 
-    std::string DumpPath(const uint64_t nowTime, const uint64_t dumpNumber,
-                         const uint32_t streamId, const uint32_t taskId,
-                         const bool debugFlag = false);
+    std::string DumpPath(
+        const uint64_t nowTime, const uint64_t dumpNumber, const uint32_t streamId, const uint32_t taskId,
+        const bool debugFlag = false);
 
-    StatusCode DoDump(const std::string &dumpFilePath, const std::string &dumpDebugFilePath = "",
-                      const std::string &dumpDebugInfo = "");
+    StatusCode DoDump(
+        const std::string& dumpFilePath, const std::string& dumpDebugFilePath = "",
+        const std::string& dumpDebugInfo = "");
 
 private:
     std::mutex dumpMtx_;
@@ -218,11 +208,11 @@ private:
     bool skipAddressConversion_;
     int32_t hostPid_;
     uint32_t deviceId_;
-};  // class OpDumpTask
+}; // class OpDumpTask
 
 class OpDumpTaskManager {
 public:
-    static OpDumpTaskManager &GetInstance();
+    static OpDumpTaskManager& GetInstance();
     OpDumpTaskManager() = default;
     ~OpDumpTaskManager() = default;
 
@@ -232,7 +222,7 @@ public:
      * @param  len info length
      * @return whather load success
      */
-    int32_t LoadOpMappingInfo(const char_t * const infoAddr, const uint32_t len);
+    int32_t LoadOpMappingInfo(const char_t* const infoAddr, const uint32_t len);
 
     /**
      * Deal with dump info event for know shape.
@@ -240,9 +230,9 @@ public:
      * @param  taskId task id
      * @return whather dump success
      */
-    int32_t DumpOpInfo(const uint32_t streamId, const uint32_t taskId,
-                       const uint32_t streamId1 = INVALID_VAL, const uint32_t taskId1 = INVALID_VAL,
-                       const std::string &dumpDebugInfo = "");
+    int32_t DumpOpInfo(
+        const uint32_t streamId, const uint32_t taskId, const uint32_t streamId1 = INVALID_VAL,
+        const uint32_t taskId1 = INVALID_VAL, const std::string& dumpDebugInfo = "");
 
     /**
      * Deal with dump info event for unknow shape.
@@ -258,11 +248,11 @@ public:
      */
     void ClearResource();
 
-    int32_t DoDump(const aicpu::dump::OpMappingInfo &opMappingInfo) const;
+    int32_t DoDump(const aicpu::dump::OpMappingInfo& opMappingInfo) const;
 
 private:
-    OpDumpTaskManager(const OpDumpTaskManager &) = delete;
-    OpDumpTaskManager &operator=(const OpDumpTaskManager &) = delete;
+    OpDumpTaskManager(const OpDumpTaskManager&) = delete;
+    OpDumpTaskManager& operator=(const OpDumpTaskManager&) = delete;
     OpDumpTaskManager(OpDumpTaskManager&&) = delete;
     OpDumpTaskManager& operator=(OpDumpTaskManager&&) = delete;
 
@@ -272,8 +262,8 @@ private:
      * @param  optionalParam optional param
      * @return void
      */
-    void GetOptionalParam(const aicpu::dump::OpMappingInfo &opMappingInfo,
-                          MappingInfoOptionalParam &optionalParam) const;
+    void GetOptionalParam(
+        const aicpu::dump::OpMappingInfo& opMappingInfo, MappingInfoOptionalParam& optionalParam) const;
 
     /**
      * Update all task dump number of according model id
@@ -287,7 +277,7 @@ private:
      * @param  opDumptasks tasks
      * @return void
      */
-    void ProcessEndGraph(const std::vector<std::shared_ptr<OpDumpTask>> &opDumptasks);
+    void ProcessEndGraph(const std::vector<std::shared_ptr<OpDumpTask>>& opDumptasks);
 
     /**
      * Parse dump step from string, like 0|1-20
@@ -295,7 +285,7 @@ private:
      * @param  dumpStep dump step of parse result
      * @return whather parse success
      */
-    bool GetDumpStepFromString(const std::string &str, DumpStep &dumpStep) const;
+    bool GetDumpStepFromString(const std::string& str, DumpStep& dumpStep) const;
 
     /**
      * Parse dump step from step string
@@ -303,34 +293,34 @@ private:
      * @param  tmpDumpStep dump step of parse result
      * @return whather parse success
      */
-    bool MatchAndInsert(const std::string &step, DumpStep &tmpDumpStep) const;
+    bool MatchAndInsert(const std::string& step, DumpStep& tmpDumpStep) const;
 
     /**
      * load mapping info
      * @param  opMappingInfo op mapping info proto
      * @return whather load success
      */
-    int32_t Load(const aicpu::dump::OpMappingInfo &opMappingInfo);
+    int32_t Load(const aicpu::dump::OpMappingInfo& opMappingInfo);
 
     /**
      * unload mapping info
      * @param  opMappingInfo op mapping info proto
      * @return whather unload success
      */
-    int32_t Unload(const aicpu::dump::OpMappingInfo &opMappingInfo);
-    
+    int32_t Unload(const aicpu::dump::OpMappingInfo& opMappingInfo);
+
     /**
      * clear baseDumpData
      * @param  TaskInfo taskInfo
      * @return void
      */
-    void UnloadClearTaskInfo(const TaskInfo &taskInfo);
+    void UnloadClearTaskInfo(const TaskInfo& taskInfo);
 
 private:
     std::multimap<TaskInfo, std::shared_ptr<OpDumpTask>> dumpTaskMap_;
     std::mutex dumpTaskMapMtx_;
     std::map<uint32_t, std::set<TaskInfo>> modelIdToTask_;
 };
-}   // namespace aicpu
+} // namespace AicpuSchedule
 
 #endif

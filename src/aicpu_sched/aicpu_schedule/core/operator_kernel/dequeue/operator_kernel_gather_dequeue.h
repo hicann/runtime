@@ -14,21 +14,23 @@
 #include "operator_kernel.h"
 #include "operator_kernel_model_batch_dequeue_buff.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelGatherDequeue : public OperatorKernelModelBatchDequeueBuff {
 public:
     OperatorKernelGatherDequeue() = default;
     ~OperatorKernelGatherDequeue() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
+
 private:
-    bool SelectMbuf(const GatherDequeParam * const batchDeqInfo, const RunContext &taskContext,
-                    void *const modelPtr, int32_t &gatherRet) const;
-    Mbuf *MakeUpPassedMbuf(const uint32_t modelId) const;
-    MbufHeadMsg *GetMbufHeadMsg(Mbuf *const mbuf) const;
-    bool DequeAndCheckIfReady(const GatherDequeParam * const batchDeqInfo, int32_t &gatherRet,
-                              void *const modelPtr, const RunContext &taskContext, bool &blockOnClientQ) const;
-    bool StoreMbufIntoModel(Mbuf *const mbuf, const size_t index, const uint32_t capacity, void *const modelPtr) const;
+    bool SelectMbuf(
+        const GatherDequeParam* const batchDeqInfo, const RunContext& taskContext, void* const modelPtr,
+        int32_t& gatherRet) const;
+    Mbuf* MakeUpPassedMbuf(const uint32_t modelId) const;
+    MbufHeadMsg* GetMbufHeadMsg(Mbuf* const mbuf) const;
+    bool DequeAndCheckIfReady(
+        const GatherDequeParam* const batchDeqInfo, int32_t& gatherRet, void* const modelPtr,
+        const RunContext& taskContext, bool& blockOnClientQ) const;
+    bool StoreMbufIntoModel(Mbuf* const mbuf, const size_t index, const uint32_t capacity, void* const modelPtr) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_GATHER_DEQUEUE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_GATHER_DEQUEUE_H

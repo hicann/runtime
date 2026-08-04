@@ -11,45 +11,52 @@
 #include "dump_task.h"
 #include "aicpusd_status.h"
 
-int32_t AicpuGetOpTaskInfo(const KfcDumpTask &taskKey, KfcDumpInfo **ptr)
+int32_t AicpuGetOpTaskInfo(const KfcDumpTask& taskKey, KfcDumpInfo** ptr)
 {
     if (ptr == nullptr) {
-        aicpusd_err("Get op task info ptr is null! streamId[%u], taskId[%u], index[%u].",
-                     taskKey.streamId_, taskKey.taskId_, taskKey.index_);
+        aicpusd_err(
+            "Get op task info ptr is null! streamId[%u], taskId[%u], index[%u].", taskKey.streamId_, taskKey.taskId_,
+            taskKey.index_);
         return AicpuSchedule::AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
-    AicpuSchedule::OpDumpTaskManager &opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
+    AicpuSchedule::OpDumpTaskManager& opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
     int32_t ret = opDumpTaskMgr.GetDumpOpTaskDataforKfc(taskKey, ptr);
     if (ret != AicpuSchedule::AICPU_SCHEDULE_OK) {
-        aicpusd_err("Get op task info failed! streamId[%u], taskId[%u], index[%u] ret[%d].",
-                     taskKey.streamId_, taskKey.taskId_, taskKey.index_, ret);
+        aicpusd_err(
+            "Get op task info failed! streamId[%u], taskId[%u], index[%u] ret[%d].", taskKey.streamId_, taskKey.taskId_,
+            taskKey.index_, ret);
         return ret;
     }
-    aicpusd_info("Get op task info success, streamId[%u], taskId[%u], index[%u] ret[%d].",
-                  taskKey.streamId_, taskKey.taskId_, taskKey.index_, ret);
+    aicpusd_info(
+        "Get op task info success, streamId[%u], taskId[%u], index[%u] ret[%d].", taskKey.streamId_, taskKey.taskId_,
+        taskKey.index_, ret);
     return ret;
 }
 
-int32_t AicpuDumpOpTaskData(const KfcDumpTask &taskKey, void *dumpPtr, uint32_t length)
+int32_t AicpuDumpOpTaskData(const KfcDumpTask& taskKey, void* dumpPtr, uint32_t length)
 {
     if (dumpPtr == nullptr) {
-        aicpusd_err("Result ptr of op task info is null! streamId[%u], taskId[%u], index[%u].",
-                     taskKey.streamId_, taskKey.taskId_, taskKey.index_);
+        aicpusd_err(
+            "Result ptr of op task info is null! streamId[%u], taskId[%u], index[%u].", taskKey.streamId_,
+            taskKey.taskId_, taskKey.index_);
         return AicpuSchedule::AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     if (length == 0U) {
-        aicpusd_warn("Result len of op task info is zero! streamId[%u], taskId[%u], index[%u].",
-                      taskKey.streamId_, taskKey.taskId_, taskKey.index_);
+        aicpusd_warn(
+            "Result len of op task info is zero! streamId[%u], taskId[%u], index[%u].", taskKey.streamId_,
+            taskKey.taskId_, taskKey.index_);
         return AicpuSchedule::AICPU_SCHEDULE_OK;
     }
-    AicpuSchedule::OpDumpTaskManager &opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
+    AicpuSchedule::OpDumpTaskManager& opDumpTaskMgr = AicpuSchedule::OpDumpTaskManager::GetInstance();
     int32_t ret = opDumpTaskMgr.DumpOpTaskDataforKfc(taskKey, dumpPtr, length);
     if (ret != AicpuSchedule::AICPU_SCHEDULE_OK) {
-        aicpusd_err("Dump op task data failed! streamId[%u], taskId[%u], index[%u], ret[%d].",
-                     taskKey.streamId_, taskKey.taskId_, taskKey.index_, ret);
+        aicpusd_err(
+            "Dump op task data failed! streamId[%u], taskId[%u], index[%u], ret[%d].", taskKey.streamId_,
+            taskKey.taskId_, taskKey.index_, ret);
         return ret;
     }
-    aicpusd_info("Dump op task data success, streamId[%u], taskId[%u], index[%u] length[%u].",
-                  taskKey.streamId_, taskKey.taskId_, taskKey.index_, length);
+    aicpusd_info(
+        "Dump op task data success, streamId[%u], taskId[%u], index[%u] length[%u].", taskKey.streamId_,
+        taskKey.taskId_, taskKey.index_, length);
     return ret;
 }

@@ -9,8 +9,7 @@
  */
 #include "ts_api.h"
 
-int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen,
-    unsigned int handleId)
+int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId)
 {
     return 0;
 }

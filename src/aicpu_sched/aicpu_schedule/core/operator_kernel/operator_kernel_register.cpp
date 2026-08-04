@@ -13,15 +13,14 @@
 #include "aicpusd_status.h"
 #include "aicpusd_model_err_process.h"
 
-
 namespace AicpuSchedule {
-OperatorKernelRegister &OperatorKernelRegister::Instance()
+OperatorKernelRegister& OperatorKernelRegister::Instance()
 {
     static OperatorKernelRegister instance;
     return instance;
 }
 
-int32_t OperatorKernelRegister::RunOperatorKernel(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelRegister::RunOperatorKernel(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     const auto kernelName = PtrToPtr<const void, const char_t>(ValueToPtr(kernelTaskInfo.kernelName));
     if (kernelName == nullptr) {
@@ -35,19 +34,21 @@ int32_t OperatorKernelRegister::RunOperatorKernel(const AicpuTaskInfo &kernelTas
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_LOGICAL_TASK;
     }
 
-    aicpusd_info("Begin to process kernelName[%s] modelId[%u] streamId[%u].", kernelName, taskContext.modelId,
+    aicpusd_info(
+        "Begin to process kernelName[%s] modelId[%u] streamId[%u].", kernelName, taskContext.modelId,
         taskContext.streamId);
     const int32_t ret = kernel->Compute(kernelTaskInfo, taskContext);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Operator kernel compute error, ret=%d, kernelName=%s", ret, kernelName);
     }
-    aicpusd_info("End to process kernelName[%s] modelId[%u] streamId[%u] result[%d].",
-                 kernelName, taskContext.modelId, taskContext.streamId, ret);
+    aicpusd_info(
+        "End to process kernelName[%s] modelId[%u] streamId[%u] result[%d].", kernelName, taskContext.modelId,
+        taskContext.streamId, ret);
 
     return ret;
 }
 
-int32_t OperatorKernelRegister::CheckOperatorKernelSupported(const std::string &kernelName)
+int32_t OperatorKernelRegister::CheckOperatorKernelSupported(const std::string& kernelName)
 {
     std::shared_ptr<OperatorKernel> kernel = GetOperatorKernel(kernelName);
     if (kernel == nullptr) {
@@ -59,7 +60,7 @@ int32_t OperatorKernelRegister::CheckOperatorKernelSupported(const std::string &
     return AICPU_SCHEDULE_OK;
 }
 
-std::shared_ptr<OperatorKernel> OperatorKernelRegister::GetOperatorKernel(const std::string &opType)
+std::shared_ptr<OperatorKernel> OperatorKernelRegister::GetOperatorKernel(const std::string& opType)
 {
     std::map<std::string, std::shared_ptr<OperatorKernel>>::const_iterator iter = kernelInstMap_.find(opType);
     if (iter != kernelInstMap_.end()) {
@@ -69,12 +70,12 @@ std::shared_ptr<OperatorKernel> OperatorKernelRegister::GetOperatorKernel(const 
     return std::shared_ptr<OperatorKernel>(nullptr);
 }
 
-OperatorKernelRegister::Registerar::Registerar(const std::string &type, const KernelCreatorFunc &func)
+OperatorKernelRegister::Registerar::Registerar(const std::string& type, const KernelCreatorFunc& func)
 {
     OperatorKernelRegister::Instance().Register(type, func);
 }
 
-void OperatorKernelRegister::Register(const std::string &type, const KernelCreatorFunc &func)
+void OperatorKernelRegister::Register(const std::string& type, const KernelCreatorFunc& func)
 {
     std::unique_lock<std::mutex> lock(kernelInstMapMutex_);
     std::map<std::string, std::shared_ptr<OperatorKernel>>::const_iterator iter = kernelInstMap_.find(type);
@@ -88,4 +89,4 @@ void OperatorKernelRegister::Register(const std::string &type, const KernelCreat
     return;
 }
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

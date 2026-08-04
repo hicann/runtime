@@ -14,20 +14,14 @@ namespace aicpu {
 #ifdef __cplusplus
 extern "C" {
 #endif
-bool IsProfOpen()
-{
-    return false;
-}
+bool IsProfOpen() { return false; }
 
 bool IsModelProfOpen() //
 {
     return false;
 }
 
-void UpdateMode(const bool mode)
-{
-    UNUSED(mode);
-}
+void UpdateMode(const bool mode) { UNUSED(mode); }
 
 void UpdateModelMode(const bool mode) //
 {
@@ -53,7 +47,7 @@ uint64_t GetSystemTickFreq()
     return freq;
 }
 
-void SendToProfiling(const std::string &sendData, const std::string &mark)
+void SendToProfiling(const std::string& sendData, const std::string& mark)
 {
     UNUSED(sendData);
     UNUSED(mark);
@@ -70,9 +64,7 @@ uint64_t NowMicros() //
     return 1UL;
 }
 
-void ReleaseProfiling()
-{
-}
+void ReleaseProfiling() {}
 
 void InitProfiling(const uint32_t deviceId, const pid_t hostPid, const uint32_t channelId)
 {
@@ -88,13 +80,8 @@ void InitProfilingDataInfo(const uint32_t deviceId, const pid_t hostPid, const u
     UNUSED(channelId);
 }
 
-void SetProfilingFlagForKFC(const uint32_t flag)
-{
-    UNUSED(flag);
-}
-void LoadProfilingLib()
-{
-}
+void SetProfilingFlagForKFC(const uint32_t flag) { UNUSED(flag); }
+void LoadProfilingLib() {}
 
 int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
 {
@@ -102,20 +89,13 @@ int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
     return static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS);
 }
 
-bool IsSupportedProfData()
-{
-    return false;
-}
+bool IsSupportedProfData() { return false; }
 
 #ifdef __cplusplus
 }
 #endif
 
-ProfMessage::ProfMessage(const char_t *tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_()
-{
-}
+ProfMessage::ProfMessage(const char_t* tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_() {}
 
-ProfMessage::~ProfMessage()
-{
-}
-}
+ProfMessage::~ProfMessage() {}
+} // namespace aicpu

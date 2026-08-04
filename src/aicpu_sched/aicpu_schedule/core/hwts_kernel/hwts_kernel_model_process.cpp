@@ -21,13 +21,12 @@ const std::string SHAPE_CONFIG = "AicpuModelShapeConfig";
 const std::string ESCHED_PRIORITY = "AicpuModelEschedPriority";
 const std::string CHECK_SUPPORTED = "CheckKernelSupported";
 const std::string PROCESS_DATA_EXCEPTION = "ProcessDataException";
-}  // namespace
+} // namespace
 
-int32_t ConfigExtInfoTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ConfigExtInfoTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel CfgExtInfo event");
-    const auto cfgMsg =
-        PtrToPtr<void, aicpu::AicpuExtendInfo>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    const auto cfgMsg = PtrToPtr<void, aicpu::AicpuExtendInfo>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
     if (cfgMsg == nullptr) {
         aicpusd_err("param base for config extension message is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -36,14 +35,14 @@ int32_t ConfigExtInfoTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AicpuModelManager::GetInstance().ProcessExtInfoCfgMsg(*cfgMsg);
 }
 
-int32_t ModelConfigTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ModelConfigTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel ModelConfig event");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
-    constexpr uint64_t len =  sizeof(aicpu::AicpuParamHead) + sizeof(AicpuModelConfig);
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
+    constexpr uint64_t len = sizeof(aicpu::AicpuParamHead) + sizeof(AicpuModelConfig);
     constexpr uint64_t offset = sizeof(aicpu::AicpuParamHead);
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
-    const aicpu::AicpuParamHead * const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
         aicpusd_err("ParamHead for ModelConfig is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -58,13 +57,13 @@ int32_t ModelConfigTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AicpuModelManager::GetInstance().ProcessModelConfigMsg(*cfg);
 }
 
-int32_t ShapeConfigTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ShapeConfigTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel ModelShapeConfig event");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
-    constexpr uint64_t len =  sizeof(aicpu::AicpuParamHead) + sizeof(AicpuModelShapeConfig);
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
+    constexpr uint64_t len = sizeof(aicpu::AicpuParamHead) + sizeof(AicpuModelShapeConfig);
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
-    const aicpu::AicpuParamHead * const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
         aicpusd_err("ParamHead for ModelShapeConfig is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -76,19 +75,18 @@ int32_t ShapeConfigTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     }
 
     constexpr uint64_t offset = sizeof(aicpu::AicpuParamHead);
-    const auto cfg =
-        PtrToPtr<const char_t, const AicpuModelShapeConfig>(PtrAdd<const char_t>(baseAddr, len, offset));
+    const auto cfg = PtrToPtr<const char_t, const AicpuModelShapeConfig>(PtrAdd<const char_t>(baseAddr, len, offset));
     return AicpuModelManager::GetInstance().ProcessModelShapeConfigMsg(*cfg);
 }
 
-int32_t EschedPriorityTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t EschedPriorityTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel AicpuModelEschedPriority event.");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
-    constexpr uint64_t len =  sizeof(aicpu::AicpuParamHead) + sizeof(AicpuPriInfo);
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
+    constexpr uint64_t len = sizeof(aicpu::AicpuParamHead) + sizeof(AicpuPriInfo);
     constexpr uint64_t offset = sizeof(aicpu::AicpuParamHead);
     const auto baseAddr = PtrToPtr<void, char_t>(ValueToPtr(kernel.paramBase));
-    const aicpu::AicpuParamHead * const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
+    const aicpu::AicpuParamHead* const paramHead = PtrToPtr<char_t, aicpu::AicpuParamHead>(baseAddr);
     if (paramHead == nullptr) {
         aicpusd_err("ParamHead for AicpuModelEschedPriority is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -102,14 +100,14 @@ int32_t EschedPriorityTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AicpuModelManager::GetInstance().ProcessModelPriorityMsg(*cfg, true);
 }
 
-int32_t CheckSupportedTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t CheckSupportedTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_run_info("Begin to process kernel CheckKernelSupported event.");
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     const auto supportedCfg = PtrToPtr<void, CheckKernelSupportedConfig>(ValueToPtr(kernel.paramBase));
     const uint32_t kernelNameLen = supportedCfg->kernelNameLen;
-    const char *const kernelName = PtrToPtr<void, const char>(ValueToPtr(supportedCfg->kernelNameAddr));
-    uint32_t *resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(supportedCfg->checkResultAddr));
+    const char* const kernelName = PtrToPtr<void, const char>(ValueToPtr(supportedCfg->kernelNameAddr));
+    uint32_t* resultAddr = PtrToPtr<void, uint32_t>(ValueToPtr(supportedCfg->checkResultAddr));
     if ((kernelName == nullptr) || (kernelNameLen == 0) || (resultAddr == nullptr)) {
         aicpusd_err("CheckKernelSupportedConfig params error");
         return AICPU_SCHEDULE_FAIL;
@@ -123,9 +121,9 @@ int32_t CheckSupportedTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t ProcessDataExceptionTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
+int32_t ProcessDataExceptionTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
-    const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
+    const aicpu::HwtsCceKernel& kernel = tsKernelInfo.kernelBase.cceKernel;
     const auto exceptionInfo = PtrToPtr<void, DataFlowExceptionNotify>(ValueToPtr(kernel.paramBase));
     return AicpuScheduleInterface::GetInstance().ProcessException(exceptionInfo);
 }
@@ -136,4 +134,4 @@ REGISTER_HWTS_KERNEL(SHAPE_CONFIG, ShapeConfigTsKernel);
 REGISTER_HWTS_KERNEL(ESCHED_PRIORITY, EschedPriorityTsKernel);
 REGISTER_HWTS_KERNEL(CHECK_SUPPORTED, CheckSupportedTsKernel);
 REGISTER_HWTS_KERNEL(PROCESS_DATA_EXCEPTION, ProcessDataExceptionTsKernel);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

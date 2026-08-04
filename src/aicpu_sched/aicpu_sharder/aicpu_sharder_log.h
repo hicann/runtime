@@ -36,40 +36,46 @@ inline int64_t GetTid()
     thread_local static const int64_t TID = syscall(__NR_gettid);
     return TID;
 }
-}
+} // namespace aicpu
 
-#define AICPUE_LOGD(fmt, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_debug(static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt,                         \
-                   &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);                                        \
+#define AICPUE_LOGD(fmt, ...)                                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
+        dlog_debug(                                                                                              \
+            static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), \
+            ##__VA_ARGS__);                                                                                      \
     }
-#define AICPUE_LOGI(fmt, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_info(static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt,                          \
-                  &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);                                         \
+#define AICPUE_LOGI(fmt, ...)                                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
+        dlog_info(                                                                                               \
+            static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), \
+            ##__VA_ARGS__);                                                                                      \
     }
-#define AICPUE_LOGW(fmt, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_warn(static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt,                          \
-                  &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);                                         \
+#define AICPUE_LOGW(fmt, ...)                                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
+        dlog_warn(                                                                                               \
+            static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), \
+            ##__VA_ARGS__);                                                                                      \
     }
-#define AICPUE_LOGE(fmt, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_error(static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt,                         \
-                   &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);                                        \
+#define AICPUE_LOGE(fmt, ...)                                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
+        dlog_error(                                                                                              \
+            static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), \
+            ##__VA_ARGS__);                                                                                      \
     }
-#define AICPUE_LOGD(fmt, ...)                                                                                \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_debug(static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt,                         \
-                   &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);                                        \
+#define AICPUE_LOGD(fmt, ...)                                                                                    \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
+        dlog_debug(                                                                                              \
+            static_cast<int32_t>(AICPU), "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), \
+            ##__VA_ARGS__);                                                                                      \
     }
 
-#define AICPUE_RUN_LOGW(fmt, ...) \
-    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                           \
-        dlog_warn(static_cast<int32_t>(static_cast<uint32_t>(AICPU) | static_cast<uint32_t>(RUN_LOG_MASK)),  \
-                  "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);    \
+#define AICPUE_RUN_LOGW(fmt, ...)                                                                     \
+    if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                    \
+        dlog_warn(                                                                                    \
+            static_cast<int32_t>(static_cast<uint32_t>(AICPU) | static_cast<uint32_t>(RUN_LOG_MASK)), \
+            "[%s][tid:%ld][AICPU_SHARDER] " fmt, &__FUNCTION__[0], aicpu::GetTid(), ##__VA_ARGS__);   \
     }
 
-#endif  // endif AICPU_SHARDER_UTST
+#endif // endif AICPU_SHARDER_UTST
 
 #endif

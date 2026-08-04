@@ -16,18 +16,18 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_REPEAT = "modelRepeat";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelRepeat::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelRepeat::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-        const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
+    const auto modelIdPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(kernelTaskInfo.paraBase)));
     if (modelIdPtr == nullptr) {
-        aicpusd_err("ModelRepeat kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelRepeat kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if (*modelIdPtr != taskContext.modelId) {
@@ -38,8 +38,9 @@ int32_t OperatorKernelModelRepeat::Compute(const AicpuTaskInfo &kernelTaskInfo, 
     ResetStaticNNModelOutputIndex(taskContext.modelId);
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if ((model != nullptr) && (model->GetModelRetCode() != 0) && (model->AbnormalNeedBreak())) {
-        aicpusd_err("Model execute failed, need to break. modelId=%u, modelRetCode=%d.",
-                    taskContext.modelId, model->GetModelRetCode());
+        aicpusd_err(
+            "Model execute failed, need to break. modelId=%u, modelRetCode=%d.", taskContext.modelId,
+            model->GetModelRetCode());
         return AICPU_SCHEDULE_ERROR_TASK_EXECUTE_FAILED;
     }
     return OperatorKernelModelRepeat::SendModelRepeatEvent(*modelIdPtr);
@@ -54,13 +55,15 @@ uint32_t OperatorKernelModelRepeat::SendModelRepeatEvent(const uint32_t modelId)
         iterCount = model->GetIteratorId();
         activeStreamNum = model->GetActiveStreamNum();
     }
-    aicpusd_info("Begin to execute ModelRepeat. modelId[%u], activeStreamNum[%u], iterCount[%u]",
-        modelId, activeStreamNum, iterCount);
+    aicpusd_info(
+        "Begin to execute ModelRepeat. modelId[%u], activeStreamNum[%u], iterCount[%u]", modelId, activeStreamNum,
+        iterCount);
     AICPUSubEventInfo subEventInfo = {};
     subEventInfo.modelId = modelId;
     g_aicpuProfiler.SetRepeatStart();
-    const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo),
-        static_cast<uint32_t>(sizeof(AICPUSubEventInfo)), AICPU_SUB_EVENT_REPEAT_MODEL);
+    const int32_t ret = OperatorKernelCommon::SendAICPUSubEvent(
+        PtrToPtr<AICPUSubEventInfo, char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
+        AICPU_SUB_EVENT_REPEAT_MODEL);
     g_aicpuProfiler.SetRepeatEnd();
 
     return ret;
@@ -76,4 +79,4 @@ void OperatorKernelModelRepeat::ResetStaticNNModelOutputIndex(const uint32_t mod
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_REPEAT, OperatorKernelModelRepeat);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

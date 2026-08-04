@@ -20,17 +20,17 @@
 namespace aicpu {
 using Closure = std::function<void()>;
 using SharderWork = std::function<void(int64_t, int64_t)>;
-using RandomKernelScheduler = std::function<uint32_t(const aicpu::Closure &task)>;
-using SplitKernelScheduler = std::function<uint32_t(const uint32_t parallelId, const int64_t shardNum,
-                                                    const std::queue<Closure> &queue)>;
-using SplitKernelGetProcesser =  std::function<bool()>;
+using RandomKernelScheduler = std::function<uint32_t(const aicpu::Closure& task)>;
+using SplitKernelScheduler =
+    std::function<uint32_t(const uint32_t parallelId, const int64_t shardNum, const std::queue<Closure>& queue)>;
+using SplitKernelGetProcesser = std::function<bool()>;
 
 class SharderNonBlock {
 public:
     /**
      * Get the unique object of this class
      */
-    static SharderNonBlock &GetInstance();
+    static SharderNonBlock& GetInstance();
 
     /**
      * Register schedule callback function, doTask function and cpu core number
@@ -40,9 +40,9 @@ public:
      * @param splitKernelScheduler random kernel event submit and task add
      * @param splitKernelScheduler get and process split kernel for main thread
      */
-    void Register(const uint32_t cpuCoreNum, const RandomKernelScheduler &randomKernelScheduler,
-                  const SplitKernelScheduler &splitKernelScheduler,
-                  const SplitKernelGetProcesser &splitKernelGetProcesser);
+    void Register(
+        const uint32_t cpuCoreNum, const RandomKernelScheduler& randomKernelScheduler,
+        const SplitKernelScheduler& splitKernelScheduler, const SplitKernelGetProcesser& splitKernelGetProcesser);
 
     /**
      * Shards the "total" unit of work refer "perUintSize"
@@ -52,7 +52,7 @@ public:
                    work(start, limit) computes the work units from [start, limit),
                    i.e., [start, limit) is a shard.
      */
-    void ParallelFor(const int64_t total, const int64_t perUnitSize, const SharderWork &work);
+    void ParallelFor(const int64_t total, const int64_t perUnitSize, const SharderWork& work);
 
     /**
      * Shards the unit of work refer for hash
@@ -62,14 +62,14 @@ public:
                    work(cur, cpuNums) computes the work units with input hash with (cpuNums-1) equals cur,
                    i.e. specially used by parallel unique op
      */
-    void ParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork &work);
+    void ParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork& work);
 
     /**
      * Schedule a task use schedule function registered by compute process,
      * note that the task will actually executed asynchronously
      * @param closure Closure function with nothrow
      */
-    void Schedule(const Closure &aicpuClosure);
+    void Schedule(const Closure& aicpuClosure);
 
     /**
      * Get CPU number
@@ -82,13 +82,12 @@ private:
     SharderNonBlock();
     ~SharderNonBlock() = default;
 
-    SharderNonBlock(const SharderNonBlock &) = delete;
-    SharderNonBlock &operator = (const SharderNonBlock &) = delete;
-    SharderNonBlock(SharderNonBlock &&) = delete;
-    SharderNonBlock &operator = (SharderNonBlock &&) = delete;
+    SharderNonBlock(const SharderNonBlock&) = delete;
+    SharderNonBlock& operator=(const SharderNonBlock&) = delete;
+    SharderNonBlock(SharderNonBlock&&) = delete;
+    SharderNonBlock& operator=(SharderNonBlock&&) = delete;
 
-    void DoTaskItself(const uint32_t parallelId, std::atomic<int64_t> &cpuNumCounter,
-                      const int64_t shardNum) const;
+    void DoTaskItself(const uint32_t parallelId, std::atomic<int64_t>& cpuNumCounter, const int64_t shardNum) const;
 
     /**
      * Calculate how many times, which ceiled, "x" is "base".
@@ -108,11 +107,12 @@ private:
                    work(start, limit) computes the work units from [start, limit),
                    i.e., [start, limit) is a shard.
      */
-    void ExecuteParallelFor(const int64_t total, const int64_t shardNum,
-                            const int64_t blockSize, const SharderWork &work, const uint32_t parallelId);
+    void ExecuteParallelFor(
+        const int64_t total, const int64_t shardNum, const int64_t blockSize, const SharderWork& work,
+        const uint32_t parallelId);
 
-    void ExecuteParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork &work,
-                                const uint32_t parallelId);
+    void ExecuteParallelForHash(
+        const int64_t total, const int64_t cpuNums, const SharderWork& work, const uint32_t parallelId);
 
 private:
     uint32_t cpuCoreNum_; // aicpu core number
@@ -121,7 +121,7 @@ private:
     SplitKernelGetProcesser splitKernelGetProcesser_;
     std::atomic<uint32_t> parallelId_; // the id for parallel run kernel
     std::mutex parallelIdMutex_;
-};                        // SharderNonBlock
+};                                     // SharderNonBlock
 } // namespace aicpu
 
 extern "C" {
@@ -133,8 +133,8 @@ extern "C" {
                  work(start, limit) computes the work units from [start, limit),
                 i.e., [start, limit) is a shard.
  */
-__attribute__((visibility("default"))) void ParallelFor(int64_t total, int64_t perUnitSize,
-    const aicpu::SharderWork &work);
+__attribute__((visibility("default"))) void ParallelFor(
+    int64_t total, int64_t perUnitSize, const aicpu::SharderWork& work);
 
 /**
  * Get CPU number

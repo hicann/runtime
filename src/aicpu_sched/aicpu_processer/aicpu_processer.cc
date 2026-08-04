@@ -19,23 +19,23 @@
  * @brief aeCallInterface: a interface to call  a function in a op kernfel lib
  * @param [in] addr: void *, should be HwtsTsKernel * format
  * @return int32_t
-*/
-__attribute__((visibility("default"))) int32_t aeCallInterface(const void * const addr)
+ */
+__attribute__((visibility("default"))) int32_t aeCallInterface(const void* const addr)
 {
     if (addr == nullptr) {
         AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");
         return AE_STATUS_BAD_PARAM;
     }
-    const auto strKernel = static_cast<const aicpu::HwtsTsKernel *>(addr);
+    const auto strKernel = static_cast<const aicpu::HwtsTsKernel*>(addr);
     AE_INFO_LOG(AE_MODULE_ID, "Begin to CallKernelApi, kernelType=%u.", strKernel->kernelType);
     FUNC_PROFILE_START
     // step1. Get the Ai Kernel Lib
     const aicpu::KernelType kernelType = static_cast<const aicpu::KernelType>(strKernel->kernelType);
-    cce::AIKernelsLibBase *targetKernelLib = nullptr;
+    cce::AIKernelsLibBase* targetKernelLib = nullptr;
     int32_t ret = cce::AIKernelsLibManger::GetKernelLib(kernelType, targetKernelLib);
     if ((ret == AE_STATUS_SUCCESS) && (targetKernelLib != nullptr)) {
         // step2. Call the Ai Kernel Lib unify abstract interface
-        ret = targetKernelLib->CallKernelApi(kernelType, static_cast<const void *>(&strKernel->kernelBase));
+        ret = targetKernelLib->CallKernelApi(kernelType, static_cast<const void*>(&strKernel->kernelBase));
     }
     FUNC_PROFILE_END
     return ret;
@@ -45,7 +45,7 @@ __attribute__((visibility("default"))) int32_t aeCallInterface(const void * cons
  * @ingroup aicpu engine
  * @brief aeClear: a interface to clear all ai kernel lib
  * @return aeStatus_t
-*/
+ */
 __attribute__((visibility("default"))) void aeClear()
 {
     for (int32_t kernelType = aicpu::KERNEL_TYPE_CCE; kernelType <= aicpu::KERNEL_TYPE_RESERVED; kernelType++) {
@@ -60,10 +60,9 @@ __attribute__((visibility("default"))) void aeClear()
  * @param [in] loadSoNum: uint32_t, so number
  * @param [in] soNames: const char_t*[], so name
  * @return aeStatus_t
-*/
-__attribute__((visibility("default"))) aeStatus_t aeBatchLoadKernelSo(const uint32_t kernelType,
-                                                                      const uint32_t loadSoNum,
-                                                                      const char_t * const * const soNames)
+ */
+__attribute__((visibility("default"))) aeStatus_t aeBatchLoadKernelSo(
+    const uint32_t kernelType, const uint32_t loadSoNum, const char_t* const* const soNames)
 {
     return cce::AIKernelsLibManger::BatchLoadKernelSo(static_cast<aicpu::KernelType>(kernelType), loadSoNum, soNames);
 }
@@ -73,12 +72,12 @@ __attribute__((visibility("default"))) aeStatus_t aeBatchLoadKernelSo(const uint
  * @brief aeClear: a interface to close a so
  * @param [in]soName: so name
  * @return aeStatus_t
-*/
-__attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kernelType, const char_t * const soName)
+ */
+__attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kernelType, const char_t* const soName)
 {
-    cce::AIKernelsLibBase *targetKernelLib = nullptr;
-    const aeStatus_t ret = cce::AIKernelsLibManger::GetKernelLib(static_cast<const aicpu::KernelType>(kernelType),
-                                                                 targetKernelLib);
+    cce::AIKernelsLibBase* targetKernelLib = nullptr;
+    const aeStatus_t ret =
+        cce::AIKernelsLibManger::GetKernelLib(static_cast<const aicpu::KernelType>(kernelType), targetKernelLib);
     if ((ret != AE_STATUS_SUCCESS)) {
         AE_ERR_LOG(AE_MODULE_ID, "aeCloseSo get kernel lib failed, kernelType[%u], ret[%u].", kernelType, ret);
         return ret;
@@ -86,7 +85,7 @@ __attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kerne
     return targetKernelLib->CloseSo(soName);
 }
 
-__attribute__((visibility("default"))) aeStatus_t AeAddSoInWhiteList(const char_t * const soName)
+__attribute__((visibility("default"))) aeStatus_t AeAddSoInWhiteList(const char_t* const soName)
 {
     if (soName == nullptr) {
         AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");
@@ -95,7 +94,7 @@ __attribute__((visibility("default"))) aeStatus_t AeAddSoInWhiteList(const char_
     return cce::AIKernelsLibManger::AddSoInWhiteList(soName);
 }
 
-__attribute__((visibility("default"))) void AeDeleteSoInWhiteList(const char_t * const soName)
+__attribute__((visibility("default"))) void AeDeleteSoInWhiteList(const char_t* const soName)
 {
     if (soName == nullptr) {
         AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");

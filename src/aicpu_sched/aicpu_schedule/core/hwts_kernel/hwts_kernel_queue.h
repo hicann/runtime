@@ -13,27 +13,26 @@
 
 #include "hwts_kernel.h"
 
-
 namespace AicpuSchedule {
 class CreateQueueTsKernel : public HwTsKernelHandler {
 public:
     CreateQueueTsKernel() = default;
     ~CreateQueueTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 
 private:
     int32_t CreateGrp() const;
     int32_t SubscribeEvent(const uint32_t deviceId, const uint32_t queueId) const;
     int32_t Resubscribe(const uint32_t deviceId, const uint32_t queueId) const;
     int32_t ResubscribeF2NF(const uint32_t deviceId, const uint32_t queueId) const;
-    int32_t DoQueueSubscrible(const QueueAttr &queAttr, uint32_t *queueId) const;
+    int32_t DoQueueSubscrible(const QueueAttr& queAttr, uint32_t* queueId) const;
 };
 
 class DestroyQueueTsKernel : public HwTsKernelHandler {
 public:
     DestroyQueueTsKernel() = default;
     ~DestroyQueueTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_QUEUE_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_QUEUE_H

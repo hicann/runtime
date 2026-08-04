@@ -32,7 +32,7 @@ void AicpuPulseNotify();
  * @param func pulse notify function.
  * @return 0:success, other:failed.
  */
-int32_t RegisterPulseNotifyFunc(const char_t * const name, const PulseNotifyFunc func);
+int32_t RegisterPulseNotifyFunc(const char_t* const name, const PulseNotifyFunc func);
 
 /**
  * aicpu pulse notify.

@@ -10,10 +10,10 @@
 #include "feature_ctrl.h"
 
 namespace AicpuSchedule {
-  bool FeatureCtrl::aicpuFeatureBindPidByHal_ = false;
-  bool FeatureCtrl::aicpuFeatureDoubleDieProduct_ = false;
-  bool FeatureCtrl::aicpuFeatureInitDrvScheModule_ = true;
-  bool FeatureCtrl::aicpuFeatureSubmitTaskOneByOne_ = false;
-  uint16_t FeatureCtrl::tsMsgVersion_ = 0;
-  std::atomic<bool> FeatureCtrl::isSetTsMsgVersion_ = false;
-}
+bool FeatureCtrl::aicpuFeatureBindPidByHal_ = false;
+bool FeatureCtrl::aicpuFeatureDoubleDieProduct_ = false;
+bool FeatureCtrl::aicpuFeatureInitDrvScheModule_ = true;
+bool FeatureCtrl::aicpuFeatureSubmitTaskOneByOne_ = false;
+uint16_t FeatureCtrl::tsMsgVersion_ = 0;
+std::atomic<bool> FeatureCtrl::isSetTsMsgVersion_ = false;
+} // namespace AicpuSchedule

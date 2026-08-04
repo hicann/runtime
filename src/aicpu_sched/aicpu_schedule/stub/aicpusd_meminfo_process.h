@@ -14,9 +14,9 @@
 #include "ascend_hal_define.h"
 
 namespace AicpuSchedule {
-    class AicpuMemInfoProcess {
-    public:
-        static int32_t GetMemZoneInfo(BuffCfg &buffCfg);
-    };
-}
+class AicpuMemInfoProcess {
+public:
+    static int32_t GetMemZoneInfo(BuffCfg& buffCfg);
+};
+} // namespace AicpuSchedule
 #endif // CORE_AICPUSD_JSON_READ_H

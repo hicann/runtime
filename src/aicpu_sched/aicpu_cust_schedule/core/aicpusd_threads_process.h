@@ -11,7 +11,6 @@
 #ifndef CUST_AICPUSD_THREADS_PROCESS_H
 #define CUST_AICPUSD_THREADS_PROCESS_H
 
-
 #include <string>
 #include <cstdint>
 #include <sys/types.h>
@@ -23,8 +22,8 @@ namespace AicpuSchedule {
  * compute process result code.
  */
 enum class ComputProcessRetCode {
-    CP_RET_SUCCESS = 0,     // success
-    CP_RET_COMMON_ERROR,    // common error
+    CP_RET_SUCCESS = 0,  // success
+    CP_RET_COMMON_ERROR, // common error
 };
 
 /**
@@ -32,12 +31,11 @@ enum class ComputProcessRetCode {
  */
 class ComputeProcess {
 public:
-
     /**
      * Get instance.
      * @return instance.
      */
-    static ComputeProcess &GetInstance();
+    static ComputeProcess& GetInstance();
 
     /**
      * start compute process.
@@ -50,37 +48,34 @@ public:
      * @param  runMode pcie socket or thread run mode
      * @return 0:success, other:fail
      */
-    int32_t Start(const uint32_t deviceId,
-                  const pid_t hostPid,
-                  const uint32_t profilingMode,
-                  const pid_t aicpuPid,
-                  const uint32_t vfId,
-                  const aicpu::AicpuRunMode runMode);
+    int32_t Start(
+        const uint32_t deviceId, const pid_t hostPid, const uint32_t profilingMode, const pid_t aicpuPid,
+        const uint32_t vfId, const aicpu::AicpuRunMode runMode);
 
     void UpdateProfilingSetting(uint32_t flag);
 
-    bool DoSplitKernelTask(const AICPUSharderTaskInfo &taskInfo);
+    bool DoSplitKernelTask(const AICPUSharderTaskInfo& taskInfo);
     bool DoRandomKernelTask();
 
     /**
      * stop compute process.
      */
     void Stop();
+
 private:
     ComputeProcess();
     ~ComputeProcess() = default;
 
     // not allow copy constructor and assignment operators
-    ComputeProcess(const ComputeProcess &) = delete;
-    ComputeProcess &operator=(const ComputeProcess &) = delete;
+    ComputeProcess(const ComputeProcess&) = delete;
+    ComputeProcess& operator=(const ComputeProcess&) = delete;
 
     uint32_t RegisterScheduleTask();
-    uint32_t SubmitRandomKernelTask(const aicpu::Closure &task);
-    uint32_t SubmitSplitKernelTask(const AICPUSharderTaskInfo &taskInfo,
-                                   const std::queue<aicpu::Closure> &taskQueue);
-    uint32_t SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo &taskInfo) const;
-    uint32_t SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo &taskInfo);
-    uint32_t SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo &taskInfo) const;
+    uint32_t SubmitRandomKernelTask(const aicpu::Closure& task);
+    uint32_t SubmitSplitKernelTask(const AICPUSharderTaskInfo& taskInfo, const std::queue<aicpu::Closure>& taskQueue);
+    uint32_t SubmitBatchSplitKernelEventOneByOne(const AICPUSharderTaskInfo& taskInfo) const;
+    uint32_t SubmitBatchSplitKernelEventDc(const AICPUSharderTaskInfo& taskInfo);
+    uint32_t SubmitOneSplitKernelEvent(const AICPUSharderTaskInfo& taskInfo) const;
     bool GetAndDoSplitKernelTask();
 
     // the device id
@@ -103,12 +98,12 @@ private:
 
     // sharder task for split kernel
     TaskMap splitKernelTask_;
- 
+
     // sharder task for random kernel
     TaskQueue randomKernelTask_;
 
     // cust aicpusd run mode : thread pice socket
     aicpu::AicpuRunMode runMode_;
 };
-}
+} // namespace AicpuSchedule
 #endif

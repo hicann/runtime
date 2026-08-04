@@ -18,42 +18,42 @@
 #include "aicpusd_status.h"
 
 namespace {
-    // current thread context
-    thread_local aicpu::aicpuContext_t g_curCtx;
-    // current thread prof context
-    thread_local aicpu::aicpuProfContext_t g_curProfCtx;
-    // task moniter context
-    thread_local uint32_t g_threadIndex = UINT32_MAX;
-    // aicpu run mode
-    uint32_t g_runMode = aicpu::AicpuRunMode::THREAD_MODE;
-    // cpu mode
-    bool g_cpuMode = false;
-    bool g_isCustAicpuSd = false;
-}
+// current thread context
+thread_local aicpu::aicpuContext_t g_curCtx;
+// current thread prof context
+thread_local aicpu::aicpuProfContext_t g_curProfCtx;
+// task moniter context
+thread_local uint32_t g_threadIndex = UINT32_MAX;
+// aicpu run mode
+uint32_t g_runMode = aicpu::AicpuRunMode::THREAD_MODE;
+// cpu mode
+bool g_cpuMode = false;
+bool g_isCustAicpuSd = false;
+} // namespace
 
 namespace aicpu {
-__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuSetContext(aicpuContext_t* ctx)
 {
     aicpusd_info("Aicpu set ctx in stub func[%s].", __func__);
     g_curCtx = *ctx;
     return AICPU_ERROR_NONE;
 }
 
-__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t *ctx)
+__attribute__((visibility("default"))) status_t aicpuGetContext(aicpuContext_t* ctx)
 {
     aicpusd_info("Aicpu get ctx in stub func[%s].", __func__);
     *ctx = g_curCtx;
     return AICPU_ERROR_NONE;
 }
 
-status_t aicpuSetProfContext(const aicpuProfContext_t &ctx)
+status_t aicpuSetProfContext(const aicpuProfContext_t& ctx)
 {
     aicpusd_info("Aicpu set prof ctx in stub func[%s].", __func__);
     g_curProfCtx = ctx;
     return AICPU_ERROR_NONE;
 }
 
-const aicpuProfContext_t &aicpuGetProfContext()
+const aicpuProfContext_t& aicpuGetProfContext()
 {
     aicpusd_info("Aicpu get prof ctx in stub func[%s].", __func__);
     return g_curProfCtx;
@@ -79,16 +79,14 @@ uint32_t GetAicpuThreadIndex()
     return g_threadIndex;
 }
 
-
-status_t SetOpname(const std::string &opname)
+status_t SetOpname(const std::string& opname)
 {
     (void)opname;
     aicpusd_info("Set opname in stub func[%s].", __func__);
     return AICPU_ERROR_NONE;
 }
 
-
-status_t GetOpname(uint32_t threadIndex, std::string &opname)
+status_t GetOpname(uint32_t threadIndex, std::string& opname)
 {
     (void)threadIndex;
     (void)opname;
@@ -111,14 +109,14 @@ status_t SetAicpuRunMode(uint32_t runMode)
     return AICPU_ERROR_NONE;
 }
 
-status_t GetAicpuRunMode(uint32_t &runMode)
+status_t GetAicpuRunMode(uint32_t& runMode)
 {
     aicpusd_info("Get aicpu run mode in stub func[%s].", __func__);
     runMode = g_runMode;
     return AICPU_ERROR_NONE;
 }
 
-status_t SetThreadLocalCtx(const std::string &key, const std::string &value)
+status_t SetThreadLocalCtx(const std::string& key, const std::string& value)
 {
     (void)key;
     (void)value;
@@ -126,7 +124,7 @@ status_t SetThreadLocalCtx(const std::string &key, const std::string &value)
     return AICPU_ERROR_NONE;
 }
 
-status_t GetThreadLocalCtx(const std::string &key, std::string &value)
+status_t GetThreadLocalCtx(const std::string& key, std::string& value)
 {
     (void)key;
     (void)value;
@@ -157,7 +155,7 @@ bool IsCustAicpuSd()
     aicpusd_info("Get cust aicpusd flag in stub func[%s].", __func__);
     return g_isCustAicpuSd;
 }
-}  // namespace aicpu
+} // namespace aicpu
 
 namespace AicpuSchedule {
 void SetCpuMode(bool cpuMode)
@@ -173,7 +171,4 @@ bool GetCpuMode()
 }
 } // namespace AicpuSchedule
 
-void ClearPulseNotifyFunc()
-{
-    aicpusd_info("call ClearPulseNotifyFunc stub func[%s].", __func__);
-}
+void ClearPulseNotifyFunc() { aicpusd_info("call ClearPulseNotifyFunc stub func[%s].", __func__); }

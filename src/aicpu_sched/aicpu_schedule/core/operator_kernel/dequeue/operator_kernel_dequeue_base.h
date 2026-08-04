@@ -12,23 +12,23 @@
 
 #include "operator_kernel_context.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelDequeueBase {
 public:
     OperatorKernelDequeueBase() = default;
-    virtual ~OperatorKernelDequeueBase() {};
+    virtual ~OperatorKernelDequeueBase(){};
 
-    int32_t DequeueTask(BufEnQueueInfo &bufInfo, const RunContext &taskContext, const bool needPending) const;
-    static int32_t AlignTimestamp(BatchDequeueInfo &batchDeqInfo, const RunContext &taskContext,
-                                  uint32_t &maxAlignTimestamp, uint32_t &minAlignTimestamp,
-                                  uint32_t &minTimestampIndex);
-    void ProcessMbufHeadInDequeueTask(const uint32_t modelId, void * const headBuf, const uint32_t headSize) const;
-    void SetModelEndOfSequence(const uint32_t modelId, void * const headBuf, const uint32_t headSize) const;
+    int32_t DequeueTask(BufEnQueueInfo& bufInfo, const RunContext& taskContext, const bool needPending) const;
+    static int32_t AlignTimestamp(
+        BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext, uint32_t& maxAlignTimestamp,
+        uint32_t& minAlignTimestamp, uint32_t& minTimestampIndex);
+    void ProcessMbufHeadInDequeueTask(const uint32_t modelId, void* const headBuf, const uint32_t headSize) const;
+    void SetModelEndOfSequence(const uint32_t modelId, void* const headBuf, const uint32_t headSize) const;
+
 private:
-    void SetModelNullData(const uint32_t modelId, const MbufHeadMsg * const headMsg) const;
-    void SetModelRetCode(const uint32_t modelId, const MbufHeadMsg * const headMsg) const;
-    void SetMbufStepId(const uint32_t modelId, MbufHeadMsg * const headMsg) const;
+    void SetModelNullData(const uint32_t modelId, const MbufHeadMsg* const headMsg) const;
+    void SetModelRetCode(const uint32_t modelId, const MbufHeadMsg* const headMsg) const;
+    void SetMbufStepId(const uint32_t modelId, MbufHeadMsg* const headMsg) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_DEQUEUE_BASE_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_DEQUEUE_BASE_H

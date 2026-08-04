@@ -44,9 +44,9 @@ const std::string ERROR_MSG_DRV_ERROR = "E39002";
 const std::string ERROR_MSG_CGROUP_FAILED = "E30007";
 const std::string ERROR_MSG_AICPU_INIT_FAILED = "E39004";
 const std::string QUEUE_SCHEDULE_SO_NAME = "libqueue_schedule.so";
-void *g_qslibHandle = nullptr;
+void* g_qslibHandle = nullptr;
 
-void SetLogLevel(AicpuSchedule::ArgsParser &startParams)
+void SetLogLevel(AicpuSchedule::ArgsParser& startParams)
 {
     if (&dlog_setlevel != nullptr) {
         if (dlog_setlevel(-1, startParams.GetLogLevel(), startParams.GetEventLevel()) != SUCCESS_VALUE) {
@@ -78,7 +78,7 @@ void SetLogLevel(AicpuSchedule::ArgsParser &startParams)
  * @param  grpNameNum group name number
  * @return true:success, false:failed
  */
-bool AttachHostGroup(const std::vector<std::string> &groupNameVec, const uint32_t grpNameNum)
+bool AttachHostGroup(const std::vector<std::string>& groupNameVec, const uint32_t grpNameNum)
 {
     if (grpNameNum == 0U) {
         aicpusd_info("There is not group need to be attached");
@@ -89,8 +89,9 @@ bool AttachHostGroup(const std::vector<std::string> &groupNameVec, const uint32_
         return false;
     }
     if (static_cast<uint32_t>(groupNameVec.size()) != grpNameNum) {
-        aicpusd_err("Aicpu start failed. parse group name num[%d] is consistence with num[%u] in parameter",
-                    groupNameVec.size(), grpNameNum);
+        aicpusd_err(
+            "Aicpu start failed. parse group name num[%d] is consistence with num[%u] in parameter",
+            groupNameVec.size(), grpNameNum);
         return false;
     }
 
@@ -132,8 +133,8 @@ void ReportErrorMsg(const int32_t errCode, const uint32_t deviceId, const uint32
     }
     DlogFlushAicpu();
     sleep(1); // sleep 1s to avoid log loss
-    const int32_t ret = TsdReportStartOrStopErrCode(deviceId, TSD_COMPUTE, hostPid, vfId,
-        errStr.c_str(), static_cast<uint32_t>(errStr.size()));
+    const int32_t ret = TsdReportStartOrStopErrCode(
+        deviceId, TSD_COMPUTE, hostPid, vfId, errStr.c_str(), static_cast<uint32_t>(errStr.size()));
     if (ret != 0) {
         aicpusd_err("TsdReportStartOrStopErrCode failed. ret[%d]", ret);
         sleep(1); // sleep 1s to avoid log loss
@@ -147,7 +148,7 @@ void SendPidQosMsgToTsd(const uint32_t pidQos, const uint32_t deviceId, const ui
     TsdCapabilityMsgInfo qosPidMsg;
     qosPidMsg.subCapabityType = TSD_EVENT_GET_CAPABILITY;
     qosPidMsg.resultInfo = pidQos;
-    ReportMsgToTsd(deviceId, TSD_COMPUTE, hostPid, vfId, reinterpret_cast<const char_t * const>(&qosPidMsg));
+    ReportMsgToTsd(deviceId, TSD_COMPUTE, hostPid, vfId, reinterpret_cast<const char_t* const>(&qosPidMsg));
 }
 
 void RegQueueScheduleModuleCallBack()
@@ -297,8 +298,8 @@ void CloseQslibHandle()
         return;
     }
 }
-}  // namespace
-}  // namespace AicpuSchedule
+} // namespace
+} // namespace AicpuSchedule
 
 /**
  * main of compute process.
@@ -307,7 +308,7 @@ void CloseQslibHandle()
  * @return 0:success, other:failed
  */
 #ifndef aicpusd_UT
-int32_t main(int32_t argc, char *argv[])
+int32_t main(int32_t argc, char* argv[])
 #else
 int32_t ComputeProcessMain(int32_t argc, char* argv[])
 #endif
@@ -326,8 +327,8 @@ int32_t ComputeProcessMain(int32_t argc, char* argv[])
         const uint32_t aicpuProcNum = startParams.GetAicpuProcNum();
         AicpuSchedule::AicpuScheduleInterface::GetInstance().SetBatchLoadMode(aicpuProcNum);
         if (!AicpuSchedule::AddToCgroup(deviceId, vfId)) {
-            AicpuSchedule::ReportErrorMsg(AicpuSchedule::AICPU_SCHEDULE_ERROR_CGROUP_FAILED,
-                                          deviceId, static_cast<uint32_t>(pid), vfId);
+            AicpuSchedule::ReportErrorMsg(
+                AicpuSchedule::AICPU_SCHEDULE_ERROR_CGROUP_FAILED, deviceId, static_cast<uint32_t>(pid), vfId);
             return -1;
         }
         // Make sure AicpusdLastword are created first，to ensure the last exit
@@ -335,10 +336,10 @@ int32_t ComputeProcessMain(int32_t argc, char* argv[])
         AicpuSchedule::AicpuProfiler::ProfilerAgentInit();
         AicpuSchedule::AicpuEventManager::GetInstance().InitEventMgr(false, true, 0U);
         std::vector<uint32_t> deviceVec(1, deviceId);
-        
+
         int32_t ret = AicpuSchedule::AicpuScheduleInterface::GetInstance().InitAICPUScheduler(
-            deviceVec, pid, startParams.GetPidSign(), startParams.GetProfilingMode(),
-            vfId, true, startParams.GetHostProcName());
+            deviceVec, pid, startParams.GetPidSign(), startParams.GetProfilingMode(), vfId, true,
+            startParams.GetHostProcName());
         if (ret != AicpuSchedule::AICPU_SCHEDULE_OK) {
             aicpusd_err("Aicpu scheduler start failed, ret=%d", ret);
             AicpuSchedule::ReportErrorMsg(ret, deviceId, static_cast<uint32_t>(pid), vfId);
@@ -354,16 +355,16 @@ int32_t ComputeProcessMain(int32_t argc, char* argv[])
         // Attach group before send success to make sure aicpusd own the authority to access mbuff send by RTS
         if (!AicpuSchedule::AttachHostGroup(startParams.GetGrpNameList(), startParams.GetGrpNameNum())) {
             aicpusd_err("AttachHostGroup execute failed.");
-            AicpuSchedule::ReportErrorMsg(AicpuSchedule::AICPU_SCHEDULE_ERROR_DRV_ERR,
-                                          deviceId, static_cast<uint32_t>(pid), vfId);
+            AicpuSchedule::ReportErrorMsg(
+                AicpuSchedule::AICPU_SCHEDULE_ERROR_DRV_ERR, deviceId, static_cast<uint32_t>(pid), vfId);
             return -1;
         }
 
         aicpusd_run_info("Aicpu schedule attach and init successfully.");
         // send pid qos to tsd current send default value 0 to tsd
-        AicpuSchedule::SendPidQosMsgToTsd(static_cast<uint32_t>(PRIORITY_LEVEL1), deviceId,
-                                          static_cast<uint32_t>(pid), vfId);
-        
+        AicpuSchedule::SendPidQosMsgToTsd(
+            static_cast<uint32_t>(PRIORITY_LEVEL1), deviceId, static_cast<uint32_t>(pid), vfId);
+
         // reg queue schedule start and stop callback func
         AicpuSchedule::RegQueueScheduleModuleCallBack();
         AicpuSchedule::RegCreateMc2MantenanceThreadCallBack();
@@ -398,7 +399,7 @@ int32_t ComputeProcessMain(int32_t argc, char* argv[])
         // flush cache log to slogd
         DlogFlushAicpu();
         return ret;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         aicpusd_err("Execute main failed, reason=%s", e.what());
         return -1;
     }

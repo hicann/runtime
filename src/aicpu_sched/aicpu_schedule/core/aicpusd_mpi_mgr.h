@@ -26,19 +26,19 @@ public:
 
     virtual ~MpiDvppPulseListener() = default;
 
-    virtual void OnPulse(const MpiDvppTimePoint &nowTimePoint) = 0;
+    virtual void OnPulse(const MpiDvppTimePoint& nowTimePoint) = 0;
 
 private:
-    MpiDvppPulseListener(const MpiDvppPulseListener &) = delete;
-    MpiDvppPulseListener &operator = (const MpiDvppPulseListener &) = delete;
-    MpiDvppPulseListener(MpiDvppPulseListener &&) = delete;
-    MpiDvppPulseListener &operator = (MpiDvppPulseListener &&) = delete;
+    MpiDvppPulseListener(const MpiDvppPulseListener&) = delete;
+    MpiDvppPulseListener& operator=(const MpiDvppPulseListener&) = delete;
+    MpiDvppPulseListener(MpiDvppPulseListener&&) = delete;
+    MpiDvppPulseListener& operator=(MpiDvppPulseListener&&) = delete;
 };
 
 class MpiDvppStatisticManager : public MpiDvppPulseListener {
 public:
     using MpiDvppTimePoint = std::chrono::high_resolution_clock::time_point;
-    static MpiDvppStatisticManager &Instance();
+    static MpiDvppStatisticManager& Instance();
 
     ~MpiDvppStatisticManager() override;
 
@@ -47,7 +47,7 @@ public:
      * @brief it is used to print statistics at regular intervals
      * @param [in] MpiDvppTimePoint: current time
      */
-    void OnPulse(const MpiDvppTimePoint &nowTimePoint) override;
+    void OnPulse(const MpiDvppTimePoint& nowTimePoint) override;
 
     /**
      * @ingroup mpi
@@ -94,9 +94,9 @@ public:
     static void MpiDvppPulseNotify();
 
 private:
-    static MpiDvppPulseListener *pulseListener_;
+    static MpiDvppPulseListener* pulseListener_;
 };
 } // namespace mpi
-}
+} // namespace AicpuSchedule
 
 #endif // CORE_AICPUSD_MPI_MGR_H

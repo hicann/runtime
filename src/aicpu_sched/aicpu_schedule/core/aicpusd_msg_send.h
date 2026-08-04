@@ -27,7 +27,7 @@ public:
      * @param [in] devId : device id
      * @param [in] event : submit event
      */
-    static void SetSchedSubmitEvent(const uint32_t devId, const event_summary &event);
+    static void SetSchedSubmitEvent(const uint32_t devId, const event_summary& event);
 
     /**
      * @ingroup AicpuMsgSend
@@ -37,8 +37,8 @@ public:
      * @param [in] aicpuSqe : send event
      * @param [in] handleId : handle id
      */
-    static void SetTsDevSendMsgAsync(const uint32_t devId, const uint32_t tsId, const TsAicpuSqe &aicpuSqe,
-        const uint32_t handleId);
+    static void SetTsDevSendMsgAsync(
+        const uint32_t devId, const uint32_t tsId, const TsAicpuSqe& aicpuSqe, const uint32_t handleId);
 
     /**
      * @ingroup AicpuMsgSend
@@ -48,8 +48,8 @@ public:
      * @param [in] aicpuSqe : send event
      * @param [in] handleId : handle id
      */
-    static void SetTsDevSendMsgAsync(const uint32_t devId, const uint32_t tsId, const TsAicpuMsgInfo &msgInfo,
-        const uint32_t handleId);
+    static void SetTsDevSendMsgAsync(
+        const uint32_t devId, const uint32_t tsId, const TsAicpuMsgInfo& msgInfo, const uint32_t handleId);
 
     /**
      * @ingroup AicpuMsgSend
@@ -58,19 +58,17 @@ public:
     static void SendEvent();
 
     /**
-    * @ingroup AicpuEventProcess
-    * @brief send aicpu sub event.
-    * @param [in] msg: message.
-    * @param [in] msgLen: message length.
-    * @param [in] subEventId: sub event id
-    * @param [in] syncSendFlag: sync sumbit event flag
-    * @return AICPU_SCHEDULE_OK: success, other: error code
-    */
-    static int32_t SendAICPUSubEvent(const char_t * const msg,
-                                     const uint32_t msgLen,
-                                     const uint32_t subEventId,
-                                     const uint32_t grpId,
-                                     const bool syncSendFlag = false);
+     * @ingroup AicpuEventProcess
+     * @brief send aicpu sub event.
+     * @param [in] msg: message.
+     * @param [in] msgLen: message length.
+     * @param [in] subEventId: sub event id
+     * @param [in] syncSendFlag: sync sumbit event flag
+     * @return AICPU_SCHEDULE_OK: success, other: error code
+     */
+    static int32_t SendAICPUSubEvent(
+        const char_t* const msg, const uint32_t msgLen, const uint32_t subEventId, const uint32_t grpId,
+        const bool syncSendFlag = false);
 
     /**
      * @ingroup AicpuMsgSend
@@ -78,7 +76,7 @@ public:
      * @param notifyParam
      * @param paramLen
      */
-    static void SendAicpuRecordMsg(const void *const notifyParam, const uint32_t paramLen);
+    static void SendAicpuRecordMsg(const void* const notifyParam, const uint32_t paramLen);
 
     /**
      * @ingroup AicpuMsgSend
@@ -86,13 +84,13 @@ public:
      * @param notifyParam
      * @param paramLen
      */
-    static void AicpuReportNotifyInfo(const aicpu::AsyncNotifyInfo &notifyInfo);
+    static void AicpuReportNotifyInfo(const aicpu::AsyncNotifyInfo& notifyInfo);
 
 private:
     AicpuMsgSend() = default;
     ~AicpuMsgSend() = default;
-    AicpuMsgSend(const AicpuMsgSend &) = delete;
-    AicpuMsgSend &operator = (const AicpuMsgSend &) = delete;
+    AicpuMsgSend(const AicpuMsgSend&) = delete;
+    AicpuMsgSend& operator=(const AicpuMsgSend&) = delete;
 
     /**
      * @ingroup AicpuMsgSend
@@ -100,6 +98,6 @@ private:
      */
     static void CheckAndSendEvent();
 };
-}
+} // namespace AicpuSchedule
 
 #endif // CORE_AICPUSD_MSG_SEND_H

@@ -13,48 +13,47 @@
 
 #include "hwts_kernel.h"
 
-
 namespace AicpuSchedule {
 class ConfigExtInfoTsKernel : public HwTsKernelHandler {
 public:
     ConfigExtInfoTsKernel() = default;
     ~ConfigExtInfoTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ModelConfigTsKernel : public HwTsKernelHandler {
 public:
     ModelConfigTsKernel() = default;
     ~ModelConfigTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ShapeConfigTsKernel : public HwTsKernelHandler {
 public:
     ShapeConfigTsKernel() = default;
     ~ShapeConfigTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class EschedPriorityTsKernel : public HwTsKernelHandler {
 public:
     EschedPriorityTsKernel() = default;
     ~EschedPriorityTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class CheckSupportedTsKernel : public HwTsKernelHandler {
 public:
     CheckSupportedTsKernel() = default;
     ~CheckSupportedTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class ProcessDataExceptionTsKernel : public HwTsKernelHandler {
 public:
     ProcessDataExceptionTsKernel() = default;
     ~ProcessDataExceptionTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_MODEL_PROCESS_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_MODEL_PROCESS_H

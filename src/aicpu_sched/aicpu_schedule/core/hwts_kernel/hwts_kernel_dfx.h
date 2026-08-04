@@ -13,20 +13,19 @@
 
 #include "hwts_kernel.h"
 
-
 namespace AicpuSchedule {
 class CfgLogAddrTsKernel : public HwTsKernelHandler {
 public:
     CfgLogAddrTsKernel() = default;
     ~CfgLogAddrTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
 
 class DumpDataInfoTsKernel : public HwTsKernelHandler {
 public:
     DumpDataInfoTsKernel() = default;
     ~DumpDataInfoTsKernel() override = default;
-    int32_t Compute(const aicpu::HwtsTsKernel &tsKernelInfo) override;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
-}  // namespace AicpuSchedule
-#endif  // HWTS_KERNEL_DFX_H
+} // namespace AicpuSchedule
+#endif // HWTS_KERNEL_DFX_H

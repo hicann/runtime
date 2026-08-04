@@ -25,9 +25,7 @@ namespace AicpuSchedule {
 constexpr int32_t MAX_ENV_CHAR_NUM = 1024;
 const std::string ENV_NAME_PROCMGR_AICPU_CPUSET = "PROCMGR_AICPU_CPUSET";
 
-inline uint64_t TickInterval2Microsecond(const uint64_t tickStart,
-                                         const uint64_t tickEnd,
-                                         const uint64_t tickFreq)
+inline uint64_t TickInterval2Microsecond(const uint64_t tickStart, const uint64_t tickEnd, const uint64_t tickFreq)
 {
     if ((tickFreq == 0UL) || (tickEnd <= tickStart)) {
         return 0UL;
@@ -38,7 +36,7 @@ inline uint64_t TickInterval2Microsecond(const uint64_t tickStart,
 
 class AicpuUtil {
 public:
-    static int32_t ExecuteCmd(const std::string &cmd)
+    static int32_t ExecuteCmd(const std::string& cmd)
     {
         /**
          * system() may fail due to  "No child processes".
@@ -70,11 +68,9 @@ public:
         (void)signal(SIGCHLD, oldHandler);
         return status;
     }
-    static void SetProfData(const std::shared_ptr<aicpu::ProfMessage> profMsg,
-                            const aicpu::aicpuProfContext_t &aicpuProfCtx,
-                            const uint32_t threadIndex,
-                            const uint64_t streamId,
-                            const uint64_t taskId)
+    static void SetProfData(
+        const std::shared_ptr<aicpu::ProfMessage> profMsg, const aicpu::aicpuProfContext_t& aicpuProfCtx,
+        const uint32_t threadIndex, const uint64_t streamId, const uint64_t taskId)
     {
         if (profMsg == nullptr) {
             return;
@@ -82,12 +78,9 @@ public:
 
         const uint64_t tickAfterRun = aicpu::GetSystemTick();
         const uint64_t tickFreq = aicpu::GetSystemTickFreq();
-        const uint64_t dispatchTime = TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick,
-                                                               aicpuProfCtx.tickBeforeRun,
-                                                               tickFreq);
-        const uint64_t totalTime = TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick,
-                                                            tickAfterRun,
-                                                            tickFreq);
+        const uint64_t dispatchTime =
+            TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick, aicpuProfCtx.tickBeforeRun, tickFreq);
+        const uint64_t totalTime = TickInterval2Microsecond(aicpuProfCtx.drvSubmitTick, tickAfterRun, tickFreq);
 
         (void)profMsg->SetAicpuMagicNumber(static_cast<uint16_t>(MSPROF_DATA_HEAD_MAGIC_NUM))
             ->SetAicpuDataTag(static_cast<uint16_t>(MSPROF_AICPU_DATA_TAG))
@@ -115,7 +108,8 @@ public:
     static int32_t TransformInnerErrCode(const int32_t errCode)
     {
         return ((errCode > AICPU_SCHEDULE_ERROR_RESERVED) || (errCode < AICPU_SCHEDULE_OK)) ?
-            AICPU_SCHEDULE_ERROR_INNER_ERROR : errCode;
+                   AICPU_SCHEDULE_ERROR_INNER_ERROR :
+                   errCode;
     }
 
     /**
@@ -124,16 +118,11 @@ public:
      * @param [out] result : exception type.
      * @return has any exception, true if has
      */
-    static bool CheckOverflow(int32_t &result)
+    static bool CheckOverflow(int32_t& result)
     {
 #if (defined __ARM_ARCH) || (defined PLATFORM_AARCH64)
         int64_t regContent;
-        __asm volatile(
-          "MRS %0, FPSR"
-          : "=r" (regContent)
-          :
-          : "memory"
-        );
+        __asm volatile("MRS %0, FPSR" : "=r"(regContent) : : "memory");
         aicpusd_info("Custom Scheduler Read FPSR:[%d].", regContent);
         if ((regContent & (1 << 3)) != 0) { // UFC(3)
             result = AICPU_SCHEDULE_ERROR_UNDERFLOW;
@@ -157,14 +146,13 @@ public:
     {
 #if (defined __ARM_ARCH) || (defined PLATFORM_AARCH64)
         aicpusd_info("Custom Scheduler Reset FPSR.");
-        __asm volatile(
-              "BIC x0, x0, #0xffffffff \n\t"
-              "MSR FPSR, x0":::"x0"
-        );
+        __asm volatile("BIC x0, x0, #0xffffffff \n\t"
+                       "MSR FPSR, x0" ::
+                           : "x0");
 #endif
     }
 
-    static bool TransStrToUint(const std::string &para, uint32_t &value)
+    static bool TransStrToUint(const std::string& para, uint32_t& value)
     {
         try {
             value = std::stoul(para);
@@ -175,7 +163,7 @@ public:
         return true;
     }
 
-    static bool TransStrToInt(const std::string &para, int32_t &value)
+    static bool TransStrToInt(const std::string& para, int32_t& value)
     {
         try {
             value = std::stoi(para);
@@ -186,13 +174,13 @@ public:
         return true;
     }
 
-    static bool GetEnvVal(const std::string &env, std::string &val)
+    static bool GetEnvVal(const std::string& env, std::string& val)
     {
         if (env.empty()) {
             return false;
         }
 
-        const char *const tmpVal = std::getenv(env.c_str());
+        const char* const tmpVal = std::getenv(env.c_str());
         if ((tmpVal == nullptr) || (strnlen(tmpVal, MAX_ENV_CHAR_NUM) >= MAX_ENV_CHAR_NUM)) {
             val = "";
             return false;
@@ -209,7 +197,7 @@ public:
      * @param [in] expectVal : expected env value
      * @return bool: true, if env val is same as expected value; otherwise, false
      */
-    static bool IsEnvValEqual(const std::string &env, const std::string &expectVal)
+    static bool IsEnvValEqual(const std::string& env, const std::string& expectVal)
     {
         std::string getedEnvVal;
         const bool ret = GetEnvVal(env, getedEnvVal);
@@ -220,7 +208,7 @@ public:
         return (getedEnvVal == expectVal) ? true : false;
     }
 
-    static void GetProfilingInfo(uint32_t flag, ProfilingMode &profilingMode, bool &kernelFlag)
+    static void GetProfilingInfo(uint32_t flag, ProfilingMode& profilingMode, bool& kernelFlag)
     {
         // set or unset mode
         const bool isStart = (flag & (1U << aicpu::PROFILING_FEATURE_SWITCH)) > 0U;
@@ -250,21 +238,16 @@ private:
  * @return The pointer after move offset
  */
 template <typename T, typename = typename std::enable_if<sizeof(T) == 1UL, void>::type>
-inline T *MovePtrByOffset(const T * const ptr, const uint64_t offset)
+inline T* MovePtrByOffset(const T* const ptr, const uint64_t offset)
 {
-    return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(ptr) + offset);
+    return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 }
 
 class ScopeGuard {
 public:
-    explicit ScopeGuard(const std::function<void()> exitScope)
-        : exitScope_(exitScope)
-    {}
+    explicit ScopeGuard(const std::function<void()> exitScope) : exitScope_(exitScope) {}
 
-    ~ScopeGuard()
-    {
-        exitScope_();
-    }
+    ~ScopeGuard() { exitScope_(); }
 
 private:
     ScopeGuard(ScopeGuard const&) = delete;
@@ -275,6 +258,6 @@ private:
 private:
     std::function<void()> exitScope_;
 };
-} // namespace aicpu
+} // namespace AicpuSchedule
 
 #endif // COMMON_AICPUSD_UTIL_H

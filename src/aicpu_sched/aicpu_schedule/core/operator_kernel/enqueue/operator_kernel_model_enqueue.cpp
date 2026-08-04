@@ -13,18 +13,18 @@
 #include "aicpusd_status.h"
 #include "aicpusd_profiler.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_ENQUEUE = "modelEnqueue";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelEnqueue::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelEnqueue::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     auto bufInfo = PtrToPtr<void, BufEnQueueInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (bufInfo == nullptr) {
-        aicpusd_err("ModelEnqueue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelEnqueue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     g_aicpuProfiler.SetEndGraph();
@@ -35,6 +35,5 @@ int32_t OperatorKernelModelEnqueue::Compute(const AicpuTaskInfo &kernelTaskInfo,
     return static_cast<uint32_t>(ret);
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_ENQUEUE, OperatorKernelModelEnqueue);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

@@ -21,12 +21,11 @@ namespace {
 const std::string MSQ_OPERATOR_SO_NAME = "libaicpu_msq_operator.so";
 
 template <typename FuncType>
-bool LoadSymbol(void *handle, const char *name, FuncType &func)
+bool LoadSymbol(void* handle, const char* name, FuncType& func)
 {
-    void *symbol = dlsym(handle, name);
+    void* symbol = dlsym(handle, name);
     if ((symbol == nullptr)) {
-        aicpusd_err("Load symbol failed, so=%s, symbol=%s",
-                    MSQ_OPERATOR_SO_NAME.c_str(), name);
+        aicpusd_err("Load symbol failed, so=%s, symbol=%s", MSQ_OPERATOR_SO_NAME.c_str(), name);
         func = nullptr;
         return false;
     }
@@ -34,9 +33,9 @@ bool LoadSymbol(void *handle, const char *name, FuncType &func)
     func = reinterpret_cast<FuncType>(symbol);
     return true;
 }
-}  // namespace
+} // namespace
 
-void *MsqOperatorManager::handle_ = nullptr;
+void* MsqOperatorManager::handle_ = nullptr;
 bool MsqOperatorManager::inited_ = false;
 std::mutex MsqOperatorManager::mutex_;
 MsqOperatorManager::MsqResetFunc MsqOperatorManager::v1ResetT0Status_ = nullptr;
@@ -105,24 +104,24 @@ void MsqOperatorManager::Finalize()
 
 bool MsqOperatorManager::LoadAllSymbols()
 {
-    const std::map<std::string, RawFuncPtr *> symbolTable = {
-        {"MsqV1ResetT0Status", reinterpret_cast<RawFuncPtr *>(&v1ResetT0Status_)},
-        {"MsqV1ResetT1Status", reinterpret_cast<RawFuncPtr *>(&v1ResetT1Status_)},
-        {"MsqV1ReadT0Status", reinterpret_cast<RawFuncPtr *>(&v1ReadT0Status_)},
-        {"MsqV1ReadT1Status", reinterpret_cast<RawFuncPtr *>(&v1ReadT1Status_)},
-        {"MsqV1ReadT0Data", reinterpret_cast<RawFuncPtr *>(&v1ReadT0Data_)},
-        {"MsqV1ReadT1Data", reinterpret_cast<RawFuncPtr *>(&v1ReadT1Data_)},
-        {"MsqV1SendT0Response", reinterpret_cast<RawFuncPtr *>(&v1SendT0Response_)},
-        {"MsqV1SendT1Response", reinterpret_cast<RawFuncPtr *>(&v1SendT1Response_)},
-        {"MsqV2ResetT0Status", reinterpret_cast<RawFuncPtr *>(&v2ResetT0Status_)},
-        {"MsqV2ResetT1Status", reinterpret_cast<RawFuncPtr *>(&v2ResetT1Status_)},
-        {"MsqV2ReadT1Status", reinterpret_cast<RawFuncPtr *>(&v2ReadT1Status_)},
-        {"MsqV2ReadT1Data", reinterpret_cast<RawFuncPtr *>(&v2ReadT1Data_)},
-        {"MsqV2SendT1Response", reinterpret_cast<RawFuncPtr *>(&v2SendT1Response_)},
-        {"Wait", reinterpret_cast<RawFuncPtr *>(&waitFunc_)},
+    const std::map<std::string, RawFuncPtr*> symbolTable = {
+        {"MsqV1ResetT0Status", reinterpret_cast<RawFuncPtr*>(&v1ResetT0Status_)},
+        {"MsqV1ResetT1Status", reinterpret_cast<RawFuncPtr*>(&v1ResetT1Status_)},
+        {"MsqV1ReadT0Status", reinterpret_cast<RawFuncPtr*>(&v1ReadT0Status_)},
+        {"MsqV1ReadT1Status", reinterpret_cast<RawFuncPtr*>(&v1ReadT1Status_)},
+        {"MsqV1ReadT0Data", reinterpret_cast<RawFuncPtr*>(&v1ReadT0Data_)},
+        {"MsqV1ReadT1Data", reinterpret_cast<RawFuncPtr*>(&v1ReadT1Data_)},
+        {"MsqV1SendT0Response", reinterpret_cast<RawFuncPtr*>(&v1SendT0Response_)},
+        {"MsqV1SendT1Response", reinterpret_cast<RawFuncPtr*>(&v1SendT1Response_)},
+        {"MsqV2ResetT0Status", reinterpret_cast<RawFuncPtr*>(&v2ResetT0Status_)},
+        {"MsqV2ResetT1Status", reinterpret_cast<RawFuncPtr*>(&v2ResetT1Status_)},
+        {"MsqV2ReadT1Status", reinterpret_cast<RawFuncPtr*>(&v2ReadT1Status_)},
+        {"MsqV2ReadT1Data", reinterpret_cast<RawFuncPtr*>(&v2ReadT1Data_)},
+        {"MsqV2SendT1Response", reinterpret_cast<RawFuncPtr*>(&v2SendT1Response_)},
+        {"Wait", reinterpret_cast<RawFuncPtr*>(&waitFunc_)},
     };
 
-    for (const auto &symbol : symbolTable) {
+    for (const auto& symbol : symbolTable) {
         if (!LoadSymbol(handle_, symbol.first.c_str(), *symbol.second)) {
             return false;
         }
@@ -131,74 +130,35 @@ bool MsqOperatorManager::LoadAllSymbols()
     return true;
 }
 
-void MsqOperatorManager::CallV1ResetT0Status()
-{
-    v1ResetT0Status_();
-}
+void MsqOperatorManager::CallV1ResetT0Status() { v1ResetT0Status_(); }
 
-void MsqOperatorManager::CallV1ResetT1Status()
-{
-    v1ResetT1Status_();
-}
+void MsqOperatorManager::CallV1ResetT1Status() { v1ResetT1Status_(); }
 
-MsqStatus MsqOperatorManager::CallV1ReadT0Status()
-{
-    return v1ReadT0Status_();
-}
+MsqStatus MsqOperatorManager::CallV1ReadT0Status() { return v1ReadT0Status_(); }
 
-MsqStatus MsqOperatorManager::CallV1ReadT1Status()
-{
-    return v1ReadT1Status_();
-}
+MsqStatus MsqOperatorManager::CallV1ReadT1Status() { return v1ReadT1Status_(); }
 
-void MsqOperatorManager::CallV1ReadT0Data(uint32_t msgSize, MsqDatas *datas)
-{
-    v1ReadT0Data_(msgSize, datas);
-}
+void MsqOperatorManager::CallV1ReadT0Data(uint32_t msgSize, MsqDatas* datas) { v1ReadT0Data_(msgSize, datas); }
 
-void MsqOperatorManager::CallV1ReadT1Data(uint32_t msgSize, MsqDatas *datas)
-{
-    v1ReadT1Data_(msgSize, datas);
-}
+void MsqOperatorManager::CallV1ReadT1Data(uint32_t msgSize, MsqDatas* datas) { v1ReadT1Data_(msgSize, datas); }
 
-void MsqOperatorManager::CallV1SendT0Response()
-{
-    v1SendT0Response_();
-}
+void MsqOperatorManager::CallV1SendT0Response() { v1SendT0Response_(); }
 
-void MsqOperatorManager::CallV1SendT1Response()
-{
-    v1SendT1Response_();
-}
+void MsqOperatorManager::CallV1SendT1Response() { v1SendT1Response_(); }
 
-void MsqOperatorManager::CallV2ResetT0Status()
-{
-    v2ResetT0Status_();
-}
+void MsqOperatorManager::CallV2ResetT0Status() { v2ResetT0Status_(); }
 
-void MsqOperatorManager::CallV2ResetT1Status()
-{
-    v2ResetT1Status_();
-}
+void MsqOperatorManager::CallV2ResetT1Status() { v2ResetT1Status_(); }
 
-MsqStatus MsqOperatorManager::CallV2ReadT1Status()
-{
-    return v2ReadT1Status_();
-}
+MsqStatus MsqOperatorManager::CallV2ReadT1Status() { return v2ReadT1Status_(); }
 
-void MsqOperatorManager::CallV2ReadT1Data(uint32_t msgSize, MsqDatas *datas)
-{
-    v2ReadT1Data_(msgSize, datas);
-}
+void MsqOperatorManager::CallV2ReadT1Data(uint32_t msgSize, MsqDatas* datas) { v2ReadT1Data_(msgSize, datas); }
 
-void MsqOperatorManager::CallV2SendT1Response()
-{
-    v2SendT1Response_();
-}
+void MsqOperatorManager::CallV2SendT1Response() { v2SendT1Response_(); }
 
 void MsqOperatorManager::CallWait()
 {
     waitFunc_();
     return;
 }
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

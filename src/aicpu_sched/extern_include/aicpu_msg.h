@@ -19,28 +19,28 @@ extern "C" {
 
 /* ================================== for obp ============================ */
 enum tag_ts_aicpu_mail_box_cmd_type {
-    AICPU_MSG_VERSION = 0,        /* 0 aicpu msg version */
-    AICPU_MODEL_OPERATE,          /* 1 aicpu model operate */
-    AICPU_MODEL_OPERATE_RESPONSE, /* 2 aicpu model operate response */
-    AIC_TASK_REPORT,              /* 3 aic task report */
-    AICPU_ACTIVE_STREAM,          /* 4 aicpu active stream */
-    AICPU_NOTIFY_RECORD,          /* 5 aicpu notify */
-    AICPU_DATADUMP_REPORT,        /* 6 data dump report */
-    AICPU_DATADUMP_LOADINFO,      /* 7 data dump load info */
-    AICPU_DATADUMP_RESPONSE,      /* 8 data dump response */
-    AICPU_ABNORMAL,               /* 9 aicpu abnormal report */
-    AICPU_TASK_ACTIVE_FOR_WAIT,   /* 10 aicpu dvpp task active */
-    AICPU_NOTICE_TS_PID,          /* 11 aicpu pid */
-    AICPU_RECORD,                 /* 12 aicpu record: 1-event_record; 2-notify_record */
-    AICPU_TIMEOUT_CONFIG,         /* 13 aicpu timeout config */
-    AICPU_TIMEOUT_CONFIG_RESPONSE, /* 14 aicpu timeout response */
-    CALLBACK_RECORD,              /* 15 synchronized callback record from runtime, not for aicpu */
-    AICPU_ERR_MSG_REPORT,         /* 16 aicpu err msg report */
+    AICPU_MSG_VERSION = 0,           /* 0 aicpu msg version */
+    AICPU_MODEL_OPERATE,             /* 1 aicpu model operate */
+    AICPU_MODEL_OPERATE_RESPONSE,    /* 2 aicpu model operate response */
+    AIC_TASK_REPORT,                 /* 3 aic task report */
+    AICPU_ACTIVE_STREAM,             /* 4 aicpu active stream */
+    AICPU_NOTIFY_RECORD,             /* 5 aicpu notify */
+    AICPU_DATADUMP_REPORT,           /* 6 data dump report */
+    AICPU_DATADUMP_LOADINFO,         /* 7 data dump load info */
+    AICPU_DATADUMP_RESPONSE,         /* 8 data dump response */
+    AICPU_ABNORMAL,                  /* 9 aicpu abnormal report */
+    AICPU_TASK_ACTIVE_FOR_WAIT,      /* 10 aicpu dvpp task active */
+    AICPU_NOTICE_TS_PID,             /* 11 aicpu pid */
+    AICPU_RECORD,                    /* 12 aicpu record: 1-event_record; 2-notify_record */
+    AICPU_TIMEOUT_CONFIG,            /* 13 aicpu timeout config */
+    AICPU_TIMEOUT_CONFIG_RESPONSE,   /* 14 aicpu timeout response */
+    CALLBACK_RECORD,                 /* 15 synchronized callback record from runtime, not for aicpu */
+    AICPU_ERR_MSG_REPORT,            /* 16 aicpu err msg report */
     AICPU_FFTS_PLUS_DATADUMP_REPORT, /* 17 ffts plus data dump report */
     AICPU_INFO_LOAD,                 /* 18 aicpu info load for tiling key sink */
     AICPU_INFO_LOAD_RESPONSE,        /* 19 aicpu info load  response */
-    AIC_ERROR_REPORT,             /* 20 aic task err report */
-    INVALID_AICPU_CMD,            /* invalid flag */
+    AIC_ERROR_REPORT,                /* 20 aic task err report */
+    INVALID_AICPU_CMD,               /* invalid flag */
 };
 
 typedef struct tag_ts_aicpu_msg_version {
@@ -88,37 +88,37 @@ typedef struct tag_ts_to_aicpu_aic_err_report {
 
 typedef struct tag_ts_aicpu_notify {
     volatile uint32_t notify_id;
-    volatile uint16_t ret_code;  // using ts_error_t
+    volatile uint16_t ret_code; // using ts_error_t
 } ts_aicpu_notify_t;
 
 typedef struct tag_ts_aicpu_event {
     volatile uint32_t record_id;
     volatile uint8_t record_type;
     volatile uint8_t reserved;
-    volatile uint16_t ret_code;  // using ts_error_t
-    volatile uint16_t fault_task_id;    // using report error of operator
-    volatile uint16_t fault_stream_id;  // using report error of operator
+    volatile uint16_t ret_code;        // using ts_error_t
+    volatile uint16_t fault_task_id;   // using report error of operator
+    volatile uint16_t fault_stream_id; // using report error of operator
 } ts_aicpu_record_t;
 
 typedef struct tag_ts_to_aicpu_datadump {
     volatile uint16_t model_id;
-    volatile uint16_t stream_id;      // first dump task info
-    volatile uint16_t task_id;        // first dump task info
-    volatile uint16_t stream_id1;     // second dump task info
-    volatile uint16_t task_id1;       // second dump task info
-    volatile uint16_t ack_stream_id;  // record overflow dump aic task info
-    volatile uint16_t ack_task_id;    // record overflow dump aic task info
+    volatile uint16_t stream_id;     // first dump task info
+    volatile uint16_t task_id;       // first dump task info
+    volatile uint16_t stream_id1;    // second dump task info
+    volatile uint16_t task_id1;      // second dump task info
+    volatile uint16_t ack_stream_id; // record overflow dump aic task info
+    volatile uint16_t ack_task_id;   // record overflow dump aic task info
     volatile uint8_t reserved[2];
 } ts_to_aicpu_datadump_t;
 
 typedef struct tag_ts_to_aicpu_ffts_plus_datadump {
-    volatile uint16_t model_id;       // model id
-    volatile uint16_t stream_id;      // first dump task info
-    volatile uint16_t task_id;        // first dump task info
-    volatile uint16_t stream_id1;     // second dump task info
-    volatile uint16_t task_id1;       // second dump task info
-    volatile uint16_t context_id;     // context id
-    volatile uint16_t thread_id;      // current thread ID
+    volatile uint16_t model_id;   // model id
+    volatile uint16_t stream_id;  // first dump task info
+    volatile uint16_t task_id;    // first dump task info
+    volatile uint16_t stream_id1; // second dump task info
+    volatile uint16_t task_id1;   // second dump task info
+    volatile uint16_t context_id; // context id
+    volatile uint16_t thread_id;  // current thread ID
     volatile uint8_t reserved[2];
 #if (defined(DAVINCI_CLOUD_V2) || defined(DAVINCI_CLOUD_V2_FFTS))
     volatile uint32_t pid;
@@ -231,18 +231,18 @@ typedef struct tag_ts_aicpu_sqe {
 /*============================== for david =======================================*/
 
 enum tag_ts_to_aicpu_msg_cmd_type {
-    TS_AICPU_MSG_VERSION            = 0,         /* 0 aicpu msg version */
-    TS_AICPU_MODEL_OPERATE          = 1,         /* 1 model operate */
-    TS_AICPU_TASK_REPORT            = 2,         /* 2 aic task report */
-    TS_AICPU_ACTIVE_STREAM          = 3,         /* 3 aicpu active stream */
-    TS_AICPU_RECORD                 = 4,         /* 4 aicpu notify */
-    TS_AICPU_NORMAL_DATADUMP_REPORT = 5,         /* 5 normal data dump report */
-    TS_AICPU_DEBUG_DATADUMP_REPORT  = 6,         /* 6 debug datadump report */
-    TS_AICPU_DATADUMP_INFO_LOAD     = 7,         /* 7 datadump info load */
-    TS_AICPU_TIMEOUT_CONFIG         = 8,         /* 8 aicpu timeout config */
-    TS_AICPU_INFO_LOAD              = 9,         /* 9 aicpu info load for tiling key sink */
-    TS_AIC_ERROR_REPORT            = 10,        /* 10 aic task err report */
-    TS_INVALID_AICPU_CMD                         /* invalid flag */
+    TS_AICPU_MSG_VERSION = 0,            /* 0 aicpu msg version */
+    TS_AICPU_MODEL_OPERATE = 1,          /* 1 model operate */
+    TS_AICPU_TASK_REPORT = 2,            /* 2 aic task report */
+    TS_AICPU_ACTIVE_STREAM = 3,          /* 3 aicpu active stream */
+    TS_AICPU_RECORD = 4,                 /* 4 aicpu notify */
+    TS_AICPU_NORMAL_DATADUMP_REPORT = 5, /* 5 normal data dump report */
+    TS_AICPU_DEBUG_DATADUMP_REPORT = 6,  /* 6 debug datadump report */
+    TS_AICPU_DATADUMP_INFO_LOAD = 7,     /* 7 datadump info load */
+    TS_AICPU_TIMEOUT_CONFIG = 8,         /* 8 aicpu timeout config */
+    TS_AICPU_INFO_LOAD = 9,              /* 9 aicpu info load for tiling key sink */
+    TS_AIC_ERROR_REPORT = 10,            /* 10 aic task err report */
+    TS_INVALID_AICPU_CMD                 /* invalid flag */
 };
 
 typedef struct tag_ts_aicpu_model_operate_msg {
@@ -265,8 +265,8 @@ typedef struct tag_ts_aicpu_record_msg {
     uint32_t record_id;
     uint8_t record_type;
     uint8_t reserved;
-    uint16_t ret_code;  // using ts_error_t
-    uint32_t fault_task_id;    // using report error of operator
+    uint16_t ret_code;      // using ts_error_t
+    uint32_t fault_task_id; // using report error of operator
 } ts_aicpu_record_msg_t;
 
 typedef struct tag_ts_to_aicpu_normal_datadump_msg {
@@ -306,7 +306,7 @@ typedef struct tag_ts_aicpu_response_msg {
     uint32_t task_id;
     uint16_t stream_id;
     uint16_t result_code;
-    uint8_t reserved;     /* for normal/debug dump, and info load */
+    uint8_t reserved; /* for normal/debug dump, and info load */
     uint8_t rsv[3];
 } ts_aicpu_response_msg_t;
 

@@ -30,32 +30,20 @@ std::atomic<bool> g_modelProfFlag(false);
 std::atomic<bool> g_profAdditionalFlag(false);
 
 #ifdef RUN_ON_AICPU
-inline void AsmCntvc(uint64_t &cntvct)
-{
-    asm volatile("mrs %0, cntvct_el0" : "=r" (cntvct));
-}
+inline void AsmCntvc(uint64_t& cntvct) { asm volatile("mrs %0, cntvct_el0" : "=r"(cntvct)); }
 
-inline void AsmCntfrq(uint64_t &cntfrq)
-{
-    asm volatile("mrs %0, cntfrq_el0" : "=r" (cntfrq));
-}
+inline void AsmCntfrq(uint64_t& cntfrq) { asm volatile("mrs %0, cntfrq_el0" : "=r"(cntfrq)); }
 #endif
-}
+} // namespace
 constexpr int32_t MAX_INNER_SEND_DATA_LEN = 1024;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool IsProfOpen()
-{
-    return g_profFlag;
-}
+bool IsProfOpen() { return g_profFlag; }
 
-bool IsModelProfOpen()
-{
-    return g_modelProfFlag;
-}
+bool IsModelProfOpen() { return g_modelProfFlag; }
 
 /*****************************************************************************
 Description   : it is used to get current micros
@@ -70,12 +58,13 @@ uint64_t NowMicros()
     uint64_t cntfrq;
     AsmCntvc(cntvct);
     AsmCntfrq(cntfrq);
-    return static_cast<uint64_t>(cntvct * 1000000ULL / cntfrq); //lint !e573
+    return static_cast<uint64_t>(cntvct * 1000000ULL / cntfrq); // lint !e573
 #else
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     return (static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + // Seconds to nanos
-        static_cast<uint64_t>(ts.tv_nsec)) / 1000ULL; // Nanos to micros
+            static_cast<uint64_t>(ts.tv_nsec)) /
+           1000ULL;                                            // Nanos to micros
 #endif
 }
 
@@ -123,7 +112,7 @@ Input         : uint64_t &micros : now micros
 Output        : NA
 Return Value  : void
 *****************************************************************************/
-void GetMicrosAndSysTick(uint64_t &micros, uint64_t &tick)
+void GetMicrosAndSysTick(uint64_t& micros, uint64_t& tick)
 {
 #ifdef RUN_ON_AICPU
     uint64_t cntvct;
@@ -136,7 +125,8 @@ void GetMicrosAndSysTick(uint64_t &micros, uint64_t &tick)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     micros = (static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + // Seconds to nanos
-        static_cast<uint64_t>(ts.tv_nsec)) / 1000ULL; // Nanos to micros
+              static_cast<uint64_t>(ts.tv_nsec)) /
+             1000ULL;                                            // Nanos to micros
     // tick is not supported when not running on aicpu
     tick = 0;
 #endif
@@ -155,8 +145,8 @@ void InitProfiling(const uint32_t deviceId, const pid_t hostPid, const uint32_t 
 {
     AICPU_LOG_INFO("Start initializing profiling.");
     const int32_t ret = ProfilingAdp::GetInstance().InitAicpuProfiling(deviceId, hostPid, channelId);
-    AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS),
-                   "Failed to init profiling(%d).", ret);
+    AICPU_LOG_WHEN(
+        ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed to init profiling(%d).", ret);
 }
 
 /*****************************************************************************
@@ -176,8 +166,8 @@ void SetProfilingFlagForKFC(const uint32_t flag)
 {
     ProfilingAdp::GetInstance().SetAicpuProfilingFlagForKFC(flag);
     const int32_t retInit = ProfilingAdp::GetInstance().ProfilingModeOpenProcess();
-    AICPU_LOG_WHEN(retInit != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS),
-        "Failed init profiling(%d).", retInit);
+    AICPU_LOG_WHEN(
+        retInit != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed init profiling(%d).", retInit);
 }
 void LoadProfilingLib()
 {
@@ -190,10 +180,7 @@ Input         : NA
 Output        : NA
 Return Value  : bool weather profiling has been initialized
 *****************************************************************************/
-bool IsProfilingValid()
-{
-    return ProfilingAdp::GetInstance().GetReportValid();
-}
+bool IsProfilingValid() { return ProfilingAdp::GetInstance().GetReportValid(); }
 
 /*****************************************************************************
 Description   : it is used to send data to profiling for ProfData
@@ -203,16 +190,17 @@ Output        : NA
 Return Value  : NA
 *****************************************************************************/
 namespace {
-void SendToProfilingForSimplify(const char_t * const sendData, const std::string &mark)
+void SendToProfilingForSimplify(const char_t* const sendData, const std::string& mark)
 {
     if (g_profFlag) {
         const int32_t ret = ProfilingAdp::GetInstance().Send(sendData, mark);
-        AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS),
-            "Failed send profiling data, ret[%d].", ret);
+        AICPU_LOG_WHEN(
+            ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed send profiling data, ret[%d].",
+            ret);
         AICPU_LOG_INFO("End of report profiling data");
     }
 }
-}
+} // namespace
 
 /*****************************************************************************
 Description   : it is used to provide interface to DP module which can send data to profiling
@@ -221,14 +209,14 @@ Input         : std::const string& sendData : the data which it is need send to 
 Output        : NA
 Return Value  : NA
 *****************************************************************************/
-void SendToProfiling(const std::string &sendData, const std::string &mark)
+void SendToProfiling(const std::string& sendData, const std::string& mark)
 {
     SendToProfilingForSimplify(PtrToPtr<const std::string, const char_t>(&sendData), mark);
 }
 
 void UpdateMode(const bool mode)
 {
-    AICPU_LOG_INFO("UpdateMode:profilingMode[%s]", mode ? "OPEN":"CLOSE");
+    AICPU_LOG_INFO("UpdateMode:profilingMode[%s]", mode ? "OPEN" : "CLOSE");
     if (mode) {
         ProfilingAdp::GetInstance().UpdateModeProcess(mode);
     }
@@ -251,8 +239,7 @@ Return Value  : NA
 void ReleaseProfiling()
 {
     int32_t ret = ProfilingAdp::GetInstance().UninitProcess();
-    AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS),
-        "Failed unit profiling(%d).", ret);
+    AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS), "Failed unit profiling(%d).", ret);
 }
 
 int32_t SetProfHandle(const std::shared_ptr<ProfMessage> profMsg)
@@ -268,16 +255,10 @@ int32_t SetMsprofReporterCallback(MsprofReporterCallback reportCallback)
     return static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS);
 }
 
-bool IsSupportedProfData()
-{
-    return true;
-}
+bool IsSupportedProfData() { return true; }
 
 #ifndef __clang__
-std::shared_ptr<ProfMessage> GetProfHandle()
-{
-    return g_prof;
-}
+std::shared_ptr<ProfMessage> GetProfHandle() { return g_prof; }
 #endif
 
 #ifdef __cplusplus
@@ -285,10 +266,7 @@ std::shared_ptr<ProfMessage> GetProfHandle()
 #endif
 
 #ifdef __clang__
-std::shared_ptr<ProfMessage> GetProfHandle()
-{
-    return g_prof;
-}
+std::shared_ptr<ProfMessage> GetProfHandle() { return g_prof; }
 #endif
 
 /*****************************************************************************
@@ -296,7 +274,7 @@ Description   : Construct an simple prof agent.
 Input         : const char_t* tag
 Output        : NA
 *****************************************************************************/
-ProfMessage::ProfMessage(const char_t *tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_()
+ProfMessage::ProfMessage(const char_t* tag) : std::basic_ostringstream<char_t>(), tag_(tag), sendData_()
 {
     const auto ret = memset_s(&sendData_, sizeof(sendData_), 0x00, sizeof(sendData_));
     if (ret != EOK) {
@@ -368,38 +346,38 @@ Output        : NA
 Return Value  : PROFILINE_SUCCESS - send data success
                 others - send data failed
 *****************************************************************************/
-int32_t ProfilingAdp::SendProcess(ReporterData &data)
+int32_t ProfilingAdp::SendProcess(ReporterData& data)
 {
     AICPU_LOG_INFO("Call SendProcess to report message.");
     int32_t ret = static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS);
     if (initFlag_) {
         if (reportCallback_ != nullptr) {
             AICPU_LOG_INFO("Start to report profiling data using report callback.");
-            ret = reportCallback_(MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT,
-                                  &data, static_cast<uint32_t>(sizeof(data)));
-        } else if (isProfApiSo_ == true){
+            ret = reportCallback_(
+                MSPROF_MODULE_DATA_PREPROCESS, MSPROF_REPORTER_REPORT, &data, static_cast<uint32_t>(sizeof(data)));
+        } else if (isProfApiSo_ == true) {
             ;
         } else {
-            AICPU_LOG_INFO("Start to report profiling data using AdprofReportData, tag=%s, len=%zu.",
-                           data.tag, data.dataLen);
+            AICPU_LOG_INFO(
+                "Start to report profiling data using AdprofReportData, tag=%s, len=%zu.", data.tag, data.dataLen);
             ret = AdprofReportDataFunc(&data, static_cast<uint32_t>(sizeof(data)));
         }
     }
     return ret;
 }
 
-int32_t ProfilingAdp::SendAdditionalProcess(MsprofAdditionalInfo &additionalReportData)
+int32_t ProfilingAdp::SendAdditionalProcess(MsprofAdditionalInfo& additionalReportData)
 {
     int32_t ret = static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS);
     if (initFlag_) {
         if (isProfApiSo_ == true) {
             AICPU_LOG_INFO("Call MsprofReportAdditionalInfoFunc to report message.");
-            ret = MsprofReportAdditionalInfoFunc(0U, static_cast<void *>(&additionalReportData),
-                                                sizeof(additionalReportData));
+            ret = MsprofReportAdditionalInfoFunc(
+                0U, static_cast<void*>(&additionalReportData), sizeof(additionalReportData));
         } else {
             AICPU_LOG_INFO("Call AdprofReportAdditionalInfo to report message.");
-            ret = AdprofReportAdditionalInfoFunc(0U, static_cast<void *>(&additionalReportData),
-                                                sizeof(additionalReportData));
+            ret = AdprofReportAdditionalInfoFunc(
+                0U, static_cast<void*>(&additionalReportData), sizeof(additionalReportData));
         }
     }
     return ret;
@@ -465,10 +443,7 @@ void ProfilingAdp::InitAicpuProfilingDataInfo(const uint32_t deviceId, const pid
     channelId_ = channelId;
 }
 
-void ProfilingAdp::SetAicpuProfilingFlagForKFC(const uint32_t flag)
-{
-    profilingFlag_ = flag;
-}
+void ProfilingAdp::SetAicpuProfilingFlagForKFC(const uint32_t flag) { profilingFlag_ = flag; }
 
 int32_t AicpuStartCallback()
 {
@@ -519,14 +494,13 @@ Input         : int32_t sendSize             : the size of data
 Output        : NA
 Return Value  : if it is true,it means success to new memory.
 *****************************************************************************/
-bool ProfilingAdp::NewMemoryToStoreData(int32_t sendSize,
-                                        const std::string &sendData,
-                                        ReporterData &reportData) const //lint !e1072
+bool ProfilingAdp::NewMemoryToStoreData(
+    int32_t sendSize, const std::string& sendData,
+    ReporterData& reportData) const // lint !e1072
 {
     const int32_t newLen = sendSize + 1;
     AICPU_RCHECK(newLen > 0, false, "Malloc size must be greater than zero, length is %d", newLen);
-    uint8_t * const rdata = static_cast<uint8_t *>(
-                                  malloc(sizeof(uint8_t) * static_cast<size_t>(newLen)));
+    uint8_t* const rdata = static_cast<uint8_t*>(malloc(sizeof(uint8_t) * static_cast<size_t>(newLen)));
     AICPU_RCHECK(rdata != nullptr, false, "Memory for new profiling data malloc failed");
     // met Exceptions, no need to checks for security functions
     auto ret = memset_s(rdata, static_cast<size_t>(newLen), 0, static_cast<size_t>(newLen));
@@ -535,8 +509,7 @@ bool ProfilingAdp::NewMemoryToStoreData(int32_t sendSize,
         free(rdata);
         return false;
     }
-    ret = memcpy_s(rdata, static_cast<size_t>(newLen),
-                   sendData.c_str(), static_cast<size_t>(sendSize));
+    ret = memcpy_s(rdata, static_cast<size_t>(newLen), sendData.c_str(), static_cast<size_t>(sendSize));
     if (ret != EOK) {
         AICPU_LOG_ERROR("Copy send data to buffer failed, ret[%d]", ret);
         free(rdata);
@@ -559,9 +532,9 @@ Input         : const string& sendData         : the source data
 Output        : NA
 Return Value  : if it is true,it means success to create the content
 *****************************************************************************/
-bool ProfilingAdp::BuildSendContent(const std::string &sendData, const std::string &mark,
-                                    char_t buffer[], const int32_t bufferlen,
-                                    bool &newflag, ReporterData &reportData) const
+bool ProfilingAdp::BuildSendContent(
+    const std::string& sendData, const std::string& mark, char_t buffer[], const int32_t bufferlen, bool& newflag,
+    ReporterData& reportData) const
 {
     const int32_t sendSize = static_cast<int32_t>(sendData.size());
     reportData.deviceId = static_cast<int32_t>(deviceId_);
@@ -574,13 +547,14 @@ bool ProfilingAdp::BuildSendContent(const std::string &sendData, const std::stri
         reportData.data = PtrToPtr<char_t, uint8_t>(buffer);
         newflag = false;
     } else {
-        AICPU_RCHECK(NewMemoryToStoreData(sendSize, sendData, reportData), false,
-            "Malloc new memory for send data failed");
+        AICPU_RCHECK(
+            NewMemoryToStoreData(sendSize, sendData, reportData), false, "Malloc new memory for send data failed");
         newflag = true;
     }
     reportData.data[sendSize] = static_cast<uint8_t>('\0');
-    const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
-                                     mark.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
+    const errno_t retCpy = strncpy_s(
+        reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1), mark.c_str(),
+        static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
         AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
@@ -598,14 +572,14 @@ Output        : NA
 Return Value  : NA
 *****************************************************************************/
 template <typename T>
-void ProfilingAdp::BuildProfData(const T &sendData, const std::string &mark,
-                                 ReporterData &reportData) const
+void ProfilingAdp::BuildProfData(const T& sendData, const std::string& mark, ReporterData& reportData) const
 {
     reportData.deviceId = static_cast<int32_t>(deviceId_);
     reportData.dataLen = sizeof(sendData);
-    reportData.data = reinterpret_cast<uint8_t *>(const_cast<T *>(&sendData));
-    const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
-                                     mark.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
+    reportData.data = reinterpret_cast<uint8_t*>(const_cast<T*>(&sendData));
+    const errno_t retCpy = strncpy_s(
+        reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1), mark.c_str(),
+        static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
         AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
@@ -613,15 +587,15 @@ void ProfilingAdp::BuildProfData(const T &sendData, const std::string &mark,
     reportData.tag[MSPROF_ENGINE_MAX_TAG_LEN] = '\0';
 }
 
-void ProfilingAdp::BuildProfAicpuAdditionalData(const MsprofAicpuProfData &sendData,
-                                                MsprofAdditionalInfo &reportData) const
+void ProfilingAdp::BuildProfAicpuAdditionalData(
+    const MsprofAicpuProfData& sendData, MsprofAdditionalInfo& reportData) const
 {
     reportData.level = MSPROF_REPORT_AICPU_LEVEL;
     reportData.type = MSPROF_REPORT_AICPU_NODE_TYPE;
     reportData.threadId = sendData.threadId;
     reportData.timeStamp = GetSystemTick();
 
-    auto data = reinterpret_cast<MsprofAicpuNodeAdditionalData *>(reportData.data);
+    auto data = reinterpret_cast<MsprofAicpuNodeAdditionalData*>(reportData.data);
     data->streamId = sendData.streamId;
     data->taskId = sendData.taskId;
     data->runStartTime = sendData.runStartTime;
@@ -644,32 +618,35 @@ void ProfilingAdp::BuildProfAicpuAdditionalData(const MsprofAicpuProfData &sendD
     data->version = sendData.version;
 
     reportData.dataLen = sizeof(MsprofAicpuNodeAdditionalData);
-    AICPU_LOG_INFO("aicpu prof message details: streamId[%hu], taskId[%hu], runStartTime[%llu], runStartTick[%llu], "
-                   "computeStartTime[%llu], memcpyStartTime[%llu], memcpyEndTime[%llu], runEndTime[%llu], "
-                   "runEndTick[%llu], threadId[%u], deviceId[%u], submitTick[%llu], scheduleTick[%llu], "
-                   "tickBeforeRun[%llu], tickAfterRun[%llu], kernelType[%u], dispatchTime[%u]us, totalTime[%u]us, "
-                   "fftsThreadId[%u], version[%u], dataLen[%u].", data->streamId, data->taskId, data->runStartTime,
-                   data->runStartTick, data->computeStartTime, data->memcpyStartTime, data->memcpyEndTime,
-                   data->runEndTime, data->runEndTick, data->threadId, data->deviceId, data->submitTick,
-                   data->scheduleTick, data->tickBeforeRun, data->tickAfterRun, data->kernelType, data->dispatchTime,
-                   data->totalTime, data->fftsThreadId, data->version, reportData.dataLen);
+    AICPU_LOG_INFO(
+        "aicpu prof message details: streamId[%hu], taskId[%hu], runStartTime[%llu], runStartTick[%llu], "
+        "computeStartTime[%llu], memcpyStartTime[%llu], memcpyEndTime[%llu], runEndTime[%llu], "
+        "runEndTick[%llu], threadId[%u], deviceId[%u], submitTick[%llu], scheduleTick[%llu], "
+        "tickBeforeRun[%llu], tickAfterRun[%llu], kernelType[%u], dispatchTime[%u]us, totalTime[%u]us, "
+        "fftsThreadId[%u], version[%u], dataLen[%u].",
+        data->streamId, data->taskId, data->runStartTime, data->runStartTick, data->computeStartTime,
+        data->memcpyStartTime, data->memcpyEndTime, data->runEndTime, data->runEndTick, data->threadId, data->deviceId,
+        data->submitTick, data->scheduleTick, data->tickBeforeRun, data->tickAfterRun, data->kernelType,
+        data->dispatchTime, data->totalTime, data->fftsThreadId, data->version, reportData.dataLen);
 }
 
-void ProfilingAdp::BuildProfDpAdditionalData(const MsprofDpProfData &sendData, MsprofAdditionalInfo &reportData) const
+void ProfilingAdp::BuildProfDpAdditionalData(const MsprofDpProfData& sendData, MsprofAdditionalInfo& reportData) const
 {
     reportData.level = MSPROF_REPORT_AICPU_LEVEL;
     reportData.type = MSPROF_REPORT_AICPU_DP_TYPE;
     reportData.threadId = 0xffffffff;
     reportData.timeStamp = GetSystemTick();
 
-    auto data = reinterpret_cast<MsprofAicpuDpAdditionalData *>(reportData.data);
-    errno_t retCpy = strncpy_s(data->action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN),
-                               sendData.action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN));
+    auto data = reinterpret_cast<MsprofAicpuDpAdditionalData*>(reportData.data);
+    errno_t retCpy = strncpy_s(
+        data->action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN), sendData.action,
+        static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN));
     if (retCpy != EOK) {
         AICPU_LOG_WARN("Copying sendData.action tag was not successful, retCpy=[%d].", retCpy);
     }
-    retCpy = strncpy_s(data->source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN),
-                       sendData.source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN));
+    retCpy = strncpy_s(
+        data->source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN), sendData.source,
+        static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN));
     if (retCpy != EOK) {
         AICPU_LOG_WARN("Copying sendData.source tag was not successful, retCpy=[%d].", retCpy);
     }
@@ -677,11 +654,12 @@ void ProfilingAdp::BuildProfDpAdditionalData(const MsprofDpProfData &sendData, M
     data->size = sendData.size;
 
     reportData.dataLen = sizeof(MsprofAicpuDpAdditionalData);
-    AICPU_LOG_INFO("dp prof message details: action[%s], source[%s], index[%llu], size[%llu], dataLen[%u].",
-                   data->action, data->source, data->index, data->size, reportData.dataLen);
+    AICPU_LOG_INFO(
+        "dp prof message details: action[%s], source[%s], index[%llu], size[%llu], dataLen[%u].", data->action,
+        data->source, data->index, data->size, reportData.dataLen);
 }
 
-void ProfilingAdp::BuildProfMiAdditionalData(const std::string &sendData, MsprofAdditionalInfo &reportData) const
+void ProfilingAdp::BuildProfMiAdditionalData(const std::string& sendData, MsprofAdditionalInfo& reportData) const
 {
     reportData.level = MSPROF_REPORT_AICPU_LEVEL;
     reportData.type = MSPROF_REPORT_AICPU_MI_TYPE;
@@ -704,28 +682,29 @@ void ProfilingAdp::BuildProfMiAdditionalData(const std::string &sendData, Msprof
         return;
     }
 
-    auto repData = reinterpret_cast<MsprofAicpuMiAdditionalData *>(reportData.data);
+    auto repData = reinterpret_cast<MsprofAicpuMiAdditionalData*>(reportData.data);
     repData->nodeTag = GET_NEXT_DEQUEUE_WAIT;
     try {
         repData->queueSize = stoul(data[QUEUE_SIZE]);
         repData->runStartTime = stoul(data[RUN_START_TIME]);
         repData->runEndTime = stoul(data[RUN_END_TIME]);
-    } catch(...) {
+    } catch (...) {
         AICPU_LOG_ERROR("mindspore prof message details: %s", sendData.c_str());
     }
 
     reportData.dataLen = sizeof(MsprofAicpuMiAdditionalData);
-    AICPU_LOG_INFO("mindspore prof message details: node[%u], queueSize[%llu], runStartTime[%llu], "
-                   "runEndTime[%llu], dataLen[%u].", repData->nodeTag, repData->queueSize,
-                   repData->runStartTime, repData->runEndTime, reportData.dataLen);
+    AICPU_LOG_INFO(
+        "mindspore prof message details: node[%u], queueSize[%llu], runStartTime[%llu], "
+        "runEndTime[%llu], dataLen[%u].",
+        repData->nodeTag, repData->queueSize, repData->runStartTime, repData->runEndTime, reportData.dataLen);
 }
 
-int32_t ProfilingAdp::SendProfDataWithNewChannel(const char_t * const sendData, std::string mark)
+int32_t ProfilingAdp::SendProfDataWithNewChannel(const char_t* const sendData, std::string mark)
 {
     MsprofAdditionalInfo additionalReportData;
     if (mark == "AICPU") {
-        BuildProfAicpuAdditionalData(*PtrToPtr<const char_t, const MsprofAicpuProfData>(sendData),
-                                     additionalReportData);
+        BuildProfAicpuAdditionalData(
+            *PtrToPtr<const char_t, const MsprofAicpuProfData>(sendData), additionalReportData);
     } else if (mark == "DP") {
         BuildProfDpAdditionalData(*PtrToPtr<const char_t, const MsprofDpProfData>(sendData), additionalReportData);
     } else {
@@ -735,22 +714,23 @@ int32_t ProfilingAdp::SendProfDataWithNewChannel(const char_t * const sendData, 
     return ret;
 }
 
-int32_t ProfilingAdp::SendProfDataWithOldChannel(const char_t * const sendData, std::string mark)
+int32_t ProfilingAdp::SendProfDataWithOldChannel(const char_t* const sendData, std::string mark)
 {
     ReporterData reportData;
     bool needNewFlag = false;
     if (mark == "AICPU") {
-        BuildProfData<MsprofAicpuProfData>(*PtrToPtr<const char_t, const MsprofAicpuProfData>(sendData), mark,
-                                           reportData);
+        BuildProfData<MsprofAicpuProfData>(
+            *PtrToPtr<const char_t, const MsprofAicpuProfData>(sendData), mark, reportData);
     } else if (mark == "DP") {
-        BuildProfData<MsprofDpProfData>(*PtrToPtr<const char_t, const MsprofDpProfData>(sendData), mark,
-                                        reportData);
+        BuildProfData<MsprofDpProfData>(*PtrToPtr<const char_t, const MsprofDpProfData>(sendData), mark, reportData);
     } else {
-        AICPU_RCHECK((PtrToPtr<const char_t, const std::string>(sendData))->size() > 0U,
-                     static_cast<int32_t>(ProfStatusCode::PROFILINE_FAILED), "Check send size failed");
-        char_t buffer[MAX_INNER_SEND_DATA_LEN] = {}; //lint !e813
-        const bool ret = BuildSendContent(*PtrToPtr<const char_t, const std::string>(sendData),
-                                          mark, &buffer[0], MAX_INNER_SEND_DATA_LEN, needNewFlag, reportData);
+        AICPU_RCHECK(
+            (PtrToPtr<const char_t, const std::string>(sendData))->size() > 0U,
+            static_cast<int32_t>(ProfStatusCode::PROFILINE_FAILED), "Check send size failed");
+        char_t buffer[MAX_INNER_SEND_DATA_LEN] = {}; // lint !e813
+        const bool ret = BuildSendContent(
+            *PtrToPtr<const char_t, const std::string>(sendData), mark, &buffer[0], MAX_INNER_SEND_DATA_LEN,
+            needNewFlag, reportData);
         AICPU_RCHECK(ret, static_cast<int32_t>(ProfStatusCode::PROFILINE_FAILED), "Build send content failed.");
     }
     int32_t ret = SendProcess(reportData);
@@ -770,7 +750,7 @@ Output        : NA
 Return Value  : PROFILINE_SUCCESS - send success
                 others - end failed
 *****************************************************************************/
-int32_t ProfilingAdp::Send(const char_t * const sendData, std::string mark)
+int32_t ProfilingAdp::Send(const char_t* const sendData, std::string mark)
 {
     if (!GetReportValid()) {
         AICPU_LOG_WARN("Report invalid.");
@@ -811,18 +791,18 @@ int32_t ProfModelMessage::SendProfModelMessageWithOldChannel()
     ReporterData reportData;
     reportData.deviceId = static_cast<int32_t>(deviceId_);
     reportData.dataLen = sizeof(sendData_);
-    reportData.data = PtrToPtr<void, uint8_t>(static_cast<void *>(&sendData_));
-    AICPU_LOG_DEBUG("Report model profiling message, dev_id=%u, dataLen=%zu, timeStamp=%llu, tag_id=%u, "
-                    "index_id=%llu, model_id=%u, event_id=%llu, dataTag=%u.", deviceId_, reportData.dataLen,
-                    sendData_.aicpuModelProfData.timeStamp,
-                    static_cast<uint32_t>(sendData_.aicpuModelProfData.tagId),
-                    sendData_.aicpuModelProfData.indexId,
-                    sendData_.aicpuModelProfData.modelId,
-                    sendData_.aicpuModelProfData.eventId,
-                    static_cast<uint32_t>(sendData_.aicpuModelProfData.dataTag));
+    reportData.data = PtrToPtr<void, uint8_t>(static_cast<void*>(&sendData_));
+    AICPU_LOG_DEBUG(
+        "Report model profiling message, dev_id=%u, dataLen=%zu, timeStamp=%llu, tag_id=%u, "
+        "index_id=%llu, model_id=%u, event_id=%llu, dataTag=%u.",
+        deviceId_, reportData.dataLen, sendData_.aicpuModelProfData.timeStamp,
+        static_cast<uint32_t>(sendData_.aicpuModelProfData.tagId), sendData_.aicpuModelProfData.indexId,
+        sendData_.aicpuModelProfData.modelId, sendData_.aicpuModelProfData.eventId,
+        static_cast<uint32_t>(sendData_.aicpuModelProfData.dataTag));
     const std::string tagStr(tag_);
-    const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
-                                     tagStr.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
+    const errno_t retCpy = strncpy_s(
+        reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1), tagStr.c_str(),
+        static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
         AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
@@ -834,7 +814,8 @@ int32_t ProfModelMessage::SendProfModelMessageWithOldChannel()
 int32_t ProfModelMessage::ProfModelMessage::ReportProfModelMessage()
 {
     int32_t ret = 0;
-    if ((g_profAdditionalFlag && ProfilingAdp::GetInstance().GetMsprofReporterCallback() == nullptr) || (ProfilingAdp::GetInstance().IsProfApiSo() == true)) {
+    if ((g_profAdditionalFlag && ProfilingAdp::GetInstance().GetMsprofReporterCallback() == nullptr) ||
+        (ProfilingAdp::GetInstance().IsProfApiSo() == true)) {
         ret = SendProfModelMessageWithNewChannel();
     } else {
         ret = SendProfModelMessageWithOldChannel();
@@ -846,21 +827,22 @@ int32_t ProfModelMessage::ProfModelMessage::ReportProfModelMessage()
     return ret;
 }
 
-void ProfModelMessage::BuildProfModelAdditionalData(MsprofAdditionalInfo &reportData)
+void ProfModelMessage::BuildProfModelAdditionalData(MsprofAdditionalInfo& reportData)
 {
     reportData.level = MSPROF_REPORT_AICPU_LEVEL;
     reportData.type = MSPROF_REPORT_AICPU_MODEL_TYPE;
     reportData.threadId = 0xffffffff;
     reportData.timeStamp = sendData_.aicpuModelProfData.timeStamp;
 
-    auto data = reinterpret_cast<MsprofAicpuModelAdditionalData *>(reportData.data);
+    auto data = reinterpret_cast<MsprofAicpuModelAdditionalData*>(reportData.data);
     data->indexId = sendData_.aicpuModelProfData.indexId;
     data->modelId = sendData_.aicpuModelProfData.modelId;
     data->tagId = sendData_.aicpuModelProfData.tagId;
     data->eventId = sendData_.aicpuModelProfData.eventId;
 
     reportData.dataLen = sizeof(MsprofAicpuModelAdditionalData);
-    AICPU_LOG_INFO("Model prof message details: indexId[%llu], modelId[%u], tagId[%hu], eventId[%llu], dataLen[%u].",
-                   data->indexId, data->modelId, data->tagId, data->eventId, reportData.dataLen);
+    AICPU_LOG_INFO(
+        "Model prof message details: indexId[%llu], modelId[%u], tagId[%hu], eventId[%llu], dataLen[%u].",
+        data->indexId, data->modelId, data->tagId, data->eventId, reportData.dataLen);
 }
 } // namespace aicpu

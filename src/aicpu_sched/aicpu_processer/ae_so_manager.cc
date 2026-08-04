@@ -23,43 +23,43 @@
 #include "ae_kernel_lib_aicpu.hpp"
 
 namespace cce {
-    namespace {
-        // aicpu so root dir, must be absolute path
-        const std::string AICPU_SO_ROOT_DIR = "/usr/lib64/aicpu_kernels/";
-        // aicpu so root dir, old path only for hccl
-        const std::string AICPU_SO_ROOT_DIR_OLD_PATH = "/usr/lib64/";
-        // cust so path for cust_aicpu_sd: CustAiCpuUser
-        constexpr const char_t *CUST_USER_SO_PATH = "/home/CustAiCpuUser";
-        // prefix of cust so dir name
-        constexpr const char_t *CUSTOM_SO_DIR_NAME_PREFIX = "cust_aicpu_";
-        // aicpu kernels tar uncompress path
-        constexpr const char_t *AICPU_SO_UNCOMPRESS_DIR = "aicpu_kernels_device";
-        // libretr_kernels.so
-        constexpr const char_t *RETR_KERNELS_SO_NAME = "libretr_kernels.so";
-        // libhccl_operator_call.so
-        constexpr const char_t *HCCL_KERNELS_SO_NAME = "libhccl_operator_call.so";
-        // libbuiltin_kernels.so
-        constexpr const char_t *BUILTIN_KERNELS_SO_NAME = "libbuiltin_kernels.so";
-        // pattern for custom so name
-        constexpr const char_t *PATTERN_FOR_SO_NAME("abcdefghijklmnopqrstuvwxyz"
-                                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_.");
-        // env variable name: inner aicpu kernel so path
-        constexpr const char_t *AICPU_INNER_SO_PATH_ENV_VAR_NAME = "ASCEND_AICPU_KERNEL_PATH";
-        // env variable name: custom aicpu kernel so path
-        // If modify the env name, please modify the same env name in aicpusd_cust_so_manager.cpp
-        constexpr const char_t *AICPU_CUSTOM_SO_PATH_ENV_VAR = "ASCEND_CUST_AICPU_KERNEL_CACHE_PATH";
-        // physical machine VFID == 0 物理机场景
-        constexpr uint32_t DEFAULT_VFID = 0U;
-        // min number of vDeviceId
-        constexpr const uint32_t VDEVICE_MIN_CPU_NUM = 32U;
-        // max number of vDeviceId
-        constexpr const uint32_t VDEVICE_MAX_CPU_NUM = 64U;
-        constexpr const uint32_t DIV_NUM = 2U;
-        // version.info TurstList info
-        const std::string TRUST_SO_LIST_PREFIX = "Trustlist=";
+namespace {
+// aicpu so root dir, must be absolute path
+const std::string AICPU_SO_ROOT_DIR = "/usr/lib64/aicpu_kernels/";
+// aicpu so root dir, old path only for hccl
+const std::string AICPU_SO_ROOT_DIR_OLD_PATH = "/usr/lib64/";
+// cust so path for cust_aicpu_sd: CustAiCpuUser
+constexpr const char_t* CUST_USER_SO_PATH = "/home/CustAiCpuUser";
+// prefix of cust so dir name
+constexpr const char_t* CUSTOM_SO_DIR_NAME_PREFIX = "cust_aicpu_";
+// aicpu kernels tar uncompress path
+constexpr const char_t* AICPU_SO_UNCOMPRESS_DIR = "aicpu_kernels_device";
+// libretr_kernels.so
+constexpr const char_t* RETR_KERNELS_SO_NAME = "libretr_kernels.so";
+// libhccl_operator_call.so
+constexpr const char_t* HCCL_KERNELS_SO_NAME = "libhccl_operator_call.so";
+// libbuiltin_kernels.so
+constexpr const char_t* BUILTIN_KERNELS_SO_NAME = "libbuiltin_kernels.so";
+// pattern for custom so name
+constexpr const char_t* PATTERN_FOR_SO_NAME("abcdefghijklmnopqrstuvwxyz"
+                                            "ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_.");
+// env variable name: inner aicpu kernel so path
+constexpr const char_t* AICPU_INNER_SO_PATH_ENV_VAR_NAME = "ASCEND_AICPU_KERNEL_PATH";
+// env variable name: custom aicpu kernel so path
+// If modify the env name, please modify the same env name in aicpusd_cust_so_manager.cpp
+constexpr const char_t* AICPU_CUSTOM_SO_PATH_ENV_VAR = "ASCEND_CUST_AICPU_KERNEL_CACHE_PATH";
+// physical machine VFID == 0 物理机场景
+constexpr uint32_t DEFAULT_VFID = 0U;
+// min number of vDeviceId
+constexpr const uint32_t VDEVICE_MIN_CPU_NUM = 32U;
+// max number of vDeviceId
+constexpr const uint32_t VDEVICE_MAX_CPU_NUM = 64U;
+constexpr const uint32_t DIV_NUM = 2U;
+// version.info TurstList info
+const std::string TRUST_SO_LIST_PREFIX = "Trustlist=";
 
-        constexpr const char_t *THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
-    }
+constexpr const char_t* THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
+} // namespace
 
 SingleSoManager::~SingleSoManager()
 {
@@ -76,7 +76,7 @@ SingleSoManager::~SingleSoManager()
     soHandle_ = nullptr;
 }
 
-aeStatus_t SingleSoManager::Init(const std::string &guardDirName, const std::string &soFile)
+aeStatus_t SingleSoManager::Init(const std::string& guardDirName, const std::string& soFile)
 {
     soName_.clear();
     apiCacher_.clear();
@@ -87,7 +87,7 @@ aeStatus_t SingleSoManager::Init(const std::string &guardDirName, const std::str
         return ret;
     }
 
-    void *handle = nullptr;
+    void* handle = nullptr;
     ret = OpenSo(soFile, &handle);
     if ((ret == AE_STATUS_SUCCESS) && (handle != nullptr)) {
         soHandle_ = handle;
@@ -96,7 +96,7 @@ aeStatus_t SingleSoManager::Init(const std::string &guardDirName, const std::str
     return ret;
 }
 
-aeStatus_t SingleSoManager::CheckSoFile(const std::string &guardDirName, const std::string &soFile)
+aeStatus_t SingleSoManager::CheckSoFile(const std::string& guardDirName, const std::string& soFile)
 {
     if (guardDirName.empty()) {
         AE_INFO_LOG(AE_MODULE_ID, "guardDirName is empty, no need check");
@@ -108,7 +108,7 @@ aeStatus_t SingleSoManager::CheckSoFile(const std::string &guardDirName, const s
         return AE_STATUS_OPEN_SO_FAILED;
     }
 
-    std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
+    std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "Alloc memory for path failed.");
         return AE_STATUS_OPEN_SO_FAILED;
@@ -134,8 +134,9 @@ aeStatus_t SingleSoManager::CheckSoFile(const std::string &guardDirName, const s
     const std::string realSoPath = GetRealCustSoPath();
     if ((strncmp(path.get(), tmpGuardDirName.c_str(), tmpGuardDirName.length()) != 0) &&
         (pathStr.find(realSoPath) == std::string::npos)) {
-        AE_ERR_LOG(AE_MODULE_ID, "Invalid so file with dir:%s so:%s, should be %s or %s",
-                   path.get(), soFile.c_str(), tmpGuardDirName.data(), realSoPath.c_str());
+        AE_ERR_LOG(
+            AE_MODULE_ID, "Invalid so file with dir:%s so:%s, should be %s or %s", path.get(), soFile.c_str(),
+            tmpGuardDirName.data(), realSoPath.c_str());
         return AE_STATUS_OPEN_SO_FAILED;
     }
     return AE_STATUS_SUCCESS;
@@ -154,7 +155,7 @@ std::string SingleSoManager::GetRealCustSoPath()
     return soPath;
 }
 
-void SingleSoManager::GetCustSoPathByUniqueVfId(std::string &soPath, const uint32_t uniqueVfId)
+void SingleSoManager::GetCustSoPathByUniqueVfId(std::string& soPath, const uint32_t uniqueVfId)
 {
     if (uniqueVfId == DEFAULT_VFID) {
         (void)soPath.append("/");
@@ -166,10 +167,10 @@ void SingleSoManager::GetCustSoPathByUniqueVfId(std::string &soPath, const uint3
     }
 }
 
-aeStatus_t SingleSoManager::OpenSo(const std::string &soFile, void ** const retHandle)
+aeStatus_t SingleSoManager::OpenSo(const std::string& soFile, void** const retHandle)
 {
     // Use API in glibc to open the so lib, load this so to process.
-    std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
+    std::unique_ptr<char_t[]> path(new (std::nothrow) char_t[PATH_MAX]);
     if (path == nullptr) {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "Alloc memory for path failed.");
         return AE_STATUS_OPEN_SO_FAILED;
@@ -187,8 +188,8 @@ aeStatus_t SingleSoManager::OpenSo(const std::string &soFile, void ** const retH
     }
 
     AE_INFO_LOG(AE_MODULE_ID, "Open so %s begin.", path.get());
-    void * const handle = dlopen(path.get(), static_cast<int32_t>(
-                                 (static_cast<uint32_t>(RTLD_LAZY))|(static_cast<uint32_t>(RTLD_GLOBAL))));
+    void* const handle = dlopen(
+        path.get(), static_cast<int32_t>((static_cast<uint32_t>(RTLD_LAZY)) | (static_cast<uint32_t>(RTLD_GLOBAL))));
     if (handle == nullptr) {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "Open so %s failed with error:%s", path.get(), dlerror());
         return AE_STATUS_OPEN_SO_FAILED;
@@ -199,9 +200,9 @@ aeStatus_t SingleSoManager::OpenSo(const std::string &soFile, void ** const retH
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t SingleSoManager::GetFunc(void * const soHandle, const char_t * const funcName, void ** const retFuncAddr)
+aeStatus_t SingleSoManager::GetFunc(void* const soHandle, const char_t* const funcName, void** const retFuncAddr)
 {
-    void * const theFuncAddr = dlsym(soHandle, funcName);
+    void* const theFuncAddr = dlsym(soHandle, funcName);
     if (static_cast<bool>(unlikely((theFuncAddr == nullptr)))) {
         AE_ERR_LOG(AE_MODULE_ID, "Get funcAddr %s from handle is NULL: %s", funcName, dlerror());
         return AE_STATUS_GET_KERNEL_NAME_FAILED;
@@ -210,8 +211,8 @@ aeStatus_t SingleSoManager::GetFunc(void * const soHandle, const char_t * const 
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t SingleSoManager::GetApi(const char_t * const soNamePtr, const char_t * const funcName,
-                                   void ** const funcAddrPtr)
+aeStatus_t SingleSoManager::GetApi(
+    const char_t* const soNamePtr, const char_t* const funcName, void** const funcAddrPtr)
 {
     if (static_cast<bool>(unlikely((soHandle_ == nullptr)))) {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "soHandle_ is null, should be Init first.");
@@ -236,7 +237,7 @@ aeStatus_t SingleSoManager::GetApi(const char_t * const soNamePtr, const char_t 
     }
 
     // get func
-    void *theFuncAddr = nullptr;
+    void* theFuncAddr = nullptr;
     const aeStatus_t ret = GetFunc(soHandle_, funcName, &theFuncAddr);
     if (ret != AE_STATUS_SUCCESS) {
         AE_RW_LOCK_UN_LOCK(&rwLock_);
@@ -251,13 +252,13 @@ aeStatus_t SingleSoManager::GetApi(const char_t * const soNamePtr, const char_t 
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t SingleSoManager::GetApi(const char_t * const soFile, const char_t * const funcName,
-                                   void ** const funcAddrPtr, void ** const retHandle)
+aeStatus_t SingleSoManager::GetApi(
+    const char_t* const soFile, const char_t* const funcName, void** const funcAddrPtr, void** const retHandle)
 {
-    void *handle = nullptr;
+    void* handle = nullptr;
     const aeStatus_t retOpenSo = OpenSo(soFile, &handle);
     if ((retOpenSo == AE_STATUS_SUCCESS) && (handle != nullptr)) {
-        void *theFuncAddr = nullptr;
+        void* theFuncAddr = nullptr;
         const aeStatus_t retGetFunc = GetFunc(handle, funcName, &theFuncAddr);
         if ((retGetFunc == AE_STATUS_SUCCESS) && (theFuncAddr != nullptr)) {
             *funcAddrPtr = theFuncAddr;
@@ -271,7 +272,7 @@ aeStatus_t SingleSoManager::GetApi(const char_t * const soFile, const char_t * c
     return retOpenSo;
 }
 
-aeStatus_t SingleSoManager::CloseSo(void * const retHandle)
+aeStatus_t SingleSoManager::CloseSo(void* const retHandle)
 {
     if (retHandle != nullptr) {
         const int32_t ret = dlclose(retHandle);
@@ -291,7 +292,7 @@ MultiSoManager::~MultiSoManager()
     // Step1.  clear the critical section apiCacher_
     AE_RW_LOCK_WR_LOCK(&rwLock_);
     for (auto iter = soCacher_.begin(); iter != soCacher_.end(); ++iter) {
-        const SingleSoManager * const soMngr = iter->second;
+        const SingleSoManager* const soMngr = iter->second;
         if (soMngr != nullptr) {
             delete soMngr; // Release each SingleSoManager * stored in cache
         }
@@ -311,9 +312,9 @@ aeStatus_t MultiSoManager::Init()
         return AE_STATUS_INNER_ERROR;
     }
     // get aicpu so path
-    const char_t * const innerDirName = getenv(AICPU_INNER_SO_PATH_ENV_VAR_NAME);
+    const char_t* const innerDirName = getenv(AICPU_INNER_SO_PATH_ENV_VAR_NAME);
     if (innerDirName != nullptr) {
-        const std::string str =  innerDirName;
+        const std::string str = innerDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
             AE_ERR_LOG(AE_MODULE_ID, "Length of inner so dir %zu is invalid.", len);
@@ -325,9 +326,9 @@ aeStatus_t MultiSoManager::Init()
         }
     }
     // get cust aicpu so path
-    const char_t * const custDirName = getenv(AICPU_CUSTOM_SO_PATH_ENV_VAR);
+    const char_t* const custDirName = getenv(AICPU_CUSTOM_SO_PATH_ENV_VAR);
     if (custDirName != nullptr) {
-        const std::string str =  custDirName;
+        const std::string str = custDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
             AE_ERR_LOG(AE_MODULE_ID, "Length of cust so dir %zu is invalid.", len);
@@ -341,10 +342,11 @@ aeStatus_t MultiSoManager::Init()
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::GetApi(const aicpu::KernelType kernelType, const char_t * const soName,
-                                  const char_t * const funcName, void ** const funcAddrPtr)
+aeStatus_t MultiSoManager::GetApi(
+    const aicpu::KernelType kernelType, const char_t* const soName, const char_t* const funcName,
+    void** const funcAddrPtr)
 {
-    SingleSoManager *soMgr = nullptr;
+    SingleSoManager* soMgr = nullptr;
     const aeStatus_t ret = LoadSo(kernelType, soName, soMgr);
     if ((ret != AE_STATUS_SUCCESS) || (soMgr == nullptr)) {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "Load so %s failed.", soName);
@@ -353,8 +355,8 @@ aeStatus_t MultiSoManager::GetApi(const aicpu::KernelType kernelType, const char
     return soMgr->GetApi(soName, funcName, funcAddrPtr);
 }
 
-aeStatus_t MultiSoManager::GetSoPath(const aicpu::KernelType kernelType, const std::string &soName,
-                                     std::string &soPath) const
+aeStatus_t MultiSoManager::GetSoPath(
+    const aicpu::KernelType kernelType, const std::string& soName, std::string& soPath) const
 {
     if (kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM || kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM_KFC) {
         return GetCustSoPath(soPath);
@@ -362,11 +364,11 @@ aeStatus_t MultiSoManager::GetSoPath(const aicpu::KernelType kernelType, const s
     return GetInnerSoPath(soName, soPath);
 }
 
-aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string &soPath) const
+aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string& soPath) const
 {
-    const char_t * const innerDirName = getenv("HOME");
+    const char_t* const innerDirName = getenv("HOME");
     if (innerDirName != nullptr) {
-        const std::string str =  innerDirName;
+        const std::string str = innerDirName;
         const size_t len = str.length();
         if ((len == 0U) || (len >= static_cast<size_t>(PATH_MAX))) {
             AE_ERR_LOG(AE_MODULE_ID, "Length[%zu] of inner so dir is invalid.", len);
@@ -376,16 +378,19 @@ aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string &soPath) const
         if (soPath[soPath.size() - 1UL] != '/') {
             (void)soPath.append("/");
         }
-        (void)soPath.append(THREAD_MODE_SO_PATH_FIX).append("/")
-            .append(std::to_string(aicpu::GetUniqueVfId())).append("/")
-            .append(AICPU_SO_UNCOMPRESS_DIR).append("/");
+        (void)soPath.append(THREAD_MODE_SO_PATH_FIX)
+            .append("/")
+            .append(std::to_string(aicpu::GetUniqueVfId()))
+            .append("/")
+            .append(AICPU_SO_UNCOMPRESS_DIR)
+            .append("/");
         return AE_STATUS_SUCCESS;
     } else {
         AE_RUN_WARN_LOG(AE_MODULE_ID, "Get HOME env failed, get thread mode so path failed.");
         return AE_STATUS_INNER_ERROR;
     }
 }
-aeStatus_t MultiSoManager::GetInnerSoPath(const std::string &soName, std::string &soPath) const
+aeStatus_t MultiSoManager::GetInnerSoPath(const std::string& soName, std::string& soPath) const
 {
     uint32_t runMode;
     aicpu::status_t status = aicpu::GetAicpuRunMode(runMode);
@@ -432,7 +437,7 @@ aeStatus_t MultiSoManager::GetInnerSoPath(const std::string &soName, std::string
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::BuildCustSoPath(std::string &soPath, const uint32_t uniqueVfId) const
+aeStatus_t MultiSoManager::BuildCustSoPath(std::string& soPath, const uint32_t uniqueVfId) const
 {
     uint32_t runMode;
     const aicpu::status_t statusMode = aicpu::GetAicpuRunMode(runMode);
@@ -445,7 +450,7 @@ aeStatus_t MultiSoManager::BuildCustSoPath(std::string &soPath, const uint32_t u
         soPath = CUST_USER_SO_PATH;
         SingleSoManager::GetCustSoPathByUniqueVfId(soPath, uniqueVfId);
     } else if (runMode == aicpu::AicpuRunMode::PROCESS_SOCKET_MODE) {
-        const char_t * const custDirName = getenv("HOME");
+        const char_t* const custDirName = getenv("HOME");
         if (custDirName == nullptr) {
             AE_ERR_LOG(AE_MODULE_ID, "Get current dir name by HOME in socket_mode failed.");
             return AE_STATUS_INNER_ERROR;
@@ -454,7 +459,7 @@ aeStatus_t MultiSoManager::BuildCustSoPath(std::string &soPath, const uint32_t u
         AE_RUN_INFO_LOG(AE_MODULE_ID, "Get soPath[%s] in socket_mode", soPath.c_str());
         SingleSoManager::GetCustSoPathByUniqueVfId(soPath, uniqueVfId);
     } else {
-        const char_t * const curDirName = getenv("HOME");
+        const char_t* const curDirName = getenv("HOME");
         if (curDirName == nullptr) {
             AE_ERR_LOG(AE_MODULE_ID, "Get current home directory failed.");
             return AE_STATUS_INNER_ERROR;
@@ -473,7 +478,7 @@ aeStatus_t MultiSoManager::BuildCustSoPath(std::string &soPath, const uint32_t u
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::GetCustSoPath(std::string &soPath) const
+aeStatus_t MultiSoManager::GetCustSoPath(std::string& soPath) const
 {
     // get aicpu context
     aicpu::aicpuContext_t currentAicpuCtx;
@@ -495,29 +500,32 @@ aeStatus_t MultiSoManager::GetCustSoPath(std::string &soPath) const
         }
     }
     (void)soPath.append(CUSTOM_SO_DIR_NAME_PREFIX)
-        .append(std::to_string(currentAicpuCtx.deviceId)).append("_")
-        .append(std::to_string(uniqueVfId)).append("_")
-        .append(std::to_string(static_cast<int32_t>(currentAicpuCtx.hostPid))).append("/");
+        .append(std::to_string(currentAicpuCtx.deviceId))
+        .append("_")
+        .append(std::to_string(uniqueVfId))
+        .append("_")
+        .append(std::to_string(static_cast<int32_t>(currentAicpuCtx.hostPid)))
+        .append("/");
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::LoadSo(const aicpu::KernelType kernelType, const std::string &soName)
+aeStatus_t MultiSoManager::LoadSo(const aicpu::KernelType kernelType, const std::string& soName)
 {
-    SingleSoManager *soMgr = nullptr;
+    SingleSoManager* soMgr = nullptr;
     return LoadSo(kernelType, soName, soMgr);
 }
 
-aeStatus_t MultiSoManager::LoadSo(const aicpu::KernelType kernelType,
-                                  const std::string &soName, SingleSoManager *&soMgr)
+aeStatus_t MultiSoManager::LoadSo(
+    const aicpu::KernelType kernelType, const std::string& soName, SingleSoManager*& soMgr)
 {
     if (soName.empty()) {
         AE_ERR_LOG(AE_MODULE_ID, "So name is empty.");
         return AE_STATUS_BAD_PARAM;
     }
 
-    if (!aicpu::IsCustAicpuSd())  {
-        if ((runMode_ != aicpu::AicpuRunMode::THREAD_MODE) && ((kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM) ||
-            (kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM_KFC))) {
+    if (!aicpu::IsCustAicpuSd()) {
+        if ((runMode_ != aicpu::AicpuRunMode::THREAD_MODE) &&
+            ((kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM) || (kernelType == aicpu::KERNEL_TYPE_AICPU_CUSTOM_KFC))) {
             AE_ERR_LOG(AE_MODULE_ID, "runmode is not THREAD_MODE AND kernelType is [%u]", kernelType);
             return AE_STATUS_BAD_PARAM;
         }
@@ -549,8 +557,8 @@ aeStatus_t MultiSoManager::LoadSo(const aicpu::KernelType kernelType,
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::CreateSingleSoMgr(const aicpu::KernelType kernelType,
-                                             const std::string &soName, SingleSoManager *&soMgr)
+aeStatus_t MultiSoManager::CreateSingleSoMgr(
+    const aicpu::KernelType kernelType, const std::string& soName, SingleSoManager*& soMgr)
 {
     // check so name
     if (soName.find_first_not_of(PATTERN_FOR_SO_NAME) != std::string::npos) {
@@ -568,16 +576,17 @@ aeStatus_t MultiSoManager::CreateSingleSoMgr(const aicpu::KernelType kernelType,
     (void)soFile.append(soName);
     AE_INFO_LOG(AE_MODULE_ID, "soname[%s]", soFile.c_str());
     // This thread get the lock and create the new single so Manager
-    SingleSoManager * const newSSoMngr = new(std::nothrow) SingleSoManager();
-    AE_MEMORY_LOG(AE_MODULE_ID, "MallocMemory, func=new, size=%zu, purpose=SingleSoManager object",
-        sizeof(SingleSoManager));
+    SingleSoManager* const newSSoMngr = new (std::nothrow) SingleSoManager();
+    AE_MEMORY_LOG(
+        AE_MODULE_ID, "MallocMemory, func=new, size=%zu, purpose=SingleSoManager object", sizeof(SingleSoManager));
     if (newSSoMngr == nullptr) {
         AE_ERR_LOG(AE_MODULE_ID, "Create newSSoMngr ptr failed");
         return AE_STATUS_INNER_ERROR;
     }
     ret = newSSoMngr->Init(realSoPath, soFile);
     if (ret != AE_STATUS_SUCCESS) {
-        AE_RUN_INFO_LOG(AE_MODULE_ID, "So does not exist, try to load at another path. currentSoFile=%s.", soFile.c_str());
+        AE_RUN_INFO_LOG(
+            AE_MODULE_ID, "So does not exist, try to load at another path. currentSoFile=%s.", soFile.c_str());
         if (realSoPath != AICPU_SO_ROOT_DIR) {
             // try to load so from /usr/lib64/aicpu_kernel/
             std::string oriPath = realSoPath;
@@ -603,7 +612,7 @@ aeStatus_t MultiSoManager::CreateSingleSoMgr(const aicpu::KernelType kernelType,
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::CloseSo(const std::string &soName)
+aeStatus_t MultiSoManager::CloseSo(const std::string& soName)
 {
     if (soName.empty()) {
         AE_ERR_LOG(AE_MODULE_ID, "So name is empty.");
@@ -613,7 +622,7 @@ aeStatus_t MultiSoManager::CloseSo(const std::string &soName)
     AE_RW_LOCK_WR_LOCK(&rwLock_);
     const auto iter = soCacher_.find(soName);
     if (iter != soCacher_.end()) {
-        const SingleSoManager * const sSoMngr = iter->second;
+        const SingleSoManager* const sSoMngr = iter->second;
         if (sSoMngr != nullptr) {
             delete sSoMngr;
         }
@@ -624,8 +633,8 @@ aeStatus_t MultiSoManager::CloseSo(const std::string &soName)
     return AE_STATUS_SUCCESS;
 }
 
-aeStatus_t MultiSoManager::GetSoInHostPidPath(const std::string &soName, std::string &oriPath,
-                                              SingleSoManager * const newSSoMngr, std::string &soFile) const
+aeStatus_t MultiSoManager::GetSoInHostPidPath(
+    const std::string& soName, std::string& oriPath, SingleSoManager* const newSSoMngr, std::string& soFile) const
 {
     aicpu::aicpuContext_t currentAicpuCtx;
     const aicpu::status_t status = aicpu::aicpuGetContext(&currentAicpuCtx);
@@ -633,11 +642,12 @@ aeStatus_t MultiSoManager::GetSoInHostPidPath(const std::string &soName, std::st
         AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed.");
         return AE_STATUS_INNER_ERROR;
     }
-    oriPath.append(std::to_string(currentAicpuCtx.hostPid)).append("_").
-        append(std::to_string(currentAicpuCtx.deviceId)).append("/");
+    oriPath.append(std::to_string(currentAicpuCtx.hostPid))
+        .append("_")
+        .append(std::to_string(currentAicpuCtx.deviceId))
+        .append("/");
     soFile = oriPath + soName;
-    AE_RUN_INFO_LOG(AE_MODULE_ID, "So does not exist, try to load at another path. currentSoFile=%s.", 
-                soFile.c_str());
+    AE_RUN_INFO_LOG(AE_MODULE_ID, "So does not exist, try to load at another path. currentSoFile=%s.", soFile.c_str());
     return newSSoMngr->Init(oriPath, soFile);
 }
-}
+} // namespace cce

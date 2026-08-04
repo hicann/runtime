@@ -26,8 +26,7 @@ public:
     TsMsgAdapter();
     virtual ~TsMsgAdapter() = default;
     int32_t ResponseToTs(TsAicpuSqe& aicpuSqe, uint32_t handleId, uint32_t devId, uint32_t tsId) const;
-    int32_t ResponseToTs(
-        TsAicpuMsgInfo& aicpuMsgInfo, uint32_t handleId, uint32_t devId, uint32_t tsId) const;
+    int32_t ResponseToTs(TsAicpuMsgInfo& aicpuMsgInfo, uint32_t handleId, uint32_t devId, uint32_t tsId) const;
     int32_t ResponseToTs(hwts_response_t& hwtsResp, uint32_t devId, EVENT_ID eventId, uint32_t subeventId) const;
 
     // invalid parameter

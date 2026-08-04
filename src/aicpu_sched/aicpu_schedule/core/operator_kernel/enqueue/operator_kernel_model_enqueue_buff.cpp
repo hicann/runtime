@@ -14,36 +14,37 @@
 #include "aicpusd_resource_manager.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_ENQUEUE_BUFF = "modelEnqueueBuff";
 constexpr uint32_t ENQUEUED_TIMEOUT = 1000U;
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelEnqueueBuff::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelEnqueueBuff::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    auto bufInfo = reinterpret_cast<BufEnQueueBuffInfo *>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
+    auto bufInfo = reinterpret_cast<BufEnQueueBuffInfo*>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
     if (bufInfo == nullptr) {
-        aicpusd_err("ModelEnqueue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "ModelEnqueue kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     const auto ret = ModelEnqueueBuff(*bufInfo, taskContext);
     return ret;
 }
 
-int32_t OperatorKernelModelEnqueueBuff::ModelEnqueueBuff(BufEnQueueBuffInfo &bufInfo,
-                                                         const RunContext &taskContext) const
+int32_t OperatorKernelModelEnqueueBuff::ModelEnqueueBuff(
+    BufEnQueueBuffInfo& bufInfo, const RunContext& taskContext) const
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if ((model != nullptr) && (model->GetModelRetCode() != 0)) {
-        aicpusd_info("Model execution was not successful, no need to enqueue. modelId=%u, modelRetCode=%d.",
-                     taskContext.modelId, model->GetModelRetCode());
+        aicpusd_info(
+            "Model execution was not successful, no need to enqueue. modelId=%u, modelRetCode=%d.", taskContext.modelId,
+            model->GetModelRetCode());
         return AICPU_SCHEDULE_OK;
     }
 
-    auto mBufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(bufInfo.mBufPtr));
+    auto mBufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(bufInfo.mBufPtr));
     if (mBufPptr == nullptr) {
         aicpusd_err("param mBufPptr is null.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -58,7 +59,7 @@ int32_t OperatorKernelModelEnqueueBuff::ModelEnqueueBuff(BufEnQueueBuffInfo &buf
         return guardRet;
     }
     uint32_t headSize = 0U;
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     const auto ret = halMbufGetPrivInfo(*mBufPptr, &headBuf, &headSize);
     if (ret != DRV_ERROR_NONE) {
         aicpusd_err("Failed to get head info in input information, ret[%d].", ret);
@@ -79,9 +80,9 @@ int32_t OperatorKernelModelEnqueueBuff::ModelEnqueueBuff(BufEnQueueBuffInfo &buf
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelModelEnqueueBuff::QueueEnQueueBuff(const uint32_t deviceId, const uint32_t queueId,
-                                                         Mbuf *const mbuf, void *const headBuf,
-                                                         const uint32_t headSize) const
+int32_t OperatorKernelModelEnqueueBuff::QueueEnQueueBuff(
+    const uint32_t deviceId, const uint32_t queueId, Mbuf* const mbuf, void* const headBuf,
+    const uint32_t headSize) const
 {
     uint64_t mbufLen = 0UL;
     int32_t ret = halMbufGetDataLen(mbuf, &mbufLen);
@@ -96,14 +97,14 @@ int32_t OperatorKernelModelEnqueueBuff::QueueEnQueueBuff(const uint32_t deviceId
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
-    void *dataAddrPtr = nullptr;
+    void* dataAddrPtr = nullptr;
     ret = OperatorKernelCommon::GetMbufDataPtr(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&mbuf)), &dataAddrPtr);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to get mbuf data addr. ret is [%d]", ret);
         return ret;
     }
 
-    buff_iovec * const buffIovec = reinterpret_cast<buff_iovec *>(vecUniquePtr.get());
+    buff_iovec* const buffIovec = reinterpret_cast<buff_iovec*>(vecUniquePtr.get());
     buffIovec->context_base = headBuf;
     buffIovec->context_len = headSize;
     buffIovec->count = 1U;
@@ -111,13 +112,13 @@ int32_t OperatorKernelModelEnqueueBuff::QueueEnQueueBuff(const uint32_t deviceId
     buffIovec->ptr[0U].len = mbufLen;
     const auto drvRet = halQueueEnQueueBuff(deviceId, queueId, buffIovec, ENQUEUED_TIMEOUT);
     if (drvRet != DRV_ERROR_NONE) {
-        aicpusd_err("halQueueEnQueueBuff to queue[%u] in device[%u] failed, error[%d]",
-            queueId, deviceId, static_cast<int32_t>(drvRet));
+        aicpusd_err(
+            "halQueueEnQueueBuff to queue[%u] in device[%u] failed, error[%d]", queueId, deviceId,
+            static_cast<int32_t>(drvRet));
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_ENQUEUE_BUFF, OperatorKernelModelEnqueueBuff);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

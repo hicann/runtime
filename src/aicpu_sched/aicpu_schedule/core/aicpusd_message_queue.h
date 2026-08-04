@@ -17,14 +17,13 @@
 #include <memory>
 #include "ascend_hal_define.h"
 
-
 namespace AicpuSchedule {
 // MSQ0_STATUS_EL0
 struct MsqStatus {
-    uint32_t valid : 1;  // [0:0]
-    uint32_t size  : 3;  // [3:1]
-    uint32_t comp  : 1;  // [4:4]
-    uint64_t res   : 59; // [63:5]
+    uint32_t valid : 1; // [0:0]
+    uint32_t size : 3;  // [3:1]
+    uint32_t comp : 1;  // [4:4]
+    uint64_t res : 59;  // [63:5]
 };
 
 // MSQ_DATA_EL0
@@ -46,18 +45,19 @@ public:
     MessageQueue() : deviceId_(0U), aicpuPhyIds_({}), isEnableHardThread_(false), cqeBaseAddr_(nullptr) {}
     ~MessageQueue() = default;
 
-    static MessageQueue &GetInstance();
-    int32_t InitMessageQueue(const uint32_t deviceId, const std::vector<uint32_t> &aicpuPhyIds);
+    static MessageQueue& GetInstance();
+    int32_t InitMessageQueue(const uint32_t deviceId, const std::vector<uint32_t>& aicpuPhyIds);
     int32_t InitMessageQueueForThread(const size_t threadIndex) const;
-    static bool WaitMsqInfoOnce(MsqDatas &datas);
+    static bool WaitMsqInfoOnce(MsqDatas& datas);
     static bool IsMsqRspComplete();
     static void SendResponse(const uint32_t errCode, const uint32_t status);
 
     using MsqStatusFunc = MsqStatus (*)();
     using MsqDataFunc = void (*)(const uint32_t, MsqDatas&);
     using MsqRspFunc = void (*)();
+
 private:
-    uint32_t *MapResAddr(const res_addr_type resType) const;
+    uint32_t* MapResAddr(const res_addr_type resType) const;
     int32_t InitMsqImpl() const;
     int32_t InitCqeBaseAddr();
 
@@ -68,8 +68,8 @@ private:
     static MsqStatus ReadMsqT0Status();
     static MsqStatus ReadMsqT1Status();
     int32_t InitMessageQueueDataReadFunc(const size_t threadIndex) const;
-    static void ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas);
-    static void ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas);
+    static void ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas);
+    static void ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas);
     int32_t InitMessageQueueRspFunc(const size_t threadIndex) const;
     int32_t InitCqeAddr(const size_t threadIndex) const;
 
@@ -82,11 +82,11 @@ private:
     uint32_t deviceId_;
     std::vector<uint32_t> aicpuPhyIds_;
     bool isEnableHardThread_;
-    uint32_t *cqeBaseAddr_;
+    uint32_t* cqeBaseAddr_;
     thread_local static MsqStatusFunc readMsqStatusFunc_;
     thread_local static MsqDataFunc readMsqDataFunc_;
     thread_local static MsqRspFunc sendMsqRspFunc_;
-    thread_local static uint32_t *cqeAddr_;
+    thread_local static uint32_t* cqeAddr_;
     static std::shared_ptr<MsqImpl> impl_;
 };
 
@@ -99,38 +99,38 @@ public:
     virtual int32_t ResetMsqT1Status() const = 0;
     virtual MsqStatus ReadMsqT0Status() const = 0;
     virtual MsqStatus ReadMsqT1Status() const = 0;
-    virtual void ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas) const = 0;
-    virtual void ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas) const = 0;
+    virtual void ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) const = 0;
+    virtual void ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const = 0;
     virtual void SendMsqT0Response() const = 0;
     virtual void SendMsqT1Response() const = 0;
 };
 
 class MsqImplV1 : public MsqImpl {
 public:
-    explicit MsqImplV1() : MsqImpl() {};
+    explicit MsqImplV1() : MsqImpl(){};
     ~MsqImplV1() override = default;
 
     int32_t ResetMsqT0Status() const override;
     int32_t ResetMsqT1Status() const override;
     MsqStatus ReadMsqT0Status() const override;
     MsqStatus ReadMsqT1Status() const override;
-    void ReadMsqT0Data(const uint32_t msgSize, MsqDatas &datas) const override;
-    void ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas) const override;
+    void ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) const override;
+    void ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const override;
     void SendMsqT0Response() const override;
     void SendMsqT1Response() const override;
 };
 
 class MsqImplV2 : public MsqImplV1 {
 public:
-    explicit MsqImplV2() : MsqImplV1() {};
+    explicit MsqImplV2() : MsqImplV1(){};
     ~MsqImplV2() override = default;
 
     int32_t ResetMsqT0Status() const override;
     int32_t ResetMsqT1Status() const override;
     MsqStatus ReadMsqT1Status() const override;
-    void ReadMsqT1Data(const uint32_t msgSize, MsqDatas &datas) const override;
+    void ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const override;
     void SendMsqT1Response() const override;
 };
 
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule
 #endif

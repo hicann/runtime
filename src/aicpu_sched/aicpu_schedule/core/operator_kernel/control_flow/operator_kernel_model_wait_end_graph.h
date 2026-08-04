@@ -13,13 +13,12 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelWaitEndGraph : public OperatorKernel {
 public:
     OperatorKernelModelWaitEndGraph() = default;
     ~OperatorKernelModelWaitEndGraph() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_WAIT_END_GRAPH_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_WAIT_END_GRAPH_H

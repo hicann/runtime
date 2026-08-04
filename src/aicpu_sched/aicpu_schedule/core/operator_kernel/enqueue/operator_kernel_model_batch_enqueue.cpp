@@ -14,26 +14,27 @@
 #include "aicpusd_profiler.h"
 #include "aicpusd_model_execute.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_BATCH_ENQUEUE = "modelBatchEnqueue";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelBatchEnqueue::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelBatchEnqueue::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    aicpusd_info("Start ModelBatchEnque. modelId=%u, streamId=%u, taskId=%u.",
-                 taskContext.modelId, kernelTaskInfo.streamID, kernelTaskInfo.taskID);
+    aicpusd_info(
+        "Start ModelBatchEnque. modelId=%u, streamId=%u, taskId=%u.", taskContext.modelId, kernelTaskInfo.streamID,
+        kernelTaskInfo.taskID);
     if (kernelTaskInfo.paraBase == 0UL) {
         aicpusd_err("kernelTaskInfo.paraBase is null");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
-    const BatchDequeueDesc * const param = PtrToPtr<void, BatchDequeueDesc>(ValueToPtr(kernelTaskInfo.paraBase));
-    const uint64_t * const mbufPtrlist = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(param->mbufAddrsAddr)));
-    const uint32_t * const outQueueIdList =
+    const BatchDequeueDesc* const param = PtrToPtr<void, BatchDequeueDesc>(ValueToPtr(kernelTaskInfo.paraBase));
+    const uint64_t* const mbufPtrlist =
+        PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(param->mbufAddrsAddr)));
+    const uint32_t* const outQueueIdList =
         PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(param->queueIdsAddr)));
-    const uint32_t &outputNum = param->inputNums;
+    const uint32_t& outputNum = param->inputNums;
 
     if ((outputNum > 0U) && ((mbufPtrlist == nullptr) || (outQueueIdList == nullptr))) {
         aicpusd_err("outputNum[%u], but mbufAddrsAddr or queueIdsAddr is null.", outputNum);
@@ -43,19 +44,19 @@ int32_t OperatorKernelModelBatchEnqueue::Compute(const AicpuTaskInfo &kernelTask
     return BatchEnque(taskContext, mbufPtrlist, outQueueIdList, outputNum);
 }
 
-int32_t OperatorKernelModelBatchEnqueue::BatchEnque(const RunContext &taskContext, const uint64_t * const mbufPtrlist,
-                                                    const uint32_t * const outQueueIdList,
-                                                    const uint32_t outQueueNum) const
+int32_t OperatorKernelModelBatchEnqueue::BatchEnque(
+    const RunContext& taskContext, const uint64_t* const mbufPtrlist, const uint32_t* const outQueueIdList,
+    const uint32_t outQueueNum) const
 {
     BufEnQueueInfo enqueueInfo;
-    AicpuModel *const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    AicpuModel* const model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
         aicpusd_err("cannot get model by modelId:[%u]!", taskContext.modelId);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     int32_t ret = AICPU_SCHEDULE_OK;
     g_aicpuProfiler.SetEqStart();
-    ModelPostpareData &postpareData = model->GetModelPostpareData();
+    ModelPostpareData& postpareData = model->GetModelPostpareData();
     for (; postpareData.enqueueIndex < outQueueNum; postpareData.enqueueIndex++) {
         enqueueInfo.mBufPtr = *(mbufPtrlist + postpareData.enqueueIndex);
         enqueueInfo.queueID = outQueueIdList[postpareData.enqueueIndex];
@@ -75,6 +76,5 @@ int32_t OperatorKernelModelBatchEnqueue::BatchEnque(const RunContext &taskContex
     return AICPU_SCHEDULE_OK;
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_BATCH_ENQUEUE, OperatorKernelModelBatchEnqueue);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

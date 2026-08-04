@@ -13,16 +13,16 @@
 
 #include "operator_kernel.h"
 
-
 namespace AicpuSchedule {
 class OperatorKernelModelRepeat : public OperatorKernel {
 public:
     OperatorKernelModelRepeat() = default;
     ~OperatorKernelModelRepeat() = default;
-    int32_t Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext) override;
+    int32_t Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext) override;
     static uint32_t SendModelRepeatEvent(const uint32_t modelId);
+
 private:
     void ResetStaticNNModelOutputIndex(const uint32_t modelId) const;
 };
-}  // namespace AicpuSchedule
-#endif  // OPERATOR_KERNEL_MODEL_REPEAT_H
+} // namespace AicpuSchedule
+#endif // OPERATOR_KERNEL_MODEL_REPEAT_H

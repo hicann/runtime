@@ -15,18 +15,18 @@
 #include "aicpusd_status.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_PREPARE_NON_ZERO_COPY_INPUT = "modelPrepareNonZeroCopyInput";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelModelPrepareNonZeroCopyInput::Compute(const AicpuTaskInfo &kernelTaskInfo,
-                                                             const RunContext &taskContext)
+int32_t OperatorKernelModelPrepareNonZeroCopyInput::Compute(
+    const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    InputCopyAddrMapInfo *mapInfo = PtrToPtr<void, InputCopyAddrMapInfo>(ValueToPtr(kernelTaskInfo.paraBase));
+    InputCopyAddrMapInfo* mapInfo = PtrToPtr<void, InputCopyAddrMapInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (mapInfo == nullptr) {
-        aicpusd_err("Model prepare non-zero copy input para is nullptr, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "Model prepare non-zero copy input para is nullptr, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -34,16 +34,16 @@ int32_t OperatorKernelModelPrepareNonZeroCopyInput::Compute(const AicpuTaskInfo 
     return DoCompute(*mapInfo, taskContext);
 }
 
-uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAddrMapInfo &mapInfo,
-                                                               const RunContext &taskContext) const
+uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(
+    const InputCopyAddrMapInfo& mapInfo, const RunContext& taskContext) const
 {
-    const uint64_t *srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.srcAddrList));
-    const uint64_t *dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.dstAddrList));
-    const uint64_t *dstAddrLenList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.dstAddrLenList));
-    const int32_t *srcFusionOffsetList = PtrToPtr<void, int32_t>(ValueToPtr(mapInfo.srcFusionOffsetList));
+    const uint64_t* srcAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.srcAddrList));
+    const uint64_t* dstAddrList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.dstAddrList));
+    const uint64_t* dstAddrLenList = PtrToPtr<void, uint64_t>(ValueToPtr(mapInfo.dstAddrLenList));
+    const int32_t* srcFusionOffsetList = PtrToPtr<void, int32_t>(ValueToPtr(mapInfo.srcFusionOffsetList));
     if ((srcAddrList == nullptr) || (dstAddrList == nullptr) || (dstAddrLenList == nullptr)) {
-        aicpusd_err("Failed to non-zero copy by nullptr, modelId[%u], streamId[%u]",
-                    taskContext.modelId, taskContext.streamId);
+        aicpusd_err(
+            "Failed to non-zero copy by nullptr, modelId[%u], streamId[%u]", taskContext.modelId, taskContext.streamId);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
@@ -55,7 +55,7 @@ uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAd
     }
 
     for (uint32_t i = 0U; i < mapInfo.addrNum; i++) {
-        void *srcDataPtr = nullptr;
+        void* srcDataPtr = nullptr;
         uint64_t totalOffset = 0UL;
         int32_t ret = OperatorKernelCommon::GetMbufDataPtr(srcAddrList[i], &srcDataPtr);
         if (ret != AICPU_SCHEDULE_OK) {
@@ -71,7 +71,7 @@ uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAd
             }
         }
 
-        const auto mbufPptr = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(srcAddrList[i]));
+        const auto mbufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(srcAddrList[i]));
         uint64_t srcDataLen = 0UL;
         ret = halMbufGetDataLen(*mbufPptr, &srcDataLen);
         if (ret != DRV_ERROR_NONE) {
@@ -79,13 +79,14 @@ uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAd
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
         if (srcDataLen < sizeof(RuntimeTensorDesc)) {
-            aicpusd_err("The mbuf datalen is less than tensor desc. modelId[%u], srcDataLen[%lu], addrNum[%u]",
-                        taskContext.modelId, srcDataLen, i);
+            aicpusd_err(
+                "The mbuf datalen is less than tensor desc. modelId[%u], srcDataLen[%lu], addrNum[%u]",
+                taskContext.modelId, srcDataLen, i);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
 
         uint32_t dataSize = 0U;
-        const RuntimeTensorDesc * const srcTensorDesc = PtrToPtr<void, RuntimeTensorDesc>(srcDataPtr);
+        const RuntimeTensorDesc* const srcTensorDesc = PtrToPtr<void, RuntimeTensorDesc>(srcDataPtr);
         ret = OperatorKernelCommon::ParseTensorDescAndCalcDataSize(srcTensorDesc, dataSize);
         if (ret != AICPU_SCHEDULE_OK) {
             aicpusd_err("Parse runtime tensor desc failed, ret[%d]", ret);
@@ -93,17 +94,19 @@ uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAd
         }
 
         if (srcDataLen < (sizeof(RuntimeTensorDesc) + totalOffset + dataSize)) {
-            aicpusd_err("The mbuf datalen is invalid. modelId[%u], srcDataLen[%lu], addrNum[%u], "
-                        "dataSize[%u], totalOffset[%lu].",
-                        taskContext.modelId, srcDataLen, i, dataSize, totalOffset);
+            aicpusd_err(
+                "The mbuf datalen is invalid. modelId[%u], srcDataLen[%lu], addrNum[%u], "
+                "dataSize[%u], totalOffset[%lu].",
+                taskContext.modelId, srcDataLen, i, dataSize, totalOffset);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
 
         srcDataPtr = ValueToPtr(PtrToValue(srcDataPtr) + sizeof(RuntimeTensorDesc));
         const int32_t eRet = memcpy_s(ValueToPtr(dstAddrList[i]), dstAddrLenList[i], srcDataPtr, dataSize);
         if (eRet != EOK) {
-            aicpusd_err("Data copy failed. modelId[%u], addrNum[%u], dstAddrLen[%lu], dataSize[%lu], ret[%d]",
-                        taskContext.modelId, i, dstAddrLenList[i], dataSize, eRet);
+            aicpusd_err(
+                "Data copy failed. modelId[%u], addrNum[%u], dstAddrLen[%lu], dataSize[%lu], ret[%d]",
+                taskContext.modelId, i, dstAddrLenList[i], dataSize, eRet);
             return AICPU_SCHEDULE_ERROR_SAFE_FUNCTION_ERR;
         }
     }
@@ -112,4 +115,4 @@ uint32_t OperatorKernelModelPrepareNonZeroCopyInput::DoCompute(const InputCopyAd
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_PREPARE_NON_ZERO_COPY_INPUT, OperatorKernelModelPrepareNonZeroCopyInput);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

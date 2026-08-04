@@ -24,7 +24,7 @@ public:
     // invalid parameter
     bool IsAdapterInvalidParameter() const override;
 
-    //version set
+    // version set
     void GetAicpuMsgVersionInfo(AicpuMsgVersionInfo& info) override;
     int32_t AicpuMsgVersionResponseToTs(const int32_t result) override;
 
@@ -41,18 +41,18 @@ public:
     int32_t AicpuModelOperateResponseToTs(const int32_t result, const uint32_t subEvent) override;
     void AicpuActiveStreamSetMsg(ActiveStreamInfo& info) override;
 
-    //task report
+    // task report
     void GetAicpuTaskReportInfo(AicpuTaskReportInfo& info) override;
     int32_t ErrorMsgResponseToTs(ErrMsgRspInfo& rspInfo) override;
 
-    //info load 
+    // info load
     void GetAicpuInfoLoad(AicpuInfoLoad& info) override;
     int32_t AicpuInfoLoadResponseToTs(const int32_t result) override;
 
     // err report
     void GetAicErrReportInfo(AicErrReportInfo& info) override;
 
-    //record
+    // record
     int32_t AicpuRecordResponseToTs(AicpuRecordInfo& info) override;
 
     // pid notice
@@ -61,6 +61,7 @@ public:
     // time out
     void GetAicpuTimeOutConfigInfo(AicpuTimeOutConfigInfo& info) override;
     int32_t AicpuTimeOutConfigResponseToTs(const int32_t result) override;
+
 private:
     TsAicpuMsgInfo aicpuMsgInfo_;
     bool invalidMsgInfo_;

@@ -26,17 +26,17 @@
 namespace aicpu {
 constexpr uint32_t GET_EVENT_LIMITED_NUM = 1000U;
 
-SharderNonBlock::SharderNonBlock() : cpuCoreNum_(0U),
-                                     randomKernelScheduler_(nullptr),
-                                     splitKernelScheduler_(nullptr),
-                                     splitKernelGetProcesser_(nullptr),
-                                     parallelId_(0U)
-{
-}
+SharderNonBlock::SharderNonBlock()
+    : cpuCoreNum_(0U),
+      randomKernelScheduler_(nullptr),
+      splitKernelScheduler_(nullptr),
+      splitKernelGetProcesser_(nullptr),
+      parallelId_(0U)
+{}
 
-void SharderNonBlock::Register(const uint32_t cpuCoreNum, const RandomKernelScheduler &randomKernelScheduler,
-                               const SplitKernelScheduler &splitKernelScheduler,
-                               const SplitKernelGetProcesser &splitKernelGetProcesser)
+void SharderNonBlock::Register(
+    const uint32_t cpuCoreNum, const RandomKernelScheduler& randomKernelScheduler,
+    const SplitKernelScheduler& splitKernelScheduler, const SplitKernelGetProcesser& splitKernelGetProcesser)
 {
     cpuCoreNum_ = cpuCoreNum;
     randomKernelScheduler_ = randomKernelScheduler;
@@ -44,7 +44,7 @@ void SharderNonBlock::Register(const uint32_t cpuCoreNum, const RandomKernelSche
     splitKernelGetProcesser_ = splitKernelGetProcesser;
 }
 
-void SharderNonBlock::Schedule(const Closure &aicpuClosure)
+void SharderNonBlock::Schedule(const Closure& aicpuClosure)
 {
     if (randomKernelScheduler_ == nullptr) {
         aicpuClosure();
@@ -60,12 +60,9 @@ void SharderNonBlock::Schedule(const Closure &aicpuClosure)
     return;
 }
 
-uint32_t SharderNonBlock::GetCPUNum()
-{
-    return cpuCoreNum_;
-}
+uint32_t SharderNonBlock::GetCPUNum() { return cpuCoreNum_; }
 
-SharderNonBlock &SharderNonBlock::GetInstance()
+SharderNonBlock& SharderNonBlock::GetInstance()
 {
     static SharderNonBlock sharderNonBlock;
     return sharderNonBlock;
@@ -81,7 +78,7 @@ inline int64_t SharderNonBlock::CeilMultiple(const int64_t x, const int64_t base
     return ret;
 }
 
-void SharderNonBlock::ParallelFor(const int64_t total, const int64_t perUnitSize, const SharderWork &work)
+void SharderNonBlock::ParallelFor(const int64_t total, const int64_t perUnitSize, const SharderWork& work)
 {
     uint32_t parallelId = 0U;
     {
@@ -115,8 +112,9 @@ void SharderNonBlock::ParallelFor(const int64_t total, const int64_t perUnitSize
     shardNum = CeilMultiple(total, blockSize);
     // There is no need to submit an event if shardNum is 1
     if (shardNum == 1) {
-        AICPUE_LOGI("Executes on the current thread by shardNum is 1. parallelId=%u, total=%ld, perUnitSize=%ld",
-                    parallelId, total, perUnitSize);
+        AICPUE_LOGI(
+            "Executes on the current thread by shardNum is 1. parallelId=%u, total=%ld, perUnitSize=%ld", parallelId,
+            total, perUnitSize);
         work(0, total);
         return;
     }
@@ -125,12 +123,12 @@ void SharderNonBlock::ParallelFor(const int64_t total, const int64_t perUnitSize
     return;
 }
 
-void SharderNonBlock::ExecuteParallelFor(const int64_t total, const int64_t shardNum,
-                                         const int64_t blockSize, const SharderWork &work,
-                                         const uint32_t parallelId)
+void SharderNonBlock::ExecuteParallelFor(
+    const int64_t total, const int64_t shardNum, const int64_t blockSize, const SharderWork& work,
+    const uint32_t parallelId)
 {
-    AICPUE_LOGI("Op parallel process start. parallelId=%u, shardNum=%ld, blockSize=%ld",
-                parallelId, shardNum, blockSize);
+    AICPUE_LOGI(
+        "Op parallel process start. parallelId=%u, shardNum=%ld, blockSize=%ld", parallelId, shardNum, blockSize);
 
     std::atomic<int64_t> cpuNumCounter(shardNum);
     sem_t aicpuSem;
@@ -145,26 +143,28 @@ void SharderNonBlock::ExecuteParallelFor(const int64_t total, const int64_t shar
     std::queue<aicpu::Closure> taskQueue;
     for (int64_t start = 0; start < total; start += blockSize) {
         const auto limit = std::min(start + blockSize, total);
-        const Closure aicpuClosure = [&aicpuSem, &work, &cpuNumCounter, start, limit,
-                                      parallelId, shardNum, taskIndex]() {
+        const Closure aicpuClosure = [&aicpuSem, &work, &cpuNumCounter, start, limit, parallelId, shardNum,
+                                      taskIndex]() {
             cpuNumCounter--;
             // In order to ensure that user's work function exception does not affect multithread services,
             // exception capture is needed. Exception type is not cared here, and error log is printed.
-            AICPUE_LOGI("Start call work func. parallelId=%u, shardNum=%ld, taskIndex=%u",
-                        parallelId, shardNum, taskIndex);
+            AICPUE_LOGI(
+                "Start call work func. parallelId=%u, shardNum=%ld, taskIndex=%u", parallelId, shardNum, taskIndex);
             try {
                 work(start, limit);
-            } catch (std::exception &e) {
-                AICPUE_LOGE("Exception occurred in work func. parallelId=%u, shardNum=%ld, taskIndex=%u, "
-                            "exception=%s", parallelId, shardNum, taskIndex, e.what());
+            } catch (std::exception& e) {
+                AICPUE_LOGE(
+                    "Exception occurred in work func. parallelId=%u, shardNum=%ld, taskIndex=%u, "
+                    "exception=%s",
+                    parallelId, shardNum, taskIndex, e.what());
             }
 
             const int32_t semPostRet = sem_post(&aicpuSem);
             if (semPostRet == -1) {
                 AICPUE_LOGE("sem_post error with message: %s", strerror(errno));
             }
-            AICPUE_LOGI("End call work func. parallelId=%u, shardNum=%ld, taskIndex=%u",
-                        parallelId, shardNum, taskIndex);
+            AICPUE_LOGI(
+                "End call work func. parallelId=%u, shardNum=%ld, taskIndex=%u", parallelId, shardNum, taskIndex);
         };
 
         taskQueue.push(aicpuClosure);
@@ -196,8 +196,8 @@ void SharderNonBlock::ExecuteParallelFor(const int64_t total, const int64_t shar
     return;
 }
 
-void SharderNonBlock::DoTaskItself(const uint32_t parallelId, std::atomic<int64_t> &cpuNumCounter,
-                                   const int64_t shardNum) const
+void SharderNonBlock::DoTaskItself(
+    const uint32_t parallelId, std::atomic<int64_t>& cpuNumCounter, const int64_t shardNum) const
 {
     uint32_t getEventCnt = 0U;
     bool ret = true;
@@ -209,18 +209,18 @@ void SharderNonBlock::DoTaskItself(const uint32_t parallelId, std::atomic<int64_
             logPrintFlag = false;
             std::string opname("");
             (void)GetOpname(GetAicpuThreadIndex(), opname);
-            AICPUE_RUN_LOGW("Get event num has exceeded %u. parallelId=%u, cpuNumCounter=%ld, shardNum=%ld, "
-                            "opName=%s", GET_EVENT_LIMITED_NUM, parallelId, cpuNumCounter.load(), shardNum,
-                            opname.c_str());
+            AICPUE_RUN_LOGW(
+                "Get event num has exceeded %u. parallelId=%u, cpuNumCounter=%ld, shardNum=%ld, "
+                "opName=%s",
+                GET_EVENT_LIMITED_NUM, parallelId, cpuNumCounter.load(), shardNum, opname.c_str());
         }
     }
 }
 
-void SharderNonBlock::ExecuteParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork &work,
-                                             const uint32_t parallelId)
+void SharderNonBlock::ExecuteParallelForHash(
+    const int64_t total, const int64_t cpuNums, const SharderWork& work, const uint32_t parallelId)
 {
-    AICPUE_LOGI("Op hash parallel process start. parallelId=%u, total=%ld, cpuNums=%ld",
-                parallelId, total, cpuNums);
+    AICPUE_LOGI("Op hash parallel process start. parallelId=%u, total=%ld, cpuNums=%ld", parallelId, total, cpuNums);
 
     std::atomic<int64_t> cpuNumCounter(cpuNums);
     sem_t aicpuSem;
@@ -234,8 +234,9 @@ void SharderNonBlock::ExecuteParallelForHash(const int64_t total, const int64_t 
     for (int64_t cur = 0; cur < cpuNums; cur++) {
         const Closure aicpuClosure = [&aicpuSem, &work, &cpuNumCounter, total, cur, parallelId]() {
             cpuNumCounter--;
-            AICPUE_LOGI("Start call work func. parallelId=%u, cur=%ld, cpuNumCounter=%ld",
-                        parallelId, cur, cpuNumCounter.load());
+            AICPUE_LOGI(
+                "Start call work func. parallelId=%u, cur=%ld, cpuNumCounter=%ld", parallelId, cur,
+                cpuNumCounter.load());
             work(total, cur);
 
             const int32_t semPostRet = sem_post(&aicpuSem);
@@ -243,7 +244,7 @@ void SharderNonBlock::ExecuteParallelForHash(const int64_t total, const int64_t 
                 AICPUE_LOGE("sem_post error with message: %s", strerror(errno));
             }
         };
-        
+
         taskQueue.push(aicpuClosure);
     }
 
@@ -271,7 +272,7 @@ void SharderNonBlock::ExecuteParallelForHash(const int64_t total, const int64_t 
     return;
 }
 
-void SharderNonBlock::ParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork &work)
+void SharderNonBlock::ParallelForHash(const int64_t total, const int64_t cpuNums, const SharderWork& work)
 {
     uint32_t parallelId = 0U;
     {
@@ -293,12 +294,12 @@ void SharderNonBlock::ParallelForHash(const int64_t total, const int64_t cpuNums
     ExecuteParallelForHash(total, cpuNums, work, parallelId);
     return;
 }
-}
+} // namespace aicpu
 
 /**
  * Shards the "total" unit of work refer "perUintSize"
  */
-void ParallelFor(int64_t total, int64_t perUnitSize, const aicpu::SharderWork &work)
+void ParallelFor(int64_t total, int64_t perUnitSize, const aicpu::SharderWork& work)
 {
     aicpu::SharderNonBlock::GetInstance().ParallelFor(total, perUnitSize, work);
 }
@@ -306,7 +307,4 @@ void ParallelFor(int64_t total, int64_t perUnitSize, const aicpu::SharderWork &w
 /**
  * Get CPU number
  */
-uint32_t GetCPUNum()
-{
-    return aicpu::SharderNonBlock::GetInstance().GetCPUNum();
-}
+uint32_t GetCPUNum() { return aicpu::SharderNonBlock::GetInstance().GetCPUNum(); }

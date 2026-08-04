@@ -15,8 +15,8 @@
 #include "aicpusd_status.h"
 
 namespace AicpuSchedule {
-void AicpusdLastword::RegLastwordCallback(const std::string mark,
-    std::function<void ()> callback, std::function<void ()> &cancelReg)
+void AicpusdLastword::RegLastwordCallback(
+    const std::string mark, std::function<void()> callback, std::function<void()>& cancelReg)
 {
     if (callback == nullptr) {
         aicpusd_run_info("Reg lastword mark[%s], callback is null.", mark.c_str());
@@ -46,9 +46,6 @@ void AicpusdLastword::LastwordCallback()
         it.second.second();
     }
 }
-}
+} // namespace AicpuSchedule
 
-__attribute__ ((constructor)) static void InitLastwordInstance()
-{
-    AicpuSchedule::AicpusdLastword::GetInstance();
-}
+__attribute__((constructor)) static void InitLastwordInstance() { AicpuSchedule::AicpusdLastword::GetInstance(); }

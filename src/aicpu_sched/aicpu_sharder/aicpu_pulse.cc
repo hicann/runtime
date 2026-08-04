@@ -17,23 +17,22 @@
 #include "aicpu_sharder_log.h"
 
 namespace {
-    static std::unordered_map<std::string, PulseNotifyFunc> pulseNotifyFuncMap;
-    static std::mutex g_mtx;
-}
-
+static std::unordered_map<std::string, PulseNotifyFunc> pulseNotifyFuncMap;
+static std::mutex g_mtx;
+} // namespace
 
 __attribute__((visibility("default"))) void AicpuPulseNotify()
 {
     const std::unique_lock<std::mutex> lck(g_mtx);
-    for (auto &notifyFunc:pulseNotifyFuncMap) {
+    for (auto& notifyFunc : pulseNotifyFuncMap) {
         AICPUE_LOGD("Aicpu pulse notify %s start.", notifyFunc.first.c_str());
         notifyFunc.second();
         AICPUE_LOGD("Aicpu pulse notify %s end.", notifyFunc.first.c_str());
     }
 }
 
-__attribute__((visibility("default"))) int32_t RegisterPulseNotifyFunc(const char_t * const name,
-                                                                       const PulseNotifyFunc func)
+__attribute__((visibility("default"))) int32_t RegisterPulseNotifyFunc(
+    const char_t* const name, const PulseNotifyFunc func)
 {
     if (name == nullptr) {
         AICPUE_LOGE("Register pulse notify func failed as param name is null");

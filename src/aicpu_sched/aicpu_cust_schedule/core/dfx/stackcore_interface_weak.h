@@ -7,21 +7,21 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef STACKCORE_INTERFACE_WEAK_H
 #define STACKCORE_INTERFACE_WEAK_H
- 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
+
 /**
  * @brief       : set stackcore file subdirectory to store files in the subdirectory
  * @param [in]  : subdir      subdirectory name
  * @return      : 0 success; -1 failed
  */
-__attribute__((weak)) __attribute__((visibility("default"))) int StackcoreSetSubdirectory(const char *subdir);
- 
+__attribute__((weak)) __attribute__((visibility("default"))) int StackcoreSetSubdirectory(const char* subdir);
+
 #ifdef __cplusplus
 }
 #endif

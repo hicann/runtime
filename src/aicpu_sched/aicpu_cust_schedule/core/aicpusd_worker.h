@@ -22,16 +22,16 @@
 namespace AicpuSchedule {
 class ThreadPool {
 public:
-    static ThreadPool &Instance();
+    static ThreadPool& Instance();
 
     int32_t CreateWorker();
 
     void PostSem(const uint32_t threadIndex);
 
     ThreadPool(const ThreadPool&) = delete;
-    ThreadPool &operator=(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
     ThreadPool(const ThreadPool&&) = delete;
-    ThreadPool &operator=(const ThreadPool&&) = delete;
+    ThreadPool& operator=(const ThreadPool&&) = delete;
 
 private:
     ThreadPool();
@@ -44,8 +44,8 @@ private:
     int32_t SecureCompute(const uint32_t threadIndex);
     int32_t SetAffinityByPm(const size_t threadIndex);
     int32_t SetAffinityBySelf(const size_t threadIndex);
-    void GetExpandedSysCalls(const char_t * const whitelist);
-    void ExpandSysCallList(std::unordered_set<int32_t> &filterSystemCalls);
+    void GetExpandedSysCalls(const char_t* const whitelist);
+    void ExpandSysCallList(std::unordered_set<int32_t>& filterSystemCalls);
 
     std::vector<std::thread> workers_;
     std::vector<sem_t> sems_;
@@ -53,5 +53,5 @@ private:
     std::vector<ThreadStatus> threadStatus_;
     std::unordered_set<int32_t> expandedSystemCalls_;
 };
-}  // namespace AicpuSchedule
-#endif  // AICPUSD_WORKER_H
+} // namespace AicpuSchedule
+#endif // AICPUSD_WORKER_H

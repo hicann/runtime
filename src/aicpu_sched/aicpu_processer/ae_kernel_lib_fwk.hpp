@@ -22,91 +22,90 @@
 
 namespace cce {
 
-    class FWKKernelTfImpl {
-        using FwkTfOpFuncPtr = uint32_t (*)(uint64_t paramBase);
-    public:
-        FWKKernelTfImpl();
+class FWKKernelTfImpl {
+    using FwkTfOpFuncPtr = uint32_t (*)(uint64_t paramBase);
 
-        ~FWKKernelTfImpl();
+public:
+    FWKKernelTfImpl();
 
-    public:
-        // Init Interface
-        aeStatus_t Init();
-        // Implement call a tensorflow op kernel interface
-        int32_t CallKernelApi(const uint64_t fwkKernelParam);
+    ~FWKKernelTfImpl();
 
-        // Implement load tensorflow so
-        aeStatus_t LoadTfSo();
+public:
+    // Init Interface
+    aeStatus_t Init();
+    // Implement call a tensorflow op kernel interface
+    int32_t CallKernelApi(const uint64_t fwkKernelParam);
 
-        // get thread mode so path
-        void GetThreadModelSoPath(std::string &soPath);
+    // Implement load tensorflow so
+    aeStatus_t LoadTfSo();
 
-        aeStatus_t GetTfThreadModeSoPath(std::string &soPath);
+    // get thread mode so path
+    void GetThreadModelSoPath(std::string& soPath);
 
-        void GetTensorflowThreadModeSoPath(std::string soPath);
+    aeStatus_t GetTfThreadModeSoPath(std::string& soPath);
 
-        void GetTfKernelThreadModeSoPath(std::string &soPath) const;
+    void GetTensorflowThreadModeSoPath(std::string soPath);
 
-    private:
-        const std::string &GetKernelName() const;
+    void GetTfKernelThreadModeSoPath(std::string& soPath) const;
 
-        const std::string &GetSoFile() const;
+private:
+    const std::string& GetKernelName() const;
 
-        // Transform kernel error code
-        static aeStatus_t TransformKernelErrorCode(const uint32_t errCode, const uint64_t fwkKernelParam);
+    const std::string& GetSoFile() const;
 
-    private:
-        // The tf-kernel lib file
-        std::string soFile_;
-        // The tensorflow lib file
-        std::string tensorflowSoFile_;
-        // The tensorflow lib api name
-        std::string kernelName_;
-        // Store the tensorflow lib api addr
-        void *funcAddr_;
-        // Store the handle of  tensorflow lib open by dlopen
-        void *soHandle_;
-        // Store the hadle of libtensorflow.so open by dlopen
-        void *soTensorflowHandle_;
-        // A Read Write lock to protect apiCacher_
-        tAERwLock rwLock_ = PTHREAD_RWLOCK_INITIALIZER;
-    };
+    // Transform kernel error code
+    static aeStatus_t TransformKernelErrorCode(const uint32_t errCode, const uint64_t fwkKernelParam);
 
-    class AIKernelsLibFWK : public AIKernelsLibBase {
-    public:
-        ~AIKernelsLibFWK() override = default;
+private:
+    // The tf-kernel lib file
+    std::string soFile_;
+    // The tensorflow lib file
+    std::string tensorflowSoFile_;
+    // The tensorflow lib api name
+    std::string kernelName_;
+    // Store the tensorflow lib api addr
+    void* funcAddr_;
+    // Store the handle of  tensorflow lib open by dlopen
+    void* soHandle_;
+    // Store the hadle of libtensorflow.so open by dlopen
+    void* soTensorflowHandle_;
+    // A Read Write lock to protect apiCacher_
+    tAERwLock rwLock_ = PTHREAD_RWLOCK_INITIALIZER;
+};
 
-        // SINGLETON object get interface
-        static AIKernelsLibFWK *GetInstance();
+class AIKernelsLibFWK : public AIKernelsLibBase {
+public:
+    ~AIKernelsLibFWK() override = default;
 
-        // Init interface
-        aeStatus_t Init() override;
+    // SINGLETON object get interface
+    static AIKernelsLibFWK* GetInstance();
 
-        // Close so
-        aeStatus_t CloseSo(const char_t * const soName) override;
+    // Init interface
+    aeStatus_t Init() override;
 
-        // SINGLETON object destroy interface
-        static void DestroyInstance();
+    // Close so
+    aeStatus_t CloseSo(const char_t* const soName) override;
 
-        // Call a framework op kernel interface
-        int32_t CallKernelApi(const aicpu::KernelType kernelType, const void * const kernelBase) override;
+    // SINGLETON object destroy interface
+    static void DestroyInstance();
 
-        // Batch load kernel so
-        aeStatus_t BatchLoadKernelSo(const aicpu::KernelType kernelType,
-                                     std::vector<std::string> &soVec) override;
+    // Call a framework op kernel interface
+    int32_t CallKernelApi(const aicpu::KernelType kernelType, const void* const kernelBase) override;
 
-    private:
-        //SINGLETON object
-        static AIKernelsLibFWK *instance_;
+    // Batch load kernel so
+    aeStatus_t BatchLoadKernelSo(const aicpu::KernelType kernelType, std::vector<std::string>& soVec) override;
 
-        AIKernelsLibFWK() = default;
+private:
+    // SINGLETON object
+    static AIKernelsLibFWK* instance_;
 
-    private:
-        // Tensorflow implement.
-        FWKKernelTfImpl tfImpl_;
-        // Mutex lock to protect SINGLETON object create or destroy
-        static std::mutex mtx_;
-    };
-}
+    AIKernelsLibFWK() = default;
+
+private:
+    // Tensorflow implement.
+    FWKKernelTfImpl tfImpl_;
+    // Mutex lock to protect SINGLETON object create or destroy
+    static std::mutex mtx_;
+};
+} // namespace cce
 #endif
-

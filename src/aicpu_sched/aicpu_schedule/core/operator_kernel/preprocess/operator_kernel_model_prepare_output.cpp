@@ -18,38 +18,41 @@
 #include "aicpusd_model_statistic.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_MODEL_PREPARE_OUTPUT = "modelPrepareOutput";
 const std::string KERNEL_MODEL_PREPARE_OUTPUT_WITH_TENSOR_DESC = "modelPrepareOutputWithTensorDesc";
 const std::string KERNEL_BUFFER_PREPARE_OUTPUT = "bufferPrepareOutput";
 const std::string KERNEL_BUFFER_PREPARE_OUTPUT_WITH_TENSOR_DESC = "bufferPrepareOutputWithTensorDesc";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelPrepareOutputBase::PrepareOutput(ProcessOutputInfo &outputInfo, const RunContext &taskContext,
-                                                       const bool zeroCpy, RuntimeTensorDesc *const tensorDesc) const
+int32_t OperatorKernelPrepareOutputBase::PrepareOutput(
+    ProcessOutputInfo& outputInfo, const RunContext& taskContext, const bool zeroCpy,
+    RuntimeTensorDesc* const tensorDesc) const
 {
     // point to Mbuf
-    auto inMBuf = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(outputInfo.inMBuf));
-    auto outMBuf = reinterpret_cast<Mbuf **>(static_cast<uintptr_t>(outputInfo.outMBuf));
+    auto inMBuf = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(outputInfo.inMBuf));
+    auto outMBuf = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(outputInfo.outMBuf));
     const bool inOrOutMbufIsNull = ((inMBuf == nullptr) || (outMBuf == nullptr));
     if (inOrOutMbufIsNull) {
-        aicpusd_err("PrepareOutput param inMBuf or outMBuf is null, inMBuf[%llx], outMbuf[%llx].", outputInfo.inMBuf,
+        aicpusd_err(
+            "PrepareOutput param inMBuf or outMBuf is null, inMBuf[%llx], outMbuf[%llx].", outputInfo.inMBuf,
             outputInfo.outMBuf);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     g_aicpuProfiler.SetPrepareOutStart();
     if (tensorDesc != nullptr) {
         if ((UINT32_MAX - static_cast<uint32_t>(sizeof(RuntimeTensorDesc))) < outputInfo.dataSize) {
-            aicpusd_err("PrepareOutput param is invalid, output data size[%u] + sizeof(RuntimeTensorDesc)[%zu] "
-                        "will overflow.", outputInfo.dataSize, sizeof(RuntimeTensorDesc));
+            aicpusd_err(
+                "PrepareOutput param is invalid, output data size[%u] + sizeof(RuntimeTensorDesc)[%zu] "
+                "will overflow.",
+                outputInfo.dataSize, sizeof(RuntimeTensorDesc));
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         *outMBuf = BufManager::GetInstance().MallocAndGuardBuf(
             outputInfo.dataSize + static_cast<uint32_t>(sizeof(RuntimeTensorDesc)), taskContext.modelId);
-        AicpuSdModelStatistic::GetInstance().StatNNModelOutput(taskContext.modelId, tensorDesc,
-                                                               GetStaticNNOutPutIndex(taskContext.modelId));
+        AicpuSdModelStatistic::GetInstance().StatNNModelOutput(
+            taskContext.modelId, tensorDesc, GetStaticNNOutPutIndex(taskContext.modelId));
     } else {
         *outMBuf = BufManager::GetInstance().MallocAndGuardBuf(outputInfo.dataSize, taskContext.modelId);
     }
@@ -60,7 +63,7 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutput(ProcessOutputInfo &output
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
     if (tensorDesc != nullptr) {
-        void *basePtr = nullptr;
+        void* basePtr = nullptr;
         const auto ret = halMbufGetBuffAddr(*outMBuf, &basePtr);
         if ((ret != DRV_ERROR_NONE) || (basePtr == nullptr)) {
             aicpusd_err("Failed to call halMbufGetBuffAddr, ret[%d].", ret);
@@ -81,7 +84,7 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutput(ProcessOutputInfo &output
         }
     }
 
-    void *inputHeaderBuf = nullptr;
+    void* inputHeaderBuf = nullptr;
     uint32_t inputHeadSize = 0U;
     const auto drvRet = halMbufGetPrivInfo(*inMBuf, &inputHeaderBuf, &inputHeadSize);
     if (drvRet != DRV_ERROR_NONE) {
@@ -96,11 +99,10 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutput(ProcessOutputInfo &output
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelPrepareOutputBase::PrepareOutputNonZeroCpy(const ProcessOutputInfo &outputInfo,
-                                                                 Mbuf * const outMBuf,
-                                                                 RuntimeTensorDesc *const tensorDesc) const
+int32_t OperatorKernelPrepareOutputBase::PrepareOutputNonZeroCpy(
+    const ProcessOutputInfo& outputInfo, Mbuf* const outMBuf, RuntimeTensorDesc* const tensorDesc) const
 {
-    void *dataPtr = nullptr;
+    void* dataPtr = nullptr;
     const auto ret = halMbufGetBuffAddr(outMBuf, &dataPtr);
     if ((ret != DRV_ERROR_NONE) || (dataPtr == nullptr)) {
         aicpusd_err("Failed to get data or data is nullptr, ret[%d].", ret);
@@ -111,8 +113,8 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutputNonZeroCpy(const ProcessOu
         dataPtr = ValueToPtr(PtrToValue(dataPtr) + sizeof(RuntimeTensorDesc));
     }
 
-    const errno_t eRet = memcpy_s(dataPtr, static_cast<size_t>(outputInfo.dataSize),
-        ValueToPtr(outputInfo.srcPtr),
+    const errno_t eRet = memcpy_s(
+        dataPtr, static_cast<size_t>(outputInfo.dataSize), ValueToPtr(outputInfo.srcPtr),
         static_cast<size_t>(outputInfo.dataSize));
     if (eRet != EOK) {
         aicpusd_err("Failed to memcpy, ret[%d].", eRet);
@@ -142,60 +144,63 @@ void OperatorKernelPrepareOutputBase::MarkStaticNNOutPutIndex(const uint32_t mod
     return;
 }
 
-int32_t OperatorKernelPrepareOutputBase::PrepareOutWithTensorDesc(const AicpuTaskInfo &kernelTaskInfo,
-                                                                  const bool zeroCpy,
-                                                                  const RunContext &taskContext) const
+int32_t OperatorKernelPrepareOutputBase::PrepareOutWithTensorDesc(
+    const AicpuTaskInfo& kernelTaskInfo, const bool zeroCpy, const RunContext& taskContext) const
 {
     MarkStaticNNOutPutIndex(taskContext.modelId);
-    ProcessOutputInfo * const info = PtrToPtr<void, ProcessOutputInfo>(ValueToPtr(kernelTaskInfo.paraBase));
+    ProcessOutputInfo* const info = PtrToPtr<void, ProcessOutputInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (info == nullptr) {
-        aicpusd_err("AicpuTaskInfo.paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
-        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
-    }
-    if ((UINT64_MAX - static_cast<uint64_t>(sizeof(ProcessOutputInfo))) < kernelTaskInfo.paraBase) {
-        aicpusd_err("AicpuTaskInfo.paramBase[%lu] + sizeof(ProcessOutputInfo)[%zu] will overflow, modelId[%u], "
-            "streamId[%u], taskId[%u]", kernelTaskInfo.paraBase, sizeof(ProcessOutputInfo), taskContext.modelId,
+        aicpusd_err(
+            "AicpuTaskInfo.paramBase is null, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
             taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    RuntimeTensorDesc *const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(
+    if ((UINT64_MAX - static_cast<uint64_t>(sizeof(ProcessOutputInfo))) < kernelTaskInfo.paraBase) {
+        aicpusd_err(
+            "AicpuTaskInfo.paramBase[%lu] + sizeof(ProcessOutputInfo)[%zu] will overflow, modelId[%u], "
+            "streamId[%u], taskId[%u]",
+            kernelTaskInfo.paraBase, sizeof(ProcessOutputInfo), taskContext.modelId, taskContext.streamId,
+            kernelTaskInfo.taskID);
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+    RuntimeTensorDesc* const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(
         ValueToPtr(kernelTaskInfo.paraBase + static_cast<uint64_t>(sizeof(ProcessOutputInfo))));
     return PrepareOutput(*info, taskContext, zeroCpy, tensorDesc);
 }
 
-int32_t OperatorKernelModelPrepareOutput::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelModelPrepareOutput::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    ProcessOutputInfo * const info = reinterpret_cast<ProcessOutputInfo *>(
-        static_cast<uintptr_t>(kernelTaskInfo.paraBase));
+    ProcessOutputInfo* const info =
+        reinterpret_cast<ProcessOutputInfo*>(static_cast<uintptr_t>(kernelTaskInfo.paraBase));
     if (info == nullptr) {
-        aicpusd_err("ModelPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return PrepareOutput(*info, taskContext, false, nullptr);
 }
 
-int32_t OperatorKernelModelPrepareOutputWithTensorDesc::Compute(const AicpuTaskInfo &kernelTaskInfo,
-                                                                 const RunContext &taskContext)
+int32_t OperatorKernelModelPrepareOutputWithTensorDesc::Compute(
+    const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     return PrepareOutWithTensorDesc(kernelTaskInfo, false, taskContext);
 }
 
-int32_t OperatorKernelBufferPrepareOutput::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelBufferPrepareOutput::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
-    ProcessOutputInfo * const info = PtrToPtr<void, ProcessOutputInfo>(
-        ValueToPtr(kernelTaskInfo.paraBase));
+    ProcessOutputInfo* const info = PtrToPtr<void, ProcessOutputInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (info == nullptr) {
-        aicpusd_err("ModelPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
+        aicpusd_err(
+            "ModelPrepareOut kernelTaskInfo paramBase is null, modelId[%u], streamId[%u], taskId[%u]",
             taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return PrepareOutput(*info, taskContext, true, nullptr);
 }
 
-int32_t OperatorKernelBufferPrepareOutputWithTensorDesc::Compute(const AicpuTaskInfo &kernelTaskInfo,
-                                                                  const RunContext &taskContext)
+int32_t OperatorKernelBufferPrepareOutputWithTensorDesc::Compute(
+    const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     return PrepareOutWithTensorDesc(kernelTaskInfo, true, taskContext);
 }
@@ -203,5 +208,6 @@ int32_t OperatorKernelBufferPrepareOutputWithTensorDesc::Compute(const AicpuTask
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_PREPARE_OUTPUT, OperatorKernelModelPrepareOutput);
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_PREPARE_OUTPUT_WITH_TENSOR_DESC, OperatorKernelModelPrepareOutputWithTensorDesc);
 REGISTER_OPERATOR_KERNEL(KERNEL_BUFFER_PREPARE_OUTPUT, OperatorKernelBufferPrepareOutput);
-REGISTER_OPERATOR_KERNEL(KERNEL_BUFFER_PREPARE_OUTPUT_WITH_TENSOR_DESC, OperatorKernelBufferPrepareOutputWithTensorDesc);
-}  // namespace AicpuSchedule
+REGISTER_OPERATOR_KERNEL(
+    KERNEL_BUFFER_PREPARE_OUTPUT_WITH_TENSOR_DESC, OperatorKernelBufferPrepareOutputWithTensorDesc);
+} // namespace AicpuSchedule

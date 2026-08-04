@@ -15,13 +15,12 @@
 #include "aicpusd_model_statistic.h"
 #include "operator_kernel_common.h"
 
-
 namespace AicpuSchedule {
 namespace {
 const std::string KERNEL_CHECK_INPUT_TENSOR_DESC = "checkInputTensorDesc";
-}  // namespace
+} // namespace
 
-int32_t OperatorKernelCheckInputTensorDesc::Compute(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
+int32_t OperatorKernelCheckInputTensorDesc::Compute(const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext)
 {
     // check whether the data is empty.
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
@@ -29,19 +28,20 @@ int32_t OperatorKernelCheckInputTensorDesc::Compute(const AicpuTaskInfo &kernelT
         aicpusd_info("null data, no need check static shape");
         return AICPU_SCHEDULE_OK;
     }
-    ShapeValidationInfo *allTensorDesc = PtrToPtr<void, ShapeValidationInfo>(ValueToPtr(kernelTaskInfo.paraBase));
+    ShapeValidationInfo* allTensorDesc = PtrToPtr<void, ShapeValidationInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (allTensorDesc == nullptr) {
-        aicpusd_err("Model check input tensor para is nullptr, modelId[%u], streamId[%u], taskId[%u]",
-            taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+        aicpusd_err(
+            "Model check input tensor para is nullptr, modelId[%u], streamId[%u], taskId[%u]", taskContext.modelId,
+            taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    aicpusd_info("tensor nums[%u], modelId[%u], streamId[%u], taskId[%u]",
-        allTensorDesc->inputNums, taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID);
+    aicpusd_info(
+        "tensor nums[%u], modelId[%u], streamId[%u], taskId[%u]", allTensorDesc->inputNums, taskContext.modelId,
+        taskContext.streamId, kernelTaskInfo.taskID);
 
     const uint64_t tensorDescNums = allTensorDesc->inputNums;
     std::vector<ModelConfigTensorDesc> tensorDescArr;
-    const int32_t result =
-        AicpuModelManager::GetInstance().GetModelConfigShape(taskContext.modelId, tensorDescArr);
+    const int32_t result = AicpuModelManager::GetInstance().GetModelConfigShape(taskContext.modelId, tensorDescArr);
     if ((result != AICPU_SCHEDULE_OK) || tensorDescArr.empty()) {
         // check aicpu model has tensor info
         aicpusd_warn("aicpumodel task has not tensordesc, no need check");
@@ -50,8 +50,9 @@ int32_t OperatorKernelCheckInputTensorDesc::Compute(const AicpuTaskInfo &kernelT
 
     // check tensor desc nums
     if (tensorDescArr.size() != tensorDescNums) {
-        aicpusd_err("tensorDesc number is not as expected. the expected number is[%zu], but is[%u]",
-            tensorDescArr.size(), tensorDescNums);
+        aicpusd_err(
+            "tensorDesc number is not as expected. the expected number is[%zu], but is[%u]", tensorDescArr.size(),
+            tensorDescNums);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     std::vector<uint64_t> inputSizeList;
@@ -71,12 +72,11 @@ int32_t OperatorKernelCheckInputTensorDesc::Compute(const AicpuTaskInfo &kernelT
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCheckInputTensorDesc::CheckInputTensorDesc(const uint64_t shapeValidationAddr,
-                                                                 const uint64_t index,
-                                                                 const ModelConfigTensorDesc &modelTensorDesc,
-                                                                 uint64_t &curSize) const
+int32_t OperatorKernelCheckInputTensorDesc::CheckInputTensorDesc(
+    const uint64_t shapeValidationAddr, const uint64_t index, const ModelConfigTensorDesc& modelTensorDesc,
+    uint64_t& curSize) const
 {
-    ShapeValidation *const shapeInfo =
+    ShapeValidation* const shapeInfo =
         PtrToPtr<void, ShapeValidation>(ValueToPtr(shapeValidationAddr + sizeof(ShapeValidation) * index));
     if (shapeInfo == nullptr) {
         aicpusd_err("input shape info is nullptr");
@@ -95,7 +95,7 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckInputTensorDesc(const uint64_t 
         return ret;
     }
 
-    void *dataPtr = nullptr;
+    void* dataPtr = nullptr;
     ret = OperatorKernelCommon::GetMbufDataPtr(shapeInfo->mbufAddrs, &dataPtr);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to get mbuf data addr. srcAddr is [%lu].", shapeInfo->mbufAddrs);
@@ -104,22 +104,23 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckInputTensorDesc(const uint64_t 
 
     if (shapeInfo->offset > 0) {
         uint64_t totalOffset = 0UL;
-        ret = OperatorKernelCommon::UpdateDataPtr(shapeInfo->mbufAddrs, static_cast<int32_t>(shapeInfo->offset),
-                                                  dataPtr, totalOffset);
+        ret = OperatorKernelCommon::UpdateDataPtr(
+            shapeInfo->mbufAddrs, static_cast<int32_t>(shapeInfo->offset), dataPtr, totalOffset);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("Failed to update data addr. fusion offset[%llu], totalOffset[%llu]",
-                shapeInfo->offset, totalOffset);
+            aicpusd_err(
+                "Failed to update data addr. fusion offset[%llu], totalOffset[%llu]", shapeInfo->offset, totalOffset);
             return ret;
         }
     }
 
-    RuntimeTensorDesc *const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(dataPtr);
+    RuntimeTensorDesc* const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(dataPtr);
     if (tensorDesc == nullptr) {
         aicpusd_err("tensorDesc is nullptr");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
-    aicpusd_info("index[%llu], dtype[%u], shape[0] = %u, datasize:%llu",
-                 index, tensorDesc->dtype, tensorDesc->shape[0], tensorDesc->dataSize);
+    aicpusd_info(
+        "index[%llu], dtype[%u], shape[0] = %u, datasize:%llu", index, tensorDesc->dtype, tensorDesc->shape[0],
+        tensorDesc->dataSize);
     ret = CheckShapeInfo(modelTensorDesc, *tensorDesc);
     if (ret != AICPU_SCHEDULE_OK) {
         aicpusd_err("check tensor info failed, tensor index = %llu", index);
@@ -129,14 +130,14 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckInputTensorDesc(const uint64_t 
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCheckInputTensorDesc::CheckMsgType(Mbuf **const mbufPtr) const
+int32_t OperatorKernelCheckInputTensorDesc::CheckMsgType(Mbuf** const mbufPtr) const
 {
     if ((mbufPtr == nullptr) || (*mbufPtr == nullptr)) {
         aicpusd_err("Invalid mbuf.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     uint32_t headSize = 0U;
-    void *headBuf = nullptr;
+    void* headBuf = nullptr;
     const auto drvRet = halMbufGetPrivInfo(*mbufPtr, &headBuf, &headSize);
     if ((drvRet != static_cast<int32_t>(DRV_ERROR_NONE)) || (headBuf == nullptr) ||
         (static_cast<size_t>(headSize) < sizeof(MbufHeadMsg))) {
@@ -144,8 +145,9 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckMsgType(Mbuf **const mbufPtr) c
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
 
-    const MbufHeadMsg * const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf),
-        static_cast<size_t>(headSize), static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
+    const MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+        PtrToPtr<void, uint8_t>(headBuf), static_cast<size_t>(headSize),
+        static_cast<size_t>(headSize) - sizeof(MbufHeadMsg)));
     if ((msg->msgType == static_cast<uint16_t>(MsgType::MSG_TYPE_RAW_MSG)) ||
         (msg->msgType >= static_cast<uint16_t>(MsgType::MSG_TYPE_USER_DEFINE_START))) {
         aicpusd_err("Invalid msg_type[%d].", msg->msgType);
@@ -155,25 +157,28 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckMsgType(Mbuf **const mbufPtr) c
     return AICPU_SCHEDULE_OK;
 }
 
-int32_t OperatorKernelCheckInputTensorDesc::CheckShapeInfo(const ModelConfigTensorDesc &modelTensorDesc,
-                                                           const RuntimeTensorDesc &tensorDesc) const
+int32_t OperatorKernelCheckInputTensorDesc::CheckShapeInfo(
+    const ModelConfigTensorDesc& modelTensorDesc, const RuntimeTensorDesc& tensorDesc) const
 {
     if (modelTensorDesc.dtype != tensorDesc.dtype) {
-        aicpusd_err("Failed to check modelTensorDesc dtype. modelTensorDesc.dtype[%lld], tensorDesc.dtype[%lld]",
+        aicpusd_err(
+            "Failed to check modelTensorDesc dtype. modelTensorDesc.dtype[%lld], tensorDesc.dtype[%lld]",
             modelTensorDesc.dtype, tensorDesc.dtype);
         PrintErrShapeInfo(modelTensorDesc, tensorDesc);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
     if (modelTensorDesc.shape[0] > MAX_DIM_SIZE + 1) {
-        aicpusd_err("Failed to check modelTensorDesc shape. shape size[%d] should less than %d",
-            modelTensorDesc.shape[0], MAX_DIM_SIZE + 1);
+        aicpusd_err(
+            "Failed to check modelTensorDesc shape. shape size[%d] should less than %d", modelTensorDesc.shape[0],
+            MAX_DIM_SIZE + 1);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     for (int64_t index = 0; index <= modelTensorDesc.shape[0]; index++) {
         if (modelTensorDesc.shape[index] != tensorDesc.shape[index]) {
-            aicpusd_err("Failed to check shape. expect shape[%lld] = [%lld], but is [%lld]",
-                index, modelTensorDesc.shape[index], tensorDesc.shape[index]);
+            aicpusd_err(
+                "Failed to check shape. expect shape[%lld] = [%lld], but is [%lld]", index,
+                modelTensorDesc.shape[index], tensorDesc.shape[index]);
             PrintErrShapeInfo(modelTensorDesc, tensorDesc);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
@@ -181,12 +186,13 @@ int32_t OperatorKernelCheckInputTensorDesc::CheckShapeInfo(const ModelConfigTens
     return AICPU_SCHEDULE_OK;
 }
 
-void OperatorKernelCheckInputTensorDesc::PrintErrShapeInfo(const ModelConfigTensorDesc &modelTensorDesc,
-                                                           const RuntimeTensorDesc &tensorDesc) const
+void OperatorKernelCheckInputTensorDesc::PrintErrShapeInfo(
+    const ModelConfigTensorDesc& modelTensorDesc, const RuntimeTensorDesc& tensorDesc) const
 {
     if ((modelTensorDesc.shape[0] > MAX_DIM_SIZE + 1) || (tensorDesc.shape[0] > MAX_DIM_SIZE + 1)) {
-        aicpusd_err("Failed to check modelTensorDesc shape. shape size[%d] should less than %d",
-            modelTensorDesc.shape[0], MAX_DIM_SIZE + 1);
+        aicpusd_err(
+            "Failed to check modelTensorDesc shape. shape size[%d] should less than %d", modelTensorDesc.shape[0],
+            MAX_DIM_SIZE + 1);
         return;
     }
     std::ostringstream oss;
@@ -210,6 +216,5 @@ void OperatorKernelCheckInputTensorDesc::PrintErrShapeInfo(const ModelConfigTens
     aicpusd_err("%s", oss.str().c_str());
 }
 
-
 REGISTER_OPERATOR_KERNEL(KERNEL_CHECK_INPUT_TENSOR_DESC, OperatorKernelCheckInputTensorDesc);
-}  // namespace AicpuSchedule
+} // namespace AicpuSchedule

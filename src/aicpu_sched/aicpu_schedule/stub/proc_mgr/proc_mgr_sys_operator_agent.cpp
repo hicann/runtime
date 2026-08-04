@@ -11,11 +11,11 @@
 #include "aicpusd_status.h"
 
 namespace AicpuSchedule {
-    uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity)
-    {
-        aicpusd_info("enter stub ProcMgrBindThread");
-        (void)threadId;
-        (void)coreAffinity;
-        return 0U;
-    }
+uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity)
+{
+    aicpusd_info("enter stub ProcMgrBindThread");
+    (void)threadId;
+    (void)coreAffinity;
+    return 0U;
 }
+} // namespace AicpuSchedule

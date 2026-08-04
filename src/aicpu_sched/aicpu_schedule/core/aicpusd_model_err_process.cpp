@@ -19,7 +19,7 @@ namespace {
 constexpr uint32_t ERRLOG_MAXNUM = 16U;
 constexpr uint32_t ERRLOG_UNIT_MAXLEN = 256U;
 constexpr uint32_t ERRLOG_TOTAL_MAXLEN = 4096U;
-}
+} // namespace
 
 namespace AicpuSchedule {
 AicpuModelErrProc::AicpuModelErrProc()
@@ -31,18 +31,17 @@ AicpuModelErrProc::AicpuModelErrProc()
     }
 }
 
-AicpuModelErrProc &AicpuModelErrProc::GetInstance()
+AicpuModelErrProc& AicpuModelErrProc::GetInstance()
 {
     static AicpuModelErrProc instance;
     return instance;
 }
 
-void AicpuModelErrProc::ProcessLogBuffCfgMsg(const aicpu::AicpuConfigMsg &cfgInfo)
+void AicpuModelErrProc::ProcessLogBuffCfgMsg(const aicpu::AicpuConfigMsg& cfgInfo)
 {
     const uint32_t tsId = cfgInfo.tsId;
     const aicpu::AicpuConfigMsgType msgType = static_cast<aicpu::AicpuConfigMsgType>(cfgInfo.msgType);
-    aicpusd_info("Begin to ProcessLogBuffCfgMsg, tsId[%u], msgType[%u].",
-                 tsId, msgType);
+    aicpusd_info("Begin to ProcessLogBuffCfgMsg, tsId[%u], msgType[%u].", tsId, msgType);
 
     if (tsId >= ERRLOG_TS_MAXNUM) {
         aicpusd_err("Invalid input tsId, tsId[%u].", tsId);
@@ -73,7 +72,7 @@ void AicpuModelErrProc::ProcessLogBuffCfgMsg(const aicpu::AicpuConfigMsg &cfgInf
 void AicpuModelErrProc::SetLogBuffInvalid(const uint32_t tsId)
 {
     lockBuff_.Lock();
-    const ScopeGuard lockGuard([&] () { lockBuff_.Unlock(); });
+    const ScopeGuard lockGuard([&]() { lockBuff_.Unlock(); });
 
     isBuffValid_[tsId] = false;
     return;
@@ -87,13 +86,13 @@ void AicpuModelErrProc::SetUnitLogEmpy(const uint32_t tsId, const uint32_t offse
     }
 
     lockBuff_.Lock();
-    const ScopeGuard lockGuard([&] () { lockBuff_.Unlock(); });
+    const ScopeGuard lockGuard([&]() { lockBuff_.Unlock(); });
 
     if (!isBuffValid_[tsId]) {
         return;
     }
 
-    char_t * const errType = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId] + offset));
+    char_t* const errType = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId] + offset));
     *errType = static_cast<char_t>(aicpu::AicpuErrMsgType::ERR_MSG_TYPE_NULL);
 
     return;
@@ -102,7 +101,7 @@ void AicpuModelErrProc::SetUnitLogEmpy(const uint32_t tsId, const uint32_t offse
 void AicpuModelErrProc::SetLogBuffAddr(const uint32_t tsId, const uint64_t buffAddr, const uint16_t buffLen)
 {
     lockBuff_.Lock();
-    const ScopeGuard lockGuard([&] () { lockBuff_.Unlock(); });
+    const ScopeGuard lockGuard([&]() { lockBuff_.Unlock(); });
 
     buffBaseAddr_[tsId] = buffAddr;
     buffLen_[tsId] = buffLen;
@@ -135,14 +134,14 @@ bool AicpuModelErrProc::CheckLogIsEmpt(const uint32_t tsId, const uint32_t offse
     if (offset >= ERRLOG_TOTAL_MAXLEN) {
         return false;
     }
-    const char_t * const errType = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId] + offset));
+    const char_t* const errType = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId] + offset));
     if ((*errType) == static_cast<char_t>(aicpu::AicpuErrMsgType::ERR_MSG_TYPE_NULL)) {
         return true;
     }
     return false;
 }
 
-uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicoreErrMsgInfo &errLog, const uint32_t tsId, uint32_t &offset)
+uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicoreErrMsgInfo& errLog, const uint32_t tsId, uint32_t& offset)
 {
     lockBuff_.Lock();
     const ScopeGuard lockGuard([&]() { lockBuff_.Unlock(); });
@@ -151,8 +150,8 @@ uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicoreErrMsgInfo &errLog, con
     if (offset == UINT32_MAX) {
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
-    char_t * const baseAddr = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId]));
-    char_t * const wrAddr = baseAddr + offset;
+    char_t* const baseAddr = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId]));
+    char_t* const wrAddr = baseAddr + offset;
     const errno_t eRet = memcpy_s(wrAddr, ERRLOG_UNIT_MAXLEN, &errLog, sizeof(aicpu::AicoreErrMsgInfo));
     if (eRet != EOK) {
         aicpusd_err("Failed to memcpy AicpuModelErrProc, ret[%d].", eRet);
@@ -162,7 +161,7 @@ uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicoreErrMsgInfo &errLog, con
     return AICPU_SCHEDULE_OK;
 }
 
-uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicpuErrMsgInfo &errLog, const uint32_t tsId, uint32_t &offset)
+uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicpuErrMsgInfo& errLog, const uint32_t tsId, uint32_t& offset)
 {
     lockBuff_.Lock();
     const ScopeGuard lockGuard([&]() { lockBuff_.Unlock(); });
@@ -171,8 +170,8 @@ uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicpuErrMsgInfo &errLog, cons
     if (offset == UINT32_MAX) {
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
-    char_t * const baseAddr = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId]));
-    char_t * const wrAddr = baseAddr + offset;
+    char_t* const baseAddr = PtrToPtr<void, char_t>(ValueToPtr(buffBaseAddr_[tsId]));
+    char_t* const wrAddr = baseAddr + offset;
 
     const errno_t eRet = memcpy_s(wrAddr, ERRLOG_UNIT_MAXLEN, &errLog, sizeof(aicpu::AicpuErrMsgInfo));
     if (eRet != EOK) {
@@ -183,15 +182,16 @@ uint32_t AicpuModelErrProc::AddErrLog(const aicpu::AicpuErrMsgInfo &errLog, cons
     return AICPU_SCHEDULE_OK;
 }
 
-void AicpuModelErrProc::RecordAicoreOpErrLog(const AicpuSqeAdapter::AicpuTaskReportInfo &info, 
-                                             AicpuSqeAdapter &aicpuSqeAdapter)
+void AicpuModelErrProc::RecordAicoreOpErrLog(
+    const AicpuSqeAdapter::AicpuTaskReportInfo& info, AicpuSqeAdapter& aicpuSqeAdapter)
 {
     if (static_cast<int32_t>(info.result_code) == AICPU_SCHEDULE_OK) {
         return;
     }
 
-    aicpusd_err("Aicpu start report aic/aiv result to ts. modelId=%hu, streamId=%hu, taskId=%hu, ret=%hu",
-                info.model_id, info.stream_id, info.task_id, info.result_code);
+    aicpusd_err(
+        "Aicpu start report aic/aiv result to ts. modelId=%hu, streamId=%hu, taskId=%hu, ret=%hu", info.model_id,
+        info.stream_id, info.task_id, info.result_code);
 
     const auto model = AicpuModelManager::GetInstance().GetModel(static_cast<uint32_t>(info.model_id));
     if (model == nullptr) {
@@ -208,9 +208,9 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(const AicpuSqeAdapter::AicpuTaskRep
     aicpu::AicoreErrMsgInfo aicLogInfo = {};
     aicLogInfo.errType = static_cast<uint8_t>(aicpu::AicpuErrMsgType::ERR_MSG_TYPE_AICORE);
     aicLogInfo.version = static_cast<uint8_t>(ModelErrRptVer::LOG_ERROR_VERSION_1);
-    aicLogInfo.errorCode  = info.result_code;
-    aicLogInfo.modelId  = static_cast<uint32_t>(info.model_id);
-    aicLogInfo.taskId   = info.task_id;
+    aicLogInfo.errorCode = info.result_code;
+    aicLogInfo.modelId = static_cast<uint32_t>(info.model_id);
+    aicLogInfo.taskId = info.task_id;
     aicLogInfo.streamId = info.stream_id;
     aicLogInfo.transactionId = 0UL;
 
@@ -222,11 +222,11 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(const AicpuSqeAdapter::AicpuTaskRep
     }
 
     ErrLogRptInfo reportInfo = {};
-    reportInfo.offset   = offset;
-    reportInfo.errCode  = info.result_code;
+    reportInfo.offset = offset;
+    reportInfo.errCode = info.result_code;
     reportInfo.streamId = info.stream_id;
-    reportInfo.taskId   = info.task_id;
-    reportInfo.modelId  = static_cast<uint32_t>(info.model_id);
+    reportInfo.taskId = info.task_id;
+    reportInfo.modelId = static_cast<uint32_t>(info.model_id);
     reportInfo.tsId = tsId;
     if (ReportErrLog(reportInfo, aicpuSqeAdapter) != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to report AicoreErrLog, offset[%u].", offset);
@@ -236,13 +236,15 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(const AicpuSqeAdapter::AicpuTaskRep
     return;
 }
 
-void AicpuModelErrProc::RecordAicpuOpErrLog(const RunContext &taskContext, const AicpuTaskInfo &kernelTaskInfo,
-                                            const uint32_t resultCode)
+void AicpuModelErrProc::RecordAicpuOpErrLog(
+    const RunContext& taskContext, const AicpuTaskInfo& kernelTaskInfo, const uint32_t resultCode)
 {
     const auto kernelName = PtrToPtr<const void, const char_t>(ValueToPtr(kernelTaskInfo.kernelName));
-    aicpusd_err("Aicpu report aicpu error to ts. modelId=%u, streamId=%u, taskId=%u, kernelType=%u, ret=%u,"
-                "kernelName=%s", taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID,
-                kernelTaskInfo.kernelType, resultCode, kernelName);
+    aicpusd_err(
+        "Aicpu report aicpu error to ts. modelId=%u, streamId=%u, taskId=%u, kernelType=%u, ret=%u,"
+        "kernelName=%s",
+        taskContext.modelId, taskContext.streamId, kernelTaskInfo.taskID, kernelTaskInfo.kernelType, resultCode,
+        kernelName);
 
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if (model == nullptr) {
@@ -296,19 +298,21 @@ void AicpuModelErrProc::RecordAicpuOpErrLog(const RunContext &taskContext, const
     return;
 }
 
-uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo &reportInfo, AicpuSqeAdapter &aicpuSqeAdapterPtr) const
+uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo& reportInfo, AicpuSqeAdapter& aicpuSqeAdapterPtr) const
 {
-    aicpusd_info("Begin to report log, tsId[%u], modelId[%u], streamId[%u], taskId[%u], offset[%u].",
-                 reportInfo.tsId, reportInfo.modelId, reportInfo.streamId, reportInfo.taskId, reportInfo.offset);
-    AicpuSqeAdapter::ErrMsgRspInfo errMsgRspInfo(reportInfo.offset, reportInfo.errCode, reportInfo.streamId, 
-                                                 reportInfo.taskId, reportInfo.modelId, reportInfo.tsId);
+    aicpusd_info(
+        "Begin to report log, tsId[%u], modelId[%u], streamId[%u], taskId[%u], offset[%u].", reportInfo.tsId,
+        reportInfo.modelId, reportInfo.streamId, reportInfo.taskId, reportInfo.offset);
+    AicpuSqeAdapter::ErrMsgRspInfo errMsgRspInfo(
+        reportInfo.offset, reportInfo.errCode, reportInfo.streamId, reportInfo.taskId, reportInfo.modelId,
+        reportInfo.tsId);
     AicpuSqeAdapter aicpuSqeAdapter(FeatureCtrl::GetTsMsgVersion());
     const int32_t ret = aicpuSqeAdapterPtr.ErrorMsgResponseToTs(errMsgRspInfo);
     aicpusd_info("Finished to send logmsg report information, ret[%d].", ret);
     return ret;
 }
 
-uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo &reportInfo) const
+uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo& reportInfo) const
 {
     AicpuSqeAdapter aicpuSqeAdapter(FeatureCtrl::GetTsMsgVersion());
     return ReportErrLog(reportInfo, aicpuSqeAdapter);

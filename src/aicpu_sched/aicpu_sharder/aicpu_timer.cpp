@@ -15,18 +15,15 @@
 
 namespace aicpu {
 
-AicpuTimer &AicpuTimer::GetInstance()
+AicpuTimer& AicpuTimer::GetInstance()
 {
     static AicpuTimer instance;
     return instance;
 }
 
-void AicpuTimer::SetSupportTimer(const bool flag)
-{
-    isSupportTimer_ = flag;
-}
+void AicpuTimer::SetSupportTimer(const bool flag) { isSupportTimer_ = flag; }
 
-void AicpuTimer::RegistMonitorFunc(const StartMonitorFunc &startFunc, const StopMonitorFunc &stopFunc)
+void AicpuTimer::RegistMonitorFunc(const StartMonitorFunc& startFunc, const StopMonitorFunc& stopFunc)
 {
     startTimerFunc_ = startFunc;
     stopTimerFunc_ = stopFunc;
@@ -34,7 +31,7 @@ void AicpuTimer::RegistMonitorFunc(const StartMonitorFunc &startFunc, const Stop
     return;
 }
 
-TimerStatus AicpuTimer::StartTimer(TimerHandle &timerHandle, const TimeoutCallback &callback, const uint32_t timeInS)
+TimerStatus AicpuTimer::StartTimer(TimerHandle& timerHandle, const TimeoutCallback& callback, const uint32_t timeInS)
 {
     if (!isSupportTimer_) {
         AICPUE_LOGI("No need start timer");
@@ -54,8 +51,9 @@ TimerStatus AicpuTimer::StartTimer(TimerHandle &timerHandle, const TimeoutCallba
 
     TimerStatus ret = RegistTimeoutCallback(timerHandle, callback);
     if (ret != TimerStatus::AICPU_TIMER_SUCCESS) {
-        AICPUE_LOGE("Register op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
-                    timerHandle);
+        AICPUE_LOGE(
+            "Register op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
+            timerHandle);
         return ret;
     }
 
@@ -85,8 +83,9 @@ TimerStatus AicpuTimer::StopTimer(const TimerHandle timerHandle)
 
     ret = UnregistTimeoutCallback(timerHandle);
     if (ret != TimerStatus::AICPU_TIMER_SUCCESS) {
-        AICPUE_LOGE("Unregister op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
-                    timerHandle);
+        AICPUE_LOGE(
+            "Unregister op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
+            timerHandle);
         return ret;
     }
 
@@ -111,7 +110,7 @@ void AicpuTimer::CallTimeoutCallback(const TimerHandle timerHandle)
     return;
 }
 
-TimerStatus AicpuTimer::RegistTimeoutCallback(const TimerHandle timerHandle, const TimeoutCallback &callback)
+TimerStatus AicpuTimer::RegistTimeoutCallback(const TimerHandle timerHandle, const TimeoutCallback& callback)
 {
     {
         const std::lock_guard<std::mutex> lk(timeoutCbkMapMutex_);
@@ -163,14 +162,12 @@ TimerStatus AicpuTimer::StopTimerInMonitor(const TimerHandle timerHandle) const
     return TimerStatus::AICPU_TIMER_SUCCESS;
 }
 
-bool StartTimer(TimerHandle &timerHandle, const TimeoutCallback &callBack, const uint32_t timeInS)
+bool StartTimer(TimerHandle& timerHandle, const TimeoutCallback& callBack, const uint32_t timeInS)
 {
-    return AicpuTimer::GetInstance().StartTimer(timerHandle, callBack, timeInS) ==
-           TimerStatus::AICPU_TIMER_SUCCESS ? true : false;
+    return AicpuTimer::GetInstance().StartTimer(timerHandle, callBack, timeInS) == TimerStatus::AICPU_TIMER_SUCCESS ?
+               true :
+               false;
 }
 
-void StopTimer(const TimerHandle timerHandle)
-{
-    (void)AicpuTimer::GetInstance().StopTimer(timerHandle);
-}
+void StopTimer(const TimerHandle timerHandle) { (void)AicpuTimer::GetInstance().StopTimer(timerHandle); }
 } // namespace aicpu
