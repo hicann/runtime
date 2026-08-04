@@ -43,9 +43,7 @@ struct RtStarsDqsBatchDequeueFc {
 
     RtStarsCondOpLLWI llwicntNotifyReadAddr;
     RtStarsCondOpLHWI lhwicntNotifyReadAddr;
-    RtStarsCondOpSystemCsr csrrcCntNotfiy;
     RtStarsCondOpLoad ldrCntNotifyStat;
-    RtStarsCondOpSystemCsr csrrsCntNotfiy;
     RtStarsCondOpImm left1;
     RtStarsCondOpImm right1;
 
@@ -62,9 +60,7 @@ struct RtStarsDqsBatchDequeueFc {
 
     RtStarsCondOpLLWI llwicntNotifyClearAddr;
     RtStarsCondOpLHWI lhwicntNotifyClearAddr;
-    RtStarsCondOpSystemCsr csrrcClearNotify;
     RtStarsCondOpStore swClearNotify;
-    RtStarsCondOpSystemCsr csrrsClearNotify;
 
     RtStarsCondOpLoad ldrGqmRealAddr;
     RtStarsCondGqm gqm;
@@ -149,8 +145,7 @@ struct RtStarsDqsBatchDequeueFc {
     RtStarsCondOpBranch EqJumpEnd;
 
     RtStarsCondOpSystemCsr wPopErr;
-    RtStarsSetCsrJumpPc jumpPcErr;
-    RtStarsCondOpBranch EqJumpErr;
+    RtStarsCondOpErrorInstr popErr;
     RtStarsCondOpSystemCsr wHandleErr;
     RtStarsCondOpLoad ldrMbuffMangAddr1;
     RtStarsCondOpLLWI llwiAddrMask2;

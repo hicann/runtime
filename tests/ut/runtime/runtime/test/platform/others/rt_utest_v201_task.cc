@@ -54,6 +54,7 @@
 #include "dqs_task_info.hpp"
 #include "ioctl_utils.hpp"
 #include "notify.hpp"
+#include "count_notify.hpp"
 #include "../../rt_utest_api.hpp"
 #include "driver/ascend_hal.h"
 #include "api_impl_david.hpp"
@@ -73,6 +74,17 @@ using namespace testing;
 using namespace cce::runtime;
 extern int64_t g_device_driver_version_stub;
 static rtChipType_t g_chipType;
+
+static drvError_t halResAddrMapStub(
+    unsigned int devId, struct res_addr_info* resInfo, unsigned long* va, unsigned int* len)
+{
+    UNUSED(devId);
+    UNUSED(resInfo);
+    *va = 0x1000UL;
+    *len = 0U;
+    return DRV_ERROR_NONE;
+}
+
 static drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     if (value) {
@@ -443,6 +455,10 @@ TEST_F(TaskTestV201, Test_Batch_Deque_Task) // halCentreNotifyGet正常返回场
     ctrlSpace.input_queue_num = 2U;
     StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
     streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+    auto* const cntNotify = new CountNotify(device_->Id_(), device_->DevGetTsId());
+    ASSERT_NE(cntNotify, nullptr);
+    streamWithDqs->SetDqsCountNotify(cntNotify);
+    MOCKER(halResAddrMap).stubs().will(invoke(halResAddrMapStub));
 
     TaskInfo task2 = {};
     NotifyWaitTaskInfo notifyWaitTask = {};

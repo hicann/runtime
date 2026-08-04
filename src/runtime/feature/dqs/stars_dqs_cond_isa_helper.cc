@@ -666,11 +666,8 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
     // 加载 cntNotifyReadAddr 到 r5 寄存器中， r5 = cntNotifyStatAddr;
     ConstructLLWI(r5, funcCallPara.cntNotifyReadAddr, fc.llwicntNotifyReadAddr);
     ConstructLHWI(r5, funcCallPara.cntNotifyReadAddr, fc.lhwicntNotifyReadAddr);
-    // cfg use PA
-    ConstructSystemCsr(r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrcCntNotfiy);
 
     ConstructLoad(r5, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCntNotifyStat);
-    ConstructSystemCsr(r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrsCntNotfiy);
     /* 通过先左移32位，再右移32位，实现清除高位的目的 */
     ConstructOpImmAndi(r5, r5, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, fc.left1);  /* 左移32位 */
     ConstructOpImmAndi(r5, r5, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, fc.right1); /* 右移32位 */
@@ -695,13 +692,7 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
     // 加载 cntNotifyClearAddr 到 r9 寄存器中， r9 = llwicntNotifyClearAddr;用于清除对应的标记位
     ConstructLLWI(r9, funcCallPara.cntNotifyClearAddr, fc.llwicntNotifyClearAddr);
     ConstructLHWI(r9, funcCallPara.cntNotifyClearAddr, fc.lhwicntNotifyClearAddr);
-    // cfg use PA
-    ConstructSystemCsr(
-        r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrcClearNotify);
     ConstructStore(r9, r10, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swClearNotify); /* 清除对应的件标记位 */
-    // restore to use VA
-    ConstructSystemCsr(
-        r1, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrsClearNotify);
 
     // 从GQM中获取handle
     ConstructLoad(r2, 0U, r10, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrGqmRealAddr); /* 加载每个队列gqm的地址到r10中 */
@@ -847,12 +838,8 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc& fc, const RtStarsDqsBa
     // todo:定义错误码，增加错误类型。
     // pop_error:
     ConstructSystemCsr(r5, r0, RT_STARS_COND_CSR_CSQ_STATUS_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRW, fc.wPopErr);
-    // Jump pc set err instr
-    offset = offsetof(RtStarsDqsBatchDequeueFc, err);
-    offset = offset / sizeof(uint32_t);
-    ConstructSetJumpPcFc(r5, offset, fc.jumpPcErr);
-    ConstructBranch(
-        r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.EqJumpErr); // 跳转到异常
+    // Pop失败时没有获得有效mbuf handle，直接报错，不能进入handle异常的free流程。
+    ConstructErrorInstr(fc.popErr);
 
     // handle_error:
     ConstructSystemCsr(r9, r0, RT_STARS_COND_CSR_CSQ_STATUS_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRW, fc.wHandleErr);

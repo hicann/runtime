@@ -128,7 +128,7 @@ rtError_t CountNotify::Record(Stream* const streamIn, const rtCntNtyRecordInfo_t
     return RT_ERROR_NONE;
 }
 
-rtError_t CountNotify::GetCntNotifyAddress(uint64_t& addr, rtNotifyType_t regType)
+rtError_t CountNotify::GetCntNotifyAddress(uint64_t& addr, rtNotifyType_t regType) const
 {
     rtDevResType_t devResType = RT_RES_TYPE_STARS_CNT_NOTIFY_RECORD;
     switch (regType) {

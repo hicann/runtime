@@ -23,7 +23,7 @@ public:
     ~CountNotify() noexcept override;
     rtInnerObject* GetInnerHandle() { return &handle_; }
     const rtInnerObject* GetInnerHandle() const { return &handle_; }
-    rtError_t GetCntNotifyAddress(uint64_t& addr, rtNotifyType_t regType);
+    rtError_t GetCntNotifyAddress(uint64_t& addr, rtNotifyType_t regType) const;
     rtError_t Record(Stream* const streamIn, const rtCntNtyRecordInfo_t* const info);
     rtError_t Setup();
     rtError_t Wait(Stream* const streamIn, const rtCntNtyWaitInfo_t* const info);

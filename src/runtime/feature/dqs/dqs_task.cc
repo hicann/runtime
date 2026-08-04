@@ -26,27 +26,6 @@ namespace cce {
 namespace runtime {
 
 constexpr uint32_t dqsPoolIdMask = 0x3FFU; // pool_id in mbuf handle. bit[9:0]
-constexpr uint32_t TS_ID_P = 0x0U;
-constexpr uint64_t TS_STARS_SUBSYS_PHY_ADDR_P = 0x580000000ULL;
-constexpr uint32_t STARS_CNTNOTIFY_THRESHOLD_DEFAULT_P = 4U;
-constexpr uint64_t TS_STARS_REG_OFFSET = 0x20000000ULL;
-constexpr uint64_t TS_STARS_CHIP_OFFSET = 0x40000000000ULL;
-
-constexpr uint64_t TS_STARS_SUBSYS_PHY_ADDR_F = 0x20880000000ULL;
-constexpr uint32_t STARS_CNTNOTIFY_THRESHOLD_DEFAULT_F = 2U;
-
-constexpr uint32_t STARS_CNTNOTIFY_SLICE_LINE_CNT_ID_NUM = 4U;
-constexpr uint32_t STARS_CNTNOTIFY_GROUP_SIZE = 16U;
-constexpr uint64_t STARS_CNTNOTIFY_SLICE_CNT_INTERVAL = 0x10000ULL;
-constexpr uint64_t STARS_CNTNOTIFY_GROUP_INTERVAL = 0x1000ULL;
-constexpr uint32_t STARS_CNTNOTIFY_CNT_ID_INTERVAL = 0x80U;
-
-/* STARS_NOTIFY_CFG Base address of Module's Register */
-constexpr uint64_t SOC_STARS_NOTIFY_CFG_BASE = 0x10000000ULL;
-
-constexpr uint64_t SOC_STARS_NOTIFY_CFG_STARS_NOTIFY_CNT_ST_SLICE0_0_REG = SOC_STARS_NOTIFY_CFG_BASE + 0x2000000ULL;
-constexpr uint64_t SOC_STARS_NOTIFY_CFG_STARS_NOTIFY_CNT_BIT_CLR_SLICE0_0_REG =
-    SOC_STARS_NOTIFY_CFG_BASE + 0x2000060ULL;
 
 static void InitOutputCommonMbufTracePara(CondMbufTraceParam& para, const uint64_t ctrlSpaceAddr, uint32_t streamId)
 {
@@ -292,52 +271,22 @@ static rtError_t PrepareSqeInfoForDqsDequeueTask(TaskInfo* taskInfo)
     return ret;
 }
 
-static uint64_t GetNotifyRecordBaseAddr(const StreamWithDqs* stm, uint32_t notifyId, uint32_t tsId)
-{
-    int32_t chipId = 0;
-    rtError_t ret = stm->Device_()->Driver_()->GetCentreNotify(6, &chipId); /* index 6可以获取chipid */
-    if (ret != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Get board info fail, retCode=%#x", ret);
-        return 0x0ULL;
-    }
-    RT_LOG(RT_LOG_INFO, "Get board info success. (chipId=%u)", chipId);
-
-    uint64_t starsRegBaseAddr = (tsId == TS_ID_P) ? TS_STARS_SUBSYS_PHY_ADDR_P : TS_STARS_SUBSYS_PHY_ADDR_F;
-    starsRegBaseAddr = starsRegBaseAddr + static_cast<uint64_t>(chipId) * TS_STARS_CHIP_OFFSET + TS_STARS_REG_OFFSET;
-    const uint32_t threshold = (tsId == 0U) ? STARS_CNTNOTIFY_THRESHOLD_DEFAULT_P : STARS_CNTNOTIFY_THRESHOLD_DEFAULT_F;
-    const uint32_t notifyNumPerSlice = threshold * STARS_CNTNOTIFY_SLICE_LINE_CNT_ID_NUM;
-    // calculate notify record addr by slice and group
-    const uint32_t sliceId = notifyId / notifyNumPerSlice;
-    // group isolated by 4KB
-    const uint32_t groupId = (notifyId % notifyNumPerSlice) / STARS_CNTNOTIFY_GROUP_SIZE;
-    const uint32_t groupOffset = (notifyId % notifyNumPerSlice) % STARS_CNTNOTIFY_GROUP_SIZE;
-
-    return starsRegBaseAddr + static_cast<uint64_t>(sliceId) * STARS_CNTNOTIFY_SLICE_CNT_INTERVAL +
-           static_cast<uint64_t>(groupId) * STARS_CNTNOTIFY_GROUP_INTERVAL +
-           static_cast<uint64_t>(groupOffset) * STARS_CNTNOTIFY_CNT_ID_INTERVAL;
-}
-
 static uint64_t GetNotifyRecordAddr(bool isRead, const StreamWithDqs* stm)
 {
-    uint64_t offset = 0;
-    if (isRead) {
-        offset = SOC_STARS_NOTIFY_CFG_STARS_NOTIFY_CNT_ST_SLICE0_0_REG;
-    } else { /* 清零的标记位 */
-        offset = SOC_STARS_NOTIFY_CFG_STARS_NOTIFY_CNT_BIT_CLR_SLICE0_0_REG;
-    }
-
     const CountNotify* notify = stm->GetDqsCountNotify();
     NULL_PTR_RETURN_MSG(notify, RT_ERROR_NOTIFY_NULL);
 
-    const uint32_t notifyId = notify->GetCntNotifyId();
-    const uint32_t tsId = notify->GetTsId();
-
-    const uint64_t baseAddr = GetNotifyRecordBaseAddr(stm, notifyId, tsId);
-    if (baseAddr == 0x0ULL) {
+    uint64_t addr = 0ULL;
+    const rtNotifyType_t regType = isRead ? NOTIFY_CNT_ST_SLICE : NOTIFY_CNT_BIT_CLR_SLICE;
+    const rtError_t error = notify->GetCntNotifyAddress(addr, regType);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_ERROR, "GetCntNotifyAddress failed, isRead=%d, retCode=%#x.", static_cast<int32_t>(isRead),
+            static_cast<uint32_t>(error));
         return 0x0ULL;
     }
 
-    return baseAddr + offset;
+    return addr;
 }
 
 static void InitFreeMbufTracePara(CondMbufTraceParam& param, uint64_t ctrlSpaceAddr, const uint32_t streamId)
