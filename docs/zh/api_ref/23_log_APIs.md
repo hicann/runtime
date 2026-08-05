@@ -616,6 +616,6 @@ enum {
     SYSMONITOR = 73,
     AML = 74,
     ADETECT = 75,
-    INVLID_MOUDLE_ID = 76   /* add new module before INVLID_MOUDLE_ID */
+    INVALID_MODULE_ID = 76   /* add new module before INVALID_MODULE_ID */
 };
 ```

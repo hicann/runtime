@@ -73,17 +73,17 @@
 
 ## aclDataBuffer
 
-- **[aclCreateDataBuffer](#aclCreateDataBuffer)**  
+- **[aclCreateDataBuffer](#aclCreateDataBuffer)**
 
-- **[aclDestroyDataBuffer](#aclDestroyDataBuffer)**  
+- **[aclDestroyDataBuffer](#aclDestroyDataBuffer)**
 
-- **[aclGetDataBufferAddr](#aclGetDataBufferAddr)**  
+- **[aclGetDataBufferAddr](#aclGetDataBufferAddr)**
 
-- **[aclGetDataBufferSize（废弃）](#aclGetDataBufferSize_deprecated)**  
+- **[aclGetDataBufferSize（废弃）](#aclGetDataBufferSize_deprecated)**
 
-- **[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)**  
+- **[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)**
 
-- **[aclUpdateDataBuffer](#aclUpdateDataBuffer)**  
+- **[aclUpdateDataBuffer](#aclUpdateDataBuffer)**
 
 <br>
 
@@ -396,9 +396,9 @@ aclError aclUpdateDataBuffer(aclDataBuffer *dataBuffer, void *data, size_t size)
 
 ## aclprofConfig
 
-- **[aclprofCreateConfig](#aclprofCreateConfig)**  
+- **[aclprofCreateConfig](#aclprofCreateConfig)**
 
-- **[aclprofDestroyConfig](#aclprofDestroyConfig)**  
+- **[aclprofDestroyConfig](#aclprofDestroyConfig)**
 
 <br>
 
@@ -439,7 +439,7 @@ aclprofConfig *aclprofCreateConfig(uint32_t *deviceIdList, uint32_t deviceNums, 
 
 创建aclprofConfig类型的数据，表示创建Profiling配置数据。
 
-aclProfConfig类型数据可以只创建一次、多处使用，用户需要保证数据的一致性和准确性。
+aclprofConfig类型数据可以只创建一次、多处使用，用户需要保证数据的一致性和准确性。
 
 如需销毁aclprofConfig类型的数据，请参见[aclprofDestroyConfig](#aclprofDestroyConfig)。
 
@@ -523,9 +523,9 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 
 ## aclprofStepInfo
 
-- **[aclprofCreateStepInfo](#aclprofCreateStepInfo)**  
+- **[aclprofCreateStepInfo](#aclprofCreateStepInfo)**
 
-- **[aclprofDestroyStepInfo](#aclprofDestroyStepInfo)**  
+- **[aclprofDestroyStepInfo](#aclprofDestroyStepInfo)**
 
 <br>
 
@@ -635,9 +635,9 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 
 ## aclprofSubscribeConfig
 
-- **[aclprofCreateSubscribeConfig](#aclprofCreateSubscribeConfig)**  
+- **[aclprofCreateSubscribeConfig](#aclprofCreateSubscribeConfig)**
 
-- **[aclprofDestroySubscribeConfig](#aclprofDestroySubscribeConfig)**  
+- **[aclprofDestroySubscribeConfig](#aclprofDestroySubscribeConfig)**
 
 <br>
 
@@ -758,19 +758,19 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscri
 
 ## aclrtAllocatorDesc
 
-- **[aclrtAllocatorCreateDesc](#aclrtAllocatorCreateDesc)**  
+- **[aclrtAllocatorCreateDesc](#aclrtAllocatorCreateDesc)**
 
-- **[aclrtAllocatorDestroyDesc](#aclrtAllocatorDestroyDesc)**  
+- **[aclrtAllocatorDestroyDesc](#aclrtAllocatorDestroyDesc)**
 
-- **[aclrtAllocatorSetObjToDesc](#aclrtAllocatorSetObjToDesc)**  
+- **[aclrtAllocatorSetObjToDesc](#aclrtAllocatorSetObjToDesc)**
 
-- **[aclrtAllocatorSetAllocFuncToDesc](#aclrtAllocatorSetAllocFuncToDesc)**  
+- **[aclrtAllocatorSetAllocFuncToDesc](#aclrtAllocatorSetAllocFuncToDesc)**
 
-- **[aclrtAllocatorSetAllocAdviseFuncToDesc](#aclrtAllocatorSetAllocAdviseFuncToDesc)**  
+- **[aclrtAllocatorSetAllocAdviseFuncToDesc](#aclrtAllocatorSetAllocAdviseFuncToDesc)**
 
-- **[aclrtAllocatorSetFreeFuncToDesc](#aclrtAllocatorSetFreeFuncToDesc)**  
+- **[aclrtAllocatorSetFreeFuncToDesc](#aclrtAllocatorSetFreeFuncToDesc)**
 
-- **[aclrtAllocatorSetGetAddrFromBlockFuncToDesc](#aclrtAllocatorSetGetAddrFromBlockFuncToDesc)**  
+- **[aclrtAllocatorSetGetAddrFromBlockFuncToDesc](#aclrtAllocatorSetGetAddrFromBlockFuncToDesc)**
 
 <br>
 
@@ -1120,9 +1120,9 @@ aclError aclrtAllocatorSetGetAddrFromBlockFuncToDesc(aclrtAllocatorDesc allocato
 
 ## aclrtStreamConfigHandle
 
-- **[aclrtCreateStreamConfigHandle](#aclrtCreateStreamConfigHandle)**  
+- **[aclrtCreateStreamConfigHandle](#aclrtCreateStreamConfigHandle)**
 
-- **[aclrtDestroyStreamConfigHandle](#aclrtDestroyStreamConfigHandle)**  
+- **[aclrtDestroyStreamConfigHandle](#aclrtDestroyStreamConfigHandle)**
 
 <br>
 
@@ -1229,21 +1229,21 @@ aclError aclrtDestroyStreamConfigHandle(aclrtStreamConfigHandle *handle)
 
 ## acltdtDataItem
 
-- **[acltdtCreateDataItem](#acltdtCreateDataItem)**  
+- **[acltdtCreateDataItem](#acltdtCreateDataItem)**
 
-- **[acltdtDestroyDataItem](#acltdtDestroyDataItem)**  
+- **[acltdtDestroyDataItem](#acltdtDestroyDataItem)**
 
-- **[acltdtGetTensorTypeFromItem](#acltdtGetTensorTypeFromItem)**  
+- **[acltdtGetTensorTypeFromItem](#acltdtGetTensorTypeFromItem)**
 
-- **[acltdtGetDataTypeFromItem](#acltdtGetDataTypeFromItem)**  
+- **[acltdtGetDataTypeFromItem](#acltdtGetDataTypeFromItem)**
 
-- **[acltdtGetDataAddrFromItem](#acltdtGetDataAddrFromItem)**  
+- **[acltdtGetDataAddrFromItem](#acltdtGetDataAddrFromItem)**
 
-- **[acltdtGetDataSizeFromItem](#acltdtGetDataSizeFromItem)**  
+- **[acltdtGetDataSizeFromItem](#acltdtGetDataSizeFromItem)**
 
-- **[acltdtGetDimNumFromItem](#acltdtGetDimNumFromItem)**  
+- **[acltdtGetDimNumFromItem](#acltdtGetDimNumFromItem)**
 
-- **[acltdtGetDimsFromItem](#acltdtGetDimsFromItem)**  
+- **[acltdtGetDimsFromItem](#acltdtGetDimsFromItem)**
 
 <br>
 
@@ -1658,17 +1658,17 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 
 ## acltdtDataset
 
-- **[acltdtCreateDataset](#acltdtCreateDataset)**  
+- **[acltdtCreateDataset](#acltdtCreateDataset)**
 
-- **[acltdtDestroyDataset](#acltdtDestroyDataset)**  
+- **[acltdtDestroyDataset](#acltdtDestroyDataset)**
 
-- **[acltdtGetDataItem](#acltdtGetDataItem)**  
+- **[acltdtGetDataItem](#acltdtGetDataItem)**
 
-- **[acltdtAddDataItem](#acltdtAddDataItem)**  
+- **[acltdtAddDataItem](#acltdtAddDataItem)**
 
-- **[acltdtGetDatasetSize](#acltdtGetDatasetSize)**  
+- **[acltdtGetDatasetSize](#acltdtGetDatasetSize)**
 
-- **[acltdtGetDatasetName](#acltdtGetDatasetName)**  
+- **[acltdtGetDatasetName](#acltdtGetDatasetName)**
 
 <br>
 
@@ -1974,13 +1974,13 @@ const char *acltdtGetDatasetName(const acltdtDataset *dataset)
 
 ## acltdtQueueAttr
 
-- **[acltdtCreateQueueAttr](#acltdtCreateQueueAttr)**  
+- **[acltdtCreateQueueAttr](#acltdtCreateQueueAttr)**
 
-- **[acltdtDestroyQueueAttr](#acltdtDestroyQueueAttr)**  
+- **[acltdtDestroyQueueAttr](#acltdtDestroyQueueAttr)**
 
-- **[acltdtSetQueueAttr](#acltdtSetQueueAttr)**  
+- **[acltdtSetQueueAttr](#acltdtSetQueueAttr)**
 
-- **[acltdtGetQueueAttr](#acltdtGetQueueAttr)**  
+- **[acltdtGetQueueAttr](#acltdtGetQueueAttr)**
 
 <br>
 
@@ -2190,11 +2190,11 @@ aclError acltdtGetQueueAttr(const acltdtQueueAttr *attr, acltdtQueueAttrType typ
 
 ## acltdtQueueRoute
 
-- **[acltdtCreateQueueRoute](#acltdtCreateQueueRoute)**  
+- **[acltdtCreateQueueRoute](#acltdtCreateQueueRoute)**
 
-- **[acltdtDestroyQueueRoute](#acltdtDestroyQueueRoute)**  
+- **[acltdtDestroyQueueRoute](#acltdtDestroyQueueRoute)**
 
-- **[acltdtGetQueueRouteParam](#acltdtGetQueueRouteParam)**  
+- **[acltdtGetQueueRouteParam](#acltdtGetQueueRouteParam)**
 
 <br>
 
@@ -2355,15 +2355,15 @@ aclError acltdtGetQueueRouteParam(const acltdtQueueRoute *route, acltdtQueueRout
 
 ## acltdtQueueRouteList
 
-- **[acltdtCreateQueueRouteList](#acltdtCreateQueueRouteList)**  
+- **[acltdtCreateQueueRouteList](#acltdtCreateQueueRouteList)**
 
-- **[acltdtDestroyQueueRouteList](#acltdtDestroyQueueRouteList)**  
+- **[acltdtDestroyQueueRouteList](#acltdtDestroyQueueRouteList)**
 
-- **[acltdtAddQueueRoute](#acltdtAddQueueRoute)**  
+- **[acltdtAddQueueRoute](#acltdtAddQueueRoute)**
 
-- **[acltdtGetQueueRoute](#acltdtGetQueueRoute)**  
+- **[acltdtGetQueueRoute](#acltdtGetQueueRoute)**
 
-- **[acltdtGetQueueRouteNum](#acltdtGetQueueRouteNum)**  
+- **[acltdtGetQueueRouteNum](#acltdtGetQueueRouteNum)**
 
 <br>
 
@@ -2618,11 +2618,11 @@ size_t acltdtGetQueueRouteNum(const acltdtQueueRouteList *routeList)
 
 ## acltdtQueueRouteQueryInfo
 
-- **[acltdtCreateQueueRouteQueryInfo](#acltdtCreateQueueRouteQueryInfo)**  
+- **[acltdtCreateQueueRouteQueryInfo](#acltdtCreateQueueRouteQueryInfo)**
 
-- **[acltdtDestroyQueueRouteQueryInfo](#acltdtDestroyQueueRouteQueryInfo)**  
+- **[acltdtDestroyQueueRouteQueryInfo](#acltdtDestroyQueueRouteQueryInfo)**
 
-- **[acltdtSetQueueRouteQueryInfo](#acltdtSetQueueRouteQueryInfo)**  
+- **[acltdtSetQueueRouteQueryInfo](#acltdtSetQueueRouteQueryInfo)**
 
 <br>
 

@@ -759,10 +759,10 @@ aclprofSubscribeOpFlag aclprofGetOpFlag(const void *opInfo, size_t opInfoLen, ui
 
 ```c
 typedef enum {
-    ACL_SUBSCRIBLE_OP = 0,                // 算子
-    ACL_SUBSCRIBLE_SUBGRAPH = 1,          // 子图
-    ACL_SUBSCRIBLE_OP_THREAD = 2,         // 算子thread
-    ACL_SUBSCRIBLE_NONE = 0xFF,
+    ACL_SUBSCRIBE_OP = 0,                // 算子
+    ACL_SUBSCRIBE_SUBGRAPH = 1,          // 子图
+    ACL_SUBSCRIBE_OP_THREAD = 2,         // 算子thread
+    ACL_SUBSCRIBE_NONE = 0xFF,
 } aclprofSubscribeOpFlag;
 ```
 

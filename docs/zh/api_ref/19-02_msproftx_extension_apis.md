@@ -504,7 +504,7 @@ aclError aclprofRangePushEx(aclprofEventAttributes *attr)
 
 ### 功能说明
 
-在Torch场景下，msproftx上报Tensor信息。
+在aclrt和<<<>>>场景下，用户在算子加载接口前先调用aclprofRangePushEx，后调用aclprofRangePop接口，完成Profiling数据的上报。
 
 调用此接口后，Profiling判断messageType为MESSAGE\_TYPE\_TENSOR\_INFO时，缓存Tensor信息。
 
@@ -561,7 +561,7 @@ aclError aclprofRangePop()
 
 ### 功能说明
 
-在Torch场景下，msproftx上报Tensor信息。
+在aclrt和<<<>>>场景下，用户在算子加载接口前先调用aclprofRangePushEx，后调用aclprofRangePop接口，完成Profiling数据的上报。
 
 调用此接口后，Profiling上报缓存的Tensor信息。
 
