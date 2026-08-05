@@ -391,6 +391,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, co
 
     MemWaitValueTaskInfo* memWaitValueTask = &taskInfo->u.memWaitValueTask;
 
+    memWaitValueTask->event = nullptr;
     memWaitValueTask->devAddr = RtPtrToValue(devAddr);
     memWaitValueTask->value = value;
     memWaitValueTask->flag = flag;

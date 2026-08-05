@@ -143,6 +143,22 @@ TEST_F(CloudV2TaskTest, MemWaitModelIsNull)
     EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
 }
 
+TEST_F(CloudV2TaskTest, MemWaitValueTaskInitClearsEvent)
+{
+    TaskInfo task = {};
+    uint64_t devAddr = 0;
+    task.stream = stream_;
+    task.typeName = "MEM_WAIT_VALUE";
+    task.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    task.u.memWaitValueTask.event = event_;
+
+    const rtError_t ret = MemWaitValueTaskInit(&task, static_cast<void*>(&devAddr), 0U, 0U);
+
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(task.u.memWaitValueTask.event, nullptr);
+    MemWaitTaskUnInit(&task);
+}
+
 TEST_F(CloudV2TaskTest, SnapShotAclGraphRestoreWithUbFlag)
 {
     Runtime::Instance()->SetConnectUbFlag(true);
