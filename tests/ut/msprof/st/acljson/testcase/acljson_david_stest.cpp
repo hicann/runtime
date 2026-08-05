@@ -150,7 +150,7 @@ TEST_F(AclJsonDavidStest, AclJsonInstrProfiling)
     nlohmann::json data;
     data["output"] = DAVID_OUTPUT_DIR;
     data["instr_profiling"] = "on";
-    data["instr_profiling_freq"] = "10000";
+    data["instr_profiling_freq"] = 10000;
     std::vector<std::string> dataList = {"instr.biu_perf_group0", "instr.biu_perf_group1", "instr.biu_perf_group2"};
     // david device simulator return aicore num 18 <= DAVID_DIE0_AICORE_NUM
     std::vector<std::string> blackDataList = {"instr.biu_perf_group3", "instr.biu_perf_group4", "instr.biu_perf_group5"};

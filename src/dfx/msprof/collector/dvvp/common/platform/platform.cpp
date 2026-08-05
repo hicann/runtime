@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "platform.h"
+#include <sstream>
 #include "errno/error_code.h"
 #include "ai_drv_dev_api.h"
 #include "platform/platform.h"
@@ -262,6 +263,38 @@ PlatformFeature Platform::PmuToFeature(const std::string &key) const
         return PlatformFeature::PLATFORM_FEATURE_INVALID;
     }
     return platform_->PmuMetricsToFeature(key);
+}
+
+PlatformFeature Platform::PmuToFeatureInMap(const std::string &key) const
+{
+    const auto it = METRIC_FEATURE_MAP.find(key);
+    if (it != METRIC_FEATURE_MAP.cend()) {
+        return it->second;
+    }
+    return PlatformFeature::PLATFORM_FEATURE_INVALID;
+}
+
+std::string Platform::GenerateAicoreMetricsPrompt() const
+{
+    std::stringstream result;
+    bool isFirstMetrics = true;
+
+    result << "[";
+    for (const auto &metricsFeature : METRIC_FEATURE_MAP) {
+        if (!CheckIfSupport(metricsFeature.second)) {
+            continue;
+        }
+        if (!isFirstMetrics) {
+            result << "|";
+        }
+        isFirstMetrics = false;
+        result << metricsFeature.first;
+    }
+    if (isFirstMetrics) {
+        return "No aic_metrics supported on current platform";
+    }
+    result << "]";
+    return result.str();
 }
 
 uint32_t Platform::DrvGetApiVersion() const

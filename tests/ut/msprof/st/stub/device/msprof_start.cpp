@@ -75,7 +75,10 @@ void MsprofStart::GetProfilingInput(map<string, string> &sv)
 
 void MsprofStart::DivideProtoJsonInput(int argvCount, nlohmann::json argv)
 {
-    std::set<string> digital = {"sys_hardware_mem_freq", "sys_io_sampling_freq", "sys_interconnection_freq", "dvpp_freq", "host_sys_usage_freq", "sys_cpu_freq"};
+    std::set<string> digital = {
+        "sys_hardware_mem_freq", "sys_io_sampling_freq", "sys_interconnection_freq", "dvpp_freq",
+        "host_sys_usage_freq", "sys_cpu_freq", "instr_profiling_freq"
+    };
     if (argvCount == 0) {
         return;
     }

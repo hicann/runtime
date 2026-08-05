@@ -123,6 +123,8 @@ public:
     bool CheckIfPlatformExist() const;
     uint64_t PlatformSysCycleTime() const;
     PlatformFeature PmuToFeature(const std::string &key) const;
+    PlatformFeature PmuToFeatureInMap(const std::string &key) const;
+    std::string GenerateAicoreMetricsPrompt() const;
     uint32_t DrvGetApiVersion() const;
     bool CheckIfSupportAdprof(uint32_t deviceId) const;
     int32_t HalGetDeviceInfoByBuff(uint32_t deviceId, int32_t moduleType,

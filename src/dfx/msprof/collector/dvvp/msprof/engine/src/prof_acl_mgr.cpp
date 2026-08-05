@@ -65,6 +65,13 @@ using namespace Collector::Dvvp::Mstx;
 namespace Msprofiler {
 namespace Api {
 namespace {
+bool IsFreqConfig(const std::string &config)
+{
+    const std::string freqSuffix = "_freq";
+    return config.size() >= freqSuffix.size() &&
+        config.compare(config.size() - freqSuffix.size(), freqSuffix.size(), freqSuffix) == 0;
+}
+
 const char *GetAclProfConfigTypeName(aclprofConfigType type)
 {
     static const char *const configTypeNames[] = {
@@ -108,23 +115,32 @@ std::string GetFreqConfigReason(const std::string &config)
     return "Please input an integer value in range [1, 100]";
 }
 
-std::string GetJsonConfigInvalidReason(const std::string &config)
+std::string GetInstrProfilingFreqReason()
 {
-    if (config == "aic_metrics") {
-        return "Please input a supported aic_metrics value";
+    return "Please input an integer value in range [" + std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MIN) + ", " +
+        std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MAX) + "]";
+}
+
+std::string GetAicMetricsConfigReason()
+{
+    const std::string metricsPrompt = Platform::instance()->GenerateAicoreMetricsPrompt();
+    if (metricsPrompt.empty() || metricsPrompt.front() != '[') {
+        return metricsPrompt;
     }
+    return "Please input in the range of " + metricsPrompt + " or Custom:<event-list>";
+}
+
+std::string GetTaskTraceConfigReason()
+{
+    return Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3) ?
+        "Please input 'on', 'off', 'l0', 'l1', 'l2' or 'l3'" :
+        "Please input 'on', 'off', 'l0', 'l1' or 'l2'";
+}
+
+std::string GetFixedJsonConfigInvalidReason(const std::string &config)
+{
     if (config == "ge_api") {
         return "Please input 'l0', 'l1' or 'off'";
-    }
-    if (config == "task_trace" || config == "task_time") {
-        return Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3) ?
-            "Please input 'on', 'off', 'l0', 'l1', 'l2' or 'l3'" :
-            "Please input 'on', 'off', 'l0', 'l1' or 'l2'";
-    }
-    if (config == "sys_hardware_mem_freq" || config == "sys_io_sampling_freq" ||
-        config == "sys_interconnection_freq" || config == "sys_cpu_freq" ||
-        config == "dvpp_freq" || config == "host_sys_usage_freq" || config == "sys_lp_freq") {
-        return GetFreqConfigReason(config);
     }
     if (config == "llc_profiling") {
         return "Please input 'read' or 'write'";
@@ -142,6 +158,34 @@ std::string GetJsonConfigInvalidReason(const std::string &config)
         return "Please input 'all', 'on' or 'off'";
     }
     return "Please input 'on' or 'off'";
+}
+
+std::string GetJsonConfigInvalidReason(const std::string &config)
+{
+    if (config == "aic_metrics") {
+        return GetAicMetricsConfigReason();
+    }
+    if (config == "task_trace" || config == "task_time") {
+        return GetTaskTraceConfigReason();
+    }
+    if (config == "instr_profiling_freq") {
+        return GetInstrProfilingFreqReason();
+    }
+    if (IsFreqConfig(config)) {
+        return GetFreqConfigReason(config);
+    }
+    return GetFixedJsonConfigInvalidReason(config);
+}
+
+std::string GetJsonConfigTypeInvalidReason(const std::string &config)
+{
+    if (config == "aic_metrics") {
+        return "The aic_metrics should be a string. " + GetJsonConfigInvalidReason(config);
+    }
+    if (IsFreqConfig(config)) {
+        return "The " + config + " should be an integer. " + GetJsonConfigInvalidReason(config);
+    }
+    return GetJsonConfigInvalidReason(config);
 }
 
 std::string GetAclProfSetFreqReason(aclprofConfigType cfgType)
@@ -214,6 +258,16 @@ bool JsonConfigTypeIsValid(const NanoJson::JsonValue &value, const std::string &
         return value.type == NanoJson::JsonValueType::STRING;
     }
     return true;
+}
+
+bool JsonConfigRequiresInteger(const std::string &config)
+{
+    return IsFreqConfig(config);
+}
+
+bool JsonConfigIntegerTypeIsValid(const NanoJson::JsonValue &value)
+{
+    return value.type == NanoJson::JsonValueType::INT || value.type == NanoJson::JsonValueType::UINT;
 }
 
 const uint32_t ACL_CFG_LEN_MAX = 1024 * 1024;  // max input cfg len is 1024 * 1024
@@ -1952,12 +2006,18 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json &acljsonCfg) 
         if (iter->first == "switch" && iter->second.GetValue<std::string>() == "on") {
             aclJsonSwitch = true;
         }
+        if (JsonConfigRequiresInteger(iter->first) && !JsonConfigIntegerTypeIsValid(iter->second)) {
+            std::string reason = GetJsonConfigTypeInvalidReason(iter->first);
+            MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
+                std::vector<std::string>({iter->second(), iter->first, reason}));
+            return MSPROF_ERROR_CONFIG_INVALID;
+        }
         if (iter->first == "output" || iter->first == "storage_limit" ||
             iter->first == "instr_profiling_freq" || iter->first == "optype") {
             continue;
         } else {
             if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
-                std::string reason = GetJsonConfigInvalidReason(iter->first);
+                std::string reason = GetJsonConfigTypeInvalidReason(iter->first);
                 MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
                     std::vector<std::string>({iter->second(), iter->first, reason}));
                 return MSPROF_ERROR_CONFIG_INVALID;
@@ -2174,7 +2234,7 @@ int32_t ProfAclMgr::MsprofGeOptionMetricsConstruct(NanoJson::Json &geoptionCfg)
         ret = Platform::instance()->GetAicoreEvents(aiVectMetrics, params_->aiv_profiling_events);
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("The aic_metrics[%s] of input geconfig is invalid", aiCoreMetrics.c_str());
-            std::string reason = "Aicore metrics is not supported on current platform";
+            std::string reason = GetJsonConfigInvalidReason("aic_metrics");
             MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({aiCoreMetrics, "aic_metrics", reason}));
             return MSPROF_ERROR_CONFIG_INVALID;
@@ -2208,6 +2268,12 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json &geoptionCfg
         if (iter->first == "task_trace") {
             MSPROF_LOGW("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
         }
+        if (JsonConfigRequiresInteger(iter->first) && !JsonConfigIntegerTypeIsValid(iter->second)) {
+            MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+                std::vector<std::string>({iter->second(), iter->first,
+                    GetJsonConfigTypeInvalidReason(iter->first)}));
+            return MSPROF_ERROR_CONFIG_INVALID;
+        }
         if (iter->first == "output" || iter->first == "storage_limit" ||
             iter->first == "fp_point" || iter->first == "bp_point" ||
             iter->first == "instr_profiling_freq" || iter->first == "optype") {
@@ -2216,7 +2282,7 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json &geoptionCfg
             if (!JsonConfigTypeIsValid(iter->second, iter->first)) {
                 MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
                     std::vector<std::string>({iter->second(), iter->first,
-                        GetJsonConfigInvalidReason(iter->first)}));
+                        GetJsonConfigTypeInvalidReason(iter->first)}));
                 return MSPROF_ERROR_CONFIG_INVALID;
             }
             if (!ProfParamsAdapter::instance()->CheckJsonConfig(iter->first, iter->second)) {
@@ -3639,9 +3705,10 @@ int32_t ProfAclMgr::MsprofAclJsonMetricsConstruct(NanoJson::Json &acljsonCfg)
     ret = Platform::instance()->GetAicoreEvents(aiVectMetrics, params_->aiv_profiling_events);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("The parameter of aic_metrics in aclJsonConfig is invalid");
-        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
+        std::string reason = GetJsonConfigInvalidReason("aic_metrics");
+        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
             std::vector<std::string>({
-                "aic_metrics", aiCoreMetrics, "The parameter of aic_metrics in aclJsonConfig is invalid"
+                aiCoreMetrics, "aic_metrics", reason
             }));
         return MSPROF_ERROR_CONFIG_INVALID;
     }

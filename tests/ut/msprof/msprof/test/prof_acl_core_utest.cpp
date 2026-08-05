@@ -2103,6 +2103,14 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidInputsReportInputError)
         ProfAclMgr::instance()->MsprofInitAclJson((void *)invalidJson.c_str(), invalidJson.size()));
     EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
     ExpectLastInputErrorReasonContains("valid json string");
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidCommonConfigsReportInputError)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS));
 
     std::string invalidOutput = "{\"switch\":\"on\",\"output\":\"p\\n\"}";
     ProfAclMgr aclJsonMgr;
@@ -2122,6 +2130,45 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidInputsReportInputError)
     ExpectLastInputErrorReasonNotEndWithPeriod();
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidMetricsAndFreqReportInputError)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS));
+
+    std::string numericAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":123}";
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitAclJson((void *)numericAicMetrics.c_str(), numericAicMetrics.size()));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "should be a string");
+    ExpectLastInputErrorReasonContains("Please input in the range of");
+
+    std::string unknownAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":\"unknown\"}";
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitAclJson((void *)unknownAicMetrics.c_str(), unknownAicMetrics.size()));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
+    ExpectLastInputErrorReasonContains("Custom:<event-list>");
+
+    std::string stringInstrFreq = "{\"switch\":\"on\",\"instr_profiling_freq\":\"10000\"}";
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitAclJson((void *)stringInstrFreq.c_str(), stringInstrFreq.size()));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("instr_profiling_freq", "should be an integer");
+    ExpectLastInputErrorReasonContains("range [");
+
+    std::string stringSysCpuFreq = "{\"switch\":\"on\",\"sys_cpu_freq\":\"10\"}";
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitAclJson((void *)stringSysCpuFreq.c_str(), stringSysCpuFreq.size()));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("sys_cpu_freq", "should be an integer");
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonTooLongReportsInputError)
 {
     using namespace Msprofiler::Api;
@@ -2133,6 +2180,17 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonTooLongReportsInputError)
         ProfAclMgr::instance()->MsprofInitAclJson((void *)aclJson.c_str(), aclCfgLenMax + 1));
     EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
     ExpectLastInputErrorReasonContains("less than or equal to");
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclJsonFreqIntegerConfigsValid)
+{
+    using namespace Msprofiler::Api;
+    NanoJson::Json acljsonCfg("{\"switch\":\"on\",\"instr_profiling_freq\":10000,\"sys_cpu_freq\":10}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
+        .stubs()
+        .will(returnValue(true));
+
+    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckAclJsonConfigInvalid(acljsonCfg));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidInputsReportInputError)
@@ -2206,7 +2264,42 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidConfigsReportInputError)
     EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
         ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
     EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
-    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "supported aic_metrics value");
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
+    ExpectLastInputErrorReasonContains("Custom:<event-list>");
+
+    (void)strcpy_s(options.options, sizeof(options.options), "{\"aic_metrics\":123}");
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "should be a string");
+    ExpectLastInputErrorReasonContains("Please input in the range of");
+
+    (void)strcpy_s(options.options, sizeof(options.options), "{\"aic_metrics\":\"unknown\"}");
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
+    ExpectLastInputErrorReasonContains("Custom:<event-list>");
+
+    (void)strcpy_s(options.options, sizeof(options.options), "{\"sys_cpu_freq\":\"10\"}");
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("sys_cpu_freq", "should be an integer");
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, CheckGeOptionFreqIntegerConfigsValid)
+{
+    using namespace Msprofiler::Api;
+    NanoJson::Json geoptionCfg("{\"instr_profiling_freq\":10000,\"sys_cpu_freq\":10}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
+        .stubs()
+        .will(returnValue(true));
+
+    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckGeOptionConfigInvalid(geoptionCfg));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclApiAicoreMetricsInvalidReportsInputError)

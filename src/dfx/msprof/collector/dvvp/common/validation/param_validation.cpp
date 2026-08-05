@@ -208,12 +208,18 @@ bool ParamValidation::CheckAicoreMetricsIsValid(const std::string &aicoreMetrics
         return true;
     }
     auto featureMetrics = Platform::instance()->PmuToFeature(aicoreMetrics);
-    if (Platform::instance()->CheckIfSupport(featureMetrics)) {
-        return true;
+    if (featureMetrics == PlatformFeature::PLATFORM_FEATURE_INVALID) {
+        featureMetrics = Platform::instance()->PmuToFeatureInMap(aicoreMetrics);
     }
-
-    MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", aicoreMetrics.c_str());
-    return false;
+    if (featureMetrics == PlatformFeature::PLATFORM_FEATURE_INVALID) {
+        MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", aicoreMetrics.c_str());
+        return false;
+    }
+    if (!Platform::instance()->CheckIfSupport(featureMetrics)) {
+        MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", aicoreMetrics.c_str());
+        return false;
+    }
+    return true;
 }
 
 bool ParamValidation::CheckDuplicateSocPmu(const std::string &oriStr) const
