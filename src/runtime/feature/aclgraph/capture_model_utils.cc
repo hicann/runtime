@@ -442,7 +442,7 @@ bool IsUbDma(Stream* const stm, const uint32_t kind, const void* const srcAddr, 
 {
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
-    rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, RtPtrToUnConstPtr<void*>(desAddr));
+    const rtError_t error = ConvertCpyType(&taskInfo, kind, srcAddr, RtPtrToUnConstPtr<void*>(desAddr));
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, false, "Failed to convert copy type, kind=%s.",
         MemcpyKindToString(static_cast<rtMemcpyKind_t>(kind)).c_str());

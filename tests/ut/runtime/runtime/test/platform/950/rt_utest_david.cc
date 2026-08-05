@@ -760,6 +760,70 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_execute)
     stream_->models_.clear();
 }
 
+TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_Success)
+{
+    rtModel_t model;
+    ASSERT_EQ(rtModelCreate(&model, 0), RT_ERROR_NONE);
+    Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(realModel, nullptr);
+
+    const uint64_t funCallMemSize = 256ULL;
+    void* hostMem = malloc(funCallMemSize);
+    ASSERT_NE(hostMem, nullptr);
+    realModel->SetFirstExecute(false);
+    realModel->SetFuncCallHostMem(hostMem);
+    realModel->SetFuncCallSvmMem(0x1000ULL);
+    realModel->SetFunCallMemSize(funCallMemSize);
+
+    RawDevice* rawDev = static_cast<RawDevice*>(stream_->Device_());
+    const uint32_t copyOnceIdx = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE);
+    const bool origVal = rawDev->featureSet_[copyOnceIdx];
+    rawDev->featureSet_[copyOnceIdx] = false;
+    MOCKER_CPP_VIRTUAL(rawDev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    rtError_t ret = ModelExecuteTaskInit(&task, realModel, realModel->Id_(), 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rawDev->featureSet_[copyOnceIdx] = origVal;
+    TaskUnInitProc(&task);
+    rtModelDestroy(model);
+    stream_->models_.clear();
+}
+
+TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_MemCopyFail)
+{
+    rtModel_t model;
+    ASSERT_EQ(rtModelCreate(&model, 0), RT_ERROR_NONE);
+    Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(realModel, nullptr);
+
+    const uint64_t funCallMemSize = 256ULL;
+    void* hostMem = malloc(funCallMemSize);
+    ASSERT_NE(hostMem, nullptr);
+    realModel->SetFirstExecute(false);
+    realModel->SetFuncCallHostMem(hostMem);
+    realModel->SetFuncCallSvmMem(0x1000ULL);
+    realModel->SetFunCallMemSize(funCallMemSize);
+
+    RawDevice* rawDev = static_cast<RawDevice*>(stream_->Device_());
+    const uint32_t copyOnceIdx = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE);
+    const bool origVal = rawDev->featureSet_[copyOnceIdx];
+    rawDev->featureSet_[copyOnceIdx] = false;
+    MOCKER_CPP_VIRTUAL(rawDev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    rtError_t ret = ModelExecuteTaskInit(&task, realModel, realModel->Id_(), 0);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+
+    rawDev->featureSet_[copyOnceIdx] = origVal;
+    TaskUnInitProc(&task);
+    rtModelDestroy(model);
+    stream_->models_.clear();
+}
+
 TEST_F(DavidTaskTest, construct_davidsqe_for_maintaince_task_force_recycle)
 {
     TaskInfo maintainceTask = {};

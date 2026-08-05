@@ -875,7 +875,7 @@ bool CaptureModel::ReportSingleCaptureStreamInfo(
 void CaptureModel::ReportedStreamInfoForProfiling() const
 {
     for (const auto& iter : singleOperStmIdAndCaptureStmIdMap_) {
-        for (int32_t captureStmId : iter.second) {
+        for (const int32_t captureStmId : iter.second) {
             if (!ReportSingleCaptureStreamInfo(
                     0U, static_cast<uint32_t>(captureStmId), static_cast<uint32_t>(iter.first),
                     beginCaptureTimeStamp_)) {

@@ -26,12 +26,12 @@
 #include <memory>
 #include <new>
 
-namespace cce {
-namespace runtime {
 /* mem cacheable */
 #define MEM_CACHEABLE_BIT 41
 #define MEM_CACHEABLE_TYPE (0X1ULL << MEM_CACHEABLE_BIT)
 
+namespace cce {
+namespace runtime {
 static constexpr uint32_t BuildMemTypeFlag(const uint32_t typeValue) { return 1U << typeValue; }
 
 static void MapPhysicalMemTypeByPolicy(rtDrvMemProp_t* const prop, const PhysicalMemTypePolicy policy)
@@ -1530,8 +1530,6 @@ rtError_t NpuDriver::DevMemFreeForPctrace(const void* const dst)
 rtError_t NpuDriver::DevMemAllocCached(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId)
 {
-    TIMESTAMP_NAME(__func__);
-
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     RT_LOG(RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", memPolicy=%u.", deviceId, type, size, memPolicy);
     if (memPolicy != RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY) {
@@ -1541,7 +1539,7 @@ rtError_t NpuDriver::DevMemAllocCached(
     uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_SVM_NORMAL) |
                        static_cast<uint64_t>(MEM_CACHEABLE_TYPE) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
-    drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
+    const drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
         const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
