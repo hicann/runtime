@@ -633,8 +633,8 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
 rtError_t CheckTaskCanSend(Stream* const stm)
 {
     COND_RETURN_AND_MSG_OUTER(
-        (stm->GetBindFlag() && (stm->Model_() != nullptr) && stm->isModelComplete), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1016, "Task delivery",
+        (!stm->IsSoftwareSqEnable() && stm->GetBindFlag() && (stm->Model_() != nullptr) && stm->isModelComplete),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Task delivery",
         "Stream (stream_id=" + std::to_string(stm->Id_()) + ") is bound to model (model_id=" +
             std::to_string(stm->Model_()->Id_()) + "). The model has been built and does not support task delivery");
     rtError_t errorCode = RT_ERROR_NONE;
