@@ -1,262 +1,240 @@
-# Context 模块架构
+# Context模块架构
 
 ## 1. 模块概述
 
-- **功能介绍**：Context 模块负责维护 Runtime 的执行上下文，是连接 Device、Stream、Task、Model 和 Module 的核心对象。上层 ACL/Runtime API 进入 Runtime 后，依赖当前线程绑定的 Context 找到对应设备、默认流、用户流、模型资源、模块缓存、系统参数和错误状态。
+- **功能介绍**：Context维护Runtime在指定Device上的执行上下文。Context与Device绑定，并管理默认Stream、用户Stream、Model、CaptureModel、Module和错误状态等。Runtime API执行时，首先获取当前线程所关联的Context，再通过该Context确定目标Device，后续的任务下发、同步、异常处理及资源回收均在该Context及其所属Device上完成。
 - **设计目标**：
-  - 支持 `rtSetDevice` / `aclrtSetDevice` 隐式创建和复用 Primary Context。
-  - 支持 `rtCtxCreate` / `aclrtCreateContext` 显式创建用户 Context。
-  - 通过线程局部变量维护当前线程的 Context 绑定关系。
-  - 统一承载 Context 下属的 Stream、Model、Module、系统参数和错误状态。
-  - 通过全局有效集合和 RAII 保护降低 Context handle 误用和并发销毁风险。
-  - 为 ACL Graph、FFTS Plus、XPU、Snapshot、runtime_compact 等能力提供扩展入口。
+  - 支持`aclrtSetDevice`关联默认Context，也支持`aclrtCreateContext`显式创建用户Context。
+  - 使用线程局部存储（TLS）中的线程局部变量保存当前Context，使各线程执行环境相互隔离。
+  - 管理Context与相关资源的关联关系和资源回收。
+  - 结合生命周期状态机、USER/INTERNAL访问模式及线程关联等机制来保障Context访问安全。
 
-Context 在 Runtime 中主要有三类形态：
+Context按创建和绑定方式分为两类：
 
 | 形态 | 创建入口 | 核心对象 | 生命周期管理 |
-| ---- | -------- | -------- | ------------ |
-| Primary Context | `rtSetDevice()`、`aclrtSetDevice()` | `Context(dev, true)` | `Runtime::PrimaryContextRetain()` / `Runtime::PrimaryContextRelease()` 通过 `RefObject<Context *>` 管理引用计数，维度为 Device + TS |
-| 用户 Context | `rtCtxCreate()`、`rtCtxCreateEx()`、`rtsCtxCreate()`、`aclrtCreateContext()` | `Context(dev, false)` | `ContextManage` 登记，`rtCtxDestroy()`、`rtCtxDestroyEx()`、`aclrtDestroyContext()` 显式销毁 |
-| XPU Context | XPU 设备设置路径 | `XpuContext : public Context` | `Runtime::PrimaryXpuContextRetain()` / `Runtime::PrimaryXpuContextRelease()` 管理 |
+| --- | --- | --- | --- |
+| 默认Context | `aclrtSetDevice()` | `Context(dev, true)` | 由Device设置/复位管理，Runtime通过`RefObject<Context *>`维护默认Context对象及其**引用计数**；reset时释放关联资源，但保留Context对象供后续复用 |
+| 用户Context | `aclrtCreateContext()` | `Context(dev, false)` | 由`ContextManage`登记，`aclrtDestroyContext()`显式销毁，Context对象的最终删除受线程绑定引用计数控制 |
 
 ## 2. 使用场景与对外接口
 
 ### 2.1 使用场景
 
-- **场景一**：设置设备并使用 Primary Context。
+- **场景一**：设置Device并使用默认Context。
+
   ```cpp
   aclrtSetDevice(0);
-  // Runtime 内部创建或复用设备 0 的 Primary Context，并绑定到当前线程。
+  // Runtime内部创建或复用device 0对应的默认Context，并绑定到当前线程。
   ```
 
-- **场景二**：显式创建、切换和销毁用户 Context。
+- **场景二**：显式创建两个用户Context，并在二者之间切换和销毁。
+
   ```cpp
-  aclrtContext ctx = nullptr;
-  aclrtCreateContext(&ctx, 0);
-  aclrtSetCurrentContext(ctx);
-  // ... 提交任务 ...
-  aclrtDestroyContext(ctx);
+  aclrtContext ctxA = nullptr;
+  aclrtContext ctxB = nullptr;
+  aclrtCreateContext(&ctxA, 0);
+  aclrtCreateContext(&ctxB, 0);
+  // 创建ctxB后，ctxB为当前Context。
+  
+  aclrtSetCurrentContext(ctxA);
+  // 当前Context从ctxB切换为ctxA。
+  // ... 在ctxA下提交任务 ...
+  
+  aclrtSetCurrentContext(ctxB);
+  // 当前Context从ctxA切换回ctxB。
+  // ... 在ctxB下提交任务 ...
+  
+  aclrtDestroyContext(ctxA);
+  aclrtDestroyContext(ctxB);
   ```
 
-- **场景三**：获取当前 Context 的默认 Stream。
+- **场景三**：获取当前Context的默认Stream。
+
   ```cpp
   aclrtStream stream = nullptr;
   aclrtCtxGetCurrentDefaultStream(&stream);
   ```
 
-- **场景四**：设置当前 Context 级系统参数。
-  ```cpp
-  aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
-  ```
+- **场景四**：多线程复用同一个用户Context。
 
-- **场景五**：多线程复用同一个用户 Context。
   ```cpp
-  // 线程 A 创建 Context 后将 handle 传给线程 B。
-  // 线程 B 需要先调用 aclrtSetCurrentContext(ctx)，再提交该 Context 下的任务。
+  aclrtContext sharedCtx = nullptr;
+  aclrtCreateContext(&sharedCtx, 0);
+  
+  auto worker = [sharedCtx]() {
+      aclrtSetCurrentContext(sharedCtx);    // 复用同一Context
+      // ... 在sharedCtx下提交任务 ...
+  };
+  
+  std::thread threadA(worker);
+  std::thread threadB(worker);
+  threadA.join();
+  threadB.join();
+  aclrtDestroyContext(sharedCtx);
   ```
 
 ### 2.2 对外接口
 
-ACL Context 接口定义在 `include/external/acl/acl_rt.h`，C 符号入口位于 `src/acl/aclrt_c/runtime/context.c`，主要实现位于 `src/acl/aclrt_impl/context.cpp`。
-
-| ACL 接口 | Runtime 落点 | 说明 |
-| -------- | ------------ | ---- |
-| `aclrtCreateContext()` | `rtCtxCreateEx()` | 创建用户 Context，并在 Runtime 层设为当前线程 Context |
-| `aclrtDestroyContext()` | `rtCtxDestroyEx()` | 销毁用户 Context，不能销毁 Primary Context |
-| `aclrtSetCurrentContext()` | `rtCtxSetCurrent()` | 将指定 Context 绑定到当前线程 |
-| `aclrtGetCurrentContext()` | `rtCtxGetCurrent()` | 获取当前线程绑定的 Context |
-| `aclrtCtxSetSysParamOpt()` | `rtCtxSetSysParamOpt()` | 设置当前 Context 的系统参数 |
-| `aclrtCtxGetSysParamOpt()` | `rtCtxGetSysParamOpt()` | 获取当前 Context 的系统参数 |
-| `aclrtCtxGetCurrentDefaultStream()` | `rtsCtxGetCurrentDefaultStream()` | 获取当前 Context 的默认 Stream |
-| `aclrtGetPrimaryCtxState()` | `rtsGetPrimaryCtxState()` | 查询指定 Device 的 Primary Context 是否 active |
-| `aclrtCtxGetFloatOverflowAddr()` | `rtsCtxGetFloatOverflowAddr()` | 获取当前 Context 的浮点溢出标记地址 |
-
-Runtime Context 头文件位于 `pkg_inc/runtime/runtime/context.h`，RTS Context 头文件位于 `pkg_inc/runtime/runtime/rts/rts_context.h`。
-
-| Runtime / RTS 接口 | 实现入口 | 说明 |
-| ------------------ | -------- | ---- |
-| `rtCtxCreate()`、`rtCtxCreateEx()` | `src/runtime/api/api_c.cc` | 创建用户 Context，`RT_CTX_GEN_MODE` 当前返回不支持 |
-| `rtCtxDestroy()`、`rtCtxDestroyEx()` | `src/runtime/api/api_c.cc` | 销毁用户 Context |
-| `rtCtxSetCurrent()`、`rtCtxGetCurrent()` | `src/runtime/api/api_c.cc` | 设置或获取当前线程 Context |
-| `rtGetPriCtxByDeviceId()` | `src/runtime/api/api_c.cc` | 获取指定 Device 当前 TS 的 Primary Context |
-| `rtCtxGetDevice()` | `src/runtime/api/api_c.cc` | 获取当前 Context 绑定的 Device ID |
-| `rtCtxSetSysParamOpt()`、`rtCtxGetSysParamOpt()` | `src/runtime/api/api_c.cc` | 读写当前 Context 级系统参数 |
-| `rtCtxGetCurrentDefaultStream()` | `src/runtime/api/api_c.cc` | 获取当前 Context 默认 Stream |
-| `rtsCtxCreate()` | `src/runtime/api/api_c_context.cc` | RTS 层创建 Context |
-| `rtsCtxDestroy()`、`rtsCtxSetCurrent()`、`rtsCtxGetCurrent()` | `src/runtime/api/api_c_context.cc` | RTS 层转调 Runtime Context API |
-| `rtsCtxSetSysParamOpt()`、`rtsCtxGetSysParamOpt()` | `src/runtime/api/api_c_context.cc` | RTS 层读写 Context 系统参数 |
-| `rtsGetPrimaryCtxState()` | `src/runtime/api/api_c_context.cc` | 查询 Primary Context 状态 |
-
-Device API 与 Primary Context 生命周期直接相关。
-
-| 接口 | 文件位置 | Context 关系 |
-| ---- | -------- | ------------ |
-| `rtSetDevice()` | `src/runtime/api/api_c_device.cc` | 调用 `ApiImpl::SetDevice()`，内部 retain Primary Context |
-| `rtDeviceReset()` | `src/runtime/api/api_c_device.cc` | 调用 `ApiImpl::DeviceReset()`，内部 release Primary Context |
+| ACL接口 | 说明 |
+| --- | --- |
+| `aclrtSetDevice()` | 设置当前线程使用的Device，Runtime内部创建或复用对应的默认Context，并将其关联到当前线程 |
+| `aclrtResetDevice()` | 复位指定Device，释放默认Context关联资源；Context对象可保留供后续再次设置Device时复用 |
+| `aclrtCreateContext()` | 创建用户Context，并将其设置为当前线程Context |
+| `aclrtDestroyContext()` | 销毁用户Context，不能用于销毁默认Context |
+| `aclrtSetCurrentContext()` | 将指定Context关联到当前线程 |
+| `aclrtGetCurrentContext()` | 获取当前线程关联的Context |
+| `aclrtCtxGetCurrentDefaultStream()` | 获取当前Context的默认Stream |
+| `aclrtGetPrimaryCtxState()` | 查询指定Device的默认Context是否处于active状态 |
 
 ## 3. 架构总览
 
-### 整体设计思路
+### 3.1 整体设计思路
 
-Context 模块采用“公开 API → Runtime C API → API 装饰器 → ApiImpl → Runtime / Context 核心对象”的分层设计。公开 API 不直接操作 `Context`、`Device`、`Stream` 等资源对象，而是进入 `Api::Instance()`，经过错误处理、Profiling 记录等装饰器后到达 `ApiImpl`。`ApiImpl` 负责参数校验、设备保留、Context 创建销毁和线程绑定。`Runtime` 维护 Primary Context 引用对象，`ContextManage` 维护全局有效 Context 集合，`Context` 本身承载执行资源。
+Context模块的整体设计包括Context的生命周期管理、当前Context的线程关联、上下文资源管理，以及有效性保护和异常状态处理。
 
-当前 Context 的解析逻辑集中在 `Runtime::CurrentContext()`：
+| 设计点 | 说明 |
+| --- | --- |
+| Context生命周期管理 | 默认Context由Device设置和复位路径管理并支持复用；用户Context由用户显式创建和销毁，详见[4.1 核心流程](#41-核心流程) |
+| 线程关联 | 无显式Context参数的Runtime API通过当前线程关联找到Context，确定执行环境，并支持线程间隔离和Context切换，详见[4.3.1 线程关联机制](#431-线程关联机制) |
+| 资源管理 | Stream、Model、Module等由所属Context管理，相关操作必须在所属Context下完成，详见[4.2 Context资源管理](#42-context资源管理) |
+| 有效性保护 | 统一管理Context有效性、状态访问、并发销毁和异常状态传播，详见[4.3 核心机制详解](#43-核心机制详解) |
 
-1. 当前线程显式设置过用户 Context 时，优先返回 `InnerThreadLocalContainer::GetCurCtx()`。
-2. 当前线程通过 `rtSetDevice()` 绑定 Primary Context 时，返回 `InnerThreadLocalContainer::GetCurRef()` 中的 Context。
-3. 两者都不存在时返回空，调用方通常返回 `RT_ERROR_CONTEXT_NULL` 或映射后的 ACL 错误码。
-
-### 架构分层图
+### 3.2 Context核心模块关系图
 
 ```mermaid
-graph TB
-    subgraph ACL["ACL 接口层"]
-        ACreate["aclrtCreateContext"]
-        ADestroy["aclrtDestroyContext"]
-        ASet["aclrtSetCurrentContext"]
-        AGet["aclrtGetCurrentContext"]
-        ASys["aclrtCtxSet/GetSysParamOpt"]
-        ADefault["aclrtCtxGetCurrentDefaultStream"]
-    end
+flowchart LR
+    classDef apiStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef runtimeStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef manageStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+    classDef resourceStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
 
-    subgraph RuntimeAPI["Runtime / RTS 接口层"]
-        RtCtx["rtCtx*"]
-        RtsCtx["rtsCtx*"]
-        RtDev["rtSetDevice / rtDeviceReset"]
-    end
+    App["应用程序"]:::apiStyle
+    Runtime["Runtime"]:::runtimeStyle
+    TLS["InnerThreadLocalContainer<br/>线程关联 Context"]:::manageStyle
+    ContextManage["ContextManage"]:::manageStyle
+    ContextData["ContextDataManage<br/>全局 Context 集合"]:::manageStyle
+    Context["Context"]:::runtimeStyle
+    Resource["Device / Stream / Model / Module<br/>Context 状态"]:::resourceStyle
 
-    subgraph ApiLayer["API 实现层"]
-        ApiC["api_c.cc / api_c_context.cc / api_c_device.cc"]
-        ApiDecorator["ApiError / ApiProfile / ApiProfileLog"]
-        ApiImpl["ApiImpl"]
-    end
-
-    subgraph Core["Context 核心层"]
-        Runtime["Runtime"]
-        TLS["InnerThreadLocalContainer"]
-        Context["Context"]
-        ContextManage["ContextManage"]
-        ContextProtect["ContextProtect"]
-        ContextData["ContextDataManage"]
-    end
-
-    subgraph Resource["资源对象"]
-        Device["Device"]
-        Stream["Stream"]
-        Model["Model / CaptureModel"]
-        Module["Module"]
-        Program["Program"]
-    end
-
-    subgraph Feature["特性扩展"]
-        AclGraph["ACL Graph"]
-        Ffts["FFTS Plus"]
-        Xpu["XpuContext"]
-        Snapshot["Snapshot / Backup"]
-        Compact["runtime_compact"]
-    end
-
-    ACreate --> ApiC
-    ADestroy --> ApiC
-    ASet --> ApiC
-    AGet --> ApiC
-    ASys --> ApiC
-    ADefault --> ApiC
-    RtCtx --> ApiC
-    RtsCtx --> ApiC
-    RtDev --> ApiC
-    ApiC --> ApiDecorator
-    ApiDecorator --> ApiImpl
-    ApiImpl --> Runtime
-    ApiImpl --> Context
-    Runtime --> TLS
-    Runtime --> Context
-    ContextManage --> ContextData
-    ContextProtect --> Context
-    Context --> Device
-    Context --> Stream
-    Context --> Model
-    Context --> Module
-    Module --> Program
-    AclGraph --> Context
-    Ffts --> Context
-    Xpu --> Context
-    Snapshot --> ContextManage
-    Compact --> RuntimeAPI
+    App -->|"创建、销毁、切换"| Runtime
+    App -->|"登记、校验"| ContextManage
+    App -->|"设置当前 Context"| TLS
+    Runtime -->|"创建或复用"| Context
+    Runtime -->|"解析当前 Context"| TLS
+    TLS -->|"关联当前线程"| Context
+    ContextManage -->|"维护 Context 集合"| ContextData
+    ContextManage -->|"校验、销毁收尾"| Context
+    Context -->|"绑定和管理"| Resource
 ```
 
-### 核心模块交互图
+### 3.3 核心模块交互图
+
+#### 3.3.1 默认Context
 
 ```mermaid
 sequenceDiagram
-    participant App as 应用程序
-    participant API as ACL/Runtime API
+    autonumber
+    participant API as aclrtSetDevice
     participant Impl as ApiImpl
     participant Runtime as Runtime
-    participant Manage as ContextManage
-    participant Ctx as Context
     participant Dev as Device
-    participant TLS as ThreadLocal
+    participant Ctx as Context
+    participant Manage as ContextManage
+    participant TLS as InnerThreadLocalContainer
 
-    App->>API: aclrtSetDevice / rtSetDevice
-    API->>Impl: SetDevice(devId)
-    Impl->>Runtime: PrimaryContextRetain(devId)
-    Runtime->>Dev: DeviceRetain(devId, tsId)
-    Runtime->>Ctx: new Context(dev, true)
-    Ctx->>Ctx: Setup()
-    Runtime->>Manage: InsertContext(ctx)
-    Runtime-->>Impl: RefObject<Context *>*
-    Impl->>TLS: SetCurRef(ref)
-    Impl->>TLS: SetCurCtx(nullptr)
+    rect rgba(227, 242, 253, 0.62)
+        API->>Impl: SetDevice(devId)
+        Impl->>Runtime: PrimaryContextRetain(devId)
+        Runtime->>Runtime: refObj.IncRef()
+    end
 
-    App->>API: aclrtCreateContext / rtCtxCreateEx
-    API->>Impl: ContextCreate(ctx, devId)
-    Impl->>Runtime: DeviceRetain(devId, tsId)
-    Impl->>Ctx: new Context(dev, false)
-    Ctx->>Ctx: Setup()
-    Impl->>Manage: InsertContext(ctx)
-    Impl->>TLS: SetCurCtx(ctx)
-    Impl->>TLS: SetCurRef(nullptr)
+    rect rgba(232, 245, 233, 0.62)
+        alt retain 计数原本非 0
+            Runtime->>Runtime: 复用 ACTIVE Context
+        else retain 从 0 恢复
+            Runtime->>Dev: DeviceRetain(devId, tsId)
+            alt RefObject 已保存 Context
+                Runtime->>Ctx: AttachDevice(dev)
+            else 首次创建
+                Runtime->>Ctx: new Context(dev, true)
+                Runtime->>Ctx: AttachDevice(dev)
+            end
+            Runtime->>TLS: 临时 INTERNAL 绑定
+            Runtime->>Ctx: Setup()
+            Runtime->>Dev: UpdateTimeoutConfig()
+            Runtime->>Dev: RegisterAndLaunchDcacheLockOp(ctx)
+            opt 首次创建
+                Runtime->>Manage: InsertContext(ctx)
+            end
+            Runtime->>Runtime: refObj.SetVal(ctx)
+        end
+    end
+
+    rect rgba(243, 229, 245, 0.62)
+        Runtime-->>Impl: RefObject<Context *>*
+        Impl->>TLS: SetCurRef(ref)
+        Impl->>TLS: SetCurCtx(nullptr)
+    end
+```
+
+#### 3.3.2 用户Context
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant API as aclrtCreateContext
+    participant Impl as ApiImpl
+    participant Runtime as Runtime
+    participant Ctx as Context
+    participant Manage as ContextManage
+    participant TLS as InnerThreadLocalContainer
+
+    rect rgba(227, 242, 253, 0.62)
+        API->>Impl: ContextCreate(ctx, devId)
+        Impl->>Runtime: DeviceRetain(devId, tsId)
+    end
+
+    rect rgba(232, 245, 233, 0.62)
+        Impl->>Ctx: new Context(dev, false)
+        Ctx->>Ctx: Setup()
+        Impl->>Manage: InsertContext(ctx)
+    end
+
+    rect rgba(243, 229, 245, 0.62)
+        Impl->>TLS: SetCurCtx(ctx)
+        Impl->>TLS: SetCurRef(nullptr)
+    end
 ```
 
 ## 4. 详细设计
 
 ### 4.1 核心流程
 
-#### Primary Context 创建流程
+#### 4.1.1 默认Context核心流程
+
+##### 创建与复用流程
 
 ```mermaid
 flowchart TD
-    A["rtSetDevice / aclrtSetDevice"] --> B[ApiImpl::SetDevice]
-    B --> C[GetDrvSentinelMode]
-    C --> D["Runtime::PrimaryContextRetain(devId)"]
-    D --> E["校验 devId 和 tsNum"]
-    E --> F{Sentinel Mode?}
-    F -->|是| G["SetTsId(RT_TSV_ID)"]
-    F -->|否| H["遍历 i = 0 .. tsNum - 1"]
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A(["aclrtSetDevice"]):::entryStyle --> B["PrimaryContextRetain"]:::processStyle
+    B --> C{"已有ACTIVE Context?"}:::decisionStyle
+    C -->|是| D["直接复用"]:::processStyle
+    C -->|否| E{"保留了Context对象?"}:::decisionStyle
+    E -->|是| F["复用原对象"]:::processStyle
+    E -->|否| G["创建Context"]:::processStyle
+    F --> H["初始化Context<br/>复用Device默认Stream"]:::processStyle
     G --> H
-    H --> I["RefObject::IncRef"]
-    I --> J{IncRef 返回 true?}
-    J -->|是：已有 Primary Context| Q["ctx = refObj.GetVal()"]
-    J -->|否：首次创建该 TS Context| K["Runtime::DeviceRetain(devId, i)"]
-    K --> L["new Context(dev, true)"]
-    L --> M[Context::Setup]
-    M --> N[Device::UpdateTimeoutConfig]
-    N --> O[ContextManage::InsertContext]
-    O --> P[RefObject::SetVal]
-    P --> R[Device::RegisterAndLaunchDcacheLockOp]
-    R --> Q
-    Q --> S{"是否还有下一个 TS?"}
-    S -->|是| H
-    S -->|否| T["返回当前线程 TS 对应 RefObject"]
-    T --> U[InnerThreadLocalContainer::SetCurRef]
-    U --> V["校验 Context 和 DefaultStream"]
-    V --> W["InnerThreadLocalContainer::SetCurCtx(nullptr)"]
+    H --> I["更新RefObject<br/>新对象登记到ContextManage"]:::processStyle
+    D --> J(["关联到当前线程<br/>作为默认Context"]):::resultStyle
+    I --> J
 ```
 
-**流程说明**
-
-Primary Context 是 Device 级默认执行环境，但源码中的保存维度是 `devId + tsId`。`Runtime::PrimaryContextRetain()` 不是只处理当前线程的 TS，而是遍历该 Device 下的 TS RefObject：每个 RefObject 先执行 `IncRef()`，如果返回 true 表示已有 Primary Context，只增加引用并读取已有对象；如果返回 false，说明该 TS 的 Primary Context 首次创建，才会执行 `DeviceRetain()`、`new Context(dev, true)`、`Setup()`、`ContextManage::InsertContext()` 和 `RefObject::SetVal()`。遍历完成后，函数按当前线程 TS 返回 `RT_TSC_ID` 或 `RT_TSV_ID` 对应的 RefObject。`ApiImpl::SetDevice()` 再把这个 RefObject 写入线程局部变量，并清空显式用户 Context。
+Runtime按Device/TS维护默认Context。`aclrtSetDevice()`创建或复用对应Context，必要时完成初始化，并将其关联到当前线程。
 
 **关键代码**：
 
@@ -267,7 +245,6 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
     Runtime * const rt = Runtime::Instance();
     RefObject<Context *> *context = rt->PrimaryContextRetain(static_cast<uint32_t>(devId));
     NULL_PTR_RETURN_MSG(context, RT_ERROR_DEVICE_RETAIN);
-
     InnerThreadLocalContainer::SetCurRef(context);
     Context * const curCtx = context->GetVal();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -276,38 +253,46 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
 }
 ```
 
-#### 用户 Context 创建流程
+##### reset释放流程
 
 ```mermaid
 flowchart TD
-    A1[aclrtCreateContext] --> A2["aclrtCreateContextImpl"]
-    A2 --> A3["rtCtxCreateEx(..., RT_CTX_NORMAL_MODE, deviceId)"]
-    B1["rtCtxCreate / rtCtxCreateEx"] --> B2{flags == RT_CTX_GEN_MODE?}
-    B2 -->|是| B3[返回 RT_ERROR_FEATURE_NOT_SUPPORT]
-    B2 -->|否| C[Api::Instance]
-    A3 --> B2
-    C --> D[ApiImpl::ContextCreate]
-    R1[rtsCtxCreate] --> R2{flags 是否合法?}
-    R2 -->|否| R3[返回 RT_ERROR_INVALID_VALUE]
-    R2 -->|是| C
-    D --> E["driver.GetDeviceCount"]
-    E --> F{devId 是否在设备范围内?}
-    F -->|否| G[返回 RT_ERROR_DEVICE_ID]
-    F -->|是| H["读取 InnerThreadLocalContainer::GetTsId"]
-    H --> I["ApiImpl::NewContext(devId, tsId)"]
-    I --> J["Runtime::DeviceRetain(devId, tsId)"]
-    J --> K["new Context(dev, false)"]
-    K --> L[Context::Setup]
-    L --> M["返回新 Context 给 ContextCreate"]
-    M --> N[ContextManage::InsertContext]
-    N --> O[ContextSetCurrent]
-    O --> P[SetCurCtx]
-    P --> Q["SetCurRef(nullptr)"]
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A(["aclrtResetDevice"]):::entryStyle --> B["PrimaryContextRelease"]:::processStyle
+    B --> C{"retain计数归零?"}:::decisionStyle
+    C -->|否| D(["仅减少retain计数"]):::resultStyle
+    C -->|是| E["Context::TearDown"]:::processStyle
+    E --> F["释放关联资源"]:::processStyle
+    F --> G["状态恢复为NOT_INITIALIZED"]:::processStyle
+    G --> H(["保留Context对象<br/>供后续aclrtSetDevice复用"]):::resultStyle
 ```
 
-**流程说明**
+retain计数归零后，默认Context执行teardown并释放关联资源，`RefObject<Context *>`继续保留Context对象；后续`aclrtSetDevice()`重新初始化并复用该对象。
 
-用户 Context 有三类入口：ACL 的 `aclrtCreateContext()` 会先进入 `aclrtCreateContextImpl()`，再调用 `rtCtxCreateEx(..., RT_CTX_NORMAL_MODE, deviceId)`；Runtime C API 的 `rtCtxCreate()` / `rtCtxCreateEx()` 会先拒绝当前不支持的 `RT_CTX_GEN_MODE`；RTS 的 `rtsCtxCreate()` 会检查 flags 范围。三类入口最终都会进入 `ApiImpl::ContextCreate()`。`ContextCreate()` 通过 driver 查询设备数量并校验 `devId`，读取当前线程 `tsId` 后调用 `NewContext()`。`NewContext()` retain 对应 Device，构造 `Context(dev, false)` 并执行 `Setup()`。创建成功后，`ContextCreate()` 将 Context 插入 `ContextManage`，再调用 `ContextSetCurrent()`，因此新创建的用户 Context 会成为当前线程的活跃 Context，同时清空 Primary Context 引用。
+#### 4.1.2 用户Context核心流程
+
+##### 创建流程
+
+```mermaid
+flowchart TD
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A(["aclrtCreateContext"]):::entryStyle --> B["ContextCreate"]:::processStyle
+    B --> C["校验Device<br/>读取tsId"]:::processStyle
+    C --> D["DeviceRetain"]:::processStyle
+    D --> E["创建用户Context"]:::processStyle
+    E --> F["Context::Setup<br/>创建自有默认Stream"]:::processStyle
+    F --> G["登记到ContextManage"]:::processStyle
+    G --> H(["关联到当前线程<br/>设为当前Context"]):::resultStyle
+```
+
+创建成功后，`ContextCreate()`立即调用`ContextSetCurrent()`，新Context因而成为当前线程关联的Context。
 
 **关键代码**：
 
@@ -325,427 +310,687 @@ rtError_t ApiImpl::ContextCreate(Context ** const inCtx, const int32_t devId)
 }
 ```
 
-#### Context 销毁流程
+##### 销毁流程
 
 ```mermaid
-flowchart TD
-    A["rtCtxDestroy / aclrtDestroyContext"] --> B[ApiImpl::ContextDestroy]
-    B --> C[CHECK_CONTEXT_VALID_WITH_RETURN]
-    C --> D{IsPrimary?}
-    D -->|是| E[返回错误]
-    D -->|否| F[TearDownIsCanExecute]
-    F --> G[Context::TearDown]
-    G --> H[ContextManage::EraseContextFromSet]
-    H --> I[ContextOutUse]
-    I --> J{使用计数为 0?}
-    J -->|是| K[delete Context]
-    J -->|否| L[等待 ContextProtect 释放]
+flowchart LR
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef errorStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#B71C1C
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A(["aclrtDestroyContext"]):::entryStyle --> B{"USER校验通过?"}:::decisionStyle
+    B -->|否| C{"可识别的<br/>inactive Context?"}:::decisionStyle
+    C -->|否| X(["返回Context错误"]):::errorStyle
+    C -->|是| J["标记待删除"]:::processStyle
+    B -->|是| E["INTERNAL绑定<br/>执行TearDown"]:::processStyle
+    E --> F{"成功?"}:::decisionStyle
+    F -->|否| Y(["恢复ACTIVE<br/>返回错误"]):::errorStyle
+    F -->|是，进入FINALIZED| J
+    J --> K{"线程绑定归零?"}:::decisionStyle
+    K -->|否| M(["等待最后一次解绑"]):::resultStyle
+    K -->|是| N(["移出全局集合并删除"]):::resultStyle
 ```
 
-**流程说明**
+用户Context teardown期间使用INTERNAL访问；teardown成功后标记待删除，并在`threadRefCount_`归零时由`TryDeleteIfNeeded()`完成删除，详见[“销毁保护机制”章节](#434-销毁保护机制)。
 
-用户 Context 销毁前会先确认 handle 仍在 `ContextManage` 有效集合中，然后拒绝销毁 `IsPrimary()` 为 true 的 Context。Primary Context 只能通过 `rtDeviceReset()` 对应路径释放。`Context::TearDown()` 清理 Context 下的 Model、Stream 和在线 Profiling Stream；用户 Context 的默认 Stream 也在该阶段释放。Context 从有效集合移除后，如果仍被其他线程保护使用，则等最后一个 `ContextProtect` 析构时释放。
+#### 4.1.3 当前Context设置与获取流程
 
-Primary Context 的释放路径在 `Runtime::PrimaryContextRelease()`，该路径按引用计数递减，计数归零后执行回调、`Context::TearDown()`、`ContextManage::EraseContextFromSet()` 和 `RefObject::ResetVal()`。
+```mermaid
+flowchart LR
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef errorStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#B71C1C
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
 
-#### 当前 Context 获取流程
+    A(["aclrtSetCurrentContext"]):::entryStyle --> B(["更新当前线程关联"]):::resultStyle
+
+    C(["aclrtGetCurrentContext"]):::entryStyle --> D{"curCtx_非空?"}:::decisionStyle
+    D -->|是| E["从curCtx_取Context"]:::processStyle
+    D -->|否| F{"curRef_非空?"}:::decisionStyle
+    F -->|是| G["从curRef_取Context"]:::processStyle
+    F -->|否| X(["返回Context错误"]):::errorStyle
+    E --> H{"Context有效?"}:::decisionStyle
+    G --> H
+    H -->|是| I(["返回当前Context"]):::resultStyle
+    H -->|否| X
+```
+
+`aclrtSetCurrentContext()`将指定有效Context关联到当前线程，不区分默认Context和用户Context。
+
+`aclrtGetCurrentContext()`优先返回`curCtx_`关联的Context；`curCtx_`为空时，再从`curRef_`获取`aclrtSetDevice()`关联的默认Context。
+
+### 4.2 Context资源管理
+
+Context与一个Device绑定，并管理该执行环境下的Stream、Model、Module和辅助资源。Context负责维护资源归属和回收顺序，资源的实际分配和执行能力由Device及各资源模块完成。
+
+#### 4.2.1 资源全景
+
+Context在`Setup()`中按需建立资源，在`TearDown()`和析构中按相反顺序回收。Context持有的资源字段包括：
+
+```cpp
+// 文件位置：src/runtime/core/inc/context/context.hpp
+class Context : public NoCopy {
+protected:
+    Device* device_;                                // 绑定的Device
+private:
+    Stream* defaultStream_;                         // 默认Stream
+    Stream* onlineStream_;
+    std::list<Stream*> streams_;                    // 用户Stream集合
+    SpinLock modelLock_;
+    std::list<Model*> models_;                      // Model集合
+    std::mutex moduleLock_;
+    ObjAllocator<Module*>* moduleAllocator_;        // Module分配器（按Program ID）
+    void* overflowAddr_ = nullptr;
+    Atomic<bool> callBackThreadExist_;
+    ContextCallBack threadCallBack_;                // Host Callback执行体
+    std::unique_ptr<Thread> hostFuncCallBackThread_;// Host Callback线程
+    // ...
+};
+```
 
 ```mermaid
 flowchart TD
-    A[Runtime::CurrentContext] --> B{CurCtx 是否为空?}
-    B -->|否| C[返回显式用户 Context]
-    B -->|是| D{CurRef 是否为空?}
-    D -->|否| E[返回 RefObject 中的 Primary Context]
-    D -->|是| F[返回 nullptr]
+    classDef contextStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef streamStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef manageStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+    classDef resourceStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+    classDef callbackStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    Ctx["Context"]:::contextStyle -->|"绑定 1"| Dev["Device<br/>执行基础"]:::resourceStyle
+    Ctx -->|"持有 1"| DS["defaultStream_<br/>默认Stream"]:::streamStyle
+    Ctx -->|"持有 *"| US["streams_<br/>用户Stream集合"]:::streamStyle
+    Ctx -->|"持有 *"| MDL["models_<br/>Model集合"]:::manageStyle
+    Ctx -->|"按Program ID登记 *"| MOD["moduleAllocator_<br/>Module分配器"]:::manageStyle
+    Ctx -->|"持有 0..1"| CB["hostFuncCallBackThread_<br/>Host Callback线程"]:::callbackStyle
+
+    DS -.->|"默认Context复用"| DevPS["Device::PrimaryStream_"]:::resourceStyle
+    DS -.->|"用户Context自创建"| NewStm["StreamFactory::CreateStream"]:::streamStyle
+    MOD -->|"实际分配/释放"| Dev
+```
+
+**资源归属约束**：
+
+- **Device**：每个Context仅绑定一个Device，Context所属的Stream、Model、Module都使用该Device的执行能力。
+- **Stream、Model、Module**：相关操作必须在资源所属Context下完成，不允许跨Context使用、绑定或销毁。
+
+#### 4.2.2 Stream管理
+
+Context主要对以下两类Stream承担管理责任：
+
+| Stream类型 | 来源 | Context职责 | 回收路径 |
+| --- | --- | --- | --- |
+| 默认Stream (`defaultStream_`) | 默认Context：复用`Device::PrimaryStream_()`<br />用户Context：`StreamFactory::CreateStream` + `Setup` | 作为未显式指定Stream时的执行入口 | 用户Context：`TearDownContextStream`销毁<br />默认Context：仅解除关联 |
+| 用户Stream (`streams_`) | `StreamCreate`在当前Context下显式创建后`InsertStreamList`登记 | 记录归属，Context同步/销毁时统一处理 | `TearDownOwnedStreamsOnContextTearDown`统一销毁 |
+
+**Context同步规则**：
+
+- `Context::Synchronize`遍历`streams_`，跳过不参与同步的Stream（`IsStreamNotSync`）；
+- 处于capture状态的Stream直接报错（`RT_ERROR_STREAM_CAPTURED`）；其余Stream在任务回收后执行同步。
+
+```cpp
+// 文件位置：src/runtime/core/src/context/context.cc
+rtError_t Context::Synchronize(int32_t timeout)
+{
+    for (const auto& syncStream : streams_) {
+        if (IsStreamNotSync(syncStream->Flags())) { continue; }
+        COND_RETURN_ERROR(syncStream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ...);
+        COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
+        syncStreams.push_back(syncStream);
+    }
+    (void)TaskReclaimforSyncDevice(startTime, timeout);   // 先回收任务
+    const rtError_t error = CheckStatus();                // 再检查Context状态
+    return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
+}
+```
+
+#### 4.2.3 Model管理
+
+Context以`models_`记录在其执行环境中创建的Model，Model与Stream的绑定关系必须满足同一Context约束。
+
+- **创建**：`ModelCreate`生成Model并由Context记录到`models_`。
+- **绑定**：`ModelBindStream`要求Model与Stream属于同一Context；一个Model可绑定多个Stream。
+- **回收**：Context TearDown时通过`TearDownModelsOnContextTearDown()`统一回收仍存续的Model。
+
+```cpp
+// 文件位置：src/runtime/core/src/context/context.cc
+void Context::TearDownModelsOnContextTearDown()
+{
+    std::list<Model*> modelsToDelete;
+    modelLock_.Lock();
+    for (Model* tdModel : models_) {
+        PrepareModelForDelete(tdModel);   // 解绑Stream、清理Executor
+    }
+    modelsToDelete.swap(models_);
+    modelLock_.Unlock();
+
+    for (Model* tdModel : modelsToDelete) {
+        DeleteModelOnContextTearDown(tdModel);   // 真正delete
+    }
+}
+```
+
+#### 4.2.4 Module管理
+
+Module由Device完成实际的内存分配和释放，Context侧通过`moduleAllocator_`按Program ID登记、查找和复用。同一Program在不同Context下分别建立Module登记关系。
+
+- **获取**：`GetModule(prog)`按Program ID查询，存在则复用，不存在则创建并登记。
+- **回收**：Context最终释放时通过`ReleaseModulesAfterTearDown()`遍历`moduleAllocator_`，释放所有未释放的Module。
+
+```cpp
+// 文件位置：src/runtime/core/src/context/context.cc
+void Context::ReleaseModulesAfterTearDown()
+{
+    uint32_t i = 0U;
+    while ((i < Runtime::maxProgramNum_) && (moduleAllocator_ != nullptr)) {
+        if (!moduleAllocator_->CheckIdValid(i)) {
+            i = moduleAllocator_->NextPoolFirstId(i);
+            continue;
+        }
+        ReleaseModule(i);   // 释放该Program ID对应的Module
+        i++;
+    }
+}
+```
+
+### 4.3 核心机制详解
+
+Context通过**线程关联**确定当前执行上下文环境，通过**生命周期状态机**和**访问模式**控制有效性，通过**线程绑定引用**保护销毁过程，并通过**异常状态传播**控制故障后的行为。
+
+#### 4.3.1 线程关联机制
+
+**设计思想**：Runtime在TLS中保存每个线程独立的Context关联（`curCtx_`），使没有显式Context参数的Runtime API能够确定执行环境。线程关联同时通过`threadRefCount_`为用户Context提供销毁保护。
+
+**两类线程关联**：
+
+| 关联方式 | 保存位置 | 设置入口 | 是否增加`threadRefCount_` | 适用Context |
+| --- | --- | --- | --- | --- |
+| `curCtx_` | `Context*`直接指针 | `ContextSetCurrent`、内部`SetCurCtx` | 是（用户Context且非内部访问时） | 用户Context、内部临时绑定 |
+| `curRef_` | `RefObject<Context*>*`引用对象 | `aclrtSetDevice`通过`SetCurRef` | 否（默认Context由`RefObject`自身管理生命周期） | 默认Context |
+
+**关联建立与解除**：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 应用线程
+    participant TLS as InnerThreadLocalContainer
+    participant Old as 旧Context
+    participant New as 新Context
+
+    rect rgba(227, 242, 253, 0.62)
+        App->>TLS: SetCurCtx(newCtx, internalAccess)
+        TLS->>TLS: NeedThreadRef(oldCtx, oldAccess)?<br/>NeedThreadRef(newCtx, newAccess)?
+    end
+
+    rect rgba(255, 243, 224, 0.62)
+        alt oldCtx需解绑
+            TLS->>Old: ContextThreadUnbind()<br/>threadRefCount_--
+            TLS->>Old: TryDeleteIfNeeded()<br/>可能直接delete
+        end
+    end
+
+    rect rgba(232, 245, 233, 0.62)
+        alt newCtx需绑定且old未被删除
+            TLS->>New: ContextThreadBind()<br/>threadRefCount_++
+        end
+    end
+
+    rect rgba(224, 247, 250, 0.62)
+        TLS->>TLS: curCtx_ = newCtx<br/>记录internalAccess标记
+        TLS->>TLS: RefreshDevice()<br/>更新当前Device缓存
+    end
 ```
 
 **关键代码**：
 
 ```cpp
-// 文件位置：src/runtime/core/src/runtime.cc
-Context *Runtime::CurrentContext() const
+// 文件位置：src/runtime/core/src/common/inner_thread_local.cpp
+bool UpdateThreadBinding(Context* oldCtx, bool oldNeedThreadRef,
+                         Context* newCtx, bool newNeedThreadRef)
 {
-    Context * const curCtx = InnerThreadLocalContainer::GetCurCtx();
-    if (curCtx != nullptr) {
-        return curCtx;
+    if (needUnbindOldCtx) {
+        (void)oldCtx->ContextThreadUnbind();        // threadRefCount_--
+        oldCtxDeleted = oldCtx->TryDeleteIfNeeded();// 可能是最后一次解绑
     }
+    if (needBindNewCtx && ((!oldCtxDeleted) || !oldCtxIsNewCtx)) {
+        newCtx->ContextThreadBind();                // threadRefCount_++
+    }
+    return oldCtxDeleted;
+}
 
-    RefObject<Context *> * const curRef = InnerThreadLocalContainer::GetCurRef();
-    if (curRef != nullptr) {
-        return curRef->GetPrimaryCtxCallBackFlag() ? curRef->GetVal(false) : curRef->GetVal();
-    }
-    return nullptr;
+bool NeedThreadRef(const Context* const ctx, const bool internalAccess)
+{
+    // 仅"用户Context + 用户访问"才占用threadRefCount_
+    return (ctx != nullptr) && !internalAccess && !ctx->IsPrimary();
 }
 ```
 
-#### Context 初始化流程
+**机制要点**：
 
-```mermaid
-flowchart TD
-    A[Context::Setup] --> B[Context::Init]
-    B --> C[创建 moduleAllocator_]
-    C --> D[初始化 sysParamOpt_]
-    D --> E[SetOverflowAddr]
-    E --> F{isPrimary_?}
-    F -->|是| G["defaultStream_ = device_->PrimaryStream_()"]
-    F -->|否| H["StreamFactory::CreateStream"]
-    H --> I[defaultStream_->Setup]
-    G --> J["defaultStream_->SetContext(this)"]
-    I --> J
-    J --> K{是否需要同步 Primary Stream?}
-    K -->|是| L[defaultStream_->Synchronize]
-    K -->|否| M[OnlineStreamInit]
-    L --> M
-```
+1. **线程间隔离**：`curCtx_`是TLS变量，切换只影响当前线程。
+2. **多线程共享**：同一用户Context可被多线程关联，每个线程独立绑定/解绑。
 
-**流程说明**
+#### 4.3.2 生命周期状态机
 
-`Context::Setup()` 建立 Context 的基础执行环境。`Context::Init()` 创建 `moduleAllocator_` 并初始化 Context 级系统参数数组。`SetOverflowAddr()` 为浮点溢出检测分配设备侧地址，大小由 `OVERFLOW_ADDR_MAX_SIZE` 定义。Primary Context 的默认 Stream 来自 Device 的 Primary Stream；用户 Context 则通过 `StreamFactory::CreateStream()` 创建自己的默认 Stream。
+**设计思想**：Context通过`lifecycleState_`原子状态机管理整个生命周期，所有状态切换通过`TrySwitchState`或`SetState`完成，保证多线程并发下的状态一致性。
 
-#### Context 同步流程
-
-```mermaid
-flowchart TD
-    A[Context::Synchronize] --> B[检查 defaultStream_]
-    B --> C[遍历 streams_]
-    C --> D{Stream 是否需要同步?}
-    D -->|否| C
-    D -->|是| E{Stream 是否处于 capture?}
-    E -->|是| F[返回 RT_ERROR_STREAM_CAPTURED]
-    E -->|否| G[加入 syncStreams]
-    G --> C
-    C --> H[TaskReclaimforSyncDevice]
-    H --> I[CheckStatus]
-    I --> J[SyncStreamsWithTimeout]
-```
-
-**流程说明**
-
-`Context::Synchronize()` 首先确认 `defaultStream_` 存在，然后遍历 `streams_` 收集需要同步的用户 Stream。`IsStreamNotSync()` 会跳过特定类型的 Stream；处于 capture 状态的 Stream 不能在该路径同步。收集完成后，Context 先执行任务回收，再通过 `CheckStatus()` 检查设备状态和 Context 失败状态，最后调用 `SyncStreamsWithTimeout()` 同步收集到的 Stream。
-
-#### Stream、Model 和 Module 管理
-
-| 资源 | 创建入口 | Context 内部状态 | 销毁或释放 |
-| ---- | -------- | ---------------- | ---------- |
-| 默认 Stream | `Context::Setup()` | `defaultStream_` | 用户 Context 在 `TearDown()` 中销毁；Primary Context 不销毁 Device 的 Primary Stream |
-| 用户 Stream | `Context::StreamCreate()` | `streams_` | `Context::StreamDestroy()` 从 `streams_` 移除后调用 `TearDownStream()` |
-| 在线 Profiling Stream | `OnlineStreamInit()` | `onlineStream_` | `Context::TearDown()` 中销毁 |
-| Model / CaptureModel | `Context::ModelCreate()` | `models_` | `Context::ModelDestroy()` 或 `Context::TearDown()` 中清理 |
-| Module | `Context::GetModule()` | `moduleAllocator_` | `Context::ReleaseModule()` 或析构时释放 |
-
-### 4.2 核心机制详解
-
-#### 线程绑定机制
-
-**设计思想**：当前线程只能有一个生效的 Context 来源。显式用户 Context 和 Primary Context 引用分别保存在不同 TLS 字段中，设置其中一个时会清空另一个。
-
-| TLS 字段 | 设置入口 | 含义 |
-| -------- | -------- | ---- |
-| `InnerThreadLocalContainer::SetCurCtx()` | `ApiImpl::ContextSetCurrent()` | 保存用户显式设置的 `Context *` |
-| `InnerThreadLocalContainer::SetCurRef()` | `ApiImpl::SetDevice()` | 保存 Primary Context 的 `RefObject<Context *>` |
+**状态定义与转换**：
 
 ```cpp
-// 文件位置：src/runtime/core/src/api_impl/api_impl.cc
-rtError_t ApiImpl::ContextSetCurrent(Context * const inCtx)
-{
-    InnerThreadLocalContainer::SetCurCtx(inCtx);
-    InnerThreadLocalContainer::SetCurRef(nullptr);
-    (void)ThreadLocalContainer::GetOrCreateWatchDogHandle();
-    return RT_ERROR_NONE;
-}
+// 文件位置：src/runtime/core/inc/context/context.hpp
+enum class ContextState : uint8_t {
+    CTX_STATE_NOT_INITIALIZED = 0U,   // 未初始化/reset后等待复用
+    CTX_STATE_INITIALIZING    = 1U,   // Setup运行中，仅内部访问
+    CTX_STATE_ACTIVE          = 2U,   // 用户API可访问
+    CTX_STATE_FINALIZING      = 3U,   // TearDown运行中，用户访问被阻断
+    CTX_STATE_FINALIZED       = 4U,   // TearDown完成，资源未完全释放
+    CTX_STATE_DEINITIALIZING  = 5U,   // 最终释放中
+};
 ```
-
-#### Context handle 有效性与并发销毁保护
-
-**设计思想**：Context handle 是 opaque pointer，Runtime 需要防止无效指针进入核心逻辑，也要避免一个线程销毁 Context 时另一个线程仍在使用。`ContextManage` 保存有效 Context 集合，`ContextProtect` 负责作用域内使用计数回落和延迟释放。
 
 ```mermaid
-flowchart TD
-    A[API 获得 Context*] --> B[ContextManage::CheckContextIsValid]
-    B --> C{是否在有效集合中?}
-    C -->|否| D[返回 Context NULL 错误]
-    C -->|是| E[ContextInUse 计数加一]
-    E --> F[构造 ContextProtect]
-    F --> G[执行 API 逻辑]
-    G --> H[ContextProtect 析构]
-    H --> I[ContextOutUse 计数减一]
-    I --> J{已标记删除且计数为 0?}
-    J -->|是| K[delete Context]
-    J -->|否| L[结束]
+stateDiagram-v2
+    [*] --> NOT_INITIALIZED : 构造
+    NOT_INITIALIZED --> INITIALIZING : Setup()
+    INITIALIZING --> ACTIVE : Setup成功
+    INITIALIZING --> NOT_INITIALIZED : Setup失败
+    ACTIVE --> FINALIZING : TearDown() / ResetDevice()
+    FINALIZING --> ACTIVE : TearDown失败<br/>(TEARDOWN_ERROR)
+    FINALIZING --> FINALIZED : TearDown成功<br/>(TEARDOWN_SUCCESS)
+    FINALIZED --> DEINITIALIZING : TryDeleteIfNeeded 或<br/>ReleaseResourcesAfterTearDown
+    DEINITIALIZING --> NOT_INITIALIZED : 资源释放完成
+    DEINITIALIZING --> [*] : delete this(用户Context)
 ```
 
-`CHECK_CONTEXT_VALID_WITH_RETURN` 宏封装了有效性检查和 `ContextProtect` 构造。`ContextManage::EraseContextFromSet()` 删除 Context 时，会先从集合中移除，再标记删除状态；如果使用计数不为 0，释放动作由最后一个 `ContextProtect` 完成。
-
-#### Primary Context 引用计数
-
-**设计思想**：Primary Context 与 Device/TS 绑定，多次设置同一 Device 时复用已有 Context。Runtime 使用 `priCtxs_[devId][tsId]` 保存 `RefObject<Context *>`，通过引用计数控制创建和销毁。
-
-```mermaid
-flowchart TD
-    A[PrimaryContextRetain] --> B[RefObject::IncRef]
-    B --> C{原引用数是否为 0?}
-    C -->|否| D[复用已有 Context]
-    C -->|是| E[DeviceRetain]
-    E --> F["new Context(dev, true)"]
-    F --> G[Context::Setup]
-    G --> H[InsertContext]
-    H --> I[RefObject::SetVal]
-
-    J[PrimaryContextRelease] --> K[RefObject::TryDecRef]
-    K --> L{引用数是否归零?}
-    L -->|否| M[保留 Context]
-    L -->|是| N[Context::TearDown]
-    N --> O[EraseContextFromSet]
-    O --> P[RefObject::ResetVal]
-```
-
-`rtsGetPrimaryCtxState()` / `aclrtGetPrimaryCtxState()` 最终进入 `Runtime::GetPrimaryCtxState()`，该函数遍历指定 Device 下的 TS 引用对象，只要存在引用计数大于 0 的 Primary Context，就返回 active。
-
-#### 系统参数作用域
-
-`rtCtxSetSysParamOpt()` 和 `rtsCtxSetSysParamOpt()` 设置的是当前 Context 的系统参数，最终写入 `Context::sysParamOpt_`。`sysParamOpt_` 使用 `pair<bool, int64_t>` 保存是否已设置和值。读取未设置参数时，`Context::CtxGetSysParamOpt()` 返回 `RT_ERROR_NOT_SET_SYSPARAMOPT`，API 层映射为对外错误码。
+**关键代码**：
 
 ```cpp
 // 文件位置：src/runtime/core/src/context/context.cc
-rtError_t Context::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
+bool Context::TrySwitchState(const ContextState expectedState,
+                              const ContextState targetState, const char_t* const trigger)
 {
-    const std::unique_lock<std::mutex> mutexLock(sysParamOptLock_);
-    sysParamOpt_[configOpt].first = true;
-    sysParamOpt_[configOpt].second = configVal;
-    return RT_ERROR_NONE;
+    ContextState expected = expectedState;
+    const bool switched = lifecycleState_.compare_exchange_strong(
+        expected, targetState, std::memory_order_acq_rel);
+    if (switched) { LogStateTransition(expectedState, targetState, trigger); }
+    return switched;
 }
 ```
 
-#### 错误状态传播
+**机制要点**：
 
-Context 维护两类错误状态：`lastErr_` 记录最近一次错误，`GetContextLastErr()` 读取后会清零；`failureError_` 记录失败模式下需要传播的错误。`ContextManage::SetGlobalFailureErr()` 会按 Device ID 遍历有效 Context，设置 Context failure error、Stream 状态和 Device 状态。`Context::CheckStatus()` 会检查设备运行状态、驱动状态、设备业务状态和 Context failure error；只有 `ctxMode_ == STOP_ON_FAILURE` 时，Context failure error 会作为返回错误继续向上传播。
+- `FINALIZING`是阻断用户访问的状态：进入此状态后，所有用户API访问立即被拒绝。
+- `FINALIZED`是中间态：TearDown完成、子资源已回收，但Module/Device引用等最终资源尚未释放。
+- `DEINITIALIZING`是唯一允许释放对象的状态，由`TryDeleteIfNeeded`或析构路径触发。
 
-#### Module 懒分配
+#### 4.3.3 Context handle有效性校验与访问模式
 
-`Context::Init()` 初始化的是 `moduleAllocator_`，真正的 `Module` 对象在 `Context::GetModule()` 首次访问对应 `Program` 时通过 `device_->ModuleAlloc(prog)` 创建，并记录到 `Program` 与 Context 的映射关系。释放时通过 `Context::ReleaseModule()` 清空 allocator 条目，并调用 `device_->ModuleRelease()`。
+**设计思想**：所有用户API入口通过`CheckContextIsValid`统一校验Context可用性。校验分两步——先查全局有效集合（读写锁保护的`unordered_set`），再查状态机；两步都通过才放行。同时，用户态校验失败会主动解除当前线程与该Context的关联，避免线程长期持有一个已失效的handle。
 
-### 4.3 特性扩展
+**访问模式**：
 
-Context 的特性扩展主要采用两种方式。
+```cpp
+// 文件位置：src/runtime/core/inc/context/context_manage.hpp
+enum class ContextAccessMode : uint8_t {
+    USER = 0,        // 用户API访问，要求Context处于ACTIVE
+    INTERNAL = 1,    // Runtime内部访问，允许INITIALIZING/FINALIZING
+};
+```
 
-| 扩展模式 | 使用方 | 说明 |
-| -------- | ------ | ---- |
-| 编译单元分离 | ACL Graph、FFTS Plus | 方法声明在 `context.hpp`，实现放在 `src/runtime/feature/` 目录，链接为 `Context` 成员方法 |
-| 继承子类 | XPU | `XpuContext` 继承 `Context` 并重写虚方法 |
+**校验流程**：
 
-#### ACL Graph 扩展
+```mermaid
+flowchart TD
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef errorStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#B71C1C
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
 
-ACL Graph 相关 Context 实现位于 `src/runtime/feature/aclgraph/context_aclgraph.cc`、`src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc` 和 `src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc`，主要为 Stream Capture 和 CaptureModel 提供入口。
+    A(["CheckContextIsValid(ctx, mode)"]):::entryStyle --> B{"ctx为空?"}:::decisionStyle
+    B -->|是| X1(["返回false"]):::errorStyle
+    B -->|否| C["读锁 ContextDataManage<br/>查询isTracked"]:::processStyle
+    C --> D["ResolveAccessMode<br/>根据TLS内部访问标记<br/>可能将USER提升为INTERNAL"]:::processStyle
+    D --> E{"IsStateAccessible<br/>(resolvedMode)?"}:::decisionStyle
+    E -->|是| Y(["返回true"]):::resultStyle
+    E -->|否| F{"isTracked?"}:::decisionStyle
+    F -->|是| G["errorCode=RT_ERROR_CONTEXT_DEL"]:::processStyle
+    F -->|否| H["errorCode=RT_ERROR_CONTEXT_NULL"]:::processStyle
+    G --> I{"resolvedMode==USER?"}:::decisionStyle
+    H --> I
+    I -->|是| J["DetachInvalidContextFromThread<br/>清理当前线程的失效绑定"]:::processStyle
+    I -->|否| X1
+    J --> X1
+```
 
-| 能力 | 入口 |
-| ---- | ---- |
-| 开始捕获 | `Context::StreamBeginCapture()` |
-| 结束捕获 | `Context::StreamEndCapture()` |
-| 查询捕获状态 | `Context::StreamGetCaptureInfo()` |
-| TaskGroup 采样 | `Context::StreamBeginTaskGrp()`、`Context::StreamEndTaskGrp()` |
-| 模型调试输出 | `Context::ModelDebugDotPrint()`、`Context::ModelDebugJsonPrint()` |
+**关键代码**：
 
-#### FFTS Plus 扩展
+```cpp
+// 文件位置：src/runtime/core/src/context/context_manage.cc
+bool ContextManage::CheckContextIsValid(Context* const curCtx,
+    ContextAccessMode accessMode, rtError_t* errorCode)
+{
+    if (curCtx == nullptr) { return false; }
+    {
+        const ReadProtect rp(&(g_ctxMan.GetSetRwLock()));
+        const bool isTracked = g_ctxMan.ExistsSetValueWithoutLock(curCtx);
+        const ContextAccessMode resolvedAccessMode = ResolveAccessMode(curCtx, accessMode);
+        if (IsContextAccessAllowed(curCtx, resolvedAccessMode, isTracked)) {
+            return true;
+        }
+        needDetachUserBinding = (resolvedAccessMode == ContextAccessMode::USER);
+    }
+    if (needDetach && needDetachUserBinding) {
+        DetachInvalidContextFromThread(curCtx);
+    }
+    return false;
+}
+```
 
-FFTS Plus Context 实现位于 `src/runtime/feature/ffts/context_ffts_standard_soc.cc`，tiny 平台 stub 位于 `src/runtime/feature/ffts/context_ffts_tiny_stub.cc`。标准实现中，`Context::FftsPlusTaskLaunch()` 从 Stream 分配 `TS_TASK_TYPE_FFTS_PLUS` 任务，初始化 FFTS Plus task，等待参数拷贝完成后通过 Device 提交任务。Stream 处于 capture 状态时，还会补充 RDMA PI value modify 任务。
+**状态-访问模式矩阵**（`Context::IsStateAccessible`）：
 
-#### XPU Context 扩展
+| Context状态 | USER访问 | INTERNAL访问 |
+| --- | --- | --- |
+| `ACTIVE` | ✅ 允许 | ✅ 允许 |
+| `INITIALIZING` | ❌ 拒绝 | ✅ 允许 |
+| `FINALIZING` | ❌ 拒绝 | ✅ 允许 |
+| `NOT_INITIALIZED` / `FINALIZED` / `DEINITIALIZING` | ❌ 拒绝 | ❌ 拒绝 |
 
-XPU Context 定义在 `src/runtime/core/inc/context/xpu_context.hpp`，实现位于 `src/runtime/feature/xpu/xpu_context.cc` 和 `src/runtime/feature/xpu/runtime_xpu_adapt.cc`。`XpuContext` 继承 `Context`，重写 `Setup()`、`TearDown()`、`StreamCreate()`、`TearDownStream()` 和 `CheckStatus()`。
+**机制要点**：
 
-| 重写方法 | 差异行为 |
-| -------- | -------- |
-| `Setup()` | 设置 `STOP_ON_FAILURE` 模式 |
-| `StreamCreate()` | 校验 priority 和 flag，创建 `XpuStream` |
-| `TearDown()` | 遍历 XPU Context 下的 Stream 并逐一清理 |
-| `CheckStatus()` | 直接返回 Context 的 failure error |
+- **TRACKED是USER访问前提**：用户Context必须已`InsertContext`登记到全局集合才允许USER访问；未登记的Context仅当当前线程已绑定且为INTERNAL时可用（用于`aclrtCreateContext`在`InsertContext`前的`Setup`窗口）。
+- **校验失败自动清理**：USER模式校验失败时，`DetachInvalidContextFromThread`会解除当前线程对该Context的绑定；解绑可能是最后一次引用，从而触发`TryDeleteIfNeeded`。
+- **访问模式提升**：`ResolveAccessMode`检查当前线程TLS的`internalAccess`标记，若线程已处于内部访问上下文，则自动按INTERNAL校验。
 
-#### Snapshot 和恢复
+#### 4.3.4 销毁保护机制
 
-Context 模块通过 `ContextManage` 为 Snapshot 提供设备、Stream 和 Model 维度的信息入口。`ContextManage::DeviceGetStreamlist()`、`DeviceGetModelList()` 遍历有效 Context 集合并筛选指定 Device；`SnapShotProcessBackup()`、`SnapShotProcessRestore()` 调用 Model 备份恢复、ACL Graph 恢复以及驱动资源备份恢复。
+**设计思想**：用户Context的销毁分为**停止对外使用并清理资源**和**删除Context对象**两个阶段。销毁开始时，切换Context状态到`FINALIZING`，阻止新的用户API访问，再通过`TearDown()`清理关联资源；清理成功后将Context标记为“待删除”。待所有用户线程解除关联后，才删除Context对象，避免对象释放后仍被访问（Use-After-Free，UAF）。
 
-#### runtime_compact Context
+**销毁保护字段**：
 
-`runtime_compact` 使用 C 结构体实现轻量 Context，代码位于 `src/runtime_compact/feature/inc/context.h`、`src/runtime_compact/feature/src/context_common.c`、`src/runtime_compact/feature/src/context_linux.c` 和 `src/runtime_compact/feature/src/context_liteos.c`。
+```cpp
+// 文件位置：src/runtime/core/inc/context/context.hpp
+class Context {
+    std::atomic<uint64_t> threadRefCount_;   // 用户线程绑定计数
+    Atomic<bool> isNeedDelete_;              // TearDown完成后置位
+    std::atomic<bool> deleteScheduled_;      // 保证delete只触发一次
+};
+```
 
-| 平台 | 当前 Context 记录方式 |
-| ---- | -------------------- |
-| Linux | `__thread Context *g_curCtx` 和 `g_curCtxSeq` |
-| LiteOS | `g_contextRecord` 按 task id 保存 `ContextKeyObj` |
+**销毁流程**：
 
-compact Context 保存 `Device *`、Stream vector 和 stream lock，创建时从 `g_contextMemPool` 分配，销毁和查询时通过内存池序列号判断 handle 是否仍有效。
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 应用线程
+    participant Api as ApiImpl::ContextDestroy
+    participant Ctx as Context
+    participant TLS as InnerThreadLocalContainer
+
+    rect rgba(227, 242, 253, 0.62)
+        App->>Api: aclrtDestroyContext(ctx)
+        Api->>Api: CheckContextIsValid(USER)<br/>检查IsPrimary/isNeedDelete/TearDownIsCanExecute
+        Api->>Api: SetInternalThreadContext(ctx)<br/>临时切换为INTERNAL访问
+    end
+
+    rect rgba(232, 245, 233, 0.62)
+        Api->>Ctx: TearDown()
+        Ctx->>Ctx: 状态FINALIZING → FINALIZED
+        Api->>Ctx: SetContextDeleteStatus()<br/>isNeedDelete_=true
+        Api->>Ctx: TryDeleteIfNeeded()
+        alt threadRefCount_==0
+            Ctx->>Ctx: deleteScheduled_<br/>RemoveContextFromSet + delete this
+        else 仍有线程绑定
+            Ctx-->>Api: 返回false，等待最后解绑
+        end
+    end
+
+    rect rgba(243, 229, 245, 0.62)
+        Note over App,TLS: 其他线程后续的Context切换/解绑
+        App->>TLS: SetCurCtx(other) 或 ClearDeletedContextBinding
+        TLS->>Ctx: ContextThreadUnbind()<br/>threadRefCount_--
+        TLS->>Ctx: TryDeleteIfNeeded()<br/>最后一次解绑触发delete
+    end
+```
+
+**关键代码**：
+
+```cpp
+// 文件位置：src/runtime/core/src/context/context.cc
+bool Context::TryDeleteIfNeeded()
+{
+    if (isPrimary_ || !GetContextIsNeedDelStatus()) {
+        return false;                          // 默认Context或未标记删除
+    }
+    if (GetThreadRefCount() != 0U) {
+        return false;                          // 仍有用户线程绑定
+    }
+    bool expected = false;
+    if (!deleteScheduled_.compare_exchange_strong(expected, true, ...)) {
+        return false;                          // 已有线程进入删除路径
+    }
+    SetState(ContextState::CTX_STATE_DEINITIALIZING, "TryDeleteIfNeeded");
+    (void)ContextManage::RemoveContextFromSet(this);
+    delete this;                               // 触发~Context → ReleaseResourcesAfterTearDown
+    return true;
+}
+```
+
+**机制要点**：
+
+1. **三重删除前提**：非Primary + `isNeedDelete_==true` + `threadRefCount_==0`，缺一不可。
+2. **`deleteScheduled_`原子标志**：保证多线程并发解绑时只有一个线程执行`delete this`。
+3. **删除即析构**：`delete this`触发`~Context`→`ReleaseResourcesAfterTearDown`，完成资源释放。
+4. **TLS兜底清理**：`ClearDeletedContextBinding`确保其他线程后续的`SetCurCtx`不会再持有已删除Context的指针。
+
+#### 4.3.5 异常处理机制
+
+**设计思想**：
+
+- ctxMode_作为遇错即停开关，用于控制Context发生异常后的处理方式。
+- Context将异常分为**最近错误**（`lastErr_`）和**失败状态**（`failureError_`）两条通道。前者保留最近一次API错误供查询；后者在同步或任务下发前决定是否允许继续执行。
+
+**失败模式控制**：
+
+```cpp
+// 文件位置：src/runtime/core/inc/context/context.hpp
+TsStreamFailureMode GetCtxMode() const { return ctxMode_; }
+void SetCtxMode(const TsStreamFailureMode flag) { ctxMode_ = flag; }
+```
+
+- **开启遇错即停**：`aclrtSetStreamFailureMode(stream, ACL_STOP_ON_FAILURE)`→ Context内部`SetCtxMode(STOP_ON_FAILURE)`。
+- **`ctxMode_`是遇错即停开关，`failureError_`是异常码**：`ctxMode_`决定遇错后行为；`failureError_`只是当前失败状态对应的异常码记录。
+
+**机制要点**：
+
+1. **Device/Driver异常优先级最高**：无论`ctxMode_`如何都直接返回错误，避免在异常设备上继续下发任务。
+2. **`CONTINUE_ON_FAILURE`是默认模式**：保留`failureError_`供后续查询，但不阻断当前路径，便于业务侧容错。
+3. **`STOP_ON_FAILURE`立即阻断**：返回`failureError_`并阻止后续任务下发，便于快速失败定位。
+4. **设备级传播按Device ID**（`SetGlobalFailureErr`）：异步Stream错误写入所属Context；设备级严重异常遍历`ContextDataManage`，对所有`IsContextOnDevice`的Context同步`SetFailureError`+`SetStreamsStatus`+`SetDeviceStatus`。
+
+**错误通道对比**：
+
+| 维度 | `lastErr_` | `failureError_` |
+| --- | --- | --- |
+| 写入方 | 一般API返回错误时由`SetGlobalErrToCtx`写入 | 异步Stream错误或设备级严重异常时由`SetGlobalFailureErr`写入 |
+| 读取方 | `GetContextLastErr`读取并清零<br />`PeekContextLastErr`读取保留 | `CheckStatus`/`CheckTaskSend`在执行前查询 |
+| 作用范围 | 当前线程关联的Context | 该Device上所有Context（按Device ID传播） |
+| 生命周期 | 读取即清零（一次性） | 直到Device恢复或Context销毁 |
+
+**执行前检查流程**：
+
+```mermaid
+flowchart TD
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef processStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef errorStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#B71C1C
+    classDef resultStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A(["CheckStatus / CheckTaskSend"]):::entryStyle --> C{"Device状态"}:::decisionStyle
+    C -->|"GetDevStatus异常"| X1(["返回驱动错误"]):::errorStyle
+    C -->|"GetDeviceStatus异常"| X2(["返回设备异常"]):::errorStyle
+    C -->|"正常"| D{"特殊Stream且非ABORT?"}:::decisionStyle
+    D -->|是| Y(["跳过Context检查,返回成功"]):::resultStyle
+    D -->|否| E["读取 failureError_"]:::processStyle
+    E --> F{"ctxMode_ == STOP_ON_FAILURE?"}:::decisionStyle
+    F -->|是| G["PopContextErrMsg<br/>返回 failureError_"]:::errorStyle
+    F -->|"否 (CONTINUE_ON_FAILURE)"| H(["保留 failureError_<br/>返回 RT_ERROR_NONE"]):::resultStyle
+```
+
+**关键代码**：
+
+```cpp
+// 文件位置：src/runtime/core/src/context/context.cc
+rtError_t Context::CheckStatus(const Stream* const stm, const bool isBlockDefault)
+{
+    // 1. Device/Driver状态优先检查（不受ctxMode_影响）
+    status = device_->GetDevStatus();
+    COND_PROC_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, status != RT_ERROR_NONE, ...);
+    status = device_->GetDeviceStatus();
+    COND_RETURN_ERROR(status != RT_ERROR_NONE, ...);
+
+    // 2. 特殊Stream（CtrlSQ/Primary）且非ABORT模式：跳过Context检查
+    if (!isBlockDefault && (stm != nullptr) && ... && (stm->GetFailureMode() != ABORT_ON_FAILURE)) {
+        return RT_ERROR_NONE;
+    }
+
+    // 3. Context失败状态按模式处理
+    status = GetFailureError();
+    if (status != RT_ERROR_NONE) { PopContextErrMsg(); }
+    if (ctxMode_ != STOP_ON_FAILURE) { return RT_ERROR_NONE; }   // 继续执行
+    return status;
+}
+```
 
 ### 4.4 模块职责划分
 
-| 模块 | 职责 | 位置 |
-| ---- | ---- | ---- |
-| ACL Context API | ACL 对外 Context 接口、参数校验、错误码转换、Profiling 统计 | `src/acl/aclrt_impl/context.cpp`、`src/acl/aclrt_c/runtime/context.c` |
-| Runtime C API | Runtime C 接口入口，转调 `Api::Instance()` | `src/runtime/api/api_c.cc`、`src/runtime/api/api_c_context.cc`、`src/runtime/api/api_c_device.cc` |
-| API 抽象 | Context API 虚接口和装饰器链 | `src/runtime/api/api.hpp`、`src/runtime/core/src/api_impl/api_decorator.cc`、`src/runtime/core/src/profiler/api_profile_decorator.cc` |
-| ApiImpl | Context 创建、销毁、设置当前、获取当前、系统参数操作 | `src/runtime/core/src/api_impl/api_impl.cc` |
-| Runtime | Primary Context 数组、引用计数、当前 Context 解析、Device 生命周期联动 | `src/runtime/core/inc/runtime.hpp`、`src/runtime/core/src/runtime.cc` |
-| Context | 资源容器，管理 Device、Stream、Model、Module、系统参数和错误状态 | `src/runtime/core/inc/context/context.hpp`、`src/runtime/core/src/context/context.cc` |
-| ContextManage | 全局 Context 集合、有效性校验、设备异常处理、Snapshot 入口 | `src/runtime/core/inc/context/context_manage.hpp`、`src/runtime/core/src/context/context_manage.cc` |
-| ContextDataManage | 线程安全 set 封装，保存有效 Context 指针 | `src/runtime/core/src/common/context_data_manage.h`、`src/runtime/core/src/common/context_data_manage.cc` |
-| ContextProtect | Context 使用计数保护，配合延迟释放 | `src/runtime/core/inc/context/context_protect.hpp`、`src/runtime/core/src/context/context_protect.cc` |
-| ACL Graph Context | 流捕获、CaptureModel、TaskGroup、模型调试输出 | `src/runtime/feature/aclgraph/context_aclgraph.cc` |
-| FFTS Context | FFTS Plus task launch | `src/runtime/feature/ffts/context_ffts_standard_soc.cc` |
-| XPU Context | XPU Context 生命周期和 Stream 管理 | `src/runtime/core/inc/context/xpu_context.hpp`、`src/runtime/feature/xpu/xpu_context.cc` |
-| compact Context | runtime_compact 轻量 Context | `src/runtime_compact/feature/inc/context.h`、`src/runtime_compact/feature/src/context_common.c` |
+| 核心模块或类 | 主要职责 | 与Context的关联 |
+| --- | --- | --- |
+| `ApiImpl` | 实现Context创建、销毁、设置当前和获取当前等核心操作 | 调用`Runtime`管理默认Context，通过`ContextManage`登记或校验Context，并更新线程关联 |
+| `Runtime` | 维护默认Context对象及其引用计数，联动Device生命周期并解析当前Context | 创建或复用默认Context，从线程局部存储解析当前Context |
+| `Context` | Context生命周期和资源管理主体 | 绑定Device，管理Stream、Model、Module、错误状态及线程关联引用 |
+| `ContextManage` | Context登记、有效性校验、销毁收尾和异常传播 | 通过`ContextDataManage`维护全局Context集合，并对Context执行状态检查 |
+| `ContextDataManage` | 对全局Context集合提供插入、移除、存在性查询和遍历访问 | 为有效性校验提供数据基础；快速恢复和Snapshot也会遍历该集合 |
+| `InnerThreadLocalContainer` | 保存当前线程关联的用户或默认Context，以及INTERNAL访问标记 | 建立或解除线程与Context的关联，并触发线程引用增减 |
 
 ### 4.5 核心数据结构
 
 ```mermaid
 classDiagram
+    direction LR
+
+    class ApiImpl {
+        +SetDevice(devId) rtError_t
+        +ContextCreate(ctx, devId) rtError_t
+        +ContextDestroy(ctx) rtError_t
+        +ContextSetCurrent(ctx) rtError_t
+    }
+
     class Runtime {
         -RefObject~Context*~ priCtxs_[][]
         +PrimaryContextRetain(devId) RefObject~Context*~*
         +PrimaryContextRelease(devId, isForceReset) rtError_t
-        +GetPrimaryCtxState(devId, flags, active) rtError_t
-        +GetPriCtxByDeviceId(deviceId, tsId) Context*
-        +GetRefPriCtx(deviceId, tsId) RefObject~Context*~*
         +CurrentContext() Context*
     }
 
     class Context {
         -Device* device_
         -Stream* defaultStream_
-        -Stream* onlineStream_
         -list~Stream*~ streams_
         -list~Model*~ models_
         -ObjAllocator~Module*~* moduleAllocator_
-        -bool isPrimary_
-        -atomic~uint64_t~ count_
-        -Atomic~bool~ isNeedDelete_
+        -atomic~uint64_t~ threadRefCount_
+        -atomic~ContextState~ lifecycleState_
         -Atomic~rtError_t~ failureError_
-        -Atomic~rtError_t~ lastErr_
-        -vector~pair~ sysParamOpt_
-        -TsStreamFailureMode ctxMode_
         +Setup() rtError_t
         +TearDown() rtError_t
-        +Synchronize(timeout) rtError_t
-        +StreamCreate(...) rtError_t
-        +StreamDestroy(Stream*) rtError_t
-        +ModelCreate(Model**) rtError_t
-        +ModelDestroy(Model*) rtError_t
-        +GetModule(Program*) Module*
-        +CtxSetSysParamOpt(opt, val) rtError_t
-        +CtxGetSysParamOpt(opt, val*) rtError_t
+        +TryDeleteIfNeeded() bool
+        +ContextThreadBind() void
+        +ContextThreadUnbind() uint64_t
         +CheckStatus(Stream*, bool) rtError_t
     }
 
     class ContextManage {
-        +CheckContextIsValid(Context*, bool) bool
+        +CheckContextIsValid(Context*, ContextAccessMode, rtError_t*) bool
         +InsertContext(Context*) void
-        +EraseContextFromSet(Context*) rtError_t
-        +DeviceTaskAbort(devId, timeout) rtError_t
+        +RemoveContextFromSet(Context*) rtError_t
         +SetGlobalFailureErr(devId, err) void
-        +DeviceGetStreamlist(devId, type, list*) void
-        +DeviceGetModelList(devId, list*) void
-        +SnapShotProcessBackup() rtError_t
-        +SnapShotProcessRestore() rtError_t
+    }
+
+    class InnerThreadLocalContainer {
+        -Context* curCtx_
+        -RefObject~Context*~* curRef_
+        -bool curCtxInternalAccess_
+        -bool curRefInternalAccess_
+        +SetCurCtx(Context*, bool) void
+        +SetCurRef(RefObject~Context*~*, bool) void
     }
 
     class ContextDataManage {
-        -unordered_set~Context*~ set_
-        -mmRWLock_t setLock_
         +InsertSetValueWithLock(Context*) void
         +EraseSetValueWithLock(Context*) bool
         +ExistsSetValueWithoutLock(Context*) bool
+        +GetSetObj() ContextSet
     }
 
-    class ContextProtect {
-        -Context* ctx_
-        +ContextProtect(Context*)
-        +~ContextProtect()
-    }
-
-    class XpuContext {
-        +Setup() rtError_t
-        +TearDown() rtError_t
-        +StreamCreate(...) rtError_t
-        +TearDownStream(Stream*, bool) rtError_t
-        +CheckStatus(Stream*, bool) rtError_t
-    }
-
+    class FastRecover
+    class Snapshot
     class Device
     class Stream
     class Model
     class Module
-    class Program
 
-    Runtime --> Context
-    Runtime --> ContextManage
-    ContextManage --> ContextDataManage
-    ContextProtect --> Context
-    XpuContext --|> Context
-    Context --> Device
-    Context --> Stream
-    Context --> Model
-    Context --> Module
-    Module --> Program
+    ApiImpl --> Runtime : 管理默认 Context
+    ApiImpl --> ContextManage : 登记和校验
+    ApiImpl --> InnerThreadLocalContainer : 设置线程关联
+    Runtime --> Context : 创建、复用和解析
+    Runtime --> InnerThreadLocalContainer : 读取当前关联
+    ContextManage --> ContextDataManage : 维护全局集合
+    ContextManage --> Context : 校验、销毁收尾和异常传播
+    InnerThreadLocalContainer --> Context : 线程关联和引用保护
+    Context "1" --> "1" Device : 绑定
+    Context "1" o-- "*" Stream : 管理
+    Context "1" o-- "*" Model : 管理
+    Context "1" o-- "*" Module : 按 Program 登记
+    FastRecover ..> ContextDataManage : 查询和遍历
+    Snapshot ..> ContextDataManage : 查询和遍历
 ```
 
 ## 5. 关键文件索引
 
 | 模块 | 文件路径 | 核心内容 |
-| ---- | -------- | -------- |
-| ACL 公开头文件 | `include/external/acl/acl_rt.h` | ACL Context API 声明和接口约束 |
-| ACL C 入口 | `src/acl/aclrt_c/runtime/context.c` | ACL Context C 符号入口，转调 wrapper |
-| ACL 实现 | `src/acl/aclrt_impl/context.cpp` | ACL Context 实现、参数校验、错误码转换 |
-| ACL wrapper | `src/acl/aclrt_impl/acl_rt_wrapper.h` | ACL runtime wrapper 宏注册 |
-| Runtime Context 头文件 | `pkg_inc/runtime/runtime/context.h` | `rtContext_t`、`rtCtx*` 接口声明 |
-| RTS Context 头文件 | `pkg_inc/runtime/runtime/rts/rts_context.h` | `rtsCtx*` 接口声明 |
-| Runtime C API | `src/runtime/api/api_c.cc` | `rtCtx*`、sysparam、default stream 等接口入口 |
-| RTS C API | `src/runtime/api/api_c_context.cc` | `rtsCtx*`、primary ctx state 接口入口 |
-| Device C API | `src/runtime/api/api_c_device.cc` | `rtSetDevice()`、`rtDeviceReset()` 与 Primary Context 生命周期联动 |
-| API 抽象 | `src/runtime/api/api.hpp` | Context 相关虚接口定义 |
-| ApiImpl | `src/runtime/core/src/api_impl/api_impl.cc` | Context 创建、销毁、线程绑定、系统参数实现 |
-| Runtime | `src/runtime/core/inc/runtime.hpp`、`src/runtime/core/src/runtime.cc` | Primary Context 引用计数、当前 Context 解析 |
-| Context 头文件 | `src/runtime/core/inc/context/context.hpp` | Context 类、校验宏、核心方法声明 |
-| Context 实现 | `src/runtime/core/src/context/context.cc` | Context 生命周期、Stream、Model、Module、sysparam、同步和错误状态 |
-| Context 平台实现 | `src/runtime/core/src/context/context_standard_soc.cc`、`src/runtime/core/src/context/context_tiny_stub.cc` | 标准平台和 tiny stub 的 Context 差异实现 |
-| ContextManage | `src/runtime/core/inc/context/context_manage.hpp`、`src/runtime/core/src/context/context_manage.cc` | 全局 Context 集合、有效性校验、设备异常、Snapshot 入口 |
-| ContextDataManage | `src/runtime/core/src/common/context_data_manage.h`、`src/runtime/core/src/common/context_data_manage.cc` | 有效 Context set 和读写锁 |
-| ContextProtect | `src/runtime/core/inc/context/context_protect.hpp`、`src/runtime/core/src/context/context_protect.cc` | RAII 使用计数和延迟释放 |
-| ACL Graph 扩展 | `src/runtime/feature/aclgraph/context_aclgraph.cc`、`src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc`、`src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc` | 流捕获和 CaptureModel 相关 Context 实现 |
-| FFTS 扩展 | `src/runtime/feature/ffts/context_ffts_standard_soc.cc`、`src/runtime/feature/ffts/context_ffts_tiny_stub.cc` | FFTS Plus task launch 标准实现和 stub |
-| XPU 扩展 | `src/runtime/core/inc/context/xpu_context.hpp`、`src/runtime/feature/xpu/xpu_context.cc`、`src/runtime/feature/xpu/runtime_xpu_adapt.cc` | XPU Context 生命周期、Stream 和 Primary XPU Context |
-| compact Context | `src/runtime_compact/feature/inc/context.h`、`src/runtime_compact/feature/src/context_common.c`、`src/runtime_compact/feature/src/context_linux.c`、`src/runtime_compact/feature/src/context_liteos.c` | runtime_compact 轻量 Context 实现 |
-| Context 示例 | `example/1_basic_features/context/README.md` | Context 使用入口说明 |
+| --- | --- | --- |
+| ACL公开头文件 | `include/external/acl/acl_rt.h` | ACL Context API声明和接口约束 |
+| ACL C入口 | `src/acl/aclrt_c/runtime/context.c` | ACL Context C符号入口，转调wrapper |
+| ACL实现 | `src/acl/aclrt_impl/context.cpp` | ACL Context实现、参数校验、错误码转换 |
+| Runtime Context头文件 | `pkg_inc/runtime/runtime/context.h` | Runtime Context handle和内部C API声明 |
+| RTS Context头文件 | `pkg_inc/runtime/runtime/rts/rts_context.h` | RTS Context内部C API声明 |
+| Runtime C API | `src/runtime/api/api_c.cc` | Context C层转调入口 |
+| RTS C API | `src/runtime/api/api_c_context.cc` | Context RTS转调入口 |
+| Device C API | `src/runtime/api/api_c_device.cc` | Device设置与复位的Runtime实现，以及默认Context生命周期联动 |
+| API抽象 | `src/runtime/api/api.hpp` | Context相关虚接口定义 |
+| ApiError | `src/runtime/core/src/api_impl/api_error.cc` | Context API参数校验、空指针校验和资源绑定关系校验 |
+| Profiling装饰器 | `src/runtime/core/src/profiler/api_profile_decorator.cc`、`src/runtime/core/src/profiler/api_profile_log_decorator.cc` | Context API Profiling记录 |
+| ApiImpl | `src/runtime/core/src/api_impl/api_impl.cc` | Context创建、销毁、线程绑定实现 |
+| Runtime | `src/runtime/core/inc/runtime.hpp`、`src/runtime/core/src/runtime.cc` | 默认Context retain/release、当前Context解析、内部访问上下文 |
+| Context头文件 | `src/runtime/core/inc/context/context.hpp` | Context类、状态机、访问模式、校验宏、核心方法声明 |
+| Context实现 | `src/runtime/core/src/context/context.cc` | Context生命周期、资源管理、状态迁移、线程绑定引用、同步和错误状态 |
+| Context平台实现 | `src/runtime/core/src/context/context_standard_soc.cc`、`src/runtime/core/src/context/context_tiny_stub.cc` | 标准平台和tiny stub的Context差异实现 |
+| ContextManage | `src/runtime/core/inc/context/context_manage.hpp`、`src/runtime/core/src/context/context_manage.cc` | 全局Context集合、USER/INTERNAL有效性校验、inactive销毁收尾、设备异常传播 |
+| ContextDataManage | `src/runtime/core/src/common/context_data_manage.h`、`src/runtime/core/src/common/context_data_manage.cc` | Context集合的增删、查询和遍历；同时供有效性校验、快速恢复及Snapshot使用 |
+| InnerThreadLocalContainer | `src/runtime/core/inc/common/inner_thread_local.hpp`、`src/runtime/core/src/common/inner_thread_local.cpp` | 线程局部存储中的当前Context、内部访问标记、线程关联引用加减 |
 
-## 6. 测试覆盖
+## 6. 设计约束与维护建议
 
-| 测试文件 | 覆盖重点 |
-| -------- | -------- |
-| `tests/ut/runtime/runtime/test/rt_utest_api_context.cc` | RTS Context 创建销毁、设置获取当前 Context、Primary Context 状态、sysparam、默认 Stream |
-| `tests/ut/runtime/runtime/test/rt_utest_context.cc` | Context Setup、TearDown、Synchronize、任务回收、并发 Context、Module、Model、FFTS、ContextProtect 等 |
-| `tests/ut/runtime/runtime/test/platform/910B/rt_utest_api_context.cc` | 910B 平台 Context API 差异用例 |
-| `tests/ut/runtime/runtime/test/platform/910B/rt_utest_context.cc` | 910B 平台 Context 行为用例 |
-| `tests/ut/runtime/runtime/test/platform/910_95/xpu/rt_utest_xpu_context.cc` | XPU Context 生命周期和 Stream 行为 |
-| `tests/ut/runtime/runtime_c/testcase/feature/rt_api_test.cc` | runtime_compact Context API 行为 |
-| `tests/ut/acl/testcase/acl_runtime_unittest.cpp` | ACL Context API 参数校验和 Runtime 转调 |
-| `tests/ut/runtime/runtime/fuzz/testcase/rt_event_ctx_fuzzer.cc` | Event 与 Context 组合路径 fuzz |
-
-## 7. 设计约束与维护建议
-
-- Primary Context 只能通过 Device 生命周期释放，用户显式销毁接口不能销毁 `IsPrimary()` 为 true 的 Context。
-- 新增以 `Context *` 为入参的 API 时，应使用 `CHECK_CONTEXT_VALID_WITH_RETURN` 或等价逻辑，保证 handle 已登记且 `ContextProtect` 覆盖 API 执行区间。
-- 调用 `ContextManage::CheckContextIsValid(ctx, true)` 后必须配套 `ContextProtect`，否则 Context 使用计数不会在作用域结束时回落。
-- 切换当前 Context 时需要明确处理 `curCtx` 和 `curRef`。显式 Context 使用 `SetCurCtx(ctx)` 并清空 `curRef`；设置 Device 使用 `SetCurRef(ref)` 并清空 `curCtx`。
-- 新增 Context 下属资源时，需要补齐 `Context::TearDown()`、异常回收、Snapshot 备份恢复和必要的测试用例。
-- 新增平台差异实现时，优先放入 `src/runtime/feature/` 或现有平台 stub 文件，避免把平台条件散落到核心 Context 主流程。
-- 新增 ACL/RTS API 时，需要同步检查 `include/external/acl/acl_rt.h`、`pkg_inc/runtime/runtime/context.h`、`pkg_inc/runtime/runtime/rts/rts_context.h`、`src/runtime/api/api.hpp`、`src/runtime/core/src/api_impl/api_impl.cc` 和 profiler 装饰器。
-
-## 8. 性能与可靠性关注点
-
-- Primary Context 通过引用计数复用，避免同一 Device/TS 组合重复创建默认执行环境。
-- 用户 Context 销毁先从 `ContextManage` 有效集合移除，再结合使用计数延迟释放，降低并发使用时的 UAF 风险。
-- `Context::Setup()` 区分 Primary Context 和用户 Context 的默认 Stream 来源，避免用户 Context 销毁时误删 Device 的 Primary Stream。
-- `Context::Synchronize()` 跳过无需同步的 Stream，并拒绝同步 capture 状态的 Stream，避免捕获期间破坏 Stream Capture 状态。
-- Module 采用按 Program ID 懒分配模式，`moduleAllocator_` 在 Context 初始化时创建，具体 Module 在首次 `GetModule()` 时创建。
-- Context 级 sysparam 保存在 `sysParamOpt_` 中，同一进程内不同 Context 可以保存不同配置。
+- 默认Context由Device设置/复位路径管理，用户显式销毁接口不能销毁`IsPrimary()`为true的Context。
+- Stream、Model、Module等资源的操作必须在资源所属Context下完成，不允许跨Context使用、绑定或销毁。
+- 新增接收`Context *`或依赖当前Context的API时，必须明确使用USER或INTERNAL访问模式；对外API默认使用USER。
+- teardown/reset的内部资源访问必须使用`Runtime::SetInternalThreadContext()`或等价INTERNAL绑定。
 
 ---
 
-_本模块文档基于 `src/runtime/core/src/context/`、`src/runtime/core/src/runtime.cc`、`src/runtime/core/src/api_impl/api_impl.cc` 及 Context 相关 API、feature、runtime_compact 源码整理。_
+_本模块文档基于 `src/runtime/core/src/context/`、`src/runtime/core/src/runtime.cc`、`src/runtime/core/src/api_impl/api_impl.cc`、`src/runtime/core/src/common/inner_thread_local.cpp`及Context相关API源码分析整理。_
