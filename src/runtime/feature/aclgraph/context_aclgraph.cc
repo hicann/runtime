@@ -337,7 +337,11 @@ rtError_t Context::CheckCaptureModelValidity(Model * const captureMdl) const
 
     bool isOnlyOrigStream = true;
     bool hasRecordOrigStream = false;
+    int32_t origStreamId = -1;
     for (auto it = streams.begin(); it != streams.end(); it++) {
+        if ((*it)->IsOrigCaptureStream()) {
+            origStreamId = (*it)->Id_();
+        }
         if (((*it)->IsOrigCaptureStream()) ||
             ((*it)->IsLastLevelCaptureStream() == false) ||
             (mdl->IsAddStream(*it))) {
@@ -355,20 +359,29 @@ rtError_t Context::CheckCaptureModelValidity(Model * const captureMdl) const
             RT_ERROR_EVENT_NULL,
             "No event object, stream_id=%d, task_id=%u.",
             streamId, taskId);
-        COND_RETURN_ERROR((event->GetEventFlag() == RT_EVENT_EXTERNAL),
-            RT_ERROR_STREAM_UNJOINED,
-            "The event flag is external, stream_id=%d, task_id=%u, event_id=%d.",
-            streamId, taskId, event->EventId_());
-        COND_RETURN_ERROR((event->IsCaptureStreamWaited() == false),
-            RT_ERROR_STREAM_UNJOINED,
-            "A free-state event record task was discovered, stream_id=%d, task_id=%u, event_id=%d.",
-            streamId, taskId, event->EventId_());
+        COND_RETURN_AND_MSG_OUTER((event->GetEventFlag() == RT_EVENT_EXTERNAL),
+            RT_ERROR_STREAM_UNJOINED, ErrorCode::EE1017,
+            "Capture model validity check", "capture model",
+            RtFmtMsg("In the cross-stream capture scenario, the last task (task_id=%u) on the sub stream "
+                "(stream_id=%d) is not an event record task. Call aclrtRecordEvent on the sub stream to "
+                "deliver an event record task",
+                taskId, streamId));
+        COND_RETURN_AND_MSG_OUTER((event->IsCaptureStreamWaited() == false),
+            RT_ERROR_STREAM_UNJOINED, ErrorCode::EE1017,
+            "Capture model validity check", "capture model",
+            RtFmtMsg("In the cross-stream capture scenario, the last task (task_id=%u, event_id=%d) on the sub "
+                "stream (stream_id=%d) lacks the corresponding event wait task",
+                taskId, event->EventId_(), streamId));
         if (event->IsRecordOrigCaptureStream(*it)) {
             hasRecordOrigStream = true;
         }
     }
-    COND_RETURN_ERROR(((isOnlyOrigStream == false) && (hasRecordOrigStream == false)), RT_ERROR_STREAM_UNJOINED,
-        "capture model contains a stream that was not joined to the original stream.");
+    COND_RETURN_AND_MSG_OUTER(((isOnlyOrigStream == false) && (hasRecordOrigStream == false)),
+        RT_ERROR_STREAM_UNJOINED, ErrorCode::EE1017,
+        "Capture model validity check", "capture model",
+        RtFmtMsg("In the cross-stream capture scenario, the origin stream (stream_id=%u) has no event wait task, "
+            "indicating that the sub stream is not joined back to the origin stream",
+            static_cast<uint32_t>(origStreamId)));
     return RT_ERROR_NONE;
 }
 

@@ -12,6 +12,7 @@
 #include "task_info.hpp"
 #include "capture_model.hpp"
 #include "thread_local_container.hpp"
+#include "error_message_manage.hpp"
 namespace cce {
 namespace runtime {
 
@@ -46,10 +47,13 @@ rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, u
         COND_RETURN_ERROR((task == nullptr),
             RT_ERROR_TASK_NULL,
             "Get task failed, stream_id=%u, task_id=%u.", streamId, pos);
-        COND_RETURN_ERROR_MSG_INNER(!((task->type == TS_TASK_TYPE_EVENT_RECORD) || (task->type == TS_TASK_TYPE_CAPTURE_RECORD)),
-            RT_ERROR_STREAM_UNJOINED,
-            "The type of the task is not event record nor capture record, stream_id=%u, task_id=%u, task_type=%d (%s).",
-            streamId, pos, static_cast<int32_t>(task->type), task->typeName);
+        COND_RETURN_AND_MSG_OUTER(!((task->type == TS_TASK_TYPE_EVENT_RECORD) || (task->type == TS_TASK_TYPE_CAPTURE_RECORD)),
+            RT_ERROR_STREAM_UNJOINED, ErrorCode::EE1017,
+            "Capture model validity check", "capture model",
+            RtFmtMsg("In the cross-stream capture scenario, the last task (task_id=%u) on the sub stream "
+                "(stream_id=%u) is not an event record task. Call aclrtRecordEvent on the sub stream to "
+                "deliver an event record task",
+                pos, streamId));
         if (task->type == TS_TASK_TYPE_EVENT_RECORD) {
             eventPtr = task->u.eventRecordTaskInfo.event;
         } else {
