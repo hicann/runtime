@@ -1036,7 +1036,7 @@ graph TB
     
     subgraph LabelGoto["Label 跳转"]
         GetAddr["读取 devDstAddr_"]
-        GenSQE["生成 Lable Switch SQE"]
+        GenSQE["生成 Label Switch SQE"]
         HWJump["硬件跳转执行"]
     end
     

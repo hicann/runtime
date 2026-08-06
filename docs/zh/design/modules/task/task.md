@@ -2,7 +2,7 @@
 
 ## 1. 模块概述
 
-- **功能介绍**：Task 模块负责管理各类任务的创建、执行和回收。支持多种任务类型（核函数执行、内存操作、事件同步、模型执行等），通过 TaskInfo 结构体承载任务信息。Stream::taskResMang_ 和 TaskFatory 共同负责任务对象分配和回收。
+- **功能介绍**：Task 模块负责管理各类任务的创建、执行和回收。支持多种任务类型（核函数执行、内存操作、事件同步、模型执行等），通过 TaskInfo 结构体承载任务信息。Stream::taskResMang_ 和 TaskFactory 共同负责任务对象分配和回收。
 - **设计目标**：
   - 提供统一的任务管理接口
   - 支持多种任务类型扩展
@@ -44,7 +44,7 @@
 **Task 管理整理分为三部分：**
 - **Task 资源管理：** Task 资源分为两部分，Device 粒度的Task资源和Stream粒度的资源。
 - **Task 处理函数：** Task 处理函数主要是针对不同类型的Task进行任务初始化、SQE封装、Task回收后处理、Task 异常后处理等流程进行统一注册管理。
-- **Task 下发流程：** 配合API接口通过task资源申请、任务组装、任务下发的等接口组合完成运行时调度。
+- **Task 下发流程：** 配合API接口通过task资源申请、任务组装、任务下发等接口组合完成运行时调度。
 
 
 ### 3.1 Task 资源管理架构
@@ -253,7 +253,7 @@ typedef struct tagTaskInfoStru {
 
 #### 4.2.2 TaskRes资源分配核心逻辑
 
-**TaskResManageDavid 核心分配代码**：Stream上的TaskId需要严格保序，从TaskInfo指针申请到sqe组组装下发到硬件，整个过程要和TaskId行为一致。因此整个过程有StreamLock进行控制。
+**TaskResManageDavid 核心分配代码**：Stream上的TaskId需要严格保序，从TaskInfo指针申请到sqe组装下发到硬件，整个过程要和TaskId行为一致。因此整个过程有StreamLock进行控制。
 
 **多 SQE 设计**：一个任务可能占用多个 SQE（如 `sqeNum=2`）， `taskInfo.id` 都指向首位置 `pos`。回收时按 `sqeNum` 刷新 `taskResAHead_`。
 
