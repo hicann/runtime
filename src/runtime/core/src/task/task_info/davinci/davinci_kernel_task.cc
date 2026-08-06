@@ -30,6 +30,8 @@
 #include "task_execute_time.h"
 #include "ffts_task.h"
 #include "printf.hpp"
+#include <sstream>
+#include <vector>
 
 namespace cce {
 namespace runtime {
@@ -958,6 +960,57 @@ void GetSoNameForAiCpu(TaskInfo* taskInfo, std::string &nameInfo)
     devArgLdr->GetKernelInfoFromAddr(nameInfo, KernelInfoType::SO_NAME, taskInfo->u.aicpuTaskInfo.soName);
 }
 
+static void DumpAicpuArgsForDfx(TaskInfo* taskInfo, const uint32_t devId)
+{
+    AicpuTaskInfo *aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
+    const uint16_t taskId = taskInfo->id;
+    const int32_t streamId = taskInfo->stream->Id_();
+    if ((aicpuTaskInfo->comm.args == nullptr) || (aicpuTaskInfo->comm.argsSize == 0U)) {
+        return;
+    }
+    const uint32_t argsSize = aicpuTaskInfo->comm.argsSize;
+    const uint64_t argsDevAddr = RtPtrToValue(aicpuTaskInfo->comm.args);
+    const uint64_t soNameDevAddr = RtPtrToValue(aicpuTaskInfo->soName);
+    const uint64_t kernelNameDevAddr = RtPtrToValue(aicpuTaskInfo->funcName);
+
+    std::vector<uint8_t> hostBuf(argsSize + 1U);
+    const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemCopySync(
+        hostBuf.data(), static_cast<uint64_t>(argsSize), aicpuTaskInfo->comm.args, static_cast<uint64_t>(argsSize),
+        RT_MEMCPY_DEVICE_TO_HOST);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_ERROR, "MemCopySync failed, device_id=%u, stream_id=%d, task_id=%u, retCode=%#x, argsSize=%u.",
+            devId, streamId, static_cast<uint32_t>(taskId), static_cast<uint32_t>(error), argsSize);
+        return;
+    }
+    hostBuf[argsSize] = 0U;
+
+    if ((aicpuTaskInfo->soName != nullptr) && (soNameDevAddr >= argsDevAddr) &&
+        ((soNameDevAddr - argsDevAddr) < static_cast<uint64_t>(argsSize))) {
+        const uint64_t soNameOffset = soNameDevAddr - argsDevAddr;
+        const auto soNamePtr = RtPtrToPtr<const char*>(hostBuf.data() + soNameOffset);
+        const size_t soNameLen = strnlen(soNamePtr, static_cast<size_t>(argsSize - soNameOffset));
+        RT_LOG(
+            RT_LOG_ERROR,
+            "[AICPU_INFO] soName=%s, strLen=%lu, remainingLen=%lu, device_id=%u, stream_id=%d, "
+            "task_id=%u.",
+            soNamePtr, soNameLen, static_cast<uint64_t>(argsSize) - soNameOffset, devId, streamId,
+            static_cast<uint32_t>(taskId));
+    }
+    if ((aicpuTaskInfo->funcName != nullptr) && (kernelNameDevAddr >= argsDevAddr) &&
+        ((kernelNameDevAddr - argsDevAddr) < static_cast<uint64_t>(argsSize))) {
+        const uint64_t kernelNameOffset = kernelNameDevAddr - argsDevAddr;
+        const auto kernelNamePtr = RtPtrToPtr<const char*>(hostBuf.data() + kernelNameOffset);
+        const size_t kernelNameLen = strnlen(kernelNamePtr, static_cast<size_t>(argsSize - kernelNameOffset));
+        RT_LOG(
+            RT_LOG_ERROR,
+            "[AICPU_INFO] kernelName=%s, strLen=%lu, remainingLen=%lu, device_id=%u, stream_id=%d, "
+            "task_id=%u.",
+            kernelNamePtr, kernelNameLen, static_cast<uint64_t>(argsSize) - kernelNameOffset, devId, streamId,
+            static_cast<uint32_t>(taskId));
+    }
+}
+
 static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
 {
     AicpuTaskInfo *aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
@@ -990,6 +1043,9 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
 
     Stream *const reportStream = GetReportStream(taskInfo->stream);
     std::string extendInfo;
+    if (soName.empty() && kernelName.empty()) {
+        DumpAicpuArgsForDfx(taskInfo, devId);
+    }
     const tsAicpuKernelType aicpuKernelType = static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType);
     if ((aicpuKernelType == TS_AICPU_KERNEL_AICPU) || (aicpuKernelType == TS_AICPU_KERNEL_CUSTOM_AICPU)) {
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
