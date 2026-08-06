@@ -111,6 +111,7 @@ void TprtDavinciTaskUnInit(TaskInfo *taskInfo)
 {
     if ((taskInfo->stream != nullptr) && (taskInfo->stream->Context_() != nullptr)) {
         static_cast<XpuStream *>(taskInfo->stream)->ArgRelease(taskInfo, true);
+        RT_LOG(RT_LOG_INFO, "stream_id=%u, task_sn=%u.", taskInfo->stream->Id_(), taskInfo->taskSn);
     }
     if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
         AicpuTaskInfo *aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);

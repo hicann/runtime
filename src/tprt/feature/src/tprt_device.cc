@@ -293,7 +293,7 @@ void TprtDevice::ProcessWaitingTask(uint32_t sqId, TprtSqHandle* sqHandle)
     TprtSqe_t headTask = {};
     uint32_t ret = sqHandle->SqPeekTask(&headTask);
     if (ret != TPRT_SUCCESS) {
-        TPRT_LOG(TPRT_LOG_ERROR, "Failed to peek task, sqId=%u, ret=%u.", sqId, ret);
+        TPRT_LOG(TPRT_LOG_INFO, "not peek task, sqId=%u, ret=%u.", sqId, ret);
         return;
     }
     TimeoutStatus_t taskStatus = waitSqIsTimeout(sqHandle, &headTask);
