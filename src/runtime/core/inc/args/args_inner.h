@@ -127,13 +127,13 @@ struct RtInnerHandleAccessor<::RtArgsHandle> {
     static rtInnerObject* Get(::RtArgsHandle* realObj) { return &realObj->handle_; }
 };
 
+constexpr uint32_t SIMT_IMPLICIT_PARAM_COUNT = 6U;
+constexpr uint32_t SIMT_SYNC_COUNTER_SIZE = static_cast<uint32_t>(sizeof(uint64_t));
+constexpr uint32_t SIMT_DIM_PARAM_SIZE = SIMT_IMPLICIT_PARAM_COUNT * static_cast<uint32_t>(sizeof(uint32_t));
+constexpr uint32_t SIMT_IMPLICIT_PARAM_SIZE = SIMT_SYNC_COUNTER_SIZE + SIMT_DIM_PARAM_SIZE;
+
 } // namespace runtime
 } // namespace cce
 #endif
-
-constexpr uint32_t SIMT_IMPLICIT_PARAM_COUNT = 6U;
-constexpr uint32_t SIMT_SYNC_COUNTER_SIZE = sizeof(uint64_t);
-constexpr uint32_t SIMT_DIM_PARAM_SIZE = SIMT_IMPLICIT_PARAM_COUNT * sizeof(uint32_t);
-constexpr uint32_t SIMT_IMPLICIT_PARAM_SIZE = SIMT_SYNC_COUNTER_SIZE + SIMT_DIM_PARAM_SIZE;
 
 #endif // CCE_RUNTIME_KERNEL_H

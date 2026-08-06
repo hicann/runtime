@@ -170,7 +170,7 @@ rtError_t PcieArgManage::PrepareSimtArgsBuffer(
         return RT_ERROR_MEMORY_ALLOCATION;
     }
 
-    const uint64_t syncCounter = 0ULL;
+    constexpr uint64_t syncCounter = 0ULL;
     errno_t ret = memcpy_s(*argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
     if (ret != EOK) {
         FreeFail(result);
