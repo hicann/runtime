@@ -26,8 +26,13 @@ STATIC SymbolInfo g_drvFuncInfo[DRIVER_FUNCTION_NUM] = {
 TraStatus TraceDriverInit(void)
 {
     g_libHandle = TraceOpenLibrary(DRIVER_LIBRARY_NAME);
-    ADIAG_CHK_EXPR_ACTION(g_libHandle == NULL, return TRACE_FAILURE,
-        "dlopen library %s failed, strerr=%s.", DRIVER_LIBRARY_NAME, strerror(AdiagGetErrorCode()));
+    if (g_libHandle == NULL) {
+        // on the general server (pure cpu) scene the driver library is absent, this is expected
+        // and should not report an error, otherwise it pollutes the disk log on a normal startup.
+        ADIAG_WAR("dlopen library %s failed, treat as pure cpu env, strerr=%s.",
+            DRIVER_LIBRARY_NAME, strerror(AdiagGetErrorCode()));
+        return TRACE_FAILURE;
+    }
 
     TraStatus ret = TraceLoadFunc(g_libHandle, g_drvFuncInfo, DRIVER_FUNCTION_NUM);
     ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return TRACE_FAILURE, "load function symbol failed, ret=%d.", ret);

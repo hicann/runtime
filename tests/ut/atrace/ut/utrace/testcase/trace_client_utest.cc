@@ -61,7 +61,10 @@ TEST_F(TraceClientUtest, TraceClient)
 
 TEST_F(TraceClientUtest, TraceClient_NotSupport)
 {
-    MOCKER(AtraceCheckSupported).stubs().will(returnValue(false));
+    // The device-interacting APIs are gated by AtraceCheckDeviceSupported: on the
+    // general server (pure cpu) scene it returns false and the report APIs must
+    // return an error code without touching the device.
+    MOCKER(AtraceCheckDeviceSupported).stubs().will(returnValue(false));
     int32_t devId = 0;
     auto ret = AtraceReportStart(devId);
     EXPECT_EQ(TRACE_UNSUPPORTED, ret);
@@ -72,7 +75,7 @@ TEST_F(TraceClientUtest, TraceClient_NotSupport)
 
 TEST_F(TraceClientUtest, TraceApiVersion_Support)
 {
-    MOCKER(AtraceCheckSupported).stubs().will(returnValue(true));
+    MOCKER(AtraceCheckDeviceSupported).stubs().will(returnValue(true));
     int32_t devId = 0;
     auto ret = AtraceReportStart(devId);
     EXPECT_EQ(0, ret);

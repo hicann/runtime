@@ -43,6 +43,7 @@ TraStatus TraceAttrInit(void);
 void TraceAttrExit(void);
 
 bool AtraceCheckSupported(void);
+bool AtraceCheckDeviceSupported(void);
 int32_t TraceAttrGetPid(void);
 int32_t TraceAttrGetPgid(void);
 uint32_t TraceAttrGetUid(void);

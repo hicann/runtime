@@ -20,8 +20,8 @@
  */
 TraStatus AtraceReportStart(int32_t devId)
 {
-    if (!AtraceCheckSupported()) {
-        ADIAG_WAR("AtraceReportStart is not supported on device side");
+    if (!AtraceCheckDeviceSupported()) {
+        ADIAG_WAR("AtraceReportStart is not supported without npu device");
         return TRACE_UNSUPPORTED;
     }
     return AtraceClientStart(devId);
@@ -33,8 +33,8 @@ TraStatus AtraceReportStart(int32_t devId)
  */
 void AtraceReportStop(int32_t devId)
 {
-    if (!AtraceCheckSupported()) {
-        ADIAG_WAR("AtraceReportStop is not supported on device side");
+    if (!AtraceCheckDeviceSupported()) {
+        ADIAG_WAR("AtraceReportStop is not supported without npu device");
         return;
     }
     AtraceClientStop(devId);

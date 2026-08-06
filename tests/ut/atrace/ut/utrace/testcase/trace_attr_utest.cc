@@ -100,6 +100,67 @@ TEST_F(TraceAttrUtest, TraceAttrGetuidFailed)
     TraceAttrExit();
 }
 
+// issue #767: general server (pure cpu) scene. dlopen driver fails so platform stays
+// invalid; cpu-only trace features must still be supported, only the device side is not.
+TEST_F(TraceAttrUtest, AtraceCheckSupported_PureCpu)
+{
+    MOCKER(TraceDriverInit).stubs().will(returnValue(TRACE_FAILURE));
+    auto ret = TraceAttrInit();
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+
+    EXPECT_EQ(PLATFORM_INVALID_VALUE, TraceAttrGetPlatform());
+    EXPECT_TRUE(AtraceCheckSupported());         // cpu-only features supported
+    EXPECT_FALSE(AtraceCheckDeviceSupported());  // device-interacting features not supported
+    TraceAttrExit();
+}
+
+drvError_t drvGetPlatformInfoHostStub(uint32_t *info)
+{
+    *info = 1; // HOST_SIDE
+    return DRV_ERROR_NONE;
+}
+
+drvError_t drvGetDevNumStub(uint32_t *numDev)
+{
+    *numDev = 1;
+    return DRV_ERROR_NONE;
+}
+
+// host side with a real npu device: both cpu-only and device-interacting features supported.
+TEST_F(TraceAttrUtest, AtraceCheckSupported_Host)
+{
+    // mock the driver query explicitly instead of relying on the default value in
+    // ascend_hal_stub.c, so the host side truth table does not depend on the stub.
+    MOCKER(drvGetPlatformInfo)
+        .stubs()
+        .will(invoke(drvGetPlatformInfoHostStub));
+    MOCKER(drvGetDevNum)
+        .stubs()
+        .will(invoke(drvGetDevNumStub));
+    auto ret = TraceAttrInit();
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+
+    EXPECT_EQ(PLATFORM_HOST_SIDE, TraceAttrGetPlatform());
+    EXPECT_TRUE(AtraceCheckSupported());
+    EXPECT_TRUE(AtraceCheckDeviceSupported());
+    TraceAttrExit();
+}
+
+// device side: neither cpu-only nor device-interacting trace features are supported.
+TEST_F(TraceAttrUtest, AtraceCheckSupported_Device)
+{
+    MOCKER(drvGetPlatformInfo)
+        .stubs()
+        .will(invoke(drvGetPlatformInfoStub));
+    auto ret = TraceAttrInit();
+    EXPECT_EQ(TRACE_SUCCESS, ret);
+
+    EXPECT_EQ(PLATFORM_DEVICE_SIDE, TraceAttrGetPlatform());
+    EXPECT_FALSE(AtraceCheckSupported());
+    EXPECT_FALSE(AtraceCheckDeviceSupported());
+    TraceAttrExit();
+}
+
 TEST_F(TraceAttrUtest, TestEnvTimeout)
 {
     setenv("ASCEND_LOG_DEVICE_FLUSH_TIMEOUT", "180000", 1);

@@ -54,10 +54,31 @@ STATIC uint32_t TraceAttrGetPlatform(void)
 #endif
 
 /**
- * @brief       check atrace is supported or not
+ * @brief       check cpu-only trace feature is supported or not.
+ *              On the general server (pure cpu) scene, only the cann package is installed
+ *              without driver/firmware, dlopen driver fails and platform stays invalid.
+ *              In this case the cpu-only features (write trace log, stacktrace) are still
+ *              supported; only the device side is not supported.
  * @return      true for support, false for not support
  */
 bool AtraceCheckSupported(void)
+{
+#ifdef ATRACE_API
+    if (TraceAttrGetPlatform() == PLATFORM_DEVICE_SIDE) {
+        return false;
+    }
+#endif
+    return true;
+}
+
+/**
+ * @brief       check the device-interacting trace feature is supported or not.
+ *              Only the host side with a real npu device can interact with device.
+ *              On the general server (pure cpu) scene the platform is invalid, so the
+ *              device-interacting features (AtraceReportStart/AtraceReportStop) are not supported.
+ * @return      true for support, false for not support
+ */
+bool AtraceCheckDeviceSupported(void)
 {
 #ifdef ATRACE_API
     if (TraceAttrGetPlatform() != PLATFORM_HOST_SIDE) {
