@@ -796,7 +796,7 @@ rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
         return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
     }
 
-    rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(va);
+    const rtError_t error = curCtx->Device_()->Driver_()->CloseIpcMem(va);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "close ipc mem failed, name=%s, va=%#" PRIx64 ".", ipcName.c_str(), va);
         return error;
