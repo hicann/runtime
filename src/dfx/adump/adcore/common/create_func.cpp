@@ -15,7 +15,7 @@ namespace Adx {
 std::unique_ptr<AdxEpoll> CreateAdxEpoll(EpollType epollType)
 {
     if (epollType == EpollType::EPOLL_HDC) {
-        return std::unique_ptr<AdxEpoll>(new(std::nothrow)AdxHdcEpoll);
+        return std::unique_ptr<AdxEpoll>(new (std::nothrow) AdxHdcEpoll);
     }
     return nullptr;
 }
@@ -23,8 +23,8 @@ std::unique_ptr<AdxEpoll> CreateAdxEpoll(EpollType epollType)
 std::unique_ptr<AdxCommOpt> CreateAdxCommOpt(OptType optType)
 {
     if (optType == OptType::COMM_HDC) {
-        return std::unique_ptr<AdxCommOpt>(new(std::nothrow)HdcCommOpt);
+        return std::unique_ptr<AdxCommOpt>(new (std::nothrow) HdcCommOpt);
     }
     return nullptr;
 }
-}
+} // namespace Adx

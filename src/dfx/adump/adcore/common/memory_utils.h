@@ -12,14 +12,15 @@
 #define ADX_COMMON_MEMORY_UTILS_H
 #include "extra_config.h"
 
-#define IDE_XFREE_AND_SET_NULL(ptr) do {                    \
-    IdeXfree(ptr);                                          \
-    ptr = nullptr;                                          \
-} while (0)
+#define IDE_XFREE_AND_SET_NULL(ptr) \
+    do {                            \
+        IdeXfree(ptr);              \
+        ptr = nullptr;              \
+    } while (0)
 
 namespace Adx {
 IdeMemHandle IdeXmalloc(size_t size);
 IdeMemHandle IdeXrmalloc(const IdeMemHandle ptr, size_t ptrsize, size_t size);
 void IdeXfree(const IdeMemHandle ptr);
-}
+} // namespace Adx
 #endif // ADX_COMMON_MEMORY_UTILS_H

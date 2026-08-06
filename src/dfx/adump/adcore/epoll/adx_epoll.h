@@ -28,11 +28,7 @@ struct EpollEvent {
     EpollHandle data;
 };
 
-enum class EpollType {
-    EPOLL_HDC,
-    EPOLL_SOCK,
-    NR_EPOLL
-};
+enum class EpollType { EPOLL_HDC, EPOLL_SOCK, NR_EPOLL };
 
 class AdxEpoll {
 public:
@@ -40,14 +36,15 @@ public:
     virtual ~AdxEpoll() {}
     virtual int32_t EpollCreate(const int32_t size) = 0;
     virtual int32_t EpollDestroy() = 0;
-    virtual int32_t EpollCtl(EpollHandle target, EpollEvent &event, int32_t op) = 0;
-    virtual int32_t EpollAdd(EpollHandle target, EpollEvent &event) = 0;
-    virtual int32_t EpollDel(EpollHandle target, EpollEvent &event) = 0;
-    virtual int32_t EpollWait(std::vector<EpollEvent> &events, int32_t size, int32_t timeout) = 0;
+    virtual int32_t EpollCtl(EpollHandle target, EpollEvent& event, int32_t op) = 0;
+    virtual int32_t EpollAdd(EpollHandle target, EpollEvent& event) = 0;
+    virtual int32_t EpollDel(EpollHandle target, EpollEvent& event) = 0;
+    virtual int32_t EpollWait(std::vector<EpollEvent>& events, int32_t size, int32_t timeout) = 0;
     virtual int32_t EpollErrorHandle() = 0;
     virtual int32_t EpollGetSize() = 0;
+
 protected:
     int32_t epMaxSize_;
 };
-}
+} // namespace Adx
 #endif

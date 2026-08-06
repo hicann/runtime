@@ -22,16 +22,16 @@ enum class DeviceState {
 class AdxDevice {
 public:
     virtual ~AdxDevice() {}
-    virtual void GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string> &devices) = 0;
-    void EnableNotify(const std::string &devId);
-    void DisableNotify(const std::string &devId);
-    void GetEnableDevices(std::vector<std::string> &devices) const;
-    void GetDisableDevices(std::vector<std::string> &devices) const;
+    virtual void GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string>& devices) = 0;
+    void EnableNotify(const std::string& devId);
+    void DisableNotify(const std::string& devId);
+    void GetEnableDevices(std::vector<std::string>& devices) const;
+    void GetDisableDevices(std::vector<std::string>& devices) const;
     bool NoDevice() const;
-    void InitDevice(const std::string &devId);
+    void InitDevice(const std::string& devId);
+
 private:
     std::map<std::string, DeviceState> devices_;
 };
-}
+} // namespace Adx
 #endif
-

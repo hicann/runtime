@@ -18,7 +18,7 @@ namespace Adx {
  *        true:   string all digital
  *        false:  string have other char
  */
-bool StringUtils::IsIntDigital(const std::string &digital)
+bool StringUtils::IsIntDigital(const std::string& digital)
 {
     if (digital.empty()) {
         return false;
@@ -33,7 +33,7 @@ bool StringUtils::IsIntDigital(const std::string &digital)
     return true;
 }
 
-bool StringUtils::IpValid(const std::string &ipStr)
+bool StringUtils::IpValid(const std::string& ipStr)
 {
     if (ipStr.empty()) {
         return false;
@@ -75,7 +75,7 @@ bool StringUtils::IpValid(const std::string &ipStr)
     return true;
 }
 
-bool StringUtils::ParseConnectInfo(const std::string &connectInfo, std::string &hostId, std::string &hostPid)
+bool StringUtils::ParseConnectInfo(const std::string& connectInfo, std::string& hostId, std::string& hostPid)
 {
     std::string connectInfoStr;
     std::string::size_type idx;
@@ -84,7 +84,8 @@ bool StringUtils::ParseConnectInfo(const std::string &connectInfo, std::string &
 
     idx = connectInfoStr.find(";");
     if (idx == std::string::npos) {
-        IDE_LOGE("invalid private info %s format, valid format like \"host:port;host_id;host_pid\"", connectInfo.c_str());
+        IDE_LOGE(
+            "invalid private info %s format, valid format like \"host:port;host_id;host_pid\"", connectInfo.c_str());
         return false;
     }
     IDE_LOGD("info str check host:port;host_id success");
@@ -92,7 +93,8 @@ bool StringUtils::ParseConnectInfo(const std::string &connectInfo, std::string &
     std::string hostIdHostPidStr = connectInfoStr.substr(idx + 1);
     idx = hostIdHostPidStr.find(";");
     if (idx == std::string::npos) {
-        IDE_LOGE("invalid private info %s format, valid format like \"host:port;host_id;host_pid\"", connectInfo.c_str());
+        IDE_LOGE(
+            "invalid private info %s format, valid format like \"host:port;host_id;host_pid\"", connectInfo.c_str());
         return false;
     }
     IDE_LOGD("info str check host_id;host_pid success");
@@ -114,4 +116,4 @@ bool StringUtils::ParseConnectInfo(const std::string &connectInfo, std::string &
     IDE_LOGD("info str check host_id and host_pid number format success");
     return true;
 }
-}
+} // namespace Adx

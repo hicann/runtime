@@ -26,8 +26,8 @@ constexpr int32_t TIME_ONE_THOUSAND = 1000;
  * @param [in]  : timeout        0 : wait_always, > 0 wait_timeout, < 0 wait_default; unit: ms
  * @return      : IDE_DAEMON_OK succeed; others failed
  */
-static int32_t ReadSettingResult(const HDC_SESSION session, const AdxStringBuffer resultBuf, uint32_t resultLen,
-    int32_t timeout)
+static int32_t ReadSettingResult(
+    const HDC_SESSION session, const AdxStringBuffer resultBuf, uint32_t resultLen, int32_t timeout)
 {
     int32_t err = IDE_DAEMON_ERROR;
     if ((session == nullptr) || (resultBuf == nullptr)) {
@@ -60,11 +60,11 @@ static int32_t ReadSettingResult(const HDC_SESSION session, const AdxStringBuffe
     return err;
 }
 
-static int32_t AdxSendMsgToServerByType(AdxHdcServiceType type, IdeTlvConReq req, const AdxStringBuffer result,
-    uint32_t resultLen, int32_t timeout = -1)
+static int32_t AdxSendMsgToServerByType(
+    AdxHdcServiceType type, IdeTlvConReq req, const AdxStringBuffer result, uint32_t resultLen, int32_t timeout = -1)
 {
     int32_t err = IDE_DAEMON_ERROR;
-    std::unique_ptr<AdxCommOpt> opt (CreateAdxCommOpt(OptType::COMM_HDC));
+    std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(OptType::COMM_HDC));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return err, "create hdc commopt exception");
     bool ret = AdxCommOptManager::Instance().CommOptsRegister(opt);
     IDE_CTRL_VALUE_FAILED(ret, return err, "register hdc failed");
@@ -84,8 +84,8 @@ static int32_t AdxSendMsgToServerByType(AdxHdcServiceType type, IdeTlvConReq req
     }
 
     CommHandle handle{COMM_HDC, reinterpret_cast<OptHandle>(session), NR_COMPONENTS, -1, nullptr};
-    err = Adx::AdxMsgProto::SendMsgData(handle, req->type, MsgStatus::MSG_STATUS_NONE_ERROR,
-        static_cast<IdeSendBuffT>(req->value), req->len);
+    err = Adx::AdxMsgProto::SendMsgData(
+        handle, req->type, MsgStatus::MSG_STATUS_NONE_ERROR, static_cast<IdeSendBuffT>(req->value), req->len);
     if (err != EN_OK) {
         IDE_LOGE("Write level info to device failed by hdc, result=%d.", err);
     } else if (result != nullptr) {
@@ -97,8 +97,8 @@ static int32_t AdxSendMsgToServerByType(AdxHdcServiceType type, IdeTlvConReq req
     return err;
 }
 
-int32_t AdxSendMsgAndGetResultByType(AdxHdcServiceType type, IdeTlvConReq req, const AdxStringBuffer result,
-    uint32_t resultLen)
+int32_t AdxSendMsgAndGetResultByType(
+    AdxHdcServiceType type, IdeTlvConReq req, const AdxStringBuffer result, uint32_t resultLen)
 {
     if ((req == nullptr) || (result == nullptr)) {
         return IDE_DAEMON_ERROR;
@@ -120,17 +120,20 @@ int32_t AdxSendMsgByHandle(AdxCommConHandle handle, CmdClassT type, AdxString da
         return IDE_DAEMON_ERROR;
     }
 
-    std::unique_ptr<AdxCommOpt> opt (CreateAdxCommOpt(handle->type));
+    std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(handle->type));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return IDE_DAEMON_ERROR, "create hdc commopt exception");
     bool ret = AdxCommOptManager::Instance().CommOptsRegister(opt);
     IDE_CTRL_VALUE_FAILED(ret, return IDE_DAEMON_ERROR, "register hdc failed");
 
-    return (Adx::AdxMsgProto::SendMsgData(*handle, type, MsgStatus::MSG_STATUS_NONE_ERROR,
-        static_cast<IdeSendBuffT>(data), len) == IDE_DAEMON_NONE_ERROR) ? IDE_DAEMON_OK : IDE_DAEMON_ERROR;
+    return (Adx::AdxMsgProto::SendMsgData(
+                *handle, type, MsgStatus::MSG_STATUS_NONE_ERROR, static_cast<IdeSendBuffT>(data), len) ==
+            IDE_DAEMON_NONE_ERROR) ?
+               IDE_DAEMON_OK :
+               IDE_DAEMON_ERROR;
 }
 
-int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString srcPath, AdxString desPath,
-    SendFileType flag)
+int32_t AdxSendFileByHandle(
+    AdxCommConHandle handle, CmdClassT type, AdxString srcPath, AdxString desPath, SendFileType flag)
 {
     if ((handle == nullptr) || (srcPath == nullptr) || (desPath == nullptr)) {
         return IDE_DAEMON_ERROR;
@@ -140,7 +143,7 @@ int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString s
         return IDE_DAEMON_ERROR;
     }
 
-    std::unique_ptr<AdxCommOpt> opt (CreateAdxCommOpt(handle->type));
+    std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(handle->type));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return IDE_DAEMON_ERROR, "create hdc commopt exception");
     bool err = AdxCommOptManager::Instance().CommOptsRegister(opt);
     IDE_CTRL_VALUE_FAILED(err, return IDE_DAEMON_ERROR, "register hdc failed");
@@ -148,14 +151,15 @@ int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString s
     int32_t fd = mmOpen2(srcPath, M_RDONLY | M_BINARY, S_IREAD);
     if (fd < 0) {
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_LOGE("open send file failed, info : %s, open file is %s",
+        IDE_LOGE(
+            "open send file failed, info : %s, open file is %s",
             mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN), srcPath);
         return IDE_DAEMON_ERROR;
     }
 
     // send file name
-    int32_t ret = Adx::AdxMsgProto::SendMsgData(*handle, type, MsgStatus::MSG_STATUS_NONE_ERROR,
-        static_cast<IdeSendBuffT>(desPath), strlen(desPath) + 1U);
+    int32_t ret = Adx::AdxMsgProto::SendMsgData(
+        *handle, type, MsgStatus::MSG_STATUS_NONE_ERROR, static_cast<IdeSendBuffT>(desPath), strlen(desPath) + 1U);
     if (ret != IDE_DAEMON_NONE_ERROR) {
         if (fd >= 0) {
             mmClose(fd);
@@ -207,7 +211,7 @@ static CmdClassT GetReqTypeByComponentType(ComponentType cmptType)
  * @param [out] : value     attribute value
  * @return      : IDE_DAEMON_OK succeed; IDE_DAEMON_ERROR failed
  */
-int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *value)
+int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t* value)
 {
     if (handle == nullptr || value == nullptr) {
         IDE_LOGE("get attribute failed, invalid input");
@@ -225,7 +229,7 @@ int32_t AdxGetAttrByCommHandle(AdxCommConHandle handle, int32_t attr, int32_t *v
  */
 AdxCommHandle AdxCreateCommHandle(AdxHdcServiceType type, int32_t devId, ComponentType compType)
 {
-    std::unique_ptr<AdxCommOpt> opt (CreateAdxCommOpt(OptType::COMM_HDC));
+    std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(OptType::COMM_HDC));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return nullptr, "create hdc commopt exception");
     bool ret = AdxCommOptManager::Instance().CommOptsRegister(opt);
     IDE_CTRL_VALUE_FAILED(ret, return nullptr, "register hdc failed");
@@ -250,7 +254,8 @@ AdxCommHandle AdxCreateCommHandle(AdxHdcServiceType type, int32_t devId, Compone
     handle->timeout = 0;
 
     const std::string defaultMessage = "LONG_LINK_DEFAULT";
-    err = Adx::AdxMsgProto::SendMsgData(*handle, GetReqTypeByComponentType(compType), MsgStatus::MSG_STATUS_LONG_LINK,
+    err = Adx::AdxMsgProto::SendMsgData(
+        *handle, GetReqTypeByComponentType(compType), MsgStatus::MSG_STATUS_LONG_LINK,
         static_cast<IdeSendBuffT>(defaultMessage.c_str()), defaultMessage.size());
     if (err != IDE_DAEMON_OK) {
         IDE_LOGE("Write default info to device failed by hdc, result=%d.", err);
@@ -307,14 +312,16 @@ int32_t AdxSendMsg(AdxCommConHandle handle, AdxString data, uint32_t len)
         return IDE_DAEMON_ERROR;
     }
 
-    std::unique_ptr<AdxCommOpt> opt (CreateAdxCommOpt(handle->type));
+    std::unique_ptr<AdxCommOpt> opt(CreateAdxCommOpt(handle->type));
     IDE_CTRL_VALUE_FAILED(opt != nullptr, return IDE_DAEMON_ERROR, "create hdc commopt exception");
     bool ret = AdxCommOptManager::Instance().CommOptsRegister(opt);
     IDE_CTRL_VALUE_FAILED(ret, return IDE_DAEMON_ERROR, "register hdc failed");
 
-    return (Adx::AdxMsgProto::SendMsgData(*handle, GetReqTypeByComponentType(handle->comp),
-        MsgStatus::MSG_STATUS_NONE_ERROR, static_cast<IdeSendBuffT>(data), len) ==
-        IDE_DAEMON_NONE_ERROR) ? IDE_DAEMON_OK : IDE_DAEMON_ERROR;
+    return (Adx::AdxMsgProto::SendMsgData(
+                *handle, GetReqTypeByComponentType(handle->comp), MsgStatus::MSG_STATUS_NONE_ERROR,
+                static_cast<IdeSendBuffT>(data), len) == IDE_DAEMON_NONE_ERROR) ?
+               IDE_DAEMON_OK :
+               IDE_DAEMON_ERROR;
 }
 
 /**
@@ -325,7 +332,7 @@ int32_t AdxSendMsg(AdxCommConHandle handle, AdxString data, uint32_t len)
  * @param [in]     : timeout        max wait time; unit: ms
  * @return         : IDE_DAEMON_OK succeed; others failed
  */
-int32_t AdxRecvMsg(AdxCommHandle handle, IdeStrBufAddrT data, uint32_t *len, uint32_t timeout)
+int32_t AdxRecvMsg(AdxCommHandle handle, IdeStrBufAddrT data, uint32_t* len, uint32_t timeout)
 {
     int32_t err = IDE_DAEMON_ERROR;
     if (len == nullptr) {
@@ -364,8 +371,8 @@ int32_t AdxRecvMsg(AdxCommHandle handle, IdeStrBufAddrT data, uint32_t *len, uin
     return err;
 }
 
-static int32_t AdxServerCommProcess(AdxHdcServiceType type, AdxTlvConReq req, AdxStringBuffer result, uint32_t length,
-    uint32_t timeout)
+static int32_t AdxServerCommProcess(
+    AdxHdcServiceType type, AdxTlvConReq req, AdxStringBuffer result, uint32_t length, uint32_t timeout)
 {
     if (req == nullptr) {
         IDE_LOGE("invalid input, tlv struct is null");
@@ -395,11 +402,13 @@ static int32_t AdxServerCommProcess(AdxHdcServiceType type, AdxTlvConReq req, Ad
         return IDE_DAEMON_ERROR;
     }
     if (result == nullptr) {
-        IDE_LOGI("AdxDevCommShortLink, no results needed, cmpt=%d, cmd=%d, devId=%d",
-            static_cast<int32_t>(req->type), static_cast<int32_t>(ide->type), ide->dev_id);
+        IDE_LOGI(
+            "AdxDevCommShortLink, no results needed, cmpt=%d, cmd=%d, devId=%d", static_cast<int32_t>(req->type),
+            static_cast<int32_t>(ide->type), ide->dev_id);
         ret = AdxSendMsgAndNoResultByType(type, ide);
     } else {
-        IDE_LOGI("AdxDevCommShortLink, result wait timeout:%u, cmpt=%d, cmd=%d, devId=%d", timeout,
+        IDE_LOGI(
+            "AdxDevCommShortLink, result wait timeout:%u, cmpt=%d, cmd=%d, devId=%d", timeout,
             static_cast<int32_t>(req->type), static_cast<int32_t>(ide->type), ide->dev_id);
         (void)memset_s(result, length, 0, length);
         ret = AdxSendMsgToServerByType(type, ide, result, length, static_cast<int32_t>(timeout));
@@ -417,8 +426,9 @@ static int32_t AdxServerCommProcess(AdxHdcServiceType type, AdxTlvConReq req, Ad
  * @param [in]     : timeout      0 : wait_always, > 0 wait_timeout; unit: ms
  * @return         : IDE_DAEMON_OK succeed; others failed
  */
-int32_t AdxDevCommShortLink(AdxHdcServiceType type, AdxTlvConReq req, AdxStringBuffer result, uint32_t length,
-    uint32_t timeout) {
+int32_t AdxDevCommShortLink(
+    AdxHdcServiceType type, AdxTlvConReq req, AdxStringBuffer result, uint32_t length, uint32_t timeout)
+{
     int32_t ret = AdxServerCommProcess(type, req, result, length, timeout);
     if ((ret != IDE_DAEMON_OK) && (result != nullptr) && (strlen(result) == 0)) {
         const std::string value = "get result data from server failed";

@@ -25,7 +25,7 @@ int32_t AdxHdcEpoll::EpollCreate(const int32_t size)
     }
 
     if (epEvent_ == nullptr) {
-        epEvent_ = (struct drvHdcEvent *)ADX_SAFE_CALLOC(size, sizeof(struct drvHdcEvent));
+        epEvent_ = (struct drvHdcEvent*)ADX_SAFE_CALLOC(size, sizeof(struct drvHdcEvent));
         if (epEvent_ == nullptr) {
             IDE_LOGE("hdc epoll calloc error.");
             return IDE_DAEMON_ERROR;
@@ -73,7 +73,7 @@ int32_t AdxHdcEpoll::EpollDestroy()
  * @param [in]  event:  epoll event
  * @return      !=0: failure ==0: success
  */
-int32_t AdxHdcEpoll::EpollCtl(EpollHandle handle, EpollEvent &event, int32_t op)
+int32_t AdxHdcEpoll::EpollCtl(EpollHandle handle, EpollEvent& event, int32_t op)
 {
     int32_t ret;
     if (ep_ == nullptr || handle == ADX_INVALID_HANDLE) {
@@ -106,7 +106,7 @@ int32_t AdxHdcEpoll::EpollCtl(EpollHandle handle, EpollEvent &event, int32_t op)
  * @param [in]  event:  epoll event
  * @return      !=0: failure ==0: success
  */
-int32_t AdxHdcEpoll::EpollAdd(EpollHandle target, EpollEvent &event)
+int32_t AdxHdcEpoll::EpollAdd(EpollHandle target, EpollEvent& event)
 {
     return EpollCtl(target, event, HDC_EPOLL_CTL_ADD);
 }
@@ -118,7 +118,7 @@ int32_t AdxHdcEpoll::EpollAdd(EpollHandle target, EpollEvent &event)
  * @param [in]  event:  epoll event
  * @return      !=0: failure ==0: success
  */
-int32_t AdxHdcEpoll::EpollDel(EpollHandle target, EpollEvent &event)
+int32_t AdxHdcEpoll::EpollDel(EpollHandle target, EpollEvent& event)
 {
     return EpollCtl(target, event, HDC_EPOLL_CTL_DEL);
 }
@@ -131,7 +131,7 @@ int32_t AdxHdcEpoll::EpollDel(EpollHandle target, EpollEvent &event)
  * @param [in]  timeout:    timeout
  * @return      event num
  */
-int32_t AdxHdcEpoll::EpollWait(std::vector<EpollEvent> &events, int32_t size, int32_t timeout)
+int32_t AdxHdcEpoll::EpollWait(std::vector<EpollEvent>& events, int32_t size, int32_t timeout)
 {
     int32_t ret;
     if (ep_ == nullptr || size < epMaxSize_) {
@@ -160,10 +160,7 @@ int32_t AdxHdcEpoll::EpollErrorHandle()
     return IDE_DAEMON_OK;
 }
 
-int32_t AdxHdcEpoll::EpollGetSize()
-{
-    return epMaxSize_;
-}
+int32_t AdxHdcEpoll::EpollGetSize() { return epMaxSize_; }
 
 uint32_t AdxHdcEpoll::EpollEventToHdcEvent(uint32_t events) const
 {
@@ -184,4 +181,4 @@ uint32_t AdxHdcEpoll::HdcEventToEpollEvent(uint32_t events) const
     }
     return transed;
 }
-}
+} // namespace Adx

@@ -18,10 +18,7 @@ namespace Adx {
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateTask(mmThread &tid, mmUserBlock_t &funcBlock)
-{
-    return mmCreateTask(&tid, &funcBlock);
-}
+int32_t Thread::CreateTask(mmThread& tid, mmUserBlock_t& funcBlock) { return mmCreateTask(&tid, &funcBlock); }
 
 /**
  * @brief create thread with detach
@@ -32,8 +29,8 @@ int32_t Thread::CreateTask(mmThread &tid, mmUserBlock_t &funcBlock)
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateDetachTask(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t Thread::CreateDetachTask(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     return mmCreateTaskWithDetach(&tid, &funcBlock);
 }
-}
+} // namespace Adx

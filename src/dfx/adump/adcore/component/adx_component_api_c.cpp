@@ -14,11 +14,12 @@
 #include "extra_config.h"
 #include "ascend_hal.h"
 using namespace Adx;
-int32_t AdxRegisterService(int32_t serverType, ComponentType componentType, AdxComponentInit init,
-    AdxComponentProcess process, AdxComponentUnInit uninit)
+int32_t AdxRegisterService(
+    int32_t serverType, ComponentType componentType, AdxComponentInit init, AdxComponentProcess process,
+    AdxComponentUnInit uninit)
 {
     std::unique_ptr<AdxComponent> commonComponent(new (std::nothrow)
-        AdxCommonComponent(init, process, uninit, componentType));
+                                                      AdxCommonComponent(init, process, uninit, componentType));
     IDE_CTRL_VALUE_FAILED(commonComponent != nullptr, return IDE_DAEMON_ERROR, "create common component error");
     return AdxRegisterComponentFunc(static_cast<drvHdcServiceType>(serverType), commonComponent);
 }
@@ -28,10 +29,7 @@ int32_t AdxUnRegisterService(int32_t serverType, ComponentType componentType)
     return AdxComponentServerCleanup(static_cast<drvHdcServiceType>(serverType), componentType);
 }
 
-int32_t AdxServiceStartup(ServerInitInfo info)
-{
-    return AdxComponentServerStartup(info);
-}
+int32_t AdxServiceStartup(ServerInitInfo info) { return AdxComponentServerStartup(info); }
 
 int32_t AdxServiceCleanup(int32_t serverType)
 {

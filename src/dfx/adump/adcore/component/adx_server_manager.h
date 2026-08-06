@@ -31,31 +31,32 @@ public:
     AdxServerManager() noexcept;
     explicit AdxServerManager(int32_t loadMode, int32_t deviceId) noexcept;
     ~AdxServerManager();
-    bool RegisterEpoll(std::unique_ptr<AdxEpoll> &epoll);
-    bool RegisterCommOpt(std::unique_ptr<AdxCommOpt> &opt,
-        const std::string &info);
-    bool ComponentAdd(std::unique_ptr<AdxComponent> &comp);
+    bool RegisterEpoll(std::unique_ptr<AdxEpoll>& epoll);
+    bool RegisterCommOpt(std::unique_ptr<AdxCommOpt>& opt, const std::string& info);
+    bool ComponentAdd(std::unique_ptr<AdxComponent>& comp);
     bool ComponentErase(ComponentType type);
     bool ComponentInit() const;
     bool ComponentWaitEvent();
     void Run();
     void ComponentProcess();
-    bool SubComponentProcess(CommHandle &handle, ComponentType &comp);
+    bool SubComponentProcess(CommHandle& handle, ComponentType& comp);
     static IdeThreadArg ThreadProcess(IdeThreadArg arg);
     int32_t Exit();
     void SetMode(int32_t loadMode);
     void SetDeviceId(int32_t deviceId);
     bool WaitServerInitted() const;
+
 private:
     void TimerProcess(void);
-    bool ServerInit(const std::map<std::string, std::string> &info);
+    bool ServerInit(const std::map<std::string, std::string>& info);
     bool ServerUnInit(OptHandle epHandle);
     ComponentType GetComponentTypeByReqType(CmdClassT cmdType) const;
     void HandleConnectEvent(CommHandle handle);
     bool IsLinkOverload(HDC_SESSION session) const;
-    bool DispatchComponent(CommHandle &handle, SharedPtr<MsgProto> &msgPtr, HDC_SESSION session, ComponentType &comp);
+    bool DispatchComponent(CommHandle& handle, SharedPtr<MsgProto>& msgPtr, HDC_SESSION session, ComponentType& comp);
     std::shared_ptr<AdxComponent> GetComponent(ComponentType type) const;
     void WaitProcessDrained();
+
 private:
     std::atomic<bool> waitOver_{true};
     int32_t pid_;
@@ -77,5 +78,5 @@ private:
     mutable std::mutex processMtx_;
     std::condition_variable processCv_;
 };
-}
+} // namespace Adx
 #endif

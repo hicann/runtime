@@ -17,9 +17,10 @@ class AdxHdcDevice : public AdxDevice {
 public:
     AdxHdcDevice() {}
     ~AdxHdcDevice() override {}
-    void GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string> &devices) override;
+    void GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string>& devices) override;
+
 private:
     std::mutex deviceNotifyMtx_;
 };
-}
+} // namespace Adx
 #endif

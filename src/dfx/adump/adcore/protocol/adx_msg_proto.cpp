@@ -15,28 +15,28 @@
 #include "log/adx_log.h"
 #include "adx_comm_opt_manager.h"
 namespace Adx {
-static const uint32_t MAX_PROTO_FILE_BUFFER_SIZE    = 512000;    // 500kb
-static const int32_t MAX_DEV_FILE_SIZE              = 4096;       // 4k
+static const uint32_t MAX_PROTO_FILE_BUFFER_SIZE = 512000; // 500kb
+static const int32_t MAX_DEV_FILE_SIZE = 4096;             // 4k
 
-MsgProto *AdxMsgProto::CreateMsgPacket(CmdClassT type, uint16_t devId, IdeSendBuffT data, uint32_t length)
+MsgProto* AdxMsgProto::CreateMsgPacket(CmdClassT type, uint16_t devId, IdeSendBuffT data, uint32_t length)
 {
-    MsgProto *msg = AdxMsgProto::CreateDataMsg(data, length);
+    MsgProto* msg = AdxMsgProto::CreateDataMsg(data, length);
     IDE_CTRL_VALUE_FAILED(msg != nullptr, return nullptr, "create message failed");
     msg->devId = devId;
     msg->reqType = type;
     return msg;
 }
 
-MsgProto *AdxMsgProto::CreateMsgByType(MsgType type, IdeSendBuffT data, uint32_t length)
+MsgProto* AdxMsgProto::CreateMsgByType(MsgType type, IdeSendBuffT data, uint32_t length)
 {
-    MsgProto *msg = nullptr;
+    MsgProto* msg = nullptr;
     if (length > UINT32_MAX - sizeof(MsgProto)) {
         return nullptr;
     }
 
     if (type == MsgType::MSG_CTRL || type == MsgType::MSG_DATA) {
         uint32_t mallocLen = length + sizeof(MsgProto);
-        msg = reinterpret_cast<MsgProto *>(IdeXmalloc(mallocLen));
+        msg = reinterpret_cast<MsgProto*>(IdeXmalloc(mallocLen));
         IDE_CTRL_VALUE_FAILED(msg != nullptr, return nullptr, "malloc memory failed");
         if (data != nullptr) { // send buffer(data) not nullptr copy data to message
             int32_t ret = memcpy_s(msg->data, length, data, length);
@@ -60,12 +60,12 @@ MsgProto *AdxMsgProto::CreateMsgByType(MsgType type, IdeSendBuffT data, uint32_t
     return nullptr;
 }
 
-MsgProto *AdxMsgProto::CreateDataMsg(IdeSendBuffT data, uint32_t length)
+MsgProto* AdxMsgProto::CreateDataMsg(IdeSendBuffT data, uint32_t length)
 {
     return CreateMsgByType(MsgType::MSG_DATA, data, length);
 }
 
-int32_t AdxMsgProto::CreateCtrlMsg(MsgProto &proto, MsgStatus status)
+int32_t AdxMsgProto::CreateCtrlMsg(MsgProto& proto, MsgStatus status)
 {
     proto.headInfo = ADX_PROTO_MAGIC_VALUE;
     proto.headVer = ADX_PROTO_VERSION;
@@ -77,28 +77,29 @@ int32_t AdxMsgProto::CreateCtrlMsg(MsgProto &proto, MsgStatus status)
     return IDE_DAEMON_OK;
 }
 
-MsgCode AdxMsgProto::SendMsgData(const CommHandle &handle, CmdClassT type, MsgStatus status,
-    IdeSendBuffT data, uint32_t length)
+MsgCode AdxMsgProto::SendMsgData(
+    const CommHandle& handle, CmdClassT type, MsgStatus status, IdeSendBuffT data, uint32_t length)
 {
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(type, 0, data, length);
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(type, 0, data, length);
     IDE_CTRL_VALUE_FAILED(msg != nullptr, return IDE_DAEMON_MALLOC_ERROR, "create message failed");
     std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
     sendDataMsgPtr->status = status;
     msg = nullptr;
-    int32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
-        sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
+    int32_t ret = AdxCommOptManager::Instance().Write(
+        handle, sendDataMsgPtr.get(), sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
     if (ret != IDE_DAEMON_OK) {
-        IDE_LOGE("send message failed, ret: %d, session: %zu, length: %u bytes, please check peer end is alive",
-            ret, handle.session, length);
+        IDE_LOGE(
+            "send message failed, ret: %d, session: %zu, length: %u bytes, please check peer end is alive", ret,
+            handle.session, length);
         return IDE_DAEMON_CHANNEL_ERROR;
     }
 
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::GetStringMsgData(const CommHandle &handle, std::string &value)
+MsgCode AdxMsgProto::GetStringMsgData(const CommHandle& handle, std::string& value)
 {
-    MsgProto *req = nullptr;
+    MsgProto* req = nullptr;
     int32_t length = 0;
     int32_t blockType = COMM_OPT_NOBLOCK;
     if (handle.timeout == 0) {
@@ -136,10 +137,10 @@ MsgCode AdxMsgProto::GetStringMsgData(const CommHandle &handle, std::string &val
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::SendEventFile(const CommHandle &handle, CmdClassT type, uint16_t devId, int32_t fd)
+MsgCode AdxMsgProto::SendEventFile(const CommHandle& handle, CmdClassT type, uint16_t devId, int32_t fd)
 {
     IDE_CTRL_VALUE_FAILED(fd >= 0, return IDE_DAEMON_INVALID_PARAM_ERROR, "create message failed");
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(type, devId, nullptr, MAX_PROTO_FILE_BUFFER_SIZE);
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(type, devId, nullptr, MAX_PROTO_FILE_BUFFER_SIZE);
     IDE_CTRL_VALUE_FAILED(msg != nullptr, return IDE_DAEMON_MALLOC_ERROR, "create message failed");
     std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
     msg = nullptr;
@@ -155,8 +156,8 @@ MsgCode AdxMsgProto::SendEventFile(const CommHandle &handle, CmdClassT type, uin
         IDE_LOGW("An EIO exception occurred when reading files from the event_sched directory");
         len = 0;
     } else {
-        IDE_CTRL_VALUE_FAILED(len >= 0, return IDE_DAEMON_UNKNOW_ERROR,
-            "Failed to read file in the event_sched directory: info [%s]",
+        IDE_CTRL_VALUE_FAILED(
+            len >= 0, return IDE_DAEMON_UNKNOW_ERROR, "Failed to read file in the event_sched directory: info [%s]",
             mmGetErrorFormatMessage(err, errBuf, MAX_ERRSTR_LEN));
     }
 
@@ -167,18 +168,19 @@ MsgCode AdxMsgProto::SendEventFile(const CommHandle &handle, CmdClassT type, uin
     sendDataMsgPtr->totalLen = len;
     sendDataMsgPtr->offset = 0;
     sendDataMsgPtr->sliceLen = (uint32_t)len;
-    int32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
-    sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
-    IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR,
-        "hand shake failed ret %d, please check server is alive", ret);
+    int32_t ret = AdxCommOptManager::Instance().Write(
+        handle, sendDataMsgPtr.get(), sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
+    IDE_CTRL_VALUE_FAILED(
+        ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR, "hand shake failed ret %d, please check server is alive",
+        ret);
     RecvResponse(handle);
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::SendFile(const CommHandle &handle, CmdClassT type, uint16_t devId, int32_t fd)
+MsgCode AdxMsgProto::SendFile(const CommHandle& handle, CmdClassT type, uint16_t devId, int32_t fd)
 {
     IDE_CTRL_VALUE_FAILED(fd >= 0, return IDE_DAEMON_INVALID_PARAM_ERROR, "create message failed");
-    MsgProto *msg = AdxMsgProto::CreateMsgPacket(type, devId, nullptr, MAX_PROTO_FILE_BUFFER_SIZE);
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(type, devId, nullptr, MAX_PROTO_FILE_BUFFER_SIZE);
     IDE_CTRL_VALUE_FAILED(msg != nullptr, return IDE_DAEMON_MALLOC_ERROR, "create message failed");
     std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
     msg = nullptr;
@@ -194,24 +196,27 @@ MsgCode AdxMsgProto::SendFile(const CommHandle &handle, CmdClassT type, uint16_t
 
     if (resLen == 0) {
         sendDataMsgPtr->sliceLen = (uint32_t)fileLength;
-        int32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
-        sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
-        IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR,
+        int32_t ret = AdxCommOptManager::Instance().Write(
+            handle, sendDataMsgPtr.get(), sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
+        IDE_CTRL_VALUE_FAILED(
+            ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR,
             "send empty file failed ret %d, please check server is alive", ret);
     }
 
     while (resLen > 0) {
-        mmSsize_t readLen = static_cast<uint32_t>(resLen) > MAX_PROTO_FILE_BUFFER_SIZE ?
-                            MAX_PROTO_FILE_BUFFER_SIZE : resLen;
+        mmSsize_t readLen =
+            static_cast<uint32_t>(resLen) > MAX_PROTO_FILE_BUFFER_SIZE ? MAX_PROTO_FILE_BUFFER_SIZE : resLen;
         mmSsize_t len = mmRead(fd, sendDataMsgPtr->data, readLen);
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_CTRL_VALUE_FAILED(len >= 0, return IDE_DAEMON_UNKNOW_ERROR,
-            "read file failed : info [%s]", mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+        IDE_CTRL_VALUE_FAILED(
+            len >= 0, return IDE_DAEMON_UNKNOW_ERROR, "read file failed : info [%s]",
+            mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
         if (len > 0 && len <= readLen) {
             sendDataMsgPtr->sliceLen = (uint32_t)len;
-            int32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
-            sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
-            IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR,
+            int32_t ret = AdxCommOptManager::Instance().Write(
+                handle, sendDataMsgPtr.get(), sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
+            IDE_CTRL_VALUE_FAILED(
+                ret == IDE_DAEMON_OK, return IDE_DAEMON_CHANNEL_ERROR,
                 "hand shake failed ret %d, please check server is alive", ret);
         }
         sendDataMsgPtr->offset += (uint32_t)len;
@@ -221,16 +226,16 @@ MsgCode AdxMsgProto::SendFile(const CommHandle &handle, CmdClassT type, uint16_t
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::RecvFile(const CommHandle &handle, int32_t fd)
+MsgCode AdxMsgProto::RecvFile(const CommHandle& handle, int32_t fd)
 {
     IDE_CTRL_VALUE_FAILED(fd >= 0, return IDE_DAEMON_INVALID_PARAM_ERROR, "create message failed");
-    MsgProto *msg = nullptr;
+    MsgProto* msg = nullptr;
     int32_t length = 0;
     while (true) {
-        int32_t ret = AdxCommOptManager::Instance().Read(handle, (IdeRecvBuffT)&msg,
-            length, handle.timeout);
-            IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK && msg != nullptr, return IDE_DAEMON_CHANNEL_ERROR,
-                "hand shake failed ret %d, read failed or timeout", ret);
+        int32_t ret = AdxCommOptManager::Instance().Read(handle, (IdeRecvBuffT)&msg, length, handle.timeout);
+        IDE_CTRL_VALUE_FAILED(
+            ret == IDE_DAEMON_OK && msg != nullptr, return IDE_DAEMON_CHANNEL_ERROR,
+            "hand shake failed ret %d, read failed or timeout", ret);
         if (msg->msgType == MsgType::MSG_CTRL) { // check the message is ctrl or not
             IDE_LOGW("receive ctrl msg from device, stop receiving this file");
             IDE_XFREE_AND_SET_NULL(msg);
@@ -240,8 +245,8 @@ MsgCode AdxMsgProto::RecvFile(const CommHandle &handle, int32_t fd)
             mmSsize_t len = mmWrite(fd, msg->data, msg->sliceLen);
             if (len < 0) {
                 char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-                IDE_LOGE("write file failed : info [%s]",
-                         mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+                IDE_LOGE(
+                    "write file failed : info [%s]", mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
                 IDE_XFREE_AND_SET_NULL(msg);
                 return IDE_DAEMON_UNKNOW_ERROR;
             }
@@ -254,8 +259,7 @@ MsgCode AdxMsgProto::RecvFile(const CommHandle &handle, int32_t fd)
         IDE_XFREE_AND_SET_NULL(msg);
     }
 
-    if (SendResponse(handle, msg->reqType, msg->devId, MsgStatus::MSG_STATUS_NONE_ERROR) !=
-        IDE_DAEMON_NONE_ERROR) {
+    if (SendResponse(handle, msg->reqType, msg->devId, MsgStatus::MSG_STATUS_NONE_ERROR) != IDE_DAEMON_NONE_ERROR) {
         IDE_LOGW("send response exception");
         IDE_XFREE_AND_SET_NULL(msg);
         return IDE_DAEMON_CHANNEL_ERROR;
@@ -265,8 +269,7 @@ MsgCode AdxMsgProto::RecvFile(const CommHandle &handle, int32_t fd)
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::SendResponse(const CommHandle &handle, uint16_t type,
-    uint16_t devId, MsgStatus status)
+MsgCode AdxMsgProto::SendResponse(const CommHandle& handle, uint16_t type, uint16_t devId, MsgStatus status)
 {
     MsgProto msg;
     (void)memset_s(&msg, sizeof(msg), 0, sizeof(msg));
@@ -283,9 +286,9 @@ MsgCode AdxMsgProto::SendResponse(const CommHandle &handle, uint16_t type,
     return IDE_DAEMON_NONE_ERROR;
 }
 
-MsgCode AdxMsgProto::RecvResponse(const CommHandle &handle)
+MsgCode AdxMsgProto::RecvResponse(const CommHandle& handle)
 {
-    MsgProto *recvBuf = nullptr;
+    MsgProto* recvBuf = nullptr;
     int32_t length = 0;
     int32_t ret = AdxCommOptManager::Instance().Read(handle, (IdeRecvBuffT)&recvBuf, length, COMM_OPT_BLOCK);
     if (ret != IDE_DAEMON_OK || recvBuf == nullptr) {
@@ -305,4 +308,4 @@ MsgCode AdxMsgProto::RecvResponse(const CommHandle &handle)
     IDE_XFREE_AND_SET_NULL(recvBuf);
     return IDE_DAEMON_UNKNOW_ERROR;
 }
-}
+} // namespace Adx

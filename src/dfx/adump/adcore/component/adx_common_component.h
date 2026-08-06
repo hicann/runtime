@@ -13,21 +13,23 @@
 namespace Adx {
 class AdxCommonComponent : public AdxComponent {
 public:
-    AdxCommonComponent(AdxComponentInit init, AdxComponentProcess process, AdxComponentUnInit uninit,
-        ComponentType componentType) : init_(init), process_(process), uninit_(uninit),
-        componentType_(componentType) {}
+    AdxCommonComponent(
+        AdxComponentInit init, AdxComponentProcess process, AdxComponentUnInit uninit, ComponentType componentType)
+        : init_(init), process_(process), uninit_(uninit), componentType_(componentType)
+    {}
     ~AdxCommonComponent() override;
     int32_t Init() override;
     const std::string GetInfo() override;
     ComponentType GetType() override;
-    int32_t Process(const CommHandle &handle, const SharedPtr<MsgProto> &proto) override;
+    int32_t Process(const CommHandle& handle, const SharedPtr<MsgProto>& proto) override;
     int32_t UnInit() override;
     void SetType(ComponentType componentType);
+
 private:
     AdxComponentInit init_;
     AdxComponentProcess process_;
     AdxComponentUnInit uninit_;
     ComponentType componentType_;
 };
-}
+} // namespace Adx
 #endif // ADX_COMMON_COMMON_COMPONENT_H

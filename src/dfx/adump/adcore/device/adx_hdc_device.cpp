@@ -13,9 +13,9 @@
 #include "log/adx_log.h"
 #include "ascend_hal.h"
 #include "adx_dsmi.h"
-using AdxDrvStateInfoPt = devdrv_state_info_t *;
+using AdxDrvStateInfoPt = devdrv_state_info_t*;
 namespace Adx {
-void AdxHdcDevice::GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string> &devices)
+void AdxHdcDevice::GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<std::string>& devices)
 {
     devices.clear();
     std::lock_guard<std::mutex> lk(this->deviceNotifyMtx_);
@@ -38,4 +38,4 @@ void AdxHdcDevice::GetAllEnableDevices(int32_t mode, int32_t devId, std::vector<
     }
     AdxHdcDevice::GetEnableDevices(devices);
 }
-}
+} // namespace Adx

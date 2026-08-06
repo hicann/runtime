@@ -29,11 +29,8 @@ int32_t AdxSockEpoll::EpollCreate(const int32_t size)
     return IDE_DAEMON_OK;
 }
 
-int32_t AdxSockEpoll::EpollDestroy()
-{
-    return IDE_DAEMON_OK;
-}
-int32_t AdxSockEpoll::EpollCtl(EpollHandle handle, EpollEvent &event, int32_t op)
+int32_t AdxSockEpoll::EpollDestroy() { return IDE_DAEMON_OK; }
+int32_t AdxSockEpoll::EpollCtl(EpollHandle handle, EpollEvent& event, int32_t op)
 {
     if (ep_ == -1 || handle == ADX_INVALID_HANDLE) {
         IDE_LOGE("sock epoll ctl input error");
@@ -55,24 +52,18 @@ int32_t AdxSockEpoll::EpollCtl(EpollHandle handle, EpollEvent &event, int32_t op
     return IDE_DAEMON_OK;
 }
 
-int32_t AdxSockEpoll::EpollAdd(EpollHandle target, EpollEvent &event)
-{
-    return EpollCtl(target, event, EPOLL_CTL_ADD);
-}
+int32_t AdxSockEpoll::EpollAdd(EpollHandle target, EpollEvent& event) { return EpollCtl(target, event, EPOLL_CTL_ADD); }
 
-int32_t AdxSockEpoll::EpollDel(EpollHandle target, EpollEvent &event)
-{
-    return EpollCtl(target, event, EPOLL_CTL_DEL);
-}
+int32_t AdxSockEpoll::EpollDel(EpollHandle target, EpollEvent& event) { return EpollCtl(target, event, EPOLL_CTL_DEL); }
 
-int32_t AdxSockEpoll::EpollWait(std::vector<EpollEvent> &events, int32_t size, int32_t timeout)
+int32_t AdxSockEpoll::EpollWait(std::vector<EpollEvent>& events, int32_t size, int32_t timeout)
 {
     if (ep_ < 0) {
         IDE_LOGW("epoll wait init");
         return IDE_DAEMON_ERROR;
     }
 
-    struct epoll_event epEvent[DEFAULT_EPOLL_SIZE] = { {0} };
+    struct epoll_event epEvent[DEFAULT_EPOLL_SIZE] = {{0}};
     int32_t ret = epoll_wait(ep_, epEvent, size, timeout);
     if (ret < 0) {
         IDE_LOGE("epoll wait process error");
@@ -87,15 +78,9 @@ int32_t AdxSockEpoll::EpollWait(std::vector<EpollEvent> &events, int32_t size, i
     return ret;
 }
 
-int32_t AdxSockEpoll::EpollErrorHandle()
-{
-    return IDE_DAEMON_OK;
-}
+int32_t AdxSockEpoll::EpollErrorHandle() { return IDE_DAEMON_OK; }
 
-int32_t AdxSockEpoll::EpollGetSize()
-{
-    return epMaxSize_;
-}
+int32_t AdxSockEpoll::EpollGetSize() { return epMaxSize_; }
 
 uint32_t AdxSockEpoll::EpollEventToHdcEvent(uint32_t events) const
 {
@@ -113,4 +98,4 @@ uint32_t AdxSockEpoll::HdcEventToEpollEvent(uint32_t events) const
 
     return transed;
 }
-}
+} // namespace Adx

@@ -20,23 +20,26 @@
 namespace Adx {
 class ServerRegister : public Adx::Common::Singleton::Singleton<ServerRegister> {
 public:
-    int32_t RegisterComponent(int32_t serverType, std::unique_ptr<AdxComponent> &adxComponent);
+    int32_t RegisterComponent(int32_t serverType, std::unique_ptr<AdxComponent>& adxComponent);
     int32_t UnRegisterComponent(int32_t serverType, ComponentType cmpt);
     int32_t ComponentServerStartup(ServerInitInfo info) const;
     int32_t ComponentServerCleanup(int32_t serverType);
+
 private:
     bool ServerManagerInit(const ServerInitInfo info);
     std::map<int32_t, AdxServerManager> services_;
     mutable std::mutex mtx_;
 };
-}
+} // namespace Adx
 #define ADX_API __attribute__((visibility("default")))
 #ifdef __cplusplus
 extern "C" {
 #endif
-ADX_API int32_t AdxRegisterComponentFunc(drvHdcServiceType serverType, std::unique_ptr<Adx::AdxComponent> &adxComponent);
+ADX_API int32_t
+AdxRegisterComponentFunc(drvHdcServiceType serverType, std::unique_ptr<Adx::AdxComponent>& adxComponent);
 ADX_API int32_t AdxComponentServerStartup(ServerInitInfo info);
-ADX_API int32_t AdxComponentServerCleanup(drvHdcServiceType serverType, ComponentType cmpt = ComponentType::NR_COMPONENTS);
+ADX_API int32_t
+AdxComponentServerCleanup(drvHdcServiceType serverType, ComponentType cmpt = ComponentType::NR_COMPONENTS);
 #ifdef __cplusplus
 }
 #endif

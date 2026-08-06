@@ -91,4 +91,4 @@ void IdeXfree(const IdeMemHandle ptr)
         free(ptr);
     }
 }
-}
+} // namespace Adx

@@ -14,17 +14,11 @@
 #include "device/adx_hdc_device.h"
 #include "mmpa_api.h"
 namespace Adx {
-std::string HdcCommOpt::CommOptName()
-{
-    return "HDC";
-}
+std::string HdcCommOpt::CommOptName() { return "HDC"; }
 
-OptType HdcCommOpt::GetOptType()
-{
-    return OptType::COMM_HDC;
-}
+OptType HdcCommOpt::GetOptType() { return OptType::COMM_HDC; }
 
-OptHandle HdcCommOpt::OpenServer(const std::map<std::string, std::string> &info)
+OptHandle HdcCommOpt::OpenServer(const std::map<std::string, std::string>& info)
 {
     if (info.empty() || info.size() < 1) {
         IDE_LOGE("open server input invalid");
@@ -45,8 +39,8 @@ OptHandle HdcCommOpt::OpenServer(const std::map<std::string, std::string> &info)
             IDE_LOGE("open server input parameter invalid, ServiceType not found");
             return ADX_OPT_INVALID_HANDLE;
         }
-        devId = std::stoi(device->second);                     // device id
-        type = (drvHdcServiceType)std::stoi(service->second);  // service type
+        devId = std::stoi(device->second);                    // device id
+        type = (drvHdcServiceType)std::stoi(service->second); // service type
     } catch (...) {
         IDE_LOGE("Value of device id or service type is not a number");
         return ADX_OPT_INVALID_HANDLE;
@@ -65,18 +59,18 @@ OptHandle HdcCommOpt::OpenServer(const std::map<std::string, std::string> &info)
     return (OptHandle)server;
 }
 
-int32_t HdcCommOpt::CloseServer(const OptHandle &handle) const
+int32_t HdcCommOpt::CloseServer(const OptHandle& handle) const
 {
     if (handle == ADX_OPT_INVALID_HANDLE) {
         IDE_LOGE("close server input invalid");
         return IDE_DAEMON_ERROR;
     }
 
-    IDE_RUN_LOGI("close device server[%u]",  static_cast<uint32_t>(handle));
+    IDE_RUN_LOGI("close device server[%u]", static_cast<uint32_t>(handle));
     return HdcServerDestroy(reinterpret_cast<HDC_SERVER>(handle));
 }
 
-OptHandle HdcCommOpt::OpenClient(const std::map<std::string, std::string> &info)
+OptHandle HdcCommOpt::OpenClient(const std::map<std::string, std::string>& info)
 {
     if (info.empty() || info.size() == 0) {
         IDE_LOGE("open client input invalid");
@@ -90,7 +84,7 @@ OptHandle HdcCommOpt::OpenClient(const std::map<std::string, std::string> &info)
             IDE_LOGE("open client input parameter invalid, ServiceType not found");
             return ADX_OPT_INVALID_HANDLE;
         }
-        type = (drvHdcServiceType)std::stoi(service->second);  // service type
+        type = (drvHdcServiceType)std::stoi(service->second); // service type
     } catch (...) {
         IDE_LOGE("Value of service type is not a number");
         return ADX_OPT_INVALID_HANDLE;
@@ -110,17 +104,15 @@ OptHandle HdcCommOpt::OpenClient(const std::map<std::string, std::string> &info)
     return (OptHandle)session;
 }
 
-int32_t HdcCommOpt::CloseClient(OptHandle &handle) const
+int32_t HdcCommOpt::CloseClient(OptHandle& handle) const
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "hdc close client input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "hdc close client input invalid");
     return HdcClientDestroy((HDC_CLIENT)handle);
 }
 
 OptHandle HdcCommOpt::Accept(const OptHandle handle) const
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return ADX_OPT_INVALID_HANDLE,
-        "hdc accept input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return ADX_OPT_INVALID_HANDLE, "hdc accept input invalid");
     HDC_SESSION session = HdcServerAccept((HDC_SERVER)handle);
     if (session == nullptr) {
         return ADX_OPT_INVALID_HANDLE;
@@ -129,12 +121,10 @@ OptHandle HdcCommOpt::Accept(const OptHandle handle) const
     return (OptHandle)session;
 }
 
-OptHandle HdcCommOpt::Connect(const OptHandle handle, const std::map<std::string, std::string> &info)
+OptHandle HdcCommOpt::Connect(const OptHandle handle, const std::map<std::string, std::string>& info)
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return ADX_OPT_INVALID_HANDLE,
-        "hdc connect input invalid");
-    IDE_CTRL_VALUE_FAILED(!info.empty(), return ADX_OPT_INVALID_HANDLE,
-        "hdc connect input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return ADX_OPT_INVALID_HANDLE, "hdc connect input invalid");
+    IDE_CTRL_VALUE_FAILED(!info.empty(), return ADX_OPT_INVALID_HANDLE, "hdc connect input invalid");
 
     int32_t devId;
     auto device = info.find(OPT_DEVICE_KEY);
@@ -148,8 +138,7 @@ OptHandle HdcCommOpt::Connect(const OptHandle handle, const std::map<std::string
         IDE_LOGE("Value of device id is not a number");
         return ADX_OPT_INVALID_HANDLE;
     }
-    IDE_CTRL_VALUE_FAILED(devId >= 0 && devId < DEVICE_NUM_MAX,
-        return ADX_OPT_INVALID_HANDLE, "devId invalid");
+    IDE_CTRL_VALUE_FAILED(devId >= 0 && devId < DEVICE_NUM_MAX, return ADX_OPT_INVALID_HANDLE, "devId invalid");
     HDC_SESSION session = nullptr;
     int32_t err;
     try {
@@ -176,9 +165,10 @@ OptHandle HdcCommOpt::Connect(const OptHandle handle, const std::map<std::string
     return (OptHandle)session;
 }
 
-int32_t HdcCommOpt::Close(OptHandle &handle) const
+int32_t HdcCommOpt::Close(OptHandle& handle) const
 {
-    IDE_CTRL_VALUE_WARN(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_OK,
+    IDE_CTRL_VALUE_WARN(
+        handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_OK,
         "hdc handle is invalid. maybe has been closed or not connected");
 
     HDC_SESSION session = (HDC_SESSION)handle;
@@ -190,8 +180,7 @@ int32_t HdcCommOpt::Close(OptHandle &handle) const
 
 int32_t HdcCommOpt::Write(const OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag)
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "hdc write input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "hdc write input invalid");
     IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "hdc write input invalid");
     IDE_CTRL_VALUE_FAILED(length > 0, return IDE_DAEMON_ERROR, "hdc write input invalid");
 
@@ -202,10 +191,9 @@ int32_t HdcCommOpt::Write(const OptHandle handle, IdeSendBuffT buffer, int32_t l
     return HdcWriteNb((HDC_SESSION)handle, buffer, length);
 }
 
-int32_t HdcCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t &length, int32_t flag)
+int32_t HdcCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag)
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "hdc read input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "hdc read input invalid");
     IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "hdc read input invalid");
 
     if (flag == COMM_OPT_BLOCK) {
@@ -252,7 +240,5 @@ SharedPtr<AdxDevice> HdcCommOpt::GetDevice()
     return device_;
 }
 
-void HdcCommOpt::Timer(void) const
-{
-}
-}
+void HdcCommOpt::Timer(void) const {}
+} // namespace Adx

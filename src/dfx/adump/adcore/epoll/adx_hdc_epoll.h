@@ -20,18 +20,20 @@ public:
     ~AdxHdcEpoll() override {}
     int32_t EpollCreate(const int32_t size) override;
     int32_t EpollDestroy() override;
-    int32_t EpollCtl(EpollHandle handle, EpollEvent &event, int32_t op) override;
-    int32_t EpollAdd(EpollHandle target, EpollEvent &event) override;
-    int32_t EpollDel(EpollHandle target, EpollEvent &event) override;
-    int32_t EpollWait(std::vector<EpollEvent> &events, int32_t size, int32_t timeout) override;
+    int32_t EpollCtl(EpollHandle handle, EpollEvent& event, int32_t op) override;
+    int32_t EpollAdd(EpollHandle target, EpollEvent& event) override;
+    int32_t EpollDel(EpollHandle target, EpollEvent& event) override;
+    int32_t EpollWait(std::vector<EpollEvent>& events, int32_t size, int32_t timeout) override;
     int32_t EpollErrorHandle() override;
     int32_t EpollGetSize() override;
+
 private:
     uint32_t EpollEventToHdcEvent(uint32_t events) const;
     uint32_t HdcEventToEpollEvent(uint32_t events) const;
+
 private:
     HDC_EPOLL ep_ = nullptr;
-    struct drvHdcEvent *epEvent_ = nullptr;
+    struct drvHdcEvent* epEvent_ = nullptr;
 };
-}
+} // namespace Adx
 #endif

@@ -41,7 +41,7 @@ repos:
             )
             | scripts
             | src/(
-              dfx/adump
+              dfx/adump(?!(?:/adcore)(?:/|$))
               | dfx/log
               | dfx/msprof
               | dfx/trace/(?:atrace|common|cpu_detect|inc)

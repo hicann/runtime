@@ -11,7 +11,7 @@
 #include "adx_device.h"
 #include "log/adx_log.h"
 namespace Adx {
-void AdxDevice::EnableNotify(const std::string &devId)
+void AdxDevice::EnableNotify(const std::string& devId)
 {
     auto it = devices_.find(devId);
     if (it != devices_.end() && it->second != DeviceState::ENABLE_STATE) {
@@ -20,7 +20,7 @@ void AdxDevice::EnableNotify(const std::string &devId)
     }
 }
 
-void AdxDevice::DisableNotify(const std::string &devId)
+void AdxDevice::DisableNotify(const std::string& devId)
 {
     auto it = devices_.find(devId);
     if (it != devices_.end() && it->second != DeviceState::DISABLE_STATE) {
@@ -29,7 +29,7 @@ void AdxDevice::DisableNotify(const std::string &devId)
     }
 }
 
-void AdxDevice::GetEnableDevices(std::vector<std::string> &devices) const
+void AdxDevice::GetEnableDevices(std::vector<std::string>& devices) const
 {
     auto it = devices_.begin();
     for (; it != devices_.end(); it++) {
@@ -39,7 +39,7 @@ void AdxDevice::GetEnableDevices(std::vector<std::string> &devices) const
     }
 }
 
-void AdxDevice::GetDisableDevices(std::vector<std::string> &devices) const
+void AdxDevice::GetDisableDevices(std::vector<std::string>& devices) const
 {
     devices.clear();
     auto it = devices_.begin();
@@ -50,16 +50,13 @@ void AdxDevice::GetDisableDevices(std::vector<std::string> &devices) const
     }
 }
 
-bool AdxDevice::NoDevice() const
-{
-    return devices_.empty();
-}
+bool AdxDevice::NoDevice() const { return devices_.empty(); }
 
-void AdxDevice::InitDevice(const std::string &devId)
+void AdxDevice::InitDevice(const std::string& devId)
 {
     auto it = devices_.find(devId);
     if (it == devices_.end()) {
         devices_[devId] = DeviceState::ENABLE_STATE;
     }
 }
-}
+} // namespace Adx

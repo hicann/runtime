@@ -18,7 +18,7 @@ namespace Adx {
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateTask(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t Thread::CreateTask(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     return CreateTaskWithDefaultAttr(tid, funcBlock);
 }
@@ -32,8 +32,8 @@ int32_t Thread::CreateTask(mmThread &tid, mmUserBlock_t &funcBlock)
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateDetachTask(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t Thread::CreateDetachTask(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     return CreateDetachTaskWithDefaultAttr(tid, funcBlock);
 }
-}
+} // namespace Adx

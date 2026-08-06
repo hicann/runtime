@@ -12,16 +12,14 @@
 #define ADX_STRING_UTILS_H
 #include <string>
 namespace Adx {
-constexpr uint32_t IP_VALID_PART_NUM      = 3;
-constexpr uint32_t IP_MAX_NUM             = 255;
-constexpr uint32_t IP_MIN_NUM             = 0;
+constexpr uint32_t IP_VALID_PART_NUM = 3;
+constexpr uint32_t IP_MAX_NUM = 255;
+constexpr uint32_t IP_MIN_NUM = 0;
 class StringUtils {
 public:
-    static bool IsIntDigital(const std::string &digital);
-    static bool IpValid(const std::string &ipStr);
-    static bool ParseConnectInfo(const std::string &connectInfo,
-                                       std::string &hostId,
-                                       std::string &hostPid);
+    static bool IsIntDigital(const std::string& digital);
+    static bool IpValid(const std::string& ipStr);
+    static bool ParseConnectInfo(const std::string& connectInfo, std::string& hostId, std::string& hostPid);
 };
-}
+} // namespace Adx
 #endif

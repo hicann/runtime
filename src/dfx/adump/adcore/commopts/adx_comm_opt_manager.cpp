@@ -12,29 +12,28 @@
 namespace Adx {
 AdxCommOptManager::~AdxCommOptManager()
 {
-    std::unique_lock<std::mutex> lock {commOptMapMtx_};
+    std::unique_lock<std::mutex> lock{commOptMapMtx_};
     commOptMap_.clear();
 }
 
-
-bool AdxCommOptManager::CommOptsRegister(std::unique_ptr<AdxCommOpt> &opt)
+bool AdxCommOptManager::CommOptsRegister(std::unique_ptr<AdxCommOpt>& opt)
 {
     if (opt == nullptr) {
         return false;
     }
 
-    std::unique_lock<std::mutex> lock {commOptMapMtx_};
+    std::unique_lock<std::mutex> lock{commOptMapMtx_};
     if (commOptMap_.find(opt->GetOptType()) == commOptMap_.end()) {
         commOptMap_[opt->GetOptType()] = std::move(opt);
     }
     return true;
 }
 
-CommHandle AdxCommOptManager::OpenServer(OptType type, const std::map<std::string, std::string> &info)
+CommHandle AdxCommOptManager::OpenServer(OptType type, const std::map<std::string, std::string>& info)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -49,11 +48,11 @@ CommHandle AdxCommOptManager::OpenServer(OptType type, const std::map<std::strin
     return ADX_COMMOPT_INVALID_HANDLE(type);
 }
 
-int32_t AdxCommOptManager::CloseServer(const CommHandle &handle) const
+int32_t AdxCommOptManager::CloseServer(const CommHandle& handle) const
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -65,11 +64,11 @@ int32_t AdxCommOptManager::CloseServer(const CommHandle &handle) const
     return IDE_DAEMON_OK;
 }
 
-CommHandle AdxCommOptManager::OpenClient(OptType type, const std::map<std::string, std::string> &info)
+CommHandle AdxCommOptManager::OpenClient(OptType type, const std::map<std::string, std::string>& info)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -83,11 +82,11 @@ CommHandle AdxCommOptManager::OpenClient(OptType type, const std::map<std::strin
     return ADX_COMMOPT_INVALID_HANDLE(type);
 }
 
-int32_t AdxCommOptManager::CloseClient(CommHandle &handle) const
+int32_t AdxCommOptManager::CloseClient(CommHandle& handle) const
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -99,11 +98,11 @@ int32_t AdxCommOptManager::CloseClient(CommHandle &handle) const
     return IDE_DAEMON_OK;
 }
 
-CommHandle AdxCommOptManager::Accept(const CommHandle &handle) const
+CommHandle AdxCommOptManager::Accept(const CommHandle& handle) const
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -117,11 +116,11 @@ CommHandle AdxCommOptManager::Accept(const CommHandle &handle) const
     return ADX_COMMOPT_INVALID_HANDLE(handle.type);
 }
 
-CommHandle AdxCommOptManager::Connect(const CommHandle &handle, const std::map<std::string, std::string> &info)
+CommHandle AdxCommOptManager::Connect(const CommHandle& handle, const std::map<std::string, std::string>& info)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -135,11 +134,11 @@ CommHandle AdxCommOptManager::Connect(const CommHandle &handle, const std::map<s
     return ADX_COMMOPT_INVALID_HANDLE(handle.type);
 }
 
-int32_t AdxCommOptManager::Close(CommHandle &handle) const
+int32_t AdxCommOptManager::Close(CommHandle& handle) const
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -151,11 +150,11 @@ int32_t AdxCommOptManager::Close(CommHandle &handle) const
     return IDE_DAEMON_OK;
 }
 
-int32_t AdxCommOptManager::Write(const CommHandle &handle, IdeSendBuffT buffer, int32_t length, int32_t flag)
+int32_t AdxCommOptManager::Write(const CommHandle& handle, IdeSendBuffT buffer, int32_t length, int32_t flag)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -168,11 +167,11 @@ int32_t AdxCommOptManager::Write(const CommHandle &handle, IdeSendBuffT buffer, 
     return -1;
 }
 
-int32_t AdxCommOptManager::Read(const CommHandle &handle, IdeRecvBuffT buffer, int32_t &length, int32_t flag)
+int32_t AdxCommOptManager::Read(const CommHandle& handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(handle.type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -189,7 +188,7 @@ SharedPtr<AdxDevice> AdxCommOptManager::GetDevice(OptType type)
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -206,7 +205,7 @@ void AdxCommOptManager::Timer(OptType type) const
 {
     std::shared_ptr<AdxCommOpt> currCommOpt(nullptr);
     {
-        std::unique_lock<std::mutex> lock {commOptMapMtx_};
+        std::unique_lock<std::mutex> lock{commOptMapMtx_};
         auto it = commOptMap_.find(type);
         if (it != commOptMap_.end()) {
             currCommOpt = it->second;
@@ -216,4 +215,4 @@ void AdxCommOptManager::Timer(OptType type) const
         currCommOpt->Timer();
     }
 }
-}
+} // namespace Adx

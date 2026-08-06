@@ -18,17 +18,17 @@ public:
     ~SockCommOpt() override {}
     std::string CommOptName() override;
     OptType GetOptType() override;
-    OptHandle OpenServer(const std::map<std::string, std::string> &info) override;
-    int32_t CloseServer(const OptHandle &handle) const override;
-    OptHandle OpenClient(const std::map<std::string, std::string> &info) override;
-    int32_t CloseClient(OptHandle &handle) const override;
+    OptHandle OpenServer(const std::map<std::string, std::string>& info) override;
+    int32_t CloseServer(const OptHandle& handle) const override;
+    OptHandle OpenClient(const std::map<std::string, std::string>& info) override;
+    int32_t CloseClient(OptHandle& handle) const override;
     OptHandle Accept(const OptHandle handle) const override;
-    OptHandle Connect(const OptHandle handle, const std::map<std::string, std::string> &info) override;
-    int32_t Close(OptHandle &handle) const override;
-    int32_t Write(const  OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag) override;
-    int32_t Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t &length, int32_t flag) override;
+    OptHandle Connect(const OptHandle handle, const std::map<std::string, std::string>& info) override;
+    int32_t Close(OptHandle& handle) const override;
+    int32_t Write(const OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag) override;
+    int32_t Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length, int32_t flag) override;
     SharedPtr<AdxDevice> GetDevice() override;
     void Timer(void) const override;
 };
-}
+} // namespace Adx
 #endif

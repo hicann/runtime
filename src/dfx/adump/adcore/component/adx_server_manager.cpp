@@ -17,7 +17,7 @@ namespace Adx {
 namespace {
 constexpr uint32_t RECONNECT_TIMES = 3U;
 constexpr uint32_t MAX_PROCESS_DRAIN_TIMEOUT = 5000U; // max 5s to wait the process threads over
-}
+} // namespace
 
 AdxServerManager::AdxServerManager() noexcept
     : pid_(0),
@@ -47,12 +47,9 @@ AdxServerManager::AdxServerManager(int32_t loadMode, int32_t deviceId) noexcept
     servers_.clear();
 }
 
-AdxServerManager::~AdxServerManager()
-{
-    (void)Exit();
-}
+AdxServerManager::~AdxServerManager() { (void)Exit(); }
 
-bool AdxServerManager::RegisterEpoll(std::unique_ptr<AdxEpoll> &epoll)
+bool AdxServerManager::RegisterEpoll(std::unique_ptr<AdxEpoll>& epoll)
 {
     if (epoll == nullptr) {
         IDE_LOGE("register epoll input error");
@@ -67,8 +64,7 @@ bool AdxServerManager::RegisterEpoll(std::unique_ptr<AdxEpoll> &epoll)
     return false;
 }
 
-bool AdxServerManager::RegisterCommOpt(std::unique_ptr<AdxCommOpt> &opt,
-    const std::string &info)
+bool AdxServerManager::RegisterCommOpt(std::unique_ptr<AdxCommOpt>& opt, const std::string& info)
 {
     if (opt == nullptr) {
         IDE_LOGE("register commopt input error");
@@ -80,7 +76,7 @@ bool AdxServerManager::RegisterCommOpt(std::unique_ptr<AdxCommOpt> &opt,
     return AdxCommOptManager::Instance().CommOptsRegister(opt);
 }
 
-bool AdxServerManager::ServerInit(const std::map<std::string, std::string> &info)
+bool AdxServerManager::ServerInit(const std::map<std::string, std::string>& info)
 {
     EpollEvent event;
     if (epoll_ == nullptr || type_ == OptType::NR_COMM || info.empty()) {
@@ -138,7 +134,7 @@ bool AdxServerManager::ServerUnInit(OptHandle epHandle)
     return true;
 }
 
-bool AdxServerManager::ComponentAdd(std::unique_ptr<AdxComponent> &comp)
+bool AdxServerManager::ComponentAdd(std::unique_ptr<AdxComponent>& comp)
 {
     if (comp == nullptr) {
         IDE_LOGE("add component input error");
@@ -223,12 +219,13 @@ void AdxServerManager::HandleConnectEvent(CommHandle handle)
         EpollHandle epHandle = ADX_INVALID_HANDLE;
         if (handleQue_.Pop(epHandle) == true) {
             IDE_LOGD("handle queue pop: %lx", epHandle);
-            CommHandle curHandle {type_, epHandle, NR_COMPONENTS, -1, nullptr};
+            CommHandle curHandle{type_, epHandle, NR_COMPONENTS, -1, nullptr};
             (void)AdxCommOptManager::Instance().Close(curHandle);
         }
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_LOGE("create component process thread failed, strerror is %s",
-                 mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+        IDE_LOGE(
+            "create component process thread failed, strerror is %s",
+            mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
     }
 }
 bool AdxServerManager::ComponentWaitEvent()
@@ -282,7 +279,7 @@ IdeThreadArg AdxServerManager::ThreadProcess(IdeThreadArg arg)
     if (arg == nullptr) {
         return nullptr;
     }
-    auto runnable = reinterpret_cast<AdxServerManager *>(arg);
+    auto runnable = reinterpret_cast<AdxServerManager*>(arg);
     (void)mmSetCurrentThreadName("adx_component_process");
     runnable->ComponentProcess();
     return nullptr;
@@ -290,7 +287,7 @@ IdeThreadArg AdxServerManager::ThreadProcess(IdeThreadArg arg)
 
 void AdxServerManager::ComponentProcess()
 {
-    const std::shared_ptr<void> processGuard(nullptr, [this](void *) {
+    const std::shared_ptr<void> processGuard(nullptr, [this](void*) {
         std::lock_guard<std::mutex> lck(this->processMtx_);
         --this->processingNum_;
         this->processCv_.notify_all();
@@ -318,21 +315,22 @@ void AdxServerManager::ComponentProcess()
     ComponentType comp = ComponentType::NR_COMPONENTS;
     bool ret = SubComponentProcess(*handle, comp);
     if (((comp != ComponentType::COMPONENT_LOG_BACKHAUL) && (comp != ComponentType::COMPONENT_TRACE) &&
-        (comp != ComponentType::COMPONENT_SYS_REPORT) && (comp != ComponentType::COMPONENT_FILE_REPORT) &&
-        (comp != ComponentType::COMPONENT_CPU_DETECT)) || !ret) {
+         (comp != ComponentType::COMPONENT_SYS_REPORT) && (comp != ComponentType::COMPONENT_FILE_REPORT) &&
+         (comp != ComponentType::COMPONENT_CPU_DETECT)) ||
+        !ret) {
         (void)AdxCommOptManager::Instance().Close(*handle);
         handle->session = ADX_OPT_INVALID_HANDLE;
         IDE_XFREE_AND_SET_NULL(handle);
     }
 }
 
-bool AdxServerManager::SubComponentProcess(CommHandle &handle, ComponentType &comp)
+bool AdxServerManager::SubComponentProcess(CommHandle& handle, ComponentType& comp)
 {
-    MsgProto *req = nullptr;
+    MsgProto* req = nullptr;
     int32_t length = 0;
 
-    int32_t ret = AdxCommOptManager::Instance().Read(handle, reinterpret_cast<IdeRecvBuffT>(&req), length,
-        COMM_OPT_NOBLOCK);
+    int32_t ret =
+        AdxCommOptManager::Instance().Read(handle, reinterpret_cast<IdeRecvBuffT>(&req), length, COMM_OPT_NOBLOCK);
     if (ret == IDE_DAEMON_ERROR || req == nullptr || length <= 0) {
         IDE_LOGE("receive request failed ret %d, length(%d bytes)", ret, length);
         return false;
@@ -358,8 +356,8 @@ bool AdxServerManager::SubComponentProcess(CommHandle &handle, ComponentType &co
     return DispatchComponent(handle, msgPtr, session, comp);
 }
 
-bool AdxServerManager::DispatchComponent(CommHandle &handle, SharedPtr<MsgProto> &msgPtr, HDC_SESSION session,
-    ComponentType &comp)
+bool AdxServerManager::DispatchComponent(
+    CommHandle& handle, SharedPtr<MsgProto>& msgPtr, HDC_SESSION session, ComponentType& comp)
 {
     comp = GetComponentTypeByReqType(static_cast<CmdClassT>(msgPtr->reqType));
     // hold a reference of the component, it keeps alive until this process is over
@@ -420,8 +418,7 @@ void AdxServerManager::TimerProcess()
     std::lock_guard<std::mutex> lck(serverMtx_);
     for (const auto& deviceId : devLogIds) {
         // filter the device that created HDC server(or not the specified device)
-        if (servers_.find(deviceId) != servers_.end() ||
-            !(deviceId_ == -1 || std::to_string(deviceId_) == deviceId)) {
+        if (servers_.find(deviceId) != servers_.end() || !(deviceId_ == -1 || std::to_string(deviceId_) == deviceId)) {
             continue;
         }
 
@@ -528,22 +525,18 @@ int32_t AdxServerManager::Exit()
 void AdxServerManager::WaitProcessDrained()
 {
     std::unique_lock<std::mutex> lck(processMtx_);
-    if (!processCv_.wait_for(lck, std::chrono::milliseconds(MAX_PROCESS_DRAIN_TIMEOUT),
-        [this]() { return this->processingNum_ == 0U; })) {
-        IDE_LOGW("still have %u component process threads running after waiting %ums",
-            processingNum_, MAX_PROCESS_DRAIN_TIMEOUT);
+    if (!processCv_.wait_for(lck, std::chrono::milliseconds(MAX_PROCESS_DRAIN_TIMEOUT), [this]() {
+            return this->processingNum_ == 0U;
+        })) {
+        IDE_LOGW(
+            "still have %u component process threads running after waiting %ums", processingNum_,
+            MAX_PROCESS_DRAIN_TIMEOUT);
     }
 }
 
-void AdxServerManager::SetMode(int32_t loadMode)
-{
-    loadMode_ = loadMode;
-}
+void AdxServerManager::SetMode(int32_t loadMode) { loadMode_ = loadMode; }
 
-void AdxServerManager::SetDeviceId(int32_t deviceId)
-{
-    deviceId_ = deviceId;
-}
+void AdxServerManager::SetDeviceId(int32_t deviceId) { deviceId_ = deviceId; }
 
 bool AdxServerManager::IsLinkOverload(HDC_SESSION session) const
 {
@@ -577,4 +570,4 @@ bool AdxServerManager::WaitServerInitted() const
 
     return false;
 }
-}
+} // namespace Adx

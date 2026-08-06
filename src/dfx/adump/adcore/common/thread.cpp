@@ -9,7 +9,7 @@
  */
 #include "thread.h"
 namespace Adx {
-static const int32_t WAIT_TID_TIME   = 500;
+static const int32_t WAIT_TID_TIME = 500;
 /**
  * @brief create thread with default attributes
  * @param [out]tid : thread id
@@ -19,7 +19,7 @@ static const int32_t WAIT_TID_TIME   = 500;
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateTaskWithDefaultAttr(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t Thread::CreateTaskWithDefaultAttr(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     mmThreadAttr threadAttr = IDE_DAEMON_DEFAULT_THREAD_ATTR;
     return mmCreateTaskWithThreadAttr(&tid, &funcBlock, &threadAttr);
@@ -34,21 +34,15 @@ int32_t Thread::CreateTaskWithDefaultAttr(mmThread &tid, mmUserBlock_t &funcBloc
  *        EN_OK: succ
  *        other: failed
  */
-int32_t Thread::CreateDetachTaskWithDefaultAttr(mmThread &tid, mmUserBlock_t &funcBlock)
+int32_t Thread::CreateDetachTaskWithDefaultAttr(mmThread& tid, mmUserBlock_t& funcBlock)
 {
     mmThreadAttr threadAttr = IDE_DAEMON_DEFAULT_DETACH_THREAD_ATTR;
     return mmCreateTaskWithThreadAttr(&tid, &funcBlock, &threadAttr);
 }
 
-Runnable::Runnable()
-    : tid_(0), quit_(false), isStarted_(false), threadName_("adx")
-{
-}
+Runnable::Runnable() : tid_(0), quit_(false), isStarted_(false), threadName_("adx") {}
 
-Runnable::~Runnable()
-{
-    Stop();
-}
+Runnable::~Runnable() { Stop(); }
 
 int32_t Runnable::Start()
 {
@@ -104,29 +98,20 @@ int32_t Runnable::Join()
     return IDE_DAEMON_OK;
 }
 
-bool Runnable::IsQuit() const
-{
-    return quit_;
-}
+bool Runnable::IsQuit() const { return quit_; }
 
-void Runnable::SetThreadName(const std::string &name)
-{
-    threadName_ = name;
-}
+void Runnable::SetThreadName(const std::string& name) { threadName_ = name; }
 
-const std::string &Runnable::GetThreadName() const
-{
-    return threadName_;
-}
+const std::string& Runnable::GetThreadName() const { return threadName_; }
 
 IdeThreadArg Runnable::Process(IdeThreadArg arg)
 {
     if (arg == nullptr) {
         return nullptr;
     }
-    auto runnable = reinterpret_cast<Runnable *>(arg);
+    auto runnable = reinterpret_cast<Runnable*>(arg);
     (void)mmSetCurrentThreadName(runnable->threadName_.c_str());
     runnable->Run();
     return nullptr;
 }
-}
+} // namespace Adx

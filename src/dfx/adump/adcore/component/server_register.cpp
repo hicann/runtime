@@ -13,7 +13,7 @@
 #include "log/adx_log.h"
 using namespace Adx;
 namespace Adx {
-int32_t ServerRegister::RegisterComponent(int32_t serverType, std::unique_ptr<AdxComponent> &adxComponent)
+int32_t ServerRegister::RegisterComponent(int32_t serverType, std::unique_ptr<AdxComponent>& adxComponent)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     return services_[serverType].ComponentAdd(adxComponent) ? IDE_DAEMON_OK : IDE_DAEMON_ERROR;
@@ -68,16 +68,17 @@ static IdeThreadArg AdxServerProcess(const IdeThreadArg arg)
     if (arg == nullptr) {
         return nullptr;
     }
-    ServerInitInfo info = *static_cast<ServerInitInfo *>(arg);
+    ServerInitInfo info = *static_cast<ServerInitInfo*>(arg);
     int32_t ret = ServerRegister::Instance().ComponentServerStartup(info);
     IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return nullptr, "server process failed");
     return nullptr;
 }
-}
+} // namespace Adx
 
-int32_t AdxRegisterComponentFunc(drvHdcServiceType serverType, std::unique_ptr<AdxComponent> &adxComponent)
+int32_t AdxRegisterComponentFunc(drvHdcServiceType serverType, std::unique_ptr<AdxComponent>& adxComponent)
 {
-    IDE_LOGI("Start to register, serverType:%d, componentType:%d", static_cast<int32_t>(serverType),
+    IDE_LOGI(
+        "Start to register, serverType:%d, componentType:%d", static_cast<int32_t>(serverType),
         static_cast<int32_t>(adxComponent->GetType()));
     return ServerRegister::Instance().RegisterComponent(serverType, adxComponent);
 }
@@ -104,7 +105,8 @@ int32_t AdxComponentServerStartup(ServerInitInfo info)
 
 int32_t AdxComponentServerCleanup(drvHdcServiceType serverType, ComponentType cmpt)
 {
-    IDE_LOGI("Start to cleanup, serverType:%d, componentType:%d", static_cast<int32_t>(serverType),
+    IDE_LOGI(
+        "Start to cleanup, serverType:%d, componentType:%d", static_cast<int32_t>(serverType),
         static_cast<int32_t>(cmpt));
     if (cmpt == ComponentType::NR_COMPONENTS) {
         return ServerRegister::Instance().ComponentServerCleanup(serverType);

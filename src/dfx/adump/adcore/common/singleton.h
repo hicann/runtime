@@ -14,7 +14,7 @@
 namespace Adx {
 namespace Common {
 namespace Singleton {
-template<class T>
+template <class T>
 class Singleton {
 public:
     static T& Instance()
@@ -22,14 +22,14 @@ public:
         static T instance;
         return instance;
     }
-    virtual ~Singleton()     {}                           // dtor hidden
-    Singleton(Singleton const &) = delete;                // copy ctor hidden
-    Singleton &operator=(Singleton const &) = delete;     // assign op. hidden
+    virtual ~Singleton() {}                          // dtor hidden
+    Singleton(Singleton const&) = delete;            // copy ctor hidden
+    Singleton& operator=(Singleton const&) = delete; // assign op. hidden
 protected:
-    Singleton()    {}                                     // ctor hidden
+    Singleton() {}                                   // ctor hidden
 };
-}  // namespace singleton
-}  // namespace common
-}  // namespace analysis
+} // namespace Singleton
+} // namespace Common
+} // namespace Adx
 
 #endif

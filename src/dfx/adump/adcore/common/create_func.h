@@ -17,5 +17,5 @@
 namespace Adx {
 std::unique_ptr<AdxEpoll> CreateAdxEpoll(EpollType epollType);
 std::unique_ptr<AdxCommOpt> CreateAdxCommOpt(OptType optType);
-}
+} // namespace Adx
 #endif

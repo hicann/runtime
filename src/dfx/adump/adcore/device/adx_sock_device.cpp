@@ -11,7 +11,7 @@
 #include "adx_sock_device.h"
 #include "log/adx_log.h"
 namespace Adx {
-void AdxSockDevice::GetAllEnableDevices(int32_t /* mode */, int32_t /* devId */, std::vector<std::string> &devices)
+void AdxSockDevice::GetAllEnableDevices(int32_t /* mode */, int32_t /* devId */, std::vector<std::string>& devices)
 {
     devices.clear();
     if (AdxSockDevice::NoDevice()) {
@@ -19,4 +19,4 @@ void AdxSockDevice::GetAllEnableDevices(int32_t /* mode */, int32_t /* devId */,
     }
     AdxSockDevice::GetEnableDevices(devices);
 }
-}
+} // namespace Adx

@@ -14,24 +14,18 @@
 #include "extra_config.h"
 
 namespace Adx {
-enum class IdeDaemonPackageType {
-    IDE_DAEMON_LITTLE_PACKAGE = 0xB0,
-    IDE_DAEMON_BIG_PACKAGE
-};
+enum class IdeDaemonPackageType { IDE_DAEMON_LITTLE_PACKAGE = 0xB0, IDE_DAEMON_BIG_PACKAGE };
 
-enum class IdeLastPacket:int8_t {
-    IDE_NOT_LAST_PACK = 0,
-    IDE_LAST_PACK = 1
-};
+enum class IdeLastPacket : int8_t { IDE_NOT_LAST_PACK = 0, IDE_LAST_PACK = 1 };
 
 struct IdeHdcPacket {
     uint32_t len;
-    IdeDaemonPackageType type;     // package type : big package,little package
-    IdeLastPacket isLast;                 // only 0:is not last package; 1:last package
+    IdeDaemonPackageType type; // package type : big package,little package
+    IdeLastPacket isLast;      // only 0:is not last package; 1:last package
     char value[0];
 };
 
-int32_t HdcClientInit(HDC_CLIENT *client);
+int32_t HdcClientInit(HDC_CLIENT* client);
 
 struct IoVec {
     IdeBuffT base;
@@ -111,8 +105,7 @@ int32_t HdcWriteNb(HDC_SESSION session, IdeSendBuffT buf, int32_t len);
  *      IDE_DAEMON_OK:    connect succ
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId,
-    HDC_CLIENT client, HDC_SESSION *session);
+int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client, HDC_SESSION* session);
 
 /**
  * @brief connect remote hal hdc server
@@ -125,8 +118,8 @@ int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId,
  *      IDE_DAEMON_OK:    connect success
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
-    int32_t hostPid, HDC_CLIENT client, HDC_SESSION *session);
+int32_t HalHdcSessionConnect(
+    int32_t peerNode, int32_t peerDevId, int32_t hostPid, HDC_CLIENT client, HDC_SESSION* session);
 
 /**
  * @brief Destroy an HDC session (Client).
@@ -160,7 +153,7 @@ int32_t IdeGetVfIdBySession(HDC_SESSION session, IdeI32Pt vfId);
 int32_t IdeGetPidBySession(HDC_SESSION session, IdeI32Pt pid);
 int32_t IdeGetAttrBySession(HDC_SESSION session, int32_t attr, IdeI32Pt value);
 int32_t HdcSessionWrite(HDC_SESSION session, IdeSendBuffT buf, int32_t len, int32_t flag);
-int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec);
-}
+int32_t HdcStorePackage(const IdeHdcPacket& packet, struct IoVec& ioVec);
+} // namespace Adx
 
 #endif

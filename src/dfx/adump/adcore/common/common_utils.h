@@ -20,14 +20,15 @@ constexpr uint64_t DUMP_STATS_NEG_INF = 1U << 4;
 constexpr uint64_t DUMP_STATS_POS_INF = 1U << 5;
 constexpr uint64_t DUMP_STATS_L2NORM = 1U << 6;
 
-#define IDE_RETURN_IF_CHECK_ASSIGN_32U_ADD(A, B, result, action) do { \
-    if (UINT32_MAX - (A) <= (B)) {                                 \
-        action;                                                \
-    }                                                              \
-    (result) = (A) + (B);                                           \
-} while (0)
+#define IDE_RETURN_IF_CHECK_ASSIGN_32U_ADD(A, B, result, action) \
+    do {                                                         \
+        if (UINT32_MAX - (A) <= (B)) {                           \
+            action;                                              \
+        }                                                        \
+        (result) = (A) + (B);                                    \
+    } while (0)
 
 template <typename T>
 using SharedPtr = std::shared_ptr<T>;
-}
+} // namespace Adx
 #endif

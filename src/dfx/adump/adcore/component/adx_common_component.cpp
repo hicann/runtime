@@ -13,39 +13,33 @@
 namespace Adx {
 int32_t AdxCommonComponent::Init()
 {
-    IDE_CTRL_VALUE_WARN(init_ != nullptr, return IDE_DAEMON_ERROR, "common component %d null init",
+    IDE_CTRL_VALUE_WARN(
+        init_ != nullptr, return IDE_DAEMON_ERROR, "common component %d null init",
         static_cast<int32_t>(componentType_));
     return init_();
 }
 
-const std::string AdxCommonComponent::GetInfo()
-{
-    return "Common hdc server process";
-}
+const std::string AdxCommonComponent::GetInfo() { return "Common hdc server process"; }
 
-ComponentType AdxCommonComponent::GetType()
-{
-    return componentType_;
-}
+ComponentType AdxCommonComponent::GetType() { return componentType_; }
 
-int32_t AdxCommonComponent::Process(const CommHandle &handle, const SharedPtr<MsgProto> &proto)
+int32_t AdxCommonComponent::Process(const CommHandle& handle, const SharedPtr<MsgProto>& proto)
 {
-    IDE_CTRL_VALUE_FAILED(process_ != nullptr, return IDE_DAEMON_ERROR, "common component %d process error",
+    IDE_CTRL_VALUE_FAILED(
+        process_ != nullptr, return IDE_DAEMON_ERROR, "common component %d process error",
         static_cast<int32_t>(componentType_));
     return process_(&handle, proto.get(), sizeof(MsgProto) + proto->sliceLen);
 }
 
 int32_t AdxCommonComponent::UnInit()
 {
-    IDE_CTRL_VALUE_WARN(uninit_ != nullptr, return IDE_DAEMON_ERROR, "common component %d null uninit",
+    IDE_CTRL_VALUE_WARN(
+        uninit_ != nullptr, return IDE_DAEMON_ERROR, "common component %d null uninit",
         static_cast<int32_t>(componentType_));
     return uninit_();
 }
 
-void AdxCommonComponent::SetType(ComponentType componentType)
-{
-    componentType_ = componentType;
-}
+void AdxCommonComponent::SetType(ComponentType componentType) { componentType_ = componentType; }
 
 AdxCommonComponent::~AdxCommonComponent()
 {
@@ -53,4 +47,4 @@ AdxCommonComponent::~AdxCommonComponent()
     process_ = nullptr;
     uninit_ = nullptr;
 }
-}
+} // namespace Adx

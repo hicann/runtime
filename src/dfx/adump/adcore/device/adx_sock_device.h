@@ -17,8 +17,7 @@ class AdxSockDevice : public AdxDevice {
 public:
     AdxSockDevice() {}
     ~AdxSockDevice() override {}
-    void GetAllEnableDevices(int32_t /* mode */, int32_t /* devId */, std::vector<std::string> &devices) override;
+    void GetAllEnableDevices(int32_t /* mode */, int32_t /* devId */, std::vector<std::string>& devices) override;
 };
-}
+} // namespace Adx
 #endif
-

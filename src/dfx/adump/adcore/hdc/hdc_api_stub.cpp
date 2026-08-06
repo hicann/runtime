@@ -16,12 +16,13 @@
 #include "ide_os_type.h"
 #include "hdc_api.h"
 
-#define IDE_FREE_HDC_MSG_AND_SET_NULL(ptr) do {                        \
-    if ((ptr) != nullptr) {                                            \
-        (void)drvHdcFreeMsg(ptr);                                            \
-        ptr = nullptr;                                                 \
-    }                                                                  \
-} while (0)
+#define IDE_FREE_HDC_MSG_AND_SET_NULL(ptr) \
+    do {                                   \
+        if ((ptr) != nullptr) {            \
+            (void)drvHdcFreeMsg(ptr);      \
+            ptr = nullptr;                 \
+        }                                  \
+    } while (0)
 
 using namespace IdeDaemon::Common::Config;
 
@@ -40,7 +41,7 @@ struct DataSendMsg {
  *      IDE_DAEMON_OK:    init succ
  *      IDE_DAEMON_ERROR: init failed
  */
-int32_t HdcClientInit(HDC_CLIENT *client)
+int32_t HdcClientInit(HDC_CLIENT* client)
 {
     UNUSED(client);
     return IDE_DAEMON_ERROR;
@@ -110,7 +111,7 @@ HDC_SESSION HdcServerAccept(HDC_SERVER server)
  *      IDE_DAEMON_OK:    store data succ
  *      IDE_DAEMON_ERROR: store data failed
  */
-int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
+int32_t HdcStorePackage(const IdeHdcPacket& packet, struct IoVec& ioVec)
 {
     UNUSED(packet);
     UNUSED(ioVec);
@@ -128,8 +129,8 @@ int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
  *      IDE_DAEMON_OK:    read succ
  *      IDE_DAEMON_ERROR: read failed
  */
-static int32_t HdcSessionRead(HDC_SESSION session, const IdeRecvBuffT recvBuf, const IdeI32Pt recvLen, int32_t nbFlag,
-    uint32_t timeout)
+static int32_t HdcSessionRead(
+    HDC_SESSION session, const IdeRecvBuffT recvBuf, const IdeI32Pt recvLen, int32_t nbFlag, uint32_t timeout)
 {
     UNUSED(session);
     UNUSED(timeout);
@@ -245,7 +246,7 @@ int32_t HdcWriteNb(HDC_SESSION session, IdeSendBuffT buf, int32_t len)
  *      IDE_DAEMON_OK:    connect succ
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client, HDC_SESSION *session)
+int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client, HDC_SESSION* session)
 {
     UNUSED(peerNode);
     UNUSED(peerDevId);
@@ -266,8 +267,8 @@ int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client
  *      IDE_DAEMON_OK:    connect succ
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
-    int32_t hostPid, HDC_CLIENT client, HDC_SESSION *session)
+int32_t HalHdcSessionConnect(
+    int32_t peerNode, int32_t peerDevId, int32_t hostPid, HDC_CLIENT client, HDC_SESSION* session)
 {
     UNUSED(peerNode);
     UNUSED(peerDevId);
@@ -277,7 +278,6 @@ int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
     return IDE_DAEMON_ERROR;
 }
 
-
 /**
  * @brief destroy hdc_connect session
  * @param session: the session created by hdc connect
@@ -286,10 +286,7 @@ int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
  *      IDE_DAEMON_OK:    destroy succ
  *      IDE_DAEMON_ERROR: destroy failed
  */
-int32_t HdcSessionDestroy(HDC_SESSION session)
-{
-    return HdcSessionClose(session);
-}
+int32_t HdcSessionDestroy(HDC_SESSION session) { return HdcSessionClose(session); }
 
 /**
  * @brief destroy hdc_accpet session
@@ -381,7 +378,7 @@ int32_t IdeGetPidBySession(HDC_SESSION session, IdeI32Pt pid)
     return IDE_DAEMON_ERROR;
 }
 
- /**
+/**
  * @brief       : get attribute value by HDC session and attribute type
  * @param [in]  : handle    hdc session
  * @param [in]  : attr      attribute type
@@ -395,4 +392,4 @@ int32_t IdeGetAttrBySession(HDC_SESSION session, int32_t attr, IdeI32Pt value)
     UNUSED(value);
     return IDE_DAEMON_ERROR;
 }
-}
+} // namespace Adx

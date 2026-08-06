@@ -17,9 +17,9 @@ namespace Adx {
 const int32_t MAX_LOCAL_DEVICE_NUM = 64; // 0~31 device phyid; 32~63  device vfid
 
 bool CheckVfId(uint32_t devId);
-int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len);
-int32_t IdeGetPhyDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len);
+int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t>& devs, uint32_t len);
+int32_t IdeGetPhyDevList(IdeU32Pt devNum, std::vector<uint32_t>& devs, uint32_t len);
 int32_t IdeGetLogIdByPhyId(uint32_t desPhyId, IdeU32Pt logId);
 int32_t AdxGetLogIdByPhyId(uint32_t desPhyId, IdeU32Pt logId);
-}
+} // namespace Adx
 #endif

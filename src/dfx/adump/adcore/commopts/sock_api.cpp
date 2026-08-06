@@ -23,7 +23,7 @@ using namespace Adx;
  * @return
  *      sock fd
  */
-int32_t SockServerCreate(const std::string &adxLocalChan)
+int32_t SockServerCreate(const std::string& adxLocalChan)
 {
     IDE_CTRL_VALUE_FAILED(!adxLocalChan.empty(), return -1, "local socket failed");
     int32_t sockFd = mmSocket(PF_LOCAL, SOCK_STREAM, 0);
@@ -39,12 +39,13 @@ int32_t SockServerCreate(const std::string &adxLocalChan)
     }
 
     sockAddr.sun_family = AF_LOCAL;
-    ret = mmBind(sockFd, reinterpret_cast<mmSockAddr *>(&sockAddr),
+    ret = mmBind(
+        sockFd, reinterpret_cast<mmSockAddr*>(&sockAddr),
         offsetof(struct sockaddr_un, sun_path) + 1 + adxLocalChan.size());
     if (ret < 0) {
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_LOGE("local server bind exception info : %s",
-                 mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+        IDE_LOGE(
+            "local server bind exception info : %s", mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
         ADX_LOCAL_CLOSE_AND_SET_INVALID(sockFd);
         return sockFd;
     }
@@ -52,8 +53,9 @@ int32_t SockServerCreate(const std::string &adxLocalChan)
     ret = mmListen(sockFd, TCP_MAX_LISTEN_NUM);
     if (ret < 0) {
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_LOGE("local server listen exception info : %s",
-                 mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+        IDE_LOGE(
+            "local server listen exception info : %s",
+            mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
         ADX_LOCAL_CLOSE_AND_SET_INVALID(sockFd);
         return sockFd;
     }
@@ -70,7 +72,7 @@ int32_t SockServerCreate(const std::string &adxLocalChan)
  *      IDE_DAEMON_OK: destroy sock server success
  *      IDE_DAEMON_ERROR: destroy sock server failed
  */
-int32_t SockServerDestroy(int32_t &sockFd)
+int32_t SockServerDestroy(int32_t& sockFd)
 {
     if (sockFd < 0) {
         return IDE_DAEMON_ERROR;
@@ -103,7 +105,7 @@ int32_t SockClientCreate()
  *      IDE_DAEMON_OK: destroy sock client success
  *      IDE_DAEMON_ERROR: destroy sock client failed
  */
-int32_t SockClientDestory(int32_t &sockFd)
+int32_t SockClientDestory(int32_t& sockFd)
 {
     IDE_CTRL_VALUE_FAILED(sockFd >= 0, return IDE_DAEMON_ERROR, "sockFd invalid");
 
@@ -128,8 +130,8 @@ int32_t SockAccept(int32_t sockFd)
     int32_t clientFd = mmAccept(sockFd, &clientAddr, &len);
     if (clientFd < 0) {
         char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-        IDE_LOGE("local socket accept failed, info : %s",
-                 mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+        IDE_LOGE(
+            "local socket accept failed, info : %s", mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
     }
 
     return clientFd;
@@ -144,11 +146,10 @@ int32_t SockAccept(int32_t sockFd)
  *      sockFd: sock fd
  *      IDE_DAEMON_ERROR: sock connect failed
  */
-int32_t SockConnect(int32_t sockFd, const std::string &adxLocalChan)
+int32_t SockConnect(int32_t sockFd, const std::string& adxLocalChan)
 {
     IDE_CTRL_VALUE_FAILED(sockFd >= 0, return IDE_DAEMON_ERROR, "local socket failed");
-    IDE_CTRL_VALUE_FAILED(!adxLocalChan.empty(), return IDE_DAEMON_ERROR,
-        "local socket failed");
+    IDE_CTRL_VALUE_FAILED(!adxLocalChan.empty(), return IDE_DAEMON_ERROR, "local socket failed");
     struct sockaddr_un sockAddr;
     (void)memset_s(&sockAddr, sizeof(sockAddr), 0, sizeof(sockAddr));
     int32_t ret = strcpy_s(sockAddr.sun_path + 1, sizeof(sockAddr.sun_path) - 1, adxLocalChan.c_str());
@@ -158,7 +159,8 @@ int32_t SockConnect(int32_t sockFd, const std::string &adxLocalChan)
     }
 
     sockAddr.sun_family = AF_LOCAL;
-    ret = mmConnect(sockFd, reinterpret_cast<mmSockAddr *>(&sockAddr),
+    ret = mmConnect(
+        sockFd, reinterpret_cast<mmSockAddr*>(&sockAddr),
         offsetof(struct sockaddr_un, sun_path) + 1 + adxLocalChan.size());
     if (ret < 0) {
         IDE_LOGE("local socket connect failed");
@@ -212,7 +214,7 @@ static uint32_t SockHalRead(int32_t fd, IdeBuffT readBuf, int32_t recvLen, int32
  *      true: msg is valid
  *      false: msg is invalid
  */
-static bool CheckMsgValid(const MsgProto &proto)
+static bool CheckMsgValid(const MsgProto& proto)
 {
     if (proto.headInfo != ADX_PROTO_MAGIC_VALUE) {
         return false;
@@ -350,7 +352,7 @@ int32_t SockWrite(int32_t fd, IdeSendBuffT writeBuf, int32_t len, int32_t flag)
  *      ret: return val of mmClose
  *      IDE_DAEMON_ERROR: sockFd invalid
  */
-int32_t SockClose(int32_t &sockFd)
+int32_t SockClose(int32_t& sockFd)
 {
     if (sockFd < 0) {
         return IDE_DAEMON_ERROR;

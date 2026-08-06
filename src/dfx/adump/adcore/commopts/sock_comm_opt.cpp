@@ -18,10 +18,7 @@ namespace Adx {
  * @return
  *      "LOCAL_SOCK"
  */
-std::string SockCommOpt::CommOptName()
-{
-    return "LOCAL_SOCK";
-}
+std::string SockCommOpt::CommOptName() { return "LOCAL_SOCK"; }
 
 /**
  * @brief      get opt type
@@ -29,10 +26,7 @@ std::string SockCommOpt::CommOptName()
  * @return
  *      COMM_LOCAL
  */
-OptType SockCommOpt::GetOptType()
-{
-    return OptType::COMM_LOCAL;
-}
+OptType SockCommOpt::GetOptType() { return OptType::COMM_LOCAL; }
 
 /**
  * @brief      open server
@@ -42,7 +36,7 @@ OptType SockCommOpt::GetOptType()
  *      handle: opt handle
  *      ADX_OPT_INVALID_HANDLE
  */
-OptHandle SockCommOpt::OpenServer(const std::map<std::string, std::string> &info)
+OptHandle SockCommOpt::OpenServer(const std::map<std::string, std::string>& info)
 {
     OptHandle handle = ADX_OPT_INVALID_HANDLE;
     if (info.empty()) {
@@ -53,7 +47,7 @@ OptHandle SockCommOpt::OpenServer(const std::map<std::string, std::string> &info
     if (it == info.end()) {
         return ADX_OPT_INVALID_HANDLE;
     }
-    int32_t fd =  SockServerCreate(it->second);
+    int32_t fd = SockServerCreate(it->second);
     if (fd < 0) {
         return handle;
     }
@@ -70,7 +64,7 @@ OptHandle SockCommOpt::OpenServer(const std::map<std::string, std::string> &info
  *      IDE_DAEMON_OK: close and destroy server success
  *      IDE_DAEMON_ERROR: close and destroy server failed
  */
-int32_t SockCommOpt::CloseServer(const OptHandle &handle) const
+int32_t SockCommOpt::CloseServer(const OptHandle& handle) const
 {
     if (handle == ADX_OPT_INVALID_HANDLE) {
         return IDE_DAEMON_ERROR;
@@ -87,7 +81,7 @@ int32_t SockCommOpt::CloseServer(const OptHandle &handle) const
  * @return
  *      fd: opt handle
  */
-OptHandle SockCommOpt::OpenClient(const std::map<std::string, std::string> &info)
+OptHandle SockCommOpt::OpenClient(const std::map<std::string, std::string>& info)
 {
     UNUSED(info);
     int32_t fd = SockClientCreate();
@@ -102,7 +96,7 @@ OptHandle SockCommOpt::OpenClient(const std::map<std::string, std::string> &info
  *      IDE_DAEMON_OK: close and destroy client success
  *      IDE_DAEMON_ERROR: close and destroy client failed
  */
-int32_t SockCommOpt::CloseClient(OptHandle &handle) const
+int32_t SockCommOpt::CloseClient(OptHandle& handle) const
 {
     if (handle == ADX_OPT_INVALID_HANDLE) {
         return IDE_DAEMON_ERROR;
@@ -145,7 +139,7 @@ OptHandle SockCommOpt::Accept(const OptHandle handle) const
  *      fd: opt handle
  *      ADX_OPT_INVALID_HANDLE
  */
-OptHandle SockCommOpt::Connect(const OptHandle handle, const std::map<std::string, std::string> &info)
+OptHandle SockCommOpt::Connect(const OptHandle handle, const std::map<std::string, std::string>& info)
 {
     if (handle == ADX_OPT_INVALID_HANDLE) {
         return ADX_OPT_INVALID_HANDLE;
@@ -171,7 +165,7 @@ OptHandle SockCommOpt::Connect(const OptHandle handle, const std::map<std::strin
  *      IDE_DAEMON_OK: close success
  *      IDE_DAEMON_ERROR: close failed
  */
-int32_t SockCommOpt::Close(OptHandle &handle) const
+int32_t SockCommOpt::Close(OptHandle& handle) const
 {
     if (handle == ADX_OPT_INVALID_HANDLE) {
         return IDE_DAEMON_ERROR;
@@ -195,8 +189,7 @@ int32_t SockCommOpt::Close(OptHandle &handle) const
  */
 int32_t SockCommOpt::Write(const OptHandle handle, IdeSendBuffT buffer, int32_t length, int32_t flag)
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "sock write input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "sock write input invalid");
     IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "sock write input invalid");
     IDE_CTRL_VALUE_FAILED(length > 0, return IDE_DAEMON_ERROR, "sock write input invalid");
 
@@ -214,10 +207,9 @@ int32_t SockCommOpt::Write(const OptHandle handle, IdeSendBuffT buffer, int32_t 
  *      IDE_DAEMON_OK: sock read success
  *      IDE_DAEMON_ERROR: sock read failed
  */
-int32_t SockCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t &length, int32_t /* flag */)
+int32_t SockCommOpt::Read(const OptHandle handle, IdeRecvBuffT buffer, int32_t& length, int32_t /* flag */)
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "sock write input invalid");
+    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR, "sock write input invalid");
     IDE_CTRL_VALUE_FAILED(buffer != nullptr, return IDE_DAEMON_ERROR, "sock write input invalid");
 
     int32_t nonBlockFlag = 0;
@@ -237,7 +229,5 @@ SharedPtr<AdxDevice> SockCommOpt::GetDevice()
     return device_;
 }
 
-void SockCommOpt::Timer(void) const
-{
-}
-}
+void SockCommOpt::Timer(void) const {}
+} // namespace Adx

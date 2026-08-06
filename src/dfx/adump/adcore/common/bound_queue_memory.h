@@ -24,21 +24,23 @@ constexpr const char* MEM_USAGE_V2 = "/sys/fs/cgroup/memory.current";
 constexpr const char* MEM_LIMIT_V1 = "/sys/fs/cgroup/memory/memory.limit_in_bytes";
 constexpr const char* MEM_LIMIT_V2 = "/sys/fs/cgroup/memory.max";
 
-template<typename T>
+template <typename T>
 class BoundQueueMemory {
 public:
-    explicit BoundQueueMemory () : quit_(false), memLimit_(InitMemLimit()) {
+    explicit BoundQueueMemory() : quit_(false), memLimit_(InitMemLimit())
+    {
         memUsageV1_.open(MEM_USAGE_V1);
         memUsageV2_.open(MEM_USAGE_V2);
     }
-    virtual ~BoundQueueMemory() {
+    virtual ~BoundQueueMemory()
+    {
         memUsageV1_.close();
         memUsageV2_.close();
     }
-    bool Push(T &value)
+    bool Push(T& value)
     {
         std::unique_lock<std::mutex> lk(mtx_);
-        cvPop_.wait(lk, [this] { return !this->IsFullUnlocked() || this->quit_;});
+        cvPop_.wait(lk, [this] { return !this->IsFullUnlocked() || this->quit_; });
         if (this->quit_) {
             return false;
         }
@@ -47,7 +49,7 @@ public:
         return true;
     }
 
-    bool Pop(T &value)
+    bool Pop(T& value)
     {
         std::unique_lock<std::mutex> lk(mtx_);
         cvPush_.wait(lk, [this] { return !this->IsEmptyUnlocked() || this->quit_; });
@@ -94,16 +96,10 @@ public:
         return dataQueue_.size();
     }
 
-    void SetPath(std::string path)
-    {
-        path_ = path;
-    }
+    void SetPath(std::string path) { path_ = path; }
 
 private:
-    bool IsEmptyUnlocked() const
-    {
-        return dataQueue_.empty();
-    }
+    bool IsEmptyUnlocked() const { return dataQueue_.empty(); }
 
     bool IsFullUnlocked() const
     {
@@ -126,7 +122,8 @@ private:
         return (info.freeram < (info.totalram * (1 - ADX_QUEUE_FULL_SIZE))) && dataQueue_.size() > queueSize;
     }
 
-    uint64_t InitMemLimit() const {
+    uint64_t InitMemLimit() const
+    {
         std::ifstream memLimitV1(MEM_LIMIT_V1);
         std::ifstream memLimitV2(MEM_LIMIT_V2);
         uint64_t ret = ReadMemory(memLimitV1, memLimitV2);
@@ -134,7 +131,8 @@ private:
         memLimitV2.close();
         return ret;
     }
-    uint64_t ReadLongLong(std::ifstream &f) const {
+    uint64_t ReadLongLong(std::ifstream& f) const
+    {
         if (!f.is_open()) {
             return 0;
         }
@@ -147,7 +145,8 @@ private:
         return 0;
     }
 
-    uint64_t ReadMemory(std::ifstream &f1, std::ifstream &f2) const {
+    uint64_t ReadMemory(std::ifstream& f1, std::ifstream& f2) const
+    {
         uint64_t value = ReadLongLong(f2);
         if (value == 0) {
             value = ReadLongLong(f1);
@@ -164,5 +163,5 @@ private:
     mutable std::ifstream memUsageV2_;
     uint64_t memLimit_;
 };
-}
+} // namespace Adx
 #endif

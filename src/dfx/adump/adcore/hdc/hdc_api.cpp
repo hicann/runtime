@@ -16,12 +16,13 @@
 #include "ide_os_type.h"
 #include "hdc_api.h"
 
-#define IDE_FREE_HDC_MSG_AND_SET_NULL(ptr) do {                        \
-    if ((ptr) != nullptr) {                                            \
-        (void)drvHdcFreeMsg(ptr);                                            \
-        ptr = nullptr;                                                 \
-    }                                                                  \
-} while (0)
+#define IDE_FREE_HDC_MSG_AND_SET_NULL(ptr) \
+    do {                                   \
+        if ((ptr) != nullptr) {            \
+            (void)drvHdcFreeMsg(ptr);      \
+            ptr = nullptr;                 \
+        }                                  \
+    } while (0)
 
 using namespace IdeDaemon::Common::Config;
 
@@ -40,14 +41,14 @@ struct DataSendMsg {
  *      IDE_DAEMON_OK:    init succ
  *      IDE_DAEMON_ERROR: init failed
  */
-int32_t HdcClientInit(HDC_CLIENT *client)
+int32_t HdcClientInit(HDC_CLIENT* client)
 {
     hdcError_t error;
     int32_t flag = 0;
     IDE_CTRL_VALUE_FAILED(client != nullptr, return IDE_DAEMON_ERROR, "client is nullptr");
 
     // create HDC client
-    error = drvHdcClientCreate (client, MAX_SESSION_NUM, HDC_SERVICE_TYPE_IDE1, flag);
+    error = drvHdcClientCreate(client, MAX_SESSION_NUM, HDC_SERVICE_TYPE_IDE1, flag);
     if (error != DRV_ERROR_NONE || *client == nullptr) {
         IDE_LOGE("Hdc Client Create Failed, error: %d", error);
         return IDE_DAEMON_ERROR;
@@ -171,7 +172,7 @@ HDC_SESSION HdcServerAccept(HDC_SERVER server)
  * @param [in] base : iovec slice of receive data
  * @param [out] ioList : iovec slice list
  */
-static void IoVecAddToList(struct IoVec &base, std::list<struct IoVec> &ioList)
+static void IoVecAddToList(struct IoVec& base, std::list<struct IoVec>& ioList)
 {
     if (base.base != nullptr && base.len > 0) {
         ioList.push_back(base);
@@ -186,14 +187,14 @@ static void IoVecAddToList(struct IoVec &base, std::list<struct IoVec> &ioList)
  * @param [out] base : save receive data of all slice
  * @return IDE_DAEMON_OK : success
  */
-static int32_t IoVecListToMem(std::list<struct IoVec> &ioList, struct IoVec &base)
+static int32_t IoVecListToMem(std::list<struct IoVec>& ioList, struct IoVec& base)
 {
     uint32_t offset = 0;
-    for (const auto &eit: ioList) {
+    for (const auto& eit : ioList) {
         if (base.len >= eit.len && offset <= base.len - eit.len) {
             const errno_t err = memcpy_s(
-                static_cast<IdeU8Pt>(base.base) + offset, static_cast<size_t>(base.len - offset), 
-                eit.base, static_cast<size_t>(eit.len));
+                static_cast<IdeU8Pt>(base.base) + offset, static_cast<size_t>(base.len - offset), eit.base,
+                static_cast<size_t>(eit.len));
             if (err != EOK) {
                 return IDE_DAEMON_ERROR;
             }
@@ -207,9 +208,9 @@ static int32_t IoVecListToMem(std::list<struct IoVec> &ioList, struct IoVec &bas
  * @brief free list of iovec
  * @param [in] ioList  ide daemon hdc client
  */
-static void IoVecListFree(std::list<struct IoVec> &ioList)
+static void IoVecListFree(std::list<struct IoVec>& ioList)
 {
-    for (auto &eit: ioList) {
+    for (auto& eit : ioList) {
         IDE_XFREE_AND_SET_NULL(eit.base);
     }
     ioList.clear();
@@ -224,7 +225,7 @@ static void IoVecListFree(std::list<struct IoVec> &ioList)
  *      IDE_DAEMON_OK:    store data succ
  *      IDE_DAEMON_ERROR: store data failed
  */
-int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
+int32_t HdcStorePackage(const IdeHdcPacket& packet, struct IoVec& ioVec)
 {
     IdeStringBuffer buf = reinterpret_cast<IdeStringBuffer>(ioVec.base);
     // little package packet type
@@ -236,9 +237,8 @@ int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
 
         const uint32_t len = ioVec.len + packet.len;
         // malloc new buffer for adding new data
-        IdeStringBuffer newBuf = static_cast<IdeStringBuffer>(IdeXrmalloc(buf,
-            static_cast<size_t>(ioVec.len),
-            static_cast<size_t>(len)));
+        IdeStringBuffer newBuf =
+            static_cast<IdeStringBuffer>(IdeXrmalloc(buf, static_cast<size_t>(ioVec.len), static_cast<size_t>(len)));
         if (newBuf == nullptr) {
             IDE_LOGE("Ide Xrmalloc Failed");
             return IDE_DAEMON_ERROR;
@@ -246,8 +246,8 @@ int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
         IDE_XFREE_AND_SET_NULL(buf);
         buf = newBuf;
         // add new package data
-        const errno_t ret = memcpy_s(buf + ioVec.len, static_cast<size_t>(packet.len),
-                                     packet.value, static_cast<size_t>(packet.len));
+        const errno_t ret =
+            memcpy_s(buf + ioVec.len, static_cast<size_t>(packet.len), packet.value, static_cast<size_t>(packet.len));
         if (ret != EOK) {
             IDE_LOGE("memory copy failed, ret: %d", ret);
             IDE_XFREE_AND_SET_NULL(buf);
@@ -262,8 +262,7 @@ int32_t HdcStorePackage(const IdeHdcPacket &packet, struct IoVec &ioVec)
     return IDE_DAEMON_ERROR;
 }
 
-static int32_t HdcReadPackage(struct drvHdcMsg &pmsg, IdeLastPacket &isLast,
-    int32_t recvBufCount, struct IoVec &ioVec)
+static int32_t HdcReadPackage(struct drvHdcMsg& pmsg, IdeLastPacket& isLast, int32_t recvBufCount, struct IoVec& ioVec)
 {
     IdeStringBuffer pBuf = nullptr;
     int32_t pBufLen = 0;
@@ -271,16 +270,15 @@ static int32_t HdcReadPackage(struct drvHdcMsg &pmsg, IdeLastPacket &isLast,
     int32_t i = 0;
     for (; i < recvBufCount; i++) {
         const hdcError_t error = drvHdcGetMsgBuffer(&pmsg, i, &pBuf, &pBufLen);
-        IDE_CTRL_VALUE_FAILED(error == DRV_ERROR_NONE,
-            return IDE_DAEMON_ERROR, "Hdc Get Msg Buffer, error %d", error);
+        IDE_CTRL_VALUE_FAILED(error == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "Hdc Get Msg Buffer, error %d", error);
         if (pBuf != nullptr && pBufLen > 0) {
-            struct IdeHdcPacket *packet = reinterpret_cast<struct IdeHdcPacket*>(pBuf);
-            IDE_CTRL_VALUE_FAILED(static_cast<uint32_t>(pBufLen) >= sizeof(IdeHdcPacket) + packet->len,
-                return IDE_DAEMON_ERROR, "packet len is larger than pBufLen");
+            struct IdeHdcPacket* packet = reinterpret_cast<struct IdeHdcPacket*>(pBuf);
+            IDE_CTRL_VALUE_FAILED(
+                static_cast<uint32_t>(pBufLen) >= sizeof(IdeHdcPacket) + packet->len, return IDE_DAEMON_ERROR,
+                "packet len is larger than pBufLen");
             // store package by packet type
             const int32_t err = HdcStorePackage(*packet, ioVec);
-            IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_OK, return IDE_DAEMON_ERROR,
-                "Hdc store package, error");
+            IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_OK, return IDE_DAEMON_ERROR, "Hdc store package, error");
             // receive the last package is true
             if (packet->isLast == IdeLastPacket::IDE_LAST_PACK) {
                 isLast = IdeLastPacket::IDE_LAST_PACK;
@@ -299,8 +297,8 @@ static int32_t HdcReadPackage(struct drvHdcMsg &pmsg, IdeLastPacket &isLast,
  * @param [out] recvLen : length of hdc data
  * @return IDE_DAEMON_OK : success; IDE_DAEMON_ERROR:failed
  */
-static int32_t HdcReadIovecToMem(std::list<struct IoVec> &hdcIoList, uint32_t bufLen, IdeRecvBuffT recvBuf,
-    IdeI32Pt recvLen)
+static int32_t HdcReadIovecToMem(
+    std::list<struct IoVec>& hdcIoList, uint32_t bufLen, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
 {
     struct IoVec ioBase = {nullptr, 0};
     IDE_CTRL_VALUE_FAILED(recvBuf != nullptr, return IDE_DAEMON_ERROR, "recvBuf is nullptr");
@@ -324,14 +322,14 @@ static int32_t HdcReadIovecToMem(std::list<struct IoVec> &hdcIoList, uint32_t bu
     return IDE_DAEMON_OK;
 }
 
-static inline void HdcReadBuffFree(struct drvHdcMsg *pmsg, std::list<struct IoVec> &ioList)
+static inline void HdcReadBuffFree(struct drvHdcMsg* pmsg, std::list<struct IoVec>& ioList)
 {
     IDE_FREE_HDC_MSG_AND_SET_NULL(pmsg);
     IoVecListFree(ioList);
 }
 
-static int32_t HdcRecvData(HDC_SESSION session, struct drvHdcMsg *pmsg, int32_t nbFlag, int32_t *recvBufCount,
-    uint32_t timeout)
+static int32_t HdcRecvData(
+    HDC_SESSION session, struct drvHdcMsg* pmsg, int32_t nbFlag, int32_t* recvBufCount, uint32_t timeout)
 {
     uint32_t len = 0;
     const hdcError_t error = halHdcRecv(session, pmsg, len, nbFlag, recvBufCount, timeout);
@@ -363,10 +361,10 @@ static int32_t HdcRecvData(HDC_SESSION session, struct drvHdcMsg *pmsg, int32_t 
  *      IDE_DAEMON_OK:    read succ
  *      IDE_DAEMON_ERROR: read failed
  */
-static int32_t HdcSessionRead(HDC_SESSION session, const IdeRecvBuffT recvBuf, const IdeI32Pt recvLen, int32_t nbFlag,
-    uint32_t timeout)
+static int32_t HdcSessionRead(
+    HDC_SESSION session, const IdeRecvBuffT recvBuf, const IdeI32Pt recvLen, int32_t nbFlag, uint32_t timeout)
 {
-    struct drvHdcMsg *pmsg = nullptr;
+    struct drvHdcMsg* pmsg = nullptr;
     constexpr int32_t count = 1;
     int32_t recvBufCount = 0;
     IdeLastPacket isLast = IdeLastPacket::IDE_NOT_LAST_PACK;
@@ -380,8 +378,8 @@ static int32_t HdcSessionRead(HDC_SESSION session, const IdeRecvBuffT recvBuf, c
 
     // 1.request alloc hdc message, count is 1
     hdcError_t error = drvHdcAllocMsg(session, &pmsg, count);
-    IDE_CTRL_VALUE_FAILED((error == DRV_ERROR_NONE) && (pmsg != nullptr),
-        return IDE_DAEMON_ERROR, "Hdc Alloc Msg, error %d", error);
+    IDE_CTRL_VALUE_FAILED(
+        (error == DRV_ERROR_NONE) && (pmsg != nullptr), return IDE_DAEMON_ERROR, "Hdc Alloc Msg, error %d", error);
     uint32_t pkgCount = 0;
     while (true) {
         // 2.Receive data, since the count is 1 when applying the descriptor, read up to 1 buf at a time.
@@ -501,8 +499,8 @@ int32_t HdcReadTimeout(HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvB
  *      DRV_ERROR_NONE: send succ
  *      others:         send failed
  */
-static hdcError_t HdcWritePackage(HDC_SESSION session, DataSendMsg dataSendMsg,
-    struct drvHdcMsg *pmsg, struct IdeHdcPacket *packet, int32_t flag)
+static hdcError_t HdcWritePackage(
+    HDC_SESSION session, DataSendMsg dataSendMsg, struct drvHdcMsg* pmsg, struct IdeHdcPacket* packet, int32_t flag)
 {
     hdcError_t hdcError = DRV_ERROR_NONE;
     uint32_t reservedLen = dataSendMsg.bufLen;
@@ -529,20 +527,21 @@ static hdcError_t HdcWritePackage(HDC_SESSION session, DataSendMsg dataSendMsg,
         packet->type = IdeDaemonPackageType::IDE_DAEMON_LITTLE_PACKAGE;
         packet->len = sendLen;
 
-        const errno_t ret = memcpy_s(packet->value, dataSendMsg.maxSendLen,
-                               static_cast<IdeU8Pt>(const_cast<IdeBuffT>(buf)) +
-                               (totalLen - reservedLen), sendLen);
+        const errno_t ret = memcpy_s(
+            packet->value, dataSendMsg.maxSendLen,
+            static_cast<IdeU8Pt>(const_cast<IdeBuffT>(buf)) + (totalLen - reservedLen), sendLen);
         IDE_CTRL_VALUE_FAILED(ret == EOK, return DRV_ERROR_INVALID_VALUE, "memory copy failed");
 
         // add buffer to hdc message
-        hdcError = drvHdcAddMsgBuffer(pmsg, reinterpret_cast<IdeStringBuffer>(packet),
-                                      sizeof(struct IdeHdcPacket) + packet->len);
+        hdcError = drvHdcAddMsgBuffer(
+            pmsg, reinterpret_cast<IdeStringBuffer>(packet), sizeof(struct IdeHdcPacket) + packet->len);
         IDE_CTRL_VALUE_FAILED(hdcError == DRV_ERROR_NONE, return hdcError, "Hdc Add Msg Buffer, error: %d", hdcError);
 
         // send hdc message
         hdcError = halHdcSend(session, pmsg, flag, timeout);
-        IDE_CTRL_VALUE_WARN(hdcError == DRV_ERROR_NONE, return hdcError, "Hdc Send, error: %d, session: %zu",
-            hdcError, reinterpret_cast<uintptr_t>(session));
+        IDE_CTRL_VALUE_WARN(
+            hdcError == DRV_ERROR_NONE, return hdcError, "Hdc Send, error: %d, session: %zu", hdcError,
+            reinterpret_cast<uintptr_t>(session));
 
         // reuse hdc message
         hdcError = drvHdcReuseMsg(pmsg);
@@ -567,21 +566,22 @@ static hdcError_t HdcWritePackage(HDC_SESSION session, DataSendMsg dataSendMsg,
 int32_t HdcSessionWrite(HDC_SESSION session, IdeSendBuffT buf, int32_t len, int32_t flag)
 {
     hdcError_t hdcError;
-    struct drvHdcMsg *pmsg = nullptr;
+    struct drvHdcMsg* pmsg = nullptr;
     constexpr int32_t count = 1;
     uint32_t capacity = 0;
     struct IdeHdcPacket* packet = nullptr;
 
-    IDE_CTRL_VALUE_FAILED((session != nullptr && buf != nullptr && len > 0),
-                          return IDE_DAEMON_ERROR, "Invalid Parameter");
+    IDE_CTRL_VALUE_FAILED(
+        (session != nullptr && buf != nullptr && len > 0), return IDE_DAEMON_ERROR, "Invalid Parameter");
 
     const int32_t err = HdcCapacity(&capacity);
     IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_OK, return IDE_DAEMON_ERROR, "Hdc Capacity Failed, err: %d", err);
 
     // 1.request alloc hdc message, count is 1
     hdcError = drvHdcAllocMsg(session, &pmsg, count);
-    IDE_CTRL_VALUE_FAILED((hdcError == DRV_ERROR_NONE) && (pmsg != nullptr),
-        return IDE_DAEMON_ERROR, "Hdc Alloc Msg, error: %d", hdcError);
+    IDE_CTRL_VALUE_FAILED(
+        (hdcError == DRV_ERROR_NONE) && (pmsg != nullptr), return IDE_DAEMON_ERROR, "Hdc Alloc Msg, error: %d",
+        hdcError);
 
     const uint32_t maxDatalen = capacity - sizeof(struct IdeHdcPacket);
     const size_t packetLen = sizeof(struct IdeHdcPacket) + maxDatalen;
@@ -592,7 +592,7 @@ int32_t HdcSessionWrite(HDC_SESSION session, IdeSendBuffT buf, int32_t len, int3
         return IDE_DAEMON_ERROR;
     }
 
-    struct DataSendMsg dataSendMsg = { buf, len, maxDatalen };
+    struct DataSendMsg dataSendMsg = {buf, len, maxDatalen};
     hdcError = HdcWritePackage(session, dataSendMsg, pmsg, packet, flag);
 
     // free packet
@@ -603,8 +603,8 @@ int32_t HdcSessionWrite(HDC_SESSION session, IdeSendBuffT buf, int32_t len, int3
     IDE_CTRL_VALUE_FAILED(ret == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "Hdc Free Msg, error: %d", ret);
     pmsg = nullptr;
 
-    return hdcError == DRV_ERROR_NONE ? IDE_DAEMON_OK : (hdcError == DRV_ERROR_SOCKET_CLOSE ?
-        IDE_DAEMON_SOCK_CLOSE : IDE_DAEMON_ERROR);
+    return hdcError == DRV_ERROR_NONE ? IDE_DAEMON_OK :
+                                        (hdcError == DRV_ERROR_SOCKET_CLOSE ? IDE_DAEMON_SOCK_CLOSE : IDE_DAEMON_ERROR);
 }
 
 /**
@@ -656,7 +656,7 @@ int32_t HdcWriteNb(HDC_SESSION session, IdeSendBuffT buf, int32_t len)
  *      IDE_DAEMON_OK:    connect succ
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client, HDC_SESSION *session)
+int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client, HDC_SESSION* session)
 {
     IDE_CTRL_VALUE_FAILED(peerNode >= 0, return IDE_DAEMON_ERROR, "peer_node is invalid");
     IDE_CTRL_VALUE_FAILED(peerDevId >= 0, return IDE_DAEMON_ERROR, "peer_devid is invalid");
@@ -693,8 +693,8 @@ int32_t HdcSessionConnect(int32_t peerNode, int32_t peerDevId, HDC_CLIENT client
  *      IDE_DAEMON_OK:    connect succ
  *      IDE_DAEMON_ERROR: connect failed
  */
-int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
-    int32_t hostPid, HDC_CLIENT client, HDC_SESSION *session)
+int32_t HalHdcSessionConnect(
+    int32_t peerNode, int32_t peerDevId, int32_t hostPid, HDC_CLIENT client, HDC_SESSION* session)
 {
     IDE_CTRL_VALUE_FAILED(peerNode >= 0, return IDE_DAEMON_ERROR, "peer_node is invalid");
     IDE_CTRL_VALUE_FAILED(peerDevId >= 0, return IDE_DAEMON_ERROR, "peer_devid is invalid");
@@ -719,7 +719,6 @@ int32_t HalHdcSessionConnect(int32_t peerNode, int32_t peerDevId,
     IDE_LOGI("connect succ, peer_node: %d, peer_devid: %d, host_pid: %d", peerNode, peerDevId, hostPid);
     return IDE_DAEMON_OK;
 }
-
 
 /**
  * @brief destroy hdc_connect session
@@ -896,7 +895,7 @@ int32_t IdeGetPidBySession(HDC_SESSION session, IdeI32Pt pid)
     return IDE_DAEMON_OK;
 }
 
- /**
+/**
  * @brief       : get attribute value by HDC session and attribute type
  * @param [in]  : handle    hdc session
  * @param [in]  : attr      attribute type
@@ -920,5 +919,4 @@ int32_t IdeGetAttrBySession(HDC_SESSION session, int32_t attr, IdeI32Pt value)
 
     return IDE_DAEMON_OK;
 }
-}
-
+} // namespace Adx
