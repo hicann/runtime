@@ -44,7 +44,7 @@ repos:
               dfx/adump
               | dfx/log
               | dfx/msprof
-              | dfx/trace
+              | dfx/trace/(?:atrace|common|cpu_detect|inc)
             )(/|$)
             | stub
             | tests(?:

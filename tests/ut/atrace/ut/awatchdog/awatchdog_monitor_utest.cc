@@ -18,6 +18,7 @@
 #include "slog.h"
 #include "mmpa_api.h"
 #include "adiag_list.h"
+#include "adiag_utils.h"
 #include "slog_stub.h"
 
 extern "C" {
@@ -31,6 +32,10 @@ extern "C" {
     AwdThreadWatchdog *AwdWatchdogCreate(uint32_t moduleId, uint32_t timeout, AwatchdogCallbackFunc callback,
     enum AwdWatchdogType type);
     void AwdWatchdogDestroy(AwdThreadWatchdog *node);
+    void AwdMonitorReset(void);
+    void *AwdMonitorProcess(void *arg);
+    AdiagStatus AwdMonitorThreadWatchdogPro(void *data);
+    void AwdMonitorThreadWatchdog(void);
 }
 
 static int32_t CreateMonitorTaskStub(mmThread *threadHandle, const mmUserBlock_t *funcBlock,
@@ -40,6 +45,14 @@ static int32_t CreateMonitorTaskStub(mmThread *threadHandle, const mmUserBlock_t
     (void)threadAttr;
     *threadHandle = static_cast<mmThread>(1);
     return 0;
+}
+
+static int32_t g_awatchdogCallbackCount = 0;
+
+static void CountAwatchdogCallback(void *args)
+{
+    (void)args;
+    g_awatchdogCallbackCount++;
 }
 
 class AwatchdogMonitorUtest: public testing::Test {
@@ -105,6 +118,51 @@ TEST_F(AwatchdogMonitorUtest, MonitorInitReturnsSuccessWhenCreateThreadSucceeds)
 
     EXPECT_EQ(AWD_SUCCESS, AwdMonitorInit());
     AwdMonitorExit();
+}
+
+TEST_F(AwatchdogMonitorUtest, MonitorProcessExitsAndDestroysListsAfterReset)
+{
+    AwdMonitorReset();
+
+    EXPECT_EQ(nullptr, AwdMonitorProcess(nullptr));
+
+    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AdiagListInit(&awd->runList);
+    AdiagListInit(&awd->newList);
+}
+
+TEST_F(AwatchdogMonitorUtest, MonitorThreadWatchdogRemovesDestroyedNode)
+{
+    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdThreadWatchdog *dog = static_cast<AwdThreadWatchdog *>(AdiagMalloc(sizeof(AwdThreadWatchdog)));
+    ASSERT_NE(dog, nullptr);
+    dog->startCount = AWD_STATUS_DESTROYED;
+    ASSERT_EQ(ADIAG_SUCCESS, AdiagListInsert(&awd->newList, dog));
+
+    AwdMonitorThreadWatchdog();
+
+    EXPECT_EQ(0U, awd->newList.cnt);
+    EXPECT_EQ(0U, awd->runList.cnt);
+}
+
+TEST_F(AwatchdogMonitorUtest, MonitorThreadWatchdogProProcessesTimeoutForExistingThread)
+{
+    MOCKER(mmCreateTaskWithThreadAttr).expects(once()).will(returnValue(-1));
+    EXPECT_EQ(AWD_FAILURE, AwdMonitorInit());
+    g_awatchdogCallbackCount = 0;
+    AwdThreadWatchdog dog = {};
+    dog.pid = getpid();
+    dog.tid = static_cast<int32_t>(syscall(SYS_gettid));
+    dog.dogId = ASCENDCL;
+    dog.timeout = 0;
+    dog.callback = CountAwatchdogCallback;
+    dog.runCount = 0;
+    dog.startCount = 1;
+
+    EXPECT_EQ(AWD_SUCCESS, AwdMonitorThreadWatchdogPro(&dog));
+
+    EXPECT_EQ(AWD_STATUS_INIT, dog.startCount);
+    EXPECT_EQ(1, g_awatchdogCallbackCount);
 }
 
 void AwatchdogCallback(void *args)

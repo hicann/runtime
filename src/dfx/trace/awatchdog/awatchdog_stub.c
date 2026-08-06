@@ -22,6 +22,6 @@ void AwdDestroyThreadWatchdog(AwdHandle handle)
     if (handle == AWD_INVALID_HANDLE) {
         return;
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_STATUS_DESTROYED);
 }

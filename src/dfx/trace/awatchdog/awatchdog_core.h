@@ -27,8 +27,8 @@ typedef struct AwdWatchdogMgr {
     bool monitorStarted;
 } AwdWatchdogMgr;
 
-AwdThreadWatchdog *AwdWatchdogCreate(uint32_t dogId, uint32_t timeout, AwatchdogCallbackFunc callback,
-    enum AwdWatchdogType type);
+AwdThreadWatchdog* AwdWatchdogCreate(
+    uint32_t dogId, uint32_t timeout, AwatchdogCallbackFunc callback, enum AwdWatchdogType type);
 struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
 
 #endif

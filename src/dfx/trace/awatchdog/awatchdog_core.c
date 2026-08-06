@@ -46,8 +46,9 @@ STATIC void AwdSubProcessInit(void)
         // sub process has been initialized
         return;
     }
-    AwdMonitorReset();  // reset thread id
-    g_awdWatchdogMgr.monitorStarted = false;  // set monitorStarted to false to restart monitor thread when create
+    // reset thread id
+    AwdMonitorReset();
+    g_awdWatchdogMgr.monitorStarted = false; // set monitorStarted to false to restart monitor thread when create
     AwdReleaseAllLock();
     g_forking = false;
 }
@@ -68,17 +69,17 @@ STATIC void AwdProcessInit(void)
 
 STATIC void AwdPrepareForFork(void)
 {
-    int32_t ret = pthread_atfork((ThreadAtFork)AwdProcessUnInit, (ThreadAtFork)AwdProcessInit,
-        (ThreadAtFork)AwdSubProcessInit);
+    int32_t ret =
+        pthread_atfork((ThreadAtFork)AwdProcessUnInit, (ThreadAtFork)AwdProcessInit, (ThreadAtFork)AwdSubProcessInit);
     if (ret != 0) {
         ADIAG_WAR("can not call pthread_atfork, ret=%d", ret);
     }
 }
 
-typedef drvError_t (*DrvGetPlatformInfo)(uint32_t *);
+typedef drvError_t (*DrvGetPlatformInfo)(uint32_t*);
 STATIC bool AwdCheckIsOnDeviceSide(void)
 {
-    void *handle = mmDlopen(DRIVER_LIBRARY_NAME, RTLD_LAZY);
+    void* handle = mmDlopen(DRIVER_LIBRARY_NAME, RTLD_LAZY);
     if (handle == NULL) {
         ADIAG_WAR("can not dlopen lib %s, reason:%s", DRIVER_LIBRARY_NAME, strerror(errno));
         return false;
@@ -145,15 +146,15 @@ STATIC DESTRUCTOR void AwatchdogExit(void)
  * @param [in]  type:          watchdog type
  * @return      atrace handle
  */
-AwdThreadWatchdog* AwdWatchdogCreate(uint32_t dogId, uint32_t timeout, AwatchdogCallbackFunc callback,
-    enum AwdWatchdogType type)
+AwdThreadWatchdog* AwdWatchdogCreate(
+    uint32_t dogId, uint32_t timeout, AwatchdogCallbackFunc callback, enum AwdWatchdogType type)
 {
     if (!g_awdWatchdogMgr.enable) {
         return NULL;
     }
     if (g_awdWatchdogMgr.monitorStarted == false) {
         // judge initialized first to avoid using atomic operations every time
-        if (AWD_ATOMIC_CMP_AND_SWAP(&g_awdWatchdogMgr.monitorStarted, false,  true)) {
+        if (AWD_ATOMIC_CMP_AND_SWAP(&g_awdWatchdogMgr.monitorStarted, false, true)) {
             /* Prevent duplicate initialization.
                Dog create may finished before monitor thread start, but timeout must be more than 1s.
                When watchdog timeout, monitor thread must have been started, so ignored. */
@@ -165,7 +166,7 @@ AwdThreadWatchdog* AwdWatchdogCreate(uint32_t dogId, uint32_t timeout, Awatchdog
             }
         }
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)AdiagMalloc(sizeof(AwdThreadWatchdog));
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)AdiagMalloc(sizeof(AwdThreadWatchdog));
     if (dog == NULL) {
         return NULL;
     }
@@ -178,7 +179,7 @@ AwdThreadWatchdog* AwdWatchdogCreate(uint32_t dogId, uint32_t timeout, Awatchdog
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_STATUS_INIT);
     ADIAG_INF("create watchdog for id : %u, tid : %d, timeout : %us", dog->dogId, dog->tid, timeout);
     // add to list after node init finished
-    AwdStatus ret = AdiagListInsert(&(g_awdWatchdogMgr.awd[type].newList), (void *)dog);
+    AwdStatus ret = AdiagListInsert(&(g_awdWatchdogMgr.awd[type].newList), (void*)dog);
     if (ret != ADIAG_SUCCESS) {
         ADIAG_SAFE_FREE(dog);
         ADIAG_ERR("add watchdog node for module : %u to new list failed", dogId);
@@ -192,7 +193,4 @@ AwdThreadWatchdog* AwdWatchdogCreate(uint32_t dogId, uint32_t timeout, Awatchdog
  * @param [in]  type:   watchdog type
  * @return      watchdog manager ptr
  */
-struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type)
-{
-    return &g_awdWatchdogMgr.awd[type];
-}
+struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type) { return &g_awdWatchdogMgr.awd[type]; }

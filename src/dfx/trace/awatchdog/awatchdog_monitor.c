@@ -21,17 +21,17 @@
 #define ADIAG_NS_TO_US 1000U
 #define ADIAG_US_TO_MS 1000U
 #define ADIAG_MS_TO_S 1000U
-#define AWD_THREAD_STACK_SIZE     128 * 1024
+#define AWD_THREAD_STACK_SIZE (128 * 1024)
 
 typedef struct AwdMonitorInfo {
-    uint32_t watchdogCount;           // monitor loop count
-    uint32_t watchdogPeriod;          // watchdogCount * 最大公约数 <= watchdogPeriod，相等时，watchdogCount 归零，执行一次监控
+    uint32_t watchdogCount; // monitor loop count
+    uint32_t watchdogPeriod; // watchdogCount * 最大公约数 <= watchdogPeriod，相等时，watchdogCount 归零，执行一次监控
     void (*watchdogFunc)(void);
 } AwdMonitorInfo;
 
-#define THREAD_STATUS_INIT          0
-#define THREAD_STATUS_RUN           1
-#define THREAD_STATUS_WAIT_EXIT     2
+#define THREAD_STATUS_INIT 0
+#define THREAD_STATUS_RUN 1
+#define THREAD_STATUS_WAIT_EXIT 2
 
 static AwdMonitorInfo g_awdMonitorInfo[AWD_WATCHDOG_TYPE_MAX] = {{0}};
 static int32_t g_awdMonitorThreadStatus = THREAD_STATUS_INIT;
@@ -79,7 +79,7 @@ STATIC INLINE void AwdMonitorResItem(void)
     }
 }
 
-STATIC void *AwdMonitorProcess(void *arg)
+STATIC void* AwdMonitorProcess(void* arg)
 {
     (void)arg;
     AwdMonitorGetPeriod();
@@ -95,8 +95,9 @@ STATIC void *AwdMonitorProcess(void *arg)
         if (duration >= period) {
             static bool warningFlag = true;
             if (warningFlag) {
-                ADIAG_WAR("awd monitor res period %uus is less than process duration %uus, may need to be increased",
-                    period, duration);
+                ADIAG_WAR(
+                    "awd monitor res period %uus is less than process duration %uus, may need to be increased", period,
+                    duration);
                 warningFlag = false;
             }
             start = start + duration;
@@ -106,7 +107,7 @@ STATIC void *AwdMonitorProcess(void *arg)
         (void)usleep(sleepTime);
         start = start + sleepTime;
     }
-    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
     (void)AdiagListDestroy(&awd->runList);
     (void)AdiagListDestroy(&awd->newList);
     return NULL;
@@ -117,7 +118,7 @@ STATIC INLINE AwdStatus AwdCreateMonitorThread(void)
     mmUserBlock_t thread;
     thread.procFunc = AwdMonitorProcess;
     thread.pulArg = NULL;
-    mmThreadAttr attr = { 0, 0, 0, 0, 0, 0, AWD_THREAD_STACK_SIZE };
+    mmThreadAttr attr = {0, 0, 0, 0, 0, 0, AWD_THREAD_STACK_SIZE};
     mmThread tid = 0;
     if (mmCreateTaskWithThreadAttr(&tid, &thread, &attr) != 0) {
         ADIAG_ERR("create task failed, strerr=%s.", strerror(errno));
@@ -128,7 +129,7 @@ STATIC INLINE AwdStatus AwdCreateMonitorThread(void)
     return AWD_SUCCESS;
 }
 
-STATIC INLINE bool CheckThreadExist(AwdThreadWatchdog *node)
+STATIC INLINE bool CheckThreadExist(AwdThreadWatchdog* node)
 {
     char dir[MAX_THREAD_TASK_PATH_LENGTH] = {0};
     int ret = sprintf_s(dir, MAX_THREAD_TASK_PATH_LENGTH, "/proc/%d/task/%d", node->pid, node->tid);
@@ -142,7 +143,7 @@ STATIC INLINE bool CheckThreadExist(AwdThreadWatchdog *node)
     return true;
 }
 
-STATIC void AwdProcessTimeout(AwdThreadWatchdog *node)
+STATIC void AwdProcessTimeout(AwdThreadWatchdog* node)
 {
     AWD_ATOMIC_TEST_AND_SET(&node->startCount, AWD_STATUS_INIT);
     // record timeout log to run info
@@ -152,9 +153,9 @@ STATIC void AwdProcessTimeout(AwdThreadWatchdog *node)
     }
 }
 
-STATIC AdiagStatus AwdMonitorThreadWatchdogPro(void *data)
+STATIC AdiagStatus AwdMonitorThreadWatchdogPro(void* data)
 {
-    AwdThreadWatchdog *node = (AwdThreadWatchdog *)data;
+    AwdThreadWatchdog* node = (AwdThreadWatchdog*)data;
     int32_t startCount = node->startCount;
     if (!CheckThreadExist(node)) {
         ADIAG_DBG("thread %d does not exist", node->tid);
@@ -185,10 +186,10 @@ STATIC AdiagStatus AwdMonitorThreadWatchdogPro(void *data)
     return AWD_SUCCESS;
 }
 
-STATIC INLINE AdiagStatus CheckNodeDestroyed(const void *nodeData, const void *data)
+STATIC INLINE AdiagStatus CheckNodeDestroyed(const void* nodeData, const void* data)
 {
     (void)data;
-    const AwdThreadWatchdog *dog = (const AwdThreadWatchdog *)nodeData;
+    const AwdThreadWatchdog* dog = (const AwdThreadWatchdog*)nodeData;
     if (dog->startCount == AWD_STATUS_DESTROYED) {
         return ADIAG_SUCCESS;
     }
@@ -197,17 +198,14 @@ STATIC INLINE AdiagStatus CheckNodeDestroyed(const void *nodeData, const void *d
 
 STATIC INLINE void AwdMonitorThreadWatchdog(void)
 {
-    AwdWatchDog *awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
     // move watchdog node from newList to runList
     AdiagListMove(&awd->newList, &awd->runList);
 
     (void)AdiagListClearAndProcessNoLock(&awd->runList, CheckNodeDestroyed, NULL, AwdMonitorThreadWatchdogPro);
 }
 
-void AwdMonitorReset(void)
-{
-    g_awdMonitorThreadStatus = THREAD_STATUS_WAIT_EXIT;
-}
+void AwdMonitorReset(void) { g_awdMonitorThreadStatus = THREAD_STATUS_WAIT_EXIT; }
 
 AwdStatus AwdMonitorInit(void)
 {

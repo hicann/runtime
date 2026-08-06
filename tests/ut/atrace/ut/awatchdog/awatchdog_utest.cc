@@ -22,12 +22,17 @@
 #include "ascend_hal.h"
 
 extern "C" {
+    typedef struct AwdWatchDog {
+        struct AdiagList runList;
+        struct AdiagList newList;
+    } AwdWatchDog;
     void AwatchdogInit(void);
     void AwatchdogExit(void);
     AwdStatus AwdMonitorInit(void);
     void AwdProcessUnInit(void);
     void AwdProcessInit(void);
     void AwdSubProcessInit(void);
+    struct AwdWatchDog* AwdGetWatchDog(enum AwdWatchdogType type);
 }
 class AwatchdogUtest: public testing::Test {
 protected:
@@ -163,6 +168,17 @@ TEST_F(AwatchdogUtest, MonitorStartFailureCanRetry)
     MOCKER(AdiagListInsert).stubs().will(returnValue(ADIAG_SUCCESS));
 
     CreateAndDestroyTwoWatchdogs();
+}
+
+TEST_F(AwatchdogUtest, SubProcessInitAfterProcessUnInitAllowsListReuse)
+{
+    AwdProcessUnInit();
+    AwdSubProcessInit();
+
+    AwdWatchDog* awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+    AwdThreadWatchdog* dog = static_cast<AwdThreadWatchdog*>(AdiagMalloc(sizeof(AwdThreadWatchdog)));
+    ASSERT_NE(dog, nullptr);
+    EXPECT_EQ(ADIAG_SUCCESS, AdiagListInsert(&awd->newList, dog));
 }
 
 // TEST_F(AwatchdogUtest, TestDlopenFailed)

@@ -14,7 +14,7 @@
 
 AwdHandle AwdCreateThreadWatchdog(uint32_t dogId, uint32_t timeout, AwatchdogCallbackFunc callback)
 {
-    AwdThreadWatchdog *dog = AwdWatchdogCreate(dogId, timeout, callback, AWD_WATCHDOG_TYPE_THREAD);
+    AwdThreadWatchdog* dog = AwdWatchdogCreate(dogId, timeout, callback, AWD_WATCHDOG_TYPE_THREAD);
     if (dog == NULL) {
         return AWD_INVALID_HANDLE;
     }
@@ -26,6 +26,6 @@ void AwdDestroyThreadWatchdog(AwdHandle handle)
     if (handle == AWD_INVALID_HANDLE) {
         return;
     }
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     AWD_ATOMIC_TEST_AND_SET(&dog->startCount, AWD_STATUS_DESTROYED);
 }
