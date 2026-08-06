@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "task.hpp"
+#include "reduce_task.h"
 
 namespace cce {
 namespace runtime {
@@ -16,6 +17,19 @@ uint32_t GetSendSqeNum(TaskInfo* const taskInfo)
 {
     UNUSED(taskInfo);
     return 1U;
+}
+
+rtError_t ReduceAsyncV2TaskInit(
+    TaskInfo* const taskInfo, uint32_t cpyType, const void* srcAddr, void* desAddr, const uint64_t cpySize,
+    void* const overflowAddr)
+{
+    UNUSED(taskInfo);
+    UNUSED(cpyType);
+    UNUSED(srcAddr);
+    UNUSED(desAddr);
+    UNUSED(cpySize);
+    UNUSED(overflowAddr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 } // namespace runtime

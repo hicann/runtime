@@ -25,6 +25,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump/dump_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
@@ -241,12 +242,7 @@ set(runtime_src_kernel_list
 )
 
 set(libruntime_other_files
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/common/common_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
     ${libruntime_profile_src_files}
 )

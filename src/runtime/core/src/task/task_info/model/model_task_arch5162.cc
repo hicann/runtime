@@ -23,9 +23,45 @@
 #include "model_maintaince_task.h"
 #include "stub_task.hpp"
 #include "runtime_task_manager.h"
+#include "kernel_fusion_task.h"
+#include "model_to_aicpu_task.h"
+#include "model_update_task.h"
 
 namespace cce {
 namespace runtime {
+
+rtError_t KernelFusionTaskInit(TaskInfo* const taskInfo, const FusionFlag fusFlag)
+{
+    UNUSED(taskInfo);
+    UNUSED(fusFlag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ModelToAicpuTaskInit(
+    TaskInfo* taskInfo, const uint32_t modelIndex, const uint32_t controlType, const uint32_t exeFlag,
+    const uint64_t modelPtr)
+{
+    UNUSED(taskInfo);
+    UNUSED(modelIndex);
+    UNUSED(controlType);
+    UNUSED(exeFlag);
+    UNUSED(modelPtr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ModelTaskUpdateInit(
+    TaskInfo* taskInfo, uint16_t desStreamId, uint32_t destaskId, uint16_t exeStreamId, void* devCopyMem,
+    uint32_t tilingTabLen, rtMdlTaskUpdateInfo_t* para)
+{
+    UNUSED(taskInfo);
+    UNUSED(desStreamId);
+    UNUSED(destaskId);
+    UNUSED(exeStreamId);
+    UNUSED(devCopyMem);
+    UNUSED(tilingTabLen);
+    UNUSED(para);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 #if F_DESC("ModelExecuteTask")
 

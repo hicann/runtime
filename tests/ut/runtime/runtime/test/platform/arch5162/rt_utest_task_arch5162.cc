@@ -42,6 +42,10 @@
 #include "task_res.hpp"
 #include "davinci_kernel_task.h"
 #include "event.hpp"
+#include "reduce_task.h"
+#include "kernel_fusion_task.h"
+#include "model_to_aicpu_task.h"
+#include "model_update_task.h"
 
 using namespace cce::runtime;
 
@@ -1339,4 +1343,29 @@ TEST_F(Arch5162TaskTest, ModelMaintainceTaskRegister_AllFields)
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_MODEL_MAINTAINCE], nullptr);
+}
+
+TEST_F(Arch5162TaskTest, ReduceAsyncV2TaskInit_NotSupport)
+{
+    rtError_t ret = ReduceAsyncV2TaskInit(nullptr, 0U, nullptr, nullptr, 0ULL, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162TaskTest, KernelFusionTaskInit_NotSupport)
+{
+    rtError_t ret = KernelFusionTaskInit(nullptr, FUSION_START);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162TaskTest, ModelToAicpuTaskInit_NotSupport)
+{
+    rtError_t ret = ModelToAicpuTaskInit(nullptr, 0U, 0U, 0U, 0ULL);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162TaskTest, ModelTaskUpdateInit_NotSupport)
+{
+    rtMdlTaskUpdateInfo_t para = {};
+    rtError_t ret = ModelTaskUpdateInit(nullptr, 0U, 0U, 0U, nullptr, 0U, &para);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
