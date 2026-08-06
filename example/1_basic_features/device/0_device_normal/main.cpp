@@ -63,6 +63,18 @@ namespace {
         aclDestroyScalar(alpha);
         aclDestroyTensor(out);
     }
+
+    void GetAndPrintResult(void *outDeviceAddr, const std::vector<int64_t> &outShape)
+    {
+        auto size = GetShapeSize(outShape);
+        std::vector<float> resultData(size, 0);
+        CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, 
+            size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
+
+        for (int64_t i = 0; i < size; i++) {
+        INFO_LOG("result[%ld] is: %f", i, resultData[i]);
+        }
+    }
 } // namespace
 
 int32_t main(int argc, char const *argv[])
@@ -87,6 +99,7 @@ int32_t main(int argc, char const *argv[])
     alpha = aclCreateScalar(&alphaValue, aclDataType::ACL_FLOAT);
     if (alpha == nullptr) {
       ERROR_LOG("Create alpha Scalar failed.");
+      return -1;
     }
 
     CHECK_ERROR(CreateAclTensor(outHostData, outShape, &outDeviceAddr, aclDataType::ACL_FLOAT, &out));
@@ -108,14 +121,7 @@ int32_t main(int argc, char const *argv[])
     CHECK_ERROR(aclrtSynchronizeStream(stream));
 
     // Obtain the execution result of the operator and copy the result from the device memory to the host
-    auto size = GetShapeSize(outShape);
-    std::vector<float> resultData(size, 0);
-    CHECK_ERROR(aclrtMemcpy(resultData.data(), resultData.size() * sizeof(resultData[0]), outDeviceAddr, 
-        size * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST));
-
-    for (int64_t i = 0; i < size; i++) {
-      INFO_LOG("result[%ld] is: %f", i, resultData[i]);
-    }
+    GetAndPrintResult(outDeviceAddr, outShape);
 
     CHECK_ERROR(aclrtSynchronizeDevice());
 
