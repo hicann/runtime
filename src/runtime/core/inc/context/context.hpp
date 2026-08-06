@@ -424,9 +424,6 @@ public:
 
     rtError_t GetFailureError() const { return failureError_.Value(); }
 
-    bool GetAicpuExecuteModel() const { return containAicpuExecuteModel_; }
-    void SetAicpuExecuteModel() { containAicpuExecuteModel_ = true; }
-
     const std::list<Stream*> StreamList_() const { return streams_; }
 
     rtError_t SyncStreamsWithTimeout(const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start) const;
@@ -561,7 +558,6 @@ private:
     std::vector<std::pair<bool, int64_t>> sysParamOpt_;
     std::mutex sysParamOptLock_;
     Atomic<rtError_t> failureError_;
-    bool containAicpuExecuteModel_ = false;
     Atomic<rtError_t> lastErr_;
     std::mutex captureLock_;
     rtStreamCaptureMode captureMode_{RT_STREAM_CAPTURE_MODE_MAX};

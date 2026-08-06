@@ -259,7 +259,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_memcpy_fail)
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     Stream* stream;
     stream = (Stream*)device->PrimaryStream_();
-    stream->models_.clear();
+    stream->SetModel(nullptr);
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
@@ -447,7 +447,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_rollback)
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     Stream* stream;
     stream = (Stream*)device->PrimaryStream_();
-    stream->models_.clear();
+    stream->SetModel(nullptr);
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);

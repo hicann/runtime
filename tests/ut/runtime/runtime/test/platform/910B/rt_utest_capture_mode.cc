@@ -2473,7 +2473,7 @@ TEST_F(CloudV2CaptureModelTest, task_get_seq_id)
     EXPECT_EQ(id, 2);
 
     free(taskInfo);
-    stm->DelModel(&model);
+    stm->SetModel(nullptr);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 

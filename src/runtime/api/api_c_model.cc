@@ -81,7 +81,7 @@ rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
         (bindStream != nullptr) && ((bindStream->Flags() & RT_STREAM_PERSISTENT) == 0), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "stm", "Non-persistent stream cannot be bound to a model");
-    if ((bindStream != nullptr) && (bindStream->GetModelNum() != 0)) {
+    if ((bindStream != nullptr) && bindStream->IsModelStream()) {
         const Model* const bindModel = bindStream->Model_();
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1007, bindStream->Id_(),

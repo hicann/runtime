@@ -80,9 +80,9 @@ rtError_t InternalLaunchWithKernelAndArgs(
     kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(argsInfo, &taskCfg, flag);
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%u, stream_id=%d, task_id=%u, model_num=%u, NonSupportModelCompile=%u, "
+        "device_id=%u, stream_id=%d, task_id=%u, isModelStream=%d, NonSupportModelCompile=%u, "
         "isNoNeedH2DCopy=%u, cpuParamHeadOffset=%zu, kernel_type=%u, flag=0x%x, timeout=%" PRIu64 "us, blkdim=%u.",
-        curCtx->Device_()->Id_(), stm->Id_(), kernelTask->id, stm->GetModelNum(), stm->NonSupportModelCompile(),
+        curCtx->Device_()->Id_(), stm->Id_(), kernelTask->id, stm->IsModelStream(), stm->NonSupportModelCompile(),
         argsInfo->isNoNeedH2DCopy, cpuParamHeadOffset, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
         kernelTask->u.aicpuTaskInfo.comm.dim);
     error = curCtx->Device_()->SubmitTask(kernelTask, curCtx->TaskGenCallback_());
@@ -135,8 +135,8 @@ rtError_t InternalLaunchWithArgs(
         RT_LOG_INFO,
         "Force flag device_id=%u, stream_id=%d, task_id=%u, model_num=%u, NonSupportModelCompile=%u "
         "isNoNeedH2DCopy=%u, kernl_type=%u, flag=0x%x, timeout=%" PRIu64 "us, kernelFlag=0x%x, blkdim=%u",
-        curCtx->Device_()->Id_(), streamId, kernelTask->id, stm->GetModelNum(), stm->NonSupportModelCompile(),
-        argsInfo->isNoNeedH2DCopy, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
+        curCtx->Device_()->Id_(), streamId, kernelTask->id, (stm->IsModelStream() ? 1U : 0U),
+        stm->NonSupportModelCompile(), argsInfo->isNoNeedH2DCopy, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
         kernelTask->u.aicpuTaskInfo.comm.kernelFlag, kernelTask->u.aicpuTaskInfo.comm.dim);
 
     error = curCtx->Device_()->SubmitTask(kernelTask, curCtx->TaskGenCallback_());

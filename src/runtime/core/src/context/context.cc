@@ -346,7 +346,6 @@ void Context::ResetResourceFieldsAfterTearDown()
     models_.clear();
     streams_.clear();
     device_ = nullptr;
-    containAicpuExecuteModel_ = false;
     failureError_.Set(RT_ERROR_NONE);
     lastErr_.Set(ACL_RT_SUCCESS);
     captureMode_ = RT_STREAM_CAPTURE_MODE_MAX;
@@ -2008,7 +2007,7 @@ rtError_t Context::ModelUnbindStream(Model* const mdl, Stream* const stm)
         error, COMPLETE, "Failed to unbind the stream from the model, model_id=%u, stream_id=%d, retCode=%#x.", modelId,
         streamId, error);
 
-    if (stm->GetModelNum() == 0 && !(stm->IsAutoSplitSq() && stm->IsSlaveStream())) {
+    if (!stm->IsModelStream() && !(stm->IsAutoSplitSq() && stm->IsSlaveStream())) {
         streams_.push_back(stm);
     }
 COMPLETE:
@@ -2064,7 +2063,7 @@ rtError_t Context::ModelDelStream(Model* const mdl, Stream* const stm)
         error, "Failed to delete the stream from the model, model_id=%u, stream_id=%d, retCode=%#x.", modelId, streamId,
         error);
 
-    if (stm->GetModelNum() == 0) {
+    if (!stm->IsModelStream()) {
         streams_.push_back(stm);
     }
 
@@ -2093,7 +2092,6 @@ rtError_t Context::ModelAddEndGraph(Model* const mdl, Stream* const stm, const u
     rtError_t error;
     // rtSetSocVersion modify ThreadLocalContainer::socType_, not Runtime::socType_
     const uint32_t modelExecuteType = mdl->ModelExecuteType();
-    stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     if ((device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_EXECUTOR_WITH_QUEUE)) &&
         (!RtIsHeterogenous())) {
         bool useAicpuExcutor = false;
@@ -2114,7 +2112,7 @@ rtError_t Context::ModelAddEndGraph(Model* const mdl, Stream* const stm, const u
     if (device_->IsStarsPlatform() && (modelExecuteType != EXECUTOR_AICPU)) {
         const bool isBindThisModel = ((stm->Model_() != nullptr) && (stm->Model_()->Id_() == mdl->Id_()));
         COND_RETURN_AND_MSG_OUTER(
-            (stm->GetModelNum() == 0) || (!isBindThisModel), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017,
+            !stm->IsModelStream() || (!isBindThisModel), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017,
             "Adding an EndGraph flag to the stream bound to the model", "stream",
             "Stream " + std::to_string(stm->Id_()) + " must be bound to the model " + std::to_string(mdl->Id_()));
 
@@ -2245,7 +2243,6 @@ rtError_t Context::ModelExit(Model* const mdl, Stream* const stm)
     COND_RETURN_AND_MSG_OUTER(
         modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum",
         "The model must exit only once");
-    stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND, ErrorCode::EE1017, "Model exiting", "stream",
         "Stream " + std::to_string(stm->Id_()) + " must be bound to a model");

@@ -1297,8 +1297,7 @@ TEST_F(DavidTaskRecycleTest, RecycleModeLabel)
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     Label* realLabel = rt_ut::UnwrapOrNull<Label>(label);
     realLabel->SetLabelDevAddr((void*)(&val));
-    streamObj->models_.insert(realModel);
-    streamObj->SetLatestModlId(realModel->Id_());
+    streamObj->SetModel(realModel);
     streamObj->InsertLabelList(realLabel);
 
     uint32_t pos = UINT32_MAX;
@@ -1313,7 +1312,7 @@ TEST_F(DavidTaskRecycleTest, RecycleModeLabel)
     EXPECT_EQ(pos, 0);
 
     RecycleModelBindStreamAllTask(streamObj, true);
-    streamObj->models_.erase(realModel);
+    streamObj->SetModel(nullptr);
 
     error = rtLabelDestroy(label);
     EXPECT_EQ(error, RT_ERROR_NONE);

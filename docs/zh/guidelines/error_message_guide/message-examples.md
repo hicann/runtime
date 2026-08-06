@@ -69,8 +69,7 @@
 - 3.The stream is bound to more than one mdlRI. Size: %u
 - 4.The stream is already bound.
 - 5.The AI CPU stream is reused.
-- 6.The number of models exceeds the upper limit 256.
-- 7.The model has been bound to another stream.
+- 6.The model has been bound to another stream.
 
 **suggestion.Solution:**
 

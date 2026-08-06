@@ -196,8 +196,6 @@ TEST_F(ChipModelTest, model_stream_bind_max)
     rtModel_t model[257];
     rtStream_t stream;
     uint32_t modelId;
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_MODEL_STREAM_REUSE);
     rtChipType_t oldChipType = Runtime::Instance()->GetChipType();
     Runtime::Instance()->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
@@ -226,7 +224,6 @@ TEST_F(ChipModelTest, model_stream_bind_max)
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    device->SetTschVersion(version);
     Runtime::Instance()->SetChipType(oldChipType);
     GlobalContainer::SetRtChipType(oldChipType);
 
@@ -404,10 +401,6 @@ TEST_F(ChipModelTest, model_stream_offline_ok)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Device* device = (Device*)((Context*)ctx)->Device_();
-    Device* heldDevice = rtInstance->DeviceRetain(device->Id_(), device->DevGetTsId());
-    ASSERT_EQ(heldDevice, device);
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_MODEL_STREAM_REUSE);
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetRunMode)
         .stubs()
         .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
@@ -436,10 +429,8 @@ TEST_F(ChipModelTest, model_stream_offline_ok)
     error = rtCtxDestroy(ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    heldDevice->SetTschVersion(version);
     rtInstance->SetChipType(oldChipType);
     GlobalContainer::SetRtChipType(oldChipType);
-    rtInstance->DeviceRelease(heldDevice);
 }
 
 TEST_F(ChipModelTest, model_stream_offline_fail)
@@ -454,10 +445,6 @@ TEST_F(ChipModelTest, model_stream_offline_fail)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Device* device = (Device*)((Context*)ctx)->Device_();
-    Device* heldDevice = rtInstance->DeviceRetain(device->Id_(), device->DevGetTsId());
-    ASSERT_EQ(heldDevice, device);
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_MODEL_STREAM_REUSE);
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetRunMode)
         .stubs()
         .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
@@ -494,10 +481,8 @@ TEST_F(ChipModelTest, model_stream_offline_fail)
     error = rtCtxDestroy(ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    heldDevice->SetTschVersion(version);
     rtInstance->SetChipType(oldChipType);
     GlobalContainer::SetRtChipType(oldChipType);
-    rtInstance->DeviceRelease(heldDevice);
 }
 
 TEST_F(ChipModelTest, LoadCompleteByStreamPrep_UseDefaultStream_310P)
@@ -511,10 +496,6 @@ TEST_F(ChipModelTest, LoadCompleteByStreamPrep_UseDefaultStream_310P)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Device* device = (Device*)((Context*)ctx)->Device_();
-    Device* heldDevice = rtInstance->DeviceRetain(device->Id_(), device->DevGetTsId());
-    ASSERT_EQ(heldDevice, device);
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_MODEL_STREAM_REUSE);
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetRunMode)
         .stubs()
         .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
@@ -551,8 +532,6 @@ TEST_F(ChipModelTest, LoadCompleteByStreamPrep_UseDefaultStream_310P)
     error = rtCtxDestroy(ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    heldDevice->SetTschVersion(version);
     rtInstance->SetChipType(oldChipType);
     GlobalContainer::SetRtChipType(oldChipType);
-    rtInstance->DeviceRelease(heldDevice);
 }

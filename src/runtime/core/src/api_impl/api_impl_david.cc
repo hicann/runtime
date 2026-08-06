@@ -474,12 +474,11 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    const bool supportFlag =
-        (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && (curStm->GetModelNum() != 0);
+    const bool supportFlag = (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support current mode bind stm, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), (curStm->GetModelNum() != 0));
+        evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
@@ -527,13 +526,13 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
     const bool supportFlag =
-        (evt->IsNewMode()) || ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && (curStm->GetModelNum() != 0));
+        (evt->IsNewMode()) || ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && curStm->IsModelStream());
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support current mode bind stm, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), (curStm->GetModelNum() != 0));
+        evt->GetEventFlag(), curStm->IsModelStream());
     // David硬件默认event reset沿用历史no-op；software event reset需要下发写0任务，不能提前返回。
-    if ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && evt->IsHardwareMode() && (curStm->GetModelNum() == 0U)) {
+    if ((evt->GetEventFlag() == RT_EVENT_DEFAULT) && evt->IsHardwareMode() && !curStm->IsModelStream()) {
         return RT_ERROR_NONE;
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
@@ -618,12 +617,11 @@ rtError_t ApiImplDavid::StreamWaitEvent(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    const bool supFlag =
-        ((evt->IsNewMode()) || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && (curStm->GetModelNum() != 0);
+    const bool supFlag = ((evt->IsNewMode()) || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support current mode bind stream, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), (curStm->GetModelNum() != 0));
+        evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
@@ -958,7 +956,6 @@ rtError_t ApiImplDavid::ModelExit(Model* const mdl, Stream* const stm)
     COND_RETURN_AND_MSG_OUTER(
         modelExitNum >= 1U, RT_ERROR_MODEL_EXIT, ErrorCode::EE1011, "Model exiting", modelExitNum, "modelExitNum",
         RtFmtMsg("Model (model_id=%u) must exit only once", mdl->Id_()));
-    stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         stm->Model_() == nullptr, RT_ERROR_MODEL_EXIT_STREAM_UNBIND, ErrorCode::EE1017, "Model exiting", "stm",
         RtFmtMsg("Stream (stream_id=%d) is not bound to any model", stm->Id_()));
@@ -1592,11 +1589,11 @@ rtError_t ApiImplDavid::StreamSwitchEx(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "stm->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
-        trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "trueStream->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStream->Id_()));
     return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType, curCtx);

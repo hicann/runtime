@@ -484,7 +484,6 @@ TEST_F(ArgManageUbTest, persistent_force_copy)
 
     Model* mdl = new (std::nothrow) Model();
     stm->SetModel(mdl);
-    stm->SetLatestModlId(mdl->Id_());
     mdl->context_ = stm->Context_();
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL)).then(returnValue(1)).then(returnValue(NULL));
@@ -506,8 +505,8 @@ TEST_F(ArgManageUbTest, persistent_force_copy)
     EXPECT_EQ(result.handle, nullptr);
     EXPECT_EQ(result.stmArgPos, UINT32_MAX);
 
-    stm->DelModel(mdl);
-    stm->models_.clear();
+    stm->SetModel(nullptr);
+    stm->SetModel(nullptr);
     mdl->context_ = nullptr;
     delete mdl;
     stm->ReleaseStreamArgRes();
@@ -635,13 +634,13 @@ static void CheckNoMixRuleIgnoresStreamState(DavidStream* stm)
 {
     uint32_t savedFlags = stm->flags_;
     stm->flags_ &= ~(RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT);
-    stm->models_.clear();
+    stm->SetModel(nullptr);
     ExpectNeedCopyPair(stm, LoadPolicy::LP_NO_MIX);
-    stm->models_.insert(reinterpret_cast<Model*>(0x1));
+    stm->SetModel(reinterpret_cast<Model*>(0x1));
     ExpectNeedCopyPair(stm, LoadPolicy::LP_NO_MIX);
     stm->flags_ |= (RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT);
     ExpectNeedCopyPair(stm, LoadPolicy::LP_NO_MIX);
-    stm->models_.clear();
+    stm->SetModel(nullptr);
     stm->flags_ = savedFlags;
 }
 
@@ -649,11 +648,11 @@ static void CheckMixRuleIgnoresStreamState(DavidStream* stm)
 {
     uint32_t savedFlags = stm->flags_;
     stm->flags_ &= ~(RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT);
-    stm->models_.clear();
+    stm->SetModel(nullptr);
     ExpectNeedCopyPair(stm, LoadPolicy::LP_MIX);
-    stm->models_.insert(reinterpret_cast<Model*>(0x2));
+    stm->SetModel(reinterpret_cast<Model*>(0x2));
     ExpectNeedCopyPair(stm, LoadPolicy::LP_MIX);
-    stm->models_.clear();
+    stm->SetModel(nullptr);
     stm->flags_ = savedFlags;
 }
 

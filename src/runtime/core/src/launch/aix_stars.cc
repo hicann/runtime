@@ -596,7 +596,7 @@ rtError_t StreamLaunchKernelV2(
             "Mix Failed to load args, stream_id=%d,"
             " retCode=%#x.",
             stm->Id_(), error);
-        mixOpt = (stm->GetModelNum() == 0U);
+        mixOpt = !stm->IsModelStream();
         copyFlag = false;
     } else if (
         ((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) || (!stm->isHasPcieBar_) ||
@@ -736,7 +736,7 @@ rtError_t StreamLaunchKernelV1(
         TIMESTAMP_END(rtKernelLaunch_ArgLoadForMix);
         ERROR_GOTO_MSG_INNER(
             error, ERROR_RECYCLE, "Mix Failed to load args , stream_id=%d, retCode=%#x.", stm->Id_(), error);
-        mixOpt = (stm->GetModelNum() == 0U);
+        mixOpt = !stm->IsModelStream();
         copyFlag = false;
     } else if (
         ((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) || (!stm->isHasPcieBar_) ||
@@ -875,7 +875,7 @@ rtError_t StreamLaunchKernelWithHandle(
             "Mix Failed to load args, stream_id=%d,"
             " retCode=%#x.",
             stm->Id_(), error);
-        mixOpt = (stm->GetModelNum() == 0U);
+        mixOpt = !stm->IsModelStream();
         copyFlag = false;
     } else if (
         ((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) || (!stm->isHasPcieBar_) ||

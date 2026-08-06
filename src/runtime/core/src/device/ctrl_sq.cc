@@ -277,7 +277,6 @@ rtError_t CtrlSQ::SendModelAbortMsg(Model* const mdl)
 rtError_t CtrlSQ::SendModelLoadCompleteMsg(const Model* const mdl, uint32_t firstTaskId)
 {
     RtCtrlMsgParam param = {};
-    GetStream()->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     param.taskType = TS_TASK_TYPE_MODEL_MAINTAINCE;
     param.modelMaintenanceParam = {
         MMT_MODEL_PRE_PROC, RtPtrToUnConstPtr<Model*>(mdl), GetStream(), RT_MODEL_HEAD_STREAM, firstTaskId};

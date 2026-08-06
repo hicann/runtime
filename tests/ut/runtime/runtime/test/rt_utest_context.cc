@@ -751,7 +751,7 @@ TEST_F(ContextTest, TearDownSkipsRestoringBoundStreamFailure)
     }
     EXPECT_FALSE(found);
 
-    stream->DelModel(&model);
+    stream->SetModel(nullptr);
     ctx->RestoreOwnedStream(stream);
     error = ctx->StreamDestroy(stream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);

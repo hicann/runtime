@@ -141,8 +141,6 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_DVPP_GRP_NEW] = {ACL_ERROR_RT_INTERNAL_ERROR, "create dvpp grp fail"};
     rtErrMap_[RT_ERROR_STREAM_BIND_GRP] = {ACL_ERROR_RT_PARAM_INVALID, "stream bind to dvpp grp"};
     rtErrMap_[RT_ERROR_REMOTE_SQID_DUPLICATE] = {ACL_ERROR_RT_INTERNAL_ERROR, "remote sq id repeatedly"};
-    rtErrMap_[RT_ERROR_STREAM_REUSE_LIMIT_MODEL_NUM] = {
-        ACL_ERROR_RT_STREAM_MODEL, "models number exceeds the upper limit 256"};
     rtErrMap_[RT_ERROR_STREAM_ABORT] = {ACL_ERROR_RT_STREAM_ABORT, "stream abort"};
     rtErrMap_[RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL] = {ACL_ERROR_RT_STREAM_ABORT, "stream abort"};
     rtErrMap_[RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL] = {ACL_ERROR_RT_STREAM_ABORT, "stream abort"};

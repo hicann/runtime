@@ -41,6 +41,7 @@
 #include "stars_cond_isa_define.hpp"
 #include "thread_local_container.hpp"
 #include "raw_device.hpp"
+#include "ctrl_sq.hpp"
 #include "task_execute_time.h"
 #include "capture_model_utils.hpp"
 #include "stars_cond_isa_helper.hpp"
@@ -139,6 +140,27 @@ TEST_F(StarsTaskTest, CheckSqeSize)
     EXPECT_EQ(sizeof(RtStarsRdmaSinkSqe1), sqeSize);
     EXPECT_EQ(sizeof(RtStarsRdmaSinkSqe2), sqeSize);
     EXPECT_EQ(sizeof(RtStarsStreamResetHeadSqe), sqeSize);
+}
+
+TEST_F(StarsTaskTest, EnterBindStreamFailureClearsModel)
+{
+    rtModel_t modelHandle = nullptr;
+    rtError_t ret = rtModelCreate(&modelHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+
+    Model* model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    ASSERT_NE(model, nullptr);
+    ASSERT_TRUE(dev_->IsStarsPlatform());
+    ASSERT_TRUE(dev_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ));
+
+    MOCKER_CPP(&CtrlSQ::SendModelBindMsg).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ret = model->EnterBindStream(stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(stream_->Model_(), nullptr);
+    EXPECT_FALSE(stream_->GetBindFlag());
+
+    ret = rtModelDestroy(modelHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(StarsTaskTest, StreamSwitch)
@@ -310,7 +332,7 @@ TEST_F(StarsTaskTest, RdmaSink)
 
     ret = rtModelUnbindStream(model, streamHandle);
     EXPECT_NE(ret, ACL_RT_SUCCESS);
-    stream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    stream->SetModel(nullptr);
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rt_ut::UnwrapOrNull<Model>(model)->ModelRemoveStream(stream);
@@ -353,7 +375,7 @@ TEST_F(StarsTaskTest, ModelExecute)
     ret = rtModelUnbindStream(model, headSreamHandle);
     EXPECT_NE(ret, ACL_RT_SUCCESS);
 
-    headSream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    headSream->SetModel(nullptr);
     ret = rtStreamDestroy(headSreamHandle);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -389,7 +411,7 @@ TEST_F(StarsTaskTest, ModelExecute_failed)
     ret = rtModelUnbindStream(model, headSreamHandle);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
-    headSream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    headSream->SetModel(nullptr);
     ret = rtStreamDestroy(headSreamHandle);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -425,7 +447,7 @@ TEST_F(StarsTaskTest, FuncCallAllocDevMem_devMem_failed)
     ret = rtModelUnbindStream(model, headSreamHandle);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
-    headSream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    headSream->SetModel(nullptr);
     ret = rtStreamDestroy(headSreamHandle);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1301,7 +1323,7 @@ TEST_F(StarsTaskTest, stars_label_switch_by_index)
     error = rtModelUnbindStream(model, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    streamObj->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    streamObj->SetModel(nullptr);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rt_ut::UnwrapOrNull<Model>(model)->ModelRemoveStream(streamObj);

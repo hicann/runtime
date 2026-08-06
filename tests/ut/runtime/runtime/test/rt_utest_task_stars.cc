@@ -142,7 +142,7 @@ void CleanupConstructTaskModelStream(rtModel_t model, rtStream_t stream)
     EXPECT_NE(modelObj, nullptr);
     EXPECT_NE(streamObj, nullptr);
     if ((modelObj != nullptr) && (streamObj != nullptr)) {
-        streamObj->DelModel(modelObj);
+        streamObj->SetModel(nullptr);
         streamObj->SetBindFlag(false);
         modelObj->ModelRemoveStream(streamObj);
     }
@@ -340,7 +340,7 @@ TEST_F(StarsTaskTest, RdmaSink)
 
     ret = rtModelUnbindStream(model, streamHandle);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
-    stream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    stream->SetModel(nullptr);
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rt_ut::UnwrapOrNull<Model>(model)->ModelRemoveStream(stream);
@@ -414,7 +414,6 @@ TEST_F(StarsTaskTest, ModelExecute_1)
     ToConstructSqe(task, command);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     TaskUnInitProc(task);
-
     CleanupConstructTaskModelStream(model, headSreamHandle);
 }
 
@@ -441,7 +440,6 @@ TEST_F(StarsTaskTest, ModelExecute_failed)
     ret = ModelExecuteTaskInit(
         &mdlExecTask, rt_ut::UnwrapOrNull<Model>(model), rt_ut::UnwrapOrNull<Model>(model)->Id_(), 0);
     (void)ret;
-
     CleanupConstructTaskModelStream(model, headSreamHandle);
 }
 
@@ -468,7 +466,6 @@ TEST_F(StarsTaskTest, FuncCallAllocDevMem_devMem_failed)
     ret = ModelExecuteTaskInit(
         &mdlExecTask, rt_ut::UnwrapOrNull<Model>(model), rt_ut::UnwrapOrNull<Model>(model)->Id_(), 0);
     (void)ret;
-
     CleanupConstructTaskModelStream(model, headSreamHandle);
 }
 

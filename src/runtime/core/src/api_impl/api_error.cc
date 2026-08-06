@@ -2537,7 +2537,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, co
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
         if (stm != nullptr) {
             COND_RETURN_AND_MSG_OUTER(
-                stm->GetModelNum() != 0U, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
+                stm->IsModelStream(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
                 "Checking asynchronous memory copy parameters",
                 RtFmtMsg(
                     "If the stream is a model stream,"
@@ -3945,7 +3945,7 @@ rtError_t ApiErrorDecorator::ModelExecute(Model* const mdl, Stream* const stm, c
         "greater than or equal to -1 and not equal to 0");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Executing the model running instance");
     COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && (stm->GetModelNum() != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        (stm != nullptr) && stm->IsModelStream(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Executing the model running instance", "stm", "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER(
         (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
@@ -4003,7 +4003,7 @@ rtError_t ApiErrorDecorator::ModelExecuteAsync(Model* const mdl, Stream* const s
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         mdl, RT_ERROR_INVALID_VALUE, "Asynchronously executing the model running instance");
     COND_RETURN_AND_MSG_OUTER(
-        (stm != nullptr) && (stm->GetModelNum() != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        (stm != nullptr) && stm->IsModelStream(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Asynchronously executing the model running instance", "stm",
         "The current stream cannot be the same as the model stream");
     COND_RETURN_AND_MSG_OUTER(

@@ -1522,6 +1522,35 @@ TEST_F(ModelTest, model_aicpu_stream_reuse)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ModelTest, model_del_aicpu_stream_clears_model)
+{
+    rtModel_t model = nullptr;
+    rtStream_t stream = nullptr;
+    rtError_t error = rtModelCreate(&model, 0);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_AICPU);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    Model* modelObj = rt_ut::UnwrapOrNull<Model>(model);
+    Stream* streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(modelObj, nullptr);
+    ASSERT_NE(streamObj, nullptr);
+
+    error = modelObj->AddStream(streamObj, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(streamObj->Model_(), modelObj);
+
+    error = modelObj->DelStream(streamObj);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(streamObj->Model_(), nullptr);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ModelTest, load_comple_81)
 {
     rtError_t error = RT_ERROR_NONE;

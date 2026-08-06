@@ -101,7 +101,7 @@ Model::~Model() noexcept
     const std::list<Stream*> streamsCpy(streams_);
     for (Stream* const streamObj : streamsCpy) {
         (void)UnbindStream(streamObj, false);
-        if (streamObj->GetModelNum() == 0 && !(streamObj->IsAutoSplitSq() && streamObj->IsSlaveStream())) {
+        if (!streamObj->IsModelStream() && !(streamObj->IsAutoSplitSq() && streamObj->IsSlaveStream())) {
             context_->InsertStreamList(streamObj);
         }
     }
@@ -399,13 +399,7 @@ rtError_t Model::CheckBindStream(const Stream* const streamIn) const
     NULL_PTR_RETURN_MSG(streamIn, RT_ERROR_STREAM_NULL);
     RT_LOG(RT_LOG_DEBUG, "Bind-Stream stream start, stream_id=%d.", streamIn->Id_());
     const int32_t streamId = streamIn->Id_();
-    if (streamIn->GetModelNum() >= RT_MAX_MODELS_IN_ONE_STREAM) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The number of models exceeds the upper limit 256");
-        return RT_ERROR_STREAM_REUSE_LIMIT_MODEL_NUM;
-    }
-
-    const bool isBindDup = (streamIn->Model_() != nullptr);
-    if (isBindDup) {
+    if (streamIn->Model_() != nullptr) {
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1007, streamId,
             RtFmtMsg(
@@ -415,33 +409,6 @@ rtError_t Model::CheckBindStream(const Stream* const streamIn) const
         return RT_ERROR_STREAM_MODEL;
     }
 
-    const bool isAicpuStreamBind = ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) && (streamIn->GetModelNum() != 0U);
-    if (isAicpuStreamBind) {
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1007, streamId,
-            RtFmtMsg(
-                "The current AI CPU stream has been bound to a model and cannot be bound to the input model "
-                "(model_id=%u)",
-                Id_()));
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    bool isSupportStreamReuse = false;
-    Device* const dev = context_->Device_();
-    const bool isVersionFits = dev->GetTschVersion() >= static_cast<uint32_t>(TS_VERSION_MODEL_STREAM_REUSE);
-    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_REUSE) && (isVersionFits) &&
-        (dev->Driver_()->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE))) {
-        isSupportStreamReuse = true;
-    }
-
-    if (!isSupportStreamReuse && (streamIn->GetModelNum() != 0)) {
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1007, streamId,
-            RtFmtMsg(
-                "The current stream has been bound to a model and cannot be bound to the input model (model_id=%u)",
-                Id_()));
-        return RT_ERROR_STREAM_MODEL;
-    }
     return RT_ERROR_NONE;
 }
 
@@ -502,7 +469,7 @@ rtError_t Model::EnterBindStream(Stream* const streamIn, const uint32_t flag)
             error = execStream->Synchronize();
         }
         if (error != RT_ERROR_NONE) {
-            streamIn->DelModel(this);
+            streamIn->SetModel(nullptr);
             streamIn->SetBindFlag(false);
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
@@ -511,7 +478,7 @@ rtError_t Model::EnterBindStream(Stream* const streamIn, const uint32_t flag)
                 streamIn->Id_(), id_, static_cast<uint32_t>(error));
             return error;
         }
-        streamIn->SetDebugRegister(streamIn->IsModelsDebugRegister());
+        streamIn->SetDebugRegister(IsDebugRegister());
         return RT_ERROR_NONE;
     } else {
         Stream* const execStream = streamIn;
@@ -528,7 +495,6 @@ rtError_t Model::EnterBindStream(Stream* const streamIn, const uint32_t flag)
 
 rtError_t Model::BindStream(Stream* const streamIn, const uint32_t flag)
 {
-    streamIn->SetLatestModlId(id_);
     rtError_t error = CheckBindStream(streamIn);
     if (error != RT_ERROR_NONE) {
         return error;
@@ -542,7 +508,6 @@ rtError_t Model::BindStream(Stream* const streamIn, const uint32_t flag)
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {
         streamIn->SetModel(this);
-        this->Context_()->SetAicpuExecuteModel();
         return RT_ERROR_NONE;
     }
 
@@ -635,16 +600,15 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
     const int32_t streamId = streamIn->Id_();
     RT_LOG(RT_LOG_DEBUG, "unbind stream start, stream_id=%d, model_id=%d.", streamId, id_);
 
-    streamIn->SetLatestModlId(id_);
     COND_RETURN_AND_MSG_OUTER(
-        streamIn->GetModelNum() == 0 || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)),
-        RT_ERROR_STREAM_MODEL, ErrorCode::EE4002,
+        !streamIn->IsModelStream() || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)), RT_ERROR_STREAM_MODEL,
+        ErrorCode::EE4002,
         RtFmtMsg("The specified stream (stream_id=%d) is not bound to the current model (model_id=%d)", streamId, id_));
 
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {
         streams_.remove(streamIn);
-        streamIn->DelModel(this);
+        streamIn->SetModel(nullptr);
         headStreams_.remove(streamIn);
         return RT_ERROR_NONE;
     }
@@ -654,7 +618,7 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
         error, "Failed to unbind the stream from the model, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
 
-    streamIn->DelModel(this);
+    streamIn->SetModel(nullptr);
     streamIn->SetBindFlag(false);
     streamIn->EraseCacheStream();
     headStreams_.remove(streamIn);
@@ -664,7 +628,6 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
 
 rtError_t Model::AddStream(Stream* const streamIn, const uint32_t flag)
 {
-    streamIn->SetLatestModlId(id_);
     rtError_t error = CheckBindStream(streamIn);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
@@ -676,7 +639,6 @@ rtError_t Model::AddStream(Stream* const streamIn, const uint32_t flag)
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {
         streamIn->SetModel(this);
-        this->Context_()->SetAicpuExecuteModel();
         return RT_ERROR_NONE;
     }
 
@@ -694,10 +656,8 @@ rtError_t Model::DelStream(Stream* const streamIn)
     const int32_t streamId = streamIn->Id_();
     RT_LOG(RT_LOG_DEBUG, "del stream from model start, stream_id=%d, model_id=%d.", streamId, id_);
 
-    streamIn->SetLatestModlId(id_);
     COND_RETURN_ERROR_MSG_INNER(
-        streamIn->GetModelNum() == 0 || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)),
-        RT_ERROR_STREAM_MODEL,
+        !streamIn->IsModelStream() || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)), RT_ERROR_STREAM_MODEL,
         "Failed to unbind the stream from the model. The specified stream is not bound to the current model. "
         "stream_id=%d, specified model_id=%d.",
         streamId, id_);
@@ -705,13 +665,13 @@ rtError_t Model::DelStream(Stream* const streamIn)
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {
         streams_.remove(streamIn);
-        streamIn->DelModel(this);
+        streamIn->SetModel(nullptr);
         headStreams_.remove(streamIn);
         return RT_ERROR_NONE;
     }
 
     streams_.remove(streamIn);
-    streamIn->DelModel(this);
+    streamIn->SetModel(nullptr);
     streamIn->SetBindFlag(false);
     streamIn->EraseCacheStream();
     headStreams_.remove(streamIn);
@@ -997,7 +957,6 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream*& stream)
         RT_LOG(RT_LOG_DEBUG, "use default stream for model load");
     }
 
-    stream->SetLatestModlId(id_);
     if (dev->IsStarsPlatform()) {
         error = dev->Driver_()->MemCopySync(
             labelCountPtr_, sizeof(uint64_t), &labelCount_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
@@ -1106,11 +1065,6 @@ rtError_t Model::LoadCompleteByStream(void)
                 static_cast<uint32_t>(error));
             error = sinkStream->Synchronize();
             syncError = ((syncError == RT_ERROR_NONE) ? error : syncError);
-        }
-
-        sinkStream->SetLatestModlId(id_);
-        if (sinkStream->GetModelNum() > 1) {
-            RT_LOG(RT_LOG_EVENT, "stream[%d] reused by model[%d].", sinkStream->Id_(), id_);
         }
     }
     ERROR_RETURN_MSG_INNER(
@@ -1269,12 +1223,6 @@ rtError_t Model::SubmitExecuteTask(Stream* const streamIn)
     RT_LOG(
         RT_LOG_DEBUG, "execute stream, model execute type=%u, model_id=%u, stream_id=%d.", executeType, Id_(),
         streamIn->Id_());
-
-    if (firstExecuteFlag_) {
-        for (auto stm : streams_) {
-            stm->SetLatestModlId(id_);
-        }
-    }
 
     rtError_t error = RT_ERROR_NONE;
     rtError_t errorReason;

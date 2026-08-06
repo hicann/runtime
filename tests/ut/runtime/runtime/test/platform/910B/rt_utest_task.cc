@@ -658,18 +658,16 @@ TEST_F(CloudV2TaskTest, CmoTask_for_prefetch_test)
     rtError_t ret = rtModelCreate(&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     stream_->SetModel(rt_ut::UnwrapOrNull<Model>(model));
-    stream_->SetLatestModlId(rt_ut::UnwrapOrNull<Model>(model)->Id_());
     TaskInfo task = {};
     InitByStream(&task, stream_);
     EXPECT_NE(task.stream, nullptr);
     rtCmoTaskInfo_t cmoTask = {};
     error = CmoTaskInit(&task, &cmoTask, stream_, 0);
     Model* tmpModel = stream_->Model_();
-    stream_->models_.clear();
+    stream_->SetModel(nullptr);
     error = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetModel(tmpModel);
-    stream_->SetLatestModlId(tmpModel->Id_());
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     error = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -695,15 +693,18 @@ TEST_F(CloudV2TaskTest, CmoAddrTask_for_prefetch_test)
     error = memset_s(&cmoAddrInfo, sizeof(rtCmoAddrInfo), 0U, sizeof(rtCmoAddrInfo));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream_->SetModel(rt_ut::UnwrapOrNull<Model>(model));
     Model* tmpModel = stream_->Model_();
-    stream_->models_.clear();
+    stream_->SetModel(nullptr);
     // single stream cmoAddrTask init
     error = CmoAddrTaskInit(&task, RtPtrToPtr<void*>(&cmoAddrInfo), cmoOpCode);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
 
     // model stream cmoAddrTask init
     stream_->SetModel(tmpModel);
-    stream_->SetLatestModlId(tmpModel->Id_());
     error = CmoAddrTaskInit(&task, RtPtrToPtr<void*>(&cmoAddrInfo), cmoOpCode);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -714,6 +715,9 @@ TEST_F(CloudV2TaskTest, CmoAddrTask_for_prefetch_test)
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
     PrintErrorInfo(&task, 0);
     TaskUnInitProc(&task);
+    stream_->SetModel(nullptr);
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2TaskTest, BuildMultipleTaskSqe)
@@ -1484,7 +1488,6 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_debug_json_success)
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     stm->SetModel(mdl);
-    stm->SetLatestModlId(mdl->Id_());
 
     TaskInfo task = {};
     InitByStream(&task, stm);
@@ -1528,7 +1531,7 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_debug_json_success)
     EXPECT_TRUE(record.args.extendInfo.empty());
 
     stm->SetBindFlag(false);
-    stm->DelModel(mdl);
+    stm->SetModel(nullptr);
     EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
@@ -1564,10 +1567,9 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_api_impl_abnormal)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* const mdl = rt_ut::UnwrapOrNull<Model>(model);
     stm->SetModel(mdl);
-    stm->SetLatestModlId(mdl->Id_());
     EXPECT_EQ(impl.CacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U), RT_ERROR_NONE);
 
-    stm->DelModel(mdl);
+    stm->SetModel(nullptr);
     EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

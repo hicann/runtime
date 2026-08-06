@@ -331,15 +331,13 @@ TEST_F(ApiTestUb, cmo_addr_test_submit_01)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, streamHandle_, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+    stream_->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_->models_.clear();
-    ;
     rtFree(cmoAddrPtr);
     rtFree(src);
 }
@@ -367,17 +365,15 @@ TEST_F(ApiTestUb, cmo_addr_test_submit_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
     MOCKER(AllocTaskInfo)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBound(pos))
         .will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, streamHandle_, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    stream_->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_->models_.clear();
-    ;
     rtFree(cmoAddrPtr);
     rtFree(src);
 }
@@ -411,14 +407,13 @@ TEST_F(ApiTestUb, allocTaskInfo_stream_full)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_TASK_FULL);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
     rtFree(src);
@@ -449,7 +444,6 @@ TEST_F(ApiTestUb, allocTaskInfo_device_down)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     engine_->SetDevRunningState(DEV_RUNNING_DOWN);
@@ -460,10 +454,9 @@ TEST_F(ApiTestUb, allocTaskInfo_device_down)
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, streamHandle_, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
     engine_->SetDevRunningState(DEV_RUNNING_NORMAL);
+    stream_->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_->models_.clear();
-    ;
     rtFree(cmoAddrPtr);
     rtFree(src);
 }
@@ -497,7 +490,6 @@ TEST_F(ApiTestUb, allocTaskInfo_abort_on_fail)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
@@ -509,9 +501,9 @@ TEST_F(ApiTestUb, allocTaskInfo_abort_on_fail)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetFailureMode(STOP_ON_FAILURE);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
     rtFree(src);
@@ -547,7 +539,6 @@ TEST_F(ApiTestUb, allocTaskInfo_abortStatus)
 
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
@@ -556,9 +547,9 @@ TEST_F(ApiTestUb, allocTaskInfo_abortStatus)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetFailureMode(STOP_ON_FAILURE);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_DEVICE_TASK_ABORT);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
     rtFree(src);
@@ -592,7 +583,6 @@ TEST_F(ApiTestUb, allocTaskInfo_taskResMang_null)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     (rt_ut::UnwrapOrNull<Stream>(stream))->ReleaseStreamTaskRes();
     EXPECT_EQ((rt_ut::UnwrapOrNull<Stream>(stream))->taskResMang_, nullptr);
@@ -602,9 +592,9 @@ TEST_F(ApiTestUb, allocTaskInfo_taskResMang_null)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetFailureMode(STOP_ON_FAILURE);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
     rtFree(src);
@@ -640,7 +630,6 @@ TEST_F(ApiTestUb, test_allocTaskInfo)
 
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos)
@@ -652,9 +641,9 @@ TEST_F(ApiTestUb, test_allocTaskInfo)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetFailureMode(STOP_ON_FAILURE);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
     rtFree(src);
@@ -689,7 +678,6 @@ TEST_F(ApiTestUb, davidSendTask_addTaskToPublicQueue_fail)
 
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->SetCtxMode(STOP_ON_FAILURE);
@@ -704,9 +692,9 @@ TEST_F(ApiTestUb, davidSendTask_addTaskToPublicQueue_fail)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);
@@ -743,7 +731,6 @@ TEST_F(ApiTestUb, davidSendTask_halSqTaskSend)
 
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->SetCtxMode(STOP_ON_FAILURE);
@@ -758,9 +745,9 @@ TEST_F(ApiTestUb, davidSendTask_halSqTaskSend)
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
     error = rtCmoAddrTaskLaunch(cmoAddrPtr, infoSize, RT_CMO_INVALID, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     rtFree(cmoAddrPtr);

@@ -1967,7 +1967,6 @@ TEST_F(TaskTestDavid, rtCacheLastTaskExtendInfo_debug_json_success_950)
     Model* const mdl = rt_ut::UnwrapOrNull<Model>(model);
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     stm->SetModel(mdl);
-    stm->SetLatestModlId(mdl->Id_());
 
     TaskInfo task = BuildDebugJsonAicpuTask(stm);
 
@@ -2011,7 +2010,7 @@ TEST_F(TaskTestDavid, rtCacheLastTaskExtendInfo_debug_json_success_950)
     EXPECT_TRUE(record.args.extendInfo.empty());
 
     stm->SetBindFlag(false);
-    stm->DelModel(mdl);
+    stm->SetModel(nullptr);
     EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

@@ -2309,7 +2309,7 @@ TEST_F(StreamTest, stream_destroy_bound_stream_keeps_handle_valid)
     Stream* validatedStream = nullptr;
     EXPECT_EQ(GetValidatedObject<Stream>(stream, validatedStream), RT_ERROR_NONE);
 
-    streamObj->DelModel(modelObj);
+    streamObj->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);

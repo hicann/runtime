@@ -68,7 +68,6 @@ DavidStream::~DavidStream()
     DestroyArgRecycleList(static_cast<uint32_t>(argRecycleListSize_));
     DELETE_O(lastHalfRecord_);
     DELETE_A(taskPublicBuff_);
-    SetLatestModlId(MAX_INT32_NUM);
 }
 
 void DavidStream::RecycleArgHandlesOnDestroy()
@@ -154,7 +153,7 @@ void DavidStream::ResetHostStateOnDestroy()
     streamResId = RTS_INVALID_RES_ID;
     SetContext(nullptr);
     device_ = nullptr;
-    models_.clear();
+    model_ = nullptr;
     dvppGrp_ = nullptr;
     cntNotifyId_ = MAX_UINT32_NUM;
 }

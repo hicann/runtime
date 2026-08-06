@@ -168,7 +168,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgsHuge(
     rtError_t error = RT_ERROR_NONE;
     RT_LOG(RT_LOG_DEBUG, "hugeargs size=%u, use randomAllocator.", size);
 
-    if ((stm->NonSupportModelCompile()) || (stm->GetModelNum() == 0U) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+    if ((stm->NonSupportModelCompile()) || (!stm->IsModelStream()) || (argsInfo->isNoNeedH2DCopy == 0U)) {
         kerArgs = umaArgAllocator->AllocDevMem(size);
         NULL_PTR_RETURN(kerArgs, RT_ERROR_MEMORY_ALLOCATION);
 
@@ -189,7 +189,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgs(
     const void* const args, const rtArgsEx_t* const argsInfo) const
 {
     rtError_t error = RT_ERROR_NONE;
-    if ((stm->NonSupportModelCompile()) || (stm->GetModelNum() == 0U) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+    if ((stm->NonSupportModelCompile()) || (!stm->IsModelStream()) || (argsInfo->isNoNeedH2DCopy == 0U)) {
         const bool isLogError = stm->Device_()->GetDevProperties().isNeedlogErrorLevel;
         kerArgs = umaArgAllocator->AllocDevMem(isLogError);
         if (kerArgs == nullptr) {
@@ -217,7 +217,7 @@ rtError_t UmaArgLoader::LoadInputOutputArgsForMix(
     const void* const args, const rtArgsEx_t* const argsInfo) const
 {
     rtError_t error = RT_ERROR_NONE;
-    if ((stm->GetModelNum() == 0U) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+    if ((!stm->IsModelStream()) || (argsInfo->isNoNeedH2DCopy == 0U)) {
         RT_LOG(RT_LOG_INFO, "args loader load for mix");
         void* devAddr =
             static_cast<void*>(RtPtrToPtr<char_t*, void*>(umaArgAllocator->GetDevAddr(kerArgs)) + CONTEXT_ALIGN_LEN);
@@ -313,7 +313,7 @@ rtError_t UmaArgLoader::LoadForMix(
             static_cast<void*>(RtPtrToPtr<char_t*, void*>(umaArgAllocator->GetDevAddr(kerArgs)) + CONTEXT_ALIGN_LEN) :
             argsInfo->args;
     result->handle = static_cast<void*>(argHandle);
-    mixOpt = (stm->GetModelNum() == 0) ? true : false;
+    mixOpt = !stm->IsModelStream();
     return RT_ERROR_NONE;
 
 RECYCLE:

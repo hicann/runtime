@@ -645,9 +645,8 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
     EXPECT_EQ(sqe.phSqe.header.preP, 1U);
     uint64_t addr;
     stream->SetModel(model);
-    stream->SetLatestModlId(model->Id_());
     (void)CmoAddrTaskInit(&maintainceTask, (void*)&addr, RT_CMO_INVALID);
-    stream->DelModel(model);
+    stream->SetModel(nullptr);
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
@@ -756,8 +755,8 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_execute)
     ToConstructDavidSqe(task, static_cast<void*>(&command), sqeInfo);
     EXPECT_EQ(sqe.header.type, RT_DAVID_SQE_TYPE_COND);
     TaskUnInitProc(task);
+    stream_->SetModel(nullptr);
     rtModelDestroy(model);
-    stream_->models_.clear();
 }
 
 TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_Success)
@@ -788,8 +787,8 @@ TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_Success)
 
     rawDev->featureSet_[copyOnceIdx] = origVal;
     TaskUnInitProc(&task);
+    stream_->SetModel(nullptr);
     rtModelDestroy(model);
-    stream_->models_.clear();
 }
 
 TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_MemCopyFail)
@@ -820,8 +819,8 @@ TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_MemCopyF
 
     rawDev->featureSet_[copyOnceIdx] = origVal;
     TaskUnInitProc(&task);
+    stream_->SetModel(nullptr);
     rtModelDestroy(model);
-    stream_->models_.clear();
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_maintaince_task_force_recycle)
@@ -1143,12 +1142,11 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_label_set)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.phSqe.taskType, TS_TASK_TYPE_LABEL_SET);
-    stream_->models_.clear();
+    stream_->SetModel(nullptr);
     rtModelDestroy(model);
 }
 
@@ -1166,7 +1164,7 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_cmotask)
 
     Model* tmpModel = stream_->Model_();
 
-    stream_->models_.clear();
+    stream_->SetModel(nullptr);
     cmoTask.opCode = RT_CMO_PREFETCH;
     CmoTaskInit(&task, &cmoTask, stream_, 0);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe1), sqeInfo);
@@ -1190,13 +1188,12 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_cmotask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     CmoTaskInit(&task, &cmoTask, stream_, 0);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe3), sqeInfo);
     EXPECT_EQ(sqe3.memcpyAsyncPtrSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
+    stream_->SetModel(nullptr);
     rtModelDestroy(model);
-    stream_->models_.clear();
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_stream_tag_set)
@@ -4691,10 +4688,9 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr)
 
     uint8_t addr[64];
     stream->SetModel(model);
-    stream->SetLatestModlId(model->Id_());
     (void)CmoAddrTaskInit(&cmoAddrTask, (void*)addr, RT_CMO_INVALID);
     PrintErrorInfo(&cmoAddrTask, 0);
-    stream->DelModel(model);
+    stream->SetModel(nullptr);
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
@@ -4754,12 +4750,11 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr_error2)
     task->id = 0;
     InitByStream(&cmoAddrTask, stream);
     stream->SetModel(model);
-    stream->SetLatestModlId(model->Id_());
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     uint8_t addr[64];
     (void)CmoAddrTaskInit(&cmoAddrTask, (void*)addr, RT_CMO_INVALID);
     PrintErrorInfo(&cmoAddrTask, 0);
-    stream->DelModel(model);
+    stream->SetModel(nullptr);
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);

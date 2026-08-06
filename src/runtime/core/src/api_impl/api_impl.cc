@@ -1635,12 +1635,12 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
     const bool supFlag = ((evt->IsNewMode()) || ((!evt->IsNotify()) && (evt->GetEventFlag() == RT_EVENT_DEFAULT))) &&
-                         (curStm->GetModelNum() != 0);
+                         curStm->IsModelStream();
     COND_RETURN_WARN(
         supFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Current mode does not support binding the stream, mode=%d, flag=%" PRIu64
         ", isNotify=%d, isModel=%d, stream_id=%d.",
-        evt->IsNewMode(), evt->GetEventFlag(), evt->IsNotify(), (curStm->GetModelNum() != 0U), curStm->Id_());
+        evt->IsNewMode(), evt->GetEventFlag(), evt->IsNotify(), curStm->IsModelStream(), curStm->Id_());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
@@ -2170,12 +2170,11 @@ rtError_t ApiImpl::EventRecord(Event* const evt, Stream* const stm, const uint32
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
-    const bool supportFlag =
-        (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && (curStm->GetModelNum() != 0);
+    const bool supportFlag = (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Current mode does not support binding the stream, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), (curStm->GetModelNum() != 0U));
+        evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
@@ -2234,11 +2233,11 @@ rtError_t ApiImpl::EventReset(Event* const evt, Stream* const stm)
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
     const bool supportFlag = (evt->IsNewMode()) || ((!evt->IsNotify()) && (evt->GetEventFlag() == RT_EVENT_DEFAULT) &&
-                                                    (curStm->GetModelNum() != 0));
+                                                    curStm->IsModelStream());
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Current mode does not support binding the stream, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), (curStm->GetModelNum() != 0U));
+        evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     if (evt->IsCapturing()) {
@@ -2934,7 +2933,7 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         "Query stream failed, dev_id=%d, stream_id=%u, retCode=%#x.", dev->Id_(), streamId,
         static_cast<uint32_t>(error));
 
-    if ((modelStream->GetBindFlag() == false) || (modelStream->GetModelNum() == 0)) {
+    if ((modelStream->GetBindFlag() == false) || (!modelStream->IsModelStream())) {
         RT_LOG_CALL_MSG(ERR_MODULE_GE, "Invalid dev_id=%d, stream_id=%u, stream is not in model", dev->Id_(), streamId);
         return RT_ERROR_INVALID_VALUE;
     }
@@ -4987,11 +4986,11 @@ rtError_t ApiImpl::StreamSwitchEx(
 {
     RT_LOG(RT_LOG_DEBUG, "Switch, condition=%d, dataType=%d.", condition, dataType);
     COND_RETURN_AND_MSG_OUTER(
-        trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "trueStream->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStream->Id_()));
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "stm->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
 
@@ -5014,7 +5013,7 @@ rtError_t ApiImpl::StreamSwitchN(
             trueStreamPtr[i], RT_ERROR_STREAM_NULL,
             "Switching between multi-dimensional streams based on conditional operators");
         COND_RETURN_AND_MSG_OUTER(
-            trueStreamPtr[i]->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+            !trueStreamPtr[i]->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
             "Switching between multi-dimensional streams based on conditional operators", 0,
             "trueStreamPtr[" + std::to_string(i) + "]->modelNum",
             RtFmtMsg("The stream (stream_id=%d) is not bound to a model", trueStreamPtr[i]->Id_()));
@@ -5022,7 +5021,7 @@ rtError_t ApiImpl::StreamSwitchN(
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between multi-dimensional streams based on conditional operators", 0, "stm->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     return CondStreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, stm, dataType, curCtx);
@@ -5033,10 +5032,10 @@ rtError_t ApiImpl::StreamActive(Stream* const activeStream, Stream* const stm)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Stream activation", 0, "stm->modelNum",
+        !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Stream activation", 0, "stm->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
-        activeStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Stream activation", 0,
+        !activeStream->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, "Stream activation", 0,
         "activeStream->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", activeStream->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
@@ -5453,7 +5452,7 @@ rtError_t ApiImpl::LabelSwitchByIndex(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+        !stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Redirecting to the corresponding label position based on the label index", 0, "stm->modelNum",
         RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
 
@@ -9572,7 +9571,7 @@ rtError_t ApiImpl::ModelGetStreams(const Model* const mdl, Stream** streams, uin
 rtError_t ApiImpl::StreamGetTasks(Stream* const stm, void** tasks, uint32_t* numTasks)
 {
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() == 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Obtaining all tasks in a stream", 0,
+        !stm->IsModelStream(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Obtaining all tasks in a stream", 0,
         "stm->modelNum", RtFmtMsg("The stream (stream_id=%d) is not bound to a model", stm->Id_()));
     Model* const mdl = stm->Model_();
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);

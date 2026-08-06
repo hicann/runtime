@@ -334,30 +334,11 @@ public:
         }
     }
 
-    void SetModel(Model* mdl)
-    {
-        if (mdl == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "mdl == nullptr");
-            return;
-        }
-        models_.insert(mdl);
-    }
+    void SetModel(Model* mdl) { model_ = mdl; }
 
-    void DelModel(Model* mdl) { models_.erase(mdl); }
+    Model* Model_() const { return model_; }
 
-    Model* Model_() const
-    {
-        for (auto it = models_.begin(); it != models_.end(); it++) {
-            if (*it != nullptr) {
-                return *it;
-            }
-        }
-        return nullptr;
-    }
-
-    uint16_t GetModelNum() const { return models_.size(); }
-
-    void SetLatestModlId(int32_t id) { latestModelId_ = id; }
+    bool IsModelStream() const { return model_ != nullptr; }
 
     uint32_t Flags() const { return flags_; }
 
@@ -817,7 +798,6 @@ public:
     bool IsTaskGroupBreak() const;
 
     uint8_t GetGroupId() const;
-    bool IsModelsDebugRegister() const;
     void ResetStreamConstruct();
     void FreeOnlineProf() const;
     virtual rtError_t ResClear(uint64_t timeout = 0);
@@ -1059,7 +1039,7 @@ protected:
     bool isNeedRecvCqe_{false};
     Event* lastHalfRecord_{nullptr};
     std::mutex publicTaskMutex_;
-    std::set<Model*> models_;
+    Model* model_{nullptr};
     std::vector<std::pair<uint32_t, std::string>> errorMsg_;
     Atomic<uint32_t> taskPersistentHead_;
     Atomic<uint32_t> taskPersistentTail_;
@@ -1182,7 +1162,6 @@ private:
     bool isCtrlSQStream_{false};
     bool isAutoSplitSq_{false}; // 是否为自动切分SQ模式
     bool* destroyTaskRecycledOnTearDownOutput_{nullptr};
-    int32_t latestModelId_{MAX_INT32_NUM};
     bool isSlaveStream_{false}; // 是否为slave stream
 public:
     TaskResManage* taskResMang_{nullptr};

@@ -249,7 +249,7 @@ Stream::~Stream()
         context_ = nullptr;
         device_ = nullptr;
         l2BaseVaddr_ = nullptr;
-        models_.clear();
+        model_ = nullptr;
         onProfDeviceAddr_ = nullptr;
         onProfHostRtAddr_ = nullptr;
         onProfHostTsAddr_ = nullptr;
@@ -273,8 +273,6 @@ Stream::~Stream()
         DELETE_A(sqeBuffer_);
     } catch (...) {
     }
-
-    latestModelId_ = MAX_INT32_NUM;
 }
 
 void Stream::FreeStreamId() const
@@ -1767,7 +1765,6 @@ void Stream::ResetHostPointersOnExit()
     sqRegVirtualAddr_ = 0ULL;
     sqMemOrderType_ = SQ_ADDR_MEM_ORDER_TYPE_MAX;
     sqIdMemAddr_ = 0UL;
-    latestModelId_ = MAX_INT32_NUM;
 }
 
 rtError_t Stream::RecycleTaskWithCtrlsq(Device* const dev, const uint32_t logicCqId, const uint32_t recycleCnt)
@@ -3008,7 +3005,7 @@ uint32_t Stream::GetMaxTryCount() const
     }
 
     if (streamFastSync_) {
-        if (isModelExcel || isModelComplete || (GetModelNum() != 0)) {
+        if (isModelExcel || isModelComplete || IsModelStream()) {
             return RT_QUERY_TIMES_THRESHOLD_20;
         }
         return RT_QUERY_TIMES_THRESHOLD_DC;
@@ -4023,7 +4020,7 @@ uint32_t Stream::StarsGetMaxTryCount() const
     }
 
     if (streamFastSync_) {
-        if (isModelExcel || isModelComplete || (GetModelNum() != 0)) {
+        if (isModelExcel || isModelComplete || IsModelStream()) {
             return RT_QUERY_TIMES_THRESHOLD;
         }
         return RT_QUERY_TIMES_THRESHOLD_STARS;
@@ -4614,16 +4611,6 @@ rtError_t Stream::ModelTaskUpdate(
 ERROR_TASK:
     (void)factory->Recycle(tsk);
     return error;
-}
-
-bool Stream::IsModelsDebugRegister() const
-{
-    for (auto it = models_.begin(); it != models_.end(); it++) {
-        if ((*it)->IsDebugRegister()) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void Stream::FreeOnlineProf() const

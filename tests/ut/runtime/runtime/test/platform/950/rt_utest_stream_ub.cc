@@ -4587,7 +4587,6 @@ TEST_F(UbStreamTest, LaunchKernelEx)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    stream_->SetLatestModlId(realModel->Id_());
     error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->flags_ = RT_STREAM_PERSISTENT;
@@ -4596,10 +4595,9 @@ TEST_F(UbStreamTest, LaunchKernelEx)
     error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 
+    stream_->SetModel(nullptr);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_->models_.clear();
-    ;
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     sqe = nullptr;
@@ -15429,11 +15427,10 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
-    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
     error = rtFusionLaunch((void*)(&fusionInfo), streamHandle_, &argsInfo);
 
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
-    stream_->models_.clear();
+    stream_->SetModel(nullptr);
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.sqeLen = 3U;
     error = rtFusionLaunch((void*)(&fusionInfo), streamHandle_, &argsInfo);
@@ -15450,10 +15447,10 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     stream_->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(nullptr);
     rtModelDestroy(model);
     taskResMng->ResetTaskRes();
     taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
-    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     delete kernel;
 

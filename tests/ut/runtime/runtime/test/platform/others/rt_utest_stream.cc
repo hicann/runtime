@@ -155,7 +155,6 @@ TEST_F(ChipStreamTest, EngineStreamObserver_TaskSubmited)
     stream->SetNeedSubmitTask(true);
     std::shared_ptr<Model> model = std::make_shared<Model>();
     stream->SetModel(model.get());
-    stream->SetLatestModlId(model.get()->Id_());
     TaskInfo task = {0};
     task.stream = stream.get();
 

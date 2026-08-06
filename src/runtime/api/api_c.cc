@@ -326,7 +326,7 @@ rtError_t rtKernelLaunch(
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
     // 0 : need h2d copy  1: no need h2d copy
-    argsInfo.isNoNeedH2DCopy = (curStm->NonSupportModelCompile()) || (curStm->GetModelNum() == 0U) ? 0U : 1U;
+    argsInfo.isNoNeedH2DCopy = (curStm->NonSupportModelCompile()) || (!curStm->IsModelStream()) ? 0U : 1U;
     const rtError_t ret = apiInstance->KernelLaunch(stubFunc, numBlocks, &argsInfo, exeStream, nullptr);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;

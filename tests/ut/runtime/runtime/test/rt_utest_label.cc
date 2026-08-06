@@ -118,7 +118,6 @@ TEST_F(LabelTest, label_switch)
     Context* ctx = (Context*)stm->Context_();
     Label* label = new Label(model);
     stm->SetModel(model);
-    stm->SetLatestModlId(model->Id_());
     label->labelId_ = 0;
     label->stream_ = stm;
     label->context_ = ctx;
@@ -131,8 +130,8 @@ TEST_F(LabelTest, label_switch)
     error = rtStreamSynchronize(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete label;
+    stm->SetModel(nullptr);
     delete model;
-    stm->models_.clear();
     rtStreamDestroy(stream);
     GlobalMockObject::verify();
 }
@@ -164,7 +163,7 @@ TEST_F(LabelTest, label_StreamGoto)
     error = label->Set(stm);
     error = label->Switch(nullptr, RT_GREATER_OR_EQUAL, 0, stm);
     error = label->Goto(stm);
-    stm->DelModel(model);
+    stm->SetModel(nullptr);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     delete label;

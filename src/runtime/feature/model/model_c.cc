@@ -481,32 +481,18 @@ rtError_t ModelLoadCompleteByStream(Model* const mdl)
     /* Mini should notify TS model load success for benchmarks,
     and decoupling model load with NPU power for lite */
     TaskInfo* aicpuTask = nullptr;
-    bool isNeedStreamReuse = false;
-    const bool isContextContainAicpuModel = mdl->Context_()->GetAicpuExecuteModel();
     const bool isNeedLoadAicpuModel = mdl->NeedLoadAicpuModelTask();
     const uint32_t executorFlag = mdl->GetModelExecutorType();
     uint32_t pos = 0xFFFFU;
     // per sink stream load complete for mini/cloud
     for (Stream* const sinkStream : mdl->StreamList_()) {
         if (((sinkStream->Flags() & RT_STREAM_AICPU) == 0) && (sinkStream->isModelComplete == false)) {
-            sinkStream->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
-            if (sinkStream->GetModelNum() > 1) {
-                RT_LOG(RT_LOG_EVENT, "stream[%d] reused by model[%u].", sinkStream->Id_(), mdl->Id_());
-                isNeedStreamReuse = true;
-            }
             sinkStream->isModelComplete = true;
             RT_LOG(RT_LOG_DEBUG, "Load for model_id=%u, stream_id=%d.", mdl->Id_(), sinkStream->Id_());
         }
     }
 
     GetAndSaveJettyInfo(mdl);
-
-    if (isNeedStreamReuse && isContextContainAicpuModel) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1016, "Ending the build of a model running instance",
-            "AI CPU model streams and stream reuse cannot be used at the same time");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
 
     Device* const dev = mdl->Context_()->Device_();
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
@@ -688,7 +674,6 @@ rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t fla
 {
     rtError_t error = RT_ERROR_NONE;
     const uint32_t modelExecuteType = mdl->ModelExecuteType();
-    stm->SetLatestModlId(static_cast<int32_t>(mdl->Id_()));
     const uint32_t endGraphNum = mdl->EndGraphNum_();
     if (endGraphNum >= 1U) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
@@ -698,7 +683,7 @@ rtError_t MdlAddEndGraph(Model* const mdl, Stream* const stm, const uint32_t fla
     }
     if ((modelExecuteType != EXECUTOR_AICPU)) {
         const bool isBindThisModel = ((stm->Model_() != nullptr) && (stm->Model_()->Id_() == mdl->Id_()));
-        if ((stm->GetModelNum() == 0) || (!isBindThisModel)) {
+        if ((!stm->IsModelStream()) || (!isBindThisModel)) {
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
                 ErrorCode::EE1017, "Adding an EndGraph flag to the stream bound to the model", "stm",
                 RtFmtMsg("stream (stream_id=%d) is not bound to the model", stm->Id_()));

@@ -75,7 +75,7 @@ TEST_F(StarsTaskTest, ModelExecute_memFree)
 
     ret = rtModelUnbindStream(model, headSream);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
-    headSream->DelModel(rt_ut::UnwrapOrNull<Model>(model));
+    headSream->SetModel(nullptr);
     ret = rtStreamDestroy(headSream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rt_ut::UnwrapOrNull<Model>(model)->ModelRemoveStream(headSream);

@@ -65,7 +65,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_DC_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_INIT_BY_CTRL_CODE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL,
-    RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_REUSE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP,
     RtOptionalFeatureType::RT_FEATURE_STREAM_CREATE_PRIORITY_GREATEST,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE,

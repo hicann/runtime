@@ -42,8 +42,8 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
     return 0;
 }
 
-__attribute__((visibility("default"))) uint32_t
-PlatformInfoManager::GetPlatformInstanceByDevice(const uint32_t& device_id, PlatFormInfos& platform_info)
+__attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatformInstanceByDevice(
+    const uint32_t& device_id, PlatFormInfos& platform_info)
 {
     return 0;
 }

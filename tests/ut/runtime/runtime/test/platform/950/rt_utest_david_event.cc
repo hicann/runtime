@@ -788,11 +788,11 @@ TEST_F(EventTestDavid, GetCaptureEvent1)
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     rtStreamCreate(&captureStream, 0);
-    Stream* stmCapture = (Stream*)captureStream;
+    Stream* stmCapture = rt_ut::UnwrapOrNull<Stream>(captureStream);
     stm->UpdateCaptureStream(stmCapture);
     stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
     CaptureModel* captureModel = new CaptureModel();
-    (rt_ut::UnwrapOrNull<Stream>(captureStream))->SetModel(static_cast<Model*>(captureModel));
+    stmCapture->SetModel(static_cast<Model*>(captureModel));
     captureModel->context_ = stm->Context_();
 
     Event* curEvent = evt->GetCaptureEvent();

@@ -104,12 +104,12 @@ RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1011, ver, "ver", "msg");
 
 ```
 // ✗ EE1011 的 ErrMessage 模板最后一个 %s 后有句号，reason 参数再加句号导致重复
-COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
+COND_RETURN_AND_MSG_OUTER(!trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL,
     ErrorCode::EE1011, __func__, 0, "trueStream->modelNum",
     "The stream is not bound to a model.");
 
 // ✓ reason 参数不加句号
-COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
+COND_RETURN_AND_MSG_OUTER(!trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL,
     ErrorCode::EE1011, __func__, 0, "trueStream->modelNum",
     "The stream is not bound to a model");
 ```

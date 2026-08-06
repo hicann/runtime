@@ -174,7 +174,7 @@ rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout)
             RT_LOG_ERROR,
             "Cannot submit event wait before event record, device_id=%u, stream_id=%d, flag=%u, "
             "model=%s.",
-            dev->Id_(), stm->Id_(), davidEvt->GetEventFlag(), stm->GetModelNum() != 0 ? "yes" : "no");
+            dev->Id_(), stm->Id_(), davidEvt->GetEventFlag(), stm->IsModelStream() ? "yes" : "no");
         return RT_ERROR_INVALID_VALUE;
     }
     error = CheckTaskCanSend(stm);

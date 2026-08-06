@@ -525,7 +525,7 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, sub_aclgraph_execution_fai
     ReportErrorInfoForModelExecuteTask(&taskInfo, 0);
 
     captureModel->ModelRemoveStream(stream);
-    stream->DelModel(captureModel);
+    stream->SetModel(nullptr);
     delete stream;
     delete captureModel;
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);

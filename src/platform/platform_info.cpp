@@ -1111,8 +1111,8 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
     return PLATFORM_SUCCESS;
 }
 
-__attribute__((visibility("default"))) uint32_t
-PlatformInfoManager::GetPlatformInfoWithOutSocVersion(PlatformInfo& platform_info, OptionalInfo& opti_compilation_info)
+__attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatformInfoWithOutSocVersion(
+    PlatformInfo& platform_info, OptionalInfo& opti_compilation_info)
 {
     std::lock_guard<std::mutex> lock_guard(pc_lock_);
     if (opti_compilation_info_.soc_version.empty()) {
@@ -1201,8 +1201,8 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
     return PLATFORM_SUCCESS;
 }
 
-__attribute__((visibility("default"))) uint32_t
-PlatformInfoManager::GetPlatformInstanceByDevice(const uint32_t& device_id, PlatFormInfos& platform_info)
+__attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatformInstanceByDevice(
+    const uint32_t& device_id, PlatFormInfos& platform_info)
 {
     std::lock_guard<std::mutex> lock_guard(pc_lock_);
     std::string real_soc = opti_compilation_infos_.GetSocVersion();

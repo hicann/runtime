@@ -90,8 +90,8 @@ rtError_t ApiErrorDecorator::StreamBeginTaskUpdate(Stream* const stm, TaskGroup*
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1016,
-        "Marking the start of the task to be updated", "Only single operator stream is supported");
+        stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1016, "Marking the start of the task to be updated",
+        "Only single operator stream is supported");
 
     return impl_->StreamBeginTaskUpdate(stm, handle);
 }
@@ -105,7 +105,7 @@ rtError_t ApiErrorDecorator::StreamEndTaskUpdate(Stream* const stm)
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", stm->Id_()));
 
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1016, "Marking the end of the task to be updated",
+        stm->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1016, "Marking the end of the task to be updated",
         "Only single operator stream is supported");
 
     return impl_->StreamEndTaskUpdate(stm);
