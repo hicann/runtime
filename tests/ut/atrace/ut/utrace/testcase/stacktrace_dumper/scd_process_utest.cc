@@ -20,11 +20,36 @@
 #include "scd_thread.h"
 #include "scd_frames.h"
 #include "scd_frame.h"
+#include <string>
 
 extern "C" {
     TraStatus ScdProcessInit(ScdProcess **process, ScdProcessArgs *args);
     TraStatus ScdProcessRecordInfo(int32_t fd, const ScdProcess *pro);
     TraStatus ScdProcessRecordProcInfo(int32_t fd, pid_t pid, const char *name);
+}
+
+static std::string BuildNestedPathForAbsLength(const std::string &basePath, size_t targetAbsLen)
+{
+    std::string path = basePath + "/scd_long_path_ut";
+    if (targetAbsLen < path.size()) {
+        return "";
+    }
+    const std::string segment = "/segment_for_stacktrace";
+    while (path.size() + segment.size() <= targetAbsLen) {
+        path += segment;
+    }
+    if (path.size() < targetAbsLen) {
+        path += "/";
+        path += std::string(targetAbsLen - path.size(), 'x');
+    }
+    return path;
+}
+
+TEST(ScdProcessPathHelperTest, BuildNestedPathRejectsLongBasePath)
+{
+    const std::string basePath = "/tmp";
+    const size_t tooShortForInitialDir = basePath.size() + strlen("/scd_long_path_ut") - 1U;
+    EXPECT_TRUE(BuildNestedPathForAbsLength(basePath, tooShortForInitialDir).empty());
 }
 
 class ScdProcessUtest: public testing::Test {
@@ -259,6 +284,32 @@ TEST_F(ScdProcessUtest, TestScdProcessCreateFile_Failed)
     ret = ScdProcessDump(&arg);
     EXPECT_EQ(TRACE_FAILURE, ret);
     GlobalMockObject::verify();
+}
+
+TEST_F(ScdProcessUtest, TestScdProcessDump_LongFilePathCreatesTxt)
+{
+    const size_t longPathLen = 360U;
+    std::string longPath = BuildNestedPathForAbsLength(LLT_TEST_DIR, longPathLen);
+    ASSERT_FALSE(longPath.empty());
+    std::string mkdirCmd = "mkdir -p " + longPath;
+    ASSERT_EQ(0, system(mkdirCmd.c_str()));
+
+    ScdProcessArgs arg = {0};
+    arg.pid = getpid();
+    arg.crashTid = gettid();
+    arg.handleType = SCD_DUMP_THREADS_TXT;
+    const char fileName[] = "stackcore_tracer_long_path";
+    ASSERT_EQ(EOK, strncpy_s(arg.filePath, SCD_MAX_FILEPATH_LEN + 1U, longPath.c_str(), longPath.size()));
+    ASSERT_EQ(EOK, strncpy_s(arg.fileName, SCD_MAX_FILENAME_LEN + 1U, fileName, strlen(fileName)));
+
+    MOCKER(ScdMapsLoad).stubs().will(returnValue(TRACE_SUCCESS));
+    MOCKER(ScdThreadsLoad).stubs().will(returnValue(TRACE_SUCCESS));
+    MOCKER(ScdThreadsRecord).stubs().will(returnValue(TRACE_SUCCESS));
+    EXPECT_EQ(TRACE_SUCCESS, ScdProcessDump(&arg));
+    GlobalMockObject::verify();
+
+    std::string txtPath = longPath + "/" + fileName + ".txt";
+    EXPECT_EQ(0, access(txtPath.c_str(), F_OK));
 }
 
 TEST_F(ScdProcessUtest, TestScdProcessRecordInfo_Failed)

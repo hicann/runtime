@@ -13,6 +13,7 @@
 #include "trace_system_api.h"
 #include "trace_attr.h"
 #include "trace_types.h"
+#include <stdarg.h>
 
 #define TRACE_FILE_ASCEND_PATH  "ascend"
 #define TRACE_FILE_SUB_PATH     "atrace"
@@ -364,22 +365,84 @@ STATIC void TraceRecorderSaveNode(const TraceDirInfo *dirInfo, TraceDirNode *dir
     TraceRecorderListAppend(dirList, dirNew);
 }
 
-STATIC TraStatus TraceRecorderCreateDirWithCheck(const char *path)
+STATIC TraStatus TraceRecorderCreateDirWithCheck(const char *path, int32_t *errCode)
 {
     TraStatus ret = TraceMkdir(path, TRACE_DIR_MODE, TraceAttrGetUid(), TraceAttrGetGid());
     if (ret != TRACE_SUCCESS) {
-        ADIAG_ERR("mkdir %s failed, strerr=%s.", path, strerror(AdiagGetErrorCode()));
+        int32_t code = AdiagGetErrorCode();
+        if (errCode != NULL) {
+            *errCode = code;
+        }
+        ADIAG_ERR("mkdir %s failed, strerr=%s.", path, strerror(code));
         return TRACE_FAILURE;
     }
     return ret;
 }
 
+STATIC void TraceRecorderLogBuildFailure(const char *label, const char *stage, const TraceDirInfo *dirInfo,
+    int32_t errCode)
+{
+    ADIAG_ERR("create trace %s failed, stage=%s, reason=snprintf_s, rootPath=%s, "
+        "eventName=%s, pid=%d, dirTime=%s, limit=%zu, strerr=%s.",
+        label, stage, g_recorderMgr->rootPath, dirInfo->eventName, dirInfo->pid, dirInfo->dirTime,
+        (size_t)MAX_FILEPATH_LEN, strerror(errCode));
+}
+
+STATIC void TraceRecorderLogMkdirFailure(const char *label, const char *stage, const char *dirPath, int32_t errCode)
+{
+    ADIAG_ERR("create trace %s failed, stage=%s, reason=mkdir, "
+        "rootPath=%s, dirPath=%s, dirPathLen=%zu, limit=%zu, strerr=%s.",
+        label, stage, g_recorderMgr->rootPath, dirPath, strlen(dirPath),
+        (size_t)MAX_FILEPATH_LEN, strerror(errCode));
+}
+
+STATIC TraStatus TraceRecorderCreateRootDir(void)
+{
+    TraStatus ret = TraceMkdir(g_recorderMgr->rootPath, TRACE_DIR_MODE, TraceAttrGetUid(), TraceAttrGetGid());
+    if (ret != TRACE_SUCCESS) {
+        int32_t errCode = AdiagGetErrorCode();
+        ADIAG_ERR("create trace root directory failed, stage=root_dir, reason=mkdir, "
+            "rootPath=%s, rootPathLen=%zu, limit=%zu, strerr=%s.",
+            g_recorderMgr->rootPath, strlen(g_recorderMgr->rootPath), (size_t)MAX_FILEPATH_LEN,
+            strerror(errCode));
+        return TRACE_FAILURE;
+    }
+    return TRACE_SUCCESS;
+}
+
+STATIC TraStatus TraceRecorderCreateFormattedDir(TraceDirNode *dirNew, const char *label, const char *stage,
+    const TraceDirInfo *dirInfo, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int32_t ret = vsnprintf_s(dirNew->dirPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, format, args);
+    va_end(args);
+    if (ret == -1) {
+        int32_t errCode = AdiagGetErrorCode();
+        TraceRecorderLogBuildFailure(label, stage, dirInfo, errCode);
+        return TRACE_FAILURE;
+    }
+    int32_t errCode = 0;
+    if (TraceRecorderCreateDirWithCheck(dirNew->dirPath, &errCode) != TRACE_SUCCESS) {
+        TraceRecorderLogMkdirFailure(label, stage, dirNew->dirPath, errCode);
+        return TRACE_FAILURE;
+    }
+    return TRACE_SUCCESS;
+}
+
+STATIC TraceDirNode *TraceRecorderFindExistingDir(const TraceDirInfo *dirInfo, TraceDirNode *dirNew)
+{
+    if (strncmp(dirInfo->eventName, TRACER_EVENT_EXIT, strlen(TRACER_EVENT_EXIT)) == 0) {
+        return NULL;
+    }
+    TraceDirList *dirList = (dirInfo->isDevice) ? &g_recorderMgr->deviceDirList : &g_recorderMgr->hostDirList;
+    return TraceRecorderListFind(dirList, dirNew->dirPath);
+}
+
 const TraceDirNode *TraceRecorderGetDirPath(const TraceDirInfo *dirInfo)
 {
     // ~/ascend
-    int32_t ret = TraceMkdir(g_recorderMgr->rootPath, TRACE_DIR_MODE, TraceAttrGetUid(), TraceAttrGetGid());
-    if (ret != TRACE_SUCCESS) {
-        ADIAG_ERR("mkdir %s failed, strerr=%s.", g_recorderMgr->rootPath, strerror(AdiagGetErrorCode()));
+    if (TraceRecorderCreateRootDir() != TRACE_SUCCESS) {
         return NULL;
     }
 
@@ -387,46 +450,39 @@ const TraceDirNode *TraceRecorderGetDirPath(const TraceDirInfo *dirInfo)
     ADIAG_CHK_EXPR_ACTION(dirNew == NULL, return NULL, "create dir failed.");
 
     // ~/ascend/atrace
-    ret = snprintf_s(dirNew->dirPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s/%s",
-        g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH);
-    if ((ret == -1) || (TraceRecorderCreateDirWithCheck(dirNew->dirPath) != TRACE_SUCCESS)) {
-        ADIAG_ERR("failed at atrace directory, strerr=%s.", strerror(AdiagGetErrorCode()));
-        ADIAG_SAFE_FREE(dirNew);
-        return NULL;
+    if (TraceRecorderCreateFormattedDir(dirNew, "atrace directory", "atrace_dir", dirInfo, "%s/%s",
+        g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH) != TRACE_SUCCESS) {
+        goto failed;
     }
 
     // ~/ascend/atrace/trace_{attr_group_id}_{attr_pid}_{attr_time}
-    ret = snprintf_s(dirNew->dirPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s/%s/%s_%d_%d_%s",
+    if (TraceRecorderCreateFormattedDir(dirNew, "first directory", "first_trace_dir", dirInfo, "%s/%s/%s_%d_%d_%s",
         g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH,
-        TRACE_DIR_HEAD, TraceAttrGetPgid(), TraceAttrGetPid(), TraceAttrGetTime());
-    if ((ret == -1) || (TraceRecorderCreateDirWithCheck(dirNew->dirPath) != TRACE_SUCCESS)) {
-        ADIAG_ERR("failed at first directory, strerr=%s.", strerror(AdiagGetErrorCode()));
-        ADIAG_SAFE_FREE(dirNew);
-        return NULL;
+        TRACE_DIR_HEAD, TraceAttrGetPgid(), TraceAttrGetPid(), TraceAttrGetTime()) != TRACE_SUCCESS) {
+        goto failed;
     }
 
     // ~/ascend/atrace/trace_{attr_group_id}_{attr_pid}_{attr_time}/{tracer_name}_event_{pid}_time
-    ret = snprintf_s(dirNew->dirPath, MAX_FILEPATH_LEN + 1U, MAX_FILEPATH_LEN, "%s/%s/%s_%d_%d_%s/%s_event_%d_%s",
+    if (TraceRecorderCreateFormattedDir(dirNew, "second directory", "second_event_dir", dirInfo,
+        "%s/%s/%s_%d_%d_%s/%s_event_%d_%s",
         g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH,
         TRACE_DIR_HEAD, TraceAttrGetPgid(), TraceAttrGetPid(), TraceAttrGetTime(),
-        dirInfo->eventName,dirInfo->pid, dirInfo->dirTime);
-    if ((ret == -1) || (TraceRecorderCreateDirWithCheck(dirNew->dirPath) != TRACE_SUCCESS)) {
-        ADIAG_ERR("failed at second directory, strerr=%s.", strerror(AdiagGetErrorCode()));
-        ADIAG_SAFE_FREE(dirNew);
-        return NULL;
+        dirInfo->eventName, dirInfo->pid, dirInfo->dirTime) != TRACE_SUCCESS) {
+        goto failed;
     }
 
-    if (strncmp(dirInfo->eventName, TRACER_EVENT_EXIT, strlen(TRACER_EVENT_EXIT)) != 0) {
-        TraceDirList *dirList = (dirInfo->isDevice) ? &g_recorderMgr->deviceDirList : &g_recorderMgr->hostDirList;
-        TraceDirNode *existNode = TraceRecorderListFind(dirList, dirNew->dirPath);
-        if (existNode != NULL) {
-            ADIAG_SAFE_FREE(dirNew);
-            return existNode;
-        }
+    TraceDirNode *existNode = TraceRecorderFindExistingDir(dirInfo, dirNew);
+    if (existNode != NULL) {
+        ADIAG_SAFE_FREE(dirNew);
+        return existNode;
     }
 
     TraceRecorderSaveNode(dirInfo, dirNew);
     return dirNew;
+
+failed:
+    ADIAG_SAFE_FREE(dirNew);
+    return NULL;
 }
 
 TraStatus TraceRecorderGetFd(const TraceDirInfo *dirInfo, const TraceFileInfo *fileInfo, int32_t *fd)
@@ -470,16 +526,17 @@ TraStatus TraceRecorderWrite(int32_t fd, const char *msg, uint32_t len)
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo)
+STATIC TraStatus TraceRecorderSafeMkdirPathWithBuffer(const TraceDirInfo *dirInfo, char *path, size_t len)
 {
+    if ((path == NULL) || (len == 0)) {
+        return TRACE_INVALID_PARAM;
+    }
     int32_t ret = TraceMkdir(g_recorderMgr->rootPath, TRACE_DIR_MODE, TraceAttrGetUid(), TraceAttrGetGid());
     if (ret != TRACE_SUCCESS) {
         return TRACE_FAILURE;
     }
 
-    char path[MAX_FULLPATH_LEN + 1U] = { 0 };
-    ret = snprintf_s(path, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN, "%s/%s",
-        g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH);
+    ret = snprintf_s(path, len, len - 1U, "%s/%s", g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH);
     if (ret == -1) {
         return TRACE_FAILURE;
     }
@@ -488,7 +545,7 @@ TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo)
         return TRACE_FAILURE;
     }
 
-    ret = snprintf_s(path, MAX_FULLPATH_LEN + 1U, MAX_FULLPATH_LEN, "%s/%s/%s_%d_%d_%s",
+    ret = snprintf_s(path, len, len - 1U, "%s/%s/%s_%d_%d_%s",
         g_recorderMgr->rootPath, TRACE_FILE_SUB_PATH,
         TRACE_DIR_HEAD, TraceAttrGetPgid(), TraceAttrGetPid(), TraceAttrGetTime());
     if (ret == -1) {
@@ -499,7 +556,7 @@ TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo)
         return TRACE_FAILURE;
     }
 
-    ret = TraceRecorderSafeGetDirPath(dirInfo, path, MAX_FULLPATH_LEN + 1U);
+    ret = TraceRecorderSafeGetDirPath(dirInfo, path, len);
     if (ret != TRACE_SUCCESS) {
         return TRACE_FAILURE;
     }
@@ -508,6 +565,12 @@ TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo)
         return ret;
     }
     return TRACE_SUCCESS;
+}
+
+TraStatus TraceRecorderSafeMkdirPath(const TraceDirInfo *dirInfo)
+{
+    char path[MAX_FULLPATH_LEN + 1U] = { 0 };
+    return TraceRecorderSafeMkdirPathWithBuffer(dirInfo, path, MAX_FULLPATH_LEN + 1U);
 }
 
 TraStatus TraceRecorderSafeGetDirPath(const TraceDirInfo *dirInfo, char *path, size_t len)
@@ -540,28 +603,23 @@ TraStatus TraceRecorderSafeGetFd(const TraceDirInfo *dirInfo, const TraceFileInf
     }
 
     char path[MAX_FULLPATH_LEN + 1U] = { 0 };
-    TraStatus ret = TraceRecorderSafeGetDirPath(dirInfo, path, MAX_FULLPATH_LEN + 1U);
+    TraStatus ret = TraceRecorderSafeMkdirPathWithBuffer(dirInfo, path, MAX_FULLPATH_LEN + 1U);
     if (ret != TRACE_SUCCESS) {
         return ret;
     }
 
-    ret = TraceRecorderSafeMkdirPath(dirInfo);
-    if (ret != TRACE_SUCCESS) {
-        return ret;
+    size_t pathLen = strlen(path);
+    if (pathLen >= MAX_FULLPATH_LEN) {
+        return TRACE_FAILURE;
     }
-
-    char tmp[MAX_FILEDIR_LEN] = { 0 };
-    ret = snprintf_s(tmp, MAX_FILEDIR_LEN, MAX_FULLPATH_LEN - 1U, "/%s_tracer_%s%s",
+    ret = snprintf_s(path + pathLen, MAX_FULLPATH_LEN + 1U - pathLen, MAX_FULLPATH_LEN - pathLen,
+        "/%s_tracer_%s%s",
         fileInfo->tracerName, fileInfo->objName, fileInfo->suffix);
     if (ret == -1) {
         return TRACE_FAILURE;
     }
-    errno_t err = strncat_s(path, MAX_FULLPATH_LEN + 1U, tmp, strlen(tmp));
-    if (err != EOK) {
-        return TRACE_FAILURE;
-    }
 
-    err = strncpy_s(g_recorderMgr->corePath, MAX_FULLPATH_LEN + 1U, path, strlen(path));
+    errno_t err = strncpy_s(g_recorderMgr->corePath, MAX_FULLPATH_LEN + 1U, path, strlen(path));
     if (err != EOK) {
         return TRACE_FAILURE;
     }

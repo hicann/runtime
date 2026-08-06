@@ -84,6 +84,15 @@ TEST_F(TraceStackcoreUtest, TraceStackInfoInit_failed)
     EXPECT_EQ(0, ret);
 }
 
+TEST_F(TraceStackcoreUtest, TestStacktracePathLimitsUseTraceMaxPath)
+{
+    EXPECT_LT(static_cast<size_t>(SCD_MAX_FILEDIR_LEN), static_cast<size_t>(SCD_MAX_FULLPATH_LEN));
+    EXPECT_LT(static_cast<size_t>(SCD_MAX_FILEPATH_LEN), static_cast<size_t>(SCD_MAX_FULLPATH_LEN));
+    EXPECT_LE(static_cast<size_t>(SCD_MAX_FILEPATH_LEN) + static_cast<size_t>(SCD_FILE_RESERVED_LEN),
+        static_cast<size_t>(SCD_MAX_FULLPATH_LEN));
+    EXPECT_EQ(static_cast<size_t>(TRACE_MAX_PATH - 1U), static_cast<size_t>(SCD_MAX_FULLPATH_LEN));
+}
+
 TEST_F(TraceStackcoreUtest, TestTraceStackFp_failed)
 {
     TraStatus ret = TRACE_FAILURE;

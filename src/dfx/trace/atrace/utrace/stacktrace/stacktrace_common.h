@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "trace_system_api.h"
 
 #define SIG_ATRACE              35
 #define STACKTRACE_DUMP_BIN_MODE 0xAABB0003U
@@ -24,9 +25,12 @@
 
 #define SCD_MAX_NAME_HEAD_LEN       64U
 #define SCD_MAX_FILENAME_LEN        128U
-#define SCD_MAX_FILEDIR_LEN         255U
-#define SCD_MAX_FILEPATH_LEN        (SCD_MAX_FILEDIR_LEN + SCD_MAX_NAME_HEAD_LEN)
-#define SCD_MAX_FULLPATH_LEN        (SCD_MAX_FILEPATH_LEN + SCD_MAX_FILENAME_LEN)
+#define SCD_MAX_FULLPATH_LEN        (TRACE_MAX_PATH - 1U)
+#define SCD_FILE_SUFFIX_MAX_LEN     4U
+#define SCD_FILE_RESERVED_LEN       (1U + SCD_MAX_FILENAME_LEN + SCD_FILE_SUFFIX_MAX_LEN)
+#define SCD_MAX_FILEPATH_LEN        ((SCD_MAX_FULLPATH_LEN > SCD_FILE_RESERVED_LEN) ? \
+    (SCD_MAX_FULLPATH_LEN - SCD_FILE_RESERVED_LEN) : 0U)
+#define SCD_MAX_FILEDIR_LEN         SCD_MAX_FILEPATH_LEN
 
 /*
  * [parent process] ---fork---> [child process] ---execv---> [new process]
