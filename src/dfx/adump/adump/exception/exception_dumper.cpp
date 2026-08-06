@@ -312,10 +312,29 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
     return false;
 }
 
+void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &exception,
+                                                       const std::string &dumpPath) const
+{
+    rtExceptionArgsInfo_t exceptionArgsInfo{};
+    int32_t ret = ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo);
+    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return,
+        "Get exception args info failed, skip early dump host kernel bin.");
+
+    KernelInfoCollector collector;
+    collector.LoadKernelInfo(exceptionArgsInfo);
+    ret = collector.LoadKernelBinBuffer();
+    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return,
+        "Load kernel bin buffer failed, skip early dump host kernel bin.");
+
+    // 提前同步落 _host.o；DumpHostKernelBin 幂等，后置慢搜索路径已存在则会跳过。
+    (void)collector.DumpHostKernelBin(dumpPath);
+}
+
 int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath)
 {
     IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
         return ADUMP_FAILED, "Exception is not support default dump.");
+    DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception);
     DumpOperator excOp;
     bool find = FindExceptionOperator(exception, excOp);
@@ -343,6 +362,7 @@ int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo &excepti
 {
     IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
         return ADUMP_FAILED, "Exception is not support default dump.");
+    DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
     KernelSymbolLocator::DumpErrorSymbols(exception);
     DumpArgs args;
     if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {

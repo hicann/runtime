@@ -30,8 +30,22 @@
 #include "adump_platform_manager.h"
 #include "ascend_hal.h"
 #include "dump_exception_stub.h"
+#include "kernel_info_collector.h"
+#include "exception_info_common.h"
+#include "path.h"
 
 using namespace Adx;
+
+namespace {
+const std::string g_idemHostBinContent = "host kernel bin content for idempotent test";
+int32_t StubGetBinDataForIdem(rtBinHandle binHandle, std::string &binData, uint32_t &binSize)
+{
+    (void)binHandle;
+    binData = g_idemHostBinContent;
+    binSize = static_cast<uint32_t>(g_idemHostBinContent.size());
+    return ADUMP_SUCCESS;
+}
+}  // namespace
 
 #define ASCEND_CACHE_PATH ADUMP_BASE_DIR
 #define ASCEND_CUSTOM_OPP_PATH "/src/dfx/adump:/tests/ut/adump:"
@@ -2535,4 +2549,89 @@ TEST_F(DumpArgsUtest, Test_Dump_Args_For_L2_Shape)
 
     EXPECT_EQ(checker.CheckOutputTensorSize(3, sizeof(shapePtrScalar)), true);
     EXPECT_EQ(checker.CheckOutputTensorData(3, GetTensorData(shapePtrScalar)), true);
+}
+
+// 幂等:_host.o 已存在时，DumpHostKernelBin 应跳过写、直接返回成功（提前落盘后，后置慢搜索路径不重复落盘）。
+TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_Idempotent)
+{
+    Tools::CaseWorkspace ws("Test_DumpHostKernelBin_Idempotent");
+    const std::string kernelName = "AddCustom_idem";
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForIdem));
+
+    KernelInfoCollector collector;
+    char fakeHandle[] = "fake_bin_handle";
+    ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), kernelName), ADUMP_SUCCESS);
+
+    // 首次落盘：文件不存在，正常写入。
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    Path hostBinPath(ws.Root());
+    hostBinPath.Concat(kernelName + "_host.o");
+    EXPECT_TRUE(hostBinPath.Exist());
+
+    // 二次落盘：文件已存在且大小一致。即使 File::Write 被打桩为失败，幂等守卫也应跳过写并返回成功。
+    MOCKER_CPP(&File::Write).expects(never());
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+// kernelName 为空时应跳过落盘并返回成功，避免退化成非唯一文件名 "_host.o" 互相覆盖。
+TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_EmptyKernelNameSkip)
+{
+    Tools::CaseWorkspace ws("Test_DumpHostKernelBin_EmptyKernelNameSkip");
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForIdem));
+
+    KernelInfoCollector collector;
+    char fakeHandle[] = "fake_bin_handle";
+    // kernelName 为空
+    ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), ""), ADUMP_SUCCESS);
+
+    // 前置守卫命中，跳过写、返回成功，且不产生 "_host.o"。
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    Path hostBinPath(ws.Root());
+    hostBinPath.Concat("_host.o");
+    EXPECT_FALSE(hostBinPath.Exist());
+}
+
+// 幂等校验基于文件大小:磁盘上残留截断/空文件(部分写)时，Exist() 为真但大小不匹配，应重写而非跳过。
+TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_TruncatedFileRewrite)
+{
+    Tools::CaseWorkspace ws("Test_DumpHostKernelBin_TruncatedFileRewrite");
+    const std::string kernelName = "AddCustom_trunc";
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForIdem));
+
+    KernelInfoCollector collector;
+    char fakeHandle[] = "fake_bin_handle";
+    ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), kernelName), ADUMP_SUCCESS);
+
+    // 预置一个大小不足的截断文件，模拟上次部分写残留。
+    Path hostBinPath(ws.Root());
+    hostBinPath.Concat(kernelName + "_host.o");
+    {
+        std::ofstream truncated(hostBinPath.GetString(), std::ios::binary | std::ios::trunc);
+        truncated << "partial";  // 长度短于 g_idemHostBinContent
+    }
+    ASSERT_TRUE(hostBinPath.Exist());
+
+    // 大小不匹配，幂等守卫不跳过，应重写为完整内容。
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    std::ifstream rewritten(hostBinPath.GetString(), std::ios::binary);
+    std::string content((std::istreambuf_iterator<char>(rewritten)), std::istreambuf_iterator<char>());
+    EXPECT_EQ(content, g_idemHostBinContent);
+}
+
+// 落盘不完整(写后文件大小不足全长)应经 stat 校验判失败并返回 ADUMP_FAILED，避免截断文件被后续幂等误判为完整。
+TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_ShortWriteFail)
+{
+    Tools::CaseWorkspace ws("Test_DumpHostKernelBin_ShortWriteFail");
+    const std::string kernelName = "AddCustom_shortwrite";
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForIdem));
+    // 打桩 File::Write 返回正值但不实际写入,模拟落盘残缺(文件被 M_TRUNC 建为空,大小不足全长)。
+    MOCKER_CPP(&File::Write).stubs().will(returnValue(static_cast<int64_t>(1)));
+
+    KernelInfoCollector collector;
+    char fakeHandle[] = "fake_bin_handle";
+    ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), kernelName), ADUMP_SUCCESS);
+
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_FAILED);
+    GlobalMockObject::verify();
 }

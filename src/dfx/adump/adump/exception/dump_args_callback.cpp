@@ -45,6 +45,11 @@ int32_t DumpArgsCallback::DumpKernelBin()
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "Init for dump kernel bin failed. ret=%d, bin=%p, kernelName=%s.", ret, info_.bin, kernelName.c_str());
 
+    // 先同步落 _host.o，再做慢的 kernel_meta 搜索拷贝。落盘失败需传播，保持与拆分前一致的错误可观测性。
+    ret = collector.DumpHostKernelBin(dumpPath_);
+    IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "DumpHostKernelBin failed, kernelName=%s.", kernelName.c_str());
+
     ret = collector.StartCollectKernel(dumpPath_);
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "StartCollectKernel failed, kernelName=%s.", kernelName.c_str());

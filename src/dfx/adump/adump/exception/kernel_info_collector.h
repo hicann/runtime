@@ -28,6 +28,8 @@ public:
     int32_t InitFromBinHandle(rtBinHandle BinHandle, const std::string &kernelName);
     int32_t LoadKernelBinBuffer();
     int32_t StartCollectKernel(const std::string &dumpPath) const;
+    // 快速同步落 _host.o（纯内存 buffer 写），从 StartCollectKernel 拆出、供调用方单独同步调用。
+    int32_t DumpHostKernelBin(const std::string &dumpPath) const;
     std::string GetProcessedKernelName() const;
     std::vector<std::string> GetSearchPath() const;
     std::string SearchJsonFiles(const std::string &rootPath, const std::string &targetString) const;
@@ -35,7 +37,6 @@ private:
     bool ContainsString(const std::string &filePath, const std::string &targetString) const;
     std::string GetFirstItem(const std::string &curLine, size_t& curPlace) const;
     bool IsTargetLine(const std::string &currentLine, const std::string &key, const std::string &value) const;
-    int32_t DumpHostKernelBin(const std::string &kernelName, const std::string &dumpPath) const;
     int32_t CollectKernelFile(const std::string &kernelName, const std::string &dumpPath) const;
     std::vector<std::string> SplitString(const std::string &str, char delimiter) const;
     rtBinHandle kernelBinHandle_;

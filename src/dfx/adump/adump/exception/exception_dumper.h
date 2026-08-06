@@ -62,6 +62,8 @@ private:
                           const std::string &dumpPath);
     int32_t DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath);
     int32_t DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath);
+    // 在符号化(DumpErrorSymbols)之前，提前同步把 _host.o 落盘，供后续按错误 PC 解析源码行使用。best-effort。
+    void DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &exception, const std::string &dumpPath) const;
     int32_t LoadTensorPluginLib();
     bool InitArgsExceptionMemory() const;
     std::string GetDumpSceneName() const;
