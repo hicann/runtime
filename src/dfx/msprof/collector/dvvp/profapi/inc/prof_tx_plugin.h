@@ -16,8 +16,6 @@
 #include "prof_runtime_plugin.h"
 
 namespace ProfAPI {
-constexpr size_t MAX_TENSOR_NUM = 5;
-
 struct CacheOpInfoBasic {
     uint32_t taskType;
     uint32_t blockdim;
@@ -67,7 +65,7 @@ public:
     int32_t ProftxSetStampPayload(VOID_PTR stamp, const int32_t type, VOID_PTR value);
     int32_t ProftxRangePushEx(ACLPROF_EVENT_ATTR_PTR attr);
     int32_t ProftxRangePop();
-    int32_t ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo, uint64_t timeStampPush, uint64_t timeStampPop);
+    int32_t ReportCustomTensorInfo(const aclprofTensorInfo* tensorInfo, uint64_t timeStampPush, uint64_t timeStampPop);
     int32_t ReportCacheOpInfo2RT(const aclprofTensorInfo* tensorInfo);
 private:
     ACLPROF_EVENT_ATTR_PTR attr_;
@@ -85,7 +83,10 @@ private:
     ProftxSetCategoryNameFunc proftxSetCategoryName_{nullptr};
     ProftxSetStampCategoryFunc proftxSetStampCategory_{nullptr};
     ProftxSetStampPayloadFunc proftxSetStampPayload_{nullptr};
-    int32_t CopyTensorData(const aclprofTensorInfo* tensorInfo, uint8_t* dest, uint64_t& destOffset, size_t maxCopySize);
+    int32_t CopyTensorData(const aclprofTensorInfo* tensorInfo, uint8_t* dest, uint64_t& destOffset,
+                           size_t maxCopySize, size_t startIdx, size_t tensorNum);
+    int32_t ReportCustomTensorInfoOnce(const aclprofTensorInfo* tensorInfo, uint64_t timeStamp,
+                                     uint32_t startIdx, uint32_t tensorNum);
 };
 }
 #endif
