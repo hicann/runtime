@@ -46,6 +46,21 @@ void StubServerReply::ResetServerReply()
 {
     ClearAllCallBack();
     curMsgType_ = HDCMessage::INIT;
+    (void)memset_s(&priVateMsg_, sizeof(priVateMsg_), 0x00, sizeof(priVateMsg_));
+    sendStoreMsg_.Clear();
+}
+
+StubServerReply::State StubServerReply::SaveState() const
+{
+    return {callbackMap_, curMsgType_, priVateMsg_, sendStoreMsg_};
+}
+
+void StubServerReply::RestoreState(const State& state)
+{
+    callbackMap_ = state.callbackMap;
+    curMsgType_ = state.curMsgType;
+    priVateMsg_ = state.privateMsg;
+    sendStoreMsg_ = state.sendStoreMsg;
 }
 
 bool StubServerReply::ReplyToHost(struct drvHdcMsg* msg)

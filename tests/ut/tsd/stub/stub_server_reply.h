@@ -21,6 +21,13 @@ using ServerReplyMsg = void (*)(struct drvHdcMsg* msg, HdcBufferInfo* buf, const
 
 class StubServerReply {
 public:
+    struct State {
+        std::map<uint32_t, ServerReplyMsg> callbackMap;
+        HDCMessage::MsgType curMsgType = HDCMessage::INIT;
+        HdcBufferInfo privateMsg{};
+        HDCMessage sendStoreMsg;
+    };
+
     static StubServerReply* GetInstance();
 
     void RegisterCallBack(const HDCMessage::MsgType type, const ServerReplyMsg callBack);
@@ -30,6 +37,10 @@ public:
     void SetCurMsgType(const struct drvHdcMsg* msg);
 
     void ResetServerReply();
+
+    State SaveState() const;
+
+    void RestoreState(const State& state);
 
     bool ReplyToHost(struct drvHdcMsg* msg);
 

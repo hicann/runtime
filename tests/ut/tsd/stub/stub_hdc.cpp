@@ -33,10 +33,6 @@ extern "C" drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len);
 
 extern "C" hdcError_t drvHdcRecvPeek(HDC_SESSION session, int* msgLen, int flag);
 
-std::atomic_bool g_drvRunning(false); // 标记是否为工作状态.
-std::mutex g_drvHdcMutex;             // 等待连接请求时的锁
-std::condition_variable g_drvHdcCond; // 等待连接请求信号量
-
 DVresult drvMemInitSvmDevice(pid_t hostpid)
 {
     if ((pid_t)0 == hostpid)
@@ -141,16 +137,6 @@ drvError_t drvGetDevIDs(uint32_t* devices, uint32_t len)
     return DRV_ERROR_NONE;
 }
 
-hdcError_t halHdcFastSend(HDC_SESSION session, struct drvHdcFastSendMsg msg, UINT64 flag, UINT32 timeout)
-{
-    return DRV_ERROR_NONE;
-}
-
-hdcError_t halHdcFastRecv(HDC_SESSION session, struct drvHdcFastRecvMsg* msg, UINT64 flag, UINT32 timeout)
-{
-    return DRV_ERROR_NONE;
-}
-
 void* drvHdcMalloc(HDC_SESSION session, enum drvHdcMemType mem_type, unsigned int len) { return (void*)malloc(len); }
 
 hdcError_t drvHdcFree(HDC_SESSION session, enum drvHdcMemType mem_type, void* buf)
@@ -163,28 +149,6 @@ hdcError_t drvHdcFree(HDC_SESSION session, enum drvHdcMemType mem_type, void* bu
 }
 
 char* tmpBuff = nullptr;
-hdcError_t drvHdcDmaMap(enum drvHdcMemType mem_type, void* buf, int devid) { return DRV_ERROR_NONE; }
-hdcError_t drvHdcDmaUnMap(enum drvHdcMemType mem_type, void* buf) { return DRV_ERROR_NONE; }
-hdcError_t drvHdcDmaReMap(enum drvHdcMemType mem_type, void* buf, int devid) { return DRV_ERROR_NONE; }
-
-void* drvHdcMallocDev(enum drvHdcMemType mem_type, unsigned int len, int devid)
-{
-    if (tmpBuff) {
-        delete[] tmpBuff;
-        tmpBuff = nullptr;
-    }
-    tmpBuff = new char[len];
-    return tmpBuff;
-}
-hdcError_t drvHdcFreeDev(enum drvHdcMemType mem_type, void* buf, int devid)
-{
-    if (tmpBuff) {
-        delete[] tmpBuff;
-        tmpBuff = nullptr;
-    }
-    return DRV_ERROR_NONE;
-}
-
 void* drvHdcMalloc(enum drvHdcMemType mem_type, unsigned int len)
 {
     if (tmpBuff) {
@@ -203,31 +167,7 @@ hdcError_t drvHdcFree(enum drvHdcMemType mem_type, void* buf)
     return DRV_ERROR_NONE;
 }
 
-void* drvHdcMallocEx(
-    enum drvHdcMemType mem_type, void* addr, unsigned int align, unsigned int len, int devid, unsigned int flag)
-{
-    if (tmpBuff) {
-        delete[] tmpBuff;
-        tmpBuff = nullptr;
-    }
-    tmpBuff = new char[len];
-    return tmpBuff;
-}
-
-hdcError_t drvHdcFreeEx(enum drvHdcMemType mem_type, void* buf)
-{
-    if (tmpBuff) {
-        delete[] tmpBuff;
-        tmpBuff = nullptr;
-    }
-    return DRV_ERROR_NONE;
-}
-
-drvError_t drvCreateAicpuWorkTasks(pid_t pid, int32_t mode) { return (drvError_t)(1); }
-
 hdcError_t drvHdcRecvPeek(HDC_SESSION session, int* msgLen, int flag) { return DRV_ERROR_NONE; }
-
-hdcError_t drvHdcRecvBuf(HDC_SESSION session, char* pBuf, int bufLen, int* msgLen) { return DRV_ERROR_NONE; }
 
 DVresult halMemAlloc(void** pp, unsigned long long size, unsigned long long flag) { return DRV_ERROR_NONE; }
 

@@ -9,7 +9,6 @@
  */
 #include <mmpa/mmpa_api.h>
 #include <unistd.h>
-#include <iostream>
 #include <dirent.h>
 
 INT32 mmGetPid() { return (INT32)1; }
@@ -68,8 +67,6 @@ INT32 mmMutexInit(mmMutex_t* mutex) { return 0; }
 INT32 mmMutexLock(mmMutex_t* mutex) { return 0; }
 
 INT32 mmMutexUnLock(mmMutex_t* mutex) { return 0; }
-
-INT32 mmMutexDestory(mmMutex_t* mutex) { return 0; }
 
 INT32 mmMutexDestroy(mmMutex_t* mutex) { return 0; }
 

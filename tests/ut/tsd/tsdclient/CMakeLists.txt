@@ -66,45 +66,54 @@ else()
 endif()
 
 set(TSD_UT_TEST_SRC_FILE
-    test/tsdclient_utest.cpp
-    test/aicpu_package_process_utest.cpp
-    test/aicpu_thread_package_worker_utest.cpp
-    test/capability_manager_utest.cpp
-    test/client_manager_utest.cpp
-    test/process_manager_utest.cpp
-    test/thread_manager_utest.cpp
-    test/package_process_config_utest.cpp
-    test/package_verify_utest.cpp
-    test/package_worker_factory_utest.cpp
-    test/package_worker_utest.cpp
-    test/version_verify_utest.cpp
-    test/package_worker_utils_utest.cpp
-    test/path_mgr_utest.cpp
-    test/tsd_util_func_utest.cpp
-    test/message_parse_client_utest.cpp
-    test/tsd_sha256_utest.cpp
-    test/env_internal_api_utest.cpp
-    test/hdc_client_utest.cpp
-    test/hdc_common_utest.cpp
-    test/hdc_message_builder_utest.cpp
-    test/device_comm_utest.cpp
-    test/main.cpp
-    test/common_util_func.cpp
+    ../interface/tsd_client_utest.cpp
+    ../basic_component/package_manager/aicpu_package_process_utest.cpp
+    ../basic_component/package_manager/aicpu_thread_package_worker_utest.cpp
+    ../basic_component/package_manager/base_package_worker_utest.cpp
+    ../basic_component/package_manager/package_check_code_service_utest.cpp
+    ../basic_component/package_manager/package_env_info_utest.cpp
+    ../basic_component/package_manager/package_hash_store_utest.cpp
+    ../basic_component/package_manager/package_loader_utest.cpp
+    ../basic_component/package_manager/package_manager_utest.cpp
+    ../basic_component/package_manager/package_sender_utest.cpp
+    ../basic_component/package_manager/plugin_pkg_version_utest.cpp
+    ../basic_component/package_manager/plugin_version_manager_utest.cpp
+    ../basic_component/capability/capability_manager_utest.cpp
+    client_manager_utest.cpp
+    process_mode_manager_utest.cpp
+    response_msg_dispatcher_utest.cpp
+    sub_process_controller_utest.cpp
+    tsd_process_controller_utest.cpp
+    thread_mode_manager_utest.cpp
+    ../basic_component/package_manager/package_process_config_utest.cpp
+    ../basic_component/package_manager/package_verify_utest.cpp
+    ../basic_component/package_manager/package_worker_factory_utest.cpp
+    ../basic_component/package_manager/package_worker_utest.cpp
+    ../basic_component/device_comm/version_verify_utest.cpp
+    ../basic_component/package_manager/package_worker_utils_utest.cpp
+    ../basic_component/package_manager/tsd_path_mgr_utest.cpp
+    ../pub_facility/util_func/tsd_util_func_utest.cpp
+    ../basic_component/message_rsp_handler/message_parse_client_utest.cpp
+    ../pub_facility/util_func/tsd_sha256_utest.cpp
+    ../pub_facility/env_manager/env_internal_api_utest.cpp
+    ../basic_component/device_comm/hdc_client_utest.cpp
+    ../basic_component/device_comm/hdc_common_utest.cpp
+    ../basic_component/message_builder/hdc_message_builder_utest.cpp
+    ../basic_component/device_comm/device_comm_utest.cpp
+    ../basic_component/device_comm/device_comm_agent_utest.cpp
+    ../basic_component/message_rsp_handler/message_parse_interface_utest.cpp
+    ../common/stub/stub_dc_utest.cpp
+    ../common/main.cpp
+    ../common/common_util_func.cpp
     ../stub/stub_server_reply.cpp
     ../stub/stub_server_msg_impl.cpp
     ../stub/stub_server_msg_proc_def.cpp
-    ../stub/stub_common_sys_call.cpp
     ../stub/stub_mmpa.cpp
-    ../stub/stub_appmon.cpp
     ../stub/stub_hdc.cpp
     ../stub/stub_driver.cpp
     ../stub/stub_log.cpp
-    ../stub/log_writer.cpp
     ../stub/stub_devdrv_runtime.cpp
-    ../stub/stub_ezcom.cpp
     ../stub/error_manager.h
-    ../stub/stub_SsToOwnerClient.cpp
-    ../stub/stub_ProcMgrGrpOwnerClient.cpp
 )
 set(TSD_PROTO_SRC_FILE
     ${TSD_SRC_PATH}/pub_facility/proto/tsd_message.proto
@@ -122,6 +131,7 @@ add_executable(tsd_client_utest
 )
 
 target_include_directories(tsd_client_utest PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/../common
     ${TSD_SRC_PATH}/common/
     ${TSD_SRC_PATH}/tsdclient/
     ${CMAKE_BINARY_DIR}/proto/tsd_client_proto/
@@ -145,7 +155,6 @@ target_include_directories(tsd_client_utest PRIVATE
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/pkg_inc/platform
     ../stub/
-    ../stub/local_stub/
     ${RUNTIME_DIR}/src/dfx/error_manager/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
 )
@@ -156,6 +165,7 @@ target_compile_definitions(tsd_client_utest PRIVATE
     TDT_HOST_LIB
     TSD_HOST_LIB
     tsd_UT
+    NOT_COVERAGE_BY_UT
     google=ascend_private
 )
 
@@ -171,3 +181,10 @@ target_link_libraries(tsd_client_utest PRIVATE
 )
 
 add_dependencies(tsd_client_utest platform)
+
+if(UNIX AND NOT APPLE)
+    set_target_properties(tsd_client_utest PROPERTIES
+        BUILD_RPATH "\$ORIGIN/../../../../src/platform"
+    )
+    target_link_options(tsd_client_utest PRIVATE "-Wl,--disable-new-dtags")
+endif()

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,28 +8,16 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include <cstdarg>
-#include "weak_log.h"
+#include "gtest/gtest.h"
+#include "tsd_message_parse_client.h"
 
-extern "C" {
-int dlog_getlevel(int moduleId, int* enableEvent)
-{
-    (void)moduleId;
-    (void)enableEvent;
-    return 2;
-}
+using namespace tsd;
 
-int CheckLogLevel(int moduleId, int logLevel)
+TEST(MessageParseClientUTest, GetInstanceReturnsSingleton)
 {
-    (void)moduleId;
-    (void)logLevel;
-    return 1;
-}
+    MessageParseClient* first = MessageParseClient::GetInstance();
+    MessageParseClient* second = MessageParseClient::GetInstance();
 
-void DlogRecord(int moduleId, int level, const char* fmt, ...)
-{
-    (void)moduleId;
-    (void)level;
-    (void)fmt;
-}
+    EXPECT_NE(first, nullptr);
+    EXPECT_EQ(first, second);
 }

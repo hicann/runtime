@@ -12,15 +12,11 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "stub_log.h"
-#include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "weak_ascend_hal.h"
 
 static const int32_t PHYSICAL_ID = 15;
 
-extern "C" int tsDevSendMsgAsync(
-    unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId);
 static struct event_info g_event = {
     .comm =
         {.event_id = EVENT_DVPP_MSG,
@@ -33,12 +29,6 @@ static struct event_info g_event = {
     .priv = {.msg_len = EVENT_MAX_MSG_LEN, .msg = {0}}};
 
 drvError_t halEschedSubmitEvent(unsigned int devId, struct event_summary* event) { return DRV_ERROR_NONE; }
-
-int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId)
-{
-    return 0;
-}
-int eSchedSubmitEvent(unsigned int devId, struct event_summary* event) { return 0; }
 
 drvError_t halGetChipFromDevice(int device_id, int* chip_id)
 {
@@ -111,12 +101,6 @@ drvError_t halEschedWaitEvent(
     return DRV_ERROR_NONE;
 }
 
-drvError_t drvBindHostPid(struct drvBindHostpidInfo info) { return DRV_ERROR_NONE; }
-
-drvError_t drvUnbindHostPid(struct drvBindHostpidInfo info) { return DRV_ERROR_NONE; }
-
-int halRegisterVmngClient() { return DRV_ERROR_NONE; }
-
 drvError_t halEschedAckEvent(
     unsigned int devId, EVENT_ID eventId, unsigned int subeventId, char* msg, unsigned int msgLen)
 {
@@ -151,78 +135,6 @@ drvError_t halEschedSubmitEventSync(
 {
     return DRV_ERROR_NONE;
 }
-
-drvError_t halGetVdevNum(uint32_t* devNum) { return DRV_ERROR_NONE; }
-
-drvError_t halSensorNodeRegister(uint32_t devId, struct halSensorNodeCfg* Cfg, uint64_t* Handle)
-{
-    return DRV_ERROR_NONE;
-}
-
-drvError_t halSensorNodeUnregister(uint32_t devId, uint64_t Handle) { return DRV_ERROR_NONE; }
-
-drvError_t halSensorNodeUpdateState(uint32_t devId, uint64_t Handle, int val, halGeneralEventType_t flag)
-{
-    if (devId == 1) {
-        return DRV_ERROR_IOCRL_FAIL;
-    }
-    if ((devId == 0U) && (flag == GENERAL_EVENT_TYPE_OCCUR)) {
-        return DRV_ERROR_NONE;
-    }
-    if ((devId == 0U) && (flag == GENERAL_EVENT_TYPE_RESUME)) {
-        return DRV_ERROR_IOCRL_FAIL;
-    }
-    return DRV_ERROR_NONE;
-}
-
-DLLEXPORT DVresult halMemGetInfo(DVdevice device, unsigned int type, struct MemInfo* info)
-{
-    if (device == 5) {
-        info->numa_info.node_cnt = 1U;
-        info->numa_info.node_id[0] = 129;
-    }
-    return DRV_ERROR_NONE;
-}
-
-drvError_t drvQueryProcessHostPid(
-    int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type)
-{
-    (void)chip_id;
-    (void)vfid;
-    (void)cp_type;
-    if (pid == 123) {
-        return DRV_ERROR_NONE;
-    } else if (pid == 456) {
-        return DRV_ERROR_NO_DEVICE;
-    } else {
-        *host_pid = 456;
-    }
-    return DRV_ERROR_NONE;
-}
-
-drvError_t halSetDeviceInfoByBuff(uint32_t deviceId, int32_t moduleType, int32_t infoType, void* buf, int32_t size)
-{
-    (void)moduleType;
-    (void)infoType;
-    (void)buf;
-    (void)size;
-    if (deviceId < 2) {
-        return DRV_ERROR_NONE;
-    } else if (deviceId == 3) {
-        return DRV_ERROR_BUSY;
-    } else {
-        return DRV_ERROR_NO_DEVICE;
-    }
-}
-
-drvError_t halRepairFault(uint32_t devid, halRepairFaultInfo* info)
-{
-    (void)devid;
-    (void)info;
-    return DRV_ERROR_NONE;
-}
-
-drvError_t halTsCmdlistMemMap(unsigned int devId, unsigned int tsId) { return DRV_ERROR_NONE; }
 
 drvError_t drvHdcGetTrustedBasePathV2(int peer_node, int peer_devid, char* base_path, unsigned int path_len)
 {
