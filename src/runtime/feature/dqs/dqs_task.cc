@@ -343,7 +343,7 @@ static rtError_t InitFuncCallParaForDqsBatchDequeueTask(TaskInfo* taskInfo, RtSt
 
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     InitDequeMbufTracePara(fcPara.dequeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
-    InitDequeMbufTracePara(fcPara.freeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
+    InitFreeMbufTracePara(fcPara.freeMbufTracePara, RtPtrToValue(ctrlSpacePtr), streamId);
 
     RT_LOG(
         RT_LOG_INFO,
