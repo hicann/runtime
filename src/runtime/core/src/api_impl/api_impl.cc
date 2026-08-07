@@ -1690,8 +1690,13 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
                 // 2.Be a capture stream
                 // 3.Event was created using the rtCreateEventExWithFlag interface
                 // 4. A record was added the single-operator stream
-                RT_LOG(
-                    RT_LOG_ERROR, "The record corresponding to the event not be captured, mode=%d", evt->IsNewMode());
+                RT_LOG_OUTER_MSG_IMPL(
+                    ErrorCode::EE1016, "Triggering event waiting",
+                    "The event wait task is not supported during model capture because the corresponding event record "
+                    "task is not "
+                    "in the current model. To wait for an event outside the model, see the usage of "
+                    "ACL_EVENT_WAIT_EXTERNAL of "
+                    "the aclrtStreamWaitEventWithFlag API in the API reference");
                 return RT_ERROR_STREAM_CAPTURE_ISOLATION;
             }
         }

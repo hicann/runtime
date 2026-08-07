@@ -297,6 +297,22 @@ TEST_F(RtApiTest, rtStreamWaitEventWithFlagApiValidation)
     ExpectDestroy(stream, event);
 }
 
+TEST_F(RtApiTest, rtStreamWaitEventWithTimeoutCaptureIsolation)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::StreamWaitEvent)
+        .expects(once())
+        .will(returnValue(RT_ERROR_STREAM_CAPTURE_ISOLATION));
+
+    Event event;
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    rtEvent_t eventHandle = rt_ut::InitAndExportHandle<rtEvent_t>(&event);
+    rtStream_t streamHandle = rt_ut::InitAndExportHandle<rtStream_t>(&stream);
+
+    EXPECT_EQ(rtStreamWaitEventWithTimeout(streamHandle, eventHandle, 0U), ACL_ERROR_RT_CAPTURE_DEPENDENCY);
+}
+
 TEST_F(RtApiTest, rtEventWithFlagExternalRejectsUnsupportedEventModes)
 {
     MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));

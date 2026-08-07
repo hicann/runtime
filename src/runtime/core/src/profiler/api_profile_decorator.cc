@@ -1470,9 +1470,8 @@ rtError_t ApiProfileDecorator::DevMalloc(
     CallApiBegin(RT_PROF_API_DEV_MALLOC);
     const rtError_t error = impl_->DevMalloc(devPtr, size, policy, advise, cfg);
     if (error == RT_ERROR_NONE) {
-        FillMemMngExtInfo(
-            (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr), size, RT_PROF_MEM_MNG_TYPE_MALLOC,
-            MSPROF_MEMORY_TYPE_DEVICE, nullptr);
+        const uint64_t addr = (devPtr == nullptr) ? 0U : RtPtrToValue(*devPtr);
+        FillMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_DEVICE, nullptr);
     }
     CallApiEnd(error);
     return error;
