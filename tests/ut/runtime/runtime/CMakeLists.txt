@@ -55,7 +55,7 @@ set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v100/task_adpter.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v100/task_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
@@ -115,7 +115,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task_launch_config.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200_base/task_adpter.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v200_base/task_adapter.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc

@@ -48,7 +48,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
-    ${TOP_DIR}/src/runtime/core/src/task/arch5162/task_adpter.cc
+    ${TOP_DIR}/src/runtime/core/src/task/arch5162/task_adapter.cc
 )
 
 set(libruntime_src_files_include_for_arch5162

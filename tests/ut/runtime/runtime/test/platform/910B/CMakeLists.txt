@@ -68,7 +68,7 @@ set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v100/task_adpter.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v100/task_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc

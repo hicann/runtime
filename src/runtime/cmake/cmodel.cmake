@@ -78,7 +78,7 @@ set(libruntime_cmodel_v100_task_src_files
 
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
-    ${RUNTIME_CORE_DIR}/src/task/v100/task_adpter.cc
+    ${RUNTIME_CORE_DIR}/src/task/v100/task_adapter.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_stars.cc
@@ -161,7 +161,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_task_v200_base.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/davinci_task_launch_config.cc
-    ${RUNTIME_CORE_DIR}/src/task/v200_base/task_adpter.cc
+    ${RUNTIME_CORE_DIR}/src/task/v200_base/task_adapter.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
