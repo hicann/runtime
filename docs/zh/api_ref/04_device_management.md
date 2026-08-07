@@ -537,7 +537,7 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| utilizationInfo | 输出 | 利用率信息结构体指针。类型定义定参见[aclrtUtilizationInfo](25-04_Structs.md#aclrtUtilizationInfo)。 |
+| utilizationInfo | 输出 | 利用率信息结构体指针。类型定义请参见[aclrtUtilizationInfo](25-04_Structs.md#aclrtUtilizationInfo)。 |
 
 ### 返回值说明
 

@@ -595,7 +595,7 @@ aclError aclFinalize()
 去初始化函数，用于释放进程内acl接口使用的相关资源。
 
 <!-- npu="950,A3,910b,910,310p,310b" id29 -->
-对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止不丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)中的。
+对于涉及Device业务日志回传到Host的场景，本接口默认增加2000ms延时（实际最大延时可达2000ms），以确保ERROR级别和EVENT级别日志完整回传，防止丢失。您可以将ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量设置为0（命令示例：export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0），来取消该默认延时。关于ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT环境变量的详细描述请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)中的。
 <!-- end id29 -->
 
 ### 参数说明
