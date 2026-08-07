@@ -63,6 +63,7 @@ export ASCEND_TOOLKIT_HOME="${ASCEND_INSTALL_PATH}"
 export ASCEND_HOME_PATH="${ASCEND_INSTALL_PATH}"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 echo "Configuring CMake..."

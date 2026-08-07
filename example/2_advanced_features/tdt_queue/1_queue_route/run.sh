@@ -18,6 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 

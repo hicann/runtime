@@ -58,6 +58,7 @@ echo "[INFO]: Current compile soc version is ${SOC_VERSION}"
 cd "${SCRIPT_DIR}"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 echo "Configuring CMake..."
