@@ -21,6 +21,7 @@
 #include "error_code.h"
 #include "thread_local_container.hpp"
 #include "aic_aiv_sqe_common.hpp"
+#include "aicpu_timeout_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -128,11 +129,12 @@ void ConstructDavidAICpuSqeForDavinciTaskBase(
     /* word3 */
     sqe->sqeIndex = 0U; // useless
     const bool isSupportTimeout =
-        ((sqe->kernelType == KERNEL_TYPE_AICPU_KFC) || (sqe->kernelType == KERNEL_TYPE_CUSTOM_KFC));
+        AicpuTimeoutManager::IsTimeoutSupportedByKernelType(stm->Device_(), static_cast<uint32_t>(sqe->kernelType));
     const bool isNeedNoTimeout = ((aicpuTaskInfo->timeout > RUNTIME_DAVINCI_MAX_TIMEOUT) && isSupportTimeout) ||
                                  (aicpuTaskInfo->timeout == MAX_UINT64_NUM);
-    sqe->kernelCredit = isNeedNoTimeout ? RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT :
-                                          static_cast<uint8_t>(GetAicpuKernelCreditV200(aicpuTaskInfo->timeout));
+    sqe->kernelCredit = isNeedNoTimeout ?
+                            RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT :
+                            static_cast<uint8_t>(GetAicpuKernelCreditV200(stm->Device_(), aicpuTaskInfo->timeout));
     sqe->sqeLength = 0U;
 
     /* words4-13 use reserved field */

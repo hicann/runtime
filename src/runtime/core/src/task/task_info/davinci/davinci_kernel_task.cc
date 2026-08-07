@@ -695,7 +695,8 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
         const std::string errMsg = "The AI CPU operator " + kernelName + " that times out is on device " +
                                    std::to_string(devId) + " stream " + std::to_string(streamId) + ". The task ID is " +
                                    std::to_string(taskId) + ", the so name is " + soName +
-                                   ", and the entry function for executing this AI CPU operator is " + funcName + ".";
+                                   ", and the entry function for executing this AI CPU operator is " + funcName + "." +
+                                   " AI CPU process will be stopped. Exit the application and restart to recover.";
         RT_LOG_OUTER_MSG(RT_AICPU_TIMEOUT_ERROR, "%s", errMsg.c_str());
     } else {
         RT_LOG_CALL_MSG_NO_RT_LOG(
@@ -995,8 +996,10 @@ void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId)
         } else if (CheckErrPrint(errorCode)) {
             if ((type == TS_TASK_TYPE_KERNEL_AICPU) && (errorCode == TS_ERROR_AICPU_TIMEOUT)) {
                 RT_LOG_OUTER_MSG(
-                    RT_AICPU_TIMEOUT_ERROR, "An error occurred in the AI CPU task, retCode=%#x, [%s].", errorCode,
-                    GetTsErrCodeMap(errorCode, &rtErrCode));
+                    RT_AICPU_TIMEOUT_ERROR,
+                    "An error occurred in the AI CPU task, retCode=%#x, [%s]. "
+                    "AI CPU process will be stopped. Exit the application and restart to recover.",
+                    errorCode, GetTsErrCodeMap(errorCode, &rtErrCode));
             } else {
                 RT_LOG_CALL_MSG(
                     moduleType, "An error occurred in the kernel task, retCode=%#x, [%s].", errorCode,

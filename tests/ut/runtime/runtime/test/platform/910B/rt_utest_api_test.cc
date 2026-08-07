@@ -2429,7 +2429,7 @@ TEST_F(NewCloudV2ApiTest, RT_SetOpExecuteWithMs_8)
     rtInstance->SetSocVersion("Ascend910B1");
     error = rtSetOpExecuteTimeOut(100);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 28);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 24);

@@ -210,6 +210,8 @@ set(libruntime_src_files_include_for_arch5162
 
 set(runtime_src_device_list
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
     ${RUNTIME_CORE_DIR}/src/device/device.cc
@@ -352,6 +354,7 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_CORE_DIR}/src/pool
     ${RUNTIME_CORE_DIR}/src/ttlv
     ${RUNTIME_CORE_DIR}/src/device
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout
     ${RUNTIME_DIR}/src/runtime/driver
     ${RUNTIME_CORE_DIR}/src/common
     ${RUNTIME_CORE_DIR}/src/plugin_manage

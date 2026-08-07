@@ -302,6 +302,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
@@ -492,6 +494,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/pool
     ${TOP_DIR}/src/runtime/core/src/ttlv
     ${TOP_DIR}/src/runtime/core/src/device
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout
     ${TOP_DIR}/src/runtime/driver
     ${TOP_DIR}/src/runtime/core/src/common
     ${TOP_DIR}/src/runtime/core/src/plugin_manage

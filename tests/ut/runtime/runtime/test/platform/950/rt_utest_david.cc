@@ -5004,6 +5004,7 @@ TEST_F(DavidVfApiTest, test_setgroup_for_david)
     MOCKER_CPP_VIRTUAL(device, &Device::SetCurGroupInfo).stubs().will(returnValue(RT_ERROR_STREAM_NEW));
     error = rtSetGroup(1);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
 TEST_F(DavidVfApiTest, test_rtGetAddrAndPrefCntWithHandle)

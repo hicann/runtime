@@ -77,7 +77,7 @@ rtError_t InternalLaunchWithKernelAndArgs(
 
     kernelTask->u.aicpuTaskInfo.aicpuFlags = flag;
     kernelTask->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(kernelType);
-    kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(argsInfo, &taskCfg, flag);
+    kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, &taskCfg, flag);
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, stream_id=%d, task_id=%u, isModelStream=%d, NonSupportModelCompile=%u, "
@@ -130,7 +130,7 @@ rtError_t InternalLaunchWithArgs(
 
     kernelTask->u.aicpuTaskInfo.aicpuFlags = flag;
     kernelTask->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(kernelType);
-    kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(argsInfo, nullptr, flag);
+    kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, nullptr, flag);
     RT_LOG(
         RT_LOG_INFO,
         "Force flag device_id=%u, stream_id=%d, task_id=%u, model_num=%u, NonSupportModelCompile=%u "

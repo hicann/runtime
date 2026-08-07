@@ -24,6 +24,7 @@
 #include "cmodel_driver.h"
 #include "event_state_callback_manager.hpp"
 #include "runtime/stars_interface.h"
+#include "aicpu_timeout_control.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -61,6 +62,7 @@ protected:
     virtual void SetUp()
     {
         GlobalMockObject::verify();
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
         defaultMemPool = CreateSimplePool((10UL << 30), 0U);
     }

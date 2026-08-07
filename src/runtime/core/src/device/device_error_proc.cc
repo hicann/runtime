@@ -23,6 +23,7 @@
 #include "davinci_kernel_task.h"
 #include "npu_driver.hpp"
 #include "ringbuffer_maintain_task.h"
+#include "aicpu_timeout_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -111,7 +112,9 @@ static const std::map<uint64_t, std::string> g_aicpuErrorMapInfo = {
     {AICPU_CUST_TASK_EXECUTE_TIMEOUT, "custom task execute timeout"},
     {AICPU_CUST_TASK_EXECUTE_PARAM_INVALID, "custom task execute param invalid"},
     {AICPU_CUST_INNER, "inner error"},
-    {AICPU_CUST_RESERVED, "reserved: inner error"}};
+    {AICPU_CUST_RESERVED, "reserved: inner error"},
+    {AICPU_TIMEOUT_RAW_ERRCODE,
+     "AI CPU execution timeout. The AI CPU process will be stopped. Exit the application and restart to recover"}};
 
 DeviceErrorProc::DeviceErrorProc(Device* dev, uint32_t ringBufferSize)
     : device_(dev),
@@ -1223,6 +1226,10 @@ rtError_t ProcessStarsAicpuErrorInfo(
             info->u.aicpuErrorInfo.comm.chipId, info->u.aicpuErrorInfo.comm.dieId, errorNumber,
             info->u.aicpuErrorInfo.aicpu.rspErrorInfo.streamId, TaskIdDesc(),
             info->u.aicpuErrorInfo.aicpu.rspErrorInfo.taskId, errcode, msg.c_str());
+        // Propagate the precise ring-buffer AI CPU error code to the fault task for graph-mode timeout detection.
+        if (errTaskPtr != nullptr) {
+            errTaskPtr->errorCode = static_cast<uint32_t>(errcode);
+        }
         return RT_ERROR_NONE;
     }
 

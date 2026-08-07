@@ -1714,7 +1714,7 @@ TEST_F(TaskTestV201, RT_SetOpExecuteWithMs)
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     error = rtSetOpExecuteTimeOutWithMs(33);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 5); // failed
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 1);

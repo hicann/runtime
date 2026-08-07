@@ -18,6 +18,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "runtime.hpp"
 #include "raw_device.hpp"
+#include "aicpu_timeout_control.h"
 #include "npu_driver.hpp"
 #include "jetty_pool.h"
 #include "jetty_manager.h"
@@ -105,6 +106,7 @@ static drvError_t StubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
 
 static void SetupJettyDriverMocks(Driver* driver)
 {
+    MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
     int64_t hardwareVersion = ((ARCH_V100 << 16) | (CHIP_DAVID << 8) | (VER_NA));
     char* socVer = "Ascend950PR_9599";
 

@@ -23,6 +23,7 @@
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "runtime_tsch_defines.h"
 #include "profiler.hpp"
+#include "aicpu_timeout_manager.h"
 #include "stars.hpp"
 #include "device.hpp"
 #include "raw_device.hpp"
@@ -207,11 +208,12 @@ void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
     const uint32_t curVersion = stm->Device_()->GetTschVersion() & 0xFFFFU; // 取低16位作为版本号
     const bool isNewVersion = curVersion >= TS_VERSION_AICPU_SINGLE_TIMEOUT;
     const bool isSupportTimeout =
-        ((sqe->kernel_type == KERNEL_TYPE_AICPU_KFC) || (sqe->kernel_type == KERNEL_TYPE_CUSTOM_KFC));
+        AicpuTimeoutManager::IsTimeoutSupportedByKernelType(stm->Device_(), static_cast<uint32_t>(sqe->kernel_type));
     const bool isNeedNoTimeout = ((aicpuTaskInfo->timeout > RUNTIME_DAVINCI_MAX_TIMEOUT) && isSupportTimeout) ||
                                  (aicpuTaskInfo->timeout == MAX_UINT64_NUM);
-    sqe->kernel_credit = isNeedNoTimeout ? RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT :
-                                           static_cast<uint8_t>(GetAicpuKernelCredit(aicpuTaskInfo->timeout));
+    sqe->kernel_credit = isNeedNoTimeout ?
+                             RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT :
+                             static_cast<uint8_t>(GetAicpuKernelCredit(stm->Device_(), aicpuTaskInfo->timeout));
 
     // old tsagent not suport config aicpu timeout  to  0xFF
     sqe->kernel_credit = (isNeedNoTimeout && (!isNewVersion)) ? RT_STARS_MAX_KERNEL_CREDIT : sqe->kernel_credit;

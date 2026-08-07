@@ -123,6 +123,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ,
     RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF,
     RtOptionalFeatureType::RT_FEATURE_DFX_ERR_GET_AND_REPAIR,
+    RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT,
 };
 
 REGISTER_CHIP_FEATURE_SET(CHIP_910_B_93, CHIP_CLOUD_V2_FEATURE);

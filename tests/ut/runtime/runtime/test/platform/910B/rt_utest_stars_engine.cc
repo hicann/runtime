@@ -22,6 +22,7 @@
 #include "event.hpp"
 #include "logger.hpp"
 #include "raw_device.hpp"
+#include "aicpu_timeout_control.h"
 #include "profiling_task.h"
 #include "maintenance_task.h"
 #undef private
@@ -60,7 +61,6 @@ constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
 } // namespace
 
 void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
-uint16_t GetAicpuKernelCredit(uint16_t timeout);
 } // namespace runtime
 } // namespace cce
 
@@ -80,10 +80,12 @@ protected:
     virtual void SetUp()
     {
         MockDriverApi();
-        rtSetDevice(0);
+        ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 
         device_ = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+        ASSERT_NE(device_, nullptr);
         device_->SetIsChipSupportRecycleThread(false);
+
         engine_ = ((RawDevice*)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
@@ -161,6 +163,7 @@ protected:
         Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::StreamUnBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
 
         bool enable = false;
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqEnable)
@@ -238,7 +241,7 @@ TEST_F(CloudV2StarsEngineTest, timeout1)
 {
     Runtime::Instance()->timeoutConfig_.isInit = false;
     Runtime::Instance()->timeoutConfig_.interval = cce::runtime::RT_STARS_TASK_KERNEL_CREDIT_SCALE_US;
-    uint16_t ret = GetAicpuKernelCredit(10 * 1000000UL);
+    uint16_t ret = GetAicpuKernelCredit(nullptr, 10 * 1000000UL);
     EXPECT_EQ(ret, 7);
 }
 

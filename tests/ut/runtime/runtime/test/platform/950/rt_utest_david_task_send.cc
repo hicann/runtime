@@ -176,10 +176,12 @@ TEST_F(DavidTaskSendTest, DavidAllocAndSendFlipTask_Fail)
 
 TEST_F(DavidTaskSendTest, david_send_aicpu_msg_version_task)
 {
-    uint16_t head = 1U;
+    Stream* const primaryStream = device_->PrimaryStream_();
+    ASSERT_NE(primaryStream, nullptr);
+    const uint16_t head = static_cast<uint16_t>((primaryStream->GetTaskPosTail() + 1U) % primaryStream->GetSqDepth());
     Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER(GetDrvSqHead).stubs().with(mockcpp::any(), outBound(head)).will(returnValue(RT_ERROR_NONE));
-    ((RawDevice*)(stream_->Device_()))->PrimaryStream_()->SetSqBaseAddr(0U);
-    ((RawDevice*)(stream_->Device_()))->SendTopicMsgVersionToAicpu();
+    primaryStream->SetSqBaseAddr(0U);
+    device_->SendTopicMsgVersionToAicpu();
     GlobalMockObject::verify();
 }

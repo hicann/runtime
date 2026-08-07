@@ -84,6 +84,7 @@
 #include "davinci_multiple_task.h"
 #undef protected
 #undef private
+#include "aicpu_timeout_control.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -4137,6 +4138,7 @@ protected:
             .will(returnValue(RT_ERROR_NONE));
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         SetupDavidDeviceAndEngine(device_, engine_);
 
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, 0);
@@ -4144,7 +4146,8 @@ protected:
         stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
-        davidSqe_ = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+        const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
+        davidSqe_ = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
         oldSqAddr_ = stream_->GetSqBaseAddr();
         uint64_t sqeAddr = reinterpret_cast<uint64_t>(davidSqe_);
         stream_->SetSqBaseAddr(sqeAddr);
@@ -4510,7 +4513,8 @@ TEST_F(ApiDavidTest, CountNotify_Record_Wait)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* defaultStm = curCtx->DefaultStream_();
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(5 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = defaultStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     defaultStm->SetSqBaseAddr(newSqAddr);
@@ -6265,7 +6269,8 @@ TEST_F(ApiDavidTest, test_aicpu_model_destroy_task_on_david)
     Model* model = rt_ut::UnwrapOrNull<Model>(rtModel);
     model->SetModelExecutorType(EXECUTOR_AICPU);
     model->aicpuTaskInfoPtr_ = &taskInfo;
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = dftStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     dftStm->SetSqBaseAddr(newSqAddr);
@@ -6288,7 +6293,8 @@ TEST_F(ApiDavidTest, test_write_value_ptr_task_on_david)
     rtWriteValueInfo_t wvinfo = {0b01, WRITE_VALUE_SIZE_TYPE_8BIT, value};
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* dftStm = curCtx->DefaultStream_();
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = dftStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     dftStm->SetSqBaseAddr(newSqAddr);
@@ -6312,7 +6318,8 @@ TEST_F(ApiDavidTest, test_cmo_task_launch_on_david)
 
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* dftStm = curCtx->DefaultStream_();
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(5 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = dftStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     dftStm->SetSqBaseAddr(newSqAddr);
@@ -6389,7 +6396,8 @@ TEST_F(ApiDavidTest, test_notify_wait_record_task_on_david)
 
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* dftStm = curCtx->DefaultStream_();
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = dftStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     dftStm->SetSqBaseAddr(newSqAddr);

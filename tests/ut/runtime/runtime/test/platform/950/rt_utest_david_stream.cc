@@ -20,6 +20,7 @@
 #define private public
 #define protected public
 #include "engine.hpp"
+#include "aicpu_timeout_control.h"
 #include "event.hpp"
 #include "task_res.hpp"
 #include "task_recycle.hpp"
@@ -178,6 +179,7 @@ protected:
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
 
         (void)rtSetSocVersion("Ascend950PR_9599");

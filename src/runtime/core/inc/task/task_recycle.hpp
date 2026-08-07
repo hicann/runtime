@@ -26,7 +26,9 @@ void TryReclaimToTask(TaskInfo* workTask);
 rtError_t ProcReport(
     Device* const dev, uint32_t streamId, const uint32_t syncPos, const uint32_t cnt,
     rtLogicCqReport_t* const logicReport, bool& isFinished, bool& hasCqeReportErr);
-void ProcCqReportException(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId);
+void ProcCqReportException(
+    Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId,
+    TaskInfo** outFaultTaskPtr = nullptr);
 // 处理完异常CQE后rt侧拉起sq
 rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* const taskInfo);
 rtError_t RecycleTaskBySqHead(Stream* const stm);

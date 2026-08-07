@@ -91,7 +91,7 @@ void ConstructAicpuSubSqeBase(
     FillTopicType(sqe, kernelFlag);
 
     sqe->sqeLength = 0U;
-    sqe->kernelCredit = static_cast<uint8_t>(GetAicpuKernelCredit(0UL));
+    sqe->kernelCredit = static_cast<uint8_t>(GetAicpuKernelCredit(taskInfo->stream->Device_(), 0UL));
     sqe->qos = taskInfo->stream->Device_()->GetTsdQos();
 
     /* word3 */

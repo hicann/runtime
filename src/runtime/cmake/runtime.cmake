@@ -382,6 +382,8 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/stream/dvpp_grp.cc
     ${RUNTIME_CORE_DIR}/src/engine/engine.cc
@@ -461,6 +463,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_CORE_DIR}/src/pool
     ${RUNTIME_CORE_DIR}/src/ttlv
     ${RUNTIME_CORE_DIR}/src/device
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout
     ${RUNTIME_DIR}/src/runtime/driver
     ${RUNTIME_CORE_DIR}/src/common
     ${RUNTIME_CORE_DIR}/src/plugin_manage

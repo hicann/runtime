@@ -292,7 +292,7 @@ static rtError_t StreamLaunchCpuKernelExWithArgsForAicpuStm(
 
     aicpuTask->aicpuFlags = flag;
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernelType);
-    aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, flag);
+    aicpuTask->timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, taskCfg, flag);
     RT_LOG(
         RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u.", kernelType, flag,
         aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim);
@@ -319,7 +319,7 @@ static void SetTaskInfo(
     AicpuTaskInfo* aicpuTask = &(kernelTask->u.aicpuTaskInfo);
     aicpuTask->aicpuFlags = flag;
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernelType);
-    aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, flag);
+    aicpuTask->timeout = ConvertAicpuTimeout(kernelTask->stream->Device_(), argsInfo, taskCfg, flag);
     aicpuTask->headParamOffset = static_cast<uint32_t>(cpuParamHeadOffset);
     RT_LOG(
         RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, headParamOffset=%u.",

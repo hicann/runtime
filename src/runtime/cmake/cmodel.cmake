@@ -467,6 +467,8 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/stream/dvpp_grp.cc
     ${RUNTIME_CORE_DIR}/src/engine/engine.cc
@@ -602,6 +604,8 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/stream/dvpp_grp.cc
@@ -695,6 +699,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_CORE_DIR}/src/pool
     ${RUNTIME_CORE_DIR}/src/ttlv
     ${RUNTIME_CORE_DIR}/src/device
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout
     ${RUNTIME_DIR}/src/runtime/driver
     ${RUNTIME_CORE_DIR}/src/common
     ${RUNTIME_CORE_DIR}/src/plugin_manage
@@ -714,6 +719,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/src/queue_schedule/dgwclient/inc/
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${LIBC_SEC_HEADER}

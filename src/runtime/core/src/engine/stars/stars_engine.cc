@@ -36,6 +36,7 @@
 #include "cond_handle/cond_handle.hpp"
 #include "capture_model.hpp"
 #include "model_c.hpp"
+#include "aicpu_timeout_manager.h"
 
 namespace {
 constexpr uint16_t TASK_RECLAIM_MAX_NUM = 64U;       // Max reclaim num per query.
@@ -1661,6 +1662,10 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t& logicCq, const bool
         streamId, taskId, sqId, sqHead, static_cast<uint16_t>(taskType), reportTask->typeName);
 
     reportTask->error = 0U;
+
+    // Record timeout before StarsCqeReceive overwrites the fault task error code.
+    AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(GetDevice(), logicCq, reportTask, faultTaskPtr);
+
     StarsCqeReceive(logicCq, reportTask);
 
     // Set error device status

@@ -37,6 +37,7 @@
 #include "rt_unwrap.h"
 #undef private
 #undef protected
+#include "aicpu_timeout_control.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -130,6 +131,7 @@ protected:
         rtInstance->SetDisableThread(true);
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
         (void)rtSetSocVersion("Ascend950PR_9599");
         dev_ = rtInstance->DeviceRetain(0, 0);

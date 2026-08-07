@@ -58,6 +58,7 @@
 #include "kernel.hpp"
 #include "stream_mem_pool.hpp"
 #include "api_impl_soma.hpp"
+#include "aicpu_timeout_manager.h"
 #include "device_error_proc.hpp"
 
 namespace cce {
@@ -132,6 +133,11 @@ rtError_t InitializePrimaryContext(PrimaryContextInitInfo& initInfo)
     rtError_t err = initInfo.ctx->Setup();
     ERROR_RETURN_MSG_INNER(
         err, "Primary context setup failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(), static_cast<uint32_t>(err));
+
+    err = AicpuTimeoutManager::TryCloseAicpuMonitor(initInfo.dev);
+    ERROR_RETURN_MSG_INNER(
+        err, "Primary context close AI CPU monitor failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(),
+        static_cast<uint32_t>(err));
 
     err = initInfo.dev->UpdateTimeoutConfig();
     ERROR_RETURN_MSG_INNER(
@@ -3210,6 +3216,7 @@ void Runtime::FinalizeDeviceRelease(RefObject<Device*>& refObj, Device* dev, con
 
     const uint32_t devRunningState = dev->GetDevRunningState();
     // 1.drvrelease
+    AicpuTimeoutManager::ClearAicpuTimeoutState(dev);
     DELETE_O(dev)
 
     // 2.tsdclose
@@ -4627,6 +4634,12 @@ rtError_t Runtime::SetTimeoutConfig(
 
             Device* const device = refObj[i].GetVal();
             if (device == nullptr) {
+                continue;
+            }
+            if (device->GetAicpuMonitorClosedStatus()) {
+                RT_LOG(
+                    RT_LOG_DEBUG, "AI CPU monitor is closed, skip setting timeout config, device_id=%u.",
+                    device->Id_());
                 continue;
             }
 

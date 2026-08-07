@@ -612,6 +612,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
@@ -735,6 +737,8 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
@@ -923,6 +927,7 @@ add_executable(runtime_utest
     test/rt_utest_pool.cc
     test/rt_utest_agent.cc
     test/rt_utest_aicpu_err_msg.cc
+    test/rt_utest_aicpu_timeout.cc
     test/rt_utest_aicpu_scheduler_agent.cc
     test/rt_utest_enum_to_string_utils.cc
     test/rt_utest_ttlv.cc
@@ -1395,6 +1400,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/pool
     ${TOP_DIR}/src/runtime/core/src/ttlv
     ${TOP_DIR}/src/runtime/core/src/device
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout
     ${TOP_DIR}/src/runtime/driver
     ${TOP_DIR}/src/runtime/core/src/common
     ${TOP_DIR}/src/runtime/core/src/plugin_manage
@@ -1623,6 +1629,8 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc

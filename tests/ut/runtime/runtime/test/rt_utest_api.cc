@@ -6984,7 +6984,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs)
     rtInstance->SetSocVersion("AS31XM1X");
     error = rtSetOpExecuteTimeOutWithMs(10);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 5); // failed
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 1);
@@ -7007,7 +7007,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_2)
     rtInstance->SetSocVersion("AS31XM1X");
     error = rtSetOpExecuteTimeOutWithMs(33);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 5); // 1+4=5
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 1);
@@ -7030,7 +7030,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_3)
     rtInstance->SetSocVersion("AS31XM1X");
     error = rtSetOpExecuteTimeOutWithMs(330);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 14);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 10);
@@ -7054,7 +7054,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_4)
     rtInstance->SetSocVersion("AS31XM1X");
     error = rtSetOpExecuteTimeOutWithMs(1000000);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 254);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 254);
@@ -7077,7 +7077,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_5)
     std::string socVersion = rtInstance->GetSocVersion();
     rtInstance->SetSocVersion("AS31XM1X");
     rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = false;
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 254);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 3);
@@ -7100,7 +7100,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_6)
     std::string socVersion = rtInstance->GetSocVersion();
     rtInstance->SetSocVersion("AS31XM1X");
     rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = true;
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 254);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 254);
@@ -7124,7 +7124,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_7)
     rtInstance->SetSocVersion("AS31XM1X");
     error = rtSetOpExecuteTimeOutWithMs(300);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 13);
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 9);
@@ -7144,7 +7144,7 @@ TEST_F(ApiTest, RT_SetOpExecuteWithMs_14)
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t oriChipType = rtInstance->GetChipType();
     error = rtInstance->SetTimeoutConfig(RT_TIMEOUT_TYPE_OP_EXECUTE, 300, RT_TIME_UNIT_TYPE_S);
-    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    uint16_t kernelCredit = GetAicpuKernelCredit(nullptr, 0);
     EXPECT_EQ(kernelCredit, 254); // CHIP_BEGIN  GetKernelCreditScaleUS=0
     kernelCredit = GetAicoreKernelCredit(0);
     EXPECT_EQ(kernelCredit, 254); // CHIP_BEGIN  GetKernelCreditScaleUS=0

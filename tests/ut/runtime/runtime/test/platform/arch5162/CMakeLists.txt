@@ -277,6 +277,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/core/src/engine/stars/stars_engine.cc
     ${TOP_DIR}/src/runtime/core/src/event/event.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aix_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/cmo_barrier_common.cc
@@ -317,6 +319,7 @@ target_link_libraries(runtimeut_src_static_lib_5162a PRIVATE $<BUILD_INTERFACE:r
 
 target_include_directories(
     runtimeut_src_static_lib_5162a PUBLIC
+    ${TOP_DIR}/src/runtime/core/src/aicpu_timeout
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc

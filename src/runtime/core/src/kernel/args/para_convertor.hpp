@@ -15,6 +15,8 @@
 
 namespace cce {
 namespace runtime {
+class Device;
+
 constexpr uint8_t DATA_DUMP_ENABLE = 1U;
 constexpr uint8_t DATA_DUMP_DISABLE = 0U;
 
@@ -33,7 +35,8 @@ rtError_t ConvertCpuArgsByArgsHandle(
     rtCpuKernelArgs_t& oldArgs, const RtArgsHandle* const argsHandle, rtHostInputInfo_t specialArgsInfos[],
     const uint8_t arrayArgsNum);
 uint64_t ConvertTimeoutToInner(uint64_t timeout);
-uint64_t ConvertAicpuTimeout(const rtAicpuArgsEx_t* const argsInfo, const TaskCfg* taskCfg, const uint32_t flag);
+uint64_t ConvertAicpuTimeout(
+    const Device* const dev, const rtAicpuArgsEx_t* const argsInfo, const TaskCfg* taskCfg, const uint32_t flag);
 rtError_t ConvertArgsArrayToArgsEx(rtArgsEx_t& argsEx, const Kernel* kernel, void** argsArray);
 } // namespace runtime
 } // namespace cce

@@ -10,6 +10,7 @@
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
 #include "rt_unwrap.h"
+#include "aicpu_timeout_control.h"
 
 rtError_t LaunchHostFuncNormalStub(
     cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
@@ -38,6 +39,7 @@ protected:
 
     virtual void SetUp()
     {
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         (void)rtSetDevice(0);
         RawDevice* rawDevice = new RawDevice(0);
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());

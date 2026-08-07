@@ -264,6 +264,14 @@ public:
 
     bool IsDevicePageFault(void) const { return isPageFault_; }
 
+    bool GetAicpuMonitorClosedStatus() const { return isAicpuMonitorClosed_.Value(); }
+
+    void SetAicpuMonitorClosedStatus(const bool closed) { isAicpuMonitorClosed_.Set(closed); }
+
+    bool GetAicpuProcessStopPendingStatus() const { return isAicpuProcessStopPending_.Value(); }
+
+    void SetAicpuProcessStopPendingStatus(const bool pending) { isAicpuProcessStopPending_.Set(pending); }
+
     virtual rtError_t DevSetLimit(const rtLimitType_t type, const uint32_t val) = 0;
     virtual rtError_t DevSetTsId(const uint32_t taskSchId) = 0;
     virtual uint32_t DevGetTsId() const = 0;
@@ -479,6 +487,8 @@ private:
     bool isPageFault_{false};
     bool isDeviceRelease_{false};
     bool isDoingRecycling_{false};
+    Atomic<bool> isAicpuProcessStopPending_{false};
+    Atomic<bool> isAicpuMonitorClosed_{false};
     uint8_t argStreamNum_{0};
     std::mutex devErrProLock_;
     std::mutex argStreamMutex_;

@@ -46,6 +46,7 @@
 #include "stream_c.hpp"
 #undef protected
 #undef private
+#include "aicpu_timeout_control.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -76,6 +77,7 @@ protected:
     virtual void SetUp()
     {
         std::cout << "DavidContextTest SetUp start" << std::endl;
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
         std::cout << "DavidContextTest SetUp end" << std::endl;
     }

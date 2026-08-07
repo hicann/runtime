@@ -78,7 +78,7 @@ rtError_t XpuLaunchKernel(
     aicpuTask->kernel = newKernel;
     aicpuTask->aicpuFlags = flag;
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernel->GetAicpuKernelType_());
-    aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, flag);
+    aicpuTask->timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, taskCfg, flag);
     RT_LOG(
         RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, argsSize=%u.",
         kernel->GetAicpuKernelType_(), flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim,

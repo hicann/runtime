@@ -22,6 +22,7 @@
 #include "stream_c.hpp"
 #undef protected
 #undef private
+#include "aicpu_timeout_control.h"
 #include "runtime.hpp"
 #include "event.hpp"
 #include "npu_driver.hpp"
@@ -168,6 +169,7 @@ void MockDriverSetup(Device** deviceOut, Engine** engineOut)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(false))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtSetDevice(0);
     (void)rtSetSocVersion("Ascend950PR_9599");

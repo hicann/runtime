@@ -34,6 +34,7 @@ TEST_F(ChipKernelTest, kernel_create_for_solomon)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t curChipType = rtInstance->GetChipType();
+    const rtChipType_t curGlobalChipType = GlobalContainer::GetRtChipType();
     rtInstance->SetChipType(CHIP_CLOUD_V5);
     GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
@@ -47,6 +48,7 @@ TEST_F(ChipKernelTest, kernel_create_for_solomon)
     EXPECT_EQ(k1->Offset_(), 10);
     EXPECT_EQ((Program*)k1->Program_(), program);
     rtInstance->SetChipType(curChipType);
+    GlobalContainer::SetRtChipType(curGlobalChipType);
     delete k1;
 }
 
@@ -54,6 +56,7 @@ TEST_F(ChipKernelTest, kernel_create_for_second_solomon)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t curChipType = rtInstance->GetChipType();
+    const rtChipType_t curGlobalChipType = GlobalContainer::GetRtChipType();
     rtInstance->SetChipType(CHIP_CLOUD_V5);
     GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
@@ -68,5 +71,6 @@ TEST_F(ChipKernelTest, kernel_create_for_second_solomon)
     EXPECT_EQ(k1->TilingKey(), 1);
     EXPECT_EQ((Program*)k1->Program_(), program);
     rtInstance->SetChipType(curChipType);
+    GlobalContainer::SetRtChipType(curGlobalChipType);
     delete k1;
 }

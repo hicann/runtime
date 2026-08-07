@@ -133,7 +133,7 @@ void CommonConstructAICpuSqe(
     aicpuSqe->qos = stream->Device_()->GetTsdQos();
     aicpuSqe->res7 = 0U;
     aicpuSqe->sqe_index = 0U; // useless
-    aicpuSqe->kernel_credit = GetAicpuKernelCredit(0U);
+    aicpuSqe->kernel_credit = GetAicpuKernelCredit(stream->Device_(), 0U);
 
     uint64_t addr = RtPtrToValue(params->soNameAddr);
     aicpuSqe->taskSoAddrLow = static_cast<uint32_t>(addr);

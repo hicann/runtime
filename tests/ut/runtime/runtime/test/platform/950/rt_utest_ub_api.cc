@@ -1073,6 +1073,7 @@ protected:
         devBin.length = sizeof(binary_);
         devBin.data = binary_;
         DELETE_O(str);
+        ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
     }
 
     virtual void TearDown()
@@ -1100,6 +1101,7 @@ protected:
         rtDeviceReset(0);
         GlobalMockObject::reset();
         DELETE_O(str);
+        ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
     }
 
 public:
@@ -1131,7 +1133,8 @@ TEST_F(ApiTestUb2, ub_doorbell_send_test_submit3)
     dbSendInfo.info[1].functionId = 1;
     dbSendInfo.info[1].jettyId = 10;
     dbSendInfo.info[1].piValue = 20;
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
@@ -1169,7 +1172,8 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_normal)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
         .will(returnValue(RT_ERROR_NONE));
 
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = (rt_ut::UnwrapOrNull<Stream>(stream))->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
@@ -1180,11 +1184,12 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_normal)
 
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* defaultStm = curCtx->DefaultStream_();
+    uint64_t defaultOldSqAddr = defaultStm->GetSqBaseAddr();
     defaultStm->SetSqBaseAddr(newSqAddr);
     error = rtUbDirectSend(&wqeInfo, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    defaultStm->SetSqBaseAddr(oldSqAddr);
-    stream_->SetSqBaseAddr(oldSqAddr);
+    defaultStm->SetSqBaseAddr(defaultOldSqAddr);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr);
     taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(defaultStm)->taskResMang_));
     taskResMang->ResetTaskRes();
     error = rtGetDevice(&devId);
@@ -1249,7 +1254,8 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_submit3)
     wqeInfo.jettyId = 10;
     wqeInfo.wqe = (uint8_t*)malloc(64 * sizeof(uint8_t));
     wqeInfo.wqePtrLen = 64U;
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
@@ -1321,7 +1327,8 @@ TEST_F(ApiTestUb2, ub_doorbell_send_test_normal)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
         .will(returnValue(RT_ERROR_NONE));
 
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(2 * sizeof(rtDavidSqe_t));
+    const uint32_t sqDepth = stream_->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = (rt_ut::UnwrapOrNull<Stream>(stream))->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
@@ -1332,11 +1339,12 @@ TEST_F(ApiTestUb2, ub_doorbell_send_test_normal)
     (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->DefaultStream_()->SetSqMemAttr(false);
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* defaultStm = curCtx->DefaultStream_();
+    uint64_t defaultOldSqAddr = defaultStm->GetSqBaseAddr();
     defaultStm->SetSqBaseAddr(newSqAddr);
     error = rtUbDbSend(&dbSendInfo, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
     (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr);
-    defaultStm->SetSqBaseAddr(oldSqAddr);
+    defaultStm->SetSqBaseAddr(defaultOldSqAddr);
     free(sqe);
     taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(defaultStm)->taskResMang_));
     taskResMang->ResetTaskRes();

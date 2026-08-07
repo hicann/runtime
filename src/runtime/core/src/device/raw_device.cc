@@ -46,6 +46,7 @@
 #include "runtime_task_manager.h"
 #include "maintenance_task.h"
 #include "timeout_set_task.h"
+#include "aicpu_timeout_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -274,6 +275,10 @@ rtError_t RawDevice::ResourceRestore()
         ret = SendTopicMsgVersionToAicpu();
         ERROR_RETURN(ret, "Send topic msg version to aicpu failed, ret=%#x.", ret);
     }
+
+    AicpuTimeoutManager::ClearAicpuTimeoutState(this);
+    ret = AicpuTimeoutManager::TryCloseAicpuMonitor(this);
+    ERROR_RETURN(ret, "Close AI CPU monitor failed, ret=%#x, deviceId=%u", ret, deviceId_);
 
     ret = UpdateTimeoutConfig();
     ERROR_RETURN(ret, "UpdateTimeoutConfig failed, ret=%#x, deviceId=%u", ret, deviceId_);
@@ -1328,6 +1333,9 @@ rtError_t RawDevice::Stop()
         return engine_->Stop();
     }
 
+    // Handle the pending stop while HDC is still available.
+    AicpuTimeoutManager::CheckAndStopAicpuProcess(this);
+
     bool isThreadAlive = false;
     const bool isDisableThread = rt->GetDisableThread();
 
@@ -1478,6 +1486,10 @@ uint32_t RawDevice::GetSnapshotLen()
 
 rtError_t RawDevice::UpdateTimeoutConfig()
 {
+    if (GetAicpuMonitorClosedStatus()) {
+        RT_LOG(RT_LOG_DEBUG, "AI CPU monitor is closed, skip updating timeout config, device_id=%u.", deviceId_);
+        return RT_ERROR_NONE;
+    }
     Stream* const stm = GetCtrlStream(primaryStream_);
     const RtTimeoutConfig& timeoutConfig = Runtime::Instance()->GetTimeoutConfig();
 

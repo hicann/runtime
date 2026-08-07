@@ -32,6 +32,7 @@ uint64_t stubArgs = 0x1234567890;
 PlainProgram stubProgram(RT_KERNEL_ATTR_TYPE_AICPU);
 int32_t stubFun = 0;
 std::queue<rtError_t> expectedSubmitTaskResults = {};
+void* expectedKernelArgs = nullptr;
 
 Stream* GetDefaultStream()
 {
@@ -75,6 +76,9 @@ rtError_t SubmitTaskStub(
     if (!expectedSubmitTaskResults.empty()) {
         rtError_t expectedResult = expectedSubmitTaskResults.front();
         expectedSubmitTaskResults.pop();
+        if ((expectedKernelArgs != nullptr) && (taskObj != nullptr)) {
+            EXPECT_EQ(taskObj->u.aicpuTaskInfo.comm.args, expectedKernelArgs);
+        }
         if (expectedResult == RT_ERROR_NONE && taskObj != nullptr) {
             device->GetTaskFactory()->Recycle(taskObj);
         }
@@ -107,6 +111,7 @@ protected:
     {
         std::cout << "CloudV2AicpuKernelLaunchTest TearDown" << std::endl;
         expectedSubmitTaskResults = {};
+        expectedKernelArgs = nullptr;
         GlobalMockObject::verify();
         rtDeviceReset(0);
         std::cout << "CloudV2AicpuKernelLaunchTest TearDown end" << std::endl;
@@ -135,6 +140,42 @@ TEST_F(CloudV2AicpuKernelLaunchTest, CPU_KERNEL_LAUNCH_TEST)
 
     error = StreamLaunchCpuKernel(&name, 1, &argsInfo, stream, RT_KERNEL_HOST_ONLY);
     EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2AicpuKernelLaunchTest, CpuKernelLaunchWithDeviceArgs)
+{
+    expectedSubmitTaskResults.push(RT_ERROR_NONE);
+    MockSubmitTask();
+
+    Stream* const stream = GetDefaultStream();
+    char kernelName[] = "CheckKernelSupported";
+    rtKernelLaunchNames_t name = {nullptr, kernelName, kernelName};
+    void* const devArgs = reinterpret_cast<void*>(0x1000UL);
+    expectedKernelArgs = devArgs;
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = devArgs;
+    argsInfo.argsSize = sizeof(uint64_t);
+    argsInfo.isNoNeedH2DCopy = 1U;
+
+    EXPECT_EQ(StreamLaunchCpuKernel(&name, 1U, &argsInfo, stream, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2AicpuKernelLaunchTest, CpuKernelLaunchWithDeviceArgsSubmitFail)
+{
+    expectedSubmitTaskResults.push(RT_ERROR_DEVICE_INVALID);
+    MockSubmitTask();
+
+    Stream* const stream = GetDefaultStream();
+    char kernelName[] = "CheckKernelSupported";
+    rtKernelLaunchNames_t name = {nullptr, kernelName, kernelName};
+    void* const devArgs = reinterpret_cast<void*>(0x1000UL);
+    expectedKernelArgs = devArgs;
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = devArgs;
+    argsInfo.argsSize = sizeof(uint64_t);
+    argsInfo.isNoNeedH2DCopy = 1U;
+
+    EXPECT_EQ(StreamLaunchCpuKernel(&name, 1U, &argsInfo, stream, RT_KERNEL_DEFAULT), RT_ERROR_DEVICE_INVALID);
 }
 
 TEST_F(CloudV2AicpuKernelLaunchTest, CPU_KERNEL_LAUNCH_EX_TEST)

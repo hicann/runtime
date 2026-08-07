@@ -125,7 +125,7 @@ static void CommonConstructDavidAICpuSqe(
 
     /* word3 */
     sqe->sqeIndex = 0U; // useless
-    sqe->kernelCredit = static_cast<uint8_t>(GetAicpuKernelCredit(0UL));
+    sqe->kernelCredit = static_cast<uint8_t>(GetAicpuKernelCredit(stm->Device_(), 0UL));
     sqe->res3 = 0U;
     sqe->sqeLength = 0U;
 

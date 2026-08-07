@@ -14,6 +14,7 @@
 #include "kernel.hpp"
 #include "thread_local_container.hpp"
 #include "kernel_utils.hpp"
+#include "aicpu_timeout_manager.h"
 
 using namespace cce::runtime;
 
@@ -136,18 +137,15 @@ uint64_t ConvertTimeoutToInner(uint64_t timeout)
     return timeoutTmp;
 }
 
-static inline bool IsCpuKernelSupportTimeout(const uint32_t flag)
-{
-    return ((flag & RT_KERNEL_USE_SPECIAL_TIMEOUT) != 0U);
-}
-
-uint64_t ConvertAicpuTimeout(const rtAicpuArgsEx_t* const argsInfo, const TaskCfg* taskCfg, const uint32_t flag)
+uint64_t ConvertAicpuTimeout(
+    const Device* const dev, const rtAicpuArgsEx_t* const argsInfo, const TaskCfg* taskCfg, const uint32_t flag)
 {
     if ((taskCfg != nullptr) && (taskCfg->isExtendValid == 1U) && (taskCfg->extend.timeout != 0U)) {
         return taskCfg->extend.timeout;
     }
 
-    if (IsCpuKernelSupportTimeout(flag) && (argsInfo != nullptr) && (argsInfo->timeout != 0U)) {
+    if (AicpuTimeoutManager::IsTimeoutSupportedByLaunchFlag(dev, flag) && (argsInfo != nullptr) &&
+        (argsInfo->timeout != 0U)) {
         if (argsInfo->timeout == MAX_UINT16_NUM) {
             return MAX_UINT64_NUM; // never timeout
         }

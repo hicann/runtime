@@ -31,6 +31,7 @@
 #include "common/internal_error_define.hpp"
 #include "stars_david.hpp"
 #include "rt_unwrap.h"
+#include "aicpu_timeout_control.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -150,6 +151,7 @@ protected:
 
     virtual void SetUp()
     {
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         (void)rtSetSocVersion("Ascend950PR_9599");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
         ((Runtime*)Runtime::Instance())->SetDisableThread(true);

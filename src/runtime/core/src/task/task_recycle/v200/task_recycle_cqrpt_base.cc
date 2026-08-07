@@ -33,6 +33,7 @@
 #include "task_res_da.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "inner_thread_local.hpp"
+#include "aicpu_timeout_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -256,7 +257,8 @@ static void ClearcMulTaskCqeNum(const uint8_t mulTaskCqeNum, TaskInfo* const rep
     }
 }
 
-void ProcCqReportException(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId)
+void ProcCqReportException(
+    Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* reportTask, uint16_t streamId, TaskInfo** outFaultTaskPtr)
 {
     if (Runtime::Instance()->IsRuntimeExiting()) {
         RT_LOG(RT_LOG_WARNING, "Runtime is exiting, skip cqe processing.");
@@ -272,6 +274,9 @@ void ProcCqReportException(Device* const dev, rtLogicCqReport_t& logicCq, TaskIn
         (void)dev->PrintStreamTimeoutSnapshotInfo();
         if (reportTask != nullptr) {
             TaskInfo* const faultTaskPtr = GetRealReportFaultTask(reportTask, static_cast<const void*>(&swStatus));
+            if (outFaultTaskPtr != nullptr) {
+                *outFaultTaskPtr = faultTaskPtr;
+            }
             (void)dev->ProcDeviceErrorInfo(faultTaskPtr);
             if (!reportTask->stream->IsSeparateSendAndRecycle()) {
                 reportTask->stream->EnterFailureAbort();
@@ -404,13 +409,17 @@ void ProcLogicCqReport(Device* const dev, rtLogicCqReport_t& logicCq, TaskInfo* 
     const uint16_t pos = logicCq.sqHead;
     const uint16_t sqId = logicCq.sqId;
 
-    ProcCqReportException(dev, logicCq, reportTask, streamId);
+    TaskInfo* faultTaskPtr = nullptr;
+    ProcCqReportException(dev, logicCq, reportTask, streamId, &faultTaskPtr);
     const tsTaskType_t taskType = reportTask->type;
     RT_LOG(
         RT_LOG_DEBUG,
         "RTS_DRIVER: report receive, stream_id=%hu, pos=%hu, sq_id=%hu, sq_head=%hu, "
         "task_type=%hu(%s).",
         streamId, pos, sqId, logicCq.sqHead, static_cast<uint16_t>(taskType), reportTask->typeName);
+
+    // Record timeout before StarsCqeReceive overwrites the fault task error code.
+    AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(dev, logicCq, reportTask, faultTaskPtr);
 
     reportTask->error = 0U;
     StarsCqeReceive(dev, logicCq, reportTask);

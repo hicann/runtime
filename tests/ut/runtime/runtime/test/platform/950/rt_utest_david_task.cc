@@ -22,6 +22,7 @@
 #include "api_impl.hpp"
 #include "api_impl_david.hpp"
 #include "api_decorator.hpp"
+#include "aicpu_timeout_control.h"
 #include "engine.hpp"
 #include "cond_c.hpp"
 #include "task_res.hpp"
@@ -92,6 +93,20 @@ rtError_t MemCopySyncCopyStub(
     const errno_t ret = memcpy_s(dst, destMax, src, size);
     return (ret == EOK) ? RT_ERROR_NONE : RT_ERROR_SEC_HANDLE;
 }
+
+void* g_expectedAicpuDeviceArgs = nullptr;
+
+rtError_t DavidSendAicpuTaskStub(TaskInfo* task, Stream* stream)
+{
+    EXPECT_NE(task, nullptr);
+    EXPECT_NE(stream, nullptr);
+    if (task != nullptr) {
+        EXPECT_EQ(task->type, TS_TASK_TYPE_KERNEL_AICPU);
+        EXPECT_EQ(task->u.aicpuTaskInfo.comm.args, g_expectedAicpuDeviceArgs);
+    }
+    return RT_ERROR_NONE;
+}
+
 } // namespace
 
 extern int64_t g_device_driver_version_stub;
@@ -179,6 +194,7 @@ protected:
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
 
         (void)rtSetSocVersion("Ascend950PR_9599");
@@ -2921,6 +2937,41 @@ TEST_F(TaskTestDavid, CpuKernelLaunchForAicpuStreamFail)
     taskResMang->ResetTaskRes();
     ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, CpuKernelLaunchWithDeviceArgs)
+{
+    char kernelName[] = "CheckKernelSupported";
+    rtKernelLaunchNames_t name = {nullptr, kernelName, kernelName};
+    void* const devArgs = reinterpret_cast<void*>(0x1000UL);
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = devArgs;
+    argsInfo.argsSize = sizeof(uint64_t);
+    argsInfo.isNoNeedH2DCopy = 1U;
+    g_expectedAicpuDeviceArgs = devArgs;
+    MOCKER(DavidSendTask).stubs().will(invoke(DavidSendAicpuTaskStub));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StreamLaunchCpuKernel(&name, 1U, &argsInfo, stream_, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
+    static_cast<TaskResManageDavid*>(stream_->taskResMang_)->ResetTaskRes();
+    g_expectedAicpuDeviceArgs = nullptr;
+}
+
+TEST_F(TaskTestDavid, CpuKernelLaunchWithDeviceArgsSendFail)
+{
+    char kernelName[] = "CheckKernelSupported";
+    rtKernelLaunchNames_t name = {nullptr, kernelName, kernelName};
+    void* const devArgs = reinterpret_cast<void*>(0x1000UL);
+    rtArgsEx_t argsInfo = {};
+    argsInfo.args = devArgs;
+    argsInfo.argsSize = sizeof(uint64_t);
+    argsInfo.isNoNeedH2DCopy = 1U;
+    TaskResManageDavid* const taskRes = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
+    const uint32_t tail = taskRes->GetTaskPosTail();
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(StreamLaunchCpuKernel(&name, 1U, &argsInfo, stream_, RT_KERNEL_DEFAULT), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(taskRes->GetTaskPosTail(), tail);
 }
 
 TEST_F(TaskTestDavid, KernelLaunchExForAicpuStream)

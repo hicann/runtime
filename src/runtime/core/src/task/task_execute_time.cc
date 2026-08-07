@@ -9,10 +9,12 @@
  */
 
 #include "task_execute_time.h"
+
 #include "stars_base.hpp"
 #include "stars.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
+#include "aicpu_timeout_manager.h"
 namespace cce {
 namespace runtime {
 uint16_t TransKernelCreditCreditByChip(const uint16_t kernelCredit)
@@ -109,17 +111,18 @@ uint16_t GetSdmaKernelCredit()
     return TransKernelCreditCreditByChip(kernelCredit);
 }
 
-static uint16_t GetAicpuKernelCreditInternal(uint64_t timeout, bool defaultNeverTimeout)
+static uint16_t GetAicpuKernelCreditInternal(
+    const Device* const dev, const uint64_t timeout, const bool defaultNeverTimeout)
 {
     uint64_t tmpTimeout = 0UL;
-    uint16_t kernelCredit = RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT;
+    uint16_t kernelCredit = AicpuTimeoutManager::GetAicpuDefaultKernelCredit(dev);
     const RtTimeoutConfig& timeoutCfg = Runtime::Instance()->GetTimeoutConfig();
     if (timeout != 0U) {
         tmpTimeout = timeout;
     } else if (timeoutCfg.isCfgOpExcTaskTimeout) {
         tmpTimeout = timeoutCfg.opExcTaskTimeout;
-    } else {
-        // no op
+    } else if (AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(dev)) {
+        return TransKernelCreditCreditByChip(kernelCredit);
     }
 
     if (defaultNeverTimeout &&
@@ -140,9 +143,15 @@ static uint16_t GetAicpuKernelCreditInternal(uint64_t timeout, bool defaultNever
     return TransKernelCreditCreditByChip(kernelCredit);
 }
 
-uint16_t GetAicpuKernelCreditV200(uint64_t timeout) { return GetAicpuKernelCreditInternal(timeout, true); }
+uint16_t GetAicpuKernelCreditV200(const Device* const dev, const uint64_t timeout)
+{
+    return GetAicpuKernelCreditInternal(dev, timeout, true);
+}
 
-uint16_t GetAicpuKernelCredit(uint64_t timeout) { return GetAicpuKernelCreditInternal(timeout, false); }
+uint16_t GetAicpuKernelCredit(const Device* const dev, const uint64_t timeout)
+{
+    return GetAicpuKernelCreditInternal(dev, timeout, false);
+}
 
 uint16_t GetCCUCredit(uint16_t customTimeout)
 {

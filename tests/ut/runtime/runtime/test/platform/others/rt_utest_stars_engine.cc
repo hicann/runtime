@@ -18,6 +18,7 @@
 #define protected public
 #include "engine.hpp"
 #include "stars_engine.hpp"
+#include "aicpu_timeout_control.h"
 #include "runtime.hpp"
 #include "event.hpp"
 #include "logger.hpp"
@@ -51,7 +52,6 @@ constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
 } // namespace
 
 void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
-uint16_t GetAicpuKernelCredit(uint16_t timeout);
 } // namespace runtime
 } // namespace cce
 
@@ -109,6 +109,7 @@ protected:
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
 
         device_ = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
