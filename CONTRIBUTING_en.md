@@ -7,7 +7,7 @@ Developers should pay attention to the following points when preparing local cod
 1. When submitting a PR, follow the PR template and carefully fill in the business background, purpose, and solution information for this PR.
 2. If your modification is not a simple bug fix but involves adding new features, new interfaces, new configuration parameters, or modifying code flows, discuss the solution through an Issue first to avoid having your code rejected. If you are unsure whether your modification qualifies as a "simple bug fix", you can also submit an Issue for solution discussion.
 
-Additionally, before coding, writing tests, and preparing design proposals, please read the development guides in the `docs/zh/guidelines/` directory first and follow the relevant standards:
+Additionally, before coding, writing tests, and preparing design proposals, first read the development guides under `docs/zh/guidelines/` and follow the relevant standards:
 
 - [Development Guide Overview](docs/zh/guidelines/README.md)
 - [pre-commit Usage](docs/zh/guidelines/pre-commit_guide.md): For configuring pre-commit and running formatting and compliance checks before committing code

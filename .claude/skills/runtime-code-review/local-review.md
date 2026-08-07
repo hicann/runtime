@@ -23,13 +23,13 @@ git diff origin/master...HEAD
 1. 获取本地审查范围和变更文件列表
 2. 读取共享规则文件：`.claude/skills/runtime-code-review/review-rules.md`
 3. 按文件分类加载规范文档：
-    - 源码文件：`docs/guidelines/coding-guidelines.md`
+    - 源码文件：`docs/zh/guidelines/coding-guidelines.md`
       - 涉及 Error Message 相关变更：在上面的基础上，额外读取
-        - `docs/guidelines/error_message_guide/README.md`
+        - `docs/zh/guidelines/error_message_guide/README.md`
         - 必要时按共享规则继续读取错误码、宏、文案或整改原则专题文档
     - UT 文件：在上面的基础上，额外读取
-      - `docs/guidelines/ut-coding-guidelines.md`
-      - `docs/guidelines/dt_guide/UT用例开发指导.md`
+      - `docs/zh/guidelines/ut-coding-guidelines.md`
+      - `docs/zh/guidelines/dt_guide/ut_case_development_guide.md`
 4. 按共享规则逐文件审查
 5. 使用共享规则中定义的格式输出结果
 

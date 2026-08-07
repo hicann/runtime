@@ -112,7 +112,7 @@ description: |
 
 ## 规范加载原则
 
-- 所有源码审查都必须遵从 `docs/guidelines/coding-guidelines.md`
+- 所有源码审查都必须遵从 `docs/zh/guidelines/coding-guidelines.md`
 - 审查 UT 代码时，除上面的文档外，还必须额外遵从：
-  - `docs/guidelines/ut-coding-guidelines.md`
-  - `docs/guidelines/dt_guide/UT用例开发指导.md`
+  - `docs/zh/guidelines/ut-coding-guidelines.md`
+  - `docs/zh/guidelines/dt_guide/ut_case_development_guide.md`
