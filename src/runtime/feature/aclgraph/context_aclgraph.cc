@@ -539,18 +539,25 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
     }
 
     CaptureModel* captureModelTmp = RtPtrToPtr<CaptureModel*, Model*>(captureModel);
-    COND_PROC_RETURN_AND_MSG_OUTER(
-        status == RT_STREAM_CAPTURE_STATUS_INVALIDATED, RT_ERROR_STREAM_CAPTURE_INVALIDATED, ErrorCode::EE1016,
-        ClearCaptureModel(this, stm, captureModel), "Stream end capture",
-        RtFmtMsg(
-            "The current stream (stream_id=%d, model_id=%u) is invalid because an error occurred during model capture",
-            stm->Id_(), captureModel->Id_()));
-    COND_PROC_RETURN_AND_MSG_OUTER(
-        captureModelTmp->IsCaptureInvalid(), RT_ERROR_STREAM_CAPTURE_INVALIDATED, ErrorCode::EE1016,
-        ClearCaptureModel(this, stm, captureModel), "Stream end capture",
-        RtFmtMsg(
-            "The current model (model_id=%u) is invalid because an error occurred during model capture",
-            captureModel->Id_()));
+    if (status == RT_STREAM_CAPTURE_STATUS_INVALIDATED) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Stream end capture",
+            RtFmtMsg(
+                "The current stream (stream_id=%d, model_id=%u) is invalid because an error occurred during model "
+                "capture",
+                stm->Id_(), captureModel->Id_()));
+        ClearCaptureModel(this, stm, captureModel);
+        return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
+    }
+    if (captureModelTmp->IsCaptureInvalid()) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Stream end capture",
+            RtFmtMsg(
+                "The current model (model_id=%u) is invalid because an error occurred during model capture",
+                captureModel->Id_()));
+        ClearCaptureModel(this, stm, captureModel);
+        return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
+    }
 
     const bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
 
