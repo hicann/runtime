@@ -14,6 +14,7 @@
 #include "ascend_hal.h"
 #include "status.h"
 #include "aicpusd_event_manager.h"
+#include "aicpusd_event_process.h"
 #include "aicpusd_status.h"
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_threads_process.h"
@@ -39,6 +40,17 @@ void RegOpenCustSoCallBack()
             "Aicpu-sd-cust main thread reg open custom so callback function failed. eventid[%d]",
             static_cast<int32_t>(openCustSoInfo.eventType));
         return;
+    }
+}
+
+void RegCloseMonitorCallBack()
+{
+    SubProcEventCallBackInfo closeMonitorInfo = {};
+    closeMonitorInfo.callBackFunc = AicpuEventProcess::AICPUEventCustCloseMonitor;
+    closeMonitorInfo.eventType = AICPU_SUB_EVENT_CUST_CLOSE_MONITOR;
+    const int32_t ret = RegEventMsgCallBackFunc(&closeMonitorInfo);
+    if (ret != 0) {
+        aicpusd_run_warn("Register close monitor callback failed. eventId[%u]", closeMonitorInfo.eventType);
     }
 }
 } // namespace
@@ -407,6 +419,7 @@ int32_t AicpuScheduleInterface::CustAicpuMainProcess(int32_t argc, char_t* argv[
         }
         AicpuSchedule::RegCreateCustMc2MaintenanceThreadCallBack();
         AicpuSchedule::RegOpenCustSoCallBack();
+        AicpuSchedule::RegCloseMonitorCallBack();
         // response start message to tsd
         int32_t rspRet = static_cast<int32_t>(tsd::TSD_OK);
         if (startParams.GetGrpNameNum() > 0U) {

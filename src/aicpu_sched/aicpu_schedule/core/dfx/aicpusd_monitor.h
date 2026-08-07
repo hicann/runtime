@@ -84,6 +84,8 @@ public:
 
     void SetOpExecuteTimeOut(const uint32_t timeOutEn, const uint32_t opExecuteTimeOut);
     void SetOpTimeoutFlag(const bool flag);
+    void SetCloseMonitorFlag(const bool closeFlag) { closeMonitorFlag_.store(closeFlag); }
+    bool IsMonitorClosed() const { return closeMonitorFlag_.load(); }
     int32_t Run();
     void StopMonitor();
     ~AicpuMonitor();
@@ -134,6 +136,7 @@ private:
     bool online_; // true when exist in process mode; false when exist in thread mode
     std::atomic<bool> opTimeoutFlag_;
     std::mutex opTimerMapMutex_;
+    std::atomic<bool> closeMonitorFlag_{false};
 };
 } // namespace AicpuSchedule
 

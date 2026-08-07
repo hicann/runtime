@@ -169,6 +169,18 @@ int32_t AicpuEventProcess::AICPUEventOpenCustomSo(const event_info_priv& privEve
     return AICPU_SCHEDULE_OK;
 }
 
+int32_t AicpuEventProcess::AICPUEventCustCloseMonitor(const TsdSubEventInfo* const eventInfo)
+{
+    if (eventInfo == nullptr) {
+        aicpusd_err("Close monitor event info is nullptr.");
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+    const auto msg = PtrToPtr<const char_t, const AICPUCloseMonitorEventMsg>(eventInfo->priMsg);
+    AicpuMonitor::GetInstance().SetCloseMonitorFlag(msg->closeFlag == 1U);
+    aicpusd_info("Cust receive close monitor event, closeFlag[%u].", msg->closeFlag);
+    return AICPU_SCHEDULE_OK;
+}
+
 int32_t AicpuEventProcess::AICPUEventCustUpdateProfilingMode(const event_info_priv& privEventInfo) const
 {
     const AICPUSubEventInfo* const info = PtrToPtr<const char_t, const AICPUSubEventInfo>(privEventInfo.msg);

@@ -12,6 +12,7 @@
 
 #include "aicpusd_cust_so_manager.h"
 #include "aicpusd_drv_manager.h"
+#include "aicpusd_monitor.h"
 #include "hwts_kernel_common.h"
 
 namespace AicpuSchedule {
@@ -157,6 +158,14 @@ int32_t CustOperationCommon::StartCustProcess(const uint32_t loadLibNum, const c
         }
     }
 
+    if (AicpuMonitor::GetInstance().IsMonitorClosed()) {
+        const int32_t closeRet = NotifyCustCloseMonitor(custAicpuPid);
+        if (closeRet != AICPU_SCHEDULE_OK) {
+            aicpusd_err("Notify custaicpu to close monitor failed, ret[%d], pid[%d].", closeRet, custAicpuPid);
+            return closeRet;
+        }
+    }
+
     aicpusd_run_info("StartCustProcess end");
     return AICPU_SCHEDULE_OK;
 }
@@ -209,6 +218,40 @@ int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(
     aicpusd_run_info(
         "End AicpuNotifyLoadSoEventToCustCtrlCpu on deviceId[%u] hostPid[%u] vfId[%u] soNum[%u].", deviceId, hostPid,
         vfId, loadLibNum);
+    return AICPU_SCHEDULE_OK;
+}
+
+int32_t CustOperationCommon::NotifyCustCloseMonitor(const int32_t custAicpuPid) const
+{
+    TsdSubEventInfo info = {};
+    info.deviceId = AicpuDrvManager::GetInstance().GetDeviceId();
+    info.srcPid = static_cast<uint32_t>(getpid());
+    info.dstPid = static_cast<uint32_t>(custAicpuPid);
+    info.hostPid = static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid());
+    info.vfId = static_cast<uint8_t>(AicpuDrvManager::GetInstance().GetVfId());
+    info.procType = 1U;
+    info.eventType = static_cast<uint32_t>(AICPU_SUB_EVENT_CUST_CLOSE_MONITOR);
+    auto closeMonitorMsg = PtrToPtr<char_t, AICPUCloseMonitorEventMsg>(info.priMsg);
+    closeMonitorMsg->closeFlag = 1U;
+
+    event_summary closeMonitorEvent = {};
+    closeMonitorEvent.dst_engine = CCPU_DEVICE;
+    closeMonitorEvent.policy = ONLY;
+    closeMonitorEvent.pid = custAicpuPid;
+    closeMonitorEvent.grp_id = CCPU_DEFAULT_GROUP_ID;
+    closeMonitorEvent.event_id = EVENT_CCPU_CTRL_MSG;
+    closeMonitorEvent.subevent_id = static_cast<uint32_t>(AICPU_SUB_EVENT_CUST_CLOSE_MONITOR);
+    closeMonitorEvent.msg = PtrToPtr<TsdSubEventInfo, char_t>(&info);
+    closeMonitorEvent.msg_len = static_cast<uint32_t>(sizeof(info));
+
+    const drvError_t ret = halEschedSubmitEvent(info.deviceId, &closeMonitorEvent);
+    if (ret != DRV_ERROR_NONE) {
+        aicpusd_err(
+            "Send close monitor event to custaicpu failed, ret[%d], pid[%d], group[%u], event[%d].", ret, custAicpuPid,
+            closeMonitorEvent.grp_id, closeMonitorEvent.event_id);
+        return AICPU_SCHEDULE_ERROR_DRV_ERR;
+    }
+    aicpusd_run_info("Submit close monitor event to custaicpu success.");
     return AICPU_SCHEDULE_OK;
 }
 

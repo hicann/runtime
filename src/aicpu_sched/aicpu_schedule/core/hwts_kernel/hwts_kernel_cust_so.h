@@ -29,6 +29,7 @@ public:
     int32_t AicpuNotifyLoadSoEventToCustCtrlCpu(
         const uint32_t deviceId, const uint32_t hostPid, const uint32_t vfId, const int32_t custAicpuPid,
         const uint32_t loadLibNum, const char_t* const loadLibName[]) const;
+    int32_t NotifyCustCloseMonitor(const int32_t custAicpuPid) const;
 };
 
 class LoadOpFromBuffTsKernel : public HwTsKernelHandler, public CustOperationCommon {

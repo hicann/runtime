@@ -202,6 +202,45 @@ TEST_F(AicpuMonitorTEST, SendKillMsgToTsdFail)
     EXPECT_EQ(monitor.running_, false);
 }
 
+TEST_F(AicpuMonitorTEST, SetTaskEndTimeClearsTimerWhenMonitorClosed)
+{
+    AicpuMonitor monitor;
+    monitor.taskTimeoutFlag_ = true;
+    monitor.online_ = true;
+    monitor.aicpuTaskTimer_.reset(new (std::nothrow) TaskTimer[1]);
+    monitor.monitorTaskInfo_.reset(new (std::nothrow) TaskInfoForMonitor[1]);
+    monitor.aicpuTaskTimer_[0].SetRunFlag(true);
+    monitor.monitorTaskInfo_[0].isHwts = true;
+    monitor.SetCloseMonitorFlag(true);
+
+    monitor.SetTaskEndTime(0);
+
+    EXPECT_FALSE(monitor.aicpuTaskTimer_[0].GetRunFlag());
+    EXPECT_FALSE(monitor.monitorTaskInfo_[0].isHwts);
+}
+
+TEST_F(AicpuMonitorTEST, MonitorClosedSkipsTaskStartAndTimeout)
+{
+    AicpuMonitor monitor;
+    monitor.taskTimeoutFlag_ = true;
+    monitor.online_ = true;
+    monitor.aicpuCoreNum_ = 1U;
+    monitor.taskTimeoutTick_ = 1U;
+    monitor.aicpuTaskTimer_.reset(new (std::nothrow) TaskTimer[1]);
+    monitor.aicpuStreamTaskTimer_.reset(new (std::nothrow) TaskTimer[MAX_MODEL_COUNT]);
+    monitor.monitorTaskInfo_.reset(new (std::nothrow) TaskInfoForMonitor[1]);
+    monitor.SetCloseMonitorFlag(true);
+
+    monitor.SetTaskStartTime(0U);
+    EXPECT_FALSE(monitor.aicpuTaskTimer_[0].GetRunFlag());
+
+    monitor.aicpuTaskTimer_[0].SetStartTick(1U);
+    monitor.aicpuTaskTimer_[0].SetRunFlag(true);
+    MOCKER(aicpu::GetSystemTick).expects(never());
+    MOCKER(TsdDestroy).expects(never());
+    monitor.HandleTaskTimeout();
+}
+
 TEST_F(AicpuMonitorTEST, HandleTaskTimeout)
 {
     AicpuMonitor m;

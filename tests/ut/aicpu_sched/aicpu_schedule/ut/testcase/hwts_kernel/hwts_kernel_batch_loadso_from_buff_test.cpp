@@ -21,6 +21,7 @@
 #include "aicpusd_event_process.h"
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_model.h"
+#include "aicpusd_monitor.h"
 #include "aicpusd_resource_manager.h"
 #include "hwts_kernel_cust_so.h"
 #include "hwts_kernel_cust_so.h"
@@ -78,6 +79,23 @@ TEST_F(CustOperationCommonTest, NowaitGrp)
     MOCKER_CPP(&CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu).stubs().will(returnValue(AICPU_SCHEDULE_OK));
     int32_t ret = commonKernel_.StartCustProcess(loadLibNum, soNames.get());
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CustOperationCommonTest, CloseMonitorNotifyFailureBlocksStart)
+{
+    const uint32_t loadLibNum = 1U;
+    const std::unique_ptr<const char_t*[]> soNames(new (std::nothrow) const char_t*[loadLibNum]);
+    MOCKER(&CreateOrFindCustPid).stubs().will(invoke(CreateOrFindCustPidFake));
+    MOCKER(&halGrpQuery).stubs().will(invoke(halGrpQueryFake));
+    MOCKER_CPP(&CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER_CPP(&CustOperationCommon::NotifyCustCloseMonitor).stubs().will(returnValue(AICPU_SCHEDULE_ERROR_DRV_ERR));
+    AicpuMonitor::GetInstance().SetCloseMonitorFlag(true);
+
+    const int32_t ret = commonKernel_.StartCustProcess(loadLibNum, soNames.get());
+
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+    AicpuMonitor::GetInstance().SetCloseMonitorFlag(false);
     GlobalMockObject::verify();
 }
 

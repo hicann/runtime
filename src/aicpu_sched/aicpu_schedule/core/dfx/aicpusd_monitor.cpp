@@ -25,6 +25,7 @@
 #include "aicpusd_resource_manager.h"
 #include "aicpusd_threads_process.h"
 #include "aicpusd_worker.h"
+#include "aicpusd_feature_ctrl.h"
 
 namespace {
 // aicpu task timeout
@@ -249,7 +250,7 @@ int32_t AicpuMonitor::SetModelTimeoutFlag()
 // index used inner, it is valid
 void AicpuMonitor::SetTaskStartTime(const uint32_t taskId)
 {
-    if ((taskTimeoutFlag_) && (online_)) {
+    if ((!IsMonitorClosed()) && (taskTimeoutFlag_) && (online_)) {
         aicpuTaskTimer_[static_cast<uint64_t>(taskId)].SetStartTick(aicpu::GetSystemTick());
         aicpuTaskTimer_[static_cast<uint64_t>(taskId)].SetRunFlag(true);
     }
@@ -450,7 +451,7 @@ void AicpuMonitor::SetOpTimeoutFlag(const bool flag)
 
 void AicpuMonitor::HandleTaskTimeout()
 {
-    if (!taskTimeoutFlag_) {
+    if (!taskTimeoutFlag_ || IsMonitorClosed()) {
         return;
     }
 

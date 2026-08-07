@@ -81,6 +81,7 @@ enum __attribute__((visibility("default"))) AICPUCustSubEvent {
     AICPU_SUB_EVENT_REPORT_CUST_DUMPDATA,       // aicpusd do cust datadump
     AICPU_SUB_EVENT_REPORT_UDF_DUMPDATA,        // aicpusd do udf datadump
     AICPU_SUB_EVENT_CUST_LOAD_PLATFORM,         // custom scheduler process load platform info event
+    AICPU_SUB_EVENT_CUST_CLOSE_MONITOR,         // notify cust-sd to close aicpu kernel timeout monitor
 };
 
 struct __attribute__((visibility("default"))) AICPUSubEventStreamInfo {
@@ -154,6 +155,10 @@ struct __attribute__((visibility("default"))) AICPUBindSdPidEventMsg {
 
 struct __attribute__((visibility("default"))) AICPUOpenCustomSoEventMsg {
     char_t kernelSoName[MAX_CUST_SO_NAME_LEN];
+} __attribute__((packed));
+
+struct __attribute__((visibility("default"))) AICPUCloseMonitorEventMsg {
+    uint8_t closeFlag;
 } __attribute__((packed));
 
 struct __attribute__((visibility("default"))) CpuSchedInitParam {

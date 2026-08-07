@@ -139,7 +139,7 @@ int32_t AicpuMonitor::SetTaskTimeoutFlag()
 
 void AicpuMonitor::SetTaskStartTime(const uint64_t taskIndex)
 {
-    if ((taskTimeoutFlag_) && (online_)) {
+    if ((!IsMonitorClosed()) && (taskTimeoutFlag_) && (online_)) {
         taskTimer_[taskIndex].SetStartTick(aicpu::GetSystemTick());
         taskTimer_[taskIndex].SetRunFlag(true);
     }
@@ -218,7 +218,7 @@ void AicpuMonitor::Stop()
 
 void AicpuMonitor::HandleTaskTimeout()
 {
-    if (!taskTimeoutFlag_) {
+    if (!taskTimeoutFlag_ || IsMonitorClosed()) {
         return;
     }
 

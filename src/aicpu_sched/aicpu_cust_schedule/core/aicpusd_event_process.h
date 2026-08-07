@@ -20,6 +20,7 @@
 #include "aicpu_context.h"
 #include "type_def.h"
 #include "aicpusd_sqe_adapter.h"
+#include "tsd.h"
 
 namespace AicpuSchedule {
 class AicpuEventProcess {
@@ -83,6 +84,8 @@ public:
      * @return AICPU_SCHEDULE_OK: success, other: error code
      */
     int32_t ProcessMsgVersionEvent(AicpuSqeAdapter& aicpuSqeAdapter) const;
+
+    static int32_t AICPUEventCustCloseMonitor(const TsdSubEventInfo* const eventInfo);
 
 private:
     AicpuEventProcess();

@@ -186,6 +186,7 @@ set(hwts_kernel_src_file
     ${SRC_PATH}/core/hwts_kernel/hwts_kernel_queue.cpp
     ${SRC_PATH}/core/hwts_kernel/hwts_kernel_model_control.cpp
     ${SRC_PATH}/core/hwts_kernel/hwts_kernel_soma.cpp
+    ${SRC_PATH}/core/hwts_kernel/hwts_kernel_close_monitor.cpp
 )
 
 set(event_process_kernel_test_src_file
@@ -209,6 +210,7 @@ set(event_process_kernel_test_src_file
     testcase/hwts_kernel/hwts_kernel_check_supported_test.cpp
     testcase/hwts_kernel/hwts_kernel_process_data_exception_test.cpp
     testcase/hwts_kernel/hwts_kernel_soma_memmng_test.cpp
+    testcase/hwts_kernel/hwts_kernel_close_monitor_test.cpp
 )
 
 # ---- 共享源文件组（各 UT target 复用，避免重复定义）----

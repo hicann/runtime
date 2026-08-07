@@ -65,6 +65,10 @@ public:
     void SetTaskStartTime(const uint64_t taskIndex);
     void SetTaskEndTime(const uint64_t taskIndex);
 
+    void SetCloseMonitorFlag(const bool closeFlag) { closeMonitorFlag_.store(closeFlag); }
+
+    bool IsMonitorClosed() const { return closeMonitorFlag_.load(); }
+
     int32_t Run();
 
     void Stop();
@@ -101,6 +105,7 @@ private:
     bool running_;
     uint32_t aicpuCoreNum_;
     bool online_; // true when exist in process mode; false when exist in thread mode
+    std::atomic<bool> closeMonitorFlag_{false};
 };
 } // namespace AicpuSchedule
 #endif // CORE_AICPUSD_MONITOR_H

@@ -146,6 +146,16 @@ drvError_t drvQueryProcessHostPidFake5(
     return DRV_ERROR_NO_PROCESS;
 }
 auto mockerOpen = reinterpret_cast<int (*)(const char*, int)>(open);
+uint32_t g_closeMonitorCallbackRegisterCount = 0U;
+
+int32_t CaptureEventCallback(const SubProcEventCallBackInfo* const callbackInfo)
+{
+    if (callbackInfo->eventType == AICPU_SUB_EVENT_CUST_CLOSE_MONITOR) {
+        EXPECT_EQ(callbackInfo->callBackFunc, AicpuEventProcess::AICPUEventCustCloseMonitor);
+        ++g_closeMonitorCallbackRegisterCount;
+    }
+    return 0;
+}
 } // namespace
 
 extern int32_t SecureCompute();
@@ -170,12 +180,15 @@ TEST_F(AICPUCustScheduleTEST, MainTest)
     int32_t argc = 10;
 
     MOCKER_CPP(&AicpuScheduleInterface::InitAICPUScheduler).stubs().will(returnValue(0));
+    g_closeMonitorCallbackRegisterCount = 0U;
+    MOCKER(RegEventMsgCallBackFunc).stubs().will(invoke(CaptureEventCallback));
     int ret = ComputeProcessMain(argc, argv);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 
     MOCKER(StartUpRspAndWaitProcess).stubs().will(returnValue(1));
     ret = ComputeProcessMain(argc, argv);
     EXPECT_EQ(ret, -1);
+    EXPECT_EQ(g_closeMonitorCallbackRegisterCount, 2U);
 }
 
 TEST_F(AICPUCustScheduleTEST, MainTestErr)
@@ -2022,6 +2035,37 @@ TEST_F(AICPUCustScheduleTEST, ActiveTheBlockThread)
     drvEventInfo.comm.subevent_id = AICPU_SUB_EVENT_CUST_LOAD_PLATFORM;
     ret = AicpuCustDumpProcess::GetInstance().ActiveTheBlockThread(drvEventInfo);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
+TEST_F(AICPUCustScheduleTEST, ProcessCloseMonitorMessageSuccess)
+{
+    TsdSubEventInfo eventInfo = {};
+    auto closeMonitorMsg = reinterpret_cast<AICPUCloseMonitorEventMsg*>(eventInfo.priMsg);
+    closeMonitorMsg->closeFlag = 1U;
+
+    const int32_t ret = AicpuEventProcess::AICPUEventCustCloseMonitor(&eventInfo);
+
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_TRUE(AicpuMonitor::GetInstance().IsMonitorClosed());
+    AicpuMonitor::GetInstance().SetCloseMonitorFlag(false);
+}
+
+TEST_F(AICPUCustScheduleTEST, ProcessCloseMonitorMessageOpenMonitor)
+{
+    AicpuMonitor::GetInstance().SetCloseMonitorFlag(true);
+    TsdSubEventInfo eventInfo = {};
+    auto closeMonitorMsg = reinterpret_cast<AICPUCloseMonitorEventMsg*>(eventInfo.priMsg);
+    closeMonitorMsg->closeFlag = 0U;
+
+    const int32_t ret = AicpuEventProcess::AICPUEventCustCloseMonitor(&eventInfo);
+
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_FALSE(AicpuMonitor::GetInstance().IsMonitorClosed());
+}
+
+TEST_F(AICPUCustScheduleTEST, ProcessCloseMonitorMessageNull)
+{
+    EXPECT_EQ(AicpuEventProcess::AICPUEventCustCloseMonitor(nullptr), AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
 
 TEST_F(AICPUCustScheduleTEST, CustProcessLoadPlatform)
