@@ -5,6 +5,7 @@ struct 类型数据。
 <br>
 
 - [aclCANNPackageVersion](#aclCANNPackageVersion)
+- [acldumpTensorInfo](#acldumpTensorInfo)
 - [aclmdlRICondTaskParams](#aclmdlRICondTaskParams)
 - [aclmdlRIEventRecordTaskParams](#aclmdlRIEventRecordTaskParams)
 - [aclmdlRIEventResetTaskParams](#aclmdlRIEventResetTaskParams)
@@ -72,6 +73,46 @@ typedef struct aclCANNPackageVersion {
     char reserved[ACL_PKG_VERSION_MAX_SIZE];
 } aclCANNPackageVersion;
 ```
+
+<br>
+
+<a id="acldumpTensorInfo"></a>
+
+## acldumpTensorInfo
+
+```c
+#define ACL_DUMP_MAX_SHAPE_NUM 25
+
+typedef struct acldumpTensorInfo {
+    acldumpTensorType type;
+    size_t tensorSize;
+    int32_t format;
+    int32_t dataType;
+    int64_t *tensorAddr;
+    acldumpTensorAddressType addrType;
+    acldumpTensorPlacement placement;
+    uint32_t argsOffset;
+    uint32_t shapeNum;
+    uint32_t originShapeNum;
+    uint64_t shape[ACL_DUMP_MAX_SHAPE_NUM];
+    uint64_t originShape[ACL_DUMP_MAX_SHAPE_NUM];
+} acldumpTensorInfo;
+```
+
+| 成员名称 | 说明 |
+| --- | --- |
+| type | tensor类型。类型定义请参见[acldumpTensorType](25-02_Enumerations.md#acldumpTensorType)。 |
+| tensorSize | tensor大小，单位Byte。 |
+| format | tensor数据格式。类型定义值请参见[aclFormat](25-02_Enumerations.md#aclFormat)。 |
+| dataType | tensor数据类型。类型定义值请参见[aclDataType](25-02_Enumerations.md#aclDataType)。 |
+| tensorAddr | tensor地址。 |
+| addrType | tensor地址类型。类型定义请参见[acldumpTensorAddressType](25-02_Enumerations.md#acldumpTensorAddressType)。 |
+| placement | tensor数据位置。类型定义请参见[acldumpTensorPlacement](25-02_Enumerations.md#acldumpTensorPlacement)。 |
+| argsOffset | tensor基于算子首参数的偏移位置。 |
+| shapeNum | tensor shape有效维度大小，不超过ACL_DUMP_MAX_SHAPE_NUM。 |
+| originShapeNum | tensor原始shape有效维度大小，不超过ACL_DUMP_MAX_SHAPE_NUM。 |
+| shape | tensor shape维度数组。 |
+| originShape | tensor原始shape维度数组。 |
 
 <br>
 

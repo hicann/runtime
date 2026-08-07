@@ -8,6 +8,9 @@ enum 类型数据。
 - [aclCANNPackageName](#aclCANNPackageName)
 - [aclDataType](#aclDataType)
 - [aclDeviceInfo](#aclDeviceInfo)
+- [acldumpTensorAddressType](#acldumpTensorAddressType)
+- [acldumpTensorPlacement](#acldumpTensorPlacement)
+- [acldumpTensorType](#acldumpTensorType)
 - [acldumpType](#acldumpType)
 - [aclFormat](#aclFormat)
 - [aclmdlRICaptureMode](#aclmdlRICaptureMode)
@@ -190,18 +193,78 @@ typedef enum {
 
 <br>
 
+<a id="acldumpTensorAddressType"></a>
+
+## acldumpTensorAddressType
+
+```c
+typedef enum acldumpTensorAddressType {
+    ACL_DUMP_ADDR_PTR = 0,
+    ACL_DUMP_ADDR_PTR_PTR,
+    ACL_DUMP_ADDR_RAW
+} acldumpTensorAddressType;
+```
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_DUMP_ADDR_PTR | address是二级地址，数据地址需要一次解引用。 |
+| ACL_DUMP_ADDR_PTR_PTR | address是三级地址，数据地址需要二次解引用。 |
+| ACL_DUMP_ADDR_RAW | address是裸地址，直接是数据地址。 |
+
+<br>
+
+<a id="acldumpTensorPlacement"></a>
+
+## acldumpTensorPlacement
+
+```c
+typedef enum acldumpTensorPlacement {
+    ACL_DUMP_PLACEMENT_DEVICE = 0,
+    ACL_DUMP_PLACEMENT_HOST,
+    ACL_DUMP_PLACEMENT_END
+} acldumpTensorPlacement;
+```
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_DUMP_PLACEMENT_DEVICE | tensor位于Device。 |
+| ACL_DUMP_PLACEMENT_HOST | tensor位于Host。 |
+| ACL_DUMP_PLACEMENT_END | 枚举值的边界，为预留值，不是有效的tensor位置。 |
+
+<br>
+
+<a id="acldumpTensorType"></a>
+
+## acldumpTensorType
+
+```c
+typedef enum acldumpTensorType {
+    ACL_DUMP_TENSOR_INPUT = 0,
+    ACL_DUMP_TENSOR_OUTPUT,
+    ACL_DUMP_TENSOR_WORKSPACE
+} acldumpTensorType;
+```
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_DUMP_TENSOR_INPUT | 输入tensor。 |
+| ACL_DUMP_TENSOR_OUTPUT | 输出tensor。 |
+| ACL_DUMP_TENSOR_WORKSPACE | Workspace tensor。 |
+
+<br>
+
 <a id="acldumpType"></a>
 
 ## acldumpType
 
 ```c
-enum acldumpType {
+typedef enum acldumpType {
     AIC_ERR_BRIEF_DUMP = 1,         // 轻量化exception dump
     AIC_ERR_NORM_DUMP = 2,          // 普通exception dump，在轻量化exception dump基础上，还会导出Shape、Data Type、Format以及属性信息
     AIC_ERR_DETAIL_DUMP = 3,        // 在轻量化exception dump基础上，还会导出AI Core的内部存储、寄存器以及调用栈信息
     DATA_DUMP = 4,                  // 模型Dump配置、单算子Dump配置
     OVERFLOW_DUMP = 5               // 溢出算子Dump
-};
+} acldumpType;
 ```
 
 <br>

@@ -4,12 +4,14 @@
 
 - [`aclError aclmdlInitDump()`](#aclmdlInitDump)：Dump初始化。
 - [`aclError aclmdlSetDump(const char *dumpCfgPath)`](#aclmdlSetDump)：设置Dump参数。
-- [`aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t len), int32_t flag)`](#acldumpRegCallback)：Dump数据回调函数注册接口。
+- [`aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t), int32_t flag)`](#acldumpRegCallback)：Dump数据回调函数注册接口。
 - [`void acldumpUnregCallback()`](#acldumpUnregCallback)：Dump数据回调函数取消注册接口。
-- [`const char* acldumpGetPath(acldumpType dumpType)`](#acldumpGetPath)：获取Dump数据存放路径，以便用户将自定维测数据保存到该路径下。
+- [`const char* acldumpGetPath(acldumpType dumpType)`](#acldumpGetPath)：获取Dump数据的存储路径，以便用户将自定义维测数据保存到该路径下。
 - [`aclError aclmdlFinalizeDump()`](#aclmdlFinalizeDump)：Dump去初始化。
 - [`aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)`](#aclopStartDumpArgs)：调用本接口开启算子信息统计功能，并需与[aclopStopDumpArgs](#aclopStopDumpArgs)接口配合使用，将算子信息文件输出到path参数指定的目录，一个shape对应一个算子信息文件，文件中包含算子类型、算子属性、算子输入&输出的format/数据类型/shape等信息。
 - [`aclError aclopStopDumpArgs(uint32_t dumpType)`](#aclopStopDumpArgs)：调用本接口关闭算子信息统计功能，并需与[aclopStartDumpArgs](#aclopStartDumpArgs)接口配合使用，将算子信息文件输出到path参数指定的目录，一个shape对应一个算子信息文件，文件中包含算子类型、算子属性、算子输入&输出的format/数据类型/shape等信息。
+- [`aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)`](#acldumpGetExceptionInfoPath)：获取异常算子Dump数据的存储路径，以便用户将自定义维测数据保存到该路径下，导出的数据用于分析AI Core Error问题。
+- [`aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, const acldumpTensorInfo *tensors, size_t tensorCount)`](#acldumpSaveExceptionInfo)：调用本接口将自定义异常算子Tensor数据保存到异常算子Dump数据的存储路径下，导出的数据用于分析AI Core Error问题。
 
 <a id="aclmdlInitDump"></a>
 
@@ -201,9 +203,11 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 }
 ```
 
+<a id="exception_dump_config"></a>
+
 ### 配置文件示例（异常算子Dump配置）
 
-**异常算子Dump配置**（用于导出异常算子的输入输出数据、workspace信息、Tiling信息），导出的数据用于分析AI Core Error问题。默认不启用该Dump配置
+**异常算子Dump配置**（用于导出异常算子的输入输出数据、workspace信息、Tiling信息），导出的数据用于分析AI Core Error问题。默认不启用该Dump配置。
 
 通过配置dump\_scene参数值开启异常算子Dump功能，配置文件中的示例内容如下，表示开启轻量化的exception dump：
 
@@ -396,7 +400,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 ## acldumpRegCallback
 
 ```c
-aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t len), int32_t flag)
+aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t), int32_t flag)
 ```
 
 ### 产品支持情况
@@ -573,7 +577,7 @@ const char* acldumpGetPath(acldumpType dumpType)
 
 ### 功能说明
 
-获取Dump数据存放路径，以便用户将自定义维测数据保存到该路径下。
+获取Dump数据的存储路径，以便用户将自定义维测数据保存到该路径下。
 
 在调用本接口前，需通过[aclmdlInitDump](#aclmdlInitDump)接口初始化Dump功能、通过[aclmdlSetDump](#aclmdlSetDump)接口配置Dump信息，或者直接通过[aclInit](02_initialization_and_deinitialization.md#aclInit)接口配置Dump信息。
 
@@ -779,3 +783,127 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
 
 仅支持在单算子API执行（例如，接口名前缀为aclnn的接口）场景下使用本接口，否则无法生成dump文件。
 <!-- end id11 -->
+
+<br>
+<br>
+<br>
+
+<a id="acldumpGetExceptionInfoPath"></a>
+
+## acldumpGetExceptionInfoPath
+
+```c
+aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id9001 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id9001 -->
+<!-- npu="A3" id9002 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id9002 -->
+<!-- npu="910b" id9003 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id9003 -->
+<!-- npu="310b" id9004 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id9004 -->
+<!-- npu="310p" id9005 -->
+- Atlas 推理系列产品：支持
+<!-- end id9005 -->
+<!-- npu="910" id9006 -->
+- Atlas 训练系列产品：支持
+<!-- end id9006 -->
+<!-- npu="IPV350" id9007 -->
+- IPV350：不支持
+<!-- end id9007 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id9 -->
+
+### 功能说明
+
+获取异常算子Dump数据的存储路径，以便用户将自定义维测数据保存到该路径下，导出的数据用于分析AI Core Error问题。输出路径格式为：`<dumpPath>/extra-info/data-dump/<deviceId>/`。其中：
+
+ - dumpPath：开启异常算子Dump时配置的存储路径。
+ - deviceId：当前正在使用的Device的ID。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| path | 输出 | 用于接收路径的字符数组。该数组内存空间由调用方提前申请，且能够满足可接收路径的内存大小（建议为4096字节）。 |
+| maxLen | 输入 | path参数的内存大小。 |
+
+### 返回值说明
+
+返回0（ACL_SUCCESS）表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+
+<br>
+<br>
+<br>
+
+<a id="acldumpSaveExceptionInfo"></a>
+
+## acldumpSaveExceptionInfo
+
+```c
+aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, const acldumpTensorInfo *tensors, size_t tensorCount)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id9008 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id9008 -->
+<!-- npu="A3" id9009 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id9009 -->
+<!-- npu="910b" id9010 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id9010 -->
+<!-- npu="310b" id9011 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id9011 -->
+<!-- npu="310p" id9012 -->
+- Atlas 推理系列产品：支持
+<!-- end id9012 -->
+<!-- npu="910" id9013 -->
+- Atlas 训练系列产品：支持
+<!-- end id9013 -->
+<!-- npu="IPV350" id9014 -->
+- IPV350：不支持
+<!-- end id9014 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/18_dump_configuration_res.md#id10 -->
+
+### 功能说明
+
+调用本接口将自定义异常算子Tensor数据保存到异常算子Dump数据的存储路径下，导出的数据用于分析AI Core Error问题。
+
+数据文件的实际存储路径格式为：`<dumpPath>/extra-info/data-dump/<deviceId>/<fileName>.custom.{timestamp}`。其中：
+
+ - dumpPath：开启异常算子Dump时配置的存储路径。
+ - deviceId：当前正在使用的Device的ID。
+ - fileName：fileName参数。
+ - timestamp：毫秒级时间戳。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| fileName | 输入 | 目标文件名。支持为异常算子Dump数据存储路径的相对路径，且不能包含“..”路径段。 |
+| userTag | 输入 | 待保存的自定义维测信息，可选参数。 |
+| tensors | 输入 | 待保存的tensors数组，数组有效长度不得小于tensorCount。Tensor类型定义请参见[acldumpTensorInfo](25-04_Structs.md#acldumpTensorInfo)。其中，acldumpTensorInfo.addrType只支持ACL_DUMP_ADDR_RAW，acldumpTensorInfo.placement只支持ACL_DUMP_PLACEMENT_DEVICE。 |
+| tensorCount | 输入 | tensors数组中的元素个数，需由调用方保证与数组实际长度一致。 |
+
+### 返回值说明
+
+返回0（ACL_SUCCESS）表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 本接口需在开启异常算子Dump功能后调用，详细配置请参见[aclInit（异常算子Dump配置）](02_initialization_and_deinitialization.md#aclInit)或[aclmdlSetDump（异常算子Dump配置）](#exception_dump_config)或环境变量[ASCEND\_DUMP\_SCENE](https://hiascend.com/document/redirect/CannCommunityEnvRef)。

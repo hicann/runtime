@@ -21,6 +21,7 @@
 #include "sys_utils.h"
 #include "dump_manager.h"
 #include "operator_dumper.h"
+#include "dump_file.h"
 #include "acl/acl_base.h"
 #include "acl/acl_dump.h"
 #include "sys_utils.h"
@@ -837,6 +838,281 @@ TEST_F(AdumpApiUtest, Test_acldumpGetPath)
     path = acldumpGetPath(acldumpType::DATA_DUMP);
     EXPECT_NE(path, nullptr);
     EXPECT_EQ(path, DumpManager::Instance().dumpSetting_.dumpPath_.path_.c_str());
+}
+
+namespace {
+acldumpTensorInfo MakeAclDumpTensor(acldumpTensorType type, int64_t *addr, size_t size)
+{
+    acldumpTensorInfo tensor{};
+    tensor.type = type;
+    tensor.tensorSize = size;
+    tensor.format = 2;    // ND
+    tensor.dataType = 0;  // DT_UNDEFINED
+    tensor.tensorAddr = addr;
+    tensor.addrType = ACL_DUMP_ADDR_RAW;
+    tensor.placement = ACL_DUMP_PLACEMENT_DEVICE;
+    tensor.argsOffset = 0;
+    tensor.shapeNum = 2;
+    tensor.shape[0] = 4;
+    tensor.shape[1] = 2;
+    tensor.originShapeNum = 2;
+    tensor.originShape[0] = 4;
+    tensor.originShape[1] = 2;
+    return tensor;
+}
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_NullFileName)
+{
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo(nullptr, "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_EmptyFileName)
+{
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_FileNameHasParentDir)
+{
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    // fileName 含 '..' 路径段应在入口被拦截，返回 ACL_ERROR_INVALID_PARAM
+    EXPECT_EQ(acldumpSaveExceptionInfo("../evil.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(acldumpSaveExceptionInfo("sub/../../x.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_NullTensorsWithCount)
+{
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", nullptr, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_PathNotReady)
+{
+    // CreateExtraDumpPath fails -> empty root path -> failure
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(false));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_FAILURE);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_Success)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::IsDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::Exist).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
+    MOCKER(mmChmod).stubs().will(returnValue(0));
+
+    int64_t inData = 0;
+    int64_t outData = 0;
+    int64_t wsData = 0;
+    std::vector<acldumpTensorInfo> tensors = {
+        MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &inData, sizeof(inData)),
+        MakeAclDumpTensor(ACL_DUMP_TENSOR_OUTPUT, &outData, sizeof(outData)),
+        MakeAclDumpTensor(ACL_DUMP_TENSOR_WORKSPACE, &wsData, sizeof(wsData)),
+    };
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "component=demo", tensors.data(), tensors.size()), ACL_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_NullUserTag)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::IsDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::Exist).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
+    MOCKER(mmChmod).stubs().will(returnValue(0));
+
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", nullptr, &tensor, 1), ACL_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_FileNameHasTimestampSuffix)
+{
+    // 落盘前应查询毫秒时间戳并追加到文件名，避免重复运行覆盖已有文件或被已有文件阻塞落盘。
+    // GetCurrentTimeWithMillisecond 被调用即证明时间戳后缀逻辑生效。
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::IsDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::Exist).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    MOCKER_CPP(&SysUtils::GetCurrentTimeWithMillisecond)
+        .expects(once())
+        .will(returnValue(std::string("20260721153012345")));
+    MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
+    MOCKER(mmChmod).stubs().will(returnValue(0));
+
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_ShapeNumOverMax)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    tensor.shapeNum = ACL_DUMP_MAX_SHAPE_NUM + 1;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_OriginShapeNumOverMax)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    tensor.originShapeNum = ACL_DUMP_MAX_SHAPE_NUM + 1;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_UnsupportedTensorType)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    // out-of-range value is rejected as well
+    tensor.type = static_cast<acldumpTensorType>(ACL_DUMP_TENSOR_WORKSPACE + 1);
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_UnsupportedAddrType)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    tensor.addrType = ACL_DUMP_ADDR_PTR;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+    tensor.addrType = ACL_DUMP_ADDR_PTR_PTR;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+    // out-of-range value is rejected as well
+    tensor.addrType = static_cast<acldumpTensorAddressType>(ACL_DUMP_ADDR_RAW + 1);
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_UnsupportedPlacement)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    tensor.placement = ACL_DUMP_PLACEMENT_HOST;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+    tensor.placement = ACL_DUMP_PLACEMENT_END;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_ZeroTensorCount)
+{
+    // tensorCount 为 0 时无数据可落盘，必须在入口拦截，不能报成功
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 0), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_NullTensorAddr)
+{
+    // tensorAddr 为空的 tensor 会在组装 dump 数据时被跳过，必须在入口拦截，不能报成功
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, nullptr, sizeof(int64_t));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_ZeroTensorSize)
+{
+    // tensorSize 为 0 的 tensor 同样会被跳过，必须在入口拦截，不能报成功
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, 0);
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_InvalidTensorInMiddleRejected)
+{
+    // 数组中任意一个非法 tensor 都应导致整体失败，不能只落盘合法的部分
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    int64_t inData = 0;
+    int64_t outData = 0;
+    std::vector<acldumpTensorInfo> tensors = {
+        MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &inData, sizeof(inData)),
+        MakeAclDumpTensor(ACL_DUMP_TENSOR_OUTPUT, nullptr, sizeof(outData)),
+    };
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", tensors.data(), tensors.size()), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpSaveExceptionInfo_DumpFail)
+{
+    MOCKER_CPP(&ExceptionDumper::IsEnabledExceptionDump).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::IsDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::Exist).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_FAILED));
+
+    int64_t data = 0;
+    acldumpTensorInfo tensor = MakeAclDumpTensor(ACL_DUMP_TENSOR_INPUT, &data, sizeof(data));
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_FAILURE);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpGetExceptionInfoPath_InvalidParam)
+{
+    char buf[64] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(nullptr, sizeof(buf)), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, 0), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, 1), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpGetExceptionInfoPath_PathNotReady)
+{
+    // 已使能但 CreateDeviceDumpPath 失败 -> empty path -> failure
+    DumpManager::Instance().exceptionDumper_.argsExceptionStatus_ = true;
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(false));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    char buf[64] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, sizeof(buf)), ACL_ERROR_FAILURE);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpGetExceptionInfoPath_NotEnabled)
+{
+    // exception dump 未使能 -> 返回空 -> 失败
+    DumpManager::Instance().exceptionDumper_.argsExceptionStatus_ = false;
+    DumpManager::Instance().exceptionDumper_.exceptionStatus_ = false;
+    DumpManager::Instance().exceptionDumper_.coredumpStatus_ = false;
+    char buf[4096] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, sizeof(buf)), ACL_ERROR_FAILURE);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpGetExceptionInfoPath_Success)
+{
+    DumpManager::Instance().exceptionDumper_.argsExceptionStatus_ = true;
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    char buf[4096] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, sizeof(buf)), ACL_SUCCESS);
+    EXPECT_GT(strlen(buf), 0U);
+}
+
+TEST_F(AdumpApiUtest, Test_acldumpGetExceptionInfoPath_BufferTooSmall)
+{
+    DumpManager::Instance().exceptionDumper_.argsExceptionStatus_ = true;
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(true));
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    MOCKER(rtGetDevice).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    char buf[2] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, sizeof(buf)), ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(AdumpApiUtest, Test_AdumpRegExceptionDumpCallback_Null)

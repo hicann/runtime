@@ -210,4 +210,19 @@ std::string DumpDataType::DataTypeToSerialString(const int32_t dataType)
         return "UNDEFINED";
     }
 }
+
+std::string DumpDataType::TensorTypeToSerialString(const TensorType tensorType)
+{
+    switch (tensorType) {
+        case TensorType::INPUT:
+            return "input";
+        case TensorType::OUTPUT:
+            return "output";
+        case TensorType::WORKSPACE:
+            return "workspace";
+        default:
+            IDE_LOGE("TensorTypeToSerialString: tensor type not support %d", static_cast<int32_t>(tensorType));
+            return "unknown";
+    }
+}
 } // namespace Adx

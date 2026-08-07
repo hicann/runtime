@@ -12,6 +12,7 @@
 #define DUMP_DATATYPE_H
 #include <cstdint>
 #include <string>
+#include "adump_pub.h"
 
 namespace Adx {
 enum class GeDataType: int32_t {
@@ -123,6 +124,7 @@ public:
     static int32_t GetIrDataType(GeDataType dataType);
     static std::string FormatToSerialString(const int32_t format);
     static std::string DataTypeToSerialString(const int32_t dataType);
+    static std::string TensorTypeToSerialString(const TensorType tensorType);
 };
 } // namespace Adx
 #endif // DUMP_DATATYPE_H

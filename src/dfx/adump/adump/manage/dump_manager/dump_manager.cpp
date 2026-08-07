@@ -34,6 +34,9 @@
 #include "kernel_dfx_dumper.h"
 #include "adx_dump_record.h"
 #include "common/file.h"
+#include "common/path.h"
+#include "sys_utils.h"
+#include "dump_file.h"
 #include "adx_datadump_server.h"
 
 namespace Adx {
@@ -683,6 +686,12 @@ void DumpManager::ExceptionModeDowngrade()
     exceptionDumper_.ExceptionModeDowngrade();
 }
 
+bool DumpManager::IsEnabledExceptionDump()
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    return exceptionDumper_.IsEnabledExceptionDump();
+}
+
 int32_t DumpManager::RegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, AdumpCallback disableFunc)
 {
     if (enableFunc == nullptr) {
@@ -772,7 +781,7 @@ int32_t DumpManager::StopDumpArgs()
     return 0;
 }
 
-const char* DumpManager::GetExceptionDumpPath()
+const char* DumpManager::GetExtraExceptionDumpPath()
 {
     std::lock_guard<std::mutex> lk(resourceMtx_);
     exceptionDumper_.CreateExtraDumpPath();
@@ -785,22 +794,26 @@ const char* DumpManager::GetDataDumpPath()
     return dumpSetting_.GetDumpCPath();
 }
 
+int32_t DumpManager::GetExceptionDumpPath(std::string &path)
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    return exceptionDumper_.GetExceptionDumpPath(path);
+}
+
+int32_t DumpManager::SaveExceptionInfo(const std::string& fileName, const std::string& userTag,
+    const std::vector<TensorInfo>& tensors)
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    return exceptionDumper_.SaveExceptionInfo(fileName, userTag, tensors);
+}
+
 int32_t DumpManager::SaveFile(const char* data, size_t dataLen, const char* fileName, SaveType type)
 {
-    Adx::Path filePath(opInfoRecordPath_);
-    filePath.Concat(fileName);
-    Adx::Path dirPath = filePath.ParentPath();
-    if (!dirPath.Exist()) {
-        if (!dirPath.CreateDirectory(true)) {
-            IDE_LOGE("create directory[%s] failed", dirPath.GetCString());
-            return -1;
-        }
+    std::string canonicalPath;
+    if (!Adx::Path::BuildFullPathUnderRoot(opInfoRecordPath_, fileName, canonicalPath)) {
+        IDE_LOGE("invalid fileName[%s], may escape root path.", fileName);
+        return -1;
     }
-    if (!dirPath.RealPath()) {
-        IDE_LOGE("get real path failed, path:%s", dirPath.GetCString());
-    }
-
-    std::string canonicalPath = dirPath.GetString() + "/" + filePath.GetFileName();
     int32_t openFlag = 0;
     if (type == SaveType::OVERWRITE) {
         openFlag = O_CREAT | O_WRONLY | O_TRUNC;

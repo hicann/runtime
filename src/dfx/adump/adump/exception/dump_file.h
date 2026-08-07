@@ -26,9 +26,11 @@ public:
     DumpFile(const uint32_t deviceId, const std::string &filePath) : deviceId_(deviceId),
         file_(filePath, M_RDWR | M_CREAT | M_APPEND, M_IRUSR | M_IWUSR, true) {}
     void SetHeader(const std::string &opName);
+    void SetOpAttr(const std::string &name, const std::string &value);
     void SetInputTensors(const std::vector<DumpTensor> &inputTensors);
     void SetOutputTensors(const std::vector<DumpTensor> &outputTensors);
     void SetWorkspaces(const std::vector<DumpWorkspace> &workspaces);
+    void SetTensors(const std::vector<TensorInfo> &tensors, std::vector<std::string> &record);
     void SetInputBuffer(const std::vector<InputBuffer> input);
     void SetTensorBuffer(const std::vector<TensorBuffer> &tensorBuffer);
     int32_t Dump(std::vector<std::string> &record);

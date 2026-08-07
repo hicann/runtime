@@ -17,9 +17,27 @@ namespace Adx {
 namespace {
 constexpr char DIRECTORY_SEPARATOR = '/';
 constexpr char FILE_EXTENSION_CHAR = '.';
+constexpr const char *PARENT_DIR = "..";
 
 constexpr mmMode_t DEFAULT_DIR_MODE = M_IRUSR | M_IWUSR | M_IXUSR;
 } // namespace
+
+bool Path::HasParentDirSegment(const std::string &path)
+{
+    size_t begin = 0;
+    while (begin <= path.size()) {
+        const size_t end = path.find(DIRECTORY_SEPARATOR, begin);
+        const size_t len = (end == std::string::npos ? path.size() : end) - begin;
+        if (path.compare(begin, len, PARENT_DIR) == 0) {
+            return true;
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        begin = end + 1;
+    }
+    return false;
+}
 
 Path &Path::operator = (const std::string &path)
 {
@@ -173,6 +191,73 @@ std::string Path::GetString() const
 const char *Path::GetCString() const
 {
     return path_.c_str();
+}
+
+bool Path::BuildFullPathUnderRoot(const std::string &rootPath, const std::string &relativeFile,
+    std::string &canonicalFile)
+{
+    if (rootPath.empty() || relativeFile.empty()) {
+        IDE_LOGE("rootPath or relativeFile is empty.");
+        return false;
+    }
+
+    if (HasParentDirSegment(relativeFile)) {
+        IDE_LOGE("relativeFile[%s] contains '..' segment.", relativeFile.c_str());
+        return false;
+    }
+
+    const std::string filePath = Path(rootPath).Concat(relativeFile).GetString();
+    const std::string baseName = Path(filePath).GetFileName();
+
+    Path dirPath = Path(filePath).ParentPath();
+    if (!dirPath.CreateDirectory(true)) {
+        IDE_LOGE("create directory failed, dirPath=%s.", dirPath.GetCString());
+        return false;
+    }
+
+    if (!dirPath.RealPath()) {
+        IDE_LOGE("get real path failed, dirPath=%s.", dirPath.GetCString());
+        return false;
+    }
+
+    if (!dirPath.IsDirectory()) {
+        IDE_LOGE("path is not a directory, dirPath=%s", dirPath.GetCString());
+        return false;
+    }
+
+    Path realRootPath(rootPath);
+    if (!realRootPath.RealPath()) {
+        IDE_LOGE("get real path failed, rootPath=%s.", realRootPath.GetCString());
+        return false;
+    }
+
+    if (!IsUnderDirectory(realRootPath.GetString(), dirPath.GetString())) {
+        IDE_LOGE("resolved dirPath=%s escapes rootPath=%s.", dirPath.GetCString(), realRootPath.GetCString());
+        return false;
+    }
+
+    canonicalFile = dirPath.GetString() + DIRECTORY_SEPARATOR + baseName;
+    return true;
+}
+
+bool Path::IsUnderDirectory(const std::string &realDirPath, const std::string &realSubPath)
+{
+    if (realDirPath.empty() || realSubPath.empty()) {
+        return false;
+    }
+
+    // Both paths are already canonical, so a segment-aware prefix match is sufficient.
+    std::string prefix = realDirPath;
+    if (prefix.back() != DIRECTORY_SEPARATOR) {
+        prefix += DIRECTORY_SEPARATOR;
+    }
+
+    std::string target = realSubPath;
+    if (target.back() != DIRECTORY_SEPARATOR) {
+        target += DIRECTORY_SEPARATOR;
+    }
+
+    return target.compare(0, prefix.size(), prefix) == 0;
 }
 
 void Path::AppendPath(const std::string &path)

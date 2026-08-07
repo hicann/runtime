@@ -98,6 +98,49 @@ TEST_F(DumpFileUtest, Test_DumpData)
     EXPECT_EQ(checker.Load(dumpFilePath), false);
 }
 
+TEST_F(DumpFileUtest, Test_SetOpAttr)
+{
+    Tools::CaseWorkspace ws("Test_SetOpAttr");
+    std::string dumpFilePath = ws.Root() + "/dump_file_attr.bin";
+
+    // 构造一个真实 host 数据的 input tensor，保证有数据落盘
+    int64_t hostData = 12345;
+    TensorInfoV2 tensorV2 = {};
+    tensorV2.addrType = AddressType::TRADITIONAL;
+    tensorV2.type = TensorType::INPUT;
+    tensorV2.dataType = static_cast<int32_t>(GeDataType::DT_INT64);
+    tensorV2.argsOffSet = 0;
+    tensorV2.format = 2;  // ND
+    tensorV2.shape = {1};
+    tensorV2.originShape = {1};
+    tensorV2.tensorAddr = &hostData;
+    tensorV2.tensorSize = sizeof(hostData);
+    tensorV2.placement = TensorPlacement::kOnDeviceHbm;
+
+    std::vector<DumpTensor> inputTensors;
+    inputTensors.emplace_back(tensorV2);
+
+    // 屏蔽真实 device 内存拷贝，直接写 host 数据
+    // 堆分配：CopyDeviceToHost 返回值由 HOST_RT_MEMORY_GUARD 释放，FreeHost 打桩防止 double-free
+    void *fakeHostData = malloc(sizeof(hostData));
+    ASSERT_NE(fakeHostData, nullptr);
+    MOCKER(rtMemGetInfoByType).stubs().will(returnValue((rtError_t)RT_ERROR_NONE));
+    MOCKER(&DumpMemory::CopyDeviceToHost).stubs().will(returnValue(fakeHostData));
+    MOCKER(&DumpMemory::FreeHost).stubs();
+
+    DumpFile dumpFile(0, dumpFilePath);
+    dumpFile.SetHeader("attr_op");
+    dumpFile.SetOpAttr("user_tag", "component=demo;stage=forward");
+    dumpFile.SetInputTensors(inputTensors);
+
+    std::vector<std::string> logRecord;
+    int32_t ret = dumpFile.Dump(logRecord);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    DumpFileChecker checker;
+    EXPECT_EQ(checker.Load(dumpFilePath), true);
+}
+
 // TEST_F(DumpFileUtest, Test_Dump_With_CopyDeviceData_Fail)
 // {
 //     Tools::CaseWorkspace ws("Test_Dump_With_CopyDeviceData_Fail");

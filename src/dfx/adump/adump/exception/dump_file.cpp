@@ -12,6 +12,7 @@
 #include <sstream>
 #include "runtime/mem.h"
 #include "sys_utils.h"
+#include "str_utils.h"
 #include "dump_datatype.h"
 #include "dump_memory.h"
 #include "log/hdc_log.h"
@@ -33,6 +34,15 @@ void DumpFile::SetHeader(const std::string &opName)
     header_.set_version(DUMP_FILE_VERSION);
     header_.set_dump_time(SysUtils::GetTimestamp());
     header_.set_op_name(opName);
+}
+
+void DumpFile::SetOpAttr(const std::string &name, const std::string &value)
+{
+    toolkit::dump::OpAttr attr;
+    attr.set_name(name);
+    attr.set_value(value);
+    header_.mutable_attr()->Add(std::move(attr));
+    IDE_LOGI("[Set][DumpData] Set op attr, name: %s", name.c_str());
 }
 
 void DumpFile::SetInputTensors(const std::vector<DumpTensor> &inputTensors)
@@ -103,6 +113,43 @@ void DumpFile::SetWorkspaces(const std::vector<DumpWorkspace> &workspaces)
 
         workspaces_.emplace_back(workspaces[i].addr, workspaces[i].bytes);
     }
+}
+
+void DumpFile::SetTensors(const std::vector<TensorInfo> &tensors, std::vector<std::string> &record)
+{
+    std::vector<DumpTensor> inputTensors;
+    std::vector<DumpTensor> outputTensors;
+    std::vector<DumpWorkspace> workspaces;
+    for (size_t index = 0U; index < tensors.size(); ++index) {
+        const TensorInfo &tensor = tensors[index];
+        if (tensor.tensorAddr == nullptr || tensor.tensorSize == 0) {
+            IDE_LOGW("[Set][DumpData] skip null/empty tensor[%zu], addr=%p, size=%zu, type=%d.",
+                index, tensor.tensorAddr, tensor.tensorSize, static_cast<int32_t>(tensor.type));
+            continue;
+        }
+
+        std::string info = StrUtils::Format(
+            "[Dump][Exception] exception info dump tensor data, type=%s; index=%zu; shape=%s; format=%s; "
+            "dtype=%s; address=%p; size=%zu bytes",
+            DumpDataType::TensorTypeToSerialString(tensor.type).c_str(), index,
+            StrUtils::ToString(tensor.shape).c_str(),
+            DumpDataType::FormatToSerialString(tensor.format).c_str(),
+            DumpDataType::DataTypeToSerialString(tensor.dataType).c_str(),
+            tensor.tensorAddr, tensor.tensorSize);
+        IDE_LOGI("%s", info.c_str());
+        record.emplace_back(info + "\n");
+
+        if (tensor.type == TensorType::INPUT) {
+            inputTensors.emplace_back(tensor);
+        } else if (tensor.type == TensorType::OUTPUT) {
+            outputTensors.emplace_back(tensor);
+        } else if (tensor.type == TensorType::WORKSPACE) {
+            workspaces.emplace_back(tensor.tensorAddr, static_cast<uint64_t>(tensor.tensorSize), tensor.argsOffSet);
+        }
+    }
+    SetInputTensors(inputTensors);
+    SetOutputTensors(outputTensors);
+    SetWorkspaces(workspaces);
 }
 
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1

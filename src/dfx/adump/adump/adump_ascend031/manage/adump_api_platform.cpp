@@ -49,3 +49,30 @@ const char* acldumpGetPath(acldumpType dumpType)
     UNUSED(dumpType);
     return nullptr;
 }
+
+/**
+ * @ingroup AscendCL
+ * @brief Save custom exception info to the Exception Dump path. Not supported on this platform.
+ * @retval ACL_ERROR_FAILURE Not supported.
+ */
+aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag,
+    const acldumpTensorInfo *tensors, size_t tensorCount)
+{
+    UNUSED(fileName);
+    UNUSED(userTag);
+    UNUSED(tensors);
+    UNUSED(tensorCount);
+    return ACL_ERROR_FAILURE;
+}
+
+/**
+ * @ingroup AscendCL
+ * @brief Get the Exception Dump root path. Not supported on this platform.
+ * @retval ACL_ERROR_FAILURE Not supported.
+ */
+aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
+{
+    UNUSED(path);
+    UNUSED(maxLen);
+    return ACL_ERROR_FAILURE;
+}

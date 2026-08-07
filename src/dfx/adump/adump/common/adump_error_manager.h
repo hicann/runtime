@@ -115,7 +115,7 @@ namespace Adx {
     do { \
         IDE_LOGE("[%s] %s failed. Reason: %s.", ADUMP_TO_CSTR(funcName), ADUMP_TO_CSTR(funcName), ADUMP_TO_CSTR(reason)); \
         ADUMP_INPUT_ERROR("EP0008", std::vector<std::string>({"func", "reason"}), \
-            std::vector<std::string>({funcName, reason})); \
+            std::vector<std::string>({std::string(funcName), std::string(reason)})); \
     } while (0)
 
 // EP0001 Reasons - Configuration item problems
@@ -165,13 +165,20 @@ constexpr const char* ADUMP_REASON_FMT_ITEM_VALUE_CANNOT_SET_WHEN_ITEM_VALUE =
 // EP0006 Reasons - Invalid argument problems
 constexpr const char* ADUMP_REASON_RESERVED_PARAM_MUST_EQUAL = "The parameter is reserved and can only be %s";
 constexpr const char* ADUMP_REASON_PARAM_PATH_EMPTY = "The parameter is a path and cannot be empty";
+constexpr const char* ADUMP_REASON_PARAM_PATH_HAS_PARENT_DIR =
+    "The parameter is a relative path and cannot contain '..' segment";
 constexpr const char* ADUMP_REASON_PARAM_PATH_CREATE_DIR_ERROR = 
     "The parameter is a path and the path fails to be created. Error: %s";
-constexpr const char* ADUMP_REASON_PARAM_PATH_NOT_DIRECTORY = 
+constexpr const char* ADUMP_REASON_PARAM_PATH_NOT_DIRECTORY =
     "The parameter is not a directory path";
+constexpr const char* ADUMP_REASON_PARAM_MUST_BE_GREATER_THAN = "The parameter must be greater than %s";
+constexpr const char* ADUMP_REASON_BUFFER_SIZE_NOT_ENOUGH = "The buffer size %s is not enough for the result size %s";
+constexpr const char* ADUMP_REASON_PARAM_VALUE_EXCEED_LIMIT = "The value %s exceeds the maximum limit of %s";
+constexpr const char* ADUMP_REASON_PARAM_VALUE_NOT_SUPPORTED = "The value %s is not supported, it must be %s";
 
 // EP0008 Reasons - Call API sequence
 constexpr const char* ADUMP_REASON_API_CALLED_REPEATEDLY = "This API cannot be called repeatedly";
+constexpr const char* ADUMP_REASON_EXCEPTION_DUMP_NOT_ENABLED = "Exception Dump must be enabled before %s is called";
 
 constexpr const char* FUNC_NAME_ACL_OP_START_DUMP_ARGS = "aclopStartDumpArgs";
 constexpr const char* FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH = "path";
@@ -179,6 +186,13 @@ constexpr const char* FUNC_ACL_OP_START_DUMP_ARGS_PARAM_DUMPTYPE = "dumpType";
 constexpr const char* FUNC_NAME_ACL_DUMP_REG_CALLBACK = "acldumpRegCallback";
 constexpr const char* FUNC_ACL_DUMP_REG_CALLBACK_PARAM_CLBK = "messageCallback";
 constexpr const char* FUNC_ACL_DUMP_REG_CALLBACK_PARAM_FLAG = "flag";
+constexpr const char* FUNC_NAME_ACL_DUMP_SAVE_EXCEPTION_INFO = "acldumpSaveExceptionInfo";
+constexpr const char* FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_FILENAME = "fileName";
+constexpr const char* FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_TENSORS = "tensors";
+constexpr const char* FUNC_ACL_DUMP_SAVE_EXCEPTION_INFO_PARAM_TENSORCOUNT = "tensorCount";
+constexpr const char* FUNC_NAME_ACL_DUMP_GET_EXCEPTION_INFO_PATH = "acldumpGetExceptionInfoPath";
+constexpr const char* FUNC_ACL_DUMP_GET_EXCEPTION_INFO_PATH_PARAM_PATH = "path";
+constexpr const char* FUNC_ACL_DUMP_GET_EXCEPTION_INFO_PATH_PARAM_MAXLEN = "maxLen";
 } // namespace Adx
 
 #endif

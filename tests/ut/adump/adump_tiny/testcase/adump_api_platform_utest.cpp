@@ -66,3 +66,24 @@ TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpGetPath)
 {
     EXPECT_EQ(acldumpGetPath(DATA_DUMP), nullptr);
 }
+
+TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpSaveExceptionInfo_NotSupport)
+{
+    int64_t data = 0;
+    acldumpTensorInfo tensor{};
+    tensor.type = ACL_DUMP_TENSOR_INPUT;
+    tensor.tensorSize = sizeof(data);
+    tensor.tensorAddr = &data;
+    tensor.shapeNum = 1;
+    tensor.shape[0] = 1;
+    EXPECT_EQ(acldumpSaveExceptionInfo("exc.bin", "tag", &tensor, 1), ACL_ERROR_FAILURE);
+    // 空指针/零 tensor 同样返回不支持
+    EXPECT_EQ(acldumpSaveExceptionInfo(nullptr, nullptr, nullptr, 0), ACL_ERROR_FAILURE);
+}
+
+TEST_F(TinyAdumpApiPlatformUtest, Test_acldumpGetExceptionInfoPath_NotSupport)
+{
+    char buf[64] = {0};
+    EXPECT_EQ(acldumpGetExceptionInfoPath(buf, sizeof(buf)), ACL_ERROR_FAILURE);
+    EXPECT_EQ(acldumpGetExceptionInfoPath(nullptr, 0), ACL_ERROR_FAILURE);
+}

@@ -50,10 +50,13 @@ public:
     DumpSetting GetDumpSetting() const;
     void KFCResourceInit();
     void ExceptionModeDowngrade();
+    bool IsEnabledExceptionDump();
     int32_t RegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, AdumpCallback disableFunc);
     int32_t StartDumpArgs(const std::string& dumpPath);
     int32_t StopDumpArgs();
     int32_t SaveFile(const char* data, size_t dataLen, const char* fileName, SaveType type);
+    int32_t SaveExceptionInfo(const std::string& fileName, const std::string& userTag,
+        const std::vector<TensorInfo>& tensors);
     int32_t DumpOperatorV2(
         const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors,
         rtStream_t stream);
@@ -62,7 +65,8 @@ public:
     void AddExceptionOpV2(const OperatorInfoV2& opInfo);
     void ConvertOperatorInfo(const OperatorInfo& opInfo, OperatorInfoV2& operatorInfoV2) const;
     std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo>& tensorInfos) const;
-    const char* GetExceptionDumpPath();
+    const char* GetExtraExceptionDumpPath();
+    int32_t GetExceptionDumpPath(std::string &path);
     const char* GetDataDumpPath();
     bool StartDataDumpServer();
     bool StopDataDumpServer();

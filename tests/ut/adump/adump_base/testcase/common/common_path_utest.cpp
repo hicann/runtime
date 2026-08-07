@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <gtest/gtest.h>
+#include <unistd.h>
 #include "mockcpp/mockcpp.hpp"
 #include "case_workspace.h"
 #include "adump_pub.h"
@@ -123,4 +124,73 @@ TEST_F(CommonPathUtest, Test_Path_With_Entity)
     EXPECT_EQ(Path(recursionCreateDir).CreateDirectory(), false);
     EXPECT_EQ(Path(recursionCreateDir).CreateDirectory(true), true);
     EXPECT_EQ(Path(recursionCreateDir).IsDirectory(), true);
+}
+
+TEST_F(CommonPathUtest, Test_Path_HasParentDirSegment)
+{
+    EXPECT_EQ(Path::HasParentDirSegment(".."), true);
+    EXPECT_EQ(Path::HasParentDirSegment("../file.bin"), true);
+    EXPECT_EQ(Path::HasParentDirSegment("dir/../file.bin"), true);
+    EXPECT_EQ(Path::HasParentDirSegment("dir/.."), true);
+
+    EXPECT_EQ(Path::HasParentDirSegment("file.bin"), false);
+    EXPECT_EQ(Path::HasParentDirSegment("my..file.bin"), false);
+    EXPECT_EQ(Path::HasParentDirSegment("dir/..file.bin"), false);
+    EXPECT_EQ(Path::HasParentDirSegment(".../file.bin"), false);
+}
+
+TEST_F(CommonPathUtest, Test_Path_IsUnderDirectory)
+{
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/root"), true);
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/root/"), true);
+    EXPECT_EQ(Path::IsUnderDirectory("/root/", "/root/sub"), true);
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/root/sub/deep"), true);
+
+    // 前缀相同但不是同一路径段，不能误判为子路径
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/root_evil"), false);
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/rootevil/sub"), false);
+    EXPECT_EQ(Path::IsUnderDirectory("/root/sub", "/root"), false);
+    EXPECT_EQ(Path::IsUnderDirectory("/root", "/other"), false);
+
+    EXPECT_EQ(Path::IsUnderDirectory("", "/root"), false);
+    EXPECT_EQ(Path::IsUnderDirectory("/root", ""), false);
+}
+
+TEST_F(CommonPathUtest, Test_Path_BuildFullPathUnderRoot)
+{
+    Tools::CaseWorkspace ws("Test_Path_BuildFullPathUnderRoot");
+    std::string root = ws.Mkdir("dump_root");
+    std::string canonicalFile;
+
+    EXPECT_EQ(Path::BuildFullPathUnderRoot("", "file.bin", canonicalFile), false);
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(root, "", canonicalFile), false);
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(root, "../escape.bin", canonicalFile), false);
+
+    // 正常场景：文件落在根目录下，父目录被自动创建
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(root, "file.bin", canonicalFile), true);
+    EXPECT_EQ(canonicalFile, Path(root).Concat("file.bin").GetString());
+
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(root, "sub/dir/file.bin", canonicalFile), true);
+    EXPECT_EQ(Path::IsUnderDirectory(root, canonicalFile), true);
+    EXPECT_EQ(Path(root).Concat("sub/dir").GetString(), Path(canonicalFile).ParentPath().GetString());
+
+    // 根目录不存在时会被递归创建，仍视为合法
+    std::string newRoot = ws.Root() + "/no_exist_root";
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(newRoot, "file.bin", canonicalFile), true);
+    EXPECT_EQ(Path::IsUnderDirectory(newRoot, canonicalFile), true);
+}
+
+TEST_F(CommonPathUtest, Test_Path_BuildFullPathUnderRoot_RejectSymlinkEscape)
+{
+    Tools::CaseWorkspace ws("Test_Path_BuildFullPathUnderRoot_Symlink");
+    std::string root = ws.Mkdir("dump_root");
+    std::string outside = ws.Mkdir("outside_dir");
+    std::string canonicalFile;
+
+    // 在落盘根目录下预置一个指向外部的软链接目录
+    std::string linkPath = Path(root).Concat("escape_link").GetString();
+    ASSERT_EQ(symlink(outside.c_str(), linkPath.c_str()), 0);
+
+    // relativeFile 不含 '..'，但经软链接解析后逃逸出 rootPath，必须被拒绝
+    EXPECT_EQ(Path::BuildFullPathUnderRoot(root, "escape_link/file.bin", canonicalFile), false);
 }

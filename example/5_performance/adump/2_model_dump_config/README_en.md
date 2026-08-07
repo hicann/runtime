@@ -9,6 +9,7 @@ This sample supports the following products:
 
 | Product | Supported |
 | --- | --- |
+| Ascend 950PR/Ascend 950DT | Yes |
 | Atlas A3 Training Series Products/Atlas A3 Inference Series Products | Yes |
 | Atlas A2 Training Series Products/Atlas A2 Inference Series Products | Yes |
 

@@ -183,42 +183,13 @@ int32_t DumpArgsCallback::DumpExtraTensors()
     }
 
     IDE_LOGI("Begin to dump extra tensors. extra tensor size=%u", info_.extraTensorNum);
-        
-    std::vector<DumpTensor> inputTensors;
-    std::vector<DumpTensor> outputTensors;
-    std::vector<DumpWorkspace> workspaces;
-    uint32_t baseOffset = static_cast<uint32_t>(tensorBuffer_.size() + workspaces_.size());
-    
-    for (uint32_t i = 0; i < info_.extraTensorNum; ++i) {
-        if (info_.extraTensor[i].tensorAddr == nullptr || info_.extraTensor[i].tensorSize == 0) {
-            IDE_LOGW("Skip null extra tensor[%u], addr=%p, size=%zu.",
-                     i, info_.extraTensor[i].tensorAddr, info_.extraTensor[i].tensorSize);
-            continue;
-        }
-        // tensor基于args偏移offset
-        info_.extraTensor[i].argsOffSet = baseOffset + i;
-        
-        RecordDumpLog(StrUtils::Format("[Dump][Exception] exception info dump extra tensor data, "
-            "addr:%p; size:%zu bytes; index:%u(origin:%u); type:%d",
-            info_.extraTensor[i].tensorAddr, info_.extraTensor[i].tensorSize,
-            info_.extraTensor[i].argsOffSet, i, static_cast<int>(info_.extraTensor[i].type)));
-        
-        if (info_.extraTensor[i].type == TensorType::INPUT) {
-            inputTensors.emplace_back(info_.extraTensor[i]);
-        } else if (info_.extraTensor[i].type == TensorType::OUTPUT) {
-            outputTensors.emplace_back(info_.extraTensor[i]);
-        } else if (info_.extraTensor[i].type == TensorType::WORKSPACE) {
-            DumpWorkspace workspace;
-            workspace.addr = info_.extraTensor[i].tensorAddr;
-            workspace.bytes = info_.extraTensor[i].tensorSize;
-            workspace.argsOffset = info_.extraTensor[i].argsOffSet;
-            workspaces.push_back(workspace);
-        }
-    }
 
-    dumpFile_.SetInputTensors(inputTensors);
-    dumpFile_.SetOutputTensors(outputTensors);
-    dumpFile_.SetWorkspaces(workspaces);
+    const uint32_t baseOffset = static_cast<uint32_t>(tensorBuffer_.size() + workspaces_.size());
+    std::vector<TensorInfo> tensors(info_.extraTensor, info_.extraTensor + info_.extraTensorNum);
+    for (uint32_t i = 0; i < info_.extraTensorNum; ++i) {
+        tensors[i].argsOffSet = baseOffset + i;
+    }
+    dumpFile_.SetTensors(tensors, logRecord_);
 
     IDE_LOGI("End to dump extra tensors.");
     return ADUMP_SUCCESS;

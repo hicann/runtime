@@ -107,9 +107,14 @@ bool ExceptionDumper::IsRepeatEnableException(DumpType type, const DumpConfig &d
         if (dumpStatus != "on") {
             return false;
         }
-        return GetCoredumpStatus() || GetExceptionStatus() || GetArgsExceptionStatus();
+        return IsEnabledExceptionDump();
     }
     return false;
+}
+
+bool ExceptionDumper::IsEnabledExceptionDump() const
+{
+    return coredumpStatus_ || exceptionStatus_ || argsExceptionStatus_;
 }
 
 int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig &dumpConfig)
@@ -169,7 +174,7 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
     IDE_CTRL_VALUE_WARN(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
     IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportExceptionDump(exception),
         return ADUMP_FAILED, "Exception is not need to dump.");
-    IDE_CTRL_VALUE_WARN(coredumpStatus_ || exceptionStatus_ || argsExceptionStatus_, return ADUMP_FAILED,
+    IDE_CTRL_VALUE_WARN(IsEnabledExceptionDump(), return ADUMP_FAILED,
         "Not enable exception dump.");
     std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
     if (dumpPath.empty()) {
@@ -256,6 +261,53 @@ std::string ExceptionDumper::CreateDeviceDumpPath(uint32_t deviceId) const
     Path deviceDumpPath(dumpPath);
     deviceDumpPath.Append(EXTRA_DUMP_PATH).Append(std::to_string(deviceId));
     return CreateDumpPath(deviceDumpPath);
+}
+
+int32_t ExceptionDumper::GetExceptionDumpPath(std::string &path)
+{
+    int32_t deviceId = 0;
+    const rtError_t rtRet = rtGetDevice(&deviceId);
+    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
+        "rtGetDevice failed when get the exception root dump path, ret=%d.", static_cast<int32_t>(rtRet));
+
+    path = CreateDeviceDumpPath(static_cast<uint32_t>(deviceId));
+    IDE_CTRL_VALUE_FAILED(!path.empty(), return ADUMP_FAILED, "exception dump root path is not ready.");
+    return ADUMP_SUCCESS;
+}
+
+int32_t ExceptionDumper::SaveExceptionInfo(const std::string &fileName, const std::string &userTag,
+    const std::vector<TensorInfo> &tensors)
+{
+    std::string rootPath;
+    IDE_CTRL_VALUE_FAILED(GetExceptionDumpPath(rootPath) == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "[SaveExceptionInfo] get exception dump root path failed.");
+
+    std::string realFilePath;
+    IDE_CTRL_VALUE_FAILED(Path::BuildFullPathUnderRoot(rootPath, fileName, realFilePath),
+        return ADUMP_FAILED, "[SaveExceptionInfo] build full file path failed.");
+
+    realFilePath += ".custom." + SysUtils::GetCurrentTimeWithMillisecond();
+
+    int32_t devId = 0;
+    const rtError_t rtRet = rtGetDevice(&devId);
+    IDE_CTRL_VALUE_FAILED(rtRet == RT_ERROR_NONE, return ADUMP_FAILED,
+        "[SaveExceptionInfo] rtGetDevice failed, ret=%d.", static_cast<int32_t>(rtRet));
+
+    DumpFile dumpFile(static_cast<uint32_t>(devId), realFilePath);
+    dumpFile.SetHeader(Path(realFilePath).GetFileName());
+    if (!userTag.empty()) {
+        dumpFile.SetOpAttr("user_tag", userTag);
+    }
+
+    std::vector<std::string> record;
+    dumpFile.SetTensors(tensors, record);
+
+    IDE_CTRL_VALUE_FAILED(dumpFile.Dump(record) == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "[SaveExceptionInfo] dump exception info to file failed, file: %s", realFilePath.c_str());
+
+    (void)mmChmod(realFilePath.c_str(), M_IRUSR);
+    IDE_LOGE("[Dump][Exception] dump custom exception to file, file: %s", realFilePath.c_str());
+    return ADUMP_SUCCESS;
 }
 
 std::string ExceptionDumper::CreateExtraDumpPath()

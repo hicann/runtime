@@ -30,14 +30,18 @@ public:
     inline bool GetCoredumpStatus() const;
     void SetDumpPath(const std::string &dumpPath);
     std::string CreateExtraDumpPath();
+    std::string CreateDeviceDumpPath(uint32_t deviceId) const;
     const char* GetExtraDumpCPath() const;
     void AddDumpOperator(const OperatorInfo &opInfo);
     void AddDumpOperatorV2(const OperatorInfoV2 &opInfo);
     int32_t DelDumpOperator(uint32_t deviceId, uint32_t streamId);
     int32_t DumpException(const rtExceptionInfo &exception);
+    int32_t GetExceptionDumpPath(std::string &path);
+    int32_t SaveExceptionInfo(const std::string &fileName, const std::string &userTag,
+        const std::vector<TensorInfo> &tensors);
     void ExceptionModeDowngrade();
     bool IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig);
-    
+    bool IsEnabledExceptionDump() const;
     int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
     int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
 
@@ -47,7 +51,6 @@ public:
 
 private:
     std::string CreateDumpPath(Path &dumpPath) const;
-    std::string CreateDeviceDumpPath(uint32_t deviceId) const;
     bool FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp);
     int32_t DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath);
     int32_t DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath);
@@ -76,7 +79,7 @@ private:
     std::string dumpPath_;
     std::string extraDumpPath_;
     DumpSetting setting_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::deque<DumpOperator> agingOperators_;
     std::map<uint32_t, std::map<uint32_t, std::deque<DumpOperator>>> residentOperators_;
     std::vector<ExceptionDumpCallback> callbacks_;
