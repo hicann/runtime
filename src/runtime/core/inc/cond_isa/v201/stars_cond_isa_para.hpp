@@ -94,6 +94,7 @@ struct RtStarsDqsPrepareFcPara {
     uint64_t csPtrOutputHeadPoolBaseAddr; // 含offset
     uint64_t csPtrOutputHeadPoolBlockSize;
     uint64_t allocPostDotAddr;            // alloc成功计数地址
+    uint64_t prepareErrorCodeAddr;
 
     CondMbufTraceParam allocMbufTracePara;
 };

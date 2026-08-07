@@ -95,6 +95,15 @@ static void InitMbufOpDot(const rtStarsCondIsaRegister_t dstReg, uint64_t cntAdd
     return;
 }
 
+static void SetDstMemVal(
+    const rtStarsCondIsaRegister_t availR1, const rtStarsCondIsaRegister_t valReg, uint64_t memAddr,
+    DstMemValInitFc& fc)
+{
+    ConstructLLWI(availR1, memAddr, fc.llwiMemAddr);
+    ConstructLHWI(availR1, memAddr, fc.lhwiMemAddr);
+    ConstructStore(availR1, valReg, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.initVal);
+}
+
 static void AddMbufOpDot(
     uint64_t mbufOpCntAddr, MbufOpCntFc& fc, const rtStarsCondIsaRegister_t avail_r1,
     const rtStarsCondIsaRegister_t avail_r2)
@@ -1058,6 +1067,7 @@ void ConstructDqsFrameAlignFc(RtStarsDqsFrameAlignFc& fc, const RtStarsDqsFrameA
 
 void ConstructDqsPrepareFc(RtStarsDqsPrepareOutFc& fc, const RtStarsDqsPrepareFcPara& fcPara)
 {
+    SetDstMemVal(r1, r0, fcPara.prepareErrorCodeAddr, fc.initDstMemVal);
     // alloc post dot init
     InitMbufOpDot(r9, fcPara.allocPostDotAddr, fc.allocPostDotInitFc);
 
@@ -1115,7 +1125,7 @@ void ConstructDqsPrepareFc(RtStarsDqsPrepareOutFc& fc, const RtStarsDqsPrepareFc
     ConstructLHWI(r6, fcPara.dfxMbufAllocPoolIdx, fc.lhwi12);
     // 保存output_idx到DFX
     ConstructStore(r6, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.store2);
-    uint64_t offset = offsetof(RtStarsDqsPrepareOutFc, err);
+    uint64_t offset = offsetof(RtStarsDqsPrepareOutFc, wrErrorCodeStart);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r6, offset, fc.jumpPc1);
     ConstructBranch(r5, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, offset, fc.bne);
@@ -1213,6 +1223,13 @@ void ConstructDqsPrepareFc(RtStarsDqsPrepareOutFc& fc, const RtStarsDqsPrepareFc
     ConstructSetJumpPcFc(r8, offset, fc.jumpPc4);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, offset, fc.beq);
 
+    // write mbuf handle error code
+    ConstructNop(fc.wrErrorCodeStart);
+    // 右移29位，读取低3bit，就是错误码
+    ConstructOpImmSlli(
+        r5, r5, 29U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srliGetErrCode);
+    // r5 is error code
+    SetDstMemVal(r8, r5, fcPara.prepareErrorCodeAddr, fc.setDstMemVal);
     // error instr
     ConstructErrorInstr(fc.err);
 

@@ -144,6 +144,7 @@ struct RtStarsDqsDequeueFc {
 };
 
 struct RtStarsDqsPrepareOutFc {
+    DstMemValInitFc initDstMemVal;
     MbufOpDotInitFc allocPostDotInitFc;
 
     // 计算input[0] private info addr
@@ -248,6 +249,9 @@ struct RtStarsDqsPrepareOutFc {
     // 异常处理
     RtStarsSetCsrJumpPc jumpPc4;
     RtStarsCondOpBranch beq;
+    RtStarsCondOpNop wrErrorCodeStart;
+    RtStarsCondOpImmSLLI srliGetErrCode;
+    DstMemValInitFc setDstMemVal;
     RtStarsCondOpErrorInstr err;
     RtStarsCondOpNop end;
 };

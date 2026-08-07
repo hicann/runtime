@@ -1478,6 +1478,10 @@ static rtError_t InitFuncCallParaForDqsPrepareTask(TaskInfo* taskInfo, RtStarsDq
     offset += offsetof(mbuf_list_op_snapshot_info, alloc_post_dot);
     fcPara.allocPostDotAddr = fcPara.ctrlSpacePtr + static_cast<uint64_t>(offset);
 
+    offset = offsetof(stars_dqs_ctrl_space_t, task_error_code);
+    offset += offsetof(dqs_task_error_code_t, prepare_task_error_code);
+    fcPara.prepareErrorCodeAddr = fcPara.ctrlSpacePtr + static_cast<uint64_t>(offset);
+
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     InitPrepareAllocMbufTracePara(fcPara.allocMbufTracePara, fcPara.ctrlSpacePtr, streamId);
 

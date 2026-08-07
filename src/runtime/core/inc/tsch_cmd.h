@@ -287,6 +287,10 @@ typedef struct {
 } mbuf_list_op_snapshot_info;
 
 typedef struct {
+    uint8_t prepare_task_error_code;
+} dqs_task_error_code_t;
+
+typedef struct {
     uint16_t stream_id;       // stream id
     uint8_t input_queue_num;  // 输入队列数量
     uint8_t output_queue_num; // 输出队列数量
@@ -336,6 +340,7 @@ typedef struct {
     uint64_t default_input_addr[STARS_DQS_MAX_INPUT_QUEUE_NUM];
     uint64_t align_res; // 1 success, 0 fail
     mbuf_list_op_snapshot_info mbuf_list_op_snapshot;
+    dqs_task_error_code_t task_error_code;
 } stars_dqs_ctrl_space_t;
 
 typedef struct {

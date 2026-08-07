@@ -42,6 +42,12 @@ struct MbufOpDotInitFc {
     RtStarsCondOpStore initDotVal;
 };
 
+struct DstMemValInitFc {
+    RtStarsCondOpLLWI llwiMemAddr;
+    RtStarsCondOpLHWI lhwiMemAddr;
+    RtStarsCondOpStore initVal;
+};
+
 struct CondMbufTraceFc {
     RtStarsCondOpLLWI llwiBlkIdMask;
     RtStarsCondOpLHWI lhwiBlkIdMask;
