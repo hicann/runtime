@@ -396,9 +396,9 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo) {
 ### 4.3 模块职责划分
  | 模块 | 职责 | 位置 | 
  |------|------|------| 
- | TaskInfo | 任务信息结构体 | `task/inc/task_info.h` | 
- | TaskFactory | 任务对象工厂类 Device对象持有，Task 对象分配和回收 | `task/task_factory.hpp` | 
- | TaskAllocator | 任务对象分配器，管理任务池，属于TaskFactory | `task/task_allocator.hpp` | 
+ | TaskInfo | 任务信息结构体 | `core/inc/task/task_info.hpp` |
+ | TaskFactory | 任务对象工厂类 Device对象持有，Task 对象分配和回收 | `core/inc/task/task.hpp` |
+ | TaskAllocator | 任务对象分配器，管理任务池，属于TaskFactory | `core/src/pool/task_allocator.hpp` |
  | TaskResManage | 任务资源管理，Stream持有 | `task/task_res_manage/` | 
  | DavidSendTask <br/> SubmitTask | 任务提交模块 | `task/task_submit/v200/task_david.cc` <br/> `engine/engine.cc`|
  | RecycleThreadDoForStarsV2 | 任务回收模块 | `task/task_recycle/` <br/> `stars_engine.cc`| 

@@ -1395,7 +1395,7 @@ graph TB
 | 条件句柄定义 | `src/runtime/core/inc/cond_handle/cond_handle.hpp` | CondHandle 类定义 |
 | 条件句柄实现 | `src/runtime/feature/aclgraph/cond_handle.cc` | CondHandle 实现 |
 | 条件任务定义 | `src/runtime/core/src/task/inc/aclgraph_cond_task.h` | 条件任务 SQE 常量与接口 |
-| 条件任务实现 | `src/runtime/core/src/task/task_info/aclgraph_cond_task.cc` | 条件任务初始化与 SQE 构建 |
+| 条件任务实现 | `src/runtime/core/src/task/task_info/cond_op/aclgraph_cond_task.cc` | 条件任务初始化与 SQE 构建 |
 | 条件任务下发 | `src/runtime/core/src/launch/cond_starsv2.cc` | 条件任务提交与后处理 |
 | 数据类型定义 | `src/inc/runtime/rt_inner_model.h` | runtime 层条件控制流类型定义 |
 | ACL 数据类型 | `include/external/acl/acl_rt.h` | aclmdlRICondHandle、aclmdlRICondTaskParams 等 ACL 类型 |

@@ -61,7 +61,7 @@
 
 | 接口 | 文件位置 | 说明 |
 |------|----------|------|
-| `rtFusionLaunch` | `pkg_inc/runtime/runtime/kernel.h:1416` | 提交下发融合算子任务 |
+| `rtFusionLaunch` | `pkg_inc/runtime/rt_external_kernel.h:545` | 提交下发融合算子任务 |
 
 **接口参数说明**：
 ```cpp
@@ -88,8 +88,8 @@ graph TB
     
     subgraph Fusion特性层
         FusionC["fusion_c.cc/hpp<br/>核心实现"]
-        FusionTask["fusion_task_david.cc/hpp<br/>任务处理"]
-        FusionSqe["fusion_sqe.cc/hpp<br/>SQE构建"]
+        FusionTask["fusion_task.cc/h<br/>任务处理"]
+        FusionSqe["fusion_task.cc/h<br/>ccu_sqe.cc/hpp<br/>SQE构建"]
     end
     
     subgraph Runtime核心层
@@ -165,7 +165,7 @@ flowchart TD
 
 #### LaunchFusionKernel（启动融合内核）
 
-**位置**：`feature/fusion/fusion_c.cc:418`
+**位置**：`src/runtime/feature/fusion/fusion_c.cc:450`
 
 **职责**：
 
@@ -177,7 +177,7 @@ flowchart TD
 
 #### ConstructDavidSqeForFusionKernelTask（构建 SQE）
 
-**位置**：`feature/fusion/fusion_sqe.cc:169`
+**位置**：`src/runtime/feature/fusion/fusion_task.cc:279`
 
 **职责**：根据子任务类型构建对应的 SQE
 - AI Core：调用 `ConstructAicAivSubSqe`，根据 mixType 判断是 AIC、AIV 还是 Mix
@@ -241,9 +241,9 @@ struct FusionTaskInfoAicPart;
 
 | 模块 | 文件路径 | 核心内容 |
 |------|----------|----------|
-| Fusion API | `pkg_inc/runtime/runtime/kernel.h` | `rtFusionLaunch` 接口定义，`rtFunsionTaskInfo_t`、`rtFusionArgsEx_t` 等数据结构 |
+| Fusion API | `pkg_inc/runtime/rt_external_kernel.h` | `rtFusionLaunch` 接口定义，`rtFunsionTaskInfo_t`、`rtFusionArgsEx_t` 等数据结构 |
 | Fusion 核心实现 | `src/runtime/feature/fusion/fusion_c.cc` | `LaunchFusionKernel`、`FusionKernelTaskPreProc`、`AixKernelTaskInitForFusion` |
-| Fusion 任务处理 | `src/runtime/feature/fusion/fusion_task_david.cc` | `BuildFusionKernelTaskName`、`DoCompleteSuccessForFusionKernelTask`、`FusionKernelTaskUnInit` |
-| Fusion SQE 构建 | `src/runtime/feature/fusion/fusion_sqe.cc` | `ConstructDavidSqeForFusionKernelTask`、`ConstructAicAivSubSqe`、`ConstructCcuSubSqe` |
+| Fusion 任务处理 | `src/runtime/feature/fusion/fusion_task.cc` | `BuildFusionKernelTaskName`、`DoCompleteSuccessForFusionKernelTask`、`FusionKernelTaskUnInit` |
+| Fusion SQE 构建 | `src/runtime/feature/fusion/fusion_task.cc`<br>`src/runtime/feature/ccu/ccu_sqe.cc` | `ConstructDavidSqeForFusionKernelTask`、`ConstructAicAivSubSqe`、`ConstructCcuSubSqe` |
 | Task 数据结构 | `src/runtime/core/inc/task/task_info.hpp` | `TaskInfo` 结构定义，包含 `FusionTaskInfo` |
 | Task 基础结构 | `src/runtime/core/inc/task/task_info_base.hpp` | `FusionTaskInfo`、`FusionTaskInfoAicPart` 详细定义 |
