@@ -16,6 +16,11 @@ extern "C" __global__ __aicore__ void EasyOPf(__gm__ uint32_t* x)
 {
     int32_t idx = block_idx;
     x[idx] += 1;
+#if __NPU_ARCH__ == 3510
+    dcci(reinterpret_cast<__gm__ int64_t*>(x),
+        cache_line_t::ENTIRE_DATA_CACHE,
+        dcci_dst_t::CACHELINE_OUT);
+#endif
 }
 
 void EasyOP(uint32_t blockDim, void *stream, uint32_t* x)

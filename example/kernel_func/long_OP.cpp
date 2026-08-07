@@ -29,6 +29,11 @@ extern "C" __global__ __aicore__ void LongOPf(__gm__ uint32_t* x)
         temp -= 0.00003f * temp;
     }
     x[idx] += temp > 0.0f ? 1:0;
+#if __NPU_ARCH__ == 3510
+    dcci(reinterpret_cast<__gm__ int64_t*>(x),
+        cache_line_t::ENTIRE_DATA_CACHE,
+        dcci_dst_t::CACHELINE_OUT);
+#endif
 }
 
 void LongOP(uint32_t blockDim, void *stream, uint32_t* x)
