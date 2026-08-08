@@ -24,19 +24,19 @@ typedef struct {
     bool ifHelpHostSide;
     uint32_t platformInfo;
     uint64_t hostOscFreq;
-    PlatformInterface *interface;
+    PlatformInterface* interface;
 } PlatformAttribute;
 
 PlatformType PlatformTypeConversion(void);
-int32_t PlatformInitialize(uint32_t *repeatCount);
-void PlatformFinalize(uint32_t *repeatCount);
+int32_t PlatformInitialize(uint32_t* repeatCount);
+void PlatformFinalize(uint32_t* repeatCount);
 uint32_t PlatformGetAicFreq(void);
 uint32_t PlatformGetAivFreq(void);
 uint32_t PlatformGetDevNum(void);
-bool IsSupportSwitch(const CHAR *sw);
+bool IsSupportSwitch(const CHAR* sw);
 bool IsSupportFeature(const PlatformFeature feature);
 bool IsSupportBit(const uint64_t dataConfig);
-bool PlatformGetMetricsEvents(const CHAR *sw, CHAR *events, size_t eventsLen);
+bool PlatformGetMetricsEvents(const CHAR* sw, CHAR* events, size_t eventsLen);
 CHAR* PlatformGetDefaultMetrics(void);
 uint64_t PlatformGetDefaultDevFreq(void);
 float PlatformGetDevFreq(uint32_t deviceId);

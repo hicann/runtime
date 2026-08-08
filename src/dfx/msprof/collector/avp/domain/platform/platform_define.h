@@ -11,11 +11,11 @@
 #ifndef DOMAIN_PLARFORM_PLARFORM_DEFINE_H
 #define DOMAIN_PLARFORM_PLARFORM_DEFINE_H
 #ifdef LITE_OS
-#define MAX_READER_BUFFER_SIZE 16384U // 16k for nano channel reader
-#define MIN_UPLOAD_BUFFER_SIZE 8192U // 8k
-#define MAX_CHANNEL_READ_BUFFER_SIZE 131072 // 128k
+#define MAX_READER_BUFFER_SIZE 16384U         // 16k for nano channel reader
+#define MIN_UPLOAD_BUFFER_SIZE 8192U          // 8k
+#define MAX_CHANNEL_READ_BUFFER_SIZE 131072   // 128k
 #else
-#define MAX_READER_BUFFER_SIZE 4194304U // 4m for channel reader
+#define MAX_READER_BUFFER_SIZE 4194304U       // 4m for channel reader
 #define MIN_UPLOAD_BUFFER_SIZE 1048576U
 #define MAX_CHANNEL_READ_BUFFER_SIZE 33554432 // 32m
 #endif

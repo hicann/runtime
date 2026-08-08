@@ -18,8 +18,8 @@
 extern "C" {
 #endif
 
-int32_t FileInitTransport(uint32_t deviceId, Transport* transport, const char *flushDir);
-int32_t FileSendBuffer(ProfFileChunk *chunk, const char* dir);
+int32_t FileInitTransport(uint32_t deviceId, Transport* transport, const char* flushDir);
+int32_t FileSendBuffer(ProfFileChunk* chunk, const char* dir);
 
 #ifdef __cplusplus
 }

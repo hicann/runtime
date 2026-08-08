@@ -22,11 +22,11 @@ typedef struct {
     bool isStart;
     bool quit;
     uint32_t deviceId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     ICollectionJob* collectionJobs[PROF_CHANNEL_MAX];
 } JobManagerAttribute;
-int32_t JobManagerStart(JobManagerAttribute *attr);
-int32_t JobManagerStop(JobManagerAttribute *attr);
+int32_t JobManagerStart(JobManagerAttribute* attr);
+int32_t JobManagerStop(JobManagerAttribute* attr);
 
 #ifdef __cplusplus
 }

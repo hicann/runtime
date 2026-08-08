@@ -15,12 +15,12 @@
 #define NANO_PMU_EVENT_MAX_NUM 10
 #define NANO_PMU_EVENT_MAX_LEN 65
 typedef struct {
-    uint32_t tag;                                  // 0-enable immediately, 1-enable delay
-    uint32_t eventNum;                             // PMU count
-    uint16_t event[NANO_PMU_EVENT_MAX_NUM];        // PMU value
+    uint32_t tag;                           // 0-enable immediately, 1-enable delay
+    uint32_t eventNum;                      // PMU count
+    uint16_t event[NANO_PMU_EVENT_MAX_NUM]; // PMU value
 } TagNanoStarsProfileConfig;
 
-int32_t NanoJobInit(ICollectionJob *attr);
-int32_t NanoJobProcess(ICollectionJob *attr);
-int32_t NanoJobUninit(ICollectionJob *attr);
+int32_t NanoJobInit(ICollectionJob* attr);
+int32_t NanoJobProcess(ICollectionJob* attr);
+int32_t NanoJobUninit(ICollectionJob* attr);
 #endif

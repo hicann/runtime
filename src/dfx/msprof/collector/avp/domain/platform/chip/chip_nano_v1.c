@@ -13,16 +13,9 @@
 #include "hal/hal_dsmi.h"
 
 static const PlatformFeature NANO_FEATURE_LIST[] = {
-    PLATFORM_TASK_SCALAR_RATIO_PMU,
-    PLATFORM_TASK_PU_PMU,
-    PLATFORM_TASK_PSC_PMU,
-    PLATFORM_TASK_MEMORY_PMU,
-    PLATFORM_TASK_MEMORYUB_PMU,
-    PLATFORM_TASK_TRACE,
-    PLATFORM_TASK_AIC_METRICS,
-    PLATFORM_TASK_SWITCH,
-    PLATFORM_TASK_OUTPUT
-};
+    PLATFORM_TASK_SCALAR_RATIO_PMU, PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PSC_PMU,
+    PLATFORM_TASK_MEMORY_PMU,       PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_TRACE,
+    PLATFORM_TASK_AIC_METRICS,      PLATFORM_TASK_SWITCH,       PLATFORM_TASK_OUTPUT};
 
 static const PlatformMetrics NANO_METRIC_EVENTS[] = {
     {PLATFORM_TASK_SCALAR_RATIO_PMU, "0x103,0x104,0x105"},
@@ -36,28 +29,19 @@ static const PlatformMetrics NANO_METRIC_EVENTS[] = {
  * @brief Get default aic freq on nano platform
  * @return default aic freq
  */
-static uint32_t GetAicFreq(void)
-{
-    return NANO_AICORE_DEFAULT_FREQ;
-}
+static uint32_t GetAicFreq(void) { return NANO_AICORE_DEFAULT_FREQ; }
 
 /**
  * @brief Get default aiv freq on nano platform
  * @return default aiv freq
  */
-static uint32_t GetAivFreq(void)
-{
-    return NANO_AICORE_DEFAULT_FREQ;
-}
+static uint32_t GetAivFreq(void) { return NANO_AICORE_DEFAULT_FREQ; }
 
 /**
  * @brief Get default host freq on nano platform
  * @return default host freq
  */
-static uint64_t GetDefaultFreq(void)
-{
-    return NANO_HWTS_DEFAULT_FREQ;
-}
+static uint64_t GetDefaultFreq(void) { return NANO_HWTS_DEFAULT_FREQ; }
 
 /**
  * @brief Check feature is support or not
@@ -67,7 +51,7 @@ static uint64_t GetDefaultFreq(void)
  */
 static bool FeatureIsSupport(const PlatformFeature feature)
 {
-    for (uint32_t id = 0; id < sizeof(NANO_FEATURE_LIST)/sizeof(NANO_FEATURE_LIST[0]); ++id) {
+    for (uint32_t id = 0; id < sizeof(NANO_FEATURE_LIST) / sizeof(NANO_FEATURE_LIST[0]); ++id) {
         if (feature == NANO_FEATURE_LIST[id]) {
             return true;
         }
@@ -83,16 +67,17 @@ static bool FeatureIsSupport(const PlatformFeature feature)
  * @return true : find metrics feature and output pmu events
            false
  */
-static bool GetPmuEvents(const PlatformFeature feature, char *events, size_t eventsLen)
+static bool GetPmuEvents(const PlatformFeature feature, char* events, size_t eventsLen)
 {
     // search in nano metrics map
-    for (uint32_t id = 0; id < sizeof(NANO_METRIC_EVENTS)/sizeof(NANO_METRIC_EVENTS[0]); ++id) {
+    for (uint32_t id = 0; id < sizeof(NANO_METRIC_EVENTS) / sizeof(NANO_METRIC_EVENTS[0]); ++id) {
         if (feature == NANO_METRIC_EVENTS[id].pmuType) {
-            errno_t ret = memcpy_s(events, eventsLen,
-                NANO_METRIC_EVENTS[id].pmuEvents, sizeof(NANO_METRIC_EVENTS[id].pmuEvents));
+            errno_t ret =
+                memcpy_s(events, eventsLen, NANO_METRIC_EVENTS[id].pmuEvents, sizeof(NANO_METRIC_EVENTS[id].pmuEvents));
             if (ret != EOK) {
-                MSPROF_LOGE("Failed to memcpy_s for NANO_METRIC_EVENTS, eventsLen: %u, pmuLen: %zu, ret:%d.",
-                    eventsLen, sizeof(NANO_METRIC_EVENTS[id].pmuEvents), (int32_t)ret);
+                MSPROF_LOGE(
+                    "Failed to memcpy_s for NANO_METRIC_EVENTS, eventsLen: %u, pmuLen: %zu, ret:%d.", eventsLen,
+                    sizeof(NANO_METRIC_EVENTS[id].pmuEvents), (int32_t)ret);
                 return false;
             }
             return true;
@@ -115,7 +100,7 @@ static char* GetDefaultMetrics(void)
 /**
  * @brief Register nano function to platform interface
  */
-void CreateNanoPlatform(PlatformInterface *interface)
+void CreateNanoPlatform(PlatformInterface* interface)
 {
     interface->GetDefaultMetrics = GetDefaultMetrics;
     interface->FeatureIsSupport = FeatureIsSupport;

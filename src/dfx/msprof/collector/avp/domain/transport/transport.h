@@ -20,10 +20,7 @@
 extern "C" {
 #endif
 
-typedef enum {
-    FILE_TRANSPORT,
-    FLSH_TRANSPORT
-} TransportType;
+typedef enum { FILE_TRANSPORT, FLSH_TRANSPORT } TransportType;
 
 typedef enum {
     PROF_CTRL_DATA = 2,
@@ -32,22 +29,21 @@ typedef enum {
 } FileChunkType;
 
 typedef struct {
-    uint8_t isLastChunk;                                      // is last chunk or not
-    uint8_t deviceId;                                         // report data fill suffix enum "devId"
-    uint16_t chunkType;                                       // form FileChunkType
-    uint64_t chunkSize;                                       // chunk size
-    uint32_t offset;                                          // flush chunk to file by offset, -1：append
-    uint8_t* chunk;                                           // chunk data
-    char fileName[MAX_FILE_CHUNK_NAME_LENGTH];               // flush chunk to disks by "fileName.tag"
+    uint8_t isLastChunk;                       // is last chunk or not
+    uint8_t deviceId;                          // report data fill suffix enum "devId"
+    uint16_t chunkType;                        // form FileChunkType
+    uint64_t chunkSize;                        // chunk size
+    uint32_t offset;                           // flush chunk to file by offset, -1：append
+    uint8_t* chunk;                            // chunk data
+    char fileName[MAX_FILE_CHUNK_NAME_LENGTH]; // flush chunk to disks by "fileName.tag"
 } ProfFileChunk;
 
 typedef struct {
-    int32_t (*SendBuffer)(ProfFileChunk *chunk, const char* dir);
+    int32_t (*SendBuffer)(ProfFileChunk* chunk, const char* dir);
     int32_t (*Flush)();
 } Transport;
 
-int32_t CreateUploaderTransport(uint32_t deviceId, TransportType type, Transport* transport,
-    const char *flushDir);
+int32_t CreateUploaderTransport(uint32_t deviceId, TransportType type, Transport* transport, const char* flushDir);
 
 #ifdef __cplusplus
 }

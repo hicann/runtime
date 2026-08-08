@@ -16,7 +16,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define MAX_REPORT_MODULE     20U // max supported report module num
+#define MAX_REPORT_MODULE 20U // max supported report module num
 #define PROF_INVALID_MODE_ID 0xFFFFFFFFUL
 
 typedef struct MsprofCommandHandle ProfCommand;
@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
     uint8_t reporterNum;
-    MsprofReporter *reporters;
+    MsprofReporter* reporters;
 } MsprofReporterList;
 
 typedef struct {
@@ -34,20 +34,20 @@ typedef struct {
     enum MsprofCommandHandleType handleType;
     uint32_t moduleId[MAX_REPORT_MODULE];
     ProfCommandHandle handle[MAX_REPORT_MODULE];
-    MsprofReporterList hostReporters;                            // reporter for api data
-    MsprofReporterList deviceReporters;                          // reporter for aicpu and ctrl cpu data
+    MsprofReporterList hostReporters;   // reporter for api data
+    MsprofReporterList deviceReporters; // reporter for aicpu and ctrl cpu data
 } ReportAttribute;
 
 typedef struct TypeInfoTagNode {
     uint16_t level;
     uint32_t typeId;
-    const CHAR *typeName;
-    struct TypeInfoTagNode *next;
+    const CHAR* typeName;
+    struct TypeInfoTagNode* next;
 } TypeInfoNode;
 
 typedef struct {
     uint64_t size;
-    TypeInfoNode *head;
+    TypeInfoNode* head;
 } TypeInfoList;
 
 typedef struct {
@@ -58,21 +58,21 @@ typedef struct {
     OsalMutex regMtx;
 } TypeInfoFlag;
 
-int32_t ReportManagerInitialize(ReportAttribute *reportAttr);
-int32_t ReportManagerRegisterModule(ReportAttribute *reportAttr, uint32_t moduleId, ProfCommandHandle handle);
-int32_t ReportManagerCollectStart(const uint32_t *deviceList, const size_t deviceNum,
-    ReportAttribute *reportAttr, uint64_t dataTypeConfig);
-int32_t ReportManagerCollectStop(const uint32_t *deviceList, const size_t deviceNum,
-    ReportAttribute *reportAttr, uint64_t dataTypeConfig);
-int32_t ReportManagerCollectFinalize(ReportAttribute *reportAttr);
-int32_t ReportManagerStartDeviceReporters(ReportAttribute *reportAttr);
-int32_t ReportManagerStopDeviceReporters(ReportAttribute *reportAttr);
-int32_t ReportManagerFinalize(ReportAttribute *reportAttr);
+int32_t ReportManagerInitialize(ReportAttribute* reportAttr);
+int32_t ReportManagerRegisterModule(ReportAttribute* reportAttr, uint32_t moduleId, ProfCommandHandle handle);
+int32_t ReportManagerCollectStart(
+    const uint32_t* deviceList, const size_t deviceNum, ReportAttribute* reportAttr, uint64_t dataTypeConfig);
+int32_t ReportManagerCollectStop(
+    const uint32_t* deviceList, const size_t deviceNum, ReportAttribute* reportAttr, uint64_t dataTypeConfig);
+int32_t ReportManagerCollectFinalize(ReportAttribute* reportAttr);
+int32_t ReportManagerStartDeviceReporters(ReportAttribute* reportAttr);
+int32_t ReportManagerStopDeviceReporters(ReportAttribute* reportAttr);
+int32_t ReportManagerFinalize(ReportAttribute* reportAttr);
 void HostReportFinalize(void);
 int32_t TypeInfoInit(void);
-int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const char *typeName);
-void SaveTypeInfoData(TypeInfoFlag *flag, bool isLastChunk);
-const CHAR *GetTypeName(uint16_t level, uint32_t typeId);
+int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const char* typeName);
+void SaveTypeInfoData(TypeInfoFlag* flag, bool isLastChunk);
+const CHAR* GetTypeName(uint16_t level, uint32_t typeId);
 void TypeInfoStop(void);
 void TypeInfoUninit(void);
 

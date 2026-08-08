@@ -16,8 +16,8 @@
 extern "C" {
 #endif
 
-PlatformInterface *CreatePlatform(PlatformType type);
-void DestroyPlatform(PlatformInterface *interface);
+PlatformInterface* CreatePlatform(PlatformType type);
+void DestroyPlatform(PlatformInterface* interface);
 
 #ifdef __cplusplus
 }

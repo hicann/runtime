@@ -44,18 +44,14 @@ static const char* g_aclJson[] = {
     "dvpp_freq",
     "host_sys",
     "host_sys_usage",
-    "host_sys_usage_freq"
-};
+    "host_sys_usage_freq"};
 
-static const char* g_switchList[] = {
-    "switch",
-    "task_trace"
-};
+static const char* g_switchList[] = {"switch", "task_trace"};
 
 CHAR* Slice(const CHAR* str, uint64_t start, uint64_t end)
 {
-    const char *p = str + start;
-    char *slice = (char *)OsalCalloc((size_t)(end - start + 2U));
+    const char* p = str + start;
+    char* slice = (char*)OsalCalloc((size_t)(end - start + 2U));
     PROF_CHK_EXPR_ACTION(slice == NULL, return NULL, "Slice char failed.");
     for (uint32_t idx = 0; idx < end - start + 1U; idx++) {
         slice[idx] = *p;
@@ -169,7 +165,7 @@ static bool CheckStorageLimit(const char* value)
     size_t valueLen = strlen(value);
     if (valueLen < STORAGE_MINIMUM_LENGTH) {
         MSPROF_LOGE("Param storage_limit configuration len is not right,"
-            "please input in the range of 200MB~4294967295MB.");
+                    "please input in the range of 200MB~4294967295MB.");
         return false;
     }
     char* mb = Slice(value, valueLen - 2U, valueLen - 1U);
@@ -198,15 +194,15 @@ static bool CheckStorageLimit(const char* value)
 static bool CheckParamValidation(JsonObj* jsonObj)
 {
     for (size_t idx = 0; idx < jsonObj->GetSize(jsonObj); idx++) {
-        JsonKeyObj *kvObj = jsonObj->KeyValuePairAt(jsonObj, idx);
+        JsonKeyObj* kvObj = jsonObj->KeyValuePairAt(jsonObj, idx);
         if (!IsSupportSwitch(kvObj->key)) {
             MSPROF_LOGE("Current platform is not support %s.", kvObj->key);
             return false;
         }
     }
     for (size_t idx = 0; idx < jsonObj->GetSize(jsonObj); idx++) {
-        JsonKeyObj *kvObj = jsonObj->KeyValuePairAt(jsonObj, idx);
-        const char *value = kvObj->value.value.stringValue;
+        JsonKeyObj* kvObj = jsonObj->KeyValuePairAt(jsonObj, idx);
+        const char* value = kvObj->value.value.stringValue;
         if (!IsValidSwitch(kvObj->key, value)) {
             MSPROF_LOGE("Invalid config [%s] for switch %s.", value, kvObj->key);
             return false;
@@ -240,11 +236,11 @@ static bool MsprofResultDirAdapter(const char* dir, char* resultDir, size_t len)
         MSPROF_LOGW("Input path is null or not exists.");
         return false;
     }
-    PROF_CHK_WARN_ACTION(!RelativePathToAbsolutePath(dir, resultDir, len), return false,
-        "Unable to process the path %s.", resultDir);
+    PROF_CHK_WARN_ACTION(
+        !RelativePathToAbsolutePath(dir, resultDir, len), return false, "Unable to process the path %s.", resultDir);
 
-    PROF_CHK_WARN_ACTION(!CreateDirectory(resultDir), return false,
-        "Directory %s did not create successfully.", resultDir);
+    PROF_CHK_WARN_ACTION(
+        !CreateDirectory(resultDir), return false, "Directory %s did not create successfully.", resultDir);
 
     if (!IsDirAccessible(resultDir)) {
         // 无法访问到时为确保安全，将路径刷空
@@ -270,18 +266,19 @@ static bool DefaultResultDirAdapter(char* resultDir)
     return true;
 }
 
-static bool SetBitMap(ParmasList *param, PlatformFeature enumValue)
+static bool SetBitMap(ParmasList* param, PlatformFeature enumValue)
 {
     uint32_t feature = (uint32_t)enumValue;
     uint32_t mapIndex = feature / DEFAULT_MAX_BYTE_LENGTH;
     feature -= mapIndex * DEFAULT_MAX_BYTE_LENGTH;
-    PROF_CHK_EXPR_ACTION(mapIndex >= DEFAULT_FEATURES_BYTE_MAP, return false,
-        "The value of [%u] exceeds byte map upper limit [%d].", feature, DEFAULT_FEATURES_BYTE_MAP);
+    PROF_CHK_EXPR_ACTION(
+        mapIndex >= DEFAULT_FEATURES_BYTE_MAP, return false, "The value of [%u] exceeds byte map upper limit [%d].",
+        feature, DEFAULT_FEATURES_BYTE_MAP);
     param->features[mapIndex] |= (uint32_t)(1UL << feature);
     return true;
 }
 
-static int32_t SetTaskTraceConfig(ParmasList *param, const char* taskTrace, const char* profLevel)
+static int32_t SetTaskTraceConfig(ParmasList* param, const char* taskTrace, const char* profLevel)
 {
     int32_t ret = strcpy_s(param->taskTrace, sizeof(param->taskTrace), taskTrace);
     PROF_CHK_EXPR_ACTION(ret != EOK, return ret, "strcpy_s taskTrace failed.");
@@ -295,12 +292,9 @@ static int32_t SetTaskTraceConfig(ParmasList *param, const char* taskTrace, cons
  * 参数: PlatformFeature bitTarget -- 输入比特类型
  * 返回值:执行返回翻转码用于与或
  */
-static inline uint32_t UnloadBitMap(PlatformFeature bitTarget)
-{
-    return ~((uint32_t)1U << (uint32_t)bitTarget);
-}
+static inline uint32_t UnloadBitMap(PlatformFeature bitTarget) { return ~((uint32_t)1U << (uint32_t)bitTarget); }
 
-static bool ProcessTaskTrace(ParmasList *param, const char* taskStatus)
+static bool ProcessTaskTrace(ParmasList* param, const char* taskStatus)
 {
     PROF_CHK_EXPR_ACTION(taskStatus == NULL, return false, "Input task char is empty.");
     int32_t ret = PROFILING_FAILED;
@@ -321,7 +315,7 @@ static bool ProcessTaskTrace(ParmasList *param, const char* taskStatus)
     return true;
 }
 
-static bool ProcessAiMetrics(ParmasList *param, const char* aiValue)
+static bool ProcessAiMetrics(ParmasList* param, const char* aiValue)
 {
     PROF_CHK_EXPR_ACTION(aiValue == NULL, return false, "Input ai metrics value is empty.");
     int32_t ret = strcpy_s(param->aiCoreMetrics, sizeof(param->aiCoreMetrics), aiValue);
@@ -339,14 +333,14 @@ static bool ProcessAiMetrics(ParmasList *param, const char* aiValue)
     return true;
 }
 
-static bool SetConfigToProfileParam(JsonObj* jsonObj, ParmasList *param)
+static bool SetConfigToProfileParam(JsonObj* jsonObj, ParmasList* param)
 {
     int32_t ret = 0;
     bool result = false;
     for (size_t i = 0; i < jsonObj->GetSize(jsonObj); i++) {
-        JsonKeyObj *kvObj = jsonObj->KeyValuePairAt(jsonObj, i);
-        const char *key = kvObj->key;
-        const char *value = kvObj->value.value.stringValue;
+        JsonKeyObj* kvObj = jsonObj->KeyValuePairAt(jsonObj, i);
+        const char* key = kvObj->key;
+        const char* value = kvObj->value.value.stringValue;
         if (strcmp(key, "switch") == 0 && strcmp(value, "on") == 0) {
             result = SetBitMap(param, PLATFORM_TASK_SWITCH);
             PROF_CHK_EXPR_ACTION(!result, return false, "Set byte map TASK_SWITCH failed.");
@@ -362,7 +356,8 @@ static bool SetConfigToProfileParam(JsonObj* jsonObj, ParmasList *param)
             result = ProcessAiMetrics(param, value);
             PROF_CHK_EXPR_ACTION(!result, return false, "Save aicore aivector metrics failed.");
         } else if (strcmp(key, "output") == 0) {
-            PROF_CHK_WARN_NO_ACTION(!MsprofResultDirAdapter(value, param->resultDir, sizeof(param->resultDir)),
+            PROF_CHK_WARN_NO_ACTION(
+                !MsprofResultDirAdapter(value, param->resultDir, sizeof(param->resultDir)),
                 "MsprofResultDirAdapter did not complete successfully.");
         } else if (strcmp(key, "storage_limit") == 0) {
             ret = strcpy_s(param->storageLimit, sizeof(param->storageLimit), value);
@@ -379,14 +374,14 @@ static bool SetConfigToProfileParam(JsonObj* jsonObj, ParmasList *param)
     return true;
 }
 
-static void UpdateDataTypeConfigBySwitch(ProfileParam *param, PlatformFeature feature,  const uint64_t dataTypeConfig)
+static void UpdateDataTypeConfigBySwitch(ProfileParam* param, PlatformFeature feature, const uint64_t dataTypeConfig)
 {
     if (IsEnable(&param->config, feature)) {
         param->dataTypeConfig |= dataTypeConfig;
     }
 }
 
-static void SetConfigToDataType(ProfileParam *param)
+static void SetConfigToDataType(ProfileParam* param)
 {
     param->dataTypeConfig |= PROF_AICPU_MODEL;
     if (strcmp(param->config.profLevel, "level2") == 0) {
@@ -408,7 +403,7 @@ static void SetConfigToDataType(ProfileParam *param)
     MSPROF_LOGI("Set dataTypeConfig is 0x%llx", param->dataTypeConfig);
 }
 
-static bool DefaultSwitchConfig(ParmasList *param)
+static bool DefaultSwitchConfig(ParmasList* param)
 {
     bool res = false;
     for (uint32_t idx = 0; idx < sizeof(DefaultSwitchList) / sizeof(DefaultSwitchList[0]); idx++) {
@@ -422,7 +417,7 @@ static bool DefaultSwitchConfig(ParmasList *param)
     return true;
 }
 
-static bool DefaultConfig(ParmasList *param)
+static bool DefaultConfig(ParmasList* param)
 {
     // 设置默认参数，strcpy_s需要做返回值检查
     param->hostPid = OsalGetPid();
@@ -460,7 +455,7 @@ static bool DefaultConfig(ParmasList *param)
     return true;
 }
 
-static void PrintParam(ProfileParam *param)
+static void PrintParam(ProfileParam* param)
 {
     MSPROF_LOGI("Param dataTypeConfig = [0x%llx]", param->dataTypeConfig);
     MSPROF_LOGI("Param aicEvents = [%s]", param->config.aicEvents);
@@ -480,7 +475,7 @@ static void PrintParam(ProfileParam *param)
     MSPROF_LOGI("Param taskTrace = [%s]", param->config.taskTrace);
 }
 
-int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam *param)
+int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam* param)
 {
     if (data == NULL || param == NULL || dataLength == 0) {
         MSPROF_LOGE("Init param failed, the data or param is empty");
@@ -495,7 +490,7 @@ int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength
         return PROFILING_FAILED;
     }
     // 参数解读
-    JsonObj *jsonObj = JsonParse(data);
+    JsonObj* jsonObj = JsonParse(data);
     if (jsonObj == NULL || !JsonIsObj(jsonObj)) {
         MSPROF_LOGE("Parse json failed.");
         return PROFILING_FAILED;
@@ -526,7 +521,7 @@ int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength
     return PROFILING_SUCCESS;
 }
 
-bool IsEnable(ParmasList *param, PlatformFeature enumValue)
+bool IsEnable(ParmasList* param, PlatformFeature enumValue)
 {
     uint32_t feature = (uint32_t)enumValue;
     if (!IsSwitch(enumValue)) {
@@ -535,8 +530,9 @@ bool IsEnable(ParmasList *param, PlatformFeature enumValue)
     }
     uint32_t mapIndex = feature / DEFAULT_MAX_BYTE_LENGTH;
     feature -= mapIndex * DEFAULT_MAX_BYTE_LENGTH;
-    PROF_CHK_EXPR_ACTION(mapIndex >= DEFAULT_FEATURES_BYTE_MAP, return false,
-        "The value of [%u] exceeds byte map upper limit [%d].", feature, DEFAULT_FEATURES_BYTE_MAP);
+    PROF_CHK_EXPR_ACTION(
+        mapIndex >= DEFAULT_FEATURES_BYTE_MAP, return false, "The value of [%u] exceeds byte map upper limit [%d].",
+        feature, DEFAULT_FEATURES_BYTE_MAP);
     uint32_t bitValue = (param->features[mapIndex] >> feature) & 1U;
     return bitValue == 1U;
 }

@@ -20,7 +20,7 @@
 #include "hal/hal_dsmi.h"
 
 TimeListCollector g_timeCount = {0, 0, 0, 0, 0};
-TimeData g_timeData = { 0 };
+TimeData g_timeData = {0};
 
 static void CreateHostTime(void)
 {
@@ -70,8 +70,9 @@ static void CreateHostAndDeviceTime(uint32_t devIndexId)
         // indicating that the interaction time between host and device has the least impact
         if ((t3 - t2) < minDelta || minDelta == 0) {
             minDelta = t3 - t2;
-            PROF_CHK_EXPR_ACTION_NODO(mT1 < 0 || mT2 < 0, continue, "The monotonic time is abnormal, mT1 is %" PRIu64
-            " mT2 is %" PRIu64 ".", mT1, mT2);
+            PROF_CHK_EXPR_ACTION_NODO(
+                mT1 < 0 || mT2 < 0, continue, "The monotonic time is abnormal, mT1 is %" PRIu64 " mT2 is %" PRIu64 ".",
+                mT1, mT2);
             g_timeCount.hostMonotonicStart = (uint64_t)(mT2 + mT1) >> 1U;
             g_timeCount.hostCntvctStart = (((t1 + t2) >> 1U) + ((t3 + t4) >> 1U)) >> 1U;
             g_timeCount.devCntvct = deviceCntvct;
@@ -115,8 +116,8 @@ static void GenHostStartTime(uint32_t deviceId)
         PROF_CHK_EXPR_ACTION(deviceIdStr == NULL, return, "Failed to transfer device id into string, ret is %d.", ret);
         ret = strcat_s(g_timeData.hostData, capacity, deviceIdStr);
         OSAL_MEM_FREE(deviceIdStr);
-        PROF_CHK_EXPR_ACTION(ret != EOK, break, "Failed to strcat_s device id %u to time buffer, ret is %d.",
-            deviceId, ret);
+        PROF_CHK_EXPR_ACTION(
+            ret != EOK, break, "Failed to strcat_s device id %u to time buffer, ret is %d.", deviceId, ret);
         ret = strcat_s(g_timeData.hostData, capacity, "]\n");
         PROF_CHK_EXPR_ACTION(ret != EOK, break, "Failed to strcat_s symbols to time buffer, ret is %d.", ret);
     }
@@ -150,8 +151,8 @@ static int32_t UploadTimeData(uint32_t deviceId, char* timeData, const char* fil
     PROF_CHK_EXPR_ACTION(result != EOK, break, "strcpy_s name %s to chunk failed.", fileName);
 
     chunk->chunk = (uint8_t*)OsalMalloc(strlen(timeData) + 1);
-    PROF_CHK_EXPR_ACTION_TWICE(chunk->chunk == NULL, OSAL_MEM_FREE(chunk), return PROFILING_FAILED,
-        "malloc chunk data failed.");
+    PROF_CHK_EXPR_ACTION_TWICE(
+        chunk->chunk == NULL, OSAL_MEM_FREE(chunk), return PROFILING_FAILED, "malloc chunk data failed.");
     result = memcpy_s(chunk->chunk, strlen(timeData) + 1, timeData, strlen(timeData));
     if (result != EOK) {
         OSAL_MEM_FREE(chunk->chunk);
@@ -178,9 +179,11 @@ int32_t CreateStartTimeFile(uint32_t deviceId)
         CreateHostTime();
     } else {
         CreateHostAndDeviceTime(deviceId);
-        MSPROF_LOGI("devId: %u, hostMonotonicStart=%" PRIu64 " ns, hostCntvctStart=%" PRIu64 " ns, hostCntvctDiff=%"
-            PRIu64 ", devCntvct=%" PRIu64 " cycle", deviceId, g_timeCount.hostMonotonicStart,
-            g_timeCount.hostCntvctStart, g_timeCount.hostCntvctDiff, g_timeCount.devCntvct);
+        MSPROF_LOGI(
+            "devId: %u, hostMonotonicStart=%" PRIu64 " ns, hostCntvctStart=%" PRIu64 " ns, hostCntvctDiff=%" PRIu64
+            ", devCntvct=%" PRIu64 " cycle",
+            deviceId, g_timeCount.hostMonotonicStart, g_timeCount.hostCntvctStart, g_timeCount.hostCntvctDiff,
+            g_timeCount.devCntvct);
         GenDevStartTime();
         result = UploadTimeData(deviceId, g_timeData.deviceData, "dev_start.log");
         if (result != PROFILING_SUCCESS) {

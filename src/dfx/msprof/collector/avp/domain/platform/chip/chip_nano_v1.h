@@ -19,7 +19,7 @@ extern "C" {
 #define NANO_AICORE_DEFAULT_FREQ 333
 #define NANO_HWTS_DEFAULT_FREQ 50000
 
-void CreateNanoPlatform(PlatformInterface *interface);
+void CreateNanoPlatform(PlatformInterface* interface);
 
 #ifdef __cplusplus
 }

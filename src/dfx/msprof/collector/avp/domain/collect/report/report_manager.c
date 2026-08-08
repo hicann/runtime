@@ -22,11 +22,7 @@
 #include "report/report_buffer_mgr.h"
 
 #define DEFAULT_TYPE_INFO_SIZE 13
-enum MsprofReporterId {
-    API_EVENT           = 0,
-    COMPACT             = 1,
-    ADDITIONAL          = 2
-};
+enum MsprofReporterId { API_EVENT = 0, COMPACT = 1, ADDITIONAL = 2 };
 
 static const TypeInfoNode DEFAULT_TYPE_INFO[DEFAULT_TYPE_INFO_SIZE] = {
     {MSPROF_REPORT_NODE_LEVEL, MSPROF_REPORT_NODE_BASIC_INFO_TYPE, "node_basic_info", NULL},
@@ -44,12 +40,12 @@ static const TypeInfoNode DEFAULT_TYPE_INFO[DEFAULT_TYPE_INFO_SIZE] = {
     {MSPROF_REPORT_HCCL_NODE_LEVEL, MSPROF_REPORT_HCCL_SLAVE_TYPE, "slave", NULL},
 };
 TypeInfoFlag g_infoType = {false, true, 0, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
-TypeInfoList *g_typeInfoList = NULL;
+TypeInfoList* g_typeInfoList = NULL;
 
 const enum MsprofReporterModuleId DEVICE_REPORT_LIST[] = {MSPROF_MODULE_DATA_PREPROCESS, MSPROF_MODULE_MSPROF};
 const enum MsprofReporterId HOST_REPORT_LIST[] = {API_EVENT, COMPACT, ADDITIONAL};
 
-static void CommandhandleProcessDeviceList(ProfCommand *command, const uint32_t devIdList[], uint64_t devNums)
+static void CommandhandleProcessDeviceList(ProfCommand* command, const uint32_t devIdList[], uint64_t devNums)
 {
     for (uint64_t i = 0; i < devNums && i < MAX_DEVICE_NUM; i++) {
         if (devIdList[i] == MAX_DEVICE_NUM) {
@@ -60,7 +56,7 @@ static void CommandhandleProcessDeviceList(ProfCommand *command, const uint32_t 
     }
 }
 
-static int32_t CommandHandleSetParams(ProfCommand *command)
+static int32_t CommandHandleSetParams(ProfCommand* command)
 {
     char msprofParams[] = "params"; // todo get params string from param module;
     if (strlen(msprofParams) > PARAM_LEN_MAX) {
@@ -76,7 +72,7 @@ static int32_t CommandHandleSetParams(ProfCommand *command)
     return PROFILING_SUCCESS;
 }
 
-static void CommandHandleCallback(ReportAttribute *reportAttr, ProfCommand *command)
+static void CommandHandleCallback(ReportAttribute* reportAttr, ProfCommand* command)
 {
     for (uint32_t i = 0; i < reportAttr->regModuleCount; i++) {
         reportAttr->handle[i]((uint32_t)PROF_CTRL_SWITCH, (void*)command, sizeof(ProfCommand));
@@ -85,13 +81,13 @@ static void CommandHandleCallback(ReportAttribute *reportAttr, ProfCommand *comm
     return;
 }
 
- /**
+/**
  * @brief      start report thread for report host and device data
  * @param [out] reportAttr: report attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerInitialize(ReportAttribute *reportAttr)
+int32_t ReportManagerInitialize(ReportAttribute* reportAttr)
 {
     reportAttr->hostReporters.reporterNum = 0;
     reportAttr->hostReporters.reporters = NULL;
@@ -108,7 +104,7 @@ int32_t ReportManagerInitialize(ReportAttribute *reportAttr)
     return PROFILING_SUCCESS;
 }
 
-int32_t ReportManagerRegisterModule(ReportAttribute *reportAttr, uint32_t moduleId, ProfCommandHandle handle)
+int32_t ReportManagerRegisterModule(ReportAttribute* reportAttr, uint32_t moduleId, ProfCommandHandle handle)
 {
     uint32_t i;
     if (handle == NULL) {
@@ -122,8 +118,9 @@ int32_t ReportManagerRegisterModule(ReportAttribute *reportAttr, uint32_t module
         }
     }
     if (reportAttr->regModuleCount == MAX_REPORT_MODULE) {
-        MSPROF_LOGE("Module[%u] register callback failed, the number of modules has reached the maximum value %u",
-            moduleId, reportAttr->regModuleCount);
+        MSPROF_LOGE(
+            "Module[%u] register callback failed, the number of modules has reached the maximum value %u", moduleId,
+            reportAttr->regModuleCount);
         return PROFILING_FAILED;
     }
     reportAttr->moduleId[reportAttr->regModuleCount] = moduleId;
@@ -133,34 +130,33 @@ int32_t ReportManagerRegisterModule(ReportAttribute *reportAttr, uint32_t module
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      start report thread for read data from ringbuffer
  * @param [in] reportAttr:     report attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerStartDeviceReporters(ReportAttribute *reportAttr)
+int32_t ReportManagerStartDeviceReporters(ReportAttribute* reportAttr)
 {
-    MsprofReporterList *deviceReporters = &reportAttr->deviceReporters;
+    MsprofReporterList* deviceReporters = &reportAttr->deviceReporters;
     if (deviceReporters->reporterNum != 0) {
         MSPROF_LOGD("Device reporters has been started");
         return PROFILING_SUCCESS;
     }
     deviceReporters->reporterNum = sizeof(DEVICE_REPORT_LIST) / sizeof(DEVICE_REPORT_LIST[0]);
     // start reporter
-    
+
     MSPROF_LOGI("Start device reporters successfully");
     return PROFILING_SUCCESS;
 }
 
-
- /**
+/**
  * @brief      stop report thread for read data from ringbuffer
  * @param [in] reportAttr:     report attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerStopDeviceReporters(ReportAttribute *reportAttr)
+int32_t ReportManagerStopDeviceReporters(ReportAttribute* reportAttr)
 {
     // stop reporters
     reportAttr->deviceReporters.reporterNum = 0;
@@ -173,7 +169,7 @@ int32_t ReportManagerStopDeviceReporters(ReportAttribute *reportAttr)
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      callback module to init and start reporting profiling data
  * @param [in] deviceId:       device id to start report
  * @param [in] reportAttr:     report attr
@@ -181,10 +177,11 @@ int32_t ReportManagerStopDeviceReporters(ReportAttribute *reportAttr)
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerCollectStart(const uint32_t *deviceList, const size_t deviceNum,
-    ReportAttribute *reportAttr, uint64_t dataTypeConfig)
+int32_t ReportManagerCollectStart(
+    const uint32_t* deviceList, const size_t deviceNum, ReportAttribute* reportAttr, uint64_t dataTypeConfig)
 {
-    PROF_CHK_EXPR_ACTION(deviceNum > UINT32_MAX, return PROFILING_FAILED,
+    PROF_CHK_EXPR_ACTION(
+        deviceNum > UINT32_MAX, return PROFILING_FAILED,
         "Device number %" PRIu64 " is bigger than uint32 type, and reset it to 0.", deviceNum);
     ProfCommand command;
     errno_t ret = memset_s(&command, sizeof(command), 0, sizeof(command));
@@ -207,7 +204,7 @@ int32_t ReportManagerCollectStart(const uint32_t *deviceList, const size_t devic
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      callback module to stop reporting profiling data
  * @param [in] deviceId:       device id to stop report
  * @param [in] reportAttr:     report attr
@@ -215,10 +212,11 @@ int32_t ReportManagerCollectStart(const uint32_t *deviceList, const size_t devic
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerCollectStop(const uint32_t *deviceList, const size_t deviceNum,
-    ReportAttribute *reportAttr, uint64_t dataTypeConfig)
+int32_t ReportManagerCollectStop(
+    const uint32_t* deviceList, const size_t deviceNum, ReportAttribute* reportAttr, uint64_t dataTypeConfig)
 {
-    PROF_CHK_EXPR_ACTION(deviceNum > UINT32_MAX, return PROFILING_FAILED,
+    PROF_CHK_EXPR_ACTION(
+        deviceNum > UINT32_MAX, return PROFILING_FAILED,
         "Device number %" PRIu64 " is bigger than uint32 type, and reset it to 0.", deviceNum);
     ProfCommand command;
     errno_t ret = memset_s(&command, sizeof(command), 0, sizeof(command));
@@ -243,14 +241,14 @@ int32_t ReportManagerCollectStop(const uint32_t *deviceList, const size_t device
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      callback module to finalize reporting profiling data
  * @param [in] reportAttr:     report attr
  * @param [in] dataTypeConfig: report data type config
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ReportManagerCollectFinalize(ReportAttribute *reportAttr)
+int32_t ReportManagerCollectFinalize(ReportAttribute* reportAttr)
 {
     ProfCommand command;
     errno_t ret = memset_s(&command, sizeof(command), 0, sizeof(command));
@@ -263,18 +261,15 @@ int32_t ReportManagerCollectFinalize(ReportAttribute *reportAttr)
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      flush data in reporter
  * @param [in] reportAttr:     report attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-static void ReportManagerFlushData(ReportAttribute *reportAttr)
-{
-    UNUSED(reportAttr);
-}
+static void ReportManagerFlushData(ReportAttribute* reportAttr) { UNUSED(reportAttr); }
 
-int32_t ReportManagerFinalize(ReportAttribute *reportAttr)
+int32_t ReportManagerFinalize(ReportAttribute* reportAttr)
 {
     int32_t ret = ReportManagerCollectFinalize(reportAttr);
     if (ret != PROFILING_SUCCESS) {
@@ -297,9 +292,9 @@ void HostReportFinalize(void)
  * @return     success: pointer of TypeInfoList
  *             failed : NULL
  */
-static TypeInfoList *CreateTypeInfoList(void)
+static TypeInfoList* CreateTypeInfoList(void)
 {
-    TypeInfoList *hashList = (TypeInfoList*)OsalCalloc(sizeof(TypeInfoList));
+    TypeInfoList* hashList = (TypeInfoList*)OsalCalloc(sizeof(TypeInfoList));
     if (hashList == NULL) {
         return NULL;
     }
@@ -316,9 +311,9 @@ static TypeInfoList *CreateTypeInfoList(void)
  * @return     true: save data success
  *             false : save data failed
  */
-static bool AddTypeInfoNode(uint16_t level, uint32_t typeId, const char *typeName)
+static bool AddTypeInfoNode(uint16_t level, uint32_t typeId, const char* typeName)
 {
-    TypeInfoNode *node = (TypeInfoNode*)OsalCalloc(sizeof(TypeInfoNode));
+    TypeInfoNode* node = (TypeInfoNode*)OsalCalloc(sizeof(TypeInfoNode));
     if (node == NULL) {
         MSPROF_LOGE("An error occurred while creating the type info node");
         return false;
@@ -342,7 +337,7 @@ static bool AddTypeInfoNode(uint16_t level, uint32_t typeId, const char *typeNam
  */
 static int32_t SearchTypeInfoNode(uint16_t level, uint32_t typeId)
 {
-    TypeInfoNode *node = g_typeInfoList->head;
+    TypeInfoNode* node = g_typeInfoList->head;
     while (node != NULL) {
         if (node->level == level && node->typeId == typeId) {
             return PROFILING_SUCCESS;
@@ -358,9 +353,9 @@ static int32_t SearchTypeInfoNode(uint16_t level, uint32_t typeId)
  */
 static void FreeTypeInfoList(void)
 {
-    TypeInfoNode *currNode = g_typeInfoList->head;
+    TypeInfoNode* currNode = g_typeInfoList->head;
     while (currNode != NULL) {
-        TypeInfoNode *tempNode = currNode;
+        TypeInfoNode* tempNode = currNode;
         currNode = currNode->next;
         OSAL_MEM_FREE(tempNode);
     }
@@ -376,8 +371,8 @@ static int32_t SaveDefaultInfo(void)
 {
     int32_t ret = PROFILING_SUCCESS;
     for (int32_t idx = 0; idx < DEFAULT_TYPE_INFO_SIZE; idx++) {
-        ret = RegReportTypeInfo(DEFAULT_TYPE_INFO[idx].level, DEFAULT_TYPE_INFO[idx].typeId,
-            DEFAULT_TYPE_INFO[idx].typeName);
+        ret = RegReportTypeInfo(
+            DEFAULT_TYPE_INFO[idx].level, DEFAULT_TYPE_INFO[idx].typeId, DEFAULT_TYPE_INFO[idx].typeName);
         if (ret != PROFILING_SUCCESS) {
             return PROFILING_FAILED;
         }
@@ -429,7 +424,7 @@ int32_t TypeInfoInit(void)
  * @return     success: PROFILING_SUCCESS
  *             failed : PROFILING_FAILED
  */
-int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     (void)OsalMutexLock(&g_infoType.regMtx);
     if (!g_infoType.infoInit || g_infoType.infoStop) {
@@ -455,14 +450,14 @@ int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
  * @param [in] isLastChunk: target of isLastChunk
  * @return     void
  */
-static void FillTypeData(ProfFileChunk *chunk, char *data, size_t dataSize, bool isLastChunk)
+static void FillTypeData(ProfFileChunk* chunk, char* data, size_t dataSize, bool isLastChunk)
 {
     chunk->chunkSize = dataSize;
     chunk->chunkType = PROF_HOST_DATA;
     chunk->isLastChunk = isLastChunk;
     chunk->offset = -1;
     chunk->deviceId = DEFAULT_HOST_ID;
-    errno_t ret = strcpy_s((char *)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH, "unaging.additional.type_info_dic");
+    errno_t ret = strcpy_s((char*)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH, "unaging.additional.type_info_dic");
     PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, chunk->chunk = NULL, return, "strcpy_s type_info_dic to chunk failed.");
     chunk->chunk = (uint8_t*)OsalCalloc(dataSize + 1U);
     PROF_CHK_EXPR_ACTION(chunk->chunk == NULL, return, "malloc chunk failed.");
@@ -481,14 +476,14 @@ static void FillTypeData(ProfFileChunk *chunk, char *data, size_t dataSize, bool
  * @param [in] bufferSize: buffer size
  * @return     void
  */
-static void ConcatenateTypeInfo(TypeInfoNode *node, char *buffer, size_t bufferSize)
+static void ConcatenateTypeInfo(TypeInfoNode* node, char* buffer, size_t bufferSize)
 {
     if (node->typeName == NULL) {
         MSPROF_LOGW("typeName invalid level:%u id:%u.", node->level, node->typeId);
         return;
     }
-    char *typeLevel = TransferUint32ToString((uint32_t)node->level);
-    char *typeId = TransferUint32ToString(node->typeId);
+    char* typeLevel = TransferUint32ToString((uint32_t)node->level);
+    char* typeId = TransferUint32ToString(node->typeId);
     errno_t ret = strcat_s(buffer, bufferSize, typeLevel);
     PROF_CHK_EXPR_ACTION(ret != EOK, break, "Failed to strcat_s %s to type info node, ret is %d.", typeLevel, ret);
     ret = strcat_s(buffer, bufferSize, "_");
@@ -510,7 +505,7 @@ static void ConcatenateTypeInfo(TypeInfoNode *node, char *buffer, size_t bufferS
  * @param [in] node: node saved in TypeInfoNode
  * @return     current node data and id length
  */
-static size_t GetTypeInfoSize(TypeInfoNode *node)
+static size_t GetTypeInfoSize(TypeInfoNode* node)
 {
     size_t nameSize = strlen(node->typeName);
     uint16_t level = node->level;
@@ -534,10 +529,10 @@ static size_t GetTypeInfoSize(TypeInfoNode *node)
  * @param [in] typeId: node saved in TypeInfoNode
  * @return     TypeName
  */
-const CHAR *GetTypeName(uint16_t level, uint32_t typeId)
+const CHAR* GetTypeName(uint16_t level, uint32_t typeId)
 {
     (void)OsalMutexLock(&g_infoType.regMtx);
-    TypeInfoNode *node = g_typeInfoList->head;
+    TypeInfoNode* node = g_typeInfoList->head;
     while (node != NULL) {
         if (node->level == level && node->typeId == typeId) {
             (void)OsalMutexUnlock(&g_infoType.regMtx);
@@ -554,7 +549,7 @@ const CHAR *GetTypeName(uint16_t level, uint32_t typeId)
  * @param [in] isLastChunk: whether is last time
  * @return     void
  */
-void SaveTypeInfoData(TypeInfoFlag *flag, bool isLastChunk)
+void SaveTypeInfoData(TypeInfoFlag* flag, bool isLastChunk)
 {
     (void)OsalMutexLock(&g_infoType.regMtx);
     if (!flag->infoInit || flag->infoStop) {
@@ -566,11 +561,11 @@ void SaveTypeInfoData(TypeInfoFlag *flag, bool isLastChunk)
         (void)OsalMutexUnlock(&g_infoType.regMtx);
         return;
     }
-    char *infoBuffer = (char*)OsalCalloc(QUEUE_BUFFER_SIZE + 1);
-    PROF_CHK_EXPR_ACTION_TWICE(infoBuffer == NULL, (void)OsalMutexUnlock(&g_infoType.regMtx), return,
-        "InfoBuffer calloc failed.");
+    char* infoBuffer = (char*)OsalCalloc(QUEUE_BUFFER_SIZE + 1);
+    PROF_CHK_EXPR_ACTION_TWICE(
+        infoBuffer == NULL, (void)OsalMutexUnlock(&g_infoType.regMtx), return, "InfoBuffer calloc failed.");
     infoBuffer[0] = '\0';
-    TypeInfoNode *currNode = g_typeInfoList->head;
+    TypeInfoNode* currNode = g_typeInfoList->head;
 
     do {
         if (currNode == NULL || g_infoType.typeCursors == g_typeInfoList->size) {
@@ -581,7 +576,7 @@ void SaveTypeInfoData(TypeInfoFlag *flag, bool isLastChunk)
         currNode = currNode->next;
         if (currNode == NULL || GetTypeInfoSize(currNode) + strlen(infoBuffer) > QUEUE_BUFFER_SIZE ||
             g_infoType.typeCursors == g_typeInfoList->size) {
-            ProfFileChunk *chunk = (ProfFileChunk *)OsalCalloc(sizeof(ProfFileChunk));
+            ProfFileChunk* chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
             if (chunk == NULL) {
                 MSPROF_LOGE("malloc file chunk failed.");
                 break;
@@ -592,7 +587,8 @@ void SaveTypeInfoData(TypeInfoFlag *flag, bool isLastChunk)
                 break;
             }
             (void)UploaderUploadData(chunk);
-            MSPROF_LOGI("total_size_typeInfo, saveLen:%zu bytes, typeSize:%" PRIu64 ", uploadSize:%" PRIu64 ".",
+            MSPROF_LOGI(
+                "total_size_typeInfo, saveLen:%zu bytes, typeSize:%" PRIu64 ", uploadSize:%" PRIu64 ".",
                 strlen(infoBuffer), g_typeInfoList->size, g_infoType.typeCursors);
             errno_t err = memset_s(infoBuffer, QUEUE_BUFFER_SIZE + 1, 0, QUEUE_BUFFER_SIZE + 1);
             if (err != EOK) {

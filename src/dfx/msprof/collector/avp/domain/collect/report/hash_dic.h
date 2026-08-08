@@ -26,17 +26,17 @@ extern "C" {
 
 typedef struct HashDataListNode {
     uint64_t hashId;
-    CHAR *hashInfo;
-    struct HashDataListNode *next;
+    CHAR* hashInfo;
+    struct HashDataListNode* next;
 } HashDataNode;
 
 typedef struct {
     uint64_t size;
-    HashDataNode *head;
+    HashDataNode* head;
 } HashDataList;
 
 int32_t HashDataInit(void);
-uint64_t GeneratedHashId(const char *hashInfo);
+uint64_t GeneratedHashId(const char* hashInfo);
 void SaveHashData(bool isLastChunk);
 void HashDataStop(void);
 void HashDataUninit(void);

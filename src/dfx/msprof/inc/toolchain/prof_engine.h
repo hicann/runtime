@@ -46,54 +46,54 @@ public:
     virtual ~PluginIntf() {}
 
 public:
-/**
- * @ingroup PluginIntf
- * @name  : Init
- * @brief : API of user plugin, libmsporf call this API to send a Reporter to user plugin
- * @par description :
- *  API of user plugin, libmsporf call this API to send a Reporter to user plugin.
- * @param reporter [IN] const Reporter* the Reporter from libmsprof
- * @retval PROFILING_SUCCESS 0 (success)
- * @retval PROFILING_FAILED -1 (failed)
- *
- * @par depend:
- * @li libmsprof
- * @li prof_engine.h
- * @since c60
- * @see UnInit
- */
-    virtual int32_t Init(const Reporter *reporter) = 0;
+    /**
+     * @ingroup PluginIntf
+     * @name  : Init
+     * @brief : API of user plugin, libmsporf call this API to send a Reporter to user plugin
+     * @par description :
+     *  API of user plugin, libmsporf call this API to send a Reporter to user plugin.
+     * @param reporter [IN] const Reporter* the Reporter from libmsprof
+     * @retval PROFILING_SUCCESS 0 (success)
+     * @retval PROFILING_FAILED -1 (failed)
+     *
+     * @par depend:
+     * @li libmsprof
+     * @li prof_engine.h
+     * @since c60
+     * @see UnInit
+     */
+    virtual int32_t Init(const Reporter* reporter) = 0;
 
-/**
- * @ingroup PluginIntf
- * @name  : OnNewConfig
- * @brief : API of user plugin, libmsprof call this API to send config info to user plugin \n
-            If the user plugin needn't config, no need to redefine this function
- * @param config [IN] const ModuleJobConfig * the config from libmsprof
- * @retval PROFILING_SUCCESS 0 (success)
- * @retval PROFILING_FAILED -1 (failed)
- *
- * @par depend:
- * @li libmsprof
- * @li prof_engine.h
- * @since c60
- * @see Init | UnInit
- */
-    virtual int32_t OnNewConfig(const ModuleJobConfig *config) = 0;
+    /**
+     * @ingroup PluginIntf
+     * @name  : OnNewConfig
+     * @brief : API of user plugin, libmsprof call this API to send config info to user plugin \n
+                If the user plugin needn't config, no need to redefine this function
+     * @param config [IN] const ModuleJobConfig * the config from libmsprof
+     * @retval PROFILING_SUCCESS 0 (success)
+     * @retval PROFILING_FAILED -1 (failed)
+     *
+     * @par depend:
+     * @li libmsprof
+     * @li prof_engine.h
+     * @since c60
+     * @see Init | UnInit
+     */
+    virtual int32_t OnNewConfig(const ModuleJobConfig* config) = 0;
 
-/**
- * @ingroup PluginIntf
- * @name  : UnInit
- * @brief : API of user plugin, libmsprof call this API to notify plugin stop to send data
- * @retval PROFILING_SUCCESS 0 (success)
- * @retval PROFILING_FAILED -1 (failed)
- *
- * @par depend:
- * @li libmsprof
- * @li prof_engine.h
- * @since c60
- * @see Init
- */
+    /**
+     * @ingroup PluginIntf
+     * @name  : UnInit
+     * @brief : API of user plugin, libmsprof call this API to notify plugin stop to send data
+     * @retval PROFILING_SUCCESS 0 (success)
+     * @retval PROFILING_FAILED -1 (failed)
+     *
+     * @par depend:
+     * @li libmsprof
+     * @li prof_engine.h
+     * @since c60
+     * @see Init
+     */
     virtual int32_t UnInit() = 0;
 };
 
@@ -111,35 +111,35 @@ public:
     virtual ~EngineIntf() {}
 
 public:
-/**
- * @ingroup EngineIntf
- * @name  : CreatePlugin
- * @brief : API of user engine, libmsporf call this API to get a plugin
- * @retval PluginIntf * The pointer of the new plugin
- *
- * @par depend:
- * @li libmsprof
- * @li prof_engine.h
- * @since c60
- * @see ReleasePlugin
- */
-    virtual PluginIntf *CreatePlugin() = 0;
+    /**
+     * @ingroup EngineIntf
+     * @name  : CreatePlugin
+     * @brief : API of user engine, libmsporf call this API to get a plugin
+     * @retval PluginIntf * The pointer of the new plugin
+     *
+     * @par depend:
+     * @li libmsprof
+     * @li prof_engine.h
+     * @since c60
+     * @see ReleasePlugin
+     */
+    virtual PluginIntf* CreatePlugin() = 0;
 
- /**
- * @ingroup EngineIntf
- * @name  : ReleasePlugin
- * @brief : API of user engine, libmsprof call this API to release a plugin
- * @param plugin [IN] PluginIntf * the plugin to release
- * @retval PROFILING_SUCCESS 0 (success)
- * @retval PROFILING_FAILED -1 (failed)
-*
- * @par depend:
- * @li libmsprof
- * @li prof_engine.h
- * @since c60
- * @see CreatePlugin
- */
-    virtual int32_t ReleasePlugin(PluginIntf *plugin) = 0;
+    /**
+     * @ingroup EngineIntf
+     * @name  : ReleasePlugin
+     * @brief : API of user engine, libmsprof call this API to release a plugin
+     * @param plugin [IN] PluginIntf * the plugin to release
+     * @retval PROFILING_SUCCESS 0 (success)
+     * @retval PROFILING_FAILED -1 (failed)
+     *
+     * @par depend:
+     * @li libmsprof
+     * @li prof_engine.h
+     * @since c60
+     * @see CreatePlugin
+     */
+    virtual int32_t ReleasePlugin(PluginIntf* plugin) = 0;
 };
 
 /**
@@ -162,7 +162,7 @@ public:
  * @since c60
  * @see UnInit
  */
-MSVP_PROF_API int32_t Init(const std::string &module, const EngineIntf *engine);
+MSVP_PROF_API int32_t Init(const std::string& module, const EngineIntf* engine);
 
 /**
  * @ingroup EngineMgr
@@ -178,8 +178,8 @@ MSVP_PROF_API int32_t Init(const std::string &module, const EngineIntf *engine);
  * @since c60
  * @see Init
  */
-MSVP_PROF_API int32_t UnInit(const std::string &module);
-}  // namespace Engine
-}  // namespace Msprof
+MSVP_PROF_API int32_t UnInit(const std::string& module);
+} // namespace Engine
+} // namespace Msprof
 
-#endif  // MSPROF_ENGINE_PROF_ENGINE_H_
+#endif // MSPROF_ENGINE_PROF_ENGINE_H_

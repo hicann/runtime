@@ -26,18 +26,9 @@ extern "C" {
 
 static const PlatformFeature featureList[] = {
     // 模拟platform当前支持的参数
-    PLATFORM_TASK_ASCENDCL,
-    PLATFORM_TASK_SWITCH,
-    PLATFORM_TASK_AIC_METRICS,
-    PLATFORM_TASK_AIV_METRICS,
-    PLATFORM_TASK_TS_TIMELINE,
-    PLATFORM_TASK_STARS_ACSQ,
-    PLATFORM_TASK_TS_KEYPOINT,
-    PLATFORM_TASK_AIC_HWTS,
-    PLATFORM_TASK_TS_MEMCPY,
-    PLATFORM_TASK_RUNTIME_TRACE,
-    PLATFORM_TASK_RUNTIME_API
-};
+    PLATFORM_TASK_ASCENDCL,    PLATFORM_TASK_SWITCH,        PLATFORM_TASK_AIC_METRICS, PLATFORM_TASK_AIV_METRICS,
+    PLATFORM_TASK_TS_TIMELINE, PLATFORM_TASK_STARS_ACSQ,    PLATFORM_TASK_TS_KEYPOINT, PLATFORM_TASK_AIC_HWTS,
+    PLATFORM_TASK_TS_MEMCPY,   PLATFORM_TASK_RUNTIME_TRACE, PLATFORM_TASK_RUNTIME_API};
 
 typedef struct {
     char aiCoreMetrics[32];
@@ -46,17 +37,9 @@ typedef struct {
 
 static const PlatformFeature DefaultSwitchList[] = {
     // 设置默认开启的开关
-    PLATFORM_TASK_ASCENDCL,
-    PLATFORM_TASK_AIC_METRICS,
-    PLATFORM_TASK_AIV_METRICS,
-    PLATFORM_TASK_TS_TIMELINE,
-    PLATFORM_TASK_TS_MEMCPY,
-    PLATFORM_TASK_RUNTIME_TRACE,
-    PLATFORM_TASK_TS_KEYPOINT,
-    PLATFORM_TASK_STARS_ACSQ,
-    PLATFORM_TASK_AIC_HWTS,
-    PLATFORM_TASK_RUNTIME_API
-};
+    PLATFORM_TASK_ASCENDCL,  PLATFORM_TASK_AIC_METRICS,   PLATFORM_TASK_AIV_METRICS, PLATFORM_TASK_TS_TIMELINE,
+    PLATFORM_TASK_TS_MEMCPY, PLATFORM_TASK_RUNTIME_TRACE, PLATFORM_TASK_TS_KEYPOINT, PLATFORM_TASK_STARS_ACSQ,
+    PLATFORM_TASK_AIC_HWTS,  PLATFORM_TASK_RUNTIME_API};
 
 typedef struct {
     uint32_t features[DEFAULT_FEATURES_BYTE_MAP]; // 31 * DEFAULT_FEATURES_BYTE_MAP
@@ -83,8 +66,8 @@ typedef struct {
     ParmasList config;
 } ProfileParam;
 
-bool IsEnable(ParmasList *param, PlatformFeature enumValue);
-int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam *param);
+bool IsEnable(ParmasList* param, PlatformFeature enumValue);
+int32_t GenProfileParam(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam* param);
 CHAR* Slice(const CHAR* str, uint64_t start, uint64_t end);
 #ifdef __cplusplus
 }

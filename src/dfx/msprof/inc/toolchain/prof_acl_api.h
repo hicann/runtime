@@ -49,23 +49,23 @@ enum ProfMessageType {
  * @brief struct of aclprofStart/aclprofStop
  */
 struct ProfConfig {
-    uint32_t devNums;                       // length of device id list
-    uint32_t devIdList[PROF_MAX_DEV_NUM + 1];   // physical device id list
-    ProfAicoreMetrics aicoreMetrics;        // aicore metric
-    uint64_t dataTypeConfig;                // data type to start profiling
+    uint32_t devNums;                         // length of device id list
+    uint32_t devIdList[PROF_MAX_DEV_NUM + 1]; // physical device id list
+    ProfAicoreMetrics aicoreMetrics;          // aicore metric
+    uint64_t dataTypeConfig;                  // data type to start profiling
 };
-using PROF_CONF_CONST_PTR = const ProfConfig *;
+using PROF_CONF_CONST_PTR = const ProfConfig*;
 
 /**
  * @name  ProfSubscribeConfig
  * @brief config of subscribe api
  */
 struct ProfSubscribeConfig {
-    bool timeInfo;                          // subscribe op time
-    ProfAicoreMetrics aicoreMetrics;        // subscribe ai core metrics
-    void* fd;                               // pipe fd
+    bool timeInfo;                   // subscribe op time
+    ProfAicoreMetrics aicoreMetrics; // subscribe ai core metrics
+    void* fd;                        // pipe fd
 };
-using PROF_SUB_CONF_CONST_PTR = const ProfSubscribeConfig *;
+using PROF_SUB_CONF_CONST_PTR = const ProfSubscribeConfig*;
 
 /**
  * @name  aclprofSubscribeConfig
@@ -74,38 +74,38 @@ using PROF_SUB_CONF_CONST_PTR = const ProfSubscribeConfig *;
 struct aclprofSubscribeConfig {
     struct ProfSubscribeConfig config;
 };
-using ACL_PROF_SUB_CONFIG_PTR = aclprofSubscribeConfig *;
-using ACL_PROF_SUB_CINFIG_CONST_PTR = const aclprofSubscribeConfig *;
+using ACL_PROF_SUB_CONFIG_PTR = aclprofSubscribeConfig*;
+using ACL_PROF_SUB_CINFIG_CONST_PTR = const aclprofSubscribeConfig*;
 
 struct ProfTensor {
-    uint32_t type;                                        // tensor类型, 0: input, 1: output
-    uint32_t format;                                      // format类型: aclFormat
-    uint32_t dataType;                                    // dataType类型 aclDataType
-    uint32_t shapeDim;                                    // shape dim <= 8
-    uint32_t shape[MSPROF_GE_TENSOR_DATA_SHAPE_LEN];      // tensor内存大小
+    uint32_t type;                                   // tensor类型, 0: input, 1: output
+    uint32_t format;                                 // format类型: aclFormat
+    uint32_t dataType;                               // dataType类型 aclDataType
+    uint32_t shapeDim;                               // shape dim <= 8
+    uint32_t shape[MSPROF_GE_TENSOR_DATA_SHAPE_LEN]; // tensor内存大小
 };
 
 struct ProfTensorInfo {
-    uint64_t opNameId;      // 通过uint64_t aclprofStr2Id(const char *message)
+    uint64_t opNameId; // 通过uint64_t aclprofStr2Id(const char *message)
     uint64_t opTypeId;
     uint32_t resv;
     uint32_t tensorNum;
     uint32_t kernelType;
     uint32_t blockNums;
-    void *stream;           // stream信息
-    ProfTensor *tensors;
+    void* stream; // stream信息
+    ProfTensor* tensors;
 };
 
 struct ProfEventAttributes {
     uint16_t version;
     uint16_t size;
-    uint32_t messageType;   // MESSAGE_TYPE_TENSOR_INFO
+    uint32_t messageType; // MESSAGE_TYPE_TENSOR_INFO
     union Message {
-        ProfTensorInfo *tensorInfo;
+        ProfTensorInfo* tensorInfo;
     } message;
 };
 
-using ACLPROF_EVENT_ATTR_PTR = ProfEventAttributes *;
+using ACLPROF_EVENT_ATTR_PTR = ProfEventAttributes*;
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 #define MSVP_PROF_API __declspec(dllexport)
@@ -113,7 +113,7 @@ using ACLPROF_EVENT_ATTR_PTR = ProfEventAttributes *;
 #define MSVP_PROF_API __attribute__((visibility("default")))
 #endif
 
-using PROFAPI_SUBSCRIBECONFIG_CONST_PTR = const void *;
+using PROFAPI_SUBSCRIBECONFIG_CONST_PTR = const void*;
 namespace Msprofiler {
 namespace Api {
 /**
@@ -124,15 +124,15 @@ namespace Api {
  * @param index [IN] index of part(op)
  * @return op execution time (us)
  */
-MSVP_PROF_API uint64_t ProfGetOpExecutionTime(const void *data, uint32_t len, uint32_t index);
-}
-}
+MSVP_PROF_API uint64_t ProfGetOpExecutionTime(const void* data, uint32_t len, uint32_t index);
+} // namespace Api
+} // namespace Msprofiler
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-MSVP_PROF_API uint64_t ProfGetOpExecutionTime(const void *data, uint32_t len, uint32_t index);
+MSVP_PROF_API uint64_t ProfGetOpExecutionTime(const void* data, uint32_t len, uint32_t index);
 MSVP_PROF_API int32_t ProfOpSubscribe(uint32_t devId, PROFAPI_SUBSCRIBECONFIG_CONST_PTR profSubscribeConfig);
 MSVP_PROF_API int32_t ProfOpUnSubscribe(uint32_t devId);
 
@@ -146,8 +146,8 @@ typedef struct aclprofConfig aclprofConfig;
  * @param [in] profSubscribeConfig: pointer to config of model subscribe
  * @return Status result of function
  */
-MSVP_PROF_API Status aclgrphProfGraphSubscribe(const uint32_t graphId,
-    const aclprofSubscribeConfig1 *profSubscribeConfig);
+MSVP_PROF_API Status
+aclgrphProfGraphSubscribe(const uint32_t graphId, const aclprofSubscribeConfig1* profSubscribeConfig);
 /**
  * @ingroup AscendCL
  * @brief unsubscribe profiling data of graph
@@ -166,57 +166,57 @@ MSVP_PROF_API Status aclgrphProfGraphUnSubscribe(const uint32_t graphId);
  * @retval graph id of subscription data
  * @retval 0 for failed
  */
-MSVP_PROF_API size_t aclprofGetGraphId(const void *opInfo, size_t opInfoLen, uint32_t index);
+MSVP_PROF_API size_t aclprofGetGraphId(const void* opInfo, size_t opInfoLen, uint32_t index);
 
 /**
-* @ingroup AscendCL
-* @brief set stamp pay load
-*
-*
-* @retval void
-*/
-MSVP_PROF_API int32_t aclprofSetStampPayload(void *stamp, const int32_t type, void *value);
+ * @ingroup AscendCL
+ * @brief set stamp pay load
+ *
+ *
+ * @retval void
+ */
+MSVP_PROF_API int32_t aclprofSetStampPayload(void* stamp, const int32_t type, void* value);
 
 /**
-* @ingroup AscendCL
-* @brief set category and name
-*
-*
-* @retval void
-*/
-MSVP_PROF_API int32_t aclprofSetCategoryName(uint32_t category, const char *categoryName);
+ * @ingroup AscendCL
+ * @brief set category and name
+ *
+ *
+ * @retval void
+ */
+MSVP_PROF_API int32_t aclprofSetCategoryName(uint32_t category, const char* categoryName);
 
 /**
-* @ingroup AscendCL
-* @brief set category to stamp
-*
-*
-* @retval void
-*/
-MSVP_PROF_API int32_t aclprofSetStampCategory(void *stamp, uint32_t category);
+ * @ingroup AscendCL
+ * @brief set category to stamp
+ *
+ *
+ * @retval void
+ */
+MSVP_PROF_API int32_t aclprofSetStampCategory(void* stamp, uint32_t category);
 
 /**
  * @ingroup AscendCL
  * @brief warmup profiling data collection
- * 
+ *
  */
-MSVP_PROF_API int aclprofWarmup(const aclprofConfig *profilerConfig);
+MSVP_PROF_API int aclprofWarmup(const aclprofConfig* profilerConfig);
 
 /**
-* @ingroup AscendCL
-* @brief get prof supported features
-* @param [out]featuresSize, pointer to feature's size
-* @param [out]featuresData, *featuresData should be nullptr, returns a pointer to the supported features
-*/
-MSVP_PROF_API Status aclprofGetSupportedFeatures(size_t *featuresSize, void **featuresData);
+ * @ingroup AscendCL
+ * @brief get prof supported features
+ * @param [out]featuresSize, pointer to feature's size
+ * @param [out]featuresData, *featuresData should be nullptr, returns a pointer to the supported features
+ */
+MSVP_PROF_API Status aclprofGetSupportedFeatures(size_t* featuresSize, void** featuresData);
 
 /**
-* @ingroup AscendCL
-* @brief get prof supported features v2
-* @param [out]featuresSize, pointer to feature's size
-* @param [out]featuresData, *featuresData should be nullptr, returns a pointer to the supported features
-*/
-MSVP_PROF_API Status aclprofGetSupportedFeaturesV2(size_t *featuresSize, void **featuresData);
+ * @ingroup AscendCL
+ * @brief get prof supported features v2
+ * @param [out]featuresSize, pointer to feature's size
+ * @param [out]featuresData, *featuresData should be nullptr, returns a pointer to the supported features
+ */
+MSVP_PROF_API Status aclprofGetSupportedFeaturesV2(size_t* featuresSize, void** featuresData);
 
 /**
  * @ingroup AscendCL
@@ -227,4 +227,4 @@ MSVP_PROF_API int aclprofRegisterDeviceCallback();
 }
 #endif
 
-#endif  // MSPROFILER_API_PROF_ACL_API_H_
+#endif // MSPROFILER_API_PROF_ACL_API_H_

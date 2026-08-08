@@ -25,9 +25,9 @@
 #include "osal/osal_mem.h"
 #include "param/profile_param.h"
 
-static int32_t DrvGetChannels(uint32_t devId, bool *channels)
+static int32_t DrvGetChannels(uint32_t devId, bool* channels)
 {
-    channel_list_t *channelList = (channel_list_t *)OsalCalloc(sizeof(channel_list_t));
+    channel_list_t* channelList = (channel_list_t*)OsalCalloc(sizeof(channel_list_t));
     PROF_CHK_EXPR_ACTION(channelList == NULL, return PROFILING_FAILED, "ChannelList calloc failed.");
     int32_t ret = HalProfGetChannelList(devId, channelList);
     if (ret != PROFILING_SUCCESS) {
@@ -47,13 +47,13 @@ static int32_t DrvGetChannels(uint32_t devId, bool *channels)
     return PROFILING_SUCCESS;
 }
 
-static int32_t DeviceJobInit(JobManagerAttribute *attr)
+static int32_t DeviceJobInit(JobManagerAttribute* attr)
 {
     MSPROF_LOGI("Device job init");
     for (uint32_t i = 0; i < (uint32_t)PROF_CHANNEL_MAX; i++) {
         attr->collectionJobs[i] = NULL;
     }
-    bool *channels = (bool*)OsalCalloc(sizeof(bool) * (size_t)PROF_CHANNEL_MAX);
+    bool* channels = (bool*)OsalCalloc(sizeof(bool) * (size_t)PROF_CHANNEL_MAX);
     PROF_CHK_EXPR_ACTION(channels == NULL, return PROFILING_FAILED, "Channels calloc failed.");
     if (DrvGetChannels(attr->deviceId, channels) != PROFILING_SUCCESS) {
         OSAL_MEM_FREE(channels);
@@ -83,7 +83,7 @@ static int32_t DeviceJobInit(JobManagerAttribute *attr)
     return PROFILING_SUCCESS;
 }
 
-static void DeviceJobStart(JobManagerAttribute *attr)
+static void DeviceJobStart(JobManagerAttribute* attr)
 {
     for (uint32_t i = 0; i < (uint32_t)PROF_CHANNEL_MAX; i++) {
         if (attr->collectionJobs[i] == NULL) {
@@ -94,7 +94,7 @@ static void DeviceJobStart(JobManagerAttribute *attr)
     }
 }
 
-static void DeviceJobStop(JobManagerAttribute *attr)
+static void DeviceJobStop(JobManagerAttribute* attr)
 {
     for (uint32_t i = 0; i < (uint32_t)PROF_CHANNEL_MAX; i++) {
         if (attr->collectionJobs[i] == NULL) {
@@ -106,7 +106,7 @@ static void DeviceJobStop(JobManagerAttribute *attr)
     }
 }
 
-int32_t JobManagerStart(JobManagerAttribute *attr)
+int32_t JobManagerStart(JobManagerAttribute* attr)
 {
     if (attr->isStart || attr->params == NULL) {
         MSPROF_LOGE("JobManager start flag is true or params is invalid.");
@@ -138,7 +138,7 @@ int32_t JobManagerStart(JobManagerAttribute *attr)
     return ret;
 }
 
-int32_t JobManagerStop(JobManagerAttribute *attr)
+int32_t JobManagerStop(JobManagerAttribute* attr)
 {
     if (!attr->isStart) {
         MSPROF_LOGW("Device job is not started.");

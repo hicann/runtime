@@ -14,19 +14,20 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
 OsalVoidPtr OsalMalloc(size_t size);
 OsalVoidPtr OsalCalloc(size_t size);
 VOID OsalFree(OsalVoidPtr ptr);
 VOID OsalConstFree(const void* ptr);
 
-#define OSAL_MEM_FREE(ptr) do {  \
-    OsalFree(ptr);               \
-    (ptr) = NULL;                  \
-} while (0)
+#define OSAL_MEM_FREE(ptr) \
+    do {                   \
+        OsalFree(ptr);     \
+        (ptr) = NULL;      \
+    } while (0)
 
 #ifdef __cplusplus
 }
-#endif  // __cpluscplus
+#endif // __cpluscplus
 #endif

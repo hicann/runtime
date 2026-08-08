@@ -77,7 +77,7 @@ OsalSockHandle OsalSocket(int32_t sockFamily, int32_t type, int32_t protocol)
  *       addrLen--对应地址的长度
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalBind(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen addrLen)
+int32_t OsalBind(OsalSockHandle sockFd, OsalSockAddr* addr, OsalSocklen addrLen)
 {
 #ifdef OSAL
     return LinuxBind(sockFd, addr, addrLen);
@@ -108,7 +108,7 @@ int32_t OsalListen(OsalSockHandle sockFd, int32_t backLog)
  *       addrLen--协议地址的长度
  * 返回值:执行成功返回自动生成的一个全新的socket id, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-OsalSockHandle OsalAccept(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen *addrLen)
+OsalSockHandle OsalAccept(OsalSockHandle sockFd, OsalSockAddr* addr, OsalSocklen* addrLen)
 {
 #ifdef OSAL
     return LinuxAccept(sockFd, addr, addrLen);
@@ -124,7 +124,7 @@ OsalSockHandle OsalAccept(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen
  *      addrLen--地址的长度
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalConnect(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen addrLen)
+int32_t OsalConnect(OsalSockHandle sockFd, OsalSockAddr* addr, OsalSocklen addrLen)
 {
 #ifdef OSAL
     return LinuxConnect(sockFd, addr, addrLen);
@@ -141,7 +141,7 @@ int32_t OsalConnect(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen addrL
  *       sendFlag--发送的方式标志位，一般置0
  * 返回值:执行成功返回实际发送的buf长度, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-OsalSsize OsalSocketSend(OsalSockHandle sockFd, VOID *sendBuf, int32_t sendLen, int32_t sendFlag)
+OsalSsize OsalSocketSend(OsalSockHandle sockFd, VOID* sendBuf, int32_t sendLen, int32_t sendFlag)
 {
 #ifdef OSAL
     return LinuxSocketSend(sockFd, sendBuf, sendLen, sendFlag);
@@ -157,7 +157,7 @@ OsalSsize OsalSocketSend(OsalSockHandle sockFd, VOID *sendBuf, int32_t sendLen, 
  *       recvFlag--接收的方式标志位，一般置0
  * 返回值:执行成功返回实际接收的buf长度, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-OsalSsize OsalSocketRecv(OsalSockHandle sockFd, VOID *recvBuf, int32_t recvLen, int32_t recvFlag)
+OsalSsize OsalSocketRecv(OsalSockHandle sockFd, VOID* recvBuf, int32_t recvLen, int32_t recvFlag)
 {
 #ifdef OSAL
     return LinuxSocketRecv(sockFd, recvBuf, recvLen, recvFlag);
@@ -188,7 +188,7 @@ int32_t OsalGetErrorCode(void)
  *      id--创建的子进程ID号
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalCreateProcess(const CHAR *fileName, const OsalArgvEnv *env, const CHAR *stdoutRedirectFile, OsalProcess *id)
+int32_t OsalCreateProcess(const CHAR* fileName, const OsalArgvEnv* env, const CHAR* stdoutRedirectFile, OsalProcess* id)
 {
 #ifdef OSAL
     return LinuxCreateProcess(fileName, env, stdoutRedirectFile, id);
@@ -204,8 +204,8 @@ int32_t OsalCreateProcess(const CHAR *fileName, const OsalArgvEnv *env, const CH
  *       threadAttr -- 包含需要设置的线程属性类别和值
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalCreateTaskWithThreadAttr(OsalThread *threadHandle,
-    const OsalUserBlock *funcBlock, const OsalThreadAttr *threadAttr)
+int32_t OsalCreateTaskWithThreadAttr(
+    OsalThread* threadHandle, const OsalUserBlock* funcBlock, const OsalThreadAttr* threadAttr)
 {
 #ifdef OSAL
     return LinuxCreateTaskWithThreadAttr(threadHandle, funcBlock, threadAttr);
@@ -224,7 +224,7 @@ int32_t OsalCreateTaskWithThreadAttr(OsalThread *threadHandle,
  * 返回值:子进程未结束返回EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  *        进程已经结束返回EN_ERR
  */
-int32_t OsalWaitPid(OsalProcess pid, int32_t *status, int32_t options)
+int32_t OsalWaitPid(OsalProcess pid, int32_t* status, int32_t options)
 {
 #ifdef OSAL
     return LinuxWaitPid(pid, status, options);
@@ -240,7 +240,7 @@ int32_t OsalWaitPid(OsalProcess pid, int32_t *status, int32_t options)
  * 参数: threadHandle-- pthread_t类型的实例
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalJoinTask(OsalThread *threadHandle)
+int32_t OsalJoinTask(OsalThread* threadHandle)
 {
 #ifdef OSAL
     return LinuxJoinTask(threadHandle);
@@ -268,7 +268,7 @@ OsalTimespec OsalGetTickCount(void)
  *      length--获取到的文件大小
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetFileSize(const CHAR *fileName, uint64_t *length)
+int32_t OsalGetFileSize(const CHAR* fileName, uint64_t* length)
 {
 #ifdef OSAL
     return LinuxGetFileSize(fileName, length);
@@ -283,7 +283,7 @@ int32_t OsalGetFileSize(const CHAR *fileName, uint64_t *length)
  *      diskSize--OsalDiskSize结构内容
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetDiskFreeSpace(const CHAR *path, OsalDiskSize *diskSize)
+int32_t OsalGetDiskFreeSpace(const CHAR* path, OsalDiskSize* diskSize)
 {
 #ifdef OSAL
     return LinuxGetDiskFreeSpace(path, diskSize);
@@ -297,7 +297,7 @@ int32_t OsalGetDiskFreeSpace(const CHAR *path, OsalDiskSize *diskSize)
  * 参数: fileName -- 文件路径名
  * 返回值:执行成功返回OSAL_EN_OK(是目录), 执行错误返回OSAL_EN_ERROR(不是目录), 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalIsDir(const CHAR *fileName)
+int32_t OsalIsDir(const CHAR* fileName)
 {
 #ifdef OSAL
     return LinuxIsDir(fileName);
@@ -312,7 +312,7 @@ int32_t OsalIsDir(const CHAR *fileName)
  * 参数: mode -- 权限
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalAccess2(const CHAR *pathName, int32_t mode)
+int32_t OsalAccess2(const CHAR* pathName, int32_t mode)
 {
 #ifdef OSAL
     return LinuxAccess2(pathName, mode);
@@ -326,7 +326,7 @@ int32_t OsalAccess2(const CHAR *pathName, int32_t mode)
  * 参数: pathName -- 文件路径名
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalAccess(const CHAR *pathName)
+int32_t OsalAccess(const CHAR* pathName)
 {
 #ifdef OSAL
     return LinuxAccess(pathName);
@@ -339,7 +339,7 @@ int32_t OsalAccess(const CHAR *pathName)
  * 参数:path--路径，函数内部会修改path的值
  * 返回值:执行成功返回指向截取到的目录部分指针，执行失败返回nullptr
  */
-CHAR *OsalDirName(CHAR *path)
+CHAR* OsalDirName(CHAR* path)
 {
 #ifdef OSAL
     return LinuxDirName(path);
@@ -353,7 +353,7 @@ CHAR *OsalDirName(CHAR *path)
  * 参数:path--路径，函数内部会修改path的值(行尾有\\会去掉)
  * 返回值:执行成功返回指向截取到的目录部分指针，执行失败返回nullptr
  */
-CHAR *OsalBaseName(CHAR *path)
+CHAR* OsalBaseName(CHAR* path)
 {
 #ifdef OSAL
     return LinuxBaseName(path);
@@ -368,7 +368,7 @@ CHAR *OsalBaseName(CHAR *path)
  *      maxLen--缓存长度
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetCwd(CHAR *buffer, int32_t maxLen)
+int32_t OsalGetCwd(CHAR* buffer, int32_t maxLen)
 {
 #ifdef OSAL
     return LinuxGetCwd(buffer, maxLen);
@@ -383,7 +383,7 @@ int32_t OsalGetCwd(CHAR *buffer, int32_t maxLen)
  *       mode -- 新目录的权限
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalMkdir(const CHAR *pathName, OsalMode mode)
+int32_t OsalMkdir(const CHAR* pathName, OsalMode mode)
 {
 #ifdef OSAL
     return LinuxMkdir(pathName, mode);
@@ -398,7 +398,7 @@ int32_t OsalMkdir(const CHAR *pathName, OsalMode mode)
  *      mode--需要修改的权限
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalChmod(const CHAR *filename, int32_t mode)
+int32_t OsalChmod(const CHAR* filename, int32_t mode)
 {
 #ifdef OSAL
     return LinuxChmod(filename, mode);
@@ -411,7 +411,7 @@ int32_t OsalChmod(const CHAR *filename, int32_t mode)
  * 参数:path--需要切换到的工作目录
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalChdir(const CHAR *path)
+int32_t OsalChdir(const CHAR* path)
 {
 #ifdef OSAL
     return LinuxChdir(path);
@@ -428,7 +428,7 @@ int32_t OsalChdir(const CHAR *path)
  *      entryList--扫描到的目录结构指针, 用户不需要分配缓存, 内部分配, 需要调用OsalScandirFree释放
  * 返回值:执行成功返回扫描到的子目录数量, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalScandir(const CHAR *path, OsalDirent ***entryList, OsalFilter filterFunc, OsalSort sort)
+int32_t OsalScandir(const CHAR* path, OsalDirent*** entryList, OsalFilter filterFunc, OsalSort sort)
 {
 #ifdef OSAL
     return LinuxScandir(path, entryList, filterFunc, sort);
@@ -443,7 +443,7 @@ int32_t OsalScandir(const CHAR *path, OsalDirent ***entryList, OsalFilter filter
  *      count--扫描到的子目录数量
  * 返回值:无
  */
-VOID OsalScandirFree(OsalDirent **entryList, int32_t count)
+VOID OsalScandirFree(OsalDirent** entryList, int32_t count)
 {
 #ifdef OSAL
     return LinuxScandirFree(entryList, count);
@@ -456,7 +456,7 @@ VOID OsalScandirFree(OsalDirent **entryList, int32_t count)
  * 参数: pathName -- 目录名全路径
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalRmdir(const CHAR *pathName)
+int32_t OsalRmdir(const CHAR* pathName)
 {
 #ifdef OSAL
     return LinuxRmdir(pathName);
@@ -470,7 +470,7 @@ int32_t OsalRmdir(const CHAR *pathName)
  * 参数:filename--文件路径
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalUnlink(const CHAR *filename)
+int32_t OsalUnlink(const CHAR* filename)
 {
 #ifdef OSAL
     return LinuxUnlink(filename);
@@ -486,7 +486,7 @@ int32_t OsalUnlink(const CHAR *filename)
  *       realPathLen--realPath缓存的长度, 长度必须要>= OSAL_MAX_PATH
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalRealPath(const CHAR *path, CHAR *realPath, int32_t realPathLen)
+int32_t OsalRealPath(const CHAR* path, CHAR* realPath, int32_t realPathLen)
 {
 #ifdef OSAL
     return LinuxRealPath(path, realPath, realPathLen);
@@ -496,13 +496,13 @@ int32_t OsalRealPath(const CHAR *path, CHAR *realPath, int32_t realPathLen)
 }
 
 /*
-* 描述：将OsalGetErrorCode函数得到的错误信息转化成字符串信息
-* 参数： errnum--错误码，即OsalGetErrorCode的返回值
-*       buf--收错误信息描述的缓冲区指针
-*       size--缓冲区的大小
-* 返回值:成功返回错误信息的字符串，失败返回nullptr
-*/
-CHAR *OsalGetErrorFormatMessage(OsalErrorMsg errnum, CHAR *buf, OsalSize size)
+ * 描述：将OsalGetErrorCode函数得到的错误信息转化成字符串信息
+ * 参数： errnum--错误码，即OsalGetErrorCode的返回值
+ *       buf--收错误信息描述的缓冲区指针
+ *       size--缓冲区的大小
+ * 返回值:成功返回错误信息的字符串，失败返回nullptr
+ */
+CHAR* OsalGetErrorFormatMessage(OsalErrorMsg errnum, CHAR* buf, OsalSize size)
 {
 #ifdef OSAL
     return LinuxGetErrorFormatMessage(errnum, buf, size);
@@ -517,7 +517,7 @@ CHAR *OsalGetErrorFormatMessage(OsalErrorMsg errnum, CHAR *buf, OsalSize size)
  *       buffer--获取到的状态 由用户分配缓存
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalStatGet(const CHAR *path, OsalStat *buffer)
+int32_t OsalStatGet(const CHAR* path, OsalStat* buffer)
 {
 #ifdef OSAL
     return LinuxStatGet(path, buffer);
@@ -533,7 +533,7 @@ int32_t OsalStatGet(const CHAR *path, OsalStat *buffer)
  *       mode -- 打开或者创建的权限
  * 返回值:执行成功返回对应打开的文件描述符, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalOpen(const CHAR *pathName, int32_t flags, OsalMode mode)
+int32_t OsalOpen(const CHAR* pathName, int32_t flags, OsalMode mode)
 {
 #ifdef OSAL
     return LinuxOpen(pathName, flags, mode);
@@ -563,7 +563,7 @@ int32_t OsalClose(int32_t fd)
  *       bufLen--需要写入的数据长度
  * 返回值:执行成功返回写入的长度, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-OsalSsize OsalWrite(int32_t fd, VOID *buf, uint32_t bufLen)
+OsalSsize OsalWrite(int32_t fd, VOID* buf, uint32_t bufLen)
 {
 #ifdef OSAL
     return LinuxWrite(fd, buf, bufLen);
@@ -595,7 +595,7 @@ int32_t OsalGetOptInd(void)
 #endif
 }
 
-CHAR *OsalGetOptArg(void)
+CHAR* OsalGetOptArg(void)
 {
 #ifdef OSAL
     return LinuxGetOptArg();
@@ -610,7 +610,7 @@ CHAR *OsalGetOptArg(void)
  *      name--由用户分配缓存, 缓存长度必须>=OSAL_MIN_OS_VERSION_SIZE
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAMs
  */
-int32_t OsalGetOsName(CHAR *name, int32_t nameSize)
+int32_t OsalGetOsName(CHAR* name, int32_t nameSize)
 {
 #ifdef OSAL
     return LinuxGetOsName(name, nameSize);
@@ -625,7 +625,7 @@ int32_t OsalGetOsName(CHAR *name, int32_t nameSize)
  *      mode--打开方式
  * 返回值:执行成功返回动态链接库的句柄, 执行错误返回nullptr, 入参检查错误返回nullptr
  */
-VOID *OsalDlopen(const CHAR *fileName, int32_t mode)
+VOID* OsalDlopen(const CHAR* fileName, int32_t mode)
 {
 #ifdef OSAL
     return LinuxDlopen(fileName, mode);
@@ -640,7 +640,7 @@ VOID *OsalDlopen(const CHAR *fileName, int32_t mode)
  *       funcName--要求获取的函数的名称
  * 返回值:执行成功返回指向函数的地址, 执行错误返回nullptr, 入参检查错误返回nullptr
  */
-VOID *OsalDlsym(VOID *handle, const CHAR *funcName)
+VOID* OsalDlsym(VOID* handle, const CHAR* funcName)
 {
 #ifdef OSAL
     return LinuxDlsym(handle, funcName);
@@ -655,7 +655,7 @@ VOID *OsalDlsym(VOID *handle, const CHAR *funcName)
  *       funcName--要求获取的函数的名称
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalDlclose(VOID *handle)
+int32_t OsalDlclose(VOID* handle)
 {
 #ifdef OSAL
     return LinuxDlclose(handle);
@@ -668,7 +668,7 @@ int32_t OsalDlclose(VOID *handle)
  * 描述:当OsalDlopen动态链接库操作函数执行失败时，OsalDlerror可以返回出错信息
  * 返回值:执行成功返回nullptr
  */
-CHAR *OsalDlerror(void)
+CHAR* OsalDlerror(void)
 {
 #ifdef OSAL
     return LinuxDlerror();
@@ -687,8 +687,8 @@ CHAR *OsalDlerror(void)
  *      longIndex--表示长选项在longopts中的位置
  * 返回值:执行错误, 找不到选项元素, 返回EN_ERROR
  */
-int32_t OsalGetOptLong(int32_t argc, CHAR * const * argv, const CHAR *opts, const OsalStructOption *longOpts,
-    int32_t *longIndex)
+int32_t OsalGetOptLong(
+    int32_t argc, CHAR* const* argv, const CHAR* opts, const OsalStructOption* longOpts, int32_t* longIndex)
 {
 #ifdef OSAL
     return LinuxGetOptLong(argc, argv, opts, longOpts, longIndex);
@@ -703,7 +703,7 @@ int32_t OsalGetOptLong(int32_t argc, CHAR * const * argv, const CHAR *opts, cons
  *      versionInfo--由用户分配缓存, 缓存长度必须>=OSAL_MIN_OS_VERSION_SIZE
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetOsVersion(CHAR *versionInfo, int32_t versionLength)
+int32_t OsalGetOsVersion(CHAR* versionInfo, int32_t versionLength)
 {
 #ifdef OSAL
     return LinuxGetOsVersion(versionInfo, versionLength);
@@ -718,7 +718,7 @@ int32_t OsalGetOsVersion(CHAR *versionInfo, int32_t versionLength)
  *      count--读取到的物理cpu个数
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetCpuInfo(OsalCpuDesc **cpuInfo, int32_t *count)
+int32_t OsalGetCpuInfo(OsalCpuDesc** cpuInfo, int32_t* count)
 {
 #ifdef OSAL
     return LinuxGetCpuInfo(cpuInfo, count);
@@ -733,7 +733,7 @@ int32_t OsalGetCpuInfo(OsalCpuDesc **cpuInfo, int32_t *count)
  *      count--LinuxGetCpuInfo获取到的物理cpu个数
  * 返回值:执行成功返回OSAL_EN_OK, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalCpuInfoFree(OsalCpuDesc *cpuInfo, int32_t count)
+int32_t OsalCpuInfoFree(OsalCpuDesc* cpuInfo, int32_t count)
 {
 #ifdef OSAL
     return LinuxCpuInfoFree(cpuInfo, count);
@@ -747,7 +747,7 @@ int32_t OsalCpuInfoFree(OsalCpuDesc *cpuInfo, int32_t count)
  * 参数: sysTimePtr -- 指向OsalSystemTime 结构的指针
  * 返回值:执行成功返回OSAL_EN_OK, 执行错误返回OSAL_EN_ERROR, 入参检查错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetLocalTime(OsalSystemTime *sysTimePtr)
+int32_t OsalGetLocalTime(OsalSystemTime* sysTimePtr)
 {
 #ifdef OSAL
     return LinuxGetLocalTime(sysTimePtr);
@@ -762,7 +762,7 @@ int32_t OsalGetLocalTime(OsalSystemTime *sysTimePtr)
         timeZone--当前系统设置的时区信息, 可以为nullptr, 表示不需要获取时区信息
  * 返回值:执行成功返回OSAL_EN_OK, 失败返回OSAL_EN_ERROR，入参错误返回OSAL_EN_INVALID_PARAM
  */
-int32_t OsalGetTimeOfDay(OsalTimeval *timeVal, OsalTimezone *timeZone)
+int32_t OsalGetTimeOfDay(OsalTimeval* timeVal, OsalTimezone* timeZone)
 {
 #ifdef OSAL
     return LinuxGetTimeOfDay(timeVal, timeZone);

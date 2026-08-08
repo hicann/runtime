@@ -17,7 +17,7 @@ typedef struct ICollectionJob {
     uint32_t channelId;
     uint32_t devId;
     int32_t jobId;
-    const ProfileParam *params;
+    const ProfileParam* params;
     int32_t (*Init)(struct ICollectionJob*);
     int32_t (*Process)(struct ICollectionJob*);
     int32_t (*Uninit)(struct ICollectionJob*);

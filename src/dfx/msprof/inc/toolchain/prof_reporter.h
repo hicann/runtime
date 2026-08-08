@@ -51,7 +51,7 @@ public:
     * @since c60
     * @see Flush
     */
-    virtual int32_t Report(const ReporterData *data) = 0;
+    virtual int32_t Report(const ReporterData* data) = 0;
 
     /**
      * @ingroup reporter
@@ -72,7 +72,7 @@ public:
     virtual uint32_t GetReportDataMaxLen() const = 0;
 };
 
-}  // namespace Engine
-}  // namespace Msprof
+} // namespace Engine
+} // namespace Msprof
 
-#endif  // MSPROF_ENGINE_PROF_REPORTER_H
+#endif // MSPROF_ENGINE_PROF_REPORTER_H

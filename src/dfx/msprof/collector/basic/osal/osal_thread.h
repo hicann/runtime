@@ -15,22 +15,22 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
 typedef pthread_mutex_t OsalMutex;
 typedef pthread_cond_t OsalCond;
 
-int32_t OsalMutexInit(OsalMutex *mutex);
-int32_t OsalMutexLock(OsalMutex *mutex);
-int32_t OsalMutexUnlock(OsalMutex *mutex);
-int32_t OsalMutexDestroy(OsalMutex *mutex);
-int32_t OsalCondInit(OsalCond *condition);
-int32_t OsalCondDestroy(OsalCond *condition);
-int32_t OsalCondSignal(OsalCond *condition);
-VOID OsalCondWait(OsalCond *condition, OsalMutex *mutex);
-int32_t OsalCreateThread(OsalThread *threadHandle, UserProcFunc func);
+int32_t OsalMutexInit(OsalMutex* mutex);
+int32_t OsalMutexLock(OsalMutex* mutex);
+int32_t OsalMutexUnlock(OsalMutex* mutex);
+int32_t OsalMutexDestroy(OsalMutex* mutex);
+int32_t OsalCondInit(OsalCond* condition);
+int32_t OsalCondDestroy(OsalCond* condition);
+int32_t OsalCondSignal(OsalCond* condition);
+VOID OsalCondWait(OsalCond* condition, OsalMutex* mutex);
+int32_t OsalCreateThread(OsalThread* threadHandle, UserProcFunc func);
 
 #ifdef __cplusplus
 }
-#endif  // __cpluscplus
+#endif // __cpluscplus
 #endif

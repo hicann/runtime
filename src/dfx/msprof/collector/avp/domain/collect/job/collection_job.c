@@ -47,7 +47,4 @@ ICollectionJob* FactoryCreateJob(uint32_t channelId)
     return collectionJob;
 }
 
-const char* GetResultFileByChannelId(uint32_t channelId)
-{
-    return g_channelResultFile[channelId];
-}
+const char* GetResultFileByChannelId(uint32_t channelId) { return g_channelResultFile[channelId]; }

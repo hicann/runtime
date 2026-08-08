@@ -62,9 +62,9 @@ MSVP_PROF_API int32_t AdprofCheckFeatureIsOn(uint64_t feature);
  * @param [in] argv: argument value
  * @return 0:SUCCESS, !0:FAILED
  */
-MSVP_PROF_API int32_t AdprofStart(int32_t argc, const char *argv[]);
-MSVP_PROF_API bool GetDeviceId(const std::map<std::string, std::string> &kvPairs, uint32_t &devId);
-MSVP_PROF_API bool GetHostPid(const std::map<std::string, std::string> &kvPairs, int32_t &hostPid);
+MSVP_PROF_API int32_t AdprofStart(int32_t argc, const char* argv[]);
+MSVP_PROF_API bool GetDeviceId(const std::map<std::string, std::string>& kvPairs, uint32_t& devId);
+MSVP_PROF_API bool GetHostPid(const std::map<std::string, std::string>& kvPairs, int32_t& hostPid);
 
 /**
  * @ingroup libascend_devprof
@@ -82,7 +82,7 @@ MSVP_PROF_API int32_t AdprofStop();
  * @param [in] length: the length of information to be hashed
  * @return hash id
  */
-MSVP_PROF_API uint64_t AdprofGetHashId(const char *hashInfo, size_t length);
+MSVP_PROF_API uint64_t AdprofGetHashId(const char* hashInfo, size_t length);
 
 /**
  * @ingroup libprofimpl

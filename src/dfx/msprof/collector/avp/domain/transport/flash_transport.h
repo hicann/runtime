@@ -20,7 +20,7 @@ extern "C" {
 
 #define MAX_DATA_FLASH_SIZE 20480U // 20k
 #define MAX_CTRL_FLASH_SIZE 5120U  // 5k
-#define MAX_INDEX_LENGTH 4U // max 1000 slice
+#define MAX_INDEX_LENGTH 4U        // max 1000 slice
 #define MAX_INDEX_NUMBER 999U
 
 typedef struct {
@@ -29,7 +29,7 @@ typedef struct {
 } IndexAttribute;
 
 int32_t FlashInitTransport(Transport* transport);
-int32_t FlashSendBuffer(ProfFileChunk *chunk, const char* dir);
+int32_t FlashSendBuffer(ProfFileChunk* chunk, const char* dir);
 
 #ifdef __cplusplus
 }

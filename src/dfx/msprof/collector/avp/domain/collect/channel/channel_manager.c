@@ -89,7 +89,7 @@ int32_t ChannelMgrInitialize(uint32_t deviceId)
  */
 OsalVoidPtr ChannelMgrThreadHandle(OsalVoidPtr args)
 {
-    ChannelMgrAttribute *attr = (ChannelMgrAttribute*)args;
+    ChannelMgrAttribute* attr = (ChannelMgrAttribute*)args;
     // wake up ChannelMgrInitialize
     (void)OsalMutexLock(&attr->pollMtx);
     attr->enable = true;
@@ -106,16 +106,17 @@ OsalVoidPtr ChannelMgrThreadHandle(OsalVoidPtr args)
         } else if (ret == PROF_STOPPED_ALREADY) {
             MSPROF_LOGI("Channel poll has been stopped.");
             break;
-        } else if (ret == PROF_CHANNEL_POLL_UNINITIALIZE){
+        } else if (ret == PROF_CHANNEL_POLL_UNINITIALIZE) {
             MSPROF_LOGD("Channel poll is not ready.");
             (void)OsalSleep(0); // release thread cpu usage
         } else {
-            ; // Channel poll get point
+            ;                   // Channel poll get point
         }
 
         for (int32_t i = 0; i < ret; ++i) {
-            MSPROF_LOGD("Channel poll start to dispatch, deviceId: %u, channelId: %u.",
-                channels[i].device_id, channels[i].channel_id);
+            MSPROF_LOGD(
+                "Channel poll start to dispatch, deviceId: %u, channelId: %u.", channels[i].device_id,
+                channels[i].channel_id);
             ChannelMgrDispatch(channels[i].device_id, channels[i].channel_id);
         }
     }
@@ -134,7 +135,7 @@ OsalVoidPtr ChannelMgrThreadHandle(OsalVoidPtr args)
  */
 void ChannelMgrDispatch(uint32_t deviceId, uint32_t channelId)
 {
-    ChannelReader *channReader = GetChannelReader(deviceId, channelId);
+    ChannelReader* channReader = GetChannelReader(deviceId, channelId);
     if (channReader == NULL) {
         return;
     }
@@ -154,10 +155,9 @@ void ChannelMgrDispatch(uint32_t deviceId, uint32_t channelId)
  * @param [in] reader: channel reader
  * @param [in] curLen: read length of buffer
  */
-STATIC void ChannelMgChanneFlushIfFinish(ChannelReader *reader, const int32_t curLen)
+STATIC void ChannelMgChanneFlushIfFinish(ChannelReader* reader, const int32_t curLen)
 {
-    if (reader->channelId != (uint32_t)PROF_CHANNEL_HWTS_LOG &&
-        reader->channelId != (uint32_t)PROF_CHANNEL_TS_FW) {
+    if (reader->channelId != (uint32_t)PROF_CHANNEL_HWTS_LOG && reader->channelId != (uint32_t)PROF_CHANNEL_TS_FW) {
         return;
     }
 
@@ -184,7 +184,7 @@ OsalVoidPtr ChannelMgChannelRead(OsalVoidPtr args)
 
     int32_t currLen = 0;
     int32_t totalLen = 0;
-    ChannelReader *reader = (ChannelReader*)args;
+    ChannelReader* reader = (ChannelReader*)args;
     (void)OsalMutexLock(&reader->readMtx);
     do {
         if (reader->quit == 1) {
@@ -193,10 +193,11 @@ OsalVoidPtr ChannelMgChannelRead(OsalVoidPtr args)
 
         reader->spaceSize = reader->bufferSize - reader->dataSize;
         (void)OsalMutexLock(&reader->flushMtx);
-        currLen = HalProfChannelRead(reader->deviceId, reader->channelId, (reader->buffer + reader->dataSize),
-            reader->spaceSize);
-        MSPROF_LOGD("Channel read deviceId:%u, channelId:%u, bufSize:%u, currLen:%d, spaceSize:%u.",
-            reader->deviceId, reader->channelId, reader->bufferSize, currLen, reader->spaceSize);
+        currLen = HalProfChannelRead(
+            reader->deviceId, reader->channelId, (reader->buffer + reader->dataSize), reader->spaceSize);
+        MSPROF_LOGD(
+            "Channel read deviceId:%u, channelId:%u, bufSize:%u, currLen:%d, spaceSize:%u.", reader->deviceId,
+            reader->channelId, reader->bufferSize, currLen, reader->spaceSize);
         ChannelMgChanneFlushIfFinish(reader, currLen);
         (void)OsalMutexUnlock(&reader->flushMtx);
         if (currLen <= 0) {
@@ -231,13 +232,13 @@ OsalVoidPtr ChannelMgChannelRead(OsalVoidPtr args)
  * @brief uploader data from channel reader buffer
  * @param [in] reader: channel reader
  */
-void ChannelMgrUploadChannelData(ChannelReader *reader)
+void ChannelMgrUploadChannelData(ChannelReader* reader)
 {
     if (reader->dataSize == 0) {
         return;
     }
 
-    ProfFileChunk *chunk = (ProfFileChunk *)OsalMalloc(sizeof(ProfFileChunk));
+    ProfFileChunk* chunk = (ProfFileChunk*)OsalMalloc(sizeof(ProfFileChunk));
     if (chunk == NULL) {
         MSPROF_LOGE("Failed to malloc chunk for ChannelMgrUploadChannelData.");
         return;
@@ -300,7 +301,7 @@ int32_t ChannelMgrCreateReader(uint32_t deviceId, uint32_t channelId)
 int32_t ChannelMgrDestroyReader(uint32_t deviceId, uint32_t channelId)
 {
     (void)OsalMutexLock(&g_chanMgrAttr.pollMtx);
-    ChannelReader *reader = GetChannelReader(deviceId, channelId);
+    ChannelReader* reader = GetChannelReader(deviceId, channelId);
     if (reader == NULL) {
         (void)OsalMutexUnlock(&g_chanMgrAttr.pollMtx);
         MSPROF_LOGE("Failed to find channel reader, deviceId: %u, channelId: %u", deviceId, channelId);
@@ -317,8 +318,9 @@ int32_t ChannelMgrDestroyReader(uint32_t deviceId, uint32_t channelId)
     ChannelMgrUploadOnce(reader);
     OSAL_MEM_FREE(reader->buffer);
     (void)OsalMutexUnlock(&g_chanMgrAttr.pollMtx);
-    MSPROF_LOGI("Success to destroy channel reader, deviceId: %u, channelId: %u, total_size_channel: %" PRIu64 ".",
-        deviceId, channelId, reader->totalSize);
+    MSPROF_LOGI(
+        "Success to destroy channel reader, deviceId: %u, channelId: %u, total_size_channel: %" PRIu64 ".", deviceId,
+        channelId, reader->totalSize);
     return PROFILING_SUCCESS;
 }
 

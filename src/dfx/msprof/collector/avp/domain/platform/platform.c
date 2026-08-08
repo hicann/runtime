@@ -38,7 +38,7 @@ PlatformType PlatformTypeConversion(void)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-int32_t PlatformInitialize(uint32_t *repeatCount)
+int32_t PlatformInitialize(uint32_t* repeatCount)
 {
     if (HalGetApiVersion() >= SUPPORT_OSC_FREQ_API_VERSION) {
 #ifndef CPU_CYCLE_NO_SUPPORT
@@ -60,8 +60,9 @@ int32_t PlatformInitialize(uint32_t *repeatCount)
         MSPROF_LOGE("Failed to get platform info.");
         return PROFILING_FAILED;
     }
-    MSPROF_LOGI("Success to init platform, version: %s, type: %d, info:%d.",
-        PROF_VERSION_INFO, platType, g_platformAttribute.platformInfo);
+    MSPROF_LOGI(
+        "Success to init platform, version: %s, type: %d, info:%d.", PROF_VERSION_INFO, platType,
+        g_platformAttribute.platformInfo);
     (*repeatCount) = 1;
     return PROFILING_SUCCESS;
 }
@@ -69,7 +70,7 @@ int32_t PlatformInitialize(uint32_t *repeatCount)
 /**
  * @brief Finalize platform interface
  */
-void PlatformFinalize(uint32_t *repeatCount)
+void PlatformFinalize(uint32_t* repeatCount)
 {
     if (g_platformAttribute.interface == NULL) {
         MSPROF_LOGI("Repeat finalize platform.");
@@ -144,7 +145,7 @@ bool IsSupportFeature(const PlatformFeature feature)
  * @return true  : switch or metric string is support
            false : switch or metric string is not support
  */
-bool IsSupportSwitch(const CHAR *sw)
+bool IsSupportSwitch(const CHAR* sw)
 {
     PlatformFeature feature = TransformFeature(sw);
     return IsSupportFeature(feature);
@@ -173,7 +174,7 @@ bool IsSupportBit(const uint64_t dataConfig)
  * @return true  : match pmu events
            false : failed to match pmu events
  */
-bool PlatformGetMetricsEvents(const CHAR *sw, CHAR *events, size_t eventsLen)
+bool PlatformGetMetricsEvents(const CHAR* sw, CHAR* events, size_t eventsLen)
 {
     if (g_platformAttribute.interface == NULL) {
         MSPROF_LOGE("Platform is not init.");
@@ -247,10 +248,7 @@ uint64_t PlatformGetHostFreq(void)
  * @brief Get profiling version info
  * @return profiling version info string
  */
-const CHAR* PlatformGetVersionInfo(void)
-{
-    return PROF_VERSION_INFO;
-}
+const CHAR* PlatformGetVersionInfo(void) { return PROF_VERSION_INFO; }
 
 bool PlatformHostFreqIsEnable(void)
 {

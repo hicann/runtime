@@ -16,7 +16,7 @@
 
 OsalVoidPtr OsalMalloc(size_t size)
 {
-    void *ptr = NULL;
+    void* ptr = NULL;
     return (halHostMemAlloc(&ptr, size, 0) == EN_OK) ? ptr : NULL;
 }
 
@@ -37,12 +37,6 @@ OsalVoidPtr OsalCalloc(size_t size)
     return val;
 }
 
-VOID OsalFree(OsalVoidPtr ptr)
-{
-    halHostMemFree(ptr);
-}
+VOID OsalFree(OsalVoidPtr ptr) { halHostMemFree(ptr); }
 
-VOID OsalConstFree(const void* ptr)
-{
-    halHostMemFree(ptr);
-}
+VOID OsalConstFree(const void* ptr) { halHostMemFree(ptr); }

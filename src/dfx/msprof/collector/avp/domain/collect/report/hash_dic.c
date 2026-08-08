@@ -25,16 +25,16 @@ bool g_hashStop = true;
 uint64_t g_hashCursors = 0;
 OsalMutex g_initMutex = PTHREAD_MUTEX_INITIALIZER;
 OsalMutex g_regHashMtx = PTHREAD_MUTEX_INITIALIZER;
-HashDataList *g_hashList = NULL;
+HashDataList* g_hashList = NULL;
 
 /**
  * @brief      Create a pointer to the HashDataList to store hash data.
  * @return     success: pointer of HashDataList
  *             failed : NULL
  */
-static HashDataList *CreateHashList(void)
+static HashDataList* CreateHashList(void)
 {
-    HashDataList *hashList = (HashDataList*)OsalCalloc(sizeof(HashDataList));
+    HashDataList* hashList = (HashDataList*)OsalCalloc(sizeof(HashDataList));
     if (hashList == NULL) {
         return NULL;
     }
@@ -50,9 +50,9 @@ static HashDataList *CreateHashList(void)
  * @return     success: pointer of HashDataList
  *             failed : NULL
  */
-static bool AddHashNode(const char *hashInfo, uint64_t hashId)
+static bool AddHashNode(const char* hashInfo, uint64_t hashId)
 {
-    HashDataNode *node = (HashDataNode*)OsalCalloc(sizeof(HashDataNode));
+    HashDataNode* node = (HashDataNode*)OsalCalloc(sizeof(HashDataNode));
     if (node == NULL) {
         MSPROF_LOGE("An error occurred while creating the node");
         return false;
@@ -84,9 +84,9 @@ static bool AddHashNode(const char *hashInfo, uint64_t hashId)
  * @return     success: corresponding hash ID
  *             failed : 0
  */
-static uint64_t SearchHashIdNode(const char *hashInfo)
+static uint64_t SearchHashIdNode(const char* hashInfo)
 {
-    HashDataNode *node = g_hashList->head;
+    HashDataNode* node = g_hashList->head;
     while (node != NULL) {
         if (strcmp(node->hashInfo, hashInfo) == 0) {
             return node->hashId;
@@ -104,7 +104,7 @@ static uint64_t SearchHashIdNode(const char *hashInfo)
  */
 static bool SearchHashInfoNode(uint64_t hashId)
 {
-    HashDataNode *node = g_hashList->head;
+    HashDataNode* node = g_hashList->head;
     while (node != NULL) {
         if (node->hashId == hashId) {
             return true;
@@ -123,9 +123,9 @@ static void FreeHashList(void)
     if (g_hashList == NULL) {
         return;
     }
-    HashDataNode *currNode = g_hashList->head;
+    HashDataNode* currNode = g_hashList->head;
     while (currNode != NULL) {
-        HashDataNode *tempNode = currNode;
+        HashDataNode* tempNode = currNode;
         currNode = currNode->next;
         OSAL_MEM_FREE(tempNode->hashInfo);
         OSAL_MEM_FREE(tempNode);
@@ -165,7 +165,7 @@ int32_t HashDataInit(void)
  * @param [in] data: hash data
  * @return     Hash id
  */
-static uint64_t DoubleHash(const char *data)
+static uint64_t DoubleHash(const char* data)
 {
     uint64_t prime[2] = {29, 131};
     uint64_t hash[2] = {0};
@@ -186,7 +186,7 @@ static uint64_t DoubleHash(const char *data)
  * @return     success: corresponding hash ID
  *             failed : UINT64_MAX
  */
-uint64_t GeneratedHashId(const char *hashInfo)
+uint64_t GeneratedHashId(const char* hashInfo)
 {
     (void)OsalMutexLock(&g_regHashMtx);
     if (!g_hashInit || g_hashStop) {
@@ -203,8 +203,7 @@ uint64_t GeneratedHashId(const char *hashInfo)
 
     hashId = DoubleHash(hashInfo);
     if (SearchHashInfoNode(hashId)) {
-        MSPROF_LOGW("HashData GenHashId conflict, hashId:%" PRIu64 " newStr:%s",
-                hashId, hashInfo);
+        MSPROF_LOGW("HashData GenHashId conflict, hashId:%" PRIu64 " newStr:%s", hashId, hashInfo);
     } else {
         if (!AddHashNode(hashInfo, hashId)) {
             MSPROF_LOGE("Add node to hashList failed.");
@@ -222,7 +221,7 @@ uint64_t GeneratedHashId(const char *hashInfo)
  * @param [in] node: node saved in HashDataList
  * @return     current node data and id length
  */
-static size_t GetHashInfoSize(HashDataNode *node)
+static size_t GetHashInfoSize(HashDataNode* node)
 {
     size_t infoSize = strlen(node->hashInfo);
     uint64_t hashId = node->hashId;
@@ -241,13 +240,13 @@ static size_t GetHashInfoSize(HashDataNode *node)
  * @param [in] bufferSize: buffer size
  * @return     void
  */
-static void ConcatenateHash(HashDataNode *node, char *buffer, size_t bufferSize)
+static void ConcatenateHash(HashDataNode* node, char* buffer, size_t bufferSize)
 {
     if (node->hashInfo == NULL) {
         MSPROF_LOGW("HashData invalid id:%" PRIu64 ".", node->hashId);
         return;
     }
-    char *hashId = TransferUint64ToString(node->hashId);
+    char* hashId = TransferUint64ToString(node->hashId);
     PROF_CHK_EXPR_ACTION(hashId == NULL, return, "Failed to transfer id into string, id is %" PRIu64 ".", node->hashId);
     errno_t ret = strcat_s(buffer, bufferSize, hashId);
     PROF_CHK_EXPR_ACTION(ret != EOK, break, "Failed to strcat_s %s to hash node, ret is %d.", hashId, ret);
@@ -267,14 +266,14 @@ static void ConcatenateHash(HashDataNode *node, char *buffer, size_t bufferSize)
  * @param [in] isLastChunk: target of isLastChunk
  * @return     void
  */
-static void FillHashData(ProfFileChunk *chunk, char *data, size_t dataSize, bool isLastChunk)
+static void FillHashData(ProfFileChunk* chunk, char* data, size_t dataSize, bool isLastChunk)
 {
     chunk->chunkSize = dataSize;
     chunk->chunkType = PROF_HOST_DATA;
     chunk->isLastChunk = isLastChunk;
     chunk->offset = -1;
     chunk->deviceId = DEFAULT_HOST_ID;
-    errno_t ret = strcpy_s((char *)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH, "unaging.additional.hash_dic");
+    errno_t ret = strcpy_s((char*)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH, "unaging.additional.hash_dic");
     PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, chunk->chunk = NULL, return, "strcpy_s hash_dic name to chunk failed.");
     chunk->chunk = (uint8_t*)OsalCalloc(dataSize + 1U);
     PROF_CHK_EXPR_ACTION(chunk->chunk == NULL, return, "malloc chunk failed.");
@@ -298,10 +297,10 @@ void SaveHashData(bool isLastChunk)
         (void)OsalMutexUnlock(&g_regHashMtx);
         return;
     }
-    char *hashbuffer = (char*)OsalCalloc(QUEUE_BUFFER_SIZE + 1);
-    PROF_CHK_EXPR_ACTION_TWICE(hashbuffer == NULL, (void)OsalMutexUnlock(&g_regHashMtx), return,
-        "Hashbuffer calloc failed.");
-    HashDataNode *currNode = g_hashList->head;
+    char* hashbuffer = (char*)OsalCalloc(QUEUE_BUFFER_SIZE + 1);
+    PROF_CHK_EXPR_ACTION_TWICE(
+        hashbuffer == NULL, (void)OsalMutexUnlock(&g_regHashMtx), return, "Hashbuffer calloc failed.");
+    HashDataNode* currNode = g_hashList->head;
     do {
         if (currNode == NULL || g_hashCursors == g_hashList->size) {
             break;
@@ -311,7 +310,7 @@ void SaveHashData(bool isLastChunk)
         currNode = currNode->next;
         if (currNode == NULL || GetHashInfoSize(currNode) + strlen(hashbuffer) > QUEUE_BUFFER_SIZE ||
             g_hashCursors == g_hashList->size) {
-            ProfFileChunk *chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
+            ProfFileChunk* chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
             if (chunk == NULL) {
                 MSPROF_LOGE("malloc file chunk failed.");
                 break;
@@ -322,7 +321,8 @@ void SaveHashData(bool isLastChunk)
                 break;
             }
             (void)UploaderUploadData(chunk);
-            MSPROF_LOGI("total_size_HashData, saveLen:%zu bytes, hashSize:%" PRIu64 ", uploadSize:%" PRIu64 ".",
+            MSPROF_LOGI(
+                "total_size_HashData, saveLen:%zu bytes, hashSize:%" PRIu64 ", uploadSize:%" PRIu64 ".",
                 strlen(hashbuffer), g_hashList->size, g_hashCursors);
             errno_t ret = memset_s(hashbuffer, QUEUE_BUFFER_SIZE + 1, 0, QUEUE_BUFFER_SIZE + 1);
             if (ret != EOK) {

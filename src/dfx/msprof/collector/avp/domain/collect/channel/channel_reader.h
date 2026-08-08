@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef DOMAIN_COLLECT_CHANNEL_CHANNEL_READER_H
 #define DOMAIN_COLLECT_CHANNEL_CHANNEL_READER_H
 
@@ -21,13 +21,13 @@ typedef struct {
     uint32_t dispatchCount;
     uint32_t deviceId;
     uint32_t channelId;
-    uint32_t quit;             // if channel stopped
+    uint32_t quit;       // if channel stopped
     uint8_t* buffer;
-    uint32_t spaceSize;        // free Space Size
-    uint32_t dataSize;         // 缓冲区以存放的空间大小
-    uint32_t bufferSize;       // 缓冲区空间大小
-    uint32_t flushSize;        // 待清空缓冲区大小
-    uint64_t totalSize;        // channel读取的总数据，用于统计通道是否有丢失数据。
+    uint32_t spaceSize;  // free Space Size
+    uint32_t dataSize;   // 缓冲区以存放的空间大小
+    uint32_t bufferSize; // 缓冲区空间大小
+    uint32_t flushSize;  // 待清空缓冲区大小
+    uint64_t totalSize;  // channel读取的总数据，用于统计通道是否有丢失数据。
     OsalMutex readMtx;
     OsalMutex flushMtx;
     OsalCond readCond;

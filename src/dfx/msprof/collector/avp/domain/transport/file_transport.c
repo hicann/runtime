@@ -13,17 +13,17 @@
 #include "osal/osal_mem.h"
 #include "file_interface.h"
 
-static int32_t CreateProfAllDir(const char *flushDir)
+static int32_t CreateProfAllDir(const char* flushDir)
 {
     // copy flush dir
-    char path[MAX_OUTPUT_FILE_LEGTH] = { 0 };
+    char path[MAX_OUTPUT_FILE_LEGTH] = {0};
     errno_t ret = strcat_s(path, sizeof(path), flushDir);
-    PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED,
-        "Failed to strcat_s for dir: %s, ret: %d.", flushDir, ret);
+    PROF_CHK_EXPR_ACTION(
+        ret != EOK, return PROFILING_FAILED, "Failed to strcat_s for dir: %s, ret: %d.", flushDir, ret);
     // create data dir
     ret = strcat_s(path, sizeof(path), "/data");
-    PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED,
-        "Failed to strcat_s for dir: %s, ret: %d.", flushDir, ret);
+    PROF_CHK_EXPR_ACTION(
+        ret != EOK, return PROFILING_FAILED, "Failed to strcat_s for dir: %s, ret: %d.", flushDir, ret);
     if (!CreateDirectory(path)) {
         MSPROF_LOGE("Failed to create dir: %s.", path);
         return PROFILING_FAILED;
@@ -33,7 +33,7 @@ static int32_t CreateProfAllDir(const char *flushDir)
     return PROFILING_SUCCESS;
 }
 
-int32_t FileInitTransport(uint32_t deviceId, Transport* transport, const char *flushDir)
+int32_t FileInitTransport(uint32_t deviceId, Transport* transport, const char* flushDir)
 {
     if (transport == NULL) {
         MSPROF_LOGE("Failed to init file transport because transport is nullptr.");

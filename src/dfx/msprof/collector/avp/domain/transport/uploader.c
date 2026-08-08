@@ -61,7 +61,7 @@ int32_t UploaderInitialize(void)
         MSPROF_LOGE("Failed to get device number.");
         return PROFILING_FAILED;
     }
-    g_uploader.uploaderList = (CstlList *)OsalCalloc(sizeof(CstlList) * g_uploader.devNum);
+    g_uploader.uploaderList = (CstlList*)OsalCalloc(sizeof(CstlList) * g_uploader.devNum);
     if (g_uploader.uploaderList == NULL) {
         (void)OsalMutexUnlock(&g_uploader.uploaderMtx);
         MSPROF_LOGE("Failed to calloc uploaderList.");
@@ -112,7 +112,7 @@ int32_t UploaderFinalize(void)
  * @param [in] capacity : size of data queue which need to malloc
  * @return uploader pointer
  */
-static UploaderAttr* InitDataUploaderBasic(const ProfileParam *param, uint32_t deviceId, uint32_t capacity)
+static UploaderAttr* InitDataUploaderBasic(const ProfileParam* param, uint32_t deviceId, uint32_t capacity)
 {
     // calloc uploader
     UploaderAttr* uploader = (UploaderAttr*)OsalCalloc(sizeof(UploaderAttr));
@@ -128,7 +128,8 @@ static UploaderAttr* InitDataUploaderBasic(const ProfileParam *param, uint32_t d
     uploader->rear = 0;
     // init basic flush data dir
     errno_t ret = strcat_s(uploader->baseDir, sizeof(uploader->baseDir), param->config.resultDir);
-    PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, OSAL_MEM_FREE(uploader), return NULL,
+    PROF_CHK_EXPR_ACTION_TWICE(
+        ret != EOK, OSAL_MEM_FREE(uploader), return NULL,
         "Failed to strcpy_s resultDir for uploader, device: %u, ret: %d.", deviceId, ret);
 
     // malloc transport
@@ -163,7 +164,7 @@ static UploaderAttr* InitDataUploaderBasic(const ProfileParam *param, uint32_t d
  * @param [in] uploader : uploader pointer
  * @return chunk data pop from uploader data queue
  */
-static ProfFileChunk *TryPopUploader(UploaderAttr* uploader)
+static ProfFileChunk* TryPopUploader(UploaderAttr* uploader)
 {
     (void)OsalMutexLock(&uploader->dataMtx);
     if (uploader->size == 0 && !uploader->destruct) {
@@ -176,7 +177,7 @@ static ProfFileChunk *TryPopUploader(UploaderAttr* uploader)
         return NULL;
     }
 
-    ProfFileChunk *chunk = uploader->dataQueue[uploader->front];
+    ProfFileChunk* chunk = uploader->dataQueue[uploader->front];
     uploader->front = (uploader->front + 1U) % uploader->capacity;
     uploader->size--;
     (void)OsalCondSignal(&uploader->notFull);
@@ -194,7 +195,7 @@ static ProfFileChunk *TryPopUploader(UploaderAttr* uploader)
  * @return true
            false
  */
-static bool TryPushUploader(UploaderAttr* uploader, ProfFileChunk *chunk)
+static bool TryPushUploader(UploaderAttr* uploader, ProfFileChunk* chunk)
 {
     if (chunk == NULL) {
         MSPROF_LOGE("Upload data is nullptr.");
@@ -209,12 +210,13 @@ static bool TryPushUploader(UploaderAttr* uploader, ProfFileChunk *chunk)
 
     if (!uploader->enable || uploader->destruct) {
         (void)OsalMutexUnlock(&uploader->dataMtx);
-        MSPROF_LOGE("Uploader is not enalble, device: %u, chunk size: %" PRIu64 ".",
-            uploader->deviceId, chunk->chunkSize);
+        MSPROF_LOGE(
+            "Uploader is not enalble, device: %u, chunk size: %" PRIu64 ".", uploader->deviceId, chunk->chunkSize);
         return false;
     }
-    MSPROF_LOGD("Push data to uploader list, device: %hu, fileName: %s, dataSize: %" PRIu64 ".",
-        chunk->deviceId, chunk->fileName, chunk->chunkSize);
+    MSPROF_LOGD(
+        "Push data to uploader list, device: %hu, fileName: %s, dataSize: %" PRIu64 ".", chunk->deviceId,
+        chunk->fileName, chunk->chunkSize);
     uploader->dataQueue[uploader->rear] = chunk;
     uploader->rear = (uploader->rear + 1U) % uploader->capacity;
     uploader->size++;
@@ -236,7 +238,7 @@ static OsalVoidPtr UploaderThreadHandle(OsalVoidPtr args)
     (void)OsalCondSignal(&uploader->uploadCond);
     (void)OsalMutexUnlock(&uploader->uploadMtx);
     do {
-        ProfFileChunk *chunk = TryPopUploader(uploader);
+        ProfFileChunk* chunk = TryPopUploader(uploader);
         if (chunk == NULL || uploader->destruct) {
             break;
         }
@@ -320,7 +322,7 @@ static int32_t StartDataUploaderThread(UploaderAttr* uploader, uint32_t deviceId
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfHostSubDir(char *flushDir, uint32_t flushDirLen)
+static int32_t CreateProfHostSubDir(char* flushDir, uint32_t flushDirLen)
 {
     errno_t ret = strcat_s(flushDir, flushDirLen, "/host");
     PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "Failed to strcat_s for host dir, ret: %d.", ret);
@@ -336,7 +338,7 @@ static int32_t CreateProfHostSubDir(char *flushDir, uint32_t flushDirLen)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfDeviceSubDir(uint32_t deviceId, char *flushDir, uint32_t flushDirLen)
+static int32_t CreateProfDeviceSubDir(uint32_t deviceId, char* flushDir, uint32_t flushDirLen)
 {
     errno_t ret = strcat_s(flushDir, flushDirLen, "/device_");
     PROF_CHK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "Failed to strcat_s for device dir, ret: %d.", ret);
@@ -358,7 +360,7 @@ static int32_t CreateProfDeviceSubDir(uint32_t deviceId, char *flushDir, uint32_
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfSubDir(uint32_t deviceId, char *flushDir, uint32_t flushDirLen)
+static int32_t CreateProfSubDir(uint32_t deviceId, char* flushDir, uint32_t flushDirLen)
 {
     int32_t ret = PROFILING_FAILED;
     if (deviceId == DEFAULT_HOST_ID) {
@@ -388,7 +390,7 @@ static int32_t CreateProfSubDir(uint32_t deviceId, char *flushDir, uint32_t flus
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-int32_t CreateDataUploader(ProfileParam *param, TransportType type, uint32_t deviceId, uint32_t capacity)
+int32_t CreateDataUploader(ProfileParam* param, TransportType type, uint32_t deviceId, uint32_t capacity)
 {
     (void)OsalMutexLock(&g_uploader.uploaderMtx);
     if (g_uploader.uploaderList == NULL) {
@@ -436,8 +438,7 @@ int32_t CreateDataUploader(ProfileParam *param, TransportType type, uint32_t dev
         return PROFILING_FAILED;
     }
     (void)OsalMutexUnlock(&g_uploader.uploaderMtx);
-    MSPROF_LOGI("Success to create uploader and start uploader thread, device: %u, capacity: %u.",
-        deviceId, capacity);
+    MSPROF_LOGI("Success to create uploader and start uploader thread, device: %u, capacity: %u.", deviceId, capacity);
     return PROFILING_SUCCESS;
 }
 
@@ -476,8 +477,7 @@ void DestroyDataUploader(uint32_t deviceId)
     OSAL_MEM_FREE(uploader->transport);
     MSPROF_LOGI("total_size_uploader, front point: %u, rear point: %u.", uploader->front, uploader->rear);
     (void)OsalMutexUnlock(&g_uploader.uploaderMtx);
-    MSPROF_LOGI("Success to destroy uploader and stop uploader thread, deviceId: %d.",
-        deviceId);
+    MSPROF_LOGI("Success to destroy uploader and stop uploader thread, deviceId: %d.", deviceId);
 }
 
 /**
@@ -513,11 +513,25 @@ UploaderAttr* GetDataUploader(uint32_t deviceId)
     if (deviceId > g_uploader.devNum - 1U) {
         return NULL;
     }
-    UploaderAttr uploader = {false, false, deviceId, 0, 0, 0, 0, {}, NULL, PTHREAD_COND_INITIALIZER,
-        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER,
-        PTHREAD_MUTEX_INITIALIZER, NULL};
-    return (UploaderAttr*)CstlListIterData(CstlListIterFind(
-        &g_uploader.uploaderList[deviceId], UploaderCmp, (uintptr_t)&uploader));
+    UploaderAttr uploader = {
+        false,
+        false,
+        deviceId,
+        0,
+        0,
+        0,
+        0,
+        {},
+        NULL,
+        PTHREAD_COND_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_COND_INITIALIZER,
+        PTHREAD_COND_INITIALIZER,
+        PTHREAD_COND_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER,
+        NULL};
+    return (UploaderAttr*)CstlListIterData(
+        CstlListIterFind(&g_uploader.uploaderList[deviceId], UploaderCmp, (uintptr_t)&uploader));
 }
 
 /**
@@ -526,7 +540,7 @@ UploaderAttr* GetDataUploader(uint32_t deviceId)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-int32_t UploaderUploadData(ProfFileChunk *chunk)
+int32_t UploaderUploadData(ProfFileChunk* chunk)
 {
     UploaderAttr* uploader = GetDataUploader((uint32_t)chunk->deviceId);
     if (uploader == NULL) {
@@ -553,7 +567,7 @@ int32_t UploaderUploadData(ProfFileChunk *chunk)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfTimeField(char *timeField, size_t timeFieldLen)
+static int32_t CreateProfTimeField(char* timeField, size_t timeFieldLen)
 {
     OsalSystemTime sysTime;
     if (OsalGetLocalTime(&sysTime) == OSAL_EN_ERROR) {
@@ -561,12 +575,15 @@ static int32_t CreateProfTimeField(char *timeField, size_t timeFieldLen)
         return PROFILING_FAILED;
     }
 
-    int32_t ret = snprintf_s(timeField, timeFieldLen, timeFieldLen - 1U, "%04d%02d%02d%02d%02d%02d%03d", sysTime.wYear,
-        sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
+    int32_t ret = snprintf_s(
+        timeField, timeFieldLen, timeFieldLen - 1U, "%04d%02d%02d%02d%02d%02d%03d", sysTime.wYear, sysTime.wMonth,
+        sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
     if (ret == -1) {
-        MSPROF_LOGE("Format time failed, timeField: %s, year: %d, month: %d, day: %d, hour: %d, minute: %d"
-            "second: %d, milli second: %lld.", timeField, sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour,
-            sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
+        MSPROF_LOGE(
+            "Format time failed, timeField: %s, year: %d, month: %d, day: %d, hour: %d, minute: %d"
+            "second: %d, milli second: %lld.",
+            timeField, sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond,
+            sysTime.wMilliseconds);
         return PROFILING_FAILED;
     }
 
@@ -581,18 +598,16 @@ static int32_t CreateProfTimeField(char *timeField, size_t timeFieldLen)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfRandField(char *randField, int32_t randFieldLen)
+static int32_t CreateProfRandField(char* randField, int32_t randFieldLen)
 {
     static const uint64_t AZ_NUMBER = 26; // A - Z
-    static char randStr[MAX_RAND_STR_LEN] = { 0 };
+    static char randStr[MAX_RAND_STR_LEN] = {0};
     (void)memset_s(randStr, MAX_RAND_STR_LEN, 0, MAX_RAND_STR_LEN);
     uint64_t timeStamp = (uint64_t)GetClockMonotonicTime();
     uint64_t timeSinceEpoch = timeStamp / AZ_NUMBER;
     int32_t ret = 0;
-    ret = snprintf_s(randStr, MAX_RAND_STR_LEN, MAX_RAND_STR_LEN - 1, "%llu%llu",
-        timeSinceEpoch, timeStamp);
-    PROF_CHK_EXPR_ACTION(ret == -1, return PROFILING_FAILED,
-        "Failed to snprintf_s randField: %s.", randField);
+    ret = snprintf_s(randStr, MAX_RAND_STR_LEN, MAX_RAND_STR_LEN - 1, "%llu%llu", timeSinceEpoch, timeStamp);
+    PROF_CHK_EXPR_ACTION(ret == -1, return PROFILING_FAILED, "Failed to snprintf_s randField: %s.", randField);
     // get rand hash id
     uint64_t hashId = GetBkdrHashId(randStr);
     for (int32_t i = 0; i < randFieldLen - 1; ++i) {
@@ -612,23 +627,23 @@ static int32_t CreateProfRandField(char *randField, int32_t randFieldLen)
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-static int32_t CreateProfMainField(uint32_t *apiIndex, char *flushDir, const char *timeField,
-    const char *randField)
+static int32_t CreateProfMainField(uint32_t* apiIndex, char* flushDir, const char* timeField, const char* randField)
 {
     int32_t ret = 0;
     errno_t retVal = EOK;
-    static char mainDir[DEFAULT_OUTPUT_MAX_LEGTH] = { 0 };
+    static char mainDir[DEFAULT_OUTPUT_MAX_LEGTH] = {0};
     (void)memset_s(mainDir, DEFAULT_OUTPUT_MAX_LEGTH, 0, DEFAULT_OUTPUT_MAX_LEGTH);
     // strcat all str for main dir
-    ret = sprintf_s(mainDir, sizeof(mainDir), "%s%06u%s%s%s%08d%s",
+    ret = sprintf_s(
+        mainDir, sizeof(mainDir), "%s%06u%s%s%s%08d%s",
 #ifdef LITE_OS
         "PROF_", (*apiIndex + 1U), // api index count
 #else
         "/PROF_", (*apiIndex + 1U), // api index count
 #endif
-        "_", timeField,             // time str
-        "_", OsalGetPid(),          // main pid str
-        randField);                 // rand hash str
+        "_", timeField,    // time str
+        "_", OsalGetPid(), // main pid str
+        randField);        // rand hash str
     PROF_CHK_EXPR_ACTION(ret == -1, return PROFILING_FAILED, "Failed to sprintf_s main dir: %s.", mainDir);
     // strcat flush dir
     retVal = strcat_s(flushDir, DEFAULT_OUTPUT_MAX_LEGTH, mainDir);
@@ -644,10 +659,10 @@ static int32_t CreateProfMainField(uint32_t *apiIndex, char *flushDir, const cha
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-int32_t CreateProfMainDir(uint32_t *apiIndex, CHAR *flushDir)
+int32_t CreateProfMainDir(uint32_t* apiIndex, CHAR* flushDir)
 {
     // create time field
-    static char timeField[MAX_TIME_FIELD_LEN] = { 0 };
+    static char timeField[MAX_TIME_FIELD_LEN] = {0};
     (void)memset_s(timeField, MAX_TIME_FIELD_LEN, 0, MAX_TIME_FIELD_LEN);
     int32_t ret = CreateProfTimeField(timeField, MAX_TIME_FIELD_LEN);
     if (ret != PROFILING_SUCCESS) {
@@ -655,7 +670,7 @@ int32_t CreateProfMainDir(uint32_t *apiIndex, CHAR *flushDir)
         return PROFILING_FAILED;
     }
     // create rand field
-    static char randField[MAX_RAND_FIELD_LEN] = { 0 };
+    static char randField[MAX_RAND_FIELD_LEN] = {0};
     (void)memset_s(randField, MAX_RAND_FIELD_LEN, 0, MAX_RAND_FIELD_LEN);
     ret = CreateProfRandField(randField, MAX_RAND_FIELD_LEN);
     if (ret != PROFILING_SUCCESS) {

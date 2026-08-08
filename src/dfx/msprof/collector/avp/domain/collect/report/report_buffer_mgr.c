@@ -28,29 +28,21 @@ ApiVector g_apiAgingVec[AGING_MAX_INDEX] = {};
 SizeCount g_sizeCount[REPORT_TYPE_MAX] = {
     {0, 0, true, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER},
     {0, 0, true, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER},
-    {0, 0, true, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER}
-};
-UnionList *g_additionalList = NULL;
-UnionList *g_compactList = NULL;
+    {0, 0, true, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER}};
+UnionList* g_additionalList = NULL;
+UnionList* g_compactList = NULL;
 uint32_t g_reportBufferLength[] = {
-    sizeof(struct MsprofApi),
-    sizeof(struct MsprofCompactInfo),
-    sizeof(struct MsprofAdditionalInfo)
-};
-char g_reportName[REPORT_TYPE_MAX][REPORT_NAME_LEN] = {
-    "api_event",
-    "compact",
-    "additional"
-};
+    sizeof(struct MsprofApi), sizeof(struct MsprofCompactInfo), sizeof(struct MsprofAdditionalInfo)};
+char g_reportName[REPORT_TYPE_MAX][REPORT_NAME_LEN] = {"api_event", "compact", "additional"};
 
 /**
  * @brief      Create union list, and save additional or compact data
  * @return     success: pointer of UnionList
  *             failed : NULL
  */
-static UnionList *CreateUnionList(void)
+static UnionList* CreateUnionList(void)
 {
-    UnionList *unionList = (UnionList*)OsalCalloc(sizeof(UnionList));
+    UnionList* unionList = (UnionList*)OsalCalloc(sizeof(UnionList));
     if (unionList == NULL) {
         return NULL;
     }
@@ -64,12 +56,12 @@ static UnionList *CreateUnionList(void)
  * @param [in] unionList: unionList which should be destroy
  * @return     void
  */
-static void UnionListDestroy(UnionList *unionList)
+static void UnionListDestroy(UnionList* unionList)
 {
     if (unionList != NULL) {
-        UnionVector *node = unionList->head;
+        UnionVector* node = unionList->head;
         while (node != NULL) {
-            UnionVector *next = node->next;
+            UnionVector* next = node->next;
             OSAL_MEM_FREE(node);
             node = next;
         }
@@ -86,13 +78,14 @@ static void UnionListDestroy(UnionList *unionList)
  * @return     true: data has saved in
  *             false : target level/type/flag not found
  */
-static bool FindAdditionalNode(struct MsprofAdditionalInfo *data, uint8_t ageFlag)
+static bool FindAdditionalNode(struct MsprofAdditionalInfo* data, uint8_t ageFlag)
 {
-    UnionVector *cur = g_additionalList->head;
+    UnionVector* cur = g_additionalList->head;
     while (cur != NULL) {
         if (cur->level == data->level && cur->typeId == data->type && cur->ageFlag == ageFlag) {
-            errno_t ret = memcpy_s(&(cur->typeInfo.additionalData[cur->quantity]), sizeof(struct MsprofAdditionalInfo),
-                data, sizeof(struct MsprofAdditionalInfo));
+            errno_t ret = memcpy_s(
+                &(cur->typeInfo.additionalData[cur->quantity]), sizeof(struct MsprofAdditionalInfo), data,
+                sizeof(struct MsprofAdditionalInfo));
             PROF_CHK_EXPR_ACTION(ret != EOK, return true, "additional node memcpy failed.");
             cur->quantity++;
             return true;
@@ -102,13 +95,14 @@ static bool FindAdditionalNode(struct MsprofAdditionalInfo *data, uint8_t ageFla
     return false;
 }
 
-static bool FindCompactNode(struct MsprofCompactInfo *data, uint8_t ageFlag)
+static bool FindCompactNode(struct MsprofCompactInfo* data, uint8_t ageFlag)
 {
-    UnionVector *cur = g_compactList->head;
+    UnionVector* cur = g_compactList->head;
     while (cur != NULL) {
         if (cur->level == data->level && cur->typeId == data->type && cur->ageFlag == ageFlag) {
-            errno_t ret = memcpy_s(&(cur->typeInfo.compactData[cur->quantity]), sizeof(struct MsprofCompactInfo),
-                data, sizeof(struct MsprofCompactInfo));
+            errno_t ret = memcpy_s(
+                &(cur->typeInfo.compactData[cur->quantity]), sizeof(struct MsprofCompactInfo), data,
+                sizeof(struct MsprofCompactInfo));
             PROF_CHK_EXPR_ACTION(ret != EOK, return true, "compact node memcpy failed.");
             cur->quantity++;
             return true;
@@ -124,14 +118,15 @@ static bool FindCompactNode(struct MsprofCompactInfo *data, uint8_t ageFlag)
  * @param [in] ageFlag: aging flag
  * @return     void
  */
-void AddAdditionalNode(struct MsprofAdditionalInfo *data, uint8_t ageFlag)
+void AddAdditionalNode(struct MsprofAdditionalInfo* data, uint8_t ageFlag)
 {
-    UnionVector *newNode = (UnionVector*)OsalCalloc(sizeof(UnionVector));
+    UnionVector* newNode = (UnionVector*)OsalCalloc(sizeof(UnionVector));
     PROF_CHK_EXPR_ACTION(newNode == NULL, return, "OsalCalloc UnionVector failed");
-    errno_t ret = memcpy_s(&(newNode->typeInfo.additionalData[0]), sizeof(struct MsprofAdditionalInfo),
-        data, sizeof(struct MsprofAdditionalInfo));
+    errno_t ret = memcpy_s(
+        &(newNode->typeInfo.additionalData[0]), sizeof(struct MsprofAdditionalInfo), data,
+        sizeof(struct MsprofAdditionalInfo));
     PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, OSAL_MEM_FREE(newNode), return, "additional node memcpy failed.");
-    
+
     if ((uint32_t)ageFlag == AGING_INDEX) {
         ret = strcpy_s(newNode->TypeName, MAX_FILE_CHUNK_NAME_LENGTH, "aging.additional.");
         PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, OSAL_MEM_FREE(newNode), return, "aging title strcpy failed.");
@@ -151,12 +146,12 @@ void AddAdditionalNode(struct MsprofAdditionalInfo *data, uint8_t ageFlag)
     g_additionalList->quantity++;
 }
 
-void AddCompactNode(struct MsprofCompactInfo *data, uint8_t ageFlag)
+void AddCompactNode(struct MsprofCompactInfo* data, uint8_t ageFlag)
 {
-    UnionVector *newNode = (UnionVector*)OsalCalloc(sizeof(UnionVector));
+    UnionVector* newNode = (UnionVector*)OsalCalloc(sizeof(UnionVector));
     PROF_CHK_EXPR_ACTION(newNode == NULL, return, "OsalCalloc UnionVector failed");
-    errno_t ret = memcpy_s(&(newNode->typeInfo.compactData[0]), sizeof(struct MsprofCompactInfo),
-        data, sizeof(struct MsprofCompactInfo));
+    errno_t ret = memcpy_s(
+        &(newNode->typeInfo.compactData[0]), sizeof(struct MsprofCompactInfo), data, sizeof(struct MsprofCompactInfo));
     PROF_CHK_EXPR_ACTION_TWICE(ret != EOK, OSAL_MEM_FREE(newNode), return, "compact node memcpy failed.");
 
     if ((uint32_t)ageFlag == AGING_INDEX) {
@@ -184,7 +179,7 @@ void AddCompactNode(struct MsprofCompactInfo *data, uint8_t ageFlag)
  */
 static void ReportDestroy(void)
 {
-    for (uint32_t i = 0; i < sizeof(g_report)/sizeof(g_report[0]); i++) {
+    for (uint32_t i = 0; i < sizeof(g_report) / sizeof(g_report[0]); i++) {
         OSAL_MEM_FREE(g_report[i].avails);
         OSAL_MEM_FREE(g_report[i].aging);
         OSAL_MEM_FREE(g_report[i].buffer);
@@ -204,7 +199,7 @@ int32_t ReportInitialize(uint32_t length)
         MSPROF_LOGI("The report has been initialized.");
         return PROFILING_SUCCESS;
     }
-    for (uint32_t i = 0; i < sizeof(g_report)/sizeof(g_report[0]); i++) {
+    for (uint32_t i = 0; i < sizeof(g_report) / sizeof(g_report[0]); i++) {
         AtomicInit(&g_report[i].rIndex, 0);
         AtomicInit(&g_report[i].wIndex, 0);
         AtomicInit(&g_report[i].idleWriteIndex, 0);
@@ -296,7 +291,7 @@ void ReportStop(void)
  * @return     success: MSPROF_ERROR_NONE
  *             failed : MSPROF_ERROR_UNINITIALIZE
  */
-int32_t ReportApiPush(uint8_t aging, const struct MsprofApi *data)
+int32_t ReportApiPush(uint8_t aging, const struct MsprofApi* data)
 {
     if (!g_isInited || g_isQuit) {
         MSPROF_LOGW("Ring buffer api_event is not initialized.");
@@ -313,15 +308,14 @@ int32_t ReportApiPush(uint8_t aging, const struct MsprofApi *data)
         }
         currWriteCusor = AtomicLoad(&g_report[REPORT_API_INDEX].idleWriteIndex);
         nextWriteCusor = currWriteCusor + 1;
-    } while (AtomicCompareExchangeWeak(&g_report[REPORT_API_INDEX].idleWriteIndex,
-        nextWriteCusor, currWriteCusor));
+    } while (AtomicCompareExchangeWeak(&g_report[REPORT_API_INDEX].idleWriteIndex, nextWriteCusor, currWriteCusor));
 
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR,
-        "Read a negative cursors when push api data.");
+    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR, "Read a negative cursors when push api data.");
     uint32_t index = (uint32_t)currWriteCusor & g_report[REPORT_API_INDEX].mask;
     g_report[REPORT_API_INDEX].aging[index] = aging;
-    (void)memcpy_s(&((struct MsprofApi*)g_report[REPORT_API_INDEX].buffer)[index], sizeof(struct MsprofApi),
-        data, sizeof(struct MsprofApi));
+    (void)memcpy_s(
+        &((struct MsprofApi*)g_report[REPORT_API_INDEX].buffer)[index], sizeof(struct MsprofApi), data,
+        sizeof(struct MsprofApi));
     g_report[REPORT_API_INDEX].avails[index] = DATA_STATUS_IS_READY;
     (void)AtomicAdd(&g_report[REPORT_API_INDEX].wIndex, 1);
     // wake up api pop wait
@@ -338,7 +332,7 @@ int32_t ReportApiPush(uint8_t aging, const struct MsprofApi *data)
  * @return     success: MSPROF_ERROR_NONE
  *             failed : MSPROF_ERROR_UNINITIALIZE
  */
-int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data)
+int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo* data)
 {
     if (!g_isInited || g_isQuit) {
         MSPROF_LOGW("Ring buffer api_event is not initialized.");
@@ -350,21 +344,20 @@ int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data)
     do {
         cycles++;
         if (cycles >= REPORT_BUFFER_MAX_CYCLES) {
-            MSPROF_LOGW("Cycle overflow, QueueName: compact, QueueCapacity: %u",
-                g_report[REPORT_COMPACT_INDEX].capacity);
+            MSPROF_LOGW(
+                "Cycle overflow, QueueName: compact, QueueCapacity: %u", g_report[REPORT_COMPACT_INDEX].capacity);
             return MSPROF_ERROR_NONE;
         }
         currWriteCusor = AtomicLoad(&g_report[REPORT_COMPACT_INDEX].idleWriteIndex);
         nextWriteCusor = currWriteCusor + 1;
-    } while (AtomicCompareExchangeWeak(&g_report[REPORT_COMPACT_INDEX].idleWriteIndex,
-        nextWriteCusor, currWriteCusor));
+    } while (AtomicCompareExchangeWeak(&g_report[REPORT_COMPACT_INDEX].idleWriteIndex, nextWriteCusor, currWriteCusor));
 
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR,
-        "Read a negative cursors when push compact data.");
+    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR, "Read a negative cursors when push compact data.");
     uint32_t index = (uint32_t)currWriteCusor & g_report[REPORT_COMPACT_INDEX].mask;
     g_report[REPORT_COMPACT_INDEX].aging[index] = aging;
-    (void)memcpy_s(&((struct MsprofCompactInfo*)g_report[REPORT_COMPACT_INDEX].buffer)[index],
-        sizeof(struct MsprofCompactInfo), data, sizeof(struct MsprofCompactInfo));
+    (void)memcpy_s(
+        &((struct MsprofCompactInfo*)g_report[REPORT_COMPACT_INDEX].buffer)[index], sizeof(struct MsprofCompactInfo),
+        data, sizeof(struct MsprofCompactInfo));
     g_report[REPORT_COMPACT_INDEX].avails[index] = DATA_STATUS_IS_READY;
     (void)AtomicAdd(&g_report[REPORT_COMPACT_INDEX].wIndex, 1);
     // wake up compact pop wait
@@ -381,7 +374,7 @@ int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data)
  * @return     success: MSPROF_ERROR_NONE
  *             failed : MSPROF_ERROR_UNINITIALIZE
  */
-int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *data)
+int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo* data)
 {
     if (!g_isInited || g_isQuit) {
         MSPROF_LOGW("Ring buffer api_event is not initialized.");
@@ -393,20 +386,20 @@ int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *d
     do {
         cycles++;
         if (cycles >= REPORT_BUFFER_MAX_CYCLES) {
-            MSPROF_LOGW("Cycle overflow, QueueName: additional, QueueCapacity: %u",
-                g_report[REPORT_ADDITIONAL_INDEX].capacity);
+            MSPROF_LOGW(
+                "Cycle overflow, QueueName: additional, QueueCapacity: %u", g_report[REPORT_ADDITIONAL_INDEX].capacity);
             return MSPROF_ERROR_NONE;
         }
         currWriteCusor = AtomicLoad(&g_report[REPORT_ADDITIONAL_INDEX].idleWriteIndex);
         nextWriteCusor = currWriteCusor + 1;
-    } while (AtomicCompareExchangeWeak(&g_report[REPORT_ADDITIONAL_INDEX].idleWriteIndex,
-        nextWriteCusor, currWriteCusor));
+    } while (
+        AtomicCompareExchangeWeak(&g_report[REPORT_ADDITIONAL_INDEX].idleWriteIndex, nextWriteCusor, currWriteCusor));
 
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR,
-        "Read a negative cursors when push additional data.");
+    PROF_CHK_EXPR_ACTION(currWriteCusor < 0, return MSPROF_ERROR, "Read a negative cursors when push additional data.");
     uint32_t index = (uint32_t)currWriteCusor & g_report[REPORT_ADDITIONAL_INDEX].mask;
     g_report[REPORT_ADDITIONAL_INDEX].aging[index] = aging;
-    (void)memcpy_s(&((struct MsprofAdditionalInfo*)g_report[REPORT_ADDITIONAL_INDEX].buffer)[index],
+    (void)memcpy_s(
+        &((struct MsprofAdditionalInfo*)g_report[REPORT_ADDITIONAL_INDEX].buffer)[index],
         sizeof(struct MsprofAdditionalInfo), data, sizeof(struct MsprofAdditionalInfo));
     g_report[REPORT_ADDITIONAL_INDEX].avails[index] = DATA_STATUS_IS_READY;
     (void)AtomicAdd(&g_report[REPORT_ADDITIONAL_INDEX].wIndex, 1);
@@ -424,7 +417,7 @@ int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *d
  * @return     true: pop data success
  *             false : pop data failed or nothing need to pop
  */
-static bool ReportApiPop(uint8_t *aging, struct MsprofApi **data)
+static bool ReportApiPop(uint8_t* aging, struct MsprofApi** data)
 {
     if (!g_isInited) {
         return false;
@@ -432,8 +425,8 @@ static bool ReportApiPop(uint8_t *aging, struct MsprofApi **data)
 
     int32_t currReadCusor = AtomicLoad(&g_report[REPORT_API_INDEX].rIndex);
     int32_t currWriteCusor = AtomicLoad(&g_report[REPORT_API_INDEX].wIndex);
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0 || currReadCusor < 0, return false,
-        "Read an negative numbers cursors when pop api data.");
+    PROF_CHK_EXPR_ACTION(
+        currWriteCusor < 0 || currReadCusor < 0, return false, "Read an negative numbers cursors when pop api data.");
     if (((uint32_t)currReadCusor & g_report[REPORT_API_INDEX].mask) ==
         ((uint32_t)currWriteCusor & g_report[REPORT_API_INDEX].mask)) {
         return false;
@@ -451,7 +444,7 @@ static bool ReportApiPop(uint8_t *aging, struct MsprofApi **data)
     return false;
 }
 
-static bool ReportCompactPop(uint8_t *aging, struct MsprofCompactInfo **data)
+static bool ReportCompactPop(uint8_t* aging, struct MsprofCompactInfo** data)
 {
     if (!g_isInited) {
         return false;
@@ -459,7 +452,8 @@ static bool ReportCompactPop(uint8_t *aging, struct MsprofCompactInfo **data)
 
     int32_t currReadCusor = AtomicLoad(&g_report[REPORT_COMPACT_INDEX].rIndex);
     int32_t currWriteCusor = AtomicLoad(&g_report[REPORT_COMPACT_INDEX].wIndex);
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0 || currReadCusor < 0, return false,
+    PROF_CHK_EXPR_ACTION(
+        currWriteCusor < 0 || currReadCusor < 0, return false,
         "Read an negative numbers cursors when pop compact data.");
     if (((uint32_t)currReadCusor & g_report[REPORT_COMPACT_INDEX].mask) ==
         ((uint32_t)currWriteCusor & g_report[REPORT_COMPACT_INDEX].mask)) {
@@ -478,7 +472,7 @@ static bool ReportCompactPop(uint8_t *aging, struct MsprofCompactInfo **data)
     return false;
 }
 
-static bool ReportAdditionalPop(uint8_t *aging, struct MsprofAdditionalInfo **data)
+static bool ReportAdditionalPop(uint8_t* aging, struct MsprofAdditionalInfo** data)
 {
     if (!g_isInited) {
         return false;
@@ -486,7 +480,8 @@ static bool ReportAdditionalPop(uint8_t *aging, struct MsprofAdditionalInfo **da
 
     int32_t currReadCusor = AtomicLoad(&g_report[REPORT_ADDITIONAL_INDEX].rIndex);
     int32_t currWriteCusor = AtomicLoad(&g_report[REPORT_ADDITIONAL_INDEX].wIndex);
-    PROF_CHK_EXPR_ACTION(currWriteCusor < 0 || currReadCusor < 0, return false,
+    PROF_CHK_EXPR_ACTION(
+        currWriteCusor < 0 || currReadCusor < 0, return false,
         "Read an negative numbers cursors when pop additional data.");
     if (((uint32_t)currReadCusor & g_report[REPORT_ADDITIONAL_INDEX].mask) ==
         ((uint32_t)currWriteCusor & g_report[REPORT_ADDITIONAL_INDEX].mask)) {
@@ -509,7 +504,7 @@ static bool ReportAdditionalPop(uint8_t *aging, struct MsprofAdditionalInfo **da
  * @param [in] ageFlag: aging flag
  * @return     agingName
  */
-static char *GenApiName(uint32_t ageFlag)
+static char* GenApiName(uint32_t ageFlag)
 {
     static char unagingName[] = "unaging.api_event.data";
     static char agingName[] = "aging.api_event.data";
@@ -530,7 +525,7 @@ void DumpApi(void)
             continue;
         }
         uint64_t chunkSize = g_apiAgingVec[idx].quantity * sizeof(struct MsprofApi);
-        ProfFileChunk *chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
+        ProfFileChunk* chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
         if (chunk == NULL) {
             MSPROF_LOGE("OsalCalloc chunk failed.");
             continue;
@@ -538,8 +533,8 @@ void DumpApi(void)
         chunk->chunkSize = chunkSize;
         chunk->chunkType = PROF_HOST_DATA;
         chunk->deviceId = DEFAULT_HOST_ID;
-        errno_t ret = strcpy_s((char *)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH,
-            GenApiName(g_apiAgingVec[idx].ageFlag));
+        errno_t ret =
+            strcpy_s((char*)chunk->fileName, MAX_FILE_CHUNK_NAME_LENGTH, GenApiName(g_apiAgingVec[idx].ageFlag));
         if (ret != EOK) {
             MSPROF_LOGE("strcpy_s api name to fileName failed.");
             OSAL_MEM_FREE(chunk);
@@ -587,7 +582,7 @@ static void ApiPopRun(void)
 {
     uint32_t batchSizeMax = 0;
     uint8_t ageFlag = 1;
-    struct MsprofApi *data = NULL;
+    struct MsprofApi* data = NULL;
     for (; batchSizeMax < REPORT_BUFFER_MAX_BATCH;) {
         bool isOK = ReportApiPop(&ageFlag, &data);
         if (!isOK) {
@@ -600,8 +595,9 @@ static void ApiPopRun(void)
         g_sizeCount[REPORT_API_INDEX].totalPopCount++;
         g_sizeCount[REPORT_API_INDEX].totalPopSize += sizeof(struct MsprofApi);
         batchSizeMax++;
-        errno_t ret = memcpy_s(&g_apiAgingVec[ageFlag].apiData[g_apiAgingVec[ageFlag].quantity],
-            sizeof(struct MsprofApi), data, sizeof(struct MsprofApi));
+        errno_t ret = memcpy_s(
+            &g_apiAgingVec[ageFlag].apiData[g_apiAgingVec[ageFlag].quantity], sizeof(struct MsprofApi), data,
+            sizeof(struct MsprofApi));
         if (ret != EOK) {
             MSPROF_LOGE("Memcpy api data to buffer failed.");
             continue;
@@ -618,9 +614,9 @@ static void ApiPopRun(void)
  * @param [in] unionList: unionList for addtional or compact
  * @return     void
  */
-static void SetCountZero(UnionList *unionList)
+static void SetCountZero(UnionList* unionList)
 {
-    UnionVector *node = unionList->head;
+    UnionVector* node = unionList->head;
     for (uint64_t idx = 0; idx < unionList->quantity; idx++) {
         if (node == NULL) {
             return;
@@ -637,7 +633,7 @@ static void SetCountZero(UnionList *unionList)
 void DumpCompact(void)
 {
     uint32_t listSize = g_compactList->quantity;
-    UnionVector *node = g_compactList->head;
+    UnionVector* node = g_compactList->head;
     for (uint32_t idx = 0; idx < listSize; idx++) {
         if (node == NULL) {
             return;
@@ -647,7 +643,7 @@ void DumpCompact(void)
             continue;
         }
         uint64_t chunkSize = node->quantity * sizeof(struct MsprofCompactInfo);
-        ProfFileChunk *chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
+        ProfFileChunk* chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
         if (chunk == NULL) {
             MSPROF_LOGE("OsalCalloc chunk failed.");
             node = node->next;
@@ -710,7 +706,7 @@ static void CompactPopRun(void)
 {
     uint64_t batchSizeMax = 0;
     uint8_t ageFlag = 1;
-    struct MsprofCompactInfo *data = NULL;
+    struct MsprofCompactInfo* data = NULL;
     for (; batchSizeMax < REPORT_BUFFER_MAX_BATCH;) {
         bool isOK = ReportCompactPop(&ageFlag, &data);
         if (!isOK) {
@@ -735,7 +731,7 @@ static void CompactPopRun(void)
 void DumpAdditional(void)
 {
     uint32_t listSize = g_additionalList->quantity;
-    UnionVector *additionalNode = g_additionalList->head;
+    UnionVector* additionalNode = g_additionalList->head;
     for (uint32_t idx = 0; idx < listSize; idx++) {
         if (additionalNode == NULL) {
             return;
@@ -745,12 +741,12 @@ void DumpAdditional(void)
             continue;
         }
         uint64_t chunkSize = additionalNode->quantity * sizeof(struct MsprofAdditionalInfo);
-        ProfFileChunk *chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
+        ProfFileChunk* chunk = (ProfFileChunk*)OsalCalloc(sizeof(ProfFileChunk));
         if (chunk == NULL) {
             MSPROF_LOGE("OsalCalloc chunk failed.");
             continue;
         }
-        errno_t ret = strcpy_s((char *)chunk->fileName, sizeof(chunk->fileName), additionalNode->TypeName);
+        errno_t ret = strcpy_s((char*)chunk->fileName, sizeof(chunk->fileName), additionalNode->TypeName);
         if (ret != EOK) {
             OSAL_MEM_FREE(chunk);
             additionalNode = additionalNode->next;
@@ -807,7 +803,7 @@ static void AdditionalPopRun(void)
 {
     uint64_t batchSizeMax = 0;
     uint8_t ageFlag = 1;
-    struct MsprofAdditionalInfo *data = NULL;
+    struct MsprofAdditionalInfo* data = NULL;
     for (; batchSizeMax < REPORT_BUFFER_MAX_BATCH;) {
         bool isOK = ReportAdditionalPop(&ageFlag, &data);
         if (!isOK) {
@@ -857,8 +853,8 @@ static bool CheckReportStatus(int32_t reportType)
         MSPROF_LOGI("Report is not initializing. No need to check.");
         return false;
     }
-    return CheckAllAvails(reportType) || AtomicLoad(&g_report[reportType].rIndex) !=
-        AtomicLoad(&g_report[reportType].wIndex);
+    return CheckAllAvails(reportType) ||
+           AtomicLoad(&g_report[reportType].rIndex) != AtomicLoad(&g_report[reportType].wIndex);
 }
 
 /**
@@ -872,7 +868,7 @@ static OsalVoidPtr ApiReportHandle(OsalVoidPtr args)
     g_sizeCount[REPORT_API_INDEX].finishTag = false;
     (void)OsalCondSignal(&g_sizeCount[REPORT_API_INDEX].sizeCond);
     (void)OsalMutexUnlock(&g_sizeCount[REPORT_API_INDEX].sizeMtx);
-    bool *quit = (bool *)args;
+    bool* quit = (bool*)args;
     while (!*quit) {
         ApiPopWait();
         ApiPopRun();
@@ -894,7 +890,7 @@ static OsalVoidPtr CompactReportHandle(OsalVoidPtr args)
     g_sizeCount[REPORT_COMPACT_INDEX].finishTag = false;
     (void)OsalCondSignal(&g_sizeCount[REPORT_COMPACT_INDEX].sizeCond);
     (void)OsalMutexUnlock(&g_sizeCount[REPORT_COMPACT_INDEX].sizeMtx);
-    bool *quit = (bool *)args;
+    bool* quit = (bool*)args;
     while (!*quit) {
         CompactPopWait();
         CompactPopRun();
@@ -916,7 +912,7 @@ static OsalVoidPtr AdditionalReportHandle(OsalVoidPtr args)
     g_sizeCount[REPORT_ADDITIONAL_INDEX].finishTag = false;
     (void)OsalCondSignal(&g_sizeCount[REPORT_ADDITIONAL_INDEX].sizeCond);
     (void)OsalMutexUnlock(&g_sizeCount[REPORT_ADDITIONAL_INDEX].sizeMtx);
-    bool *quit = (bool *)args;
+    bool* quit = (bool*)args;
     while (!*quit) {
         AdditionalPopWait();
         AdditionalPopRun();
@@ -1015,8 +1011,9 @@ static void TotalCountPrint(void)
 {
     for (int32_t idx = 0; idx < REPORT_TYPE_MAX; idx++) {
         int32_t currWrite = AtomicLoad(&g_report[idx].idleWriteIndex);
-        MSPROF_LOGI("total_size_report module:%s, push count:%d, pop count:%" PRIu64 ", pop size:%"
-        PRIu64 " bytes", g_reportName[idx], currWrite, g_sizeCount[idx].totalPopCount, g_sizeCount[idx].totalPopSize);
+        MSPROF_LOGI(
+            "total_size_report module:%s, push count:%d, pop count:%" PRIu64 ", pop size:%" PRIu64 " bytes",
+            g_reportName[idx], currWrite, g_sizeCount[idx].totalPopCount, g_sizeCount[idx].totalPopSize);
         g_sizeCount[idx].totalPopCount = 0;
         g_sizeCount[idx].totalPopSize = 0;
         g_sizeCount[idx].finishTag = true;

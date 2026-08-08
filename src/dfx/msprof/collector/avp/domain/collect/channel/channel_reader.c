@@ -21,8 +21,8 @@
 
 typedef struct {
     uint32_t devNum;
-    CstlList *readList;
-    ChannelList *chanList;
+    CstlList* readList;
+    ChannelList* chanList;
 } ChannelReaderAttribue;
 
 ChannelReaderAttribue g_readerAttr = {MAX_DEVICE_NUM, NULL, NULL};
@@ -35,13 +35,13 @@ int32_t ChannelReaderInitialize(uint32_t deviceId, uint32_t deviceNum)
 {
     if (g_readerAttr.readList == NULL) {
         g_readerAttr.devNum = deviceNum;
-        g_readerAttr.readList = (CstlList *)OsalCalloc(sizeof(CstlList) * g_readerAttr.devNum);
+        g_readerAttr.readList = (CstlList*)OsalCalloc(sizeof(CstlList) * g_readerAttr.devNum);
         if (g_readerAttr.readList == NULL) {
             MSPROF_LOGE("Failed to calloc for read list.");
             return PROFILING_FAILED;
         }
 
-        g_readerAttr.chanList = (ChannelList *)OsalCalloc(sizeof(ChannelList) * g_readerAttr.devNum);
+        g_readerAttr.chanList = (ChannelList*)OsalCalloc(sizeof(ChannelList) * g_readerAttr.devNum);
         if (g_readerAttr.chanList == NULL) {
             OSAL_MEM_FREE(g_readerAttr.readList);
             MSPROF_LOGE("Failed to calloc for channel list.");
@@ -73,8 +73,8 @@ int32_t ChannelReaderInitialize(uint32_t deviceId, uint32_t deviceNum)
  */
 STATIC int32_t ChannelReaderChannelCmp(uintptr_t key1, uintptr_t key2)
 {
-    if (((ChannelReader *)key1)->deviceId == ((ChannelReader *)key2)->deviceId &&
-        ((ChannelReader *)key1)->channelId == ((ChannelReader *)key2)->channelId) {
+    if (((ChannelReader*)key1)->deviceId == ((ChannelReader*)key2)->deviceId &&
+        ((ChannelReader*)key1)->channelId == ((ChannelReader*)key2)->channelId) {
         return PROFILING_SUCCESS;
     }
     return PROFILING_FAILED;
@@ -91,10 +91,22 @@ ChannelReader* GetChannelReader(uint32_t deviceId, uint32_t channelId)
     if (g_readerAttr.readList == NULL || g_readerAttr.devNum - 1U < deviceId) {
         return NULL;
     }
-    ChannelReader reader = {0, deviceId, channelId, 0, NULL, 0, 0, 0, 0, 0,
-        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER};
-    return (ChannelReader*)CstlListIterData(CstlListIterFind(
-        &g_readerAttr.readList[deviceId], ChannelReaderChannelCmp, (uintptr_t)&reader));
+    ChannelReader reader = {
+        0,
+        deviceId,
+        channelId,
+        0,
+        NULL,
+        0,
+        0,
+        0,
+        0,
+        0,
+        PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_COND_INITIALIZER};
+    return (ChannelReader*)CstlListIterData(
+        CstlListIterFind(&g_readerAttr.readList[deviceId], ChannelReaderChannelCmp, (uintptr_t)&reader));
 }
 
 /**
@@ -150,7 +162,7 @@ uint32_t GetChannelNum(uint32_t deviceId)
     if (g_readerAttr.chanList == NULL || g_readerAttr.devNum - 1U < deviceId) {
         return 0;
     }
- 
+
     return g_readerAttr.chanList[deviceId].channel_num;
 }
 

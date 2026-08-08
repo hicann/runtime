@@ -13,7 +13,7 @@
 #include "logger/logger.h"
 #include "osal/osal_mem.h"
 #include "chip/chip_nano_v1.h"
- 
+
 typedef struct {
     PlatformType type;
     CreatePlatformFunc func;
@@ -28,14 +28,14 @@ static PlatformTable g_funcTable[] = {
  * @param [in] type : data config of bit switch
  * @return platform interface pointer
  */
-PlatformInterface *CreatePlatform(PlatformType type)
+PlatformInterface* CreatePlatform(PlatformType type)
 {
-    PlatformInterface *pInterface = (PlatformInterface *)OsalCalloc(sizeof(PlatformInterface));
+    PlatformInterface* pInterface = (PlatformInterface*)OsalCalloc(sizeof(PlatformInterface));
     if (pInterface == NULL) {
         MSPROF_LOGE("Failed to calloc for platform interface, type: %d", type);
         return NULL;
     }
-    for (uint32_t i = 0; i < sizeof(g_funcTable)/sizeof(g_funcTable[0]); ++i) {
+    for (uint32_t i = 0; i < sizeof(g_funcTable) / sizeof(g_funcTable[0]); ++i) {
         if (g_funcTable[i].type == type) {
             g_funcTable[i].func(pInterface);
             MSPROF_LOGI("Success to create platform, type: %d", type);
@@ -51,7 +51,4 @@ PlatformInterface *CreatePlatform(PlatformType type)
  * @brief Free interface pointer of platform
  * @param [in] interface : platform interface pointer
  */
-void DestroyPlatform(PlatformInterface *interface)
-{
-    OSAL_MEM_FREE(interface);
-}
+void DestroyPlatform(PlatformInterface* interface) { OSAL_MEM_FREE(interface); }

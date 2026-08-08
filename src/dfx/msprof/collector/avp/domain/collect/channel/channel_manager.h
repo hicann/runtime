@@ -30,7 +30,7 @@ int32_t ChannelMgrInitialize(uint32_t deviceId);
 OsalVoidPtr ChannelMgrThreadHandle(OsalVoidPtr args);
 VOID ChannelMgrDispatch(uint32_t deviceId, uint32_t channelId);
 OsalVoidPtr ChannelMgChannelRead(OsalVoidPtr args);
-VOID ChannelMgrUploadChannelData(ChannelReader *reader);
+VOID ChannelMgrUploadChannelData(ChannelReader* reader);
 VOID ChannelMgrUploadOnce(ChannelReader* reader);
 int32_t ChannelMgrCreateReader(uint32_t deviceId, uint32_t channelId);
 int32_t ChannelMgrDestroyReader(uint32_t deviceId, uint32_t channelId);

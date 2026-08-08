@@ -13,8 +13,7 @@
 #include "logger/logger.h"
 #include "utils/utils.h"
 
-int32_t CreateUploaderTransport(uint32_t deviceId, TransportType type, Transport* transport,
-    const char *flushDir)
+int32_t CreateUploaderTransport(uint32_t deviceId, TransportType type, Transport* transport, const char* flushDir)
 {
     int32_t ret = PROFILING_FAILED;
     switch (type) {

@@ -19,7 +19,6 @@
 #include "ascend_hal.h"
 #include "hal/hal_prof.h"
 
-
 int32_t NanoJobInit(ICollectionJob* attr)
 {
     MSPROF_LOGI("Nano job init");
@@ -27,8 +26,7 @@ int32_t NanoJobInit(ICollectionJob* attr)
         MSPROF_LOGE("Invalid parameter of collection job.");
         return PROFILING_FAILED;
     }
-    if (attr->params->hostProfiling ||
-        strcmp(attr->params->config.taskTrace, "off") == 0) {
+    if (attr->params->hostProfiling || strcmp(attr->params->config.taskTrace, "off") == 0) {
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
@@ -37,15 +35,16 @@ int32_t NanoJobInit(ICollectionJob* attr)
 static int32_t PackPmuParam(ICollectionJob* attr, TagNanoStarsProfileConfig* config)
 {
     char str[NANO_PMU_EVENT_MAX_LEN];
-    const ParmasList *paramConfig = &attr->params->config;
+    const ParmasList* paramConfig = &attr->params->config;
     errno_t err = strncpy_s(str, sizeof(str) / sizeof(str[0]), paramConfig->aicEvents, strlen(paramConfig->aicEvents));
     if (err != EOK) {
         MSPROF_LOGE("string copy failed, err: %d", err);
         return PROFILING_FAILED;
     }
-    char *context = NULL;
-    char *token = Strtok(str, ",", &context);
-    PROF_CHK_EXPR_ACTION(errno == ERANGE, return PROFILING_FAILED,
+    char* context = NULL;
+    char* token = Strtok(str, ",", &context);
+    PROF_CHK_EXPR_ACTION(
+        errno == ERANGE, return PROFILING_FAILED,
         "The errno is out of the range that can be represented after strtok.");
     if (token == NULL) {
         MSPROF_LOGE("PackPmuParam strtok error, aicEvents:%s", str);
@@ -53,35 +52,33 @@ static int32_t PackPmuParam(ICollectionJob* attr, TagNanoStarsProfileConfig* con
     }
     int32_t eventNum = 0;
     while (token != NULL && eventNum < NANO_PMU_EVENT_MAX_NUM) {
-        char *endptr = NULL;
+        char* endptr = NULL;
         errno = 0;
         int64_t num = strtol(token, &endptr, 16);
-        PROF_CHK_EXPR_ACTION(errno == ERANGE || *endptr != '\0', return PROFILING_FAILED,
+        PROF_CHK_EXPR_ACTION(
+            errno == ERANGE || *endptr != '\0', return PROFILING_FAILED,
             "Invalid hexadecimal character string, errno: %d.", errno);
 
-        PROF_CHK_EXPR_ACTION(num < 0 || num > UINT16_MAX, return PROFILING_FAILED,
+        PROF_CHK_EXPR_ACTION(
+            num < 0 || num > UINT16_MAX, return PROFILING_FAILED,
             "Conversion result is out of the range of the uint16_t type");
         uint16_t hexNum = (uint16_t)num;
         config->event[eventNum] = hexNum;
         token = Strtok(NULL, ",", &context);
-        PROF_CHK_EXPR_ACTION(errno == ERANGE, return PROFILING_FAILED,
+        PROF_CHK_EXPR_ACTION(
+            errno == ERANGE, return PROFILING_FAILED,
             "The value of errno %d is abnormal after method Strtok is executed in cycling.", errno);
         eventNum++;
     }
     config->eventNum = (uint32_t)eventNum;
-    MSPROF_LOGI("PackPmuParam, event_num=%u, events=%s",
-        config->eventNum, paramConfig->aicEvents);
+    MSPROF_LOGI("PackPmuParam, event_num=%u, events=%s", config->eventNum, paramConfig->aicEvents);
     return PROFILING_SUCCESS;
 }
 
 static int32_t ChannelStart(ICollectionJob* attr, uint32_t devId, uint32_t channelId)
 {
     MSPROF_LOGI("Begin to start channel profiling, profDeviceId=%u, profChannel=%u", devId, channelId);
-    TagNanoStarsProfileConfig config = {
-        .tag = 0,
-        .eventNum = 0,
-        .event = {0}
-    };
+    TagNanoStarsProfileConfig config = {.tag = 0, .eventNum = 0, .event = {0}};
     int32_t ret = PackPmuParam(attr, &config);
     if (ret == PROFILING_SUCCESS) {
         struct prof_start_para profStartPara;
@@ -119,7 +116,6 @@ int32_t NanoJobUninit(ICollectionJob* attr)
         MSPROF_LOGE("Nano stars job uninit, prof_stop failed.");
     }
     (void)ChannelMgrDestroyReader(attr->devId, attr->channelId);
-    MSPROF_LOGI("stop profiling success, device id: %u, channel id: %u",
-        attr->devId, attr->channelId);
+    MSPROF_LOGI("stop profiling success, device id: %u, channel id: %u", attr->devId, attr->channelId);
     return ret;
 }

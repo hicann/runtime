@@ -20,22 +20,22 @@ extern "C" {
 #endif
 
 typedef enum {
-    CHIP_MINI                      = 0,
-    CHIP_CLOUD                     = 1,
-    CHIP_MDC                       = 2,
-    CHIP_DC                        = 4,
-    CHIP_CLOUD_V2                  = 5,
-    CHIP_MINI_V3                   = 7,
-    CHIP_TINY_V1                   = 8,
-    CHIP_NANO_V1                   = 9,
-    CHIP_MDC_MINI_V3               = 10, // 11 mdc
-    CHIP_MDC_V2                    = 11, // 51 lite
+    CHIP_MINI = 0,
+    CHIP_CLOUD = 1,
+    CHIP_MDC = 2,
+    CHIP_DC = 4,
+    CHIP_CLOUD_V2 = 5,
+    CHIP_MINI_V3 = 7,
+    CHIP_TINY_V1 = 8,
+    CHIP_NANO_V1 = 9,
+    CHIP_MDC_MINI_V3 = 10, // 11 mdc
+    CHIP_MDC_V2 = 11,      // 51 lite
     CHIP_END
 } PlatformType;
 
 typedef struct PlatformInterface {
     bool (*FeatureIsSupport)(const PlatformFeature feature);
-    bool (*GetPmuEvents)(const PlatformFeature feature, CHAR *events, size_t eventsLen);
+    bool (*GetPmuEvents)(const PlatformFeature feature, CHAR* events, size_t eventsLen);
     CHAR* (*GetDefaultMetrics)(void);
     uint32_t (*GetAicFreq)();
     uint32_t (*GetAivFreq)();
@@ -58,10 +58,10 @@ typedef struct {
     uint64_t bitSwitch;
 } PlatformBitMap;
 
-typedef void (*CreatePlatformFunc)(PlatformInterface *);
-PlatformFeature TransformFeature(const CHAR *sw);
-bool GetCommonPmuEvents(const PlatformFeature feature, CHAR *events, size_t eventsLen);
-bool CheckBitFeature(const uint64_t dataConfig, PlatformInterface *interface);
+typedef void (*CreatePlatformFunc)(PlatformInterface*);
+PlatformFeature TransformFeature(const CHAR* sw);
+bool GetCommonPmuEvents(const PlatformFeature feature, CHAR* events, size_t eventsLen);
+bool CheckBitFeature(const uint64_t dataConfig, PlatformInterface* interface);
 
 #ifdef __cplusplus
 }
