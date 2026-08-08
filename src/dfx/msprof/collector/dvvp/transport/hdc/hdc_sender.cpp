@@ -18,14 +18,11 @@ namespace dvvp {
 namespace transport {
 using namespace analysis::dvvp::common::error;
 
-HdcSender::HdcSender()
-    : engineName_(""), chunkPool_(nullptr), sender_(nullptr), transport_(nullptr) {}
+HdcSender::HdcSender() : engineName_(""), chunkPool_(nullptr), sender_(nullptr), transport_(nullptr) {}
 
-HdcSender::~HdcSender()
-{
-}
+HdcSender::~HdcSender() {}
 
-int32_t HdcSender::Init(SHARED_PTR_ALIA<ITransport> transport, const std::string &engineName)
+int32_t HdcSender::Init(SHARED_PTR_ALIA<ITransport> transport, const std::string& engineName)
 {
     if (transport == nullptr || engineName.empty()) {
         MSPROF_LOGE("[Init]transport is null");
@@ -39,10 +36,10 @@ int32_t HdcSender::Init(SHARED_PTR_ALIA<ITransport> transport, const std::string
         MSPROF_LOGE("Init sender pool failed");
         return PROFILING_FAILED;
     }
-    const int32_t chunkPoolNum = 64; // 64 : pool num
+    const int32_t chunkPoolNum = 64;         // 64 : pool num
     const int32_t chunkPoolSize = 64 * 1024; // 64 * 1024 chunk size:64K
-    MSVP_MAKE_SHARED2(chunkPool_, analysis::dvvp::common::memory::ChunkPool, chunkPoolNum,
-        chunkPoolSize, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED2(
+        chunkPool_, analysis::dvvp::common::memory::ChunkPool, chunkPoolNum, chunkPoolSize, return PROFILING_FAILED);
     if (!(chunkPool_->Init())) {
         MSPROF_LOGE("Init chunk pool failed.");
         SenderPool::instance()->Uninit();
@@ -61,7 +58,7 @@ int32_t HdcSender::Init(SHARED_PTR_ALIA<ITransport> transport, const std::string
     return PROFILING_SUCCESS;
 }
 
-int32_t HdcSender::SendData(const std::string &jobCtx, const struct DataChunk &data)
+int32_t HdcSender::SendData(const std::string& jobCtx, const struct DataChunk& data)
 {
     if (sender_ == nullptr) {
         MSPROF_LOGE("[HdcSender::SendData]sender_ is null");
@@ -99,6 +96,6 @@ void HdcSender::Uninit() const
     SenderPool::instance()->Uninit();
     MSPROF_LOGI("[HdcSender]Uninit end.");
 }
-}
-}
-}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

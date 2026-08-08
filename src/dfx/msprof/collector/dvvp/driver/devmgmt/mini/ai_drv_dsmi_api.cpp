@@ -18,7 +18,7 @@ namespace Driver {
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::error;
 
-int32_t DrvGetAicoreInfo(int32_t deviceId, int64_t &freq)
+int32_t DrvGetAicoreInfo(int32_t deviceId, int64_t& freq)
 {
     if (deviceId < 0) {
         return PROFILING_FAILED;
@@ -33,4 +33,6 @@ std::string DrvGeAicFrq(int32_t deviceId)
     const std::string defAicFrq = Analysis::Dvvp::Common::Config::ConfigManager::instance()->GetAicDefFrequency();
     return defAicFrq;
 }
-}}}
+} // namespace Driver
+} // namespace Dvvp
+} // namespace Analysis

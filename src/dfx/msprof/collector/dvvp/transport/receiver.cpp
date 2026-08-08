@@ -22,13 +22,9 @@ using namespace Analysis::Dvvp::MsprofErrMgr;
 
 Receiver::Receiver(SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> transport)
     : dispatcher_(nullptr), transport_(transport), devId_(-1), devIdOnHost_(-1), inited_(false)
-{
-}
+{}
 
-Receiver::~Receiver()
-{
-    Uinit();
-}
+Receiver::~Receiver() { Uinit(); }
 
 int32_t Receiver::Init(int32_t devId)
 {
@@ -76,10 +72,7 @@ int32_t Receiver::Uinit()
     return PROFILING_SUCCESS;
 }
 
-void Receiver::SetDevIdOnHost(int32_t devIdOnHost)
-{
-    devIdOnHost_ = devIdOnHost;
-}
+void Receiver::SetDevIdOnHost(int32_t devIdOnHost) { devIdOnHost_ = devIdOnHost; }
 
 int32_t Receiver::SendMessage(SHARED_PTR_ALIA<google::protobuf::Message> message)
 {
@@ -88,19 +81,15 @@ int32_t Receiver::SendMessage(SHARED_PTR_ALIA<google::protobuf::Message> message
     if (message != nullptr) {
         std::string encoded = analysis::dvvp::message::EncodeMessage(message);
         ret = transport_->SendBuffer(encoded.c_str(), encoded.size());
-        MSPROF_LOGI("DeviceOnHost(%d) Send message size %zu ret %d",
-            devIdOnHost_, encoded.size(), ret);
+        MSPROF_LOGI("DeviceOnHost(%d) Send message size %zu ret %d", devIdOnHost_, encoded.size(), ret);
     }
 
     return ret;
 }
 
-const SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> Receiver::GetTransport()
-{
-    return transport_;
-}
+const SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> Receiver::GetTransport() { return transport_; }
 
-void Receiver::Run(const struct error_message::Context &errorContext)
+void Receiver::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("Receiver begin, devId:%d, devIdOnHost:%d", devId_, devIdOnHost_);
@@ -129,6 +118,6 @@ void Receiver::Run(const struct error_message::Context &errorContext)
     } while (!IsQuit());
     MSPROF_LOGI("Receiver end, devId:%d, devIdOnHost:%d", devId_, devIdOnHost_);
 }
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

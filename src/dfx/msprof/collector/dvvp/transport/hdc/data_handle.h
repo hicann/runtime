@@ -32,7 +32,7 @@ class HdcTransportDataHandle : public IDataHandleCB,
 public:
     HdcTransportDataHandle();
     ~HdcTransportDataHandle() override;
-    static std::map<const google::protobuf::Descriptor *, PFMessagehandler> CreateHandlerMap();
+    static std::map<const google::protobuf::Descriptor*, PFMessagehandler> CreateHandlerMap();
     static int32_t ReceiveStreamData(CONST_VOID_PTR data, uint32_t dataLen);
 
 private:
@@ -40,12 +40,12 @@ private:
     static int32_t ProcessDataChannelFinish(SHARED_PTR_ALIA<google::protobuf::Message> message);
     static int32_t ProcessFinishJobRspMsg(SHARED_PTR_ALIA<google::protobuf::Message> message);
     static int32_t ProcessResponseMsg(SHARED_PTR_ALIA<google::protobuf::Message> message);
-    static int32_t ProcessRspCommon(const std::string &jobId, const std::string &encoded);
+    static int32_t ProcessRspCommon(const std::string& jobId, const std::string& encoded);
 
 private:
-    static std::map<const google::protobuf::Descriptor *, PFMessagehandler> handlerMap_;
+    static std::map<const google::protobuf::Descriptor*, PFMessagehandler> handlerMap_;
 };
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis
 #endif

@@ -22,7 +22,7 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::Adx;
-int32_t SendBufferPacket(HelperTransport &transport, VOID_PTR buffer, int32_t length)
+int32_t SendBufferPacket(HelperTransport& transport, VOID_PTR buffer, int32_t length)
 {
     const int32_t retLengthError = -1;
     if (buffer == nullptr) {
@@ -33,8 +33,9 @@ int32_t SendBufferPacket(HelperTransport &transport, VOID_PTR buffer, int32_t le
     if (transport.SendAdxBuffer(buffer, length) != PROFILING_SUCCESS) {
         return retLengthError;
     }
-    MSPROF_LOGD("SendBufferPacket head=%x, version=%x.", (static_cast<ProfHalTlv *>(buffer))->head,
-                (static_cast<ProfHalTlv *>(buffer))->version);
+    MSPROF_LOGD(
+        "SendBufferPacket head=%x, version=%x.", (static_cast<ProfHalTlv*>(buffer))->head,
+        (static_cast<ProfHalTlv*>(buffer))->version);
     const uint64_t endRawTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     if (transport.perfCount_ != nullptr) {
         transport.perfCount_->UpdatePerfInfo(startRawTime, endRawTime, length);
@@ -43,22 +44,16 @@ int32_t SendBufferPacket(HelperTransport &transport, VOID_PTR buffer, int32_t le
 }
 
 HelperTransport::HelperTransport(HDC_SESSION session, bool isClient, HDC_CLIENT client)
-    : session_(session),
-      isClient_(isClient),
-      client_(client),
-      isLastChunk_(false)
-{
-}
+    : session_(session), isClient_(isClient), client_(client), isLastChunk_(false)
+{}
 
-HelperTransport::~HelperTransport()
-{
-    Destroy();
-}
+HelperTransport::~HelperTransport() { Destroy(); }
 
 int32_t HelperTransport::SendAdxBuffer(VOID_PTR out, int32_t outLen) const
 {
-    MSPROF_LOGD("SendAdxBuffer head=%x, version=%x.", (static_cast<ProfHalTlv *>(out))->head,
-                (static_cast<ProfHalTlv *>(out))->version);
+    MSPROF_LOGD(
+        "SendAdxBuffer head=%x, version=%x.", (static_cast<ProfHalTlv*>(out))->head,
+        (static_cast<ProfHalTlv*>(out))->version);
     int32_t ret = Analysis::Dvvp::Adx::AdxHdcWrite(session_, out, outLen);
     if (ret != IDE_DAEMON_OK) {
         MSPROF_LOGE("hdc write failed, outLen=%d, err=%d.", outLen, ret);
@@ -67,8 +62,8 @@ int32_t HelperTransport::SendAdxBuffer(VOID_PTR out, int32_t outLen) const
     return PROFILING_SUCCESS;
 }
 
-int32_t HelperTransport::PackingData(ProfHalStruct &package,
-                                     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
+int32_t HelperTransport::PackingData(
+    ProfHalStruct& package, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     std::string pid = std::to_string(Utils::GetPid());
     // copy int32_t info into ProfHalStruct
@@ -79,18 +74,20 @@ int32_t HelperTransport::PackingData(ProfHalStruct &package,
     (void)memset_s(package.fileName, HAL_FILENAME_MAX_LEN + 1, 0, HAL_FILENAME_MAX_LEN + 1);
     (void)memset_s(package.extraInfo, HAL_EXTRAINFO_MAX_LEN + 1, 0, HAL_EXTRAINFO_MAX_LEN + 1);
     (void)memset_s(package.id, HAL_ID_MAX_LEN + 1, 0, HAL_ID_MAX_LEN + 1);
-    auto err = memcpy_s(package.fileName, HAL_FILENAME_MAX_LEN, fileChunkReq->fileName.c_str(),
-                        fileChunkReq->fileName.length());
+    auto err = memcpy_s(
+        package.fileName, HAL_FILENAME_MAX_LEN, fileChunkReq->fileName.c_str(), fileChunkReq->fileName.length());
     if (err != EOK) {
-        MSPROF_LOGE("[Helper PackingData]memcpy_s fileName failed, ret is %d, fileName is %s.", err,
-                    fileChunkReq->fileName.c_str());
+        MSPROF_LOGE(
+            "[Helper PackingData]memcpy_s fileName failed, ret is %d, fileName is %s.", err,
+            fileChunkReq->fileName.c_str());
         return err;
     }
-    err = memcpy_s(package.extraInfo, HAL_EXTRAINFO_MAX_LEN, fileChunkReq->extraInfo.c_str(),
-                   fileChunkReq->extraInfo.length());
+    err = memcpy_s(
+        package.extraInfo, HAL_EXTRAINFO_MAX_LEN, fileChunkReq->extraInfo.c_str(), fileChunkReq->extraInfo.length());
     if (err != EOK) {
-        MSPROF_LOGE("[Helper PackingData]memcpy_s extraInfo failed, ret is %d, extraInfo is %s.", err,
-                    fileChunkReq->extraInfo.c_str());
+        MSPROF_LOGE(
+            "[Helper PackingData]memcpy_s extraInfo failed, ret is %d, extraInfo is %s.", err,
+            fileChunkReq->extraInfo.c_str());
         return err;
     }
     err = memcpy_s(package.id, HAL_ID_MAX_LEN, pid.c_str(), pid.length());
@@ -99,13 +96,14 @@ int32_t HelperTransport::PackingData(ProfHalStruct &package,
         return err;
     }
     MSPROF_LOGD("package.chunkModule:%d, package.offset:%08x.", package.chunkModule, package.offset);
-    MSPROF_LOGD("package.fileName:%s, package.extraInfo:%s, package.id:%s.", package.fileName, package.extraInfo,
-                package.id);
+    MSPROF_LOGD(
+        "package.fileName:%s, package.extraInfo:%s, package.id:%s.", package.fileName, package.extraInfo, package.id);
     return EOK;
 }
 
-int32_t HelperTransport::SendPackingData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-                                         ProfHalStruct &package, SHARED_PTR_ALIA<ProfHalTlv> tlvbuff)
+int32_t HelperTransport::SendPackingData(
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, ProfHalStruct& package,
+    SHARED_PTR_ALIA<ProfHalTlv> tlvbuff)
 {
     uint32_t stackLength = fileChunkReq->chunkSize;
     uint32_t pos = 0;
@@ -124,8 +122,9 @@ int32_t HelperTransport::SendPackingData(SHARED_PTR_ALIA<analysis::dvvp::Profile
         stackLength = (stackLength > copyLen) ? (stackLength - copyLen) : 0;
         FillLastChunk(stackLength, package);
         package.chunkSize = copyLen;
-        MSPROF_LOGD("[Helper SendBuffer]package.chunkSize:%u bytes, copyLen:%u bytes, package.isLastChunk:%d",
-                    package.chunkSize, copyLen, package.isLastChunk);
+        MSPROF_LOGD(
+            "[Helper SendBuffer]package.chunkSize:%u bytes, copyLen:%u bytes, package.isLastChunk:%d",
+            package.chunkSize, copyLen, package.isLastChunk);
 
         // filling tlvbuff finished
         tlvbuff->len = static_cast<uint32_t>(sizeof(ProfHalStruct));
@@ -135,7 +134,7 @@ int32_t HelperTransport::SendPackingData(SHARED_PTR_ALIA<analysis::dvvp::Profile
             return PROFILING_FAILED;
         }
         const int32_t tlvbufflen = static_cast<int32_t>(sizeof(ProfHalTlv));
-        if (SendBufferPacket(*this, Utils::ReinterpretCast<void *>(tlvbuff.get()), tlvbufflen) != tlvbufflen) {
+        if (SendBufferPacket(*this, Utils::ReinterpretCast<void*>(tlvbuff.get()), tlvbufflen) != tlvbufflen) {
             MSPROF_LOGE("[Helper SendBuffer] sendbuffer profiling data failed.");
             return PROFILING_FAILED;
         }
@@ -166,7 +165,7 @@ int32_t HelperTransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileC
     return SendPackingData(fileChunkReq, package, tlvbuff);
 }
 
-void HelperTransport::FillLastChunk(uint32_t stackLength, ProfHalStruct &package) const
+void HelperTransport::FillLastChunk(uint32_t stackLength, ProfHalStruct& package) const
 {
     if (stackLength == 0) {
         package.isLastChunk = isLastChunk_;
@@ -175,13 +174,13 @@ void HelperTransport::FillLastChunk(uint32_t stackLength, ProfHalStruct &package
     }
 }
 
-int32_t HelperTransport::ReceivePacket(ProfHalTlv **packet) const
+int32_t HelperTransport::ReceivePacket(ProfHalTlv** packet) const
 {
     if (packet == nullptr) {
         return PROFILING_FAILED;
     }
 
-    void *buffer = nullptr;
+    void* buffer = nullptr;
     int32_t bufLen = 0;
 
     const int32_t ret = Analysis::Dvvp::Adx::AdxHdcRead(session_, &buffer, &bufLen);
@@ -190,11 +189,11 @@ int32_t HelperTransport::ReceivePacket(ProfHalTlv **packet) const
         return PROFILING_FAILED;
     }
 
-    *packet = static_cast<ProfHalTlv *>(buffer);
+    *packet = static_cast<ProfHalTlv*>(buffer);
     return bufLen;
 }
 
-void HelperTransport::FreePacket(ProfHalTlv *packet) const
+void HelperTransport::FreePacket(ProfHalTlv* packet) const
 {
     IdeBuffT buf = static_cast<IdeBuffT>(packet);
     Analysis::Dvvp::Adx::AdxIdeFreePacket(buf);
@@ -206,10 +205,7 @@ int32_t HelperTransport::SendBuffer(CONST_VOID_PTR /* buffer */, int32_t /* leng
     return PROFILING_SUCCESS;
 }
 
-void HelperTransport::WriteDone()
-{
-    MSPROF_LOGI("No need to do anything in helper mode.");
-}
+void HelperTransport::WriteDone() { MSPROF_LOGI("No need to do anything in helper mode."); }
 
 int32_t HelperTransport::CloseSession()
 {
@@ -238,8 +234,8 @@ void HelperTransport::Destroy()
     }
 }
 
-SHARED_PTR_ALIA<HelperTransport> HelperTransportFactory::CreateHdcServerTransport(int32_t logicDevId,
-                                                                                  HDC_SERVER server) const
+SHARED_PTR_ALIA<HelperTransport> HelperTransportFactory::CreateHdcServerTransport(
+    int32_t logicDevId, HDC_SERVER server) const
 {
     MSPROF_LOGI("CreateHelperServerTransport begin, logicDevId:%d", logicDevId);
     if (server == nullptr) {
@@ -260,8 +256,8 @@ SHARED_PTR_ALIA<HelperTransport> HelperTransportFactory::CreateHdcServerTranspor
     return hdcTransport;
 }
 
-SHARED_PTR_ALIA<ITransport> HelperTransportFactory::CreateHdcClientTransport(int32_t hostPid, int32_t devId,
-                                                                             HDC_CLIENT client) const
+SHARED_PTR_ALIA<ITransport> HelperTransportFactory::CreateHdcClientTransport(
+    int32_t hostPid, int32_t devId, HDC_CLIENT client) const
 {
     MSPROF_LOGI("Helper createHdcClientTransport, hostPid:%d, devId:%d", hostPid, devId);
     HDC_SESSION session = nullptr;
@@ -283,6 +279,6 @@ SHARED_PTR_ALIA<ITransport> HelperTransportFactory::CreateHdcClientTransport(int
     }
     return hdcTransport;
 }
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

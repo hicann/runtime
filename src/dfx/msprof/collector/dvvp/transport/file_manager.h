@@ -21,15 +21,15 @@ class FileManager : public analysis::dvvp::common::singleton::Singleton<FileMana
 public:
     FileManager();
     ~FileManager() override;
-    int32_t InitFileTransport(uint32_t deviceId, const char *flushDir, const char *storageLimit);
+    int32_t InitFileTransport(uint32_t deviceId, const char* flushDir, const char* storageLimit);
     int32_t SendBuffer(ProfFileChunk* chunk);
 
 private:
     std::map<uint32_t, SHARED_PTR_ALIA<ITransport>> transportMap_;
     std::mutex fileMtx_;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

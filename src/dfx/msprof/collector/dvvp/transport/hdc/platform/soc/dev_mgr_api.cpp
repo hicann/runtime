@@ -13,8 +13,7 @@
 namespace analysis {
 namespace dvvp {
 namespace transport {
-void LoadDevMgrAPI(DevMgrAPI &devMgrAPI /* = nullptr */)
-{
-    UNUSED(devMgrAPI);
-}
-}}}
+void LoadDevMgrAPI(DevMgrAPI& devMgrAPI /* = nullptr */) { UNUSED(devMgrAPI); }
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

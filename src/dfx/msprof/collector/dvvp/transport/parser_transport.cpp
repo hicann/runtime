@@ -26,10 +26,7 @@ ParserTransport::ParserTransport(SHARED_PTR_ALIA<Uploader> uploader)
     MSVP_MAKE_SHARED1(analyzer_, Analysis::Dvvp::Analyze::Analyzer, uploader, return);
 }
 
-ParserTransport::~ParserTransport()
-{
-    CloseSession();
-}
+ParserTransport::~ParserTransport() { CloseSession(); }
 
 int32_t ParserTransport::SendBuffer(CONST_VOID_PTR /* buffer */, int32_t /* length */)
 {
@@ -67,7 +64,7 @@ void ParserTransport::WriteDone()
     }
 }
 
-void ParserTransport::SetDevId(const std::string &devIdStr)
+void ParserTransport::SetDevId(const std::string& devIdStr)
 {
     MSPROF_LOGI("ParserTransport SetDeviceId");
     if (analyzer_ != nullptr) {
@@ -102,7 +99,7 @@ int32_t PipeTransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
 int32_t PipeTransport::SendBuffer(CONST_VOID_PTR buffer, int32_t length)
 {
     int32_t sent = 0;
-    const unsigned long pipeFullSleepUs = 1000;  // sleep 1ms and retry
+    const unsigned long pipeFullSleepUs = 1000; // sleep 1ms and retry
     uint32_t modelId = 0;
     int32_t ret = Analysis::Dvvp::Analyze::OpDescParser::GetModelId(buffer, length, 0, &modelId);
     if (ret != ACL_SUCCESS) {
@@ -139,7 +136,7 @@ int32_t PipeTransport::SendBuffer(CONST_VOID_PTR buffer, int32_t length)
             break;
         }
         if (errno == EAGAIN) {
-            if (count++ % 1000 == 0) {  // record log every 1000 times
+            if (count++ % 1000 == 0) { // record log every 1000 times
                 MSPROF_LOGW("Pipe is full, count: %d", count);
             }
             analysis::dvvp::common::utils::Utils::UsleepInterupt(pipeFullSleepUs);
@@ -150,10 +147,7 @@ int32_t PipeTransport::SendBuffer(CONST_VOID_PTR buffer, int32_t length)
     }
     return sent;
 }
-int32_t PipeTransport::CloseSession()
-{
-    return PROFILING_SUCCESS;
-}
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+int32_t PipeTransport::CloseSession() { return PROFILING_SUCCESS; }
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

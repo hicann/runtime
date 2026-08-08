@@ -51,6 +51,8 @@ public:
     SHARED_PTR_ALIA<AdxTransport> CreateHdcClientTransport(int32_t hostPid, int32_t devId, HDC_CLIENT client) const;
 };
 
-int32_t SendBufferWithFixedLength(AdxTransport &transport, CONST_VOID_PTR buffer, int32_t length);
-}}}
+int32_t SendBufferWithFixedLength(AdxTransport& transport, CONST_VOID_PTR buffer, int32_t length);
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 #endif

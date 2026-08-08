@@ -34,17 +34,20 @@ public:
     bool IsInit() const;
     void SaveHashData(int32_t devId);
     void SaveNewHashData(bool isLastChunk);
-    int32_t GetHashKeys(std::string &saveHashData);
-    std::string &GetHashInfo(uint64_t hashId);
-    uint64_t GenHashId(const std::string &hashInfo);
-    uint64_t GenHashId(const std::string &module, CONST_CHAR_PTR data, uint32_t dataLen);
+    int32_t GetHashKeys(std::string& saveHashData);
+    std::string& GetHashInfo(uint64_t hashId);
+    uint64_t GenHashId(const std::string& hashInfo);
+    uint64_t GenHashId(const std::string& module, CONST_CHAR_PTR data, uint32_t dataLen);
 
 private:
-    uint64_t DoubleHash(const std::string &data) const;
-    void FillPbData(const std::string &module, int32_t upDevId, const std::string &saveHashData,
-                    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk, bool isLastChunk) const;
-    void FillPbData(int32_t upDevId, const std::string &saveHashData,
-                    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk, bool isLastChunk) const;
+    uint64_t DoubleHash(const std::string& data) const;
+    void FillPbData(
+        const std::string& module, int32_t upDevId, const std::string& saveHashData,
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk, bool isLastChunk) const;
+    void FillPbData(
+        int32_t upDevId, const std::string& saveHashData, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk,
+        bool isLastChunk) const;
+
 private:
     bool inited_;
     std::mutex initMutex_;
@@ -52,14 +55,14 @@ private:
     size_t readIndex_;
     bool readStatus_;
     std::vector<std::pair<uint64_t, std::string>> hashVector_;
-    std::unordered_map<std::string, uint64_t> hashInfoMap_;   // <hashInfo, hashId>
-    std::unordered_map<uint64_t, std::string> hashIdMap_;   // <hashId, hashInfo>
+    std::unordered_map<std::string, uint64_t> hashInfoMap_;                 // <hashInfo, hashId>
+    std::unordered_map<uint64_t, std::string> hashIdMap_;                   // <hashId, hashInfo>
     std::map<std::string, std::shared_ptr<std::mutex>> hashMapMutex_;       // <module, hashMutex>
     std::map<std::string, std::map<std::string, uint64_t>> hashDataKeyMap_; // <module, <data, hashId>>
     std::map<std::string, std::map<uint64_t, std::string>> hashIdKeyMap_;   // <module, <hashId, data>>
 };
 
-}
-}
-}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 #endif

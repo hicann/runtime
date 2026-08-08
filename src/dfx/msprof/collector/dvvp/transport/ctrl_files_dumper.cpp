@@ -63,8 +63,8 @@ int CtrlFilesDumper::DumpCollectionTimeInfo(uint32_t deviceId, bool isHostProfil
     return PROFILING_SUCCESS;
 }
 
-void CtrlFilesDumper::GeneratorCollectionTimeInfoName(std::string &fileName, const std::string &deviceId,
-                                                      bool isHostProfiling, bool isStart)
+void CtrlFilesDumper::GeneratorCollectionTimeInfoName(
+    std::string& fileName, const std::string& deviceId, bool isHostProfiling, bool isStart)
 {
     std::string prefix = isStart ? "start_info" : "end_info";
     fileName.append(prefix);

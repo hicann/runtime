@@ -24,9 +24,9 @@ public:
     virtual ~HdcSender();
 
 public:
-    int32_t Init(SHARED_PTR_ALIA<ITransport> transport, const std::string &engineName);
+    int32_t Init(SHARED_PTR_ALIA<ITransport> transport, const std::string& engineName);
     void Uninit() const;
-    int32_t SendData(const std::string &jobCtx, const struct DataChunk &data);
+    int32_t SendData(const std::string& jobCtx, const struct DataChunk& data);
     void Flush() const;
 
 private:
@@ -35,8 +35,8 @@ private:
     SHARED_PTR_ALIA<Sender> sender_;
     SHARED_PTR_ALIA<ITransport> transport_;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
-#endif  // ANALYSIS_DVVP_COMMON_HDC_SENDER_H
+#endif // ANALYSIS_DVVP_COMMON_HDC_SENDER_H

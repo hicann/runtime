@@ -17,7 +17,9 @@ namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
 class Analyzer;
-}}}
+}
+} // namespace Dvvp
+} // namespace Analysis
 
 namespace analysis {
 namespace dvvp {
@@ -34,7 +36,7 @@ public:
     int32_t SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) override;
     int32_t CloseSession() override;
     void WriteDone() override;
-    void SetDevId(const std::string &devIdStr) override;
+    void SetDevId(const std::string& devIdStr) override;
     void SetType(const uint32_t type) override;
 
 private:
@@ -49,8 +51,8 @@ public:
     int32_t CloseSession() override;
     void WriteDone() override {}
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

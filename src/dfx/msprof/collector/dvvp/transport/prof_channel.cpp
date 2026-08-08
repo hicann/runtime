@@ -35,15 +35,15 @@ using namespace Msprofiler::Parser;
 
 namespace {
 const std::set<AI_DRV_CHANNEL> SUPPORT_FLUSH_CHANNEL_SET = {
-    PROF_CHANNEL_AI_CORE, PROF_CHANNEL_HWTS_LOG, PROF_CHANNEL_TS_FW, PROF_CHANNEL_L2_CACHE,
-    PROF_CHANNEL_STARS_SOC_LOG, PROF_CHANNEL_FFTS_PROFILE_TASK, PROF_CHANNEL_NPU_APP_MEM, PROF_CHANNEL_NPU_MEM,
-    PROF_CHANNEL_AISTACK_MEM, PROF_CHANNEL_AICPU, PROF_CHANNEL_CUS_AICPU, PROF_CHANNEL_ADPROF
-};
+    PROF_CHANNEL_AI_CORE,     PROF_CHANNEL_HWTS_LOG,      PROF_CHANNEL_TS_FW,
+    PROF_CHANNEL_L2_CACHE,    PROF_CHANNEL_STARS_SOC_LOG, PROF_CHANNEL_FFTS_PROFILE_TASK,
+    PROF_CHANNEL_NPU_APP_MEM, PROF_CHANNEL_NPU_MEM,       PROF_CHANNEL_AISTACK_MEM,
+    PROF_CHANNEL_AICPU,       PROF_CHANNEL_CUS_AICPU,     PROF_CHANNEL_ADPROF};
 }
 
-ChannelReader::ChannelReader(int32_t deviceId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId,
-                             const std::string &relativeFileName,
-                             SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx)
+ChannelReader::ChannelReader(
+    int32_t deviceId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId, const std::string& relativeFileName,
+    SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx)
     : deviceId_(deviceId),
       channelId_(channelId),
       relativeFileName_(relativeFileName),
@@ -94,12 +94,13 @@ int32_t ChannelReader::Init()
 
 int32_t ChannelReader::Uinit()
 {
-    MSPROF_EVENT("device id %d, channel: %d, total_size_channel: %lld bytes, warmup_size: %lld bytes, "
-                 "file:%s, job_id:%s, channelReadCnt:%lld, readExecCnt: %u, dispatchInCnt: %u, "
-                 "dispatchOutCnt: %u, uploadDataMaxDuration: %llu.",
-                 deviceId_, static_cast<int32_t>(channelId_), totalSize_, warmupSize_, relativeFileName_.c_str(),
-                 jobCtx_->job_id.c_str(), drvChannelReadCont_, readExecCnt_, totalSchedulingInCnt_,
-                 totalSchedulingOutCnt_, uploadDataMaxDuration_);
+    MSPROF_EVENT(
+        "device id %d, channel: %d, total_size_channel: %lld bytes, warmup_size: %lld bytes, "
+        "file:%s, job_id:%s, channelReadCnt:%lld, readExecCnt: %u, dispatchInCnt: %u, "
+        "dispatchOutCnt: %u, uploadDataMaxDuration: %llu.",
+        deviceId_, static_cast<int32_t>(channelId_), totalSize_, warmupSize_, relativeFileName_.c_str(),
+        jobCtx_->job_id.c_str(), drvChannelReadCont_, readExecCnt_, totalSchedulingInCnt_, totalSchedulingOutCnt_,
+        uploadDataMaxDuration_);
     std::string tag =
         "[" + jobCtx_->job_id + " : " + std::to_string(deviceId_) + " : " + std::to_string(channelId_) + "]";
     readSpeedPerfCount_->OutPerfInfo("ChannelReaderSpeed" + tag);
@@ -112,15 +113,9 @@ int32_t ChannelReader::Uinit()
     return PROFILING_SUCCESS;
 }
 
-void ChannelReader::SetChannelStopped()
-{
-    isChannelStopped_ = true;
-}
+void ChannelReader::SetChannelStopped() { isChannelStopped_ = true; }
 
-bool ChannelReader::GetSchedulingStatus()
-{
-    return (schedulingTime_.load() >= MAX_SCHEDULING_TIME);
-}
+bool ChannelReader::GetSchedulingStatus() { return (schedulingTime_.load() >= MAX_SCHEDULING_TIME); }
 
 void ChannelReader::RegisterBufferThread(SHARED_PTR_ALIA<ChannelBuffer> channelBuffer)
 {
@@ -156,13 +151,13 @@ int32_t ChannelReader::Execute()
         spaceSize_ = bufSize_ - dataSize_;
         const uint64_t startRawTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
         guard.lock();
-        currLen = DrvChannelRead(deviceId_, channelId_,
-                                 reinterpret_cast<UNSIGNED_CHAR_PTR>(const_cast<CHAR_PTR>(buffer_.data())) + dataSize_,
-                                 spaceSize_);
+        currLen = DrvChannelRead(
+            deviceId_, channelId_,
+            reinterpret_cast<UNSIGNED_CHAR_PTR>(const_cast<CHAR_PTR>(buffer_.data())) + dataSize_, spaceSize_);
         CheckIfSendFlush(currLen);
         guard.unlock();
         const uint64_t endRawTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
-        readSpeedPerfCount_->UpdatePerfInfo(startRawTime, endRawTime, currLen);  // update the PerfCount info
+        readSpeedPerfCount_->UpdatePerfInfo(startRawTime, endRawTime, currLen); // update the PerfCount info
         if (lastEndRawTime_ != 0) {
             overallReadSpeedPerfCount_->UpdatePerfInfo(lastEndRawTime_, endRawTime, currLen);
         }
@@ -185,10 +180,7 @@ int32_t ChannelReader::Execute()
     return PROFILING_SUCCESS;
 }
 
-size_t ChannelReader::HashId()
-{
-    return hashId_;
-}
+size_t ChannelReader::HashId() { return hashId_; }
 
 void ChannelReader::UploadData()
 {
@@ -268,7 +260,7 @@ void ChannelReader::CheckIfSendFlush(const size_t curLen)
         return;
     }
     if (needWait_) {
-        if (flushCurSize_ > UINT_MAX - curLen) {  // Check for overflow, if curLen is very large,Sure to send finish
+        if (flushCurSize_ > UINT_MAX - curLen) { // Check for overflow, if curLen is very large,Sure to send finish
             SendFlushFinished();
         } else {
             flushCurSize_ += curLen;
@@ -294,13 +286,9 @@ ChannelPoll::ChannelPoll()
       pollSleepCount_(0),
       dispatchCount_(0),
       dispatchChannelCount_(0)
-{
-}
+{}
 
-ChannelPoll::~ChannelPoll()
-{
-    Stop();
-}
+ChannelPoll::~ChannelPoll() { Stop(); }
 
 int32_t ChannelPoll::AddReader(uint32_t devId, uint32_t channelId, SHARED_PTR_ALIA<ChannelReader> reader)
 {
@@ -408,9 +396,9 @@ int32_t ChannelPoll::Start()
     }
     MSPROF_LOGI("ChannelPoll set thread pool num: %u", threadPoolNum);
 
-    MSVP_MAKE_SHARED2(threadPool_, analysis::dvvp::common::thread::ThreadPool,
-                      analysis::dvvp::common::thread::LOAD_BALANCE_METHOD::ID_MOD, threadPoolNum,
-                      return PROFILING_FAILED);
+    MSVP_MAKE_SHARED2(
+        threadPool_, analysis::dvvp::common::thread::ThreadPool,
+        analysis::dvvp::common::thread::LOAD_BALANCE_METHOD::ID_MOD, threadPoolNum, return PROFILING_FAILED);
     threadPool_->SetThreadPoolNamePrefix(MSVP_CHANNEL_POOL_NAME_PREFIX);
     threadPool_->SetThreadPoolQueueSize(CHANNELPOLL_THREAD_QUEUE_SIZE);
     isStart_ = true;
@@ -430,8 +418,9 @@ int32_t ChannelPoll::Stop()
         (void)analysis::dvvp::common::thread::Thread::Stop();
         (void)threadPool_->Stop();
         (void)threadBuffer_->Stop();
-        MSPROF_EVENT("ChannelPoll count: %d, Sleep count: %d, Dispatch count: %d, DispatchChannel count: %d",
-                     pollCount_, pollSleepCount_, dispatchCount_, dispatchChannelCount_);
+        MSPROF_EVENT(
+            "ChannelPoll count: %d, Sleep count: %d, Dispatch count: %d, DispatchChannel count: %d", pollCount_,
+            pollSleepCount_, dispatchCount_, dispatchChannelCount_);
         pollCount_ = 0;
         pollSleepCount_ = 0;
         dispatchCount_ = 0;
@@ -443,11 +432,11 @@ int32_t ChannelPoll::Stop()
     return PROFILING_SUCCESS;
 }
 
-void ChannelPoll::Run(const struct error_message::Context &errorContext)
+void ChannelPoll::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
-    constexpr uint32_t channelNum = 6;  // at most get 6 channels to read once loop
-    const int32_t defaultTimeoutSec = 1;        // at most wait for 1 seconds
+    constexpr uint32_t channelNum = 6;   // at most get 6 channels to read once loop
+    const int32_t defaultTimeoutSec = 1; // at most wait for 1 seconds
 
     struct prof_poll_info channels[channelNum];
     (void)memset_s(channels, channelNum * sizeof(struct prof_poll_info), 0, channelNum * sizeof(struct prof_poll_info));
@@ -464,7 +453,7 @@ void ChannelPoll::Run(const struct error_message::Context &errorContext)
                 MSPROF_LOGI("Exit poll channel thread.");
                 break;
             } else {
-                const unsigned long sleepTimeInUs = 1000;  // 1000us
+                const unsigned long sleepTimeInUs = 1000; // 1000us
                 analysis::dvvp::common::utils::Utils::UsleepInterupt(sleepTimeInUs);
                 pollSleepCount_++;
                 continue;
@@ -473,8 +462,9 @@ void ChannelPoll::Run(const struct error_message::Context &errorContext)
 
         dispatchCount_++;
         for (int32_t ii = 0; ii < ret; ++ii) {
-            MSPROF_LOGD("DispatchChannel devId: %d, channelID: %d, ret: %d", channels[ii].device_id,
-                        channels[ii].channel_id, ret);
+            MSPROF_LOGD(
+                "DispatchChannel devId: %d, channelID: %d, ret: %d", channels[ii].device_id, channels[ii].channel_id,
+                ret);
             if (JsonParser::instance()->GetJsonChannelReporterSwitch(channels[ii].channel_id)) {
                 (void)DispatchChannel(channels[ii].device_id, channels[ii].channel_id);
                 dispatchChannelCount_++;
@@ -483,13 +473,9 @@ void ChannelPoll::Run(const struct error_message::Context &errorContext)
     }
 }
 
-ChannelBuffer::ChannelBuffer() : isStart_(false), bufferPrepareCount_(0), bufferPopCount_(0)
-{
-}
+ChannelBuffer::ChannelBuffer() : isStart_(false), bufferPrepareCount_(0), bufferPopCount_(0) {}
 
-ChannelBuffer::~ChannelBuffer()
-{
-}
+ChannelBuffer::~ChannelBuffer() {}
 
 int32_t ChannelBuffer::Start()
 {
@@ -504,8 +490,7 @@ int32_t ChannelBuffer::Stop()
     if (isStart_) {
         isStart_ = false;
         (void)analysis::dvvp::common::thread::Thread::Stop();
-        MSPROF_EVENT("ChannelBuffer prepare count: %d, pop count: %d",
-                     bufferPrepareCount_, bufferPopCount_);
+        MSPROF_EVENT("ChannelBuffer prepare count: %d, pop count: %d", bufferPrepareCount_, bufferPopCount_);
         bufferPrepareCount_ = 0;
         bufferPopCount_ = 0;
     }
@@ -513,7 +498,7 @@ int32_t ChannelBuffer::Stop()
     return PROFILING_SUCCESS;
 }
 
-void ChannelBuffer::Run(const struct error_message::Context &errorContext)
+void ChannelBuffer::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     const uint8_t maxChanelBufferSize = 8;
@@ -535,7 +520,7 @@ void ChannelBuffer::Run(const struct error_message::Context &errorContext)
     }
 }
 
-bool ChannelBuffer::SwapChannelBuffer(std::string &buffer)
+bool ChannelBuffer::SwapChannelBuffer(std::string& buffer)
 {
     std::unique_lock<std::mutex> guard(preQueueMutex_);
     if (preBufferQueue_.empty()) {
@@ -546,6 +531,6 @@ bool ChannelBuffer::SwapChannelBuffer(std::string &buffer)
     bufferPopCount_++;
     return true;
 }
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

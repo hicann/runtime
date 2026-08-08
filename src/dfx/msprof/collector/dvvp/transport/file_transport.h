@@ -22,7 +22,7 @@ namespace transport {
 class FILETransport : public ITransport {
 public:
     // using the existing session
-    explicit FILETransport(const std::string &storageDir, const std::string &storageLimit);
+    explicit FILETransport(const std::string& storageDir, const std::string& storageLimit);
     ~FILETransport() override;
 
 public:
@@ -36,11 +36,12 @@ public:
     void RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr* ptr) override;
 
 private:
-    int32_t UpdateFileName(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, const std::string &devId) const;
+    int32_t UpdateFileName(
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, const std::string& devId) const;
     int32_t ParseTlvChunk(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     int32_t ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void AddHashData(const std::string& input) const;
-    int32_t SaveChunk(const char *data, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const;
+    int32_t SaveChunk(const char* data, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const;
 
 private:
     SHARED_PTR_ALIA<FileSlice> fileSlice_;
@@ -59,11 +60,11 @@ public:
     virtual ~FileTransportFactory() {}
 
 public:
-    SHARED_PTR_ALIA<ITransport> CreateFileTransport(const std::string &storageDir, const std::string &storageLimit,
-                                                    bool needSlice) const;
+    SHARED_PTR_ALIA<ITransport> CreateFileTransport(
+        const std::string& storageDir, const std::string& storageLimit, bool needSlice) const;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

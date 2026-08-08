@@ -30,10 +30,8 @@ using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-DeviceTransport::DeviceTransport(HDC_CLIENT client,
-                                 const std::string &devId,
-                                 const std::string &jobId,
-                                 const std::string &mode)
+DeviceTransport::DeviceTransport(
+    HDC_CLIENT client, const std::string& devId, const std::string& jobId, const std::string& mode)
     : client_(client),
       devIndexId_(0),
       devIndexIdStr_(devId),
@@ -45,8 +43,7 @@ DeviceTransport::DeviceTransport(HDC_CLIENT client,
       isClosed_(false),
       dataTran_(nullptr),
       ctrlTran_(nullptr)
-{
-}
+{}
 
 DeviceTransport::~DeviceTransport()
 {
@@ -54,17 +51,11 @@ DeviceTransport::~DeviceTransport()
     Join();
 }
 
-bool DeviceTransport::IsInitialized()
-{
-    return (dataInitialized_ && ctrlInitialized_);
-}
+bool DeviceTransport::IsInitialized() { return (dataInitialized_ && ctrlInitialized_); }
 
-void DeviceTransport::SetTimeOut(uint32_t timeout)
-{
-    timeout_ = timeout;
-}
+void DeviceTransport::SetTimeOut(uint32_t timeout) { timeout_ = timeout; }
 
-int32_t DeviceTransport::HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::message::StatusInfo &status)
+int32_t DeviceTransport::HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::message::StatusInfo& status)
 {
     int32_t ret = PROFILING_FAILED;
     do {
@@ -90,8 +81,9 @@ int32_t DeviceTransport::HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::messag
             MSPROF_LOGE("Device(%s) message from string failed", devIndexIdStr_.c_str());
             break;
         }
-        FUNRET_CHECK_EXPR_ACTION_LOGW(status.status != analysis::dvvp::message::SUCCESS, break,
-            "Device(%s) message status abnormal, info: %s", devIndexIdStr_.c_str(), status.info.c_str());
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            status.status != analysis::dvvp::message::SUCCESS, break, "Device(%s) message status abnormal, info: %s",
+            devIndexIdStr_.c_str(), status.info.c_str());
         ret = PROFILING_SUCCESS;
     } while (0);
     ctrlTran_->DestroyPacket(packet);
@@ -111,11 +103,11 @@ int32_t DeviceTransport::HandleShake(SHARED_PTR_ALIA<google::protobuf::Message> 
     int32_t ret = PROFILING_FAILED;
     std::string encoded = analysis::dvvp::message::EncodeMessage(message);
     int32_t handshakeCount = 0;
-    const int32_t handshakeRetryTimes = 5;    // try 5 times to handshake
-    const unsigned long handshakeRetryInterval = 100000;   // sleep 100000us before retry
+    const int32_t handshakeRetryTimes = 5;               // try 5 times to handshake
+    const unsigned long handshakeRetryInterval = 100000; // sleep 100000us before retry
     SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> tran;
     do {
-        if (handshakeCount > 0) {   // no sleep at first time
+        if (handshakeCount > 0) { // no sleep at first time
             analysis::dvvp::common::utils::Utils::UsleepInterupt(handshakeRetryInterval);
         }
         handshakeCount++;
@@ -148,8 +140,9 @@ int32_t DeviceTransport::HandleShake(SHARED_PTR_ALIA<google::protobuf::Message> 
 
         analysis::dvvp::message::StatusInfo status;
         ret = HandlePacket(packet, status);
-        FUNRET_CHECK_EXPR_ACTION_LOGW(ret != PROFILING_SUCCESS, continue,
-            "Device(%s) create channel handle packet exception.", devIndexIdStr_.c_str());
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            ret != PROFILING_SUCCESS, continue, "Device(%s) create channel handle packet exception.",
+            devIndexIdStr_.c_str());
 
         break;
     } while (handshakeCount < handshakeRetryTimes && ctrlShake);
@@ -170,8 +163,9 @@ int32_t DeviceTransport::Init()
         MSPROF_LOGE("[DeviceTransport::Init]devId %s is not valid!", devIndexIdStr_.c_str());
         return PROFILING_FAILED;
     }
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devIndexId_, devIndexIdStr_), return PROFILING_FAILED,
-        "devIndexIdStr_ %s is invalid", devIndexIdStr_.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToInt32(devIndexId_, devIndexIdStr_), return PROFILING_FAILED, "devIndexIdStr_ %s is invalid",
+        devIndexIdStr_.c_str());
     MSPROF_LOGI("Try to shake hand with Device %d", devIndexId_);
     ctrlMessage->set_devid(devIndexId_);
     ctrlMessage->set_jobid(jobId_);
@@ -207,12 +201,9 @@ int32_t DeviceTransport::Init()
     return ret;
 }
 
-int32_t DeviceTransport::RecvDataPacket(TLV_REQ_2PTR packet)
-{
-    return dataTran_->RecvPacket(packet, timeout_);
-}
+int32_t DeviceTransport::RecvDataPacket(TLV_REQ_2PTR packet) { return dataTran_->RecvPacket(packet, timeout_); }
 
-void DeviceTransport::Run(const struct error_message::Context &errorContext)
+void DeviceTransport::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     if (!dataInitialized_) {
@@ -277,7 +268,7 @@ void DeviceTransport::Uinit()
             success return PROFILING_SUCCESS
             failed return PROFILING_FAILED
  */
-int32_t DeviceTransport::SendMsgAndRecvResponse(const std::string &msg, TLV_REQ_2PTR packet)
+int32_t DeviceTransport::SendMsgAndRecvResponse(const std::string& msg, TLV_REQ_2PTR packet)
 {
     int32_t ret = PROFILING_FAILED;
     do {
@@ -376,8 +367,7 @@ SHARED_PTR_ALIA<DeviceTransport> DevTransMgr::GetDevTransport(std::string jobId,
 {
     std::lock_guard<std::mutex> lk(devTarnsMtx_);
     if (devTransMap_.find(jobId) != devTransMap_.end() &&
-        devTransMap_[jobId].find(devId) != devTransMap_[jobId].end() &&
-        devTransMap_[jobId][devId]->IsInitialized()) {
+        devTransMap_[jobId].find(devId) != devTransMap_[jobId].end() && devTransMap_[jobId][devId]->IsInitialized()) {
         return devTransMap_[jobId][devId];
     }
 
@@ -423,6 +413,6 @@ int32_t DevTransMgr::UnInit()
 
     return PROFILING_SUCCESS;
 }
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

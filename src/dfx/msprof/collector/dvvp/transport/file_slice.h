@@ -30,29 +30,32 @@ constexpr int64_t STARS_RECORD_ALIGN_BYTES = 64;
 
 class FileSlice {
 public:
-    FileSlice(int32_t sliceFileMaxKByte, const std::string &storageDir, const std::string &storageLimit);
+    FileSlice(int32_t sliceFileMaxKByte, const std::string& storageDir, const std::string& storageLimit);
     ~FileSlice();
 
 public:
     int32_t Init(bool needSlice = true);
     bool FileSliceFlush();
-    int32_t SaveDataToLocalFiles(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-        const std::string &storageDir);
+    int32_t SaveDataToLocalFiles(
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, const std::string& storageDir);
 
 private:
-    int32_t FileSliceFlushByJobID(const std::string &jobIDRelative, const std::string &devID);
-    bool CreateDoneFile(const std::string &absolutePath, const std::string &fileSize,
-                        const std::string &startTime, const std::string &endTime, const std::string &timeKey);
-    std::string GetSliceKey(const std::string &dir, std::string &fileName);
-    int32_t SetChunkTime(const std::string &key, uint64_t startTime, uint64_t endTime);
-    int32_t WriteToLocalFiles(const std::string &key, CONST_CHAR_PTR data, int32_t dataLen, int32_t offset, bool isLastChunk, std::string &fileName);
-    int32_t WriteDataToFile(const std::string &key, CONST_CHAR_PTR data, int32_t dataLen, int32_t offset);
-    int32_t WriteStarsSliceAligned(const std::string &key, CONST_CHAR_PTR data, int32_t dataLen,
-        bool isLastChunk, std::string &fileName);
-    int32_t HandleFileCompletion(const std::string &key, const std::string &fileName, bool isLastChunk);
-    int32_t CheckDirAndMessage(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-        const std::string &storageDir) const;
-    int32_t WriteCtrlDataToFile(const std::string &absolutePath, const std::string &data, int32_t dataLen);
+    int32_t FileSliceFlushByJobID(const std::string& jobIDRelative, const std::string& devID);
+    bool CreateDoneFile(
+        const std::string& absolutePath, const std::string& fileSize, const std::string& startTime,
+        const std::string& endTime, const std::string& timeKey);
+    std::string GetSliceKey(const std::string& dir, std::string& fileName);
+    int32_t SetChunkTime(const std::string& key, uint64_t startTime, uint64_t endTime);
+    int32_t WriteToLocalFiles(
+        const std::string& key, CONST_CHAR_PTR data, int32_t dataLen, int32_t offset, bool isLastChunk,
+        std::string& fileName);
+    int32_t WriteDataToFile(const std::string& key, CONST_CHAR_PTR data, int32_t dataLen, int32_t offset);
+    int32_t WriteStarsSliceAligned(
+        const std::string& key, CONST_CHAR_PTR data, int32_t dataLen, bool isLastChunk, std::string& fileName);
+    int32_t HandleFileCompletion(const std::string& key, const std::string& fileName, bool isLastChunk);
+    int32_t CheckDirAndMessage(
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, const std::string& storageDir) const;
+    int32_t WriteCtrlDataToFile(const std::string& absolutePath, const std::string& data, int32_t dataLen);
 
 private:
     int32_t sliceFileMaxKByte_;
@@ -67,7 +70,7 @@ private:
     std::string storageLimit_;
     SHARED_PTR_ALIA<FileAgeing> fileAgeing_;
 };
-}
-}
-}
-#endif  // _ANALYSIS_DVVP_STREAMIO_COMMON_FILE_SLICE_H
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
+#endif // _ANALYSIS_DVVP_STREAMIO_COMMON_FILE_SLICE_H

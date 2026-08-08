@@ -19,7 +19,7 @@ namespace dvvp {
 namespace transport {
 class StatsTransport : public ITransport {
 public:
-    explicit StatsTransport(const std::string &path);
+    explicit StatsTransport(const std::string& path);
     ~StatsTransport() override;
 
 public:
@@ -38,10 +38,10 @@ public:
     virtual ~StatsTransportFactory() {}
 
 public:
-    SHARED_PTR_ALIA<ITransport> CreateStatsTransport(const std::string &path) const;
+    SHARED_PTR_ALIA<ITransport> CreateStatsTransport(const std::string& path) const;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

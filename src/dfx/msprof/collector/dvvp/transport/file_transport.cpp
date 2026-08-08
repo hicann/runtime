@@ -23,15 +23,17 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::utils;
 
-FILETransport::FILETransport(const std::string &storageDir, const std::string &storageLimit)
-    : fileSlice_(nullptr), storageDir_(storageDir), storageLimit_(storageLimit), needSlice_(true), stopped_(false),
-    parseStr2IdStart_(false), hashDataGenIdFuncPtr_(nullptr)
-{
-}
+FILETransport::FILETransport(const std::string& storageDir, const std::string& storageLimit)
+    : fileSlice_(nullptr),
+      storageDir_(storageDir),
+      storageLimit_(storageLimit),
+      needSlice_(true),
+      stopped_(false),
+      parseStr2IdStart_(false),
+      hashDataGenIdFuncPtr_(nullptr)
+{}
 
-FILETransport::~FILETransport()
-{
-}
+FILETransport::~FILETransport() {}
 
 int32_t FILETransport::Init()
 {
@@ -44,15 +46,9 @@ int32_t FILETransport::Init()
     return PROFILING_SUCCESS;
 }
 
-void FILETransport::SetAbility(bool needSlice)
-{
-    needSlice_ = needSlice;
-}
+void FILETransport::SetAbility(bool needSlice) { needSlice_ = needSlice; }
 
-void FILETransport::WriteDone()
-{
-    fileSlice_->FileSliceFlush();
-}
+void FILETransport::WriteDone() { fileSlice_->FileSliceFlush(); }
 
 int32_t FILETransport::SendBuffer(CONST_VOID_PTR /* buffer */, int32_t /* length */)
 {
@@ -60,15 +56,13 @@ int32_t FILETransport::SendBuffer(CONST_VOID_PTR /* buffer */, int32_t /* length
     return 0;
 }
 
-int32_t FILETransport::SendBuffer(
-    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
+int32_t FILETransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
         return PROFILING_SUCCESS;
     }
-    MSPROF_LOGD("FileChunk filename:%s, module:%d",
-        fileChunkReq->fileName.c_str(), fileChunkReq->chunkModule);
+    MSPROF_LOGD("FileChunk filename:%s, module:%d", fileChunkReq->fileName.c_str(), fileChunkReq->chunkModule);
     if (fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_DEVICE ||
         fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_MSPROF ||
         fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_MSPROF_DEVICE ||
@@ -103,13 +97,10 @@ int32_t FILETransport::SendBuffer(
     return PROFILING_SUCCESS;
 }
 
-int32_t FILETransport::CloseSession()
-{
-    return PROFILING_SUCCESS;
-}
+int32_t FILETransport::CloseSession() { return PROFILING_SUCCESS; }
 
-int32_t FILETransport::UpdateFileName(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-    const std::string &devId) const
+int32_t FILETransport::UpdateFileName(
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, const std::string& devId) const
 {
     std::string fileName = fileChunkReq->fileName;
     const size_t pos = fileName.find_last_of("/\\");
@@ -151,8 +142,8 @@ int32_t FILETransport::ParseTlvChunk(SHARED_PTR_ALIA<analysis::dvvp::ProfileFile
     fileChunk->extraInfo = fileChunkReq->extraInfo;
 
     const uint32_t structSize = sizeof(ProfTlv);
-    const char *data = fileChunkReq->chunk.data();
-    std::string &fileName = fileChunkReq->fileName;
+    const char* data = fileChunkReq->chunk.data();
+    std::string& fileName = fileChunkReq->fileName;
 
     // If there is cached data, some data in front of the chunk belongs to the previous chunk.
     if (channelBuffer_.find(fileName) != channelBuffer_.end() && channelBuffer_[fileName].size() != 0 &&
@@ -160,8 +151,9 @@ int32_t FILETransport::ParseTlvChunk(SHARED_PTR_ALIA<analysis::dvvp::ProfileFile
         const uint32_t prevDataSize = channelBuffer_[fileName].size();
         const uint32_t leftDataSize = structSize - prevDataSize;
         if (fileChunkReq->chunkSize < leftDataSize) {
-            MSPROF_LOGE("fileChunk size smaller than expected, expected minimum size %u, received size %zu",
-                leftDataSize, fileChunkReq->chunkSize);
+            MSPROF_LOGE(
+                "fileChunk size smaller than expected, expected minimum size %u, received size %zu", leftDataSize,
+                fileChunkReq->chunkSize);
             return PROFILING_FAILED;
         }
         channelBuffer_[fileName].append(data, leftDataSize);
@@ -193,7 +185,8 @@ int32_t FILETransport::ParseTlvChunk(SHARED_PTR_ALIA<analysis::dvvp::ProfileFile
     return PROFILING_SUCCESS;
 }
 
-void FILETransport::AddHashData(const std::string& input) const{
+void FILETransport::AddHashData(const std::string& input) const
+{
     if (hashDataGenIdFuncPtr_ == nullptr) {
         MSPROF_LOGE("hashDataGenIdFuncPtr_ is null");
         return;
@@ -208,8 +201,7 @@ void FILETransport::AddHashData(const std::string& input) const{
             item.erase(pos + 1);
         }
         uint64_t uid = hashDataGenIdFuncPtr_(item);
-        MSPROF_LOGD("Add str2id:%s(size:%zuB) uid:%llu from adprof into hash data ",
-            item.c_str(), item.size(), uid);
+        MSPROF_LOGD("Add str2id:%s(size:%zuB) uid:%llu from adprof into hash data ", item.c_str(), item.size(), uid);
         cnt += 1;
         totalSize += item.size();
     }
@@ -217,17 +209,16 @@ void FILETransport::AddHashData(const std::string& input) const{
 }
 
 // 取一条 MsprofAdditionalInfo.data[] 中的有效 ASCII payload (clamp 到 dataLen，剔尾部 NUL)
-std::string ExtractStructPayload(const MsprofAdditionalInfo &info)
+std::string ExtractStructPayload(const MsprofAdditionalInfo& info)
 {
     uint32_t len = std::min<uint32_t>(info.dataLen, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
-    return std::string(reinterpret_cast<const char *>(info.data), len);
+    return std::string(reinterpret_cast<const char*>(info.data), len);
 }
 
 // 在 infos[0..count) 里按 struct 顺序找首条含 mark 的 struct。
 // 返回 struct 索引；命中时 offAfterMark 出参被设为 mark 末尾在该 struct data[] 内的偏移
 // (用于剥掉 mark 自身)。未命中返回 count。
-size_t LocateStr2IdMark(const MsprofAdditionalInfo *infos, size_t count, const std::string &mark,
-    size_t &offAfterMark)
+size_t LocateStr2IdMark(const MsprofAdditionalInfo* infos, size_t count, const std::string& mark, size_t& offAfterMark)
 {
     for (size_t i = 0; i < count; ++i) {
         std::string payload = ExtractStructPayload(infos[i]);
@@ -242,7 +233,7 @@ size_t LocateStr2IdMark(const MsprofAdditionalInfo *infos, size_t count, const s
 
 // 判断 [data, data+len) 是否全部是可打印 ASCII (0x20-0x7E)。aicpu data 残留通常含 NUL/0x5A5A
 // magic/任意高位字节，不会通过此校验，由此把误混入 hash 流的 aicpu 二进制段筛掉。
-bool IsPrintableAsciiPayload(const char *data, size_t len)
+bool IsPrintableAsciiPayload(const char* data, size_t len)
 {
     for (size_t i = 0; i < len; ++i) {
         auto uc = static_cast<unsigned char>(data[i]);
@@ -257,8 +248,7 @@ bool IsPrintableAsciiPayload(const char *data, size_t len)
 // 起。每条 struct 取出的 payload 必须非空且全可打印 ASCII，否则告警并跳过 (防御 producer 侧并发
 // 把 aicpu data 混进 hash 流的场景)。跨 struct 边界补 STR2ID_DELIMITER：producer 切新 struct
 // 时不写 ','，consumer 补回来，否则下游按 ',' 切分会把前后 struct 的 key 粘成一个。
-std::string ConcatHashPayload(const MsprofAdditionalInfo *infos, size_t startIdx, size_t count,
-    size_t startOff)
+std::string ConcatHashPayload(const MsprofAdditionalInfo* infos, size_t startIdx, size_t count, size_t startOff)
 {
     std::string after;
     after.reserve((count - startIdx) * MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
@@ -269,7 +259,7 @@ std::string ConcatHashPayload(const MsprofAdditionalInfo *infos, size_t startIdx
             MSPROF_LOGW("Str2id struct[%zu] payload empty after off=%zu, skip", i, off);
             break;
         }
-        const char *segData = payload.data() + off;
+        const char* segData = payload.data() + off;
         size_t segLen = payload.size() - off;
         if (!IsPrintableAsciiPayload(segData, segLen)) {
             MSPROF_LOGW("Str2id struct[%zu] payload non-ascii (len=%zuB), skip", i, segLen);
@@ -301,14 +291,13 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
         MSPROF_LOGW("Unable to parse fileChunkReq");
         return parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED;
     }
-    auto &chunk = fileChunkReq->chunk;
+    auto& chunk = fileChunkReq->chunk;
     if (chunk.empty() || chunk.size() % infoSize != 0) {
-        MSPROF_LOGW("Str2id chunk size:%zuB invalid (must be non-zero multiple of %zuB)",
-            chunk.size(), infoSize);
+        MSPROF_LOGW("Str2id chunk size:%zuB invalid (must be non-zero multiple of %zuB)", chunk.size(), infoSize);
         return parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED;
     }
 
-    const auto *infos = reinterpret_cast<const MsprofAdditionalInfo *>(chunk.data());
+    const auto* infos = reinterpret_cast<const MsprofAdditionalInfo*>(chunk.data());
     const size_t structCount = chunk.size() / infoSize;
 
     // 定位 hash payload 起点 (struct idx + struct 内 data[] off)：
@@ -319,13 +308,12 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
     if (!parseStr2IdStart_) {
         hashStartIdx = LocateStr2IdMark(infos, structCount, STR2ID_MARK, hashStartOff);
         if (hashStartIdx == structCount) {
-            MSPROF_LOGD("Not found drv str2id mark, total chunk size:%zuB struct count:%zu",
-                chunk.size(), structCount);
+            MSPROF_LOGD("Not found drv str2id mark, total chunk size:%zuB struct count:%zu", chunk.size(), structCount);
             return PROFILING_FAILED;
         }
         parseStr2IdStart_ = true;
-        MSPROF_LOGI("Found drv str2id mark at struct[%zu](total:%zu) off[%zu]",
-            hashStartIdx, structCount, hashStartOff);
+        MSPROF_LOGI(
+            "Found drv str2id mark at struct[%zu](total:%zu) off[%zu]", hashStartIdx, structCount, hashStartOff);
     }
 
     AddHashData(ConcatHashPayload(infos, hashStartIdx, structCount, hashStartOff));
@@ -344,12 +332,12 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
  * @param [in] fileChunk: ProfileFileChunk type shared_ptr
  * @return 0:SUCCESS, !0:FAILED
  */
-int32_t FILETransport::SaveChunk(const char *data, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const
+int32_t FILETransport::SaveChunk(const char* data, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const
 {
-    FUNRET_CHECK_EXPR_ACTION_LOGW(data == nullptr, return PROFILING_SUCCESS,
-        "Unable to parse struct data, pointer is null");
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        data == nullptr, return PROFILING_SUCCESS, "Unable to parse struct data, pointer is null");
 
-    const ProfTlv *packet = reinterpret_cast<const ProfTlv *>(data);
+    const ProfTlv* packet = reinterpret_cast<const ProfTlv*>(data);
     if (packet->head != TLV_HEAD) {
         MSPROF_LOGE("Check tlv head failed");
         return PROFILING_FAILED;
@@ -360,7 +348,7 @@ int32_t FILETransport::SaveChunk(const char *data, SHARED_PTR_ALIA<analysis::dvv
         return PROFILING_FAILED;
     }
 
-    const ProfTlvValue *tlvValue = reinterpret_cast<const ProfTlvValue *>(packet->value);
+    const ProfTlvValue* tlvValue = reinterpret_cast<const ProfTlvValue*>(packet->value);
 
     if (tlvValue->chunkSize > TLV_VALUE_CHUNK_MAX_LEN) {
         MSPROF_LOGE("Invalid chunkSize: %zu, max: %u", tlvValue->chunkSize, TLV_VALUE_CHUNK_MAX_LEN);
@@ -389,12 +377,12 @@ int32_t FILETransport::SaveChunk(const char *data, SHARED_PTR_ALIA<analysis::dvv
 }
 
 SHARED_PTR_ALIA<ITransport> FileTransportFactory::CreateFileTransport(
-    const std::string &storageDir, const std::string &storageLimit, bool needSlice) const
+    const std::string& storageDir, const std::string& storageLimit, bool needSlice) const
 {
     SHARED_PTR_ALIA<FILETransport> fileTransport;
     MSVP_MAKE_SHARED2(fileTransport, FILETransport, storageDir, storageLimit, return fileTransport);
-    MSVP_MAKE_SHARED2(fileTransport->perfCount_, PerfCount, FILE_PERFCOUNT_MODULE_NAME,
-        TRANSPORT_PRI_FREQ, return nullptr);
+    MSVP_MAKE_SHARED2(
+        fileTransport->perfCount_, PerfCount, FILE_PERFCOUNT_MODULE_NAME, TRANSPORT_PRI_FREQ, return nullptr);
     fileTransport->SetAbility(needSlice);
 
     if (fileTransport->Init() != PROFILING_SUCCESS) {
@@ -404,15 +392,9 @@ SHARED_PTR_ALIA<ITransport> FileTransportFactory::CreateFileTransport(
     return fileTransport;
 }
 
-void FILETransport::SetStopped()
-{
-    stopped_ = true;
-}
+void FILETransport::SetStopped() { stopped_ = true; }
 
-void FILETransport::RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr *ptr)
-{
-    hashDataGenIdFuncPtr_ = ptr;
-}
+void FILETransport::RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr* ptr) { hashDataGenIdFuncPtr_ = ptr; }
 
 } // namespace transport
 } // namespace dvvp

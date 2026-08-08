@@ -31,8 +31,8 @@ public:
     void RegisterRawDataCallback(MsprofRawDataCallback callback) override;
     void UnRegisterRawDataCallback() override;
     bool IsRegisterRawDataCallback() override;
-    int32_t ConvertFileChunkToRawData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-        MsprofRawData& rawData) const;
+    int32_t ConvertFileChunkToRawData(
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, MsprofRawData& rawData) const;
 
 private:
     MsprofRawDataCallback profRawDataCallback_;
@@ -47,8 +47,8 @@ public:
     SHARED_PTR_ALIA<ITransport> CreateMsptiPipeTransport() const;
 };
 
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

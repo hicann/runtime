@@ -18,14 +18,14 @@ namespace {
 // 从 dlopen 打开的 libascend_hal.so 句柄解析符号。通用服务器场景（句柄为空）或符号缺失时
 // 返回 nullptr，由调用方按 not support / error 降级。
 template <class T>
-inline T LoadDrvApi(void *handle, const char *name)
+inline T LoadDrvApi(void* handle, const char* name)
 {
     if (handle == nullptr) {
         return nullptr;
     }
     return reinterpret_cast<T>(OsalDlsym(handle, name));
 }
-}  // namespace
+} // namespace
 
 MsprofDrvApi::~MsprofDrvApi()
 {
@@ -53,12 +53,9 @@ void MsprofDrvApi::LoadApi()
     halEschedQueryInfo_ = LoadDrvApi<HalEschedQueryInfoFunc>(ascendHalLibHandle_, "halEschedQueryInfo");
     halEschedSubmitEvent_ = LoadDrvApi<HalEschedSubmitEventFunc>(ascendHalLibHandle_, "halEschedSubmitEvent");
     halProfSampleRegister_ = LoadDrvApi<HalProfSampleRegisterFunc>(ascendHalLibHandle_, "halProfSampleRegister");
-    halProfSampleRegisterEx_ =
-        LoadDrvApi<HalProfSampleRegisterExFunc>(ascendHalLibHandle_, "halProfSampleRegisterEx");
-    halProfQueryAvailBufLen_ =
-        LoadDrvApi<HalProfQueryAvailBufLenFunc>(ascendHalLibHandle_, "halProfQueryAvailBufLen");
-    halProfSampleDataReport_ =
-        LoadDrvApi<HalProfSampleDataReportFunc>(ascendHalLibHandle_, "halProfSampleDataReport");
+    halProfSampleRegisterEx_ = LoadDrvApi<HalProfSampleRegisterExFunc>(ascendHalLibHandle_, "halProfSampleRegisterEx");
+    halProfQueryAvailBufLen_ = LoadDrvApi<HalProfQueryAvailBufLenFunc>(ascendHalLibHandle_, "halProfQueryAvailBufLen");
+    halProfSampleDataReport_ = LoadDrvApi<HalProfSampleDataReportFunc>(ascendHalLibHandle_, "halProfSampleDataReport");
     drvHdcClientCreate_ = LoadDrvApi<DrvHdcClientCreateFunc>(ascendHalLibHandle_, "drvHdcClientCreate");
     drvHdcClientDestroy_ = LoadDrvApi<DrvHdcClientDestroyFunc>(ascendHalLibHandle_, "drvHdcClientDestroy");
     drvHdcServerCreate_ = LoadDrvApi<DrvHdcServerCreateFunc>(ascendHalLibHandle_, "drvHdcServerCreate");
@@ -67,8 +64,7 @@ void MsprofDrvApi::LoadApi()
     drvHdcSetSessionReference_ =
         LoadDrvApi<DrvHdcSetSessionReferenceFunc>(ascendHalLibHandle_, "drvHdcSetSessionReference");
     drvHdcSessionConnect_ = LoadDrvApi<DrvHdcSessionConnectFunc>(ascendHalLibHandle_, "drvHdcSessionConnect");
-    halHdcSessionConnectEx_ =
-        LoadDrvApi<HalHdcSessionConnectExFunc>(ascendHalLibHandle_, "halHdcSessionConnectEx");
+    halHdcSessionConnectEx_ = LoadDrvApi<HalHdcSessionConnectExFunc>(ascendHalLibHandle_, "halHdcSessionConnectEx");
     drvHdcSessionClose_ = LoadDrvApi<DrvHdcSessionCloseFunc>(ascendHalLibHandle_, "drvHdcSessionClose");
     drvHdcGetCapacity_ = LoadDrvApi<DrvHdcGetCapacityFunc>(ascendHalLibHandle_, "drvHdcGetCapacity");
     drvHdcAllocMsg_ = LoadDrvApi<DrvHdcAllocMsgFunc>(ascendHalLibHandle_, "drvHdcAllocMsg");
@@ -81,8 +77,7 @@ void MsprofDrvApi::LoadApi()
     halHdcGetSessionAttr_ = LoadDrvApi<HalHdcGetSessionAttrFunc>(ascendHalLibHandle_, "halHdcGetSessionAttr");
     halEschedAttachDevice_ = LoadDrvApi<HalEschedAttachDeviceFunc>(ascendHalLibHandle_, "halEschedAttachDevice");
     halEschedDettachDevice_ = LoadDrvApi<HalEschedDettachDeviceFunc>(ascendHalLibHandle_, "halEschedDettachDevice");
-    halEschedSubscribeEvent_ =
-        LoadDrvApi<HalEschedSubscribeEventFunc>(ascendHalLibHandle_, "halEschedSubscribeEvent");
+    halEschedSubscribeEvent_ = LoadDrvApi<HalEschedSubscribeEventFunc>(ascendHalLibHandle_, "halEschedSubscribeEvent");
     halQueryDevpid_ = LoadDrvApi<HalQueryDevpidFunc>(ascendHalLibHandle_, "halQueryDevpid");
     halEschedWaitEvent_ = LoadDrvApi<HalEschedWaitEventFunc>(ascendHalLibHandle_, "halEschedWaitEvent");
 }
@@ -96,9 +91,10 @@ void MsprofDrvApi::EnsureInit()
             // 仍继续 LoadApi：符号可能已由进程内其它已加载模块提供（全局符号表回退），
             // 若最终仍解析不到，对应包装方法按 not support / error 降级。
             // OsalDlerror() 在无错误记录时可能返回 nullptr（POSIX dlerror 语义），对 %s 做空指针保护。
-            const char *dlErrMsg = OsalDlerror();
-            MSPROF_EVENT("Unable to open %s, running as general server scenario. dlopen info: %s",
-                MSPROF_ASCEND_HAL_LIB, (dlErrMsg != nullptr) ? dlErrMsg : "unknown");
+            const char* dlErrMsg = OsalDlerror();
+            MSPROF_EVENT(
+                "Unable to open %s, running as general server scenario. dlopen info: %s", MSPROF_ASCEND_HAL_LIB,
+                (dlErrMsg != nullptr) ? dlErrMsg : "unknown");
         }
         LoadApi();
     });
@@ -110,7 +106,7 @@ bool MsprofDrvApi::IsDrvLibLoaded()
     return ascendHalLibHandle_ != nullptr;
 }
 
-drvError_t MsprofDrvApi::drvGetDevNum(uint32_t *numDev)
+drvError_t MsprofDrvApi::drvGetDevNum(uint32_t* numDev)
 {
     EnsureInit();
     if (drvGetDevNum_ == nullptr) {
@@ -119,7 +115,7 @@ drvError_t MsprofDrvApi::drvGetDevNum(uint32_t *numDev)
     return drvGetDevNum_(numDev);
 }
 
-drvError_t MsprofDrvApi::drvGetDevIDs(uint32_t *devices, uint32_t len)
+drvError_t MsprofDrvApi::drvGetDevIDs(uint32_t* devices, uint32_t len)
 {
     EnsureInit();
     if (drvGetDevIDs_ == nullptr) {
@@ -128,7 +124,7 @@ drvError_t MsprofDrvApi::drvGetDevIDs(uint32_t *devices, uint32_t len)
     return drvGetDevIDs_(devices, len);
 }
 
-drvError_t MsprofDrvApi::drvGetPlatformInfo(uint32_t *info)
+drvError_t MsprofDrvApi::drvGetPlatformInfo(uint32_t* info)
 {
     EnsureInit();
     if (drvGetPlatformInfo_ == nullptr) {
@@ -137,7 +133,7 @@ drvError_t MsprofDrvApi::drvGetPlatformInfo(uint32_t *info)
     return drvGetPlatformInfo_(info);
 }
 
-drvError_t MsprofDrvApi::drvDeviceStatus(uint32_t devId, drvStatus_t *status)
+drvError_t MsprofDrvApi::drvDeviceStatus(uint32_t devId, drvStatus_t* status)
 {
     EnsureInit();
     if (drvDeviceStatus_ == nullptr) {
@@ -146,7 +142,7 @@ drvError_t MsprofDrvApi::drvDeviceStatus(uint32_t devId, drvStatus_t *status)
     return drvDeviceStatus_(devId, status);
 }
 
-drvError_t MsprofDrvApi::halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+drvError_t MsprofDrvApi::halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     EnsureInit();
     if (halGetDeviceInfo_ == nullptr) {
@@ -155,7 +151,7 @@ drvError_t MsprofDrvApi::halGetDeviceInfo(uint32_t devId, int32_t moduleType, in
     return halGetDeviceInfo_(devId, moduleType, infoType, value);
 }
 
-int MsprofDrvApi::ProfDrvGetChannels(unsigned int deviceId, channel_list_t *channels)
+int MsprofDrvApi::ProfDrvGetChannels(unsigned int deviceId, channel_list_t* channels)
 {
     EnsureInit();
     if (profDrvGetChannels_ == nullptr) {
@@ -164,7 +160,7 @@ int MsprofDrvApi::ProfDrvGetChannels(unsigned int deviceId, channel_list_t *chan
     return profDrvGetChannels_(deviceId, channels);
 }
 
-int MsprofDrvApi::ProfDrvStart(unsigned int deviceId, unsigned int channelId, struct prof_start_para *startPara)
+int MsprofDrvApi::ProfDrvStart(unsigned int deviceId, unsigned int channelId, struct prof_start_para* startPara)
 {
     EnsureInit();
     if (profDrvStart_ == nullptr) {
@@ -182,7 +178,7 @@ int MsprofDrvApi::ProfStop(unsigned int deviceId, unsigned int channelId)
     return profStop_(deviceId, channelId);
 }
 
-int MsprofDrvApi::ProfChannelRead(unsigned int deviceId, unsigned int channelId, char *outBuf, unsigned int bufSize)
+int MsprofDrvApi::ProfChannelRead(unsigned int deviceId, unsigned int channelId, char* outBuf, unsigned int bufSize)
 {
     EnsureInit();
     if (profChannelRead_ == nullptr) {
@@ -191,7 +187,7 @@ int MsprofDrvApi::ProfChannelRead(unsigned int deviceId, unsigned int channelId,
     return profChannelRead_(deviceId, channelId, outBuf, bufSize);
 }
 
-int MsprofDrvApi::ProfChannelPoll(struct prof_poll_info *outBuf, int num, int timeout)
+int MsprofDrvApi::ProfChannelPoll(struct prof_poll_info* outBuf, int num, int timeout)
 {
     EnsureInit();
     if (profChannelPoll_ == nullptr) {
@@ -200,7 +196,7 @@ int MsprofDrvApi::ProfChannelPoll(struct prof_poll_info *outBuf, int num, int ti
     return profChannelPoll_(outBuf, num, timeout);
 }
 
-int MsprofDrvApi::halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int *dataLen)
+int MsprofDrvApi::halProfDataFlush(unsigned int deviceId, unsigned int channelId, unsigned int* dataLen)
 {
     EnsureInit();
     if (halProfDataFlush_ == nullptr) {
@@ -210,7 +206,7 @@ int MsprofDrvApi::halProfDataFlush(unsigned int deviceId, unsigned int channelId
     return halProfDataFlush_(deviceId, channelId, dataLen);
 }
 
-drvError_t MsprofDrvApi::drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
+drvError_t MsprofDrvApi::drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t* phyId)
 {
     EnsureInit();
     if (drvDeviceGetPhyIdByIndex_ == nullptr) {
@@ -219,8 +215,8 @@ drvError_t MsprofDrvApi::drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *p
     return drvDeviceGetPhyIdByIndex_(devIndex, phyId);
 }
 
-drvError_t MsprofDrvApi::halEschedQueryInfo(unsigned int devId, ESCHED_QUERY_TYPE type,
-    struct esched_input_info *inPut, struct esched_output_info *outPut)
+drvError_t MsprofDrvApi::halEschedQueryInfo(
+    unsigned int devId, ESCHED_QUERY_TYPE type, struct esched_input_info* inPut, struct esched_output_info* outPut)
 {
     EnsureInit();
     if (halEschedQueryInfo_ == nullptr) {
@@ -229,7 +225,7 @@ drvError_t MsprofDrvApi::halEschedQueryInfo(unsigned int devId, ESCHED_QUERY_TYP
     return halEschedQueryInfo_(devId, type, inPut, outPut);
 }
 
-drvError_t MsprofDrvApi::halEschedSubmitEvent(unsigned int devId, struct event_summary *event)
+drvError_t MsprofDrvApi::halEschedSubmitEvent(unsigned int devId, struct event_summary* event)
 {
     EnsureInit();
     if (halEschedSubmitEvent_ == nullptr) {
@@ -238,8 +234,7 @@ drvError_t MsprofDrvApi::halEschedSubmitEvent(unsigned int devId, struct event_s
     return halEschedSubmitEvent_(devId, event);
 }
 
-int MsprofDrvApi::halProfSampleRegister(unsigned int devId, unsigned int chanId,
-    struct prof_sample_register_para *para)
+int MsprofDrvApi::halProfSampleRegister(unsigned int devId, unsigned int chanId, struct prof_sample_register_para* para)
 {
     EnsureInit();
     if (halProfSampleRegister_ == nullptr) {
@@ -248,8 +243,8 @@ int MsprofDrvApi::halProfSampleRegister(unsigned int devId, unsigned int chanId,
     return halProfSampleRegister_(devId, chanId, para);
 }
 
-int MsprofDrvApi::halProfSampleRegisterEx(unsigned int devId, unsigned int chanId,
-    struct prof_sample_register_para *para)
+int MsprofDrvApi::halProfSampleRegisterEx(
+    unsigned int devId, unsigned int chanId, struct prof_sample_register_para* para)
 {
     EnsureInit();
     if (halProfSampleRegisterEx_ == nullptr) {
@@ -258,7 +253,7 @@ int MsprofDrvApi::halProfSampleRegisterEx(unsigned int devId, unsigned int chanI
     return halProfSampleRegisterEx_(devId, chanId, para);
 }
 
-int MsprofDrvApi::halProfQueryAvailBufLen(unsigned int devId, unsigned int chanId, unsigned int *buffAvailLen)
+int MsprofDrvApi::halProfQueryAvailBufLen(unsigned int devId, unsigned int chanId, unsigned int* buffAvailLen)
 {
     EnsureInit();
     if (halProfQueryAvailBufLen_ == nullptr) {
@@ -267,8 +262,8 @@ int MsprofDrvApi::halProfQueryAvailBufLen(unsigned int devId, unsigned int chanI
     return halProfQueryAvailBufLen_(devId, chanId, buffAvailLen);
 }
 
-int MsprofDrvApi::halProfSampleDataReport(unsigned int devId, unsigned int chanId, unsigned int subChanId,
-    struct prof_data_report_para *para)
+int MsprofDrvApi::halProfSampleDataReport(
+    unsigned int devId, unsigned int chanId, unsigned int subChanId, struct prof_data_report_para* para)
 {
     EnsureInit();
     if (halProfSampleDataReport_ == nullptr) {
@@ -277,7 +272,7 @@ int MsprofDrvApi::halProfSampleDataReport(unsigned int devId, unsigned int chanI
     return halProfSampleDataReport_(devId, chanId, subChanId, para);
 }
 
-drvError_t MsprofDrvApi::drvHdcClientCreate(HDC_CLIENT *client, int maxSessionNum, int serviceType, int flag)
+drvError_t MsprofDrvApi::drvHdcClientCreate(HDC_CLIENT* client, int maxSessionNum, int serviceType, int flag)
 {
     EnsureInit();
     if (drvHdcClientCreate_ == nullptr) {
@@ -295,7 +290,7 @@ drvError_t MsprofDrvApi::drvHdcClientDestroy(HDC_CLIENT client)
     return drvHdcClientDestroy_(client);
 }
 
-drvError_t MsprofDrvApi::drvHdcServerCreate(int devId, int serviceType, HDC_SERVER *server)
+drvError_t MsprofDrvApi::drvHdcServerCreate(int devId, int serviceType, HDC_SERVER* server)
 {
     EnsureInit();
     if (drvHdcServerCreate_ == nullptr) {
@@ -313,7 +308,7 @@ drvError_t MsprofDrvApi::drvHdcServerDestroy(HDC_SERVER server)
     return drvHdcServerDestroy_(server);
 }
 
-drvError_t MsprofDrvApi::drvHdcSessionAccept(HDC_SERVER server, HDC_SESSION *session)
+drvError_t MsprofDrvApi::drvHdcSessionAccept(HDC_SERVER server, HDC_SESSION* session)
 {
     EnsureInit();
     if (drvHdcSessionAccept_ == nullptr) {
@@ -331,7 +326,7 @@ drvError_t MsprofDrvApi::drvHdcSetSessionReference(HDC_SESSION session)
     return drvHdcSetSessionReference_(session);
 }
 
-drvError_t MsprofDrvApi::drvHdcSessionConnect(int peerNode, int peerDevid, HDC_CLIENT client, HDC_SESSION *session)
+drvError_t MsprofDrvApi::drvHdcSessionConnect(int peerNode, int peerDevid, HDC_CLIENT client, HDC_SESSION* session)
 {
     EnsureInit();
     if (drvHdcSessionConnect_ == nullptr) {
@@ -340,8 +335,8 @@ drvError_t MsprofDrvApi::drvHdcSessionConnect(int peerNode, int peerDevid, HDC_C
     return drvHdcSessionConnect_(peerNode, peerDevid, client, session);
 }
 
-hdcError_t MsprofDrvApi::halHdcSessionConnectEx(int peerNode, int peerDevid, int peerPid, HDC_CLIENT client,
-    HDC_SESSION *session)
+hdcError_t MsprofDrvApi::halHdcSessionConnectEx(
+    int peerNode, int peerDevid, int peerPid, HDC_CLIENT client, HDC_SESSION* session)
 {
     EnsureInit();
     if (halHdcSessionConnectEx_ == nullptr) {
@@ -359,7 +354,7 @@ drvError_t MsprofDrvApi::drvHdcSessionClose(HDC_SESSION session)
     return drvHdcSessionClose_(session);
 }
 
-drvError_t MsprofDrvApi::drvHdcGetCapacity(struct drvHdcCapacity *capacity)
+drvError_t MsprofDrvApi::drvHdcGetCapacity(struct drvHdcCapacity* capacity)
 {
     EnsureInit();
     if (drvHdcGetCapacity_ == nullptr) {
@@ -368,7 +363,7 @@ drvError_t MsprofDrvApi::drvHdcGetCapacity(struct drvHdcCapacity *capacity)
     return drvHdcGetCapacity_(capacity);
 }
 
-drvError_t MsprofDrvApi::drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count)
+drvError_t MsprofDrvApi::drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count)
 {
     EnsureInit();
     if (drvHdcAllocMsg_ == nullptr) {
@@ -377,7 +372,7 @@ drvError_t MsprofDrvApi::drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **
     return drvHdcAllocMsg_(session, ppMsg, count);
 }
 
-drvError_t MsprofDrvApi::drvHdcFreeMsg(struct drvHdcMsg *msg)
+drvError_t MsprofDrvApi::drvHdcFreeMsg(struct drvHdcMsg* msg)
 {
     EnsureInit();
     if (drvHdcFreeMsg_ == nullptr) {
@@ -386,7 +381,7 @@ drvError_t MsprofDrvApi::drvHdcFreeMsg(struct drvHdcMsg *msg)
     return drvHdcFreeMsg_(msg);
 }
 
-drvError_t MsprofDrvApi::drvHdcReuseMsg(struct drvHdcMsg *msg)
+drvError_t MsprofDrvApi::drvHdcReuseMsg(struct drvHdcMsg* msg)
 {
     EnsureInit();
     if (drvHdcReuseMsg_ == nullptr) {
@@ -395,7 +390,7 @@ drvError_t MsprofDrvApi::drvHdcReuseMsg(struct drvHdcMsg *msg)
     return drvHdcReuseMsg_(msg);
 }
 
-drvError_t MsprofDrvApi::drvHdcGetMsgBuffer(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen)
+drvError_t MsprofDrvApi::drvHdcGetMsgBuffer(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen)
 {
     EnsureInit();
     if (drvHdcGetMsgBuffer_ == nullptr) {
@@ -404,7 +399,7 @@ drvError_t MsprofDrvApi::drvHdcGetMsgBuffer(struct drvHdcMsg *msg, int index, ch
     return drvHdcGetMsgBuffer_(msg, index, pBuf, pLen);
 }
 
-drvError_t MsprofDrvApi::drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
+drvError_t MsprofDrvApi::drvHdcAddMsgBuffer(struct drvHdcMsg* msg, char* pBuf, int len)
 {
     EnsureInit();
     if (drvHdcAddMsgBuffer_ == nullptr) {
@@ -413,7 +408,7 @@ drvError_t MsprofDrvApi::drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, i
     return drvHdcAddMsgBuffer_(msg, pBuf, len);
 }
 
-hdcError_t MsprofDrvApi::halHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg, UINT64 flag, UINT32 timeout)
+hdcError_t MsprofDrvApi::halHdcSend(HDC_SESSION session, struct drvHdcMsg* pMsg, UINT64 flag, UINT32 timeout)
 {
     EnsureInit();
     if (halHdcSend_ == nullptr) {
@@ -422,8 +417,8 @@ hdcError_t MsprofDrvApi::halHdcSend(HDC_SESSION session, struct drvHdcMsg *pMsg,
     return halHdcSend_(session, pMsg, flag, timeout);
 }
 
-hdcError_t MsprofDrvApi::halHdcRecv(HDC_SESSION session, struct drvHdcMsg *pMsg, int bufLen, UINT64 flag,
-    int *recvBufCount, UINT32 timeout)
+hdcError_t MsprofDrvApi::halHdcRecv(
+    HDC_SESSION session, struct drvHdcMsg* pMsg, int bufLen, UINT64 flag, int* recvBufCount, UINT32 timeout)
 {
     EnsureInit();
     if (halHdcRecv_ == nullptr) {
@@ -432,7 +427,7 @@ hdcError_t MsprofDrvApi::halHdcRecv(HDC_SESSION session, struct drvHdcMsg *pMsg,
     return halHdcRecv_(session, pMsg, bufLen, flag, recvBufCount, timeout);
 }
 
-drvError_t MsprofDrvApi::halHdcGetSessionAttr(HDC_SESSION session, int attr, int *value)
+drvError_t MsprofDrvApi::halHdcGetSessionAttr(HDC_SESSION session, int attr, int* value)
 {
     EnsureInit();
     if (halHdcGetSessionAttr_ == nullptr) {
@@ -459,8 +454,8 @@ drvError_t MsprofDrvApi::halEschedDettachDevice(unsigned int devId)
     return halEschedDettachDevice_(devId);
 }
 
-drvError_t MsprofDrvApi::halEschedSubscribeEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
-    unsigned long long eventBitmap)
+drvError_t MsprofDrvApi::halEschedSubscribeEvent(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, unsigned long long eventBitmap)
 {
     EnsureInit();
     if (halEschedSubscribeEvent_ == nullptr) {
@@ -469,7 +464,7 @@ drvError_t MsprofDrvApi::halEschedSubscribeEvent(unsigned int devId, unsigned in
     return halEschedSubscribeEvent_(devId, grpId, threadId, eventBitmap);
 }
 
-drvError_t MsprofDrvApi::halQueryDevpid(struct halQueryDevpidInfo info, pid_t *devPid)
+drvError_t MsprofDrvApi::halQueryDevpid(struct halQueryDevpidInfo info, pid_t* devPid)
 {
     EnsureInit();
     if (halQueryDevpid_ == nullptr) {
@@ -478,8 +473,8 @@ drvError_t MsprofDrvApi::halQueryDevpid(struct halQueryDevpidInfo info, pid_t *d
     return halQueryDevpid_(info, devPid);
 }
 
-drvError_t MsprofDrvApi::halEschedWaitEvent(unsigned int devId, unsigned int grpId, unsigned int threadId,
-    int timeout, struct event_info *event)
+drvError_t MsprofDrvApi::halEschedWaitEvent(
+    unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout, struct event_info* event)
 {
     EnsureInit();
     if (halEschedWaitEvent_ == nullptr) {
@@ -487,6 +482,6 @@ drvError_t MsprofDrvApi::halEschedWaitEvent(unsigned int devId, unsigned int grp
     }
     return halEschedWaitEvent_(devId, grpId, threadId, timeout, event);
 }
-}  // namespace driver
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace driver
+} // namespace dvvp
+} // namespace analysis

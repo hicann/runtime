@@ -31,8 +31,9 @@ public:
     const SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> GetTransport();
     int32_t SendMessage(SHARED_PTR_ALIA<google::protobuf::Message> message);
     void SetDevIdOnHost(int32_t devIdOnHost);
+
 protected:
-    void Run(const struct error_message::Context &errorContext);
+    void Run(const struct error_message::Context& errorContext);
 
 private:
     SHARED_PTR_ALIA<analysis::dvvp::message::MsgDispatcher> dispatcher_;
@@ -41,8 +42,8 @@ private:
     int32_t devIdOnHost_;
     volatile bool inited_;
 };
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 
 #endif

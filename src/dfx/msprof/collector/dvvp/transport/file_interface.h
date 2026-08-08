@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-int32_t ProfInitTransport(uint32_t deviceId, const char *flushDir, const char *storageLimit);
+int32_t ProfInitTransport(uint32_t deviceId, const char* flushDir, const char* storageLimit);
 int32_t ProfSendBuffer(ProfFileChunk* chunk, const char* dir);
 
 #ifdef __cplusplus

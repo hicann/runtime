@@ -10,7 +10,7 @@
 #include "file_interface.h"
 #include "file_manager.h"
 
-int32_t ProfInitTransport(uint32_t deviceId, const char *flushDir, const char *storageLimit)
+int32_t ProfInitTransport(uint32_t deviceId, const char* flushDir, const char* storageLimit)
 {
     return analysis::dvvp::transport::FileManager::instance()->InitFileTransport(deviceId, flushDir, storageLimit);
 }

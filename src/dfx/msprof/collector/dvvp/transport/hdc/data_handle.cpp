@@ -29,26 +29,19 @@ using namespace analysis::dvvp::common::config;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Msprof;
 
-std::map<const google::protobuf::Descriptor *, PFMessagehandler> HdcTransportDataHandle::handlerMap_ =
+std::map<const google::protobuf::Descriptor*, PFMessagehandler> HdcTransportDataHandle::handlerMap_ =
     HdcTransportDataHandle::CreateHandlerMap();
 
-IDataHandleCB::~IDataHandleCB()
-{
-}
+IDataHandleCB::~IDataHandleCB() {}
 
-HdcTransportDataHandle::HdcTransportDataHandle()
-{
-}
+HdcTransportDataHandle::HdcTransportDataHandle() {}
 
-HdcTransportDataHandle::~HdcTransportDataHandle()
-{
-}
+HdcTransportDataHandle::~HdcTransportDataHandle() {}
 
 int32_t HdcTransportDataHandle::ReceiveStreamData(CONST_VOID_PTR data, uint32_t dataLen)
 {
     if ((data == nullptr) || (dataLen == 0) || (dataLen > PROFILING_PACKET_MAX_LEN)) {
-        MSPROF_LOGE("receive stream data, args invalid, data=%d, dataLen=%d.",
-            ((data == nullptr) ? 0 : 1), dataLen);
+        MSPROF_LOGE("receive stream data, args invalid, data=%d, dataLen=%d.", ((data == nullptr) ? 0 : 1), dataLen);
         return PROFILING_FAILED;
     }
 
@@ -64,9 +57,9 @@ int32_t HdcTransportDataHandle::ReceiveStreamData(CONST_VOID_PTR data, uint32_t 
     return PROFILING_FAILED;
 }
 
-std::map<const google::protobuf::Descriptor *, PFMessagehandler> HdcTransportDataHandle::CreateHandlerMap()
+std::map<const google::protobuf::Descriptor*, PFMessagehandler> HdcTransportDataHandle::CreateHandlerMap()
 {
-    std::map<const google::protobuf::Descriptor *, PFMessagehandler> handlerMap;
+    std::map<const google::protobuf::Descriptor*, PFMessagehandler> handlerMap;
     handlerMap[analysis::dvvp::proto::FileChunkReq::descriptor()] = ProcessStreamFileChunk;
     handlerMap[analysis::dvvp::proto::DataChannelFinish::descriptor()] = ProcessDataChannelFinish;
     handlerMap[analysis::dvvp::proto::FinishJobRsp::descriptor()] = ProcessFinishJobRspMsg;
@@ -83,8 +76,9 @@ int32_t HdcTransportDataHandle::ProcessStreamFileChunk(SHARED_PTR_ALIA<google::p
     }
 
     std::string name = fileChunkReq->filename();
-    MSPROF_LOGD("Handle FileChunkReq, filename: %s, job_ctx: %s, datamodule: %d",
-        name.c_str(), fileChunkReq->hdr().job_ctx().c_str(), fileChunkReq->datamodule());
+    MSPROF_LOGD(
+        "Handle FileChunkReq, filename: %s, job_ctx: %s, datamodule: %d", name.c_str(),
+        fileChunkReq->hdr().job_ctx().c_str(), fileChunkReq->datamodule());
 
     analysis::dvvp::message::JobContext jobCtx;
     if (!jobCtx.FromString(fileChunkReq->hdr().job_ctx())) {
@@ -99,8 +93,9 @@ int32_t HdcTransportDataHandle::ProcessStreamFileChunk(SHARED_PTR_ALIA<google::p
             return PROFILING_FAILED;
         }
         int32_t devId = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devId, jobCtx.dev_id), return PROFILING_FAILED, 
-            "jobCtx.dev_id %s is invalid", jobCtx.dev_id.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(devId, jobCtx.dev_id), return PROFILING_FAILED, "jobCtx.dev_id %s is invalid",
+            jobCtx.dev_id.c_str());
         jobId = UploaderMgr::instance()->GetJobId(devId, analysis::dvvp::message::PROFILING_MODE_DEF);
         fileChunkReq->set_datamodule(FileChunkDataModule::PROFILING_IS_FROM_MSPROF_DEVICE);
     }
@@ -117,8 +112,9 @@ int32_t HdcTransportDataHandle::ProcessStreamFileChunk(SHARED_PTR_ALIA<google::p
 
     int32_t ret = UploaderMgr::instance()->UploadData(jobId, fileChunk);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("ProcessStreamFileChunk failed jobid:%s, datamode:%d, name:%s", jobId.c_str(),
-            fileChunk->chunkModule, name.c_str());
+        MSPROF_LOGE(
+            "ProcessStreamFileChunk failed jobid:%s, datamode:%d, name:%s", jobId.c_str(), fileChunk->chunkModule,
+            name.c_str());
     }
     return ret;
 }
@@ -146,7 +142,7 @@ int32_t HdcTransportDataHandle::ProcessDataChannelFinish(SHARED_PTR_ALIA<google:
     return PROFILING_SUCCESS;
 }
 
-int32_t HdcTransportDataHandle::ProcessRspCommon(const std::string &jobId, const std::string &encoded)
+int32_t HdcTransportDataHandle::ProcessRspCommon(const std::string& jobId, const std::string& encoded)
 {
     auto task = MsprofManager::instance()->GetTask(jobId);
     if (task == nullptr) {
@@ -155,8 +151,8 @@ int32_t HdcTransportDataHandle::ProcessRspCommon(const std::string &jobId, const
     }
 
     int32_t ret = UploaderMgr::instance()->UploadData(jobId, encoded.c_str(), encoded.size());
-    FUNRET_CHECK_EXPR_LOGW(ret != PROFILING_SUCCESS, "[RspCommon]Unable to transfer message by job_id %s",
-        jobId.c_str());
+    FUNRET_CHECK_EXPR_LOGW(
+        ret != PROFILING_SUCCESS, "[RspCommon]Unable to transfer message by job_id %s", jobId.c_str());
 
     task->StopNoWait();
 
@@ -186,7 +182,6 @@ int32_t HdcTransportDataHandle::ProcessFinishJobRspMsg(SHARED_PTR_ALIA<google::p
 
     return ProcessRspCommon(finishJobRsp->jobid(), analysis::dvvp::message::EncodeMessage(finishJobRsp));
 }
-}
-}
-}
-
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis

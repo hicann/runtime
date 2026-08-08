@@ -27,11 +27,10 @@ using PFDevMgrGetDevTrans = SHARED_PTR_ALIA<IDeviceTransport> (*)(const std::str
 class DevMgrAPI {
 public:
     DevMgrAPI()
-        : pfDevMgrInit(nullptr),
-          pfDevMgrUnInit(nullptr),
-          pfDevMgrCloseDevTrans(nullptr),
-          pfDevMgrGetDevTrans(nullptr) {}
+        : pfDevMgrInit(nullptr), pfDevMgrUnInit(nullptr), pfDevMgrCloseDevTrans(nullptr), pfDevMgrGetDevTrans(nullptr)
+    {}
     virtual ~DevMgrAPI() {}
+
 public:
     PFDevMgrInit pfDevMgrInit;
     PFDevMgrUnInit pfDevMgrUnInit;
@@ -39,15 +38,18 @@ public:
     PFDevMgrGetDevTrans pfDevMgrGetDevTrans;
 };
 
-extern void LoadDevMgrAPI(DevMgrAPI &devMgrAPI);
+extern void LoadDevMgrAPI(DevMgrAPI& devMgrAPI);
 
 class IDeviceTransport {
 public:
     virtual ~IDeviceTransport() {}
+
 public:
-    virtual int32_t SendMsgAndRecvResponse(const std::string &msg, TLV_REQ_2PTR packet) = 0;
-    virtual int32_t HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::message::StatusInfo &status) = 0;
+    virtual int32_t SendMsgAndRecvResponse(const std::string& msg, TLV_REQ_2PTR packet) = 0;
+    virtual int32_t HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::message::StatusInfo& status) = 0;
 };
-}}}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

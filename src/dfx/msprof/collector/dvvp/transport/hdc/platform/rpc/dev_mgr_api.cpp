@@ -15,7 +15,7 @@
 namespace analysis {
 namespace dvvp {
 namespace transport {
-void LoadDevMgrAPI(DevMgrAPI &devMgrAPI)
+void LoadDevMgrAPI(DevMgrAPI& devMgrAPI)
 {
     MSPROF_LOGI("LoadDevMgrAPI init begin");
     devMgrAPI.pfDevMgrInit = &DevTransMgr::InitDevTransMgr;
@@ -24,4 +24,6 @@ void LoadDevMgrAPI(DevMgrAPI &devMgrAPI)
     devMgrAPI.pfDevMgrGetDevTrans = &DevTransMgr::GetDevTrans;
     MSPROF_LOGI("LoadDevMgrAPI init end");
 }
-}}}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

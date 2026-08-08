@@ -21,11 +21,12 @@ class CtrlFilesDumper : public analysis::dvvp::common::singleton::Singleton<Ctrl
 public:
     CtrlFilesDumper() {}
     virtual ~CtrlFilesDumper() {}
-    
+
     int DumpCollectionTimeInfo(uint32_t deviceId, bool isHostProfiling, bool isStart);
+
 private:
-    void GeneratorCollectionTimeInfoName(std::string &fileName, const std::string &deviceId,
-                                         bool isHostProfiling, bool isStart);
+    void GeneratorCollectionTimeInfoName(
+        std::string& fileName, const std::string& deviceId, bool isHostProfiling, bool isStart);
 };
 
 } // namespace transport

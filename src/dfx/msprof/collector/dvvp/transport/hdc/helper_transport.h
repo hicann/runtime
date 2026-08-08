@@ -31,13 +31,14 @@ public:
     int32_t SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) override;
     void WriteDone() override;
     int32_t CloseSession() override;
-    int32_t PackingData(ProfHalStruct &package, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
-    int32_t SendPackingData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq,
-        ProfHalStruct &package, SHARED_PTR_ALIA<ProfHalTlv> tlvbuff);
-    void FillLastChunk(uint32_t stackLength, ProfHalStruct &package) const;
+    int32_t PackingData(ProfHalStruct& package, SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
+    int32_t SendPackingData(
+        SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq, ProfHalStruct& package,
+        SHARED_PTR_ALIA<ProfHalTlv> tlvbuff);
+    void FillLastChunk(uint32_t stackLength, ProfHalStruct& package) const;
     int32_t SendAdxBuffer(VOID_PTR out, int32_t outLen) const;
-    int32_t ReceivePacket(ProfHalTlv **packet) const;
-    void FreePacket(ProfHalTlv *packet) const;
+    int32_t ReceivePacket(ProfHalTlv** packet) const;
+    void FreePacket(ProfHalTlv* packet) const;
 
 private:
     void Destroy();
@@ -60,9 +61,9 @@ public:
     SHARED_PTR_ALIA<HelperTransport> CreateHdcServerTransport(int32_t logicDevId, HDC_SERVER server) const;
 };
 
-int32_t SendBufferPacket(HelperTransport &transport, VOID_PTR buffer, int32_t length);
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+int32_t SendBufferPacket(HelperTransport& transport, VOID_PTR buffer, int32_t length);
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

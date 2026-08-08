@@ -16,7 +16,7 @@
 #include "utils/utils.h"
 #include "prof_common.h"
 
-using HashDataGenIdFuncPtr = uint64_t(const std::string &hashInfo);
+using HashDataGenIdFuncPtr = uint64_t(const std::string& hashInfo);
 
 namespace analysis {
 namespace dvvp {
@@ -33,13 +33,13 @@ public:
     virtual int32_t SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) = 0;
     virtual int32_t CloseSession() = 0;
     virtual void WriteDone() = 0;
-    virtual void SetDevId(const std::string & /* devIdStr */){};
+    virtual void SetDevId(const std::string& /* devIdStr */){};
     virtual void SetType(const uint32_t /* type */){};
-    virtual void SetStopped() {};
-    virtual void RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr*) {};
-    virtual void RegisterRawDataCallback(MsprofRawDataCallback) {};
-    virtual bool IsRegisterRawDataCallback() {return false;};
-    virtual void UnRegisterRawDataCallback() {};
+    virtual void SetStopped(){};
+    virtual void RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr*){};
+    virtual void RegisterRawDataCallback(MsprofRawDataCallback){};
+    virtual bool IsRegisterRawDataCallback() { return false; };
+    virtual void UnRegisterRawDataCallback(){};
 
 public:
     SHARED_PTR_ALIA<PerfCount> perfCount_; // calculate statistics
@@ -53,8 +53,8 @@ public:
 public:
     SHARED_PTR_ALIA<ITransport> CreateIdeTransport(IDE_SESSION session);
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

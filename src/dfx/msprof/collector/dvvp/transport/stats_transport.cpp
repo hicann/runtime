@@ -17,15 +17,13 @@ namespace transport {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 
-StatsTransport::StatsTransport(const std::string &path)
+StatsTransport::StatsTransport(const std::string& path)
 {
     MSVP_MAKE_SHARED1(analyzer_, Analysis::Dvvp::Analyze::StatsAnalyzer, path, return);
     MSPROF_LOGI("StatsTransport create successfully.");
 }
 
-StatsTransport::~StatsTransport()
-{
-}
+StatsTransport::~StatsTransport() {}
 
 int32_t StatsTransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
@@ -51,17 +49,14 @@ int32_t StatsTransport::CloseSession()
     return PROFILING_SUCCESS;
 }
 
-void StatsTransport::WriteDone()
-{
-    MSPROF_LOGI("StatsTransport WriteDone");
-}
+void StatsTransport::WriteDone() { MSPROF_LOGI("StatsTransport WriteDone"); }
 
-SHARED_PTR_ALIA<ITransport> StatsTransportFactory::CreateStatsTransport(const std::string &path) const
+SHARED_PTR_ALIA<ITransport> StatsTransportFactory::CreateStatsTransport(const std::string& path) const
 {
     SHARED_PTR_ALIA<StatsTransport> transport = nullptr;
     MSVP_MAKE_SHARED1(transport, StatsTransport, path, return transport);
     return transport;
 }
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

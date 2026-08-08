@@ -23,7 +23,7 @@ using namespace analysis::dvvp::proto;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::utils;
-int32_t SendBufferWithFixedLength(AdxTransport &transport, CONST_VOID_PTR buffer, int32_t length)
+int32_t SendBufferWithFixedLength(AdxTransport& transport, CONST_VOID_PTR buffer, int32_t length)
 {
     const int32_t retLengthError = PROFILING_FAILED;
     if (buffer == nullptr) {
@@ -52,20 +52,15 @@ int32_t SendBufferWithFixedLength(AdxTransport &transport, CONST_VOID_PTR buffer
 
 HDCTransport::HDCTransport(HDC_SESSION session, bool isClient, HDC_CLIENT client)
     : session_(session), isClient_(isClient), client_(client)
-{
-}
+{}
 
-HDCTransport::~HDCTransport()
-{
-    Destroy();
-}
+HDCTransport::~HDCTransport() { Destroy(); }
 
 int32_t HDCTransport::SendAdxBuffer(IdeBuffT out, int32_t outLen)
 {
     const int32_t ret = Analysis::Dvvp::Adx::AdxHdcWrite(session_, out, outLen);
     if (ret != IDE_DAEMON_OK) {
-        MSPROF_LOGE("hdc write failed, outLen=%d bytes, err=%d.",
-                    outLen, ret);
+        MSPROF_LOGE("hdc write failed, outLen=%d bytes, err=%d.", outLen, ret);
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
@@ -95,7 +90,7 @@ int32_t HDCTransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChun
     fileChunk->mutable_hdr()->set_job_ctx(jobCtx->ToString());
     std::string encoded = analysis::dvvp::message::EncodeMessage(fileChunk);
     const int32_t length = static_cast<int32_t>(encoded.size());
-    auto sentLen = SendBufferWithFixedLength(*this, static_cast<void *>(const_cast<CHAR_PTR>(encoded.c_str())), length);
+    auto sentLen = SendBufferWithFixedLength(*this, static_cast<void*>(const_cast<CHAR_PTR>(encoded.c_str())), length);
     MSPROF_LOGD("SendBuffer size %d/%d", sentLen, length);
     if (sentLen != length) {
         return PROFILING_FAILED;
@@ -114,7 +109,7 @@ int32_t HDCTransport::RecvPacket(TLV_REQ_2PTR packet, uint32_t timeout)
         return PROFILING_FAILED;
     }
 
-    void *buffer = nullptr;
+    void* buffer = nullptr;
     int32_t bufLen = 0;
 
     const int32_t ret = Analysis::Dvvp::Adx::AdxHdcRead(session_, &buffer, &bufLen, timeout);
@@ -221,7 +216,8 @@ SHARED_PTR_ALIA<AdxTransport> HDCTransportFactory::CreateHdcTransport(HDC_CLIENT
     HDC_SESSION session = nullptr;
 
     const int32_t ret = Analysis::Dvvp::Adx::AdxHdcSessionConnect(0, devId, client, &session);
-    FUNRET_CHECK_EXPR_ACTION_LOGW(ret != IDE_DAEMON_OK, return SHARED_PTR_ALIA<AdxTransport>(),
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        ret != IDE_DAEMON_OK, return SHARED_PTR_ALIA<AdxTransport>(),
         "CreateHdcTransport did not complete successfully, ret is %d", ret);
     SHARED_PTR_ALIA<HDCTransport> hdcTransport;
     do {
@@ -238,15 +234,16 @@ SHARED_PTR_ALIA<AdxTransport> HDCTransportFactory::CreateHdcTransport(HDC_CLIENT
     return hdcTransport;
 }
 
-SHARED_PTR_ALIA<AdxTransport> HDCTransportFactory::CreateHdcClientTransport(int32_t hostPid,
-    int32_t devId, HDC_CLIENT client) const
+SHARED_PTR_ALIA<AdxTransport> HDCTransportFactory::CreateHdcClientTransport(
+    int32_t hostPid, int32_t devId, HDC_CLIENT client) const
 {
     MSPROF_LOGI("CreateHdcClientTransport, hostPid:%d, devId:%d", hostPid, devId);
 
     HDC_SESSION session = nullptr;
 
     const int32_t ret = Analysis::Dvvp::Adx::AdxHalHdcSessionConnect(0, devId, hostPid, client, &session);
-    FUNRET_CHECK_EXPR_ACTION_LOGW(ret != IDE_DAEMON_OK, return SHARED_PTR_ALIA<AdxTransport>(),
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        ret != IDE_DAEMON_OK, return SHARED_PTR_ALIA<AdxTransport>(),
         "CreateHdcTransport did not complete successfully, ret is %d", ret);
     SHARED_PTR_ALIA<HDCTransport> hdcTransport;
     do {
@@ -261,4 +258,6 @@ SHARED_PTR_ALIA<AdxTransport> HDCTransportFactory::CreateHdcClientTransport(int3
     }
     return hdcTransport;
 }
-}}}
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis

@@ -14,15 +14,14 @@
 #include "ascend_hal.h"
 #include "message/prof_params.h"
 
-
 namespace Analysis {
 namespace Dvvp {
 namespace Driver {
-int32_t DrvGetAicoreInfo(int32_t deviceId, int64_t &freq);
+int32_t DrvGetAicoreInfo(int32_t deviceId, int64_t& freq);
 std::string DrvGeAicFrq(int32_t deviceId);
 std::string DrvGeAivFrq(int32_t deviceId);
-}  // namespace driver
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace Driver
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

@@ -16,9 +16,9 @@ namespace analysis {
 namespace dvvp {
 namespace transport {
 using namespace analysis::dvvp::common::utils;
-using TLV_REQ_PTR = struct tlv_req *;
-using CONST_TLV_REQ_PTR = const struct tlv_req *;
-using TLV_REQ_2PTR = struct tlv_req **;
+using TLV_REQ_PTR = struct tlv_req*;
+using CONST_TLV_REQ_PTR = const struct tlv_req*;
+using TLV_REQ_2PTR = struct tlv_req**;
 class AdxTransport : public ITransport {
 public:
     int32_t SendBuffer(CONST_VOID_PTR buffer, int32_t length) override = 0;
@@ -29,8 +29,8 @@ public:
     virtual int32_t RecvPacket(TLV_REQ_2PTR packet, uint32_t timeout = 0) = 0;
     virtual void DestroyPacket(TLV_REQ_PTR packet) = 0;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

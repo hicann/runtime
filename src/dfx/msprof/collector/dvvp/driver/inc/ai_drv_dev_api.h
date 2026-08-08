@@ -25,28 +25,28 @@ constexpr uint32_t FREQUENCY_KHZ_TO_MHZ = 1000; // KHz to MHz
 // driver 层不引入 platform.h（避免 Platform<->driver 反向依赖），故在此复制该数值常量。
 constexpr uint32_t PLATFORM_INFO_HOST_FALLBACK = 1U;
 int32_t DrvGetDevNum();
-int32_t DrvGetDevIds(int32_t numDevices, std::vector<int32_t> &devIds);
-int32_t DrvGetEnvType(uint32_t deviceId, int64_t &envType);
-int32_t DrvGetCtrlCpuId(uint32_t deviceId, int64_t &ctrlCpuId);
-int32_t DrvGetCtrlCpuCoreNum(uint32_t deviceId, int64_t &ctrlCpuCoreNum);
-int32_t DrvGetCtrlCpuEndianLittle(uint32_t deviceId, int64_t &ctrlCpuEndianLittle);
-int32_t DrvGetAiCpuCoreNum(uint32_t deviceId, int64_t &aiCpuCoreNum);
-int32_t DrvGetAiCpuCoreId(uint32_t deviceId, int64_t &aiCpuCoreId);
-int32_t DrvGetAiCpuOccupyBitmap(uint32_t deviceId, int64_t &aiCpuOccupyBitmap);
-int32_t DrvGetTsCpuCoreNum(uint32_t deviceId, int64_t &tsCpuCoreNum);
-int32_t DrvGetAiCoreId(uint32_t deviceId, int64_t &aiCoreId);
-int32_t DrvGetAiCoreNum(uint32_t deviceId, int64_t &aiCoreNum);
-int32_t DrvGetAivNum(uint32_t deviceId, int64_t &aivNum);
-int32_t DrvGetPlatformInfo(uint32_t &platformInfo);
-int32_t DrvGetDeviceTime(uint32_t deviceId, uint64_t &startMono, uint64_t &cntvct);
+int32_t DrvGetDevIds(int32_t numDevices, std::vector<int32_t>& devIds);
+int32_t DrvGetEnvType(uint32_t deviceId, int64_t& envType);
+int32_t DrvGetCtrlCpuId(uint32_t deviceId, int64_t& ctrlCpuId);
+int32_t DrvGetCtrlCpuCoreNum(uint32_t deviceId, int64_t& ctrlCpuCoreNum);
+int32_t DrvGetCtrlCpuEndianLittle(uint32_t deviceId, int64_t& ctrlCpuEndianLittle);
+int32_t DrvGetAiCpuCoreNum(uint32_t deviceId, int64_t& aiCpuCoreNum);
+int32_t DrvGetAiCpuCoreId(uint32_t deviceId, int64_t& aiCpuCoreId);
+int32_t DrvGetAiCpuOccupyBitmap(uint32_t deviceId, int64_t& aiCpuOccupyBitmap);
+int32_t DrvGetTsCpuCoreNum(uint32_t deviceId, int64_t& tsCpuCoreNum);
+int32_t DrvGetAiCoreId(uint32_t deviceId, int64_t& aiCoreId);
+int32_t DrvGetAiCoreNum(uint32_t deviceId, int64_t& aiCoreNum);
+int32_t DrvGetAivNum(uint32_t deviceId, int64_t& aivNum);
+int32_t DrvGetPlatformInfo(uint32_t& platformInfo);
+int32_t DrvGetDeviceTime(uint32_t deviceId, uint64_t& startMono, uint64_t& cntvct);
 std::string DrvGetDevIdsStr();
 bool DrvCheckIfHelperHost();
-bool DrvGetHostFreq(std::string &freq);
-bool DrvGetHostFreq(float &freq);
-bool DrvGetDeviceFreq(uint32_t deviceId, std::string &freq);
+bool DrvGetHostFreq(std::string& freq);
+bool DrvGetHostFreq(float& freq);
+bool DrvGetDeviceFreq(uint32_t deviceId, std::string& freq);
 bool DrvGetDeviceStatus(const uint32_t deviceId);
-}  // namespace driver
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace driver
+} // namespace dvvp
+} // namespace analysis
 
 #endif
