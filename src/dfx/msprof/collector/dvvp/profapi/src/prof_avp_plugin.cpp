@@ -60,19 +60,19 @@ void ProfAvpPlugin::LoadProfApi()
 void ProfAvpPlugin::LoadProfInfo()
 {
     if (profRegisterCallback_ != nullptr) {
-        for (const auto &model : moduleCallbacks_) {
+        for (const auto& model : moduleCallbacks_) {
             profRegisterCallback_(model.first, model.second);
         }
     }
 
     if (profNotifySetDevice_ != nullptr) {
-        for (const auto &device : deviceStates_) {
+        for (const auto& device : deviceStates_) {
             profNotifySetDevice_(device.first & 0xFFFFFFFFULL, device.first >> 32ULL, device.second);
         }
     }
 }
 
-int32_t ProfAvpPlugin::ProfInit(uint32_t type, void *data, uint32_t dataLen)
+int32_t ProfAvpPlugin::ProfInit(uint32_t type, void* data, uint32_t dataLen)
 {
     // Init api
     ProfApiInit();
@@ -101,7 +101,7 @@ int32_t ProfAvpPlugin::ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle
     return 0;
 }
 
-int32_t ProfAvpPlugin::ProfReportApi(uint32_t agingFlag, const MsprofApi &api) const
+int32_t ProfAvpPlugin::ProfReportApi(uint32_t agingFlag, const MsprofApi& api) const
 {
     if (profReportApi_ != nullptr) {
         return profReportApi_(agingFlag, api);
@@ -109,7 +109,7 @@ int32_t ProfAvpPlugin::ProfReportApi(uint32_t agingFlag, const MsprofApi &api) c
     return 0;
 }
 
-int32_t ProfAvpPlugin::ProfReportEvent(uint32_t agingFlag, const MsprofEvent &event) const
+int32_t ProfAvpPlugin::ProfReportEvent(uint32_t agingFlag, const MsprofEvent& event) const
 {
     if (profReportEvent_ != nullptr) {
         return profReportEvent_(agingFlag, event);
@@ -133,7 +133,7 @@ int32_t ProfAvpPlugin::ProfReportAdditionalInfo(uint32_t agingFlag, const VOID_P
     return 0;
 }
 
-int32_t ProfAvpPlugin::ProfReportRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName) const
+int32_t ProfAvpPlugin::ProfReportRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName) const
 {
     if (profReportRegTypeInfo_ != nullptr) {
         return profReportRegTypeInfo_(level, typeId, typeName);
@@ -141,7 +141,7 @@ int32_t ProfAvpPlugin::ProfReportRegTypeInfo(uint16_t level, uint32_t typeId, co
     return 0;
 }
 
-uint64_t ProfAvpPlugin::ProfReportGetHashId(const char *hashInfo, size_t length) const
+uint64_t ProfAvpPlugin::ProfReportGetHashId(const char* hashInfo, size_t length) const
 {
     if (profReportGetHashId_ != nullptr) {
         return profReportGetHashId_(hashInfo, length);
@@ -177,4 +177,4 @@ uint64_t ProfAvpPlugin::ProfSysCycleTime() const
     }
     return 0;
 }
-}
+} // namespace ProfAPI

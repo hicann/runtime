@@ -24,14 +24,14 @@ const std::string MSPROF_REPORT_ADDITIONAL_INFO = "MsprofReportAdditionalInfo";
 const std::string MSPROF_REPORT_BATCH_ADDITIONAL_INFO = "MsprofReportBatchAdditionalInfo";
 const std::string MSPROF_GET_BATCH_REPORT_MAX_SIZE = "MsprofGetBatchReportMaxSize";
 
-using ProfInitFunc = int32_t (*)(uint32_t, void *, uint32_t);
+using ProfInitFunc = int32_t (*)(uint32_t, void*, uint32_t);
 using ProfRegisterCallbackFunc = int32_t (*)(uint32_t, ProfCommandHandle);
 using ProfFinalizeFunc = int32_t (*)();
-using ProfReportAdditionalInfoFunc = int32_t (*)(uint32_t, const void *, uint32_t);
-using ProfStr2IdFunc = uint64_t (*)(const char *, size_t);
-using ProfReportBatchAdditionalInfoFunc = int32_t (*)(uint32_t, const void *, uint32_t);
+using ProfReportAdditionalInfoFunc = int32_t (*)(uint32_t, const void*, uint32_t);
+using ProfStr2IdFunc = uint64_t (*)(const char*, size_t);
+using ProfReportBatchAdditionalInfoFunc = int32_t (*)(uint32_t, const void*, uint32_t);
 using ProfGetBatchReportMaxSizeFunc = size_t (*)(uint32_t);
-}
+} // namespace
 
 using namespace analysis::dvvp::common::error;
 
@@ -62,7 +62,7 @@ ProfDevApi::~ProfDevApi()
     }
 }
 
-int32_t ProfDevApi::ProfInit(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t ProfDevApi::ProfInit(uint32_t dataType, void* data, uint32_t dataLen)
 {
     ProfInitFunc func = reinterpret_cast<ProfInitFunc>(funcMap_[MSPROF_INIT]);
     if (func == nullptr) {
@@ -92,7 +92,7 @@ int32_t ProfDevApi::ProfFinalize()
     return func();
 }
 
-uint64_t ProfDevApi::ProfStr2Id(const char *hashInfo, size_t length)
+uint64_t ProfDevApi::ProfStr2Id(const char* hashInfo, size_t length)
 {
     ProfStr2IdFunc func = reinterpret_cast<ProfStr2IdFunc>(funcMap_[MSPROF_STR_TO_ID]);
     if (func == nullptr) {
@@ -102,10 +102,10 @@ uint64_t ProfDevApi::ProfStr2Id(const char *hashInfo, size_t length)
     return func(hashInfo, length);
 }
 
-int32_t ProfDevApi::ProfReportAdditionalInfo(uint32_t agingFlag, const void *data, uint32_t length)
+int32_t ProfDevApi::ProfReportAdditionalInfo(uint32_t agingFlag, const void* data, uint32_t length)
 {
-    ProfReportAdditionalInfoFunc func = reinterpret_cast<ProfReportAdditionalInfoFunc>(
-        funcMap_[MSPROF_REPORT_ADDITIONAL_INFO]);
+    ProfReportAdditionalInfoFunc func =
+        reinterpret_cast<ProfReportAdditionalInfoFunc>(funcMap_[MSPROF_REPORT_ADDITIONAL_INFO]);
     if (func == nullptr) {
         MSPROF_LOGE("MsprofReportAdditionalInfo func is nullptr");
         return PROFILING_FAILED;
@@ -113,10 +113,10 @@ int32_t ProfDevApi::ProfReportAdditionalInfo(uint32_t agingFlag, const void *dat
     return func(agingFlag, data, length);
 }
 
-int32_t ProfDevApi::ProfReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+int32_t ProfDevApi::ProfReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
-    ProfReportBatchAdditionalInfoFunc func = reinterpret_cast<ProfReportBatchAdditionalInfoFunc>(
-        funcMap_[MSPROF_REPORT_BATCH_ADDITIONAL_INFO]);
+    ProfReportBatchAdditionalInfoFunc func =
+        reinterpret_cast<ProfReportBatchAdditionalInfoFunc>(funcMap_[MSPROF_REPORT_BATCH_ADDITIONAL_INFO]);
     if (func == nullptr) {
         MSPROF_LOGE("MsprofReportBatchAdditionalInfo func is nullptr");
         return PROFILING_FAILED;
@@ -126,21 +126,21 @@ int32_t ProfDevApi::ProfReportBatchAdditionalInfo(uint32_t nonPersistantFlag, co
 
 size_t ProfDevApi::ProfGetBatchReportMaxSize(uint32_t type)
 {
-    ProfGetBatchReportMaxSizeFunc func = reinterpret_cast<ProfGetBatchReportMaxSizeFunc>(
-        funcMap_[MSPROF_GET_BATCH_REPORT_MAX_SIZE]);
+    ProfGetBatchReportMaxSizeFunc func =
+        reinterpret_cast<ProfGetBatchReportMaxSizeFunc>(funcMap_[MSPROF_GET_BATCH_REPORT_MAX_SIZE]);
     if (func == nullptr) {
         MSPROF_LOGE("MsprofGetBatchReportMaxSize func is nullptr");
         return PROFILING_FAILED;
     }
     return func(type);
 }
-}
+} // namespace ProfAPI
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-int32_t MsprofInit(uint32_t dataType, void *data, uint32_t dataLen)
+int32_t MsprofInit(uint32_t dataType, void* data, uint32_t dataLen)
 {
     return ProfAPI::ProfDevApi::instance()->ProfInit(dataType, data, dataLen);
 }
@@ -150,12 +150,9 @@ int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle)
     return ProfAPI::ProfDevApi::instance()->ProfRegisterCallback(moduleId, handle);
 }
 
-int32_t MsprofFinalize()
-{
-    return ProfAPI::ProfDevApi::instance()->ProfFinalize();
-}
+int32_t MsprofFinalize() { return ProfAPI::ProfDevApi::instance()->ProfFinalize(); }
 
-uint64_t MsprofStr2Id(const char *hashInfo, size_t length)
+uint64_t MsprofStr2Id(const char* hashInfo, size_t length)
 {
     return ProfAPI::ProfDevApi::instance()->ProfStr2Id(hashInfo, length);
 }
@@ -178,4 +175,3 @@ size_t MsprofGetBatchReportMaxSize(uint32_t type)
 #ifdef __cplusplus
 }
 #endif
-

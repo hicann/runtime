@@ -29,8 +29,8 @@ using namespace analysis::dvvp::message;
 using namespace analysis::dvvp::common::validation;
 using namespace Collector::Dvvp::DynProf;
 
-int32_t Application::PrepareLaunchAppCmd(std::stringstream &ssCmdApp,
-                                     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
+int32_t Application::PrepareLaunchAppCmd(
+    std::stringstream& ssCmdApp, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
 {
     if (params->app_dir.empty()) {
         MSPROF_LOGE("app_dir is empty");
@@ -83,7 +83,7 @@ std::string Application::GetCmdString(const std::string paramsName)
     }
 }
 
-void Application::PrepareAppArgs(const std::vector<std::string> &params, std::vector<std::string> &argsV)
+void Application::PrepareAppArgs(const std::vector<std::string>& params, std::vector<std::string>& argsV)
 {
     for (uint32_t i = 1; i < params.size(); ++i) {
         if (!params[i].empty()) {
@@ -92,8 +92,8 @@ void Application::PrepareAppArgs(const std::vector<std::string> &params, std::ve
     }
 }
 
-int32_t Application::PrepareAppEnvs(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    std::vector<std::string> &envsV)
+int32_t Application::PrepareAppEnvs(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, std::vector<std::string>& envsV)
 {
     if (params == nullptr) {
         MSPROF_LOGE("params is nullptr");
@@ -106,8 +106,7 @@ int32_t Application::PrepareAppEnvs(SHARED_PTR_ALIA<analysis::dvvp::message::Pro
     return PROFILING_SUCCESS;
 }
 
-int32_t Application::LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    OsalProcess &appProcess)
+int32_t Application::LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, OsalProcess& appProcess)
 {
     if (params == nullptr) {
         MSPROF_LOGE("[LaunchApp]params is empty.");
@@ -116,7 +115,7 @@ int32_t Application::LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileP
     std::vector<std::string> paramsCmd;
     std::string cmd;
     if (params->application.empty()) {
-        std::stringstream ssCmdApp;  // cmd
+        std::stringstream ssCmdApp; // cmd
         if (PrepareLaunchAppCmd(ssCmdApp, params) != PROFILING_SUCCESS) {
             return PROFILING_FAILED;
         }
@@ -147,13 +146,13 @@ int32_t Application::LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileP
 
     std::vector<std::string> argsVec;
     std::vector<std::string> envsVec;
-    PrepareAppArgs(paramsCmd, argsVec);  // args
-    int32_t ret = PrepareAppEnvs(params, envsVec);  // envs
+    PrepareAppArgs(paramsCmd, argsVec);            // args
+    int32_t ret = PrepareAppEnvs(params, envsVec); // envs
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to PrepareAppEnvs, cmd:%s", cmd.c_str());
         return PROFILING_FAILED;
     }
-    appProcess = MSVP_PROCESS;  // run
+    appProcess = MSVP_PROCESS; // run
 
     int32_t exitCode = analysis::dvvp::common::utils::INVALID_EXIT_CODE;
     ExecCmdParams execCmdParams(cmd, true, "");
@@ -165,8 +164,8 @@ int32_t Application::LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileP
     return ret;
 }
 
-void Application::SetAppEnv(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    std::vector<std::string> &envsV)
+void Application::SetAppEnv(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, std::vector<std::string>& envsV)
 {
     MSPROF_LOGI("Handle app_env param %s", params->app_env.c_str());
     std::vector<std::string> appEnvs = analysis::dvvp::common::utils::Utils::Split(params->app_env, false, "", ";");
@@ -189,10 +188,9 @@ void Application::SetAppEnv(SHARED_PTR_ALIA<analysis::dvvp::message::ProfilePara
     paramEnv.append(params->ToString());
     envsV.push_back(paramEnv);
     if (DynProfCliMgr::instance()->IsDynProfCliEnable()) {
-        auto itr = std::find_if(envsV.begin(), envsV.end(), [](const std::string &value) {
-            return value.find(PROFILING_MODE_ENV) == 0;
-        });
-        auto &&dynProfEnv = DynProfCliMgr::instance()->GetDynProfEnv();
+        auto itr = std::find_if(
+            envsV.begin(), envsV.end(), [](const std::string& value) { return value.find(PROFILING_MODE_ENV) == 0; });
+        auto&& dynProfEnv = DynProfCliMgr::instance()->GetDynProfEnv();
         if (itr != envsV.end()) {
             *itr = dynProfEnv;
         } else {
@@ -206,6 +204,6 @@ void Application::SetAppEnv(SHARED_PTR_ALIA<analysis::dvvp::message::ProfilePara
         envsV.push_back(PROFILING_MODE_ENV + "=" + DELAY_DURARION_PROFILING_VALUE);
     }
 }
-}  // namespace app
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace app
+} // namespace dvvp
+} // namespace analysis

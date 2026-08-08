@@ -21,11 +21,11 @@ using namespace Analysis::Dvvp::App;
 using namespace analysis::dvvp::common::utils;
 using namespace Collector::Dvvp::Acp;
 
-static void SetEnvList(CONST_CHAR_PTR &envp, std::vector<std::string> &envpList)
+static void SetEnvList(CONST_CHAR_PTR& envp, std::vector<std::string>& envpList)
 {
     uint32_t envpLen = 0;
     constexpr uint32_t maxEnvpLen = 4096;
-    const char **env = &envp;
+    const char** env = &envp;
     while (*env) {
         envpList.push_back(*env++);
         envpLen++;
@@ -37,9 +37,9 @@ static void SetEnvList(CONST_CHAR_PTR &envp, std::vector<std::string> &envpList)
 }
 
 #ifdef __PROF_LLT
-int32_t LltAcpMain(int32_t argc, const char *argv[], const char **envp)
+int32_t LltAcpMain(int32_t argc, const char* argv[], const char** envp)
 #else
-int32_t main(int32_t argc, const char *argv[], const char **envp)
+int32_t main(int32_t argc, const char* argv[], const char** envp)
 #endif
 {
     std::vector<std::string> envpList;

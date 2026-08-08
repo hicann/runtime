@@ -25,26 +25,28 @@ using namespace Collector::Dvvp::Acp;
 constexpr uint8_t INSTRUCTION_PC_PLACE = 1;
 constexpr uint8_t FILE_PATH_PLACE = 1;
 constexpr uint8_t HEX_BASE = 16;
-constexpr char PC_SAMPLING_INSTR_SUMMARY_HEADER[] = "address,ibuf_empty,nop_stall,scoreboard_not_ready,"
+constexpr char PC_SAMPLING_INSTR_SUMMARY_HEADER[] =
+    "address,ibuf_empty,nop_stall,scoreboard_not_ready,"
     "register_bank_conflict,resource_conflict,warp_level_sync,divergence_stack_spill,other";
-constexpr char PC_SAMPLING_SOURCE_SUMMARY_HEADER[] = "file,line,ibuf_empty,nop_stall,scoreboard_not_ready,"
+constexpr char PC_SAMPLING_SOURCE_SUMMARY_HEADER[] =
+    "file,line,ibuf_empty,nop_stall,scoreboard_not_ready,"
     "register_bank_conflict,resource_conflict,warp_level_sync,divergence_stack_spill,other";
 
 struct SamplingInstrRecord {
     SamplingInstrRecord() : pcAddr(0), active(0) {}
     uint32_t pcAddr : 24;
     uint32_t active : 8;
-    uint8_t ibufEmpty{ 0 };
-    uint8_t nopStall{ 0 };
-    uint8_t scoreboardNotReady{ 0 };
-    uint8_t registerBankConflict{ 0 };
-    uint8_t resourceConflict{ 0 };
-    uint8_t warpLevelSync{ 0 };
-    uint8_t divergenceStackSpill{ 0 };
-    uint8_t other{ 0 };
+    uint8_t ibufEmpty{0};
+    uint8_t nopStall{0};
+    uint8_t scoreboardNotReady{0};
+    uint8_t registerBankConflict{0};
+    uint8_t resourceConflict{0};
+    uint8_t warpLevelSync{0};
+    uint8_t divergenceStackSpill{0};
+    uint8_t other{0};
 };
 
-bool OpAnalyzerPcSampling::IsPcSamplingData(const std::string &fileName) const
+bool OpAnalyzerPcSampling::IsPcSamplingData(const std::string& fileName) const
 {
     return fileName.find("pc_sampling") != std::string::npos;
 }
@@ -63,7 +65,7 @@ void OpAnalyzerPcSampling::ParsePcSamplingData(SHARED_PTR_ALIA<analysis::dvvp::P
     size_t offset = 0;
     while (it->second.size >= sizeof(SamplingInstrRecord) && offset <= it->second.size - sizeof(SamplingInstrRecord)) {
         auto sampling = reinterpret_cast<const SamplingInstrRecord*>(it->second.data.c_str() + offset);
-        auto &record = it->second.pcSamplingRecord[sampling->pcAddr];
+        auto& record = it->second.pcSamplingRecord[sampling->pcAddr];
         record.pcAddr = sampling->pcAddr;
         record.active += sampling->active;
         record.ibufEmpty += sampling->ibufEmpty;
@@ -80,18 +82,19 @@ void OpAnalyzerPcSampling::ParsePcSamplingData(SHARED_PTR_ALIA<analysis::dvvp::P
     it->second.size -= offset;
 }
 
-void OpAnalyzerPcSampling::AnalyzePcSamplingDataAndSaveSummary(const std::string &output)
+void OpAnalyzerPcSampling::AnalyzePcSamplingDataAndSaveSummary(const std::string& output)
 {
     if (!isSamplingEnable_) {
         return;
     }
 
     AnalyzeBinaryObject();
-    for (auto &it : pcSamplingData_) {
-        MSPROF_EVENT("total_size_analyze, pc_sampling, file: %s, analyze bytes: %zu",
-            Utils::BaseName(it.first).c_str(), it.second.totalSize);
-        for (auto &record : it.second.pcSamplingRecord) {
-            auto &summary = pcSamplingRecord_[record.second.pcAddr];
+    for (auto& it : pcSamplingData_) {
+        MSPROF_EVENT(
+            "total_size_analyze, pc_sampling, file: %s, analyze bytes: %zu", Utils::BaseName(it.first).c_str(),
+            it.second.totalSize);
+        for (auto& record : it.second.pcSamplingRecord) {
+            auto& summary = pcSamplingRecord_[record.second.pcAddr];
             summary.pcAddr = record.second.pcAddr;
             summary.active += record.second.active;
             summary.ibufEmpty += record.second.ibufEmpty;
@@ -115,12 +118,7 @@ void OpAnalyzerPcSampling::AnalyzeBinaryObject()
     std::string objdumpFile = path + ".objdump"; // llvm-objdump 解析输出的文件
     std::vector<std::string> envsVec;
     int32_t exitCode = analysis::dvvp::common::utils::INVALID_EXIT_CODE;
-    std::vector<std::string> argsVec = {
-        path,
-        "-d",
-        "--source",
-        "--line-numbers"
-    };
+    std::vector<std::string> argsVec = {path, "-d", "--source", "--line-numbers"};
 
     ExecCmdParams execCmdParams(objdumpCmd, true, objdumpFile);
     OsalProcess objdumpProcess = -1;
@@ -139,7 +137,7 @@ void OpAnalyzerPcSampling::AnalyzeBinaryObject()
     ReadObjdumpFile(objdumpFile);
 }
 
-void OpAnalyzerPcSampling::ReadObjdumpFile(const std::string &file)
+void OpAnalyzerPcSampling::ReadObjdumpFile(const std::string& file)
 {
     std::regex instructionPattern("^\\s*([a-f0-9]+):\\s+");
     std::regex filePatern("^\\s*;*\\s*(\\/(?:[a-zA-Z0-9\\._\\- ]*\\/)*"
@@ -173,7 +171,7 @@ void OpAnalyzerPcSampling::ReadObjdumpFile(const std::string &file)
             try {
                 uint64_t pcAddr = std::stoul(match.str(INSTRUCTION_PC_PLACE).c_str(), nullptr, HEX_BASE);
                 objectData_[pcAddr] = curFile;
-            } catch (const std::exception &ex) {
+            } catch (const std::exception& ex) {
                 MSPROF_LOGE("Convert pc addr to uint64_t failed, ex: %s, pcAddr: %s", ex.what(), match.str(1).c_str());
             }
         }
@@ -181,12 +179,12 @@ void OpAnalyzerPcSampling::ReadObjdumpFile(const std::string &file)
     in.close();
 }
 
-void OpAnalyzerPcSampling::GeneratePcSummary(const std::string &output)
+void OpAnalyzerPcSampling::GeneratePcSummary(const std::string& output)
 {
     std::string pcSamplingInstrSummaryCsv = output + "/pc_sampling_instr_summary.csv";
     std::stringstream s;
-    s << PC_SAMPLING_INSTR_SUMMARY_HEADER<<"\n";
-    for (auto &it : pcSamplingRecord_) {
+    s << PC_SAMPLING_INSTR_SUMMARY_HEADER << "\n";
+    for (auto& it : pcSamplingRecord_) {
         s << it.second.pcAddr << "," << it.second.ibufEmpty << "," << it.second.nopStall << ",";
         s << it.second.scoreboardNotReady << "," << it.second.registerBankConflict << ",";
         s << it.second.resourceConflict << "," << it.second.warpLevelSync << ",";
@@ -195,13 +193,13 @@ void OpAnalyzerPcSampling::GeneratePcSummary(const std::string &output)
     (void)Utils::DumpFile(pcSamplingInstrSummaryCsv, s.str().c_str(), s.str().size());
 }
 
-void OpAnalyzerPcSampling::GenerateSourceSummary(const std::string &output)
+void OpAnalyzerPcSampling::GenerateSourceSummary(const std::string& output)
 {
     std::string pcSamplingSourceSummaryCsv = output + "/pc_sampling_source_summary.csv";
     std::stringstream s;
-    s << PC_SAMPLING_SOURCE_SUMMARY_HEADER<<"\n";
-    for (auto &it : pcSamplingRecord_) {
-        auto &fileLine = objectData_[it.second.pcAddr];
+    s << PC_SAMPLING_SOURCE_SUMMARY_HEADER << "\n";
+    for (auto& it : pcSamplingRecord_) {
+        auto& fileLine = objectData_[it.second.pcAddr];
         s << fileLine << "," << it.second.ibufEmpty << "," << it.second.nopStall << ",";
         s << it.second.scoreboardNotReady << "," << it.second.registerBankConflict << ",";
         s << it.second.resourceConflict << "," << it.second.warpLevelSync << ",";
@@ -211,7 +209,7 @@ void OpAnalyzerPcSampling::GenerateSourceSummary(const std::string &output)
     (void)Utils::DumpFile(pcSamplingSourceSummaryCsv, s.str().c_str(), s.str().size());
 }
 
-void OpAnalyzerPcSampling::GenerateSummary(const std::string &output)
+void OpAnalyzerPcSampling::GenerateSummary(const std::string& output)
 {
     GeneratePcSummary(output);
     GenerateSourceSummary(output);
@@ -224,6 +222,6 @@ bool OpAnalyzerPcSampling::IsPcSamplingMode() const
     }
     return false;
 }
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp

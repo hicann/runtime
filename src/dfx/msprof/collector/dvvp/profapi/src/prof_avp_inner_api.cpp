@@ -15,17 +15,14 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, void *data, uint32_t dataLen)
+MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, void* data, uint32_t dataLen)
 {
     return ProfAPI::ProfAvpPlugin::instance()->ProfInit(dataType, data, dataLen);
 }
 
-MSVP_PROF_API int32_t MsprofFinalize()
-{
-    return ProfAPI::ProfAvpPlugin::instance()->ProfFinalize();
-}
+MSVP_PROF_API int32_t MsprofFinalize() { return ProfAPI::ProfAvpPlugin::instance()->ProfFinalize(); }
 
 MSVP_PROF_API int32_t MsprofNotifySetDevice(uint32_t chipId, uint32_t deviceId, bool isOpen)
 {
@@ -37,7 +34,7 @@ MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandl
     return ProfAPI::ProfAvpPlugin::instance()->ProfRegisterCallback(moduleId, handle);
 }
 
-MSVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const MsprofEvent *event)
+MSVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const MsprofEvent* event)
 {
     if (event == nullptr) {
         MSPROF_LOGE("MsprofReportEvent interface input invalid data.");
@@ -46,7 +43,7 @@ MSVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const Msprof
     return ProfAPI::ProfAvpPlugin::instance()->ProfReportEvent(nonPersistantFlag, *event);
 }
 
-MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const MsprofApi *api)
+MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const MsprofApi* api)
 {
     if (api == nullptr) {
         MSPROF_LOGE("MsprofReportApi interface input invalid data.");
@@ -73,7 +70,7 @@ MSVP_PROF_API int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, con
     return ProfAPI::ProfAvpPlugin::instance()->ProfReportAdditionalInfo(nonPersistantFlag, data, length);
 }
 
-MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     if (typeName == nullptr) {
         return analysis::dvvp::common::error::PROFILING_FAILED;
@@ -81,7 +78,7 @@ MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const c
     return ProfAPI::ProfAvpPlugin::instance()->ProfReportRegTypeInfo(level, typeId, typeName);
 }
 
-MSVP_PROF_API uint64_t MsprofGetHashId(const char *hashInfo, size_t length)
+MSVP_PROF_API uint64_t MsprofGetHashId(const char* hashInfo, size_t length)
 {
     if (hashInfo == nullptr || length == 0) {
         MSPROF_LOGW("The hashInfo[%zu] is invalid, thus unable to get hash id.", length);
@@ -90,10 +87,7 @@ MSVP_PROF_API uint64_t MsprofGetHashId(const char *hashInfo, size_t length)
     return ProfAPI::ProfAvpPlugin::instance()->ProfReportGetHashId(hashInfo, length);
 }
 
-MSVP_PROF_API uint64_t MsprofSysCycleTime()
-{
-    return ProfAPI::ProfAvpPlugin::instance()->ProfSysCycleTime();
-}
+MSVP_PROF_API uint64_t MsprofSysCycleTime() { return ProfAPI::ProfAvpPlugin::instance()->ProfSysCycleTime(); }
 
 #ifdef __cplusplus
 }

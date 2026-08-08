@@ -20,11 +20,7 @@ using namespace analysis::dvvp::common::utils;
 
 const std::string RUNTIME_LIB_PATH = "libruntime.so";
 
-static std::set<std::string> g_runtimeApiSet = {
-    "rtProfilerTraceEx",
-    "rtsStreamGetAttribute",
-    "rtCacheLastTaskOpInfo"
-};
+static std::set<std::string> g_runtimeApiSet = {"rtProfilerTraceEx", "rtsStreamGetAttribute", "rtCacheLastTaskOpInfo"};
 
 ProfRuntimePlugin::~ProfRuntimePlugin()
 {
@@ -35,7 +31,7 @@ ProfRuntimePlugin::~ProfRuntimePlugin()
 
 void ProfRuntimePlugin::LoadRuntimeApi()
 {
-    for (auto &it : g_runtimeApiSet) {
+    for (auto& it : g_runtimeApiSet) {
         auto addr = dlsym(runtimeLibHandle_, it.c_str());
         if (addr == nullptr) {
             MSPROF_LOGW("Unable to load api[%s] from %s.", it.c_str(), RUNTIME_LIB_PATH.c_str());
@@ -60,7 +56,7 @@ int32_t ProfRuntimePlugin::RuntimeApiInit()
     return PROFILING_SUCCESS;
 }
 
-void *ProfRuntimePlugin::GetPluginApiFunc(const std::string funcName)
+void* ProfRuntimePlugin::GetPluginApiFunc(const std::string funcName)
 {
     auto it = runtimeApiInfoMap_.find(funcName);
     if (it == runtimeApiInfoMap_.cend()) {
@@ -71,15 +67,15 @@ void *ProfRuntimePlugin::GetPluginApiFunc(const std::string funcName)
     return it->second.funcAddr;
 }
 
-int32_t ProfRuntimePlugin::ProfMarkEx(uint64_t indexId, uint64_t modelId, uint16_t tagId, void *stm)
+int32_t ProfRuntimePlugin::ProfMarkEx(uint64_t indexId, uint64_t modelId, uint16_t tagId, void* stm)
 {
     auto func = GetPluginApiFunc("rtProfilerTraceEx");
     if (func == nullptr) {
         MSPROF_LOGE("Failed to get api stub[rtProfilerTraceEx] func.");
         return PROFILING_FAILED;
     }
-    rtError_t ret = reinterpret_cast<RtProfilerTraceExFunc>(func)(indexId, modelId, tagId,
-        static_cast<rtStream_t>(stm));
+    rtError_t ret =
+        reinterpret_cast<RtProfilerTraceExFunc>(func)(indexId, modelId, tagId, static_cast<rtStream_t>(stm));
     if (ret != RT_ERROR_NONE) {
         MSPROF_LOGE("Failed to call rtProfilerTraceEx, ret: %d.", ret);
         return PROFILING_FAILED;
@@ -88,7 +84,7 @@ int32_t ProfRuntimePlugin::ProfMarkEx(uint64_t indexId, uint64_t modelId, uint16
 }
 
 int32_t ProfRuntimePlugin::ProfRtsStreamGetAttribute(
-    rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue)
+    rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t* attrValue)
 {
     auto func = GetPluginApiFunc("rtsStreamGetAttribute");
     if (func == nullptr) {
@@ -103,7 +99,7 @@ int32_t ProfRuntimePlugin::ProfRtsStreamGetAttribute(
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
+int32_t ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo(const void* const infoPtr, const size_t infoSize)
 {
     auto func = GetPluginApiFunc("rtCacheLastTaskOpInfo");
     if (func == nullptr) {
@@ -117,4 +113,4 @@ int32_t ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo(const void * const infoPtr,
     }
     return PROFILING_SUCCESS;
 }
-}
+} // namespace ProfAPI

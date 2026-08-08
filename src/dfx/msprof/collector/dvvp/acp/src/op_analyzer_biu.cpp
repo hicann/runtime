@@ -16,21 +16,20 @@
 namespace Dvvp {
 namespace Acp {
 namespace Analyze {
-    
+
 using namespace Analysis::Dvvp::Driver;
 
 OpAnalyzerBiu::OpAnalyzerBiu() : inited_(false), countTimes_(0), group_(0), groupTag_(0), aicFreq_(0.0), aivFreq_(0.0)
 {
-    instructionMap_ = {
-        {0, "SU"}, {1, "Vector"}, {2, "Cube"}, {3, "MTE1"}, {4, "MTE2"}, {5, "MTE3"}, {6, "Fixp"}
-    };
+    instructionMap_ = {{0, "SU"}, {1, "Vector"}, {2, "Cube"}, {3, "MTE1"}, {4, "MTE2"}, {5, "MTE3"}, {6, "Fixp"}};
     mappingList_ = {{"aic", 0}, {"aiv0", 1}, {"aiv1", 2}};
 }
 
-bool OpAnalyzerBiu::IsBiuPerfData(const std::string &fileName) const
+bool OpAnalyzerBiu::IsBiuPerfData(const std::string& fileName) const
 {
-    if (fileName.find("biu_perf_group") != std::string::npos && (fileName.find("aic") != std::string::npos ||
-        fileName.find("aiv0") != std::string::npos || fileName.find("aiv1") != std::string::npos)) {
+    if (fileName.find("biu_perf_group") != std::string::npos &&
+        (fileName.find("aic") != std::string::npos || fileName.find("aiv0") != std::string::npos ||
+         fileName.find("aiv1") != std::string::npos)) {
         return true;
     }
     return false;
@@ -44,12 +43,13 @@ bool OpAnalyzerBiu::IsBiuPerfData(const std::string &fileName) const
  */
 void OpAnalyzerBiu::SetDeviceInfo(uint32_t deviceId, double freq, double aicFreq)
 {
-    frequency_ = freq; // 1 / GHZ = ns
+    frequency_ = freq;  // 1 / GHZ = ns
     FUNRET_CHECK_EXPR_ACTION(frequency_ <= 0, return, "The frequency %lf is less than or equal to 0.", frequency_);
     aicFreq_ = aicFreq; // 1 / MHZ = us
     FUNRET_CHECK_EXPR_ACTION(aicFreq_ <= 0, return, "The aic freq %lf is less than or equal to 0. %s", aicFreq_);
     std::string aivFreq = DrvGeAivFrq(static_cast<int32_t>(deviceId));
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToDouble(aivFreq_, aivFreq) || aivFreq_ <= 0, return,
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToDouble(aivFreq_, aivFreq) || aivFreq_ <= 0, return,
         "Convert aivFreq failed or aiv freq equal to 0, value is %s", aivFreq.c_str());
     inited_ = true;
 }
@@ -57,10 +57,10 @@ void OpAnalyzerBiu::SetDeviceInfo(uint32_t deviceId, double freq, double aicFreq
 /**
  * @brief      The file name is parsed, the group number and group target(aic, aiv0, aiv1) are obtained.
  * @param [in] fileName: File name, read from filechunk.
- * @return     true: Parsing the name succeeded. 
+ * @return     true: Parsing the name succeeded.
  *             false: Parsing the name failed.
  */
-bool OpAnalyzerBiu::SplitFileName(const std::string &fileName)
+bool OpAnalyzerBiu::SplitFileName(const std::string& fileName)
 {
     size_t groupPos = fileName.find("biu_perf_group");
     size_t underline = fileName.find_last_of("_");
@@ -69,7 +69,9 @@ bool OpAnalyzerBiu::SplitFileName(const std::string &fileName)
         MSPROF_LOGE("Can not find target in %s", fileName.c_str());
         return false;
     }
-    FUNRET_CHECK_EXPR_ACTION(groupPos >= underline || underline >= dotPos, return false, "The obtained cursor is"
+    FUNRET_CHECK_EXPR_ACTION(
+        groupPos >= underline || underline >= dotPos, return false,
+        "The obtained cursor is"
         "abnormal. group pos is %" PRIu64 ", underline is %" PRIu64 ", dot pos is %" PRIu64 ", in fileName %s.",
         groupPos, underline, dotPos, fileName.c_str());
     std::string groupNumber = fileName.substr(groupPos + GROUP_STR_LEN, underline - groupPos - GROUP_STR_LEN);
@@ -78,8 +80,8 @@ bool OpAnalyzerBiu::SplitFileName(const std::string &fileName)
         MSPROF_LOGE("Handle group number %s failed.", groupNumber.c_str());
         return false;
     }
-    FUNRET_CHECK_EXPR_ACTION(group_ >= GROUP_NUM_MAX, return false, "Group number %u exceeds the maximum value %d.",
-        group_, GROUP_NUM_MAX);
+    FUNRET_CHECK_EXPR_ACTION(
+        group_ >= GROUP_NUM_MAX, return false, "Group number %u exceeds the maximum value %d.", group_, GROUP_NUM_MAX);
     auto iter = mappingList_.find(groupTag);
     if (iter != mappingList_.end()) {
         groupTag_ = iter->second;
@@ -115,7 +117,7 @@ void OpAnalyzerBiu::ParseBiuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChun
             break;
         }
         countTimes_++;
-        auto biuPerfData = reinterpret_cast<const BiuPerfProfile *>(dataPtr_ + offset);
+        auto biuPerfData = reinterpret_cast<const BiuPerfProfile*>(dataPtr_ + offset);
         switch (static_cast<CtrlType>(biuPerfData->ctrlType)) {
             case CtrlType::CTRL_SU:
             case CtrlType::CTRL_VEC:
@@ -149,21 +151,22 @@ void OpAnalyzerBiu::ParseBiuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChun
  * @param [in] data: A piece of biu perf data converted by BiuPerfProfile.
  * @return     void
  */
-void OpAnalyzerBiu::HandleStampData(const BiuPerfProfile *data)
+void OpAnalyzerBiu::HandleStampData(const BiuPerfProfile* data)
 {
     if (biuData_[group_][groupTag_].initTimes != SYSCNT_DATA_TIMES) {
-        MSPROF_LOGE("HandleStampData failed in group %u tag %u as syscnt data only have %u.",
-            group_, groupTag_, biuData_[group_][groupTag_].initTimes);
+        MSPROF_LOGE(
+            "HandleStampData failed in group %u tag %u as syscnt data only have %u.", group_, groupTag_,
+            biuData_[group_][groupTag_].initTimes);
         return;
     }
-    if (groupTag_ == 0) { // aic is 0, aiv is 1 or 2
+    if (groupTag_ == 0) {                                                  // aic is 0, aiv is 1 or 2
         biuData_[group_][groupTag_].baseTime += data->timeData / aicFreq_; // us
     } else {
         biuData_[group_][groupTag_].baseTime += data->timeData / aivFreq_; // us
     }
     NanoJson::Json metaData;
     metaData["name"] = ""; // No need to name this
-    metaData["ph"] = "X"; // Complete events
+    metaData["ph"] = "X";  // Complete events
     metaData["pid"] = group_;
     metaData["tid"] = ConvCtrlToInstr(data->ctrlType);
     metaData["ts"] = biuData_[group_][groupTag_].baseTime;
@@ -181,7 +184,7 @@ void OpAnalyzerBiu::HandleStampData(const BiuPerfProfile *data)
  * @param [in] data: A piece of biu perf data converted by BiuPerfProfile.
  * @return     void
  */
-void OpAnalyzerBiu::HandleSyscnt(const BiuPerfProfile *data)
+void OpAnalyzerBiu::HandleSyscnt(const BiuPerfProfile* data)
 {
     if (biuData_[group_][groupTag_].initTimes >= SYSCNT_DATA_TIMES) {
         MSPROF_LOGE("HandleSyscnt reads an unexpected amount of data in group %u tag %u", group_, groupTag_);
@@ -190,12 +193,12 @@ void OpAnalyzerBiu::HandleSyscnt(const BiuPerfProfile *data)
     // assemble the syscnt
     constexpr uint32_t offset16Bit = 16;
     constexpr uint32_t offset8Bit = 8;
-    biuData_[group_][groupTag_].sysCnt |= (static_cast<uint64_t>(data->timeData) <<
-        (offset16Bit * biuData_[group_][groupTag_].initTimes));
+    biuData_[group_][groupTag_].sysCnt |=
+        (static_cast<uint64_t>(data->timeData) << (offset16Bit * biuData_[group_][groupTag_].initTimes));
     // assemble the block id
     if (biuData_[group_][groupTag_].initTimes < BLOCK_ID_TIMES) {
-        biuData_[group_][groupTag_].blockId |= (static_cast<uint16_t>(data->events) <<
-        (offset8Bit * biuData_[group_][groupTag_].initTimes));
+        biuData_[group_][groupTag_].blockId |=
+            (static_cast<uint16_t>(data->events) << (offset8Bit * biuData_[group_][groupTag_].initTimes));
     }
     biuData_[group_][groupTag_].initTimes++;
     if (biuData_[group_][groupTag_].initTimes == SYSCNT_DATA_TIMES) {
@@ -210,13 +213,13 @@ void OpAnalyzerBiu::SaveCntData()
     // create group
     NanoJson::Json metaData;
     metaData["name"] = "process_name"; // The name is fixed.
-    metaData["ph"] = "M"; // Metadate events
+    metaData["ph"] = "M";              // Metadate events
     metaData["pid"] = group_;
     metaData["args"]["name"] = "group" + std::to_string(group_);
     metaData["args"]["begin time"] = biuData_[group_][groupTag_].baseTime;
     biuData_[group_][groupTag_].data += metaData.ToString() + ",";
     // create instruction for group
-    for(auto it = instructionMap_.begin(); it != instructionMap_.end(); it++) {
+    for (auto it = instructionMap_.begin(); it != instructionMap_.end(); it++) {
         NanoJson::Json metaDataThread;
         metaDataThread["name"] = "thread_name"; // The name is fixed.
         metaDataThread["ph"] = "M";
@@ -236,15 +239,16 @@ void OpAnalyzerBiu::SaveCntData()
  * @param [in] data: A piece of biu perf data converted by BiuPerfProfile.
  * @return     void
  */
-void OpAnalyzerBiu::HandleStatusData(const BiuPerfProfile *data)
+void OpAnalyzerBiu::HandleStatusData(const BiuPerfProfile* data)
 {
     if (biuData_[group_][groupTag_].initTimes != SYSCNT_DATA_TIMES) {
-        MSPROF_LOGE("HandleStatusData failed in group %u tag %u as syscnt data only have %u.",
-            group_, groupTag_, biuData_[group_][groupTag_].initTimes);
+        MSPROF_LOGE(
+            "HandleStatusData failed in group %u tag %u as syscnt data only have %u.", group_, groupTag_,
+            biuData_[group_][groupTag_].initTimes);
         return;
     }
     std::vector<uint16_t> checkList = CheckBits(data->events);
-    if (groupTag_ == 0) { // aic is 0, aiv is 1 or 2
+    if (groupTag_ == 0) {                                                  // aic is 0, aiv is 1 or 2
         biuData_[group_][groupTag_].baseTime += data->timeData / aicFreq_; // us
     } else {
         biuData_[group_][groupTag_].baseTime += data->timeData / aivFreq_; // us
@@ -287,9 +291,10 @@ void OpAnalyzerBiu::HandleInstrStart(uint32_t idx)
  */
 void OpAnalyzerBiu::HandleInstrStop(uint32_t idx)
 {
-    FUNRET_CHECK_EXPR_ACTION(biuData_[group_][groupTag_].instrMap[idx].timeStart >
-        biuData_[group_][groupTag_].baseTime, return, "The end of time %f is lower than %f.",
-        biuData_[group_][groupTag_].baseTime, biuData_[group_][groupTag_].instrMap[idx].timeStart);
+    FUNRET_CHECK_EXPR_ACTION(
+        biuData_[group_][groupTag_].instrMap[idx].timeStart > biuData_[group_][groupTag_].baseTime, return,
+        "The end of time %f is lower than %f.", biuData_[group_][groupTag_].baseTime,
+        biuData_[group_][groupTag_].instrMap[idx].timeStart);
     NanoJson::Json eventData;
     eventData["name"] = ""; // No need to named it.
     eventData["ph"] = "X";  // Complete events
@@ -347,7 +352,9 @@ void OpAnalyzerBiu::SaveDataToFile(std::string path)
     path += "instr_timeline_" + std::to_string(createTimes) + ".json";
     Utils::GenTimeLineJsonFile(path, biuStringData);
     createTimes++;
-    FUNRET_CHECK_EXPR_ACTION_LOGW(createTimes >= UINT64_MAX, createTimes = 0, "Overflow detected! Resetting json file"
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        createTimes >= UINT64_MAX, createTimes = 0,
+        "Overflow detected! Resetting json file"
         "creation times.")
     MSPROF_LOGI("The Json file has been created, path: %s.", path.c_str());
 }
@@ -363,8 +370,9 @@ uint16_t OpAnalyzerBiu::ConvCtrlToInstr(uint16_t ctrlType) const
 
 void OpAnalyzerBiu::PrintStats() const
 {
-    MSPROF_EVENT("OpAnalyzerBiu total_size_biu, data processed %" PRIu64 " times, data size %" PRIu64 " bytes.",
-        countTimes_, countTimes_ * BIU_DATA_SIZE);
+    MSPROF_EVENT(
+        "OpAnalyzerBiu total_size_biu, data processed %" PRIu64 " times, data size %" PRIu64 " bytes.", countTimes_,
+        countTimes_ * BIU_DATA_SIZE);
 }
 
 bool OpAnalyzerBiu::IsBiuMode() const
@@ -374,6 +382,6 @@ bool OpAnalyzerBiu::IsBiuMode() const
     }
     return false;
 }
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp

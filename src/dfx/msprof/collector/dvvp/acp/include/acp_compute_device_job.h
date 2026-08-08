@@ -37,7 +37,7 @@ private:
     int32_t ParseAiCoreConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParseAivConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParsePmuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
-    std::string GenerateFileName(const std::string &fileName);
+    std::string GenerateFileName(const std::string& fileName);
     int32_t StartProfHandle(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 
 private:
@@ -50,5 +50,7 @@ private:
     std::array<CollectionJobT, NR_MAX_COLLECTION_JOB> collectionJobV_;
     std::set<int32_t> jobUsed_;
 };
-}}}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector
 #endif

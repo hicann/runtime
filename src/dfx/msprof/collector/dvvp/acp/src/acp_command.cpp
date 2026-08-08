@@ -43,7 +43,7 @@ constexpr size_t MAX_CUSTOM_METRICS_LEN = 30;
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-int32_t CheckOutputValid(std::string &output)
+int32_t CheckOutputValid(std::string& output)
 {
     std::string path = Utils::RelativePathToAbsolutePath(output);
     if (path.empty()) {
@@ -51,15 +51,17 @@ int32_t CheckOutputValid(std::string &output)
         return ARGPARSE_ERROR;
     }
     if (path.size() > MAX_PATH_LENGTH) {
-        CmdLog::CmdErrorLog("Argument --output is invalid because of exceeds"
-                            " the maximum length of %d",
-                            MAX_PATH_LENGTH);
+        CmdLog::CmdErrorLog(
+            "Argument --output is invalid because of exceeds"
+            " the maximum length of %d",
+            MAX_PATH_LENGTH);
         return ARGPARSE_ERROR;
     }
     if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
-        char errBuf[MAX_ERR_STRING_LEN + 1] = { 0 };
-        CmdLog::CmdErrorLog("Create output dir failed.ErrorCode: %d, ErrorInfo: %s.", OsalGetErrorCode(),
-                            OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
+        char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
+        CmdLog::CmdErrorLog(
+            "Create output dir failed.ErrorCode: %d, ErrorInfo: %s.", OsalGetErrorCode(),
+            OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
         return ARGPARSE_ERROR;
     }
     if (!Utils::IsDir(path)) {
@@ -85,7 +87,7 @@ int32_t CheckOutputValid(std::string &output)
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-int32_t CheckAcpMetricsIsValid(std::string &metrics)
+int32_t CheckAcpMetricsIsValid(std::string& metrics)
 {
     if (metrics.empty()) {
         CmdLog::CmdErrorLog("Argument --aic-metrics input is empty.");
@@ -115,11 +117,13 @@ int32_t CheckAcpMetricsIsValid(std::string &metrics)
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string &metrics, std::vector<std::string> &metricsVec)
+int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string& metrics, std::vector<std::string>& metricsVec)
 {
     if (pos > 0) {
-        CmdLog::CmdErrorLog("Argument --aic-metrics %s is invalid because of invalid value before custom events. "
-            "Please noted that custom function can not be used with metrics groups.", metrics.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument --aic-metrics %s is invalid because of invalid value before custom events. "
+            "Please noted that custom function can not be used with metrics groups.",
+            metrics.c_str());
         return ARGPARSE_ERROR;
     }
 
@@ -127,9 +131,10 @@ int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string &metrics
     std::transform(eventStr.begin(), eventStr.end(), eventStr.begin(), ::tolower);
     metricsVec = Utils::Split(eventStr, false, "", ",");
     if (metricsVec.empty() || metricsVec.size() > MAX_CUSTOM_METRICS_LEN) {
-        CmdLog::CmdErrorLog("Argument --aic-metrics %s is invalid, which input %zu custom events, and the number "
-            "of custom events should be in range of [1,%zu].", metrics.c_str(), metricsVec.size(),
-            MAX_CUSTOM_METRICS_LEN);
+        CmdLog::CmdErrorLog(
+            "Argument --aic-metrics %s is invalid, which input %zu custom events, and the number "
+            "of custom events should be in range of [1,%zu].",
+            metrics.c_str(), metricsVec.size(), MAX_CUSTOM_METRICS_LEN);
         return ARGPARSE_ERROR;
     }
 
@@ -137,8 +142,10 @@ int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string &metrics
         std::string event = metricsVec[i];
         if (!ParamValidation::instance()->CheckHexOrDec(event, HEX_MODE) &&
             !ParamValidation::instance()->CheckHexOrDec(event, DEC_MODE)) {
-            CmdLog::CmdErrorLog("Argument --aic-metrics %s (lower) is invalid, hexadecimal or decimal "
-                "parameters are allowed in custom mode.", event.c_str());
+            CmdLog::CmdErrorLog(
+                "Argument --aic-metrics %s (lower) is invalid, hexadecimal or decimal "
+                "parameters are allowed in custom mode.",
+                event.c_str());
             return ARGPARSE_ERROR;
         }
     }
@@ -153,12 +160,14 @@ int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string &metrics
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-int32_t CheckGroupMetricsIsValid(std::string &metrics, std::vector<std::string> &metricsVec)
+int32_t CheckGroupMetricsIsValid(std::string& metrics, std::vector<std::string>& metricsVec)
 {
     metricsVec = Utils::Split(metrics, false, "", ",");
     if (metricsVec.size() > MAX_GROUP_METRICS_LEN) {
-        CmdLog::CmdErrorLog("Argument --aic-metrics %s is invalid, which inputs %zu group metrics, and the maximum "
-            "number of group metrics is %zu.", metrics.c_str(), metricsVec.size(), MAX_GROUP_METRICS_LEN);
+        CmdLog::CmdErrorLog(
+            "Argument --aic-metrics %s is invalid, which inputs %zu group metrics, and the maximum "
+            "number of group metrics is %zu.",
+            metrics.c_str(), metricsVec.size(), MAX_GROUP_METRICS_LEN);
         return ARGPARSE_ERROR;
     }
 
@@ -166,8 +175,10 @@ int32_t CheckGroupMetricsIsValid(std::string &metrics, std::vector<std::string> 
         std::string metricsVal = metricsVec[i];
         auto featureMetrics = Platform::instance()->PmuToFeature(metricsVal);
         if (!Platform::instance()->CheckIfSupport(featureMetrics)) {
-            CmdLog::CmdErrorLog("Argument --aic-metrics %s is invalid in this platform, please check input range "
-                "in help message.", metricsVal.c_str());
+            CmdLog::CmdErrorLog(
+                "Argument --aic-metrics %s is invalid in this platform, please check input range "
+                "in help message.",
+                metricsVal.c_str());
             return ARGPARSE_ERROR;
         }
     }
@@ -182,7 +193,7 @@ int32_t CheckGroupMetricsIsValid(std::string &metrics, std::vector<std::string> 
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-void DeduplicateAcpMetrics(std::string::size_type pos, std::string &metrics, std::vector<std::string> &metricsVec)
+void DeduplicateAcpMetrics(std::string::size_type pos, std::string& metrics, std::vector<std::string>& metricsVec)
 {
     if (metricsVec.size() == 1) {
         return;
@@ -202,7 +213,7 @@ void DeduplicateAcpMetrics(std::string::size_type pos, std::string &metrics, std
         metrics += CUSTOM_METRICS;
     }
 
-    for (auto &iter : metricsVec) {
+    for (auto& iter : metricsVec) {
         metrics += iter + ",";
     }
 
@@ -224,7 +235,7 @@ int32_t PreCheckPlatform()
     return ARGPARSE_ERROR;
 }
 
-int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid)
+int32_t WaitRunningProcess(std::string processUsage, int32_t& taskPid)
 {
     if (taskPid == MSVP_PROCESS) {
         MSPROF_LOGE("[WaitRunningProcess] Invalid task pid.");
@@ -233,7 +244,7 @@ int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid)
     bool isExited = false;
     int32_t exitCode = 0;
     int32_t ret = PROFILING_SUCCESS;
-    static const int32_t SLEEP_INTERVAL_US = 100000;  // 0.1s
+    static const int32_t SLEEP_INTERVAL_US = 100000; // 0.1s
     static const int32_t APP_FAIL_EXIT_CODE = 256;
 
     for (;;) {
@@ -245,10 +256,12 @@ int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid)
         if (isExited) {
             MSPROF_EVENT("%s process %d exited, exit code:%d", processUsage.c_str(), taskPid, exitCode);
             if (exitCode != 0) {
-                MSPROF_LOGW("An exception has occurred in process %s, code info: %s.", processUsage.c_str(),
-                            strerror(exitCode));
-                CmdLog::CmdWarningLog("An exception has occurred in process %s, code info: %s.", 
-                                      processUsage.c_str(), strerror(exitCode));
+                MSPROF_LOGW(
+                    "An exception has occurred in process %s, code info: %s.", processUsage.c_str(),
+                    strerror(exitCode));
+                CmdLog::CmdWarningLog(
+                    "An exception has occurred in process %s, code info: %s.", processUsage.c_str(),
+                    strerror(exitCode));
             }
             if (exitCode == APP_FAIL_EXIT_CODE) {
                 return PROFILING_FAILED;
@@ -265,7 +278,7 @@ int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid)
  * @return: PROFILING_SUCCESS
             PROFILING_FAILED
  */
-int32_t ProfileCommandRun(Argparser &profCommand)
+int32_t ProfileCommandRun(Argparser& profCommand)
 {
     std::string path = profCommand.GetOption("output");
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params;
@@ -281,7 +294,7 @@ int32_t ProfileCommandRun(Argparser &profCommand)
     params->application = profCommand.appArgs;
     if (params->instrProfiling.compare("on") == 0 && params->pcSampling.compare("on") == 0) {
         CmdLog::CmdErrorLog("Start profiling failed because instr-profiling and pc-sampling switch"
-            "have been enabled together.");
+                            "have been enabled together.");
         return PROFILING_FAILED;
     }
     int32_t taskPid = MSVP_PROCESS;
@@ -322,8 +335,8 @@ Argparser AcpCommandBuild(const std::string commandName)
     const std::string profileName = "profile";
     const std::string subcmdName = commandName + " " + profileName;
     const std::string profUsageMsg = "./" + subcmdName + " [--options] [app]";
-    std::vector<std::string> aicMetricsRange = { "ArithmeticUtilization", "PipeUtilization", "Memory", "MemoryL0",
-                                                 "ResourceConflictRatio", "MemoryUB",        "L2Cache" };
+    std::vector<std::string> aicMetricsRange = {"ArithmeticUtilization", "PipeUtilization", "Memory", "MemoryL0",
+                                                "ResourceConflictRatio", "MemoryUB",        "L2Cache"};
     UtilsStringBuilder<std::string> builder;
     std::string aicMetricsHelpMsg = "The aic metrics groups, include " + builder.Join(aicMetricsRange, ", ") + ".\n" +
                                     "\t\t\t\t\t\t   the default value is PipeUtilization. " +
@@ -331,25 +344,23 @@ Argparser AcpCommandBuild(const std::string commandName)
                                     "<event id>,<event id>.";
     std::string aicScaleHelpMsg = "Control if need collect partial op, input all or partial, "
                                   "the default value is all.";
-    std::vector<std::string> aicScaleRange = { "all", "partial" };
-    std::vector<std::string> onOffRange = { "on", "off" };
+    std::vector<std::string> aicScaleRange = {"all", "partial"};
+    std::vector<std::string> onOffRange = {"on", "off"};
     auto profileCommand = Argparser("Profile single operator.")
                               .SetProgramName(subcmdName)
                               .SetUsage(profUsageMsg)
                               .AddOption("help", "Show this help message.", "")
-                              .AddOption("aic-metrics", aicMetricsHelpMsg, "PipeUtilization",
-                                  CheckAcpMetricsIsValid);
+                              .AddOption("aic-metrics", aicMetricsHelpMsg, "PipeUtilization", CheckAcpMetricsIsValid);
 
     if (Platform::instance()->CheckIfSupport(PLATFORM_AICSCALE_ACP)) {
         profileCommand.AddOption("aic-scale", aicScaleHelpMsg, "all", aicScaleRange);
     }
     if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING)) {
-        profileCommand.AddOption("instr-profiling", "Show instr profiling data, the default value is off.",
-            "off", onOffRange);
+        profileCommand.AddOption(
+            "instr-profiling", "Show instr profiling data, the default value is off.", "off", onOffRange);
     }
     if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_PC_SAMPLING)) {
-        profileCommand.AddOption("pc-sampling", "Show pc sampling data, the default value is off.",
-            "off", onOffRange);
+        profileCommand.AddOption("pc-sampling", "Show pc sampling data, the default value is off.", "off", onOffRange);
     }
     profileCommand
         .AddOption("output", "Specify the directory that is used for storing data results.", "", CheckOutputValid)
@@ -365,6 +376,6 @@ Argparser AcpCommandBuild(const std::string commandName)
                           .AddSubCommand(profileName, profileCommand);
     return acpCommand;
 }
-}
-}
-}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector

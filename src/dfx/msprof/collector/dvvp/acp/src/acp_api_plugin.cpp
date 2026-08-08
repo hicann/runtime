@@ -38,8 +38,7 @@ static std::set<std::string> g_pluginApiStubSet = {
     "rtStreamSynchronize",
     "rtMalloc",
     "rtFree",
-    "rtMemcpyAsync"
-};
+    "rtMemcpyAsync"};
 
 AcpApiPlugin::~AcpApiPlugin()
 {
@@ -51,17 +50,17 @@ AcpApiPlugin::~AcpApiPlugin()
 void AcpApiPlugin::LoadRuntimeApi()
 {
     FUNRET_CHECK_EXPR_ACTION(acpRuntimeLibHandle_ == nullptr, return, "Runtime handle is nullptr, load api failed.");
-    for (auto &it : g_pluginApiStubSet) {
+    for (auto& it : g_pluginApiStubSet) {
         auto addr = dlsym(acpRuntimeLibHandle_, it.c_str());
-        FUNRET_CHECK_EXPR_ACTION_LOGW(addr == nullptr, continue, "Unable to load API %s from %s.",
-            it.c_str(), RUNTIME_LIB_PATH);
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            addr == nullptr, continue, "Unable to load API %s from %s.", it.c_str(), RUNTIME_LIB_PATH);
 
         MSPROF_LOGI("Load api[%s] from %s success.", it.c_str(), RUNTIME_LIB_PATH);
         apiStubInfoMap_.insert({it, {it, addr}});
     }
 }
 
-AcpApiPlugin::AcpApiPlugin(): apiLoadFlag_(false)
+AcpApiPlugin::AcpApiPlugin() : apiLoadFlag_(false)
 {
     if (acpRuntimeLibHandle_ == nullptr) {
         MSPROF_LOGD("Init api handle from %s", RUNTIME_LIB_PATH);
@@ -77,20 +76,22 @@ rtError_t AcpApiPlugin::ApiRtStreamSynchronize(rtStream_t stream)
 {
     if (rtStreamSynchronize_ == nullptr) {
         rtStreamSynchronize_ = reinterpret_cast<RtStreamSynchronizeFunc>(GetPluginApiStubFunc("rtStreamSynchronize"));
-        FUNRET_CHECK_EXPR_ACTION(rtStreamSynchronize_ == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to load api rtStreamSynchronize");
+        FUNRET_CHECK_EXPR_ACTION(
+            rtStreamSynchronize_ == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
+            "Failed to load api rtStreamSynchronize");
     }
 
     return rtStreamSynchronize_(stream);
 }
 
-rtError_t AcpApiPlugin::ApiRtGetBinaryDeviceBaseAddress(CONST_VOID_PTR handle, VOID_PTR &launchBase)
+rtError_t AcpApiPlugin::ApiRtGetBinaryDeviceBaseAddress(CONST_VOID_PTR handle, VOID_PTR& launchBase)
 {
     if (rtGetBinaryDeviceBaseAddress_ == nullptr) {
-        rtGetBinaryDeviceBaseAddress_ = reinterpret_cast<RtGetBinaryDeviceBaseAddressFunc>(
-            GetPluginApiStubFunc("rtGetBinaryDeviceBaseAddr"));
-        FUNRET_CHECK_EXPR_ACTION(rtGetBinaryDeviceBaseAddress_ == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to load api rtGetBinaryDeviceBaseAddr");
+        rtGetBinaryDeviceBaseAddress_ =
+            reinterpret_cast<RtGetBinaryDeviceBaseAddressFunc>(GetPluginApiStubFunc("rtGetBinaryDeviceBaseAddr"));
+        FUNRET_CHECK_EXPR_ACTION(
+            rtGetBinaryDeviceBaseAddress_ == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
+            "Failed to load api rtGetBinaryDeviceBaseAddr");
     }
 
     return rtGetBinaryDeviceBaseAddress_(handle, &launchBase);
@@ -108,6 +109,6 @@ VOID_PTR AcpApiPlugin::GetPluginApiStubFunc(const std::string funcName)
     return it->second.funcAddr;
 }
 
-}
-}
-}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector

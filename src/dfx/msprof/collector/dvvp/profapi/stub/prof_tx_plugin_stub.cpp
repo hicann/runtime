@@ -10,7 +10,5 @@
 #include "prof_tx_plugin.h"
 
 namespace ProfAPI {
-void LoadProftxApiInit(VOID_PTR /* handle */)
-{
-}
-}
+void LoadProftxApiInit(VOID_PTR /* handle */) {}
+} // namespace ProfAPI

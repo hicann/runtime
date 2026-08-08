@@ -13,12 +13,12 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 static bool g_profAclInited = false;
 
 // prof acl api
-MSVP_PROF_API int32_t ProfAclInit(uint32_t type, const char *profilerPath, uint32_t len)
+MSVP_PROF_API int32_t ProfAclInit(uint32_t type, const char* profilerPath, uint32_t len)
 {
     ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
     ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf();
@@ -79,17 +79,17 @@ MSVP_PROF_API int32_t ProfAclDrvGetDevNum()
     return ProfAPI::ProfAclPlugin::instance()->ProfAclDrvGetDevNum();
 }
 
-MSVP_PROF_API int32_t ProfAclSetConfig(uint32_t configType, const char *config, size_t configLength)
+MSVP_PROF_API int32_t ProfAclSetConfig(uint32_t configType, const char* config, size_t configLength)
 {
     return ProfAPI::ProfAclPlugin::instance()->ProfAclSetConfig(configType, config, configLength);
 }
 
-MSVP_PROF_API int32_t ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData)
+MSVP_PROF_API int32_t ProfAclGetCompatibleFeatures(size_t* featuresSize, void** featuresData)
 {
     return ProfAPI::ProfAclPlugin::instance()->ProfAclGetCompatibleFeatures(featuresSize, featuresData);
 }
 
-MSVP_PROF_API int32_t ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData)
+MSVP_PROF_API int32_t ProfAclGetCompatibleFeaturesV2(size_t* featuresSize, void** featuresData)
 {
     return ProfAPI::ProfAclPlugin::instance()->ProfAclGetCompatibleFeaturesV2(featuresSize, featuresData);
 }

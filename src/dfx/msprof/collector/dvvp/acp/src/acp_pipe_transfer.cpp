@@ -19,11 +19,10 @@ namespace Acp {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 
-int32_t AcpPipeWrite(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, int32_t &fdPipe)
+int32_t AcpPipeWrite(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, int32_t& fdPipe)
 {
     AcpPipeParams acpPipeParams;
-    int32_t ret = strcpy_s(acpPipeParams.aicCoreMetrics,
-        AIC_CORE_METRICS_MAX_LEN, params->ai_core_metrics.c_str());
+    int32_t ret = strcpy_s(acpPipeParams.aicCoreMetrics, AIC_CORE_METRICS_MAX_LEN, params->ai_core_metrics.c_str());
     FUNRET_CHECK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "ai_core_metrics copy failed");
     ret = strcpy_s(acpPipeParams.resultDir, RESULT_DIR_MAX_LEN, params->result_dir.c_str());
     FUNRET_CHECK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "result_dir copy failed");
@@ -91,6 +90,6 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> AcpPipeRead()
     fdPipe = -1;
     return params;
 }
-}
-}
-}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector

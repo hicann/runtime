@@ -33,16 +33,21 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::transport;
 using namespace analysis::dvvp::message;
 
-AcpManager::AcpManager() : blockDim_(0), binaryHandle_(nullptr), jobAdapter_(nullptr), params_(nullptr),
-    devBinaryMap_({}), mallocVec_({}), memoryVec_({}), metrics_({}), rtMallocFunc_(nullptr), rtFreeFunc_(nullptr),
-    rtMemcpyAsyncFunc_(nullptr)
-{
-}
+AcpManager::AcpManager()
+    : blockDim_(0),
+      binaryHandle_(nullptr),
+      jobAdapter_(nullptr),
+      params_(nullptr),
+      devBinaryMap_({}),
+      mallocVec_({}),
+      memoryVec_({}),
+      metrics_({}),
+      rtMallocFunc_(nullptr),
+      rtFreeFunc_(nullptr),
+      rtMemcpyAsyncFunc_(nullptr)
+{}
 
-AcpManager::~AcpManager()
-{
-    UnInit();
-}
+AcpManager::~AcpManager() { UnInit(); }
 
 int32_t AcpManager::Init(int32_t devId)
 {
@@ -65,13 +70,14 @@ void AcpManager::UnInit()
 
 int32_t AcpManager::TaskStart()
 {
-    FUNRET_CHECK_EXPR_ACTION(params_ == nullptr, return PROFILING_FAILED,
-        "Acp task start failed, the params is nullptr.");
+    FUNRET_CHECK_EXPR_ACTION(
+        params_ == nullptr, return PROFILING_FAILED, "Acp task start failed, the params is nullptr.");
     int32_t ret = InitAcpUploader();
     FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS, return PROFILING_FAILED, "Acp uploader init failed.");
     // if instr-profiling or pc-sampling opened, send config message to runtime
-    FUNRET_CHECK_EXPR_ACTION(NotifyRtSwitchConfig(PROF_COMMANDHANDLE_TYPE_START) != PROFILING_SUCCESS,
-        return PROFILING_FAILED, "Start set biu or pc sampling config to runtime failed.");
+    FUNRET_CHECK_EXPR_ACTION(
+        NotifyRtSwitchConfig(PROF_COMMANDHANDLE_TYPE_START) != PROFILING_SUCCESS, return PROFILING_FAILED,
+        "Start set biu or pc sampling config to runtime failed.");
     ret = JobStart();
     FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS, return PROFILING_FAILED, "Acp job start failed.");
     MSPROF_LOGI("Acp task started successfully.");
@@ -132,10 +138,11 @@ int32_t AcpManager::JobStart()
 
 int32_t AcpManager::TaskStop()
 {
-    FUNRET_CHECK_EXPR_ACTION(params_ == nullptr, return PROFILING_FAILED,
-        "Acp task stop failed, the params is nullptr.");
-    FUNRET_CHECK_EXPR_ACTION(NotifyRtSwitchConfig(PROF_COMMANDHANDLE_TYPE_STOP) != PROFILING_SUCCESS,
-        return PROFILING_FAILED, "Stop set biu or pc sampling config to runtime failed.");
+    FUNRET_CHECK_EXPR_ACTION(
+        params_ == nullptr, return PROFILING_FAILED, "Acp task stop failed, the params is nullptr.");
+    FUNRET_CHECK_EXPR_ACTION(
+        NotifyRtSwitchConfig(PROF_COMMANDHANDLE_TYPE_STOP) != PROFILING_SUCCESS, return PROFILING_FAILED,
+        "Stop set biu or pc sampling config to runtime failed.");
     int32_t ret = JobStop();
     UploaderMgr::instance()->DelAllUploader();
     (void)UploaderMgr::instance()->Uninit();
@@ -168,11 +175,12 @@ int32_t AcpManager::JobStop()
     return ret;
 }
 
-void AcpManager::AddBinary(VOID_PTR handle, const RtDevBinary &binary)
+void AcpManager::AddBinary(VOID_PTR handle, const RtDevBinary& binary)
 {
     FUNRET_CHECK_EXPR_ACTION(handle == nullptr, return, "Add binary handle is invalid.");
-    FUNRET_CHECK_EXPR_ACTION(((binary.data == nullptr) || (binary.length == 0)), return,
-     "Binary is invalid, binary data is nullptr or length is 0");
+    FUNRET_CHECK_EXPR_ACTION(
+        ((binary.data == nullptr) || (binary.length == 0)), return,
+        "Binary is invalid, binary data is nullptr or length is 0");
     AcpDevBinary bin;
     bin.magic = binary.magic;
     bin.version = binary.version;
@@ -210,7 +218,7 @@ void AcpManager::DumpBinary(VOID_PTR handle)
     auto it = devBinaryMap_.find(handle);
     if (it == devBinaryMap_.cend()) {
         MSPROF_LOGE("Failed to find binary by handle[%p].", handle);
-        return ;
+        return;
     }
 
     binaryObjectPath_ = Utils::CanonicalizePath(params_->result_dir);
@@ -222,8 +230,8 @@ void AcpManager::DumpBinary(VOID_PTR handle)
     binaryObjectPath_ = binaryObjectPath_ + "/" + "object_" + std::to_string(Utils::GetClockMonotonicRaw()) + ".o";
     int32_t fd = OsalOpen(binaryObjectPath_.c_str(), O_WRONLY | O_CREAT | O_APPEND, OSAL_IRUSR | OSAL_IWUSR);
     if (fd < 0) {
-        MSPROF_LOGE("Failed to create or open binary file: %s, error info %s.",
-            binaryObjectPath_.c_str(), strerror(errno));
+        MSPROF_LOGE(
+            "Failed to create or open binary file: %s, error info %s.", binaryObjectPath_.c_str(), strerror(errno));
         return;
     }
     (void)OsalClose(fd);
@@ -232,7 +240,7 @@ void AcpManager::DumpBinary(VOID_PTR handle)
         MSPROF_LOGE("Failed to open %s, errinfo:%s", binaryObjectPath_.c_str(), strerror(OsalGetErrorCode()));
         return;
     }
-    file.write(reinterpret_cast<const char *>(it->second.data.data()), it->second.length);
+    file.write(reinterpret_cast<const char*>(it->second.data.data()), it->second.length);
     file.flush();
     file.close();
     MSPROF_LOGI("Device binary file[%s] dump successfully.", binaryObjectPath_.c_str());
@@ -250,7 +258,7 @@ void AcpManager::AddBinaryBaseAddr(VOID_PTR handle, VOID_PTR baseAddr)
     }
 }
 
-void AcpManager::SaveBinaryHandle(VOID_PTR &handle)
+void AcpManager::SaveBinaryHandle(VOID_PTR& handle)
 {
     if (handle == nullptr) {
         MSPROF_LOGE("Save binary handle failed, handle is nullptr.");
@@ -268,8 +276,8 @@ int32_t AcpManager::NotifyRtSwitchConfig(MsprofCommandHandleType connamdType)
 {
     if (params_->instrProfiling.compare(MSVP_PROF_ON) == 0 || params_->pcSampling.compare(MSVP_PROF_ON) == 0) {
         auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc("rtProfSetProSwitch");
-        FUNRET_CHECK_EXPR_ACTION(func == nullptr, return PROFILING_FAILED,
-            "dlopen rtProfSetProSwitch failed which is nullptr.");
+        FUNRET_CHECK_EXPR_ACTION(
+            func == nullptr, return PROFILING_FAILED, "dlopen rtProfSetProSwitch failed which is nullptr.");
         MsprofCommandHandle command;
         int32_t ret = memset_s(&command, sizeof(command), 0, sizeof(command));
         FUNRET_CHECK_EXPR_ACTION(ret != EOK, return PROFILING_FAILED, "Memset data to command failed, ret is %d", ret);
@@ -278,31 +286,24 @@ int32_t AcpManager::NotifyRtSwitchConfig(MsprofCommandHandleType connamdType)
         command.modelId = 0xFFFFFFFFUL;
         command.cacheFlag = 0;
         command.devNums = 1;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToUint32(command.devIdList[0], params_->devices), return PROFILING_FAILED,
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToUint32(command.devIdList[0], params_->devices), return PROFILING_FAILED,
             "Convert device string %s to uint32 failed.", params_->devices.c_str());
-        ret = reinterpret_cast<RtProfSetProSwitchFunc>(func)(reinterpret_cast<VOID_PTR>(&command),
-            sizeof(MsprofCommandHandle));
-        FUNRET_CHECK_EXPR_ACTION(ret != ACL_RT_SUCCESS, return PROFILING_FAILED,
+        ret = reinterpret_cast<RtProfSetProSwitchFunc>(func)(
+            reinterpret_cast<VOID_PTR>(&command), sizeof(MsprofCommandHandle));
+        FUNRET_CHECK_EXPR_ACTION(
+            ret != ACL_RT_SUCCESS, return PROFILING_FAILED,
             "Set config to runtime by rtProfSetProSwitch failed with ret %d.", ret);
         MSPROF_LOGI("Success to notify runtime set config with command type %u", connamdType);
     }
     return PROFILING_SUCCESS;
 }
 
-VOID_PTR AcpManager::GetBinaryHandle() const
-{
-    return binaryHandle_;
-}
+VOID_PTR AcpManager::GetBinaryHandle() const { return binaryHandle_; }
 
-bool AcpManager::PcSamplingIsEnable() const
-{
-    return params_->pcSampling.compare("on") == 0;
-}
+bool AcpManager::PcSamplingIsEnable() const { return params_->pcSampling.compare("on") == 0; }
 
-std::string AcpManager::GetBinaryObjectPath() const
-{
-    return binaryObjectPath_;
-}
+std::string AcpManager::GetBinaryObjectPath() const { return binaryObjectPath_; }
 
 int32_t AcpManager::SaveBasicOpInfo(SHARED_PTR_ALIA<Uploader> uploader)
 {
@@ -396,10 +397,7 @@ void AcpManager::HandleAcpMetrics()
  * @brief Get kernel replay times
  * @return
  */
-uint32_t AcpManager::GetKernelReplayTime() const
-{
-    return static_cast<uint32_t>(metrics_.size());
-}
+uint32_t AcpManager::GetKernelReplayTime() const { return static_cast<uint32_t>(metrics_.size()); }
 
 /**
  * @brief Set aic metrics for kernel replay
@@ -416,7 +414,8 @@ void AcpManager::SetKernelReplayMetrics(const uint32_t time)
         params_->ai_core_metrics = metrics_[time];
         params_->aiv_metrics = params_->ai_core_metrics;
         ConfigManager::instance()->GetVersionSpecificMetrics(params_->ai_core_metrics);
-        int32_t ret = Platform::instance()->GetAicoreEvents(params_->ai_core_metrics, params_->ai_core_profiling_events);
+        int32_t ret =
+            Platform::instance()->GetAicoreEvents(params_->ai_core_metrics, params_->ai_core_profiling_events);
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("The ai_core_metrics: %s is invalid.", params_->ai_core_metrics.c_str());
             return;
@@ -433,8 +432,9 @@ void AcpManager::SetKernelReplayMetrics(const uint32_t time)
         params_->aiv_profiling_events = params_->ai_core_profiling_events;
     }
 
-    MSPROF_LOGI("Acp kernel replay set ai core metrics: %s, pmu events: %s, time: %u.",
-        params_->ai_core_metrics.c_str(), params_->ai_core_profiling_events.c_str(), time);
+    MSPROF_LOGI(
+        "Acp kernel replay set ai core metrics: %s, pmu events: %s, time: %u.", params_->ai_core_metrics.c_str(),
+        params_->ai_core_profiling_events.c_str(), time);
 }
 
 /**
@@ -472,15 +472,16 @@ void AcpManager::RegisterRtMemcpyFunc(RtMemcpyAsyncFunc memcpyAsyncFunc)
  * @param [in] attr: back up attribute applied by the user
  * @return
  */
-void AcpManager::SaveRtMallocAttr(AcpBackupAttr &attr)
+void AcpManager::SaveRtMallocAttr(AcpBackupAttr& attr)
 {
     if (attr.addr == nullptr) {
         MSPROF_LOGI("Acp skipped saving nullptr malloc attr.");
         return;
     }
     mallocVec_.emplace_back(attr);
-    MSPROF_LOGI("Acp save malloc attr, addr: %p, size: %llu, type: %u, moduleId: %u.",
-        attr.addr, attr.size, attr.type, attr.moduleId);
+    MSPROF_LOGI(
+        "Acp save malloc attr, addr: %p, size: %llu, type: %u, moduleId: %u.", attr.addr, attr.size, attr.type,
+        attr.moduleId);
 }
 
 /**
@@ -490,7 +491,7 @@ void AcpManager::SaveRtMallocAttr(AcpBackupAttr &attr)
  */
 void AcpManager::ReleaseRtMallocAddr(const void* ptr)
 {
-    for (auto &it : mallocVec_) {
+    for (auto& it : mallocVec_) {
         if (it.addr == ptr) {
             MSPROF_LOGI("Acp release malloc addr: %p.", it.addr);
             it.addr = nullptr;
@@ -519,7 +520,7 @@ void AcpManager::SaveMallocMemory(rtStream_t stream)
 void AcpManager::SaveRtMallocMemory(rtStream_t stream)
 {
     rtError_t ret = ACL_RT_SUCCESS;
-    for (auto &it : mallocVec_) {
+    for (auto& it : mallocVec_) {
         if (it.size == 0 || it.addr == nullptr) {
             AcpBackupAttr attr = {nullptr, 0, 0, 0};
             memoryVec_.emplace_back(attr);
@@ -527,8 +528,8 @@ void AcpManager::SaveRtMallocMemory(rtStream_t stream)
             continue;
         }
         // malloc and memcpy memory ptr
-        void *ptr = nullptr;
-        void **upPtr = reinterpret_cast<void **>(&ptr);
+        void* ptr = nullptr;
+        void** upPtr = reinterpret_cast<void**>(&ptr);
         ret = rtMallocFunc_(upPtr, it.size, static_cast<rtMemType_t>(it.type), it.moduleId);
         FUNRET_CHECK_EXPR_ACTION(ret != ACL_RT_SUCCESS, break, "Failed to malloc back up ptr, ret: %d.", ret);
         ret = rtMemcpyAsyncFunc_(ptr, it.size, it.addr, it.size, RT_MEMCPY_DEVICE_TO_DEVICE, stream);
@@ -536,8 +537,9 @@ void AcpManager::SaveRtMallocMemory(rtStream_t stream)
         // save memory ptr in vector
         AcpBackupAttr attr = {ptr, it.size, it.type, it.moduleId};
         memoryVec_.emplace_back(attr);
-        MSPROF_LOGI("Acp save malloc memory, addr: %p, size: %llu, type: %u, moduleId: %u.", attr.addr, attr.size,
-            attr.type, attr.moduleId);
+        MSPROF_LOGI(
+            "Acp save malloc memory, addr: %p, size: %llu, type: %u, moduleId: %u.", attr.addr, attr.size, attr.type,
+            attr.moduleId);
     }
     ret = AcpApiPlugin::instance()->ApiRtStreamSynchronize(stream);
     FUNRET_CHECK_EXPR_PRINT(ret != ACL_RT_SUCCESS, "Failed to execute rtStreamSynchronize.");
@@ -575,10 +577,12 @@ void AcpManager::ResetRtMallocMemory(rtStream_t stream)
             continue;
         }
         // reset malloc memory
-        ret = rtMemcpyAsyncFunc_(mallocVec_[i].addr, mallocVec_[i].size, memoryVec_[i].addr, memoryVec_[i].size,
-            RT_MEMCPY_DEVICE_TO_DEVICE, stream);
+        ret = rtMemcpyAsyncFunc_(
+            mallocVec_[i].addr, mallocVec_[i].size, memoryVec_[i].addr, memoryVec_[i].size, RT_MEMCPY_DEVICE_TO_DEVICE,
+            stream);
         FUNRET_CHECK_EXPR_ACTION(ret != ACL_RT_SUCCESS, break, "Failed to memcpy back up ptr, ret: %d.", ret);
-        MSPROF_LOGI("Acp reset malloc memory, addr: %p, size: %llu, type: %u, moduleId: %u.", mallocVec_[i].addr,
+        MSPROF_LOGI(
+            "Acp reset malloc memory, addr: %p, size: %llu, type: %u, moduleId: %u.", mallocVec_[i].addr,
             mallocVec_[i].size, mallocVec_[i].type, mallocVec_[i].moduleId);
     }
     ret = AcpApiPlugin::instance()->ApiRtStreamSynchronize(stream);
@@ -603,7 +607,7 @@ void AcpManager::ClearMallocMemory()
  */
 void AcpManager::ClearRtMallocMemory()
 {
-    for (auto &it : memoryVec_) {
+    for (auto& it : memoryVec_) {
         if (it.addr != nullptr) {
             (void)rtFreeFunc_(it.addr);
         }
@@ -629,11 +633,11 @@ void AcpManager::ClearMallocAddr()
  */
 void AcpManager::ClearRtMallocAddr()
 {
-    for (auto &it : mallocVec_) {
+    for (auto& it : mallocVec_) {
         it.addr = nullptr;
     }
     mallocVec_.clear();
 }
-}
-}
-}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector

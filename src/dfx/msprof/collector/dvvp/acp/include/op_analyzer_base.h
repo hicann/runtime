@@ -37,8 +37,8 @@ public:
     std::multimap<std::string, KernelDetail> subTaskInfo_;
     std::multimap<std::string, KernelDetail> blockInfo_;
 };
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp
 
 #endif

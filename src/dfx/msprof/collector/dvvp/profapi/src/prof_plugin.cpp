@@ -14,8 +14,5 @@ namespace ProfAPI {
 std::mutex ProfPlugin::callbackMutex_;
 std::map<uint32_t, std::set<ProfCommandHandle>> ProfPlugin::moduleCallbacks_;
 
-size_t ProfPlugin::ReadProfCommandHandle()
-{
-    return ProfPlugin::moduleCallbacks_.size();
-}
-}
+size_t ProfPlugin::ReadProfCommandHandle() { return ProfPlugin::moduleCallbacks_.size(); }
+} // namespace ProfAPI

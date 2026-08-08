@@ -26,9 +26,9 @@ struct AcpPipeParams {
     char instrProfiling[ON_OFF_MAX_LEN];
     char pcSampling[ON_OFF_MAX_LEN];
 };
-int32_t AcpPipeWrite(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, int32_t &fdPipe);
+int32_t AcpPipeWrite(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, int32_t& fdPipe);
 SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> AcpPipeRead();
-}
-}
-}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector
 #endif

@@ -42,12 +42,12 @@ constexpr uint16_t END_SQE = 21;
 
 class OpAnalyzerPmu : public OpAnalyzerBase {
 public:
-    OpAnalyzerPmu(): starsBytes_(0), fftsSubBytes_(0), fftsBlockBytes_(0) {};
+    OpAnalyzerPmu() : starsBytes_(0), fftsSubBytes_(0), fftsBlockBytes_(0){};
     ~OpAnalyzerPmu(){};
 
 public:
-    bool IsStarsData(const std::string &fileName) const;
-    bool IsFftsData(const std::string &fileName) const;
+    bool IsStarsData(const std::string& fileName) const;
+    bool IsFftsData(const std::string& fileName) const;
     void ParseStarsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void ParseFftsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void ParseDavidLogData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
@@ -57,12 +57,12 @@ public:
 
 private:
     template <typename T>
-    void HandleStarsAcsq(const T *logData, uint16_t logType);
-    void HandleSubTaskThread(const void *data, uint16_t logType) const;
+    void HandleStarsAcsq(const T* logData, uint16_t logType);
+    void HandleSubTaskThread(const void* data, uint16_t logType) const;
     template <typename T>
-    void HandleSubtaskPmu(const T *data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
+    void HandleSubtaskPmu(const T* data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
     template <typename T>
-    void HandleBlockPmu(const T *data);
+    void HandleBlockPmu(const T* data);
     bool IsAic(uint8_t fftsType, uint8_t contextType, uint8_t coreType) const;
     bool IsFftsAic(uint8_t fftsType, uint8_t contextType) const;
     bool IsTraditionAic(uint8_t fftsType) const;
@@ -77,8 +77,8 @@ private:
     uint64_t fftsSubBytes_;
     uint64_t fftsBlockBytes_;
 };
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp
 
 #endif

@@ -48,12 +48,12 @@ struct InstructionMap {
 };
 
 struct BiuDataCollection {
-    uint32_t initTimes = 0; // each channel need 4 data to combine syscnt
+    uint32_t initTimes = 0;                      // each channel need 4 data to combine syscnt
     uint64_t sysCnt = 0;
-    double baseTime = 0; // Base time(us) when channel starts to run.
+    double baseTime = 0;                         // Base time(us) when channel starts to run.
     uint16_t blockId = 0;
     InstructionMap instrMap[INSTR_TYPE_NUM_MAX]; // Status set of 7 instructions, busy or idle
-    std::string data; // Collection of character strings in JSON format.
+    std::string data;                            // Collection of character strings in JSON format.
 };
 
 class OpAnalyzerBiu : public OpAnalyzerBase {
@@ -62,7 +62,7 @@ public:
     ~OpAnalyzerBiu(){};
 
 public:
-    bool IsBiuPerfData(const std::string &fileName) const;
+    bool IsBiuPerfData(const std::string& fileName) const;
     void ParseBiuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void PrintStats() const;
     void SetDeviceInfo(uint32_t deviceId, double freq, double aicFreq);
@@ -71,12 +71,12 @@ public:
 
 private:
     uint16_t ConvCtrlToInstr(uint16_t ctrlType) const;
-    void HandleSyscnt(const BiuPerfProfile *data);
-    void HandleStatusData(const BiuPerfProfile *data);
-    void HandleStampData(const BiuPerfProfile *data);
+    void HandleSyscnt(const BiuPerfProfile* data);
+    void HandleStatusData(const BiuPerfProfile* data);
+    void HandleStampData(const BiuPerfProfile* data);
     bool CheckNumberExist(std::vector<uint16_t> checkList, uint16_t num) const;
     std::vector<uint16_t> CheckBits(uint16_t instrStatus) const;
-    bool SplitFileName(const std::string &fileName);
+    bool SplitFileName(const std::string& fileName);
     void SaveCntData();
     void HandleInstrStart(uint32_t idx);
     void HandleInstrStop(uint32_t idx);
@@ -93,8 +93,8 @@ private:
     double aivFreq_;
 };
 
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp
 
 #endif

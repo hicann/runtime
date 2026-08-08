@@ -33,17 +33,13 @@ using namespace Analysis::Dvvp::TaskHandle;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::JobWrapper;
 
-AcpComputeDeviceJob::AcpComputeDeviceJob(int32_t devIndexId)
-    : devIndexId_(devIndexId),
-      isStarted_(false)
+AcpComputeDeviceJob::AcpComputeDeviceJob(int32_t devIndexId) : devIndexId_(devIndexId), isStarted_(false)
 {
     collectionJobV_.fill(CollectionJobT());
     jobUsed_ = {BIU_PERF_COLLECTION_JOB, STARS_SOC_LOG_COLLECTION_JOB, FFTS_PROFILE_COLLECTION_JOB};
 }
 
-AcpComputeDeviceJob::~AcpComputeDeviceJob()
-{
-}
+AcpComputeDeviceJob::~AcpComputeDeviceJob() {}
 
 int32_t AcpComputeDeviceJob::StartProfHandle(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
 {
@@ -67,8 +63,7 @@ int32_t AcpComputeDeviceJob::StartProf(SHARED_PTR_ALIA<analysis::dvvp::message::
     status_.info = "Start prof failed";
     do {
         MSPROF_LOGI("AcpComputeDeviceJob StartProf checking params");
-        if (isStarted_ || params == nullptr ||
-            !(ParamValidation::instance()->CheckProfilingParams(params))) {
+        if (isStarted_ || params == nullptr || !(ParamValidation::instance()->CheckProfilingParams(params))) {
             MSPROF_LOGE("[AcpComputeDeviceJob::StartProf]Failed to check params");
             status_.info = "Start flag is true or parmas is invalid";
             break;
@@ -129,13 +124,12 @@ int32_t AcpComputeDeviceJob::ParseAiCoreConfig(SHARED_PTR_ALIA<PMUEventsConfig> 
 {
     MSPROF_LOGI("aiCoreEvents:%s", Utils::GetEventsStr(cfg->aiCoreEvents).c_str());
     MSPROF_LOGI("aiCoreIdSize:%d", cfg->aiCoreEventsCoreIds.size());
-    if (cfg->aiCoreEvents.size() > 0 &&
-        !ParamValidation::instance()->CheckAiCoreEventsIsValid(cfg->aiCoreEvents)) {
+    if (cfg->aiCoreEvents.size() > 0 && !ParamValidation::instance()->CheckAiCoreEventsIsValid(cfg->aiCoreEvents)) {
         MSPROF_LOGE("[AcpComputeDeviceJob::ParseAiCoreConfig]aiCoreEvent is not valid!");
         return PROFILING_FAILED;
     }
-    if (cfg->aiCoreEventsCoreIds.size() > 0
-        && !ParamValidation::instance()->CheckAiCoreEventCoresIsValid(cfg->aiCoreEventsCoreIds)) {
+    if (cfg->aiCoreEventsCoreIds.size() > 0 &&
+        !ParamValidation::instance()->CheckAiCoreEventCoresIsValid(cfg->aiCoreEventsCoreIds)) {
         MSPROF_LOGE("[AcpComputeDeviceJob::ParseAiCoreConfig]aiCoreEventCores is not valid!");
         return PROFILING_FAILED;
     }
@@ -151,14 +145,14 @@ int32_t AcpComputeDeviceJob::ParseAiCoreConfig(SHARED_PTR_ALIA<PMUEventsConfig> 
     }
 
     if (collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.cores == nullptr) {
-        MSVP_MAKE_SHARED0(collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.cores,
-            std::vector<int32_t>,
+        MSVP_MAKE_SHARED0(
+            collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.cores, std::vector<int32_t>,
             return PROFILING_FAILED);
     }
 
     if (collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.events == nullptr) {
-        MSVP_MAKE_SHARED0(collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.events,
-            std::vector<std::string>,
+        MSVP_MAKE_SHARED0(
+            collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.events, std::vector<std::string>,
             return PROFILING_FAILED);
     }
     return PROFILING_SUCCESS;
@@ -166,13 +160,12 @@ int32_t AcpComputeDeviceJob::ParseAiCoreConfig(SHARED_PTR_ALIA<PMUEventsConfig> 
 
 int32_t AcpComputeDeviceJob::ParseAivConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg)
 {
-    if (cfg->aivEvents.size() > 0 &&
-        !ParamValidation::instance()->CheckAivEventsIsValid(cfg->aivEvents)) {
+    if (cfg->aivEvents.size() > 0 && !ParamValidation::instance()->CheckAivEventsIsValid(cfg->aivEvents)) {
         MSPROF_LOGE("[AcpComputeDeviceJob::ParseAivConfig]aivEvents is not valid!");
         return PROFILING_FAILED;
     }
-    if (cfg->aivEventsCoreIds.size() > 0
-        && !ParamValidation::instance()->CheckAivEventCoresIsValid(cfg->aivEventsCoreIds)) {
+    if (cfg->aivEventsCoreIds.size() > 0 &&
+        !ParamValidation::instance()->CheckAivEventCoresIsValid(cfg->aivEventsCoreIds)) {
         MSPROF_LOGE("[AcpComputeDeviceJob::ParseAivConfig]aivEventsCoreIds is not valid!");
         return PROFILING_FAILED;
     }
@@ -188,14 +181,14 @@ int32_t AcpComputeDeviceJob::ParseAivConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg
     }
 
     if (collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivCores == nullptr) {
-        MSVP_MAKE_SHARED0(collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivCores,
-            std::vector<int32_t>,
+        MSVP_MAKE_SHARED0(
+            collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivCores, std::vector<int32_t>,
             return PROFILING_FAILED);
     }
 
     if (collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivEvents == nullptr) {
-        MSVP_MAKE_SHARED0(collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivEvents,
-            std::vector<std::string>,
+        MSVP_MAKE_SHARED0(
+            collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].jobCfg->jobParams.aivEvents, std::vector<std::string>,
             return PROFILING_FAILED);
     }
     return PROFILING_SUCCESS;
@@ -262,8 +255,9 @@ void AcpComputeDeviceJob::UnRegisterCollectionJobs()
                 collectionJobV_[cnt].jobCfg->jobParams.cores.reset();
             }
             if (retn != PROFILING_SUCCESS) {
-                MSPROF_LOGD("Device %d Collection Job %d Unregister", collectionJobCommCfg_->devIdOnHost,
-                            collectionJobV_[cnt].jobTag);
+                MSPROF_LOGD(
+                    "Device %d Collection Job %d Unregister", collectionJobCommCfg_->devIdOnHost,
+                    collectionJobV_[cnt].jobTag);
             }
         }
         ProfChannelManager::instance()->UnInit();
@@ -293,8 +287,7 @@ int32_t AcpComputeDeviceJob::CreateAcpCollectionJobArray()
         collectionJobV_[STARS_SOC_LOG_COLLECTION_JOB].collectionJob, ProfStarsSocLogJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[FFTS_PROFILE_COLLECTION_JOB].collectionJob, ProfFftsProfileJob, return PROFILING_FAILED);
-    MSVP_MAKE_SHARED0(
-        collectionJobV_[BIU_PERF_COLLECTION_JOB].collectionJob, ProfBiuPerfJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(collectionJobV_[BIU_PERF_COLLECTION_JOB].collectionJob, ProfBiuPerfJob, return PROFILING_FAILED);
     return PROFILING_SUCCESS;
 }
 
@@ -316,9 +309,11 @@ int32_t AcpComputeDeviceJob::DoCreateCollectionJobArray()
     return PROFILING_SUCCESS;
 }
 
-std::string AcpComputeDeviceJob::GenerateFileName(const std::string &fileName)
+std::string AcpComputeDeviceJob::GenerateFileName(const std::string& fileName)
 {
     std::string ret = fileName + "." + std::to_string(collectionJobCommCfg_->devIdFlush);
     return ret;
 }
-}}}
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector

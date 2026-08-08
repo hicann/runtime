@@ -30,7 +30,7 @@ static void SaveBinaryBaseAddr()
         return;
     }
     VOID_PTR baseAddress = nullptr;
-    auto hdl =  AcpManager::instance()->GetBinaryHandle();
+    auto hdl = AcpManager::instance()->GetBinaryHandle();
     auto error = AcpApiPlugin::instance()->ApiRtGetBinaryDeviceBaseAddress(hdl, baseAddress);
     if (error == RT_ERROR_NONE) {
         AcpManager::instance()->AddBinaryBaseAddr(hdl, baseAddress);
@@ -48,15 +48,14 @@ static void SaveBinaryBaseAddr()
  * @return RT_ERROR_NONE:SUCCESS, !RT_ERROR_NONE:FAILED
  */
 template <typename Func, typename... Args>
-static rtError_t KernelWarmUp(rtStream_t &stream, Func &&func, Args&&... args)
+static rtError_t KernelWarmUp(rtStream_t& stream, Func&& func, Args&&... args)
 {
     rtError_t ret = RT_ERROR_NONE;
     MSPROF_LOGI("Acp execute kernel warm up.");
     ret = std::forward<Func>(func)(std::forward<Args>(args)...);
     FUNRET_CHECK_EXPR_ACTION(ret != RT_ERROR_NONE, return ret, "Failed to warm up kernel, ret: %d.", ret);
     ret = AcpApiPlugin::instance()->ApiRtStreamSynchronize(stream);
-    FUNRET_CHECK_EXPR_ACTION(ret != RT_ERROR_NONE, return ret, "Failed to execute rtStreamSynchronize, ret: %d.",
-        ret);
+    FUNRET_CHECK_EXPR_ACTION(ret != RT_ERROR_NONE, return ret, "Failed to execute rtStreamSynchronize, ret: %d.", ret);
     return ret;
 }
 
@@ -69,7 +68,7 @@ static rtError_t KernelWarmUp(rtStream_t &stream, Func &&func, Args&&... args)
  * @return RT_ERROR_NONE:SUCCESS, !RT_ERROR_NONE:FAILED
  */
 template <typename Func, typename... Args>
-static rtError_t KernelReplay(rtStream_t &stream, Func &&func, Args&&... args)
+static rtError_t KernelReplay(rtStream_t& stream, Func&& func, Args&&... args)
 {
     rtError_t ret = RT_ERROR_NONE;
     int32_t acpRet = PROFILING_SUCCESS;
@@ -92,8 +91,9 @@ static rtError_t KernelReplay(rtStream_t &stream, Func &&func, Args&&... args)
         // stop profiling
         acpRet = AcpManager::instance()->TaskStop();
         FUNRET_CHECK_EXPR_PRINT(acpRet != PROFILING_SUCCESS, "Failed to stop acp task.");
-        FUNRET_CHECK_EXPR_ACTION(ret != RT_ERROR_NONE || acpRet != PROFILING_SUCCESS, break,
-            "Failed to execute kernel task, time: %u.", time);
+        FUNRET_CHECK_EXPR_ACTION(
+            ret != RT_ERROR_NONE || acpRet != PROFILING_SUCCESS, break, "Failed to execute kernel task, time: %u.",
+            time);
     }
 
     return ret;
@@ -108,7 +108,7 @@ static rtError_t KernelReplay(rtStream_t &stream, Func &&func, Args&&... args)
  * @return RT_ERROR_NONE:SUCCESS, !RT_ERROR_NONE:FAILED
  */
 template <typename Func, typename... Args>
-static rtError_t KernelExec(rtStream_t stream, Func &&func, Args&&... args)
+static rtError_t KernelExec(rtStream_t stream, Func&& func, Args&&... args)
 {
     rtError_t ret = RT_ERROR_NONE;
     // save rtMalloc memory
@@ -156,18 +156,18 @@ extern "C" MSVP_PROF_API rtError_t rtSetDevice(int32_t devId)
 
     MSPROF_LOGI("Acp rtSetDevice reloading finished.");
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     return reinterpret_cast<RtSetDeviceFunc>(func)(devId);
 }
 
- // static operator register
-extern "C" MSVP_PROF_API rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, void **hdl)
+// static operator register
+extern "C" MSVP_PROF_API rtError_t rtDevBinaryRegister(const rtDevBinary_t* bin, void** hdl)
 {
     MSPROF_LOGI("rtDevBinaryRegister called");
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     rtError_t error = reinterpret_cast<RtDevBinaryRegisterFunc>(func)(bin, hdl);
     if (error == RT_ERROR_NONE) {
         AcpManager::instance()->AddBinary(*hdl, *bin);
@@ -177,12 +177,12 @@ extern "C" MSVP_PROF_API rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin,
     return error;
 }
 
-extern "C" MSVP_PROF_API rtError_t rtDevBinaryUnRegister(void *hdl)
+extern "C" MSVP_PROF_API rtError_t rtDevBinaryUnRegister(void* hdl)
 {
     MSPROF_LOGI("rtDevBinaryUnRegister called");
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     rtError_t error = reinterpret_cast<RtDevBinaryUnRegisterFunc>(func)(hdl);
     if (error == RT_ERROR_NONE) {
         AcpManager::instance()->RemoveBinary(hdl);
@@ -192,16 +192,15 @@ extern "C" MSVP_PROF_API rtError_t rtDevBinaryUnRegister(void *hdl)
 }
 
 // function register after static operator binary register
-extern "C" MSVP_PROF_API rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc,
-                             const char_t *stubName, const void *kernelInfoExt,
-                             uint32_t funcMode)
+extern "C" MSVP_PROF_API rtError_t rtFunctionRegister(
+    void* binHandle, const void* stubFunc, const char_t* stubName, const void* kernelInfoExt, uint32_t funcMode)
 {
     MSPROF_LOGI("rtFunctionRegister called");
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
-    rtError_t error = reinterpret_cast<RtFunctionRegisterFunc>(func)(binHandle, stubFunc, stubName,
-        kernelInfoExt, funcMode);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
+    rtError_t error =
+        reinterpret_cast<RtFunctionRegisterFunc>(func)(binHandle, stubFunc, stubName, kernelInfoExt, funcMode);
     if (error == RT_ERROR_NONE) {
         AcpManager::instance()->SaveBinaryHandle(binHandle);
     } else {
@@ -212,12 +211,12 @@ extern "C" MSVP_PROF_API rtError_t rtFunctionRegister(void *binHandle, const voi
 }
 
 // dynamic operator register
-extern "C" MSVP_PROF_API rtError_t rtRegisterAllKernel(const rtDevBinary_t *bin, void **hdl)
+extern "C" MSVP_PROF_API rtError_t rtRegisterAllKernel(const rtDevBinary_t* bin, void** hdl)
 {
     MSPROF_LOGI("rtRegisterAllKernel called");
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     rtError_t error = reinterpret_cast<RtRegisterAllKernelFunc>(func)(bin, hdl);
     if (error == RT_ERROR_NONE) {
         AcpManager::instance()->AddBinary(*hdl, *bin);
@@ -227,66 +226,71 @@ extern "C" MSVP_PROF_API rtError_t rtRegisterAllKernel(const rtDevBinary_t *bin,
     return error;
 }
 
-extern "C" MSVP_PROF_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args,
-    uint32_t argsSize, rtSmDesc_t *smDesc, rtStream_t stm)
+extern "C" MSVP_PROF_API rtError_t rtKernelLaunch(
+    const void* stubFunc, uint32_t blockDim, void* args, uint32_t argsSize, rtSmDesc_t* smDesc, rtStream_t stm)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     AcpManager::instance()->SetTaskBlockDim(blockDim);
-    return KernelExec(stm, reinterpret_cast<RtKernelLaunchFunc>(func),
-        stubFunc, blockDim, args, argsSize, smDesc, stm);
+    return KernelExec(stm, reinterpret_cast<RtKernelLaunchFunc>(func), stubFunc, blockDim, args, argsSize, smDesc, stm);
 }
 
-extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
-    rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const void *kernelInfo)
+extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithHandle(
+    void* hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm,
+    const void* kernelInfo)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     AcpManager::instance()->SetTaskBlockDim(blockDim);
     AcpManager::instance()->SaveBinaryHandle(hdl);
-    return KernelExec(stm, reinterpret_cast<RtKernelLaunchWithHandleFunc>(func),
-        hdl, tilingKey, blockDim, argsInfo, smDesc, stm, kernelInfo);
+    return KernelExec(
+        stm, reinterpret_cast<RtKernelLaunchWithHandleFunc>(func), hdl, tilingKey, blockDim, argsInfo, smDesc, stm,
+        kernelInfo);
 }
 
-extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
-    rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
+extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithHandleV2(
+    void* hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm,
+    const rtTaskCfgInfo_t* cfgInfo)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     AcpManager::instance()->SetTaskBlockDim(blockDim);
     AcpManager::instance()->SaveBinaryHandle(hdl);
-    return KernelExec(stm, reinterpret_cast<RtKernelLaunchWithHandleV2Func>(func),
-        hdl, tilingKey, blockDim, argsInfo, smDesc, stm, cfgInfo);
+    return KernelExec(
+        stm, reinterpret_cast<RtKernelLaunchWithHandleV2Func>(func), hdl, tilingKey, blockDim, argsInfo, smDesc, stm,
+        cfgInfo);
 }
 
-extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
-    rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
+extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithFlag(
+    const void* stubFunc, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm, uint32_t flags)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     AcpManager::instance()->SetTaskBlockDim(blockDim);
-    return KernelExec(stm, reinterpret_cast<RtKernelLaunchWithFlagFunc>(func),
-        stubFunc, blockDim, argsInfo, smDesc, stm, flags);
+    return KernelExec(
+        stm, reinterpret_cast<RtKernelLaunchWithFlagFunc>(func), stubFunc, blockDim, argsInfo, smDesc, stm, flags);
 }
 
-extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim,
-    rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
+extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithFlagV2(
+    const void* stubFunc, uint32_t blockDim, rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc, rtStream_t stm, uint32_t flags,
+    const rtTaskCfgInfo_t* cfgInfo)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     AcpManager::instance()->SetTaskBlockDim(blockDim);
-    return KernelExec(stm, reinterpret_cast<RtKernelLaunchWithFlagV2Func>(func),
-       stubFunc, blockDim, argsInfo, smDesc, stm, flags, cfgInfo);
+    return KernelExec(
+        stm, reinterpret_cast<RtKernelLaunchWithFlagV2Func>(func), stubFunc, blockDim, argsInfo, smDesc, stm, flags,
+        cfgInfo);
 }
 
 /**
@@ -298,27 +302,27 @@ extern "C" MSVP_PROF_API rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc
  * @param [in] moduleId: model id
  * @return RT_ERROR_NONE:SUCCESS, !RT_ERROR_NONE:FAILED
  */
-extern "C" MSVP_PROF_API rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
+extern "C" MSVP_PROF_API rtError_t rtMalloc(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     // register rtMalloc、rtFree and rtMemcpyAsync
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__);
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__);
     auto func2 = AcpApiPlugin::instance()->GetPluginApiStubFunc("rtFree");
-    FUNRET_CHECK_EXPR_ACTION(func2 == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[rtFree] func.")
-    AcpManager::instance()->RegisterRtMallocFunc(reinterpret_cast<RtMallocFunc>(func),
-        reinterpret_cast<RtFreeFunc>(func2));
+    FUNRET_CHECK_EXPR_ACTION(
+        func2 == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[rtFree] func.")
+    AcpManager::instance()->RegisterRtMallocFunc(
+        reinterpret_cast<RtMallocFunc>(func), reinterpret_cast<RtFreeFunc>(func2));
     auto func3 = AcpApiPlugin::instance()->GetPluginApiStubFunc("rtMemcpyAsync");
-    FUNRET_CHECK_EXPR_ACTION(func3 == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[rtMemcpyAsync] func.")
+    FUNRET_CHECK_EXPR_ACTION(
+        func3 == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[rtMemcpyAsync] func.")
     AcpManager::instance()->RegisterRtMemcpyFunc(reinterpret_cast<RtMemcpyAsyncFunc>(func3));
     // execute rtMalloc
     rtError_t ret = reinterpret_cast<RtMallocFunc>(func)(devPtr, size, type, moduleId);
-    FUNRET_CHECK_EXPR_ACTION(ret != ACL_RT_SUCCESS, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to %s, size: %llu, type: %u, moduleId: %u.", __FUNCTION__, size,
-        static_cast<uint32_t>(type), moduleId);
+    FUNRET_CHECK_EXPR_ACTION(
+        ret != ACL_RT_SUCCESS, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to %s, size: %llu, type: %u, moduleId: %u.",
+        __FUNCTION__, size, static_cast<uint32_t>(type), moduleId);
     // save rtMalloc attr
     AcpBackupAttr attr = {*devPtr, size, type, moduleId};
     AcpManager::instance()->SaveRtMallocAttr(attr);
@@ -331,12 +335,12 @@ extern "C" MSVP_PROF_API rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemT
  * @param [in] devPtr: malloc ptr which need to be free
  * @return RT_ERROR_NONE:SUCCESS, !RT_ERROR_NONE:FAILED
  */
-extern "C" MSVP_PROF_API rtError_t rtFree(void *devPtr)
+extern "C" MSVP_PROF_API rtError_t rtFree(void* devPtr)
 {
     MSPROF_LOGI("Acp %s reloaded start.", __FUNCTION__);
     auto func = AcpApiPlugin::instance()->GetPluginApiStubFunc(__FUNCTION__);
-    FUNRET_CHECK_EXPR_ACTION(func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR,
-        "Failed to get api stub[%s] func.", __FUNCTION__)
+    FUNRET_CHECK_EXPR_ACTION(
+        func == nullptr, return ACL_ERROR_RT_PROFILING_ERROR, "Failed to get api stub[%s] func.", __FUNCTION__)
     // release rtMalloc addr
     AcpManager::instance()->ReleaseRtMallocAddr(devPtr);
     return reinterpret_cast<RtFreeFunc>(func)(devPtr);

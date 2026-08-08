@@ -14,26 +14,24 @@
 #include <dlfcn.h>
 
 namespace ProfAPI {
-using VOID_PTR = void *;
+using VOID_PTR = void*;
 class ProfLoadApi {
 public:
-    void ProfLoadApiInit(const VOID_PTR &handle);
-    VOID_PTR LoadApi(const std::string &apiName) const;
+    void ProfLoadApiInit(const VOID_PTR& handle);
+    VOID_PTR LoadApi(const std::string& apiName) const;
     template <typename T>
-    T LoadProfTxApi(const std::string &apiName) const
+    T LoadProfTxApi(const std::string& apiName) const
     {
         return reinterpret_cast<T>(LoadApi(apiName));
     }
+
 private:
     VOID_PTR handle_{nullptr};
 };
 
-inline void ProfLoadApi::ProfLoadApiInit(const VOID_PTR &handle)
-{
-    handle_ = handle;
-}
+inline void ProfLoadApi::ProfLoadApiInit(const VOID_PTR& handle) { handle_ = handle; }
 
-inline VOID_PTR ProfLoadApi::LoadApi(const std::string &apiName) const
+inline VOID_PTR ProfLoadApi::LoadApi(const std::string& apiName) const
 {
     if (handle_ != nullptr) {
         return dlsym(handle_, apiName.c_str());
@@ -41,5 +39,5 @@ inline VOID_PTR ProfLoadApi::LoadApi(const std::string &apiName) const
 
     return nullptr;
 }
-}
+} // namespace ProfAPI
 #endif

@@ -27,7 +27,7 @@ public:
     int32_t SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) override;
     int32_t CloseSession() override;
     void WriteDone() override;
-    void SetDevId(const std::string &deviceId) override;
+    void SetDevId(const std::string& deviceId) override;
 
 private:
     SHARED_PTR_ALIA<Dvvp::Acp::Analyze::OpAnalyzer> analyzer_;
@@ -39,10 +39,10 @@ public:
     virtual ~OpTransportFactory() {}
 
 public:
-    SHARED_PTR_ALIA<ITransport> CreateOpTransport(const std::string &deviceId) const;
+    SHARED_PTR_ALIA<ITransport> CreateOpTransport(const std::string& deviceId) const;
 };
-}  // namespace transport
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace transport
+} // namespace dvvp
+} // namespace analysis
 
 #endif

@@ -20,8 +20,5 @@ PROF_PLUGIN_PTR ProfPluginManager::GetProfPlugin(void)
     return profPlugin_;
 }
 
-void ProfPluginManager::SetProfPlugin(PROF_PLUGIN_PTR plugin)
-{
-    profPlugin_ = plugin;
-}
-}
+void ProfPluginManager::SetProfPlugin(PROF_PLUGIN_PTR plugin) { profPlugin_ = plugin; }
+} // namespace ProfAPI

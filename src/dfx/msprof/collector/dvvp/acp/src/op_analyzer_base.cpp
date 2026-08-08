@@ -18,8 +18,8 @@ static const std::string DEFAULT_FREQ = "50"; // default freq in chip v4, not us
 
 int32_t OpAnalyzerBase::InitFrequency(uint32_t deviceId)
 {
-    std::string freq = Analysis::Dvvp::Common::Platform::Platform::instance()->PlatformGetDeviceOscFreq(
-        deviceId, DEFAULT_FREQ);
+    std::string freq =
+        Analysis::Dvvp::Common::Platform::Platform::instance()->PlatformGetDeviceOscFreq(deviceId, DEFAULT_FREQ);
     frequency_ = std::stod(freq) / MHZ_CONVERT_GHZ;
     if (frequency_ <= 0) {
         MSPROF_LOGE("Failed to init Op analyzer freqency: %f ghz, get freq %s mhz.", frequency_, freq.c_str());
@@ -29,6 +29,6 @@ int32_t OpAnalyzerBase::InitFrequency(uint32_t deviceId)
         return PROFILING_SUCCESS;
     }
 }
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp

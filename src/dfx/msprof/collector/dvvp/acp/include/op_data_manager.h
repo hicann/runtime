@@ -28,8 +28,8 @@ public:
     ~OpDataManager() override;
     void UnInit();
     void AddAnalyzeCount();
-    void AddMetrics(std::string &metrics);
-    void AddSummaryInfo(KernelDetail &data);
+    void AddMetrics(std::string& metrics);
+    void AddSummaryInfo(KernelDetail& data);
     bool CheckSummaryInfoData(uint32_t replayTime) const;
     uint32_t GetAnalyzeCount() const;
     std::vector<std::string> GetMetricsInfo() const;
@@ -41,7 +41,7 @@ private:
     std::vector<std::vector<KernelDetail>> summaryInfo_;
     std::vector<std::string> metrics_;
 };
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp
 #endif

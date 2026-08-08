@@ -22,28 +22,27 @@ namespace dvvp {
 namespace app {
 class Application {
 public:
-    static int32_t LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                         OsalProcess &appProcess);
+    static int32_t LaunchApp(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, OsalProcess& appProcess);
 
 private:
-    static int32_t PrepareAppEnvs(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-        std::vector<std::string> &envsV);
-    static int32_t PrepareLaunchAppCmd(std::stringstream &ssCmdApp,
-                                   SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
+    static int32_t PrepareAppEnvs(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, std::vector<std::string>& envsV);
+    static int32_t PrepareLaunchAppCmd(
+        std::stringstream& ssCmdApp, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 
-    static void PrepareAppArgs(const std::vector<std::string> &params, std::vector<std::string> &argsV);
+    static void PrepareAppArgs(const std::vector<std::string>& params, std::vector<std::string>& argsV);
 
-    static int32_t PrepareAclEnvs(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                        std::vector<std::string> &envsV);
+    static int32_t PrepareAclEnvs(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, std::vector<std::string>& envsV);
 
-    static void SetAppEnv(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-        std::vector<std::string> &envsV);
-    static void SourceEnv(std::vector<std::string> &argsVec);
+    static void SetAppEnv(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, std::vector<std::string>& envsV);
+    static void SourceEnv(std::vector<std::string>& argsVec);
     static std::string GetAppPath(std::vector<std::string> paramsCmd);
     static std::string GetCmdString(const std::string paramsName);
 };
-}  // namespace app
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace app
+} // namespace dvvp
+} // namespace analysis
 
 #endif

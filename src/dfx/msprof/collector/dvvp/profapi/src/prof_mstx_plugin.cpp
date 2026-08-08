@@ -22,7 +22,7 @@ constexpr size_t LengthOf(T (&)[N]) noexcept
 {
     return N;
 }
-}
+} // namespace
 
 namespace ProfApi {
 namespace MstxPlugin {
@@ -52,10 +52,7 @@ public:
         return instance;
     }
 
-    const MstxContext_t& GetCurContext()
-    {
-        return GetContext(curModule.load());
-    }
+    const MstxContext_t& GetCurContext() { return GetContext(curModule.load()); }
 
     const MstxContext_t& GetContext(ProfModule module)
     {
@@ -65,15 +62,9 @@ public:
         return msptiMstxContext;
     }
 
-    ProfModule GetCurModule()
-    {
-        return curModule;
-    }
+    ProfModule GetCurModule() { return curModule; }
 
-    void EnableMstxFunc(ProfModule module)
-    {
-        curModule = module;
-    }
+    void EnableMstxFunc(ProfModule module) { curModule = module; }
 
     void RecordDomainHandle(mstxDomainHandle_t profDomainHandle, mstxDomainHandle_t ptiDomainHandle)
     {
@@ -108,7 +99,8 @@ public:
         return it->second;
     }
 
-    int MstxGetModuleFuncTable(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize, ProfModule profModule)
+    int MstxGetModuleFuncTable(
+        MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize, ProfModule profModule)
     {
         if (!outSize || !outTable) {
             return MSTX_FAIL;
@@ -134,53 +126,49 @@ private:
     {
         msprofMstxContext = {
             ProfApi::MstxPlugin::MsprofMstxGetModuleFuncTable,
- 
-            nullptr, nullptr, nullptr, nullptr,
-            nullptr, nullptr, nullptr, nullptr, nullptr,
- 
-            {
-                nullptr,
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxMarkAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxRangeStartAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxRangeEndPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxGetToolIdPtr),
-                nullptr
-            },
-            {
-                nullptr,
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainCreateAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainDestroyPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainMarkAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainRangeStartAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainRangeEndPtr),
-                nullptr
-            }
-        };
- 
+
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+
+            {nullptr, reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxMarkAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxRangeStartAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxRangeEndPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxGetToolIdPtr), nullptr},
+            {nullptr, reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainCreateAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainDestroyPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainMarkAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainRangeStartAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msprofMstxContext.mstxDomainRangeEndPtr), nullptr}};
+
         msptiMstxContext = {
             ProfApi::MstxPlugin::MsptiMstxGetModuleFuncTable,
 
-            nullptr, nullptr, nullptr, nullptr,
-            nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
 
-            {
-                nullptr,
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxMarkAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxRangeStartAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxRangeEndPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxGetToolIdPtr),
-                nullptr
-            },
-            {
-                nullptr,
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainCreateAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainDestroyPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainMarkAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainRangeStartAPtr),
-                reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainRangeEndPtr),
-                nullptr
-            }
-        };
+            {nullptr, reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxMarkAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxRangeStartAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxRangeEndPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxGetToolIdPtr), nullptr},
+            {nullptr, reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainCreateAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainDestroyPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainMarkAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainRangeStartAPtr),
+             reinterpret_cast<MstxFuncPointer*>(&msptiMstxContext.mstxDomainRangeEndPtr), nullptr}};
     }
     MstxContext_t msprofMstxContext;
     MstxContext_t msptiMstxContext;
@@ -214,12 +202,9 @@ void MstxRangeEndImpl(mstxRangeId id)
     }
 }
 
-void MstxGetToolIdImpl(uint64_t *id)
-{
-    *id = MSTX_TOOLS_MSPROF_ID;
-}
+void MstxGetToolIdImpl(uint64_t* id) { *id = MSTX_TOOLS_MSPROF_ID; }
 
-mstxDomainHandle_t MstxDomainCreateAImpl(const char *name)
+mstxDomainHandle_t MstxDomainCreateAImpl(const char* name)
 {
     auto& contextManager = MstxContextManager::GetInstance();
     auto& profContext = contextManager.GetContext(PROF_MODULE_MSPROF);
@@ -259,7 +244,7 @@ void MstxDomainDestroyImpl(mstxDomainHandle_t domain)
     }
 }
 
-void MstxDomainMarkAImpl(mstxDomainHandle_t domain, const char *message, aclrtStream stream)
+void MstxDomainMarkAImpl(mstxDomainHandle_t domain, const char* message, aclrtStream stream)
 {
     auto& curContext = MstxContextManager::GetInstance().GetCurContext();
     ProfModule curModule = MstxContextManager::GetInstance().GetCurModule();
@@ -269,8 +254,7 @@ void MstxDomainMarkAImpl(mstxDomainHandle_t domain, const char *message, aclrtSt
     }
 }
 
-mstxRangeId MstxDomainRangeStartAImpl(mstxDomainHandle_t domain, const char *message,
-                                      aclrtStream stream)
+mstxRangeId MstxDomainRangeStartAImpl(mstxDomainHandle_t domain, const char* message, aclrtStream stream)
 {
     auto& curContext = MstxContextManager::GetInstance().GetCurContext();
     ProfModule curModule = MstxContextManager::GetInstance().GetCurModule();
@@ -328,12 +312,7 @@ int GetModuleTableFunc(MstxGetModuleFuncTableFunc getFuncTable)
     int retVal = MSTX_SUCCESS;
     unsigned int outSize = 0;
     MstxFuncTable outTable;
-    static std::vector<unsigned int> CheckOutTableSizes = {
-        0,
-        MSTX_FUNC_END,
-        MSTX_FUNC_DOMAIN_END,
-        0
-    };
+    static std::vector<unsigned int> CheckOutTableSizes = {0, MSTX_FUNC_END, MSTX_FUNC_DOMAIN_END, 0};
     for (size_t i = MSTX_API_MODULE_CORE; i < MSTX_API_MODULE_SIZE; i++) {
         if (getFuncTable(static_cast<MstxFuncModule>(i), &outTable, &outSize) != MSTX_SUCCESS) {
             continue;
@@ -380,12 +359,9 @@ void ProfRegisteMstxFunc(MstxInitInjectionFunc mstxInitFunc, ProfModule module)
     }
 }
 
-void EnableMstxFunc(ProfModule module)
-{
-    MstxContextManager::GetInstance().EnableMstxFunc(module);
-}
-}
-}
+void EnableMstxFunc(ProfModule module) { MstxContextManager::GetInstance().EnableMstxFunc(module); }
+} // namespace MstxPlugin
+} // namespace ProfApi
 
 // for mstx to init mstx impl functions injection
 MSVP_PROF_API int32_t InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable)
@@ -403,7 +379,4 @@ MSVP_PROF_API void ProfRegisterMstxFunc(MstxInitInjectionFunc mstxInitFunc, Prof
 }
 
 // for msprof and mspti to enable current mstx module
-MSVP_PROF_API void ProfEnableMstxFunc(ProfModule module)
-{
-    ProfApi::MstxPlugin::EnableMstxFunc(module);
-}
+MSVP_PROF_API void ProfEnableMstxFunc(ProfModule module) { ProfApi::MstxPlugin::EnableMstxFunc(module); }

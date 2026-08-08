@@ -18,15 +18,15 @@ namespace Dvvp {
 namespace Acp {
 using namespace analysis::dvvp::common::argparse;
 Argparser AcpCommandBuild(const std::string commandName);
-int32_t ProfileCommandRun(Argparser &profCommand);
-int32_t WaitRunningProcess(std::string processUsage, int32_t &taskPid);
+int32_t ProfileCommandRun(Argparser& profCommand);
+int32_t WaitRunningProcess(std::string processUsage, int32_t& taskPid);
 int32_t PreCheckPlatform();
-int32_t CheckOutputValid(std::string &output);
-int32_t CheckAcpMetricsIsValid(std::string &metrics);
-int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string &metrics, std::vector<std::string> &metricsVec);
-int32_t CheckGroupMetricsIsValid(std::string &metrics, std::vector<std::string> &metricsVec);
-void DeduplicateAcpMetrics(std::string::size_type pos, std::string &metrics, std::vector<std::string> &metricsVec);
-}
-}
-}
+int32_t CheckOutputValid(std::string& output);
+int32_t CheckAcpMetricsIsValid(std::string& metrics);
+int32_t CheckCustomEventIsValid(std::string::size_type pos, std::string& metrics, std::vector<std::string>& metricsVec);
+int32_t CheckGroupMetricsIsValid(std::string& metrics, std::vector<std::string>& metricsVec);
+void DeduplicateAcpMetrics(std::string::size_type pos, std::string& metrics, std::vector<std::string>& metricsVec);
+} // namespace Acp
+} // namespace Dvvp
+} // namespace Collector
 #endif

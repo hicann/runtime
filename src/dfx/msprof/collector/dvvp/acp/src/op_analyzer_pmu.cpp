@@ -15,7 +15,7 @@ namespace Dvvp {
 namespace Acp {
 namespace Analyze {
 using namespace Analysis::Dvvp::Analyze;
-bool OpAnalyzerPmu::IsStarsData(const std::string &fileName) const
+bool OpAnalyzerPmu::IsStarsData(const std::string& fileName) const
 {
     if (fileName.find("stars_soc.data") != std::string::npos) {
         return true;
@@ -23,7 +23,7 @@ bool OpAnalyzerPmu::IsStarsData(const std::string &fileName) const
     return false;
 }
 
-bool OpAnalyzerPmu::IsFftsData(const std::string &fileName) const
+bool OpAnalyzerPmu::IsFftsData(const std::string& fileName) const
 {
     if (fileName.find("ffts_profile.data") != std::string::npos) {
         return true;
@@ -49,14 +49,14 @@ void OpAnalyzerPmu::ParseStarsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileCh
         if (remainingLen < dataSize) {
             break;
         }
-        auto logHead = reinterpret_cast<const StarsLogHead *>(dataPtr_ + offset);
+        auto logHead = reinterpret_cast<const StarsLogHead*>(dataPtr_ + offset);
         uint16_t logType = logHead->logType;
         if (IsExtPmu() && (logType == ACSQ_TASK_START_FUNC_TYPE || logType == ACSQ_TASK_END_FUNC_TYPE)) {
-            auto data = reinterpret_cast<const DavidAcsqLog *>(logHead);
+            auto data = reinterpret_cast<const DavidAcsqLog*>(logHead);
             HandleStarsAcsq(data, logType);
             starsBytes_ += dataSize;
         } else if (logType == ACSQ_TASK_START_FUNC_TYPE || logType == ACSQ_TASK_END_FUNC_TYPE) {
-            auto data = reinterpret_cast<const StarsAcsqLog *>(logHead);
+            auto data = reinterpret_cast<const StarsAcsqLog*>(logHead);
             HandleStarsAcsq(data, logType);
             starsBytes_ += dataSize;
         } else if (logType == FFTS_SUBTASK_THREAD_START_FUNC_TYPE || logType == FFTS_SUBTASK_THREAD_END_FUNC_TYPE) {
@@ -72,7 +72,7 @@ void OpAnalyzerPmu::ParseStarsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileCh
 }
 
 template <typename T>
-void OpAnalyzerPmu::HandleStarsAcsq(const T *logData, uint16_t logType)
+void OpAnalyzerPmu::HandleStarsAcsq(const T* logData, uint16_t logType)
 {
     uint16_t sqeType = logData->head.sqeType;
     if (IsSqeControl(sqeType)) {
@@ -87,8 +87,7 @@ void OpAnalyzerPmu::HandleStarsAcsq(const T *logData, uint16_t logType)
 
     MSPROF_LOGI("HandleStarsAcsq get key: %s, time: %llu, logType: %u.", key.c_str(), sysTime, logType);
     auto iter = logInfo_.find(key); // search for first match
-    if (iter == logInfo_.end() ||
-        (iter->second.beginTime != 0 && iter->second.endTime != 0)) {
+    if (iter == logInfo_.end() || (iter->second.beginTime != 0 && iter->second.endTime != 0)) {
         KernelDetail info{0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0};
         info.taskId = logData->taskId;
         info.streamId = logData->streamId;
@@ -114,7 +113,7 @@ void OpAnalyzerPmu::HandleStarsAcsq(const T *logData, uint16_t logType)
     }
 }
 
-void OpAnalyzerPmu::HandleSubTaskThread(const void *data, uint16_t logType) const
+void OpAnalyzerPmu::HandleSubTaskThread(const void* data, uint16_t logType) const
 {
     UNUSED(data);
     UNUSED(logType);
@@ -136,22 +135,22 @@ void OpAnalyzerPmu::ParseFftsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
             break;
         }
 
-        auto pmuHead = reinterpret_cast<const StarsPmuHead *>(dataPtr_ + offset);
+        auto pmuHead = reinterpret_cast<const StarsPmuHead*>(dataPtr_ + offset);
         uint8_t funcType = pmuHead->funcType;
         if (IsExtPmu() && (funcType == FUNC_TYPE_DAVID_TASK)) {
-            auto data = reinterpret_cast<const DavidProfile *>(pmuHead);
+            auto data = reinterpret_cast<const DavidProfile*>(pmuHead);
             HandleSubtaskPmu(data, 0, data->coreType, data->endCnt - data->startCnt); // david has no ffts
             fftsSubBytes_ += PMU_DATA_SIZE;
         } else if (IsExtPmu() && (funcType == FUNC_TYPE_DAVID_BLOCK)) {
-            auto data = reinterpret_cast<const DavidProfile *>(pmuHead);
+            auto data = reinterpret_cast<const DavidProfile*>(pmuHead);
             HandleBlockPmu(data);
             fftsSubBytes_ += PMU_DATA_SIZE;
         } else if (funcType == FUNC_TYPE_SUBTASK) {
-            auto data = reinterpret_cast<const FftsSubProfile *>(pmuHead);
+            auto data = reinterpret_cast<const FftsSubProfile*>(pmuHead);
             HandleSubtaskPmu(data, data->fftsType, 0, 0);
             fftsSubBytes_ += PMU_DATA_SIZE;
         } else if (funcType == FUNC_TYPE_BLOCK) {
-            auto data = reinterpret_cast<const FftsBlockProfile *>(pmuHead);
+            auto data = reinterpret_cast<const FftsBlockProfile*>(pmuHead);
             HandleBlockPmu(data);
             fftsBlockBytes_ += PMU_DATA_SIZE;
         } else {
@@ -165,15 +164,15 @@ void OpAnalyzerPmu::ParseFftsData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
 }
 
 template <typename T>
-void OpAnalyzerPmu::HandleSubtaskPmu(const T *data, uint8_t fftsType, uint8_t coreType, uint64_t cnt)
+void OpAnalyzerPmu::HandleSubtaskPmu(const T* data, uint8_t fftsType, uint8_t coreType, uint64_t cnt)
 {
     bool isAicType = IsAic(fftsType, data->contextType, coreType);
-    std::string key = std::to_string(data->taskId) +
-        "-" + std::to_string(data->streamId) +
-        "_" + std::to_string(data->contextId);
-    MSPROF_LOGI("HandleFftsPmu get key: %s, isAicType: %d, fftsType: %u, contextType: %u, totalCycle: %llu, "
-        "start Cnt: %llu, endCnt: %llu.", key.c_str(), isAicType, fftsType, data->contextType, data->totalCycle,
-        data->startCnt, data->endCnt);
+    std::string key =
+        std::to_string(data->taskId) + "-" + std::to_string(data->streamId) + "_" + std::to_string(data->contextId);
+    MSPROF_LOGI(
+        "HandleFftsPmu get key: %s, isAicType: %d, fftsType: %u, contextType: %u, totalCycle: %llu, "
+        "start Cnt: %llu, endCnt: %llu.",
+        key.c_str(), isAicType, fftsType, data->contextType, data->totalCycle, data->startCnt, data->endCnt);
 
     KernelDetail info{0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0};
     info.taskId = data->taskId;
@@ -182,8 +181,9 @@ void OpAnalyzerPmu::HandleSubtaskPmu(const T *data, uint8_t fftsType, uint8_t co
     info.aivTotalCycle = (isAicType) ? 0 : data->totalCycle;
     info.aicCnt = (coreType == CORE_TYPE_AIC) ? cnt : 0;
     info.aivCnt = (coreType == CORE_TYPE_AIV) ? cnt : 0;
-    MSPROF_LOGI("HandleFftsPmu save aicTotalCycle: %llu, aivTotalCycle: %llu, aicCnt: %llu, aivCnt: %llu.",
-        info.aicTotalCycle, info.aivTotalCycle, info.aicCnt, info.aivCnt);
+    MSPROF_LOGI(
+        "HandleFftsPmu save aicTotalCycle: %llu, aivTotalCycle: %llu, aicCnt: %llu, aivCnt: %llu.", info.aicTotalCycle,
+        info.aivTotalCycle, info.aicCnt, info.aivCnt);
     uint32_t pmuStart = (isAicType) ? 0 : pmuNum_; // if aiv type, move pmu write key
     for (uint32_t i = 0; i < pmuNum_; i++) {
         MSPROF_LOGI("HandleFftsPmu get key: %s, i: %u, pmu: %llu.", key.c_str(), i, data->pmu[i]);
@@ -193,7 +193,7 @@ void OpAnalyzerPmu::HandleSubtaskPmu(const T *data, uint8_t fftsType, uint8_t co
 }
 
 template <typename T>
-void OpAnalyzerPmu::HandleBlockPmu(const T *data)
+void OpAnalyzerPmu::HandleBlockPmu(const T* data)
 {
     // check if mix type
     if (!IsMixType(data->contextType)) {
@@ -203,11 +203,11 @@ void OpAnalyzerPmu::HandleBlockPmu(const T *data)
     if (!IsSlaveCore(data->contextType, data->coreType)) {
         return;
     }
-    std::string key = std::to_string(data->taskId) +
-        "-" + std::to_string(data->streamId) +
-        "_" + std::to_string(data->contextId);
-    MSPROF_LOGI("HandleBlockPmu get key: %s, contextType: %u, coreType: %u, totalCycle: %llu.",
-        key.c_str(), data->contextType, data->coreType, data->totalCycle);
+    std::string key =
+        std::to_string(data->taskId) + "-" + std::to_string(data->streamId) + "_" + std::to_string(data->contextId);
+    MSPROF_LOGI(
+        "HandleBlockPmu get key: %s, contextType: %u, coreType: %u, totalCycle: %llu.", key.c_str(), data->contextType,
+        data->coreType, data->totalCycle);
     KernelDetail info{0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0};
     info.taskId = data->taskId;
     info.streamId = data->streamId;
@@ -227,9 +227,10 @@ void OpAnalyzerPmu::HandleBlockPmu(const T *data)
 
 void OpAnalyzerPmu::PrintStats() const
 {
-    MSPROF_EVENT("total_size_pmu, stars_bytes: %u, ffts_sub_bytes: %u, ffts_block_bytes: %u, log info size: %zu."
-        "sub task info size: %zu, block info size: %zu.", starsBytes_, fftsSubBytes_, fftsBlockBytes_,
-        logInfo_.size(), subTaskInfo_.size(), blockInfo_.size());
+    MSPROF_EVENT(
+        "total_size_pmu, stars_bytes: %u, ffts_sub_bytes: %u, ffts_block_bytes: %u, log info size: %zu."
+        "sub task info size: %zu, block info size: %zu.",
+        starsBytes_, fftsSubBytes_, fftsBlockBytes_, logInfo_.size(), subTaskInfo_.size(), blockInfo_.size());
 }
 
 bool OpAnalyzerPmu::IsAic(uint8_t fftsType, uint8_t contextType, uint8_t coreType) const
@@ -237,9 +238,7 @@ bool OpAnalyzerPmu::IsAic(uint8_t fftsType, uint8_t contextType, uint8_t coreTyp
     if (IsExtPmu()) {
         return (coreType == CORE_TYPE_AIC);
     } else {
-        return IsFftsAic(fftsType, contextType) ||
-            IsTraditionAic(fftsType) ||
-            IsFftsMixAic(fftsType, contextType);
+        return IsFftsAic(fftsType, contextType) || IsTraditionAic(fftsType) || IsFftsMixAic(fftsType, contextType);
     }
 }
 
@@ -261,8 +260,7 @@ bool OpAnalyzerPmu::IsTraditionAic(uint8_t fftsType) const
 
 bool OpAnalyzerPmu::IsFftsMixAic(uint8_t fftsType, uint8_t contextType) const
 {
-    if ((fftsType == FFTS_TYPE_FFTS && contextType == SUB_TASK_TYPE_MIXAIC) ||
-        fftsType == FFTS_TYPE_MIX_AIC) {
+    if ((fftsType == FFTS_TYPE_FFTS && contextType == SUB_TASK_TYPE_MIXAIC) || fftsType == FFTS_TYPE_MIX_AIC) {
         return true;
     }
     return false;
@@ -278,8 +276,7 @@ bool OpAnalyzerPmu::IsFftsMixAiv(uint8_t fftsType, uint8_t contextType) const
 
 bool OpAnalyzerPmu::IsMixType(uint8_t contextType) const
 {
-    if (contextType == SUB_TASK_TYPE_MIXAIC ||
-        contextType == SUB_TASK_TYPE_MIXAIV) {
+    if (contextType == SUB_TASK_TYPE_MIXAIC || contextType == SUB_TASK_TYPE_MIXAIV) {
         return true;
     }
     return false;
@@ -304,14 +301,8 @@ bool OpAnalyzerPmu::IsExtPmu() const
 
 bool OpAnalyzerPmu::IsSqeControl(uint16_t sqeType) const
 {
-    static std::vector<uint16_t> ctrlSqeVec = {
-        PLACE_HOLER_SQE,
-        NOTIFY_RECORD_SQE,
-        NOTIFY_WAIT_SQE,
-        WRITE_VALUE_SQE,
-        CONDITION_SQE,
-        END_SQE
-    };
+    static std::vector<uint16_t> ctrlSqeVec = {PLACE_HOLER_SQE, NOTIFY_RECORD_SQE, NOTIFY_WAIT_SQE,
+                                               WRITE_VALUE_SQE, CONDITION_SQE,     END_SQE};
 
     if (std::find(ctrlSqeVec.begin(), ctrlSqeVec.end(), sqeType) != ctrlSqeVec.end()) {
         return true;
@@ -320,12 +311,14 @@ bool OpAnalyzerPmu::IsSqeControl(uint16_t sqeType) const
     return false;
 }
 
-template void OpAnalyzerPmu::HandleStarsAcsq(const StarsAcsqLog *logData, uint16_t logType);
-template void OpAnalyzerPmu::HandleStarsAcsq(const DavidAcsqLog *logData, uint16_t logType);
-template void OpAnalyzerPmu::HandleSubtaskPmu(const FftsSubProfile *data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
-template void OpAnalyzerPmu::HandleSubtaskPmu(const DavidProfile *data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
-template void OpAnalyzerPmu::HandleBlockPmu(const FftsBlockProfile *data);
-template void OpAnalyzerPmu::HandleBlockPmu(const DavidProfile *data);
+template void OpAnalyzerPmu::HandleStarsAcsq(const StarsAcsqLog* logData, uint16_t logType);
+template void OpAnalyzerPmu::HandleStarsAcsq(const DavidAcsqLog* logData, uint16_t logType);
+template void OpAnalyzerPmu::HandleSubtaskPmu(
+    const FftsSubProfile* data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
+template void OpAnalyzerPmu::HandleSubtaskPmu(
+    const DavidProfile* data, uint8_t fftsType, uint8_t coreType, uint64_t cnt);
+template void OpAnalyzerPmu::HandleBlockPmu(const FftsBlockProfile* data);
+template void OpAnalyzerPmu::HandleBlockPmu(const DavidProfile* data);
 } // namespace Analyze
+} // namespace Acp
 } // namespace Dvvp
-} // namespace Analysis

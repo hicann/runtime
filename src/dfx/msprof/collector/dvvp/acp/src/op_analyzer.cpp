@@ -38,9 +38,15 @@ constexpr uint32_t MAX_OP_SUMMARY_SUFFIX_START = 7;
 constexpr uint32_t MAX_OP_SUMMARY_SUFFIX_LEN = 14;
 const std::string OP_SUMMARY_NAME = "op_summary_";
 
-OpAnalyzer::OpAnalyzer() : inited_(false), metricsPmuNum_(0),
-    aicCoreNum_(0), aivCoreNum_(0), aicFreq_(0), highBlockDim_(0), lowBlockDim_(0),
-    replayTime_(0)
+OpAnalyzer::OpAnalyzer()
+    : inited_(false),
+      metricsPmuNum_(0),
+      aicCoreNum_(0),
+      aivCoreNum_(0),
+      aicFreq_(0),
+      highBlockDim_(0),
+      lowBlockDim_(0),
+      replayTime_(0)
 {
     MSVP_MAKE_SHARED0(analyzerPmu_, OpAnalyzerPmu, return);
     MSVP_MAKE_SHARED0(analyzerBiu_, OpAnalyzerBiu, return);
@@ -51,10 +57,9 @@ OpAnalyzer::OpAnalyzer() : inited_(false), metricsPmuNum_(0),
     }
 }
 
-OpAnalyzer::~OpAnalyzer()
-{}
+OpAnalyzer::~OpAnalyzer() {}
 
-void OpAnalyzer::InitAnalyzerByDeviceId(const std::string &deviceId)
+void OpAnalyzer::InitAnalyzerByDeviceId(const std::string& deviceId)
 {
     uint32_t devId = 0;
     if (!Utils::StrToUint32(devId, deviceId)) {
@@ -80,8 +85,10 @@ void OpAnalyzer::InitAnalyzerByDeviceId(const std::string &deviceId)
     std::string aicFreq = DrvGeAicFrq(static_cast<int32_t>(devId));
     aicFreq_ = stod(aicFreq);
     analyzerBiu_->SetDeviceInfo(devId, analyzerPmu_->frequency_, aicFreq_);
-    MSPROF_LOGI("Success to get device freq: %lf ghz, aic freq: %lf mhz, ai core num: %lld, "
-        "aivector core num: %lld.", analyzerPmu_->frequency_, aicFreq_, aicCoreNum_, aivCoreNum_);
+    MSPROF_LOGI(
+        "Success to get device freq: %lf ghz, aic freq: %lf mhz, ai core num: %lld, "
+        "aivector core num: %lld.",
+        analyzerPmu_->frequency_, aicFreq_, aicCoreNum_, aivCoreNum_);
 }
 
 /**
@@ -102,8 +109,9 @@ void OpAnalyzer::OnOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> file
 
     if (fileChunkReq->fileName.find("end_info") != std::string::npos) {
         std::string replayStr = Utils::GetInfoSuffix(fileChunkReq->fileName);
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToUint32(replayTime_, replayStr), return,
-            "Failed to convert replay time string, file name: %s.", fileChunkReq->fileName.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToUint32(replayTime_, replayStr), return, "Failed to convert replay time string, file name: %s.",
+            fileChunkReq->fileName.c_str());
         std::unique_lock<std::mutex> lk(flushMtx_);
         OpAssociation(fileChunkReq);
         uint32_t analyzeCnt = OpDataManager::instance()->GetAnalyzeCount();
@@ -171,14 +179,15 @@ void OpAnalyzer::PreAssociation(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk
 {
     analyzerPmu_->PrintStats();
     analyzerBiu_->PrintStats();
-    std::string name = fileChunkReq->chunk;     // use chunk to pass pmu metrics type
+    std::string name = fileChunkReq->chunk; // use chunk to pass pmu metrics type
     metricsPmuNum_ = Platform::instance()->GetMetricsPmuNum(name);
     FUNRET_CHECK_EXPR_PRINT(metricsPmuNum_ == 0, "Failed to get metrics pmu num, name: %s.", name.c_str());
     OpDataManager::instance()->AddMetrics(name);
 
     uint32_t blockDim = 0;
-    FUNRET_CHECK_EXPR_PRINT(!Utils::StrToUint32(blockDim, fileChunkReq->id),
-        "Failed to convert block dim from end_info data id str: %s.", fileChunkReq->id);
+    FUNRET_CHECK_EXPR_PRINT(
+        !Utils::StrToUint32(blockDim, fileChunkReq->id), "Failed to convert block dim from end_info data id str: %s.",
+        fileChunkReq->id);
     lowBlockDim_ = blockDim & SEPARATE_BLOCK_DIM_BITS;
     highBlockDim_ = lowBlockDim_ + lowBlockDim_; // default set 1:2 ratio
     MSPROF_LOGI("Get main block dim: %u, slave block dim: %u.", lowBlockDim_, highBlockDim_);
@@ -190,8 +199,7 @@ void OpAnalyzer::PreAssociation(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk
  */
 void OpAnalyzer::BlockAssociation()
 {
-    for (auto iter = analyzerPmu_->subTaskInfo_.begin();
-        iter != analyzerPmu_->subTaskInfo_.end(); iter++) {
+    for (auto iter = analyzerPmu_->subTaskInfo_.begin(); iter != analyzerPmu_->subTaskInfo_.end(); iter++) {
         for (uint16_t n = 0; n < highBlockDim_; n++) {
             BlockInfoMatch(iter->first, iter->second);
         }
@@ -204,7 +212,7 @@ void OpAnalyzer::BlockAssociation()
  * @param [in] value: kernel detail
  * @return
  */
-void OpAnalyzer::BlockInfoMatch(std::string key, KernelDetail &value)
+void OpAnalyzer::BlockInfoMatch(std::string key, KernelDetail& value)
 {
     // find first match
     auto iter = analyzerPmu_->blockInfo_.find(key);
@@ -216,16 +224,15 @@ void OpAnalyzer::BlockInfoMatch(std::string key, KernelDetail &value)
     value.aivTotalCycle += iter->second.aivTotalCycle;
     value.aicCnt += iter->second.aicCnt;
     value.aivCnt += iter->second.aivCnt;
-    MSPROF_LOGI("BlockInfoMatch key: %s, aic total cycle: %llu, aiv total cycle: %llu, aic cnt: %llu, aiv cnt: %llu.",
+    MSPROF_LOGI(
+        "BlockInfoMatch key: %s, aic total cycle: %llu, aiv total cycle: %llu, aic cnt: %llu, aiv cnt: %llu.",
         key.c_str(), iter->second.aicTotalCycle, iter->second.aivTotalCycle, iter->second.aicCnt, iter->second.aivCnt);
     uint32_t pmuLen = 2 * analyzerPmu_->pmuNum_;
     for (uint32_t i = 0; i < pmuLen; i++) {
-        if ((i >= metricsPmuNum_ && i < analyzerPmu_->pmuNum_) ||
-            i >= (metricsPmuNum_ + analyzerPmu_->pmuNum_)) {
+        if ((i >= metricsPmuNum_ && i < analyzerPmu_->pmuNum_) || i >= (metricsPmuNum_ + analyzerPmu_->pmuNum_)) {
             continue;
         }
-        MSPROF_LOGI("BlockInfoMatch i: %u, subtask pmu: %llu, block pmu: %llu.", i, value.pmu[i],
-            iter->second.pmu[i]);
+        MSPROF_LOGI("BlockInfoMatch i: %u, subtask pmu: %llu, block pmu: %llu.", i, value.pmu[i], iter->second.pmu[i]);
         value.pmu[i] += iter->second.pmu[i];
     }
     // delete match block data
@@ -238,8 +245,7 @@ void OpAnalyzer::BlockInfoMatch(std::string key, KernelDetail &value)
  */
 void OpAnalyzer::SubTaskAssociation()
 {
-    for (auto iter = analyzerPmu_->logInfo_.begin();
-        iter != analyzerPmu_->logInfo_.end(); iter++) {
+    for (auto iter = analyzerPmu_->logInfo_.begin(); iter != analyzerPmu_->logInfo_.end(); iter++) {
         SubTaskInfoMatch(iter->second);
     }
 }
@@ -249,11 +255,10 @@ void OpAnalyzer::SubTaskAssociation()
  * @param [in] value: kernel detail
  * @return
  */
-void OpAnalyzer::SubTaskInfoMatch(KernelDetail &value)
+void OpAnalyzer::SubTaskInfoMatch(KernelDetail& value)
 {
     // find first match
-    for (auto iter = analyzerPmu_->subTaskInfo_.begin();
-        iter != analyzerPmu_->subTaskInfo_.end(); iter++) {
+    for (auto iter = analyzerPmu_->subTaskInfo_.begin(); iter != analyzerPmu_->subTaskInfo_.end(); iter++) {
         if (value.taskId != iter->second.taskId || value.streamId != iter->second.streamId) {
             continue;
         }
@@ -261,12 +266,13 @@ void OpAnalyzer::SubTaskInfoMatch(KernelDetail &value)
         value.aivTotalCycle = iter->second.aivTotalCycle;
         value.aicCnt = iter->second.aicCnt;
         value.aivCnt = iter->second.aivCnt;
-        MSPROF_LOGI("SubTaskInfoMatch task id: %u, stream id: %u, aic total cycle: %llu, aiv total cycle: %llu, "
-            "aic cnt: %llu, aiv cnt: %llu.", value.taskId, value.streamId, iter->second.aicTotalCycle,
-            iter->second.aivTotalCycle, iter->second.aicCnt, iter->second.aivCnt);
+        MSPROF_LOGI(
+            "SubTaskInfoMatch task id: %u, stream id: %u, aic total cycle: %llu, aiv total cycle: %llu, "
+            "aic cnt: %llu, aiv cnt: %llu.",
+            value.taskId, value.streamId, iter->second.aicTotalCycle, iter->second.aivTotalCycle, iter->second.aicCnt,
+            iter->second.aivCnt);
         for (uint32_t i = 0; i < SUMMARY_PMU_LEN; i++) {
-            if ((i >= metricsPmuNum_ && i < analyzerPmu_->pmuNum_) ||
-                i >= (metricsPmuNum_ + analyzerPmu_->pmuNum_)) {
+            if ((i >= metricsPmuNum_ && i < analyzerPmu_->pmuNum_) || i >= (metricsPmuNum_ + analyzerPmu_->pmuNum_)) {
                 continue;
             }
             MSPROF_LOGI("SubTaskInfoMatch i: %u, subtask pmu: %llu.", i, iter->second.pmu[i]);
@@ -285,11 +291,13 @@ void OpAnalyzer::SubTaskInfoMatch(KernelDetail &value)
 void OpAnalyzer::StoreAssociation() const
 {
     for (auto iter = analyzerPmu_->logInfo_.begin(); iter != analyzerPmu_->logInfo_.end(); ++iter) {
-        MSPROF_LOGI("Save summary info key: %s, task id: %u, stream id: %u, begin time: %llu, end time: %llu, "
+        MSPROF_LOGI(
+            "Save summary info key: %s, task id: %u, stream id: %u, begin time: %llu, end time: %llu, "
             "aic total cycle: %llu, aiv total cycle: %llu, main block dim: %u, slave block dim: %u, aic freq: %lf, "
-            "aic core num: %lld, aiv core num: %lld.", iter->first.c_str(), iter->second.taskId,
-            iter->second.streamId, iter->second.beginTime, iter->second.endTime, iter->second.aicTotalCycle,
-            iter->second.aivTotalCycle, lowBlockDim_, highBlockDim_, aicFreq_, aicCoreNum_, aivCoreNum_);
+            "aic core num: %lld, aiv core num: %lld.",
+            iter->first.c_str(), iter->second.taskId, iter->second.streamId, iter->second.beginTime,
+            iter->second.endTime, iter->second.aicTotalCycle, iter->second.aivTotalCycle, lowBlockDim_, highBlockDim_,
+            aicFreq_, aicCoreNum_, aivCoreNum_);
         OpDataManager::instance()->AddSummaryInfo(iter->second);
     }
     OpDataManager::instance()->AddAnalyzeCount();
@@ -315,8 +323,8 @@ void OpAnalyzer::FlushOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> f
     }
     // flush op_summary.csv
     std::string opProfSuffix = Utils::CreateProfDir(0, "");
-    std::string summaryFile = CreateOpFile(path, OP_SUMMARY_NAME + opProfSuffix.substr(
-        MAX_OP_SUMMARY_SUFFIX_START, MAX_OP_SUMMARY_SUFFIX_LEN));
+    std::string summaryFile = CreateOpFile(
+        path, OP_SUMMARY_NAME + opProfSuffix.substr(MAX_OP_SUMMARY_SUFFIX_START, MAX_OP_SUMMARY_SUFFIX_LEN));
     std::ofstream csvFile(summaryFile, std::ios::out | std::ios::app);
     if (csvFile.is_open()) {
         WriteOpTitle(csvFile);
@@ -327,7 +335,7 @@ void OpAnalyzer::FlushOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> f
     }
     csvFile.close();
     // flush <metrics>.csv
-    std::string name = fileChunkReq->chunk;     // use chunk to pass pmu metrics type
+    std::string name = fileChunkReq->chunk; // use chunk to pass pmu metrics type
     if (name.compare(0, CUSTOM_METRICS.length(), CUSTOM_METRICS) != 0 && replayTime_ == 1) {
         std::string metricsFile = CreateOpFile(path, name);
         csvFile.open(metricsFile, std::ios::out | std::ios::app);
@@ -348,7 +356,7 @@ void OpAnalyzer::FlushOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> f
  * @param [in] name: csv name
  * @return fileName: output file name with path
  */
-std::string OpAnalyzer::CreateOpFile(const std::string &path, const std::string &name) const
+std::string OpAnalyzer::CreateOpFile(const std::string& path, const std::string& name) const
 {
     MSPROF_LOGI("Create op file, path: %s, name: %s.", path.c_str(), name.c_str());
     std::string fileName = path + name + ".csv";
@@ -357,9 +365,9 @@ std::string OpAnalyzer::CreateOpFile(const std::string &path, const std::string 
     FUNRET_CHECK_EXPR_ACTION(fd < 0, return "", "Failed to create or open op file: %s.", fileName.c_str());
     (void)OsalClose(fd);
     fileName = Utils::CanonicalizePath(fileName);
-    FUNRET_CHECK_EXPR_ACTION(fileName.empty(), return "", 
-        "The fileName path: %s does not exist or permission denied.", fileName.c_str());
-    return fileName; 
+    FUNRET_CHECK_EXPR_ACTION(
+        fileName.empty(), return "", "The fileName path: %s does not exist or permission denied.", fileName.c_str());
+    return fileName;
 }
 
 /**
@@ -371,9 +379,9 @@ void OpAnalyzer::WriteOpTitle(std::ofstream& file) const
 {
     // add table top name
     file << "task_id,stream_id,task_duration(us),aic_total_time(us),aic_total_cycle,"
-        "aiv_total_time(us),aiv_total_cycle";
+            "aiv_total_time(us),aiv_total_cycle";
     std::vector<std::string> metricsVec = OpDataManager::instance()->GetMetricsInfo();
-    for (auto &iter : metricsVec) {
+    for (auto& iter : metricsVec) {
         file << Platform::instance()->GetMetricsTopName(iter);
     }
     file << std::endl;
@@ -404,7 +412,7 @@ void OpAnalyzer::WriteOpData(std::ofstream& file)
  * @param [in] dataVec: summary info data
  * @return
  */
-void OpAnalyzer::WriteOpBaseData(std::ofstream& file, std::vector<std::vector<KernelDetail>> &dataVec)
+void OpAnalyzer::WriteOpBaseData(std::ofstream& file, std::vector<std::vector<KernelDetail>>& dataVec)
 {
     uint64_t aicTotalCycleAvg = 0;
     uint64_t aivTotalCycleAvg = 0;
@@ -423,9 +431,10 @@ void OpAnalyzer::WriteOpBaseData(std::ofstream& file, std::vector<std::vector<Ke
             taskDurationAvg += ((static_cast<float>(data.endTime - data.beginTime) / NS_CONVERT_US) / dataSize);
             // total time
             HandleOpTotalTime(data, aicTotalTimeAvg, aivTotalTimeAvg);
-            MSPROF_LOGI("Acp calculate summary data, taskDuration: %f, aicTotalCycle: %llu, aivTotalCycle: %llu, "
-                "aicTotalTime: %f, aivTotalTime: %f, vec location: %u, vec size: %u.", taskDurationAvg,
-                aicTotalCycleAvg, aivTotalCycleAvg, aicTotalTimeAvg, aivTotalTimeAvg, time, dataSize);
+            MSPROF_LOGI(
+                "Acp calculate summary data, taskDuration: %f, aicTotalCycle: %llu, aivTotalCycle: %llu, "
+                "aicTotalTime: %f, aivTotalTime: %f, vec location: %u, vec size: %u.",
+                taskDurationAvg, aicTotalCycleAvg, aivTotalCycleAvg, aicTotalTimeAvg, aivTotalTimeAvg, time, dataSize);
         }
     }
     // write average data to local file
@@ -439,7 +448,8 @@ void OpAnalyzer::WriteOpBaseData(std::ofstream& file, std::vector<std::vector<Ke
     WriteFloatDataToFile(file, aivTotalTimeAvg);
     file << ",";
     file << aivTotalCycleAvg;
-    MSPROF_LOGI("Save task duration: %f, aic total time: %f, aiv total time: %f.", taskDurationAvg, aicTotalTimeAvg,
+    MSPROF_LOGI(
+        "Save task duration: %f, aic total time: %f, aiv total time: %f.", taskDurationAvg, aicTotalTimeAvg,
         aivTotalTimeAvg);
 }
 
@@ -450,7 +460,7 @@ void OpAnalyzer::WriteOpBaseData(std::ofstream& file, std::vector<std::vector<Ke
  * @param [in] aivTotalTimeAvg: output aiv total time
  * @return
  */
-void OpAnalyzer::HandleOpTotalTime(KernelDetail &data, float &aicTotalTimeAvg, float &aivTotalTimeAvg) const
+void OpAnalyzer::HandleOpTotalTime(KernelDetail& data, float& aicTotalTimeAvg, float& aivTotalTimeAvg) const
 {
     uint32_t dataSize = replayTime_ * KERNEL_EXECUTE_TIME;
     if (analyzerPmu_->IsExtPmu()) {
@@ -459,15 +469,15 @@ void OpAnalyzer::HandleOpTotalTime(KernelDetail &data, float &aicTotalTimeAvg, f
         return;
     }
     if (data.aicTotalCycle == 0 || data.aivTotalCycle == 0) { // not mix type
-        aicTotalTimeAvg += Platform::instance()->GetTotalTime(data.aicTotalCycle, aicFreq_, lowBlockDim_,
-            aicCoreNum_) / dataSize;
-        aivTotalTimeAvg += Platform::instance()->GetTotalTime(data.aivTotalCycle, aicFreq_, lowBlockDim_,
-            aivCoreNum_) / dataSize;
+        aicTotalTimeAvg +=
+            Platform::instance()->GetTotalTime(data.aicTotalCycle, aicFreq_, lowBlockDim_, aicCoreNum_) / dataSize;
+        aivTotalTimeAvg +=
+            Platform::instance()->GetTotalTime(data.aivTotalCycle, aicFreq_, lowBlockDim_, aivCoreNum_) / dataSize;
     } else if (data.coreType == CORE_TYPE_AIV || data.coreType == CORE_TYPE_AIC) { // slave core
-        aicTotalTimeAvg += Platform::instance()->GetTotalTime(data.aicTotalCycle, aicFreq_, lowBlockDim_,
-            aicCoreNum_) / dataSize;
-        aivTotalTimeAvg += Platform::instance()->GetTotalTime(data.aivTotalCycle, aicFreq_, highBlockDim_,
-            aivCoreNum_) / dataSize;
+        aicTotalTimeAvg +=
+            Platform::instance()->GetTotalTime(data.aicTotalCycle, aicFreq_, lowBlockDim_, aicCoreNum_) / dataSize;
+        aivTotalTimeAvg +=
+            Platform::instance()->GetTotalTime(data.aivTotalCycle, aicFreq_, highBlockDim_, aivCoreNum_) / dataSize;
     }
 }
 
@@ -477,15 +487,15 @@ void OpAnalyzer::HandleOpTotalTime(KernelDetail &data, float &aicTotalTimeAvg, f
  * @param [in] dataVec: summary info data
  * @return
  */
-void OpAnalyzer::WriteOpPmuData(std::ofstream& file, std::vector<std::vector<KernelDetail>> &dataVec)
+void OpAnalyzer::WriteOpPmuData(std::ofstream& file, std::vector<std::vector<KernelDetail>>& dataVec)
 {
     std::vector<std::string> metricsVec = OpDataManager::instance()->GetMetricsInfo();
     for (uint32_t time = 0; time < dataVec.size(); ++time) {
-        float avgPmu[SUMMARY_PMU_LEN] = { 0 };
+        float avgPmu[SUMMARY_PMU_LEN] = {0};
         // calculate and add avg pmu data
         for (uint32_t exec = 0; exec < KERNEL_EXECUTE_TIME; ++exec) {
-            MSPROF_LOGI("Handle op event name: %s, replay time: %u, execute time: %u.", metricsVec[time].c_str(),
-                time, exec);
+            MSPROF_LOGI(
+                "Handle op event name: %s, replay time: %u, execute time: %u.", metricsVec[time].c_str(), time, exec);
             HandleOpPmuData(metricsVec[time], dataVec[time][exec], avgPmu, SUMMARY_PMU_LEN);
             continue;
         }
@@ -509,7 +519,7 @@ void OpAnalyzer::WriteOpPmuData(std::ofstream& file, std::vector<std::vector<Ker
  * @param [in] avgLen: len of output pmu array
  * @return
  */
-void OpAnalyzer::HandleOpPmuData(const std::string &name, KernelDetail &data, float* avg, uint32_t avgLen) const
+void OpAnalyzer::HandleOpPmuData(const std::string& name, KernelDetail& data, float* avg, uint32_t avgLen) const
 {
     uint32_t maxPmuNum = analyzerPmu_->pmuNum_;
     uint32_t allPmuNum = maxPmuNum * 2;
@@ -538,7 +548,7 @@ void OpAnalyzer::HandleOpPmuData(const std::string &name, KernelDetail &data, fl
  * @param [in] data: float data which need to write
  * @return
  */
-void OpAnalyzer::WriteFloatDataToFile(std::ofstream& file, float &data)
+void OpAnalyzer::WriteFloatDataToFile(std::ofstream& file, float& data)
 {
     file << ",";
     file << std::fixed << std::setprecision(FLOAT_PRECISION) << CeilPrecision(data);
@@ -557,19 +567,15 @@ void OpAnalyzer::WaitOpDone()
     bool status;
     static const int32_t WAIT_OP_TIMEOUT = 5000000;
     do {
-        status = flushCv_.wait_for(lk, std::chrono::microseconds(WAIT_OP_TIMEOUT),
-            [this] {
-                return (analyzerPmu_->logInfo_.size() == 0 &&
-                        analyzerPmu_->subTaskInfo_.size() == 0 &&
-                        analyzerPmu_->blockInfo_.size() == 0);
-            });
+        status = flushCv_.wait_for(lk, std::chrono::microseconds(WAIT_OP_TIMEOUT), [this] {
+            return (
+                analyzerPmu_->logInfo_.size() == 0 && analyzerPmu_->subTaskInfo_.size() == 0 &&
+                analyzerPmu_->blockInfo_.size() == 0);
+        });
     } while (!status);
 }
 
-float OpAnalyzer::CeilPrecision(float value) const
-{
-    return std::ceil(value * PRECISION_CONVERT) / PRECISION_CONVERT;
-}
-}  // namespace Dvvp
-}  // namespace Acp
-}  // namespace Analysis
+float OpAnalyzer::CeilPrecision(float value) const { return std::ceil(value * PRECISION_CONVERT) / PRECISION_CONVERT; }
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp

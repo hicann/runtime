@@ -34,7 +34,7 @@ public:
     ~OpAnalyzer();
 
 public:
-    void InitAnalyzerByDeviceId(const std::string &deviceId);
+    void InitAnalyzerByDeviceId(const std::string& deviceId);
     void OnOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void PrintStats();
     void WaitOpDone();
@@ -42,22 +42,22 @@ public:
 private:
     void DispatchOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void FlushOpData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
-    std::string CreateOpFile(const std::string &path, const std::string &name) const;
+    std::string CreateOpFile(const std::string& path, const std::string& name) const;
     void WriteOpTitle(std::ofstream& file) const;
     void WriteOpData(std::ofstream& file);
-    void WriteOpBaseData(std::ofstream& file, std::vector<std::vector<KernelDetail>> &dataVec);
-    void HandleOpTotalTime(KernelDetail &data, float &aicTotalTimeAvg, float &aivTotalTimeAvg) const;
-    void WriteOpPmuData(std::ofstream& file, std::vector<std::vector<KernelDetail>> &dataVec);
-    void HandleOpPmuData(const std::string &name, KernelDetail &data, float* avg, uint32_t avgLen) const;
+    void WriteOpBaseData(std::ofstream& file, std::vector<std::vector<KernelDetail>>& dataVec);
+    void HandleOpTotalTime(KernelDetail& data, float& aicTotalTimeAvg, float& aivTotalTimeAvg) const;
+    void WriteOpPmuData(std::ofstream& file, std::vector<std::vector<KernelDetail>>& dataVec);
+    void HandleOpPmuData(const std::string& name, KernelDetail& data, float* avg, uint32_t avgLen) const;
     void OpAssociation(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void PreAssociation(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void BlockAssociation();
-    void BlockInfoMatch(std::string key, KernelDetail &value);
+    void BlockInfoMatch(std::string key, KernelDetail& value);
     void SubTaskAssociation();
-    void SubTaskInfoMatch(KernelDetail &value);
+    void SubTaskInfoMatch(KernelDetail& value);
     void StoreAssociation() const;
     float CeilPrecision(float value) const;
-    void WriteFloatDataToFile(std::ofstream& file, float &data);
+    void WriteFloatDataToFile(std::ofstream& file, float& data);
 
 private:
     bool inited_;
@@ -74,8 +74,8 @@ private:
     SHARED_PTR_ALIA<OpAnalyzerBiu> analyzerBiu_;
     OpAnalyzerPcSampling pcSampling_;
 };
-}
-}
-}
+} // namespace Analyze
+} // namespace Acp
+} // namespace Dvvp
 
 #endif
