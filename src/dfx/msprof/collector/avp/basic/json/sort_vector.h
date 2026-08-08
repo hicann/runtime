@@ -15,11 +15,11 @@
 extern "C" {
 #endif
 
-typedef void *(*FnBinaryGet)(void *appInfo, size_t id);
-typedef int32_t (*FnBinaryCompare)(void *a, void *b, void *appInfo);
+typedef void* (*FnBinaryGet)(void* appInfo, size_t id);
+typedef int32_t (*FnBinaryCompare)(void* a, void* b, void* appInfo);
 
 typedef struct {
-    void *appInfo;
+    void* appInfo;
     FnBinaryCompare fnCmp;
     Vector vector;
 } SortVector;
@@ -28,26 +28,23 @@ typedef struct {
 
 // itemSize 不能为0，请调用者保证
 // appInfo 该参数只会透传给pfnCmp使用，为空是否合法由调用者自己判断
-void InitCSortVector(SortVector *sortVector, size_t itemSize, FnBinaryCompare pfnCmp, void *appInfo);
-static inline void SetCSortVectorDestroyItem(SortVector *sortVector, FnDestroy pfnDestroyItem)
+void InitCSortVector(SortVector* sortVector, size_t itemSize, FnBinaryCompare pfnCmp, void* appInfo);
+static inline void SetCSortVectorDestroyItem(SortVector* sortVector, FnDestroy pfnDestroyItem)
 {
     SetCVectorDestroyItem(&sortVector->vector, pfnDestroyItem);
 }
-void DeInitCSortVector(SortVector *vector);
+void DeInitCSortVector(SortVector* vector);
 
 // itemSize 不能为0，请调用者保证
-SortVector *CreateCSortVector(size_t itemSize, FnBinaryCompare pfnCmp, void *appInfo);
-void DestroyCSortVector(SortVector *sortVector);
-size_t CapacityCSortVector(SortVector *sortVector, size_t capacity);
-static inline size_t CSortVectorSize(SortVector *sortVector)
-{
-    return CVectorSize(&sortVector->vector);
-};
-void *CSortVectorAt(SortVector *sortVector, size_t index);
-size_t FindCSortVector(SortVector *sortVector, void *key);
-void *CSortVectorAtKey(SortVector *sortVector, void *key);
-void *EmplaceCSortVector(SortVector *sortVector, void *data);
-void RemoveCSortVector(SortVector *sortVector, size_t index);
+SortVector* CreateCSortVector(size_t itemSize, FnBinaryCompare pfnCmp, void* appInfo);
+void DestroyCSortVector(SortVector* sortVector);
+size_t CapacityCSortVector(SortVector* sortVector, size_t capacity);
+static inline size_t CSortVectorSize(SortVector* sortVector) { return CVectorSize(&sortVector->vector); };
+void* CSortVectorAt(SortVector* sortVector, size_t index);
+size_t FindCSortVector(SortVector* sortVector, void* key);
+void* CSortVectorAtKey(SortVector* sortVector, void* key);
+void* EmplaceCSortVector(SortVector* sortVector, void* data);
+void RemoveCSortVector(SortVector* sortVector, size_t index);
 #ifdef __cplusplus
 }
 #endif

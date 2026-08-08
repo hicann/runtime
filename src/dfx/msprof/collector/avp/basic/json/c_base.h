@@ -18,10 +18,10 @@ extern "C" {
 
 #define SUCCESS 0
 
-typedef void (*FnDestroy)(void *);
+typedef void (*FnDestroy)(void*);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif  // GE_EXECUTOR_C_BASE_H
+#endif // GE_EXECUTOR_C_BASE_H

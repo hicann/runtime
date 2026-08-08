@@ -18,8 +18,8 @@
 extern "C" {
 #endif
 typedef struct TagCstlListNode {
-    struct TagCstlListNode *prev;
-    struct TagCstlListNode *next;
+    struct TagCstlListNode* prev;
+    struct TagCstlListNode* next;
     uintptr_t userdata;
 } CstlListNode;
 
@@ -31,14 +31,14 @@ typedef struct {
 
 typedef CstlListNode* CstlListIterator;
 typedef int32_t (*CstlKeyCmpFunc)(uintptr_t key1, uintptr_t key2);
-typedef void (*CstlFreeFunc)(void *ptr);
-int32_t CstlListInit(CstlList *list, CstlFreeFunc freeFunc);
-int32_t CstlListDeinit(CstlList *list);
-bool CstlListEmpty(CstlList *list);
-int32_t CstlListClear(CstlList *list);
-int32_t CstlListPushBack(CstlList *list, uintptr_t userData);
+typedef void (*CstlFreeFunc)(void* ptr);
+int32_t CstlListInit(CstlList* list, CstlFreeFunc freeFunc);
+int32_t CstlListDeinit(CstlList* list);
+bool CstlListEmpty(CstlList* list);
+int32_t CstlListClear(CstlList* list);
+int32_t CstlListPushBack(CstlList* list, uintptr_t userData);
 uintptr_t CstlListIterData(const CstlListIterator it);
-CstlListIterator  CstlListIterFind(CstlList *list, CstlKeyCmpFunc iterCmpFunc, uintptr_t data);
+CstlListIterator CstlListIterFind(CstlList* list, CstlKeyCmpFunc iterCmpFunc, uintptr_t data);
 #ifdef __cplusplus
 }
 #endif

@@ -17,37 +17,34 @@ typedef struct {
     size_t itemSize;
     size_t size;
     size_t capacity;
-    uint8_t *data;
+    uint8_t* data;
     FnDestroy pfnDestroyItem;
 } Vector;
 
 #define NewVector(objType) CreateCVector(sizeof(objType))
 
 // itemSize 不能为0，请调用者保证
-void InitCVector(Vector *vector, size_t itemSize);
-static inline void SetCVectorDestroyItem(Vector *vector, FnDestroy pfnDestroyItem)
+void InitCVector(Vector* vector, size_t itemSize);
+static inline void SetCVectorDestroyItem(Vector* vector, FnDestroy pfnDestroyItem)
 {
     vector->pfnDestroyItem = pfnDestroyItem;
 };
-void DeInitCVector(Vector *vector);
+void DeInitCVector(Vector* vector);
 
 // itemSize 不能为0，请调用者保证
-Vector *CreateCVector(size_t itemSize);
-void DestroyCVector(Vector *vector);
-void ClearCVector(Vector *vector);
-static inline size_t CVectorSize(const Vector *vector)
-{
-    return vector->size;
-};
-size_t ReSizeCVector(Vector *vector, size_t size);
-size_t CapacityCVector(Vector *vector, size_t capacity);
-void *EmplaceCVector(Vector *vector, size_t index, void *data);
-void *EmplaceBackCVector(Vector *vector, void *data);
-void *EmplaceHeadCVector(Vector *vector, void *data);
-void RemoveCVector(Vector *vector, size_t index);
-void MoveCVector(Vector *src, Vector *desc);
-void *CVectorAt(Vector *vector, size_t index);
-const void *ConstCVectorAt(const Vector *vector, size_t index);
+Vector* CreateCVector(size_t itemSize);
+void DestroyCVector(Vector* vector);
+void ClearCVector(Vector* vector);
+static inline size_t CVectorSize(const Vector* vector) { return vector->size; };
+size_t ReSizeCVector(Vector* vector, size_t size);
+size_t CapacityCVector(Vector* vector, size_t capacity);
+void* EmplaceCVector(Vector* vector, size_t index, void* data);
+void* EmplaceBackCVector(Vector* vector, void* data);
+void* EmplaceHeadCVector(Vector* vector, void* data);
+void RemoveCVector(Vector* vector, size_t index);
+void MoveCVector(Vector* src, Vector* desc);
+void* CVectorAt(Vector* vector, size_t index);
+const void* ConstCVectorAt(const Vector* vector, size_t index);
 #ifdef __cplusplus
 }
 #endif

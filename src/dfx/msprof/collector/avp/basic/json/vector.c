@@ -17,7 +17,7 @@ extern "C" {
 #define VECTOR_BASIC_STEP 8
 #define VECTOR_MAX_AREA 0x80000000U
 
-void InitCVector(Vector *vector, size_t itemSize)
+void InitCVector(Vector* vector, size_t itemSize)
 {
     vector->itemSize = itemSize;
     vector->size = 0;
@@ -26,7 +26,7 @@ void InitCVector(Vector *vector, size_t itemSize)
     vector->pfnDestroyItem = NULL;
 }
 
-void ClearCVector(Vector *vector)
+void ClearCVector(Vector* vector)
 {
     if (vector->pfnDestroyItem != NULL) {
         for (size_t i = 0; i < vector->size; i++) {
@@ -36,16 +36,16 @@ void ClearCVector(Vector *vector)
     vector->size = 0;
 }
 
-void DeInitCVector(Vector *vector)
+void DeInitCVector(Vector* vector)
 {
     ClearCVector(vector);
     OsalFree(vector->data);
     InitCVector(vector, 0);
 }
 
-Vector *CreateCVector(size_t itemSize)
+Vector* CreateCVector(size_t itemSize)
 {
-    Vector *vector = (Vector *)OsalMalloc(sizeof(Vector));
+    Vector* vector = (Vector*)OsalMalloc(sizeof(Vector));
     if (vector == NULL) {
         return NULL;
     }
@@ -53,13 +53,13 @@ Vector *CreateCVector(size_t itemSize)
     return vector;
 }
 
-void DestroyCVector(Vector *vector)
+void DestroyCVector(Vector* vector)
 {
     DeInitCVector(vector);
     OsalFree(vector);
 }
 
-void MoveCVector(Vector *src, Vector *desc)
+void MoveCVector(Vector* src, Vector* desc)
 {
     desc->capacity = src->capacity;
     desc->data = src->data;
@@ -69,7 +69,7 @@ void MoveCVector(Vector *src, Vector *desc)
     InitCVector(src, 0);
 }
 
-size_t CapacityCVector(Vector *vector, size_t capacity)
+size_t CapacityCVector(Vector* vector, size_t capacity)
 {
     if (vector->capacity >= capacity || vector->itemSize == 0) {
         return vector->capacity;
@@ -82,7 +82,7 @@ size_t CapacityCVector(Vector *vector, size_t capacity)
 
     size_t validCapacity = (capacity >= maxCapacity) ? maxCapacity : capacity;
     size_t areaSize = validCapacity * vector->itemSize;
-    uint8_t *data = (uint8_t *)OsalMalloc(areaSize);
+    uint8_t* data = (uint8_t*)OsalMalloc(areaSize);
     if (data == NULL) {
         return vector->capacity;
     }
@@ -101,7 +101,7 @@ size_t CapacityCVector(Vector *vector, size_t capacity)
     return validCapacity;
 }
 
-size_t ReSizeCVector(Vector *vector, size_t size)
+size_t ReSizeCVector(Vector* vector, size_t size)
 {
     if (size > vector->capacity) {
         (void)CapacityCVector(vector, size);
@@ -116,7 +116,7 @@ size_t ReSizeCVector(Vector *vector, size_t size)
     return vector->size;
 }
 
-void *EmplaceCVector(Vector *vector, size_t index, void *data)
+void* EmplaceCVector(Vector* vector, size_t index, void* data)
 {
     if (vector->size == vector->capacity) {
         size_t capacity =
@@ -130,7 +130,7 @@ void *EmplaceCVector(Vector *vector, size_t index, void *data)
         return NULL;
     }
 
-    uint8_t *itemData = vector->data + (index * vector->itemSize);
+    uint8_t* itemData = vector->data + (index * vector->itemSize);
     errno_t ret;
     if (index < vector->size) {
         size_t mvArea = (vector->size - index) * vector->itemSize;
@@ -147,23 +147,17 @@ void *EmplaceCVector(Vector *vector, size_t index, void *data)
     return itemData;
 }
 
-void *EmplaceBackCVector(Vector *vector, void *data)
-{
-    return EmplaceCVector(vector, vector->size, data);
-}
+void* EmplaceBackCVector(Vector* vector, void* data) { return EmplaceCVector(vector, vector->size, data); }
 
-void *EmplaceHeadCVector(Vector *vector, void *data)
-{
-    return EmplaceCVector(vector, 0, data);
-}
+void* EmplaceHeadCVector(Vector* vector, void* data) { return EmplaceCVector(vector, 0, data); }
 
-void RemoveCVector(Vector *vector, size_t index)
+void RemoveCVector(Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return;
     }
 
-    uint8_t *itemData = vector->data + (index * vector->itemSize);
+    uint8_t* itemData = vector->data + (index * vector->itemSize);
     if (vector->pfnDestroyItem != NULL) {
         vector->pfnDestroyItem(itemData);
     }
@@ -180,7 +174,7 @@ void RemoveCVector(Vector *vector, size_t index)
     return;
 }
 
-void *CVectorAt(Vector *vector, size_t index)
+void* CVectorAt(Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return NULL;
@@ -188,7 +182,7 @@ void *CVectorAt(Vector *vector, size_t index)
     return vector->data + (index * vector->itemSize);
 }
 
-const void *ConstCVectorAt(const Vector *vector, size_t index)
+const void* ConstCVectorAt(const Vector* vector, size_t index)
 {
     if (index >= vector->size) {
         return NULL;

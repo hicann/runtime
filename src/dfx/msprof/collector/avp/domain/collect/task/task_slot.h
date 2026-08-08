@@ -14,20 +14,20 @@
 
 typedef struct {
     uint32_t deviceId;
-    uint32_t launchRepeatTimes;           // times of starting task called
+    uint32_t launchRepeatTimes; // times of starting task called
     OsalThread handle;
     JobManagerAttribute jobAttr;
-    bool started;                         // device job is started or not
-    bool quit;                            // task slot thread is started or not
+    bool started; // device job is started or not
+    bool quit;    // task slot thread is started or not
     OsalCond taskStartCond;
     OsalCond taskStopCond;
     OsalCond taskEndCond;
     OsalMutex taskMtx;
 } TaskSlotAttribute;
 
-int32_t TaskSlotInitialize(TaskSlotAttribute *attr);
-int32_t TaskSlotStart(const ProfileParam *params, TaskSlotAttribute *attr);
-int32_t TaskSlotStop(TaskSlotAttribute *attr);
-int32_t TaskSlotFinalize(TaskSlotAttribute *attr);
+int32_t TaskSlotInitialize(TaskSlotAttribute* attr);
+int32_t TaskSlotStart(const ProfileParam* params, TaskSlotAttribute* attr);
+int32_t TaskSlotStop(TaskSlotAttribute* attr);
+int32_t TaskSlotFinalize(TaskSlotAttribute* attr);
 
 #endif

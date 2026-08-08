@@ -23,26 +23,26 @@ typedef struct {
 } DeviceInfo;
 
 static DeviceInfo g_deviceInfo[MAX_DEVICE_INFO_TYPE] = {
-    {MODULE_TYPE_SYSTEM,       INFO_TYPE_SYS_COUNT,           0, "get device sys count"},
-    {MODULE_TYPE_SYSTEM,       INFO_TYPE_HOST_OSC_FREQUE,     0, "get host osc frequency"},
-    {MODULE_TYPE_SYSTEM,       INFO_TYPE_DEV_OSC_FREQUE,      0, "get device osc frequency"},
+    {MODULE_TYPE_SYSTEM, INFO_TYPE_SYS_COUNT, 0, "get device sys count"},
+    {MODULE_TYPE_SYSTEM, INFO_TYPE_HOST_OSC_FREQUE, 0, "get host osc frequency"},
+    {MODULE_TYPE_SYSTEM, INFO_TYPE_DEV_OSC_FREQUE, 0, "get device osc frequency"},
     /* 获取芯片形态, 用于区分芯片读取PMU值不同等 */
-    {MODULE_TYPE_SYSTEM,       INFO_TYPE_VERSION,             0, "get device chip version"},
+    {MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION, 0, "get device chip version"},
     /* 获取device的环境: 0: FPGA; 1: EMU; 2: ESL */
-    {MODULE_TYPE_SYSTEM,       INFO_TYPE_ENV,                 0, "get device env type"},
+    {MODULE_TYPE_SYSTEM, INFO_TYPE_ENV, 0, "get device env type"},
     /* 获取Ctrl Cpu 编号, 做芯片型号映射使用, 如： ARMv8_Cortext_A55 */
-    {MODULE_TYPE_CCPU,         INFO_TYPE_ID,                  0, "get ctrl cpu id"},
-    {MODULE_TYPE_CCPU,         INFO_TYPE_CORE_NUM,            0, "get ctrl cpu core number"},
-    {MODULE_TYPE_CCPU,         INFO_TYPE_ENDIAN,              0, "get ctrl cpu little-endian"},
-    {MODULE_TYPE_AICPU,        INFO_TYPE_CORE_NUM,            0, "get ai cpu core number"},
-    {MODULE_TYPE_AICPU,        INFO_TYPE_ID,                  0, "get ai cpu id"},
-    {MODULE_TYPE_AICPU,        INFO_TYPE_OCCUPY,              0, "get ai cpu occupy bitmap"},
-    {MODULE_TYPE_TSCPU,        INFO_TYPE_CORE_NUM,            0, "get ts cpu core number"},
-    {MODULE_TYPE_AICORE,       INFO_TYPE_ID,                  0, "get ai core id"},
-    {MODULE_TYPE_AICORE,       INFO_TYPE_CORE_NUM,            0, "get ai core number"},
-    {MODULE_TYPE_AICORE,       INFO_TYPE_FREQUE,              0, "get ai core frequency"},
-    {MODULE_TYPE_VECTOR_CORE,  INFO_TYPE_CORE_NUM,            0, "get ai vector core number"},
-    {MODULE_TYPE_VECTOR_CORE,  INFO_TYPE_FREQUE,              0, "get ai vector core frequency"},
+    {MODULE_TYPE_CCPU, INFO_TYPE_ID, 0, "get ctrl cpu id"},
+    {MODULE_TYPE_CCPU, INFO_TYPE_CORE_NUM, 0, "get ctrl cpu core number"},
+    {MODULE_TYPE_CCPU, INFO_TYPE_ENDIAN, 0, "get ctrl cpu little-endian"},
+    {MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, 0, "get ai cpu core number"},
+    {MODULE_TYPE_AICPU, INFO_TYPE_ID, 0, "get ai cpu id"},
+    {MODULE_TYPE_AICPU, INFO_TYPE_OCCUPY, 0, "get ai cpu occupy bitmap"},
+    {MODULE_TYPE_TSCPU, INFO_TYPE_CORE_NUM, 0, "get ts cpu core number"},
+    {MODULE_TYPE_AICORE, INFO_TYPE_ID, 0, "get ai core id"},
+    {MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM, 0, "get ai core number"},
+    {MODULE_TYPE_AICORE, INFO_TYPE_FREQUE, 0, "get ai core frequency"},
+    {MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM, 0, "get ai vector core number"},
+    {MODULE_TYPE_VECTOR_CORE, INFO_TYPE_FREQUE, 0, "get ai vector core frequency"},
 };
 
 /*
@@ -104,7 +104,7 @@ uint32_t HalGetDeviceNumber(void)
  * 出  参：devIds - device Id存放缓冲区
  * 返回值：>0：获取device id成功, others：获取到的device id失败
  */
-uint32_t HalGetDeviceIds(uint32_t devNum, uint32_t *devIds, uint32_t devIdsLen)
+uint32_t HalGetDeviceIds(uint32_t devNum, uint32_t* devIds, uint32_t devIdsLen)
 {
     if (devNum == 0 || devNum > MAX_DEVICE_NUMS || devIds == NULL || devIdsLen < MAX_DEVICE_NUMS) {
         MSPROF_LOGE("the parameter of input is invalid, device number is %u.", devNum);
@@ -128,7 +128,7 @@ uint32_t HalGetDeviceIds(uint32_t devNum, uint32_t *devIds, uint32_t devIdsLen)
  * 出  参： value - device信息值
  * 返回值：0：获取成功, -1：获取失败
  */
-int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t *value)
+int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t* value)
 {
     *value = g_deviceInfo[type].defaultValue;
     drvError_t ret = halGetDeviceInfo(deviceId, g_deviceInfo[type].moduleType, g_deviceInfo[type].infoType, value);
@@ -136,8 +136,10 @@ int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t *value)
         MSPROF_LOGI("Succeeded to %s, deviceId=%u, value=%lld.", g_deviceInfo[type].message, deviceId, *value);
         return PROFILING_SUCCESS;
     } else if (ret == DRV_ERROR_NOT_SUPPORT) {
-        MSPROF_LOGW("Driver doesn't support to %s by halGetDeviceInfo interface, "
-            "deviceId=%u, ret=%d.", g_deviceInfo[type].message, deviceId, ret);
+        MSPROF_LOGW(
+            "Driver doesn't support to %s by halGetDeviceInfo interface, "
+            "deviceId=%u, ret=%d.",
+            g_deviceInfo[type].message, deviceId, ret);
         return PROFILING_SUCCESS;
     } else {
         MSPROF_LOGE("Failed to %s, deviceId=%u, ret=%d.", g_deviceInfo[type].message, deviceId, ret);
@@ -151,7 +153,7 @@ int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t *value)
  * 出  参： cntvct - device对应的时间信息值
  * 返回值： 0(PROFILING_SUCCESS)：获取成功, -1(PROFILING_FAILED)：获取失败
  */
-int32_t HalGetDeviceTime(uint32_t deviceId, uint64_t *cntvct)
+int32_t HalGetDeviceTime(uint32_t deviceId, uint64_t* cntvct)
 {
     PROF_CHK_EXPR_ACTION(cntvct == NULL, return PROFILING_FAILED, "Param cntvct is null.");
     int64_t deviceTime = 0;
@@ -160,8 +162,10 @@ int32_t HalGetDeviceTime(uint32_t deviceId, uint64_t *cntvct)
         *cntvct = (uint64_t)deviceTime;
         MSPROF_LOGI("Succeeded to HalGetDeviceTime cntvct, devId=%u, cntvct=%" PRIu64 ".", deviceId, *cntvct);
     } else if (ret == DRV_ERROR_NOT_SUPPORT) {
-        MSPROF_LOGW("Driver doesn't support HalGetDeviceTime cntvct by halGetDeviceInfo interface, "
-            "deviceId=%u, ret=%d", deviceId, ret);
+        MSPROF_LOGW(
+            "Driver doesn't support HalGetDeviceTime cntvct by halGetDeviceInfo interface, "
+            "deviceId=%u, ret=%d",
+            deviceId, ret);
     } else {
         MSPROF_LOGE("Failed to HalGetDeviceTime cntvct, deviceId=%u, ret=%d", deviceId, ret);
         return PROFILING_FAILED;

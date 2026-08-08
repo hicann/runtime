@@ -36,7 +36,7 @@ typedef struct JsonObj JsonObj;
 typedef struct JsonKeyObj JsonKeyObj;
 
 typedef union JsonValue {
-    const CHAR *stringValue;
+    const CHAR* stringValue;
     bool boolValue;
     double doubleValue;
     int64_t intValue;
@@ -50,84 +50,48 @@ struct JsonObj {
     CJSON_TYPE type;
 
     // objectValue api
-    JsonKeyObj *(*KeyValuePairAt)(const JsonObj *, size_t);
-    JsonObj *(*SetValueByKey)(JsonObj *, const CHAR *, JsonObj);
-    JsonValue *(*GetValueByKey)(JsonObj *, CHAR *);
-    JsonObj *(*TravelByKey)(JsonObj **, CHAR *);
-    bool (*Contains)(JsonObj *, CHAR *);
+    JsonKeyObj* (*KeyValuePairAt)(const JsonObj*, size_t);
+    JsonObj* (*SetValueByKey)(JsonObj*, const CHAR*, JsonObj);
+    JsonValue* (*GetValueByKey)(JsonObj*, CHAR*);
+    JsonObj* (*TravelByKey)(JsonObj**, CHAR*);
+    bool (*Contains)(JsonObj*, CHAR*);
     // arrayValue api
-    JsonObj *(*AddArrayItem)(JsonObj *, JsonObj);
+    JsonObj* (*AddArrayItem)(JsonObj*, JsonObj);
     // common
-    size_t (*GetSize)(const JsonObj *);
+    size_t (*GetSize)(const JsonObj*);
 };
 
 struct JsonKeyObj {
-    const CHAR *key;
+    const CHAR* key;
     JsonObj value;
 };
 
-JsonObj *JsonInit(void);
-void JsonObjUnInit(JsonObj *obj);
-void JsonFree(JsonObj *obj);
-JsonObj *JsonParse(const CHAR *jsonContent);
+JsonObj* JsonInit(void);
+void JsonObjUnInit(JsonObj* obj);
+void JsonFree(JsonObj* obj);
+JsonObj* JsonParse(const CHAR* jsonContent);
 
-JsonObj *JsonArrayAt(JsonObj *obj, size_t i);
-JsonObj *GetJsonSubObj(JsonObj *obj, const char *key);
-void JsonCopy(JsonObj *dstObj, const JsonObj *srcObj);
+JsonObj* JsonArrayAt(JsonObj* obj, size_t i);
+JsonObj* GetJsonSubObj(JsonObj* obj, const char* key);
+void JsonCopy(JsonObj* dstObj, const JsonObj* srcObj);
 
-static inline bool JsonIsNull(JsonObj *obj)
-{
-    return (obj->type == CJSON_NULL);
-};
-static inline bool JsonIsInt(JsonObj *obj)
-{
-    return (obj->type == CJSON_INT);
-};
-static inline bool JsonIsUint(JsonObj *obj)
-{
-    return (obj->type == CJSON_UINT);
-};
-static inline bool JsonIsBool(JsonObj *obj)
-{
-    return (obj->type == CJSON_BOOL);
-};
-static inline bool JsonIsDouble(JsonObj *obj)
-{
-    return (obj->type == CJSON_DOUBLE);
-};
-static inline bool JsonIsString(JsonObj *obj)
-{
-    return (obj->type == CJSON_STRING);
-};
-static inline bool JsonIsObj(JsonObj *obj)
-{
-    return (obj->type == CJSON_OBJ);
-};
-static inline bool JsonIsArray(JsonObj *obj)
-{
-    return (obj->type == CJSON_ARRAY);
-};
-static inline bool GetJsonBool(JsonObj *obj)
-{
-    return ((obj->type != CJSON_BOOL)) ? false : obj->value.boolValue;
-};
-static inline int64_t GetJsonInt(JsonObj *obj)
-{
-    return (obj->type != CJSON_INT) ? 0 : obj->value.intValue;
-};
-static inline int64_t GetJsonUint(JsonObj *obj)
-{
-    return (obj->type != CJSON_UINT) ? 0 : obj->value.uintValue;
-};
-static inline double GetJsonDouble(JsonObj *obj)
-{
-    return (obj->type != CJSON_DOUBLE) ? 0 : obj->value.doubleValue;
-};
-static inline const CHAR *GetJsonString(JsonObj *obj)
+static inline bool JsonIsNull(JsonObj* obj) { return (obj->type == CJSON_NULL); };
+static inline bool JsonIsInt(JsonObj* obj) { return (obj->type == CJSON_INT); };
+static inline bool JsonIsUint(JsonObj* obj) { return (obj->type == CJSON_UINT); };
+static inline bool JsonIsBool(JsonObj* obj) { return (obj->type == CJSON_BOOL); };
+static inline bool JsonIsDouble(JsonObj* obj) { return (obj->type == CJSON_DOUBLE); };
+static inline bool JsonIsString(JsonObj* obj) { return (obj->type == CJSON_STRING); };
+static inline bool JsonIsObj(JsonObj* obj) { return (obj->type == CJSON_OBJ); };
+static inline bool JsonIsArray(JsonObj* obj) { return (obj->type == CJSON_ARRAY); };
+static inline bool GetJsonBool(JsonObj* obj) { return ((obj->type != CJSON_BOOL)) ? false : obj->value.boolValue; };
+static inline int64_t GetJsonInt(JsonObj* obj) { return (obj->type != CJSON_INT) ? 0 : obj->value.intValue; };
+static inline int64_t GetJsonUint(JsonObj* obj) { return (obj->type != CJSON_UINT) ? 0 : obj->value.uintValue; };
+static inline double GetJsonDouble(JsonObj* obj) { return (obj->type != CJSON_DOUBLE) ? 0 : obj->value.doubleValue; };
+static inline const CHAR* GetJsonString(JsonObj* obj)
 {
     return (obj->type != CJSON_STRING) ? NULL : obj->value.stringValue;
 };
-static inline size_t GetJsonArraySize(JsonObj *obj)
+static inline size_t GetJsonArraySize(JsonObj* obj)
 {
     return (obj->type != CJSON_ARRAY) ? 0 : CVectorSize(&obj->value.arrayValue);
 };

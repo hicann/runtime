@@ -10,22 +10,13 @@
 #include <stdatomic.h>
 #include "atomic.h"
 
-void AtomicInit(volatile int32_t *ptr, int32_t val)
+void AtomicInit(volatile int32_t* ptr, int32_t val) { atomic_init((volatile atomic_int*)ptr, val); }
+
+int32_t AtomicLoad(volatile int32_t* ptr) { return atomic_load((volatile atomic_int*)ptr); }
+
+bool AtomicCompareExchangeWeak(volatile int32_t* ptr, int32_t desired, int32_t expected)
 {
-    atomic_init((volatile atomic_int *)ptr, val);
+    return !atomic_compare_exchange_weak((volatile atomic_int*)ptr, &expected, desired);
 }
 
-int32_t AtomicLoad(volatile int32_t *ptr)
-{
-    return atomic_load((volatile atomic_int *)ptr);
-}
-
-bool AtomicCompareExchangeWeak(volatile int32_t *ptr, int32_t desired, int32_t expected)
-{
-    return !atomic_compare_exchange_weak((volatile atomic_int *)ptr, &expected, desired);
-}
-
-int32_t AtomicAdd(volatile int32_t *ptr, int32_t val)
-{
-    return atomic_fetch_add((volatile atomic_int *)ptr, val);
-}
+int32_t AtomicAdd(volatile int32_t* ptr, int32_t val) { return atomic_fetch_add((volatile atomic_int*)ptr, val); }

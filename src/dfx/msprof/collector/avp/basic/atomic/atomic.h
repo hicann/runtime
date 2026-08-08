@@ -16,14 +16,14 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cpluscplus
+#endif // __cpluscplus
 
-void AtomicInit(volatile int32_t *ptr, int32_t val);
-int32_t AtomicLoad(volatile int32_t *ptr);
-bool AtomicCompareExchangeWeak(volatile int32_t *ptr, int32_t desired, int32_t expected);
-int32_t AtomicAdd(volatile int32_t *ptr, int32_t val);
+void AtomicInit(volatile int32_t* ptr, int32_t val);
+int32_t AtomicLoad(volatile int32_t* ptr);
+bool AtomicCompareExchangeWeak(volatile int32_t* ptr, int32_t desired, int32_t expected);
+int32_t AtomicAdd(volatile int32_t* ptr, int32_t val);
 
 #ifdef __cplusplus
 }
-#endif  // __cpluscplus
+#endif // __cpluscplus
 #endif

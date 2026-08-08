@@ -11,19 +11,18 @@
 #include "osal/osal_mem.h"
 #include "logger/logger.h"
 
-static inline bool CstlRawListNodeInList(const CstlListNode *node)
+static inline bool CstlRawListNodeInList(const CstlListNode* node)
 {
     bool ret = false;
-    if ((node->next != NULL) && (node->prev != NULL) &&
-        ((const CstlListNode *)(node->next->prev) == node) &&
-        ((const CstlListNode *)(node->prev->next) == node)) {
+    if ((node->next != NULL) && (node->prev != NULL) && ((const CstlListNode*)(node->next->prev) == node) &&
+        ((const CstlListNode*)(node->prev->next) == node)) {
         ret = true;
     }
 
     return ret;
 }
 
-int32_t CstlListInit(CstlList *list, CstlFreeFunc freeFunc)
+int32_t CstlListInit(CstlList* list, CstlFreeFunc freeFunc)
 {
     if (list != NULL) {
         list->head.next = &list->head;
@@ -36,7 +35,7 @@ int32_t CstlListInit(CstlList *list, CstlFreeFunc freeFunc)
     return CSTL_ERR;
 }
 
-bool CstlListEmpty(CstlList *list)
+bool CstlListEmpty(CstlList* list)
 {
     if (list != NULL) {
         if (list->size == 0) { // list not init, default size is 0
@@ -48,7 +47,7 @@ bool CstlListEmpty(CstlList *list)
     return false;
 }
 
-static inline void CstlListRemoveNode(CstlList *list, CstlListNode *node)
+static inline void CstlListRemoveNode(CstlList* list, CstlListNode* node)
 {
     if ((node == NULL) || !CstlRawListNodeInList(node)) {
         return;
@@ -57,14 +56,14 @@ static inline void CstlListRemoveNode(CstlList *list, CstlListNode *node)
     node->prev->next = node->next;
     node->next->prev = node->prev;
     if (list->freeFunc != NULL) { // Free object like reader and uploader
-        list->freeFunc((void *)node->userdata);
+        list->freeFunc((void*)node->userdata);
     }
 
     OSAL_MEM_FREE(node);
     list->size--;
 }
 
-int32_t CstlListClear(CstlList *list)
+int32_t CstlListClear(CstlList* list)
 {
     if (list == NULL) {
         return CSTL_ERR;
@@ -77,7 +76,7 @@ int32_t CstlListClear(CstlList *list)
     return CSTL_OK;
 }
 
-int32_t CstlListDeinit(CstlList *list)
+int32_t CstlListDeinit(CstlList* list)
 {
     if (list == NULL) {
         return CSTL_ERR;
@@ -88,10 +87,10 @@ int32_t CstlListDeinit(CstlList *list)
     return ret;
 }
 
-int32_t CstlListPushBack(CstlList *list, uintptr_t userData)
+int32_t CstlListPushBack(CstlList* list, uintptr_t userData)
 {
     if (list != NULL) {
-        CstlListNode *node = (CstlListNode *)OsalCalloc(sizeof(CstlListNode));
+        CstlListNode* node = (CstlListNode*)OsalCalloc(sizeof(CstlListNode));
         if (node == NULL) {
             return CSTL_ERR;
         }
@@ -116,16 +115,16 @@ uintptr_t CstlListIterData(const CstlListIterator it)
     return 0;
 }
 
-CstlListIterator CstlListIterFind(CstlList *list, CstlKeyCmpFunc iterCmpFunc, uintptr_t data)
+CstlListIterator CstlListIterFind(CstlList* list, CstlKeyCmpFunc iterCmpFunc, uintptr_t data)
 {
-    CstlListNode *ans = NULL;
-    CstlListNode *node = NULL;
+    CstlListNode* ans = NULL;
+    CstlListNode* node = NULL;
     if ((list != NULL) && (iterCmpFunc != NULL)) {
         node = list->head.next;
         if (node == NULL) {
             return ans;
         }
-        while ((const CstlListNode *)node != &list->head) {
+        while ((const CstlListNode*)node != &list->head) {
             if (iterCmpFunc(node->userdata, data) == CSTL_OK) {
                 ans = node;
                 break;

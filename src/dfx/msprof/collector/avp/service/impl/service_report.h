@@ -13,10 +13,10 @@
 #include "toolchain/prof_api.h"
 
 int32_t ServiceReportInitialize(uint32_t index, uint32_t length);
-int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi *data);
-int32_t ServiceReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data, uint32_t length);
-int32_t ServiceReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *data, uint32_t length);
-int32_t RegisterTypeInfo(uint16_t level, uint32_t typeId, const char *typeName);
-uint64_t ServiceHashId(const char *hashInfo, size_t length);
+int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi* data);
+int32_t ServiceReportCompactPush(uint8_t aging, const struct MsprofCompactInfo* data, uint32_t length);
+int32_t ServiceReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo* data, uint32_t length);
+int32_t RegisterTypeInfo(uint16_t level, uint32_t typeId, const char* typeName);
+uint64_t ServiceHashId(const char* hashInfo, size_t length);
 
 #endif

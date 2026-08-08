@@ -19,15 +19,15 @@
 extern "C" {
 #endif
 
-#define REPORT_API_INDEX           0
-#define REPORT_COMPACT_INDEX       1
-#define REPORT_ADDITIONAL_INDEX    2
-#define REPORT_TYPE_MAX            3
-#define UNAGING_INDEX              0
-#define AGING_INDEX                1
-#define AGING_MAX_INDEX            2
-#define REPORT_NAME_LEN            12
-#define AGING_TITLE_MAX_LENGTH     20
+#define REPORT_API_INDEX 0
+#define REPORT_COMPACT_INDEX 1
+#define REPORT_ADDITIONAL_INDEX 2
+#define REPORT_TYPE_MAX 3
+#define UNAGING_INDEX 0
+#define AGING_INDEX 1
+#define AGING_MAX_INDEX 2
+#define REPORT_NAME_LEN 12
+#define AGING_TITLE_MAX_LENGTH 20
 #define REPORT_BUFFER_MAX_CYCLES 512U
 #define REPORT_BUFFER_MAX_BATCH 32U
 
@@ -37,9 +37,9 @@ typedef struct ReportBuffer {
     volatile int32_t idleWriteIndex;
     uint32_t mask;
     uint32_t capacity;
-    uint8_t *avails;
-    uint8_t *aging;
-    void *buffer;
+    uint8_t* avails;
+    uint8_t* aging;
+    void* buffer;
     OsalCond bufCond;
     OsalMutex bufMtx;
 } ReportBuffer;
@@ -60,12 +60,12 @@ typedef struct UnionVectorTag {
         struct MsprofCompactInfo compactData[REPORT_BUFFER_MAX_BATCH];
         struct MsprofAdditionalInfo additionalData[REPORT_BUFFER_MAX_BATCH];
     } typeInfo;
-    struct UnionVectorTag *next;
+    struct UnionVectorTag* next;
 } UnionVector;
 
 typedef struct {
     uint32_t quantity;
-    UnionVector *head;
+    UnionVector* head;
 } UnionList;
 
 typedef struct {
@@ -78,13 +78,13 @@ typedef struct {
 
 int32_t ReportInitialize(uint32_t length);
 int32_t ReportStart(void);
-int32_t ReportApiPush(uint8_t aging, const struct MsprofApi *data);
-int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data);
-int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *data);
+int32_t ReportApiPush(uint8_t aging, const struct MsprofApi* data);
+int32_t ReportCompactPush(uint8_t aging, const struct MsprofCompactInfo* data);
+int32_t ReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo* data);
 void ReportStop(void);
 void ReportUninitialize(void);
-void AddCompactNode(struct MsprofCompactInfo *data, uint8_t ageFlag);
-void AddAdditionalNode(struct MsprofAdditionalInfo *data, uint8_t ageFlag);
+void AddCompactNode(struct MsprofCompactInfo* data, uint8_t ageFlag);
+void AddAdditionalNode(struct MsprofAdditionalInfo* data, uint8_t ageFlag);
 void DumpApi(void);
 void DumpCompact(void);
 void DumpAdditional(void);

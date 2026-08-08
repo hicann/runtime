@@ -27,9 +27,9 @@ static void* JsonContextPush(JsonContext* ctx, size_t size)
         }
         size_t oldSize = ctx->size;
         while (ctx->top + size >= ctx->size) {
-            ctx->size += ctx->size >> 1;  /* c->size * 1.5 */
+            ctx->size += ctx->size >> 1; /* c->size * 1.5 */
         }
-        char *reallocStack = (char*)MsprofRealloc(ctx->stack, oldSize, ctx->size);
+        char* reallocStack = (char*)MsprofRealloc(ctx->stack, oldSize, ctx->size);
         if (reallocStack == NULL) {
             return NULL;
         }
@@ -45,7 +45,7 @@ static inline void PutChar(JsonContext* ctx, char ch)
     if (ctx == NULL) {
         return;
     }
-    void *p = JsonContextPush(ctx, sizeof(char));
+    void* p = JsonContextPush(ctx, sizeof(char));
     PROF_CHK_EXPR_ACTION_NODO(p == NULL, return, "JsonContextPush Failed.");
     *(char*)p = ch;
 }
@@ -78,13 +78,34 @@ static void JsonMakeString(JsonContext* ctx, const char* s)
     for (i = 0; i < len; i++) {
         unsigned char ch = (unsigned char)s[i];
         switch (ch) {
-            case '\"': *p++ = '\\'; *p++ = '\"'; break;
-            case '\\': *p++ = '\\'; *p++ = '\\'; break;
-            case '\b': *p++ = '\\'; *p++ = 'b';  break;
-            case '\f': *p++ = '\\'; *p++ = 'f';  break;
-            case '\n': *p++ = '\\'; *p++ = 'n';  break;
-            case '\r': *p++ = '\\'; *p++ = 'r';  break;
-            case '\t': *p++ = '\\'; *p++ = 't';  break;
+            case '\"':
+                *p++ = '\\';
+                *p++ = '\"';
+                break;
+            case '\\':
+                *p++ = '\\';
+                *p++ = '\\';
+                break;
+            case '\b':
+                *p++ = '\\';
+                *p++ = 'b';
+                break;
+            case '\f':
+                *p++ = '\\';
+                *p++ = 'f';
+                break;
+            case '\n':
+                *p++ = '\\';
+                *p++ = 'n';
+                break;
+            case '\r':
+                *p++ = '\\';
+                *p++ = 'r';
+                break;
+            case '\t':
+                *p++ = '\\';
+                *p++ = 't';
+                break;
             default:
                 *p = s[i];
                 p++;
@@ -118,20 +139,27 @@ static void JsonObjToString(JsonContext* ctx, const JsonObj* obj)
     }
     size_t i;
     switch (obj->type) {
-        case CJSON_NULL: PutStr(ctx, "null",  strlen("null")); break;
-        case CJSON_BOOL:
-            (obj->value.boolValue) ? PutStr(ctx, "true", strlen("true")) : PutStr(ctx, "false", strlen("false")); break;
-        case CJSON_INT: IntNumberToString(ctx, obj); break;
-        case CJSON_UINT: UintNumberToString(ctx, obj); break;
-        case CJSON_DOUBLE:
-            {
-                char buffer[32];
-                int32_t length = sprintf_s(buffer, sizeof(buffer), "%.16g", obj->value.doubleValue);
-                PROF_CHK_EXPR_ACTION(length < 0, return, "sprintf_s fail for double value");
-                PutStr(ctx, buffer, (size_t)length);
-            }
+        case CJSON_NULL:
+            PutStr(ctx, "null", strlen("null"));
             break;
-        case CJSON_STRING: JsonMakeString(ctx, obj->value.stringValue); break;
+        case CJSON_BOOL:
+            (obj->value.boolValue) ? PutStr(ctx, "true", strlen("true")) : PutStr(ctx, "false", strlen("false"));
+            break;
+        case CJSON_INT:
+            IntNumberToString(ctx, obj);
+            break;
+        case CJSON_UINT:
+            UintNumberToString(ctx, obj);
+            break;
+        case CJSON_DOUBLE: {
+            char buffer[32];
+            int32_t length = sprintf_s(buffer, sizeof(buffer), "%.16g", obj->value.doubleValue);
+            PROF_CHK_EXPR_ACTION(length < 0, return, "sprintf_s fail for double value");
+            PutStr(ctx, buffer, (size_t)length);
+        } break;
+        case CJSON_STRING:
+            JsonMakeString(ctx, obj->value.stringValue);
+            break;
         case CJSON_ARRAY:
             PutChar(ctx, '[');
             for (i = 0; i < obj->value.arrayValue.size; i++) {
@@ -156,7 +184,8 @@ static void JsonObjToString(JsonContext* ctx, const JsonObj* obj)
             }
             PutChar(ctx, '}');
             break;
-        default: break;
+        default:
+            break;
     }
 }
 

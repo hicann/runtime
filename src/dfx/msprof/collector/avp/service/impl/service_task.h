@@ -23,8 +23,8 @@ typedef struct {
     TaskSlotAttribute taskSlotAttr[MAX_TASK_SLOT];
 } ProfileAttribute;
 
-int32_t ServiceTaskInitialize(ProfileAttribute *attr);
-int32_t ServiceTaskStart(uint32_t deviceId,  ProfileAttribute *attr);
-int32_t ServiceTaskStop(uint32_t deviceId,  ProfileAttribute *attr);
-int32_t ServiceTaskFinalize(ProfileAttribute *attr);
+int32_t ServiceTaskInitialize(ProfileAttribute* attr);
+int32_t ServiceTaskStart(uint32_t deviceId, ProfileAttribute* attr);
+int32_t ServiceTaskStop(uint32_t deviceId, ProfileAttribute* attr);
+int32_t ServiceTaskFinalize(ProfileAttribute* attr);
 #endif

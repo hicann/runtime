@@ -12,5 +12,5 @@
 #define SERVICE_IMPL_PROF_PARAM_H
 #include "param/profile_param.h"
 
-int32_t ServiceParamParseConfig(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam *param);
+int32_t ServiceParamParseConfig(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam* param);
 #endif

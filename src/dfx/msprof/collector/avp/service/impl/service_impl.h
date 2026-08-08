@@ -19,4 +19,3 @@ int32_t ServiceImplStart(uint32_t chipId, uint32_t deviceId);
 int32_t ServiceImplStop(uint32_t chipId, uint32_t deviceId);
 int32_t ServiceImplFinalize(void);
 #endif
-

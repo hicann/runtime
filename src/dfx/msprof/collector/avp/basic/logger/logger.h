@@ -18,63 +18,72 @@ extern "C" {
 #endif
 
 #define MSPROF_MODULE_NAME PROFILING
-#define MSPROF_LOGD(format, ...) do {                                                                      \
-    DlogRecord(MSPROF_MODULE_NAME, DLOG_DEBUG, "[DEBUG][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
-} while (0)
-#define MSPROF_LOGI(format, ...) do {                                                                      \
-    DlogRecord(MSPROF_MODULE_NAME, DLOG_INFO, "[INFO][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__);   \
-} while (0)
-#define MSPROF_LOGW(format, ...) do {                                                                      \
-    DlogRecord(MSPROF_MODULE_NAME, DLOG_WARN, "[WARNING][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__);   \
-} while (0)
-#define MSPROF_LOGE(format, ...) do {                                                                      \
-    DlogRecord(MSPROF_MODULE_NAME, DLOG_ERROR, "[ERROR][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
-} while (0)
-#define MSPROF_EVENT(format, ...) do {                                                                     \
-    DlogRecord(MSPROF_MODULE_NAME, DLOG_EVENT, "[EVENT][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
-} while (0)
+#define MSPROF_LOGD(format, ...)                                                                                     \
+    do {                                                                                                             \
+        DlogRecord(MSPROF_MODULE_NAME, DLOG_DEBUG, "[DEBUG][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+#define MSPROF_LOGI(format, ...)                                                                                   \
+    do {                                                                                                           \
+        DlogRecord(MSPROF_MODULE_NAME, DLOG_INFO, "[INFO][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+#define MSPROF_LOGW(format, ...)                                                                                      \
+    do {                                                                                                              \
+        DlogRecord(MSPROF_MODULE_NAME, DLOG_WARN, "[WARNING][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+#define MSPROF_LOGE(format, ...)                                                                                     \
+    do {                                                                                                             \
+        DlogRecord(MSPROF_MODULE_NAME, DLOG_ERROR, "[ERROR][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+#define MSPROF_EVENT(format, ...)                                                                                    \
+    do {                                                                                                             \
+        DlogRecord(MSPROF_MODULE_NAME, DLOG_EVENT, "[EVENT][%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
-#define PROF_CHK_EXPR_NO_ACTION(expr, msg, ...) do { \
-    if (expr) { \
-        MSPROF_LOGE(msg, ##__VA_ARGS__); \
-    } \
-} while (0)
+#define PROF_CHK_EXPR_NO_ACTION(expr, msg, ...) \
+    do {                                        \
+        if (expr) {                             \
+            MSPROF_LOGE(msg, ##__VA_ARGS__);    \
+        }                                       \
+    } while (0)
 
-#define PROF_CHK_EXPR_ACTION(expr, ACTION, msg, ...) do { \
-    if (expr) { \
-        MSPROF_LOGE(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
-} while (0)
+#define PROF_CHK_EXPR_ACTION(expr, ACTION, msg, ...) \
+    do {                                             \
+        if (expr) {                                  \
+            MSPROF_LOGE(msg, ##__VA_ARGS__);         \
+            ACTION;                                  \
+        }                                            \
+    } while (0)
 
-#define PROF_CHK_EXPR_ACTION_TWICE(expr, ACTION, ACTION2, msg, ...) do { \
-    if (expr) { \
-        MSPROF_LOGE(msg, ##__VA_ARGS__); \
-        ACTION; \
-        ACTION2; \
-    } \
-} while (0)
+#define PROF_CHK_EXPR_ACTION_TWICE(expr, ACTION, ACTION2, msg, ...) \
+    do {                                                            \
+        if (expr) {                                                 \
+            MSPROF_LOGE(msg, ##__VA_ARGS__);                        \
+            ACTION;                                                 \
+            ACTION2;                                                \
+        }                                                           \
+    } while (0)
 
 #define PROF_CHK_EXPR_ACTION_NODO(expr, ACTION, msg, ...) \
-    if (expr) { \
-        MSPROF_LOGE(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
+    if (expr) {                                           \
+        MSPROF_LOGE(msg, ##__VA_ARGS__);                  \
+        ACTION;                                           \
+    }
 
 #define PROF_CHK_WARN_ACTION(expr, ACTION, msg, ...) \
-    if (expr) { \
-        MSPROF_LOGW(msg, ##__VA_ARGS__); \
-        ACTION; \
-    } \
+    if (expr) {                                      \
+        MSPROF_LOGW(msg, ##__VA_ARGS__);             \
+        ACTION;                                      \
+    }
 
-#define PROF_CHK_WARN_NO_ACTION(expr, msg, ...) do { \
-    if (expr) { \
-        MSPROF_LOGW(msg, ##__VA_ARGS__); \
-    } \
-} while (0)
+#define PROF_CHK_WARN_NO_ACTION(expr, msg, ...) \
+    do {                                        \
+        if (expr) {                             \
+            MSPROF_LOGW(msg, ##__VA_ARGS__);    \
+        }                                       \
+    } while (0)
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif  // BASIC_LOGGER_LOGGER_H
+#endif // BASIC_LOGGER_LOGGER_H

@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #define CSTL_OK (0)
 #define CSTL_ERR (-1)
-typedef void (*CstlFreeFunc)(void *ptr);
+typedef void (*CstlFreeFunc)(void* ptr);
 
 /**
  * @ingroup cstl_public
@@ -34,6 +34,5 @@ typedef void (*CstlFreeFunc)(void *ptr);
  */
 typedef int32_t (*CstlKeyCmpFunc)(uintptr_t key1, uintptr_t key2);
 
-#define CSTL_CONTAINER_OF(ptr, type, member) \
-    ((type *)((uintptr_t)(ptr) - (uintptr_t)(&(((type *)0)->member))))
+#define CSTL_CONTAINER_OF(ptr, type, member) ((type*)((uintptr_t)(ptr) - (uintptr_t)(&(((type*)0)->member))))
 #endif

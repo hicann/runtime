@@ -17,13 +17,13 @@
 #include "transport/uploader.h"
 #include "logger/logger.h"
 
- /**
+/**
  * @brief      initialize task manager and set attribute to attr
  * @param [out] attr: profiling attrubute
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ServiceTaskInitialize(ProfileAttribute *attr)
+int32_t ServiceTaskInitialize(ProfileAttribute* attr)
 {
     int32_t ret;
     for (uint32_t i = 0; i < MAX_TASK_SLOT; i++) {
@@ -58,14 +58,14 @@ int32_t ServiceTaskInitialize(ProfileAttribute *attr)
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      start task for deviceId
  * @param [in]  deviceId: device id to be started, range[0, DEFAULT_HOST_ID)
  * @param [out] attr:     profiling attrubute
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ServiceTaskStart(uint32_t deviceId, ProfileAttribute *attr)
+int32_t ServiceTaskStart(uint32_t deviceId, ProfileAttribute* attr)
 {
     int32_t ret;
     ret = ReportManagerStartDeviceReporters(&attr->reportAttr);
@@ -84,8 +84,8 @@ int32_t ServiceTaskStart(uint32_t deviceId, ProfileAttribute *attr)
         return ret;
     }
     uint32_t deviceList[] = {deviceId};
-    ret = ReportManagerCollectStart(deviceList, sizeof(deviceList) / sizeof(deviceList[0]),
-        &attr->reportAttr, attr->params.dataTypeConfig);
+    ret = ReportManagerCollectStart(
+        deviceList, sizeof(deviceList) / sizeof(deviceList[0]), &attr->reportAttr, attr->params.dataTypeConfig);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Start collect for device %u failed, ret : %d", deviceId, ret);
         return ret;
@@ -93,20 +93,21 @@ int32_t ServiceTaskStart(uint32_t deviceId, ProfileAttribute *attr)
     return ret;
 }
 
- /**
+/**
  * @brief      stop task for deviceId
  * @param [in]  deviceId: device id to be stopped
  * @param [out] attr:     profiling attrubute
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t ServiceTaskStop(uint32_t deviceId, ProfileAttribute *attr)
+int32_t ServiceTaskStop(uint32_t deviceId, ProfileAttribute* attr)
 {
     int32_t ret = PROFILING_SUCCESS;
     if (deviceId != DEFAULT_HOST_ID) {
         uint32_t deviceList[] = {deviceId};
-        if (ReportManagerCollectStop(deviceList, sizeof(deviceList) / sizeof(deviceList[0]),
-            &attr->reportAttr, attr->params.dataTypeConfig) != PROFILING_SUCCESS) {
+        if (ReportManagerCollectStop(
+                deviceList, sizeof(deviceList) / sizeof(deviceList[0]), &attr->reportAttr,
+                attr->params.dataTypeConfig) != PROFILING_SUCCESS) {
             MSPROF_LOGE("Stop report manager collect for deivce %u failed", deviceId);
             ret = PROFILING_FAILED;
         }
@@ -121,8 +122,8 @@ int32_t ServiceTaskStop(uint32_t deviceId, ProfileAttribute *attr)
     }
     return ret;
 }
- 
-int32_t ServiceTaskFinalize(ProfileAttribute *attr)
+
+int32_t ServiceTaskFinalize(ProfileAttribute* attr)
 {
     int32_t ret = PROFILING_SUCCESS;
     for (uint32_t i = 0; i < MAX_TASK_SLOT; i++) {

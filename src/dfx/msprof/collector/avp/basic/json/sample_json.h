@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-int32_t CreateSampleJson(ProfileParam *params, uint32_t deviceId);
+int32_t CreateSampleJson(ProfileParam* params, uint32_t deviceId);
 
 #ifdef __cplusplus
 }

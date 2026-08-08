@@ -19,25 +19,25 @@ extern "C" {
 
 typedef struct {
     OsalVoidPtr (*function)(OsalVoidPtr); // task function
-    OsalVoidPtr taskArgs;              // task arguments
+    OsalVoidPtr taskArgs;                 // task arguments
 } ThreadTask;
 
 typedef struct {
-    ThreadTask *taskQueue;
+    ThreadTask* taskQueue;
     uint32_t capacity;
-    uint32_t size;            // current task size
-    uint32_t front;           // front of task list
-    uint32_t rear;            // rear of task list
-    uint32_t threadNum;       // consumer thread number
-    uint32_t maxThreadNum;    // max consumer thread number
-    uint32_t destruct;        // if need to destruct thread pool
-    uint32_t liveNum;         // live thread number
-    OsalThread *threadId;     // id list of consumer thread
-    OsalMutex poolMtx;        // mutex param of thread pool
-    OsalMutex liveMtx;        // mutex param of thread pool
-    OsalCond notFull;         // if task list is not full
-    OsalCond notEmpty;        // if task list is not empty
-    OsalCond liveCond;        // wait for live thread exit
+    uint32_t size;         // current task size
+    uint32_t front;        // front of task list
+    uint32_t rear;         // rear of task list
+    uint32_t threadNum;    // consumer thread number
+    uint32_t maxThreadNum; // max consumer thread number
+    uint32_t destruct;     // if need to destruct thread pool
+    uint32_t liveNum;      // live thread number
+    OsalThread* threadId;  // id list of consumer thread
+    OsalMutex poolMtx;     // mutex param of thread pool
+    OsalMutex liveMtx;     // mutex param of thread pool
+    OsalCond notFull;      // if task list is not full
+    OsalCond notEmpty;     // if task list is not empty
+    OsalCond liveCond;     // wait for live thread exit
 } ThreadPool;
 
 int32_t ProfThreadPoolInit(uint32_t queueSize, uint32_t consumerNum, uint32_t maxConsumerNum);

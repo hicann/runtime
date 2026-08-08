@@ -42,11 +42,11 @@ typedef enum {
 uint32_t HalGetApiVersion(void);
 int32_t HalGetPlatformInfo(uint32_t* platformInfo);
 uint32_t HalGetDeviceNumber(void);
-uint32_t HalGetDeviceIds(uint32_t devNum, uint32_t *devIds, uint32_t devIdsLen);
-int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t *value);
+uint32_t HalGetDeviceIds(uint32_t devNum, uint32_t* devIds, uint32_t devIdsLen);
+int32_t HalGetDeviceInfo(DeviceInfoType type, uint32_t deviceId, int64_t* value);
 uint64_t HalGetHostFreq(void);
 uint64_t HalGetDeviceFreq(uint32_t deviceId);
-int32_t HalGetDeviceTime(uint32_t deviceId, uint64_t *cntvct);
+int32_t HalGetDeviceTime(uint32_t deviceId, uint64_t* cntvct);
 uint32_t HalGetChipVersion(void);
 int64_t HalGetEnvType(uint32_t deviceId);
 int64_t HalGetCtrlCpuId(uint32_t deviceId);

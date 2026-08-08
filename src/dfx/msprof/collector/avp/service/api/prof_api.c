@@ -69,7 +69,7 @@ AVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-AVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct MsprofApi *api)
+AVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct MsprofApi* api)
 {
     return ServiceReportApiPush((uint8_t)nonPersistantFlag, api);
 }
@@ -81,9 +81,9 @@ AVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const struct Ms
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-AVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const struct MsprofEvent *event)
+AVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const struct MsprofEvent* event)
 {
-    return ServiceReportApiPush((uint8_t)nonPersistantFlag, (const struct MsprofApi *)event);
+    return ServiceReportApiPush((uint8_t)nonPersistantFlag, (const struct MsprofApi*)event);
 }
 
 /**
@@ -96,7 +96,7 @@ AVP_PROF_API int32_t MsprofReportEvent(uint32_t nonPersistantFlag, const struct 
  */
 AVP_PROF_API int32_t MsprofReportCompactInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length)
 {
-    return ServiceReportCompactPush((uint8_t)nonPersistantFlag, (const struct MsprofCompactInfo *)data, length);
+    return ServiceReportCompactPush((uint8_t)nonPersistantFlag, (const struct MsprofCompactInfo*)data, length);
 }
 
 /**
@@ -109,7 +109,7 @@ AVP_PROF_API int32_t MsprofReportCompactInfo(uint32_t nonPersistantFlag, const V
  */
 AVP_PROF_API int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length)
 {
-    return ServiceReportAdditionalPush((uint8_t)nonPersistantFlag, (const struct MsprofAdditionalInfo *)data, length);
+    return ServiceReportAdditionalPush((uint8_t)nonPersistantFlag, (const struct MsprofAdditionalInfo*)data, length);
 }
 
 /**
@@ -119,7 +119,7 @@ AVP_PROF_API int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, cons
  * @param [in] typeName: label of type id for presenting user
  * @return 0:SUCCESS, !0:FAILED
  */
-AVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+AVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     return RegisterTypeInfo(level, typeId, typeName);
 }
@@ -130,10 +130,7 @@ AVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const ch
  * @param [in] length: the length of information to be hashed
  * @return hash id
  */
-AVP_PROF_API uint64_t MsprofGetHashId(const char *hashInfo, size_t length)
-{
-    return ServiceHashId(hashInfo, length);
-}
+AVP_PROF_API uint64_t MsprofGetHashId(const char* hashInfo, size_t length) { return ServiceHashId(hashInfo, length); }
 
 /**
  * @brief      profiling module finalize
@@ -158,13 +155,13 @@ AVP_PROF_API uint64_t MsprofSysCycleTime(void)
 #if defined(__aarch64__)
         asm volatile("mrs %0, cntvct_el0" : "=r"(cycles));
 #elif defined(__x86_64__)
-        const uint32_t uint32Bits = 32;  // 32 is uint bit count
+        const uint32_t uint32Bits = 32; // 32 is uint bit count
         uint32_t hi = 0;
         uint32_t lo = 0;
         __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
         cycles = ((uint64_t)lo) | (((uint64_t)hi) << uint32Bits);
 #elif defined(__arm__)
-        const uint32_t uint32Bits = 32;  // 32 is uint bit count
+        const uint32_t uint32Bits = 32; // 32 is uint bit count
         uint32_t hi = 0;
         uint32_t lo = 0;
         asm volatile("mrrc p15, 1, %0, %1, c14" : "=r"(lo), "=r"(hi));

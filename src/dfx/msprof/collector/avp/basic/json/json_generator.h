@@ -19,13 +19,13 @@ extern "C" {
 #define TRANSFER_BUFFER_LEN 32U
 
 typedef struct {
-    const char *json;
-    CHAR *stack;
+    const char* json;
+    CHAR* stack;
     size_t top;
     size_t size;
 } JsonContext;
 
-CHAR *JsonToString(const JsonObj *obj);
+CHAR* JsonToString(const JsonObj* obj);
 
 #ifdef __cplusplus
 }

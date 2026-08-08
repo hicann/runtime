@@ -16,13 +16,13 @@
 #include "json/sample_json.h"
 #include "report/start_time.h"
 
-int32_t TaskManagerInitialize(uint32_t deviceId, TaskSlotAttribute *attr)
+int32_t TaskManagerInitialize(uint32_t deviceId, TaskSlotAttribute* attr)
 {
     attr->deviceId = deviceId;
     return TaskSlotInitialize(attr);
 }
 
- /**
+/**
  * @brief      start task slot for device and save device info to attr
  * @param [in]     params   : profiling params
  * @param [in]     transType: transport types
@@ -30,7 +30,7 @@ int32_t TaskManagerInitialize(uint32_t deviceId, TaskSlotAttribute *attr)
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t TaskManagerStart(ProfileParam *params, const TransportType transType, TaskSlotAttribute *attr)
+int32_t TaskManagerStart(ProfileParam* params, const TransportType transType, TaskSlotAttribute* attr)
 {
     if (attr->started && attr->deviceId != DEFAULT_HOST_ID) {
         MSPROF_LOGE("Repeat start device %u task manager.", attr->deviceId);
@@ -66,13 +66,13 @@ int32_t TaskManagerStart(ProfileParam *params, const TransportType transType, Ta
     return PROFILING_SUCCESS;
 }
 
- /**
+/**
  * @brief      stop task slot for device and save device info to attr
  * @param [in/out] attr: task slot attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t TaskManagerStop(ProfileParam *params, TaskSlotAttribute *attr)
+int32_t TaskManagerStop(ProfileParam* params, TaskSlotAttribute* attr)
 {
     if (attr->launchRepeatTimes == 0) {
         return PROFILING_SUCCESS;
@@ -106,7 +106,7 @@ int32_t TaskManagerStop(ProfileParam *params, TaskSlotAttribute *attr)
     return PROFILING_SUCCESS;
 }
 
-int32_t TaskManagerFinalize(TaskSlotAttribute *attr)
+int32_t TaskManagerFinalize(TaskSlotAttribute* attr)
 {
     UploaderFlush(attr->deviceId);
     return TaskSlotFinalize(attr);

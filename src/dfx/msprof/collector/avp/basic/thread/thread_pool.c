@@ -15,7 +15,7 @@
 #include "osal/osal_mem.h"
 #include "osal/osal_thread.h"
 
-STATIC ThreadPool *g_threadPool = NULL;
+STATIC ThreadPool* g_threadPool = NULL;
 
 static int32_t ThreadPoolFilling(uint32_t queueSize, uint32_t consumerNum, uint32_t maxConsumerNum)
 {
@@ -24,12 +24,12 @@ static int32_t ThreadPoolFilling(uint32_t queueSize, uint32_t consumerNum, uint3
     g_threadPool->taskQueue = NULL;
     // malloc consumer threadId of thread pool
     g_threadPool->threadId = (OsalThread*)OsalCalloc(sizeof(OsalThread) * maxConsumerNum);
-    PROF_CHK_EXPR_ACTION(g_threadPool->threadId == NULL, return PROFILING_FAILED,
-        "Failed to malloc threadId of threadPool.");
+    PROF_CHK_EXPR_ACTION(
+        g_threadPool->threadId == NULL, return PROFILING_FAILED, "Failed to malloc threadId of threadPool.");
     // malloc task queue of thread pool
     g_threadPool->taskQueue = (ThreadTask*)OsalMalloc(sizeof(ThreadTask) * queueSize);
-    PROF_CHK_EXPR_ACTION(g_threadPool->taskQueue == NULL, return PROFILING_FAILED,
-        "Failed to malloc taskQueue of threadPool.");
+    PROF_CHK_EXPR_ACTION(
+        g_threadPool->taskQueue == NULL, return PROFILING_FAILED, "Failed to malloc taskQueue of threadPool.");
     g_threadPool->capacity = queueSize;
     g_threadPool->size = 0;
     g_threadPool->front = 0;
@@ -41,8 +41,8 @@ static int32_t ThreadPoolFilling(uint32_t queueSize, uint32_t consumerNum, uint3
     for (uint32_t i = 0; i < consumerNum; ++i) {
         // run consumer thread
         int32_t ret = OsalCreateThread(&g_threadPool->threadId[i], ProfThreadPoolConsumer);
-        PROF_CHK_EXPR_ACTION(ret != OSAL_EN_OK, return PROFILING_FAILED,
-            "Failed to create thread of threadPool, ret: %d.", ret);
+        PROF_CHK_EXPR_ACTION(
+            ret != OSAL_EN_OK, return PROFILING_FAILED, "Failed to create thread of threadPool, ret: %d.", ret);
         MSPROF_LOGI("Success to create pool thread, id: %u", i);
         g_threadPool->liveNum++;
     }
@@ -69,10 +69,8 @@ int32_t ProfThreadPoolInit(uint32_t queueSize, uint32_t consumerNum, uint32_t ma
         return PROFILING_FAILED;
     }
     // init mutex and condition
-    if (OsalMutexInit(&g_threadPool->poolMtx) != 0 ||
-        OsalMutexInit(&g_threadPool->liveMtx) != 0 ||
-        OsalCondInit(&g_threadPool->notEmpty) != 0 ||
-        OsalCondInit(&g_threadPool->notFull) != 0 ||
+    if (OsalMutexInit(&g_threadPool->poolMtx) != 0 || OsalMutexInit(&g_threadPool->liveMtx) != 0 ||
+        OsalCondInit(&g_threadPool->notEmpty) != 0 || OsalCondInit(&g_threadPool->notFull) != 0 ||
         OsalCondInit(&g_threadPool->liveCond) != 0) {
         MSPROF_LOGE("Failed to init mutex or condition of threadPool.");
         OSAL_MEM_FREE(g_threadPool);
@@ -170,15 +168,16 @@ int32_t ProfThreadPoolDispatch(ThreadTask* task, uint32_t priority)
         }
         g_threadPool->taskQueue[g_threadPool->front].function = task->function;
         g_threadPool->taskQueue[g_threadPool->front].taskArgs = task->taskArgs;
-        MSPROF_LOGI("Success to push highest task, front point: %u, rear point: %u.",
-            g_threadPool->front, g_threadPool->rear);
+        MSPROF_LOGI(
+            "Success to push highest task, front point: %u, rear point: %u.", g_threadPool->front, g_threadPool->rear);
     } else {
         // push task to queue list rear and move rear point
         g_threadPool->taskQueue[g_threadPool->rear].function = task->function;
         g_threadPool->taskQueue[g_threadPool->rear].taskArgs = task->taskArgs;
         g_threadPool->rear = (g_threadPool->rear + 1U) % g_threadPool->capacity;
-        MSPROF_LOGI("Success to push secondary task, front point: %u, rear point: %u.",
-            g_threadPool->front, g_threadPool->rear);
+        MSPROF_LOGI(
+            "Success to push secondary task, front point: %u, rear point: %u.", g_threadPool->front,
+            g_threadPool->rear);
     }
     g_threadPool->size++;
     // release consumer thread
@@ -232,8 +231,8 @@ OsalVoidPtr ProfThreadPoolConsumer(OsalVoidPtr arg)
         // move front point
         g_threadPool->front = (g_threadPool->front + 1U) % g_threadPool->capacity;
         g_threadPool->size--;
-        MSPROF_LOGI("Success to pop and run task, front point: %u, rear point: %u.",
-            g_threadPool->front, g_threadPool->rear);
+        MSPROF_LOGI(
+            "Success to pop and run task, front point: %u, rear point: %u.", g_threadPool->front, g_threadPool->rear);
         // release producer thread
         (void)OsalCondSignal(&g_threadPool->notFull);
         // unlock mutex
@@ -263,7 +262,7 @@ int32_t ProfThreadPoolExpand(uint32_t expandNum)
     (void)OsalMutexLock(&g_threadPool->poolMtx);
     uint32_t count = 0;
     for (uint32_t i = g_threadPool->threadNum;
-        i < g_threadPool->maxThreadNum && i < (g_threadPool->threadNum + expandNum); ++i) {
+         i < g_threadPool->maxThreadNum && i < (g_threadPool->threadNum + expandNum); ++i) {
         int32_t ret = OsalCreateThread(&g_threadPool->threadId[i], ProfThreadPoolConsumer);
         if (ret != OSAL_EN_OK) {
             MSPROF_LOGE("Failed to create thread of threadPool, ret: %d.", ret);

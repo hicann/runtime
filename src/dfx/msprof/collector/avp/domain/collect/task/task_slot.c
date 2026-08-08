@@ -14,7 +14,7 @@
 #include "osal/osal.h"
 #include "osal/osal_thread.h"
 
-int32_t TaskSlotInitialize(TaskSlotAttribute *attr)
+int32_t TaskSlotInitialize(TaskSlotAttribute* attr)
 {
     attr->launchRepeatTimes = 0;
     attr->handle = (OsalThread)-1;
@@ -30,7 +30,7 @@ int32_t TaskSlotInitialize(TaskSlotAttribute *attr)
 
 static OsalVoidPtr TaskSlotProcess(OsalVoidPtr args)
 {
-    TaskSlotAttribute *attr = (TaskSlotAttribute *)args;
+    TaskSlotAttribute* attr = (TaskSlotAttribute*)args;
     attr->jobAttr.deviceId = attr->deviceId;
     (void)OsalMutexLock(&attr->taskMtx);
     int32_t ret = JobManagerStart(&attr->jobAttr);
@@ -62,14 +62,14 @@ static OsalVoidPtr TaskSlotProcess(OsalVoidPtr args)
     return NULL;
 }
 
- /**
+/**
  * @brief      start task slot for device and save device info to attr
  * @param [in]     params   : profiling params
  * @param [in/out] attr     : task slot attr
  * @return     PROFILING_FAILED  : failed
  *             PROFILING_SUCCESS : success
  */
-int32_t TaskSlotStart(const ProfileParam *params, TaskSlotAttribute *attr)
+int32_t TaskSlotStart(const ProfileParam* params, TaskSlotAttribute* attr)
 {
     attr->started = false;
     attr->quit = false;
@@ -80,8 +80,7 @@ int32_t TaskSlotStart(const ProfileParam *params, TaskSlotAttribute *attr)
     userBlock.pulArg = attr;
     int32_t ret = OsalCreateTaskWithThreadAttr(&attr->handle, &userBlock, &threadAttr);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Start task slot thread for device %u failed, errno : %d",
-            attr->deviceId, OsalGetErrorCode());
+        MSPROF_LOGE("Start task slot thread for device %u failed, errno : %d", attr->deviceId, OsalGetErrorCode());
         return ret;
     }
     (void)OsalMutexLock(&attr->taskMtx);
@@ -100,7 +99,7 @@ int32_t TaskSlotStart(const ProfileParam *params, TaskSlotAttribute *attr)
     return PROFILING_SUCCESS;
 }
 
-int32_t TaskSlotStop(TaskSlotAttribute *attr)
+int32_t TaskSlotStop(TaskSlotAttribute* attr)
 {
     // wake up TaskSlotProcess
     (void)OsalMutexLock(&attr->taskMtx);
@@ -120,7 +119,7 @@ int32_t TaskSlotStop(TaskSlotAttribute *attr)
     return PROFILING_SUCCESS;
 }
 
-int32_t TaskSlotFinalize(TaskSlotAttribute *attr)
+int32_t TaskSlotFinalize(TaskSlotAttribute* attr)
 {
     attr->started = false;
     return PROFILING_SUCCESS;

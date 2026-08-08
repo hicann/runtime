@@ -11,7 +11,7 @@
 #include "service_param.h"
 #include "errno/error_code.h"
 
-int32_t ServiceParamParseConfig(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam *param)
+int32_t ServiceParamParseConfig(uint32_t dataType, OsalVoidPtr data, uint32_t dataLength, ProfileParam* param)
 {
     return GenProfileParam(dataType, data, dataLength, param);
 }

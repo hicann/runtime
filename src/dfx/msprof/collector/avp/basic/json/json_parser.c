@@ -23,59 +23,56 @@ extern "C" {
 #endif
 
 typedef struct {
-    const char *jsonContent;
+    const char* jsonContent;
     size_t contentLen;
     size_t parserIndex;
 } JsonParser;
 
 typedef struct {
-    const char *data;
+    const char* data;
     size_t len;
     size_t escapeCharNum;
 } JsonString;
 
-JsonObj *JsonArrayAt(JsonObj *obj, size_t i)
+JsonObj* JsonArrayAt(JsonObj* obj, size_t i)
 {
-    return (JsonObj *)((obj->type != CJSON_ARRAY) ? NULL : CVectorAt(&obj->value.arrayValue, i));
+    return (JsonObj*)((obj->type != CJSON_ARRAY) ? NULL : CVectorAt(&obj->value.arrayValue, i));
 }
 
-static void InitJsonParser(JsonParser *parser, const char *jsonContent, size_t jsonLen)
+static void InitJsonParser(JsonParser* parser, const char* jsonContent, size_t jsonLen)
 {
     parser->contentLen = jsonLen;
     parser->jsonContent = jsonContent;
     parser->parserIndex = 0;
 }
 
-static inline bool CheckValidSpace(JsonParser *parser, size_t space)
+static inline bool CheckValidSpace(JsonParser* parser, size_t space)
 {
     return (space <= (parser->contentLen - parser->parserIndex));
 }
 
-static inline const char *ParseContent(JsonParser *parser)
-{
-    return &parser->jsonContent[parser->parserIndex];
-}
+static inline const char* ParseContent(JsonParser* parser) { return &parser->jsonContent[parser->parserIndex]; }
 
-static inline bool CheckJsonKey(JsonParser *parser, const char *key, size_t keyLen)
+static inline bool CheckJsonKey(JsonParser* parser, const char* key, size_t keyLen)
 {
     return CheckValidSpace(parser, keyLen) ? (strncmp(ParseContent(parser), key, keyLen) == 0) : false;
 }
 
-static inline bool CheckJsonKeyChar(JsonParser *parser, char key)
+static inline bool CheckJsonKeyChar(JsonParser* parser, char key)
 {
     return (CheckValidSpace(parser, 1) && (ParseContent(parser)[0] == key));
 }
 
-static inline void SkipUtf8Bom(JsonParser *parser)
+static inline void SkipUtf8Bom(JsonParser* parser)
 {
-    const char *bom = "\xEF\xBB\xBF";
+    const char* bom = "\xEF\xBB\xBF";
     const size_t bomlen = 3;
     if (CheckJsonKey(parser, bom, bomlen)) {
         parser->parserIndex += bomlen;
     }
 }
 
-static inline void SkipWhiteSpace(JsonParser *parser)
+static inline void SkipWhiteSpace(JsonParser* parser)
 {
 #define MIN_VISIBLE_CHAR 33
     size_t index = parser->parserIndex;
@@ -85,7 +82,7 @@ static inline void SkipWhiteSpace(JsonParser *parser)
     parser->parserIndex = index;
 }
 
-static inline bool ParseNullKey(JsonParser *parser, JsonObj *value)
+static inline bool ParseNullKey(JsonParser* parser, JsonObj* value)
 {
 #define KEY_NULL_LEN 4UL
     if (CheckJsonKey(parser, "null", KEY_NULL_LEN)) {
@@ -98,7 +95,7 @@ static inline bool ParseNullKey(JsonParser *parser, JsonObj *value)
     return false;
 }
 
-static inline bool ParseTrueKey(JsonParser *parser, JsonObj *value)
+static inline bool ParseTrueKey(JsonParser* parser, JsonObj* value)
 {
 #define KEY_TRUE_LEN 4UL
     if (CheckJsonKey(parser, "true", KEY_TRUE_LEN)) {
@@ -112,7 +109,7 @@ static inline bool ParseTrueKey(JsonParser *parser, JsonObj *value)
     return false;
 }
 
-static inline bool ParseFalseKey(JsonParser *parser, JsonObj *value)
+static inline bool ParseFalseKey(JsonParser* parser, JsonObj* value)
 {
 #define KEY_FALSE_LEN 5UL
     if (CheckJsonKey(parser, "false", KEY_FALSE_LEN)) {
@@ -127,12 +124,12 @@ static inline bool ParseFalseKey(JsonParser *parser, JsonObj *value)
 }
 
 #define MAX_NUMBER_LENGTH 64U
-static bool ParseNumStrAndType(JsonParser *parser, char numStr[], CJSON_TYPE *typePtr)
+static bool ParseNumStrAndType(JsonParser* parser, char numStr[], CJSON_TYPE* typePtr)
 {
     size_t end = parser->contentLen - parser->parserIndex;
-    const char *data = &parser->jsonContent[parser->parserIndex];
+    const char* data = &parser->jsonContent[parser->parserIndex];
     size_t i;
- 
+
     end = (end > MAX_NUMBER_LENGTH) ? MAX_NUMBER_LENGTH : end;
     for (i = 0; i < end; i++, data++) {
         if (((*data >= '0') && (*data <= '9')) || (*data == '+') || (*data == '-')) {
@@ -153,14 +150,14 @@ static bool ParseNumStrAndType(JsonParser *parser, char numStr[], CJSON_TYPE *ty
     return true;
 }
 
-static bool ParseNumber(JsonParser *parser, JsonObj *value)
+static bool ParseNumber(JsonParser* parser, JsonObj* value)
 {
     char numStr[MAX_NUMBER_LENGTH + 1];
     CJSON_TYPE type = CJSON_INT;
     if (!ParseNumStrAndType(parser, numStr, &type)) {
         return false;
     }
-    char *afterEnd = NULL;
+    char* afterEnd = NULL;
     int64_t intValue = 0;
     uint64_t uintValue = 0;
     double doubleValue = 0.0;
@@ -195,10 +192,10 @@ static bool ParseNumber(JsonParser *parser, JsonObj *value)
     return true;
 }
 
-static char *NewCStringByJsonString(JsonString *jsonString)
+static char* NewCStringByJsonString(JsonString* jsonString)
 {
     size_t validLen = jsonString->len - jsonString->escapeCharNum;
-    char *string = (char *)OsalMalloc(validLen + 1);
+    char* string = (char*)OsalMalloc(validLen + 1);
     if (string == NULL) {
         MSPROF_LOGE("string malloc failed.");
         return NULL;
@@ -215,19 +212,29 @@ static char *NewCStringByJsonString(JsonString *jsonString)
         return string;
     }
     size_t index = 0;
-    const char *endData = jsonString->data + jsonString->len;
-    for (const char *srcString = jsonString->data; (srcString < endData) && (index < validLen); srcString++, index++) {
+    const char* endData = jsonString->data + jsonString->len;
+    for (const char* srcString = jsonString->data; (srcString < endData) && (index < validLen); srcString++, index++) {
         if (*srcString != '\\') {
             string[index] = *(srcString);
             continue;
         }
         srcString++;
         switch (*srcString) {
-            case 'b': string[index] = '\b'; break;
-            case 'f': string[index] = '\f'; break;
-            case 'n': string[index] = '\n'; break;
-            case 'r': string[index] = '\r'; break;
-            case 't': string[index] = '\t'; break;
+            case 'b':
+                string[index] = '\b';
+                break;
+            case 'f':
+                string[index] = '\f';
+                break;
+            case 'n':
+                string[index] = '\n';
+                break;
+            case 'r':
+                string[index] = '\r';
+                break;
+            case 't':
+                string[index] = '\t';
+                break;
             case '\"':
             case '\\':
             case '/':
@@ -243,14 +250,14 @@ static char *NewCStringByJsonString(JsonString *jsonString)
     return string;
 }
 
-static bool ParseJsonString(JsonParser *parser, JsonString *string)
+static bool ParseJsonString(JsonParser* parser, JsonString* string)
 {
     if (!CheckJsonKeyChar(parser, '\"')) {
         return false;
     }
 
     size_t index = parser->parserIndex + 1;
-    const char *data = &parser->jsonContent[index];
+    const char* data = &parser->jsonContent[index];
     string->escapeCharNum = 0;
     while ((index < parser->contentLen) && (*data != '\"')) {
         if (*data == '\\') {
@@ -276,7 +283,7 @@ static bool ParseJsonString(JsonParser *parser, JsonString *string)
     return true;
 }
 
-static bool ParseString(JsonParser *parser, JsonObj *value)
+static bool ParseString(JsonParser* parser, JsonObj* value)
 {
     JsonString jsonString;
     if (!ParseJsonString(parser, &jsonString)) {
@@ -294,21 +301,21 @@ static bool ParseString(JsonParser *parser, JsonObj *value)
     return true;
 }
 
-static int32_t JsonKeyCmp(void *a, void *b, void *appInfo)
+static int32_t JsonKeyCmp(void* a, void* b, void* appInfo)
 {
     (void)appInfo;
-    return strcmp(((JsonKeyObj *)a)->key, ((JsonKeyObj *)b)->key);
+    return strcmp(((JsonKeyObj*)a)->key, ((JsonKeyObj*)b)->key);
 }
 
-JsonKeyObj *KeyValuePairAt(const JsonObj *obj, size_t index);
-JsonObj *SetValueByKey(JsonObj *obj, const char *key, JsonObj valueObj);
-JsonValue *GetValueByKey(JsonObj *obj, char *key);
-JsonObj *TravelByKey(JsonObj **obj, char *key);
-bool Contains(JsonObj *obj, char *key);
-JsonObj *AddArrayItem(JsonObj *obj, JsonObj value);
-size_t GetSize(const JsonObj *obj);
+JsonKeyObj* KeyValuePairAt(const JsonObj* obj, size_t index);
+JsonObj* SetValueByKey(JsonObj* obj, const char* key, JsonObj valueObj);
+JsonValue* GetValueByKey(JsonObj* obj, char* key);
+JsonObj* TravelByKey(JsonObj** obj, char* key);
+bool Contains(JsonObj* obj, char* key);
+JsonObj* AddArrayItem(JsonObj* obj, JsonObj value);
+size_t GetSize(const JsonObj* obj);
 
-static void JsonObjInit(JsonObj *obj)
+static void JsonObjInit(JsonObj* obj)
 {
     if (obj == NULL) {
         return;
@@ -323,9 +330,9 @@ static void JsonObjInit(JsonObj *obj)
     obj->GetSize = GetSize;
 }
 
-static inline JsonObj *NewJsonObj(void)
+static inline JsonObj* NewJsonObj(void)
 {
-    JsonObj *obj = (JsonObj *)OsalMalloc(sizeof(JsonObj));
+    JsonObj* obj = (JsonObj*)OsalMalloc(sizeof(JsonObj));
     if (obj == NULL) {
         MSPROF_LOGE("JsonObj malloc failed.");
         return NULL;
@@ -334,38 +341,42 @@ static inline JsonObj *NewJsonObj(void)
     return obj;
 }
 
-static inline void DeInitJsonObj(JsonObj *obj)
+static inline void DeInitJsonObj(JsonObj* obj)
 {
     switch (obj->type) {
-        case CJSON_STRING: OsalConstFree(obj->value.stringValue); break;
-        case CJSON_OBJ: DeInitCSortVector(&obj->value.objectValue); break;
-        case CJSON_ARRAY: DeInitCVector(&obj->value.arrayValue); break;
-        default: break;
+        case CJSON_STRING:
+            OsalConstFree(obj->value.stringValue);
+            break;
+        case CJSON_OBJ:
+            DeInitCSortVector(&obj->value.objectValue);
+            break;
+        case CJSON_ARRAY:
+            DeInitCVector(&obj->value.arrayValue);
+            break;
+        default:
+            break;
     }
     obj->type = CJSON_NULL;
 }
 
-void JsonObjUnInit(JsonObj *obj)
-{
-    DeInitJsonObj(obj);
-}
+void JsonObjUnInit(JsonObj* obj) { DeInitJsonObj(obj); }
 
-void JsonFree(JsonObj *obj)
+void JsonFree(JsonObj* obj)
 {
     if (obj == NULL) {
         return;
     }
     DeInitJsonObj(obj);
-    OsalFree((void *)obj);
+    OsalFree((void*)obj);
 }
 
-typedef bool (*PFN_ParseValue)(JsonParser *parser, JsonObj *value);
+typedef bool (*PFN_ParseValue)(JsonParser* parser, JsonObj* value);
 typedef struct {
     char key;
     PFN_ParseValue pfnParse;
 } KeyCharParsePair;
 
-static inline bool ParseKey(JsonParser *parser, const char **key)
+static inline bool ParseKey(JsonParser* parser, const char** key)
 {
     JsonString jsonString;
     if (!ParseJsonString(parser, &jsonString)) {
@@ -380,7 +391,7 @@ static inline bool ParseKey(JsonParser *parser, const char **key)
     return (*key != NULL);
 }
 
-static bool ParseSimpleValue(JsonParser *parser, JsonObj *value)
+static bool ParseSimpleValue(JsonParser* parser, JsonObj* value)
 {
     static PFN_ParseValue keyValueParse[] = {ParseNullKey, ParseTrueKey, ParseFalseKey, ParseNumber};
     static size_t count = sizeof(keyValueParse) / sizeof(keyValueParse[0]);
@@ -392,8 +403,8 @@ static bool ParseSimpleValue(JsonParser *parser, JsonObj *value)
     return false;
 }
 
-extern bool ParseJsonObj(JsonParser *parser, JsonObj *value);
-static size_t ParseKeyValuePair(JsonParser *parser, const char **key, JsonObj *obj)
+extern bool ParseJsonObj(JsonParser* parser, JsonObj* value);
+static size_t ParseKeyValuePair(JsonParser* parser, const char** key, JsonObj* obj)
 {
     // parse key
     if (!ParseKey(parser, key)) {
@@ -419,16 +430,16 @@ static size_t ParseKeyValuePair(JsonParser *parser, const char **key, JsonObj *o
     return validJson ? valueIndex : 0;
 }
 
-static void DeInitJsonKeyObj(void *item)
+static void DeInitJsonKeyObj(void* item)
 {
-    JsonKeyObj *obj = (JsonKeyObj *)item;
+    JsonKeyObj* obj = (JsonKeyObj*)item;
     if (obj->key != NULL) {
         OsalConstFree(obj->key);
         DeInitJsonObj(&obj->value);
     }
 }
 
-static bool ParseObj(JsonParser *parser, JsonObj *value)
+static bool ParseObj(JsonParser* parser, JsonObj* value)
 {
     // skip {
     parser->parserIndex++;
@@ -483,16 +494,13 @@ static bool ParseObj(JsonParser *parser, JsonObj *value)
     return true;
 }
 
-static void DestroyJsonArrayItem(void *item)
-{
-    DeInitJsonObj((JsonObj *)item);
-}
+static void DestroyJsonArrayItem(void* item) { DeInitJsonObj((JsonObj*)item); }
 
-static bool ParseArray(JsonParser *parser, JsonObj *value)
+static bool ParseArray(JsonParser* parser, JsonObj* value)
 {
     parser->parserIndex++;
 
-    Vector *array = NULL;
+    Vector* array = NULL;
     if (value != NULL) {
         value->type = CJSON_ARRAY;
         array = &value->value.arrayValue;
@@ -542,7 +550,7 @@ static bool ParseArray(JsonParser *parser, JsonObj *value)
     return true;
 }
 
-static bool ParseStructValue(JsonParser *parser, JsonObj *value)
+static bool ParseStructValue(JsonParser* parser, JsonObj* value)
 {
     static KeyCharParsePair keyCharParsePair[] = {{'\"', ParseString}, {'{', ParseObj}, {'[', ParseArray}};
     static const size_t count = sizeof(keyCharParsePair) / sizeof(keyCharParsePair[0]);
@@ -554,7 +562,7 @@ static bool ParseStructValue(JsonParser *parser, JsonObj *value)
     return false;
 }
 
-bool ParseJsonObj(JsonParser *parser, JsonObj *value)
+bool ParseJsonObj(JsonParser* parser, JsonObj* value)
 {
     SkipWhiteSpace(parser);
     if (ParseSimpleValue(parser, value)) {
@@ -564,9 +572,9 @@ bool ParseJsonObj(JsonParser *parser, JsonObj *value)
     return ParseStructValue(parser, value);
 }
 
-static JsonObj *JsonParseByParser(JsonParser *parser)
+static JsonObj* JsonParseByParser(JsonParser* parser)
 {
-    JsonObj *obj = NewJsonObj();
+    JsonObj* obj = NewJsonObj();
     if (obj == NULL) {
         return NULL;
     }
@@ -581,7 +589,7 @@ static JsonObj *JsonParseByParser(JsonParser *parser)
     return obj;
 }
 
-JsonObj *JsonParse(const CHAR *jsonContent)
+JsonObj* JsonParse(const CHAR* jsonContent)
 {
     if (jsonContent == NULL) {
         return NULL;
@@ -592,26 +600,26 @@ JsonObj *JsonParse(const CHAR *jsonContent)
     return JsonParseByParser(&parser);
 }
 
-JsonObj *GetJsonSubObj(JsonObj *obj, const char *key)
+JsonObj* GetJsonSubObj(JsonObj* obj, const char* key)
 {
     if (obj->type != CJSON_OBJ) {
         return NULL;
     }
 
     JsonKeyObj cmpKey = {key, {}};
-    JsonKeyObj *keyObj = (JsonKeyObj *)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
+    JsonKeyObj* keyObj = (JsonKeyObj*)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
     if (keyObj == NULL) {
         return NULL;
     }
     return &keyObj->value;
 }
 
-static char *ToHeapStr(const char *stackStr)
+static char* ToHeapStr(const char* stackStr)
 {
     if (stackStr == NULL) {
         return NULL;
     }
-    char *heapStr = (char *)OsalMalloc((strlen(stackStr) + 1) * sizeof(char));
+    char* heapStr = (char*)OsalMalloc((strlen(stackStr) + 1) * sizeof(char));
     if (heapStr != NULL) {
         int32_t ret = memcpy_s(heapStr, (strlen(stackStr) + 1), stackStr, strlen(stackStr) + 1);
         if (ret != 0) {
@@ -624,13 +632,13 @@ static char *ToHeapStr(const char *stackStr)
     return NULL;
 }
 
-static void JsonCopyArray(JsonObj *dstObj, const JsonObj *srcObj)
+static void JsonCopyArray(JsonObj* dstObj, const JsonObj* srcObj)
 {
     dstObj->type = CJSON_ARRAY;
     InitCVector(&dstObj->value.arrayValue, sizeof(JsonObj));
     SetCVectorDestroyItem(&dstObj->value.arrayValue, DestroyJsonArrayItem);
     for (size_t i = 0; i < srcObj->GetSize(srcObj); i++) {
-        JsonObj *arrItem = (JsonObj*)ConstCVectorAt(&srcObj->value.arrayValue, i);
+        JsonObj* arrItem = (JsonObj*)ConstCVectorAt(&srcObj->value.arrayValue, i);
         JsonObj cpArrItem;
         JsonObjInit(&cpArrItem);
         JsonCopy(&cpArrItem, arrItem);
@@ -642,14 +650,14 @@ static void JsonCopyArray(JsonObj *dstObj, const JsonObj *srcObj)
     }
 }
 
-static void JsonCopyObj(JsonObj *dstObj, const JsonObj *srcObj)
+static void JsonCopyObj(JsonObj* dstObj, const JsonObj* srcObj)
 {
     dstObj->type = CJSON_OBJ;
     InitCSortVector(&dstObj->value.objectValue, sizeof(JsonKeyObj), JsonKeyCmp, NULL);
     SetCSortVectorDestroyItem(&dstObj->value.objectValue, DeInitJsonKeyObj);
     for (size_t i = 0; i < srcObj->GetSize(srcObj); i++) {
-        JsonKeyObj *kvObj = srcObj->KeyValuePairAt(srcObj, i);
-        char *keyStr = ToHeapStr(kvObj->key);
+        JsonKeyObj* kvObj = srcObj->KeyValuePairAt(srcObj, i);
+        char* keyStr = ToHeapStr(kvObj->key);
         if (keyStr == NULL) {
             MSPROF_LOGE("JsonCopy CJSON_OBJ key: %s key malloc failed.", kvObj->key);
             return;
@@ -669,7 +677,7 @@ static void JsonCopyObj(JsonObj *dstObj, const JsonObj *srcObj)
     }
 }
 
-void JsonCopy(JsonObj *dstObj, const JsonObj *srcObj)
+void JsonCopy(JsonObj* dstObj, const JsonObj* srcObj)
 {
     if (srcObj == NULL || dstObj == NULL) {
         return;
@@ -677,7 +685,7 @@ void JsonCopy(JsonObj *dstObj, const JsonObj *srcObj)
     switch (srcObj->type) {
         case CJSON_STRING:
             dstObj->type = CJSON_STRING;
-            char *valueStr = ToHeapStr(srcObj->value.stringValue);
+            char* valueStr = ToHeapStr(srcObj->value.stringValue);
             if (valueStr == NULL) {
                 MSPROF_LOGE("JsonCopy CJSON_STRING %s malloc failed.", srcObj->value.stringValue);
             }
@@ -689,19 +697,17 @@ void JsonCopy(JsonObj *dstObj, const JsonObj *srcObj)
         case CJSON_OBJ:
             JsonCopyObj(dstObj, srcObj);
             break;
-        default:
-            {
-                errno_t ret = memcpy_s(dstObj, sizeof(JsonObj), srcObj, sizeof(JsonObj));
-                if (ret != EOK) {
-                    MSPROF_LOGE("JsonCopy memcpy_s failed, ret = %d.", ret);
-                    return;
-                }
+        default: {
+            errno_t ret = memcpy_s(dstObj, sizeof(JsonObj), srcObj, sizeof(JsonObj));
+            if (ret != EOK) {
+                MSPROF_LOGE("JsonCopy memcpy_s failed, ret = %d.", ret);
+                return;
             }
-            break;
+        } break;
     }
 }
 
-JsonObj *SetValueByKey(JsonObj *obj, const char *key, JsonObj valueObj)
+JsonObj* SetValueByKey(JsonObj* obj, const char* key, JsonObj valueObj)
 {
     if (obj->type != CJSON_NULL && obj->type != CJSON_OBJ) {
         return obj;
@@ -712,7 +718,7 @@ JsonObj *SetValueByKey(JsonObj *obj, const char *key, JsonObj valueObj)
         SetCSortVectorDestroyItem(&obj->value.objectValue, DeInitJsonKeyObj);
     }
     JsonKeyObj cmpKey = {key, {}};
-    JsonKeyObj *kvObj = (JsonKeyObj *)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
+    JsonKeyObj* kvObj = (JsonKeyObj*)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
     if (kvObj != NULL) {
         DeInitJsonObj(&kvObj->value);
         JsonObj cpValueObj;
@@ -720,7 +726,7 @@ JsonObj *SetValueByKey(JsonObj *obj, const char *key, JsonObj valueObj)
         JsonCopy(&cpValueObj, &valueObj);
         kvObj->value = cpValueObj;
     } else {
-        char *keyStr = ToHeapStr(key);
+        char* keyStr = ToHeapStr(key);
         if (keyStr == NULL) {
             MSPROF_LOGE("key: %s malloc failed.", key);
             return obj;
@@ -740,20 +746,20 @@ JsonObj *SetValueByKey(JsonObj *obj, const char *key, JsonObj valueObj)
     return obj;
 }
 
-JsonValue *GetValueByKey(JsonObj *obj, char *key)
+JsonValue* GetValueByKey(JsonObj* obj, char* key)
 {
     if (obj == NULL || obj->type != CJSON_OBJ) {
         return NULL;
     }
-    JsonKeyObj cmpKey = {(char *)key, {}};
-    JsonKeyObj *kvObj = (JsonKeyObj *)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
+    JsonKeyObj cmpKey = {(char*)key, {}};
+    JsonKeyObj* kvObj = (JsonKeyObj*)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
     if (kvObj == NULL) {
         return NULL;
     }
     return &kvObj->value.value;
 }
 
-JsonObj *TravelByKey(JsonObj **obj, char *key)
+JsonObj* TravelByKey(JsonObj** obj, char* key)
 {
     if (*obj == NULL) {
         return *obj;
@@ -762,7 +768,7 @@ JsonObj *TravelByKey(JsonObj **obj, char *key)
     return *obj;
 }
 
-JsonObj *AddArrayItem(JsonObj *obj, JsonObj value)
+JsonObj* AddArrayItem(JsonObj* obj, JsonObj value)
 {
     if (obj->type != CJSON_NULL && obj->type != CJSON_ARRAY) {
         return obj;
@@ -782,7 +788,7 @@ JsonObj *AddArrayItem(JsonObj *obj, JsonObj value)
     return obj;
 }
 
-size_t GetSize(const JsonObj *obj)
+size_t GetSize(const JsonObj* obj)
 {
     size_t size = 0;
     if (obj == NULL || obj->type == CJSON_NULL) {
@@ -802,28 +808,25 @@ size_t GetSize(const JsonObj *obj)
     return size;
 }
 
-JsonKeyObj *KeyValuePairAt(const JsonObj *obj, size_t index)
+JsonKeyObj* KeyValuePairAt(const JsonObj* obj, size_t index)
 {
     if (obj == NULL || obj->type != CJSON_OBJ) {
         return NULL;
     }
-    return (JsonKeyObj *)ConstCVectorAt(&obj->value.objectValue.vector, index);
+    return (JsonKeyObj*)ConstCVectorAt(&obj->value.objectValue.vector, index);
 }
 
-bool Contains(JsonObj *obj, char *key)
+bool Contains(JsonObj* obj, char* key)
 {
     if (obj == NULL || obj->type != CJSON_OBJ) {
         return false;
     }
-    JsonKeyObj cmpKey = {(char *)key, {}};
-    JsonKeyObj *kvObj = (JsonKeyObj *)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
+    JsonKeyObj cmpKey = {(char*)key, {}};
+    JsonKeyObj* kvObj = (JsonKeyObj*)CSortVectorAtKey(&obj->value.objectValue, &cmpKey);
     return kvObj != NULL;
 }
 
-JsonObj *JsonInit(void)
-{
-    return NewJsonObj();
-}
+JsonObj* JsonInit(void) { return NewJsonObj(); }
 
 #ifdef __cplusplus
 }

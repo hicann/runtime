@@ -24,15 +24,15 @@ extern "C" {
 #define MAX_DEVICE_NUM 64U
 #define MAX_ERR_STRING_LEN 256
 #define DEFAULT_OUTPUT_MAX_LEGTH 512
-#define CWD_VAL_MAX_LEN 8193 // 1024 * 8 + 1: 8k
+#define CWD_VAL_MAX_LEN 8193    // 1024 * 8 + 1: 8k
 #define MAX_NUMBER_LONG_LEN 21U // uint64 max len + '\0'
-#define MAX_NUMBER_LEN 11U // uint32 max len + '\0'
+#define MAX_NUMBER_LEN 11U      // uint32 max len + '\0'
 #define MAX_NUMBER_FLOAT_LEN 8U
 #define MAX_NUMBER_VAL 10
 #define MIDDLE_NUMBER_VAL 2
 #define TRANSFER_FROM_S_TO_NS 1000000000
 #define DEFAULT_HOST_ID MAX_DEVICE_NUM
-#define MAX_TASK_SLOT   (DEFAULT_HOST_ID + 1U)
+#define MAX_TASK_SLOT (DEFAULT_HOST_ID + 1U)
 #define UNUSED(x) (void)(x)
 #define DATESTR_MAXLEN 80U
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
@@ -48,8 +48,8 @@ extern "C" {
 #define INLINE inline
 #endif
 
-void *MsprofMalloc(size_t size);
-void *MsprofRealloc(void *ptr, size_t oldSize, size_t newSize);
+void* MsprofMalloc(size_t size);
+void* MsprofRealloc(void* ptr, size_t oldSize, size_t newSize);
 bool IsDir(const CHAR* path);
 bool IsDirAccessible(const CHAR* path);
 bool IsFileExist(const CHAR* path);
@@ -63,14 +63,14 @@ CHAR* TransferUint32ToString(uint32_t num);
 CHAR* TransferUint64ToString(uint64_t num);
 CHAR* TransferFloatToString(float num);
 int64_t GetClockMonotonicTime(void);
-uint64_t GetBkdrHashId(const CHAR *str);
-uint64_t TransferStringToInt(CHAR *nptr, size_t nptrLen, CHAR **endptr, uint64_t base);
-double TransferStringToDouble(CHAR *nptr, size_t nptrLen, CHAR **endptr);
+uint64_t GetBkdrHashId(const CHAR* str);
+uint64_t TransferStringToInt(CHAR* nptr, size_t nptrLen, CHAR** endptr, uint64_t base);
+double TransferStringToDouble(CHAR* nptr, size_t nptrLen, CHAR** endptr);
 int32_t TransferDoubleToString(double d, CHAR buffer[]);
 int32_t VTransferIntToString(CHAR buffer[], const CHAR* format, va_list arglist);
 int32_t TransferIntToString(CHAR buffer[], const CHAR* format, ...);
-CHAR *TimestampToTime(uint64_t timestamp, uint32_t unit);
-CHAR *Strtok(CHAR *strToken, const CHAR *delimit, CHAR **context);
+CHAR* TimestampToTime(uint64_t timestamp, uint32_t unit);
+CHAR* Strtok(CHAR* strToken, const CHAR* delimit, CHAR** context);
 
 #ifdef __cplusplus
 }

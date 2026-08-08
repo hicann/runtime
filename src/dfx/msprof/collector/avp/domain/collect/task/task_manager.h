@@ -18,10 +18,10 @@
 extern "C" {
 #endif
 
-int32_t TaskManagerInitialize(uint32_t deviceId, TaskSlotAttribute *attr);
-int32_t TaskManagerStart(ProfileParam *params, const TransportType transType, TaskSlotAttribute *attr);
-int32_t TaskManagerStop(ProfileParam *params, TaskSlotAttribute *attr);
-int32_t TaskManagerFinalize(TaskSlotAttribute *attr);
+int32_t TaskManagerInitialize(uint32_t deviceId, TaskSlotAttribute* attr);
+int32_t TaskManagerStart(ProfileParam* params, const TransportType transType, TaskSlotAttribute* attr);
+int32_t TaskManagerStop(ProfileParam* params, TaskSlotAttribute* attr);
+int32_t TaskManagerFinalize(TaskSlotAttribute* attr);
 
 #ifdef __cplusplus
 }

@@ -14,12 +14,6 @@
 #define MAX_THREAD_NUM 64U
 #define QUEUE_SIZE 32U
 
-int32_t TaskPoolInitialize(void)
-{
-    return ProfThreadPoolInit(QUEUE_SIZE, 0, MAX_THREAD_NUM);
-}
+int32_t TaskPoolInitialize(void) { return ProfThreadPoolInit(QUEUE_SIZE, 0, MAX_THREAD_NUM); }
 
-void TaskPoolFinalize(void)
-{
-    ProfThreadPoolFinalize();
-}
+void TaskPoolFinalize(void) { ProfThreadPoolFinalize(); }

@@ -12,8 +12,8 @@
 #define BASIC_ERRNO_ERRCODE_H
 #include <stdint.h>
 
-#define PROFILING_SUCCESS                       (0)
-#define PROFILING_FAILED                        (-1)
-#define PROFILING_NOT_SUPPORT                   (-2)
-#define PROFILING_ERROR_INVALID_PARAM           (-3)
+#define PROFILING_SUCCESS (0)
+#define PROFILING_FAILED (-1)
+#define PROFILING_NOT_SUPPORT (-2)
+#define PROFILING_ERROR_INVALID_PARAM (-3)
 #endif

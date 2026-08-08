@@ -16,13 +16,13 @@
 #include "osal/osal_mem.h"
 #include "time.h"
 
-void *MsprofRealloc(void *ptr, size_t oldSize, size_t newSize)
+void* MsprofRealloc(void* ptr, size_t oldSize, size_t newSize)
 {
     if (oldSize == 0 || newSize == 0) {
         MSPROF_LOGE("Invalid ralloc oldSize %zu or newSize %zu", oldSize, newSize);
         return NULL;
     }
-    void *newPtr = OsalMalloc(newSize);
+    void* newPtr = OsalMalloc(newSize);
     if (newPtr == NULL) {
         MSPROF_LOGE("ralloc failed, newSize=%zu.", newSize);
         return NULL;
@@ -155,38 +155,38 @@ bool CreateDirectory(CHAR* resultPath)
         return false;
     }
 
-    char tmp[DEFAULT_OUTPUT_MAX_LEGTH] = { 0 };
+    char tmp[DEFAULT_OUTPUT_MAX_LEGTH] = {0};
     errno_t ret = strcat_s(tmp, sizeof(tmp), resultPath);
-    PROF_CHK_EXPR_ACTION(ret != EOK, return false,
-        "Failed to strcat_s for dir: %s, ret: %d.", resultPath, ret);
+    PROF_CHK_EXPR_ACTION(ret != EOK, return false, "Failed to strcat_s for dir: %s, ret: %d.", resultPath, ret);
 
-    char path[DEFAULT_OUTPUT_MAX_LEGTH] = { 0 };
-    char *context = NULL;
-    const char *delim = "/";
-    char *token = Strtok(tmp, delim, &context);
-    PROF_CHK_EXPR_ACTION(errno == ERANGE, return false,
-        "The errno is out of the range that can be represented after strtok.");
+    char path[DEFAULT_OUTPUT_MAX_LEGTH] = {0};
+    char* context = NULL;
+    const char* delim = "/";
+    char* token = Strtok(tmp, delim, &context);
+    PROF_CHK_EXPR_ACTION(
+        errno == ERANGE, return false, "The errno is out of the range that can be represented after strtok.");
     while (token != NULL) {
         ret = strcat_s(path, sizeof(path), delim);
-        PROF_CHK_EXPR_ACTION(ret != EOK, return false,
-            "Failed to strcat_s '/' to dir: %s, ret is %d.", resultPath, ret);
+        PROF_CHK_EXPR_ACTION(
+            ret != EOK, return false, "Failed to strcat_s '/' to dir: %s, ret is %d.", resultPath, ret);
 
         ret = strcat_s(path, sizeof(path), token);
-        PROF_CHK_EXPR_ACTION(ret != EOK, return false,
-            "Failed to strcat_s token to dir: %s, ret is %d.", resultPath, ret);
+        PROF_CHK_EXPR_ACTION(
+            ret != EOK, return false, "Failed to strcat_s token to dir: %s, ret is %d.", resultPath, ret);
 
         token = Strtok(NULL, delim, &context);
-        PROF_CHK_EXPR_ACTION(errno == ERANGE, return false,
-            "The errno is out of the range that can be represented in recycling.");
+        PROF_CHK_EXPR_ACTION(
+            errno == ERANGE, return false, "The errno is out of the range that can be represented in recycling.");
         if (IsFileExist(path)) {
             MSPROF_LOGD("The file already exists, %s", path);
             continue;
         }
-        const OsalMode defaultFileMode = (OsalMode)0750;  // 0750 means xwrx-r
+        const OsalMode defaultFileMode = (OsalMode)0750; // 0750 means xwrx-r
         if ((OsalMkdir(path, defaultFileMode) != OSAL_EN_OK) && (errno != EEXIST)) {
             char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
-            MSPROF_LOGE("Failed to mkdir, FilePath : %s, FileMode : %o, ErrorCode : %d, ERRORInfo : %s",
-                path, (int32_t)defaultFileMode, OsalGetErrorCode(),
+            MSPROF_LOGE(
+                "Failed to mkdir, FilePath : %s, FileMode : %o, ErrorCode : %d, ERRORInfo : %s", path,
+                (int32_t)defaultFileMode, OsalGetErrorCode(),
                 OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
             return false;
         }
@@ -309,7 +309,7 @@ int64_t GetClockMonotonicTime(void)
     return (now.tv_sec) * TRANSFER_FROM_S_TO_NS + now.tv_nsec;
 }
 
-uint64_t GetBkdrHashId(const CHAR *str)
+uint64_t GetBkdrHashId(const CHAR* str)
 {
     static const uint64_t SEED = 31;
     uint64_t hash = 0;
@@ -320,7 +320,7 @@ uint64_t GetBkdrHashId(const CHAR *str)
     return hash;
 }
 
-uint64_t TransferStringToInt(CHAR *nptr, size_t nptrLen, CHAR **endptr, uint64_t base)
+uint64_t TransferStringToInt(CHAR* nptr, size_t nptrLen, CHAR** endptr, uint64_t base)
 {
     (void)nptrLen;
     uint64_t result = 0;
@@ -331,7 +331,7 @@ uint64_t TransferStringToInt(CHAR *nptr, size_t nptrLen, CHAR **endptr, uint64_t
     } else if (*nptr == '+') {
         nptr++;
     } else {
-        ;  // No action required
+        ; // No action required
     }
     while (*nptr >= '0' && *nptr <= '9') {
         result = result * base + (uint64_t)(*nptr - '0');
@@ -346,7 +346,7 @@ uint64_t TransferStringToInt(CHAR *nptr, size_t nptrLen, CHAR **endptr, uint64_t
     return result;
 }
 
-double TransferStringToDouble(CHAR *nptr, size_t nptrLen, CHAR **endptr)
+double TransferStringToDouble(CHAR* nptr, size_t nptrLen, CHAR** endptr)
 {
     (void)nptrLen;
     double result = 0.0;
@@ -381,15 +381,16 @@ double TransferStringToDouble(CHAR *nptr, size_t nptrLen, CHAR **endptr)
     return result;
 }
 
-char *TimestampToTime(uint64_t timestamp, uint32_t unit)
+char* TimestampToTime(uint64_t timestamp, uint32_t unit)
 {
     PROF_CHK_EXPR_ACTION(unit == 0, return NULL, "TimestampToTime failed, divisor is 0.");
     uint32_t microTime = (uint32_t)(timestamp % (uint64_t)unit);
     uint64_t tmpTime = timestamp / unit;
-    PROF_CHK_EXPR_ACTION(tmpTime > LONG_MAX, return NULL,
+    PROF_CHK_EXPR_ACTION(
+        tmpTime > LONG_MAX, return NULL,
         "Failed to prepare for forced transfer. The data %" PRIu64 " exceeds the long type.", tmpTime);
     time_t t = (time_t)tmpTime;
-    struct tm *lt = localtime(&t);
+    struct tm* lt = localtime(&t);
     char* dateStr = (char*)OsalMalloc(sizeof(char) * DATESTR_MAXLEN);
     if (dateStr == NULL) {
         return NULL;
@@ -398,20 +399,37 @@ char *TimestampToTime(uint64_t timestamp, uint32_t unit)
     if (len == 0) {
         MSPROF_LOGE("TimestampToTime, dateStr too short");
     }
-    char *microTimeStr = TransferUint64ToString(microTime);
-    PROF_CHK_EXPR_ACTION(microTimeStr == NULL,
-        {OSAL_MEM_FREE(dateStr); return NULL;}, "Failed to transfer microTimeStr.");
+    char* microTimeStr = TransferUint64ToString(microTime);
+    PROF_CHK_EXPR_ACTION(
+        microTimeStr == NULL,
+        {
+            OSAL_MEM_FREE(dateStr);
+            return NULL;
+        },
+        "Failed to transfer microTimeStr.");
     int32_t ret = strcat_s(dateStr, DATESTR_MAXLEN, ".");
-    PROF_CHK_EXPR_ACTION(ret != EOK,
-        {OSAL_MEM_FREE(dateStr); OSAL_MEM_FREE(microTimeStr); return NULL;}, "Faild to strcat_s for TimestampToTime.");
+    PROF_CHK_EXPR_ACTION(
+        ret != EOK,
+        {
+            OSAL_MEM_FREE(dateStr);
+            OSAL_MEM_FREE(microTimeStr);
+            return NULL;
+        },
+        "Faild to strcat_s for TimestampToTime.");
     ret = strcat_s(dateStr, DATESTR_MAXLEN, microTimeStr);
-    PROF_CHK_EXPR_ACTION(ret != EOK,
-        {OSAL_MEM_FREE(dateStr); OSAL_MEM_FREE(microTimeStr); return NULL;}, "Faild to strcat_s for TimestampToTime.");
+    PROF_CHK_EXPR_ACTION(
+        ret != EOK,
+        {
+            OSAL_MEM_FREE(dateStr);
+            OSAL_MEM_FREE(microTimeStr);
+            return NULL;
+        },
+        "Faild to strcat_s for TimestampToTime.");
     OSAL_MEM_FREE(microTimeStr);
     return dateStr;
 }
 
-CHAR *Strtok(CHAR *strToken, const CHAR *delimit, CHAR **context)
+CHAR* Strtok(CHAR* strToken, const CHAR* delimit, CHAR** context)
 {
 #ifdef LITE_OS
     UNUSED(context);

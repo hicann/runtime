@@ -79,7 +79,7 @@ typedef struct {
     uint32_t cpuCores;
     int32_t rankId;
     uint32_t drvVersion;
-    CpuInfo *infoCpus;
+    CpuInfo* infoCpus;
     DevInfo deviceInfos;
 } InfoAttr;
 

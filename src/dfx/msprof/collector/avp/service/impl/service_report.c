@@ -16,7 +16,7 @@
 #include "report/report_buffer_mgr.h"
 #include "report/report_manager.h"
 
-int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi *data)
+int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi* data)
 {
     if (data == NULL) {
         MSPROF_LOGW("Ring buffer api_event received NULL data.");
@@ -25,7 +25,7 @@ int32_t ServiceReportApiPush(uint8_t aging, const struct MsprofApi *data)
     return ReportApiPush(aging, data);
 }
 
-int32_t ServiceReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *data, uint32_t length)
+int32_t ServiceReportCompactPush(uint8_t aging, const struct MsprofCompactInfo* data, uint32_t length)
 {
     if (data == NULL || length == 0) {
         MSPROF_LOGW("Ring buffer compact received unexpected report data.");
@@ -34,7 +34,7 @@ int32_t ServiceReportCompactPush(uint8_t aging, const struct MsprofCompactInfo *
     return ReportCompactPush(aging, data);
 }
 
-int32_t ServiceReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo *data, uint32_t length)
+int32_t ServiceReportAdditionalPush(uint8_t aging, const struct MsprofAdditionalInfo* data, uint32_t length)
 {
     if (data == NULL || length == 0) {
         MSPROF_LOGW("Ring buffer additional received unexpected report data.");
@@ -43,7 +43,7 @@ int32_t ServiceReportAdditionalPush(uint8_t aging, const struct MsprofAdditional
     return ReportAdditionalPush(aging, data);
 }
 
-int32_t RegisterTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+int32_t RegisterTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     if (level == 0 || typeName == NULL) {
         MSPROF_LOGI("Register type info is invalid, level: [%u], type name %s", level, typeName);
@@ -53,7 +53,7 @@ int32_t RegisterTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
     return RegReportTypeInfo(level, typeId, typeName);
 }
 
-uint64_t ServiceHashId(const char *hashInfo, size_t length)
+uint64_t ServiceHashId(const char* hashInfo, size_t length)
 {
     if (hashInfo == NULL || length == 0) {
         MSPROF_LOGE("HashData hashInfo is empty.");

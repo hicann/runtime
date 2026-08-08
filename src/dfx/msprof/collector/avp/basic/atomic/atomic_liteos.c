@@ -10,22 +10,13 @@
 #include "atomic.h"
 #include "los_atomic.h"
 
-void AtomicInit(volatile int32_t *ptr, int32_t val)
-{
-    LOS_AtomicSet(ptr, val);
-}
+void AtomicInit(volatile int32_t* ptr, int32_t val) { LOS_AtomicSet(ptr, val); }
 
-int32_t AtomicLoad(volatile int32_t *ptr)
-{
-    return LOS_AtomicRead(ptr);
-}
+int32_t AtomicLoad(volatile int32_t* ptr) { return LOS_AtomicRead(ptr); }
 
-bool AtomicCompareExchangeWeak(volatile int32_t *ptr, int32_t desired, int32_t expected)
+bool AtomicCompareExchangeWeak(volatile int32_t* ptr, int32_t desired, int32_t expected)
 {
     return LOS_AtomicCmpXchg32bits(ptr, desired, expected);
 }
 
-int32_t AtomicAdd(volatile int32_t *ptr, int32_t val)
-{
-    return LOS_AtomicAdd(ptr, val);
-}
+int32_t AtomicAdd(volatile int32_t* ptr, int32_t val) { return LOS_AtomicAdd(ptr, val); }
