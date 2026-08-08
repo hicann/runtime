@@ -4181,7 +4181,12 @@ rtError_t ApiImpl::ContextSetCurrent(Context* const inCtx)
 
 rtError_t ApiImpl::ContextGetCurrent(Context** const inCtx)
 {
-    // there is no need to check context which is valid.
+    Context* const curCtx = InnerThreadLocalContainer::GetCurCtx();
+    if ((curCtx != nullptr) && (curCtx->GetState() == ContextState::CTX_STATE_ACTIVE)) {
+        *inCtx = curCtx;
+        return RT_ERROR_NONE;
+    }
+
     *inCtx = Runtime::Instance()->CurrentContext();
     COND_RETURN_WARN(*inCtx == nullptr, RT_ERROR_CONTEXT_NULL, "curCtx is nullptr!");
     return RT_ERROR_NONE;
