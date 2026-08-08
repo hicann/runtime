@@ -1161,7 +1161,7 @@ static void PrintCoreInfo(
     (void)snprintf_truncated_s(
         aicoreBuffer.data(), AICORE_BUF_LEN,
         "An error occurs on the device(chipId:%u, dieId:%u), the serial number is %" PRIu64 ", "
-        "the error is %s error, core id is %" PRIu64 ", "
+        "the error is %s, core id is %" PRIu64 ", "
         "error code = %#" PRIx64 ", dump info: "
         "pc start: %#" PRIx64 ", current: %#" PRIx64 ", "
         "vec error info: %#" PRIx64 ", mte error info: %#" PRIx64 ", "

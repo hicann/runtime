@@ -6200,6 +6200,18 @@ TEST_F(DavidTaskTest, GetPageFaultCount_stub_no_support)
     EXPECT_EQ(rtInstance->pageFaultSupportFlag_, false);
 }
 
+// 驱动不支持 INFO_TYPE_REAL_TIME 查询时，GetDeviceCurrentTime 返回 0 并打印 INFO 日志
+TEST_F(DavidTaskTest, GetDeviceCurrentTime_driver_not_support)
+{
+    Driver* driver = dev_->Driver_();
+    MOCKER_CPP_VIRTUAL((NpuDriver*)driver, &NpuDriver::GetDevInfo)
+        .stubs()
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    int64_t currTime = dev_->GetDeviceCurrentTime();
+    EXPECT_EQ(currTime, 0);
+    GlobalMockObject::verify();
+}
+
 TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_NullStream)
 {
     StreamJettyContext context;

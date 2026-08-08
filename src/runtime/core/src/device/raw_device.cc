@@ -2722,11 +2722,14 @@ int64_t RawDevice::GetDeviceCurrentTime() const
     const rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_SYSTEM, INFO_TYPE_REAL_TIME, &currTime);
     if ((error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT) && (error != RT_ERROR_DRV_INPUT)) {
         RT_LOG(
-            RT_LOG_ERROR, "get device current time failed, deviceId=%u, retCode=%#x.", deviceId_,
+            RT_LOG_ERROR, "Failed to get device current time, deviceId=%u, retCode=%#x.", deviceId_,
             static_cast<uint32_t>(error));
         return 0;
     }
     if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_INFO, "Getting device current time is not supported, deviceId=%u, retCode=%#x.", deviceId_,
+            static_cast<uint32_t>(error));
         return 0;
     }
     return currTime;
