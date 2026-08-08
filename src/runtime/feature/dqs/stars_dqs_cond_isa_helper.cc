@@ -1574,6 +1574,8 @@ static void ConstructInterChipPreProcErrPath(
     ConstructSystemCsr(r5, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrcErrPa);
 
     ConstructStore(r8, r10, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swErrTrace);
+    ConstructSystemCsr(
+        r0, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_BIA, fc.biaErrTraceNotify);
 
     ConstructLLWI(r6, 0x1ULL, fc.llwiErrNotifyVal);
     ConstructLHWI(r6, 0x1ULL, fc.lhwiErrNotifyVal);

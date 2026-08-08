@@ -447,6 +447,7 @@ struct RtStarsDqsInterChipPreProcFc {
     RtStarsCondOpLHWI lhwiErrVaMask;
     RtStarsCondOpSystemCsr csrrcErrPa;
     RtStarsCondOpStore swErrTrace;
+    RtStarsCondOpSystemCsr biaErrTraceNotify;
 
     RtStarsCondOpLLWI llwiErrNotifyVal;
     RtStarsCondOpLHWI lhwiErrNotifyVal;
