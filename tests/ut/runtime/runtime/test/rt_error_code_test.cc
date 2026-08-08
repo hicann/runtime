@@ -16,6 +16,8 @@
 #include "rt_log.h"
 #include "runtime_handle_guard.h"
 #include "api_handle_guard.h"
+extern std::string g_lastDlogRecordLine;
+void ClearLastDlogRecordLine();
 using namespace testing;
 using namespace cce::runtime;
 class RtErrorCodeTest : public Test {
@@ -449,4 +451,59 @@ TEST_F(RtErrorCodeTest, ValidateLaunchArgsHandleForApiAcceptsLegacyObjectAddress
         ValidateLaunchArgsHandleForApi(RtPtrToPtr<rtLaunchArgsHandle>(&legacyLaunchArgs), out, __func__);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(out, &legacyLaunchArgs);
+}
+
+// 验证 RecordErrorLog 将 format 中间和前导的 \n 替换为空格，保留末尾 \n
+TEST_F(RtErrorCodeTest, RecordErrorLogSanitizesInnerNewlines)
+{
+    ClearLastDlogRecordLine();
+    RecordErrorLog(__FILE__, __LINE__, __FUNCTION__, "line1\nline2\n");
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    EXPECT_EQ(g_lastDlogRecordLine.find("line1\nline2"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("line1 line2"), std::string::npos);
+}
+
+// 验证前导 \n 也被替换
+TEST_F(RtErrorCodeTest, RecordErrorLogSanitizesLeadingNewline)
+{
+    ClearLastDlogRecordLine();
+    RecordErrorLog(__FILE__, __LINE__, __FUNCTION__, "\nleading newline\n");
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    EXPECT_EQ(g_lastDlogRecordLine.find("\nleading"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find(" leading"), std::string::npos);
+}
+
+// 验证无末尾 \n 时，所有 \n 均被替换
+TEST_F(RtErrorCodeTest, RecordErrorLogSanitizesAllNewlinesWhenNoTrailing)
+{
+    ClearLastDlogRecordLine();
+    RecordErrorLog(__FILE__, __LINE__, __FUNCTION__, "a\nb\nc");
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    EXPECT_EQ(g_lastDlogRecordLine.find("a\nb"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("a b c"), std::string::npos);
+}
+
+// 验证 RecordLog 同样清洗中间 \n
+TEST_F(RtErrorCodeTest, RecordLogSanitizesInnerNewlines)
+{
+    ClearLastDlogRecordLine();
+    RecordLog(DLOG_DEBUG, __FILE__, __LINE__, __FUNCTION__, "msg1\nmsg2\n");
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    EXPECT_EQ(g_lastDlogRecordLine.find("msg1\nmsg2"), std::string::npos);
+    EXPECT_NE(g_lastDlogRecordLine.find("msg1 msg2"), std::string::npos);
+}
+
+// 验证 EZ2001 模板中的中间 \n 被清洗（通过 PrintErrMsgToLog 走 DispatchErrMsg → RecordErrorLog 路径）
+TEST_F(RtErrorCodeTest, Ez2001TemplateInnerNewlineSanitized)
+{
+    ClearLastDlogRecordLine();
+    std::vector<std::string> values = {"aicore_error_info", "HW_L", "fault_info"};
+    PrintErrMsgToLog(ErrorCode::EZ2001, "file", 1000, "func", values);
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    // EZ2001 模板: "%s\nFault %s occurs in the system: %s ErrorCode=EZ2001.\n"
+    // 清洗后中间 \n 应被替换为空格
+    const size_t faultPos = g_lastDlogRecordLine.find("Fault");
+    ASSERT_NE(faultPos, std::string::npos);
+    // Fault 前面应该是空格而不是 \n
+    EXPECT_EQ(g_lastDlogRecordLine[faultPos - 1U], ' ');
 }

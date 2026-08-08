@@ -9,6 +9,7 @@
  */
 
 #include "rt_log.h"
+#include <algorithm>
 #include "dlog_pub.h"
 #if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
 #include "error_manager.h"
@@ -17,6 +18,17 @@
 #include "common/error_code_meta.h"
 namespace cce {
 namespace runtime {
+namespace {
+void SanitizeInnerNewlines(char* const buf, const size_t len)
+{
+    if ((buf == nullptr) || (len == 0U)) {
+        return;
+    }
+    const size_t end = (buf[len - 1U] == '\n') ? (len - 1U) : len;
+    std::replace(buf, buf + end, '\n', ' ');
+}
+} // namespace
+
 void RecordErrorLog(const char* file, const int32_t line, const char* fun, const char* fmt, ...)
 {
     if (file == nullptr || fun == nullptr || fmt == nullptr) {
@@ -33,6 +45,7 @@ void RecordErrorLog(const char* file, const int32_t line, const char* fun, const
     int ret = vsnprintf_truncated_s(buf, RT_MAX_LOG_BUF_SIZE, fmt, arg);
     va_end(arg);
     if (ret > 0) {
+        SanitizeInnerNewlines(buf, static_cast<size_t>(ret));
         DlogRecord(
             static_cast<int32_t>(RUNTIME), DLOG_ERROR, "[%s:%d]%d %s:%s%s", file, line, mmGetTid(), fun, err.c_str(),
             buf);
@@ -52,6 +65,7 @@ void RecordLog(int32_t level, const char* file, const int32_t line, const char* 
     int ret = vsnprintf_truncated_s(buf, RT_MAX_LOG_BUF_SIZE, fmt, arg);
     va_end(arg);
     if (ret > 0) {
+        SanitizeInnerNewlines(buf, static_cast<size_t>(ret));
         DlogRecord(static_cast<int32_t>(RUNTIME), level, "[%s:%d] %d %s:%s", file, line, mmGetTid(), fun, buf);
     }
     return;
