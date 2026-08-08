@@ -25,7 +25,7 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id3214 -->
 <!-- npu="A3" id3215 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id3215 -->
 <!-- npu="910b" id3216 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
@@ -84,7 +84,7 @@ aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemMan
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id2150 -->
 <!-- npu="A3" id2151 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id2151 -->
 <!-- npu="910b" id2152 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
@@ -140,7 +140,7 @@ aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const v
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id1688 -->
 <!-- npu="A3" id1689 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id1689 -->
 <!-- npu="910b" id1690 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
@@ -199,7 +199,7 @@ aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id2073 -->
 <!-- npu="A3" id2074 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id2074 -->
 <!-- npu="910b" id2075 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
@@ -259,7 +259,7 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id2136 -->
 <!-- npu="A3" id2137 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id2137 -->
 <!-- npu="910b" id2138 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
@@ -316,7 +316,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 - Ascend 950PR/Ascend 950DT：不支持
 <!-- end id2339 -->
 <!-- npu="A3" id2340 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 <!-- end id2340 -->
 <!-- npu="910b" id2341 -->
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持

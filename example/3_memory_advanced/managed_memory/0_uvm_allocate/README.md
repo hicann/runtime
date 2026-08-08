@@ -2,7 +2,7 @@
 
 ## 描述
 
-本样例基于UVM（Unified Virtual Memory）统一虚拟内存机制，通过UVM内存申请接口为算子输入、输出分配内存，消除了算子参数追加和结果写回过程中的显式数据搬运。覆盖UVM类型内存申请、二进制加载、核函数句柄获取、参数组装、任务下发、Stream 同步和结果校验。运行后会生成输入数据、执行 Kernel，并校验输出结果。
+本样例基于UVM（Unified Virtual Memory）统一虚拟内存机制，通过UVM内存申请接口为算子输入、输出分配内存，消除了算子参数追加和结果回写过程中的显式数据搬运。覆盖UVM类型内存申请、二进制加载、核函数句柄获取、参数组装、任务下发、Stream 同步和结果校验。运行该样例后会生成算子输入数据、执行算子，并校验算子输出结果。
 
 ## 产品支持情况
 
@@ -10,12 +10,15 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend 950DT | × |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
 
 ## 编译运行
 
 1. 下载样例代码至安装 CANN 软件的环境，切换到样例目录。
+
 ```bash
 cd ${git_clone_path}/example/3_memory_advanced/managed_memory/0_uvm_allocate
 ```
@@ -25,18 +28,12 @@ cd ${git_clone_path}/example/3_memory_advanced/managed_memory/0_uvm_allocate
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在 /usr/local/Ascend 目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
 
-# ${ascend_name} 替换为昇腾 AI 处理器型号，可通过 npu-smi info 查看 Name 字段并去掉空格获得
-export SOC_VERSION=${ascend_name}
-
-# ${cmake_path} 替换为 ascendc.cmake 所在目录，例如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
-export ASCENDC_CMAKE_DIR=${cmake_path}
+# 自动识别 SOC_VERSION 和 ASCENDC_CMAKE_DIR
+source ${git_clone_path}/example/set_sample_env.sh
 ```
 
-如果未提前设置环境变量，`run.sh` 会自动尝试探测 `ASCEND_INSTALL_PATH`、`ASCEND_HOME_PATH`、`$HOME/Ascend/cann`、`/usr/local/Ascend/cann`、`/opt/Ascend/cann`、`SOC_VERSION` 和 `ASCENDC_CMAKE_DIR`；如果自动探测失败，请按上述命令手动设置。
-
-本样例的数据生成与结果校验依赖 `numpy`，执行 `run.sh` 前请确保 Python 环境已安装 `numpy`。
+本样例的数据生成与结果校验依赖 `numpy`，执行 `run.sh` 前请确保 Python 环境已安装 `numpy`。依赖numpy版本 >= 1.19.0。
 
 3. 执行以下命令运行样例。
 
