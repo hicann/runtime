@@ -10,7 +10,7 @@
 - [`aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)`](#aclrtSetOpExecuteTimeOut)：设置算子执行的超时时间，单位为秒。一个进程内多次调用本接口，则以最后一次设置的时间为准。
 - [`aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTimeout)`](#aclrtSetOpExecuteTimeOutV2)：设置算子执行的超时时间，单位为微秒。
 - [`aclError aclrtSetOpExecuteTimeOutWithMs(uint32_t timeout)`](#aclrtSetOpExecuteTimeOutWithMs)：设置算子执行的超时时间，单位为毫秒。
-- [`aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)`](#aclrtGetOpExecuteTimeout)：获取AI Core算子执行的超时时间。
+- [`aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)`](#aclrtGetOpExecuteTimeout)：获取算子执行的超时时间。
 - [`aclError aclrtGetThreadLastTaskId(uint32_t *taskId)`](#aclrtGetThreadLastTaskId)：获取当前线程的最后一个下发的Task ID。
 - [`aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduceKind kind, aclDataType type, aclrtStream stream, void *reserve)`](#aclrtReduceAsync)：执行Reduce操作，包括SUM、MIN、MAX等。异步接口。
 - [`aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void *args)`](#aclrtLaunchHostFunc)：在Stream的任务队列中下发一个Host回调任务，系统内部在执行到该回调任务时，会在Stream上注册的线程（该线程在本接口内部创建并注册）中执行回调函数，并且回调任务默认阻塞本Stream上后续任务的执行。
@@ -394,16 +394,16 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 
 - 不调用本接口，不同产品型号的AI Core算子、AI CPU算子默认超时时间不同：
     <!-- npu="950" id12 -->
-    - 对于Ascend 950PR/Ascend 950DT，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Ascend 950PR/Ascend 950DT，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id12 -->
     <!-- npu="A3" id13 -->
-    - 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为60秒。
+    - 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id13 -->
     <!-- npu="910b" id14 -->
-    - 对于Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id14 -->
     <!-- npu="310b" id15 -->
-    - 对于Atlas 200I/500 A2 推理产品，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Atlas 200I/500 A2 推理产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id15 -->
     <!-- npu="310p" id16 -->
     - 对于Atlas 推理系列产品，AI Core算子的默认超时时间为547秒，AI CPU算子的默认超时时间为28秒。
@@ -482,11 +482,15 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 ### 约束说明
 
 <!-- npu="950,A3,910b" id22 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时，此时，actualTimeout参数输出的值为uint64\_t的最大值。
+对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时，AI CPU算子同样适用。此时，actualTimeout参数输出的值为uint64\_t的最大值。
 <!-- end id22 -->
 
-<!-- npu="910,310p,310b" id23 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，调用本接口只能设置AI Core算子执行的超时时间。
+<!-- npu="310b" id32 -->
+对于Atlas 200I/500 A2 推理产品，调用本接口可以设置AI Core算子、AI CPU算子执行的超时时间。
+<!-- end id32 -->
+
+<!-- npu="910,310p" id23 -->
+对于Atlas 推理系列产品、Atlas 训练系列产品，调用本接口只能设置AI Core算子执行的超时时间。
 <!-- end id23 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id17 -->
@@ -583,17 +587,17 @@ aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)
 
 ### 功能说明
 
-获取AI Core算子执行的超时时间。
+获取算子执行的超时时间。
 
 <!-- npu="950,A3,910b" id24 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，如果AI Core算子永不超时，则该参数输出的值为uint32_t的最大值。
+对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，如果算子永不超时，则该参数输出的值为uint32_t的最大值。
 <!-- end id24 -->
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| timeoutMs | 输出 | 超时时间，单位为毫秒。<br>若已调用set接口（例如aclrtSetOpExecuteTimeOut）设置过超时时间，则返回硬件的实际超时时间，否则，返回AI Core的默认超时时间。|
+| timeoutMs | 输出 | 超时时间，单位为毫秒。<br>若已调用set接口（例如aclrtSetOpExecuteTimeOut）设置过超时时间，则返回硬件的实际超时时间，否则，返回默认超时时间。|
 
 ### 返回值说明
 
