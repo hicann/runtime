@@ -20,7 +20,8 @@ namespace runtime {
 
 bool AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(const Device* const dev)
 {
-    return (dev != nullptr) && dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT);
+    return (dev != nullptr) && dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT) &&
+           (dev->GetRunMode() == RT_RUN_MODE_ONLINE);
 }
 
 bool AicpuTimeoutManager::IsKfcType(const uint32_t kernelType)

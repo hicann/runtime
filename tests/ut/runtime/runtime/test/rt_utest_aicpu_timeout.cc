@@ -217,6 +217,7 @@ protected:
         device_.engine_ = new AicpuTimeoutTestEngine(&device_);
         device_.engine_->runningState_ = DEV_RUNNING_DOWN;
         device_.primaryStream_ = &stream_;
+        device_.SetRunMode(RT_RUN_MODE_ONLINE);
     }
 
     void TearDown() override
@@ -297,6 +298,17 @@ TEST_F(AicpuTimeoutTest, DefaultCreditUsesDeviceFeature)
     SetAicpuTimeoutForAllTypesSupported(false);
     EXPECT_FALSE(AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(&device_));
     EXPECT_EQ(AicpuTimeoutManager::GetAicpuDefaultKernelCredit(&device_), RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT);
+}
+
+TEST_F(AicpuTimeoutTest, StarsMonitorAicpuTimeoutUnsupportedInOfflineMode)
+{
+    SetAicpuTimeoutForAllTypesSupported(true);
+    device_.SetRunMode(RT_RUN_MODE_OFFLINE);
+
+    EXPECT_FALSE(AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(&device_));
+    EXPECT_EQ(AicpuTimeoutManager::GetAicpuDefaultKernelCredit(&device_), RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT);
+    EXPECT_FALSE(AicpuTimeoutManager::IsTimeoutSupportedByKernelType(&device_, 0U));
+    EXPECT_FALSE(AicpuTimeoutManager::IsTimeoutSupportedByLaunchFlag(&device_, RT_KERNEL_DEFAULT));
 }
 
 TEST_F(AicpuTimeoutTest, CqeMarksStopOnlyForManagedAicpuTimeout)
