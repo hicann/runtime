@@ -114,15 +114,17 @@ uint16_t GetSdmaKernelCredit()
 static uint16_t GetAicpuKernelCreditInternal(
     const Device* const dev, const uint64_t timeout, const bool defaultNeverTimeout)
 {
-    uint64_t tmpTimeout = 0UL;
     uint16_t kernelCredit = AicpuTimeoutManager::GetAicpuDefaultKernelCredit(dev);
     const RtTimeoutConfig& timeoutCfg = Runtime::Instance()->GetTimeoutConfig();
-    if (timeout != 0U) {
-        tmpTimeout = timeout;
-    } else if (timeoutCfg.isCfgOpExcTaskTimeout) {
-        tmpTimeout = timeoutCfg.opExcTaskTimeout;
-    } else if (AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(dev)) {
+    const bool hasTaskTimeout = timeout != 0U;
+    const bool hasGlobalTimeout = timeoutCfg.isCfgOpExcTaskTimeout;
+    if (!hasTaskTimeout && !hasGlobalTimeout && AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(dev)) {
         return TransKernelCreditCreditByChip(kernelCredit);
+    }
+
+    uint64_t tmpTimeout = timeout;
+    if (!hasTaskTimeout && hasGlobalTimeout) {
+        tmpTimeout = timeoutCfg.opExcTaskTimeout;
     }
 
     if (defaultNeverTimeout &&

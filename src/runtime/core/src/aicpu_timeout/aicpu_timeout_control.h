@@ -24,9 +24,9 @@ class Stream;
 class AicpuTimeoutControl {
 public:
     // Queries AI CPU package capability, not platform support; TS kernel names require the "tsKernel:" prefix.
-    static rtError_t CheckKernelSupported(Device* const dev, const std::string& kernelName, bool& isSupported);
+    static rtError_t CheckKernelSupported(const Device* const dev, const std::string& kernelName, bool& isSupported);
 
-    static rtError_t CloseAicpuMonitor(Device* const dev, bool& closed);
+    static rtError_t CloseAicpuMonitor(const Device* const dev, bool& closed);
 
 private:
     static rtError_t LaunchAicpuBuiltinKernel(

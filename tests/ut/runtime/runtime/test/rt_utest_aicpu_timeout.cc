@@ -153,7 +153,7 @@ rtError_t StreamSynchronizeStub(Stream* stm, const bool isNeedWaitSyncCq, int32_
     return g_syncResult;
 }
 
-rtError_t CheckKernelSupportedStub(Device* dev, const std::string& kernelName, bool& isSupported)
+rtError_t CheckKernelSupportedStub(const Device* dev, const std::string& kernelName, bool& isSupported)
 {
     UNUSED(dev);
     EXPECT_EQ(kernelName, "tsKernel:CloseAicpuMonitor");
@@ -161,14 +161,14 @@ rtError_t CheckKernelSupportedStub(Device* dev, const std::string& kernelName, b
     return g_checkKernelRet;
 }
 
-rtError_t CloseAicpuMonitorStub(Device* dev, bool& closed)
+rtError_t CloseAicpuMonitorStub(const Device* dev, bool& closed)
 {
     UNUSED(dev);
     closed = g_monitorClosed;
     return g_closeMonitorRet;
 }
 
-void StopAicpuProcessStub(Device* dev)
+void StopAicpuProcessStub(const Device* dev)
 {
     UNUSED(dev);
     g_stopCalled = true;

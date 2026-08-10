@@ -25,14 +25,14 @@ class AicpuTimeoutManager {
 public:
     static bool IsStarsMonitorAicpuTimeoutSupported(const Device* const dev);
 
-    static bool IsTimeoutSupportedByKernelType(const Device* const dev, uint32_t kernelType);
+    static bool IsTimeoutSupportedByKernelType(const Device* const dev, const uint32_t kernelType);
 
-    static bool IsTimeoutSupportedByLaunchFlag(const Device* const dev, uint32_t flag);
+    static bool IsTimeoutSupportedByLaunchFlag(const Device* const dev, const uint32_t flag);
 
     static uint16_t GetAicpuDefaultKernelCredit(const Device* const dev);
 
     static void UpdateAicpuTimeoutStateOnCqeReport(
-        Device* const dev, const rtLogicCqReport_t& logicCq, TaskInfo* reportTask, TaskInfo* faultTaskPtr);
+        Device* const dev, const rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask, TaskInfo* faultTaskPtr);
 
     static void CheckAndStopAicpuProcess(Device* const dev);
 
@@ -41,9 +41,9 @@ public:
     static void ClearAicpuTimeoutState(Device* const dev);
 
 private:
-    static bool IsKfcType(uint32_t kernelType);
+    static bool IsKfcType(const uint32_t kernelType);
 
-    static void StopAicpuProcess(Device* const dev);
+    static void StopAicpuProcess(const Device* const dev);
 };
 
 } // namespace runtime

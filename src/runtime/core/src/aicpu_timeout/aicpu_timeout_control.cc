@@ -34,7 +34,7 @@ struct CloseAicpuMonitorArgs {
 };
 } // namespace
 
-rtError_t AicpuTimeoutControl::CloseAicpuMonitor(Device* const dev, bool& closed)
+rtError_t AicpuTimeoutControl::CloseAicpuMonitor(const Device* const dev, bool& closed)
 {
     closed = false;
     Driver* const drv = dev->Driver_();
@@ -66,7 +66,8 @@ rtError_t AicpuTimeoutControl::CloseAicpuMonitor(Device* const dev, bool& closed
     Stream* const stm = dev->GetCtrlSQStream(dev->PrimaryStream_());
     COND_RETURN_ERROR(
         stm == nullptr, RT_ERROR_INVALID_VALUE, "Stream for AI CPU compatibility kernel is null, deviceId=%u", devId);
-    ret = LaunchAicpuBuiltinKernel(stm, AICPU_CLOSE_MONITOR_KERNEL_NAME, devArgsBuf, sizeof(args));
+    ret =
+        LaunchAicpuBuiltinKernel(stm, AICPU_CLOSE_MONITOR_KERNEL_NAME, devArgsBuf, static_cast<uint32_t>(sizeof(args)));
     if (ret != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Launch AI CPU compatibility kernel failed, kernel=%s, deviceId=%u, ret=%d",
@@ -99,13 +100,13 @@ rtError_t AicpuTimeoutControl::CloseAicpuMonitor(Device* const dev, bool& closed
     return RT_ERROR_NONE;
 }
 
-rtError_t AicpuTimeoutControl::CheckKernelSupported(Device* const dev, const std::string& kernelName, bool& isSupported)
+rtError_t AicpuTimeoutControl::CheckKernelSupported(
+    const Device* const dev, const std::string& kernelName, bool& isSupported)
 {
     isSupported = false;
     Driver* const drv = dev->Driver_();
     COND_RETURN_ERROR(drv == nullptr, RT_ERROR_INVALID_VALUE, "driver is null, deviceId=%u", dev->Id_());
     COND_RETURN_ERROR(kernelName.empty(), RT_ERROR_INVALID_VALUE, "kernelName is empty");
-
     const uint32_t devId = dev->Id_();
     const uint32_t nameLen = static_cast<uint32_t>(kernelName.length());
     void* devNameBuf = nullptr;
@@ -145,7 +146,7 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(Device* const dev, const std
         RT_LOG(RT_LOG_ERROR, "MemCopySync name H2D failed, ret=%d", ret);
         return ret;
     }
-    uint32_t initResult = MAX_UINT32_NUM;
+    const uint32_t initResult = MAX_UINT32_NUM;
     ret = drv->MemCopySync(devResultBuf, sizeof(uint32_t), &initResult, sizeof(uint32_t), RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "MemCopySync result H2D failed, ret=%d", ret);
@@ -156,7 +157,7 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(Device* const dev, const std
     cfg.kernelNameAddr = RtPtrToValue(devNameBuf);
     cfg.kernelNameLen = nameLen;
     cfg.checkResultAddr = RtPtrToValue(devResultBuf);
-    cfg.checkResultLen = sizeof(uint32_t);
+    cfg.checkResultLen = static_cast<uint32_t>(sizeof(uint32_t));
     ret = drv->MemCopySync(devCfgBuf, sizeof(cfg), &cfg, sizeof(cfg), RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "MemCopySync config H2D failed, ret=%d", ret);
@@ -166,7 +167,8 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(Device* const dev, const std
     Stream* const stm = dev->GetCtrlSQStream(dev->PrimaryStream_());
     COND_RETURN_ERROR(
         stm == nullptr, RT_ERROR_INVALID_VALUE, "Stream for AI CPU compatibility kernel is null, deviceId=%u", devId);
-    ret = LaunchAicpuBuiltinKernel(stm, AICPU_CHECK_SUPPORTED_KERNEL_NAME, devCfgBuf, sizeof(cfg));
+    ret =
+        LaunchAicpuBuiltinKernel(stm, AICPU_CHECK_SUPPORTED_KERNEL_NAME, devCfgBuf, static_cast<uint32_t>(sizeof(cfg)));
     if (ret != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Launch AI CPU compatibility kernel failed, kernel=%s, query=%s, deviceId=%u, ret=%d",

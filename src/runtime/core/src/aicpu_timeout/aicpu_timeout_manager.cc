@@ -11,7 +11,6 @@
 
 #include "aicpu_timeout_control.h"
 #include "device.hpp"
-#include "rt_external_kernel.h"
 #include "runtime.hpp"
 #include "runtime/kernel.h"
 #include "stars.hpp"
@@ -24,7 +23,7 @@ bool AicpuTimeoutManager::IsStarsMonitorAicpuTimeoutSupported(const Device* cons
     return (dev != nullptr) && dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT);
 }
 
-bool AicpuTimeoutManager::IsKfcType(uint32_t kernelType)
+bool AicpuTimeoutManager::IsKfcType(const uint32_t kernelType)
 {
     return (kernelType == static_cast<uint32_t>(KERNEL_TYPE_AICPU_KFC)) ||
            (kernelType == static_cast<uint32_t>(KERNEL_TYPE_CUSTOM_KFC));
@@ -63,7 +62,7 @@ void AicpuTimeoutManager::ClearAicpuTimeoutState(Device* const dev)
     dev->SetAicpuProcessStopPendingStatus(false);
 }
 
-void AicpuTimeoutManager::StopAicpuProcess(Device* const dev)
+void AicpuTimeoutManager::StopAicpuProcess(const Device* const dev)
 {
     if (dev == nullptr) {
         return;
@@ -78,7 +77,7 @@ void AicpuTimeoutManager::StopAicpuProcess(Device* const dev)
 }
 
 void AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(
-    Device* const dev, const rtLogicCqReport_t& logicCq, TaskInfo* reportTask, TaskInfo* faultTaskPtr)
+    Device* const dev, const rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask, TaskInfo* faultTaskPtr)
 {
     if (!dev->GetAicpuMonitorClosedStatus()) {
         RT_LOG(RT_LOG_DEBUG, "AI CPU monitor is not closed, skip updating timeout state, device_id=%u.", dev->Id_());

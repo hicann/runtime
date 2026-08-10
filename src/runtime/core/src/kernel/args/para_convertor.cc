@@ -16,8 +16,6 @@
 #include "kernel_utils.hpp"
 #include "aicpu_timeout_manager.h"
 
-using namespace cce::runtime;
-
 namespace cce {
 namespace runtime {
 rtError_t ConvertArgsByArgsHandle(
