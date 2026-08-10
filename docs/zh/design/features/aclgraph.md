@@ -124,7 +124,7 @@
 | `aclmdlRICaptureBegin()` | `src/acl/aclrt_impl/model_ri.cpp` | 开始流捕获                 |
 | `aclmdlRICaptureEnd()` | `src/acl/aclrt_impl/model_ri.cpp` | 结束流捕获                 |
 | `aclmdlRICaptureGetInfo()` | `src/acl/aclrt_impl/model_ri.cpp` | 获取捕获状态信息           |
-| `rtStreamAddToModel()` | `context_aclgraph.cc:554` | 添加流到捕获模型 |
+| `rtStreamAddToModel()` | `src/runtime/api/api_c_standard_soc.cc:665` | 添加流到捕获模型 |
 | `aclmdlRICaptureTaskGrpBegin()` | `src/acl/aclrt_impl/model_ri.cpp` | 开始任务组                 |
 | `aclmdlRICaptureTaskGrpEnd()` | `src/acl/aclrt_impl/model_ri.cpp` | 结束任务组                 |
 | `aclmdlRICaptureTaskUpdateBegin()` | `src/acl/aclrt_impl/model_ri.cpp` | 开始任务更新               |

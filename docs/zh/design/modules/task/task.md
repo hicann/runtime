@@ -315,7 +315,7 @@ rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream *stm, uint32_t &pos, uint32_
 不同 TASK_TYPE 的任务回调函数结构体，针对不同 CHIP_TYPE 和 taskType 单独处理，调用函数 rtError_t RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs) 进行全局注册。
 
 ```cpp
-// task_manager.h:61-70
+// src/runtime/core/src/task/inc/runtime_task_manager.h:69-78
 struct TaskFuncSingle {
     PfnTaskToCmd toCommandFunc;
     PfnTaskToSqe toSqeFunc;
@@ -332,7 +332,7 @@ struct TaskFuncSingle {
 TaskFuncArrays g_taskFuncArrays[CHIP_END]  runtime初始化的时候根据 CHIP_TYPE 保存对应 TaskFunc。
 
 ```cpp
-// task_manager.h
+// src/runtime/core/src/task/inc/runtime_task_manager.h:58-67
 struct TaskFuncArrays {
     PfnTaskToCmd toCommandFunc[TS_TASK_TYPE_RESERVED];           // [0] TaskCommand 构建
     PfnTaskToSqe toSqeFunc[TS_TASK_TYPE_RESERVED];               // [1] SQE 构建

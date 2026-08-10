@@ -395,7 +395,7 @@ private:
 | Stream | 流管理核心类，继承自 NoCopy | `stream/stream.hpp` |
 | StreamFactory | 静态流创建工厂，版本分发 | `stream/stream_factory.hpp` |
 | StreamSqCqManage | SQ/CQ ID 管理与复用 | `stream/stream_sqcq_manage.hpp` |
-| TaskAllocator | 任务对象分配器 | `task/task_allocator.hpp` |
+| TaskAllocator | 任务对象分配器 | `core/src/pool/task_allocator.hpp` |
 | TaskResManage | 任务资源管理 | `task/task_res_manage/` |
 | EngineStreamObserver | 流状态观察者 | `stream/engine_stream_observer.hpp` |
 
