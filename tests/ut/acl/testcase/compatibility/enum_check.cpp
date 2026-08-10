@@ -800,6 +800,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtAtomicOperationCapability)
 
     cap = (aclrtAtomicOperationCapability)(1U << 2);
     EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_REDUCATION);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_REDUCTION);
 
     cap = (aclrtAtomicOperationCapability)(1U << 3);
     EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR8);
