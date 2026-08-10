@@ -21,10 +21,10 @@ namespace analysis {
 namespace dvvp {
 namespace common {
 namespace queue {
-const size_t BLOCK_BUFFER_MAX_CYCLES    = 2048;
-const size_t BLOCK_BUFF_CAPACITY        = 16384; // 16K length queue
-const size_t MAX_DRV_REPORT_SIZE        = 524032; // 512K - 256 byte pack
-const uint32_t BLOCK_PUSH_WAIT_TIME     = 1;
+const size_t BLOCK_BUFFER_MAX_CYCLES = 2048;
+const size_t BLOCK_BUFF_CAPACITY = 16384;  // 16K length queue
+const size_t MAX_DRV_REPORT_SIZE = 524032; // 512K - 256 byte pack
+const uint32_t BLOCK_PUSH_WAIT_TIME = 1;
 const std::string BLOCK_BUFFER_NAME = "BlockBuffer";
 
 /**
@@ -46,19 +46,16 @@ public:
           dataBuffer_(nullptr)
     {}
 
-    virtual ~BlockBuffer()
-    {
-        UnInit();
-    }
+    virtual ~BlockBuffer() { UnInit(); }
 
 public:
     /**
-    * @brief Init block buffer
-    * @param [in] name: the name of block buffer
-    * @param [in] capacity: the length of block buffer, which need to be 2^n and larger than MAX_DRV_REPORT_SIZE
-    * @return true: success, false: failed
-    */
-    bool Init(const std::string &name, size_t capacity = BLOCK_BUFF_CAPACITY)
+     * @brief Init block buffer
+     * @param [in] name: the name of block buffer
+     * @param [in] capacity: the length of block buffer, which need to be 2^n and larger than MAX_DRV_REPORT_SIZE
+     * @return true: success, false: failed
+     */
+    bool Init(const std::string& name, size_t capacity = BLOCK_BUFF_CAPACITY)
     {
         if (capacity <= (MAX_DRV_REPORT_SIZE / sizeof(T))) {
             MSPROF_LOGE("Failed to init block buffer, capacity: %zu, buffer name: %s", capacity, name.c_str());
@@ -85,8 +82,8 @@ public:
         return true;
     }
     /**
-    * @brief UnInit block buffer
-    */
+     * @brief UnInit block buffer
+     */
     void UnInit()
     {
         if (isInited_) {
@@ -94,38 +91,42 @@ public:
             size_t currReadCursor = readIndex_.load(std::memory_order_relaxed);
             size_t currWriteCursor = writeIndex_.load(std::memory_order_relaxed);
             if ((currWriteCursor - currReadCursor) >= capacity_) {
-                MSPROF_LOGE("Block buffer overflow, [%s] capacity: %zu, read count: %zu, "
-                    "write count: %zu", name_.c_str(), capacity_, currReadCursor, currWriteCursor);
+                MSPROF_LOGE(
+                    "Block buffer overflow, [%s] capacity: %zu, read count: %zu, "
+                    "write count: %zu",
+                    name_.c_str(), capacity_, currReadCursor, currWriteCursor);
             }
 
             if (dataBuffer_ != nullptr) {
                 delete[] dataBuffer_;
             }
 
-            MSPROF_EVENT("total_size_report [%s] read count: %zu, write count: %zu",
-                name_.c_str(), readIndex_.exchange(0), writeIndex_.exchange(0));
+            MSPROF_EVENT(
+                "total_size_report [%s] read count: %zu, write count: %zu", name_.c_str(), readIndex_.exchange(0),
+                writeIndex_.exchange(0));
             idleWriteIndex_.exchange(0);
         }
     }
     /**
-    * @brief Print read and write count of block buffer
-    */
+     * @brief Print read and write count of block buffer
+     */
     void Print()
     {
         if (isInited_) {
             size_t currReadCursor = readIndex_.load(std::memory_order_relaxed);
             size_t currWriteCursor = writeIndex_.load(std::memory_order_relaxed);
-            MSPROF_EVENT("print_report_count [%s] read count: %zu, write count: %zu",
-                name_.c_str(), currReadCursor, currWriteCursor);
+            MSPROF_EVENT(
+                "print_report_count [%s] read count: %zu, write count: %zu", name_.c_str(), currReadCursor,
+                currWriteCursor);
         }
     }
     /**
-    * @brief Batch push data into block buffer
-    * @param [in] data: the data need to be pushed
-    * @param [in] dataSize: the size of data, which need to be aligned with sizeof(T)
-    * @return MSPROF_ERROR_NONE: success, MSPROF_ERROR_UNINITIALIZE: uninitialized
-    */
-    int32_t BatchPush(const T *data, size_t dataSize)
+     * @brief Batch push data into block buffer
+     * @param [in] data: the data need to be pushed
+     * @param [in] dataSize: the size of data, which need to be aligned with sizeof(T)
+     * @return MSPROF_ERROR_NONE: success, MSPROF_ERROR_UNINITIALIZE: uninitialized
+     */
+    int32_t BatchPush(const T* data, size_t dataSize)
     {
         if (!isInited_) {
             MSPROF_LOGW("Block buffer %s is not initialized.", name_.c_str());
@@ -142,8 +143,8 @@ public:
             if (cycles >= maxCycles_) {
                 bool expected = false;
                 if (cycleOverflowLogged_.compare_exchange_strong(expected, true)) {
-                    MSPROF_EVENT("Block cycle overflow, buffer name: %s, buffer capacity: %zu",
-                        name_.c_str(), capacity_);
+                    MSPROF_EVENT(
+                        "Block cycle overflow, buffer name: %s, buffer capacity: %zu", name_.c_str(), capacity_);
                 }
                 return MSPROF_ERROR_NONE;
             }
@@ -154,9 +155,10 @@ public:
             // check if block buffer about to overflow
             // packSize is used to ensure that the data of the previous pop packet is cleared
             if ((currWriteCursor - currReadCursor) + inSize > capacity_ - packSize) {
-                MSPROF_LOGW("Block buffer about to overflow, buffer name: %s, buffer capacity: %u, "
-                    "currWriteCursor: %zu, currReadCursor: %zu, inSize: %zu", name_.c_str(), capacity_,
-                    currWriteCursor, currReadCursor, inSize);
+                MSPROF_LOGW(
+                    "Block buffer about to overflow, buffer name: %s, buffer capacity: %u, "
+                    "currWriteCursor: %zu, currReadCursor: %zu, inSize: %zu",
+                    name_.c_str(), capacity_, currWriteCursor, currReadCursor, inSize);
                 usleep(BLOCK_PUSH_WAIT_TIME);
             }
         } while (((currWriteCursor - currReadCursor) + inSize > capacity_ - packSize) ||
@@ -175,11 +177,11 @@ public:
         return MSPROF_ERROR_NONE;
     }
     /**
-    * @brief Batch pop data from block buffer
-    * @param [out] popSize: pop size of data, which need to be aligned with sizeof(T)
-    * @param [in] popForce: whether force pop data when data size is not enough
-    */
-    void *BatchPop(size_t &popSize, bool popForce)
+     * @brief Batch pop data from block buffer
+     * @param [out] popSize: pop size of data, which need to be aligned with sizeof(T)
+     * @param [in] popForce: whether force pop data when data size is not enough
+     */
+    void* BatchPop(size_t& popSize, bool popForce)
     {
         if (!isInited_ || popSize == 0) {
             return nullptr;
@@ -217,11 +219,11 @@ public:
         return dataBuffer_ + currIndex;
     }
     /**
-    * @brief Adapt read index and clear data
-    * @param [in] popPtr: pop start ptr
-    * @param [in] popSize: pop size of data
-    */
-    void BatchPopBufferIndexShift(void *popPtr, const size_t popSize)
+     * @brief Adapt read index and clear data
+     * @param [in] popPtr: pop start ptr
+     * @param [in] popSize: pop size of data
+     */
+    void BatchPopBufferIndexShift(void* popPtr, const size_t popSize)
     {
         if (popPtr == nullptr || popSize == 0) {
             return;
@@ -231,9 +233,9 @@ public:
         readIndex_.fetch_add(popSize / sizeof(T));
     }
     /**
-    * @brief Get used size of block buffer
-    * @return size_t: used size of block buffer
-    */
+     * @brief Get used size of block buffer
+     * @return size_t: used size of block buffer
+     */
     size_t GetUsedSize()
     {
         size_t readIndex = readIndex_.load(std::memory_order_relaxed);
@@ -247,15 +249,15 @@ public:
 
 private:
     /**
-    * @brief Use MSPROF_REPORT_DATA_MAGIC_NUM head to check data is available
-    * @param [in] startIndex: start index of data
-    * @param [in] endIndex: end index of data
-    * @return true: available, false: unavailable
-    */
+     * @brief Use MSPROF_REPORT_DATA_MAGIC_NUM head to check data is available
+     * @param [in] startIndex: start index of data
+     * @param [in] endIndex: end index of data
+     * @return true: available, false: unavailable
+     */
     bool IsAvail(const size_t startIndex, const size_t endIndex) const
     {
         for (size_t i = startIndex; i < endIndex; i++) {
-            if (*(reinterpret_cast<uint16_t *>(dataBuffer_ + i)) != MSPROF_REPORT_DATA_MAGIC_NUM) {
+            if (*(reinterpret_cast<uint16_t*>(dataBuffer_ + i)) != MSPROF_REPORT_DATA_MAGIC_NUM) {
                 return false;
             }
         }
@@ -273,11 +275,11 @@ private:
     volatile bool isInited_;
     std::atomic<bool> cycleOverflowLogged_;
     std::string name_;
-    T *dataBuffer_;
+    T* dataBuffer_;
 };
-}
-}
-}
-}
+} // namespace queue
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

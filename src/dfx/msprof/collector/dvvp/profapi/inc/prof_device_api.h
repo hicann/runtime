@@ -19,17 +19,17 @@ class ProfDevApi : public analysis::dvvp::common::singleton::Singleton<ProfDevAp
 public:
     ProfDevApi();
     ~ProfDevApi() override;
-    int32_t ProfInit(uint32_t dataType, void *data, uint32_t dataLen);
+    int32_t ProfInit(uint32_t dataType, void* data, uint32_t dataLen);
     int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
     int32_t ProfFinalize();
-    uint64_t ProfStr2Id(const char *hashInfo, size_t length);
-    int32_t ProfReportAdditionalInfo(uint32_t agingFlag, const void *data, uint32_t length);
-    int32_t ProfReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length);
+    uint64_t ProfStr2Id(const char* hashInfo, size_t length);
+    int32_t ProfReportAdditionalInfo(uint32_t agingFlag, const void* data, uint32_t length);
+    int32_t ProfReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length);
     size_t ProfGetBatchReportMaxSize(uint32_t type);
 
 private:
-    void *libHandle_{nullptr};
-    std::map<std::string, void *> funcMap_;
+    void* libHandle_{nullptr};
+    std::map<std::string, void*> funcMap_;
 };
-}
+} // namespace ProfAPI
 #endif

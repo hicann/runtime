@@ -50,7 +50,7 @@ unsigned long long Utils::GetClockRealtime()
     (void)memset_s(&now, sizeof(now), 0, sizeof(now));
     (void)clock_gettime(CLOCK_REALTIME, &now);
     return (static_cast<unsigned long long>(now.tv_sec) * CHANGE_FROM_S_TO_NS) +
-        static_cast<unsigned long long>(now.tv_nsec);
+           static_cast<unsigned long long>(now.tv_nsec);
 #endif
 }
 
@@ -58,7 +58,7 @@ unsigned long long Utils::GetClockMonotonicRaw()
 {
     OsalTimespec now = OsalGetTickCount();
     return (static_cast<unsigned long long>(now.tv_sec) * CHANGE_FROM_S_TO_NS) +
-        static_cast<unsigned long long>(now.tv_nsec);
+           static_cast<unsigned long long>(now.tv_nsec);
 }
 
 unsigned long long Utils::GetCPUCycleCounter()
@@ -66,15 +66,15 @@ unsigned long long Utils::GetCPUCycleCounter()
     unsigned long long cycles;
 #ifndef CPU_CYCLE_NO_SUPPORT
 #if defined(__aarch64__)
-    asm volatile("mrs %0, cntvct_el0" : "=r" (cycles));
+    asm volatile("mrs %0, cntvct_el0" : "=r"(cycles));
 #elif defined(__x86_64__)
-    const int32_t uint32Bits = 32;  // 32 is uint bit count
+    const int32_t uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
     cycles = (static_cast<unsigned long long>(lo)) | ((static_cast<unsigned long long>(hi)) << uint32Bits);
 #elif defined(__arm__) && !defined(PROF_LITE)
-    const int32_t uint32Bits = 32;  // 32 is uint bit count
+    const int32_t uint32Bits = 32; // 32 is uint bit count
     uint32_t hi = 0;
     uint32_t lo = 0;
     asm volatile("mrrc p15, 1, %0, %1, c14" : "=r"(lo), "=r"(hi));
@@ -88,7 +88,7 @@ unsigned long long Utils::GetCPUCycleCounter()
     return cycles;
 }
 
-int64_t Utils::GetFileSize(const std::string &path)
+int64_t Utils::GetFileSize(const std::string& path)
 {
     uint64_t size = 0;
 
@@ -100,7 +100,7 @@ int64_t Utils::GetFileSize(const std::string &path)
     return static_cast<int64_t>(size);
 }
 
-int32_t Utils::GetVolumeSize(const std::string &path, unsigned long long &size, VolumeSize sizeType)
+int32_t Utils::GetVolumeSize(const std::string& path, unsigned long long& size, VolumeSize sizeType)
 {
     OsalDiskSize diskSize;
     int32_t ret = OsalGetDiskFreeSpace(path.c_str(), &diskSize);
@@ -126,7 +126,7 @@ int32_t Utils::GetVolumeSize(const std::string &path, unsigned long long &size, 
     return ret;
 }
 
-bool Utils::IsDir(const std::string &path)
+bool Utils::IsDir(const std::string& path)
 {
     if (path.length() == 0) {
         return false;
@@ -139,7 +139,7 @@ bool Utils::IsDir(const std::string &path)
     return true;
 }
 
-bool Utils::IsAllDigit(const std::string &digitStr)
+bool Utils::IsAllDigit(const std::string& digitStr)
 {
     if (digitStr.empty()) {
         return false;
@@ -152,7 +152,7 @@ bool Utils::IsAllDigit(const std::string &digitStr)
     return true;
 }
 
-bool Utils::IsDirAccessible(const std::string &path)
+bool Utils::IsDirAccessible(const std::string& path)
 {
     if (!IsDir(path)) {
         MSPROF_LOGW("Path %s is not a dir", path.c_str());
@@ -165,7 +165,7 @@ bool Utils::IsDirAccessible(const std::string &path)
     return false;
 }
 
-bool Utils::IsFileExist(const std::string &path)
+bool Utils::IsFileExist(const std::string& path)
 {
     if (path.empty()) {
         return false;
@@ -178,10 +178,8 @@ bool Utils::IsFileExist(const std::string &path)
     return false;
 }
 
-std::vector<std::string> Utils::Split(const std::string &input_str,
-                                      bool filter_out_enabled,
-                                      const std::string &filter_out,
-                                      const std::string &pattern)
+std::vector<std::string> Utils::Split(
+    const std::string& input_str, bool filter_out_enabled, const std::string& filter_out, const std::string& pattern)
 {
     std::string::size_type pos;
     std::vector<std::string> res;
@@ -211,9 +209,7 @@ std::vector<std::string> Utils::Split(const std::string &input_str,
     return res;
 }
 
-int32_t Utils::RelativePath(const std::string &path,
-                        const std::string &dir,
-                        std::string &relativePath)
+int32_t Utils::RelativePath(const std::string& path, const std::string& dir, std::string& relativePath)
 {
     const size_t pos = path.find(dir);
     if (pos == std::string::npos) {
@@ -227,12 +223,12 @@ int32_t Utils::RelativePath(const std::string &path,
 }
 
 #if (defined(linux) || defined(__linux__))
-std::string Utils::DirName(const std::string &path)
+std::string Utils::DirName(const std::string& path)
 {
     std::string result;
-    char *pathc = MSVP_STRDUP(path.c_str());
+    char* pathc = MSVP_STRDUP(path.c_str());
     if (pathc != nullptr) {
-        char *dirc = OsalDirName(pathc);
+        char* dirc = OsalDirName(pathc);
         if (dirc != nullptr) {
             result = dirc;
         }
@@ -242,7 +238,7 @@ std::string Utils::DirName(const std::string &path)
     return result;
 }
 #else
-std::string Utils::DirName(const std::string &path)
+std::string Utils::DirName(const std::string& path)
 {
     std::string result;
     std::string filePath(path);
@@ -255,12 +251,12 @@ std::string Utils::DirName(const std::string &path)
 #endif
 
 #if (defined(linux) || defined(__linux__))
-std::string Utils::BaseName(const std::string &path)
+std::string Utils::BaseName(const std::string& path)
 {
     std::string result;
-    char *pathc = MSVP_STRDUP(path.c_str());
+    char* pathc = MSVP_STRDUP(path.c_str());
     if (pathc != nullptr) {
-        char *basec = OsalBaseName(pathc);
+        char* basec = OsalBaseName(pathc);
         if (basec != nullptr) {
             result = basec;
         }
@@ -270,7 +266,7 @@ std::string Utils::BaseName(const std::string &path)
     return result;
 }
 #else
-std::string Utils::BaseName(const std::string &path)
+std::string Utils::BaseName(const std::string& path)
 {
     std::string result;
     std::string filePath(path);
@@ -282,14 +278,14 @@ std::string Utils::BaseName(const std::string &path)
 }
 #endif
 
-int32_t Utils::SplitPath(const std::string &path, std::string &dir, std::string &base)
+int32_t Utils::SplitPath(const std::string& path, std::string& dir, std::string& base)
 {
     int32_t ret = PROFILING_FAILED;
 
-    char *dirc = nullptr;
-    char *basec = nullptr;
-    char *bname = nullptr;
-    char *dname = nullptr;
+    char* dirc = nullptr;
+    char* basec = nullptr;
+    char* bname = nullptr;
+    char* dname = nullptr;
 
     dirc = MSVP_STRDUP(path.c_str());
     basec = MSVP_STRDUP(path.c_str());
@@ -321,7 +317,7 @@ int32_t Utils::SplitPath(const std::string &path, std::string &dir, std::string 
 }
 
 #if (defined(linux) || defined(__linux__))
-int32_t Utils::CreateDir(const std::string &path)
+int32_t Utils::CreateDir(const std::string& path)
 {
     std::string curr = path;
 
@@ -346,7 +342,7 @@ int32_t Utils::CreateDir(const std::string &path)
         }
     }
 
-    const OsalMode defaultFileMode = static_cast<OsalMode>(0750);  // 0750 means xwrx-r
+    const OsalMode defaultFileMode = static_cast<OsalMode>(0750); // 0750 means xwrx-r
     MSPROF_LOGI("CreateDir dir %s with 750", BaseName(path).c_str());
     if ((OsalMkdir(path.c_str(), defaultFileMode) != OSAL_EN_OK) && (errno != EEXIST)) {
         return PROFILING_FAILED;
@@ -355,13 +351,14 @@ int32_t Utils::CreateDir(const std::string &path)
     if (OsalChmod(path.c_str(), defaultFileMode) != OSAL_EN_OK) {
         MSPROF_LOGW("Chmod : %s unsuccessfully", BaseName(path).c_str());
     }
-    MSPROF_LOGI("Success to mkdir, FilePath : %s, FileMode : %o",
-                BaseName(path).c_str(), static_cast<int32_t>(defaultFileMode));
+    MSPROF_LOGI(
+        "Success to mkdir, FilePath : %s, FileMode : %o", BaseName(path).c_str(),
+        static_cast<int32_t>(defaultFileMode));
     return PROFILING_SUCCESS;
 }
 
 #else
-int32_t Utils::CreateDir(const std::string &path)
+int32_t Utils::CreateDir(const std::string& path)
 {
     std::string curr = path;
     if (curr.empty()) {
@@ -371,11 +368,12 @@ int32_t Utils::CreateDir(const std::string &path)
         MSPROF_LOGD("The file already exists, %s", BaseName(path).c_str());
         return PROFILING_SUCCESS;
     }
-    const OsalMode defaultFileMode = (OsalMode)0750;  // 0750 means xwrx-r
+    const OsalMode defaultFileMode = (OsalMode)0750; // 0750 means xwrx-r
     if ((OsalMkdir(path.c_str(), defaultFileMode) != OSAL_EN_OK) && (errno != EEXIST)) {
         char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
-        MSPROF_LOGE("Failed to mkdir, FilePath : %s, FileMode : %o, ErrorCode : %d, ERRORInfo : %s",
-            BaseName(path).c_str(), static_cast<int32_t>(defaultFileMode), OsalGetErrorCode(),
+        MSPROF_LOGE(
+            "Failed to mkdir, FilePath : %s, FileMode : %o, ErrorCode : %d, ERRORInfo : %s", BaseName(path).c_str(),
+            static_cast<int32_t>(defaultFileMode), OsalGetErrorCode(),
             OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
         return PROFILING_FAILED;
     }
@@ -383,7 +381,7 @@ int32_t Utils::CreateDir(const std::string &path)
 }
 #endif
 
-void Utils::RemoveDir(const std::string &dir, bool rmTopDir)
+void Utils::RemoveDir(const std::string& dir, bool rmTopDir)
 {
     if ((dir.empty()) || (dir.compare("/")) == 0) {
         MSPROF_LOGE("empty compare failed.");
@@ -392,9 +390,10 @@ void Utils::RemoveDir(const std::string &dir, bool rmTopDir)
     MSPROF_LOGI("RemoveDir dir %s", BaseName(dir).c_str());
 
     if (!rmTopDir) {
-        OsalDirent **nameList = nullptr;
+        OsalDirent** nameList = nullptr;
         const int32_t count = OsalScandir(dir.c_str(), &nameList, nullptr, nullptr);
-        FUNRET_CHECK_EXPR_ACTION_LOGW(count == OSAL_EN_ERROR || count == OSAL_EN_INVALID_PARAM, return,
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            count == OSAL_EN_ERROR || count == OSAL_EN_INVALID_PARAM, return,
             "An anomaly was detected when the OsalScandir function processes %s with return code %d.",
             BaseName(dir).c_str(), OsalGetErrorCode());
 
@@ -418,16 +417,17 @@ void Utils::RemoveDir(const std::string &dir, bool rmTopDir)
 
         OsalScandirFree(nameList, count);
     } else {
-        FUNRET_CHECK_EXPR_ACTION_LOGW(OsalRmdir(dir.c_str()) != OSAL_EN_OK, return,
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            OsalRmdir(dir.c_str()) != OSAL_EN_OK, return,
             "An anomaly was detected when the OsalRmdir function processes %s with return code %d.",
             BaseName(dir).c_str(), OsalGetErrorCode());
     }
 }
 
-bool Utils::IsSoftLink(const std::string &path)
+bool Utils::IsSoftLink(const std::string& path)
 {
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
-    return false;   // not soft-link
+    return false; // not soft-link
 #else
     struct stat buf1;
     int32_t ret = stat(path.c_str(), &buf1);
@@ -444,14 +444,14 @@ bool Utils::IsSoftLink(const std::string &path)
     }
 
     if (buf1.st_ino != buf2.st_ino) {
-        return true;     // soft-link
+        return true; // soft-link
     }
 
-    return false;   // not soft-link
+    return false; // not soft-link
 #endif
 }
 
-std::string Utils::CanonicalizePath(const std::string &path)
+std::string Utils::CanonicalizePath(const std::string& path)
 {
     std::string resolvedPath;
     std::string tmpPath = IdeReplaceWaveWithHomedir(path);
@@ -459,43 +459,40 @@ std::string Utils::CanonicalizePath(const std::string &path)
         return "";
     }
 
-    char realPath[OSAL_MAX_PATH] = { 0 };
+    char realPath[OSAL_MAX_PATH] = {0};
     int32_t ret = OsalRealPath(tmpPath.c_str(), realPath, OSAL_MAX_PATH);
     if (ret == OSAL_EN_OK) {
         MSPROF_LOGD("OsalRealPath ret=%d.", ret);
         resolvedPath = realPath;
     }
-    MSPROF_LOGD("Input path:%s, canonicalized path:%s",
-                BaseName(tmpPath).c_str(), BaseName(resolvedPath).c_str());
+    MSPROF_LOGD("Input path:%s, canonicalized path:%s", BaseName(tmpPath).c_str(), BaseName(resolvedPath).c_str());
 
     return resolvedPath;
 }
 
-int32_t Utils::ExecCmd(const ExecCmdParams &execCmdParams,
-    const std::vector<std::string> &argv,
-    const std::vector<std::string> &envp,
-    int32_t &exitCodeP,
-    OsalProcess &childProcess)
+int32_t Utils::ExecCmd(
+    const ExecCmdParams& execCmdParams, const std::vector<std::string>& argv, const std::vector<std::string>& envp,
+    int32_t& exitCodeP, OsalProcess& childProcess)
 {
     int32_t ret = PROFILING_FAILED;
-    const std::string &cmd = execCmdParams.cmd;
+    const std::string& cmd = execCmdParams.cmd;
     bool async = execCmdParams.async;
     std::string stdoutRedirectFile = execCmdParams.stdoutRedirectFile;
-    constexpr int32_t maxArgvEnvSize = (1024 * 1024);  // 1024 * 1024 means 1mb
+    constexpr int32_t maxArgvEnvSize = (1024 * 1024); // 1024 * 1024 means 1mb
     if (argv.size() > maxArgvEnvSize || envp.size() > maxArgvEnvSize) {
         MSPROF_LOGE("invalid argv or envp size");
         return ret;
     }
     UtilsStringBuilder<std::string> builder;
     std::string argsStr = builder.Join(argv, " ");
-    MSPROF_LOGI("Execute cmd:\"%s %s\", stdoutRedirectFile=%s",
-                cmd.c_str(), argsStr.c_str(), stdoutRedirectFile.c_str());
+    MSPROF_LOGI(
+        "Execute cmd:\"%s %s\", stdoutRedirectFile=%s", cmd.c_str(), argsStr.c_str(), stdoutRedirectFile.c_str());
 
     do {
         uint32_t ii = 0;
         const int32_t reserveArgvLen = 2;
-        SHARED_PTR_ALIA<CHAR_PTR> argvArray(new(std::nothrow) CHAR_PTR[argv.size() + reserveArgvLen],
-                                            std::default_delete<CHAR_PTR[]>());
+        SHARED_PTR_ALIA<CHAR_PTR> argvArray(
+            new (std::nothrow) CHAR_PTR[argv.size() + reserveArgvLen], std::default_delete<CHAR_PTR[]>());
         FUNRET_CHECK_NULL_PTR(argvArray, return PROFILING_FAILED);
         argvArray.get()[0] = const_cast<CHAR_PTR>(cmd.c_str());
         for (ii = 0; ii < static_cast<uint32_t>(argv.size()); ++ii) {
@@ -503,15 +500,16 @@ int32_t Utils::ExecCmd(const ExecCmdParams &execCmdParams,
         }
         argvArray.get()[ii + 1] = nullptr;
 
-        SHARED_PTR_ALIA<CHAR_PTR> envpArray(new(std::nothrow) CHAR_PTR[envp.size() + 1],
-                                            std::default_delete<CHAR_PTR[]>());
+        SHARED_PTR_ALIA<CHAR_PTR> envpArray(
+            new (std::nothrow) CHAR_PTR[envp.size() + 1], std::default_delete<CHAR_PTR[]>());
         FUNRET_CHECK_NULL_PTR(envpArray, return PROFILING_FAILED);
         for (ii = 0; ii < static_cast<uint32_t>(envp.size()); ++ii) {
             envpArray.get()[ii] = const_cast<CHAR_PTR>(envp[ii].c_str());
         }
         envpArray.get()[ii] = nullptr;
-        ExecCmdArgv execCmdArgv(argvArray.get(), static_cast<uint32_t>(argv.size() + reserveArgvLen),
-            envpArray.get(), static_cast<uint32_t>(envp.size()));
+        ExecCmdArgv execCmdArgv(
+            argvArray.get(), static_cast<uint32_t>(argv.size() + reserveArgvLen), envpArray.get(),
+            static_cast<uint32_t>(envp.size()));
         if (async) {
             ret = ExecCmdCAsync(execCmdArgv, execCmdParams, childProcess);
         } else {
@@ -521,14 +519,14 @@ int32_t Utils::ExecCmd(const ExecCmdParams &execCmdParams,
     return ret;
 }
 
-int32_t Utils::ChangeWorkDir(const std::string &fileName)
+int32_t Utils::ChangeWorkDir(const std::string& fileName)
 {
     if (fileName.empty()) {
         return PROFILING_FAILED;
     }
     // change work dir
-    char *dName = nullptr;
-    char *dirc = nullptr;
+    char* dName = nullptr;
+    char* dirc = nullptr;
     dirc = MSVP_STRDUP(fileName.c_str());
     if (dirc == nullptr) {
         return PROFILING_FAILED;
@@ -544,11 +542,8 @@ int32_t Utils::ChangeWorkDir(const std::string &fileName)
     return PROFILING_SUCCESS;
 }
 
-void Utils::SetArgEnv(CHAR_PTR_CONST argv[],
-                      const int32_t argvCount,
-                      CHAR_PTR_CONST envp[],
-                      const int32_t envCount,
-                      OsalArgvEnv &argvEnv)
+void Utils::SetArgEnv(
+    CHAR_PTR_CONST argv[], const int32_t argvCount, CHAR_PTR_CONST envp[], const int32_t envCount, OsalArgvEnv& argvEnv)
 {
     if (argv != nullptr && envp != nullptr) {
         (void)memset_s(&argvEnv, sizeof(OsalArgvEnv), 0, sizeof(OsalArgvEnv));
@@ -560,10 +555,8 @@ void Utils::SetArgEnv(CHAR_PTR_CONST argv[],
     }
 }
 
-int32_t Utils::DoCreateCmdProcess(const std::string &stdoutRedirectFile,
-                              const std::string &fileName,
-                              const OsalArgvEnv &argvEnv,
-                              OsalProcess &tid)
+int32_t Utils::DoCreateCmdProcess(
+    const std::string& stdoutRedirectFile, const std::string& fileName, const OsalArgvEnv& argvEnv, OsalProcess& tid)
 {
     int32_t ret = 0;
     if (stdoutRedirectFile.empty()) {
@@ -577,12 +570,12 @@ int32_t Utils::DoCreateCmdProcess(const std::string &stdoutRedirectFile,
     return PROFILING_SUCCESS;
 }
 
-int32_t Utils::ExecCmdC(const ExecCmdArgv &execCmdArgv, const ExecCmdParams &execCmdParams, int32_t &exitCodeP)
+int32_t Utils::ExecCmdC(const ExecCmdArgv& execCmdArgv, const ExecCmdParams& execCmdParams, int32_t& exitCodeP)
 {
     std::string filename = execCmdParams.cmd;
-    CHAR_PTR_CONST *argv = execCmdArgv.argv;
+    CHAR_PTR_CONST* argv = execCmdArgv.argv;
     const int32_t argvCount = execCmdArgv.argvCount;
-    CHAR_PTR_CONST *envp = execCmdArgv.envp;
+    CHAR_PTR_CONST* envp = execCmdArgv.envp;
     const int32_t envCount = execCmdArgv.envCount;
     std::string stdoutRedirectFile = execCmdParams.stdoutRedirectFile;
     constexpr int32_t invalidExitCode = -1;
@@ -614,13 +607,13 @@ int32_t Utils::ExecCmdC(const ExecCmdArgv &execCmdArgv, const ExecCmdParams &exe
     return ret;
 }
 
-int32_t Utils::ExecCmdCAsync(const ExecCmdArgv &execCmdArgv, const ExecCmdParams &execCmdParams,
-                         OsalProcess &childProcess)
+int32_t Utils::ExecCmdCAsync(
+    const ExecCmdArgv& execCmdArgv, const ExecCmdParams& execCmdParams, OsalProcess& childProcess)
 {
     std::string filename = execCmdParams.cmd;
-    CHAR_PTR_CONST *argv = execCmdArgv.argv;
+    CHAR_PTR_CONST* argv = execCmdArgv.argv;
     const int32_t argvCount = execCmdArgv.argvCount;
-    CHAR_PTR_CONST *envp = execCmdArgv.envp;
+    CHAR_PTR_CONST* envp = execCmdArgv.envp;
     const int32_t envCount = execCmdArgv.envCount;
     std::string stdoutRedirectFile = execCmdParams.stdoutRedirectFile;
 
@@ -639,7 +632,7 @@ int32_t Utils::ExecCmdCAsync(const ExecCmdArgv &execCmdArgv, const ExecCmdParams
     return PROFILING_SUCCESS;
 }
 
-int32_t Utils::WaitProcess(OsalProcess process, bool &isExited, int32_t &exitCode, bool hang /* = true */)
+int32_t Utils::WaitProcess(OsalProcess process, bool& isExited, int32_t& exitCode, bool hang /* = true */)
 {
     isExited = false;
     int32_t waitStatus = 0;
@@ -675,7 +668,7 @@ bool Utils::ProcessIsRuning(OsalProcess process)
     return false;
 }
 
-std::string Utils::LeftTrim(const std::string &str, const std::string &trims)
+std::string Utils::LeftTrim(const std::string& str, const std::string& trims)
 {
     if (str.length() > 0) {
         size_t posStr = str.find_first_not_of(trims);
@@ -689,7 +682,7 @@ std::string Utils::LeftTrim(const std::string &str, const std::string &trims)
     return str;
 }
 
-std::string Utils::JoinPath(const std::vector<std::string> &paths)
+std::string Utils::JoinPath(const std::vector<std::string>& paths)
 {
     std::string path;
 
@@ -704,21 +697,21 @@ std::string Utils::JoinPath(const std::vector<std::string> &paths)
     return path;
 }
 
-std::string Utils::ToUpper(const std::string &value)
+std::string Utils::ToUpper(const std::string& value)
 {
     std::string result = value;
-    (void)std::transform (result.begin(), result.end(), result.begin(), static_cast<int32_t(*)(int32_t)>(std::toupper));
+    (void)std::transform(result.begin(), result.end(), result.begin(), static_cast<int32_t (*)(int32_t)>(std::toupper));
     return result;
 }
 
-std::string Utils::ToLower(const std::string &value)
+std::string Utils::ToLower(const std::string& value)
 {
     std::string result = value;
-    (void)std::transform(result.begin(), result.end(), result.begin(), static_cast<int32_t(*)(int32_t)>(std::tolower));
+    (void)std::transform(result.begin(), result.end(), result.begin(), static_cast<int32_t (*)(int32_t)>(std::tolower));
     return result;
 }
 
-std::string Utils::Trim(const std::string &value)
+std::string Utils::Trim(const std::string& value)
 {
     std::string result = value;
     const size_t pos = result.find_first_not_of(" ");
@@ -739,13 +732,13 @@ int32_t Utils::UsleepInterupt(unsigned long usec)
     return PROFILING_SUCCESS;
 }
 
-void Utils::GetFiles(const std::string &dir, bool isRecur, std::vector<std::string> &files, uint32_t depth)
+void Utils::GetFiles(const std::string& dir, bool isRecur, std::vector<std::string>& files, uint32_t depth)
 {
     if (dir.empty() || depth > MAX_FILE_DEPTH) {
         return;
     }
 
-    OsalDirent **dirNameList = nullptr;
+    OsalDirent** dirNameList = nullptr;
     int32_t count = OsalScandir(dir.c_str(), &dirNameList, nullptr, nullptr);
     if (count == OSAL_EN_ERROR || count == OSAL_EN_INVALID_PARAM) {
         return;
@@ -776,13 +769,13 @@ void Utils::GetFiles(const std::string &dir, bool isRecur, std::vector<std::stri
     OsalScandirFree(dirNameList, count);
 }
 
-void Utils::GetChildDirs(const std::string &dir, bool isRecur, std::vector<std::string> &childDirs, uint32_t depth)
+void Utils::GetChildDirs(const std::string& dir, bool isRecur, std::vector<std::string>& childDirs, uint32_t depth)
 {
     if (dir.empty() || depth > MAX_FILE_DEPTH) {
         return;
     }
 
-    OsalDirent **nameList = nullptr;
+    OsalDirent** nameList = nullptr;
     const int32_t count = OsalScandir(dir.c_str(), &nameList, nullptr, nullptr);
     if (count == OSAL_EN_ERROR || count == OSAL_EN_INVALID_PARAM) {
         return;
@@ -810,12 +803,12 @@ void Utils::GetChildDirs(const std::string &dir, bool isRecur, std::vector<std::
     OsalScandirFree(nameList, count);
 }
 
-void Utils::GetChildFilenames(const std::string &dir, std::vector<std::string> &files)
+void Utils::GetChildFilenames(const std::string& dir, std::vector<std::string>& files)
 {
     if (dir.empty()) {
         return;
     }
-    OsalDirent **dirNameList = nullptr;
+    OsalDirent** dirNameList = nullptr;
     int32_t count = OsalScandir(dir.c_str(), &dirNameList, nullptr, nullptr);
     if (count == OSAL_EN_INVALID_PARAM || count == OSAL_EN_ERROR) {
         return;
@@ -836,10 +829,9 @@ void Utils::GetChildFilenames(const std::string &dir, std::vector<std::string> &
     OsalScandirFree(dirNameList, count);
 }
 
-std::string Utils::TimestampToTime(const std::string &timestamp, int32_t unit /* = 1 */)
+std::string Utils::TimestampToTime(const std::string& timestamp, int32_t unit /* = 1 */)
 {
-    if (timestamp.compare("") == 0 || timestamp.find_first_not_of("1234567890") != std::string::npos
-        || unit == 0) {
+    if (timestamp.compare("") == 0 || timestamp.find_first_not_of("1234567890") != std::string::npos || unit == 0) {
         return "0";
     }
     time_t secTime;
@@ -864,7 +856,7 @@ std::string Utils::TimestampToTime(const std::string &timestamp, int32_t unit /*
     }
 #endif
     const int32_t timeLen = 32;
-    char timeStr[timeLen] = { 0 };
+    char timeStr[timeLen] = {0};
     (void)strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &ttime);
     timeString = std::string(timeStr);
 
@@ -886,7 +878,7 @@ std::string Utils::HandleEnvString(CONST_CHAR_PTR envPtr)
     std::lock_guard<std::mutex> lock(g_envMtx);
 
     constexpr int32_t envValMaxLen = 1024 * 8 + 1; // 1024 * 8 : 8k
-    char val[envValMaxLen] = { 0 };
+    char val[envValMaxLen] = {0};
 
     size_t lenOfPtr = strlen(envPtr);
     size_t envLen = 0;
@@ -907,7 +899,7 @@ std::string Utils::HandleEnvString(CONST_CHAR_PTR envPtr)
     return std::string(val);
 }
 
-std::string Utils::RelativePathToAbsolutePath(const std::string &path)
+std::string Utils::RelativePathToAbsolutePath(const std::string& path)
 {
     if (path.empty()) {
         return "";
@@ -924,7 +916,7 @@ std::string Utils::RelativePathToAbsolutePath(const std::string &path)
 std::string Utils::GetCwdString(void)
 {
     constexpr int32_t cwdValMaxLen = 1024 * 8; // 1024 * 8 : 8k
-    char val[cwdValMaxLen + 1] = { 0 };
+    char val[cwdValMaxLen + 1] = {0};
     (void)memset_s(val, cwdValMaxLen + 1, 0, cwdValMaxLen + 1);
     int32_t ret = OsalGetCwd(val, cwdValMaxLen);
     if (ret == OSAL_EN_OK) {
@@ -933,42 +925,43 @@ std::string Utils::GetCwdString(void)
     return "";
 }
 
-bool Utils::CheckStringIsUnsignedIntNum(const std::string &numberStr)
+bool Utils::CheckStringIsUnsignedIntNum(const std::string& numberStr)
 {
-    const std::string maxUintValStr = std::to_string(std::numeric_limits<uint32_t>::max());  // max uint32 string
+    const std::string maxUintValStr = std::to_string(std::numeric_limits<uint32_t>::max()); // max uint32 string
     return CheckStringNumRange(numberStr, maxUintValStr);
 }
 
-bool Utils::CheckStringIsNonNegativeIntNum(const std::string &numberStr)
+bool Utils::CheckStringIsNonNegativeIntNum(const std::string& numberStr)
 {
-    const std::string maxIntValStr = std::to_string(std::numeric_limits<int32_t>::max());  // max int32 string
+    const std::string maxIntValStr = std::to_string(std::numeric_limits<int32_t>::max()); // max int32 string
     return CheckStringNumRange(numberStr, maxIntValStr);
 }
 
-bool Utils::CheckStringNumRange(const std::string &numberStr, const std::string &target)
+bool Utils::CheckStringNumRange(const std::string& numberStr, const std::string& target)
 {
     if (numberStr.empty()) {
         return false;
     }
 
-    if (numberStr.length() > target.length()) {  // over max int value
+    if (numberStr.length() > target.length()) { // over max int value
         MSPROF_LOGE("[Utils::CheckStringIsNonNegativeIntNum]numberStr(%s) is too long", numberStr.c_str());
         return false;
     }
 
     for (uint32_t i = 0; i < numberStr.length(); ++i) {
-        if (numberStr[i] < '0' || numberStr[i] > '9') {  // numberStr must be pure number
-            MSPROF_LOGE("[Utils::CheckStringIsNonNegativeIntNum]numberStr(%s) is not a positive integer",
-                numberStr.c_str());
+        if (numberStr[i] < '0' || numberStr[i] > '9') { // numberStr must be pure number
+            MSPROF_LOGE(
+                "[Utils::CheckStringIsNonNegativeIntNum]numberStr(%s) is not a positive integer", numberStr.c_str());
             return false;
         }
     }
 
-    if (numberStr.length() == target.length()) {  // numberStr len equal max int val length
+    if (numberStr.length() == target.length()) { // numberStr len equal max int val length
         for (uint32_t i = 0; i < numberStr.length(); ++i) {
             if (numberStr[i] > target[i]) {
-                MSPROF_LOGE("[Utils::CheckStringIsNonNegativeIntNum]numberStr(%s) is over than %s",
-                    numberStr.c_str(), target.c_str());
+                MSPROF_LOGE(
+                    "[Utils::CheckStringIsNonNegativeIntNum]numberStr(%s) is over than %s", numberStr.c_str(),
+                    target.c_str());
                 return false;
             } else if (numberStr[i] == target[i]) {
                 continue;
@@ -986,7 +979,7 @@ std::string Utils::IdeGetHomedir()
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
     std::string homedir;
 #else
-    struct passwd *pw = getpwuid(getuid());
+    struct passwd* pw = getpwuid(getuid());
     std::string homedir(pw != nullptr ? pw->pw_dir : "");
 #endif
     if (!homedir.empty() && homedir[homedir.size() - 1] == '/' && homedir.size() > 1) {
@@ -995,7 +988,7 @@ std::string Utils::IdeGetHomedir()
     return homedir;
 }
 
-std::string Utils::IdeReplaceWaveWithHomedir(const std::string &path)
+std::string Utils::IdeReplaceWaveWithHomedir(const std::string& path)
 {
     if (path.size() < 2) { // 2 : path begin with ~/, so size >= 2
         return std::string(path);
@@ -1032,7 +1025,7 @@ void Utils::EnsureEndsInSlash(std::string& path)
  */
 void* Utils::ProfMalloc(size_t size)
 {
-    void *val = nullptr;
+    void* val = nullptr;
     errno_t err;
 
     if (size == 0) {
@@ -1059,7 +1052,7 @@ void* Utils::ProfMalloc(size_t size)
  * @param ptr: the memory to free
  * @return
  */
-void Utils::ProfFree(VOID_PTR &ptr)
+void Utils::ProfFree(VOID_PTR& ptr)
 {
     if (ptr != nullptr) {
         free(ptr);
@@ -1067,13 +1060,13 @@ void Utils::ProfFree(VOID_PTR &ptr)
     }
 }
 
-std::string Utils::GetCoresStr(const std::vector<int32_t> &cores, const std::string &separator)
+std::string Utils::GetCoresStr(const std::vector<int32_t>& cores, const std::string& separator)
 {
     analysis::dvvp::common::utils::UtilsStringBuilder<int32_t> builder;
     return builder.Join(cores, separator);
 }
 
-std::string Utils::GetEventsStr(const std::vector<std::string> &events, const std::string &separator)
+std::string Utils::GetEventsStr(const std::vector<std::string>& events, const std::string& separator)
 {
     analysis::dvvp::common::utils::UtilsStringBuilder<std::string> builder;
     return builder.Join(events, separator);
@@ -1106,7 +1099,7 @@ std::string Utils::GetSelfPath()
     curPath.get()[len] = '\0';
     return std::string(curPath.get());
 #else
-    TCHAR path[MAX_PATH] = { 0 };
+    TCHAR path[MAX_PATH] = {0};
     GetModuleFileName(nullptr, path, MAX_PATH);
     std::string result;
 #ifdef UNICODE
@@ -1128,7 +1121,7 @@ std::string Utils::GetSelfPath()
 #endif
 }
 
-std::string Utils::CreateResultPath(const std::string &devId)
+std::string Utils::CreateResultPath(const std::string& devId)
 {
     std::string result;
     const int32_t deviceIdForHost = DEFAULT_HOST_ID;
@@ -1148,7 +1141,7 @@ std::string Utils::CreateResultPath(const std::string &devId)
  * @param [in] pid: pid string
  * @return: 0.. + pid str whose width is 8
  */
-std::string Utils::CreatePidStr(const std::string &pid)
+std::string Utils::CreatePidStr(const std::string& pid)
 {
     if (pid.length() > MAX_PID_LENGTH) {
         MSPROF_LOGE("The length of input pid str is bigger than %d.", MAX_PID_LENGTH);
@@ -1165,11 +1158,11 @@ std::string Utils::CreatePidStr(const std::string &pid)
  * @param [in] index: number to count profiling start times in acl api
  * @return: PROF_taskId_timeStr_(hostPid + hashId)
  */
-std::string Utils::CreateProfDir(uint64_t index, const std::string &title)
+std::string Utils::CreateProfDir(uint64_t index, const std::string& title)
 {
     std::stringstream randStr;
     const int32_t letterNum = 26; // A - Z
-    int32_t randLen = 32; // 32 : the length of the rand str
+    int32_t randLen = 32;         // 32 : the length of the rand str
     srand(static_cast<uint32_t>(time(nullptr)));
     randStr.str("");
     for (int32_t idx = 0; idx < randLen; idx++) {
@@ -1177,11 +1170,10 @@ std::string Utils::CreateProfDir(uint64_t index, const std::string &title)
     }
     auto timeSinceEpoch = std::chrono::steady_clock::now().time_since_epoch();
     size_t hashId = std::hash<std::string>()(
-        randStr.str() +
-        std::to_string(std::chrono::duration_cast<std::chrono::nanoseconds>(timeSinceEpoch).count()) +
+        randStr.str() + std::to_string(std::chrono::duration_cast<std::chrono::nanoseconds>(timeSinceEpoch).count()) +
         std::to_string(analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw()));
     randStr.str("");
-    randLen = 8; // 8 : the length of the rand str
+    randLen = 8;                // 8 : the length of the rand str
     const int32_t hashMod = 18; // change hashId to [A-R]
     for (int32_t idx = 0; idx < randLen; idx++) {
         randStr << static_cast<char>('A' + hashId % hashMod);
@@ -1196,7 +1188,7 @@ std::string Utils::CreateProfDir(uint64_t index, const std::string &title)
  * @param [in] helperPid: progress pid from helper device
  * @return: PROF_taskId_timeStr_(hostPid + devicePid)
  */
-std::string Utils::CreateHelperDir(uint64_t index, const std::string &helperPid)
+std::string Utils::CreateHelperDir(uint64_t index, const std::string& helperPid)
 {
     std::string subPidStr = CreatePidStr(helperPid);
     return CreateProfDirSuffix(index, subPidStr, "PROF_");
@@ -1208,7 +1200,7 @@ std::string Utils::CreateHelperDir(uint64_t index, const std::string &helperPid)
  * @param [in] suffix: sub pid or rand hash str
  * @return: PROF_taskId_timeStr_(hostPid + devicePid)
  */
-std::string Utils::CreateProfDirSuffix(uint64_t index, std::string suffix, const std::string &title)
+std::string Utils::CreateProfDirSuffix(uint64_t index, std::string suffix, const std::string& title)
 {
     // add task id
     std::string result = title;
@@ -1226,8 +1218,9 @@ std::string Utils::CreateProfDirSuffix(uint64_t index, std::string suffix, const
 
     const int32_t timeStrLen = 32;
     char timeStr[timeStrLen] = {0};
-    ret = snprintf_s(timeStr, timeStrLen, timeStrLen - 1, "%04d%02d%02d%02d%02d%02d%03d", sysTime.wYear,
-        sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
+    ret = snprintf_s(
+        timeStr, timeStrLen, timeStrLen - 1, "%04d%02d%02d%02d%02d%02d%03d", sysTime.wYear, sysTime.wMonth,
+        sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
     FUNRET_CHECK_EXPR_LOGW(ret == OSAL_EN_ERROR, "Unable to format time expressions.");
     result = result + timeStr + "_";
 
@@ -1261,39 +1254,35 @@ uint32_t Utils::GenerateSignature(CONST_UINT8_PTR data, uint64_t len)
 
     static const int32_t TABLE_SIZE = 256;
     static const uint32_t SIGNATURE_TABLE[TABLE_SIZE] = {
-        0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB,
-        0x8AD958CF, 0x78B2DBCC, 0x6BE22838, 0x9989AB3B, 0x4D43CFD0, 0xBF284CD3, 0xAC78BF27, 0x5E133C24,
-        0x105EC76F, 0xE235446C, 0xF165B798, 0x030E349B, 0xD7C45070, 0x25AFD373, 0x36FF2087, 0xC494A384,
-        0x9A879FA0, 0x68EC1CA3, 0x7BBCEF57, 0x89D76C54, 0x5D1D08BF, 0xAF768BBC, 0xBC267848, 0x4E4DFB4B,
-        0x20BD8EDE, 0xD2D60DDD, 0xC186FE29, 0x33ED7D2A, 0xE72719C1, 0x154C9AC2, 0x061C6936, 0xF477EA35,
-        0xAA64D611, 0x580F5512, 0x4B5FA6E6, 0xB93425E5, 0x6DFE410E, 0x9F95C20D, 0x8CC531F9, 0x7EAEB2FA,
-        0x30E349B1, 0xC288CAB2, 0xD1D83946, 0x23B3BA45, 0xF779DEAE, 0x05125DAD, 0x1642AE59, 0xE4292D5A,
-        0xBA3A117E, 0x4851927D, 0x5B016189, 0xA96AE28A, 0x7DA08661, 0x8FCB0562, 0x9C9BF696, 0x6EF07595,
-        0x417B1DBC, 0xB3109EBF, 0xA0406D4B, 0x522BEE48, 0x86E18AA3, 0x748A09A0, 0x67DAFA54, 0x95B17957,
-        0xCBA24573, 0x39C9C670, 0x2A993584, 0xD8F2B687, 0x0C38D26C, 0xFE53516F, 0xED03A29B, 0x1F682198,
-        0x5125DAD3, 0xA34E59D0, 0xB01EAA24, 0x42752927, 0x96BF4DCC, 0x64D4CECF, 0x77843D3B, 0x85EFBE38,
-        0xDBFC821C, 0x2997011F, 0x3AC7F2EB, 0xC8AC71E8, 0x1C661503, 0xEE0D9600, 0xFD5D65F4, 0x0F36E6F7,
-        0x61C69362, 0x93AD1061, 0x80FDE395, 0x72966096, 0xA65C047D, 0x5437877E, 0x4767748A, 0xB50CF789,
-        0xEB1FCBAD, 0x197448AE, 0x0A24BB5A, 0xF84F3859, 0x2C855CB2, 0xDEEEDFB1, 0xCDBE2C45, 0x3FD5AF46,
-        0x7198540D, 0x83F3D70E, 0x90A324FA, 0x62C8A7F9, 0xB602C312, 0x44694011, 0x5739B3E5, 0xA55230E6,
-        0xFB410CC2, 0x092A8FC1, 0x1A7A7C35, 0xE811FF36, 0x3CDB9BDD, 0xCEB018DE, 0xDDE0EB2A, 0x2F8B6829,
-        0x82F63B78, 0x709DB87B, 0x63CD4B8F, 0x91A6C88C, 0x456CAC67, 0xB7072F64, 0xA457DC90, 0x563C5F93,
-        0x082F63B7, 0xFA44E0B4, 0xE9141340, 0x1B7F9043, 0xCFB5F4A8, 0x3DDE77AB, 0x2E8E845F, 0xDCE5075C,
-        0x92A8FC17, 0x60C37F14, 0x73938CE0, 0x81F80FE3, 0x55326B08, 0xA759E80B, 0xB4091BFF, 0x466298FC,
-        0x1871A4D8, 0xEA1A27DB, 0xF94AD42F, 0x0B21572C, 0xDFEB33C7, 0x2D80B0C4, 0x3ED04330, 0xCCBBC033,
-        0xA24BB5A6, 0x502036A5, 0x4370C551, 0xB11B4652, 0x65D122B9, 0x97BAA1BA, 0x84EA524E, 0x7681D14D,
-        0x2892ED69, 0xDAF96E6A, 0xC9A99D9E, 0x3BC21E9D, 0xEF087A76, 0x1D63F975, 0x0E330A81, 0xFC588982,
-        0xB21572C9, 0x407EF1CA, 0x532E023E, 0xA145813D, 0x758FE5D6, 0x87E466D5, 0x94B49521, 0x66DF1622,
-        0x38CC2A06, 0xCAA7A905, 0xD9F75AF1, 0x2B9CD9F2, 0xFF56BD19, 0x0D3D3E1A, 0x1E6DCDEE, 0xEC064EED,
-        0xC38D26C4, 0x31E6A5C7, 0x22B65633, 0xD0DDD530, 0x0417B1DB, 0xF67C32D8, 0xE52CC12C, 0x1747422F,
-        0x49547E0B, 0xBB3FFD08, 0xA86F0EFC, 0x5A048DFF, 0x8ECEE914, 0x7CA56A17, 0x6FF599E3, 0x9D9E1AE0,
-        0xD3D3E1AB, 0x21B862A8, 0x32E8915C, 0xC083125F, 0x144976B4, 0xE622F5B7, 0xF5720643, 0x07198540,
-        0x590AB964, 0xAB613A67, 0xB831C993, 0x4A5A4A90, 0x9E902E7B, 0x6CFBAD78, 0x7FAB5E8C, 0x8DC0DD8F,
-        0xE330A81A, 0x115B2B19, 0x020BD8ED, 0xF0605BEE, 0x24AA3F05, 0xD6C1BC06, 0xC5914FF2, 0x37FACCF1,
-        0x69E9F0D5, 0x9B8273D6, 0x88D28022, 0x7AB90321, 0xAE7367CA, 0x5C18E4C9, 0x4F48173D, 0xBD23943E,
-        0xF36E6F75, 0x0105EC76, 0x12551F82, 0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E,
-        0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
-    };
+        0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB, 0x8AD958CF,
+        0x78B2DBCC, 0x6BE22838, 0x9989AB3B, 0x4D43CFD0, 0xBF284CD3, 0xAC78BF27, 0x5E133C24, 0x105EC76F, 0xE235446C,
+        0xF165B798, 0x030E349B, 0xD7C45070, 0x25AFD373, 0x36FF2087, 0xC494A384, 0x9A879FA0, 0x68EC1CA3, 0x7BBCEF57,
+        0x89D76C54, 0x5D1D08BF, 0xAF768BBC, 0xBC267848, 0x4E4DFB4B, 0x20BD8EDE, 0xD2D60DDD, 0xC186FE29, 0x33ED7D2A,
+        0xE72719C1, 0x154C9AC2, 0x061C6936, 0xF477EA35, 0xAA64D611, 0x580F5512, 0x4B5FA6E6, 0xB93425E5, 0x6DFE410E,
+        0x9F95C20D, 0x8CC531F9, 0x7EAEB2FA, 0x30E349B1, 0xC288CAB2, 0xD1D83946, 0x23B3BA45, 0xF779DEAE, 0x05125DAD,
+        0x1642AE59, 0xE4292D5A, 0xBA3A117E, 0x4851927D, 0x5B016189, 0xA96AE28A, 0x7DA08661, 0x8FCB0562, 0x9C9BF696,
+        0x6EF07595, 0x417B1DBC, 0xB3109EBF, 0xA0406D4B, 0x522BEE48, 0x86E18AA3, 0x748A09A0, 0x67DAFA54, 0x95B17957,
+        0xCBA24573, 0x39C9C670, 0x2A993584, 0xD8F2B687, 0x0C38D26C, 0xFE53516F, 0xED03A29B, 0x1F682198, 0x5125DAD3,
+        0xA34E59D0, 0xB01EAA24, 0x42752927, 0x96BF4DCC, 0x64D4CECF, 0x77843D3B, 0x85EFBE38, 0xDBFC821C, 0x2997011F,
+        0x3AC7F2EB, 0xC8AC71E8, 0x1C661503, 0xEE0D9600, 0xFD5D65F4, 0x0F36E6F7, 0x61C69362, 0x93AD1061, 0x80FDE395,
+        0x72966096, 0xA65C047D, 0x5437877E, 0x4767748A, 0xB50CF789, 0xEB1FCBAD, 0x197448AE, 0x0A24BB5A, 0xF84F3859,
+        0x2C855CB2, 0xDEEEDFB1, 0xCDBE2C45, 0x3FD5AF46, 0x7198540D, 0x83F3D70E, 0x90A324FA, 0x62C8A7F9, 0xB602C312,
+        0x44694011, 0x5739B3E5, 0xA55230E6, 0xFB410CC2, 0x092A8FC1, 0x1A7A7C35, 0xE811FF36, 0x3CDB9BDD, 0xCEB018DE,
+        0xDDE0EB2A, 0x2F8B6829, 0x82F63B78, 0x709DB87B, 0x63CD4B8F, 0x91A6C88C, 0x456CAC67, 0xB7072F64, 0xA457DC90,
+        0x563C5F93, 0x082F63B7, 0xFA44E0B4, 0xE9141340, 0x1B7F9043, 0xCFB5F4A8, 0x3DDE77AB, 0x2E8E845F, 0xDCE5075C,
+        0x92A8FC17, 0x60C37F14, 0x73938CE0, 0x81F80FE3, 0x55326B08, 0xA759E80B, 0xB4091BFF, 0x466298FC, 0x1871A4D8,
+        0xEA1A27DB, 0xF94AD42F, 0x0B21572C, 0xDFEB33C7, 0x2D80B0C4, 0x3ED04330, 0xCCBBC033, 0xA24BB5A6, 0x502036A5,
+        0x4370C551, 0xB11B4652, 0x65D122B9, 0x97BAA1BA, 0x84EA524E, 0x7681D14D, 0x2892ED69, 0xDAF96E6A, 0xC9A99D9E,
+        0x3BC21E9D, 0xEF087A76, 0x1D63F975, 0x0E330A81, 0xFC588982, 0xB21572C9, 0x407EF1CA, 0x532E023E, 0xA145813D,
+        0x758FE5D6, 0x87E466D5, 0x94B49521, 0x66DF1622, 0x38CC2A06, 0xCAA7A905, 0xD9F75AF1, 0x2B9CD9F2, 0xFF56BD19,
+        0x0D3D3E1A, 0x1E6DCDEE, 0xEC064EED, 0xC38D26C4, 0x31E6A5C7, 0x22B65633, 0xD0DDD530, 0x0417B1DB, 0xF67C32D8,
+        0xE52CC12C, 0x1747422F, 0x49547E0B, 0xBB3FFD08, 0xA86F0EFC, 0x5A048DFF, 0x8ECEE914, 0x7CA56A17, 0x6FF599E3,
+        0x9D9E1AE0, 0xD3D3E1AB, 0x21B862A8, 0x32E8915C, 0xC083125F, 0x144976B4, 0xE622F5B7, 0xF5720643, 0x07198540,
+        0x590AB964, 0xAB613A67, 0xB831C993, 0x4A5A4A90, 0x9E902E7B, 0x6CFBAD78, 0x7FAB5E8C, 0x8DC0DD8F, 0xE330A81A,
+        0x115B2B19, 0x020BD8ED, 0xF0605BEE, 0x24AA3F05, 0xD6C1BC06, 0xC5914FF2, 0x37FACCF1, 0x69E9F0D5, 0x9B8273D6,
+        0x88D28022, 0x7AB90321, 0xAE7367CA, 0x5C18E4C9, 0x4F48173D, 0xBD23943E, 0xF36E6F75, 0x0105EC76, 0x12551F82,
+        0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E, 0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E,
+        0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351};
 
     static const int32_t OFFSET = 8;
     while (len > 0) {
@@ -1310,12 +1299,9 @@ std::string Utils::ConvertIntToStr(const int32_t interval)
     return Trim(result.str());
 }
 
-int32_t Utils::GetPid()
-{
-    return OsalGetPid();
-}
+int32_t Utils::GetPid() { return OsalGetPid(); }
 
-void Utils::RemoveEndCharacter(std::string &input, const char end)
+void Utils::RemoveEndCharacter(std::string& input, const char end)
 {
     if (input.empty() || input[input.size() - 1] != end) {
         return;
@@ -1358,12 +1344,13 @@ CHAR_PTR Utils::GetErrno()
     return OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STR_LEN);
 }
 
-int32_t Utils::DumpFile(const std::string &output, CONST_CHAR_PTR data, std::size_t length)
+int32_t Utils::DumpFile(const std::string& output, CONST_CHAR_PTR data, std::size_t length)
 {
     int32_t fd = OsalOpen(output.c_str(), O_WRONLY | O_CREAT | O_APPEND, OSAL_IRUSR | OSAL_IWUSR);
     if (fd < 0) {
-        MSPROF_LOGE("Failed to create or open binary file: %s, error info %s.",
-            BaseName(output).c_str(), strerror(OsalGetErrorCode()));
+        MSPROF_LOGE(
+            "Failed to create or open binary file: %s, error info %s.", BaseName(output).c_str(),
+            strerror(OsalGetErrorCode()));
         return PROFILING_FAILED;
     }
     (void)OsalClose(fd);
@@ -1378,12 +1365,12 @@ int32_t Utils::DumpFile(const std::string &output, CONST_CHAR_PTR data, std::siz
     return PROFILING_SUCCESS;
 }
 
-int32_t WriteFile(const std::string &absolutePath, const std::string &recordFile, const std::string &profName)
+int32_t WriteFile(const std::string& absolutePath, const std::string& recordFile, const std::string& profName)
 {
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
     return analysis::dvvp::common::error::PROFILING_SUCCESS;
 #else
-    FILE *file;
+    FILE* file;
 
     if ((file = fopen(absolutePath.c_str(), "a")) == nullptr) {
         MSPROF_LOGE("Failed to open %s", recordFile.c_str());
@@ -1408,7 +1395,7 @@ int32_t WriteFile(const std::string &absolutePath, const std::string &recordFile
 #endif
 }
 
-std::string Utils::GetInfoSuffix(const std::string &fileName)
+std::string Utils::GetInfoSuffix(const std::string& fileName)
 {
     const size_t pos = fileName.find_last_of(".");
     if (pos != std::string::npos) {
@@ -1417,7 +1404,7 @@ std::string Utils::GetInfoSuffix(const std::string &fileName)
     return "";
 }
 
-std::string Utils::GetInfoPrefix(const std::string &fileName)
+std::string Utils::GetInfoPrefix(const std::string& fileName)
 {
     const size_t pos = fileName.find_last_of(".");
     if (pos != std::string::npos) {
@@ -1426,7 +1413,7 @@ std::string Utils::GetInfoPrefix(const std::string &fileName)
     return "";
 }
 
-std::string Utils::PackDotInfo(const std::string &leftPattern, const std::string &rightPattern)
+std::string Utils::PackDotInfo(const std::string& leftPattern, const std::string& rightPattern)
 {
     return leftPattern + "." + rightPattern;
 }
@@ -1435,8 +1422,7 @@ uint64_t Utils::GreenwichToMonotonic(uint64_t inputTime)
 {
     // convert greenwichTime to chrono::system_clock::time_point
     auto greenwichTimePoint = std::chrono::system_clock::time_point(
-        std::chrono::duration_cast<std::chrono::system_clock::duration>(
-        std::chrono::duration<uint64_t>(inputTime)));
+        std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::duration<uint64_t>(inputTime)));
     // convert greenwichTimePoint to chrono::steady_clock::time_point
     auto monotonicTimePoint = std::chrono::time_point_cast<std::chrono::steady_clock::duration>(greenwichTimePoint);
     return std::chrono::duration_cast<std::chrono::microseconds>(monotonicTimePoint.time_since_epoch()).count();
@@ -1447,7 +1433,7 @@ uint64_t Utils::GreenwichToMonotonic(uint64_t inputTime)
  * @return true
            false
  */
-bool Utils::StrToUint64(uint64_t &out, const std::string &numStr)
+bool Utils::StrToUint64(uint64_t& out, const std::string& numStr)
 {
     if (!IsAllDigit(numStr)) {
         MSPROF_LOGE("StrToUint64 failed, the input string is not digit.");
@@ -1456,7 +1442,7 @@ bool Utils::StrToUint64(uint64_t &out, const std::string &numStr)
     size_t pos = 0;
     try {
         out = static_cast<uint64_t>(std::stoull(numStr, &pos));
-    } catch (std::exception &ex) {
+    } catch (std::exception& ex) {
         MSPROF_LOGE("StrToUint64 failed, the input string is '%s', message: %s.", numStr.c_str(), ex.what());
         return false;
     }
@@ -1468,7 +1454,7 @@ bool Utils::StrToUint64(uint64_t &out, const std::string &numStr)
  * @return true
            false
  */
-bool Utils::StrToUint32(uint32_t &out, const std::string &numStr)
+bool Utils::StrToUint32(uint32_t& out, const std::string& numStr)
 {
     if (!IsAllDigit(numStr)) {
         MSPROF_LOGE("StrToUint32 failed, the input string is not digit.");
@@ -1477,9 +1463,8 @@ bool Utils::StrToUint32(uint32_t &out, const std::string &numStr)
     size_t pos = 0;
     try {
         out = static_cast<uint32_t>(std::stoul(numStr, &pos));
-    } catch (std::exception &ex) {
-        MSPROF_LOGE("StrToUint32 failed, the input string is '%s', message: %s.",
-            numStr.c_str(), ex.what());
+    } catch (std::exception& ex) {
+        MSPROF_LOGE("StrToUint32 failed, the input string is '%s', message: %s.", numStr.c_str(), ex.what());
         return false;
     }
     return true;
@@ -1490,7 +1475,7 @@ bool Utils::StrToUint32(uint32_t &out, const std::string &numStr)
  * @return true
            false
  */
-bool Utils::StrToInt32(int32_t &out, const std::string &numStr)
+bool Utils::StrToInt32(int32_t& out, const std::string& numStr)
 {
     if (numStr.empty()) {
         MSPROF_LOGE("StrToInt32 failed, the input string is empty.");
@@ -1499,9 +1484,8 @@ bool Utils::StrToInt32(int32_t &out, const std::string &numStr)
     size_t pos = 0;
     try {
         out = static_cast<int32_t>(std::stoi(numStr, &pos));
-    } catch (std::exception &ex) {
-        MSPROF_LOGE("StrToInt32 failed, the input string is '%s', message: %s.",
-            numStr.c_str(), ex.what());
+    } catch (std::exception& ex) {
+        MSPROF_LOGE("StrToInt32 failed, the input string is '%s', message: %s.", numStr.c_str(), ex.what());
         return false;
     }
     if (pos != numStr.size()) {
@@ -1516,7 +1500,7 @@ bool Utils::StrToInt32(int32_t &out, const std::string &numStr)
  * @return true
            false
  */
-bool Utils::StrToDouble(double &out, const std::string &numStr)
+bool Utils::StrToDouble(double& out, const std::string& numStr)
 {
     if (numStr.empty()) {
         MSPROF_LOGE("StrToDouble failed, the input string is empty.");
@@ -1525,9 +1509,8 @@ bool Utils::StrToDouble(double &out, const std::string &numStr)
     size_t pos = 0;
     try {
         out = std::stod(numStr, &pos);
-    } catch (std::exception &ex) {
-        MSPROF_LOGE("StrToDouble failed, the input string is '%s', message: %s.",
-            numStr.c_str(), ex.what());
+    } catch (std::exception& ex) {
+        MSPROF_LOGE("StrToDouble failed, the input string is '%s', message: %s.", numStr.c_str(), ex.what());
         return false;
     }
     if (pos != numStr.size()) {
@@ -1547,7 +1530,7 @@ bool Utils::CheckInputArgsLength(int32_t argc, CONST_CHAR_PTR argv[])
     static const int32_t INPUT_MAX_LEN = 512; // 512 : max length
     if (argc > INPUT_MAX_LEN || argv == nullptr || strlen(*argv) > INPUT_MAX_LEN) {
         CmdLog::CmdErrorLog("input data is invalid,"
-            "please input argc less than 512 and argv is not null and the len of argv less than 512");
+                            "please input argc less than 512 and argv is not null and the len of argv less than 512");
         return false;
     }
     return true;
@@ -1558,7 +1541,7 @@ bool Utils::CheckInputArgsLength(int32_t argc, CONST_CHAR_PTR argv[])
  *  @return true
            false
  */
-bool Utils::CheckBinValid(const std::string &binPath)
+bool Utils::CheckBinValid(const std::string& binPath)
 {
     if (Utils::CanonicalizePath(binPath).empty()) {
         CmdLog::CmdErrorLog("The file %s does not exist or permission denied.", binPath.c_str());
@@ -1569,8 +1552,10 @@ bool Utils::CheckBinValid(const std::string &binPath)
         return false;
     }
     if (Utils::IsDir(binPath)) {
-        CmdLog::CmdErrorLog("The file %s is a directory, "
-            "please enter the executable file path.", Utils::CanonicalizePath(binPath).c_str());
+        CmdLog::CmdErrorLog(
+            "The file %s is a directory, "
+            "please enter the executable file path.",
+            Utils::CanonicalizePath(binPath).c_str());
         return false;
     }
     if (OsalAccess2(binPath.c_str(), OSAL_X_OK) != OSAL_EN_OK) {
@@ -1595,7 +1580,7 @@ std::string Utils::GetHostTime()
     return hostTime;
 }
 
-void Utils::GenTimeLineJsonFile(std::string path, const std::string &strData)
+void Utils::GenTimeLineJsonFile(std::string path, const std::string& strData)
 {
     // create file and open ofstream
     int32_t fd = OsalOpen(path.c_str(), O_WRONLY | O_CREAT | O_APPEND, OSAL_IRUSR | OSAL_IWUSR);
@@ -1605,8 +1590,8 @@ void Utils::GenTimeLineJsonFile(std::string path, const std::string &strData)
     }
     (void)OsalClose(fd);
     path = Utils::CanonicalizePath(path);
-    FUNRET_CHECK_EXPR_ACTION(path.empty(), return, 
-        "The fileName path: %s does not exist or permission denied.", path.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        path.empty(), return, "The fileName path: %s does not exist or permission denied.", path.c_str());
     std::ofstream jsonFile(path, std::ios::out | std::ios::app);
     if (!jsonFile.is_open()) {
         MSPROF_LOGE("Failed to open timeline json file: %s.", path.c_str());
@@ -1620,7 +1605,7 @@ void Utils::GenTimeLineJsonFile(std::string path, const std::string &strData)
     jsonFile.close();
 }
 
-bool Utils::CheckDuplicateStrings(const std::string &oriStr, const std::string &subStr)
+bool Utils::CheckDuplicateStrings(const std::string& oriStr, const std::string& subStr)
 {
     if (subStr.empty()) {
         return false;
@@ -1637,15 +1622,13 @@ bool Utils::CheckDuplicateStrings(const std::string &oriStr, const std::string &
     return true;
 }
 
-bool Utils::CheckPathWithInvalidChar(const std::string &path)
+bool Utils::CheckPathWithInvalidChar(const std::string& path)
 {
     static const std::unordered_map<std::string, std::string> INVALID_CHAR = {
-        {"\n", "\\n"}, {"\f", "\\f"}, {"\r", "\\r"}, {"\b", "\\b"}, {"\t", "\\t"},
-        {"\v", "\\v"}, {"\u007f", "\\u007f"}, {"\"", "\\\""}, {"'", "\'"},
-        {"\\", "\\\\"}, {"%", "\\%"}, {">", "\\>"}, {"<", "\\<"}, {"|", "\\|"},
-        {"&", "\\&"}, {"$", "\\$"}, {";", "\\;"}, {"`", "\\`"}
-    };
-    for (auto &ch : INVALID_CHAR) {
+        {"\n", "\\n"},         {"\f", "\\f"},  {"\r", "\\r"}, {"\b", "\\b"},  {"\t", "\\t"}, {"\v", "\\v"},
+        {"\u007f", "\\u007f"}, {"\"", "\\\""}, {"'", "\'"},   {"\\", "\\\\"}, {"%", "\\%"},  {">", "\\>"},
+        {"<", "\\<"},          {"|", "\\|"},   {"&", "\\&"},  {"$", "\\$"},   {";", "\\;"},  {"`", "\\`"}};
+    for (auto& ch : INVALID_CHAR) {
         if (path.find(ch.first) != std::string::npos) {
             MSPROF_LOGE("The path %s contains invalid character %s.", path.c_str(), ch.second.c_str());
             return false;
@@ -1653,7 +1636,7 @@ bool Utils::CheckPathWithInvalidChar(const std::string &path)
     }
     return true;
 }
-}  // namespace utils
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace utils
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

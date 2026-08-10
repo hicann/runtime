@@ -109,7 +109,7 @@ public:
     bool IsDriverSupportLlc() const;
     std::string GetPerfDataDir(const int32_t devId = 0) const;
     std::string GetDefaultWorkDir() const;
-    void GetVersionSpecificMetrics(std::string &aicMetrics) const;
+    void GetVersionSpecificMetrics(std::string& aicMetrics) const;
 
 private:
     void InitFrequency();
@@ -117,8 +117,8 @@ private:
     bool isInit_;
     std::map<std::string, std::string> configMap_;
 };
-}
-}
-}
-}
+} // namespace Config
+} // namespace Common
+} // namespace Dvvp
+} // namespace Analysis
 #endif

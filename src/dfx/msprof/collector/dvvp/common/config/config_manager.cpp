@@ -36,15 +36,8 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::validation;
 using namespace analysis::dvvp::driver;
 
-ConfigManager::ConfigManager()
-    : isInit_(false)
-{
-    (void)Init();
-}
-ConfigManager::~ConfigManager()
-{
-    Uninit();
-}
+ConfigManager::ConfigManager() : isInit_(false) { (void)Init(); }
+ConfigManager::~ConfigManager() { Uninit(); }
 
 int32_t ConfigManager::Init()
 {
@@ -66,19 +59,20 @@ int32_t ConfigManager::Init()
     int64_t versionInfo = 0;
     uint32_t chipId = 0;
     drvError_t ret = DRV_ERROR_NO_DEVICE;
-    for (auto &devId : devList) {
+    for (auto& devId : devList) {
         if (!DrvGetDeviceStatus(devId)) {
             continue;
         }
-        ret = analysis::dvvp::driver::MsprofDrvApi::instance()->halGetDeviceInfo(devId,
-            static_cast<int32_t>(MODULE_TYPE_SYSTEM),
-            static_cast<int32_t>(INFO_TYPE_VERSION), &versionInfo);
+        ret = analysis::dvvp::driver::MsprofDrvApi::instance()->halGetDeviceInfo(
+            devId, static_cast<int32_t>(MODULE_TYPE_SYSTEM), static_cast<int32_t>(INFO_TYPE_VERSION), &versionInfo);
         if (ret == DRV_ERROR_NONE) {
             chipId = ((static_cast<uint64_t>(versionInfo) >> 8) & 0xff);
             break;
         } else if (ret == DRV_ERROR_NOT_SUPPORT) {
-            MSPROF_LOGW("Driver doesn't support device type version by halGetDeviceInfo interface, ret=%d"
-                ", set default PlatformType", static_cast<int32_t>(ret));
+            MSPROF_LOGW(
+                "Driver doesn't support device type version by halGetDeviceInfo interface, ret=%d"
+                ", set default PlatformType",
+                static_cast<int32_t>(ret));
 #ifndef BUILD_PROFILING_OPEN_PROJECT
             chipId = static_cast<uint32_t>(PlatformType::MDC_TYPE);
 #else
@@ -105,7 +99,7 @@ void ConfigManager::Uninit()
     }
 }
 
-void ConfigManager::GetVersionSpecificMetrics(std::string &aicMetrics) const
+void ConfigManager::GetVersionSpecificMetrics(std::string& aicMetrics) const
 {
     if (GetPlatformType() == PlatformType::CHIP_V4_1_0 && (aicMetrics.compare(PIPE_UTILIZATION) == 0)) {
         aicMetrics = PIPE_UTILIZATION_EXCT;
@@ -138,9 +132,8 @@ void ConfigManager::InitFrequency()
     std::string aicFrq;
     std::string type = configMap_[TYPE_CONFIG];
     int32_t typeInt = 0;
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, type), return, 
-        "type %s is invalid", type.c_str());
-    auto platType  = static_cast<PlatformType>(typeInt);
+    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, type), return, "type %s is invalid", type.c_str());
+    auto platType = static_cast<PlatformType>(typeInt);
     auto iterator = FREQUENCY_TYPE.find(platType);
     if (iterator != FREQUENCY_TYPE.end()) {
         frequency = iterator->second;
@@ -168,15 +161,17 @@ std::string ConfigManager::GetChipIdStr()
 
 PlatformType ConfigManager::GetPlatformType() const
 {
-    auto iter =  configMap_.find(TYPE_CONFIG);
+    auto iter = configMap_.find(TYPE_CONFIG);
     if (iter != configMap_.end()) {
         int32_t typeInt = 0;
 #ifdef BUILD_PROFILING_OPEN_PROJECT
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, iter->second), return PlatformType::CLOUD_TYPE, 
-            "iter->second %s is invalid", iter->second.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(typeInt, iter->second), return PlatformType::CLOUD_TYPE, "iter->second %s is invalid",
+            iter->second.c_str());
 #else
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, iter->second), return PlatformType::MINI_TYPE, 
-            "iter->second %s is invalid", iter->second.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(typeInt, iter->second), return PlatformType::MINI_TYPE, "iter->second %s is invalid",
+            iter->second.c_str());
 #endif // BUILD_PROFILING_OPEN_PROJECT
         auto type = static_cast<PlatformType>(typeInt);
         return type;
@@ -191,15 +186,15 @@ PlatformType ConfigManager::GetPlatformType() const
 bool ConfigManager::IsDriverSupportLlc() const
 {
     PlatformType type = GetPlatformType();
-    if (type == PlatformType::CLOUD_TYPE || type == PlatformType::DC_TYPE || 
-        type == PlatformType::CHIP_V4_1_0 || type == PlatformType::MINI_V3_TYPE
+    if (type == PlatformType::CLOUD_TYPE || type == PlatformType::DC_TYPE || type == PlatformType::CHIP_V4_1_0 ||
+        type == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
         || type == PlatformType::MDC_TYPE || type == PlatformType::CHIP_TINY_V1 ||
-        type == PlatformType::CHIP_MDC_MINI_V3 || type == PlatformType::CHIP_MDC_LITE || type == PlatformType::CHIP_MDC_V2 ||
-        type == PlatformType::CHIP_CLOUD_V3 || type == PlatformType::CHIP_CLOUD_V4 ||
-        type == PlatformType::CHIP_MDC_LITE_V2
+        type == PlatformType::CHIP_MDC_MINI_V3 || type == PlatformType::CHIP_MDC_LITE ||
+        type == PlatformType::CHIP_MDC_V2 || type == PlatformType::CHIP_CLOUD_V3 ||
+        type == PlatformType::CHIP_CLOUD_V4 || type == PlatformType::CHIP_MDC_LITE_V2
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ) {
+    ) {
         return true;
     }
     return false;
@@ -211,11 +206,8 @@ std::string ConfigManager::GetPerfDataDir(const int32_t devId) const
     return perfDataDir;
 }
 
-std::string ConfigManager::GetDefaultWorkDir() const
-{
-    return std::string(INOTIFY_CFG_PATH_STR);
-}
-}
-}
-}
-}
+std::string ConfigManager::GetDefaultWorkDir() const { return std::string(INOTIFY_CFG_PATH_STR); }
+} // namespace Config
+} // namespace Common
+} // namespace Dvvp
+} // namespace Analysis

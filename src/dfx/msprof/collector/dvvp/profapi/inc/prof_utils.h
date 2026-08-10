@@ -13,7 +13,7 @@
 namespace ProfAPI {
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 using PTHREAD_ONCE_T = bool;
-inline void PthreadOnce(bool *flag, void (*func)(void))
+inline void PthreadOnce(bool* flag, void (*func)(void))
 {
     if (*flag == false) {
         *flag = true;
@@ -22,10 +22,7 @@ inline void PthreadOnce(bool *flag, void (*func)(void))
 }
 #else
 using PTHREAD_ONCE_T = pthread_once_t;
-inline void PthreadOnce(pthread_once_t *flag, void (*func)(void))
-{
-    (void)pthread_once(flag, func);
-}
+inline void PthreadOnce(pthread_once_t* flag, void (*func)(void)) { (void)pthread_once(flag, func); }
 #endif
-}
+} // namespace ProfAPI
 #endif

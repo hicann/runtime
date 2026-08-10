@@ -34,7 +34,7 @@ public:
      *      SOCKET_ERR_EADDRINUSE: addr already in use
      *      -1: failed
      */
-    static int32_t Create(const std::string &key, int32_t backlog = MAX_CONN_BACKLOG);
+    static int32_t Create(const std::string& key, int32_t backlog = MAX_CONN_BACKLOG);
 
     /**
      * @brief open socket
@@ -65,7 +65,7 @@ public:
      *      SOCKET_ERR_EAGAIN: time out
      *      -1: failed
      */
-    static int32_t Connect(int32_t fd, const std::string &key);
+    static int32_t Connect(int32_t fd, const std::string& key);
 
     /**
      * @brief set sock recv/send timeout
@@ -103,7 +103,7 @@ public:
      *      SOCKET_ERR_EAGAIN: time out
      *      -1: failed
      */
-    static int32_t Recv(int32_t fd, void *buff, int32_t len, int32_t flag);
+    static int32_t Recv(int32_t fd, void* buff, int32_t len, int32_t flag);
 
     /**
      * @brief sock send
@@ -117,16 +117,16 @@ public:
      *      SOCKET_ERR_EAGAIN: time out
      *      -1: failed
      */
-    static int32_t Send(int32_t fd, const void *buff, int32_t len, int32_t flag);
+    static int32_t Send(int32_t fd, const void* buff, int32_t len, int32_t flag);
 
     /**
      * @brief sock close
      * @param [in] fd: sock file descriptor
      */
-    static void Close(int32_t &fd);
+    static void Close(int32_t& fd);
 
 private:
-    static sockaddr_un GetUnixSockAddr(const std::string &key);
+    static sockaddr_un GetUnixSockAddr(const std::string& key);
 };
 } // namespace socket
 } // namespace common

@@ -16,32 +16,32 @@
 #include "prof_api.h"
 
 namespace ProfAPI {
-using ProfReportApiFunc = int32_t (*) (uint32_t agingFlag, const MsprofApi &api);
-using ProfReportEventFunc = int32_t (*) (uint32_t agingFlag, const MsprofEvent &event);
-using ProfReportCompactInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
-using ProfReportAdditionalInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
-using ProfReportRegTypeInfoFunc = int32_t (*) (uint16_t level, uint32_t typeId, const std::string &typeName);
-using ProfReportRegDataFormatFunc = int32_t (*) (uint16_t level, uint32_t typeId, const std::string &dataFormat);
-using ProfReportGetHashIdFunc = uint64_t (*) (const std::string &info);
-using ProfReportGetHashInfoFunc = std::string (*) (const uint64_t hashId);
-using ProfGetPathFunc = std::string (*) ();
-using ProfHostFreqIsEnableFunc = bool (*) ();
+using ProfReportApiFunc = int32_t (*)(uint32_t agingFlag, const MsprofApi& api);
+using ProfReportEventFunc = int32_t (*)(uint32_t agingFlag, const MsprofEvent& event);
+using ProfReportCompactInfoFunc = int32_t (*)(uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using ProfReportAdditionalInfoFunc = int32_t (*)(uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using ProfReportRegTypeInfoFunc = int32_t (*)(uint16_t level, uint32_t typeId, const std::string& typeName);
+using ProfReportRegDataFormatFunc = int32_t (*)(uint16_t level, uint32_t typeId, const std::string& dataFormat);
+using ProfReportGetHashIdFunc = uint64_t (*)(const std::string& info);
+using ProfReportGetHashInfoFunc = std::string (*)(const uint64_t hashId);
+using ProfGetPathFunc = std::string (*)();
+using ProfHostFreqIsEnableFunc = bool (*)();
 
-using AtlsReportApiFunc = int32_t (*) (uint32_t agingFlag, const MsprofApi* api);
-using AtlsReportEventFunc = int32_t (*) (uint32_t agingFlag, const MsprofEvent* event);
-using AtlsReportCompactInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
-using AtlsReportAdditionalInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
-using AtlsReportRegTypeInfoFunc = int32_t (*) (uint16_t level, uint32_t typeId, const char* typeName, size_t len);
-using AtlsReportGetHashIdFunc = uint64_t (*) (const char* info, size_t len);
-using AtlsHostFreqIsEnableFunc = int8_t (*) ();
+using AtlsReportApiFunc = int32_t (*)(uint32_t agingFlag, const MsprofApi* api);
+using AtlsReportEventFunc = int32_t (*)(uint32_t agingFlag, const MsprofEvent* event);
+using AtlsReportCompactInfoFunc = int32_t (*)(uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using AtlsReportAdditionalInfoFunc = int32_t (*)(uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using AtlsReportRegTypeInfoFunc = int32_t (*)(uint16_t level, uint32_t typeId, const char* typeName, size_t len);
+using AtlsReportGetHashIdFunc = uint64_t (*)(const char* info, size_t len);
+using AtlsHostFreqIsEnableFunc = int8_t (*)();
 
 class ProfPlugin { // : public analysis::dvvp::common::singleton::Singleton<ProfPlugin> {
 public:
     virtual ~ProfPlugin() {}
-    virtual int32_t ProfInit(uint32_t type, void *data, uint32_t dataLen) = 0;
-    virtual int32_t ProfStart(uint32_t dataType, const void *data, uint32_t length) = 0;
-    virtual int32_t ProfStop(uint32_t dataType, const void *data, uint32_t length) = 0;
-    virtual int32_t ProfSetConfig(uint32_t configType, const char *config, size_t configLength) = 0;
+    virtual int32_t ProfInit(uint32_t type, void* data, uint32_t dataLen) = 0;
+    virtual int32_t ProfStart(uint32_t dataType, const void* data, uint32_t length) = 0;
+    virtual int32_t ProfStop(uint32_t dataType, const void* data, uint32_t length) = 0;
+    virtual int32_t ProfSetConfig(uint32_t configType, const char* config, size_t configLength) = 0;
     virtual int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) = 0;
     virtual int32_t ProfReportData(uint32_t moduleId, uint32_t type, void* data, uint32_t len) = 0;
     virtual int32_t ProfReportApi(uint32_t agingFlag, const MsprofApi* api) = 0;
@@ -53,8 +53,8 @@ public:
     virtual int32_t ProfReportRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName, size_t len) = 0;
     virtual int32_t ProfReportRegDataFormat(uint16_t level, uint32_t typeId, const char* dataFormat, size_t len) = 0;
     virtual uint64_t ProfReportGetHashId(const char* info, size_t len) = 0;
-    virtual char *ProfReportGetHashInfo(const uint64_t hashId) = 0;
-    virtual char *profGetPath() = 0;
+    virtual char* ProfReportGetHashInfo(const uint64_t hashId) = 0;
+    virtual char* profGetPath() = 0;
     virtual int32_t ProfSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId) = 0;
     virtual int32_t ProfUnSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId) = 0;
     virtual int32_t ProfSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream) = 0;
@@ -62,9 +62,10 @@ public:
     virtual int32_t ProfFinalize() = 0;
     virtual bool ProfHostFreqIsEnable() = 0;
     static size_t ReadProfCommandHandle();
+
 protected:
     static std::mutex callbackMutex_;
     static std::map<uint32_t, std::set<ProfCommandHandle>> moduleCallbacks_;
 };
-}
+} // namespace ProfAPI
 #endif

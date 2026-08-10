@@ -26,35 +26,34 @@ namespace validation {
 constexpr uint16_t NTS_PMU_EVENT_MAX_NUM = 10;
 constexpr int32_t NTS_PMU_EVENT_BASE_AUTO = 0;
 
-inline const std::string &NtsMetricsConfigName()
+inline const std::string& NtsMetricsConfigName()
 {
     static const std::string ntsMetrics = "nts_metrics";
     return ntsMetrics;
 }
 
-inline const std::string &NtsPipeUtilization()
+inline const std::string& NtsPipeUtilization()
 {
     static const std::string ntsPipeUtilization = "PipeUtilization";
     return ntsPipeUtilization;
 }
 
-inline const std::string &NtsCustomPrefix()
+inline const std::string& NtsCustomPrefix()
 {
     static const std::string ntsCustomPrefix = "Custom:";
     return ntsCustomPrefix;
 }
 
-inline bool ParseNtsPmuEvent(const std::string &event, uint16_t &eventCode)
+inline bool ParseNtsPmuEvent(const std::string& event, uint16_t& eventCode)
 {
     const std::string trimEvent = analysis::dvvp::common::utils::Utils::Trim(event);
     if (trimEvent.empty()) {
         return false;
     }
-    char *end = nullptr;
+    char* end = nullptr;
     errno = 0;
     const unsigned long value = std::strtoul(trimEvent.c_str(), &end, NTS_PMU_EVENT_BASE_AUTO);
-    if (errno != 0 || end == trimEvent.c_str() || *end != '\0' ||
-        value > std::numeric_limits<uint16_t>::max()) {
+    if (errno != 0 || end == trimEvent.c_str() || *end != '\0' || value > std::numeric_limits<uint16_t>::max()) {
         return false;
     }
 
@@ -62,13 +61,13 @@ inline bool ParseNtsPmuEvent(const std::string &event, uint16_t &eventCode)
     return true;
 }
 
-inline bool CheckNtsPmuEventsValid(const std::vector<std::string> &events)
+inline bool CheckNtsPmuEventsValid(const std::vector<std::string>& events)
 {
     if (events.empty() || events.size() > NTS_PMU_EVENT_MAX_NUM) {
         return false;
     }
 
-    for (const auto &event : events) {
+    for (const auto& event : events) {
         uint16_t eventCode = 0;
         if (!ParseNtsPmuEvent(event, eventCode)) {
             return false;
@@ -77,9 +76,9 @@ inline bool CheckNtsPmuEventsValid(const std::vector<std::string> &events)
     return true;
 }
 
-inline bool GetNtsCustomEvents(const std::string &metrics, std::string &events)
+inline bool GetNtsCustomEvents(const std::string& metrics, std::string& events)
 {
-    const std::string &prefix = NtsCustomPrefix();
+    const std::string& prefix = NtsCustomPrefix();
     if (metrics.compare(0, prefix.size(), prefix) != 0) {
         return false;
     }
@@ -87,7 +86,7 @@ inline bool GetNtsCustomEvents(const std::string &metrics, std::string &events)
     return !events.empty();
 }
 
-inline bool CheckNtsMetricsConfigValid(const std::string &metrics, std::string &events)
+inline bool CheckNtsMetricsConfigValid(const std::string& metrics, std::string& events)
 {
     events.clear();
     if (metrics == NtsPipeUtilization()) {
@@ -98,8 +97,7 @@ inline bool CheckNtsMetricsConfigValid(const std::string &metrics, std::string &
         return false;
     }
 
-    const std::vector<std::string> eventList =
-        analysis::dvvp::common::utils::Utils::Split(events, false, "", ",");
+    const std::vector<std::string> eventList = analysis::dvvp::common::utils::Utils::Split(events, false, "", ",");
     return CheckNtsPmuEventsValid(eventList);
 }
 

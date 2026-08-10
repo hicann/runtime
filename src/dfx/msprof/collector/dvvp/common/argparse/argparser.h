@@ -29,10 +29,10 @@ const int32_t ARGPARSE_OK = 0;
 const std::string LONG_PRE = "--";
 
 struct Option {
-    Option(std::string lname, std::string hp, std::string val,
-        std::function<int32_t(std::string&)> checkFunc, std::vector<std::string> valRange)
-        : longName(lname), help(hp), value(val), checkValidFunc(checkFunc),
-          valueRange(valRange)
+    Option(
+        std::string lname, std::string hp, std::string val, std::function<int32_t(std::string&)> checkFunc,
+        std::vector<std::string> valRange)
+        : longName(lname), help(hp), value(val), checkValidFunc(checkFunc), valueRange(valRange)
     {}
     std::string longName;
     std::string help;
@@ -43,38 +43,43 @@ struct Option {
 
 class Argparser {
 public:
-    explicit Argparser(const std::string &description);
+    explicit Argparser(const std::string& description);
     ~Argparser() = default;
+
 public:
-    Argparser &SetProgramName(const std::string &name);
-    Argparser &SetUsage(const std::string &usage);
-    Argparser &AddOption(std::string lname, std::string help, std::string defaultValue);
-    Argparser &AddOption(std::string lname, std::string help, std::string defaultValue,
-                        std::function<int32_t(std::string&)> checkValidFunc);
-    Argparser &AddOption(std::string lname, std::string help, std::string defaultValue,
-                        std::vector<std::string> valueRange);
-    Argparser &AddOption(std::string lname, std::string help, std::string defaultValue,
-                        std::function<int32_t(std::string&)> checkValidFunc, std::vector<std::string> valueRange);
-    Argparser &AddRearAppSupport();
-    std::string GetOption(const std::string &longName);
-    Argparser &AddSubCommand(std::string commandName, Argparser &subcommand);
-    Argparser &GetSubCommand(std::string commandName);
-    Argparser &BindPreCheck(std::function<int32_t(void)> preCheckFunc);
-    Argparser &BindExecute(std::function<int32_t(Argparser&)> executeFunc);
-    Argparser &Parse(int32_t argc, const CHAR *argv[]);
+    Argparser& SetProgramName(const std::string& name);
+    Argparser& SetUsage(const std::string& usage);
+    Argparser& AddOption(std::string lname, std::string help, std::string defaultValue);
+    Argparser& AddOption(
+        std::string lname, std::string help, std::string defaultValue,
+        std::function<int32_t(std::string&)> checkValidFunc);
+    Argparser& AddOption(
+        std::string lname, std::string help, std::string defaultValue, std::vector<std::string> valueRange);
+    Argparser& AddOption(
+        std::string lname, std::string help, std::string defaultValue,
+        std::function<int32_t(std::string&)> checkValidFunc, std::vector<std::string> valueRange);
+    Argparser& AddRearAppSupport();
+    std::string GetOption(const std::string& longName);
+    Argparser& AddSubCommand(std::string commandName, Argparser& subcommand);
+    Argparser& GetSubCommand(std::string commandName);
+    Argparser& BindPreCheck(std::function<int32_t(void)> preCheckFunc);
+    Argparser& BindExecute(std::function<int32_t(Argparser&)> executeFunc);
+    Argparser& Parse(int32_t argc, const CHAR* argv[]);
     bool ParsedSuccess() const;
     std::string GetDescription();
     void PrintHelp();
     int32_t Execute();
+
 public:
     std::vector<std::string> appArgs;
     std::string enabledSubCmd;
+
 private:
-    int32_t ProcessOptLong(int32_t argc, const CHAR *argv[]);
-    void ProcessAppArgs(std::vector<std::string> &tokens);
-    int32_t CheckOptionValue(Option &option) const;
+    int32_t ProcessOptLong(int32_t argc, const CHAR* argv[]);
+    void ProcessAppArgs(std::vector<std::string>& tokens);
+    int32_t CheckOptionValue(Option& option) const;
     bool StartWith(const std::string& str, const std::string& prefix) const;
-    std::string StringJoin(std::vector<std::string> &stringList, std::string sep) const;
+    std::string StringJoin(std::vector<std::string>& stringList, std::string sep) const;
 
 private:
     std::string description_;
@@ -88,8 +93,8 @@ private:
     std::function<int32_t(void)> preCheckFunc_{nullptr};
     std::function<int32_t(Argparser&)> executeFunc_{nullptr};
 };
-}
-}
-}
-}
+} // namespace argparse
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 #endif

@@ -22,17 +22,15 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::Common::Platform;
 
-Argparser::Argparser(const std::string &description) : description_(description)
-{
-}
+Argparser::Argparser(const std::string& description) : description_(description) {}
 
-Argparser &Argparser::SetProgramName(const std::string &name)
+Argparser& Argparser::SetProgramName(const std::string& name)
 {
     programName_ = name;
     return *this;
 }
 
-Argparser &Argparser::SetUsage(const std::string &usage)
+Argparser& Argparser::SetUsage(const std::string& usage)
 {
     usage_ = usage;
     return *this;
@@ -48,7 +46,7 @@ void Argparser::PrintHelp()
     std::cout << "      " + usage_ << std::endl << std::endl;
     if (!subcommands_.empty()) {
         std::cout << "Subcommands:" << std::endl;
-        for (auto const &kv : subcommands_) {
+        for (auto const& kv : subcommands_) {
             // 6 space command line indentation
             std::cout << std::right << std::setw(6) << "";
             // 34 space for subcommand indentation
@@ -78,8 +76,9 @@ void Argparser::PrintHelp()
  * @param [in] valueRange: valid value range of this option, will be checked in CheckOptionValue
  * @return Argparser
  */
-Argparser &Argparser::AddOption(std::string lname, std::string help, std::string defaultValue,
-    std::function<int32_t(std::string&)> checkValidFunc, std::vector<std::string> valueRange)
+Argparser& Argparser::AddOption(
+    std::string lname, std::string help, std::string defaultValue, std::function<int32_t(std::string&)> checkValidFunc,
+    std::vector<std::string> valueRange)
 {
     if (lname.empty()) {
         return *this;
@@ -100,8 +99,8 @@ Argparser &Argparser::AddOption(std::string lname, std::string help, std::string
  * @param [in] checkValidFunc: function use to check this option valid, will be called in CheckOptionValue
  * @return Argparser
  */
-Argparser &Argparser::AddOption(std::string lname, std::string help, std::string defaultValue,
-    std::function<int32_t(std::string&)> checkValidFunc)
+Argparser& Argparser::AddOption(
+    std::string lname, std::string help, std::string defaultValue, std::function<int32_t(std::string&)> checkValidFunc)
 {
     return AddOption(lname, help, defaultValue, checkValidFunc, {});
 }
@@ -116,8 +115,8 @@ Argparser &Argparser::AddOption(std::string lname, std::string help, std::string
  * @param [in] valueRange: valid value range of this option, will be checked in CheckOptionValue
  * @return Argparser
  */
-Argparser &Argparser::AddOption(std::string lname, std::string help, std::string defaultValue,
-    std::vector<std::string> valueRange)
+Argparser& Argparser::AddOption(
+    std::string lname, std::string help, std::string defaultValue, std::vector<std::string> valueRange)
 {
     return AddOption(lname, help, defaultValue, nullptr, valueRange);
 }
@@ -131,7 +130,7 @@ Argparser &Argparser::AddOption(std::string lname, std::string help, std::string
  * @param [in] defaultValue: set defalut value of option
  * @return Argparser
  */
-Argparser &Argparser::AddOption(std::string lname, std::string help, std::string defaultValue)
+Argparser& Argparser::AddOption(std::string lname, std::string help, std::string defaultValue)
 {
     return AddOption(lname, help, defaultValue, nullptr, {});
 }
@@ -144,7 +143,7 @@ Argparser &Argparser::AddOption(std::string lname, std::string help, std::string
  * @param [in] subcommand: another instance of Argparser
  * @return Argparser
  */
-Argparser &Argparser::AddSubCommand(std::string commandName, Argparser &subcommand)
+Argparser& Argparser::AddSubCommand(std::string commandName, Argparser& subcommand)
 {
     SHARED_PTR_ALIA<Argparser> subCmdPtr = nullptr;
     MSVP_MAKE_SHARED1(subCmdPtr, Argparser, subcommand, return *this);
@@ -152,13 +151,13 @@ Argparser &Argparser::AddSubCommand(std::string commandName, Argparser &subcomma
     return *this;
 }
 
-Argparser &Argparser::AddRearAppSupport()
+Argparser& Argparser::AddRearAppSupport()
 {
     appSupported_ = true;
     return *this;
 }
 
-Argparser &Argparser::GetSubCommand(std::string commandName)
+Argparser& Argparser::GetSubCommand(std::string commandName)
 {
     if (subcommands_.find(commandName) == subcommands_.end()) {
         CmdLog::CmdErrorLog("Can not find subcommand: %s", commandName.c_str());
@@ -167,7 +166,7 @@ Argparser &Argparser::GetSubCommand(std::string commandName)
     return *subcommands_[commandName].get();
 }
 
-std::string Argparser::GetOption(const std::string &longName)
+std::string Argparser::GetOption(const std::string& longName)
 {
     if (longNameIndex_.find(longName) == longNameIndex_.end()) {
         return "";
@@ -176,22 +175,19 @@ std::string Argparser::GetOption(const std::string &longName)
     return options_[idx].value;
 }
 
-Argparser &Argparser::BindPreCheck(std::function<int32_t(void)> preCheckFunc)
+Argparser& Argparser::BindPreCheck(std::function<int32_t(void)> preCheckFunc)
 {
     preCheckFunc_ = preCheckFunc;
     return *this;
 }
 
-Argparser &Argparser::BindExecute(std::function<int32_t(Argparser&)> executeFunc)
+Argparser& Argparser::BindExecute(std::function<int32_t(Argparser&)> executeFunc)
 {
     executeFunc_ = executeFunc;
     return *this;
 }
 
-bool Argparser::ParsedSuccess() const
-{
-    return status_ == ARGPARSE_OK;
-}
+bool Argparser::ParsedSuccess() const { return status_ == ARGPARSE_OK; }
 
 bool Argparser::StartWith(const std::string& str, const std::string& prefix) const
 {
@@ -201,7 +197,7 @@ bool Argparser::StartWith(const std::string& str, const std::string& prefix) con
     return str.substr(0, prefix.size()) == prefix;
 }
 
-std::string Argparser::StringJoin(std::vector<std::string> &stringList, std::string sep) const
+std::string Argparser::StringJoin(std::vector<std::string>& stringList, std::string sep) const
 {
     std::string joinedStr;
     for (size_t i = 0; i < stringList.size(); i++) {
@@ -221,7 +217,7 @@ std::string Argparser::StringJoin(std::vector<std::string> &stringList, std::str
  * @return: ARGPARSE_OK
             ARGPARSE_ERROR
  */
-int32_t Argparser::CheckOptionValue(Option &option) const
+int32_t Argparser::CheckOptionValue(Option& option) const
 {
     if (option.valueRange.empty() && option.checkValidFunc == nullptr) {
         return ARGPARSE_OK;
@@ -231,7 +227,8 @@ int32_t Argparser::CheckOptionValue(Option &option) const
         if (validSet.count(option.value) != 1) {
             std::string valueRangeStr = StringJoin(option.valueRange, "|");
             valueRangeStr = "[" + valueRangeStr + "]";
-            CmdLog::CmdErrorLog("Argument %s: invalid option value %s. Please input in the range of %s",
+            CmdLog::CmdErrorLog(
+                "Argument %s: invalid option value %s. Please input in the range of %s",
                 (LONG_PRE + option.longName).c_str(), option.value.c_str(), valueRangeStr.c_str());
             return ARGPARSE_ERROR;
         }
@@ -242,12 +239,9 @@ int32_t Argparser::CheckOptionValue(Option &option) const
     return ARGPARSE_OK;
 }
 
-std::string Argparser::GetDescription()
-{
-    return description_;
-}
+std::string Argparser::GetDescription() { return description_; }
 
-int32_t Argparser::ProcessOptLong(int32_t argc, const CHAR *argv[])
+int32_t Argparser::ProcessOptLong(int32_t argc, const CHAR* argv[])
 {
     int32_t opt = 0;
     std::string optString = "";
@@ -263,8 +257,8 @@ int32_t Argparser::ProcessOptLong(int32_t argc, const CHAR *argv[])
     }
     longopt = {nullptr, 0, nullptr, 0};
     longopts.emplace_back(longopt);
-    while ((opt = OsalGetOptLong(argc, const_cast<CHAR **>(argv), optString.c_str(),
-        longopts.data(), &optionIndex)) != ARGPARSE_ERROR) {
+    while ((opt = OsalGetOptLong(argc, const_cast<CHAR**>(argv), optString.c_str(), longopts.data(), &optionIndex)) !=
+           ARGPARSE_ERROR) {
         if (opt == '?') { // 63
             PrintHelp();
             return ARGPARSE_ERROR;
@@ -279,8 +273,7 @@ int32_t Argparser::ProcessOptLong(int32_t argc, const CHAR *argv[])
             return ARGPARSE_ERROR;
         }
         if (OsalGetOptArg() == nullptr) {
-            CmdLog::CmdErrorLog("Argument %s: expected one argument",
-                (LONG_PRE + options_[optIdx].longName).c_str());
+            CmdLog::CmdErrorLog("Argument %s: expected one argument", (LONG_PRE + options_[optIdx].longName).c_str());
             return ARGPARSE_ERROR;
         }
         options_[optIdx].value = std::string(OsalGetOptArg());
@@ -291,7 +284,7 @@ int32_t Argparser::ProcessOptLong(int32_t argc, const CHAR *argv[])
     return ARGPARSE_OK;
 }
 
-void Argparser::ProcessAppArgs(std::vector<std::string> &tokens)
+void Argparser::ProcessAppArgs(std::vector<std::string>& tokens)
 {
     if (!appSupported_) {
         return;
@@ -306,7 +299,7 @@ void Argparser::ProcessAppArgs(std::vector<std::string> &tokens)
     }
 }
 
-Argparser &Argparser::Parse(int32_t argc, const CHAR *argv[])
+Argparser& Argparser::Parse(int32_t argc, const CHAR* argv[])
 {
     if (!Utils::CheckInputArgsLength(argc, argv)) {
         return *this;
@@ -370,7 +363,7 @@ int32_t Argparser::Execute()
     }
     return PROFILING_SUCCESS;
 }
-}
-}
-}
-}
+} // namespace argparse
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

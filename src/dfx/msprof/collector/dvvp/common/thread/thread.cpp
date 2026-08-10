@@ -22,13 +22,12 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
 Thread::Thread()
-    :tid_(0),
-     quit_(false),
-     isStarted_(false),
-     threadName_(MSVP_PROFILER_THREADNAME_MAXNUM, 0),
-     errorContext_({0UL, "", "", ""})
-{
-}
+    : tid_(0),
+      quit_(false),
+      isStarted_(false),
+      threadName_(MSVP_PROFILER_THREADNAME_MAXNUM, 0),
+      errorContext_({0UL, "", "", ""})
+{}
 
 Thread::~Thread()
 {
@@ -91,27 +90,18 @@ int32_t Thread::Join()
     return PROFILING_SUCCESS;
 }
 
-bool Thread::IsQuit() const
-{
-    return quit_;
-}
+bool Thread::IsQuit() const { return quit_; }
 
-void Thread::SetThreadName(const std::string &threadName)
-{
-    threadName_ = threadName;
-}
+void Thread::SetThreadName(const std::string& threadName) { threadName_ = threadName; }
 
-const std::string &Thread::GetThreadName() const
-{
-    return threadName_;
-}
+const std::string& Thread::GetThreadName() const { return threadName_; }
 
-void *Thread::ThrProcess(VOID_PTR arg)
+void* Thread::ThrProcess(VOID_PTR arg)
 {
     if (arg == nullptr) {
         return nullptr;
     }
-    auto runnable = reinterpret_cast<Thread *>(arg);
+    auto runnable = reinterpret_cast<Thread*>(arg);
     (void)OsalSetCurrentThreadName(runnable->threadName_.c_str());
 
     MSPROF_LOGI("New thread [%s] begins to run", runnable->threadName_.c_str());
@@ -119,7 +109,7 @@ void *Thread::ThrProcess(VOID_PTR arg)
     runnable->Run(runnable->errorContext_);
     return nullptr;
 }
-}  // namespace thread
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace thread
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

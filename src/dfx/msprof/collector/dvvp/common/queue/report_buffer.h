@@ -21,24 +21,25 @@ namespace analysis {
 namespace dvvp {
 namespace common {
 namespace queue {
-#define DELETE_REPORT_MEM(queue, action) do {                   \
-    if (queue != nullptr) {                                     \
-        action;                                                 \
-    }                                                           \
-} while (0)
+#define DELETE_REPORT_MEM(queue, action) \
+    do {                                 \
+        if (queue != nullptr) {          \
+            action;                      \
+        }                                \
+    } while (0)
 
-static const size_t MAX_RING_BUFF_CAPACITY      = 2097152; // 2097152: 2M
-static const size_t MIN_RING_BUFF_CAPACITY      = 2048;    // 2048: 2K
-static const size_t API_RING_BUFF_CAPACITY      = 131072;  // 131072: 128K
-static const size_t COM_RING_BUFF_CAPACITY      = 262144;  // 262144: 256K
-static const size_t ADD_RING_BUFF_CAPACITY      = 262144;  // 262144: 256K
-static const size_t REPORT_BUFFER_MAX_CYCLES    = 2048;
-static const uint32_t NEG_RING_BUFF_PERCENT     = 1000;    // 1000: (1/0.1%)
-static const uint32_t CARDINALITY_RING_BUFF     = 2;       // 2^n cardinal number
+static const size_t MAX_RING_BUFF_CAPACITY = 2097152; // 2097152: 2M
+static const size_t MIN_RING_BUFF_CAPACITY = 2048;    // 2048: 2K
+static const size_t API_RING_BUFF_CAPACITY = 131072;  // 131072: 128K
+static const size_t COM_RING_BUFF_CAPACITY = 262144;  // 262144: 256K
+static const size_t ADD_RING_BUFF_CAPACITY = 262144;  // 262144: 256K
+static const size_t REPORT_BUFFER_MAX_CYCLES = 2048;
+static const uint32_t NEG_RING_BUFF_PERCENT = 1000;   // 1000: (1/0.1%)
+static const uint32_t CARDINALITY_RING_BUFF = 2;      // 2^n cardinal number
 static const std::string REPORT_RINGBUFFER_NAME = "ReportBuffer";
-static const uint8_t DATA_STATUS_IS_NOT_READY      = 0;
-static const uint8_t DATA_STATUS_IS_READY       = 1;
-static const uint32_t PUSH_WAIT_TIME            = 1;
+static const uint8_t DATA_STATUS_IS_NOT_READY = 0;
+static const uint8_t DATA_STATUS_IS_READY = 1;
+static const uint32_t PUSH_WAIT_TIME = 1;
 
 template <class T>
 class ReportBuffer {
@@ -56,10 +57,7 @@ public:
           name_(REPORT_RINGBUFFER_NAME)
     {}
 
-    virtual ~ReportBuffer()
-    {
-        UnInit();
-    }
+    virtual ~ReportBuffer() { UnInit(); }
 
     struct ReportDataChunk {
         T data;
@@ -69,7 +67,7 @@ public:
 
 public:
     // capacity must be 2^n
-    void Init(const size_t capacity, const std::string &name)
+    void Init(const size_t capacity, const std::string& name)
     {
         if (isInited_) {
             MSPROF_LOGW("Repeat init report buffer capacity: %zu, buffer name: %s", capacity, name.c_str());
@@ -98,12 +96,15 @@ public:
             const size_t currReadCusor = readIndex_.load(std::memory_order_relaxed);
             const size_t currWriteCusor = writeIndex_.load(std::memory_order_relaxed);
             if ((currWriteCusor - currReadCusor) >= capacity_) {
-                MSPROF_LOGE("Report buffer overflow, [%s] capacity: %zu, read count: %zu, "
-                    "write count: %zu", name_.c_str(), capacity_, currReadCusor, currWriteCusor);
+                MSPROF_LOGE(
+                    "Report buffer overflow, [%s] capacity: %zu, read count: %zu, "
+                    "write count: %zu",
+                    name_.c_str(), capacity_, currReadCusor, currWriteCusor);
             }
             DELETE_REPORT_MEM(dataQueue_, delete[] dataQueue_);
-            MSPROF_EVENT("total_size_report [%s] read count: %zu, write count: %zu",
-                name_.c_str(), readIndex_.exchange(0), writeIndex_.exchange(0));
+            MSPROF_EVENT(
+                "total_size_report [%s] read count: %zu, write count: %zu", name_.c_str(), readIndex_.exchange(0),
+                writeIndex_.exchange(0));
             idleWriteIndex_.exchange(0);
         }
     }
@@ -113,8 +114,9 @@ public:
         if (isInited_) {
             const size_t currReadCusor = readIndex_.load(std::memory_order_relaxed);
             const size_t currWriteCusor = writeIndex_.load(std::memory_order_relaxed);
-            MSPROF_EVENT("print_report_count [%s] read count: %zu, write count: %zu",
-                name_.c_str(), currReadCusor, currWriteCusor);
+            MSPROF_EVENT(
+                "print_report_count [%s] read count: %zu, write count: %zu", name_.c_str(), currReadCusor,
+                currWriteCusor);
         }
     }
 
@@ -183,7 +185,7 @@ public:
         return MSPROF_ERROR_NONE;
     }
 
-    bool TryPop(uint32_t &aging, T& data)
+    bool TryPop(uint32_t& aging, T& data)
     {
         if (!isInited_) {
             return false;
@@ -231,9 +233,9 @@ private:
     std::string name_;
     ReportDataChunk* dataQueue_;
 };
-}
-}
-}
-}
+} // namespace queue
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

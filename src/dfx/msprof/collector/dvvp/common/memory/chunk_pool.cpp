@@ -15,15 +15,9 @@ namespace dvvp {
 namespace common {
 namespace memory {
 using namespace analysis::dvvp::common::utils;
-Chunk::Chunk(size_t bufferSize)
-    : buffer_(nullptr), bufferSize_(bufferSize), usedSize_(0)
-{
-}
+Chunk::Chunk(size_t bufferSize) : buffer_(nullptr), bufferSize_(bufferSize), usedSize_(0) {}
 
-Chunk::~Chunk()
-{
-    Uninit();
-}
+Chunk::~Chunk() { Uninit(); }
 
 bool Chunk::Init()
 {
@@ -58,40 +52,20 @@ void Chunk::Clear()
     usedSize_ = 0;
 }
 
-uint8_t *Chunk::GetBuffer() const
-{
-    return buffer_;
-}
+uint8_t* Chunk::GetBuffer() const { return buffer_; }
 
-size_t Chunk::GetUsedSize() const
-{
-    return usedSize_;
-}
+size_t Chunk::GetUsedSize() const { return usedSize_; }
 
-void Chunk::SetUsedSize(size_t size)
-{
-    usedSize_ = size;
-}
+void Chunk::SetUsedSize(size_t size) { usedSize_ = size; }
 
-size_t Chunk::GetFreeSize() const
-{
-    return bufferSize_ - usedSize_;
-}
+size_t Chunk::GetFreeSize() const { return bufferSize_ - usedSize_; }
 
-size_t Chunk::GetBufferSize() const
-{
-    return bufferSize_;
-}
+size_t Chunk::GetBufferSize() const { return bufferSize_; }
 
-ChunkPool::ChunkPool(size_t poolSize, size_t chunkSize)
-    : ResourcePool<Chunk, size_t>(poolSize, chunkSize)
-{
-}
+ChunkPool::ChunkPool(size_t poolSize, size_t chunkSize) : ResourcePool<Chunk, size_t>(poolSize, chunkSize) {}
 
-ChunkPool::~ChunkPool()
-{
-}
-}  // namespace memory
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+ChunkPool::~ChunkPool() {}
+} // namespace memory
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

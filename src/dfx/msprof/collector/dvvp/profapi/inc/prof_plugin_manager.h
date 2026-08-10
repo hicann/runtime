@@ -12,7 +12,7 @@
 #include "singleton/singleton.h"
 #include "prof_plugin.h"
 namespace ProfAPI {
-using PROF_PLUGIN_PTR = ProfPlugin *;
+using PROF_PLUGIN_PTR = ProfPlugin*;
 class ProfPluginManager : public analysis::dvvp::common::singleton::Singleton<ProfPluginManager> {
 public:
     PROF_PLUGIN_PTR GetProfPlugin(void);
@@ -20,5 +20,5 @@ public:
     PROF_PLUGIN_PTR profPlugin_{nullptr};
 };
 
-}
+} // namespace ProfAPI
 #endif

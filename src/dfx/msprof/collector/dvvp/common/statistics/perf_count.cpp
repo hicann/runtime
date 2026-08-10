@@ -14,14 +14,19 @@ namespace Analysis {
 namespace Dvvp {
 namespace Common {
 namespace Statistics {
-PerfCount::PerfCount(const std::string &moduleName)
-    : overHeadMin_(UINT64_MAX), overHeadMax_(0), overHeadSum_(0),
-      packetNums_(0), minDataLen_(0), maxDataLen_(0),
-      throughPut_(0), moduleName_(moduleName), printFrequency_(0)
-{
-}
+PerfCount::PerfCount(const std::string& moduleName)
+    : overHeadMin_(UINT64_MAX),
+      overHeadMax_(0),
+      overHeadSum_(0),
+      packetNums_(0),
+      minDataLen_(0),
+      maxDataLen_(0),
+      throughPut_(0),
+      moduleName_(moduleName),
+      printFrequency_(0)
+{}
 
-PerfCount::PerfCount(const std::string &moduleName, const uint64_t printFrequency)
+PerfCount::PerfCount(const std::string& moduleName, const uint64_t printFrequency)
     : overHeadMin_(UINT64_MAX),
       overHeadMax_(0),
       overHeadSum_(0),
@@ -31,24 +36,21 @@ PerfCount::PerfCount(const std::string &moduleName, const uint64_t printFrequenc
       throughPut_(0),
       moduleName_(moduleName),
       printFrequency_(printFrequency)
-{
-}
+{}
 
-PerfCount::~PerfCount()
-{
-}
+PerfCount::~PerfCount() {}
 
 /**
-* @brief UpdatePerfInfo: update the perf data according the received data info
-* @param [in] startTime: data received time(ns)
-* @param [in] endTime: the time of data has been dealed
-* @param [in] dataLen: the length of the received data
-*/
+ * @brief UpdatePerfInfo: update the perf data according the received data info
+ * @param [in] startTime: data received time(ns)
+ * @param [in] endTime: the time of data has been dealed
+ * @param [in] dataLen: the length of the received data
+ */
 void PerfCount::UpdatePerfInfo(uint64_t startTime, uint64_t endTime, size_t dataLen)
 {
     if (startTime > endTime) {
-        MSPROF_LOGE("[UpdatePerfInfo] startTime:%" PRIu64 "ns is larger than endTime:%" PRIu64 "ns",
-            startTime, endTime);
+        MSPROF_LOGE(
+            "[UpdatePerfInfo] startTime:%" PRIu64 "ns is larger than endTime:%" PRIu64 "ns", startTime, endTime);
         return;
     }
     std::lock_guard<std::mutex> lk(mtx_);
@@ -77,17 +79,18 @@ void PerfCount::UpdatePerfInfo(uint64_t startTime, uint64_t endTime, size_t data
  * @brief PrintPerfInfo: print the perf info with module name
  * @param [in] moduleName: the module name
  */
-void PerfCount::PrintPerfInfo(const std::string &moduleName) const
+void PerfCount::PrintPerfInfo(const std::string& moduleName) const
 {
     const uint64_t perfMsec = 1000000;
     uint64_t nsToMSec = overHeadSum_ / perfMsec;
 
     if ((packetNums_ > 0) && (nsToMSec > 0)) {
-        MSPROF_EVENT("moduleName: %s, overhead Min: %" PRIu64 " ns, data Min: %zu, overhead Max: %" PRIu64 " ns, "
+        MSPROF_EVENT(
+            "moduleName: %s, overhead Min: %" PRIu64 " ns, data Min: %zu, overhead Max: %" PRIu64 " ns, "
             "data Max: %zu, overhead Avg: %" PRIu64 " ns, overhead Sum_: %" PRIu64 " ns, package nums: %" PRIu64 ", "
-            "package size: %" PRIu64 " bytes, throughput: %" PRIu64 ".%" PRIu64 " B/ms", moduleName.c_str(),
-            overHeadMin_, minDataLen_, overHeadMax_, maxDataLen_, overHeadSum_ / packetNums_, overHeadSum_,
-            packetNums_, throughPut_, throughPut_ / nsToMSec, throughPut_ % nsToMSec);
+            "package size: %" PRIu64 " bytes, throughput: %" PRIu64 ".%" PRIu64 " B/ms",
+            moduleName.c_str(), overHeadMin_, minDataLen_, overHeadMax_, maxDataLen_, overHeadSum_ / packetNums_,
+            overHeadSum_, packetNums_, throughPut_, throughPut_ / nsToMSec, throughPut_ % nsToMSec);
     }
 }
 
@@ -95,7 +98,7 @@ void PerfCount::PrintPerfInfo(const std::string &moduleName) const
  * @brief OutPerfInfo: output the perf info with module name and device id
  * @param [in] tag: the module tag
  */
-void PerfCount::OutPerfInfo(const std::string &tag)
+void PerfCount::OutPerfInfo(const std::string& tag)
 {
     std ::string moduleName = tag.empty() ? moduleName_ : tag;
     std::lock_guard<std::mutex> lk(mtx_);
@@ -103,8 +106,8 @@ void PerfCount::OutPerfInfo(const std::string &tag)
 }
 
 /**
-* @brief ResetPerfInfo: reset perf info
-*/
+ * @brief ResetPerfInfo: reset perf info
+ */
 void PerfCount::ResetPerfInfo()
 {
     overHeadMin_ = UINT64_MAX;
@@ -115,7 +118,7 @@ void PerfCount::ResetPerfInfo()
     maxDataLen_ = 0;
     throughPut_ = 0;
 }
-}  // namespace Statistics
-}  // namespace Common
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Statistics
+} // namespace Common
+} // namespace Dvvp
+} // namespace Analysis

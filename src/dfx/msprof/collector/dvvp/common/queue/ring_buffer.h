@@ -28,10 +28,7 @@ namespace dvvp {
 namespace common {
 namespace queue {
 static const size_t RING_BUFFER_DEFAULT_MAX_PUSH_CYCLES = 2048;
-enum class DataStatus {
-    DATA_STATUS_NOT_READY = 0,
-    DATA_STATUS_READY = 1
-};
+enum class DataStatus { DATA_STATUS_NOT_READY = 0, DATA_STATUS_READY = 1 };
 // NOTE:
 // The ring buffer is only for multiple producers and single consumer model
 // The capacity must be a power of two
@@ -49,15 +46,12 @@ public:
           isQuit_(false),
           isInited_(false),
           name_("RingBuffer")
-    {
-    }
+    {}
 
-    virtual ~RingBuffer()
-    {
-        UnInit();
-    }
+    virtual ~RingBuffer() { UnInit(); }
+
 public:
-    void Init(size_t capacity, const std::string &name)
+    void Init(size_t capacity, const std::string& name)
     {
         capacity_ = capacity;
         name_ = name;
@@ -87,10 +81,7 @@ public:
         MSPROF_LOGI("Ring buffer[%s] size: %zu", name_.c_str(), capacity_);
     }
 
-    void SetQuit()
-    {
-        isQuit_ = true;
-    }
+    void SetQuit() { isQuit_ = true; }
 
     bool TryPush(const T& data)
     {
@@ -108,8 +99,8 @@ public:
             cycles++;
             if (cycles >= maxCycles_) {
                 size_t size = GetUsedSize();
-                MSPROF_LOGW("QueueName: %s, QueueCapacity:%" PRIu64 ", QueueSize:%" PRIu64,
-                            name_.c_str(), capacity_, size);
+                MSPROF_LOGW(
+                    "QueueName: %s, QueueCapacity:%" PRIu64 ", QueueSize:%" PRIu64, name_.c_str(), capacity_, size);
                 return false;
             }
 
@@ -117,8 +108,9 @@ public:
             currWriteCusor = idleWriteIndex_.load(std::memory_order_relaxed);
             nextWriteCusor = currWriteCusor + 1;
             if ((nextWriteCusor & mask_) == (currReadCusor & mask_)) {
-                MSPROF_LOGW("IsFull, QueueName:%s, QueueCapacity:%" PRIu64 ", Read:%" PRIu64 ", Write:%lld, Used:%"
-                    PRIu64, name_.c_str(), capacity_, currReadCusor, currWriteCusor, GetUsedSize());
+                MSPROF_LOGW(
+                    "IsFull, QueueName:%s, QueueCapacity:%" PRIu64 ", Read:%" PRIu64 ", Write:%lld, Used:%" PRIu64,
+                    name_.c_str(), capacity_, currReadCusor, currWriteCusor, GetUsedSize());
                 return false;
             }
         } while (!idleWriteIndex_.compare_exchange_weak(currWriteCusor, nextWriteCusor));
@@ -179,9 +171,9 @@ private:
     std::vector<T> dataQueue_;
     std::vector<uint64_t> dataAvails_;
 };
-}  // namespace queue
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace queue
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

@@ -16,13 +16,9 @@ namespace Hal {
 namespace Server {
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
-ServerManager::ServerManager()
-{}
+ServerManager::ServerManager() {}
 
-ServerManager::~ServerManager()
-{
-    (void)ProfServerFinal();
-}
+ServerManager::~ServerManager() { (void)ProfServerFinal(); }
 
 int32_t ServerManager::ProfHelperServerInit(uint32_t devId)
 {
@@ -31,8 +27,7 @@ int32_t ServerManager::ProfHelperServerInit(uint32_t devId)
     return PROFILING_SUCCESS;
 }
 
-int32_t ServerManager::ProfServerInit(uint32_t moduleType, const ProfHalModuleConfig *moduleConfig,
-    uint32_t length)
+int32_t ServerManager::ProfServerInit(uint32_t moduleType, const ProfHalModuleConfig* moduleConfig, uint32_t length)
 {
     std::unique_lock<std::mutex> lk(halMtx_);
     int32_t ret = PROFILING_SUCCESS;
@@ -54,10 +49,7 @@ int32_t ServerManager::ProfServerInit(uint32_t moduleType, const ProfHalModuleCo
     return PROFILING_SUCCESS;
 }
 
-int32_t ServerManager::ProfServerFinal()
-{
-    return PROFILING_SUCCESS;
-}
+int32_t ServerManager::ProfServerFinal() { return PROFILING_SUCCESS; }
 
 void ServerManager::SetFlushModuleCallback(const ProfHalFlushModuleCallback func)
 {
@@ -82,6 +74,6 @@ void ServerManager::SetSendHelperDataCallback(const ProfHalSendHelperDataCallbac
     UNUSED(func);
     MSPROF_LOGI("Prof helper data callback is deprecated.");
 }
-}
-}
-}
+} // namespace Server
+} // namespace Hal
+} // namespace Dvvp

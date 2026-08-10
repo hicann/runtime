@@ -18,31 +18,20 @@ namespace thread {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 
-ThreadPool::ThreadPool(LOAD_BALANCE_METHOD method /* = ID_MOD */,
-    uint32_t threadNum /* = 4 */)
+ThreadPool::ThreadPool(LOAD_BALANCE_METHOD method /* = ID_MOD */, uint32_t threadNum /* = 4 */)
     : threadNum_(threadNum),
       currIndex_(0),
       balancerMethod_(method),
       isStarted_(false),
       threadPoolNamePrefix_(""),
       threadPoolQueueSize_(THREAD_QUEUE_SIZE_DEFAULT)
-{
-}
+{}
 
-ThreadPool::~ThreadPool()
-{
-    (void)Stop();
-}
+ThreadPool::~ThreadPool() { (void)Stop(); }
 
-void ThreadPool::SetThreadPoolNamePrefix(const std::string &name)
-{
-    threadPoolNamePrefix_ = name;
-}
+void ThreadPool::SetThreadPoolNamePrefix(const std::string& name) { threadPoolNamePrefix_ = name; }
 
-void ThreadPool::SetThreadPoolQueueSize(const size_t queueSize)
-{
-    threadPoolQueueSize_ = queueSize;
-}
+void ThreadPool::SetThreadPoolQueueSize(const size_t queueSize) { threadPoolQueueSize_ = queueSize; }
 
 int32_t ThreadPool::Start()
 {
@@ -106,7 +95,7 @@ int32_t ThreadPool::Dispatch(const SHARED_PTR_ALIA<Task> task)
 
     return PROFILING_SUCCESS;
 }
-}  // namespace thread
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace thread
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

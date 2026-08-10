@@ -10,7 +10,6 @@
 #ifndef ANALYSIS_DVVP_COMMON_THREAD_THREAD_POOL_H
 #define ANALYSIS_DVVP_COMMON_THREAD_THREAD_POOL_H
 
-
 #include <atomic>
 #include <condition_variable>
 #include <memory>
@@ -36,19 +35,16 @@ public:
 
 using TaskQueue = analysis::dvvp::common::queue::BoundQueue<SHARED_PTR_ALIA<Task>>;
 
-enum class LOAD_BALANCE_METHOD {
-    ROUND_ROBIN = 0,
-    ID_MOD = 1
-};
+enum class LOAD_BALANCE_METHOD { ROUND_ROBIN = 0, ID_MOD = 1 };
 
 const uint32_t THREAD_NUM_DEFAULT = 4;
 class ThreadPool {
 public:
-    explicit ThreadPool(LOAD_BALANCE_METHOD method = LOAD_BALANCE_METHOD::ID_MOD,
-                        uint32_t threadNum = THREAD_NUM_DEFAULT);
+    explicit ThreadPool(
+        LOAD_BALANCE_METHOD method = LOAD_BALANCE_METHOD::ID_MOD, uint32_t threadNum = THREAD_NUM_DEFAULT);
     virtual ~ThreadPool();
 
-    void SetThreadPoolNamePrefix(const std::string &name);
+    void SetThreadPoolNamePrefix(const std::string& name);
     void SetThreadPoolQueueSize(const size_t queueSize);
     int32_t Start();
     int32_t Stop();
@@ -59,24 +55,14 @@ private:
         friend class ThreadPool;
 
     public:
-        explicit InnnerThread(size_t queueSize)
-            : started_(false), queue_(nullptr), queueSize_(queueSize)
-        {
-        }
-        virtual ~InnnerThread()
-        {
-            (void)Stop();
-        }
+        explicit InnnerThread(size_t queueSize) : started_(false), queue_(nullptr), queueSize_(queueSize) {}
+        virtual ~InnnerThread() { (void)Stop(); }
 
-        const SHARED_PTR_ALIA<TaskQueue> GetQueue()
-        {
-            return queue_;
-        }
+        const SHARED_PTR_ALIA<TaskQueue> GetQueue() { return queue_; }
 
         int32_t Start() override
         {
-            MSVP_MAKE_SHARED1(queue_, TaskQueue, queueSize_,
-                return analysis::dvvp::common::error::PROFILING_FAILED);
+            MSVP_MAKE_SHARED1(queue_, TaskQueue, queueSize_, return analysis::dvvp::common::error::PROFILING_FAILED);
             auto threadName = GetThreadName();
             queue_->SetQueueName(threadName);
             if (Thread::Start() != analysis::dvvp::common::error::PROFILING_SUCCESS) {
@@ -100,13 +86,12 @@ private:
         }
 
     protected:
-        void Run(const struct error_message::Context &errorContext) override
+        void Run(const struct error_message::Context& errorContext) override
         {
             Analysis::Dvvp::MsprofErrMgr::MsprofErrorManager::instance()->SetErrorContext(errorContext);
             for (;;) {
                 SHARED_PTR_ALIA<Task> task;
-                if ((!queue_->TryPop(task)) &&
-                    (Thread::IsQuit())) {
+                if ((!queue_->TryPop(task)) && (Thread::IsQuit())) {
                     break;
                 }
 
@@ -130,13 +115,13 @@ private:
     std::atomic_uint currIndex_;
     LOAD_BALANCE_METHOD balancerMethod_;
     volatile bool isStarted_;
-    std::vector<SHARED_PTR_ALIA<ThreadPool::InnnerThread> > threads_;
+    std::vector<SHARED_PTR_ALIA<ThreadPool::InnnerThread>> threads_;
     std::string threadPoolNamePrefix_;
     size_t threadPoolQueueSize_;
 };
-}  // namespace thread
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace thread
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

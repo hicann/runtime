@@ -15,7 +15,7 @@ namespace analysis {
 namespace dvvp {
 namespace common {
 namespace cmdlog {
-constexpr int32_t MSPROF_BIN_MAX_LOG_SIZE  = 1024; // 1024 : 1k
+constexpr int32_t MSPROF_BIN_MAX_LOG_SIZE = 1024; // 1024 : 1k
 
 void CmdLog::CmdLogNoLevel(CONST_CHAR_PTR format, ...)
 {
@@ -64,7 +64,7 @@ void CmdLog::CmdWarningLog(CONST_CHAR_PTR format, ...)
     }
     va_end(args);
 }
-}
-}
-}
-}
+} // namespace cmdlog
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

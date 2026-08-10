@@ -22,12 +22,11 @@ namespace MstxPlugin {
 void MstxMarkAImpl(const char* message, aclrtStream stream);
 mstxRangeId MstxRangeStartAImpl(const char* message, aclrtStream stream);
 void MstxRangeEndImpl(mstxRangeId id);
-void MstxGetToolIdImpl(uint64_t *id);
-mstxDomainHandle_t MstxDomainCreateAImpl(const char *name);
+void MstxGetToolIdImpl(uint64_t* id);
+mstxDomainHandle_t MstxDomainCreateAImpl(const char* name);
 void MstxDomainDestroyImpl(mstxDomainHandle_t domain);
-void MstxDomainMarkAImpl(mstxDomainHandle_t domain, const char *message, aclrtStream stream);
-mstxRangeId MstxDomainRangeStartAImpl(mstxDomainHandle_t domain, const char *message,
-    aclrtStream stream);
+void MstxDomainMarkAImpl(mstxDomainHandle_t domain, const char* message, aclrtStream stream);
+mstxRangeId MstxDomainRangeStartAImpl(mstxDomainHandle_t domain, const char* message, aclrtStream stream);
 void MstxDomainRangeEndImpl(mstxDomainHandle_t domain, mstxRangeId id);
 int GetModuleTableFunc(MstxGetModuleFuncTableFunc getFuncTable);
 void ProfRegisterMstxFunc(MstxInitInjectionFunc mstxInitFunc, ProfModule module);
@@ -44,10 +43,10 @@ using MstxDomainDestroyFunc = decltype(&MstxDomainDestroyImpl);
 using MstxDomainMarkAFunc = decltype(&MstxDomainMarkAImpl);
 using MstxDomainRangeStartAFunc = decltype(&MstxDomainRangeStartAImpl);
 using MstxDomainRangeEndFunc = decltype(&MstxDomainRangeEndImpl);
-using MstxGetModuleFuncTableFunc = int (*)(MstxFuncModule module, MstxFuncTable *outTable, unsigned int *outSize);
+using MstxGetModuleFuncTableFunc = int (*)(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize);
 using MstxInitInjectionFunc = int (*)(MstxGetModuleFuncTableFunc);
-}
-}
+} // namespace MstxPlugin
+} // namespace ProfApi
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,6 +64,5 @@ MSVP_PROF_API int InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable);
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

@@ -25,12 +25,11 @@ std::vector<FeatureRecord> FEATURE_V1 = {
 };
 
 std::unordered_map<PlatformType, std::vector<FeatureRecord>> FEATURE_V2_TABLE = {
-    {
-        PlatformType::CHIP_V4_1_0, {
-            {"ATTR\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: ATTR!\0"},
-            {"MemoryAccess\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: MEMORY_ACCESS!\0"},
-        }
-    },
+    {PlatformType::CHIP_V4_1_0,
+     {
+         {"ATTR\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: ATTR!\0"},
+         {"MemoryAccess\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: MEMORY_ACCESS!\0"},
+     }},
 };
 
 static const std::string FILE_NAME = "incompatible_features.json";
@@ -47,14 +46,11 @@ static std::vector<FeatureRecord>& GetCurPlatformFeatures(bool isV2 = true)
     }
     return FEATURE_V1;
 }
-}
+} // namespace
 
 FeatureManager::FeatureManager() {}
- 
-FeatureManager::~FeatureManager()
-{
-    Uninit();
-}
+
+FeatureManager::~FeatureManager() { Uninit(); }
 
 int32_t FeatureManager::Init()
 {
@@ -62,8 +58,7 @@ int32_t FeatureManager::Init()
         MSPROF_LOGI("FeatureManager is already initialized.");
         return PROFILING_SUCCESS;
     }
-    FUNRET_CHECK_EXPR_ACTION(!CheckCreateFeatures(), return PROFILING_FAILED,
-        "Failed to check feature list.");
+    FUNRET_CHECK_EXPR_ACTION(!CheckCreateFeatures(), return PROFILING_FAILED, "Failed to check feature list.");
 
     isInit_ = true;
     MSPROF_LOGI("FeatureManager initialized successfully.");
@@ -75,42 +70,42 @@ bool FeatureManager::CheckCreateFeatures() const
     // check v2 features
     for (const auto& platformFeatures : FEATURE_V2_TABLE) {
         for (const auto& feature : platformFeatures.second) {
-            FUNRET_CHECK_EXPR_ACTION(feature.featureName[0] == '\0' || feature.info.affectedComponent[0] == '\0' ||
-                feature.info.affectedComponentVersion[0] == '\0' || feature.info.compatibility[0] == '\0' ||
-                feature.info.featureVersion[0] == '\0' || feature.info.infoLog[0] == '\0', return false,
-                "V2 function initialization failed. Member fields are empty.");
+            FUNRET_CHECK_EXPR_ACTION(
+                feature.featureName[0] == '\0' || feature.info.affectedComponent[0] == '\0' ||
+                    feature.info.affectedComponentVersion[0] == '\0' || feature.info.compatibility[0] == '\0' ||
+                    feature.info.featureVersion[0] == '\0' || feature.info.infoLog[0] == '\0',
+                return false, "V2 function initialization failed. Member fields are empty.");
         }
     }
 
     // check v1 features
     for (const auto& feature : FEATURE_V1) {
-        FUNRET_CHECK_EXPR_ACTION(feature.featureName[0] == '\0' || feature.info.affectedComponent[0] == '\0' ||
-            feature.info.affectedComponentVersion[0] == '\0' || feature.info.compatibility[0] == '\0' ||
-            feature.info.featureVersion[0] == '\0' || feature.info.infoLog[0] == '\0', return false,
-            "V1 function initialization failed. Member fields are empty.");
+        FUNRET_CHECK_EXPR_ACTION(
+            feature.featureName[0] == '\0' || feature.info.affectedComponent[0] == '\0' ||
+                feature.info.affectedComponentVersion[0] == '\0' || feature.info.compatibility[0] == '\0' ||
+                feature.info.featureVersion[0] == '\0' || feature.info.infoLog[0] == '\0',
+            return false, "V1 function initialization failed. Member fields are empty.");
     }
     MSPROF_LOGI("All feature checks are successful.");
     return true;
 }
 
-FeatureRecord* FeatureManager::GetIncompatibleFeatures(size_t *featuresSize, bool isV2) const
+FeatureRecord* FeatureManager::GetIncompatibleFeatures(size_t* featuresSize, bool isV2) const
 {
     MSPROF_LOGD("Start to obtain the address information of the feature.");
-    FUNRET_CHECK_EXPR_ACTION(featuresSize == nullptr, return nullptr,
+    FUNRET_CHECK_EXPR_ACTION(
+        featuresSize == nullptr, return nullptr,
         "Input parameter featuresSize for GetIncompatibleFeatures is nullptr.");
 
-    auto &feature = GetCurPlatformFeatures(isV2);
+    auto& feature = GetCurPlatformFeatures(isV2);
     *featuresSize = feature.size();
     MSPROF_LOGD("Stop to obtain the address information of the feature.");
     return feature.data();
 }
 
-void FeatureManager::Uninit()
-{
-    isInit_ = false;
-}
- 
-}  // namespace Config
-}  // namespace Comon
-}  // namespace Dvvp
-}  // namespace Analysis
+void FeatureManager::Uninit() { isInit_ = false; }
+
+} // namespace Config
+} // namespace Common
+} // namespace Dvvp
+} // namespace Analysis

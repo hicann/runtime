@@ -62,7 +62,7 @@ void LlcEventUtils::GenerateLlcEvents(SHARED_PTR_ALIA<analysis::dvvp::message::P
         GenerateLlcDefEvents(params);
         return;
     }
-    #ifndef BUILD_PROFILING_OPEN_PROJECT
+#ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
         if (params->llc_profiling.compare(LLC_PROFILING_CAPACITY) == 0) {
             params->llc_profiling_events = GenerateCapacityEvents();
@@ -71,16 +71,15 @@ void LlcEventUtils::GenerateLlcEvents(SHARED_PTR_ALIA<analysis::dvvp::message::P
         }
     } else
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->IsDriverSupportLlc()) {
-        if (params->llc_profiling.compare(LLC_PROFILING_READ) == 0) {
-            params->llc_profiling_events = LLC_PROFILING_READ;
-        } else if (params->llc_profiling.compare(LLC_PROFILING_WRITE) == 0) {
-            params->llc_profiling_events = LLC_PROFILING_WRITE;
+        if (ConfigManager::instance()->IsDriverSupportLlc()) {
+            if (params->llc_profiling.compare(LLC_PROFILING_READ) == 0) {
+                params->llc_profiling_events = LLC_PROFILING_READ;
+            } else if (params->llc_profiling.compare(LLC_PROFILING_WRITE) == 0) {
+                params->llc_profiling_events = LLC_PROFILING_WRITE;
+            }
         }
-    }
     if (params->llc_profiling_events.empty()) {
-        MSPROF_LOGE("Does not support this llc profiling type : %s",
-            params->llc_profiling.c_str());
+        MSPROF_LOGE("Does not support this llc profiling type : %s", params->llc_profiling.c_str());
     }
 }
 
@@ -92,15 +91,15 @@ void LlcEventUtils::GenerateLlcDefEvents(SHARED_PTR_ALIA<analysis::dvvp::message
         params->llc_profiling_events = GenerateCapacityEvents();
     } else
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->IsDriverSupportLlc()) {
-        params->llc_profiling = LLC_PROFILING_READ;
-        params->llc_profiling_events = LLC_PROFILING_READ;
-    } else {
-        MSPROF_LOGW("The current platform does not support llc profiling.");
-    }
+        if (ConfigManager::instance()->IsDriverSupportLlc()) {
+            params->llc_profiling = LLC_PROFILING_READ;
+            params->llc_profiling_events = LLC_PROFILING_READ;
+        } else {
+            MSPROF_LOGW("The current platform does not support llc profiling.");
+        }
 }
 
-}
-}
-}
-}
+} // namespace utils
+} // namespace common
+} // namespace dvvp
+} // namespace analysis

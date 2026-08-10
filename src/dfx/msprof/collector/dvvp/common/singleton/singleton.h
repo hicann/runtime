@@ -16,24 +16,24 @@ namespace analysis {
 namespace dvvp {
 namespace common {
 namespace singleton {
-template<class T>
+template <class T>
 class Singleton {
 public:
-    static T *instance()
+    static T* instance()
     {
         static T value;
         return &value;
     }
-    virtual ~Singleton() {}                   // dtor hidden
+    virtual ~Singleton() {} // dtor hidden
 
 protected:
-    Singleton() {}                            // ctor hidden
-    Singleton(Singleton const &);             // copy ctor hidden
-    Singleton &operator=(Singleton const &);  // assign op. hidden
+    Singleton() {}                          // ctor hidden
+    Singleton(Singleton const&);            // copy ctor hidden
+    Singleton& operator=(Singleton const&); // assign op. hidden
 };
-}  // namespace singleton
-}  // namespace common
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace singleton
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

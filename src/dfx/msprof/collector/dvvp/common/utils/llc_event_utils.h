@@ -29,9 +29,9 @@ public:
     static void GenerateLlcDefEvents(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 };
 
-}
-}
-}
-}
+} // namespace utils
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 
 #endif

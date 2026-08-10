@@ -21,7 +21,7 @@ class ServerManager : public analysis::dvvp::common::singleton::Singleton<Server
 public:
     ServerManager();
     ~ServerManager() override;
-    int32_t ProfServerInit(uint32_t moduleType, const ProfHalModuleConfig *moduleConfig, uint32_t length);
+    int32_t ProfServerInit(uint32_t moduleType, const ProfHalModuleConfig* moduleConfig, uint32_t length);
     int32_t ProfServerFinal();
     void SetFlushModuleCallback(const ProfHalFlushModuleCallback func);
     void SetSendAicpuDataCallback(const ProfHalSendAicpuDataCallback func);
@@ -32,7 +32,7 @@ private:
     int32_t ProfHelperServerInit(uint32_t devId);
     std::mutex halMtx_;
 };
-}
-}
-}
+} // namespace Server
+} // namespace Hal
+} // namespace Dvvp
 #endif

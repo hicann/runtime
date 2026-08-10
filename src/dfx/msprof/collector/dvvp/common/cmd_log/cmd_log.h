@@ -15,7 +15,7 @@ namespace analysis {
 namespace dvvp {
 namespace common {
 namespace cmdlog {
-using CONST_CHAR_PTR = const char *;
+using CONST_CHAR_PTR = const char*;
 
 class CmdLog {
 public:
@@ -24,8 +24,8 @@ public:
     static void CmdInfoLog(CONST_CHAR_PTR format, ...);
     static void CmdWarningLog(CONST_CHAR_PTR format, ...);
 };
-}
-}
-}
-}
+} // namespace cmdlog
+} // namespace common
+} // namespace dvvp
+} // namespace analysis
 #endif
