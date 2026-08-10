@@ -1957,7 +1957,7 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 
 ### 功能说明
 
-根据Device ID获取对应设备的PCI Bus ID（BDF）字符串。BDF字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
+根据Device ID获取对应设备的PCI Bus ID字符串。PCI Bus ID字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
 
 ### 参数说明
 
@@ -1965,7 +1965,7 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID，与[aclrtSetDevice](#aclrtSetDevice)接口中的Device ID保持一致。 |
 | pciBusId | 输出 | 指向用于存储PCI Bus ID字符串的缓冲区。 |
-| len | 输入 | 缓冲区长度，必须大于等于13。BDF字符串为12个字符加上结尾的`\0`，共13字节。 |
+| len | 输入 | 缓冲区长度，必须大于等于13。PCI Bus ID字符串为12个字符加上结尾的`\0`，共13字节。 |
 
 ### 返回值说明
 
@@ -1973,8 +1973,8 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 
 ### 约束说明
 
-- 虚拟化或容器场景下，返回的是虚拟化层分配的虚拟BDF，仅保证在当前VM或容器内格式合法且唯一，不保证与物理机一致或跨VM唯一。
-- 非PCIe互连形态（如HCCS/UB）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+- 虚拟机或容器场景下，返回的是虚拟化层分配的虚拟PCI Bus ID，仅保证在当前虚拟机或容器内格式合法且唯一，不保证与物理机一致或跨虚拟机唯一。
+- 非PCIe互连形态（如Huawei Cache Coherence System、Unified Bus）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 
 <br>
 <br>
@@ -2015,7 +2015,7 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 
 ### 功能说明
 
-根据PCI Bus ID（BDF）字符串获取对应的Device ID。BDF字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
+根据PCI Bus ID字符串获取对应的Device ID。PCI Bus ID字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
 
 ### 参数说明
 
@@ -2030,8 +2030,8 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 
 ### 约束说明
 
-- 若BDF对应的设备不在可见空间内，返回错误码。
-- 非PCIe互连形态（如HCCS/UB）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+- 若PCI Bus ID对应的设备不在可见空间内，返回错误码。
+- 非PCIe互连形态（如Huawei Cache Coherence System、Unified Bus）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 
 <br>
 <br>
