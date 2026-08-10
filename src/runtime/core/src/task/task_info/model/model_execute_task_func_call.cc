@@ -371,9 +371,8 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
         if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE)) {
             ret = (dev->Driver_())
                       ->MemCopySync(
-                          reinterpret_cast<void*>(static_cast<uintptr_t>(model->GetFuncCallSvmMem())),
-                          model->GetFunCallMemSize(), model->GetFuncCallHostMem(), model->GetFunCallMemSize(),
-                          RT_MEMCPY_DEVICE_TO_DEVICE);
+                          RtValueToPtr<void*>(model->GetFuncCallSvmMem()), model->GetFunCallMemSize(),
+                          model->GetFuncCallHostMem(), model->GetFunCallMemSize(), RT_MEMCPY_DEVICE_TO_DEVICE);
             if (ret != RT_ERROR_NONE) {
                 (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
                 RT_LOG(

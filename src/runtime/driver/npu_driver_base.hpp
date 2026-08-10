@@ -245,7 +245,7 @@ int32_t __attribute__((weak)) drv_log_report_err_msg_handle_unregister(void);
 
 namespace cce {
 namespace runtime {
-constexpr uint64_t MEM_CACHED = (0X1ULL << 41U);
+
 constexpr uint64_t HUGE_PAGE_MEM_CRITICAL_VALUE = (1024ULL * 1024ULL); // 1M
 constexpr uint64_t MEM_LENGTH_2M = 2048000U;
 constexpr uint32_t CQ_DEPTH_FOR_FLAT_ADDR_VIRTURE_MACH = 256U;
