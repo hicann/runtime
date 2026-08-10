@@ -10,7 +10,6 @@
 #ifndef ANALYSIS_DVVP_DEVICE_TASK_MGR_H
 #define ANALYSIS_DVVP_DEVICE_TASK_MGR_H
 
-
 #include <map>
 #include <memory>
 #include <mutex>
@@ -27,18 +26,19 @@ public:
     virtual ~TaskManager();
     int32_t Init();
     int32_t Uninit();
-    SHARED_PTR_ALIA<ProfJobHandler> CreateTask(int32_t hostId, const std::string &jobId,
-        SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport);
-    SHARED_PTR_ALIA<ProfJobHandler> GetTask(const std::string &jobId);
-    bool DeleteTask(const std::string &jobId);
+    SHARED_PTR_ALIA<ProfJobHandler> CreateTask(
+        int32_t hostId, const std::string& jobId, SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport);
+    SHARED_PTR_ALIA<ProfJobHandler> GetTask(const std::string& jobId);
+    bool DeleteTask(const std::string& jobId);
     void ClearTask();
     void ConnectionReset(SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport);
+
 private:
     bool isInited_;
     std::map<std::string, SHARED_PTR_ALIA<ProfJobHandler>> taskMap_;
     std::mutex mtx_;
 };
-} // device
-} // dvvp
-} // analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 #endif

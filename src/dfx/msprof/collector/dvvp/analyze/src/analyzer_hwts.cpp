@@ -15,7 +15,7 @@
 namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
-bool AnalyzerHwts::IsHwtsData(const std::string &fileName)
+bool AnalyzerHwts::IsHwtsData(const std::string& fileName)
 {
     // hwts data contains "hwts.data"
     if (fileName.find("hwts.data") != std::string::npos) {
@@ -27,8 +27,8 @@ bool AnalyzerHwts::IsHwtsData(const std::string &fileName)
 uint8_t AnalyzerHwts::GetRptType(CONST_CHAR_PTR data, uint32_t len)
 {
     if (len >= sizeof(uint8_t)) {
-        auto firstByte = reinterpret_cast<const uint8_t *>(data);
-        uint8_t rptType = (*firstByte) & 0x7;  // bit 0-3
+        auto firstByte = reinterpret_cast<const uint8_t*>(data);
+        uint8_t rptType = (*firstByte) & 0x7; // bit 0-3
         return rptType;
     } else {
         return HWTS_INVALID_TYPE;
@@ -37,12 +37,10 @@ uint8_t AnalyzerHwts::GetRptType(CONST_CHAR_PTR data, uint32_t len)
 
 void AnalyzerHwts::PrintStats()
 {
-    MSPROF_EVENT("total_size_analyze, module: HWTS, analyzed %" PRIu64 ", total %" PRIu64 ", "
-                 "hwts time %u, merge %u",
-        analyzedBytes_,
-        totalBytes_,
-        totalHwtsTimes_,
-        totalHwtsMerges_);
+    MSPROF_EVENT(
+        "total_size_analyze, module: HWTS, analyzed %" PRIu64 ", total %" PRIu64 ", "
+        "hwts time %u, merge %u",
+        analyzedBytes_, totalBytes_, totalHwtsTimes_, totalHwtsMerges_);
 }
 
 void AnalyzerHwts::HwtsParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
@@ -79,7 +77,7 @@ void AnalyzerHwts::ParseOptimizeHwtsData(CONST_CHAR_PTR data, uint32_t len)
 
 void AnalyzerHwts::HandleOptimizeStartEndData(CONST_CHAR_PTR data, uint8_t rptType)
 {
-    auto hwtsData = reinterpret_cast<const HwtsProfileType01 *>(data);
+    auto hwtsData = reinterpret_cast<const HwtsProfileType01*>(data);
     std::string key = std::to_string(hwtsData->taskId) + KEY_SEPARATOR + std::to_string(hwtsData->streamId);
     auto devIter = AnalyzerBase::tsOpInfo_.find(key);
     if (devIter == AnalyzerBase::tsOpInfo_.end()) {
@@ -99,6 +97,6 @@ void AnalyzerHwts::HandleOptimizeStartEndData(CONST_CHAR_PTR data, uint8_t rptTy
     }
 }
 
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

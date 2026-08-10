@@ -23,12 +23,13 @@
 namespace IdeDaemon {
 namespace Common {
 namespace Utils {
-std::string ReplaceWaveToHomeDir(const std::string &filePath);
-bool IsValidDirChar(const std::string &path);
-std::vector<std::string> Split(const std::string &inputStr, bool filterOutEnabled = false,
-    const std::string &filterOut = "", const std::string &pattern = " ");
-std::string LeftTrim(const std::string &str, const std::string &trims);
-}
-}
-}
+std::string ReplaceWaveToHomeDir(const std::string& filePath);
+bool IsValidDirChar(const std::string& path);
+std::vector<std::string> Split(
+    const std::string& inputStr, bool filterOutEnabled = false, const std::string& filterOut = "",
+    const std::string& pattern = " ");
+std::string LeftTrim(const std::string& str, const std::string& trims);
+} // namespace Utils
+} // namespace Common
+} // namespace IdeDaemon
 #endif // __IDE_DAEMON_COMMON_UTILS_H__

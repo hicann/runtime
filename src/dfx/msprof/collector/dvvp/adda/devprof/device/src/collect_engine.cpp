@@ -42,19 +42,14 @@ using namespace analysis::dvvp::transport;
 using namespace Analysis::Dvvp::JobWrapper;
 using namespace analysis::dvvp::common::validation;
 
-
 std::mutex CollectEngine::staticMtx_;
 
-CollectEngine::CollectEngine()
-    : _is_stop(false), isInited_(false), _is_started(false)
+CollectEngine::CollectEngine() : _is_stop(false), isInited_(false), _is_started(false)
 {
     collectionJobCommCfg_.reset();
 }
 
-CollectEngine::~CollectEngine()
-{
-    Uinit();
-}
+CollectEngine::~CollectEngine() { Uinit(); }
 
 int32_t CollectEngine::Init(int32_t devId)
 {
@@ -98,7 +93,7 @@ void CollectEngine::SetDevIdOnHost(int32_t devIdOnHost)
     }
 }
 
-int32_t CollectEngine::CreateTmpDir(std::string &tmp)
+int32_t CollectEngine::CreateTmpDir(std::string& tmp)
 {
     std::string tempDir = Analysis::Dvvp::Common::Config::ConfigManager::instance()->GetDefaultWorkDir();
     if (tempDir.empty()) {
@@ -154,8 +149,8 @@ int32_t CollectEngine::CleanupResults()
     return PROFILING_SUCCESS;
 }
 
-int32_t CollectEngine::CheckPmuEventIsValid(SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent,
-    SHARED_PTR_ALIA<std::vector<std::string> > llcEvent)
+int32_t CollectEngine::CheckPmuEventIsValid(
+    SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent, SHARED_PTR_ALIA<std::vector<std::string> > llcEvent)
 {
     if (ctrlCpuEvent != nullptr && !ParamValidation::instance()->CheckCtrlCpuEventIsValid(*ctrlCpuEvent)) {
         MSPROF_LOGE("[CheckPmuEventIsValid]ctrlCpuEvent is not valid!");
@@ -174,9 +169,9 @@ int32_t CollectEngine::CheckPmuEventIsValid(SHARED_PTR_ALIA<std::vector<std::str
     return PROFILING_SUCCESS;
 }
 
-int32_t CollectEngine::CollectStartReplay(SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent,
-                                      analysis::dvvp::message::StatusInfo &status,
-                                      SHARED_PTR_ALIA<std::vector<std::string> > llcEvent)
+int32_t CollectEngine::CollectStartReplay(
+    SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent, analysis::dvvp::message::StatusInfo& status,
+    SHARED_PTR_ALIA<std::vector<std::string> > llcEvent)
 {
     status.status = analysis::dvvp::message::ERR;
     if (!_is_started || collectionJobCommCfg_ == nullptr) {
@@ -196,7 +191,7 @@ int32_t CollectEngine::CollectStartReplay(SHARED_PTR_ALIA<std::vector<std::strin
     return CollectRegister(status);
 }
 
-int32_t CollectEngine::CollectRegister(analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::CollectRegister(analysis::dvvp::message::StatusInfo& status)
 {
     MSPROF_LOGI("Start to register collection job:%s", collectionJobCommCfg_->params->job_id.c_str());
     int32_t registerCnt = 0;
@@ -208,10 +203,8 @@ int32_t CollectEngine::CollectRegister(analysis::dvvp::message::StatusInfo &stat
             int32_t ret = collectionJobV_[cnt].collectionJob->Init(collectionJobV_[cnt].jobCfg);
             if (ret == PROFILING_SUCCESS) {
                 MSPROF_LOGD("Collection Job %d Register", cnt);
-                ret = CollectionRegisterMgr::instance()
-                    ->CollectionJobRegisterAndRun(collectionJobCommCfg_->devId,
-                                                  collectionJobV_[cnt].jobTag,
-                                                  collectionJobV_[cnt].collectionJob);
+                ret = CollectionRegisterMgr::instance()->CollectionJobRegisterAndRun(
+                    collectionJobCommCfg_->devId, collectionJobV_[cnt].jobTag, collectionJobV_[cnt].collectionJob);
             }
 
             if (ret != PROFILING_SUCCESS) {
@@ -234,7 +227,7 @@ int32_t CollectEngine::CollectRegister(analysis::dvvp::message::StatusInfo &stat
     return PROFILING_SUCCESS;
 }
 
-int32_t CollectEngine::CollectStopJob(analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::CollectStopJob(analysis::dvvp::message::StatusInfo& status)
 {
     int32_t ret = PROFILING_FAILED;
     status.status = analysis::dvvp::message::ERR;
@@ -255,8 +248,9 @@ int32_t CollectEngine::CollectStopJob(analysis::dvvp::message::StatusInfo &statu
             collectionJobV_[cnt].jobCfg->jobParams.events.reset();
             collectionJobV_[cnt].jobCfg->jobParams.cores.reset();
             if (retn != PROFILING_SUCCESS) {
-                MSPROF_LOGD("Device %d Collection Job %d Unregister", collectionJobCommCfg_->devIdOnHost,
-                            collectionJobV_[cnt].jobTag);
+                MSPROF_LOGD(
+                    "Device %d Collection Job %d Unregister", collectionJobCommCfg_->devIdOnHost,
+                    collectionJobV_[cnt].jobTag);
             }
         }
         ret = PROFILING_SUCCESS;
@@ -264,7 +258,7 @@ int32_t CollectEngine::CollectStopJob(analysis::dvvp::message::StatusInfo &statu
     return ret;
 }
 
-int32_t CollectEngine::CollectStopReplay(analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::CollectStopReplay(analysis::dvvp::message::StatusInfo& status)
 {
     int32_t ret = PROFILING_FAILED;
     status.status = analysis::dvvp::message::ERR;
@@ -283,7 +277,7 @@ int32_t CollectEngine::CollectStopReplay(analysis::dvvp::message::StatusInfo &st
     return ret;
 }
 
-int32_t CollectEngine::CollectStop(analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::CollectStop(analysis::dvvp::message::StatusInfo& status)
 {
     int32_t ret = PROFILING_FAILED;
     status.status = analysis::dvvp::message::SUCCESS;
@@ -320,8 +314,8 @@ int32_t CollectEngine::CollectStop(analysis::dvvp::message::StatusInfo &status)
     }
 }
 
-int32_t CollectEngine::InitBeforeCollectStart(const std::string &sampleConfig,
-    analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::InitBeforeCollectStart(
+    const std::string& sampleConfig, analysis::dvvp::message::StatusInfo& status)
 {
     _is_started = false;
     _is_stop = false;
@@ -345,8 +339,7 @@ int32_t CollectEngine::InitBeforeCollectStart(const std::string &sampleConfig,
     return PROFILING_FAILED;
 }
 
-int32_t CollectEngine::CollectStart(const std::string &sampleConfig,
-                                analysis::dvvp::message::StatusInfo &status)
+int32_t CollectEngine::CollectStart(const std::string& sampleConfig, analysis::dvvp::message::StatusInfo& status)
 {
     int32_t ret = PROFILING_FAILED;
     status.status = analysis::dvvp::message::ERR;
@@ -381,7 +374,7 @@ int32_t CollectEngine::CollectStart(const std::string &sampleConfig,
     return ret;
 }
 
-std::string CollectEngine::BindFileWithChannel(const std::string &fileName, uint32_t channelId)
+std::string CollectEngine::BindFileWithChannel(const std::string& fileName, uint32_t channelId)
 {
     std::stringstream ssProfDataFilePath;
 
@@ -412,6 +405,6 @@ void CollectEngine::CreateCollectionJobArray()
         }
     }
 }
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

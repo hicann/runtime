@@ -24,5 +24,7 @@ protected:
     std::string GetL2CacheEvents() override;
 };
 
-}}}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

@@ -20,14 +20,9 @@ namespace dvvp {
 namespace device {
 using namespace analysis::dvvp::common::error;
 
-TaskManager::TaskManager()
-    : isInited_(false)
-{
-}
+TaskManager::TaskManager() : isInited_(false) {}
 
-TaskManager::~TaskManager()
-{
-}
+TaskManager::~TaskManager() {}
 
 /**
  * @brief Task management initialization
@@ -96,8 +91,8 @@ void TaskManager::ConnectionReset(SHARED_PTR_ALIA<analysis::dvvp::transport::ITr
             success return Shared pointer for tasks
             failed return nullptr
  */
-SHARED_PTR_ALIA<ProfJobHandler> TaskManager::CreateTask(int32_t hostId, const std::string &jobId,
-    SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport)
+SHARED_PTR_ALIA<ProfJobHandler> TaskManager::CreateTask(
+    int32_t hostId, const std::string& jobId, SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport)
 {
     if (transport == nullptr) {
         MSPROF_LOGE("CreateTask failed, transport is nullptr");
@@ -138,7 +133,7 @@ SHARED_PTR_ALIA<ProfJobHandler> TaskManager::CreateTask(int32_t hostId, const st
             success return Shared pointer for tasks
             if task not eixst, return nullptr
  */
-SHARED_PTR_ALIA<ProfJobHandler> TaskManager::GetTask(const std::string &jobId)
+SHARED_PTR_ALIA<ProfJobHandler> TaskManager::GetTask(const std::string& jobId)
 {
     if (!isInited_) {
         MSPROF_LOGE("TaskManager is not inited yet");
@@ -161,7 +156,7 @@ SHARED_PTR_ALIA<ProfJobHandler> TaskManager::GetTask(const std::string &jobId)
             if delete success, return true
             if task not eixst, return false
  */
-bool TaskManager::DeleteTask(const std::string &jobId)
+bool TaskManager::DeleteTask(const std::string& jobId)
 {
     if (!isInited_) {
         MSPROF_LOGE("TaskManager is not inited yet");
@@ -178,6 +173,6 @@ bool TaskManager::DeleteTask(const std::string &jobId)
 
     return false;
 }
-} // analysis
-} // dvvp
-} // device
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

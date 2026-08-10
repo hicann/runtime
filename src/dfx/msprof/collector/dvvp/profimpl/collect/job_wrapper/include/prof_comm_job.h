@@ -21,36 +21,39 @@ namespace JobWrapper {
 using namespace analysis::dvvp::driver;
 using namespace analysis::dvvp::common::config;
 
+#define CHECK_JOB_EVENT_PARAM_RET(cfg, ACTION)                                                       \
+    do {                                                                                             \
+        if ((cfg) == nullptr || (cfg)->comParams == nullptr || (cfg)->jobParams.events == nullptr || \
+            (cfg)->jobParams.events->size() == 0) {                                                  \
+            MSPROF_LOGI("Job check event param not pass");                                           \
+            ACTION;                                                                                  \
+        }                                                                                            \
+    } while (0)
 
-#define CHECK_JOB_EVENT_PARAM_RET(cfg, ACTION)  do {                                   \
-    if ((cfg) == nullptr || (cfg)->comParams == nullptr ||                             \
-        (cfg)->jobParams.events == nullptr || (cfg)->jobParams.events->size() == 0) {  \
-        MSPROF_LOGI("Job check event param not pass");                                 \
-        ACTION;                                                                        \
-    }                                                                                  \
-} while (0)
+#define CHECK_JOB_CONTEXT_PARAM_RET(cfg, ACTION)                                                      \
+    do {                                                                                              \
+        if ((cfg) == nullptr || (cfg)->comParams == nullptr || (cfg)->comParams->jobCtx == nullptr || \
+            (cfg)->comParams->params == nullptr) {                                                    \
+            MSPROF_LOGI("Job context param check not passed");                                        \
+            ACTION;                                                                                   \
+        }                                                                                             \
+    } while (0)
 
-#define CHECK_JOB_CONTEXT_PARAM_RET(cfg, ACTION)  do {                                 \
-    if ((cfg) == nullptr || (cfg)->comParams == nullptr ||                             \
-        (cfg)->comParams->jobCtx == nullptr || (cfg)->comParams->params == nullptr) {  \
-        MSPROF_LOGI("Job context param check not passed");                             \
-        ACTION;                                                                        \
-    }                                                                                  \
-} while (0)
+#define CHECK_JOB_COMMON_PARAM_RET(cfg, ACTION)                \
+    do {                                                       \
+        if ((cfg) == nullptr || (cfg)->comParams == nullptr) { \
+            MSPROF_LOGI("Job common param check not passed");  \
+            ACTION;                                            \
+        }                                                      \
+    } while (0)
 
-#define CHECK_JOB_COMMON_PARAM_RET(cfg, ACTION) do {                                   \
-    if ((cfg) == nullptr || (cfg)->comParams == nullptr) {                             \
-        MSPROF_LOGI("Job common param check not passed");                              \
-        ACTION;                                                                        \
-    }                                                                                  \
-} while (0)
-
-#define CHECK_JOB_CONFIG_UNSIGNED_SIZE_RET(size, ACTION) do {                          \
-    if ((size) == 0 || (size) > 0x7FFFFFFF) {                                          \
-        MSPROF_LOGE("Profiling Config Size Out Range");                                \
-        ACTION;                                                                        \
-    }                                                                                  \
-} while (0)
+#define CHECK_JOB_CONFIG_UNSIGNED_SIZE_RET(size, ACTION)    \
+    do {                                                    \
+        if ((size) == 0 || (size) > 0x7FFFFFFF) {           \
+            MSPROF_LOGE("Profiling Config Size Out Range"); \
+            ACTION;                                         \
+        }                                                   \
+    } while (0)
 
 constexpr int32_t DEFAULT_PERIOD_TIME = 10;
 
@@ -60,13 +63,14 @@ public:
     ~ProfDrvJob() override;
 
 protected:
-    void AddReader(const std::string &key, int32_t devId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId,
-        const std::string &filePath);
-    void RemoveReader(const std::string &key, int32_t devId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId) const;
-    std::string GetEventsStr(const std::vector<std::string> &events, const std::string &separator = ",") const;
-    uint32_t GetEventSize(const std::vector<std::string> &events) const;
-    std::string BindFileWithChannel(const std::string &fileName) const;
-    std::string GenerateFileName(const std::string &fileName, int32_t devId) const;
+    void AddReader(
+        const std::string& key, int32_t devId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId,
+        const std::string& filePath);
+    void RemoveReader(const std::string& key, int32_t devId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId) const;
+    std::string GetEventsStr(const std::vector<std::string>& events, const std::string& separator = ",") const;
+    uint32_t GetEventSize(const std::vector<std::string>& events) const;
+    std::string BindFileWithChannel(const std::string& fileName) const;
+    std::string GenerateFileName(const std::string& fileName, int32_t devId) const;
 
 protected:
     SHARED_PTR_ALIA<CollectionJobCfg> collectionJobCfg_;
@@ -87,7 +91,7 @@ protected:
     analysis::dvvp::driver::DrvPeripheralProfileCfg peripheralCfg_;
     std::string eventsStr_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

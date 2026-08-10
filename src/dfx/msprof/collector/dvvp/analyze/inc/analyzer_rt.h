@@ -27,23 +27,23 @@ public:
     ~AnalyzerRt() {}
 
 public:
-    bool IsRtCompactData(const std::string &tag) const;
+    bool IsRtCompactData(const std::string& tag) const;
 
 private:
     void ParseRuntimeTrackData(CONST_CHAR_PTR data, uint32_t len, bool ageFlag);
     void HandleRuntimeTrackData(CONST_CHAR_PTR data, bool ageFlag) const;
     void RtCompactParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void PrintStats() const;
-    void MatchDeviceOpInfo(std::map<std::string, RtOpInfo> &rtOpInfo,
-        std::multimap<std::string, RtOpInfo> &tsTmpOpInfo,
-        std::multimap<uint32_t, GeOpFlagInfo> &geOpInfo) const;
+    void MatchDeviceOpInfo(
+        std::map<std::string, RtOpInfo>& rtOpInfo, std::multimap<std::string, RtOpInfo>& tsTmpOpInfo,
+        std::multimap<uint32_t, GeOpFlagInfo>& geOpInfo) const;
 
 private:
     uint32_t totalRtTimes_;
     uint32_t totalRtMerges_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

@@ -34,8 +34,8 @@ public:
     ~ProfUbJob() override;
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

@@ -27,119 +27,61 @@ MdcLiteV2Platform::MdcLiteV2Platform()
 {
     supportedFeature_ = {
         // TASK
-        PLATFORM_TASK_ASCENDCL,
-        PLATFORM_TASK_RUNTIME_API,
-        PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_AIV_METRICS,
-        PLATFORM_TASK_AIC_METRICS,
-        PLATFORM_TASK_GE_API,
-        PLATFORM_TASK_HCCL,
-        PLATFORM_TASK_TSFW,
-        PLATFORM_TASK_L2_CACHE_REG,
-        PLATFORM_TASK_MEMORY,
-        PLATFORM_TASK_MSPROFTX,
-        PLATFORM_TASK_SWITCH,
-        PLATFORM_TASK_TRACE,
-        PLATFORM_TASK_STARS_ACSQ,
-        PLATFORM_TASK_TS_KEYPOINT,
-        PLATFORM_TASK_TS_MEMCPY,
-        PLATFORM_TASK_TRAINING_TRACE,
-        PLATFORM_TASK_AICPU,
-        PLATFORM_TASK_BLOCK,
-        PLATFORM_TASK_INSTR_PROFILING,
+        PLATFORM_TASK_ASCENDCL, PLATFORM_TASK_RUNTIME_API, PLATFORM_TASK_METRICS, PLATFORM_TASK_AIV_METRICS,
+        PLATFORM_TASK_AIC_METRICS, PLATFORM_TASK_GE_API, PLATFORM_TASK_HCCL, PLATFORM_TASK_TSFW,
+        PLATFORM_TASK_L2_CACHE_REG, PLATFORM_TASK_MEMORY, PLATFORM_TASK_MSPROFTX, PLATFORM_TASK_SWITCH,
+        PLATFORM_TASK_TRACE, PLATFORM_TASK_STARS_ACSQ, PLATFORM_TASK_TS_KEYPOINT, PLATFORM_TASK_TS_MEMCPY,
+        PLATFORM_TASK_TRAINING_TRACE, PLATFORM_TASK_AICPU, PLATFORM_TASK_BLOCK, PLATFORM_TASK_INSTR_PROFILING,
         // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PUEXCT_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_L2_CACHE_PMU,
-        PLATFORM_TASK_RCR_PMU,
+        PLATFORM_TASK_AU_PMU, PLATFORM_TASK_PU_PMU, PLATFORM_TASK_PUEXCT_PMU, PLATFORM_TASK_MEMORYL0_PMU,
+        PLATFORM_TASK_MEMORY_PMU, PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_L2_CACHE_PMU, PLATFORM_TASK_RCR_PMU,
         PLATFORM_TASK_SOC_PMU,
         // Device
         PLATFORM_SYS_DEVICE_US,
         // Feature
-        PLATFORM_MC2,
-        PLATFORM_AICPU_HCCL,
-        PLATFORM_DIAGNOSTIC_COLLECTION,
-        PLATFORM_SYS_MEM_SERVICEFLOW,
-        PLATFORM_STARS_QOS,
-        PLATFORM_ACLAPI_SETDEVICE_ENABLE
-    };
+        PLATFORM_MC2, PLATFORM_AICPU_HCCL, PLATFORM_DIAGNOSTIC_COLLECTION, PLATFORM_SYS_MEM_SERVICEFLOW,
+        PLATFORM_STARS_QOS, PLATFORM_ACLAPI_SETDEVICE_ENABLE};
     InsertSysFeature();
 }
 
-uint16_t MdcLiteV2Platform::GetMaxMonitorNumber() const
-{
-    return MAX_DAVID_MONITOR_NUM;
-}
+uint16_t MdcLiteV2Platform::GetMaxMonitorNumber() const { return MAX_DAVID_MONITOR_NUM; }
 
-uint16_t MdcLiteV2Platform::GetQosMonitorNumber() const
-{
-    return MAX_QOS_MONITOR_NUM;
-}
+uint16_t MdcLiteV2Platform::GetQosMonitorNumber() const { return MAX_QOS_MONITOR_NUM; }
 
-std::string MdcLiteV2Platform::GetPipeUtilizationMetrics()
-{
-    return MDC_LITE_V2_PIPEUTILIZATION;
-}
+std::string MdcLiteV2Platform::GetPipeUtilizationMetrics() { return MDC_LITE_V2_PIPEUTILIZATION; }
 
-std::string MdcLiteV2Platform::GetMemoryMetrics()
-{
-    return MDC_LITE_V2_MEMORY;
-}
+std::string MdcLiteV2Platform::GetMemoryMetrics() { return MDC_LITE_V2_MEMORY; }
 
-std::string MdcLiteV2Platform::GetMemoryL0Metrics()
-{
-    return MDC_LITE_V2_MEMORYL0;
-}
+std::string MdcLiteV2Platform::GetMemoryL0Metrics() { return MDC_LITE_V2_MEMORYL0; }
 
-std::string MdcLiteV2Platform::GetMemoryUBMetrics()
-{
-    return MDC_LITE_V2_MEMORYUB;
-}
+std::string MdcLiteV2Platform::GetMemoryUBMetrics() { return MDC_LITE_V2_MEMORYUB; }
 
-std::string MdcLiteV2Platform::GetArithmeticUtilizationMetrics()
-{
-    return MDC_LITE_V2_AIRTHMETICUTILIZATION;
-}
+std::string MdcLiteV2Platform::GetArithmeticUtilizationMetrics() { return MDC_LITE_V2_AIRTHMETICUTILIZATION; }
 
-std::string MdcLiteV2Platform::GetResourceConflictRatioMetrics()
-{
-    return MDC_LITE_V2_RESOURCECONFLICTRATIO;
-}
+std::string MdcLiteV2Platform::GetResourceConflictRatioMetrics() { return MDC_LITE_V2_RESOURCECONFLICTRATIO; }
 
-std::string MdcLiteV2Platform::GetL2CacheMetrics()
-{
-    return MDC_LITE_V2_L2CACHE;
-}
+std::string MdcLiteV2Platform::GetL2CacheMetrics() { return MDC_LITE_V2_L2CACHE; }
 
-std::string MdcLiteV2Platform::GetL2CacheEvents()
-{
-    return MDC_LITE_V2_L2CACHEEVENT;
-}
+std::string MdcLiteV2Platform::GetL2CacheEvents() { return MDC_LITE_V2_L2CACHEEVENT; }
 
 void MdcLiteV2Platform::InsertSysFeature()
 {
-    const auto sysFeature =  {
-        // System-device
-        PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
-        PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
-        PLATFORM_SYS_DEVICE_TS_CPU_HOT_FUNC_PMU,
-        PLATFORM_SYS_DEVICE_AI_CTRL_CPU_HOT_FUNC_PMU,
-        PLATFORM_SYS_DEVICE_NPU_MODULE_MEM,
-        PLATFORM_SYS_DEVICE_LLC,
-        PLATFORM_SYS_DEVICE_NIC,
-        PLATFORM_SYS_DEVICE_DDR,
-        PLATFORM_SYS_DEVICE_HBM,
-        PLATFORM_SYS_DEVICE_ROCE,
-        PLATFORM_SYS_DEVICE_HCCS,
-        PLATFORM_SYS_DEVICE_QOS,
-        PLATFORM_SYS_DEVICE_LOW_POWER
-    };
+    const auto sysFeature = {// System-device
+                             PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
+                             PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
+                             PLATFORM_SYS_DEVICE_TS_CPU_HOT_FUNC_PMU,
+                             PLATFORM_SYS_DEVICE_AI_CTRL_CPU_HOT_FUNC_PMU,
+                             PLATFORM_SYS_DEVICE_NPU_MODULE_MEM,
+                             PLATFORM_SYS_DEVICE_LLC,
+                             PLATFORM_SYS_DEVICE_NIC,
+                             PLATFORM_SYS_DEVICE_DDR,
+                             PLATFORM_SYS_DEVICE_HBM,
+                             PLATFORM_SYS_DEVICE_ROCE,
+                             PLATFORM_SYS_DEVICE_HCCS,
+                             PLATFORM_SYS_DEVICE_QOS,
+                             PLATFORM_SYS_DEVICE_LOW_POWER};
     supportedFeature_.insert(sysFeature.begin(), sysFeature.end());
 }
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

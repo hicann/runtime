@@ -27,23 +27,18 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 using namespace Msprofiler::Parser;
 
-ProfDrvJob::ProfDrvJob()
-{
-}
-ProfDrvJob::~ProfDrvJob()
-{
-}
+ProfDrvJob::ProfDrvJob() {}
+ProfDrvJob::~ProfDrvJob() {}
 
-void ProfDrvJob::AddReader(const std::string &key, int32_t devId, AI_DRV_CHANNEL channelId, const std::string &filePath)
+void ProfDrvJob::AddReader(const std::string& key, int32_t devId, AI_DRV_CHANNEL channelId, const std::string& filePath)
 {
     std::string relativePath;
-    (void)analysis::dvvp::common::utils::Utils::RelativePath(filePath,
-        collectionJobCfg_->comParams->tmpResultDir,
-        relativePath);
+    (void)analysis::dvvp::common::utils::Utils::RelativePath(
+        filePath, collectionJobCfg_->comParams->tmpResultDir, relativePath);
 
     SHARED_PTR_ALIA<ChannelReader> reader;
-    MSVP_MAKE_SHARED4(reader, ChannelReader, devId, channelId,
-        relativePath, collectionJobCfg_->comParams->jobCtx, return);
+    MSVP_MAKE_SHARED4(
+        reader, ChannelReader, devId, channelId, relativePath, collectionJobCfg_->comParams->jobCtx, return);
     int32_t ret = reader->Init();
     if (ret != PROFILING_SUCCESS) {
         return;
@@ -52,12 +47,13 @@ void ProfDrvJob::AddReader(const std::string &key, int32_t devId, AI_DRV_CHANNEL
     if (poll != nullptr) {
         (void)poll->AddReader(devId, channelId, reader);
     } else {
-        MSPROF_LOGI("ProfDrvJob skipped adding reader, key:%s, devId:%d, channel:%d, filepath:%s",
-                    key.c_str(), devId, channelId, Utils::BaseName(filePath).c_str());
+        MSPROF_LOGI(
+            "ProfDrvJob skipped adding reader, key:%s, devId:%d, channel:%d, filepath:%s", key.c_str(), devId,
+            channelId, Utils::BaseName(filePath).c_str());
     }
 }
 
-void ProfDrvJob::RemoveReader(const std::string &key, int32_t devId, AI_DRV_CHANNEL channelId) const
+void ProfDrvJob::RemoveReader(const std::string& key, int32_t devId, AI_DRV_CHANNEL channelId) const
 {
     MSPROF_LOGI("ProfDrvJob RemoveReader, key:%s, devId:%d, channel:%d", key.c_str(), devId, channelId);
     SHARED_PTR_ALIA<ChannelPoll> poll = ProfChannelManager::instance()->GetChannelPoller();
@@ -66,7 +62,7 @@ void ProfDrvJob::RemoveReader(const std::string &key, int32_t devId, AI_DRV_CHAN
     }
 }
 
-uint32_t ProfDrvJob::GetEventSize(const std::vector<std::string> &events) const
+uint32_t ProfDrvJob::GetEventSize(const std::vector<std::string>& events) const
 {
     uint32_t eventSize = 0;
     for (size_t i = 0; i < events.size(); i++) {
@@ -77,15 +73,15 @@ uint32_t ProfDrvJob::GetEventSize(const std::vector<std::string> &events) const
     return eventSize;
 }
 
-std::string ProfDrvJob::GetEventsStr(const std::vector<std::string> &events,
-    const std::string &separator /* = "," */) const
+std::string ProfDrvJob::GetEventsStr(
+    const std::vector<std::string>& events, const std::string& separator /* = "," */) const
 {
     analysis::dvvp::common::utils::UtilsStringBuilder<std::string> builder;
 
     return builder.Join(events, separator);
 }
 
-std::string ProfDrvJob::GenerateFileName(const std::string &fileName, int32_t devId) const
+std::string ProfDrvJob::GenerateFileName(const std::string& fileName, int32_t devId) const
 {
     std::stringstream ssProfDataFilePath;
 
@@ -96,7 +92,7 @@ std::string ProfDrvJob::GenerateFileName(const std::string &fileName, int32_t de
     return ssProfDataFilePath.str();
 }
 
-std::string ProfDrvJob::BindFileWithChannel(const std::string &fileName) const
+std::string ProfDrvJob::BindFileWithChannel(const std::string& fileName) const
 {
     std::stringstream ssProfDataFilePath;
 
@@ -109,8 +105,8 @@ std::string ProfDrvJob::BindFileWithChannel(const std::string &fileName) const
  * @berif  : Collect Peripheral profiling data
  */
 ProfPeripheralJob::ProfPeripheralJob()
-    : samplePeriod_(analysis::dvvp::common::config::DEFAULT_INTERVAL),
-      channelId_(PROF_CHANNEL_UNKNOWN) {}
+    : samplePeriod_(analysis::dvvp::common::config::DEFAULT_INTERVAL), channelId_(PROF_CHANNEL_UNKNOWN)
+{}
 
 ProfPeripheralJob::~ProfPeripheralJob() {}
 
@@ -138,7 +134,7 @@ int32_t ProfPeripheralJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
  */
 int32_t ProfPeripheralJob::SetPeripheralConfig()
 {
-    peripheralCfg_.configP    = nullptr;
+    peripheralCfg_.configP = nullptr;
     peripheralCfg_.configSize = 0;
     return PROFILING_SUCCESS;
 }
@@ -154,13 +150,13 @@ int32_t ProfPeripheralJob::Process()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
             static_cast<int32_t>(channelId_));
         return PROFILING_SUCCESS;
     }
 
-    MSPROF_LOGI("Begin to start profiling Channel %d, events:%s",
-        static_cast<int32_t>(channelId_), eventsStr_.c_str());
+    MSPROF_LOGI("Begin to start profiling Channel %d, events:%s", static_cast<int32_t>(channelId_), eventsStr_.c_str());
     peripheralCfg_.profDataFilePath = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath);
     int32_t ret = SetPeripheralConfig();
     if (ret != PROFILING_SUCCESS) {
@@ -168,14 +164,16 @@ int32_t ProfPeripheralJob::Process()
         return ret;
     }
 
-    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelId_,
+    AddReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelId_,
         peripheralCfg_.profDataFilePath);
 
-    MSPROF_LOGI("begin to start profiling Channel %d, devId :%d",
-        static_cast<int32_t>(channelId_), collectionJobCfg_->comParams->devIdOnHost);
+    MSPROF_LOGI(
+        "begin to start profiling Channel %d, devId :%d", static_cast<int32_t>(channelId_),
+        collectionJobCfg_->comParams->devIdOnHost);
 
-    peripheralCfg_.profDeviceId     = collectionJobCfg_->comParams->devId;
-    peripheralCfg_.profChannel      = channelId_;
+    peripheralCfg_.profDeviceId = collectionJobCfg_->comParams->devId;
+    peripheralCfg_.profChannel = channelId_;
     peripheralCfg_.bufLen = JsonParser::instance()->GetJsonChannelDriverBufferLen(channelId_);
     int32_t peroid = JsonParser::instance()->GetJsonChannelPeroid(channelId_);
     if (peroid != 0) {
@@ -185,8 +183,8 @@ int32_t ProfPeripheralJob::Process()
     }
     peripheralCfg_.profDataFile = "";
     ret = DrvPeripheralStart(peripheralCfg_);
-    MSPROF_LOGI("start profiling Channel %d, events:%s, ret=%d",
-        static_cast<int32_t>(channelId_), eventsStr_.c_str(), ret);
+    MSPROF_LOGI(
+        "start profiling Channel %d, events:%s, ret=%d", static_cast<int32_t>(channelId_), eventsStr_.c_str(), ret);
 
     Utils::ProfFree(peripheralCfg_.configP);
     peripheralCfg_.configP = nullptr;
@@ -206,7 +204,8 @@ int32_t ProfPeripheralJob::Uninit()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_SUCCESS);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
             static_cast<int32_t>(channelId_));
         return PROFILING_SUCCESS;
     }
@@ -223,6 +222,6 @@ int32_t ProfPeripheralJob::Uninit()
     RemoveReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelId_);
     return PROFILING_SUCCESS;
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

@@ -19,11 +19,8 @@ using namespace analysis::dvvp::common::config;
 namespace Msprofiler {
 namespace Parser {
 std::map<uint32_t, uint32_t> g_moduleIdMap = {
-    {ASCENDCL, MSPROF_MODULE_ACL},
-    {GE, MSPROF_MODULE_FRAMEWORK},
-    {RUNTIME, MSPROF_MODULE_RUNTIME},
-    {HCCL, MSPROF_MODULE_HCCL},
-    {AICPU, MSPROF_MODULE_DATA_PREPROCESS},
+    {ASCENDCL, MSPROF_MODULE_ACL}, {GE, MSPROF_MODULE_FRAMEWORK},          {RUNTIME, MSPROF_MODULE_RUNTIME},
+    {HCCL, MSPROF_MODULE_HCCL},    {AICPU, MSPROF_MODULE_DATA_PREPROCESS},
 };
 
 std::map<std::string, uint32_t> g_parseJsonModulesMap = {
@@ -32,25 +29,16 @@ std::map<std::string, uint32_t> g_parseJsonModulesMap = {
     {PROF_JSON_RUNTIME, MSPROF_MODULE_RUNTIME},
     {PROF_JSON_HCCL, MSPROF_MODULE_HCCL},
     {PROF_JSON_DATA_PREPROCESS, MSPROF_MODULE_DATA_PREPROCESS},
-    {PROF_JSON_MSPROF, MSPROF_MODULE_MSPROF}
-};
+    {PROF_JSON_MSPROF, MSPROF_MODULE_MSPROF}};
 
 std::map<std::string, uint32_t> g_parseJsonReportersMap = {
-    {PROF_JSON_API_EVENT, API_EVENT},
-    {PROF_JSON_COMPACT, COMPACT},
-    {PROF_JSON_ADDITIONAL, ADDITIONAL}
-};
+    {PROF_JSON_API_EVENT, API_EVENT}, {PROF_JSON_COMPACT, COMPACT}, {PROF_JSON_ADDITIONAL, ADDITIONAL}};
 
-JsonParser::JsonParser() : isInited_(false)
-{
-}
+JsonParser::JsonParser() : isInited_(false) {}
 
-JsonParser::~JsonParser()
-{
-    UnInit();
-}
+JsonParser::~JsonParser() { UnInit(); }
 
-void JsonParser::Init(const std::string &jsonPath)
+void JsonParser::Init(const std::string& jsonPath)
 {
     if (!isInited_) {
         isInited_ = true;
@@ -69,7 +57,7 @@ void JsonParser::UnInit()
     isInited_ = false;
 }
 
-void JsonParser::ParseJsonFile(const std::string &path)
+void JsonParser::ParseJsonFile(const std::string& path)
 {
     std::string tempString;
     ProfJsonRoot profJsonRootFile;
@@ -97,7 +85,7 @@ void JsonParser::ParseJsonFile(const std::string &path)
     }
 }
 
-void JsonParser::ParseJsonReporters(const ProfJsonRoot &profJsonRootFile)
+void JsonParser::ParseJsonReporters(const ProfJsonRoot& profJsonRootFile)
 {
     NanoJson::JsonArray reportersArray = profJsonRootFile.reporters.GetValue<NanoJson::JsonArray>();
     size_t len = reportersArray.size();
@@ -126,7 +114,7 @@ void JsonParser::ParseJsonReporters(const ProfJsonRoot &profJsonRootFile)
     }
 }
 
-void JsonParser::ParseJsonModules(const ProfJsonRoot &profJsonRootFile)
+void JsonParser::ParseJsonModules(const ProfJsonRoot& profJsonRootFile)
 {
     NanoJson::JsonArray modulesArray = profJsonRootFile.modules.GetValue<NanoJson::JsonArray>();
     size_t len = modulesArray.size();
@@ -154,7 +142,7 @@ void JsonParser::ParseJsonModules(const ProfJsonRoot &profJsonRootFile)
     }
 }
 
-void JsonParser::ParseJsonChannels(const ProfJsonRoot &profJsonRootFile)
+void JsonParser::ParseJsonChannels(const ProfJsonRoot& profJsonRootFile)
 {
     NanoJson::JsonArray channelsArray = profJsonRootFile.channels.GetValue<NanoJson::JsonArray>();
     size_t len = channelsArray.size();
@@ -168,8 +156,9 @@ void JsonParser::ParseJsonChannels(const ProfJsonRoot &profJsonRootFile)
         tempChannel.channelId = tmpInt;
         if (!channelsArray[i].Contains(MSPORF_PERIOD_STRING)) {
             tempChannel.peroid = 0;
-        } else if (channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() < MIN_CHANNEL_PEROID ||
-                    channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() > MAX_CHANNEL_PEROID) {
+        } else if (
+            channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() < MIN_CHANNEL_PEROID ||
+            channelsArray[i][MSPORF_PERIOD_STRING].GetValue<int32_t>() > MAX_CHANNEL_PEROID) {
             MSPROF_LOGW("The peroid of Channel %d is out of range", tempChannel.channelId);
             tempChannel.peroid = 0;
         } else {
@@ -192,80 +181,82 @@ void JsonParser::ParseJsonChannels(const ProfJsonRoot &profJsonRootFile)
     }
 }
 
-void JsonParser::CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters &tempReporter) const
+void JsonParser::CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters& tempReporter) const
 {
     if (!temp.Contains(MSPORF_REPORT_BUFFER_LEN_STRING)) {
-            tempReporter.reportBufferLen = 0;
-        } else if ((temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() < MIN_REPORT_BUFFER_LEN ||
-                    temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() > MAX_REPORT_BUFFER_LEN)) {
-            MSPROF_LOGW("The reporter buffer len of Repoter %d is out of range", tempReporter.reporterId);
-            tempReporter.reportBufferLen = 0;
-        } else {
-            tempReporter.reportBufferLen = (temp)[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>();
-        }
+        tempReporter.reportBufferLen = 0;
+    } else if ((temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() < MIN_REPORT_BUFFER_LEN ||
+                temp[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>() > MAX_REPORT_BUFFER_LEN)) {
+        MSPROF_LOGW("The reporter buffer len of Repoter %d is out of range", tempReporter.reporterId);
+        tempReporter.reportBufferLen = 0;
+    } else {
+        tempReporter.reportBufferLen = (temp)[MSPORF_REPORT_BUFFER_LEN_STRING].GetValue<int32_t>();
+    }
 }
 
-void JsonParser::CheckChannelProfSwitch(JsonValue temp, ProfJsonChannels &tempChannel) const
+void JsonParser::CheckChannelProfSwitch(JsonValue temp, ProfJsonChannels& tempChannel) const
 {
     std::string tempString;
     if (!temp.Contains(MSPORF_PROF_SWITCH_STRING)) {
+        tempChannel.profSwitch = true;
+    } else {
+        tempString = temp[MSPORF_PROF_SWITCH_STRING].GetValue<std::string>();
+        if (tempString == "on") {
             tempChannel.profSwitch = true;
-        } else {
-            tempString = temp[MSPORF_PROF_SWITCH_STRING].GetValue<std::string>();
-            if (tempString == "on") {
-                tempChannel.profSwitch = true;
-            } else if (tempString == "off") {
-                MSPROF_EVENT("Set channel switch of channel %d off", tempChannel.channelId);
-                tempChannel.profSwitch = false;
-            }
+        } else if (tempString == "off") {
+            MSPROF_EVENT("Set channel switch of channel %d off", tempChannel.channelId);
+            tempChannel.profSwitch = false;
         }
+    }
 }
 
-void JsonParser::CheckChannelReporterSwitch(JsonValue temp, ProfJsonChannels &tempChannel) const
+void JsonParser::CheckChannelReporterSwitch(JsonValue temp, ProfJsonChannels& tempChannel) const
 {
     std::string tempString;
     if (!temp.Contains(MSPORF_REPORTER_SWITCH_STRING)) {
+        tempChannel.reporterSwitch = true;
+    } else {
+        tempString = temp[MSPORF_REPORTER_SWITCH_STRING].GetValue<std::string>();
+        if (tempString == "on") {
             tempChannel.reporterSwitch = true;
-        } else {
-            tempString = temp[MSPORF_REPORTER_SWITCH_STRING].GetValue<std::string>();
-            if (tempString == "on") {
-                tempChannel.reporterSwitch = true;
-            } else if (tempString == "off") {
-                MSPROF_EVENT("Set reporter switch of channel %d off", tempChannel.channelId);
-                tempChannel.reporterSwitch = false;
-            }
+        } else if (tempString == "off") {
+            MSPROF_EVENT("Set reporter switch of channel %d off", tempChannel.channelId);
+            tempChannel.reporterSwitch = false;
         }
+    }
 }
 
-void JsonParser::CheckChannelReportBufferLen(JsonValue temp, ProfJsonChannels &tempChannel) const
+void JsonParser::CheckChannelReportBufferLen(JsonValue temp, ProfJsonChannels& tempChannel) const
 {
     if (!temp.Contains(MSPORF_CHANNEL_BUFFER_SIZE_STRING)) {
-            tempChannel.reportBufferLen = 0;
-        } else if (temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() < MIN_CHANNEL_BUFFER_SIZE ||
-                    temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() > MAX_CHANNEL_BUFFER_SIZE) {
-            MSPROF_LOGW("The channel buffer size of Channel %d is out of range", tempChannel.channelId);
-            tempChannel.reportBufferLen = 0;
-        } else {
-            tempChannel.reportBufferLen = (temp)[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>();
-        }
+        tempChannel.reportBufferLen = 0;
+    } else if (
+        temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() < MIN_CHANNEL_BUFFER_SIZE ||
+        temp[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>() > MAX_CHANNEL_BUFFER_SIZE) {
+        MSPROF_LOGW("The channel buffer size of Channel %d is out of range", tempChannel.channelId);
+        tempChannel.reportBufferLen = 0;
+    } else {
+        tempChannel.reportBufferLen = (temp)[MSPORF_CHANNEL_BUFFER_SIZE_STRING].GetValue<int32_t>();
+    }
 }
 
-void JsonParser::CheckChannelThreshold(JsonValue temp, ProfJsonChannels &tempChannel) const
+void JsonParser::CheckChannelThreshold(JsonValue temp, ProfJsonChannels& tempChannel) const
 {
     if (!temp.Contains(MSPORF_THRESHOLD_STRING)) {
-            tempChannel.threshold = 0;
-        } else if ((temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>() < MIN_HWTS_THRESHOLD ||
-                    temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>() > MAX_HWTS_THRESHOLD) &&
-                    (tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG) ||
-                    tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG))) {
-            MSPROF_LOGW("The threshold of Channel %d is out of range", tempChannel.channelId);
-            tempChannel.threshold = 0;
-        } else {
-            tempChannel.threshold = (temp)[MSPORF_THRESHOLD_STRING].GetValue<int32_t>();
-        }
+        tempChannel.threshold = 0;
+    } else if (
+        (temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>() < MIN_HWTS_THRESHOLD ||
+         temp[MSPORF_THRESHOLD_STRING].GetValue<int32_t>() > MAX_HWTS_THRESHOLD) &&
+        (tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_HWTS_LOG) ||
+         tempChannel.channelId == static_cast<int32_t>(AI_DRV_CHANNEL::PROF_CHANNEL_AIV_HWTS_LOG))) {
+        MSPROF_LOGW("The threshold of Channel %d is out of range", tempChannel.channelId);
+        tempChannel.threshold = 0;
+    } else {
+        tempChannel.threshold = (temp)[MSPORF_THRESHOLD_STRING].GetValue<int32_t>();
+    }
 }
 
-bool JsonParser::CheckJsonModuleId(const std::string &tempString) const
+bool JsonParser::CheckJsonModuleId(const std::string& tempString) const
 {
     auto iter = g_parseJsonModulesMap.find(tempString);
     if (iter == g_parseJsonModulesMap.end()) {
@@ -275,7 +266,7 @@ bool JsonParser::CheckJsonModuleId(const std::string &tempString) const
     return true;
 }
 
-bool JsonParser::CheckJsonReporterId(const std::string &tempString) const
+bool JsonParser::CheckJsonReporterId(const std::string& tempString) const
 {
     auto iter = g_parseJsonReportersMap.find(tempString);
     if (iter == g_parseJsonReportersMap.end()) {
@@ -285,7 +276,7 @@ bool JsonParser::CheckJsonReporterId(const std::string &tempString) const
     return true;
 }
 
-bool JsonParser::CheckJsonChannelId(const int32_t &channelId) const
+bool JsonParser::CheckJsonChannelId(const int32_t& channelId) const
 {
     if (channelId >= AI_DRV_CHANNEL::PROF_CHANNEL_MAX || channelId <= AI_DRV_CHANNEL::PROF_CHANNEL_UNKNOWN) {
         MSPROF_LOGE("Channel Id %d is invalid.", channelId);
@@ -294,7 +285,7 @@ bool JsonParser::CheckJsonChannelId(const int32_t &channelId) const
     return true;
 }
 
-bool JsonParser::GetJsonModuleProfSwitch(const uint32_t &moduleId) const
+bool JsonParser::GetJsonModuleProfSwitch(const uint32_t& moduleId) const
 {
     auto iter = moduleParams_.find(g_moduleIdMap[moduleId]);
     if (iter != moduleParams_.end()) {
@@ -303,7 +294,7 @@ bool JsonParser::GetJsonModuleProfSwitch(const uint32_t &moduleId) const
     return true;
 }
 
-bool JsonParser::GetJsonModuleReporterSwitch(const uint32_t &moduleId) const
+bool JsonParser::GetJsonModuleReporterSwitch(const uint32_t& moduleId) const
 {
     auto iter = reporterParams_.find(moduleId);
     if (iter != reporterParams_.end()) {
@@ -312,7 +303,7 @@ bool JsonParser::GetJsonModuleReporterSwitch(const uint32_t &moduleId) const
     return true;
 }
 
-uint32_t JsonParser::GetJsonModuleReporterBufferLen(const uint32_t &reporterId) const
+uint32_t JsonParser::GetJsonModuleReporterBufferLen(const uint32_t& reporterId) const
 {
     auto iter = reporterParams_.find(reporterId);
     if (iter != reporterParams_.end()) {
@@ -323,7 +314,7 @@ uint32_t JsonParser::GetJsonModuleReporterBufferLen(const uint32_t &reporterId) 
     return 0;
 }
 
-bool JsonParser::GetJsonChannelReporterSwitch(const uint32_t &channelId) const
+bool JsonParser::GetJsonChannelReporterSwitch(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -332,7 +323,7 @@ bool JsonParser::GetJsonChannelReporterSwitch(const uint32_t &channelId) const
     return true;
 }
 
-bool JsonParser::GetJsonChannelProfSwitch(const uint32_t &channelId) const
+bool JsonParser::GetJsonChannelProfSwitch(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -341,7 +332,7 @@ bool JsonParser::GetJsonChannelProfSwitch(const uint32_t &channelId) const
     return true;
 }
 
-uint32_t JsonParser::GetJsonChannelReportBufferLen(const uint32_t &channelId) const
+uint32_t JsonParser::GetJsonChannelReportBufferLen(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -352,7 +343,7 @@ uint32_t JsonParser::GetJsonChannelReportBufferLen(const uint32_t &channelId) co
     return 0;
 }
 
-uint32_t JsonParser::GetJsonChannelDriverBufferLen(const uint32_t &channelId) const
+uint32_t JsonParser::GetJsonChannelDriverBufferLen(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -363,7 +354,7 @@ uint32_t JsonParser::GetJsonChannelDriverBufferLen(const uint32_t &channelId) co
     return 0;
 }
 
-uint32_t JsonParser::GetJsonChannelPeroid(const uint32_t &channelId) const
+uint32_t JsonParser::GetJsonChannelPeroid(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -374,7 +365,7 @@ uint32_t JsonParser::GetJsonChannelPeroid(const uint32_t &channelId) const
     return 0;
 }
 
-uint32_t JsonParser::GetJsonChannelThreshold(const uint32_t &channelId) const
+uint32_t JsonParser::GetJsonChannelThreshold(const uint32_t& channelId) const
 {
     auto iter = channelParams_.find(channelId);
     if (iter != channelParams_.end()) {
@@ -384,5 +375,5 @@ uint32_t JsonParser::GetJsonChannelThreshold(const uint32_t &channelId) const
     }
     return 0;
 }
-}
-}
+} // namespace Parser
+} // namespace Msprofiler

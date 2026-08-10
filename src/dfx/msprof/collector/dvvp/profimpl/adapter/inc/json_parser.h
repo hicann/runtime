@@ -88,33 +88,33 @@ class JsonParser : public analysis::dvvp::common::singleton::Singleton<JsonParse
 public:
     JsonParser();
     ~JsonParser() override;
-    void Init(const std::string &jsonPath = PROF_JSON_PATH);
+    void Init(const std::string& jsonPath = PROF_JSON_PATH);
     void JsonParserDefaultParametersInit(void);
     bool GetJsonProfSwitch();
-    bool GetJsonModuleProfSwitch(const uint32_t &moduleId) const;
-    bool GetJsonModuleReporterSwitch(const uint32_t &moduleId) const;
-    uint32_t GetJsonModuleReporterBufferLen(const uint32_t &reporterId) const;
-    bool GetJsonChannelReporterSwitch(const uint32_t &channelId) const;
-    bool GetJsonChannelProfSwitch(const uint32_t &channelId) const;
-    uint32_t GetJsonChannelReportBufferLen(const uint32_t &channelId) const;
-    uint32_t GetJsonChannelDriverBufferLen(const uint32_t &channelId) const;
-    uint32_t GetJsonChannelPeroid(const uint32_t &channelId) const;
-    uint32_t GetJsonChannelThreshold(const uint32_t &channelId) const;
-    bool CheckJsonModuleId(const std::string &tempString) const;
-    bool CheckJsonReporterId(const std::string &tempString) const;
-    bool CheckJsonChannelId(const int32_t &channelId) const;
+    bool GetJsonModuleProfSwitch(const uint32_t& moduleId) const;
+    bool GetJsonModuleReporterSwitch(const uint32_t& moduleId) const;
+    uint32_t GetJsonModuleReporterBufferLen(const uint32_t& reporterId) const;
+    bool GetJsonChannelReporterSwitch(const uint32_t& channelId) const;
+    bool GetJsonChannelProfSwitch(const uint32_t& channelId) const;
+    uint32_t GetJsonChannelReportBufferLen(const uint32_t& channelId) const;
+    uint32_t GetJsonChannelDriverBufferLen(const uint32_t& channelId) const;
+    uint32_t GetJsonChannelPeroid(const uint32_t& channelId) const;
+    uint32_t GetJsonChannelThreshold(const uint32_t& channelId) const;
+    bool CheckJsonModuleId(const std::string& tempString) const;
+    bool CheckJsonReporterId(const std::string& tempString) const;
+    bool CheckJsonChannelId(const int32_t& channelId) const;
     void UnInit();
 
 private:
-    void ParseJsonFile(const std::string &path);
-    void ParseJsonModules(const ProfJsonRoot &profJsonRootFile);
-    void ParseJsonReporters(const ProfJsonRoot &profJsonRootFile);
-    void ParseJsonChannels(const ProfJsonRoot &profJsonRootFile);
-    void CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters &tempReporter) const;
-    void CheckChannelProfSwitch(JsonValue temp, ProfJsonChannels &tempChannel) const;
-    void CheckChannelReporterSwitch(JsonValue temp, ProfJsonChannels &tempChannel) const;
-    void CheckChannelReportBufferLen(JsonValue temp, ProfJsonChannels &tempChannel) const;
-    void CheckChannelThreshold(JsonValue temp, ProfJsonChannels &tempChannel) const;
+    void ParseJsonFile(const std::string& path);
+    void ParseJsonModules(const ProfJsonRoot& profJsonRootFile);
+    void ParseJsonReporters(const ProfJsonRoot& profJsonRootFile);
+    void ParseJsonChannels(const ProfJsonRoot& profJsonRootFile);
+    void CheckModuleReportBufferLen(JsonValue temp, ProfJsonReporters& tempReporter) const;
+    void CheckChannelProfSwitch(JsonValue temp, ProfJsonChannels& tempChannel) const;
+    void CheckChannelReporterSwitch(JsonValue temp, ProfJsonChannels& tempChannel) const;
+    void CheckChannelReportBufferLen(JsonValue temp, ProfJsonChannels& tempChannel) const;
+    void CheckChannelThreshold(JsonValue temp, ProfJsonChannels& tempChannel) const;
 
     bool isInited_;
     std::map<int32_t, ProfJsonChannels> channelParams_;
@@ -122,6 +122,6 @@ private:
     std::map<int32_t, ProfJsonReporters> reporterParams_;
 };
 
-}
-}
+} // namespace Parser
+} // namespace Msprofiler
 #endif

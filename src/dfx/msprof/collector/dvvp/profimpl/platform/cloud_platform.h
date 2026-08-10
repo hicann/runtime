@@ -21,7 +21,9 @@ public:
     ~CloudPlatform() override {}
 
 protected:
-    std::string GetL2CacheEvents() override; 
+    std::string GetL2CacheEvents() override;
 };
-}}}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

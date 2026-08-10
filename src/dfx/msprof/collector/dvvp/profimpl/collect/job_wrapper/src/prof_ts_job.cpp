@@ -21,12 +21,8 @@ using namespace analysis::dvvp::common::config;
 using namespace Msprofiler::Parser;
 using namespace Analysis::Dvvp::Common::Platform;
 
-ProfTscpuJob::ProfTscpuJob()
-{
-}
-ProfTscpuJob::~ProfTscpuJob()
-{
-}
+ProfTscpuJob::ProfTscpuJob() {}
+ProfTscpuJob::~ProfTscpuJob() {}
 
 int32_t ProfTscpuJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -43,8 +39,8 @@ int32_t ProfTscpuJob::Process()
 {
     CHECK_JOB_EVENT_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_TS_CPU);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU);
         return PROFILING_SUCCESS;
     }
 
@@ -58,8 +54,9 @@ int32_t ProfTscpuJob::Process()
 
     std::string filePath = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath);
 
-    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_TS_CPU, filePath);
+    AddReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU,
+        filePath);
 
     DrvPeripheralProfileCfg drvPeripheralProfileCfg;
     drvPeripheralProfileCfg.profDeviceId = collectionJobCfg_->comParams->devId;
@@ -69,12 +66,11 @@ int32_t ProfTscpuJob::Process()
     if (peroid != 0) {
         drvPeripheralProfileCfg.profSamplePeriod = peroid;
     } else {
-        drvPeripheralProfileCfg.profSamplePeriod = tsCpuPeriod;  // int32_t prof_sample_period
+        drvPeripheralProfileCfg.profSamplePeriod = tsCpuPeriod; // int32_t prof_sample_period
     }
     drvPeripheralProfileCfg.profDataFilePath = "";
 
-    int32_t ret = DrvTscpuStart(drvPeripheralProfileCfg,
-                            *collectionJobCfg_->jobParams.events);
+    int32_t ret = DrvTscpuStart(drvPeripheralProfileCfg, *collectionJobCfg_->jobParams.events);
 
     MSPROF_LOGI("start profiling ts cpu, events:%s, ret=%d", eventsStr.c_str(), ret);
     FUNRET_CHECK_RET_VAL(ret != PROFILING_SUCCESS);
@@ -85,8 +81,8 @@ int32_t ProfTscpuJob::Uninit()
 {
     CHECK_JOB_EVENT_PARAM_RET(collectionJobCfg_, return PROFILING_SUCCESS);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_TS_CPU);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU);
         return PROFILING_SUCCESS;
     }
 
@@ -96,18 +92,14 @@ int32_t ProfTscpuJob::Uninit()
 
     MSPROF_LOGI("stop profiling ts cpu, events:%s, ret=%d", eventsStr.c_str(), ret);
 
-    RemoveReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_TS_CPU);
+    RemoveReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, PROF_CHANNEL_TS_CPU);
     collectionJobCfg_->jobParams.events.reset();
     return PROFILING_SUCCESS;
 }
 
-ProfFmkJob::ProfFmkJob()
-{
-}
-ProfFmkJob::~ProfFmkJob()
-{
-}
+ProfFmkJob::ProfFmkJob() {}
+ProfFmkJob::~ProfFmkJob() {}
 
 int32_t ProfFmkJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -128,15 +120,15 @@ int32_t ProfFmkJob::Process()
         return PROFILING_SUCCESS;
     }
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_FMK);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK);
         return PROFILING_SUCCESS;
     }
     MSPROF_LOGI("Begin to start profiling fmk log");
 
     std::string filePath = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath);
-    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_FMK, filePath);
+    AddReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK, filePath);
     int32_t ret = DrvFmkDataStart(collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK);
 
     MSPROF_LOGI("start profiling fmk log, ret=%d", ret);
@@ -152,8 +144,8 @@ int32_t ProfFmkJob::Uninit()
         return PROFILING_SUCCESS;
     }
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_FMK);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_FMK);
         return PROFILING_SUCCESS;
     }
 
@@ -166,12 +158,8 @@ int32_t ProfFmkJob::Uninit()
     return PROFILING_SUCCESS;
 }
 
-ProfTsTrackJob::ProfTsTrackJob() : channelId_(PROF_CHANNEL_TS_FW)
-{
-}
-ProfTsTrackJob::~ProfTsTrackJob()
-{
-}
+ProfTsTrackJob::ProfTsTrackJob() : channelId_(PROF_CHANNEL_TS_FW) {}
+ProfTsTrackJob::~ProfTsTrackJob() {}
 
 int32_t ProfTsTrackJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -204,8 +192,7 @@ int32_t ProfTsTrackJob::Process()
     }
     MSPROF_LOGI("Begin to start profiling ts track, devId: %d", collectionJobCfg_->comParams->devId);
     std::string filePath = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath);
-    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        channelId_, filePath);
+    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, channelId_, filePath);
     DrvPeripheralProfileCfg drvPeripheralProfileCfg;
     drvPeripheralProfileCfg.profDeviceId = collectionJobCfg_->comParams->devId;
     drvPeripheralProfileCfg.profChannel = channelId_;
@@ -230,8 +217,7 @@ int32_t ProfTsTrackJob::Uninit()
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_SUCCESS);
 
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            channelId_);
+        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, channelId_);
         return PROFILING_SUCCESS;
     }
 
@@ -268,6 +254,6 @@ int32_t ProfAivTsTrackJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     return PROFILING_SUCCESS;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

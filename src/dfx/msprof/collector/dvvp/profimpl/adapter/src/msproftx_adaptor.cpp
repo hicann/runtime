@@ -21,21 +21,20 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 
 namespace {
-int32_t ReportNullParam(const char *api, const char *param)
+int32_t ReportNullParam(const char* api, const char* param)
 {
     MSPROF_LOGE("[%s]%s is nullptr", api, param);
-    MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
-        std::vector<std::string>({api, param}));
+    MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}), std::vector<std::string>({api, param}));
     return ACL_ERROR_INVALID_PARAM;
 }
-}
+} // namespace
 
 extern "C" void* ProfAclCreateStamp()
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
-            std::vector<std::string>({"aclprofCreateStamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofCreateStamp"}));
         return nullptr;
     }
     return Msprof::MsprofTx::MsprofTxManager::instance()->CreateStamp();
@@ -55,7 +54,7 @@ extern "C" void ProfAclDestroyStamp(VOID_PTR stamp)
     Msprof::MsprofTx::MsprofTxManager::instance()->DestroyStamp(stampInstancePtr);
 }
 
-extern "C" int32_t ProfAclSetCategoryName(uint32_t category, const char *categoryName)
+extern "C" int32_t ProfAclSetCategoryName(uint32_t category, const char* categoryName)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
@@ -84,7 +83,7 @@ extern "C" int32_t ProfAclSetStampPayload(VOID_PTR stamp, const int32_t type, CO
     return Msprof::MsprofTx::MsprofTxManager::instance()->SetStampPayload(stampInstancePtr, type, value);
 }
 
-extern "C" int32_t ProfAclSetStampTraceMessage(VOID_PTR stamp, const char *msg, uint32_t msgLen)
+extern "C" int32_t ProfAclSetStampTraceMessage(VOID_PTR stamp, const char* msg, uint32_t msgLen)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
@@ -104,7 +103,7 @@ extern "C" int32_t ProfAclMark(VOID_PTR stamp)
     return Msprof::MsprofTx::MsprofTxManager::instance()->Mark(stampInstancePtr);
 }
 
-extern "C" int32_t ProfAclMarkEx(const char *msg, size_t msgLen, aclrtStream stream)
+extern "C" int32_t ProfAclMarkEx(const char* msg, size_t msgLen, aclrtStream stream)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
@@ -136,12 +135,12 @@ extern "C" int32_t ProfAclPop()
     return Msprof::MsprofTx::MsprofTxManager::instance()->Pop();
 }
 
-extern "C" int32_t ProfAclRangeStart(VOID_PTR stamp, uint32_t *rangeId)
+extern "C" int32_t ProfAclRangeStart(VOID_PTR stamp, uint32_t* rangeId)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
-            std::vector<std::string>({"aclprofRangeStart"}));
+        MSPROF_INPUT_ERROR(
+            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofRangeStart"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     if (stamp == nullptr) {
@@ -158,8 +157,8 @@ extern "C" int32_t ProfAclRangeStop(uint32_t rangeId)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
-            std::vector<std::string>({"aclprofRangeStop"}));
+        MSPROF_INPUT_ERROR(
+            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofRangeStop"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     return Msprof::MsprofTx::MsprofTxManager::instance()->RangeStop(rangeId);

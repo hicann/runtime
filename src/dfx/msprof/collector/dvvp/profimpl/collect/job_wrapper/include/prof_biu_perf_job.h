@@ -47,7 +47,7 @@ private:
     };
 };
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

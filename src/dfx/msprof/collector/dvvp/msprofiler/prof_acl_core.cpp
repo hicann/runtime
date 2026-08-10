@@ -25,15 +25,12 @@ using namespace Msprof::Engine::Intf;
 std::mutex g_aclprofMutex;
 static uint64_t g_indexId = 1;
 
-aclError aclprofModelSubscribe(const uint32_t modelId, const aclprofSubscribeConfig *profSubscribeConfig)
+aclError aclprofModelSubscribe(const uint32_t modelId, const aclprofSubscribeConfig* profSubscribeConfig)
 {
     return ProfAclSubscribe(ACL_API_TYPE, modelId, profSubscribeConfig);
 }
 
-aclError aclprofModelUnSubscribe(const uint32_t modelId)
-{
-    return ProfAclUnSubscribe(ACL_API_TYPE, modelId);
-}
+aclError aclprofModelUnSubscribe(const uint32_t modelId) { return ProfAclUnSubscribe(ACL_API_TYPE, modelId); }
 
 size_t aclprofGetModelId(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index)
 {
@@ -46,13 +43,14 @@ struct aclprofStepInfo {
     uint64_t indexId;
 };
 
-using ACLPROF_STEPINFO_PTR = aclprofStepInfo *;
+using ACLPROF_STEPINFO_PTR = aclprofStepInfo*;
 
 aclError aclprofGetStepTimestamp(ACLPROF_STEPINFO_PTR stepInfo, aclprofStepTag tag, aclrtStream stream)
 {
     if (stepInfo == nullptr) {
         MSPROF_LOGE("stepInfo is nullptr.");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
             std::vector<std::string>({"aclprofGetStepTimestamp", "stepInfo"}));
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -80,10 +78,11 @@ aclError aclprofGetStepTimestamp(ACLPROF_STEPINFO_PTR stepInfo, aclprofStepTag t
 
 ACLPROF_STEPINFO_PTR aclprofCreateStepInfo()
 {
-    auto stepInfo = new (std::nothrow)aclprofStepInfo();
+    auto stepInfo = new (std::nothrow) aclprofStepInfo();
     if (stepInfo == nullptr) {
         MSPROF_LOGE("new stepInfo fail");
-        MSPROF_ENV_ERROR("EK0201", std::vector<std::string>({"buf_size"}),
+        MSPROF_ENV_ERROR(
+            "EK0201", std::vector<std::string>({"buf_size"}),
             std::vector<std::string>({std::to_string(sizeof(aclprofStepInfo)) + "B"}));
         return nullptr;
     }
@@ -98,7 +97,8 @@ void aclprofDestroyStepInfo(ACLPROF_STEPINFO_PTR stepInfo)
 {
     if (stepInfo == nullptr) {
         MSPROF_LOGE("destroy stepInfo failed, stepInfo must not be nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
             std::vector<std::string>({"aclprofDestroyStepInfo", "stepInfo"}));
     } else {
         delete stepInfo;
@@ -106,77 +106,47 @@ void aclprofDestroyStepInfo(ACLPROF_STEPINFO_PTR stepInfo)
     }
 }
 
-void *aclprofCreateStamp()
-{
-    return ProfAclCreateStamp();
-}
+void* aclprofCreateStamp() { return ProfAclCreateStamp(); }
 
-void aclprofDestroyStamp(VOID_PTR stamp)
-{
-    ProfAclDestroyStamp(stamp);
-}
+void aclprofDestroyStamp(VOID_PTR stamp) { ProfAclDestroyStamp(stamp); }
 
-aclError aclprofSetCategoryName(uint32_t category, const char *categoryName)
+aclError aclprofSetCategoryName(uint32_t category, const char* categoryName)
 {
     return ProfAclSetCategoryName(category, categoryName);
 }
 
-aclError aclprofSetStampCategory(VOID_PTR stamp, uint32_t category)
-{
-    return ProfAclSetStampCategory(stamp, category);
-}
+aclError aclprofSetStampCategory(VOID_PTR stamp, uint32_t category) { return ProfAclSetStampCategory(stamp, category); }
 
 aclError aclprofSetStampPayload(VOID_PTR stamp, const int32_t type, VOID_PTR value)
 {
     return ProfAclSetStampPayload(stamp, type, value);
 }
 
-aclError aclprofSetStampTraceMessage(VOID_PTR stamp, const char *msg, uint32_t msgLen)
+aclError aclprofSetStampTraceMessage(VOID_PTR stamp, const char* msg, uint32_t msgLen)
 {
     return ProfAclSetStampTraceMessage(stamp, msg, msgLen);
 }
 
-aclError aclprofMark(VOID_PTR stamp)
-{
-    return ProfAclMark(stamp);
-}
+aclError aclprofMark(VOID_PTR stamp) { return ProfAclMark(stamp); }
 
-aclError aclprofMarkEx(const char *msg, size_t msgLen, aclrtStream stream)
+aclError aclprofMarkEx(const char* msg, size_t msgLen, aclrtStream stream)
 {
     return ProfAclMarkEx(msg, msgLen, stream);
 }
 
-aclError aclprofPush(VOID_PTR stamp)
-{
-    return ProfAclPush(stamp);
-}
+aclError aclprofPush(VOID_PTR stamp) { return ProfAclPush(stamp); }
 
-aclError aclprofPop()
-{
-    return ProfAclPop();
-}
+aclError aclprofPop() { return ProfAclPop(); }
 
-aclError aclprofRangeStart(VOID_PTR stamp, uint32_t *rangeId)
-{
-    return ProfAclRangeStart(stamp, rangeId);
-}
+aclError aclprofRangeStart(VOID_PTR stamp, uint32_t* rangeId) { return ProfAclRangeStart(stamp, rangeId); }
 
-aclError aclprofRangeStop(uint32_t rangeId)
-{
-    return ProfAclRangeStop(rangeId);
-}
+aclError aclprofRangeStop(uint32_t rangeId) { return ProfAclRangeStop(rangeId); }
 
-uint64_t aclprofStr2Id(const char *message)
-{
-    return ProfStr2Id(message, strlen(message));
-}
+uint64_t aclprofStr2Id(const char* message) { return ProfStr2Id(message, strlen(message)); }
 
-aclError aclprofRangePushEx(aclprofEventAttributes *attr)
+aclError aclprofRangePushEx(aclprofEventAttributes* attr)
 {
     return ProfAclRangePushEx(reinterpret_cast<ACLPROF_EVENT_ATTR_PTR>(attr));
 }
 
-aclError aclprofRangePop()
-{
-    return ProfAclRangePop();
-}
+aclError aclprofRangePop() { return ProfAclRangePop(); }

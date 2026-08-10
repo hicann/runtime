@@ -18,57 +18,54 @@ namespace Collect {
 namespace Report {
 using namespace analysis::dvvp;
 const std::map<uint16_t, std::map<uint32_t, std::string>> DEFAULT_TYPE_INFO = {
-    { MSPROF_REPORT_NODE_LEVEL, {
-        {MSPROF_REPORT_NODE_BASIC_INFO_TYPE, "node_basic_info"},
-        {MSPROF_REPORT_NODE_TENSOR_INFO_TYPE, "tensor_info"},
-        {MSPROF_REPORT_NODE_ATTR_INFO_TYPE, "node_attr_info"},
-        {MSPROF_REPORT_NODE_FUSION_OP_INFO_TYPE, "fusion_op_info"},
-        {MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE, "context_id_info"},
-        {MSPROF_REPORT_NODE_LAUNCH_TYPE, "launch"},
-        {MSPROF_REPORT_NODE_TASK_MEMORY_TYPE, "task_memory_info"},
-        {MSPROF_REPORT_NODE_STATIC_OP_MEM_TYPE, "static_op_mem"},
-    }},
-    { MSPROF_REPORT_MODEL_LEVEL, {
-        {MSPROF_REPORT_MODEL_GRAPH_ID_MAP_TYPE, "graph_id_map"},
-        {MSPROF_REPORT_MODEL_EXEOM_TYPE, "model_exeom"},
-        {MSPROF_REPORT_MODEL_LOGIC_STREAM_TYPE, "logic_stream_info"}
-    }},
-    { MSPROF_REPORT_HCCL_NODE_LEVEL, {
-        {MSPROF_REPORT_HCCL_MASTER_TYPE, "master"},
-        {MSPROF_REPORT_HCCL_SLAVE_TYPE, "slave"}
-    }},
-    { MSPROF_REPORT_TX_LEVEL, {
-        {MSPROF_REPORT_TX_BASE_TYPE, "msproftx"}
-    }}
-};
+    {MSPROF_REPORT_NODE_LEVEL,
+     {
+         {MSPROF_REPORT_NODE_BASIC_INFO_TYPE, "node_basic_info"},
+         {MSPROF_REPORT_NODE_TENSOR_INFO_TYPE, "tensor_info"},
+         {MSPROF_REPORT_NODE_ATTR_INFO_TYPE, "node_attr_info"},
+         {MSPROF_REPORT_NODE_FUSION_OP_INFO_TYPE, "fusion_op_info"},
+         {MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE, "context_id_info"},
+         {MSPROF_REPORT_NODE_LAUNCH_TYPE, "launch"},
+         {MSPROF_REPORT_NODE_TASK_MEMORY_TYPE, "task_memory_info"},
+         {MSPROF_REPORT_NODE_STATIC_OP_MEM_TYPE, "static_op_mem"},
+     }},
+    {MSPROF_REPORT_MODEL_LEVEL,
+     {{MSPROF_REPORT_MODEL_GRAPH_ID_MAP_TYPE, "graph_id_map"},
+      {MSPROF_REPORT_MODEL_EXEOM_TYPE, "model_exeom"},
+      {MSPROF_REPORT_MODEL_LOGIC_STREAM_TYPE, "logic_stream_info"}}},
+    {MSPROF_REPORT_HCCL_NODE_LEVEL,
+     {{MSPROF_REPORT_HCCL_MASTER_TYPE, "master"}, {MSPROF_REPORT_HCCL_SLAVE_TYPE, "slave"}}},
+    {MSPROF_REPORT_TX_LEVEL, {{MSPROF_REPORT_TX_BASE_TYPE, "msproftx"}}}};
 class ProfReporterMgr : public analysis::dvvp::common::thread::Thread {
 public:
-    static ProfReporterMgr &GetInstance()
+    static ProfReporterMgr& GetInstance()
     {
         static ProfReporterMgr mgr;
         return mgr;
     }
     int32_t Start() override;
     int32_t Stop() override;
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     int32_t StartReporters();
     int32_t StartAdprofReporters();
     int32_t SendAdditionalData(SHARED_PTR_ALIA<ProfileFileChunk> fileChunk);
     void FlushAdditonalData();
     void FlushAllReporter();
     void FlushHostReporters();
-    int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const std::string &typeName);
+    int32_t RegReportTypeInfo(uint16_t level, uint32_t typeId, const std::string& typeName);
     bool ValidateDataFormat(const std::string& dataFormatStr) const;
-    int32_t RegReportDataFormat(uint16_t level, uint32_t typeId, const std::string &dataFormat);
-    uint64_t GetHashId(const std::string &info) const;
-    std::string &GetHashInfo(uint64_t hashId) const;
+    int32_t RegReportDataFormat(uint16_t level, uint32_t typeId, const std::string& dataFormat);
+    uint64_t GetHashId(const std::string& info) const;
+    std::string& GetHashInfo(uint64_t hashId) const;
     void GetReportTypeInfo(uint16_t level, uint32_t typeId, std::string& tag);
     int32_t StopReporters();
     void SetSyncReporter();
     void NotifyQuit();
 
 private:
-    void FillData(const std::string &saveHashData, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, bool isLastChunk, const std::string& filename) const;
+    void FillData(
+        const std::string& saveHashData, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, bool isLastChunk,
+        const std::string& filename) const;
     void SaveData(bool isLastChunk);
     void SaveDataFormat(bool isLastChunk);
     void FlushMstxData();
@@ -90,7 +87,7 @@ private:
     std::vector<Msprof::Engine::MsprofReporter> reporters_;
     std::vector<Msprof::Engine::MsprofReporter> adprofReporters_;
 };
-}
-}
-}
+} // namespace Report
+} // namespace Collect
+} // namespace Dvvp
 #endif

@@ -22,8 +22,7 @@ public:
 public:
     int32_t BindFunction(
         std::function<int32_t(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>)> reportFunc,
-        std::function<bool()> adprofStartedFunc
-    );
+        std::function<bool()> adprofStartedFunc);
     int32_t Report(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk);
     bool AdprofStarted();
 

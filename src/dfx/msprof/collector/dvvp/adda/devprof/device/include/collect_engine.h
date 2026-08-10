@@ -33,42 +33,40 @@ public:
     int32_t Uinit();
     void SetDevIdOnHost(int32_t devIdOnHost);
 
-    int32_t CollectStart(const std::string &sampleConfig,
-                     analysis::dvvp::message::StatusInfo &status);
+    int32_t CollectStart(const std::string& sampleConfig, analysis::dvvp::message::StatusInfo& status);
 
-    int32_t CollectStop(analysis::dvvp::message::StatusInfo &status);
+    int32_t CollectStop(analysis::dvvp::message::StatusInfo& status);
 
-    int32_t CollectStartReplay(SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent,
-                           analysis::dvvp::message::StatusInfo &status,
-                           SHARED_PTR_ALIA<std::vector<std::string> > llcEvent);
-    int32_t CollectRegister(analysis::dvvp::message::StatusInfo &status);
-    int32_t CollectStopReplay(analysis::dvvp::message::StatusInfo &status);
-    int32_t CollectStopJob(analysis::dvvp::message::StatusInfo &status);
+    int32_t CollectStartReplay(
+        SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent, analysis::dvvp::message::StatusInfo& status,
+        SHARED_PTR_ALIA<std::vector<std::string> > llcEvent);
+    int32_t CollectRegister(analysis::dvvp::message::StatusInfo& status);
+    int32_t CollectStopReplay(analysis::dvvp::message::StatusInfo& status);
+    int32_t CollectStopJob(analysis::dvvp::message::StatusInfo& status);
 
 private:
-    int32_t CreateTmpDir(std::string &tmp);
+    int32_t CreateTmpDir(std::string& tmp);
     int32_t CleanupResults();
-    std::string BindFileWithChannel(const std::string &fileName, uint32_t channelId);
+    std::string BindFileWithChannel(const std::string& fileName, uint32_t channelId);
     void CreateCollectionJobArray();
-    int32_t InitBeforeCollectStart(const std::string &sampleConfig,
-        analysis::dvvp::message::StatusInfo &status);
+    int32_t InitBeforeCollectStart(const std::string& sampleConfig, analysis::dvvp::message::StatusInfo& status);
 
-    int32_t CheckPmuEventIsValid(SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent,
-        SHARED_PTR_ALIA<std::vector<std::string> > llcEvent);
+    int32_t CheckPmuEventIsValid(
+        SHARED_PTR_ALIA<std::vector<std::string> > ctrlCpuEvent, SHARED_PTR_ALIA<std::vector<std::string> > llcEvent);
 
     SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> _transport;
     std::string _sample_config;
     SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams> collectionJobCommCfg_;
-    std::array<Analysis::Dvvp::JobWrapper::CollectionJobT,
-        Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB> collectionJobV_;
+    std::array<Analysis::Dvvp::JobWrapper::CollectionJobT, Analysis::Dvvp::JobWrapper::NR_MAX_COLLECTION_JOB>
+        collectionJobV_;
     volatile bool _is_stop;
     bool isInited_;
     std::string tmpResultDir_;
     volatile bool _is_started;
     static std::mutex staticMtx_;
 };
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 
 #endif

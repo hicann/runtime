@@ -16,7 +16,7 @@ namespace Dvvp {
 namespace Analyze {
 constexpr uint32_t RT_COMPACT_INFO_SIZE = sizeof(MsprofCompactInfo);
 
-bool AnalyzerRt::IsRtCompactData(const std::string &tag) const
+bool AnalyzerRt::IsRtCompactData(const std::string& tag) const
 {
     if (tag.find("task_track") != std::string::npos) {
         return true;
@@ -55,7 +55,7 @@ void AnalyzerRt::ParseRuntimeTrackData(CONST_CHAR_PTR data, uint32_t len, bool a
             break;
         }
 
-        auto rtData = reinterpret_cast<const MsprofCompactInfo *>(dataPtr_ + offset);
+        auto rtData = reinterpret_cast<const MsprofCompactInfo*>(dataPtr_ + offset);
         MSPROF_LOGD("ParseRuntimeTrackData level: %hu.", rtData->level);
         if (rtData->level == MSPROF_REPORT_RUNTIME_LEVEL) {
             HandleRuntimeTrackData(dataPtr_ + offset, ageFlag);
@@ -71,7 +71,7 @@ void AnalyzerRt::ParseRuntimeTrackData(CONST_CHAR_PTR data, uint32_t len, bool a
 
 void AnalyzerRt::HandleRuntimeTrackData(CONST_CHAR_PTR data, bool ageFlag) const
 {
-    auto compactData = reinterpret_cast<const MsprofCompactInfo *>(data);
+    auto compactData = reinterpret_cast<const MsprofCompactInfo*>(data);
     auto rtData = compactData->data.runtimeTrack;
     std::string key;
     if (IsExtPmu()) {
@@ -81,21 +81,24 @@ void AnalyzerRt::HandleRuntimeTrackData(CONST_CHAR_PTR data, bool ageFlag) const
         auto hostIter = AnalyzerBase::rtOpInfo_.find(key);
         if (hostIter != AnalyzerBase::rtOpInfo_.end()) {
             EraseRtMapByStreamId(rtData.streamId, AnalyzerBase::rtOpInfo_);
-            MSPROF_LOGD("Delete repeat runtime track data with same key. taskId: %u, streamId: %u.",
-                rtData.taskId, rtData.streamId);
+            MSPROF_LOGD(
+                "Delete repeat runtime track data with same key. taskId: %u, streamId: %u.", rtData.taskId,
+                rtData.streamId);
         }
     }
 
-    RtOpInfo opInfo = {compactData->timeStamp, 0, 0, compactData->threadId, ageFlag, 0, 0, ACL_SUBSCRIBE_OP,
-        UINT16_MAX, rtData.deviceId};
+    RtOpInfo opInfo = {compactData->timeStamp, 0, 0, compactData->threadId, ageFlag, 0, 0, ACL_SUBSCRIBE_OP, UINT16_MAX,
+                       rtData.deviceId};
     AnalyzerBase::rtOpInfo_[key] = opInfo;
-    MSPROF_LOGD("host aging data not found, insert runtime track data in rtOpInfo map"
-        ", key: %s, timeStamp: %" PRIu64 ", age: %d", key.c_str(), compactData->timeStamp, ageFlag);
+    MSPROF_LOGD(
+        "host aging data not found, insert runtime track data in rtOpInfo map"
+        ", key: %s, timeStamp: %" PRIu64 ", age: %d",
+        key.c_str(), compactData->timeStamp, ageFlag);
 }
 
-void AnalyzerRt::MatchDeviceOpInfo(std::map<std::string, RtOpInfo> &rtOpInfo,
-    std::multimap<std::string, RtOpInfo> &tsTmpOpInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &geOpInfo) const
+void AnalyzerRt::MatchDeviceOpInfo(
+    std::map<std::string, RtOpInfo>& rtOpInfo, std::multimap<std::string, RtOpInfo>& tsTmpOpInfo,
+    std::multimap<uint32_t, GeOpFlagInfo>& geOpInfo) const
 {
     if (tsTmpOpInfo.empty()) {
         return;
@@ -108,12 +111,13 @@ void AnalyzerRt::MatchDeviceOpInfo(std::map<std::string, RtOpInfo> &rtOpInfo,
         }
         devIter->second.threadId = hostIter->second.threadId;
         devIter->second.tsTrackTimeStamp = hostIter->second.tsTrackTimeStamp;
-        MSPROF_LOGD("Success to merge runtime track and Hwts|Ffts data in rt back. timestamp: %" PRIu64 ", "
+        MSPROF_LOGD(
+            "Success to merge runtime track and Hwts|Ffts data in rt back. timestamp: %" PRIu64 ", "
             "threadId: %u, taskId+streamId: %s, start: %" PRIu64 ", end: %" PRIu64 ", "
             "startAicore: %" PRIu64 ", endAicore: %" PRIu64 ", contextId: %u, age: %d",
-            hostIter->second.tsTrackTimeStamp, devIter->second.threadId, devIter->first.c_str(),
-            devIter->second.start, devIter->second.end, devIter->second.startAicore, devIter->second.endAicore,
-            devIter->second.contextId, hostIter->second.ageFlag);
+            hostIter->second.tsTrackTimeStamp, devIter->second.threadId, devIter->first.c_str(), devIter->second.start,
+            devIter->second.end, devIter->second.startAicore, devIter->second.endAicore, devIter->second.contextId,
+            hostIter->second.ageFlag);
         if (geOpInfo.empty()) {
             AnalyzerBase::devTmpOpInfo_.emplace_back(std::move(devIter->second));
             tsTmpOpInfo.erase(devIter++);
@@ -142,13 +146,11 @@ void AnalyzerRt::MatchDeviceOpInfo(std::map<std::string, RtOpInfo> &rtOpInfo,
 
 void AnalyzerRt::PrintStats() const
 {
-    MSPROF_EVENT("total_size_analyze, module: RT, analyzed %" PRIu64 ", total %" PRIu64 ", rt time %u, merge %u",
-        analyzedBytes_,
-        totalBytes_,
-        totalRtTimes_,
-        totalRtMerges_);
+    MSPROF_EVENT(
+        "total_size_analyze, module: RT, analyzed %" PRIu64 ", total %" PRIu64 ", rt time %u, merge %u", analyzedBytes_,
+        totalBytes_, totalRtTimes_, totalRtMerges_);
 }
 
-}
-}
-}
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

@@ -24,79 +24,35 @@ constexpr char LITE_L2CACHEEVENT[] = "0x78,0x79,0x77,0x71,0x6a,0x6c,0x74,0x62";
 PLATFORM_REGISTER(CHIP_MDC_LITE, MdcLitePlatform);
 MdcLitePlatform::MdcLitePlatform()
 {
-    supportedFeature_ = {
-        // TASK
-        PLATFORM_TASK_ASCENDCL,
-        PLATFORM_TASK_AIC_METRICS,
-        PLATFORM_TASK_GE_API,
-        PLATFORM_TASK_HCCL,
-        PLATFORM_TASK_L2_CACHE_REG,
-        PLATFORM_TASK_MSPROFTX,
-        PLATFORM_TASK_RUNTIME_API,
-        PLATFORM_TASK_SWITCH,
-        PLATFORM_TASK_TRACE,
-        PLATFORM_TASK_TSFW,
-        PLATFORM_TASK_TS_MEMCPY,
-        PLATFORM_TASK_TS_KEYPOINT,
-        PLATFORM_TASK_TRAINING_TRACE,
-        PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_MEMORY,
-        // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PEU_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        // Device
-        PLATFORM_SYS_DEVICE_NPU_MODULE_MEM,
-        PLATFORM_SYS_DEVICE_DVPP_EX,
-        PLATFORM_SYS_DEVICE_DDR,
-        PLATFORM_SYS_DEVICE_HBM,
-        PLATFORM_SYS_DEVICE_LLC
-    };
+    supportedFeature_ = {// TASK
+                         PLATFORM_TASK_ASCENDCL, PLATFORM_TASK_AIC_METRICS, PLATFORM_TASK_GE_API, PLATFORM_TASK_HCCL,
+                         PLATFORM_TASK_L2_CACHE_REG, PLATFORM_TASK_MSPROFTX, PLATFORM_TASK_RUNTIME_API,
+                         PLATFORM_TASK_SWITCH, PLATFORM_TASK_TRACE, PLATFORM_TASK_TSFW, PLATFORM_TASK_TS_MEMCPY,
+                         PLATFORM_TASK_TS_KEYPOINT, PLATFORM_TASK_TRAINING_TRACE, PLATFORM_TASK_METRICS,
+                         PLATFORM_TASK_MEMORY,
+                         // PMU
+                         PLATFORM_TASK_AU_PMU, PLATFORM_TASK_PU_PMU, PLATFORM_TASK_PEU_PMU, PLATFORM_TASK_MEMORY_PMU,
+                         PLATFORM_TASK_MEMORYL0_PMU, PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_RCR_PMU,
+                         // Device
+                         PLATFORM_SYS_DEVICE_NPU_MODULE_MEM, PLATFORM_SYS_DEVICE_DVPP_EX, PLATFORM_SYS_DEVICE_DDR,
+                         PLATFORM_SYS_DEVICE_HBM, PLATFORM_SYS_DEVICE_LLC};
 }
 
-std::string MdcLitePlatform::GetPipeUtilizationMetrics()
-{
-    return LITE_PIPEUTILIZATION;
-}
+std::string MdcLitePlatform::GetPipeUtilizationMetrics() { return LITE_PIPEUTILIZATION; }
 
-std::string MdcLitePlatform::GetPipelineExecuteUtilizationMetrics()
-{
-    return LITE_PIPELINEEXECUTEUTILIZATION;
-}
+std::string MdcLitePlatform::GetPipelineExecuteUtilizationMetrics() { return LITE_PIPELINEEXECUTEUTILIZATION; }
 
-std::string MdcLitePlatform::GetMemoryMetrics()
-{
-    return LITE_MEMORY;
-}
+std::string MdcLitePlatform::GetMemoryMetrics() { return LITE_MEMORY; }
 
-std::string MdcLitePlatform::GetMemoryL0Metrics()
-{
-    return LITE_MEMORYL0;
-}
+std::string MdcLitePlatform::GetMemoryL0Metrics() { return LITE_MEMORYL0; }
 
-std::string MdcLitePlatform::GetMemoryUBMetrics()
-{
-    return LITE_MEMORYUB;
-}
+std::string MdcLitePlatform::GetMemoryUBMetrics() { return LITE_MEMORYUB; }
 
-std::string MdcLitePlatform::GetArithmeticUtilizationMetrics()
-{
-    return LITE_AIRTHMETICUTILIZATION;
-}
+std::string MdcLitePlatform::GetArithmeticUtilizationMetrics() { return LITE_AIRTHMETICUTILIZATION; }
 
-std::string MdcLitePlatform::GetResourceConflictRatioMetrics()
-{
-    return LITE_RESOURCECONFLICTRATIO;
-}
+std::string MdcLitePlatform::GetResourceConflictRatioMetrics() { return LITE_RESOURCECONFLICTRATIO; }
 
-std::string MdcLitePlatform::GetL2CacheEvents()
-{
-    return LITE_L2CACHEEVENT;
-}
-}
-}
-}
+std::string MdcLitePlatform::GetL2CacheEvents() { return LITE_L2CACHEEVENT; }
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

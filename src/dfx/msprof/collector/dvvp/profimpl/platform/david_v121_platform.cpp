@@ -28,67 +28,33 @@ DavidV121Platform::DavidV121Platform()
 {
     supportedFeature_ = {
         // TASK
-        PLATFORM_TASK_ASCENDCL,
-        PLATFORM_TASK_RUNTIME_API,
-        PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_AIC_METRICS,
-        PLATFORM_TASK_AIV_METRICS,
-        PLATFORM_TASK_AICORE_LPM,
-        PLATFORM_TASK_GE_API,
-        PLATFORM_TASK_HCCL,
-        PLATFORM_TASK_TSFW,
-        PLATFORM_TASK_L2_CACHE_REG,
-        PLATFORM_TASK_MEMORY,
-        PLATFORM_TASK_MSPROFTX,
-        PLATFORM_TASK_SWITCH,
-        PLATFORM_TASK_TRACE,
-        PLATFORM_TASK_STARS_ACSQ,
-        PLATFORM_TASK_TS_KEYPOINT,
-        PLATFORM_TASK_TS_MEMCPY,
-        PLATFORM_TASK_TRAINING_TRACE,
-        PLATFORM_TASK_AICPU,
-        PLATFORM_TASK_DYNAMIC,
-        PLATFORM_TASK_DELAY_DURATION,
-        PLATFORM_TASK_BLOCK,
-        PLATFORM_TASK_CCU_INSTRUTION,
-        PLATFORM_TASK_CCU_STATISTIC,
-        PLATFORM_TASK_INSTR_PROFILING,
-        PLATFORM_TASK_PC_SAMPLING,
-        PLATFORM_TASK_SCALE,
+        PLATFORM_TASK_ASCENDCL, PLATFORM_TASK_RUNTIME_API, PLATFORM_TASK_METRICS, PLATFORM_TASK_AIC_METRICS,
+        PLATFORM_TASK_AIV_METRICS, PLATFORM_TASK_AICORE_LPM, PLATFORM_TASK_GE_API, PLATFORM_TASK_HCCL,
+        PLATFORM_TASK_TSFW, PLATFORM_TASK_L2_CACHE_REG, PLATFORM_TASK_MEMORY, PLATFORM_TASK_MSPROFTX,
+        PLATFORM_TASK_SWITCH, PLATFORM_TASK_TRACE, PLATFORM_TASK_STARS_ACSQ, PLATFORM_TASK_TS_KEYPOINT,
+        PLATFORM_TASK_TS_MEMCPY, PLATFORM_TASK_TRAINING_TRACE, PLATFORM_TASK_AICPU, PLATFORM_TASK_DYNAMIC,
+        PLATFORM_TASK_DELAY_DURATION, PLATFORM_TASK_BLOCK, PLATFORM_TASK_CCU_INSTRUTION, PLATFORM_TASK_CCU_STATISTIC,
+        PLATFORM_TASK_INSTR_PROFILING, PLATFORM_TASK_PC_SAMPLING, PLATFORM_TASK_SCALE,
         // Feature
-        PLATFORM_MC2,
-        PLATFORM_AICPU_HCCL,
-        PLATFORM_DIAGNOSTIC_COLLECTION,
-        PLATFORM_AICSCALE_ACP,
-        PLATFORM_STARS_QOS,
-        PLATFORM_SYS_MEM_SERVICEFLOW,
-        PLATFORM_API_STATS
-    };
+        PLATFORM_MC2, PLATFORM_AICPU_HCCL, PLATFORM_DIAGNOSTIC_COLLECTION, PLATFORM_AICSCALE_ACP, PLATFORM_STARS_QOS,
+        PLATFORM_SYS_MEM_SERVICEFLOW, PLATFORM_API_STATS};
     InsertPmuFeature();
     InsertSysFeature();
 }
 
 void DavidV121Platform::InsertPmuFeature()
 {
-    const auto pmuFeature =  {
-        // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PUEXCT_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_L2_CACHE_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        PLATFORM_TASK_SOC_PMU,
-        PLATFORM_TASK_SOC_PMU_NOC
-    };
+    const auto pmuFeature = {// PMU
+                             PLATFORM_TASK_AU_PMU,       PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PUEXCT_PMU,
+                             PLATFORM_TASK_MEMORY_PMU,   PLATFORM_TASK_MEMORYL0_PMU, PLATFORM_TASK_MEMORYUB_PMU,
+                             PLATFORM_TASK_L2_CACHE_PMU, PLATFORM_TASK_RCR_PMU,      PLATFORM_TASK_SOC_PMU,
+                             PLATFORM_TASK_SOC_PMU_NOC};
     supportedFeature_.insert(pmuFeature.begin(), pmuFeature.end());
 }
 
 void DavidV121Platform::InsertSysFeature()
 {
-    const auto sysFeature =  {
+    const auto sysFeature = {
         // System-device
         PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
         PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
@@ -123,50 +89,23 @@ void DavidV121Platform::InsertSysFeature()
     supportedFeature_.insert(sysFeature.begin(), sysFeature.end());
 }
 
-uint16_t DavidV121Platform::GetMaxMonitorNumber() const
-{
-    return MAX_DAVID_MONITOR_NUM;
-}
+uint16_t DavidV121Platform::GetMaxMonitorNumber() const { return MAX_DAVID_MONITOR_NUM; }
 
-uint16_t DavidV121Platform::GetQosMonitorNumber() const
-{
-    return MAX_QOS_MONITOR_NUM;
-}
+uint16_t DavidV121Platform::GetQosMonitorNumber() const { return MAX_QOS_MONITOR_NUM; }
 
-std::string DavidV121Platform::GetPipeUtilizationMetrics()
-{
-    return DAVID_V121_PIPEUTILIZATION;
-}
+std::string DavidV121Platform::GetPipeUtilizationMetrics() { return DAVID_V121_PIPEUTILIZATION; }
 
-std::string DavidV121Platform::GetMemoryMetrics()
-{
-    return DAVID_V121_MEMORY;
-}
+std::string DavidV121Platform::GetMemoryMetrics() { return DAVID_V121_MEMORY; }
 
-std::string DavidV121Platform::GetMemoryL0Metrics()
-{
-    return DAVID_V121_MEMORYL0;
-}
+std::string DavidV121Platform::GetMemoryL0Metrics() { return DAVID_V121_MEMORYL0; }
 
-std::string DavidV121Platform::GetMemoryUBMetrics()
-{
-    return DAVID_V121_MEMORYUB;
-}
+std::string DavidV121Platform::GetMemoryUBMetrics() { return DAVID_V121_MEMORYUB; }
 
-std::string DavidV121Platform::GetArithmeticUtilizationMetrics()
-{
-    return DAVID_V121_AIRTHMETICUTILIZATION;
-}
+std::string DavidV121Platform::GetArithmeticUtilizationMetrics() { return DAVID_V121_AIRTHMETICUTILIZATION; }
 
-std::string DavidV121Platform::GetResourceConflictRatioMetrics()
-{
-    return DAVID_V121_RESOURCECONFLICTRATIO;
-}
+std::string DavidV121Platform::GetResourceConflictRatioMetrics() { return DAVID_V121_RESOURCECONFLICTRATIO; }
 
-std::string DavidV121Platform::GetL2CacheMetrics()
-{
-    return DAVID_V121_L2CACHE;
-}
+std::string DavidV121Platform::GetL2CacheMetrics() { return DAVID_V121_L2CACHE; }
 
 int32_t DavidV121Platform::InitOnlineAnalyzer()
 {
@@ -174,10 +113,7 @@ int32_t DavidV121Platform::InitOnlineAnalyzer()
     return 0;
 }
 
-std::string DavidV121Platform::GetL2CacheEvents()
-{
-    return DAVID_V121_L2CACHEEVENT;
-}
-}
-}
-}
+std::string DavidV121Platform::GetL2CacheEvents() { return DAVID_V121_L2CACHEEVENT; }
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

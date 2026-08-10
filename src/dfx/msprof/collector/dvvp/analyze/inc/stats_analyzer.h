@@ -21,7 +21,7 @@ namespace Analyze {
 using namespace analysis::dvvp::common::utils;
 class StatsAnalyzer {
 public:
-    explicit StatsAnalyzer(const std::string &path);
+    explicit StatsAnalyzer(const std::string& path);
     ~StatsAnalyzer();
 
 public:
@@ -30,7 +30,7 @@ public:
 private:
     void DispatchApiData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void FlushApiData();
-    std::string CreateStatsFile(const std::string &name);
+    std::string CreateStatsFile(const std::string& name);
     void WriteTotalTimeTitle(std::ofstream& file);
     void WriteStatisticsTitle(std::ofstream& file);
     void WriteTotalTimeData(std::ofstream& file);
@@ -41,8 +41,8 @@ private:
     std::string storePath_;
     SHARED_PTR_ALIA<StatsAnalyzerApi> statsAnalyzerApi_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

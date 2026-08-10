@@ -22,16 +22,12 @@ using namespace analysis::dvvp::common::validation;
 
 ProfJobHandler::ProfJobHandler()
     : isInited_(false), engine_(nullptr), devId_(-1), devIdOnHost_(-1), _is_started(false), transport_(nullptr)
-{
-}
+{}
 
-ProfJobHandler::~ProfJobHandler()
-{
-    Uinit();
-}
+ProfJobHandler::~ProfJobHandler() { Uinit(); }
 
-int32_t ProfJobHandler::Init(int32_t devId, std::string jobId,
-    SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport)
+int32_t ProfJobHandler::Init(
+    int32_t devId, std::string jobId, SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport)
 {
     if (transport == nullptr) {
         MSPROF_LOGE("Init failed, transport is null");
@@ -56,15 +52,9 @@ int32_t ProfJobHandler::Uinit()
     return PROFILING_SUCCESS;
 }
 
-void ProfJobHandler::SetDevIdOnHost(int32_t devIdOnHost)
-{
-    devIdOnHost_ = devIdOnHost;
-}
+void ProfJobHandler::SetDevIdOnHost(int32_t devIdOnHost) { devIdOnHost_ = devIdOnHost; }
 
-const std::string& ProfJobHandler::GetJobId()
-{
-    return jobId_;
-}
+const std::string& ProfJobHandler::GetJobId() { return jobId_; }
 
 void ProfJobHandler::ResetTask()
 {
@@ -75,7 +65,7 @@ void ProfJobHandler::ResetTask()
     }
 }
 
-int32_t ProfJobHandler::InitEngine(analysis::dvvp::message::StatusInfo &statusInfo)
+int32_t ProfJobHandler::InitEngine(analysis::dvvp::message::StatusInfo& statusInfo)
 {
     int32_t ret = PROFILING_FAILED;
     do {
@@ -101,8 +91,8 @@ int32_t ProfJobHandler::InitEngine(analysis::dvvp::message::StatusInfo &statusIn
     return ret;
 }
 
-int32_t ProfJobHandler::OnJobStart(SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message,
-                               analysis::dvvp::message::StatusInfo &statusInfo)
+int32_t ProfJobHandler::OnJobStart(
+    SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message, analysis::dvvp::message::StatusInfo& statusInfo)
 {
     int32_t ret = PROFILING_FAILED;
     MSPROF_LOGI("receive job start");
@@ -130,7 +120,7 @@ int32_t ProfJobHandler::OnJobStart(SHARED_PTR_ALIA<analysis::dvvp::proto::JobSta
     return ret;
 }
 
-int32_t ProfJobHandler::OnJobEnd(analysis::dvvp::message::StatusInfo &statusInfo)
+int32_t ProfJobHandler::OnJobEnd(analysis::dvvp::message::StatusInfo& statusInfo)
 {
     int32_t ret = PROFILING_FAILED;
     MSPROF_LOGI("receive job end");
@@ -213,8 +203,8 @@ int32_t ProfJobHandler::CheckEventValid(SHARED_PTR_ALIA<analysis::dvvp::proto::R
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfJobHandler::OnReplayStart(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message,
-                                  analysis::dvvp::message::StatusInfo &statusInfo)
+int32_t ProfJobHandler::OnReplayStart(
+    SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message, analysis::dvvp::message::StatusInfo& statusInfo)
 {
     int32_t ret = PROFILING_FAILED;
     MSPROF_LOGI("receive start");
@@ -249,8 +239,8 @@ int32_t ProfJobHandler::OnReplayStart(SHARED_PTR_ALIA<analysis::dvvp::proto::Rep
     return ret;
 }
 
-int32_t ProfJobHandler::OnReplayEnd(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message,
-                                analysis::dvvp::message::StatusInfo &statusInfo)
+int32_t ProfJobHandler::OnReplayEnd(
+    SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message, analysis::dvvp::message::StatusInfo& statusInfo)
 {
     int32_t ret = PROFILING_FAILED;
     MSPROF_LOGI("receive end");
@@ -302,15 +292,9 @@ int32_t ProfJobHandler::OnConnectionReset()
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfJobHandler::GetDevId()
-{
-    return devId_;
-}
+int32_t ProfJobHandler::GetDevId() { return devId_; }
 
-SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> ProfJobHandler::GetTransport(void)
-{
-    return transport_;
-}
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> ProfJobHandler::GetTransport(void) { return transport_; }
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

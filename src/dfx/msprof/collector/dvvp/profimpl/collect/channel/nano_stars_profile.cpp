@@ -27,8 +27,7 @@ int32_t NanoStarsProfile::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         return PROFILING_FAILED;
     }
 
-    if (cfg->comParams->params->hostProfiling ||
-        cfg->comParams->params->taskTrace.compare(MSVP_PROF_OFF) == 0) {
+    if (cfg->comParams->params->hostProfiling || cfg->comParams->params->taskTrace.compare(MSVP_PROF_OFF) == 0) {
         return PROFILING_FAILED;
     }
 
@@ -36,16 +35,16 @@ int32_t NanoStarsProfile::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     return PROFILING_SUCCESS;
 }
 
-void NanoStarsProfile::PackPmuParam(TagNanoStarsProfileConfig &config) const
+void NanoStarsProfile::PackPmuParam(TagNanoStarsProfileConfig& config) const
 {
     auto aiEvents = Utils::Split(cfg_->comParams->params->ai_core_profiling_events, false, "", ",");
     config.eventNum = static_cast<uint32_t>(aiEvents.size());
     for (size_t i = 0; i < aiEvents.size(); i++) {
-        config.event[i] =
-            static_cast<uint16_t>(strtol(aiEvents[i].c_str(), nullptr, STRING_TO_LONG_WEIGHT));
+        config.event[i] = static_cast<uint16_t>(strtol(aiEvents[i].c_str(), nullptr, STRING_TO_LONG_WEIGHT));
     }
-    MSPROF_EVENT("PackPmuParam, event_num=%u, events=%s",
-        config.eventNum, cfg_->comParams->params->ai_core_profiling_events.c_str());
+    MSPROF_EVENT(
+        "PackPmuParam, event_num=%u, events=%s", config.eventNum,
+        cfg_->comParams->params->ai_core_profiling_events.c_str());
 }
 
 int32_t NanoStarsProfile::Process()
@@ -83,6 +82,6 @@ int32_t NanoStarsProfile::Uninit()
     MSPROF_LOGI("stop profiling success, collection id: %d", GetCollectionId());
     return ret;
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Collect
+} // namespace Dvvp

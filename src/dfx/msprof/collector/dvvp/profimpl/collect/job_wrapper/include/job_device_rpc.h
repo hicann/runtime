@@ -30,12 +30,16 @@ public:
 
 private:
     int32_t SendMsgAndHandleResponse(SHARED_PTR_ALIA<google::protobuf::Message> msg);
-    void BuildStartReplayMessage(SHARED_PTR_ALIA<PMUEventsConfig> cfg,
-                                SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
-    void BuildCtrlCpuEventMessage(SHARED_PTR_ALIA<PMUEventsConfig> cfg,
-                                SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
-    void BuildLlcEventMessage(SHARED_PTR_ALIA<PMUEventsConfig> cfg,
-                                SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
+    void BuildStartReplayMessage(
+        SHARED_PTR_ALIA<PMUEventsConfig> cfg,
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
+    void BuildCtrlCpuEventMessage(
+        SHARED_PTR_ALIA<PMUEventsConfig> cfg,
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
+    void BuildLlcEventMessage(
+        SHARED_PTR_ALIA<PMUEventsConfig> cfg,
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> startReplayMessage) const;
+
 private:
     int32_t indexId_;
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params_;
@@ -43,5 +47,7 @@ private:
     analysis::dvvp::message::JobContext jobCtx_;
     SHARED_PTR_ALIA<PMUEventsConfig> pmuCfg_;
 };
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

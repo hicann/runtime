@@ -30,7 +30,7 @@ protected:
     analysis::dvvp::driver::AI_DRV_CHANNEL channelId_;
 };
 
-class ProfStarsBlockLogJob : public ProfDrvJob  {
+class ProfStarsBlockLogJob : public ProfDrvJob {
 public:
     ProfStarsBlockLogJob();
     ~ProfStarsBlockLogJob() override;
@@ -65,10 +65,11 @@ public:
     ~ProfStarsSocProfileJob() override;
     int32_t SetPeripheralConfig() override;
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
+
 private:
-    void SetConfigP(int32_t &period, StarsSocProfileConfigT *configP) const;
+    void SetConfigP(int32_t& period, StarsSocProfileConfigT* configP) const;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

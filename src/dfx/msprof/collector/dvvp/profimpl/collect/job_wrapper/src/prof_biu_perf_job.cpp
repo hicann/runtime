@@ -20,20 +20,17 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 using BiuPerfChannelInfo = ::Dvvp::Collect::Platform::BiuPerfChannelInfo;
 
-ProfBiuPerfJob::ProfBiuPerfJob(): groupNum_(BIU_PERF_LOWER_GROUP_NUM), biuPcSamplingMode_(0)
-{
-}
+ProfBiuPerfJob::ProfBiuPerfJob() : groupNum_(BIU_PERF_LOWER_GROUP_NUM), biuPcSamplingMode_(0) {}
 
-ProfBiuPerfJob::~ProfBiuPerfJob()
-{
-}
+ProfBiuPerfJob::~ProfBiuPerfJob() {}
 
 int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
     CHECK_JOB_CONTEXT_PARAM_RET(cfg, return PROFILING_FAILED);
     collectionJobCfg_ = cfg;
-    if (cfg->comParams->params->hostProfiling || (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING) &&
-        !Platform::instance()->CheckIfSupport(PLATFORM_TASK_PC_SAMPLING))) {
+    if (cfg->comParams->params->hostProfiling ||
+        (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING) &&
+         !Platform::instance()->CheckIfSupport(PLATFORM_TASK_PC_SAMPLING))) {
         MSPROF_LOGI("Biu perf job does not support.");
         return PROFILING_FAILED;
     }
@@ -73,7 +70,8 @@ int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 
 uint32_t ProfBiuPerfJob::GenGroupVector(int64_t aiCoreNum)
 {
-    FUNRET_CHECK_EXPR_ACTION(aiCoreNum < 0 || aiCoreNum > std::numeric_limits<uint32_t>::max(), return 0,
+    FUNRET_CHECK_EXPR_ACTION(
+        aiCoreNum < 0 || aiCoreNum > std::numeric_limits<uint32_t>::max(), return 0,
         "Aicore number %" PRId64 " is abnormal.", aiCoreNum);
     uint32_t lowerCore = aiCoreNum;
     if (aiCoreNum > DAVID_DIE0_AICORE_NUM) {
@@ -107,9 +105,9 @@ std::vector<BiuPerfChannelInfo> ProfBiuPerfJob::GetBiuChannelInfos() const
             if (biuPcSamplingMode_ == 1 && groupType == 0) {
                 continue;
             }
-            channelInfos.push_back({
-                groupId, groupType, groupVector_[groupId], static_cast<uint32_t>(groupChannelIdMap_[groupId][groupType])
-            });
+            channelInfos.push_back(
+                {groupId, groupType, groupVector_[groupId],
+                 static_cast<uint32_t>(groupChannelIdMap_[groupId][groupType])});
         }
     }
     return channelInfos;
@@ -122,17 +120,16 @@ int32_t ProfBiuPerfJob::Process()
     int32_t devId = collectionJobCfg_->comParams->devId;
     std::vector<std::string> coreName = {"aic", "aiv0", "aiv1"};
 
-    for (const auto &channelInfo : GetBiuChannelInfos()) {
+    for (const auto& channelInfo : GetBiuChannelInfos()) {
         auto channelId = static_cast<AI_DRV_CHANNEL>(channelInfo.channelId);
         if (!DrvChannelsMgr::instance()->ChannelIsValid(devId, channelId)) {
             MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", devId, channelId);
             continue;
         }
-        MSPROF_LOGI("Begin to start biu perf job, devId:%d, channelId:%d, biu mode: %u", devId, channelId,
-            biuPcSamplingMode_);
-        std::string filePath = collectionJobCfg_->jobParams.dataPath + "." +
-            profBiuPerfJobName_ + "group" + std::to_string(channelInfo.groupId) + "_" +
-            coreName[channelInfo.groupType];
+        MSPROF_LOGI(
+            "Begin to start biu perf job, devId:%d, channelId:%d, biu mode: %u", devId, channelId, biuPcSamplingMode_);
+        std::string filePath = collectionJobCfg_->jobParams.dataPath + "." + profBiuPerfJobName_ + "group" +
+                               std::to_string(channelInfo.groupId) + "_" + coreName[channelInfo.groupType];
         AddReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId, filePath);
         // Select the config struct by the running driver hal version: new drivers support
         // reportDataLoss and use BiuProfileConfigTV2 with it set to true; old drivers fall back to
@@ -144,14 +141,14 @@ int32_t ProfBiuPerfJob::Process()
             config.groupType = channelInfo.groupType;
             config.groupNo = channelInfo.groupNo;
             config.reportDataLoss = true;
-            ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+            ret = DrvInstrProfileStart(devId, channelId, static_cast<void*>(&config), sizeof(config));
         } else {
             BiuProfileConfigT config;
             config.period = DEFAULT_BIU_PERF_CYCLE;
             config.biuPcSamplingMode = biuPcSamplingMode_;
             config.groupType = channelInfo.groupType;
             config.groupNo = channelInfo.groupNo;
-            ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+            ret = DrvInstrProfileStart(devId, channelId, static_cast<void*>(&config), sizeof(config));
         }
         if (ret != PROFILING_SUCCESS) {
             RemoveReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId);
@@ -169,7 +166,7 @@ int32_t ProfBiuPerfJob::Uninit()
     int32_t ret = PROFILING_SUCCESS;
     int32_t devId = collectionJobCfg_->comParams->devId;
 
-    for (const auto &channelInfo : GetBiuChannelInfos()) {
+    for (const auto& channelInfo : GetBiuChannelInfos()) {
         auto channelId = static_cast<AI_DRV_CHANNEL>(channelInfo.channelId);
         if (!DrvChannelsMgr::instance()->ChannelIsValid(devId, channelId)) {
             MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", devId, channelId);
@@ -185,6 +182,6 @@ int32_t ProfBiuPerfJob::Uninit()
     return ret;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

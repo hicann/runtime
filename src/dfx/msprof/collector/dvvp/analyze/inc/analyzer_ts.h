@@ -24,20 +24,18 @@ class AnalyzerTs : public AnalyzerBase {
     friend class Analyzer;
 
 public:
-    AnalyzerTs() : opTimeCount_(0), totalTsMerges_(0)
-    {}
-    ~AnalyzerTs()
-    {}
+    AnalyzerTs() : opTimeCount_(0), totalTsMerges_(0) {}
+    ~AnalyzerTs() {}
 
 public:
-    bool IsTsData(const std::string &fileName);
+    bool IsTsData(const std::string& fileName);
     void Parse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
 
 private:
     void ParseTsTrackData(CONST_CHAR_PTR data, uint32_t len);
     void ParseTsTimelineData(CONST_CHAR_PTR data, uint32_t len);
-    template<typename T>
-    void ParseTsKeypointData(const T *tsData);
+    template <typename T>
+    void ParseTsKeypointData(const T* tsData);
     uint8_t GetRptType(CONST_CHAR_PTR data, uint32_t len);
 
     void PrintStats();
@@ -45,12 +43,12 @@ private:
 private:
     uint64_t opTimeCount_;
     uint32_t totalTsMerges_;
-    std::map<std::string, OpTime> opTimeDrafts_;  // stores incomplete data
-    std::multimap<std::string, OpTime> opTimes_;  // key is taskId-streamId-contextId
+    std::map<std::string, OpTime> opTimeDrafts_; // stores incomplete data
+    std::multimap<std::string, OpTime> opTimes_; // key is taskId-streamId-contextId
     std::unordered_map<std::string, KeypointOp> keypointOpInfo_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

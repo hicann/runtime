@@ -18,13 +18,9 @@ namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 
-ProfInstrPerfJob::ProfInstrPerfJob()
-{
-}
+ProfInstrPerfJob::ProfInstrPerfJob() {}
 
-ProfInstrPerfJob::~ProfInstrPerfJob()
-{
-}
+ProfInstrPerfJob::~ProfInstrPerfJob() {}
 
 int32_t ProfInstrPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -43,7 +39,8 @@ int32_t ProfInstrPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     for (uint32_t groupId = 0; groupId < INSTR_PROFILING_GROUP_MAX_NUM; ++groupId) {
         groupIds_.push_back(groupId);
     }
-    MSPROF_LOGI("Instr profiling profile init success, instr profiling groupId: %s.",
+    MSPROF_LOGI(
+        "Instr profiling profile init success, instr profiling groupId: %s.",
         cfg->comParams->params->instrProfiling.c_str());
     return PROFILING_SUCCESS;
 }
@@ -63,19 +60,20 @@ int32_t ProfInstrPerfJob::Process()
                 continue;
             }
             MSPROF_LOGI("Begin to start bui profile buffer, devId:%d, channelId:%d", devId, channelId);
-            std::string filePath = collectionJobCfg_->jobParams.dataPath +
-                                ".group_" + std::to_string(groupId) + "_" + coreName[i];
+            std::string filePath =
+                collectionJobCfg_->jobParams.dataPath + ".group_" + std::to_string(groupId) + "_" + coreName[i];
             AddReader(collectionJobCfg_->comParams->params->job_id, devId, channelId, filePath);
             InstrProfileConfigT config;
             config.period = sampleCycle_;
-            ret = DrvInstrProfileStart(devId, channelId, static_cast<void *>(&config), sizeof(config));
+            ret = DrvInstrProfileStart(devId, channelId, static_cast<void*>(&config), sizeof(config));
             if (ret != PROFILING_SUCCESS) {
                 RemoveReader(collectionJobCfg_->comParams->params->job_id, devId, channelId);
-                MSPROF_LOGE("[ProfInstrPerfJob]Process, DrvInstrProfileStart failed. devId:%d, channelId:%d",
-                            devId, channelId);
+                MSPROF_LOGE(
+                    "[ProfInstrPerfJob]Process, DrvInstrProfileStart failed. devId:%d, channelId:%d", devId, channelId);
             }
-            MSPROF_LOGI("start instr profiling profile buffer, ret=%d, devId:%d, channelId:%d, period:%u",
-                ret, devId, channelId, sampleCycle_);
+            MSPROF_LOGI(
+                "start instr profiling profile buffer, ret=%d, devId:%d, channelId:%d, period:%u", ret, devId,
+                channelId, sampleCycle_);
         }
     }
     // return last channel start result
@@ -107,6 +105,6 @@ int32_t ProfInstrPerfJob::Uninit()
     return ret;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

@@ -52,6 +52,7 @@ public:
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
     int32_t Process() override;
     int32_t Uninit() override;
+
 protected:
     std::string taskType_;
     analysis::dvvp::driver::AI_DRV_CHANNEL channelId_;
@@ -64,7 +65,7 @@ public:
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
 };
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

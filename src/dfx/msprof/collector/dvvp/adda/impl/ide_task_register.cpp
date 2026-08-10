@@ -17,7 +17,7 @@
  * @return
  */
 namespace Adx {
-STATIC void IdeRegisterModule(enum IdeComponentType type, const struct IdeSingleComponentFuncs &ideFuncs)
+STATIC void IdeRegisterModule(enum IdeComponentType type, const struct IdeSingleComponentFuncs& ideFuncs)
 {
     if (type < NR_IDE_COMPONENTS) {
         g_ideComponentsFuncs.init[type] = ideFuncs.init;
@@ -28,7 +28,7 @@ STATIC void IdeRegisterModule(enum IdeComponentType type, const struct IdeSingle
 }
 
 #ifdef IDE_DAEMON_DEVICE
-STATIC void IdeDeviceMonitorRegister(struct IdeSingleComponentFuncs &ideFuncs)
+STATIC void IdeDeviceMonitorRegister(struct IdeSingleComponentFuncs& ideFuncs)
 {
     ideFuncs.init = IdeMonitorHostInit;
     ideFuncs.destroy = IdeMonitorHostDestroy;
@@ -37,7 +37,7 @@ STATIC void IdeDeviceMonitorRegister(struct IdeSingleComponentFuncs &ideFuncs)
     IdeRegisterModule(IDE_COMPONENT_MONITOR, ideFuncs);
 }
 
-STATIC void IdeDeviceHdcRegister(struct IdeSingleComponentFuncs &ideFuncs)
+STATIC void IdeDeviceHdcRegister(struct IdeSingleComponentFuncs& ideFuncs)
 {
     ideFuncs.init = HdcDaemonInit;
     ideFuncs.destroy = HdcDaemonDestroy;
@@ -46,7 +46,7 @@ STATIC void IdeDeviceHdcRegister(struct IdeSingleComponentFuncs &ideFuncs)
     IdeRegisterModule(IDE_COMPONENT_HDC, ideFuncs);
 }
 
-STATIC void IdeDeviceProfileRegister(struct IdeSingleComponentFuncs &ideFuncs)
+STATIC void IdeDeviceProfileRegister(struct IdeSingleComponentFuncs& ideFuncs)
 {
     ideFuncs.init = IdeDeviceProfileInit;
     ideFuncs.destroy = IdeDeviceProfileCleanup;
@@ -63,5 +63,4 @@ void IdeDaemonRegisterModules()
     IdeDeviceProfileRegister(ideFuncs);
 }
 #endif
-}
-
+} // namespace Adx

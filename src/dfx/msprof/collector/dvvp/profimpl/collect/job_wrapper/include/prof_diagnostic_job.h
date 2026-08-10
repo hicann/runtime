@@ -24,16 +24,16 @@ namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 using namespace analysis::dvvp::transport;
-using DsmiReadFaultEventFunc = int32_t (*) (int32_t deviceId, int32_t timeout, struct dsmi_event_filter filter,
-    struct dsmi_event *event);
+using DsmiReadFaultEventFunc =
+    int32_t (*)(int32_t deviceId, int32_t timeout, struct dsmi_event_filter filter, struct dsmi_event* event);
 static std::set<uint32_t> g_eventIdSet = {0x81AD8605, 0x81A38605, 0x81078605, 0x80E00209, 0x819B8605};
 
 struct ProfFaultEvent {
-    uint8_t severity;     /* 事件级别 0：提示，1：次要，2：重要，3：紧急 */
-    uint8_t assertion;    /* 事件类型 0：故障恢复，1：故障产生，2：一次性事件 */
-    uint16_t deviceId;    /* 设备ID */
-    uint32_t eventId;     /* 事件ID */
-    uint64_t reasonHash;  /* 故障原因 包含事件描述和附加信息 */
+    uint8_t severity;    /* 事件级别 0：提示，1：次要，2：重要，3：紧急 */
+    uint8_t assertion;   /* 事件类型 0：故障恢复，1：故障产生，2：一次性事件 */
+    uint16_t deviceId;   /* 设备ID */
+    uint32_t eventId;    /* 事件ID */
+    uint64_t reasonHash; /* 故障原因 包含事件描述和附加信息 */
 };
 
 class MsprofDiagnostic : public analysis::dvvp::common::thread::Thread {
@@ -41,15 +41,15 @@ public:
     MsprofDiagnostic();
     ~MsprofDiagnostic() override;
     int32_t Start() override;
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     int32_t Stop() override;
     static bool IsTriggered();
 
 protected:
     void PostStopReplay();
-    void EventHandler(struct dsmi_event *event) const;
+    void EventHandler(struct dsmi_event* event) const;
     void DumpData(dms_fault_event dmsEvent) const;
-    void DataTransport(MsprofAdditionalInfo &additionalInfo) const;
+    void DataTransport(MsprofAdditionalInfo& additionalInfo) const;
 
 protected:
     VOID_PTR drvDsmiLibHandle_{nullptr};
@@ -70,7 +70,7 @@ private:
     SHARED_PTR_ALIA<MsprofDiagnostic> diagnostic_;
 };
 
-} // JobWrapper
-} // Dvvp
-} // Analysis
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

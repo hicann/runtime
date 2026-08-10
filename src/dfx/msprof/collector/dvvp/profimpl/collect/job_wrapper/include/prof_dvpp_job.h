@@ -26,8 +26,8 @@ private:
     std::vector<analysis::dvvp::driver::AI_DRV_CHANNEL> channelList_;
     std::map<analysis::dvvp::driver::AI_DRV_CHANNEL, std::string> fileNameList_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

@@ -21,7 +21,7 @@ public:
     MiniPlatform();
     ~MiniPlatform() override {}
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

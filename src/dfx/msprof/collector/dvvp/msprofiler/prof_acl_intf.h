@@ -13,11 +13,7 @@
 namespace Msprof {
 namespace Engine {
 namespace Intf {
-enum ProfType {
-    ACL_API_TYPE,
-    ACL_GRPH_API_TYPE,
-    OP_TYPE
-};
+enum ProfType { ACL_API_TYPE, ACL_GRPH_API_TYPE, OP_TYPE };
 
 enum AclProfOpType {
     ACL_OP_DESC_SIZE,
@@ -32,7 +28,7 @@ enum AclProfOpType {
     ACL_OP_GET_FLAG,
     ACL_OP_GET_ATTR,
 };
-}
-}
-}
+} // namespace Intf
+} // namespace Engine
+} // namespace Msprof
 #endif

@@ -71,19 +71,20 @@ public:
     CollectionRegisterMgr();
     ~CollectionRegisterMgr() override;
 
-    int32_t CollectionJobRegisterAndRun(int32_t devId,
-                                    const ProfCollectionJobE jobTag,
-                                    const SHARED_PTR_ALIA<ICollectionJob> job);
+    int32_t CollectionJobRegisterAndRun(
+        int32_t devId, const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job);
     int32_t CollectionJobRun(int32_t devId, const ProfCollectionJobE jobTag);
     int32_t CollectionJobUnregisterAndStop(int32_t devId, const ProfCollectionJobE jobTag);
 
 private:
-    bool CheckCollectionJobIsNoRegister(int32_t &devId, const ProfCollectionJobE jobTag) const;
+    bool CheckCollectionJobIsNoRegister(int32_t& devId, const ProfCollectionJobE jobTag) const;
     bool InsertCollectionJob(int32_t devId, const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job);
-    bool GetAndDelCollectionJob(int32_t devId, const ProfCollectionJobE jobTag, SHARED_PTR_ALIA<ICollectionJob> &job);
+    bool GetAndDelCollectionJob(int32_t devId, const ProfCollectionJobE jobTag, SHARED_PTR_ALIA<ICollectionJob>& job);
 
     std::map<int32_t, std::map<ProfCollectionJobE, SHARED_PTR_ALIA<ICollectionJob>>> collectionJobs_;
     std::mutex collectionJobsMutex_;
 };
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

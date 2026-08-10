@@ -33,32 +33,32 @@ struct IdeDevInfo {
 };
 
 struct DeviceUpCallBack {
-    std::vector <drvDeviceStartupNotify> upCallbacks;
+    std::vector<drvDeviceStartupNotify> upCallbacks;
 };
 
 struct IdeGlobalCtrlInfo {
-    HDC_CLIENT hdcClient;                        // HDC client
-    DeviceUpCallBack deviceNotifyCallbacks;      // Device Notify Callback functions
+    HDC_CLIENT hdcClient;                            // HDC client
+    DeviceUpCallBack deviceNotifyCallbacks;          // Device Notify Callback functions
     std::map<int32_t, struct IdeDevInfo> mapDevInfo; // Device Info
-    mmMutex_t mtx;                               // Mutex for struct
-    mmSem_t devNotifySem;                        // Number of devices change semaphore
-    bool devMapInfoInitFlag;                      // Mutex init flag
-    bool hdcServerProcFlag;                       // HDC server process running flag
-    bool hdcHandleEventFlag;                      // HDC handle process running flag
-    bool initFlag;                                // Init flag
+    mmMutex_t mtx;                                   // Mutex for struct
+    mmSem_t devNotifySem;                            // Number of devices change semaphore
+    bool devMapInfoInitFlag;                         // Mutex init flag
+    bool hdcServerProcFlag;                          // HDC server process running flag
+    bool hdcHandleEventFlag;                         // HDC handle process running flag
+    bool initFlag;                                   // Init flag
 };
 
 struct DevSession {
     uint32_t phyDevId;
     uint32_t logDevId;
     HDC_SESSION session;
-    void *mmUserBlockAddr;
+    void* mmUserBlockAddr;
 };
 
 extern IdeThreadArg HdcCreateHdcServerProc(IdeThreadArg args);
 extern int32_t HdcDaemonInit();
 extern int32_t HdcDaemonDestroy();
-extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t> &dev);
+extern int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t>& dev);
 extern IdeThreadArg IdeDaemonHdcProcessEvent(IdeThreadArg arg);
 extern IdeThreadArg IdeDaemonHdcHandleEvent(IdeThreadArg args);
 #endif /* IDE_COMMON_UTIL_H */

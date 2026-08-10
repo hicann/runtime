@@ -18,11 +18,7 @@ namespace Dvvp {
 namespace Collect {
 namespace Platform {
 
-enum class PmuCalculationType {
-    WITH_FREQ,
-    WITHOUT_FREQ,
-    WITH_ITSELF
-};
+enum class PmuCalculationType { WITH_FREQ, WITHOUT_FREQ, WITH_ITSELF };
 
 struct PmuCalculationAttr {
     std::string pmuName;
@@ -39,9 +35,9 @@ public:
         Init();
     }
     ~BaseAnalyzer() {}
-    uint32_t GetMetricsPmuNum(const std::string &name) const;
-    std::string GetMetricsTopName(const std::string &name) const;
-    PmuCalculationAttr* GetMetricsFunc(const std::string &name, uint32_t index) const;
+    uint32_t GetMetricsPmuNum(const std::string& name) const;
+    std::string GetMetricsTopName(const std::string& name) const;
+    PmuCalculationAttr* GetMetricsFunc(const std::string& name, uint32_t index) const;
     float GetTotalTime(uint64_t cycle, double freq, uint16_t blockDim, int64_t coreNum);
 
 protected:
@@ -60,11 +56,11 @@ private:
     void InitFuncMapWithFreqOne();
     void InitFuncMapWithFreqTwo();
     void InitFuncMapWithItself();
-    std::string GetMetricsPmuName(const std::string &name) const;
-    PmuCalculationAttr* GetAicMetricsFunc(const std::string &name, uint32_t index) const;
-    PmuCalculationAttr* GetAivMetricsFunc(const std::string &name, uint32_t index) const;
+    std::string GetMetricsPmuName(const std::string& name) const;
+    PmuCalculationAttr* GetAicMetricsFunc(const std::string& name, uint32_t index) const;
+    PmuCalculationAttr* GetAivMetricsFunc(const std::string& name, uint32_t index) const;
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

@@ -24,49 +24,45 @@ namespace message {
 
 #define MSG_STR(s) #s
 
-#define SET_VALUE(root, value)                        \
-    do {                                              \
-        (root)[MSG_STR(value)] = (value);             \
+#define SET_VALUE(root, value)            \
+    do {                                  \
+        (root)[MSG_STR(value)] = (value); \
     } while (0)
 
-#define SET_ARRAY_VALUE(root, vector)                 \
-    do {                                              \
-        (root)[MSG_STR(vector)] = (vector);          \
+#define SET_ARRAY_VALUE(root, vector)       \
+    do {                                    \
+        (root)[MSG_STR(vector)] = (vector); \
     } while (0)
 
-#define FROM_STRING_VALUE(root, field)            \
-    do {                                          \
-        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) {     \
-            field = (root)[MSG_STR(field)].GetValue<std::string>(); \
-        }       \
+#define FROM_STRING_VALUE(root, field)                                         \
+    do {                                                                       \
+        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) { \
+            field = (root)[MSG_STR(field)].GetValue<std::string>();            \
+        }                                                                      \
     } while (0)
 
-#define FROM_INT_VALUE(root, field, def)           \
-    do {                                           \
-        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) {     \
-            field = (root)[MSG_STR(field)].GetValue<int32_t>(); \
-        }       \
+#define FROM_INT_VALUE(root, field, def)                                       \
+    do {                                                                       \
+        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) { \
+            field = (root)[MSG_STR(field)].GetValue<int32_t>();                \
+        }                                                                      \
     } while (0)
 
-#define FROM_UINT64_VALUE(root, field, def)         \
-    do {                                            \
-        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) {     \
-            field = (root)[MSG_STR(field)].GetValue<uint64_t>(); \
-        }       \
+#define FROM_UINT64_VALUE(root, field, def)                                    \
+    do {                                                                       \
+        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) { \
+            field = (root)[MSG_STR(field)].GetValue<uint64_t>();               \
+        }                                                                      \
     } while (0)
 
-
-#define FROM_BOOL_VALUE(root, field)                 \
-    do {                                             \
-        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) {     \
-            field = (root)[MSG_STR(field)].GetValue<bool>(); \
-        }       \
+#define FROM_BOOL_VALUE(root, field)                                           \
+    do {                                                                       \
+        if ((root)[MSG_STR(field)].type != NanoJson::JsonValueType::INVALID) { \
+            field = (root)[MSG_STR(field)].GetValue<bool>();                   \
+        }                                                                      \
     } while (0)
 
-enum COLLECTON_STATUS {
-    SUCCESS = 0,
-    ERR = 1
-};
+enum COLLECTON_STATUS { SUCCESS = 0, ERR = 1 };
 
 struct BaseInfo {
     virtual ~BaseInfo() {}
@@ -81,16 +77,13 @@ struct BaseInfo {
         return result;
     }
 
-    virtual void ToObject(NanoJson::Json &object) = 0;
+    virtual void ToObject(NanoJson::Json& object) = 0;
 
-    virtual void FromObject(NanoJson::Json &object) = 0;
+    virtual void FromObject(NanoJson::Json& object) = 0;
 
-    virtual std::string GetStructName()
-    {
-        return "BaseInfo";
-    }
+    virtual std::string GetStructName() { return "BaseInfo"; }
 
-    bool FromString(const std::string &value)
+    bool FromString(const std::string& value)
     {
         if (value.empty()) {
             return false;
@@ -103,7 +96,7 @@ struct BaseInfo {
             root.Parse(value);
             FromObject(root);
             ok = true;
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             MSPROF_LOGE("%s ::FromString(): %s", GetStructName().c_str(), e.what());
         }
         return ok;
@@ -114,34 +107,23 @@ struct StatusInfo : public BaseInfo {
     std::string dev_id;
     int32_t status;
     std::string info;
-    explicit StatusInfo(const std::string id, int32_t sta = static_cast<int32_t>(ERR),
-        const std::string &inf = "")
-        : dev_id(id),
-          status(sta),
-          info(inf)
-        {
-    }
+    explicit StatusInfo(const std::string id, int32_t sta = static_cast<int32_t>(ERR), const std::string& inf = "")
+        : dev_id(id), status(sta), info(inf)
+    {}
 
-    StatusInfo()
-        : dev_id("-1"),
-          status(ERR)
-        {
-    }
+    StatusInfo() : dev_id("-1"), status(ERR) {}
     ~StatusInfo() override {}
 
-    std::string GetStructName() override
-    {
-        return "StatusInfo";
-    }
+    std::string GetStructName() override { return "StatusInfo"; }
 
-    void ToObject(NanoJson::Json &object) override
+    void ToObject(NanoJson::Json& object) override
     {
         SET_VALUE(object, dev_id);
         SET_VALUE(object, status);
         SET_VALUE(object, info);
     }
 
-    void FromObject(NanoJson::Json &object) override
+    void FromObject(NanoJson::Json& object) override
     {
         FROM_STRING_VALUE(object, dev_id);
         FROM_INT_VALUE(object, status, static_cast<int32_t>(ERR));
@@ -156,17 +138,11 @@ struct Status : public BaseInfo {
     Status() : status(ERR) {}
     ~Status() override {}
 
-    std::string GetStructName() override
-    {
-        return "Status";
-    }
+    std::string GetStructName() override { return "Status"; }
 
-    void AddStatusInfo(const StatusInfo &statusInfo)
-    {
-        info.push_back(statusInfo);
-    }
+    void AddStatusInfo(const StatusInfo& statusInfo) { info.push_back(statusInfo); }
 
-    void ToObject(NanoJson::Json &object) override
+    void ToObject(NanoJson::Json& object) override
     {
         object["status"] = status;
         const size_t size = info.size();
@@ -178,7 +154,7 @@ struct Status : public BaseInfo {
         }
     }
 
-    void FromObject(NanoJson::Json &object) override
+    void FromObject(NanoJson::Json& object) override
     {
         FROM_INT_VALUE(object, status, static_cast<int32_t>(ERR));
 
@@ -198,11 +174,11 @@ struct Status : public BaseInfo {
 // intervals of ProfileParams maybe large,
 // remember to cast to long long before calculation (for example, convert ms to ns)
 struct JobContext : public BaseInfo {
-    std::string result_dir;  // result_dir
-    std::string module;  // module: runtime,Framework
-    std::string tag;  // tag: module tag
-    std::string dev_id;  // dev_id
-    std::string job_id;  // job_id
+    std::string result_dir; // result_dir
+    std::string module;     // module: runtime,Framework
+    std::string tag;        // tag: module tag
+    std::string dev_id;     // dev_id
+    std::string job_id;     // job_id
     uint64_t chunkStartTime;
     uint64_t chunkEndTime;
     int32_t dataModule;
@@ -210,17 +186,12 @@ struct JobContext : public BaseInfo {
     // for debug purpose
     std::string stream_enabled;
 
-    JobContext() : chunkStartTime(0), chunkEndTime(0), dataModule(0)
-    {
-    }
+    JobContext() : chunkStartTime(0), chunkEndTime(0), dataModule(0) {}
     ~JobContext() override {}
 
-    std::string GetStructName() override
-    {
-        return "JobContext";
-    }
+    std::string GetStructName() override { return "JobContext"; }
 
-    void ToObject(NanoJson::Json &object) override
+    void ToObject(NanoJson::Json& object) override
     {
         SET_VALUE(object, result_dir);
         SET_VALUE(object, module);
@@ -233,7 +204,7 @@ struct JobContext : public BaseInfo {
         SET_VALUE(object, stream_enabled);
     }
 
-    void FromObject(NanoJson::Json &object) override
+    void FromObject(NanoJson::Json& object) override
     {
         FROM_STRING_VALUE(object, result_dir);
         FROM_STRING_VALUE(object, module);
@@ -246,8 +217,7 @@ struct JobContext : public BaseInfo {
         FROM_STRING_VALUE(object, stream_enabled);
     }
 };
-}  // namespace message
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace message
+} // namespace dvvp
+} // namespace analysis
 #endif
-

@@ -16,16 +16,16 @@ namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
 using namespace analysis::dvvp::common::utils;
-constexpr uint16_t TS_MASK_BIT0_BIT1   = 0x3U;    // 0b11
-constexpr uint16_t TS_MASK_BIT0_BIT11  = 0x0FFFU; // take significant bit0~11
-constexpr uint16_t TS_MASK_BIT12       = 0x1000U; // bit12 indicate whether taskId is update
+constexpr uint16_t TS_MASK_BIT0_BIT1 = 0x3U;      // 0b11
+constexpr uint16_t TS_MASK_BIT0_BIT11 = 0x0FFFU;  // take significant bit0~11
+constexpr uint16_t TS_MASK_BIT12 = 0x1000U;       // bit12 indicate whether taskId is update
 constexpr uint16_t TS_MASK_BIT13_BIT15 = 0xE000U; // take significant bit13~15
 constexpr uint16_t TS_MASK_BIT12_BIT15 = 0xF000U; // take significant bit12~15
-constexpr uint16_t TS_UPDATE_FOR_ALL   = 0b10;
-constexpr uint16_t TS_UPDATE_FLAG_BIT  = 12U;
+constexpr uint16_t TS_UPDATE_FOR_ALL = 0b10;
+constexpr uint16_t TS_UPDATE_FLAG_BIT = 12U;
 constexpr uint32_t CLOUD_V3_LOG_DATA_SIZE = 32;
 
-bool AnalyzerFfts::IsFftsData(const std::string &fileName) const
+bool AnalyzerFfts::IsFftsData(const std::string& fileName) const
 {
     // "ffts.data"
     if (fileName.find("stars_soc.data") != std::string::npos) {
@@ -36,12 +36,10 @@ bool AnalyzerFfts::IsFftsData(const std::string &fileName) const
 
 void AnalyzerFfts::PrintStats() const
 {
-    MSPROF_EVENT("total_size_analyze, module: FFTS, analyzed %" PRIu64 ", total %" PRIu64 ", "
-                 "ffts time %u, merge %u",
-        analyzedBytes_,
-        totalBytes_,
-        totalFftsTimes_,
-        totalFftsMerges_);
+    MSPROF_EVENT(
+        "total_size_analyze, module: FFTS, analyzed %" PRIu64 ", total %" PRIu64 ", "
+        "ffts time %u, merge %u",
+        analyzedBytes_, totalBytes_, totalFftsTimes_, totalFftsMerges_);
 }
 
 void AnalyzerFfts::FftsParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
@@ -70,16 +68,16 @@ void AnalyzerFfts::ParseOptimizeFftsData(CONST_CHAR_PTR data, uint32_t len)
             MSPROF_LOGW("Ffts remains %u bytes unparsed, which is incomplete data", remainLen);
             break;
         }
-        const StarsLogHead *logHead = Utils::ReinterpretCast<const StarsLogHead, const char>(dataPtr_ + curLen);
+        const StarsLogHead* logHead = Utils::ReinterpretCast<const StarsLogHead, const char>(dataPtr_ + curLen);
         const uint32_t logType = logHead->logType;
         if (IsExtPmu() && (logType == ACSQ_TASK_START_FUNC_TYPE || logType == ACSQ_TASK_END_FUNC_TYPE)) {
-            const DavidAcsqLog *acsqData = Utils::ReinterpretCast<const DavidAcsqLog, const StarsLogHead>(logHead);
+            const DavidAcsqLog* acsqData = Utils::ReinterpretCast<const DavidAcsqLog, const StarsLogHead>(logHead);
             HandleOptimizeAcsqTaskData(acsqData, logType);
         } else if (logType == ACSQ_TASK_START_FUNC_TYPE || logType == ACSQ_TASK_END_FUNC_TYPE) {
-            const StarsAcsqLog *acsqData = Utils::ReinterpretCast<const StarsAcsqLog, const StarsLogHead>(logHead);
+            const StarsAcsqLog* acsqData = Utils::ReinterpretCast<const StarsAcsqLog, const StarsLogHead>(logHead);
             HandleOptimizeAcsqTaskData(acsqData, logType);
         } else if (logType == FFTS_SUBTASK_THREAD_START_FUNC_TYPE || logType == FFTS_SUBTASK_THREAD_END_FUNC_TYPE) {
-            const StarsCxtLog *cxtData = Utils::ReinterpretCast<const StarsCxtLog, const StarsLogHead>(logHead);
+            const StarsCxtLog* cxtData = Utils::ReinterpretCast<const StarsCxtLog, const StarsLogHead>(logHead);
             HandleOptimizeSubTaskThreadData(cxtData, logType);
         } else {
             MSPROF_LOGD("unknownOp ffts op. logType:%u", logType);
@@ -93,8 +91,8 @@ void AnalyzerFfts::ParseOptimizeFftsData(CONST_CHAR_PTR data, uint32_t len)
     BufferRemainingData(curLen);
 }
 
-template<typename T>
-void AnalyzerFfts::HandleOptimizeAcsqTaskData(const T *acsqLog, uint32_t logType)
+template <typename T>
+void AnalyzerFfts::HandleOptimizeAcsqTaskData(const T* acsqLog, uint32_t logType)
 {
     uint16_t taskId = acsqLog->taskId;
     uint16_t streamId = acsqLog->streamId;
@@ -133,7 +131,7 @@ void AnalyzerFfts::HandleOptimizeAcsqTaskData(const T *acsqLog, uint32_t logType
     }
 }
 
-void AnalyzerFfts::HandleOptimizeSubTaskThreadData(const StarsCxtLog *cxtLog, uint32_t logType)
+void AnalyzerFfts::HandleOptimizeSubTaskThreadData(const StarsCxtLog* cxtLog, uint32_t logType)
 {
     uint16_t taskId = cxtLog->taskId;
     uint16_t streamId = cxtLog->streamId;
@@ -165,7 +163,7 @@ void AnalyzerFfts::HandleOptimizeSubTaskThreadData(const StarsCxtLog *cxtLog, ui
     }
 }
 
-void AnalyzerFfts::StarsRollBackStreamTaskId(uint16_t *streamId, uint16_t *taskId) const
+void AnalyzerFfts::StarsRollBackStreamTaskId(uint16_t* streamId, uint16_t* taskId) const
 {
     // bit12 == 0 && bit13 == 1: streamId = (bit0~11)taskId, taskId = (bit0~11)streamId | (bit12~15)taskId
     if ((((*streamId) >> TS_UPDATE_FLAG_BIT) & TS_MASK_BIT0_BIT1) == TS_UPDATE_FOR_ALL) {
@@ -181,8 +179,8 @@ void AnalyzerFfts::StarsRollBackStreamTaskId(uint16_t *streamId, uint16_t *taskI
     }
 }
 
-template void AnalyzerFfts::HandleOptimizeAcsqTaskData(const StarsAcsqLog *acsqLog, uint32_t logType);
-template void AnalyzerFfts::HandleOptimizeAcsqTaskData(const DavidAcsqLog *acsqLog, uint32_t logType);
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+template void AnalyzerFfts::HandleOptimizeAcsqTaskData(const StarsAcsqLog* acsqLog, uint32_t logType);
+template void AnalyzerFfts::HandleOptimizeAcsqTaskData(const DavidAcsqLog* acsqLog, uint32_t logType);
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

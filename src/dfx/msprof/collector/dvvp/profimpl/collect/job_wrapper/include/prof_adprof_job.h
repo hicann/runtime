@@ -18,11 +18,11 @@ namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 using TsdCapabilityGetFunc = uint32_t (*)(const uint32_t logicDeviceId, const int32_t type, const uint64_t ptr);
-using TsdProcessOpenFunc = uint32_t (*)(uint32_t logicDeviceId, ProcOpenArgs *openArgs);
-using TsdGetProcListStatusFunc = uint32_t (*)(const uint32_t logicDeviceId, ProcStatusParam *pidInfo,
-                                              const uint32_t arrayLen);
-using ProcessCloseSubProcListFunc = uint32_t (*)(const uint32_t logicDeviceId, const ProcStatusParam *closeList,
-                                                 const uint32_t listSize);
+using TsdProcessOpenFunc = uint32_t (*)(uint32_t logicDeviceId, ProcOpenArgs* openArgs);
+using TsdGetProcListStatusFunc =
+    uint32_t (*)(const uint32_t logicDeviceId, ProcStatusParam* pidInfo, const uint32_t arrayLen);
+using ProcessCloseSubProcListFunc =
+    uint32_t (*)(const uint32_t logicDeviceId, const ProcStatusParam* closeList, const uint32_t listSize);
 
 class ProfAdprofJob : public ProfDrvJob {
 public:
@@ -35,7 +35,7 @@ public:
 private:
     int32_t InitAdprof();
     int32_t LoadTsdApi();
-    void BuildSysProfCmdArg(ProcOpenArgs &procOpenArgs);
+    void BuildSysProfCmdArg(ProcOpenArgs& procOpenArgs);
     void CloseAdprof() const;
 
 private:
@@ -53,7 +53,7 @@ private:
     std::vector<std::string> cmdVec_;
     std::vector<ProcExtParam> params_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

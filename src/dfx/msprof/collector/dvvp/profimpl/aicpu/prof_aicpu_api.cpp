@@ -15,20 +15,17 @@ extern "C" {
 #endif // __cplusplus
 
 /* AICPU API */
-MSVP_PROF_API int32_t ProfHalGetVersion(uint32_t *version)
+MSVP_PROF_API int32_t ProfHalGetVersion(uint32_t* version)
 {
     return ProfAPI::ProfHalPlugin::instance()->ProfHalGetVersion(version);
 }
 
-MSVP_PROF_API int32_t ProfHalModuleInitialize(uint32_t moduleType, const void *moduleConfig, uint32_t length)
+MSVP_PROF_API int32_t ProfHalModuleInitialize(uint32_t moduleType, const void* moduleConfig, uint32_t length)
 {
     return ProfAPI::ProfHalPlugin::instance()->ProfHalInit(moduleType, moduleConfig, length);
 }
 
-MSVP_PROF_API int32_t ProfHalModuleFinalize()
-{
-    return ProfAPI::ProfHalPlugin::instance()->ProfHalFinal();
-}
+MSVP_PROF_API int32_t ProfHalModuleFinalize() { return ProfAPI::ProfHalPlugin::instance()->ProfHalFinal(); }
 
 MSVP_PROF_API void ProfHalSetFlushModuleCallback(const ProfHalFlushModuleCallback func)
 {

@@ -45,8 +45,7 @@ void ExtendPlugin::LoadProfApi()
     } while (0);
 }
 
-int32_t ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId(int32_t logicDeviceId,
-    int32_t* visibleDeviceId) const
+int32_t ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId(int32_t logicDeviceId, int32_t* visibleDeviceId) const
 {
     if (rtGetVisibleDeviceIdByLogicDeviceId_ == nullptr) {
         MSPROF_LOGW("RuntimePlugin rtGetVisibleDeviceIdByLogicDeviceId function is null.");
@@ -55,4 +54,4 @@ int32_t ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId(int32_t logicDeviceI
     return rtGetVisibleDeviceIdByLogicDeviceId_(logicDeviceId, visibleDeviceId);
 }
 
-}
+} // namespace ProfRtAPI

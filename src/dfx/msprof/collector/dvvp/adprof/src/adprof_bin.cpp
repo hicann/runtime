@@ -24,8 +24,8 @@
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
-using AdprofStartFunc = int32_t (*) (int32_t argc, const char** argv);
-using AdprofIsExitFunc = bool (*) ();
+using AdprofStartFunc = int32_t (*)(int32_t argc, const char** argv);
+using AdprofIsExitFunc = bool (*)();
 
 const static std::string LIBASCEND_DEVPROF_LIB_PATH = "libascend_devprof.so";
 const static std::string HOST_PID = "host_pid:";
@@ -37,7 +37,7 @@ constexpr uint32_t SLEEP_TIME = 500U;
 constexpr uint32_t QUERY_BIND_HOST_PID_TIME = 500U;
 constexpr uint32_t QUERY_BIND_HOST_PID_INTERVAL = 50U;
 
-STATIC int32_t CheckBindHostPid(const char *arg)
+STATIC int32_t CheckBindHostPid(const char* arg)
 {
     MSPROF_LOGI("Check bind host pid");
     std::string hostPidStr(arg);
@@ -79,15 +79,15 @@ STATIC int32_t CheckBindHostPid(const char *arg)
     return PROFILING_FAILED;
 }
 
-STATIC void Start(int32_t argc, const char *argv[])
+STATIC void Start(int32_t argc, const char* argv[])
 {
-    void *handle = OsalDlopen(LIBASCEND_DEVPROF_LIB_PATH.c_str(), RTLD_LAZY | RTLD_NODELETE);
+    void* handle = OsalDlopen(LIBASCEND_DEVPROF_LIB_PATH.c_str(), RTLD_LAZY | RTLD_NODELETE);
     if (!handle) {
         MSPROF_LOGE("Failed to load library: %s, dlopen error: %s\n", LIBASCEND_DEVPROF_LIB_PATH.c_str(), dlerror());
         return;
     }
-    AdprofStartFunc adprofStartFunc = Utils::ReinterpretCast<int32_t (int32_t argc, const char** argv)>(
-        OsalDlsym(handle, "AdprofStart"));
+    AdprofStartFunc adprofStartFunc =
+        Utils::ReinterpretCast<int32_t(int32_t argc, const char** argv)>(OsalDlsym(handle, "AdprofStart"));
     if (adprofStartFunc == nullptr) {
         MSPROF_LOGE("Failed to load AdprofStart function from %s", LIBASCEND_DEVPROF_LIB_PATH.c_str());
         OsalDlclose(handle);
@@ -100,7 +100,7 @@ STATIC void Start(int32_t argc, const char *argv[])
         return;
     }
 
-    AdprofIsExitFunc adprofIsExitFunc = Utils::ReinterpretCast<bool ()>(OsalDlsym(handle, "GetIsExit"));
+    AdprofIsExitFunc adprofIsExitFunc = Utils::ReinterpretCast<bool()>(OsalDlsym(handle, "GetIsExit"));
     if (adprofIsExitFunc == nullptr) {
         MSPROF_LOGE("Failed to load GetIsExit function from %s", LIBASCEND_DEVPROF_LIB_PATH.c_str());
         OsalDlclose(handle);
@@ -114,9 +114,9 @@ STATIC void Start(int32_t argc, const char *argv[])
 }
 
 #ifdef __PROF_LLT
-int32_t LltMain(int32_t argc, const char *argv[])
+int32_t LltMain(int32_t argc, const char* argv[])
 #else
-int32_t main(int32_t argc, const char *argv[])
+int32_t main(int32_t argc, const char* argv[])
 #endif
 {
     MSPROF_EVENT("adprof start");
@@ -146,8 +146,9 @@ int32_t main(int32_t argc, const char *argv[])
 
     uint32_t localDevId = 0;
     drvError_t err = drvGetLocalDevIDByHostDevID(hostDevId, &localDevId);
-    FUNRET_CHECK_EXPR_ACTION(err != DRV_ERROR_NONE, return PROFILING_FAILED,
-        "Failed to get local device id, devId=%u, ret=%d.", hostDevId, static_cast<int32_t>(err));
+    FUNRET_CHECK_EXPR_ACTION(
+        err != DRV_ERROR_NONE, return PROFILING_FAILED, "Failed to get local device id, devId=%u, ret=%d.", hostDevId,
+        static_cast<int32_t>(err));
     MSPROF_LOGI("Get local device id %u by id %u.", localDevId, hostDevId);
     err = halDrvEventThreadInit(localDevId);
     if (err != DRV_ERROR_NONE) {

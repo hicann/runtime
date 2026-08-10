@@ -66,7 +66,7 @@ struct IdeComponentsFuncs {
     int32_t (*hdcProcess[NR_IDE_COMPONENTS])(HDC_SESSION session, IdeTlvConReq req);
 };
 
-extern struct IdeComponentsFuncs       g_ideComponentsFuncs;
+extern struct IdeComponentsFuncs g_ideComponentsFuncs;
 
 extern void IdeReqFree(const IdeTlvReq req);
 extern void IdeRegisterSig();
@@ -88,26 +88,29 @@ extern void DaemonDestroy();
 extern int32_t HdclogHostInit();
 extern int32_t HdclogHostDestroy();
 
-#define IDE_CTRL_MUTEX_LOCK(mtx, action) do {                          \
-    if (mmMutexLock(mtx) != EN_OK) {                                   \
-        MSPROF_LOGE("mutex lock error");                                  \
-        action;                                                        \
-    }                                                                  \
-} while (0)
+#define IDE_CTRL_MUTEX_LOCK(mtx, action)     \
+    do {                                     \
+        if (mmMutexLock(mtx) != EN_OK) {     \
+            MSPROF_LOGE("mutex lock error"); \
+            action;                          \
+        }                                    \
+    } while (0)
 
-#define IDE_CTRL_MUTEX_UNLOCK(mtx, action) do {                        \
-    if (mmMutexUnLock(mtx) != EN_OK) {                                 \
-        MSPROF_LOGE("mutex lock error");                                  \
-        action;                                                        \
-    }                                                                  \
-} while (0)
+#define IDE_CTRL_MUTEX_UNLOCK(mtx, action)   \
+    do {                                     \
+        if (mmMutexUnLock(mtx) != EN_OK) {   \
+            MSPROF_LOGE("mutex lock error"); \
+            action;                          \
+        }                                    \
+    } while (0)
 
-#define IDE_MMCLOSE_AND_SET_INVALID(fd) do {                    \
-    if ((fd) >= 0) {                                            \
-        (void)mmClose(fd);                                      \
-        fd = -1;                                                \
-    }                                                           \
-} while (0)
+#define IDE_MMCLOSE_AND_SET_INVALID(fd) \
+    do {                                \
+        if ((fd) >= 0) {                \
+            (void)mmClose(fd);          \
+            fd = -1;                    \
+        }                               \
+    } while (0)
 
 #if defined(__IDE_UT) || defined(__IDE_ST)
 #define STATIC

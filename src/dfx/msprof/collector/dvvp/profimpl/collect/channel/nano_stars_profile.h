@@ -15,23 +15,24 @@ namespace Collect {
 namespace JobWrapper {
 constexpr uint8_t NANO_PMU_EVENT_MAX_NUM = 10;
 struct TagNanoStarsProfileConfig {
-    uint32_t tag = 0;                                  // 0-enable immediately, 1-enable delay
-    uint32_t eventNum = 0;                             // PMU count
-    uint16_t event[NANO_PMU_EVENT_MAX_NUM] = {0};      // PMU value
+    uint32_t tag = 0;                             // 0-enable immediately, 1-enable delay
+    uint32_t eventNum = 0;                        // PMU count
+    uint16_t event[NANO_PMU_EVENT_MAX_NUM] = {0}; // PMU value
 };
 class NanoStarsProfile : public ChannelJob {
 public:
     NanoStarsProfile()
-        : ChannelJob(static_cast<uint32_t>(
-        analysis::dvvp::driver::AI_DRV_CHANNEL::PROF_CHANNEL_STARS_NANO_PROFILE),
-        "nano_stars_profile.data") {}
+        : ChannelJob(
+              static_cast<uint32_t>(analysis::dvvp::driver::AI_DRV_CHANNEL::PROF_CHANNEL_STARS_NANO_PROFILE),
+              "nano_stars_profile.data")
+    {}
     ~NanoStarsProfile() override {}
     int32_t Init(const SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> cfg) override;
     int32_t Process() override;
     int32_t Uninit() override;
-    void PackPmuParam(TagNanoStarsProfileConfig &config) const;
+    void PackPmuParam(TagNanoStarsProfileConfig& config) const;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Collect
+} // namespace Dvvp
 #endif

@@ -28,23 +28,24 @@ struct TaskEventAttr {
     OsalThread handle;
     bool isAttachDevice;
     bool isWaitDevPid;
-    const char *grpName;
+    const char* grpName;
 };
 
 class ProfDrvEvent {
 public:
     ProfDrvEvent();
     ~ProfDrvEvent();
-    int32_t SubscribeEventThreadInit(struct TaskEventAttr *eventAttr) const;
+    int32_t SubscribeEventThreadInit(struct TaskEventAttr* eventAttr) const;
     void SubscribeEventThreadUninit(uint32_t devId) const;
+
 private:
-    static void *EventThreadHandle(void *attr);
-    static int32_t QueryDevPid(const struct TaskEventAttr *eventAttr);
-    static int32_t QueryGroupId(uint32_t devId, uint32_t &grpId, const char *grpName);
-    static void WaitEvent(struct TaskEventAttr *eventAttr, uint32_t grpId);
+    static void* EventThreadHandle(void* attr);
+    static int32_t QueryDevPid(const struct TaskEventAttr* eventAttr);
+    static int32_t QueryGroupId(uint32_t devId, uint32_t& grpId, const char* grpName);
+    static void WaitEvent(struct TaskEventAttr* eventAttr, uint32_t grpId);
 };
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

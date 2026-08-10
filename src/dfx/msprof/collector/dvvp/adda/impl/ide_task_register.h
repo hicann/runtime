@@ -13,12 +13,12 @@
 #include "ide_common_util.h"
 #include "ide_daemon_hdc.h"
 namespace Adx {
-const char * const IDE_DAEMON_NAME = "adda";
+const char* const IDE_DAEMON_NAME = "adda";
 extern void IdeDaemonRegisterModules();
 #if defined(__IDE_UT) || defined(__IDE_ST)
-STATIC void IdeRegisterModule(enum IdeComponentType type, const struct IdeSingleComponentFuncs &ideFuncs);
+STATIC void IdeRegisterModule(enum IdeComponentType type, const struct IdeSingleComponentFuncs& ideFuncs);
 #endif
-}
+} // namespace Adx
 #ifdef __cplusplus
 extern "C" {
 #endif

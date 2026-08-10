@@ -16,20 +16,19 @@
 namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
-#define CHECK_DATA_RET(ret, action)         \
-    do {                                    \
-        if (ret != ACL_SUCCESS) {           \
-            action;                         \
-        }                                   \
+#define CHECK_DATA_RET(ret, action) \
+    do {                            \
+        if (ret != ACL_SUCCESS) {   \
+            action;                 \
+        }                           \
     } while (0)
 
-#define CHECK_INDEX_RET(index, len, action)                             \
-    do {                                                                \
-        if (((index) + 1 == 0) ||                                       \
-            (((index) + 1) * GetOpDescSize() > (len))) {                \
-            MSPROF_LOGE("Index %u is out of range %u", (index), (len)); \
-            action;                                                     \
-        }                                                               \
+#define CHECK_INDEX_RET(index, len, action)                                    \
+    do {                                                                       \
+        if (((index) + 1 == 0) || (((index) + 1) * GetOpDescSize() > (len))) { \
+            MSPROF_LOGE("Index %u is out of range %u", (index), (len));        \
+            action;                                                            \
+        }                                                                      \
     } while (0)
 
 std::string g_aclprofSubscribeOpAttriValue;
@@ -38,10 +37,7 @@ using namespace Msprofiler::Api;
 
 OpDescParser::OpDescParser() : opIndex_(0) {}
 
-uint32_t OpDescParser::GetOpDescSize()
-{
-    return sizeof(ProfOpDesc);
-}
+uint32_t OpDescParser::GetOpDescSize() { return sizeof(ProfOpDesc); }
 
 int32_t OpDescParser::GetOpNum(CONST_VOID_PTR data, uint32_t len, UINT32_T_PTR opNum)
 {
@@ -65,7 +61,7 @@ int32_t OpDescParser::GetModelId(CONST_VOID_PTR data, uint32_t len, uint32_t ind
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     *modelId = opDesc->modelId;
     return ACL_SUCCESS;
 }
@@ -80,7 +76,7 @@ int32_t OpDescParser::GetThreadId(CONST_VOID_PTR data, uint32_t len, uint32_t in
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     *threadId = opDesc->threadId;
     return ACL_SUCCESS;
 }
@@ -95,12 +91,12 @@ int32_t OpDescParser::GetDeviceId(CONST_VOID_PTR data, uint32_t len, uint32_t in
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     *devId = opDesc->devId;
     return ACL_SUCCESS;
 }
 
-uint64_t OpDescParser::SetOpTypeAndOpName(const std::string &opType, const std::string &opName)
+uint64_t OpDescParser::SetOpTypeAndOpName(const std::string& opType, const std::string& opName)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     if (opIndex_ + 1 != 0) {
@@ -123,7 +119,7 @@ int32_t OpDescParser::GetOpTypeLen(CONST_VOID_PTR data, uint32_t len, SIZE_T_PTR
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
 
     std::lock_guard<std::mutex> lk(mtx_);
     auto iter = opTypes_.find(opDesc->opIndex);
@@ -145,7 +141,7 @@ int32_t OpDescParser::GetOpType(CONST_VOID_PTR data, uint32_t len, CHAR_PTR opTy
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
 
     std::lock_guard<std::mutex> lk(mtx_);
     const auto iter = opTypes_.find(opDesc->opIndex);
@@ -172,7 +168,7 @@ int32_t OpDescParser::GetOpNameLen(CONST_VOID_PTR data, uint32_t len, SIZE_T_PTR
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
 
     std::lock_guard<std::mutex> lk(mtx_);
     auto iter = opNames_.find(opDesc->opIndex);
@@ -194,7 +190,7 @@ int32_t OpDescParser::GetOpName(CONST_VOID_PTR data, uint32_t len, CHAR_PTR opNa
     CHECK_DATA_RET(ret, return ret);
     CHECK_INDEX_RET(index, len, return ACL_ERROR_INVALID_PARAM);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
 
     std::lock_guard<std::mutex> lk(mtx_);
     const auto iter = opNames_.find(opDesc->opIndex);
@@ -204,8 +200,9 @@ int32_t OpDescParser::GetOpName(CONST_VOID_PTR data, uint32_t len, CHAR_PTR opNa
     }
     const errno_t err = memcpy_s(opName, opNameLen, iter->second.c_str(), iter->second.size());
     if (err != EOK) {
-        MSPROF_LOGE("memory copy failed, err: %d, op name of: %" PRIu64 ", opNameLen: %u, iter->second.size(): %zu",
-                    static_cast<int32_t>(err), opDesc->opIndex, opNameLen, iter->second.size());
+        MSPROF_LOGE(
+            "memory copy failed, err: %d, op name of: %" PRIu64 ", opNameLen: %u, iter->second.size(): %zu",
+            static_cast<int32_t>(err), opDesc->opIndex, opNameLen, iter->second.size());
         return ACL_ERROR_INVALID_PARAM;
     }
     *(opName + opNameLen - 1) = '\0';
@@ -223,7 +220,7 @@ uint64_t OpDescParser::GetOpStart(CONST_VOID_PTR data, uint32_t len, uint32_t in
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->start;
 }
 
@@ -237,7 +234,7 @@ uint64_t OpDescParser::GetOpEnd(CONST_VOID_PTR data, uint32_t len, uint32_t inde
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->end;
 }
 
@@ -251,7 +248,7 @@ uint64_t OpDescParser::GetOpDuration(CONST_VOID_PTR data, uint32_t len, uint32_t
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->duration;
 }
 
@@ -265,7 +262,7 @@ uint64_t OpDescParser::GetOpExecutionTime(CONST_VOID_PTR data, uint32_t len, uin
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->executionTime;
 }
 
@@ -279,7 +276,7 @@ uint64_t OpDescParser::GetOpCubeFops(CONST_VOID_PTR data, uint32_t len, uint32_t
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->cubeFops;
 }
 
@@ -293,7 +290,7 @@ uint64_t OpDescParser::GetOpVectorFops(CONST_VOID_PTR data, uint32_t len, uint32
     CHECK_DATA_RET(ret, return 0);
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->vectorFops;
 }
 
@@ -303,11 +300,11 @@ int32_t OpDescParser::CheckData(CONST_VOID_PTR data, uint32_t len)
         MSPROF_LOGE("Length of data: %u bytes is not [integer multiple] of OpDescSize: %u", len, GetOpDescSize());
         return ACL_ERROR_INVALID_PARAM;
     }
-    auto addr = static_cast<const uint8_t *>(data);
+    auto addr = static_cast<const uint8_t*>(data);
     for (uint32_t i = 0; i < len / GetOpDescSize(); i++) {
         const uint32_t signature = analysis::dvvp::common::utils::Utils::GenerateSignature(
             addr + i * GetOpDescSize() + sizeof(uint32_t), GetOpDescSize() - sizeof(uint32_t));
-        auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + i * GetOpDescSize());
+        auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + i * GetOpDescSize());
         if (opDesc->signature != signature) {
             MSPROF_LOGE("Part %u of data is invalid", i);
             return ACL_ERROR_INVALID_PARAM;
@@ -324,12 +321,12 @@ uint32_t OpDescParser::GetOpFlag(CONST_VOID_PTR data, uint32_t len, uint32_t ind
     }
     CHECK_INDEX_RET(index, len, return 0);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     return opDesc->flag;
 }
 
-const char *OpDescParser::GetOpAttriValue(CONST_VOID_PTR data, uint32_t len, uint32_t index,
-    aclprofSubscribeOpAttri attri)
+const char* OpDescParser::GetOpAttriValue(
+    CONST_VOID_PTR data, uint32_t len, uint32_t index, aclprofSubscribeOpAttri attri)
 {
     if (data == nullptr) {
         MSPROF_LOGE("Invalid param of GetOpAttriValue, data is null");
@@ -337,15 +334,14 @@ const char *OpDescParser::GetOpAttriValue(CONST_VOID_PTR data, uint32_t len, uin
     }
     CHECK_INDEX_RET(index, len, return nullptr);
     auto addr = static_cast<CONST_CHAR_PTR>(data);
-    auto opDesc = reinterpret_cast<const ProfOpDesc *>(addr + index * GetOpDescSize());
+    auto opDesc = reinterpret_cast<const ProfOpDesc*>(addr + index * GetOpDescSize());
     std::map<aclprofSubscribeOpAttri, aclprofSubscribeOpFlag> opFlagAttriMap = {
-        {ACL_SUBSCRIBE_ATTRI_THREADID, ACL_SUBSCRIBE_OP_THREAD}
-    };
+        {ACL_SUBSCRIBE_ATTRI_THREADID, ACL_SUBSCRIBE_OP_THREAD}};
     switch (attri) {
         case ACL_SUBSCRIBE_ATTRI_THREADID:
             if (opFlagAttriMap[attri] != opDesc->flag) {
-                MSPROF_LOGE("Invalid param of GetOpAttriValue, curr op flag %u not support attri %u",
-                            opDesc->flag, attri);
+                MSPROF_LOGE(
+                    "Invalid param of GetOpAttriValue, curr op flag %u not support attri %u", opDesc->flag, attri);
                 return nullptr;
             }
             g_aclprofSubscribeOpAttriValue = std::to_string(opDesc->threadId);
@@ -355,6 +351,6 @@ const char *OpDescParser::GetOpAttriValue(CONST_VOID_PTR data, uint32_t len, uin
             return nullptr;
     }
 }
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

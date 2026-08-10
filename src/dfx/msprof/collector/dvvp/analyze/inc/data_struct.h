@@ -33,8 +33,8 @@ struct KeypointOp {
     uint64_t modelId;
     uint64_t startTime;
     uint64_t endTime;
-    bool uploaded;           // false: send to pipe; true: not send to pipe
-    uint64_t findSuccTimes;  // find op success times by this KeypointOp
+    bool uploaded;          // false: send to pipe; true: not send to pipe
+    uint64_t findSuccTimes; // find op success times by this KeypointOp
 };
 
 struct OpTime {
@@ -44,14 +44,14 @@ struct OpTime {
     uint64_t endAicore;
     uint64_t end;
     uint32_t threadId;
-    uint32_t flag;      // enum aclprofSubscribeOpFlag
-    uint32_t streamId;  // used in aclprofSubscribe scene
+    uint32_t flag;     // enum aclprofSubscribeOpFlag
+    uint32_t streamId; // used in aclprofSubscribe scene
 };
 
 struct StreamInfo {
-    uint32_t curTaskidHigh;  // high 16 bit of task id
-    uint32_t curTaskidLow;   // low 16 bit of task id
-    uint32_t streamType;     // 0:known shape stream, 1:unknown shape stream
+    uint32_t curTaskidHigh; // high 16 bit of task id
+    uint32_t curTaskidLow;  // low 16 bit of task id
+    uint32_t streamType;    // 0:known shape stream, 1:unknown shape stream
 };
 
 struct OpPMU {
@@ -82,10 +82,10 @@ constexpr uint16_t TS_KEYPOINT_START_TASK_STATE = 0;
 constexpr uint16_t TS_KEYPOINT_END_TASK_STATE = 1;
 
 struct TsProfileDataHead {
-    uint8_t mode;  // 0-host,1-device
+    uint8_t mode; // 0-host,1-device
     uint8_t rptType;
     uint16_t bufSize;
-    uint8_t reserved[4];  // reserved 4 bytes
+    uint8_t reserved[4]; // reserved 4 bytes
 };
 
 struct TsProfileTimeline {
@@ -124,49 +124,49 @@ struct TsDavidKeypoint {
 constexpr uint8_t HWTS_TASK_START_TYPE = 0;
 constexpr uint8_t HWTS_TASK_END_TYPE = 1;
 constexpr uint8_t HWTS_INVALID_TYPE = 0xff;
-constexpr uint32_t HWTS_DATA_SIZE = 64;  // 64bytes
+constexpr uint32_t HWTS_DATA_SIZE = 64; // 64bytes
 
 struct HwtsProfileType01 {
     uint8_t cntRes0Type;  // bit0-2:Type, bit3:Res0, bit4-7:Cnt
     uint8_t reserved;
-    uint16_t hex6bd3;      // 0x6bd3
-    uint8_t reserved1[2];  // reserved 2 bytes
+    uint16_t hex6bd3;     // 0x6bd3
+    uint8_t reserved1[2]; // reserved 2 bytes
     uint16_t taskId;
     uint64_t syscnt;
     uint32_t streamId;
-    uint8_t reserved2[44];  // reserved 44 bytes, total size: 64 bytes
+    uint8_t reserved2[44]; // reserved 44 bytes, total size: 64 bytes
 };
 
 struct HwtsProfileType2 {
-    uint8_t cntRes0Type;  // bit0-2:Type, bit3:Res0, bit4-7:Cnt
+    uint8_t cntRes0Type; // bit0-2:Type, bit3:Res0, bit4-7:Cnt
     uint8_t coreId;
-    uint16_t hex6bd3;  // 0x6bd3
+    uint16_t hex6bd3;    // 0x6bd3
     uint16_t blockId;
     uint16_t taskId;
     uint64_t syscnt;
     uint32_t streamId;
-    uint8_t reserved[44];  // reserved 44 bytes, total size: 64 bytes
+    uint8_t reserved[44]; // reserved 44 bytes, total size: 64 bytes
 };
 
 struct HwtsProfileType3 {
-    uint8_t cntWarnType;  // bit0-2:Type, bit3:Warn, bit4-7:Cnt
+    uint8_t cntWarnType; // bit0-2:Type, bit3:Warn, bit4-7:Cnt
     uint8_t coreId;
-    uint16_t hex6bd3;  // 0x6bd3
+    uint16_t hex6bd3;    // 0x6bd3
     uint16_t blockId;
     uint16_t taskId;
     uint64_t syscnt;
     uint32_t streamId;
-    uint8_t reserved[4];  // reserved 4 bytes
+    uint8_t reserved[4];   // reserved 4 bytes
     uint64_t warnStatus;
-    uint8_t reserved2[32];  // reserved 32 bytes, total size: 64 bytes
+    uint8_t reserved2[32]; // reserved 32 bytes, total size: 64 bytes
 };
 
 // ffts
-constexpr int32_t STARS_DATA_SIZE = 64;                       // 64bytes
-constexpr int32_t ACSQ_TASK_START_FUNC_TYPE = 0;             // ACSQ task start log
-constexpr int32_t ACSQ_TASK_END_FUNC_TYPE = 1;               // ACSQ task end log
-constexpr int32_t FFTS_SUBTASK_THREAD_START_FUNC_TYPE = 34;  // ffts thread subtask start log
-constexpr int32_t FFTS_SUBTASK_THREAD_END_FUNC_TYPE = 35;    // ffts thread subtask end log
+constexpr int32_t STARS_DATA_SIZE = 64;                     // 64bytes
+constexpr int32_t ACSQ_TASK_START_FUNC_TYPE = 0;            // ACSQ task start log
+constexpr int32_t ACSQ_TASK_END_FUNC_TYPE = 1;              // ACSQ task end log
+constexpr int32_t FFTS_SUBTASK_THREAD_START_FUNC_TYPE = 34; // ffts thread subtask start log
+constexpr int32_t FFTS_SUBTASK_THREAD_END_FUNC_TYPE = 35;   // ffts thread subtask end log
 struct StarsLogHead {
     uint16_t logType : 6;
     uint16_t cnt : 4;
@@ -205,12 +205,12 @@ struct ProfOpDesc {
     uint32_t flag;
     uint32_t threadId;
     uint64_t opIndex;
-    uint64_t duration;  // unit: us, schedule time + execution time;
+    uint64_t duration; // unit: us, schedule time + execution time;
     uint64_t start;
     uint64_t end;
-    uint64_t executionTime;  // AI Core execution time;
+    uint64_t executionTime; // AI Core execution time;
     uint64_t cubeFops;
-    uint64_t vectorFops;  // total size: 64 bytes
+    uint64_t vectorFops;    // total size: 64 bytes
     uint32_t devId;
 };
 
@@ -234,7 +234,7 @@ struct FftsSubProfile {
     uint64_t res2;
     uint8_t contextType; // subTaskType
     uint8_t res3;
-    uint16_t contextId; // subTaskId
+    uint16_t contextId;  // subTaskId
     uint16_t res4 : 13;
     uint16_t fftsType : 3;
     uint16_t threadId;
@@ -346,7 +346,7 @@ struct KernelDetail {
     uint64_t aicCnt;
     uint64_t aivCnt;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 #endif

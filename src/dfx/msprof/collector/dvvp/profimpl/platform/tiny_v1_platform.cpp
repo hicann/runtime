@@ -14,6 +14,6 @@ namespace Collect {
 namespace Platform {
 PLATFORM_REGISTER(CHIP_TINY_V1, TinyV1Platform);
 TinyV1Platform::TinyV1Platform() {}
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

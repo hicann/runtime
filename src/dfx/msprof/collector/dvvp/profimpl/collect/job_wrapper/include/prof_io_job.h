@@ -41,8 +41,8 @@ protected:
     bool isStarted_{false};
     uint64_t sampleIntervalNs_{0};
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

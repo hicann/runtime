@@ -7,20 +7,16 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include<functional>
+#include <functional>
 #include "utils/utils.h"
 #include "error_code.h"
 #include "adprof_collector_proxy.h"
 
 using namespace analysis::dvvp::common::error;
 
-AdprofCollectorProxy::AdprofCollectorProxy()
-{
-}
+AdprofCollectorProxy::AdprofCollectorProxy() {}
 
-AdprofCollectorProxy::~AdprofCollectorProxy()
-{
-}
+AdprofCollectorProxy::~AdprofCollectorProxy() {}
 
 int32_t AdprofCollectorProxy::BindFunction(
     std::function<int32_t(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>)> reportFunc = nullptr,

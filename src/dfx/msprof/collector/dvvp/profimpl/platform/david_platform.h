@@ -39,5 +39,7 @@ private:
     void InsertSysFeature();
     void InsertPmuFeature();
 };
-}}}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

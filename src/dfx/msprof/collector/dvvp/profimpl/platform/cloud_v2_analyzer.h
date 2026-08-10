@@ -18,24 +18,18 @@ namespace Platform {
 
 class CloudV2Analyzer : public BaseAnalyzer {
 public:
-    CloudV2Analyzer()
-    {
-        AdaptCloudV2PmuMap();
-    }
+    CloudV2Analyzer() { AdaptCloudV2PmuMap(); }
     ~CloudV2Analyzer() {}
 
 private:
     void AdaptCloudV2PmuMap() const
     {
-        BaseAnalyzer::aicPmuMap_["PipeUtilization"] = {
-            "0x416","0x417","0x9","0x302","0xc","0x303","0x54","0x55"
-        };
-        BaseAnalyzer::aivPmuMap_["PipeUtilization"] = {
-            "0x8","0xa","0x9","0xb","0xc","0xd","0x54","0x55"
-        };
+        BaseAnalyzer::aicPmuMap_["PipeUtilization"] = {"0x416", "0x417", "0x9",  "0x302",
+                                                       "0xc",   "0x303", "0x54", "0x55"};
+        BaseAnalyzer::aivPmuMap_["PipeUtilization"] = {"0x8", "0xa", "0x9", "0xb", "0xc", "0xd", "0x54", "0x55"};
     }
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

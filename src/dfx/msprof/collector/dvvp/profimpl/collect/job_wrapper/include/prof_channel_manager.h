@@ -14,12 +14,12 @@
 #include "singleton/singleton.h"
 #include "transport/prof_channel.h"
 
-
 namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 class ProfChannelManager : public analysis::dvvp::common::singleton::Singleton<ProfChannelManager> {
     friend analysis::dvvp::common::singleton::Singleton<ProfChannelManager>;
+
 public:
     ProfChannelManager();
     ~ProfChannelManager() override;
@@ -33,6 +33,8 @@ private:
     std::mutex channelPollMutex_;
     uint64_t index_;
 };
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

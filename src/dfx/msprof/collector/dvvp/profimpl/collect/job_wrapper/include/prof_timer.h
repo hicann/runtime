@@ -21,15 +21,14 @@
 #include "transport/uploader.h"
 #include "utils/utils.h"
 
-
 namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 using namespace analysis::dvvp::common::utils;
-const char * const PROF_PROC_STAT = "/proc/stat";
-const char * const PROF_PROC_MEM = "/proc/meminfo";
-const char * const PROF_NET_STAT = "/proc/net/dev";
-const char * const PROF_PROC_UPTIME = "/proc/uptime";
+const char* const PROF_PROC_STAT = "/proc/stat";
+const char* const PROF_PROC_MEM = "/proc/meminfo";
+const char* const PROF_NET_STAT = "/proc/net/dev";
+const char* const PROF_PROC_UPTIME = "/proc/uptime";
 constexpr uint32_t PROC_STAT_USELESS_DATA_SIZE = 512;
 constexpr uint32_t PROC_PID_STAT_DATA_SIZE = 512;
 constexpr uint32_t PROC_MEM_USELESS_DATA_SIZE = 1536;
@@ -54,18 +53,21 @@ class TimerHandler {
 public:
     explicit TimerHandler(TimerHandlerTag tag);
     virtual ~TimerHandler();
+
 public:
     virtual int32_t Execute() = 0;
     virtual int32_t Init() = 0;
     virtual int32_t Uinit() = 0;
     TimerHandlerTag GetTag();
+
 private:
     TimerHandlerTag tag_;
 };
 
 struct TimerAttr {
-    TimerAttr(TimerHandlerTag tg, int32_t id, uint32_t size, uint64_t interval) : tag(tg), devId(id),
-        bufSize(size), sampleInterval(interval), srcFileName(""), retFileName(""), pid(0) {}
+    TimerAttr(TimerHandlerTag tg, int32_t id, uint32_t size, uint64_t interval)
+        : tag(tg), devId(id), bufSize(size), sampleInterval(interval), srcFileName(""), retFileName(""), pid(0)
+    {}
     TimerHandlerTag tag;
     int32_t devId;
     uint32_t bufSize;
@@ -77,26 +79,27 @@ struct TimerAttr {
 
 class ProcTimerHandler : public TimerHandler {
 public:
-    ProcTimerHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                     SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                     SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcTimerHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcTimerHandler() override;
 
 public:
     int32_t Execute() override;
     int32_t Init() override;
     int32_t Uinit() override;
-protected:
-    virtual void ParseProcFile(std::ifstream &ifs, std::string &data) = 0;
 
 protected:
-    void PacketData(std::string &dest, std::string &data, uint32_t headSize);
-    void StoreData(std::string &data);
+    virtual void ParseProcFile(std::ifstream& ifs, std::string& data) = 0;
+
+protected:
+    void PacketData(std::string& dest, std::string& data, uint32_t headSize);
+    void StoreData(std::string& data);
     void SendData(CONST_UNSIGNED_CHAR_PTR buf, uint32_t size);
     void FlushBuf();
-    bool IsValidData(std::ifstream &ifs, std::string &data) const;
-    bool CheckFileSize(const std::string &file) const;
+    bool IsValidData(std::ifstream& ifs, std::string& data) const;
+    bool CheckFileSize(const std::string& file) const;
 
 protected:
     analysis::dvvp::common::memory::Chunk buf_;
@@ -116,16 +119,16 @@ private:
 
 class ProcHostCpuHandler : public ProcTimerHandler {
 public:
-    ProcHostCpuHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                       SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcHostCpuHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcHostCpuHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
-    void ParseProcTidStat(std::string &data);
-    void ParseSysTime(std::string &data);
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
+    void ParseProcTidStat(std::string& data);
+    void ParseSysTime(std::string& data);
 
 private:
     std::string sysTimeSrc_;
@@ -134,15 +137,15 @@ private:
 
 class ProcHostMemHandler : public ProcTimerHandler {
 public:
-    ProcHostMemHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                       SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcHostMemHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcHostMemHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
-    void ParseProcMemUsage(std::string &data);
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
+    void ParseProcMemUsage(std::string& data);
 
 private:
     std::string statmSrc_;
@@ -150,40 +153,41 @@ private:
 
 class ProcHostNetworkHandler : public ProcTimerHandler {
 public:
-    ProcHostNetworkHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                           SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                           SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                           SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcHostNetworkHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcHostNetworkHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
-    void ParseNetStat(std::string &data);
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
+    void ParseNetStat(std::string& data);
 };
 
 class ProcStatFileHandler : public ProcTimerHandler {
 public:
-    ProcStatFileHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcStatFileHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcStatFileHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
 };
 
 class ProcPidStatFileHandler : public ProcTimerHandler {
 public:
-    ProcPidStatFileHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                           SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                           SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                           SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcPidStatFileHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcPidStatFileHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
-    void GetProcessName(std::string &processName);
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
+    void GetProcessName(std::string& processName);
+
 private:
     uint32_t pid_;
     std::ifstream ifStat_;
@@ -191,27 +195,27 @@ private:
 
 class ProcMemFileHandler : public ProcTimerHandler {
 public:
-    ProcMemFileHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                       SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                       SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcMemFileHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcMemFileHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
 };
 
 class ProcPidMemFileHandler : public ProcTimerHandler {
 public:
-    ProcPidMemFileHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-                          SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
-                          SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                          SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
+    ProcPidMemFileHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcPidMemFileHandler() override;
 
 private:
-    void ParseProcFile(std::ifstream &ifs, std::string &data) override;
-    void GetProcessName(std::string &processName);
+    void ParseProcFile(std::ifstream& ifs, std::string& data) override;
+    void GetProcessName(std::string& processName);
 
 private:
     uint32_t pid_;
@@ -224,14 +228,14 @@ public:
     void Execute();
 
 public:
-    SHARED_PTR_ALIA<ProcPidMemFileHandler>  memHandler_;
+    SHARED_PTR_ALIA<ProcPidMemFileHandler> memHandler_;
     SHARED_PTR_ALIA<ProcPidStatFileHandler> statHandler_;
 };
 
 class ProcAllPidsFileHandler : public TimerHandler {
 public:
-    ProcAllPidsFileHandler(SHARED_PTR_ALIA<TimerAttr> attr,
-        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
+    ProcAllPidsFileHandler(
+        SHARED_PTR_ALIA<TimerAttr> attr, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param,
         SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
         SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader);
     ~ProcAllPidsFileHandler() override;
@@ -242,15 +246,16 @@ public:
     int32_t Uinit() override;
 
 public:
-    static void GetProcessName(uint32_t pid, std::string &processName);
+    static void GetProcessName(uint32_t pid, std::string& processName);
 
 private:
-    void ParseProcFile(const std::ifstream &ifs, const std::string &data) const;
-    void GetCurPids(std::vector<uint32_t> &curPids) const;
-    void GetNewExitPids(std::vector<uint32_t> &curPids, std::vector<uint32_t> &prevPids,
-            std::vector<uint32_t> &newPids, std::vector<uint32_t> &exitPids) const;
-    void HandleNewPids(std::vector<uint32_t> &newPids);
-    void HandleExitPids(std::vector<uint32_t> &exitPids);
+    void ParseProcFile(const std::ifstream& ifs, const std::string& data) const;
+    void GetCurPids(std::vector<uint32_t>& curPids) const;
+    void GetNewExitPids(
+        std::vector<uint32_t>& curPids, std::vector<uint32_t>& prevPids, std::vector<uint32_t>& newPids,
+        std::vector<uint32_t>& exitPids) const;
+    void HandleNewPids(std::vector<uint32_t>& newPids);
+    void HandleExitPids(std::vector<uint32_t>& exitPids);
 
 private:
     uint32_t devId_;
@@ -260,7 +265,7 @@ private:
     SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx_;
     SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> upLoader_;
 
-    std::map<uint32_t, SHARED_PTR_ALIA<ProcPidFileHandler> > pidsMap_;
+    std::map<uint32_t, SHARED_PTR_ALIA<ProcPidFileHandler>> pidsMap_;
     std::vector<uint32_t> prevPids_;
 };
 
@@ -330,17 +335,18 @@ struct dcmi_network_pkt_stats_info {
 
 using DcmiInitFunc = int (*)();
 using DcmiV2InitFunc = int (*)();
-using DcmiGetCardListFunc = int (*)(int *cardNum, int *cardList, int listLen);
-using DcmiGetDeviceNumInCardFunc_ = int (*)(int cardId, int *deviceNum);
-using DcmiGetNetdevPktStatsInfoFunc = int (*)(int cardId, int deviceId, int portId,
-    struct dcmi_network_pkt_stats_info *statsInfo);
-using DcmiV2GetNetdevPktStatsInfoFunc = int (*)(int deviceId, int portId,
-    struct dcmi_network_pkt_stats_info *statsInfo);
-using DcmiV2GetDcmiVersionFunc = int (*)(char *dcmi_ver, unsigned int len);
+using DcmiGetCardListFunc = int (*)(int* cardNum, int* cardList, int listLen);
+using DcmiGetDeviceNumInCardFunc_ = int (*)(int cardId, int* deviceNum);
+using DcmiGetNetdevPktStatsInfoFunc =
+    int (*)(int cardId, int deviceId, int portId, struct dcmi_network_pkt_stats_info* statsInfo);
+using DcmiV2GetNetdevPktStatsInfoFunc =
+    int (*)(int deviceId, int portId, struct dcmi_network_pkt_stats_info* statsInfo);
+using DcmiV2GetDcmiVersionFunc = int (*)(char* dcmi_ver, unsigned int len);
 
 class NetDevStatsHandler : public TimerHandler {
 public:
-    NetDevStatsHandler(size_t bufSize, uint64_t sampleIntervalNs, std::string jobId,
+    NetDevStatsHandler(
+        size_t bufSize, uint64_t sampleIntervalNs, std::string jobId,
         SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx);
     ~NetDevStatsHandler() override = default;
 
@@ -354,7 +360,7 @@ public:
 private:
     void StoreData(uint32_t devId, std::string data);
     void SendData(uint32_t devId, CONST_UNSIGNED_CHAR_PTR buf, size_t size);
-    bool GetDcmiCardDevId(uint32_t devId, int &dcmiCardId, int &dcmiDevId) const;
+    bool GetDcmiCardDevId(uint32_t devId, int& dcmiCardId, int& dcmiDevId) const;
     std::unordered_map<uint32_t, std::pair<int, int>> GetCurDcmiCardDevIdMap();
 
     int32_t LoadDcmiApi();
@@ -365,7 +371,7 @@ private:
 private:
     volatile bool isInited_;
     unsigned long long prevTimeStamp_;
-    unsigned long long  sampleIntervalNs_;
+    unsigned long long sampleIntervalNs_;
     bool isDcmiV2Supported_;
     size_t bufSize_;
     std::string retFileName_;
@@ -386,9 +392,7 @@ private:
 };
 
 struct TimerParam {
-    explicit TimerParam(unsigned long interval)
-        : intervalUsec(interval)
-    {}
+    explicit TimerParam(unsigned long interval) : intervalUsec(interval) {}
     unsigned long intervalUsec;
 };
 
@@ -409,7 +413,7 @@ public:
     int32_t Stop() override;
 
 protected:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
 
 private:
     int32_t Handler();
@@ -418,11 +422,12 @@ private:
     volatile bool isStarted_;
     SHARED_PTR_ALIA<struct TimerParam> timerParam_;
     std::mutex mtx_;
-    std::map<enum TimerHandlerTag, SHARED_PTR_ALIA<TimerHandler> > handlerMap_;
+    std::map<enum TimerHandlerTag, SHARED_PTR_ALIA<TimerHandler>> handlerMap_;
 };
 
 class TimerManager : public analysis::dvvp::common::singleton::Singleton<TimerManager> {
     friend analysis::dvvp::common::singleton::Singleton<TimerManager>;
+
 public:
     void StartProfTimer();
     void StopProfTimer();
@@ -439,7 +444,7 @@ private:
     std::mutex profTimerMtx_;
     SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::ProfTimer> profTimer_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

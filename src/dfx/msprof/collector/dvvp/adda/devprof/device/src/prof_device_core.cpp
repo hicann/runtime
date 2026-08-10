@@ -89,8 +89,8 @@ int32_t IdeDeviceProfileProcess(HDC_SESSION session, CONST_TLV_REQ_PTR req)
         }
         if (vfId != 0) {
             MSPROF_LOGW("Prohibit container operate profiling, vfId=%d.", vfId);
-            if (transport->SendBuffer(CONTAINER_NO_SUPPORT_MESSAGE.c_str(),
-                CONTAINER_NO_SUPPORT_MESSAGE.size()) == -1) {
+            if (transport->SendBuffer(CONTAINER_NO_SUPPORT_MESSAGE.c_str(), CONTAINER_NO_SUPPORT_MESSAGE.size()) ==
+                -1) {
                 MSPROF_LOGE("Transport send buffer failed.");
                 break;
             }
@@ -101,8 +101,10 @@ int32_t IdeDeviceProfileProcess(HDC_SESSION session, CONST_TLV_REQ_PTR req)
         MSPROF_LOGI("device %d step handle function", devIndexId);
 
         // try the block to catch the exceptions
-        MSVP_TRY_BLOCK(ret = analysis::dvvp::device::CollectionEntry::instance()->Handle(
-                       transport, std::string(req->value, req->len), devIndexId), break);
+        MSVP_TRY_BLOCK(
+            ret = analysis::dvvp::device::CollectionEntry::instance()->Handle(
+                transport, std::string(req->value, req->len), devIndexId),
+            break);
     } while (0);
     MSPROF_EVENT("End to process profiling, ret:%d", ret);
     return ret;

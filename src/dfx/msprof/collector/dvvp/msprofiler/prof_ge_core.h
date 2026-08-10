@@ -17,6 +17,6 @@ namespace ge {
 using namespace analysis::dvvp::common::utils;
 size_t aclprofGetGraphId(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index);
 bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums);
-}
+} // namespace ge
 
-#endif  // MSPROF_ENGINE_GE_CORE_H
+#endif // MSPROF_ENGINE_GE_CORE_H

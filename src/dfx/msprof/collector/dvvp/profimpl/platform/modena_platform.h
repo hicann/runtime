@@ -28,7 +28,7 @@ protected:
     std::string GetArithmeticUtilizationMetrics() override;
     std::string GetResourceConflictRatioMetrics() override;
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

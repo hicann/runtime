@@ -37,19 +37,19 @@ struct ProfImplInfo {
     bool profInitFlag;
 };
 
-typedef bool (*ProfApiBufPopCallback)(uint32_t &aging, MsprofApi& data);
-typedef bool (*ProfCompactBufPopCallback)(uint32_t &aging, MsprofCompactInfo& data);
-typedef bool (*ProfAdditionalBufPopCallback)(uint32_t &aging, MsprofAdditionalInfo& data);
+typedef bool (*ProfApiBufPopCallback)(uint32_t& aging, MsprofApi& data);
+typedef bool (*ProfCompactBufPopCallback)(uint32_t& aging, MsprofCompactInfo& data);
+typedef bool (*ProfAdditionalBufPopCallback)(uint32_t& aging, MsprofAdditionalInfo& data);
 typedef bool (*ProfReportBufEmptyCallback)();
 typedef void (*ProfUnInitReportBufCallback)();
 typedef int32_t (*ProfAdditionalBufPushCallback)(uint32_t aging, const VOID_PTR data, uint32_t len);
 typedef int32_t (*ProfMarkExCallback)(uint64_t indexId, uint64_t modelId, uint16_t tagId, VOID_PTR stm);
-typedef void* (*ProfBatchAddBufPopCallback)(size_t &popSize, bool popForce);
-typedef void (*ProfBatchAddBufIndexShiftCallBack)(void *popPtr, const size_t popSize);
+typedef void* (*ProfBatchAddBufPopCallback)(size_t& popSize, bool popForce);
+typedef void (*ProfBatchAddBufIndexShiftCallBack)(void* popPtr, const size_t popSize);
 typedef void (*ProfRegisterMstxFuncCallback)(MstxInitInjectionFunc mstxInitFunc, ProfModule module);
 
-typedef void* (*ProfVarAddBlockBufPopCallback)(size_t &popSize);
-typedef void (*ProfVarAddBufIndexShiftCallBack)(void *popPtr, const size_t popSize);
+typedef void* (*ProfVarAddBlockBufPopCallback)(size_t& popSize);
+typedef void (*ProfVarAddBufIndexShiftCallBack)(void* popPtr, const size_t popSize);
 
 #ifdef __cplusplus
 }

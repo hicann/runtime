@@ -34,8 +34,8 @@ private:
     int32_t DoCreateCollectionJobArray();
     int32_t RegisterCollectionJobs() const;
     void UnRegisterCollectionJobs();
-    void StoreData(const std::string &path, const std::string &fileName);
-    int32_t SendData(const std::string &fileName, const std::string &data);
+    void StoreData(const std::string& path, const std::string& fileName);
+    int32_t SendData(const std::string& fileName, const std::string& data);
     int32_t ParseTsCpuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParseAiCoreConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParseAivConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
@@ -44,10 +44,10 @@ private:
     int32_t ParseDdrCpuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParsePmuConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
     int32_t ParseHbmConfig(SHARED_PTR_ALIA<PMUEventsConfig> cfg);
-    std::string GenerateFileName(const std::string &fileName);
+    std::string GenerateFileName(const std::string& fileName);
     std::string GenerateDurationdata();
-    void GetAndStoreStartTime(const int32_t &hostProfiling);
-    int32_t StoreTime(const std::string &fileName, const std::string &startTime);
+    void GetAndStoreStartTime(const int32_t& hostProfiling);
+    int32_t StoreTime(const std::string& fileName, const std::string& startTime);
     int32_t StartProfHandle(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 
 private:
@@ -59,5 +59,7 @@ private:
     SHARED_PTR_ALIA<CollectionJobCommonParams> collectionJobCommCfg_;
     std::array<CollectionJobT, NR_MAX_COLLECTION_JOB> collectionJobV_;
 };
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

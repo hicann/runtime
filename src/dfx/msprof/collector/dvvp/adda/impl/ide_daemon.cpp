@@ -26,7 +26,7 @@ using namespace Adx;
  * @param : none
  * @return: open file fd
  */
-STATIC int32_t SingleProcessStart(std::string &lockInfo)
+STATIC int32_t SingleProcessStart(std::string& lockInfo)
 {
     const int32_t fileMaskWc = 0600;
     lockInfo = IdeGetHomeDir() + "/ide_daemon/";
@@ -135,4 +135,3 @@ int32_t main(int32_t /* argc */, IdeStrBufAddrT /* argv[] */)
 {
     return IdeDaemonStartUp();
 }
-

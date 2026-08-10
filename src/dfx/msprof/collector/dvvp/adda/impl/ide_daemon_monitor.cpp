@@ -52,28 +52,21 @@ STATIC struct IdeMonitorMgr g_ideMonitorMgr;
  */
 STATIC bool IdeMonitorIsRun(void)
 {
-    return (g_ideMonitorMgr.status == IDE_MONITOR_RUNNING ||
-            g_ideMonitorMgr.status == IDE_MONITOR_HEARTBEAT);
+    return (g_ideMonitorMgr.status == IDE_MONITOR_RUNNING || g_ideMonitorMgr.status == IDE_MONITOR_HEARTBEAT);
 }
 
 /*
  * @brief       : judge thread is processing heart beat
  * @return      : yes:true; No:false
  */
-STATIC bool IdeMonitorIsHeartBeat(void)
-{
-    return (g_ideMonitorMgr.status == IDE_MONITOR_HEARTBEAT);
-}
+STATIC bool IdeMonitorIsHeartBeat(void) { return (g_ideMonitorMgr.status == IDE_MONITOR_HEARTBEAT); }
 
 /*
  * @brief       : set monitor thread status
  * @param [in]  : int status        thread status
  * @return      : NA
  */
-STATIC void IdeMonitorSetStatus(int status)
-{
-    g_ideMonitorMgr.status = status;
-}
+STATIC void IdeMonitorSetStatus(int status) { g_ideMonitorMgr.status = status; }
 
 /*
  * @brief       : monitor thread, register to appmon, and process heart beat
@@ -175,17 +168,11 @@ int IdeMonitorHostDestroy(void)
  * @brief       : stub function, only cloud support
  * @return      : IDE_DAEMON_OK: succ
  */
-int IdeMonitorHostInit(void)
-{
-    return IDE_DAEMON_OK;
-}
+int IdeMonitorHostInit(void) { return IDE_DAEMON_OK; }
 
 /*
  * @brief       : stub function, only cloud support
  * @return      : IDE_DAEMON_OK: succ
  */
-int IdeMonitorHostDestroy(void)
-{
-    return IDE_DAEMON_OK;
-}
+int IdeMonitorHostDestroy(void) { return IDE_DAEMON_OK; }
 #endif // PLATFORM_MONITOR

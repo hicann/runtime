@@ -43,7 +43,7 @@ bool CheckVfId(uint32_t devId)
  *      IDE_DAEMON_OK:    get device num succ
  *      IDE_DAEMON_ERROR: get device num failed
  */
-int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len)
+int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t>& devs, uint32_t len)
 {
     IDE_CTRL_VALUE_FAILED(devNum != nullptr, return IDE_DAEMON_ERROR, "devNum is nullptr");
     IDE_CTRL_VALUE_FAILED(len == DEVICE_NUM_MAX, return IDE_DAEMON_ERROR, "len is invalid");
@@ -55,7 +55,7 @@ int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len
 
     if (*devNum > 0 && *devNum <= DEVICE_NUM_MAX) {
 #if (defined ADX_LIB_HOST) || (defined ADX_LIB_HOST_DRV)
-        err = drvGetDevIDs(devs.data(), MAX_LOCAL_DEVICE_NUM);    // host side get devId
+        err = drvGetDevIDs(devs.data(), MAX_LOCAL_DEVICE_NUM); // host side get devId
 #else
         err = drvGetDeviceLocalIDs(devs.data(), MAX_LOCAL_DEVICE_NUM); //  device side get devId
 #endif
@@ -77,7 +77,7 @@ int32_t IdeGetDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len
  *      IDE_DAEMON_OK:    get device num succ
  *      IDE_DAEMON_ERROR: get device num failed
  */
-int32_t IdeGetPhyDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t len)
+int32_t IdeGetPhyDevList(IdeU32Pt devNum, std::vector<uint32_t>& devs, uint32_t len)
 {
     IDE_CTRL_VALUE_FAILED(devNum != nullptr, return IDE_DAEMON_ERROR, "devNum is nullptr");
     IDE_CTRL_VALUE_FAILED(len == DEVICE_NUM_MAX, return IDE_DAEMON_ERROR, "len is invalid");
@@ -90,8 +90,9 @@ int32_t IdeGetPhyDevList(IdeU32Pt devNum, std::vector<uint32_t> &devs, uint32_t 
     uint32_t phyId = 0;
     for (i = 0; i < *devNum && i < DEVICE_NUM_MAX; i++) {
         drvError_t err = drvDeviceGetPhyIdByIndex(devLogIds[i], &phyId);
-        IDE_CTRL_VALUE_FAILED(err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR,
-            "drvDeviceGetPhyIdByIndex devIds: %u failed, err: %d", devLogIds[i], err);
+        IDE_CTRL_VALUE_FAILED(
+            err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "drvDeviceGetPhyIdByIndex devIds: %u failed, err: %d",
+            devLogIds[i], err);
         devs[i] = phyId;
     }
     return IDE_DAEMON_OK;
@@ -123,8 +124,9 @@ int32_t IdeGetLogIdByPhyId(uint32_t desPhyId, IdeU32Pt logId)
         uint32_t phyId = 0;
         for (i = 0; i < devNum; i++) {
             err = drvDeviceGetPhyIdByIndex(devIds[i], &phyId);
-            IDE_CTRL_VALUE_FAILED(err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR,
-                "drvDeviceGetPhyIdByIndex devIds: %u failed, err: %d", devIds[i], err);
+            IDE_CTRL_VALUE_FAILED(
+                err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "drvDeviceGetPhyIdByIndex devIds: %u failed, err: %d",
+                devIds[i], err);
             if (phyId == desPhyId) {
                 MSPROF_LOGI("the logical ID(%u) is a corresponding physical ID(%u)", devIds[i], phyId);
                 *logId = devIds[i];
@@ -151,9 +153,10 @@ int32_t AdxGetLogIdByPhyId(uint32_t desPhyId, IdeU32Pt logId)
     }
 
     drvError_t err = drvDeviceGetIndexByPhyId(desPhyId, logId);
-    IDE_CTRL_VALUE_FAILED(err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR,
-        "drvDeviceGetIndexByPhyId devIds: %u failed, err: %d", desPhyId, err);
+    IDE_CTRL_VALUE_FAILED(
+        err == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "drvDeviceGetIndexByPhyId devIds: %u failed, err: %d", desPhyId,
+        err);
 
     return IDE_DAEMON_OK;
 }
-}
+} // namespace Adx

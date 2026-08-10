@@ -32,14 +32,9 @@ using namespace Analysis::Dvvp::JobWrapper;
 using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::Common::Platform;
 
-CollectionEntry::CollectionEntry()
-    : isInited_(false)
-{
-}
+CollectionEntry::CollectionEntry() : isInited_(false) {}
 
-CollectionEntry::~CollectionEntry()
-{
-}
+CollectionEntry::~CollectionEntry() {}
 
 int32_t CollectionEntry::Init()
 {
@@ -76,8 +71,8 @@ int32_t CollectionEntry::Uinit()
     return PROFILING_SUCCESS;
 }
 
-int32_t CollectionEntry::Handle(SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> transport,
-                            const std::string &req, int32_t devIndexId)
+int32_t CollectionEntry::Handle(
+    SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> transport, const std::string& req, int32_t devIndexId)
 {
     if (!isInited_ || transport == nullptr) {
         MSPROF_LOGE("Collection Entry was not inited.");
@@ -119,17 +114,17 @@ int32_t CollectionEntry::Handle(SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTr
         std::string resp = analysis::dvvp::message::EncodeMessage(CreateResponse(statusInfo));
 
         int32_t sent = transport->SendBuffer(resp.c_str(), resp.size());
-        MSPROF_LOGW("The reply handle is abnormal, dev_id=%d, statusInfo=%s, response sent size:%d, resp size:%zu",
-            devIndexId, statusInfo.ToString().c_str(), sent, static_cast<int32_t>(resp.size()));
+        MSPROF_LOGW(
+            "The reply handle is abnormal, dev_id=%d, statusInfo=%s, response sent size:%d, resp size:%zu", devIndexId,
+            statusInfo.ToString().c_str(), sent, static_cast<int32_t>(resp.size()));
     }
 
     return ret;
 }
 
-int32_t CollectionEntry::HandleCtrlSession(SHARED_PTR_ALIA<Receiver> receiver,
-                                       SHARED_PTR_ALIA<analysis::dvvp::proto::CtrlChannelHandshake> handshake,
-                                       analysis::dvvp::message::StatusInfo &statusInfo,
-                                       int32_t devIndexId)
+int32_t CollectionEntry::HandleCtrlSession(
+    SHARED_PTR_ALIA<Receiver> receiver, SHARED_PTR_ALIA<analysis::dvvp::proto::CtrlChannelHandshake> handshake,
+    analysis::dvvp::message::StatusInfo& statusInfo, int32_t devIndexId)
 {
     int32_t ret = PROFILING_SUCCESS;
 
@@ -140,8 +135,9 @@ int32_t CollectionEntry::HandleCtrlSession(SHARED_PTR_ALIA<Receiver> receiver,
         if (!lastJobId.empty()) {
             auto lastReceiver = GetReceiver(lastJobId, devIndexId);
             if (lastReceiver != nullptr && !lastReceiver->IsQuit()) {
-                MSPROF_LOGE("Last profiling job %s on device %u has not exited, please try again later",
-                            lastJobId.c_str(), devIndexId);
+                MSPROF_LOGE(
+                    "Last profiling job %s on device %u has not exited, please try again later", lastJobId.c_str(),
+                    devIndexId);
                 return PROFILING_FAILED;
             }
         }
@@ -165,8 +161,9 @@ int32_t CollectionEntry::HandleCtrlSession(SHARED_PTR_ALIA<Receiver> receiver,
         statusInfo.status = analysis::dvvp::message::SUCCESS;
         std::string resp = analysis::dvvp::message::EncodeMessage(CreateResponse(statusInfo));
         int32_t sent = receiver->GetTransport()->SendBuffer(resp.c_str(), resp.size());
-        MSPROF_LOGI("Reply ctrl handshake, statusInfo=%s, response sent size:%d, resp size:%zu",
-            statusInfo.ToString().c_str(), sent, static_cast<int32_t>(resp.size()));
+        MSPROF_LOGI(
+            "Reply ctrl handshake, statusInfo=%s, response sent size:%d, resp size:%zu", statusInfo.ToString().c_str(),
+            sent, static_cast<int32_t>(resp.size()));
         AddReceiver(handshake->mode(), handshake->jobid(), devIndexId, receiver);
         // start ctrl receiver
         receiver->SetThreadName(MSVP_CTRL_RECEIVER_THREAD_NAME);
@@ -181,9 +178,9 @@ int32_t CollectionEntry::HandleCtrlSession(SHARED_PTR_ALIA<Receiver> receiver,
     return ret;
 }
 
-int32_t CollectionEntry::HandleDataSession(SHARED_PTR_ALIA<Uploader> uploader,
-                                       SHARED_PTR_ALIA<analysis::dvvp::proto::DataChannelHandshake> handshake,
-                                       int32_t devIndexId)
+int32_t CollectionEntry::HandleDataSession(
+    SHARED_PTR_ALIA<Uploader> uploader, SHARED_PTR_ALIA<analysis::dvvp::proto::DataChannelHandshake> handshake,
+    int32_t devIndexId)
 {
     MSPROF_LOGI("Device %d Received data handshake", devIndexId);
     std::string jobID = handshake->jobid();
@@ -220,8 +217,9 @@ int32_t CollectionEntry::HandleDataSession(SHARED_PTR_ALIA<Uploader> uploader,
     std::string resp = analysis::dvvp::message::EncodeMessage(CreateResponse(statusInfo));
     int32_t sent = uploader->UploadData(resp.c_str(), resp.size());
 
-    MSPROF_LOGI("Reply data handshake, statusInfo=%s, response sent size:%d, resp size:%zu",
-        statusInfo.ToString().c_str(), sent, static_cast<int32_t>(resp.size()));
+    MSPROF_LOGI(
+        "Reply data handshake, statusInfo=%s, response sent size:%d, resp size:%zu", statusInfo.ToString().c_str(),
+        sent, static_cast<int32_t>(resp.size()));
 
     UploaderMgr::instance()->AddMapByDevIdMode(devIndexId, mode, jobID);
     UploaderMgr::instance()->AddUploader(jobID, uploader);
@@ -229,7 +227,7 @@ int32_t CollectionEntry::HandleDataSession(SHARED_PTR_ALIA<Uploader> uploader,
     return PROFILING_SUCCESS;
 }
 
-int32_t CollectionEntry::FinishCollection(uint32_t devIdFlush, const std::string &jobId)
+int32_t CollectionEntry::FinishCollection(uint32_t devIdFlush, const std::string& jobId)
 {
     MSPROF_LOGI("Entering device(%d) FinishCollection...jobId:%s", devIdFlush, jobId.c_str());
     SHARED_PTR_ALIA<Uploader> uploader = nullptr;
@@ -264,7 +262,7 @@ int32_t CollectionEntry::FinishCollection(uint32_t devIdFlush, const std::string
     return PROFILING_SUCCESS;
 }
 
-void CollectionEntry::DeleteReceiver(const std::string &jobId, uint32_t devIndexId)
+void CollectionEntry::DeleteReceiver(const std::string& jobId, uint32_t devIndexId)
 {
     MSPROF_LOGI("Delete receiver jobId %s, devIndexId %d", jobId.c_str(), devIndexId);
     if (jobId.empty()) {
@@ -283,11 +281,10 @@ void CollectionEntry::DeleteReceiver(const std::string &jobId, uint32_t devIndex
     }
 }
 
-void CollectionEntry::AddReceiver(const std::string &mode, const std::string &jobId,
-                                  uint32_t devIndexId, SHARED_PTR_ALIA<Receiver> receiver)
+void CollectionEntry::AddReceiver(
+    const std::string& mode, const std::string& jobId, uint32_t devIndexId, SHARED_PTR_ALIA<Receiver> receiver)
 {
-    MSPROF_LOGI("mode: %s, devIndexId: %u, jobId: %s Entering AddReceiver...",
-        mode.c_str(), devIndexId, jobId.c_str());
+    MSPROF_LOGI("mode: %s, devIndexId: %u, jobId: %s Entering AddReceiver...", mode.c_str(), devIndexId, jobId.c_str());
     // first remove origin receiver
     std::string lastJobId = DeleteModeJobIdRelation(devIndexId, mode);
     DeleteReceiver(lastJobId, devIndexId);
@@ -306,7 +303,7 @@ void CollectionEntry::AddReceiver(const std::string &mode, const std::string &jo
     }
 }
 
-SHARED_PTR_ALIA<Receiver> CollectionEntry::GetReceiver(const std::string &jobId, uint32_t devIndexId)
+SHARED_PTR_ALIA<Receiver> CollectionEntry::GetReceiver(const std::string& jobId, uint32_t devIndexId)
 {
     MSPROF_LOGI("devIndexId: %u, jobId: %s Entering GetReceiver...", devIndexId, jobId.c_str());
 
@@ -331,8 +328,8 @@ SHARED_PTR_ALIA<Receiver> CollectionEntry::GetReceiver(const std::string &jobId,
     return receiver;
 }
 
-int32_t CollectionEntry::SendMsgByDevId(const std::string &jobId, uint32_t devIndexId,
-    SHARED_PTR_ALIA<google::protobuf::Message> message)
+int32_t CollectionEntry::SendMsgByDevId(
+    const std::string& jobId, uint32_t devIndexId, SHARED_PTR_ALIA<google::protobuf::Message> message)
 {
     if (message == nullptr) {
         MSPROF_LOGE("[SendMsgByDevId] message is nullptr.");
@@ -349,7 +346,7 @@ int32_t CollectionEntry::SendMsgByDevId(const std::string &jobId, uint32_t devIn
     return PROFILING_FAILED;
 }
 
-void CollectionEntry::AddModeJobIdRelation(uint32_t devId, const std::string &mode, const std::string &jobId)
+void CollectionEntry::AddModeJobIdRelation(uint32_t devId, const std::string& mode, const std::string& jobId)
 {
     std::string devModeKey = std::to_string(devId) + "_" + mode;
     if (mode.empty()) {
@@ -360,7 +357,7 @@ void CollectionEntry::AddModeJobIdRelation(uint32_t devId, const std::string &mo
     modeJobIdRelations_[devModeKey] = jobId;
 }
 
-std::string CollectionEntry::GetModeJobIdRelation(uint32_t devId, const std::string &mode)
+std::string CollectionEntry::GetModeJobIdRelation(uint32_t devId, const std::string& mode)
 {
     std::string devModeKey = std::to_string(devId) + "_" + mode;
     if (mode.empty()) {
@@ -374,7 +371,7 @@ std::string CollectionEntry::GetModeJobIdRelation(uint32_t devId, const std::str
     return std::string("");
 }
 
-std::string CollectionEntry::DeleteModeJobIdRelation(uint32_t devId, const std::string &mode)
+std::string CollectionEntry::DeleteModeJobIdRelation(uint32_t devId, const std::string& mode)
 {
     std::string devModeKey = std::to_string(devId) + "_" + mode;
     if (mode.empty()) {
@@ -390,6 +387,6 @@ std::string CollectionEntry::DeleteModeJobIdRelation(uint32_t devId, const std::
     }
     return result;
 }
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

@@ -25,15 +25,16 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::validation;
 using namespace analysis::dvvp::common::utils;
 
-#define GET_JOB_BY_TASKID(taskId, job, ACTION) do {                                         \
-    job = analysis::dvvp::device::TaskManager::instance()->GetTask(taskId);                 \
-    if ((job) == nullptr) {                                                                 \
-        MSPROF_LOGE("Get Task Failed");                                                     \
-        ACTION;                                                                             \
-    }                                                                                       \
-} while (0)
+#define GET_JOB_BY_TASKID(taskId, job, ACTION)                                  \
+    do {                                                                        \
+        job = analysis::dvvp::device::TaskManager::instance()->GetTask(taskId); \
+        if ((job) == nullptr) {                                                 \
+            MSPROF_LOGE("Get Task Failed");                                     \
+            ACTION;                                                             \
+        }                                                                       \
+    } while (0)
 
-SHARED_PTR_ALIA<google::protobuf::Message> CreateResponse(analysis::dvvp::message::StatusInfo &statusInfo)
+SHARED_PTR_ALIA<google::protobuf::Message> CreateResponse(analysis::dvvp::message::StatusInfo& statusInfo)
 {
     SHARED_PTR_ALIA<analysis::dvvp::proto::Response> rsp;
     do {
@@ -72,8 +73,8 @@ void JobStartHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> me
         return;
     }
     int32_t devPhyId = 0;
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devPhyId, jobCtx.dev_id), return, 
-        "jobCtx.dev_id %s is invalid", jobCtx.dev_id.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToInt32(devPhyId, jobCtx.dev_id), return, "jobCtx.dev_id %s is invalid", jobCtx.dev_id.c_str());
     int32_t devIndexId = 0;
     analysis::dvvp::message::StatusInfo statusInfo;
     do {
@@ -95,11 +96,10 @@ void JobStartHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> me
     } while (0);
 
     // send status back to host
-    int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(jobCtx.job_id, devIndexId,
-        CreateResponse(statusInfo));
+    int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(
+        jobCtx.job_id, devIndexId, CreateResponse(statusInfo));
 
-    MSPROF_LOGI("Reply job start, status=%s, devIndexId=%d, ret=%d",
-        statusInfo.ToString().c_str(), devIndexId, ret);
+    MSPROF_LOGI("Reply job start, status=%s, devIndexId=%d, ret=%d", statusInfo.ToString().c_str(), devIndexId, ret);
 }
 
 void JobStopHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> message)
@@ -127,11 +127,10 @@ void JobStopHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> mes
         }
 
         // send status back to host
-        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(jobCtx1.job_id, devIndexId,
-            CreateResponse(statusInfo));
+        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(
+            jobCtx1.job_id, devIndexId, CreateResponse(statusInfo));
 
-        MSPROF_LOGI("Reply job stop, status=%s, devIndexId=%d, ret=%d",
-            statusInfo.ToString().c_str(), devIndexId, ret);
+        MSPROF_LOGI("Reply job stop, status=%s, devIndexId=%d, ret=%d", statusInfo.ToString().c_str(), devIndexId, ret);
         bool flag = analysis::dvvp::device::TaskManager::instance()->DeleteTask(job1->GetJobId());
         if (!flag) {
             MSPROF_LOGE("DeleteTask failed.jobId: %s", job1->GetJobId().c_str());
@@ -164,11 +163,10 @@ void ReplayStartHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message>
         }
 
         // send status back to host
-        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(jobCtx2.job_id, devIndexId,
-            CreateResponse(statusInfo));
+        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(
+            jobCtx2.job_id, devIndexId, CreateResponse(statusInfo));
 
-        MSPROF_LOGI("Reply start, status=%s, devIndexId=%d, ret=%d",
-            statusInfo.ToString().c_str(), devIndexId,  ret);
+        MSPROF_LOGI("Reply start, status=%s, devIndexId=%d, ret=%d", statusInfo.ToString().c_str(), devIndexId, ret);
     }
 }
 
@@ -197,13 +195,12 @@ void ReplayStopHandler::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> 
         }
 
         // send status back to host
-        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(jobCtx.job_id, devIndexId,
-            CreateResponse(statusInfo));
+        int32_t ret = analysis::dvvp::device::CollectionEntry::instance()->SendMsgByDevId(
+            jobCtx.job_id, devIndexId, CreateResponse(statusInfo));
 
-        MSPROF_LOGI("Stop, status=%s, devIndexId=%d, ret=%d",
-            statusInfo.ToString().c_str(), devIndexId, ret);
+        MSPROF_LOGI("Stop, status=%s, devIndexId=%d, ret=%d", statusInfo.ToString().c_str(), devIndexId, ret);
     }
 }
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis

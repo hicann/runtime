@@ -13,14 +13,9 @@ namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
-CollectionRegisterMgr::CollectionRegisterMgr()
-{
-}
+CollectionRegisterMgr::CollectionRegisterMgr() {}
 
-CollectionRegisterMgr::~CollectionRegisterMgr()
-{
-    collectionJobs_.clear();
-}
+CollectionRegisterMgr::~CollectionRegisterMgr() { collectionJobs_.clear(); }
 
 /**
  * @berif  : jugde the job is exist or not
@@ -28,7 +23,7 @@ CollectionRegisterMgr::~CollectionRegisterMgr()
  * @param  : [in] jobTag : collection job Tag
  * @return : true : exist Job; false : not exist Job
  */
-bool CollectionRegisterMgr::CheckCollectionJobIsNoRegister(int32_t &devId, const ProfCollectionJobE jobTag) const
+bool CollectionRegisterMgr::CheckCollectionJobIsNoRegister(int32_t& devId, const ProfCollectionJobE jobTag) const
 {
     if (devId < 0 || jobTag >= NR_MAX_COLLECTION_JOB) {
         return false;
@@ -63,8 +58,8 @@ bool CollectionRegisterMgr::CheckCollectionJobIsNoRegister(int32_t &devId, const
  * @param  : [in] jobTag : collection job Tag
  * @return : true : exist Job; false : not exist Job
  */
-int32_t CollectionRegisterMgr::CollectionJobRegisterAndRun(int32_t devId,
-    const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job)
+int32_t CollectionRegisterMgr::CollectionJobRegisterAndRun(
+    int32_t devId, const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job)
 {
     if (devId < 0 || jobTag >= NR_MAX_COLLECTION_JOB || job == nullptr) {
         return PROFILING_FAILED;
@@ -126,8 +121,8 @@ int32_t CollectionRegisterMgr::CollectionJobUnregisterAndStop(int32_t devId, con
  * @param  : [in] SHARED_PTR_ALIA<ICollectionJob> job : collection job
  * @return : true : exist Job; false : not exist Job
  */
-bool CollectionRegisterMgr::InsertCollectionJob(int32_t devId,
-    const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job)
+bool CollectionRegisterMgr::InsertCollectionJob(
+    int32_t devId, const ProfCollectionJobE jobTag, const SHARED_PTR_ALIA<ICollectionJob> job)
 {
     if (devId < 0 || jobTag >= NR_MAX_COLLECTION_JOB || job == nullptr) {
         return false;
@@ -155,8 +150,8 @@ bool CollectionRegisterMgr::InsertCollectionJob(int32_t devId,
  * @param  : [out] SHARED_PTR_ALIA<ICollectionJob> job : collection job
  * @return : true : exist Job; false : not exist Job
  */
-bool CollectionRegisterMgr::GetAndDelCollectionJob(int32_t devId,
-    const ProfCollectionJobE jobTag, SHARED_PTR_ALIA<ICollectionJob> &job)
+bool CollectionRegisterMgr::GetAndDelCollectionJob(
+    int32_t devId, const ProfCollectionJobE jobTag, SHARED_PTR_ALIA<ICollectionJob>& job)
 {
     if (devId < 0 || jobTag >= NR_MAX_COLLECTION_JOB) {
         return false;
@@ -173,4 +168,6 @@ bool CollectionRegisterMgr::GetAndDelCollectionJob(int32_t devId,
 
     return false;
 }
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

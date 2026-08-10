@@ -25,23 +25,15 @@ namespace Analyze {
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Config;
 constexpr int32_t MSPROF_API_SIZE = sizeof(MsprofApi);
-constexpr float MHZ_CONVERT_GHZ = 1000.0; // 1000: mhz to ghz
+constexpr float MHZ_CONVERT_GHZ = 1000.0;       // 1000: mhz to ghz
 constexpr float DEFAULT_HOST_FREQ_MHZ = 1000.0; // 1000: default 1000MHz
 constexpr float DEFAULT_HOST_FREQ_GHZ = DEFAULT_HOST_FREQ_MHZ / MHZ_CONVERT_GHZ;
 const std::string API_SHIELDING_PATH = "/etc/prof_api_shielding.json";
 
 const std::map<uint32_t, std::string> API_TAG_MAP = {
-    {ACL_OP, "ACL_OP"},
-    {ACL_MODEL, "ACL_MODEL"},
-    {ACL_RTS, "ACL_RTS"},
-    {ACL_OTHERS, "ACL_OTHERS"},
-    {ACL_NN, "ACL_NN"},
-    {ACL_ASCENDC, "ACL_ASCENDC"},
-    {ACL_HCCL, "ACL_HCCL"},
-    {ACL_DVPP, "ACL_DVPP"},
-    {ACL_GRAPH, "ACL_GRAPH"},
-    {ACL_ATB, "ACL_ATB"}
-};
+    {ACL_OP, "ACL_OP"},       {ACL_MODEL, "ACL_MODEL"},     {ACL_RTS, "ACL_RTS"},   {ACL_OTHERS, "ACL_OTHERS"},
+    {ACL_NN, "ACL_NN"},       {ACL_ASCENDC, "ACL_ASCENDC"}, {ACL_HCCL, "ACL_HCCL"}, {ACL_DVPP, "ACL_DVPP"},
+    {ACL_GRAPH, "ACL_GRAPH"}, {ACL_ATB, "ACL_ATB"}};
 
 void StatsAnalyzerApi::InitFrequency()
 {
@@ -67,11 +59,12 @@ float StatsAnalyzerApi::GetSafeHostFreq() const
     return DEFAULT_HOST_FREQ_GHZ;
 }
 
-bool StatsAnalyzerApi::IsValidStatsRecord(const ApiStatsInfo &info) const
+bool StatsAnalyzerApi::IsValidStatsRecord(const ApiStatsInfo& info) const
 {
     if (info.endTime <= info.beginTime) {
-        MSPROF_LOGW("Skip invalid api stats record, begin: %llu, end: %llu, type: %u, hash name: %u.",
-            info.beginTime, info.endTime, info.type, info.hashName);
+        MSPROF_LOGW(
+            "Skip invalid api stats record, begin: %llu, end: %llu, type: %u, hash name: %u.", info.beginTime,
+            info.endTime, info.type, info.hashName);
         return false;
     }
     return true;
@@ -87,7 +80,7 @@ void StatsAnalyzerApi::InitApiShieldingConfig()
     ParseApiShieldingConfig(content);
 }
 
-bool StatsAnalyzerApi::LoadApiShieldingConfig(std::string &content) const
+bool StatsAnalyzerApi::LoadApiShieldingConfig(std::string& content) const
 {
     std::ifstream file(API_SHIELDING_PATH);
     if (!file.is_open()) {
@@ -103,12 +96,12 @@ bool StatsAnalyzerApi::LoadApiShieldingConfig(std::string &content) const
     return true;
 }
 
-void StatsAnalyzerApi::ParseApiShieldingConfig(const std::string &content)
+void StatsAnalyzerApi::ParseApiShieldingConfig(const std::string& content)
 {
     NanoJson::Json json;
     try {
         json.Parse(content);
-    } catch (std::runtime_error &e) {
+    } catch (std::runtime_error& e) {
         MSPROF_LOGW("Failed to parse api shielding config %s, reason: %s.", API_SHIELDING_PATH.c_str(), e.what());
         return;
     }
@@ -123,7 +116,7 @@ void StatsAnalyzerApi::ParseApiShieldingConfig(const std::string &content)
         return;
     }
 
-    for (auto &api : apiList.GetValue<NanoJson::JsonArray>()) {
+    for (auto& api : apiList.GetValue<NanoJson::JsonArray>()) {
         if (api.type != NanoJson::JsonValueType::STRING) {
             MSPROF_LOGW("Api shielding config %s contains non-string api name.", API_SHIELDING_PATH.c_str());
             continue;
@@ -135,15 +128,16 @@ void StatsAnalyzerApi::ParseApiShieldingConfig(const std::string &content)
     }
 }
 
-std::string StatsAnalyzerApi::NormalizeApiName(const std::string &apiName) const
+std::string StatsAnalyzerApi::NormalizeApiName(const std::string& apiName) const
 {
     std::string result = apiName;
-    std::transform(result.begin(), result.end(), result.begin(),
-        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
     return result;
 }
 
-bool StatsAnalyzerApi::ShouldSkipTotalTimeApi(const std::string &apiName) const
+bool StatsAnalyzerApi::ShouldSkipTotalTimeApi(const std::string& apiName) const
 {
     const std::string lowerName = NormalizeApiName(apiName);
     if (lowerName.find("synchronize") != std::string::npos) {
@@ -182,11 +176,9 @@ void StatsAnalyzerApi::HandleRemainingData(uint32_t offset)
     }
 }
 
-void StatsAnalyzerApi::PrintStats()
-{
-}
+void StatsAnalyzerApi::PrintStats() {}
 
-bool StatsAnalyzerApi::IsApiOrEventData(const std::string &fileName) const
+bool StatsAnalyzerApi::IsApiOrEventData(const std::string& fileName) const
 {
     if (fileName.find("api_event") != std::string::npos) {
         return true;
@@ -200,7 +192,6 @@ void StatsAnalyzerApi::Parse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> f
         MSPROF_LOGE("Api and event parse chunk is null.");
         return;
     }
-
 
     MSPROF_LOGI("Start to analyze api_event file: %s", fileChunkReq->fileName.c_str());
     ParseApiAndEventInfo(fileChunkReq->chunk.c_str(), fileChunkReq->chunkSize);
@@ -217,9 +208,10 @@ void StatsAnalyzerApi::ParseApiAndEventInfo(CONST_CHAR_PTR data, uint32_t len)
             break;
         }
 
-        auto apiData = reinterpret_cast<const MsprofApi *>(dataPtr_ + offset);
-        MSPROF_LOGD("Parse api level: %hu, type %u, eventFlag: %llu, threadId: %u, itemId: %llu.",
-            apiData->level, apiData->type, apiData->endTime, apiData->threadId, apiData->itemId);
+        auto apiData = reinterpret_cast<const MsprofApi*>(dataPtr_ + offset);
+        MSPROF_LOGD(
+            "Parse api level: %hu, type %u, eventFlag: %llu, threadId: %u, itemId: %llu.", apiData->level,
+            apiData->type, apiData->endTime, apiData->threadId, apiData->itemId);
         if (apiData->endTime != MSPROF_EVENT_FLAG && apiData->level == MSPROF_REPORT_ACL_LEVEL) {
             HandleApiInfo(dataPtr_ + offset);
             totalApiTimes_++;
@@ -234,27 +226,31 @@ void StatsAnalyzerApi::ParseApiAndEventInfo(CONST_CHAR_PTR data, uint32_t len)
 
 void StatsAnalyzerApi::HandleApiInfo(CONST_CHAR_PTR data)
 {
-    auto klData = reinterpret_cast<const MsprofApi *>(data);
+    auto klData = reinterpret_cast<const MsprofApi*>(data);
     uint32_t key = klData->threadId;
     uint32_t type = 0; // api type
     uint32_t tag = (klData->type >> 16);
     uint32_t hashName = klData->type;
     statsMap_[key][klData->beginTime] = {type, tag, hashName, 0, klData->beginTime, klData->endTime};
-    MSPROF_LOGI("Insert to api stats map, thread: %u, type: %u, tag: %u, hash name: %u, beginTime: %llu, "
-        "endTime: %llu", key, type, tag, hashName, klData->beginTime, klData->endTime);
+    MSPROF_LOGI(
+        "Insert to api stats map, thread: %u, type: %u, tag: %u, hash name: %u, beginTime: %llu, "
+        "endTime: %llu",
+        key, type, tag, hashName, klData->beginTime, klData->endTime);
 }
 
 void StatsAnalyzerApi::HandleEventInfo(CONST_CHAR_PTR data)
 {
-    auto mlData = reinterpret_cast<const MsprofEvent *>(data);
+    auto mlData = reinterpret_cast<const MsprofEvent*>(data);
     uint32_t key = mlData->threadId;
     uint32_t type = 1; // event type
     uint32_t tag = (mlData->type >> 16);
     uint32_t hashName = mlData->type;
     if (statsMap_.count(key) == 0) {
         statsMap_[key][mlData->timeStamp] = {type, tag, hashName, mlData->itemId, mlData->timeStamp, 0};
-        MSPROF_LOGI("Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
-            "beginTime: %llu", key, type, tag, hashName, mlData->itemId, mlData->timeStamp);
+        MSPROF_LOGI(
+            "Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
+            "beginTime: %llu",
+            key, type, tag, hashName, mlData->itemId, mlData->timeStamp);
         return;
     }
 
@@ -277,16 +273,19 @@ void StatsAnalyzerApi::HandleEventInfo(CONST_CHAR_PTR data)
             return;
         }
         iter->second.endTime = mlData->timeStamp;
-        MSPROF_LOGI("Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
-            "beginTime: %llu, endTime: %llu", key, type, tag, hashName, mlData->itemId,
-            iter->second.beginTime, iter->second.endTime);
+        MSPROF_LOGI(
+            "Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
+            "beginTime: %llu, endTime: %llu",
+            key, type, tag, hashName, mlData->itemId, iter->second.beginTime, iter->second.endTime);
         modelIdExist = true;
     }
 
     if (!modelIdExist) { // same threadId different modelid
         statsMap_[key][mlData->timeStamp] = {type, tag, hashName, mlData->itemId, mlData->timeStamp, 0};
-        MSPROF_LOGI("Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
-            "beginTime: %llu", key, type, tag, hashName, mlData->itemId, mlData->timeStamp);
+        MSPROF_LOGI(
+            "Insert to api event map, thread: %u, type: %u, tag: %u, hash name: %u, model id: %llu, "
+            "beginTime: %llu",
+            key, type, tag, hashName, mlData->itemId, mlData->timeStamp);
     }
 }
 
@@ -320,8 +319,7 @@ void StatsAnalyzerApi::GenerateTotalTimeData(std::ofstream& file)
                 MSPROF_LOGD("First api found, begin: %llu, end: %llu, cost: %llu.", curBegin, curEnd, curCost);
                 continue;
             }
-            if (curEnd <= iter->second.lastEnd &&
-                curBegin >= iter->second.lastBegin) {
+            if (curEnd <= iter->second.lastEnd && curBegin >= iter->second.lastBegin) {
                 MSPROF_LOGD("Sub api found, begin: %llu, end: %llu, cost: %llu.", curBegin, curEnd, curCost);
                 continue;
             }
@@ -335,7 +333,7 @@ void StatsAnalyzerApi::GenerateTotalTimeData(std::ofstream& file)
     WriteTotalTimeData(file, apiTimeMap);
 }
 
-void StatsAnalyzerApi::WriteTotalTimeData(std::ofstream& file, const std::map<uint32_t, ApiTotalTime> &apiTimeMap)
+void StatsAnalyzerApi::WriteTotalTimeData(std::ofstream& file, const std::map<uint32_t, ApiTotalTime>& apiTimeMap)
 {
     const float hostFreq = GetSafeHostFreq();
     if (hostFreq <= 0) {
@@ -347,8 +345,8 @@ void StatsAnalyzerApi::WriteTotalTimeData(std::ofstream& file, const std::map<ui
         file << ",";
         file << (static_cast<float>(iter->second.totalTime) / hostFreq); // syscnt * (1 / ghz) = ns
         file << std::endl;
-        MSPROF_LOGI("Write thread: %u, total time: %llu, to acl_api_total_time.csv.",
-            iter->first, iter->second.totalTime);
+        MSPROF_LOGI(
+            "Write thread: %u, total time: %llu, to acl_api_total_time.csv.", iter->first, iter->second.totalTime);
     }
 }
 
@@ -372,18 +370,22 @@ void StatsAnalyzerApi::GenerateStatisticsData(std::ofstream& file)
             if (statsIt == apiStatsMap.end()) {
                 ApiStatistics data = {curCost, curCost, curCost, 1, timeIt->second.tag};
                 apiStatsMap[threadIt->first][timeIt->second.hashName] = data;
-                MSPROF_LOGD("First thread found, hash name: %u, main time: %llu, max time: %llu, total time: %llu,"
-                    " count: %u, tag: %u.", timeIt->second.hashName, data.apiMaxTime, data.apiMinTime, data.apiTime,
-                    data.apiCount, data.apiTag);
+                MSPROF_LOGD(
+                    "First thread found, hash name: %u, main time: %llu, max time: %llu, total time: %llu,"
+                    " count: %u, tag: %u.",
+                    timeIt->second.hashName, data.apiMaxTime, data.apiMinTime, data.apiTime, data.apiCount,
+                    data.apiTag);
                 continue;
             }
             auto hashIt = statsIt->second.find(timeIt->second.hashName);
             if (hashIt == statsIt->second.end()) {
                 ApiStatistics data = {curCost, curCost, curCost, 1, timeIt->second.tag};
                 apiStatsMap[threadIt->first][timeIt->second.hashName] = data;
-                MSPROF_LOGD("First name found, hash name: %u, main time: %llu, max time: %llu, total time: %llu, "
-                    "count: %u, tag: %u.", timeIt->second.hashName, data.apiMaxTime, data.apiMinTime, data.apiTime,
-                    data.apiCount, data.apiTag);
+                MSPROF_LOGD(
+                    "First name found, hash name: %u, main time: %llu, max time: %llu, total time: %llu, "
+                    "count: %u, tag: %u.",
+                    timeIt->second.hashName, data.apiMaxTime, data.apiMinTime, data.apiTime, data.apiCount,
+                    data.apiTag);
                 continue;
             }
 
@@ -398,8 +400,8 @@ void StatsAnalyzerApi::GenerateStatisticsData(std::ofstream& file)
     WriteStatisticsData(file, apiStatsMap);
 }
 
-void StatsAnalyzerApi::WriteStatisticsData(std::ofstream& file,
-    const std::map<uint32_t, std::map<uint32_t, ApiStatistics>> &apiStatsMap)
+void StatsAnalyzerApi::WriteStatisticsData(
+    std::ofstream& file, const std::map<uint32_t, std::map<uint32_t, ApiStatistics>>& apiStatsMap)
 {
     const float hostFreq = GetSafeHostFreq();
     if (hostFreq <= 0) {
@@ -409,8 +411,8 @@ void StatsAnalyzerApi::WriteStatisticsData(std::ofstream& file,
     for (auto iter = apiStatsMap.begin(); iter != apiStatsMap.end(); iter++) {
         for (auto innerIt = iter->second.begin(); innerIt != iter->second.end(); innerIt++) {
             if (innerIt->second.apiCount == 0) {
-                MSPROF_LOGW("Skip api statistics with zero count, thread: %u, hash name: %u.",
-                    iter->first, innerIt->first);
+                MSPROF_LOGW(
+                    "Skip api statistics with zero count, thread: %u, hash name: %u.", iter->first, innerIt->first);
                 continue;
             }
             std::string name = "NA";
@@ -423,9 +425,9 @@ void StatsAnalyzerApi::WriteStatisticsData(std::ofstream& file,
             }
             file << iter->first; // thread
             file << ",";
-            file << name; // api name
+            file << name;        // api name
             file << ",";
-            file << type; // api type
+            file << type;        // api type
             file << ",";
             file << (static_cast<float>(innerIt->second.apiTime) / innerIt->second.apiCount / hostFreq);
             file << ",";
@@ -435,10 +437,11 @@ void StatsAnalyzerApi::WriteStatisticsData(std::ofstream& file,
             file << ",";
             file << innerIt->second.apiCount;
             file << std::endl;
-            MSPROF_LOGI("Write thread: %u, name: %s, type: %s, max cnt: %llu, min cnt: %llu, all cnt: %llu, "
-                "count: %u, cpu freq: %f to acl_api_statistics.csv.", iter->first, name.c_str(), type.c_str(),
-                innerIt->second.apiMaxTime, innerIt->second.apiMinTime, innerIt->second.apiTime,
-                innerIt->second.apiCount, hostFreq);
+            MSPROF_LOGI(
+                "Write thread: %u, name: %s, type: %s, max cnt: %llu, min cnt: %llu, all cnt: %llu, "
+                "count: %u, cpu freq: %f to acl_api_statistics.csv.",
+                iter->first, name.c_str(), type.c_str(), innerIt->second.apiMaxTime, innerIt->second.apiMinTime,
+                innerIt->second.apiTime, innerIt->second.apiCount, hostFreq);
         }
     }
 }
@@ -453,6 +456,6 @@ void StatsAnalyzerApi::ClearAllData()
     totalApiTimes_ = 0;
     totalEventTimes_ = 0;
 }
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

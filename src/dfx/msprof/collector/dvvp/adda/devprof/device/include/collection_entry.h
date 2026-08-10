@@ -29,43 +29,42 @@ public:
     int32_t Init();
     int32_t Uinit();
 
-    int32_t Handle(SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> transport,
-               const std::string &req, int32_t devIndexId);
-    int32_t FinishCollection(uint32_t devIdFlush, const std::string &jobId);
-    void AddReceiver(const std::string &mode, const std::string &jobId,
-                     uint32_t devIndexId, SHARED_PTR_ALIA<Receiver> receiver);
-    SHARED_PTR_ALIA<Receiver> GetReceiver(const std::string &jobId, uint32_t devIndexId);
-    void DeleteReceiver(const std::string &jobId, uint32_t devIndexId);
-    int32_t SendMsgByDevId(const std::string &jobId, uint32_t devIndexId,
-        SHARED_PTR_ALIA<google::protobuf::Message> message);
+    int32_t Handle(
+        SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> transport, const std::string& req, int32_t devIndexId);
+    int32_t FinishCollection(uint32_t devIdFlush, const std::string& jobId);
+    void AddReceiver(
+        const std::string& mode, const std::string& jobId, uint32_t devIndexId, SHARED_PTR_ALIA<Receiver> receiver);
+    SHARED_PTR_ALIA<Receiver> GetReceiver(const std::string& jobId, uint32_t devIndexId);
+    void DeleteReceiver(const std::string& jobId, uint32_t devIndexId);
+    int32_t SendMsgByDevId(
+        const std::string& jobId, uint32_t devIndexId, SHARED_PTR_ALIA<google::protobuf::Message> message);
 
 protected:
     CollectionEntry();
     virtual ~CollectionEntry();
 
 private:
-    int32_t HandleCtrlSession(SHARED_PTR_ALIA<Receiver> receiver,
-                          SHARED_PTR_ALIA<analysis::dvvp::proto::CtrlChannelHandshake> handshake,
-                          analysis::dvvp::message::StatusInfo &statusInfo,
-                          int32_t devIndexId);
-    int32_t HandleDataSession(SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader,
-                          SHARED_PTR_ALIA<analysis::dvvp::proto::DataChannelHandshake> handshake,
-                          int32_t devIndexId);
+    int32_t HandleCtrlSession(
+        SHARED_PTR_ALIA<Receiver> receiver, SHARED_PTR_ALIA<analysis::dvvp::proto::CtrlChannelHandshake> handshake,
+        analysis::dvvp::message::StatusInfo& statusInfo, int32_t devIndexId);
+    int32_t HandleDataSession(
+        SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader,
+        SHARED_PTR_ALIA<analysis::dvvp::proto::DataChannelHandshake> handshake, int32_t devIndexId);
 
-    void AddModeJobIdRelation(uint32_t devId, const std::string &mode, const std::string &jobId);
-    std::string GetModeJobIdRelation(uint32_t devId, const std::string &mode);
-    std::string DeleteModeJobIdRelation(uint32_t devId, const std::string &mode);
+    void AddModeJobIdRelation(uint32_t devId, const std::string& mode, const std::string& jobId);
+    std::string GetModeJobIdRelation(uint32_t devId, const std::string& mode);
+    std::string DeleteModeJobIdRelation(uint32_t devId, const std::string& mode);
 
 private:
     bool isInited_;
-    std::map<std::string, std::map<int32_t, SHARED_PTR_ALIA<Receiver>>> receiverMap_;   // <jobId, <devId, Receiver> >
-    std::map<std::string, std::string> modeJobIdRelations_;                         // <devId_mode, jobId>
+    std::map<std::string, std::map<int32_t, SHARED_PTR_ALIA<Receiver>>> receiverMap_; // <jobId, <devId, Receiver> >
+    std::map<std::string, std::string> modeJobIdRelations_;                           // <devId_mode, jobId>
     std::map<int32_t, int32_t> hostIdMap_;
     std::mutex receiverMtx_;
     std::mutex relatiionMtx_;
 };
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 
 #endif

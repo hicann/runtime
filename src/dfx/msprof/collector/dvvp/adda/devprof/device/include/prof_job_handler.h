@@ -35,22 +35,25 @@ public:
     SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> GetTransport(void);
 
 public:
-    int32_t OnJobStart(SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message,
-                           analysis::dvvp::message::StatusInfo &statusInfo) override;
+    int32_t OnJobStart(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) override;
 
-    int32_t OnJobEnd(analysis::dvvp::message::StatusInfo &statusInfo) override;
+    int32_t OnJobEnd(analysis::dvvp::message::StatusInfo& statusInfo) override;
 
-    int32_t OnReplayStart(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message,
-                              analysis::dvvp::message::StatusInfo &statusInfo) override;
+    int32_t OnReplayStart(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) override;
 
-    int32_t OnReplayEnd(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message,
-                            analysis::dvvp::message::StatusInfo &statusInfo) override;
+    int32_t OnReplayEnd(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) override;
 
     int32_t OnConnectionReset() override;
 
     int32_t GetDevId() override;
 
-    virtual int32_t InitEngine(analysis::dvvp::message::StatusInfo &statusInfo);
+    virtual int32_t InitEngine(analysis::dvvp::message::StatusInfo& statusInfo);
 
 private:
     void ResetTask();
@@ -65,14 +68,14 @@ private:
 private:
     bool isInited_;
     SHARED_PTR_ALIA<CollectEngine> engine_;
-    int32_t devId_;         // devIndexId
-    int32_t devIdOnHost_;   // devPhyId
+    int32_t devId_;       // devIndexId
+    int32_t devIdOnHost_; // devPhyId
     std::string jobId_;
     volatile bool _is_started;
     SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport_;
 };
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 
 #endif

@@ -21,35 +21,20 @@ constexpr char NANO_SCALAR_RATIO[] = "0x103,0x104,0x105";
 PLATFORM_REGISTER(CHIP_NANO_V1, NanoPlatform);
 NanoPlatform::NanoPlatform()
 {
-    supportedFeature_ = {PLATFORM_TASK_SCALAR_RATIO_PMU, PLATFORM_TASK_PU_PMU, PLATFORM_TASK_PSC_PMU,
-        PLATFORM_TASK_MEMORY_PMU, PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_TRACE, PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_SWITCH};
+    supportedFeature_ = {PLATFORM_TASK_SCALAR_RATIO_PMU, PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PSC_PMU,
+                         PLATFORM_TASK_MEMORY_PMU,       PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_TRACE,
+                         PLATFORM_TASK_METRICS,          PLATFORM_TASK_SWITCH};
 }
 
-std::string NanoPlatform::GetScalarMetrics()
-{
-    return NANO_SCALAR_RATIO;
-}
+std::string NanoPlatform::GetScalarMetrics() { return NANO_SCALAR_RATIO; }
 
-std::string NanoPlatform::GetPipeUtilizationMetrics()
-{
-    return NANO_PIPEUTILIZATION;
-}
+std::string NanoPlatform::GetPipeUtilizationMetrics() { return NANO_PIPEUTILIZATION; }
 
-std::string NanoPlatform::GetPipeStallCycleMetrics()
-{
-    return NANO_PIPESTALLCYCLE;
-}
+std::string NanoPlatform::GetPipeStallCycleMetrics() { return NANO_PIPESTALLCYCLE; }
 
-std::string NanoPlatform::GetMemoryMetrics()
-{
-    return NANO_MEMORY;
-}
+std::string NanoPlatform::GetMemoryMetrics() { return NANO_MEMORY; }
 
-std::string NanoPlatform::GetMemoryUBMetrics()
-{
-    return NANO_MEMORYUB;
-}
-}
-}
-}
+std::string NanoPlatform::GetMemoryUBMetrics() { return NANO_MEMORYUB; }
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

@@ -14,7 +14,7 @@ namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
 using namespace analysis::dvvp::common::utils;
-bool AnalyzerTs::IsTsData(const std::string &fileName)
+bool AnalyzerTs::IsTsData(const std::string& fileName)
 {
     // ts data contains "ts_track.data"
     if (fileName.find("ts_track.data") != std::string::npos) {
@@ -45,7 +45,7 @@ void AnalyzerTs::ParseTsTrackData(CONST_CHAR_PTR data, uint32_t len)
             MSPROF_LOGI("Ts remains %u bytes unparsed, cache it", remainingLen);
             break;
         }
-        auto tsHeader = reinterpret_cast<const TsProfileDataHead *>(dataPtr_ + offset);
+        auto tsHeader = reinterpret_cast<const TsProfileDataHead*>(dataPtr_ + offset);
         if (tsHeader->bufSize == 0) {
             // invalid data, reset buffer
             MSPROF_LOGE("TsHeader buf size is 0, invalid data");
@@ -63,31 +63,28 @@ void AnalyzerTs::ParseTsTrackData(CONST_CHAR_PTR data, uint32_t len)
             ParseTsTimelineData(dataPtr_ + offset, remainingLen);
         } else if (tsHeader->rptType == TS_KEYPOINT_RPT_TYPE) {
             if (IsExtPmu()) {
-                const TsDavidKeypoint *tsData =
+                const TsDavidKeypoint* tsData =
                     Utils::ReinterpretCast<const TsDavidKeypoint, const TsProfileDataHead>(tsHeader);
                 ParseTsKeypointData(tsData);
             } else {
-                const TsProfileKeypoint *tsData =
+                const TsProfileKeypoint* tsData =
                     Utils::ReinterpretCast<const TsProfileKeypoint, const TsProfileDataHead>(tsHeader);
                 ParseTsKeypointData(tsData);
             }
         }
         offset += tsHeader->bufSize;
     }
-    MSPROF_LOGI("Finish parsing tstrack data, offset: %u, total len: %u, from buffered len: %u, "
-                "op time collected %zu, draft %zu",
-        offset,
-        dataLen_,
-        dataLen_ - len,
-        opTimes_.size(),
-        opTimeDrafts_.size());
+    MSPROF_LOGI(
+        "Finish parsing tstrack data, offset: %u, total len: %u, from buffered len: %u, "
+        "op time collected %zu, draft %zu",
+        offset, dataLen_, dataLen_ - len, opTimes_.size(), opTimeDrafts_.size());
     BufferRemainingData(offset);
 }
 
 void AnalyzerTs::ParseTsTimelineData(CONST_CHAR_PTR data, uint32_t len)
 {
     if (len >= sizeof(TsProfileTimeline)) {
-        auto tsData = reinterpret_cast<const TsProfileTimeline *>(data);
+        auto tsData = reinterpret_cast<const TsProfileTimeline*>(data);
         std::string key = std::to_string(tsData->taskId) + KEY_SEPARATOR + std::to_string(tsData->streamId) +
                           KEY_SEPARATOR + std::to_string(UINT32_MAX);
         std::string optKey = std::to_string(tsData->taskId) + KEY_SEPARATOR + std::to_string(tsData->streamId);
@@ -114,12 +111,20 @@ void AnalyzerTs::ParseTsTimelineData(CONST_CHAR_PTR data, uint32_t len)
         }
         if (iter->second.start > 0 && iter->second.startAicore > 0 && iter->second.endAicore > 0 &&
             iter->second.end > 0) {
-            RtOpInfo devOpInfo = {0, iter->second.start, iter->second.end, 0, true, iter->second.startAicore,
-                iter->second.endAicore, ACL_SUBSCRIBE_OP, UINT16_MAX, 0};
-            HandleDeviceData(optKey, devOpInfo, totalTsMerges_);
-            MSPROF_LOGD("Ts op time collected, key %s, start %" PRIu64 ", end %" PRIu64,
-                key.c_str(),
+            RtOpInfo devOpInfo = {
+                0,
                 iter->second.start,
+                iter->second.end,
+                0,
+                true,
+                iter->second.startAicore,
+                iter->second.endAicore,
+                ACL_SUBSCRIBE_OP,
+                UINT16_MAX,
+                0};
+            HandleDeviceData(optKey, devOpInfo, totalTsMerges_);
+            MSPROF_LOGD(
+                "Ts op time collected, key %s, start %" PRIu64 ", end %" PRIu64, key.c_str(), iter->second.start,
                 iter->second.end);
             opTimes_.insert(std::make_pair(iter->first, iter->second));
             opTimeCount_++;
@@ -129,13 +134,14 @@ void AnalyzerTs::ParseTsTimelineData(CONST_CHAR_PTR data, uint32_t len)
     }
 }
 
-template<typename T>
-void AnalyzerTs::ParseTsKeypointData(const T *tsData)
+template <typename T>
+void AnalyzerTs::ParseTsKeypointData(const T* tsData)
 {
     if (tsData->head.bufSize != sizeof(T) || tsData->timestamp == 0) {
-        MSPROF_LOGE("keypoint op error. bufSize %" PRIu64 " bytes, struct_len %u, "
-            "indexId %" PRIu64 ", taskId %u, streamId %u, timestamp %" PRIu64, tsData->head.bufSize,
-            sizeof(T), tsData->indexId, tsData->taskId, tsData->streamId, tsData->timestamp);
+        MSPROF_LOGE(
+            "keypoint op error. bufSize %" PRIu64 " bytes, struct_len %u, "
+            "indexId %" PRIu64 ", taskId %u, streamId %u, timestamp %" PRIu64,
+            tsData->head.bufSize, sizeof(T), tsData->indexId, tsData->taskId, tsData->streamId, tsData->timestamp);
         return;
     }
 
@@ -143,9 +149,11 @@ void AnalyzerTs::ParseTsKeypointData(const T *tsData)
     auto iter = keypointOpInfo_.find(key);
     if (tsData->tagId == TS_KEYPOINT_START_TASK_STATE) {
         if (iter != keypointOpInfo_.end()) {
-            MSPROF_LOGE("Reapted start key point. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
-                "previous taskId %u, previous streamId %u", tsData->modelId, tsData->indexId, tsData->taskId,
-                tsData->streamId, iter->second.taskId, iter->second.streamId);
+            MSPROF_LOGE(
+                "Reapted start key point. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
+                "previous taskId %u, previous streamId %u",
+                tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId, iter->second.taskId,
+                iter->second.streamId);
             return;
         }
 
@@ -159,23 +167,28 @@ void AnalyzerTs::ParseTsKeypointData(const T *tsData)
         keypointOpInfo_[key] = opData;
     } else if (tsData->tagId == TS_KEYPOINT_END_TASK_STATE) {
         if (iter == keypointOpInfo_.end()) {
-            MSPROF_LOGW("Start key point is not found. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, "
-                "streamId %u", tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId);
+            MSPROF_LOGW(
+                "Start key point is not found. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, "
+                "streamId %u",
+                tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId);
             return;
         }
 
-        KeypointOp &curOp = iter->second;
+        KeypointOp& curOp = iter->second;
         uint64_t ts = static_cast<uint64_t>(tsData->timestamp / frequency_);
         if (curOp.endTime != 0 || ts <= curOp.startTime) {
-            MSPROF_LOGE("keypoint op error. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
+            MSPROF_LOGE(
+                "keypoint op error. modelId %" PRIu64 ", indexId %" PRIu64 ", taskId %u, streamId %u, "
                 "previous taskId %u, previous streamId %u, startTime %" PRIu64 ", endTime %" PRIu64 ", "
-                "timestamp %" PRIu64, tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId,
-                curOp.taskId, curOp.streamId, curOp.startTime, curOp.endTime, ts);
+                "timestamp %" PRIu64,
+                tsData->modelId, tsData->indexId, tsData->taskId, tsData->streamId, curOp.taskId, curOp.streamId,
+                curOp.startTime, curOp.endTime, ts);
             return;
         } else {
             curOp.endTime = ts;
-            MSPROF_LOGD("keypoint op: startTime %" PRIu64 ", endTime %" PRIu64 ", indexId=%" PRIu64 ", endSyscnt %"
-                PRIu64, curOp.startTime, curOp.endTime, curOp.indexId, tsData->timestamp);
+            MSPROF_LOGD(
+                "keypoint op: startTime %" PRIu64 ", endTime %" PRIu64 ", indexId=%" PRIu64 ", endSyscnt %" PRIu64,
+                curOp.startTime, curOp.endTime, curOp.indexId, tsData->timestamp);
         }
     } else {
         MSPROF_LOGE("keypoint tagId error. tagId %u", tsData->tagId);
@@ -190,20 +203,15 @@ void AnalyzerTs::PrintStats()
     if (!keypointOpInfo_.empty()) {
         times = keypointOpInfo_.begin()->second.findSuccTimes;
     }
-    MSPROF_EVENT("total_size_analyze, module: TS, analyzed %" PRIu64 ", total %" PRIu64 ", op time total %" PRIu64 ", "
-                 "remain %zu, draft %zu. remain keypoint op %zu, last step find op %" PRIu64 ", merge time %u",
-        analyzedBytes_,
-        totalBytes_,
-        opTimeCount_,
-        opTimes_.size(),
-        opTimeDrafts_.size(),
-        keypointOpInfo_.size(),
-        times,
+    MSPROF_EVENT(
+        "total_size_analyze, module: TS, analyzed %" PRIu64 ", total %" PRIu64 ", op time total %" PRIu64 ", "
+        "remain %zu, draft %zu. remain keypoint op %zu, last step find op %" PRIu64 ", merge time %u",
+        analyzedBytes_, totalBytes_, opTimeCount_, opTimes_.size(), opTimeDrafts_.size(), keypointOpInfo_.size(), times,
         totalTsMerges_);
 }
 
-template void AnalyzerTs::ParseTsKeypointData(const TsProfileKeypoint *tsData);
-template void AnalyzerTs::ParseTsKeypointData(const TsDavidKeypoint *tsData);
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+template void AnalyzerTs::ParseTsKeypointData(const TsProfileKeypoint* tsData);
+template void AnalyzerTs::ParseTsKeypointData(const TsDavidKeypoint* tsData);
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

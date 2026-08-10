@@ -24,7 +24,7 @@ struct CollectionTimeInfo : BaseInfo {
     std::string collectionTimeEnd;
     std::string clockMonotonicRaw;
 
-    void ToObject(NanoJson::Json &object) override
+    void ToObject(NanoJson::Json& object) override
     {
         SET_VALUE(object, collectionDateBegin);
         SET_VALUE(object, collectionDateEnd);
@@ -33,7 +33,7 @@ struct CollectionTimeInfo : BaseInfo {
         SET_VALUE(object, clockMonotonicRaw);
     }
 
-    void FromObject(NanoJson::Json &object) override { (void)object; }
+    void FromObject(NanoJson::Json& object) override { (void)object; }
 };
 
 } // namespace message

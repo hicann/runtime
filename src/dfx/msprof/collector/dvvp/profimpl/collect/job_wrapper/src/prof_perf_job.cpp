@@ -31,21 +31,15 @@ using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-constexpr uint32_t PERF_DATA_BUFF_SIZE_M = 262144 + 1;  // 262144 + 1, 256K Byte + '\0'
+constexpr uint32_t PERF_DATA_BUFF_SIZE_M = 262144 + 1; // 262144 + 1, 256K Byte + '\0'
 static const std::string PROF_COLLECT = "sudo";
 static const std::string ENV_PATH = "PATH=/usr/bin:/usr/sbin:/var";
 
-PerfExtraTask::PerfExtraTask(uint32_t bufSize, const std::string &retDir,
-                             SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
-    : isInited_(false),
-      dataSize_(0),
-      retDir_(retDir),
-      buf_(bufSize),
-      jobCtx_(jobCtx),
-      param_(param)
-{
-}
+PerfExtraTask::PerfExtraTask(
+    uint32_t bufSize, const std::string& retDir, SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
+    : isInited_(false), dataSize_(0), retDir_(retDir), buf_(bufSize), jobCtx_(jobCtx), param_(param)
+{}
 
 PerfExtraTask::~PerfExtraTask() {}
 
@@ -83,12 +77,12 @@ int32_t PerfExtraTask::UnInit()
     return PROFILING_SUCCESS;
 }
 
-void PerfExtraTask::Run(const struct error_message::Context &errorContext)
+void PerfExtraTask::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     while (!IsQuit()) {
         MSPROF_LOGI("PerfExtraTask running");
-        Utils::UsleepInterupt(1000000);  // 1000000 : sleep 1s
+        Utils::UsleepInterupt(1000000); // 1000000 : sleep 1s
         PerfScriptTask();
     }
 
@@ -104,7 +98,7 @@ void PerfExtraTask::PerfScriptTask()
     Utils::GetFiles(retDir_, false, files, 0);
     for (size_t i = 0; i < files.size(); i++) {
         if (files[i].find(MSVP_PROF_PERF_DATA_FILE) != std::string::npos &&
-            std::count(files[i].begin(), files[i].end(), '.') == 3) {  // 3 meaning dot number: ai_ctrl_cpu.data.0.xxx
+            std::count(files[i].begin(), files[i].end(), '.') == 3) { // 3 meaning dot number: ai_ctrl_cpu.data.0.xxx
             perfDataFiles.push_back(files[i]);
         }
     }
@@ -139,7 +133,7 @@ void PerfExtraTask::PerfScriptTask()
     }
 }
 
-void PerfExtraTask::ResolvePerfRecordData(const std::string &fileName) const
+void PerfExtraTask::ResolvePerfRecordData(const std::string& fileName) const
 {
     std::vector<std::string> argsVec;
     std::vector<std::string> envVec;
@@ -153,14 +147,15 @@ void PerfExtraTask::ResolvePerfRecordData(const std::string &fileName) const
     int32_t exitCode = VALID_EXIT_CODE;
     OsalProcess appProcess = MSVP_PROCESS;
     ExecCmdParams execCmdParams(PROF_COLLECT, false, newFilePath);
-    int32_t ret = Utils::ExecCmd(execCmdParams,
-                             argsVec,  // const std::vector<std::string> & argv,
-                             envVec,   // const std::vector<std::string> & envp,
-                             exitCode, appProcess);
+    int32_t ret = Utils::ExecCmd(
+        execCmdParams,
+        argsVec, // const std::vector<std::string> & argv,
+        envVec,  // const std::vector<std::string> & envp,
+        exitCode, appProcess);
     MSPROF_LOGI("resolve ctrlcpu data:%s, ret=%d, exit_code=%d", fileName.c_str(), ret, exitCode);
 }
 
-void PerfExtraTask::StoreData(const std::string &fileName)
+void PerfExtraTask::StoreData(const std::string& fileName)
 {
     if (!(Utils::IsFileExist(fileName))) {
         MSPROF_LOGW("file:%s is not exist", fileName.c_str());
@@ -177,8 +172,8 @@ void PerfExtraTask::StoreData(const std::string &fileName)
     UNSIGNED_CHAR_PTR buf = const_cast<UNSIGNED_CHAR_PTR>(buf_.GetBuffer());
     size_t bufSize = buf_.GetBufferSize();
     std::string canonicalizedPath = Utils::CanonicalizePath(fileName);
-    FUNRET_CHECK_EXPR_ACTION(canonicalizedPath.empty(), return,
-        "The fileName: %s does not exist or permission denied.", fileName.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        canonicalizedPath.empty(), return, "The fileName: %s does not exist or permission denied.", fileName.c_str());
     std::ifstream ifs(canonicalizedPath, std::ifstream::in);
     if (!ifs.is_open() || buf == nullptr) {
         return;
@@ -189,7 +184,7 @@ void PerfExtraTask::StoreData(const std::string &fileName)
         ifs.read(reinterpret_cast<CHAR_PTR>(buf), bufSize > 0 ? (bufSize - 1) : 0);
 
         SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
-        MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return );
+        MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
         fileChunk->fileName = Utils::PackDotInfo(perfRetName, jobCtx_->tag);
         fileChunk->offset = -1;
         fileChunk->chunk = std::string(reinterpret_cast<CONST_CHAR_PTR>(buf), ifs.gcount());
@@ -201,8 +196,8 @@ void PerfExtraTask::StoreData(const std::string &fileName)
         if (AdprofCollectorProxy::instance()->AdprofStarted()) {
             AdprofCollectorProxy::instance()->Report(fileChunk);
         } else {
-            if (analysis::dvvp::transport::UploaderMgr::instance()->UploadData(param_->job_id,
-                fileChunk) != PROFILING_SUCCESS) {
+            if (analysis::dvvp::transport::UploaderMgr::instance()->UploadData(param_->job_id, fileChunk) !=
+                PROFILING_SUCCESS) {
                 MSPROF_LOGE("Upload cpu data failed , jobId: %s", param_->job_id.c_str());
             }
         }
@@ -243,9 +238,9 @@ int32_t ProfCtrlcpuJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         return ret;
     }
     // perf script
-    MSVP_MAKE_SHARED4(perfExtraTask_, PerfExtraTask, PERF_DATA_BUFF_SIZE_M, tmpPath,
-                      collectionJobCfg_->comParams->jobCtx, collectionJobCfg_->comParams->params,
-                      return PROFILING_FAILED);
+    MSVP_MAKE_SHARED4(
+        perfExtraTask_, PerfExtraTask, PERF_DATA_BUFF_SIZE_M, tmpPath, collectionJobCfg_->comParams->jobCtx,
+        collectionJobCfg_->comParams->params, return PROFILING_FAILED);
     return PROFILING_SUCCESS;
 }
 
@@ -297,7 +292,7 @@ int32_t ProfCtrlcpuJob::Process()
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfCtrlcpuJob::GetCollectCtrlCpuEventCmd(const std::vector<std::string> &events, std::string &profCtrlcpuCmd)
+int32_t ProfCtrlcpuJob::GetCollectCtrlCpuEventCmd(const std::vector<std::string>& events, std::string& profCtrlcpuCmd)
 {
     const int32_t changeFormMsToS = 1000;
     if (events.empty() || !ParamValidation::instance()->CheckCtrlCpuEventIsValid(events)) {
@@ -322,7 +317,7 @@ int32_t ProfCtrlcpuJob::GetCollectCtrlCpuEventCmd(const std::vector<std::string>
     ssCombined << "}";
     std::stringstream ssPerfCmd;
 
-    int32_t cpuProfilingInterval = 10;  // Profile deltas every 10ms defaultly
+    int32_t cpuProfilingInterval = 10; // Profile deltas every 10ms defaultly
     if (collectionJobCfg_->comParams->params->cpu_sampling_interval > 0) {
         cpuProfilingInterval = collectionJobCfg_->comParams->params->cpu_sampling_interval;
     }
@@ -338,7 +333,7 @@ int32_t ProfCtrlcpuJob::GetCollectCtrlCpuEventCmd(const std::vector<std::string>
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfCtrlcpuJob::PrepareDataDir(std::string &cpuDataFile)
+int32_t ProfCtrlcpuJob::PrepareDataDir(std::string& cpuDataFile)
 {
     std::string perfDataDir = ConfigManager::instance()->GetPerfDataDir(collectionJobCfg_->comParams->devId);
     int32_t ret = Utils::CreateDir(perfDataDir);
@@ -357,8 +352,8 @@ int32_t ProfCtrlcpuJob::PrepareDataDir(std::string &cpuDataFile)
         cpuFile.close();
     } else {
         MSPROF_LOGE("Failed to open %s, dev_id=%d", cpuDataFile.c_str(), collectionJobCfg_->comParams->devIdOnHost);
-        MSPROF_INNER_ERROR("EK9999", "Failed to open %s, dev_id=%d", cpuDataFile.c_str(),
-                           collectionJobCfg_->comParams->devIdOnHost);
+        MSPROF_INNER_ERROR(
+            "EK9999", "Failed to open %s, dev_id=%d", cpuDataFile.c_str(), collectionJobCfg_->comParams->devIdOnHost);
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
@@ -432,8 +427,8 @@ int32_t ProfAicpuHscbJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfAicpuHscbJob::GetAicpuHscbCmd(int32_t devId, const std::vector<std::string> &events,
-    std::string &hscbCmd) const
+int32_t ProfAicpuHscbJob::GetAicpuHscbCmd(
+    int32_t devId, const std::vector<std::string>& events, std::string& hscbCmd) const
 {
     std::string perfDataDir = ConfigManager::instance()->GetPerfDataDir(devId);
     int32_t ret = Utils::CreateDir(perfDataDir);
@@ -448,7 +443,8 @@ int32_t ProfAicpuHscbJob::GetAicpuHscbCmd(int32_t devId, const std::vector<std::
         collectionJobCfg_->jobParams.dataPath + "." + std::to_string(collectionJobCfg_->comParams->devId);
 
     std::string canonicalizedPath = Utils::CanonicalizePath(filePath);
-    FUNRET_CHECK_EXPR_ACTION(canonicalizedPath.empty(), return PROFILING_FAILED,
+    FUNRET_CHECK_EXPR_ACTION(
+        canonicalizedPath.empty(), return PROFILING_FAILED,
         "Failed to find hscb file path: %s, which does not exist or permission denied.", filePath.c_str());
     std::ofstream streamFile(canonicalizedPath);
     if (streamFile.is_open()) {
@@ -460,11 +456,11 @@ int32_t ProfAicpuHscbJob::GetAicpuHscbCmd(int32_t devId, const std::vector<std::
 
     std::stringstream perfCmd;
     std::string eventsStr = GetEventsStr(events);
-    FUNRET_CHECK_EXPR_ACTION(eventsStr.empty(), return PROFILING_FAILED,
-        "Failed to set empty hscb events.");
+    FUNRET_CHECK_EXPR_ACTION(eventsStr.empty(), return PROFILING_FAILED, "Failed to set empty hscb events.");
 
     int32_t perfInterval = (collectionJobCfg_->comParams->params->cpu_sampling_interval > 0) ?
-        collectionJobCfg_->comParams->params->cpu_sampling_interval : DEFAULT_PROFILING_INTERVAL_20MS;  // default 20ms
+                               collectionJobCfg_->comParams->params->cpu_sampling_interval :
+                               DEFAULT_PROFILING_INTERVAL_20MS; // default 20ms
     perfCmd << "sudo /var/prof_collect.sh --stat ";
     perfCmd << filePath;
     perfCmd << " ";
@@ -497,8 +493,9 @@ int32_t ProfAicpuHscbJob::Process()
         ExecCmdParams execCmdParams(cmd, true, "");
         (void)DrvGetDeviceTime(collectionJobCfg_->comParams->devId, deviceMonotonic_, deviceSysCnt_);
         int32_t ret = Utils::ExecCmd(execCmdParams, argsV, envsV, exitCode, hscbProcess_);
-        FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS, return PROFILING_FAILED,
-            "Failed to start profiling aicpu hscb, pid: %d, ret: %d", hscbProcess_, ret);
+        FUNRET_CHECK_EXPR_ACTION(
+            ret != PROFILING_SUCCESS, return PROFILING_FAILED, "Failed to start profiling aicpu hscb, pid: %d, ret: %d",
+            hscbProcess_, ret);
         MSPROF_LOGI("Success to start profiling aicpu hscb, pid: %d, ret: %d", hscbProcess_, ret);
     }
 
@@ -540,12 +537,13 @@ void ProfAicpuHscbJob::SendData() const
     std::string hscbDataFile =
         collectionJobCfg_->jobParams.dataPath + "." + std::to_string(collectionJobCfg_->comParams->devId);
     std::string canonicalizedPath = Utils::CanonicalizePath(hscbDataFile);
-    FUNRET_CHECK_EXPR_ACTION(canonicalizedPath.empty(), return,
+    FUNRET_CHECK_EXPR_ACTION(
+        canonicalizedPath.empty(), return,
         "Failed to find hscb file path: %s, which does not exist or permission denied.", hscbDataFile.c_str());
 
     std::ifstream ifs(canonicalizedPath, std::ifstream::in);
-    FUNRET_CHECK_EXPR_ACTION(!ifs.is_open(), return,
-        "Failed to open hscb file: %s, please check its permissions.", hscbDataFile.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        !ifs.is_open(), return, "Failed to open hscb file: %s, please check its permissions.", hscbDataFile.c_str());
 
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
     MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
@@ -560,15 +558,15 @@ void ProfAicpuHscbJob::SendData() const
         fileChunk->chunk = std::string(static_cast<CONST_CHAR_PTR>(buf.get()), ifs.gcount());
         fileChunk->chunkSize = ifs.gcount();
         fileChunk->isLastChunk = false;
-        fileChunk->extraInfo = Utils::PackDotInfo(collectionJobCfg_->comParams->jobCtx->job_id,
-                                                  collectionJobCfg_->comParams->jobCtx->dev_id);
+        fileChunk->extraInfo = Utils::PackDotInfo(
+            collectionJobCfg_->comParams->jobCtx->job_id, collectionJobCfg_->comParams->jobCtx->dev_id);
         fileChunk->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
         if (AdprofCollectorProxy::instance()->AdprofStarted()) {
             MSPROF_LOGI("Begin to send data of perf stat, datasize: %zu.", fileChunk->chunkSize);
             AdprofCollectorProxy::instance()->Report(fileChunk);
         }
     }
- 
+
     ifs.close();
     (void)::remove(canonicalizedPath.c_str());
     MSPROF_LOGI("Success to remove hscb data: %s.", canonicalizedPath.c_str());
@@ -577,8 +575,8 @@ void ProfAicpuHscbJob::SendData() const
 void ProfAicpuHscbJob::SendPerfTimeData() const
 {
     const std::string perfRetName = "data/aicpu.hscb.data";
-    const std::string timeStr = "HscbStartMono:" + std::to_string(deviceMonotonic_) + "\n"
-        + "HscbStartSysCnt:" + std::to_string(deviceSysCnt_) + "\n";
+    const std::string timeStr = "HscbStartMono:" + std::to_string(deviceMonotonic_) + "\n" +
+                                "HscbStartSysCnt:" + std::to_string(deviceSysCnt_) + "\n";
     MSPROF_LOGI("Begin to send time data of perf stat: %s.", timeStr.c_str());
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
     MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
@@ -587,14 +585,14 @@ void ProfAicpuHscbJob::SendPerfTimeData() const
     fileChunk->chunk = timeStr;
     fileChunk->chunkSize = timeStr.size();
     fileChunk->isLastChunk = false;
-    fileChunk->extraInfo = Utils::PackDotInfo(collectionJobCfg_->comParams->jobCtx->job_id,
-                                                collectionJobCfg_->comParams->jobCtx->dev_id);
+    fileChunk->extraInfo =
+        Utils::PackDotInfo(collectionJobCfg_->comParams->jobCtx->job_id, collectionJobCfg_->comParams->jobCtx->dev_id);
     fileChunk->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
     if (AdprofCollectorProxy::instance()->AdprofStarted()) {
         MSPROF_LOGI("Success to send time data of perf stat: %s.", timeStr.c_str());
         AdprofCollectorProxy::instance()->Report(fileChunk);
     }
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

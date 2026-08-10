@@ -17,13 +17,9 @@ namespace dvvp {
 namespace message {
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::config;
-MsgDispatcher::MsgDispatcher()
-{
-}
+MsgDispatcher::MsgDispatcher() {}
 
-MsgDispatcher::~MsgDispatcher()
-{
-}
+MsgDispatcher::~MsgDispatcher() {}
 
 void MsgDispatcher::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> message)
 {
@@ -39,6 +35,6 @@ void MsgDispatcher::OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> mess
         MSPROF_LOGE("Failed to find handler for message:%s", message->GetTypeName().c_str());
     }
 }
-}  // namespace message
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace message
+} // namespace dvvp
+} // namespace analysis

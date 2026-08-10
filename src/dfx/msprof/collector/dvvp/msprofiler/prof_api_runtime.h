@@ -14,20 +14,22 @@
 #include "prof_utils.h"
 
 namespace ProfRtAPI {
-using VOID_PTR = void *;
-using RtGetVisibleDeviceIdByLogicDeviceIdFunc = int32_t (*) (int32_t logicDeviceId, int32_t* visibleDeviceId);
+using VOID_PTR = void*;
+using RtGetVisibleDeviceIdByLogicDeviceIdFunc = int32_t (*)(int32_t logicDeviceId, int32_t* visibleDeviceId);
 
 class ExtendPlugin : public analysis::dvvp::common::singleton::Singleton<ExtendPlugin> {
 public:
     void RuntimeApiInit();
     int32_t ProfGetVisibleDeviceIdByLogicDeviceId(int32_t logicDeviceId, int32_t* visibleDeviceId) const;
     ~ExtendPlugin() override;
+
 private:
     VOID_PTR msRuntimeLibHandle_{nullptr};
     ProfAPI::PTHREAD_ONCE_T loadFlag_;
     RtGetVisibleDeviceIdByLogicDeviceIdFunc rtGetVisibleDeviceIdByLogicDeviceId_{nullptr};
+
 private:
     void LoadProfApi();
 };
-}
+} // namespace ProfRtAPI
 #endif

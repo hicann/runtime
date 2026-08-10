@@ -23,15 +23,16 @@ namespace MsprofErrMgr {
 
 class MsprofErrorManager : public analysis::dvvp::common::singleton::Singleton<MsprofErrorManager> {
 public:
-    error_message::Context &GetErrorManagerContext() const;
+    error_message::Context& GetErrorManagerContext() const;
     void SetErrorContext(const error_message::Context errorContext) const;
     MsprofErrorManager() {}
     ~MsprofErrorManager() override {}
+
 private:
     static error_message::Context errorContext_;
 };
 
-}  // ErrorManager
-}  // Dvvp
-}  // namespace Analysis
+} // namespace MsprofErrMgr
+} // namespace Dvvp
+} // namespace Analysis
 #endif

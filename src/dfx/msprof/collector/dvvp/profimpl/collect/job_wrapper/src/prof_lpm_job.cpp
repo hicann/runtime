@@ -21,15 +21,12 @@ namespace JobWrapper {
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
-using namespace Analysis::Dvvp::Common::Platform;        
+using namespace Analysis::Dvvp::Common::Platform;
 
 /*
  * @berif  : Collect milan frequency conversion data
  */
-ProfLpmFreqConvJob::ProfLpmFreqConvJob()
-{
-    channelId_ = PROF_CHANNEL_LP;
-}
+ProfLpmFreqConvJob::ProfLpmFreqConvJob() { channelId_ = PROF_CHANNEL_LP; }
 
 ProfLpmFreqConvJob::~ProfLpmFreqConvJob() {}
 
@@ -57,8 +54,7 @@ int32_t ProfLpmFreqConvJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 int32_t ProfLpmFreqConvJob::Process()
 {
     if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_AICORE_LPM_INFO)) {
-        std::string filePath =
-            collectionJobCfg_->comParams->tmpResultDir + MSVP_SLASH + "lpmInfoConv.data";
+        std::string filePath = collectionJobCfg_->comParams->tmpResultDir + MSVP_SLASH + "lpmInfoConv.data";
         collectionJobCfg_->jobParams.dataPath = filePath;
     }
     return ProfPeripheralJob::Process();
@@ -73,7 +69,7 @@ int32_t ProfLpmFreqConvJob::Process()
 int32_t ProfLpmFreqConvJob::SetPeripheralConfig()
 {
     uint32_t configSize = sizeof(LpmConvProfileConfig);
-    LpmConvProfileConfig *configP = static_cast<LpmConvProfileConfig *>(Utils::ProfMalloc(configSize));
+    LpmConvProfileConfig* configP = static_cast<LpmConvProfileConfig*>(Utils::ProfMalloc(configSize));
     if (configP == nullptr) {
         MSPROF_LOGE("ProfLpmFreqConvJob ProfMalloc LpmConvProfileConfig failed");
         return PROFILING_FAILED;
@@ -84,6 +80,6 @@ int32_t ProfLpmFreqConvJob::SetPeripheralConfig()
     peripheralCfg_.configSize = configSize;
     return PROFILING_SUCCESS;
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

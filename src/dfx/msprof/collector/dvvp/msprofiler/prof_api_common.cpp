@@ -18,12 +18,13 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Analyze;
 using namespace Msprof::Engine::Intf;
-aclprofSubscribeConfig *aclprofCreateSubscribeConfig(
+aclprofSubscribeConfig* aclprofCreateSubscribeConfig(
     int8_t opTimeSwitch, aclprofAicoreMetrics aicoreMetrics, VOID_PTR fd)
 {
     if (fd == nullptr) {
         MSPROF_LOGE("fd is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
             std::vector<std::string>({"aclprofCreateSubscribeConfig", "fd"}));
         return nullptr;
     }
@@ -31,14 +32,16 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(
     static const int8_t PROF_TIME_INFO_SWITCH_OFF = 0;
     static const int8_t PROF_TIME_INFO_SWITCH_ON = 1;
     if (opTimeSwitch != PROF_TIME_INFO_SWITCH_OFF && opTimeSwitch != PROF_TIME_INFO_SWITCH_ON) {
-        MSPROF_LOGE("opTimeSwitch %d out of switch's range [%d, %d]", opTimeSwitch,
-            PROF_TIME_INFO_SWITCH_OFF, PROF_TIME_INFO_SWITCH_ON);
+        MSPROF_LOGE(
+            "opTimeSwitch %d out of switch's range [%d, %d]", opTimeSwitch, PROF_TIME_INFO_SWITCH_OFF,
+            PROF_TIME_INFO_SWITCH_ON);
         return nullptr;
     }
-    aclprofSubscribeConfig *subscribeConfig = new (std::nothrow)aclprofSubscribeConfig;
+    aclprofSubscribeConfig* subscribeConfig = new (std::nothrow) aclprofSubscribeConfig;
     if (subscribeConfig == nullptr) {
         MSPROF_LOGE("new aclprofSubscribeConfig failed");
-        MSPROF_ENV_ERROR("EK0201", std::vector<std::string>({"buf_size"}),
+        MSPROF_ENV_ERROR(
+            "EK0201", std::vector<std::string>({"buf_size"}),
             std::vector<std::string>({std::to_string(sizeof(aclprofSubscribeConfig)) + "B"}));
         return nullptr;
     }
@@ -48,7 +51,7 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(
     return subscribeConfig;
 }
 
-aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscribeConfig)
+aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig* profSubscribeConfig)
 {
     if (profSubscribeConfig == nullptr) {
         MSPROF_LOGE("profSubscribeConfig is nullptr");
@@ -109,15 +112,14 @@ uint64_t aclprofGetOpDuration(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t 
     return ProfAclGetOpTime(ACL_OP_DURATION, opInfo, opInfoLen, index);
 }
 
-
 aclprofSubscribeOpFlag aclprofGetOpFlag(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index)
 {
     uint32_t result = ProfAclGetOpVal(ACL_OP_GET_FLAG, opInfo, opInfoLen, index, nullptr, 0);
     return static_cast<aclprofSubscribeOpFlag>(result);
 }
 
-const char *aclprofGetOpAttriValue(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index,
-    aclprofSubscribeOpAttri attri)
+const char* aclprofGetOpAttriValue(
+    CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index, aclprofSubscribeOpAttri attri)
 {
     return ProfAclGetOpAttriVal(ACL_OP_GET_ATTR, opInfo, opInfoLen, index, attri);
 }

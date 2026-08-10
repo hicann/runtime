@@ -26,8 +26,7 @@ public:
     {
         pmuNum_ = Analysis::Dvvp::Common::Platform::Platform::instance()->GetMaxMonitorNumber();
     }
-    ~AnalyzerBase()
-    {}
+    ~AnalyzerBase() {}
 
 protected:
     /**
@@ -48,10 +47,10 @@ protected:
      */
     int32_t InitFrequency();
 
-    void EraseRtMapByStreamId(uint16_t streamId, std::map<std::string, RtOpInfo> &rtOpInfo) const;
-    void HandleDeviceData(const std::string &key, RtOpInfo &devData, uint32_t &time) const;
-    void HandleUploadData(const std::string &key, const RtOpInfo &devData) const;
-    void ConstructAndUploadOptimizeData(GeOpFlagInfo &opFlagData, const RtOpInfo &rtTsOpdata) const;
+    void EraseRtMapByStreamId(uint16_t streamId, std::map<std::string, RtOpInfo>& rtOpInfo) const;
+    void HandleDeviceData(const std::string& key, RtOpInfo& devData, uint32_t& time) const;
+    void HandleUploadData(const std::string& key, const RtOpInfo& devData) const;
+    void ConstructAndUploadOptimizeData(GeOpFlagInfo& opFlagData, const RtOpInfo& rtTsOpdata) const;
     uint32_t GetGraphModelId(uint32_t modelId) const;
     void SetGraphModelId(uint32_t modelId, uint32_t graphId) const;
     bool IsExtPmu() const;
@@ -75,7 +74,7 @@ protected:
     static std::multimap<uint32_t, GeOpFlagInfo> geApiInfo_;
     static std::multimap<uint32_t, GeOpFlagInfo> geModelInfo_;
     static std::multimap<uint32_t, GeOpFlagInfo> geOpInfo_;
-    static std::map<uint32_t, uint32_t> graphIdMap_;    // <modeId, graphId>
+    static std::map<uint32_t, uint32_t> graphIdMap_; // <modeId, graphId>
     static std::vector<ProfOpDesc> opDescInfos_;
     static std::vector<RtOpInfo> devTmpOpInfo_;
     static std::mutex opDescInfoMtx_;
@@ -84,8 +83,8 @@ protected:
     static std::mutex geThreadMtx_;
     static std::mutex tsThreadMtx_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

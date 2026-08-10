@@ -26,14 +26,14 @@ namespace Utils {
  * @return
  *        after replace path
  */
-std::string ReplaceWaveToHomeDir(const std::string &filePath)
+std::string ReplaceWaveToHomeDir(const std::string& filePath)
 {
     if (filePath.empty()) {
         return "";
     }
 
     const int32_t waveBeginPos = 0;
-    const int32_t wavePos      = 1;
+    const int32_t wavePos = 1;
     if (filePath.find(IDE_HOME_WAVE_DIR) == waveBeginPos) {
         std::string homeDir = IdeGetHomeDir();
         homeDir.append(filePath.substr(wavePos));
@@ -50,7 +50,7 @@ std::string ReplaceWaveToHomeDir(const std::string &filePath)
  *        true:   the path has sufficient disk space
  *        false:  have invalid char in dir
  */
-bool IsValidDirChar(const std::string &path)
+bool IsValidDirChar(const std::string& path)
 {
     if (path.empty()) {
         MSPROF_LOGE("invalid parameter");
@@ -70,8 +70,8 @@ bool IsValidDirChar(const std::string &path)
     return true;
 }
 
-std::vector<std::string> Split(const std::string &inputStr, bool filterOutEnabled,
-    const std::string &filterOut, const std::string &pattern)
+std::vector<std::string> Split(
+    const std::string& inputStr, bool filterOutEnabled, const std::string& filterOut, const std::string& pattern)
 {
     std::string::size_type pos;
     std::vector<std::string> result;
@@ -104,7 +104,7 @@ std::vector<std::string> Split(const std::string &inputStr, bool filterOutEnable
  * @param[in] trims : trim char
  * @return left no trimed char of string
  */
-std::string LeftTrim(const std::string &str, const std::string &trims)
+std::string LeftTrim(const std::string& str, const std::string& trims)
 {
     if (str.length() > 0) {
         size_t pos = str.find_first_not_of(trims);
@@ -117,4 +117,6 @@ std::string LeftTrim(const std::string &str, const std::string &trims)
 
     return str;
 }
-}}}
+} // namespace Utils
+} // namespace Common
+} // namespace IdeDaemon

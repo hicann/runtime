@@ -19,6 +19,7 @@ class MdcLitePlatform : public PlatformInterface {
 public:
     MdcLitePlatform();
     ~MdcLitePlatform() override {}
+
 protected:
     std::string GetPipeUtilizationMetrics() override;
     std::string GetPipelineExecuteUtilizationMetrics() override;
@@ -29,7 +30,7 @@ protected:
     std::string GetResourceConflictRatioMetrics() override;
     std::string GetL2CacheEvents() override;
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

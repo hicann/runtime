@@ -20,7 +20,7 @@ public:
     MdcMiniV3Platform();
     ~MdcMiniV3Platform() override {}
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

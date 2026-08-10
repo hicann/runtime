@@ -11,12 +11,6 @@
 #include "msproftx_adaptor.h"
 #include "msprof_dlog.h"
 
-extern "C" void MsprofTxInit()
-{
-    MSPROF_LOGI("Lite type does not support msproftx.");
-}
+extern "C" void MsprofTxInit() { MSPROF_LOGI("Lite type does not support msproftx."); }
 
-extern "C" void MsprofTxUnInit()
-{
-    MSPROF_LOGI("Lite type does not support msproftx.");
-}
+extern "C" void MsprofTxUnInit() { MSPROF_LOGI("Lite type does not support msproftx."); }

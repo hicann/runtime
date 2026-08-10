@@ -20,8 +20,8 @@ namespace dvvp {
 namespace transport {
 class Uploader;
 }
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace dvvp
+} // namespace analysis
 namespace Analysis {
 namespace Dvvp {
 namespace Analyze {
@@ -39,7 +39,7 @@ public:
 public:
     void OnOptimizeData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void Flush();
-    void SetDevId(const std::string &devIdStr);
+    void SetDevId(const std::string& devIdStr);
     void SetGraphType(bool flag);
     void SetOpType(bool flag) const;
     void PrintDeviceStats();
@@ -47,15 +47,15 @@ public:
 
 private:
     void DispatchOptimizeData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
-    void ConstructAndUploadData(const std::string &opId, OpTime &opTime);
+    void ConstructAndUploadData(const std::string& opId, OpTime& opTime);
     void TsDataPostProc();
-    void UploadAppOp(std::multimap<std::string, OpTime> &opTimes);
-    void UploadAppOpModeStepTrace(std::multimap<std::string, OpTime> &opTimes);
-    void UploadAppOpModeStaticShape(std::multimap<std::string, OpTime> &opTimes);
-    void UploadAppOpModeSingleOp(std::multimap<std::string, OpTime> &opTimes);
+    void UploadAppOp(std::multimap<std::string, OpTime>& opTimes);
+    void UploadAppOpModeStepTrace(std::multimap<std::string, OpTime>& opTimes);
+    void UploadAppOpModeStaticShape(std::multimap<std::string, OpTime>& opTimes);
+    void UploadAppOpModeSingleOp(std::multimap<std::string, OpTime>& opTimes);
     void UploadKeypointOp();
     bool IsNeedUpdateIndexId();
-    void UpdateOpIndexId(std::multimap<std::string, OpTime> &opTimes);
+    void UpdateOpIndexId(std::multimap<std::string, OpTime>& opTimes);
     void UpdateHwtsLatestOpIndexId();
     uint64_t GetOpIndexId(uint64_t opTimeStamp);
     void UploadProfOpDescProc();
@@ -75,8 +75,8 @@ private:
     SHARED_PTR_ALIA<AnalyzerFfts> analyzerFfts_;
     SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

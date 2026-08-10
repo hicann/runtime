@@ -18,22 +18,14 @@ using namespace analysis::dvvp::driver;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 using namespace Analysis::Dvvp::JobWrapper;
-ChannelJob::ChannelJob()
-{
-}
-ChannelJob::ChannelJob(int32_t collectionId, const std::string &name)
-    : ICollectionJob(collectionId, name)
-{
-}
+ChannelJob::ChannelJob() {}
+ChannelJob::ChannelJob(int32_t collectionId, const std::string& name) : ICollectionJob(collectionId, name) {}
 
-ChannelJob::~ChannelJob()
-{
-}
+ChannelJob::~ChannelJob() {}
 
-int32_t ChannelJob::ChannelStart(int32_t devId, int32_t channelId, const ProfChannelParam &param) const
+int32_t ChannelJob::ChannelStart(int32_t devId, int32_t channelId, const ProfChannelParam& param) const
 {
-    MSPROF_EVENT("Begin to start channel profiling, profDeviceId=%d, profChannel=%d",
-        devId, channelId);
+    MSPROF_EVENT("Begin to start channel profiling, profDeviceId=%d, profChannel=%d", devId, channelId);
     struct prof_start_para profStartPara;
     profStartPara.channel_type = PROF_TS_TYPE;
     profStartPara.sample_period = param.period;
@@ -42,20 +34,20 @@ int32_t ChannelJob::ChannelStart(int32_t devId, int32_t channelId, const ProfCha
     profStartPara.user_data_size = param.dataSize;
     auto ret = prof_drv_start(devId, channelId, &profStartPara);
     if (ret != PROF_OK) {
-        MSPROF_LOGE("Failed to start channel profiling, profDeviceId=%d, profChannel=%d, ret=%d",
-            devId, channelId, ret);
+        MSPROF_LOGE(
+            "Failed to start channel profiling, profDeviceId=%d, profChannel=%d, ret=%d", devId, channelId, ret);
         return PROFILING_FAILED;
     }
-    MSPROF_EVENT("Succeeded to start profiling channel profiling, profDeviceId=%d, profChannel=%d",
-        devId, channelId);
+    MSPROF_EVENT("Succeeded to start profiling channel profiling, profDeviceId=%d, profChannel=%d", devId, channelId);
     return PROFILING_SUCCESS;
 }
 
-void ChannelJob::AddReader(int32_t devId, int32_t channelId, const std::string &filePath)
+void ChannelJob::AddReader(int32_t devId, int32_t channelId, const std::string& filePath)
 {
     SHARED_PTR_ALIA<ChannelReader> reader;
-    MSVP_MAKE_SHARED4(reader, ChannelReader, devId, static_cast<AI_DRV_CHANNEL>(channelId),
-        filePath, cfg_->comParams->jobCtx, return);
+    MSVP_MAKE_SHARED4(
+        reader, ChannelReader, devId, static_cast<AI_DRV_CHANNEL>(channelId), filePath, cfg_->comParams->jobCtx,
+        return);
     auto ret = reader->Init();
     if (ret != PROFILING_SUCCESS) {
         return;
@@ -64,8 +56,9 @@ void ChannelJob::AddReader(int32_t devId, int32_t channelId, const std::string &
     if (poll != nullptr) {
         (void)poll->AddReader(devId, channelId, reader);
     } else {
-        MSPROF_LOGI("Channel job skipped adding reader, devId:%d, channel:%d, filepath:%s",
-                    devId, channelId, Utils::BaseName(filePath).c_str());
+        MSPROF_LOGI(
+            "Channel job skipped adding reader, devId:%d, channel:%d, filepath:%s", devId, channelId,
+            Utils::BaseName(filePath).c_str());
     }
 }
 
@@ -77,6 +70,6 @@ void ChannelJob::RemoveReader(int32_t devId, int32_t channelId) const
         (void)poll->RemoveReader(devId, channelId);
     }
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Collect
+} // namespace Dvvp

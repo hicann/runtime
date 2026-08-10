@@ -19,19 +19,19 @@ namespace Dvvp {
 namespace JobWrapper {
 class PerfExtraTask : public analysis::dvvp::common::thread::Thread {
 public:
-    PerfExtraTask(uint32_t bufSize, const std::string &retDir,
-                  SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
-                  SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
+    PerfExtraTask(
+        uint32_t bufSize, const std::string& retDir, SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx,
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
     ~PerfExtraTask() override;
     void SetJobCtx(SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx);
     int32_t Init();
     int32_t UnInit();
 
 private:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     void PerfScriptTask();
-    void ResolvePerfRecordData(const std::string &fileName) const;
-    void StoreData(const std::string &fileName);
+    void ResolvePerfRecordData(const std::string& fileName) const;
+    void StoreData(const std::string& fileName);
 
 private:
     volatile bool isInited_;
@@ -49,13 +49,11 @@ public:
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
     int32_t Process() override;
     int32_t Uninit() override;
-    bool IsGlobalJobLevel() override
-    {
-        return true;
-    }
+    bool IsGlobalJobLevel() override { return true; }
+
 private:
-    int32_t GetCollectCtrlCpuEventCmd(const std::vector<std::string> &events, std::string &profCtrlcpuCmd);
-    int32_t PrepareDataDir(std::string &cpuDataFile);
+    int32_t GetCollectCtrlCpuEventCmd(const std::vector<std::string>& events, std::string& profCtrlcpuCmd);
+    int32_t PrepareDataDir(std::string& cpuDataFile);
 
 private:
     OsalProcess ctrlcpuProcess_;
@@ -70,21 +68,20 @@ public:
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
     int32_t Process() override;
     int32_t Uninit() override;
- 
+
 private:
-    int32_t GetAicpuHscbCmd(int32_t devId, const std::vector<std::string> &events,
-        std::string &hscbCmd) const;
+    int32_t GetAicpuHscbCmd(int32_t devId, const std::vector<std::string>& events, std::string& hscbCmd) const;
     void SendData() const;
     void SendPerfTimeData() const;
- 
+
 private:
     OsalProcess hscbProcess_;
     SHARED_PTR_ALIA<CollectionJobCfg> collectionJobCfg_;
     uint64_t deviceMonotonic_;
     uint64_t deviceSysCnt_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

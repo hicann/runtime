@@ -29,20 +29,21 @@ using namespace analysis::dvvp::common::utils;
 using DevInfoT = struct IdeDevInfo;
 struct IdeGlobalCtrlInfo g_ideGlobalInfo;
 
-#define IDE_CTRL_WAIT_FAILED(value, action, logText, ...) do {         \
-    if (mmSemWait(value) != EN_OK && mmGetErrorCode() != EINTR) {      \
-        MSPROF_LOGE(logText, ##__VA_ARGS__);                              \
-        action;                                                        \
-    }                                                                  \
-} while (mmGetErrorCode() == EINTR)
+#define IDE_CTRL_WAIT_FAILED(value, action, logText, ...)             \
+    do {                                                              \
+        if (mmSemWait(value) != EN_OK && mmGetErrorCode() != EINTR) { \
+            MSPROF_LOGE(logText, ##__VA_ARGS__);                      \
+            action;                                                   \
+        }                                                             \
+    } while (mmGetErrorCode() == EINTR)
 
 STATIC void IdeInitGlobalCtrlInfoDev()
 {
     if (!g_ideGlobalInfo.devMapInfoInitFlag) {
         MSPROF_LOGI("Init GlobalCtrlInfo");
         IDE_CTRL_VALUE_FAILED(mmMutexInit(&g_ideGlobalInfo.mtx) == EN_OK, return, "global info mutex init error");
-        IDE_CTRL_VALUE_FAILED(mmSemInit(&g_ideGlobalInfo.devNotifySem, 0) == EN_OK, return,
-            "device notify sem init error");
+        IDE_CTRL_VALUE_FAILED(
+            mmSemInit(&g_ideGlobalInfo.devNotifySem, 0) == EN_OK, return, "device notify sem init error");
         g_ideGlobalInfo.devMapInfoInitFlag = true;
     }
 }
@@ -57,10 +58,9 @@ STATIC void IdeDestroyGlobalCtrlInfoDev()
     if (g_ideGlobalInfo.devMapInfoInitFlag) {
         MSPROF_LOGI("Destroy GlobalCtrlInfo");
         g_ideGlobalInfo.deviceNotifyCallbacks.upCallbacks.clear();
-        IDE_CTRL_VALUE_FAILED(mmSemDestroy(&g_ideGlobalInfo.devNotifySem) == EN_OK, return,
-            "device notify sem destroy error");
-        IDE_CTRL_VALUE_FAILED(mmMutexDestroy(&g_ideGlobalInfo.mtx) == EN_OK, return,
-            "global info mutex dertroy error");
+        IDE_CTRL_VALUE_FAILED(
+            mmSemDestroy(&g_ideGlobalInfo.devNotifySem) == EN_OK, return, "device notify sem destroy error");
+        IDE_CTRL_VALUE_FAILED(mmMutexDestroy(&g_ideGlobalInfo.mtx) == EN_OK, return, "global info mutex dertroy error");
         g_ideGlobalInfo.devMapInfoInitFlag = false;
     }
 }
@@ -95,7 +95,7 @@ STATIC void IdeDestroyGlobalCtrlInfo()
 
     MSPROF_LOGI("Destroy GlobalCtrlInfo");
     hdcError_t err = DRV_ERROR_NONE;
-    DevInfoT *pdevInfo = nullptr;
+    DevInfoT* pdevInfo = nullptr;
 
     // destroy hdc server for every device
     IDE_CTRL_MUTEX_LOCK(&g_ideGlobalInfo.mtx, return);
@@ -123,8 +123,7 @@ STATIC void IdeDestroyGlobalCtrlInfo()
 
     g_ideGlobalInfo.hdcServerProcFlag = false;
     g_ideGlobalInfo.hdcHandleEventFlag = false;
-    IDE_CTRL_VALUE_FAILED(mmSemPost(&g_ideGlobalInfo.devNotifySem) == EN_OK, return,
-        "notify sem post error");
+    IDE_CTRL_VALUE_FAILED(mmSemPost(&g_ideGlobalInfo.devNotifySem) == EN_OK, return, "notify sem post error");
     IdeDestroyGlobalCtrlInfoDev();
     g_ideGlobalInfo.initFlag = false;
 }
@@ -150,7 +149,7 @@ IdeThreadArg HdcCreateHdcServerProc(IdeThreadArg /* args */)
             break;
         }
         std::map<int32_t, DevInfoT>::iterator it;
-        DevInfoT *pDevInfo = nullptr;
+        DevInfoT* pDevInfo = nullptr;
 
         IDE_CTRL_MUTEX_LOCK(&g_ideGlobalInfo.mtx, return nullptr);
         for (it = g_ideGlobalInfo.mapDevInfo.begin(); it != g_ideGlobalInfo.mapDevInfo.end(); ++it) {
@@ -166,10 +165,10 @@ IdeThreadArg HdcCreateHdcServerProc(IdeThreadArg /* args */)
             mmThreadAttr threadAttr = IDE_DAEMON_DEFAULT_DETACH_THREAD_ATTR;
             err = mmCreateTaskWithThreadAttr(&pDevInfo->tid, &funcBlock, &threadAttr);
             if (err != EN_OK) {
-                const int32_t MAX_ERRSTR_LEN  = 128;
+                const int32_t MAX_ERRSTR_LEN = 128;
                 char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-                MSPROF_LOGE("Thread Create error: %s",
-                            mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+                MSPROF_LOGE(
+                    "Thread Create error: %s", mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
                 IDE_CTRL_MUTEX_UNLOCK(&g_ideGlobalInfo.mtx, return nullptr);
                 return nullptr;
             }
@@ -183,7 +182,7 @@ IdeThreadArg HdcCreateHdcServerProc(IdeThreadArg /* args */)
     return nullptr;
 }
 
-STATIC int32_t GetDevCount(uint32_t &devCount, std::vector<uint32_t> &devs)
+STATIC int32_t GetDevCount(uint32_t& devCount, std::vector<uint32_t>& devs)
 {
     int32_t err;
     // device no register callbacks get devices count
@@ -230,8 +229,9 @@ int32_t HdcDaemonInit()
     }
 
     error = drvHdcClientCreate(&g_ideGlobalInfo.hdcClient, MAX_SESSION_NUM, HDC_SERVICE_TYPE_IDE2, flag);
-    IDE_CTRL_VALUE_FAILED((error == DRV_ERROR_NONE) && (g_ideGlobalInfo.hdcClient != nullptr),
-        return IDE_DAEMON_ERROR, "Hdc Client Create, Max Session Num: %d", MAX_SESSION_NUM);
+    IDE_CTRL_VALUE_FAILED(
+        (error == DRV_ERROR_NONE) && (g_ideGlobalInfo.hdcClient != nullptr), return IDE_DAEMON_ERROR,
+        "Hdc Client Create, Max Session Num: %d", MAX_SESSION_NUM);
 
     return IDE_DAEMON_OK;
 }
@@ -245,7 +245,7 @@ int32_t HdcDaemonInit()
  *        IDE_DAEMON_OK: succ
  *        IDE_DAEMON_ERROR: failed
  */
-int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t> &dev)
+int HdcDaemonServerRegister(uint32_t num, const std::vector<uint32_t>& dev)
 {
     uint32_t i = 0;
     uint32_t count = 0;
@@ -306,9 +306,9 @@ int32_t HdcDaemonDestroy()
  *        IDE_DAEMON_OK:    succ
  *        IDE_DAEMON_ERROR: failed
  */
-STATIC int32_t IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqAddr req)
+STATIC int32_t IdeDaemonReadReq(const struct IdeTransChannel& handle, IdeTlvReqAddr req)
 {
-    void *buf = nullptr;
+    void* buf = nullptr;
     uint32_t recvlen = 0;
 
     IDE_CTRL_VALUE_FAILED(req != nullptr, return IDE_DAEMON_ERROR, "req is nullptr");
@@ -325,7 +325,7 @@ STATIC int32_t IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqA
         return IDE_DAEMON_ERROR;
     }
 
-    *req = (struct tlv_req *)IdeXmalloc(recvlen + 1);
+    *req = (struct tlv_req*)IdeXmalloc(recvlen + 1);
     if (*req == nullptr) {
         MSPROF_LOGE("Ide Xmalloc failed");
         IDE_XFREE_AND_SET_NULL(buf);
@@ -351,7 +351,6 @@ STATIC int32_t IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqA
     return IDE_DAEMON_OK;
 }
 
-
 /**
  * @brief Call the specified handler based on the data sent by the user
  *
@@ -361,7 +360,7 @@ STATIC int32_t IdeDaemonReadReq(const struct IdeTransChannel &handle, IdeTlvReqA
  *        IDE_DAEMON_OK:    succ
  *        IDE_DAEMON_ERROR: failed
  */
-STATIC int32_t IdeDaemonHdcProcessEventOne(const struct DevSession &devSession)
+STATIC int32_t IdeDaemonHdcProcessEventOne(const struct DevSession& devSession)
 {
     int32_t err;
     IdeTlvReq req = nullptr;
@@ -375,8 +374,9 @@ STATIC int32_t IdeDaemonHdcProcessEventOne(const struct DevSession &devSession)
         return IDE_DAEMON_ERROR;
     }
 
-    MSPROF_LOGI("received %s request, type %d, req->dev_id=%d, phyDevId=%u.",
-                IdeGetCompontNameByReq(req->type), req->type, req->dev_id, devSession.phyDevId);
+    MSPROF_LOGI(
+        "received %s request, type %d, req->dev_id=%d, phyDevId=%u.", IdeGetCompontNameByReq(req->type), req->type,
+        req->dev_id, devSession.phyDevId);
     req->dev_id = devSession.phyDevId;
     enum IdeComponentType type = IdeGetComponentType(req);
     if ((type != NR_IDE_COMPONENTS) && (g_ideComponentsFuncs.hdcProcess[type] != nullptr)) {
@@ -391,8 +391,8 @@ STATIC int32_t IdeDaemonHdcProcessEventOne(const struct DevSession &devSession)
     }
 
     if (err != IDE_DAEMON_OK) {
-        MSPROF_LOGE("req->type: %d, call %s process func failed, err: %d",
-            req->type, IdeGetCompontNameByReq(req->type), err);
+        MSPROF_LOGE(
+            "req->type: %d, call %s process func failed, err: %d", req->type, IdeGetCompontNameByReq(req->type), err);
     }
 
     // profiling is aync, freed by its thread; bbox use the session send log data
@@ -416,7 +416,7 @@ IdeThreadArg IdeDaemonHdcProcessEvent(IdeThreadArg arg)
 {
     IDE_CTRL_VALUE_FAILED(arg != nullptr, return nullptr, "invalid parameter");
 
-    struct DevSession *devSession = static_cast<struct DevSession *>(arg);
+    struct DevSession* devSession = static_cast<struct DevSession*>(arg);
     (void)mmSetCurrentThreadName(IDE_HDC_PROCESS_THREAD_NAME);
 
     int32_t err = IdeDaemonHdcProcessEventOne(*devSession);
@@ -434,7 +434,7 @@ IdeThreadArg IdeDaemonHdcProcessEvent(IdeThreadArg arg)
  *
  * @return
  */
-STATIC void IdeDaemonCreateHdcServer(DevInfoT *devInfo)
+STATIC void IdeDaemonCreateHdcServer(DevInfoT* devInfo)
 {
     IDE_CTRL_VALUE_FAILED(devInfo != nullptr, return, "devInfo is nullptr");
     hdcError_t error = DRV_ERROR_NONE;
@@ -442,18 +442,21 @@ STATIC void IdeDaemonCreateHdcServer(DevInfoT *devInfo)
     while (g_ideGlobalInfo.hdcHandleEventFlag) {
         int32_t ret = IdeGetLogIdByPhyId(devInfo->phyDevId, &devInfo->logDevId);
         if (ret != IDE_DAEMON_OK) {
-            MSPROF_LOGW("logDevId %u phyDevId %u not ready, sleep %d milliseconds and retry",
-                devInfo->logDevId, devInfo->phyDevId, IDE_CREATE_SERVER_TIME);
+            MSPROF_LOGW(
+                "logDevId %u phyDevId %u not ready, sleep %d milliseconds and retry", devInfo->logDevId,
+                devInfo->phyDevId, IDE_CREATE_SERVER_TIME);
             (void)mmSleep(IDE_CREATE_SERVER_TIME);
             continue;
         }
-        error = drvHdcServerCreate (devInfo->logDevId, devInfo->serviceType, &devInfo->server);
+        error = drvHdcServerCreate(devInfo->logDevId, devInfo->serviceType, &devInfo->server);
         if (error == DRV_ERROR_DEVICE_NOT_READY) {
-            MSPROF_LOGW("logDevId %u phyDevId %u hdc not ready, sleep %d milliseconds and retry",
-                devInfo->logDevId, devInfo->phyDevId, IDE_CREATE_SERVER_TIME);
+            MSPROF_LOGW(
+                "logDevId %u phyDevId %u hdc not ready, sleep %d milliseconds and retry", devInfo->logDevId,
+                devInfo->phyDevId, IDE_CREATE_SERVER_TIME);
             (void)mmSleep(IDE_CREATE_SERVER_TIME);
         } else if (error != DRV_ERROR_NONE || devInfo->server == nullptr) {
-            MSPROF_LOGW("Unable to create HDC with logDevId %u phyDevId %u, return value: %d, sleep %dms and retry",
+            MSPROF_LOGW(
+                "Unable to create HDC with logDevId %u phyDevId %u, return value: %d, sleep %dms and retry",
                 devInfo->logDevId, devInfo->phyDevId, error, IDE_CREATE_SERVER_TIME);
             (void)mmSleep(IDE_CREATE_SERVER_TIME);
         } else {
@@ -472,9 +475,9 @@ STATIC void IdeDaemonCreateHdcServer(DevInfoT *devInfo)
  * @return IDE_DAEMON_ERROR : success
  *         IDE_DAEMON_OK : failed
  */
-STATIC int32_t IdeCreateHdcHandleThread(HDC_SESSION session, const DevInfoT &devInfo)
+STATIC int32_t IdeCreateHdcHandleThread(HDC_SESSION session, const DevInfoT& devInfo)
 {
-    struct DevSession *devSession = static_cast<struct DevSession*>(IdeXmalloc(sizeof(struct DevSession)));
+    struct DevSession* devSession = static_cast<struct DevSession*>(IdeXmalloc(sizeof(struct DevSession)));
     if (devSession == nullptr) {
         MSPROF_LOGE("Ide Xmalloc failed");
         return IDE_DAEMON_ERROR;
@@ -525,7 +528,7 @@ STATIC int32_t IdeHdcCheckRunEnv(HDC_SESSION session)
  * @return IDE_DAEMON_ERROR : success
  *         IDE_DAEMON_OK : failed
  */
-STATIC int32_t IdeHdcDistroyDevice(const DevInfoT &devInfo)
+STATIC int32_t IdeHdcDistroyDevice(const DevInfoT& devInfo)
 {
     if (devInfo.devDisable) {
         IDE_CTRL_MUTEX_LOCK(&g_ideGlobalInfo.mtx, return IDE_DAEMON_ERROR);
@@ -544,7 +547,7 @@ STATIC int32_t IdeHdcDistroyDevice(const DevInfoT &devInfo)
  * @param [in]devInfo: hdc device info
  * @return void
  */
-STATIC void IdeHdcDistroyServer(DevInfoT *devInfoPtr)
+STATIC void IdeHdcDistroyServer(DevInfoT* devInfoPtr)
 {
     if (devInfoPtr->server != nullptr) {
         hdcError_t err = drvHdcServerDestroy(devInfoPtr->server);
@@ -568,7 +571,7 @@ IdeThreadArg IdeDaemonHdcHandleEvent(IdeThreadArg args)
     IDE_CTRL_VALUE_FAILED(args != nullptr, return nullptr, "invalid parameter");
     (void)mmSetCurrentThreadName(IDE_HDC_SERVER_THREAD_NAME);
 
-    DevInfoT *devInfo = reinterpret_cast<DevInfoT *>(args);
+    DevInfoT* devInfo = reinterpret_cast<DevInfoT*>(args);
     IdeDaemonCreateHdcServer(devInfo);
     while (g_ideGlobalInfo.hdcHandleEventFlag) {
         HDC_SESSION session = nullptr;
@@ -589,8 +592,7 @@ IdeThreadArg IdeDaemonHdcHandleEvent(IdeThreadArg args)
             continue;
         }
 
-        if (drvHdcSetSessionReference(session) != DRV_ERROR_NONE &&
-            IdeHdcCheckRunEnv(session) != IDE_DAEMON_OK) {
+        if (drvHdcSetSessionReference(session) != DRV_ERROR_NONE && IdeHdcCheckRunEnv(session) != IDE_DAEMON_OK) {
             HdcSessionClose(session);
             session = nullptr;
             continue;

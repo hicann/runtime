@@ -22,11 +22,11 @@ namespace dvvp {
 namespace message {
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::utils;
-const char * const PROFILING_MODE_SAMPLE_BASED = "sample-based";
-const char * const PROFILING_MODE_TASK_BASED = "task-based";
-const char * const PROFILING_ANALYSIS_TARGET = "launch application";
-const char * const PROFILING_MODE_DEF = "def_mode";
-const char * const PROFILING_MODE_SYSTEM_WIDE = "system-wide";
+const char* const PROFILING_MODE_SAMPLE_BASED = "sample-based";
+const char* const PROFILING_MODE_TASK_BASED = "task-based";
+const char* const PROFILING_ANALYSIS_TARGET = "launch application";
+const char* const PROFILING_MODE_DEF = "def_mode";
+const char* const PROFILING_MODE_SYSTEM_WIDE = "system-wide";
 const std::string PROFILING_STATE_FILE = "job_state.ini";
 
 // Attention:
@@ -80,7 +80,7 @@ struct ProfileParams : public BaseInfo {
     std::string ts_memcpy;
     std::string taskTsfw;
     std::string ai_vector_status;
-    std::string ts_fw_training;  // unused
+    std::string ts_fw_training; // unused
     std::string hwts_log;
     std::string hwts_log1;
     std::string stars_acsq_task;
@@ -218,51 +218,103 @@ struct ProfileParams : public BaseInfo {
     std::string durationTime;
 
     ProfileParams()
-        : msprofBinPid(MSVP_PROCESS), isCancel(false), profiling_period(-1),
-          profiling_options(""), profMode(""),
-          aicore_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS), ai_core_lpm("off"),
-          aiv_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS), npuEvents(""), ntsMetrics(""),
-          ntsPmuEvents(""), taskTsfw("off"), sysLp("on"),
-          sysLpFreq(DEFAULT_PROFILING_INTERVAL_10000US), aicScale("all"), ccuInstr("off"), cpu_profiling("off"),
+        : msprofBinPid(MSVP_PROCESS),
+          isCancel(false),
+          profiling_period(-1),
+          profiling_options(""),
+          profMode(""),
+          aicore_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS),
+          ai_core_lpm("off"),
+          aiv_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS),
+          npuEvents(""),
+          ntsMetrics(""),
+          ntsPmuEvents(""),
+          taskTsfw("off"),
+          sysLp("on"),
+          sysLpFreq(DEFAULT_PROFILING_INTERVAL_10000US),
+          aicScale("all"),
+          ccuInstr("off"),
+          cpu_profiling("off"),
           cpu_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
-          hscb("off"), aiCtrlCpuProfiling("off"), tsCpuProfiling("off"),
-          sys_profiling("off"), sys_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
-          pid_profiling("off"), pid_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
-          hardware_mem("off"), hardware_mem_sampling_interval(DEFAULT_PROFILING_INTERVAL_20000US),
-          memProfiling("off"), memInterval(DEFAULT_PROFILING_INTERVAL_20MS), appMemProfiling("on"),
+          hscb("off"),
+          aiCtrlCpuProfiling("off"),
+          tsCpuProfiling("off"),
+          sys_profiling("off"),
+          sys_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
+          pid_profiling("off"),
+          pid_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
+          hardware_mem("off"),
+          hardware_mem_sampling_interval(DEFAULT_PROFILING_INTERVAL_20000US),
+          memProfiling("off"),
+          memInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          appMemProfiling("on"),
           llc_interval(DEFAULT_PROFILING_INTERVAL_20MS),
-          ddr_interval(DEFAULT_PROFILING_INTERVAL_20MS), ddr_master_id(0),
+          ddr_interval(DEFAULT_PROFILING_INTERVAL_20MS),
+          ddr_master_id(0),
           hbmInterval(DEFAULT_PROFILING_INTERVAL_20MS),
-          io_profiling("off"), io_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS),
-          nicProfiling("off"), nicInterval(DEFAULT_PROFILING_INTERVAL_10MS),
-          roceProfiling("off"), roceInterval(DEFAULT_PROFILING_INTERVAL_10MS),
-          interconnection_profiling("off"), interconnection_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
-          hccsProfiling("off"), hccsInterval(DEFAULT_PROFILING_INTERVAL_20MS),
-          pcieInterval(DEFAULT_PROFILING_INTERVAL_20MS), ubProfiling("off"), ubInterval(DEFAULT_PROFILING_INTERVAL_20MS),
-          dvpp_profiling("off"), dvpp_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
-          pcSampling("off"), instrProfilingFreq(DEFAULT_PROFILING_INTERVAL_1000MS),
-          runtimeApi("off"), msprof("off"), msproftx("off"), mstxDomainInclude(""), mstxDomainExclude(""),
-          taskTrace("on"), taskTime("on"), taskMemory("off"),
-          prof_level("off"), geApi("off"), opType(""), host_sys(""),
-          host_sys_pid(HOST_PID_DEFAULT), hostSysUsage(""),
-          hostProfilingSamplingInterval(DEFAULT_PROFILING_INTERVAL_20MS), host_disk_profiling("off"),
-          host_osrt_profiling("off"), host_numa_profiling("off"), pureCpu("off"), hostProfiling(false), host_cpu_profiling("off"),
-          host_mem_profiling("off"), hostAllPidCpuProfiling("off"), hostAllPidMemProfiling("off"),
-          host_network_profiling("off"), host_disk_freq(DEFAULT_PROFILING_INTERVAL_50MS),
-          pythonPath(""), parseSwitch("off"), querySwitch("off"), exportSwitch("off"), clearSwitch("off"),
-          exportSummaryFormat(PROFILING_SUMMARY_FORMAT), exportType(PROFILING_EXPORT_TYPE_TEXT), reportsPath(""),
-          analyzeSwitch("off"), analyzeRuleSwitch("communication,communication_matrix"),
-          exportIterationId(DEFAULT_INTERATION_ID), exportModelId(DEFAULT_MODEL_ID), usedParams(),
-          delayTime(""), durationTime("")
-    {
-    }
+          io_profiling("off"),
+          io_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS),
+          nicProfiling("off"),
+          nicInterval(DEFAULT_PROFILING_INTERVAL_10MS),
+          roceProfiling("off"),
+          roceInterval(DEFAULT_PROFILING_INTERVAL_10MS),
+          interconnection_profiling("off"),
+          interconnection_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
+          hccsProfiling("off"),
+          hccsInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          pcieInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          ubProfiling("off"),
+          ubInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          dvpp_profiling("off"),
+          dvpp_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
+          pcSampling("off"),
+          instrProfilingFreq(DEFAULT_PROFILING_INTERVAL_1000MS),
+          runtimeApi("off"),
+          msprof("off"),
+          msproftx("off"),
+          mstxDomainInclude(""),
+          mstxDomainExclude(""),
+          taskTrace("on"),
+          taskTime("on"),
+          taskMemory("off"),
+          prof_level("off"),
+          geApi("off"),
+          opType(""),
+          host_sys(""),
+          host_sys_pid(HOST_PID_DEFAULT),
+          hostSysUsage(""),
+          hostProfilingSamplingInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          host_disk_profiling("off"),
+          host_osrt_profiling("off"),
+          host_numa_profiling("off"),
+          pureCpu("off"),
+          hostProfiling(false),
+          host_cpu_profiling("off"),
+          host_mem_profiling("off"),
+          hostAllPidCpuProfiling("off"),
+          hostAllPidMemProfiling("off"),
+          host_network_profiling("off"),
+          host_disk_freq(DEFAULT_PROFILING_INTERVAL_50MS),
+          pythonPath(""),
+          parseSwitch("off"),
+          querySwitch("off"),
+          exportSwitch("off"),
+          clearSwitch("off"),
+          exportSummaryFormat(PROFILING_SUMMARY_FORMAT),
+          exportType(PROFILING_EXPORT_TYPE_TEXT),
+          reportsPath(""),
+          analyzeSwitch("off"),
+          analyzeRuleSwitch("communication,communication_matrix"),
+          exportIterationId(DEFAULT_INTERATION_ID),
+          exportModelId(DEFAULT_MODEL_ID),
+          usedParams(),
+          delayTime(""),
+          durationTime("")
+    {}
 
     ~ProfileParams() override {}
 
-    std::string GetStructName() override
-    {
-        return "ProfileParams";
-    }
+    std::string GetStructName() override { return "ProfileParams"; }
 
     void PrintAllFields()
     {
@@ -278,7 +330,7 @@ struct ProfileParams : public BaseInfo {
                     ss << (iter->second());
                 }
                 if ((iter->first.find("interval") != std::string::npos &&
-                    iter->first.find("hardware_mem_sampling_interval") == std::string::npos) ||
+                     iter->first.find("hardware_mem_sampling_interval") == std::string::npos) ||
                     iter->first.find("memInterval") != std::string::npos ||
                     iter->first.find("ubInterval") != std::string::npos ||
                     iter->first.find("hccsInterval") != std::string::npos ||
@@ -293,8 +345,7 @@ struct ProfileParams : public BaseInfo {
                     ss << "us";
                 }
                 static size_t scalePrintLen = 128;
-                if (iter->first.find("optype") != std::string::npos &&
-                    ss.str().size() > scalePrintLen) {
+                if (iter->first.find("optype") != std::string::npos && ss.str().size() > scalePrintLen) {
                     MSPROF_LOGI("[PrintAllFields] %s...", ss.str().substr(0, scalePrintLen).c_str());
                     ss.str("");
                     continue;
@@ -317,18 +368,15 @@ struct ProfileParams : public BaseInfo {
         return false;
     }
 
-    bool IsMsprofTx() const
-    {
-        return msproftx == "on";
-    }
+    bool IsMsprofTx() const { return msproftx == "on"; }
 
-    void ToObjectPartOne(NanoJson::Json &object)
+    void ToObjectPartOne(NanoJson::Json& object)
     {
         ToObjectCoreOptions(object);
         ToObjectSystemOptions(object);
     }
 
-    void ToObjectPartTwo(NanoJson::Json &object)
+    void ToObjectPartTwo(NanoJson::Json& object)
     {
         SET_VALUE(object, dvpp_sampling_interval);
         SET_VALUE(object, aicore_sampling_interval);
@@ -371,13 +419,13 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, roceInterval);
         SET_VALUE(object, nicInterval);
         // llc
-        SET_VALUE(object, llc_profiling);         // for analysis use, read, write, capacity
+        SET_VALUE(object, llc_profiling);        // for analysis use, read, write, capacity
         SET_VALUE(object, msprof_llc_profiling); // for msprof self use, on or off
         SET_VALUE(object, llc_profiling_events);
         SET_VALUE(object, llc_interval);
     }
 
-    void ToObjectPartThree(NanoJson::Json &object)
+    void ToObjectPartThree(NanoJson::Json& object)
     {
         // pcSampling
         SET_VALUE(object, pcSampling);
@@ -427,26 +475,26 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, hostAllPidMemProfiling);
     }
 
-    void ToObject(NanoJson::Json &object) override
+    void ToObject(NanoJson::Json& object) override
     {
         ToObjectPartOne(object);
         ToObjectPartTwo(object);
         ToObjectPartThree(object);
     }
 
-    void FromObjectPartOne(NanoJson::Json &object)
+    void FromObjectPartOne(NanoJson::Json& object)
     {
         FromObjectCoreOptions(object);
         FromObjectSystemOptions(object);
     }
 
-    void FromObjectPartTwo(NanoJson::Json &object)
+    void FromObjectPartTwo(NanoJson::Json& object)
     {
         FromObjectTraceOptions(object);
         FromObjectDeviceOptions(object);
     }
 
-    void FromObjectPartThree(NanoJson::Json &object)
+    void FromObjectPartThree(NanoJson::Json& object)
     {
         FROM_STRING_VALUE(object, profMode);
         FROM_INT_VALUE(object, msprofBinPid, MSVP_PROCESS);
@@ -486,7 +534,7 @@ struct ProfileParams : public BaseInfo {
         FROM_STRING_VALUE(object, durationTime);
     }
 
-    void FromObject(NanoJson::Json &object) override
+    void FromObject(NanoJson::Json& object) override
     {
         FromObjectPartOne(object);
         FromObjectPartTwo(object);
@@ -494,7 +542,7 @@ struct ProfileParams : public BaseInfo {
     }
 
 private:
-    void ToObjectCoreOptions(NanoJson::Json &object)
+    void ToObjectCoreOptions(NanoJson::Json& object)
     {
         SET_VALUE(object, result_dir);
         SET_VALUE(object, storageLimit);
@@ -527,7 +575,7 @@ private:
         SET_VALUE(object, ntsPmuEvents);
     }
 
-    void ToObjectSystemOptions(NanoJson::Json &object)
+    void ToObjectSystemOptions(NanoJson::Json& object)
     {
         // system trace
         SET_VALUE(object, cpu_profiling);
@@ -560,7 +608,7 @@ private:
         SET_VALUE(object, pureCpu);
     }
 
-    void FromObjectCoreOptions(NanoJson::Json &object)
+    void FromObjectCoreOptions(NanoJson::Json& object)
     {
         FROM_STRING_VALUE(object, result_dir);
         FROM_STRING_VALUE(object, storageLimit);
@@ -593,7 +641,7 @@ private:
         FROM_STRING_VALUE(object, ntsPmuEvents);
     }
 
-    void FromObjectSystemOptions(NanoJson::Json &object)
+    void FromObjectSystemOptions(NanoJson::Json& object)
     {
         // system trace
         FROM_STRING_VALUE(object, cpu_profiling);
@@ -628,7 +676,7 @@ private:
         FROM_STRING_VALUE(object, pureCpu);
     }
 
-    void FromObjectTraceOptions(NanoJson::Json &object)
+    void FromObjectTraceOptions(NanoJson::Json& object)
     {
         FROM_STRING_VALUE(object, ts_cpu_hot_function);
         FROM_STRING_VALUE(object, acl);
@@ -661,7 +709,7 @@ private:
         FROM_STRING_VALUE(object, hwts_log1);
     }
 
-    void FromObjectDeviceOptions(NanoJson::Json &object)
+    void FromObjectDeviceOptions(NanoJson::Json& object)
     {
         FROM_STRING_VALUE(object, stars_acsq_task);
         FROM_STRING_VALUE(object, taskBlock);
@@ -686,9 +734,8 @@ private:
         FROM_STRING_VALUE(object, llc_profiling_events);
         FROM_INT_VALUE(object, llc_interval, DEFAULT_PROFILING_INTERVAL_100MS);
     }
-
 };
-}  // namespace message
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace message
+} // namespace dvvp
+} // namespace analysis
 #endif // ANALYSIS_DVVP_MESSAGE_PROFILE_PARAMS_H

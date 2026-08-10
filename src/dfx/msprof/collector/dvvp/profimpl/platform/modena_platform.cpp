@@ -22,48 +22,22 @@ constexpr uint16_t MAX_MODENA_MONITOR_NUM = 8;
 PLATFORM_REGISTER(CHIP_5162A, ModenaPlatform);
 ModenaPlatform::ModenaPlatform()
 {
-    supportedFeature_ = {
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        PLATFORM_TASK_TRACE,
-        PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_SWITCH,
-        PLATFORM_TASK_AIC_METRICS
-    };
+    supportedFeature_ = {PLATFORM_TASK_AU_PMU,       PLATFORM_TASK_PU_PMU,  PLATFORM_TASK_MEMORY_PMU,
+                         PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_RCR_PMU, PLATFORM_TASK_TRACE,
+                         PLATFORM_TASK_METRICS,      PLATFORM_TASK_SWITCH,  PLATFORM_TASK_AIC_METRICS};
 }
 
-std::string ModenaPlatform::GetPipeUtilizationMetrics()
-{
-    return MODENA_PIPEUTILIZATION;
-}
+std::string ModenaPlatform::GetPipeUtilizationMetrics() { return MODENA_PIPEUTILIZATION; }
 
-std::string ModenaPlatform::GetMemoryMetrics()
-{
-    return MODENA_MEMORY;
-}
+std::string ModenaPlatform::GetMemoryMetrics() { return MODENA_MEMORY; }
 
-std::string ModenaPlatform::GetMemoryUBMetrics()
-{
-    return MODENA_MEMORYUB;
-}
+std::string ModenaPlatform::GetMemoryUBMetrics() { return MODENA_MEMORYUB; }
 
-std::string ModenaPlatform::GetArithmeticUtilizationMetrics()
-{
-    return MODENA_ARITHMETICUTILIZATION;
-}
+std::string ModenaPlatform::GetArithmeticUtilizationMetrics() { return MODENA_ARITHMETICUTILIZATION; }
 
-std::string ModenaPlatform::GetResourceConflictRatioMetrics()
-{
-    return MODENA_RESOURCECONFLICTRATIO;
-}
+std::string ModenaPlatform::GetResourceConflictRatioMetrics() { return MODENA_RESOURCECONFLICTRATIO; }
 
-uint16_t ModenaPlatform::GetMaxMonitorNumber() const
-{
-    return MAX_MODENA_MONITOR_NUM;
-}
-}
-}
-}
+uint16_t ModenaPlatform::GetMaxMonitorNumber() const { return MAX_MODENA_MONITOR_NUM; }
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

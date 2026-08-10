@@ -27,7 +27,7 @@ namespace Adx {
  *        IDE_DAEMON_OK: succ
  *        IDE_DAEMON_ERROR: failed
  */
-int32_t IdeRead(const struct IdeTransChannel &handle, IdeRecvBuffT readBuf, IdeI32Pt readLen, int32_t flag)
+int32_t IdeRead(const struct IdeTransChannel& handle, IdeRecvBuffT readBuf, IdeI32Pt readLen, int32_t flag)
 {
     int32_t err;
     if (readBuf == nullptr || readLen == nullptr) {
@@ -65,11 +65,7 @@ int32_t IdeRead(const struct IdeTransChannel &handle, IdeRecvBuffT readBuf, IdeI
  *        IDE_DAEMON_OK: succ
  *        IDE_DAEMON_ERROR: failed
  */
-pid_t IdeFork(void)
-{
-    return fork();
-}
-
+pid_t IdeFork(void) { return fork(); }
 
 /**
  * @brief provides control for (file) descriptors.
@@ -81,10 +77,7 @@ pid_t IdeFork(void)
  *        IDE_DAEMON_OK: succ
  *        IDE_DAEMON_ERROR: failed
  */
-int32_t IdeFcntl(int32_t fd, int32_t cmd, long arg)
-{
-    return fcntl(fd, cmd, arg);
-}
+int32_t IdeFcntl(int32_t fd, int32_t cmd, long arg) { return fcntl(fd, cmd, arg); }
 
 /**
  * @brief provides control for (file) descriptors.
@@ -96,10 +89,7 @@ int32_t IdeFcntl(int32_t fd, int32_t cmd, long arg)
  *        0: succ
  *        low 0: failed
  */
-int32_t IdeLockFcntl(int32_t fd, int32_t cmd, const struct flock &lock)
-{
-    return fcntl(fd, cmd, &lock);
-}
+int32_t IdeLockFcntl(int32_t fd, int32_t cmd, const struct flock& lock) { return fcntl(fd, cmd, &lock); }
 
 /**
  * @brief get homedir
@@ -109,9 +99,8 @@ int32_t IdeLockFcntl(int32_t fd, int32_t cmd, const struct flock &lock)
  */
 std::string IdeGetHomeDir()
 {
-    struct passwd *pw = getpwuid(getuid());
-    if (pw != nullptr && pw->pw_dir != nullptr && strlen(pw->pw_dir) > 0 &&
-        strlen(pw->pw_dir) < MMPA_MAX_PATH) {
+    struct passwd* pw = getpwuid(getuid());
+    if (pw != nullptr && pw->pw_dir != nullptr && strlen(pw->pw_dir) > 0 && strlen(pw->pw_dir) < MMPA_MAX_PATH) {
         return pw->pw_dir;
     }
 
@@ -150,4 +139,4 @@ int32_t IdeRealFileRemove(IdeString file)
     IDE_XFREE_AND_SET_NULL(actualPath);
     return IDE_DAEMON_OK;
 }
-}
+} // namespace Adx

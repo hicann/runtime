@@ -21,7 +21,7 @@ using namespace analysis::dvvp::common::config;
 const std::string API_STATS_TOTAL_TIME_FILE = "acl_api_total_time.csv";
 const std::string API_STATS_STATISTICS_FILE = "acl_api_statistics.csv";
 
-StatsAnalyzer::StatsAnalyzer(const std::string &path): inited_(false), storePath_(path)
+StatsAnalyzer::StatsAnalyzer(const std::string& path) : inited_(false), storePath_(path)
 {
     MSVP_MAKE_SHARED0(statsAnalyzerApi_, StatsAnalyzerApi, return);
     statsAnalyzerApi_->InitFrequency();
@@ -71,7 +71,8 @@ void StatsAnalyzer::FlushApiData()
         WriteTotalTimeTitle(csvFile);
         WriteTotalTimeData(csvFile);
     } else {
-        MSPROF_LOGE("Failed to open total time file, path: %s, name: %s.", storePath_.c_str(),
+        MSPROF_LOGE(
+            "Failed to open total time file, path: %s, name: %s.", storePath_.c_str(),
             API_STATS_TOTAL_TIME_FILE.c_str());
         return;
     }
@@ -84,14 +85,15 @@ void StatsAnalyzer::FlushApiData()
         WriteStatisticsTitle(csvFile);
         WriteStatisticsData(csvFile);
     } else {
-        MSPROF_LOGE("Failed to open statistics file, path: %s, name: %s.", storePath_.c_str(),
+        MSPROF_LOGE(
+            "Failed to open statistics file, path: %s, name: %s.", storePath_.c_str(),
             API_STATS_STATISTICS_FILE.c_str());
         return;
     }
     csvFile.close();
 }
 
-std::string StatsAnalyzer::CreateStatsFile(const std::string &name)
+std::string StatsAnalyzer::CreateStatsFile(const std::string& name)
 {
     MSPROF_LOGI("Create stats file, path: %s, name: %s.", storePath_.c_str(), name.c_str());
     std::string fileName = storePath_ + name;
@@ -100,8 +102,8 @@ std::string StatsAnalyzer::CreateStatsFile(const std::string &name)
     FUNRET_CHECK_EXPR_ACTION(fd < 0, return "", "Failed to create or open total time file: %s.", fileName.c_str());
     (void)OsalClose(fd);
     fileName = Utils::CanonicalizePath(fileName);
-    FUNRET_CHECK_EXPR_ACTION(fileName.empty(), return "",
-        "The fileName path: %s does not exist or permission denied.", fileName.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        fileName.empty(), return "", "The fileName path: %s does not exist or permission denied.", fileName.c_str());
     return fileName;
 }
 
@@ -117,15 +119,9 @@ void StatsAnalyzer::WriteStatisticsTitle(std::ofstream& file)
     file << std::endl;
 }
 
-void StatsAnalyzer::WriteTotalTimeData(std::ofstream& file)
-{
-    statsAnalyzerApi_->GenerateTotalTimeData(file);
-}
+void StatsAnalyzer::WriteTotalTimeData(std::ofstream& file) { statsAnalyzerApi_->GenerateTotalTimeData(file); }
 
-void StatsAnalyzer::WriteStatisticsData(std::ofstream& file)
-{
-    statsAnalyzerApi_->GenerateStatisticsData(file);
-}
-}
-}
-}
+void StatsAnalyzer::WriteStatisticsData(std::ofstream& file) { statsAnalyzerApi_->GenerateStatisticsData(file); }
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

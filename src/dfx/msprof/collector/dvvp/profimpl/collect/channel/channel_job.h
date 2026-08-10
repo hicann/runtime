@@ -17,7 +17,7 @@ namespace JobWrapper {
 constexpr int32_t STRING_TO_LONG_WEIGHT = 16;
 struct ProfChannelParam {
     ProfChannelParam() : userData(nullptr), dataSize(0), period(0) {}
-    void *userData;
+    void* userData;
     uint32_t dataSize;
     uint32_t period;
 };
@@ -25,16 +25,17 @@ struct ProfChannelParam {
 class ChannelJob : public Analysis::Dvvp::JobWrapper::ICollectionJob {
 public:
     ChannelJob();
-    ChannelJob(int32_t collectionId, const std::string &name);
+    ChannelJob(int32_t collectionId, const std::string& name);
     ~ChannelJob() override;
+
 protected:
-    int32_t ChannelStart(int32_t devId, int32_t channelId, const ProfChannelParam &param) const;
-    void AddReader(int32_t devId, int32_t channelId, const std::string &filePath);
+    int32_t ChannelStart(int32_t devId, int32_t channelId, const ProfChannelParam& param) const;
+    void AddReader(int32_t devId, int32_t channelId, const std::string& filePath);
     void RemoveReader(int32_t devId, int32_t channelId) const;
 
     SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> cfg_;
 };
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Collect
+} // namespace Dvvp
 #endif

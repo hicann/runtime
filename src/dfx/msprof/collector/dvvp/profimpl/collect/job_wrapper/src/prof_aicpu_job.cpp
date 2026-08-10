@@ -17,12 +17,15 @@ namespace Dvvp {
 namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
-const char * const AICPU_EVENT_GRP_NAME = "prof_aicpu_grp";
-const char * const AI_CUSTOM_CPU_EVENT_GRP_NAME = "prof_cus_grp";
+const char* const AICPU_EVENT_GRP_NAME = "prof_aicpu_grp";
+const char* const AI_CUSTOM_CPU_EVENT_GRP_NAME = "prof_cus_grp";
 
-ProfAicpuJob::ProfAicpuJob() : channelId_(PROF_CHANNEL_AICPU), eventGrpName_(AICPU_EVENT_GRP_NAME),
-    eventAttr_{0, channelId_, AICPU_COLLECTION_JOB, false, false, false, false, 0, false, false, nullptr},
-    processCount_(0) {}
+ProfAicpuJob::ProfAicpuJob()
+    : channelId_(PROF_CHANNEL_AICPU),
+      eventGrpName_(AICPU_EVENT_GRP_NAME),
+      eventAttr_{0, channelId_, AICPU_COLLECTION_JOB, false, false, false, false, 0, false, false, nullptr},
+      processCount_(0)
+{}
 
 ProfAicpuJob::~ProfAicpuJob()
 {
@@ -57,7 +60,8 @@ int32_t ProfAicpuJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
             static_cast<int32_t>(channelId_));
         eventAttr_.deviceId = collectionJobCfg_->comParams->devId;
         eventAttr_.grpName = eventGrpName_.c_str();
@@ -145,8 +149,8 @@ bool ProfAicpuJob::CheckMC2Switch(void)
     // MC2 check prof_level >= L1 (L1 or L2)
     if (Platform::instance()->CheckIfSupport(PLATFORM_MC2) &&
         ((collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L1) == 0) ||
-        (collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L2) == 0) ||
-        (collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L3) == 0))) {
+         (collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L2) == 0) ||
+         (collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L3) == 0))) {
         return true;
     }
 
@@ -175,6 +179,6 @@ ProfAiCustomCpuJob::ProfAiCustomCpuJob()
     eventAttr_.channelId = channelId_;
     eventAttr_.jobTag = AI_CUSTOM_CPU_COLLECTION_JOB;
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

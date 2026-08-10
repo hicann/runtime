@@ -19,15 +19,16 @@ namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Common::Platform;
 const std::string LIBTSD_LIB_PATH = "libtsdclient.so";
-const char * const ADPROF_EVENT_MSG_GRP_NAME = "prof_adprof_grp";
+const char* const ADPROF_EVENT_MSG_GRP_NAME = "prof_adprof_grp";
 constexpr uint32_t PROCESS_NUM = 1;
 
-ProfAdprofJob::ProfAdprofJob() : channelId_(PROF_CHANNEL_ADPROF),
-    procStatusParam_{0, TSD_SUB_PROC_ADPROF, SUB_PROCESS_STATUS_MAX},
-    eventAttr_{0, channelId_, ADPROF_COLLECTION_JOB, false, false, false, false, 0, false, false, nullptr},
-    processCount_(0), phyId_(0)
-{
-}
+ProfAdprofJob::ProfAdprofJob()
+    : channelId_(PROF_CHANNEL_ADPROF),
+      procStatusParam_{0, TSD_SUB_PROC_ADPROF, SUB_PROCESS_STATUS_MAX},
+      eventAttr_{0, channelId_, ADPROF_COLLECTION_JOB, false, false, false, false, 0, false, false, nullptr},
+      processCount_(0),
+      phyId_(0)
+{}
 
 ProfAdprofJob::~ProfAdprofJob()
 {
@@ -44,8 +45,8 @@ int32_t ProfAdprofJob::InitAdprof()
     }
 
     bool result = false;
-    uint32_t ret = tsdCapabilityGet_(collectionJobCfg_->comParams->devId, TSD_CAPABILITY_ADPROF,
-                                     reinterpret_cast<uint64_t>(&result));
+    uint32_t ret = tsdCapabilityGet_(
+        collectionJobCfg_->comParams->devId, TSD_CAPABILITY_ADPROF, reinterpret_cast<uint64_t>(&result));
     if (ret != tsd::TSD_OK || !result) {
         MSPROF_LOGW("Tsd client not support adprof");
         return PROFILING_FAILED;
@@ -75,8 +76,9 @@ int32_t ProfAdprofJob::InitAdprof()
         return PROFILING_FAILED;
     }
     if (procStatusParam_.curStat != SUB_PROCESS_STATUS_NORMAL) {
-        MSPROF_LOGE("Adprof status '%d' not normal, devId:%d",
-            static_cast<int32_t>(procStatusParam_.curStat), collectionJobCfg_->comParams->devId);
+        MSPROF_LOGE(
+            "Adprof status '%d' not normal, devId:%d", static_cast<int32_t>(procStatusParam_.curStat),
+            collectionJobCfg_->comParams->devId);
         return PROFILING_FAILED;
     }
 
@@ -100,14 +102,14 @@ int32_t ProfAdprofJob::LoadTsdApi()
         MSPROF_LOGE("Failed to dlsym TsdProcessOpen");
         return PROFILING_FAILED;
     }
-    tsdGetProcListStatus_ = reinterpret_cast<TsdGetProcListStatusFunc>(OsalDlsym(tsdLibHandle_,
-                                                                                 "TsdGetProcListStatus"));
+    tsdGetProcListStatus_ =
+        reinterpret_cast<TsdGetProcListStatusFunc>(OsalDlsym(tsdLibHandle_, "TsdGetProcListStatus"));
     if (tsdGetProcListStatus_ == nullptr) {
         MSPROF_LOGE("Failed to dlsym TsdGetProcListStatus");
         return PROFILING_FAILED;
     }
-    processCloseSubProcList_ = reinterpret_cast<ProcessCloseSubProcListFunc>(OsalDlsym(tsdLibHandle_,
-                                                                                       "ProcessCloseSubProcList"));
+    processCloseSubProcList_ =
+        reinterpret_cast<ProcessCloseSubProcListFunc>(OsalDlsym(tsdLibHandle_, "ProcessCloseSubProcList"));
     if (processCloseSubProcList_ == nullptr) {
         MSPROF_LOGE("Failed to dlsym ProcessCloseSubProcList");
         return PROFILING_FAILED;
@@ -115,7 +117,7 @@ int32_t ProfAdprofJob::LoadTsdApi()
     return PROFILING_SUCCESS;
 }
 
-void ProfAdprofJob::BuildSysProfCmdArg(ProcOpenArgs &procOpenArgs)
+void ProfAdprofJob::BuildSysProfCmdArg(ProcOpenArgs& procOpenArgs)
 {
     cmdVec_.emplace_back("adprof");
     cmdVec_.emplace_back("host_pid:" + std::to_string(Utils::GetPid()));
@@ -124,21 +126,21 @@ void ProfAdprofJob::BuildSysProfCmdArg(ProcOpenArgs &procOpenArgs)
     if (collectionJobCfg_->comParams->params->cpu_profiling == MSVP_PROF_ON) {
         cmdVec_.emplace_back("cpu_profiling:" + collectionJobCfg_->comParams->params->cpu_profiling);
         cmdVec_.emplace_back("aiCtrlCpuProfiling:" + collectionJobCfg_->comParams->params->aiCtrlCpuProfiling);
-        cmdVec_.emplace_back("ai_ctrl_cpu_profiling_events:" +
-            collectionJobCfg_->comParams->params->ai_ctrl_cpu_profiling_events);
-        cmdVec_.emplace_back("cpu_sampling_interval:" +
-            std::to_string(collectionJobCfg_->comParams->params->cpu_sampling_interval));
+        cmdVec_.emplace_back(
+            "ai_ctrl_cpu_profiling_events:" + collectionJobCfg_->comParams->params->ai_ctrl_cpu_profiling_events);
+        cmdVec_.emplace_back(
+            "cpu_sampling_interval:" + std::to_string(collectionJobCfg_->comParams->params->cpu_sampling_interval));
         cmdVec_.emplace_back("hscb:" + collectionJobCfg_->comParams->params->hscb);
     }
     if (collectionJobCfg_->comParams->params->sys_profiling == MSVP_PROF_ON) {
         cmdVec_.emplace_back("sys_profiling:" + collectionJobCfg_->comParams->params->sys_profiling);
-        cmdVec_.emplace_back("sys_sampling_interval:" +
-            std::to_string(collectionJobCfg_->comParams->params->sys_sampling_interval));
+        cmdVec_.emplace_back(
+            "sys_sampling_interval:" + std::to_string(collectionJobCfg_->comParams->params->sys_sampling_interval));
     }
     if (collectionJobCfg_->comParams->params->pid_profiling == MSVP_PROF_ON) {
         cmdVec_.emplace_back("pid_profiling:" + collectionJobCfg_->comParams->params->pid_profiling);
-        cmdVec_.emplace_back("pid_sampling_interval:" +
-            std::to_string(collectionJobCfg_->comParams->params->pid_sampling_interval));
+        cmdVec_.emplace_back(
+            "pid_sampling_interval:" + std::to_string(collectionJobCfg_->comParams->params->pid_sampling_interval));
     }
     params_.reserve(cmdVec_.size());
     for (uint32_t i = 0; i < cmdVec_.size(); i++) {
@@ -180,7 +182,8 @@ int32_t ProfAdprofJob::Process()
 void ProfAdprofJob::CloseAdprof() const
 {
     uint32_t ret = processCloseSubProcList_(collectionJobCfg_->comParams->devId, &procStatusParam_, PROCESS_NUM);
-    FUNRET_CHECK_EXPR_LOGW(ret != tsd::TSD_OK && ret != tsd::TSD_HDC_CLIENT_CLOSED_EXTERNAL, 
+    FUNRET_CHECK_EXPR_LOGW(
+        ret != tsd::TSD_OK && ret != tsd::TSD_HDC_CLIENT_CLOSED_EXTERNAL,
         "Close adprof process unexpectedly, ret:%u devId:%d", ret, collectionJobCfg_->comParams->devId);
 }
 
@@ -218,8 +221,7 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
     CHECK_JOB_COMMON_PARAM_RET(cfg, return PROFILING_FAILED);
 
-    if (!cfg->comParams->params->app.empty() && 
-        cfg->comParams->params->hscb != MSVP_PROF_ON) {
+    if (!cfg->comParams->params->app.empty() && cfg->comParams->params->hscb != MSVP_PROF_ON) {
         MSPROF_LOGI("App mode not collect system level data");
         return PROFILING_FAILED;
     }
@@ -229,7 +231,8 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         return PROFILING_FAILED;
     }
 
-    if (cfg->comParams->params->cpu_profiling != MSVP_PROF_ON && cfg->comParams->params->sys_profiling != MSVP_PROF_ON &&
+    if (cfg->comParams->params->cpu_profiling != MSVP_PROF_ON &&
+        cfg->comParams->params->sys_profiling != MSVP_PROF_ON &&
         cfg->comParams->params->pid_profiling != MSVP_PROF_ON) {
         MSPROF_LOGI("Switch cpu_profiling & sys_profiling & pid_profiling are off");
         return PROFILING_FAILED;
@@ -238,11 +241,11 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     if (!Platform::instance()->CheckIfSupportAdprof(static_cast<uint32_t>(cfg->comParams->devId)) ||
         (Platform::instance()->GetPlatformType() == CHIP_MINI_V3)
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || (Platform::instance()->GetPlatformType() == CHIP_MDC)
-        || (Platform::instance()->GetPlatformType() == CHIP_MDC_LITE)
-        || (Platform::instance()->GetPlatformType() == CHIP_MDC_MINI_V3)
+        || (Platform::instance()->GetPlatformType() == CHIP_MDC) ||
+        (Platform::instance()->GetPlatformType() == CHIP_MDC_LITE) ||
+        (Platform::instance()->GetPlatformType() == CHIP_MDC_MINI_V3)
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ) {
+    ) {
         MSPROF_LOGI("Drv version is not supported adprof");
         return PROFILING_FAILED;
     }
@@ -254,14 +257,15 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
             MSPROF_LOGW("[ProfAdprofJob]Driver not support drvDeviceGetPhyIdByIndex interface.");
             phyId_ = static_cast<uint32_t>(cfg->comParams->devId);
         } else {
-            MSPROF_LOGE("[ProfAdprofJob]Failed to get phyId by devId: %u, err: %d.",
+            MSPROF_LOGE(
+                "[ProfAdprofJob]Failed to get phyId by devId: %u, err: %d.",
                 static_cast<uint32_t>(cfg->comParams->devId), err);
             return PROFILING_FAILED;
         }
     }
 
-    MSPROF_LOGI("[ProfAdprofJob]Adprof get phyId: %u by devId: %u.", phyId_,
-        static_cast<uint32_t>(cfg->comParams->devId));
+    MSPROF_LOGI(
+        "[ProfAdprofJob]Adprof get phyId: %u by devId: %u.", phyId_, static_cast<uint32_t>(cfg->comParams->devId));
     collectionJobCfg_ = cfg;
     int32_t ret = InitAdprof();
     if (ret != PROFILING_SUCCESS) {
@@ -271,6 +275,6 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 
     return PROFILING_SUCCESS;
 }
-}  // namespace JobWrapper
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

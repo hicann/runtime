@@ -20,7 +20,7 @@ public:
     TinyV1Platform();
     ~TinyV1Platform() override {}
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

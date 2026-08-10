@@ -21,19 +21,20 @@ struct Context {
     std::string secondStage;
     std::string logHeader;
 };
-}
+} // namespace error_message
 namespace Analysis {
 namespace Dvvp {
 namespace MsprofErrMgr {
 
 class MsprofErrorManager : public analysis::dvvp::common::singleton::Singleton<MsprofErrorManager> {
 public:
-    error_message::Context &GetErrorManagerContext() const;
+    error_message::Context& GetErrorManagerContext() const;
     void SetErrorContext(const error_message::Context errorContext) const;
     MsprofErrorManager() {}
     ~MsprofErrorManager() override {}
-    void ReportErrorMessage(const std::string errorCode, const std::vector<std::string> &keys = {},
-        const std::vector<std::string> &values = {}) const;
+    void ReportErrorMessage(
+        const std::string errorCode, const std::vector<std::string>& keys = {},
+        const std::vector<std::string>& values = {}) const;
 
 private:
     static error_message::Context errorContext_;
@@ -45,7 +46,7 @@ private:
 #define MSPROF_ENV_ERROR MSPROF_INPUT_ERROR
 #define MSPROF_INNER_ERROR REPORT_INNER_ERROR
 #define MSPROF_CALL_ERROR MSPROF_INNER_ERROR
-}  // ErrorManager
-}  // Dvvp
-}  // namespace Analysis
+} // namespace MsprofErrMgr
+} // namespace Dvvp
+} // namespace Analysis
 #endif

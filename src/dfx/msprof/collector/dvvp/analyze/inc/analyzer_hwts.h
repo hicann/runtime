@@ -28,7 +28,7 @@ public:
     ~AnalyzerHwts() {}
 
 public:
-    bool IsHwtsData(const std::string &fileName);
+    bool IsHwtsData(const std::string& fileName);
     void HwtsParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
 
 private:
@@ -40,13 +40,13 @@ private:
 private:
     uint64_t opTimeCount_;
     uint64_t opRepeatCount_;
-    std::map<std::string, OpTime> opTimeDrafts_;  // stores incomplete data
-    std::multimap<std::string, OpTime> opTimes_;  // key is taskId-streamId-contextId
+    std::map<std::string, OpTime> opTimeDrafts_; // stores incomplete data
+    std::multimap<std::string, OpTime> opTimes_; // key is taskId-streamId-contextId
     uint32_t totalHwtsTimes_;
     uint32_t totalHwtsMerges_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

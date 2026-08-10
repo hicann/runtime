@@ -26,9 +26,12 @@ class JobSocFactory : public JobFactory {
 public:
     JobSocFactory();
     ~JobSocFactory() override;
+
 public:
     SHARED_PTR_ALIA<JobAdapter> CreateJobAdapter(int32_t devIndexId) const;
 };
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

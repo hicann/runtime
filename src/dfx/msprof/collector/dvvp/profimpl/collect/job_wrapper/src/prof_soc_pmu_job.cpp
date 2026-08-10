@@ -32,7 +32,7 @@ int32_t ProfSocPmuTaskJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 
     collectionJobCfg_ = cfg;
     if (collectionJobCfg_->comParams->params->l2CacheTaskProfiling.compare(
-        analysis::dvvp::common::config::MSVP_PROF_ON) != 0 ||
+            analysis::dvvp::common::config::MSVP_PROF_ON) != 0 ||
         collectionJobCfg_->comParams->params->npuEvents.empty() ||
         !Platform::instance()->CheckIfSupport(PLATFORM_TASK_SOC_PMU)) {
         MSPROF_LOGI("ProfSocPmuTaskJob not enabled");
@@ -46,23 +46,23 @@ int32_t ProfSocPmuTaskJob::Process()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_SOC_PMU);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU);
         return PROFILING_SUCCESS;
     }
 
-    MSPROF_LOGI("Begin to start profiling soc pmu task, events:%s",
-        collectionJobCfg_->comParams->params->npuEvents.c_str());
+    MSPROF_LOGI(
+        "Begin to start profiling soc pmu task, events:%s", collectionJobCfg_->comParams->params->npuEvents.c_str());
     std::string filePath = BindFileWithChannel(collectionJobCfg_->jobParams.dataPath);
-    AddReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_SOC_PMU, filePath);
+    AddReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU,
+        filePath);
 
     int32_t ret = DrvSocPmuTaskStart(
-        collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_SOC_PMU,
-        collectionJobCfg_->comParams->params->npuEvents);
+        collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU, collectionJobCfg_->comParams->params->npuEvents);
     FUNRET_CHECK_RET_VAL(ret != PROFILING_SUCCESS);
-    MSPROF_LOGI("Success to start profiling soc pmu task, events:%s, ret:%d",
+    MSPROF_LOGI(
+        "Success to start profiling soc pmu task, events:%s, ret:%d",
         collectionJobCfg_->comParams->params->npuEvents.c_str(), ret);
     return ret;
 }
@@ -71,21 +71,21 @@ int32_t ProfSocPmuTaskJob::Uninit()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_SUCCESS);
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            PROF_CHANNEL_SOC_PMU);
+        MSPROF_LOGW(
+            "Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU);
         return PROFILING_SUCCESS;
     }
 
     const int32_t ret = DrvStop(collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU);
-    MSPROF_LOGI("stop profiling soc pmu task, events:%s, ret:%d",
-        collectionJobCfg_->comParams->params->npuEvents.c_str(), ret);
+    MSPROF_LOGI(
+        "stop profiling soc pmu task, events:%s, ret:%d", collectionJobCfg_->comParams->params->npuEvents.c_str(), ret);
 
-    RemoveReader(collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId,
-        PROF_CHANNEL_SOC_PMU);
+    RemoveReader(
+        collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->devId, PROF_CHANNEL_SOC_PMU);
     collectionJobCfg_->jobParams.events.reset();
     return PROFILING_SUCCESS;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

@@ -17,13 +17,9 @@ namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 
-ProfHwtsLogJob::ProfHwtsLogJob() : channelId_(PROF_CHANNEL_HWTS_LOG)
-{
-}
+ProfHwtsLogJob::ProfHwtsLogJob() : channelId_(PROF_CHANNEL_HWTS_LOG) {}
 
-ProfHwtsLogJob::~ProfHwtsLogJob()
-{
-}
+ProfHwtsLogJob::~ProfHwtsLogJob() {}
 
 int32_t ProfHwtsLogJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -44,13 +40,12 @@ int32_t ProfHwtsLogJob::Process()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
 
-    MSPROF_LOGI("[ProfHwtsLogJob]Process, hwts_log:%s, aiv_hwts_log:%s",
-        collectionJobCfg_->comParams->params->hwts_log.c_str(),
+    MSPROF_LOGI(
+        "[ProfHwtsLogJob]Process, hwts_log:%s, aiv_hwts_log:%s", collectionJobCfg_->comParams->params->hwts_log.c_str(),
         collectionJobCfg_->comParams->params->hwts_log1.c_str());
 
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            channelId_);
+        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, channelId_);
         return PROFILING_SUCCESS;
     }
     MSPROF_LOGI("Begin to start profiling hwts log");
@@ -69,13 +64,12 @@ int32_t ProfHwtsLogJob::Uninit()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_SUCCESS);
 
-    MSPROF_LOGI("[ProfHwtsLogJob]Uninit, hwts_log:%s, aiv_hwts_log:%s",
-        collectionJobCfg_->comParams->params->hwts_log.c_str(),
+    MSPROF_LOGI(
+        "[ProfHwtsLogJob]Uninit, hwts_log:%s, aiv_hwts_log:%s", collectionJobCfg_->comParams->params->hwts_log.c_str(),
         collectionJobCfg_->comParams->params->hwts_log1.c_str());
 
     if (!DrvChannelsMgr::instance()->ChannelIsValid(collectionJobCfg_->comParams->devId, channelId_)) {
-        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId,
-            channelId_);
+        MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", collectionJobCfg_->comParams->devId, channelId_);
         return PROFILING_SUCCESS;
     }
     MSPROF_LOGI("begin to stop profiling hwts_log data");
@@ -109,6 +103,6 @@ int32_t ProfAivHwtsLogJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     return PROFILING_SUCCESS;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

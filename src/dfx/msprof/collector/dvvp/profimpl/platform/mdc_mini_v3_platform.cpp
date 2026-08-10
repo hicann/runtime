@@ -16,17 +16,13 @@ PLATFORM_REGISTER(CHIP_MDC_MINI_V3, MdcMiniV3Platform);
 MdcMiniV3Platform::MdcMiniV3Platform()
 {
     const std::vector<PlatformFeature> unsupportFeature = {
-        PLATFORM_TASK_AICPU,
-        PLATFORM_TASK_BLOCK,
-        PLATFORM_SYS_DEVICE_NIC,
-        PLATFORM_TASK_AICORE_LPM,
-        PLATFORM_TASK_DYNAMIC,
-        PLATFORM_TASK_DELAY_DURATION,
+        PLATFORM_TASK_AICPU,      PLATFORM_TASK_BLOCK,   PLATFORM_SYS_DEVICE_NIC,
+        PLATFORM_TASK_AICORE_LPM, PLATFORM_TASK_DYNAMIC, PLATFORM_TASK_DELAY_DURATION,
     };
     for (PlatformFeature feature : unsupportFeature) {
         supportedFeature_.erase(feature);
     }
 }
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

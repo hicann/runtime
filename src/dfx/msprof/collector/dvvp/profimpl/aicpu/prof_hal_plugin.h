@@ -15,23 +15,23 @@
 #include "prof_hal_api.h"
 
 namespace ProfAPI {
-using VOID_PTR = void *;
-using CONST_VOID_PTR = const void *;
+using VOID_PTR = void*;
+using CONST_VOID_PTR = const void*;
 
-using ProfHalInitFunc = int32_t (*) (uint32_t moduleType, const void *moduleConfig, uint32_t length);
-using ProfHalGetVersionFunc = int32_t (*) (uint32_t *version);
-using ProfHalFinalFunc = int32_t (*) ();
-using ProfHalFlushModuleFunc = void (*) (const ProfHalFlushModuleCallback func);
-using ProfHalSendDataFunc = int32_t (*) (const ProfHalSendAicpuDataCallback func);
-using ProfHalHelperDirFunc = int32_t (*) (const ProfHalHelperDirCallback func);
-using ProfHalSendHelperDataFunc = int32_t (*) (const ProfHalSendHelperDataCallback func);
+using ProfHalInitFunc = int32_t (*)(uint32_t moduleType, const void* moduleConfig, uint32_t length);
+using ProfHalGetVersionFunc = int32_t (*)(uint32_t* version);
+using ProfHalFinalFunc = int32_t (*)();
+using ProfHalFlushModuleFunc = void (*)(const ProfHalFlushModuleCallback func);
+using ProfHalSendDataFunc = int32_t (*)(const ProfHalSendAicpuDataCallback func);
+using ProfHalHelperDirFunc = int32_t (*)(const ProfHalHelperDirCallback func);
+using ProfHalSendHelperDataFunc = int32_t (*)(const ProfHalSendHelperDataCallback func);
 
 class ProfHalPlugin : public analysis::dvvp::common::singleton::Singleton<ProfHalPlugin> {
 public:
     ~ProfHalPlugin() override;
     void ProfHalApiInit();
-    int32_t ProfHalInit(uint32_t moduleType, const void *moduleConfig, uint32_t length);
-    int32_t ProfHalGetVersion(uint32_t *version) const;
+    int32_t ProfHalInit(uint32_t moduleType, const void* moduleConfig, uint32_t length);
+    int32_t ProfHalGetVersion(uint32_t* version) const;
     int32_t ProfHalFinal() const;
     void ProfHalFlushModuleRegister(const ProfHalFlushModuleCallback func) const;
     void ProfHalSendDataRegister(const ProfHalSendAicpuDataCallback func) const;
@@ -51,5 +51,5 @@ private:
     ProfHalHelperDirFunc profHalHelperDir_;
     ProfHalSendHelperDataFunc profHalSendHelperData_;
 };
-}
+} // namespace ProfAPI
 #endif

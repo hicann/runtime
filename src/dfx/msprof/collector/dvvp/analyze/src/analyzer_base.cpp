@@ -74,7 +74,7 @@ void AnalyzerBase::BufferRemainingData(uint32_t offset)
 int32_t AnalyzerBase::InitFrequency()
 {
     std::string freq = Analysis::Dvvp::Common::Config::ConfigManager::instance()->GetFrequency();
-    frequency_ = std::stod(freq) / 1000;  // 1000: mhz to ghz, syscnt * (1 / ghz) = ns
+    frequency_ = std::stod(freq) / 1000; // 1000: mhz to ghz, syscnt * (1 / ghz) = ns
     if (frequency_ <= 0) {
         MSPROF_LOGE("init freqency failed. freq %s mhz, frequency_ %f ghz", freq.c_str(), frequency_);
         return PROFILING_FAILED;
@@ -84,18 +84,18 @@ int32_t AnalyzerBase::InitFrequency()
     }
 }
 
-void AnalyzerBase::EraseRtMapByStreamId(uint16_t streamId, std::map<std::string, RtOpInfo> &rtOpInfo) const
+void AnalyzerBase::EraseRtMapByStreamId(uint16_t streamId, std::map<std::string, RtOpInfo>& rtOpInfo) const
 {
     for (auto iter = rtOpInfo.begin(); iter != rtOpInfo.end();) {
         const auto pos = iter->first.find(KEY_SEPARATOR);
         int32_t iterStreamIdInt = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(iterStreamIdInt, iter->first.substr(pos + 1)), continue, 
-            "iterStreamId %s is invalid", iter->first.substr(pos + 1).c_str());
         FUNRET_CHECK_EXPR_ACTION(
-                iterStreamIdInt > std::numeric_limits<uint16_t>::max() ||
+            !Utils::StrToInt32(iterStreamIdInt, iter->first.substr(pos + 1)), continue, "iterStreamId %s is invalid",
+            iter->first.substr(pos + 1).c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            iterStreamIdInt > std::numeric_limits<uint16_t>::max() ||
                 iterStreamIdInt < std::numeric_limits<uint16_t>::min(),
-                continue, "iterStreamId %d is out of range", iterStreamIdInt
-            )
+            continue, "iterStreamId %d is out of range", iterStreamIdInt)
         if (static_cast<uint16_t>(iterStreamIdInt) != streamId) {
             iter++;
             continue;
@@ -104,11 +104,11 @@ void AnalyzerBase::EraseRtMapByStreamId(uint16_t streamId, std::map<std::string,
     }
 }
 
-void AnalyzerBase::HandleDeviceData(const std::string &key, RtOpInfo &devData, uint32_t &time) const
+void AnalyzerBase::HandleDeviceData(const std::string& key, RtOpInfo& devData, uint32_t& time) const
 {
     std::unique_lock<std::mutex> lk(AnalyzerBase::rtThreadMtx_);
     if (devData.start >= devData.end) {
-        MSPROF_LOGD("Device start end error, start: %" PRIu64 "ns, end: %" PRIu64"ns", devData.start, devData.end);
+        MSPROF_LOGD("Device start end error, start: %" PRIu64 "ns, end: %" PRIu64 "ns", devData.start, devData.end);
         AnalyzerBase::tsOpInfo_.erase(key);
         return;
     }
@@ -121,8 +121,9 @@ void AnalyzerBase::HandleDeviceData(const std::string &key, RtOpInfo &devData, u
 
     auto hostIter = AnalyzerBase::rtOpInfo_.find(key);
     if (hostIter == AnalyzerBase::rtOpInfo_.end()) {
-        MSPROF_LOGD("Device data not match runtime track, key: %s, start: %" PRIu64 "ns, end: %" PRIu64 "ns",
-            key.c_str(), devData.start, devData.end);
+        MSPROF_LOGD(
+            "Device data not match runtime track, key: %s, start: %" PRIu64 "ns, end: %" PRIu64 "ns", key.c_str(),
+            devData.start, devData.end);
         AnalyzerBase::tsTmpOpInfo_.insert(std::pair<std::string, RtOpInfo>(key, devData));
         AnalyzerBase::tsOpInfo_.erase(key);
         return;
@@ -131,20 +132,23 @@ void AnalyzerBase::HandleDeviceData(const std::string &key, RtOpInfo &devData, u
     devData.threadId = hostIter->second.threadId;
     devData.tsTrackTimeStamp = hostIter->second.tsTrackTimeStamp;
     time++;
-    MSPROF_LOGD("Success to merge runtime track and Hwts|Ffts data. timestamp: %" PRIu64 ", threadId: %u, "
+    MSPROF_LOGD(
+        "Success to merge runtime track and Hwts|Ffts data. timestamp: %" PRIu64 ", threadId: %u, "
         "taskId+streamId: %s, start: %" PRIu64 "ns, end: %" PRIu64 "ns, startAicore: %" PRIu64 ", endAicore: %" PRIu64
-        ", contextId: %u, age: %d", hostIter->second.tsTrackTimeStamp, devData.threadId, key.c_str(), devData.start,
-         devData.end, devData.startAicore, devData.endAicore, devData.contextId, hostIter->second.ageFlag);
+        ", contextId: %u, age: %d",
+        hostIter->second.tsTrackTimeStamp, devData.threadId, key.c_str(), devData.start, devData.end,
+        devData.startAicore, devData.endAicore, devData.contextId, hostIter->second.ageFlag);
     HandleUploadData(key, devData);
 }
 
-void AnalyzerBase::HandleUploadData(const std::string &key, const RtOpInfo &devData) const
+void AnalyzerBase::HandleUploadData(const std::string& key, const RtOpInfo& devData) const
 {
     std::unique_lock<std::mutex> lk(AnalyzerBase::geThreadMtx_);
 
     AnalyzerBase::devTmpOpInfo_.emplace_back(std::move(devData));
     if (AnalyzerBase::geOpInfo_.empty()) {
-        MSPROF_LOGD("Ge opInfo is empty, drop data key: %s, threadId: %u, tsTrackTimeStamp: %" PRIu64, key.c_str(),
+        MSPROF_LOGD(
+            "Ge opInfo is empty, drop data key: %s, threadId: %u, tsTrackTimeStamp: %" PRIu64, key.c_str(),
             devData.threadId, devData.tsTrackTimeStamp);
         AnalyzerBase::tsOpInfo_.erase(key);
         return;
@@ -165,7 +169,7 @@ void AnalyzerBase::HandleUploadData(const std::string &key, const RtOpInfo &devD
     AnalyzerBase::tsOpInfo_.erase(key);
 }
 
-void AnalyzerBase::ConstructAndUploadOptimizeData(GeOpFlagInfo &opFlagData, const RtOpInfo &rtTsOpdata) const
+void AnalyzerBase::ConstructAndUploadOptimizeData(GeOpFlagInfo& opFlagData, const RtOpInfo& rtTsOpdata) const
 {
     ProfOpDesc opDesc;
     const auto ret = memset_s(&opDesc, sizeof(ProfOpDesc), 0, sizeof(ProfOpDesc));
@@ -193,9 +197,10 @@ void AnalyzerBase::ConstructAndUploadOptimizeData(GeOpFlagInfo &opFlagData, cons
         opDesc.flag = ACL_SUBSCRIBE_SUBGRAPH;
     }
     opDesc.executionTime = rtTsOpdata.endAicore - rtTsOpdata.startAicore;
-    MSPROF_LOGD("Upload opt data push to vector. modelId: %u ,threadId: %u, duration: %" PRIu64 ", executionTime: %"
-        PRIu64 ", opName: %s, opType: %s", opDesc.modelId, opDesc.threadId, opDesc.duration, opDesc.executionTime,
-        opName.c_str(), opType.c_str());
+    MSPROF_LOGD(
+        "Upload opt data push to vector. modelId: %u ,threadId: %u, duration: %" PRIu64 ", executionTime: %" PRIu64
+        ", opName: %s, opType: %s",
+        opDesc.modelId, opDesc.threadId, opDesc.duration, opDesc.executionTime, opName.c_str(), opType.c_str());
     std::unique_lock<std::mutex> lk(opDescInfoMtx_);
     AnalyzerBase::opDescInfos_.emplace_back(std::move(opDesc));
 }
@@ -223,6 +228,6 @@ bool AnalyzerBase::IsExtPmu() const
     }
     return false;
 }
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

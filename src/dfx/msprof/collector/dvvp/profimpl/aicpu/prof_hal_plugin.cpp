@@ -15,7 +15,7 @@ namespace ProfAPI {
 const std::string ASCEND_PROF_LIB_PATH = "libascendprofhal.so";
 
 template <class T>
-inline T LoadDlsymApi(VOID_PTR hanle, const std::string &name)
+inline T LoadDlsymApi(VOID_PTR hanle, const std::string& name)
 {
     return reinterpret_cast<T>(OsalDlsym(hanle, name.c_str()));
 }
@@ -37,7 +37,7 @@ void ProfHalPlugin::ProfHalApiInit()
         msProfLibHandle_ = OsalDlopen(ASCEND_PROF_LIB_PATH.c_str(), OSAL_RTLD_LAZY | RTLD_NODELETE);
     }
     if (msProfLibHandle_ != nullptr) {
-        PthreadOnce(&profHalApiLoadFlag_, []()-> void { ProfHalPlugin::instance()->LoadHalApi();});
+        PthreadOnce(&profHalApiLoadFlag_, []() -> void { ProfHalPlugin::instance()->LoadHalApi(); });
     }
     return;
 }
@@ -50,11 +50,11 @@ void ProfHalPlugin::LoadHalApi()
     profHalFlush_ = LoadDlsymApi<decltype(profHalFlush_)>(msProfLibHandle_, "ProfHalSetFlushModuleCallback");
     profHalSendData_ = LoadDlsymApi<decltype(profHalSendData_)>(msProfLibHandle_, "ProfHalSetSendDataCallback");
     profHalHelperDir_ = LoadDlsymApi<decltype(profHalHelperDir_)>(msProfLibHandle_, "ProfHalSetHelperDirCallback");
-    profHalSendHelperData_ = LoadDlsymApi<decltype(profHalSendHelperData_)>(msProfLibHandle_,
-        "ProfHalSetSendHelperDataCallback");
+    profHalSendHelperData_ =
+        LoadDlsymApi<decltype(profHalSendHelperData_)>(msProfLibHandle_, "ProfHalSetSendHelperDataCallback");
 }
 
-int32_t ProfHalPlugin::ProfHalInit(uint32_t moduleType, const void *moduleConfig, uint32_t length)
+int32_t ProfHalPlugin::ProfHalInit(uint32_t moduleType, const void* moduleConfig, uint32_t length)
 {
     ProfHalApiInit();
     if (profHalInit_ != nullptr) {
@@ -63,7 +63,7 @@ int32_t ProfHalPlugin::ProfHalInit(uint32_t moduleType, const void *moduleConfig
     return 0;
 }
 
-int32_t ProfHalPlugin::ProfHalGetVersion(uint32_t *version) const
+int32_t ProfHalPlugin::ProfHalGetVersion(uint32_t* version) const
 {
     if (profHalGetVersion_ != nullptr) {
         return profHalGetVersion_(version);
@@ -106,4 +106,4 @@ void ProfHalPlugin::ProfHalSendHelperDataRegister(const ProfHalSendHelperDataCal
         profHalSendHelperData_(func);
     }
 }
-}
+} // namespace ProfAPI

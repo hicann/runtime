@@ -28,14 +28,13 @@ struct IdeTransChannel {
     IdeSession session;
 };
 
-int32_t IdeRead(const struct IdeTransChannel &handle, IdeRecvBuffT readBuf, IdeI32Pt readLen, int32_t flag);
+int32_t IdeRead(const struct IdeTransChannel& handle, IdeRecvBuffT readBuf, IdeI32Pt readLen, int32_t flag);
 int32_t IdeGetWorkspace(IdeStringBuffer path, uint32_t len);
 int32_t IdeRealFileRemove(IdeString file);
 std::string IdeGetHomeDir();
 
 pid_t IdeFork(void);
 int32_t IdeFcntl(int32_t fd, int32_t cmd, long arg);
-int32_t IdeLockFcntl(int32_t fd, int32_t cmd, const struct flock &lock);
-}
+int32_t IdeLockFcntl(int32_t fd, int32_t cmd, const struct flock& lock);
+} // namespace Adx
 #endif
-

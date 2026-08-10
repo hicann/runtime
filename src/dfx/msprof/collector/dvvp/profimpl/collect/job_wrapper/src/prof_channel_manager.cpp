@@ -18,14 +18,9 @@ namespace JobWrapper {
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::transport;
 
-ProfChannelManager::ProfChannelManager()
-    : index_(0)
-{
-}
+ProfChannelManager::ProfChannelManager() : index_(0) {}
 
-ProfChannelManager::~ProfChannelManager()
-{
-}
+ProfChannelManager::~ProfChannelManager() {}
 
 int32_t ProfChannelManager::Init()
 {
@@ -85,4 +80,6 @@ void ProfChannelManager::FlushChannel()
         drvChannelPoll_->FlushDrvBuff();
     }
 }
-}}}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

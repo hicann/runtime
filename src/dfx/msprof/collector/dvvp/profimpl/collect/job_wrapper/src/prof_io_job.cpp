@@ -25,10 +25,7 @@ using namespace analysis::dvvp::common::utils;
 /*
  * @berif  : Collect NIC profiling data
  */
-ProfNicJob::ProfNicJob()
-{
-    channelId_ = PROF_CHANNEL_NIC;
-}
+ProfNicJob::ProfNicJob() { channelId_ = PROF_CHANNEL_NIC; }
 
 ProfNicJob::~ProfNicJob() {}
 
@@ -66,10 +63,7 @@ int32_t ProfNicJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     return PROFILING_SUCCESS;
 }
 
-ProfRoceJob::ProfRoceJob()
-{
-    channelId_ = PROF_CHANNEL_ROCE;
-}
+ProfRoceJob::ProfRoceJob() { channelId_ = PROF_CHANNEL_ROCE; }
 ProfRoceJob::~ProfRoceJob() {}
 
 /*
@@ -121,11 +115,10 @@ int32_t ProfNetDevStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     MSPROF_LOGI("NetDevStat Profiling enabled");
-    sampleIntervalNs_ =
-        static_cast<uint64_t>(collectionJobCfg_->comParams->params->io_sampling_interval) * MS_TO_NS;
+    sampleIntervalNs_ = static_cast<uint64_t>(collectionJobCfg_->comParams->params->io_sampling_interval) * MS_TO_NS;
 
-    std::vector<std::string> profDataFilePathV{collectionJobCfg_->comParams->tmpResultDir,
-                                               "data", PROF_NETDEV_STATS_FILE};
+    std::vector<std::string> profDataFilePathV{
+        collectionJobCfg_->comParams->tmpResultDir, "data", PROF_NETDEV_STATS_FILE};
     collectionJobCfg_->jobParams.dataPath = analysis::dvvp::common::utils::Utils::JoinPath(profDataFilePathV);
 
     MSPROF_LOGI("Netdev stats profiling enabled, sample interval: %llu ns", sampleIntervalNs_);
@@ -145,7 +138,8 @@ int32_t ProfNetDevStatJob::Process()
     auto curHandler = TimerManager::instance()->GetProfTimerHandler(PROF_NETDEV_STATS);
     if (curHandler == nullptr) {
         SHARED_PTR_ALIA<NetDevStatsHandler> statHandler;
-        MSVP_MAKE_SHARED4(statHandler, NetDevStatsHandler, netDevStatsBufSize, sampleIntervalNs_,
+        MSVP_MAKE_SHARED4(
+            statHandler, NetDevStatsHandler, netDevStatsBufSize, sampleIntervalNs_,
             collectionJobCfg_->comParams->params->job_id, collectionJobCfg_->comParams->jobCtx,
             return PROFILING_FAILED);
         auto ret = statHandler->Init();
@@ -198,6 +192,6 @@ int32_t ProfNetDevStatJob::Uninit()
     }
     return PROFILING_SUCCESS;
 }
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

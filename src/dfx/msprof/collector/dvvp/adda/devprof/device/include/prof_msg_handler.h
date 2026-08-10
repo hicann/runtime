@@ -18,24 +18,26 @@
 namespace analysis {
 namespace dvvp {
 namespace device {
-extern SHARED_PTR_ALIA<google::protobuf::Message> CreateResponse(
-    analysis::dvvp::message::StatusInfo &statusInfo);
+extern SHARED_PTR_ALIA<google::protobuf::Message> CreateResponse(analysis::dvvp::message::StatusInfo& statusInfo);
 
 class IJobCallback {
 public:
     virtual ~IJobCallback() {}
 
 public:
-    virtual int32_t OnJobStart(SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message,
-                           analysis::dvvp::message::StatusInfo &statusInfo) = 0;
+    virtual int32_t OnJobStart(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::JobStartReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) = 0;
 
-    virtual int32_t OnJobEnd(analysis::dvvp::message::StatusInfo &statusInfo) = 0;
+    virtual int32_t OnJobEnd(analysis::dvvp::message::StatusInfo& statusInfo) = 0;
 
-    virtual int32_t OnReplayStart(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message,
-                              analysis::dvvp::message::StatusInfo &statusInfo) = 0;
+    virtual int32_t OnReplayStart(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStartReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) = 0;
 
-    virtual int32_t OnReplayEnd(SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message,
-                            analysis::dvvp::message::StatusInfo &statusInfo) = 0;
+    virtual int32_t OnReplayEnd(
+        SHARED_PTR_ALIA<analysis::dvvp::proto::ReplayStopReq> message,
+        analysis::dvvp::message::StatusInfo& statusInfo) = 0;
 
     virtual int32_t OnConnectionReset() = 0;
 
@@ -83,8 +85,8 @@ public:
 public:
     void OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> message) override;
 };
-}  // namespace device
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace device
+} // namespace dvvp
+} // namespace analysis
 
 #endif

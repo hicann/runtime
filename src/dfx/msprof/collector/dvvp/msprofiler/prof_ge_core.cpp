@@ -21,15 +21,12 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 using namespace Msprof::Engine::Intf;
 
-Status aclgrphProfGraphSubscribe(const uint32_t graphId, const aclprofSubscribeConfig *profSubscribeConfig)
+Status aclgrphProfGraphSubscribe(const uint32_t graphId, const aclprofSubscribeConfig* profSubscribeConfig)
 {
     return ProfAclSubscribe(ACL_GRPH_API_TYPE, graphId, profSubscribeConfig);
 }
 
-Status aclgrphProfGraphUnSubscribe(const uint32_t graphId)
-{
-    return ProfAclUnSubscribe(ACL_GRPH_API_TYPE, graphId);
-}
+Status aclgrphProfGraphUnSubscribe(const uint32_t graphId) { return ProfAclUnSubscribe(ACL_GRPH_API_TYPE, graphId); }
 
 size_t aclprofGetGraphId(CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index)
 {
@@ -49,24 +46,23 @@ Status aclgrphProfInit(CONST_CHAR_PTR profilerPath, uint32_t length)
     return GE_PROF_SUCCESS;
 }
 
-Status aclgrphProfFinalize()
-{
-    return ProfAclFinalize(ACL_GRPH_API_TYPE);
-}
+Status aclgrphProfFinalize() { return ProfAclFinalize(ACL_GRPH_API_TYPE); }
 
-using PROF_AICORE_EVENTS_PTR = ProfAicoreEvents *;
+using PROF_AICORE_EVENTS_PTR = ProfAicoreEvents*;
 bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
 {
     if (deviceidList == nullptr) {
         MSPROF_LOGE("[IsProfConfigValid]deviceIdList is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclgrphProfCreateConfig", "deviceIdList"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclgrphProfCreateConfig", "deviceIdList"}));
         return false;
     }
     if (deviceNums == 0 || deviceNums > MSVP_MAX_DEV_NUM) {
         MSPROF_LOGE("[IsProfConfigValid]The device nums is invalid.");
         std::string errorReason = "The device number should be in range [1, " + std::to_string(MSVP_MAX_DEV_NUM) + "]";
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
         return false;
     }
@@ -79,7 +75,8 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
     if (deviceNums > static_cast<uint32_t>(devCount)) {
         MSPROF_LOGE("[IsProfConfigValid]Device num(%u) is not in range 1 ~ %d.", deviceNums, devCount);
         std::string errorReason = "The device number should be in range [1, " + std::to_string(devCount) + "]";
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
         return false;
     }
@@ -89,14 +86,16 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
         if (devId >= static_cast<uint32_t>(devCount)) {
             MSPROF_LOGE("Device id %u is not in range 0 ~ %d(exclude %d)", devId, devCount, devCount);
             std::string errorReason = "The device ID should be in range [0, " + std::to_string(devCount) + ")";
-            MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            MSPROF_INPUT_ERROR(
+                "EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({std::to_string(devId), "device id", errorReason}));
             return false;
         }
         if (record.count(devId) > 0) {
             MSPROF_LOGE("Device id %u is duplicatedly set", devId);
             std::string errorReason = "device id is duplicatedly set";
-            MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            MSPROF_INPUT_ERROR(
+                "EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({std::to_string(devId), "device id", errorReason}));
             return false;
         }
@@ -108,19 +107,20 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
 struct aclgrphProfConfig {
     ProfConfig config;
 };
-using ACL_GRPH_PROF_CONFIG_PTR = aclgrphProfConfig *;
+using ACL_GRPH_PROF_CONFIG_PTR = aclgrphProfConfig*;
 
 static bool ModifyLogicDeviceId(UINT32_T_PTR deviceIdList, uint32_t deviceNums, ACL_GRPH_PROF_CONFIG_PTR profCfg)
 {
     ProfRtAPI::ExtendPlugin::instance()->RuntimeApiInit();
     for (uint32_t i = 0; i < deviceNums; i++) {
         int32_t visibleDevId = 0;
-        int32_t ret = ProfRtAPI::ExtendPlugin::instance()->ProfGetVisibleDeviceIdByLogicDeviceId(static_cast<int32_t>(
-            deviceIdList[i]),  &visibleDevId);
+        int32_t ret = ProfRtAPI::ExtendPlugin::instance()->ProfGetVisibleDeviceIdByLogicDeviceId(
+            static_cast<int32_t>(deviceIdList[i]), &visibleDevId);
         if (ret == PROFILING_NOTSUPPORT) {
             MSPROF_LOGI("GetLogicDeviceId is not support, using logic devId");
-            if (memcpy_s(profCfg->config.devIdList, sizeof(profCfg->config.devIdList),
-                deviceIdList, deviceNums * sizeof(uint32_t)) != EOK) {
+            if (memcpy_s(
+                    profCfg->config.devIdList, sizeof(profCfg->config.devIdList), deviceIdList,
+                    deviceNums * sizeof(uint32_t)) != EOK) {
                 MSPROF_LOGE("copy devID failed. size = %u", deviceNums);
                 return false;
             }
@@ -138,8 +138,9 @@ static bool ModifyLogicDeviceId(UINT32_T_PTR deviceIdList, uint32_t deviceNums, 
     return true;
 }
 
-ACL_GRPH_PROF_CONFIG_PTR aclgrphProfCreateConfig(UINT32_T_PTR deviceidList, uint32_t deviceNums,
-    ProfilingAicoreMetrics aicoreMetrics, PROF_AICORE_EVENTS_PTR aicoreEvents, uint64_t dataTypeConfig)
+ACL_GRPH_PROF_CONFIG_PTR aclgrphProfCreateConfig(
+    UINT32_T_PTR deviceidList, uint32_t deviceNums, ProfilingAicoreMetrics aicoreMetrics,
+    PROF_AICORE_EVENTS_PTR aicoreEvents, uint64_t dataTypeConfig)
 {
     UNUSED(aicoreEvents);
     if (!IsProfConfigValid(deviceidList, deviceNums)) {
@@ -148,7 +149,8 @@ ACL_GRPH_PROF_CONFIG_PTR aclgrphProfCreateConfig(UINT32_T_PTR deviceidList, uint
     ACL_GRPH_PROF_CONFIG_PTR config = new (std::nothrow) aclgrphProfConfig();
     if (config == nullptr) {
         MSPROF_LOGE("new aclgrphProfConfig fail");
-        MSPROF_ENV_ERROR("EK0201", std::vector<std::string>({"buf_size"}),
+        MSPROF_ENV_ERROR(
+            "EK0201", std::vector<std::string>({"buf_size"}),
             std::vector<std::string>({std::to_string(sizeof(aclgrphProfConfig)) + "B"}));
         return nullptr;
     }
@@ -183,7 +185,8 @@ Status aclgrphProfDestroyConfig(ACL_GRPH_PROF_CONFIG_PTR profilerConfig)
 {
     if (profilerConfig == nullptr) {
         MSPROF_LOGE("Destroy profilerConfig failed, profilerConfig must not be nullptr");
-        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"value", "config", "reason"}),
+        MSPROF_INPUT_ERROR(
+            "EK0003", std::vector<std::string>({"value", "config", "reason"}),
             std::vector<std::string>({"nullptr", "profilerConfig", "profilerConfig cannot be nullptr"}));
         return GE_PROF_FAILED;
     }

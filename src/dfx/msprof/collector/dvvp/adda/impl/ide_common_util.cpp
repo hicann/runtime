@@ -33,15 +33,15 @@ using namespace IdeDaemon::Common::Config;
 using namespace Adx;
 using namespace Analysis::Dvvp::Adx;
 
-struct IdeComponentsFuncs       g_ideComponentsFuncs;
+struct IdeComponentsFuncs g_ideComponentsFuncs;
 static struct ComponentMap g_compMap[] = {
-    {IDE_COMPONENT_HOOK_REG,    IDE_INVALID_REQ,            "hook_reg",       nullptr         },
-    {IDE_COMPONENT_HDC,         IDE_INVALID_REQ,            "hdc",            nullptr         },
-    {IDE_COMPONENT_PROFILING,   IDE_PROFILING_REQ,          "profiling",      "Profiling"     },
-    {NR_IDE_COMPONENTS,         NR_IDE_CMD_CLASS,           "default",        nullptr         },
+    {IDE_COMPONENT_HOOK_REG, IDE_INVALID_REQ, "hook_reg", nullptr},
+    {IDE_COMPONENT_HDC, IDE_INVALID_REQ, "hdc", nullptr},
+    {IDE_COMPONENT_PROFILING, IDE_PROFILING_REQ, "profiling", "Profiling"},
+    {NR_IDE_COMPONENTS, NR_IDE_CMD_CLASS, "default", nullptr},
 };
 
-#define IDE_GET_COMPONENT_NUM    ((sizeof(g_compMap) / sizeof(g_compMap[0])))
+#define IDE_GET_COMPONENT_NUM ((sizeof(g_compMap) / sizeof(g_compMap[0])))
 
 IdeString IdeGetCompontName(int32_t type)
 {
@@ -96,20 +96,14 @@ enum IdeComponentType IdeGetComponentType(IdeTlvConReq req)
  *
  * @return
  */
-void IdeReqFree(const IdeTlvReq req)
-{
-    IdeXfree(req);
-}
+void IdeReqFree(const IdeTlvReq req) { IdeXfree(req); }
 
 /**
  * @brief register the SIGPIPE process function
  *
  * @return
  */
-void IdeRegisterSig()
-{
-    signal(SIGPIPE, SIG_IGN);
-}
+void IdeRegisterSig() { signal(SIGPIPE, SIG_IGN); }
 
 /**
  * @brief initial ide daemon, mkdir workspace and init socket server

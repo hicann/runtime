@@ -28,27 +28,27 @@ public:
     ~AnalyzerFfts() {}
 
 public:
-    bool IsFftsData(const std::string &fileName) const;
+    bool IsFftsData(const std::string& fileName) const;
     void FftsParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
 
 private:
     void PrintStats() const;
     void ParseOptimizeFftsData(CONST_CHAR_PTR data, uint32_t len);
-    template<typename T>
-    void HandleOptimizeAcsqTaskData(const T *acsqLog, uint32_t logType);
-    void HandleOptimizeSubTaskThreadData(const StarsCxtLog *cxtLog, uint32_t logType);
-    void StarsRollBackStreamTaskId(uint16_t *streamId, uint16_t *taskId) const;
+    template <typename T>
+    void HandleOptimizeAcsqTaskData(const T* acsqLog, uint32_t logType);
+    void HandleOptimizeSubTaskThreadData(const StarsCxtLog* cxtLog, uint32_t logType);
+    void StarsRollBackStreamTaskId(uint16_t* streamId, uint16_t* taskId) const;
 
 private:
     uint64_t opTimeCount_;
     uint64_t opRepeatCount_;
-    std::map<std::string, OpTime> opDrafts_;      // stores incomplete data
-    std::multimap<std::string, OpTime> opTimes_;  // key is taskId-streamId-contextId
+    std::map<std::string, OpTime> opDrafts_;     // stores incomplete data
+    std::multimap<std::string, OpTime> opTimes_; // key is taskId-streamId-contextId
     uint32_t totalFftsTimes_;
     uint32_t totalFftsMerges_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

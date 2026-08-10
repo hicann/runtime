@@ -31,127 +31,58 @@ DavidPlatform::DavidPlatform()
 {
     supportedFeature_ = {
         // TASK
-        PLATFORM_TASK_ASCENDCL,
-        PLATFORM_TASK_RUNTIME_API,
-        PLATFORM_TASK_METRICS,
-        PLATFORM_TASK_AIC_METRICS,
-        PLATFORM_TASK_AIV_METRICS,
-        PLATFORM_TASK_AICORE_LPM,
-        PLATFORM_TASK_GE_API,
-        PLATFORM_TASK_HCCL,
-        PLATFORM_TASK_TSFW,
-        PLATFORM_TASK_L2_CACHE_REG,
-        PLATFORM_TASK_MEMORY,
-        PLATFORM_TASK_MSPROFTX,
-        PLATFORM_TASK_SWITCH,
-        PLATFORM_TASK_TRACE,
-        PLATFORM_TASK_TRACE_L3,
-        PLATFORM_TASK_STARS_ACSQ,
-        PLATFORM_TASK_TS_KEYPOINT,
-        PLATFORM_TASK_TS_MEMCPY,
-        PLATFORM_TASK_TRAINING_TRACE,
-        PLATFORM_TASK_AICPU,
-        PLATFORM_TASK_DYNAMIC,
-        PLATFORM_TASK_DELAY_DURATION,
-        PLATFORM_TASK_BLOCK,
-        PLATFORM_TASK_CCU_INSTRUTION,
-        PLATFORM_TASK_CCU_STATISTIC,
-        PLATFORM_TASK_INSTR_PROFILING,
-        PLATFORM_TASK_PC_SAMPLING,
+        PLATFORM_TASK_ASCENDCL, PLATFORM_TASK_RUNTIME_API, PLATFORM_TASK_METRICS, PLATFORM_TASK_AIC_METRICS,
+        PLATFORM_TASK_AIV_METRICS, PLATFORM_TASK_AICORE_LPM, PLATFORM_TASK_GE_API, PLATFORM_TASK_HCCL,
+        PLATFORM_TASK_TSFW, PLATFORM_TASK_L2_CACHE_REG, PLATFORM_TASK_MEMORY, PLATFORM_TASK_MSPROFTX,
+        PLATFORM_TASK_SWITCH, PLATFORM_TASK_TRACE, PLATFORM_TASK_TRACE_L3, PLATFORM_TASK_STARS_ACSQ,
+        PLATFORM_TASK_TS_KEYPOINT, PLATFORM_TASK_TS_MEMCPY, PLATFORM_TASK_TRAINING_TRACE, PLATFORM_TASK_AICPU,
+        PLATFORM_TASK_DYNAMIC, PLATFORM_TASK_DELAY_DURATION, PLATFORM_TASK_BLOCK, PLATFORM_TASK_CCU_INSTRUTION,
+        PLATFORM_TASK_CCU_STATISTIC, PLATFORM_TASK_INSTR_PROFILING, PLATFORM_TASK_PC_SAMPLING,
         // Device
-        PLATFORM_SYS_DEVICE_UB,
-        PLATFORM_SYS_DEVICE_US,
+        PLATFORM_SYS_DEVICE_UB, PLATFORM_SYS_DEVICE_US,
         // Feature
-        PLATFORM_MC2,
-        PLATFORM_AICPU_HCCL,
-        PLATFORM_DIAGNOSTIC_COLLECTION,
-        PLATFORM_AICSCALE_ACP,
-        PLATFORM_STARS_QOS,
-        PLATFORM_SYS_MEM_SERVICEFLOW,
-        PLATFORM_ACLAPI_SETDEVICE_ENABLE,
-        PLATFORM_API_STATS,
-        PLATFORM_AICPU_SAMPLE_PERIOD
-    };
+        PLATFORM_MC2, PLATFORM_AICPU_HCCL, PLATFORM_DIAGNOSTIC_COLLECTION, PLATFORM_AICSCALE_ACP, PLATFORM_STARS_QOS,
+        PLATFORM_SYS_MEM_SERVICEFLOW, PLATFORM_ACLAPI_SETDEVICE_ENABLE, PLATFORM_API_STATS,
+        PLATFORM_AICPU_SAMPLE_PERIOD};
     InsertPmuFeature();
     InsertSysFeature();
 }
 
-uint16_t DavidPlatform::GetMaxMonitorNumber() const
-{
-    return MAX_DAVID_MONITOR_NUM;
-}
+uint16_t DavidPlatform::GetMaxMonitorNumber() const { return MAX_DAVID_MONITOR_NUM; }
 
-uint32_t DavidPlatform::GetSmmuDFXOffset() const
-{
-    return DAVID_SMMU_DFX_OFFSET;
-}
+uint32_t DavidPlatform::GetSmmuDFXOffset() const { return DAVID_SMMU_DFX_OFFSET; }
 
-uint32_t DavidPlatform::GetSmmuDFXRegMask() const
-{
-    return DAVID_SMMU_DFX_REG_MASK;
-}
+uint32_t DavidPlatform::GetSmmuDFXRegMask() const { return DAVID_SMMU_DFX_REG_MASK; }
 
-uint16_t DavidPlatform::GetQosMonitorNumber() const
-{
-    return MAX_QOS_MONITOR_NUM;
-}
+uint16_t DavidPlatform::GetQosMonitorNumber() const { return MAX_QOS_MONITOR_NUM; }
 
-std::string DavidPlatform::GetPipeUtilizationMetrics()
-{
-    return DAVID_PIPEUTILIZATION;
-}
+std::string DavidPlatform::GetPipeUtilizationMetrics() { return DAVID_PIPEUTILIZATION; }
 
-std::string DavidPlatform::GetMemoryMetrics()
-{
-    return DAVID_MEMORY;
-}
+std::string DavidPlatform::GetMemoryMetrics() { return DAVID_MEMORY; }
 
-std::string DavidPlatform::GetMemoryL0Metrics()
-{
-    return DAVID_MEMORYL0;
-}
+std::string DavidPlatform::GetMemoryL0Metrics() { return DAVID_MEMORYL0; }
 
-std::string DavidPlatform::GetMemoryUBMetrics()
-{
-    return DAVID_MEMORYUB;
-}
+std::string DavidPlatform::GetMemoryUBMetrics() { return DAVID_MEMORYUB; }
 
-std::string DavidPlatform::GetArithmeticUtilizationMetrics()
-{
-    return DAVID_AIRTHMETICUTILIZATION;
-}
+std::string DavidPlatform::GetArithmeticUtilizationMetrics() { return DAVID_AIRTHMETICUTILIZATION; }
 
-std::string DavidPlatform::GetResourceConflictRatioMetrics()
-{
-    return DAVID_RESOURCECONFLICTRATIO;
-}
+std::string DavidPlatform::GetResourceConflictRatioMetrics() { return DAVID_RESOURCECONFLICTRATIO; }
 
-std::string DavidPlatform::GetL2CacheMetrics()
-{
-    return DAVID_L2CACHE;
-}
+std::string DavidPlatform::GetL2CacheMetrics() { return DAVID_L2CACHE; }
 
 void DavidPlatform::InsertPmuFeature()
 {
-    const auto pmuFeature =  {
-        // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PUEXCT_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_L2_CACHE_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        PLATFORM_TASK_SOC_PMU,
-        PLATFORM_TASK_SOC_PMU_NOC
-    };
+    const auto pmuFeature = {// PMU
+                             PLATFORM_TASK_AU_PMU,       PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PUEXCT_PMU,
+                             PLATFORM_TASK_MEMORY_PMU,   PLATFORM_TASK_MEMORYL0_PMU, PLATFORM_TASK_MEMORYUB_PMU,
+                             PLATFORM_TASK_L2_CACHE_PMU, PLATFORM_TASK_RCR_PMU,      PLATFORM_TASK_SOC_PMU,
+                             PLATFORM_TASK_SOC_PMU_NOC};
     supportedFeature_.insert(pmuFeature.begin(), pmuFeature.end());
 }
 
 void DavidPlatform::InsertSysFeature()
 {
-    const auto sysFeature =  {
+    const auto sysFeature = {
         // System-device
         PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
         PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
@@ -189,10 +120,7 @@ int32_t DavidPlatform::InitOnlineAnalyzer()
     return 0;
 }
 
-std::string DavidPlatform::GetL2CacheEvents()
-{
-    return DAVID_L2CACHEEVENT;
-}
-}
-}
-}
+std::string DavidPlatform::GetL2CacheEvents() { return DAVID_L2CACHEEVENT; }
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp

@@ -37,7 +37,7 @@ public:
 public:
     void OnNewMessage(SHARED_PTR_ALIA<google::protobuf::Message> message);
 
-    template<typename T>
+    template <typename T>
     void RegisterMessageHandler(SHARED_PTR_ALIA<IMsgHandler> handler)
     {
         if (handler == nullptr) {
@@ -47,10 +47,10 @@ public:
     }
 
 private:
-    std::map<const google::protobuf::Descriptor *, SHARED_PTR_ALIA<IMsgHandler> > handlerMap_;
+    std::map<const google::protobuf::Descriptor*, SHARED_PTR_ALIA<IMsgHandler> > handlerMap_;
 };
-}  // namespace message
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace message
+} // namespace dvvp
+} // namespace analysis
 
 #endif

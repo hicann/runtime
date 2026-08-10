@@ -31,7 +31,10 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::transport;
 Analyzer::Analyzer(SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader)
-    : resultCount_(0), profileMode_(PROFILE_MODE_STATIC_SHAPE), flushedChannel_(false), flushQueueLen_(0),
+    : resultCount_(0),
+      profileMode_(PROFILE_MODE_STATIC_SHAPE),
+      flushedChannel_(false),
+      flushQueueLen_(0),
       graphTypeFlag_(false)
 {
     uploader_ = uploader;
@@ -50,8 +53,7 @@ Analyzer::Analyzer(SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader
     }
 }
 
-Analyzer::~Analyzer()
-{}
+Analyzer::~Analyzer() {}
 
 void Analyzer::Flush()
 {
@@ -99,7 +101,7 @@ void Analyzer::TsDataPostProc()
     UploadKeypointOp();
 }
 
-void Analyzer::UploadAppOp(std::multimap<std::string, OpTime> &opTimes)
+void Analyzer::UploadAppOp(std::multimap<std::string, OpTime>& opTimes)
 {
     if (profileMode_ == PROFILE_MODE_STEP_TRACE) {
         UploadAppOpModeStepTrace(opTimes);
@@ -110,7 +112,7 @@ void Analyzer::UploadAppOp(std::multimap<std::string, OpTime> &opTimes)
     }
 }
 
-void Analyzer::UploadAppOpModeStepTrace(std::multimap<std::string, OpTime> &opTimes)
+void Analyzer::UploadAppOpModeStepTrace(std::multimap<std::string, OpTime>& opTimes)
 {
     for (auto iter = opTimes.begin(); iter != opTimes.end();) {
         if (iter->second.indexId == 0) {
@@ -136,7 +138,7 @@ void Analyzer::UploadAppOpModeStepTrace(std::multimap<std::string, OpTime> &opTi
     }
 }
 
-void Analyzer::UploadAppOpModeStaticShape(std::multimap<std::string, OpTime> &opTimes)
+void Analyzer::UploadAppOpModeStaticShape(std::multimap<std::string, OpTime>& opTimes)
 {
     if (analyzerGe_->GetIsAllStaticShape()) {
         // in final solution only this branch is needed,need to query high16bit taskid from stream info
@@ -153,7 +155,7 @@ void Analyzer::UploadAppOpModeStaticShape(std::multimap<std::string, OpTime> &op
         }
     } else {
         MSPROF_LOGD("Try to custruct Op info, is not all static");
-        for (auto iter = opTimes.begin(); iter != opTimes.end();) {  // tmp solution, discard dynamic shape task
+        for (auto iter = opTimes.begin(); iter != opTimes.end();) { // tmp solution, discard dynamic shape task
             int32_t streamType;
             if (!analyzerGe_->GetStreamType(iter->second.streamId, streamType)) {
                 MSPROF_LOGI("Op Stream info hasn't been received, stream id is %u", iter->second.streamId);
@@ -180,7 +182,7 @@ void Analyzer::UploadAppOpModeStaticShape(std::multimap<std::string, OpTime> &op
     }
 }
 
-void Analyzer::UploadAppOpModeSingleOp(std::multimap<std::string, OpTime> &opTimes)
+void Analyzer::UploadAppOpModeSingleOp(std::multimap<std::string, OpTime>& opTimes)
 {
     for (auto iter = opTimes.begin(); iter != opTimes.cend();) {
         std::string key = iter->first + KEY_SEPARATOR + "0";
@@ -195,7 +197,7 @@ void Analyzer::UploadAppOpModeSingleOp(std::multimap<std::string, OpTime> &opTim
 
 void Analyzer::UploadKeypointOp()
 {
-    auto &tsKeypointOp = analyzerTs_->keypointOpInfo_;
+    auto& tsKeypointOp = analyzerTs_->keypointOpInfo_;
 
     if (profileMode_ == PROFILE_MODE_STATIC_SHAPE) {
         for (auto iter = tsKeypointOp.begin(); iter != tsKeypointOp.end();) {
@@ -215,7 +217,7 @@ void Analyzer::UploadKeypointOp()
             opTime.end = iter->second.endTime;
             opTime.indexId = graphId;
             ConstructAndUploadData(nullStr, opTime);
-            iter = tsKeypointOp.erase(iter);  // static shape, no need to keep uploaded keypoint
+            iter = tsKeypointOp.erase(iter); // static shape, no need to keep uploaded keypoint
         }
     } else {
         for (auto iter = tsKeypointOp.begin(); iter != tsKeypointOp.end(); ++iter) {
@@ -242,7 +244,7 @@ void Analyzer::UploadKeypointOp()
 
 uint64_t Analyzer::GetOpIndexId(uint64_t opTimeStamp)
 {
-    auto &tsKeypointOp = analyzerTs_->keypointOpInfo_;
+    auto& tsKeypointOp = analyzerTs_->keypointOpInfo_;
 
     const size_t opNum = tsKeypointOp.size();
     if ((opNum == 0) || ((opNum == 1) && (tsKeypointOp.begin()->second.endTime == 0))) {
@@ -265,7 +267,7 @@ uint64_t Analyzer::GetOpIndexId(uint64_t opTimeStamp)
     return 0;
 }
 
-void Analyzer::UpdateOpIndexId(std::multimap<std::string, OpTime> &opTimes)
+void Analyzer::UpdateOpIndexId(std::multimap<std::string, OpTime>& opTimes)
 {
     if (profileMode_ == PROFILE_MODE_STATIC_SHAPE) {
         MSPROF_LOGI("Static shape scen, no need to update op index");
@@ -283,15 +285,15 @@ void Analyzer::UpdateOpIndexId(std::multimap<std::string, OpTime> &opTimes)
         }
 
         // clean useless keypoint op
-        auto &tsKeypointOp = analyzerTs_->keypointOpInfo_;
+        auto& tsKeypointOp = analyzerTs_->keypointOpInfo_;
         for (auto iter = tsKeypointOp.begin(); iter != tsKeypointOp.end();) {
             if (!iter->second.uploaded) {
                 iter++;
                 continue;
             }
             if (iter->second.indexId < maxIndexId) {
-                MSPROF_LOGI("delete keypoint. indexId:%" PRIu64 " findSuccTimes:%" PRIu64,
-                    iter->second.indexId,
+                MSPROF_LOGI(
+                    "delete keypoint. indexId:%" PRIu64 " findSuccTimes:%" PRIu64, iter->second.indexId,
                     iter->second.findSuccTimes);
                 iter = tsKeypointOp.erase(iter);
             } else {
@@ -303,7 +305,7 @@ void Analyzer::UpdateOpIndexId(std::multimap<std::string, OpTime> &opTimes)
 
 bool Analyzer::IsNeedUpdateIndexId()
 {
-    auto &tsKeypointOp = analyzerTs_->keypointOpInfo_;
+    auto& tsKeypointOp = analyzerTs_->keypointOpInfo_;
 
     if (tsKeypointOp.empty()) {
         return false;
@@ -317,11 +319,13 @@ bool Analyzer::IsNeedUpdateIndexId()
     return false;
 }
 
-void Analyzer::ConstructAndUploadData(const std::string &opId, OpTime &opTime)
+void Analyzer::ConstructAndUploadData(const std::string& opId, OpTime& opTime)
 {
     if (opTime.start > opTime.end || opTime.startAicore > opTime.endAicore) {
-        MSPROF_LOGE("End timestamp is less then start. op:%s start:%" PRIu64 " end:%" PRIu64 " startAicore:%" PRIu64
-            " endAicore:%" PRIu64, opId.c_str(), opTime.start, opTime.end, opTime.startAicore, opTime.endAicore);
+        MSPROF_LOGE(
+            "End timestamp is less then start. op:%s start:%" PRIu64 " end:%" PRIu64 " startAicore:%" PRIu64
+            " endAicore:%" PRIu64,
+            opId.c_str(), opTime.start, opTime.end, opTime.startAicore, opTime.endAicore);
         return;
     }
 
@@ -355,12 +359,13 @@ void Analyzer::ConstructAndUploadData(const std::string &opId, OpTime &opTime)
         opDesc.flag = ACL_SUBSCRIBE_SUBGRAPH;
     }
     opDesc.threadId = opTime.threadId;
-    opDesc.executionTime = opTime.endAicore - opTime.startAicore;  // chipId 0 only
+    opDesc.executionTime = opTime.endAicore - opTime.startAicore; // chipId 0 only
     opDesc.signature = analysis::dvvp::common::utils::Utils::GenerateSignature(
-        reinterpret_cast<uint8_t *>(&opDesc) + sizeof(uint32_t), sizeof(ProfOpDesc) - sizeof(uint32_t));
-    MSPROF_LOGD("Upload old data. modelId: %u, threadId: %u, opName: %s, opType: %s, start: %" PRIu64 ", end: %" PRIu64
-        ", duration: %" PRIu64 ", startAicore: %" PRIu64 ", endAicore: %" PRIu64 ", flag: %u", opDesc.modelId,
-        opDesc.threadId, opName.c_str(), opType.c_str(), opDesc.start, opDesc.end, opDesc.duration,
+        reinterpret_cast<uint8_t*>(&opDesc) + sizeof(uint32_t), sizeof(ProfOpDesc) - sizeof(uint32_t));
+    MSPROF_LOGD(
+        "Upload old data. modelId: %u, threadId: %u, opName: %s, opType: %s, start: %" PRIu64 ", end: %" PRIu64
+        ", duration: %" PRIu64 ", startAicore: %" PRIu64 ", endAicore: %" PRIu64 ", flag: %u",
+        opDesc.modelId, opDesc.threadId, opName.c_str(), opType.c_str(), opDesc.start, opDesc.end, opDesc.duration,
         opTime.startAicore, opTime.endAicore, opDesc.flag);
     uploader_->UploadData(reinterpret_cast<CHAR_PTR>(&opDesc), sizeof(ProfOpDesc));
     resultCount_++;
@@ -428,7 +433,7 @@ void Analyzer::DispatchOptimizeData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileC
 void Analyzer::UploadProfOpDescProc()
 {
     std::unique_lock<std::mutex> lk(AnalyzerBase::opDescInfoMtx_);
-    for (auto &it : AnalyzerBase::opDescInfos_) {
+    for (auto& it : AnalyzerBase::opDescInfos_) {
         if (uploader_ == nullptr) {
             MSPROF_LOGE("uploader is nullptr in upload optimize data");
             return;
@@ -439,17 +444,18 @@ void Analyzer::UploadProfOpDescProc()
         }
         it.modelId = graphId;
         it.signature = analysis::dvvp::common::utils::Utils::GenerateSignature(
-            reinterpret_cast<uint8_t *>(&it) + sizeof(uint32_t), sizeof(ProfOpDesc) - sizeof(uint32_t));
-        MSPROF_LOGD("Upload opt data pop from vector. modelId: %u, threadId: %u, start: %" PRIu64 ", end: %" PRIu64
-            " duration: %" PRIu64 ", flag: %u, exetime: %" PRIu64, it.modelId, it.threadId, it.start, it.end,
-            it.duration, it.flag, it.executionTime);
+            reinterpret_cast<uint8_t*>(&it) + sizeof(uint32_t), sizeof(ProfOpDesc) - sizeof(uint32_t));
+        MSPROF_LOGD(
+            "Upload opt data pop from vector. modelId: %u, threadId: %u, start: %" PRIu64 ", end: %" PRIu64
+            " duration: %" PRIu64 ", flag: %u, exetime: %" PRIu64,
+            it.modelId, it.threadId, it.start, it.end, it.duration, it.flag, it.executionTime);
         uploader_->UploadData(reinterpret_cast<CHAR_PTR>(&it), sizeof(ProfOpDesc));
         resultCount_++;
     }
     AnalyzerBase::opDescInfos_.clear();
 }
 
-void Analyzer::SetDevId(const std::string &devIdStr)
+void Analyzer::SetDevId(const std::string& devIdStr)
 {
     devIdStr_ = devIdStr;
     MSPROF_LOGI("Analyzer::SetDevId devIdStr_: %s", devIdStr_.c_str());
@@ -466,6 +472,6 @@ void Analyzer::SetOpType(bool flag) const
     AnalyzerBase::opTypeFlag_ = flag;
     MSPROF_LOGI("Analyzer set optype flag: %d", flag);
 }
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

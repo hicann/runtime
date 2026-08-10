@@ -13,33 +13,19 @@ namespace Analysis {
 namespace Dvvp {
 namespace JobWrapper {
 std::map<int32_t, std::function<SHARED_PTR_ALIA<ICollectionJob>()>> CollectionJobReflection::collectionJobMap_;
-ICollectionJob::ICollectionJob() : collectionId_(0), fileName_("")
-{
-}
+ICollectionJob::ICollectionJob() : collectionId_(0), fileName_("") {}
 
-ICollectionJob::ICollectionJob(int32_t collectionId, const std::string &name)
+ICollectionJob::ICollectionJob(int32_t collectionId, const std::string& name)
     : collectionId_(collectionId), fileName_(name)
-{
-}
+{}
 
-ICollectionJob::~ICollectionJob()
-{
-}
+ICollectionJob::~ICollectionJob() {}
 
-bool ICollectionJob::IsGlobalJobLevel()
-{
-    return false;
-}
+bool ICollectionJob::IsGlobalJobLevel() { return false; }
 
-int32_t ICollectionJob::GetCollectionId()
-{
-    return collectionId_;
-}
+int32_t ICollectionJob::GetCollectionId() { return collectionId_; }
 
-std::string ICollectionJob::JobFileName()
-{
-    return fileName_;
-}
-}
-}
-}
+std::string ICollectionJob::JobFileName() { return fileName_; }
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis

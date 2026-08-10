@@ -61,18 +61,19 @@ enum AclApiTag {
 
 class StatsAnalyzerApi {
 public:
-    StatsAnalyzerApi() : dataPtr_(nullptr), dataLen_(0), totalApiTimes_(0), totalEventTimes_(0), hostFreq_(1),
-        statsMap_({})  {}
+    StatsAnalyzerApi()
+        : dataPtr_(nullptr), dataLen_(0), totalApiTimes_(0), totalEventTimes_(0), hostFreq_(1), statsMap_({})
+    {}
     ~StatsAnalyzerApi() {}
 
 public:
-    bool IsApiOrEventData(const std::string &fileName) const;
+    bool IsApiOrEventData(const std::string& fileName) const;
     void Parse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
     void GenerateTotalTimeData(std::ofstream& file);
     void GenerateStatisticsData(std::ofstream& file);
-    void WriteTotalTimeData(std::ofstream& file, const std::map<uint32_t, ApiTotalTime> &apiTimeMap);
-    void WriteStatisticsData(std::ofstream& file,
-        const std::map<uint32_t, std::map<uint32_t, ApiStatistics>> &apiStatsMap);
+    void WriteTotalTimeData(std::ofstream& file, const std::map<uint32_t, ApiTotalTime>& apiTimeMap);
+    void WriteStatisticsData(
+        std::ofstream& file, const std::map<uint32_t, std::map<uint32_t, ApiStatistics>>& apiStatsMap);
     void InitFrequency();
     void ClearAllData();
 
@@ -84,11 +85,11 @@ private:
     void HandleEventInfo(CONST_CHAR_PTR data);
     void HandleApiInfo(CONST_CHAR_PTR data);
     void InitApiShieldingConfig();
-    bool LoadApiShieldingConfig(std::string &content) const;
-    void ParseApiShieldingConfig(const std::string &content);
-    bool ShouldSkipTotalTimeApi(const std::string &apiName) const;
-    std::string NormalizeApiName(const std::string &apiName) const;
-    bool IsValidStatsRecord(const ApiStatsInfo &info) const;
+    bool LoadApiShieldingConfig(std::string& content) const;
+    void ParseApiShieldingConfig(const std::string& content);
+    bool ShouldSkipTotalTimeApi(const std::string& apiName) const;
+    std::string NormalizeApiName(const std::string& apiName) const;
+    bool IsValidStatsRecord(const ApiStatsInfo& info) const;
     float GetSafeHostFreq() const;
 
 private:
@@ -101,8 +102,8 @@ private:
     std::string analyzerBuf_;
     std::set<std::string> shieldingApiNames_;
 };
-}  // namespace Analyze
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

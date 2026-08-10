@@ -24,14 +24,14 @@ enum class E_CODEC_FORMAT {
     CODEC_FORMAT_JSON = 0,
     CODEC_FORMAT_BINARY = 1,
 };
-const google::protobuf::Descriptor *FindMessageTypeByName(const std::string &name);
-SHARED_PTR_ALIA<google::protobuf::Message> CreateMessage(const std::string &name);
-bool AppendMessage(std::string &out, SHARED_PTR_ALIA<google::protobuf::Message> message);
+const google::protobuf::Descriptor* FindMessageTypeByName(const std::string& name);
+SHARED_PTR_ALIA<google::protobuf::Message> CreateMessage(const std::string& name);
+bool AppendMessage(std::string& out, SHARED_PTR_ALIA<google::protobuf::Message> message);
 SHARED_PTR_ALIA<std::string> EncodeMessageShared(SHARED_PTR_ALIA<google::protobuf::Message> message = nullptr);
 std::string EncodeMessage(SHARED_PTR_ALIA<google::protobuf::Message> message = nullptr);
-SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string &buf);
-}  // namespace message
-}  // namespace dvvp
-}  // namespace analysis
+SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string& buf);
+} // namespace message
+} // namespace dvvp
+} // namespace analysis
 
 #endif

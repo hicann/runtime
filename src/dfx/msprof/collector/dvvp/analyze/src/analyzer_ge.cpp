@@ -25,7 +25,7 @@ constexpr int32_t GE_COMPACT_INFO_SIZE = sizeof(MsprofCompactInfo);
 constexpr int32_t ADDITIONAL_INFO_SIZE = sizeof(MsprofAdditionalInfo);
 constexpr int32_t GE_API_SIZE = sizeof(MsprofApi);
 
-bool AnalyzerGe::IsGeData(const std::string &fileName)
+bool AnalyzerGe::IsGeData(const std::string& fileName)
 {
     // Ge data starts with "Framework"
     if (fileName.find("Framework") != std::string::npos) {
@@ -34,7 +34,7 @@ bool AnalyzerGe::IsGeData(const std::string &fileName)
     return false;
 }
 
-bool AnalyzerGe::IsGeApiOrEventData(const std::string &fileName) const
+bool AnalyzerGe::IsGeApiOrEventData(const std::string& fileName) const
 {
     // Ge api or event data
     if (fileName.find("api_event") != std::string::npos) {
@@ -43,7 +43,7 @@ bool AnalyzerGe::IsGeApiOrEventData(const std::string &fileName) const
     return false;
 }
 
-bool AnalyzerGe::IsGeCompactData(const std::string &tag) const
+bool AnalyzerGe::IsGeCompactData(const std::string& tag) const
 {
     // Ge compact data
     if (tag.find("node_basic_info") != std::string::npos) {
@@ -52,7 +52,7 @@ bool AnalyzerGe::IsGeCompactData(const std::string &tag) const
     return false;
 }
 
-bool AnalyzerGe::IsGeContextData(const std::string &tag) const
+bool AnalyzerGe::IsGeContextData(const std::string& tag) const
 {
     // Ge context data
     if (tag.find("context_id_info") != std::string::npos) {
@@ -61,7 +61,7 @@ bool AnalyzerGe::IsGeContextData(const std::string &tag) const
     return false;
 }
 
-bool AnalyzerGe::IsGeGraphIdMapData(const std::string &tag) const
+bool AnalyzerGe::IsGeGraphIdMapData(const std::string& tag) const
 {
     // Ge compact data
     if (tag.find("graph_id_map") != std::string::npos) {
@@ -70,12 +70,9 @@ bool AnalyzerGe::IsGeGraphIdMapData(const std::string &tag) const
     return false;
 }
 
-bool AnalyzerGe::GetIsAllStaticShape() const
-{
-    return isAllStaticShape_;
-}
+bool AnalyzerGe::GetIsAllStaticShape() const { return isAllStaticShape_; }
 
-bool AnalyzerGe::GetStreamType(const int32_t &streamId, int32_t &streamType) const
+bool AnalyzerGe::GetStreamType(const int32_t& streamId, int32_t& streamType) const
 {
     auto iter = steamState_.find(streamId);
     if (iter == steamState_.end()) {
@@ -110,29 +107,23 @@ void AnalyzerGe::Parse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChu
     MSPROF_LOGD("Dropped ge data, fileName: %s", fileChunkReq->fileName.c_str());
 }
 
-bool AnalyzerGe::IsOpInfoCompleted(const std::string &opId)
-{
-    return (opInfos_.find(opId) != opInfos_.end());
-}
+bool AnalyzerGe::IsOpInfoCompleted(const std::string& opId) { return (opInfos_.find(opId) != opInfos_.end()); }
 
-uint32_t AnalyzerGe::GetModelId(const std::string &opId) const
+uint32_t AnalyzerGe::GetModelId(const std::string& opId) const
 {
     auto iter = opInfos_.find(opId);
     return (iter == opInfos_.end() ? 0 : iter->second.modelId);
 }
 
-uint32_t AnalyzerGe::GetModelId(uint32_t modelId) const
-{
-    return GetGraphModelId(modelId);
-}
+uint32_t AnalyzerGe::GetModelId(uint32_t modelId) const { return GetGraphModelId(modelId); }
 
-std::string AnalyzerGe::GetOpName(const std::string &opId)
+std::string AnalyzerGe::GetOpName(const std::string& opId)
 {
     const auto iter = opInfos_.find(opId);
     return (iter == opInfos_.end() ? std::string() : iter->second.opName);
 }
 
-std::string AnalyzerGe::GetOpType(const std::string &opId)
+std::string AnalyzerGe::GetOpType(const std::string& opId)
 {
     const auto iter = opInfos_.find(opId);
     return (iter == opInfos_.end() ? std::string() : iter->second.opType);
@@ -140,13 +131,12 @@ std::string AnalyzerGe::GetOpType(const std::string &opId)
 
 void AnalyzerGe::ParseIdMap(CONST_CHAR_PTR data, uint32_t len)
 {
-    auto idMapData = reinterpret_cast<const MsprofGeProfIdMapData *>(data);
+    auto idMapData = reinterpret_cast<const MsprofGeProfIdMapData*>(data);
     int32_t remaindLen = static_cast<int32_t>(len);
     for (; remaindLen >= GE_ID_MAP_SIZE; remaindLen -= GE_ID_MAP_SIZE, idMapData++) {
         if (idMapData->magicNumber != MSPROF_DATA_HEAD_MAGIC_NUM || idMapData->dataTag != MSPROF_GE_DATA_TAG_ID_MAP) {
-            MSPROF_LOGE("Check ge id map data fail. len:%u, magicNumber:%u, dataTag:%u",
-                len,
-                idMapData->magicNumber,
+            MSPROF_LOGE(
+                "Check ge id map data fail. len:%u, magicNumber:%u, dataTag:%u", len, idMapData->magicNumber,
                 idMapData->dataTag);
             continue;
         }
@@ -175,18 +165,15 @@ void AnalyzerGe::ParseTaskDesc(CONST_CHAR_PTR data, uint32_t len)
         parsedOpNum += 1;
         parsedLen += GE_TASK_DATA_SIZE;
     }
-    MSPROF_LOGI("Finish parsing ge data, BuffLen:%u NewDataLen:%u parsedLen:%u TotalOpNum:%zu ParsedOp:%u",
-        dataLen_,
-        len,
-        parsedLen,
-        opInfos_.size(),
-        parsedOpNum);
+    MSPROF_LOGI(
+        "Finish parsing ge data, BuffLen:%u NewDataLen:%u parsedLen:%u TotalOpNum:%zu ParsedOp:%u", dataLen_, len,
+        parsedLen, opInfos_.size(), parsedOpNum);
     BufferRemainingData(parsedLen);
 }
 
-void AnalyzerGe::ParseOpName(const MsprofGeProfTaskData &data, struct GeOpInfo &opInfo) const
+void AnalyzerGe::ParseOpName(const MsprofGeProfTaskData& data, struct GeOpInfo& opInfo) const
 {
-    MsprofMixData *opName = const_cast<MsprofMixData *>(&data.opName);
+    MsprofMixData* opName = const_cast<MsprofMixData*>(&data.opName);
     if (opName->type == MSPROF_MIX_DATA_STRING) {
         uint32_t dataStrLen = strnlen(opName->data.dataStr, MSPROF_MIX_DATA_STRING_LEN);
         if (dataStrLen == MSPROF_MIX_DATA_STRING_LEN) {
@@ -199,9 +186,9 @@ void AnalyzerGe::ParseOpName(const MsprofGeProfTaskData &data, struct GeOpInfo &
     }
 }
 
-void AnalyzerGe::ParseOpType(const MsprofGeProfTaskData &data, struct GeOpInfo &opInfo) const
+void AnalyzerGe::ParseOpType(const MsprofGeProfTaskData& data, struct GeOpInfo& opInfo) const
 {
-    MsprofGeOpType *opType = const_cast<MsprofGeOpType *>(&data.opType);
+    MsprofGeOpType* opType = const_cast<MsprofGeOpType*>(&data.opType);
     if (opType->type == MSPROF_MIX_DATA_STRING) {
         uint32_t dataStrLen = strnlen(opType->data.dataStr, MSPROF_GE_OP_TYPE_LEN);
         if (dataStrLen == MSPROF_GE_OP_TYPE_LEN) {
@@ -216,14 +203,12 @@ void AnalyzerGe::ParseOpType(const MsprofGeProfTaskData &data, struct GeOpInfo &
 
 int32_t AnalyzerGe::ParseOpData(CONST_CHAR_PTR data)
 {
-    auto geTaskData = reinterpret_cast<const MsprofGeProfTaskData *>(data);
+    auto geTaskData = reinterpret_cast<const MsprofGeProfTaskData*>(data);
     if (geTaskData->magicNumber != MSPROF_DATA_HEAD_MAGIC_NUM || geTaskData->dataTag != MSPROF_GE_DATA_TAG_TASK ||
         geTaskData->opName.type > MSPROF_MIX_DATA_STRING || geTaskData->opType.type > MSPROF_MIX_DATA_STRING) {
-        MSPROF_LOGE("Check ge op data fail. magicNumber:%u, dataTag:%u, opName:%u, opType:%u",
-            geTaskData->magicNumber,
-            geTaskData->dataTag,
-            geTaskData->opName.type,
-            geTaskData->opType.type);
+        MSPROF_LOGE(
+            "Check ge op data fail. magicNumber:%u, dataTag:%u, opName:%u, opType:%u", geTaskData->magicNumber,
+            geTaskData->dataTag, geTaskData->opName.type, geTaskData->opType.type);
         return PROFILING_FAILED;
     }
 
@@ -235,7 +220,7 @@ int32_t AnalyzerGe::ParseOpData(CONST_CHAR_PTR data)
     opInfo.modelId = GetModelId(geTaskData->modelId);
     ParseOpName(*geTaskData, opInfo);
     ParseOpType(*geTaskData, opInfo);
-    if (geTaskData->curIterNum == 0) {  // static shape
+    if (geTaskData->curIterNum == 0) { // static shape
         auto iter = steamState_.find(geTaskData->streamId);
         if (iter == steamState_.end()) {
             StreamInfo streamInfo = {0, 0, KNOWN_SHAPE_STREAM};
@@ -243,7 +228,7 @@ int32_t AnalyzerGe::ParseOpData(CONST_CHAR_PTR data)
             MSPROF_LOGI("Add new known shape stream. stream :%u", geTaskData->streamId);
         }
         opInfo.opId = taskId + KEY_SEPARATOR + streamId + KEY_SEPARATOR + contextId + KEY_SEPARATOR +
-                      "0";  // defaultiterid is 0，in future need to change to INT_MAX
+                      "0"; // defaultiterid is 0，in future need to change to INT_MAX
     } else if (geTaskData->curIterNum == 1) {
         MSPROF_LOGI("There is unknown shape GE task info");
         isAllStaticShape_ = false;
@@ -261,25 +246,19 @@ int32_t AnalyzerGe::ParseOpData(CONST_CHAR_PTR data)
     }
     opInfos_.insert(std::make_pair(opInfo.opId, opInfo));
     analyzedBytes_ += GE_TASK_DATA_SIZE;
-    MSPROF_LOGD("Analyzer ge data collect op info id=%s, name=%s, type==%s, modelId=%u",
-        opInfo.opId.c_str(),
-        opInfo.opName.c_str(),
-        opInfo.opType.c_str(),
-        opInfo.modelId);
+    MSPROF_LOGD(
+        "Analyzer ge data collect op info id=%s, name=%s, type==%s, modelId=%u", opInfo.opId.c_str(),
+        opInfo.opName.c_str(), opInfo.opType.c_str(), opInfo.modelId);
 
     return PROFILING_SUCCESS;
 }
 
 void AnalyzerGe::PrintStats()
 {
-    MSPROF_EVENT("total_size_analyze, module: GE, analyzed %" PRIu64 ", total %" PRIu64 ", api time %u, node time %u,"
+    MSPROF_EVENT(
+        "total_size_analyze, module: GE, analyzed %" PRIu64 ", total %" PRIu64 ", api time %u, node time %u,"
         " event time %u, merge %u",
-        analyzedBytes_,
-        totalBytes_,
-        totalApiTimes_,
-        totalNodeTimes_,
-        totalEventTimes_,
-        totalGeMerges_);
+        analyzedBytes_, totalBytes_, totalApiTimes_, totalNodeTimes_, totalEventTimes_, totalGeMerges_);
 }
 
 void AnalyzerGe::GeApiAndEventParse(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
@@ -365,7 +344,7 @@ void AnalyzerGe::ParseContextIdInfo(CONST_CHAR_PTR data, uint32_t len)
             break;
         }
 
-        auto contextData = reinterpret_cast<const MsprofAdditionalInfo *>(dataPtr_ + offset);
+        auto contextData = reinterpret_cast<const MsprofAdditionalInfo*>(dataPtr_ + offset);
         if (contextData->level == MSPROF_REPORT_NODE_LEVEL &&
             contextData->type == MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE) {
             HandleContextIdInfo(dataPtr_ + offset);
@@ -375,25 +354,34 @@ void AnalyzerGe::ParseContextIdInfo(CONST_CHAR_PTR data, uint32_t len)
         offset += ADDITIONAL_INFO_SIZE;
     }
     BufferRemainingData(offset);
-    MatchApiInfo(AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_,
-        AnalyzerBase::geContextInfo_);
+    MatchApiInfo(
+        AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_, AnalyzerBase::geContextInfo_);
 }
 
 void AnalyzerGe::HandleContextIdInfo(CONST_CHAR_PTR data) const
 {
-    auto additionalData = reinterpret_cast<const MsprofAdditionalInfo *>(data);
-    auto contextIdInfo = reinterpret_cast<const MsprofContextIdInfo *>(additionalData->data);
+    auto additionalData = reinterpret_cast<const MsprofAdditionalInfo*>(data);
+    auto contextIdInfo = reinterpret_cast<const MsprofContextIdInfo*>(additionalData->data);
     uint32_t key = additionalData->threadId;
-    GeOpFlagInfo opInfo{contextIdInfo->opName, 0, 0, additionalData->timeStamp, 0, false, false, false,
+    GeOpFlagInfo opInfo{
+        contextIdInfo->opName,
+        0,
+        0,
+        additionalData->timeStamp,
+        0,
+        false,
+        false,
+        false,
         static_cast<uint16_t>(contextIdInfo->ctxIds[0])};
     AnalyzerBase::geContextInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(key, opInfo));
     std::string contextName = HashData::instance()->GetHashInfo(contextIdInfo->opName);
-    MSPROF_LOGD("insert ContextIdInfo opName: %s, contextId: %u, num: %u.", contextName.c_str(),
-        contextIdInfo->ctxIds[0], contextIdInfo->ctxIdNum);
+    MSPROF_LOGD(
+        "insert ContextIdInfo opName: %s, contextId: %u, num: %u.", contextName.c_str(), contextIdInfo->ctxIds[0],
+        contextIdInfo->ctxIdNum);
 }
 
-bool AnalyzerGe::HandleContextWithNode(std::multimap<uint32_t, GeOpFlagInfo> &nodeInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &contextInfo) const
+bool AnalyzerGe::HandleContextWithNode(
+    std::multimap<uint32_t, GeOpFlagInfo>& nodeInfo, std::multimap<uint32_t, GeOpFlagInfo>& contextInfo) const
 {
     if (contextInfo.empty()) {
         return false;
@@ -401,8 +389,7 @@ bool AnalyzerGe::HandleContextWithNode(std::multimap<uint32_t, GeOpFlagInfo> &no
 
     for (auto nodeIter = nodeInfo.rbegin(); nodeIter != nodeInfo.rend(); nodeIter++) {
         for (auto cxtIter = contextInfo.begin(); cxtIter != contextInfo.end(); cxtIter++) {
-            if (nodeIter->first == cxtIter->first &&
-                nodeIter->second.start == cxtIter->second.start &&
+            if (nodeIter->first == cxtIter->first && nodeIter->second.start == cxtIter->second.start &&
                 nodeIter->second.opNameHash == cxtIter->second.opNameHash) {
                 nodeIter->second.contextId = cxtIter->second.contextId;
             }
@@ -423,7 +410,7 @@ void AnalyzerGe::ParseNodeBasicInfo(CONST_CHAR_PTR data, uint32_t len, bool ageF
             break;
         }
 
-        auto nodeData = reinterpret_cast<const MsprofCompactInfo *>(dataPtr_ + offset);
+        auto nodeData = reinterpret_cast<const MsprofCompactInfo*>(dataPtr_ + offset);
         MSPROF_LOGD("ParseNodeBasicInfo level: %hu.", nodeData->level);
         if (nodeData->level == MSPROF_REPORT_NODE_LEVEL) {
             HandleNodeBasicInfo(dataPtr_ + offset, ageFlag);
@@ -434,8 +421,8 @@ void AnalyzerGe::ParseNodeBasicInfo(CONST_CHAR_PTR data, uint32_t len, bool ageF
         offset += GE_COMPACT_INFO_SIZE;
     }
     BufferRemainingData(offset);
-    MatchApiInfo(AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_,
-        AnalyzerBase::geContextInfo_);
+    MatchApiInfo(
+        AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_, AnalyzerBase::geContextInfo_);
 }
 
 void AnalyzerGe::ParseGraphIdMap(CONST_CHAR_PTR data, uint32_t len)
@@ -450,8 +437,8 @@ void AnalyzerGe::ParseGraphIdMap(CONST_CHAR_PTR data, uint32_t len)
             break;
         }
 
-        auto graphIdMapData = reinterpret_cast<const MsprofAdditionalInfo *>(dataPtr_ + offset);
-        auto graphIdInfo = reinterpret_cast<const MsprofGraphIdInfo *>(graphIdMapData->data);
+        auto graphIdMapData = reinterpret_cast<const MsprofAdditionalInfo*>(dataPtr_ + offset);
+        auto graphIdInfo = reinterpret_cast<const MsprofGraphIdInfo*>(graphIdMapData->data);
         if (graphIdMapData->level == MSPROF_REPORT_MODEL_LEVEL &&
             graphIdInfo->graphId != std::numeric_limits<uint32_t>::max()) {
             SetGraphModelId(graphIdInfo->modelId, graphIdInfo->graphId);
@@ -464,7 +451,7 @@ void AnalyzerGe::ParseGraphIdMap(CONST_CHAR_PTR data, uint32_t len)
 
 void AnalyzerGe::HandleNodeBasicInfo(CONST_CHAR_PTR data, bool ageFlag) const
 {
-    auto compactData = reinterpret_cast<const MsprofCompactInfo *>(data);
+    auto compactData = reinterpret_cast<const MsprofCompactInfo*>(data);
     auto nodeData = compactData->data.nodeBasicInfo;
     uint32_t key = compactData->threadId;
     const uint64_t opNameHash = nodeData.opName;
@@ -482,8 +469,9 @@ void AnalyzerGe::HandleNodeBasicInfo(CONST_CHAR_PTR data, bool ageFlag) const
 
     GeOpFlagInfo opInfo{opNameHash, opTypeHash, 0, timeStamp, 0, false, false, ageFlag, UINT16_MAX};
     AnalyzerBase::geNodeInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(key, opInfo));
-    MSPROF_LOGD("insert NodeInfo timeStamp: %" PRIu64 ", opname: %s, optype: %s, age: %d.", timeStamp,
-        nodeName.c_str(), nodeType.c_str(), ageFlag);
+    MSPROF_LOGD(
+        "insert NodeInfo timeStamp: %" PRIu64 ", opname: %s, optype: %s, age: %d.", timeStamp, nodeName.c_str(),
+        nodeType.c_str(), ageFlag);
 }
 
 void AnalyzerGe::ParseApiAndEventInfo(CONST_CHAR_PTR data, uint32_t len, bool ageFlag)
@@ -497,13 +485,14 @@ void AnalyzerGe::ParseApiAndEventInfo(CONST_CHAR_PTR data, uint32_t len, bool ag
             break;
         }
 
-        auto mlApiData = reinterpret_cast<const MsprofApi *>(dataPtr_ + offset);
+        auto mlApiData = reinterpret_cast<const MsprofApi*>(dataPtr_ + offset);
         MSPROF_LOGD("ParseMApiAndEvent level: %hu, type %u.", mlApiData->level, mlApiData->type);
         if (mlApiData->endTime != MSPROF_EVENT_FLAG && mlApiData->type == MSPROF_REPORT_NODE_LAUNCH_TYPE) {
             HandleApiInfo(dataPtr_ + offset, ageFlag);
             analyzedBytes_ += GE_API_SIZE;
             totalApiTimes_++;
-        } else if (mlApiData->endTime == MSPROF_EVENT_FLAG && mlApiData->level == MSPROF_REPORT_MODEL_LEVEL &&
+        } else if (
+            mlApiData->endTime == MSPROF_EVENT_FLAG && mlApiData->level == MSPROF_REPORT_MODEL_LEVEL &&
             mlApiData->type == MSPROF_REPORT_MODEL_LOAD_TYPE) {
             HandleModelInfo(dataPtr_ + offset, ageFlag);
             analyzedBytes_ += GE_API_SIZE;
@@ -512,28 +501,30 @@ void AnalyzerGe::ParseApiAndEventInfo(CONST_CHAR_PTR data, uint32_t len, bool ag
         offset += GE_API_SIZE;
     }
     BufferRemainingData(offset);
-    MatchApiInfo(AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_,
-        AnalyzerBase::geContextInfo_);
+    MatchApiInfo(
+        AnalyzerBase::geApiInfo_, AnalyzerBase::geModelInfo_, AnalyzerBase::geNodeInfo_, AnalyzerBase::geContextInfo_);
 }
 
 void AnalyzerGe::HandleApiInfo(CONST_CHAR_PTR data, bool ageFlag) const
 {
-    auto klData = reinterpret_cast<const MsprofApi *>(data);
+    auto klData = reinterpret_cast<const MsprofApi*>(data);
     uint32_t key = klData->threadId;
     GeOpFlagInfo opInfo{0, 0, 0, klData->beginTime, klData->endTime, false, false, ageFlag, UINT16_MAX};
     AnalyzerBase::geApiInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(key, opInfo));
-    MSPROF_LOGD("Insert to GeApiInfo, key: %u, beginTime: %" PRIu64 ", endTime: %" PRIu64 ", age: %d",
-        key, klData->beginTime, klData->endTime, ageFlag);
+    MSPROF_LOGD(
+        "Insert to GeApiInfo, key: %u, beginTime: %" PRIu64 ", endTime: %" PRIu64 ", age: %d", key, klData->beginTime,
+        klData->endTime, ageFlag);
 }
 
 void AnalyzerGe::HandleModelInfo(CONST_CHAR_PTR data, bool ageFlag) const
 {
-    auto mlData = reinterpret_cast<const MsprofEvent *>(data);
+    auto mlData = reinterpret_cast<const MsprofEvent*>(data);
     uint32_t key = mlData->threadId;
     if (AnalyzerBase::geModelInfo_.count(key) == 0) {
         GeOpFlagInfo opInfo = {0, 0, mlData->itemId, mlData->timeStamp, 0, false, false, ageFlag, UINT16_MAX};
         AnalyzerBase::geModelInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(key, opInfo));
-        MSPROF_LOGD("Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map cause no same key. age: %d",
+        MSPROF_LOGD(
+            "Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map cause no same key. age: %d",
             mlData->timeStamp, mlData->itemId, ageFlag);
         return;
     }
@@ -546,7 +537,8 @@ void AnalyzerGe::HandleModelInfo(CONST_CHAR_PTR data, bool ageFlag) const
         if (iter->second.end != 0) {
             iter->second.end = 0;
             iter->second.start = mlData->timeStamp; // repeat modelId and threadId
-            MSPROF_LOGD("Repeat Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map.", mlData->timeStamp,
+            MSPROF_LOGD(
+                "Repeat Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map.", mlData->timeStamp,
                 mlData->itemId);
             return;
         }
@@ -555,23 +547,23 @@ void AnalyzerGe::HandleModelInfo(CONST_CHAR_PTR data, bool ageFlag) const
             return;
         }
         iter->second.end = mlData->timeStamp;
-        MSPROF_LOGD("Insert end: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map.",
-            mlData->timeStamp, mlData->itemId);
+        MSPROF_LOGD(
+            "Insert end: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo map.", mlData->timeStamp, mlData->itemId);
         modelIdExist = true;
     }
 
     if (!modelIdExist) { // same threadId different modelid
         GeOpFlagInfo opInfo{0, 0, mlData->itemId, mlData->timeStamp, 0, false, false, ageFlag, UINT16_MAX};
         AnalyzerBase::geModelInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(key, opInfo));
-        MSPROF_LOGD("Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo_ cause no same modelId. age: %d",
+        MSPROF_LOGD(
+            "Insert start: %" PRIu64 ", modelId: %" PRIu64 " to geModelInfo_ cause no same modelId. age: %d",
             mlData->timeStamp, mlData->itemId, ageFlag);
     }
 }
 
-void AnalyzerGe::MatchApiInfo(std::multimap<uint32_t, GeOpFlagInfo> &apiInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &modelInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &nodeInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &contextInfo)
+void AnalyzerGe::MatchApiInfo(
+    std::multimap<uint32_t, GeOpFlagInfo>& apiInfo, std::multimap<uint32_t, GeOpFlagInfo>& modelInfo,
+    std::multimap<uint32_t, GeOpFlagInfo>& nodeInfo, std::multimap<uint32_t, GeOpFlagInfo>& contextInfo)
 {
     if (apiInfo.empty() || nodeInfo.empty()) {
         return;
@@ -579,8 +571,7 @@ void AnalyzerGe::MatchApiInfo(std::multimap<uint32_t, GeOpFlagInfo> &apiInfo,
     if (modelInfo.empty() && !AnalyzerBase::opTypeFlag_) {
         return;
     }
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_V4_1_0 &&
-        AnalyzerBase::isFftsPlus_) {
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_V4_1_0 && AnalyzerBase::isFftsPlus_) {
         if (!HandleContextWithNode(nodeInfo, contextInfo)) {
             return;
         }
@@ -602,9 +593,11 @@ void AnalyzerGe::MatchApiInfo(std::multimap<uint32_t, GeOpFlagInfo> &apiInfo,
 
         if ((api->second.nodeFlag && api->second.modelFlag) || (api->second.nodeFlag && AnalyzerBase::opTypeFlag_)) {
             std::string nodeName = HashData::instance()->GetHashInfo(api->second.opNameHash);
-            MSPROF_LOGD("Success to match ge opinfo data and insert in map."
-                "Key: %u, start: %" PRIu64 ", end: %" PRIu64 ", name %s, context: %u, age: %d.", api->first,
-                api->second.start, api->second.end, nodeName.c_str(), api->second.contextId, api->second.ageFlag);
+            MSPROF_LOGD(
+                "Success to match ge opinfo data and insert in map."
+                "Key: %u, start: %" PRIu64 ", end: %" PRIu64 ", name %s, context: %u, age: %d.",
+                api->first, api->second.start, api->second.end, nodeName.c_str(), api->second.contextId,
+                api->second.ageFlag);
             AnalyzerBase::geOpInfo_.insert(std::pair<uint32_t, GeOpFlagInfo>(api->first, api->second));
             totalGeMerges_++;
             if (AnalyzerBase::isFftsPlus_) {
@@ -619,13 +612,11 @@ void AnalyzerGe::MatchApiInfo(std::multimap<uint32_t, GeOpFlagInfo> &apiInfo,
     MatchDeviceOpInfo(AnalyzerBase::devTmpOpInfo_, AnalyzerBase::geOpInfo_);
 }
 
-void AnalyzerGe::MatchModelInfo(std::multimap<uint32_t, GeOpFlagInfo> &modelInfo, uint32_t threadId,
-    GeOpFlagInfo &apiInfo) const
+void AnalyzerGe::MatchModelInfo(
+    std::multimap<uint32_t, GeOpFlagInfo>& modelInfo, uint32_t threadId, GeOpFlagInfo& apiInfo) const
 {
     for (auto model = modelInfo.begin(); model != modelInfo.end(); model++) {
-        if (model->first == threadId &&
-            apiInfo.start > model->second.start &&
-            apiInfo.end < model->second.end &&
+        if (model->first == threadId && apiInfo.start > model->second.start && apiInfo.end < model->second.end &&
             apiInfo.ageFlag == model->second.ageFlag) { // match modelid
             apiInfo.modelId = model->second.modelId;
             apiInfo.modelFlag = true;
@@ -635,12 +626,11 @@ void AnalyzerGe::MatchModelInfo(std::multimap<uint32_t, GeOpFlagInfo> &modelInfo
     }
 }
 
-void AnalyzerGe::MatchNodeInfo(std::multimap<uint32_t, GeOpFlagInfo> &nodeInfo, uint32_t threadId,
-    GeOpFlagInfo &apiInfo) const
+void AnalyzerGe::MatchNodeInfo(
+    std::multimap<uint32_t, GeOpFlagInfo>& nodeInfo, uint32_t threadId, GeOpFlagInfo& apiInfo) const
 {
     for (auto node = nodeInfo.begin(); node != nodeInfo.end();) {
-        if (node->first == threadId &&
-            node->second.start >= apiInfo.start &&
+        if (node->first == threadId && node->second.start >= apiInfo.start &&
             node->second.start <= apiInfo.end) { // match node
             apiInfo.opNameHash = node->second.opNameHash;
             apiInfo.opTypeHash = node->second.opTypeHash;
@@ -654,8 +644,8 @@ void AnalyzerGe::MatchNodeInfo(std::multimap<uint32_t, GeOpFlagInfo> &nodeInfo, 
     }
 }
 
-void AnalyzerGe::MatchDeviceOpInfo(std::vector<RtOpInfo> &devTmpOpInfo,
-    std::multimap<uint32_t, GeOpFlagInfo> &geOpInfo) const
+void AnalyzerGe::MatchDeviceOpInfo(
+    std::vector<RtOpInfo>& devTmpOpInfo, std::multimap<uint32_t, GeOpFlagInfo>& geOpInfo) const
 {
     if (devTmpOpInfo.empty() || geOpInfo.empty()) {
         return;
@@ -681,6 +671,6 @@ void AnalyzerGe::MatchDeviceOpInfo(std::vector<RtOpInfo> &devTmpOpInfo,
     }
 }
 
-}  // namespace DEF
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace Analyze
+} // namespace Dvvp
+} // namespace Analysis

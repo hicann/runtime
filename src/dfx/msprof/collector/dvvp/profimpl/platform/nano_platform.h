@@ -27,7 +27,7 @@ protected:
     std::string GetMemoryUBMetrics() override;
     std::string GetScalarMetrics() override;
 };
-}
-}
-}
+} // namespace Platform
+} // namespace Collect
+} // namespace Dvvp
 #endif

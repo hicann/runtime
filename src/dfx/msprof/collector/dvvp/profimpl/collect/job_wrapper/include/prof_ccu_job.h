@@ -27,9 +27,9 @@ public:
     int32_t Uninit() override;
 
 protected:
-    int32_t StartCcuChannel(const std::string &jobId, int32_t deviceId, AI_DRV_CHANNEL channelId,
-        const std::string &filePath);
-    int32_t StopCcuChannel(const std::string &jobId, int32_t deviceId, AI_DRV_CHANNEL channelId) const;
+    int32_t StartCcuChannel(
+        const std::string& jobId, int32_t deviceId, AI_DRV_CHANNEL channelId, const std::string& filePath);
+    int32_t StopCcuChannel(const std::string& jobId, int32_t deviceId, AI_DRV_CHANNEL channelId) const;
 
 protected:
     AI_DRV_CHANNEL channelIdCcu0_;
@@ -54,7 +54,7 @@ public:
     int32_t Uninit() override;
 };
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
 #endif

@@ -25,13 +25,13 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::Common::Platform;
 
-static unsigned long long ProfTimerJobCommonInit(const SHARED_PTR_ALIA<CollectionJobCfg> cfg,
-    SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> &uploader,
+static unsigned long long ProfTimerJobCommonInit(
+    const SHARED_PTR_ALIA<CollectionJobCfg> cfg, SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader>& uploader,
     TimerHandlerTag timerTag)
 {
     CHECK_JOB_CONTEXT_PARAM_RET(cfg, return PROFILING_FAILED);
-    const uint32_t profStatMemIntervalHundredMs = 100;  // 100 MS
-    const uint32_t profMsToNs = 1000000;  // 1000000 NS
+    const uint32_t profStatMemIntervalHundredMs = 100; // 100 MS
+    const uint32_t profMsToNs = 1000000;               // 1000000 NS
     int32_t sampleIntervalMs = profStatMemIntervalHundredMs;
     int32_t profilingInterval = cfg->comParams->params->cpu_sampling_interval;
 
@@ -51,23 +51,20 @@ static unsigned long long ProfTimerJobCommonInit(const SHARED_PTR_ALIA<Collectio
 
     analysis::dvvp::transport::UploaderMgr::instance()->GetUploader(cfg->comParams->params->job_id, uploader);
     if (uploader == nullptr) {
-        MSPROF_LOGE("Failed to get devId:%d uploader, devIdOnHost:%d",
-                    cfg->comParams->devId, cfg->comParams->devIdOnHost);
+        MSPROF_LOGE(
+            "Failed to get devId:%d uploader, devIdOnHost:%d", cfg->comParams->devId, cfg->comParams->devIdOnHost);
         return 0;
     }
-    MSPROF_LOGI("[ProfTimerJobCommonInit]devId:%d, devIdOnHost:%d, timerTag:%d, sampleIntervalMs:%d",
-        cfg->comParams->devId, cfg->comParams->devIdOnHost, timerTag, sampleIntervalMs);
+    MSPROF_LOGI(
+        "[ProfTimerJobCommonInit]devId:%d, devIdOnHost:%d, timerTag:%d, sampleIntervalMs:%d", cfg->comParams->devId,
+        cfg->comParams->devIdOnHost, timerTag, sampleIntervalMs);
 
     return (static_cast<unsigned long long>(sampleIntervalMs) * profMsToNs);
 }
 
-ProfSysStatJob::ProfSysStatJob() : ProfSysInfoBase()
-{
-}
+ProfSysStatJob::ProfSysStatJob() : ProfSysInfoBase() {}
 
-ProfSysStatJob::~ProfSysStatJob()
-{
-}
+ProfSysStatJob::~ProfSysStatJob() {}
 
 int32_t ProfSysStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -81,8 +78,8 @@ int32_t ProfSysStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->sys_profiling.compare(
-        analysis::dvvp::common::config::MSVP_PROF_ON) != 0) {
+    if (collectionJobCfg_->comParams->params->sys_profiling.compare(analysis::dvvp::common::config::MSVP_PROF_ON) !=
+        0) {
         MSPROF_LOGI("sys_profiling not enabled");
         return PROFILING_FAILED;
     }
@@ -102,11 +99,13 @@ int32_t ProfSysStatJob::Process()
     std::string retFileName(PROF_SYS_CPU_USAGE_FILE);
     SHARED_PTR_ALIA<ProcStatFileHandler> statHandler;
     SHARED_PTR_ALIA<TimerAttr> attr = nullptr;
-    MSVP_MAKE_SHARED4(attr, TimerAttr, PROF_SYS_STAT, collectionJobCfg_->comParams->devId,
-        procSysStatBufSize, sampleIntervalNs_, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED4(
+        attr, TimerAttr, PROF_SYS_STAT, collectionJobCfg_->comParams->devId, procSysStatBufSize, sampleIntervalNs_,
+        return PROFILING_FAILED);
     attr->srcFileName = PROF_PROC_STAT;
     attr->retFileName = retFileName;
-    MSVP_MAKE_SHARED4(statHandler, ProcStatFileHandler, attr, collectionJobCfg_->comParams->params,
+    MSVP_MAKE_SHARED4(
+        statHandler, ProcStatFileHandler, attr, collectionJobCfg_->comParams->params,
         collectionJobCfg_->comParams->jobCtx, uploader_, return PROFILING_FAILED);
 
     if (statHandler->Init() != PROFILING_SUCCESS) {
@@ -127,19 +126,13 @@ int32_t ProfSysStatJob::Uninit()
     return PROFILING_SUCCESS;
 }
 
-ProfAllPidsJob::ProfAllPidsJob() : ProfSysInfoBase()
-{
-}
+ProfAllPidsJob::ProfAllPidsJob() : ProfSysInfoBase() {}
 
-ProfAllPidsJob::~ProfAllPidsJob()
-{
-}
+ProfAllPidsJob::~ProfAllPidsJob() {}
 
 int32_t ProfAllPidsJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
-    if (cfg == nullptr ||
-        cfg->comParams == nullptr ||
-        cfg->comParams->jobCtx == nullptr ||
+    if (cfg == nullptr || cfg->comParams == nullptr || cfg->comParams->jobCtx == nullptr ||
         cfg->comParams->params == nullptr) {
         return PROFILING_FAILED;
     }
@@ -152,8 +145,8 @@ int32_t ProfAllPidsJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->pid_profiling.compare(
-        analysis::dvvp::common::config::MSVP_PROF_ON) != 0) {
+    if (collectionJobCfg_->comParams->params->pid_profiling.compare(analysis::dvvp::common::config::MSVP_PROF_ON) !=
+        0) {
         MSPROF_LOGI("pid_profiling not enabled");
         return PROFILING_FAILED;
     }
@@ -170,10 +163,11 @@ int32_t ProfAllPidsJob::Process()
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
     SHARED_PTR_ALIA<ProcAllPidsFileHandler> pidsHandler;
     SHARED_PTR_ALIA<TimerAttr> attr = nullptr;
-    MSVP_MAKE_SHARED4(attr, TimerAttr, PROF_ALL_PID, collectionJobCfg_->comParams->devId,
-        0, sampleIntervalNs_, return PROFILING_FAILED);
-    MSVP_MAKE_SHARED4(pidsHandler, ProcAllPidsFileHandler,
-        attr, collectionJobCfg_->comParams->params,
+    MSVP_MAKE_SHARED4(
+        attr, TimerAttr, PROF_ALL_PID, collectionJobCfg_->comParams->devId, 0, sampleIntervalNs_,
+        return PROFILING_FAILED);
+    MSVP_MAKE_SHARED4(
+        pidsHandler, ProcAllPidsFileHandler, attr, collectionJobCfg_->comParams->params,
         collectionJobCfg_->comParams->jobCtx, uploader_, return PROFILING_FAILED);
     if (pidsHandler->Init() != PROFILING_SUCCESS) {
         MSPROF_LOGE("pidsHandler Init Failed");
@@ -193,13 +187,9 @@ int32_t ProfAllPidsJob::Uninit()
     return PROFILING_SUCCESS;
 }
 
-ProfSysMemJob::ProfSysMemJob() : ProfSysInfoBase()
-{
-}
+ProfSysMemJob::ProfSysMemJob() : ProfSysInfoBase() {}
 
-ProfSysMemJob::~ProfSysMemJob()
-{
-}
+ProfSysMemJob::~ProfSysMemJob() {}
 
 int32_t ProfSysMemJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 {
@@ -213,10 +203,10 @@ int32_t ProfSysMemJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->sys_profiling.compare(
-        analysis::dvvp::common::config::MSVP_PROF_ON) != 0 ||
-        collectionJobCfg_->comParams->params->msprof.compare(
-            analysis::dvvp::common::config::MSVP_PROF_ON) == 0) { // msprof does not collect mem
+    if (collectionJobCfg_->comParams->params->sys_profiling.compare(analysis::dvvp::common::config::MSVP_PROF_ON) !=
+            0 ||
+        collectionJobCfg_->comParams->params->msprof.compare(analysis::dvvp::common::config::MSVP_PROF_ON) ==
+            0) { // msprof does not collect mem
         MSPROF_LOGI("sys mem profiling not enabled");
         return PROFILING_FAILED;
     }
@@ -231,16 +221,18 @@ int32_t ProfSysMemJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
 int32_t ProfSysMemJob::Process()
 {
     CHECK_JOB_COMMON_PARAM_RET(collectionJobCfg_, return PROFILING_FAILED);
-    const uint32_t procSysMemBufSize = (1 << 15);  // 1 << 15  means 32k
+    const uint32_t procSysMemBufSize = (1 << 15); // 1 << 15  means 32k
     std::string retFileName(PROF_SYS_MEM_FILE);
 
     SHARED_PTR_ALIA<ProcMemFileHandler> memHandler;
     SHARED_PTR_ALIA<TimerAttr> attr = nullptr;
-    MSVP_MAKE_SHARED4(attr, TimerAttr, PROF_SYS_MEM, collectionJobCfg_->comParams->devId,
-        procSysMemBufSize, sampleIntervalNs_, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED4(
+        attr, TimerAttr, PROF_SYS_MEM, collectionJobCfg_->comParams->devId, procSysMemBufSize, sampleIntervalNs_,
+        return PROFILING_FAILED);
     attr->srcFileName = PROF_PROC_MEM;
     attr->retFileName = retFileName;
-    MSVP_MAKE_SHARED4(memHandler, ProcMemFileHandler, attr, collectionJobCfg_->comParams->params,
+    MSVP_MAKE_SHARED4(
+        memHandler, ProcMemFileHandler, attr, collectionJobCfg_->comParams->params,
         collectionJobCfg_->comParams->jobCtx, uploader_, return PROFILING_FAILED);
     if (memHandler->Init() != PROFILING_SUCCESS) {
         MSPROF_LOGE("memHandler Init Failed");
@@ -260,6 +252,6 @@ int32_t ProfSysMemJob::Uninit()
     return PROFILING_SUCCESS;
 }
 
-}
-}
-}
+} // namespace JobWrapper
+} // namespace Dvvp
+} // namespace Analysis
