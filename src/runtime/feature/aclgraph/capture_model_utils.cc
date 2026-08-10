@@ -239,7 +239,7 @@ rtError_t CheckCaptureModelSupportSoftwareSq(const Device* const dev)
 rtError_t CheckCaptureModelForUpdate(const Stream* stm)
 {
     Device* dev = stm->Device_();
-    static rtError_t isSupportResult = CheckCaptureModelSupportSoftwareSq(dev);
+    const rtError_t isSupportResult = CheckCaptureModelSupportSoftwareSq(dev);
     COND_RETURN_WITH_NOLOG((isSupportResult != RT_ERROR_NONE), isSupportResult);
 
     Model* const mdl = stm->Model_();

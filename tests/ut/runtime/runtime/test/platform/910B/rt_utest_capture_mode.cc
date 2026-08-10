@@ -112,6 +112,23 @@ private:
     bool isCfgOpExcTaskTimeout{false};
 };
 
+TEST_F(CloudV2CaptureModelTest, CheckCaptureModelForUpdateRefreshesSupportResult)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+
+    MOCKER(CheckCaptureModelSupportSoftwareSq)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT))
+        .then(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+
+    EXPECT_EQ(CheckCaptureModelForUpdate(streamObj), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(CheckCaptureModelForUpdate(streamObj), RT_ERROR_DRV_NOT_SUPPORT);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2CaptureModelTest, SUBMIT_RDMA_PI_VALUE_MODIFY_TASK)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
