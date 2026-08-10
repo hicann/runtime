@@ -217,7 +217,7 @@ int32_t File::AddMapping(const std::string &filePath, const std::string &fileNam
         if (residLen >= static_cast<uint32_t>(writeLen)) {
             residLen -= static_cast<uint32_t>(writeLen);
         } else {
-            IDE_LOGE("Write failed, info: %s, write length larger than resid length", strerror(errno));
+            IDE_LOGE("Write failed, info: %s, write length larger than remaining length", strerror(errno));
             (void)Close();
             return ADUMP_FAILED;
         }

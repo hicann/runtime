@@ -27,7 +27,7 @@ int32_t JsonParser::ParseJsonFromMemory(const char *dumpConfigData, size_t dumpC
     errMsg.clear();
     if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U)) {
         errMsg = "Invalid input parameters";
-        IDE_LOGD("Parse json from memory failed: invaild input parameters.");
+        IDE_LOGD("Parse json from memory failed: invalid input parameters.");
         return ADUMP_INPUT_FAILED;
     }
     try

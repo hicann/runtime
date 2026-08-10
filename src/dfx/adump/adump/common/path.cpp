@@ -160,7 +160,7 @@ Path Path::ParentPath() const
 bool Path::CreateDirectory(bool recursion) const
 {
     if (path_.empty() || path_.length() > MMPA_MAX_PATH) {
-        IDE_LOGW("Director path is empty or overlength, path: %s", path_.c_str());
+        IDE_LOGW("Directory path is empty or overlength, path: %s", path_.c_str());
         return false;
     }
 

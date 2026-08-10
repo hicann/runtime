@@ -228,3 +228,14 @@ TEST_F(CommonFileUtest, Test_Open_LongFilename_AddMapping_OpenFails)
     File file(filePath, O_RDWR | O_CREAT, M_IRUSR | M_IWUSR);
     EXPECT_EQ(file.IsFileOpen(), ADUMP_FAILED);
 }
+
+TEST_F(CommonFileUtest, Test_AddMapping_WriteLengthExceedsRemainingLength)
+{
+    constexpr mmSsize_t writeLengthBeyondMapping = 1024;
+    File file("mapping_target", O_RDWR, READ_WRITE_MODE, true);
+    MOCKER(mmOpen2).stubs().will(returnValue(1));
+    MOCKER(mmWrite).stubs().will(returnValue(writeLengthBeyondMapping));
+    MOCKER(mmClose).expects(once()).will(returnValue(EN_OK));
+
+    EXPECT_EQ(file.AddMapping("/tmp", "file.txt", "hash"), ADUMP_FAILED);
+}

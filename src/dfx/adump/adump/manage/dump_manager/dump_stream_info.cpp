@@ -580,7 +580,7 @@ int32_t GetDumpInfoFromMap(DumpInfoParams& params)
     int32_t ret = DumpStreamCreate(&dumpPtr);
     std::shared_ptr<DumpStreamInfo> dumpInfo(dumpPtr, DumpStreamFree);
     if (ret != ADUMP_SUCCESS) {
-        IDE_LOGE("ceate dump info error, ret : %d", ret);
+        IDE_LOGE("create dump info error, ret : %d", ret);
         return ADUMP_FAILED;
     }
     dumpPtr->mainStreamKey = params.mainStreamKey;
