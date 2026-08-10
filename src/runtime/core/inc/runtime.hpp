@@ -337,14 +337,18 @@ public:
 
     void SetSentinelMode(bool mode) { sentinelMode_ = mode; }
 
-    bool IsDrvBindStreamThread() const { return (halCqReportRecv == nullptr) ? false : true; }
+    bool IsDrvBindStreamThread() const { return (&halCqReportRecv == nullptr) ? false : true; }
 
     std::mutex& GetIpcMemNameLock() { return ipcMemNameLock_; }
 
     std::unordered_map<std::string, ipcMemInfo_t>& GetIpcMemNameMap() { return ipcMemNameMap_; }
     bool isRK3588HostCpu() const { return isRk3588Cpu_; }
+
+private:
     std::mutex ipcMemNameLock_;
     std::unordered_map<std::string, ipcMemInfo_t> ipcMemNameMap_;
+
+public:
     static uint32_t starsPendingMax_;
     static uint32_t maxProgramNum_;
 
