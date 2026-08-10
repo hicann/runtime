@@ -4014,6 +4014,29 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t*
 
 /**
  * @ingroup AscendCL
+ * @brief get PCI Bus ID string by device id
+ * @param [in] deviceId        device id
+ * @param [out] pciBusId       buffer to receive PCI Bus ID string, format: domain:bus:device.function
+ *                              e.g. 0000:3d:00.0
+ * @param [in] len             buffer length, must be greater than or equal to 13
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len);
+
+/**
+ * @ingroup AscendCL
+ * @brief get device id by PCI Bus ID string
+ * @param [in] pciBusId        PCI Bus ID string, format: domain:bus:device.function
+ *                              e.g. 0000:3d:00.0
+ * @param [out] deviceId       device id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId);
+
+/**
+ * @ingroup AscendCL
  * @brief get h2d atomic capabilities by device id
  * @param [out] capabilities  atomic capabilities
  * @param [in] operations     atomic operations

@@ -429,7 +429,8 @@ typedef enum {
     INFO_TYPE_SWPLUGIN_UPGRADE_POLICY,
     INFO_TYPE_SUPER_POD_INTERCON_TYPE,
     INFO_TYPE_REAL_TIME,
-    INFO_TYPE_L2BUFF_INVALID_CACHE,
+    INFO_TYPE_L2BUFF_INVALID_CACHE = 65,
+    INFO_TYPE_PCIE_ID_INFO,
 } DEV_INFO_TYPE;
 
 /**
@@ -1176,6 +1177,15 @@ enum hal_product_type {
 * @return   0 for success, others for fail
 */
 DLLEXPORT drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value);
+
+#define PCIE_INFO_RESERVED_LEN 20
+typedef struct {
+    unsigned int domain;
+    unsigned int bus;
+    unsigned int device;
+    unsigned int function;
+    unsigned int reserved[PCIE_INFO_RESERVED_LEN];
+} HAL_PCIE_INFO;
 
 #define HAL_CPM_DATA_SIZE 256
 typedef struct {

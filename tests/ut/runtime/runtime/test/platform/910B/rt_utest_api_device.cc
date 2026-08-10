@@ -648,6 +648,149 @@ TEST_F(CloudV2ApiDeviceTest, get_device_uuid_fail)
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
 }
 
+rtError_t ApiGetDevicePCIBusIdStub(Api* api, int32_t devId, char* pciBusId, int32_t len)
+{
+    UNUSED(api);
+    UNUSED(devId);
+    UNUSED(len);
+    const char sampleBdf[] = "0000:3d:00.0";
+    (void)memcpy_s(pciBusId, len, sampleBdf, sizeof(sampleBdf));
+    return RT_ERROR_NONE;
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_success)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+        .stubs()
+        .will(invoke(ApiGetDevicePCIBusIdStub));
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_feature_not_support)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+        .stubs()
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_fail)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+        .stubs()
+        .will(returnValue(RT_ERROR_DEVICE_ID));
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_success)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t devId = -1;
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceByPCIBusId).stubs().will(returnValue(RT_ERROR_NONE));
+
+    auto error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_feature_not_support)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t devId = 0;
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceByPCIBusId)
+        .stubs()
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    auto error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_dec_invalid_dev_id)
+{
+    int32_t devId = -1;
+    char pciBusId[20] = {0};
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_dec_invalid_ptr)
+{
+    int32_t devId = 0;
+
+    auto error = rtDeviceGetPCIBusId(devId, nullptr, 20);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_dec_len_too_small)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, static_cast<int32_t>(RT_PCI_BUS_ID_MIN_LEN) - 1);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_dec_success)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+
+    auto error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_dec_invalid_ptr)
+{
+    int32_t devId = 0;
+
+    auto error = rtDeviceGetByPCIBusId(nullptr, &devId);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_dec_invalid_dev_id_ptr)
+{
+    auto error = rtDeviceGetByPCIBusId("0000:3d:00.0", nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_dec_success)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t devId = -1;
+
+    auto error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(devId, 0);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_dec_no_match)
+{
+    const char* pciBusId = "0000:ff:00.0";
+    int32_t devId = -1;
+
+    auto error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(CloudV2ApiDeviceTest, rtDeviceGetHostAtomicCapabilities)
 {
     rtError_t error;

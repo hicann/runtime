@@ -7799,6 +7799,52 @@ rtError_t ApiImpl::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid)
         static_cast<uint32_t>(devId), MODULE_TYPE_SYSTEM, INFO_TYPE_UUID, uuid->bytes, &drvRetUuidSize);
 }
 
+rtError_t ApiImpl::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
+{
+    RT_LOG(RT_LOG_DEBUG, "Get device PCI bus id, drv devId=%d.", devId);
+    return NpuDriver::GetDevicePCIBusId(static_cast<uint32_t>(devId), pciBusId, len);
+}
+
+rtError_t ApiImpl::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    RT_LOG(RT_LOG_DEBUG, "Get device by PCI bus id, pciBusId=%s.", pciBusId);
+
+    Runtime* const rt = Runtime::Instance();
+    uint32_t devCnt = rt->deviceCnt;
+    if (devCnt == 0U) {
+        FacadeDriver& curDrv = rt->FacadeDriver_();
+        int32_t drvDeviceCnt = 0;
+        const rtError_t error = curDrv.GetDeviceCount(&drvDeviceCnt);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "GetDeviceCount failed, error=%#x.", static_cast<uint32_t>(error));
+            return error;
+        }
+        devCnt = static_cast<uint32_t>(drvDeviceCnt);
+    }
+    for (uint32_t logicalDevId = 0U; logicalDevId < devCnt; ++logicalDevId) {
+        char curBdf[RT_PCI_BUS_ID_MIN_LEN] = {0};
+        rtError_t error = NpuDriver::GetDevicePCIBusId(logicalDevId, curBdf, static_cast<int32_t>(sizeof(curBdf)));
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_DEBUG, "GetDevicePCIBusId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                static_cast<uint32_t>(error));
+            continue;
+        }
+        if (strcmp(pciBusId, curBdf) == 0) {
+            error = rt->GetUserDevIdByDeviceId(logicalDevId, reinterpret_cast<uint32_t*>(devId));
+            if (error != RT_ERROR_NONE) {
+                RT_LOG(
+                    RT_LOG_ERROR, "GetUserDevIdByDeviceId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                    static_cast<uint32_t>(error));
+                return error;
+            }
+            return RT_ERROR_NONE;
+        }
+    }
+    RT_LOG(RT_LOG_ERROR, "No device matched PCI bus id: %s.", pciBusId);
+    return RT_ERROR_INVALID_VALUE;
+}
+
 static rtError_t SetStreamResLimitByType(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value)
 {
     const Device* dev = stm->Device_();

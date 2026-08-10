@@ -430,6 +430,8 @@ public:
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount) override;
     rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t* uuid) override;
+    rtError_t GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len) override;
+    rtError_t GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId) override;
     rtError_t GetHostAtomicCapabilities(
         uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
     rtError_t GetP2PAtomicCapabilities(

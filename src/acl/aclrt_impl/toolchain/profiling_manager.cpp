@@ -157,6 +157,8 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtGetEventAvailNum, "aclrtGetEventAvailNum"},
     {AclProfType::AclrtGetDeviceInfo, "aclrtGetDeviceInfo"},
     {AclProfType::AclrtDeviceGetUuid, "aclrtDeviceGetUuid"},
+    {AclProfType::AclrtDeviceGetPCIBusId, "aclrtDeviceGetPCIBusId"},
+    {AclProfType::AclrtDeviceGetByPCIBusId, "aclrtDeviceGetByPCIBusId"},
     {AclProfType::AclrtDeviceSetLimit, "aclrtDeviceSetLimit"},
     {AclProfType::AclrtDeviceGetLimit, "aclrtDeviceGetLimit"},
     {AclProfType::AclrtDeviceGetStreamPriorityRange, "aclrtDeviceGetStreamPriorityRange"},

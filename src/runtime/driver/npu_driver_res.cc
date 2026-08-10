@@ -207,6 +207,26 @@ rtError_t NpuDriver::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* memUce
     return RT_GET_DRV_ERRCODE(drvRet);
 }
 
+rtError_t NpuDriver::GetDevicePCIBusId(const uint32_t deviceId, char* const pciBusId, const int32_t len)
+{
+    HAL_PCIE_INFO pcieInfo{};
+    int32_t infoSize = static_cast<int32_t>(sizeof(pcieInfo));
+    const rtError_t error =
+        GetDeviceInfoByBuff(deviceId, MODULE_TYPE_PCIE, INFO_TYPE_PCIE_ID_INFO, &pcieInfo, &infoSize);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    const uint32_t bufLen = static_cast<uint32_t>(len);
+    const int32_t ret = snprintf_s(
+        pciBusId, bufLen, bufLen - 1U, "%04x:%02x:%02x.%x", pcieInfo.domain, pcieInfo.bus, pcieInfo.device,
+        pcieInfo.function);
+    if (ret < 0) {
+        RT_LOG(RT_LOG_ERROR, "snprintf_s failed for PCI bus id, ret=%d.", ret);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::GetDeviceInfoByBuff(
     const uint32_t deviceId, const int32_t moduleType, const int32_t infoType, void* const buf, int32_t* const size)
 {

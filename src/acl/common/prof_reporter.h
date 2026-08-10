@@ -258,6 +258,8 @@ enum AclProfType {
     AclrtSetOpExecuteTimeOutV2,
     AclrtGetOpTimeOutInterval,
     AclrtDeviceGetUuid,
+    AclrtDeviceGetPCIBusId,
+    AclrtDeviceGetByPCIBusId,
     AclrtMemGetAccess,
     AclrtFreeWithDevSync,
     AclrtFreeHostWithDevSync,

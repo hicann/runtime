@@ -468,6 +468,8 @@ public:
     virtual rtError_t rtsDeviceGetStreamPriorityRange(int32_t* leastPriority, int32_t* greatestPriority);
     virtual rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32_t* val);
     virtual rtError_t rtGetDeviceUuid(int32_t deviceId, rtUuid_t* uuid);
+    virtual rtError_t rtDeviceGetPCIBusId(int32_t deviceId, char* pciBusId, int32_t len);
+    virtual rtError_t rtDeviceGetByPCIBusId(const char* pciBusId, int32_t* deviceId);
 
     virtual rtError_t rtsCtxGetCurrentDefaultStream(rtStream_t* stm);
     virtual rtError_t rtsGetPrimaryCtxState(const int32_t devId, uint32_t* flags, int32_t* active);
@@ -1094,6 +1096,8 @@ public:
     MOCK_METHOD2(rtsDeviceGetStreamPriorityRange, rtError_t(int32_t* leastPriority, int32_t* greatestPriority));
     MOCK_METHOD3(rtsDeviceGetCapability, rtError_t(int32_t deviceId, int32_t devFeatureType, int32_t* val));
     MOCK_METHOD2(rtGetDeviceUuid, rtError_t(int32_t deviceId, rtUuid_t* uuid));
+    MOCK_METHOD3(rtDeviceGetPCIBusId, rtError_t(int32_t deviceId, char* pciBusId, int32_t len));
+    MOCK_METHOD2(rtDeviceGetByPCIBusId, rtError_t(const char* pciBusId, int32_t* deviceId));
 
     MOCK_METHOD1(rtsCtxGetCurrentDefaultStream, rtError_t(rtStream_t* stm));
     MOCK_METHOD3(rtsGetPrimaryCtxState, rtError_t(const int32_t devId, uint32_t* flags, int32_t* active));

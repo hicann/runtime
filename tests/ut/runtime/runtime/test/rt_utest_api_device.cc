@@ -553,3 +553,113 @@ TEST_F(ApiDeviceTest, TestRtsNewDeviceId)
     error = rtsGetUserDevIdByLogicDevId(-1, &count3);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
+
+/* ========== PCI Bus ID 测试：覆盖 ApiErrorDecorator → ApiImpl 全链路 ========== */
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_full_chain_success)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+    rtError_t error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_full_chain_invalid_dev_id)
+{
+    int32_t devId = -1;
+    char pciBusId[20] = {0};
+    rtError_t error = rtDeviceGetPCIBusId(devId, pciBusId, sizeof(pciBusId));
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_full_chain_invalid_ptr)
+{
+    int32_t devId = 0;
+    rtError_t error = rtDeviceGetPCIBusId(devId, nullptr, 20);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_full_chain_len_too_small)
+{
+    int32_t devId = 0;
+    char pciBusId[20] = {0};
+    rtError_t error = rtDeviceGetPCIBusId(devId, pciBusId, static_cast<int32_t>(RT_PCI_BUS_ID_MIN_LEN) - 1);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_full_chain_success)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t devId = -1;
+    rtError_t error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(devId, 0);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_full_chain_no_match)
+{
+    const char* pciBusId = "0000:ff:00.0";
+    int32_t devId = -1;
+    rtError_t error = rtDeviceGetByPCIBusId(pciBusId, &devId);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_full_chain_invalid_ptr)
+{
+    int32_t devId = 0;
+    rtError_t error = rtDeviceGetByPCIBusId(nullptr, &devId);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_full_chain_invalid_dev_id_ptr)
+{
+    rtError_t error = rtDeviceGetByPCIBusId("0000:3d:00.0", nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+/* ========== PCI Bus ID 测试：覆盖 ApiDecorator 基类（通过 ProfileDecorator） ========== */
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_profile_decorator)
+{
+    ApiImpl apiImpl;
+    Profiler profiler(&apiImpl);
+    ApiProfileDecorator apiProfileDecorator(&apiImpl, &profiler);
+    char pciBusId[20] = {0};
+    rtError_t error = apiProfileDecorator.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_profile_decorator)
+{
+    ApiImpl apiImpl;
+    Profiler profiler(&apiImpl);
+    ApiProfileDecorator apiProfileDecorator(&apiImpl, &profiler);
+    int32_t devId = -1;
+    rtError_t error = apiProfileDecorator.GetDeviceByPCIBusId("0000:3d:00.0", &devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(devId, 0);
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_profile_log_decorator)
+{
+    ApiImpl apiImpl;
+    Profiler profiler(&apiImpl);
+    ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
+    char pciBusId[20] = {0};
+    rtError_t error = apiProfileLogDecorator.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+}
+
+TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_profile_log_decorator)
+{
+    ApiImpl apiImpl;
+    Profiler profiler(&apiImpl);
+    ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
+    int32_t devId = -1;
+    rtError_t error = apiProfileLogDecorator.GetDeviceByPCIBusId("0000:3d:00.0", &devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(devId, 0);
+}

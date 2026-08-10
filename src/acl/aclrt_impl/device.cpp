@@ -373,6 +373,29 @@ aclError aclrtDeviceGetUuidImpl(int32_t deviceId, aclrtUuid* uuid)
     return ACL_SUCCESS;
 }
 
+aclError aclrtDeviceGetPCIBusIdImpl(int32_t deviceId, char* pciBusId, int32_t len)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetPCIBusId);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetPCIBusId, deviceId is [%d]", deviceId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pciBusId);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtDeviceGetPCIBusId(deviceId, pciBusId, len), rtDeviceGetPCIBusId);
+
+    ACL_LOG_INFO("successfully execute aclrtDeviceGetPCIBusId");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceGetByPCIBusIdImpl(const char* pciBusId, int32_t* deviceId)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetByPCIBusId);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetByPCIBusId");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pciBusId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(deviceId);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtDeviceGetByPCIBusId(pciBusId, deviceId), rtDeviceGetByPCIBusId);
+
+    ACL_LOG_INFO("successfully execute aclrtDeviceGetByPCIBusId");
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetDeviceResLimitImpl(int32_t deviceId, aclrtDevResLimitType type, uint32_t* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetDeviceResLimit);

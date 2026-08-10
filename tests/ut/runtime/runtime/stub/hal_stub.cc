@@ -108,6 +108,16 @@ drvError_t halGetFaultEvent(
 
 drvError_t halGetDeviceInfoByBuff(uint32_t devId, int32_t moduleType, int32_t infoType, void* buf, int32_t* size)
 {
+    if (infoType == INFO_TYPE_PCIE_ID_INFO) {
+        if (buf != nullptr) {
+            HAL_PCIE_INFO* pcieInfo = static_cast<HAL_PCIE_INFO*>(buf);
+            pcieInfo->domain = 0x0000U;
+            pcieInfo->bus = 0x3dU;
+            pcieInfo->device = 0x00U;
+            pcieInfo->function = 0x0U;
+        }
+        return DRV_ERROR_NONE;
+    }
     if (infoType == 13U) {
         return DRV_ERROR_NONE;
     }

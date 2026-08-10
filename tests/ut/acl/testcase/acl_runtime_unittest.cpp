@@ -5992,6 +5992,63 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetUuid_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetPCIBusId_invalid_param_null_buf)
+{
+    int32_t deviceId = 0;
+    const auto ret = aclrtDeviceGetPCIBusId(deviceId, nullptr, 20);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetPCIBusId_feature_not_support)
+{
+    int32_t deviceId = 0;
+    char pciBusId[20] = {0};
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetPCIBusId(_, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    const auto ret = aclrtDeviceGetPCIBusId(deviceId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetPCIBusId_success)
+{
+    int32_t deviceId = 0;
+    char pciBusId[20] = {0};
+    const auto ret = aclrtDeviceGetPCIBusId(deviceId, pciBusId, sizeof(pciBusId));
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetByPCIBusId_invalid_param_null_busid)
+{
+    int32_t deviceId = 0;
+    const auto ret = aclrtDeviceGetByPCIBusId(nullptr, &deviceId);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetByPCIBusId_invalid_param_null_devid)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    const auto ret = aclrtDeviceGetByPCIBusId(pciBusId, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetByPCIBusId_feature_not_support)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t deviceId = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetByPCIBusId(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    const auto ret = aclrtDeviceGetByPCIBusId(pciBusId, &deviceId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetByPCIBusId_success)
+{
+    const char* pciBusId = "0000:3d:00.0";
+    int32_t deviceId = 0;
+    const auto ret = aclrtDeviceGetByPCIBusId(pciBusId, &deviceId);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtCtxGetCurrentDefaultStream_failed_with_invalid_args)
 {
     auto ret = aclrtCtxGetCurrentDefaultStream(nullptr);

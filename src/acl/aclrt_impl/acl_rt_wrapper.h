@@ -309,6 +309,8 @@
     _(aclError, aclrtGetDeviceCapability, (int32_t deviceId, aclrtDevFeatureType devFeatureType, int32_t * value),     \
       (deviceId, devFeatureType, value))                                                                               \
     _(aclError, aclrtDeviceGetUuid, (int32_t deviceId, aclrtUuid * uuid), (deviceId, uuid))                            \
+    _(aclError, aclrtDeviceGetPCIBusId, (int32_t deviceId, char* pciBusId, int32_t len), (deviceId, pciBusId, len))    \
+    _(aclError, aclrtDeviceGetByPCIBusId, (const char* pciBusId, int32_t* deviceId), (pciBusId, deviceId))             \
     _(aclError, aclrtDeviceSetLimit, (aclrtDeviceLimit limit, size_t value), (limit, value))                           \
     _(aclError, aclrtDeviceGetLimit, (aclrtDeviceLimit limit, size_t * value), (limit, value))                         \
     _(aclError, aclrtCtxGetCurrentDefaultStream, (aclrtStream * stream), (stream))                                     \

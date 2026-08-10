@@ -16,6 +16,8 @@
 #include "kernel.h"
 #include "runtime_handle_guard.h"
 
+#define RT_PCI_BUS_ID_MIN_LEN 13U
+
 namespace cce {
 namespace runtime {
 constexpr uint32_t RT_MAX_DEV_NUM = 64U;

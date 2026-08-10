@@ -34,6 +34,8 @@
 - [`aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const userDevId)`](#aclrtGetUserDevIdByPhyDevId)：根据物理设备ID获取对应的用户设备ID。
 - [`aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phyDevId)`](#aclrtGetPhyDevIdByUserDevId)：根据用户设备ID获取对应的物理设备ID。
 - [`aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)`](#aclrtDeviceGetUuid)：获取Device的唯一标识UUID（Universally Unique Identifier）。
+- [`aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)`](#aclrtDeviceGetPCIBusId)：根据Device ID获取对应设备的PCI Bus ID字符串。
+- [`aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)`](#aclrtDeviceGetByPCIBusId)：根据PCI Bus ID字符串获取对应的Device ID。
 - [`aclError aclrtDeviceGetBareTgid(int32_t *pid)`](#aclrtDeviceGetBareTgid)：获取当前进程的进程ID。
 - [`aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId)`](#aclrtDeviceGetHostAtomicCapabilities)：查询指定Device与Host之间支持的原子操作详情。
 - [`aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)`](#aclrtDeviceGetP2PAtomicCapabilities)：查询一个AI Server内两个Device之间支持的原子操作详情。AI Server通常是多个Device组成的服务器形态的统称。
@@ -1915,6 +1917,121 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceGetPCIBusId"></a>
+
+## aclrtDeviceGetPCIBusId
+
+```c
+aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3333 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3333 -->
+<!-- npu="A3" id3334 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3334 -->
+<!-- npu="910b" id3335 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3335 -->
+<!-- npu="310b" id3336 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3336 -->
+<!-- npu="310p" id3337 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3337 -->
+<!-- npu="910" id3338 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3338 -->
+<!-- npu="IPV350" id3339 -->
+- IPV350：不支持
+<!-- end id3339 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id36 -->
+
+### 功能说明
+
+根据Device ID获取对应设备的PCI Bus ID（BDF）字符串。BDF字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| deviceId | 输入 | Device ID，与[aclrtSetDevice](#aclrtSetDevice)接口中的Device ID保持一致。 |
+| pciBusId | 输出 | 指向用于存储PCI Bus ID字符串的缓冲区。 |
+| len | 输入 | 缓冲区长度，必须大于等于13。BDF字符串为12个字符加上结尾的`\0`，共13字节。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 虚拟化或容器场景下，返回的是虚拟化层分配的虚拟BDF，仅保证在当前VM或容器内格式合法且唯一，不保证与物理机一致或跨VM唯一。
+- 非PCIe互连形态（如HCCS/UB）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceGetByPCIBusId"></a>
+
+## aclrtDeviceGetByPCIBusId
+
+```c
+aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3340 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3340 -->
+<!-- npu="A3" id3341 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3341 -->
+<!-- npu="910b" id3342 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3342 -->
+<!-- npu="310b" id3343 -->
+- Atlas 200I/500 A2 推理产品：不支持
+<!-- end id3343 -->
+<!-- npu="310p" id3344 -->
+- Atlas 推理系列产品：不支持
+<!-- end id3344 -->
+<!-- npu="910" id3345 -->
+- Atlas 训练系列产品：不支持
+<!-- end id3345 -->
+<!-- npu="IPV350" id3346 -->
+- IPV350：不支持
+<!-- end id3346 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id37 -->
+
+### 功能说明
+
+根据PCI Bus ID（BDF）字符串获取对应的Device ID。BDF字符串格式为`domain:bus:device.function`，例如`0000:3d:00.0`。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| pciBusId | 输入 | PCI Bus ID字符串，格式为`domain:bus:device.function`。 |
+| deviceId | 输出 | Device ID，与[aclrtSetDevice](#aclrtSetDevice)接口中的Device ID保持一致。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 若BDF对应的设备不在可见空间内，返回错误码。
+- 非PCIe互连形态（如HCCS/UB）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 
 <br>
 <br>

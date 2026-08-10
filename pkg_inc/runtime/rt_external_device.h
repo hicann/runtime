@@ -436,6 +436,29 @@ typedef enum tagRtMemRequestFeature {
  */
 RTS_API uint32_t rtGetTsMemType(rtMemRequestFeature_t featureType, uint32_t memSize);
 
+/**
+ * @ingroup dvrt_dev
+ * @brief get PCI Bus ID (BDF) string by device id
+ * @param [in] devId      user device ID
+ * @param [out] pciBusId  buffer to receive PCI Bus ID string, format: domain:bus:device.function
+ * @param [in] len        buffer length, must be greater than or equal to 13
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return ACL_ERROR_RT_FEATURE_NOT_SUPPORT for driver or device not support
+ */
+RTS_API rtError_t rtDeviceGetPCIBusId(const int32_t devId, char* pciBusId, const int32_t len);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief get device id by PCI Bus ID (BDF) string
+ * @param [in] pciBusId   PCI Bus ID string, format: domain:bus:device.function
+ * @param [out] devId     user device ID
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return ACL_ERROR_RT_FEATURE_NOT_SUPPORT for driver or device not support
+ */
+RTS_API rtError_t rtDeviceGetByPCIBusId(const char* pciBusId, int32_t* devId);
+
 #if defined(__cplusplus)
 }
 #endif

@@ -714,6 +714,7 @@ public:
         const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen);
     static rtError_t ReleaseDevResAddress(const uint32_t deviceId, const rtDevResInfo* const resInfo);
     static rtError_t MemcpyBatch(uint64_t dsts[], uint64_t srcs[], size_t sizes[], size_t count);
+    static rtError_t GetDevicePCIBusId(const uint32_t deviceId, char* const pciBusId, const int32_t len);
     static rtError_t GetDeviceInfoByBuff(
         const uint32_t deviceId, const int32_t moduleType, const int32_t infoType, void* const buf,
         int32_t* const size);

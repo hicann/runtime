@@ -1949,6 +1949,16 @@ rtError_t ApiDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32
 
 rtError_t ApiDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid) { return impl_->GetDeviceUuid(devId, uuid); }
 
+rtError_t ApiDecorator::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
+{
+    return impl_->GetDevicePCIBusId(devId, pciBusId, len);
+}
+
+rtError_t ApiDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
+{
+    return impl_->GetDeviceByPCIBusId(pciBusId, devId);
+}
+
 rtError_t ApiDecorator::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t cacheOpInfoSwitch)
 {
     return impl_->SetStreamCacheOpInfoSwitch(stm, cacheOpInfoSwitch);

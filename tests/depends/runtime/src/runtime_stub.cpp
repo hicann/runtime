@@ -1642,6 +1642,28 @@ rtError_t aclStub::rtGetDeviceUuid(int32_t deviceId, rtUuid_t* uuid)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtDeviceGetPCIBusId(int32_t deviceId, char* pciBusId, int32_t len)
+{
+    (void)deviceId;
+    if ((pciBusId != nullptr) && (len > 13)) {
+        const char sampleBdf[] = "0000:3d:00.0";
+        const auto ret = memcpy_s(pciBusId, len, sampleBdf, sizeof(sampleBdf));
+        if (ret != EOK) {
+            return RT_ERROR_INVALID_VALUE;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtDeviceGetByPCIBusId(const char* pciBusId, int32_t* deviceId)
+{
+    (void)pciBusId;
+    if (deviceId != nullptr) {
+        *deviceId = 0;
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsCtxGetCurrentDefaultStream(rtStream_t* stm)
 {
     (void)stm;
@@ -3902,6 +3924,16 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
 rtError_t rtGetDeviceUuid(int32_t deviceId, rtUuid_t* uuid)
 {
     return MockFunctionTest::aclStubInstance().rtGetDeviceUuid(deviceId, uuid);
+}
+
+rtError_t rtDeviceGetPCIBusId(int32_t deviceId, char* pciBusId, int32_t len)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceGetPCIBusId(deviceId, pciBusId, len);
+}
+
+rtError_t rtDeviceGetByPCIBusId(const char* pciBusId, int32_t* deviceId)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceGetByPCIBusId(pciBusId, deviceId);
 }
 
 rtError_t rtsCtxGetCurrentDefaultStream(rtStream_t* stm)
