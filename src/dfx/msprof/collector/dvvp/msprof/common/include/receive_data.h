@@ -30,7 +30,7 @@ namespace Engine {
 using namespace analysis::dvvp;
 using namespace analysis::dvvp::common::memory;
 using namespace analysis::dvvp::common::config;
-using CONST_REPORT_DATA_PTR = const ReporterData *;
+using CONST_REPORT_DATA_PTR = const ReporterData*;
 constexpr int32_t WAIT_BUFF_EMPTY_TIMEOUT_US = 5000000;
 struct ModuleIdName {
     uint32_t id;
@@ -39,11 +39,11 @@ struct ModuleIdName {
 };
 
 enum class ProfileDataType {
-    MSPROF_DEFAULT_PROFILE_DATA_TYPE             = 0,
-    MSPROF_API_PROFILE_DATA_TYPE                 = 1,
-    MSPROF_COMPACT_PROFILE_DATA_TYPE             = 2,
-    MSPROF_ADDITIONAL_PROFILE_DATA_TYPE          = 3,
-    ADPROF_ADDITIONAL_PROFILE_DATA_TYPE          = 4,
+    MSPROF_DEFAULT_PROFILE_DATA_TYPE = 0,
+    MSPROF_API_PROFILE_DATA_TYPE = 1,
+    MSPROF_COMPACT_PROFILE_DATA_TYPE = 2,
+    MSPROF_ADDITIONAL_PROFILE_DATA_TYPE = 3,
+    ADPROF_ADDITIONAL_PROFILE_DATA_TYPE = 4,
     MSPROF_VARIABLE_ADDITIONAL_PROFILE_DATA_TYPE = 5,
 };
 
@@ -53,15 +53,13 @@ const std::vector<ModuleIdName> MSPROF_MODULE_ID_NAME_MAP = {
 };
 
 const std::vector<ModuleIdName> MSPROF_MODULE_REPORT_TABLE = {
-    {API_EVENT,               "api_event",        RING_BUFF_CAPACITY},
-    {COMPACT,                 "compact",          COMPACT_RING_BUFF_CAPACITY},
-    {ADDITIONAL,              "additional",       ADDITIONAL_RING_BUFF_CAPACITY},
-    {VARIABLE_ADDINFO,        "variable",         VARIABLE_ADDITIONAL_BUFF_CAPACITY},
+    {API_EVENT, "api_event", RING_BUFF_CAPACITY},
+    {COMPACT, "compact", COMPACT_RING_BUFF_CAPACITY},
+    {ADDITIONAL, "additional", ADDITIONAL_RING_BUFF_CAPACITY},
+    {VARIABLE_ADDINFO, "variable", VARIABLE_ADDITIONAL_BUFF_CAPACITY},
 };
 
-const std::vector<ModuleIdName> ADPROF_MODULE_REPORT_TABLE = {
-    {ADPROF,        "adprof",         ADPROF_BUFF_CAPACITY}
-};
+const std::vector<ModuleIdName> ADPROF_MODULE_REPORT_TABLE = {{ADPROF, "adprof", ADPROF_BUFF_CAPACITY}};
 
 struct ReporterDataChunk {
     char tag[MSPROF_ENGINE_MAX_TAG_LEN + 1];
@@ -93,7 +91,7 @@ protected:
     virtual int32_t FlushAll();
     virtual void TimedTask();
     virtual void DoReportRun();
-    virtual int32_t Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>> &message);
+    virtual int32_t Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& message);
     virtual void WriteDone();
 
     void RunDefaultProfileData(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
@@ -102,21 +100,21 @@ protected:
     int32_t Init();
     int32_t DoReport(CONST_REPORT_DATA_PTR rData) const;
     void PrintTotalSize();
-    template<typename T>
-    int32_t DumpData(std::vector<T> &message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
-    template<typename T>
-    void DumpProfileData(std::vector<T> &message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks,
-        uint32_t ageFlag);
+    template <typename T>
+    int32_t DumpData(std::vector<T>& message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
+    template <typename T>
+    void DumpProfileData(
+        std::vector<T>& message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag);
     void ApiRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
     void CompactRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
     void AdditionalRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
     void RunProfileData(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
 
     void AdprofRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
-    void DumpAdprofData(void *outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const;
+    void DumpAdprofData(void* outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const;
 
     void VariableAdditionalRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks);
-    void DumpVariableData(void *outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const;
+    void DumpVariableData(void* outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const;
 
 protected:
     volatile bool started_;
@@ -136,6 +134,6 @@ private:
     std::atomic<uint64_t> totalPushSize_;
     std::atomic<uint64_t> totalDataLengthFailed_;
 };
-}}
+} // namespace Engine
+} // namespace Msprof
 #endif
-

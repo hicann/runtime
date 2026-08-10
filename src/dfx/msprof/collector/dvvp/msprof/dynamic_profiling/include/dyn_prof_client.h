@@ -32,13 +32,13 @@ public:
     DynProfClient() = default;
     ~DynProfClient() override = default;
 
-    void SetParams(const std::string &params);
+    void SetParams(const std::string& params);
     int32_t Start() override;
     int32_t Stop() override;
     bool IsCliStarted() const;
 
 protected:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
 
 private:
     void DynProfCliInitProcFunc();
@@ -51,8 +51,8 @@ private:
     void DynProfCliProcQuit() const;
     void DynProfCliHelpInfo() const;
 
-    int32_t cliSockFd_ { -1 };
-    bool cliStarted_ { false };
+    int32_t cliSockFd_{-1};
+    bool cliStarted_{false};
     std::string dynProfParams_;
     std::map<DynProfCliCmd, ProcFunc> procFuncMap_;
 };
@@ -62,7 +62,7 @@ class DynProfCliMgr : public analysis::dvvp::common::singleton::Singleton<DynPro
 
 public:
     ~DynProfCliMgr() override;
-    int32_t StartDynProfCli(const std::string &params);
+    int32_t StartDynProfCli(const std::string& params);
     void StopDynProfCli();
     void SetKeyPid(int32_t pid);
     int32_t GetKeyPid() const;
@@ -77,9 +77,9 @@ public:
 
 private:
     DynProfCliMgr() = default;
-    bool enabled_ { false };
-    bool isAppMode_ { false }; // --application
-    int32_t keyPid_ { 0 };         // --application: msprofbin pid; --pid: app pid
+    bool enabled_{false};
+    bool isAppMode_{false}; // --application
+    int32_t keyPid_{0};     // --application: msprofbin pid; --pid: app pid
     SHARED_PTR_ALIA<Collector::Dvvp::DynProf::DynProfClient> dynProfCli_;
 };
 } // namespace DynProf

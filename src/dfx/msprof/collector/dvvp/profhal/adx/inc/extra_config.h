@@ -14,25 +14,25 @@
 extern "C" {
 #endif
 
-typedef void*                IdeSession;
-typedef void*                IdeThreadArg;
-typedef void*                IdeMemHandle;
-typedef void*                IdeBuffT;
-typedef void**               IdeRecvBuffT;
-typedef const void*          IdeSendBuffT;
-typedef int*                 IdeI32Pt;
-typedef unsigned int*        IdeU32Pt;
-typedef char**               IdeStrBufAddrT;
+typedef void* IdeSession;
+typedef void* IdeThreadArg;
+typedef void* IdeMemHandle;
+typedef void* IdeBuffT;
+typedef void** IdeRecvBuffT;
+typedef const void* IdeSendBuffT;
+typedef int* IdeI32Pt;
+typedef unsigned int* IdeU32Pt;
+typedef char** IdeStrBufAddrT;
 
-using IdeStringBuffer = char *;
-using IdeString = const char *;
-using IdeU8Pt = unsigned char *;
+using IdeStringBuffer = char*;
+using IdeString = const char*;
+using IdeU8Pt = unsigned char*;
 
 const int IDE_DAEMON_ERROR = -1;
 const int IDE_DAEMON_OK = 0;
 const int IDE_DAEMON_SOCK_CLOSE = 1;
-const int IDE_DAEMON_RECV_NODATA = 2;   // 2 : no data
-const int MAX_SESSION_NUM = 96; // 96 : max session num
+const int IDE_DAEMON_RECV_NODATA = 2; // 2 : no data
+const int MAX_SESSION_NUM = 96;       // 96 : max session num
 const int DEVICE_NUM_MAX = 1124;
 
 #ifdef __cplusplus
@@ -40,4 +40,3 @@ const int DEVICE_NUM_MAX = 1124;
 #endif
 
 #endif
-

@@ -20,14 +20,9 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 
-DynProfMgr::DynProfMgr() : isStarted_(false)
-{
-}
+DynProfMgr::DynProfMgr() : isStarted_(false) {}
 
-DynProfMgr::~DynProfMgr()
-{
-    StopDynProf();
-}
+DynProfMgr::~DynProfMgr() { StopDynProf(); }
 
 /**
  * @brief Start dynamic profiling task by environment(dynamic start/stop; delay/dutation)
@@ -53,7 +48,7 @@ int32_t DynProfMgr::StartDynProf()
             dynProfSrv_.reset();
             return PROFILING_FAILED;
         }
-    // msprofbin set delay_or_duration, create thread using delay and duration
+        // msprofbin set delay_or_duration, create thread using delay and duration
     } else if (dynProfModeEnv == DELAY_DURARION_PROFILING_VALUE) {
         MSVP_MAKE_SHARED0(dynProfThread_, DynProfThread, return PROFILING_FAILED);
         if (dynProfThread_->Start() != PROFILING_SUCCESS) {
@@ -146,6 +141,6 @@ bool DynProfMgr::IsProfStarted() const
     }
     return false;
 }
-} // DynProf
-} // Dvvp
-} // Collect
+} // namespace DynProf
+} // namespace Dvvp
+} // namespace Collector

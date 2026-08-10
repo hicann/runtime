@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "uploader_dumper.h"
-#include<algorithm>
+#include <algorithm>
 #include "config/config.h"
 #include "error_code.h"
 #include "prof_params.h"
@@ -34,11 +34,10 @@ namespace Engine {
 using namespace analysis::dvvp::common::validation;
 using namespace Msprofiler::Parser;
 /**
-* @brief UploaderDumper: the construct function
-* @param [in] module: the path of profiling data to be saved
-*/
-UploaderDumper::UploaderDumper(const std::string& module)
-    : DataDumper(), module_(module)
+ * @brief UploaderDumper: the construct function
+ * @param [in] module: the path of profiling data to be saved
+ */
+UploaderDumper::UploaderDumper(const std::string& module) : DataDumper(), module_(module)
 {
     if (module_ == "Framework") {
         needCache_ = true;
@@ -47,16 +46,13 @@ UploaderDumper::UploaderDumper(const std::string& module)
     }
 }
 
-UploaderDumper::~UploaderDumper()
-{
-    Stop();
-}
+UploaderDumper::~UploaderDumper() { Stop(); }
 
 /**
-* @brief Start: init variables of UploaderDumper for can receive data from user plugin
-*               start a new thread to check the data from user and write data to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief Start: init variables of UploaderDumper for can receive data from user plugin
+ *               start a new thread to check the data from user and write data to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t UploaderDumper::Start()
 {
     if (started_) {
@@ -65,14 +61,16 @@ int32_t UploaderDumper::Start()
     }
 
     int32_t ret = PROFILING_SUCCESS;
-    auto iter1 = std::find_if(std::begin(ADPROF_MODULE_REPORT_TABLE), std::end(ADPROF_MODULE_REPORT_TABLE),
+    auto iter1 = std::find_if(
+        std::begin(ADPROF_MODULE_REPORT_TABLE), std::end(ADPROF_MODULE_REPORT_TABLE),
         [this](ModuleIdName m) { return m.name == this->module_; });
     if (iter1 != std::end(ADPROF_MODULE_REPORT_TABLE)) {
         ReceiveData::moduleId_ = iter1->id;
         ReceiveData::moduleName_ = module_;
         ret = ReceiveData::Init();
     }
-    auto iter2 = std::find_if(std::begin(MSPROF_MODULE_REPORT_TABLE), std::end(MSPROF_MODULE_REPORT_TABLE),
+    auto iter2 = std::find_if(
+        std::begin(MSPROF_MODULE_REPORT_TABLE), std::end(MSPROF_MODULE_REPORT_TABLE),
         [this](ModuleIdName m) { return m.name == this->module_; });
     if (iter2 != std::end(MSPROF_MODULE_REPORT_TABLE)) {
         ReceiveData::moduleId_ = iter2->id;
@@ -97,10 +95,7 @@ int32_t UploaderDumper::Start()
     return PROFILING_SUCCESS;
 }
 
-int32_t UploaderDumper::Report(CONST_REPORT_DATA_PTR rData)
-{
-    return DoReport(rData);
-}
+int32_t UploaderDumper::Report(CONST_REPORT_DATA_PTR rData) { return DoReport(rData); }
 
 uint32_t UploaderDumper::GetReportDataMaxLen() const
 {
@@ -109,17 +104,17 @@ uint32_t UploaderDumper::GetReportDataMaxLen() const
 }
 
 /**
-* @brief Run: the thread function to deal with user datas
-*/
-void UploaderDumper::Run(const struct error_message::Context &errorContext)
+ * @brief Run: the thread function to deal with user datas
+ */
+void UploaderDumper::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     DoReportRun();
 }
 
 /**
-* @brief Stop: wait data write finished, then stop the thread, which check data from user
-*/
+ * @brief Stop: wait data write finished, then stop the thread, which check data from user
+ */
 int32_t UploaderDumper::Stop()
 {
     int32_t ret = PROFILING_SUCCESS;
@@ -155,9 +150,9 @@ void UploaderDumper::WriteDone()
 }
 
 /**
-* @brief Flush: write all datas from user to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief Flush: write all datas from user to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t UploaderDumper::Flush()
 {
     if (!started_) {
@@ -171,9 +166,7 @@ int32_t UploaderDumper::Flush()
     return PROFILING_SUCCESS;
 }
 
-void UploaderDumper::TimedTask()
-{
-}
+void UploaderDumper::TimedTask() {}
 
 int32_t UploaderDumper::SendData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk)
 {
@@ -182,18 +175,18 @@ int32_t UploaderDumper::SendData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChun
         MSPROF_LOGE("fileChunk is nullptr");
         return PROFILING_FAILED;
     }
-    std::vector<SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> > fileChunks;
+    std::vector<SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>> fileChunks;
     fileChunks.clear();
     fileChunks.push_back(fileChunk); // insert the data into the new vector
     return Dump(fileChunks);
 }
 
 /**
-* @brief Dump: write the user datas in messages into local files
-* @param [in] messages: the vector saved the user datas to be write to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
-int32_t UploaderDumper::Dump(std::vector<SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>> &messages)
+ * @brief Dump: write the user datas in messages into local files
+ * @param [in] messages: the vector saved the user datas to be write to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
+int32_t UploaderDumper::Dump(std::vector<SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>>& messages)
 {
     for (size_t i = 0; i < messages.size(); i++) {
         if (messages[i] == nullptr) {
@@ -205,8 +198,7 @@ int32_t UploaderDumper::Dump(std::vector<SHARED_PTR_ALIA<analysis::dvvp::Profile
         }
         std::string tag = Utils::GetInfoSuffix(messages[i]->fileName);
         if (!ParamValidation::instance()->CheckDataTagIsValid(tag)) {
-            MSPROF_LOGE("UploaderDumper::Dump, Check tag failed, module:%s, tag:%s",
-                module_.c_str(), tag.c_str());
+            MSPROF_LOGE("UploaderDumper::Dump, Check tag failed, module:%s, tag:%s", module_.c_str(), tag.c_str());
             continue;
         }
 
@@ -227,15 +219,17 @@ void UploaderDumper::AddToUploader(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileCh
     SHARED_PTR_ALIA<Uploader> uploader = nullptr;
     analysis::dvvp::transport::UploaderMgr::instance()->GetUploader(devId, uploader);
     if (uploader == nullptr) {
-        MSPROF_LOGW("UploaderDumper::AddToUploader, get uploader[%s] unsuccessfully, fileName:%s, chunkLen:%zu",
-            devId.c_str(), module_.c_str(), message->chunkSize);
+        MSPROF_LOGW(
+            "UploaderDumper::AddToUploader, get uploader[%s] unsuccessfully, fileName:%s, chunkLen:%zu", devId.c_str(),
+            module_.c_str(), message->chunkSize);
         return;
     }
     int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadData(devId, message);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("UploaderDumper::AddToUploader, UploadData failed, fileName:%s, chunkLen:%zu bytes",
-                    module_.c_str(), message->chunkSize);
+        MSPROF_LOGE(
+            "UploaderDumper::AddToUploader, UploadData failed, fileName:%s, chunkLen:%zu bytes", module_.c_str(),
+            message->chunkSize);
     }
 }
-}
-}
+} // namespace Engine
+} // namespace Msprof

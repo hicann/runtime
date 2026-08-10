@@ -21,9 +21,9 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::driver;
 using namespace Devprof;
 
-const char * const EVENT_ADPROF_MSG_GRP_NAME = "prof_adprof_grp";
+const char* const EVENT_ADPROF_MSG_GRP_NAME = "prof_adprof_grp";
 
-int32_t ReportAdprofFileChunk(const void *data)
+int32_t ReportAdprofFileChunk(const void* data)
 {
     if (data == nullptr) {
         MSPROF_LOGE("Report adprof file chunk interface input invalid data.");
@@ -32,7 +32,7 @@ int32_t ReportAdprofFileChunk(const void *data)
 
     const uint32_t ageFlag = 1;
     int32_t ret = DevprofDrvAdprof::instance()->adprofFileChunkBuffer.TryPush(
-        ageFlag, *static_cast<const analysis::dvvp::ProfileFileChunk *>(data));
+        ageFlag, *static_cast<const analysis::dvvp::ProfileFileChunk*>(data));
     if (ret != MSPROF_ERROR_NONE) {
         size_t buffUsedSize = DevprofDrvAdprof::instance()->adprofFileChunkBuffer.GetUsedSize();
         MSPROF_LOGE("Try push buff failed, buffUsedSize: %" PRIu64 " buffs.", buffUsedSize);
@@ -42,7 +42,7 @@ int32_t ReportAdprofFileChunk(const void *data)
     return PROFILING_SUCCESS;
 }
 
-STATIC int32_t ProfStartAdprof(ProfSampleStartPara *para)
+STATIC int32_t ProfStartAdprof(ProfSampleStartPara* para)
 {
     UNUSED(para);
     MSPROF_EVENT("drv start adprof");
@@ -57,14 +57,14 @@ STATIC int32_t ProfStartAdprof(ProfSampleStartPara *para)
     return PROFILING_SUCCESS;
 }
 
-STATIC int32_t TransChunkToTlv(analysis::dvvp::ProfileFileChunk &fileChunk, ProfTlv *tlvBuff)
+STATIC int32_t TransChunkToTlv(analysis::dvvp::ProfileFileChunk& fileChunk, ProfTlv* tlvBuff)
 {
     tlvBuff->head = TLV_HEAD;
     tlvBuff->version = TLV_VERSION;
     tlvBuff->type = TLV_TYPE;
     tlvBuff->len = static_cast<uint32_t>(sizeof(ProfTlvValue));
 
-    ProfTlvValue *tlvValue = reinterpret_cast<ProfTlvValue *>(tlvBuff->value);
+    ProfTlvValue* tlvValue = reinterpret_cast<ProfTlvValue*>(tlvBuff->value);
     tlvValue->isLastChunk = fileChunk.isLastChunk;
     tlvValue->chunkModule = fileChunk.chunkModule;
     tlvValue->offset = fileChunk.offset;
@@ -82,8 +82,7 @@ STATIC int32_t TransChunkToTlv(analysis::dvvp::ProfileFileChunk &fileChunk, Prof
     }
     err = strcpy_s(tlvValue->extraInfo, TLV_VALUE_EXTRAINFO_MAX_LEN, fileChunk.extraInfo.c_str());
     if (err != EOK) {
-        MSPROF_LOGE(
-            "Adprof strcpy_s extraInfo failed, ret is %d, extraInfo is %s.", err, fileChunk.extraInfo.c_str());
+        MSPROF_LOGE("Adprof strcpy_s extraInfo failed, ret is %d, extraInfo is %s.", err, fileChunk.extraInfo.c_str());
         return PROFILING_FAILED;
     }
     err = strcpy_s(tlvValue->id, TLV_VALUE_ID_MAX_LEN, fileChunk.id.c_str());
@@ -94,9 +93,9 @@ STATIC int32_t TransChunkToTlv(analysis::dvvp::ProfileFileChunk &fileChunk, Prof
     return PROFILING_SUCCESS;
 }
 
-STATIC int32_t ProfSampleAdprof(ProfSamplePara *para)
+STATIC int32_t ProfSampleAdprof(ProfSamplePara* para)
 {
-    ProfTlv *tlvBuff = static_cast<ProfTlv *>(para->buff);
+    ProfTlv* tlvBuff = static_cast<ProfTlv*>(para->buff);
 
     uint64_t totalReportLen = 0;
     uint32_t ageFlag = 1;
@@ -122,7 +121,7 @@ STATIC int32_t ProfSampleAdprof(ProfSamplePara *para)
 
 STATIC int32_t ProfReportAdprofData(uint32_t devId, uint32_t channelId)
 {
-    void *buff = Utils::ProfMalloc(REPORT_BUFF_SIZE);
+    void* buff = Utils::ProfMalloc(REPORT_BUFF_SIZE);
     if (buff == nullptr) {
         MSPROF_LOGE("malloc report buffer failed");
         return PROFILING_FAILED;
@@ -136,7 +135,7 @@ STATIC int32_t ProfReportAdprofData(uint32_t devId, uint32_t channelId)
     int32_t ret = 0;
     while (DevprofDrvAdprof::instance()->adprofFileChunkBuffer.GetUsedSize() != 0) {
         totalReportLen = 0;
-        ProfTlv *tlvBuff = static_cast<ProfTlv *>(buff);
+        ProfTlv* tlvBuff = static_cast<ProfTlv*>(buff);
         ret = MsprofDrvApi::instance()->halProfQueryAvailBufLen(devId, channelId, &bufLen);
         if (ret != DRV_ERROR_NONE) {
             MSPROF_LOGE("get driver buffer len failed, device id:%u, channel id:%u, ret:%d", devId, channelId, ret);
@@ -173,7 +172,7 @@ STATIC int32_t ProfReportAdprofData(uint32_t devId, uint32_t channelId)
     return PROFILING_SUCCESS;
 }
 
-STATIC int32_t ProfStopAdprof(ProfSampleStopPara *para)
+STATIC int32_t ProfStopAdprof(ProfSampleStopPara* para)
 {
     UNUSED(para);
     MSPROF_EVENT("drv stop adprof");
@@ -188,7 +187,7 @@ STATIC int32_t ProfStopAdprof(ProfSampleStopPara *para)
     return PROFILING_SUCCESS;
 }
 
-int32_t AdprofStartRegister(struct AdprofCallBack &adprofCallBack, uint32_t devId, int32_t hostPid)
+int32_t AdprofStartRegister(struct AdprofCallBack& adprofCallBack, uint32_t devId, int32_t hostPid)
 {
     MSPROF_EVENT("adprof start register");
     DevprofDrvAdprof::instance()->adprofCallBack_ = adprofCallBack;

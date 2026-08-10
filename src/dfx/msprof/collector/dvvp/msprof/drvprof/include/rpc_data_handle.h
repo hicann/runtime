@@ -28,21 +28,21 @@ public:
     virtual int32_t Init() = 0;
     virtual int32_t UnInit() = 0;
     virtual int32_t Flush() = 0;
-    virtual int32_t SendData(CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName = "",
-        const std::string jobCtx = "") = 0;
+    virtual int32_t SendData(
+        CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName = "", const std::string jobCtx = "") = 0;
 };
 
 class HdcDataHandle : public IDataHandle {
 public:
-    HdcDataHandle(const std::string &moduleNameWithId, int32_t hostPid, int32_t devId);
+    HdcDataHandle(const std::string& moduleNameWithId, int32_t hostPid, int32_t devId);
     ~HdcDataHandle() override;
 
 public:
     int32_t Init() override;
     int32_t UnInit() override;
     int32_t Flush() override;
-    int32_t SendData(CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName = "",
-        const std::string jobCtx = "") override;
+    int32_t SendData(
+        CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName = "", const std::string jobCtx = "") override;
 
 private:
     std::string moduleNameWithId_; // like: DATA_PREPROCESS-80858-3
@@ -53,7 +53,7 @@ private:
 
 class RpcDataHandle {
 public:
-    RpcDataHandle(const std::string &moduleNameWithId, const std::string &module, int32_t hostPid, int32_t devId);
+    RpcDataHandle(const std::string& moduleNameWithId, const std::string& module, int32_t hostPid, int32_t devId);
     virtual ~RpcDataHandle();
 
 public:
@@ -66,10 +66,11 @@ public:
 
 private:
     std::string moduleNameWithId_; // like: DATA_PREPROCESS-80858-3
-    std::string module_; // the module name, like: DATA_PREPROCESS
+    std::string module_;           // the module name, like: DATA_PREPROCESS
     int32_t hostPid_;
     int32_t devId_;
     SHARED_PTR_ALIA<IDataHandle> dataHandle_;
 };
-}}
+} // namespace Engine
+} // namespace Msprof
 #endif

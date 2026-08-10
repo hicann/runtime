@@ -11,25 +11,28 @@
 #ifndef ADX_LOG_H
 #define ADX_LOG_H
 #include "msprof_dlog.h"
-#define IDE_CTRL_VALUE_FAILED(err, action, logText, ...) do {          \
-    if (!(err)) {                                                      \
-        MSPROF_LOGE(logText, ##__VA_ARGS__);                           \
-        action;                                                        \
-    }                                                                  \
-} while (0)
+#define IDE_CTRL_VALUE_FAILED(err, action, logText, ...) \
+    do {                                                 \
+        if (!(err)) {                                    \
+            MSPROF_LOGE(logText, ##__VA_ARGS__);         \
+            action;                                      \
+        }                                                \
+    } while (0)
 
-#define IDE_CTRL_VALUE_WARN(err, action, logText, ...) do {            \
-    if (!(err)) {                                                      \
-        MSPROF_LOGW(logText, ##__VA_ARGS__);                           \
-        action;                                                        \
-    }                                                                  \
-} while (0)
+#define IDE_CTRL_VALUE_WARN(err, action, logText, ...) \
+    do {                                               \
+        if (!(err)) {                                  \
+            MSPROF_LOGW(logText, ##__VA_ARGS__);       \
+            action;                                    \
+        }                                              \
+    } while (0)
 
-#define IDE_CTRL_VALUE_WARN_EX(err, action, logText, ...) do {         \
-    if (err) {                                                         \
-        MSPROF_LOGW(logText, ##__VA_ARGS__);                           \
-        action;                                                        \
-    }                                                                  \
-} while (0)
+#define IDE_CTRL_VALUE_WARN_EX(err, action, logText, ...) \
+    do {                                                  \
+        if (err) {                                        \
+            MSPROF_LOGW(logText, ##__VA_ARGS__);          \
+            action;                                       \
+        }                                                 \
+    } while (0)
 
 #endif

@@ -28,14 +28,14 @@ const std::string ADPROF_REPORT_BATCH_ADDITIONAL_INFO = "AdprofReportBatchAdditi
 const std::string ADPROF_GET_BATCH_REPORT_MAX_SIZE = "AdprofGetBatchReportMaxSize";
 
 using AdprofCheckFeatureIsOnFunc = int32_t (*)(uint64_t);
-using AdprofStartFunc = int32_t (*)(int32_t, const char *[]);
+using AdprofStartFunc = int32_t (*)(int32_t, const char*[]);
 using AdprofStopFunc = int32_t (*)();
-using AdprofGetHashIdFunc = uint64_t (*)(const char *, size_t);
-using AdprofAicpuStartRegisterFunc = int32_t (*)(AicpuStartFunc, const struct AicpuStartPara *);
-using AdprofReportAdditionalInfoFunc = int32_t (*)(uint32_t, const void *, uint32_t);
-using AdprofReportBatchAdditionalInfoFunc = int32_t (*)(uint32_t, const void *, uint32_t);
+using AdprofGetHashIdFunc = uint64_t (*)(const char*, size_t);
+using AdprofAicpuStartRegisterFunc = int32_t (*)(AicpuStartFunc, const struct AicpuStartPara*);
+using AdprofReportAdditionalInfoFunc = int32_t (*)(uint32_t, const void*, uint32_t);
+using AdprofReportBatchAdditionalInfoFunc = int32_t (*)(uint32_t, const void*, uint32_t);
 using AdprofGetBatchReportMaxSizeFunc = size_t (*)(uint32_t);
-}
+} // namespace
 
 DevprofApi DevprofApi::item_;
 
@@ -70,8 +70,8 @@ DevprofApi::~DevprofApi()
 
 int32_t DevprofApi::CheckFeatureIsOn(uint64_t feature)
 {
-    AdprofCheckFeatureIsOnFunc func = reinterpret_cast<AdprofCheckFeatureIsOnFunc>(
-        funcMap_[ADPROF_CHECK_FEATURE_IS_ON]);
+    AdprofCheckFeatureIsOnFunc func =
+        reinterpret_cast<AdprofCheckFeatureIsOnFunc>(funcMap_[ADPROF_CHECK_FEATURE_IS_ON]);
     if (func == nullptr) {
         MSPROF_LOGE("AdprofCheckFeatureIsOn func is nullptr");
         return PROFILING_FAILED;
@@ -79,7 +79,7 @@ int32_t DevprofApi::CheckFeatureIsOn(uint64_t feature)
     return func(feature);
 }
 
-int32_t DevprofApi::Start(int32_t argc, const char *argv[])
+int32_t DevprofApi::Start(int32_t argc, const char* argv[])
 {
     AdprofStartFunc func = reinterpret_cast<AdprofStartFunc>(funcMap_[ADPROF_START]);
     if (func == nullptr) {
@@ -109,7 +109,7 @@ int32_t DevprofApi::GetIsExit()
     return func();
 }
 
-uint64_t DevprofApi::GetHashId(const char *hashInfo, size_t length)
+uint64_t DevprofApi::GetHashId(const char* hashInfo, size_t length)
 {
     AdprofGetHashIdFunc func = reinterpret_cast<AdprofGetHashIdFunc>(funcMap_[ADPROF_GET_HASH_ID]);
     if (func == nullptr) {
@@ -119,10 +119,10 @@ uint64_t DevprofApi::GetHashId(const char *hashInfo, size_t length)
     return func(hashInfo, length);
 }
 
-int32_t DevprofApi::AicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para)
+int32_t DevprofApi::AicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para)
 {
-    AdprofAicpuStartRegisterFunc func = reinterpret_cast<AdprofAicpuStartRegisterFunc>(
-        funcMap_[ADPROF_AICPU_START_REGISTER]);
+    AdprofAicpuStartRegisterFunc func =
+        reinterpret_cast<AdprofAicpuStartRegisterFunc>(funcMap_[ADPROF_AICPU_START_REGISTER]);
     if (func == nullptr) {
         MSPROF_LOGE("AdprofAicpuStartRegister func is nullptr");
         return PROFILING_FAILED;
@@ -130,10 +130,10 @@ int32_t DevprofApi::AicpuStartRegister(AicpuStartFunc aicpuStartCallback, const 
     return func(aicpuStartCallback, para);
 }
 
-int32_t DevprofApi::ReportAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+int32_t DevprofApi::ReportAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
-    AdprofReportAdditionalInfoFunc func = reinterpret_cast<AdprofReportAdditionalInfoFunc>(
-        funcMap_[ADPROF_REPORT_ADDITIONAL_INFO]);
+    AdprofReportAdditionalInfoFunc func =
+        reinterpret_cast<AdprofReportAdditionalInfoFunc>(funcMap_[ADPROF_REPORT_ADDITIONAL_INFO]);
     if (func == nullptr) {
         MSPROF_LOGE("AdprofReportAdditionalInfo is nullptr");
         return PROFILING_FAILED;
@@ -141,10 +141,10 @@ int32_t DevprofApi::ReportAdditionalInfo(uint32_t nonPersistantFlag, const void 
     return func(nonPersistantFlag, data, length);
 }
 
-int32_t DevprofApi::ReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+int32_t DevprofApi::ReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
-    AdprofReportBatchAdditionalInfoFunc func = reinterpret_cast<AdprofReportBatchAdditionalInfoFunc>(
-        funcMap_[ADPROF_REPORT_BATCH_ADDITIONAL_INFO]);
+    AdprofReportBatchAdditionalInfoFunc func =
+        reinterpret_cast<AdprofReportBatchAdditionalInfoFunc>(funcMap_[ADPROF_REPORT_BATCH_ADDITIONAL_INFO]);
     if (func == nullptr) {
         MSPROF_LOGE("AdprofReportBatchAdditionalInfo is nullptr");
         return PROFILING_FAILED;
@@ -154,8 +154,8 @@ int32_t DevprofApi::ReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const 
 
 size_t DevprofApi::GetBatchReportMaxSize(uint32_t type)
 {
-    AdprofGetBatchReportMaxSizeFunc func = reinterpret_cast<AdprofGetBatchReportMaxSizeFunc>(
-        funcMap_[ADPROF_GET_BATCH_REPORT_MAX_SIZE]);
+    AdprofGetBatchReportMaxSizeFunc func =
+        reinterpret_cast<AdprofGetBatchReportMaxSizeFunc>(funcMap_[ADPROF_GET_BATCH_REPORT_MAX_SIZE]);
     if (func == nullptr) {
         MSPROF_LOGE("AdprofGetBatchReportMaxSize func is nullptr");
         return 0;
@@ -165,24 +165,24 @@ size_t DevprofApi::GetBatchReportMaxSize(uint32_t type)
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 MSVP_PROF_API int32_t AdprofCheckFeatureIsOn(uint64_t feature)
 {
     return DevprofApi::Instance()->CheckFeatureIsOn(feature);
 }
 
-MSVP_PROF_API uint64_t AdprofGetHashId(const char *hashInfo, size_t length)
+MSVP_PROF_API uint64_t AdprofGetHashId(const char* hashInfo, size_t length)
 {
     return DevprofApi::Instance()->GetHashId(hashInfo, length);
 }
 
-MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
     return DevprofApi::Instance()->ReportAdditionalInfo(nonPersistantFlag, data, length);
 }
 
-MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
     return DevprofApi::Instance()->ReportAdditionalInfo(nonPersistantFlag, data, length);
 }
@@ -199,27 +199,18 @@ MSVP_PROF_API int32_t AdprofReportData(ConstVoidPtr data, uint32_t length)
     return PROFILING_FAILED;
 }
 
-MSVP_PROF_API int32_t AdprofAicpuStop()
-{
-    return PROFILING_FAILED;
-}
+MSVP_PROF_API int32_t AdprofAicpuStop() { return PROFILING_FAILED; }
 
-MSVP_PROF_API int32_t AdprofStart(int32_t argc, const char *argv[])
+MSVP_PROF_API int32_t AdprofStart(int32_t argc, const char* argv[])
 {
     return DevprofApi::Instance()->Start(argc, argv);
 }
 
-MSVP_PROF_API int32_t AdprofStop()
-{
-    return DevprofApi::Instance()->Stop();
-}
+MSVP_PROF_API int32_t AdprofStop() { return DevprofApi::Instance()->Stop(); }
 
-MSVP_PROF_API bool GetIsExit(void)
-{
-    return DevprofApi::Instance()->GetIsExit();
-}
+MSVP_PROF_API bool GetIsExit(void) { return DevprofApi::Instance()->GetIsExit(); }
 
-MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para)
+MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para)
 {
     return DevprofApi::Instance()->AicpuStartRegister(aicpuStartCallback, para);
 }

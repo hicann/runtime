@@ -17,13 +17,9 @@ using namespace analysis::dvvp::common::utils;
 
 namespace Msprof {
 namespace Engine {
-EngineMgr::EngineMgr()
-{
-}
+EngineMgr::EngineMgr() {}
 
-EngineMgr::~EngineMgr()
-{
-}
+EngineMgr::~EngineMgr() {}
 
 /* *
  * @brief Init: Initialize an engine to profiling
@@ -40,14 +36,14 @@ int32_t EngineMgr::Init(const std::string& module, CONST_ENGINE_INTF_PTR engine)
     }
 
     if (!module.empty() && engine != nullptr) {
-        auto iter = engines_.find(module); // check whether the module has been init
+        auto iter = engines_.find(module);                      // check whether the module has been init
         if (iter == engines_.end()) {
-            engines_[module] = const_cast<EngineIntf *>(engine); // add the engine into the map
+            engines_[module] = const_cast<EngineIntf*>(engine); // add the engine into the map
             MSPROF_LOGI("Initialized module %s successfully.", module.c_str());
             return PROFILING_SUCCESS;
         } else {
-            MSPROF_LOGE("Module %s has been initialized, cannot initialize a module with the same name.",
-                        module.c_str());
+            MSPROF_LOGE(
+                "Module %s has been initialized, cannot initialize a module with the same name.", module.c_str());
         }
     }
     return PROFILING_FAILED;
@@ -58,13 +54,13 @@ int32_t EngineMgr::Init(const std::string& module, CONST_ENGINE_INTF_PTR engine)
  * @param [in] module: the module name
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t EngineMgr::UnInit(const std::string &module)
+int32_t EngineMgr::UnInit(const std::string& module)
 {
-    std::lock_guard<std::mutex> lk(mtx_); // lock
+    std::lock_guard<std::mutex> lk(mtx_);  // lock
     if (!module.empty()) {
         auto iter = engines_.find(module); // check whether the module has been init
         if (iter != engines_.end()) {
-            engines_.erase(iter); // Remove engines_ [module] from the map
+            engines_.erase(iter);          // Remove engines_ [module] from the map
             MSPROF_LOGI("UnInit module %s successfully.", module.c_str());
             return PROFILING_SUCCESS;
         } else {
@@ -75,15 +71,15 @@ int32_t EngineMgr::UnInit(const std::string &module)
 }
 
 /**
-* @brief ProfStart: according the module name to start the engine, it will create a reporter for user
-* @param [in] module: the module name
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief ProfStart: according the module name to start the engine, it will create a reporter for user
+ * @param [in] module: the module name
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t EngineMgr::ProfStart(const std::string& module)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     int32_t ret = PROFILING_FAILED;
-    auto job = jobs_.find(module); // check whether the module has been inserted into the jobs_
+    auto job = jobs_.find(module);         // check whether the module has been inserted into the jobs_
     if (job == jobs_.end()) {
         auto iter = engines_.find(module); // get the engine according the name
         if (iter != engines_.end()) {
@@ -107,8 +103,7 @@ int32_t EngineMgr::ProfStart(const std::string& module)
  * @param [in] config: the config info from FMK
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t EngineMgr::ProfConfig(const std::string &module,
-                          const SHARED_PTR_ALIA<ProfilerJobConfig> &config)
+int32_t EngineMgr::ProfConfig(const std::string& module, const SHARED_PTR_ALIA<ProfilerJobConfig>& config)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     int32_t ret = PROFILING_FAILED;
@@ -131,7 +126,7 @@ int32_t EngineMgr::ProfConfig(const std::string &module,
  * @param [in] module: the module name
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t EngineMgr::ProfStop(const std::string &module)
+int32_t EngineMgr::ProfStop(const std::string& module)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     int32_t ret = PROFILING_FAILED;
@@ -156,8 +151,7 @@ int32_t EngineMgr::ProfStop(const std::string &module)
  * @param [in] config: the config info from FMK
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t EngineMgr::ConfigHandler(const std::string &module,
-                             const SHARED_PTR_ALIA<ProfilerJobConfig> &config)
+int32_t EngineMgr::ConfigHandler(const std::string& module, const SHARED_PTR_ALIA<ProfilerJobConfig>& config)
 {
     if (module.empty() || config == nullptr) {
         MSPROF_LOGE("Input parameter is error, module name is empty or config is nullptr");
@@ -172,7 +166,7 @@ int32_t EngineMgr::ConfigHandler(const std::string &module,
  * @param [in] engine: the user self-defined engine
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t Init(const std::string &module, CONST_ENGINE_INTF_PTR engine)
+int32_t Init(const std::string& module, CONST_ENGINE_INTF_PTR engine)
 {
     if (!module.empty() && engine != nullptr) {
         MSPROF_EVENT("[Init]Received request to init engine %s", module.c_str());
@@ -192,7 +186,7 @@ int32_t Init(const std::string &module, CONST_ENGINE_INTF_PTR engine)
  * @param [in] module: the module name
  * @return : success return UNPROFILING_SUCCESS, failed return UNPROFIING_FAILED
  */
-int32_t UnInit(const std::string &module)
+int32_t UnInit(const std::string& module)
 {
     int32_t ret = PROFILING_SUCCESS;
     if (!module.empty()) {

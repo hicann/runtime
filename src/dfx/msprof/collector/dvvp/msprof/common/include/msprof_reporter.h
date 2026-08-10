@@ -52,7 +52,7 @@ private:
 void FlushAllModule();
 void FlushModule();
 int32_t SendAiCpuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk);
-}  // namespace Engine
-}  // namespace Msprof
+} // namespace Engine
+} // namespace Msprof
 
 #endif

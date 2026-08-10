@@ -53,7 +53,7 @@ struct DynProfMsg {
 
 struct DynProfParams {
     uint32_t dataLen = 0;
-    char data[DYN_PROF_PARAMS_MAX_LEN] = { 0 };
+    char data[DYN_PROF_PARAMS_MAX_LEN] = {0};
 };
 
 struct DynProfDeviceInfo {

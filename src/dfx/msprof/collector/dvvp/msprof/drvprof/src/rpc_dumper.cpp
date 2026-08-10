@@ -26,20 +26,16 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 /**
-* @brief RpcDumper: the construct function
-* @param [in] module: the path of profiling data to be saved
-*/
-RpcDumper::RpcDumper(const std::string &module)
+ * @brief RpcDumper: the construct function
+ * @param [in] module: the path of profiling data to be saved
+ */
+RpcDumper::RpcDumper(const std::string& module)
     : DataDumper(), moduleNameWithId_(module), hostPid_(-1), devId_(-1), dataHandle_(nullptr)
-{
-}
+{}
 
-RpcDumper::~RpcDumper()
-{
-    Stop();
-}
+RpcDumper::~RpcDumper() { Stop(); }
 
-int32_t RpcDumper::GetNameAndId(const std::string &module)
+int32_t RpcDumper::GetNameAndId(const std::string& module)
 {
     MSPROF_LOGI("GetNameAndId module:%s", module.c_str());
     size_t posTmp = module.find_first_of("-");
@@ -72,10 +68,10 @@ int32_t RpcDumper::GetNameAndId(const std::string &module)
 }
 
 /**
-* @brief Start: init variables of RpcDumper for can receive data from user plugin
-*               start a new thread to check the data from user and write data to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief Start: init variables of RpcDumper for can receive data from user plugin
+ *               start a new thread to check the data from user and write data to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t RpcDumper::Start()
 {
     if (started_) {
@@ -88,16 +84,16 @@ int32_t RpcDumper::Start()
         return PROFILING_FAILED;
     }
     ReceiveData::moduleName_ = module_;
-    MSVP_MAKE_SHARED4(dataHandle_, RpcDataHandle, moduleNameWithId_, module_, hostPid_, devId_,
-        return PROFILING_FAILED);
+    MSVP_MAKE_SHARED4(
+        dataHandle_, RpcDataHandle, moduleNameWithId_, module_, hostPid_, devId_, return PROFILING_FAILED);
     ret = dataHandle_->Init();
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("RpcDumper dataHandle init failed");
         return PROFILING_FAILED;
     }
     ret = dataHandle_->TryToConnect();
-    FUNRET_CHECK_EXPR_ACTION_LOGW(ret != PROFILING_SUCCESS, return PROFILING_FAILED,
-        "RpcDumper dataHandle try connect unsuccessfully.");
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        ret != PROFILING_SUCCESS, return PROFILING_FAILED, "RpcDumper dataHandle try connect unsuccessfully.");
 
     Thread::SetThreadName(analysis::dvvp::common::config::MSVP_RPC_DUMPER_THREAD_NAME);
     ret = Thread::Start();
@@ -109,7 +105,8 @@ int32_t RpcDumper::Start()
     }
 
     size_t capacity = RING_BUFF_CAPACITY;
-    auto iter = std::find_if(std::begin(MSPROF_MODULE_ID_NAME_MAP), std::end(MSPROF_MODULE_ID_NAME_MAP),
+    auto iter = std::find_if(
+        std::begin(MSPROF_MODULE_ID_NAME_MAP), std::end(MSPROF_MODULE_ID_NAME_MAP),
         [&](ModuleIdName m) { return m.name == module_; });
     if (iter != std::end(MSPROF_MODULE_ID_NAME_MAP)) {
         ReceiveData::moduleId_ = iter->id;
@@ -125,10 +122,7 @@ int32_t RpcDumper::Start()
     return PROFILING_SUCCESS;
 }
 
-int32_t RpcDumper::Report(CONST_REPORT_DATA_PTR rData)
-{
-    return DoReport(rData);
-}
+int32_t RpcDumper::Report(CONST_REPORT_DATA_PTR rData) { return DoReport(rData); }
 
 uint32_t RpcDumper::GetReportDataMaxLen() const
 {
@@ -137,19 +131,19 @@ uint32_t RpcDumper::GetReportDataMaxLen() const
 }
 
 /**
-* @brief Run: the thread function to deal with user datas
-*/
-void RpcDumper::Run(const struct error_message::Context &errorContext)
+ * @brief Run: the thread function to deal with user datas
+ */
+void RpcDumper::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     DoReportRun();
 }
 
 /**
-* @brief Run: read datas from ring buffer to build ProfileFileChunk,
-*             the read data times is MAX_LOOP_TIMES
-* @param [out] fileChunks: data from user to write to local file or send to remote host
-*/
+ * @brief Run: read datas from ring buffer to build ProfileFileChunk,
+ *             the read data times is MAX_LOOP_TIMES
+ * @param [out] fileChunks: data from user to write to local file or send to remote host
+ */
 void RpcDumper::RunDefaultProfileData(const std::vector<SHARED_PTR_ALIA<FileChunkReq>>& fileChunks) const
 {
     (void)fileChunks;
@@ -157,7 +151,7 @@ void RpcDumper::RunDefaultProfileData(const std::vector<SHARED_PTR_ALIA<FileChun
 
 void RpcDumper::DoReportRun()
 {
-    std::vector<SHARED_PTR_ALIA<FileChunkReq> > fileChunks;
+    std::vector<SHARED_PTR_ALIA<FileChunkReq>> fileChunks;
     unsigned long sleepIntevalNs = 50000000; // 50,000,000 : 50ms
     timeStamp_ = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
 
@@ -187,8 +181,8 @@ void RpcDumper::DoReportRun()
 }
 
 /**
-* @brief Stop: wait data write finished, then stop the thread, which check data from user
-*/
+ * @brief Stop: wait data write finished, then stop the thread, which check data from user
+ */
 int32_t RpcDumper::Stop()
 {
     int32_t ret = PROFILING_SUCCESS;
@@ -233,8 +227,8 @@ void RpcDumper::WriteDone()
 
         std::string data = analysis::dvvp::message::EncodeMessage(fileChunk);
         if (data.size() > 0) {
-            if (dataHandle_->SendData(data.c_str(), data.size(), module_.c_str(), jobCtx->ToString().c_str())
-                != PROFILING_SUCCESS) {
+            if (dataHandle_->SendData(data.c_str(), data.size(), module_.c_str(), jobCtx->ToString().c_str()) !=
+                PROFILING_SUCCESS) {
                 MSPROF_LOGE("send last FileChunk package failed");
                 continue;
             }
@@ -246,9 +240,9 @@ void RpcDumper::WriteDone()
 }
 
 /**
-* @brief Flush: write all datas from user to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief Flush: write all datas from user to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t RpcDumper::Flush()
 {
     if (!started_) {
@@ -262,18 +256,15 @@ int32_t RpcDumper::Flush()
     return PROFILING_SUCCESS;
 }
 
-void RpcDumper::TimedTask()
-{
-    dataHandle_->Flush();
-}
+void RpcDumper::TimedTask() { dataHandle_->Flush(); }
 
 /**
-* @brief DumpData: deal with the data from user to build FileChunkReq struct for store or send
-* @param [in] message: data saved in the ring buffer
-* @param [out] fileChunk: data build from message for store or send
-* @return : success return PROFILING_SUCCESS, failed return PROFILING_FAILED
-*/
-int32_t RpcDumper::DumpData(std::vector<ReporterDataChunk> &message, SHARED_PTR_ALIA<FileChunkReq> fileChunk)
+ * @brief DumpData: deal with the data from user to build FileChunkReq struct for store or send
+ * @param [in] message: data saved in the ring buffer
+ * @param [out] fileChunk: data build from message for store or send
+ * @return : success return PROFILING_SUCCESS, failed return PROFILING_FAILED
+ */
+int32_t RpcDumper::DumpData(std::vector<ReporterDataChunk>& message, SHARED_PTR_ALIA<FileChunkReq> fileChunk)
 {
     if (fileChunk == nullptr) {
         MSPROF_LOGE("fileChunk or dataPool is nullptr");
@@ -321,7 +312,7 @@ int32_t RpcDumper::DumpData(std::vector<ReporterDataChunk> &message, SHARED_PTR_
     return PROFILING_SUCCESS;
 }
 
-int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>> &message)
+int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& message)
 {
     UNUSED(message);
     MSPROF_LOGD("message size is : %zu", message.size());
@@ -329,11 +320,11 @@ int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>> &message)
 }
 
 /**
-* @brief Dump: write the user datas in messages into local files
-* @param [in] messages: the vector saved the user datas to be write to local files
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
-int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<FileChunkReq>> &messages)
+ * @brief Dump: write the user datas in messages into local files
+ * @param [in] messages: the vector saved the user datas to be write to local files
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
+int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<FileChunkReq>>& messages)
 {
     int32_t ret = PROFILING_SUCCESS;
     if (!(dataHandle_->IsReady()) && (messages.size() > 0)) {
@@ -345,8 +336,9 @@ int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<FileChunkReq>> &messages)
         }
         std::string tag = messages[i]->tag();
         if (!ParamValidation::instance()->CheckDataTagIsValid(tag)) {
-            MSPROF_LOGE("UploaderDumper::Dump, Check tag failed, module:%s, tag:%s",
-                module_.c_str(), messages[i]->tag().c_str());
+            MSPROF_LOGE(
+                "UploaderDumper::Dump, Check tag failed, module:%s, tag:%s", module_.c_str(),
+                messages[i]->tag().c_str());
             continue;
         }
         messages[i]->set_datamodule(FileChunkDataModule::PROFILING_IS_FROM_MSPROF);
@@ -355,11 +347,12 @@ int32_t RpcDumper::Dump(std::vector<SHARED_PTR_ALIA<FileChunkReq>> &messages)
         std::string fileName = module_ + "." + messages[i]->tag() + "." + messages[i]->tagsuffix();
         ret = dataHandle_->SendData(encoded.c_str(), encoded.size(), fileName, messages[i]->hdr().job_ctx().c_str());
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("RpcDumper::Dump, UploadData failed, fileName:%s, chunkLen:%d",
-                module_.c_str(), messages[i]->chunksizeinbytes());
+            MSPROF_LOGE(
+                "RpcDumper::Dump, UploadData failed, fileName:%s, chunkLen:%d", module_.c_str(),
+                messages[i]->chunksizeinbytes());
         }
     }
     return ret;
 }
-}
-}
+} // namespace Engine
+} // namespace Msprof

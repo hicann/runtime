@@ -31,7 +31,7 @@ public:
     void SaveDevicesInfo(DynProfDeviceInfo data);
 
 protected:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
 
 private:
     void DynProfSrvInitProcFunc();
@@ -42,13 +42,13 @@ private:
     void DynProfSrvProcStart();
     void DynProfSrvProcStop();
     void DynProfSrvProcQuit();
-    bool IdleConnectOverTime(uint32_t &recvIdleTimes) const;
+    bool IdleConnectOverTime(uint32_t& recvIdleTimes) const;
     void NotifyClientDisconnect();
 
-    int32_t srvSockFd_ { -1 };
-    int32_t cliSockFd_ { -1 };
-    bool srvStarted_ { false };
-    bool profStarted_ { false };
+    int32_t srvSockFd_{-1};
+    int32_t cliSockFd_{-1};
+    bool srvStarted_{false};
+    bool profStarted_{false};
     std::string socketPath_;
     std::string dynProfParams_;
     std::map<DynProfMsgType, ProcFunc> procFuncMap_;

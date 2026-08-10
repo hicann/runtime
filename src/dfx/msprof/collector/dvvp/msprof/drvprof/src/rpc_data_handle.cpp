@@ -26,8 +26,9 @@ using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::transport;
 using namespace analysis::dvvp::common::utils;
 
-HdcDataHandle::HdcDataHandle(const std::string &moduleNameWithId, int32_t hostPid, int32_t devId)
-    : moduleNameWithId_(moduleNameWithId), hostPid_(hostPid), devId_(devId), hdcSender_(nullptr) {}
+HdcDataHandle::HdcDataHandle(const std::string& moduleNameWithId, int32_t hostPid, int32_t devId)
+    : moduleNameWithId_(moduleNameWithId), hostPid_(hostPid), devId_(devId), hdcSender_(nullptr)
+{}
 
 HdcDataHandle::~HdcDataHandle() {}
 
@@ -74,8 +75,8 @@ int32_t HdcDataHandle::Flush()
     return PROFILING_SUCCESS;
 }
 
-int32_t HdcDataHandle::SendData(CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName,
-    const std::string jobCtx)
+int32_t HdcDataHandle::SendData(
+    CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName, const std::string jobCtx)
 {
     if (data == nullptr || dataLen == 0 || dataLen > PROFILING_PACKET_MAX_LEN || hdcSender_ == nullptr) {
         MSPROF_LOGE("HdcDataHandle SendData failed, dataLen:%d", dataLen);
@@ -102,18 +103,14 @@ int32_t HdcDataHandle::SendData(CONST_VOID_PTR data, uint32_t dataLen, const std
     return hdcSender_->SendData(jobCtx, dataChunk);
 }
 
-RpcDataHandle::RpcDataHandle(const std::string &moduleNameWithId, const std::string &module,
-    int32_t hostPid, int32_t devId)
+RpcDataHandle::RpcDataHandle(
+    const std::string& moduleNameWithId, const std::string& module, int32_t hostPid, int32_t devId)
     : moduleNameWithId_(moduleNameWithId), module_(module), hostPid_(hostPid), devId_(devId), dataHandle_(nullptr)
-{
-}
+{}
 
 RpcDataHandle::~RpcDataHandle() {}
 
-int32_t RpcDataHandle::Init() const
-{
-    return PROFILING_SUCCESS;
-}
+int32_t RpcDataHandle::Init() const { return PROFILING_SUCCESS; }
 
 int32_t RpcDataHandle::UnInit() const
 {
@@ -148,7 +145,8 @@ int32_t RpcDataHandle::TryToConnect()
     } else {
         hdcHandle.reset();
     }
-    MSPROF_LOGW("TryToConnect did not complete successfully, moduleNameWithId:%s, module:%s, hostPid:%d, devId:%d",
+    MSPROF_LOGW(
+        "TryToConnect did not complete successfully, moduleNameWithId:%s, module:%s, hostPid:%d, devId:%d",
         moduleNameWithId_.c_str(), module_.c_str(), hostPid_, devId_);
 
     return PROFILING_FAILED;
@@ -162,8 +160,8 @@ int32_t RpcDataHandle::Flush() const
     return PROFILING_SUCCESS;
 }
 
-int32_t RpcDataHandle::SendData(CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName,
-    const std::string jobCtx)
+int32_t RpcDataHandle::SendData(
+    CONST_VOID_PTR data, uint32_t dataLen, const std::string fileName, const std::string jobCtx)
 {
     int32_t ret = PROFILING_SUCCESS;
     if (data == nullptr || dataLen == 0 || dataLen > PROFILING_PACKET_MAX_LEN) {
@@ -177,5 +175,5 @@ int32_t RpcDataHandle::SendData(CONST_VOID_PTR data, uint32_t dataLen, const std
     }
     return ret;
 }
-}
-}
+} // namespace Engine
+} // namespace Msprof

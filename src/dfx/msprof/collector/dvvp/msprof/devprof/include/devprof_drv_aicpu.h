@@ -19,15 +19,15 @@
 #include "thread/thread.h"
 
 namespace Devprof {
-    struct AicpuUserProfileBufferInfo;
+struct AicpuUserProfileBufferInfo;
 }
 
 class DevprofDrvAicpu : public analysis::dvvp::common::singleton::Singleton<DevprofDrvAicpu>,
-    public analysis::dvvp::common::thread::Thread {
+                        public analysis::dvvp::common::thread::Thread {
 public:
     DevprofDrvAicpu();
     ~DevprofDrvAicpu() override;
-    int32_t Init(const struct AicpuStartPara *para);
+    int32_t Init(const struct AicpuStartPara* para);
     int32_t Start() override;
     int32_t Stop() override;
     bool IsRegister(void) const;
@@ -37,7 +37,7 @@ public:
     bool CheckProfilingIsOn(uint64_t profConfig);
     int32_t ReportAdditionalInfo(uint32_t agingFlag, ConstVoidPtr data, uint32_t length);
     size_t GetBatchReportMaxSize(uint32_t type) const;
-    int32_t AdprofInit(const AicpuStartPara *para);
+    int32_t AdprofInit(const AicpuStartPara* para);
     int32_t ModuleRegisterCallback(uint32_t moduleId, ProfCommandHandle commandHandle);
     void DoCallbackHandle(uint32_t moduleId, ProfCommandHandle commandHandle);
     void CommandHandleLaunch();
@@ -48,7 +48,7 @@ public:
     int32_t ReportStr2IdInfoToHost(std::string& dataStr);
     bool IsSupportHostMove() const { return isSupportHostMove_; }
     void SetSupportHostMove(bool support) { isSupportHostMove_ = support; }
-    int32_t RecordHostMoveBufferAddresses(const Devprof::AicpuUserProfileBufferInfo *info);
+    int32_t RecordHostMoveBufferAddresses(const Devprof::AicpuUserProfileBufferInfo* info);
     void Release();
 #ifdef __PROF_LLT
 public:
@@ -56,7 +56,7 @@ public:
 #endif
 
 protected:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
 
 private:
     int32_t RegisterDrvChannel(uint32_t devId, uint32_t channelId);
@@ -70,8 +70,8 @@ public:
 private:
 #endif
     void UninitHostMoveBuffer();
-    int32_t WriteToHostMoveBuffer(const MsprofAdditionalInfo *data, size_t dataSize);
-    int32_t WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo *data, uint32_t recordCount);
+    int32_t WriteToHostMoveBuffer(const MsprofAdditionalInfo* data, size_t dataSize);
+    int32_t WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo* data, uint32_t recordCount);
     int32_t DrainBufferToHostMove();
 
     // One step of the host-move drain loop: keep draining, sleep-and-retry, or stop on a fatal error.
@@ -80,9 +80,8 @@ private:
         RETRY,
         FATAL,
     };
-    HostMoveStep AcquireHostMoveFreeSlots(uint32_t &freeSlots);
-    HostMoveStep MoveOneBatchToHostMove(size_t maxBatchRecords, uint32_t freeSlots,
-        uint64_t &totalWriteLen);
+    HostMoveStep AcquireHostMoveFreeSlots(uint32_t& freeSlots);
+    HostMoveStep MoveOneBatchToHostMove(size_t maxBatchRecords, uint32_t freeSlots, uint64_t& totalWriteLen);
 
 private:
     volatile bool stopped_;
@@ -94,10 +93,10 @@ private:
     volatile uint64_t profConfig_;
     bool isRegister_;
     bool isSupportHostMove_;
-    uint8_t *hostMoveBuffer_;
+    uint8_t* hostMoveBuffer_;
     size_t hostMoveBufferSize_;
-    volatile uint32_t *hostMoveWptr_;
-    volatile uint32_t *hostMoveRptr_;
+    volatile uint32_t* hostMoveWptr_;
+    volatile uint32_t* hostMoveRptr_;
     std::atomic<uint32_t> hostMoveWriteIndex_;
     analysis::dvvp::common::queue::BlockBuffer<MsprofAdditionalInfo> aicpuAdditionalBuffer_{};
     MsprofCommandHandle command_;

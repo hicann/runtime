@@ -65,7 +65,7 @@ bool DynProfServer::IsProfStarted()
     return profStarted_;
 }
 
-void DynProfServer::Run(const struct error_message::Context &errorContext)
+void DynProfServer::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
 
@@ -175,7 +175,7 @@ void DynProfServer::DynProfSrvRsqMsg(DynProfMsgType type, DynProfMsgRsqCode rsqC
     MSPROF_LOGI("server send rsq: %d,%d", type, rsqCode);
 }
 
-bool DynProfServer::IdleConnectOverTime(uint32_t &recvIdleTimes) const
+bool DynProfServer::IdleConnectOverTime(uint32_t& recvIdleTimes) const
 {
     if (profStarted_) {
         return false;
@@ -259,7 +259,7 @@ void DynProfServer::DynProfSrvProcStart()
     }
     devLk.unlock();
 
-    for (auto &devInfo : notifyInfo) {
+    for (auto& devInfo : notifyInfo) {
         ret = Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(devInfo.chipId, devInfo.devId, devInfo.isOpenDevice);
         if (ret != MSPROF_ERROR_NONE) {
             MSPROF_LOGE("Dynamic profiling start set device failed, ret=%d.", ret);

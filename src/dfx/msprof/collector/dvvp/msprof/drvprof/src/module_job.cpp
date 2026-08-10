@@ -23,10 +23,9 @@ namespace Engine {
  * @param [in] module: the name of the module
  * @param [in] engine: the engine of user
  */
-ModuleJob::ModuleJob(const std::string& module, EngineIntf &engine)
+ModuleJob::ModuleJob(const std::string& module, EngineIntf& engine)
     : module_(module), engine_(&engine), plugin_(nullptr), isStarted_(false)
-{
-}
+{}
 
 ModuleJob::~ModuleJob()
 {
@@ -104,7 +103,7 @@ int32_t ModuleJob::ProfStart()
  * @param [in] config: config info from FMK
  * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
  */
-int32_t ModuleJob::ProfConfig(const SHARED_PTR_ALIA<ProfilerJobConfig> &config)
+int32_t ModuleJob::ProfConfig(const SHARED_PTR_ALIA<ProfilerJobConfig>& config)
 {
     int32_t ret = PROFILING_FAILED;
     if (config == nullptr || !isStarted_) {
@@ -119,8 +118,11 @@ int32_t ModuleJob::ProfConfig(const SHARED_PTR_ALIA<ProfilerJobConfig> &config)
         jobConfig->switches = iter->second.switches;
         MSPROF_LOGI("Call OnNewConfig to config module:%s", module_.c_str());
         ret = plugin_->OnNewConfig(jobConfig.get());
-        FUNRET_CHECK_EXPR_LOGW(ret != PROFILING_SUCCESS, "The plugin OnNewConfig did not proceed as intended, "
-            "please check the plugin code %d", ret);
+        FUNRET_CHECK_EXPR_LOGW(
+            ret != PROFILING_SUCCESS,
+            "The plugin OnNewConfig did not proceed as intended, "
+            "please check the plugin code %d",
+            ret);
     } else {
         MSPROF_LOGE("Cannot find the module info in the config");
     }
@@ -182,7 +184,7 @@ int32_t ModuleJob::ProfStop()
     return ret;
 }
 
-SHARED_PTR_ALIA<DataDumper> ModuleJob::CreateDumper(const std::string &module) const
+SHARED_PTR_ALIA<DataDumper> ModuleJob::CreateDumper(const std::string& module) const
 {
     std::string moduleName = module;
     size_t pos = module.find_first_of("-");

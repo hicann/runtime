@@ -16,18 +16,24 @@
 #include "extra_config.h"
 #include "error_manager.h"
 
-#define IDE_DAEMON_DEFAULT_THREAD_ATTR        {0, 0, 0, 0, 0, 1, 128 * 1024}
-#define IDE_DAEMON_DEFAULT_DETACH_THREAD_ATTR {1, 0, 0, 0, 0, 1, 128 * 1024}
+#define IDE_DAEMON_DEFAULT_THREAD_ATTR \
+    {                                  \
+        0, 0, 0, 0, 0, 1, 128 * 1024   \
+    }
+#define IDE_DAEMON_DEFAULT_DETACH_THREAD_ATTR \
+    {                                         \
+        1, 0, 0, 0, 0, 1, 128 * 1024          \
+    }
 
 namespace Adx {
-static const int32_t WAIT_TID_TIME   = 500;
+static const int32_t WAIT_TID_TIME = 500;
 
 class Thread {
 public:
-    static int32_t CreateTask(OsalThread &tid, OsalUserBlock &funcBlock);
-    static int32_t CreateTaskWithDefaultAttr(OsalThread &tid, OsalUserBlock &funcBlock);
-    static int32_t CreateDetachTaskWithDefaultAttr(OsalThread &tid, OsalUserBlock &funcBlock);
-    static int32_t CreateDetachTask(OsalThread &tid, OsalUserBlock &funcBlock);
+    static int32_t CreateTask(OsalThread& tid, OsalUserBlock& funcBlock);
+    static int32_t CreateTaskWithDefaultAttr(OsalThread& tid, OsalUserBlock& funcBlock);
+    static int32_t CreateDetachTaskWithDefaultAttr(OsalThread& tid, OsalUserBlock& funcBlock);
+    static int32_t CreateDetachTask(OsalThread& tid, OsalUserBlock& funcBlock);
 };
 
 class Runnable {
@@ -39,11 +45,11 @@ public:
     int32_t Join();
     bool IsQuit();
     virtual int32_t Start();
-    const std::string &GetThreadName();
-    void SetThreadName(const std::string &threadName);
+    const std::string& GetThreadName();
+    void SetThreadName(const std::string& threadName);
 
 protected:
-    virtual void Run(const struct error_message::Context &errorContext) = 0;
+    virtual void Run(const struct error_message::Context& errorContext) = 0;
 
 private:
     static IdeThreadArg Process(IdeThreadArg arg);
@@ -54,5 +60,5 @@ private:
     mutable bool isStarted_;
     std::string threadName_;
 };
-}
+} // namespace Adx
 #endif

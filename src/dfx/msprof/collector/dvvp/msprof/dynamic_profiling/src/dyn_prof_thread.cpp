@@ -28,15 +28,11 @@ using namespace Analysis::Dvvp::MsprofErrMgr;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::host;
 
-DynProfThread::DynProfThread() : started_(false), profStarted_(false), delayTime_(0), durationTime_(0),
-    durationSet_(false)
-{
-}
+DynProfThread::DynProfThread()
+    : started_(false), profStarted_(false), delayTime_(0), durationTime_(0), durationSet_(false)
+{}
 
-DynProfThread::~DynProfThread()
-{
-    Stop();
-}
+DynProfThread::~DynProfThread() { Stop(); }
 
 /**
  * @brief Get and set delay and duration time input by user
@@ -103,7 +99,7 @@ int32_t DynProfThread::Start()
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-void DynProfThread::Run(const struct error_message::Context &errorContext)
+void DynProfThread::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     std::unique_lock<std::mutex> lk(threadStopMtx_);
@@ -167,7 +163,7 @@ int32_t DynProfThread::StartProfTask()
         MSPROF_LOGE("Dynamic profiling start MsprofInitAclEnv failed, ret=%d.", ret);
         return PROFILING_FAILED;
     }
- 
+
     if (Msprofiler::Api::ProfAclMgr::instance()->Init() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Dynamic profiling failed to init acl manager");
         Msprofiler::Api::ProfAclMgr::instance()->SetModeToOff();
@@ -183,7 +179,7 @@ int32_t DynProfThread::StartProfTask()
     }
     devLk.unlock();
 
-    for (auto &devInfo : notifyInfo) {
+    for (auto& devInfo : notifyInfo) {
         ret = Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(devInfo.chipId, devInfo.devId, devInfo.isOpenDevice);
         if (ret != MSPROF_ERROR_NONE) {
             MSPROF_LOGE("Dynamic profiling start set device failed, ret=%d.", ret);
@@ -240,6 +236,6 @@ bool DynProfThread::IsProfStarted()
     std::unique_lock<std::mutex> lk(devMtx_);
     return profStarted_;
 }
-} // DynProf
-} // Dvvp
-} // Collector
+} // namespace DynProf
+} // namespace Dvvp
+} // namespace Collector

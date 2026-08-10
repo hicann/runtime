@@ -20,8 +20,9 @@ class AdprofCollector : public analysis::dvvp::common::singleton::Singleton<Adpr
 public:
     AdprofCollector();
     ~AdprofCollector() override;
+
 public:
-    int32_t Init(std::map<std::string, std::string> &keyValuePairs);
+    int32_t Init(std::map<std::string, std::string>& keyValuePairs);
     int32_t UnInit();
     int32_t StartCollectJob();
     int32_t GetProfilingPeriod();
@@ -29,17 +30,18 @@ public:
     int32_t Report(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const;
     std::vector<analysis::dvvp::ProfileFileChunk> SpilitChunk(
         analysis::dvvp::ProfileFileChunk& fileChunk, const uint32_t chunkMaxLen) const;
-    template<typename T>
+    template <typename T>
     void ModifyParam(T& paramNeedModify, const std::string& key)
     {
-        FUNRET_CHECK_EXPR_ACTION_LOGW(keyValuePairs_.count(key) == 0, return,
-            "adprof kvPairs missing key: %s", key.c_str());
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            keyValuePairs_.count(key) == 0, return, "adprof kvPairs missing key: %s", key.c_str());
         std::string value = keyValuePairs_[key];
         std::istringstream iss(value);
         if (std::is_same<T, int32_t>::value) {
             int32_t intVal = 0;
-            FUNRET_CHECK_EXPR_ACTION_LOGW(!analysis::dvvp::common::utils::Utils::StrToInt32(intVal, value),
-                return, "adprof kvPairs %s: '%s' is invalid", key.c_str(), value.c_str());
+            FUNRET_CHECK_EXPR_ACTION_LOGW(
+                !analysis::dvvp::common::utils::Utils::StrToInt32(intVal, value), return,
+                "adprof kvPairs %s: '%s' is invalid", key.c_str(), value.c_str());
             paramNeedModify = intVal;
         } else if (std::is_same<T, std::string>::value) {
             T val;
@@ -49,6 +51,7 @@ public:
             MSPROF_LOGW("adprof unsupported value : %s", value.c_str());
         }
     }
+
 private:
     SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> MakeCfg() const;
     void CollectCtrlCpu(SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg);
@@ -57,6 +60,7 @@ private:
     void CollectSysJob(SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg);
     void CollectSysStatJob(SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg);
     void CollectSysMemJob(SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg);
+
 private:
     std::map<std::string, std::string> keyValuePairs_;
     std::mutex mtx_;

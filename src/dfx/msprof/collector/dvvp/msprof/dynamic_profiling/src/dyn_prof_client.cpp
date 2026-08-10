@@ -19,10 +19,9 @@ namespace Collector {
 namespace Dvvp {
 namespace DynProf {
 const std::map<std::string, DynProfCliCmd> DYN_PROF_CLI_CMD_MAP = {
-    { "start", DynProfCliCmd::DYN_PROF_CLI_CMD_START }, { "stop", DynProfCliCmd::DYN_PROF_CLI_CMD_STOP },
-    { "quit", DynProfCliCmd::DYN_PROF_CLI_CMD_QUIT },   { "q", DynProfCliCmd::DYN_PROF_CLI_CMD_QUIT },
-    { "help", DynProfCliCmd::DYN_PROF_CLI_CMD_HELP },   { "h", DynProfCliCmd::DYN_PROF_CLI_CMD_HELP }
-};
+    {"start", DynProfCliCmd::DYN_PROF_CLI_CMD_START}, {"stop", DynProfCliCmd::DYN_PROF_CLI_CMD_STOP},
+    {"quit", DynProfCliCmd::DYN_PROF_CLI_CMD_QUIT},   {"q", DynProfCliCmd::DYN_PROF_CLI_CMD_QUIT},
+    {"help", DynProfCliCmd::DYN_PROF_CLI_CMD_HELP},   {"h", DynProfCliCmd::DYN_PROF_CLI_CMD_HELP}};
 
 using namespace analysis::dvvp::common::cmdlog;
 using namespace analysis::dvvp::common::config;
@@ -32,7 +31,7 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-void DynProfClient::SetParams(const std::string &params)
+void DynProfClient::SetParams(const std::string& params)
 {
     if (params.size() >= DYN_PROF_PARAMS_MAX_LEN || params.empty()) {
         MSPROF_LOGE("dynamic profiling param length error, len=%zu bytes.", params.size());
@@ -85,12 +84,9 @@ int32_t DynProfClient::Stop()
     return PROFILING_SUCCESS;
 }
 
-bool DynProfClient::IsCliStarted() const
-{
-    return cliStarted_;
-}
+bool DynProfClient::IsCliStarted() const { return cliStarted_; }
 
-void DynProfClient::Run(const struct error_message::Context &errorContext)
+void DynProfClient::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
 
@@ -306,11 +302,9 @@ void DynProfClient::DynProfCliHelpInfo() const
                           "\t quit:                  Stop collection and quit interactive mode.");
 }
 
-DynProfCliMgr::~DynProfCliMgr()
-{
-}
+DynProfCliMgr::~DynProfCliMgr() {}
 
-int32_t DynProfCliMgr::StartDynProfCli(const std::string &params)
+int32_t DynProfCliMgr::StartDynProfCli(const std::string& params)
 {
     MSVP_MAKE_SHARED0(dynProfCli_, DynProfClient, return PROFILING_FAILED);
     dynProfCli_->SetParams(params);
@@ -336,40 +330,25 @@ void DynProfCliMgr::SetKeyPid(int32_t pid)
     keyPid_ = pid;
 }
 
-int32_t DynProfCliMgr::GetKeyPid() const
-{
-    return keyPid_;
-}
+int32_t DynProfCliMgr::GetKeyPid() const { return keyPid_; }
 
 std::string DynProfCliMgr::GetKeyPidEnv() const
 {
     return isAppMode_ ? DYNAMIC_PROFILING_KEY_PID_ENV + "=" + std::to_string(keyPid_) : "";
 }
 
-void DynProfCliMgr::EnableDynProfCli()
-{
-    enabled_ = true;
-}
+void DynProfCliMgr::EnableDynProfCli() { enabled_ = true; }
 
-bool DynProfCliMgr::IsDynProfCliEnable() const
-{
-    return enabled_;
-}
+bool DynProfCliMgr::IsDynProfCliEnable() const { return enabled_; }
 
 std::string DynProfCliMgr::GetDynProfEnv() const
 {
     return enabled_ ? PROFILING_MODE_ENV + "=" + DYNAMIC_PROFILING_VALUE : "";
 }
 
-void DynProfCliMgr::SetAppMode()
-{
-    isAppMode_ = true;
-}
+void DynProfCliMgr::SetAppMode() { isAppMode_ = true; }
 
-bool DynProfCliMgr::IsAppMode() const
-{
-    return isAppMode_;
-}
+bool DynProfCliMgr::IsAppMode() const { return isAppMode_; }
 
 bool DynProfCliMgr::IsCliStarted() const
 {
@@ -385,6 +364,6 @@ void DynProfCliMgr::WaitQuit()
         dynProfCli_->Join();
     }
 }
-}  // namespace DynProf
-}  // namespace Dvvp
-}  // namespace Collector
+} // namespace DynProf
+} // namespace Dvvp
+} // namespace Collector

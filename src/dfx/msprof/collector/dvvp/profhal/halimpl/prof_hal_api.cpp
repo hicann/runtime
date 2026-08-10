@@ -13,11 +13,11 @@
 
 using namespace analysis::dvvp::common::error;
 namespace {
-    const uint32_t ASCEND_PROF_MAJOR_VERSION_SHIFT = 16;
-    const uint32_t ASCEND_PROF_MINOR_VERSION_SHIFT = 8;
-}
+const uint32_t ASCEND_PROF_MAJOR_VERSION_SHIFT = 16;
+const uint32_t ASCEND_PROF_MINOR_VERSION_SHIFT = 8;
+} // namespace
 
-extern "C" int32_t ProfHalGetVersion(uint32_t *version)
+extern "C" int32_t ProfHalGetVersion(uint32_t* version)
 {
     if (version == nullptr) {
         MSPROF_LOGE("Invalid input version of ProfHalGetVersion");
@@ -25,12 +25,11 @@ extern "C" int32_t ProfHalGetVersion(uint32_t *version)
     }
 
     *version = (ASCEND_PROF_MAJOR_VERSION << ASCEND_PROF_MAJOR_VERSION_SHIFT) +
-        (ASCEND_PROF_MINOR_VERSION << ASCEND_PROF_MINOR_VERSION_SHIFT) +
-        ASCEND_PROF_PATCH_VERSION;
+               (ASCEND_PROF_MINOR_VERSION << ASCEND_PROF_MINOR_VERSION_SHIFT) + ASCEND_PROF_PATCH_VERSION;
     return PROFILING_SUCCESS;
 }
 
-extern "C" int32_t ProfHalModuleInitialize(uint32_t moduleType, const void *moduleConfig, uint32_t length)
+extern "C" int32_t ProfHalModuleInitialize(uint32_t moduleType, const void* moduleConfig, uint32_t length)
 {
     if (moduleConfig == nullptr) {
         MSPROF_LOGE("Invalid input moduleConfig of ProfHalModuleInitialize");
@@ -38,13 +37,10 @@ extern "C" int32_t ProfHalModuleInitialize(uint32_t moduleType, const void *modu
     }
 
     return Dvvp::Hal::Server::ServerManager::instance()->ProfServerInit(
-        moduleType, reinterpret_cast<const ProfHalModuleConfig *>(moduleConfig), length);
+        moduleType, reinterpret_cast<const ProfHalModuleConfig*>(moduleConfig), length);
 }
 
-extern "C" int32_t ProfHalModuleFinalize()
-{
-    return Dvvp::Hal::Server::ServerManager::instance()->ProfServerFinal();
-}
+extern "C" int32_t ProfHalModuleFinalize() { return Dvvp::Hal::Server::ServerManager::instance()->ProfServerFinal(); }
 
 extern "C" void ProfHalSetFlushModuleCallback(const ProfHalFlushModuleCallback func)
 {

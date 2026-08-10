@@ -45,7 +45,7 @@ constexpr int32_t REPORT_BUFF_CAPACITY = 16 * 1024;
 constexpr size_t REPORT_BUFF_SIZE = 1024 * 1024;
 constexpr uint32_t WAIT_DATA_TIME = 5U;
 constexpr uint32_t WAIT_DRV_TIME = 1U;
-int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char *grpName);
+int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char* grpName);
 
 struct AicpuUserProfileBufferInfo {
     uint32_t buffer_size;
@@ -54,6 +54,6 @@ struct AicpuUserProfileBufferInfo {
     uint64_t buffer_read_ptr_user_va;
     uint64_t buffer_write_ptr_user_va;
 };
-}
+} // namespace Devprof
 
 #endif

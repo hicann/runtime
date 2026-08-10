@@ -31,21 +31,13 @@ using namespace analysis::dvvp::common::utils;
 
 static bool g_isExit = false;
 
-static void AdprofExit()
-{
-    g_isExit = true;
-}
+static void AdprofExit() { g_isExit = true; }
 
-AdprofCollector::AdprofCollector() : started_{false}
-{
-}
+AdprofCollector::AdprofCollector() : started_{false} {}
 
-AdprofCollector::~AdprofCollector()
-{
-    UnInit();
-}
+AdprofCollector::~AdprofCollector() { UnInit(); }
 
-int32_t AdprofCollector::Init(std::map<std::string, std::string> &keyValuePairs)
+int32_t AdprofCollector::Init(std::map<std::string, std::string>& keyValuePairs)
 {
     std::lock_guard<std::mutex> lk(mtx_);
     MSPROF_EVENT("Adprof start init");
@@ -65,7 +57,7 @@ int32_t AdprofCollector::UnInit()
 {
     std::lock_guard<std::mutex> lk(mtx_);
     if (started_) {
-        for (auto job: jobs_) {
+        for (auto job : jobs_) {
             job->Uninit();
         }
     }
@@ -74,10 +66,7 @@ int32_t AdprofCollector::UnInit()
     return PROFILING_SUCCESS;
 }
 
-bool AdprofCollector::AdprofStarted() const
-{
-    return started_;
-}
+bool AdprofCollector::AdprofStarted() const { return started_; }
 
 SHARED_PTR_ALIA<CollectionJobCfg> AdprofCollector::MakeCfg() const
 {
@@ -135,11 +124,11 @@ void AdprofCollector::CollectAicpuHscbJob(SHARED_PTR_ALIA<CollectionJobCfg> coll
     // set hscb events
     SHARED_PTR_ALIA<std::vector<std::string>> events = nullptr;
     MSVP_MAKE_SHARED0(events, std::vector<std::string>, return);
-    std::string aicpuHscbEvents = "cpu_cycles,"   // 0x11
+    std::string aicpuHscbEvents = "cpu_cycles,"                // 0x11
                                   "HSCB_BUS_ACCESS_RD_PERCYC," // 0x6189: bus read transactions in progress
                                   "HSCB_BUS_ACCESS_WR_PERCYC," // 0x618A: bus write transactions in progress
-                                  "HSCB_BUS_REQ_RD," // 0x618B: bus request read
-                                  "HSCB_BUS_REQ_WR"; // 0x618C: bus request write
+                                  "HSCB_BUS_REQ_RD,"           // 0x618B: bus request read
+                                  "HSCB_BUS_REQ_WR";           // 0x618C: bus request write
     *events = Utils::Split(aicpuHscbEvents, false, "", ",");
     collectionJobCfg->jobParams.events = events;
     // Init and start hscb job
@@ -272,8 +261,7 @@ STATIC int32_t StartAdprof()
 {
     AdprofCollectorProxy::instance()->BindFunction(
         std::bind(&AdprofCollector::Report, AdprofCollector::instance(), std::placeholders::_1),
-        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance())
-    );
+        std::bind(&AdprofCollector::AdprofStarted, AdprofCollector::instance()));
     MSPROF_LOGI("Adprof collector start.");
     AdprofCollector::instance()->StartCollectJob();
     return PROFILING_SUCCESS;
@@ -281,9 +269,9 @@ STATIC int32_t StartAdprof()
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-int32_t AdprofStart(int32_t argc, const char *argv[])
+int32_t AdprofStart(int32_t argc, const char* argv[])
 {
     std::map<std::string, std::string> kvPairs;
     const int32_t minArgc = 4;
@@ -311,7 +299,7 @@ int32_t AdprofStart(int32_t argc, const char *argv[])
         MSPROF_LOGE("Adprof collector init failed.");
         return PROFILING_FAILED;
     }
- 
+
     uint32_t devId;
     if (!GetDeviceId(kvPairs, devId)) {
         return PROFILING_FAILED;
@@ -324,19 +312,20 @@ int32_t AdprofStart(int32_t argc, const char *argv[])
     uint32_t localDevId = devId;
 
     drvError_t err = drvGetLocalDevIDByHostDevID(devId, &localDevId);
-    FUNRET_CHECK_EXPR_ACTION(err != DRV_ERROR_NONE, return PROFILING_FAILED,
-        "Failed to get local device id, devId=%u, ret=%d.", devId, static_cast<int32_t>(err));
+    FUNRET_CHECK_EXPR_ACTION(
+        err != DRV_ERROR_NONE, return PROFILING_FAILED, "Failed to get local device id, devId=%u, ret=%d.", devId,
+        static_cast<int32_t>(err));
     MSPROF_LOGI("Get local device id %u by id %u.", localDevId, devId);
 
     ret = AdprofStartRegister(adprofCallBack, localDevId, hostPid);
     if (ret != PROFILING_SUCCESS) {
         return PROFILING_FAILED;
     }
- 
+
     return PROFILING_SUCCESS;
 }
 
-bool GetDeviceId(const std::map<std::string, std::string> &kvPairs, uint32_t &devId)
+bool GetDeviceId(const std::map<std::string, std::string>& kvPairs, uint32_t& devId)
 {
     if (kvPairs.find("dev_id") == kvPairs.end()) {
         MSPROF_LOGE("not find device id");
@@ -349,7 +338,7 @@ bool GetDeviceId(const std::map<std::string, std::string> &kvPairs, uint32_t &de
     return true;
 }
 
-bool GetHostPid(const std::map<std::string, std::string> &kvPairs, int32_t &hostPid)
+bool GetHostPid(const std::map<std::string, std::string>& kvPairs, int32_t& hostPid)
 {
     if (kvPairs.find("host_pid") == kvPairs.end()) {
         MSPROF_LOGE("not find host pid");
@@ -368,10 +357,7 @@ int32_t AdprofStop()
     return PROFILING_SUCCESS;
 }
 
-bool GetIsExit(void)
-{
-    return g_isExit;
-}
+bool GetIsExit(void) { return g_isExit; }
 
 #ifdef __cplusplus
 }

@@ -26,8 +26,8 @@ struct AdprofCallBack {
 const uint32_t TLV_VERSION = 0x00000100;
 const uint32_t TLV_TYPE = 1;
 
-int32_t AdprofStartRegister(struct AdprofCallBack &adprofCallBack, uint32_t devId, int32_t hostPid);
-int32_t ReportAdprofFileChunk(const void *data);
+int32_t AdprofStartRegister(struct AdprofCallBack& adprofCallBack, uint32_t devId, int32_t hostPid);
+int32_t ReportAdprofFileChunk(const void* data);
 
 class DevprofDrvAdprof : public analysis::dvvp::common::singleton::Singleton<DevprofDrvAdprof> {
 public:

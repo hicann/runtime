@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "prof_dev_api.h"
 #include "devprof_drv_aicpu.h"
 #include "hash_data.h"
@@ -17,14 +16,14 @@ using namespace analysis::dvvp::common::error;
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 MSVP_PROF_API int32_t AdprofCheckFeatureIsOn(uint64_t feature)
 {
     return DevprofDrvAicpu::instance()->CheckFeatureIsOn(feature);
 }
 
-MSVP_PROF_API uint64_t AdprofGetHashId(const char *hashInfo, size_t length)
+MSVP_PROF_API uint64_t AdprofGetHashId(const char* hashInfo, size_t length)
 {
     if (hashInfo == nullptr || length == 0) {
         MSPROF_LOGW("The hashInfo[%zu] is invalid, thus unable to get hash id.", length);
@@ -33,17 +32,14 @@ MSVP_PROF_API uint64_t AdprofGetHashId(const char *hashInfo, size_t length)
     return analysis::dvvp::transport::HashData::instance()->GenHashId(std::string(hashInfo, length));
 }
 
-MSVP_PROF_API uint64_t AdprofStr2Id(const char *hashInfo, size_t length)
-{
-    return AdprofGetHashId(hashInfo, length);
-}
+MSVP_PROF_API uint64_t AdprofStr2Id(const char* hashInfo, size_t length) { return AdprofGetHashId(hashInfo, length); }
 
-MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
     return DevprofDrvAicpu::instance()->ReportAdditionalInfo(nonPersistantFlag, data, length);
 }
 
-MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length)
 {
     return DevprofDrvAicpu::instance()->ReportAdditionalInfo(nonPersistantFlag, data, length);
 }
@@ -53,7 +49,7 @@ MSVP_PROF_API size_t AdprofGetBatchReportMaxSize(uint32_t type)
     return DevprofDrvAicpu::instance()->GetBatchReportMaxSize(type);
 }
 
-MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para)
+MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para)
 {
     const int32_t ret = DevprofDrvAicpu::instance()->AdprofInit(para);
     if (ret == PROFILING_CONTINUE) {
@@ -71,10 +67,7 @@ MSVP_PROF_API int32_t AdprofReportData(ConstVoidPtr data, uint32_t length)
     return PROFILING_FAILED;
 }
 
-MSVP_PROF_API int32_t AdprofAicpuStop()
-{
-    return PROFILING_FAILED;
-}
+MSVP_PROF_API int32_t AdprofAicpuStop() { return PROFILING_FAILED; }
 
 #ifdef __cplusplus
 }

@@ -49,12 +49,10 @@ ReceiveData::ReceiveData()
       timeStamp_(0),
       totalPushCount_(0),
       totalPushSize_(0),
-      totalDataLengthFailed_(0) {}
+      totalDataLengthFailed_(0)
+{}
 
-ReceiveData::~ReceiveData()
-{
-    StopReceiveData();
-}
+ReceiveData::~ReceiveData() { StopReceiveData(); }
 
 /**
  * @name  DumpProfileData
@@ -64,9 +62,9 @@ ReceiveData::~ReceiveData()
  * @param [in] ageFlag : if need age
  * @param [in] key : type and level of data
  */
-template<typename T>
-void ReceiveData::DumpProfileData(std::vector<T> &message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks,
-    uint32_t ageFlag)
+template <typename T>
+void ReceiveData::DumpProfileData(
+    std::vector<T>& message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag)
 {
     if (!JsonParser::instance()->GetJsonModuleReporterSwitch(moduleId_)) {
         MSPROF_EVENT("GetJsonModuleReporterSwitch, moduleId_: %d", moduleId_);
@@ -75,8 +73,9 @@ void ReceiveData::DumpProfileData(std::vector<T> &message, std::vector<SHARED_PT
 
     SHARED_PTR_ALIA<ProfileFileChunk> fileChunk = nullptr;
     MSVP_MAKE_SHARED0_NODO(fileChunk, ProfileFileChunk, return);
-    MSPROF_LOGD("Dump data, module:%s, level:%u, type:%u, data.size:%zu, ageFlag: %u",
-        moduleName_.c_str(), message[0].level, message[0].type, sizeof(message[0]), ageFlag);
+    MSPROF_LOGD(
+        "Dump data, module:%s, level:%u, type:%u, data.size:%zu, ageFlag: %u", moduleName_.c_str(), message[0].level,
+        message[0].type, sizeof(message[0]), ageFlag);
     if (DumpData(message, fileChunk, ageFlag) == PROFILING_SUCCESS) {
         fileChunks.push_back(fileChunk); // insert the data into the new vector
     } else {
@@ -119,7 +118,7 @@ void ReceiveData::ApiRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChu
     if (ageVec.size() > 0) {
         DumpProfileData<MsprofApi>(ageVec, fileChunks, 1);
     }
- 
+
     if (unageVec.size() > 0) {
         DumpProfileData<MsprofApi>(unageVec, fileChunks, 0);
     }
@@ -145,9 +144,8 @@ void ReceiveData::CompactRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fil
         totalPopCount_++;
         totalPopSize_ += sizeof(MsprofCompactInfo);
         batchSizeMax += sizeof(ProfileFileChunk);
-        std::string tagWizSuffix = std::to_string(data.level) + "." +
-                                   std::to_string(data.type) + "." +
-                                   std::to_string(ageFlag);
+        std::string tagWizSuffix =
+            std::to_string(data.level) + "." + std::to_string(data.type) + "." + std::to_string(ageFlag);
         // classify data by level and type
         dataMap[tagWizSuffix].push_back(data);
     }
@@ -183,9 +181,8 @@ void ReceiveData::AdditionalRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& 
         totalPopCount_++;
         totalPopSize_ += sizeof(MsprofAdditionalInfo);
         batchSizeMax += sizeof(ProfileFileChunk);
-        std::string tagWizSuffix = std::to_string(data.level) + "." +
-                                   std::to_string(data.type) + "." +
-                                   std::to_string(ageFlag);
+        std::string tagWizSuffix =
+            std::to_string(data.level) + "." + std::to_string(data.type) + "." + std::to_string(ageFlag);
         // classify data by level and type
         dataMap[tagWizSuffix].push_back(data);
     }
@@ -210,7 +207,7 @@ void ReceiveData::AdprofRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& file
 {
     uint64_t allStartTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     size_t outSize = 524032; // 512K - 256 byte pack
-    void *outPtr = ReceiveData::batchAdditionalTryPop_(outSize, true);
+    void* outPtr = ReceiveData::batchAdditionalTryPop_(outSize, true);
     if (outPtr == nullptr) {
         return;
     }
@@ -224,7 +221,8 @@ void ReceiveData::AdprofRun(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& file
     uint64_t dumpEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     ReceiveData::batchAdditionalBufferIndexShift_(outPtr, outSize);
     uint64_t allEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
-    MSPROF_LOGD("Devprof handle data successfully, dump cost: %llu ns, all cost: %llu ns, data size: %zu",
+    MSPROF_LOGD(
+        "Devprof handle data successfully, dump cost: %llu ns, all cost: %llu ns, data size: %zu",
         (dumpEndTime - dumpStartTime), (allEndTime - allStartTime), outSize);
 }
 
@@ -237,7 +235,7 @@ void ReceiveData::VariableAdditionalRun(std::vector<SHARED_PTR_ALIA<ProfileFileC
 {
     uint64_t allStartTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     size_t outSize = 1048576;
-    void *outPtr = ReceiveData::varAdditionalTryPop_(outSize);
+    void* outPtr = ReceiveData::varAdditionalTryPop_(outSize);
     if (outPtr == nullptr) {
         return;
     }
@@ -251,7 +249,8 @@ void ReceiveData::VariableAdditionalRun(std::vector<SHARED_PTR_ALIA<ProfileFileC
     uint64_t dumpEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     ReceiveData::varAdditionalBufferIndexShift_(outPtr, outSize);
     uint64_t allEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
-    MSPROF_LOGD("Variable block buffer handle data successfully, dump cost: %llu ns, all cost: %llu ns, data size: %zu",
+    MSPROF_LOGD(
+        "Variable block buffer handle data successfully, dump cost: %llu ns, all cost: %llu ns, data size: %zu",
         (dumpEndTime - dumpStartTime), (allEndTime - allStartTime), outSize);
 }
 
@@ -285,13 +284,9 @@ void ReceiveData::StopReceiveData()
     MSPROF_LOGI("stop this reporter, stopped_: %d, module: %s", stopped_, moduleName_.c_str());
 }
 
-void ReceiveData::WriteDone()
-{
-}
+void ReceiveData::WriteDone() {}
 
-void ReceiveData::TimedTask()
-{
-}
+void ReceiveData::TimedTask() {}
 
 int32_t ReceiveData::SendData(SHARED_PTR_ALIA<ProfileFileChunk> fileChunk /* = nullptr */)
 {
@@ -314,28 +309,23 @@ void ReceiveData::WaitAllBufferEmptyEvent(uint64_t us)
     int cnt = 0;
     int maxWaitTimes = 3;
     do {
-        status = cvBufferEmpty_.wait_for(lk, std::chrono::microseconds(us),
-            [this] {
-                return ReceiveData::reportBufEmpty_();
-            });
+        status = cvBufferEmpty_.wait_for(
+            lk, std::chrono::microseconds(us), [this] { return ReceiveData::reportBufEmpty_(); });
         cnt++;
         MSPROF_LOGI("buffer status is:%d, wait all buf empty, moduleName:%s", status, moduleName_.c_str());
     } while (!status && cnt < maxWaitTimes);
 }
 
 /**
-* @brief Flush: wait device buffer is empty
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
-int32_t ReceiveData::Flush()
-{
-    return PROFILING_SUCCESS;
-}
+ * @brief Flush: wait device buffer is empty
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
+int32_t ReceiveData::Flush() { return PROFILING_SUCCESS; }
 
 /**
-* @brief FlushAll: wait all buffer is empty
-* @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
-*/
+ * @brief FlushAll: wait all buffer is empty
+ * @return : success return PROFILING_SUCCESS, failed return PROFIING_FAILED
+ */
 int32_t ReceiveData::FlushAll()
 {
     WaitAllBufferEmptyEvent(WAIT_BUFF_EMPTY_TIMEOUT_US);
@@ -346,9 +336,10 @@ void ReceiveData::PrintTotalSize()
 {
     uint64_t totalPushCount = totalPushCount_.load(std::memory_order_relaxed);
     uint64_t totalPushSize = totalPushSize_.load(std::memory_order_relaxed);
-    MSPROF_EVENT("total_size_report module:%s, push count:%" PRIu64 ", pop count:%" PRIu64 ", push size:%"
-        PRIu64" bytes, pop size:%" PRIu64" bytes", moduleName_.c_str(), totalPushCount, totalPopCount_,
-        totalPushSize, totalPopSize_);
+    MSPROF_EVENT(
+        "total_size_report module:%s, push count:%" PRIu64 ", pop count:%" PRIu64 ", push size:%" PRIu64
+        " bytes, pop size:%" PRIu64 " bytes",
+        moduleName_.c_str(), totalPushCount, totalPopCount_, totalPushSize, totalPopSize_);
 }
 
 int32_t ReceiveData::Init()
@@ -378,7 +369,7 @@ int32_t ReceiveData::DoReport(CONST_REPORT_DATA_PTR rData) const
 
 void ReceiveData::DoReportRun()
 {
-    std::vector<SHARED_PTR_ALIA<ProfileFileChunk> > fileChunks;
+    std::vector<SHARED_PTR_ALIA<ProfileFileChunk>> fileChunks;
     unsigned long sleepIntevalNs = 50000000; // 50,000,000 : 50ms
     timeStamp_ = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
 
@@ -408,14 +399,14 @@ void ReceiveData::DoReportRun()
     }
 }
 
-int32_t ReceiveData::Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk> > &message)
+int32_t ReceiveData::Dump(std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& message)
 {
     UNUSED(message);
     MSPROF_LOGD("message size is : %zu", message.size());
     return PROFILING_SUCCESS;
 }
 
-void ReceiveData::DumpAdprofData(void *outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const
+void ReceiveData::DumpAdprofData(void* outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const
 {
     if (fileChunk == nullptr) {
         MSPROF_LOGE("fileChunk or dataPool is nullptr");
@@ -424,21 +415,20 @@ void ReceiveData::DumpAdprofData(void *outPtr, size_t outSize, SHARED_PTR_ALIA<P
 
     fileChunk->fileName = "aicpu.data";
     fileChunk->offset = -1;
-    fileChunk->chunk = std::string(reinterpret_cast<char *>(outPtr), outSize);
+    fileChunk->chunk = std::string(reinterpret_cast<char*>(outPtr), outSize);
     fileChunk->isLastChunk = false;
     fileChunk->extraInfo = "null.0"; // set dev id 0 on rc mode
     fileChunk->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
     fileChunk->chunkSize = outSize;
 }
 
-void ReceiveData::DumpVariableData(void *outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const
+void ReceiveData::DumpVariableData(void* outPtr, size_t outSize, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk) const
 {
     if (fileChunk == nullptr) {
         MSPROF_LOGE("fileChunk or dataPool is nullptr");
         return;
     }
-    fileChunk->fileName = "unaging." + moduleName_ +
-                "." + "capture_op_info";
+    fileChunk->fileName = "unaging." + moduleName_ + "." + "capture_op_info";
     fileChunk->offset = -1;
     fileChunk->chunk = std::string(reinterpret_cast<CHAR_PTR>(outPtr), outSize);
     fileChunk->isLastChunk = false;
@@ -447,8 +437,8 @@ void ReceiveData::DumpVariableData(void *outPtr, size_t outSize, SHARED_PTR_ALIA
     fileChunk->chunkSize = outSize;
 }
 
-template<typename T>
-int32_t ReceiveData::DumpData(std::vector<T> &message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag)
+template <typename T>
+int32_t ReceiveData::DumpData(std::vector<T>& message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag)
 {
     if (fileChunk == nullptr) {
         MSPROF_LOGE("fileChunk or dataPool is nullptr");
@@ -477,8 +467,8 @@ int32_t ReceiveData::DumpData(std::vector<T> &message, SHARED_PTR_ALIA<ProfileFi
                 tag = "data";
             }
 #endif
-            fileChunk->fileName = ((ageFlag == static_cast<uint32_t>(1)) ? "aging." : "unaging.") + moduleName_ +
-                "." + tag;
+            fileChunk->fileName =
+                ((ageFlag == static_cast<uint32_t>(1)) ? "aging." : "unaging.") + moduleName_ + "." + tag;
             fileChunk->offset = -1;
             chunkLen = messageLen;
             fileChunk->chunk = std::string(dataPtr, chunkLen);
@@ -496,16 +486,19 @@ int32_t ReceiveData::DumpData(std::vector<T> &message, SHARED_PTR_ALIA<ProfileFi
     return PROFILING_SUCCESS;
 }
 
-template int32_t ReceiveData::DumpData(std::vector<MsprofApi> &message,
-    SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
-template int32_t ReceiveData::DumpData(std::vector<MsprofCompactInfo> &message,
-    SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
-template int32_t ReceiveData::DumpData(std::vector<MsprofAdditionalInfo> &message,
-    SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
-template void ReceiveData::DumpProfileData(std::vector<MsprofApi> &message,
-    std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag);
-template void ReceiveData::DumpProfileData(std::vector<MsprofCompactInfo> &message,
-    std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag);
-template void ReceiveData::DumpProfileData(std::vector<MsprofAdditionalInfo> &message,
-    std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag);
-}}
+template int32_t ReceiveData::DumpData(
+    std::vector<MsprofApi>& message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
+template int32_t ReceiveData::DumpData(
+    std::vector<MsprofCompactInfo>& message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
+template int32_t ReceiveData::DumpData(
+    std::vector<MsprofAdditionalInfo>& message, SHARED_PTR_ALIA<ProfileFileChunk> fileChunk, uint32_t ageFlag);
+template void ReceiveData::DumpProfileData(
+    std::vector<MsprofApi>& message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks, uint32_t ageFlag);
+template void ReceiveData::DumpProfileData(
+    std::vector<MsprofCompactInfo>& message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks,
+    uint32_t ageFlag);
+template void ReceiveData::DumpProfileData(
+    std::vector<MsprofAdditionalInfo>& message, std::vector<SHARED_PTR_ALIA<ProfileFileChunk>>& fileChunks,
+    uint32_t ageFlag);
+} // namespace Engine
+} // namespace Msprof

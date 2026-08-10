@@ -20,7 +20,7 @@ namespace Devprof {
 using namespace analysis::dvvp::common::error;
 using analysis::dvvp::driver::MsprofDrvApi;
 
-int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char *grpName)
+int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char* grpName)
 {
     struct esched_query_gid_output gidOut = {0};
     struct esched_query_gid_input gidIn = {hostPid, {0}};
@@ -65,5 +65,4 @@ int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char *grpName)
     return PROFILING_SUCCESS;
 }
 
-}
-
+} // namespace Devprof

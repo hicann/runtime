@@ -23,7 +23,7 @@ public:
      * @brief DataDumper: the construct function
      */
     DataDumper() = default;
-    ~DataDumper() override {};
+    ~DataDumper() override{};
 };
 } // namespace Engine
 } // namespace Msprof

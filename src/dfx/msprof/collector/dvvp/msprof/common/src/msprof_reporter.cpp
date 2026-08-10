@@ -29,14 +29,9 @@ static std::mutex g_reporterMtx;
 
 MsprofReporter::MsprofReporter() {}
 
-MsprofReporter::MsprofReporter(const std::string module) : module_(module)
-{
-}
+MsprofReporter::MsprofReporter(const std::string module) : module_(module) {}
 
-MsprofReporter::~MsprofReporter()
-{
-    reporter_ = nullptr;
-}
+MsprofReporter::~MsprofReporter() { reporter_ = nullptr; }
 
 int32_t MsprofReporter::HandleReportRequest(uint32_t type, VOID_PTR data, uint32_t len)
 {
@@ -83,7 +78,7 @@ void MsprofReporter::InitReporters()
         return;
     }
     MSPROF_EVENT("Init all reporters");
-    for (auto &module : MSPROF_MODULE_ID_NAME_MAP) {
+    for (auto& module : MSPROF_MODULE_ID_NAME_MAP) {
         reporters_.insert(std::make_pair(module.id, MsprofReporter(module.name)));
     }
 }
@@ -167,7 +162,7 @@ int32_t MsprofReporter::GetDataMaxLen(VOID_PTR data, uint32_t len) const
         MSPROF_LOGE("len:%d is so less", len);
         return PROFILING_FAILED;
     }
-    *(reinterpret_cast<uint32_t *>(data)) = reporter_->GetReportDataMaxLen();
+    *(reinterpret_cast<uint32_t*>(data)) = reporter_->GetReportDataMaxLen();
     return PROFILING_SUCCESS;
 }
 
@@ -181,14 +176,14 @@ int32_t MsprofReporter::GetHashId(VOID_PTR data, uint32_t len) const
         MSPROF_LOGE("module:%s, params error, data:0x%lx len:%" PRIu64, module_.c_str(), data, len);
         return PROFILING_FAILED;
     }
-    auto hData = reinterpret_cast<MsprofHashData *>(data);
+    auto hData = reinterpret_cast<MsprofHashData*>(data);
     if (hData->data == nullptr || hData->dataLen > HASH_DATA_MAX_LEN || hData->dataLen == 0) {
-        MSPROF_LOGE("module:%s, data error, data:0x%lx, dataLen:%" PRIu64,
-            module_.c_str(), hData->data, hData->dataLen);
+        MSPROF_LOGE(
+            "module:%s, data error, data:0x%lx, dataLen:%" PRIu64, module_.c_str(), hData->data, hData->dataLen);
         return PROFILING_FAILED;
     }
-    hData->hashId = HashData::instance()->GenHashId(module_,
-        reinterpret_cast<CONST_CHAR_PTR>(hData->data), hData->dataLen);
+    hData->hashId =
+        HashData::instance()->GenHashId(module_, reinterpret_cast<CONST_CHAR_PTR>(hData->data), hData->dataLen);
     if (hData->hashId == 0) {
         return PROFILING_FAILED;
     }
@@ -213,5 +208,5 @@ int32_t SendAiCpuData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChun
     std::lock_guard<std::mutex> lk(g_reporterMtx);
     return MsprofReporter::reporters_[MSPROF_MODULE_DATA_PREPROCESS].SendData(fileChunk);
 }
-}  // namespace Engine
-}  // namespace Msprof
+} // namespace Engine
+} // namespace Msprof
