@@ -20,7 +20,7 @@
 namespace Analysis {
 namespace Dvvp {
 namespace Msopprof {
-using CONST_CHAR_PTR = const char *;
+using CONST_CHAR_PTR = const char*;
 using namespace analysis::dvvp::common::config;
 
 class MsopprofManager : public analysis::dvvp::common::singleton::Singleton<MsopprofManager> {
@@ -30,9 +30,10 @@ public:
     int MsopprofProcess(int argc, CONST_CHAR_PTR argv[]);
     OsalProcess GetMsopprofPid() { return msopprofPid_; }
 
- private:
-    bool CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[], std::vector<std::string> &opArgv) const;
-    void ExecuteMsopprof(const std::vector<std::string> &opArgv);
+private:
+    bool CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[], std::vector<std::string>& opArgv) const;
+    void ExecuteMsopprof(const std::vector<std::string>& opArgv);
+
 private:
     std::string msopprofPath_;
     OsalProcess msopprofPid_;
@@ -42,4 +43,4 @@ private:
 } // namespace Dvvp
 } // namespace Analysis
 
-#endif  // ANALYSIS_DVVP_MSPROFBIN_MSOPPROF_MANAGER_H_
+#endif // ANALYSIS_DVVP_MSPROFBIN_MSOPPROF_MANAGER_H_

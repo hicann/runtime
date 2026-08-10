@@ -25,16 +25,16 @@ public:
     void AddHostIdDevIdRelationship(int32_t hostId, int32_t devId);
     int32_t GetDevIdByHostId(int32_t hostId);
     int32_t GetHostIdByDevId(int32_t devId);
-    void AddLocalFlushJobId(const std::string &jobId);
-    int32_t GetFlushSuffixDevId(const std::string &jobId, int32_t indexId);
+    void AddLocalFlushJobId(const std::string& jobId);
+    int32_t GetFlushSuffixDevId(const std::string& jobId, int32_t indexId);
 
 private:
     std::mutex hostIdMapMutex_;
     std::map<int32_t, int32_t> hostIdToDevId_;
     std::set<std::string> localFlushJobIds_;
 };
-}  // namespace TaskHandle
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace TaskHandle
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

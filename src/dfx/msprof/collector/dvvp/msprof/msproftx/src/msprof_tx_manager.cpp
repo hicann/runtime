@@ -34,8 +34,14 @@ constexpr uint32_t MARKEX_TAG_ID = 11;
 constexpr uint32_t MARKEX_RANGE_TAG_ID = 12;
 constexpr uint32_t MARKEX_MAX_CYCLE = 1000;
 
-MsprofTxManager::MsprofTxManager() : isInit_(false), reporter_(nullptr), stampPool_(nullptr), categoryNameMap_({}),
-    markExIndex_(0), rtProfilerTraceExFunc_(nullptr) {}
+MsprofTxManager::MsprofTxManager()
+    : isInit_(false),
+      reporter_(nullptr),
+      stampPool_(nullptr),
+      categoryNameMap_({}),
+      markExIndex_(0),
+      rtProfilerTraceExFunc_(nullptr)
+{}
 
 MsprofTxManager::~MsprofTxManager()
 {
@@ -59,7 +65,8 @@ int32_t MsprofTxManager::Init()
     auto ret = stampPool_->Init(CURRENT_STAMP_SIZE);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("[Init]init stamp pool failed, ret is %d", ret);
-        MSPROF_ENV_ERROR("EK0201", std::vector<std::string>({"buf_size"}),
+        MSPROF_ENV_ERROR(
+            "EK0201", std::vector<std::string>({"buf_size"}),
             std::vector<std::string>({std::to_string(CURRENT_STAMP_SIZE) + "B"}));
         return PROFILING_FAILED;
     }
@@ -94,7 +101,8 @@ ACL_PROF_STAMP_PTR MsprofTxManager::CreateStamp() const
 {
     if (!isInit_) {
         MSPROF_LOGE("[CreateStamp]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
             std::vector<std::string>({"aclprofStart", "aclprofCreateStamp"}));
         return nullptr;
     }
@@ -110,8 +118,9 @@ void MsprofTxManager::DestroyStamp(const ACL_PROF_STAMP_PTR stamp) const
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("[DestroyStamp]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-                           std::vector<std::string>({ "aclprofDestroyStamp", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofDestroyStamp", "stamp"}));
         return;
     }
     if (!isInit_) {
@@ -140,8 +149,9 @@ int32_t MsprofTxManager::SetStampCategory(ACL_PROF_STAMP_PTR stamp, uint32_t cat
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-                           std::vector<std::string>({ "aclprofSetStampCategory", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofSetStampCategory", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -149,12 +159,13 @@ int32_t MsprofTxManager::SetStampCategory(ACL_PROF_STAMP_PTR stamp, uint32_t cat
     return PROFILING_SUCCESS;
 }
 
-int32_t MsprofTxManager::SetStampPayload(ACL_PROF_STAMP_PTR stamp, const int32_t type, const void *value) const
+int32_t MsprofTxManager::SetStampPayload(ACL_PROF_STAMP_PTR stamp, const int32_t type, const void* value) const
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofSetStampPayload", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofSetStampPayload", "stamp"}));
         return PROFILING_FAILED;
     }
     if (value == nullptr) {
@@ -171,8 +182,9 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("[SetStampTraceMessage]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofSetStampTraceMessage", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofSetStampTraceMessage", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -180,8 +192,9 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
     if (msgLen >= MAX_MSG_LEN) {
         MSPROF_LOGE("[SetStampTraceMessage]msg len(%u) is invalid, must less then 128 bytes", msgLen);
         std::string errorReason = "msg len should be less than" + std::to_string(MAX_MSG_LEN);
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofSetStampTraceMessage", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofSetStampTraceMessage", "stamp"}));
         return PROFILING_FAILED;
     }
     auto ret = strncpy_s(stamp->txInfo.value.stampInfo.message, MAX_MSG_LEN - 1, msg, msgLen);
@@ -203,8 +216,8 @@ int32_t MsprofTxManager::Mark(ACL_PROF_STAMP_PTR stamp) const
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Mark]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofMark", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}), std::vector<std::string>({"aclprofMark", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -221,11 +234,13 @@ int32_t MsprofTxManager::MarkEx(CONST_CHAR_PTR msg, size_t msgLen, aclrtStream s
     // check if message invalid
     if (msg == nullptr || stream == nullptr || strlen(msg) != msgLen) {
         MSPROF_LOGE("[MarkEx]Invalid input param for markEx.");
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+        MSPROF_INPUT_ERROR(
+            "EK0001", std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({"nullptr", "message", "Invalid input param for markEx"}));
         return PROFILING_FAILED;
     }
-    FUNRET_CHECK_EXPR_ACTION(msgLen > static_cast<size_t>(MAX_MESSAGE_LEN - 1) || msgLen < 1, return PROFILING_FAILED,
+    FUNRET_CHECK_EXPR_ACTION(
+        msgLen > static_cast<size_t>(MAX_MESSAGE_LEN - 1) || msgLen < 1, return PROFILING_FAILED,
         "[MarkEx]The length of input message should be in range of 1~%zu.", static_cast<size_t>(MAX_MESSAGE_LEN - 1));
     // create MsprofTxInfo info
     MsprofTxInfo info;
@@ -237,28 +252,30 @@ int32_t MsprofTxManager::MarkEx(CONST_CHAR_PTR msg, size_t msgLen, aclrtStream s
     info.value.stampInfo.endTime = info.value.stampInfo.startTime;
     // rtProfilerTraceEx
     int32_t ret = MarkExPoint(stream, info);
-    FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS,
-        return PROFILING_FAILED, "[MarkEx]MarkExPoint failed, msgLen %zu.", msgLen);
+    FUNRET_CHECK_EXPR_ACTION(
+        ret != PROFILING_SUCCESS, return PROFILING_FAILED, "[MarkEx]MarkExPoint failed, msgLen %zu.", msgLen);
     // copy message
-    FUNRET_CHECK_EXPR_ACTION(memcpy_s(info.value.stampInfo.message, MAX_MESSAGE_LEN - 1, msg, msgLen) != EOK,
-        return PROFILING_FAILED, "[MarkEx]Memcpy_s message failed, msgLen %zu.", msgLen);
+    FUNRET_CHECK_EXPR_ACTION(
+        memcpy_s(info.value.stampInfo.message, MAX_MESSAGE_LEN - 1, msg, msgLen) != EOK, return PROFILING_FAILED,
+        "[MarkEx]Memcpy_s message failed, msgLen %zu.", msgLen);
     info.value.stampInfo.message[msgLen] = '\0';
     // report data
     ret = reporter_->Report(info);
-    FUNRET_CHECK_EXPR_ACTION(ret != MSPROF_ERROR_NONE,
-        return PROFILING_FAILED, "[ReportStampData]Report profiling data failed.");
+    FUNRET_CHECK_EXPR_ACTION(
+        ret != MSPROF_ERROR_NONE, return PROFILING_FAILED, "[ReportStampData]Report profiling data failed.");
     return PROFILING_SUCCESS;
 }
 
-int32_t MsprofTxManager::MarkExPoint(aclrtStream stream, MsprofTxInfo &info)
+int32_t MsprofTxManager::MarkExPoint(aclrtStream stream, MsprofTxInfo& info)
 {
-    FUNRET_CHECK_EXPR_ACTION(rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
+    FUNRET_CHECK_EXPR_ACTION(
+        rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
         "[MarkEx]Failed to call nullptr rtProfilerTraceEx.");
     uint64_t markId = GetTxEventId();
-    const int32_t ret = rtProfilerTraceExFunc_(markId, MARKEX_MODEL_ID, MARKEX_TAG_ID,
-        static_cast<void *>(stream));
-    FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS, return PROFILING_FAILED,
-        "[MarkEx]Failed to call rtProfilerTraceEx, mark index: %u.", markId);
+    const int32_t ret = rtProfilerTraceExFunc_(markId, MARKEX_MODEL_ID, MARKEX_TAG_ID, static_cast<void*>(stream));
+    FUNRET_CHECK_EXPR_ACTION(
+        ret != PROFILING_SUCCESS, return PROFILING_FAILED, "[MarkEx]Failed to call rtProfilerTraceEx, mark index: %u.",
+        markId);
     info.value.stampInfo.markId = markId;
     MSPROF_LOGI("[MarkEx]Success to mark ex point in device, index: %u.", markId);
     return PROFILING_SUCCESS;
@@ -273,8 +290,8 @@ int32_t MsprofTxManager::Push(ACL_PROF_STAMP_PTR stamp) const
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Push]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofPush", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}), std::vector<std::string>({"aclprofPush", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -291,7 +308,8 @@ int32_t MsprofTxManager::Pop() const
     auto stamp = stampPool_->MsprofStampPop();
     if (stamp == nullptr) {
         MSPROF_LOGE("[Pop]stampPool pop failed ,stamp is null!");
-        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
             std::vector<std::string>({"aclprofPush", "aclprofPop"}));
         return PROFILING_FAILED;
     }
@@ -301,27 +319,30 @@ int32_t MsprofTxManager::Pop() const
 }
 
 // stamp map manage
-int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t *rangeId) const
+int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t* rangeId) const
 {
     if (!isInit_) {
         MSPROF_LOGE("[RangeStart]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
             std::vector<std::string>({"aclprofStart", "aclprofRangeStart"}));
         return PROFILING_FAILED;
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[RangeStart] stamp pointer is nullptr!");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofRangeStart", "stamp"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofRangeStart", "stamp"}));
         return PROFILING_FAILED;
     }
     if (rangeId == nullptr) {
         MSPROF_LOGE("[RangeStart] rangeId pointer is nullptr!");
-        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
-            std::vector<std::string>({ "aclprofRangeStart", "rangeId"}));
+        MSPROF_INPUT_ERROR(
+            "EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofRangeStart", "rangeId"}));
         return PROFILING_FAILED;
     }
-    auto &stampInfo = stamp->txInfo.value.stampInfo;
+    auto& stampInfo = stamp->txInfo.value.stampInfo;
     stampInfo.startTime = Platform::instance()->PlatformSysCycleTime();
     stamp->isEnable = 1;
     *rangeId = stampPool_->GetIdByStamp(stamp);
@@ -333,14 +354,16 @@ int32_t MsprofTxManager::RangeStop(uint32_t rangeId) const
 {
     if (!isInit_) {
         MSPROF_LOGE("[RangeStop]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
             std::vector<std::string>({"aclprofStart", "aclprofRangeStop"}));
         return PROFILING_FAILED;
     }
     auto stamp = stampPool_->GetStampById(rangeId);
     if (stamp == nullptr) {
         MSPROF_LOGE("[RangeStop] Get stamp by rangeId failed, rangeId is %u!", rangeId);
-        MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+        MSPROF_INPUT_ERROR(
+            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
             std::vector<std::string>({"aclprofRangeStart", "aclprofRangeStop"}));
         return PROFILING_FAILED;
     }
@@ -349,7 +372,7 @@ int32_t MsprofTxManager::RangeStop(uint32_t rangeId) const
     return ReportStampData(stamp);
 }
 
-int32_t MsprofTxManager::ReportStampData(MsprofStampInstance *stamp) const
+int32_t MsprofTxManager::ReportStampData(MsprofStampInstance* stamp) const
 {
     stamp->txInfo.value.stampInfo.threadId = static_cast<uint32_t>(OsalGetTid());
     if (reporter_->Report(stamp->txInfo) != MSPROF_ERROR_NONE) {
@@ -360,7 +383,7 @@ int32_t MsprofTxManager::ReportStampData(MsprofStampInstance *stamp) const
     return PROFILING_SUCCESS;
 }
 
-int32_t MsprofTxManager::ReportData(MsprofTxInfo &info) const
+int32_t MsprofTxManager::ReportData(MsprofTxInfo& info) const
 {
     if (reporter_->Report(info) != MSPROF_ERROR_NONE) {
         MSPROF_LOGE("[ReportData] report profiling data failed.");
@@ -386,15 +409,13 @@ void MsprofTxManager::RegisterReporterCallback(const ProfAdditionalBufPushCallba
 
 int32_t MsprofTxManager::LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm, bool isRangeTx)
 {
-    FUNRET_CHECK_EXPR_ACTION(rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
+    FUNRET_CHECK_EXPR_ACTION(
+        rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
         "[MarkEx]Failed to call nullptr rtProfilerTraceEx.");
     uint32_t tagId = isRangeTx ? MARKEX_RANGE_TAG_ID : MARKEX_TAG_ID;
     return rtProfilerTraceExFunc_(indexId, MARKEX_MODEL_ID, tagId, stm);
 }
 
-uint64_t MsprofTxManager::GetTxEventId()
-{
-    return ++txEventId_;
-}
-}
-}
+uint64_t MsprofTxManager::GetTxEventId() { return ++txEventId_; }
+} // namespace MsprofTx
+} // namespace Msprof

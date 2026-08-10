@@ -31,14 +31,8 @@ using namespace analysis::dvvp::transport;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
 MsprofTask::MsprofTask(const int32_t devId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
-    : isInit_(false),
-      deviceId_(devId),
-      isQuited_(false),
-      isExited_(false),
-      isStopReplayReady(false),
-      params_(param)
-{
-}
+    : isInit_(false), deviceId_(devId), isQuited_(false), isExited_(false), isStopReplayReady(false), params_(param)
+{}
 
 MsprofTask::~MsprofTask() {}
 
@@ -58,7 +52,7 @@ void MsprofTask::PostStopReplay()
 
 void MsprofTask::PostSyncDataCtrl() {}
 
-void MsprofTask::Run(const struct error_message::Context &errorContext)
+void MsprofTask::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     if (params_ == nullptr || !isInit_) {
@@ -74,7 +68,7 @@ void MsprofTask::Run(const struct error_message::Context &errorContext)
         if (ret != PROFILING_SUCCESS) {
             break;
         }
-        WaitStopReplay();  // wait SendStopMessage
+        WaitStopReplay(); // wait SendStopMessage
         ret = jobAdapter_->StopProf();
         if (ret != PROFILING_SUCCESS) {
             break;
@@ -118,7 +112,7 @@ void MsprofTask::WriteDone()
     }
 }
 
-void MsprofTask::GenerateFileName(bool isStartTime, std::string &filename)
+void MsprofTask::GenerateFileName(bool isStartTime, std::string& filename)
 {
     if (!isStartTime) {
         filename.append("end_info");
@@ -164,7 +158,7 @@ int32_t MsprofTask::CreateCollectionTimeInfo(std::string collectionTime, bool is
     std::string content;
     try {
         content = EncodeTimeInfoJson(timeInfo);
-    } catch (const std::runtime_error &error) {
+    } catch (const std::runtime_error& error) {
         return PROFILING_FAILED;
     }
     MSPROF_LOGI("CreateCollectionTimeInfo, content:%s", content.c_str());
@@ -177,8 +171,8 @@ int32_t MsprofTask::CreateCollectionTimeInfo(std::string collectionTime, bool is
         fileName, true, analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_CTRL_DATA);
 
     MSPROF_LOGI("job_id: %s,fileName: %s", params_->job_id.c_str(), fileName.c_str());
-    int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params_->job_id, content,
-                                                                                     fileDataParams, jobCtx);
+    int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(
+        params_->job_id, content, fileDataParams, jobCtx);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to upload data for %s", fileName.c_str());
         return PROFILING_FAILED;
@@ -213,8 +207,8 @@ int32_t MsprofTask::GetHostAndDeviceInfo()
         fileName, true, analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_CTRL_DATA);
 
     MSPROF_LOGI("storeStartTime.id: %s,fileName: %s", params_->job_id.c_str(), fileName.c_str());
-    int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params_->job_id, content,
-                                                                                     fileDataParams, jobCtx);
+    int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(
+        params_->job_id, content, fileDataParams, jobCtx);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to upload data for %s", fileName.c_str());
         return PROFILING_FAILED;
@@ -241,8 +235,7 @@ std::string MsprofTask::GetHostTime() const
 
 ProfSocTask::ProfSocTask(const int32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
     : MsprofTask(deviceId, param)
-{
-}
+{}
 
 ProfSocTask::~ProfSocTask() {}
 
@@ -266,10 +259,8 @@ int32_t ProfSocTask::UnInit()
 }
 
 ProfRpcTask::ProfRpcTask(const int32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
-    : MsprofTask(deviceId, param),
-      isDataChannelEnd_(false)
-{
-}
+    : MsprofTask(deviceId, param), isDataChannelEnd_(false)
+{}
 
 ProfRpcTask::~ProfRpcTask() {}
 
@@ -337,6 +328,6 @@ void ProfRpcTask::WaitSyncDataCtrl()
     cvSyncDataCtrl_.wait(lk, [this] { return (isDataChannelEnd_ || !isExited_); });
     isDataChannelEnd_ = false;
 }
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis

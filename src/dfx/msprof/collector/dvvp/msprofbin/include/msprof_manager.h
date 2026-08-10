@@ -27,9 +27,10 @@ public:
     int32_t UnInit();
     void NotifyStop();
     int32_t MsProcessCmd() const;
-    SHARED_PTR_ALIA<MsprofTask> GetTask(const std::string &jobId);
+    SHARED_PTR_ALIA<MsprofTask> GetTask(const std::string& jobId);
 
     SHARED_PTR_ALIA<Collector::Dvvp::Msprofbin::RunningMode> rMode_;
+
 private:
     int32_t GenerateRunningMode();
     int32_t GenerateCollectRunningMode();
@@ -39,7 +40,7 @@ private:
 
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params_;
 };
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis
 #endif

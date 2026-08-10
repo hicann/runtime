@@ -49,12 +49,11 @@ RunningMode::RunningMode(std::string preCheckParams, std::string modeName, SHARE
       neccessarySet_(),
       params_(params),
       taskMap_()
-{
-}
+{}
 
 RunningMode::~RunningMode() {}
 
-std::string RunningMode::ConvertParamsSetToString(std::set<int32_t> &srcSet) const
+std::string RunningMode::ConvertParamsSetToString(std::set<int32_t>& srcSet) const
 {
     std::string result;
     if (srcSet.empty()) {
@@ -75,12 +74,13 @@ int32_t RunningMode::CheckForbiddenParams() const
         return PROFILING_FAILED;
     }
     std::set<int32_t> usedForbiddenParams;
-    set_intersection(params_->usedParams.begin(), params_->usedParams.end(), blackSet_.begin(), blackSet_.end(),
-                     inserter(usedForbiddenParams, usedForbiddenParams.begin()));
+    set_intersection(
+        params_->usedParams.begin(), params_->usedParams.end(), blackSet_.begin(), blackSet_.end(),
+        inserter(usedForbiddenParams, usedForbiddenParams.begin()));
     if (!usedForbiddenParams.empty()) {
         std::string forbiddenParamsStr = ConvertParamsSetToString(usedForbiddenParams);
-        CmdLog::CmdErrorLog("The argument %s is forbidden when --%s is not empty", forbiddenParamsStr.c_str(),
-                            preCheckParams_.c_str());
+        CmdLog::CmdErrorLog(
+            "The argument %s is forbidden when --%s is not empty", forbiddenParamsStr.c_str(), preCheckParams_.c_str());
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
@@ -92,12 +92,13 @@ int32_t RunningMode::CheckNeccessaryParams() const
         return PROFILING_FAILED;
     }
     std::set<int32_t> moreReqParams;
-    set_difference(neccessarySet_.begin(), neccessarySet_.end(), params_->usedParams.begin(), params_->usedParams.end(),
-                   inserter(moreReqParams, moreReqParams.begin()));
+    set_difference(
+        neccessarySet_.begin(), neccessarySet_.end(), params_->usedParams.begin(), params_->usedParams.end(),
+        inserter(moreReqParams, moreReqParams.begin()));
     if (!moreReqParams.empty()) {
         std::string reqParams = ConvertParamsSetToString(moreReqParams);
-        CmdLog::CmdErrorLog("The argument %s is necessary when --%s is not empty", reqParams.c_str(),
-                            preCheckParams_.c_str());
+        CmdLog::CmdErrorLog(
+            "The argument %s is necessary when --%s is not empty", reqParams.c_str(), preCheckParams_.c_str());
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
@@ -109,12 +110,13 @@ void RunningMode::OutputUselessParams() const
         return;
     }
     std::set<int32_t> uselessParams;
-    set_difference(params_->usedParams.begin(), params_->usedParams.end(), whiteSet_.begin(), whiteSet_.end(),
-                   inserter(uselessParams, uselessParams.begin()));
+    set_difference(
+        params_->usedParams.begin(), params_->usedParams.end(), whiteSet_.begin(), whiteSet_.end(),
+        inserter(uselessParams, uselessParams.begin()));
     if (!uselessParams.empty()) {
         std::string noEffectParams = ConvertParamsSetToString(uselessParams);
-        CmdLog::CmdWarningLog("The argument %s is useless when --%s is not empty", noEffectParams.c_str(),
-                              preCheckParams_.c_str());
+        CmdLog::CmdWarningLog(
+            "The argument %s is useless when --%s is not empty", noEffectParams.c_str(), preCheckParams_.c_str());
     }
 }
 
@@ -155,8 +157,9 @@ int32_t RunningMode::GetOutputDirInfoFromRecord()
         return PROFILING_FAILED;
     }
     outPut = Utils::CanonicalizePath(outPut);
-    FUNRET_CHECK_EXPR_ACTION(outPut.empty(), return PROFILING_FAILED,
-                             "The output path: %s does not exist or permission denied.", outPut.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        outPut.empty(), return PROFILING_FAILED, "The output path: %s does not exist or permission denied.",
+        outPut.c_str());
     fin.open(outPut, std::ifstream::in);
     if (fin.is_open()) {
         while (getline(fin, baseDir)) {
@@ -166,14 +169,15 @@ int32_t RunningMode::GetOutputDirInfoFromRecord()
         RemoveRecordFile(outPut);
         return PROFILING_SUCCESS;
     } else {
-        char errBuf[MAX_ERR_STRING_LEN + 1] = { 0 };
-        MSPROF_LOGE("Open file failed, fileName:%s, error: %s", Utils::BaseName(recordFile).c_str(),
-                    OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
+        char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
+        MSPROF_LOGE(
+            "Open file failed, fileName:%s, error: %s", Utils::BaseName(recordFile).c_str(),
+            OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
         return PROFILING_FAILED;
     }
 }
 
-void RunningMode::RemoveRecordFile(const std::string &fileName) const
+void RunningMode::RemoveRecordFile(const std::string& fileName) const
 {
     if (!(Utils::IsFileExist(fileName))) {
         return;
@@ -200,11 +204,12 @@ void RunningMode::StopRunningTasks() const
     int32_t exitCode = INVALID_EXIT_CODE;
     OsalProcess killProces = MSVP_PROCESS;
     int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsV, envsV, exitCode, killProces);
-    MSPROF_LOGI("[%s mode] Stop %s Process:%d, ret=%d", modeName_.c_str(), taskName_.c_str(),
-                static_cast<int32_t>(taskPid_), ret);
+    MSPROF_LOGI(
+        "[%s mode] Stop %s Process:%d, ret=%d", modeName_.c_str(), taskName_.c_str(), static_cast<int32_t>(taskPid_),
+        ret);
 }
 
-void RunningMode::SetEnvList(std::vector<std::string> &envsV) const
+void RunningMode::SetEnvList(std::vector<std::string>& envsV) const
 {
     envsV = Analysis::Dvvp::App::EnvManager::instance()->GetGlobalEnv();
 }
@@ -217,9 +222,10 @@ int32_t RunningMode::StartAnalyzeTask()
     }
 
     if (taskPid_ != MSVP_PROCESS) {
-        MSPROF_LOGE("Start analyze task error, process %d is running,"
-                    "only one child process can run at the same time.",
-                    static_cast<int32_t>(taskPid_));
+        MSPROF_LOGE(
+            "Start analyze task error, process %d is running,"
+            "only one child process can run at the same time.",
+            static_cast<int32_t>(taskPid_));
         return PROFILING_FAILED;
     }
 
@@ -235,8 +241,8 @@ int32_t RunningMode::StartAnalyzeTask()
     std::vector<std::string> envsV;
     int32_t exitCode = INVALID_EXIT_CODE;
     SetEnvList(envsV);
-    std::vector<std::string> argsV = { analysisPath_, "analyze", "-dir=" + jobResultDir_,
-                                       "-r=" + params_->analyzeRuleSwitch };
+    std::vector<std::string> argsV = {
+        analysisPath_, "analyze", "-dir=" + jobResultDir_, "-r=" + params_->analyzeRuleSwitch};
     if (params_->clearSwitch == "on") {
         argsV.push_back("--clear");
     }
@@ -269,9 +275,10 @@ int32_t RunningMode::StartParseTask()
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
-        MSPROF_LOGE("Start parse task error, process %d is running,"
-                    "only one child process can run at the same time.",
-                    static_cast<int32_t>(taskPid_));
+        MSPROF_LOGE(
+            "Start parse task error, process %d is running,"
+            "only one child process can run at the same time.",
+            static_cast<int32_t>(taskPid_));
         return PROFILING_FAILED;
     }
     if (jobResultDir_.empty() || analysisPath_.empty()) {
@@ -286,7 +293,7 @@ int32_t RunningMode::StartParseTask()
     std::vector<std::string> envsV;
     int32_t exitCode = INVALID_EXIT_CODE;
     SetEnvList(envsV);
-    std::vector<std::string> argsV = { analysisPath_, "import", "-dir=" + jobResultDir_ };
+    std::vector<std::string> argsV = {analysisPath_, "import", "-dir=" + jobResultDir_};
     int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsV, envsV, exitCode, taskPid_);
     if (ret == PROFILING_FAILED) {
         MSPROF_LOGE("Failed to launch parse task, data path: %s", Utils::BaseName(jobResultDir_).c_str());
@@ -310,9 +317,10 @@ int32_t RunningMode::StartQueryTask()
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
-        MSPROF_LOGE("Start query task error, process %d is running,"
-                    "only one child process can run at the same time.",
-                    static_cast<int32_t>(taskPid_));
+        MSPROF_LOGE(
+            "Start query task error, process %d is running,"
+            "only one child process can run at the same time.",
+            static_cast<int32_t>(taskPid_));
         return PROFILING_FAILED;
     }
     if (jobResultDir_.empty() || analysisPath_.empty()) {
@@ -327,7 +335,7 @@ int32_t RunningMode::StartQueryTask()
     std::vector<std::string> envsV;
     int32_t exitCode = INVALID_EXIT_CODE;
     SetEnvList(envsV);
-    std::vector<std::string> argsV = { analysisPath_, "query", "-dir=" + jobResultDir_ };
+    std::vector<std::string> argsV = {analysisPath_, "query", "-dir=" + jobResultDir_};
     int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsV, envsV, exitCode, taskPid_);
     if (ret == PROFILING_FAILED) {
         MSPROF_LOGE("Failed to launch query task, data path: %s", Utils::BaseName(jobResultDir_).c_str());
@@ -344,10 +352,10 @@ int32_t RunningMode::StartQueryTask()
     return PROFILING_SUCCESS;
 }
 
-int32_t RunningMode::RunExportDbTask(const ExecCmdParams &execCmdParams, std::vector<std::string> &envsV,
-                                  int32_t &exitCode)
+int32_t RunningMode::RunExportDbTask(
+    const ExecCmdParams& execCmdParams, std::vector<std::string>& envsV, int32_t& exitCode)
 {
-    std::vector<std::string> argsDbV = { analysisPath_, "export", "db", "-dir=" + jobResultDir_ };
+    std::vector<std::string> argsDbV = {analysisPath_, "export", "db", "-dir=" + jobResultDir_};
 
     int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsDbV, envsV, exitCode, taskPid_);
     if (ret == PROFILING_FAILED) {
@@ -364,11 +372,11 @@ int32_t RunningMode::RunExportDbTask(const ExecCmdParams &execCmdParams, std::ve
     return PROFILING_SUCCESS;
 }
 
-int32_t RunningMode::RunExportSummaryTask(const ExecCmdParams &execCmdParams, std::vector<std::string> &envsV,
-                                      int32_t &exitCode)
+int32_t RunningMode::RunExportSummaryTask(
+    const ExecCmdParams& execCmdParams, std::vector<std::string>& envsV, int32_t& exitCode)
 {
-    std::vector<std::string> argsSummaryV = { analysisPath_, "export", "summary", "-dir=" + jobResultDir_,
-                                              "--format=" + params_->exportSummaryFormat };
+    std::vector<std::string> argsSummaryV = {
+        analysisPath_, "export", "summary", "-dir=" + jobResultDir_, "--format=" + params_->exportSummaryFormat};
     if (params_->clearSwitch == "on") {
         argsSummaryV.emplace_back("--clear");
     }
@@ -392,10 +400,10 @@ int32_t RunningMode::RunExportSummaryTask(const ExecCmdParams &execCmdParams, st
     exitCode = INVALID_EXIT_CODE;
     return PROFILING_SUCCESS;
 }
-int32_t RunningMode::RunExportTimelineTask(const ExecCmdParams &execCmdParams, std::vector<std::string> &envsV,
-                                       int32_t &exitCode)
+int32_t RunningMode::RunExportTimelineTask(
+    const ExecCmdParams& execCmdParams, std::vector<std::string>& envsV, int32_t& exitCode)
 {
-    std::vector<std::string> argsTimelineV = { analysisPath_, "export", "timeline", "-dir=" + jobResultDir_ };
+    std::vector<std::string> argsTimelineV = {analysisPath_, "export", "timeline", "-dir=" + jobResultDir_};
     if (params_->exportModelId != DEFAULT_MODEL_ID) {
         argsTimelineV.emplace_back("--model-id=" + params_->exportModelId);
     }
@@ -405,8 +413,8 @@ int32_t RunningMode::RunExportTimelineTask(const ExecCmdParams &execCmdParams, s
     if (!params_->reportsPath.empty()) {
         argsTimelineV.emplace_back("-reports=" + params_->reportsPath);
     }
-    int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsTimelineV, envsV, 
-        exitCode, taskPid_);
+    int32_t ret =
+        analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsTimelineV, envsV, exitCode, taskPid_);
     if (ret == PROFILING_FAILED) {
         MSPROF_LOGE("Failed to launch export timeline task, data path: %s", Utils::BaseName(jobResultDir_).c_str());
         return PROFILING_FAILED;
@@ -428,9 +436,10 @@ int32_t RunningMode::StartExportTask()
         return PROFILING_FAILED;
     }
     if (taskPid_ != MSVP_PROCESS) {
-        MSPROF_LOGE("Start export task error, process %d is running,"
-                    "only one child process can run at the same time.",
-                    static_cast<int32_t>(taskPid_));
+        MSPROF_LOGE(
+            "Start export task error, process %d is running,"
+            "only one child process can run at the same time.",
+            static_cast<int32_t>(taskPid_));
         return PROFILING_FAILED;
     }
     if (jobResultDir_.empty() || analysisPath_.empty()) {
@@ -487,18 +496,21 @@ int32_t RunningMode::WaitRunningProcess(std::string processUsage)
     for (;;) {
         ret = analysis::dvvp::common::utils::Utils::WaitProcess(taskPid_, isExited, exitCode, false);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Failed to wait %s process %d to exit, ret=%d", processUsage.c_str(),
-                        static_cast<int32_t>(taskPid_), ret);
+            MSPROF_LOGE(
+                "Failed to wait %s process %d to exit, ret=%d", processUsage.c_str(), static_cast<int32_t>(taskPid_),
+                ret);
             return ret;
         }
         if (isExited) {
-            MSPROF_EVENT("%s process %d exited, exit code:%d", processUsage.c_str(), static_cast<int32_t>(taskPid_),
-                         exitCode);
+            MSPROF_EVENT(
+                "%s process %d exited, exit code:%d", processUsage.c_str(), static_cast<int32_t>(taskPid_), exitCode);
             if (exitCode != 0 && !isQuit_) {
-                MSPROF_LOGW("An exception has occurred in process %s, return code: %s.", processUsage.c_str(),
-                            strerror(exitCode));
-                CmdLog::CmdWarningLog("An exception has occurred in process %s, return code: %s.",
-                            processUsage.c_str(), strerror(exitCode));
+                MSPROF_LOGW(
+                    "An exception has occurred in process %s, return code: %s.", processUsage.c_str(),
+                    strerror(exitCode));
+                CmdLog::CmdWarningLog(
+                    "An exception has occurred in process %s, return code: %s.", processUsage.c_str(),
+                    strerror(exitCode));
             }
             if (exitCode == lltExitCode) {
                 return PROFILING_FAILED;
@@ -512,7 +524,7 @@ int32_t RunningMode::WaitRunningProcess(std::string processUsage)
     }
 }
 
-SHARED_PTR_ALIA<MsprofTask> RunningMode::GetRunningTask(const std::string &jobId)
+SHARED_PTR_ALIA<MsprofTask> RunningMode::GetRunningTask(const std::string& jobId)
 {
     const auto iter = taskMap_.find(jobId);
     if (iter != taskMap_.end()) {
@@ -533,7 +545,7 @@ int32_t RunningMode::CheckAnalysisEnv()
         return PROFILING_FAILED;
     }
     if (params_->pythonPath.empty()) {
-        const std::string PYTHON_CMD{ "python3" };
+        const std::string PYTHON_CMD{"python3"};
         params_->pythonPath = PYTHON_CMD;
     }
     // check analysis scripts
@@ -546,7 +558,7 @@ int32_t RunningMode::CheckAnalysisEnv()
         return PROFILING_FAILED;
     }
     Utils::EnsureEndsInSlash(msprofToolsPath);
-    const std::string ANALYSIS_SCRIPT_PATH{ "profiler_tool/analysis/msprof/msprof.py" };
+    const std::string ANALYSIS_SCRIPT_PATH{"profiler_tool/analysis/msprof/msprof.py"};
     analysisPath_ = msprofToolsPath + ANALYSIS_SCRIPT_PATH;
     if (!Utils::IsFileExist(analysisPath_)) {
         CmdLog::CmdWarningLog("No analysis script found in %s", Utils::BaseName(analysisPath_).c_str());
@@ -671,7 +683,7 @@ int32_t AppMode::StartAppTaskForDynProf()
             return PROFILING_FAILED;
         }
         // wait server start
-        const int32_t sleepUs = 2 * 1000 * 1000;  // 2s
+        const int32_t sleepUs = 2 * 1000 * 1000; // 2s
         Utils::UsleepInterupt(sleepUs);
     }
 
@@ -752,8 +764,8 @@ int32_t SystemMode::CheckIfDeviceOnline() const
             return PROFILING_FAILED;
         }
         int32_t devIdInt = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devIdInt, devId), return PROFILING_FAILED, 
-            "devId %s is invalid", devId.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(devIdInt, devId), return PROFILING_FAILED, "devId %s is invalid", devId.c_str());
         auto it = find(devices.begin(), devices.end(), devIdInt);
         if (it == devices.end()) {
             invalidIds.push_back(devId);
@@ -763,8 +775,8 @@ int32_t SystemMode::CheckIfDeviceOnline() const
     }
     UtilsStringBuilder<std::string> strBuilder;
     if (!invalidIds.empty()) {
-        CmdLog::CmdWarningLog("The following devices(%s) are offline and will not collect.",
-                              strBuilder.Join(invalidIds, ",").c_str());
+        CmdLog::CmdWarningLog(
+            "The following devices(%s) are offline and will not collect.", strBuilder.Join(invalidIds, ",").c_str());
     }
     if (validIds.empty()) {
         CmdLog::CmdErrorLog("Argument --sys-devices is invalid,"
@@ -796,10 +808,12 @@ bool SystemMode::DataWillBeCollected() const
         return false;
     }
     std::set<int32_t> unnecessaryParams;
-    set_difference(params_->usedParams.begin(), params_->usedParams.end(), neccessarySet_.begin(), neccessarySet_.end(),
-                   inserter(unnecessaryParams, unnecessaryParams.begin()));
-    set_intersection(params_->usedParams.begin(), params_->usedParams.end(), unnecessaryParams.begin(),
-                     unnecessaryParams.end(), inserter(unnecessaryParams, unnecessaryParams.begin()));
+    set_difference(
+        params_->usedParams.begin(), params_->usedParams.end(), neccessarySet_.begin(), neccessarySet_.end(),
+        inserter(unnecessaryParams, unnecessaryParams.begin()));
+    set_intersection(
+        params_->usedParams.begin(), params_->usedParams.end(), unnecessaryParams.begin(), unnecessaryParams.end(),
+        inserter(unnecessaryParams, unnecessaryParams.begin()));
     if (unnecessaryParams.size() == 1 && *(unnecessaryParams.begin()) == ARGS_SYS_DEVICES) {
         CmdLog::CmdWarningLog("No collection data type is specified, profiling will not start");
         return false;
@@ -884,16 +898,16 @@ void SystemMode::SetSysDefaultParams() const
     params_->profMode = MSVP_PROF_SYSTEM_MODE;
 }
 
-int32_t SystemMode::CreateJobDir(std::string device, std::string &resultDir) const
+int32_t SystemMode::CreateJobDir(std::string device, std::string& resultDir) const
 {
     resultDir = params_->result_dir;
     resultDir = resultDir + MSVP_SLASH + baseDir_ + MSVP_SLASH;
     resultDir.append(Utils::CreateResultPath(device));
     if (Utils::CreateDir(resultDir) != PROFILING_SUCCESS) {
-        char errBuf[MAX_ERR_STRING_LEN + 1] = { 0 };
-        CmdLog::CmdErrorLog("Create dir (%s) failed.ErrorCode: %d, ErrorInfo: %s.", Utils::BaseName(resultDir).c_str(),
-                            OsalGetErrorCode(),
-                            OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
+        char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
+        CmdLog::CmdErrorLog(
+            "Create dir (%s) failed.ErrorCode: %d, ErrorInfo: %s.", Utils::BaseName(resultDir).c_str(),
+            OsalGetErrorCode(), OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
         return PROFILING_FAILED;
     }
     analysis::dvvp::common::utils::Utils::EnsureEndsInSlash(resultDir);
@@ -981,8 +995,8 @@ int32_t SystemMode::StartDeviceTask(const std::string resultDir, const std::stri
     }
     SHARED_PTR_ALIA<ProfRpcTask> task = nullptr;
     int32_t devId = 0;
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devId, device), return PROFILING_FAILED, 
-        "device %s is invalid", device.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToInt32(devId, device), return PROFILING_FAILED, "device %s is invalid", device.c_str());
     MSVP_MAKE_SHARED2(task, ProfRpcTask, devId, params, return PROFILING_FAILED);
     ret = task->Init();
     if (ret != PROFILING_SUCCESS) {
@@ -1029,7 +1043,7 @@ int32_t SystemMode::WaitSysTask() const
     return PROFILING_SUCCESS;
 }
 
-int32_t SystemMode::CreateUploader(const std::string &jobId, const std::string &resultDir) const
+int32_t SystemMode::CreateUploader(const std::string& jobId, const std::string& resultDir) const
 {
     if (jobId.empty() || resultDir.empty()) {
         return PROFILING_FAILED;
@@ -1080,8 +1094,8 @@ SHARED_PTR_ALIA<ProfileParams> SystemMode::GenerateHostParam(SHARED_PTR_ALIA<Pro
     return dstParams;
 }
 
-bool SystemMode::CreateSampleJsonFile(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                                      const std::string &resultDir) const
+bool SystemMode::CreateSampleJsonFile(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string& resultDir) const
 {
     if (resultDir.empty()) {
         return true;
@@ -1103,7 +1117,7 @@ bool SystemMode::CreateSampleJsonFile(SHARED_PTR_ALIA<analysis::dvvp::message::P
     return true;
 }
 
-bool SystemMode::CreateDoneFile(const std::string &absolutePath, const std::string &fileSize) const
+bool SystemMode::CreateDoneFile(const std::string& absolutePath, const std::string& fileSize) const
 {
     std::ofstream file;
 
@@ -1124,7 +1138,7 @@ bool SystemMode::CreateDoneFile(const std::string &absolutePath, const std::stri
     return true;
 }
 
-int32_t SystemMode::WriteCtrlDataToFile(const std::string &absolutePath, const std::string &data, int32_t dataLen) const
+int32_t SystemMode::WriteCtrlDataToFile(const std::string& absolutePath, const std::string& data, int32_t dataLen) const
 {
     std::ofstream file;
 
@@ -1159,7 +1173,7 @@ int32_t SystemMode::WriteCtrlDataToFile(const std::string &absolutePath, const s
     return PROFILING_SUCCESS;
 }
 
-int32_t SystemMode::StartDeviceJobs(const std::string &device)
+int32_t SystemMode::StartDeviceJobs(const std::string& device)
 {
     std::string resultDir;
     int32_t ret = CreateJobDir(device, resultDir);
@@ -1181,7 +1195,7 @@ int32_t SystemMode::StartDeviceJobs(const std::string &device)
 
     if (IsDeviceJob() && (!Platform::instance()->PlatformIsSocSide()) &&
         ((Platform::instance()->GetPlatformType() == CHIP_MINI_V3) ||
-        (!Platform::instance()->CheckIfSupportAdprof(devId)))) { // 1911ep collect device system data from HDC
+         (!Platform::instance()->CheckIfSupportAdprof(devId)))) { // 1911ep collect device system data from HDC
         ret = StartDeviceTask(resultDir, device);
         if (ret != PROFILING_SUCCESS) {
             if (ret != PROFILING_NOTSUPPORT) {
@@ -1242,9 +1256,9 @@ int32_t SystemMode::StartSysTask()
 ParseMode::ParseMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
     : RunningMode(preCheckParams, "parse", params)
 {
-    whiteSet_ = { ARGS_OUTPUT, ARGS_PARSE, ARGS_PYTHON_PATH };
-    neccessarySet_ = { ARGS_OUTPUT, ARGS_PARSE };
-    blackSet_ = { ARGS_QUERY, ARGS_EXPORT, ARGS_ANALYZE, ARGS_RULE, ARGS_CLEAR };
+    whiteSet_ = {ARGS_OUTPUT, ARGS_PARSE, ARGS_PYTHON_PATH};
+    neccessarySet_ = {ARGS_OUTPUT, ARGS_PARSE};
+    blackSet_ = {ARGS_QUERY, ARGS_EXPORT, ARGS_ANALYZE, ARGS_RULE, ARGS_CLEAR};
 }
 
 ParseMode::~ParseMode() {}
@@ -1296,9 +1310,9 @@ int32_t ParseMode::RunModeTasks()
 QueryMode::QueryMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
     : RunningMode(preCheckParams, "query", params)
 {
-    whiteSet_ = { ARGS_OUTPUT, ARGS_QUERY, ARGS_PYTHON_PATH };
-    neccessarySet_ = { ARGS_OUTPUT, ARGS_QUERY };
-    blackSet_ = { ARGS_PARSE, ARGS_EXPORT, ARGS_ANALYZE, ARGS_RULE, ARGS_CLEAR };
+    whiteSet_ = {ARGS_OUTPUT, ARGS_QUERY, ARGS_PYTHON_PATH};
+    neccessarySet_ = {ARGS_OUTPUT, ARGS_QUERY};
+    blackSet_ = {ARGS_PARSE, ARGS_EXPORT, ARGS_ANALYZE, ARGS_RULE, ARGS_CLEAR};
 }
 
 QueryMode::~QueryMode() {}
@@ -1346,10 +1360,10 @@ int32_t QueryMode::RunModeTasks()
 ExportMode::ExportMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
     : RunningMode(preCheckParams, "export", params)
 {
-    whiteSet_ = { ARGS_OUTPUT, ARGS_EXPORT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID, ARGS_SUMMARY_FORMAT,
-                  ARGS_PYTHON_PATH, ARGS_CLEAR, ARGS_EXPORT_TYPE, ARGS_REPORTS };
-    neccessarySet_ = { ARGS_OUTPUT, ARGS_EXPORT };
-    blackSet_ = { ARGS_QUERY, ARGS_PARSE, ARGS_ANALYZE, ARGS_RULE };
+    whiteSet_ = {ARGS_OUTPUT,      ARGS_EXPORT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID, ARGS_SUMMARY_FORMAT,
+                 ARGS_PYTHON_PATH, ARGS_CLEAR,  ARGS_EXPORT_TYPE,         ARGS_REPORTS};
+    neccessarySet_ = {ARGS_OUTPUT, ARGS_EXPORT};
+    blackSet_ = {ARGS_QUERY, ARGS_PARSE, ARGS_ANALYZE, ARGS_RULE};
 }
 
 ExportMode::~ExportMode() {}
@@ -1362,10 +1376,10 @@ int32_t ExportMode::ModeParamsCheck()
     }
     if (params_->exportType == "db") {
         preCheckParams_ = "export and --type";
-        whiteSet_ = { ARGS_OUTPUT, ARGS_EXPORT, ARGS_EXPORT_TYPE, ARGS_PYTHON_PATH };
-        neccessarySet_ = { ARGS_OUTPUT, ARGS_EXPORT, ARGS_EXPORT_TYPE };
-        blackSet_ = { ARGS_QUERY, ARGS_PARSE, ARGS_ANALYZE, ARGS_RULE, ARGS_EXPORT_ITERATION_ID,
-                        ARGS_EXPORT_MODEL_ID, ARGS_SUMMARY_FORMAT, ARGS_CLEAR, ARGS_REPORTS };
+        whiteSet_ = {ARGS_OUTPUT, ARGS_EXPORT, ARGS_EXPORT_TYPE, ARGS_PYTHON_PATH};
+        neccessarySet_ = {ARGS_OUTPUT, ARGS_EXPORT, ARGS_EXPORT_TYPE};
+        blackSet_ = {ARGS_QUERY,           ARGS_PARSE,          ARGS_ANALYZE, ARGS_RULE,   ARGS_EXPORT_ITERATION_ID,
+                     ARGS_EXPORT_MODEL_ID, ARGS_SUMMARY_FORMAT, ARGS_CLEAR,   ARGS_REPORTS};
     }
     if (CheckForbiddenParams() != PROFILING_SUCCESS || CheckNeccessaryParams() != PROFILING_SUCCESS) {
         return PROFILING_FAILED;
@@ -1404,9 +1418,9 @@ int32_t ExportMode::RunModeTasks()
 AnalyzeMode::AnalyzeMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
     : RunningMode(preCheckParams, "analyze", params)
 {
-    whiteSet_ = { ARGS_OUTPUT, ARGS_ANALYZE, ARGS_PYTHON_PATH, ARGS_RULE, ARGS_CLEAR, ARGS_EXPORT_TYPE };
-    neccessarySet_ = { ARGS_OUTPUT, ARGS_ANALYZE };
-    blackSet_ = { ARGS_QUERY, ARGS_EXPORT, ARGS_PARSE };
+    whiteSet_ = {ARGS_OUTPUT, ARGS_ANALYZE, ARGS_PYTHON_PATH, ARGS_RULE, ARGS_CLEAR, ARGS_EXPORT_TYPE};
+    neccessarySet_ = {ARGS_OUTPUT, ARGS_ANALYZE};
+    blackSet_ = {ARGS_QUERY, ARGS_EXPORT, ARGS_PARSE};
 }
 
 AnalyzeMode::~AnalyzeMode() {}
@@ -1460,21 +1474,64 @@ AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> para
     : RunningMode(preCheckParams, "app", params)
 {
     whiteSet_ = {
-        ARGS_OUTPUT, ARGS_STORAGE_LIMIT, ARGS_APPLICATION, ARGS_ENVIRONMENT, ARGS_DYNAMIC_PROF, ARGS_DYNAMIC_PROF_PID,
-        ARGS_AIC_MODE, ARGS_AIC_METRICS, ARGS_AIV_MODE, ARGS_AIV_METRICS, ARGS_NPU_EVENTS, ARGS_LLC_PROFILING,
-        ARGS_ASCENDCL, ARGS_AI_CORE, ARGS_AIV, ARGS_MODEL_EXECUTION, ARGS_TASK_MEMORY,
-        ARGS_RUNTIME_API, ARGS_TASK_TSFW, ARGS_TASK_TIME, ARGS_GE_API, ARGS_TASK_TRACE, ARGS_AICPU,
-        ARGS_CPU_PROFILING, ARGS_SYS_PROFILING, ARGS_PID_PROFILING, ARGS_HARDWARE_MEM, ARGS_IO_PROFILING,
-        ARGS_INTERCONNECTION_PROFILING, ARGS_DVPP_PROFILING, ARGS_TASK_BLOCK, ARGS_L2_PROFILING, ARGS_AIC_FREQ,
-        ARGS_AIV_FREQ, ARGS_INSTR_PROFILING_FREQ, ARGS_INSTR_PROFILING, ARGS_HCCL,
+        ARGS_OUTPUT,
+        ARGS_STORAGE_LIMIT,
+        ARGS_APPLICATION,
+        ARGS_ENVIRONMENT,
+        ARGS_DYNAMIC_PROF,
+        ARGS_DYNAMIC_PROF_PID,
+        ARGS_AIC_MODE,
+        ARGS_AIC_METRICS,
+        ARGS_AIV_MODE,
+        ARGS_AIV_METRICS,
+        ARGS_NPU_EVENTS,
+        ARGS_LLC_PROFILING,
+        ARGS_ASCENDCL,
+        ARGS_AI_CORE,
+        ARGS_AIV,
+        ARGS_MODEL_EXECUTION,
+        ARGS_TASK_MEMORY,
+        ARGS_RUNTIME_API,
+        ARGS_TASK_TSFW,
+        ARGS_TASK_TIME,
+        ARGS_GE_API,
+        ARGS_TASK_TRACE,
+        ARGS_AICPU,
+        ARGS_CPU_PROFILING,
+        ARGS_SYS_PROFILING,
+        ARGS_PID_PROFILING,
+        ARGS_HARDWARE_MEM,
+        ARGS_IO_PROFILING,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_DVPP_PROFILING,
+        ARGS_TASK_BLOCK,
+        ARGS_L2_PROFILING,
+        ARGS_AIC_FREQ,
+        ARGS_AIV_FREQ,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_INSTR_PROFILING,
+        ARGS_HCCL,
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ARGS_SYS_SAMPLING_FREQ, ARGS_PID_SAMPLING_FREQ, ARGS_HARDWARE_MEM_SAMPLING_FREQ, ARGS_MEM_SERVICEFLOW,
-        ARGS_IO_SAMPLING_FREQ, ARGS_DVPP_FREQ,  ARGS_CPU_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ,
-        ARGS_HOST_SYS, ARGS_PYTHON_PATH, ARGS_MSPROFTX, ARGS_DELAY_PROF, ARGS_DURATION_PROF, ARGS_OPTYPE,
-        ARGS_EXPORT_TYPE, ARGS_MSTX_DOMAIN_INCLUDE, ARGS_MSTX_DOMAIN_EXCLUDE
-    };
+        ARGS_SYS_SAMPLING_FREQ,
+        ARGS_PID_SAMPLING_FREQ,
+        ARGS_HARDWARE_MEM_SAMPLING_FREQ,
+        ARGS_MEM_SERVICEFLOW,
+        ARGS_IO_SAMPLING_FREQ,
+        ARGS_DVPP_FREQ,
+        ARGS_CPU_SAMPLING_FREQ,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_HOST_SYS,
+        ARGS_PYTHON_PATH,
+        ARGS_MSPROFTX,
+        ARGS_DELAY_PROF,
+        ARGS_DURATION_PROF,
+        ARGS_OPTYPE,
+        ARGS_EXPORT_TYPE,
+        ARGS_MSTX_DOMAIN_INCLUDE,
+        ARGS_MSTX_DOMAIN_EXCLUDE};
 }
 
 int32_t RunningMode::HandleProfilingParams() const
@@ -1490,11 +1547,11 @@ int32_t RunningMode::HandleProfilingParams() const
     std::string aiVectMetrics;
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1 ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ) {
+    ) {
         aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_EXECUTION_UTILIZATION : params_->ai_core_metrics;
     } else {
         aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_UTILIZATION : params_->ai_core_metrics;
@@ -1517,8 +1574,8 @@ int32_t RunningMode::HandleProfilingParams() const
     params_->ai_core_metrics = aiCoreMetrics;
     ret = Platform::instance()->GetAicoreEvents(aiVectMetrics, params_->aiv_profiling_events);
     params_->aiv_metrics = aiVectMetrics;
-    Platform::instance()->L2CacheAdaptor(params_->npuEvents, params_->l2CacheTaskProfiling,
-        params_->l2CacheTaskProfilingEvents);
+    Platform::instance()->L2CacheAdaptor(
+        params_->npuEvents, params_->l2CacheTaskProfiling, params_->l2CacheTaskProfilingEvents);
     Analysis::Dvvp::Msprof::MsprofParamsAdapter::instance()->GenerateLlcEvents(params_);
     params_->msprofBinPid = Utils::GetPid();
     return MsprofParamsAdapter::instance()->UpdateParams(params_);
@@ -1558,21 +1615,46 @@ SystemMode::SystemMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams
     : RunningMode(preCheckParams, "system", params)
 {
     whiteSet_ = {
-        ARGS_OUTPUT, ARGS_STORAGE_LIMIT, ARGS_AIC_MODE, ARGS_SYS_DEVICES,
-        ARGS_AIC_METRICS, ARGS_AIV_MODE, ARGS_AIV_METRICS, ARGS_LLC_PROFILING,
-        ARGS_AI_CORE, ARGS_AIV, ARGS_CPU_PROFILING, ARGS_SYS_PROFILING,
-        ARGS_PID_PROFILING, ARGS_HARDWARE_MEM, ARGS_IO_PROFILING, ARGS_INTERCONNECTION_PROFILING,
-        ARGS_DVPP_PROFILING, ARGS_AIC_FREQ, ARGS_AIV_FREQ,
+        ARGS_OUTPUT,
+        ARGS_STORAGE_LIMIT,
+        ARGS_AIC_MODE,
+        ARGS_SYS_DEVICES,
+        ARGS_AIC_METRICS,
+        ARGS_AIV_MODE,
+        ARGS_AIV_METRICS,
+        ARGS_LLC_PROFILING,
+        ARGS_AI_CORE,
+        ARGS_AIV,
+        ARGS_CPU_PROFILING,
+        ARGS_SYS_PROFILING,
+        ARGS_PID_PROFILING,
+        ARGS_HARDWARE_MEM,
+        ARGS_IO_PROFILING,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_DVPP_PROFILING,
+        ARGS_AIC_FREQ,
+        ARGS_AIV_FREQ,
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ARGS_INSTR_PROFILING_FREQ, ARGS_INSTR_PROFILING, ARGS_SYS_SAMPLING_FREQ, ARGS_PID_SAMPLING_FREQ,
-        ARGS_HARDWARE_MEM_SAMPLING_FREQ, ARGS_IO_SAMPLING_FREQ, ARGS_DVPP_FREQ,
-        ARGS_CPU_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ, ARGS_HOST_SYS, ARGS_SYS_PERIOD,
-        ARGS_HOST_SYS_PID, ARGS_HOST_SYS_USAGE, ARGS_HOST_SYS_USAGE_FREQ, ARGS_PYTHON_PATH,
-        ARGS_MEM_SERVICEFLOW
-    };
-    neccessarySet_ = { ARGS_OUTPUT, ARGS_SYS_PERIOD };
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_INSTR_PROFILING,
+        ARGS_SYS_SAMPLING_FREQ,
+        ARGS_PID_SAMPLING_FREQ,
+        ARGS_HARDWARE_MEM_SAMPLING_FREQ,
+        ARGS_IO_SAMPLING_FREQ,
+        ARGS_DVPP_FREQ,
+        ARGS_CPU_SAMPLING_FREQ,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_HOST_SYS,
+        ARGS_SYS_PERIOD,
+        ARGS_HOST_SYS_PID,
+        ARGS_HOST_SYS_USAGE,
+        ARGS_HOST_SYS_USAGE_FREQ,
+        ARGS_PYTHON_PATH,
+        ARGS_MEM_SERVICEFLOW};
+    neccessarySet_ = {ARGS_OUTPUT, ARGS_SYS_PERIOD};
 }
 
 bool SystemMode::IsDeviceJob() const
@@ -1580,7 +1662,7 @@ bool SystemMode::IsDeviceJob() const
     if (params_ == nullptr) {
         return false;
     }
-    #ifndef BUILD_PROFILING_OPEN_PROJECT
+#ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE &&
         params_->hardware_mem.compare("on") == 0) {
         return true;
@@ -1613,7 +1695,7 @@ SHARED_PTR_ALIA<ProfileParams> SystemMode::GenerateDeviceParam(SHARED_PTR_ALIA<P
     dstParams->profiling_period = params->profiling_period;
     uintptr_t addr = reinterpret_cast<uintptr_t>(dstParams.get());
     dstParams->job_id = Utils::ProfCreateId(static_cast<uint64_t>(addr));
-    #ifndef BUILD_PROFILING_OPEN_PROJECT
+#ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
         dstParams->llc_profiling_events = params->llc_profiling_events;
         dstParams->llc_profiling = params->llc_profiling;
@@ -1626,6 +1708,6 @@ SHARED_PTR_ALIA<ProfileParams> SystemMode::GenerateDeviceParam(SHARED_PTR_ALIA<P
     }
     return dstParams;
 }
-}
-}
-}
+} // namespace Msprofbin
+} // namespace Dvvp
+} // namespace Collector

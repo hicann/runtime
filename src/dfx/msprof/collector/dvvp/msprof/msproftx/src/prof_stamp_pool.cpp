@@ -26,13 +26,9 @@ using MsprofStampCtrlHandle = struct MsprofStampCtrlHandle;
 MsprofStampCtrlHandle* g_stampPoolHandle = nullptr;
 MsprofStampInstance* g_stampInstanceAddr[CURRENT_STAMP_SIZE];
 
-ProfStampPool::ProfStampPool()
-{
-}
+ProfStampPool::ProfStampPool() {}
 
-ProfStampPool::~ProfStampPool()
-{
-}
+ProfStampPool::~ProfStampPool() {}
 
 int32_t ProfStampPool::Init(uint32_t size)
 {
@@ -50,8 +46,7 @@ int32_t ProfStampPool::Init(uint32_t size)
     g_stampPoolHandle->freeCnt = size;
     g_stampPoolHandle->usedCnt = 0;
 
-    g_stampPoolHandle->memPool =
-        (struct MsprofStampInstance*) calloc(1, size * sizeof(struct MsprofStampInstance));
+    g_stampPoolHandle->memPool = (struct MsprofStampInstance*)calloc(1, size * sizeof(struct MsprofStampInstance));
     if (g_stampPoolHandle->memPool == nullptr) {
         MSPROF_LOGE("Init Stamp Pool Failed, Memory Not Enough.");
         return PROFILING_FAILED;
@@ -135,13 +130,13 @@ void ProfStampPool::DestroyStamp(MsprofStampInstance* stamp)
     /* take stamp node out from usedlist */
     if (g_stampPoolHandle->usedlist == stamp) { // the stamp is first node in usedlist
         g_stampPoolHandle->usedlist = stamp->next;
-    } else if (stamp->next == nullptr) { // the stamp is last node in usedlist
+    } else if (stamp->next == nullptr) {        // the stamp is last node in usedlist
         stamp->prev->next = nullptr;
-    } else { // the stamp is middle node in usedlist
+    } else {                                    // the stamp is middle node in usedlist
         stamp->prev->next = stamp->next;
         stamp->next->prev = stamp->prev;
     }
-     /* insert stamp not to freelist */
+    /* insert stamp not to freelist */
     stamp->next = g_stampPoolHandle->freelist;
     g_stampPoolHandle->freelist = stamp;
 
@@ -150,7 +145,7 @@ void ProfStampPool::DestroyStamp(MsprofStampInstance* stamp)
     g_stampPoolHandle->freeCnt++;
 }
 
-int32_t ProfStampPool::MsprofStampPush(MsprofStampInstance *stamp)
+int32_t ProfStampPool::MsprofStampPush(MsprofStampInstance* stamp)
 {
     if (stamp == nullptr) {
         return PROFILING_FAILED;
@@ -168,7 +163,7 @@ MsprofStampInstance* ProfStampPool::MsprofStampPop()
         return nullptr;
     }
 
-    MsprofStampInstance *stamp = singleTStack_.back();
+    MsprofStampInstance* stamp = singleTStack_.back();
     singleTStack_.pop_back();
     return stamp;
 }
@@ -182,7 +177,7 @@ MsprofStampInstance* ProfStampPool::GetStampById(uint32_t id) const
     if (g_stampInstanceAddr[id] != nullptr && g_stampInstanceAddr[id]->isEnable) {
         return g_stampInstanceAddr[id];
     }
-    
+
     return nullptr;
 }
 
@@ -194,5 +189,5 @@ int32_t ProfStampPool::GetIdByStamp(const MsprofStampInstance* const stamp) cons
 
     return stamp->id;
 }
-}
-}
+} // namespace MsprofTx
+} // namespace Msprof

@@ -26,11 +26,10 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::config;
 
-Sender::Sender(SHARED_PTR_ALIA<ITransport> transport, const std::string &engineName,
-               SHARED_PTR_ALIA<analysis::dvvp::common::memory::ChunkPool> chunkPool)
-    : transport_(transport),
-      engineName_(engineName), chunkPool_(chunkPool),
-      isInited_(false), isFinished_(true)
+Sender::Sender(
+    SHARED_PTR_ALIA<ITransport> transport, const std::string& engineName,
+    SHARED_PTR_ALIA<analysis::dvvp::common::memory::ChunkPool> chunkPool)
+    : transport_(transport), engineName_(engineName), chunkPool_(chunkPool), isInited_(false), isFinished_(true)
 {
     hashId_ = std::hash<std::string>()(engineName_);
 }
@@ -93,7 +92,7 @@ void Sender::FlushFileCache()
     fileMutexMap_.clear();
 }
 
-SHARED_PTR_ALIA<std::mutex> Sender::GetMutexByFileName(const std::string &fileName)
+SHARED_PTR_ALIA<std::mutex> Sender::GetMutexByFileName(const std::string& fileName)
 {
     std::lock_guard<std::mutex> lk(fileMutexMapLock_);
 
@@ -116,7 +115,7 @@ void Sender::DispatchFile(SHARED_PTR_ALIA<File> file)
         isFinished_ = false;
         try {
             SenderPool::instance()->Dispatch(shared_from_this());
-        } catch (std::bad_weak_ptr &e) {
+        } catch (std::bad_weak_ptr& e) {
             MSPROF_LOGE("DispatchFile error, because shared_from_this return nullptr.");
         }
     }
@@ -129,9 +128,8 @@ void Sender::WaitEmpty()
     cv_.wait_for(lk, std::chrono::microseconds(waitBuffEmptyTimeoutUs), [=] { return isFinished_; });
 }
 
-SHARED_PTR_ALIA<File> Sender::InitNewCustomFile(const std::string &jobCtxJson,
-                                                const std::string &fileName,
-                                                const size_t chunkSize) const
+SHARED_PTR_ALIA<File> Sender::InitNewCustomFile(
+    const std::string& jobCtxJson, const std::string& fileName, const size_t chunkSize) const
 {
     SHARED_PTR_ALIA<analysis::dvvp::common::memory::Chunk> chunk = nullptr;
     MSVP_MAKE_SHARED1(chunk, analysis::dvvp::common::memory::Chunk, chunkSize, return nullptr);
@@ -150,7 +148,7 @@ SHARED_PTR_ALIA<File> Sender::InitNewCustomFile(const std::string &jobCtxJson,
     return file;
 }
 
-int32_t Sender::DoSaveFileData(const std::string &fileName, SHARED_PTR_ALIA<File> &file, const struct DataChunk &data)
+int32_t Sender::DoSaveFileData(const std::string& fileName, SHARED_PTR_ALIA<File>& file, const struct DataChunk& data)
 {
     if (file == nullptr) {
         return PROFILING_SUCCESS;
@@ -158,11 +156,13 @@ int32_t Sender::DoSaveFileData(const std::string &fileName, SHARED_PTR_ALIA<File
 
     auto chunk = file->GetChunk();
     if (data.bufLen != 0) {
-        errno_t err = memcpy_s(static_cast<void *>(const_cast<UNSIGNED_CHAR_PTR>(chunk->GetBuffer())),
-            chunk->GetFreeSize(), data.dataBuf, data.bufLen);
+        errno_t err = memcpy_s(
+            static_cast<void*>(const_cast<UNSIGNED_CHAR_PTR>(chunk->GetBuffer())), chunk->GetFreeSize(), data.dataBuf,
+            data.bufLen);
         if (err != EOK) {
-            MSPROF_LOGE("chunk[%s] memcpy_s failed, chunkFreeSize:%u, bufLen:%u, err:%u",
-                        fileName.c_str(), chunk->GetFreeSize(), data.bufLen, err);
+            MSPROF_LOGE(
+                "chunk[%s] memcpy_s failed, chunkFreeSize:%u, bufLen:%u, err:%u", fileName.c_str(),
+                chunk->GetFreeSize(), data.bufLen, err);
             return PROFILING_FAILED;
         }
     }
@@ -172,7 +172,7 @@ int32_t Sender::DoSaveFileData(const std::string &fileName, SHARED_PTR_ALIA<File
     return PROFILING_SUCCESS;
 }
 
-int32_t Sender::SaveFileData(const std::string &jobCtxJson, const struct DataChunk &data)
+int32_t Sender::SaveFileData(const std::string& jobCtxJson, const struct DataChunk& data)
 {
     // get file from cache, otherwise create a new file
     std::string fileName = data.relativeFileName;
@@ -208,7 +208,7 @@ void Sender::CloseFileFds()
     fileFdMap_.clear();
 }
 
-int32_t Sender::OpenWriteFile(const std::string &fileName)
+int32_t Sender::OpenWriteFile(const std::string& fileName)
 {
     const size_t index = fileName.find_last_of(MSVP_SLASH);
     std::string dir = fileName.substr(0, index == std::string::npos ? 0 : index);
@@ -230,7 +230,7 @@ int32_t Sender::OpenWriteFile(const std::string &fileName)
     return fd;
 }
 
-int32_t Sender::GetFileFd(const std::string &fileName)
+int32_t Sender::GetFileFd(const std::string& fileName)
 {
     std::lock_guard<std::mutex> lk(fileFdLock_);
 
@@ -242,14 +242,14 @@ int32_t Sender::GetFileFd(const std::string &fileName)
     return -1;
 }
 
-void Sender::SetFileFd(const std::string &fileName, int32_t fd)
+void Sender::SetFileFd(const std::string& fileName, int32_t fd)
 {
     std::lock_guard<std::mutex> lk(fileFdLock_);
 
     fileFdMap_[fileName] = fd;
 }
 
-int32_t Sender::Send(const std::string &jobCtxJson, const struct DataChunk &data)
+int32_t Sender::Send(const std::string& jobCtxJson, const struct DataChunk& data)
 {
     if (!isInited_) {
         return PROFILING_FAILED;
@@ -274,7 +274,7 @@ int32_t Sender::SendData(CONST_CHAR_PTR buffer, int32_t size)
     int32_t sentLen = 0;
 
     if (buffer != nullptr && size > 0 && transport_ != nullptr) {
-        sentLen = transport_->SendBuffer(reinterpret_cast<const void *>(buffer), size);
+        sentLen = transport_->SendBuffer(reinterpret_cast<const void*>(buffer), size);
         if (sentLen != size) {
             MSPROF_LOGE("Failed to SendData, data_len=%d, sent len=%d", size, sentLen);
         } else {
@@ -317,8 +317,11 @@ SHARED_PTR_ALIA<std::string> Sender::EncodeData(SHARED_PTR_ALIA<File> file) cons
 void Sender::ExecuteStreamMode(SHARED_PTR_ALIA<File> file)
 {
     auto encode = EncodeData(file);
-    FUNRET_CHECK_EXPR_ACTION(encode == nullptr, return, "[Sender::ExecuteStreamMode] Failed to encode data, "
-        "fileName: %s", file->GetFileName().c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        encode == nullptr, return,
+        "[Sender::ExecuteStreamMode] Failed to encode data, "
+        "fileName: %s",
+        file->GetFileName().c_str());
     const int32_t currentSize = encode->size();
     MSPROF_LOGD("[Sender::ExecuteStreamMode] fileName = %s", file->GetFileName().c_str());
     const int32_t ret = SendData(encode->c_str(), currentSize);
@@ -344,11 +347,11 @@ void Sender::ExecuteFileMode(SHARED_PTR_ALIA<File> file)
     }
 
     const size_t size = chunk->GetUsedSize();
-    int32_t ret = OsalWrite(fd, static_cast<void *>(const_cast<UNSIGNED_CHAR_PTR>(chunk->GetBuffer())), size);
+    int32_t ret = OsalWrite(fd, static_cast<void*>(const_cast<UNSIGNED_CHAR_PTR>(chunk->GetBuffer())), size);
     if (static_cast<size_t>(ret) != size) {
-        MSPROF_LOGE("write[%d] fileName = %s data size = %u, written size = %d",
-                    static_cast<int32_t>(fd), fileName.c_str(),
-                    size, ret);
+        MSPROF_LOGE(
+            "write[%d] fileName = %s data size = %u, written size = %d", static_cast<int32_t>(fd), fileName.c_str(),
+            size, ret);
     }
 }
 
@@ -383,20 +386,11 @@ int32_t Sender::Execute()
     return PROFILING_SUCCESS;
 }
 
-size_t Sender::HashId()
-{
-    return hashId_;
-}
+size_t Sender::HashId() { return hashId_; }
 
-SenderPool::SenderPool()
-    : inited_(false)
-{
-}
+SenderPool::SenderPool() : inited_(false) {}
 
-SenderPool::~SenderPool()
-{
-    Uninit();
-}
+SenderPool::~SenderPool() { Uninit(); }
 
 int32_t SenderPool::Init()
 {
@@ -410,7 +404,8 @@ int32_t SenderPool::Init()
         }
 
         MSPROF_LOGI("createing sender pool");
-        MSVP_MAKE_SHARED2_NODO(senderPool_, analysis::dvvp::common::thread::ThreadPool,
+        MSVP_MAKE_SHARED2_NODO(
+            senderPool_, analysis::dvvp::common::thread::ThreadPool,
             analysis::dvvp::common::thread::LOAD_BALANCE_METHOD::ID_MOD, MSVP_CLN_SENDER_POOL_THREAD_NUM, break);
 
         senderPool_->SetThreadPoolNamePrefix(MSVP_SENDER_POOL_NAME_PREFIX);
@@ -445,7 +440,7 @@ int32_t SenderPool::Dispatch(SHARED_PTR_ALIA<Sender> sender)
 
     return PROFILING_FAILED;
 }
-}  // namespace client
-}  // namespace streamio
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace client
+} // namespace streamio
+} // namespace dvvp
+} // namespace analysis

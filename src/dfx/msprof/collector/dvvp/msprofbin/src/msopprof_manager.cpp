@@ -54,8 +54,7 @@ int MsopprofManager::MsopprofProcess(int argc, CONST_CHAR_PTR argv[])
     return PROFILING_SUCCESS;
 }
 
-bool MsopprofManager::CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[],
-                                           std::vector<std::string> &opArgv) const
+bool MsopprofManager::CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[], std::vector<std::string>& opArgv) const
 {
     bool ret = false;
     static std::string msopprofCmd = "op";
@@ -65,7 +64,7 @@ bool MsopprofManager::CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[],
     if (true) {
         if (msopprofPath_.empty()) {
             CmdLog::CmdErrorLog("Cannot find msopprof, "
-              "Maybe you shoule source set_env.sh in advance.");
+                                "Maybe you shoule source set_env.sh in advance.");
         } else {
             for (int i = 2; i < argc; i++) {
                 opArgv.emplace_back(argv[i]);
@@ -75,7 +74,7 @@ bool MsopprofManager::CheckMsopprofIfExist(int argc, CONST_CHAR_PTR argv[],
     return ret;
 }
 
-void MsopprofManager::ExecuteMsopprof(const std::vector<std::string> &opArgv)
+void MsopprofManager::ExecuteMsopprof(const std::vector<std::string>& opArgv)
 {
     (void)signal(SIGINT, [](int signum) {
         (void)Utils::UsleepInterupt(OSAL_TIMES_MILLIONS);

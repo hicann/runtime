@@ -23,13 +23,13 @@ public:
     int32_t Init();
     int32_t UnInit();
     void SetReporterCallback(const ProfAdditionalBufPushCallback func);
-    int32_t Report(MsprofTxInfo &data) const;
+    int32_t Report(MsprofTxInfo& data) const;
 
 private:
     bool isInit_;
     ProfAdditionalBufPushCallback reporterCallback_;
 };
-}
-}
+} // namespace MsprofTx
+} // namespace Msprof
 
 #endif // PROFILER_MSPROFTXREPORTER_H

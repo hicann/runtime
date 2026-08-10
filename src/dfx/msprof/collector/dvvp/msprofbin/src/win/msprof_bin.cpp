@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #ifdef __PROF_LLT
-int WlltMain(int argc, const char **argv, const char **envp)
+int WlltMain(int argc, const char** argv, const char** envp)
 #else
-int main(int argc, const char **argv, const char **envp)
+int main(int argc, const char** argv, const char** envp)
 #endif
 {
     return 0;

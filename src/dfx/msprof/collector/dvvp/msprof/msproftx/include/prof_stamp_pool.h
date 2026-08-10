@@ -64,12 +64,12 @@ public:
     int32_t GetIdByStamp(const MsprofStampInstance* const stamp) const;
 
 private:
-    std::vector<MsprofStampInstance *> singleTStack_;
+    std::vector<MsprofStampInstance*> singleTStack_;
     std::mutex singleTStackMtx_;
     std::mutex memoryListMtx_;
 };
 
-}
-}
+} // namespace MsprofTx
+} // namespace Msprof
 
 #endif // PROF_STAMP_POOL_H

@@ -19,10 +19,10 @@
 namespace analysis {
 namespace dvvp {
 namespace host {
-const char *const PLATFORM_CLOUD = "cloud";
+const char* const PLATFORM_CLOUD = "cloud";
 const char INFO_FILE_NAME[] = "info.json";
 const double DAVID_BASE_HWTS_FREQ = 1000.0;
-const double ERROR_THRESHOLD = DAVID_BASE_HWTS_FREQ * 0.0005;  // 万分之5 = 0.0005，对应绝对值0.5
+const double ERROR_THRESHOLD = DAVID_BASE_HWTS_FREQ * 0.0005; // 万分之5 = 0.0005，对应绝对值0.5
 
 #define CPU_ID_STR(id_str, begin, num)                                                                              \
     do {                                                                                                            \
@@ -101,24 +101,33 @@ struct DeviceInfo {
     int64_t aiCoreId;
     int64_t aiCpuOccupyBitMap;
     DeviceInfo()
-        : envType(0), ctrlCpuId(0), ctrlCpuCoreNum(0), ctrlCpuEndianLittle(0), tsCpuCoreNum(0), aiCpuCoreNum(0),
-          aiCoreNum(0), aivNum(0), aiCpuCoreId(0), aiCoreId(0), aiCpuOccupyBitMap(0)
+        : envType(0),
+          ctrlCpuId(0),
+          ctrlCpuCoreNum(0),
+          ctrlCpuEndianLittle(0),
+          tsCpuCoreNum(0),
+          aiCpuCoreNum(0),
+          aiCoreNum(0),
+          aivNum(0),
+          aiCpuCoreId(0),
+          aiCoreId(0),
+          aiCpuOccupyBitMap(0)
     {}
 };
 
 class InfoJson {
 public:
-    InfoJson(const std::string &jobInfo, const std::string &devices, int32_t hostpid);
+    InfoJson(const std::string& jobInfo, const std::string& devices, int32_t hostpid);
     virtual ~InfoJson();
-    int32_t Generate(std::string &content);
+    int32_t Generate(std::string& content);
 
 private:
     int32_t InitDeviceIds();
     int32_t AddHostInfo(SHARED_PTR_ALIA<InfoMain> infoMain) const;
     int32_t AddDeviceInfo(SHARED_PTR_ALIA<InfoMain> infoMain);
     int32_t AddOtherInfo(SHARED_PTR_ALIA<InfoMain> infoMain);
-    int32_t GetCtrlCpuInfo(uint32_t devId, struct DeviceInfo &devInfo) const;
-    int32_t GetDevInfo(int32_t deviceId, struct DeviceInfo &devInfo) const;
+    int32_t GetCtrlCpuInfo(uint32_t devId, struct DeviceInfo& devInfo) const;
+    int32_t GetDevInfo(int32_t deviceId, struct DeviceInfo& devInfo) const;
     void SetPlatFormVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const;
     void SetPidInfo(SHARED_PTR_ALIA<InfoMain> infoMain, int32_t pid) const;
     void AddSysConf(SHARED_PTR_ALIA<InfoMain> infoMain) const;
@@ -129,7 +138,7 @@ private:
     void SetRankId(SHARED_PTR_ALIA<InfoMain> infoMain) const;
     int32_t GetRankId() const;
     std::string GetHostOscFrequency() const;
-    std::string GetDeviceOscFrequency(uint32_t deviceId, const std::string &freq) const;
+    std::string GetDeviceOscFrequency(uint32_t deviceId, const std::string& freq) const;
     std::string EncodeInfoMainJson(SHARED_PTR_ALIA<InfoMain> infoMain) const;
     std::string GetHwtsFreq(std::string freq) const;
     void SetDrvVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const;
@@ -143,8 +152,8 @@ private:
     std::string hostIdSerial_;
     int32_t hostpid_;
 };
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace host
+} // namespace dvvp
+} // namespace analysis
 
 #endif

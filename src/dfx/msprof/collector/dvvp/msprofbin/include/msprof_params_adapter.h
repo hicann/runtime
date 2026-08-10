@@ -28,8 +28,8 @@ public:
 private:
     std::map<std::string, std::string> aicoreEvents_;
 };
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis
 
 #endif

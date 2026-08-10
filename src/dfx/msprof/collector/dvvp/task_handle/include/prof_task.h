@@ -35,21 +35,20 @@ struct CollectionStartEndTime {
 
 class ProfTask : public analysis::dvvp::common::thread::Thread {
 public:
-    ProfTask(const std::vector<std::string> &devices,
-             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
+    ProfTask(const std::vector<std::string>& devices, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
     virtual ~ProfTask();
 
 public:
     int32_t Init();
     int32_t Uinit();
-    bool IsDeviceRunProfiling(const std::string &devStr);
+    bool IsDeviceRunProfiling(const std::string& devStr);
 
 public:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     int32_t Stop() override;
 
 public:
-    int32_t NotifyFileDoneForDevice(const std::string &fileName, const std::string &devId) const;
+    int32_t NotifyFileDoneForDevice(const std::string& fileName, const std::string& devId) const;
     int32_t WriteStreamData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk) const;
     void SetIsFinished(bool finished);
     bool GetIsFinished() const;
@@ -73,15 +72,15 @@ private:
 
 private:
     int32_t GetHostAndDeviceInfo();
-    void GenerateFileName(bool isStartTime, std::string &filename);
+    void GenerateFileName(bool isStartTime, std::string& filename);
     int32_t CreateCollectionTimeInfo(std::string collectionTime, bool isStartTime);
     std::string EncodeTimeInfoJson(SHARED_PTR_ALIA<CollectionStartEndTime> timeInfo) const;
-    void StartDevices(const std::vector<std::string> &devicesVec);
+    void StartDevices(const std::vector<std::string>& devicesVec);
     void ProcessDefMode();
-    std::string GetDevicesStr(const std::vector<std::string> &events) const;
-    void Process(analysis::dvvp::message::StatusInfo &statusInfo);
+    std::string GetDevicesStr(const std::vector<std::string>& events) const;
+    void Process(analysis::dvvp::message::StatusInfo& statusInfo);
 };
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace host
+} // namespace dvvp
+} // namespace analysis
 #endif

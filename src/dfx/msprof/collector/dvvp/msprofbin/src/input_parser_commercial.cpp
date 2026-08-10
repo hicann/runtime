@@ -38,13 +38,13 @@ int32_t InputParser::CheckMstxValid()
             return MSPROF_DAEMON_OK;
         } else {
             CmdLog::CmdErrorLog("Argument --mstx-domain-include/--mstx-domain-exclude "
-                "must be used with --msproftx=on.");
+                                "must be used with --msproftx=on.");
             return MSPROF_DAEMON_ERROR;
         }
     } else {
         if (!params_->mstxDomainInclude.empty() && !params_->mstxDomainExclude.empty()) {
             CmdLog::CmdErrorLog("Argument --mstx-domain-include and --mstx-domain-exclude "
-                "cannot be used at the same time.");
+                                "cannot be used at the same time.");
             return MSPROF_DAEMON_ERROR;
         }
         return MSPROF_DAEMON_OK;
@@ -60,7 +60,7 @@ void ArgsManager::PrintMsopprofHelp()
     std::cout << "Use binary msopprof to operator optimization (msprof op ...)" << std::endl << std::endl;
 }
 
-int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     params_->npuEvents = cmdInfo.args[opt];
     if (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_L2_CACHE_REG) &&
@@ -72,9 +72,9 @@ int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, in
     if (params_->npuEvents.compare(0, singleEventsHead.length(), singleEventsHead) == 0 &&
         params_->npuEvents.find(";") != std::string::npos) {
         MSPROF_LOGE("Failed to check soc pmu events, if you want to collect multiple soc pmu type, "
-            "please input prefix like [HA:] before events.");
+                    "please input prefix like [HA:] before events.");
         CmdLog::CmdErrorLog("Failed to check soc pmu events, if you want to collect multiple soc pmu type, "
-            "please input prefix like [HA:] before events.");
+                            "please input prefix like [HA:] before events.");
         return MSPROF_DAEMON_ERROR;
     }
     if (!ParamValidation::instance()->CheckDuplicateSocPmu(params_->npuEvents)) {
@@ -93,10 +93,13 @@ int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, in
         }
         std::vector<std::string> eventsList = Utils::Split(eventStr, false, "", ",");
         if (!ParamValidation::instance()->CheckSocPmuEventsValid(eventType, eventsList)) {
-            MSPROF_LOGE("Failed to check soc pmu events, type: %u, event: %s", static_cast<uint32_t>(eventType),
+            MSPROF_LOGE(
+                "Failed to check soc pmu events, type: %u, event: %s", static_cast<uint32_t>(eventType),
                 registerList[i].c_str());
-            CmdLog::CmdErrorLog("The npu-events[%s] is invalid or exceeds the specified length, "
-                "please check ERROR information in host plog.", params_->npuEvents.c_str());
+            CmdLog::CmdErrorLog(
+                "The npu-events[%s] is invalid or exceeds the specified length, "
+                "please check ERROR information in host plog.",
+                params_->npuEvents.c_str());
             return MSPROF_DAEMON_ERROR;
         }
     }
@@ -104,7 +107,7 @@ int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, in
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckMemServiceflow(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckMemServiceflow(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_MEM_SERVICEFLOW] == nullptr) {
         CmdLog::CmdErrorLog("Argument --sys-mem-serviceflow: expected one argument");
@@ -125,8 +128,9 @@ void ArgsManager::AddLowPowerArgs()
         return;
     }
     Args sysLpArgs = {"sys-lp", "Open low power profiling data config, the default value is on.", ON};
-    Args sysLpFreqArgs = {"sys-lp-freq", "Config low power frequency, the default value is 100Hz, "
-        "the range is 1 to 100Hz."};
+    Args sysLpFreqArgs = {
+        "sys-lp-freq", "Config low power frequency, the default value is 100Hz, "
+                       "the range is 1 to 100Hz."};
     argsList_.push_back(sysLpArgs);
     argsList_.push_back(sysLpFreqArgs);
 }
@@ -145,11 +149,13 @@ void ArgsManager::AddStarsArgs()
     } else {
         task_block_ranges = "'all', 'off'.";
     }
-    Args fftsBlockArgs = {"task-block", "Show task block profiling data, the default value is off."
-        "The possible parameters are " + task_block_ranges};
+    Args fftsBlockArgs = {
+        "task-block", "Show task block profiling data, the default value is off."
+                      "The possible parameters are " +
+                          task_block_ranges};
     argsList_.push_back(fftsBlockArgs);
 }
 
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis

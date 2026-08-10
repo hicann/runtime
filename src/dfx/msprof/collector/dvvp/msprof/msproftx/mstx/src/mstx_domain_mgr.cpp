@@ -32,13 +32,13 @@ mstxDomainHandle_t MstxDomainMgr::CreateDomainHandle(const char* name)
     }
     std::lock_guard<std::mutex> lk(domainHandleMutex_);
     if (domainHandleMap_.size() > MARK_MAX_CACHE_NUM) {
-        MSPROF_LOGE("Cache domain name failed, current size: %u, limit size: %u",
-            domainHandleMap_.size(), MARK_MAX_CACHE_NUM);
+        MSPROF_LOGE(
+            "Cache domain name failed, current size: %u, limit size: %u", domainHandleMap_.size(), MARK_MAX_CACHE_NUM);
         return nullptr;
     }
     std::string nameStr(name);
     uint64_t hashId = HashData::instance()->GenHashId(nameStr);
-    for (const auto &iter : domainHandleMap_) {
+    for (const auto& iter : domainHandleMap_) {
         if (iter.second->nameHash == hashId) {
             return iter.first;
         }
@@ -66,7 +66,7 @@ void MstxDomainMgr::DestroyDomainHandle(mstxDomainHandle_t domain)
     domainHandleMap_.erase(domain);
 }
 
-bool MstxDomainMgr::GetDomainNameHashByHandle(mstxDomainHandle_t domain, uint64_t &name)
+bool MstxDomainMgr::GetDomainNameHashByHandle(mstxDomainHandle_t domain, uint64_t& name)
 {
     std::lock_guard<std::mutex> lk(domainHandleMutex_);
     auto iter = domainHandleMap_.find(domain);
@@ -84,7 +84,7 @@ uint64_t MstxDomainMgr::GetDefaultDomainNameHash()
     return defaultDomainNameHash;
 }
 
-bool MstxDomainMgr::IsDomainEnabled(const uint64_t &domainNameHash)
+bool MstxDomainMgr::IsDomainEnabled(const uint64_t& domainNameHash)
 {
     if (!domainSet_.load()) {
         return true;
@@ -96,8 +96,7 @@ bool MstxDomainMgr::IsDomainEnabled(const uint64_t &domainNameHash)
     }
 }
 
-void MstxDomainMgr::SetMstxDomainsEnabled(const std::string &mstxDomainInclude,
-    const std::string &mstxDomainExclude)
+void MstxDomainMgr::SetMstxDomainsEnabled(const std::string& mstxDomainInclude, const std::string& mstxDomainExclude)
 {
     // reset these params in case that repeat prof with different switches in one process;
     domainSet_.store(false);
@@ -112,13 +111,13 @@ void MstxDomainMgr::SetMstxDomainsEnabled(const std::string &mstxDomainInclude,
     if (!mstxDomainInclude.empty()) {
         domainSetting_.domainInclude = true;
         setDomains = Utils::Split(mstxDomainInclude, false, "", ",");
-        for (auto &domain : setDomains) {
+        for (auto& domain : setDomains) {
             domainSetting_.setDomains_.insert(HashData::instance()->GenHashId(domain));
         }
     } else if (!mstxDomainExclude.empty()) {
         domainSetting_.domainInclude = false;
         setDomains = Utils::Split(mstxDomainExclude, false, "", ",");
-        for (auto &domain : setDomains) {
+        for (auto& domain : setDomains) {
             domainSetting_.setDomains_.insert(HashData::instance()->GenHashId(domain));
         }
     } else {
@@ -126,13 +125,14 @@ void MstxDomainMgr::SetMstxDomainsEnabled(const std::string &mstxDomainInclude,
         return;
     }
     std::lock_guard<std::mutex> lk(domainHandleMutex_);
-    for (auto &domainHandle : domainHandleMap_) {
+    for (auto& domainHandle : domainHandleMap_) {
         domainHandle.second->enabled = (domainSetting_.setDomains_.count(domainHandle.second->nameHash) > 0) ?
-            domainSetting_.domainInclude : !domainSetting_.domainInclude;
+                                           domainSetting_.domainInclude :
+                                           !domainSetting_.domainInclude;
     }
     domainSet_.store(true);
 }
 
-}
-}
-}
+} // namespace Mstx
+} // namespace Dvvp
+} // namespace Collector

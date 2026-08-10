@@ -35,15 +35,14 @@ using namespace analysis::dvvp::common::config;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Common::Config;
 
-const char *const PROF_NET_CARD = "/sys/class/net";
-const char *const PROF_PROC_MEM = "/proc/meminfo";
-const char *const PROF_PROC_UPTIME = "/proc/uptime";
+const char* const PROF_NET_CARD = "/sys/class/net";
+const char* const PROF_PROC_MEM = "/proc/meminfo";
+const char* const PROF_PROC_UPTIME = "/proc/uptime";
 
-const char *const PROC_MEM_TOTAL = "MemTotal";
-const char *const PROC_NET_SPEED = "speed";
+const char* const PROC_MEM_TOTAL = "MemTotal";
+const char* const PROC_NET_SPEED = "speed";
 
-
-static void EncodeInfoMainScalarFields(SHARED_PTR_ALIA<InfoMain> infoMain, NanoJson::Json &infoMainJson)
+static void EncodeInfoMainScalarFields(SHARED_PTR_ALIA<InfoMain> infoMain, NanoJson::Json& infoMainJson)
 {
     infoMainJson["version"] = infoMain->version;
     infoMainJson["jobInfo"] = infoMain->jobInfo;
@@ -66,8 +65,7 @@ static void EncodeInfoMainScalarFields(SHARED_PTR_ALIA<InfoMain> infoMain, NanoJ
     infoMainJson["cannVersion"] = infoMain->cannVersion;
 }
 
-
-InfoJson::InfoJson(const std::string &jobInfo, const std::string &devices, int32_t hostpid)
+InfoJson::InfoJson(const std::string& jobInfo, const std::string& devices, int32_t hostpid)
     : jobInfo_(jobInfo), devices_(devices), hostpid_(hostpid)
 {}
 
@@ -136,7 +134,7 @@ std::string InfoJson::GetHwtsFreq(std::string freq) const
     return hwtsFrequency;
 }
 
-int32_t InfoJson::Generate(std::string &content)
+int32_t InfoJson::Generate(std::string& content)
 {
     MSPROF_LOGI("Begin to generate info.json, devices: %s.", devices_.c_str());
 
@@ -167,7 +165,7 @@ int32_t InfoJson::Generate(std::string &content)
 
     try {
         content = EncodeInfoMainJson(infoMain);
-    } catch (const std::runtime_error &error) {
+    } catch (const std::runtime_error& error) {
         return PROFILING_FAILED;
     }
 
@@ -208,8 +206,8 @@ void InfoJson::AddSysConf(SHARED_PTR_ALIA<InfoMain> infoMain) const
     infoMain->sysClockFreq = tck;
 
     long cpu = sysconf(_SC_NPROCESSORS_CONF);
-    FUNRET_CHECK_EXPR_ACTION_LOGW(cpu == -1, return, "Unable to get system cpu num, return code %d.",
-        OsalGetErrorCode());
+    FUNRET_CHECK_EXPR_ACTION_LOGW(
+        cpu == -1, return, "Unable to get system cpu num, return code %d.", OsalGetErrorCode());
     infoMain->cpuNums = cpu;
 #endif
 }
@@ -270,8 +268,8 @@ void InfoJson::AddMemTotal(SHARED_PTR_ALIA<InfoMain> infoMain) const
                 break;
             }
         }
-        FUNRET_CHECK_EXPR_ACTION_LOGW(start == 0 || end == 0, break, "MemTotal %s did not parse successfully.",
-            line.c_str());
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            start == 0 || end == 0, break, "MemTotal %s did not parse successfully.", line.c_str());
         std::string result = line.substr(start, end - start + 1);
         if (Utils::IsAllDigit(result)) {
             infoMain->memoryTotal = std::stoull(result);
@@ -304,16 +302,16 @@ void InfoJson::AddNetCardInfo(SHARED_PTR_ALIA<InfoMain> infoMain) const
             continue;
         }
         std::string canonicalizedPath = Utils::CanonicalizePath(srcFile);
-        FUNRET_CHECK_EXPR_ACTION_LOGW(canonicalizedPath.empty(), continue,
-            "The srcFile: %s does not exist or permission denied.", srcFile.c_str());
+        FUNRET_CHECK_EXPR_ACTION_LOGW(
+            canonicalizedPath.empty(), continue, "The srcFile: %s does not exist or permission denied.",
+            srcFile.c_str());
         fin.open(canonicalizedPath, std::ifstream::in);
         FUNRET_CHECK_EXPR_ACTION_LOGW(!fin.is_open(), continue, "Unable to open file %s.", canonicalizedPath.c_str());
 
         if (std::getline(fin, line) && (line.length() > 0 && line[0] != '-') &&
             Utils::CheckStringIsNonNegativeIntNum(line)) {
             int32_t speed = 0;
-            FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(speed, line), continue, 
-                "line %s is invalid", line.c_str());
+            FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(speed, line), continue, "line %s is invalid", line.c_str());
             infoMain->netCardInfos.push_back({.netCardName = *it, .speed = speed});
         }
         fin.close();
@@ -370,7 +368,7 @@ int32_t InfoJson::AddHostInfo(SHARED_PTR_ALIA<InfoMain> infoMain) const
     AddNetCardInfo(infoMain);
 
     // fetch and set cpu infos
-    OsalCpuDesc *cpuInfo = nullptr;
+    OsalCpuDesc* cpuInfo = nullptr;
     int32_t cpuNum = 0;
     ret = OsalGetCpuInfo(&cpuInfo, &cpuNum);
     if (ret != OSAL_EN_OK || cpuNum <= 0) {
@@ -380,11 +378,12 @@ int32_t InfoJson::AddHostInfo(SHARED_PTR_ALIA<InfoMain> infoMain) const
     infoMain->hwtype = cpuInfo[0].arch;
     infoMain->cpuCores = cpuNum;
     for (int32_t i = 0; i < cpuNum; i++) {
-        infoMain->infoCpus.push_back({.id = i,
-            .name = cpuInfo[i].manufacturer,
-            .frequency = GetHostOscFrequency(),
-            .logicalCpuCount = std::to_string(cpuInfo[i].nthreads == 0 ? cpuInfo[i].ncounts : cpuInfo[i].nthreads),
-            .type = cpuInfo[i].version});
+        infoMain->infoCpus.push_back(
+            {.id = i,
+             .name = cpuInfo[i].manufacturer,
+             .frequency = GetHostOscFrequency(),
+             .logicalCpuCount = std::to_string(cpuInfo[i].nthreads == 0 ? cpuInfo[i].ncounts : cpuInfo[i].nthreads),
+             .type = cpuInfo[i].version});
     }
     OsalCpuInfoFree(cpuInfo, cpuNum);
     MSPROF_LOGI("End to AddHostInfo in info.json, devices: %s.", devices_.c_str());
@@ -396,12 +395,12 @@ std::string InfoJson::GetHostOscFrequency() const
     return Analysis::Dvvp::Common::Platform::Platform::instance()->PlatformGetHostOscFreq();
 }
 
-std::string InfoJson::GetDeviceOscFrequency(uint32_t deviceId, const std::string &freq) const
+std::string InfoJson::GetDeviceOscFrequency(uint32_t deviceId, const std::string& freq) const
 {
     return Analysis::Dvvp::Common::Platform::Platform::instance()->PlatformGetDeviceOscFreq(deviceId, freq);
 }
 
-int32_t InfoJson::GetCtrlCpuInfo(uint32_t devId, struct DeviceInfo &devInfo) const
+int32_t InfoJson::GetCtrlCpuInfo(uint32_t devId, struct DeviceInfo& devInfo) const
 {
     int32_t ret = analysis::dvvp::driver::DrvGetCtrlCpuId(devId, devInfo.ctrlCpuId);
     if (ret != PROFILING_SUCCESS) {
@@ -421,7 +420,7 @@ int32_t InfoJson::GetCtrlCpuInfo(uint32_t devId, struct DeviceInfo &devInfo) con
     return PROFILING_SUCCESS;
 }
 
-int32_t InfoJson::GetDevInfo(int32_t deviceId, struct DeviceInfo &devInfo) const
+int32_t InfoJson::GetDevInfo(int32_t deviceId, struct DeviceInfo& devInfo) const
 {
     uint32_t devId = static_cast<uint32_t>(deviceId);
     int32_t ret = analysis::dvvp::driver::DrvGetEnvType(devId, devInfo.envType);
@@ -487,12 +486,9 @@ int32_t InfoJson::AddDeviceInfo(SHARED_PTR_ALIA<InfoMain> infoMain)
             return PROFILING_FAILED;
         }
 
-        const std::map<int32_t, std::string> cpuTypes = {{0x41d03, "ARMv8_Cortex_A53"},
-            {0x41d05, "ARMv8_Cortex_A55"},
-            {0x41d07, "ARMv8_Cortex_A57"},
-            {0x41d08, "ARMv8_Cortex_A72"},
-            {0x41d09, "ARMv8_Cortex_A73"},
-            {0x48d01, "TaishanV110"}};
+        const std::map<int32_t, std::string> cpuTypes = {{0x41d03, "ARMv8_Cortex_A53"}, {0x41d05, "ARMv8_Cortex_A55"},
+                                                         {0x41d07, "ARMv8_Cortex_A57"}, {0x41d08, "ARMv8_Cortex_A72"},
+                                                         {0x41d09, "ARMv8_Cortex_A73"}, {0x48d01, "TaishanV110"}};
         auto iterator = cpuTypes.find(devInfo.ctrlCpuId);
         std::string ctrlCpuId = "";
         if (iterator != cpuTypes.end()) {
@@ -504,28 +500,29 @@ int32_t InfoJson::AddDeviceInfo(SHARED_PTR_ALIA<InfoMain> infoMain)
         MSPROF_LOGD("hwtsFrq:%s", hwtsFrq.c_str());
 
         std::string ctrlCpu;
-        CPU_ID_STR(ctrlCpu, 0, devInfo.ctrlCpuCoreNum);  // ctrl cpu, begin with 0
+        CPU_ID_STR(ctrlCpu, 0, devInfo.ctrlCpuCoreNum); // ctrl cpu, begin with 0
         std::string aiCpu;
-        CPU_ID_STR(aiCpu, devInfo.aiCpuCoreId, (devInfo.ctrlCpuCoreNum + devInfo.aiCpuCoreNum));  // ai cpu
-        auto freq = Analysis::Dvvp::Driver::DrvGeAicFrq(devIndexId);  // aic and aiv with the same frequency
+        CPU_ID_STR(aiCpu, devInfo.aiCpuCoreId, (devInfo.ctrlCpuCoreNum + devInfo.aiCpuCoreNum)); // ai cpu
+        auto freq = Analysis::Dvvp::Driver::DrvGeAicFrq(devIndexId); // aic and aiv with the same frequency
 
-        infoMain->deviceInfos.push_back({.id = hostId,
-            .envType = devInfo.envType,
-            .ctrlCpuCoreNum = devInfo.ctrlCpuCoreNum,
-            .ctrlCpuEndianLittle = devInfo.ctrlCpuEndianLittle,
-            .tsCpuCoreNum = devInfo.tsCpuCoreNum,
-            .aiCpuCoreNum = devInfo.aiCpuCoreNum,
-            .aiCoreNum = devInfo.aiCoreNum,
-            .aiCpuCoreId = devInfo.aiCpuCoreId,
-            .aiCoreId = devInfo.aiCoreId,
-            .aiCpuOccupyBitMap = devInfo.aiCpuOccupyBitMap,
-            .aivNum = devInfo.aivNum,
-            .ctrlCpuId = ctrlCpuId,
-            .ctrlCpu = ctrlCpu,
-            .aiCpu = aiCpu,
-            .hwtsFrequency = hwtsFrq,
-            .aicFrequency = freq,
-            .aivFrequency = freq});
+        infoMain->deviceInfos.push_back(
+            {.id = hostId,
+             .envType = devInfo.envType,
+             .ctrlCpuCoreNum = devInfo.ctrlCpuCoreNum,
+             .ctrlCpuEndianLittle = devInfo.ctrlCpuEndianLittle,
+             .tsCpuCoreNum = devInfo.tsCpuCoreNum,
+             .aiCpuCoreNum = devInfo.aiCpuCoreNum,
+             .aiCoreNum = devInfo.aiCoreNum,
+             .aiCpuCoreId = devInfo.aiCpuCoreId,
+             .aiCoreId = devInfo.aiCoreId,
+             .aiCpuOccupyBitMap = devInfo.aiCpuOccupyBitMap,
+             .aivNum = devInfo.aivNum,
+             .ctrlCpuId = ctrlCpuId,
+             .ctrlCpu = ctrlCpu,
+             .aiCpu = aiCpu,
+             .hwtsFrequency = hwtsFrq,
+             .aicFrequency = freq,
+             .aivFrequency = freq});
     }
     infoMain->devices = hostIdSerial_;
     MSPROF_LOGI("End to AddDeviceInfo in info.json, hostIds: %s.", hostIdSerial_.c_str());
@@ -628,7 +625,8 @@ void InfoJson::SetCannVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const
     }
     std::ifstream versionFile(versionFilePath, std::ifstream::in);
     if (!versionFile.is_open()) {
-        MSPROF_LOGW("Failed to open cann version file: %s, cann version info will be missing.", versionFilePath.c_str());
+        MSPROF_LOGW(
+            "Failed to open cann version file: %s, cann version info will be missing.", versionFilePath.c_str());
         return;
     }
     std::string line;
@@ -637,7 +635,7 @@ void InfoJson::SetCannVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const
         if (line.length() <= strlen("Version=") || line.length() > MAX_VERSION_LENGTH) {
             continue;
         }
-        const auto &pos = line.find("Version=");
+        const auto& pos = line.find("Version=");
         if (pos != std::string::npos) {
             lineVersion = line.substr(pos + strlen("Version="));
             break;
@@ -650,8 +648,7 @@ void InfoJson::SetCannVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const
     infoMain->cannVersion = lineVersion;
 }
 
-InfoJson::~InfoJson()
-{}
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+InfoJson::~InfoJson() {}
+} // namespace host
+} // namespace dvvp
+} // namespace analysis

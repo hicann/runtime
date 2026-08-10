@@ -42,35 +42,30 @@ using namespace analysis::dvvp::common::config;
 using namespace Collector::Dvvp::Msprofbin;
 using namespace Collector::Dvvp::DynProf;
 
-constexpr int32_t MSPROF_DAEMON_ERROR       = -1;
-constexpr int32_t MSPROF_DAEMON_OK          = 0;
-const std::string TASK_BASED        = "task-based";
-const std::string SAMPLE_BASED      = "sample-based";
-const std::string ALL               = "all";
-const std::string ON                = "on";
-const std::string OFF               = "off";
-const std::string L0                = "l0";
-const std::string L1                = "l1";
-const std::string L2                = "l2";
-const std::string L3                = "l3";
-const std::string LLC_CAPACITY      = "capacity";
-const std::string LLC_BANDWIDTH     = "bandwidth";
-const std::string LLC_READ          = "read";
-const std::string LLC_WRITE         = "write";
-const std::string TOOL_NAME_PERF    = "perf";
-const std::string CSV_FORMAT        = "csv";
-const std::string JSON_FORMAT       = "json";
-const std::string TEXT_EXPORT_TYPE  = "text";
-const std::string DB_EXPORT_TYPE    = "db";
+constexpr int32_t MSPROF_DAEMON_ERROR = -1;
+constexpr int32_t MSPROF_DAEMON_OK = 0;
+const std::string TASK_BASED = "task-based";
+const std::string SAMPLE_BASED = "sample-based";
+const std::string ALL = "all";
+const std::string ON = "on";
+const std::string OFF = "off";
+const std::string L0 = "l0";
+const std::string L1 = "l1";
+const std::string L2 = "l2";
+const std::string L3 = "l3";
+const std::string LLC_CAPACITY = "capacity";
+const std::string LLC_BANDWIDTH = "bandwidth";
+const std::string LLC_READ = "read";
+const std::string LLC_WRITE = "write";
+const std::string TOOL_NAME_PERF = "perf";
+const std::string CSV_FORMAT = "csv";
+const std::string JSON_FORMAT = "json";
+const std::string TEXT_EXPORT_TYPE = "text";
+const std::string DB_EXPORT_TYPE = "db";
 
+InputParser::InputParser() { MSVP_MAKE_SHARED0(params_, analysis::dvvp::message::ProfileParams, return); }
 
-InputParser::InputParser()
-{
-    MSVP_MAKE_SHARED0(params_, analysis::dvvp::message::ProfileParams, return);
-}
-
-InputParser::~InputParser()
-{}
+InputParser::~InputParser() {}
 
 void InputParser::MsprofCmdUsage(const std::string msg)
 {
@@ -86,15 +81,16 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> InputParser::MsprofGetOp
         return nullptr;
     }
 
-    int32_t argCount = 1;       // argv[0] is msprof
+    int32_t argCount = 1; // argv[0] is msprof
     SplitApplicationArgv(argc, argv, argCount);
 
     int32_t opt = 0;
     int32_t optionIndex = 0;
     MsprofString optString = "";
-    struct MsprofCmdInfo cmdInfo = { {nullptr} };
-    while ((opt = OsalGetOptLong(argCount, const_cast<MsprofStrBufAddrT>(argv),
-        optString, LONG_OPTIONS, &optionIndex)) != MSPROF_DAEMON_ERROR) {
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+    while (
+        (opt = OsalGetOptLong(argCount, const_cast<MsprofStrBufAddrT>(argv), optString, LONG_OPTIONS, &optionIndex)) !=
+        MSPROF_DAEMON_ERROR) {
         if (PreCheckPlatform(opt, argv) == PROFILING_FAILED) {
             return nullptr;
         }
@@ -126,7 +122,7 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> InputParser::MsprofGetOp
  * @param [in] argv: argv
  * @param [out] argCount: msprof parameter count
  */
-void InputParser::SplitApplicationArgv(int32_t argc, CONST_CHAR_PTR argv[], int32_t &argCount)
+void InputParser::SplitApplicationArgv(int32_t argc, CONST_CHAR_PTR argv[], int32_t& argCount)
 {
     const int32_t argWithSpaceNum = 2;
     for (int32_t i = 1; i < argc; i++) {
@@ -138,7 +134,7 @@ void InputParser::SplitApplicationArgv(int32_t argc, CONST_CHAR_PTR argv[], int3
                 i++;
             }
         } else {
-            for (;i < argc; i++) {
+            for (; i < argc; i++) {
                 params_->application.emplace_back(argv[i]);
             }
             return;
@@ -151,7 +147,7 @@ void InputParser::SplitApplicationArgv(int32_t argc, CONST_CHAR_PTR argv[], int3
  */
 void InputParser::HandleApp()
 {
-    if (!params_->app.empty()) {                             // --application has a higher priority.
+    if (!params_->app.empty()) { // --application has a higher priority.
         params_->application.clear();
         return;
     }
@@ -159,7 +155,7 @@ void InputParser::HandleApp()
     return;
 }
 
-int32_t InputParser::ProcessOptions(int32_t opt, struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::ProcessOptions(int32_t opt, struct MsprofCmdInfo& cmdInfo)
 {
     int32_t ret = MSPROF_DAEMON_ERROR;
     // opt range validate
@@ -200,8 +196,8 @@ int32_t InputParser::ParamsCheck() const
         std::string path = Utils::RelativePathToAbsolutePath(ascendWorkPath) + MSVP_SLASH + PROFILING_RESULT_PATH;
         if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
             char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
-            CmdLog::CmdErrorLog("Create output dir failed.ErrorCode: %d, ErrorInfo: %s.",
-                OsalGetErrorCode(),
+            CmdLog::CmdErrorLog(
+                "Create output dir failed.ErrorCode: %d, ErrorInfo: %s.", OsalGetErrorCode(),
                 OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
             return MSPROF_DAEMON_ERROR;
         }
@@ -229,7 +225,7 @@ int32_t InputParser::ParamsCheck() const
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo& cmdInfo)
 {
     if (cmdInfo.args[ARGS_OUTPUT] == nullptr) {
         CmdLog::CmdErrorLog("Argument --output: expected one argument");
@@ -238,8 +234,10 @@ int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
     std::string path = Utils::RelativePathToAbsolutePath(cmdInfo.args[ARGS_OUTPUT]);
     if (!path.empty()) {
         if (path.size() > MAX_PATH_LENGTH) {
-            CmdLog::CmdErrorLog("Argument --output is invalid because of exceeds"
-                " the maximum length of %d", MAX_PATH_LENGTH);
+            CmdLog::CmdErrorLog(
+                "Argument --output is invalid because of exceeds"
+                " the maximum length of %d",
+                MAX_PATH_LENGTH);
             return MSPROF_DAEMON_ERROR;
         }
         if (!Utils::CheckPathWithInvalidChar(path)) {
@@ -248,8 +246,9 @@ int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
         }
         if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
             char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
-            CmdLog::CmdErrorLog("Create output dir failed.ErrorCode: %d, ErrorInfo: %s.",
-                OsalGetErrorCode(), OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
+            CmdLog::CmdErrorLog(
+                "Create output dir failed.ErrorCode: %d, ErrorInfo: %s.", OsalGetErrorCode(),
+                OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
             return MSPROF_DAEMON_ERROR;
         }
         if (!Utils::IsDir(path)) {
@@ -263,7 +262,7 @@ int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
         params_->result_dir = Utils::CanonicalizePath(path);
         if (params_->result_dir.empty()) {
             CmdLog::CmdErrorLog("Argument --output is invalid because of"
-                " get the canonicalized absolute pathname failed");
+                                " get the canonicalized absolute pathname failed");
             return MSPROF_DAEMON_ERROR;
         }
     } else {
@@ -273,7 +272,7 @@ int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckStorageLimitValid(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckStorageLimitValid(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_STORAGE_LIMIT] == nullptr) {
         return MSPROF_DAEMON_OK;
@@ -285,14 +284,15 @@ int32_t InputParser::CheckStorageLimitValid(const struct MsprofCmdInfo &cmdInfo)
     }
     const std::string storageLimit = params_->storageLimit;
     if (!ParamValidation::instance()->CheckStorageLimit(params_)) {
-        CmdLog::CmdErrorLog("Argument --storage-limit %s is invalid, valid range is %dMB~%uMB",
-            storageLimit.c_str(), STORAGE_LIMIT_DOWN_THD, UINT32_MAX);
+        CmdLog::CmdErrorLog(
+            "Argument --storage-limit %s is invalid, valid range is %dMB~%uMB", storageLimit.c_str(),
+            STORAGE_LIMIT_DOWN_THD, UINT32_MAX);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::GetAppParam(const std::string &appParams)
+int32_t InputParser::GetAppParam(const std::string& appParams)
 {
     if (appParams.empty()) {
         CmdLog::CmdErrorLog("Argument --application: expected one script");
@@ -324,7 +324,7 @@ int32_t InputParser::GetAppParam(const std::string &appParams)
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckAppValid(const struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::CheckAppValid(const struct MsprofCmdInfo& cmdInfo)
 {
     if (cmdInfo.args[ARGS_APPLICATION] == nullptr) {
         CmdLog::CmdErrorLog("Argument --application: expected one argument");
@@ -383,7 +383,7 @@ int32_t InputParser::CheckAppValid(const struct MsprofCmdInfo &cmdInfo)
 /**
  * Check validation of app name and app dir before launch.
  */
-int32_t InputParser::PreCheckApp(const std::string &appDir, const std::string &appName) const
+int32_t InputParser::PreCheckApp(const std::string& appDir, const std::string& appName) const
 {
     if (appDir.empty() || appName.empty()) {
         return MSPROF_DAEMON_ERROR;
@@ -410,15 +410,16 @@ int32_t InputParser::PreCheckApp(const std::string &appDir, const std::string &a
     }
 
     if (Utils::IsDir(appPath)) {
-        CmdLog::CmdErrorLog("Argument --application:%s is a directory, "
-            "please enter the executable file path.", appPath.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument --application:%s is a directory, "
+            "please enter the executable file path.",
+            appPath.c_str());
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-
-int32_t InputParser::CheckEnvironmentValid(const struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::CheckEnvironmentValid(const struct MsprofCmdInfo& cmdInfo)
 {
     if (cmdInfo.args[ARGS_ENVIRONMENT] == nullptr) {
         CmdLog::CmdErrorLog("Argument --environment: expected one argument");
@@ -432,7 +433,7 @@ int32_t InputParser::CheckEnvironmentValid(const struct MsprofCmdInfo &cmdInfo)
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckDynProfValid(struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckDynProfValid(struct MsprofCmdInfo& cmdInfo) const
 {
     const auto app = params_->app;
     const auto dynamic = params_->dynamic;
@@ -462,14 +463,15 @@ int32_t InputParser::CheckDynProfValid(struct MsprofCmdInfo &cmdInfo) const
         return MSPROF_DAEMON_ERROR;
     }
     // Check whether the switch parameter conflicts with the dynamic parameter.
-    FUNRET_CHECK_EXPR_ACTION(CheckDynConflict(cmdInfo), return MSPROF_DAEMON_ERROR,
+    FUNRET_CHECK_EXPR_ACTION(
+        CheckDynConflict(cmdInfo), return MSPROF_DAEMON_ERROR,
         "Failed to check the parameter conflict about dynamic mode.");
 
     // --pid is non-empty, save pid to DynProfCliMgr
     if (!pid.empty()) {
         int32_t pidInt = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(pidInt, pid), return MSPROF_DAEMON_ERROR, 
-            "pid %s is invalid", pid.c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(pidInt, pid), return MSPROF_DAEMON_ERROR, "pid %s is invalid", pid.c_str());
         DynProfCliMgr::instance()->SetKeyPid(pidInt);
     } else { // app mode, set msprofbin pid
         DynProfCliMgr::instance()->SetAppMode();
@@ -479,30 +481,35 @@ int32_t InputParser::CheckDynProfValid(struct MsprofCmdInfo &cmdInfo) const
     return MSPROF_DAEMON_OK;
 }
 
-bool InputParser::CheckDynConflict(struct MsprofCmdInfo &cmdInfo) const
+bool InputParser::CheckDynConflict(struct MsprofCmdInfo& cmdInfo) const
 {
-    FUNRET_CHECK_EXPR_ACTION(ConflictChecking(cmdInfo, ARGS_SYS_DEVICES, "dynamic"), return true,
+    FUNRET_CHECK_EXPR_ACTION(
+        ConflictChecking(cmdInfo, ARGS_SYS_DEVICES, "dynamic"), return true,
         "Failed to check availability of argument --%s", LONG_OPTIONS[ARGS_SYS_DEVICES].name);
-    FUNRET_CHECK_EXPR_ACTION(ConflictChecking(cmdInfo, ARGS_SYS_PERIOD, "dynamic"), return true,
+    FUNRET_CHECK_EXPR_ACTION(
+        ConflictChecking(cmdInfo, ARGS_SYS_PERIOD, "dynamic"), return true,
         "Failed to check availability of argument --%s", LONG_OPTIONS[ARGS_SYS_PERIOD].name);
-    FUNRET_CHECK_EXPR_ACTION(ConflictChecking(cmdInfo, ARGS_CPU_PROFILING, "dynamic"), return true,
+    FUNRET_CHECK_EXPR_ACTION(
+        ConflictChecking(cmdInfo, ARGS_CPU_PROFILING, "dynamic"), return true,
         "Failed to check availability of argument --%s", LONG_OPTIONS[ARGS_CPU_PROFILING].name);
     return false;
 }
 
-bool InputParser::ConflictChecking(struct MsprofCmdInfo &cmdInfo, int32_t opt, const std::string &conflictArgs) const
+bool InputParser::ConflictChecking(struct MsprofCmdInfo& cmdInfo, int32_t opt, const std::string& conflictArgs) const
 {
     if (cmdInfo.args[opt] != nullptr) {
-        CmdLog::CmdErrorLog("Argument --%s and --%s cannot be configured at the same time.", conflictArgs.c_str(),
+        CmdLog::CmdErrorLog(
+            "Argument --%s and --%s cannot be configured at the same time.", conflictArgs.c_str(),
             LONG_OPTIONS[opt].name);
-        MSPROF_LOGE("Argument --%s and --%s cannot be configured at the same time.", conflictArgs.c_str(),
+        MSPROF_LOGE(
+            "Argument --%s and --%s cannot be configured at the same time.", conflictArgs.c_str(),
             LONG_OPTIONS[opt].name);
         return true;
     }
     return false;
 }
 
-int32_t InputParser::CheckPythonPathValid(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckPythonPathValid(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_PYTHON_PATH] == nullptr) {
         CmdLog::CmdErrorLog("Argument --python-path: expected one argument");
@@ -515,15 +522,17 @@ int32_t InputParser::CheckPythonPathValid(const struct MsprofCmdInfo &cmdInfo) c
     }
 
     if (params_->pythonPath.size() > MAX_PATH_LENGTH) {
-        CmdLog::CmdErrorLog("Argument --python-path is invalid because of exceeds"
-            " the maximum length of %d", MAX_PATH_LENGTH);
+        CmdLog::CmdErrorLog(
+            "Argument --python-path is invalid because of exceeds"
+            " the maximum length of %d",
+            MAX_PATH_LENGTH);
         return MSPROF_DAEMON_ERROR;
     }
 
     std::string absolutePythonPath = Utils::CanonicalizePath(params_->pythonPath);
     if (absolutePythonPath.empty()) {
-        CmdLog::CmdErrorLog("Argument --python-path %s does not exist or permission denied!!!",
-            params_->pythonPath.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument --python-path %s does not exist or permission denied!!!", params_->pythonPath.c_str());
         return MSPROF_DAEMON_ERROR;
     }
 
@@ -533,15 +542,17 @@ int32_t InputParser::CheckPythonPathValid(const struct MsprofCmdInfo &cmdInfo) c
     }
 
     if (Utils::IsDir(absolutePythonPath)) {
-        CmdLog::CmdErrorLog("Argument --python-path %s is a directory, "
-            "please enter the executable file path.", params_->pythonPath.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument --python-path %s is a directory, "
+            "please enter the executable file path.",
+            params_->pythonPath.c_str());
         return MSPROF_DAEMON_ERROR;
     }
 
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckExportSummaryFormat(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckExportSummaryFormat(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_SUMMARY_FORMAT] == nullptr) {
         CmdLog::CmdErrorLog("Argument --summary-format: expected one argument");
@@ -549,14 +560,16 @@ int32_t InputParser::CheckExportSummaryFormat(const struct MsprofCmdInfo &cmdInf
     }
     params_->exportSummaryFormat = cmdInfo.args[ARGS_SUMMARY_FORMAT];
     if (params_->exportSummaryFormat != JSON_FORMAT && params_->exportSummaryFormat != CSV_FORMAT) {
-        CmdLog::CmdErrorLog("Argument --summary-format: invalid value: %s. "
-            "Please input 'json' or 'csv'.", cmdInfo.args[ARGS_SUMMARY_FORMAT]);
+        CmdLog::CmdErrorLog(
+            "Argument --summary-format: invalid value: %s. "
+            "Please input 'json' or 'csv'.",
+            cmdInfo.args[ARGS_SUMMARY_FORMAT]);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckExportType(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckExportType(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_EXPORT_TYPE] == nullptr) {
         CmdLog::CmdErrorLog("Argument --type: expected one argument");
@@ -564,14 +577,16 @@ int32_t InputParser::CheckExportType(const struct MsprofCmdInfo &cmdInfo) const
     }
     params_->exportType = cmdInfo.args[ARGS_EXPORT_TYPE];
     if (params_->exportType != TEXT_EXPORT_TYPE && params_->exportType != DB_EXPORT_TYPE) {
-        CmdLog::CmdErrorLog("Argument --type: invalid value: %s. "
-            "Please input 'text' or 'db'.", cmdInfo.args[ARGS_EXPORT_TYPE]);
+        CmdLog::CmdErrorLog(
+            "Argument --type: invalid value: %s. "
+            "Please input 'text' or 'db'.",
+            cmdInfo.args[ARGS_EXPORT_TYPE]);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckReports(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckReports(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_REPORTS] == nullptr) {
         CmdLog::CmdErrorLog("Argument --type: expected one argument");
@@ -581,7 +596,7 @@ int32_t InputParser::CheckReports(const struct MsprofCmdInfo &cmdInfo) const
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckAnalyzeRuleSwitch(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckAnalyzeRuleSwitch(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_RULE] == nullptr) {
         CmdLog::CmdErrorLog("Argument --rule: expected one argument");
@@ -590,10 +605,11 @@ int32_t InputParser::CheckAnalyzeRuleSwitch(const struct MsprofCmdInfo &cmdInfo)
 
     std::vector<std::string> ruleVal = Utils::Split(cmdInfo.args[ARGS_RULE], false, "", ",");
     for (size_t i = 0; i < ruleVal.size(); ++i) {
-        if (ruleVal[i].compare("communication") != 0 &&
-            ruleVal[i].compare("communication_matrix") != 0) {
-            CmdLog::CmdErrorLog("Argument --rule: invalid value: %s. "
-                                "Please input 'communication' or 'communication_matrix'.", ruleVal[i].c_str());
+        if (ruleVal[i].compare("communication") != 0 && ruleVal[i].compare("communication_matrix") != 0) {
+            CmdLog::CmdErrorLog(
+                "Argument --rule: invalid value: %s. "
+                "Please input 'communication' or 'communication_matrix'.",
+                ruleVal[i].c_str());
             return MSPROF_DAEMON_ERROR;
         }
     }
@@ -601,7 +617,7 @@ int32_t InputParser::CheckAnalyzeRuleSwitch(const struct MsprofCmdInfo &cmdInfo)
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckCmdScaleIsValid(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckCmdScaleIsValid(const struct MsprofCmdInfo& cmdInfo) const
 {
     std::string errInfo = "";
     if (!ParamValidation::instance()->CheckOpTypeIsValid(cmdInfo.args[ARGS_OPTYPE], params_->opType, errInfo)) {
@@ -637,7 +653,7 @@ std::string InputParser::GeneratePrompts() const
     return result.str();
 }
 
-int32_t InputParser::CheckLlcProfilingValid(const struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::CheckLlcProfilingValid(const struct MsprofCmdInfo& cmdInfo)
 {
     if (cmdInfo.args[ARGS_LLC_PROFILING] == nullptr) {
         CmdLog::CmdErrorLog("Argument --llc-profiling: expected one argument.");
@@ -660,28 +676,33 @@ int32_t InputParser::CheckLlcProfilingValid(const struct MsprofCmdInfo &cmdInfo)
  *        MSPROF_DAEMON_OK: succ
  *        MSPROF_DAEMON_ERROR: failed
  */
-int32_t InputParser::CheckSysPeriodValid(const struct MsprofCmdInfo &cmdInfo) const
+int32_t InputParser::CheckSysPeriodValid(const struct MsprofCmdInfo& cmdInfo) const
 {
     if (cmdInfo.args[ARGS_SYS_PERIOD] == nullptr) {
         CmdLog::CmdErrorLog("Argument --sys-period is empty,"
-            "Please enter a valid --sys-period value.");
+                            "Please enter a valid --sys-period value.");
         return MSPROF_DAEMON_ERROR;
     }
 
     if (Utils::CheckStringIsNonNegativeIntNum(cmdInfo.args[ARGS_SYS_PERIOD])) {
         int32_t syspeRet = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(syspeRet, cmdInfo.args[ARGS_SYS_PERIOD]), return MSPROF_DAEMON_ERROR, 
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(syspeRet, cmdInfo.args[ARGS_SYS_PERIOD]), return MSPROF_DAEMON_ERROR,
             "syspeRet %s is invalid", cmdInfo.args[ARGS_SYS_PERIOD]);
         if (!(ParamValidation::instance()->IsValidSleepPeriod(syspeRet))) {
-            CmdLog::CmdErrorLog("Argument --sys-period: invalid int value: %d."
-                "The range of period is 1~2592000 seconds.", syspeRet);
+            CmdLog::CmdErrorLog(
+                "Argument --sys-period: invalid int value: %d."
+                "The range of period is 1~2592000 seconds.",
+                syspeRet);
             return MSPROF_DAEMON_ERROR;
         } else {
             return MSPROF_DAEMON_OK;
         }
     } else {
-        CmdLog::CmdErrorLog("Argument --sys-period: invalid value: %s."
-            "Please input an integer value.The range of period is 1~2592000 seconds.", cmdInfo.args[ARGS_SYS_PERIOD]);
+        CmdLog::CmdErrorLog(
+            "Argument --sys-period: invalid value: %s."
+            "Please input an integer value.The range of period is 1~2592000 seconds.",
+            cmdInfo.args[ARGS_SYS_PERIOD]);
         return MSPROF_DAEMON_ERROR;
     }
 }
@@ -694,17 +715,17 @@ int32_t InputParser::CheckSysPeriodValid(const struct MsprofCmdInfo &cmdInfo) co
  *        MSPROF_DAEMON_OK: succ
  *        MSPROF_DAEMON_ERROR: failed
  */
-int32_t InputParser::CheckSysDevicesValid(const struct MsprofCmdInfo &cmdInfo)
+int32_t InputParser::CheckSysDevicesValid(const struct MsprofCmdInfo& cmdInfo)
 {
     if (cmdInfo.args[ARGS_SYS_DEVICES] == nullptr) {
         CmdLog::CmdErrorLog("Argument --sys-devices is empty,"
-            "Please enter a valid --sys-devices value.");
+                            "Please enter a valid --sys-devices value.");
         return MSPROF_DAEMON_ERROR;
     }
     params_->devices = cmdInfo.args[ARGS_SYS_DEVICES];
     if (params_->devices.empty()) {
         CmdLog::CmdErrorLog("Argument --sys-devices is empty,"
-            "Please enter a valid --sys-devices value.");
+                            "Please enter a valid --sys-devices value.");
         return MSPROF_DAEMON_ERROR;
     }
     if (std::string(cmdInfo.args[ARGS_SYS_DEVICES]) == ALL) {
@@ -714,8 +735,10 @@ int32_t InputParser::CheckSysDevicesValid(const struct MsprofCmdInfo &cmdInfo)
     std::vector<std::string> devices = Utils::Split(cmdInfo.args[ARGS_SYS_DEVICES], false, "", ",");
     for (size_t i = 0; i < devices.size(); ++i) {
         if (!(ParamValidation::instance()->CheckDeviceIdIsValid(devices[i]))) {
-            CmdLog::CmdErrorLog("Argument --sys-devices: invalid value: %s."
-                "Please input a valid device id.", devices[i].c_str());
+            CmdLog::CmdErrorLog(
+                "Argument --sys-devices: invalid value: %s."
+                "Please input a valid device id.",
+                devices[i].c_str());
             return MSPROF_DAEMON_ERROR;
         }
     }
@@ -723,7 +746,7 @@ int32_t InputParser::CheckSysDevicesValid(const struct MsprofCmdInfo &cmdInfo)
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckArgRange(const struct MsprofCmdInfo &cmdInfo, int32_t opt, uint32_t min, uint32_t max) const
+int32_t InputParser::CheckArgRange(const struct MsprofCmdInfo& cmdInfo, int32_t opt, uint32_t min, uint32_t max) const
 {
     if (cmdInfo.args[opt] == nullptr) {
         CmdLog::CmdErrorLog("Argument --%s is empty, please enter a valid value.", LONG_OPTIONS[opt].name);
@@ -734,26 +757,32 @@ int32_t InputParser::CheckArgRange(const struct MsprofCmdInfo &cmdInfo, int32_t 
         if ((optRet >= min) && (optRet <= max)) {
             return MSPROF_DAEMON_OK;
         } else {
-            CmdLog::CmdErrorLog("Argument --%s: invalid int value: %d."
-                "Please input data is in %u to %u.", LONG_OPTIONS[opt].name, optRet, min, max);
+            CmdLog::CmdErrorLog(
+                "Argument --%s: invalid int value: %d."
+                "Please input data is in %u to %u.",
+                LONG_OPTIONS[opt].name, optRet, min, max);
             return MSPROF_DAEMON_ERROR;
         }
     } else {
-        CmdLog::CmdErrorLog("Argument --%s: invalid value: %s."
-            "Please input an integer value in %u-%u.", LONG_OPTIONS[opt].name, cmdInfo.args[opt], min, max);
+        CmdLog::CmdErrorLog(
+            "Argument --%s: invalid value: %s."
+            "Please input an integer value in %u-%u.",
+            LONG_OPTIONS[opt].name, cmdInfo.args[opt], min, max);
         return MSPROF_DAEMON_ERROR;
     }
 }
 
-int32_t InputParser::CheckArgsIsNumber(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckArgsIsNumber(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     if (cmdInfo.args[opt] == nullptr) {
         CmdLog::CmdErrorLog("Argument --%s is empty, please enter a valid value.", LONG_OPTIONS[opt].name);
         return MSPROF_DAEMON_ERROR;
     }
     if (!Utils::CheckStringIsUnsignedIntNum(cmdInfo.args[opt])) {
-        CmdLog::CmdErrorLog("Argument --%s: invalid value: %s."
-            "Please input an integer value.", LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
+        CmdLog::CmdErrorLog(
+            "Argument --%s: invalid value: %s."
+            "Please input an integer value.",
+            LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
@@ -775,7 +804,7 @@ void InputParser::SetTaskTimeSwitch(const std::string timeSwitch)
     params_->ts_memcpy = ON;
 }
 
-void InputParser::ParamsSwitchValid3(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::ParamsSwitchValid3(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     switch (opt) {
         case ARGS_INSTR_PROFILING:
@@ -796,7 +825,7 @@ void InputParser::ParamsSwitchValid3(const struct MsprofCmdInfo &cmdInfo, int32_
     }
 }
 
-int32_t InputParser::MsprofSwitchCheckValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+int32_t InputParser::MsprofSwitchCheckValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t ret = CheckArgOnOff(cmdInfo, opt);
     if (ret == MSPROF_DAEMON_OK) {
@@ -818,17 +847,14 @@ int32_t InputParser::CheckSysCpu()
         MSPROF_LOGI("Start the detection tool.");
         if (CheckHostSysToolsIsExist(TOOL_NAME_PERF, PROF_SCRIPT_PROF) != MSPROF_DAEMON_OK) {
             CmdLog::CmdErrorLog("The tool perf is invalid, please check"
-                " if the tool and sudo are available.");
+                                " if the tool and sudo are available.");
             return MSPROF_DAEMON_ERROR;
         }
     }
     return MSPROF_DAEMON_OK;
 }
 
-
-
-
-int32_t InputParser::MsprofFreqCheckValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+int32_t InputParser::MsprofFreqCheckValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t ret = MSPROF_DAEMON_OK;
     if (opt > NR_ARGS) {
@@ -875,23 +901,23 @@ int32_t InputParser::MsprofFreqCheckValid(const struct MsprofCmdInfo &cmdInfo, i
     return ret;
 }
 
-void InputParser::MsprofFreqUpdateParams(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::MsprofFreqUpdateParams(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     switch (opt) {
         case ARGS_INSTR_PROFILING_FREQ: {
-                int32_t instrProfilingFreq = 0;
-                FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(instrProfilingFreq, cmdInfo.args[opt]), return, 
-                    "instrProfilingFreq %s is invalid", cmdInfo.args[opt]);
-                params_->instrProfilingFreq = instrProfilingFreq;
-            }
-            break;
+            int32_t instrProfilingFreq = 0;
+            FUNRET_CHECK_EXPR_ACTION(
+                !Utils::StrToInt32(instrProfilingFreq, cmdInfo.args[opt]), return, "instrProfilingFreq %s is invalid",
+                cmdInfo.args[opt]);
+            params_->instrProfilingFreq = instrProfilingFreq;
+        } break;
         case ARGS_SYS_PERIOD: {
-                int32_t period = 0;
-                FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(period, cmdInfo.args[opt]), return, 
-                    "profiling_period %s is invalid", cmdInfo.args[opt]);
-                params_->profiling_period = period;
-            }
-            break;
+            int32_t period = 0;
+            FUNRET_CHECK_EXPR_ACTION(
+                !Utils::StrToInt32(period, cmdInfo.args[opt]), return, "profiling_period %s is invalid",
+                cmdInfo.args[opt]);
+            params_->profiling_period = period;
+        } break;
         case ARGS_EXPORT_ITERATION_ID:
             params_->exportIterationId = cmdInfo.args[opt];
             break;
@@ -904,7 +930,7 @@ void InputParser::MsprofFreqUpdateParams(const struct MsprofCmdInfo &cmdInfo, in
     }
 }
 
-int32_t InputParser::MsprofDynamicCheckValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+int32_t InputParser::MsprofDynamicCheckValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t ret = MSPROF_DAEMON_OK;
     switch (opt) {
@@ -929,7 +955,7 @@ int32_t InputParser::MsprofDynamicCheckValid(const struct MsprofCmdInfo &cmdInfo
     return ret;
 }
 
-void InputParser::MsprofDynamicUpdateParams(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::MsprofDynamicUpdateParams(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     switch (opt) {
         case ARGS_DYNAMIC_PROF:
@@ -949,42 +975,31 @@ void InputParser::MsprofDynamicUpdateParams(const struct MsprofCmdInfo &cmdInfo,
     }
 }
 
-Args::Args(const std::string &name, const std::string &detail)
+Args::Args(const std::string& name, const std::string& detail)
     : name_(name), detail_(detail), optional_(OSAL_OPTIONAL_ARG)
-{
-}
+{}
 
-Args::Args(const std::string &name, const std::string &detail, const std::string &defaultValue)
+Args::Args(const std::string& name, const std::string& detail, const std::string& defaultValue)
     : name_(name), defaultValue_(defaultValue), detail_(detail), optional_(OSAL_OPTIONAL_ARG)
-{
-}
+{}
 
-Args::Args(const std::string &name, const std::string &detail, const std::string &defaultValue, int32_t optional)
+Args::Args(const std::string& name, const std::string& detail, const std::string& defaultValue, int32_t optional)
     : name_(name), defaultValue_(defaultValue), detail_(detail), optional_(optional)
-{
-}
+{}
 
-Args::~Args()
-{
-}
+Args::~Args() {}
 
 void Args::PrintHelp()
 {
     std::string ifOptional = (optional_ == OSAL_OPTIONAL_ARG) ? "<Optional>" : "<Mandatory>";
-    std::cout << std::right << std::setw(8) << "--"; // 8 space
-    std::cout << std::left << std::setw(32) << name_  << ifOptional; // 32 space for option
+    std::cout << std::right << std::setw(8) << "--";                // 8 space
+    std::cout << std::left << std::setw(32) << name_ << ifOptional; // 32 space for option
     std::cout << " " << detail_ << std::endl << std::flush;
 }
 
-void Args::SetDetail(const std::string &detail)
-{
-    detail_ = detail;
-}
+void Args::SetDetail(const std::string& detail) { detail_ = detail; }
 
-ArgsManager::~ArgsManager()
-{
-    argsList_.clear();
-}
+ArgsManager::~ArgsManager() { argsList_.clear(); }
 
 void ArgsManager::AddAicMetricsArgs()
 {
@@ -1006,10 +1021,11 @@ void ArgsManager::AddAicMetricsArgs()
     if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_MEMORY_ACCESS_PMU)) {
         memoryAccess = ", MemoryAccess";
     }
-    Args aicMetricsArgs = {"aic-metrics",
-        "The aic metrics groups, include ArithmeticUtilization, PipeUtilization" + pipExe +
-        ", Memory, MemoryL0" + resource + ", MemoryUB" + l2Cache + memoryAccess + ".\n" +
-        "\t\t\t\t\t\t   the default value is " + option + ".",
+    Args aicMetricsArgs = {
+        "aic-metrics",
+        "The aic metrics groups, include ArithmeticUtilization, PipeUtilization" + pipExe + ", Memory, MemoryL0" +
+            resource + ", MemoryUB" + l2Cache + memoryAccess + ".\n" + "\t\t\t\t\t\t   the default value is " + option +
+            ".",
         option};
     argsList_.push_back(aicMetricsArgs);
 }
@@ -1021,27 +1037,32 @@ void ArgsManager::AddAnalysisArgs()
     }
     std::vector<Args> argsList;
     argsList = {
-    {"python-path", "Specify the python interpreter path that is used for analysis, please ensure the python version"
-                " is 3.7.5 or later."},
-    {"parse", "Switch for using msprof to parse collecting data, the default value is off.", OFF},
-    {"query", "Switch for using msprof to query collecting data, the default value is off.", OFF},
-    {"export", "Switch for using msprof to export collecting data, the default value is off.", OFF},
-    {"clear", "Switch for using msprof to analyze or export data in clear mode, the default value is off.", OFF},
-    {"analyze", "Switch for using msprof to analyze collecting data, the default value is off.", OFF},
-    {"rule", "Switch specified rule for using msprof to analyze collecting data, "
-        "include communication, communication_matrix.\n"
-        "\t\t\t\t\t\t   the default value is communication,communication_matrix."},
-    {"iteration-id", "The export iteration id, only used when argument export is on, the default value is 1.", "1"},
-    {"model-id", "The export model id, only used when argument export is on, "
-        "msprof will export minium accessible model by default.",
-        "-1"},
-    {"summary-format", "The export summary file format, only used when argument export is on, "
-        "include csv, json, the default value is csv.", "csv"},
-    {"type", "The export type, only used when argument `export` is on \n"
-        "\t\t\t\t\t\t   or when collecting data, include text, db.\n"
-        "\t\t\t\t\t\t   the default value is text(which will alse export the database).", "text"},
-    {"reports", "Specify the path that is used for controlling the export scope of collecting results"}
-    };
+        {"python-path",
+         "Specify the python interpreter path that is used for analysis, please ensure the python version"
+         " is 3.7.5 or later."},
+        {"parse", "Switch for using msprof to parse collecting data, the default value is off.", OFF},
+        {"query", "Switch for using msprof to query collecting data, the default value is off.", OFF},
+        {"export", "Switch for using msprof to export collecting data, the default value is off.", OFF},
+        {"clear", "Switch for using msprof to analyze or export data in clear mode, the default value is off.", OFF},
+        {"analyze", "Switch for using msprof to analyze collecting data, the default value is off.", OFF},
+        {"rule", "Switch specified rule for using msprof to analyze collecting data, "
+                 "include communication, communication_matrix.\n"
+                 "\t\t\t\t\t\t   the default value is communication,communication_matrix."},
+        {"iteration-id", "The export iteration id, only used when argument export is on, the default value is 1.", "1"},
+        {"model-id",
+         "The export model id, only used when argument export is on, "
+         "msprof will export minium accessible model by default.",
+         "-1"},
+        {"summary-format",
+         "The export summary file format, only used when argument export is on, "
+         "include csv, json, the default value is csv.",
+         "csv"},
+        {"type",
+         "The export type, only used when argument `export` is on \n"
+         "\t\t\t\t\t\t   or when collecting data, include text, db.\n"
+         "\t\t\t\t\t\t   the default value is text(which will alse export the database).",
+         "text"},
+        {"reports", "Specify the path that is used for controlling the export scope of collecting results"}};
     argsList_.insert(argsList_.end(), argsList.begin(), argsList.end());
 }
 
@@ -1052,7 +1073,9 @@ void ArgsManager::AddInstrArgs()
         return;
     }
     Args instrProfiling = {"instr-profiling", "Show instr profiling data, the default value is off.", OFF};
-    Args instrProfilingFreq = {"instr-profiling-freq", "The instr profiling sampling period in clock-cycle, "
+    Args instrProfilingFreq = {
+        "instr-profiling-freq",
+        "The instr profiling sampling period in clock-cycle, "
         "the default value is 1000 cycle, the range is 300 to 30000 cycle.",
         "1000"};
     argsList_.push_back(instrProfiling);
@@ -1061,13 +1084,17 @@ void ArgsManager::AddInstrArgs()
 
 void ArgsManager::AddCpuArgs()
 {
-    Args cpu = Args("sys-cpu-profiling", "The CPU acquisition switch, optional on / off,"
+    Args cpu = Args(
+        "sys-cpu-profiling",
+        "The CPU acquisition switch, optional on / off,"
         "the default value is off.",
         OFF);
     if (Platform::instance()->CheckIfSupport(PLATFORM_SYS_DEVICE_AICPU_HSCB)) {
         cpu.SetDetail("CPU and HSCB acquisition switch, optional on / off, the default value is off.");
     }
-    Args cpuFreq =  {"sys-cpu-freq", "The cpu sampling frequency in hertz. "
+    Args cpuFreq = {
+        "sys-cpu-freq",
+        "The cpu sampling frequency in hertz. "
         "the default value is 50 Hz, the range is 1 to 50 Hz.",
         "50"};
     argsList_.push_back(cpu);
@@ -1076,17 +1103,24 @@ void ArgsManager::AddCpuArgs()
 
 void ArgsManager::AddSysArgs()
 {
-    Args sysProfiling = {"sys-profiling", "The System CPU usage and system memory acquisition switch,"
+    Args sysProfiling = {
+        "sys-profiling",
+        "The System CPU usage and system memory acquisition switch,"
         "the default value is off.",
         OFF};
-    Args sysFreq = {"sys-sampling-freq", "The sys sampling frequency in hertz. "
+    Args sysFreq = {
+        "sys-sampling-freq",
+        "The sys sampling frequency in hertz. "
         "the default value is 10 Hz, the range is 1 to 10 Hz.",
         "10"};
-    Args pidProfiling = {"sys-pid-profiling",
+    Args pidProfiling = {
+        "sys-pid-profiling",
         "The CPU usage of the process and the memory acquisition switch of the process,"
         "the default value is off.",
         OFF};
-    Args pidFreq = {"sys-pid-sampling-freq", "The pid sampling frequency in hertz. "
+    Args pidFreq = {
+        "sys-pid-sampling-freq",
+        "The pid sampling frequency in hertz. "
         "the default value is 10 Hz, the range is 1 to 10 Hz.",
         "10"};
     argsList_.push_back(sysProfiling);
@@ -1097,18 +1131,15 @@ void ArgsManager::AddSysArgs()
 
 void ArgsManager::AddDvvpArgs()
 {
-    Args dvpp = {"dvpp-profiling",
-        "DVPP acquisition switch, the default value is off.",
-        OFF};
-    Args dvppFreq = {"dvpp-freq", "DVPP acquisition frequency, range 1 ~ 100, "
+    Args dvpp = {"dvpp-profiling", "DVPP acquisition switch, the default value is off.", OFF};
+    Args dvppFreq = {
+        "dvpp-freq",
+        "DVPP acquisition frequency, range 1 ~ 100, "
         "the default value is 50, unit Hz.",
         "50"};
     argsList_.push_back(dvpp);
     argsList_.push_back(dvppFreq);
 }
-
-
-
 
 void ArgsManager::PrintHelp()
 {
@@ -1131,15 +1162,14 @@ void ArgsManager::AddHostArgs()
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
     return;
 #endif
-    Args hostSys = {"host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt",
-        HOST_SYS_CPU};
-    Args hostSysPid = {"host-sys-pid", "Set the PID of the app process for "
-        "which you want to collect performance data."};
-    Args hostSysUsage = {"host-sys-usage", "The host-sys-usage data type, include cpu, mem.(full-platform)",
-        HOST_SYS_CPU};
+    Args hostSys = {"host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt", HOST_SYS_CPU};
+    Args hostSysPid = {
+        "host-sys-pid", "Set the PID of the app process for "
+                        "which you want to collect performance data."};
+    Args hostSysUsage = {
+        "host-sys-usage", "The host-sys-usage data type, include cpu, mem.(full-platform)", HOST_SYS_CPU};
     Args hostSysUsageFreq = {
-        "host-sys-usage-freq",
-        "The sampling frequency in hertz. the default value is 50 Hz the range is 1 to 50 Hz.",
+        "host-sys-usage-freq", "The sampling frequency in hertz. the default value is 50 Hz the range is 1 to 50 Hz.",
         "50"};
     argsList_.push_back(hostSys);
     argsList_.push_back(hostSysPid);
@@ -1163,10 +1193,8 @@ void ArgsManager::AddDelayDurationArgs()
     if (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_DELAY_DURATION)) {
         return;
     }
-    Args delay = {"delay",
-        "Collect start delay time in seconds, range 1 ~ 4294967295s."};
-    Args duration = {"duration",
-        "Collection duration in seconds, range 1 ~ 4294967295s."};
+    Args delay = {"delay", "Collect start delay time in seconds, range 1 ~ 4294967295s."};
+    Args duration = {"duration", "Collection duration in seconds, range 1 ~ 4294967295s."};
     argsList_.push_back(delay);
     argsList_.push_back(duration);
 }
@@ -1176,16 +1204,29 @@ void ArgsManager::AddScaleArgs()
     if (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_SCALE)) {
         return;
     }
-    Args optype = {"optype", "Customized operator type with the following format: "
-        "\"opType1,opType2,...\"."};
+    Args optype = {
+        "optype", "Customized operator type with the following format: "
+                  "\"opType1,opType2,...\"."};
     argsList_.push_back(optype);
 }
 
 int32_t InputParser::PreCheckPlatform(int32_t opt, CONST_CHAR_PTR argv[])
 {
-    std::vector<MsprofArgsType> socBlackSwith = {ARGS_HOST_SYS, ARGS_HOST_SYS_PID, ARGS_HOST_SYS_USAGE,
-        ARGS_HOST_SYS_USAGE_FREQ, ARGS_PARSE, ARGS_QUERY, ARGS_EXPORT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID,
-        ARGS_SUMMARY_FORMAT, ARGS_PYTHON_PATH, ARGS_ANALYZE, ARGS_RULE, ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
+    std::vector<MsprofArgsType> socBlackSwith = {ARGS_HOST_SYS,
+                                                 ARGS_HOST_SYS_PID,
+                                                 ARGS_HOST_SYS_USAGE,
+                                                 ARGS_HOST_SYS_USAGE_FREQ,
+                                                 ARGS_PARSE,
+                                                 ARGS_QUERY,
+                                                 ARGS_EXPORT,
+                                                 ARGS_EXPORT_ITERATION_ID,
+                                                 ARGS_EXPORT_MODEL_ID,
+                                                 ARGS_SUMMARY_FORMAT,
+                                                 ARGS_PYTHON_PATH,
+                                                 ARGS_ANALYZE,
+                                                 ARGS_RULE,
+                                                 ARGS_MEM_SERVICEFLOW,
+                                                 ARGS_OPTYPE};
     Analysis::Dvvp::Common::Config::PlatformType platformType = ConfigManager::instance()->GetPlatformType();
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (platformType < PlatformType::MINI_TYPE || platformType >= PlatformType::END_TYPE) {
@@ -1208,27 +1249,64 @@ int32_t InputParser::PreCheckPlatform(int32_t opt, CONST_CHAR_PTR argv[])
     return PROFILING_SUCCESS;
 }
 
-void InputParser::InitOpenBlackLists(std::map<PlatformType, std::vector<MsprofArgsType>> &platformArgsType) const
+void InputParser::InitOpenBlackLists(std::map<PlatformType, std::vector<MsprofArgsType>>& platformArgsType) const
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    std::vector<MsprofArgsType> miniBlackSwith = {ARGS_INTERCONNECTION_PROFILING, ARGS_INTERCONNECTION_FREQ,
-        ARGS_L2_PROFILING, ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS, ARGS_STORAGE_LIMIT,
-        ARGS_TASK_BLOCK, ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ, ARGS_DYNAMIC_PROF, ARGS_DYNAMIC_PROF_PID,
-        ARGS_NPU_EVENTS, ARGS_DELAY_PROF, ARGS_DURATION_PROF, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
-        ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
+    std::vector<MsprofArgsType> miniBlackSwith = {
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_L2_PROFILING,
+        ARGS_AIV,
+        ARGS_AIV_FREQ,
+        ARGS_AIV_MODE,
+        ARGS_AIV_METRICS,
+        ARGS_STORAGE_LIMIT,
+        ARGS_TASK_BLOCK,
+        ARGS_INSTR_PROFILING,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_DYNAMIC_PROF,
+        ARGS_DYNAMIC_PROF_PID,
+        ARGS_NPU_EVENTS,
+        ARGS_DELAY_PROF,
+        ARGS_DURATION_PROF,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_MEM_SERVICEFLOW,
+        ARGS_OPTYPE};
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    std::vector<MsprofArgsType> cloudBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS,
-        ARGS_TASK_BLOCK, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ,
-        ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
-    std::vector<MsprofArgsType> dcBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS,
-        ARGS_IO_PROFILING, ARGS_IO_SAMPLING_FREQ, ARGS_TASK_BLOCK, ARGS_INSTR_PROFILING,
-        ARGS_INSTR_PROFILING_FREQ, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
-    std::vector<MsprofArgsType> cloudBlackSwithV2 = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS,
-        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_OPTYPE};
-    std::vector<MsprofArgsType> miniV3BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS,
-        ARGS_INTERCONNECTION_PROFILING, ARGS_INTERCONNECTION_FREQ, ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ,
-        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
-    #ifndef BUILD_PROFILING_OPEN_PROJECT
+    std::vector<MsprofArgsType> cloudBlackSwith = {ARGS_AIV,
+                                                   ARGS_AIV_FREQ,
+                                                   ARGS_AIV_MODE,
+                                                   ARGS_AIV_METRICS,
+                                                   ARGS_TASK_BLOCK,
+                                                   ARGS_SYS_LOW_POWER,
+                                                   ARGS_SYS_LOW_POWER_FREQ,
+                                                   ARGS_INSTR_PROFILING,
+                                                   ARGS_INSTR_PROFILING_FREQ,
+                                                   ARGS_MEM_SERVICEFLOW,
+                                                   ARGS_OPTYPE};
+    std::vector<MsprofArgsType> dcBlackSwith = {ARGS_AIV,           ARGS_AIV_FREQ,           ARGS_AIV_MODE,
+                                                ARGS_AIV_METRICS,   ARGS_IO_PROFILING,       ARGS_IO_SAMPLING_FREQ,
+                                                ARGS_TASK_BLOCK,    ARGS_INSTR_PROFILING,    ARGS_INSTR_PROFILING_FREQ,
+                                                ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_MEM_SERVICEFLOW,
+                                                ARGS_OPTYPE};
+    std::vector<MsprofArgsType> cloudBlackSwithV2 = {ARGS_AIV,         ARGS_AIV_FREQ,      ARGS_AIV_MODE,
+                                                     ARGS_AIV_METRICS, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+                                                     ARGS_OPTYPE};
+    std::vector<MsprofArgsType> miniV3BlackSwith = {
+        ARGS_AIV,
+        ARGS_AIV_FREQ,
+        ARGS_AIV_MODE,
+        ARGS_AIV_METRICS,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_INSTR_PROFILING,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_MEM_SERVICEFLOW,
+        ARGS_OPTYPE};
+#ifndef BUILD_PROFILING_OPEN_PROJECT
     platformArgsType[PlatformType::MINI_TYPE] = miniBlackSwith;
 #endif // BUILD_PROFILING_OPEN_PROJECT
     platformArgsType[PlatformType::CLOUD_TYPE] = cloudBlackSwith;
@@ -1238,27 +1316,97 @@ void InputParser::InitOpenBlackLists(std::map<PlatformType, std::vector<MsprofAr
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-void InputParser::InitClosedBlackLists(std::map<PlatformType, std::vector<MsprofArgsType>> &platformArgsType) const
+void InputParser::InitClosedBlackLists(std::map<PlatformType, std::vector<MsprofArgsType>>& platformArgsType) const
 {
-    std::vector<MsprofArgsType> mdcBlackSwith = {ARGS_IO_PROFILING, ARGS_IO_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ,
-        ARGS_INTERCONNECTION_PROFILING, ARGS_AICPU, ARGS_TASK_BLOCK, ARGS_PYTHON_PATH,
-        ARGS_SUMMARY_FORMAT, ARGS_PARSE, ARGS_QUERY, ARGS_EXPORT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID,
-        ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ, ARGS_DYNAMIC_PROF, ARGS_DYNAMIC_PROF_PID, ARGS_ANALYZE,
-        ARGS_RULE, ARGS_DELAY_PROF, ARGS_DURATION_PROF, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
-        ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
-    std::vector<MsprofArgsType> mdcMiniV3BlackSwith = {ARGS_AICPU, ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_QUERY,
-        ARGS_AIV_METRICS, ARGS_INTERCONNECTION_PROFILING, ARGS_INTERCONNECTION_FREQ, ARGS_DYNAMIC_PROF, ARGS_EXPORT,
-        ARGS_HOST_SYS, ARGS_HOST_SYS_PID, ARGS_EXPORT_ITERATION_ID, ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ,
-        ARGS_MODEL_EXECUTION, ARGS_EXPORT_MODEL_ID, ARGS_PYTHON_PATH, ARGS_PARSE, ARGS_DYNAMIC_PROF_PID,
-        ARGS_SUMMARY_FORMAT, ARGS_IO_PROFILING, ARGS_IO_SAMPLING_FREQ, ARGS_TASK_BLOCK, ARGS_MEM_SERVICEFLOW,
-        ARGS_ANALYZE, ARGS_RULE, ARGS_DELAY_PROF, ARGS_DURATION_PROF, ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+    std::vector<MsprofArgsType> mdcBlackSwith = {
+        ARGS_IO_PROFILING,
+        ARGS_IO_SAMPLING_FREQ,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_AICPU,
+        ARGS_TASK_BLOCK,
+        ARGS_PYTHON_PATH,
+        ARGS_SUMMARY_FORMAT,
+        ARGS_PARSE,
+        ARGS_QUERY,
+        ARGS_EXPORT,
+        ARGS_EXPORT_ITERATION_ID,
+        ARGS_EXPORT_MODEL_ID,
+        ARGS_INSTR_PROFILING,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_DYNAMIC_PROF,
+        ARGS_DYNAMIC_PROF_PID,
+        ARGS_ANALYZE,
+        ARGS_RULE,
+        ARGS_DELAY_PROF,
+        ARGS_DURATION_PROF,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_MEM_SERVICEFLOW,
         ARGS_OPTYPE};
-    std::vector<MsprofArgsType> mdcLiteBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS,
-        ARGS_IO_PROFILING, ARGS_IO_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ, ARGS_INTERCONNECTION_PROFILING,
-        ARGS_AICPU, ARGS_TASK_BLOCK, ARGS_PYTHON_PATH, ARGS_SUMMARY_FORMAT, ARGS_PARSE, ARGS_QUERY,
-        ARGS_EXPORT, ARGS_EXPORT_ITERATION_ID, ARGS_EXPORT_MODEL_ID, ARGS_INSTR_PROFILING, ARGS_INSTR_PROFILING_FREQ,
-        ARGS_DYNAMIC_PROF, ARGS_DYNAMIC_PROF_PID, ARGS_ANALYZE, ARGS_RULE, ARGS_DELAY_PROF, ARGS_DURATION_PROF,
-        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ, ARGS_MEM_SERVICEFLOW, ARGS_OPTYPE};
+    std::vector<MsprofArgsType> mdcMiniV3BlackSwith = {
+        ARGS_AICPU,
+        ARGS_AIV,
+        ARGS_AIV_FREQ,
+        ARGS_AIV_MODE,
+        ARGS_QUERY,
+        ARGS_AIV_METRICS,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_DYNAMIC_PROF,
+        ARGS_EXPORT,
+        ARGS_HOST_SYS,
+        ARGS_HOST_SYS_PID,
+        ARGS_EXPORT_ITERATION_ID,
+        ARGS_INSTR_PROFILING,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_MODEL_EXECUTION,
+        ARGS_EXPORT_MODEL_ID,
+        ARGS_PYTHON_PATH,
+        ARGS_PARSE,
+        ARGS_DYNAMIC_PROF_PID,
+        ARGS_SUMMARY_FORMAT,
+        ARGS_IO_PROFILING,
+        ARGS_IO_SAMPLING_FREQ,
+        ARGS_TASK_BLOCK,
+        ARGS_MEM_SERVICEFLOW,
+        ARGS_ANALYZE,
+        ARGS_RULE,
+        ARGS_DELAY_PROF,
+        ARGS_DURATION_PROF,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_OPTYPE};
+    std::vector<MsprofArgsType> mdcLiteBlackSwith = {
+        ARGS_AIV,
+        ARGS_AIV_FREQ,
+        ARGS_AIV_MODE,
+        ARGS_AIV_METRICS,
+        ARGS_IO_PROFILING,
+        ARGS_IO_SAMPLING_FREQ,
+        ARGS_INTERCONNECTION_FREQ,
+        ARGS_INTERCONNECTION_PROFILING,
+        ARGS_AICPU,
+        ARGS_TASK_BLOCK,
+        ARGS_PYTHON_PATH,
+        ARGS_SUMMARY_FORMAT,
+        ARGS_PARSE,
+        ARGS_QUERY,
+        ARGS_EXPORT,
+        ARGS_EXPORT_ITERATION_ID,
+        ARGS_EXPORT_MODEL_ID,
+        ARGS_INSTR_PROFILING,
+        ARGS_INSTR_PROFILING_FREQ,
+        ARGS_DYNAMIC_PROF,
+        ARGS_DYNAMIC_PROF_PID,
+        ARGS_ANALYZE,
+        ARGS_RULE,
+        ARGS_DELAY_PROF,
+        ARGS_DURATION_PROF,
+        ARGS_SYS_LOW_POWER,
+        ARGS_SYS_LOW_POWER_FREQ,
+        ARGS_MEM_SERVICEFLOW,
+        ARGS_OPTYPE};
     std::vector<MsprofArgsType> davidBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
     std::vector<MsprofArgsType> david121BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
     std::vector<MsprofArgsType> mdcV2BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
@@ -1285,7 +1433,7 @@ std::vector<MsprofArgsType> InputParser::GeneratePlatSwithList() const
     return platformArgsType[platformType];
 }
 
-int32_t InputParser::CheckSampleModeValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckSampleModeValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     std::map<int32_t, std::string> sampleMap = {
         {ARGS_AIC_MODE, "--aic-mode"},
@@ -1297,31 +1445,31 @@ int32_t InputParser::CheckSampleModeValid(const struct MsprofCmdInfo &cmdInfo, i
         return MSPROF_DAEMON_ERROR;
     }
 
-    if (std::string(cmdInfo.args[opt]) != TASK_BASED &&
-        std::string(cmdInfo.args[opt]) != SAMPLE_BASED) {
-        CmdLog::CmdErrorLog("Argument %s: invalid value: %s."
-            "Please input 'task-based' or 'sample-based'.", sampleMap[opt].c_str(), cmdInfo.args[opt]);
+    if (std::string(cmdInfo.args[opt]) != TASK_BASED && std::string(cmdInfo.args[opt]) != SAMPLE_BASED) {
+        CmdLog::CmdErrorLog(
+            "Argument %s: invalid value: %s."
+            "Please input 'task-based' or 'sample-based'.",
+            sampleMap[opt].c_str(), cmdInfo.args[opt]);
         return MSPROF_DAEMON_ERROR;
     }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
-        params_->aiv_profiling_mode = (opt == ARGS_AIV_MODE) ?
-            cmdInfo.args[ARGS_AIV_MODE] : params_->aiv_profiling_mode;
+        params_->aiv_profiling_mode =
+            (opt == ARGS_AIV_MODE) ? cmdInfo.args[ARGS_AIV_MODE] : params_->aiv_profiling_mode;
     } else {
-        params_->aiv_profiling_mode = (opt == ARGS_AIC_MODE) ?
-            cmdInfo.args[ARGS_AIC_MODE] : params_->aiv_profiling_mode;
+        params_->aiv_profiling_mode =
+            (opt == ARGS_AIC_MODE) ? cmdInfo.args[ARGS_AIC_MODE] : params_->aiv_profiling_mode;
     }
 #else
-    params_->aiv_profiling_mode = (opt == ARGS_AIC_MODE) ?
-        cmdInfo.args[ARGS_AIC_MODE] : params_->aiv_profiling_mode;
+    params_->aiv_profiling_mode = (opt == ARGS_AIC_MODE) ? cmdInfo.args[ARGS_AIC_MODE] : params_->aiv_profiling_mode;
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    params_->ai_core_profiling_mode = (opt == ARGS_AIC_MODE) ?
-        cmdInfo.args[ARGS_AIC_MODE] : params_->ai_core_profiling_mode;
+    params_->ai_core_profiling_mode =
+        (opt == ARGS_AIC_MODE) ? cmdInfo.args[ARGS_AIC_MODE] : params_->ai_core_profiling_mode;
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckAiCoreMetricsValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckAiCoreMetricsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     std::map<int32_t, std::string> metricsMap = {
         {ARGS_AIC_METRICS, "--aic-metrics"},
@@ -1335,13 +1483,14 @@ int32_t InputParser::CheckAiCoreMetricsValid(const struct MsprofCmdInfo &cmdInfo
     std::string metricsRange = GeneratePrompts();
     std::string aicoreMetrics = std::string(cmdInfo.args[opt]);
     if (aicoreMetrics.empty()) {
-        CmdLog::CmdErrorLog("Argument %s is empty. Please input in the range of %s", metricsMap[opt].c_str(),
-            metricsRange.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument %s is empty. Please input in the range of %s", metricsMap[opt].c_str(), metricsRange.c_str());
         return MSPROF_DAEMON_ERROR;
     }
     if (!ParamValidation::instance()->CheckAicoreMetricsIsValid(aicoreMetrics)) {
-        CmdLog::CmdErrorLog("Argument %s: invalid value:%s. Please input in the range of %s",
-            metricsMap[opt].c_str(), aicoreMetrics.c_str(), metricsRange.c_str());
+        CmdLog::CmdErrorLog(
+            "Argument %s: invalid value:%s. Please input in the range of %s", metricsMap[opt].c_str(),
+            aicoreMetrics.c_str(), metricsRange.c_str());
         return MSPROF_DAEMON_ERROR;
     }
     params_->ai_core_metrics = (opt == ARGS_AIC_METRICS) ? cmdInfo.args[opt] : params_->ai_core_metrics;
@@ -1357,19 +1506,17 @@ int32_t InputParser::CheckAiCoreMetricsValid(const struct MsprofCmdInfo &cmdInfo
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckLlcProfilingIsValid(const std::string &llcProfiling) const
+int32_t InputParser::CheckLlcProfilingIsValid(const std::string& llcProfiling) const
 {
-    std::vector<std::string> llcProfilingWhiteList = {
-        LLC_READ,
-        LLC_WRITE
-    };
+    std::vector<std::string> llcProfilingWhiteList = {LLC_READ, LLC_WRITE};
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
         llcProfilingWhiteList = {LLC_CAPACITY, LLC_BANDWIDTH};
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
     if (llcProfiling.empty()) {
-        CmdLog::CmdErrorLog("Argument --llc-profiling is empty."
+        CmdLog::CmdErrorLog(
+            "Argument --llc-profiling is empty."
             "Please input in the range of '%s|%s'",
             llcProfilingWhiteList[0].c_str(), llcProfilingWhiteList[1].c_str());
         return MSPROF_DAEMON_ERROR;
@@ -1381,9 +1528,10 @@ int32_t InputParser::CheckLlcProfilingIsValid(const std::string &llcProfiling) c
         }
     }
 
-    CmdLog::CmdErrorLog("Argument --llc-profiling: invalid value: %s. "
-        "Please input in the range of '%s|%s'", llcProfiling.c_str(),
-        llcProfilingWhiteList[0].c_str(), llcProfilingWhiteList[1].c_str());
+    CmdLog::CmdErrorLog(
+        "Argument --llc-profiling: invalid value: %s. "
+        "Please input in the range of '%s|%s'",
+        llcProfiling.c_str(), llcProfilingWhiteList[0].c_str(), llcProfilingWhiteList[1].c_str());
     return MSPROF_DAEMON_ERROR;
 }
 
@@ -1402,11 +1550,10 @@ void InputParser::AiCoreFreqCheckValid(const int32_t intervalTransfer)
 #endif // BUILD_PROFILING_OPEN_PROJECT
 }
 
-int32_t InputParser::CheckArgOnOff(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckArgOnOff(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     if (cmdInfo.args[opt] == nullptr) {
-        CmdLog::CmdErrorLog("Argument --%s: expected one argument,please enter a valid value.",
-            LONG_OPTIONS[opt].name);
+        CmdLog::CmdErrorLog("Argument --%s: expected one argument,please enter a valid value.", LONG_OPTIONS[opt].name);
         return MSPROF_DAEMON_ERROR;
     }
     if (opt == ARGS_MSTX_DOMAIN_INCLUDE || opt == ARGS_MSTX_DOMAIN_EXCLUDE) {
@@ -1425,20 +1572,21 @@ int32_t InputParser::CheckArgOnOff(const struct MsprofCmdInfo &cmdInfo, int32_t 
     return CheckOnOffArgValid(switchStr, cmdInfo, opt);
 }
 
-int32_t InputParser::CheckGeApiArgValid(const std::string &switchStr,
-    const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckGeApiArgValid(
+    const std::string& switchStr, const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
-    if (switchStr.compare(OFF) != 0 && switchStr.compare(L0) != 0 &&
-        switchStr.compare(L1) != 0) {
-        CmdLog::CmdErrorLog("Argument --%s: invalid value: %s. "
-            "Please input 'off', 'l0' or 'l1'.", LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
+    if (switchStr.compare(OFF) != 0 && switchStr.compare(L0) != 0 && switchStr.compare(L1) != 0) {
+        CmdLog::CmdErrorLog(
+            "Argument --%s: invalid value: %s. "
+            "Please input 'off', 'l0' or 'l1'.",
+            LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckTaskBlockArgValid(const std::string &switchStr,
-    const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckTaskBlockArgValid(
+    const std::string& switchStr, const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (!ParamValidation::instance()->CheckTaskBlockValid("--task-block", switchStr)) {
@@ -1453,16 +1601,20 @@ int32_t InputParser::CheckTaskBlockArgValid(const std::string &switchStr,
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckTaskTimeArgValid(const std::string &switchStr,
-    const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckTaskTimeArgValid(
+    const std::string& switchStr, const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     if (switchStr.compare(OFF) != 0 && switchStr.compare(L0) != 0 && switchStr.compare(L2) != 0 &&
         switchStr.compare(L3) != 0 && switchStr.compare(L1) != 0 && switchStr.compare(ON) != 0) {
-        std::string task_trace_ranges = Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3)
-                    ? "'on', 'off', 'l0', 'l1', 'l2' or 'l3'."
-                    : "'on', 'off', 'l0', 'l1' or 'l2'.";
-        CmdLog::CmdErrorLog(("Argument --%s: invalid value: %s. "
-            "Please input " + task_trace_ranges).c_str(), LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
+        std::string task_trace_ranges = Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3) ?
+                                            "'on', 'off', 'l0', 'l1', 'l2' or 'l3'." :
+                                            "'on', 'off', 'l0', 'l1' or 'l2'.";
+        CmdLog::CmdErrorLog(
+            ("Argument --%s: invalid value: %s. "
+             "Please input " +
+             task_trace_ranges)
+                .c_str(),
+            LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
         return MSPROF_DAEMON_ERROR;
     }
     if (switchStr.compare(L3) == 0 && !Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3)) {
@@ -1472,18 +1624,20 @@ int32_t InputParser::CheckTaskTimeArgValid(const std::string &switchStr,
     return MSPROF_DAEMON_OK;
 }
 
-int32_t InputParser::CheckOnOffArgValid(const std::string &switchStr,
-    const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::CheckOnOffArgValid(
+    const std::string& switchStr, const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     if (switchStr.compare(OFF) != 0 && switchStr.compare(ON) != 0) {
-        CmdLog::CmdErrorLog("Argument --%s: invalid value: %s. "
-            "Please input 'on' or 'off'.", LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
+        CmdLog::CmdErrorLog(
+            "Argument --%s: invalid value: %s. "
+            "Please input 'on' or 'off'.",
+            LONG_OPTIONS[opt].name, cmdInfo.args[opt]);
         return MSPROF_DAEMON_ERROR;
     }
     return MSPROF_DAEMON_OK;
 }
 
-void InputParser::ParamsSwitchValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::ParamsSwitchValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     if (opt >= NR_ARGS) {
         return;
@@ -1533,10 +1687,7 @@ void InputParser::ParamsSwitchValid(const struct MsprofCmdInfo &cmdInfo, int32_t
     }
 }
 
-
-
-
-int32_t InputParser::MsprofCmdCheckValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+int32_t InputParser::MsprofCmdCheckValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t ret = MSPROF_DAEMON_OK;
     if (opt > NR_ARGS) {
@@ -1586,7 +1737,7 @@ int32_t InputParser::MsprofCmdCheckValid(const struct MsprofCmdInfo &cmdInfo, in
     return ret;
 }
 
-void InputParser::SetSwitchParam(int32_t opt, const char *value)
+void InputParser::SetSwitchParam(int32_t opt, const char* value)
 {
     switch (opt) {
         case ARGS_IO_PROFILING:
@@ -1638,16 +1789,13 @@ void InputParser::SetSwitchParam(int32_t opt, const char *value)
 
 bool InputParser::IsSwitchValid2Handled(int32_t opt) const
 {
-    return opt == ARGS_IO_PROFILING || opt == ARGS_INTERCONNECTION_PROFILING ||
-        opt == ARGS_DVPP_PROFILING || opt == ARGS_SYS_LOW_POWER ||
-        opt == ARGS_L2_PROFILING || opt == ARGS_AICPU ||
-        opt == ARGS_ANALYZE || opt == ARGS_PARSE ||
-        opt == ARGS_QUERY || opt == ARGS_EXPORT ||
-        opt == ARGS_CLEAR || opt == ARGS_MSPROFTX ||
-        opt == ARGS_MSTX_DOMAIN_INCLUDE || opt == ARGS_MSTX_DOMAIN_EXCLUDE;
+    return opt == ARGS_IO_PROFILING || opt == ARGS_INTERCONNECTION_PROFILING || opt == ARGS_DVPP_PROFILING ||
+           opt == ARGS_SYS_LOW_POWER || opt == ARGS_L2_PROFILING || opt == ARGS_AICPU || opt == ARGS_ANALYZE ||
+           opt == ARGS_PARSE || opt == ARGS_QUERY || opt == ARGS_EXPORT || opt == ARGS_CLEAR || opt == ARGS_MSPROFTX ||
+           opt == ARGS_MSTX_DOMAIN_INCLUDE || opt == ARGS_MSTX_DOMAIN_EXCLUDE;
 }
 
-void InputParser::ParamsSwitchValid2(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::ParamsSwitchValid2(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     if (opt == ARGS_TASK_BLOCK) {
         SetTaskBlockParam(cmdInfo.args[opt]);
@@ -1658,7 +1806,7 @@ void InputParser::ParamsSwitchValid2(const struct MsprofCmdInfo &cmdInfo, int32_
     }
 }
 
-void InputParser::SetTaskBlockParam(const char *argValue)
+void InputParser::SetTaskBlockParam(const char* argValue)
 {
     if (strcmp(argValue, MSVP_PROF_ALL) == 0) {
         params_->taskBlock = MSVP_PROF_ON;
@@ -1669,10 +1817,7 @@ void InputParser::SetTaskBlockParam(const char *argValue)
     }
 }
 
-
-
-
-int32_t InputParser::MsprofCmdCheckValid2(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+int32_t InputParser::MsprofCmdCheckValid2(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t ret = MSPROF_DAEMON_OK;
     switch (opt) {
@@ -1714,7 +1859,7 @@ int32_t InputParser::MsprofCmdCheckValid2(const struct MsprofCmdInfo &cmdInfo, i
     return ret;
 }
 
-int32_t InputParser::MsprofFreqCheckValidTwo(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const
+int32_t InputParser::MsprofFreqCheckValidTwo(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     int32_t ret = MSPROF_DAEMON_OK;
     switch (opt) {
@@ -1740,11 +1885,11 @@ int32_t InputParser::MsprofFreqCheckValidTwo(const struct MsprofCmdInfo &cmdInfo
     return ret;
 }
 
-void InputParser::MsprofFreqTransferParams(const struct MsprofCmdInfo &cmdInfo, int32_t opt)
+void InputParser::MsprofFreqTransferParams(const struct MsprofCmdInfo& cmdInfo, int32_t opt)
 {
     int32_t interval = 0;
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(interval, cmdInfo.args[opt]), return, 
-        "interval %s is invalid", cmdInfo.args[opt]);
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToInt32(interval, cmdInfo.args[opt]), return, "interval %s is invalid", cmdInfo.args[opt]);
     if (interval < 1) {
         return;
     }
@@ -1789,9 +1934,6 @@ void InputParser::MsprofFreqTransferParams(const struct MsprofCmdInfo &cmdInfo, 
     }
 }
 
-
-
-
 void ArgsManager::AddArgs()
 {
     AddStorageLimitArgs();
@@ -1809,10 +1951,10 @@ void ArgsManager::AddArgs()
     AddDvvpArgs();
     AddL2Args();
     AddHostArgs();
-    #ifndef BUILD_PROFILING_OPEN_PROJECT
+#ifndef BUILD_PROFILING_OPEN_PROJECT
     AddStarsArgs();
     AddLowPowerArgs();
-    #endif // BUILD_PROFILING_OPEN_PROJECT
+#endif // BUILD_PROFILING_OPEN_PROJECT
     AddDynProfArgs();
     AddDelayDurationArgs();
     AddScaleArgs();
@@ -1824,13 +1966,14 @@ void ArgsManager::AddHardWareMemArgs()
     auto hardwareMemFreq = Args("sys-hardware-mem-freq", "", "50");
     if (Platform::instance()->CheckIfSupport(PLATFORM_SYS_DEVICE_US)) {
         hardwareMem.SetDetail("QOS, HBM, LLC, SOC and mem acquisition switch, optional on / off, "
-            "the default value is off.");
-        hardwareMemFreq.SetDetail("QOS, HBM, LLC, SOC and mem acquisition frequency, "
+                              "the default value is off.");
+        hardwareMemFreq.SetDetail(
+            "QOS, HBM, LLC, SOC and mem acquisition frequency, "
             "range 1 ~ 10000 for QOS and SOC, 1 ~ 100 for HBM, LLC and mem, the default value is 50, unit Hz.");
     } else {
         hardwareMem.SetDetail("LLC, DDR, HBM acquisition switch, optional on / off, the default value is off.");
         hardwareMemFreq.SetDetail("LLC, DDR, HBM acquisition frequency, range 1 ~ 100, "
-                                "the default value is 50, unit Hz.");
+                                  "the default value is 50, unit Hz.");
     }
     auto llcProfiling = Args("llc-profiling", "", "capacity");
     llcProfiling.SetDetail("The llc profiling groups, include read, write. the default value is read.");
@@ -1844,57 +1987,69 @@ void ArgsManager::AddHardWareMemArgs()
 
 ArgsManager::ArgsManager()
 {
-    std::string task_trace_ranges = Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3)
-                ? "'l0', 'l1', 'l2', 'l3', 'on' or 'off'." 
-                : "'l0', 'l1', 'l2', 'on' or 'off'.";
+    std::string task_trace_ranges = Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3) ?
+                                        "'l0', 'l1', 'l2', 'l3', 'on' or 'off'." :
+                                        "'l0', 'l1', 'l2', 'on' or 'off'.";
     argsList_ = {
-    {"output", "Specify the directory that is used for storing data results."},
-    {"application", "Specify application path, considering the risk of privilege escalation, please pay attention to\n"
-        "\t\t\t\t\t\t   the group of the application and confirm whether it is the same as the user currently.\n"
-        "\t\t\t\t\t\t   [Note] This option will be discarded in later versions.\n"
-        "\t\t\t\t\t\t   you can try to use: msprof [msprof arguments] <app> [app arguments]"},
-    {"ascendcl", "Show acl profiling data, the default value is on.", ON},
-    {"ge-api", "Specify if report GE event, the default value is off. "
-        "The possible parameters are 'l0', 'l1' or 'off'.", OFF},
-    {"runtime-api", "Show runtime api profiling data, the default value is off.", OFF},
-    {"task-time", "Show task profiling data, the default value is on. "
-        "The possible parameters are " + task_trace_ranges, ON},
-    {"task-trace", "Show task profiling data, the default value is on."
-        "The possible parameters are " + task_trace_ranges, ON},
-    {"task-tsfw", "Specify the start of collection of ts management data, the default value is off.", OFF},
-    {"task-memory", "Show the memory usage of the operator, the default value is off. "
-        "The possible parameters are 'on' or 'off'.", ON},
-    {"ai-core", "Turn on / off the ai core profiling, the default value is on when collecting app Profiling.", ON},
-    {"aic-mode", "Set the aic profiling mode to task-based or sample-based.\n"
-                  "\t\t\t\t\t\t   In task-based mode, profiling data will be collected by tasks.\n"
-                  "\t\t\t\t\t\t   In sample-based mode, profiling data will be collected in a specific interval.\n"
-                  "\t\t\t\t\t\t   The default value is task-based in AI task mode, sample-based in system mode.",
-                  TASK_BASED},
-    {"aic-freq", "The aic sampling frequency in hertz, "
-                "the default value is 100 Hz, the range is 1 to 100 Hz.", "100"},
-    {"environment", "User app custom environment variable configuration."},
-    {"sys-period", "Set total sampling period of system profiling in seconds."},
-    {"sys-devices", "Specify the profiling scope by device ID when collect sys profiling."
-                     "The value is all or ID list (split with ',')."},
-    {"hccl", "Show hccl profiling data, the default value is off. "
-                "[Note] This option will be discarded in later versions.", OFF},
-    {"msproftx", "Show msproftx and mstx data, the default value is off.", OFF},
-    {"mstx-domain-include", "Choose to only include mstx events from a comma separated list of domains;\n"
-        "\t\t\t\t\t\t   `default` filters the mstx default domain;\n"
-        "\t\t\t\t\t\t   The switch is only applicable when parameter msproftx is set to on;\n"
-        "\t\t\t\t\t\t   The switch cannot be set with mstx-domain-exclude at the same time."},
-    {"mstx-domain-exclude", "Choose to exclude mstx events from a comma separated list of domains;\n"
-        "\t\t\t\t\t\t   `default` excludes the mstx default domain;\n"
-        "\t\t\t\t\t\t   The switch is only applicable when parameter msproftx is set to on;\n"
-        "\t\t\t\t\t\t   The switch cannot be set with mstx-domain-include at the same time."}
-    };
+        {"output", "Specify the directory that is used for storing data results."},
+        {"application",
+         "Specify application path, considering the risk of privilege escalation, please pay attention to\n"
+         "\t\t\t\t\t\t   the group of the application and confirm whether it is the same as the user currently.\n"
+         "\t\t\t\t\t\t   [Note] This option will be discarded in later versions.\n"
+         "\t\t\t\t\t\t   you can try to use: msprof [msprof arguments] <app> [app arguments]"},
+        {"ascendcl", "Show acl profiling data, the default value is on.", ON},
+        {"ge-api",
+         "Specify if report GE event, the default value is off. "
+         "The possible parameters are 'l0', 'l1' or 'off'.",
+         OFF},
+        {"runtime-api", "Show runtime api profiling data, the default value is off.", OFF},
+        {"task-time",
+         "Show task profiling data, the default value is on. "
+         "The possible parameters are " +
+             task_trace_ranges,
+         ON},
+        {"task-trace",
+         "Show task profiling data, the default value is on."
+         "The possible parameters are " +
+             task_trace_ranges,
+         ON},
+        {"task-tsfw", "Specify the start of collection of ts management data, the default value is off.", OFF},
+        {"task-memory",
+         "Show the memory usage of the operator, the default value is off. "
+         "The possible parameters are 'on' or 'off'.",
+         ON},
+        {"ai-core", "Turn on / off the ai core profiling, the default value is on when collecting app Profiling.", ON},
+        {"aic-mode",
+         "Set the aic profiling mode to task-based or sample-based.\n"
+         "\t\t\t\t\t\t   In task-based mode, profiling data will be collected by tasks.\n"
+         "\t\t\t\t\t\t   In sample-based mode, profiling data will be collected in a specific interval.\n"
+         "\t\t\t\t\t\t   The default value is task-based in AI task mode, sample-based in system mode.",
+         TASK_BASED},
+        {"aic-freq",
+         "The aic sampling frequency in hertz, "
+         "the default value is 100 Hz, the range is 1 to 100 Hz.",
+         "100"},
+        {"environment", "User app custom environment variable configuration."},
+        {"sys-period", "Set total sampling period of system profiling in seconds."},
+        {"sys-devices", "Specify the profiling scope by device ID when collect sys profiling."
+                        "The value is all or ID list (split with ',')."},
+        {"hccl",
+         "Show hccl profiling data, the default value is off. "
+         "[Note] This option will be discarded in later versions.",
+         OFF},
+        {"msproftx", "Show msproftx and mstx data, the default value is off.", OFF},
+        {"mstx-domain-include", "Choose to only include mstx events from a comma separated list of domains;\n"
+                                "\t\t\t\t\t\t   `default` filters the mstx default domain;\n"
+                                "\t\t\t\t\t\t   The switch is only applicable when parameter msproftx is set to on;\n"
+                                "\t\t\t\t\t\t   The switch cannot be set with mstx-domain-exclude at the same time."},
+        {"mstx-domain-exclude", "Choose to exclude mstx events from a comma separated list of domains;\n"
+                                "\t\t\t\t\t\t   `default` excludes the mstx default domain;\n"
+                                "\t\t\t\t\t\t   The switch is only applicable when parameter msproftx is set to on;\n"
+                                "\t\t\t\t\t\t   The switch cannot be set with mstx-domain-include at the same time."}};
     AddArgs();
     Args help = {"help", "help message."};
     argsList_.push_back(help);
 }
-
-
-
 
 void ArgsManager::AddStorageLimitArgs()
 {
@@ -1911,12 +2066,15 @@ void ArgsManager::AddModelExecutionArgs()
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-    ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
         return;
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    Args modelExecutionArgs = {"model-execution", "Show ge model execution profiling data, the default value is off. "
-        "[Note] This option will be discarded in later versions.", OFF};
+    Args modelExecutionArgs = {
+        "model-execution",
+        "Show ge model execution profiling data, the default value is off. "
+        "[Note] This option will be discarded in later versions.",
+        OFF};
     argsList_.push_back(modelExecutionArgs);
 }
 
@@ -1942,15 +2100,21 @@ void ArgsManager::AddAivArgs()
         return;
     }
     Args aiv = {"ai-vector-core", "Turn on / off the ai vector core profiling, the default value is on.", ON};
-    Args aivMode = {"aiv-mode", "Set the aiv profiling mode to task-based or sample-based.\n"
+    Args aivMode = {
+        "aiv-mode",
+        "Set the aiv profiling mode to task-based or sample-based.\n"
         "\t\t\t\t\t\t   In task-based mode, profiling data will be collected by tasks.\n"
         "\t\t\t\t\t\t   In sample-based mode, profiling data will be collected in a specific interval.\n"
         "\t\t\t\t\t\t   The default value is task-based in AI task mode, sample-based in system mode.",
         TASK_BASED};
-    Args aivFreq = {"aiv-freq", "The aiv sampling frequency in hertz, "
+    Args aivFreq = {
+        "aiv-freq",
+        "The aiv sampling frequency in hertz, "
         "the default value is 100 Hz, the range is 1 to 100 Hz.",
         "100"};
-    Args aivMetrics = {"aiv-metrics", "The aiv metrics groups, "
+    Args aivMetrics = {
+        "aiv-metrics",
+        "The aiv metrics groups, "
         "include ArithmeticUtilization, PipeUtilization, "
         "Memory, MemoryL0, ResourceConflictRatio, MemoryUB.\n"
         "\t\t\t\t\t\t   the default value is PipeUtilization.",
@@ -1966,16 +2130,18 @@ void ArgsManager::AddIoArgs()
 {
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::DC_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ) {
+    ) {
         return;
     }
     Args ioArgs = {"sys-io-profiling", "NIC acquisition switch, the default value is off.", OFF};
-    Args ioFreqArgs = {"sys-io-sampling-freq", "NIC acquisition frequency, range 1 ~ 100, "
+    Args ioFreqArgs = {
+        "sys-io-sampling-freq",
+        "NIC acquisition frequency, range 1 ~ 100, "
         "the default value is 100, unit Hz.",
         "100"};
 
@@ -1984,13 +2150,13 @@ void ArgsManager::AddIoArgs()
         ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE) {
         ioArgs.SetDetail("NIC, ROCE acquisition switch, the default value is off.");
         ioFreqArgs.SetDetail("NIC, ROCE acquisition frequency, range 1 ~ 100, "
-                               "the default value is 100, unit Hz.");
+                             "the default value is 100, unit Hz.");
     }
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V3) {
         ioArgs.SetDetail("UB acquisition switch, the default value is off.");
         ioFreqArgs.SetDetail("UB acquisition frequency, range 1 ~ 100, "
-                               "the default value is 100, unit Hz.");
+                             "the default value is 100, unit Hz.");
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
     argsList_.push_back(ioArgs);
@@ -2001,33 +2167,34 @@ void ArgsManager::AddInterArgs()
 {
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        ) {
+    ) {
         return;
     }
-    Args interArgs = {"sys-interconnection-profiling",
-        "PCIE, HCCS acquisition switch, the default value is off.",
-        OFF};
-    Args interFreq = {"sys-interconnection-freq", "PCIE, HCCS acquisition frequency, range 1 ~ 50, "
+    Args interArgs = {"sys-interconnection-profiling", "PCIE, HCCS acquisition switch, the default value is off.", OFF};
+    Args interFreq = {
+        "sys-interconnection-freq",
+        "PCIE, HCCS acquisition frequency, range 1 ~ 50, "
         "the default value is 50, unit Hz.",
         "50"};
     if (ConfigManager::instance()->GetPlatformType() != PlatformType::CLOUD_TYPE &&
         ConfigManager::instance()->GetPlatformType() != PlatformType::CHIP_V4_1_0) {
-        interArgs = {"sys-interconnection-profiling",
-            "PCIE acquisition switch, the default value is off.",
-            OFF};
-        interFreq = {"sys-interconnection-freq", "PCIE acquisition frequency, range 1 ~ 50, "
-            "the default value is 50, unit Hz.", "50"};
+        interArgs = {"sys-interconnection-profiling", "PCIE acquisition switch, the default value is off.", OFF};
+        interFreq = {
+            "sys-interconnection-freq",
+            "PCIE acquisition frequency, range 1 ~ 50, "
+            "the default value is 50, unit Hz.",
+            "50"};
     }
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V3) {
         interArgs.SetDetail("PCIE, CCU, SIO and UB acquisition switch, the default value is off.");
         interFreq.SetDetail("PCIE, CCU, SIO and UB acquisition frequency, range 1 ~ 50, "
-            "the default value is 50, unit Hz.");
+                            "the default value is 50, unit Hz.");
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
     argsList_.push_back(interArgs);
@@ -2050,12 +2217,14 @@ void ArgsManager::AddL2Args()
         smmu = " and SMMU";
     }
     Args l2 = {"l2", "L2 Cache" + smmu + " acquisition switch. The default value is off.", OFF};
-    Args npuEvents = {"npu-events", "Customize soc pmu parameters for collection. "
-        "The input is hexadecimal number starting with 0x. Maximum of 8 parameters can be received for MATA and SMMU."
-        + noc};
+    Args npuEvents = {
+        "npu-events",
+        "Customize soc pmu parameters for collection. "
+        "The input is hexadecimal number starting with 0x. Maximum of 8 parameters can be received for MATA and SMMU." +
+            noc};
     argsList_.push_back(l2);
     argsList_.push_back(npuEvents);
 }
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis

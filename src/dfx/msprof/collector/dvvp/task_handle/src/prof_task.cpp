@@ -36,14 +36,10 @@ using namespace analysis::dvvp::message;
 using namespace analysis::dvvp::transport;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-ProfTask::ProfTask(const std::vector<std::string> &devices,
-                   SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
-    : params_(param),
-      currDevicesV_(devices),
-      isInited_(false),
-      isFinished_(false)
-{
-}
+ProfTask::ProfTask(
+    const std::vector<std::string>& devices, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param)
+    : params_(param), currDevicesV_(devices), isInited_(false), isFinished_(false)
+{}
 
 ProfTask::~ProfTask()
 {
@@ -86,7 +82,7 @@ int32_t ProfTask::Uinit()
     return PROFILING_SUCCESS;
 }
 
-bool ProfTask::IsDeviceRunProfiling(const std::string &devStr)
+bool ProfTask::IsDeviceRunProfiling(const std::string& devStr)
 {
     std::lock_guard<std::mutex> lck(devicesMtx_);
     auto iter = std::find(currDevicesV_.begin(), currDevicesV_.end(), devStr);
@@ -96,13 +92,13 @@ bool ProfTask::IsDeviceRunProfiling(const std::string &devStr)
     return false;
 }
 
-std::string ProfTask::GetDevicesStr(const std::vector<std::string> &events) const
+std::string ProfTask::GetDevicesStr(const std::vector<std::string>& events) const
 {
     analysis::dvvp::common::utils::UtilsStringBuilder<std::string> builder;
     return builder.Join(events, ",");
 }
 
-void ProfTask::GenerateFileName(bool isStartTime, std::string &filename)
+void ProfTask::GenerateFileName(bool isStartTime, std::string& filename)
 {
     if (!isStartTime) {
         filename.append("end_info");
@@ -151,7 +147,7 @@ int32_t ProfTask::CreateCollectionTimeInfo(std::string collectionTime, bool isSt
     std::string content;
     try {
         content = EncodeTimeInfoJson(timeInfo);
-    } catch (const std::runtime_error &error) {
+    } catch (const std::runtime_error& error) {
         return PROFILING_FAILED;
     }
     MSPROF_LOGI("[CreateCollectionTimeInfo]content:%s", content.c_str());
@@ -160,11 +156,11 @@ int32_t ProfTask::CreateCollectionTimeInfo(std::string collectionTime, bool isSt
     jobCtx->job_id = params_->job_id;
     std::string fileName;
     GenerateFileName(isStartTime, fileName);
-    analysis::dvvp::transport::FileDataParams fileDataParams(fileName, true,
-                                                             FileChunkDataModule::PROFILING_IS_CTRL_DATA);
+    analysis::dvvp::transport::FileDataParams fileDataParams(
+        fileName, true, FileChunkDataModule::PROFILING_IS_CTRL_DATA);
     MSPROF_LOGI("[CreateCollectionTimeInfo]job_id: %s,fileName: %s", params_->job_id.c_str(), fileName.c_str());
-    const int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params_->job_id, content,
-                                                                                     fileDataParams, jobCtx);
+    const int32_t ret = analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(
+        params_->job_id, content, fileDataParams, jobCtx);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to upload data for %s", fileName.c_str());
         return PROFILING_FAILED;
@@ -199,19 +195,19 @@ int32_t ProfTask::GetHostAndDeviceInfo()
     } else {
         fileName.append(INFO_FILE_NAME).append(".").append(params_->devices);
     }
-    analysis::dvvp::transport::FileDataParams fileDataParams(fileName, true,
-                                                             FileChunkDataModule::PROFILING_IS_CTRL_DATA);
+    analysis::dvvp::transport::FileDataParams fileDataParams(
+        fileName, true, FileChunkDataModule::PROFILING_IS_CTRL_DATA);
     MSPROF_LOGI("[GetHostAndDeviceInfo]storeStartTime.id: %s,fileName: %s", params_->job_id.c_str(), fileName.c_str());
 
-    if (analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params_->job_id, content, fileDataParams,
-        jobCtx) != PROFILING_SUCCESS) {
+    if (analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(
+            params_->job_id, content, fileDataParams, jobCtx) != PROFILING_SUCCESS) {
         MSPROF_LOGE("[GetHostAndDeviceInfo]Failed to upload data for %s", fileName.c_str());
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
 }
 
-void ProfTask::StartDevices(const std::vector<std::string> &devicesVec)
+void ProfTask::StartDevices(const std::vector<std::string>& devicesVec)
 {
     std::lock_guard<std::mutex> lck(devicesMtx_);
     for (size_t i = 0; i < devicesVec.size(); i++) {
@@ -221,8 +217,8 @@ void ProfTask::StartDevices(const std::vector<std::string> &devicesVec)
         const auto iter = devicesMap_.find(devicesVec[i]);
         if (iter != devicesMap_.end()) {
             MSPROF_LOGE("Device %s is already running profiling, skip the device.", devicesVec[i].c_str());
-            MSPROF_INNER_ERROR("EK9999", "Device %s is already running profiling, skip the device.",
-                               devicesVec[i].c_str());
+            MSPROF_INNER_ERROR(
+                "EK9999", "Device %s is already running profiling, skip the device.", devicesVec[i].c_str());
             continue;
         }
 
@@ -272,7 +268,7 @@ void ProfTask::ProcessDefMode()
     MSPROF_EVENT("ProfTask %s finished waiting for task stop cv", params_->job_id.c_str());
 }
 
-int32_t ProfTask::NotifyFileDoneForDevice(const std::string &fileName, const std::string &devId) const
+int32_t ProfTask::NotifyFileDoneForDevice(const std::string& fileName, const std::string& devId) const
 {
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
     MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return PROFILING_FAILED);
@@ -288,12 +284,15 @@ int32_t ProfTask::NotifyFileDoneForDevice(const std::string &fileName, const std
     fileChunk->extraInfo = Utils::PackDotInfo(jobCtx.job_id, jobCtx.dev_id);
 
     const int32_t ret = WriteStreamData(fileChunk);
-    FUNRET_CHECK_EXPR_LOGW(ret != PROFILING_SUCCESS, "NotifyFileDoneForDevice did not execute successfully,"
-        "jobId:%s, filename:%s, devId:%s", jobCtx.job_id.c_str(), fileName.c_str(), devId.c_str());
+    FUNRET_CHECK_EXPR_LOGW(
+        ret != PROFILING_SUCCESS,
+        "NotifyFileDoneForDevice did not execute successfully,"
+        "jobId:%s, filename:%s, devId:%s",
+        jobCtx.job_id.c_str(), fileName.c_str(), devId.c_str());
     return PROFILING_SUCCESS;
 }
 
-void ProfTask::Run(const struct error_message::Context &errorContext)
+void ProfTask::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     // process prepare
@@ -359,15 +358,9 @@ int32_t ProfTask::WriteStreamData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
     return PROFILING_FAILED;
 }
 
-void ProfTask::SetIsFinished(bool finished)
-{
-    isFinished_ = finished;
-}
+void ProfTask::SetIsFinished(bool finished) { isFinished_ = finished; }
 
-bool ProfTask::GetIsFinished() const
-{
-    return isFinished_;
-}
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+bool ProfTask::GetIsFinished() const { return isFinished_; }
+} // namespace host
+} // namespace dvvp
+} // namespace analysis

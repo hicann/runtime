@@ -31,49 +31,46 @@ public:
     int32_t Handle(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 
 public:
-    SHARED_PTR_ALIA<ProfTask> GetTask(const std::string &jobId);
-    int32_t StopTask(const std::string &jobId);
-    int32_t OnTaskFinished(const std::string &jobId);
-    int32_t WriteCtrlDataToFile(const std::string &absolutePath, const std::string &data, int32_t dataLen) const;
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> HandleProfilingParams(uint32_t deviceId,
-        const std::string &sampleConfig) const;
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> CreateAndParseParams(
-        const std::string &sampleConfig) const;
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ValidateAndProcessParams(uint32_t deviceId,
-        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string &sampleConfig) const;
+    SHARED_PTR_ALIA<ProfTask> GetTask(const std::string& jobId);
+    int32_t StopTask(const std::string& jobId);
+    int32_t OnTaskFinished(const std::string& jobId);
+    int32_t WriteCtrlDataToFile(const std::string& absolutePath, const std::string& data, int32_t dataLen) const;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> HandleProfilingParams(
+        uint32_t deviceId, const std::string& sampleConfig) const;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> CreateAndParseParams(const std::string& sampleConfig) const;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ValidateAndProcessParams(
+        uint32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
+        const std::string& sampleConfig) const;
     int32_t IdeCloudProfileProcess(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
-    bool CheckIfDevicesOnline(const std::string paramsDevices, std::string &statusInfo) const;
+    bool CheckIfDevicesOnline(const std::string paramsDevices, std::string& statusInfo) const;
 
 protected:
-    ProfManager() : isInited_(false)
-    {
-    }
-    ~ProfManager() override
-    {
-    }
+    ProfManager() : isInited_(false) {}
+    ~ProfManager() override {}
 
 private:
     std::string GetParamJsonStr(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
-    bool CreateSampleJsonFile(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                              const std::string &resultDir) const;
-    bool CheckHandleSuc(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                        analysis::dvvp::message::StatusInfo &statusInfo);
+    bool CreateSampleJsonFile(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string& resultDir) const;
+    bool CheckHandleSuc(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
+        analysis::dvvp::message::StatusInfo& statusInfo);
     int32_t ProcessHandleFailed(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
 
 private:
-    int32_t LaunchTask(SHARED_PTR_ALIA<ProfTask> task, const std::string &jobId, std::string &info);
-    SHARED_PTR_ALIA<ProfTask> GetTaskNoLock(const std::string &jobId);
-    bool IsDeviceProfiling(const std::vector<std::string> &devices);
-    bool CreateDoneFile(const std::string &absolutePath, const std::string &fileSize) const;
-    bool PreGetDeviceList(std::vector<int32_t> &devIds) const;
+    int32_t LaunchTask(SHARED_PTR_ALIA<ProfTask> task, const std::string& jobId, std::string& info);
+    SHARED_PTR_ALIA<ProfTask> GetTaskNoLock(const std::string& jobId);
+    bool IsDeviceProfiling(const std::vector<std::string>& devices);
+    bool CreateDoneFile(const std::string& absolutePath, const std::string& fileSize) const;
+    bool PreGetDeviceList(std::vector<int32_t>& devIds) const;
 
 private:
     bool isInited_;
     std::mutex taskMtx_;
-    std::map<std::string, SHARED_PTR_ALIA<ProfTask> > _tasks;  // taskptr, task
+    std::map<std::string, SHARED_PTR_ALIA<ProfTask> > _tasks; // taskptr, task
 };
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace host
+} // namespace dvvp
+} // namespace analysis
 
 #endif

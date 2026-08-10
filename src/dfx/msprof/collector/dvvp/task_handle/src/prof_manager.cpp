@@ -61,7 +61,7 @@ int32_t ProfManager::AclUinit()
     return PROFILING_SUCCESS;
 }
 
-bool ProfManager::CreateDoneFile(const std::string &absolutePath, const std::string &fileSize) const
+bool ProfManager::CreateDoneFile(const std::string& absolutePath, const std::string& fileSize) const
 {
     std::ofstream file;
 
@@ -82,8 +82,8 @@ bool ProfManager::CreateDoneFile(const std::string &absolutePath, const std::str
     return true;
 }
 
-int32_t ProfManager::WriteCtrlDataToFile(const std::string &absolutePath, const std::string &data,
-    int32_t dataLen) const
+int32_t ProfManager::WriteCtrlDataToFile(
+    const std::string& absolutePath, const std::string& data, int32_t dataLen) const
 {
     std::ofstream file;
 
@@ -126,8 +126,8 @@ std::string ProfManager::GetParamJsonStr(SHARED_PTR_ALIA<analysis::dvvp::message
     return object.ToString();
 }
 
-bool ProfManager::CreateSampleJsonFile(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                                       const std::string &resultDir) const
+bool ProfManager::CreateSampleJsonFile(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string& resultDir) const
 {
     if (resultDir.empty()) {
         return true;
@@ -150,14 +150,15 @@ bool ProfManager::CreateSampleJsonFile(SHARED_PTR_ALIA<analysis::dvvp::message::
     return true;
 }
 
-bool ProfManager::CheckHandleSuc(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-                                 analysis::dvvp::message::StatusInfo &statusInfo)
+bool ProfManager::CheckHandleSuc(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, analysis::dvvp::message::StatusInfo& statusInfo)
 {
     bool isOk = false;
     do {
-        MSPROF_LOGI("jobId:%s, period:%d, devices:%s, is_cancel:%d", params->job_id.c_str(), params->profiling_period,
-                    params->devices.c_str(), params->isCancel);
-        if (params->isCancel) {  // judge is_cancel
+        MSPROF_LOGI(
+            "jobId:%s, period:%d, devices:%s, is_cancel:%d", params->job_id.c_str(), params->profiling_period,
+            params->devices.c_str(), params->isCancel);
+        if (params->isCancel) { // judge is_cancel
             StopTask(params->job_id);
             isOk = true;
             break;
@@ -170,8 +171,9 @@ bool ProfManager::CheckHandleSuc(SHARED_PTR_ALIA<analysis::dvvp::message::Profil
         if (IsDeviceProfiling(devices)) {
             statusInfo.info = "device is already in profiling, skip the task";
             MSPROF_LOGE("Device is already in profiling");
-            MSPROF_INNER_ERROR("EK9999", "Device is already in profiling, device id: %s, job id: %s.",
-                params->devices.c_str(), params->job_id.c_str());
+            MSPROF_INNER_ERROR(
+                "EK9999", "Device is already in profiling, device id: %s, job id: %s.", params->devices.c_str(),
+                params->job_id.c_str());
             break;
         }
         SHARED_PTR_ALIA<ProfTask> task = nullptr;
@@ -179,8 +181,9 @@ bool ProfManager::CheckHandleSuc(SHARED_PTR_ALIA<analysis::dvvp::message::Profil
         const int32_t ret = LaunchTask(task, params->job_id, statusInfo.info);
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("Failed to launch profiling task.");
-            MSPROF_INNER_ERROR("EK9999", "Failed to launch profiling task, device id: %s, job id: %s.",
-                params->devices.c_str(), params->job_id.c_str());
+            MSPROF_INNER_ERROR(
+                "EK9999", "Failed to launch profiling task, device id: %s, job id: %s.", params->devices.c_str(),
+                params->job_id.c_str());
             break;
         }
         isOk = true;
@@ -196,11 +199,13 @@ int32_t ProfManager::ProcessHandleFailed(SHARED_PTR_ALIA<analysis::dvvp::message
     std::vector<std::string> devices = Utils::Split(params->devices, false, "", ",");
     for (size_t ii = 0; ii < devices.size(); ++ii) {
         MSPROF_LOGE("handle task failed, devid:%s, jobid:%s", devices[ii].c_str(), jobId.c_str());
-        MSPROF_INNER_ERROR("EK9999", "Failed to handle profiling task, device id: %s, job id: %s.",
-            devices[ii].c_str(), jobId.c_str());
+        MSPROF_INNER_ERROR(
+            "EK9999", "Failed to handle profiling task, device id: %s, job id: %s.", devices[ii].c_str(),
+            jobId.c_str());
         int32_t devId = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devId, devices[ii]), return PROFILING_FAILED, 
-            "devices[%zu] %s is invalid", ii, devices[ii].c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(devId, devices[ii]), return PROFILING_FAILED, "devices[%zu] %s is invalid", ii,
+            devices[ii].c_str());
         Msprofiler::Api::DeviceResponse(devId);
     }
     return PROFILING_SUCCESS;
@@ -236,7 +241,7 @@ int32_t ProfManager::Handle(SHARED_PTR_ALIA<analysis::dvvp::message::ProfilePara
     return PROFILING_FAILED;
 }
 
-bool ProfManager::IsDeviceProfiling(const std::vector<std::string> &devices)
+bool ProfManager::IsDeviceProfiling(const std::vector<std::string>& devices)
 {
     for (size_t ii = 0; ii < devices.size(); ++ii) {
         for (auto iter = _tasks.begin(); iter != _tasks.end();) {
@@ -256,7 +261,7 @@ bool ProfManager::IsDeviceProfiling(const std::vector<std::string> &devices)
     return false;
 }
 
-int32_t ProfManager::OnTaskFinished(const std::string &jobId)
+int32_t ProfManager::OnTaskFinished(const std::string& jobId)
 {
     std::lock_guard<std::mutex> lk(taskMtx_);
     const auto iter = _tasks.find(jobId);
@@ -269,7 +274,7 @@ int32_t ProfManager::OnTaskFinished(const std::string &jobId)
     return PROFILING_SUCCESS;
 }
 
-SHARED_PTR_ALIA<ProfTask> ProfManager::GetTaskNoLock(const std::string &jobId)
+SHARED_PTR_ALIA<ProfTask> ProfManager::GetTaskNoLock(const std::string& jobId)
 {
     SHARED_PTR_ALIA<ProfTask> task = nullptr;
     auto iter = _tasks.find(jobId);
@@ -280,13 +285,13 @@ SHARED_PTR_ALIA<ProfTask> ProfManager::GetTaskNoLock(const std::string &jobId)
     return task;
 }
 
-SHARED_PTR_ALIA<ProfTask> ProfManager::GetTask(const std::string &jobId)
+SHARED_PTR_ALIA<ProfTask> ProfManager::GetTask(const std::string& jobId)
 {
     std::lock_guard<std::mutex> lk(taskMtx_);
     return GetTaskNoLock(jobId);
 }
 
-int32_t ProfManager::LaunchTask(SHARED_PTR_ALIA<ProfTask> task, const std::string &jobId, std::string &info)
+int32_t ProfManager::LaunchTask(SHARED_PTR_ALIA<ProfTask> task, const std::string& jobId, std::string& info)
 {
     MSPROF_EVENT("Begin to launch task, jobId:%s", jobId.c_str());
     if (task == nullptr) {
@@ -319,7 +324,7 @@ int32_t ProfManager::LaunchTask(SHARED_PTR_ALIA<ProfTask> task, const std::strin
     return ret;
 }
 
-int32_t ProfManager::StopTask(const std::string &jobId)
+int32_t ProfManager::StopTask(const std::string& jobId)
 {
     MSPROF_EVENT("Begin to stop task, jobId:%s", jobId.c_str());
     auto task = GetTask(jobId);
@@ -337,7 +342,7 @@ int32_t ProfManager::StopTask(const std::string &jobId)
 }
 
 SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::HandleProfilingParams(
-    uint32_t deviceId, const std::string &sampleConfig) const
+    uint32_t deviceId, const std::string& sampleConfig) const
 {
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = CreateAndParseParams(sampleConfig);
     if (params == nullptr) {
@@ -348,7 +353,7 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::HandleProfi
 }
 
 SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::CreateAndParseParams(
-    const std::string &sampleConfig) const
+    const std::string& sampleConfig) const
 {
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
     MSVP_MAKE_SHARED0(params, analysis::dvvp::message::ProfileParams, return nullptr);
@@ -361,8 +366,9 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::CreateAndPa
     return params;
 }
 
-SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAndProcessParams(uint32_t deviceId,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string &sampleConfig) const
+SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAndProcessParams(
+    uint32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
+    const std::string& sampleConfig) const
 {
     MSPROF_LOGI("ValidateAndProcessParams checking params");
     if (!ParamValidation::instance()->CheckProfilingParams(params)) {
@@ -382,8 +388,9 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAnd
         }
     }
     analysis::dvvp::common::utils::Utils::EnsureEndsInSlash(params->result_dir);
-    MSPROF_LOGI("job_id:%s, result_dir:%s, app_location:%s", params->job_id.c_str(),
-                Utils::BaseName(params->result_dir).c_str(), params->app_location.c_str());
+    MSPROF_LOGI(
+        "job_id:%s, result_dir:%s, app_location:%s", params->job_id.c_str(),
+        Utils::BaseName(params->result_dir).c_str(), params->app_location.c_str());
     if (!Platform::instance()->CheckIfRpcHelper()) {
         if (!CreateSampleJsonFile(params, params->result_dir)) {
             MSPROF_LOGE("Failed to create sample.json");
@@ -400,8 +407,8 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAnd
             fileName, true, analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_CTRL_DATA);
 
         MSPROF_LOGI("ValidateAndProcessParams: %s,fileName: %s", params->job_id.c_str(), fileName.c_str());
-        if (analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params->job_id, sampleConfig,
-            fileDataParams, jobCtx) != PROFILING_SUCCESS) {
+        if (analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(
+                params->job_id, sampleConfig, fileDataParams, jobCtx) != PROFILING_SUCCESS) {
             MSPROF_LOGE("Failed to upload data for %s", fileName.c_str());
             return nullptr;
         }
@@ -433,7 +440,7 @@ int32_t ProfManager::IdeCloudProfileProcess(SHARED_PTR_ALIA<analysis::dvvp::mess
     return ret;
 }
 
-bool ProfManager::PreGetDeviceList(std::vector<int32_t> &devIds) const
+bool ProfManager::PreGetDeviceList(std::vector<int32_t>& devIds) const
 {
     const int32_t numDevices = DrvGetDevNum();
     if (numDevices <= 0) {
@@ -450,7 +457,7 @@ bool ProfManager::PreGetDeviceList(std::vector<int32_t> &devIds) const
     return true;
 }
 
-bool ProfManager::CheckIfDevicesOnline(const std::string paramsDevices, std::string &statusInfo) const
+bool ProfManager::CheckIfDevicesOnline(const std::string paramsDevices, std::string& statusInfo) const
 {
     if (paramsDevices.compare("all") == 0) {
         return true;
@@ -470,8 +477,8 @@ bool ProfManager::CheckIfDevicesOnline(const std::string paramsDevices, std::str
             return false;
         }
         int32_t devId = 0;
-        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(devId, devices[i]), return false, 
-            "devices[%zu] %s is invalid", i, devices[i].c_str());
+        FUNRET_CHECK_EXPR_ACTION(
+            !Utils::StrToInt32(devId, devices[i]), return false, "devices[%zu] %s is invalid", i, devices[i].c_str());
         if (devId == DEFAULT_HOST_ID) {
             MSPROF_LOGI("devId(%s) is host device", devices[i].c_str());
             continue;
@@ -490,6 +497,6 @@ bool ProfManager::CheckIfDevicesOnline(const std::string paramsDevices, std::str
     }
     return ret;
 }
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace host
+} // namespace dvvp
+} // namespace analysis

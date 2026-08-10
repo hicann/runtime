@@ -27,15 +27,9 @@ using namespace Analysis::Dvvp::Common::Platform;
 namespace Collector {
 namespace Dvvp {
 namespace Mstx {
-MstxDataHandler::MstxDataHandler()
-{
-    Init();
-}
+MstxDataHandler::MstxDataHandler() { Init(); }
 
-MstxDataHandler::~MstxDataHandler()
-{
-    Uninit();
-}
+MstxDataHandler::~MstxDataHandler() { Uninit(); }
 
 void MstxDataHandler::Init()
 {
@@ -54,7 +48,7 @@ void MstxDataHandler::Uninit()
     }
 }
 
-int MstxDataHandler::Start(const std::string &mstxDomainInclude, const std::string &mstxDomainExclude)
+int MstxDataHandler::Start(const std::string& mstxDomainInclude, const std::string& mstxDomainExclude)
 {
     if (start_.load()) {
         return PROFILING_SUCCESS;
@@ -77,7 +71,7 @@ int MstxDataHandler::Stop()
     return PROFILING_SUCCESS;
 }
 
-void MstxDataHandler::Run(const struct error_message::Context &errorContext)
+void MstxDataHandler::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("mstx data handler thread start");
@@ -91,18 +85,15 @@ void MstxDataHandler::Run(const struct error_message::Context &errorContext)
     MSPROF_LOGI("mstx data handler thread stop");
 }
 
-void MstxDataHandler::Flush()
-{
-    ReportData();
-}
+void MstxDataHandler::Flush() { ReportData(); }
 
-std::vector<MsprofTxInfo> MstxDataHandler::SplitMstxInfo(const MstxInfo &info)
+std::vector<MsprofTxInfo> MstxDataHandler::SplitMstxInfo(const MstxInfo& info)
 {
     std::vector<MsprofTxInfo> splitInfos;
-    const size_t maxStrValid = MAX_MESSAGE_LEN - 1;  // -1 for '\0'
+    const size_t maxStrValid = MAX_MESSAGE_LEN - 1; // -1 for '\0'
     size_t totalRawLen = info.message.size();
 
-    uint32_t segIdx = 0;  // segment index starts from 0
+    uint32_t segIdx = 0; // segment index starts from 0
     size_t offset = 0;
     while (offset < totalRawLen) {
         MsprofTxInfo splitInfo{};
@@ -143,7 +134,7 @@ void MstxDataHandler::ReportData()
             break;
         }
         auto splitInfos = SplitMstxInfo(info);
-        for (auto &splitInfo : splitInfos) {
+        for (auto& splitInfo : splitInfos) {
             MsprofTxManager::instance()->ReportData(splitInfo);
         }
     }
@@ -200,13 +191,10 @@ int MstxDataHandler::SaveRangeData(const char* msg, uint64_t mstxEventId, MstxDa
 int MstxDataHandler::SaveMstxData(const char* msg, uint64_t mstxEventId, MstxDataType type, uint64_t domainNameHash)
 {
     return type == MstxDataType::DATA_MARK ? SaveMarkData(msg, mstxEventId, domainNameHash) :
-        SaveRangeData(msg, mstxEventId, type, domainNameHash);
+                                             SaveRangeData(msg, mstxEventId, type, domainNameHash);
 }
 
-bool MstxDataHandler::IsStart()
-{
-    return start_.load();
-}
-}
-}
-}
+bool MstxDataHandler::IsStart() { return start_.load(); }
+} // namespace Mstx
+} // namespace Dvvp
+} // namespace Collector

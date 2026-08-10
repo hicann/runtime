@@ -36,8 +36,7 @@ using namespace Analysis::Dvvp::TaskHandle;
 using namespace analysis::dvvp::common::validation;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
-Device::Device(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-               const std::string &devId)
+Device::Device(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string& devId)
     : params_(params),
       indexIdStr_(devId),
       indexId_(-1),
@@ -74,11 +73,12 @@ int32_t Device::Init()
 
 int32_t Device::InitJobAdapter()
 {
-    FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(indexId_, indexIdStr_), return PROFILING_FAILED, 
-        "indexIdStr_ %s is invalid", indexIdStr_.c_str());
+    FUNRET_CHECK_EXPR_ACTION(
+        !Utils::StrToInt32(indexId_, indexIdStr_), return PROFILING_FAILED, "indexIdStr_ %s is invalid",
+        indexIdStr_.c_str());
     status_->dev_id = indexIdStr_;
 
-    if (Platform::instance()->PlatformIsSocSide()) {  // soc scene
+    if (Platform::instance()->PlatformIsSocSide()) { // soc scene
         MSPROF_LOGI("Init SOC JobAdapter");
         auto jobFactory = JobSocFactory();
         jobAdapter_ = jobFactory.CreateJobAdapter(indexId_);
@@ -134,14 +134,14 @@ void Device::PostStopReplay()
     cvSyncStopReplay.notify_one();
 }
 
-void Device::Run(const struct error_message::Context &errorContext)
+void Device::Run(const struct error_message::Context& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("Device(%d) ctrl thread is running", indexId_);
     int32_t ret = PROFILING_SUCCESS;
     do {
         ret = jobAdapter_->StartProf(params_);
-        if (deviceResponseCallack_ != nullptr) {  // call cloud response when start profiling
+        if (deviceResponseCallack_ != nullptr) { // call cloud response when start profiling
             MSPROF_LOGI("Send response Device(%d)", indexId_);
             deviceResponseCallack_(indexId_);
         }
@@ -169,10 +169,7 @@ void Device::Run(const struct error_message::Context &errorContext)
     }
 }
 
-int32_t Device::Stop()
-{
-    return 0;
-}
+int32_t Device::Stop() { return 0; }
 
 int32_t Device::Wait()
 {
@@ -186,10 +183,7 @@ int32_t Device::Wait()
     return 0;
 }
 
-const SHARED_PTR_ALIA<analysis::dvvp::message::StatusInfo> Device::GetStatus()
-{
-    return status_;
-}
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+const SHARED_PTR_ALIA<analysis::dvvp::message::StatusInfo> Device::GetStatus() { return status_; }
+} // namespace host
+} // namespace dvvp
+} // namespace analysis

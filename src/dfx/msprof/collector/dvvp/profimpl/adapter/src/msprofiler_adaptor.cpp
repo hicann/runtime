@@ -28,7 +28,7 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::ProfilerCommon;
 
-extern "C" MSVP_PROF_API int32_t MsprofSetConfig(uint32_t configType, const char *config, size_t configLength)
+extern "C" MSVP_PROF_API int32_t MsprofSetConfig(uint32_t configType, const char* config, size_t configLength)
 {
     return Analysis::Dvvp::ProfilerCommon::ProfSetConfig(configType, config, configLength);
 }
@@ -58,12 +58,12 @@ extern "C" MSVP_PROF_API int32_t MsprofInit(uint32_t dataType, VOID_PTR data, ui
     return Analysis::Dvvp::ProfilerCommon::ProfInit(dataType, data, dataLen);
 }
 
-extern "C" MSVP_PROF_API int32_t MsprofStart(uint32_t dataType, const void *data, uint32_t length)
+extern "C" MSVP_PROF_API int32_t MsprofStart(uint32_t dataType, const void* data, uint32_t length)
 {
     return Analysis::Dvvp::ProfilerCommon::ProfConfigStart(dataType, data, length);
 }
- 
-extern "C" MSVP_PROF_API int32_t MsprofStop(uint32_t dataType, const void *data, uint32_t length)
+
+extern "C" MSVP_PROF_API int32_t MsprofStop(uint32_t dataType, const void* data, uint32_t length)
 {
     return Analysis::Dvvp::ProfilerCommon::ProfConfigStop(dataType, data, length);
 }
@@ -76,14 +76,11 @@ extern "C" MSVP_PROF_API int32_t MsprofNotifySetDevice(uint32_t chipId, uint32_t
     return Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(chipId, deviceId, isOpen);
 }
 
-extern "C" MSVP_PROF_API int32_t MsprofFinalize()
-{
-    return Analysis::Dvvp::ProfilerCommon::ProfFinalize();
-}
+extern "C" MSVP_PROF_API int32_t MsprofFinalize() { return Analysis::Dvvp::ProfilerCommon::ProfFinalize(); }
 
 extern "C" MSVP_PROF_API int32_t MsprofSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId)
 {
-    return  Analysis::Dvvp::ProfilerCommon::ProfSetDeviceIdByGeModelIdx(geModelIdx, deviceId);
+    return Analysis::Dvvp::ProfilerCommon::ProfSetDeviceIdByGeModelIdx(geModelIdx, deviceId);
 }
 
 extern "C" MSVP_PROF_API int32_t MsprofUnsetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId)
@@ -96,7 +93,7 @@ extern "C" MSVP_PROF_API uint64_t ProfGetOpExecutionTime(CONST_VOID_PTR data, ui
     return Msprofiler::Api::ProfGetOpExecutionTime(data, len, index);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclInit(ProfType type, const char *profilerPath, uint32_t length)
+extern "C" MSVP_PROF_API int32_t ProfAclInit(ProfType type, const char* profilerPath, uint32_t length)
 {
     JsonParser::instance()->Init(PROF_JSON_PATH);
     if (Platform::instance()->Init() != PROFILING_SUCCESS) {
@@ -120,22 +117,16 @@ extern "C" MSVP_PROF_API int32_t ProfAclStop(ProfType type, PROF_CONFIG_CONST_PT
     return Msprofiler::AclApi::ProfStop(type, profilerConfig);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclFinalize(ProfType type)
-{
-    return  Msprofiler::AclApi::ProfFinalize(type);
-}
+extern "C" MSVP_PROF_API int32_t ProfAclFinalize(ProfType type) { return Msprofiler::AclApi::ProfFinalize(type); }
 
-extern "C" MSVP_PROF_API int32_t ProfAclSetConfig(aclprofConfigType type, const char *config, size_t configLength)
+extern "C" MSVP_PROF_API int32_t ProfAclSetConfig(aclprofConfigType type, const char* config, size_t configLength)
 {
     return Msprofiler::AclApi::ProfSetConfig(type, config, configLength);
 }
 
-extern "C" MSVP_PROF_API bool ProfIsInited()
-{
-    return Msprofiler::Api::ProfAclMgr::instance()->IsInited();
-}
+extern "C" MSVP_PROF_API bool ProfIsInited() { return Msprofiler::Api::ProfAclMgr::instance()->IsInited(); }
 
-extern "C" MSVP_PROF_API int32_t ProfGetResultPath(char *path, uint32_t len)
+extern "C" MSVP_PROF_API int32_t ProfGetResultPath(char* path, uint32_t len)
 {
     std::string resultPath = Msprofiler::Api::ProfAclMgr::instance()->GetResultPath();
     if (resultPath.length() >= len) {
@@ -154,8 +145,8 @@ extern "C" MSVP_PROF_API int32_t ProfGetResultPath(char *path, uint32_t len)
     return PROFILING_SUCCESS;
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclSubscribe(
-    ProfType type, uint32_t modelId, const aclprofSubscribeConfig *profSubscribeConfig)
+extern "C" MSVP_PROF_API int32_t
+ProfAclSubscribe(ProfType type, uint32_t modelId, const aclprofSubscribeConfig* profSubscribeConfig)
 {
     JsonParser::instance()->Init(PROF_JSON_PATH);
     if (Platform::instance()->Init() != PROFILING_SUCCESS) {
@@ -166,7 +157,7 @@ extern "C" MSVP_PROF_API int32_t ProfAclSubscribe(
 
 extern "C" MSVP_PROF_API Msprofiler::AclApi::ProfCreateTransportFunc ProfCreateParsertransport()
 {
-    return  Msprofiler::AclApi::CreateParserTransport;
+    return Msprofiler::AclApi::CreateParserTransport;
 }
 
 extern "C" MSVP_PROF_API void ProfRegisterTransport(Msprofiler::AclApi::ProfCreateTransportFunc callback)
@@ -176,7 +167,7 @@ extern "C" MSVP_PROF_API void ProfRegisterTransport(Msprofiler::AclApi::ProfCrea
 
 extern "C" MSVP_PROF_API int32_t ProfAclUnSubscribe(ProfType type, uint32_t modelId)
 {
-    return  Msprofiler::AclApi::ProfModelUnSubscribe(type, modelId);
+    return Msprofiler::AclApi::ProfModelUnSubscribe(type, modelId);
 }
 
 extern "C" MSVP_PROF_API int32_t ProfOpSubscribe(uint32_t devId, PROFAPI_SUBSCRIBECONFIG_CONST_PTR profSubscribeConfig)
@@ -185,22 +176,18 @@ extern "C" MSVP_PROF_API int32_t ProfOpSubscribe(uint32_t devId, PROFAPI_SUBSCRI
     if (Platform::instance()->Init() != PROFILING_SUCCESS) {
         return MSPROF_ERROR;
     }
-    return  Msprofiler::AclApi::ProfOpSubscribe(devId,
-        static_cast<const aclprofSubscribeConfig *>(profSubscribeConfig));
+    return Msprofiler::AclApi::ProfOpSubscribe(devId, static_cast<const aclprofSubscribeConfig*>(profSubscribeConfig));
 }
 
 extern "C" MSVP_PROF_API int32_t ProfOpUnSubscribe(uint32_t devId)
 {
-    return  Msprofiler::AclApi::ProfOpUnSubscribe(devId);
+    return Msprofiler::AclApi::ProfOpUnSubscribe(devId);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclDrvGetDevNum()
-{
-    return Msprofiler::AclApi::ProfAclDrvGetDevNum();
-}
+extern "C" MSVP_PROF_API int32_t ProfAclDrvGetDevNum() { return Msprofiler::AclApi::ProfAclDrvGetDevNum(); }
 
-extern "C" MSVP_PROF_API uint64_t ProfAclGetOpTime(
-    uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index)
+extern "C" MSVP_PROF_API uint64_t
+ProfAclGetOpTime(uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index)
 {
     return Msprofiler::AclApi::ProfAclGetOpTime(type, opInfo, opInfoLen, index);
 }
@@ -210,29 +197,29 @@ extern "C" MSVP_PROF_API size_t ProfAclGetId(ProfType type, CONST_VOID_PTR opInf
     return Msprofiler::AclApi::ProfGetModelId(type, opInfo, opInfoLen, index);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclGetOpVal(uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen,
-                                   uint32_t index, VOID_PTR data, size_t len)
+extern "C" MSVP_PROF_API int32_t
+ProfAclGetOpVal(uint32_t type, CONST_VOID_PTR opInfo, size_t opInfoLen, uint32_t index, VOID_PTR data, size_t len)
 {
     return Msprofiler::AclApi::ProfAclGetOpVal(type, opInfo, opInfoLen, index, data, len);
 }
 
-extern "C" MSVP_PROF_API const char *ProfAclGetOpAttriVal(uint32_t type, const void *opInfo, size_t opInfoLen,
-                                            uint32_t index, uint32_t attri)
+extern "C" MSVP_PROF_API const char* ProfAclGetOpAttriVal(
+    uint32_t type, const void* opInfo, size_t opInfoLen, uint32_t index, uint32_t attri)
 {
     return Msprofiler::AclApi::ProfAclGetOpAttriVal(type, opInfo, opInfoLen, index, attri);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string &typeName)
+extern "C" MSVP_PROF_API int32_t ProfImplReportRegTypeInfo(uint16_t level, uint32_t type, const std::string& typeName)
 {
     return Dvvp::Collect::Report::ProfReporterMgr::GetInstance().RegReportTypeInfo(level, type, typeName);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfImplReportDataFormat(uint16_t level, uint32_t type, const std::string &dataFormat)
+extern "C" MSVP_PROF_API int32_t ProfImplReportDataFormat(uint16_t level, uint32_t type, const std::string& dataFormat)
 {
     return Dvvp::Collect::Report::ProfReporterMgr::GetInstance().RegReportDataFormat(level, type, dataFormat);
 }
 
-extern "C" MSVP_PROF_API uint64_t ProfImplReportGetHashId(const std::string &info)
+extern "C" MSVP_PROF_API uint64_t ProfImplReportGetHashId(const std::string& info)
 {
     return Dvvp::Collect::Report::ProfReporterMgr::GetInstance().GetHashId(info);
 }
@@ -247,10 +234,7 @@ extern "C" MSVP_PROF_API std::string ProfImplGetOutputPath()
     return Msprofiler::Api::ProfAclMgr::instance()->GetOutputPath();
 }
 
-extern "C" MSVP_PROF_API bool ProfImplHostFreqIsEnable()
-{
-    return Platform::instance()->PlatformHostFreqIsEnable();
-}
+extern "C" MSVP_PROF_API bool ProfImplHostFreqIsEnable() { return Platform::instance()->PlatformHostFreqIsEnable(); }
 
 extern "C" MSVP_PROF_API void ProfImplGetImplInfo(ProfImplInfo& info)
 {
@@ -277,12 +261,12 @@ extern "C" MSVP_PROF_API void ProfImplIfReportBufEmpty(const ProfReportBufEmptyC
     Msprof::Engine::ReceiveData::reportBufEmpty_ = func;
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData)
+extern "C" MSVP_PROF_API int32_t ProfAclGetCompatibleFeatures(size_t* featuresSize, void** featuresData)
 {
     return Msprofiler::AclApi::ProfAclGetCompatibleFeatures(featuresSize, featuresData);
 }
 
-extern "C" MSVP_PROF_API int32_t ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData)
+extern "C" MSVP_PROF_API int32_t ProfAclGetCompatibleFeaturesV2(size_t* featuresSize, void** featuresData)
 {
     return Msprofiler::AclApi::ProfAclGetCompatibleFeaturesV2(featuresSize, featuresData);
 }
@@ -338,7 +322,7 @@ extern "C" MSVP_PROF_API int32_t ProfImplSetProfCommand(VOID_PTR command, uint32
     return ProfSetProfCommand(*reinterpret_cast<ProfCommand*>(command));
 }
 
-extern "C" MSVP_PROF_API bool ProfCheckOpSwitch(uint32_t type, const char *op, size_t len)
+extern "C" MSVP_PROF_API bool ProfCheckOpSwitch(uint32_t type, const char* op, size_t len)
 {
     return Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(type, op, len);
 }

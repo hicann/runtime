@@ -25,8 +25,7 @@ namespace Dvvp {
 namespace Msprof {
 class MsprofTask : public analysis::dvvp::common::thread::Thread {
 public:
-    MsprofTask(const int32_t devId,
-             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
+    MsprofTask(const int32_t devId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
     ~MsprofTask() override;
 
     virtual int32_t Init() = 0;
@@ -34,9 +33,10 @@ public:
     virtual void WaitStopReplay();
     virtual void PostStopReplay();
     virtual void PostSyncDataCtrl();
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     int32_t Stop() override;
     virtual int32_t Wait();
+
 protected:
     void WriteDone();
 
@@ -56,15 +56,14 @@ protected:
 private:
     int32_t GetHostAndDeviceInfo();
     std::string GetHostTime() const;
-    void GenerateFileName(bool isStartTime, std::string &filename);
+    void GenerateFileName(bool isStartTime, std::string& filename);
     int32_t CreateCollectionTimeInfo(std::string collectionTime, bool isStartTime);
     std::string EncodeTimeInfoJson(SHARED_PTR_ALIA<analysis::dvvp::host::CollectionStartEndTime> timeInfo) const;
 };
 
 class ProfSocTask : public MsprofTask {
 public:
-    ProfSocTask(const int32_t deviceId,
-             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
+    ProfSocTask(const int32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
     ~ProfSocTask() override;
 
 public:
@@ -74,14 +73,14 @@ public:
 
 class ProfRpcTask : public MsprofTask {
 public:
-    ProfRpcTask(const int32_t deviceId,
-             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
+    ProfRpcTask(const int32_t deviceId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> param);
     ~ProfRpcTask() override;
 
 public:
     int32_t Init() override;
     int32_t UnInit() override;
     int32_t Stop() override;
+
 private:
     void PostSyncDataCtrl() override;
     void WaitSyncDataCtrl();
@@ -93,7 +92,7 @@ private:
     std::condition_variable cvSyncDataCtrl_;
     analysis::dvvp::transport::DevMgrAPI devMgrAPI_;
 };
-}
-}
-}
+} // namespace Msprof
+} // namespace Dvvp
+} // namespace Analysis
 #endif

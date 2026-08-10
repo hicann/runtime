@@ -14,15 +14,9 @@ namespace analysis {
 namespace dvvp {
 namespace streamio {
 namespace common {
-SelectOperation::SelectOperation()
-    : maxFd_(0)
-{
-    FD_ZERO(&readfd_);
-}
+SelectOperation::SelectOperation() : maxFd_(0) { FD_ZERO(&readfd_); }
 
-SelectOperation::~SelectOperation()
-{
-}
+SelectOperation::~SelectOperation() {}
 
 void SelectOperation::SelectAdd(OsalSockHandle fd)
 {
@@ -59,11 +53,8 @@ bool SelectOperation::SelectIsSet(OsalSockHandle fd)
     return false;
 }
 
-void SelectOperation::SelectClear()
-{
-    FD_ZERO(&readfd_);
-}
-}  // namespace common
-}  // namespace streamio
-}  // namespace dvvp
-}  // namespace analysis
+void SelectOperation::SelectClear() { FD_ZERO(&readfd_); }
+} // namespace common
+} // namespace streamio
+} // namespace dvvp
+} // namespace analysis

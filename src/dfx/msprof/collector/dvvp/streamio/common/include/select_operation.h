@@ -36,12 +36,12 @@ private:
     OsalSockHandle maxFd_;
     fd_set readfd_;
 
-    SelectOperation &operator=(const SelectOperation &op);
-    SelectOperation(const SelectOperation &op);
+    SelectOperation& operator=(const SelectOperation& op);
+    SelectOperation(const SelectOperation& op);
 };
-}  // namespace common
-}  // namespace streamio
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace common
+} // namespace streamio
+} // namespace dvvp
+} // namespace analysis
 
 #endif

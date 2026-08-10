@@ -22,14 +22,14 @@
 namespace analysis {
 namespace dvvp {
 namespace host {
-using DeviceCallback = void (*) (int32_t devId);
+using DeviceCallback = void (*)(int32_t devId);
 class Device : public analysis::dvvp::common::thread::Thread {
 public:
-    Device(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string &devId);
+    Device(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string& devId);
     virtual ~Device();
 
 public:
-    void Run(const struct error_message::Context &errorContext) override;
+    void Run(const struct error_message::Context& errorContext) override;
     int32_t Stop() override;
     int32_t Wait();
     void PostStopReplay();
@@ -45,7 +45,7 @@ private:
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params_;
     // for host app/training, devId from Constructor is phyId
     // for device app, devId from Constructor is phyId(on host), indexId(on device)
-    std::string indexIdStr_;     // devId from Constructor
+    std::string indexIdStr_; // devId from Constructor
     int32_t indexId_;
     int32_t hostId_;
     bool isQuited_;
@@ -60,8 +60,8 @@ private:
     DeviceCallback deviceResponseCallack_;
     SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::JobAdapter> jobAdapter_;
 };
-}  // namespace host
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace host
+} // namespace dvvp
+} // namespace analysis
 
 #endif

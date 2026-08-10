@@ -19,8 +19,8 @@ enum IO_MODE {
     FILE_MODE = 1,
 };
 }
-}  // namespace streamio
-}  // namespace dvvp
-}  // namespace analysis
+} // namespace streamio
+} // namespace dvvp
+} // namespace analysis
 
 #endif

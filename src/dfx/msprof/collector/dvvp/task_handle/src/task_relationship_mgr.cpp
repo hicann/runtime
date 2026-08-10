@@ -11,7 +11,6 @@
 #include <string>
 #include "msprof_dlog.h"
 
-
 namespace Analysis {
 namespace Dvvp {
 namespace TaskHandle {
@@ -43,13 +42,13 @@ int32_t TaskRelationshipMgr::GetHostIdByDevId(int32_t devId)
     return devId;
 }
 
-void TaskRelationshipMgr::AddLocalFlushJobId(const std::string &jobId)
+void TaskRelationshipMgr::AddLocalFlushJobId(const std::string& jobId)
 {
     MSPROF_LOGI("Job %s should flush locally", jobId.c_str());
     (void)localFlushJobIds_.insert(jobId);
 }
 
-int32_t TaskRelationshipMgr::GetFlushSuffixDevId(const std::string &jobId, int32_t indexId)
+int32_t TaskRelationshipMgr::GetFlushSuffixDevId(const std::string& jobId, int32_t indexId)
 {
     if (localFlushJobIds_.find(jobId) != localFlushJobIds_.end()) {
         return indexId;
@@ -57,6 +56,6 @@ int32_t TaskRelationshipMgr::GetFlushSuffixDevId(const std::string &jobId, int32
         return GetHostIdByDevId(indexId);
     }
 }
-}  // namespace TaskHandle
-}  // namespace Dvvp
-}  // namespace Analysis
+} // namespace TaskHandle
+} // namespace Dvvp
+} // namespace Analysis

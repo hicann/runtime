@@ -32,22 +32,19 @@ using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace analysis::dvvp::common::validation;
 
-ProfParamsAdapter::ProfParamsAdapter(): aclApiSetDeviceEnable_(false) {}
+ProfParamsAdapter::ProfParamsAdapter() : aclApiSetDeviceEnable_(false) {}
 
 ProfParamsAdapter::~ProfParamsAdapter() {}
 
-int32_t ProfParamsAdapter::Init() const
-{
-    return PROFILING_SUCCESS;
-}
+int32_t ProfParamsAdapter::Init() const { return PROFILING_SUCCESS; }
 
 /**
  * @brief  : Transfer ProfApiStartReq to inner params
  * @param  : [in] ProfApiStartReq : acl api struct cfg
  * @param  : [out] ProfileParams : inner params
  */
-int32_t ProfParamsAdapter::StartReqTrfToInnerParam(SHARED_PTR_ALIA<ProfApiStartReq> feature,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+int32_t ProfParamsAdapter::StartReqTrfToInnerParam(
+    SHARED_PTR_ALIA<ProfApiStartReq> feature, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     if (params == nullptr || feature == nullptr) {
         MSPROF_LOGE("ProfileParams or ProfApiStartReq is nullptr");
@@ -88,8 +85,8 @@ int32_t ProfParamsAdapter::StartReqTrfToInnerParam(SHARED_PTR_ALIA<ProfApiStartR
  * @param  : [in] msprofStartCfg : msprof config
  * @param  : [out] ProfileParams : inner params
  */
-void ProfParamsAdapter::StartCfgTrfToInnerParam(const uint64_t dataTypeConfig,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+void ProfParamsAdapter::StartCfgTrfToInnerParam(
+    const uint64_t dataTypeConfig, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     MSPROF_LOGI("Begin to transfer msprof StartCfg to inner params");
     if ((dataTypeConfig & PROF_TASK_TSFW_MASK) != 0) {
@@ -124,19 +121,16 @@ int32_t ProfParamsAdapter::CheckDataTypeSupport(const uint64_t dataTypeConfig) c
  * @param  : [in] switchName : switch name
  * @param  : [in] val : switch name Corresponding JsonValue
  */
-bool ProfParamsAdapter::CheckJsonConfig(const std::string &switchName, const NanoJson::JsonValue &val) const
+bool ProfParamsAdapter::CheckJsonConfig(const std::string& switchName, const NanoJson::JsonValue& val) const
 {
     if (switchName == "aic_metrics") {
         return ParamValidation::instance()->CheckAicoreMetricsIsValid(val.GetValue<std::string>());
     } else if (switchName == "ge_api" || switchName == "task_trace" || switchName == "task_time") {
         return ParamValidation::instance()->CheckParamL0L1Invalid(switchName, val.GetValue<std::string>());
-    } else if (switchName == "sys_hardware_mem_freq" ||
-               switchName == "sys_io_sampling_freq" ||
-               switchName == "sys_interconnection_freq" ||
-               switchName == "sys_cpu_freq" ||
-               switchName == "dvpp_freq" ||
-               switchName == "host_sys_usage_freq" ||
-               switchName == "sys_lp_freq") {
+    } else if (
+        switchName == "sys_hardware_mem_freq" || switchName == "sys_io_sampling_freq" ||
+        switchName == "sys_interconnection_freq" || switchName == "sys_cpu_freq" || switchName == "dvpp_freq" ||
+        switchName == "host_sys_usage_freq" || switchName == "sys_lp_freq") {
         return ParamValidation::instance()->CheckFreqIsValid(switchName, val.GetValue<uint32_t>());
     } else if (switchName == "llc_profiling") {
         return ParamValidation::instance()->CheckLlcConfigValid(val.GetValue<std::string>());
@@ -162,10 +156,10 @@ bool ProfParamsAdapter::CheckJsonConfig(const std::string &switchName, const Nan
  * @param  : [in] jsonCfg : msprof json config
  * @param  : [out] params : inner ProfileParams
  */
-int32_t ProfParamsAdapter::HandleJsonConf(const NanoJson::Json &jsonCfg,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+int32_t ProfParamsAdapter::HandleJsonConf(
+    const NanoJson::Json& jsonCfg, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
-    for (auto iter = jsonCfg.Begin(); iter != jsonCfg.End();  ++iter) {
+    for (auto iter = jsonCfg.Begin(); iter != jsonCfg.End(); ++iter) {
         if (iter->first == "sys_hardware_mem_freq") {
             params->hardware_mem_sampling_interval = HZ_CONVERT_US / iter->second.GetValue<uint32_t>();
             params->hardware_mem = "on";
@@ -203,21 +197,21 @@ int32_t ProfParamsAdapter::HandleJsonConf(const NanoJson::Json &jsonCfg,
 int32_t ProfParamsAdapter::CheckApiConfigSupport(aclprofConfigType type) const
 {
     const std::map<aclprofConfigType, std::vector<PlatformFeature>> platformAclApiMap = {
-        {ACL_PROF_SYS_HARDWARE_MEM_FREQ,    {PLATFORM_SYS_DEVICE_NPU_MODULE_MEM, PLATFORM_SYS_DEVICE_LLC,
-                                             PLATFORM_SYS_DEVICE_DDR, PLATFORM_SYS_DEVICE_HBM}},
-        {ACL_PROF_LLC_MODE,                 {PLATFORM_SYS_DEVICE_LLC}},
-        {ACL_PROF_SYS_IO_FREQ,              {PLATFORM_SYS_DEVICE_NIC, PLATFORM_SYS_DEVICE_ROCE}},
+        {ACL_PROF_SYS_HARDWARE_MEM_FREQ,
+         {PLATFORM_SYS_DEVICE_NPU_MODULE_MEM, PLATFORM_SYS_DEVICE_LLC, PLATFORM_SYS_DEVICE_DDR,
+          PLATFORM_SYS_DEVICE_HBM}},
+        {ACL_PROF_LLC_MODE, {PLATFORM_SYS_DEVICE_LLC}},
+        {ACL_PROF_SYS_IO_FREQ, {PLATFORM_SYS_DEVICE_NIC, PLATFORM_SYS_DEVICE_ROCE}},
         {ACL_PROF_SYS_INTERCONNECTION_FREQ, {PLATFORM_SYS_DEVICE_PCIE, PLATFORM_SYS_DEVICE_HCCS}},
-        {ACL_PROF_SYS_CPU_FREQ,             {PLATFORM_SYS_DEVICE_AICPU_HSCB}},
-        {ACL_PROF_DVPP_FREQ,                {PLATFORM_SYS_DEVICE_DVPP, PLATFORM_SYS_DEVICE_DVPP_EX}},
-        {ACL_PROF_HOST_SYS,                 {PLATFORM_SYS_HOST_SYS_CPU, PLATFORM_SYS_HOST_SYS_MEM}},
-        {ACL_PROF_HOST_SYS_USAGE,           {PLATFORM_SYS_HOST_ALL_PID_CPU, PLATFORM_SYS_HOST_ALL_PID_MEM}},
-        {ACL_PROF_HOST_SYS_USAGE_FREQ,      {PLATFORM_SYS_HOST_ALL_PID_CPU, PLATFORM_SYS_HOST_ALL_PID_MEM}},
-        {ACL_PROF_LOW_POWER_FREQ,           {PLATFORM_SYS_DEVICE_LOW_POWER}},
-        {ACL_PROF_SYS_MEM_SERVICEFLOW,      {PLATFORM_SYS_MEM_SERVICEFLOW}},
-        {ACL_PROF_OPTYPE,                   {PLATFORM_TASK_SCALE}},
-        {ACL_PROF_NTS_METRICS,              {PLATFORM_TASK_NTS}}
-    };
+        {ACL_PROF_SYS_CPU_FREQ, {PLATFORM_SYS_DEVICE_AICPU_HSCB}},
+        {ACL_PROF_DVPP_FREQ, {PLATFORM_SYS_DEVICE_DVPP, PLATFORM_SYS_DEVICE_DVPP_EX}},
+        {ACL_PROF_HOST_SYS, {PLATFORM_SYS_HOST_SYS_CPU, PLATFORM_SYS_HOST_SYS_MEM}},
+        {ACL_PROF_HOST_SYS_USAGE, {PLATFORM_SYS_HOST_ALL_PID_CPU, PLATFORM_SYS_HOST_ALL_PID_MEM}},
+        {ACL_PROF_HOST_SYS_USAGE_FREQ, {PLATFORM_SYS_HOST_ALL_PID_CPU, PLATFORM_SYS_HOST_ALL_PID_MEM}},
+        {ACL_PROF_LOW_POWER_FREQ, {PLATFORM_SYS_DEVICE_LOW_POWER}},
+        {ACL_PROF_SYS_MEM_SERVICEFLOW, {PLATFORM_SYS_MEM_SERVICEFLOW}},
+        {ACL_PROF_OPTYPE, {PLATFORM_TASK_SCALE}},
+        {ACL_PROF_NTS_METRICS, {PLATFORM_TASK_NTS}}};
     if (type == ACL_PROF_STORAGE_LIMIT) {
         return PROFILING_SUCCESS;
     }
@@ -232,8 +226,8 @@ int32_t ProfParamsAdapter::CheckApiConfigSupport(aclprofConfigType type) const
         }
     }
     if (type == ACL_PROF_NTS_METRICS) {
-        MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}),
-            std::vector<std::string>({NtsMetricsConfigName()}));
+        MSPROF_INPUT_ERROR(
+            "EK0005", std::vector<std::string>({"param"}), std::vector<std::string>({NtsMetricsConfigName()}));
     }
     MSPROF_LOGE("The api config of type [%d] is not support.", static_cast<int32_t>(type));
     return PROFILING_FAILED;
@@ -243,13 +237,15 @@ int32_t ProfParamsAdapter::CheckApiConfigSupport(aclprofConfigType type) const
  * @brief  : Check host sys config is valid
  * @param  : [in] config : host sys config string
  */
-bool ProfParamsAdapter::CheckHostSysValid(const std::string &config) const
+bool ProfParamsAdapter::CheckHostSysValid(const std::string& config) const
 {
     std::vector<std::string> hostSysArray = Utils::Split(config, false, "", ",");
     for (size_t i = 0; i < hostSysArray.size(); ++i) {
         if (!ParamValidation::instance()->CheckHostSysOptionsIsValid(hostSysArray[i])) {
-            MSPROF_LOGE("Argument --host-sys: invalid value:%s. Please input in the range of "
-                "'cpu|mem'", hostSysArray[i].c_str());
+            MSPROF_LOGE(
+                "Argument --host-sys: invalid value:%s. Please input in the range of "
+                "'cpu|mem'",
+                hostSysArray[i].c_str());
             return false;
         }
     }
@@ -260,13 +256,15 @@ bool ProfParamsAdapter::CheckHostSysValid(const std::string &config) const
  * @brief  : Check host sys usage config is valid
  * @param  : [in] config : host sys usage config string
  */
-bool ProfParamsAdapter::CheckHostSysUsageValid(const std::string &config) const
+bool ProfParamsAdapter::CheckHostSysUsageValid(const std::string& config) const
 {
     std::vector<std::string> hostSysUsageArray = Utils::Split(config, false, "", ",");
     for (size_t i = 0; i < hostSysUsageArray.size(); ++i) {
         if (!ParamValidation::instance()->CheckHostSysUsageOptionsIsValid(hostSysUsageArray[i])) {
-            MSPROF_LOGE("Argument --host-sys: invalid value:%s. Please input in the range of "
-                "'cpu|mem'", hostSysUsageArray[i].c_str());
+            MSPROF_LOGE(
+                "Argument --host-sys: invalid value:%s. Please input in the range of "
+                "'cpu|mem'",
+                hostSysUsageArray[i].c_str());
             return false;
         }
     }
@@ -278,8 +276,8 @@ bool ProfParamsAdapter::CheckHostSysUsageValid(const std::string &config) const
  * @param  : [in] jsonCfg : msprof json config
  * @param  : [out] params : inner ProfileParams
  */
-int32_t ProfParamsAdapter::CheckApiConfigIsValid(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    aclprofConfigType type, const std::string &config)
+int32_t ProfParamsAdapter::CheckApiConfigIsValid(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, aclprofConfigType type, const std::string& config)
 {
     FUNRET_CHECK_EXPR_ACTION(params == nullptr, return PROFILING_FAILED, "Check config failed, the params is nullptr.");
     switch (type) {
@@ -296,7 +294,7 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValid(SHARED_PTR_ALIA<analysis::dvvp:
             if (ParamValidation::instance()->CheckMemServiceflowValid("ACL_PROF_SYS_MEM_SERVICEFLOW", config)) {
                 params->memServiceflow = config;
                 return PROFILING_SUCCESS;
-            }    
+            }
             break;
         case ACL_PROF_LLC_MODE:
             if (ParamValidation::instance()->CheckLlcConfigValid(config)) {
@@ -326,8 +324,8 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValid(SHARED_PTR_ALIA<analysis::dvvp:
     return PROFILING_FAILED;
 }
 
-int32_t ProfParamsAdapter::CheckApiConfigIsValidTwo(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    aclprofConfigType type, const std::string &config)
+int32_t ProfParamsAdapter::CheckApiConfigIsValidTwo(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, aclprofConfigType type, const std::string& config)
 {
     switch (type) {
         case ACL_PROF_DVPP_FREQ:
@@ -375,18 +373,18 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValidTwo(SHARED_PTR_ALIA<analysis::dv
     return PROFILING_FAILED;
 }
 
-int32_t ProfParamsAdapter::CheckApiConfigIsValidThree(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params,
-    aclprofConfigType type, const std::string &config)
+int32_t ProfParamsAdapter::CheckApiConfigIsValidThree(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, aclprofConfigType type, const std::string& config)
 {
     switch (type) {
         case ACL_PROF_SYS_HARDWARE_MEM_FREQ:
             static bool hardwareMemFlag = false;
             if (Platform::instance()->CheckIfSupport(PLATFORM_SYS_DEVICE_US)) {
-                hardwareMemFlag = ParamValidation::instance()->CheckArgRange("ACL_PROF_SYS_HARDWARE_MEM_FREQ", config,
-                    1, HZ_TEN_THOUSAND);
+                hardwareMemFlag = ParamValidation::instance()->CheckArgRange(
+                    "ACL_PROF_SYS_HARDWARE_MEM_FREQ", config, 1, HZ_TEN_THOUSAND);
             } else {
-                hardwareMemFlag = ParamValidation::instance()->CheckArgRange("ACL_PROF_SYS_HARDWARE_MEM_FREQ", config,
-                    1, HZ_HUNDRED);
+                hardwareMemFlag =
+                    ParamValidation::instance()->CheckArgRange("ACL_PROF_SYS_HARDWARE_MEM_FREQ", config, 1, HZ_HUNDRED);
             }
             if (hardwareMemFlag) {
                 params->hardware_mem = "on";
@@ -430,8 +428,8 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValidThree(SHARED_PTR_ALIA<analysis::
  * @brief  : Transfer host sys config to inner params
  * @param  : [in] config : host sys config string
  */
-void ProfParamsAdapter::SetHostSysParam(const std::string &config,
-                                        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+void ProfParamsAdapter::SetHostSysParam(
+    const std::string& config, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     std::vector<std::string> hostSysArray = Utils::Split(config, false, "", ",");
     for (auto sysSwitch : hostSysArray) {
@@ -455,8 +453,8 @@ void ProfParamsAdapter::SetHostSysParam(const std::string &config,
  * @brief  : Transfer host sys usage config to inner params
  * @param  : [in] config : host sys usage config string
  */
-void ProfParamsAdapter::SetHostSysUsageParam(const std::string &config,
-                                             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+void ProfParamsAdapter::SetHostSysUsageParam(
+    const std::string& config, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     std::vector<std::string> hostSysUsageArray = Utils::Split(config, false, "", ",");
     for (auto sysSwitch : hostSysUsageArray) {
@@ -468,18 +466,18 @@ void ProfParamsAdapter::SetHostSysUsageParam(const std::string &config,
     }
 }
 
-int32_t ProfParamsAdapter::HandleTaskTraceConf(const std::string &conf,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+int32_t ProfParamsAdapter::HandleTaskTraceConf(
+    const std::string& conf, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
-    const int32_t cfgBufferMaxLen = 1024 * 1024;  // 1024 *1024 means 1mb
-    if (params == nullptr || conf.size() > cfgBufferMaxLen) {  // job context size bigger than 1mb
+    const int32_t cfgBufferMaxLen = 1024 * 1024;              // 1024 *1024 means 1mb
+    if (params == nullptr || conf.size() > cfgBufferMaxLen) { // job context size bigger than 1mb
         return PROFILING_FAILED;
     }
     SHARED_PTR_ALIA<ProfApiSysConf> taskConf = DecodeSysConfJson(conf);
     FUNRET_CHECK_EXPR_ACTION(taskConf == nullptr, return PROFILING_FAILED, "Failed to decode sys conf json");
     params->l2CacheTaskProfiling = taskConf->l2;
-    Platform::instance()->L2CacheAdaptor(params->npuEvents, params->l2CacheTaskProfiling,
-        params->l2CacheTaskProfilingEvents);
+    Platform::instance()->L2CacheAdaptor(
+        params->npuEvents, params->l2CacheTaskProfiling, params->l2CacheTaskProfilingEvents);
     if (taskConf->aicoreMetrics.empty()) {
         params->ai_core_profiling = "off";
         params->aiv_profiling = "off";
@@ -511,11 +509,11 @@ int32_t ProfParamsAdapter::HandleTaskTraceConf(const std::string &conf,
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfParamsAdapter::HandleSystemTraceConf(const std::string &conf,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+int32_t ProfParamsAdapter::HandleSystemTraceConf(
+    const std::string& conf, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
-    const int32_t cfgBufferMaxLen = 1024 * 1024;  // 1024 *1024 means 1mb
-    if (params == nullptr || conf.size() > cfgBufferMaxLen) {  // job context size bigger than 1mb
+    const int32_t cfgBufferMaxLen = 1024 * 1024;              // 1024 *1024 means 1mb
+    if (params == nullptr || conf.size() > cfgBufferMaxLen) { // job context size bigger than 1mb
         return PROFILING_FAILED;
     }
     SHARED_PTR_ALIA<ProfApiSysConf> sysConf = DecodeSysConfJson(conf);
@@ -523,8 +521,8 @@ int32_t ProfParamsAdapter::HandleSystemTraceConf(const std::string &conf,
     return PROFILING_SUCCESS;
 }
 
-void ProfParamsAdapter::UpdateSysConf(SHARED_PTR_ALIA<ProfApiSysConf> sysConf,
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+void ProfParamsAdapter::UpdateSysConf(
+    SHARED_PTR_ALIA<ProfApiSysConf> sysConf, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     if (sysConf == nullptr || params == nullptr) {
         return;
@@ -571,7 +569,8 @@ void ProfParamsAdapter::UpdateSysConf(SHARED_PTR_ALIA<ProfApiSysConf> sysConf,
     }
 }
 
-void ProfParamsAdapter::SetSystemTraceParams(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
+void ProfParamsAdapter::SetSystemTraceParams(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const
 {
     if (dstParams == nullptr || srcParams == nullptr) {
@@ -606,8 +605,9 @@ void ProfParamsAdapter::SetSystemTraceParams(SHARED_PTR_ALIA<analysis::dvvp::mes
     }
 }
 
-void ProfParamsAdapter::UpdateCpuProfiling(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
-                                           SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const
+void ProfParamsAdapter::UpdateCpuProfiling(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const
 {
     if (dstParams == nullptr || srcParams == nullptr) {
         return;
@@ -623,8 +623,8 @@ void ProfParamsAdapter::UpdateCpuProfiling(SHARED_PTR_ALIA<analysis::dvvp::messa
     }
 }
 
-void ProfParamsAdapter::UpdateOpFeature(SHARED_PTR_ALIA<ProfApiStartReq> feature,
-                                        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
+void ProfParamsAdapter::UpdateOpFeature(
+    SHARED_PTR_ALIA<ProfApiStartReq> feature, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
     using namespace analysis::dvvp::common::validation;
     std::string aiCoreMetrics = feature->aiCoreEvents;
@@ -632,8 +632,9 @@ void ProfParamsAdapter::UpdateOpFeature(SHARED_PTR_ALIA<ProfApiStartReq> feature
     ConfigManager::instance()->GetVersionSpecificMetrics(aiCoreMetrics);
     Platform::instance()->GetAicoreEvents(aiCoreMetrics, params->ai_core_profiling_events);
     Platform::instance()->GetAicoreEvents(aiVectMetrics, params->aiv_profiling_events);
-    MSPROF_LOGI("op_trace profiling ai_core_events: %s , feature ai_core_events: %s",
-        params->ai_core_profiling_events.c_str(), feature->aiCoreEvents.c_str());
+    MSPROF_LOGI(
+        "op_trace profiling ai_core_events: %s , feature ai_core_events: %s", params->ai_core_profiling_events.c_str(),
+        feature->aiCoreEvents.c_str());
     const std::string l2CacheEvents = feature->l2CacheEvents;
     if (ParamValidation::instance()->CheckEventsSize(params->ai_core_profiling_events) != PROFILING_SUCCESS ||
         ParamValidation::instance()->CheckEventsSize(l2CacheEvents) != PROFILING_SUCCESS) {
@@ -650,9 +651,9 @@ void ProfParamsAdapter::UpdateOpFeature(SHARED_PTR_ALIA<ProfApiStartReq> feature
         params->l2CacheTaskProfiling = "on";
     }
 
-    MSPROF_LOGI("start op_trace job.ai_core_events: %s , l2_cache_events: %s",
-                params->ai_core_profiling_events.c_str(),
-                params->l2CacheTaskProfilingEvents.c_str());
+    MSPROF_LOGI(
+        "start op_trace job.ai_core_events: %s , l2_cache_events: %s", params->ai_core_profiling_events.c_str(),
+        params->l2CacheTaskProfilingEvents.c_str());
 }
 
 std::string ProfParamsAdapter::EncodeSysConfJson(SHARED_PTR_ALIA<ProfApiSysConf> sysConf) const
@@ -712,7 +713,7 @@ SHARED_PTR_ALIA<ProfApiSysConf> ProfParamsAdapter::DecodeSysConfJson(std::string
     return sysConf;
 }
 
-bool ProfParamsAdapter::CheckSetDeviceEnableIsValid(const std::string &config)
+bool ProfParamsAdapter::CheckSetDeviceEnableIsValid(const std::string& config)
 {
     if (config.compare(MSVP_PROF_ON) == 0) {
         aclApiSetDeviceEnable_ = true;
@@ -724,23 +725,23 @@ bool ProfParamsAdapter::CheckSetDeviceEnableIsValid(const std::string &config)
         return true;
     }
 
-    MSPROF_LOGE("Argument ACL_PROF_SETDEVICE_ENABLE invalid value:%s. Please input [on|off] if you want"
-        "to enable or disable device notify capability.", config.c_str());
+    MSPROF_LOGE(
+        "Argument ACL_PROF_SETDEVICE_ENABLE invalid value:%s. Please input [on|off] if you want"
+        "to enable or disable device notify capability.",
+        config.c_str());
     return false;
 }
 
-bool ProfParamsAdapter::CheckAclApiSetDeviceEnable() const
-{
-   return aclApiSetDeviceEnable_;
-}
+bool ProfParamsAdapter::CheckAclApiSetDeviceEnable() const { return aclApiSetDeviceEnable_; }
 
-void ProfParamsAdapter::UpdateHardwareMemParams(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
+void ProfParamsAdapter::UpdateHardwareMemParams(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const
 {
     if (dstParams->hardware_mem.compare("on") == 0) {
         const int32_t periodUs = dstParams->hardware_mem_sampling_interval;
-        const int32_t periodMs = (periodUs > DEFAULT_PROFILING_INTERVAL_10000US) ?
-            (periodUs / US_CONVERT_MS) : DEFAULT_PROFILING_INTERVAL_10MS;
+        const int32_t periodMs = (periodUs > DEFAULT_PROFILING_INTERVAL_10000US) ? (periodUs / US_CONVERT_MS) :
+                                                                                   DEFAULT_PROFILING_INTERVAL_10MS;
         dstParams->llc_profiling = "on";
         dstParams->msprof_llc_profiling = "on";
         dstParams->llc_profiling_events = srcParams->llc_profiling_events;
@@ -773,7 +774,7 @@ void ProfParamsAdapter::GenerateLlcEvents(SHARED_PTR_ALIA<analysis::dvvp::messag
     analysis::dvvp::common::utils::LlcEventUtils::GenerateLlcEvents(params);
 }
 
-}   // Adaptor
-}   // Host
-}   // Dvvp
-}   // Analysis
+} // namespace Adapter
+} // namespace Host
+} // namespace Dvvp
+} // namespace Analysis

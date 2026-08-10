@@ -187,10 +187,7 @@ mstxDomainHandle_t MstxDomainCreateAFunc(const char* name)
     return MstxDomainMgr::instance()->CreateDomainHandle(name);
 }
 
-void MstxDomainDestroyFunc(mstxDomainHandle_t domain)
-{
-    MstxDomainMgr::instance()->DestroyDomainHandle(domain);
-}
+void MstxDomainDestroyFunc(mstxDomainHandle_t domain) { MstxDomainMgr::instance()->DestroyDomainHandle(domain); }
 
 void MstxDomainMarkAFunc(mstxDomainHandle_t domain, const char* msg, aclrtStream stream)
 {
@@ -290,12 +287,7 @@ int GetModuleTableFunc(MstxGetModuleFuncTableFunc getFuncTable)
     int retVal = MSTX_SUCCESS;
     unsigned int outSize = 0;
     MstxFuncTable outTable;
-    static std::vector<unsigned int> CheckOutTableSizes = {
-        0,
-        MSTX_FUNC_END,
-        MSTX_FUNC_DOMAIN_END,
-        0
-    };
+    static std::vector<unsigned int> CheckOutTableSizes = {0, MSTX_FUNC_END, MSTX_FUNC_DOMAIN_END, 0};
     for (size_t i = MSTX_API_MODULE_CORE; i < MSTX_API_MODULE_SIZE; i++) {
         if (getFuncTable(static_cast<MstxFuncModule>(i), &outTable, &outSize) != MSTX_SUCCESS) {
             MSPROF_LOGW("Failed to get func table for module %zu", i);
@@ -333,4 +325,4 @@ int InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable)
     }
     return MSTX_SUCCESS;
 }
-}
+} // namespace MsprofMstxApi
