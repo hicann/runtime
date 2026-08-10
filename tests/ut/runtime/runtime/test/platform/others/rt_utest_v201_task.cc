@@ -923,6 +923,43 @@ TEST_F(TaskTestV201, Test_DqsTask_06)
     delete stm;
 }
 
+TEST_F(TaskTestV201, Test_DqsTask_ZeroCopyAllocOffsetFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+    TaskInfo task1 = {};
+    task1.stream = stm;
+
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device_->Driver_()), &NpuDriver::DevMemAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_DRV_ERR));
+
+    uint64_t dest[] = {0xFF};
+    uint64_t offset[] = {0xFF};
+    rtDqsZeroCopyCfg_t zeroCopyCfg = {};
+    zeroCopyCfg.queueId = 0;
+    zeroCopyCfg.copyType = RT_DQS_ZERO_COPY_INPUT;
+    zeroCopyCfg.count = 1;
+    zeroCopyCfg.offset = offset;
+    zeroCopyCfg.dest = dest;
+    ctrlSpace.input_queue_num = 1U;
+    ctrlSpace.input_queue_ids[0] = 0;
+
+    DqsTaskConfig taskCfg = {};
+    taskCfg.zeroCopyCfg = &zeroCopyCfg;
+    rtError_t error = DqsZeroCopyTaskInit(&task1, stm, &taskCfg);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete stm;
+}
+
 TEST_F(TaskTestV201, Test_DqsTask_07)
 {
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));

@@ -414,7 +414,7 @@ static rtError_t AllocSvmMemForDqsZeroCopyTask(TaskInfo* const taskInfo, const D
 
     std::function<void()> const errRecycle = [&ret, &taskInfo]() {
         if (ret != RT_ERROR_NONE) {
-            (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsZeroCopyTask.commonTaskInfo), taskInfo);
+            (void)FreeSvmMemForDqsZeroCopyTask(taskInfo);
         }
     };
     ScopeGuard drvErrRecycle(errRecycle);
@@ -1006,10 +1006,7 @@ rtError_t DqsZeroCopyTaskInit(TaskInfo* taskInfo, const Stream* const stream, co
     return RT_ERROR_NONE;
 }
 
-void DqsZeroCopyTaskUnInit(TaskInfo* const taskInfo)
-{
-    (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsZeroCopyTask.commonTaskInfo), taskInfo);
-}
+void DqsZeroCopyTaskUnInit(TaskInfo* const taskInfo) { (void)FreeSvmMemForDqsZeroCopyTask(taskInfo); }
 
 void PrintErrorInfoForDqsZeroCopyTask(TaskInfo* taskInfo, const uint32_t devId)
 {
