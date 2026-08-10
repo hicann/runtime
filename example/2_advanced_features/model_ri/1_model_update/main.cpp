@@ -60,20 +60,20 @@ int main()
     ModelUtils::CreateAclTensor(shape, &outDevice, aclDataType::ACL_FLOAT, &out);
     ModelUtils::CreateAclTensor(shape, &outTmpDevice, aclDataType::ACL_FLOAT, &outTmp);
     
-    // 该算子计算outTmp = self + ohter * alpha
+    // 该算子计算outTmp = self + other * alpha
     aclnnAddGetWorkspaceSize(self, other, alpha, outTmp, &firstAddWorkspaceSize, &firstAddExecutor);
     void *firstAddWorkspaceAddr = nullptr;
     if (firstAddWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&firstAddWorkspaceAddr, firstAddWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
 
-    // 该算子计算outTmp = outTmp + ohter * alpha
+    // 该算子计算outTmp = outTmp + other * alpha
     aclnnAddGetWorkspaceSize(outTmp, other, alpha, out, &secondAddWorkspaceSize, &secondAddExecutor);
     void *secondAddWorkspaceAddr = nullptr;
     if (secondAddWorkspaceSize > 0) {
         CHECK_ERROR(aclrtMalloc(&secondAddWorkspaceAddr, secondAddWorkspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
-    // 该算子计算outTmp = outTmp + ohter * updateAlpha
+    // 该算子计算outTmp = outTmp + other * updateAlpha
     aclnnAddGetWorkspaceSize(outTmp, other, updateAlpha, out, &updateAddWorkspaceSize, &updateAddExecutor);
     void *updateAddWorkspaceAddr = nullptr;
     if (updateAddWorkspaceSize > 0) {

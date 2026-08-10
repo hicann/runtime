@@ -183,13 +183,13 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy);
 sequenceDiagram
     participant App as 应用程序
     participant API as API
-    participant Manger as 内存管理
+    participant Manager as 内存管理
     participant Adapter as HAL
     participant HW as 驱动
 
     App->>API: aclrtMalloc
-    API->>Manger: DevMalloc
-    Manger->>Adapter: DevMemAlloc
+    API->>Manager: DevMalloc
+    Manager->>Adapter: DevMemAlloc
     Adapter->>HW: halMemAlloc
     HW-->>App: devAddr
 ```
@@ -214,14 +214,14 @@ sequenceDiagram
 sequenceDiagram
     participant App as 应用程序
     participant API as API
-    participant Manger as 内存管理
+    participant Manager as 内存管理
     participant Adapter as HAL
     participant HW as 驱动
     participant NPU as NPU
  
     App->>API: aclrtMemcpyAsync
-    API->>Manger: 组装拷贝任务
-    Manger->>Adapter: 提交拷贝任务
+    API->>Manager: 组装拷贝任务
+    Manager->>Adapter: 提交拷贝任务
     Adapter->>HW: 下发拷贝任务
     HW-->>App: 返回下发结果
     HW->>NPU: 等待执行
