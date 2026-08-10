@@ -96,8 +96,10 @@ static constexpr uint32_t FP32_MAN_LEN = 23U;
  */
 static constexpr uint32_t FP32_MAX_MAN = 0x7FFFFFU;
 
+// FP32转FP16：按饱和模式处理，NaN和Inf转65504.0(0x7BFF)，负Inf转-65504.0(0xFBFF)，适用于所有形态
 uint16_t FloatToFp16(const float32_t val);
 
+// FP16转FP32：不保留NaN/Inf语义，+Inf转65536.0，-Inf转-65536.0，NaN转98304.0，适用于所有形态
 float32_t Fp16ToFloat(const uint16_t val);
 } // namespace acl
 /**

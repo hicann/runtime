@@ -78,6 +78,7 @@ static void Fp16Normalize(uint16_t& expVal, uint16_t& man)
     }
 }
 
+// FP16转FP32：不保留NaN/Inf语义，+Inf转65536.0，-Inf转-65536.0，NaN转98304.0，适用于所有形态
 float32_t Fp16ToFloat(const uint16_t val)
 {
     uint16_t hfSign;
@@ -108,6 +109,7 @@ float32_t Fp16ToFloat(const uint16_t val)
     return ret;
 }
 
+// FP32转FP16：按饱和模式处理，NaN和Inf转65504.0(0x7BFF)，负Inf转-65504.0(0xFBFF)，适用于所有形态
 uint16_t FloatToFp16(const float32_t val)
 {
     TypeUnion u;
@@ -119,7 +121,7 @@ uint16_t FloatToFp16(const float32_t val)
 
     uint16_t mRet;
     uint16_t eRet;
-    // Exponent overflow/NaN converts to signed inf/NaN
+    // 指数溢出/NaN/Inf按饱和模式处理，转换为有符号MAX
     if (eF > 0x8FU) { // 0x8Fu:142=127+15
         eRet = FP16_MAX_EXP - 1U;
         mRet = FP16_MAX_MAN;

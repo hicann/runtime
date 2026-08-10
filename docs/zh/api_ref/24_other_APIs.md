@@ -181,6 +181,8 @@ float aclFloat16ToFloat(aclFloat16 value)
 
 将[aclFloat16](25-05_Typedefs.md#aclFloat16)类型的数据转换为float（指float32）类型的数据。
 
+对于NaN和Inf等特殊值，本接口不会保留其语义，转换结果为普通有限数值：FP16 +Inf（0x7C00）转换为65536.0，FP16 -Inf（0xFC00）转换为-65536.0，FP16 NaN（0x7E00）转换为98304.0。该行为固定不变，不随Device的浮点计算结果输出模式（可通过[aclrtGetDeviceSatMode](04_device_management.md#aclrtGetDeviceSatMode)查询，模式说明请参见[aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode)）而变化，适用于所有形态。如需保留NaN/Inf语义进行精度调试，建议直接在算子计算中产生NaN/Inf，不要通过本接口构造。
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -231,6 +233,8 @@ aclFloat16 aclFloatToFloat16(float value)
 ### 功能说明
 
 将float（指float32）类型的数据转换为[aclFloat16](25-05_Typedefs.md#aclFloat16)类型的数据。
+
+对于NaN和Inf等特殊值，本接口按照饱和模式处理：NaN和Inf均转换为FP16最大值65504.0（0x7BFF），负Inf转换为-65504.0（0xFBFF）。该行为固定不变，不随Device的浮点计算结果输出模式（可通过[aclrtGetDeviceSatMode](04_device_management.md#aclrtGetDeviceSatMode)查询，模式说明请参见[aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode)）而变化，适用于所有形态。如需保留NaN/Inf语义进行精度调试，建议直接在算子计算中产生NaN/Inf，不要通过本接口构造。
 
 ### 参数说明
 

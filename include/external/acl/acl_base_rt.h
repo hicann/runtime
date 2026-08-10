@@ -228,6 +228,10 @@ typedef enum {
  * @param value [IN]   Data to be converted
  *
  * @retval Transformed data
+ *
+ * @note 不保留NaN/Inf语义，转换结果为普通有限数值：FP16 +Inf转为65536.0，-Inf转为-65536.0，NaN转为98304.0。
+ *       该行为兼容仅支持饱和模式的芯片，适用于所有形态。
+ *       如需保留NaN/Inf语义，建议直接在算子计算中产生，不要通过本接口构造。
  */
 ACL_FUNC_VISIBILITY float aclFloat16ToFloat(aclFloat16 value);
 
@@ -238,6 +242,10 @@ ACL_FUNC_VISIBILITY float aclFloat16ToFloat(aclFloat16 value);
  * @param value [IN]   Data to be converted
  *
  * @retval Transformed data
+ *
+ * @note 按饱和模式处理：NaN和Inf均转为FP16最大值65504.0(0x7BFF)，负Inf转为-65504.0(0xFBFF)。
+ *       该行为兼容仅支持饱和模式的芯片，适用于所有形态。
+ *       如需保留NaN/Inf语义，建议直接在算子计算中产生，不要通过本接口构造。
  */
 ACL_FUNC_VISIBILITY aclFloat16 aclFloatToFloat16(float value);
 
