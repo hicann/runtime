@@ -634,12 +634,6 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
-TEST_F(TaskTestDavid, GetDavidSqeFuncAddr_Test)
-{
-    void* addr = GetDavidSqeFuncAddr();
-    EXPECT_NE(addr, nullptr);
-}
-
 TEST_F(TaskTestDavid, read_aicore_mem)
 {
     Context* const curCtx = Runtime::Instance()->CurrentContext();

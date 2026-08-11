@@ -79,9 +79,9 @@ static bool RingBufferMaintainTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, &ConstructDavidSqeForRingBufferMaintainTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, &ConstructDavidSqeForRingBufferMaintainTask);
     return true;
 }
 

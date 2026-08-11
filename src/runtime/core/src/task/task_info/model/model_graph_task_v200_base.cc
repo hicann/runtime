@@ -102,10 +102,10 @@ static bool ModelGraphTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, endGraphFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, exitGraphFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, &ConstructDavidSqeForAddEndGraphTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_END_GRAPH, &ConstructDavidSqeForAddEndGraphTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_EXIT_GRAPH, &ConstructDavidSqeBase);
     return true;
 }
 

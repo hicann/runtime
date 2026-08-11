@@ -409,12 +409,12 @@ static bool EventTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RECORD, davidEventRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_WAIT, davidEventWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RESET, davidEventResetFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_REMOTE_EVENT_WAIT, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RECORD, &ConstructDavidSqeForEventRecordTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DAVID_EVENT_WAIT, &ConstructDavidSqeForEventWaitTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RESET, &ConstructDavidSqeForEventResetTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_REMOTE_EVENT_WAIT, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_RECORD, &ConstructDavidSqeForEventRecordTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_WAIT, &ConstructDavidSqeForEventWaitTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_RESET, &ConstructDavidSqeForEventResetTask);
     return true;
 }
 

@@ -205,10 +205,10 @@ static bool CommonTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_STARS_COMMON, starsCommonFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_WRITE_VALUE, writeValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_COMMON_CMD, commonCmdFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_STARS_COMMON, &ConstructDavidSqeForStarsCommonTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_WRITE_VALUE, &ConstructDavidSqeForWriteValueTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_STARS_COMMON, &ConstructDavidSqeForStarsCommonTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_WRITE_VALUE, &ConstructDavidSqeForWriteValueTask);
     return true;
 }
 

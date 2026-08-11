@@ -285,9 +285,8 @@ static bool DavinciMultipleTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MULTIPLE_TASK, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MULTIPLE_TASK, &ConstructDavidSqeForDavinciMultipleTask);
     }
-
-    RegDavidSqeFunc(TS_TASK_TYPE_MULTIPLE_TASK, &ConstructDavidSqeForDavinciMultipleTask);
 
     return true;
 }

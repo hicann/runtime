@@ -31,9 +31,9 @@ static bool KernelFusionTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_ISSUE, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_ISSUE, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_FUSION_ISSUE, &ConstructDavidSqeBase);
     return true;
 }
 

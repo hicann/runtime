@@ -28,21 +28,32 @@
 
 namespace cce {
 namespace runtime {
-static PfnTaskToDavidSqe g_toDavidSqeFunc[TS_TASK_TYPE_RESERVED] = {};
+static PfnTaskToDavidSqe g_toDavidSqeFunc[CHIP_END][TS_TASK_TYPE_RESERVED] = {};
+static PfnTaskToDavidSqe* g_toDavidSqeRunningFunc = g_toDavidSqeFunc[CHIP_BEGIN];
 
 constexpr uint8_t TASK_SQE_NUM_ONE = 1U;
 constexpr uint8_t TASK_SQE_NUM_TWO = 2U;
 constexpr uint8_t TASK_NUM_FOR_HEAD_UPDATE = 64U;
 
-PfnTaskToDavidSqe* GetDavidSqeFuncAddr() { return g_toDavidSqeFunc; }
-
-void RegDavidSqeFunc(tsTaskType_t taskType, PfnTaskToDavidSqe func)
+void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavidSqe func)
 {
     if (taskType >= TS_TASK_TYPE_RESERVED) {
         RT_LOG(RT_LOG_ERROR, "task type is invalid: %d", taskType);
         return;
     }
-    g_toDavidSqeFunc[taskType] = func;
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+    g_toDavidSqeFunc[chipType][taskType] = func;
+
+    return;
+}
+
+void RefreshDavidSqeRunningFunc(rtChipType_t chipType)
+{
+    g_toDavidSqeRunningFunc = g_toDavidSqeFunc[chipType];
+    RT_LOG(RT_LOG_INFO, "David sqe running func refreshed to chipType: %d.", chipType);
     return;
 }
 
@@ -90,8 +101,8 @@ rtDavidSqe_t* GetSqPosAddr(uint64_t sqBaseAddr, uint32_t pos)
 void ToConstructDavidSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     taskInfo->bindFlag = taskInfo->stream->GetBindFlag();
-    if (g_toDavidSqeFunc[taskInfo->type] != nullptr) {
-        g_toDavidSqeFunc[taskInfo->type](taskInfo, sqe, sqeInfo);
+    if (g_toDavidSqeRunningFunc[taskInfo->type] != nullptr) {
+        g_toDavidSqeRunningFunc[taskInfo->type](taskInfo, sqe, sqeInfo);
     }
 
     if (Runtime::Instance()->GetConnectUbFlag() &&

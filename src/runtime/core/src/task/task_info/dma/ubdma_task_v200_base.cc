@@ -328,10 +328,10 @@ static bool UbDmaTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_UB_DB_SEND, ubDbFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DIRECT_SEND, directSendFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_UB_DB_SEND, &ConstructDavidSqeForUbDbSendTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DIRECT_SEND, &ConstructDavidSqeForUbDirectSendTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_UB_DB_SEND, &ConstructDavidSqeForUbDbSendTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DIRECT_SEND, &ConstructDavidSqeForUbDirectSendTask);
     return true;
 }
 

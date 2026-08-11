@@ -249,7 +249,7 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/mini_v3/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/nano/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/tiny/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/config/910_96/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirinx90/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/kirin9030/dev_info_reg.cc

@@ -42,10 +42,10 @@ static bool RdmaTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_RDMA_SEND, rdmaSendFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_RDMA_DB_SEND, rdmaDbSendFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_RDMA_SEND, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_RDMA_DB_SEND, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_RDMA_SEND, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_RDMA_DB_SEND, &ConstructDavidSqeBase);
     return true;
 }
 

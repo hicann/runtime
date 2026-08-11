@@ -51,9 +51,9 @@ static bool FusionKernelTaskRegister()
     const auto& chips = GetV200Chips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, &ConstructDavidSqeForFusionKernelTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_FUSION_KERNEL, &ConstructDavidSqeForFusionKernelTask);
     return true;
 }
 

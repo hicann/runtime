@@ -229,17 +229,16 @@ static bool ProfilingTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, pcTraceFuncs);
+        // Register David SQE functions
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_ENABLE, &ConstructDavidSqeForProfilingEnableTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_DISABLE, &ConstructDavidSqeForProfilingDisableTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_START, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_STOP, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_ADCPROF, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, &ConstructDavidSqeForProfilerTraceExTask);
     }
-
-    // Register David SQE functions
-    RegDavidSqeFunc(TS_TASK_TYPE_PROFILING_ENABLE, &ConstructDavidSqeForProfilingEnableTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_PROFILING_DISABLE, &ConstructDavidSqeForProfilingDisableTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_ONLINEPROF_START, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_ONLINEPROF_STOP, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_ADCPROF, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_PCTRACE_ENABLE, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_PROFILER_TRACE, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_PROFILER_TRACE_EX, &ConstructDavidSqeForProfilerTraceExTask);
 
     return true;
 }

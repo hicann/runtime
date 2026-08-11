@@ -2008,23 +2008,23 @@ static bool DqsTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, modelSerialSchedPreProcTaskFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, modelSerialSchedNotifyWaitTaskFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, modelSerialSchedPostProcTaskFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_MBUF_FREE, &ConstructSqeForDqsMbufFreeTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ENQUEUE, &ConstructSqeForDqsEnqueueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_DEQUEUE, &ConstructSqeForDqsDequeueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ZERO_COPY, &ConstructSqeForDqsZeroCopyTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_SCHED_END, &ConstructSqeForDqsSchedEndTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_PREPARE, &ConstructSqeForDqsPrepareTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, &ConstructSqeForDqsInterChipPreProcTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, &ConstructSqeForDqsInterChipPostProcTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ADSPC, &ConstructSqeForDqsAdspcTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_BATCH_DEQUEUE, &ConstructSqeForDqsBatchDequeueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_CONDITION_COPY, &ConstructSqeForDqsConditionCopyTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_FRAME_ALIGN, &ConstructSqeForDqsFrameAlignTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, &ConstructSqeForModelSerialSchedPreProcTask);
+        RegDavidSqeFunc(
+            chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, &ConstructSqeForModelSerialSchedNotifyWaitTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, &ConstructSqeForModelSerialSchedPostProcTask);
     }
-
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_MBUF_FREE, &ConstructSqeForDqsMbufFreeTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ENQUEUE, &ConstructSqeForDqsEnqueueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_DEQUEUE, &ConstructSqeForDqsDequeueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ZERO_COPY, &ConstructSqeForDqsZeroCopyTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_SCHED_END, &ConstructSqeForDqsSchedEndTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_PREPARE, &ConstructSqeForDqsPrepareTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, &ConstructSqeForDqsInterChipPreProcTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, &ConstructSqeForDqsInterChipPostProcTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_ADSPC, &ConstructSqeForDqsAdspcTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_BATCH_DEQUEUE, &ConstructSqeForDqsBatchDequeueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_CONDITION_COPY, &ConstructSqeForDqsConditionCopyTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DQS_FRAME_ALIGN, &ConstructSqeForDqsFrameAlignTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, &ConstructSqeForModelSerialSchedPreProcTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, &ConstructSqeForModelSerialSchedNotifyWaitTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, &ConstructSqeForModelSerialSchedPostProcTask);
 
     return true;
 }

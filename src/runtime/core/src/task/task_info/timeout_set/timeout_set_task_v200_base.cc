@@ -86,9 +86,9 @@ static bool TimeoutSetTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, &ConstructDavidSqeForTimeoutSetTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_TASK_TIMEOUT_SET, &ConstructDavidSqeForTimeoutSetTask);
     return true;
 }
 

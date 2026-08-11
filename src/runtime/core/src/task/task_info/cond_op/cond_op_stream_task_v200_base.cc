@@ -126,12 +126,13 @@ static bool CondOpStreamTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_SWITCH_N, streamSwitchNFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, streamLabelSwitchByIndexFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, streamLabelGotoFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_SWITCH, &ConstructDavidSqeForStreamSwitchTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_SWITCH_N, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(
+            chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, &ConstructDavidSqeForStreamLabelSwitchByIndexTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_SWITCH, &ConstructDavidSqeForStreamSwitchTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_SWITCH_N, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, &ConstructDavidSqeForStreamLabelSwitchByIndexTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_LABEL_GOTO, &ConstructDavidSqeBase);
     return true;
 }
 

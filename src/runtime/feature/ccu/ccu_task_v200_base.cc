@@ -32,9 +32,9 @@ static bool CcuLaunchTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CCU_LAUNCH, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CCU_LAUNCH, &ConstructDavidSqeForCcuLaunchTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_CCU_LAUNCH, &ConstructDavidSqeForCcuLaunchTask);
     return true;
 }
 

@@ -255,5 +255,11 @@ void TaskRollBack(Stream* const stm, uint32_t pos)
     return;
 }
 
+void RefreshDavidSqeRunningFunc(rtChipType_t chipType)
+{
+    UNUSED(chipType);
+    return;
+}
+
 } // namespace runtime
 } // namespace cce

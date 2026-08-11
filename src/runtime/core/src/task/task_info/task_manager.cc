@@ -1093,6 +1093,9 @@ void RefreshTaskFuncPointer(rtChipType_t chipType)
     g_printErrorInfoFunc = arrays.printErrorInfoFunc;
     g_setResultFunc = arrays.setResultFunc;
     g_setStarsResultFunc = arrays.setStarsResultFunc;
+
+    RefreshDavidSqeRunningFunc(chipType);
+
     RT_LOG(RT_LOG_INFO, "Task func pointer refreshed to chip type: %d", chipType);
 }
 

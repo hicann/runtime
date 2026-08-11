@@ -31,9 +31,9 @@ static bool FftsPlusTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FFTS_PLUS, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_FFTS_PLUS, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_FFTS_PLUS, &ConstructDavidSqeBase);
     return true;
 }
 

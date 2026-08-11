@@ -31,9 +31,9 @@ static bool BarrierTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_BARRIER, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_BARRIER, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_BARRIER, &ConstructDavidSqeBase);
     return true;
 }
 

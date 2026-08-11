@@ -72,10 +72,10 @@ static bool NotifyTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
     return true;
 }
 

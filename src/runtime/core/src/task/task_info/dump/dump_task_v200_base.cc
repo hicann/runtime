@@ -254,16 +254,16 @@ static bool DumpTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, debugUnRegisterForStreamFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_AICPU_INFO_LOAD, aicpuInfoLoadFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOP, nopFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSIONDUMP_ADDR_SET, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DATADUMP_LOADINFO, &ConstructDavidSqeForDataDumpLoadInfoTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER, &ConstructDavidSqeForDebugRegisterTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER, &ConstructDavidSqeForDebugUnRegisterTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM, &ConstructDavidSqeForDebugRegisterForStreamTask);
+        RegDavidSqeFunc(
+            chip, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, &ConstructDavidSqeForDebugUnRegisterForStreamTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_AICPU_INFO_LOAD, &ConstructDavidSqeForAicpuInfoLoadTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOP, &ConstructDavidSqeForNopTask);
     }
-
-    RegDavidSqeFunc(TS_TASK_TYPE_FUSIONDUMP_ADDR_SET, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_DATADUMP_LOADINFO, &ConstructDavidSqeForDataDumpLoadInfoTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DEBUG_REGISTER, &ConstructDavidSqeForDebugRegisterTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DEBUG_UNREGISTER, &ConstructDavidSqeForDebugUnRegisterTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM, &ConstructDavidSqeForDebugRegisterForStreamTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, &ConstructDavidSqeForDebugUnRegisterForStreamTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_AICPU_INFO_LOAD, &ConstructDavidSqeForAicpuInfoLoadTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_NOP, &ConstructDavidSqeForNopTask);
 
     return true;
 }

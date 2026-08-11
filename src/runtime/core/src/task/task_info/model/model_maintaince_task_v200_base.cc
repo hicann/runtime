@@ -159,9 +159,9 @@ static bool ModelMaintainceTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, &ConstructDavidSqeForModelMaintainceTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_MAINTAINCE, &ConstructDavidSqeForModelMaintainceTask);
     return true;
 }
 

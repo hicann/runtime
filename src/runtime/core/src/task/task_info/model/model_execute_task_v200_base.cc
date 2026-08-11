@@ -70,9 +70,9 @@ static bool ModelExecuteTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, &ConstructDavidSqeForModelExecuteTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_MODEL_EXECUTE, &ConstructDavidSqeForModelExecuteTask);
     return true;
 }
 

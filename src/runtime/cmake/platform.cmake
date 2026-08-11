@@ -175,7 +175,7 @@ macro(runtime_platform_others_obj target_name)
         ${RUNTIME_DIR}/src/runtime/config/mini_v3/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/nano/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_reg.cc
-        ${RUNTIME_DIR}/src/runtime/config/910_96/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     )
 

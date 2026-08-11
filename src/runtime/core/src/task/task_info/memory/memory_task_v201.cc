@@ -170,17 +170,17 @@ static bool MemoryTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, updateAddressFuncs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEMCPY, &ConstructDavidSqeForMemcpyAsyncTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEM_WRITE_VALUE, &ConstructDavidSqeForMemWriteValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, &ConstructDavidSqeBase);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_MEMCPY, &ConstructDavidSqeForMemcpyAsyncTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MEM_WRITE_VALUE, &ConstructDavidSqeForMemWriteValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_UPDATE_ADDRESS, &ConstructDavidSqeBase);
     return true;
 }
 

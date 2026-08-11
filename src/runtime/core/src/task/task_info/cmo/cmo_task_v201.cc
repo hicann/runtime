@@ -50,9 +50,9 @@ static bool CmoTaskRegister()
     const auto& chips = GetV201Chips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
+        RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);
     return true;
 }
 

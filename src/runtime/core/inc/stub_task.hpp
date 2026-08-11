@@ -63,6 +63,7 @@ rtError_t UpdateTimeoutConfigTaskSubmitDavid(Stream* const stm, const RtTimeoutC
 
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo* taskInfo, uint8_t* const command);
 void ConstructStarsSqeForConditionNotifyWait(TaskInfo* taskInfo, uint8_t* const command);
+void RefreshDavidSqeRunningFunc(rtChipType_t chipType);
 
 } // namespace runtime
 } // namespace cce
