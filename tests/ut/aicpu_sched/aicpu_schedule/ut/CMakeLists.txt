@@ -201,6 +201,7 @@ set(event_process_kernel_test_src_file
     testcase/hwts_kernel/hwts_kernel_create_queue_test.cpp
     testcase/hwts_kernel/hwts_kernel_destroy_queue_test.cpp
     testcase/hwts_kernel/hwts_kernel_cfg_log_addr_test.cpp
+    testcase/hwts_kernel/hwts_kernel_set_dfx_info_test.cpp
     testcase/hwts_kernel/hwts_kernel_config_extinfo_test.cpp
     testcase/hwts_kernel/hwts_kernel_model_config_test.cpp
     testcase/hwts_kernel/hwts_kernel_esched_priority_test.cpp

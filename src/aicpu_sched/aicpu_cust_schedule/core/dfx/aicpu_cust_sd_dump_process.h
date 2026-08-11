@@ -91,6 +91,7 @@ private:
     int32_t ActiveTheBlockThread(const event_info& drvEventInfo);
     int32_t ProcessDumpMessage(const event_info& drvEventInfo);
     int32_t ProcessPlatformInfoMessage(const event_info& drvEventInfo) const;
+    int32_t AICPUEventSetDfxInfo(const event_info& drvEventInfo) const;
     /*
      * 消息处理函数
      */

@@ -223,6 +223,40 @@ int32_t AicpuCustDumpProcess::ProcessPlatformInfoMessage(const event_info& drvEv
 {
     return CustProcessLoadPlatform(&drvEventInfo);
 }
+
+int32_t AicpuCustDumpProcess::AICPUEventSetDfxInfo(const event_info& drvEventInfo) const
+{
+    aicpusd_info("Begin to process set dfx info event.");
+    const auto& privEventInfo = drvEventInfo.priv;
+    if (privEventInfo.msg_len != sizeof(AicpuDfxInfoReq)) {
+        aicpusd_err("The event msg len[%u] is not correct[%zu].", privEventInfo.msg_len, sizeof(AicpuDfxInfoReq));
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+
+    const AicpuDfxInfoReq* dfxInfoReq = PtrToPtr<const char_t, const AicpuDfxInfoReq>(privEventInfo.msg);
+    aicpusd_info("Set dfx info for aicpusd, addr is %lu.", dfxInfoReq->infoAddr);
+    aicpu::AicpuSetDfxInfo(dfxInfoReq->infoAddr);
+
+    const event_sync_msg* syncHead = PtrToPtr<char_t, event_sync_msg>(privEventInfo.msg);
+    event_summary replyEvent = {};
+    int32_t ret = AICPU_SCHEDULE_OK;
+    replyEvent.msg = PtrToPtr<int32_t, char_t>(&ret);
+    replyEvent.msg_len = static_cast<uint32_t>(sizeof(int32_t));
+    replyEvent.dst_engine = syncHead->dst_engine;
+    replyEvent.policy = ONLY;
+    replyEvent.pid = syncHead->pid;
+    replyEvent.grp_id = syncHead->gid;
+    const int32_t eventId = syncHead->event_id;
+    replyEvent.event_id = static_cast<EVENT_ID>(eventId);
+    replyEvent.subevent_id = syncHead->subevent_id;
+    const auto drvRet = halEschedSubmitEvent(AicpuDrvManager::GetInstance().GetDeviceId(), &replyEvent);
+    if (drvRet != DRV_ERROR_NONE) {
+        aicpusd_err("Failed to submit aicpu event. ret is %d.", static_cast<int32_t>(drvRet));
+        return AICPU_SCHEDULE_ERROR_DRV_ERR;
+    }
+    return ret;
+}
+
 int32_t AicpuCustDumpProcess::ActiveTheBlockThread(const event_info& drvEventInfo)
 {
     const AICPUCustSubEvent drvEventId = static_cast<AICPUCustSubEvent>(drvEventInfo.comm.subevent_id);
@@ -231,6 +265,9 @@ int32_t AicpuCustDumpProcess::ActiveTheBlockThread(const event_info& drvEventInf
     }
     if (drvEventId == AICPU_SUB_EVENT_CUST_LOAD_PLATFORM) {
         return ProcessPlatformInfoMessage(drvEventInfo);
+    }
+    if (drvEventId == AICPU_SUB_EVENT_SET_DFX_INFO) {
+        return AICPUEventSetDfxInfo(drvEventInfo);
     }
     aicpusd_err("invalid Subevent Id [%u]", static_cast<uint32_t>(drvEventId));
     return AICPU_SCHEDULE_OK;

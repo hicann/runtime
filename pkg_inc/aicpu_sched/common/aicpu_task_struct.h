@@ -91,6 +91,12 @@ struct AicpuErrMsgInfo {
     char_t errDesc[128];   /* err msg desc info */
     uint8_t reserved2[40]; /* the total byte is 256, reserved2 len = 256 - other lens */
 };
+
+struct AicpuDfxInfo {
+    uint8_t cpType; /* 0: aicpusd, 1: custom_aicpusd */
+    uint64_t infoAddr;
+};
+
 #pragma pack(pop)
 
 } // namespace aicpu

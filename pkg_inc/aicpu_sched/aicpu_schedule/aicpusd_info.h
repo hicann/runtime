@@ -82,6 +82,7 @@ enum __attribute__((visibility("default"))) AICPUCustSubEvent {
     AICPU_SUB_EVENT_REPORT_UDF_DUMPDATA,        // aicpusd do udf datadump
     AICPU_SUB_EVENT_CUST_LOAD_PLATFORM,         // custom scheduler process load platform info event
     AICPU_SUB_EVENT_CUST_CLOSE_MONITOR,         // notify cust-sd to close aicpu kernel timeout monitor
+    AICPU_SUB_EVENT_SET_DFX_INFO,               // custom scheduler process set dfx event
 };
 
 struct __attribute__((visibility("default"))) AICPUSubEventStreamInfo {
@@ -285,6 +286,11 @@ struct __attribute__((visibility("default"))) SomaMemMng {
     int32_t memAsyncOpType; // Malloc(0) Free(1)
     int32_t memAsyncSubCMD; // Distinguish between Malloc reuse strategies and Free explicit/implicit reuse methods
     char rsv[4];
+} __attribute__((packed));
+
+struct AicpuDfxInfoReq {
+    uint64_t syncEventHead;
+    uint64_t infoAddr;
 } __attribute__((packed));
 }
 #endif // AICPUSD_AICPUSD_INFO_H

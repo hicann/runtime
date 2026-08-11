@@ -10,6 +10,7 @@
 
 #include "hwts_kernel_dfx.h"
 
+#include "aicpu_context.h"
 #include "aicpu_prof.h"
 #include "aicpusd_profiler.h"
 #include "profiling_adp.h"
@@ -26,6 +27,13 @@ namespace AicpuSchedule {
 namespace {
 const std::string CFG_LOG_ADDR = "CfgLogAddr";
 const std::string DUMP_DATA_INFO = "DumpDataInfo";
+const std::string SET_AICPU_DFX = "SetAicpuDfx";
+constexpr uint32_t CUSTOM_CP_CCPU_GROUP_ID = 31U;
+
+enum class DfxCpType : uint8_t {
+    AICPUSD = 0,        /* aicpusd */
+    CUSTOM_AICPUSD = 1, /* custom_aicpusd */
+};
 } // namespace
 
 int32_t CfgLogAddrTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
@@ -75,6 +83,62 @@ int32_t DumpDataInfoTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
     return dumpTaskMgr.DumpOpInfoForUnknowShape(opMappingInfoAddr, opMappingInfoLen);
 }
 
+int32_t SetAicpuDfxTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
+{
+    aicpusd_info("Begin to process ts kernel SetAicpuDfx event.");
+    const auto dfxInfo = PtrToPtr<void, aicpu::AicpuDfxInfo>(ValueToPtr(tsKernelInfo.kernelBase.cceKernel.paramBase));
+    if (dfxInfo == nullptr) {
+        aicpusd_err("param base for dfx info is null.");
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+    const auto cpType = static_cast<DfxCpType>(dfxInfo->cpType);
+    if (cpType == DfxCpType::AICPUSD) {
+        aicpusd_info("Set dfx info for aicpusd, infoAddr is %lu.", dfxInfo->infoAddr);
+        aicpu::AicpuSetDfxInfo(dfxInfo->infoAddr);
+        return AICPU_SCHEDULE_OK;
+    }
+    if (cpType == DfxCpType::CUSTOM_AICPUSD) {
+        aicpusd_info("Set dfx info for custom_aicpusd, infoAddr is %lu.", dfxInfo->infoAddr);
+        return SetDfxInfoToCustomSd(dfxInfo->infoAddr);
+    } else {
+        aicpusd_err("dfx info cpType[%u] is invalid", dfxInfo->cpType);
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+}
+
+int32_t SetAicpuDfxTsKernel::SetDfxInfoToCustomSd(const uint64_t infoAddr) const
+{
+    AicpuDfxInfoReq req = {};
+    req.infoAddr = infoAddr;
+    event_summary syncDfxInfo = {};
+    syncDfxInfo.msg = PtrToPtr<AicpuDfxInfoReq, char_t>(&req);
+    syncDfxInfo.msg_len = static_cast<uint32_t>(sizeof(AicpuDfxInfoReq));
+    syncDfxInfo.dst_engine = CCPU_DEVICE;
+    syncDfxInfo.policy = ONLY;
+    syncDfxInfo.pid = AicpuScheduleInterface::GetInstance().GetAicpuCustSdProcId();
+    syncDfxInfo.grp_id = CUSTOM_CP_CCPU_GROUP_ID;
+    syncDfxInfo.event_id = EVENT_CCPU_CTRL_MSG;
+    syncDfxInfo.subevent_id = AICPU_SUB_EVENT_SET_DFX_INFO;
+
+    int32_t syncRet = 0;
+    event_reply drvAck = {};
+    drvAck.buf = PtrToPtr<int32_t, char>(&syncRet);
+    drvAck.buf_len = sizeof(int32_t);
+    const int32_t timeOutMs = 5000;
+    const auto drvRet =
+        halEschedSubmitEventSync(AicpuDrvManager::GetInstance().GetDeviceId(), &syncDfxInfo, timeOutMs, &drvAck);
+    if (drvRet != DRV_ERROR_NONE) {
+        aicpusd_err("Failed to submit event to custom sd, ret=[%d].", static_cast<int32_t>(drvRet));
+        return AICPU_SCHEDULE_ERROR_INNER_ERROR;
+    }
+    if (syncRet != AICPU_SCHEDULE_OK) {
+        aicpusd_err("Failed to set dfx info for custom sd, ret=[%d].", syncRet);
+        return AICPU_SCHEDULE_ERROR_INNER_ERROR;
+    }
+    return AICPU_SCHEDULE_OK;
+}
+
 REGISTER_HWTS_KERNEL(CFG_LOG_ADDR, CfgLogAddrTsKernel);
 REGISTER_HWTS_KERNEL(DUMP_DATA_INFO, DumpDataInfoTsKernel);
+REGISTER_HWTS_KERNEL(SET_AICPU_DFX, SetAicpuDfxTsKernel);
 } // namespace AicpuSchedule

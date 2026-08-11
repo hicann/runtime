@@ -164,6 +164,8 @@ void SetUniqueVfId(uint32_t uniqueVfId) {}
 void SetCustAicpuSdFlag(bool isCustAicpuSdFlag) {}
 
 bool IsCustAicpuSd() { return false; }
+
+void AicpuSetDfxInfo(const uint64_t dfxInfoAddr) {}
 } // namespace aicpu
 
 namespace aicpu {

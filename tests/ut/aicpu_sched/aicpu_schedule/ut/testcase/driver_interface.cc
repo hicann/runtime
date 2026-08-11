@@ -219,3 +219,9 @@ int32_t SetSubProcScheduleMode(
 {
     return 0;
 }
+
+drvError_t halEschedSubmitEventSync(
+    unsigned int devId, struct event_summary* event, int32_t timeout, struct event_reply* reply)
+{
+    return DRV_ERROR_NONE;
+}

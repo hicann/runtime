@@ -27,5 +27,15 @@ public:
     ~DumpDataInfoTsKernel() override = default;
     int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
 };
+
+class SetAicpuDfxTsKernel : public HwTsKernelHandler {
+public:
+    SetAicpuDfxTsKernel() = default;
+    ~SetAicpuDfxTsKernel() override = default;
+    int32_t Compute(const aicpu::HwtsTsKernel& tsKernelInfo) override;
+
+private:
+    int32_t SetDfxInfoToCustomSd(const uint64_t infoAddr) const;
+};
 } // namespace AicpuSchedule
 #endif // HWTS_KERNEL_DFX_H

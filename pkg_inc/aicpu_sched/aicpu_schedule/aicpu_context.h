@@ -332,6 +332,8 @@ void __attribute__((weak)) SetCustAicpuSdFlag(const bool isCustAicpuSdFlag);
  * @return bool  is cusAicpuSd or not
  */
 bool __attribute__((weak)) IsCustAicpuSd();
+
+__attribute__((visibility("default"))) void AicpuSetDfxInfo(const uint64_t dfxInfoAddr);
 } // namespace aicpu
 
 extern "C" {
@@ -385,5 +387,12 @@ uint64_t __attribute__((weak)) AicpuGetTaskId();
  * @return stream id
  */
 uint32_t __attribute__((weak)) AicpuGetStreamId();
+
+/**
+ * get dfx info address.
+ * @param [out] dfxInfoAddr : dfx info address output
+ * @return 0: success, 1: dfx info not set, -1: invalid param
+ */
+__attribute__((visibility("default"))) int32_t AicpuGetDfxInfo(uint64_t* dfxInfoAddr);
 }
 #endif // AICPU_CONTEXT_H_

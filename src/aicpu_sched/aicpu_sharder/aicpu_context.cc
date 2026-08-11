@@ -40,6 +40,12 @@ std::mutex g_sqeIdMtx;
 constexpr uint32_t INITIAL_SQE_IQ = 0x80000000U;
 uint32_t g_sqeId = INITIAL_SQE_IQ;
 
+enum class AicpuDfxInfoRet : int32_t {
+    OK = 0,
+    NOT_SET = 1,
+    INVALID_PARAM = -1,
+};
+
 // context info
 std::mutex g_defaultMutex;
 std::vector<std::map<std::string, std::string>> g_defaultThreadCtx;
@@ -49,6 +55,13 @@ std::mutex g_debugMutex;
 std::vector<std::map<std::string, std::string>> g_debugThreadCtx;
 std::mutex g_funcMapMutex;
 std::map<uint32_t, std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>> g_funcMap;
+
+typedef struct {
+    std::mutex dfxInfoMutex;
+    uint64_t dfxInfoAddr = 0U;
+    bool dfxInfoSet = false;
+} DfxStorer;
+DfxStorer g_dfxStorer = {};
 
 std::map<std::string, std::string>& GetThreadCtx(const aicpu::CtxType type, const uint32_t threadIndex)
 {
@@ -506,6 +519,13 @@ void SetUniqueVfId(const uint32_t uniqueVfId) { g_uniqueVfId = uniqueVfId; }
 void SetCustAicpuSdFlag(const bool isCustAicpuSdFlag) { g_isCustAicpuSd = isCustAicpuSdFlag; }
 
 bool IsCustAicpuSd() { return g_isCustAicpuSd; }
+
+void AicpuSetDfxInfo(const uint64_t dfxInfoAddr)
+{
+    std::lock_guard<std::mutex> lock(g_dfxStorer.dfxInfoMutex);
+    g_dfxStorer.dfxInfoAddr = dfxInfoAddr;
+    g_dfxStorer.dfxInfoSet = true;
+}
 } // namespace aicpu
 
 aicpu::status_t SetThreadCtxInfo(aicpu::CtxType type, const std::string& key, const std::string& value)
@@ -563,3 +583,16 @@ uint32_t AicpuGetBlockNum() { return g_blockNum; }
 uint64_t AicpuGetTaskId() { return g_streamAndTaskId.taskId; }
 
 uint32_t AicpuGetStreamId() { return g_streamAndTaskId.streamId; }
+
+int32_t AicpuGetDfxInfo(uint64_t* dfxInfoAddr)
+{
+    if (dfxInfoAddr == nullptr) {
+        return static_cast<int32_t>(AicpuDfxInfoRet::INVALID_PARAM);
+    }
+    std::lock_guard<std::mutex> lock(g_dfxStorer.dfxInfoMutex);
+    if (!g_dfxStorer.dfxInfoSet) {
+        return static_cast<int32_t>(AicpuDfxInfoRet::NOT_SET);
+    }
+    *dfxInfoAddr = g_dfxStorer.dfxInfoAddr;
+    return static_cast<int32_t>(AicpuDfxInfoRet::OK);
+}

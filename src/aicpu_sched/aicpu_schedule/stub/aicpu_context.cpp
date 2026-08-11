@@ -155,6 +155,12 @@ bool IsCustAicpuSd()
     aicpusd_info("Get cust aicpusd flag in stub func[%s].", __func__);
     return g_isCustAicpuSd;
 }
+
+void AicpuSetDfxInfo(const uint64_t dfxInfoAddr)
+{
+    aicpusd_info("Set dfx info in stub func[%s].", __func__);
+    (void)dfxInfoAddr;
+}
 } // namespace aicpu
 
 namespace AicpuSchedule {

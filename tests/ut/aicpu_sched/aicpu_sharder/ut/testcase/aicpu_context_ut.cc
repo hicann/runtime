@@ -240,3 +240,25 @@ TEST_F(AiCPUContextUt, GetSqeIdSuccess)
     EXPECT_EQ(start, inital);
     EXPECT_EQ(end, inital + 30);
 }
+
+// g_dfxStorer is a file-scope global in aicpu_context.cc with no reset API.
+// SetAndGetDfxInfoSuccess sets dfxInfoSet=true and cannot restore it.
+// GetDfxInfoNotSet relies on dfxInfoSet=false and must run before any Set call.
+// GetDfxInfoNullParam does not touch storer state.
+TEST_F(AiCPUContextUt, GetDfxInfoNotSet)
+{
+    uint64_t actualAddr = 0xDEADULL;
+    EXPECT_EQ(AicpuGetDfxInfo(&actualAddr), 1);
+    EXPECT_EQ(actualAddr, 0xDEADULL);
+}
+
+TEST_F(AiCPUContextUt, SetAndGetDfxInfoSuccess)
+{
+    const uint64_t expectAddr = 0x1234ABCDULL;
+    AicpuSetDfxInfo(expectAddr);
+    uint64_t actualAddr = 0U;
+    EXPECT_EQ(AicpuGetDfxInfo(&actualAddr), 0);
+    EXPECT_EQ(actualAddr, expectAddr);
+}
+
+TEST_F(AiCPUContextUt, GetDfxInfoNullParam) { EXPECT_EQ(AicpuGetDfxInfo(nullptr), -1); }

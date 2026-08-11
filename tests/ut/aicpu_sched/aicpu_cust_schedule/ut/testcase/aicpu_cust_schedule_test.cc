@@ -2660,3 +2660,54 @@ TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_sem_wait_failed_St)
         AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).processThread_.join();
     }
 }
+
+TEST_F(AICPUCustScheduleTEST, AICPUEventSetDfxInfo_MsgLenMismatch)
+{
+    event_info drvEventInfo = {};
+    drvEventInfo.comm.subevent_id = AICPU_SUB_EVENT_SET_DFX_INFO;
+    auto& privEventInfo = drvEventInfo.priv;
+
+    privEventInfo.msg_len = 1U;
+    int32_t ret = AicpuCustDumpProcess::GetInstance().ActiveTheBlockThread(drvEventInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
+TEST_F(AICPUCustScheduleTEST, AICPUEventSetDfxInfo_Success)
+{
+    event_info drvEventInfo = {};
+    drvEventInfo.comm.subevent_id = AICPU_SUB_EVENT_SET_DFX_INFO;
+    auto& privEventInfo = drvEventInfo.priv;
+
+    privEventInfo.msg_len = sizeof(AicpuDfxInfoReq);
+    struct event_sync_msg syncHead = {};
+    syncHead.pid = 100;
+    syncHead.gid = 5;
+    syncHead.event_id = EVENT_AICPU_MSG;
+    syncHead.subevent_id = AICPU_SUB_EVENT_SET_DFX_INFO;
+    syncHead.dst_engine = CCPU_DEVICE;
+    AicpuDfxInfoReq dfxInfoReq = {};
+    dfxInfoReq.syncEventHead = *reinterpret_cast<uint64_t*>(&syncHead);
+    dfxInfoReq.infoAddr = 0xABCD1234ULL;
+    memcpy_s(privEventInfo.msg, sizeof(dfxInfoReq), &dfxInfoReq, sizeof(dfxInfoReq));
+    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_NONE));
+    int32_t ret = AicpuCustDumpProcess::GetInstance().ActiveTheBlockThread(drvEventInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AICPUCustScheduleTEST, AICPUEventSetDfxInfo_SubmitEventFail)
+{
+    event_info drvEventInfo = {};
+    drvEventInfo.comm.subevent_id = AICPU_SUB_EVENT_SET_DFX_INFO;
+    auto& privEventInfo = drvEventInfo.priv;
+
+    privEventInfo.msg_len = sizeof(AicpuDfxInfoReq);
+    struct event_sync_msg syncHead = {};
+    syncHead.pid = 100;
+    AicpuDfxInfoReq dfxInfoReq = {};
+    dfxInfoReq.syncEventHead = *reinterpret_cast<uint64_t*>(&syncHead);
+    dfxInfoReq.infoAddr = 0ULL;
+    memcpy_s(privEventInfo.msg, sizeof(dfxInfoReq), &dfxInfoReq, sizeof(dfxInfoReq));
+    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
+    int32_t ret = AicpuCustDumpProcess::GetInstance().ActiveTheBlockThread(drvEventInfo);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DRV_ERR);
+}
