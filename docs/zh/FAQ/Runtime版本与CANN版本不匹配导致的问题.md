@@ -41,17 +41,16 @@ undefined reference to `aclrtGetVersion'
 ### 原因1：不同 CANN 版本的 API 差异
 
 **解决方法**：
-- 检查版本信息：使用 aclrtGetVersion 查询当前 Runtime 版本
+- 检查版本信息：使用 aclsysGetVersionNum 查询当前 Runtime 版本
 - 参考 API 文档：确认接口在不同版本的支持情况
 - 升级或降级版本：根据需求调整 CANN 版本
 
 版本查询示例：
 ```c
-size_t majorVersion = 0;
-size_t minorVersion = 0;
-size_t patchVersion = 0;
-aclError ret = aclrtGetVersion(&majorVersion, &minorVersion, &patchVersion);
-printf("Runtime version: %zu.%zu.%zu\n", majorVersion, minorVersion, patchVersion);
+char pkgName[] = "runtime";
+int32_t versionNum = 0;
+aclError ret = aclsysGetVersionNum(pkgName, &versionNum);
+printf("Runtime version: %d\n", versionNum);
 ```
 
 ### 原因2：运行时库版本不一致
