@@ -257,7 +257,6 @@ target_compile_options(aicpu_aicpuschedule_stest PRIVATE
 
 target_link_libraries(aicpu_aicpuschedule_stest PRIVATE
    ${COMMON_C_LINK}
-    json
 )
 
 add_executable(aicpu_aicpuschedule_stest_host_cpu

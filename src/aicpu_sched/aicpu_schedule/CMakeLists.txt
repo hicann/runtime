@@ -331,8 +331,7 @@ if(${PRODUCT_SIDE} STREQUAL host)
         $<BUILD_INTERFACE:intf_pub>
         PUBLIC c_sec
         ascend_hal_stub
-        protobuf_static 
-        json
+        protobuf_static
         mmpa
         Eigen3::Eigen
         dl
@@ -404,7 +403,6 @@ else()
         adump_stub
         stackcore_stub
         Eigen3::Eigen
-        json
         $<BUILD_INTERFACE:c_sec_headers>
     )
 
@@ -490,7 +488,6 @@ else()
         adump_stub
         stackcore_stub 
         Eigen3::Eigen
-        json
         -ldl
         $<BUILD_INTERFACE:c_sec_headers>
     )

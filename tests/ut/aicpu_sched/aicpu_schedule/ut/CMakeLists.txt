@@ -354,7 +354,6 @@ target_compile_definitions(aicpu_aicpuschedule_utest PRIVATE
 
 target_link_libraries(aicpu_aicpuschedule_utest PRIVATE
     ${COMMON_C_LINK}
-    json
 )
 
 add_executable(aicpu_aicpuschedule_utest_host_cpu
@@ -421,7 +420,6 @@ target_compile_definitions(aicpu_aicpuschedule_utest_host_cpu PRIVATE
 
 target_link_libraries(aicpu_aicpuschedule_utest_host_cpu PRIVATE
     ${COMMON_C_LINK}
-    json
 )
 
 add_library(aicpusd_fake_hccd SHARED
@@ -472,7 +470,6 @@ target_include_directories(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
     ${COMMON_C_INCLUDES}
     ${SRC_PATH}/stub
     ${RUNTIME_DIR}/pkg_inc/dump
-    ${RUNTIME_DIR}/output/third_party/json/include
 )
 
 target_compile_definitions(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
@@ -487,7 +484,6 @@ target_link_options(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
 target_link_libraries(aicpu_aicpuschedule_stub_coverage_utest PRIVATE
     ${COMMON_C_LINK}
     aicpusd_fake_hccd
-    json
 )
 
 add_executable(aicpu_thread_datadump_utest
@@ -628,5 +624,4 @@ target_compile_definitions(aicpu_sched_sim_utest PRIVATE
 
 target_link_libraries(aicpu_sched_sim_utest PRIVATE
     ${COMMON_C_LINK}
-    json
 )
