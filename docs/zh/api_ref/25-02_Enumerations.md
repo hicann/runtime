@@ -2433,18 +2433,33 @@ typedef enum tagAclrtDeviceLimit {
 } aclrtDeviceLimit;
 ```
 
-| 枚举项 | 说明 |
-| --- | --- |
-| ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE | SIMT栈大小（per-thread）。 |
-| ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE | SIMT分支栈大小（per-warp）。 |
-| ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE | AI Core栈大小（每核）。 |
-| ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE | SIMD printf FIFO大小（每核）。 |
-| ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE | SIMT printf FIFO大小。 |
+<!-- npu="950" id106 -->
+对于Ascend 950PR/Ascend 950DT，以上选项都支持。
+<!-- end id106 -->
 
-<!-- npu="950" id90 -->
-对于Ascend 950PR/Ascend 950DT，支持以上全部枚举选项。
-<!-- end id90 -->
+<!-- npu="A3,910b" id107 -->
+对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`）。
+<!-- end id107 -->
 
-<!-- npu="A3,910b" id91 -->
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，不支持`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`枚举选项。
-<!-- end id91 -->
+各枚举项的说明如下：
+
+- `ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`：用于设置SIMT（Single Instruction Multiple Thread）算子每个线程的栈空间大小，单位Byte。默认值为1152Byte。设置为`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`类型时，value取值必须是128Byte的整数倍，如果传入的不是128Byte的整数倍，则接口内部会自动向上取整，确保其为128Byte的整数倍。实际每个线程的栈空间大小为（value向上128Byte取整后 × 32）Byte。
+
+- `ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`：用于设置SIMT算子的分支（Divergence）栈空间大小，单位Byte。默认值为1024Byte。设置为`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`类型时，value取值必须是128Byte的整数倍，如果传入的不是128Byte的整数倍，则接口内部会自动向上取整，确保其为128Byte的整数倍。
+
+- `ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`：用于控制进程中SIMD（Single Instruction Multiple Data）算子执行时为每个AI Core分配的栈空间大小，单位Byte。默认值为32768Byte（即32K）。
+
+    <!-- npu="A3,910b" id104 -->
+    对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 196608]Byte，即(32, 192]KB。
+    <!-- end id104 -->
+
+    <!-- npu="950" id105 -->
+    对于Ascend 950PR/Ascend 950DT，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 131072]Byte，即(32, 128]KB。
+    <!-- end id105 -->
+
+    当value的取值大于32K时，接口内部会向上取整，确保其为16K的整数倍；当value的取值小于或等于32K时，默认按32K处理。
+
+- `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。默认值为32768Byte（即32K）。设置为`ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1024, 67108864]Byte，即[1KB, 64MB]。
+
+- `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`：用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2M）。设置为`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1048576, 67108864]Byte，即[1, 64]MB。
+
