@@ -2179,8 +2179,10 @@ rtError_t ApiImpl::EventRecord(Event* const evt, Stream* const stm, const uint32
     const bool supportFlag = (evt->IsNewMode() || (evt->GetEventFlag() == RT_EVENT_DEFAULT)) && curStm->IsModelStream();
     COND_RETURN_WARN(
         supportFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Current mode does not support binding the stream, mode=%d, flag=%" PRIu64 ", isModel=%d.", evt->IsNewMode(),
-        evt->GetEventFlag(), curStm->IsModelStream());
+        "Event record is not supported on a model-bound stream when the event was created in Ex mode "
+        "(for example, via aclrtCreateEventExWithFlag or rtEventCreateExWithFlag) or "
+        "eventFlag is RT_EVENT_DEFAULT, isNewMode=%d, eventFlag=%#" PRIx64 ", isModelStream=%d.",
+        evt->IsNewMode(), evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(curStm, curCtx, RT_ERROR_STREAM_CONTEXT);
 
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
