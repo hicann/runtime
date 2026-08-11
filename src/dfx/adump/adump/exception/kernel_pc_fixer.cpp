@@ -262,7 +262,9 @@ const char* const V200_REG_NAMES[] = {
     "VEC_ERROR_T0_0", "VEC_ERROR_T0_2", "CUBE_ERROR_T0_0",
     "CUBE_ERROR_T0_1", "L1_ERROR_T0_0", "L1_ERROR_T0_1",
     "SC_ERR_INFO_T0_0", "SC_ERR_INFO_T0_1", "SU_SPR_CONDITION_0",
-    "SU_SPR_CONDITION_1",
+    "SU_SPR_CONDITION_1", "SU_ERR_INFO_T0_4", "SU_ERR_INFO_T0_5",
+    "SU_ERR_INFO_T0_6", "SU_ERR_INFO_T0_7", "VEC_ERR_INFO_T0_6",
+    "SU_ERROR_T0_1",
 };
 
 std::string GetV100BitName(uint32_t aicErrorIdx, uint32_t bit)
@@ -452,6 +454,113 @@ std::string CloudV4PcFixer::GetModuleName(uint32_t moduleId) const
         case V200_CUBE_ERROR_T0_IDX:
             return "CUBE";
         case V200_L1_ERROR_T0_IDX:
+            return "L1";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+
+// === CloudV5 PC Fixer ====
+namespace {
+// V5 errReg 采用 V200 布局，各寄存器下标沿用 rtErrRegInfoIdxV200_t 的绝对值。
+// 其中 SU_ERROR_T0_1 复用 RT_V200_SU_ERROR_T0_1，在 V200 布局下位于离群下标处。
+enum V300ErrorIdx {
+    V300_SC_ERROR_T0_0_IDX = RT_V200_SC_ERROR_T0_0,
+    V300_SU_ERROR_T0_0_IDX = RT_V200_SU_ERROR_T0_0,
+    V300_SU_ERROR_T0_1_IDX = RT_V200_SU_ERROR_T0_1,
+    V300_MTE_ERROR_T0_0_IDX = RT_V200_MTE_ERROR_T0_0,
+    V300_MTE_ERROR_T1_0_IDX = RT_V200_MTE_ERROR_T1_0,
+    V300_VEC_ERROR_T0_0_IDX = RT_V200_VEC_ERROR_T0_0,
+    V300_VEC_ERROR_T0_2_IDX = RT_V200_VEC_ERROR_T0_2,
+    V300_CUBE_ERROR_T0_0_IDX = RT_V200_CUBE_ERROR_T0_0,
+    V300_CUBE_ERROR_T0_1_IDX = RT_V200_CUBE_ERROR_T0_1,
+    V300_L1_ERROR_T0_0_IDX = RT_V200_L1_ERROR_T0_0,
+    V300_L1_ERROR_T0_1_IDX = RT_V200_L1_ERROR_T0_1,
+    V300_ERROR_IDX_NUM = RT_V200_SU_ERROR_T0_1 + 1
+};
+
+void InitV300CommonPcFixGroups(std::vector<std::vector<PcFixGroup>>& table)
+{
+    AddPcFixGroup(table[V300_SU_ERROR_T0_0_IDX], V300_SU_ERROR_T0_0_IDX, GenPcMask32(0, 31),
+        {MakePcFixEntry(RT_V200_SU_ERR_INFO_T0_0, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    AddPcFixGroup(table[V300_SU_ERROR_T0_1_IDX], V300_SU_ERROR_T0_0_IDX, GenPcMask32(0, 3),
+        {MakePcFixEntry(RT_V200_SU_ERR_INFO_T0_0, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    AddPcFixGroup(table[V300_MTE_ERROR_T0_0_IDX], V300_MTE_ERROR_T0_0_IDX, GenPcMask32(0, 31),
+        {MakePcFixEntry(RT_V200_MTE_ERR_INFO_T0_0, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    // MTE_ERR_INFO_T1_0值废弃，使用MTE_ERR_INFO_T0_0
+    AddPcFixGroup(table[V300_MTE_ERROR_T1_0_IDX], V300_MTE_ERROR_T0_0_IDX, GenPcMask32(0, 31),
+        {MakePcFixEntry(RT_V200_MTE_ERR_INFO_T0_0, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+}
+
+void InitV300VecPcFixGroups(std::vector<std::vector<PcFixGroup>>& table)
+{
+    AddPcFixGroup(table[V300_VEC_ERROR_T0_0_IDX], V300_VEC_ERROR_T0_0_IDX, GenPcMask32(0, 29),
+        {MakePcFixEntry(RT_V200_VEC_ERR_INFO_T0_1, GenPcMask64(0, 31), GenPcMask64(0, 31)),
+            MakePcFixEntry(RT_V200_VEC_ERR_INFO_T0_2, GenPcMask64(0, 16), GenPcMask64(32, 48))});
+    AddPcFixGroup(table[V300_VEC_ERROR_T0_2_IDX], V300_VEC_ERROR_T0_0_IDX, GenPcMask32(0, 12),
+        {MakePcFixEntry(RT_V200_VEC_ERR_INFO_T0_1, GenPcMask64(0, 31), GenPcMask64(0, 31)),
+            MakePcFixEntry(RT_V200_VEC_ERR_INFO_T0_2, GenPcMask64(0, 16), GenPcMask64(32, 48))});
+}
+
+void InitV300CubeAndL1PcFixGroups(std::vector<std::vector<PcFixGroup>>& table)
+{
+    AddPcFixGroup(table[V300_CUBE_ERROR_T0_0_IDX], V300_CUBE_ERROR_T0_0_IDX, GenPcMask32(0, 18),
+        {MakePcFixEntry(RT_V200_CUBE_ERR_INFO_T0_1, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    AddPcFixGroup(table[V300_CUBE_ERROR_T0_1_IDX], V300_CUBE_ERROR_T0_0_IDX, GenPcMask32(0, 9),
+        {MakePcFixEntry(RT_V200_CUBE_ERR_INFO_T0_1, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    AddPcFixGroup(table[V300_L1_ERROR_T0_0_IDX], V300_L1_ERROR_T0_0_IDX, GenPcMask32(0, 30),
+        {MakePcFixEntry(RT_V200_L1_ERR_INFO_T0_1, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+    AddPcFixGroup(table[V300_L1_ERROR_T0_1_IDX], V300_L1_ERROR_T0_0_IDX, GenPcMask32(0, 22),
+        {MakePcFixEntry(RT_V200_L1_ERR_INFO_T0_1, GenPcMask64(0, 15), GenPcMask64(2, 17))});
+}
+}
+
+CloudV5PcFixer::CloudV5PcFixer()
+{
+    // V5 errReg 为 V200 布局，table_ 按 errReg 绝对下标寻址，故 errStartIdx_ 从 0 起，
+    // errCount_ 覆盖到最大用到的下标；未使用的位置留空并在扫描时跳过。
+    // 最大下标为 RT_V200_SU_ERROR_T0_1（值 39），故 errCount_ = 40；SU_ERROR_T0_1
+    // 与常规错误下标（0~29）之间的 30~38 为 ERR_INFO 类寄存器，非空洞，table_ 空条目占比很低，
+    // 连续 vector 寻址 O(1)、无需哈希映射。
+    errStartIdx_ = 0;
+    errCount_ = V300_ERROR_IDX_NUM;
+    table_.resize(errCount_);
+
+    // SC_ERROR_T0_0 没有 PC 映射规则。
+    table_[V300_SC_ERROR_T0_0_IDX] = {};
+    InitV300CommonPcFixGroups(table_);
+    InitV300VecPcFixGroups(table_);
+    InitV300CubeAndL1PcFixGroups(table_);
+}
+
+std::string CloudV5PcFixer::GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const
+{
+    if (errReg == nullptr || errRegLen == 0) {
+        return "";
+    }
+    // V5 errReg 为 V200 布局，寄存器名沿用 V200_REG_NAMES。
+    constexpr size_t regNameNum = sizeof(V200_REG_NAMES) / sizeof(V200_REG_NAMES[0]);
+    return BuildErrorRegistersStr(V200_REG_NAMES, regNameNum, errReg, errRegLen);
+}
+
+std::string CloudV5PcFixer::GetModuleName(uint32_t moduleId) const
+{
+    switch (moduleId) {
+        case V300_SU_ERROR_T0_0_IDX:
+        case V300_SU_ERROR_T0_1_IDX:
+            return "SU";
+        case V300_MTE_ERROR_T0_0_IDX:
+        case V300_MTE_ERROR_T1_0_IDX:
+            return "MTE";
+        case V300_VEC_ERROR_T0_0_IDX:
+        case V300_VEC_ERROR_T0_2_IDX:
+            return "VEC";
+        case V300_CUBE_ERROR_T0_0_IDX:
+        case V300_CUBE_ERROR_T0_1_IDX:
+            return "CUBE";
+        case V300_L1_ERROR_T0_0_IDX:
+        case V300_L1_ERROR_T0_1_IDX:
             return "L1";
         default:
             return "UNKNOWN";

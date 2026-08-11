@@ -16,6 +16,7 @@
 #include "adump_dsmi.h"
 #include "adump_platform_manager.h"
 #include "dump_common.h"
+#include "acc_error_info.h"
 
 using namespace Adx;
 
@@ -61,6 +62,54 @@ TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterCloudV4)
     RegisterManager registerManager = RegisterManager();
     registerManager.CreateRegister();
     EXPECT_NE(registerManager.GetRegister(), nullptr);
+}
+
+TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterCloudV5)
+{
+    uint32_t vtype = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V5);
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(vtype)).will(returnValue(true));
+    RegisterManager registerManager = RegisterManager();
+    registerManager.CreateRegister();
+    EXPECT_NE(registerManager.GetRegister(), nullptr);
+}
+
+TEST_F(RegisterManagerPlatformUtest, Test_CloudV5ErrorRegisterTableIntegrity)
+{
+    CloudV5Register reg;
+    const auto& table = reg.GetErrorRegisterTable();
+    EXPECT_FALSE(table.empty());
+
+    // 名称与 errIndex 一一对应，且偏移地址、字节宽度非零（地址表完整性）。
+    for (const auto& item : table) {
+        EXPECT_FALSE(item.name.empty());
+        EXPECT_NE(0U, item.offsetAddr);
+        EXPECT_NE(0U, item.byteWidth);
+    }
+
+    auto find = [&table](uint8_t errIndex) -> const ErrorRegisterTable* {
+        for (const auto& item : table) {
+            if (item.errIndex == errIndex) {
+                return &item;
+            }
+        }
+        return nullptr;
+    };
+
+    // 关键条目校验（覆盖历史检视意见涉及的寄存器）。
+    const ErrorRegisterTable* vec = find(RT_V200_VEC_ERR_INFO_T0_3);
+    ASSERT_NE(nullptr, vec);
+    EXPECT_EQ("VEC_ERR_INFO_T0_3", vec->name);
+    EXPECT_EQ(0x773CU, vec->offsetAddr);
+
+    const ErrorRegisterTable* l1 = find(RT_V200_L1_ERR_INFO_T0_1);
+    ASSERT_NE(nullptr, l1);
+    EXPECT_EQ("L1_ERR_INFO_T0_1", l1->name);
+    EXPECT_EQ(0xA71CU, l1->offsetAddr);
+
+    const ErrorRegisterTable* su = find(RT_V200_SU_ERROR_T0_1);
+    ASSERT_NE(nullptr, su);
+    EXPECT_EQ("SU_ERROR_T0_1", su->name);
+    EXPECT_EQ(0x5704U, su->offsetAddr);
 }
 
 TEST_F(RegisterManagerPlatformUtest, Test_CreateRegisterCloudV2)

@@ -22,7 +22,7 @@ enum class AdumpPlatformFeature {
     FEATURE_OVERFLOW_DUMP,     // overflow dump
     FEATURE_EXCEPTION_DUMP_L0, // L0 exception dump
     FEATURE_EXCEPTION_DUMP_L1, // L1 exception dump
-    FEATURE_CORE_DUMP,         // coredump（仅 V2/V4）
+    FEATURE_CORE_DUMP,         // coredump（仅 V2/V4/V5）
 };
 
 class FeaturesSupportInterface {

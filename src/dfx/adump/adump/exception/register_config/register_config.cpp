@@ -76,7 +76,7 @@ uint64_t CloudV2Register::GetAddr(uint64_t regAddrHigh, uint64_t regAddrLow) con
  	return (regAddrHigh << HIGH_ADDR_SHIFT) | regAddrLow;
 }
 
-CloudV4Register::CloudV4Register()
+CloudBaseRegister::CloudBaseRegister()
 {
     GenAICDbgAddr();  
     GenAIVDbgAddr();  
@@ -86,6 +86,10 @@ CloudV4Register::CloudV4Register()
         {CORE_TYPE_AIC, {RegisterType::AIC, RegisterType::AIC_DBG}},
         {CORE_TYPE_AIV, {RegisterType::AIV, RegisterType::AIV_DBG}}
     };
+}
+
+CloudV4Register::CloudV4Register()
+{
     InitErrorRegisterMap();
 }
 
@@ -127,7 +131,8 @@ void CloudV4Register::InitErrorRegisterMap()
         };
 }
 
-void CloudV4Register::GenAICDbgAddr(){
+void CloudBaseRegister::GenAICDbgAddr()
+{
     std::vector<RegisterTable> regAICDbgTab =  {
         // SU(for AIC)
         {0X10000000000000,32, 8}, {0X10000000000040, 15, 8}, {0X10000000000080, 12, 8},
@@ -160,7 +165,7 @@ void CloudV4Register::GenAICDbgAddr(){
     registerTableMap_[RegisterType::AIC_DBG] = regAICDbgTab;            
 }
 
-void CloudV4Register::GenAIVDbgAddr()
+void CloudBaseRegister::GenAIVDbgAddr()
 {
     std::vector<RegisterTable> regAIVDbgTab;
     auto suTab = GenAIVDbgSUAddr();
@@ -174,7 +179,55 @@ void CloudV4Register::GenAIVDbgAddr()
     registerTableMap_[RegisterType::AIV_DBG] = regAIVDbgTab;
 }
 
-std::vector<RegisterTable> CloudV4Register::GenAIVDbgSUAddr()
+CloudV5Register::CloudV5Register()
+{
+    InitErrorRegisterMap();
+}
+
+void CloudV5Register::InitErrorRegisterMap()
+{
+    ErrorRegisterMap_ = {
+        {RT_V200_SC_ERROR_T0_0, 0x4700, 4, "SC_ERROR_T0_0"},
+        {RT_V200_SC_ERR_INFO_T0_0, 0x4730, 4, "SC_ERR_INFO_T0_0"},
+        {RT_V200_SC_ERR_INFO_T0_1, 0x4734, 4, "SC_ERR_INFO_T0_1"},
+        {RT_V200_SU_ERROR_T0_0, 0x5700, 4, "SU_ERROR_T0_0"},
+        {RT_V200_SU_ERROR_T0_1, 0x5704, 4, "SU_ERROR_T0_1"},
+        {RT_V200_SU_ERR_INFO_T0_0, 0x5730, 4, "SU_ERR_INFO_T0_0"},
+        {RT_V200_SU_ERR_INFO_T0_1, 0x5734, 4, "SU_ERR_INFO_T0_1"},
+        {RT_V200_SU_ERR_INFO_T0_2, 0x5738, 4, "SU_ERR_INFO_T0_2"},
+        {RT_V200_SU_ERR_INFO_T0_3, 0x573C, 4, "SU_ERR_INFO_T0_3"},
+        {RT_V200_SU_ERR_INFO_T0_4, 0x5740, 4, "SU_ERR_INFO_T0_4"},
+        {RT_V200_SU_ERR_INFO_T0_5, 0x5744, 4, "SU_ERR_INFO_T0_5"},
+        {RT_V200_SU_ERR_INFO_T0_6, 0x5748, 4, "SU_ERR_INFO_T0_6"},
+        {RT_V200_SU_ERR_INFO_T0_7, 0x574C, 4, "SU_ERR_INFO_T0_7"},
+        {RT_V200_MTE_ERROR_T0_0, 0x6700, 4, "MTE_ERROR_T0_0"},
+        {RT_V200_MTE_ERROR_T1_0, 0x6708, 4, "MTE_ERROR_T1_0"},
+        {RT_V200_MTE_ERR_INFO_T0_0, 0x6718, 4, "MTE_ERR_INFO_T0_0"},
+        {RT_V200_MTE_ERR_INFO_T0_1, 0x671C, 4, "MTE_ERR_INFO_T0_1"},
+        {RT_V200_MTE_ERR_INFO_T0_2, 0x6720, 4, "MTE_ERR_INFO_T0_2"},
+        {RT_V200_MTE_ERR_INFO_T1_0, 0x6724, 4, "MTE_ERR_INFO_T1_0"},
+        {RT_V200_MTE_ERR_INFO_T1_1, 0x6728, 4, "MTE_ERR_INFO_T1_1"},
+        {RT_V200_MTE_ERR_INFO_T1_2, 0x673C, 4, "MTE_ERR_INFO_T1_2"},
+        {RT_V200_VEC_ERROR_T0_0, 0x7700, 4, "VEC_ERROR_T0_0"},
+        {RT_V200_VEC_ERROR_T0_2, 0x7708, 4, "VEC_ERROR_T0_2"},
+        {RT_V200_VEC_ERR_INFO_T0_0, 0x7730, 4, "VEC_ERR_INFO_T0_0"},
+        {RT_V200_VEC_ERR_INFO_T0_1, 0x7734, 4, "VEC_ERR_INFO_T0_1"},
+        {RT_V200_VEC_ERR_INFO_T0_2, 0x7738, 4, "VEC_ERR_INFO_T0_2"},
+        {RT_V200_VEC_ERR_INFO_T0_3, 0x773C, 4, "VEC_ERR_INFO_T0_3"},
+        {RT_V200_VEC_ERR_INFO_T0_4, 0x7740, 4, "VEC_ERR_INFO_T0_4"},
+        {RT_V200_VEC_ERR_INFO_T0_5, 0x7744, 4, "VEC_ERR_INFO_T0_5"},
+        {RT_V200_VEC_ERR_INFO_T0_6, 0x7748, 4, "VEC_ERR_INFO_T0_6"},
+        {RT_V200_CUBE_ERROR_T0_0, 0x8700, 4, "CUBE_ERROR_T0_0"},
+        {RT_V200_CUBE_ERROR_T0_1, 0x8704, 4, "CUBE_ERROR_T0_1"},
+        {RT_V200_CUBE_ERR_INFO_T0_0, 0x8730, 4, "CUBE_ERR_INFO_T0_0"},
+        {RT_V200_CUBE_ERR_INFO_T0_1, 0x8734, 4, "CUBE_ERR_INFO_T0_1"},
+        {RT_V200_L1_ERROR_T0_0, 0xA700, 4, "L1_ERROR_T0_0"},
+        {RT_V200_L1_ERROR_T0_1, 0xA704, 4, "L1_ERROR_T0_1"},
+        {RT_V200_L1_ERR_INFO_T0_0, 0xA718, 4, "L1_ERR_INFO_T0_0"},
+        {RT_V200_L1_ERR_INFO_T0_1, 0xA71C, 4, "L1_ERR_INFO_T0_1"},
+    };
+}
+std::vector<RegisterTable> CloudBaseRegister::GenAIVDbgSUAddr()
 {
     return {
         {0X10000000000000, 32, 8}, {0X10000000000040, 15, 8}, {0X10000000000080, 12, 8},
@@ -183,7 +236,7 @@ std::vector<RegisterTable> CloudV4Register::GenAIVDbgSUAddr()
     };
 }
 
-std::vector<RegisterTable> CloudV4Register::GenAIVDbgMTEAddr()
+std::vector<RegisterTable> CloudBaseRegister::GenAIVDbgMTEAddr()
 {
     return {
         {0X21000000000000, 1, 8}, {0X22000000000002, 1, 8}, {0X22000000000007, 3, 8},
@@ -191,7 +244,7 @@ std::vector<RegisterTable> CloudV4Register::GenAIVDbgMTEAddr()
     };
 }
 
-std::vector<RegisterTable> CloudV4Register::GenAIVDbgVECRBAddr()
+std::vector<RegisterTable> CloudBaseRegister::GenAIVDbgVECRBAddr()
 {
     return {
         {0X32000000000000, 8, 32}, {0X32000000000010, 8, 32}, {0X32000000000020, 8, 32},
@@ -239,7 +292,7 @@ std::vector<RegisterTable> CloudV4Register::GenAIVDbgVECRBAddr()
     };
 }
 
-std::vector<RegisterTable> CloudV4Register::GenAIVDbgOthersAddr()
+std::vector<RegisterTable> CloudBaseRegister::GenAIVDbgOthersAddr()
 {
     return {
         {0X80000000000000, 5, 8}, {0X90000000000000, 9, 8}, {0X90000000000040, 8, 8},
@@ -260,7 +313,7 @@ std::vector<RegisterTable> CloudV4Register::GenAIVDbgOthersAddr()
     };
 }
 
-void CloudV4Register::GenAICOffsetAddr(){
+void CloudBaseRegister::GenAICOffsetAddr(){
     std::vector<RegisterTable> regAICOffsetTab =  {
         {0X80,30, 4}, {0X1000, 3, 4}, {0X11f0, 1, 4}, 
         {0X1200, 2, 4}, {0X1210, 1, 4}, {0X1400, 5, 4}, 
@@ -309,7 +362,7 @@ void CloudV4Register::GenAICOffsetAddr(){
     registerTableMap_[RegisterType::AIC] = regAICOffsetTab;            
 }
 
-void CloudV4Register::GenAIVOffsetAddr(){
+void CloudBaseRegister::GenAIVOffsetAddr(){
     std::vector<RegisterTable> regAIVOffsetTab =  {
         {0X80,30, 4}, {0X1000, 3, 4}, {0X11f0, 1, 4}, 
         {0X1500, 4, 4}, {0X2000, 1, 4}, {0X2010, 1, 4},         
@@ -358,12 +411,12 @@ void CloudV4Register::GenAIVOffsetAddr(){
     registerTableMap_[RegisterType::AIV] = regAIVOffsetTab;            
 }
 
-uint64_t CloudV4Register::GetAddr(uint64_t type, uint64_t regAddrHigh, uint64_t regAddrLow) const 
+uint64_t CloudBaseRegister::GetAddr(uint64_t type, uint64_t regAddrHigh, uint64_t regAddrLow) const
 {
     return (type << MOUDLE_TYPE_SHIFT) | (regAddrHigh << HIGH_ADDR_SHIFT) | regAddrLow;
 }
 
-void CloudV4Register::GenAddrByStep(RegisterType regType, const std::vector<RegisterStepTable>& regStepTab)
+void CloudBaseRegister::GenAddrByStep(RegisterType regType, const std::vector<RegisterStepTable>& regStepTab)
 {
     for (const auto& stepTable : regStepTab) {
         uint64_t curStartAddr = stepTable.startAddr;

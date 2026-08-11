@@ -37,6 +37,7 @@ enum class PlatformType : uint32_t{
     CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 13,
     CHIP_CLOUD_V4 = 15,
+    CHIP_CLOUD_V5 = 16,
     END_TYPE
 };
 

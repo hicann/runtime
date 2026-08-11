@@ -65,6 +65,15 @@ private:
     std::string GetModuleName(uint32_t moduleId) const override;
 };
 
+class CloudV5PcFixer : public PcFixerInterface {
+public:
+    CloudV5PcFixer();
+    std::string GetErrorRegisters(const uint32_t errReg[], size_t errRegLen) const override;
+
+private:
+    std::string GetModuleName(uint32_t moduleId) const override;
+};
+
 class PcFixerFactory {
 public:
     static PcFixerInterface* GetInstance();

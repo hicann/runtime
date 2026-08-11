@@ -85,14 +85,13 @@ private:
     uint64_t GetAddr(uint64_t regAddrHigh, uint64_t regAddrLow) const;
 };
 
-class CloudV4Register : public RegisterInterface {
+class CloudBaseRegister : public RegisterInterface {
 public:
-    CloudV4Register();
-    ~CloudV4Register() override {};
-private:
+    CloudBaseRegister();
+    ~CloudBaseRegister() override {};
+protected:
     uint64_t GetAddr(uint64_t type, uint64_t regAddrHigh, uint64_t regAddrLow) const;
     void GenAddrByStep(RegisterType regType, const std::vector<RegisterStepTable> &regStepTab);
-    void InitErrorRegisterMap();
     void GenAICDbgAddr();
     void GenAIVDbgAddr();
     void GenAICOffsetAddr();
@@ -101,6 +100,22 @@ private:
     std::vector<RegisterTable> GenAIVDbgMTEAddr();
     std::vector<RegisterTable> GenAIVDbgVECRBAddr();
     std::vector<RegisterTable> GenAIVDbgOthersAddr();
+};
+
+class CloudV4Register : public CloudBaseRegister {
+public:
+    CloudV4Register();
+    ~CloudV4Register() override {};
+private:
+    void InitErrorRegisterMap();
+};
+
+class CloudV5Register : public CloudBaseRegister {
+public:
+    CloudV5Register();
+    ~CloudV5Register() override {};
+private:
+    void InitErrorRegisterMap();
 };
 
 class RegisterManager {

@@ -59,6 +59,7 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_dsmi.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/platform/cloud_v2_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/platform/cloud_v4_platform.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/common/platform/cloud_v5_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/platform/dc_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_platform_api/adump_platform_api.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/json_parser.cpp

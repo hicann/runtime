@@ -19,7 +19,7 @@ class PcFixerInterface;
 class RegisterInterface;
 class DumpCore;
 
-// Coredump 特性下的平台差异处理。仅支持 coredump 的平台（V2/V4）注册此接口；
+// Coredump 特性下的平台差异处理。仅支持 coredump 的平台（V2/V4/V5）注册此接口；
 // 不支持的平台（如 DC）不注册，CoredumpManager::Get() 返回 nullptr。
 class CoredumpInterface {
 public:
