@@ -10,8 +10,8 @@ This sample supports the following products:
 | Product | Supported |
 | --- | --- |
 | Ascend 950PR/Ascend 950DT | Yes |
-| Atlas A3 Training Series Products/Atlas A3 Inference Series Products | Yes |
-| Atlas A2 Training Series Products/Atlas A2 Inference Series Products | Yes |
+| Atlas A3 training series products/Atlas A3 inference series products | Yes |
+| Atlas A2 training series products/Atlas A2 inference series products | Yes |
 
 ## Build and Run
 For environment installation details and runtime details, see [README](../../../README_en.md) in the example directory.

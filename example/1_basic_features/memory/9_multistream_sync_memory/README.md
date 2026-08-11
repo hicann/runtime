@@ -68,3 +68,4 @@ bash run.sh
 [INFO]  Stream A: the data in the specified memory has met the condition, all tasks are complete
 [INFO]  Flag value read by the waiting thread: 123
 ```
+

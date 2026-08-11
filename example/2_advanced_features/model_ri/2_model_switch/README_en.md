@@ -7,16 +7,16 @@ This sample demonstrates how to use aclmdlRIBuildBegin interface to create a mod
 
 Key interfaces in this sample have the following support status on different products:
 
-| Interface | Atlas A3 training series products/Atlas A3 inference series products | Atlas A2 training series products/Atlas A2 inference series products |
-| --- | --- | --- |
-| aclmdlRIBuildBegin | Yes | Yes |
-| aclmdlRIBindStream | Yes | Yes |
-| aclmdlRIEndTask | Yes | Yes |
-| aclmdlRIBuildEnd | Yes | Yes |
-| aclmdlRIUnbindStream | Yes | Yes |
-| aclmdlRIExecuteAsync | Yes | Yes |
-| aclrtSwitchStream | No | Yes |
-| aclrtActiveStream | No | Yes |
+| Interface | Ascend 950PR/Ascend 950DT | Atlas A3 training series products/Atlas A3 inference series products | Atlas A2 training series products/Atlas A2 inference series products |
+| --- | --- | --- | --- |
+| aclmdlRIBuildBegin | Yes | Yes | Yes |
+| aclmdlRIBindStream | Yes | Yes | Yes |
+| aclmdlRIEndTask | Yes | Yes | Yes |
+| aclmdlRIBuildEnd | Yes | Yes | Yes |
+| aclmdlRIUnbindStream | Yes | Yes | Yes |
+| aclmdlRIExecuteAsync | Yes | Yes | Yes |
+| aclrtSwitchStream | Yes | No | Yes |
+| aclrtActiveStream | Yes | No | Yes |
 
 ## Build and Run
 For environment installation details and running details, see [README](../../../README_en.md) in the example directory.

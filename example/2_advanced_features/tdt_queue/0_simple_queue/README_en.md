@@ -8,6 +8,7 @@ This sample demonstrates basic TDT Queue capabilities, covering QueueAttr config
 
 | Product | Supported |
 | --- | --- |
+| Ascend 950PR/Ascend 950DT | Yes |
 | Atlas A3 training series products/Atlas A3 inference series products | Yes |
 | Atlas A2 training series products/Atlas A2 inference series products | Yes |
 

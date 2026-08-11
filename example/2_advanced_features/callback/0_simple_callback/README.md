@@ -7,16 +7,16 @@
 
 本样例关键接口在不同产品上的支持情况如下：
 
-| 接口 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
-| --- | --- | --- |
-| aclrtSubscribeReport | √ | √ |
-| aclrtProcessReport | √ | √ |
-| aclrtUnSubscribeReport | √ | √ |
-| aclrtLaunchCallback | √ | √ |
-| aclrtSubscribeHostFunc | x | x |
-| aclrtProcessHostFunc | x | x |
-| aclrtUnSubscribeHostFunc | x | x |
-| aclrtLaunchHostFunc | √ | √ |
+| 接口 | Ascend 950PR/Ascend 950DT | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
+| --- | --- | --- | --- |
+| aclrtSubscribeReport | √ | √ | √ |
+| aclrtProcessReport | √ | √ | √ |
+| aclrtUnSubscribeReport | √ | √ | √ |
+| aclrtLaunchCallback | √ | √ | √ |
+| aclrtSubscribeHostFunc | × | × | × |
+| aclrtProcessHostFunc | × | × | × |
+| aclrtUnSubscribeHostFunc | × | × | × |
+| aclrtLaunchHostFunc | √ | √ | √ |
 
 ## 编译运行
 环境安装详情以及运行详情请见 example 目录下的 [README](../../../README.md)。

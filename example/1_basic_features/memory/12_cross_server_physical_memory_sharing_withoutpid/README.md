@@ -102,3 +102,4 @@ bash run_client.sh
 [INFO]  Client: released memory successfully
 [SUCCESS] Client completed successfully
 ```
+

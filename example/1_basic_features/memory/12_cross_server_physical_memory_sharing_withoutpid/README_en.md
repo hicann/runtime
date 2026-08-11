@@ -9,13 +9,13 @@ This sample supports the following products:
 
 | Product | Supported |
 | --- | --- |
-| Ascend 950PR/Ascend 950DT | × |
-| Atlas A3 Training Series Products/Atlas A3 Inference Series Products | √ |
-| Atlas A2 Training Series Products/Atlas A2 Inference Series Products | × |
+| Ascend 950PR/Ascend 950DT | No |
+| Atlas A3 training series products/Atlas A3 inference series products | Yes |
+| Atlas A2 training series products/Atlas A2 inference series products | No |
 
 ## Build and Run
 
-This sample depends on cross-server shareable handle capabilities and is designed for Atlas A3 Training Series Products/Atlas A3 Inference Series Products only. It must be run on two servers with completed environment configuration and network connectivity.
+This sample depends on cross-server shareable handle capabilities and is designed for Atlas A3 training series products/Atlas A3 inference series products only. It must be run on two servers with completed environment configuration and network connectivity.
 
 1. Download the sample code to an environment where CANN software is installed, and switch to the sample directory on both the server and client.
 ```bash

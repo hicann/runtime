@@ -4,17 +4,15 @@
 
 This sample demonstrates how to use mstx interfaces to mark events in the default domain and a custom domain. It also shows how to control the collected domains with the `--mstx-domain-include` and `--mstx-domain-exclude` options of msprof. The sample source file is `mstx_with_domain.cpp` in the current directory, and `run.sh` builds and runs the sample.
 
-## Supported Products
+## Product Support
 
 This sample supports the following products:
 
 | Product | Supported |
 | --- | --- |
-| Atlas A3 Training Series Products/Atlas A3 Inference Series Products | √ |
-| Atlas A2 Training Series Products/Atlas 800I A2 Inference Products/A200I A2 Box Heterogeneous Components | √ |
-| Atlas 200I/500 A2 Inference Products | √ |
-| Atlas Inference Series Products | √ |
-| Atlas Training Series Products | √ |
+| Ascend 950PR/Ascend 950DT | Yes |
+| Atlas A3 training series products/Atlas A3 inference series products | Yes |
+| Atlas A2 training series products/Atlas A2 inference series products | Yes |
 
 ## Compile and Run
 

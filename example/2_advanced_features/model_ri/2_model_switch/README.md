@@ -7,16 +7,16 @@
 
 本样例关键接口在不同产品上的支持情况如下：
 
-| 接口 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
-| --- | --- | --- |
-| aclmdlRIBuildBegin | √ | √ |
-| aclmdlRIBindStream | √ | √ |
-| aclmdlRIEndTask | √ | √ |
-| aclmdlRIBuildEnd | √ | √ |
-| aclmdlRIUnbindStream | √ | √ |
-| aclmdlRIExecuteAsync | √ | √ |
-| aclrtSwitchStream | x | √ |
-| aclrtActiveStream | x | √ |
+| 接口 | Ascend 950PR/Ascend 950DT | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
+| --- | --- | --- | --- |
+| aclmdlRIBuildBegin | √ | √ | √ |
+| aclmdlRIBindStream | √ | √ | √ |
+| aclmdlRIEndTask | √ | √ | √ |
+| aclmdlRIBuildEnd | √ | √ | √ |
+| aclmdlRIUnbindStream | √ | √ | √ |
+| aclmdlRIExecuteAsync | √ | √ | √ |
+| aclrtSwitchStream | √ | × | √ |
+| aclrtActiveStream | √ | × | √ |
 
 ## 编译运行
 环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。

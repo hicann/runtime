@@ -7,16 +7,16 @@ This sample demonstrates how to register Report callback thread and HostFunc pro
 
 Key interfaces in this sample have the following support status on different products:
 
-| Interface | Atlas A3 training series products/Atlas A3 inference series products | Atlas A2 training series products/Atlas A2 inference series products |
-| --- | --- | --- |
-| aclrtSubscribeReport | Yes | Yes |
-| aclrtProcessReport | Yes | Yes |
-| aclrtUnSubscribeReport | Yes | Yes |
-| aclrtLaunchCallback | Yes | Yes |
-| aclrtSubscribeHostFunc | No | No |
-| aclrtProcessHostFunc | No | No |
-| aclrtUnSubscribeHostFunc | No | No |
-| aclrtLaunchHostFunc | Yes | Yes |
+| Interface | Ascend 950PR/Ascend 950DT | Atlas A3 training series products/Atlas A3 inference series products | Atlas A2 training series products/Atlas A2 inference series products |
+| --- | --- | --- | --- |
+| aclrtSubscribeReport | Yes | Yes | Yes |
+| aclrtProcessReport | Yes | Yes | Yes |
+| aclrtUnSubscribeReport | Yes | Yes | Yes |
+| aclrtLaunchCallback | Yes | Yes | Yes |
+| aclrtSubscribeHostFunc | No | No | No |
+| aclrtProcessHostFunc | No | No | No |
+| aclrtUnSubscribeHostFunc | No | No | No |
+| aclrtLaunchHostFunc | Yes | Yes | Yes |
 
 ## Build and Run
 For environment installation details and running details, see [README](../../../README_en.md) in the example directory.

@@ -72,3 +72,4 @@ Source data: 123
 [INFO]  Process A: receive the completion signal from Process B, completion signal = 1
 [SUCCESS] IPC memory sharing successfully. Values at source and destination are equal: 123
 ```
+
