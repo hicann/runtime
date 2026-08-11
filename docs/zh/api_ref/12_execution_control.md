@@ -403,7 +403,7 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
     - 对于Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id14 -->
     <!-- npu="310b" id15 -->
-    - 对于Atlas 200I/500 A2 推理产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
+    - 对于Atlas 200I/500 A2 推理产品，Ascend EP形态下，AI Core算子、AI CPU算子的默认超时时间为1091秒；Ascend RC形态下，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
     <!-- end id15 -->
     <!-- npu="310p" id16 -->
     - 对于Atlas 推理系列产品，AI Core算子的默认超时时间为547秒，AI CPU算子的默认超时时间为28秒。
