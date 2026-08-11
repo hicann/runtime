@@ -1399,7 +1399,7 @@ TEST_F(DavidTaskTest, FormatRasFaultDesc_all_punct_state)
 }
 
 // B. QueryRasFaultEvents 单元测试
-static void SetDeviceCurrentTimeMock(Device* dev, int64_t timeMs);
+static void SetDeviceTimeMock(Device* dev, int64_t currentTimeMs, int64_t baseTimeMs);
 static rtError_t g_rasQueryRetError = RT_ERROR_NONE;
 static uint32_t g_rasQueryEventCount = 0U;
 static rtDmsFaultEvent g_rasQueryEvents[4] = {};
@@ -1464,8 +1464,24 @@ static void SetRasQueryEvent(
 
 TEST_F(DavidTaskTest, QueryRasFaultEvents_nullptr_dev)
 {
-    RasEventMatch match = QueryRasFaultEvents(nullptr, 1000U, 500U, 0U);
+    RasEventMatch match = QueryRasFaultEvents(nullptr, 1000U, 0U);
     EXPECT_FALSE(match.found);
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_invalid_base_time)
+{
+    MOCKER_CPP_VIRTUAL(dev_, &Device::GetBaseTime).stubs().will(returnValue(0));
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
+    EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_base_time_after_upper_bound)
+{
+    SetDeviceTimeMock(dev_, 1000U, 1100U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
+    EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
 }
 
 TEST_F(DavidTaskTest, QueryRasFaultEvents_v200_hit_in_window)
@@ -1474,10 +1490,25 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_v200_hit_in_window)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U, "event state=ecc", "hbm ecc detail");
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    SetDeviceCurrentTimeMock(dev_, 1000U);
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_TRUE(match.found);
     EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_after_cqe_recycle_delay)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    // The RAS event predates CQE recycling by 600 ms but is still after baseTime.
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 400U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceTimeMock(dev_, 1000U, 100U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
+    EXPECT_TRUE(match.found);
+    EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
+    EXPECT_EQ(match.alarmTime, 400U);
     GlobalMockObject::verify();
 }
 
@@ -1487,7 +1518,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_but_before_window)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 400U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_FALSE(match.found);
     GlobalMockObject::verify();
 }
@@ -1498,7 +1530,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_but_after_upper_bound)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 1600U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_FALSE(match.found);
     GlobalMockObject::verify();
 }
@@ -1509,8 +1542,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_hbm_ecc_notify)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_NOTIFY_EVENT_ID, 800U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    SetDeviceCurrentTimeMock(dev_, 1000U);
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_TRUE(match.found);
     EXPECT_EQ(match.eventId, HBM_ECC_NOTIFY_EVENT_ID);
     GlobalMockObject::verify();
@@ -1522,8 +1555,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_hbm_ecc)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    SetDeviceCurrentTimeMock(dev_, 1000U);
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_TRUE(match.found);
     EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
     GlobalMockObject::verify();
@@ -1535,7 +1568,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_no_wait_single_miss)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, 0x12345678U, 800U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_FALSE(match.found);
     GlobalMockObject::verify();
 }
@@ -1548,7 +1582,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_need_wait_second_hit)
     g_rasQuerySecondEvents[0].eventId = HBM_ECC_EVENT_ID;
     g_rasQuerySecondEvents[0].alarmRaisedTime = 800U;
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 500U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U);
     EXPECT_TRUE(match.found);
     EXPECT_EQ(match.eventId, HBM_ECC_EVENT_ID);
     GlobalMockObject::verify();
@@ -1561,8 +1596,8 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_multi_events_earliest)
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 900U);
     SetRasQueryEvent(1U, UB_REMOTE_MEM_TIMEOUT_EVENT_ID, 700U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    SetDeviceCurrentTimeMock(dev_, 1000U);
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_TRUE(match.found);
     EXPECT_EQ(match.eventId, UB_REMOTE_MEM_TIMEOUT_EVENT_ID);
     EXPECT_EQ(match.alarmTime, 700U);
@@ -1576,8 +1611,33 @@ TEST_F(DavidTaskTest, QueryRasFaultEvents_get_error_returned)
     g_rasQueryEventCount = 1U;
     SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 800U);
     MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
-    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 500U, 0U);
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
     EXPECT_FALSE(match.found);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_on_base_time)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 500U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
+    EXPECT_TRUE(match.found);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, QueryRasFaultEvents_hit_on_upper_bound)
+{
+    ResetRasQueryStub();
+    g_rasQueryEventCount = 1U;
+    SetRasQueryEvent(0U, HBM_ECC_EVENT_ID, 1000U);
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubRasQueryGetDeviceFaultEvents));
+    SetDeviceTimeMock(dev_, 1000U, 500U);
+    RasEventMatch match = QueryRasFaultEvents(dev_, 1000U, 0U);
+    EXPECT_TRUE(match.found);
     GlobalMockObject::verify();
 }
 
@@ -1590,10 +1650,11 @@ static void ResetRasFlowEnv(Device* dev)
     dev->SetDeviceRas(false);
 }
 
-static void SetDeviceCurrentTimeMock(Device* dev, int64_t timeMs)
+static void SetDeviceTimeMock(Device* dev, int64_t currentTimeMs, int64_t baseTimeMs)
 {
-    g_deviceCurrentTimeStub = timeMs;
-    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceCurrentTime).stubs().will(returnValue(timeMs));
+    g_deviceCurrentTimeStub = currentTimeMs;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetDeviceCurrentTime).stubs().will(returnValue(currentTimeMs));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetBaseTime).stubs().will(returnValue(baseTimeMs));
 }
 
 TEST_F(DavidTaskTest, aicore_ras_mte_poison_with_device_time)
@@ -1608,7 +1669,7 @@ TEST_F(DavidTaskTest, aicore_ras_mte_poison_with_device_time)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 8;
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1649,7 +1710,7 @@ TEST_F(DavidTaskTest, aicore_ras_hw_l_with_device_time)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 4;
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1670,7 +1731,7 @@ TEST_F(DavidTaskTest, aicore_ras_link_error_with_device_time_hit)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 10;
     ClearLastDlogRecordLine();
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
@@ -1696,7 +1757,7 @@ TEST_F(DavidTaskTest, aicore_ras_s_error_not_trigger)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 8;
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1785,8 +1846,8 @@ TEST_F(DavidTaskTest, aicore_ras_mte_poison_ras_miss_ez9999_fallback)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
-    faultEventFlag = 8; // 事件 alarmRaisedTime=0，不在 RAS 窗口 [999500, 1000000] 内
+    SetDeviceTimeMock(dev_, 1000000, 1);
+    faultEventFlag = 8; // 事件 alarmRaisedTime=0，早于 baseTime
     ClearLastDlogRecordLine();
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1811,7 +1872,7 @@ TEST_F(DavidTaskTest, aicore_ras_multi_core_ez2001_only_first_core)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 10; // UB_REMOTE_MEM_TIMEOUT, alarmRaisedTime = deviceTime - 100，在窗口内
     ClearLastDlogRecordLine();
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
@@ -1838,7 +1899,7 @@ TEST_F(DavidTaskTest, aicore_ras_hw_l_with_device_time_hit)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
 
     ResetRasFlowEnv(dev_);
-    SetDeviceCurrentTimeMock(dev_, 1000000);
+    SetDeviceTimeMock(dev_, 1000000, 1);
     faultEventFlag = 11; // HBM_ECC_EVENT_ID, alarmRaisedTime = deviceTime，在 [t-window, t+window] 内
     ClearLastDlogRecordLine();
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);

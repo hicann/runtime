@@ -652,13 +652,13 @@ static std::string QueryAndFormatRasFaultDavid(
     if (aixErrClass == AixErrClass::AIX_HW_L_ERROR) {
         // ProcessCoreErrorClass函数的AixErrClass::AIX_HW_L_ERROR分支中没有做任何轮询查询事件的动作，
         // QueryRasFaultEvents函数中需要轮询500ms，等待事件发生，QueryRasFaultEvents的windowAfterMs直接传rasWindowMs
-        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, rasWindowMs);
+        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs);
     } else {
         // AixErrClass::AIX_MTE_POISON_ERROR 和 AixErrClass::AIX_LINK_ERROR分支已经等待过事件发生了，有两种场景
         // 1、等足了500ms，没有查到事件，此处不应该再去轮询查事件了，而是直接只查一次，以这次的查询结果为准
         // 2、没有等够500ms事件就发生了，函数提前返回，此处立即去查询告警，一定能查到
         // 无论那种情况，此处都不应该再去轮询查事件了，QueryRasFaultEvents的windowAfterMs直接传0
-        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, 0U);
+        rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, 0U);
     }
     if (!rasMatch.found) {
         return "";

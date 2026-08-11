@@ -148,19 +148,18 @@ drvError_t halGetFaultEvent(
         eventInfo[0].alarm_raised_time = 0x1000ULL;
         return DRV_ERROR_NONE;
     }
-    if (faultEventFlag == 10) {              // UB_REMOTE_MEM_TIMEOUT with alarmRaisedTime strictly inside RAS window
+    if (faultEventFlag == 10) {              // UB_REMOTE_MEM_TIMEOUT with alarmRaisedTime inside RAS window
         *eventCount = 1;
         eventInfo[0].event_id = 0x81AFAA02U; // UB_REMOTE_MEM_TIMEOUT_EVENT_ID
-        // alarmRaisedTime 须严格小于 upperBound(=GetDeviceCurrentTime)，否则 MatchRasEventInBatch 的
-        // alarmTime < upperBound 不成立，RAS 不会命中 EZ2001 路径
+        // alarmRaisedTime 不晚于 upperBound(=GetDeviceCurrentTime)时，RAS 可以命中 EZ2001 路径
         eventInfo[0].alarm_raised_time = static_cast<uint64_t>(g_deviceCurrentTimeStub) - 100U;
         return DRV_ERROR_NONE;
     }
-    if (faultEventFlag == 11) { // HBM_ECC_EVENT_ID with alarmRaisedTime in HW_L RAS window [t-window, t+window]
+    if (faultEventFlag == 11) {              // HBM_ECC_EVENT_ID with alarmRaisedTime in HW_L RAS window
         *eventCount = 1;
         eventInfo[0].event_id = 0x80E01801U; // HBM_ECC_EVENT_ID
         // HW_L 路径 windowAfterMs > 0，upperBound = deviceTimeMs + rasWindowMs
-        // alarmRaisedTime 须在 (deviceTimeMs - rasWindowMs, deviceTimeMs + rasWindowMs) 内
+        // alarmRaisedTime 须在 [baseTime, deviceTimeMs + rasWindowMs] 内
         eventInfo[0].alarm_raised_time = static_cast<uint64_t>(g_deviceCurrentTimeStub);
         return DRV_ERROR_NONE;
     }

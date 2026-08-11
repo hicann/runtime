@@ -254,8 +254,7 @@ uint32_t GetRingbufferElementNum();
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap);
 uint16_t GetMteErrWaitCount();
 std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName);
-RasEventMatch QueryRasFaultEvents(
-    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowBeforeMs, uint64_t windowAfterMs);
+RasEventMatch QueryRasFaultEvents(const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs);
 void ConvertErrorCodeForFastReport(StarsOpExceptionInfo* report);
 void GetFastRingBufferErrorMap(std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>>& errorMap);
 void InitFastRingBuffer(void* fastRingBufferAddr);

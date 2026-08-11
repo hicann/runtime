@@ -769,42 +769,54 @@ static void MatchRasEventInBatch(
 {
     for (uint32_t idx = 0U; idx < eventCount; ++idx) {
         const uint64_t alarmTime = faultEventInfo[idx].alarmRaisedTime;
-        if ((alarmTime > lowerBound) && (alarmTime < upperBound) && IsRasFaultEventId(faultEventInfo[idx].eventId)) {
+        if ((alarmTime >= lowerBound) && (alarmTime <= upperBound) && IsRasFaultEventId(faultEventInfo[idx].eventId)) {
             UpdateEarliestRasEvent(match, faultEventInfo[idx]);
         }
     }
 }
 
-// 查询 RAS 故障事件，在时间窗口内匹配目标 eventId
-// 如果在时间窗内，匹配到目标eventID，命中后立即返回，取 alarmRaisedTime 最早的事件作为根因。未命中时打印 DEBUG 诊断日志
-// deviceTimeMs 为时间窗计算的基准时间，windowBeforeMs，windowAfterMs 是时间窗左右边界在基准时间上的左右偏移量，单位ms
-// 时间窗计算方法为 [deviceTimeMs - windowBeforeMs, upperBound]
-// windowAfterMs > 0 时：upperBound = deviceTimeMs + windowAfterMs，表示需轮询等待未来事件到达（如 HW_L_ERROR）；
-// windowAfterMs == 0 时：upperBound = 查询时刻的 device 当前时间，
-// 表示事件已在前序等待中到达，无需轮询等待，单次查询即可（如 MTE/LINK）
-RasEventMatch QueryRasFaultEvents(
-    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowBeforeMs, uint64_t windowAfterMs)
+struct RasQueryWindow {
+    uint64_t lowerBound;
+    uint64_t upperBound;
+};
+
+static bool BuildRasQueryWindow(
+    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs, RasQueryWindow& window)
 {
-    RasEventMatch match{};
-    if (dev == nullptr) {
-        return match;
+    const int64_t baseTime = dev->GetBaseTime();
+    if (baseTime <= 0) {
+        RT_LOG(
+            RT_LOG_WARNING, "Invalid device base time, skip RAS query, device_id=%u, base_time=%" PRId64 ".",
+            dev->Id_(), baseTime);
+        return false;
     }
-    const uint64_t lowerBound = (deviceTimeMs > windowBeforeMs) ? (deviceTimeMs - windowBeforeMs) : 0U;
+    window.lowerBound = static_cast<uint64_t>(baseTime);
     // windowAfterMs > 0: 右边界为 deviceTimeMs + windowAfterMs（等待未来到达的事件）
     // windowAfterMs == 0: 右边界为查询时的当前 device 时间（事件在 ProcessCoreErrorClass 等待期间已到达）
-    uint64_t upperBound;
     if (windowAfterMs > 0U) {
-        upperBound = deviceTimeMs + windowAfterMs;
+        window.upperBound = deviceTimeMs + windowAfterMs;
     } else {
         const int64_t currTime = dev->GetDeviceCurrentTime();
         if (currTime <= 0) {
             RT_LOG(RT_LOG_WARNING, "GetDeviceCurrentTime failed, skip RAS query, device_id=%u.", dev->Id_());
-            return match;
+            return false;
         }
-        upperBound = static_cast<uint64_t>(currTime);
+        window.upperBound = static_cast<uint64_t>(currTime);
     }
-    std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
+    if (window.lowerBound > window.upperBound) {
+        RT_LOG(
+            RT_LOG_WARNING, "Invalid RAS query window, device_id=%u, base_time=%llu, upper_bound=%llu.", dev->Id_(),
+            window.lowerBound, window.upperBound);
+        return false;
+    }
+    return true;
+}
 
+static RasEventMatch QueryRasEventsInWindow(
+    const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs, const RasQueryWindow& window)
+{
+    RasEventMatch match{};
+    std::vector<rtDmsFaultEvent> faultEventInfo(RAS_GET_MAX_NUM, rtDmsFaultEvent{});
     uint32_t lastEventCount = 0U;
     rtError_t lastError = RT_ERROR_NONE;
     const uint32_t maxQueryCount = (windowAfterMs > 0U) ? static_cast<uint32_t>(GetMteErrWaitCount()) : 1U;
@@ -819,7 +831,7 @@ RasEventMatch QueryRasFaultEvents(
                 static_cast<uint32_t>(error));
             return match;
         }
-        MatchRasEventInBatch(match, faultEventInfo, eventCount, lowerBound, upperBound);
+        MatchRasEventInBatch(match, faultEventInfo, eventCount, window.lowerBound, window.upperBound);
         if (match.found) {
             break;
         }
@@ -830,10 +842,10 @@ RasEventMatch QueryRasFaultEvents(
     if (!match.found) {
         RT_LOG(
             RT_LOG_DEBUG,
-            "RAS query no match: device_id=%u, deviceTimeMs=%llu, window=[%llu,%llu], "
+            "RAS query no match: device_id=%u, deviceTimeMs=%llu, baseTimeMs=%llu, window=[%llu,%llu], "
             "windowAfterMs=%llu, queryCount=%u, lastError=%#x, eventCount=%u.",
-            dev->Id_(), deviceTimeMs, lowerBound, upperBound, windowAfterMs, maxQueryCount,
-            static_cast<uint32_t>(lastError), lastEventCount);
+            dev->Id_(), deviceTimeMs, window.lowerBound, window.lowerBound, window.upperBound, windowAfterMs,
+            maxQueryCount, static_cast<uint32_t>(lastError), lastEventCount);
         for (uint32_t idx = 0U; idx < lastEventCount; ++idx) {
             RT_LOG(
                 RT_LOG_DEBUG, "RAS query event[%u]: event_id=%#x, alarm_time=%llu.", idx, faultEventInfo[idx].eventId,
@@ -841,6 +853,24 @@ RasEventMatch QueryRasFaultEvents(
         }
     }
     return match;
+}
+
+// 查询 RAS 故障事件，在时间窗口内匹配目标 eventId
+// 如果在时间窗内，匹配到目标eventID，命中后立即返回，取 alarmRaisedTime 最早的事件作为根因。未命中时打印 DEBUG 诊断日志
+// 时间窗口下边界固定为最近一次 setDevice 或 repair 时记录的 device baseTime
+// windowAfterMs > 0 时：upperBound = deviceTimeMs + windowAfterMs，表示需轮询等待未来事件到达（如 HW_L_ERROR）；
+// windowAfterMs == 0 时：upperBound = 查询时刻的 device 当前时间，
+// 表示事件已在前序等待中到达，无需轮询等待，单次查询即可（如 MTE/LINK）
+RasEventMatch QueryRasFaultEvents(const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs)
+{
+    if (dev == nullptr) {
+        return RasEventMatch{};
+    }
+    RasQueryWindow window{};
+    if (!BuildRasQueryWindow(dev, deviceTimeMs, windowAfterMs, window)) {
+        return RasEventMatch{};
+    }
+    return QueryRasEventsInWindow(dev, deviceTimeMs, windowAfterMs, window);
 }
 
 // 封装 SMMU 故障检查逻辑
@@ -1119,12 +1149,11 @@ static std::string QueryAndFormatRasFault(const Device* const dev, const int64_t
         return "";
     }
     const uint64_t deviceTimeMs = static_cast<uint64_t>(deviceTime);
-    const uint64_t rasWindowMs = static_cast<uint64_t>(GetMteErrWaitCount()) * RAS_QUERY_INTERVAL;
     // SetTaskMteErr(errTaskPtr, dev) 中已经等待过事件发生了，这个函数调用结束，只有两种情况：
     // 1、等足了120ms，没有查到事件，此处不应该再去轮询查事件了，而是直接只查一次，以这次的查询结果为准
     // 2、没有等够120ms事件就发生了，函数提前返回，此处立即去查询告警，一定能查到
     // 所以，无论那种情况，此处都不应该再去轮询查事件了，QueryRasFaultEvents的windowAfterMs直接传0
-    RasEventMatch rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, rasWindowMs, 0U);
+    RasEventMatch rasMatch = QueryRasFaultEvents(dev, deviceTimeMs, 0U);
     if (!rasMatch.found) {
         return "";
     }
