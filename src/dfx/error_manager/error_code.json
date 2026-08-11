@@ -693,7 +693,7 @@
       "errClass": "RTS Errors",
       "errTitle": "Model_Unbinding_Errors",
       "ErrCode": "EE4002",
-      "ErrMessage": "Failed to unbind the stream to the model. %s",
+      "ErrMessage": "Failed to unbind the stream from the model. %s",
       "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "1. The stream to be unbound is not bound to the model. 2. The model is running.",
