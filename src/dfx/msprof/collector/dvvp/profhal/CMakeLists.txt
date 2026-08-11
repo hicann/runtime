@@ -101,7 +101,7 @@ target_link_libraries(ascendprof_fwk_share PRIVATE
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:slog_headers>
     c_sec
-    alog
+    unified_dlog
     mmpa
     error_manager
 )

@@ -268,7 +268,7 @@ target_link_libraries(profimpl_fwk_share PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
     c_sec
-    alog
+    unified_dlog
     mmpa
     error_manager
 )

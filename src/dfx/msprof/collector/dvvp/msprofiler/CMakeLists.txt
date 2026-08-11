@@ -97,7 +97,7 @@ target_link_libraries(msprofiler_fwk_share
         adump_headers
         npu_runtime_headers
         c_sec
-        alog
+        unified_dlog
         mmpa
         profapi_share
         error_manager
@@ -191,7 +191,7 @@ target_link_libraries(msprofiler_fwk_lite_share
         slog_headers
         -Wl,--no-as-needed
         c_sec
-        alog
+        unified_dlog
         profapi_lite_share
         -Wl,--as-needed
         mmpa

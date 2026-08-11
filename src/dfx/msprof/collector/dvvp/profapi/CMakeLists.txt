@@ -97,7 +97,7 @@ target_link_libraries(profapi_stub PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     -Wl,--no-as-needed
     mmpa
-    alog
+    unified_dlog
     c_sec
     -Wl,--as-needed
 )
@@ -153,7 +153,7 @@ target_link_libraries(profapi_share
         slog_headers
         -Wl,--no-as-needed
         mmpa
-        alog
+        unified_dlog
         c_sec
         -Wl,--as-needed
     PUBLIC
@@ -212,7 +212,7 @@ target_link_libraries(profapi_lite_share
         intf_pub
         slog_headers
         -Wl,--no-as-needed
-        alog
+        unified_dlog
         c_sec
         -Wl,--as-needed
     PUBLIC
