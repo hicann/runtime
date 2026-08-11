@@ -65,6 +65,8 @@
 #include "thread_local_container.hpp"
 #include "device/device_error_proc.hpp"
 #include "memory_task.h"
+#include "kernel_fusion_task.h"
+#include "task_fail_callback_manager.hpp"
 #include "davinci_kernel_task.h"
 #include "stub_task.hpp"
 #include "task_info.hpp"
@@ -4171,3 +4173,28 @@ TEST_F(TaskTest, EventWaitTaskInit_WithValidEventPtr)
 
     TaskUnInitProc(&task);
 }
+
+TEST_F(TaskTest, KernelFusionTaskInit_Success)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    rtError_t ret = KernelFusionTaskInit(&task, FUSION_START);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_FUSION_ISSUE);
+    EXPECT_STREQ(task.typeName, "KERNEL_FUSION");
+    EXPECT_EQ(task.u.kernelFusionTaskInfo.flag, FUSION_START);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(TaskTest, ToCommandBodyForKernelFusionTask_Success)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    KernelFusionTaskInit(&task, FUSION_END);
+    rtCommand_t command = {};
+    ToCommandBodyForKernelFusionTask(&task, &command);
+    EXPECT_EQ(command.u.fusion.flag, FUSION_END);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(TaskTest, CheckKernelMemoryCorruption_AllNull) { CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr); }

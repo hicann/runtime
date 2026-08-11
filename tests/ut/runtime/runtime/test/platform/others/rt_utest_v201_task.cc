@@ -63,6 +63,9 @@
 #include "fusion_c.hpp"
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
+#include "api_impl_v201.hpp"
+#include "capture_adapt.hpp"
+#include "task_fail_callback_manager.hpp"
 #include "notify_task.h"
 #include "davinci_kernel_task.h"
 #include "rt_unwrap.h"
@@ -2020,4 +2023,116 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_EmptyHeadStream)
     delete notify;
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, rtLaunchDqsTask_NullApiInstance)
+{
+    MOCKER(Api::Instance).stubs().will(returnValue((Api*)NULL));
+    rtDqsTaskCfg_t taskCfg = {};
+    rtError_t ret = rtLaunchDqsTask(streamHandle_, &taskCfg);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+}
+
+TEST_F(TaskTestV201, rtLaunchDqsTask_NullStream)
+{
+    rtDqsTaskCfg_t taskCfg = {};
+    rtError_t ret = rtLaunchDqsTask(nullptr, &taskCfg);
+    EXPECT_NE(ret, ACL_RT_SUCCESS);
+}
+
+TEST_F(TaskTestV201, rtLaunchDqsTask_Success)
+{
+    static ApiImpl impl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&impl)));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::LaunchDqsTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtDqsTaskCfg_t taskCfg = {};
+    taskCfg.type = RT_DQS_TASK_SCHED_CONFIG;
+    rtError_t ret = rtLaunchDqsTask(streamHandle_, &taskCfg);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+}
+
+TEST_F(TaskTestV201, rtLaunchDqsTask_LaunchFail)
+{
+    static ApiImpl impl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&impl)));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::LaunchDqsTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtDqsTaskCfg_t taskCfg = {};
+    taskCfg.type = RT_DQS_TASK_SCHED_CONFIG;
+    rtError_t ret = rtLaunchDqsTask(streamHandle_, &taskCfg);
+    EXPECT_NE(ret, ACL_RT_SUCCESS);
+}
+
+TEST_F(TaskTestV201, ApiImplV201_LaunchDqsTask)
+{
+    ApiImplV201 implV201;
+    MOCKER(DqsLaunchTask).stubs().will(returnValue(RT_ERROR_NONE));
+    rtDqsTaskCfg_t taskCfg = {};
+    taskCfg.type = RT_DQS_TASK_SCHED_CONFIG;
+    rtError_t ret = implV201.LaunchDqsTask(stream_, &taskCfg);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, ApiImplV201_EventRecord_ExternalNotSupport)
+{
+    ApiImplV201 implV201;
+    Event evt;
+    rtError_t ret = implV201.EventRecord(&evt, stream_, RT_EVENT_RECORD_EXTERNAL);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TaskTestV201, ApiImplV201_EventRecord_DefaultFlag)
+{
+    ApiImplV201 implV201;
+    rtEvent_t eventHandle = nullptr;
+    rtError_t createRet = rtEventCreate(&eventHandle);
+    ASSERT_EQ(createRet, RT_ERROR_NONE);
+    Event* evt = rt_ut::UnwrapOrNull<Event>(eventHandle);
+    ASSERT_NE(evt, nullptr);
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    rtError_t ret = implV201.EventRecord(evt, stream_, RT_EVENT_RECORD_DEFAULT);
+    EXPECT_EQ(ret, RT_ERROR_CONTEXT_NULL);
+    rtEventDestroy(eventHandle);
+}
+
+TEST_F(TaskTestV201, ApiImplV201_StreamWaitEvent_ExternalNotSupport)
+{
+    ApiImplV201 implV201;
+    Event evt;
+    rtError_t ret = implV201.StreamWaitEvent(stream_, &evt, 0U, RT_EVENT_WAIT_EXTERNAL);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TaskTestV201, ApiImplV201_StreamWaitEvent_DefaultFlag)
+{
+    ApiImplV201 implV201;
+    rtEvent_t eventHandle = nullptr;
+    rtError_t createRet = rtEventCreate(&eventHandle);
+    ASSERT_EQ(createRet, RT_ERROR_NONE);
+    Event* evt = rt_ut::UnwrapOrNull<Event>(eventHandle);
+    ASSERT_NE(evt, nullptr);
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    rtError_t ret = implV201.StreamWaitEvent(stream_, evt, 0U, RT_EVENT_WAIT_DEFAULT);
+    EXPECT_EQ(ret, RT_ERROR_CONTEXT_NULL);
+    rtEventDestroy(eventHandle);
+}
+
+TEST_F(TaskTestV201, CheckKernelMemoryCorruption_V201_AllNull)
+{
+    CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr);
+}
+
+TEST_F(TaskTestV201, ConstructDavidAsyncUbDbSqe_AllNull) { ConstructDavidAsyncUbDbSqe(nullptr, nullptr); }
+
+TEST_F(TaskTestV201, GetStreamTaskInfo_NullDev)
+{
+    TaskInfo* result = GetStreamTaskInfo(nullptr, 0, 0);
+    EXPECT_EQ(result, nullptr);
+}
+
+TEST_F(TaskTestV201, GetStreamTaskInfo_NullStream)
+{
+    TaskInfo* result = GetStreamTaskInfo(device_, 999, 0);
+    EXPECT_EQ(result, nullptr);
 }

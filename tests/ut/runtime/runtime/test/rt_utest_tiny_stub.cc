@@ -58,7 +58,12 @@
 #include "notify.hpp"
 #include "event.hpp"
 #include "xpu_task_fail_callback_data_manager.h"
+#include "funcsymbol_table.hpp"
+#include "symbol_table.hpp"
 #include "task_to_sqe.hpp"
+#include "program.hpp"
+#include "memory_task.h"
+#include "stream_c.hpp"
 #undef protected
 #undef private
 
@@ -1381,4 +1386,51 @@ TEST_F(TinyStubTest, InvalidCache_NoContext_ContextNull)
     ApiImpl apiImpl;
     rtError_t error = apiImpl.InvalidCache(0x1000U, 256U);
     EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(TinyStubTest, funcsymbol_table_tiny_stub)
+{
+    FuncSymbolTable table;
+    rtError_t ret = table.Register(nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    Kernel* kernel = table.Lookup(nullptr);
+    EXPECT_EQ(kernel, nullptr);
+}
+
+TEST_F(TinyStubTest, symbol_table_tiny_stub)
+{
+    SymbolTable table;
+    rtError_t ret = table.Register(nullptr, nullptr, nullptr, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    SymbolEntry entry = {};
+    ret = table.Lookup(nullptr, entry);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    void* devPtr = nullptr;
+    ret = table.GetDeviceAddress(nullptr, 0, &devPtr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    size_t size = 0;
+    ret = table.GetSize(nullptr, &size);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, program_plat_stub)
+{
+    PlainProgram program;
+    rtError_t ret = program.XpuSetKernelLiteralNameDevAddr(nullptr, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TinyStubTest, memory_task_v100_external_event_tiny_stub)
+{
+    TaskInfo taskInfo = {};
+    RtStarsMemWaitValueInstrFcPara fcPara = {};
+    uint64_t funcCallSize = 0;
+    rtError_t ret = ConstructLastSqeForExternalWaitTask(&taskInfo, fcPara, funcCallSize);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, stream_ub_db_stub)
+{
+    rtError_t ret = StreamUbDbSend(nullptr, nullptr, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
