@@ -2030,7 +2030,6 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 
 ### 约束说明
 
-- 若PCI Bus ID对应的设备不在可见空间内，返回错误码。
 - 非PCIe互连形态（如Huawei Cache Coherence System、Unified Bus）的设备，该接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 
 <br>
