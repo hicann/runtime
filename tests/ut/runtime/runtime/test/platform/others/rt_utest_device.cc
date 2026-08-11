@@ -17,6 +17,7 @@
 #include "raw_device.hpp"
 #include "module.hpp"
 #include "event.hpp"
+#include "task.hpp"
 #include "task_info.hpp"
 #include "device/device_error_proc.hpp"
 #include "program.hpp"

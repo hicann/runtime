@@ -56,6 +56,7 @@
 #include "davinci_kernel_task.h"
 #include "davinci_multiple_task.h"
 #include "stub_task.hpp"
+#include "task.hpp"
 #include "para_convertor.hpp"
 #include "runtime_task_manager.h"
 #include "cmo_task.h"

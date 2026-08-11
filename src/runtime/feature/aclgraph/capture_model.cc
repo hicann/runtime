@@ -34,6 +34,7 @@
 #include "notify_c.hpp"
 #include <securec.h>
 #include <algorithm>
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

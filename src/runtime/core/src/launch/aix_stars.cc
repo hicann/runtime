@@ -25,6 +25,7 @@
 #include "runtime.hpp"
 #include "stream.hpp"
 #include "kernel_utils.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

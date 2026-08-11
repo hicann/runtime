@@ -41,6 +41,7 @@
 #include "ttlv.hpp"
 #include "model.hpp"
 #include "task_info.hpp"
+#include "task.hpp"
 #include "platform/platform_info.h"
 #include "soc_info.h"
 #include "../../rt_utest_config_define.hpp"

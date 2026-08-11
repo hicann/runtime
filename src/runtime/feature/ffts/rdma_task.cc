@@ -15,6 +15,7 @@
 #include "context.hpp"
 #include "rdma_task.h"
 #include "inner_thread_local.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

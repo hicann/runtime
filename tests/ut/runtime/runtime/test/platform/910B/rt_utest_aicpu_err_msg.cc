@@ -21,6 +21,7 @@
 #include "thread_local_container.hpp"
 #include "rt_unwrap.h"
 #include "../../task_test_helper.h"
+#include "task.hpp"
 
 using namespace testing;
 using namespace cce::runtime;

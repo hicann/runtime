@@ -107,7 +107,7 @@ aclrtCreateEventExWithFlag(&endEvent, ACL_EVENT_TIME_LINE);
 // 插入startEvent
 aclrtRecordEvent(startEvent, stream);
 // 在Stream中下发计算任务
-kernel<<< grid, block, 0, stream>>>(...);
+kernel<<<blockDim, nullptr, stream>>>();
 // 插入endEvent
 aclrtRecordEvent(endEvent, stream);
 aclrtSynchronizeStream(stream);

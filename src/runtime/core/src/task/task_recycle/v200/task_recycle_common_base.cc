@@ -33,6 +33,7 @@
 #include "task_res_da.hpp"
 #include "stream.hpp"
 #include "stream_david.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

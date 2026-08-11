@@ -32,6 +32,7 @@
 #include "task_recycle.hpp"
 #include "engine.hpp"
 #include "task_res_da.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

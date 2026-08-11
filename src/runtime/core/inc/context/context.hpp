@@ -12,7 +12,6 @@
 
 #include <list>
 #include <memory>
-#include <unordered_set>
 #include "runtime/kernel.h"
 #include "runtime/mem.h"
 #include "runtime/rt_inner_mem.h"
@@ -34,7 +33,6 @@
 #include "error_manager.h"
 #endif
 #include "profiler_struct.hpp"
-#include "task_to_sqe.hpp"
 #include "context_manage.hpp"
 #include "rts/rts.h"
 #include "mmpa_linux.h"
@@ -69,7 +67,8 @@ class Model;
 class Label;
 struct ArgLoaderResult;
 class DvppGrp;
-class SqeInfo;
+struct RtDebugSendInfo;
+struct rtDebugReportInfo_t;
 
 enum TearDownStatus {
     TEARDOWN_NOT_EXECUTE = 0, // TDT threads is idle

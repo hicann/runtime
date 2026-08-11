@@ -23,6 +23,7 @@
 #include "api.hpp"
 #include "aicpu_c.hpp"
 #include "raw_device.hpp"
+#include "task.hpp"
 
 using namespace testing;
 using namespace cce::runtime;

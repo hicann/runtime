@@ -17,6 +17,7 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "profiler_c.hpp"
+#include "task.hpp"
 namespace cce {
 namespace runtime {
 // for dvpp task, submit write value task

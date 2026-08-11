@@ -47,7 +47,7 @@ aclrtMalloc(&devPtr, size, 0);
 ......
 
 // 去初始化
-aclrtResetDeviceForce(deviceId)
+aclrtResetDeviceForce(deviceId);
 aclFinalize();
 ```
 

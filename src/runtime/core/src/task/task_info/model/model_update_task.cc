@@ -14,6 +14,7 @@
 #include "base.hpp"
 #include "task_info.hpp"
 #include "model_update_task.h"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

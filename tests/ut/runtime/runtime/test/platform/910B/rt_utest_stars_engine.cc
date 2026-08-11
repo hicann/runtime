@@ -45,6 +45,7 @@
 #include "task_execute_time.h"
 #include "model.hpp"
 #include "stub_task.hpp"
+#include "task.hpp"
 #include "model_execute_task.h"
 #include "event_task.h"
 #include "../../task_test_helper.h"

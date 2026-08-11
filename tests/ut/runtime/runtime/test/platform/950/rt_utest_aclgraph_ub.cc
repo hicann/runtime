@@ -26,6 +26,7 @@
 #include "stream_jetty_handler.h"
 #include "task_info.hpp"
 #include "task_base.hpp"
+#include "task.hpp"
 #include "drv/driver_types.hpp"
 #include "thread_local_container.hpp"
 #include "memory_task.h"

@@ -54,6 +54,8 @@
 #include "error_message_manage.hpp"
 #include "capability.hpp"
 #include "notify_enum_desc.hpp"
+#include "task.hpp"
+#include "context_data_manage.h"
 
 namespace cce {
 namespace runtime {

@@ -36,6 +36,7 @@
 #include <utility> // For std::pair and std::make_pair.
 #include "mmpa_api.h"
 #include "thread_local_container.hpp"
+#include "task.hpp"
 
 using namespace testing;
 using namespace cce::runtime;

@@ -11,6 +11,7 @@
 #include "task_to_sqe.hpp"
 #include "task_info.hpp"
 #include "stream.hpp"
+#include "stars_david.hpp"
 
 namespace cce {
 namespace runtime {

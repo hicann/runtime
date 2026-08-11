@@ -15,6 +15,7 @@
 #include "context.hpp"
 #include "error_message_manage.hpp"
 #include "memcpy_c.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

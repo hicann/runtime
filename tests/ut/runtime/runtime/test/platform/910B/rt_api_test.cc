@@ -26,6 +26,7 @@
 #include "engine.hpp"
 #include "async_hwts_engine.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "stars.hpp"
 #include "npu_driver.hpp"
 #include "api_error.hpp"

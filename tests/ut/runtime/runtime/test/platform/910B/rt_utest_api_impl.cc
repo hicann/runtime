@@ -36,6 +36,7 @@
 #include "logger.hpp"
 #include "dqs/task_dqs.hpp"
 #include "stub_task.hpp"
+#include "task.hpp"
 #include "device_error_proc.hpp"
 #include "snapshot_process_helper.hpp"
 #include "device_snapshot.hpp"

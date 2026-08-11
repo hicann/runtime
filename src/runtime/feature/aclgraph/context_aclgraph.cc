@@ -29,6 +29,7 @@
 #include "cond_handle.hpp"
 #include "cond_op_stream_task.h"
 #include "aclgraph_cond_task.h"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "context.hpp"
 #include "runtime.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

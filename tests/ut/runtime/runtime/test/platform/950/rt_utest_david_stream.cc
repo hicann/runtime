@@ -23,6 +23,7 @@
 #include "aicpu_timeout_control.h"
 #include "event.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "task_recycle.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"

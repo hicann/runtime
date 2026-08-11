@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "thread_local_container.hpp"
+#include "task.hpp"
 #include "task_david.hpp"
 #include "stars_david.hpp"
 #include "task_res_da.hpp"

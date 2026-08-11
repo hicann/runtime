@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "capture_model.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

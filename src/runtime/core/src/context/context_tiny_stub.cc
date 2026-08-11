@@ -8,9 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "context.hpp"
-#include "capture_model.hpp"
-#include "notify.hpp"
-#include "device_snapshot.hpp"
 
 namespace cce {
 namespace runtime {

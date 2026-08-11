@@ -7,10 +7,11 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <mutex>
 #include "context_manage.hpp"
 #include "context.hpp"
-#include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
+#include "context_data_manage.h"
 
 namespace cce {
 namespace runtime {

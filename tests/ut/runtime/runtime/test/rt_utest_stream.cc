@@ -44,6 +44,7 @@
 #include "api_handle_guard.h"
 #include "npu_driver.hpp"
 #include "task_submit.hpp"
+#include "task.hpp"
 #include "capture_model_utils.hpp"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"

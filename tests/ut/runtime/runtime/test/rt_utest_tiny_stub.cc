@@ -58,6 +58,7 @@
 #include "notify.hpp"
 #include "event.hpp"
 #include "xpu_task_fail_callback_data_manager.h"
+#include "task_to_sqe.hpp"
 #undef protected
 #undef private
 

@@ -19,6 +19,7 @@
 #include "engine.hpp"
 #include "event.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "ctrl_stream.hpp"
 #include "coprocessor_stream.hpp"
 #include "engine_stream_observer.hpp"

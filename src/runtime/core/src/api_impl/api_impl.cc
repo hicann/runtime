@@ -90,6 +90,7 @@
 #include "kernel/symbol_table.hpp"
 #include "snapshot_callback_manager.hpp"
 #include "snapshot_process_helper.hpp"
+#include "task_to_sqe.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM) NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)

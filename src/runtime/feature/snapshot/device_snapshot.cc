@@ -14,6 +14,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "context_manage.hpp"
+#include "context_data_manage.h"
 #include "inner_thread_local.hpp"
 #include "error_message_manage.hpp"
 #include "uma_arg_loader.hpp"

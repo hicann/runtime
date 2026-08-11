@@ -18,6 +18,7 @@
 #include "capture_model.hpp"
 #include "common_task.h"
 #include "memcpy_c.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

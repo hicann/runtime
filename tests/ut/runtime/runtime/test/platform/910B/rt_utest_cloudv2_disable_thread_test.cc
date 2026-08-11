@@ -44,6 +44,7 @@
 #include "device_state_callback_manager.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "model.hpp"
+#include "task.hpp"
 #include "capture_model.hpp"
 #include "subscribe.hpp"
 #include <fstream>

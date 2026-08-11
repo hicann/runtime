@@ -28,6 +28,7 @@
 #include "api_profile_log_decorator.hpp"
 #include "stream.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "task_submit.hpp"
 #include "api.hpp"
 #include "driver.hpp"

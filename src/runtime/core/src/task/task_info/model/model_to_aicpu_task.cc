@@ -17,6 +17,7 @@
 #include "runtime_task_manager.h"
 #include "model_to_aicpu_task.h"
 #include "task_info.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

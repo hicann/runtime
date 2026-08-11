@@ -29,6 +29,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
 #include "rt_unwrap.h"
+#include "task.hpp"
 using namespace testing;
 using namespace cce::runtime;
 

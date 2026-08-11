@@ -60,6 +60,7 @@
 #include "api_impl_soma.hpp"
 #include "aicpu_timeout_manager.h"
 #include "device_error_proc.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

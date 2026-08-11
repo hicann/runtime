@@ -30,7 +30,6 @@
 #include "npu_driver.hpp"
 #include "onlineprof.hpp"
 #include "task.hpp"
-#include "runtime_dump_task.h"
 #include "osal.hpp"
 #include "error_message_manage.hpp"
 #include "profiler.hpp"
@@ -41,7 +40,6 @@
 #include "profiling_task.h"
 #include "stream_task.h"
 #include "task_submit.hpp"
-#include "task_to_sqe.hpp"
 #include "stream_state_callback_manager.hpp"
 #if (!defined(CFG_VECTOR_CAST))
 #include <algorithm>

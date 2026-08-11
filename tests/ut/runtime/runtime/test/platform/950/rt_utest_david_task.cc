@@ -26,6 +26,7 @@
 #include "engine.hpp"
 #include "cond_c.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "scheduler.hpp"

@@ -17,6 +17,7 @@
 #include "memset_common.h"
 #include "memcpy_c.hpp"
 #include <atomic>
+#include "task.hpp"
 
 namespace {
 constexpr const char_t* TASK_FAIL_CALLBACK_TEST_MODULE = "ASCENDCL";

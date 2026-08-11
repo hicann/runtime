@@ -34,6 +34,7 @@
 #include "api.hpp"
 #include "logger.hpp"
 #include "task_info.hpp"
+#include "task.hpp"
 #include "thread_local_container.hpp"
 #include "device_msg_handler.hpp"
 #include "device_snapshot.hpp"

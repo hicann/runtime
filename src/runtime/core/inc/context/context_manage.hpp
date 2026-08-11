@@ -10,14 +10,13 @@
 #ifndef CCE_RUNTIME_CONTEXT_MANAGE_HPP
 #define CCE_RUNTIME_CONTEXT_MANAGE_HPP
 
-#include <vector>
-#include "error_message_manage.hpp"
 #include "base.hpp"
-#include "context_data_manage.h"
+
 namespace cce {
 namespace runtime {
 class Context;
 class Device;
+class Stream;
 enum class ContextAccessMode : uint8_t {
     USER = 0,
     INTERNAL = 1,

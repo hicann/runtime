@@ -23,6 +23,7 @@
 #include "xpu_device.hpp"
 #include "runtime.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 #include "event.hpp"
 #include "logger.hpp"
 #include "raw_device.hpp"

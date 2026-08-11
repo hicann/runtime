@@ -44,6 +44,7 @@
 #include "api_profile_log_decorator.hpp"
 #include "device_state_callback_manager.hpp"
 #include "task_fail_callback_manager.hpp"
+#include "task.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
 #include "subscribe.hpp"

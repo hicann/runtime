@@ -12,7 +12,6 @@
 
 #include <cstdint>
 #include <rt_preload_task.h>
-#include "task.hpp"
 
 namespace cce {
 namespace runtime {

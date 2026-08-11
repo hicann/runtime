@@ -23,6 +23,7 @@
 #include "stream_jetty_handler.h"
 #include "capture_model_utils.hpp"
 #include "rt_inner_event.h"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

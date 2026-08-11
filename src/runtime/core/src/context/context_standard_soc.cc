@@ -33,7 +33,6 @@
 #include "ffts_task.h"
 #include "rdma_task.h"
 #include "task_submit.hpp"
-#include "task_to_sqe.hpp"
 #include "stream_state_callback_manager.hpp"
 #if (!defined(CFG_VECTOR_CAST))
 #include <algorithm>
