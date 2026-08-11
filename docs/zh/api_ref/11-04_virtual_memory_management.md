@@ -8,7 +8,7 @@
 - [`aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t alignment, void *expectPtr, uint64_t flags)`](#aclrtReserveMemAddressNoUCMemory)：预留虚拟内存。
 - [`aclError aclrtReleaseMemAddress(void *virPtr)`](#aclrtReleaseMemAddress)：释放通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口申请的虚拟内存。
 - [`aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)`](#aclrtMapMem)：将虚拟内存映射到物理内存。
-- [`aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)`](#aclrtMemMapNoAccess)：预留接口，暂不支持。
+- [`aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)`](#aclrtMemMapNoAccess)：将虚拟内存映射到物理内存。
 - [`aclError aclrtUnmapMem(void *virPtr)`](#aclrtUnmapMem)：取消虚拟内存与物理内存之间的映射关系。
 - [`aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandleType handleType, uint64_t flags, uint64_t *shareableHandle)`](#aclrtMemExportToShareableHandle)：将本进程通过[aclrtMallocPhysical](#aclrtMallocPhysical)接口获取到的Device物理内存handle导出，以便后续将Device物理内存共享给其它进程。
 - [`aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid, size_t pidNum)`](#aclrtMemSetPidToShareableHandle)：设置共享内存的进程白名单。
@@ -460,7 +460,7 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 | virPtr | 输入 | 待映射的虚拟内存地址指针。<br>这个地址不一定是起始地址，用户也可以根据起始地址自行偏移后，再映射。 |
 | size | 输入 | 待映射的内存大小，单位Byte。<br>此处的size必须与[aclrtMallocPhysical](#aclrtMallocPhysical)接口的size参数值相同，size必须与[aclrtMemGetAllocationGranularity](#aclrtMemGetAllocationGranularity)接口获取的ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM对齐。 |
 | offset | 输入 | 物理内存偏移值，当前只能设置为0。 |
-| handle | 输入 | 物理内存信息handle。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与两个Device上申请的物理地址绑定。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与[aclrtMallocPhysical](#aclrtMallocPhysical)、[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)接口输出的handle绑定。 |
+| handle | 输入 | 物理内存信息handle。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与两个Device上申请的物理地址绑定。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与[aclrtMallocPhysical](#aclrtMallocPhysical)、[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)、[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口输出的handle绑定。 |
 | flags | 输入 | 预留，当前只能设置为0。 |
 
 ### 返回值说明
@@ -485,37 +485,66 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle handle, uint64_t flags)
 ```
 
-**须知：本接口为预留接口，暂不支持。**
+### 产品支持情况
+
+<!-- npu="950" id27 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id27 -->
+<!-- npu="A3" id28 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id28 -->
+<!-- npu="910b" id29 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id29 -->
+<!-- npu="310b" id30 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id30 -->
+<!-- npu="310p" id31 -->
+- Atlas 推理系列产品：支持
+<!-- end id31 -->
+<!-- npu="910" id32 -->
+- Atlas 训练系列产品：支持
+<!-- end id32 -->
+<!-- npu="IPV350" id33 -->
+- IPV350：不支持
+<!-- end id33 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id21 -->
 
 ### 功能说明
 
 将虚拟内存映射到物理内存。
 本接口与aclrtMemMap接口的区别在于：调用本接口成功后，目标Device上尚未建立可访问页表，虚拟地址区间不可访问。因此，需先调用[aclrtMemSetAccess](#aclrtMemSetAccess)接口设置内存访问权限，以触发在Device上建立可访问页表，方可访问该虚拟地址区间。
 
-**本接口需与以下其它接口配合使用**，典型调用流程如下：
+**本接口需与以下其它接口配合使用**，以便申请地址连续的虚拟内存、最大化利用物理内存：
 
-1. 预留虚拟内存（[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口）；
-2. 申请物理内存（[aclrtMallocPhysical](#aclrtMallocPhysical)接口），或导入共享物理内存handle（[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)或[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口）；
-3. 建立虚拟地址与物理内存handle之间的no-access绑定关系（[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口）；
+1. 申请虚拟内存（[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口）；
+2. 申请物理内存（[aclrtMallocPhysical](#aclrtMallocPhysical)接口）；
+3. 将虚拟内存映射到物理内存（[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口）；
 4. 为目标Device设置访问权限（[aclrtMemSetAccess](#aclrtMemSetAccess)接口）；
 5. 执行任务（调用具体的任务接口）；
-6. 取消虚拟内存与物理内存之间的绑定关系（[aclrtUnmapMem](#aclrtUnmapMem)接口）；
-7. 释放物理内存handle（[aclrtFreePhysical](#aclrtFreePhysical)接口）；
+6. 取消虚拟内存与物理内存的映射（[aclrtUnmapMem](#aclrtUnmapMem)接口）；
+7. 释放物理内存（[aclrtFreePhysical](#aclrtFreePhysical)接口）；
 8. 释放虚拟内存（[aclrtReleaseMemAddress](#aclrtReleaseMemAddress)接口）。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| virPtr | 输入 | 待绑定的虚拟内存地址指针，不能为nullptr。该地址需位于通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留的有效虚拟地址区间内。 |
-| size | 输入 | 待绑定的内存大小，单位Byte，取值必须大于0。 |
-| offset | 输入 | handle对应物理内存内的偏移值。offset与size的合法范围及对齐要求由底层驱动校验。 |
-| handle | 输入 | 物理内存信息handle，不能为nullptr。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>handle可通过[aclrtMallocPhysical](#aclrtMallocPhysical)、[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)或[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口获取。 |
-| flags | 输入 | 预留参数，当前只能设置为0。 |
+| virPtr | 输入 | 待映射的虚拟内存地址指针。<br>这个地址不一定是起始地址，用户也可以根据起始地址自行偏移后，再映射。 |
+| size | 输入 | 待映射的内存大小，单位Byte。<br>此处的size必须与[aclrtMallocPhysical](#aclrtMallocPhysical)接口的size参数值相同，size必须与[aclrtMemGetAllocationGranularity](#aclrtMemGetAllocationGranularity)接口获取的ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM对齐。 |
+| offset | 输入 | 物理内存偏移值，当前只能设置为0。 |
+| handle | 输入 | 物理内存信息handle。类型定义请参见[aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle)。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与两个Device上申请的物理地址绑定。<br>通过[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口预留出来的一整段虚拟地址，由用户自行管理、划分时，不能同时与[aclrtMallocPhysical](#aclrtMallocPhysical)、[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)、[aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2)接口输出的handle绑定。 |
+| flags | 输入 | 预留，当前只能设置为0。 |
 
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<!-- npu="310b" id34 -->
+### 约束说明
+
+对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+<!-- end id34 -->
 
 <br>
 <br>
@@ -556,17 +585,7 @@ aclError aclrtUnmapMem(void *virPtr)
 
 ### 功能说明
 
-取消虚拟内存与物理内存之间的映射关系。
-
-**本接口需与以下其它接口配合使用**，以便申请地址连续的虚拟内存、最大化利用物理内存：
-
-1. 申请虚拟内存（[aclrtReserveMemAddress](#aclrtReserveMemAddress)接口）；
-2. 申请物理内存（[aclrtMallocPhysical](#aclrtMallocPhysical)接口）；
-3. 将虚拟内存映射到物理内存（[aclrtMapMem](#aclrtMapMem)接口）；
-4. 执行任务（调用具体的任务接口）；
-5. 取消虚拟内存与物理内存的映射（[aclrtUnmapMem](#aclrtUnmapMem)接口）；
-6. 释放物理内存（[aclrtFreePhysical](#aclrtFreePhysical)接口）；
-7. 释放虚拟内存（[aclrtReleaseMemAddress](#aclrtReleaseMemAddress)接口）。
+取消通过[aclrtMapMem](#aclrtMapMem)或[aclrtMemMapNoAccess](#aclrtMemMapNoAccess)接口建立的虚拟内存与物理内存之间的映射关系。
 
 ### 参数说明
 
