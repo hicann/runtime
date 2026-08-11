@@ -673,7 +673,7 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
     const Kernel* kernel = aicpuTaskInfo->kernel;
     bool isKernelValid = false;
     const auto* const innerObject = aicpuTaskInfo->kernelInnerHandle;
-    if ((innerObject != nullptr) && (innerObject->magic.load() == RT_KERNEL_MAGIC)) {
+    if ((innerObject != nullptr) && (innerObject->magic.load() == RT_FUNC_HANDLE_MAGIC)) {
         isKernelValid = true;
     }
     if (kernel != nullptr) {

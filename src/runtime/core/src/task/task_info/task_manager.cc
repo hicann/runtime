@@ -622,7 +622,7 @@ static bool IsAicpuKernelHandleValid(const AicpuTaskInfo* const aicpuTaskInfo)
         return false;
     }
     const rtInnerObject* const innerObject = aicpuTaskInfo->kernelInnerHandle;
-    return ((innerObject != nullptr) && (innerObject->magic.load() == RT_KERNEL_MAGIC));
+    return ((innerObject != nullptr) && (innerObject->magic.load() == RT_FUNC_HANDLE_MAGIC));
 }
 
 static bool GetAicpuExceptionNameCopySize(

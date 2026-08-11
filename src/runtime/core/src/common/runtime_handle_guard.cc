@@ -41,25 +41,25 @@ const char* GetResourceNameByMagic(const uint64_t magic)
             resourceName = "notify";
             break;
         case RT_CNTNOTIFY_MAGIC:
-            resourceName = "cntnotify";
+            resourceName = "cntNotify";
             break;
         case RT_COND_HANDLE_MAGIC:
-            resourceName = "cond_handle";
+            resourceName = "condHandle";
             break;
-        case RT_PROGRAM_MAGIC:
-            resourceName = "program";
+        case RT_BIN_HANDLE_MAGIC:
+            resourceName = "binHandle";
             break;
-        case RT_KERNEL_MAGIC:
-            resourceName = "kernel";
+        case RT_FUNC_HANDLE_MAGIC:
+            resourceName = "funcHandle";
             break;
-        case RT_ARGS_MAGIC:
-            resourceName = "args";
+        case RT_ARGS_HANDLE_MAGIC:
+            resourceName = "argsHandle";
             break;
-        case RT_PARAM_MAGIC:
-            resourceName = "param";
+        case RT_PARAM_HANDLE_MAGIC:
+            resourceName = "paraHandle";
             break;
         case RT_LAUNCH_ARGS_MAGIC:
-            resourceName = "launch_args";
+            resourceName = "launchArgsHandle";
             break;
         default:
             break;
