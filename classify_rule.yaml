@@ -1,3 +1,12 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
 acl:
   commiter:
     "xxx"
@@ -26,6 +35,69 @@ rts_common:
       - src/runtime/driver/npu_driver_win.cc
       - src/runtime/driver/npu_driver_standard_soc_win.cc
       - src/cmodel_driver
+      # 以下.h文件为纯声明/宏定义，无可执行代码，gcov不生成覆盖率数据，从scope统计中排除
+      - src/runtime/feature/ffts/ffts_task.h
+      - src/runtime/feature/jetty/stream_jetty_handler.h
+      - src/runtime/feature/jetty/jetty_pool.h
+      - src/runtime/feature/jetty/stream_jetty_context.h
+      - src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.h
+      - src/runtime/feature/xpu/xpu_kernel_task.h
+      - src/runtime/feature/fusion/fusion_task.h
+      - src/runtime/api/api_c.h
+      - src/runtime/api/api_global_err.h
+      - src/runtime/core/inc/task_scheduler_error.h
+      - src/runtime/core/inc/runtime_tsch_defines.h
+      - src/runtime/core/inc/tsch_defines_profiling.h
+      - src/runtime/core/inc/fwk_adapt_struct.h
+      - src/runtime/core/inc/tsch_cmd.h
+      - src/runtime/core/inc/sqe/v200/memcpy_sqe.h
+      - src/runtime/core/inc/sqe/v200_base/place_holder_sqe.h
+      - src/runtime/core/inc/sqe/v200_base/aicpu_sqe.h
+      - src/runtime/core/inc/sqe/v200_base/ccu_sqe.h
+      - src/runtime/core/inc/sqe/v200_base/memcpy_sqe_common.h
+      - src/runtime/core/inc/sqe/v201/memcpy_sqe.h
+      - src/runtime/core/inc/common/error_code_meta.h
+      - src/runtime/core/inc/device/dev_info.h
+      - src/runtime/core/inc/device/device_properties.h
+      - src/runtime/core/src/task/inc/timeout_set_task.h
+      - src/runtime/core/src/task/inc/debug_task.h
+      - src/runtime/core/src/task/inc/notify_task.h
+      - src/runtime/core/src/task/inc/cmo_task.h
+      - src/runtime/core/src/task/inc/memory_task.h
+      - src/runtime/core/src/task/inc/ringbuffer_maintain_task.h
+      - src/runtime/core/src/task/inc/cond_op_stream_task.h
+      - src/runtime/core/src/task/inc/event_task.h
+      - src/runtime/core/src/task/inc/davinci_multiple_task.h
+      - src/runtime/core/src/task/inc/cond_op_label_task.h
+      - src/runtime/core/src/task/inc/davinci_kernel_task.h
+      - src/runtime/core/src/task/inc/runtime_task_manager.h
+      - src/runtime/core/src/task/inc/profiling_task.h
+      - src/runtime/core/src/task/inc/task_info_v100.h
+      - src/runtime/core/src/task/inc/stream_task.h
+      - src/runtime/core/src/task/inc/aclgraph_cond_task.h
+      - src/runtime/core/src/task/inc/model_to_aicpu_task.h
+      - src/runtime/core/src/task/inc/random_num_task.h
+      - src/runtime/core/src/task/inc/model_maintaince_task.h
+      - src/runtime/core/src/task/inc/kernel_fusion_task.h
+      - src/runtime/core/src/task/inc/maintenance_task.h
+      - src/runtime/core/src/task/inc/model_execute_task.h
+      - src/runtime/core/src/task/inc/barrier_task.h
+      - src/runtime/core/src/task/inc/runtime_dump_task.h
+      - src/runtime/core/src/task/inc/model_graph_task.h
+      - src/runtime/core/src/task/inc/task_execute_time.h
+      - src/runtime/core/src/task/inc/rdma_task.h
+      - src/runtime/core/src/task/inc/model_update_task.h
+      - src/runtime/core/src/task/inc/reduce_task.h
+      - src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.h
+      - src/runtime/core/src/aicpu_timeout/aicpu_timeout_control.h
+      - src/runtime/core/src/common/error_code.h
+      - src/runtime/core/src/common/platform_config_keys.h
+      - src/runtime/core/src/common/heterogenous.h
+      - src/runtime/core/src/common/soc_info.h
+      - src/runtime/core/src/common/task_fail_callback_data_manager.h
+      - src/runtime/core/src/plugin_manage/runtime_keeper.h
+      - src/runtime/inc/common/feature_type.h
+      - src/runtime/inc/device/ini_parse_utils.h
   llt:
     ut_check: true
     st_check: false

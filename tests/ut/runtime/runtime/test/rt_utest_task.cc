@@ -4195,4 +4195,7 @@ TEST_F(TaskTest, ToCommandBodyForKernelFusionTask_Success)
     TaskUnInitProc(&task);
 }
 
-TEST_F(TaskTest, CheckKernelMemoryCorruption_AllNull) { CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr); }
+TEST_F(TaskTest, CheckKernelMemoryCorruption_AllNull)
+{
+    EXPECT_NO_THROW(CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr));
+}

@@ -2120,10 +2120,13 @@ TEST_F(TaskTestV201, ApiImplV201_StreamWaitEvent_DefaultFlag)
 
 TEST_F(TaskTestV201, CheckKernelMemoryCorruption_V201_AllNull)
 {
-    CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr);
+    EXPECT_NO_THROW(CheckKernelMemoryCorruption(nullptr, nullptr, 0, nullptr));
 }
 
-TEST_F(TaskTestV201, ConstructDavidAsyncUbDbSqe_AllNull) { ConstructDavidAsyncUbDbSqe(nullptr, nullptr); }
+TEST_F(TaskTestV201, ConstructDavidAsyncUbDbSqe_AllNull)
+{
+    EXPECT_NO_THROW(ConstructDavidAsyncUbDbSqe(nullptr, nullptr));
+}
 
 TEST_F(TaskTestV201, GetStreamTaskInfo_NullDev)
 {
