@@ -146,7 +146,7 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(
         RT_LOG(RT_LOG_ERROR, "MemCopySync name H2D failed, ret=%d", ret);
         return ret;
     }
-    const uint32_t initResult = MAX_UINT32_NUM;
+    constexpr uint32_t initResult = MAX_UINT32_NUM;
     ret = drv->MemCopySync(devResultBuf, sizeof(uint32_t), &initResult, sizeof(uint32_t), RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "MemCopySync result H2D failed, ret=%d", ret);

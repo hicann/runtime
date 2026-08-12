@@ -78,7 +78,8 @@ void AicpuTimeoutManager::StopAicpuProcess(const Device* const dev)
 }
 
 void AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(
-    Device* const dev, const rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask, TaskInfo* faultTaskPtr)
+    Device* const dev, const rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask,
+    const TaskInfo* const faultTaskPtr)
 {
     if (!dev->GetAicpuMonitorClosedStatus()) {
         RT_LOG(RT_LOG_DEBUG, "AI CPU monitor is not closed, skip updating timeout state, device_id=%u.", dev->Id_());
