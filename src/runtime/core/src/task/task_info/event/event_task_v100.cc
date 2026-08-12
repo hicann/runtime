@@ -68,7 +68,8 @@ static void ConstructSqeForEventRecordTask(TaskInfo* const taskInfo, rtStarsSqe_
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     param.u.eventRecordParams = {
         eventRecordTaskInfo->eventid, static_cast<uint32_t>(eventRecordTaskInfo->waitCqflag),
-        eventRecordTaskInfo->waitCqId, false, ((RtPtrToValue(eventRecordTaskInfo->event)) & 0xFFULL)};
+        eventRecordTaskInfo->waitCqId, false,
+        ((static_cast<uintptr_t>(RtPtrToValue(eventRecordTaskInfo->event))) & 0xFF)};
 
     AtraceSubmitLog(TYPE_EVENT_RECORD, param);
     eventRecordTaskInfo->event->InsertRecordResetToMap(taskInfo);
@@ -147,7 +148,7 @@ static void ConstructSqeForEventResetTask(TaskInfo* const taskInfo, rtStarsSqe_t
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     param.u.eventResetParams = {
         eventResetTaskInfo->eventid, static_cast<uint16_t>(eventResetTaskInfo->isNotify),
-        ((RtPtrToValue(eventResetTaskInfo->event)) & 0xFFULL)};
+        ((static_cast<uintptr_t>(RtPtrToValue(eventResetTaskInfo->event))) & 0xFF)};
     AtraceSubmitLog(TYPE_EVENT_RESET, param);
     RT_LOG(
         RT_LOG_INFO, "event_reset: device_id=%u, stream_id=%d, task_id=%hu, sq_id=%u, event_id=%d, base=0x%llx.",
@@ -193,7 +194,7 @@ static void ConstructSqeForEventWaitTask(TaskInfo* const taskInfo, rtStarsSqe_t*
     uintptr_t eventLowEightAddr = 0;
     if (eventWaitTaskInfo->event != nullptr) {
         eventWaitTaskInfo->event->InsertWaitToMap(taskInfo);
-        eventLowEightAddr = (RtPtrToValue(eventWaitTaskInfo->event)) & 0xFFULL;
+        eventLowEightAddr = (RtPtrToValue(eventWaitTaskInfo->event)) & 0xFF;
     }
 
     PrintSqe(command, "EventWaitTask");

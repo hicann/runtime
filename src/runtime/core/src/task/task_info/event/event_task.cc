@@ -273,7 +273,7 @@ void ToCommandBodyForEventResetTask(TaskInfo* const taskInfo, rtCommand_t* const
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     uintptr_t eventLowEightAddr = 0;
     if (eventResetTaskInfo->event != nullptr) {
-        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventResetTaskInfo->event)) & 0xFFULL;
+        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventResetTaskInfo->event)) & 0xFF;
     }
     param.u.eventResetParams = {
         eventResetTaskInfo->eventid, static_cast<uint16_t>(eventResetTaskInfo->isNotify), eventLowEightAddr};
@@ -394,7 +394,7 @@ void ToCommandBodyForEventWaitTask(TaskInfo* const taskInfo, rtCommand_t* const 
                           GetCurrentTid(),          stream->Device_()->GetAtraceHandle(), {}};
     uintptr_t eventLowEightAddr = 0;
     if (eventWaitTaskInfo->event != nullptr) {
-        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventWaitTaskInfo->event)) & 0xFFULL;
+        eventLowEightAddr = (reinterpret_cast<uintptr_t>(eventWaitTaskInfo->event)) & 0xFF;
     }
     param.u.eventWaitParams = {eventWaitTaskInfo->eventId, false, eventLowEightAddr};
     AtraceSubmitLog(TYPE_EVENT_WAIT, param);
