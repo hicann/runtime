@@ -40,7 +40,7 @@ rtError_t TaskResManage::LoadInputOutputArgs(
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
             "Failed to call memcpy_s to copy args, src=%p, dest=%p, dest_max=%u, count=%u, kind=%s, retCode=%#x.", args,
-            kerArgs, size, size, MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(ret));
+            kerArgs, size, size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(ret));
     }
     return RT_ERROR_NONE;
 }
@@ -61,7 +61,7 @@ rtError_t TaskResManage::LoadInputOutputArgs(
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
             "Failed to call memcpy_s to copy args, src=%p, dest=%p, dest_max=%u, count=%u, kind=%s, retCode=%#x.", args,
-            kerArgs, size, size, MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(ret));
+            kerArgs, size, size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(ret));
     }
 
     return RT_ERROR_NONE;

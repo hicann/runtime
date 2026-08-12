@@ -1626,11 +1626,11 @@ bool RawDevice::ModuleRelease(Module* mdl)
 
 rtError_t RawDevice::DevSetLimit(const rtLimitType_t type, const uint32_t val)
 {
-    RT_LOG(RT_LOG_WARNING, "DevSetLimit,type=%u, value=%u", static_cast<uint32_t>(type), val);
+    RT_LOG(RT_LOG_WARNING, "DevSetLimit,type=%s, value=%u", LimitTypeToString(type).c_str(), val);
     if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
         return RT_ERROR_NONE;
     }
-    RT_LOG(RT_LOG_WARNING, "limit type wrong!,type=%u", static_cast<uint32_t>(type));
+    RT_LOG(RT_LOG_WARNING, "limit type wrong!,type=%s", LimitTypeToString(type).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -2226,7 +2226,7 @@ rtError_t RawDevice::WriteDevString(void* const dest, const size_t max, const ch
         dest, static_cast<uint64_t>(devStrLen), str, static_cast<uint64_t>(devStrLen), RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(
         error, "Failed to copy memory for string, size=%zu(bytes), kind=%s, retCode=%#x.", devStrLen,
-        MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
+        MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
@@ -2242,7 +2242,7 @@ rtError_t RawDevice::WriteDevValue(void* const dest, const size_t size, const vo
         dest, static_cast<uint64_t>(size), data, static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(
         error, "Failed to copy memory value, size=%zu(bytes), kind=%s, retCode=%#x.", size,
-        MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
+        MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

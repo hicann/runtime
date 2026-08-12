@@ -19,6 +19,7 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "utils/data_type_utils.h"
 
 namespace {
 std::unordered_map<rtError_t, const char*> succStmSyncErrCodes = {
@@ -356,8 +357,8 @@ aclError aclrtSwitchStreamImpl(
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSwitchStream);
     ACL_LOG_INFO(
-        "start to execute aclrtSwitchStream, cond is [%u], dataType is [%u]", static_cast<uint32_t>(cond),
-        static_cast<uint32_t>(dataType));
+        "start to execute aclrtSwitchStream, cond is [%s], dataType is [%s]", acl::GetConditionDesc(cond),
+        acl::GetCompareDataTypeDesc(dataType));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(leftValue);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(rightValue);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(trueStream);

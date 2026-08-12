@@ -32,6 +32,7 @@
 #include "task.hpp"
 #include "osal.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
@@ -3216,8 +3217,8 @@ rtError_t Context::CmoAddrTaskLaunch(
     // fill in head args
     InitStarsSdmaCmoSqe(&sdmaCmoSqe, stm, cmoOpCode);
     RT_LOG(
-        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%d, device_id=%u, stream_id=%d",
-        RtPtrToValue<rtCmoAddrInfo*>(cmoAddrInfo), cmoOpCode, device_->Id_(), streamId);
+        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%s, device_id=%u, stream_id=%d",
+        RtPtrToValue<rtCmoAddrInfo*>(cmoAddrInfo), CmoOpCodeToString(cmoOpCode).c_str(), device_->Id_(), streamId);
 
     Driver* const devDrv = device_->Driver_();
     if (devDrv != nullptr) {
@@ -3406,7 +3407,7 @@ rtError_t Context::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* con
 {
     const std::unique_lock<std::mutex> mutexLock(sysParamOptLock_);
     if (!sysParamOpt_[configOpt].first) {
-        RT_LOG(RT_LOG_WARNING, "SYS Config Opt(%u) did not set", configOpt);
+        RT_LOG(RT_LOG_WARNING, "SYS Config Opt(%s) did not set", SysParamOptToString(configOpt).c_str());
         return RT_ERROR_NOT_SET_SYSPARAMOPT;
     }
     *configVal = sysParamOpt_[configOpt].second;

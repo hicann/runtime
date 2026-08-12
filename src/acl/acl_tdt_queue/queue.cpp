@@ -116,7 +116,7 @@ aclError CheckQueueRouteQueryInfo(const acltdtQueueRouteQueryInfo* const queryIn
             break;
         }
         default: {
-            ACL_LOG_ERROR("[Check][Type]unknown mode %d.", queryInfo->mode);
+            ACL_LOG_ERROR("[Check][Type]invalid mode UNKNOWN(%d).", static_cast<int32_t>(queryInfo->mode));
             const char_t* argList[] = {"func", "value", "param", "expect"};
             const char_t* argVal[] = {
                 "Checking the validity of the queue route query operation",
@@ -401,7 +401,7 @@ aclError acltdtSetQueueAttr(acltdtQueueAttr* attr, acltdtQueueAttrType type, siz
         case ACL_TDT_QUEUE_DEPTH_UINT32:
             return CopyParam(param, len, static_cast<void*>(&attr->depth), sizeof(uint32_t));
         default: {
-            ACL_LOG_ERROR("[Check][Type]unknown acltdtQueueAttrType %d.", type);
+            ACL_LOG_ERROR("[Check][Type]invalid acltdtQueueAttrType UNKNOWN(%d).", static_cast<int32_t>(type));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
@@ -418,7 +418,7 @@ aclError acltdtGetQueueAttr(
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(param);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramRetSize);
-    ACL_LOG_INFO("start to get queue attr, type is %d, len is %zu", type, len);
+    ACL_LOG_INFO("start to get queue attr, type is %s, len is %zu", acl::GetQueueAttrTypeDesc(type), len);
     switch (type) {
         case ACL_TDT_QUEUE_NAME_PTR: {
             const char_t* tmp = &attr->name[0];
@@ -427,7 +427,7 @@ aclError acltdtGetQueueAttr(
         case ACL_TDT_QUEUE_DEPTH_UINT32:
             return CopyParam(static_cast<const void*>(&attr->depth), sizeof(uint32_t), param, len, paramRetSize);
         default: {
-            ACL_LOG_ERROR("[Check][Type]unknown acltdtQueueAttrType %d.", type);
+            ACL_LOG_ERROR("[Check][Type]invalid acltdtQueueAttrType UNKNOWN(%d).", static_cast<int32_t>(type));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
@@ -465,7 +465,7 @@ aclError acltdtGetQueueRouteParam(
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(route);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(param);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramRetSize);
-    ACL_LOG_INFO("get route type %d, len is %zu", type, len);
+    ACL_LOG_INFO("get route type %s, len is %zu", acl::GetQueueRouteParamTypeDesc(type), len);
     switch (type) {
         case ACL_TDT_QUEUE_ROUTE_SRC_UINT32:
             return CopyParam(static_cast<const void*>(&route->srcId), sizeof(uint32_t), param, len, paramRetSize);
@@ -474,7 +474,7 @@ aclError acltdtGetQueueRouteParam(
         case ACL_TDT_QUEUE_ROUTE_STATUS_INT32:
             return CopyParam(static_cast<const void*>(&route->status), sizeof(int32_t), param, len, paramRetSize);
         default: {
-            ACL_LOG_ERROR("[Check][Type]unknown acltdtQueueRouteParamType %d.", type);
+            ACL_LOG_ERROR("[Check][Type]invalid acltdtQueueRouteParamType UNKNOWN(%d).", static_cast<int32_t>(type));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
@@ -572,7 +572,8 @@ aclError acltdtSetQueueRouteQueryInfo(
             return ret;
         }
         default: {
-            ACL_LOG_ERROR("[Check][Type]unknown acltdtQueueRouteQueryInfoParamType %d.", type);
+            ACL_LOG_ERROR(
+                "[Check][Type]invalid acltdtQueueRouteQueryInfoParamType UNKNOWN(%d).", static_cast<int32_t>(type));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(

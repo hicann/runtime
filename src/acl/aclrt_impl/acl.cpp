@@ -32,6 +32,7 @@
 #include "platform/platform_info.h"
 #include "common/json_parser.h"
 #include "utils/hash_utils.h"
+#include "utils/data_type_utils.h"
 #include "utils/string_utils.h"
 #include "utils/file_utils.h"
 #include "aclrt_impl/acl_rt_impl_base.h"
@@ -1344,7 +1345,7 @@ aclError aclGetCannAttributeImpl(aclCannAttr cannAttr, int32_t* value)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     const aclError ret = acl::CannInfoUtils::GetAttribute(cannAttr, value);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("Failed to check, attr value = %d, ret = %d.", static_cast<int32_t>(cannAttr), ret);
+        ACL_LOG_ERROR("Failed to check, attr value = %s, ret = %d.", acl::GetCannAttrDesc(cannAttr), ret);
         return ret;
     }
     ACL_LOG_INFO("execute aclGetCannAttribute successfully.");
@@ -1375,14 +1376,14 @@ aclError aclGetDeviceCapabilityImpl(uint32_t deviceId, aclDeviceInfo deviceInfo,
         {ACL_DEVICE_INFO_L2_SIZE, "l2_size"}};
     const auto iter = infoTypeToKey.find(deviceInfo);
     if (iter == infoTypeToKey.end()) {
-        ACL_LOG_WARN("get device info failed, invalid info type = %d", static_cast<int32_t>(deviceInfo));
+        ACL_LOG_WARN("get device info failed, invalid info type = %s", acl::GetDeviceInfoDesc(deviceInfo));
         return ACL_ERROR_INVALID_PARAM;
     }
     const auto& key = iter->second;
     const aclError ret = GetPlatformInfoWithKey(key, value);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_ERROR(
-            "get device info failed, info type = %d, key = %s", static_cast<int32_t>(deviceInfo), key.c_str());
+            "get device info failed, info type = %s, key = %s", acl::GetDeviceInfoDesc(deviceInfo), key.c_str());
         return ret;
     }
     ACL_LOG_INFO("execute aclGetDeviceCapability successfully.");

@@ -33,6 +33,7 @@
 #include "task_execute_time.h"
 #include "ffts_task.h"
 #include "printf.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -883,12 +884,12 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
     RT_LOG(
         RT_LOG_INFO,
         "bindFlag=%d, biuperfProfFla=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
-        "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%d, "
+        "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%s, "
         "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
         Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode, taskInfo->type, aicTaskInfo->comm.kernelFlag,
-        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, kernelAttrType, minStackSize, stackSize,
-        stackPhyBase);
+        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, KernelAttrTypeToString(kernelAttrType).c_str(),
+        minStackSize, stackSize, stackPhyBase);
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
             CheckBlockDim(taskInfo, sqe, nullptr);

@@ -16,9 +16,12 @@
 #include "runtime/config.h"
 #include "runtime/mem_base.h"
 #include "runtime/mem.h"
+#include "runtime/rt_inner_mem.h"
 #include "runtime/rt_external_mem.h"
 #include "runtime/rt_external_stream.h"
 #include "runtime/rt_external_stars.h"
+#include "runtime/rts/rts_kernel.h"
+#include "runtime/rts/rts_device.h"
 #include "runtime/rts/rts_stars.h"
 #include "runtime/kernel.h"
 #include "rt_log.h"
@@ -66,52 +69,7 @@ static inline std::string ReduceKindToString(const rtRecudeKind_t kind)
     return desc;
 }
 
-static inline std::string DataTypeToString(const rtDataType_t type)
-{
-    std::string desc;
-    switch (type) {
-        case RT_DATA_TYPE_FP32:
-            desc = "DATA_TYPE_FP32(0)";
-            break;
-        case RT_DATA_TYPE_FP16:
-            desc = "DATA_TYPE_FP16(1)";
-            break;
-        case RT_DATA_TYPE_INT16:
-            desc = "DATA_TYPE_INT16(2)";
-            break;
-        case RT_DATA_TYPE_INT4:
-            desc = "DATA_TYPE_INT4(3)";
-            break;
-        case RT_DATA_TYPE_INT8:
-            desc = "DATA_TYPE_INT8(4)";
-            break;
-        case RT_DATA_TYPE_INT32:
-            desc = "DATA_TYPE_INT32(5)";
-            break;
-        case RT_DATA_TYPE_BFP16:
-            desc = "DATA_TYPE_BFP16(6)";
-            break;
-        case RT_DATA_TYPE_BFP32:
-            desc = "DATA_TYPE_BFP32(7)";
-            break;
-        case RT_DATA_TYPE_UINT8:
-            desc = "DATA_TYPE_UINT8(8)";
-            break;
-        case RT_DATA_TYPE_UINT16:
-            desc = "DATA_TYPE_UINT16(9)";
-            break;
-        case RT_DATA_TYPE_UINT32:
-            desc = "DATA_TYPE_UINT32(10)";
-            break;
-        case RT_DATA_TYPE_END:
-            desc = "DATA_TYPE_END(11)";
-            break;
-        default:
-            desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
-            break;
-    }
-    return desc;
-}
+std::string DataTypeToString(const rtDataType_t type);
 
 static inline std::string KernelFlagToString(const uint32_t flag)
 {
@@ -171,84 +129,8 @@ static inline std::string LastErrLevelToString(const rtLastErrLevel_t level)
     return desc;
 }
 
-static inline std::string MemcpyKindToString(const rtMemcpyKind_t kind)
-{
-    std::string desc;
-    switch (kind) {
-        case RT_MEMCPY_HOST_TO_HOST:
-            desc = "MEMCPY_HOST_TO_HOST(0)";
-            break;
-        case RT_MEMCPY_HOST_TO_DEVICE:
-            desc = "MEMCPY_HOST_TO_DEVICE(1)";
-            break;
-        case RT_MEMCPY_DEVICE_TO_HOST:
-            desc = "MEMCPY_DEVICE_TO_HOST(2)";
-            break;
-        case RT_MEMCPY_DEVICE_TO_DEVICE:
-            desc = "MEMCPY_DEVICE_TO_DEVICE(3)";
-            break;
-        case RT_MEMCPY_MANAGED:
-            desc = "MEMCPY_MANAGED(4)";
-            break;
-        case RT_MEMCPY_ADDR_DEVICE_TO_DEVICE:
-            desc = "MEMCPY_ADDR_DEVICE_TO_DEVICE(5)";
-            break;
-        case RT_MEMCPY_HOST_TO_DEVICE_EX:
-            desc = "MEMCPY_HOST_TO_DEVICE_EX(6)";
-            break;
-        case RT_MEMCPY_DEVICE_TO_HOST_EX:
-            desc = "MEMCPY_DEVICE_TO_HOST_EX(7)";
-            break;
-        case RT_MEMCPY_DEFAULT:
-            desc = "MEMCPY_DEFAULT(8)";
-            break;
-        case RT_MEMCPY_RESERVED:
-            desc = "MEMCPY_RESERVED(9)";
-            break;
-        default:
-            desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(kind));
-            break;
-    }
-    return desc;
-}
-
-static inline std::string MemcpyNewKindToString(const rtMemcpyKind kind)
-{
-    std::string desc;
-    switch (kind) {
-        case RT_MEMCPY_KIND_HOST_TO_HOST:
-            desc = "MEMCPY_KIND_HOST_TO_HOST(0)";
-            break;
-        case RT_MEMCPY_KIND_HOST_TO_DEVICE:
-            desc = "MEMCPY_KIND_HOST_TO_DEVICE(1)";
-            break;
-        case RT_MEMCPY_KIND_DEVICE_TO_HOST:
-            desc = "MEMCPY_KIND_DEVICE_TO_HOST(2)";
-            break;
-        case RT_MEMCPY_KIND_DEVICE_TO_DEVICE:
-            desc = "MEMCPY_KIND_DEVICE_TO_DEVICE(3)";
-            break;
-        case RT_MEMCPY_KIND_DEFAULT:
-            desc = "MEMCPY_KIND_DEFAULT(4)";
-            break;
-        case RT_MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE:
-            desc = "MEMCPY_KIND_HOST_TO_BUF_TO_DEVICE(5)";
-            break;
-        case RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE:
-            desc = "MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)";
-            break;
-        case RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE:
-            desc = "MEMCPY_KIND_INTER_DEVICE_TO_DEVICE(7)";
-            break;
-        case RT_MEMCPY_KIND_MAX:
-            desc = "MEMCPY_KIND_MAX(8)";
-            break;
-        default:
-            desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(kind));
-            break;
-    }
-    return desc;
-}
+const char_t* MemcpyKindToStr(const rtMemcpyKind_t kind);
+std::string MemcpyNewKindToString(const rtMemcpyKind kind);
 
 static inline std::string MemTypeToString(const rtMemType_t type)
 {
@@ -382,70 +264,16 @@ static inline std::string StreamTypeToString(const uint32_t streamType)
     return desc;
 }
 
-static inline std::string MemInfoTypeToString(const rtMemInfoType_t memInfoType)
-{
-    std::string desc;
-    switch (memInfoType) {
-        case RT_MEMORYINFO_DDR:
-            desc = "MEMORYINFO_DDR(0)";
-            break;
-        case RT_MEMORYINFO_HBM:
-            desc = "MEMORYINFO_HBM(1)";
-            break;
-        case RT_MEMORYINFO_DDR_HUGE:
-            desc = "MEMORYINFO_DDR_HUGE(2)";
-            break;
-        case RT_MEMORYINFO_DDR_NORMAL:
-            desc = "MEMORYINFO_DDR_NORMAL(3)";
-            break;
-        case RT_MEMORYINFO_HBM_HUGE:
-            desc = "MEMORYINFO_HBM_HUGE(4)";
-            break;
-        case RT_MEMORYINFO_HBM_NORMAL:
-            desc = "MEMORYINFO_HBM_NORMAL(5)";
-            break;
-        case RT_MEMORYINFO_DDR_P2P_HUGE:
-            desc = "MEMORYINFO_DDR_P2P_HUGE(6)";
-            break;
-        case RT_MEMORYINFO_DDR_P2P_NORMAL:
-            desc = "MEMORYINFO_DDR_P2P_NORMAL(7)";
-            break;
-        case RT_MEMORYINFO_HBM_P2P_HUGE:
-            desc = "MEMORYINFO_HBM_P2P_HUGE(8)";
-            break;
-        case RT_MEMORYINFO_HBM_P2P_NORMAL:
-            desc = "MEMORYINFO_HBM_P2P_NORMAL(9)";
-            break;
-        case RT_MEMORYINFO_HBM_HUGE1G:
-            desc = "MEMORYINFO_HBM_HUGE1G(10)";
-            break;
-        case RT_MEMORYINFO_HBM_P2P_HUGE1G:
-            desc = "MEMORYINFO_HBM_P2P_HUGE1G(11)";
-            break;
-        case RT_MEMORYINFO_NORMAL:
-            desc = "MEMORYINFO_NORMAL(12)";
-            break;
-        case RT_MEMORYINFO_HUGE:
-            desc = "MEMORYINFO_HUGE(13)";
-            break;
-        case RT_MEMORYINFO_HUGE1G:
-            desc = "MEMORYINFO_HUGE1G(14)";
-            break;
-        case RT_MEMORYINFO_P2P_NORMAL:
-            desc = "MEMORYINFO_P2P_NORMAL(15)";
-            break;
-        case RT_MEMORYINFO_P2P_HUGE:
-            desc = "MEMORYINFO_P2P_HUGE(16)";
-            break;
-        case RT_MEMORYINFO_P2P_HUGE1G:
-            desc = "MEMORYINFO_P2P_HUGE1G(17)";
-            break;
-        default:
-            desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(memInfoType));
-            break;
-    }
-    return desc;
-}
+std::string MemInfoTypeToString(const rtMemInfoType_t memInfoType);
+
+const char_t* DrvMemHandleTypeToString(const rtDrvMemHandleType type);
+const char_t* MemSharedHandleTypeToString(const rtMemSharedHandleType type);
+std::string ManagedMemLocationTypeToString(const rtMemManagedLocationType type);
+const char_t* MallocAttrToString(const rtMallocAttr attr);
+const char_t* FloatOverflowModeToString(const rtFloatOverflowMode_t mode);
+std::string MemLocationTypeToString(const rtMemLocationType type);
+std::string CmoOpCodeToString(const rtCmoOpCode_t opCode);
+std::string LimitTypeToString(const rtLimitType_t type);
 
 static inline std::string SwitchDataTypeToString(const rtSwitchDataType_t dataType)
 {
@@ -489,6 +317,9 @@ static inline std::string RandomNumDataTypeToString(const rtRandomNumDataType da
         case RT_RANDOM_NUM_DATATYPE_FP32:
             desc = "RANDOM_NUM_DATATYPE_FP32(6)";
             break;
+        case RT_RANDOM_NUM_DATATYPE_MAX:
+            desc = "RANDOM_NUM_DATATYPE_MAX(7)";
+            break;
         default:
             desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(dataType));
             break;
@@ -512,12 +343,26 @@ static inline std::string RandomNumFuncTypeToString(const rtRandomNumFuncType fu
         case RT_RANDOM_NUM_FUNC_TYPE_TRUNCATED_NORMAL_DIS:
             desc = "RANDOM_NUM_FUNC_TYPE_TRUNCATED_NORMAL_DIS(3)";
             break;
+        case RT_RANDOM_NUM_FUNC_TYPE_MAX:
+            desc = "RANDOM_NUM_FUNC_TYPE_MAX(4)";
+            break;
         default:
             desc = RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(funcType));
             break;
     }
     return desc;
 }
+
+std::string SysParamOptToString(const rtSysParamOpt option);
+const char_t* DevResLimitTypeToString(const rtDevResLimitType_t type);
+std::string ConditionToString(const rtCondition_t condition);
+std::string KernelAttrTypeToString(const rtKernelAttrType type);
+std::string LaunchKernelAttrIdToString(const rtLaunchKernelAttrId id);
+
+const char_t* DevAttrToString(const rtDevAttr attr);
+std::string HacTypeToString(const rtHacType type);
+std::string MemPoolAttrToString(const rtMemPoolAttr attr);
+std::string DeviceStatusToString(const rtDeviceStatus status);
 
 } // namespace runtime
 } // namespace cce

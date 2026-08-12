@@ -102,16 +102,16 @@ static rtError_t CheckUniDisTaskInfo(const rtRandomNumTaskInfo_t* taskInfo, cons
     rtError_t error = CheckRandomParam(min, "min", realDataSize);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "CheckRandomParam call failed for the min parameter, dataType=%u, dataSize=%zu, isAddr=%hhu.",
-        static_cast<uint32_t>(taskInfo->dataType), dataSize, min.isAddr);
+        "CheckRandomParam call failed for the min parameter, dataType=%s, dataSize=%zu, isAddr=%hhu.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), dataSize, min.isAddr);
 
     const rtRandomParaInfo_t max = uniDisParam.max;
     realDataSize = (max.isAddr == RANDOM_ADDR_FLAG) ? sizeof(uint64_t) : dataSize;
     error = CheckRandomParam(max, "max", realDataSize);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "CheckRandomParam call failed for the max parameter, dataType=%u, dataSize=%zu, isAddr=%hhu.",
-        static_cast<uint32_t>(taskInfo->dataType), dataSize, max.isAddr);
+        "CheckRandomParam call failed for the max parameter, dataType=%s, dataSize=%zu, isAddr=%hhu.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), dataSize, max.isAddr);
 
     return RT_ERROR_NONE;
 }
@@ -125,8 +125,8 @@ static rtError_t CheckoutDropoutBitmaskTaskInfo(const rtRandomNumTaskInfo_t* tas
     const rtError_t error = CheckRandomParam(ration, "dropoutRation", realDataSize);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "CheckRandomParam call failed for the dropoutRation parameter, dataType=%u, dataSize=%zu, isAddr=%hhu.",
-        static_cast<uint32_t>(taskInfo->dataType), dataSize, ration.isAddr);
+        "CheckRandomParam call failed for the dropoutRation parameter, dataType=%s, dataSize=%zu, isAddr=%hhu.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), dataSize, ration.isAddr);
 
     return RT_ERROR_NONE;
 }
@@ -139,16 +139,16 @@ static rtError_t CheckNorDisTaskInfo(const rtRandomNumTaskInfo_t* taskInfo, cons
     rtError_t error = CheckRandomParam(mean, "mean", realDataSize);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "CheckRandomParam call failed for the mean parameter, dataType=%u, dataSize=%zu, isAddr=%hhu.",
-        static_cast<uint32_t>(taskInfo->dataType), dataSize, mean.isAddr);
+        "CheckRandomParam call failed for the mean parameter, dataType=%s, dataSize=%zu, isAddr=%hhu.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), dataSize, mean.isAddr);
 
     const rtRandomParaInfo_t stddev = norDisParam.stddev;
     realDataSize = (stddev.isAddr == RANDOM_ADDR_FLAG) ? sizeof(uint64_t) : dataSize;
     error = CheckRandomParam(stddev, "stddev", realDataSize);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "CheckRandomParam call failed for the stddev parameter, dataType=%u, dataSize=%zu, isAddr=%hhu.",
-        static_cast<uint32_t>(taskInfo->dataType), dataSize, stddev.isAddr);
+        "CheckRandomParam call failed for the stddev parameter, dataType=%s, dataSize=%zu, isAddr=%hhu.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), dataSize, stddev.isAddr);
 
     return RT_ERROR_NONE;
 }
@@ -415,14 +415,15 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t* taskInfo)
     const rtRandomNumFuncType funcType = taskInfo->randomNumFuncParaInfo.funcType;
     rtError_t error = CheckDataTypeByFuncType(taskInfo->dataType, funcType);
     COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to check data type by funcType, dataType=%d, funcType=%d, retCode=%#x",
-        taskInfo->dataType, funcType, static_cast<uint32_t>(error));
+        error != RT_ERROR_NONE, error, "Failed to check data type by funcType, dataType=%s, funcType=%s, retCode=%#x",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), RandomNumFuncTypeToString(funcType).c_str(),
+        static_cast<uint32_t>(error));
 
     size_t dataSize = 0U;
     error = GetRandomNumDataSize(taskInfo->dataType, dataSize);
     COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to get random num data size, dataType=%d, retCode=%d.",
-        taskInfo->dataType, error);
+        error != RT_ERROR_NONE, error, "Failed to get random num data size, dataType=%s, retCode=%d.",
+        RandomNumDataTypeToString(taskInfo->dataType).c_str(), error);
 
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE,

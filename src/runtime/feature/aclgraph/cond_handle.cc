@@ -13,6 +13,7 @@
 #include "stream.hpp"
 #include "cond_handle.hpp"
 #include "capture_model.hpp"
+#include "cond_enum_desc.hpp"
 
 #include "context.hpp"
 #include "device.hpp"
@@ -94,8 +95,8 @@ rtError_t CondHandle::Setup(Context* ctx)
     ERROR_RETURN(error, "Failed to memset devAddr, retCode=%#x.", static_cast<uint32_t>(error));
 
     RT_LOG(
-        RT_LOG_DEBUG, "CondHandle setup success, model_id=%u, default_value=%u, flag=%d, dev_addr=%p.", model_->Id_(),
-        defaultValue_, static_cast<int32_t>(flag_), devAddr_);
+        RT_LOG_DEBUG, "CondHandle setup success, model_id=%u, default_value=%u, flag=%s, dev_addr=%p.", model_->Id_(),
+        defaultValue_, CondHandleFlagToString(flag_).c_str(), devAddr_);
 
     InitEmbeddedInnerHandle(this);
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(model_);
@@ -140,9 +141,10 @@ rtError_t CondHandle::InitCondTaskByDefValue()
     rtError_t error =
         driver->MemCopySync(devAddr_, sizeof(uint64_t), &defValue, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(
-        error, "Failed to init cond default value, condFlag=%u, condType=%d, condSize=%u, defValue=%u retCode=%#x.",
-        flag_, condType_, condSize_, defaultValue_, static_cast<uint32_t>(error));
-    RT_LOG(RT_LOG_DEBUG, "defValue=%u, condType=%d", defValue, condType_);
+        error, "Failed to init cond default value, condFlag=%s, condType=%s, condSize=%u, defValue=%u retCode=%#x.",
+        CondHandleFlagToString(flag_).c_str(), CondTaskTypeToString(condType_).c_str(), condSize_, defaultValue_,
+        static_cast<uint32_t>(error));
+    RT_LOG(RT_LOG_DEBUG, "defValue=%u, condType=%s", defValue, CondTaskTypeToString(condType_).c_str());
 
     return RT_ERROR_NONE;
 }

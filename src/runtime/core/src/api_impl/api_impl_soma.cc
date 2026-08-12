@@ -16,6 +16,7 @@
 #include "inner_thread_local.hpp"
 #include "soma.hpp"
 #include "aicpu_c.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -42,8 +43,8 @@ rtError_t ApiImplSoma::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr a
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         value, RT_ERROR_INVALID_VALUE, "Setting the attribute value of a memory pool");
     RT_LOG(
-        RT_LOG_DEBUG, "Stream memory pool set attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool),
-        static_cast<uint32_t>(attr));
+        RT_LOG_DEBUG, "Stream memory pool set attribute, poolId=%#" PRIx64 ", attr=%s.", RtPtrToValue(memPool),
+        MemPoolAttrToString(attr).c_str());
     return SomaApi::StreamMemPoolSetAttr(memPool, attr, value);
 }
 
@@ -54,8 +55,8 @@ rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr a
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         value, RT_ERROR_INVALID_VALUE, "Obtaining the specified attribute value of a memory pool");
     RT_LOG(
-        RT_LOG_DEBUG, "Stream memory pool get attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool),
-        static_cast<uint32_t>(attr));
+        RT_LOG_DEBUG, "Stream memory pool get attribute, poolId=%#" PRIx64 ", attr=%s.", RtPtrToValue(memPool),
+        MemPoolAttrToString(attr).c_str());
     return SomaApi::StreamMemPoolGetAttr(memPool, attr, value);
 }
 

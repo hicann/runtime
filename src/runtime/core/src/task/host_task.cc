@@ -22,12 +22,12 @@ rtError_t HostTaskMemCpy::AsyncCall()
     const rtError_t retCode = drv_->MemCopyAsync(dst_, destMax_, src_, cnt_, kind_, copyFd_);
     TIMESTAMP_END(rtMemcpyHostTask_MemCopyAsync);
     COND_RETURN_ERROR(
-        retCode != RT_ERROR_NONE, retCode, "MemCopyAsync failed, kind=%s, retCode=%#x.",
-        MemcpyKindToString(kind_).c_str(), static_cast<uint32_t>(retCode));
+        retCode != RT_ERROR_NONE, retCode, "MemCopyAsync failed, kind=%s, retCode=%#x.", MemcpyKindToStr(kind_),
+        static_cast<uint32_t>(retCode));
     RT_LOG(
         RT_LOG_INFO,
-        "HostTaskMemCpy AsyncCall success. destMax=%" PRIu64 ", size=%" PRIu64 ", kind=%u copyFd_=%" PRIu64, destMax_,
-        cnt_, static_cast<uint32_t>(kind_), copyFd_);
+        "HostTaskMemCpy AsyncCall success. destMax=%" PRIu64 ", size=%" PRIu64 ", kind=%s copyFd_=%" PRIu64, destMax_,
+        cnt_, MemcpyKindToStr(kind_), copyFd_);
 
     return RT_ERROR_NONE;
 }

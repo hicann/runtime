@@ -9,6 +9,7 @@
  */
 
 #include "stars_cond_isa_helper.hpp"
+#include "enum_desc.hpp"
 #include "runtime.hpp"
 #include <map>
 
@@ -65,7 +66,9 @@ void ConvertConditionToBranchFunc3(
             isNeedReverseCmpReg = true;
             break;
         default:
-            RT_LOG(RT_LOG_WARNING, "condition=%d does not support, use equal instead.", condition);
+            RT_LOG(
+                RT_LOG_WARNING, "condition=UNKNOWN(%d) does not support, use equal instead.",
+                static_cast<int32_t>(condition));
             func3 = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
             isNeedReverseCmpReg = false;
             break;

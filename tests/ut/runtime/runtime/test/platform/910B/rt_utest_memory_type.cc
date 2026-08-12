@@ -30,20 +30,23 @@ protected:
 TEST_F(MemoryTypeManagerTest, memory_type_test)
 {
     rtMemLocationType type = RT_MEMORY_LOC_HOST;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_HOST");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_HOST(0)");
 
     type = RT_MEMORY_LOC_DEVICE;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_DEVICE");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_DEVICE(1)");
 
     type = RT_MEMORY_LOC_UNREGISTERED;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_UNREGISTERED");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_UNREGISTERED(2)");
 
     type = RT_MEMORY_LOC_MANAGED;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MANAGED");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_MANAGED(3)");
 
     type = RT_MEMORY_LOC_HOST_NUMA;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOC_HOST_NUMA");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_HOST_NUMA(4)");
 
     type = RT_MEMORY_LOC_MAX;
-    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MAX");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "MEMORY_LOC_MAX(5)");
+
+    type = static_cast<rtMemLocationType>(100);
+    EXPECT_STREQ(MemLocationTypeToStr(type), "UNKNOWN(100)");
 }

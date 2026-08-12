@@ -196,6 +196,9 @@ set(runtimeut_src_callback_list
 )
 
 set(runtimeut_src_common_list
+    ${TOP_DIR}/src/runtime/core/src/common/enum_desc.cc
+    ${TOP_DIR}/src/runtime/core/src/common/api_enum_desc.cc
+    ${TOP_DIR}/src/runtime/core/src/common/optional_enum_desc.cc
     ${TOP_DIR}/src/runtime/core/src/common/error_code.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/utils.cc

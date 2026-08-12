@@ -40,6 +40,8 @@ constexpr uint32_t DEVICE_TYPE = 1U;
 constexpr uint32_t NUMA_TYPE = 4U;
 constexpr uint32_t DRV_MEM_HOST_NUMA_SIDE = 2U;
 constexpr int32_t FEATURE_SVM_VMM_NORMAL_GRANULARITY = 6; // check drv is support alloc mem via numa id
+constexpr char_t MEM_SHARED_HANDLE_TYPE_EXPECT_DESC[] =
+    "MEM_SHARE_HANDLE_TYPE_DEFAULT(1) or MEM_SHARE_HANDLE_TYPE_FABRIC(2)";
 
 ApiErrorDecorator::ApiErrorDecorator(Api* const impl) : ApiDecorator(impl) {}
 
@@ -2113,15 +2115,14 @@ rtError_t ApiErrorDecorator::MemCopySync(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         cnt > destMax, RT_ERROR_INVALID_VALUE, "Synchronous memory copy", cnt, "(0, " + std::to_string(destMax) + "]");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
-        MemcpyKindToString(kind), "kind",
-        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE, MemcpyKindToStr(kind),
+        "kind", "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_WARN((dst == src), RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
     const rtError_t error = impl_->MemCopySync(dst, destMax, src, cnt, kind, checkKind);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToString(kind).c_str());
+        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
     return error;
 }
 
@@ -2136,15 +2137,14 @@ rtError_t ApiErrorDecorator::MemCopySyncEx(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         cnt > destMax, RT_ERROR_INVALID_VALUE, "Synchronous memory copy", cnt, "(0, " + std::to_string(destMax) + "]");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
-        MemcpyKindToString(kind), "kind",
-        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE, MemcpyKindToStr(kind),
+        "kind", "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_WARN((dst == src), RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
 
     const rtError_t error = impl_->MemCopySyncEx(dst, destMax, src, cnt, kind);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToString(kind).c_str());
+        "Memory copy sync failed, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
     return error;
 }
 
@@ -2159,9 +2159,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         cnt > destMax, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy", cnt, "(0, " + std::to_string(destMax) + "]");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE,
-        MemcpyKindToString(kind), "kind",
-        "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
+        (kind >= RT_MEMCPY_RESERVED) || (kind < RT_MEMCPY_HOST_TO_HOST), RT_ERROR_INVALID_VALUE, MemcpyKindToStr(kind),
+        "kind", "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
     COND_RETURN_AND_MSG_OUTER(
         ((kind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) && (cnt > MAX_MEMCPY_SIZE_OF_D2D)), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1011, "Asynchronous memory copy", cnt, "cnt",
@@ -2203,7 +2202,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
             error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
             COND_RETURN_ERROR_MSG_INNER(
                 error != RT_ERROR_NONE, error, "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%s",
-                streamId, MemcpyKindToString(kind).c_str());
+                streamId, MemcpyKindToStr(kind));
         } else {
             // no operation
         }
@@ -2215,7 +2214,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
         COND_RETURN_ERROR_MSG_INNER(
             error != RT_ERROR_NONE, error,
             "MemcpyAsync check src or dst location failed, stream_id=%d, checkKind=%d, copyKind=%s", streamId,
-            checkKind, MemcpyKindToString(copyKind).c_str());
+            checkKind, MemcpyKindToStr(copyKind));
     }
 
     COND_RETURN_WARN(
@@ -2248,8 +2247,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
 
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error,
-        "Memcpy async failed, count=%" PRIu64 ", kind=%s, isInvolvePageableMemory=%d", cnt,
-        MemcpyKindToString(copyKind).c_str(), isD2HorH2DInvolvePageableMemory);
+        "Memcpy async failed, count=%" PRIu64 ", kind=%s, isInvolvePageableMemory=%d", cnt, MemcpyKindToStr(copyKind),
+        isD2HorH2DInvolvePageableMemory);
     return error;
 }
 
@@ -2440,7 +2439,8 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(
 {
     COND_RETURN_WARN(
         (kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
+        "Kind should be %s, but now is %s.", "MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)",
+        MemcpyNewKindToString(kind).c_str());
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(srcAddr, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dstAddr, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desc, RT_ERROR_INVALID_VALUE, "Setting the memory copy descriptor");
@@ -2473,18 +2473,20 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(
 
     COND_RETURN_ERROR_MSG_INNER(
         descAttributes.location.type != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE,
-        "rtsSetMemcpyDesc failed, desc addr type=%d is invalid!", descAttributes.location.type);
+        "rtsSetMemcpyDesc failed, desc addr type=%s is invalid!",
+        MemLocationTypeToString(descAttributes.location.type).c_str());
 
     COND_RETURN_AND_MSG_OUTER(
         ((destAttributes.location.id != srcAttributes.location.id) ||
          (destAttributes.location.type != RT_MEMORY_LOC_DEVICE) ||
          (srcAttributes.location.type != RT_MEMORY_LOC_DEVICE)),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Setting the memory copy descriptor", "dstAddr or srcAddr",
-        "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, dstAddr DeviceId=" +
-            std::to_string(destAttributes.location.id) +
-            ", srcAddr DeviceId=" + std::to_string(srcAttributes.location.id) +
-            ", dstAddr type=" + std::to_string(destAttributes.location.type) +
-            ", srcAddr type=" + std::to_string(srcAttributes.location.type));
+        RtFmtMsg(
+            "DstAddr and srcAddr do not match with the kind RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, "
+            "dstAddr DeviceId=%d, srcAddr DeviceId=%d, dstAddr type=%s, srcAddr type=%s",
+            destAttributes.location.id, srcAttributes.location.id,
+            MemLocationTypeToString(destAttributes.location.type).c_str(),
+            MemLocationTypeToString(srcAttributes.location.type).c_str()));
 
     error = impl_->SetMemcpyDesc(desc, srcAddr, dstAddr, count, kind, config);
     ERROR_RETURN_MSG_INNER(error, "Failed to set memcpy desc, retCode=%#x.", static_cast<uint32_t>(error));
@@ -2496,7 +2498,8 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(
 {
     COND_RETURN_WARN(
         (kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
+        "Kind should be %s, but now is %s.", "MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)",
+        MemcpyNewKindToString(kind).c_str());
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         desc, RT_ERROR_INVALID_VALUE, "Performing asynchronous memory copy using the memory copy descriptor");
     COND_RETURN_AND_MSG_RESERVED_PARAM(
@@ -2509,7 +2512,8 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(
         static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_INNER(
         descAttributes.location.type != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE,
-        "rtsMemcpyAsyncWithDesc failed, desc addr type=%d is invalid!", descAttributes.location.type);
+        "rtsMemcpyAsyncWithDesc failed, desc addr type=%s is invalid!",
+        MemLocationTypeToString(descAttributes.location.type).c_str());
 
     rtTaskCfgInfo_t cfgInfo = {};
     (void)memset_s(&cfgInfo, sizeof(rtTaskCfgInfo_t), 0, sizeof(rtTaskCfgInfo_t));
@@ -2541,8 +2545,8 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, co
                 "Checking asynchronous memory copy parameters",
                 RtFmtMsg(
                     "If the stream is a model stream,"
-                    " the memcpy kind %u is not supported",
-                    kind));
+                    " the memcpy kind %s is not supported",
+                    MemcpyKindToStr(kind)));
         }
     }
     return RT_ERROR_NONE;
@@ -2709,9 +2713,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(
     if (it == MemcpyKindReviseMap.end()) {
         // Uncovered combinations: return success, kind unchanged.
         RT_LOG(
-            RT_LOG_INFO, "MemcpyKindAutoCorrect: undefined memory combination src=%d(%s), dst=%d(%s), kind=%d.",
-            srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
-            MemLocationTypeToStr(dstLocationType), *kind);
+            RT_LOG_INFO, "MemcpyKindAutoCorrect: undefined memory combination src=%s, dst=%s, kind=%s.",
+            MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str(),
+            MemcpyKindToStr(*kind));
         return RT_ERROR_NONE;
     }
     const MemcpyKindReviseRule& rule = it->second;
@@ -2719,9 +2723,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(
     if (rule.expectKind != RT_MEMCPY_RESERVED) {
         if (*kind != rule.expectKind) {
             RT_LOG(
-                RT_LOG_INFO, "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d(%s), dst=%d(%s).", *kind,
-                rule.expectKind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
-                MemLocationTypeToStr(dstLocationType));
+                RT_LOG_INFO, "MemcpyKindAutoCorrect: kind changed from %s to %s for src=%s, dst=%s.",
+                std::string(MemcpyKindToStr(*kind)).c_str(), std::string(MemcpyKindToStr(rule.expectKind)).c_str(),
+                MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str());
             *kind = rule.expectKind;
         }
         return RT_ERROR_NONE;
@@ -2729,9 +2733,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(
     // 2) If incoming is DEFAULT -> replace with defaultKind
     if (*kind == RT_MEMCPY_DEFAULT) {
         RT_LOG(
-            RT_LOG_INFO, "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d(%s), dst=%d(%s) (default case).",
-            *kind, rule.defaultKind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
-            MemLocationTypeToStr(dstLocationType));
+            RT_LOG_INFO, "MemcpyKindAutoCorrect: kind changed from %s to %s for src=%s, dst=%s (default case).",
+            std::string(MemcpyKindToStr(*kind)).c_str(), std::string(MemcpyKindToStr(rule.defaultKind)).c_str(),
+            MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str());
         *kind = rule.defaultKind;
         return RT_ERROR_NONE;
     }
@@ -2742,10 +2746,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(
     // 4) Otherwise illegal -> log expected set and return error
     std::string expected = allowed_list_to_string(rule.allowedKinds);
     RT_LOG(
-        RT_LOG_ERROR,
-        "MemcpyKindAutoCorrect: invalid kind=%s for src=%d(%s), dst=%d(%s); expected one of [%s], actual=%s.",
-        MemcpyKindToString(*kind).c_str(), srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
-        MemLocationTypeToStr(dstLocationType), expected.c_str(), MemcpyKindToString(*kind).c_str());
+        RT_LOG_ERROR, "MemcpyKindAutoCorrect: invalid kind=%s for src=%s, dst=%s; expected one of [%s], actual=%s.",
+        MemcpyKindToStr(*kind), MemLocationTypeToString(srcLocationType).c_str(),
+        MemLocationTypeToString(dstLocationType).c_str(), expected.c_str(), MemcpyKindToStr(*kind));
     return RT_ERROR_INVALID_VALUE;
 }
 
@@ -2808,8 +2811,9 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
         error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
         COND_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_GE, error != RT_ERROR_NONE, error,
-            "Memory async check kind and loc failed, retCode=%#x, copyKind=%s, srcLoc=%d, dstLoc=%d",
-            static_cast<uint32_t>(error), MemcpyKindToString(copyKind).c_str(), srcLocationType, dstLocationType);
+            "Memory async check kind and loc failed, retCode=%#x, copyKind=%s, srcLoc=%s, dstLoc=%s",
+            static_cast<uint32_t>(error), MemcpyKindToStr(copyKind), MemLocationTypeToString(srcLocationType).c_str(),
+            MemLocationTypeToString(dstLocationType).c_str());
     }
 
     /* 3) check whether involve pageable host memory */
@@ -2818,11 +2822,12 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
 
     RT_LOG(
         RT_LOG_INFO,
-        "kind=%d, checkKind= %d, copyKind=%d, srcLocType=%d(%s), srcRealLocType=%d(%s), dstLocType=%d(%s), "
-        "dstRealLocType=%d(%s), isSupportUserMem=%d, isD2HorH2DInvolvePageableMemory=%d.",
-        kind, checkKind, copyKind, srcLocationType, MemLocationTypeToStr(srcLocationType), srcRealLocation,
-        MemLocationTypeToStr(srcRealLocation), dstLocationType, MemLocationTypeToStr(dstLocationType), dstRealLocation,
-        MemLocationTypeToStr(dstRealLocation), isSupportUserMem, isD2HorH2DInvolvePageableMemory);
+        "kind=%s, checkKind= %d, copyKind=%s, srcLocType=%s, srcRealLocType=%s, dstLocType=%s, "
+        "dstRealLocType=%s, isSupportUserMem=%d, isD2HorH2DInvolvePageableMemory=%d.",
+        std::string(MemcpyKindToStr(kind)).c_str(), checkKind, std::string(MemcpyKindToStr(copyKind)).c_str(),
+        MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(srcRealLocation).c_str(),
+        MemLocationTypeToString(dstLocationType).c_str(), MemLocationTypeToString(dstRealLocation).c_str(),
+        isSupportUserMem, isD2HorH2DInvolvePageableMemory);
 
     return error;
 }
@@ -2844,7 +2849,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoUpdate(
             *kind = RT_MEMCPY_DEVICE_TO_DEVICE;
         }
     }
-    RT_LOG(RT_LOG_DEBUG, "auto infer copy srcType=%d, dstType=%d, dir=%d", srcType, dstType, *kind);
+    RT_LOG(
+        RT_LOG_DEBUG, "auto infer copy srcType=%s, dstType=%s, dir=%s", MemLocationTypeToString(srcType).c_str(),
+        MemLocationTypeToString(dstType).c_str(), MemcpyKindToStr(*kind));
     return RT_ERROR_NONE;
 }
 
@@ -2997,22 +3004,19 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(
         (error != RT_ERROR_NONE) || ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST)),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         RT_LOG(
-            RT_LOG_ERROR,
-            "srcLocType=%d(%s), srcLocType=%d(%s), dstLocType=%d(%s), "
-            "dstRealLocType=%d(%s).",
-            srcLocationType, MemLocationTypeToStr(srcLocationType), srcRealLocation,
-            MemLocationTypeToStr(srcRealLocation), dstLocationType, MemLocationTypeToStr(dstLocationType),
-            dstRealLocation, MemLocationTypeToStr(dstRealLocation)),
+            RT_LOG_ERROR, "srcLocType=%s, srcRealLocType=%s, dstLocType=%s, dstRealLocType=%s.",
+            MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(srcRealLocation).c_str(),
+            MemLocationTypeToString(dstLocationType).c_str(), MemLocationTypeToString(dstRealLocation).c_str()),
         __func__, "kind or newKind",
         RtFmtMsg(
-            "Memcpy2dSync supports only H2D or D2H. Parameter kind is %s, and newKind is %s",
-            MemcpyKindToString(kind).c_str(), MemcpyNewKindToString(newKind).c_str()));
+            "Memcpy2dSync supports only H2D or D2H. Parameter kind is %s, and newKind is %s", MemcpyKindToStr(kind),
+            MemcpyNewKindToString(newKind).c_str()));
     error = impl_->MemCopy2DSync(dst, dstPitch, src, srcPitch, width, height, copyKind);
     ERROR_RETURN(
         error,
         "Memcpy2d sync failed, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64
         ", kind=%s",
-        dstPitch, srcPitch, width, height, MemcpyKindToString(copyKind).c_str());
+        dstPitch, srcPitch, width, height, MemcpyKindToStr(copyKind));
     return error;
 }
 
@@ -3039,7 +3043,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Asynchronous 2D memory copy", "kind or newKind",
         RtFmtMsg(
             "Memcpy2dAsync supports only H2D, D2H, or D2D. Parameter kind is %s, and reviseKind is %s",
-            MemcpyKindToString(kind).c_str(), MemcpyKindToString(copyKind).c_str()));
+            std::string(MemcpyKindToStr(kind)).c_str(), std::string(MemcpyKindToStr(copyKind)).c_str()));
 
     COND_RETURN_WARN(
         ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) &&
@@ -3071,7 +3075,7 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(
         error,
         "Memcpy2d async failed, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64
         ", kind=%s, isInvolvePageableMemory=%d",
-        dstPitch, srcPitch, width, height, MemcpyKindToString(copyKind).c_str(), isD2HorH2DInvolvePageableMemory);
+        dstPitch, srcPitch, width, height, MemcpyKindToStr(copyKind), isD2HorH2DInvolvePageableMemory);
     return error;
 }
 
@@ -3149,8 +3153,8 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(
         "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_P2P_HUGE1G) + "]");
     const rtError_t error = impl_->MemGetInfoEx(memInfoType, freeSize, totalSize);
     ERROR_RETURN(
-        error, "Get Memory extend info failed, memInfoType=%u, free=%zu, total=%zu.", memInfoType, *freeSize,
-        *totalSize);
+        error, "Get Memory extend info failed, memInfoType=%s, free=%zu, total=%zu.",
+        MemInfoTypeToString(memInfoType).c_str(), *freeSize, *totalSize);
     return error;
 }
 
@@ -3182,8 +3186,8 @@ rtError_t ApiErrorDecorator::PtrGetAttributes(const void* const ptr, rtPtrAttrib
     const rtError_t error = impl_->PtrGetAttributes(ptr, attributes);
     ERROR_RETURN(error, "Get pointer attributes failed");
     RT_LOG(
-        RT_LOG_DEBUG, "get memory attribute locationType=%d, [0:HOST,1:DEVICE].",
-        static_cast<int32_t>(attributes->location.type));
+        RT_LOG_DEBUG, "get memory attribute locationType=%s.",
+        MemLocationTypeToString(attributes->location.type).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -3416,7 +3420,8 @@ rtError_t ApiErrorDecorator::DeviceSetLimit(const int32_t devId, const rtLimitTy
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = impl_->DeviceSetLimit(realDeviceId, type, val);
     ERROR_RETURN(
-        error, "Device set limit failed, device_id=%d, type=%d, value=%u.", devId, static_cast<int32_t>(type), val);
+        error, "Device set limit failed, device_id=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(),
+        val);
     return error;
 }
 
@@ -3424,7 +3429,7 @@ rtError_t ApiErrorDecorator::DeviceGetLimit(const rtLimitType_t type, uint32_t* 
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val == nullptr, RT_ERROR_INVALID_VALUE, val, "non-null");
     rtError_t error = impl_->DeviceGetLimit(type, val);
-    ERROR_RETURN(error, "Device get limit failed, type=%d.", static_cast<int32_t>(type));
+    ERROR_RETURN(error, "Device get limit failed, type=%s.", LimitTypeToString(type).c_str());
     return error;
 }
 
@@ -4265,25 +4270,29 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckExLocation(
         COND_RETURN_AND_MSG_OUTER(
             (srcRealLocation == RT_MEMORY_LOC_DEVICE) || (dstRealLocation != RT_MEMORY_LOC_DEVICE),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
-            RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
+            RtFmtMsg(
+                "%s/%s", MemLocationTypeToString(srcRealLocation).c_str(),
+                MemLocationTypeToString(dstRealLocation).c_str()),
             "src/dst address location",
             "The src address must be a host address and the dst address must be a device address");
     } else {
         COND_RETURN_AND_MSG_OUTER(
             (srcRealLocation != RT_MEMORY_LOC_DEVICE) || (dstRealLocation == RT_MEMORY_LOC_DEVICE),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
-            RtFmtMsg("%s/%s", MemLocationTypeToStr(srcRealLocation), MemLocationTypeToStr(dstRealLocation)),
+            RtFmtMsg(
+                "%s/%s", MemLocationTypeToString(srcRealLocation).c_str(),
+                MemLocationTypeToString(dstRealLocation).c_str()),
             "src/dst address location",
             "The src address must be a device address and the dst address must be a host address");
     }
 
     RT_LOG(
         RT_LOG_INFO,
-        "MemcpyAsync EX location check passed, kind=%d, srcLocType=%d(%s), srcRealLocType=%d(%s), "
-        "dstLocType=%d(%s), dstRealLocType=%d(%s).",
-        kind, srcLocationType, MemLocationTypeToStr(srcLocationType), srcRealLocation,
-        MemLocationTypeToStr(srcRealLocation), dstLocationType, MemLocationTypeToStr(dstLocationType), dstRealLocation,
-        MemLocationTypeToStr(dstRealLocation));
+        "MemcpyAsync EX location check passed, kind=%s, srcLocType=%s, srcRealLocType=%s, "
+        "dstLocType=%s, dstRealLocType=%s.",
+        MemcpyKindToStr(kind), MemLocationTypeToString(srcLocationType).c_str(),
+        MemLocationTypeToString(srcRealLocation).c_str(), MemLocationTypeToString(dstLocationType).c_str(),
+        MemLocationTypeToString(dstRealLocation).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -4472,15 +4481,17 @@ rtError_t ApiErrorDecorator::StreamSwitchEx(
         trueStream, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         curStm, RT_ERROR_INVALID_VALUE, "Switching between streams based on conditions");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (condition > RT_LESS_OR_EQUAL) || (condition < 0), RT_ERROR_INVALID_VALUE,
-        "Switching between streams based on conditions", condition, "[0, " + std::to_string(RT_LESS_OR_EQUAL) + "]");
+        "Switching between streams based on conditions", RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(condition)),
+        "condition", "[0, " + std::to_string(RT_LESS_OR_EQUAL) + "]");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
         (dataType > RT_SWITCH_INT64) || (dataType < 0), RT_ERROR_INVALID_VALUE, SwitchDataTypeToString(dataType),
         "dataType", "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
     const rtError_t error = impl_->StreamSwitchEx(ptr, condition, valuePtr, trueStream, curStm, dataType);
     ERROR_RETURN(
-        error, "Stream switch[extend] failed, condition=%d, dataType=%d.", condition, static_cast<int32_t>(dataType));
+        error, "Stream switch[extend] failed, condition=%s, dataType=%s.", ConditionToString(condition).c_str(),
+        SwitchDataTypeToString(dataType).c_str());
     return error;
 }
 
@@ -4522,7 +4533,8 @@ rtError_t ApiErrorDecorator::StreamSwitchN(
         "dataType", "[0, " + std::to_string(RT_SWITCH_INT64) + "]");
     const rtError_t error = impl_->StreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, curStm, dataType);
     ERROR_RETURN(
-        error, "Stream switchN failed, size=%u(bytes), elementSize=%u(bytes) dataType=%d", size, elementSize, dataType);
+        error, "Stream switchN failed, size=%u(bytes), elementSize=%u(bytes) dataType=%s", size, elementSize,
+        SwitchDataTypeToString(dataType).c_str());
     return error;
 }
 
@@ -5872,10 +5884,10 @@ rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         cmoAddrInfo, RT_ERROR_INVALID_VALUE, "Using the memory descriptor to operate the cache memory on the device");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         ((cmoOpCode < RT_CMO_PREFETCH) || (cmoOpCode >= RT_CMO_RESERVED)), RT_ERROR_INVALID_VALUE,
-        "Using the memory descriptor to operate the cache memory on the device", cmoOpCode,
-        "[" + std::to_string(RT_CMO_PREFETCH) + ", " + std::to_string(RT_CMO_RESERVED) + ")");
+        "Using the memory descriptor to operate the cache memory on the device", CmoOpCodeToString(cmoOpCode),
+        "cmoOpCode", "[" + std::to_string(RT_CMO_PREFETCH) + ", " + std::to_string(RT_CMO_RESERVED) + ")");
     rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties devProperty{};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
@@ -5924,7 +5936,8 @@ rtError_t ApiErrorDecorator::MemcpyHostTask(
     const uint32_t devRunMode = curCtx->Device_()->Driver_()->GetRunMode();
     if ((devRunMode != RT_RUN_MODE_ONLINE) ||
         ((kind != RT_MEMCPY_HOST_TO_DEVICE) && (kind != RT_MEMCPY_DEVICE_TO_HOST))) {
-        RT_LOG(RT_LOG_INFO, "unsupported MemcpyHostTask feature, kind = %d, run mode = %u", kind, devRunMode);
+        RT_LOG(
+            RT_LOG_INFO, "unsupported MemcpyHostTask feature, kind=%s, run mode=%u", MemcpyKindToStr(kind), devRunMode);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return impl_->MemcpyHostTask(dst, destMax, src, cnt, kind, stm);
@@ -5932,10 +5945,9 @@ rtError_t ApiErrorDecorator::MemcpyHostTask(
 
 rtError_t ApiErrorDecorator::SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMode)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
         (floatOverflowMode >= RT_OVERFLOW_MODE_UNDEF) || (floatOverflowMode < RT_OVERFLOW_MODE_SATURATION),
-        RT_ERROR_INVALID_VALUE, floatOverflowMode,
-        "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
+        RT_ERROR_INVALID_VALUE, FloatOverflowModeToString(floatOverflowMode), "floatOverflowMode", "[0, 2)");
     return impl_->SetDeviceSatMode(floatOverflowMode);
 }
 
@@ -6100,9 +6112,9 @@ rtError_t ApiErrorDecorator::GetVisibleDeviceIdByLogicDeviceId(
 rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
     constexpr int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, SysParamOptToString(configOpt),
+        "configOpt", RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
     const int64_t maxVal =
         (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
@@ -6113,9 +6125,9 @@ rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, co
 
 rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE,
-        "Obtaining the system parameter value in the current context", configOpt,
+        "Obtaining the system parameter value in the current context", SysParamOptToString(configOpt), "configOpt",
         "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         configVal, RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context");
@@ -6358,10 +6370,10 @@ rtError_t ApiErrorDecorator::ExportToShareableHandleV2(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         shareableHandle, RT_ERROR_INVALID_VALUE, "Exporting the shared handle of the AI server");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC),
-        RT_ERROR_INVALID_VALUE, "Exporting the shared handle of the AI server", handleType,
-        std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) + " or " + std::to_string(RT_MEM_SHARE_HANDLE_TYPE_FABRIC));
+        RT_ERROR_INVALID_VALUE, "Exporting the shared handle of the AI server",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(handleType)), "handleType", MEM_SHARED_HANDLE_TYPE_EXPECT_DESC);
     constexpr uint64_t maxFlag = RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (flags > maxFlag), RT_ERROR_INVALID_VALUE, "Exporting the shared handle of the AI server", flags,
@@ -6397,11 +6409,10 @@ rtError_t ApiErrorDecorator::ImportFromShareableHandleV2(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         handle, RT_ERROR_INVALID_VALUE,
         "Obtaining shareableHandle information and returning the handle in the current process");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC),
         RT_ERROR_INVALID_VALUE, "Obtaining shareableHandle information and returning the handle in the current process",
-        handleType,
-        std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) + " or " + std::to_string(RT_MEM_SHARE_HANDLE_TYPE_FABRIC));
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(handleType)), "handleType", MEM_SHARED_HANDLE_TYPE_EXPECT_DESC);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (flags != 0U), RT_ERROR_INVALID_VALUE,
         "Obtaining shareableHandle information and returning the handle in the current process", flags, "0");
@@ -6427,10 +6438,10 @@ rtError_t ApiErrorDecorator::SetPidToShareableHandleV2(
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         shareableHandle, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC),
-        RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory", handleType,
-        std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) + " or " + std::to_string(RT_MEM_SHARE_HANDLE_TYPE_FABRIC));
+        RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(handleType)), "handleType", MEM_SHARED_HANDLE_TYPE_EXPECT_DESC);
     return impl_->SetPidToShareableHandleV2(shareableHandle, handleType, pid, pidNum);
 }
 
@@ -6687,9 +6698,9 @@ rtError_t ApiErrorDecorator::GetDeviceStatus(const int32_t devId, rtDevStatus_t*
 
 rtError_t ApiErrorDecorator::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, "Setting the device resource limit",
-        type, "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
+        DevResLimitTypeToString(type), "type", "[0, 2)");
     uint32_t drvDevId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
     COND_RETURN_ERROR(
@@ -6716,10 +6727,9 @@ rtError_t ApiErrorDecorator::ResetDeviceResLimit(const uint32_t devId)
 
 rtError_t ApiErrorDecorator::GetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t* value)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resource limits of the current process", type,
-        "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
+        "Obtaining the device resource limits of the current process", DevResLimitTypeToString(type), "type", "[0, 2)");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of the current process");
     uint32_t drvDevId = 0;
@@ -6735,9 +6745,9 @@ rtError_t ApiErrorDecorator::GetDeviceResLimit(const uint32_t devId, const rtDev
 
 rtError_t ApiErrorDecorator::SetStreamResLimit(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, type,
-        "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, DevResLimitTypeToString(type),
+        "type", "[0, 2)");
     return impl_->SetStreamResLimit(stm, type, value);
 }
 
@@ -6746,10 +6756,9 @@ rtError_t ApiErrorDecorator::ResetStreamResLimit(Stream* const stm) { return imp
 rtError_t ApiErrorDecorator::GetStreamResLimit(
     const Stream* const stm, const rtDevResLimitType_t type, uint32_t* const value)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resource limits of a specified stream", type,
-        "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
+        "Obtaining the device resource limits of a specified stream", DevResLimitTypeToString(type), "type", "[0, 2)");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of a specified stream");
     return impl_->GetStreamResLimit(stm, type, value);
@@ -6767,10 +6776,10 @@ rtError_t ApiErrorDecorator::NotUseStreamResInCurrentThread(const Stream* const 
 
 rtError_t ApiErrorDecorator::GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t* const value)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resources that can be used by the current thread", type,
-        "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
+        "Obtaining the device resources that can be used by the current thread", DevResLimitTypeToString(type), "type",
+        "[0, 2)");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         value, RT_ERROR_INVALID_VALUE, "Obtaining the device resources that can be used by the current thread");
     return impl_->GetResInCurrentThread(type, value);

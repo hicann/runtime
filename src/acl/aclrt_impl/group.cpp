@@ -191,7 +191,7 @@ aclError aclrtGetGroupInfoDetailImpl(
                 attrValue, valueLen, paramRetSize, __func__);
             break;
         default:
-            ACL_LOG_ERROR("invalid group attribute, attribute = %d", static_cast<int32_t>(attr));
+            ACL_LOG_ERROR("invalid group attribute, attribute = UNKNOWN(%d)", static_cast<int32_t>(attr));
             std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),

@@ -107,7 +107,7 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t* value, bool isCtx)
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_SYSPARAMOPT_NOT_SET) {
             ACL_LOG_WARN(
-                "option %d is not set, runtime errorCode is %d", static_cast<int32_t>(opt),
+                "option %s is not set, runtime errorCode is %d", acl::GetSysParamOptDesc(opt),
                 static_cast<int32_t>(rtErr));
         }
         return ACL_GET_ERRCODE_RTS(rtErr);
@@ -141,7 +141,8 @@ aclError aclrtCtxGetSysParamOptImpl(aclSysParamOpt opt, int64_t* value)
 aclError aclrtCtxSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxSetSysParamOpt);
-    ACL_LOG_INFO("start to execute aclrtCtxSetSysParamOpt, opt = %d, value = %ld.", static_cast<int32_t>(opt), value);
+    ACL_LOG_INFO(
+        "start to execute aclrtCtxSetSysParamOpt, opt = %s, value = %ld.", acl::GetSysParamOptDesc(opt), value);
     return SetSysParamOpt(opt, value, true);
 }
 
@@ -149,13 +150,13 @@ aclError aclrtGetSysParamOptImpl(aclSysParamOpt opt, int64_t* value) { return Ge
 
 aclError aclrtSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
-    ACL_LOG_INFO("start to execute aclrtSetSysParamOpt, opt = %d, value = %ld.", static_cast<int32_t>(opt), value);
+    ACL_LOG_INFO("start to execute aclrtSetSysParamOpt, opt = %s, value = %ld.", acl::GetSysParamOptDesc(opt), value);
     return SetSysParamOpt(opt, value, false);
 }
 
 aclError aclrtPeekAtLastErrorImpl(aclrtLastErrLevel level)
 {
-    ACL_LOG_INFO("start to execute aclrtPeekAtLastError, level is %d", static_cast<int32_t>(level));
+    ACL_LOG_INFO("start to execute aclrtPeekAtLastError, level is %s", acl::GetLastErrLevelDesc(level));
     ACL_REQUIRES_PARAM_EQUAL_REPORT(level, ACL_RT_THREAD_LEVEL);
     const rtLastErrLevel_t rtLevel = static_cast<rtLastErrLevel_t>(level);
     return rtPeekAtLastError(rtLevel);
@@ -163,7 +164,7 @@ aclError aclrtPeekAtLastErrorImpl(aclrtLastErrLevel level)
 
 aclError aclrtGetLastErrorImpl(aclrtLastErrLevel level)
 {
-    ACL_LOG_INFO("start to execute aclrtGetLastError, level is %d", static_cast<int32_t>(level));
+    ACL_LOG_INFO("start to execute aclrtGetLastError, level is %s", acl::GetLastErrLevelDesc(level));
     ACL_REQUIRES_PARAM_EQUAL_REPORT(level, ACL_RT_THREAD_LEVEL);
     const rtLastErrLevel_t rtLevel = static_cast<rtLastErrLevel_t>(level);
     return rtGetLastError(rtLevel);

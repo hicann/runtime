@@ -53,7 +53,7 @@ void UvmCallback::MemcpyAsyncCallback(void* userData)
         RT_LOG(
             RT_LOG_ERROR, "Memcopy sync failed with code=%u dst=%p destMax=%u src=%p cnt=%u kind=%s",
             static_cast<uint32_t>(error), params->dst, params->destMax, params->src, params->cnt,
-            MemcpyKindToString(kindCov).c_str());
+            MemcpyKindToStr(kindCov));
     }
     delete params;
 }

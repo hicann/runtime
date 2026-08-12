@@ -25,6 +25,7 @@
 #include "task_execute_time.h"
 #include "ccu_sqe.hpp"
 #include "aic_aiv_sqe_common.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -359,9 +360,8 @@ static rtError_t GetArgsInfoForFusionKernelTask(TaskInfo* taskInfo)
         hostMem, static_cast<uint64_t>(fusionKernelTask->argsSize) + 1U, fusionKernelTask->args,
         static_cast<uint64_t>(fusionKernelTask->argsSize), RT_MEMCPY_DEVICE_TO_HOST);
     COND_PROC_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, (void)dev->Driver_()->HostMemFree(hostMem);
-                                     , "Memcpy failed, size=%u, type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
-                                     fusionKernelTask->argsSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST),
-                                     static_cast<uint32_t>(error));
+                                     , "Memcpy failed, size=%u, type=%s, retCode=%#x", fusionKernelTask->argsSize,
+                                     MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
     const uint32_t totalLen = fusionKernelTask->argsSize / static_cast<uint32_t>(sizeof(void*));
     const uint32_t argsTimes = (totalLen % ARGS_PER_STRING_MAX_LEN > 0) ?
                                    static_cast<uint32_t>((totalLen / ARGS_PER_STRING_MAX_LEN) + 1) :

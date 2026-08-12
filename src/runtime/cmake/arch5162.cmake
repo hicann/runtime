@@ -250,6 +250,7 @@ set(libruntime_other_files
 )
 
 set(libruntime_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${runtime_src_pool_list}
     ${runtime_src_ttlv_list}
     ${libruntime_callback_files}

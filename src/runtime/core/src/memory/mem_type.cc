@@ -9,6 +9,7 @@
  */
 
 #include "mem_type.hpp"
+#include "securec.h"
 
 namespace cce {
 namespace runtime {
@@ -18,18 +19,24 @@ const char_t* MemLocationTypeToStr(const rtMemLocationType type)
 {
     switch (type) {
         case RT_MEMORY_LOC_HOST:
-            return "RT_MEMORY_LOCATION_HOST";
+            return "MEMORY_LOC_HOST(0)";
         case RT_MEMORY_LOC_DEVICE:
-            return "RT_MEMORY_LOCATION_DEVICE";
+            return "MEMORY_LOC_DEVICE(1)";
         case RT_MEMORY_LOC_UNREGISTERED:
-            return "RT_MEMORY_LOCATION_UNREGISTERED";
+            return "MEMORY_LOC_UNREGISTERED(2)";
         case RT_MEMORY_LOC_MANAGED:
-            return "RT_MEMORY_LOCATION_MANAGED";
+            return "MEMORY_LOC_MANAGED(3)";
         case RT_MEMORY_LOC_HOST_NUMA:
-            return "RT_MEMORY_LOC_HOST_NUMA";
+            return "MEMORY_LOC_HOST_NUMA(4)";
+        case RT_MEMORY_LOC_MAX:
+            return "MEMORY_LOC_MAX(5)";
         default:
-            return "RT_MEMORY_LOCATION_MAX";
+            break;
     }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
 }
 
 uint16_t GetMemcpyBatchCopyKind(const rtMemcpyBatchAttr& attr)

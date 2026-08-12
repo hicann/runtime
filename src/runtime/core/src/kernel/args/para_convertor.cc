@@ -15,6 +15,7 @@
 #include "thread_local_container.hpp"
 #include "kernel_utils.hpp"
 #include "aicpu_timeout_manager.h"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -198,7 +199,8 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg& taskCfg, const rtKernelLaunchCfg_t*
                 break;
             default:
                 RT_LOG(
-                    RT_LOG_ERROR, "Launch kernel attr type[%u] is invalid, should be [1, %u)", cfg->attrs[idx].id,
+                    RT_LOG_ERROR, "Launch kernel attr type[%s] is invalid, should be [%u, %u)",
+                    LaunchKernelAttrIdToString(cfg->attrs[idx].id).c_str(), RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE,
                     RT_LAUNCH_KERNEL_ATTR_MAX);
                 return RT_ERROR_INVALID_VALUE;
         }

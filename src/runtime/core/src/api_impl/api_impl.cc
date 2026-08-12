@@ -56,6 +56,7 @@
 #include "stream_state_callback_manager.hpp"
 #include "heterogenous.h"
 #include "capture_model.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
 #include "capture_adapt.hpp"
 #include "stars_engine.hpp"
@@ -76,6 +77,7 @@
 #include "rt_inner_stream.h"
 #include "rt_inner_device.h"
 #include "rt_inner_task.h"
+#include "task_enum_desc.hpp"
 #include "rt_inner_mem.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
@@ -105,6 +107,7 @@ using DevInfo = struct {
 namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
 constexpr uint32_t MEM_TYPE_MASK = 0xFF00U;
+constexpr char_t MALLOC_ATTR_MODULE_ID_EXPECT_DESC[] = "MEM_MALLOC_ATTR_MODULE_ID(1)";
 
 void ResetKernelArgsParamHandles(RtArgsHandle* argsHandle, uint32_t paramCount)
 {
@@ -392,9 +395,9 @@ rtError_t ApiImpl::FunctionRegister(
     const uint32_t funcMode)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "register function, type=%d, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
-        prog->GetDefaultKernelAttrType(), stubFunc, funcMode, (stubName != nullptr) ? stubName : "(none)",
-        kernelInfoExt);
+        RT_LOG_DEBUG, "register function, type=%s, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
+        KernelAttrTypeToString(prog->GetDefaultKernelAttrType()).c_str(), stubFunc, funcMode,
+        (stubName != nullptr) ? stubName : "(none)", kernelInfoExt);
     return Runtime::Instance()->KernelRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
 }
 
@@ -2416,7 +2419,7 @@ rtError_t ApiImpl::DevDvppFree(void* const devPtr)
         static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(
         locationType != RT_MEMORY_LOC_DEVICE && locationType != RT_MEMORY_LOC_MANAGED, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1011, "Releasing DVPP device memory", MemLocationTypeToStr(locationType), "devPtr locationType",
+        ErrorCode::EE1011, "Releasing DVPP device memory", MemLocationTypeToString(locationType), "devPtr locationType",
         "The specified address must be a device address");
 #endif
 
@@ -2458,9 +2461,9 @@ rtError_t ApiImpl::GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t* 
     }
 
     // 申请内存的接口不支持传入其他类型cfg
-    RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-        "Obtaining the configuration attributes of the memory allocated on the host", attr->attr,
-        RT_MEM_MALLOC_ATTR_MODULE_ID);
+    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+        ErrorCode::EE1003, "Obtaining the configuration attributes of the memory allocated on the host",
+        MallocAttrToString(attr->attr), "attr->attr", MALLOC_ATTR_MODULE_ID_EXPECT_DESC);
     return RT_ERROR_INVALID_VALUE;
 }
 
@@ -2528,7 +2531,7 @@ rtError_t ApiImpl::HostFree(void* const hostPtr)
         static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(
         locationType != RT_MEMORY_LOC_HOST && locationType != RT_MEMORY_LOC_UNREGISTERED, RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1011, "Host memory release", MemLocationTypeToStr(locationType), "hostPtr locationType",
+        ErrorCode::EE1011, "Host memory release", MemLocationTypeToString(locationType), "hostPtr locationType",
         "The specified address must be a host address");
 #endif
 
@@ -2716,7 +2719,7 @@ rtError_t ApiImpl::MemCopySync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
     const uint32_t checkKind)
 {
-    RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%d.", cnt, kind);
+    RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
@@ -2746,7 +2749,7 @@ rtError_t ApiImpl::MemCopySync(
 rtError_t ApiImpl::MemCopySyncEx(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {
-    RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%d.", cnt, kind);
+    RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
@@ -2839,7 +2842,7 @@ rtError_t ApiImpl::MemcpyAsync(
     Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo, const rtD2DAddrCfgInfo_t* const addrCfg, bool checkKind,
     const rtMemcpyConfig_t* const memcpyConfig)
 {
-    RT_LOG(RT_LOG_DEBUG, "async memcpy, count=%" PRIu64 ", kind=%d", cnt, kind);
+    RT_LOG(RT_LOG_DEBUG, "async memcpy, count=%" PRIu64 ", kind=%s", cnt, MemcpyKindToStr(kind));
     UNUSED(memcpyConfig);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -3119,7 +3122,7 @@ rtError_t ApiImpl::ReduceAsync(
     void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo)
 {
-    RT_LOG(RT_LOG_INFO, "ReduceAsync, count=%" PRIu64 ", kind=%d.", cnt, kind);
+    RT_LOG(RT_LOG_INFO, "ReduceAsync, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3137,7 +3140,7 @@ rtError_t ApiImpl::ReduceAsyncV2(
     void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, void* const overflowAddr)
 {
-    RT_LOG(RT_LOG_INFO, "ReduceAsyncV2, count=%" PRIu64 ", kind=%d.", cnt, kind);
+    RT_LOG(RT_LOG_INFO, "ReduceAsyncV2, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3253,7 +3256,9 @@ rtError_t ApiImpl::GetMemUsageInfo(
 
 rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t* const freeSize, size_t* const totalSize)
 {
-    RT_LOG(RT_LOG_DEBUG, "mem get info memInfoType=%u, free=%zu, total=%zu.", memInfoType, *freeSize, *totalSize);
+    RT_LOG(
+        RT_LOG_DEBUG, "mem get info memInfoType=%s, free=%zu, total=%zu.", MemInfoTypeToString(memInfoType).c_str(),
+        *freeSize, *totalSize);
     Context* const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3734,12 +3739,13 @@ rtError_t ApiImpl::DeviceReset(const int32_t devId, const bool isForceReset)
 
 rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val)
 {
-    RT_LOG(RT_LOG_INFO, "Set Limit, drv devId=%d, type=%d, value=%u.", devId, type, val);
+    RT_LOG(RT_LOG_INFO, "Set Limit, drv devId=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(), val);
     (void)devId;
     if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
         type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%u", static_cast<uint32_t>(type));
+            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%s",
+            LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     rtError_t ret = RT_ERROR_NONE;
@@ -3761,7 +3767,7 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
 
 rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
 {
-    RT_LOG(RT_LOG_INFO, "Get Limit, type=%d.", static_cast<int32_t>(type));
+    RT_LOG(RT_LOG_INFO, "Get Limit, type=%s.", LimitTypeToString(type).c_str());
     rtError_t ret = RT_ERROR_NONE;
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime* rt = Runtime::Instance();
@@ -3770,7 +3776,8 @@ rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
         type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
         type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%u", static_cast<uint32_t>(type));
+            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%s",
+            LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
         Runtime* rt = Runtime::Instance();
@@ -3778,11 +3785,11 @@ rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
         *val = rt->GetSimdPrintFifoSize();
     } else {
         RT_LOG(
-            RT_LOG_WARNING, "Limit type not supported on this platform, type=%u, returning default 0.",
-            static_cast<uint32_t>(type));
+            RT_LOG_WARNING, "Limit type not supported on this platform, type=%s, returning default 0.",
+            LimitTypeToString(type).c_str());
         *val = 0U;
     }
-    RT_LOG(RT_LOG_INFO, "DeviceGetLimit success, type=%d, val=%u.", static_cast<int32_t>(type), *val);
+    RT_LOG(RT_LOG_INFO, "DeviceGetLimit success, type=%s, val=%u.", LimitTypeToString(type).c_str(), *val);
     return ret;
 }
 
@@ -3915,7 +3922,7 @@ rtError_t ApiImpl::GetDeviceSimtInfo(rtDevAttr attr, int64_t* val)
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM(attr, "[RT_DEV_ATTR_WARP_SIZE, RT_DEV_ATTR_MAX_BLOCK_DIM_Z]");
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, DevAttrToString(attr), "attr", "[202, 212]");
             break;
     }
 
@@ -4964,7 +4971,9 @@ rtError_t ApiImpl::StreamSwitchEx(
     void* const ptr, const rtCondition_t condition, void* const valuePtr, Stream* const trueStream, Stream* const stm,
     const rtSwitchDataType_t dataType)
 {
-    RT_LOG(RT_LOG_DEBUG, "Switch, condition=%d, dataType=%d.", condition, dataType);
+    RT_LOG(
+        RT_LOG_DEBUG, "Switch, condition=%s, dataType=%s.", ConditionToString(condition).c_str(),
+        SwitchDataTypeToString(dataType).c_str());
     COND_RETURN_AND_MSG_OUTER(
         !trueStream->IsModelStream(), RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
         "Switching between streams based on conditions", 0, "trueStream->modelNum",
@@ -4984,7 +4993,9 @@ rtError_t ApiImpl::StreamSwitchN(
     void* const ptr, const uint32_t size, void* const valuePtr, Stream** const trueStreamPtr,
     const uint32_t elementSize, Stream* const stm, const rtSwitchDataType_t dataType)
 {
-    RT_LOG(RT_LOG_DEBUG, "SwitchN, size=%u, elementSize=%u, dataType=%d.", size, elementSize, dataType);
+    RT_LOG(
+        RT_LOG_DEBUG, "SwitchN, size=%u, elementSize=%u, dataType=%s.", size, elementSize,
+        SwitchDataTypeToString(dataType).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6686,8 +6697,8 @@ rtError_t ApiImpl::MemCopy2DSync(
     (void)newKind;
     RT_LOG(
         RT_LOG_DEBUG,
-        "sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%d.",
-        dstPitch, srcPitch, width, height, kind);
+        "sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s.",
+        dstPitch, srcPitch, width, height, MemcpyKindToStr(kind));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6708,8 +6719,8 @@ rtError_t ApiImpl::MemCopy2DAsync(
     (void)newKind;
     RT_LOG(
         RT_LOG_DEBUG,
-        "sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%d.",
-        dstPitch, srcPitch, width, height, kind);
+        "sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s.",
+        dstPitch, srcPitch, width, height, MemcpyKindToStr(kind));
     rtError_t error = RT_ERROR_NONE;
     uint64_t remainSize = width * height;
     uint64_t realSize = 0UL;
@@ -6749,7 +6760,7 @@ rtError_t ApiImpl::MemcpyHostTask(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
     Stream* const stm)
 {
-    RT_LOG(RT_LOG_INFO, "memCopy for host task, kind=%d.", kind);
+    RT_LOG(RT_LOG_INFO, "memCopy for host task, kind=%s.", MemcpyKindToStr(kind));
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_DESC(curCtx, "Delivering a memory copy task on the host");
@@ -6800,7 +6811,9 @@ rtError_t ApiImpl::CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* 
 rtError_t ApiImpl::CmoAddrTaskLaunch(
     void* cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode, Stream* const stm, const uint32_t flag)
 {
-    RT_LOG(RT_LOG_DEBUG, "CmoAddr Task launch. opCode=%d, destMax is %" PRIu64 "(bytes)", cmoOpCode, destMax);
+    RT_LOG(
+        RT_LOG_DEBUG, "CmoAddr Task launch. opCode=%s, destMax is %" PRIu64 "(bytes)",
+        CmoOpCodeToString(cmoOpCode).c_str(), destMax);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6835,10 +6848,12 @@ rtError_t ApiImpl::SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMod
     const bool isValidFlag = ContextManage::CheckContextIsValid((curCtx));
     if (isValidFlag) {
         curCtx->Device_()->SetSatMode(floatOverflowMode);
-        RT_LOG(RT_LOG_INFO, "Set saturation mode to %u for device %u", floatOverflowMode, curCtx->Device_()->Id_());
+        RT_LOG(
+            RT_LOG_INFO, "Set saturation mode to %s for device %u", FloatOverflowModeToString(floatOverflowMode),
+            curCtx->Device_()->Id_());
     }
     Runtime::Instance()->SetSatMode(floatOverflowMode);
-    RT_LOG(RT_LOG_INFO, "Set saturation mode to %u for runtime process.", floatOverflowMode);
+    RT_LOG(RT_LOG_INFO, "Set saturation mode to %s for runtime process.", FloatOverflowModeToString(floatOverflowMode));
     return RT_ERROR_NONE;
 }
 
@@ -6964,10 +6979,12 @@ rtError_t ApiImpl::GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDeviceId
 rtError_t ApiImpl::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
     rtError_t error = RT_ERROR_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Start to set sys param opt, opt=%d.", configOpt);
+    RT_LOG(RT_LOG_DEBUG, "Start to set sys param opt, opt=%s.", SysParamOptToString(configOpt).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    RT_LOG(RT_LOG_INFO, "curCtx = %p, configOpt=%d, configVal=%lld.", curCtx, configOpt, configVal);
+    RT_LOG(
+        RT_LOG_INFO, "curCtx = %p, configOpt=%s, configVal=%lld.", curCtx, SysParamOptToString(configOpt).c_str(),
+        configVal);
 
     error = curCtx->CtxSetSysParamOpt(configOpt, configVal);
     ERROR_RETURN(error, "Set sys param opt failed, retCode=%#x.", error);
@@ -6980,7 +6997,9 @@ rtError_t ApiImpl::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* con
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const rtError_t ret = curCtx->CtxGetSysParamOpt(configOpt, configVal);
-    RT_LOG(RT_LOG_INFO, "ret=%#x, curCtx = %p, configOpt=%d, *configVal=%lld.", ret, curCtx, configOpt, (*configVal));
+    RT_LOG(
+        RT_LOG_INFO, "ret=%#x, curCtx = %p, configOpt=%s, *configVal=%lld.", ret, curCtx,
+        SysParamOptToString(configOpt).c_str(), (*configVal));
     return ret;
 }
 
@@ -7266,8 +7285,8 @@ rtError_t ApiImpl::ExportToShareableHandle(
         error = NpuDriver::SetMemShareHandleDisablePidVerify(*shareableHandle);
     }
     RT_LOG(
-        RT_LOG_INFO, "handleType=%d, flags=%#" PRIx64 ", shareableHandle=%" PRIu64 ".", handleType, flags,
-        *shareableHandle);
+        RT_LOG_INFO, "handleType=%s, flags=%#" PRIx64 ", shareableHandle=%" PRIu64 ".",
+        DrvMemHandleTypeToString(handleType), flags, *shareableHandle);
     return error;
 }
 
@@ -7297,7 +7316,7 @@ rtError_t ApiImpl::ExportToShareableHandleV2(
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
         error = NpuDriver::SetMemShareHandleDisablePidVerify(shareableHandleU64);
     }
-    RT_LOG(RT_LOG_INFO, "handleType=%d, flags=%#" PRIu64 "", handleType, flags);
+    RT_LOG(RT_LOG_INFO, "handleType=%s, flags=%#" PRIu64 "", MemSharedHandleTypeToString(handleType), flags);
     return error;
 }
 
@@ -7380,7 +7399,7 @@ rtError_t ApiImpl::SetPidToShareableHandleV2(
     error = NpuDriver::GetServerIdAndshareableHandle(handleType, shareableHandle, &serverId, &shareableHandleU64);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     error = NpuDriver::SetPidToShareableHandle(shareableHandleU64, pid, pidNum);
-    RT_LOG(RT_LOG_DEBUG, "handleType = %d pidNum = %d.", handleType, pidNum);
+    RT_LOG(RT_LOG_DEBUG, "handleType = %s pidNum = %d.", MemSharedHandleTypeToString(handleType), pidNum);
     return error;
 }
 
@@ -7621,7 +7640,7 @@ rtError_t ApiImpl::GetLastErr(rtLastErrLevel_t level)
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_EVENT, "level=%d err=%d.", level, ret);
+    RT_LOG(RT_LOG_EVENT, "level=%s err=%d.", LastErrLevelToString(level).c_str(), ret);
     return ret;
 }
 
@@ -7637,7 +7656,7 @@ rtError_t ApiImpl::PeekLastErr(rtLastErrLevel_t level)
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_EVENT, "level=%d err=%u.", level, ret);
+    RT_LOG(RT_LOG_EVENT, "level=%s err=%u.", LastErrLevelToString(level).c_str(), ret);
     return ret;
 }
 
@@ -7669,7 +7688,7 @@ static rtError_t UpdatePlatformRes(
             res["vector_core_cnt"] = std::to_string(value);
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "Unsupported resource type: %d", type);
+            RT_LOG(RT_LOG_ERROR, "Unsupported resource type: %s", DevResLimitTypeToString(type));
             return RT_ERROR_INVALID_VALUE;
     }
 
@@ -7714,7 +7733,7 @@ static rtError_t SetDeviceResLimitByFe(const uint32_t devId, const rtDevResLimit
 
 rtError_t ApiImpl::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value)
 {
-    RT_LOG(RT_LOG_INFO, "drv devId=%u, type=%d, value=%u.", devId, type, value);
+    RT_LOG(RT_LOG_INFO, "drv devId=%u, type=%s, value=%u.", devId, DevResLimitTypeToString(type), value);
     Runtime* const rt = Runtime::Instance();
     Device* const dev = rt->GetDevice(devId, static_cast<uint32_t>(RT_TSC_ID));
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
@@ -7724,8 +7743,8 @@ rtError_t ApiImpl::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitTy
         RT_LOG(
             RT_LOG_ERROR,
             "The value exceeds the total number of cores."
-            " drv devId=%u, type=%d, value=%u, total number of cores=%u.",
-            devId, type, value, initValue),
+            " drv devId=%u, type=%s, value=%u, total number of cores=%u.",
+            devId, DevResLimitTypeToString(type), value, initValue),
         "Setting the device resource limit", value, "value", RtFmtMsg("must be less than or equal to %u", initValue));
 
     const auto error = SetDeviceResLimitByFe(devId, type, value);
@@ -7757,7 +7776,7 @@ rtError_t ApiImpl::GetDeviceResLimit(const uint32_t devId, const rtDevResLimitTy
     Device* const dev = rt->GetDevice(devId, static_cast<uint32_t>(RT_TSC_ID));
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     *value = dev->GetResValue(type);
-    RT_LOG(RT_LOG_INFO, "type=%d, value=%u.", type, *value);
+    RT_LOG(RT_LOG_INFO, "type=%s, value=%u.", DevResLimitTypeToString(type), *value);
     return RT_ERROR_NONE;
 }
 
@@ -7825,13 +7844,15 @@ static rtError_t SetStreamResLimitByType(Stream* const stm, const rtDevResLimitT
         RT_LOG(
             RT_LOG_ERROR,
             "The value exceeds the total number of cores."
-            " drv devId=%u, type=%d, value=%u, total number of cores=%u.",
-            dev->Id_(), type, value, initValue),
+            " drv devId=%u, type=%s, value=%u, total number of cores=%u.",
+            dev->Id_(), DevResLimitTypeToString(type), value, initValue),
         __func__, value, "value", RtFmtMsg("must be less than or equal to %u", initValue));
 
     // There is no restriction that it must be less than the SetDeviceResLimit setting
     stm->InsertResLimit(type, value);
-    RT_LOG(RT_LOG_INFO, "drv devId=%u, stream_id=%d, type=%d, value=%u.", dev->Id_(), stm->Id_(), type, value);
+    RT_LOG(
+        RT_LOG_INFO, "drv devId=%u, stream_id=%d, type=%s, value=%u.", dev->Id_(), stm->Id_(),
+        DevResLimitTypeToString(type), value);
     return RT_ERROR_NONE;
 }
 
@@ -7876,7 +7897,9 @@ static rtError_t GetStreamResLimitByType(const Stream* const stm, const rtDevRes
         NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
         *value = dev->GetResValue(type);
     }
-    RT_LOG(RT_LOG_INFO, "stream_id=%d, resLimitFlag=%d, type=%d, value=%u.", stm->Id_(), resLimitFlag, type, *value);
+    RT_LOG(
+        RT_LOG_INFO, "stream_id=%d, resLimitFlag=%d, type=%s, value=%u.", stm->Id_(), resLimitFlag,
+        DevResLimitTypeToString(type), *value);
     return RT_ERROR_NONE;
 }
 
@@ -7932,7 +7955,9 @@ rtError_t ApiImpl::GetResInCurrentThread(const rtDevResLimitType_t type, uint32_
     const auto curResLimitStream = InnerThreadLocalContainer::GetCurrentResLimitStream();
     if (curResLimitStream != nullptr && curResLimitStream->GetResLimitFlag(type)) {
         *value = curResLimitStream->GetResValue(type);
-        RT_LOG(RT_LOG_INFO, "stream_id=%d, type=%d, value=%u.", curResLimitStream->Id_(), type, *value);
+        RT_LOG(
+            RT_LOG_INFO, "stream_id=%d, type=%s, value=%u.", curResLimitStream->Id_(), DevResLimitTypeToString(type),
+            *value);
     } else {
         Device* dev = InnerThreadLocalContainer::GetDevice();
         if (dev == nullptr) {
@@ -7942,7 +7967,7 @@ rtError_t ApiImpl::GetResInCurrentThread(const rtDevResLimitType_t type, uint32_
             NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
         }
         *value = dev->GetResValue(type);
-        RT_LOG(RT_LOG_INFO, "drv devId=%u, type=%d, value=%u.", dev->Id_(), type, *value);
+        RT_LOG(RT_LOG_INFO, "drv devId=%u, type=%s, value=%u.", dev->Id_(), DevResLimitTypeToString(type), *value);
     }
     return RT_ERROR_NONE;
 }
@@ -8053,10 +8078,9 @@ rtError_t ApiImpl::ParseMallocCfg(const rtMallocConfig_t* const cfg, rtConfigVal
                 cfgVal->deviceId = cfg->attrs[i].value.deviceId;
                 break;
             default:
-                RT_LOG(RT_LOG_ERROR, "invalid attribute %d", cfg->attrs[i].attr);
-                RT_LOG_OUTER_MSG_INVALID_PARAM(
-                    cfg->attrs[i].attr, "[" + std::to_string(RT_MEM_MALLOC_ATTR_RSV) + ", " +
-                                            std::to_string(RT_MEM_MALLOC_ATTR_DEVICE_ID) + "]");
+                RT_LOG(RT_LOG_ERROR, "invalid attribute %s", MallocAttrToString(cfg->attrs[i].attr));
+                RT_LOG_OUTER_MSG_WITH_FUNC(
+                    ErrorCode::EE1003, MallocAttrToString(cfg->attrs[i].attr), "cfg->attrs[i].attr", "[0, 2]");
                 return RT_ERROR_INVALID_VALUE;
         }
     }
@@ -8663,9 +8687,9 @@ rtError_t ApiImpl::MemcpyBatch(
             (realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, SetFailIndex(failIdx, i),
             "Batch synchronous memory copy",
             RtFmtMsg(
-                "Only H2D and D2H copy directions are supported. The destination location type is %s(%d),"
-                " and the source location type is %s(%d)",
-                MemLocationTypeToStr(realDstLoc), realDstLoc, MemLocationTypeToStr(realSrcLoc), realSrcLoc));
+                "Only H2D and D2H copy directions are supported. The destination location type is %s,"
+                " and the source location type is %s",
+                MemLocationTypeToString(realDstLoc).c_str(), MemLocationTypeToString(realSrcLoc).c_str()));
     }
     return NpuDriver::MemcpyBatch(reinterpret_cast<uint64_t*>(dsts), reinterpret_cast<uint64_t*>(srcs), sizes, count);
 }
@@ -8685,10 +8709,10 @@ rtError_t ApiImpl::CheckMemCpyAttr(
          ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking memory copy attributes", "dst",
         RtFmtMsg(
-            "The input memory type %s(%d) and the actual memory type %s(%d) do not match,"
+            "The input memory type %s and the actual memory type %s do not match,"
             " or the input device ID (device_id=%d) and the actual device ID (device_id=%d) do not match",
-            MemLocationTypeToStr(memAttr.dstLoc.type), memAttr.dstLoc.type, MemLocationTypeToStr(dstAttr.location.type),
-            dstAttr.location.type, memAttr.dstLoc.id, dstAttr.location.id));
+            MemLocationTypeToString(memAttr.dstLoc.type).c_str(),
+            MemLocationTypeToString(dstAttr.location.type).c_str(), memAttr.dstLoc.id, dstAttr.location.id));
 
     error = PtrGetAttributes(src, &srcAttr);
     ERROR_RETURN(error, "get src attribute failed, error=%#x.", error);
@@ -8700,10 +8724,10 @@ rtError_t ApiImpl::CheckMemCpyAttr(
          ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking memory copy attributes", "src",
         RtFmtMsg(
-            "The input memory type %s(%d) and the actual memory type %s(%d) do not match,"
+            "The input memory type %s and the actual memory type %s do not match,"
             " or the input device ID (device_id=%d) and the actual device ID (device_id=%d) do not match",
-            MemLocationTypeToStr(memAttr.srcLoc.type), memAttr.srcLoc.type, MemLocationTypeToStr(srcAttr.location.type),
-            srcAttr.location.type, memAttr.srcLoc.id, srcAttr.location.id));
+            MemLocationTypeToString(memAttr.srcLoc.type).c_str(),
+            MemLocationTypeToString(srcAttr.location.type).c_str(), memAttr.srcLoc.id, srcAttr.location.id));
 
     return RT_ERROR_NONE;
 }
@@ -8730,17 +8754,17 @@ rtError_t ApiImpl::ValidateMemCpyParamsAndAttributes(
     realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error,
-        "check attributes failed, attributes of src locationType=%d, dst locationType=%d, "
-        "actually dst locationType=%d(%s), src locationType=%d(%s).",
-        memAttr.srcLoc.type, memAttr.dstLoc.type, realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
-        MemLocationTypeToStr(realSrcLoc));
+        "check attributes failed, attributes of src locationType=%s, dst locationType=%s, "
+        "actually dst locationType=%s, src locationType=%s.",
+        MemLocationTypeToString(memAttr.srcLoc.type).c_str(), MemLocationTypeToString(memAttr.dstLoc.type).c_str(),
+        MemLocationTypeToString(realDstLoc).c_str(), MemLocationTypeToString(realSrcLoc).c_str());
 
     COND_RETURN_AND_MSG_OUTER(
         (realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Checking memory copy params",
         RtFmtMsg(
-            "Only H2D and D2H copy directions are supported. The destination location type is %s(%d),"
-            " and the source location type is %s(%d)",
-            MemLocationTypeToStr(realDstLoc), realDstLoc, MemLocationTypeToStr(realSrcLoc), realSrcLoc));
+            "Only H2D and D2H copy directions are supported. The destination location type is %s,"
+            " and the source location type is %s",
+            MemLocationTypeToString(realDstLoc).c_str(), MemLocationTypeToString(realSrcLoc).c_str()));
     return error;
 }
 
@@ -8810,8 +8834,8 @@ rtError_t ApiImpl::LoopMemcpyAsync(
 
         COND_RETURN_AND_MSG_INNER(
             (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-            "Failed to copy memory asynchronously, count=%zu, kind=%s, retCode=%#x.", sizes[i],
-            MemcpyKindToString(kind).c_str(), static_cast<uint32_t>(error));
+            "Failed to copy memory asynchronously, count=%zu, kind=%s, retCode=%#x.", sizes[i], MemcpyKindToStr(kind),
+            static_cast<uint32_t>(error));
     }
 
     return error;
@@ -9172,7 +9196,11 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
             break;
         }
         default: {
-            RT_LOG(RT_LOG_WARNING, "Invalid attrType attrType=%d", attrType);
+            if (attrType == RT_FUNCTION_ATTR_MAX) {
+                RT_LOG(RT_LOG_WARNING, "Invalid attrType=FUNCTION_ATTR_MAX(4)");
+            } else {
+                RT_LOG(RT_LOG_WARNING, "Invalid attrType=UNKNOWN(%d)", static_cast<int32_t>(attrType));
+            }
             break;
         }
     }
@@ -9512,8 +9540,9 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
         case RT_TASK_EVENT_RECORD:
         case RT_TASK_EVENT_WAIT:
         case RT_TASK_EVENT_RESET:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Setting task parameters", params->type, "RT_TASK_KERNEL or RT_TASK_VALUE_WRITE or RT_TASK_VALUE_WAIT");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting task parameters", TaskTypeToString(params->type), "params->type",
+                "TASK_KERNEL(1) or TASK_VALUE_WRITE(5) or TASK_VALUE_WAIT(6)");
             error = RT_ERROR_INVALID_VALUE;
             break;
         case RT_TASK_VALUE_WRITE:
@@ -9523,8 +9552,9 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
             error = UpdateWaitValueTaskParams(taskInfo, params);
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Setting task parameters", params->type, "[1, " + std::to_string(RT_TASK_VALUE_WAIT) + "]");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Setting task parameters", TaskTypeToString(params->type), "params->type",
+                "TASK_KERNEL(1) or TASK_VALUE_WRITE(5) or TASK_VALUE_WAIT(6)");
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -9532,8 +9562,8 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
                                 , "task set params failed");
     taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);
     RT_LOG(
-        RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%d", taskInfo->stream->Id_(),
-        taskInfo->id, taskInfo->typeName, taskInfo->type, params->type);
+        RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%s", taskInfo->stream->Id_(),
+        taskInfo->id, taskInfo->typeName, taskInfo->type, TaskTypeToString(params->type).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -9558,8 +9588,8 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
 
     if (captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::UPDATING) {
         RT_LOG(
-            RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
-            captureModel->GetCaptureModelStatus());
+            RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%s", captureModel->Id_(),
+            CaptureModelStatusToString(captureModel->GetCaptureModelStatus()).c_str());
         return RT_ERROR_MODEL_UPDATE_FAILED;
     }
 
@@ -9795,7 +9825,7 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
     size_t freeSize = 0UL;
     size_t totalSize = 0UL;
 
-    RT_LOG(RT_LOG_INFO, "get device info by attr misc, deviceId=%u attr=%d", deviceId, attr);
+    RT_LOG(RT_LOG_INFO, "get device info by attr misc, deviceId=%u attr=%s", deviceId, DevAttrToString(attr));
 
     uint32_t userDeviceId = 0U;
     rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(static_cast<uint32_t>(deviceId), &userDeviceId);
@@ -9845,17 +9875,15 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
             error = GetDeviceVirtualInfo(deviceId, val);
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                attr, "RT_DEV_ATTR_CUBE_CORE_NUM(102), RT_DEV_ATTR_WARP_SIZE(202),"
-                      " RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE(203), RT_DEV_ATTR_UBUF_PER_VECTOR_CORE(204), "
-                      "RT_DEV_ATTR_MAX_GRID_DIM_X(205),"
-                      " RT_DEV_ATTR_MAX_GRID_DIM_Y(206), RT_DEV_ATTR_MAX_GRID_DIM_Z(207), "
-                      "RT_DEV_ATTR_MAX_BLOCK_PER_GRID(208),"
-                      " RT_DEV_ATTR_MAX_THREADS_PER_BLOCK(209), RT_DEV_ATTR_MAX_BLOCK_DIM_X(210), "
-                      "RT_DEV_ATTR_MAX_BLOCK_DIM_Y(211),"
-                      " RT_DEV_ATTR_MAX_BLOCK_DIM_Z(212), RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE(301), "
-                      "RT_DEV_ATTR_L2_CACHE_SIZE(302),"
-                      " RT_DEV_ATTR_NPU_ARCH(601), or RT_DEV_ATTR_IS_VIRTUAL(501)");
+            RT_LOG_OUTER_MSG_WITH_FUNC(
+                ErrorCode::EE1003, DevAttrToString(attr), "attr",
+                "DEV_ATTR_CUBE_CORE_NUM(102), DEV_ATTR_WARP_SIZE(202), "
+                "DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE(203), DEV_ATTR_UBUF_PER_VECTOR_CORE(204), "
+                "DEV_ATTR_MAX_GRID_DIM_X(205), DEV_ATTR_MAX_GRID_DIM_Y(206), DEV_ATTR_MAX_GRID_DIM_Z(207), "
+                "DEV_ATTR_MAX_BLOCK_PER_GRID(208), DEV_ATTR_MAX_THREADS_PER_BLOCK(209), "
+                "DEV_ATTR_MAX_BLOCK_DIM_X(210), DEV_ATTR_MAX_BLOCK_DIM_Y(211), DEV_ATTR_MAX_BLOCK_DIM_Z(212), "
+                "DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE(301), DEV_ATTR_L2_CACHE_SIZE(302), DEV_ATTR_NPU_ARCH(601), or "
+                "DEV_ATTR_IS_VIRTUAL(501)");
             error = RT_ERROR_INVALID_VALUE;
             break;
     }

@@ -11,9 +11,34 @@
 #include "acl/acl_base.h"
 #include "acl/acl_rt.h"
 #include "log_inner.h"
+#include "securec.h"
 #include "runtime/dev.h"
 #include "runtime/mem.h"
 #include "model_config_rt.h"
+
+#define ACL_MEMCPY_KIND_DESC_LEN 48U
+
+static const char* GetUnsupportedMemcpyKindDesc(
+    const aclrtMemcpyKind kind, char* const unknownDesc, const size_t unknownDescLen)
+{
+    switch (kind) {
+        case ACL_MEMCPY_DEFAULT:
+            return "MEMCPY_DEFAULT(4)";
+        case ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE:
+            return "MEMCPY_HOST_TO_BUF_TO_DEVICE(5)";
+        case ACL_MEMCPY_INNER_DEVICE_TO_DEVICE:
+            return "MEMCPY_INNER_DEVICE_TO_DEVICE(6)";
+        case ACL_MEMCPY_INTER_DEVICE_TO_DEVICE:
+            return "MEMCPY_INTER_DEVICE_TO_DEVICE(7)";
+        default:
+            if ((unknownDesc == NULL) || (unknownDescLen == 0U)) {
+                return "UNKNOWN";
+            }
+            (void)snprintf_s(unknownDesc, unknownDescLen, unknownDescLen - 1U, "UNKNOWN(%d)", (int32_t)kind);
+            unknownDesc[unknownDescLen - 1U] = '\0';
+            return unknownDesc;
+    }
+}
 
 static aclError GetAlignedSize(const size_t size, size_t* alignedSize)
 {
@@ -88,7 +113,8 @@ aclError aclrtMemcpy(void* dst, size_t destMax, const void* src, size_t count, a
     rtMemcpyKind_t rtKind = RT_MEMCPY_RESERVED;
     const aclError ret = MemcpyKindTranslate(kind, &rtKind);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_INNER_ERROR("invalid kind[%d]", (int32_t)(kind));
+        char kindDesc[ACL_MEMCPY_KIND_DESC_LEN] = {0};
+        ACL_LOG_INNER_ERROR("invalid kind[%s]", GetUnsupportedMemcpyKindDesc(kind, kindDesc, sizeof(kindDesc)));
         return ret;
     }
     return rtMemcpy(dst, destMax, src, count, rtKind);

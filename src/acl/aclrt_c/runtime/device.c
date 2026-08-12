@@ -9,12 +9,32 @@
  */
 #include "acl/acl_rt.h"
 #include "log_inner.h"
+#include "securec.h"
 #include "runtime/rt.h"
 #include "ge_executor_rt.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define ACL_ENUM_DESC_LEN 32U
+
+static const char* GetRunModeDesc(const aclrtRunMode runMode, char* const unknownDesc, const size_t unknownDescLen)
+{
+    switch (runMode) {
+        case ACL_DEVICE:
+            return "DEVICE(0)";
+        case ACL_HOST:
+            return "HOST(1)";
+        default:
+            if ((unknownDesc == NULL) || (unknownDescLen == 0U)) {
+                return "UNKNOWN";
+            }
+            (void)snprintf_s(unknownDesc, unknownDescLen, unknownDescLen - 1U, "UNKNOWN(%d)", (int32_t)runMode);
+            unknownDesc[unknownDescLen - 1U] = '\0';
+            return unknownDesc;
+    }
+}
 
 aclError aclrtSetDevice(int32_t deviceId)
 {
@@ -74,7 +94,8 @@ aclError aclrtGetRunMode(aclrtRunMode* runMode)
         return ACL_SUCCESS;
     }
     *runMode = ACL_HOST;
-    ACL_LOG_INFO("get runMode success, runMode = %d.", (int32_t)(*runMode));
+    char runModeDesc[ACL_ENUM_DESC_LEN] = {0};
+    ACL_LOG_INFO("get runMode success, runMode = %s.", GetRunModeDesc(*runMode, runModeDesc, sizeof(runModeDesc)));
     return ACL_SUCCESS;
 }
 #if defined(__cplusplus)

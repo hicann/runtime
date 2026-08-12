@@ -471,7 +471,7 @@ rtError_t MemcpyAsyncTaskInitV2(
         error = ConvertCpyType(taskInfo, kind, srcAddr, dst);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to convert the D2D asynchronous copy typeD2D, retCode=%#x, kind=%s.", error,
-            MemcpyKindToString(static_cast<rtMemcpyKind_t>(kind)).c_str());
+            MemcpyKindToStr(static_cast<rtMemcpyKind_t>(kind)));
     } else {
         // reserve
     }

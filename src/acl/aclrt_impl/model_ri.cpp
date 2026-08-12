@@ -17,6 +17,7 @@
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
+#include "utils/data_type_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +49,7 @@ aclError aclmdlRIDestroyImpl(aclmdlRI modelRI)
 aclError aclmdlRICaptureBeginImpl(aclrtStream stream, aclmdlRICaptureMode mode)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRICaptureBegin);
-    ACL_LOG_INFO("start to execute aclmdlRICaptureBegin, mode is %d", static_cast<int32_t>(mode));
+    ACL_LOG_INFO("start to execute aclmdlRICaptureBegin, mode is %s", acl::GetCaptureModeDesc(mode));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
         rtStreamBeginCapture(static_cast<rtStream_t>(stream), static_cast<rtStreamCaptureMode>(mode)),
@@ -137,13 +138,14 @@ aclError aclmdlRICaptureThreadExchangeModeImpl(aclmdlRICaptureMode* mode)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRICaptureThreadExchangeMode);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(mode);
-    ACL_LOG_INFO("start to execute aclmdlRICaptureThreadExchangeMode, input mode is %d", static_cast<int32_t>(*mode));
+    ACL_LOG_INFO(
+        "start to execute aclmdlRICaptureThreadExchangeMode, input mode is %s", acl::GetCaptureModeDesc(*mode));
     rtStreamCaptureMode rtMode = static_cast<rtStreamCaptureMode>(*mode);
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtThreadExchangeCaptureMode(&rtMode), rtThreadExchangeCaptureMode);
     *mode = static_cast<aclmdlRICaptureMode>(rtMode);
 
     ACL_LOG_INFO(
-        "successfully execute aclmdlRICaptureThreadExchangeMode, output mode is %d", static_cast<int32_t>(*mode));
+        "successfully execute aclmdlRICaptureThreadExchangeMode, output mode is %s", acl::GetCaptureModeDesc(*mode));
     return ACL_SUCCESS;
 }
 

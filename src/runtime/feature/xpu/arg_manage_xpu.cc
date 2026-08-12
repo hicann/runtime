@@ -97,7 +97,7 @@ rtError_t XpuArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, voi
     if (handle != nullptr) {
         error = handle->argsAlloc->H2DMemCopy(result->kerArgs, args, size);
         ERROR_RETURN_MSG_INNER(
-            error, "H2DMemCopy failed, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_HOST).c_str(),
+            error, "H2DMemCopy failed, kind=%s, retCode=%#x.", MemcpyKindToStr(RT_MEMCPY_HOST_TO_HOST),
             static_cast<uint32_t>(error));
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));

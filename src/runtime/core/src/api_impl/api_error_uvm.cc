@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include "enum_desc.hpp"
 #include "osal.hpp"
 #include "global_state_manager.hpp"
 
@@ -114,8 +115,8 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(
     const rtError_t error = impl_->MemManagedPrefetchAsync(ptr, size, location, flags, curStm);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory prefetch async failed, ret=%d, size=%u, loc_type=%u, loc_id=%d.", static_cast<int32_t>(error), size,
-        static_cast<uint32_t>(location.type), location.id);
+        "Memory prefetch async failed, ret=%d, size=%u, loc_type=%s, loc_id=%d.", static_cast<int32_t>(error), size,
+        ManagedMemLocationTypeToString(location.type).c_str(), location.id);
     return error;
 }
 
@@ -195,8 +196,9 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(
         ptrs, sizes, count, prefetchLocs, prefetchLocIdxs, numPrefetchLocs, flags, curStm);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory prefetch batch async failed, ret=%d, sizes[0]=%u, loc[0].type=%u, loc[0].id=%d.",
-        static_cast<int32_t>(error), sizes[0], static_cast<uint32_t>(prefetchLocs[0].type), prefetchLocs[0].id);
+        "Memory prefetch batch async failed, ret=%d, sizes[0]=%u, loc[0].type=%s, loc[0].id=%d.",
+        static_cast<int32_t>(error), sizes[0], ManagedMemLocationTypeToString(prefetchLocs[0].type).c_str(),
+        prefetchLocs[0].id);
     return error;
 }
 

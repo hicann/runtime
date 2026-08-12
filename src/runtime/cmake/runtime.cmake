@@ -84,6 +84,7 @@ set(libruntime_v100_task_src_files
 )
 
 set(libruntime_api_src_files
+    ${RUNTIME_API_ENUM_DESC_SRC_FILES}
     ${RUNTIME_DIR}/src/runtime/api/api_c.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
@@ -286,6 +287,8 @@ set(xpu_tprt_src_file
 )
 
 set(libruntime_v100_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
+    ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc

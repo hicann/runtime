@@ -91,7 +91,7 @@ rtError_t H2HCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint32_
             COND_RETURN_ERROR_MSG_CALL(
                 ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_INVALID_VALUE,
                 "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. size=%u, offset=%u, kind=%s.",
-                __func__, ret, strerror(ret), size, offset, MemcpyKindToString(RT_MEMCPY_HOST_TO_HOST).c_str());
+                __func__, ret, strerror(ret), size, offset, MemcpyKindToStr(RT_MEMCPY_HOST_TO_HOST));
             offset += curSize;
         }
     }

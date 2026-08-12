@@ -376,6 +376,8 @@ set(xpu_tprt_api_file
 )
 
 set(libruntime_cmodel_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
+    ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
@@ -501,6 +503,8 @@ set(libruntime_cmodel_src_files
 )
 
 set(libruntime_cmodel_v200_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
+    ${RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc

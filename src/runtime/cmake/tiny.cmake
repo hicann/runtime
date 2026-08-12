@@ -77,6 +77,7 @@ set(libruntime_v100_task_src_files
 )
 
 set(libruntime_api_src_files
+    ${RUNTIME_API_ENUM_DESC_SRC_FILES}
     ${RUNTIME_DIR}/src/runtime/api/api_c.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
@@ -210,6 +211,7 @@ set(libruntime_api_src_files_include_for_tiny
 )
 
 set(libruntime_common_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
@@ -355,6 +357,7 @@ set_source_files_properties(${libruntime_aclrt_impl_src_files}
 
 #------------------------- runtime v100 -------------------------
 set(libruntime_v100_src_files
+    ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc

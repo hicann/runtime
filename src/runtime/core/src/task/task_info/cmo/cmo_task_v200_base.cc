@@ -11,6 +11,7 @@
 #include "stars_david.hpp"
 #include "stream.hpp"
 #include "device.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -132,8 +133,8 @@ void PrintErrorInfoForDavidCmoTask(TaskInfo* taskInfo, const uint32_t devId)
         sizeof(rtDavidCmoAddrInfo), RT_MEMCPY_DEVICE_TO_HOST);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Memcpy failed, size=%lu(Bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
-            sizeof(rtDavidCmoAddrInfo), static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+            RT_LOG_ERROR, "Memcpy failed, size=%lu(Bytes), type=%s, retCode=%#x", sizeof(rtDavidCmoAddrInfo),
+            MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
         return;
     }
 

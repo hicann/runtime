@@ -59,6 +59,7 @@
 #include "stream_mem_pool.hpp"
 #include "api_impl_soma.hpp"
 #include "aicpu_timeout_manager.h"
+#include "enum_desc.hpp"
 #include "device_error_proc.hpp"
 #include "task.hpp"
 #include "heterogenous.h"
@@ -1650,8 +1651,8 @@ rtError_t Runtime::MallocProgramAndReg(const rtDevBinary_t* const bin, Program**
         case RT_DEV_BINARY_MAGIC_PLAIN_AIVEC:
             prog = new (std::nothrow) PlainProgram(kernelAttrType);
             RT_LOG(
-                RT_LOG_INFO, "new PlainProgram ok, magic=%#x, kernelAttrType=%d, Runtime_alloc_size=%zu", bin->magic,
-                kernelAttrType, sizeof(PlainProgram));
+                RT_LOG_INFO, "new PlainProgram ok, magic=%#x, kernelAttrType=%s, Runtime_alloc_size=%zu", bin->magic,
+                KernelAttrTypeToString(kernelAttrType).c_str(), sizeof(PlainProgram));
             break;
         case RT_DEV_BINARY_MAGIC_ELF:
         case RT_DEV_BINARY_MAGIC_ELF_AICUBE:
@@ -1659,8 +1660,8 @@ rtError_t Runtime::MallocProgramAndReg(const rtDevBinary_t* const bin, Program**
         case RT_DEV_BINARY_MAGIC_ELF_AIVEC:
             prog = new (std::nothrow) ElfProgram(kernelAttrType);
             RT_LOG(
-                RT_LOG_INFO, "new ElfProgram ok, magic=%#x, kernelAttrType=%d, Runtime_alloc_size=%zu", bin->magic,
-                kernelAttrType, sizeof(ElfProgram));
+                RT_LOG_INFO, "new ElfProgram ok, magic=%#x, kernelAttrType=%s, Runtime_alloc_size=%zu", bin->magic,
+                KernelAttrTypeToString(kernelAttrType).c_str(), sizeof(ElfProgram));
             break;
         default:
             RT_LOG_CALL_MSG(ERR_MODULE_GE, "Program register failed, magic error, magic: %#x.", bin->magic);
@@ -4937,8 +4938,8 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
 
     if (error != RT_ERROR_NONE) {
         RT_LOG(
-            RT_LOG_ERROR, "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x", size,
-            static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            RT_LOG_ERROR, "Memcpy failed, size=%u(bytes), type=%s, retCode=%#x", size,
+            MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
         BinaryMemFree(device, prog, alignSize);
         return error;
     }
@@ -5551,7 +5552,7 @@ void Runtime::ProcHBMRas(const uint32_t devId)
     // wait next cycle, check cqe error
     rtDeviceStatus deviceStatus = RT_DEVICE_STATUS_NORMAL;
     rtError_t error = GetWatchDogDevStatus(devId, &deviceStatus);
-    RT_LOG(RT_LOG_ERROR, "get WatchDogDevStatus, ret=%u.", deviceStatus);
+    RT_LOG(RT_LOG_ERROR, "get WatchDogDevStatus, ret=%s.", DeviceStatusToString(deviceStatus).c_str());
     if (error == RT_ERROR_NONE && deviceStatus == RT_DEVICE_STATUS_NORMAL) {
         RtHbmRasInfo rasInfo = {};
         rasInfo.eventId = HBM_ECC_EVENT_ID;
@@ -5736,7 +5737,9 @@ void Runtime::ProcPageFault(Device* const device, const uint32_t value)
     const uint32_t devId = device->Id_();
     rtDeviceStatus deviceStatus = RT_DEVICE_STATUS_NORMAL;
     const rtError_t error = GetWatchDogDevStatus(devId, &deviceStatus);
-    RT_LOG(RT_LOG_ERROR, "ProcPageFault start, drv devId=%u, get WatchDogDevStatus, ret=%u.", devId, deviceStatus);
+    RT_LOG(
+        RT_LOG_ERROR, "ProcPageFault start, drv devId=%u, get WatchDogDevStatus, ret=%s.", devId,
+        DeviceStatusToString(deviceStatus).c_str());
     if (error == RT_ERROR_NONE && deviceStatus == RT_DEVICE_STATUS_NORMAL) {
         device->SetDevicePageFault(true);
         RT_LOG(RT_LOG_ERROR, "PageFault occurred, drv devId=%u, current page fault count=%u.", devId, value);

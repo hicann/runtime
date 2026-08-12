@@ -14,6 +14,7 @@
 #include "device.hpp"
 #include "model.hpp"
 #include "runtime_task_manager.h"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -192,8 +193,8 @@ void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId)
     if (error != RT_ERROR_NONE) {
         (void)dev->Driver_()->HostMemFree(hostMemSrc);
         RT_LOG(
-            RT_LOG_ERROR, "Memcpy failed, size=%lu(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
-            rtCmoAddrInfoSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+            RT_LOG_ERROR, "Memcpy failed, size=%lu(bytes), type=%s, retCode=%#x", rtCmoAddrInfoSize,
+            MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
         return;
     }
 

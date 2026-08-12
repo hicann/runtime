@@ -659,7 +659,7 @@ aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo* taskInfo, const a
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(taskInfo);
     aclDataType type = taskInfo->dataType;
     if (kMapDataType.count(type) == 0) {
-        ACL_LOG_ERROR("[Check][param]param dataType [%d] is invalid.", static_cast<int32_t>(type));
+        ACL_LOG_ERROR("[Check][param]param dataType [%s] is invalid.", acl::GetDataTypeDesc(type));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),

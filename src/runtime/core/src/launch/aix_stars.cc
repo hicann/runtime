@@ -26,6 +26,7 @@
 #include "stream.hpp"
 #include "kernel_utils.hpp"
 #include "task.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -80,7 +81,8 @@ rtError_t InternalLaunchKernelPrepare(
                  (tsId == 1U)) ||
                     ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)),
                 RT_ERROR_PROGRAM_MACHINE_TYPE,
-                "Launch kernel failed, current ts doesn't support the task! type=%d, tsid=%u.", kernelAttrType, tsId);
+                "Launch kernel failed, current ts doesn't support the task! type=%s, tsid=%u.",
+                KernelAttrTypeToString(kernelAttrType).c_str(), tsId);
         }
         addr1 = 0ULL;
         addr2 = 0ULL;
@@ -105,12 +107,13 @@ rtError_t InternalLaunchKernelPrepare(
     kernelAttrType = registeredKernel->GetKernelAttrType();
     COND_RETURN_ERROR_MSG_INNER(
         static_cast<uint32_t>(kernelAttrType) == RT_KERNEL_ATTR_TYPE_INVALID, RT_ERROR_PROGRAM_MACHINE_TYPE,
-        "Launch kernel failed, kernelAttrType failed! invalid type, current kernelAttrType=%d,"
-        " valid kernelAttrType range is [%u, %u].",
-        kernelAttrType, RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_ATTR_TYPE_MIX);
+        "Launch kernel failed, kernelAttrType failed! invalid type, current kernelAttrType=%s,"
+        " valid kernelAttrType range is [%d, %d].",
+        KernelAttrTypeToString(kernelAttrType).c_str(), RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_ATTR_TYPE_MIX);
     COND_RETURN_ERROR_MSG_INNER(
         kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%d.", kernelAttrType);
+        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%s.",
+        KernelAttrTypeToString(kernelAttrType).c_str());
 
     if (device->GetDevProperties().enabledTSNum == ENABLED_TS_NUM_2) {
         const uint32_t tsId = device->DevGetTsId();
@@ -119,7 +122,8 @@ rtError_t InternalLaunchKernelPrepare(
              (tsId == 1U)) ||
                 ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)),
             RT_ERROR_PROGRAM_MACHINE_TYPE,
-            "Launch kernel failed, current ts doesn't support the task! type=%d, tsid=%u.", kernelAttrType, tsId);
+            "Launch kernel failed, current ts doesn't support the task! type=%s, tsid=%u.",
+            KernelAttrTypeToString(kernelAttrType).c_str(), tsId);
     }
     mdl = ctx->GetModule(prog);
     TIMESTAMP_END(rtKernelLaunch_GetModule);
@@ -163,11 +167,12 @@ rtError_t InternalUpdateTaskPrepare(
         RT_LOG(
             RT_LOG_ERROR,
             "check kernel type failed, device_id=%u, stream_id=%d, task_id=%hu, "
-            "old mixType=%u, funcType=%u, kernelAttrType=%d, "
-            "new mixType=%u, funcType=%u, kernelAttrType=%d.",
+            "old mixType=%u, funcType=%u, kernelAttrType=%s, "
+            "new mixType=%u, funcType=%u, kernelAttrType=%s.",
             device->Id_(), updateTask->stream->Id_(), updateTask->id, updateTask->u.aicTaskInfo.kernel->GetMixType(),
-            updateTask->u.aicTaskInfo.kernel->GetFuncType(), updateTask->u.aicTaskInfo.kernel->GetKernelAttrType(),
-            kernel->GetMixType(), kernel->GetFuncType(), kernel->GetKernelAttrType());
+            updateTask->u.aicTaskInfo.kernel->GetFuncType(),
+            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), kernel->GetMixType(),
+            kernel->GetFuncType(), KernelAttrTypeToString(kernel->GetKernelAttrType()).c_str());
         return RT_ERROR_KERNEL_TYPE;
     }
 
@@ -616,8 +621,8 @@ rtError_t StreamLaunchKernelV2(
     }
     error = CheckMixKernelValid(mixType, kernelPc2);
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_FREE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelAttrType, error);
+        error, ERROR_FREE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%s, retCode=%#x.",
+        stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(), error);
 
     COND_PROC(
         ((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))),
@@ -626,8 +631,8 @@ rtError_t StreamLaunchKernelV2(
     AicTaskInit(
         kernTask, kernel, kernelAttrType, static_cast<uint16_t>(coreDim), extendAgrs->taskCfg, isNeedAllocSqeDevBuf);
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_FREE, "Init kernel task failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelAttrType, error);
+        error, ERROR_FREE, "Init kernel task failed, stream_id=%d, task_id=%hu, kernelAttrType=%s, retCode=%#x.",
+        stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(), error);
 
     aicTask = &kernTask->u.aicTaskInfo;
     if (copyFlag) {
@@ -644,14 +649,15 @@ rtError_t StreamLaunchKernelV2(
 
     RT_LOG(
         RT_LOG_INFO,
-        "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, "
+        "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, "
         "arg_size=%u, coreDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
         "prefetchCnt1=%u, prefetchCnt2=%u, isNoNeedH2DCopy=%u.",
-        device->Id_(), stm->Id_(), kernTask->id, kernelAttrType, kernel->Name_().c_str(), argsInfo->argsSize, coreDim,
-        kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
-        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
-        aicTask->inputArgsSize.atomicIndex, prefetchCnt1, prefetchCnt2, argsInfo->isNoNeedH2DCopy);
+        device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
+        kernel->Name_().c_str(), argsInfo->argsSize, coreDim, kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1,
+        kernelPc2, mixType, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, prefetchCnt1, prefetchCnt2,
+        argsInfo->isNoNeedH2DCopy);
 
     TIMESTAMP_BEGIN(rtLaunchKernel_SubMit);
     error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr);
@@ -758,8 +764,8 @@ rtError_t StreamLaunchKernelV1(
     }
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelAttrType, error);
+        error, ERROR_RECYCLE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%s, retCode=%#x.",
+        stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(), error);
 
     COND_PROC(
         ((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))),
@@ -784,13 +790,14 @@ rtError_t StreamLaunchKernelV1(
 
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, arg_size=%u, "
+        "device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, arg_size=%u, "
         "taskRation=%u, funcType=%u, coreDim=%u, mixType=%hhu, addr1=0x%llx, addr2=0x%llx, stubFunc=%p, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, isNoNeedH2DCopy=%u, "
         "isUpdateSinkSqe=%u.",
-        device->Id_(), stm->Id_(), kernTask->id, kernelAttrType, registeredKernel->Name_().c_str(), argsInfo->argsSize,
-        registeredKernel->GetTaskRation(), registeredKernel->GetFuncType(), coreDim, mixType, addr1, addr2, stubFunc,
-        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
+        registeredKernel->Name_().c_str(), argsInfo->argsSize, registeredKernel->GetTaskRation(),
+        registeredKernel->GetFuncType(), coreDim, mixType, addr1, addr2, stubFunc, aicTask->comm.kernelFlag,
+        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex, argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
     error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, prog);
@@ -901,8 +908,8 @@ rtError_t StreamLaunchKernelWithHandle(
 
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_FREE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelAttrType, error);
+        error, ERROR_FREE, "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%s, retCode=%#x.",
+        stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(), error);
 
     COND_PROC(
         ((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))),
@@ -935,11 +942,11 @@ rtError_t StreamLaunchKernelWithHandle(
 
     RT_LOG(
         RT_LOG_INFO,
-        "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, "
+        "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, "
         "arg_size=%u, coreDim=%u, mixType=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
         "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
-        device->Id_(), stm->Id_(), kernTask->id, kernelAttrType,
+        device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
         (tilingKey == DEFAULT_TILING_KEY) ? "" : registeredKernel->Name_().c_str(), argsInfo->argsSize, coreDim,
         mixType, taskRation, funcType, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
         aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,

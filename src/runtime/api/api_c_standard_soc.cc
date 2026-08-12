@@ -12,6 +12,7 @@
 #include "api_handle_guard.h"
 #include "base.hpp"
 #include "device_enum_desc.hpp"
+#include "enum_desc.hpp"
 #include "stream_enum_desc.hpp"
 #include "prof_ctrl_callback_manager.hpp"
 #include "error_message_manage.hpp"
@@ -843,9 +844,8 @@ rtError_t rtCmoAsync(void* srcAddrPtr, size_t srcLen, rtCmoOpCode_t cmoType, rtS
     const bool isSupport = (cmoType == RT_CMO_PREFETCH) || (cmoType == RT_CMO_WRITEBACK) ||
                            (cmoType == RT_CMO_INVALID) || (cmoType == RT_CMO_FLUSH);
     COND_RETURN_WARN(
-        !isSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT,
-        "cmoType(%d) does not support, support[PREFETCH, WRITEBACK, INVALID, FLUSH], return.",
-        static_cast<int32_t>(cmoType));
+        !isSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "cmoType %s does not support, support[%s, %s, %s, %s], return.",
+        CmoOpCodeToString(cmoType).c_str(), "CMO_PREFETCH(6)", "CMO_WRITEBACK(7)", "CMO_INVALID(8)", "CMO_FLUSH(9)");
 
     NULL_PTR_RETURN_MSG_OUTER(srcAddrPtr, ACL_ERROR_RT_PARAM_INVALID);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((srcLen == 0), ACL_ERROR_RT_PARAM_INVALID, srcLen, "greater than 0");
@@ -960,9 +960,9 @@ rtError_t rtMemcpyAsyncWithOffset(
         RT_LOG(RT_LOG_INFO, "cnt is 0, no need to copy memory async with offset, just return success.");
         return ACL_RT_SUCCESS;
     }
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_INVALID_VALUE, kind,
-        "RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_INVALID_VALUE, MemcpyNewKindToString(kind), "kind",
+        "MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)");
     return rtMemcpyD2DAddrAsync(
         RtPtrToPtr<void*>(dst), dstMax, dstDataOffset, RtPtrToPtr<void*>(src), cnt, srcDataOffset, stm);
 }

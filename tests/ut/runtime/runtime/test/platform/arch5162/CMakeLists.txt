@@ -106,6 +106,9 @@ set(runtimeut_src_api_impl_list
 )
 
 set(runtimeut_src_common_list
+    ${TOP_DIR}/src/runtime/core/src/common/enum_desc.cc
+    ${TOP_DIR}/src/runtime/core/src/common/api_enum_desc.cc
+    ${TOP_DIR}/src/runtime/core/src/common/optional_enum_desc.cc
     ${TOP_DIR}/src/runtime/core/src/common/args_buffer_guard.cc
     ${TOP_DIR}/src/runtime/core/src/common/context_data_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/dev_info_manage.cc

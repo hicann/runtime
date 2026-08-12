@@ -106,8 +106,7 @@ rtError_t PcieArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, vo
         }
         error = handle->argsAlloc->H2DMemCopy(dst, args, static_cast<uint64_t>(size));
         ERROR_RETURN(
-            error, "H2DMemCopy failed, kind=%s, retCode=%#x.", MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(),
-            error);
+            error, "H2DMemCopy failed, kind=%s, retCode=%#x.", MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), error);
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
         COND_RETURN_ERROR_MSG_CALL(

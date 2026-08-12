@@ -72,6 +72,8 @@ static inline std::string StreamCaptureModeToString(const rtStreamCaptureMode mo
     return desc;
 }
 
+std::string StreamCaptureStatusToString(const rtStreamCaptureStatus status);
+
 static inline std::string CaptureEventModeToString(const uint8_t mode)
 {
     std::string desc;

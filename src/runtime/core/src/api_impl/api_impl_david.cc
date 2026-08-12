@@ -29,6 +29,7 @@
 #include "event_david.hpp"
 #include "model_c.hpp"
 #include "cond_c.hpp"
+#include "cond_enum_desc.hpp"
 #include "label_c.hpp"
 #include "label.hpp"
 #include "cmo_barrier_c.hpp"
@@ -56,6 +57,7 @@
 #include "notify_enum_desc.hpp"
 #include "task.hpp"
 #include "context_data_manage.h"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -397,7 +399,7 @@ rtError_t ApiImplDavid::CmoAddrTaskLaunch(
 {
     UNUSED(destMax);
     UNUSED(flag);
-    RT_LOG(RT_LOG_DEBUG, "Cmo addr task launch, opCode=%d.", cmoOpCode);
+    RT_LOG(RT_LOG_DEBUG, "Cmo addr task launch, opCode=%s.", CmoOpCodeToString(cmoOpCode).c_str());
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -698,8 +700,8 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
     const rtMemcpyKind kind, rtMemcpyConfig_t* const config)
 {
     RT_LOG(
-        RT_LOG_INFO, "SetMemcpyDesc called, desc=%p, srcAddr=%p, dstAddr=%p, count=%zu, kind=%d, config=%p", desc,
-        srcAddr, dstAddr, count, kind, config);
+        RT_LOG_INFO, "SetMemcpyDesc called, desc=%p, srcAddr=%p, dstAddr=%p, count=%zu, kind=%s, config=%p", desc,
+        srcAddr, dstAddr, count, MemcpyNewKindToString(kind).c_str(), config);
     UNUSED(kind);
     UNUSED(config);
 
@@ -740,8 +742,8 @@ rtError_t ApiImplDavid::MemCopy2DAsync(
     UNUSED(newKind);
     RT_LOG(
         RT_LOG_DEBUG,
-        "Sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%d.",
-        dstPitch, srcPitch, width, height, kind);
+        "Sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s.",
+        dstPitch, srcPitch, width, height, MemcpyKindToStr(kind));
 
     rtError_t error = RT_ERROR_NONE;
     uint64_t remainSize = width * height;
@@ -895,7 +897,7 @@ rtError_t ApiImplDavid::MemcpyAsync(
 {
     UNUSED(checkKind);
     UNUSED(memcpyConfig);
-    RT_LOG(RT_LOG_DEBUG, "Async memcpy, count=%" PRIu64 ", kind=%d", cnt, kind);
+    RT_LOG(RT_LOG_DEBUG, "Async memcpy, count=%" PRIu64 ", kind=%s", cnt, MemcpyKindToStr(kind));
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -941,7 +943,7 @@ rtError_t ApiImplDavid::ReduceAsync(
     void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo)
 {
-    RT_LOG(RT_LOG_INFO, "ReduceAsync, count=%" PRIu64 ", kind=%d.", cnt, kind);
+    RT_LOG(RT_LOG_INFO, "ReduceAsync, count=%" PRIu64 ", kind=%s.", cnt, ReduceKindToString(kind).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1593,7 +1595,9 @@ rtError_t ApiImplDavid::StreamSwitchEx(
     void* const ptr, const rtCondition_t condition, void* const valuePtr, Stream* const trueStream, Stream* const stm,
     const rtSwitchDataType_t dataType)
 {
-    RT_LOG(RT_LOG_DEBUG, "Stream switch, condition=%d, dataType=%d.", condition, dataType);
+    RT_LOG(
+        RT_LOG_DEBUG, "Stream switch, condition=%s, dataType=%s.", ConditionToString(condition).c_str(),
+        SwitchDataTypeToString(dataType).c_str());
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM(stm, curCtx, RT_ERROR_STREAM_CONTEXT);
@@ -1791,9 +1795,10 @@ static rtError_t SetLimitSizeByType(const rtLimitType_t type, const uint32_t val
             rt->SetSimtDvgWarpStkSize(alignVal);
             break;
         default:
-            RT_LOG_OUTER_MSG_INVALID_PARAM(
-                type, std::to_string(RT_LIMIT_TYPE_SIMT_STACK_SIZE) + " or " +
-                          std::to_string(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE));
+            RT_LOG_OUTER_MSG_WITH_FUNC(
+                ErrorCode::EE1003, LimitTypeToString(type), "type",
+                LimitTypeToString(RT_LIMIT_TYPE_SIMT_STACK_SIZE) + " or " +
+                    LimitTypeToString(RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE));
             return RT_ERROR_DEVICE_LIMIT;
     }
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
@@ -1805,7 +1810,7 @@ static rtError_t SetLimitSizeByType(const rtLimitType_t type, const uint32_t val
 rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "drv devId=%u, type=%u, value=%u.", static_cast<uint32_t>(devId), static_cast<uint32_t>(type),
+        RT_LOG_DEBUG, "drv devId=%u, type=%s, value=%u.", static_cast<uint32_t>(devId), LimitTypeToString(type).c_str(),
         val);
     rtError_t error = RT_ERROR_NONE;
     Runtime* rt = Runtime::Instance();
@@ -1814,8 +1819,8 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
         Context* const curCtx = CurrentContext();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         RT_LOG(
-            RT_LOG_WARNING, "DeviceSetLimit, drv devId=%u, type=%u, value=%u.", static_cast<uint32_t>(devId),
-            static_cast<uint32_t>(type), val);
+            RT_LOG_WARNING, "DeviceSetLimit, drv devId=%u, type=%s, value=%u.", static_cast<uint32_t>(devId),
+            LimitTypeToString(type).c_str(), val);
         return error;
     } else if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         std::unique_lock<std::mutex> lock(rt->GetSimtStackMutex());
@@ -1840,13 +1845,13 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
 
 rtError_t ApiImplDavid::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
 {
-    RT_LOG(RT_LOG_DEBUG, "type=%u.", static_cast<uint32_t>(type));
+    RT_LOG(RT_LOG_DEBUG, "type=%s.", LimitTypeToString(type).c_str());
     Runtime* rt = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
     if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
         Context* const curCtx = CurrentContext();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-        RT_LOG(RT_LOG_WARNING, "DeviceGetLimit, type=%u.", static_cast<uint32_t>(type));
+        RT_LOG(RT_LOG_WARNING, "DeviceGetLimit, type=%s.", LimitTypeToString(type).c_str());
         *val = 0;
     } else if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         *val = rt->GetDeviceCustomerStackSize();
@@ -1861,10 +1866,10 @@ rtError_t ApiImplDavid::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
     } else if (type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         *val = rt->GetSimtDvgWarpStkSize();
     } else {
-        RT_LOG(RT_LOG_WARNING, "Limit type is not supported, type=%u", static_cast<uint32_t>(type));
+        RT_LOG(RT_LOG_WARNING, "Limit type is not supported, type=%s", LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    RT_LOG(RT_LOG_INFO, "DeviceGetLimit success, type=%u, val=%u.", static_cast<uint32_t>(type), *val);
+    RT_LOG(RT_LOG_INFO, "DeviceGetLimit success, type=%s, val=%u.", LimitTypeToString(type).c_str(), *val);
     return RT_ERROR_NONE;
 }
 
@@ -2262,8 +2267,8 @@ rtError_t ApiImplDavid::StreamAddCondTask(rtCondTaskParams params, Stream* const
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
     ERROR_RETURN_MSG_INNER(
-        error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.", params.type,
-        params.size, static_cast<uint32_t>(error));
+        error, "Create sub capture model failed, condition type=%s, condition size=%u, retCode=%#x.",
+        CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));
 
     return cce::runtime::StreamAddCondTask(realHandle, params, stm, flags);
 }

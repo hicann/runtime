@@ -20,6 +20,7 @@
 #include "aix_c.hpp"
 #include "task_execute_time.h"
 #include "fusion_task.h"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -171,10 +172,10 @@ static rtError_t PreProcAicAivTaskForFusion(
     aicAivInfo->program = (prog != nullptr) ? prog : realProgram;
     RT_LOG(
         RT_LOG_INFO,
-        "kernel info: stream_id=%d, kernelAttrType=%d, kernel_name=%s,"
+        "kernel info: stream_id=%d, kernelAttrType=%s, kernel_name=%s,"
         "mixType=%u, taskRation=%u, tilingKey=%llu.",
-        stm->Id_(), kernelAttrType, registeredKernel->Name_().c_str(), mixType, registeredKernel->GetTaskRation(),
-        tilingKey);
+        stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(), registeredKernel->Name_().c_str(), mixType,
+        registeredKernel->GetTaskRation(), tilingKey);
     return RT_ERROR_NONE;
 }
 

@@ -14,6 +14,7 @@
 #include <mutex>
 #include <set>
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "runtime.hpp"
 #include "utils.h"
 #include "program.hpp"
@@ -145,7 +146,13 @@ rtError_t BinaryLoader::ParseLoadOptions()
             const rtError_t ret = SetCpuBinInfo(loadOptions_->options[idx].value);
             ERROR_RETURN(ret, "set cpu bin info failed! ret=%#x", ret);
         } else {
-            RT_LOG_OUTER_MSG_INVALID_PARAM(optionId, "[1, " + std::to_string(RT_LOAD_BINARY_OPT_MAX) + ")");
+            RT_LOG_OUTER_MSG_WITH_FUNC(
+                ErrorCode::EE1003,
+                (optionId == RT_LOAD_BINARY_OPT_MAX) ? "LOAD_BINARY_OPT_MAX(4)" :
+                                                       RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(optionId)),
+                "optionId",
+                "[" + std::to_string(RT_LOAD_BINARY_OPT_LAZY_LOAD) + ", " + std::to_string(RT_LOAD_BINARY_OPT_MAX) +
+                    ")");
             return RT_ERROR_INVALID_VALUE;
         }
     }
@@ -254,7 +261,9 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram* const prog) const
         if (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)) {
             prog->SetElfMagic(jsonMagic);
             prog->SetDefaultKernelAttrType(kernelAttrType);
-            RT_LOG(RT_LOG_INFO, "Load binary from file, jsonMagic=%u, kernelAttrType=%d", jsonMagic, kernelAttrType);
+            RT_LOG(
+                RT_LOG_INFO, "Load binary from file, jsonMagic=%u, kernelAttrType=%s", jsonMagic,
+                KernelAttrTypeToString(kernelAttrType).c_str());
             return RT_ERROR_NONE;
         }
     }
@@ -263,11 +272,13 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram* const prog) const
     if (optionMagic == 0U) {
         kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
         prog->SetDefaultKernelAttrType(kernelAttrType);
-        RT_LOG(RT_LOG_INFO, "Load binary from file, kernelAttrType=%d", kernelAttrType);
+        RT_LOG(RT_LOG_INFO, "Load binary from file, kernelAttrType=%s", KernelAttrTypeToString(kernelAttrType).c_str());
         return RT_ERROR_NONE;
     }
 
-    RT_LOG(RT_LOG_INFO, "Load binary from file, optionMagic=%u, kernelAttrType=%d", optionMagic, kernelAttrType);
+    RT_LOG(
+        RT_LOG_INFO, "Load binary from file, optionMagic=%u, kernelAttrType=%s", optionMagic,
+        KernelAttrTypeToString(kernelAttrType).c_str());
 
     prog->SetElfMagic(optionMagic);
     return RT_ERROR_NONE;
@@ -365,8 +376,8 @@ ElfProgram* BinaryLoader::LoadFromData() const
         return nullptr;
     }
     RT_LOG(
-        RT_LOG_INFO, "New ElfProgram ok, magic=%u, kernelAttrType=%d, Runtime_alloc_size=%zu", magic_, kernelAttrType,
-        sizeof(ElfProgram));
+        RT_LOG_INFO, "New ElfProgram ok, magic=%u, kernelAttrType=%s, Runtime_alloc_size=%zu", magic_,
+        KernelAttrTypeToString(kernelAttrType).c_str(), sizeof(ElfProgram));
 
     if (magic_ != 0) {
         prog->SetElfMagic(magic_);

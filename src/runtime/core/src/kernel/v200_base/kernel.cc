@@ -15,6 +15,7 @@
 #include "task_info.hpp"
 #include "stars_arg_manager.hpp"
 #include "stream_david.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -53,7 +54,9 @@ rtError_t GetPrefetchCnt(Kernel* const kernel)
             prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
             break;
         default:
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=%d.", kernel->GetKernelAttrType());
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=%s.",
+                KernelAttrTypeToString(kernel->GetKernelAttrType()).c_str());
             return RT_ERROR_INVALID_VALUE;
     }
 

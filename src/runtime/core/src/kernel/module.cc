@@ -14,6 +14,7 @@
 #include "error_message_manage.hpp"
 #include "memory_pool.hpp"
 #include "module.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -116,8 +117,8 @@ rtError_t Module::Load(Program* const prog)
             ERROR_GOTO(
                 error, FAIL_FREE,
                 "Memcpy so names failed, size=%zu(bytes), "
-                "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x.",
-                prog->GetSoName().size(), static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+                "type=%s, retCode=%#x.",
+                prog->GetSoName().size(), MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
             kernelNamesSize_ = progKernelName.size() + 1U;
             soNamesSize_ = prog->GetSoName().size();
         }
@@ -183,8 +184,8 @@ rtError_t Module::Load(Program* const prog)
         ERROR_GOTO(
             error, FAIL_FREE,
             "Memcpy failed, size=%u(bytes),"
-            "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
-            size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
+            "type=%s, retCode=%#x",
+            size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
     }
     RT_LOG(RT_LOG_DEBUG, "Load on device addr=%p, size=%u(bytes), program id=%u.", baseAddrAlign_, size, prog->Id_());
     programId_ = prog->Id_();
@@ -245,8 +246,8 @@ rtError_t Module::CalModuleHash(std::size_t& hash) const
         RT_MEMCPY_DEVICE_TO_HOST);
 
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)deviceDrv->HostMemFree(hostMem);
-                           , "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x.", dataSize,
-                           static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+                           , "Memcpy failed, size=%u(bytes), type=%s, retCode=%#x.", dataSize,
+                           MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
     // calculate hash
     const std::string hashStr(RtPtrToPtr<const char_t*>(hostMem), static_cast<uint64_t>(dataSize));
     hash = std::hash<std::string>{}(hashStr);
@@ -304,7 +305,8 @@ rtError_t Module::GetPrefetchCnt(const Kernel* const kernelIn, uint32_t& icacheP
             break;
         default:
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=%d.", kernelIn->GetKernelAttrType());
+                RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=UNKNOWN(%d).",
+                static_cast<int32_t>(kernelIn->GetKernelAttrType()));
             return RT_ERROR_INVALID_VALUE;
     }
 
@@ -360,7 +362,8 @@ rtError_t Module::GetPrefetchCnt(
             break;
         default:
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=%d.", kernelIn->GetKernelAttrType());
+                RT_LOG_ERROR, "Get prefetch cnt failed, kernelAttrType=UNKNOWN(%d).",
+                static_cast<int32_t>(kernelIn->GetKernelAttrType()));
             return RT_ERROR_INVALID_VALUE;
     }
 

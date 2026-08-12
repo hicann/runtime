@@ -22,6 +22,7 @@
 #include "elf.hpp"
 #include "osal.hpp"
 #include "stream_factory.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1117,10 +1118,11 @@ void ElfProgram::SetKernelAttribute(const RtKernel* const kernel, Kernel* const 
     kernelObj->SetSystemParaNum(sysParamNum);
     RT_LOG(
         RT_LOG_INFO,
-        "kernel_name=%s, kernelAttrType=%d, userParamNum=%hu, sysParamNum=%hu, "
+        "kernel_name=%s, kernelAttrType=%s, userParamNum=%hu, sysParamNum=%hu, "
         "IsNeedSetFftsAddrInArg=%u, isSupportOverFlow=%u, elfDataFlag=%d",
-        kernel->name, kernelObj->GetKernelAttrType(), kernelObj->GetUserParaNum(), kernelObj->GetSystemParaNum(),
-        kernelObj->IsNeedSetFftsAddrInArg(), kernelObj->IsSupportOverFlow(), kernelObj->ElfDataFlag());
+        kernel->name, KernelAttrTypeToString(kernelObj->GetKernelAttrType()).c_str(), kernelObj->GetUserParaNum(),
+        kernelObj->GetSystemParaNum(), kernelObj->IsNeedSetFftsAddrInArg(), kernelObj->IsSupportOverFlow(),
+        kernelObj->ElfDataFlag());
     return;
 }
 
@@ -1467,8 +1469,8 @@ rtError_t Program::BinaryMemCopySync(
     ERROR_RETURN(
         error,
         "advise dev_mem failed, adviseSize=%u(bytes),"
-        "type=%d(RT_ADVISE_ACCESS_READWRITE), retCode=%#x, device_id=%u.",
-        adviseSize, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        adviseSize, "ADVISE_ACCESS_READWRITE(3)", static_cast<uint32_t>(error), devId);
 
     TIMESTAMP_BEGIN(BinaryMemCpy);
     error = curDrv->MemCopySync(
@@ -1476,8 +1478,8 @@ rtError_t Program::BinaryMemCopySync(
     ERROR_RETURN_MSG_INNER(
         error,
         "Memcpy failed, size=%u(bytes),"
-        "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
     TIMESTAMP_END(BinaryMemCpy);
 
     // after the host-to-device (H2D) transfer is completed, the memory needs to be set as read-only.
@@ -1485,8 +1487,8 @@ rtError_t Program::BinaryMemCopySync(
     ERROR_RETURN(
         error,
         "advise dev_mem failed, adviseSize=%u(bytes),"
-        "type=%d(RT_ADVISE_ACCESS_READONLY), retCode=%#x, device_id=%u.",
-        adviseSize, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        adviseSize, "ADVISE_ACCESS_READONLY(2)", static_cast<uint32_t>(error), devId);
 
     return RT_ERROR_NONE;
 }
@@ -1512,8 +1514,8 @@ rtError_t Program::BinaryPoolMemCopySync(
     ERROR_RETURN(
         error,
         "advise pool_mem failed, size=%u(bytes),"
-        "type=%d(RT_ADVISE_ACCESS_READWRITE), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        size, "ADVISE_ACCESS_READWRITE(3)", static_cast<uint32_t>(error), devId);
 
     TIMESTAMP_BEGIN(BinaryMemCpy);
     error = curDrv->MemCopySync(
@@ -1521,8 +1523,8 @@ rtError_t Program::BinaryPoolMemCopySync(
     ERROR_RETURN_MSG_INNER(
         error,
         "memcpy failed, size=%u(bytes),"
-        "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        size, MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
     TIMESTAMP_END(BinaryMemCpy);
 
     // after the host-to-device (H2D) transfer is completed, the memory needs to be set as read-only.
@@ -1530,8 +1532,8 @@ rtError_t Program::BinaryPoolMemCopySync(
     ERROR_RETURN(
         error,
         "advise pool_mem failed, size=%u(bytes),"
-        "type=%d(RT_ADVISE_ACCESS_READONLY), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
+        "type=%s, retCode=%#x, device_id=%u.",
+        size, "ADVISE_ACCESS_READONLY(2)", static_cast<uint32_t>(error), devId);
 
     return RT_ERROR_NONE;
 }
@@ -1669,20 +1671,20 @@ rtError_t ElfProgram::GetKernelTypeAndMixType(
 
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu", elfkernelInfo->name,
-        metaInfo->funcType, kernelAttrType, mixType);
+        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu", elfkernelInfo->name,
+        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
 
     GetKernelTypeAndMixTypeByName(elfkernelInfo->name, kernelAttrType, mixType);
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu", elfkernelInfo->name,
-        metaInfo->funcType, kernelAttrType, mixType);
+        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu", elfkernelInfo->name,
+        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
 
     kernelAttrType = GetDefaultKernelAttrType();
 
     RT_LOG(
-        RT_LOG_INFO, "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu",
-        elfkernelInfo->name, metaInfo->funcType, kernelAttrType, mixType);
+        RT_LOG_INFO, "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu",
+        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
 
     return RT_ERROR_NONE;
 }
@@ -1720,11 +1722,12 @@ rtError_t ElfProgram::BuildNewKernel(
     RT_LOG(
         RT_LOG_INFO,
         "new kernel success, size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
-        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%d, mixType=%hu, taskRation=%u, "
+        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%s, mixType=%hu, taskRation=%u, "
         "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u",
         sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
-        metaInfo->funcType, kernelAttrType, mixType, metaInfo->taskRation, static_cast<uint32_t>(elfkernelInfo->offset),
-        static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)), metaInfo->dfxSize);
+        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType, metaInfo->taskRation,
+        static_cast<uint32_t>(elfkernelInfo->offset), static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)),
+        metaInfo->dfxSize);
     kernel = kernelObj;
     return RT_ERROR_NONE;
 }
@@ -1749,10 +1752,10 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
         RT_LOG(
             RT_LOG_ERROR,
             "found the previous mix kernel but conflict. "
-            "found kernel name=[%s], kernelAttrType=%d, mixType=%hu, offset2=%u, "
-            "current kernel name=[%s], kernelAttrType=%d, mixType=%hu",
-            oldKernel->Name_().c_str(), oldKernelAttrType, oldMixType, oldKernel->Offset2_(), elfkernelInfo->name,
-            kernelAttrType, mixType);
+            "found kernel name=[%s], kernelAttrType=%s, mixType=%hu, offset2=%u, "
+            "current kernel name=[%s], kernelAttrType=%s, mixType=%hu",
+            oldKernel->Name_().c_str(), KernelAttrTypeToString(oldKernelAttrType).c_str(), oldMixType,
+            oldKernel->Offset2_(), elfkernelInfo->name, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -1799,10 +1802,10 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
     RT_LOG(
         RT_LOG_INFO,
         "merge kernel success, programId=%u, kernel name=[%s], offset1=%u, offset2=%u, "
-        "mixType1=%hu, mixType2=%hu, final mixType=%hu, final kernelAttrType=%d, kernelVfType=%u, shareMemSize=%u",
+        "mixType1=%hu, mixType2=%hu, final mixType=%hu, final kernelAttrType=%s, kernelVfType=%u, shareMemSize=%u",
         Id_(), oldKernel->Name_().c_str(), oldKernel->Offset_(), oldKernel->Offset2_(), kernelTmpMixType, mixType,
-        oldKernel->GetMixType(), oldKernel->GetKernelAttrType(), oldKernel->KernelVfType_(),
-        oldKernel->ShareMemSize_());
+        oldKernel->GetMixType(), KernelAttrTypeToString(oldKernel->GetKernelAttrType()).c_str(),
+        oldKernel->KernelVfType_(), oldKernel->ShareMemSize_());
     return RT_ERROR_NONE;
 }
 

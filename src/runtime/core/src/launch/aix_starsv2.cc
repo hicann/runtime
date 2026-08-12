@@ -21,6 +21,7 @@
 #include "stars_david.hpp"
 #include "memory_task.h"
 #include "kernel_utils.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -290,11 +291,12 @@ static rtError_t CheckUpdateDavidTaskInfo(
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,
             "check kernel type failed, stream_id=%d, task_id=%hu, "
-            "old mixType=%u, funcType=%u, kernelAttrType=%d, "
-            "new mixType=%u, funcType=%u, kernelAttrType=%d.",
+            "old mixType=%u, funcType=%u, kernelAttrType=%s, "
+            "new mixType=%u, funcType=%u, kernelAttrType=%s.",
             updateTask->stream->Id_(), updateTask->id, updateTask->u.aicTaskInfo.kernel->GetMixType(),
-            updateTask->u.aicTaskInfo.kernel->GetFuncType(), updateTask->u.aicTaskInfo.kernel->GetKernelAttrType(),
-            kernel->GetMixType(), kernel->GetFuncType(), kernel->GetKernelAttrType());
+            updateTask->u.aicTaskInfo.kernel->GetFuncType(),
+            KernelAttrTypeToString(updateTask->u.aicTaskInfo.kernel->GetKernelAttrType()).c_str(), kernel->GetMixType(),
+            kernel->GetFuncType(), KernelAttrTypeToString(kernel->GetKernelAttrType()).c_str());
         return RT_ERROR_KERNEL_TYPE;
     }
 
@@ -329,8 +331,9 @@ rtError_t StreamLaunchKernelV1(
     mixType = registeredKernel->GetMixType();
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);
-                                , "Failed to check mix kernel, stream_id=%d, kernelAttrType=%d, retCode=%#x.",
-                                stm->Id_(), kernelAttrType, static_cast<uint32_t>(error));
+                                , "Failed to check mix kernel, stream_id=%d, kernelAttrType=%s, retCode=%#x.",
+                                stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(),
+                                static_cast<uint32_t>(error));
 
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
@@ -351,8 +354,8 @@ rtError_t StreamLaunchKernelV1(
     if (kernelTask->isUpdateSinkSqe == 1U) { // 此处失败，仅本次任务不更新，但继续保留老任务
         error = CheckUpdateDavidTaskInfo(kernelTask, registeredKernel, stm);
         ERROR_RETURN_MSG_INNER(
-            error, "stream_id=%d, kernelAttrType=%d, retCode=%#x.", stm->Id_(), kernelAttrType,
-            static_cast<uint32_t>(error));
+            error, "stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
+            KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {
         SaveTaskCommonInfo(kernelTask, dstStm, pos);
     }
@@ -375,13 +378,14 @@ rtError_t StreamLaunchKernelV1(
     aicTask->progHandle = prog;
     RT_LOG(
         RT_LOG_INFO,
-        "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, arg_size=%u, taskRation=%u, "
+        "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, arg_size=%u, taskRation=%u, "
         "mixType=%hhu, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
-        stm->Id_(), registeredKernel->Name_().c_str(), kernelAttrType, registeredKernel->GetFuncType(),
-        argsInfo->argsSize, registeredKernel->GetTaskRation(), mixType, registeredKernel->KernelVfType_(),
-        aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
-        aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
+        stm->Id_(), registeredKernel->Name_().c_str(), KernelAttrTypeToString(kernelAttrType).c_str(),
+        registeredKernel->GetFuncType(), argsInfo->argsSize, registeredKernel->GetTaskRation(), mixType,
+        registeredKernel->KernelVfType_(), aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag,
+        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        aicTask->inputArgsSize.atomicIndex);
 
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = UpdateDavidKernelTaskSubmit(kernelTask, stm);
@@ -448,8 +452,9 @@ rtError_t StreamLaunchKernelWithHandle(
     }
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);
-                                , "Failed to check mix kernel, stream_id=%d, kernelAttrType=%d, retCode=%#x.",
-                                stm->Id_(), kernelAttrType, static_cast<uint32_t>(error));
+                                , "Failed to check mix kernel, stream_id=%d, kernelAttrType=%s, retCode=%#x.",
+                                stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(),
+                                static_cast<uint32_t>(error));
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     const bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
     uint32_t pos = 0xFFFFU;
@@ -492,12 +497,12 @@ rtError_t StreamLaunchKernelWithHandle(
     aicTask->funcAddr1 = addr2;
     RT_LOG(
         RT_LOG_INFO,
-        "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, "
+        "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, "
         "arg_size=%u, mixType=%hhu, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
-        stm->Id_(), name.c_str(), kernelAttrType, funcType, argsInfo->argsSize, mixType, taskRation, kernelVfType,
-        aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
-        aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
+        stm->Id_(), name.c_str(), KernelAttrTypeToString(kernelAttrType).c_str(), funcType, argsInfo->argsSize, mixType,
+        taskRation, kernelVfType, aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos,
+        aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = UpdateDavidKernelTaskSubmit(kernelTask, stm);
         if ((error != RT_ERROR_NONE) && (kernelTask->u.aicTaskInfo.oldArgHandle != nullptr)) {
@@ -573,8 +578,8 @@ rtError_t StreamLaunchKernelV2(
 
     error = CheckMixKernelValid(mixType, kernelPc2);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to check mix kernel, stream_id=%d, kernelAttrType=%d, retCode=%#x.", stm->Id_(), kernelAttrType,
-        static_cast<uint32_t>(error));
+        error, "Failed to check mix kernel, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
+        KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
 
@@ -593,8 +598,8 @@ rtError_t StreamLaunchKernelV2(
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = CheckUpdateDavidTaskInfo(kernelTask, kernel, stm);
         ERROR_RETURN_MSG_INNER(
-            error, "Failed to check update task info, stream_id=%d, kernelAttrType=%d, retCode=%#x.", stm->Id_(),
-            kernelAttrType, static_cast<uint32_t>(error));
+            error, "Failed to check update task info, stream_id=%d, kernelAttrType=%s, retCode=%#x.", stm->Id_(),
+            KernelAttrTypeToString(kernelAttrType).c_str(), static_cast<uint32_t>(error));
     } else {
         SaveTaskCommonInfo(kernelTask, dstStm, pos);
     }
@@ -619,14 +624,15 @@ rtError_t StreamLaunchKernelV2(
     SetSimtTaskParams(aicTask, extendAgrs);
     RT_LOG(
         RT_LOG_INFO,
-        "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, arg_size=%u, mixType=%hhu, "
+        "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, arg_size=%u, mixType=%hhu, "
         "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
         "groupDim=%u, groupBlockDim=%u.",
-        stm->Id_(), kernel->Name_().c_str(), kernelAttrType, kernel->GetFuncType(), argsInfo->argsSize, mixType,
-        coreDim, kernel->GetTaskRation(), kernel->KernelVfType_(), aicTask->dynamicShareMemSize, kernelPc1, kernelPc2,
-        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
-        aicTask->inputArgsSize.atomicIndex, aicTask->groupDim, aicTask->groupBlockDim);
+        stm->Id_(), kernel->Name_().c_str(), KernelAttrTypeToString(kernelAttrType).c_str(), kernel->GetFuncType(),
+        argsInfo->argsSize, mixType, coreDim, kernel->GetTaskRation(), kernel->KernelVfType_(),
+        aicTask->dynamicShareMemSize, kernelPc1, kernelPc2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
+        aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, aicTask->groupDim,
+        aicTask->groupBlockDim);
 
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = UpdateDavidKernelTaskSubmit(kernelTask, stm);

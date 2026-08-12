@@ -20,6 +20,7 @@
 #include "inner_thread_local.hpp"
 #include "task_info.hpp"
 #include "capture_model.hpp"
+#include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
 #include "capture_adapt.hpp"
 #include "buffer_allocator.hpp"
@@ -336,9 +337,9 @@ rtError_t Context::StreamBeginCapture(Stream* const stm, const rtStreamCaptureMo
     RT_LOG(
         RT_LOG_EVENT,
         "capture begin success, device_id=%u, model_id=%u"
-        " original stream_id=%d, capture stream_id=%d, stream_status=%d, isSubmodel=%u, parent model_id=%u.",
-        device_->Id_(), captureMdl->Id_(), streamId, stm->GetCaptureStream()->Id_(), stm->GetCaptureStatus(),
-        captureMdl->IsSubCaptureModel(),
+        " original stream_id=%d, capture stream_id=%d, stream_status=%s, isSubmodel=%u, parent model_id=%u.",
+        device_->Id_(), captureMdl->Id_(), streamId, stm->GetCaptureStream()->Id_(),
+        StreamCaptureStatusToString(stm->GetCaptureStatus()).c_str(), captureMdl->IsSubCaptureModel(),
         (condHandle != nullptr) ? condHandle->GetParentModel()->Id_() : MAX_UINT32_NUM);
 
     return RT_ERROR_NONE;
@@ -680,8 +681,8 @@ rtError_t Context::StreamGetCaptureInfo(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, model_id=%u, original stream_id=%d, stream_status=%d", device_->Id_(), modelId,
-        stm->Id_(), statusTmp);
+        RT_LOG_INFO, "device_id=%u, model_id=%u, original stream_id=%d, stream_status=%s", device_->Id_(), modelId,
+        stm->Id_(), StreamCaptureStatusToString(statusTmp).c_str());
 
     return RT_ERROR_NONE;
 }

@@ -198,6 +198,7 @@ RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
 | COND_RETURN_AND_MSG_OUTER_WITH_PARAM | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
 | COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
 | COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
+| COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC | rtError_t | 自定义条件 | 否 | 否 | 否 | 推荐 | — |
 | ZERO_RETURN_AND_MSG_OUTER | rtError_t | 零值 | 否 | 否 | 否 | 推荐 | — |
 | COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM | ACL错误码(rt转换) | 自定义条件 | 否 | 否 | 是 | 推荐 | — |
 | COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME | ACL错误码(rt转换) | 自定义条件 | 否 | 否 | 是 | 推荐 | — |

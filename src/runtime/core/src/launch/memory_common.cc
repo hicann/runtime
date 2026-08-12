@@ -96,8 +96,8 @@ rtError_t MemSetAsync(
     const rtError_t error = stm->Device_()->Driver_()->PtrGetAttributes(ptr, &attributes);
     ERROR_RETURN_MSG_INNER(error, "get pointer attribute failed, retCode=%#x.", error);
     RT_LOG(
-        RT_LOG_DEBUG, "memset memory type is %u, fillVal=%u, fillCount=%" PRIu64 ", destMax=%" PRIu64 ".",
-        attributes.location.type, fillVal, fillCount, destMax);
+        RT_LOG_DEBUG, "memset memory type is %s, fillVal=%u, fillCount=%" PRIu64 ", destMax=%" PRIu64 ".",
+        MemLocationTypeToString(attributes.location.type).c_str(), fillVal, fillCount, destMax);
 
     if ((attributes.location.type == RT_MEMORY_LOC_HOST) || (attributes.location.type == RT_MEMORY_LOC_UNREGISTERED)) {
         const errno_t ret = memset_s(ptr, destMax, static_cast<int32_t>(fillVal), fillCount);

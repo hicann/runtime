@@ -23,7 +23,7 @@ aclError aclrtSubscribeReport(uint64_t threadId, aclrtStream stream)
 aclError aclrtLaunchCallback(aclrtCallback fn, void* userData, aclrtCallbackBlockType blockType, aclrtStream stream)
 {
     if ((blockType != ACL_CALLBACK_BLOCK) && (blockType != ACL_CALLBACK_NO_BLOCK)) {
-        ACL_LOG_INNER_ERROR("invalid block type, the current blockType = %d", blockType);
+        ACL_LOG_INNER_ERROR("invalid block type, the current blockType = UNKNOWN(%d)", (int32_t)blockType);
         return ACL_ERROR_INVALID_PARAM;
     }
     return rtCallbackLaunch((rtCallback_t)(fn), userData, (rtStream_t)(stream), (blockType == ACL_CALLBACK_BLOCK));

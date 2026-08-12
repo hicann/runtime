@@ -300,15 +300,15 @@ rtError_t NpuDriver::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType
     drvRet = halHostRegisterCapabilities(deviceId, static_cast<UINT32>(hacType), &drv_capabilities);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halHostRegisterCapabilities failed, drvRetCode=%d, drvDevId=%u, hacType=%d.",
-            static_cast<int32_t>(drvRet), deviceId, static_cast<UINT32>(hacType));
+            drvRet, "Call driver api halHostRegisterCapabilities failed, drvRetCode=%d, drvDevId=%u, hacType=%s.",
+            static_cast<int32_t>(drvRet), deviceId, HacTypeToString(hacType).c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     // 将drv_capabilities的值传递给capabilities
     *capabilities = static_cast<rtHostMemMapCapability>(drv_capabilities);
     RT_LOG(
-        RT_LOG_DEBUG, "halHostRegisterCapabilities: device_id=%u, hacType=%d, capabilities=%d!", deviceId, hacType,
-        *capabilities);
+        RT_LOG_DEBUG, "halHostRegisterCapabilities: device_id=%u, hacType=%s, capabilities=%d!", deviceId,
+        HacTypeToString(hacType).c_str(), *capabilities);
     return RT_ERROR_NONE;
 }
 
@@ -568,8 +568,8 @@ rtError_t NpuDriver::ExportToShareableHandleV2(
     }
     drv_mem_handle_type drvHandleType = MEM_HANDLE_TYPE_NONE;
     COND_RETURN_ERROR(
-        !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE, "Invalid handle type: %d",
-        handleType);
+        !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE, "Invalid handle type: UNKNOWN(%d)",
+        static_cast<int32_t>(handleType));
     COND_RETURN_WARN(
         &halMemExportToShareableHandleV2 == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halMemExportToShareableHandleV2 does not exist");
@@ -616,8 +616,8 @@ rtError_t NpuDriver::ImportFromShareableHandleV2(
     }
     drv_mem_handle_type drvHandleType = MEM_HANDLE_TYPE_NONE;
     COND_RETURN_ERROR(
-        !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE, "Invalid handle type: %d",
-        handleType);
+        !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE, "Invalid handle type: UNKNOWN(%d)",
+        static_cast<int32_t>(handleType));
     COND_RETURN_WARN(
         &halMemImportFromShareableHandleV2 == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halMemImportFromShareableHandleV2 does not exist");
@@ -664,8 +664,8 @@ rtError_t NpuDriver::GetServerIdAndshareableHandle(
             "[drv api] halMemTransShareableHandle does not exist");
         drv_mem_handle_type drvHandleType = MEM_HANDLE_TYPE_NONE;
         COND_RETURN_ERROR(
-            !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE, "Invalid handle type: %d",
-            handleType);
+            !TransSharedHandleType(handleType, drvHandleType), RT_ERROR_INVALID_VALUE,
+            "Invalid handle type: UNKNOWN(%d)", static_cast<int32_t>(handleType));
         const drvError_t drvRet = halMemTransShareableHandle(
             drvHandleType, RtPtrToPtr<struct MemShareHandle*>(RtPtrToUnConstPtr<void*>(sharehandle)), serverId,
             shareableHandle);
@@ -679,7 +679,7 @@ rtError_t NpuDriver::GetServerIdAndshareableHandle(
         *shareableHandle = *RtPtrToPtr<uint64_t*>(RtPtrToUnConstPtr<void*>(sharehandle));
         return RT_ERROR_NONE;
     } else {
-        RT_LOG(RT_LOG_ERROR, "Invalid handle type: %d.", handleType);
+        RT_LOG(RT_LOG_ERROR, "Invalid handle type: UNKNOWN(%d).", static_cast<int32_t>(handleType));
         return RT_ERROR_INVALID_VALUE;
     }
 }
@@ -1877,13 +1877,17 @@ rtError_t NpuDriver::MemGetInfoEx(
     rtMemInfoType_t curMemInfoType = memInfoType;
     if ((GetDevProperties().memInfoMapType & MAP_WHEN_GET_INFO) != 0) {
         curMemInfoType = g_memInfoTypeMap[memInfoType];
-        RT_LOG(RT_LOG_INFO, "memInfoType convert %d to %d.", memInfoType, curMemInfoType);
+        RT_LOG(
+            RT_LOG_INFO, "memInfoType convert %s to %s.", MemInfoTypeToString(memInfoType).c_str(),
+            MemInfoTypeToString(curMemInfoType).c_str());
     }
     const rtError_t error = GetMemInfoType(curMemInfoType, &type);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-            "Obtaining the memory information of the current device", static_cast<int32_t>(curMemInfoType),
-            "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_HBM_P2P_NORMAL) + "]");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1003, "Obtaining the memory information of the current device",
+            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(curMemInfoType)), "curMemInfoType",
+            RtFmtMsg(
+                "[%d, %d]", static_cast<int32_t>(RT_MEMORYINFO_DDR), static_cast<int32_t>(RT_MEMORYINFO_P2P_HUGE1G)));
         return error;
     }
 
@@ -1897,8 +1901,8 @@ rtError_t NpuDriver::MemGetInfoEx(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "curMemInfoType=%u, drvMemType=%u, free=%" PRIu64 ", hug_free=%" PRIu64,
-        static_cast<uint32_t>(curMemInfoType), type, static_cast<uint64_t>(info.phy_info.free),
+        RT_LOG_INFO, "curMemInfoType=%s, drvMemType=%u, free=%" PRIu64 ", hug_free=%" PRIu64,
+        MemInfoTypeToString(curMemInfoType).c_str(), type, static_cast<uint64_t>(info.phy_info.free),
         static_cast<uint64_t>(info.phy_info.huge_free));
 
     if ((curMemInfoType == RT_MEMORYINFO_DDR) || (curMemInfoType == RT_MEMORYINFO_HBM)) {
@@ -1910,7 +1914,9 @@ rtError_t NpuDriver::MemGetInfoEx(
     } else if (Is1GHugePageMem(curMemInfoType)) {
         const rtError_t ret = CheckIfSupport1GHugePage();
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "this feature is not supported on current version, memory policy=%u.", curMemInfoType);
+            RT_LOG(
+                RT_LOG_ERROR, "this feature is not supported on current version, memory policy=%s.",
+                MemInfoTypeToString(curMemInfoType).c_str());
             return ret;
         }
         *freeSize = static_cast<size_t>(info.phy_info.giant_free);
@@ -2116,8 +2122,8 @@ rtError_t NpuDriver::PtrGetRealLocation(
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "PtrGetRealLocation memType=%u, devId=%u, realLoc=%d(%s)", dvAttributes.memType,
-        dvAttributes.devId, realLocation, MemLocationTypeToStr(realLocation));
+        RT_LOG_DEBUG, "PtrGetRealLocation memType=%u, devId=%u, realLoc=%s", dvAttributes.memType, dvAttributes.devId,
+        MemLocationTypeToString(realLocation).c_str());
 
     return RT_ERROR_NONE;
 }
@@ -2186,7 +2192,7 @@ rtError_t NpuDriver::MemCopySync(
                 drvRet,
                 "Call driver api drvMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", "
                 "size=%" PRIu64 "(bytes), kind=%s.",
-                static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
+                static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToStr(kind));
         }
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -2221,8 +2227,8 @@ rtError_t NpuDriver::MemCopyAsync(
         RT_LOG(
             RT_LOG_INFO,
             "call halMemCpyAsync success, destMax=%" PRIu64 ","
-            " size=%" PRIu64 "(bytes), kind=%d.",
-            destMax, size, static_cast<int32_t>(kind));
+            " size=%" PRIu64 "(bytes), kind=%s.",
+            destMax, size, MemcpyKindToStr(kind));
     }
 #else
     drvError_t drvRet = cmodelDrvMemcpy(
@@ -2236,7 +2242,7 @@ rtError_t NpuDriver::MemCopyAsync(
             drvRet,
             "Call driver api drvAsyncMemcpy failed, drvRetCode=%d, destMax=%" PRIu64 ", size=%" PRIu64
             "(bytes), kind=%s.",
-            static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToString(kind).c_str());
+            static_cast<int32_t>(drvRet), destMax, size, MemcpyKindToStr(kind));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

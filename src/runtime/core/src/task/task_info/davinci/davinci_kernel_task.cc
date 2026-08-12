@@ -30,6 +30,7 @@
 #include "task_execute_time.h"
 #include "ffts_task.h"
 #include "printf.hpp"
+#include "enum_desc.hpp"
 #include <sstream>
 #include <vector>
 
@@ -794,8 +795,8 @@ rtError_t GetArgsInfo(TaskInfo* taskInfo)
         RT_MEMCPY_DEVICE_TO_HOST);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)dev->Driver_()->HostMemFree(hostMem),
-        "Memcpy failed, size=%u, type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x.", argSize,
-        static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+        "Memcpy failed, size=%u, type=%s, retCode=%#x.", argSize, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST),
+        static_cast<uint32_t>(error));
     // args info
     const uint32_t totalLen = argSize / static_cast<uint32_t>(sizeof(void*));
     const uint32_t argsTimes = (totalLen % ARGS_PER_STRING_MAX_LEN > 0) ? ((totalLen / ARGS_PER_STRING_MAX_LEN) + 1U) :
@@ -847,9 +848,9 @@ void HandleSimtPrintErrorInfo(Device* const dev)
         (void)dev->Driver_()->HostMemFree(hostBlockSrc);
         RT_LOG(
             RT_LOG_ERROR,
-            "Memcpy failed, size=%lu(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x,"
+            "Memcpy failed, size=%lu(bytes), type=%s, retCode=%#x,"
             " device_id=%u",
-            fifoSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error), dev->Id_());
+            fifoSize, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error), dev->Id_());
         return;
     }
 

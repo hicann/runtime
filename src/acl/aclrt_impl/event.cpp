@@ -19,6 +19,7 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "utils/data_type_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -413,7 +414,9 @@ aclError aclrtRepairErrorImpl(int32_t deviceId, const aclrtErrorInfo* errorInfo)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRepairError);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(errorInfo);
-    ACL_LOG_INFO("start to execute aclrtRepairError with deviceId %d and errorType %d", deviceId, errorInfo->errorType);
+    ACL_LOG_INFO(
+        "start to execute aclrtRepairError with deviceId %d and errorType %s", deviceId,
+        acl::GetErrorTypeDesc(errorInfo->errorType));
 
     // Type conversion adaptation
     const uint32_t rtsDeviceId = static_cast<uint32_t>(deviceId);

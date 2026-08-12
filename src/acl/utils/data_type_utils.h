@@ -26,69 +26,8 @@
 
 namespace acl {
 
-inline const char* GetDataTypeDesc(aclDataType type)
-{
-    static const std::unordered_map<aclDataType, const char*> dataTypeDescMap = {
-        {ACL_DT_UNDEFINED, "DT_UNDEFINED(-1)"},
-        {ACL_FLOAT, "FLOAT(0)"},
-        {ACL_FLOAT16, "FLOAT16(1)"},
-        {ACL_INT8, "INT8(2)"},
-        {ACL_INT32, "INT32(3)"},
-        {ACL_UINT8, "UINT8(4)"},
-        {ACL_INT16, "INT16(6)"},
-        {ACL_UINT16, "UINT16(7)"},
-        {ACL_UINT32, "UINT32(8)"},
-        {ACL_INT64, "INT64(9)"},
-        {ACL_UINT64, "UINT64(10)"},
-        {ACL_DOUBLE, "DOUBLE(11)"},
-        {ACL_BOOL, "BOOL(12)"},
-        {ACL_STRING, "STRING(13)"},
-        {ACL_COMPLEX64, "COMPLEX64(16)"},
-        {ACL_COMPLEX128, "COMPLEX128(17)"},
-        {ACL_BF16, "BF16(27)"},
-        {ACL_INT4, "INT4(29)"},
-        {ACL_UINT1, "UINT1(30)"},
-        {ACL_COMPLEX32, "COMPLEX32(33)"},
-        {ACL_HIFLOAT8, "HIFLOAT8(34)"},
-        {ACL_FLOAT8_E5M2, "FLOAT8_E5M2(35)"},
-        {ACL_FLOAT8_E4M3FN, "FLOAT8_E4M3FN(36)"},
-        {ACL_FLOAT8_E8M0, "FLOAT8_E8M0(37)"},
-        {ACL_FLOAT6_E3M2, "FLOAT6_E3M2(38)"},
-        {ACL_FLOAT6_E2M3, "FLOAT6_E2M3(39)"},
-        {ACL_FLOAT4_E2M1, "FLOAT4_E2M1(40)"},
-        {ACL_FLOAT4_E1M2, "FLOAT4_E1M2(41)"},
-    };
-
-    auto it = dataTypeDescMap.find(type);
-    if (it != dataTypeDescMap.end()) {
-        return it->second;
-    }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
-    return enumBuf;
-}
-
-inline const char* GetMemcpyKindDesc(aclrtMemcpyKind kind)
-{
-    static const std::unordered_map<aclrtMemcpyKind, const char*> memcpyKindDescMap = {
-        {ACL_MEMCPY_HOST_TO_HOST, "MEMCPY_HOST_TO_HOST(0)"},
-        {ACL_MEMCPY_HOST_TO_DEVICE, "MEMCPY_HOST_TO_DEVICE(1)"},
-        {ACL_MEMCPY_DEVICE_TO_HOST, "MEMCPY_DEVICE_TO_HOST(2)"},
-        {ACL_MEMCPY_DEVICE_TO_DEVICE, "MEMCPY_DEVICE_TO_DEVICE(3)"},
-        {ACL_MEMCPY_DEFAULT, "MEMCPY_DEFAULT(4)"},
-        {ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE, "MEMCPY_HOST_TO_BUF_TO_DEVICE(5)"},
-        {ACL_MEMCPY_INNER_DEVICE_TO_DEVICE, "MEMCPY_INNER_DEVICE_TO_DEVICE(6)"},
-        {ACL_MEMCPY_INTER_DEVICE_TO_DEVICE, "MEMCPY_INTER_DEVICE_TO_DEVICE(7)"},
-    };
-
-    auto it = memcpyKindDescMap.find(kind);
-    if (it != memcpyKindDescMap.end()) {
-        return it->second;
-    }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(kind));
-    return enumBuf;
-}
+const char* GetDataTypeDesc(aclDataType type);
+const char* GetMemcpyKindDesc(aclrtMemcpyKind kind);
 
 inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type)
 {
@@ -105,6 +44,7 @@ inline const char* GetExceptionExpandTypeDesc(rtExceptionExpandType_t type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -122,6 +62,7 @@ inline const char* GetGroupAttrDesc(aclrtGroupAttr attr)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -139,6 +80,7 @@ inline const char* GetTsIdDesc(aclrtTsId tsId)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(tsId));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -157,6 +99,7 @@ inline const char* GetQueueRouteQueryModeDesc(acltdtQueueRouteQueryMode mode)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -173,6 +116,7 @@ inline const char* GetQueueAttrTypeDesc(acltdtQueueAttrType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -190,6 +134,7 @@ inline const char* GetQueueRouteParamTypeDesc(acltdtQueueRouteParamType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -208,6 +153,7 @@ inline const char* GetQueueRouteQueryInfoParamTypeDesc(acltdtQueueRouteQueryInfo
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -224,6 +170,7 @@ inline const char* GetAllocBufTypeDesc(acltdtAllocBufType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -244,6 +191,7 @@ inline const char* GetTensorTypeDesc(acltdtTensorType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -253,9 +201,9 @@ inline const char* GetSysParamOptDesc(aclSysParamOpt opt)
     // Defined as static_cast to bypass the ACL_DEPRECATED_MESSAGE warning under -Werror compilation.
     constexpr aclSysParamOpt OPT_STRONG_CONSISTENCY = static_cast<aclSysParamOpt>(2);
     static const std::unordered_map<aclSysParamOpt, const char*> sysParamOptDescMap = {
-        {ACL_OPT_DETERMINISTIC, "ACL_OPT_DETERMINISTIC(0)"},
-        {ACL_OPT_ENABLE_DEBUG_KERNEL, "ACL_OPT_ENABLE_DEBUG_KERNEL(1)"},
-        {OPT_STRONG_CONSISTENCY, "ACL_OPT_STRONG_CONSISTENCY(2)"},
+        {ACL_OPT_DETERMINISTIC, "OPT_DETERMINISTIC(0)"},
+        {ACL_OPT_ENABLE_DEBUG_KERNEL, "OPT_ENABLE_DEBUG_KERNEL(1)"},
+        {OPT_STRONG_CONSISTENCY, "OPT_STRONG_CONSISTENCY(2)"},
     };
 
     auto it = sysParamOptDescMap.find(opt);
@@ -264,6 +212,7 @@ inline const char* GetSysParamOptDesc(aclSysParamOpt opt)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(opt));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -280,17 +229,18 @@ inline const char* GetCallbackBlockTypeDesc(aclrtCallbackBlockType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
 inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type)
 {
     static const std::unordered_map<aclrtMemLocationType, const char*> memLocationTypeDescMap = {
-        {ACL_MEM_LOCATION_TYPE_HOST, "ACL_MEM_LOCATION_TYPE_HOST(0)"},
-        {ACL_MEM_LOCATION_TYPE_DEVICE, "ACL_MEM_LOCATION_TYPE_DEVICE(1)"},
-        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "ACL_MEM_LOCATION_TYPE_UNREGISTERED(2)"},
-        {ACL_MEM_LOCATION_TYPE_MANAGED, "ACL_MEM_LOCATION_TYPE_MANAGED(3)"},
-        {ACL_MEM_LOCATION_TYPE_HOST_NUMA, "ACL_MEM_LOCATION_TYPE_HOST_NUMA(4)"},
+        {ACL_MEM_LOCATION_TYPE_HOST, "MEM_LOCATION_TYPE_HOST(0)"},
+        {ACL_MEM_LOCATION_TYPE_DEVICE, "MEM_LOCATION_TYPE_DEVICE(1)"},
+        {ACL_MEM_LOCATION_TYPE_UNREGISTERED, "MEM_LOCATION_TYPE_UNREGISTERED(2)"},
+        {ACL_MEM_LOCATION_TYPE_MANAGED, "MEM_LOCATION_TYPE_MANAGED(3)"},
+        {ACL_MEM_LOCATION_TYPE_HOST_NUMA, "MEM_LOCATION_TYPE_HOST_NUMA(4)"},
     };
 
     auto it = memLocationTypeDescMap.find(type);
@@ -299,6 +249,7 @@ inline const char* GetMemLocationTypeDesc(aclrtMemLocationType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -314,6 +265,7 @@ inline const char* GetMemAllocationTypeDesc(aclrtMemAllocationType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -335,6 +287,7 @@ inline const char* GetTdtDataTypeDesc(tdt::TdtDataType type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -357,6 +310,7 @@ inline const char* GetTdtDataTypeDescV2(int32_t type)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", type);
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -373,6 +327,7 @@ inline const char* GetRunModeDesc(aclrtRunMode mode)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -390,6 +345,7 @@ inline const char* GetCaptureModeDesc(aclmdlRICaptureMode mode)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -405,6 +361,7 @@ inline const char* GetLastErrLevelDesc(aclrtLastErrLevel level)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(level));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
@@ -423,40 +380,24 @@ inline const char* GetDeviceInfoDesc(aclDeviceInfo info)
     }
     static thread_local char enumBuf[32];
     (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(info));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }
 
-inline const char* GetMemAttrDesc(aclrtMemAttr attr)
-{
-    static const std::unordered_map<aclrtMemAttr, const char*> memAttrDescMap = {
-        {ACL_DDR_MEM, "DDR_MEM(0)"},
-        {ACL_HBM_MEM, "HBM_MEM(1)"},
-        {ACL_DDR_MEM_HUGE, "DDR_MEM_HUGE(2)"},
-        {ACL_DDR_MEM_NORMAL, "DDR_MEM_NORMAL(3)"},
-        {ACL_HBM_MEM_HUGE, "HBM_MEM_HUGE(4)"},
-        {ACL_HBM_MEM_NORMAL, "HBM_MEM_NORMAL(5)"},
-        {ACL_DDR_MEM_P2P_HUGE, "DDR_MEM_P2P_HUGE(6)"},
-        {ACL_DDR_MEM_P2P_NORMAL, "DDR_MEM_P2P_NORMAL(7)"},
-        {ACL_HBM_MEM_P2P_HUGE, "HBM_MEM_P2P_HUGE(8)"},
-        {ACL_HBM_MEM_P2P_NORMAL, "HBM_MEM_P2P_NORMAL(9)"},
-        {ACL_HBM_MEM_HUGE1G, "HBM_MEM_HUGE1G(10)"},
-        {ACL_HBM_MEM_P2P_HUGE1G, "HBM_MEM_P2P_HUGE1G(11)"},
-        {ACL_MEM_NORMAL, "MEM_NORMAL(12)"},
-        {ACL_MEM_HUGE, "MEM_HUGE(13)"},
-        {ACL_MEM_HUGE1G, "MEM_HUGE1G(14)"},
-        {ACL_MEM_P2P_NORMAL, "MEM_P2P_NORMAL(15)"},
-        {ACL_MEM_P2P_HUGE, "MEM_P2P_HUGE(16)"},
-        {ACL_MEM_P2P_HUGE1G, "MEM_P2P_HUGE1G(17)"},
-    };
+const char* GetCannAttrDesc(aclCannAttr attr);
+const char* GetDevResLimitTypeDesc(aclrtDevResLimitType type);
+const char* GetReduceKindDesc(aclrtReduceKind kind);
+const char* GetMemLinkTypeDesc(aclrtMemLinkType type);
+const char* GetErrorTypeDesc(aclrtErrorType type);
+const char* GetConditionDesc(aclrtCondition condition);
+const char* GetCompareDataTypeDesc(aclrtCompareDataType type);
 
-    auto it = memAttrDescMap.find(attr);
-    if (it != memAttrDescMap.end()) {
-        return it->second;
-    }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
-    return enumBuf;
-}
+const char* GetMemAttrDesc(aclrtMemAttr attr);
+
+const char* GetIpcMemAttrTypeDesc(aclrtIpcMemAttrType type);
+const char* GetFloatOverflowModeDesc(aclrtFloatOverflowMode mode);
+const char* GetCmoTypeDesc(aclrtCmoType type);
+const char* GetDeviceLimitDesc(aclrtDeviceLimit limit);
 
 static inline std::string DatasetMemTypeToString(const datasetMemType type)
 {

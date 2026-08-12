@@ -2068,7 +2068,7 @@ rtError_t Model::MallocDevValue(const void* const data, const uint32_t size, voi
     if (error != RT_ERROR_NONE) {
         ERROR_GOTO(
             error, FAIL_ALLOC, "Memory copy value failed, size=%u(bytes), kind=%s, retCode=%#x.", size,
-            MemcpyKindToString(RT_MEMCPY_HOST_TO_DEVICE).c_str(), static_cast<uint32_t>(error));
+            MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
     }
 
     return RT_ERROR_NONE;

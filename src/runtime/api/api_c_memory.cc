@@ -11,6 +11,7 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
+#include "enum_desc.hpp"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "global_state_manager.hpp"
@@ -349,7 +350,9 @@ rtError_t rtsGetMemcpyDescSize(rtMemcpyKind kind, size_t* descSize)
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     if (kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE) {
-        RT_LOG(RT_LOG_WARNING, "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
+        RT_LOG(
+            RT_LOG_WARNING, "Kind should be %s, but now is %s.", "MEMCPY_KIND_INNER_DEVICE_TO_DEVICE(6)",
+            MemcpyNewKindToString(kind).c_str());
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(descSize, RT_ERROR_INVALID_VALUE);
@@ -691,8 +694,9 @@ rtError_t rtsCmoAsyncWithBarrier(void* srcAddrPtr, size_t srcLen, rtCmoOpCode cm
             break;
         default:
             RT_LOG(
-                RT_LOG_WARNING, "cmoType(%d) does not support, support[PREFETCH, WRITEBACK, INVALID, FLUSH]",
-                static_cast<int32_t>(cmoType));
+                RT_LOG_WARNING, "cmoType %s does not support, support[%s, %s, %s, %s]",
+                CmoOpCodeToString(cmoType).c_str(), "CMO_PREFETCH(6)", "CMO_WRITEBACK(7)", "CMO_INVALID(8)",
+                "CMO_FLUSH(9)");
             return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
             break;
     }

@@ -184,7 +184,7 @@ rtError_t OnlineProf::GetOnlineProfilingData(
         error,
         "Copy memory from ts to runtime failed, size=%u, kind=%s, "
         "retCode=%#x.",
-        ONLINEPROF_MEM_SIZE, MemcpyKindToString(RT_MEMCPY_DEVICE_TO_HOST).c_str(), static_cast<uint32_t>(error));
+        ONLINEPROF_MEM_SIZE, MemcpyKindToStr(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
 
     onlineProfAddr = RtPtrToValue(hostTsMem);
     rtProfDataInfo_t* const profTsSourceData = RtValueToPtr<rtProfDataInfo_t*>(onlineProfAddr + ONLINEPROF_HEAD_SIZE);

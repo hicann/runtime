@@ -13,6 +13,7 @@
 #include "task_david.hpp"
 #include "stream_factory.hpp"
 #include "error_message_manage.hpp"
+#include "enum_desc.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "context_data_manage.h"
@@ -83,7 +84,8 @@ rtError_t StreamLaunchKernelPrepare(
     kernelAttrType = registeredKernel->GetKernelAttrType();
     COND_RETURN_ERROR_MSG_INNER(
         kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%d.", kernelAttrType);
+        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%s.",
+        KernelAttrTypeToString(kernelAttrType).c_str());
 
     mdl = stm->Context_()->GetModule(prog);
     TIMESTAMP_END(rtKernelLaunch_GetModule);
@@ -175,8 +177,8 @@ rtError_t CmoAddrTaskLaunchForDavid(
     // fill in head args
     InitStarsCmoSqeForDavid(&sdmaCmoSqe, dstStm, cmoOpCode);
     RT_LOG(
-        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%d, device_id=%u, stream_id=%d.", RtPtrToValue(cmoAddrInfo),
-        cmoOpCode, dev->Id_(), streamId);
+        RT_LOG_DEBUG, "cmoAddrInfo=0x%llx, cmoOpCode=%s, device_id=%u, stream_id=%d.", RtPtrToValue(cmoAddrInfo),
+        CmoOpCodeToString(cmoOpCode).c_str(), dev->Id_(), streamId);
     Driver* const devDrv = dev->Driver_();
     if (devDrv != nullptr) {
         constexpr uint64_t dstMax = 28ULL;

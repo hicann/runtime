@@ -157,6 +157,13 @@
         return (RTERRCODE);                                                                 \
     }
 
+// EE1003错误码使用，带语义化函数描述，value与参数名分开传入
+#define COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(COND, RTERRCODE, FUNC_DESC, value, paramName, ...)     \
+    if (unlikely((COND))) {                                                                                   \
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1003, (FUNC_DESC), (value), (paramName), ##__VA_ARGS__); \
+        return (RTERRCODE);                                                                                   \
+    }
+
 // 除EE1003、EE1001之外的其他外部错误码使用
 #define COND_RETURN_AND_MSG_OUTER(COND, RTERRCODE, ERRCODE, ...) \
     if (unlikely(COND)) {                                        \

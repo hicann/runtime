@@ -15,6 +15,7 @@
 #include <string>
 #include "runtime/rt_external_preload.h"
 #include "runtime/rt_external_stars.h"
+#include "runtime/rt_inner_task.h"
 #include "rt_log.h"
 
 namespace cce {
@@ -59,6 +60,8 @@ static inline std::string MultipleTaskTypeToString(const rtMultipleTaskType_t ty
     }
     return desc;
 }
+
+std::string TaskTypeToString(const rtTaskType type);
 
 } // namespace runtime
 } // namespace cce

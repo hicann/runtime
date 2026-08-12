@@ -9,6 +9,7 @@
  */
 
 #include "utils/cann_info_utils.h"
+#include "utils/data_type_utils.h"
 
 #include <fstream>
 #include <sys/stat.h>
@@ -109,7 +110,7 @@ aclError CannInfoUtils::GetAttribute(aclCannAttr cannAttr, int32_t* value)
 
     auto iter = attrToCannInfo_.find(cannAttr);
     if (iter == attrToCannInfo_.end()) {
-        ACL_LOG_WARN("find cann attr failed, attr value = %d", static_cast<int32_t>(cannAttr));
+        ACL_LOG_WARN("find cann attr failed, attr value = %s", acl::GetCannAttrDesc(cannAttr));
         return ACL_ERROR_INVALID_PARAM;
     }
     *value = iter->second.isAvailable;
@@ -269,5 +270,365 @@ void CannInfoUtils::CheckAndUpdateAttrAvailability()
             ++attrNum_;
         }
     }
+}
+
+const char* GetDataTypeDesc(aclDataType type)
+{
+    switch (type) {
+        case ACL_DT_UNDEFINED:
+            return "DT_UNDEFINED(-1)";
+        case ACL_FLOAT:
+            return "FLOAT(0)";
+        case ACL_FLOAT16:
+            return "FLOAT16(1)";
+        case ACL_INT8:
+            return "INT8(2)";
+        case ACL_INT32:
+            return "INT32(3)";
+        case ACL_UINT8:
+            return "UINT8(4)";
+        case ACL_INT16:
+            return "INT16(6)";
+        case ACL_UINT16:
+            return "UINT16(7)";
+        case ACL_UINT32:
+            return "UINT32(8)";
+        case ACL_INT64:
+            return "INT64(9)";
+        case ACL_UINT64:
+            return "UINT64(10)";
+        case ACL_DOUBLE:
+            return "DOUBLE(11)";
+        case ACL_BOOL:
+            return "BOOL(12)";
+        case ACL_STRING:
+            return "STRING(13)";
+        case ACL_COMPLEX64:
+            return "COMPLEX64(16)";
+        case ACL_COMPLEX128:
+            return "COMPLEX128(17)";
+        case ACL_BF16:
+            return "BF16(27)";
+        case ACL_INT4:
+            return "INT4(29)";
+        case ACL_UINT1:
+            return "UINT1(30)";
+        case ACL_COMPLEX32:
+            return "COMPLEX32(33)";
+        case ACL_HIFLOAT8:
+            return "HIFLOAT8(34)";
+        case ACL_FLOAT8_E5M2:
+            return "FLOAT8_E5M2(35)";
+        case ACL_FLOAT8_E4M3FN:
+            return "FLOAT8_E4M3FN(36)";
+        case ACL_FLOAT8_E8M0:
+            return "FLOAT8_E8M0(37)";
+        case ACL_FLOAT6_E3M2:
+            return "FLOAT6_E3M2(38)";
+        case ACL_FLOAT6_E2M3:
+            return "FLOAT6_E2M3(39)";
+        case ACL_FLOAT4_E2M1:
+            return "FLOAT4_E2M1(40)";
+        case ACL_FLOAT4_E1M2:
+            return "FLOAT4_E1M2(41)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetMemcpyKindDesc(aclrtMemcpyKind kind)
+{
+    switch (kind) {
+        case ACL_MEMCPY_HOST_TO_HOST:
+            return "MEMCPY_HOST_TO_HOST(0)";
+        case ACL_MEMCPY_HOST_TO_DEVICE:
+            return "MEMCPY_HOST_TO_DEVICE(1)";
+        case ACL_MEMCPY_DEVICE_TO_HOST:
+            return "MEMCPY_DEVICE_TO_HOST(2)";
+        case ACL_MEMCPY_DEVICE_TO_DEVICE:
+            return "MEMCPY_DEVICE_TO_DEVICE(3)";
+        case ACL_MEMCPY_DEFAULT:
+            return "MEMCPY_DEFAULT(4)";
+        case ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE:
+            return "MEMCPY_HOST_TO_BUF_TO_DEVICE(5)";
+        case ACL_MEMCPY_INNER_DEVICE_TO_DEVICE:
+            return "MEMCPY_INNER_DEVICE_TO_DEVICE(6)";
+        case ACL_MEMCPY_INTER_DEVICE_TO_DEVICE:
+            return "MEMCPY_INTER_DEVICE_TO_DEVICE(7)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(kind));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetMemAttrDesc(aclrtMemAttr attr)
+{
+    switch (attr) {
+        case ACL_DDR_MEM:
+            return "DDR_MEM(0)";
+        case ACL_HBM_MEM:
+            return "HBM_MEM(1)";
+        case ACL_DDR_MEM_HUGE:
+            return "DDR_MEM_HUGE(2)";
+        case ACL_DDR_MEM_NORMAL:
+            return "DDR_MEM_NORMAL(3)";
+        case ACL_HBM_MEM_HUGE:
+            return "HBM_MEM_HUGE(4)";
+        case ACL_HBM_MEM_NORMAL:
+            return "HBM_MEM_NORMAL(5)";
+        case ACL_DDR_MEM_P2P_HUGE:
+            return "DDR_MEM_P2P_HUGE(6)";
+        case ACL_DDR_MEM_P2P_NORMAL:
+            return "DDR_MEM_P2P_NORMAL(7)";
+        case ACL_HBM_MEM_P2P_HUGE:
+            return "HBM_MEM_P2P_HUGE(8)";
+        case ACL_HBM_MEM_P2P_NORMAL:
+            return "HBM_MEM_P2P_NORMAL(9)";
+        case ACL_HBM_MEM_HUGE1G:
+            return "HBM_MEM_HUGE1G(10)";
+        case ACL_HBM_MEM_P2P_HUGE1G:
+            return "HBM_MEM_P2P_HUGE1G(11)";
+        case ACL_MEM_NORMAL:
+            return "MEM_NORMAL(12)";
+        case ACL_MEM_HUGE:
+            return "MEM_HUGE(13)";
+        case ACL_MEM_HUGE1G:
+            return "MEM_HUGE1G(14)";
+        case ACL_MEM_P2P_NORMAL:
+            return "MEM_P2P_NORMAL(15)";
+        case ACL_MEM_P2P_HUGE:
+            return "MEM_P2P_HUGE(16)";
+        case ACL_MEM_P2P_HUGE1G:
+            return "MEM_P2P_HUGE1G(17)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetCannAttrDesc(aclCannAttr attr)
+{
+    switch (attr) {
+        case ACL_CANN_ATTR_UNDEFINED:
+            return "CANN_ATTR_UNDEFINED(-1)";
+        case ACL_CANN_ATTR_INF_NAN:
+            return "CANN_ATTR_INF_NAN(0)";
+        case ACL_CANN_ATTR_BF16:
+            return "CANN_ATTR_BF16(1)";
+        case ACL_CANN_ATTR_JIT_COMPILE:
+            return "CANN_ATTR_JIT_COMPILE(2)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetDevResLimitTypeDesc(aclrtDevResLimitType type)
+{
+    switch (type) {
+        case ACL_RT_DEV_RES_CUBE_CORE:
+            return "RT_DEV_RES_CUBE_CORE(0)";
+        case ACL_RT_DEV_RES_VECTOR_CORE:
+            return "RT_DEV_RES_VECTOR_CORE(1)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetReduceKindDesc(aclrtReduceKind kind)
+{
+    switch (kind) {
+        case ACL_RT_MEMCPY_SDMA_AUTOMATIC_SUM:
+            return "RT_MEMCPY_SDMA_AUTOMATIC_SUM(10)";
+        case ACL_RT_MEMCPY_SDMA_AUTOMATIC_MAX:
+            return "RT_MEMCPY_SDMA_AUTOMATIC_MAX(11)";
+        case ACL_RT_MEMCPY_SDMA_AUTOMATIC_MIN:
+            return "RT_MEMCPY_SDMA_AUTOMATIC_MIN(12)";
+        case ACL_RT_MEMCPY_SDMA_AUTOMATIC_EQUAL:
+            return "RT_MEMCPY_SDMA_AUTOMATIC_EQUAL(13)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(kind));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetMemLinkTypeDesc(aclrtMemLinkType type)
+{
+    switch (type) {
+        case ACL_RT_MEM_ACCESS_LINK_SIO:
+            return "RT_MEM_ACCESS_LINK_SIO(0)";
+        case ACL_RT_MEM_ACCESS_LINK_HCCS:
+            return "RT_MEM_ACCESS_LINK_HCCS(1)";
+        case ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH:
+            return "RT_MEM_ACCESS_UB_ONE_PORT_PATH(2)";
+        case ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH:
+            return "RT_MEM_ACCESS_UB_MULTI_PORT_PATH(3)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetErrorTypeDesc(aclrtErrorType type)
+{
+    switch (type) {
+        case ACL_RT_NO_ERROR:
+            return "RT_NO_ERROR(0)";
+        case ACL_RT_ERROR_MEMORY:
+            return "RT_ERROR_MEMORY(1)";
+        case ACL_RT_ERROR_L2:
+            return "RT_ERROR_L2(2)";
+        case ACL_RT_ERROR_AICORE:
+            return "RT_ERROR_AICORE(3)";
+        case ACL_RT_ERROR_LINK:
+            return "RT_ERROR_LINK(4)";
+        case ACL_RT_ERROR_L3_PORT:
+            return "RT_ERROR_L3_PORT(5)";
+        case ACL_RT_ERROR_OTHERS:
+            return "RT_ERROR_OTHERS(65535)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetConditionDesc(aclrtCondition condition)
+{
+    switch (condition) {
+        case ACL_RT_EQUAL:
+            return "RT_EQUAL(0)";
+        case ACL_RT_NOT_EQUAL:
+            return "RT_NOT_EQUAL(1)";
+        case ACL_RT_GREATER:
+            return "RT_GREATER(2)";
+        case ACL_RT_GREATER_OR_EQUAL:
+            return "RT_GREATER_OR_EQUAL(3)";
+        case ACL_RT_LESS:
+            return "RT_LESS(4)";
+        case ACL_RT_LESS_OR_EQUAL:
+            return "RT_LESS_OR_EQUAL(5)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(condition));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetCompareDataTypeDesc(aclrtCompareDataType type)
+{
+    switch (type) {
+        case ACL_RT_SWITCH_INT32:
+            return "RT_SWITCH_INT32(0)";
+        case ACL_RT_SWITCH_INT64:
+            return "RT_SWITCH_INT64(1)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetIpcMemAttrTypeDesc(aclrtIpcMemAttrType type)
+{
+    switch (type) {
+        case ACL_RT_IPC_MEM_ATTR_ACCESS_LINK:
+            return "RT_IPC_MEM_ATTR_ACCESS_LINK(0)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetFloatOverflowModeDesc(aclrtFloatOverflowMode mode)
+{
+    switch (mode) {
+        case ACL_RT_OVERFLOW_MODE_SATURATION:
+            return "RT_OVERFLOW_MODE_SATURATION(0)";
+        case ACL_RT_OVERFLOW_MODE_INFNAN:
+            return "RT_OVERFLOW_MODE_INFNAN(1)";
+        case ACL_RT_OVERFLOW_MODE_UNDEF:
+            return "RT_OVERFLOW_MODE_UNDEF(2)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(mode));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetCmoTypeDesc(aclrtCmoType type)
+{
+    switch (type) {
+        case ACL_RT_CMO_TYPE_PREFETCH:
+            return "RT_CMO_TYPE_PREFETCH(0)";
+        case ACL_RT_CMO_TYPE_WRITEBACK:
+            return "RT_CMO_TYPE_WRITEBACK(1)";
+        case ACL_RT_CMO_TYPE_INVALID:
+            return "RT_CMO_TYPE_INVALID(2)";
+        case ACL_RT_CMO_TYPE_FLUSH:
+            return "RT_CMO_TYPE_FLUSH(3)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(type));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
+const char* GetDeviceLimitDesc(aclrtDeviceLimit limit)
+{
+    switch (limit) {
+        case ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE:
+            return "RT_DEV_LIMIT_SIMT_STACK_SIZE(0)";
+        case ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE:
+            return "RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE(1)";
+        case ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE:
+            return "RT_DEV_LIMIT_SIMD_STACK_SIZE(2)";
+        case ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE:
+            return "RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3)";
+        case ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE:
+            return "RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(limit));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
 }
 } // namespace acl

@@ -1210,8 +1210,8 @@ rtError_t rtMemcpyAsyncPtr(
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (kind != RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) {
         RT_LOG(
-            RT_LOG_WARNING, "rtMemcpyAsyncPtr failed, kind should be %u, but now is %u.",
-            RT_MEMCPY_ADDR_DEVICE_TO_DEVICE, kind);
+            RT_LOG_WARNING, "rtMemcpyAsyncPtr failed, kind should be %s, but now is %s.",
+            "MEMCPY_ADDR_DEVICE_TO_DEVICE(5)", MemcpyKindToStr(kind));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 
@@ -1246,8 +1246,8 @@ rtError_t rtMemcpyAsyncPtrV2(
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (kind != RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) {
         RT_LOG(
-            RT_LOG_WARNING, "rtMemcpyAsyncPtrV2 failed, kind should be %u, but now is %u.",
-            RT_MEMCPY_ADDR_DEVICE_TO_DEVICE, kind);
+            RT_LOG_WARNING, "rtMemcpyAsyncPtrV2 failed, kind should be %s, but now is %s.",
+            "MEMCPY_ADDR_DEVICE_TO_DEVICE(5)", MemcpyKindToStr(kind));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     if (cfgInfo == nullptr) {
@@ -3483,9 +3483,9 @@ VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
     constexpr int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, SysParamOptToString(configOpt),
+        "configOpt", RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
     const int64_t maxVal =
         (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
@@ -3498,9 +3498,9 @@ RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t 
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
 {
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, configOpt,
-        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, SysParamOptToString(configOpt),
+        "configOpt", RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_RESERVED)));
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(configVal, RT_ERROR_INVALID_VALUE);
     *configVal = sysParamOpt_[configOpt].load();
     return ACL_RT_SUCCESS;

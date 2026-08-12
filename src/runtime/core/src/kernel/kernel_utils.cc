@@ -17,6 +17,8 @@
 #include "error_message_manage.hpp"
 #include "task/task_info.hpp"
 #include "stream_david.hpp"
+#include "enum_desc.hpp"
+#include "task_enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -75,8 +77,9 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
         RT_LOG(
             RT_LOG_INFO,
             "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=%d, convert to "
-            "rtTaskType=%d.",
-            task->stream->Id_(), task->id, task->type, task->typeName, static_cast<int32_t>(task->taskOwner), *type);
+            "rtTaskType=%s.",
+            task->stream->Id_(), task->id, task->type, task->typeName, static_cast<int32_t>(task->taskOwner),
+            TaskTypeToString(*type).c_str());
         return RT_ERROR_NONE;
     }
 
@@ -111,8 +114,8 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
     *type = taskType;
     RT_LOG(
         RT_LOG_INFO,
-        "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, convert to rtTaskType=%d.",
-        task->stream->Id_(), task->id, task->type, task->typeName, taskType);
+        "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, convert to rtTaskType=%s.",
+        task->stream->Id_(), task->id, task->type, task->typeName, TaskTypeToString(taskType).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -198,13 +201,13 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
 
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, arg_size=%u, "
+        "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, arg_size=%u, "
         "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
         "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
-        dev->Id_(), stm->Id_(), taskInfo->id, kernelAttrType, kernel->Name_().c_str(), argsInfo->argsSize, blockDim,
-        kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
-        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        dev->Id_(), stm->Id_(), taskInfo->id, KernelAttrTypeToString(kernelAttrType).c_str(), kernel->Name_().c_str(),
+        argsInfo->argsSize, blockDim, kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType,
+        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(), kernel->KernelVfType_(),
         aicTask->dynamicShareMemSize, aicTask->simtDcuSmSize);
 
@@ -315,7 +318,7 @@ rtError_t GetKernelAttribute(
         return RT_ERROR_INVALID_VALUE;
     }
 
-    RT_LOG(RT_LOG_INFO, "get kernel attrId=%d", attrId);
+    RT_LOG(RT_LOG_INFO, "get kernel attrId=%s", LaunchKernelAttrIdToString(attrId).c_str());
     const AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     rtError_t ret = RT_ERROR_NONE;
     switch (attrId) {
@@ -345,16 +348,16 @@ rtError_t GetKernelAttribute(
         case RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET:
         case RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH:
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-                ErrorCode::EE1003, "Obtaining kernel function attributes", attrId, "attrId",
-                "not equal (" + std::to_string(RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE) + ", " +
-                    std::to_string(RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET) + ", " +
-                    std::to_string(RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH) + ")");
+                ErrorCode::EE1003, "Obtaining kernel function attributes", LaunchKernelAttrIdToString(attrId), "attrId",
+                "not equal (" + LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE) + ", " +
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET) + ", " +
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH) + ")");
             ret = RT_ERROR_INVALID_VALUE;
             break;
         default:
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-                ErrorCode::EE1003, "Obtaining kernel function attributes", attrId, "attrId",
-                "[ " + std::to_string(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE) + ", " +
+                ErrorCode::EE1003, "Obtaining kernel function attributes", LaunchKernelAttrIdToString(attrId), "attrId",
+                "[" + std::to_string(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE) + ", " +
                     std::to_string(RT_LAUNCH_KERNEL_ATTR_MAX) + ")");
             ret = RT_ERROR_INVALID_VALUE;
             break;

@@ -15,6 +15,7 @@
 #include "program.hpp"
 #include "context.hpp"
 #include "toolchain/prof_api.h"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -399,7 +400,9 @@ rtError_t GetPrefetchCntAndMixTypeWithKernel(
             prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
             break;
         default:
-            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=%d.", kernelPtr->GetKernelAttrType());
+            RT_LOG(
+                RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=UNKNOWN(%d).",
+                static_cast<int32_t>(kernelPtr->GetKernelAttrType()));
             return RT_ERROR_INVALID_VALUE;
     }
     // Icache_prefetch_cnt:aic aiv prefetch instruction length, the unit is 2KB, K=1024

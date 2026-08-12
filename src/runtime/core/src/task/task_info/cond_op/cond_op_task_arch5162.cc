@@ -19,6 +19,7 @@
 #include "runtime_task_manager.h"
 #include "cond_op_label_task.h"
 #include "kernel.hpp"
+#include "enum_desc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -108,10 +109,12 @@ void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
     RT_LOG(
         RT_LOG_INFO,
         "StreamSwitchTask current streamId=%d, taskId=%hu, trueStreamId=%u, type=%u, sqeSubType=%" PRIu16
-        ", preP=%u, condition=%d, dataType=%d, leftPtr=%" PRIu64 ", rightPtr=%" PRIu64 ".",
+        ", preP=%u, condition=%s, dataType=%s, leftPtr=%" PRIu64 ", rightPtr=%" PRIu64 ".",
         stm->Id_(), taskInfo->id, streamSwitchTask->trueStreamId, static_cast<unsigned int>(sqe->header.type),
-        sqe->header.u.sqeSubType, static_cast<unsigned int>(sqe->header.preP), sqe->u.streamSwitchExInfo.condition,
-        sqe->u.streamSwitchExInfo.dataType, sqe->u.streamSwitchExInfo.varPtr, sqe->u.streamSwitchExInfo.valPtr);
+        sqe->header.u.sqeSubType, static_cast<unsigned int>(sqe->header.preP),
+        ConditionToString(streamSwitchTask->condition).c_str(),
+        SwitchDataTypeToString(streamSwitchTask->dataType).c_str(), sqe->u.streamSwitchExInfo.varPtr,
+        sqe->u.streamSwitchExInfo.valPtr);
 
     return;
 }

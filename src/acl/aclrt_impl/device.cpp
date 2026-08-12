@@ -152,7 +152,7 @@ aclError aclrtGetRunModeImpl(aclrtRunMode* runMode)
         return ACL_SUCCESS;
     }
     *runMode = ACL_HOST;
-    ACL_LOG_INFO("successfully execute aclrtGetRunMode, current runMode is %d.", static_cast<int32_t>(*runMode));
+    ACL_LOG_INFO("successfully execute aclrtGetRunMode, current runMode is %s.", acl::GetRunModeDesc(*runMode));
     return ACL_SUCCESS;
 }
 
@@ -186,7 +186,7 @@ aclError aclrtSynchronizeDeviceWithTimeoutImpl(int32_t timeout)
 aclError aclrtSetTsDeviceImpl(aclrtTsId tsId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetTsDevice);
-    ACL_LOG_INFO("start to execute aclrtSetTsDevice, tsId = %d.", static_cast<int32_t>(tsId));
+    ACL_LOG_INFO("start to execute aclrtSetTsDevice, tsId = %s.", acl::GetTsIdDesc(tsId));
     if ((tsId != ACL_TS_ID_AICORE) && (tsId != ACL_TS_ID_AIVECTOR)) {
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
         acl::AclErrorLogManager::ReportInputError(
@@ -196,7 +196,7 @@ aclError aclrtSetTsDeviceImpl(aclrtTsId tsId)
         return ACL_ERROR_INVALID_PARAM;
     }
     ACL_REQUIRES_RTS_OK(rtSetTSDevice(static_cast<uint32_t>(tsId)));
-    ACL_LOG_INFO("successfully execute aclrtSetTsDevice, set device ts %d", static_cast<int32_t>(tsId));
+    ACL_LOG_INFO("successfully execute aclrtSetTsDevice, set device ts %s", acl::GetTsIdDesc(tsId));
     return ACL_SUCCESS;
 }
 
@@ -236,15 +236,15 @@ aclError aclrtGetDeviceSatModeImpl(aclrtFloatOverflowMode* mode)
     rtFloatOverflowMode_t rtMode = RT_OVERFLOW_MODE_UNDEF;
     ACL_REQUIRES_RTS_OK(rtGetDeviceSatMode(&rtMode));
     *mode = static_cast<aclrtFloatOverflowMode>(rtMode);
-    ACL_LOG_INFO("successfully execute aclrtGetDeviceSatMode, mode is %d.", *mode);
+    ACL_LOG_INFO("successfully execute aclrtGetDeviceSatMode, mode is %s.", acl::GetFloatOverflowModeDesc(*mode));
     return ACL_SUCCESS;
 }
 
 aclError aclrtSetDeviceSatModeImpl(aclrtFloatOverflowMode mode)
 {
-    ACL_LOG_INFO("start to execute aclrtSetDeviceSatMode, mode is %d", mode);
+    ACL_LOG_INFO("start to execute aclrtSetDeviceSatMode, mode is %s", acl::GetFloatOverflowModeDesc(mode));
     ACL_REQUIRES_RTS_OK(rtSetDeviceSatMode(static_cast<rtFloatOverflowMode_t>(mode)));
-    ACL_LOG_INFO("successfully execute aclrtSetDeviceSatMode, mode is %d", mode);
+    ACL_LOG_INFO("successfully execute aclrtSetDeviceSatMode, mode is %s", acl::GetFloatOverflowModeDesc(mode));
     return ACL_SUCCESS;
 }
 
@@ -400,8 +400,8 @@ aclError aclrtGetDeviceResLimitImpl(int32_t deviceId, aclrtDevResLimitType type,
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetDeviceResLimit);
     ACL_LOG_INFO(
-        "start to execute aclrtGetDeviceResLimit, deviceId is [%d], type is [%u]", deviceId,
-        static_cast<uint32_t>(type));
+        "start to execute aclrtGetDeviceResLimit, deviceId is [%d], type is [%s]", deviceId,
+        acl::GetDevResLimitTypeDesc(type));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
     ACL_REQUIRES_RTS_OK(rtsGetDeviceResLimit(deviceId, static_cast<rtDevResLimitType_t>(type), value));
@@ -414,8 +414,8 @@ aclError aclrtSetDeviceResLimitImpl(int32_t deviceId, aclrtDevResLimitType type,
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetDeviceResLimit);
     ACL_LOG_INFO(
-        "start to execute aclrtSetDeviceResLimit, deviceId is [%d], type is [%u], value is [%u]", deviceId,
-        static_cast<uint32_t>(type), value);
+        "start to execute aclrtSetDeviceResLimit, deviceId is [%d], type is [%s], value is [%u]", deviceId,
+        acl::GetDevResLimitTypeDesc(type), value);
 
     ACL_REQUIRES_RTS_OK(rtsSetDeviceResLimit(deviceId, static_cast<rtDevResLimitType_t>(type), value));
 
@@ -437,7 +437,7 @@ aclError aclrtResetDeviceResLimitImpl(int32_t deviceId)
 aclError aclrtGetStreamResLimitImpl(aclrtStream stream, aclrtDevResLimitType type, uint32_t* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetStreamResLimit);
-    ACL_LOG_INFO("start to execute aclrtGetStreamResLimit, type is [%u]", static_cast<uint32_t>(type));
+    ACL_LOG_INFO("start to execute aclrtGetStreamResLimit, type is [%s]", acl::GetDevResLimitTypeDesc(type));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     ACL_REQUIRES_RTS_OK(
         rtsGetStreamResLimit(static_cast<rtStream_t>(stream), static_cast<rtDevResLimitType_t>(type), value));
@@ -450,7 +450,8 @@ aclError aclrtSetStreamResLimitImpl(aclrtStream stream, aclrtDevResLimitType typ
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetStreamResLimit);
     ACL_LOG_INFO(
-        "start to execute aclrtSetStreamResLimit, type is [%u], value is [%u]", static_cast<uint32_t>(type), value);
+        "start to execute aclrtSetStreamResLimit, type is [%s], value is [%u]", acl::GetDevResLimitTypeDesc(type),
+        value);
     ACL_REQUIRES_RTS_OK(
         rtsSetStreamResLimit(static_cast<rtStream_t>(stream), static_cast<rtDevResLimitType_t>(type), value));
 
@@ -618,14 +619,14 @@ aclError aclrtDeviceSetLimitImpl(aclrtDeviceLimit limit, size_t value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSetLimit);
     ACL_LOG_INFO(
-        "start to execute aclrtDeviceSetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), value);
+        "start to execute aclrtDeviceSetLimit, limit is [%s], value is [%zu]", acl::GetDeviceLimitDesc(limit), value);
     const auto rtType = AclLimitToRtLimit(limit);
     if (rtType == RT_LIMIT_TYPE_RESERVED) {
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        std::string limitStr = std::to_string(static_cast<int32_t>(limit));
+        const char_t* const limitStr = acl::GetDeviceLimitDesc(limit);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
-            std::vector<const char*>({funcName.c_str(), limitStr.c_str(), "limit", "[0, 4]"}));
+            std::vector<const char*>({funcName.c_str(), limitStr, "limit", "[0, 4]"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     if (value > static_cast<size_t>(UINT32_MAX)) {
@@ -640,7 +641,7 @@ aclError aclrtDeviceSetLimitImpl(aclrtDeviceLimit limit, size_t value)
     if (rtSetErr != RT_ERROR_NONE) {
         if (rtSetErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
             ACL_LOG_WARN(
-                "aclrtDeviceSetLimit not supported, limit is [%d], value is [%zu].", static_cast<int32_t>(limit),
+                "aclrtDeviceSetLimit not supported, limit is [%s], value is [%zu].", acl::GetDeviceLimitDesc(limit),
                 value);
             return rtSetErr;
         }
@@ -648,29 +649,30 @@ aclError aclrtDeviceSetLimitImpl(aclrtDeviceLimit limit, size_t value)
         return ACL_GET_ERRCODE_RTS(rtSetErr);
     }
     ACL_LOG_INFO(
-        "successfully execute aclrtDeviceSetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), value);
+        "successfully execute aclrtDeviceSetLimit, limit is [%s], value is [%zu]", acl::GetDeviceLimitDesc(limit),
+        value);
     return ACL_SUCCESS;
 }
 
 aclError aclrtDeviceGetLimitImpl(aclrtDeviceLimit limit, size_t* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetLimit);
-    ACL_LOG_INFO("start to execute aclrtDeviceGetLimit, limit is [%d]", static_cast<int32_t>(limit));
+    ACL_LOG_INFO("start to execute aclrtDeviceGetLimit, limit is [%s]", acl::GetDeviceLimitDesc(limit));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     const auto rtType = AclLimitToRtLimit(limit);
     if (rtType == RT_LIMIT_TYPE_RESERVED) {
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
-        std::string limitStr = std::to_string(static_cast<int32_t>(limit));
+        const char_t* const limitStr = acl::GetDeviceLimitDesc(limit);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
-            std::vector<const char*>({funcName.c_str(), limitStr.c_str(), "limit", "[0, 4]"}));
+            std::vector<const char*>({funcName.c_str(), limitStr, "limit", "[0, 4]"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     uint32_t rtValue = 0U;
     const rtError_t rtGetErr = rtDeviceGetLimit(rtType, &rtValue);
     if (rtGetErr != RT_ERROR_NONE) {
         if (rtGetErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("aclrtDeviceGetLimit not supported, limit is [%d].", static_cast<int32_t>(limit));
+            ACL_LOG_WARN("aclrtDeviceGetLimit not supported, limit is [%s].", acl::GetDeviceLimitDesc(limit));
             return rtGetErr;
         }
         ACL_LOG_CALL_ERROR("rtDeviceGetLimit failed, runtime result = %d.", static_cast<int32_t>(rtGetErr));
@@ -678,7 +680,8 @@ aclError aclrtDeviceGetLimitImpl(aclrtDeviceLimit limit, size_t* value)
     }
     *value = static_cast<size_t>(rtValue);
     ACL_LOG_INFO(
-        "successfully execute aclrtDeviceGetLimit, limit is [%d], value is [%zu]", static_cast<int32_t>(limit), *value);
+        "successfully execute aclrtDeviceGetLimit, limit is [%s], value is [%zu]", acl::GetDeviceLimitDesc(limit),
+        *value);
     return ACL_SUCCESS;
 }
 

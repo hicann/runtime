@@ -10,6 +10,16 @@
 set(RUNTIME_CORE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core)
 set(RUNTIME_FEATURE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/feature)
 set(RUNTIME_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(RUNTIME_CORE_ENUM_DESC_SRC_FILES
+    ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
+)
+set(RUNTIME_API_ENUM_DESC_SRC_FILES
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
+)
+set(RUNTIME_OPTIONAL_ENUM_DESC_SRC_FILES
+    ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
+)
 
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)

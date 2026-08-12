@@ -135,7 +135,7 @@ uint64_t GetFuncCallMemSizeForCaptureCondTask(rtCondTaskType_t type)
             return sizeof(RtStarsCaptureWhileCondFc);
 
         default:
-            RT_LOG(RT_LOG_ERROR, "Invalid cond type, cond type=%d", type);
+            RT_LOG(RT_LOG_ERROR, "Invalid cond type=%s", CondTaskTypeToString(type).c_str());
             return 0U;
     }
 }
@@ -254,7 +254,8 @@ void CaptureConditionTaskUnInit(TaskInfo* const taskInfo)
 
 rtError_t CheckCondTaskParamsSize(rtCondTaskParams params)
 {
-    RT_LOG(RT_LOG_DEBUG, "condition type=%u, condition size=%u", params.type, params.size);
+    RT_LOG(
+        RT_LOG_DEBUG, "condition type=%s, condition size=%u", CondTaskTypeToString(params.type).c_str(), params.size);
     switch (params.type) {
         case RT_COND_TASK_TYPE_IF:
             COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
@@ -375,7 +376,9 @@ static rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo* condTaskIn
             COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcSwitch failed.");
         } break;
         default:
-            RT_LOG(RT_LOG_ERROR, "unsupported condType=%d.", condTaskInfo->condHandle->GetCondType());
+            RT_LOG(
+                RT_LOG_ERROR, "unsupported condType=%s.",
+                CondTaskTypeToString(condTaskInfo->condHandle->GetCondType()).c_str());
             return RT_ERROR_INVALID_VALUE;
     }
 
@@ -395,7 +398,7 @@ void ConstructCaptureCondTaskDeltaOffset(rtCondTaskType_t condType, rtStarsCaptu
             para.deltaOffset = offsetof(RtStarsCaptureSwitchCondFc, modelExe) / sizeof(uint32_t);
             break;
         default:
-            RT_LOG(RT_LOG_EVENT, "unsupported condType=%d.", condType);
+            RT_LOG(RT_LOG_EVENT, "unsupported condType=%s.", CondTaskTypeToString(condType).c_str());
     }
 }
 
