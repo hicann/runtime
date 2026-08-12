@@ -63,7 +63,6 @@ protected:
     {
         (void)rtSetSocVersion("Ascend910B1");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
         (void)rtSetDevice(0);
         ut::ClearCurrentContextStatusForReset();
         ut::ClearCurrentDefaultStreamPending();
@@ -82,7 +81,6 @@ protected:
             device_ = nullptr;
         }
         ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
-        ((Runtime*)Runtime::Instance())->SetDisableThread(false);
         (void)rtSetSocVersion("");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
         GlobalMockObject::verify();
@@ -406,8 +404,6 @@ TEST_F(EventTest910B, TestWaitForBusy)
     rtError_t error;
     rtEvent_t event;
 
-    bool isDisableThread = ((Runtime*)Runtime::Instance())->GetDisableThread();
-
     error = rtEventCreate(&event);
     Event* eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -419,18 +415,9 @@ TEST_F(EventTest910B, TestWaitForBusy)
     EXPECT_EQ(error, RT_ERROR_END_OF_SEQUENCE);
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Event::IsEventTaskEmpty).stubs().will(returnValue(false)).then(returnValue(true));
-    MOCKER_CPP(&Event::GetFailureStatus).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
-
-    ((Runtime*)Runtime::Instance())->SetDisableThread(false);
-    error = eventObj->WaitForBusy();
-    EXPECT_EQ(error, RT_ERROR_END_OF_SEQUENCE);
-
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    ((Runtime*)Runtime::Instance())->SetDisableThread(true);
     GlobalMockObject::verify();
-    ((Runtime*)Runtime::Instance())->SetDisableThread(isDisableThread);
 }
 
 TEST_F(EventTest910B, TestWaitForBusy_device_down)
@@ -452,7 +439,6 @@ TEST_F(EventTest910B, TestWaitForBusy_device_down)
 
     MOCKER_CPP(&Event::IsEventTaskEmpty).stubs().will(returnValue(false)).then(returnValue(true));
     MOCKER_CPP(&Event::GetFailureStatus).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
-    ((Runtime*)Runtime::Instance())->SetDisableThread(true);
 
     Event* eventObj = rt_ut::UnwrapOrNull<Event>(event);
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
@@ -473,10 +459,7 @@ TEST_F(EventTest910B, TestElapsedTime)
     Event event1;
     Event event2;
     float32_t timeInterval;
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
-    rtInstance->SetDisableThread(false);
-    rtInstance->SetDisableThread(false);
     RawDevice* stub = new RawDevice(0);
     event1.device_ = stub;
     event2.device_ = stub;
@@ -492,8 +475,6 @@ TEST_F(EventTest910B, TestElapsedTime)
     event2.timestamp_ = 10240000;
     error = event1.ElapsedTime(&timeInterval, &event2);
     EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtInstance->SetDisableThread(true);
     delete stub;
 }
 

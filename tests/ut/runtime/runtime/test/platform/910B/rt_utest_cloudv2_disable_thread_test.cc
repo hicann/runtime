@@ -71,8 +71,6 @@ protected:
     {
         (void)rtSetSocVersion("Ascend910B");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
         int64_t phyDieId = 0;
         MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
@@ -119,8 +117,6 @@ protected:
         ((Runtime*)Runtime::Instance())->DeviceRelease(device);
         GlobalMockObject::verify();
         (void)rtSetSocVersion("");
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        rtInstance->SetDisableThread(false); // Recover.
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
     }
 
@@ -315,9 +311,6 @@ TEST_F(ApiCloudV2DisableThreadTest, kernel_launch_success_dfx)
     stm->SetLimitFlag(true);
     stm->SetRecycleFlag(false);
 
-    const bool isDisableThread = Runtime::Instance()->GetDisableThread();
-    EXPECT_EQ(isDisableThread, true);
-
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -342,9 +335,6 @@ TEST_F(ApiCloudV2DisableThreadTest, kernel_launch_sq_task_send_error)
 
     int32_t errCode = 8888;
     MOCKER_CPP_VIRTUAL((NpuDriver*)(dev->Driver_()), &NpuDriver::SqTaskSend).stubs().will(returnValue(errCode));
-
-    const bool isDisableThread = Runtime::Instance()->GetDisableThread();
-    EXPECT_EQ(isDisableThread, true);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, errCode);

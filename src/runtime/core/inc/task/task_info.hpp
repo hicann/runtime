@@ -63,10 +63,6 @@ typedef struct tagTaskInfoStru {
     uint8_t resv : 4;
     uint8_t sqeNum : 7;    // 使用sqeNum必须在对应taskini中初始化
     uint8_t needPostProc : 1;
-    /*-------------------------tmp begine------------------------------------*/
-    // DavinciMultiTaskInfo、PCTraceTaskInfo:
-    std::shared_ptr<PCTrace> pcTrace;
-    /*-------------------------tmp end---------------------------------------*/
     union {
         AicTaskInfo aicTaskInfo;
         AicpuTaskInfo aicpuTaskInfo;
@@ -90,7 +86,6 @@ typedef struct tagTaskInfoStru {
         OnlineProfEnableTaskInfo onlineProfEnableTaskInfo;
         OnlineProfDisableTaskInfo onlineProfDisableTaskInfo;
         AdcProfTaskInfo adcProfTaskInfo;
-        PCTraceTaskInfo pcTraceTaskInfo;
         ModelMaintainceTaskInfo modelMaintainceTaskInfo;
         ModelExecuteTaskInfo modelExecuteTaskInfo;
         RdmaPiValueModifyInfo rdmaPiValueModifyInfo;

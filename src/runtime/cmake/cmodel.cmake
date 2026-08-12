@@ -451,7 +451,6 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/engine/hwts/scheduler.cc
     ${RUNTIME_CORE_DIR}/src/dfx/atrace_log.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fast_recover.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/pctrace.cc
     ${RUNTIME_CORE_DIR}/src/utils/subscribe.cc
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc
     ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_decoder_utils.cc
@@ -586,7 +585,6 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/dfx/atrace_log.cc
     ${RUNTIME_CORE_DIR}/src/dfx/coredump_c.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fast_recover.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/pctrace.cc
     ${RUNTIME_CORE_DIR}/src/utils/subscribe.cc
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc
     ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_decoder_utils.cc

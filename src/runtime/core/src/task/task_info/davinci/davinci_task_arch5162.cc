@@ -161,7 +161,6 @@ rtError_t WaitAsyncCopyCompleteForDavinciTask(TaskInfo* taskInfo)
 }
 
 TIMESTAMP_EXTERN(ArgRelease);
-TIMESTAMP_EXTERN(KernelTaskCompleteOther);
 void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     const uint32_t errorCode = taskInfo->errorCode;
@@ -194,13 +193,6 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
     }
     aicTaskInfo->comm.argHandle = nullptr;
     TIMESTAMP_END(ArgRelease);
-
-    TIMESTAMP_BEGIN(KernelTaskCompleteOther);
-    if (unlikely(taskInfo->pcTrace != nullptr)) {
-        RT_LOG(RT_LOG_INFO, "DoCompleteSuccess, davinci kernel task has been completed successfully!");
-        (void)taskInfo->pcTrace->WritePCTraceFile();
-    }
-    TIMESTAMP_END(KernelTaskCompleteOther);
 }
 
 static void ArgReleaseForAicTaskUnInit(TaskInfo* taskInfo)
@@ -260,7 +252,6 @@ void DavinciTaskUnInit(TaskInfo* taskInfo)
     } else {
         ArgReleaseForAicTaskUnInit(taskInfo);
     }
-    taskInfo->pcTrace.reset();
 }
 
 void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)

@@ -1802,6 +1802,7 @@ rtError_t Runtime::RegisterKernelByStubFunc(
     ElfProgram* elfProg, const void* stubFunc, const char_t* stubName, const void* const kernelInfoExt,
     const uint32_t funcMode, const char_t* kernelName)
 {
+    UNUSED(funcMode);
     uint32_t kernelCount = elfProg->GetKernelsCount();
     bool isKernelFound = false;
     const RtKernel* kernels = elfProg->GetKernels();
@@ -1842,14 +1843,6 @@ rtError_t Runtime::RegisterKernelByStubFunc(
             kernelObj->SetStubName_(stubName);
             if (kernelInfoExt != nullptr) {
                 kernelObj->SetKernelInfoExt(RtPtrToPtr<const char_t*>(kernelInfoExt));
-            }
-
-            const uint32_t funcModeInner = (funcMode & 0xFFFFU);
-            if ((funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_RECORDLOOP) ||
-                (funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_SKIPLOOP) ||
-                (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_RECORDLOOP) ||
-                (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_SKIPLOOP)) {
-                kernelObj->SetPctraceFlag(funcModeInner);
             }
 
             /* add kernel to runtime KernelTable */

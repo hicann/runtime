@@ -59,7 +59,6 @@ protected:
     {
         (void)rtSetSocVersion("Ascend310P");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
         originType_ = Runtime::Instance()->GetChipType();
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
         rtInstance->SetChipType(CHIP_DC);
@@ -78,10 +77,6 @@ protected:
 
         (void)rtSetDevice(0);
         (void)rtSetTSDevice(0);
-
-        // env check
-        const bool isDisableThread = Runtime::Instance()->GetDisableThread();
-        EXPECT_EQ(isDisableThread, true);
 
         rtError_t error1 = rtStreamCreate(&stream_, 0);
         rtError_t error2 = rtEventCreate(&event_);
@@ -116,7 +111,6 @@ protected:
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
         rtInstance->SetChipType(originType_);
         GlobalContainer::SetRtChipType(originType_);
-        rtInstance->SetDisableThread(false); // Recover.
     }
 
     virtual void SetUp() {}

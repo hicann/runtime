@@ -65,17 +65,9 @@ rtError_t stubGetHardVerBySocVer(const uint32_t deviceId, int64_t& hardwareVersi
 
 class StarsTaskTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        flag = ((Runtime*)Runtime::Instance())->GetDisableThread();
-        std::cout << "StarsTaskTest start" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "StarsTaskTest start" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "StarsTaskTest end" << std::endl;
-        ((Runtime*)Runtime::Instance())->SetDisableThread(flag);
-    }
+    static void TearDownTestCase() { std::cout << "StarsTaskTest end" << std::endl; }
 
     virtual void SetUp()
     {
@@ -120,9 +112,7 @@ protected:
     Device* dev_ = nullptr;
     Context* ctx_ = nullptr;
     rtChipType_t old;
-    static bool flag;
 };
-bool StarsTaskTest::flag = false;
 
 TEST_F(StarsTaskTest, CheckSqeSize)
 {

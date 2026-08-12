@@ -62,9 +62,6 @@ private:
 extern int32_t faultEventFlag;
 TEST_F(CloudV2AicpuErrMsgTest, SetStarsResultForDavinciTask)
 {
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    bool flag = rtInstance->GetDisableThread();
-
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -94,8 +91,6 @@ TEST_F(CloudV2AicpuErrMsgTest, SetStarsResultForDavinciTask)
 
     ret = rtStreamDestroy(newStream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    rtInstance->SetDisableThread(flag);
 }
 
 TEST_F(CloudV2AicpuErrMsgTest, SetAddr)

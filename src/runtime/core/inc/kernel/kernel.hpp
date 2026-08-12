@@ -115,10 +115,6 @@ public:
 
     void SetNameOffset(const uint32_t offset) { nameOffset_ = offset; }
 
-    void SetPctraceFlag(const uint32_t pctraceFlag) { pctraceFlag_ = pctraceFlag; }
-
-    uint32_t PctraceFlag() const { return pctraceFlag_; }
-
     void SetTaskRation(const uint32_t taskRation) { taskRation_ = taskRation; }
 
     uint32_t GetTaskRation() const { return taskRation_; }
@@ -264,7 +260,6 @@ private:
     uint32_t length2_;
     uint32_t minStackSize1_{0U}; // aic min stack size
     uint32_t minStackSize2_{0U}; // aiv min stack size
-    uint32_t pctraceFlag_;
     uint32_t nameOffset_;
     uint8_t mixType_;
     uint32_t taskRation_; // task ration of aic : aiv

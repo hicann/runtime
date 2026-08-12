@@ -270,7 +270,6 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/pctrace.cc
     ${TOP_DIR}/src/runtime/core/src/engine/engine.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/package_rebuilder.cc
     ${TOP_DIR}/src/runtime/core/src/engine/hwts/scheduler.cc

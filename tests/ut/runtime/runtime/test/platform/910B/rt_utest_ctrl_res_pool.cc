@@ -42,15 +42,9 @@ protected:
         std::cout << "CtrlTaskPoolEntry test start" << std::endl;
         (void)rtSetSocVersion("Ascend910");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
         (void)rtSetTSDevice(0);
     }
-    static void TearDownTestCase()
-    {
-        ((Runtime*)Runtime::Instance())->SetDisableThread(false);
-        ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-    }
+    static void TearDownTestCase() { ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false); }
 
     virtual void SetUp() { (void)rtSetDevice(0); }
 

@@ -240,7 +240,6 @@ TEST_F(Arch5162TaskTest, DoCompleteSuccessForDavinciTask)
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     MOCKER_CPP(&Stream::SetArgHandle).stubs();
     uint32_t descBuf = 1;
-    std::shared_ptr<PCTrace> pcTrace;
     RawDevice* device = new RawDevice(0);
     Stream* stream = new Stream(device, 0);
     EXPECT_NE(stream, nullptr);
@@ -250,7 +249,6 @@ TEST_F(Arch5162TaskTest, DoCompleteSuccessForDavinciTask)
     task.errorCode = 0;
     task.u.aicTaskInfo.mixOpt = 1;
     task.u.aicTaskInfo.descBuf = &descBuf;
-    task.pcTrace = pcTrace;
     DoCompleteSuccessForDavinciTask(&task, 10);
     EXPECT_EQ(task.u.aicTaskInfo.descBuf, nullptr);
     delete stream;

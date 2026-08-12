@@ -323,7 +323,6 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
-    ${TOP_DIR}/src/runtime/core/src/dfx/pctrace.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
@@ -715,7 +714,6 @@ add_executable(runtime_utest_api_910B
     rt_utest_kernel.cc
     rt_utest_kernellaunch.cc
     rt_utest_osal.cc
-    rt_utest_pctrace.cc
     rt_utest_printf.cc
     rt_utest_profileapi.cc
     rt_utest_profiler.cc

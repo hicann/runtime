@@ -10,7 +10,6 @@
 #ifndef CCE_RUNTIME_TASK_INFO_BASE_HPP
 #define CCE_RUNTIME_TASK_INFO_BASE_HPP
 
-#include "pctrace.hpp"
 #include "profiler_struct.hpp"
 #include "ffts.hpp"
 #include "task_base.hpp"

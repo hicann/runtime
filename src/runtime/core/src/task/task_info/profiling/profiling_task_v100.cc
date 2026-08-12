@@ -99,10 +99,6 @@ void ConstructSqeForProfilerTraceExTask(TaskInfo* taskInfo, rtStarsSqe_t* const 
 }
 #endif
 
-#if F_DESC("PCTraceTask")
-void PCTraceTaskUnInit(TaskInfo* const taskInfo) { taskInfo->pcTrace.reset(); }
-#endif
-
 #if F_DESC("ProfilingTaskRegister")
 static bool ProfilingTaskRegister()
 {
@@ -214,18 +210,6 @@ static bool ProfilingTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommon,
     };
 
-    // TS_TASK_TYPE_PCTRACE_ENABLE
-    TaskFuncSingle pcTraceFuncs = {
-        .toCommandFunc = &ToCommandBodyForPCTraceTask,
-        .toSqeFunc = &ConstructSqeBase,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = &PCTraceTaskUnInit,
-        .waitAsyncCpCompleteFunc = nullptr,
-        .printErrorInfoFunc = &PrintErrorInfoCommon,
-        .setResultFunc = &SetResultCommon,
-        .setStarsResultFunc = &SetStarsResultCommon,
-    };
-
     const auto& chips = GetV100Chips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE, profilerDynamicEnableFuncs);
@@ -237,7 +221,6 @@ static bool ProfilingTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_ADCPROF, adcProfFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, pcTraceFuncs);
     }
 
     return true;

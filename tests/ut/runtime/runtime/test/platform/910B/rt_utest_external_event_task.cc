@@ -73,7 +73,6 @@ protected:
         GlobalMockObject::verify();
         (void)rtSetSocVersion("Ascend910B1");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
         ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
     }
 
@@ -81,7 +80,6 @@ protected:
     {
         GlobalMockObject::verify();
         rtDeviceReset(0);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(false);
         (void)rtSetSocVersion("");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
     }

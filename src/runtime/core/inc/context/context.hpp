@@ -22,7 +22,6 @@
 #include "runtime.hpp"
 #include "kernel.hpp"
 #include "program.hpp"
-#include "pctrace.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
 #include "jetty_pool.h"
@@ -60,7 +59,6 @@ class CaptureModel;
 class Program;
 class Kernel;
 class DavinciKernelTask;
-class PCTraceTask;
 class Runtime;
 struct StarsArgLoaderResult;
 class Model;

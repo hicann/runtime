@@ -354,8 +354,6 @@ void TransDavinciTaskToVectorCore(
     kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
 }
 
-void SetPcTrace(TaskInfo* taskInfo, std::shared_ptr<PCTrace> pcTracePtr) { taskInfo->pcTrace = std::move(pcTracePtr); }
-
 uint16_t GetAICpuQos(const TaskInfo* const taskInfo) { return taskInfo->stream->Device_()->GetTsdQos(); }
 
 rtError_t FillKernelLaunchPara(

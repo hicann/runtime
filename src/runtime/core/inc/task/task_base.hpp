@@ -115,7 +115,6 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_CREATE_STREAM = 7,                 /* create stream task */
     TS_TASK_TYPE_DATA_DUMP = 8,                     /* kernel data dump configure */
     TS_TASK_TYPE_REMOTE_EVENT_WAIT = 9,             /* wait for event on another device */
-    TS_TASK_TYPE_PCTRACE_ENABLE = 10,
     TS_TASK_TYPE_CREATE_L2_ADDR = 11,               /* create L2 addr info for aicpu kernel */
     TS_TASK_TYPE_MODEL_MAINTAINCE = 12,             /* bind or unbind stream with model */
     TS_TASK_TYPE_MODEL_EXECUTE = 13,                /* execute model */

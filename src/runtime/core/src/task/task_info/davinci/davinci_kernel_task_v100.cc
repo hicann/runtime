@@ -39,7 +39,6 @@ namespace runtime {
 #if F_DESC("DavinciKernelTask")
 
 TIMESTAMP_EXTERN(ArgRelease);
-TIMESTAMP_EXTERN(KernelTaskCompleteOther);
 
 void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
 {
@@ -74,13 +73,6 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
     }
     aicTaskInfo->comm.argHandle = nullptr;
     TIMESTAMP_END(ArgRelease);
-
-    TIMESTAMP_BEGIN(KernelTaskCompleteOther);
-    if (unlikely(taskInfo->pcTrace != nullptr)) {
-        RT_LOG(RT_LOG_INFO, "DoCompleteSuccess, davinci kernel task has been completed successfully!");
-        (void)taskInfo->pcTrace->WritePCTraceFile();
-    }
-    TIMESTAMP_END(KernelTaskCompleteOther);
 }
 
 void SetResultForDavinciTask(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize)
@@ -524,7 +516,6 @@ void DavinciTaskUnInit(TaskInfo* taskInfo)
     } else {
         ArgReleaseForAicTaskUnInit(taskInfo);
     }
-    taskInfo->pcTrace.reset();
 }
 
 void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t& logicCq)

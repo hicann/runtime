@@ -316,46 +316,5 @@ void ToCommandBodyForProfilerTraceExTask(TaskInfo* taskInfo, rtCommand_t* const 
 }
 #endif
 
-#if F_DESC("PCTraceTask")
-rtError_t PCTraceTaskInit(
-    TaskInfo* const taskInfo, const uint16_t enableTaskIndex, const uint16_t coreDims,
-    std::shared_ptr<PCTrace> pcTracePtr)
-{
-    NULL_PTR_RETURN_MSG(pcTracePtr, RT_ERROR_PCTRACE_NULL);
-
-    PCTraceTaskInfo* pcTraceTaskInfo = &(taskInfo->u.pcTraceTaskInfo);
-    TaskCommonInfoInit(taskInfo);
-
-    taskInfo->type = TS_TASK_TYPE_PCTRACE_ENABLE;
-    taskInfo->typeName = "PC_TRACE";
-
-    pcTraceTaskInfo->enableTaskID = enableTaskIndex;
-    pcTraceTaskInfo->coreDim = coreDims;
-    taskInfo->pcTrace = std::move(pcTracePtr);
-    pcTraceTaskInfo->pctraceAddr = taskInfo->pcTrace->GetPcTraceAddr();
-    return RT_ERROR_NONE;
-}
-
-void ToCommandBodyForPCTraceTask(TaskInfo* const taskInfo, rtCommand_t* const command)
-{
-    PCTraceTaskInfo* pcTraceTaskInfo = &(taskInfo->u.pcTraceTaskInfo);
-    Stream* const stream = taskInfo->stream;
-    Driver* const driver = taskInfo->stream->Device_()->Driver_();
-
-    rtError_t error;
-    uint64_t pctracePhyAddr;
-    const int32_t devId = static_cast<int32_t>(stream->Device_()->Id_());
-    error = driver->MemAddressTranslate(devId, pcTraceTaskInfo->pctraceAddr, &pctracePhyAddr);
-    COND_RETURN_VOID(error != RT_ERROR_NONE, "translate virtual address to physic failed, retCode=%#x.", error);
-    RT_LOG(
-        RT_LOG_INFO, "PC trace address=%#" PRIx64 ", physical address=%#" PRIx64, pcTraceTaskInfo->pctraceAddr,
-        pctracePhyAddr);
-
-    command->u.pctraceTask.enableTaskID = pcTraceTaskInfo->enableTaskID;
-    command->u.pctraceTask.contentAddr = pctracePhyAddr;
-    command->u.pctraceTask.coreDim = pcTraceTaskInfo->coreDim;
-    command->u.pctraceTask.virAddr = MAX_UINT32_NUM;
-}
-#endif
 } // namespace runtime
 } // namespace cce

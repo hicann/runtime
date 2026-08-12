@@ -115,8 +115,6 @@ static void ApiTest_Stream_Cb(void* arg) {}
 
 TEST_F(CloudV2StreamTest, stream_set_attribute2)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     rtStream_t stream;
     rtError_t error;
     rtStreamAttrValue_t value;
@@ -152,13 +150,10 @@ TEST_F(CloudV2StreamTest, stream_set_attribute2)
     EXPECT_EQ(error, RT_ERROR_NONE);
     device->SetTschVersion(version);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
-    Runtime::Instance()->SetDisableThread(olgFlag);
 }
 
 TEST_F(CloudV2StreamTest, stream_get_attribute2)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     rtError_t error;
     rtStreamAttrValue_t setvalue;
     rtStreamAttrValue_t stmModeRet;
@@ -201,13 +196,10 @@ TEST_F(CloudV2StreamTest, stream_get_attribute2)
     error = rtStreamDestroy(stm);
     device->SetTschVersion(version);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
-    Runtime::Instance()->SetDisableThread(olgFlag);
 }
 
 TEST_F(CloudV2StreamTest, rtsLaunchHostFunc01)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     rtError_t error;
     rtStream_t stream;
     uint32_t cqId = 0;
@@ -223,18 +215,14 @@ TEST_F(CloudV2StreamTest, rtsLaunchHostFunc01)
     error = rtStreamSynchronize(stream);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime::Instance()->SetDisableThread(olgFlag);
 }
 
 TEST_F(CloudV2StreamTest, Query_test)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
-
     std::unique_ptr<RawDevice> device = std::make_unique<RawDevice>(0);
     device->Init();
     std::unique_ptr<Stream> stream = std::make_unique<Stream>(device.get(), 0);
 
-    Runtime::Instance()->SetDisableThread(true);
     rtChipType_t oldChipType = device->chipType_;
     uint16_t sqHead = 0U;
     uint16_t sqTail = 1U;
@@ -243,7 +231,6 @@ TEST_F(CloudV2StreamTest, Query_test)
     EXPECT_NE(ret, RT_ERROR_NONE);
 
     device->chipType_ = oldChipType;
-    Runtime::Instance()->SetDisableThread(olgFlag);
     GlobalMockObject::verify();
 }
 

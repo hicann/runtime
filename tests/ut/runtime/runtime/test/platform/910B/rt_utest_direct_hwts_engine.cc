@@ -233,7 +233,6 @@ void ExeciptionCallbackStub(rtExceptionType type)
 
 TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_MODEL_EXECUTE)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
     bool isSetVisibleDev = Runtime::Instance()->isSetVisibleDev;
     RawDevice* device = new RawDevice(0);
     device->Init();
@@ -244,14 +243,12 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_MODEL_EXECUTE)
     uint32_t payload = TS_ERROR_TASK_TYPE_NOT_SUPPORT;
     std::unique_ptr<HwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ExeciptionCallbackStub;
-    Runtime::Instance()->SetDisableThread(true);
     TaskInfo taskInfo = {0};
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
     Runtime::Instance()->isSetVisibleDev = true;
     engine->ReportExceptProc(&task, payload);
     EXPECT_EQ(task.stream->GetErrCode(), payload);
     Runtime::Instance()->isSetVisibleDev = isSetVisibleDev;
-    Runtime::Instance()->SetDisableThread(olgFlag);
     delete stream;
     delete device;
     GlobalMockObject::reset();
@@ -361,7 +358,6 @@ rtError_t StartMock(DirectHwtsEngine* engine)
 
 TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_001)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
     bool isSetVisibleDev = Runtime::Instance()->isSetVisibleDev;
     RawDevice* device = new RawDevice(0);
     device->Init();
@@ -372,14 +368,12 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_001)
     uint32_t payload = TS_ERROR_TASK_TYPE_NOT_SUPPORT;
     std::unique_ptr<HwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ExeciptionCallbackStub;
-    Runtime::Instance()->SetDisableThread(true);
     TaskInfo taskInfo = {0};
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
     Runtime::Instance()->isSetVisibleDev = true;
     engine->ReportExceptProc(&task, payload);
     EXPECT_EQ(task.stream->GetErrCode(), payload);
     Runtime::Instance()->isSetVisibleDev = isSetVisibleDev;
-    Runtime::Instance()->SetDisableThread(olgFlag);
     delete stream;
     delete device;
     GlobalMockObject::reset();
@@ -387,7 +381,6 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_001)
 
 TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_002)
 {
-    const bool olgFlag = Runtime::Instance()->GetDisableThread();
     bool isSetVisibleDev = Runtime::Instance()->isSetVisibleDev;
     RawDevice* device = new RawDevice(0);
     device->Init();
@@ -409,14 +402,12 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_002)
 
     std::unique_ptr<HwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ExeciptionCallbackStub;
-    Runtime::Instance()->SetDisableThread(true);
     TaskInfo taskInfo = {0};
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
     Runtime::Instance()->isSetVisibleDev = true;
     engine->ReportExceptProc(&task, payload);
     EXPECT_EQ(task.stream->GetErrCode(), payload);
     Runtime::Instance()->isSetVisibleDev = isSetVisibleDev;
-    Runtime::Instance()->SetDisableThread(olgFlag);
     delete kernel;
     delete stream;
     delete device;

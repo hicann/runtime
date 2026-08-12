@@ -633,7 +633,6 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
-    ${TOP_DIR}/src/runtime/core/src/dfx/pctrace.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
@@ -759,7 +758,6 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
-    ${TOP_DIR}/src/runtime/core/src/dfx/pctrace.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
@@ -1259,7 +1257,6 @@ add_executable(runtime_utest_dfx
     ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
-    test/rt_utest_pctrace.cc
     test/rt_utest_dfx_api.cc
     test/rt_utest_printf.cc
 )
@@ -1653,7 +1650,6 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/pctrace.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc

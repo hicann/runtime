@@ -3610,15 +3610,6 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_3)
 {
     rtError_t error;
     void* args[] = {&error, NULL};
-    PCTrace* pctraceHandle = new PCTrace();
-    RawDevice* stubDevice = new RawDevice(0);
-    stubDevice->Init();
-    Stream* realStream = rt_ut::UnwrapOrNull<Stream>(stream_);
-    ASSERT_NE(realStream, nullptr);
-
-    TaskInfo* pctraceTask =
-        (const_cast<TaskFactory*>(stubDevice->GetTaskFactory()))->Alloc(realStream, TS_TASK_TYPE_PCTRACE_ENABLE, error);
-
     char function;
     void* binHdl = nullptr;
     rtDevBinary_t master_bin;
@@ -3638,10 +3629,7 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_3)
     EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
 
     error = rtStreamSynchronize(stream_);
-    (const_cast<TaskFactory*>(stubDevice->GetTaskFactory()))->Recycle(pctraceTask);
     rtDevBinaryUnRegister(binHdl);
-    delete pctraceHandle;
-    delete stubDevice;
 }
 
 TEST_F(ApiTest, LAUNCH_ALL_KERNEL_TEST_1)
@@ -3938,8 +3926,6 @@ TEST_F(ApiTest, kernel_launch_1)
 
     error = rtKernelLaunch(&function, 1, NULL, 0, NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
-    MOCKER_CPP(&PCTrace::FreePCTraceMemory).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-
     error = rtKernelLaunch(&function, 0, (void*)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
     rtDevBinaryUnRegister(binHdl);

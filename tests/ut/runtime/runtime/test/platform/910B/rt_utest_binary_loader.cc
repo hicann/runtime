@@ -40,9 +40,7 @@ class BinaryLoaderTest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
-
-        std::cout << "BinaryLoaderTest test start start. disbale=%d. " << rtInstance->GetDisableThread() << std::endl;
+        std::cout << "BinaryLoaderTest test start start." << std::endl;
 
         // Create GatherV3.o binary file
         std::ifstream binaryTxtFile(binaryTxtFileName);
@@ -78,7 +76,6 @@ protected:
     {
         std::cout << "BinaryLoaderTest test start end. " << std::endl;
         DeleteFile(binaryFileName);
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
     }
 
     virtual void SetUp() { (void)rtSetDevice(0); }

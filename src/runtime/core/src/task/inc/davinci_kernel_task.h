@@ -37,7 +37,6 @@ void TransDavinciTaskToVectorCore(
     const bool isLaunchVec);
 rtError_t CheckMixKernelValid(const uint8_t mixType, const uint64_t func2);
 uint16_t GetAICpuQos(const TaskInfo* const taskInfo);
-void SetPcTrace(TaskInfo* taskInfo, std::shared_ptr<PCTrace> pcTracePtr);
 rtError_t FillKernelLaunchPara(
     const rtKernelLaunchNames_t* const launchNames, TaskInfo* taskInfo, ArgLoader* const devArgLdr);
 void ParseExtendInfo(

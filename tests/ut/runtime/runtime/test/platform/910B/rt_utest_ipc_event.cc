@@ -48,7 +48,6 @@ protected:
     {
         (void)rtSetSocVersion("Ascend910B1");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
         (void)rtSetDevice(0);
         ut::ClearCurrentContextStatusForReset();
         ut::ClearCurrentDefaultStreamPending();
@@ -62,7 +61,6 @@ protected:
             rd->PopNextPoolFreeEventId();
         }
         ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
-        ((Runtime*)Runtime::Instance())->SetDisableThread(false);
         (void)rtSetSocVersion("");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
         GlobalMockObject::verify();

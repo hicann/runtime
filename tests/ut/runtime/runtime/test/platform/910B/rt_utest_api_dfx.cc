@@ -53,7 +53,6 @@ protected:
     {
         (void)rtSetSocVersion("Ascend910A");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        ((Runtime*)Runtime::Instance())->SetDisableThread(true);
 
         int64_t hardwareVersion = CHIP_CLOUD << 8;
         driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
@@ -104,8 +103,6 @@ protected:
         rtDeviceReset(0);
         (void)rtSetSocVersion("");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        rtInstance->SetDisableThread(false); // Recover.
     }
 
     virtual void SetUp() {}

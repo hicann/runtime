@@ -200,15 +200,11 @@ TEST_F(CloudV2StarsEngineTest, StateDown)
     delete aicKernel1;
     task0.u.aicTaskInfo.kernel = kernel;
     EXPECT_EQ(task0.type, TS_TASK_TYPE_KERNEL_AICORE);
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    const bool flag = rtInstance->GetDisableThread();
-    rtInstance->SetDisableThread(true);
     device_->SetDevStatus(RT_ERROR_LOST_HEARTBEAT);
     error = engine_->SubmitTask(&task0);
     EXPECT_EQ(error, RT_ERROR_LOST_HEARTBEAT);
     device_->SetDevStatus(RT_ERROR_NONE);
 
-    rtInstance->SetDisableThread(flag);
     delete kernel;
 }
 

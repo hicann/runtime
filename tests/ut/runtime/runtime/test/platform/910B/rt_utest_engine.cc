@@ -261,14 +261,11 @@ TEST_F(EngineTest, de_state_down)
     TaskInfo task0 = {};
     task0.stream = stream_;
     std::unique_ptr<Engine> egine = std::make_unique<AsyncHwtsEngine>(device_);
-    const bool flag = Runtime::Instance()->GetDisableThread();
 
-    Runtime::Instance()->SetDisableThread(true);
     device_->SetDevStatus(RT_ERROR_SOCKET_CLOSE);
     error = egine->SubmitTask(&task0);
     EXPECT_EQ(error, RT_ERROR_SOCKET_CLOSE);
     device_->SetDevStatus(RT_ERROR_NONE);
-    Runtime::Instance()->SetDisableThread(flag);
 }
 
 TEST_F(EngineTest, engine_start)
@@ -327,7 +324,6 @@ TEST_F(EngineTest, engine_PreProcessTask)
     std::unique_ptr<DirectHwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
     task.bindFlag = false;
-    Runtime::Instance()->SetDisableThread(false);
     EXPECT_EQ(task.preRecycleFlag, false);
     engine->PreProcessTask(&task, payload);
 }
@@ -342,12 +338,9 @@ TEST_F(EngineTest, engine_PreProcessTask_001)
     std::unique_ptr<DirectHwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device_);
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
     task.bindFlag = false;
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
     MOCKER_CPP(&Stream::GetRecycleTaskHeadId).stubs().will(returnValue(RT_ERROR_STREAM_EMPTY));
-    Runtime::Instance()->SetDisableThread(true);
     engine->PreProcessTask(&task, payload);
     EXPECT_EQ(task.preRecycleFlag, false);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
     GlobalMockObject::reset();
 }
 
@@ -361,15 +354,12 @@ TEST_F(EngineTest, engine_PreProcessTask_002)
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
     task.bindFlag = false;
 
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
     MOCKER_CPP(&Stream::GetRecycleTaskHeadId).stubs().will(returnValue(RT_ERROR_NONE));
 
     TaskInfo* nullTask = nullptr;
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(nullTask));
-    Runtime::Instance()->SetDisableThread(true);
     engine->PreProcessTask(&task, payload);
     EXPECT_EQ(task.preRecycleFlag, false);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
     GlobalMockObject::reset();
 }
 
@@ -484,7 +474,6 @@ TEST_F(EngineTest, TaskReclaimEx)
     shareMemInfo.taskId2 = 2;
     shareMemInfo.valid = 0x5A5A5A5A;
 
-    Runtime::Instance()->SetDisableThread(true);
     engine->TaskReclaimEx(0, true, taskID, shareMemInfo);
 
     shareMemInfo.taskId = 5;
@@ -495,7 +484,6 @@ TEST_F(EngineTest, TaskReclaimEx)
     shareMemInfo.valid = 0;
     engine->TaskReclaimEx(0, true, taskID, shareMemInfo);
 
-    Runtime::Instance()->SetDisableThread(false);
     engine->TaskReclaimEx(0, true, taskID, shareMemInfo);
     EXPECT_EQ(taskID, UINT32_MAX);
     GlobalMockObject::reset();
@@ -642,8 +630,6 @@ TEST_F(EngineTest, StarsMonitor_DevRuningDown)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     uint32_t threadNumBefore = Runtime::Instance()->monitorThreadNum_.Value();
     engine->MonitoringRun();
-    const bool flag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     engine->SetDevRunningState(DEV_RUNNING_DOWN);
     rtDeviceStatus deviceStatus = RT_DEVICE_STATUS_NORMAL;
     rtError_t error = ((Runtime*)Runtime::Instance())->GetWatchDogDevStatus(device_->Id_(), &deviceStatus);
@@ -651,7 +637,6 @@ TEST_F(EngineTest, StarsMonitor_DevRuningDown)
     auto* instance = Runtime::Instance();
     uint32_t threadNumAfter = instance->monitorThreadNum_.Value();
     EXPECT_EQ(threadNumBefore, threadNumAfter);
-    Runtime::Instance()->SetDisableThread(flag);
 }
 
 drvError_t drvGetPlatformInfo_offline_stub(uint32_t* info)
@@ -979,14 +964,10 @@ TEST_F(EngineTest, WaitCompletion_test_break)
 {
     std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device_);
 
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
     engine->pendingNum_.Set(1U);
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     MOCKER_CPP_VIRTUAL(engine.get(), &Engine::TaskReclaim).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     engine->WaitCompletion();
     EXPECT_EQ(engine->pendingNum_.Value(), 1U);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
 }
 
 TEST_F(EngineTest, WaitCompletion_test_submit_task_fail_break)
@@ -1055,14 +1036,11 @@ TEST_F(EngineTest, PreProcessTask_do_while)
     ((Runtime*)Runtime::Instance())->excptCallBack_ = ut_callback;
     task.bindFlag = false;
 
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
     MOCKER_CPP(&Stream::GetRecycleTaskHeadId).stubs().will(returnValue(RT_ERROR_NONE));
 
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&task));
-    Runtime::Instance()->SetDisableThread(true);
     engine->PreProcessTask(&task, payload);
     EXPECT_EQ(task.preRecycleFlag, true);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
     GlobalMockObject::reset();
 }
 
@@ -1596,14 +1574,11 @@ TEST_F(EngineTestWithDisableThread, test_not_same_taskid_branch_engine)
     std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device_);
     uint32_t taskId = 1111U;
     stream->SetCheckTaskId(taskId);
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
     MOCKER_CPP_VIRTUAL(engine.get(), &Engine::TaskReclaim).stubs().will(returnValue(RT_ERROR_NONE));
 
     uint8_t failCount = 0U;
-    Runtime::Instance()->SetDisableThread(true);
     engine->SendingWait(stream, failCount);
     EXPECT_EQ(failCount, 1U);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
     delete stream;
 }
 
@@ -1613,13 +1588,10 @@ TEST_F(EngineTestWithDisableThread, test_not_same_taskid_branch_starsengine)
     std::unique_ptr<StarsEngine> engine = std::make_unique<StarsEngine>(device_);
     uint32_t taskId = 6666U;
     stream->SetCheckTaskId(taskId);
-    bool orginThreadDisableFlag = Runtime::Instance()->GetDisableThread();
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().will(returnValue(RT_ERROR_NONE));
 
-    Runtime::Instance()->SetDisableThread(true);
     engine->SendingWaitProc(stream);
     EXPECT_EQ(stream->GetRecycleFlag(), false);
-    Runtime::Instance()->SetDisableThread(orginThreadDisableFlag);
     delete stream;
 }
 
@@ -1723,10 +1695,7 @@ TEST_F(EngineTest1, ReportSocketCloseProc_04)
     engine->ReportSocketCloseProc();
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_DOWN);
     device->SetDevStatus(RT_ERROR_NONE);
-    const bool flag = Runtime::Instance()->GetDisableThread();
-    Runtime::Instance()->SetDisableThread(true);
     engine->SetDevRunningState(DEV_RUNNING_NORMAL);
-    Runtime::Instance()->SetDisableThread(flag);
     delete device;
 }
 

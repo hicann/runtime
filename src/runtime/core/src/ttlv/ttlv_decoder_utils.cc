@@ -26,7 +26,6 @@ static std::map<uint16_t, const char_t*> g_taskType2String = {
     {TS_TASK_TYPE_CREATE_STREAM, "create stream"},
     {TS_TASK_TYPE_DATA_DUMP, "data dump"},
     {TS_TASK_TYPE_REMOTE_EVENT_WAIT, "remote event wait"},
-    {TS_TASK_TYPE_PCTRACE_ENABLE, "pctrace enable"},
     {TS_TASK_TYPE_CREATE_L2_ADDR, "create l2 address"},
     {TS_TASK_TYPE_MODEL_MAINTAINCE, "model maintenance"},
     {TS_TASK_TYPE_MODEL_EXECUTE, "model execute"},

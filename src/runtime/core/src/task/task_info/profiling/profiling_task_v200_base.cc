@@ -205,18 +205,6 @@ static bool ProfilingTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
 
-    // TS_TASK_TYPE_PCTRACE_ENABLE
-    TaskFuncSingle pcTraceFuncs = {
-        .toCommandFunc = &ToCommandBodyForPCTraceTask,
-        .toSqeFunc = nullptr,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
-        .waitAsyncCpCompleteFunc = nullptr,
-        .printErrorInfoFunc = &PrintErrorInfoCommon,
-        .setResultFunc = nullptr,
-        .setStarsResultFunc = &SetStarsResultCommonForDavid,
-    };
-
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE, profilerDynamicEnableFuncs);
@@ -228,14 +216,11 @@ static bool ProfilingTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_ADCPROF, adcProfFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, pcTraceFuncs);
-        // Register David SQE functions
         RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_ENABLE, &ConstructDavidSqeForProfilingEnableTask);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_DISABLE, &ConstructDavidSqeForProfilingDisableTask);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_START, &ConstructDavidSqeBase);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_STOP, &ConstructDavidSqeBase);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_ADCPROF, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_PCTRACE_ENABLE, &ConstructDavidSqeBase);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, &ConstructDavidSqeBase);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, &ConstructDavidSqeForProfilerTraceExTask);
     }

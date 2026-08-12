@@ -3849,14 +3849,12 @@ TEST_F(TaskTest, memcpy_async_to_constructSqe_01)
 TEST_F(TaskTest, DoCompleteSuccessForDavinciTask)
 {
     uint32_t descBuf = 1;
-    std::shared_ptr<PCTrace> pcTrace;
     TaskInfo task = {};
     InitByStream(&task, stream_);
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
     task.errorCode = 0;
     task.u.aicTaskInfo.mixOpt = 1;
     task.u.aicTaskInfo.descBuf = &descBuf;
-    task.pcTrace = pcTrace;
     DoCompleteSuccessForDavinciTask(&task, 10);
     EXPECT_EQ(task.u.aicTaskInfo.descBuf, nullptr);
 }

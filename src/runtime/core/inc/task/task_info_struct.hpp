@@ -166,12 +166,6 @@ struct AdcProfTaskInfo {
     uint32_t length;
 };
 
-struct PCTraceTaskInfo {
-    uint64_t pctraceAddr;
-    uint16_t enableTaskID;
-    uint16_t coreDim;
-};
-
 struct ModelMaintainceTaskInfo {
     Stream* opStream;
     Model* model;

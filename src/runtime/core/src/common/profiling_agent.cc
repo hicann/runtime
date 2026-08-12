@@ -122,7 +122,6 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {TS_TASK_TYPE_CREATE_STREAM, "CREATE_STREAM"},
         {TS_TASK_TYPE_DATA_DUMP, "reserve"}, // reserve but not support task type
         {TS_TASK_TYPE_REMOTE_EVENT_WAIT, "REMOTE_EVENT_WAIT"},
-        {TS_TASK_TYPE_PCTRACE_ENABLE, "PC_TRACE"},
         {TS_TASK_TYPE_CREATE_L2_ADDR, "CREATE_L2_ADDR"},
         {TS_TASK_TYPE_MODEL_MAINTAINCE, "MODEL_MAINTAINCE"},
         {TS_TASK_TYPE_MODEL_EXECUTE, "MODEL_EXECUTE"},

@@ -271,10 +271,7 @@ TEST_F(CloudV2DeviceTest, STARS_FFTSPLUS_ERROR_PROC)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     DeviceErrorProc* errorProc = new DeviceErrorProc(device);
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    bool oldDisableThread = rtInstance->GetDisableThread();
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
-    Runtime::Instance()->SetDisableThread(true);
     Stream* stm = new Stream(device, 1);
     stm->streamId_ = 1;
     rtError_t errCode = RT_ERROR_NONE;
@@ -332,7 +329,6 @@ TEST_F(CloudV2DeviceTest, STARS_FFTSPLUS_ERROR_PROC)
     DeleteFakeStream(stm);
     delete errorProc;
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
-    Runtime::Instance()->SetDisableThread(oldDisableThread);
 }
 
 TEST_F(CloudV2DeviceTest, PrintStreamTimeoutSnapshotInfo_test)

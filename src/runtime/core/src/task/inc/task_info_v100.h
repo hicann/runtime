@@ -30,7 +30,6 @@ void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command);
 void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command);
 void ConstructSqeForProfilerTraceExTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
-void PCTraceTaskUnInit(TaskInfo* const taskInfo);
 
 void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
 void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
