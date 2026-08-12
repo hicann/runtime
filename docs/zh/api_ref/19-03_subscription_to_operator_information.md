@@ -10,9 +10,9 @@
 - [`aclError aclprofGetOpType(const void *opInfo, size_t opInfoLen, uint32_t index, char *opType, size_t opTypeLen)`](#aclprofGetOpType)：获取指定算子的算子类型名称。
 - [`aclError aclprofGetOpNameLen(const void *opInfo, size_t opInfoLen, uint32_t index, size_t *opNameLen)`](#aclprofGetOpNameLen)：获取算子名称的字符串长度，用于内存申请。
 - [`aclError aclprofGetOpName(const void *opInfo, size_t opInfoLen, uint32_t index, char *opName, size_t opNameLen)`](#aclprofGetOpName)：获取指定算子的算子名称。
-- [`uint64_t aclprofGetOpStart(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpStart)：获取算子执行的开始时间，单位为ns。
-- [`uint64_t aclprofGetOpEnd(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpEnd)：获取算子执行的结束时间，单位为ns。
-- [`uint64_t aclprofGetOpDuration(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpDuration)：获取算子执行的耗时时间，单位为ns。
+- [`uint64_t aclprofGetOpStart(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpStart)：获取算子执行的开始时间，单位为us。
+- [`uint64_t aclprofGetOpEnd(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpEnd)：获取算子执行的结束时间，单位为us。
+- [`uint64_t aclprofGetOpDuration(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpDuration)：获取算子执行的耗时时间，单位为us。
 - [`size_t aclprofGetModelId(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetModelId)：获取指定算子所在模型的ID。
 - [`aclprofSubscribeOpFlag aclprofGetOpFlag(const void *opInfo, size_t opInfoLen, uint32_t index)`](#aclprofGetOpFlag)：获取指定算子的订阅类型标记。
 - [`const char *aclprofGetOpAttriValue(const void *opInfo, size_t opInfoLen, uint32_t index, aclprofSubscribeOpAttri attri)`](#aclprofGetOpAttriValue)：获取指定算子的属性值。
@@ -522,7 +522,7 @@ uint64_t aclprofGetOpStart(const void *opInfo, size_t opInfoLen, uint32_t index)
 
 ### 功能说明
 
-获取算子执行的开始时间，单位为ns。
+获取算子执行的开始时间，单位为us。
 
 建议用户新建一个线程，在新线程内调用该接口，否则可能阻塞主线程中的其它任务调度。
 
@@ -576,7 +576,7 @@ uint64_t aclprofGetOpEnd(const void *opInfo, size_t opInfoLen, uint32_t index)
 <!-- @ref: runtime/res/docs/zh/api_ref/19-03_subscription_to_operator_information_res.md#id10 -->
 ### 功能说明
 
-获取算子执行的结束时间，单位为ns。
+获取算子执行的结束时间，单位为us。
 
 建议用户新建一个线程，在新线程内调用该接口，否则可能阻塞主线程中的其它任务调度。
 
@@ -631,7 +631,7 @@ uint64_t aclprofGetOpDuration(const void *opInfo, size_t opInfoLen, uint32_t ind
 
 ### 功能说明
 
-获取算子执行的耗时时间，单位为ns。
+获取算子执行的耗时时间，单位为us。
 
 建议用户新建一个线程，在新线程内调用该接口，否则可能阻塞主线程中的其它任务调度。
 

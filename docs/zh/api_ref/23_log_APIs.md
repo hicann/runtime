@@ -3,7 +3,7 @@
 本章节描述日志接口，用于记录模块产生的日志并校验调测日志级别。
 
 - [使用须知](#使用须知)
-- [`void AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)`](#AlogRecord)：用于记录各模块产生的日志。
+- [`int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)`](#AlogRecord)：用于记录各模块产生的日志。
 - [`int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)`](#AlogCheckDebugLevel)：用于校验调测日志级别。
 - [`void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)`](#acllogRecord)：用于记录用户模块产生的日志。
 - [`void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list)`](#acllogVaList)：用于通过va_list记录用户模块产生的日志。
@@ -41,7 +41,7 @@ ${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户�
 ## AlogRecord
 
 ```c
-void AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)
+int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *fmt, ...)
 ```
 
 ### 产品支持情况
@@ -87,7 +87,7 @@ void AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const char *
 
 ### 返回值
 
-无。
+返回0表示成功，返回其他值表示失败。
 
 ### 调用示例
 
