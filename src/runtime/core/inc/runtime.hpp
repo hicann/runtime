@@ -636,6 +636,9 @@ public:
 
     bool IsRuntimeExiting() const { return isRuntimeExiting_; }
 
+    void CallApiBegin(const uint16_t profileType, const uint64_t dataSize = 0, const uint16_t cpyDirection = 0) const;
+    void CallApiEnd(const rtError_t retCode, const uint32_t devId = static_cast<uint32_t>(UINT16_MAX)) const;
+
 private:
     void UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, const RtIniAttributes& iniAttrs);
     void SocTypeInit(const int64_t aicoreNumLevel, const int64_t aicoreFreqLevel);

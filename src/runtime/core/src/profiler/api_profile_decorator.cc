@@ -16,17 +16,6 @@
 
 namespace cce {
 namespace runtime {
-namespace {
-ProfApiContext* PushProfApiContextWithCheck(Profiler* const profiler)
-{
-    ProfApiContext* profApiContext = profiler->PushProfApiContext();
-    if (profApiContext == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "push api profiling context failed.");
-    }
-    return profApiContext;
-}
-
-} // namespace
 
 ApiProfileDecorator::ApiProfileDecorator(Api* const impl, Profiler* const prof) : ApiDecorator(impl), profiler_(prof)
 {
@@ -171,99 +160,12 @@ void ApiProfileDecorator::FillMemcpyBatchExtInfoByCopyKind(
 void ApiProfileDecorator::CallApiBegin(
     const uint16_t profileType, const uint64_t dataSize, const uint16_t cpyDirection) const
 {
-    ProfApiContext* profApiContext = nullptr;
-    if (!profiler_->GetApiProfEnable()) {
-        // profiling 关闭时，栈空场景可直接返回；
-        if (profiler_->GetTopProfApiContext() == nullptr) {
-            return;
-        }
-
-        // 若当前线程仍有外层活跃 frame，则必须压入 needReport=false 的占位 frame，
-        // 保证嵌套场景下 CallApiBegin/CallApiEnd 继续严格配对，避免内层 End 提前弹出外层profiling数据。
-        profApiContext = PushProfApiContextWithCheck(profiler_);
-        if (profApiContext == nullptr) {
-            return;
-        }
-        return;
-    }
-
-    profApiContext = PushProfApiContextWithCheck(profiler_);
-    if (profApiContext == nullptr) {
-        return;
-    }
-    profApiContext->needReport = true;
-
-    RuntimeProfApiData& profApiData = profApiContext->apiData;
-    profApiData.magicNumber = static_cast<uint16_t>(MSPROF_DATA_HEAD_MAGIC_NUM);
-    profApiData.dataTag = static_cast<uint16_t>(MSPROF_RUNTIME_DATA_TAG_API);
-    profApiData.threadId = PidTidFetcher::GetCurrentTid();
-    profApiData.dataSize = dataSize;
-    profApiData.memcpyDirection = cpyDirection;
-    profApiData.maxSize = CalculateMemcpyAsyncSingleMaxSize(static_cast<rtMemcpyKind_t>(cpyDirection));
-    profApiData.streamId = static_cast<uint32_t>(UINT16_MAX);
-    profApiData.taskNum = 0U;
-    profApiData.profileType = profileType;
-    profApiData.extInfoCount = 0U;
-
-    RT_LOG(RT_LOG_DEBUG, "profileType=%hu", profApiData.profileType);
-    profApiData.entryTime = MsprofSysCycleTime();
+    profiler_->CallApiBegin(profileType, dataSize, cpyDirection);
 }
 
 void ApiProfileDecorator::CallApiEnd(const rtError_t retCode, const uint32_t devId) const
 {
-    ProfApiContext profApiContext{};
-    if (!profiler_->PopProfApiContext(profApiContext)) {
-        if (!profiler_->GetApiProfEnable()) {
-            return;
-        }
-        RT_LOG(RT_LOG_ERROR, "api profiling stack is empty when CallApiEnd.");
-        return;
-    }
-
-    if (!profApiContext.needReport || !profiler_->GetApiProfEnable()) {
-        return;
-    }
-
-    const uint64_t endTime = MsprofSysCycleTime();
-    uint32_t deviceId = devId;
-    TaskTrackInfo& trackMngInfo = profApiContext.taskTrackInfo;
-    const uint32_t taskNum = trackMngInfo.taskNum;
-
-    if (deviceId == static_cast<uint32_t>(UINT16_MAX)) {
-        Context* curCtx = nullptr;
-        const rtError_t error = impl_->ContextGetCurrent(&curCtx);
-        if ((error == RT_ERROR_NONE) && (ContextManage::CheckContextIsValid(curCtx))) {
-            deviceId = curCtx->Device_()->Id_();
-        }
-    }
-
-    // report task track info
-    for (uint32_t i = 0U; i < taskNum; i++) {
-        RuntimeProfTrackData* data = &trackMngInfo.trackBuff[i];
-        RT_LOG(
-            RT_LOG_DEBUG,
-            "isModel=%u, threadId=%u, timeStamp=%llu, devId=%u, stream_id=%u, task_id=%u, "
-            "task_type=%u, kernel_name=%llu",
-            data->isModel, data->compactInfo.threadId, data->compactInfo.timeStamp,
-            data->compactInfo.data.runtimeTrack.deviceId, data->compactInfo.data.runtimeTrack.streamId,
-            data->compactInfo.data.runtimeTrack.taskId, data->compactInfo.data.runtimeTrack.taskType,
-            data->compactInfo.data.runtimeTrack.kernelName);
-        const bool agingFlag = (data->isModel != 0) ? false : true;
-        const int32_t ret = MsprofReportCompactInfo(
-            static_cast<uint32_t>(agingFlag), &(data->compactInfo), static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
-        if (ret != MSPROF_ERROR_NONE) {
-            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
-            return;
-        }
-    }
-    trackMngInfo.taskNum = 0U;
-
-    // report runtime api info
-    RuntimeProfApiData& profApiData = profApiContext.apiData;
-    profApiData.retCode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(retCode));
-    profApiData.exitTime = endTime;
-    profiler_->ReportProfApi(deviceId, profApiData);
-    RT_LOG(RT_LOG_DEBUG, "profileType=%hu, devId=%u, retCode=%u", profApiData.profileType, deviceId, retCode);
+    profiler_->CallApiEnd(retCode, devId);
 }
 
 rtError_t ApiProfileDecorator::DevBinaryRegister(const rtDevBinary_t* const bin, Program** const prog)

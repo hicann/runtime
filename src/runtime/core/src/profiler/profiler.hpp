@@ -110,6 +110,8 @@ public:
     void InsertStream(Stream* const stm);
     void EraseStream(Stream* const stm);
     rtError_t ReportCacheTrack(uint32_t cacheFlag);
+    void CallApiBegin(const uint16_t profileType, const uint64_t dataSize = 0, const uint16_t cpyDirection = 0) const;
+    void CallApiEnd(const rtError_t retCode, const uint32_t devId = static_cast<uint32_t>(UINT16_MAX)) const;
 
 private:
     Api* api_;

@@ -175,6 +175,14 @@ void ClearApiProfContextStack(Profiler* profiler)
     profiler->GetProfTaskTrackData() = TaskTrackInfo{};
 }
 
+void PrepareRuntimeProfCallApiTest(Profiler* profiler)
+{
+    ClearApiProfContextStack(profiler);
+    ResetReportedApiTypes();
+    profiler->SetTrackProfEnable(false);
+    profiler->SetApiProfEnable(true);
+}
+
 void PrepareRuntimeProfDecoratorTest(Profiler* profiler)
 {
     ClearApiProfContextStack(profiler);
@@ -430,6 +438,152 @@ TEST_F(ProfilerTest, MemCpyAsync)
     profiler->GetProfTaskTrackData().taskNum = 0;
     profiler->apiProfileDecorator_->CallApiEnd(RT_ERROR_NONE, 0);
     rt->isHaveDevice_ = tmp;
+}
+
+TEST_F(ProfilerTest, ProfilerCallApiBeginEndDirectReportApiData)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    MOCKER(MsprofReportCompactInfo).expects(once()).will(returnValue(static_cast<int32_t>(MSPROF_ERROR_NONE)));
+
+    profiler->CallApiBegin(RT_PROF_API_MEMCPY_ASYNC, 2048U, RT_MEMCPY_HOST_TO_DEVICE);
+    ProfApiContext* const profApiContext = profiler->GetTopProfApiContext();
+    ASSERT_NE(profApiContext, nullptr);
+    EXPECT_TRUE(profApiContext->needReport);
+
+    RuntimeProfApiData& profData = profApiContext->apiData;
+    EXPECT_EQ(profData.magicNumber, static_cast<uint16_t>(MSPROF_DATA_HEAD_MAGIC_NUM));
+    EXPECT_EQ(profData.dataTag, static_cast<uint16_t>(MSPROF_RUNTIME_DATA_TAG_API));
+    EXPECT_EQ(profData.dataSize, 2048U);
+    EXPECT_EQ(profData.memcpyDirection, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(profData.streamId, static_cast<uint32_t>(UINT16_MAX));
+    EXPECT_EQ(profData.taskNum, 0U);
+    EXPECT_EQ(profData.profileType, RT_PROF_API_MEMCPY_ASYNC);
+    EXPECT_EQ(profData.extInfoCount, 0U);
+
+    profiler->CallApiEnd(RT_ERROR_NONE);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_MEMCPY_ASYNC + RT_PROFILE_TYPE_API_BEGIN);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ProfilerCallApiEndWithEmptyStack)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    PrepareRuntimeProfCallApiTest(profiler);
+
+    profiler->CallApiEnd(RT_ERROR_NONE, 0);
+
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ProfilerCallApiEndReportsTaskTrack)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    MOCKER(MsprofReportCompactInfo).expects(once()).will(returnValue(static_cast<int32_t>(MSPROF_ERROR_NONE)));
+
+    profiler->CallApiBegin(RT_PROF_API_MEMCPY_ASYNC);
+    ProfApiContext* const profApiContext = profiler->GetTopProfApiContext();
+    ASSERT_NE(profApiContext, nullptr);
+    profApiContext->taskTrackInfo.taskNum = 1U;
+    profApiContext->taskTrackInfo.trackBuff[0].isModel = 1U;
+
+    profiler->CallApiEnd(RT_ERROR_NONE, 0);
+
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_MEMCPY_ASYNC + RT_PROFILE_TYPE_API_BEGIN);
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ProfilerCallApiEndStopsWhenTaskTrackReportFails)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(never());
+    MOCKER(MsprofReportCompactInfo).expects(once()).will(returnValue(static_cast<int32_t>(MSPROF_ERROR)));
+
+    profiler->CallApiBegin(RT_PROF_API_MEMCPY_ASYNC);
+    ProfApiContext* const profApiContext = profiler->GetTopProfApiContext();
+    ASSERT_NE(profApiContext, nullptr);
+    profApiContext->taskTrackInfo.taskNum = 1U;
+    profApiContext->taskTrackInfo.trackBuff[0].isModel = 0U;
+
+    profiler->CallApiEnd(RT_ERROR_NONE, 0);
+
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    EXPECT_EQ(g_reportedApiTypeNum, 0U);
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ProfilerCallApiBeginOffKeepsNestedStackPaired)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ClearApiProfContextStack(profiler);
+
+    profiler->SetApiProfEnable(false);
+    profiler->CallApiBegin(RT_PROF_API_DEV_FREE);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    PrepareRuntimeProfCallApiTest(profiler);
+    profiler->CallApiBegin(RT_PROF_API_STREAM_DESTROY);
+    EXPECT_EQ(profiler->GetProfApiData().profileType, RT_PROF_API_STREAM_DESTROY);
+
+    profiler->SetApiProfEnable(false);
+    profiler->CallApiBegin(RT_PROF_API_DEV_FREE);
+    ProfApiContext* const placeholderContext = profiler->GetTopProfApiContext();
+    ASSERT_NE(placeholderContext, nullptr);
+    EXPECT_FALSE(placeholderContext->needReport);
+    profiler->CallApiEnd(RT_ERROR_NONE, 0);
+    EXPECT_EQ(profiler->GetProfApiData().profileType, RT_PROF_API_STREAM_DESTROY);
+
+    profiler->SetApiProfEnable(true);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    profiler->CallApiEnd(RT_ERROR_NONE, 0);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_STREAM_DESTROY + RT_PROFILE_TYPE_API_BEGIN);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, RuntimeCallApiBeginEndForwardAndIgnoreNullProfiler)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    Profiler* const oldProfiler = rt->profiler_;
+    ASSERT_NE(oldProfiler, nullptr);
+    profiler = oldProfiler;
+
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    rt->CallApiBegin(RT_PROF_API_SET_DEVICE);
+    EXPECT_EQ(profiler->GetProfApiData().profileType, RT_PROF_API_SET_DEVICE);
+    rt->CallApiEnd(RT_ERROR_NONE, 0);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_SET_DEVICE + RT_PROFILE_TYPE_API_BEGIN);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+
+    rt->profiler_ = nullptr;
+    rt->CallApiBegin(RT_PROF_API_DEV_FREE);
+    rt->CallApiEnd(RT_ERROR_NONE, 0);
+    rt->profiler_ = oldProfiler;
 }
 
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)

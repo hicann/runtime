@@ -6018,5 +6018,17 @@ Stream* Runtime::GetCurStream(Stream* const stm) const
     }
     return stm;
 }
+
+void Runtime::CallApiBegin(const uint16_t profileType, const uint64_t dataSize, const uint16_t cpyDirection) const
+{
+    COND_RETURN_VOID(Profiler_() == nullptr, "profiler_ is nullptr");
+    Profiler_()->CallApiBegin(profileType, dataSize, cpyDirection);
+}
+
+void Runtime::CallApiEnd(const rtError_t retCode, const uint32_t devId) const
+{
+    COND_RETURN_VOID(Profiler_() == nullptr, "profiler_ is nullptr");
+    Profiler_()->CallApiEnd(retCode, devId);
+}
 } // namespace runtime
 } // namespace cce
