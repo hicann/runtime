@@ -243,7 +243,7 @@ target_link_libraries(profimpl_fwk_lite_share PRIVATE
     -Wl,--no-as-needed
     c_sec
     -Wl,--as-needed
-    $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,unified_dlog,slog>
+    $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,alog,slog>
 )
 
 install(TARGETS profimpl_fwk_lite_share OPTIONAL
@@ -349,7 +349,7 @@ target_link_libraries(proftransport_static PRIVATE
     -Wl,--no-as-needed
     c_sec
     -Wl,--as-needed
-    $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,unified_dlog,slog>
+    $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,alog,slog>
 )
 
 install(TARGETS proftransport_static OPTIONAL
