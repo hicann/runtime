@@ -11,7 +11,7 @@
 #
 # 为 aicpu_sched / queue_schedule 等 esched 事件驱动模块提供统一的 HAL/DRV 打桩 + 可编程事件注入。
 # 分层：
-#   L1 符号接管  hal_esched_shim.cpp 导出与 include/driver 同名 esched 强符号，链接期接管 HAL 弱符号
+#   L1 符号接管  hal_esched_shim.cpp 导出与 pkg_inc/driver 同名 esched 强符号，链接期接管 HAL 弱符号
 #   L2 仿真引擎  EschedSimEngine 事件队列（wait 出队 / submit 入队+捕获 / ack 捕获）
 #   L3 测试 API  SimPlatform 门面、EventInfoBuilder、HwtsTsTaskBuilder
 #   L4 测试用例  各模块 testcase，从 ComputeProcessMain 入口切入
@@ -35,7 +35,7 @@
 add_library(sim_platform_inc INTERFACE)
 target_include_directories(sim_platform_inc INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/include
     ${CMAKE_BINARY_DIR}/libc_sec/source/include
 )

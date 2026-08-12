@@ -40,25 +40,25 @@ typedef enum tagDrvSqCqType {
     DRV_CTRL_TYPE,
     DRV_GDB_TYPE,
     DRV_INVALID_TYPE
-}  drvSqCqType_t;
+} drvSqCqType_t;
 
 struct halSqCqInputInfo {
-    drvSqCqType_t type;  // normal : 0, callback : 1
+    drvSqCqType_t type; // normal : 0, callback : 1
     uint32_t tsId;
     /* The size and depth of each cqsq can be configured in normal mode, but this function is not yet supported */
-    uint32_t sqeSize;    // normal : 64Byte
-    uint32_t cqeSize;    // normal : 12Byte
-    uint32_t sqeDepth;   // normal : 1024
-    uint32_t cqeDepth;   // normal : 1024
+    uint32_t sqeSize;                    // normal : 64Byte
+    uint32_t cqeSize;                    // normal : 12Byte
+    uint32_t sqeDepth;                   // normal : 1024
+    uint32_t cqeDepth;                   // normal : 1024
 
-    uint32_t grpId;   // runtime thread identifier,normal : 0
-    uint32_t flag;    // ref to TSDRV_FLAG_*
-    uint32_t cqId;    // if flag bit 0 is 0, don't care about it
-    uint32_t sqId;    // if flag bit 1 is 0, don't care about it
+    uint32_t grpId;                      // runtime thread identifier,normal : 0
+    uint32_t flag;                       // ref to TSDRV_FLAG_*
+    uint32_t cqId;                       // if flag bit 0 is 0, don't care about it
+    uint32_t sqId;                       // if flag bit 1 is 0, don't care about it
 
-    uint32_t info[SQCQ_RTS_INFO_LENGTH];  // inform to ts through the mailbox, consider single operator performance
+    uint32_t info[SQCQ_RTS_INFO_LENGTH]; // inform to ts through the mailbox, consider single operator performance
     uint32_t ext_info_len;
-    void *ext_info;    // the header of ext_info is struct trs_ext_info_header
+    void* ext_info;                      // the header of ext_info is struct trs_ext_info_header
     uint32_t res[SQCQ_RESV_LENGTH - 3];
 };
 
@@ -66,8 +66,8 @@ struct halSqCqFreeInfo {
     drvSqCqType_t type; // normal : 0, callback : 1
     uint32_t tsId;
     uint32_t sqId;
-    uint32_t cqId;  // cqId to be freed, if flag bit 0 is 0, don't care about it
-    uint32_t flag;  // bit 0 : whether cq is to be freed  0 : free, 1 : no free
+    uint32_t cqId; // cqId to be freed, if flag bit 0 is 0, don't care about it
+    uint32_t flag; // bit 0 : whether cq is to be freed  0 : free, 1 : no free
     uint32_t res[SQCQ_RESV_LENGTH];
 };
 
@@ -99,8 +99,8 @@ typedef enum tagDrvSqCqPropType {
 struct halSqCqConfigInfo {
     drvSqCqType_t type;
     uint32_t tsId;
-    uint32_t sqId; // U32_MAX: pause or resume will config all sq in the process
-    uint32_t cqId; // U32_MAX: pause or resume will config all cq in the process
+    uint32_t sqId;                           // U32_MAX: pause or resume will config all sq in the process
+    uint32_t cqId;                           // U32_MAX: pause or resume will config all cq in the process
     drvSqCqPropType_t prop;
     uint32_t value[SQCQ_CONFIG_INFO_LENGTH]; // 0: value; SQCQ_CONFIG_INFO_FLAG(7): flag
 };
@@ -131,7 +131,7 @@ enum res_addr_type {
     RES_ADDR_TYPE_MAX
 };
 
-# define TRS_RES_MAP_RSV_LEN 8
+#define TRS_RES_MAP_RSV_LEN 8
 struct trs_res_map_priv {
     unsigned int flag;
     unsigned int local_devid;
@@ -141,32 +141,32 @@ struct trs_res_map_priv {
 
 #define RES_ADDR_INFO_RSV_LEN 2
 struct res_addr_info {
-    unsigned int id;                 /* the meaning of 'id' depends on res_type, default is 0 */
+    unsigned int id; /* the meaning of 'id' depends on res_type, default is 0 */
     processType_t target_proc_type;
     enum res_addr_type res_type;
-    unsigned int res_id;             /* corresponding resource id if res_type is NOTIFY or CNT_NOTIFY */
-    unsigned int flag;               /* default is 0, ascend910B and ascend910_93 with NOTIFY is TSDRV_FLAG_SHR_ID_SHADOW. */
-    unsigned int rudevid;            /* remote unify devid, rudevid is valid when the flag is TSDRV_FLAG_SHR_ID_SHADOW */
-    unsigned int rsv[RES_ADDR_INFO_RSV_LEN];  /* default is 0 */
+    unsigned int res_id;  /* corresponding resource id if res_type is NOTIFY or CNT_NOTIFY */
+    unsigned int flag;    /* default is 0, ascend910B and ascend910_93 with NOTIFY is TSDRV_FLAG_SHR_ID_SHADOW. */
+    unsigned int rudevid; /* remote unify devid, rudevid is valid when the flag is TSDRV_FLAG_SHR_ID_SHADOW */
+    unsigned int rsv[RES_ADDR_INFO_RSV_LEN]; /* default is 0 */
 };
 
 struct halTaskSendInfo {
     drvSqCqType_t type;
     uint32_t tsId;
     uint32_t sqId;
-    int32_t timeout;                 /* send wait time */
-    uint8_t *sqe_addr;
+    int32_t timeout; /* send wait time */
+    uint8_t* sqe_addr;
     uint32_t sqe_num;
-    uint32_t pos;                    /* output: first sqe pos */
-    uint32_t res[SQCQ_RESV_LENGTH];  /* must zero out */
+    uint32_t pos;                   /* output: first sqe pos */
+    uint32_t res[SQCQ_RESV_LENGTH]; /* must zero out */
 };
 
 struct halReportRecvInfo {
     drvSqCqType_t type;
     uint32_t tsId;
     uint32_t cqId;
-    int32_t timeout;         /* recv wait time */
-    uint8_t *cqe_addr;
+    int32_t timeout; /* recv wait time */
+    uint8_t* cqe_addr;
     uint32_t cqe_num;
     uint32_t report_cqe_num; /* output */
     uint32_t stream_id;
@@ -180,23 +180,23 @@ typedef enum tagDrvIdType {
     DRV_MODEL_ID,
     DRV_NOTIFY_ID,
     DRV_CMO_ID,
-    DRV_CNT_NOTIFY_ID,    /* add start ascend950 */
+    DRV_CNT_NOTIFY_ID, /* add start ascend950 */
     DRV_SQ_ID,
     DRV_CQ_ID,
     DRV_INVALID_ID,
 } drvIdType_t;
 
-#define RESOURCEID_RESV_LENGTH  8
+#define RESOURCEID_RESV_LENGTH 8
 
 struct halResourceIdInputInfo {
-    drvIdType_t type;                       // resource Id Type
+    drvIdType_t type;    // resource Id Type
     uint32_t tsId;
-    uint32_t resourceId;                    // the id that will be freed, halResourceIdAlloc does not care about this variable
-    uint32_t res[RESOURCEID_RESV_LENGTH];   // 0:stream pri, 1:flag
+    uint32_t resourceId; // the id that will be freed, halResourceIdAlloc does not care about this variable
+    uint32_t res[RESOURCEID_RESV_LENGTH]; // 0:stream pri, 1:flag
 };
 
 struct halResourceIdOutputInfo {
-    uint32_t resourceId;  /* applied resource id */
+    uint32_t resourceId; /* applied resource id */
     uint32_t res[RESOURCEID_RESV_LENGTH];
 };
 #endif

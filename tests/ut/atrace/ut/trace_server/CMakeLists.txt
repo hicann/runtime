@@ -65,7 +65,7 @@ set(libutraceHeaderDir
     ${UTRACE_SOURCE_DIR}/../utils
     ${ADIAG_DIR}/inc/utrace
     ${LIBC_SEC_HEADER}
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${ADIAG_DIR}/common
 )
 
@@ -180,7 +180,7 @@ set(INCLUDE_DIR
     ${UTRACE_SOURCE_DIR}/utrace_client
     ${ATRACE_SOURCE_DIR}/utils
     ${LIBC_SEC_HEADER}
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${ADIAG_DIR}/common
 )
 

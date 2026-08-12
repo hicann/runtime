@@ -103,7 +103,7 @@ target_include_directories(transport PRIVATE
     ${TOP_DIR}/src/mmpa/../../pkg_inc
     ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa
     ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa/sub_inc
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump
     ${TOP_DIR}/src/dfx/adump/inc/metadef

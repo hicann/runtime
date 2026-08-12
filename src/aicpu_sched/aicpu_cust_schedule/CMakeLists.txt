@@ -73,7 +73,7 @@ set(AICPU_TS_C_INCLUDES
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/dfx/adump/inc
     ${RUNTIME_DIR}/include
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/proc_mgr
     ${CMAKE_BINARY_DIR}/proto/aicpu_cust/proto/
 )

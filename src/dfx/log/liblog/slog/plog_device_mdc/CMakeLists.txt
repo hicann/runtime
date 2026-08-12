@@ -37,7 +37,7 @@ set(libslogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_buffer
     ${IAM_HEADER_DIR}/include
     ${MDC_LINUX_SDK_DIR}/include
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/../manager/resmgr/procmgr/unified_timer/include)
 
 set(CMAKE_C_STANDARD 11)

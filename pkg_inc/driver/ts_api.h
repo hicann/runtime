@@ -19,11 +19,9 @@ extern "C" {
 #define TS_PARA_ERR (-2)
 #define TS_COPY_USER_ERR (-3)
 
-int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen,
-    unsigned int handleId);
+int tsDevSendMsgAsync(unsigned int devId, unsigned int tsId, char* msg, unsigned int msgLen, unsigned int handleId);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

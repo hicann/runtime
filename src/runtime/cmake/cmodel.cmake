@@ -722,7 +722,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/src/runtime/dfx/include/trace/awatchdog/
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/include/trace/utrace
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/include/external/acl

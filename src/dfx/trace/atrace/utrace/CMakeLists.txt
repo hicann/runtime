@@ -54,7 +54,7 @@ set(libtraceHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}/../utils
     ${ATRACE_DIR}/common
     ${LIBC_SEC_HEADER}
-    ${ATRACE_DIR}/../../../include/driver
+    ${ATRACE_DIR}/../../../pkg_inc/driver
     ${ATRACE_DIR}/../../../pkg_inc/trace
     ${ATRACE_DIR}/inc/toolchain
 )

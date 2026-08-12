@@ -94,7 +94,7 @@ set(devprofHeader
     ${RUNTIME_DIR}/src/dfx/msprof/inc
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/inc/
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/abl/ascend_hal/user_space/inc
     ./device/include

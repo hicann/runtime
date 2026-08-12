@@ -202,7 +202,7 @@ set(libmsprofHeaderDir
     ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/third_party/libc_sec/include
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/src/dfx/error_manager
@@ -471,7 +471,7 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
 endif()
 
 target_include_directories(msprof_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/runtime
@@ -572,7 +572,7 @@ add_executable(devprof_api_utest
 )
 
 target_include_directories(devprof_api_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/src/dfx/error_manager
     ${TOP_DIR}/src/dfx/msprof/inc/external

@@ -33,7 +33,7 @@ set(libslogSrcFiles
 
 set(libslogHeaderDir
     ${LIBC_SEC_HEADER}
-    ${TOOLAHCIN_LOG_DIR}/../../../include/driver
+    ${TOOLAHCIN_LOG_DIR}/../../../pkg_inc/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../pkg_inc/mmpa
     ${RUNTIME_DIR}/inc/driver
     ${IAM_HEADER_DIR}/include

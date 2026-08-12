@@ -38,7 +38,7 @@ set(libLibalogSrc
 )
 
 set(libLibalogInc
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/liblog/slog
     ${LOG_SOURCE_PATH}/liblog/slog/dlog_communication
     ${LOG_SOURCE_PATH}/shared

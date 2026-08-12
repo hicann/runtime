@@ -42,7 +42,7 @@ set(libmsprofHeaderDir
     ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/third_party/libc_sec/include
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/src/dfx/error_manager

@@ -102,7 +102,7 @@ set(adumpTinyHeaders
     ${SRC_CODE_ROOT_PATH}/adump/printf/dump_printf/
     ${SRC_CODE_ROOT_PATH}/adump/proto/
     ${SRC_CODE_ROOT_PATH}/external/
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/

@@ -32,7 +32,7 @@ add_executable(iam_slog_utest
 )
 
 target_include_directories(iam_slog_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/liblog/slog
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
@@ -95,7 +95,7 @@ add_executable(iam_app_slog_utest
 )
 
 target_include_directories(iam_app_slog_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/liblog/slog
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
@@ -145,7 +145,7 @@ add_executable(iam_slogd_utest
 )
 
 target_include_directories(iam_slogd_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/syslog/common
     ${LOG_SOURCE_PATH}/syslog/common/config
@@ -197,7 +197,7 @@ add_executable(mergeslog_coverage_utest
     ${CMAKE_CURRENT_SOURCE_DIR}/mergeslog_coverage_utest.cc
 )
 target_include_directories(mergeslog_coverage_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/liblog/mergeslog
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
@@ -224,7 +224,7 @@ add_executable(log_proxy_coverage_utest
     ${CMAKE_CURRENT_SOURCE_DIR}/log_proxy_coverage_utest.cc
 )
 target_include_directories(log_proxy_coverage_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/syslog/log_proxy
     ${LOG_SOURCE_PATH}/utils
@@ -255,7 +255,7 @@ add_executable(hardware_zip_coverage_utest
     ${CMAKE_CURRENT_SOURCE_DIR}/hardware_zip_coverage_utest.cc
 )
 target_include_directories(hardware_zip_coverage_utest PRIVATE
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LOG_SOURCE_PATH}/shared
     ${LOG_SOURCE_PATH}/utils
     ${LOG_SOURCE_PATH}/utils/log_compress

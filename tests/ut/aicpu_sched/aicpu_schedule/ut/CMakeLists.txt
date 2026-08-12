@@ -58,7 +58,7 @@ set(COMMON_C_INCLUDES
     ${RUNTIME_DIR}/src/inc/tdt
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/include
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/src/dfx/adump/inc
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/aicpu_sched/aicpu_schedule/common/ts_to_aicpu_msg_adapter

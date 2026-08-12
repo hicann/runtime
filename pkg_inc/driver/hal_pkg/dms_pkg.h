@@ -11,7 +11,7 @@
 #ifndef DMS_PKG_H
 #define DMS_PKG_H
 
-#define MAX_RECORD_PA_NUM_PER_DEV    20U
+#define MAX_RECORD_PA_NUM_PER_DEV 20U
 
 struct va_info {
     unsigned short size;
@@ -30,7 +30,7 @@ struct memory_fault_timestamp {
     unsigned int dev_id;
     unsigned int host_pid;
     unsigned int event_id;
-    unsigned int reserved; /* for byte alignment */
+    unsigned int reserved;     /* for byte alignment */
     unsigned long long syscnt; /* event occur syscnt*/
 };
 

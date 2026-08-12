@@ -41,11 +41,11 @@ typedef enum tagDrvError {
     DRV_ERROR_INNER_ERR = 7,           /**< driver inside error */
     DRV_ERROR_PARA_ERROR = 8,          /**< driver wrong parameter */
     DRV_ERROR_UNINIT = 9,              /**< driver uninit */
-    DRV_ERROR_REPEATED_INIT = 10,          /**< driver repeated init */
-    DRV_ERROR_NOT_EXIST = 11,        /**< there is resource*/
+    DRV_ERROR_REPEATED_INIT = 10,      /**< driver repeated init */
+    DRV_ERROR_NOT_EXIST = 11,          /**< there is resource*/
     DRV_ERROR_REPEATED_USERD = 12,
-    DRV_ERROR_BUSY = 13,                /**< task already running */
-    DRV_ERROR_NO_RESOURCES = 14,        /**< driver short of resources */
+    DRV_ERROR_BUSY = 13,               /**< task already running */
+    DRV_ERROR_NO_RESOURCES = 14,       /**< driver short of resources */
     DRV_ERROR_OUT_OF_CMD_SLOT = 15,
     DRV_ERROR_WAIT_TIMEOUT = 16,       /**< driver wait timeout*/
     DRV_ERROR_IOCRL_FAIL = 17,         /**< driver ioctl fail*/
@@ -91,16 +91,16 @@ typedef enum tagDrvError {
     DRV_ERROR_NO_MODEL_RESOURCES = 50,
     DRV_ERROR_TRY_AGAIN = 51,
 
-    DRV_ERROR_DST_PATH_ILLEGAL = 52,                    /**< send file dst path illegal*/
-    DRV_ERROR_OPEN_FAILED = 53,                         /**< send file open failed */
-    DRV_ERROR_NO_FREE_SPACE = 54,                       /**< send file no free space */
-    DRV_ERROR_LOCAL_ABNORMAL_FILE = 55,                 /**< send file local file abnormal*/
-    DRV_ERROR_DST_PERMISSION_DENIED = 56,               /**< send file dst Permission denied*/
-    DRV_ERROR_DST_NO_SUCH_FILE = 57,                    /**< pull file no such file or directory*/
+    DRV_ERROR_DST_PATH_ILLEGAL = 52,      /**< send file dst path illegal*/
+    DRV_ERROR_OPEN_FAILED = 53,           /**< send file open failed */
+    DRV_ERROR_NO_FREE_SPACE = 54,         /**< send file no free space */
+    DRV_ERROR_LOCAL_ABNORMAL_FILE = 55,   /**< send file local file abnormal*/
+    DRV_ERROR_DST_PERMISSION_DENIED = 56, /**< send file dst Permission denied*/
+    DRV_ERROR_DST_NO_SUCH_FILE = 57,      /**< pull file no such file or directory*/
 
     DRV_ERROR_MEMORY_OPT_FAIL = 58,
     DRV_ERROR_RUNTIME_ON_OTHER_PLAT = 59,
-    DRV_ERROR_SQID_FULL = 60,                           /**< driver SQ   is full */
+    DRV_ERROR_SQID_FULL = 60, /**< driver SQ   is full */
 
     DRV_ERROR_SERVER_HAS_BEEN_CREATED = 61,
     DRV_ERROR_NO_PROCESS = 62,
@@ -121,8 +121,8 @@ typedef enum tagDrvError {
     DRV_ERROR_RUN_IN_ILLEGAL_CPU = 77,
     DRV_ERROR_SUBSCRIBE_THREAD_TIMEOUT = 78,
     DRV_ERROR_BAD_ADDRESS = 79,
-    DRV_ERROR_DST_FILE_IS_BEING_WRITTEN = 80,           /**< send file The dts file is being written */
-    DRV_ERROR_EPOLL_CLOSE = 81,                         /**< epoll close */
+    DRV_ERROR_DST_FILE_IS_BEING_WRITTEN = 80, /**< send file The dts file is being written */
+    DRV_ERROR_EPOLL_CLOSE = 81,               /**< epoll close */
     DRV_ERROR_CDQ_ABNORMAL = 82,
     DRV_ERROR_CDQ_NOT_EXIST = 83,
     DRV_ERROR_NO_CDQ_RESOURCES = 84,
@@ -136,13 +136,13 @@ typedef enum tagDrvError {
     DEV_ERROR_BIST_SW_ERR = 92,
     DEV_ERROR_DUP_CONFIG = 93,
     DRV_ERROR_POWER_OP_FAIL = 94,
-    DRV_ERROR_NET_UNREACH = 95,         /**< net error or device failure*/
+    DRV_ERROR_NET_UNREACH = 95, /**< net error or device failure*/
     DRV_ERROR_TRANS_LINK_ABNORMAL = 96,
     DRV_ERROR_TRANS_LINK_ACK_TIMEOUT_ERR = 97,
-    DRV_ERROR_CALL_NO_RETRY = 98,       /**< Function call error，no need to retry */
+    DRV_ERROR_CALL_NO_RETRY = 98, /**< Function call error，no need to retry */
     DRV_ERROR_CONNECT = 99,
     DRV_ERROR_NOT_SUPPORT = 0xfffe,
     DRV_ERROR_RESERVED
-} drvError_t;//lint !e116 !e17
+} drvError_t; // lint !e116 !e17
 
 #endif

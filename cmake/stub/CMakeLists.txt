@@ -10,8 +10,8 @@
 
 add_library(ascend_hal_headers INTERFACE)
 target_include_directories(ascend_hal_headers INTERFACE
-    $<BUILD_INTERFACE:${RUNTIME_DIR}/include>
-    $<BUILD_INTERFACE:${RUNTIME_DIR}/include/driver>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
+    $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/driver>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/ascend_hal>
     $<INSTALL_INTERFACE:include/ascend_hal/driver>
@@ -22,9 +22,9 @@ set(LOCAL_H2C_PY_PATH ${LOCAL_STUB_PATH}/h2c.py)
 
 add_library(ascend_hal_stub SHARED)
 
-set(LOCAL_ASCEND_H_FILE_PATH ${RUNTIME_DIR}/include/driver/ascend_hal.h)
-set(LOCAL_ASCEND_H_FILE_PATH1 ${RUNTIME_DIR}/include/driver/ascend_hal_external.h)
-set(LOCAL_ASCEND_H_FILE_PATH2 ${RUNTIME_DIR}/include/driver/ascend_hal_base.h)
+set(LOCAL_ASCEND_H_FILE_PATH ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal.h)
+set(LOCAL_ASCEND_H_FILE_PATH1 ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_external.h)
+set(LOCAL_ASCEND_H_FILE_PATH2 ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_base.h)
 set(LOCAL_ASCEND_C_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/ascend_hal.c)
 
 add_custom_command(
@@ -71,11 +71,11 @@ if(PRODUCT_SIDE STREQUAL "host" OR NOT ENABLE_OPEN_SRC)
     install(TARGETS ascend_hal_stub ascend_hal_headers
         LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/stub OPTIONAL
     )
-    install(FILES   ${RUNTIME_DIR}/include/driver/ascend_hal_define.h
-                    ${RUNTIME_DIR}/include/driver/ascend_hal_error.h
-                    ${RUNTIME_DIR}/include/driver/ascend_hal.h
-                    ${RUNTIME_DIR}/include/driver/ascend_hal_external.h
-                    ${RUNTIME_DIR}/include/driver/ascend_hal_base.h
+    install(FILES   ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_define.h
+                    ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_error.h
+                    ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal.h
+                    ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_external.h
+                    ${RUNTIME_DIR}/pkg_inc/driver/ascend_hal_base.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/ascend_hal/driver EXCLUDE_FROM_ALL
     )
     unset(PKG_NAME)
@@ -85,7 +85,7 @@ else()
     )
 endif()
 
-set(LOCAL_DSMI_H_FILE_PATH ${RUNTIME_DIR}/include/driver/dsmi_common_interface.h)
+set(LOCAL_DSMI_H_FILE_PATH ${RUNTIME_DIR}/pkg_inc/driver/dsmi_common_interface.h)
 set(LOCAL_DSMI_C_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/dsmi_common_interface.c)
 
 add_custom_command(
@@ -100,7 +100,7 @@ target_sources(drvdsmi_host_stub PRIVATE
 )
 
 target_include_directories(drvdsmi_host_stub PRIVATE
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
 )
 
 target_link_libraries(drvdsmi_host_stub PRIVATE

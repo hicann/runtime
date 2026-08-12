@@ -188,7 +188,7 @@ set(adumpBaseHeaders
     ${SRC_CODE_ROOT_PATH}/external/
     ${SRC_CODE_ROOT_PATH}/inc/metadef/
     ${SRC_CODE_ROOT_PATH}/inc/metadef/external
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/

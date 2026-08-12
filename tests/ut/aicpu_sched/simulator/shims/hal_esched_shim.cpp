@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-// L1 符号接管层：导出与 include/driver 同名的 esched 强符号，链接期接管 HAL 弱符号，转调 EschedSimEngine。
+// L1 符号接管层：导出与 pkg_inc/driver 同名的 esched 强符号，链接期接管 HAL 弱符号，转调 EschedSimEngine。
 // OBJECT library 保证 L1 shim 与 L4 testcase 共享同一个 EschedSimEngine 单例（SHARED 会因 exe/so 各自实例化而割裂）。
 #include "ascend_hal_base.h"
 #include "ascend_hal_define.h"

@@ -66,7 +66,7 @@ set(adxSocDumpApiUtHeaderList
     ${LLT_CODE_ROOT_PATH}/stub
     ${LLT_CODE_ROOT_PATH}/common_stub
 
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/

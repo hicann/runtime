@@ -28,7 +28,7 @@ set(plogSrcFiles
 set(plogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${LIBC_SEC_HEADER}
-    ${TOOLAHCIN_LOG_DIR}/../../../include/driver
+    ${TOOLAHCIN_LOG_DIR}/../../../pkg_inc/driver
     ${TOOLAHCIN_LOG_DIR}/../../../include/dfx/base
     ${TOOLAHCIN_LOG_DIR}/inc/toolchain
     ${TOOLAHCIN_LOG_DIR}/shared

@@ -19,7 +19,7 @@ set(adprofBinHeader
     ${PROF_BASIC_DIR}/osal
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${LIBC_SEC_HEADER}
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
 )
  
 set(adprofbinCpp

@@ -10,7 +10,7 @@
 #ifndef ESCHED_PKG_H
 #define ESCHED_PKG_H
 
-#define EVENT_MAX_GRP_NAME_LEN   16
+#define EVENT_MAX_GRP_NAME_LEN 16
 #define ESCHED_USR_CFG_DATA_MAX_LEN 32
 
 struct event_sync_msg {
@@ -28,7 +28,7 @@ struct event_sync_msg {
 /* Keys are aligned by bytes. Key_len is less than or equal to cqe_size.
   If the key is less than one byte, zeros are added to the high bits. */
 struct esched_table_key {
-    unsigned char *key;
+    unsigned char* key;
     unsigned int key_len;
 };
 
@@ -37,26 +37,22 @@ struct esched_table_key_entry_stat {
     unsigned int rsv[8]; /* rsv 8 int */
 };
 
-typedef enum esched_query_type {
-    QUERY_TYPE_LOCAL_GRP_ID,
-    QUERY_TYPE_REMOTE_GRP_ID,
-    QUERY_TYPE_MAX
-} ESCHED_QUERY_TYPE;
+typedef enum esched_query_type { QUERY_TYPE_LOCAL_GRP_ID, QUERY_TYPE_REMOTE_GRP_ID, QUERY_TYPE_MAX } ESCHED_QUERY_TYPE;
 
 struct esched_input_info {
-    void *inBuff;
+    void* inBuff;
     unsigned int inLen;
 };
 
 struct esched_output_info {
-    void *outBuff;
+    void* outBuff;
     unsigned int outLen;
 };
 
 enum esched_table_op_type {
     ESCHED_TABLE_OP_SEND_EVENT, /* send a event */
     ESCHED_TABLE_OP_NEXT_TABLE, /* continue query next table */
-    ESCHED_TABLE_OP_DROP, /* drop */
+    ESCHED_TABLE_OP_DROP,       /* drop */
     ESCHED_TABLE_OP_MAX
 };
 

@@ -16,7 +16,7 @@ protobuf_generate(msprofbin_proto
 
 set(msprofBinHeader
     ${LIBC_SEC_HEADER}
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/inc/aicpu
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain

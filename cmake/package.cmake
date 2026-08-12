@@ -204,7 +204,7 @@ install(FILES
     COMPONENT npu-runtime
 )
 
-install(DIRECTORY ${RUNTIME_DIR}/include/driver
+install(DIRECTORY ${RUNTIME_DIR}/pkg_inc/driver
     DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/pkg_inc
     COMPONENT npu-runtime
 )

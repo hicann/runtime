@@ -28,6 +28,7 @@ set(LOCAL_SRC_FILES
 set(LOCAL_C_INCLUDES
     ${SRC_PATH}
     ${RUNTIME_DIR}/include
+    ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/base
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/aicpu_schedule
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched

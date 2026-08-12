@@ -56,7 +56,7 @@ set(libAlogSrc
 )
 
 set(libAlogInc
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/dfx/base
     ${TOP_DIR}/src/dfx/adump/inc/adump
     ${LOG_SOURCE_PATH}/liblog/slog

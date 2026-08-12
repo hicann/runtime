@@ -87,7 +87,7 @@ set(logDaemonSrc
 )
 
 set(logDaemonInc
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/src/runtime/core/inc
     ${TOP_DIR}/src/aicpu_sched/extern_include
     ${TOP_DIR}/src/dfx/adump/external

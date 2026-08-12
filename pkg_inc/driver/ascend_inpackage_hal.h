@@ -41,11 +41,7 @@ enum tagAicpufwPlat {
 };
 
 /* verify type for select, include soc and cms */
-typedef enum {
-    VERIFY_TYPE_SOC = 0,
-    VERIFY_TYPE_CMS,
-    VERIFY_TYPE_MAX
-} HAL_VERIFY_TYPE;//lint !e116 !e17
+typedef enum { VERIFY_TYPE_SOC = 0, VERIFY_TYPE_CMS, VERIFY_TYPE_MAX } HAL_VERIFY_TYPE; // lint !e116 !e17
 
 /* image id for cms verification */
 typedef enum {
@@ -66,13 +62,13 @@ typedef enum {
     DP_CORE_IMG_ID,
     ABL_PATCH_IMG_ID,
     IMAGE_ID_MAX
-} HAL_IMG_ID;//lint !e116 !e17
+} HAL_IMG_ID; // lint !e116 !e17
 
 typedef enum {
     HAL_VMNGD_EVENT_CREATE_VF = 100,
     HAL_VMNGD_EVENT_DESTROY_VF,
     HAL_VMNGD_EVENT_MAX
-}HAL_VMNGD_SUBEVENT_ID;//lint !e116 !e17
+} HAL_VMNGD_SUBEVENT_ID; // lint !e116 !e17
 
 struct drvVmngdEventMsg {
     uint32_t dev_id;
@@ -81,12 +77,9 @@ struct drvVmngdEventMsg {
     uint32_t total_core_num;
 };
 
-typedef enum {
-    HAL_IMG_HEAD_TYPE_ROOT_HASH = 0,
-    HAL_IMG_HEAD_TYPE_MAX
-}HAL_IMG_HEAD_TYPE;//lint !e116 !e17
+typedef enum { HAL_IMG_HEAD_TYPE_ROOT_HASH = 0, HAL_IMG_HEAD_TYPE_MAX } HAL_IMG_HEAD_TYPE; // lint !e116 !e17
 
-#define HAL_VERIFY_MODE_COVER_WITH_HEAD_OFF (1<<0) /* cover file with head off */
+#define HAL_VERIFY_MODE_COVER_WITH_HEAD_OFF (1 << 0) /* cover file with head off */
 
 /**
  * @ingroup driver
@@ -110,7 +103,7 @@ DV_ONLINE DVresult drvMemInitSvmDevice(int hostpid, unsigned int vfid, unsigned 
  * @return   0   success
  * @return   -1  fail
  */
-int devdrv_get_board_id(unsigned int dev_id, unsigned int *board_id);
+int devdrv_get_board_id(unsigned int dev_id, unsigned int* board_id);
 /**
  * @ingroup driver
  * @brief get vnic ip
@@ -120,7 +113,7 @@ int devdrv_get_board_id(unsigned int dev_id, unsigned int *board_id);
  * @param [out] ip_addr vnic ip address
  * @return  0  success, return others fail
  */
-int devdrv_get_vnic_ip(unsigned int dev_id, unsigned int *ip_addr);
+int devdrv_get_vnic_ip(unsigned int dev_id, unsigned int* ip_addr);
 
 /**
  * @ingroup driver
@@ -131,7 +124,7 @@ int devdrv_get_vnic_ip(unsigned int dev_id, unsigned int *ip_addr);
  * @param [out] ip_addr vnic ip address
  * @return  0  success, return others fail
  */
-int devdrv_get_vnic_ip_by_sdid(unsigned int sdid, unsigned int *ip_addr);
+int devdrv_get_vnic_ip_by_sdid(unsigned int sdid, unsigned int* ip_addr);
 
 /**
  * @ingroup driver
@@ -144,7 +137,7 @@ int devdrv_get_vnic_ip_by_sdid(unsigned int sdid, unsigned int *ip_addr);
  * @return   0   success
  * @return   -1  fail
  */
-int drvDeviceGetEthIdByIndex(uint32_t dev_id, uint32_t port_id, uint32_t *eth_id);
+int drvDeviceGetEthIdByIndex(uint32_t dev_id, uint32_t port_id, uint32_t* eth_id);
 
 /**
  * @ingroup driver
@@ -153,11 +146,11 @@ int drvDeviceGetEthIdByIndex(uint32_t dev_id, uint32_t port_id, uint32_t *eth_id
  *  if the components is not in driver of device, don't use this function.
  * @param [in] verify_type  choose soc or cms
  * @param [in] image_id  image id, only use in cms verification.
-  * @param [in] img_path  verify image path.
+ * @param [in] img_path  verify image path.
  * @param [in] mode choose cover file soc head or not.
  * @return  0  success, return others fail
  */
-int halVerifyImg(HAL_VERIFY_TYPE verify_type, HAL_IMG_ID image_id, const char *img_path, int mode);
+int halVerifyImg(HAL_VERIFY_TYPE verify_type, HAL_IMG_ID image_id, const char* img_path, int mode);
 
 typedef enum {
     TSFW_HOT_PATCH_LOAD = 0,
@@ -185,7 +178,7 @@ int halTsPkgLoad(unsigned int dev_id, TSFW_LOAD_TYPE load_type, unsigned int ex_
  *  if the components is not in driver of device, don't use this function.
  * @param [in] verify_type  choose soc or cms
  * @param [in] image_id  image id, only use in cms verification.
-  * @param [in] img_path  verify image path.
+ * @param [in] img_path  verify image path.
  * @param [in] mode choose cover file soc head or not.
  * @return  0  success, return others fail
  */
@@ -235,7 +228,7 @@ drvError_t halTsCmdlistMemUnMap(unsigned int devId, unsigned int tsId);
  * @param [in] buf_len  input buff length, when proc succ, the value should be change to actual value length
  * @return  0  success, return others fail
  */
-int halGetImgHeadInfo(HAL_IMG_ID image_id, const char *img_path, HAL_IMG_HEAD_TYPE cmd_type, char *buf, int* buf_len);
+int halGetImgHeadInfo(HAL_IMG_ID image_id, const char* img_path, HAL_IMG_HEAD_TYPE cmd_type, char* buf, int* buf_len);
 
 typedef enum {
     UADK_CFG_ADD_PID_CMD = 0,
@@ -262,9 +255,9 @@ struct uadk_certified_info {
  * @param [in] info  config info
  * @return  0  success, return others fail
  */
-int uadk_config_certified_info(UADK_CFG_CMD_TYPE cmd, struct uadk_certified_info *info);
+int uadk_config_certified_info(UADK_CFG_CMD_TYPE cmd, struct uadk_certified_info* info);
 
-typedef enum  {
+typedef enum {
     UADK_DIGEST_SHA256,
     UADK_DIGEST_AES_CMAC,
     UADK_DIGEST_SM3,
@@ -287,7 +280,7 @@ typedef void* DIGEST_CTX;
  * @param [in] param  input param
  * @return  0  success, return others fail
  */
-DLLEXPORT int uadk_digest_init(DIGEST_CTX *handle, uadk_digest_param *param);
+DLLEXPORT int uadk_digest_init(DIGEST_CTX* handle, uadk_digest_param* param);
 
 /**
  * @ingroup driver
@@ -298,7 +291,7 @@ DLLEXPORT int uadk_digest_init(DIGEST_CTX *handle, uadk_digest_param *param);
  * @param [out] buff  input buffer
  * @return  0  success, return others fail
  */
-DLLEXPORT int uadk_digest_alloc(DIGEST_CTX handle, unsigned int len, unsigned char **buff);
+DLLEXPORT int uadk_digest_alloc(DIGEST_CTX handle, unsigned int len, unsigned char** buff);
 
 /**
  * @ingroup driver
@@ -309,7 +302,7 @@ DLLEXPORT int uadk_digest_alloc(DIGEST_CTX handle, unsigned int len, unsigned ch
  * @param [in] len  input key length
  * @return  0  success, return others fail
  */
-DLLEXPORT int uadk_digest_set_key(DIGEST_CTX handle, unsigned char *key, unsigned int len);
+DLLEXPORT int uadk_digest_set_key(DIGEST_CTX handle, unsigned char* key, unsigned int len);
 
 /**
  * @ingroup driver
@@ -331,8 +324,8 @@ DLLEXPORT int uadk_digest_update(DIGEST_CTX handle, const unsigned int len);
  * @param [out] out_len  length of output result
  * @return  0  success, return others fail
  */
-DLLEXPORT int uadk_digest_final(DIGEST_CTX handle, unsigned char *digest,
-    const unsigned int len, unsigned int *out_len);
+DLLEXPORT int uadk_digest_final(
+    DIGEST_CTX handle, unsigned char* digest, const unsigned int len, unsigned int* out_len);
 
 /**
  * @ingroup driver
@@ -350,49 +343,49 @@ DLLEXPORT int uadk_digest_uninit(DIGEST_CTX handle);
  * @param [out] phy_dev_id phycical device id
  * @return  0  success, return others fail
  */
-drvError_t halGetPhyDevIdByLogicDevId(unsigned int dev_id, unsigned int *phy_dev_id);
+drvError_t halGetPhyDevIdByLogicDevId(unsigned int dev_id, unsigned int* phy_dev_id);
 
 /**
-* @ingroup driver
-* @brief get network device info.
-* @attention null
-* @return 0 success
-*/
-DLLEXPORT int dsmi_cmd_get_network_device_info(int device_id, const char *inbuf, unsigned int size_in, char *outbuf,
-                                               unsigned int *size_out);
+ * @ingroup driver
+ * @brief get network device info.
+ * @attention null
+ * @return 0 success
+ */
+DLLEXPORT int dsmi_cmd_get_network_device_info(
+    int device_id, const char* inbuf, unsigned int size_in, char* outbuf, unsigned int* size_out);
 
 /**
  * @ingroup driver
  * @brief ZIP MACRO
  */
-#define HZIP_LEVEL_DEFAULT          0
-#define HZIP_VERSION                "1.0.1"
-#define HZIP_METHOD_DEFAULT         0
-#define HZIP_WINDOWBITS_GZIP        16
-#define HZIP_MEM_LEVEL_DEFAULT      0
-#define HZIP_STRATEGY_DEFAULT       0
-#define HZIP_FLUSH_TYPE_SYNC_FLUSH  2
-#define HZIP_FLUSH_TYPE_FINISH      3
-#define HZIP_OK                     0
-#define HZIP_STREAM_END             1
-#define HZIP_STREAM_NEED_AGAIN      2
+#define HZIP_LEVEL_DEFAULT 0
+#define HZIP_VERSION "1.0.1"
+#define HZIP_METHOD_DEFAULT 0
+#define HZIP_WINDOWBITS_GZIP 16
+#define HZIP_MEM_LEVEL_DEFAULT 0
+#define HZIP_STRATEGY_DEFAULT 0
+#define HZIP_FLUSH_TYPE_SYNC_FLUSH 2
+#define HZIP_FLUSH_TYPE_FINISH 3
+#define HZIP_OK 0
+#define HZIP_STREAM_END 1
+#define HZIP_STREAM_NEED_AGAIN 2
 
 /**
  * @ingroup driver
  * @brief zip stream param
  */
 struct drv_zip_stream {
-    void            *next_in;   /**< next input byte */
-    unsigned long   avail_in;   /**< number of bytes available at next_in */
-    unsigned long   total_in;   /**< total nb of input bytes read so far */
-    void            *next_out;  /**< next output byte should be put there */
-    unsigned long   avail_out;  /**< remaining free space at next_out */
-    unsigned long   total_out;  /**< total nb of bytes output so far */
-    char            *msg;       /**< last error message, NULL if no error */
-    void            *workspace; /**< memory allocated for this stream */
-    int             data_type;  /**< the data type: ascii or binary */
-    unsigned long   adler;      /**< adler32 value of the uncompressed data */
-    void            *reserved;  /**< reserved for future use */
+    void* next_in;           /**< next input byte */
+    unsigned long avail_in;  /**< number of bytes available at next_in */
+    unsigned long total_in;  /**< total nb of input bytes read so far */
+    void* next_out;          /**< next output byte should be put there */
+    unsigned long avail_out; /**< remaining free space at next_out */
+    unsigned long total_out; /**< total nb of bytes output so far */
+    char* msg;               /**< last error message, NULL if no error */
+    void* workspace;         /**< memory allocated for this stream */
+    int data_type;           /**< the data type: ascii or binary */
+    unsigned long adler;     /**< adler32 value of the uncompressed data */
+    void* reserved;          /**< reserved for future use */
 };
 
 /**
@@ -406,7 +399,7 @@ struct drv_zip_stream {
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_deflateInit_(struct drv_zip_stream *zstrm, int level, const char *version, int stream_size);
+DLLEXPORT int drv_hw_deflateInit_(struct drv_zip_stream* zstrm, int level, const char* version, int stream_size);
 
 /**
  * @ingroup driver
@@ -423,8 +416,9 @@ DLLEXPORT int drv_hw_deflateInit_(struct drv_zip_stream *zstrm, int level, const
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_deflateInit2_(struct drv_zip_stream *zstrm, int level, int method, int windowBits,
-    int memLevel, int strategy, const char *version, int stream_size);
+DLLEXPORT int drv_hw_deflateInit2_(
+    struct drv_zip_stream* zstrm, int level, int method, int windowBits, int memLevel, int strategy,
+    const char* version, int stream_size);
 
 /**
  * @ingroup driver
@@ -437,7 +431,7 @@ DLLEXPORT int drv_hw_deflateInit2_(struct drv_zip_stream *zstrm, int level, int 
  * @return   HZIP_STREAM_NEED_AGAIN  need again
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_deflate(struct drv_zip_stream *zstrm, int flush);
+DLLEXPORT int drv_hw_deflate(struct drv_zip_stream* zstrm, int flush);
 
 /**
  * @ingroup driver
@@ -447,7 +441,7 @@ DLLEXPORT int drv_hw_deflate(struct drv_zip_stream *zstrm, int flush);
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_deflateEnd(struct drv_zip_stream *zstrm);
+DLLEXPORT int drv_hw_deflateEnd(struct drv_zip_stream* zstrm);
 
 /**
  * @ingroup driver
@@ -459,7 +453,7 @@ DLLEXPORT int drv_hw_deflateEnd(struct drv_zip_stream *zstrm);
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_inflateInit_(struct drv_zip_stream *zstrm, const char *version, int stream_size);
+DLLEXPORT int drv_hw_inflateInit_(struct drv_zip_stream* zstrm, const char* version, int stream_size);
 
 /**
  * @ingroup driver
@@ -472,7 +466,7 @@ DLLEXPORT int drv_hw_inflateInit_(struct drv_zip_stream *zstrm, const char *vers
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_inflateInit2_(struct drv_zip_stream *zstrm, int windowBits, const char *version, int stream_size);
+DLLEXPORT int drv_hw_inflateInit2_(struct drv_zip_stream* zstrm, int windowBits, const char* version, int stream_size);
 
 /**
  * @ingroup driver
@@ -485,7 +479,7 @@ DLLEXPORT int drv_hw_inflateInit2_(struct drv_zip_stream *zstrm, int windowBits,
  * @return   HZIP_STREAM_NEED_AGAIN  need again
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_inflate(struct drv_zip_stream *zstrm, int flush);
+DLLEXPORT int drv_hw_inflate(struct drv_zip_stream* zstrm, int flush);
 
 /**
  * @ingroup driver
@@ -495,7 +489,7 @@ DLLEXPORT int drv_hw_inflate(struct drv_zip_stream *zstrm, int flush);
  * @return   HZIP_OK   success
  * @return   other  fail
  */
-DLLEXPORT int drv_hw_inflateEnd(struct drv_zip_stream *zstrm);
+DLLEXPORT int drv_hw_inflateEnd(struct drv_zip_stream* zstrm);
 
 #define PROF_SAMPLE_RSV_NUM 8
 #define PROF_SAMPLE_START_RSV_NUM 3
@@ -503,26 +497,27 @@ struct prof_sample_start_para {
     unsigned int dev_id;
     unsigned int sub_chan_id;
     int target_pid;
-    void *user_data;       /* sample configuration information */
-    unsigned int user_data_len;     /* sample length of the configuration data */
+    void* user_data;            /* sample configuration information */
+    unsigned int user_data_len; /* sample length of the configuration data */
     bool is_support_host_move;
-    void *out_data;        /* device buff info, host sample use */
-    unsigned int out_data_len; /* device buff info, host sample use */
+    void* out_data;             /* device buff info, host sample use */
+    unsigned int out_data_len;  /* device buff info, host sample use */
     unsigned int out_data_max_len;
-    unsigned int phease; // dev 0; host 1; host 2
+    unsigned int phease;        // dev 0; host 1; host 2
     unsigned int rsv[PROF_SAMPLE_START_RSV_NUM];
 };
 
-#define SAMPLE_DATA_ONLY        0x0      /* not the first sample, only data needs to be reported */
-#define SAMPLE_DATA_WITH_HEADER 0x1      /* for the first sample, the data description header needs to be filled for some channels */
+#define SAMPLE_DATA_ONLY 0x0 /* not the first sample, only data needs to be reported */
+#define SAMPLE_DATA_WITH_HEADER \
+    0x1 /* for the first sample, the data description header needs to be filled for some channels */
 struct prof_sample_para {
     unsigned int dev_id;
     unsigned int sub_chan_id;
     int target_pid;
-    unsigned int sample_flag;       /* SAMPLE_ONLY_DATA or SAMPLE_WITH_HEADER */
-    void *buff;                     /* sample buff address */
-    unsigned int buff_len;          /* total length of the sample buff */
-    unsigned int report_len;        /* return value: actual reported data volume */
+    unsigned int sample_flag; /* SAMPLE_ONLY_DATA or SAMPLE_WITH_HEADER */
+    void* buff;               /* sample buff address */
+    unsigned int buff_len;    /* total length of the sample buff */
+    unsigned int report_len;  /* return value: actual reported data volume */
     unsigned int rsv[PROF_SAMPLE_RSV_NUM];
 };
 
@@ -541,14 +536,14 @@ struct prof_sample_stop_para {
 };
 
 struct prof_sample_ops {
-    int (*start_func)(struct prof_sample_start_para *para);
-    int (*sample_func)(struct prof_sample_para *para);            /* NULL: sampler_period must equals to 0 */
-    int (*flush_func)(struct prof_sample_flush_para *para);       /* not must */
-    int (*stop_func)(struct prof_sample_stop_para *para);
+    int (*start_func)(struct prof_sample_start_para* para);
+    int (*sample_func)(struct prof_sample_para* para);      /* NULL: sampler_period must equals to 0 */
+    int (*flush_func)(struct prof_sample_flush_para* para); /* not must */
+    int (*stop_func)(struct prof_sample_stop_para* para);
 };
 
 struct prof_sample_register_para {
-    unsigned int sub_chan_num;              /* multi-instance */
+    unsigned int sub_chan_num; /* multi-instance */
     struct prof_sample_ops ops;
 };
 
@@ -561,7 +556,7 @@ struct prof_sample_register_para {
  * @param [in] para : information to be registered with the channel
  * @return  0 for success, others for fail
  */
-DLLEXPORT int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *para);
+DLLEXPORT int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para* para);
 
 /**
  * @ingroup driver
@@ -572,7 +567,8 @@ DLLEXPORT int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, s
  * @param [in] para : information to be registered with the channel
  * @return  0 for success, others for fail
  */
-DLLEXPORT int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *para);
+DLLEXPORT int halProfSampleRegisterEx(
+    unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para* para);
 
 /**
  * @ingroup driver
@@ -585,10 +581,10 @@ DLLEXPORT int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id,
  * @return   DRV_ERROR_NONE   success
  * @return   other  fail
  */
-DLLEXPORT int halProfQueryAvailBufLen(unsigned int dev_id, unsigned int chan_id, unsigned int *buff_avail_len);
+DLLEXPORT int halProfQueryAvailBufLen(unsigned int dev_id, unsigned int chan_id, unsigned int* buff_avail_len);
 
 struct prof_data_report_para {
-    void *data;
+    void* data;
     unsigned int data_len;
 };
 
@@ -602,11 +598,10 @@ struct prof_data_report_para {
  * @param [in] para : data to be reported
  * @return  0 for success, others for fail
  */
-DLLEXPORT int halProfSampleDataReport(unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id,
-    struct prof_data_report_para *para);
+DLLEXPORT int halProfSampleDataReport(
+    unsigned int dev_id, unsigned int chan_id, unsigned int sub_chan_id, struct prof_data_report_para* para);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

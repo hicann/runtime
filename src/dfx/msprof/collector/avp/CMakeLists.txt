@@ -105,7 +105,7 @@ add_library(profcore_static STATIC
 
 target_include_directories(profcore_static PRIVATE
     ${LIBC_SEC_HEADER}
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${basicInc}
     ${domainInc}
     ${serviceInc}
@@ -191,7 +191,7 @@ set(profimplLiteInc
     ${basicInc}
     ${domainInc}
     ${serviceInc}
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${LIBC_SEC_HEADER}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -279,7 +279,7 @@ set(proftransportInc
     ../dvvp/driver/inc
     ../dvvp/transport
     ./
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROF_BASIC_DIR}
     ${PROF_BASIC_DIR}/osal

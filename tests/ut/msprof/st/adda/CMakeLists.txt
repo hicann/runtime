@@ -62,7 +62,7 @@ target_include_directories(adda_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump
     ${TOP_DIR}/src/dfx/log/inc/toolchain

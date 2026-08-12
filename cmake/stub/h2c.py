@@ -48,13 +48,14 @@ def collect_content(file_path):
             left += i.count('(')
             right += i.count(')')
             i = i.replace('extern', '').replace('SECUREC_API', '')
+            is_declaration_prefix = i.lstrip().startswith("DLLEXPORT") and '(' not in i
             if change_line == 0:
-                contents.append(i.strip(" "))
+                contents.append(i.rstrip('\r\n') + ' ' if is_declaration_prefix else i.strip(" "))
             elif change_line == 1:
                 contents[-1] = contents[-1] + i
-            if left != right:
+            if left != right or is_declaration_prefix:
                 change_line = 1
-            if i.strip().endswith(";") or (change_line == 1 and left == right):
+            if i.strip().endswith(";") or (change_line == 1 and left == right and not is_declaration_prefix):
                 change_line = 0
                 left = 0
                 right = 0

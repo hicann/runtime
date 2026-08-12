@@ -21,7 +21,7 @@ set(dgw_client_inc_path
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/src/inc
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_BINARY_DIR}/proto/aicpu

@@ -14,7 +14,7 @@ set(INCLUDE_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/../stub/
     ${ADIAG_DIR}/common
     ${TOP_DIR}/src/dfx/trace/inc/toolchain
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
 )
 
 set(TEST_SRC

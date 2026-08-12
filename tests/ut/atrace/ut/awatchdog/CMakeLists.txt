@@ -17,7 +17,7 @@ set(SRC_FILE
 set(INCLUDE_DIR
     ${WATCHDOG_SOURCE_DIR}/
     ${TOP_DIR}/src/dfx/trace/common/
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/../stub/
     ${LIBC_SEC_HEADER}
 )
@@ -84,7 +84,7 @@ set(SRC_FILE
 
 set(INCLUDE_DIR
     ${WATCHDOG_SOURCE_DIR}/
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
     ${LIBC_SEC_HEADER}
 )
 

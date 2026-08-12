@@ -20,6 +20,7 @@ repos:
               /(?!
                 (?:
                   external
+                  | driver
                   | tsd_client
                   | dfx/base/err_msg.h
                 )(?:/|$)
@@ -31,6 +32,7 @@ repos:
                 (?:
                   aicpu_sched
                   | base/err_mgr.h
+                  | driver
                   | mmpa
                   | queue_schedule
                   | runtime

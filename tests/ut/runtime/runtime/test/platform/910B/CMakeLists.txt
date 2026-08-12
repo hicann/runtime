@@ -440,7 +440,8 @@ target_compile_definitions(runtime_ut_910b_intf_pub INTERFACE
 )
 
 set(RUNTIME_TEST_INC_DIR_COMMON
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc
+    ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/pkg_inc/aicpu_sched/common
     ${TOP_DIR}/src/tsd/tsdclient/inc/tsd
@@ -520,7 +521,6 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/pkg_inc/profiling
     ${TOP_DIR}/abl/atrace/inc/awatchdog/
     ${TOP_DIR}/src/runtime/core/src/task/
-    ${TOP_DIR}/pkg_inc
     ${TOP_DIR}/src/queue_schedule/dgwclient/inc
     ${TOP_DIR}/src/dfx/msprof/include/external/runtime/rts
     ${TOP_DIR}/src/inc

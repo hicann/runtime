@@ -95,7 +95,7 @@ set(INCLUDE_DIR
     ${TOP_DIR}/src/dfx/trace/inc/toolchain
     ${TOP_DIR}/src/dfx/trace/common
     ${TOP_DIR}/src/dfx/adump
-    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/driver
 )
 
 set(TEST_SRC

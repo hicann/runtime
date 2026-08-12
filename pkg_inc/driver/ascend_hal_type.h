@@ -7,20 +7,18 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef BUFF_PKG_H
-#define BUFF_PKG_H
 
-typedef struct {
-    unsigned int admin : 1;     /* admin permission, can add other proc to grp */
-    unsigned int read : 1;     /* rsv, not support */
-    unsigned int write : 1;    /* read and write permission */
-    unsigned int alloc : 1;    /* alloc permission (have read and write permission) */
-    unsigned int rsv : 28;
-}GroupShareAttr;
+#ifndef __ASCEND_HAL_TYPE_H__
+#define __ASCEND_HAL_TYPE_H__
 
-typedef struct {
-    unsigned long long addr; /* cache memory addr */
-    unsigned long long size; /* cache memory size */
-} GrpQueryGroupAddrInfo; /* cmd: GRP_QUERY_GROUP_ADDR_INFO */
+typedef signed char int8_t;
+typedef signed int int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+
+typedef unsigned long long UINT64;
+typedef unsigned int UINT32;
+typedef unsigned short UINT16;
+typedef unsigned char UINT8;
 
 #endif

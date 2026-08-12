@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 /* * @defgroup 应用程序心跳监控接口模块
  *  @brief   提供应用心跳监控接口
  *  @author
@@ -42,7 +41,7 @@ typedef struct server_info_s {
     /**
      *  内部维护信息。主要包括注册信息、进程间通信配置等。不对用户开放。
      */
-    void *info;
+    void* info;
 } server_info_t;
 
 /**
@@ -52,7 +51,7 @@ typedef struct client_info_s {
     /**
      *  内部维护信息。主要包括注册信息、进程间通信配置等。不对用户开放。
      */
-    void *info;
+    void* info;
 } client_info_t;
 
 /* * 监控进程启动接口
@@ -67,7 +66,7 @@ typedef struct client_info_s {
  *
  *  @attention  无
  */
-int appmon_start(server_info_t *srvr, const char *pid_file, const char *serv_addr);
+int appmon_start(server_info_t* srvr, const char* pid_file, const char* serv_addr);
 
 /* * 监控进程退出接口
  *
@@ -80,7 +79,7 @@ int appmon_start(server_info_t *srvr, const char *pid_file, const char *serv_add
  *
  *  @attention  无
  */
-int appmon_stop(server_info_t *srvr);
+int appmon_stop(server_info_t* srvr);
 
 /* * 应用程序客户端初始化
  *
@@ -94,7 +93,7 @@ int appmon_stop(server_info_t *srvr);
  *
  *  @attention  无
  */
-int appmon_client_init(client_info_t *clnt, const char *serv_addr);
+int appmon_client_init(client_info_t* clnt, const char* serv_addr);
 
 /* * 应用程序客户端退出
  *
@@ -107,7 +106,7 @@ int appmon_client_init(client_info_t *clnt, const char *serv_addr);
  *
  *  @attention  无
  */
-void appmon_client_exit(client_info_t *clnt);
+void appmon_client_exit(client_info_t* clnt);
 
 /* * 应用程序注册
  *
@@ -124,7 +123,7 @@ void appmon_client_exit(client_info_t *clnt);
  *
  *  @attention  脚本路径字符串长度不能超过255个字符
  */
-int appmon_client_register(client_info_t *clnt, unsigned long timeout, const char *timeout_action);
+int appmon_client_register(client_info_t* clnt, unsigned long timeout, const char* timeout_action);
 
 /* * 应用程序注销
  *
@@ -139,7 +138,7 @@ int appmon_client_register(client_info_t *clnt, unsigned long timeout, const cha
  *
  *  @attention  无
  */
-int appmon_client_deregister(client_info_t *clnt, const char *reason);
+int appmon_client_deregister(client_info_t* clnt, const char* reason);
 
 /* * 应用程序客户端心跳发送函数
  *
@@ -153,7 +152,7 @@ int appmon_client_deregister(client_info_t *clnt, const char *reason);
  *
  *  @attention  无
  */
-int appmon_client_heartbeat(client_info_t *clnt);
+int appmon_client_heartbeat(client_info_t* clnt);
 
 /* * 应用程序主动宣称死亡
  *
@@ -168,7 +167,7 @@ int appmon_client_heartbeat(client_info_t *clnt);
  *
  *  @attention  无
  */
-int appmon_client_declare_death(client_info_t *clnt, const char *last_words);
+int appmon_client_declare_death(client_info_t* clnt, const char* last_words);
 
 #ifdef __cplusplus
 }

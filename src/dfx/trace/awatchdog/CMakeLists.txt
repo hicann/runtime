@@ -16,7 +16,7 @@ set(libawatchdogSrcFiles
 set(libawatchdogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ATRACE_DIR}/common
-    ${ATRACE_DIR}/../../../include/driver
+    ${ATRACE_DIR}/../../../pkg_inc/driver
     ${ATRACE_DIR}/../../../pkg_inc/mmpa
 )
 
@@ -27,7 +27,7 @@ add_library(awatchdog_share
 
 target_include_directories(awatchdog_share
     PRIVATE
-        ${ATRACE_DIR}/../../../include/driver
+        ${ATRACE_DIR}/../../../pkg_inc/driver
         ${libawatchdogHeaderDir})
 
 target_compile_definitions(awatchdog_share

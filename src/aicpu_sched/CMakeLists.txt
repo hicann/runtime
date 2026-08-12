@@ -26,7 +26,7 @@ endfunction()
 
 add_library(stackcore_stub SHARED ${CMAKE_CURRENT_SOURCE_DIR}/stub/stackcore_stub.cpp)
 target_include_directories(stackcore_stub PRIVATE
-    ${RUNTIME}/include/driver
+    ${RUNTIME}/pkg_inc/driver
 )
 
 add_library(adump_stub SHARED ${CMAKE_CURRENT_SOURCE_DIR}/stub/adump_stub.cpp)

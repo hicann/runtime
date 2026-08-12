@@ -10,7 +10,7 @@
 ####################### acp #######################
 set(acpBinHeader
     ${RUNTIME_DIR}/src/dfx/error_manager
-    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${LIBC_SEC_HEADER}
     ./include
@@ -222,7 +222,7 @@ target_include_directories(profinj PRIVATE
     ${RUNTIME_DIR}/src/dfx/msprof/inc/
     ${RUNTIME_DIR}/pkg_inc/runtime/
     ${LIBC_SEC_HEADER}
-    ${RUNTIME_DIR}/include/driver/
+    ${RUNTIME_DIR}/pkg_inc/driver/
     ${RUNTIME_DIR}/include/external/
     ${RUNTIME_DIR}/include/external/acl/
     ${RUNTIME_DIR}/src/dfx/error_manager/
