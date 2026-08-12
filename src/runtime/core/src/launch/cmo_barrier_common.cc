@@ -28,7 +28,6 @@ rtError_t BarrierTaskLaunch(const rtBarrierTaskInfo_t* const taskInfo, Stream* c
 
     Device* const dev = stm->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
-    Context* const curCtx = stm->Context_();
 
     const int32_t streamId = stm->Id_();
     TaskInfo taskSubmit = {};
@@ -41,7 +40,7 @@ rtError_t BarrierTaskLaunch(const rtBarrierTaskInfo_t* const taskInfo, Stream* c
         error, ERROR_RECYCLE, "Failed to init barrier task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtBarrierTask->id, error);
 
-    error = dev->SubmitTask(rtBarrierTask, (curCtx != nullptr) ? curCtx->TaskGenCallback_() : nullptr);
+    error = dev->SubmitTask(rtBarrierTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit barrier task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtBarrierTask->id, error);

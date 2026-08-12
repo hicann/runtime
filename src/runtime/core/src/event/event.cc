@@ -526,7 +526,6 @@ rtError_t Event::Record(Stream* const stm, const bool isApiCall)
     const bool oldHasReset = HasReset(); // for task send fail rollback.
     const bool oldHasRecord = HasRecord();
     int32_t newEventId = INVALID_EVENT_ID;
-    rtTaskGenCallback callback = nullptr;
     tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_EVENT_RECORD, errorReason);
     COND_RETURN_ERROR_MSG_INNER(
         (tsk == nullptr), errorReason, "Failed to allocate task when event record, stream_id=%d.", stm->Id_());
@@ -554,8 +553,7 @@ rtError_t Event::Record(Stream* const stm, const bool isApiCall)
     error = UpdateEventTimeLine(tsk, this); // can not in task init because maybe deadlock
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to get timeline buffer, retCode=%#x.", static_cast<uint32_t>(error));
-    callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-    error = dev->SubmitTask(tsk, callback);
+    error = dev->SubmitTask(tsk);
     TryFreeLastEventId();
     if (error == RT_ERROR_NONE) {
         stm->InsertEventTask(tsk);
@@ -742,8 +740,7 @@ rtError_t Event::Wait(Stream* const stm, const uint32_t timeout)
             static_cast<uint32_t>(errorReason));
 
         (void)EventWaitTaskInit(tsk, this, eventId, timeout);
-        rtTaskGenCallback const callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-        error = dev->SubmitTask(tsk, callback);
+        error = dev->SubmitTask(tsk);
 
         ERROR_GOTO_MSG_INNER(
             error, ERROR_RECYCLE, "Failed to submit wait task, retCode=%#x.", static_cast<uint32_t>(error));
@@ -784,7 +781,7 @@ rtError_t Event::Reset(Stream* const stm)
 
     SetHasReset(true);
     (void)EventResetTaskInit(tsk, this, isNotify_, eventId);
-    error = dev->SubmitTask(tsk, (stm->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(tsk);
 
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit reset task, retCode=%#x.", static_cast<uint32_t>(error));
@@ -1058,7 +1055,7 @@ rtError_t Event::RecordForNotify(Stream* const stm)
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to initialize record task, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(tsk, (stm->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(tsk);
 
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit record task, retCode=%#x.", static_cast<uint32_t>(error));

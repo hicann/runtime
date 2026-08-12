@@ -28,7 +28,6 @@ rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm
 
     Device* const dev = stm->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
-    Context* const curCtx = stm->Context_();
 
     const int32_t streamId = stm->Id_();
     TaskInfo taskSubmit = {};
@@ -41,7 +40,7 @@ rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm
         error, ERROR_RECYCLE, "Init CMO task failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId, rtCmoTask->id,
         error);
 
-    error = dev->SubmitTask(rtCmoTask, (curCtx != nullptr) ? curCtx->TaskGenCallback_() : nullptr);
+    error = dev->SubmitTask(rtCmoTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Submit CMO task failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtCmoTask->id, error);

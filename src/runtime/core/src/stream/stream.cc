@@ -2221,7 +2221,7 @@ rtError_t Stream::KernelFusionStart()
 
     rtError_t error = KernelFusionTaskInit(tsk, FUSION_START);
     ERROR_GOTO_MSG_INNER(error, RECYCLE, "Init kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-    error = device_->SubmitTask(tsk, (context_ != nullptr) ? context_->TaskGenCallback_() : nullptr);
+    error = device_->SubmitTask(tsk);
     ERROR_GOTO_MSG_INNER(
         error, RECYCLE, "Submit kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -2248,7 +2248,7 @@ rtError_t Stream::KernelFusionEnd()
 
     rtError_t error = KernelFusionTaskInit(tsk, FUSION_END);
     ERROR_GOTO_MSG_INNER(error, RECYCLE, "Init kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
-    error = device_->SubmitTask(tsk, (context_ != nullptr) ? context_->TaskGenCallback_() : nullptr);
+    error = device_->SubmitTask(tsk);
     ERROR_GOTO_MSG_INNER(
         error, RECYCLE, "Submit kernel fusion task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -3135,7 +3135,7 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
     eventRecordTsk->timeout = timeout;
     tsk->isNeedStreamSync = true;
 
-    error = device_->SubmitTask(tsk, nullptr, nullptr, timeout);
+    error = device_->SubmitTask(tsk, nullptr, timeout);
     if (error != RT_ERROR_NONE) {
         eventRecordTsk->event->DeleteRecordResetFromMap(tsk);
         eventRecordTsk->event->EventIdCountSub(eventRecordTsk->eventid);
@@ -4042,7 +4042,7 @@ rtError_t Stream::SubmitRecordTask(int32_t timeout)
     eventRecordTsk->timeout = timeout;
     tsk->isNeedStreamSync = true;
 
-    error = device_->SubmitTask(tsk, nullptr, nullptr, timeout);
+    error = device_->SubmitTask(tsk, nullptr, timeout);
     // ERROR CASE1: task send successfully but sync failed, and pendingNum_ has been incremented, simply return, don't
     // recycle task here; in the case of stream abort, task is recycled in Stream::ResClear instead;
     if ((error == RT_ERROR_STREAM_SYNC_TIMEOUT) || (error == RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL) ||

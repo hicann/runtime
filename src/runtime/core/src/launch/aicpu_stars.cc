@@ -85,7 +85,7 @@ rtError_t InternalLaunchWithKernelAndArgs(
         curCtx->Device_()->Id_(), stm->Id_(), kernelTask->id, stm->IsModelStream(), stm->NonSupportModelCompile(),
         argsInfo->isNoNeedH2DCopy, cpuParamHeadOffset, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
         kernelTask->u.aicpuTaskInfo.comm.dim);
-    error = curCtx->Device_()->SubmitTask(kernelTask, curCtx->TaskGenCallback_());
+    error = curCtx->Device_()->SubmitTask(kernelTask);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to submit kernel task, retCode=%#x", error);
     GET_THREAD_TASKID_AND_STREAMID(kernelTask, stm->AllocTaskStreamId());
@@ -139,7 +139,7 @@ rtError_t InternalLaunchWithArgs(
         stm->NonSupportModelCompile(), argsInfo->isNoNeedH2DCopy, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
         kernelTask->u.aicpuTaskInfo.comm.kernelFlag, kernelTask->u.aicpuTaskInfo.comm.dim);
 
-    error = curCtx->Device_()->SubmitTask(kernelTask, curCtx->TaskGenCallback_());
+    error = curCtx->Device_()->SubmitTask(kernelTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to submit kernel task, retCode=%#x", error);
     GET_THREAD_TASKID_AND_STREAMID(kernelTask, stm->AllocTaskStreamId());
     return RT_ERROR_NONE;
@@ -167,7 +167,7 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
     kernelTask->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_FMK);
     kernelTask->u.aicpuTaskInfo.aicpuFlags = flags;
 
-    error = curCtx->Device_()->SubmitTask(kernelTask, curCtx->TaskGenCallback_());
+    error = curCtx->Device_()->SubmitTask(kernelTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DavinciKernelTask, retCode=%#x.", error);
     GET_THREAD_TASKID_AND_STREAMID(kernelTask, stm->AllocTaskStreamId());
     return RT_ERROR_NONE;
@@ -242,7 +242,7 @@ rtError_t StreamLaunchCpuKernel(
     aicpuTaskInfo->aicpuKernelType = static_cast<uint8_t>(aicpuKernelType);
 
     // Submit task
-    error = curCtx->Device_()->SubmitTask(kernTask, curCtx->TaskGenCallback_());
+    error = curCtx->Device_()->SubmitTask(kernTask);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to submit kernel task, retCode=%#x", error);
     GET_THREAD_TASKID_AND_STREAMID(kernTask, stm->AllocTaskStreamId());

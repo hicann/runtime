@@ -477,7 +477,7 @@ rtError_t GetRunModeStub(cce::runtime::ApiImpl* api, rtRunMode* mode)
     return RT_ERROR_NONE;
 }
 
-rtError_t GetDevMsgSubmitTaskStub(RawDevice* dev, TaskInfo* task, rtTaskGenCallback callback)
+rtError_t GetDevMsgSubmitTaskStub(RawDevice* dev, TaskInfo* task)
 {
     (void)dev->GetTaskFactory()->Recycle(task);
     return RT_ERROR_NONE;
@@ -954,7 +954,7 @@ TEST_F(CloudV2ApiImplTest, GetDevErrMsg)
     delete stream;
 }
 
-rtError_t GetDevMsgSubmitTaskStub1(Device* dev, TaskInfo* task, rtTaskGenCallback callback)
+rtError_t GetDevMsgSubmitTaskStub1(Device* dev, TaskInfo* task)
 {
     (void)dev->GetTaskFactory()->Recycle(task);
     return RT_ERROR_NONE;

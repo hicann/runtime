@@ -62,7 +62,7 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam& par
         error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
         "Failed to set up ctrl msg, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
 
-    error = device_->SubmitTask(taskInfo, param.sendParam.callback, msgId, param.sendParam.timeout);
+    error = device_->SubmitTask(taskInfo, msgId, param.sendParam.timeout);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
         "Failed to submit task, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));

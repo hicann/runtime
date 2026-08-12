@@ -54,7 +54,6 @@ rtError_t MemcopyAsyncPtr(
 {
     UNUSED(destMax);
     rtError_t error;
-    rtTaskGenCallback callback = nullptr;
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo* cpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
@@ -105,8 +104,7 @@ rtError_t MemcopyAsyncPtr(
         cpyAsyncTask->u.memcpyAsyncTaskInfo.guardMemVec->emplace_back(guardMem);
     }
 
-    callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-    error = dev->SubmitTask(cpyAsyncTask, callback);
+    error = dev->SubmitTask(cpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         recycleTask();
         return error;
@@ -123,7 +121,6 @@ rtError_t Memcpy2DAsync(
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    rtTaskGenCallback callback = nullptr;
 
     if (stm == nullptr) {
         return RT_ERROR_STREAM_NULL;
@@ -141,8 +138,7 @@ rtError_t Memcpy2DAsync(
     }
     *realSize = taskAsync2d->u.memcpyAsyncTaskInfo.size;
 
-    callback = (stm->Context_() == nullptr) ? nullptr : stm->Context_()->TaskGenCallback_();
-    error = stm->Device_()->SubmitTask(taskAsync2d, callback);
+    error = stm->Device_()->SubmitTask(taskAsync2d);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "invoke device_ SubmitTask error code:%#x", error);
         recycleTask();

@@ -73,11 +73,8 @@ public:
 
     uint64_t GetDevFailureMode() override { return devFailureMode_.Value(); }
 
-    rtError_t SubmitTask(
-        TaskInfo* const taskObj, const rtTaskGenCallback callback = nullptr, uint32_t* const flipTaskId = nullptr,
-        int32_t timeout = -1) override
+    rtError_t SubmitTask(TaskInfo* const taskObj, uint32_t* const flipTaskId = nullptr, int32_t timeout = -1) override
     {
-        UNUSED(callback);
         const rtError_t error = GetDeviceStatus();
         COND_PROC((error != RT_ERROR_NONE), return error);
         return engine_->SubmitTask(taskObj, flipTaskId, timeout);

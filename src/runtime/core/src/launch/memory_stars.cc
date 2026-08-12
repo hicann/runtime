@@ -135,7 +135,7 @@ rtError_t MemWriteValue(const void* const devAddr, const uint64_t value, const u
     rtMemWriteValueTask->typeName = "MEM_WRITE_VALUE";
     rtMemWriteValueTask->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
-    error = stm->Device_()->SubmitTask(rtMemWriteValueTask, stm->Context_()->TaskGenCallback_());
+    error = stm->Device_()->SubmitTask(rtMemWriteValueTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "mem write value task submit failed, retCode=%#x", static_cast<uint32_t>(error));
 
     GET_THREAD_TASKID_AND_STREAMID(rtMemWriteValueTask, stm->AllocTaskStreamId());
@@ -163,7 +163,7 @@ rtError_t MemWaitValue(const void* const devAddr, const uint64_t value, const ui
         error, ERROR_RECYCLE, "mem wait value init failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtMemWaitValueTask->id, static_cast<uint32_t>(error));
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
-    error = stm->Device_()->SubmitTask(rtMemWaitValueTask, stm->Context_()->TaskGenCallback_());
+    error = stm->Device_()->SubmitTask(rtMemWaitValueTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "mem wait value task submit failed, retCode=%#x", static_cast<uint32_t>(error));
 
     GET_THREAD_TASKID_AND_STREAMID(rtMemWaitValueTask, stm->AllocTaskStreamId());

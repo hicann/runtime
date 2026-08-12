@@ -945,7 +945,7 @@ rtError_t Context::SubmitCaptureConditionTask(CondHandle* condHandle, Stream* co
         "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%d, condsize=%u, "
         "retCode=%#x.",
         stm->Model_()->Id_(), stm->Id_(), tsk->id, condHandle->GetCondType(), condHandle->GetCondSize(), error);
-    error = dev->SubmitTask(tsk, taskGenCallback_);
+    error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit capture model condition task, retCode=%#x.", static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();

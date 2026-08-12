@@ -66,11 +66,8 @@ void MockCopyAndDevAlloc(void* memBase, const NpuDriver* rawDrv)
         .will(returnValue(RT_ERROR_NONE));
 }
 
-rtError_t SubmitTaskStub(
-    Device* device, TaskInfo* const taskObj, const rtTaskGenCallback callback, uint32_t* const flipTaskId,
-    int32_t timeout)
+rtError_t SubmitTaskStub(Device* device, TaskInfo* const taskObj, uint32_t* const flipTaskId, int32_t timeout)
 {
-    UNUSED(callback);
     UNUSED(flipTaskId);
     UNUSED(timeout);
 

@@ -5237,7 +5237,7 @@ rtError_t ApiImpl::CallbackLaunchWithEvent(
 
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, static_cast<int32_t>(curEventId));
 
-    ret = dev->SubmitTask(rtCbLaunchTask, (stm->Context_())->TaskGenCallback_());
+    ret = dev->SubmitTask(rtCbLaunchTask);
     ERROR_RETURN(
         ret,
         "Callback launch task submit failed, "
@@ -5293,7 +5293,7 @@ rtError_t ApiImpl::CallbackLaunchWithoutEvent(
 
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, INVALID_EVENT_ID);
 
-    ret = dev->SubmitTask(rtCbLaunchTask, (stm->Context_())->TaskGenCallback_());
+    ret = dev->SubmitTask(rtCbLaunchTask);
     ERROR_RETURN(
         ret,
         "Callback launch task submit failed, "

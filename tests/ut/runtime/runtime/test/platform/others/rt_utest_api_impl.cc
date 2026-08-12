@@ -376,7 +376,7 @@ rtError_t GetDevMsgTaskInitStubDavid(
     return RT_ERROR_NONE;
 }
 
-rtError_t GetDevMsgSubmitTaskStubDavid(Device* dev, TaskInfo* task, rtTaskGenCallback callback)
+rtError_t GetDevMsgSubmitTaskStubDavid(Device* dev, TaskInfo* task)
 {
     Complete(task, dev->Id_());
     task->stream->pendingNum_.Set(0U);

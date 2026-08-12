@@ -57,7 +57,7 @@ rtError_t Context::FftsPlusTaskLaunch(
         }
     }
 
-    error = device_->SubmitTask(rtFftsPlusTask, taskGenCallback_);
+    error = device_->SubmitTask(rtFftsPlusTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Ffts plus task submit failed, retCode=%#x", error);
 
     GET_THREAD_TASKID_AND_STREAMID(rtFftsPlusTask, stm->AllocTaskStreamId());

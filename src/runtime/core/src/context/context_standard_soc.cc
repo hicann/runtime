@@ -57,7 +57,7 @@ rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Str
         error, ERROR_RECYCLE, "Failed to init RDMA send task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtRdmaSendTask->id, static_cast<uint32_t>(error));
 
-    error = device_->SubmitTask(rtRdmaSendTask, taskGenCallback_);
+    error = device_->SubmitTask(rtRdmaSendTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit RDMA send task, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -85,7 +85,7 @@ rtError_t Context::RdmaDbSendToDev(
         error, ERROR_RECYCLE, "Failed to init RDMA DB send task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtRdmaDbSendTask->id, static_cast<uint32_t>(error));
 
-    error = device_->SubmitTask(rtRdmaDbSendTask, taskGenCallback_);
+    error = device_->SubmitTask(rtRdmaDbSendTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit RDMA DB send task, retCode=%#x.", static_cast<uint32_t>(error));
 

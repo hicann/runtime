@@ -191,12 +191,10 @@ public:
     virtual bool ModuleRelease(Module* mdl) = 0;
     virtual void TryToRecycleModulesPool(uint32_t latestPoolIdx) = 0;
 
-    // 1. for fastlaunch scenarios, pass parameters : taskObj, flipTaskId and timeout.
+    // For fastlaunch scenarios, pass parameters : taskObj, flipTaskId and timeout.
     // flipTaskId and timeout are optional
-    // 2. for non-fastlaunch scenarios, pass parameters : taskObj, callback. callback is optional.
     virtual rtError_t SubmitTask(
-        TaskInfo* const taskObj, const rtTaskGenCallback callback = nullptr, uint32_t* const flipTaskId = nullptr,
-        int32_t timeout = -1) = 0;
+        TaskInfo* const taskObj, uint32_t* const flipTaskId = nullptr, int32_t timeout = -1) = 0;
 
     virtual rtError_t TaskReclaim(const uint32_t streamId, const bool limited, uint32_t& taskId) = 0;
     virtual rtError_t TaskReclaimAllForNoRes(const bool limited, uint32_t& taskId) = 0;

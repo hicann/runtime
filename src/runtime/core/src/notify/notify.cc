@@ -207,7 +207,7 @@ rtError_t Notify::Record(Stream* const streamIn)
         goto ERROR_RECYCLE;
     }
 
-    error = dev->SubmitTask(notifyTask, (streamIn->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(notifyTask);
     if (error != RT_ERROR_NONE) {
         goto ERROR_RECYCLE;
     }
@@ -241,7 +241,7 @@ rtError_t Notify::Reset(Stream* const streamIn) const
     cmdInfo.notifyId = notifyid_;
     CommonCmdTaskInit(notifyTask, PhCmdType::CMD_NOTIFY_RESET, &cmdInfo);
 
-    auto error = dev->SubmitTask(notifyTask, (streamIn->Context_())->TaskGenCallback_());
+    auto error = dev->SubmitTask(notifyTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit notify reset task, retCode=%#x", static_cast<uint32_t>(error));
 
@@ -311,7 +311,7 @@ rtError_t Notify::RevisedWait(Stream* const streamIn, const uint32_t timeout)
         error, ERROR_RECYCLE_WAIT, "Failed to initialize event wait task, notifyid=%u, retCode=%#x.", notifyid_,
         static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(waitTask, (streamIn->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(waitTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE_WAIT, "Failed to submit event wait task, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -323,7 +323,7 @@ rtError_t Notify::RevisedWait(Stream* const streamIn, const uint32_t timeout)
         error, ERROR_RECYCLE_RESET, "Failed to initialize event reset task, notifyid=%u, retCode=%#x.", notifyid_,
         static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(resetTask, (streamIn->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(resetTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE_RESET, "Failed to submit event reset task, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -370,7 +370,7 @@ rtError_t Notify::Wait(
         externalWaitRetainedResources->clear();
     }
 
-    error = dev->SubmitTask(waitTask, (streamIn->Context_())->TaskGenCallback_());
+    error = dev->SubmitTask(waitTask);
     if (error != RT_ERROR_NONE) {
         return error;
     }

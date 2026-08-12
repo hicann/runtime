@@ -1266,7 +1266,7 @@ rtError_t Context::DatadumpInfoLoad(const void* const dumpInfo, const uint32_t l
         "Failed to init data dump info load task, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.", streamId,
         rtDumpLoadInfoTask->id, error);
 
-    error = device_->SubmitTask(rtDumpLoadInfoTask, taskGenCallback_);
+    error = device_->SubmitTask(rtDumpLoadInfoTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit data dump info load task, retCode=%#x.", error);
 
     error = dftStm->Synchronize();
@@ -1301,7 +1301,7 @@ rtError_t Context::AicpuInfoLoad(const void* const aicpuInfo, const uint32_t len
         error, ERROR_RECYCLE, "Failed to init AI CPU info load task, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
         streamId, rtAicpuLoadInfoTask->id, error);
 
-    error = device_->SubmitTask(rtAicpuLoadInfoTask, taskGenCallback_);
+    error = device_->SubmitTask(rtAicpuLoadInfoTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AI CPU info load task, retCode=%#x.", error);
 
     error = dftStm->Synchronize();
@@ -1344,7 +1344,7 @@ rtError_t Context::DebugRegister(
             error, ERROR_RECYCLE, "Failed to init debug register task, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
             *streamId, rtDbgRegTask->id, error);
 
-        error = device_->SubmitTask(rtDbgRegTask, taskGenCallback_, &flipTaskId);
+        error = device_->SubmitTask(rtDbgRegTask, &flipTaskId);
         *taskId = flipTaskId;
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit debug register task, retCode=%#x.", error);
 
@@ -1385,7 +1385,7 @@ rtError_t Context::DebugUnRegister(Model* const mdl)
             error, ERROR_RECYCLE, "Failed to init DebugUnRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
             streamId, rtDbgUnregTask->id, error);
 
-        error = device_->SubmitTask(rtDbgUnregTask, taskGenCallback_);
+        error = device_->SubmitTask(rtDbgUnregTask);
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugUnRegisterTask, retCode=%#x.", error);
 
         error = dftStm->Synchronize();
@@ -1431,7 +1431,7 @@ rtError_t Context::DebugRegisterForStream(
         ", retCode=%#x.",
         *streamId, debugStream->Id_(), rtDbgRegStreamTask->id, err);
 
-    err = device_->SubmitTask(rtDbgRegStreamTask, taskGenCallback_);
+    err = device_->SubmitTask(rtDbgRegStreamTask);
     ERROR_GOTO_MSG_INNER(err, ERROR_RECYCLE, "Failed to submit debug register for stream task, retCode=%#x.", err);
 
     *taskId = GetFlipTaskId(rtDbgRegStreamTask->id, rtDbgRegStreamTask->flipNum);
@@ -1470,7 +1470,7 @@ rtError_t Context::DebugUnRegisterForStream(Stream* const debugStream)
 
     (void)DebugUnRegisterForStreamTaskInit(rtDbgUnregStreamTask, debugStream->Id_());
 
-    err = device_->SubmitTask(rtDbgUnregStreamTask, taskGenCallback_);
+    err = device_->SubmitTask(rtDbgUnregStreamTask);
     ERROR_GOTO_MSG_INNER(err, ERROR_RECYCLE, "Failed to submit debug unregister for stream task, retCode=%#x.", err);
 
     if (device_->IsStarsPlatform() != true) {
@@ -1536,7 +1536,7 @@ rtError_t Context::LaunchSqeUpdateTask(
         goto ERROR_RECYCLE;
     }
 
-    error = device_->SubmitTask(rtMemcpyAsyncTask, taskGenCallback_);
+    error = device_->SubmitTask(rtMemcpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "device_id=%u, exe_stream_id=%d, dsa_sq_id=%u, dsa_pos=%u, cpySize=%#" PRIx64, device_->Id_(),
@@ -2148,7 +2148,7 @@ rtError_t Context::ModelAddEndGraph(Model* const mdl, Stream* const stm, const u
         rtAddEndGraphTask, mdl->Id_(), modelExecuteType, RtPtrToValue<const void*>(mdl->GetDevModelID()),
         RtPtrToValue<const void*>(mdl->GetDevString(RT_DEV_STRING_ENDGRAPH)), static_cast<uint8_t>(flags));
 
-    error = device_->SubmitTask(rtAddEndGraphTask, taskGenCallback_);
+    error = device_->SubmitTask(rtAddEndGraphTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AddEndGraphTask, retCode=%#x.", error);
 
     mdl->IncEndGraphNum();
@@ -2255,7 +2255,7 @@ rtError_t Context::ModelExit(Model* const mdl, Stream* const stm)
 
     (void)AddModelExitTaskInit(rtAddModelExitTask, mdl->Id_());
 
-    error = device_->SubmitTask(rtAddModelExitTask, taskGenCallback_);
+    error = device_->SubmitTask(rtAddModelExitTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit AddModelExitTask, retCode=%#x.", error);
 
     mdl->IncModelExitNum();
@@ -2290,7 +2290,7 @@ rtError_t Context::ProfilerTrace(const uint64_t id, const bool notifyFlag, const
         "Failed to init profiler trace task, id=%" PRIu64 ", notifyFlag=%d, flags=%u, retCode=%#x.", id,
         static_cast<int32_t>(notifyFlag), flags, error);
 
-    error = device_->SubmitTask(rtProfTraceTask, taskGenCallback_);
+    error = device_->SubmitTask(rtProfTraceTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit profiler trace task, retCode=%#x.", error);
 
     return error;
@@ -2328,7 +2328,7 @@ rtError_t Context::ProfilerTraceEx(const uint64_t id, const uint64_t modelId, co
         "Failed to init ProfilerTraceExTask, id=%" PRIu64 ", model_id=%" PRIu64 ", tag_id=%hu, retCode=%#x.", id,
         modelId, tagId, error);
 
-    error = device_->SubmitTask(rtProfTraceExTask, taskGenCallback_);
+    error = device_->SubmitTask(rtProfTraceExTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit ProfilerTraceExTask, retCode=%#x.", error);
     GET_THREAD_TASKID_AND_STREAMID(rtProfTraceExTask, stm->Id_());
     return error;
@@ -2350,7 +2350,7 @@ rtError_t Context::CallbackLaunch(
 
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, evtId);
 
-    error = device_->SubmitTask(rtCbLaunchTask, taskGenCallback_);
+    error = device_->SubmitTask(rtCbLaunchTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit host func callback task, retCode=%#x.", error);
 
     GET_THREAD_TASKID_AND_STREAMID(rtCbLaunchTask, streamId);
@@ -2553,7 +2553,7 @@ rtError_t Context::LaunchRandomNumTask(
         error, ERROR_RECYCLE, "Failed to init stars common task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtStarsCommonTask->id, error);
 
-    error = device_->SubmitTask(rtStarsCommonTask, taskGenCallback_, &taskId);
+    error = device_->SubmitTask(rtStarsCommonTask, &taskId);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Failed to submit stars common task, streamId=%d, taskId=%hu, retCode=%#x.", streamId,
         rtStarsCommonTask->id, error);
@@ -2581,7 +2581,7 @@ rtError_t Context::SetStreamSqLockUnlock(Stream* const stm, const bool isLock)
         error, ERROR_RECYCLE, "Failed to init SQ lock/unlock task, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtSetSqLockUnlockTask->id, error);
 
-    error = device_->SubmitTask(rtSetSqLockUnlockTask, taskGenCallback_);
+    error = device_->SubmitTask(rtSetSqLockUnlockTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit SQ lock/unlock task, retCode=%#x.", error);
 
     GET_THREAD_TASKID_AND_STREAMID(rtSetSqLockUnlockTask, streamId);
@@ -2605,7 +2605,7 @@ rtError_t Context::NopTask(Stream* const stm) const
         error, ERROR_RECYCLE, "Failed to init NopTask, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtNopTask->id, error);
 
-    error = device_->SubmitTask(rtNopTask, taskGenCallback_);
+    error = device_->SubmitTask(rtNopTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit NopTask, retCode=%#x.", error);
 
     GET_THREAD_TASKID_AND_STREAMID(rtNopTask, stm->AllocTaskStreamId());
@@ -2762,7 +2762,7 @@ rtError_t Context::StreamClear(const Stream* const stm, rtClearStep_t step) cons
     cmdInfo.step = step;
     CommonCmdTaskInit(rtCommonCmdTask, PhCmdType::CMD_STREAM_CLEAR, &cmdInfo);
 
-    rtError_t error = device_->SubmitTask(rtCommonCmdTask, taskGenCallback_);
+    rtError_t error = device_->SubmitTask(rtCommonCmdTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit stream clear task, retCode=%#x.", error);
 
     error = dftStm->Synchronize();
@@ -3239,7 +3239,7 @@ rtError_t Context::CmoAddrTaskLaunch(
     // init cmoAddrTask
     (void)CmoAddrTaskInit(cmoAddrTask, cmoAddrInfo, cmoOpCode);
 
-    error = device_->SubmitTask(cmoAddrTask, taskGenCallback_);
+    error = device_->SubmitTask(cmoAddrTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit CMO task, retCode=%#x.", error);
 
     GET_THREAD_TASKID_AND_STREAMID(cmoAddrTask, streamId);
@@ -3264,7 +3264,7 @@ rtError_t Context::NpuGetFloatStatus(
 
     (void)NpuGetFloatStaTaskInit(rtNpuGetFloatStatusTask, outputAddrPtr, outputSize, checkMode, isDebug);
 
-    error = device_->SubmitTask(rtNpuGetFloatStatusTask, taskGenCallback_);
+    error = device_->SubmitTask(rtNpuGetFloatStatusTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit NPUGetFloatStatus task, retCode=%#x.", error);
 
     GET_THREAD_TASKID_AND_STREAMID(rtNpuGetFloatStatusTask, streamId);
@@ -3289,7 +3289,7 @@ rtError_t Context::NpuClearFloatStatus(const uint32_t checkMode, Stream* const s
     (void)NpuClrFloatStaTaskInit(rtNpuClearFloatStatusTask, checkMode, isDebug);
 
     RT_LOG(RT_LOG_INFO, "Begin to submit NpuClearFloatStatus task.");
-    error = device_->SubmitTask(rtNpuClearFloatStatusTask, taskGenCallback_);
+    error = device_->SubmitTask(rtNpuClearFloatStatusTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit NPUClearFloatStatus task, retCode=%#x.", error);
 
     RT_LOG(RT_LOG_INFO, "success to submit NpuClearFloatStatus task.");
@@ -3320,7 +3320,7 @@ rtError_t Context::SetStreamOverflowSwitch(Stream* const stm, const uint32_t fla
         NULL_PTR_RETURN(tsk, errorReason);
 
         (void)OverflowSwitchSetTaskInit(tsk, stm, flags);
-        error = device_->SubmitTask(tsk, taskGenCallback_);
+        error = device_->SubmitTask(tsk);
         ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit OverflowSwitchSetTask, retCode=%#x.", error);
         GET_THREAD_TASKID_AND_STREAMID(tsk, DefaultStream_()->Id_());
     }
@@ -3354,7 +3354,7 @@ rtError_t Context::SetStreamTag(Stream* const stm, const uint32_t geOpTag) const
         NULL_PTR_RETURN(tsk, errorReason);
 
         (void)StreamTagSetTaskInit(tsk, stm, geOpTag);
-        error = device_->SubmitTask(tsk, taskGenCallback_);
+        error = device_->SubmitTask(tsk);
         ERROR_GOTO_MSG_INNER(
             error, ERROR_RECYCLE, "Failed to submit StreamTagSetTask, retCode=%#x.", static_cast<uint32_t>(error));
         stm->SetStreamTag(geOpTag);
@@ -3463,7 +3463,7 @@ rtError_t Context::SetUpdateAddrTask(uint64_t devAddr, uint64_t len, Stream* stm
         error, ERROR_RECYCLE, "Failed to init UpdateAddressTask, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtUpdateAddressTask->id, static_cast<uint32_t>(error));
 
-    error = device_->SubmitTask(rtUpdateAddressTask, taskGenCallback_);
+    error = device_->SubmitTask(rtUpdateAddressTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "Failed to submit UpdateAddressTask, retCode=%#x.", static_cast<uint32_t>(error));
 
     GET_THREAD_TASKID_AND_STREAMID(rtUpdateAddressTask, streamId);

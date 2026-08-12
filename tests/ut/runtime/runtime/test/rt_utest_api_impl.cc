@@ -672,7 +672,7 @@ rtError_t GetDevMsgTaskInitStub(TaskInfo* task, const void* devMemAddr, uint32_t
     return RT_ERROR_NONE;
 }
 
-rtError_t GetDevMsgSubmitTaskStub(RawDevice* dev, TaskInfo* task, rtTaskGenCallback callback)
+rtError_t GetDevMsgSubmitTaskStub(RawDevice* dev, TaskInfo* task)
 {
     (void)dev->GetTaskFactory()->Recycle(task);
     return RT_ERROR_NONE;
@@ -746,7 +746,7 @@ TEST_F(ApiImplTest, GetMemUceInfoGetSmmuFaultValidFailed)
     EXPECT_EQ(ret, RT_ERROR_DRV_ERR);
 }
 
-rtError_t GetDevMsgSubmitTaskStub1(Device* dev, TaskInfo* task, rtTaskGenCallback callback)
+rtError_t GetDevMsgSubmitTaskStub1(Device* dev, TaskInfo* task)
 {
     (void)dev->GetTaskFactory()->Recycle(task);
     return RT_ERROR_NONE;

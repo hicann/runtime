@@ -74,7 +74,7 @@ rtError_t StarsLaunch(const void* const sqe, const uint32_t sqeLen, Stream* cons
         error, ERROR_RECYCLE, "Stars common task init failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
         rtStarsCommonTask->id, error);
 
-    error = dev->SubmitTask(rtStarsCommonTask, nullptr, &taskId);
+    error = dev->SubmitTask(rtStarsCommonTask, &taskId);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Task submit failed, streamId=%d, taskId=%hu, sqeType=%hu, retCode=%#x.", streamId,
         rtStarsCommonTask->id, sqeType, error);
@@ -117,7 +117,7 @@ rtError_t LaunchMultipleTaskInfo(
     ERROR_PROC_RETURN_MSG_INNER(error, (void)dev->GetTaskFactory()->Recycle(multipleTask);
                                 , "Multiple task init failed, stream_id=%d, retCode=0x%x.", streamId, error);
 
-    error = dev->SubmitTask(multipleTask, nullptr, &taskId);
+    error = dev->SubmitTask(multipleTask, &taskId);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Failed to submit kernel task, stream_id=%d, retCode=0x%x", streamId, error);
 

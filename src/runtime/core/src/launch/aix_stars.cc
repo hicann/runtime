@@ -223,7 +223,7 @@ rtError_t InternalUpdateMixKernelTask(
     // oldArgHandle will be released by releaseArgHandle of the H2D task
     aicTaskInfo->oldArgHandle = nullptr;
 
-    error = device->SubmitTask(rtMemcpyAsyncTask, ctx->TaskGenCallback_());
+    error = device->SubmitTask(rtMemcpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%u, retCode=%#x.", device->Id_(), stm->Id_(), copySize,
@@ -277,7 +277,7 @@ rtError_t InternalUpdateNormalKernelTaskH2DSubmitComm(
     // oldArgHandle will be released by releaseArgHandle of the H2D task
     aicTaskInfo->oldArgHandle = nullptr;
 
-    error = device->SubmitTask(rtMemcpyAsyncTask, ctx->TaskGenCallback_());
+    error = device->SubmitTask(rtMemcpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%u, retCode=%#x.", device->Id_(), stm->Id_(),
@@ -325,7 +325,7 @@ rtError_t InternalUpdateNormalKernelTaskD2HSubmit(
         goto ERROR_RECYCLE;
     }
 
-    error = device->SubmitTask(rtMemcpyAsyncTask, ctx->TaskGenCallback_());
+    error = device->SubmitTask(rtMemcpyAsyncTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%u, retCode=%#x.", device->Id_(), stm->Id_(),
@@ -384,7 +384,7 @@ rtError_t InternalUpdateNormalKernelTaskByTS(
 
     errorReason = SqeUpdateTaskInit(kernTask, updateTask, updateArgHandle);
     COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
-    errorReason = ctx->Device_()->SubmitTask(kernTask, ctx->TaskGenCallback_());
+    errorReason = ctx->Device_()->SubmitTask(kernTask);
     COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
 
     GET_THREAD_TASKID_AND_STREAMID(kernTask, stm->AllocTaskStreamId());
@@ -498,7 +498,7 @@ rtError_t InternalLaunchKernelSubmit(
     }
 
     TIMESTAMP_BEGIN(rtKernelLaunch_SubmitTask);
-    const rtError_t error = ctx->Device_()->SubmitTask(submitTask, ctx->TaskGenCallback_());
+    const rtError_t error = ctx->Device_()->SubmitTask(submitTask);
     TIMESTAMP_END(rtKernelLaunch_SubmitTask);
 
     ERROR_RETURN_MSG_INNER(error, "Failed to submit kernel task, retCode=%#x.", error);

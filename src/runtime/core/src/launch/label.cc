@@ -182,7 +182,7 @@ rtError_t Label::Set(Stream* const stm)
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Init label set task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(labelTask, context_->TaskGenCallback_());
+    error = dev->SubmitTask(labelTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Submit label set task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -223,7 +223,7 @@ rtError_t Label::Switch(const void* const ptr, const rtCondition_t condition, co
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Init label switch task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(labelTask, context_->TaskGenCallback_());
+    error = dev->SubmitTask(labelTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Submit label switch task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -252,7 +252,7 @@ rtError_t Label::Goto(Stream* const stm)
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Init label goto task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = dev->SubmitTask(labelTask, context_->TaskGenCallback_());
+    error = dev->SubmitTask(labelTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Submit label goto task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -279,7 +279,7 @@ rtError_t Label::StreamGoto(Stream* const stm)
     NULL_PTR_RETURN_MSG(labelTask, errorReason);
 
     (void)StreamLabelGotoTaskInit(labelTask, labelId_);
-    error = dev->SubmitTask(labelTask, context_->TaskGenCallback_());
+    error = dev->SubmitTask(labelTask);
     ERROR_GOTO_MSG_INNER(
         error, ERROR_RECYCLE, "Submit stream label goto task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
