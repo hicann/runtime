@@ -477,6 +477,7 @@ public:
     const DevProperties& GetCurChipProperties() const { return curChipProperties_; }
 
     Context* CurrentContext() const override;
+    Context* CurrentContext(const bool isNeedSetDevice, int32_t deviceId);
     driverType_t GetDriverType() const;
 
     ThreadGuard* GetThreadGuard() const { return threadGuard_; }

@@ -61,6 +61,7 @@
 #include "aicpu_timeout_manager.h"
 #include "device_error_proc.hpp"
 #include "task.hpp"
+#include "heterogenous.h"
 
 namespace cce {
 namespace runtime {
@@ -5389,6 +5390,43 @@ Context* Runtime::CurrentContext() const
         Context* const refCtx = curRef->GetPrimaryCtxCallBackFlag() ? curRef->GetVal(false) : curRef->GetVal();
         return ContextManage::CheckContextIsValid(refCtx, accessMode) ? refCtx : nullptr;
     }
+    return nullptr;
+}
+
+Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
+{
+    Context* const curCtx = InnerThreadLocalContainer::GetCurCtx();
+    if (curCtx != nullptr) {
+        return curCtx;
+    }
+
+    RefObject<Context*>* const curRef = InnerThreadLocalContainer::GetCurRef();
+    if (curRef != nullptr) {
+        return curRef->GetPrimaryCtxCallBackFlag() ? curRef->GetVal(false) : curRef->GetVal();
+    }
+
+    // 异构场景不支持隐式setdevice
+    if (RtIsHeterogenous()) {
+        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogenous does not support set device.");
+        return nullptr;
+    }
+
+    const int32_t defaultDeviceId = GetDefaultDeviceId();
+    const bool hasSetDefaultDevId = GetSetDefaultDevIdFlag();
+    if (isNeedSetDevice && hasSetDefaultDevId) {
+        if (deviceId == DEFAULT_DEVICE_ID) {
+            // DEFAULT_DEVICE_ID代表无需校验deviceId是否和defaultDeviceID相等
+            deviceId = defaultDeviceId;
+        }
+
+        if ((deviceId == defaultDeviceId) && (HaveDevice())) {
+            const rtError_t error = ApiImpl_()->SetDevice(defaultDeviceId);
+            if (error == RT_ERROR_NONE) {
+                return InnerThreadLocalContainer::GetCurRef()->GetVal();
+            }
+        }
+    }
+    RT_LOG(RT_LOG_WARNING, "current ctx is nullptr!");
     return nullptr;
 }
 

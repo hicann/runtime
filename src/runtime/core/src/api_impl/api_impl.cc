@@ -298,40 +298,7 @@ rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
 
 Context* ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 {
-    Context* const curCtx = InnerThreadLocalContainer::GetCurCtx();
-    if (curCtx != nullptr) {
-        return curCtx;
-    }
-
-    RefObject<Context*>* const curRef = InnerThreadLocalContainer::GetCurRef();
-    if (curRef != nullptr) {
-        return curRef->GetPrimaryCtxCallBackFlag() ? curRef->GetVal(false) : curRef->GetVal();
-    }
-
-    // 异构场景不支持隐式setdevice
-    if (RtIsHeterogenous()) {
-        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogenous does not support set device.");
-        return nullptr;
-    }
-
-    Runtime* rtInstance = Runtime::Instance();
-    const int32_t defaultDeviceId = rtInstance->GetDefaultDeviceId();
-    const bool hasSetDefaultDevId = rtInstance->GetSetDefaultDevIdFlag();
-    if (isNeedSetDevice && hasSetDefaultDevId) {
-        if (deviceId == DEFAULT_DEVICE_ID) {
-            // DEFAULT_DEVICE_ID代表无需校验deviceId是否和defaultDeviceID相等
-            deviceId = defaultDeviceId;
-        }
-
-        if ((deviceId == defaultDeviceId) && (rtInstance->HaveDevice())) {
-            const rtError_t error = SetDevice(defaultDeviceId);
-            if (error == RT_ERROR_NONE) {
-                return InnerThreadLocalContainer::GetCurRef()->GetVal();
-            }
-        }
-    }
-    RT_LOG(RT_LOG_WARNING, "current ctx is nullptr!");
-    return nullptr;
+    return Runtime::Instance()->CurrentContext(isNeedSetDevice, deviceId);
 }
 
 rtError_t ApiImpl::DevBinaryRegister(const rtDevBinary_t* const bin, Program** const prog)
