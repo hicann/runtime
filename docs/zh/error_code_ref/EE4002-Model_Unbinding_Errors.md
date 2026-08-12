@@ -5,7 +5,7 @@
 报错格式如下，占位符%s表示报错原因：
 
 ```
-Failed to unbind the stream to the model. %s
+Failed to unbind the stream from the model. %s
 ```
 
 报错示例如下：
