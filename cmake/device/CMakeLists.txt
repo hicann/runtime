@@ -57,6 +57,11 @@ install(FILES
     DESTINATION ${DEVICE_LIBRARY_PATH} COMPONENT npu-runtime
 )
 
+install(FILES
+    $<TARGET_FILE:c_sec>
+    DESTINATION ${DEVICE_LIBRARY_PATH} COMPONENT npu-runtime
+)
+
 include(${RUNTIME_DIR}/version.cmake)
 
 add_cann_sign_file(

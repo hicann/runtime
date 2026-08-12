@@ -396,12 +396,10 @@ install(TARGETS acl_rt acl_rt_impl acl_tdt_queue acl_tdt_channel runtime xpu_tpr
         ARCHIVE DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
 )
 
-if(TARGET shared_c_sec)
-    install(TARGETS shared_c_sec
-            LIBRARY DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
-            ARCHIVE DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
-    )
-endif()
+install(FILES
+    $<TARGET_FILE:c_sec> $<TARGET_FILE:c_sec_static>
+    DESTINATION ${INSTALL_DIR} COMPONENT npu-runtime
+)
 
 install(TARGETS platform
         LIBRARY DESTINATION ${INSTALL_DIR} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
