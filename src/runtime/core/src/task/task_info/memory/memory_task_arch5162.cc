@@ -323,7 +323,7 @@ void DoCompleteSuccessForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_
     }
 
     if (memcpyAsyncTaskInfo->dsaSqeUpdateFlag || memcpyAsyncTaskInfo->isSqeUpdateD2H) {
-        // update task dose not need to call drvMemDestroyAddr
+        // update task does not need to call drvMemDestroyAddr
         return;
     }
 

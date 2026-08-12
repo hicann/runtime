@@ -184,7 +184,7 @@ struct RtStarsModelMaintaince {
 };
 
 struct RtStarsMaintaince {
-    uint8_t sub_type; // force recyle
+    uint8_t sub_type; // force recycle
     uint8_t rsv;
     uint16_t target_id;
     uint8_t reserved[44];

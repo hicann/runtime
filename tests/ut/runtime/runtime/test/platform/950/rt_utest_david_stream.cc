@@ -604,6 +604,28 @@ TEST_F(DavidStreamTest, ResClear_01)
     delete stream;
 }
 
+TEST_F(DavidStreamTest, ResClearSeparateSendAndRecycle)
+{
+    DavidStream* stream = new DavidStream(device_, 0, RT_STREAM_AICPU, nullptr);
+    rtError_t ret = stream->Setup();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    auto* taskResMang = dynamic_cast<TaskResManageDavid*>(stream->taskResMang_);
+    ASSERT_NE(taskResMang, nullptr);
+    taskResMang->taskResATail_.Set(1U);
+
+    MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetDevRunningState)
+        .stubs()
+        .will(returnValue((uint32_t)DEV_RUNNING_NORMAL))
+        .then(returnValue((uint32_t)DEV_RUNNING_DOWN));
+    MOCKER(RecycleTaskBySqHeadForRecycleThread).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = stream->ResClear();
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
+    delete stream;
+}
+
 TEST_F(DavidStreamTest, DavidrtStreamTaskAbort_01)
 {
     rtStream_t stream = 0;

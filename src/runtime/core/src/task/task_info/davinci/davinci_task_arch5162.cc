@@ -180,7 +180,7 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
 
     Handle* argHdl = static_cast<Handle*>(aicTaskInfo->comm.argHandle);
     if (stream->Model_() != nullptr) {
-        RT_LOG(RT_LOG_INFO, "Model Task no relase args, stream_id=%d ,task_id=%hu", stream->Id_(), taskInfo->id);
+        RT_LOG(RT_LOG_INFO, "Model Task no release args, stream_id=%d ,task_id=%hu", stream->Id_(), taskInfo->id);
         (stream->Model_())->PushbackArgHandle(static_cast<uint16_t>(stream->Id_()), taskInfo->id, argHdl);
     } else if (stream->IsSeparateSendAndRecycle() && taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
         stream->SetArgHandle(aicTaskInfo->comm.argHandle);

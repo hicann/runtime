@@ -283,7 +283,7 @@ rtError_t RecycleTaskBySqHead(Stream* const stm)
         stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(), sqHead);
 }
 
-rtError_t RecycleTaskBySqHeadForRecyleThread(Stream* const stm)
+rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm)
 {
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE) || stm->isForceRecycle_) {
         RT_LOG(
@@ -308,8 +308,8 @@ rtError_t TaskReclaimForSeparatedStm(Stream* const stm)
         ProcLogicCqUntilEmpty(stm);
     }
 
-    rtError_t error = RecycleTaskBySqHeadForRecyleThread(stm);
-    COND_LOG_DEBUG((error != RT_ERROR_NONE), "recyle task stream_id=%d, ret=%u", stm->Id_(), error);
+    rtError_t error = RecycleTaskBySqHeadForRecycleThread(stm);
+    COND_LOG_DEBUG((error != RT_ERROR_NONE), "recycle task stream_id=%d, ret=%u", stm->Id_(), error);
     return error;
 }
 

@@ -33,7 +33,7 @@ void ProcCqReportException(
 rtError_t StarsResumeRtsq(const rtLogicCqReport_t* logicCq, const TaskInfo* const taskInfo);
 rtError_t RecycleTaskBySqHead(Stream* const stm);
 rtError_t AdjustRecycleTaskID(const Stream* const stm, const uint32_t endTaskId, const uint16_t recyclePos);
-rtError_t RecycleTaskBySqHeadForRecyleThread(Stream* const stm);
+rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm);
 rtError_t RefreshForceRecyleFlagAndSendMaintainceTask(Stream* const stm);
 
 // ===================== 对外API =================================================================//

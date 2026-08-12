@@ -255,6 +255,34 @@ TEST_F(Arch5162TaskTest, DoCompleteSuccessForDavinciTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, DoCompleteSuccessForDavinciTaskWithModel)
+{
+    MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
+    uint32_t descBuf = 1;
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    Model model;
+    stream->SetModel(&model);
+    TaskInfo task = {};
+    task.stream = stream;
+    task.type = TS_TASK_TYPE_KERNEL_AICPU;
+    task.errorCode = 0;
+    task.id = 1U;
+    task.u.aicTaskInfo.mixOpt = 1U;
+    task.u.aicTaskInfo.descBuf = &descBuf;
+    Handle argHdl = {};
+    argHdl.freeArgs = true;
+    task.u.aicTaskInfo.comm.argHandle = static_cast<void*>(&argHdl);
+    DoCompleteSuccessForDavinciTask(&task, 10);
+    EXPECT_EQ(task.u.aicTaskInfo.descBuf, nullptr);
+    void* retrieved = model.GetArgHandle(static_cast<uint16_t>(stream->Id_()), task.id);
+    EXPECT_NE(retrieved, nullptr);
+    EXPECT_EQ(task.u.aicTaskInfo.comm.argHandle, nullptr);
+    delete stream;
+    delete device;
+}
+
 TEST_F(Arch5162TaskTest, SetResultForDavinciTask)
 {
     MOCKER_CPP(&H2DCopyMgr::H2DMemCopyWaitFinish).stubs().will(returnValue(RT_ERROR_NONE));

@@ -21,7 +21,7 @@ namespace runtime {
 #pragma pack(1)
 
 struct DavidStarsMaintaince {
-    uint8_t subType; // force recyle
+    uint8_t subType; // force recycle
     uint8_t rsv;
     uint16_t targetId;
     uint8_t reserved[44];

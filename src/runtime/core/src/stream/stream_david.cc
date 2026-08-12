@@ -1202,7 +1202,7 @@ rtError_t DavidStream::ResClear(uint64_t timeout)
             StreamSyncLock();
             if (IsSeparateSendAndRecycle()) {
                 StreamRecycleLock();
-                RecycleTaskBySqHeadForRecyleThread(this);
+                RecycleTaskBySqHeadForRecycleThread(this);
                 StreamRecycleUnlock();
             } else {
                 (void)TaskReclaimByStream(this, false);

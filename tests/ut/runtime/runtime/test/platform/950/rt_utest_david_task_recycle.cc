@@ -1470,7 +1470,7 @@ TEST_F(DavidTaskRecycleTest, test_recycle_task_abort_on_failure)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
 
-    error = RecycleTaskBySqHeadForRecyleThread(stm);
+    error = RecycleTaskBySqHeadForRecycleThread(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stmHandle);

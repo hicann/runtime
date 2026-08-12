@@ -425,7 +425,7 @@ rtError_t DeviceErrorProc::DestroyDeviceRingBuffer()
     RT_LOG(RT_LOG_DEBUG, "begin to delete device ringbuffer.");
     {
         const std::unique_lock<std::mutex> mutexLock(mutex_);
-        // if addr is nullptr ,it don`t need to relase, directly to return.
+        // if addr is nullptr ,it don`t need to release, directly to return.
         NULL_PTR_RETURN(deviceRingBufferAddr_, RT_ERROR_NONE);
         Driver* const devDrv = device_->Driver_();
         const rtError_t error = devDrv->DevMemFree(deviceRingBufferAddr_, device_->Id_());

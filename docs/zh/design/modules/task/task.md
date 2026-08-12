@@ -386,7 +386,7 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo) {
         
         TaskReclaimForSeparatedStm(stream);
         //   → ProcLogicCqUntilEmpty(stm)  // 先收 CQE
-        //   → RecycleTaskBySqHeadForRecyleThread(stm)  // 再根据 drv sqHead 回收
+        //   → RecycleTaskBySqHeadForRecycleThread(stm)  // 再根据 drv sqHead 回收
         
         stream->StreamRecycleUnlock();
     }

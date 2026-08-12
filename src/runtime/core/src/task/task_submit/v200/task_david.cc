@@ -27,7 +27,7 @@
 
 namespace cce {
 namespace runtime {
-constexpr uint16_t TASK_QUERY_INTERVAL_NUM = 64U; // task recyle interval.
+constexpr uint16_t TASK_QUERY_INTERVAL_NUM = 64U; // task recycle interval.
 
 static rtError_t AddTaskToPublicQueue(TaskInfo* const workTask, const uint32_t sendSqeNum)
 {
