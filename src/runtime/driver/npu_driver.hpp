@@ -321,15 +321,10 @@ public:
         void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t memPolicy,
         const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true) override;
 
-    // Alloc pctrace memory
-    rtError_t DevMemAllocForPctrace(void** const dptr, const uint64_t size, const uint32_t deviceId) override;
-
     // Free device global memory.
     rtError_t DevMemFree(void* const dptr, const uint32_t deviceId) override;
     // Free device Continuous memory.
     rtError_t DevContinuousMemFree(void* const dptr, const uint32_t deviceId) override;
-    // Free pctrace memory
-    rtError_t DevMemFreeForPctrace(const void* const dst) override;
     // Alloc cached memory.
     rtError_t DevMemAllocCached(
         void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId,
@@ -548,10 +543,6 @@ public:
     rtError_t PcieHostRegister(void* const addr, const uint64_t size, const uint32_t deviceId, void*& outAddr) override;
 
     rtError_t PcieHostUnRegister(void* const addr, const uint32_t deviceId) override;
-
-    rtError_t HostAddrRegister(void* const addr, const uint64_t size, const uint32_t deviceId) override;
-
-    rtError_t HostAddrUnRegister(void* const addr, const uint32_t deviceId) override;
 
     rtError_t GetCqeStatus(const uint32_t deviceId, const uint32_t tsId, const uint32_t sqId, bool& status) override;
 

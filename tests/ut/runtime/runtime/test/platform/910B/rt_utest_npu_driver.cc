@@ -709,36 +709,6 @@ TEST_F(CloudV2NpuDriverTest, command_send_fail)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, devm_memory_pctrace)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemFreeForPctrace((void*)NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(CloudV2NpuDriverTest, devm_memory_pctrace_online)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
 TEST_F(CloudV2NpuDriverTest, device_memory_alloc)
 {
     rtError_t error;

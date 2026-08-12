@@ -67,21 +67,6 @@ rtError_t NpuDriver::HostGetDevPointer(void* srcPtr, uint32_t devid, void** dstP
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::HostAddrRegister(void* const addr, const uint64_t size, const uint32_t deviceId)
-{
-    UNUSED(addr);
-    UNUSED(size);
-    UNUSED(deviceId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::HostAddrUnRegister(void* const addr, const uint32_t deviceId)
-{
-    UNUSED(addr);
-    UNUSED(deviceId);
-    return RT_ERROR_NONE;
-}
-
 rtError_t NpuDriver::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags)
 {
     UNUSED(devPtr);
@@ -1753,20 +1738,6 @@ rtError_t NpuDriver::DevContinuousMemFree(void* const dptr, const uint32_t devic
 {
     UNUSED(dptr);
     UNUSED(deviceId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::DevMemAllocForPctrace(void** const dptr, const uint64_t size, const uint32_t deviceId)
-{
-    UNUSED(dptr);
-    UNUSED(size);
-    UNUSED(deviceId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::DevMemFreeForPctrace(const void* const dst)
-{
-    UNUSED(dst);
     return RT_ERROR_NONE;
 }
 

@@ -312,33 +312,6 @@ rtError_t NpuDriver::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::HostAddrRegister(void* const addr, const uint64_t size, const uint32_t deviceId)
-{
-    // just use in hccs & smmu agent mode
-    RUNTIME_WHEN_NO_VIRTUAL_MODEL_RETURN;
-
-    COND_RETURN_WARN(
-        &halHostRegister == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostRegister does not exist");
-    const drvError_t drvRet =
-        halHostRegister(addr, static_cast<UINT64>(size), static_cast<UINT32>(HOST_MEM_MAP_DMA), deviceId, nullptr);
-    RT_LOG(RT_LOG_DEBUG, "ret=%u, deviceId=%u, size=%" PRIu64, drvRet, deviceId, size);
-
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::HostAddrUnRegister(void* const addr, const uint32_t deviceId)
-{
-    // just use in hccs & smmu agent mode
-    RUNTIME_WHEN_NO_VIRTUAL_MODEL_RETURN;
-
-    COND_RETURN_WARN(
-        &halHostUnregisterEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostUnregisterEx does not exist");
-    const drvError_t drvRet = halHostUnregisterEx(addr, deviceId, static_cast<UINT32>(HOST_MEM_MAP_DMA));
-    RT_LOG(RT_LOG_DEBUG, "ret=%u, deviceId=%u", drvRet, deviceId);
-
-    return RT_ERROR_NONE;
-}
-
 rtError_t NpuDriver::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags)
 {
     drvError_t drvRet = DRV_ERROR_NONE;
@@ -1487,43 +1460,6 @@ rtError_t NpuDriver::DevContinuousMemFree(void* const dptr, const uint32_t devic
             static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::DevMemAllocForPctrace(void** const dptr, const uint64_t size, const uint32_t deviceId)
-{
-    if (GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1006, "Allocating device-dedicated memory for the Pctrace function", "Memory allocation",
-            "The current SoC does not support memory allocation for ptrace");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    const drvError_t drvRet = halMemAlloc(
-        dptr, static_cast<UINT64>(size),
-        static_cast<UINT64>(GetDevProperties().memAllocPctraceFlag) | static_cast<UINT64>(MEM_SET_ALIGN_SIZE(9ULL)) |
-            static_cast<UINT64>(MEM_ADVISE_TS) | static_cast<UINT64>(NODE_TO_DEVICE(deviceId)));
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_MALLOC_ERROR_PROCESS(
-            drvRet, RUNTIME_MODULE_ID,
-            "Call driver api halMemAlloc failed, drvRetCode=%d, "
-            "size=%" PRIu64 "(bytes), drvDevId=%u.",
-            static_cast<int32_t>(drvRet), size, deviceId);
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-
-    RT_LOG(RT_LOG_INFO, "Device mem alloc pctrace : offline, size=%" PRIu64 ".", size);
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::DevMemFreeForPctrace(const void* const dst)
-{
-    const drvError_t drvRet = halMemFree(const_cast<void*>(dst));
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "Call driver api halMemFree failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-
     return RT_ERROR_NONE;
 }
 

@@ -594,36 +594,6 @@ TEST_F(NpuDriverTest, mem_get_info_ex_adc)
     delete rawDrv;
 }
 
-TEST_F(NpuDriverTest, devm_memory_pctrace)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemFreeForPctrace((void*)NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(NpuDriverTest, devm_memory_pctrace_online)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
 TEST_F(NpuDriverTest, device_memory_alloc)
 {
     rtError_t error;
@@ -1775,36 +1745,6 @@ TEST_F(NpuDriverTest2, memory_dev_alloc_online_05)
     free(ptr);
 }
 
-TEST_F(NpuDriverTest2, devm_memory_pctrace)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemFreeForPctrace((void*)NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(NpuDriverTest2, devm_memory_pctrace_online)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
 drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     *value = 3;
@@ -2862,36 +2802,6 @@ TEST_F(NpuDriverTest3, memory_dev_alloc_online_05)
     free(ptr);
 }
 
-TEST_F(NpuDriverTest3, devm_memory_pctrace)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemFreeForPctrace((void*)NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(NpuDriverTest3, devm_memory_pctrace_online)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
 #if 0
 TEST_F(NpuDriverTest3, memory_dev_alloc_offline_02)
 {
@@ -3252,36 +3162,6 @@ TEST_F(NpuDriverTest5, memory_dev_alloc_online_05)
 
     delete rawDrv;
     free(ptr);
-}
-
-TEST_F(NpuDriverTest5, devm_memory_pctrace)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemFreeForPctrace((void*)NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(NpuDriverTest5, devm_memory_pctrace_online)
-{
-    rtError_t error;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(1));
-
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->DevMemAllocForPctrace((void**)NULL, 0, 0);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    delete rawDrv;
 }
 
 TEST_F(NpuDriverTest5, memory_dev_alloc_offline_02)
