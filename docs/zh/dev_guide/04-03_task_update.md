@@ -80,7 +80,7 @@
             aclScalar *updatealpha = nullptr;
             aclTensor *out = nullptr;
             aclTensor *outtmp = nullptr;
-            /* aclnnAdd: self = self  +  other * alpha */
+            /* aclnnAdd: outtmp = self  +  other * alpha */
             float *self_h = nullptr;
             float *other_h = nullptr;
             std::vector<int64_t> shape = {4, 2};

@@ -87,7 +87,7 @@ if (canAccess != 0) {
 批量复制接口aclrtMemcpyBatch、aclrtMemcpyBatchAsync及其V2版本适用于一次下发多段Host到Device或Device到Host复制。批量复制需要注意：
 
 -   批次内的复制操作不保证按照数组顺序执行。
--   每个复制操作的目的地址、源地址和复制大小数组长度必须一致。
+-   每个复制操作的目的地址数组、源地址数组和复制大小数组长度必须一致。
 -   同一个批次中的复制方向仅支持Host到Device或Device到Host中的一种。
 -   相关接口属于试验特性时，应以API参考中的产品说明和约束为准。
 

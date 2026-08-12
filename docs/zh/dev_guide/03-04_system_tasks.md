@@ -98,7 +98,7 @@ int main()
     
     float mean = 3.0;
     float stddev = 2.0;    
-    ret =NormalFloatAsync(mean, stddev, 0, num, counterAddr, devOutput, stream);
+    ret = NormalFloatAsync(mean, stddev, 0, num, counterAddr, devOutput, stream);
     // 同步 stream
     aclrtSynchronizeStream(stream);
     // 拷回结果

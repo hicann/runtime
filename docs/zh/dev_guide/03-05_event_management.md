@@ -100,7 +100,7 @@ aclrtCreateStream(&stream);
 
 aclrtEvent startEvent;
 aclrtEvent endEvent;
-// 创建Event，接口传入ACL_EVENT_TIME_LINE参数，表示创建的Event用于记录
+// 创建Event，接口传入ACL_EVENT_TIME_LINE参数，表示创建的Event用于记录时间戳
 aclrtCreateEventExWithFlag(&startEvent, ACL_EVENT_TIME_LINE);
 aclrtCreateEventExWithFlag(&endEvent, ACL_EVENT_TIME_LINE);
 

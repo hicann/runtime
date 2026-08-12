@@ -40,7 +40,7 @@ error = aclrtGetLastError(ACL_RT_THREAD_LEVEL);
 
 error = aclrtMemcpyAsync(hostPtr, hostSize, devPtr, devSize, ACL_MEMCPY_DEVICE_TO_HOST, stream);
 
-// 【关键差异】异步接口必须调用流同步，才能获取Device上的异步错误
+// 【关键差异】异步接口必须调用同步接口，才能获取Device上的异步错误
 error = aclrtSynchronizeDevice();
 if (error != ACL_RT_SUCCESS) {
     // 获取ErrorMsg
