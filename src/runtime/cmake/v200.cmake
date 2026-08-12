@@ -380,6 +380,7 @@ set(libruntime_v200_src_files
     ${RUNTIME_DIR}/src/runtime/driver/v200/npu_driver.cc
     ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
     ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
+    ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_proc_arch9201.cc
     ${RUNTIME_FEATURE_DIR}/xpu/runtime_xpu_adapt.cc
     ${RUNTIME_FEATURE_DIR}/model/v200/model_c.cc
     ${libruntime_v200_task_src_files}

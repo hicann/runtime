@@ -12,6 +12,7 @@
 #include "context.hpp"
 #include "runtime.hpp"
 #include "task.hpp"
+#include "runtime_task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -21,27 +22,30 @@ bool IsRasFaultEventId(uint32_t eventId)
     return (eventId == HBM_ECC_NOTIFY_EVENT_ID) || (eventId == HBM_ECC_EVENT_ID);
 }
 
-void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap)
+static bool RegisterStarsErrorProcFunc()
 {
-    static const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> starsFuncMap = {
-        {AICORE_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo},
-        {AIVECTOR_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo},
-        {FFTS_PLUS_AICORE_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo},
-        {FFTS_PLUS_AIVECTOR_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo},
-        {WAIT_TIMEOUT_ERROR, &DeviceErrorProc::ProcessStarsWaitTimeoutErrorInfo},
-        {SDMA_ERROR, &DeviceErrorProc::ProcessStarsSdmaErrorInfo},
-        {AICPU_ERROR, &ProcessStarsAicpuErrorInfo},
-        {FFTS_PLUS_SDMA_ERROR, &DeviceErrorProc::ProcessStarsSdmaErrorInfo},
-        {FFTS_PLUS_AICPU_ERROR, &ProcessStarsAicpuErrorInfo},
-        {DVPP_ERROR, &DeviceErrorProc::ProcessStarsDvppErrorInfo},
-        {DSA_ERROR, &DeviceErrorProc::ProcessStarsDsaErrorInfo},
-        {FFTS_PLUS_DSA_ERROR, &DeviceErrorProc::ProcessStarsDsaErrorInfo},
-        {SQE_ERROR, &DeviceErrorProc::ProcessStarsSqeErrorInfo},
-        {HCCL_FFTSPLUS_TIMEOUT_ERROR, &DeviceErrorProc::ProcessStarsHcclFftsPlusTimeoutErrorInfo},
-        {AICORE_TIMEOUT_DFX, &DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo}};
-    funcMap = starsFuncMap;
-    return;
+    const auto& chips = GetV100Chips();
+    for (const auto chip : chips) {
+        RegErrorProcFunc(chip, AICORE_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, AIVECTOR_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, FFTS_PLUS_AICORE_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, FFTS_PLUS_AIVECTOR_ERROR, &DeviceErrorProc::ProcessStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, WAIT_TIMEOUT_ERROR, &DeviceErrorProc::ProcessStarsWaitTimeoutErrorInfo);
+        RegErrorProcFunc(chip, SDMA_ERROR, &DeviceErrorProc::ProcessStarsSdmaErrorInfo);
+        RegErrorProcFunc(chip, AICPU_ERROR, &ProcessStarsAicpuErrorInfo);
+        RegErrorProcFunc(chip, FFTS_PLUS_SDMA_ERROR, &DeviceErrorProc::ProcessStarsSdmaErrorInfo);
+        RegErrorProcFunc(chip, FFTS_PLUS_AICPU_ERROR, &ProcessStarsAicpuErrorInfo);
+        RegErrorProcFunc(chip, DVPP_ERROR, &DeviceErrorProc::ProcessStarsDvppErrorInfo);
+        RegErrorProcFunc(chip, DSA_ERROR, &DeviceErrorProc::ProcessStarsDsaErrorInfo);
+        RegErrorProcFunc(chip, FFTS_PLUS_DSA_ERROR, &DeviceErrorProc::ProcessStarsDsaErrorInfo);
+        RegErrorProcFunc(chip, SQE_ERROR, &DeviceErrorProc::ProcessStarsSqeErrorInfo);
+        RegErrorProcFunc(chip, HCCL_FFTSPLUS_TIMEOUT_ERROR, &DeviceErrorProc::ProcessStarsHcclFftsPlusTimeoutErrorInfo);
+        RegErrorProcFunc(chip, AICORE_TIMEOUT_DFX, &DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo);
+    }
+    return true;
 }
+
+static bool g_registerStarsErrorProc = RegisterStarsErrorProcFunc();
 
 uint16_t GetMteErrWaitCount() { return 120U; }
 

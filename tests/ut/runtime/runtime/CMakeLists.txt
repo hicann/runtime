@@ -767,6 +767,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc.cc
+    ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc_arch9201.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
@@ -1890,6 +1891,7 @@ set(RUNTIME_TARGET_DAVID
     runtime_utest_api_david
     runtime_utest_task_david
     runtime_utest_xpu
+    runtime_utest_arch9201
 )
 
 set(RUNTIME_TARGET_910B
@@ -1923,6 +1925,7 @@ set(RUNTIME_TARGET
     runtime_utest_adc
     runtime_utest_mini_v3
     runtime_utest_arch5162
+    runtime_utest_arch9201
 )
 
 set(RUNTIME_TARGET_COMMON ${RUNTIME_TARGET})

@@ -42,7 +42,10 @@ struct RtDavidStarsMemcpySqe {
     uint32_t ie2 : 1;
     uint32_t compEn : 1;
     uint32_t vaValid : 1;
-    uint32_t res4 : 13;
+    // A6 add allocate and victimHint.
+    uint32_t allocate : 1;
+    uint32_t victimHint : 2;
+    uint32_t res4 : 10;
 
     /* word5 */
     uint16_t sqeId;

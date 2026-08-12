@@ -7,11 +7,26 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-add_subdirectory(910B)
-add_subdirectory(950)
-add_subdirectory(dc)
-add_subdirectory(mini_v3)
-add_subdirectory(cloud)
-add_subdirectory(adc)
-add_subdirectory(arch5162)
-add_subdirectory(arch9201)
+##################################################################################################
+add_executable(runtime_utest_arch9201
+    ${runtimeut_david_src_list}
+    ${TOP_DIR}/src/runtime/driver/npu_driver.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    stub/hal_stub.cc
+    main.cc
+    rt_utest_arch9201_error_proc.cc
+)
+
+target_compile_definitions(runtime_utest_arch9201 PUBLIC
+    TEMP_PERFORMANCE
+    TEMP_PERFORMANCE_NOT_OUTPUT
+)
+
+target_link_libraries(runtime_utest_arch9201 PRIVATE
+    $<BUILD_INTERFACE:runtime_utest_intf_pub>
+    -lgcov
+    -Wl,--whole-archive
+     runtime_ut_stub_static_lib
+     runtime_ut_david_static_lib
+    -Wl,--no-whole-archive
+)

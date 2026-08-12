@@ -27,8 +27,46 @@
 
 namespace cce {
 namespace runtime {
+static std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> g_errorProcFuncMap[CHIP_END];
 
-// alloc a huge page size
+void RegErrorProcFunc(rtChipType_t chipType, uint64_t errorType, DeviceErrorProc::StarsErrorInfoProc func)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+    g_errorProcFuncMap[chipType][errorType] = func;
+}
+
+const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& GetErrorProcFuncMap(rtChipType_t chipType)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        static const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> emptyMap;
+        return emptyMap;
+    }
+    return g_errorProcFuncMap[chipType];
+}
+
+static const std::map<uint64_t, std::string>* g_davidErrorMapByChip[CHIP_END] = {nullptr};
+
+void RegDavidErrorMapInfo(rtChipType_t chipType, const std::map<uint64_t, std::string>* errorMap)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+    g_davidErrorMapByChip[chipType] = errorMap;
+}
+
+const std::map<uint64_t, std::string>* GetDavidErrorMapInfo(rtChipType_t chipType)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType = %d, valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return nullptr;
+    }
+    return g_davidErrorMapByChip[chipType];
+}
 
 const std::map<uint64_t, DeviceErrorProc::ErrorInfoProc> DeviceErrorProc::funcMap_ = {
     {AICORE_ERROR, &DeviceErrorProc::ProcessCoreErrorInfo},
@@ -1684,8 +1722,7 @@ void DeviceErrorProc::ProcessStarsRingBufferErrorInfo(
         PrintTaskErrorInfo(info->errorType, errorInfo);
     }
 
-    std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> funcMap;
-    UpdateDeviceErrorProcFunc(funcMap);
+    const auto& funcMap = GetErrorProcFuncMap(device_->GetChipType());
     const auto it = funcMap.find(info->errorType);
     if (it != funcMap.end()) {
         const rtError_t error = it->second(errorInfo, info->errorNumber, device_, this);

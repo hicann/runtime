@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "task_recycle.hpp"
+#include "runtime_task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -35,22 +36,28 @@ bool IsRasFaultEventId(uint32_t eventId)
     return false;
 }
 
-void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap)
+static bool RegisterDavidErrorProcFunc()
 {
-    static const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> davidFuncMap = {
-        {AICORE_ERROR, &ProcessDavidStarsCoreErrorInfo},
-        {AIVECTOR_ERROR, &ProcessDavidStarsCoreErrorInfo},
-        {WAIT_TIMEOUT_ERROR, &ProcessDavidStarsWaitTimeoutErrorInfo},
-        {SDMA_ERROR, &ProcessStarsSdmaErrorInfo},
-        {AICPU_ERROR, &ProcessStarsAicpuErrorInfo},
-        {DVPP_ERROR, &DeviceErrorProc::ProcessStarsDvppErrorInfo},
-        {SQE_ERROR, &DeviceErrorProc::ProcessStarsSqeErrorInfo},
-        {FUSION_KERNEL_ERROR, &ProcessDavidStarsFusionKernelErrorInfo},
-        {CCU_ERROR, &ProcessDavidStarsCcuErrorInfo},
-        {AICORE_TIMEOUT_DFX, &ProcessStarsV2CoreTimeoutDfxInfo}};
-    funcMap = davidFuncMap;
-    return;
+    const auto& chips = GetDavidChips();
+    for (const auto chip : chips) {
+        if (chip == CHIP_CLOUD_V5) {
+            continue;
+        }
+        RegErrorProcFunc(chip, AICORE_ERROR, &ProcessDavidStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, AIVECTOR_ERROR, &ProcessDavidStarsCoreErrorInfo);
+        RegErrorProcFunc(chip, WAIT_TIMEOUT_ERROR, &ProcessDavidStarsWaitTimeoutErrorInfo);
+        RegErrorProcFunc(chip, SDMA_ERROR, &ProcessStarsSdmaErrorInfo);
+        RegErrorProcFunc(chip, AICPU_ERROR, &ProcessStarsAicpuErrorInfo);
+        RegErrorProcFunc(chip, DVPP_ERROR, &DeviceErrorProc::ProcessStarsDvppErrorInfo);
+        RegErrorProcFunc(chip, SQE_ERROR, &DeviceErrorProc::ProcessStarsSqeErrorInfo);
+        RegErrorProcFunc(chip, FUSION_KERNEL_ERROR, &ProcessDavidStarsFusionKernelErrorInfo);
+        RegErrorProcFunc(chip, CCU_ERROR, &ProcessDavidStarsCcuErrorInfo);
+        RegErrorProcFunc(chip, AICORE_TIMEOUT_DFX, &ProcessStarsV2CoreTimeoutDfxInfo);
+    }
+    return true;
 }
+
+static bool g_registerDavidErrorProc = RegisterDavidErrorProcFunc();
 
 uint16_t GetMteErrWaitCount() { return RAS_QUERY_MAX_COUNT; }
 

@@ -13,6 +13,7 @@
 #include "error_message_manage.hpp"
 #include "task_david.hpp"
 #include "task_recycle.hpp"
+#include "runtime_task_manager.h"
 #include "stream.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "ringbuffer_maintain_task.h"
@@ -24,141 +25,6 @@ namespace cce {
 namespace runtime {
 
 namespace {
-enum RtDavidCoreErrorType : std::uint16_t {
-    CUBE_INVLD_INPUT = RINGBUFFER_CUBE_ERROR_OFFSET + 4U,
-    CUBE_L0A_WRAP_AROUND,
-    CUBE_L0B_WRAP_AROUND,
-    CUBE_L0C_WRAP_AROUND,
-    CUBE_L0A_ECC,
-    CUBE_L0B_ECC,
-    CUBE_L0C_ECC,
-    CUBE_ILLEGAL_INSTR,
-    CUBE_ERR_HSET_CNT_OVF,
-    CUBE_ERR_HSET_CNT_UNF,
-    CUBE_ERR_PBUF_WRAP_AROUND,
-    CUBE_ERR_PARITY_ERR,
-    CUBE_ERR_SF_ECC_MB_ERR,
-
-    MTE_NDDMA_CACHE_ECC = RINGBUFFER_MTE_ERROR_OFFSET,
-    MTE_NDDMA_REG_BUF_ECC,
-    MTE_L1_ECC,
-    MTE_CFG_REG_PARITY,
-    MTE_READ_OVERFLOW = RINGBUFFER_MTE_ERROR_OFFSET + 9U,
-    MTE_WRITE_OVERFLOW,
-    MTE_INSTR_ILLEGAL_CFG = RINGBUFFER_MTE_ERROR_OFFSET + 14U,
-    MTE_ATM_ADD_ADDR_MISALIGN,
-    MTE_INSTR_ADDR_MISALIGN,
-    MTE_GDMA_READ_OVERFLOW,
-    MTE_GDMA_WRITE_OVERFLOW,
-    MTE_STB_ECC = RINGBUFFER_MTE_ERROR_OFFSET + 26U,
-    MTE_TAGMGR_BUF_ECC = RINGBUFFER_MTE_ERROR_OFFSET + 28U,
-    MTE_UB_ECC,
-    MTE_ROB_ECC,
-    MTE_BIU_RDWR_RESP,
-
-    L1_L0A_RDWR_CFLT = RINGBUFFER_L1_ERROR_OFFSET,
-    L1_L0B_RDWR_CFLT,
-    L1_READ_2D_OVERFLOW,
-    L1_WRITE_2D_OVERFLOW,
-    L1_ILLEGAL_CHN_SIZE = RINGBUFFER_L1_ERROR_OFFSET + 14U,
-    L1_ILLEGAL_K_M_EXT_STEP,
-    L1_ILLEGAL_K_M_START_POS,
-    L1_ILLEGAL_FM_SIZE = RINGBUFFER_L1_ERROR_OFFSET + 19U,
-    L1_ILLEGAL_STRIDE = RINGBUFFER_L1_ERROR_OFFSET + 21U,
-    L1_PADDING_CFG,
-    L1_READ_3D_OVERFLOW,
-    L1_WRITE_3D_OVERFLOW,
-    L1_F1WPOS_LARGER_FSIZE = RINGBUFFER_L1_ERROR_OFFSET + 27U,
-    L1_FMAP_LESS_KERNEL,
-    L1_FMAPWH_LARGER_L1SIZE,
-    L1_FPOS_LARGER_FSIZE,
-
-    FIXP_BIU_RDWR_RESP = RINGBUFFER_L1_ERROR_1_OFFSET + 1U,
-    FIXP_STB_ECC_ERR,
-    FIXP_FBUF_WR_OVERFLOW,
-    FIXP_FBUF_RD_OVERFLOW,
-    FIXP_OUT_WR_OVERFLOW,
-    FIXP_L1_WR_OVERFLOW,
-    FIXP_L1_RD_OVERFLOW,
-    FIXP_L0C_RD_OVERFLOW,
-    FIXP_ILLEGAL_CFG,
-    FIXP_ADDR_MISAL,
-    FIXP_L0C_ECC_ERR,
-    FIXP_L0C_RDWR_CFLT,
-    FIXP_WRITE_UB_OVFLW,
-    L1_UB_WR_OVFLW,         // reserve，not in chip doc
-    L1_WAITSET_ERR,         // reserve，not in chip doc
-    L1_L1_ECC,              // reserve，not in chip doc
-    L1_GDMA_READ_OVERFLOW,  // reserve，not in chip doc
-    L1_GDMA_WRITE_OVERFLOW, // reserve，not in chip doc
-    L1_INSTR_ILLEGAL_CFG,   // reserve，not in chip doc
-    L1_INSTR_ADDR_MISALIGN, // reserve，not in chip doc
-
-    SC_BUS_RESP_TIMEOUT_ERR = RINGBUFFER_SC_ERROR_OFFSET + 3U,
-
-    SU_IFU_BUS_ERR_T0 = RINGBUFFER_SU_ERROR_OFFSET,
-    SU_CCU_CALL_DEPTH_OVRFLW_T0,
-    SU_CCU_DIV0_T0,
-    SU_CCU_ILLEGAL_INSTR_T0,
-    SU_CCU_NEG_SQRT_T0,
-    SU_CCU_UB_ECC_T0,
-    SU_CCU_INF_NAN_T0,
-    SU_CCU_ADDR_ERR_T0,
-    SU_CCU_BUS_ERR_T0,
-    SU_CCU_DC_DATA_ECC_T0,
-    SU_CCU_DC_TAG_ECC_T0,
-    SU_CCU_DIV0_FP_T0,
-    SU_CCU_NEG_SQRT_FP_T0,
-    SU_CCU_ERR_PARITY_ERR_T0,
-    SU_CCU_SEQ_ERR_T0,
-    SU_CCU_MPU_ERR_T0,
-    SU_CCU_LSU_ERR_T0,
-    SU_CCU_PB_ECC_ERR_T0,
-    SU_CCU_SAFETY_CRC_ERR_T0,
-    SU_CCU_LSU_ATOMIC_ERR_T0,
-    SU_CCU_CC_SET_OVFL_ERR_T0,
-    SU_SAFETY_1BIT_ECC_OVFLW_ERR_T0,
-    SU_CCU_DC_SSBUF_ECC_T0,
-    SU_HIT_TRAP_ERR_T0 = RINGBUFFER_SU_ERROR_OFFSET + 30U,
-    WARN_AS_EXCEPTION_T0,
-
-    VEC_ERR_UB_ARB_DATA_EXCP_MTE_T0 = RINGBUFFER_VEC_ERROR_OFFSET,
-    VEC_ERR_UB_ARB_DATA_EXCP_SU_T0,
-    VEC_ERR_UB_ARB_DATA_EXCP_VEC_T0,
-    VEC_ERR_INSTR_TIMEOUT_T0 = RINGBUFFER_VEC_ERROR_OFFSET + 6U,
-    VEC_ERR_SU_PLD_UNDEF_T0,   // need to be updated after chip doc update
-    VEC_ERR_SU_PLD_ILL_CFG_T0, // need to be updated after chip doc update
-    VEC_ERR_PC_OVERFLOW_T0,    // need to be updated after chip doc update
-    VEC_ERR_INSTR_UNDEF_T0,
-    VEC_INSTR_ILLEGAL_CFG_T0,
-    VEC_ERR_HWLP_STACK_OVFL_T0,
-    VEC_ERR_HWLP_INSTR_NUM_MISMATCH_T0,
-    VEC_ERR_BIU_RESP_ERR_T0,
-    VEC_ERR_PB_ECC_MBERR_T0,
-    VEC_ERR_IDATA_INF_NAN_T0,
-    VEC_ERR_DIV_BY_ZERO_T0,
-    VEC_ERR_VALU_NEG_LN_T0,
-    VEC_ERR_VALU_NEG_SQRT_T0,
-    VEC_ERR_UB_ADDR_OVERFLOW_T0,
-    VEC_UB_WRAP_AROUND,
-    VEC_ERR_UB_ECC_MBERR_T0,
-    VEC_ERR_VMS_UNSORT_T0,
-    VEC_ERR_CSW_DATA_T0,
-
-    VEC_ERR_UNEXP_JOIN_T0 = RINGBUFFER_VEC_ERROR_1_OFFSET,
-    VEC_ERR_UB_SIZE_CFG_ERR_T0,
-    VEC_ERR_DC_STACK_ADDR_OVFL_T0,
-    VEC_ERR_GM_ADDR_OVFL_T0,
-    VEC_ERR_DVG_STACK_OVFL_T0,
-    VEC_ERR_DVG_STACK_UNDFL_T0,
-    VEC_ERR_BHU_ECC_MBERR_T0,
-    VEC_ERR_MROB_ECC_MBERR_T0,
-    VEC_ERR_DCACHE_TAG_MBERR_T0,
-    VEC_ERR_DIRTY_ECC_MBERR_T0,
-    VEC_ERR_VTH_ID_ECC_MBERR_T0,
-    VEC_ERR_MRF_ECC_MBERR_T0,
-    VEC_ERR_DVG_ECC_MBERR_T0,
-};
 constexpr uint32_t TS_SDMA_STATUS_DDRC_ERROR = 0x8U;
 constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
@@ -364,7 +230,8 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
 uint32_t GetRingbufferElementNum() { return RINGBUFFER_LEN_DAVID; }
 
 static void ProcessDavidStarsCoreErrorOneMapInfo(
-    uint32_t* const cnt, uint64_t err, std::string& errorString, std::string& errorCode, uint32_t offset)
+    const std::map<uint64_t, std::string>& errorMap, uint32_t* const cnt, uint64_t err, std::string& errorString,
+    std::string& errorCode, uint32_t offset)
 {
     if (err == 0ULL) {
         return;
@@ -373,8 +240,8 @@ static void ProcessDavidStarsCoreErrorOneMapInfo(
     RT_LOG(RT_LOG_DEBUG, "core errorCode:%" PRIx64, err);
     for (uint32_t i = static_cast<uint32_t>(BitScan(err)); i < MAX_BIT_LEN; i = static_cast<uint32_t>(BitScan(err))) {
         BITMAP_CLR(err, static_cast<uint64_t>(i));
-        const auto it = g_davidErrorMapInfo.find((i + offset));
-        if (it != g_davidErrorMapInfo.end()) {
+        const auto it = errorMap.find((i + offset));
+        if (it != errorMap.end()) {
             // if the string is too long, the log will truncate to 1024.
             // so the error string only show 400.
             if (unlikely((it->second.size() + errorString.size()) > RINGBUFFER_ERROR_MSG_MAX_LEN)) {
@@ -393,19 +260,27 @@ static void ProcessDavidStarsCoreErrorOneMapInfo(
     return;
 }
 
-static void ProcessDavidStarsCoreErrorMapInfo(
-    const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode)
+void ProcessDavidStarsCoreErrorMapInfo(
+    const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode, rtChipType_t chipType)
 {
+    const auto* errorMap = GetDavidErrorMapInfo(chipType);
+    if (errorMap == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Failed to get david error map for chipType = %d.", chipType);
+        return;
+    }
     uint32_t cnt = 0U;
-    ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->scError, errorString, errorCode, RINGBUFFER_SC_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(
-        &cnt, info->suError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_SU_ERROR_OFFSET));
-    ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->mteError[0], errorString, errorCode, RINGBUFFER_MTE_ERROR_OFFSET);
+        *errorMap, &cnt, info->scError, errorString, errorCode, RINGBUFFER_SC_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(
-        &cnt, info->vecError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_VEC_ERROR_OFFSET));
-    ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->cubeError, errorString, errorCode, RINGBUFFER_CUBE_ERROR_OFFSET);
+        *errorMap, &cnt, info->suError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_SU_ERROR_OFFSET));
     ProcessDavidStarsCoreErrorOneMapInfo(
-        &cnt, info->l1Error, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_L1_ERROR_OFFSET));
+        *errorMap, &cnt, info->mteError[0], errorString, errorCode, RINGBUFFER_MTE_ERROR_OFFSET);
+    ProcessDavidStarsCoreErrorOneMapInfo(
+        *errorMap, &cnt, info->vecError, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_VEC_ERROR_OFFSET));
+    ProcessDavidStarsCoreErrorOneMapInfo(
+        *errorMap, &cnt, info->cubeError, errorString, errorCode, RINGBUFFER_CUBE_ERROR_OFFSET);
+    ProcessDavidStarsCoreErrorOneMapInfo(
+        *errorMap, &cnt, info->l1Error, errorString, errorCode, static_cast<uint32_t>(RINGBUFFER_L1_ERROR_OFFSET));
 
     if (cnt != 0U) { // at least one error bit exists.
         return;
@@ -554,7 +429,7 @@ static void SetDeviceFaultTypeByAixErrClass(
     }
 }
 
-static void ProcessCoreErrorClass(const Device* const dev, const StarsDeviceErrorInfo* const info)
+void ProcessCoreErrorClass(const Device* const dev, const StarsDeviceErrorInfo* const info)
 {
     TaskInfo* errTaskPtr = GetTaskInfo(
         dev, static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.streamId),
@@ -609,7 +484,7 @@ static void GetRegInfoErrReg(const DavidOneCoreErrorInfo& info, rtExceptionErrRe
     regInfo.errReg[RT_V200_SU_SPR_CONDITION_1] = static_cast<uint32_t>(info.aicCond >> REG_OFFSET);
 }
 
-static void AddExceptionRegInfo(
+void AddExceptionRegInfo(
     const StarsDeviceErrorInfo* const starsInfo, const uint32_t coreIdx, const uint16_t type,
     const TaskInfo* errTaskPtr)
 {
@@ -742,7 +617,8 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
 
         std::string errorString;
         std::string errorCode;
-        ProcessDavidStarsCoreErrorMapInfo(&(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode);
+        ProcessDavidStarsCoreErrorMapInfo(
+            &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
         PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc);
     }
@@ -795,7 +671,7 @@ rtError_t ProcessStarsSdmaErrorInfo(
     return RT_ERROR_NONE;
 }
 
-static void CheckAixErrorClassInFusionKernel(
+void CheckAixErrorClassInFusionKernel(
     const StarsDeviceErrorInfo* errInfo, const StarsDeviceErrorInfo* const info, const Device* const dev,
     TaskInfo* errTaskPtr)
 {
@@ -827,7 +703,7 @@ void GetExceptionArgsForFusionKernelTask(const TaskInfo* const taskInfo, rtExcep
     return;
 }
 
-static void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo* const info, uint64_t errorNumber)
+void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo* const info, uint64_t errorNumber)
 {
     RT_LOG_CALL_MSG(
         ERR_MODULE_TBE,
@@ -857,9 +733,9 @@ static void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo* const info, uin
         info->u.fusionKernelErrorInfo.ccuError);
 }
 
-rtError_t ProcessDavidStarsFusionKernelErrorInfo(
+rtError_t ProcessFusionKernelErrorCommon(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
-    const DeviceErrorProc* const insPtr)
+    const DeviceErrorProc* const insPtr, DeviceErrorProc::StarsErrorInfoProc coreErrorProc)
 {
     if (info == nullptr) {
         return RT_ERROR_NONE;
@@ -898,15 +774,22 @@ rtError_t ProcessDavidStarsFusionKernelErrorInfo(
         errInfo = RtPtrToPtr<const StarsDeviceErrorInfo*>(&(info->u.fusionKernelErrorInfo.aicInfo));
         TriggerMemoryCorruptionCheck(nullptr, dev, dev->Id_(), binHandle, &kernelInfo);
         CheckAixErrorClassInFusionKernel(errInfo, info, RtPtrToUnConstPtr<Device*>(dev), errTaskPtr);
-        (void)ProcessDavidStarsCoreErrorInfo(errInfo, errorNumber, dev, insPtr);
+        (void)coreErrorProc(errInfo, errorNumber, dev, insPtr);
     }
     if (info->u.fusionKernelErrorInfo.aivError == 1U) {
         errInfo = RtPtrToPtr<const StarsDeviceErrorInfo*>(&(info->u.fusionKernelErrorInfo.aivInfo));
         TriggerMemoryCorruptionCheck(nullptr, dev, dev->Id_(), binHandle, &kernelInfo);
         CheckAixErrorClassInFusionKernel(errInfo, info, RtPtrToUnConstPtr<Device*>(dev), errTaskPtr);
-        (void)ProcessDavidStarsCoreErrorInfo(errInfo, errorNumber, dev, insPtr);
+        (void)coreErrorProc(errInfo, errorNumber, dev, insPtr);
     }
     return RT_ERROR_NONE;
+}
+
+rtError_t ProcessDavidStarsFusionKernelErrorInfo(
+    const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
+    const DeviceErrorProc* const insPtr)
+{
+    return ProcessFusionKernelErrorCommon(info, errorNumber, dev, insPtr, &ProcessDavidStarsCoreErrorInfo);
 }
 
 rtError_t ProcessDavidStarsWaitTimeoutErrorInfo(
@@ -1022,6 +905,20 @@ rtError_t ProcRingBufferTaskDavid(
     stm->StreamUnLock();
     return stm->Synchronize();
 }
+
+static bool RegisterDavidErrorMap()
+{
+    const auto& chips = GetDavidChips();
+    for (const auto chip : chips) {
+        if (chip == CHIP_CLOUD_V5) {
+            continue;
+        }
+        RegDavidErrorMapInfo(chip, &g_davidErrorMapInfo);
+    }
+    return true;
+}
+
+static bool g_registerDavidErrorMap = RegisterDavidErrorMap();
 
 } // namespace runtime
 } // namespace cce

@@ -232,8 +232,9 @@ static void ParseAndGetCcuExceptionInfo(
     }
 }
 
-static void TaskFailCallBackForFusionKernelTask(
-    const TaskInfo* const taskInfo, const uint32_t deviceId, const StarsDeviceErrorInfo* const info)
+void TaskFailCallBackForFusionKernelTask(
+    const TaskInfo* const taskInfo, const uint32_t deviceId, const StarsDeviceErrorInfo* const info,
+    rtFusionExType_t fusionDetailType)
 {
     COND_RETURN_VOID(taskInfo == nullptr, "taskInfo is nullptr.");
     const int32_t streamId = taskInfo->stream->GetExposedStreamId();
@@ -242,9 +243,12 @@ static void TaskFailCallBackForFusionKernelTask(
     (void)memset_s(&exceptionInfo, sizeof(rtExceptionInfo_t), 0U, sizeof(rtExceptionInfo_t));
     rtExceptionExpandInfo_t* expandInfo = &(exceptionInfo.expandInfo);
     rtFusionExDetailInfo_t* fusionDetail = &(expandInfo->u.fusionInfo);
-    fusionDetail->type = RT_FUSION_AICORE_CCU;
+    fusionDetail->type = fusionDetailType;
 
-    ParseAndGetCcuExceptionInfo(expandInfo, taskInfo, info);
+    if (info != nullptr) {
+        ParseAndGetCcuExceptionInfo(expandInfo, taskInfo, info);
+    }
+
     rtError_t rtErrCode = RT_ERROR_TSFW_BASE;
     if (taskInfo->mte_error != 0) {
         (void)GetTsErrCodeMap(taskInfo->mte_error, &rtErrCode);
@@ -317,7 +321,7 @@ rtError_t ProcessDavidStarsCcuErrorInfo(
     if (errTaskPtr->type == TS_TASK_TYPE_CCU_LAUNCH) {
         TaskFailCallBackForCcuTask(errTaskPtr, dev->Id_(), info);
     } else if (errTaskPtr->type == TS_TASK_TYPE_FUSION_KERNEL) {
-        TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), info);
+        TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), info, RT_FUSION_AICORE_CCU);
     } else {
         // Other task types do not need CCU task-fail callback handling.
     }
