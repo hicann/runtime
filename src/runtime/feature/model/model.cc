@@ -2244,7 +2244,7 @@ rtError_t Model::UpdateSnapShotSqe(void)
     for (Stream* const stm : streams_) {
         error = stm->UpdateSnapShotSqe();
         ERROR_RETURN_MSG_INNER(
-            error, "Update sqe failed, model id=%u, stream_id=%d, retCode=%#x.", Id_(), stm->Id_(),
+            error, "Update sqe failed, model_id=%u, stream_id=%d, retCode=%#x.", Id_(), stm->Id_(),
             static_cast<uint32_t>(error));
     }
     return error;

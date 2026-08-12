@@ -3843,10 +3843,10 @@ rtError_t ApiErrorDecorator::ModelDestroy(Model* const mdl)
     }
 
     const uint32_t modelId = mdl->Id_();
-    RT_LOG(RT_LOG_INFO, "model id=%u.", modelId);
+    RT_LOG(RT_LOG_INFO, "model_id=%u.", modelId);
 
     const rtError_t error = impl_->ModelDestroy(mdl);
-    ERROR_RETURN(error, "Destroy model failed, model id=%u.", modelId);
+    ERROR_RETURN(error, "Destroy model failed, model_id=%u.", modelId);
     return error;
 }
 
