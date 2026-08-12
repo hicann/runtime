@@ -276,10 +276,6 @@ rtError_t RawDevice::ResourceRestore()
         ERROR_RETURN(ret, "Send topic msg version to aicpu failed, ret=%#x.", ret);
     }
 
-    AicpuTimeoutManager::ClearAicpuTimeoutState(this);
-    ret = AicpuTimeoutManager::TryCloseAicpuMonitor(this);
-    ERROR_RETURN(ret, "Close AI CPU monitor failed, ret=%#x, deviceId=%u", ret, deviceId_);
-
     ret = UpdateTimeoutConfig();
     ERROR_RETURN(ret, "UpdateTimeoutConfig failed, ret=%#x, deviceId=%u", ret, deviceId_);
 

@@ -18,6 +18,7 @@
 #include "npu_driver.hpp"
 #include "model.hpp"
 #include "jetty_manager.h"
+#include "aicpu_timeout_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -326,10 +327,14 @@ rtError_t SnapShotProcessRestore()
         ERROR_RETURN(ret, "ACL Graph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
         dev->ArgLoader_()->RestoreAiCpuKernelInfo();
+        AicpuTimeoutManager::ClearAicpuTimeoutState(dev);
+        ret = AicpuTimeoutManager::TryCloseAicpuMonitor(dev);
+        ERROR_RETURN(ret, "Close AI CPU monitor failed, ret=%#x, devId=%u.", ret, devId);
     }
 
     ret = Runtime::Instance()->RestoreModule();
     ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+
     RT_LOG(RT_LOG_INFO, "the resource is restored successfully");
     return RT_ERROR_NONE;
 }
