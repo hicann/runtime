@@ -45,24 +45,22 @@ int messageCallback(const Adx::DumpChunk * data, int len)
 
 TEST_F(ADX_DUMP_RECORD_TEST, Init)
 {
-    MOCKER_CPP(&std::string::empty).stubs()
-        .will(returnValue(true))
-        .then(returnValue(false));
-     MOCKER(mmGetCwd)
+    MOCKER(mmGetCwd)
         .stubs()
         .will(returnValue(-1));
     int ret = Adx::AdxDumpRecord::Instance().Init("");
     EXPECT_EQ(IDE_DAEMON_ERROR, ret);
 
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(true));
     MOCKER(readlink).stubs()
         .will(returnValue(0))
         .then(returnValue(-1));
-    ret = Adx::AdxDumpRecord::Instance().Init("");
+    ret = Adx::AdxDumpRecord::Instance().Init("1");
     EXPECT_EQ(IDE_DAEMON_OK, ret);
 
     MOCKER(readlink).stubs()
         .will(returnValue(-1));
-    ret = Adx::AdxDumpRecord::Instance().Init("");
+    ret = Adx::AdxDumpRecord::Instance().Init("1");
     EXPECT_EQ(IDE_DAEMON_ERROR, ret);
 }
 

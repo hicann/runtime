@@ -37,6 +37,7 @@ set(adumpServerBaseCompileOptions
     -fno-strict-aliasing
     -Wextra
     -Wfloat-equal
+    -Wno-array-bounds
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
     $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2 -Os -ftrapv>

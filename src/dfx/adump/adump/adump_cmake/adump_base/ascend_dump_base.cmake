@@ -108,6 +108,7 @@ set(ascendDumpBaseCompileOptions
     -Wextra
     -Wfloat-equal
     -Wformat
+    -Wno-array-bounds
     -fvisibility=default
     -fvisibility-inlines-hidden
     $<$<CONFIG:Debug>:-ftrapv>
@@ -147,6 +148,7 @@ set(ascendDumpStaticCompileOptions
     -Werror
     -Wextra
     -Wfloat-equal
+    -Wno-array-bounds
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     $<$<CONFIG:Debug>:-ftrapv>
