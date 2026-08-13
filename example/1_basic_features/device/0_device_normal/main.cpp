@@ -64,7 +64,7 @@ namespace {
         aclDestroyTensor(out);
     }
 
-    void GetAndPrintResult(void *outDeviceAddr, const std::vector<int64_t> &outShape)
+    int GetAndPrintResult(void *outDeviceAddr, const std::vector<int64_t> &outShape)
     {
         auto size = GetShapeSize(outShape);
         std::vector<float> resultData(size, 0);
@@ -74,6 +74,7 @@ namespace {
         for (int64_t i = 0; i < size; i++) {
         INFO_LOG("result[%ld] is: %f", i, resultData[i]);
         }
+        return 0;
     }
 } // namespace
 
@@ -82,7 +83,7 @@ int32_t main(int argc, char const *argv[])
     INFO_LOG("Start to run device_normal sample.");
     int32_t deviceId = 0;
     aclrtStream stream = nullptr;
-    Init(deviceId, &stream);
+    CHECK_ERROR(Init(deviceId, &stream));
 
     std::vector<int64_t> selfShape{4, 2}, otherShape{4, 2}, outShape{4, 2};
     void *selfDeviceAddr = nullptr, *otherDeviceAddr = nullptr, *outDeviceAddr = nullptr;
@@ -121,7 +122,7 @@ int32_t main(int argc, char const *argv[])
     CHECK_ERROR(aclrtSynchronizeStream(stream));
 
     // Obtain the execution result of the operator and copy the result from the device memory to the host
-    GetAndPrintResult(outDeviceAddr, outShape);
+    CHECK_ERROR(GetAndPrintResult(outDeviceAddr, outShape));
 
     CHECK_ERROR(aclrtSynchronizeDevice());
 
