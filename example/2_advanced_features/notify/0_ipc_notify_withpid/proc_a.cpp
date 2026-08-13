@@ -65,7 +65,7 @@ int32_t main()
 
         // Read Process B's pid from the file
         int32_t pid = 0;
-        memory::ReadFile("file/pid.bin", "file/pid.bin.done", &pid);
+        memory::ReadFile("file/pid.bin", "file/pid.bin.done", &pid, sizeof(pid));
         INFO_LOG("Process A: get Process B's pid successfully, Process B's pid = %d", pid);
 
         // Add Process B to the whitelist

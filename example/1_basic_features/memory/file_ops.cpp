@@ -66,7 +66,7 @@ void WriteFile(const char* filePath, const char* doneFile, void* data, size_t si
 } // namespace memory
 
 namespace memory {
-void ReadFile(const char* filePath, const char* doneFile, void* data) {
+void ReadFile(const char* filePath, const char* doneFile, void* data, size_t bufferSize) {
     INFO_LOG("Start reading from %s", filePath);
     constexpr uint32_t waitTime = 1000000;
     int attempts = 0;
@@ -103,6 +103,12 @@ void ReadFile(const char* filePath, const char* doneFile, void* data) {
         return;
     }
     size_t fileSize = static_cast<size_t>(fileStat.st_size);
+    if (fileSize > bufferSize) {
+    ERROR_LOG("File size %zu exceeds buffer size %zu", fileSize, bufferSize);
+    (void)close(fd);
+    return;
+    }
+
     if (!ReadBufferFromFile(fd, data, fileSize)) {
         (void)close(fd);
         return;

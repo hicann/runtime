@@ -39,7 +39,7 @@ int32_t main()
 
     // Get the shareable memory identifier from the file
     char memName[256] = "name";
-    memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName);
+    memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName, sizeof(memName));
     INFO_LOG("Process B: get the shareable memory identifier successfully, shareable identifier = %s", memName);
 
     // Return a device memory pointer accessible to Process B

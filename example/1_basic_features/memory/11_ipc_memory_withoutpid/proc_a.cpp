@@ -51,7 +51,7 @@ int32_t main()
 
     // Read the completion flag from the file
     int32_t flag = 0;
-    memory::ReadFile("file/flag.bin", "file/flag.bin.done", &flag);
+    memory::ReadFile("file/flag.bin", "file/flag.bin.done", &flag, sizeof(flag));
     INFO_LOG("Process A: receive the completion signal from Process B, completion signal = %d", flag);
 
     // Release memory resources

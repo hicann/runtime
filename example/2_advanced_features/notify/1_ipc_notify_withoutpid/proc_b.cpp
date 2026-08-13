@@ -60,7 +60,7 @@ int32_t main()
 
         // Get the shareable identifier from the file
         char memName[256] = "name";
-        memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName);
+        memory::ReadFile("file/memName.bin", "file/memName.bin.done", memName, sizeof(memName));
         INFO_LOG("Process B: get the shareable identifier for IPC memory sharing successfully, shareable identifier = %s", memName);
 
         // Get identifier information and return a device memory pointer accessible to Process B
@@ -70,7 +70,7 @@ int32_t main()
       
         // Get the shareable identifier from the file
         char notifyName[256] = "name";
-        memory::ReadFile("file/notifyName.bin", "file/notifyName.bin.done", notifyName);
+        memory::ReadFile("file/notifyName.bin", "file/notifyName.bin.done", notifyName, sizeof(notifyName));
         INFO_LOG("Process B: get the shareable identifier for IPC notify sharing successfully, shareable identifier = %s", notifyName);
 
         // Return the notify accessible to Process B

@@ -78,7 +78,7 @@ int32_t main()
 
     // Read Process B's pid from the file
     int32_t pid = 0;
-    memory::ReadFile("file/pid.bin", "file/pid.bin.done", &pid);
+    memory::ReadFile("file/pid.bin", "file/pid.bin.done", &pid, sizeof(pid));
     INFO_LOG("Process A: get Process B's pid successfully, Process B's pid = %d", pid);
 
     // Add Process B to the whitelist
@@ -90,7 +90,7 @@ int32_t main()
 
     // Read the completion flag from the file
     int32_t flag = 0;
-    memory::ReadFile("file/flag.bin", "file/flag.bin.done", &flag);
+    memory::ReadFile("file/flag.bin", "file/flag.bin.done", &flag, sizeof(flag));
     INFO_LOG("Process A: receive the completion signal from Process B, completion signal = %d", flag);
 
     // Unmap virtual memory from physical memory

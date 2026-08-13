@@ -38,7 +38,7 @@ int32_t main()
     // Get the shareable handle from the file
     uint64_t shareableHandle = 0ULL;
     aclrtDrvMemHandle handle = nullptr;
-    memory::ReadFile("file/handle.bin", "file/handle.bin.done", &shareableHandle);
+    memory::ReadFile("file/handle.bin", "file/handle.bin.done", &shareableHandle, sizeof(shareableHandle));
     INFO_LOG("Process B: get a shareable handle successfully, shareable handle = %d", static_cast<int32_t>(shareableHandle));
 
     CHECK_ERROR(aclrtMemImportFromShareableHandle(shareableHandle, deviceId, &handle));

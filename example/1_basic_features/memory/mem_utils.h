@@ -15,7 +15,7 @@
 
 namespace memory {
     void WriteFile(const char* filePath, const char* doneFile, void* data, size_t size);
-    void ReadFile(const char* filePath, const char* doneFile, void* data);
+    void ReadFile(const char* filePath, const char* doneFile, void* data, size_t bufferSize);
     void WriteFileEx(const char* filePath, void* data, size_t size);
     void ReadFileEx(const char* filePath, void* data, size_t size);
 }
