@@ -14,6 +14,7 @@
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
 #include "api_impl_soma.hpp"
+#include "api_impl_event.hpp"
 #include "context.hpp"
 #include "ctrl_stream.hpp"
 #include "engine_stream_observer.hpp"
@@ -77,10 +78,12 @@ Runtime::~Runtime()
     api_ = nullptr;
     apiMbuf_ = nullptr;
     apiSoma_ = nullptr;
+    apiEvent_ = nullptr;
 
     DELETE_O(apiImpl_);
     DELETE_O(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
+    DELETE_O(apiImplEvent_);
     DELETE_O(apiError_);
     DELETE_O(logger_);
     DELETE_O(profiler_);

@@ -35,6 +35,7 @@ void __attribute__((weak)) halSetRuntimeApiVer(int Version);
 
 namespace cce {
 namespace runtime {
+class ApiEvent;
 namespace {
 constexpr uint32_t DEFAULT_PROGRAM_NUMBER = 2000U;
 constexpr uint32_t DEFAULT_PHY_PAGE_SIZE = 4U * 1024U;
@@ -199,6 +200,8 @@ public:
     ApiMbuf* ApiMbuf_() const override { return apiMbuf_; }
 
     ApiSoma* ApiSoma_() const override { return apiSoma_; }
+
+    ApiEvent* ApiEvent_() const override { return apiEvent_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -881,6 +884,8 @@ private:
     DevProperties curChipProperties_;
     std::mutex memMapSelectedLinkMutex_;
     bool isRuntimeExiting_{false};
+    ApiEvent* apiEvent_;
+    ApiEvent* apiImplEvent_;
 };
 } // namespace runtime
 } // namespace cce

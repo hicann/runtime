@@ -389,6 +389,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
@@ -515,6 +516,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_event.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_david.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc

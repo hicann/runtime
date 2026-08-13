@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
+#include "api_impl_event.hpp"
 #include "api_impl_soma.hpp"
 
 namespace cce {
@@ -250,6 +251,20 @@ rtError_t ApiImpl::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* ha
 }
 
 rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
+{
+    UNUSED(event);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImplEvent::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
+{
+    UNUSED(evt);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImplEvent::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
 {
     UNUSED(event);
     UNUSED(handle);

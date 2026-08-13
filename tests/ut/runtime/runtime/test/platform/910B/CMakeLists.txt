@@ -255,6 +255,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc

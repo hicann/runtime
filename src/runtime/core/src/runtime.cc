@@ -16,6 +16,7 @@
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
+#include "api_impl_event.hpp"
 #include "context.hpp"
 #include "engine_stream_observer.hpp"
 #include "raw_device.hpp"
@@ -310,9 +311,11 @@ Runtime::Runtime() : RuntimeIntf()
     api_ = nullptr;
     apiMbuf_ = nullptr;
     apiSoma_ = nullptr;
+    apiEvent_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
+    apiImplEvent_ = nullptr;
     logger_ = nullptr;
     apiError_ = nullptr;
     profiler_ = nullptr;
@@ -1080,6 +1083,14 @@ rtError_t Runtime::InitApiImplies()
         return RT_ERROR_API_NEW;
     }
     RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu", sizeof(ApiImplSoma));
+
+    apiImplEvent_ = CreateImplEventAndGet();
+    if (apiImplEvent_ == nullptr) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImplEvent), "new");
+        RT_LOG(RT_LOG_ERROR, "create ApiImplEvent failed.");
+        return RT_ERROR_API_NEW;
+    }
+    RT_LOG(RT_LOG_INFO, "ApiImplEvent:Runtime_alloc_size %zu", sizeof(ApiImplEvent));
     return RT_ERROR_NONE;
 }
 
@@ -1519,6 +1530,7 @@ rtError_t Runtime::Init()
     api_ = apiError_;
     apiMbuf_ = apiImplMbuf_; // apiImplMbuf_ no Profiler and Decorator
     apiSoma_ = apiImplSoma_; // apiImplSoma_ no Profiler and Decorator
+    apiEvent_ = apiImplEvent_;
 
     error = InitThreadGuard();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -1573,6 +1585,7 @@ INIT_FAIL:
     DELETE_O(apiImpl_);
     DELETE_O(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
+    DELETE_O(apiImplEvent_);
     return error;
 }
 

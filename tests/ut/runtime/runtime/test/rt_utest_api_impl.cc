@@ -48,6 +48,7 @@
 #include "soc_info.h"
 #include "rt_utest_config_define.hpp"
 #include "api_impl_david.hpp"
+#include "api_impl_event.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
@@ -59,6 +60,17 @@
 #include "common/rt_utest_context_reset_helper.hpp"
 using namespace testing;
 using namespace cce::runtime;
+
+namespace {
+using NothrowNewFunc = void* (*)(size_t, const std::nothrow_t&);
+
+void* NothrowNewFailForApiEvent(size_t size, const std::nothrow_t& tag)
+{
+    UNUSED(size);
+    UNUSED(tag);
+    return nullptr;
+}
+} // namespace
 
 extern bool g_init_platform_info_flag;
 extern bool g_get_platform_info_flag;
@@ -1968,6 +1980,94 @@ TEST_F(ApiImplTest, OpenEventHandle_Test)
     error = apiDecorator.IpcOpenEventHandle(eventHandle, static_cast<IpcEvent**>(event));
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiDecorator_;
+}
+
+TEST_F(ApiImplTest, ipc_open_event_handle_invalid_parameter)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    IpcEvent* event = nullptr;
+
+    EXPECT_EQ(impl.IpcOpenEventHandle(&handle, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcOpenEventHandle(nullptr, &event), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, ipc_open_event_handle_context_null)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    IpcEvent* event = nullptr;
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t)>(&Runtime::CurrentContext)))
+        .expects(once())
+        .will(returnValue(static_cast<Context*>(nullptr)));
+
+    EXPECT_EQ(impl.IpcOpenEventHandle(&handle, &event), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(event, nullptr);
+}
+
+TEST_F(ApiImplTest, ipc_open_event_handle_alloc_failed)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    IpcEvent* event = nullptr;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t)>(&Runtime::CurrentContext)))
+        .expects(once())
+        .will(returnValue(context));
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailForApiEvent));
+
+    EXPECT_EQ(impl.IpcOpenEventHandle(&handle, &event), RT_ERROR_EVENT_NEW);
+    EXPECT_EQ(event, nullptr);
+}
+
+TEST_F(ApiImplTest, ipc_open_event_handle_failed)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    IpcEvent* event = nullptr;
+    MOCKER_CPP(&IpcEvent::IpcOpenEventHandle).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(impl.IpcOpenEventHandle(&handle, &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(event, nullptr);
+}
+
+TEST_F(ApiImplTest, ipc_open_event_handle_success)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    IpcEvent* event = nullptr;
+    MOCKER_CPP(&IpcEvent::IpcOpenEventHandle).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(impl.IpcOpenEventHandle(&handle, &event), RT_ERROR_NONE);
+    ASSERT_NE(event, nullptr);
+    EXPECT_EQ(event->GetInnerHandle()->object, event);
+    DELETE_O(event);
+}
+
+TEST_F(ApiImplTest, ipc_get_event_handle_invalid_parameter)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    IpcEvent event(context->Device_(), RT_EVENT_DEFAULT, context);
+
+    EXPECT_EQ(impl.IpcGetEventHandle(nullptr, &handle), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcGetEventHandle(&event, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcGetEventHandle(&event, &handle), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, ipc_get_event_handle_failed)
+{
+    ApiImplEvent impl;
+    rtIpcEventHandle_t handle = {};
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    IpcEvent event(context->Device_(), RT_EVENT_IPC, context);
+    MOCKER_CPP(&IpcEvent::IpcGetEventHandle).expects(once()).will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    EXPECT_EQ(impl.IpcGetEventHandle(&event, &handle), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(ApiImplTest, memcpyAsyncCheckLocationNotSupportUserMem)

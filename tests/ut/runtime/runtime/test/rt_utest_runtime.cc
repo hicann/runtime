@@ -15,6 +15,7 @@
 #include "runtime.hpp"
 #include "runtime_keeper.h"
 #include "npu_driver.hpp"
+#include "api_event.hpp"
 #include "api_impl.hpp"
 #include "program.hpp"
 #include "profiler.hpp"
@@ -140,6 +141,14 @@ TEST_F(RuntimeTest, BOOT_RUNTIME_TEST_ConstructRuntime)
     destruct(rt);
 
     dlclose(handlePtr);
+}
+
+TEST_F(RuntimeTest, ApiEventInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiEvent_(), nullptr);
+    EXPECT_EQ(ApiEvent::Instance(), runtime->ApiEvent_());
 }
 
 TEST_F(RuntimeTest, BOOT_RUNTIME_TEST_PrepareRuntimeProcessExitDoesNotDeleteRuntime)

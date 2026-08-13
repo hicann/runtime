@@ -20,6 +20,7 @@
 #include "raw_device.hpp"
 #include "api.hpp"
 #include "api_impl.hpp"
+#include "api_impl_event.hpp"
 #include "api_error.hpp"
 #include "api_decorator.hpp"
 #include "api_profile_decorator.hpp"
@@ -301,6 +302,7 @@ TEST_F(TinyStubTest, api_error_stub)
 TEST_F(TinyStubTest, api_impl_stub)
 {
     ApiImpl impl;
+    ApiImplEvent eventImpl;
     rtError_t ret = RT_ERROR_NONE;
     ret = impl.WriteValuePtr(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -369,6 +371,10 @@ TEST_F(TinyStubTest, api_impl_stub)
     ret = impl.IpcGetEventHandle(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.IpcOpenEventHandle(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.IpcGetEventHandle(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = eventImpl.IpcOpenEventHandle(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtMemManagedLocation location;
     ret = impl.MemManagedAdvise(nullptr, 0, 0, location);
