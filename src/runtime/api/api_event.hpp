@@ -13,13 +13,13 @@
 #define CCE_RUNTIME_API_EVENT_HPP
 
 #include "base.hpp"
-#include "event.hpp"
 #include "runtime.hpp"
 #include "runtime/rt.h"
-#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
+
+class IpcEvent;
 
 class ApiEvent {
 public:

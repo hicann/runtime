@@ -15,7 +15,6 @@
 #include "ipc_event.hpp"
 #include "npu_driver.hpp"
 #include "runtime.hpp"
-#include "runtime/rt_mem_queue.h"
 
 namespace cce {
 namespace runtime {

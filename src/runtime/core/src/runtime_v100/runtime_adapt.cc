@@ -14,7 +14,7 @@
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
 #include "api_impl_soma.hpp"
-#include "api_impl_event.hpp"
+#include "api_event.hpp"
 #include "context.hpp"
 #include "ctrl_stream.hpp"
 #include "engine_stream_observer.hpp"
