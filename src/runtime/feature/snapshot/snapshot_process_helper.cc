@@ -328,8 +328,10 @@ rtError_t SnapShotProcessRestore()
 
         dev->ArgLoader_()->RestoreAiCpuKernelInfo();
         AicpuTimeoutManager::ClearAicpuTimeoutState(dev);
+#ifndef CFG_DEV_PLATFORM_PC
         ret = AicpuTimeoutManager::TryCloseAicpuMonitor(dev);
         ERROR_RETURN(ret, "Close AI CPU monitor failed, ret=%#x, devId=%u.", ret, devId);
+#endif
     }
 
     ret = Runtime::Instance()->RestoreModule();

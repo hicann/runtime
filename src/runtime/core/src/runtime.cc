@@ -138,10 +138,12 @@ rtError_t InitializePrimaryContext(PrimaryContextInitInfo& initInfo)
     ERROR_RETURN_MSG_INNER(
         err, "Primary context setup failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(), static_cast<uint32_t>(err));
 
+#ifndef CFG_DEV_PLATFORM_PC
     err = AicpuTimeoutManager::TryCloseAicpuMonitor(initInfo.dev);
     ERROR_RETURN_MSG_INNER(
         err, "Primary context close AI CPU monitor failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(),
         static_cast<uint32_t>(err));
+#endif
 
     err = initInfo.dev->UpdateTimeoutConfig();
     ERROR_RETURN_MSG_INNER(
