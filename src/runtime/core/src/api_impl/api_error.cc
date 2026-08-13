@@ -369,11 +369,15 @@ static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* c
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "gridDim",
-        "gridDim.x, gridDim.y, gridDim.z must all be greater than 0");
+        RtFmtMsg(
+            "gridDim.x, gridDim.y, gridDim.z must all be greater than 0, actual gridDim=[%u,%u,%u]",
+            simtArgs->gridDim.x, simtArgs->gridDim.y, simtArgs->gridDim.z));
     COND_RETURN_AND_MSG_OUTER(
         (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "blockDim",
-        "blockDim.x, blockDim.y, blockDim.z must all be greater than 0");
+        RtFmtMsg(
+            "blockDim.x, blockDim.y, blockDim.z must all be greater than 0, actual blockDim=[%u,%u,%u]",
+            simtArgs->blockDim.x, simtArgs->blockDim.y, simtArgs->blockDim.z));
     const uint32_t argsSize = argsWithType->args.simtArgsHost->argsSize;
     const uint32_t placeHolderNum = argsWithType->args.simtArgsHost->placeHolderNum;
     if (placeHolderNum > 0U) {

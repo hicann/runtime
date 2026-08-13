@@ -1679,9 +1679,9 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
-| numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
-| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
 | args | 输入 | 参数数组指针。<br/>参数数组中的每个元素均指向核函数参数数据在Host侧的内存地址。                                                        |
 
@@ -2248,7 +2248,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
@@ -2314,7 +2314,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
