@@ -828,7 +828,7 @@ rtError_t NpuDriver::HostMemAlloc(
         // 接口cfg里面配置了使用UVA特性，但是驱动不支持，直接返回
         COND_RETURN_WARN(
             !CheckIsSupportFeature(deviceId, FEATURE_SVM_MEM_HOST_UVA), RT_ERROR_DRV_NOT_SUPPORT,
-            "[drv api] driver not support uva feature.");
+            "[drv api] driver does not support uva feature.");
         drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST_UVA);
     }
 

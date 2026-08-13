@@ -109,6 +109,7 @@ rtError_t rtsMallocHost(void** hostPtr, uint64_t size, const rtMallocConfig_t* c
 
     const rtError_t error = apiInstance->HostMallocWithCfg(hostPtr, size, cfg);
     TIMESTAMP_END(rtsMallocHost);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

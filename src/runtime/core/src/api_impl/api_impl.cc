@@ -2502,6 +2502,7 @@ rtError_t ApiImpl::HostMallocWithCfg(void** const hostPtr, const uint64_t size, 
     const uint64_t curSize = (((size + 0x1FU) >> 5U) << 5U);
 
     error = curCtx->Device_()->Driver_()->HostMemAlloc(hostPtr, curSize, curCtx->Device_()->Id_(), moduleId, vaFlag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, error);
     ERROR_RETURN(
         error, "Host memory malloc failed, size=%" PRIu64 "(bytes), moduleId=%hu, vaFlag=%u.", size, moduleId, vaFlag);
     RT_LOG(
