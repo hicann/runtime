@@ -72,22 +72,29 @@ static void ConstructSqeForEventRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* con
     EventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     Stream* const stm = taskInfo->stream;
-    RtStarsWriteValueSqe* sqe = &(command->writeValueSqe);
-    sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
-    sqe->header.wrCqe =
+    const uint16_t wrCqe =
         (((eventRecordTaskInfo->event->GetEventFlag() & RT_EVENT_TIME_LINE) != 0U) ||
                  static_cast<bool>((taskInfo->isCqeNeedConcern)) ?
              1U :
              0U);
-    sqe->header.taskId = taskInfo->id;
-    sqe->header.rtStreamId = static_cast<uint16_t>(stm->Id_());
-
-    /* word2-15 */
-    sqe->notifyId = static_cast<uint16_t>(eventRecordTaskInfo->eventid);
-    sqe->subType = RT_SQE_SUBTYPE_NOTIFY_ID;
-    sqe->awsize = 2U;
-    sqe->awprot = 2U;
-    sqe->writeValuePart[0] = WR_EVENT_RECORD_VALUE;
+    if (eventRecordTaskInfo->event->IsEventWithoutWaitTask()) {
+        RtStarsWriteValueSqe* sqe = &(command->writeValueSqe);
+        sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+        sqe->header.wrCqe = wrCqe;
+        sqe->header.taskId = taskInfo->id;
+        sqe->header.rtStreamId = static_cast<uint16_t>(stm->Id_());
+    } else {
+        RtStarsWriteValueSqe* sqe = &(command->writeValueSqe);
+        sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
+        sqe->header.wrCqe = wrCqe;
+        sqe->header.taskId = taskInfo->id;
+        sqe->header.rtStreamId = static_cast<uint16_t>(stm->Id_());
+        sqe->notifyId = static_cast<uint16_t>(eventRecordTaskInfo->eventid);
+        sqe->subType = RT_SQE_SUBTYPE_NOTIFY_ID;
+        sqe->awsize = 2U;
+        sqe->awprot = 2U;
+        sqe->writeValuePart[0] = WR_EVENT_RECORD_VALUE;
+    }
 
     eventRecordTaskInfo->event->InsertRecordResetToMap(taskInfo);
     RecordTaskInfo latestRecord = {taskInfo->stream->Id_(), taskInfo->id, RECORDING};

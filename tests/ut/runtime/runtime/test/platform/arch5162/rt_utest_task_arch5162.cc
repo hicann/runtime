@@ -605,6 +605,30 @@ TEST_F(Arch5162TaskTest, ConstructSqeForEventRecordTask)
     delete device;
 }
 
+TEST_F(Arch5162TaskTest, ConstructSqeForEventRecordTaskWithoutWaitTask)
+{
+    MOCKER(PrintSqe).stubs();
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    Event event(device, RT_EVENT_TIME_LINE, nullptr, false, true);
+    EXPECT_TRUE(event.IsEventWithoutWaitTask());
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.id = 1;
+    taskInfo.u.eventRecordTaskInfo.event = &event;
+    taskInfo.u.eventRecordTaskInfo.eventid = 5;
+    rtStarsSqe_t sqe = {};
+    memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_EVENT_RECORD];
+    ASSERT_NE(toSqeFunc, nullptr);
+    toSqeFunc(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.writeValueSqe.header.taskId, 1);
+    delete stream;
+    delete device;
+}
+
 TEST_F(Arch5162TaskTest, ConstructSqeForEventResetTask)
 {
     MOCKER(PrintSqe).stubs();
