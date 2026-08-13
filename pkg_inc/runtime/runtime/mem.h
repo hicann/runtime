@@ -118,7 +118,7 @@ typedef enum tagRtMemoryType {
     RT_MEMORY_TYPE_DEVICE = 2,
     RT_MEMORY_TYPE_SVM = 3,
     RT_MEMORY_TYPE_DVPP = 4,
-    RT_MEMORY_TYPE_USER = 5 // by user malloc, unkown memory
+    RT_MEMORY_TYPE_USER = 5 // by user malloc, unknown memory
 } rtMemoryType_t;
 
 /**

@@ -31,8 +31,8 @@ typedef enum {
     STARS_IOCTL_CMD_BIND_QUEUE_MBUF_POOL = 0x104,       /* create src queue mbuf pool bind info */
     STARS_IOCTL_CMD_UNBIND_QUEUE_MBUF_POOL = 0x105,     /* delete src queue mbuf pool bind info */
     STARS_IOCTL_CMD_GET_QUEUE_MBUF_POOL = 0x106,        /* get mbuf pool info */
-    STARS_IOCTL_CMD_BIND_FRAME_ALIGN_INFO = 0x107,      /* bind frame algin cfg */
-    STARS_IOCTL_CMD_UNBIND_FRAME_ALIGN_INFO = 0x108,    /* unbind frame algin cfg */
+    STARS_IOCTL_CMD_BIND_FRAME_ALIGN_INFO = 0x107,      /* bind frame align cfg */
+    STARS_IOCTL_CMD_UNBIND_FRAME_ALIGN_INFO = 0x108,    /* unbind frame align cfg */
     STARS_IOCTL_CMD_UPDATE_CS_FRAME_ALIGN_INFO = 0x109, /* update ctrl space frame align cfg */
     STARS_IOCTL_CMD_UPDATE_CS_MBUF_TRACE_CFG = 0x10A,   /* update ctrl space mbuf trace cfg */
     STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE = 0x200,        /* dqs acc subscribe, nn/dss/vpc+q */
