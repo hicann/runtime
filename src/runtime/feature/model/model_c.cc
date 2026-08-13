@@ -45,8 +45,7 @@ rtError_t ModelDebugRegister(
     Device* device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
-        error =
-            device->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, nullptr, taskId);
+        error = device->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, taskId);
         *streamId = device->GetCtrlSQ().GetStream()->Id_();
         ERROR_RETURN_MSG_INNER(error, "Failed to SendDebugRegisterMsg, retCode=%#x.", error);
         mdl->SetDebugRegister(true);
@@ -95,7 +94,7 @@ rtError_t ModelDebugUnRegister(Model* const mdl, Stream* const dftStm)
     Device* device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugUnRegisterParam param = {mdl->Id_()};
-        error = device->GetCtrlSQ().SendDebugUnRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param, nullptr);
+        error = device->GetCtrlSQ().SendDebugUnRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param);
         ERROR_RETURN_MSG_INNER(error, "Failed to SendDebugUnRegisterMsg, retCode=%#x.", error);
         mdl->SetDebugRegister(false);
         return error;

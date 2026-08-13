@@ -216,8 +216,7 @@ rtError_t StreamDatadumpInfoLoad(const void* const dumpInfo, const uint32_t leng
     Device* device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDataDumpLoadInfoParam param = {dumpInfo, length, 0U};
-        return device->GetCtrlSQ().SendDataDumpLoadInfoMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD, param, nullptr);
+        return device->GetCtrlSQ().SendDataDumpLoadInfoMsg(RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD, param);
     }
 
     rtError_t error = RT_ERROR_NONE;
@@ -507,8 +506,7 @@ rtError_t SetTagOnStream(Stream* const stm, const uint32_t geOpTag)
         uint32_t taskSn = 0;
         RtSetStreamTagParam param = {stm, geOpTag};
         // SubmitTaskPostProc 改成stm Synchronize
-        error =
-            device->GetCtrlSQ().SendSetStreamTagMsg(RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG, param, nullptr, &taskSn);
+        error = device->GetCtrlSQ().SendSetStreamTagMsg(RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG, param, &taskSn);
         ERROR_RETURN_MSG_INNER(error, "Failed to SendSetStreamTagMsg, retCode=%#x.", error);
         stm->SetStreamTag(geOpTag);
         SET_THREAD_TASKID_AND_STREAMID(stm->Context_()->GetCtrlSQStream()->Id_(), taskSn);
@@ -646,7 +644,7 @@ rtError_t StreamAicpuInfoLoad(Stream* const dftStm, const void* const aicpuInfo,
     Device* device = dftStm->Device_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtAicpuInfoLoadParam param = {aicpuInfo, length};
-        return device->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param, nullptr);
+        return device->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param);
     }
 
     TaskInfo* rtAicpuLoadInfoTask = nullptr;

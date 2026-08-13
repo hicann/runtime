@@ -37,7 +37,7 @@ public:
      */
     rtError_t WaitComplete(const bool isNeedWaitSyncCq = false, int32_t timeout = -1);
 
-    rtError_t SendStreamClearMsg(const Stream* const stm, rtClearStep_t step, rtTaskGenCallback callback);
+    rtError_t SendStreamClearMsg(const Stream* const stm, rtClearStep_t step);
 
     rtError_t SendStreamRecycleMsg(const RtMaintainceParam& maintenanceParam, TaskInfo*& task);
 
@@ -59,26 +59,20 @@ public:
 
     rtError_t SendAicpuModelMsg(RtCtrlMsgType msgType, const RtAicpuModelParam& aicpuModelParam);
 
-    rtError_t SendDataDumpLoadInfoMsg(
-        RtCtrlMsgType msgType, const RtDataDumpLoadInfoParam& datadumpLoadInfoParam, rtTaskGenCallback callback);
+    rtError_t SendDataDumpLoadInfoMsg(RtCtrlMsgType msgType, const RtDataDumpLoadInfoParam& datadumpLoadInfoParam);
 
-    rtError_t SendAicpuInfoLoadMsg(
-        RtCtrlMsgType msgType, const RtAicpuInfoLoadParam& aicpuInfoLoadParam, rtTaskGenCallback callback);
+    rtError_t SendAicpuInfoLoadMsg(RtCtrlMsgType msgType, const RtAicpuInfoLoadParam& aicpuInfoLoadParam);
 
     rtError_t SendDebugRegisterMsg(
-        RtCtrlMsgType msgType, const RtDebugRegisterParam& debugRegisterParam, rtTaskGenCallback callback,
-        uint32_t* const flipTaskId);
+        RtCtrlMsgType msgType, const RtDebugRegisterParam& debugRegisterParam, uint32_t* const flipTaskId);
 
-    rtError_t SendDebugUnRegisterMsg(
-        RtCtrlMsgType msgType, const RtDebugUnRegisterParam& debugUnRegisterParam, rtTaskGenCallback callback);
+    rtError_t SendDebugUnRegisterMsg(RtCtrlMsgType msgType, const RtDebugUnRegisterParam& debugUnRegisterParam);
 
     rtError_t SendOverflowSwitchSetMsg(
-        RtCtrlMsgType msgType, const RtOverflowSwitchSetParam& overflowSwitchSetParam, rtTaskGenCallback callback,
-        uint32_t* const flipTaskId);
+        RtCtrlMsgType msgType, const RtOverflowSwitchSetParam& overflowSwitchSetParam, uint32_t* const flipTaskId);
 
     rtError_t SendSetStreamTagMsg(
-        RtCtrlMsgType msgType, const RtSetStreamTagParam& setStreamTagParam, rtTaskGenCallback callback,
-        uint32_t* const flipTaskId);
+        RtCtrlMsgType msgType, const RtSetStreamTagParam& setStreamTagParam, uint32_t* const flipTaskId);
 
     Stream* GetStream() const { return stream_; }
 

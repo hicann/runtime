@@ -254,7 +254,6 @@ Context::Context(Device* const ctxDevice, const bool primaryCtx)
       onlineStream_(nullptr),
       moduleAllocator_(nullptr),
       isPrimary_(primaryCtx),
-      taskGenCallback_(nullptr),
       threadRefCount_(0U),
       isNeedDelete_(false),
       tearDownStatus_(TEARDOWN_NOT_EXECUTE),
@@ -1252,8 +1251,7 @@ rtError_t Context::DatadumpInfoLoad(const void* const dumpInfo, const uint32_t l
 
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDataDumpLoadInfoParam param = {dumpInfo, length, static_cast<uint16_t>(kernelType)};
-        return device_->GetCtrlSQ().SendDataDumpLoadInfoMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD, param, taskGenCallback_);
+        return device_->GetCtrlSQ().SendDataDumpLoadInfoMsg(RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD, param);
     }
 
     TaskInfo submitTask = {};
@@ -1285,8 +1283,7 @@ rtError_t Context::AicpuInfoLoad(const void* const aicpuInfo, const uint32_t len
 {
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtAicpuInfoLoadParam param = {aicpuInfo, length};
-        return device_->GetCtrlSQ().SendAicpuInfoLoadMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param, taskGenCallback_);
+        return device_->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param);
     }
     Stream* const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
@@ -1329,8 +1326,8 @@ rtError_t Context::DebugRegister(
     COND_RETURN_WARN(mdl->IsDebugRegister(), RT_ERROR_DEBUG_REGISTER_FAILED, "model repeat debug register!");
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
-        error = device_->GetCtrlSQ().SendDebugRegisterMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, taskGenCallback_, &flipTaskId);
+        error =
+            device_->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, &flipTaskId);
         *taskId = flipTaskId;
         *streamId = static_cast<uint32_t>(device_->GetCtrlSQ().GetStream()->Id_());
         ERROR_RETURN(error, "Failed to send debug register message, retCode=%#x.", error);
@@ -1372,8 +1369,7 @@ rtError_t Context::DebugUnRegister(Model* const mdl)
 
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         RtDebugUnRegisterParam param = {mdl->Id_()};
-        error = device_->GetCtrlSQ().SendDebugUnRegisterMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param, taskGenCallback_);
+        error = device_->GetCtrlSQ().SendDebugUnRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param);
         ERROR_RETURN(error, "Failed to send debug unregister message, retCode=%#x.", error);
     } else {
         TaskInfo submitTask = {};
@@ -2748,7 +2744,7 @@ rtError_t Context::StreamClear(const Stream* const stm, rtClearStep_t step) cons
         stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, ErrorCode::EE1016, "Clearing tasks in a stream",
         "Clearing model stream is not supported");
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        return device_->GetCtrlSQ().SendStreamClearMsg(stm, step, taskGenCallback_);
+        return device_->GetCtrlSQ().SendStreamClearMsg(stm, step);
     }
     Stream* const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
@@ -3310,7 +3306,7 @@ rtError_t Context::SetStreamOverflowSwitch(Stream* const stm, const uint32_t fla
         uint32_t flipTaskId = 0;
         RtOverflowSwitchSetParam param = {stm, flags};
         error = device_->GetCtrlSQ().SendOverflowSwitchSetMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH, param, taskGenCallback_, &flipTaskId);
+            RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH, param, &flipTaskId);
         ERROR_RETURN(error, "Failed to send overflow switch set message, retCode=%#x.", error);
         SET_THREAD_TASKID_AND_STREAMID(GetCtrlSQStream()->Id_(), flipTaskId);
     } else {
@@ -3341,8 +3337,7 @@ rtError_t Context::SetStreamTag(Stream* const stm, const uint32_t geOpTag) const
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         uint32_t flipTaskId = 0;
         RtSetStreamTagParam param = {stm, geOpTag};
-        error = device_->GetCtrlSQ().SendSetStreamTagMsg(
-            RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG, param, taskGenCallback_, &flipTaskId);
+        error = device_->GetCtrlSQ().SendSetStreamTagMsg(RtCtrlMsgType::RT_CTRL_MSG_SET_STREAM_TAG, param, &flipTaskId);
         ERROR_RETURN(error, "Failed to send stream tag set message, retCode=%#x.", error);
         stm->SetStreamTag(geOpTag);
         SET_THREAD_TASKID_AND_STREAMID(GetCtrlSQStream()->Id_(), flipTaskId);

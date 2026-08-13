@@ -99,7 +99,6 @@ struct RtNotifyResetParam {
 };
 
 struct RtCtrlMsgSendParam {
-    rtTaskGenCallback callback = nullptr;
     int32_t timeout = -1;
 };
 

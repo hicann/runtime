@@ -288,8 +288,6 @@ public:
 
     uint32_t UserDeviceId() const { return userDeviceId_; }
 
-    rtTaskGenCallback TaskGenCallback_() const { return taskGenCallback_; }
-
     void InsertStreamList(Stream* const stm)
     {
         std::unique_lock<std::mutex> taskLock(streamLock_);
@@ -542,7 +540,6 @@ private:
     ObjAllocator<Module*>* moduleAllocator_;
 
     bool isPrimary_;
-    rtTaskGenCallback taskGenCallback_;
     std::atomic<uint64_t> threadRefCount_;
     Atomic<bool> isNeedDelete_;
     std::atomic<TearDownStatus> tearDownStatus_;

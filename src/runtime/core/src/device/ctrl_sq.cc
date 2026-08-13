@@ -134,13 +134,12 @@ void CtrlSQ::RegCtrlMsgInitFunc(void) const
         &CtrlMsgNotifyResetV200Init;
 }
 
-rtError_t CtrlSQ::SendStreamClearMsg(const Stream* const stm, rtClearStep_t step, rtTaskGenCallback callback)
+rtError_t CtrlSQ::SendStreamClearMsg(const Stream* const stm, rtClearStep_t step)
 {
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_COMMON_CMD;
     param.commonCmdParam = {PhCmdType::CMD_STREAM_CLEAR, streamId, step, 0U};
-    param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_STREAM_CLEAR, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -301,13 +300,11 @@ rtError_t CtrlSQ::SendAicpuModelMsg(RtCtrlMsgType msgType, const RtAicpuModelPar
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlSQ::SendDataDumpLoadInfoMsg(
-    RtCtrlMsgType msgType, const RtDataDumpLoadInfoParam& datadumpLoadInfoParam, rtTaskGenCallback callback)
+rtError_t CtrlSQ::SendDataDumpLoadInfoMsg(RtCtrlMsgType msgType, const RtDataDumpLoadInfoParam& datadumpLoadInfoParam)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_DATADUMP_LOADINFO;
     param.datadumpLoadInfoParam = datadumpLoadInfoParam;
-    param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(msgType, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -317,13 +314,11 @@ rtError_t CtrlSQ::SendDataDumpLoadInfoMsg(
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlSQ::SendAicpuInfoLoadMsg(
-    RtCtrlMsgType msgType, const RtAicpuInfoLoadParam& aicpuInfoLoadParam, rtTaskGenCallback callback)
+rtError_t CtrlSQ::SendAicpuInfoLoadMsg(RtCtrlMsgType msgType, const RtAicpuInfoLoadParam& aicpuInfoLoadParam)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_AICPU_INFO_LOAD;
     param.aicpuInfoLoadParam = aicpuInfoLoadParam;
-    param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(msgType, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -334,13 +329,11 @@ rtError_t CtrlSQ::SendAicpuInfoLoadMsg(
 }
 
 rtError_t CtrlSQ::SendDebugRegisterMsg(
-    RtCtrlMsgType msgType, const RtDebugRegisterParam& debugRegisterParam, rtTaskGenCallback callback,
-    uint32_t* const flipTaskId)
+    RtCtrlMsgType msgType, const RtDebugRegisterParam& debugRegisterParam, uint32_t* const flipTaskId)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_DEBUG_REGISTER;
     param.debugRegisterParam = debugRegisterParam;
-    param.sendParam.callback = callback;
 
     rtError_t error = CreateCtrlMsg(msgType, param, flipTaskId);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
@@ -351,13 +344,11 @@ rtError_t CtrlSQ::SendDebugRegisterMsg(
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlSQ::SendDebugUnRegisterMsg(
-    RtCtrlMsgType msgType, const RtDebugUnRegisterParam& debugUnRegisterParam, rtTaskGenCallback callback)
+rtError_t CtrlSQ::SendDebugUnRegisterMsg(RtCtrlMsgType msgType, const RtDebugUnRegisterParam& debugUnRegisterParam)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_DEBUG_UNREGISTER;
     param.debugUnRegisterParam = debugUnRegisterParam;
-    param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(msgType, param);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -368,26 +359,22 @@ rtError_t CtrlSQ::SendDebugUnRegisterMsg(
 }
 
 rtError_t CtrlSQ::SendOverflowSwitchSetMsg(
-    RtCtrlMsgType msgType, const RtOverflowSwitchSetParam& overflowSwitchSetParam, rtTaskGenCallback callback,
-    uint32_t* const flipTaskId)
+    RtCtrlMsgType msgType, const RtOverflowSwitchSetParam& overflowSwitchSetParam, uint32_t* const flipTaskId)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_SET_OVERFLOW_SWITCH;
     param.overflowSwitchSetParam = overflowSwitchSetParam;
-    param.sendParam.callback = callback;
     const rtError_t error = CreateCtrlMsg(msgType, param, flipTaskId);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
 rtError_t CtrlSQ::SendSetStreamTagMsg(
-    RtCtrlMsgType msgType, const RtSetStreamTagParam& setStreamTagParam, rtTaskGenCallback callback,
-    uint32_t* const flipTaskId)
+    RtCtrlMsgType msgType, const RtSetStreamTagParam& setStreamTagParam, uint32_t* const flipTaskId)
 {
     RtCtrlMsgParam param = {};
     param.taskType = TS_TASK_TYPE_SET_STREAM_GE_OP_TAG;
     param.setStreamTagParam = setStreamTagParam;
-    param.sendParam.callback = callback;
     rtError_t error = CreateCtrlMsg(msgType, param, flipTaskId);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
     error = WaitComplete();
