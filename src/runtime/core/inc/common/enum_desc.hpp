@@ -35,10 +35,10 @@ static inline std::string EventOperationFlagToString(const uint32_t flag, const 
         return "UNINITIALIZED";
     }
     if (flag == 0U) {
-        return isRecord ? "RT_EVENT_RECORD_DEFAULT(0)" : "RT_EVENT_WAIT_DEFAULT(0)";
+        return isRecord ? "ACL_EVENT_RECORD_DEFAULT(0)" : "ACL_EVENT_WAIT_DEFAULT(0)";
     }
     if (flag == 1U) {
-        return isRecord ? "RT_EVENT_RECORD_EXTERNAL(1)" : "RT_EVENT_WAIT_EXTERNAL(1)";
+        return isRecord ? "ACL_EVENT_RECORD_EXTERNAL(1)" : "ACL_EVENT_WAIT_EXTERNAL(1)";
     }
     return RtFmtMsg("UNKNOWN(%u)", flag);
 }

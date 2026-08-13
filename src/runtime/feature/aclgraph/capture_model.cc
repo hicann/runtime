@@ -489,13 +489,13 @@ rtError_t CaptureModel::CheckExternalEventConstraints(const Event* const event, 
         COND_RETURN_AND_MSG_OUTER(
             HasExternalEventItem(sameTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
             "Recording an external event",
-            "The same event can be used with RT_EVENT_RECORD_EXTERNAL only once in the same graph. Use different "
+            "The same event can be used with ACL_EVENT_RECORD_EXTERNAL only once in the same graph. Use different "
             "events for multiple external record operations in one graph");
     } else {
         COND_RETURN_AND_MSG_OUTER(
             HasExternalEventItem(sameTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
             "Stream waiting for an external event",
-            "The same event can be used with RT_EVENT_WAIT_EXTERNAL only once in the same graph. Use different "
+            "The same event can be used with ACL_EVENT_WAIT_EXTERNAL only once in the same graph. Use different "
             "events for multiple external wait operations in one graph");
     }
     // 检查同一Event是否同时登记了record和wait两种external操作。
@@ -504,7 +504,7 @@ rtError_t CaptureModel::CheckExternalEventConstraints(const Event* const event, 
     COND_RETURN_AND_MSG_OUTER(
         HasExternalEventItem(otherTypeItems, event), RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
         "Capturing external event synchronization",
-        "The same event cannot be used for both RT_EVENT_RECORD_EXTERNAL and RT_EVENT_WAIT_EXTERNAL in the same "
+        "The same event cannot be used for both ACL_EVENT_RECORD_EXTERNAL and ACL_EVENT_WAIT_EXTERNAL in the same "
         "graph. Use normal capture record/wait inside one graph, or use different graphs for external graph-to-graph "
         "synchronization");
     return RT_ERROR_NONE;

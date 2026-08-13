@@ -1390,7 +1390,7 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering event waiting");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         ((flag != RT_EVENT_WAIT_DEFAULT) && (flag != RT_EVENT_WAIT_EXTERNAL)), RT_ERROR_INVALID_VALUE,
-        "Triggering event waiting", flag, "RT_EVENT_WAIT_DEFAULT(0) or RT_EVENT_WAIT_EXTERNAL(1)");
+        "Triggering event waiting", flag, "ACL_EVENT_WAIT_DEFAULT(0) or ACL_EVENT_WAIT_EXTERNAL(1)");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1407,9 +1407,8 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
-            ErrorCode::EE1016, "Triggering external event waiting",
-            "Only events created by rtEventCreateExWithFlag with RT_EVENT_DDSYNC_NS are supported when flag is "
-            "RT_EVENT_WAIT_EXTERNAL");
+            ErrorCode::WE0001, "wait for an event",
+            "ACL_EVENT_WAIT_EXTERNAL for an event not created by aclrtCreateEventExWithFlag with ACL_EVENT_SYNC");
     }
     // Wait flag一致性仅由ApiError层检查，其他位置不读写该状态。
     const uint32_t currentFlag = evt->GetWaitFlag();
@@ -1420,6 +1419,10 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
             "The wait flag must remain consistent for the same event, current flag is %s, input flag is %s",
             EventOperationFlagToString(currentFlag, false).c_str(), EventOperationFlagToString(flag, false).c_str()));
     evt->SetWaitFlag(flag);
+
+    COND_RETURN_AND_MSG_OUTER(
+        (flag == RT_EVENT_WAIT_EXTERNAL) && IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT,
+        ErrorCode::WE0001, "wait for an event", "ACL_EVENT_WAIT_EXTERNAL in sub ACL Graph");
     return impl_->StreamWaitEvent(stm, evt, timeout, flag);
 }
 
@@ -1685,7 +1688,7 @@ rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, co
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event recording");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         ((flag != RT_EVENT_RECORD_DEFAULT) && (flag != RT_EVENT_RECORD_EXTERNAL)), RT_ERROR_INVALID_VALUE,
-        "Event recording", flag, "RT_EVENT_RECORD_DEFAULT(0) or RT_EVENT_RECORD_EXTERNAL(1)");
+        "Event recording", flag, "ACL_EVENT_RECORD_DEFAULT(0) or ACL_EVENT_RECORD_EXTERNAL(1)");
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
@@ -1699,9 +1702,8 @@ rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, co
     if (flag == RT_EVENT_RECORD_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!evt->IsNewMode()) || (evt->GetEventFlag() != RT_EVENT_DDSYNC_NS), RT_ERROR_FEATURE_NOT_SUPPORT,
-            ErrorCode::EE1016, "Event recording external",
-            "Only events created by rtEventCreateExWithFlag with RT_EVENT_DDSYNC_NS are supported when flag is "
-            "RT_EVENT_RECORD_EXTERNAL");
+            ErrorCode::WE0001, "record an event",
+            "ACL_EVENT_RECORD_EXTERNAL for an event not created by aclrtCreateEventExWithFlag with ACL_EVENT_SYNC");
     }
     // Record flag一致性仅由ApiError层检查，其他位置不读写该状态。
     const uint32_t currentFlag = evt->GetRecordFlag();
@@ -1712,6 +1714,10 @@ rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, co
             "The record flag must remain consistent for the same event, current flag is %s, input flag is %s",
             EventOperationFlagToString(currentFlag, true).c_str(), EventOperationFlagToString(flag, true).c_str()));
     evt->SetRecordFlag(flag);
+
+    COND_RETURN_AND_MSG_OUTER(
+        (flag == RT_EVENT_RECORD_EXTERNAL) && IsStreamBindWithSubModel(stm), RT_ERROR_FEATURE_NOT_SUPPORT,
+        ErrorCode::WE0001, "record an event", "ACL_EVENT_RECORD_EXTERNAL in sub ACL Graph");
     const rtError_t error = impl_->EventRecord(evt, stm, flag);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error, "Record event failed.");
