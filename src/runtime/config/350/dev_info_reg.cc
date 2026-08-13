@@ -198,7 +198,6 @@ static const DevProperties CHIP_DAVID_LITE_PROPERTIES = {
     .aivNum = RT_DAVID_AIVECTOR_NUM_PER_DIE,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE_ON_95_96,
     .hugeManagedFlag = SVM_HOST_AGENT,
-    .memAllocPctraceFlag = MEM_SVM_HUGE,
     .memInfoType = RT_MEM_INFO_TYPE_HBM_SIZE,
     .taskPrefetchCount = static_cast<uint8_t>(PREFETCH_CNT_8),
     .maxAllocHugeStreamNum = DEFAULT,

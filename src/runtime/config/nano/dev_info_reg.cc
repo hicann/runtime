@@ -82,7 +82,6 @@ static const DevProperties CHIP_NANO_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_50,
     .ringbufSize = 0U,
     .hugeManagedFlag = 0U,
-    .memAllocPctraceFlag = MEM_SVM_HUGE,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = static_cast<uint8_t>(PREFETCH_CNT_8),
     .maxAllocHugeStreamNum = DEFAULT,

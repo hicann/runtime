@@ -65,7 +65,6 @@ static const DevProperties CHIP_5162A_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_1,
     .ringbufSize = 0U,
     .hugeManagedFlag = 0U,
-    .memAllocPctraceFlag = MEM_SVM_HUGE,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = PREFETCH_CNT_4,
     .maxAllocHugeStreamNum = 128U,

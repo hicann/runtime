@@ -102,7 +102,6 @@ static const DevProperties CHIP_AS31XM1_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_50,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE_MDC,
     .hugeManagedFlag = TS_4G_CONTIGUOUS_PHY,
-    .memAllocPctraceFlag = MEM_DEV | MEM_TYPE_HBM | MEM_PAGE_NORMAL | MEM_ADVISE_4G,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = PREFETCH_CNT_8,
     .maxAllocHugeStreamNum = DEFAULT,

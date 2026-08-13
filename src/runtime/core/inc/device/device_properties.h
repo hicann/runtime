@@ -208,7 +208,6 @@ struct DevProperties final {
     uint32_t aivNum;      // 目前是宏定义，后续需要去 ini 里面去读
     uint32_t ringbufSize; // 0: do not need new DeviceErrorProc. others: Custom DeviceErrorProc ringBufferSize
     uint32_t hugeManagedFlag;
-    uint32_t memAllocPctraceFlag;
     uint32_t memInfoType;
     uint8_t taskPrefetchCount;
     uint32_t maxAllocHugeStreamNum;

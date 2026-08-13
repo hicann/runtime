@@ -119,7 +119,6 @@ static const DevProperties CHIP_DC_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_50,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE,
     .hugeManagedFlag = TS_4G_CONTIGUOUS_PHY,
-    .memAllocPctraceFlag = MEM_DEV | MEM_TYPE_HBM | MEM_PAGE_NORMAL | MEM_ADVISE_4G,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = static_cast<uint8_t>(PREFETCH_CNT_10),
     .maxAllocHugeStreamNum = DEFAULT,

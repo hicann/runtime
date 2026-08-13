@@ -57,7 +57,6 @@ static const DevProperties CHIP_KIRIN_DEV_0002_PROPERTIES = {
     .aivNum = RT_KIRIN_DEV_0002_AIVECTOR_NUM,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE,
     .hugeManagedFlag = SVM_HOST_AGENT,
-    .memAllocPctraceFlag = static_cast<uint32_t>(MEM_SVM_HUGE),
     .memInfoType = RT_MEM_INFO_TYPE_HBM_SIZE,
     .taskPrefetchCount = PREFETCH_CNT_8,
     .maxAllocHugeStreamNum = DEFAULT,

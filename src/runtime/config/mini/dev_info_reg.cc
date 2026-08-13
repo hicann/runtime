@@ -62,7 +62,6 @@ static const DevProperties CHIP_MINI_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_1,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE,
     .hugeManagedFlag = TS_PAGE_HUGE_ALIGNED,
-    .memAllocPctraceFlag = MEM_SVM_HUGE,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = static_cast<uint8_t>(PREFETCH_CNT_8),
     .maxAllocHugeStreamNum = DEFAULT,

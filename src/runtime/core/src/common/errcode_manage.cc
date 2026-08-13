@@ -301,14 +301,6 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_PROF_FULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler data full"};
     rtErrMap_[RT_ERROR_PROF_NAME] = {ACL_ERROR_RT_PARAM_INVALID, "profiler name error"};
 
-    // pctrace error
-    rtErrMap_[RT_ERROR_PCTRACE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace base error"};
-    rtErrMap_[RT_ERROR_PCTRACE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace pointer null"};
-    rtErrMap_[RT_ERROR_PCTRACE_NEW] = {
-        ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the pctrace object. The host memory has been exhausted."};
-    rtErrMap_[RT_ERROR_PCTRACE_TIME] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace time error"};
-    rtErrMap_[RT_ERROR_PCTRACE_FILE] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace file error"};
-
     // task error
     rtErrMap_[RT_ERROR_TASK_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "task base error"};
     rtErrMap_[RT_ERROR_TASK_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "task pointer null"};

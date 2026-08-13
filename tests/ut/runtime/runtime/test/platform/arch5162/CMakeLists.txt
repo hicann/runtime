@@ -386,7 +386,6 @@ target_compile_definitions(runtime_utest_intf_pub_arch5162 INTERFACE
     __RUNTIME_PRODUCT_DRV_MINI__
     _GLIBCXX_USE_CXX11_ABI=0
     FEATURE_NOTIFY
-    FEATURE_PCTRACE
     FEATURE_DEBUG
     CFG_DEV_PLATFORM_PC
     STATIC_RT_LIB

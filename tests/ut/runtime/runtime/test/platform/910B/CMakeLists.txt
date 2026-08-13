@@ -434,7 +434,6 @@ target_compile_definitions(runtime_ut_910b_intf_pub INTERFACE
     _GLIBCXX_USE_CXX11_ABI=0
     RT_UT_TEST
     FEATURE_NOTIFY
-    FEATURE_PCTRACE
     FEATURE_DEBUG
     CFG_DEV_PLATFORM_PC
     STATIC_RT_LIB

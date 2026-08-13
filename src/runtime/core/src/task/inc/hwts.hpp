@@ -184,18 +184,6 @@ struct TsTkProfDisTask {
 
 /**
  * @ingroup
- * @brief the struct define of pc trace task
- */
-typedef struct TagRtPcTraceTask {
-    uint64_t contentAddr;
-    uint16_t enableTaskID;
-    uint16_t coreDim;
-    uint32_t virAddr;
-    uint8_t reserved[32]; // reserved 32 bytes
-} RtPcTraceTask;
-
-/**
- * @ingroup
  * @brief the struct define of model maintaince task
  */
 typedef struct TagRtModelMaintaince {
@@ -659,7 +647,6 @@ typedef struct tagTsCommand {
         TsCreateL2Addr createL2Addr;
         TsTkProfEnTask profilingEnable;
         TsTkProfDisTask profilingDisable;
-        RtPcTraceTask pctraceTask;
         RtModelMaintaince modelMaintainceTack;
         RtModelExecute modelExecuteTask;
         TsRdmaSendTask rdmaSendTask;

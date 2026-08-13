@@ -132,7 +132,6 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .aivNum = RT_AIVECTOR_NUM_50,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE,
     .hugeManagedFlag = 0U,
-    .memAllocPctraceFlag = MEM_SVM_HUGE,
     .memInfoType = RT_MEM_INFO_TYPE_DDR_SIZE,
     .taskPrefetchCount = PREFETCH_CNT_8,
     .maxAllocHugeStreamNum = DEFAULT,

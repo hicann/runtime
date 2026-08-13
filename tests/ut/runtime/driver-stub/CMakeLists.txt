@@ -35,7 +35,6 @@ target_include_directories(driver_stub_utest PRIVATE
 target_compile_definitions(driver_stub_utest PRIVATE
         DRIVER_NEW_API 
         FEATURE_NOTIFY
-        FEATURE_PCTRACE
         FEATURE_DEBUG
 )
 
@@ -47,7 +46,6 @@ target_compile_definitions(driver_stub_utest PRIVATE
 #     target_compile_definitions(driver_stub_utest PRIVATE
 #         DRIVER_NEW_API 
 #         FEATURE_NOTIFY
-#         FEATURE_PCTRACE
 #         FEATURE_DEBUG
 #     )
 # endif()

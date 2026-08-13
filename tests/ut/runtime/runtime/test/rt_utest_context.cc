@@ -2816,7 +2816,7 @@ TEST_F(ContextTest, CPU_KERNEL_LAUNCH_CPY_FLAG_TEST)
     argsInfo.argsSize = sizeof(arg);
 }
 
-TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace)
+TEST_F(ContextTest, aicpu_kernel_launch_with_func_mode)
 {
     uint32_t binary[32] = {0};
     rtDevBinary_t devBin;
@@ -2836,7 +2836,7 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace)
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtFunctionRegister(binHandle, &funStub, "foo_pctrace", NULL, 1);
+    error = rtFunctionRegister(binHandle, &funStub, "foo_func_mode", NULL, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RawDevice* rawDevice = (RawDevice*)((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
@@ -2856,7 +2856,7 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace)
     ((Runtime*)Runtime::Instance())->DeviceRelease(rawDevice);
 }
 
-TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace_failed)
+TEST_F(ContextTest, aicpu_kernel_launch_with_func_mode_failed)
 {
     uint32_t binary[32] = {0};
     rtDevBinary_t devBin;
@@ -2876,7 +2876,7 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace_failed)
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtFunctionRegister(binHandle, &funStub, "foo_pctrace_failed", NULL, 1);
+    error = rtFunctionRegister(binHandle, &funStub, "foo_func_mode_failed", NULL, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtKernelLaunch(&funStub, 1, (void*)binary, sizeof(binary), NULL, NULL);
