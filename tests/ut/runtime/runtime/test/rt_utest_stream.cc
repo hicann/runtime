@@ -1230,43 +1230,6 @@ TEST_F(StreamTest, GetLastTaskIdFromCqShm_notNull)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(StreamTest, stream_ProcL2AddrTask)
-{
-    RawDevice* stubDevice = new RawDevice(0);
-    stubDevice->Init();
-    Stream* stream = new Stream((Device*)stubDevice, 0);
-    TaskInfo tsk = {};
-    stream->streamId_ = 1;
-    tsk.stream = stream;
-    TaskInfo* task1 = &tsk;
-    rtError_t error = stream->ProcL2AddrTask(task1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete stream;
-    delete stubDevice;
-}
-
-TEST_F(StreamTest, stream_ProcL2AddrTask2)
-{
-    RawDevice* device = new RawDevice(0);
-    NpuDriver drv;
-    MOCKER_CPP_VIRTUAL(&drv, &NpuDriver::GetRunMode).stubs().will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
-
-    device->Init();
-    EXPECT_NE(device->engine_, nullptr);
-
-    Stream* stream = new Stream(device, 0);
-    EXPECT_NE(stream, nullptr);
-    TaskResManage taskResMng;
-    stream->taskResMang_ = &taskResMng;
-    TaskInfo tsk = {};
-    TaskInfo* task1 = &tsk;
-    rtError_t error = stream->ProcL2AddrTask(task1);
-    stream->taskResMang_ = nullptr;
-
-    delete stream;
-    delete device;
-}
-
 TEST_F(StreamTest, TaskFactoryFreeById)
 {
     RawDevice* stubDevice = new RawDevice(0);

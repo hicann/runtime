@@ -79,8 +79,6 @@ TIMESTAMP_EXTERN(rtStreamCreate_AllocLogicCq);
 TIMESTAMP_EXTERN(rtStreamCreate_AllocStreamSqCq);
 TIMESTAMP_EXTERN(rtStreamCreate_CreateTaskResource);
 TIMESTAMP_EXTERN(rtStreamCreate_SubmitCreateStreamTask);
-TIMESTAMP_EXTERN(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
-TIMESTAMP_EXTERN(rtStreamCreate_drvMemcpy);
 TIMESTAMP_EXTERN(rtStreamDestroy_drvMemReleaseL2buffAddr);
 TIMESTAMP_EXTERN(rtStreamDestroy_drvMemFreeManaged);
 TIMESTAMP_EXTERN(rtStreamDestroy_drvStreamIdFree);
@@ -108,7 +106,6 @@ Stream::Stream(Device* const dev, const uint32_t prio, const uint32_t stmFlags, 
       taskPersistentHead_(0U),
       taskPersistentTail_(0U),
       l2BaseVaddr_(nullptr),
-      pteVA_(nullptr),
       needSubmitTask_(true),
       fusioning_(false),
       lastTaskId_(MAX_UINT16_NUM),
@@ -1356,56 +1353,6 @@ rtError_t Stream::Restore()
             error != RT_ERROR_NONE, error, "MemSetSync stream executed times SVM failed, retCode=%#x.",
             static_cast<uint32_t>(error));
     }
-    return error;
-}
-
-rtError_t Stream::SetL2Addr()
-{
-    constexpr size_t memSize = PTE_LENGTH * sizeof(uint64_t);
-    // alloc device mem, max L2 size is 32M ,need 16 page table
-    TIMESTAMP_BEGIN(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
-    rtError_t error = device_->Driver_()->DevMemAlloc(&pteVA_, memSize, RT_MEMORY_HBM, device_->Id_());
-    ERROR_RETURN_MSG_INNER(
-        error, "Failed to allocate device memory for L2 address, size=%zu, device_id=%u, retCode=%#x.", memSize,
-        device_->Id_(), error);
-    TIMESTAMP_END(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
-
-    // cpy pte to device mem
-    TIMESTAMP_BEGIN(rtStreamCreate_drvMemcpy);
-    error = device_->Driver_()->MemCopySync(
-        pteVA_, memSize, static_cast<void*>(pte_.data()), memSize, RT_MEMCPY_HOST_TO_DEVICE);
-    ERROR_GOTO(
-        error, DEV_FREE,
-        "Failed to memcpy for L2 address, retCode=%#x,"
-        "srcSize=%zu(bytes), dstSize=%zu(bytes).",
-        static_cast<uint32_t>(error), memSize, memSize);
-    TIMESTAMP_END(rtStreamCreate_drvMemcpy);
-
-    return RT_ERROR_NONE;
-DEV_FREE:
-    const rtError_t errorDevFree = device_->Driver_()->DevMemFree(pteVA_, device_->Id_());
-    COND_LOG(
-        errorDevFree != RT_ERROR_NONE, "dump dev mem free failed, retCode=%#x, deviceId=%u.", errorDevFree,
-        device_->Id_());
-    pteVA_ = nullptr;
-    return error;
-}
-
-rtError_t Stream::ProcL2AddrTask(TaskInfo*& tsk)
-{
-    // trans device va to pte_pa;
-    uint64_t ptePA;
-    int32_t devId = static_cast<int32_t>(device_->Id_());
-    rtError_t error = device_->Driver_()->MemAddressTranslate(devId, RtPtrToValue(pteVA_), &ptePA);
-    ERROR_RETURN(
-        error, "Failed to translate address to physic for L2 address, retCode=%#x.", static_cast<uint32_t>(error));
-
-    rtError_t errorReason;
-    TaskInfo* l2Task = AllocTask(tsk, TS_TASK_TYPE_CREATE_L2_ADDR, errorReason);
-    NULL_PTR_RETURN_MSG(l2Task, errorReason);
-
-    error = CreateL2AddrTaskInit(l2Task, ptePA);
-    tsk = l2Task;
     return error;
 }
 

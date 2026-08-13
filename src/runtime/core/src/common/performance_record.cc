@@ -188,8 +188,6 @@ TIMESTAMP_DEFINE(rtStreamCreate_AllocLogicCq);
 TIMESTAMP_DEFINE(rtStreamCreate_AllocStreamSqCq);
 TIMESTAMP_DEFINE(rtStreamCreate_CreateTaskResource);
 TIMESTAMP_DEFINE(rtStreamCreate_SubmitCreateStreamTask);
-TIMESTAMP_DEFINE(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
-TIMESTAMP_DEFINE(rtStreamCreate_drvMemcpy);
 TIMESTAMP_DEFINE(rtStreamDestroy_drvMemReleaseL2buffAddr);
 TIMESTAMP_DEFINE(rtStreamDestroy_drvMemFreeManaged);
 TIMESTAMP_DEFINE(rtStreamDestroy_drvStreamIdFree);

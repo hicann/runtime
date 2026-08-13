@@ -252,9 +252,7 @@ TIMESTAMP_EXTERN(rtStreamCreate);
 TIMESTAMP_EXTERN(rtStreamCreate_AllocLogicCq);
 TIMESTAMP_EXTERN(rtStreamCreate_AllocStreamSqCq);
 TIMESTAMP_EXTERN(rtStreamCreate_drvDeviceGetBareTgid);
-TIMESTAMP_EXTERN(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
 TIMESTAMP_EXTERN(rtStreamCreate_drvMemAllocL2buffAddr);
-TIMESTAMP_EXTERN(rtStreamCreate_drvMemcpy);
 TIMESTAMP_EXTERN(rtStreamCreate_drvStreamIdAlloc);
 TIMESTAMP_EXTERN(rtStreamCreate_SubmitCreateStreamTask);
 TIMESTAMP_EXTERN(rtStreamCreate_taskPublicBuff);
@@ -3668,8 +3666,6 @@ void ApiImpl::DumpTimeStampPart2() const
     TIMESTAMP_DUMP(rtStreamCreate_AllocStreamSqCq);
     TIMESTAMP_DUMP(rtStreamCreate_SubmitCreateStreamTask);
     TIMESTAMP_DUMP(rtStreamCreate_drvStreamIdAlloc);
-    TIMESTAMP_DUMP(rtStreamCreate_drvMemAllocHugePageManaged_drvMemAllocManaged_drvMemAdvise);
-    TIMESTAMP_DUMP(rtStreamCreate_drvMemcpy);
     TIMESTAMP_DUMP(rtStreamCreate_drvDeviceGetBareTgid);
     TIMESTAMP_DUMP(rtStreamDestroy_drvMemReleaseL2buffAddr);
     TIMESTAMP_DUMP(rtStreamDestroy_drvMemFreeManaged);

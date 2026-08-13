@@ -38,7 +38,6 @@ constexpr uint32_t NOP_TASK_E2E_DURATION = 1U;
 constexpr uint32_t RECORD_TASK_E2E_DURATION = 5U;
 constexpr uint32_t WAIT_TASK_E2E_DURATION = 15U;
 constexpr uint32_t DEFAULT_TASK_E2E_DURATION = 10U;
-constexpr size_t PTE_LENGTH = 16U;
 
 constexpr uint16_t STREAM_TASK_BUFF_SIZE = 1025U;
 constexpr uint16_t STREAM_PUBLIC_TASK_BUFF_SIZE = 10241U;
@@ -204,9 +203,6 @@ public:
         return RT_ERROR_NONE;
     }
 
-    // init L2 addr
-    rtError_t SetL2Addr();
-
     virtual void SetAbortStatus(rtError_t status);
 
     virtual rtError_t GetAbortStatus() const;
@@ -239,8 +235,6 @@ public:
     virtual rtError_t QuerySq(const uint32_t queryType, uint32_t& status);
 
     virtual bool IsNeedSendFlipTask(uint16_t preTaskId);
-    // create CreateL2AddrTask
-    rtError_t ProcL2AddrTask(TaskInfo*& tsk);
 
     // destroy this stream
     virtual rtError_t TearDown(const bool terminal = false, bool flag = true);
@@ -1052,9 +1046,6 @@ protected:
 private:
     uint32_t poolId_;
     void* l2BaseVaddr_;
-    std::array<uint64_t, PTE_LENGTH> pte_ = {};
-
-    void* pteVA_;
     bool needSubmitTask_;
 
     bool fusioning_;

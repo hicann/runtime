@@ -262,7 +262,6 @@ TEST_F(CloudV2StreamTest, TestIsTaskLimitedWithTaskTypeUnexpected)
 
 TEST_F(CloudV2StreamTest, EngineStreamObserver_TaskSubmited)
 {
-    MOCKER_CPP(&Stream::ProcL2AddrTask).stubs().will(returnValue(RT_ERROR_NONE));
     std::shared_ptr<RawDevice> device = std::make_shared<RawDevice>(0);
     MOCKER_CPP_VIRTUAL(device.get(), &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     device->Init();
