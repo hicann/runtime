@@ -816,6 +816,7 @@ static rtError_t CallbackLaunchForDavid(const rtCallback_t callBackFunc, void * 
     error = AllocTaskInfoForCapture(&rtCbLaunchTask, stm, pos, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    SaveTaskCommonInfo(rtCbLaunchTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     error = ProcCaptureStmSubscribeInfo(stm, isBlock, threadId);
     ERROR_RETURN_MSG_INNER(error, "Failed to proc capture stream subscribe info, stream_id=%d, capture stream_id=%d, error=%#x.",
@@ -825,8 +826,7 @@ static rtError_t CallbackLaunchForDavid(const rtCallback_t callBackFunc, void * 
         ERROR_RETURN_MSG_INNER(error, "Failed to get notify info, stream_id=%d maybe have capture stream_id=%d, error=%#x.",
                         streamId, dstStm->Id_(), static_cast<uint32_t>(error));
     }
-    
-    SaveTaskCommonInfo(rtCbLaunchTask, dstStm, pos);
+
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, notifyId);
     rtCbLaunchTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     error = DavidSendTask(rtCbLaunchTask, dstStm);
