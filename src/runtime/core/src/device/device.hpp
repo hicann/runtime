@@ -168,10 +168,6 @@ public:
     // Stop this device
     virtual rtError_t Stop() = 0;
 
-    // Submit cleanup that must run before context resources are released.
-    // Implementations must be idempotent because Stop() may retry the same work.
-    virtual rtError_t PrepareStop() { return RT_ERROR_NONE; }
-
     virtual rtError_t ReOpen() = 0;
     virtual rtError_t ResourceRestore() = 0;
 

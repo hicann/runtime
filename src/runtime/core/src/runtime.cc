@@ -2833,8 +2833,7 @@ void Runtime::PrepareProcessExitNoThrow()
 }
 
 rtError_t Runtime::ExecutePrimaryTearDown(
-    RefObject<Context*>& refObj, Context* const ctx, const uint32_t devId, const uint32_t tsId, const bool isForceReset,
-    bool& earlyReturn)
+    RefObject<Context*>& refObj, Context* const ctx, const uint32_t devId, const bool isForceReset, bool& earlyReturn)
 {
     earlyReturn = false;
     if (unlikely(!ContextManage::CheckContextIsValid(ctx, ContextAccessMode::INTERNAL))) {
@@ -2859,20 +2858,6 @@ rtError_t Runtime::ExecutePrimaryTearDown(
         });
         PrimaryContextCallBack(ctx, devId);
         tearDownRet = ctx->TearDown();
-        if (tearDownRet == RT_ERROR_NONE) {
-            Runtime::SetInternalThreadContext(ctx);
-            Device* const ownerDev = ctx->Device_();
-            if (ownerDev != nullptr) {
-                const rtError_t prepareRet = ownerDev->PrepareStop();
-                if (prepareRet != RT_ERROR_NONE) {
-                    RT_LOG(
-                        RT_LOG_WARNING,
-                        "PrimaryContextRelease PrepareStop failed, devId=%u, ts_id=%u, retCode=%#x. "
-                        "Continue tearing down.",
-                        devId, tsId, static_cast<uint32_t>(prepareRet));
-                }
-            }
-        }
         Stream* const ctrlSqStream = ctx->GetCtrlSQStream();
         if (ctrlSqStream != nullptr) {
             ctrlSqStream->SetContext(nullptr);
@@ -2903,7 +2888,7 @@ rtError_t Runtime::ReleasePrimaryContextSlot(
     }
     decision.originForceReset = ctx->IsContextForceReset();
     bool earlyReturn = false;
-    const rtError_t tearDownRet = ExecutePrimaryTearDown(refObj, ctx, devId, tsId, isForceReset, earlyReturn);
+    const rtError_t tearDownRet = ExecutePrimaryTearDown(refObj, ctx, devId, isForceReset, earlyReturn);
     if (earlyReturn) {
         return RollbackPrimaryTearDown(
             refObj, ctx, devId, tearDownRet, decision.retainRestoreCount, decision.originForceReset);

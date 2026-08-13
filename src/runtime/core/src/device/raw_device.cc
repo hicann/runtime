@@ -1296,24 +1296,6 @@ void RawDevice::ProfSwitchEnable()
     return;
 }
 
-rtError_t RawDevice::PrepareStop()
-{
-    if (deviceErrorProc_ == nullptr) {
-        return RT_ERROR_NONE;
-    }
-    if (GetDevRunningState() != static_cast<uint32_t>(DEV_RUNNING_NORMAL)) {
-        return RT_ERROR_NONE;
-    }
-    const rtError_t error = deviceErrorProc_->SendTaskToStopUseRingBuffer();
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_WARNING,
-            "PrepareStop send ringbuffer stop task failed, devId=%u, retCode=%#x. RawDevice::Stop will retry.",
-            deviceId_, static_cast<uint32_t>(error));
-    }
-    return error;
-}
-
 rtError_t RawDevice::Stop()
 {
     Runtime* const rt = Runtime::Instance();

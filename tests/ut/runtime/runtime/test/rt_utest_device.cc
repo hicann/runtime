@@ -1985,18 +1985,6 @@ TEST_F(DeviceTest, DevInvalidParamTest)
     EXPECT_EQ(dev.ModuleRetain(nullptr), false);
 }
 
-class PrepareStopTestRawDevice : public RawDevice {
-public:
-    explicit PrepareStopTestRawDevice(const uint32_t devId, const uint32_t runningState)
-        : RawDevice(devId), runningState_(runningState)
-    {}
-
-    uint32_t GetDevRunningState() override { return runningState_; }
-
-private:
-    uint32_t runningState_;
-};
-
 TEST_F(DeviceTest, SetCurGroupInfoTest)
 {
     {
@@ -2009,28 +1997,6 @@ TEST_F(DeviceTest, SetCurGroupInfoTest)
         rtError_t error = dev.SetCurGroupInfo();
         EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
     }
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
-}
-
-TEST_F(DeviceTest, PrepareStopSkipWhenDeviceNotNormal)
-{
-    PrepareStopTestRawDevice dev(0, static_cast<uint32_t>(DEV_RUNNING_DOWN));
-    dev.deviceErrorProc_ = new (std::nothrow) DeviceErrorProc(nullptr);
-    ASSERT_NE(dev.deviceErrorProc_, nullptr);
-
-    EXPECT_EQ(dev.PrepareStop(), RT_ERROR_NONE);
-}
-
-TEST_F(DeviceTest, PrepareStopReturnsSendStopTaskError)
-{
-    PrepareStopTestRawDevice dev(0, static_cast<uint32_t>(DEV_RUNNING_NORMAL));
-    dev.deviceErrorProc_ = new (std::nothrow) DeviceErrorProc(nullptr);
-    ASSERT_NE(dev.deviceErrorProc_, nullptr);
-
-    MOCKER_CPP(&DeviceErrorProc::SendTaskToStopUseRingBuffer).expects(once()).will(returnValue(RT_ERROR_DEVICE_NULL));
-
-    EXPECT_EQ(dev.PrepareStop(), RT_ERROR_DEVICE_NULL);
     GlobalMockObject::verify();
     GlobalMockObject::reset();
 }

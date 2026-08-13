@@ -691,8 +691,8 @@ private:
         const bool aicpuExecutorStarted) const;
     void FinalizeDeviceRelease(RefObject<Device*>& refObj, Device* dev, const bool isForceReset);
     rtError_t ExecutePrimaryTearDown(
-        RefObject<Context*>& refObj, Context* const ctx, const uint32_t devId, const uint32_t tsId,
-        const bool isForceReset, bool& earlyReturn);
+        RefObject<Context*>& refObj, Context* const ctx, const uint32_t devId, const bool isForceReset,
+        bool& earlyReturn);
     rtError_t ReleasePrimaryContextSlot(
         const uint32_t devId, const uint32_t tsId, const bool isForceReset, const bool sentinelMode, bool& ret);
     Device* DeviceAddObserver(Device* dev);
