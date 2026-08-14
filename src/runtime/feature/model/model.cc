@@ -603,7 +603,8 @@ rtError_t Model::UnbindStream(Stream* const streamIn, const bool force)
     COND_RETURN_AND_MSG_OUTER(
         !streamIn->IsModelStream() || (streamIn->Model_()->Id_() != static_cast<uint32_t>(id_)), RT_ERROR_STREAM_MODEL,
         ErrorCode::EE4002,
-        RtFmtMsg("The specified stream (stream_id=%d) is not bound to the current model (model_id=%d)", streamId, id_));
+        RtFmtMsg(
+            "The specified stream (stream_id=%d) is not bound to the current model (model_id=%d).", streamId, id_));
 
     /* AICPU streamIn no need sent to TS */
     if ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) {

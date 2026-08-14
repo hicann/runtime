@@ -115,7 +115,7 @@
       "Expected value: %s. ErrorCode=EE2002.\n",                                                                   \
       DLOG_ERROR)                                                                                                  \
     /* EE4002 - Model_Unbinding_Errors */                                                                          \
-    X(EE4002, "EE4002", ("extend_info"), "Failed to unbind the stream from the model. %s. ErrorCode=EE4002.\n",    \
+    X(EE4002, "EE4002", ("extend_info"), "Failed to unbind the stream from the model. %s ErrorCode=EE4002.\n",     \
       DLOG_ERROR)                                                                                                  \
     /* EZ2001 - Execution_Error (RAS Fault) */                                                                     \
     X(EZ2001, "EZ2001", ("aicore_error_info", "fault_type", "fault_info"),                                         \

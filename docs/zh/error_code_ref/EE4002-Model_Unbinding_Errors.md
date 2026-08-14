@@ -11,7 +11,7 @@ Failed to unbind the stream from the model. %s
 报错示例如下：
 
 ```
-Failed to unbind the stream to the model. Failed to unbind stream [1] from model [2]. Reason: model id is not equal to stream model id[0].
+Failed to unbind the stream from the model. The specified stream (stream_id=61) is not bound to the current model (model_id=63).
 ```
 
 ## 可能原因
