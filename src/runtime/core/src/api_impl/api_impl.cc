@@ -2613,7 +2613,10 @@ rtError_t ApiImpl::HostUnregister(void* ptr)
         isRegister = true;
         ErasePinnedMemory(ptr);
     }
-    return (isRegister) ? RT_ERROR_NONE : RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
+    COND_RETURN_AND_MSG_OUTER(
+        !isRegister, RT_ERROR_HOST_MEMORY_NOT_REGISTERED, ErrorCode::EE1018, "Unregistering host memory",
+        "The host pointer has not been registered for device memory mapping");
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag)

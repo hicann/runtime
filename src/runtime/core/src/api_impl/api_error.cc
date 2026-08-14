@@ -2012,7 +2012,9 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void* ptr, uint64_t size, uint32_t f
         " RT_MEM_HOST_REGISTER_READONLY(0x8U), and RT_MEM_HOST_REGISTER_PINNED(0x10000000U)");
 
     rtError_t error = CheckMemoryRangeRegistered(ptr, size);
-    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    COND_RETURN_AND_MSG_OUTER(
+        error != RT_ERROR_NONE, error, ErrorCode::EE1018, "Host memory address registration",
+        "The memory range has already been registered");
 
     error = impl_->HostRegisterV2(ptr, size, flag);
     ERROR_RETURN(error, "Register host memory failed, MemSize=%" PRIu64 "(bytes), flag=%#x.", size, flag);
@@ -2024,7 +2026,7 @@ rtError_t ApiErrorDecorator::HostUnregister(void* ptr)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Host memory deregistration");
 
     const rtError_t error = impl_->HostUnregister(ptr);
-    ERROR_RETURN(error, "Malloc host memory failed.");
+    ERROR_RETURN(error, "Unregister host memory failed.");
     return error;
 }
 
