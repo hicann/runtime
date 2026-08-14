@@ -65,7 +65,7 @@ int32_t ProfReporterMgr::Start()
     return PROFILING_SUCCESS;
 }
 
-void ProfReporterMgr::Run(const struct error_message::Context& errorContext)
+void ProfReporterMgr::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     while (!IsQuit()) {

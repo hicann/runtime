@@ -62,6 +62,7 @@ set(devProfCppList
     ../../profimpl/collect/job_wrapper/src/prof_hwts_log_job.cpp
     ../../profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     ../../profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ../../profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ../../profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     ../../profimpl/collect/job_wrapper/src/prof_sys_info_job.cpp
     ../../profimpl/collect/job_wrapper/src/prof_hardware_mem_job.cpp
@@ -94,8 +95,8 @@ set(devprofHeader
     ${RUNTIME_DIR}/src/dfx/msprof/inc
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/inc/
+    ${RUNTIME_DIR}/include/dfx
     ${RUNTIME_DIR}/pkg_inc/driver
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/abl/ascend_hal/user_space/inc
     ./device/include
     ${CMAKE_CURRENT_SOURCE_DIR}/

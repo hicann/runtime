@@ -11,6 +11,7 @@
 set(acpBinHeader
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/pkg_inc/driver
+    ${RUNTIME_DIR}/include/dfx
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${LIBC_SEC_HEADER}
     ./include
@@ -182,6 +183,7 @@ set(profinjCpp
     ../profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ../profimpl/collect/job_wrapper/src/prof_stars_job.cpp
     ../profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ../profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ../common/platform/platform.cpp
     ../common/utils/utils.cpp
     ../common/statistics/perf_count.cpp
@@ -225,7 +227,6 @@ target_include_directories(profinj PRIVATE
     ${RUNTIME_DIR}/pkg_inc/driver/
     ${RUNTIME_DIR}/include/external/
     ${RUNTIME_DIR}/include/external/acl/
-    ${RUNTIME_DIR}/src/dfx/error_manager/
     ${CMAKE_CURRENT_SOURCE_DIR}/
     ${CMAKE_BINARY_DIR}/proto/profiler_proto/
     ${PROF_BASIC_DIR}/osal

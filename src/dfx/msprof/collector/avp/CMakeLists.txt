@@ -280,6 +280,7 @@ set(proftransportInc
     ../dvvp/transport
     ./
     ${RUNTIME_DIR}/pkg_inc/driver
+    ${RUNTIME_DIR}/include/dfx
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROF_BASIC_DIR}
     ${PROF_BASIC_DIR}/osal

@@ -537,7 +537,11 @@ int32_t DrvStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel);
 
 // Dedicated stop for biu perf: when the driver returns the data loss status code (0x916), only log
 // the error and still return success, without affecting the shared DrvStop behavior of other channels.
-int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel);
+// lossRetCode, when non-null, receives the driver status code if profiling data loss was reported,
+// and 0 otherwise. The function still returns PROFILING_SUCCESS in that case so teardown can finish;
+// the code lets the caller record what happened without knowing the driver's constants.
+// Defaulted to nullptr so existing call sites stay unchanged.
+int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel, int32_t* lossRetCode = nullptr);
 
 int32_t DrvChannelRead(int32_t profDeviceId, AI_DRV_CHANNEL profChannel, UNSIGNED_CHAR_PTR outBuf, uint32_t bufSize);
 

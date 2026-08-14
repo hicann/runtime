@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
-# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
@@ -18,9 +18,9 @@ set(msprofilerCpp
 set(msprofilerInc
    ${RUNTIME_DIR}/graphengine/inc
    ${RUNTIME_DIR}/include/external
+   ${RUNTIME_DIR}/include/dfx
    ${RUNTIME_DIR}/graphengine/inc/external
    ${RUNTIME_DIR}/graphengine/inc/framework/common
-   ${RUNTIME_DIR}/src/dfx/error_manager
    ${LIBC_SEC_HEADER}
    ../
    ../common
@@ -97,7 +97,7 @@ target_link_libraries(msprofiler_fwk_share
         adump_headers
         npu_runtime_headers
         c_sec
-        alog
+        unified_dlog
         mmpa
         profapi_share
         error_manager
@@ -131,7 +131,6 @@ install_package(
 ####################### libmsprofiler_lite.so #########################
 set(msprofilerLiteInc
    ${RUNTIME_DIR}/include/external
-   ${RUNTIME_DIR}/src/dfx/error_manager
    ${LIBC_SEC_HEADER}
    ${MSPROF_DIR}/include/external
    ${PROF_BASIC_DIR}/osal
@@ -149,7 +148,7 @@ add_library(msprofiler_fwk_lite_share SHARED
 target_include_directories(msprofiler_fwk_lite_share PRIVATE
     ${msprofilerLiteInc}
     ../profapi/inc
-    ../depend/include/wrapper
+    ../depend/include/stub
 )
 
 set_target_properties(msprofiler_fwk_lite_share
@@ -189,9 +188,10 @@ target_link_libraries(msprofiler_fwk_lite_share
         mmpa_headers
         intf_pub
         slog_headers
+        $<BUILD_INTERFACE:error_manager_headers>
         -Wl,--no-as-needed
         c_sec
-        alog
+        unified_dlog
         profapi_lite_share
         -Wl,--as-needed
         mmpa

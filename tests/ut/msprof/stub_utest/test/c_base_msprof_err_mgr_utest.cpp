@@ -26,12 +26,13 @@ protected:
 TEST_F(C_BASE_ERR_MGR_UTEST, GetErrorManagerContext)
 {
     auto &ctx = MsprofErrorManager::instance()->GetErrorManagerContext();
-    EXPECT_EQ(0UL, ctx.workStreamId);
+    EXPECT_EQ(0UL, ctx.work_stream_id);
 }
 
 TEST_F(C_BASE_ERR_MGR_UTEST, SetErrorContext)
 {
-    error_message::Context ctx{1UL, "init", "parser", "header"};
+    error_message::ErrorManagerContext ctx{};
+    ctx.work_stream_id = 1UL;
     MsprofErrorManager::instance()->SetErrorContext(ctx);
 }
 

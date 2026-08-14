@@ -549,7 +549,7 @@ void DevprofDrvAicpu::RunNormalMode()
     }
 }
 
-void DevprofDrvAicpu::Run(const struct error_message::Context& errorContext)
+void DevprofDrvAicpu::Run(const error_message::ErrorManagerContext& errorContext)
 {
     (void)errorContext;
 

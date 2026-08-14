@@ -9,6 +9,7 @@
  */
 #include "prof_runtime_plugin.h"
 #include <dlfcn.h>
+#include <set>
 #include "msprof_dlog.h"
 #include "errno/error_code.h"
 #include "prof_api.h"

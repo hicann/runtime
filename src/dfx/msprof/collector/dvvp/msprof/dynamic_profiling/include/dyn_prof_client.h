@@ -38,7 +38,7 @@ public:
     bool IsCliStarted() const;
 
 protected:
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
 
 private:
     void DynProfCliInitProcFunc();

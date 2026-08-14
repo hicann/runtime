@@ -432,7 +432,7 @@ int32_t ChannelPoll::Stop()
     return PROFILING_SUCCESS;
 }
 
-void ChannelPoll::Run(const struct error_message::Context& errorContext)
+void ChannelPoll::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     constexpr uint32_t channelNum = 6;   // at most get 6 channels to read once loop
@@ -498,7 +498,7 @@ int32_t ChannelBuffer::Stop()
     return PROFILING_SUCCESS;
 }
 
-void ChannelBuffer::Run(const struct error_message::Context& errorContext)
+void ChannelBuffer::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     const uint8_t maxChanelBufferSize = 8;

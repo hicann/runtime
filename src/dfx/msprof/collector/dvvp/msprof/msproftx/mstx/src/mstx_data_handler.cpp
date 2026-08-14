@@ -71,7 +71,7 @@ int MstxDataHandler::Stop()
     return PROFILING_SUCCESS;
 }
 
-void MstxDataHandler::Run(const struct error_message::Context& errorContext)
+void MstxDataHandler::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("mstx data handler thread start");

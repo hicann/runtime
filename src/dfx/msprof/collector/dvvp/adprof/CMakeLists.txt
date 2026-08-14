@@ -17,8 +17,8 @@ set(adprofBinHeader
     ../common/singleton
     ../depend/include/stub
     ${PROF_BASIC_DIR}/osal
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/include/dfx
     ${RUNTIME_DIR}/pkg_inc/driver
 )
  

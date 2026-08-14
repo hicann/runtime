@@ -65,7 +65,7 @@ bool DynProfServer::IsProfStarted()
     return profStarted_;
 }
 
-void DynProfServer::Run(const struct error_message::Context& errorContext)
+void DynProfServer::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
 

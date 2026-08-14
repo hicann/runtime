@@ -33,7 +33,7 @@ public:
     virtual void WaitStopReplay();
     virtual void PostStopReplay();
     virtual void PostSyncDataCtrl();
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     int32_t Stop() override;
     virtual int32_t Wait();
 

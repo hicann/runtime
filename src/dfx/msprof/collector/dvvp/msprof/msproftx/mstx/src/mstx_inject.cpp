@@ -10,6 +10,7 @@
 
 #include "mstx_inject.h"
 #include <algorithm>
+#include <set>
 #include <unordered_map>
 #include "msprof_dlog.h"
 #include "errno/error_code.h"

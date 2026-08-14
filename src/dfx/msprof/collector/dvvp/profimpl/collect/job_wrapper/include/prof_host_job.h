@@ -120,7 +120,7 @@ protected:
     volatile bool isStarted_{false};
 
 private:
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     int32_t Handler();
     void StoreData() const;
     int32_t GetCollectSysCallsCmd(int32_t pid, std::string& profHostCmd);

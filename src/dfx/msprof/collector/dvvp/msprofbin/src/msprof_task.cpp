@@ -52,7 +52,7 @@ void MsprofTask::PostStopReplay()
 
 void MsprofTask::PostSyncDataCtrl() {}
 
-void MsprofTask::Run(const struct error_message::Context& errorContext)
+void MsprofTask::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     if (params_ == nullptr || !isInit_) {

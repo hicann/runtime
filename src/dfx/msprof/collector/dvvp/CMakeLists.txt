@@ -66,6 +66,7 @@ set(profimplCpp
     profimpl/collect/job_wrapper/src/prof_hwts_log_job.cpp
     profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     profimpl/collect/job_wrapper/src/prof_aicpu_job.cpp
     profimpl/collect/job_wrapper/src/prof_sys_info_job.cpp
@@ -159,7 +160,6 @@ set(profimplInc
     ${RUNTIME_DIR}/include/external/acl
     ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/src/inc
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     msprof/dynamic_profiling/include
     msprof/engine/include
@@ -212,7 +212,6 @@ target_include_directories(profimpl_fwk_share PRIVATE
     ${profimplInc}
     ${RUNTIME_DIR}/graphengine/inc
     ${RUNTIME_DIR}/graphengine/inc/framework
-    ${RUNTIME_DIR}/src/dfx/error_manager
     depend/include/wrapper
     profapi/inc
 )
@@ -339,7 +338,6 @@ target_include_directories(profimpl_share_device PRIVATE
     ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/include/external
-    ${RUNTIME_DIR}/src/dfx/error_manager
     msprof/
     msprof/drvprof
     msprof/drvprof/include
@@ -416,6 +414,7 @@ target_link_libraries(profimpl_share_device PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:msprof_headers>
+    $<BUILD_INTERFACE:error_manager_headers>
     c_sec
     unified_dlog
     mmpa

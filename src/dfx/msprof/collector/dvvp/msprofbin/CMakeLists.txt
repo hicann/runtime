@@ -20,7 +20,6 @@ set(msprofBinHeader
     ${RUNTIME_DIR}/inc/aicpu
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/src/dfx/msprof/inc
     ./include
     ../
@@ -109,6 +108,7 @@ set(msprofbinCpp
     ../profimpl/collect/job_wrapper/src/prof_hwts_log_job.cpp
     ../profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     ../profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ../profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ../profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     ../profimpl/collect/job_wrapper/src/prof_aicpu_job.cpp
     ../profimpl/collect/job_wrapper/src/prof_sys_info_job.cpp

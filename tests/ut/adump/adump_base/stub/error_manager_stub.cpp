@@ -7,9 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "error_manager.h"
+#include "base/err_msg.h"
+#include <map>
 #include <mutex>
 #include <iostream>
+#include <string>
+#include <vector>
 
 namespace {
 const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
@@ -33,76 +36,6 @@ void ClearLastReportedErrorCode() {
     g_lastErrorCode.clear();
 }
 
-///
-/// @brief Obtain ErrorManager instance
-/// @return ErrorManager instance
-///
-ErrorManager &ErrorManager::GetInstance() {
-  static ErrorManager instance;
-  return instance;
-}
-
-int ErrorManager::Init(std::string /* path */) {
-  return 0;
-}
-
-int ErrorManager::Init() {
-  return 0;
-}
-
-///
-/// @brief report error message
-/// @param [in] error_code: error code
-/// @param [in] args_map: parameter map
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ReportErrMessage(std::string /* error_code */, const std::map<std::string, std::string> &/* args_map */) {
-  return 0;
-}
-
-///
-/// @brief output error message
-/// @param [in] handle: print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::OutputErrMessage(int /* handle */) {
-  return 0;
-}
-
-///
-/// @brief output message
-/// @param [in] handle: print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::OutputMessage(int /* handle */) {
-  return 0;
-}
-
-///
-/// @brief parse json file
-/// @param [in] path: json path
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ParseJsonFile(std::string /* path */) {
-  return 0;
-}
-
-///
-/// @brief read json file
-/// @param [in] file_path: json path
-/// @param [in] handle:  print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ReadJsonFile(const std::string &/* file_path */, void */* handle */) {
-  return 0;
-}
-
-///
-/// @brief report error message
-/// @param [in] error_code: error code
-/// @param [in] vector parameter ky, vector parameter value
-/// @return int 0(success) -1(fail)
-///
 static std::string FormatErrorCode(const std::string &error_code,
                                    const std::vector<std::string> &key,
                                    const std::vector<std::string> &value) {
@@ -140,35 +73,52 @@ static std::string FormatErrorCode(const std::string &error_code,
     return error_code + ": " + templateStr;
 }
 
-void ErrorManager::ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key,
-                                       const std::vector<std::string> &value) {
+// Definitions for the WEAK_SYMBOL declarations in base/err_msg.h. Without these the weak symbols
+// resolve to null and calling them segfaults at run time instead of failing to link.
+namespace error_message {
+int32_t ReportPredefinedErrMsg(const char *error_code, const std::vector<const char *> &key,
+                               const std::vector<const char *> &value) {
+    std::vector<std::string> keyStr;
+    std::vector<std::string> valueStr;
+    for (const auto *k : key) {
+        keyStr.emplace_back((k == nullptr) ? "" : k);
+    }
+    for (const auto *v : value) {
+        valueStr.emplace_back((v == nullptr) ? "" : v);
+    }
+    const std::string code = (error_code == nullptr) ? "" : error_code;
+
     std::lock_guard<std::mutex> lock(g_errorMutex);
-    g_lastErrorCode = error_code;
-    
-    std::string errMsg = FormatErrorCode(error_code, key, value);
-    std::cout << "[ERROR] " << errMsg << std::endl;
+    g_lastErrorCode = code;
+    std::cout << "[ERROR] " << FormatErrorCode(code, keyStr, valueStr) << std::endl;
+    return 0;
 }
 
-///
-/// @brief get graph compile failed message in mustune case
-/// @param [in] graph_name: graph name
-/// @param [out] msg_map: failed message map, ky is error code, value is op_name list
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::GetMstuneCompileFailedMsg(const std::string &/* graph_name */, std::map<std::string,
-  std::vector<std::string>> &/* msg_map */) {
-  return 0;
+int32_t ReportPredefinedErrMsg(const char *error_code) {
+    std::lock_guard<std::mutex> lock(g_errorMutex);
+    g_lastErrorCode = (error_code == nullptr) ? "" : error_code;
+    return 0;
 }
 
-int32_t ErrorManager::ReportInterErrMessage(const std::string /* error_code */, const std::string &/* error_msg */) {
-  return 0;
+int32_t ReportInnerErrMsg(const char *file_name, const char *func, uint32_t line, const char *error_code,
+                          const char *format, ...) {
+    (void)file_name;
+    (void)func;
+    (void)line;
+    (void)error_code;
+    (void)format;
+    return 0;
 }
 
-int32_t error_message::FormatErrorMessage(char_t */* str_dst */, size_t /* dst_max */, const char_t */* format */, ...) {
-  return 0;
+int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...) {
+    (void)error_code;
+    (void)format;
+    return 0;
 }
 
-void error_message::ReportInnerError(const char_t *file_name, const char_t *func, uint32_t line, const std::string error_code,
-                      const char_t *format, ...) {
-  return;
+int32_t RegisterFormatErrorMessage(const char *error_msg, size_t error_msg_len) {
+    (void)error_msg;
+    (void)error_msg_len;
+    return 0;
 }
+}  // namespace error_message

@@ -70,7 +70,9 @@ set(ascendDumpSrcList
 set(ascendDumpHeaderList
     ${adumpServerHeaders}
     ${CMAKE_BINARY_DIR}/proto/adump_host_proto
-    ${RUNTIME_DIR}/src/dfx/error_manager
+    # base/err_msg.h (adump_error_manager.h) lives here; kept target-scoped rather than added to the
+    # adump_headers INTERFACE, which 60+ unrelated targets consume.
+    ${PROJECT_TOP_DIR}/include/dfx
     ${ADUMP_ADUMP_DIR}/adump_ascend031/manage/
     ${ADUMP_DIR}/adcore/
     ${ADUMP_ADUMP_DIR}/

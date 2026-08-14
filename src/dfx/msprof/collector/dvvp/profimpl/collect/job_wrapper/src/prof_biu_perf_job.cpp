@@ -9,9 +9,11 @@
  */
 
 #include "prof_biu_perf_job.h"
+#include <string>
 #include "errno/error_code.h"
 #include "ai_drv_dev_api.h"
 #include "platform/platform.h"
+#include "prof_collect_info.h"
 
 namespace Analysis {
 namespace Dvvp {
@@ -166,18 +168,44 @@ int32_t ProfBiuPerfJob::Uninit()
     int32_t ret = PROFILING_SUCCESS;
     int32_t devId = collectionJobCfg_->comParams->devId;
 
+    bool anyDataLoss = false;
     for (const auto& channelInfo : GetBiuChannelInfos()) {
         auto channelId = static_cast<AI_DRV_CHANNEL>(channelInfo.channelId);
         if (!DrvChannelsMgr::instance()->ChannelIsValid(devId, channelId)) {
             MSPROF_LOGW("Channel is invalid, devId:%d, channelId:%d", devId, channelId);
             continue;
         }
-        ret = DrvBiuPerfStop(devId, channelId);
+        int32_t lossRetCode = 0;
+        ret = DrvBiuPerfStop(devId, channelId, &lossRetCode);
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("[ProfBiuPerfJob]DrvBiuPerfStop failed, ret:%d, devId:%d, channelId:%d", ret, devId, channelId);
         }
+        // Record per channel: one run may lose data on several channels, and the group/core context
+        // is only available here.
+        if (lossRetCode != 0) {
+            anyDataLoss = true;
+            CollectAbnormalItem item;
+            item.module = "biu_perf";
+            item.devId = devId;
+            item.channelId = static_cast<int32_t>(channelInfo.channelId);
+            item.retCode = lossRetCode;
+            item.reason = "Driver reported profiling data loss during collection, please retry profiling";
+            item.detail = "groupId=" + std::to_string(channelInfo.groupId) +
+                          ",groupType=" + std::to_string(channelInfo.groupType) +
+                          ",groupNo=" + std::to_string(channelInfo.groupNo);
+            ProfCollectInfo::instance()->RecordDataLoss(item);
+        }
         RemoveReader(std::to_string(collectionJobCfg_->comParams->devId), devId, channelId);
         MSPROF_LOGI("Stop biu perf job end, devId:%d, channelId:%d", devId, channelId);
+    }
+
+    // Flush once after every channel is handled, so a run losing data on multiple channels produces
+    // a single file listing them all. Writing failures must not fail teardown -- the collected data
+    // is still valid, only the loss note would be missing.
+    if (anyDataLoss) {
+        if (ProfCollectInfo::instance()->Flush(collectionJobCfg_->comParams->tmpResultDir) != PROFILING_SUCCESS) {
+            MSPROF_LOGE("[ProfBiuPerfJob]Failed to write prof_collect.info");
+        }
     }
     return ret;
 }

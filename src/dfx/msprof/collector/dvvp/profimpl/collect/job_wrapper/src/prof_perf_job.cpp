@@ -77,7 +77,7 @@ int32_t PerfExtraTask::UnInit()
     return PROFILING_SUCCESS;
 }
 
-void PerfExtraTask::Run(const struct error_message::Context& errorContext)
+void PerfExtraTask::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     while (!IsQuit()) {

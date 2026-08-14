@@ -74,9 +74,10 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/include/dfx
+    ${TOP_DIR}/pkg_inc
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
-    ${TOP_DIR}/src/dfx/error_manager
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump

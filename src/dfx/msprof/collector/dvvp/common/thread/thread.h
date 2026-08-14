@@ -34,7 +34,7 @@ public:
     const std::string& GetThreadName() const;
 
 protected:
-    virtual void Run(const struct error_message::Context& errorContext) = 0;
+    virtual void Run(const error_message::ErrorManagerContext& errorContext) = 0;
 
 private:
     static void* ThrProcess(VOID_PTR arg);
@@ -43,7 +43,7 @@ private:
     volatile bool quit_;
     volatile bool isStarted_;
     std::string threadName_;
-    error_message::Context errorContext_;
+    error_message::ErrorManagerContext errorContext_;
 };
 } // namespace thread
 } // namespace common

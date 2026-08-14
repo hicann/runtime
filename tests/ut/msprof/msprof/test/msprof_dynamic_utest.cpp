@@ -108,7 +108,7 @@ TEST_F(MSPROF_DYNAMIC_CLIENT_UTEST, DynProfClient_Stop)
 
 TEST_F(MSPROF_DYNAMIC_CLIENT_UTEST, DynProfClient_RunSetSendTimeOutFail)
 {
-    struct error_message::Context errorContext;
+    error_message::ErrorManagerContext errorContext;
     SHARED_PTR_ALIA<DynProfClient> dynProfClient = std::make_shared<DynProfClient>();
     dynProfClient->cliStarted_ = true;
     MOCKER(LocalSocket::SetRecvTimeOut)
@@ -404,7 +404,7 @@ TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_Stop)
 
 TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_Run)
 {
-    struct error_message::Context errorContext;
+    error_message::ErrorManagerContext errorContext;
     SHARED_PTR_ALIA<DynProfServer> dynProfServer = std::make_shared<DynProfServer>();
     dynProfServer->DynProfSrvInitProcFunc();
     dynProfServer->srvStarted_ = true;

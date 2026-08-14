@@ -72,7 +72,7 @@ int32_t MsprofDiagnostic::Start()
     return PROFILING_SUCCESS;
 }
 
-void MsprofDiagnostic::Run(const struct error_message::Context& errorContext)
+void MsprofDiagnostic::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     do {

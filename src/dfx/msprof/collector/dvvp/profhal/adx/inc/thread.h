@@ -14,7 +14,7 @@
 #include <cstdint>
 #include "osal.h"
 #include "extra_config.h"
-#include "error_manager.h"
+#include "base/err_mgr.h"
 
 #define IDE_DAEMON_DEFAULT_THREAD_ATTR \
     {                                  \
@@ -49,7 +49,7 @@ public:
     void SetThreadName(const std::string& threadName);
 
 protected:
-    virtual void Run(const struct error_message::Context& errorContext) = 0;
+    virtual void Run(const error_message::ErrorManagerContext& errorContext) = 0;
 
 private:
     static IdeThreadArg Process(IdeThreadArg arg);

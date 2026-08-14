@@ -1114,8 +1114,11 @@ int32_t DrvStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel)
     return PROFILING_SUCCESS;
 }
 
-int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel)
+int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel, int32_t* lossRetCode)
 {
+    if (lossRetCode != nullptr) {
+        *lossRetCode = 0;
+    }
     MSPROF_EVENT(
         "Begin to stop profiling DrvBiuPerfStop, profDeviceId=%d, profChannel=%d", profDeviceId,
         static_cast<int32_t>(profChannel));
@@ -1127,12 +1130,15 @@ int32_t DrvBiuPerfStop(int32_t profDeviceId, AI_DRV_CHANNEL profChannel)
         return PROFILING_SUCCESS;
     }
     // Data loss is an acceptable collection result: only log the error and still return success, so
-    // that the biu perf job can finish its teardown normally.
+    // that the biu perf job can finish its teardown normally. The flag tells the caller to record it.
     if (ret == DRV_PROF_DATA_LOSS) {
-        MSPROF_LOGE(
+        MSPROF_EVENT(
             "Biu perf data loss detected during data collection, please retry profiling. "
-            "profDeviceId=%d, profChannel=%d, ret=0x%x",
-            profDeviceId, static_cast<int32_t>(profChannel), ret);
+            "ProfDeviceId=%d, profChannel=%d, ret=0x%x",
+            profDeviceId, static_cast<int32_t>(profChannel), static_cast<uint32_t>(ret));
+        if (lossRetCode != nullptr) {
+            *lossRetCode = ret;
+        }
         return PROFILING_SUCCESS;
     }
     MSPROF_LOGE(

@@ -7,16 +7,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "error_manager.h"
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <vector>
+#include "base/err_mgr.h"
 #include "error_manager_stub2.h"
 
 namespace {
-const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
-const char *const kErrorList = "error_info_list";
-const char *const kErrCode = "ErrCode";
-const char *const kErrMessage = "ErrMessage";
-const char *const kArgList = "Arglist";
-const uint64_t kLength = 2;
 std::string g_msprofLastInputErrorCode;
 std::vector<std::string> g_msprofLastInputErrorValues;
 }  // namespace
@@ -54,95 +52,63 @@ const std::vector<std::string> &GetMsprofLastInputErrorValues()
 ///
 /// @brief Obtain ErrorManager instance
 /// @return ErrorManager instance
-///
-ErrorManager &ErrorManager::GetInstance() {
-  static ErrorManager instance;
-  return instance;
+// Definitions for the WEAK_SYMBOL declarations in base/err_msg.h. Missing definitions would link
+// silently and then jump to null at run time. ReportPredefinedErrMsg records the reported code so
+// the MSPROF_INPUT_ERROR assertions keep working for code paths that reach the real macro rather
+// than the override in error_manager_stub2.h.
+namespace error_message {
+ErrorManagerContext GetErrMgrContext()
+{
+    static ErrorManagerContext errorContext{};
+    return errorContext;
 }
 
-int ErrorManager::Init(std::string /* path */) {
-  return 0;
+void SetErrMgrContext(ErrorManagerContext errorContext)
+{
+    (void)(errorContext);
 }
 
-int ErrorManager::Init() {
-  return 0;
+int32_t ReportInnerErrMsg(const char *fileName, const char *func, uint32_t line, const char *errorCode,
+                          const char *format, ...)
+{
+    (void)fileName;
+    (void)func;
+    (void)line;
+    (void)errorCode;
+    (void)format;
+    return 0;
 }
 
-///
-/// @brief report error message
-/// @param [in] error_code: error code
-/// @param [in] args_map: parameter map
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ReportErrMessage(std::string /* error_code */,
-                                   const std::map<std::string, std::string> &/* args_map */) {
-  return 0;
+int32_t ReportPredefinedErrMsg(const char *errorCode, const std::vector<const char *> &key,
+                               const std::vector<const char *> &value)
+{
+    (void)key;
+    std::vector<std::string> values;
+    values.reserve(value.size());
+    for (const auto *v : value) {
+        values.emplace_back((v == nullptr) ? "" : v);
+    }
+    MsprofUtestStub::RecordMsprofInputErrorCode((errorCode == nullptr) ? "" : errorCode, values);
+    return 0;
 }
 
-///
-/// @brief output error message
-/// @param [in] handle: print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::OutputErrMessage(int /* handle */) {
-  return 0;
+int32_t ReportPredefinedErrMsg(const char *errorCode)
+{
+    MsprofUtestStub::RecordMsprofInputErrorCode((errorCode == nullptr) ? "" : errorCode);
+    return 0;
 }
 
-///
-/// @brief output message
-/// @param [in] handle: print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::OutputMessage(int /* handle */) {
-  return 0;
+int32_t ReportUserDefinedErrMsg(const char *errorCode, const char *format, ...)
+{
+    (void)errorCode;
+    (void)format;
+    return 0;
 }
 
-///
-/// @brief parse json file
-/// @param [in] path: json path
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ParseJsonFile(std::string /* path */) {
-  return 0;
+int32_t RegisterFormatErrorMessage(const char *errorMsg, size_t errorMsgLen)
+{
+    (void)errorMsg;
+    (void)errorMsgLen;
+    return 0;
 }
-
-///
-/// @brief read json file
-/// @param [in] file_path: json path
-/// @param [in] handle:  print handle
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::ReadJsonFile(const std::string &/* file_path */, void */* handle */) {
-  return 0;
-}
-
-///
-/// @brief report error message
-/// @param [in] error_code: error code
-/// @param [in] vector parameter ky, vector parameter value
-/// @return int 0(success) -1(fail)
-///
-void ErrorManager::ATCReportErrMessage(std::string error_code, const std::vector<std::string> &/* ky */,
-                                       const std::vector<std::string> &value) {
-  MsprofUtestStub::RecordMsprofInputErrorCode(error_code, value);
-}
-
-///
-/// @brief get graph compile failed message in mustune case
-/// @param [in] graph_name: graph name
-/// @param [out] msg_map: failed message map, ky is error code, value is op_name list
-/// @return int 0(success) -1(fail)
-///
-int ErrorManager::GetMstuneCompileFailedMsg(const std::string &/* graph_name */, std::map<std::string,
-  std::vector<std::string>> &/* msg_map */) {
-  return 0;
-}
-
-int32_t ErrorManager::ReportInterErrMessage(const std::string /* error_code */, const std::string &/* error_msg */) {
-  return 0;
-}
-
-int32_t error_message::FormatErrorMessage(char_t */* str_dst */, size_t /* dst_max */,
-                                          const char_t */* format */, ...) {
-  return 0;
-}
+}  // namespace error_message

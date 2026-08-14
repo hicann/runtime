@@ -782,7 +782,7 @@ int32_t ProfHostService::Stop()
     return PROFILING_SUCCESS;
 }
 
-void ProfHostService::Run(const struct error_message::Context& errorContext)
+void ProfHostService::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     int32_t ret = Process();

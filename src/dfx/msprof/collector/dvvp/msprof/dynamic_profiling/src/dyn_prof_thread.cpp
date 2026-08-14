@@ -99,7 +99,7 @@ int32_t DynProfThread::Start()
  * @return PROFILING_SUCCESS
            PROFILING_FAILED
  */
-void DynProfThread::Run(const struct error_message::Context& errorContext)
+void DynProfThread::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     std::unique_lock<std::mutex> lk(threadStopMtx_);

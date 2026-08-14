@@ -10,7 +10,7 @@
 #ifndef MSPROF_ERROR_MANAGER_STUB_H
 #define MSPROF_ERROR_MANAGER_STUB_H
 
-#include "error_manager.h"
+#include "base/err_mgr.h"
 #include "common/singleton/singleton.h"
 
 #define MSPROF_INPUT_ERROR(error_code, key, value)
@@ -24,13 +24,13 @@ namespace MsprofErrMgr {
 
 class MsprofErrorManager : public analysis::dvvp::common::singleton::Singleton<MsprofErrorManager> {
 public:
-    void SetErrorContext(const error_message::Context errorContext) const;
-    error_message::Context& GetErrorManagerContext() const;
+    void SetErrorContext(const error_message::ErrorManagerContext errorContext) const;
+    error_message::ErrorManagerContext& GetErrorManagerContext() const;
     MsprofErrorManager() {}
     ~MsprofErrorManager() override {}
 
 private:
-    static error_message::Context errorContext_;
+    static error_message::ErrorManagerContext errorContext_;
 };
 
 } // namespace MsprofErrMgr

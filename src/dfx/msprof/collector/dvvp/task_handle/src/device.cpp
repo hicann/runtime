@@ -134,7 +134,7 @@ void Device::PostStopReplay()
     cvSyncStopReplay.notify_one();
 }
 
-void Device::Run(const struct error_message::Context& errorContext)
+void Device::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("Device(%d) ctrl thread is running", indexId_);

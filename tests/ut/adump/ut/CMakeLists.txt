@@ -162,6 +162,7 @@ target_link_libraries(adx_utestonetrack_pub INTERFACE
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:runtime_headers>
+    $<BUILD_INTERFACE:error_manager_headers>
     -Wl,--as-needed
     -lpthread
 )

@@ -22,11 +22,7 @@ using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
 Thread::Thread()
-    : tid_(0),
-      quit_(false),
-      isStarted_(false),
-      threadName_(MSVP_PROFILER_THREADNAME_MAXNUM, 0),
-      errorContext_({0UL, "", "", ""})
+    : tid_(0), quit_(false), isStarted_(false), threadName_(MSVP_PROFILER_THREADNAME_MAXNUM, 0), errorContext_{}
 {}
 
 Thread::~Thread()

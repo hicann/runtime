@@ -82,6 +82,7 @@ list(APPEND src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_stars_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_ccu_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/prof_channel.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/uploader_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/uploader.cpp
@@ -101,7 +102,8 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
-    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/include/dfx
+    ${TOP_DIR}/pkg_inc
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump

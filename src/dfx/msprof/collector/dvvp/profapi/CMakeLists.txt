@@ -8,7 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(msProfHeader
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/include/external
     ${RUNTIME_DIR}/include/external/acl
     ${RUNTIME_DIR}/src/inc
@@ -151,6 +150,7 @@ target_link_libraries(profapi_share
         intf_pub
         mmpa_headers
         slog_headers
+        $<BUILD_INTERFACE:error_manager_headers>
         -Wl,--no-as-needed
         mmpa
         alog

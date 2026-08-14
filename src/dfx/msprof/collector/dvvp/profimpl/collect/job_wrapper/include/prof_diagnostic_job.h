@@ -41,7 +41,7 @@ public:
     MsprofDiagnostic();
     ~MsprofDiagnostic() override;
     int32_t Start() override;
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     int32_t Stop() override;
     static bool IsTriggered();
 

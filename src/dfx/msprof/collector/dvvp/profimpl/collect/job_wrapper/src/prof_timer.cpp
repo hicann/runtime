@@ -1255,7 +1255,7 @@ int32_t ProfTimer::Stop()
     return ret;
 }
 
-void ProfTimer::Run(const struct error_message::Context& errorContext)
+void ProfTimer::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     do {

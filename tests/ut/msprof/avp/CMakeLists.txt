@@ -195,7 +195,8 @@ add_library(proftransport_ut_static STATIC
 
 target_include_directories(proftransport_ut_static PRIVATE
     ${proftransportInc}
-    ${RUNTIME_DIR}/src/dfx/error_manager
+    ${RUNTIME_DIR}/include/dfx
+    ${RUNTIME_DIR}/pkg_inc
     ${MSPROF_SOURCE_DIR}/dvvp/depend/c_base
 )
 

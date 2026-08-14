@@ -106,7 +106,7 @@ uint32_t UploaderDumper::GetReportDataMaxLen() const
 /**
  * @brief Run: the thread function to deal with user datas
  */
-void UploaderDumper::Run(const struct error_message::Context& errorContext)
+void UploaderDumper::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     DoReportRun();

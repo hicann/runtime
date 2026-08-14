@@ -28,7 +28,7 @@ public:
     int32_t UnInit();
 
 private:
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     void PerfScriptTask();
     void ResolvePerfRecordData(const std::string& fileName) const;
     void StoreData(const std::string& fileName);

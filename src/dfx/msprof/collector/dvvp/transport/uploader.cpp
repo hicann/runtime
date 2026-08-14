@@ -95,7 +95,7 @@ int32_t Uploader::UploadData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> f
     return PROFILING_SUCCESS;
 }
 
-void Uploader::Run(const struct error_message::Context& errorContext)
+void Uploader::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     if (!isInited_) {

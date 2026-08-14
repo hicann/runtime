@@ -45,7 +45,7 @@ public:
     }
     int32_t Start() override;
     int32_t Stop() override;
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     int32_t StartReporters();
     int32_t StartAdprofReporters();
     int32_t SendAdditionalData(SHARED_PTR_ALIA<ProfileFileChunk> fileChunk);

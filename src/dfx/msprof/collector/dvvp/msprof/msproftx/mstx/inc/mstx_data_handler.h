@@ -47,7 +47,7 @@ public:
 
     int Start(const std::string& mstxDomainInclude, const std::string& mstxDomainExclude);
     int Stop();
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
     bool IsStart();
     int SaveMstxData(const char* msg, uint64_t mstxEventId, MstxDataType type, uint64_t domainNameHash = 0);
 

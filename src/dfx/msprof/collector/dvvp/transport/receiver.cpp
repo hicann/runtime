@@ -89,7 +89,7 @@ int32_t Receiver::SendMessage(SHARED_PTR_ALIA<google::protobuf::Message> message
 
 const SHARED_PTR_ALIA<analysis::dvvp::transport::AdxTransport> Receiver::GetTransport() { return transport_; }
 
-void Receiver::Run(const struct error_message::Context& errorContext)
+void Receiver::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     MSPROF_LOGI("Receiver begin, devId:%d, devIdOnHost:%d", devId_, devIdOnHost_);

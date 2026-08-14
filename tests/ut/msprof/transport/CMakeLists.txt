@@ -61,6 +61,7 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_stars_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_compute_device_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_pipe_transfer.cpp
     ${CppPath}
@@ -104,6 +105,7 @@ target_include_directories(transport PRIVATE
     ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa
     ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa/sub_inc
     ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/include/dfx
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump
     ${TOP_DIR}/src/dfx/adump/inc/metadef
@@ -154,7 +156,6 @@ target_include_directories(transport PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform
     ${MSPROF_SOURCE_DIR}/avp/
-    ${TOP_DIR}/src/dfx/error_manager
 )
 
 target_link_libraries(transport PRIVATE

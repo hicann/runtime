@@ -11,25 +11,31 @@
 #define C_BASE_MSPROF_ERROR_MANAGER_H
 #include <vector>
 #include <string>
-#include "error_manager.h"
+#include "base/err_mgr.h"
 #include "common/singleton/singleton.h"
 
-namespace error_message {
-struct Context {
-    uint64_t workStreamId;
-    std::string firstStage;
-    std::string secondStage;
-    std::string logHeader;
-};
-} // namespace error_message
+// The locally defined error_message::Context is gone: err_mgr.h now supplies the official
+// ErrorManagerContext in the same namespace, and keeping a same-named struct with a different field
+// naming style (workStreamId vs work_stream_id) would be actively confusing.
+
+// C entry point this variant reports through. It used to come in transitively via error_manager.h;
+// declared explicitly now that the wrapper only includes base/err_mgr.h.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void ReportErrMessage(const char* errorCode, char* args[], char* argValues[], int32_t argsNum);
+#ifdef __cplusplus
+}
+#endif
+
 namespace Analysis {
 namespace Dvvp {
 namespace MsprofErrMgr {
 
 class MsprofErrorManager : public analysis::dvvp::common::singleton::Singleton<MsprofErrorManager> {
 public:
-    error_message::Context& GetErrorManagerContext() const;
-    void SetErrorContext(const error_message::Context errorContext) const;
+    error_message::ErrorManagerContext& GetErrorManagerContext() const;
+    void SetErrorContext(const error_message::ErrorManagerContext errorContext) const;
     MsprofErrorManager() {}
     ~MsprofErrorManager() override {}
     void ReportErrorMessage(
@@ -37,14 +43,14 @@ public:
         const std::vector<std::string>& values = {}) const;
 
 private:
-    static error_message::Context errorContext_;
+    static error_message::ErrorManagerContext errorContext_;
 };
 
 #define MSPROF_INPUT_ERROR(errorCode, key, value) \
     Analysis::Dvvp::MsprofErrMgr::MsprofErrorManager::instance()->ReportErrorMessage(errorCode, key, value)
 
 #define MSPROF_ENV_ERROR MSPROF_INPUT_ERROR
-#define MSPROF_INNER_ERROR REPORT_INNER_ERROR
+#define MSPROF_INNER_ERROR REPORT_INNER_ERR_MSG
 #define MSPROF_CALL_ERROR MSPROF_INNER_ERROR
 } // namespace MsprofErrMgr
 } // namespace Dvvp

@@ -11,6 +11,10 @@
 set(adumpServerBaseHeaderList
     ${ADUMP_DIR}/adump/
     ${ADUMP_DIR}/adump/common/
+    # base/err_msg.h (adump_error_manager.h) lives here; kept target-scoped rather than added to the
+    # adump_headers INTERFACE, which 60+ unrelated targets consume.
+    ${PROJECT_TOP_DIR}/include/dfx
+    ${PROJECT_TOP_DIR}/pkg_inc
     ${ADUMP_DIR}/adcore/common/
     ${CMAKE_BINARY_DIR}/proto/adumpHostProto
     ${PROJECT_TOP_DIR}/include/external/acl

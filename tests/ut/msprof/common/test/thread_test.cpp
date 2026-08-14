@@ -27,7 +27,7 @@ protected:
 
 class ThreadClass : public Thread {
 public:
-    virtual void Run(const struct error_message::Context &errorContext) {
+    virtual void Run(const error_message::ErrorManagerContext &errorContext) {
     }
 };
 

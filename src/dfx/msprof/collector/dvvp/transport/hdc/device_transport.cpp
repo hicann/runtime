@@ -203,7 +203,7 @@ int32_t DeviceTransport::Init()
 
 int32_t DeviceTransport::RecvDataPacket(TLV_REQ_2PTR packet) { return dataTran_->RecvPacket(packet, timeout_); }
 
-void DeviceTransport::Run(const struct error_message::Context& errorContext)
+void DeviceTransport::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     if (!dataInitialized_) {

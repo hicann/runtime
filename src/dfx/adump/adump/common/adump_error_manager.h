@@ -9,13 +9,38 @@
  */
 #ifndef ADUMP_ERROR_MANAGER_H
 #define ADUMP_ERROR_MANAGER_H
-#include "error_manager.h"
+#include <string>
+#include <vector>
+#include "base/err_msg.h"
 #include "str_utils.h"
 #include "log/adx_log.h"
 
 namespace Adx {
+// REPORT_PREDEFINED_ERR_MSG takes std::vector<const char *>, while the REPORT_EP000x_* macros below
+// pass std::vector<std::string>. Converting here keeps those macros unchanged.
+inline std::vector<const char *> ToCStrVec(const std::vector<std::string> &in)
+{
+    std::vector<const char *> out;
+    out.reserve(in.size());
+    for (const auto &s : in) {
+        out.emplace_back(s.c_str());
+    }
+    return out;
+}
+}  // namespace Adx
 
-#define ADUMP_INPUT_ERROR(error_code, key, value) REPORT_INPUT_ERROR(error_code, key, value)
+// Named locals before c_str(): every caller builds the vectors inline as temporaries. Binding them
+// to the do/while block makes the lifetime explicit rather than relying on full-expression scope.
+#define ADUMP_INPUT_ERROR(error_code, key, value)                  \
+    do {                                                           \
+        const std::vector<std::string> adumpErrKeys__ = (key);      \
+        const std::vector<std::string> adumpErrVals__ = (value);    \
+        REPORT_PREDEFINED_ERR_MSG((error_code),                     \
+            Adx::ToCStrVec(adumpErrKeys__),                         \
+            Adx::ToCStrVec(adumpErrVals__));                        \
+    } while (0)
+
+namespace Adx {
 
 #define ADUMP_TO_CSTR(s) (std::string(s).c_str())
 

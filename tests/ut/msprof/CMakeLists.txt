@@ -59,6 +59,7 @@ target_link_libraries(msprof_utestonetrack_pub INTERFACE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:error_manager_headers>
     -Wl,--as-needed
     -lpthread
 )

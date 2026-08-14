@@ -87,7 +87,7 @@ protected:
 
 TEST_F(MSPROF_DYNAMIC_CLIENT_STEST, DynProfClient_RunSetSendTimeOutFail)
 {
-    struct error_message::Context errorContext;
+    error_message::ErrorManagerContext errorContext;
     SHARED_PTR_ALIA<DynProfClient> dynProfClient = std::make_shared<DynProfClient>();
     dynProfClient->cliStarted_ = true;
     MOCKER(LocalSocket::SetRecvTimeOut)

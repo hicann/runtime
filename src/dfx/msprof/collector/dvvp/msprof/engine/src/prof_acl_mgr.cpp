@@ -394,7 +394,7 @@ void ProfAclMgr::DeviceResponseHandler::HandleResponse()
     cv_.notify_one();
 }
 
-void ProfAclMgr::DeviceResponseHandler::Run(const struct error_message::Context& errorContext)
+void ProfAclMgr::DeviceResponseHandler::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     static const int32_t RESPONSE_TIME_S = 30; // device response timeout: 30s

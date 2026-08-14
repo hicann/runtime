@@ -35,7 +35,7 @@ public:
     bool SwapChannelBuffer(std::string& buffer);
 
 protected:
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
 
 private:
     std::queue<std::string> preBufferQueue_;
@@ -118,7 +118,7 @@ public:
     int32_t Stop() override;
 
 protected:
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
 
 private:
     std::vector<SHARED_PTR_ALIA<ChannelReader>> GetAllReaders();

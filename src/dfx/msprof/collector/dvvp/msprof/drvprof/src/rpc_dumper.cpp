@@ -133,7 +133,7 @@ uint32_t RpcDumper::GetReportDataMaxLen() const
 /**
  * @brief Run: the thread function to deal with user datas
  */
-void RpcDumper::Run(const struct error_message::Context& errorContext)
+void RpcDumper::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     DoReportRun();

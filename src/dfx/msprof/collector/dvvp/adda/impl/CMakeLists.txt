@@ -28,13 +28,13 @@ set(addaCppList
 )
 
 set(addaHeaderList
+    ${RUNTIME_DIR}/include/dfx
     ../../
     ../../common
     ${PROF_BASIC_DIR}/osal
     ../../common/logger
     ../../profhal/adx/inc
     ../../depend/include/stub
-    ${RUNTIME_DIR}/src/dfx/error_manager
 )
 if (PRODUCT)
 if (${PRODUCT} STREQUAL "ascend310p" OR ${PRODUCT} STREQUAL "ascend910" OR ${PRODUCT} STREQUAL "ascend910B" OR ${PRODUCT} STREQUAL "ascend310B" OR ${PRODUCT} STREQUAL "ascend310Brc" OR ${PRODUCT} STREQUAL "ascend310Besl")

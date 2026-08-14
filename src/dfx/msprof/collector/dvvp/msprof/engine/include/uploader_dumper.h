@@ -66,7 +66,7 @@ protected:
     /**
      * @brief Run: the thread function for deal with user data
      */
-    void Run(const struct error_message::Context& errorContext) override;
+    void Run(const error_message::ErrorManagerContext& errorContext) override;
 
 private:
     /**

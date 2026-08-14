@@ -86,7 +86,7 @@ int32_t DynProfClient::Stop()
 
 bool DynProfClient::IsCliStarted() const { return cliStarted_; }
 
-void DynProfClient::Run(const struct error_message::Context& errorContext)
+void DynProfClient::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
 

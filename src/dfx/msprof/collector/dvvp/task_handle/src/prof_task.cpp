@@ -292,7 +292,7 @@ int32_t ProfTask::NotifyFileDoneForDevice(const std::string& fileName, const std
     return PROFILING_SUCCESS;
 }
 
-void ProfTask::Run(const struct error_message::Context& errorContext)
+void ProfTask::Run(const error_message::ErrorManagerContext& errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     // process prepare

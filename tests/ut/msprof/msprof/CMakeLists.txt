@@ -64,6 +64,7 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_hwts_log_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicpu_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_adprof_job.cpp
@@ -203,9 +204,9 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/include/dfx
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
-    ${TOP_DIR}/src/dfx/error_manager
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/src/dfx/adump/inc
     ${TOP_DIR}/src/dfx/adump/inc/adump
@@ -388,6 +389,7 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_hwts_log_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_collect_info.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicpu_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_sys_info_job.cpp
@@ -472,6 +474,7 @@ endif()
 
 target_include_directories(msprof_utest PRIVATE
     ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/include/dfx
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/runtime
@@ -480,7 +483,6 @@ target_include_directories(msprof_utest PRIVATE
     ${TOP_DIR}/src/dfx/adump/inc/metadef
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx
-    ${TOP_DIR}/src/dfx/error_manager
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof
@@ -573,8 +575,8 @@ add_executable(devprof_api_utest
 
 target_include_directories(devprof_api_utest PRIVATE
     ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/include/dfx
     ${TOP_DIR}/include/external
-    ${TOP_DIR}/src/dfx/error_manager
     ${TOP_DIR}/src/dfx/msprof/inc/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
     ${MSPROF_SOURCE_DIR}/dvvp/common/logger

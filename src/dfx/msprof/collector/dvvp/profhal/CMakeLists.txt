@@ -31,7 +31,6 @@ target_include_directories(ascendprof_fwk_share PRIVATE
     ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/pkg_inc/driver
     ${RUNTIME_DIR}/include/external
-    ${RUNTIME_DIR}/src/dfx/error_manager
     ../
     ../msprof/
     ../msprof/common/include
