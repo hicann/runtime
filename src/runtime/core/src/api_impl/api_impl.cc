@@ -8988,10 +8988,11 @@ rtError_t ApiImpl::RepairError(const uint32_t deviceId, const rtErrorInfo* const
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
-                "Rectifying the device faults", errorInfo->errorType,
-                "{" + std::to_string(RT_NO_ERROR) + ", " + std::to_string(RT_ERROR_MEMORY) + ", " +
-                    std::to_string(RT_ERROR_LINK) + "}");
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1003, "Rectifying the device faults", ErrorTypeToString(errorInfo->errorType),
+                "errorInfo->errorType",
+                "{" + ErrorTypeToString(RT_NO_ERROR) + ", " + ErrorTypeToString(RT_ERROR_MEMORY) + ", " +
+                    ErrorTypeToString(RT_ERROR_LINK) + "}");
             break;
     }
     dev->SetBaseTime();

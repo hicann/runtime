@@ -2996,6 +2996,11 @@ TEST_F(UTEST_ACL_Common, EnumDescUsesNameWithoutAclPrefixAndNumericValue)
     EXPECT_STREQ(GetErrorTypeDesc(ACL_RT_ERROR_LINK), "RT_ERROR_LINK(4)");
     EXPECT_STREQ(GetErrorTypeDesc(ACL_RT_ERROR_L3_PORT), "RT_ERROR_L3_PORT(5)");
     EXPECT_STREQ(GetErrorTypeDesc(ACL_RT_ERROR_OTHERS), "RT_ERROR_OTHERS(65535)");
+    EXPECT_STREQ(GetStreamAttrDesc(ACL_STREAM_ATTR_FAILURE_MODE), "STREAM_ATTR_FAILURE_MODE(1)");
+    EXPECT_STREQ(GetStreamAttrDesc(ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK), "STREAM_ATTR_FLOAT_OVERFLOW_CHECK(2)");
+    EXPECT_STREQ(GetStreamAttrDesc(ACL_STREAM_ATTR_USER_CUSTOM_TAG), "STREAM_ATTR_USER_CUSTOM_TAG(3)");
+    EXPECT_STREQ(GetStreamAttrDesc(ACL_STREAM_ATTR_CACHE_OP_INFO), "STREAM_ATTR_CACHE_OP_INFO(4)");
+    EXPECT_STREQ(GetStreamAttrDesc(ACL_STREAM_ATTR_PRIORITY), "STREAM_ATTR_PRIORITY(5)");
     EXPECT_STREQ(GetConditionDesc(ACL_RT_EQUAL), "RT_EQUAL(0)");
     EXPECT_STREQ(GetConditionDesc(ACL_RT_NOT_EQUAL), "RT_NOT_EQUAL(1)");
     EXPECT_STREQ(GetConditionDesc(ACL_RT_GREATER), "RT_GREATER(2)");
@@ -3032,6 +3037,7 @@ TEST_F(UTEST_ACL_Common, EnumDescPreservesUnknownNumericValue)
     EXPECT_STREQ(GetReduceKindDesc(static_cast<aclrtReduceKind>(92)), "UNKNOWN(92)");
     EXPECT_STREQ(GetMemLinkTypeDesc(static_cast<aclrtMemLinkType>(93)), "UNKNOWN(93)");
     EXPECT_STREQ(GetErrorTypeDesc(static_cast<aclrtErrorType>(94)), "UNKNOWN(94)");
+    EXPECT_STREQ(GetStreamAttrDesc(static_cast<aclrtStreamAttr>(104)), "UNKNOWN(104)");
     EXPECT_STREQ(GetConditionDesc(static_cast<aclrtCondition>(95)), "UNKNOWN(95)");
     EXPECT_STREQ(GetCompareDataTypeDesc(static_cast<aclrtCompareDataType>(96)), "UNKNOWN(96)");
     EXPECT_STREQ(GetIpcMemAttrTypeDesc(static_cast<aclrtIpcMemAttrType>(100)), "UNKNOWN(100)");

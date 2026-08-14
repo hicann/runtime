@@ -307,8 +307,8 @@ rtError_t NpuDriver::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType
     // 将drv_capabilities的值传递给capabilities
     *capabilities = static_cast<rtHostMemMapCapability>(drv_capabilities);
     RT_LOG(
-        RT_LOG_DEBUG, "halHostRegisterCapabilities: device_id=%u, hacType=%s, capabilities=%d!", deviceId,
-        HacTypeToString(hacType).c_str(), *capabilities);
+        RT_LOG_DEBUG, "halHostRegisterCapabilities: device_id=%u, hacType=%s, capabilities=%s!", deviceId,
+        HacTypeToString(hacType).c_str(), HostMemMapCapabilityToString(*capabilities).c_str());
     return RT_ERROR_NONE;
 }
 

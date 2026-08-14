@@ -16,6 +16,7 @@
 #include "runtime/config.h"
 #include "runtime/mem_base.h"
 #include "runtime/mem.h"
+#include "runtime/rt_ras.h"
 #include "runtime/rt_inner_mem.h"
 #include "runtime/rt_external_mem.h"
 #include "runtime/rt_external_stream.h"
@@ -67,6 +68,40 @@ static inline std::string ReduceKindToString(const rtRecudeKind_t kind)
             break;
     }
     return desc;
+}
+
+static inline std::string ErrorTypeToString(const rtErrType type)
+{
+    switch (type) {
+        case RT_NO_ERROR:
+            return "NO_ERROR(0)";
+        case RT_ERROR_MEMORY:
+            return "ERROR_MEMORY(1)";
+        case RT_ERROR_L2:
+            return "ERROR_L2(2)";
+        case RT_ERROR_AICORE:
+            return "ERROR_AICORE(3)";
+        case RT_ERROR_LINK:
+            return "ERROR_LINK(4)";
+        case RT_ERROR_L3_PORT:
+            return "ERROR_L3_PORT(5)";
+        case RT_ERROR_OTHERS:
+            return "ERROR_OTHERS(65535)";
+        default:
+            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
+    }
+}
+
+static inline std::string HostMemMapCapabilityToString(const rtHostMemMapCapability capability)
+{
+    switch (capability) {
+        case RT_HOST_MEM_MAP_NOT_SUPPORTED:
+            return "HOST_MEM_MAP_NOT_SUPPORTED(0)";
+        case RT_HOST_MEM_MAP_SUPPORTED:
+            return "HOST_MEM_MAP_SUPPORTED(1)";
+        default:
+            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(capability));
+    }
 }
 
 std::string DataTypeToString(const rtDataType_t type);

@@ -34,6 +34,25 @@ TEST(EnumToStringUtilsTest, ReduceKindToStringUnknownValue)
     EXPECT_EQ(ReduceKindToString(static_cast<rtRecudeKind_t>(100)), "UNKNOWN(100)");
 }
 
+TEST(EnumToStringUtilsTest, ErrorTypeToString)
+{
+    EXPECT_EQ(ErrorTypeToString(RT_NO_ERROR), "NO_ERROR(0)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_MEMORY), "ERROR_MEMORY(1)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_L2), "ERROR_L2(2)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_AICORE), "ERROR_AICORE(3)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_LINK), "ERROR_LINK(4)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_L3_PORT), "ERROR_L3_PORT(5)");
+    EXPECT_EQ(ErrorTypeToString(RT_ERROR_OTHERS), "ERROR_OTHERS(65535)");
+    EXPECT_EQ(ErrorTypeToString(static_cast<rtErrType>(100)), "UNKNOWN(100)");
+}
+
+TEST(EnumToStringUtilsTest, HostMemMapCapabilityToString)
+{
+    EXPECT_EQ(HostMemMapCapabilityToString(RT_HOST_MEM_MAP_NOT_SUPPORTED), "HOST_MEM_MAP_NOT_SUPPORTED(0)");
+    EXPECT_EQ(HostMemMapCapabilityToString(RT_HOST_MEM_MAP_SUPPORTED), "HOST_MEM_MAP_SUPPORTED(1)");
+    EXPECT_EQ(HostMemMapCapabilityToString(static_cast<rtHostMemMapCapability>(100)), "UNKNOWN(100)");
+}
+
 TEST(EnumToStringUtilsTest, DataTypeToStringKnownValue)
 {
     EXPECT_EQ(DataTypeToString(RT_DATA_TYPE_FP32), "DATA_TYPE_FP32(0)");

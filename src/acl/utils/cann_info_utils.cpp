@@ -518,6 +518,28 @@ const char* GetErrorTypeDesc(aclrtErrorType type)
     return enumBuf;
 }
 
+const char* GetStreamAttrDesc(aclrtStreamAttr attr)
+{
+    switch (attr) {
+        case ACL_STREAM_ATTR_FAILURE_MODE:
+            return "STREAM_ATTR_FAILURE_MODE(1)";
+        case ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK:
+            return "STREAM_ATTR_FLOAT_OVERFLOW_CHECK(2)";
+        case ACL_STREAM_ATTR_USER_CUSTOM_TAG:
+            return "STREAM_ATTR_USER_CUSTOM_TAG(3)";
+        case ACL_STREAM_ATTR_CACHE_OP_INFO:
+            return "STREAM_ATTR_CACHE_OP_INFO(4)";
+        case ACL_STREAM_ATTR_PRIORITY:
+            return "STREAM_ATTR_PRIORITY(5)";
+        default:
+            break;
+    }
+    static thread_local char enumBuf[32];
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%d)", static_cast<int32_t>(attr));
+    enumBuf[sizeof(enumBuf) - 1U] = '\0';
+    return enumBuf;
+}
+
 const char* GetConditionDesc(aclrtCondition condition)
 {
     switch (condition) {

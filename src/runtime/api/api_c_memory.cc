@@ -724,7 +724,7 @@ rtError_t rtsLaunchBarrierTask(rtBarrierTaskInfo_t* taskInfo, rtStream_t stm, ui
         auto cmoInfo = taskInfo->cmoInfo[i];
         // if cmoType!=invalid return error
         COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-            cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE, cmoInfo.cmoType, "RT_CMO_INVALID(8)");
+            cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE, cmoInfo.cmoType, "CMO_INVALID(8)");
         COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
             cmoInfo.logicId == 0, RT_ERROR_INVALID_VALUE, cmoInfo.logicId, "not equal to 0");
     }

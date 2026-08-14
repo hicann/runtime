@@ -315,7 +315,7 @@ aclError aclrtGetStreamAvailableNumImpl(uint32_t* streamCount)
 aclError aclrtSetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue* value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetStreamAttribute);
-    ACL_LOG_INFO("start to execute aclrtSetStreamAttribute, stmAttrType = [%u]", static_cast<uint32_t>(stmAttrType));
+    ACL_LOG_INFO("start to execute aclrtSetStreamAttribute, stmAttrType = [%s]", acl::GetStreamAttrDesc(stmAttrType));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
     ACL_REQUIRES_RTS_OK(rtsStreamSetAttribute(

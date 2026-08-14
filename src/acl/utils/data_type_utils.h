@@ -389,6 +389,7 @@ const char* GetDevResLimitTypeDesc(aclrtDevResLimitType type);
 const char* GetReduceKindDesc(aclrtReduceKind kind);
 const char* GetMemLinkTypeDesc(aclrtMemLinkType type);
 const char* GetErrorTypeDesc(aclrtErrorType type);
+const char* GetStreamAttrDesc(aclrtStreamAttr attr);
 const char* GetConditionDesc(aclrtCondition condition);
 const char* GetCompareDataTypeDesc(aclrtCompareDataType type);
 

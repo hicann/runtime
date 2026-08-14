@@ -2200,8 +2200,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
     checkKind = (configInfo.checkBitmap == WITHOUT_CHECK_KIND) ? false : checkKind;
     COND_RETURN_AND_MSG_OUTER(
         !checkKind && (kind == RT_MEMCPY_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        "Asynchronous memory copy", "RT_MEMCPY_DEFAULT(7)", "kind",
-        "If parameter checkKind is false, parameter kind cannot be RT_MEMCPY_DEFAULT(7)");
+        "Asynchronous memory copy", "MEMCPY_DEFAULT(8)", "kind",
+        "If parameter checkKind is false, parameter kind cannot be MEMCPY_DEFAULT(8)");
     bool isD2HorH2DInvolvePageableMemory = false;
     Context* curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2325,10 +2325,11 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
                 ERR_MODULE_GE, error != RT_ERROR_NONE, error,
                 "Memory async ptr failed, get pointer attributes failed, retCode=%#x", static_cast<uint32_t>(error));
             const rtMemLocationType srcLocationType = attributes.location.type;
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
                 srcLocationType != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE,
-                "Performing asynchronous memory copy using the address description on the device", srcLocationType,
-                std::to_string(RT_MEMORY_LOC_DEVICE));
+                "Performing asynchronous memory copy using the address description on the device",
+                MemLocationTypeToString(srcLocationType), "srcLocationType",
+                MemLocationTypeToString(RT_MEMORY_LOC_DEVICE));
         }
     }
     const rtError_t error = impl_->MemcpyAsyncPtr(memcpyAddrInfo, destMax, count, stm, cfgInfo, isMemcpyDesc);
@@ -2905,9 +2906,10 @@ rtError_t ApiErrorDecorator::ReduceAsyncV2(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         overflowAddr, RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation");
     ZERO_RETURN_AND_MSG_OUTER(cnt);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (kind != RT_MEMCPY_SDMA_AUTOMATIC_ADD), RT_ERROR_INVALID_VALUE,
-        "Asynchronously performing the Reduce operation", kind, std::to_string(RT_MEMCPY_SDMA_AUTOMATIC_ADD));
+        "Asynchronously performing the Reduce operation", ReduceKindToString(kind), "kind",
+        ReduceKindToString(RT_MEMCPY_SDMA_AUTOMATIC_ADD));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
         (cnt > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, "Asynchronously performing the Reduce operation", cnt,
         "(0, " + std::to_string(MAX_MEMCPY_SIZE_OF_D2D) + "]");
@@ -7217,9 +7219,10 @@ rtError_t ApiErrorDecorator::MemWriteValue(
         ERR_MODULE_GE, error != RT_ERROR_NONE, error,
         "mem write value failed, get devAddr attributes failed, retCode=%#x", static_cast<uint32_t>(error));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (attributes.location.type != RT_MEMORY_LOC_DEVICE), RT_ERROR_INVALID_VALUE,
-        "Writing data to the specified memory", attributes.location.type, std::to_string(RT_MEMORY_LOC_DEVICE));
+        "Writing data to the specified memory", MemLocationTypeToString(attributes.location.type),
+        "attributes.location.type", MemLocationTypeToString(RT_MEMORY_LOC_DEVICE));
 
     return impl_->MemWriteValue(devAddr, value, flag, stm);
 }
@@ -7242,10 +7245,11 @@ rtError_t ApiErrorDecorator::MemWaitValue(
         ERR_MODULE_GE, error != RT_ERROR_NONE, error,
         "mem wait value failed, get devAddr attributes failed, retCode=%#x", static_cast<uint32_t>(error));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_DESC(
         (attributes.location.type != RT_MEMORY_LOC_DEVICE), RT_ERROR_INVALID_VALUE,
-        "Unblocking the data in the specified memory when the data meets certain conditions", attributes.location.type,
-        std::to_string(RT_MEMORY_LOC_DEVICE));
+        "Unblocking the data in the specified memory when the data meets certain conditions",
+        MemLocationTypeToString(attributes.location.type), "attributes.location.type",
+        MemLocationTypeToString(RT_MEMORY_LOC_DEVICE));
 
     return impl_->MemWaitValue(devAddr, value, flag, stm);
 }
