@@ -14,6 +14,10 @@
 int32_t SendUpdateProfilingRspToTsd(
     const uint32_t deviceId, const uint32_t waitType, const uint32_t hostPid, const uint32_t vfId)
 {
+    (void)deviceId;
+    (void)waitType;
+    (void)hostPid;
+    (void)vfId;
     return 0;
 }
 
