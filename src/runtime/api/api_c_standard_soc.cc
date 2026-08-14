@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_event.hpp"
 #include "api_handle_guard.h"
 #include "base.hpp"
 #include "device_enum_desc.hpp"
@@ -1467,10 +1468,10 @@ rtError_t rtIpcGetEventHandle(rtEvent_t event, rtIpcEventHandle_t* handle)
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtIpcGetEventHandle api.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(event, Event, eventPtr);
-    const rtError_t error = apiInstance->IpcGetEventHandle(static_cast<IpcEvent*>(eventPtr), handle);
+    const rtError_t error = apiEventInstance->IpcGetEventHandle(static_cast<IpcEvent*>(eventPtr), handle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return error;
@@ -1487,10 +1488,10 @@ rtError_t rtIpcOpenEventHandle(rtIpcEventHandle_t handle, rtEvent_t* event)
         RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtIpcOpenEventHandle api.", chipType);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    ApiEvent* const apiEventInstance = ApiEvent::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEventInstance);
     rtIpcEventHandle_t* eventHandle = &handle;
-    const rtError_t error = apiInstance->IpcOpenEventHandle(eventHandle, RtPtrToPtr<IpcEvent**>(event));
+    const rtError_t error = apiEventInstance->IpcOpenEventHandle(eventHandle, RtPtrToPtr<IpcEvent**>(event));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     IpcEvent* realEvent = RtPtrToPtr<IpcEvent*>(*event);
     *event = ExportEmbeddedHandle<rtEvent_t>(realEvent);
