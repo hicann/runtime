@@ -76,6 +76,11 @@ STATIC int32_t CpuDetectServerProcess(const ServerHandle handle, const CpuDetect
         return DETECT_FAILURE;
     }
 
+    if (g_cpuDetectMgr.cpuDetectStart == NULL) {
+        SELF_LOG_ERROR("cpu detect start func is null");
+        CpuDetectServerReplyMsg(handle, DETECT_FAILURE, CPU_DETECT_REPLY_MSG_FW_FAIL);
+        return DETECT_FAILURE;
+    }
     int32_t ret = g_cpuDetectMgr.cpuDetectStart(msg->timeout);
     if (ret == 0) {
         SELF_LOG_INFO("cpu detect run success");
@@ -166,6 +171,7 @@ int32_t CpuDetectServerInit(void)
 
 void CpuDetectServerExit(void)
 {
-    CpuDetectServerDestroyHandle();
+    // ServerRelease must run first to drain in-flight callbacks before dlclose, to avoid use-after-free.
     ServerRelease(COMPONENT_CPU_DETECT);
+    CpuDetectServerDestroyHandle();
 }

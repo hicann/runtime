@@ -173,6 +173,22 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStart)
     CpuDetectServerExit();
 }
 
+TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStartCpuDetectStartNull)
+{
+    MOCKER(DlopenStub).stubs().will(returnValue((void*)NULL));
+    EXPECT_EQ(CpuDetectServerInit(), DETECT_SUCCESS);
+
+    ServerMgr tmp;
+    CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
+    tmp.handle = &comm;
+    ServerHandle handle = &tmp;
+    MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
+    EXPECT_EQ(CpuDetectServerStart(handle), DETECT_FAILURE);
+    CpuDetectServerStop();
+
+    CpuDetectServerExit();
+}
+
 TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectTestcaseFailed)
 {
     EXPECT_EQ(CpuDetectServerInit(), DETECT_SUCCESS);
@@ -215,5 +231,27 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStartRecvFailed)
     EXPECT_EQ(CpuDetectServerStart(handle), DETECT_FAILURE);
     CpuDetectServerStop();
 
+    CpuDetectServerExit();
+}
+
+TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerLifecycleMultiRequest)
+{
+    EXPECT_EQ(CpuDetectServerInit(), DETECT_SUCCESS);
+
+    ServerMgr tmp;
+    CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
+    tmp.handle = &comm;
+    ServerHandle handle = &tmp;
+    MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
+    for (int32_t i = 0; i < 3; i++) {
+        EXPECT_EQ(CpuDetectServerStart(handle), DETECT_SUCCESS);
+        CpuDetectServerStop();
+    }
+    CpuDetectServerExit();
+
+    EXPECT_EQ(CpuDetectServerInit(), DETECT_SUCCESS);
+    MOCKER(ServerRecvMsg).stubs().will(invoke(ServerRecvMsgStub));
+    EXPECT_EQ(CpuDetectServerStart(handle), DETECT_SUCCESS);
+    CpuDetectServerStop();
     CpuDetectServerExit();
 }

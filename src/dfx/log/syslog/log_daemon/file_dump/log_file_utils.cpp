@@ -32,7 +32,12 @@ IdeErrorT LogFileUtils::CopyFileAndRename(const std::string &src, const std::str
         return IDE_DAEMON_INVALID_PATH_ERROR;
     }
 
-    std::string cmdCopyStr = "cp " + src + " " + des;
+    // Wrap paths in single quotes and escape inner quotes to prevent shell injection from untrusted file names
+    std::string safeSrc = src;
+    (void)ReplaceAll(safeSrc, "'", "'\\''");
+    std::string safeDes = des;
+    (void)ReplaceAll(safeDes, "'", "'\\''");
+    std::string cmdCopyStr = "cp '" + safeSrc + "' '" + safeDes + "'";
     int32_t ret = AdxCreateProcess(cmdCopyStr.c_str());
     ONE_ACT_ERR_LOG(ret != SYS_OK, return IDE_DAEMON_UNKNOW_ERROR, "AdxCreateProcess failed, %s", cmdCopyStr.c_str());
     return IDE_DAEMON_NONE_ERROR;

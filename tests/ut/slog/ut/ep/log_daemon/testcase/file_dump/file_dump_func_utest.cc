@@ -78,6 +78,13 @@ int32_t CreateProcess(const char *fileName, const mmArgvEnv *env, mmProcess *id)
 
 namespace {
 int32_t g_logCmdResponseMode = 0;
+std::string g_capturedCmd;
+
+int32_t AdxCreateProcessCaptureStub(IdeString command)
+{
+    g_capturedCmd = command;
+    return SYS_OK;
+}
 
 int32_t LogCmdSendLogMsgCoverageStub(LogCmdMsg *rcvMsg, const char *msg, uint16_t devId)
 {
@@ -389,4 +396,35 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, CreateProcessSuccess)
     MOCKER(Adx::CreateProcess).stubs().will(returnValue(EN_OK));
     MOCKER(mmWaitPid).stubs().will(returnValue(EN_ERR));
     EXPECT_EQ(SYS_OK, AdxCreateProcess("true"));
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, CopyFileAndRenameEscapesShellMetacharacters)
+{
+    MOCKER(AdxCreateProcess).stubs().will(invoke(AdxCreateProcessCaptureStub));
+
+    struct TestCase {
+        std::string src;
+        std::string des;
+        std::string expectSrc;
+        std::string expectDes;
+    };
+    const std::vector<TestCase> cases = {
+        {"normal.log", "copy.log", "normal.log", "copy.log"},
+        {"path with space.log", "out space.log", "path with space.log", "out space.log"},
+        {"file'name.log", "out'name.log", "file'\\''name.log", "out'\\''name.log"},
+        {"a;rm -rf /", "b", "a;rm -rf /", "b"},
+        {"a$(whoami)", "b", "a$(whoami)", "b"},
+        {"a`whoami`", "b", "a`whoami`", "b"},
+        {"a|cat", "b|grep", "a|cat", "b|grep"},
+        {"a&bg", "b&bg", "a&bg", "b&bg"},
+        {"a>b", "c<d", "a>b", "c<d"},
+        {"it's a 'test'.log", "out's.log", "it'\\''s a '\\''test'\\''.log", "out'\\''s.log"},
+    };
+
+    for (const auto& tc : cases) {
+        g_capturedCmd.clear();
+        EXPECT_EQ(IDE_DAEMON_NONE_ERROR, LogFileUtils::CopyFileAndRename(tc.src, tc.des));
+        EXPECT_EQ("cp '" + tc.expectSrc + "' '" + tc.expectDes + "'", g_capturedCmd)
+            << "src='" << tc.src << "', des='" << tc.des << "'";
+    }
 }
