@@ -1997,7 +1997,7 @@ TEST_F(ApiImplTest, ipc_open_event_handle_context_null)
     ApiImplEvent impl;
     rtIpcEventHandle_t handle = {};
     IpcEvent* event = nullptr;
-    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t)>(&Runtime::CurrentContext)))
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
         .expects(once())
         .will(returnValue(static_cast<Context*>(nullptr)));
 
@@ -2012,7 +2012,7 @@ TEST_F(ApiImplTest, ipc_open_event_handle_alloc_failed)
     IpcEvent* event = nullptr;
     Context* const context = Runtime::Instance()->CurrentContext();
     ASSERT_NE(context, nullptr);
-    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t)>(&Runtime::CurrentContext)))
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
         .expects(once())
         .will(returnValue(context));
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailForApiEvent));

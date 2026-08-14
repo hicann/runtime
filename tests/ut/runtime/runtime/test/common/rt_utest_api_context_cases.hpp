@@ -237,7 +237,7 @@ inline void RunFinalizingContextBlockedForUserButAllowedForInternalCase()
     EXPECT_EQ(errorCode, RT_ERROR_NONE);
     EXPECT_EQ(ctxPtr->GetThreadRefCount(), 0U);
 
-    ctxPtr->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctxPtr->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     EXPECT_EQ(ctxPtr->GetState(), ContextState::CTX_STATE_ACTIVE);
     EXPECT_EQ(rtCtxDestroy(ctx), RT_ERROR_NONE);
 }

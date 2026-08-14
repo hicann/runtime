@@ -1820,7 +1820,7 @@ rtError_t Runtime::RegisterKernelByStubFunc(
     const uint32_t funcMode, const char_t* kernelName)
 {
     UNUSED(funcMode);
-    uint32_t kernelCount = elfProg->GetKernelsCount();
+    const uint32_t kernelCount = elfProg->GetKernelsCount();
     bool isKernelFound = false;
     const RtKernel* kernels = elfProg->GetKernels();
     Kernel* kernelObj = nullptr;
@@ -2862,7 +2862,8 @@ rtError_t Runtime::ExecutePrimaryTearDown(
         if (ctrlSqStream != nullptr) {
             ctrlSqStream->SetContext(nullptr);
         }
-        ctx->SetTearDownExecuteResult((tearDownRet == RT_ERROR_NONE) ? TEARDOWN_SUCCESS : TEARDOWN_ERROR);
+        ctx->SetTearDownExecuteResult(
+            (tearDownRet == RT_ERROR_NONE) ? TearDownStatus::TEARDOWN_SUCCESS : TearDownStatus::TEARDOWN_ERROR);
         if (tearDownRet == RT_ERROR_NONE) {
             ctx->ReleaseResourcesAfterTearDown();
             InnerThreadLocalContainer::SetCurRef(nullptr);
@@ -5394,7 +5395,7 @@ Context* Runtime::CurrentContext() const
     return nullptr;
 }
 
-Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
+Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId) const
 {
     Context* const curCtx = InnerThreadLocalContainer::GetCurCtx();
     if (curCtx != nullptr) {
@@ -5412,7 +5413,7 @@ Context* Runtime::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
         return nullptr;
     }
 
-    const int32_t defaultDeviceId = GetDefaultDeviceId();
+    const int32_t defaultDeviceId = static_cast<int32_t>(GetDefaultDeviceId());
     const bool hasSetDefaultDevId = GetSetDefaultDevIdFlag();
     if (isNeedSetDevice && hasSetDefaultDevId) {
         if (deviceId == DEFAULT_DEVICE_ID) {

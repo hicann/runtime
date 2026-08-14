@@ -4127,11 +4127,11 @@ rtError_t ApiImpl::ContextDestroy(Context* const inCtx)
         }
         const rtError_t error = inCtx->TearDown();
         if (error != RT_ERROR_NONE) {
-            inCtx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+            inCtx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
             ERROR_RETURN_MSG_INNER(
                 error, "Failed to destroy context because TearDown failed, retCode=%#x", static_cast<uint32_t>(error));
         }
-        inCtx->SetTearDownExecuteResult(TEARDOWN_SUCCESS);
+        inCtx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_SUCCESS);
         inCtx->SetContextDeleteStatus();
     }
     (void)inCtx->TryDeleteIfNeeded();

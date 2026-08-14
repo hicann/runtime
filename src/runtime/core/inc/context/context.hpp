@@ -68,7 +68,7 @@ class DvppGrp;
 struct RtDebugSendInfo;
 struct rtDebugReportInfo_t;
 
-enum TearDownStatus {
+enum class TearDownStatus : uint8_t {
     TEARDOWN_NOT_EXECUTE = 0, // TDT threads is idle
     TEARDOWN_WORKING = 1,     // TDT threads is working
     TEARDOWN_ERROR = 2,       // TDT threads begin to stop
@@ -396,10 +396,10 @@ public:
     void SetTearDownExecuteResult(TearDownStatus status)
     {
         tearDownStatus_ = status;
-        if (status == TEARDOWN_ERROR) {
+        if (status == TearDownStatus::TEARDOWN_ERROR) {
             (void)TrySwitchState(
                 ContextState::CTX_STATE_FINALIZING, ContextState::CTX_STATE_ACTIVE, "SetTearDownExecuteResultError");
-        } else if (status == TEARDOWN_SUCCESS) {
+        } else if (status == TearDownStatus::TEARDOWN_SUCCESS) {
             (void)TrySwitchState(
                 ContextState::CTX_STATE_FINALIZING, ContextState::CTX_STATE_FINALIZED,
                 "SetTearDownExecuteResultSuccess");

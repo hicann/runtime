@@ -157,7 +157,7 @@ TEST_F(CloudV2ContextTest, TEAR_DOWN_TEST)
     ctx->defaultStream_ = stream;
     ctx->streams_ = streams;
     ctx->onlineStream_ = onlineStream;
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 

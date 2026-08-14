@@ -256,7 +256,7 @@ Context::Context(Device* const ctxDevice, const bool primaryCtx)
       isPrimary_(primaryCtx),
       threadRefCount_(0U),
       isNeedDelete_(false),
-      tearDownStatus_(TEARDOWN_NOT_EXECUTE),
+      tearDownStatus_(TearDownStatus::TEARDOWN_NOT_EXECUTE),
       lifecycleState_(ContextState::CTX_STATE_NOT_INITIALIZED),
       deleteScheduled_(false),
       resourcesReleased_(false),
@@ -350,7 +350,7 @@ void Context::ResetResourceFieldsAfterTearDown()
     (void)memset_s(captureModeRefNum_, sizeof(captureModeRefNum_), 0, sizeof(captureModeRefNum_));
     isForceReset_ = false;
     ctxMode_ = CONTINUE_ON_FAILURE;
-    tearDownStatus_.store(TEARDOWN_NOT_EXECUTE, std::memory_order_release);
+    tearDownStatus_.store(TearDownStatus::TEARDOWN_NOT_EXECUTE, std::memory_order_release);
     deleteScheduled_.store(false, std::memory_order_release);
 }
 
@@ -537,7 +537,7 @@ void Context::ProcessReportFastRingBuffer() const
 
 rtError_t Context::Init()
 {
-    tearDownStatus_.store(TEARDOWN_NOT_EXECUTE, std::memory_order_release);
+    tearDownStatus_.store(TearDownStatus::TEARDOWN_NOT_EXECUTE, std::memory_order_release);
     moduleAllocator_ = new (std::nothrow) ObjAllocator<Module*>(DEFAULT_PROGRAM_NUMBER, Runtime::maxProgramNum_, true);
     COND_RETURN_AND_MSG_OUTER(
         moduleAllocator_ == nullptr, RT_ERROR_MODULE_NEW, ErrorCode::EE1013, sizeof(ObjAllocator<Module*>), "new");
@@ -1877,10 +1877,10 @@ rtError_t Context::ReleaseModule(const uint32_t id)
 bool Context::TearDownIsCanExecute()
 {
     // For multi-thread: block user access before waiting for in-use refs to drain.
-    TearDownStatus previousStatus = TEARDOWN_NOT_EXECUTE;
-    if (!tearDownStatus_.compare_exchange_strong(previousStatus, TEARDOWN_WORKING)) {
-        previousStatus = TEARDOWN_ERROR;
-        if (!tearDownStatus_.compare_exchange_strong(previousStatus, TEARDOWN_WORKING)) {
+    TearDownStatus previousStatus = TearDownStatus::TEARDOWN_NOT_EXECUTE;
+    if (!tearDownStatus_.compare_exchange_strong(previousStatus, TearDownStatus::TEARDOWN_WORKING)) {
+        previousStatus = TearDownStatus::TEARDOWN_ERROR;
+        if (!tearDownStatus_.compare_exchange_strong(previousStatus, TearDownStatus::TEARDOWN_WORKING)) {
             return false;
         }
     }

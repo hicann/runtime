@@ -39,11 +39,11 @@ rtError_t Runtime::PrimaryXpuContextRelease(const uint32_t devId)
         InnerThreadLocalContainer::SetCurCtx((previousCtx == ctx) ? nullptr : previousCtx, previousInternalAccess);
     });
     if (ctx->TearDown() == RT_ERROR_NONE) {
-        ctx->SetTearDownExecuteResult(TEARDOWN_SUCCESS);
+        ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_SUCCESS);
         ctx->ReleaseResourcesAfterTearDown();
         tearDownSuccess = true;
     } else {
-        ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+        ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     }
     if (!tearDownSuccess) {
         RT_LOG(RT_LOG_ERROR, "Primary xpu context teardown failed, devId=%u.", devId);

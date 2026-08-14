@@ -384,7 +384,7 @@ TEST_F(ContextTest, TEAR_DOWN_TEST)
     ctx->defaultStream_ = stream;
     ctx->streams_ = streams;
     ctx->onlineStream_ = onlineStream;
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 
@@ -408,7 +408,7 @@ TEST_F(ContextTest, TearDownIsCanExecuteRejectsInvalidStateAndDuplicateTearDown)
     EXPECT_EQ(ctx.GetState(), ContextState::CTX_STATE_FINALIZING);
     EXPECT_FALSE(ctx.TearDownIsCanExecute());
 
-    ctx.SetTearDownExecuteResult(TEARDOWN_SUCCESS);
+    ctx.SetTearDownExecuteResult(TearDownStatus::TEARDOWN_SUCCESS);
 }
 
 TEST_F(ContextTest, PrimaryContextReleaseRestoresContextWhenFinalReleaseFails)
@@ -709,7 +709,7 @@ TEST_F(ContextTest, TearDownReturnsOwnerStreamFailureAndKeepsStreamRestored)
     }
     EXPECT_TRUE(found);
 
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     GlobalMockObject::reset();
     error = ctx->StreamDestroy(stream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -740,7 +740,7 @@ TEST_F(ContextTest, TearDownSkipsRestoringBoundStreamFailure)
     stream->SetModel(&model);
     error = ctx->TearDownOwnedStreamsOnContextTearDown();
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
 
     bool found = false;
     for (const Stream* const ownedStream : ctx->streams_) {
@@ -786,7 +786,7 @@ TEST_F(ContextTest, TearDownKeepsOnlineStreamOnFailure)
     error = ctx->TearDown();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(ctx->onlineStream_, onlineStream);
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     GlobalMockObject::reset();
     error = ctx->StreamDestroy(onlineStream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -826,7 +826,7 @@ TEST_F(ContextTest, TearDownKeepsDefaultStreamOnFailure)
     error = ctx->TearDown();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(ctx->defaultStream_, defaultStream);
-    ctx->SetTearDownExecuteResult(TEARDOWN_ERROR);
+    ctx->SetTearDownExecuteResult(TearDownStatus::TEARDOWN_ERROR);
     GlobalMockObject::reset();
     error = ctx->StreamDestroy(defaultStream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
