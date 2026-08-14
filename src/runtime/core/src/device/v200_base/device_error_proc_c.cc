@@ -75,7 +75,8 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {MTE_TAGMGR_BUF_ECC, "A multi-bit ECC error occurs when MTE reads tagmgr buffer. See the RAS alarm handling."},
     {MTE_UB_ECC, "A multi-bit ECC error occurs when MTE reads UB. See the RAS alarm handling."},
     {MTE_ROB_ECC, "A multi-bit ECC error occurs when MTE reads ROB buffer. See the RAS alarm handling."},
-    {MTE_BIU_RDWR_RESP, "The DDR address of the MTE instruction is out of range."},
+    {MTE_BIU_RDWR_RESP,
+     "The MTE instruction accesses an invalid GM address or the cross-device memory access timeout."},
 
     // RINGBUFFER_L1_ERROR_OFFSET
     {L1_L0A_RDWR_CFLT, "The address for MTE to write L0A conflicts with that for CUBE to read L0A."},
