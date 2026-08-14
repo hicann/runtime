@@ -28,7 +28,7 @@
 
 namespace cce {
 namespace runtime {
-static std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> g_errorProcFuncMap[CHIP_END];
+static std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> g_errorProcFuncMap[CHIP_END] = {};
 
 void RegErrorProcFunc(rtChipType_t chipType, uint64_t errorType, DeviceErrorProc::StarsErrorInfoProc func)
 {
@@ -49,7 +49,7 @@ const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& GetErrorProcFuncM
     return g_errorProcFuncMap[chipType];
 }
 
-static const std::map<uint64_t, std::string>* g_davidErrorMapByChip[CHIP_END] = {nullptr};
+static const std::map<uint64_t, std::string>* g_davidErrorMapByChip[CHIP_END] = {};
 
 void RegDavidErrorMapInfo(rtChipType_t chipType, const std::map<uint64_t, std::string>* errorMap)
 {

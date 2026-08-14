@@ -291,8 +291,8 @@ rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm)
             "stream is in failure abort and need to reclaim all, device_id=%u, stream_id=%d, lastTaskId=%u, "
             "failuremode=%" PRIu64,
             stm->Device_()->Id_(), stm->Id_(), stm->GetLastTaskId(), stm->GetFailureMode());
-        uint32_t lastTaskId = stm->GetLastTaskId();
-        stm->SetExecuteEndTaskId(lastTaskId);
+        const uint32_t lastTaskId = stm->GetLastTaskId();
+        stm->SetExecuteEndTaskId(static_cast<uint16_t>(lastTaskId));
         return FinishedTaskReclaim(
             stm, false, (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosHead(),
             (dynamic_cast<TaskResManageDavid*>(stm->taskResMang_))->GetTaskPosTail());
@@ -308,7 +308,7 @@ rtError_t TaskReclaimForSeparatedStm(Stream* const stm)
         ProcLogicCqUntilEmpty(stm);
     }
 
-    rtError_t error = RecycleTaskBySqHeadForRecycleThread(stm);
+    const rtError_t error = RecycleTaskBySqHeadForRecycleThread(stm);
     COND_LOG_DEBUG((error != RT_ERROR_NONE), "recycle task stream_id=%d, ret=%u", stm->Id_(), error);
     return error;
 }
