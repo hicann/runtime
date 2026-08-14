@@ -10,7 +10,6 @@
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(runtimeut_src_task_list
-    ${TOP_DIR}/src/runtime/core/src/task/ctrl_res_pool.cpp
     ${TOP_DIR}/src/runtime/core/src/task/host_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/task.cc
@@ -39,7 +38,6 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task.cc
@@ -173,17 +171,9 @@ set(runtimeut_src_pool_list
     ${TOP_DIR}/src/runtime/core/src/pool/h2d_copy_mgr.cc
     ${TOP_DIR}/src/runtime/core/src/pool/memory_list.cc
     ${TOP_DIR}/src/runtime/core/src/pool/memory_pool.cc
-    ${TOP_DIR}/src/runtime/core/src/pool/memory_pool_manager.cc
     ${TOP_DIR}/src/runtime/core/src/pool/spm_pool.cc
     ${TOP_DIR}/src/runtime/core/src/pool/task_allocator.cc
-)
-
-set(runtimeut_src_ttlv_list
-    ${TOP_DIR}/src/runtime/core/src/ttlv/ttlv.cc
-    ${TOP_DIR}/src/runtime/core/src/ttlv/ttlv_decoder_utils.cc
-    ${TOP_DIR}/src/runtime/core/src/ttlv/ttlv_paragraph_decoder.cc
-    ${TOP_DIR}/src/runtime/core/src/ttlv/ttlv_sentence_decoder.cc
-    ${TOP_DIR}/src/runtime/core/src/ttlv/ttlv_word_decoder.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/memory_pool_stub.cc
 )
 
 set(runtimeut_src_callback_list
@@ -251,7 +241,6 @@ set(runtimeut_src_list
     ${runtimeut_src_stream_list}
     ${runtime_src_arg_loader_list}
     ${runtimeut_src_pool_list}
-    ${runtimeut_src_ttlv_list}
     ${runtimeut_src_callback_list}
     ${runtime_xpu_src}
     ${runtimeut_src_common_list}

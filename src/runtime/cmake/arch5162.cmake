@@ -11,7 +11,6 @@ include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 set(libruntime_v100_task_src_files
-    ${RUNTIME_CORE_DIR}/src/task/ctrl_res_pool.cpp
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task.cc
@@ -39,7 +38,6 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task.cc
@@ -150,17 +148,9 @@ set(runtime_src_pool_list
     ${RUNTIME_CORE_DIR}/src/pool/h2d_copy_mgr.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_list.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
-    ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_CORE_DIR}/src/pool/spm_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/task_allocator.cc
-)
-
-set(runtime_src_ttlv_list
-    ${RUNTIME_CORE_DIR}/src/ttlv/ttlv.cc
-    ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_decoder_utils.cc
-    ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_paragraph_decoder.cc
-    ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_sentence_decoder.cc
-    ${RUNTIME_CORE_DIR}/src/ttlv/ttlv_word_decoder.cc
+    ${RUNTIME_CORE_DIR}/src/pool/memory_pool_stub.cc
 )
 
 set(libruntime_callback_files
@@ -241,7 +231,6 @@ set(libruntime_other_files
 set(libruntime_src_files
     ${RUNTIME_CORE_ENUM_DESC_SRC_FILES}
     ${runtime_src_pool_list}
-    ${runtime_src_ttlv_list}
     ${libruntime_callback_files}
     ${runtime_src_aclgraph_list}
     ${libruntime_v100_task_src_files}

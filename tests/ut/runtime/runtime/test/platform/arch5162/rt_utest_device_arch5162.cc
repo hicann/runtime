@@ -17,6 +17,8 @@
 #include "device_error_proc.hpp"
 #include "device_msg_handler.hpp"
 #include "ctrl_sq.hpp"
+#include "ctrl_res_pool.hpp"
+#include "memory_pool_manager.hpp"
 #undef protected
 #undef private
 #include "runtime/rt.h"
@@ -135,4 +137,33 @@ TEST_F(Arch5162DeviceTest, GroupDeviceStub_NotSupport)
     EXPECT_EQ(device->SetGroup(0), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(device->ResetGroup(), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete device;
+}
+
+TEST_F(Arch5162DeviceTest, CtrlResEntryStub_NotSupport)
+{
+    CtrlResEntry ctrlRes;
+    EXPECT_EQ(ctrlRes.Init(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    uint32_t taskId = 0U;
+    ctrlRes.AllocTaskId(taskId);
+    EXPECT_EQ(taskId, CTRL_INVALID_TASK_ID);
+    ctrlRes.RecycleTask(0U);
+    EXPECT_EQ(ctrlRes.GetTask(0U), nullptr);
+    ctrlRes.TryTaskReclaim(nullptr);
+    ctrlRes.TearDown();
+}
+
+TEST_F(Arch5162DeviceTest, CtrlTaskPoolEntryStub_NotSupport)
+{
+    CtrlTaskPoolEntry entry;
+    EXPECT_EQ(entry.Alloc(nullptr, 0U, TS_TASK_TYPE_KERNEL_AICORE), nullptr);
+}
+
+TEST_F(Arch5162DeviceTest, MemoryPoolManagerStub_NotSupport)
+{
+    MemoryPoolManager poolMng(nullptr, 0);
+    EXPECT_EQ(poolMng.Init(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(poolMng.Allocate(0U, false), nullptr);
+    EXPECT_EQ(poolMng.TryRelease(nullptr, 0U), false);
+    PoolMemInfo info = poolMng.GetPoolMemInfo(nullptr);
+    EXPECT_EQ(info.found, false);
 }

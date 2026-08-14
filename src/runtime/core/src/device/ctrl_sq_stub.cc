@@ -10,10 +10,12 @@
 
 #include "base.hpp"
 #include "ctrl_sq.hpp"
+#include "ctrl_res_pool.hpp"
 
 namespace cce {
 namespace runtime {
 
+#if F_DESC("CtrlSQStub")
 CtrlSQ::CtrlSQ(Device* const dev) : NoCopy(), device_(dev) {}
 
 CtrlSQ::~CtrlSQ() noexcept {}
@@ -138,6 +140,45 @@ rtError_t CtrlSQ::SendSetStreamTagMsg(
     UNUSED(flipTaskId);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+#endif
+
+#if F_DESC("CtrlResEntryStub")
+CtrlTaskPoolEntry::CtrlTaskPoolEntry() {}
+
+CtrlTaskPoolEntry::~CtrlTaskPoolEntry() { taskBuff_ = nullptr; }
+
+TaskInfo* CtrlTaskPoolEntry::Alloc(Stream* const stm, const uint32_t taskId, const tsTaskType_t taskType) const
+{
+    UNUSED(stm);
+    UNUSED(taskId);
+    UNUSED(taskType);
+    return nullptr;
+}
+
+CtrlResEntry::CtrlResEntry() {}
+
+CtrlResEntry::~CtrlResEntry() noexcept {}
+
+void CtrlResEntry::TearDown() noexcept { dev_ = nullptr; }
+
+rtError_t CtrlResEntry::Init(Device* const dev)
+{
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+void CtrlResEntry::AllocTaskId(uint32_t& taskId) { taskId = CTRL_INVALID_TASK_ID; }
+
+void CtrlResEntry::RecycleTask(const uint32_t taskId) { UNUSED(taskId); }
+
+TaskInfo* CtrlResEntry::GetTask(const uint32_t taskId) const
+{
+    UNUSED(taskId);
+    return nullptr;
+}
+
+void CtrlResEntry::TryTaskReclaim(Stream* const stm) const { UNUSED(stm); }
+#endif
 
 } // namespace runtime
 } // namespace cce
