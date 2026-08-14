@@ -215,5 +215,22 @@ void AicpuErrMsg::SetErrMsgBufAddr(void)
     }
     ErrMsgBufUnLock();
 }
+
+void InitAicpuErrMsg(Device* dev, AicpuErrMsg** obj)
+{
+    *obj = new (std::nothrow) AicpuErrMsg(dev);
+    if (*obj != nullptr) {
+        (*obj)->SetErrMsgBufAddr();
+    }
+}
+
+void DestroyAicpuErrMsg(AicpuErrMsg* obj)
+{
+    if (obj != nullptr) {
+        delete obj;
+    }
+}
+
+size_t GetAicpuErrMsgSize() { return sizeof(AicpuErrMsg); }
 } // namespace runtime
 } // namespace cce

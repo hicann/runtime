@@ -24,6 +24,7 @@
 #include "npu_driver.hpp"
 #include "ringbuffer_maintain_task.h"
 #include "aicpu_timeout_manager.h"
+#include "ffts_task.h"
 
 namespace cce {
 namespace runtime {
@@ -1869,6 +1870,50 @@ rtError_t DeviceErrorProc::CreateFastRingbuffer()
     InitFastRingBuffer(fastRingBufferAddr_);
     RT_LOG(RT_LOG_INFO, "Create fast ringbuffer successfully, size=%zu(bytes).", fastRingBufferSize_);
     return RT_ERROR_NONE;
+}
+
+std::string GetTaskKernelName(const TaskInfo* task)
+{
+    if (task == nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "Task is null");
+        return "none";
+    }
+    RT_LOG(RT_LOG_DEBUG, "Task type is [%d]", task->type);
+    std::string kernelNameStr = "";
+    if (task->type == TS_TASK_TYPE_KERNEL_AICORE || task->type == TS_TASK_TYPE_KERNEL_AIVEC) {
+        const AicTaskInfo* aicTaskInfo = &(task->u.aicTaskInfo);
+        if ((aicTaskInfo != nullptr) && (aicTaskInfo->kernel != nullptr)) {
+            kernelNameStr = aicTaskInfo->kernel->Name_();
+        }
+    }
+
+    if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        const AicpuTaskInfo* aicpuTaskInfo = &(task->u.aicpuTaskInfo);
+        if ((aicpuTaskInfo != nullptr) && (aicpuTaskInfo->kernel != nullptr)) {
+            kernelNameStr = aicpuTaskInfo->kernel->GetCpuOpType();
+        }
+    }
+
+    if (task->type == TS_TASK_TYPE_FUSION_KERNEL) {
+        const FusionTaskInfo* fusionKernelTask = &(task->u.fusionKernelTask);
+        if ((fusionKernelTask != nullptr) && (fusionKernelTask->aicPart.kernel != nullptr)) {
+            kernelNameStr = fusionKernelTask->aicPart.kernel->Name_();
+        }
+    }
+    return kernelNameStr.empty() ? "none" : kernelNameStr.c_str();
+}
+
+void PushBackErrInfo(TaskInfo* taskInfo, const void* errInfo, uint32_t len)
+{
+    if (taskInfo == nullptr) {
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "PushBackErrInfo failed because taskInfo cannot be a NULL pointer.");
+        return;
+    }
+    const tsTaskType_t type = taskInfo->type;
+    if (type != TS_TASK_TYPE_FFTS_PLUS) {
+        return;
+    }
+    PushBackErrInfoForFftsPlusTask(taskInfo, errInfo, len);
 }
 
 } // namespace runtime

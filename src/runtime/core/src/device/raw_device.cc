@@ -53,6 +53,7 @@ namespace runtime {
 constexpr uint32_t FREE_EVENT_QUEUE_SIZE = 64U * 1024U;
 constexpr uint32_t SQ_ID_MEM_POOL_INIT_COUNT = 1024U;
 constexpr uint32_t WAIT_PRINTF_THREAD_TIME_MAX = 1000U;
+bool g_isAddrFlatDevice = false;
 
 RawDevice::RawDevice(const uint32_t devId)
     : GroupDevice(),
@@ -137,9 +138,15 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
     DELETE_O(taskFactory_);
     DELETE_O(modulesAllocator_);
     DELETE_O(deviceErrorProc_);
-    DELETE_O(errMsgObj_);
+    if (DestroyAicpuErrMsg != nullptr) {
+        DestroyAicpuErrMsg(errMsgObj_);
+    }
+    errMsgObj_ = nullptr;
     DELETE_O(engine_);
-    DELETE_O(deviceSnapshot_);
+    if (DestroyDeviceSnapshot != nullptr) {
+        DestroyDeviceSnapshot(deviceSnapshot_);
+    }
+    deviceSnapshot_ = nullptr;
     DELETE_A(messageQueue_);
     DELETE_A(tschCapability_);
     DELETE_A(freeEvent_);
@@ -674,10 +681,13 @@ rtError_t RawDevice::Init()
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        deviceSnapshot_ = new (std::nothrow) DeviceSnapshot(this);
-        COND_GOTO_MSG_OUTER(
-            deviceSnapshot_ == nullptr, EVENT_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
-            sizeof(DeviceSnapshot), "new");
+        if (CreateDeviceSnapshot != nullptr) {
+            deviceSnapshot_ = CreateDeviceSnapshot(this);
+            const size_t snapshotSize = (GetDeviceSnapshotSize != nullptr) ? GetDeviceSnapshotSize() : 0U;
+            COND_GOTO_MSG_OUTER(
+                deviceSnapshot_ == nullptr, EVENT_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+                snapshotSize, "new");
+        }
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
@@ -786,7 +796,10 @@ LOADER_FREE:
 EVENT_EXE_FREE:
     DELETE_O(eventExpandingPool_);
 SNAPSHOT_FREE:
-    DELETE_O(deviceSnapshot_);
+    if (DestroyDeviceSnapshot != nullptr) {
+        DestroyDeviceSnapshot(deviceSnapshot_);
+    }
+    deviceSnapshot_ = nullptr;
 EVENT_FREE:
     DELETE_O(eventPool_);
 SPM_FREE:
@@ -1159,11 +1172,13 @@ rtError_t RawDevice::Start()
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_AICPU_ERROR_MESSAGE)) {
-        errMsgObj_ = new (std::nothrow) AicpuErrMsg(this);
-        COND_GOTO_MSG_OUTER(
-            errMsgObj_ == nullptr, ERROR_STOP, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
-            sizeof(AicpuErrMsg), "new");
-        errMsgObj_->SetErrMsgBufAddr();
+        if (InitAicpuErrMsg != nullptr) {
+            InitAicpuErrMsg(this, &errMsgObj_);
+            const size_t errMsgSize = (GetAicpuErrMsgSize != nullptr) ? GetAicpuErrMsgSize() : 0U;
+            COND_GOTO_MSG_OUTER(
+                errMsgObj_ == nullptr, ERROR_STOP, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, errMsgSize,
+                "new");
+        }
     }
 #else
     Runtime::Instance()->RtTimeoutConfigInit();

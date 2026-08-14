@@ -45,7 +45,6 @@ void ParseExtendInfo(
 rtError_t GetArgsInfo(TaskInfo* taskInfo);
 rtError_t GetMixCtxInfo(TaskInfo* taskInfo);
 void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId);
-std::string GetTaskKernelName(const TaskInfo* task);
 
 void CheckBlockDim(
     TaskInfo* const taskInfo, const RtFftsPlusKernelSqe* const sqe, const rtFftsPlusMixAicAivCtx_t* const fftsCtx);

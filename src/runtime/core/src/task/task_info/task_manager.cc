@@ -51,30 +51,6 @@ PfnTaskUnInit* g_taskUnInitFunc = g_taskFuncArrays[CHIP_BEGIN].taskUnInitFunc;
 static rtChipType_t g_lastInitializedChipType = CHIP_BEGIN;
 static std::mutex g_taskFuncMutex;
 
-static const char_t* g_davidSqeTypeStr[] = {
-    "aic",
-    "aiv",
-    "fusion",
-    "place holder",
-    "aicpu_h",
-    "aicpu_d",
-    "notify record",
-    "notify wait",
-    "write value",
-    "ubdma",
-    "asyncdma",
-    "sdma",
-    "vpc",
-    "jpege",
-    "jpegd",
-    "cmo",
-    "ccu",
-    "rsv"
-    "rsv"
-    "rsv"
-    "condition",
-};
-
 static TaskTypeRegisterInfo g_taskDesc[] = {
     // task type and task name
     {TS_TASK_TYPE_KERNEL_AICORE, "KERNEL_AICORE"},
@@ -215,17 +191,6 @@ static const char_t* g_sqeTypeStr[] = {
 };
 
 #if F_DESC("common func")
-const char_t* GetDavidSqeDescByType(const uint8_t sqeType)
-{
-    const uint8_t arraySize = static_cast<uint8_t>(sizeof(g_davidSqeTypeStr) / sizeof(g_davidSqeTypeStr[0]));
-
-    if (sqeType >= arraySize) {
-        return "unknown";
-    }
-
-    return g_davidSqeTypeStr[sqeType];
-}
-
 const char_t* GetTaskDescByType(const uint8_t taskType)
 {
     for (uint32_t i = 0U; i < sizeof(g_taskDesc) / sizeof(TaskTypeRegisterInfo); i++) {
@@ -904,19 +869,6 @@ TaskInfo* GetRealReportFaultTask(TaskInfo* taskInfo, const void* info)
     } else {
         return taskInfo;
     }
-}
-
-void PushBackErrInfo(TaskInfo* taskInfo, const void* errInfo, uint32_t len)
-{
-    if (taskInfo == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "PushBackErrInfo failed because taskInfo cannot be a NULL pointer.");
-        return;
-    }
-    const tsTaskType_t type = taskInfo->type;
-    if (type != TS_TASK_TYPE_FFTS_PLUS) {
-        return;
-    }
-    PushBackErrInfoForFftsPlusTask(taskInfo, errInfo, len);
 }
 
 void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos)

@@ -446,3 +446,16 @@ TEST_F(AicpuErrMsgTest, GetError)
     auto error = stm.GetError();
     EXPECT_EQ(error, RT_ERROR_AICPU_HCCL_OP_RETRY_FAILED);
 }
+
+TEST_F(AicpuErrMsgTest, InitAndDestroyAicpuErrMsg)
+{
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    EXPECT_NE(GetAicpuErrMsgSize(), 0U);
+    AicpuErrMsg* obj = nullptr;
+    InitAicpuErrMsg(device, &obj);
+    EXPECT_NE(obj, nullptr);
+    DestroyAicpuErrMsg(obj);
+    DestroyAicpuErrMsg(nullptr);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}

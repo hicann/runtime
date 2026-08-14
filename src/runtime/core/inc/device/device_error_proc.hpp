@@ -262,6 +262,9 @@ void ConvertErrorCodeForFastReport(StarsOpExceptionInfo* report);
 void GetFastRingBufferErrorMap(std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>>& errorMap);
 void InitFastRingBuffer(void* fastRingBufferAddr);
 
+std::string GetTaskKernelName(const TaskInfo* task);
+void PushBackErrInfo(TaskInfo* taskInfo, const void* errInfo, uint32_t len);
+
 } // namespace runtime
 } // namespace cce
 #endif // CCE_RUNTIME_DEVICE_ERROR_PROC_HPP

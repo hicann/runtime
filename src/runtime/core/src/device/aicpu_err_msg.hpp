@@ -44,6 +44,10 @@ private:
         const uint32_t argsSize, const uint32_t flag) const;
     rtError_t FillKernelLaunchPara(const rtKernelLaunchNames_t& launchNames, TaskInfo* const kernTask) const;
 };
+
+__attribute__((weak)) void InitAicpuErrMsg(Device* dev, AicpuErrMsg** obj);
+__attribute__((weak)) void DestroyAicpuErrMsg(AicpuErrMsg* obj);
+__attribute__((weak)) size_t GetAicpuErrMsgSize();
 } // namespace runtime
 } // namespace cce
 

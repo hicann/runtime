@@ -74,6 +74,10 @@ void HandleRdmaPiValueModify(TaskInfo* const task, DeviceSnapshot* snapshot);
 void HandleStreamActive(TaskInfo* const task, DeviceSnapshot* snapshot);
 void HandleModelTaskUpdate(TaskInfo* const task, DeviceSnapshot* snapshot);
 } // namespace TaskHandlers
+
+__attribute__((weak)) IDeviceSnapshotOps* CreateDeviceSnapshot(Device* const dev);
+__attribute__((weak)) void DestroyDeviceSnapshot(IDeviceSnapshotOps* obj);
+__attribute__((weak)) size_t GetDeviceSnapshotSize();
 } // namespace runtime
 } // namespace cce
 

@@ -32,6 +32,7 @@
 #include "aicpu_err_msg.hpp"
 #include "thread_local_container.hpp"
 #include "runtime_exit_test_helper.h"
+#include "device_snapshot.hpp"
 #undef private
 #undef protected
 #include "rdma_task.h"
@@ -2584,5 +2585,17 @@ TEST_F(DeviceTest, get_qos_info_by_ipc_feature_not_support)
     rtError_t error = device->GetQosInfoByIpc();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    delete device;
+}
+
+TEST_F(DeviceTest, CreateAndDestroyDeviceSnapshot)
+{
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    EXPECT_NE(GetDeviceSnapshotSize(), 0U);
+    IDeviceSnapshotOps* snapshot = CreateDeviceSnapshot(device);
+    EXPECT_NE(snapshot, nullptr);
+    DestroyDeviceSnapshot(snapshot);
+    DestroyDeviceSnapshot(nullptr);
     delete device;
 }

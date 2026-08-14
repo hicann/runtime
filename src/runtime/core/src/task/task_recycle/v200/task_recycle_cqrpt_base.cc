@@ -42,7 +42,24 @@ namespace runtime {
 static const std::vector<std::string> DavidCqeErrorDesc_ = {
     "task exception", "bus error", "task timeout", "sqe error", "resource conflict error", "sq sw status error"};
 
+static const char_t* g_davidSqeTypeStr[] = {
+    "aic",         "aiv",         "fusion", "place holder", "aicpu_h", "aicpu_d", "notify record",
+    "notify wait", "write value", "ubdma",  "asyncdma",     "sdma",    "vpc",     "jpege",
+    "jpegd",       "cmo",         "ccu",    "rsv",          "rsv",     "rsv",     "condition",
+};
+
 // =================================================== static 函数区 ======================================== //
+static const char_t* GetDavidSqeDescByType(const uint8_t sqeType)
+{
+    const uint8_t arraySize = static_cast<uint8_t>(sizeof(g_davidSqeTypeStr) / sizeof(g_davidSqeTypeStr[0]));
+
+    if (sqeType >= arraySize) {
+        return "unknown";
+    }
+
+    return g_davidSqeTypeStr[sqeType];
+}
+
 static void PrintTaskErrorMsg(
     const uint16_t streamId, const uint16_t pos, rtLogicCqReport_t& logicCq, const TaskInfo* const reportTask,
     std::string& errMsg)

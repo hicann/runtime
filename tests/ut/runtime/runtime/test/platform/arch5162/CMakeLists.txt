@@ -65,7 +65,6 @@ set(libruntime_src_files_include_for_arch5162
     ${TOP_DIR}/src/runtime/core/src/task/tiny/rdma_task_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_tiny_stub.cc
 
-    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
 
@@ -195,12 +194,6 @@ set(runtimeut_src_callback_list
 )
 
 
-set(runtime_raw_device_adpt_common_list
-    ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
-    ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
-)
-
-
 set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_task_arch5162.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
@@ -215,19 +208,16 @@ set(runtimeut_src_aclgraph_list
 )
 
 set(runtimeut_src_device_list
-    ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
-    ${TOP_DIR}/src/runtime/core/src/device/ctrl_msg.cc
-    ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_msg_handler.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/ini_parse_utils.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
+    ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
-    ${TOP_DIR}/src/runtime/core/src/device/v100/device_error_proc.cc
+    ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_error_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_msg_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/device/group_device_stub.cc
 )
 
 set(runtimeut_src_kernel_list
@@ -350,7 +340,6 @@ target_link_libraries(runtime_ut_stub_static_lib_5162a PRIVATE $<BUILD_INTERFACE
 
 ###################################################################################################
 add_executable(runtime_utest_arch5162
-    ${runtime_raw_device_adpt_common_list}
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
@@ -362,6 +351,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_task_arch5162.cc
     rt_utest_task_execute_time_arch5162.cc
     rt_utest_mem_arch5162.cc
+    rt_utest_device_arch5162.cc
 )
 
 target_compile_definitions(runtime_utest_arch5162 PUBLIC

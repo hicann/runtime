@@ -176,7 +176,6 @@ uint32_t GetReportCount(const rtPkgDesc pkgStat[], const uint8_t profEnabled);
 bool CheckPackageState(const TaskInfo* taskInfo);
 uint32_t GetFlipTaskId(uint32_t taskId, uint16_t flipNum);
 TaskInfo* GetRealReportFaultTask(TaskInfo* taskInfo, const void* info);
-void PushBackErrInfo(TaskInfo* taskInfo, const void* errInfo, uint32_t len);
 void TaskFailCallBack(
     const uint32_t streamId, const uint32_t taskId, const uint32_t threadId, const uint32_t retCode,
     const Device* const dev, bool isNeedTransTaskId = false);
@@ -233,7 +232,6 @@ inline void SetNameArgs(TaskInfo* taskInfo, const void* const kernelSoName, cons
 }
 
 const char_t* GetSqeDescByType(const uint8_t sqeType);
-const char_t* GetDavidSqeDescByType(const uint8_t sqeType);
 const char_t* GetTaskDescByType(const uint8_t taskType);
 bool IsNeedFreeStreamRes(const TaskInfo* task);
 

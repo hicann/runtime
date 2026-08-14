@@ -249,5 +249,16 @@ rtError_t DeviceSnapshot::UbArgsPoolRestore(void) const
 
     return RT_ERROR_NONE;
 }
+
+IDeviceSnapshotOps* CreateDeviceSnapshot(Device* const dev) { return new (std::nothrow) DeviceSnapshot(dev); }
+
+void DestroyDeviceSnapshot(IDeviceSnapshotOps* obj)
+{
+    if (obj != nullptr) {
+        delete obj;
+    }
+}
+
+size_t GetDeviceSnapshotSize() { return sizeof(DeviceSnapshot); }
 } // namespace runtime
 } // namespace cce

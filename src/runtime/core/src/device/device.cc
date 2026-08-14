@@ -34,7 +34,6 @@
 namespace cce {
 namespace runtime {
 constexpr int32_t MIN_GROUP_ID = 0;
-bool g_isAddrFlatDevice = false;
 
 rtError_t GroupDevice::FillCache(struct capability_group_info capGroupInfos[], const uint32_t groupCount)
 {

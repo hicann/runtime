@@ -170,11 +170,6 @@ set(libruntime_callback_files
     ${RUNTIME_CORE_DIR}/src/event/event_state_callback_manager.cc
 )
 
-set(runtime_raw_device_adpt_common_list
-    ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
-    ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
-)
-
 set(runtime_src_aclgraph_list
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_task_arch5162.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
@@ -200,7 +195,6 @@ set(libruntime_src_files_include_for_arch5162
     ${RUNTIME_CORE_DIR}/src/engine/engine_factory_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/device_snapshot_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_callback_manager_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
@@ -209,21 +203,16 @@ set(libruntime_src_files_include_for_arch5162
 )
 
 set(runtime_src_device_list
-    ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
-    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
-    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
-    ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
-    ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
-    ${RUNTIME_CORE_DIR}/src/device/device.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
+    ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
-    ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
+    ${RUNTIME_CORE_DIR}/src/device/ctrl_sq_stub.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_stub.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_msg_stub.cc
+    ${RUNTIME_CORE_DIR}/src/device/group_device_stub.cc
 )
 
 set(runtime_src_kernel_list
@@ -255,7 +244,6 @@ set(libruntime_src_files
     ${runtime_src_ttlv_list}
     ${libruntime_callback_files}
     ${runtime_src_aclgraph_list}
-    ${runtime_raw_device_adpt_common_list}
     ${libruntime_v100_task_src_files}
     ${libruntime_context_src_files}
     ${libruntime_stream_src_files}
@@ -271,6 +259,8 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_manager.cc
+    ${RUNTIME_CORE_DIR}/src/aicpu_timeout/aicpu_timeout_control.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
