@@ -15,8 +15,13 @@
 #include "common/thread.h"
 #include "adx_dump_record.h"
 #include "dump_exception_stub.h"
+#include "kernel_symbol_locator.h"
+#include "kernel_info_collector.h"
+#include "exception_info_common.h"
+#include "path.h"
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
+#include <fstream>
 
 using namespace Adx;
 
@@ -801,4 +806,69 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_EmptyNamesAllowed)
     exception.expandInfo.type = RT_EXCEPTION_AICORE;
     ret = dumper.DumpException(exception);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+namespace {
+const std::string g_hostBinContentForSymFail = "host kernel bin content for symbolize-fail regression";
+int32_t StubGetBinDataForSymFail(rtBinHandle binHandle, std::string &binData, uint32_t &binSize)
+{
+    (void)binHandle;
+    binData = g_hostBinContentForSymFail;
+    binSize = static_cast<uint32_t>(g_hostBinContentForSymFail.size());
+    return ADUMP_SUCCESS;
+}
+}  // namespace
+
+// 编排层端到端回归：DumpException(args 默认路径) 先无条件 DumpHostKernelBinBeforeSymbolize 落 _host.o，
+// 再调 KernelSymbolLocator::DumpErrorSymbols 做符号化。这里打桩符号解析(InitFromBinBuffer)失败，
+// 模拟 .o 符号表损坏/无法解析导致 DumpErrorSymbols 在 InitFromBinBuffer 处提前 return。
+// 此时 _host.o 仍必须已落盘且内容完整，守护「提前落盘独立于符号化」的编排不变量：
+// 防止落盘被误合并进 DumpErrorSymbols 内部、被前置符号解析的提前 return 挡住而漏落盘。
+// 若回退该修复(删除 DumpHostKernelBinBeforeSymbolize，落盘只留在 DumpErrorSymbols 内)，本用例会因 _host.o 缺失而失败。
+TEST_F(ExceptionDumperExtraUtest, DumpArgsException_HostBinDroppedWhenSymbolizeFails)
+{
+    const uint32_t deviceId = 0U;
+    const std::string dumpRoot = "/tmp/adump_hostbin_symfail_test";
+    const std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = dumpRoot;
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+
+    // 落盘链依赖 GetBinDataFromHandle 返回 bin buffer，打桩成功以确保 _host.o 能落盘且内容可校验。
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForSymFail));
+    // 关键：符号解析失败，使 DumpErrorSymbols 在 InitFromBinBuffer 处提前 return，不再落盘。
+    MOCKER_CPP(&KernelSymbolLocator::InitFromBinBuffer)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ADUMP_FAILED)));
+
+    char hostKernel[] = "host kernel bin file stub";
+    rtExceptionInfo exception = {};
+    exception.deviceid = deviceId;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    auto &kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    kernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+    kernelInfo.binSize = sizeof(hostKernel);
+    kernelInfo.kernelName = const_cast<char *>(kernelName.data());
+    kernelInfo.kernelNameSize = kernelName.size();
+
+    // 最终返回值不作断言：后续 args 解析在无真实 device args 时可能失败，
+    // 但那发生在 _host.o 落盘之后，不影响本用例要守护的落盘不变量。
+    (void)dumper.DumpException(exception);
+
+    // 符号解析失败不影响提前落盘：_host.o 仍应存在且内容完整。
+    // _host.o 名去掉 _mix_aic 后缀，落在 device dump 目录（<root>/extra-info/data-dump/<deviceId>）下。
+    Path hostBinPath(dumpRoot);
+    hostBinPath.Append("/extra-info/data-dump/").Append(std::to_string(deviceId));
+    std::string hostOName = ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(kernelName) + "_host.o";
+    hostBinPath.Concat(hostOName);
+    EXPECT_TRUE(hostBinPath.Exist());
+    std::ifstream dumped(hostBinPath.GetString(), std::ios::binary);
+    std::string content((std::istreambuf_iterator<char>(dumped)), std::istreambuf_iterator<char>());
+    EXPECT_EQ(content, g_hostBinContentForSymFail);
+    GlobalMockObject::verify();
 }

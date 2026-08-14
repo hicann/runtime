@@ -12,9 +12,12 @@
 #include <elf.h>
 #include <limits>
 #include <mutex>
+#include <sstream>
 #include "securec.h"
 #include "runtime/kernel.h"
 #include "kernel_symbol_locator.h"
+#include "kernel_info_collector.h"
+#include "kernel_source_symbolizer.h"
 #include "exception_info_common.h"
 #include "log/adx_log.h"
 #include "log/hdc_log.h"
@@ -454,6 +457,69 @@ bool ParseSymbolTables(
     }
     return true;
 }
+
+// 分类汇总用：(oFilePath, fixedPCOffset) 相同的多个异常 core 归为一组。
+struct SummaryGroup {
+    std::string oFilePath;
+    uint64_t fixedPCOffset = 0;
+    bool hasSymbol = false;
+    std::string symbolName;
+    uint64_t symbolOffset = 0;
+    SymbolizeResult src;
+    std::vector<const ErrorLocation*> cores;
+};
+
+// 按 (oFilePath, fixedPCOffset) 聚类：命中已有组则追加 core，否则新建组并拷贝定位信息。
+std::vector<SummaryGroup> BuildSummaryGroups(const std::vector<ErrorLocation>& locations)
+{
+    std::vector<SummaryGroup> groups;
+    for (const ErrorLocation& loc : locations) {
+        SummaryGroup* target = nullptr;
+        for (SummaryGroup& g : groups) {
+            if (g.oFilePath == loc.oFilePath && g.fixedPCOffset == loc.fixedPCOffset) {
+                target = &g;
+                break;
+            }
+        }
+        if (target == nullptr) {
+            groups.emplace_back();
+            target = &groups.back();
+            target->oFilePath = loc.oFilePath;
+            target->fixedPCOffset = loc.fixedPCOffset;
+            target->hasSymbol = loc.hasSymbol;
+            target->symbolName = loc.symbolName;
+            target->symbolOffset = loc.symbolOffset;
+            target->src = loc.src;
+        }
+        target->cores.push_back(&loc);
+    }
+    return groups;
+}
+
+// 打印单个分组：core 列表、symbol+偏移、func、source 行号，缺失信息统一显示 unknown。
+void PrintSummaryGroup(size_t index, const SummaryGroup& g)
+{
+    std::ostringstream coresOss;
+    for (size_t c = 0; c < g.cores.size(); ++c) {
+        if (c != 0) {
+            coresOss << ",";
+        }
+        coresOss << "{id=" << g.cores[c]->coreId << ",type=" << g.cores[c]->coreType << "}";
+    }
+    std::ostringstream symbolOss;
+    if (g.hasSymbol) {
+        symbolOss << g.symbolName << "+0x" << std::hex << g.symbolOffset;
+    } else {
+        symbolOss << "unknown";
+    }
+    const std::string sourceStr = g.src.ok
+        ? (g.src.srcFile + ":" + std::to_string(g.src.srcLine) + ":" + std::to_string(g.src.srcColumn))
+        : "unknown";
+    IDE_LOGE("[Dump][Exception][Symbolize] Group[%zu] oFile=%s fixedPCOffset=0x%lx symbol=%s "
+        "source=%s cores=[%s]",
+        index, g.oFilePath.empty() ? "unknown" : g.oFilePath.c_str(), g.fixedPCOffset,
+        symbolOss.str().c_str(), sourceStr.c_str(), coresOss.str().c_str());
+}
 } // namespace
 
 std::unordered_map<rtBinHandle, KernelSymbolSet> KernelSymbolLocator::cache_;
@@ -473,6 +539,12 @@ void KernelSymbolLocator::ResetState()
     kernelDeviceStartPC_ = 0;
     hasKernelDeviceStartPC_ = false;
     initialized_ = false;
+    oFilePath_.clear();
+}
+
+void KernelSymbolLocator::SetOFilePath(const std::string& oFilePath)
+{
+    oFilePath_ = oFilePath;
 }
 
 void KernelSymbolLocator::UpdateStartPCFromDeviceAddr(rtBinHandle binHandle)
@@ -576,8 +648,15 @@ bool KernelSymbolLocator::GetCorrectedStartPC(const rtExceptionErrRegInfo_t& cor
     return false;
 }
 
-void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo)
+void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo, ErrorLocation& outLocation)
 {
+    outLocation.coreId = coreInfo.coreId;
+    outLocation.coreType = static_cast<uint32_t>(coreInfo.coreType);
+    outLocation.oFilePath = oFilePath_;
+    // hasSymbol/skipped 只在特定分支置 true，入口先复位，避免调用方复用同一 ErrorLocation 时残留脏值。
+    outLocation.hasSymbol = false;
+    outLocation.skipped = false;
+
     uint32_t coreType = static_cast<uint32_t>(coreInfo.coreType);
     IDE_LOGE("[Dump][Exception] Error register information. coreId=%u, coreType=%u, %s",
         coreInfo.coreId, coreType, GetErrorRegisters(coreInfo).c_str());
@@ -587,25 +666,38 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo)
         IDE_LOGI("Correct startPC by kernel address. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
             "fixedStartPC=0x%lx.", coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC);
     }
-
     if (fixedCurrentPC < fixedStartPC) {
         IDE_LOGE("coreId=%u, coreType=%u, fixedCurrentPC=0x%lx < fixedStartPC=0x%lx, "
             "originalCurrentPC=0x%lx, originalStartPC=0x%lx, skip lookup symbol.",
             coreInfo.coreId, coreType, fixedCurrentPC, fixedStartPC, coreInfo.currentPC, coreInfo.startPC);
+        outLocation.skipped = true;
         return;
     }
 
     const uint64_t fixedPCOffset = fixedCurrentPC - fixedStartPC;
+    outLocation.fixedPCOffset = fixedPCOffset;
     IDE_LOGE("[Dump][Exception] Error PC information. coreId=%u, coreType=%u, originalStartPC=0x%lx, "
         "fixedStartPC=0x%lx, originalCurrentPC=0x%lx, fixedCurrentPC=0x%lx, fixedPCOffset=0x%lx.",
         coreInfo.coreId, coreType, coreInfo.startPC, fixedStartPC, coreInfo.currentPC, fixedCurrentPC,
         fixedPCOffset);
 
+    // 源码解析不在此逐核进行：偏移已回填 outLocation.fixedPCOffset，由 SymbolizeCollectedLocations
+    // 收齐所有核后对同一 .o 一次性批量 symbolize，避免每核各起一个 llvm-symbolizer 进程放大超时。
+    MatchSymbolForCore(coreInfo, fixedPCOffset, outLocation);
+}
+
+void KernelSymbolLocator::MatchSymbolForCore(const rtExceptionErrRegInfo_t& coreInfo, uint64_t fixedPCOffset,
+    ErrorLocation& outLocation)
+{
+    const uint32_t coreType = static_cast<uint32_t>(coreInfo.coreType);
     const KernelSymbol* matchedSymbol = FindBestMatchedSymbol(kernelSymbols_.symbols, fixedPCOffset);
     if (matchedSymbol != nullptr) {
+        outLocation.hasSymbol = true;
+        outLocation.symbolName = matchedSymbol->name;
+        outLocation.symbolOffset = fixedPCOffset - matchedSymbol->offset;
         IDE_LOGE("[Dump][Exception] Error symbol information. coreId=%u, coreType=%u, "
             "symbol=%s+0x%lx.", coreInfo.coreId, coreType, matchedSymbol->name.c_str(),
-            fixedPCOffset - matchedSymbol->offset);
+            outLocation.symbolOffset);
         return;
     }
 
@@ -618,7 +710,37 @@ void KernelSymbolLocator::PrintErrorForCore(rtExceptionErrRegInfo_t coreInfo)
         static_cast<uint32_t>(hasSymbolRange), minSymbolOffset, maxSymbolEnd);
 }
 
-int32_t KernelSymbolLocator::LocateAndPrintErrorSymbols(const ExceptionRegInfo& exceptionRegInfo)
+void KernelSymbolLocator::SymbolizeCollectedLocations(std::vector<ErrorLocation>& locations) const
+{
+    if (oFilePath_.empty() || !KernelSourceSymbolizer::IsAvailable()) {
+        return;
+    }
+    // 收集所有未跳过 core 的偏移；idxMap 记录第 k 个偏移对应 locations 中的下标，便于按序回填。
+    std::vector<uint64_t> offsets;
+    std::vector<size_t> idxMap;
+    for (size_t i = 0; i < locations.size(); ++i) {
+        if (!locations[i].skipped) {
+            offsets.push_back(locations[i].fixedPCOffset);
+            idxMap.push_back(i);
+        }
+    }
+    if (offsets.empty()) {
+        return;
+    }
+    // 同一 .o 的全部偏移由一个 llvm-symbolizer 进程一次解析，最坏耗时收敛为单次超时。
+    std::vector<SymbolizeResult> results;
+    if (!KernelSourceSymbolizer::Symbolize(oFilePath_, offsets, results)) {
+        IDE_LOGW("Symbolize kernel source failed for all cores, oFile=%s, offsetCount=%zu.",
+            oFilePath_.c_str(), offsets.size());
+        return;
+    }
+    for (size_t k = 0; k < idxMap.size() && k < results.size(); ++k) {
+        locations[idxMap[k]].src = results[k];
+    }
+}
+
+int32_t KernelSymbolLocator::LocateErrorSymbols(const ExceptionRegInfo& exceptionRegInfo,
+    std::vector<ErrorLocation>& outLocations)
 {
     IDE_CTRL_VALUE_WARN(initialized_, return ADUMP_FAILED, "KernelSymbolLocator not initialized.");
 
@@ -626,14 +748,18 @@ int32_t KernelSymbolLocator::LocateAndPrintErrorSymbols(const ExceptionRegInfo& 
         exceptionRegInfo.errRegInfo != nullptr && exceptionRegInfo.coreNum != 0, return ADUMP_FAILED,
         "Exception register info is null or core num is zero.");
 
+    // 先逐核定位偏移与符号，再对同一 .o 的所有偏移一次性批量 symbolize，避免逐核各起进程放大超时。
     for (uint32_t i = 0; i < exceptionRegInfo.coreNum; i++) {
-        PrintErrorForCore(exceptionRegInfo.errRegInfo[i]);
+        ErrorLocation loc;
+        PrintErrorForCore(exceptionRegInfo.errRegInfo[i], loc);
+        outLocations.push_back(loc);
     }
+    SymbolizeCollectedLocations(outLocations);
     return ADUMP_SUCCESS;
 }
 
-int32_t KernelSymbolLocator::LocateAndPrintErrorSymbolsForCore(
-    uint32_t coreId, uint32_t coreType, ExceptionRegInfo exceptionRegInfo)
+int32_t KernelSymbolLocator::LocateErrorSymbolsForCore(
+    uint32_t coreId, uint32_t coreType, ExceptionRegInfo exceptionRegInfo, ErrorLocation& outLocation)
 {
     IDE_CTRL_VALUE_WARN(initialized_, return ADUMP_FAILED, "KernelSymbolLocator not initialized.");
 
@@ -652,8 +778,26 @@ int32_t KernelSymbolLocator::LocateAndPrintErrorSymbolsForCore(
     IDE_CTRL_VALUE_WARN(coreInfo != nullptr, return ADUMP_FAILED,
         "Core exception register info is not found, coreId=%u, coreType=%u.", coreId, coreType);
 
-    PrintErrorForCore(*coreInfo);
+    // 先定位偏移与符号，再对该核偏移做一次 symbolize（单核路径每个 .o 本就是一次进程调用）。
+    PrintErrorForCore(*coreInfo, outLocation);
+    std::vector<ErrorLocation> single{outLocation};
+    SymbolizeCollectedLocations(single);
+    outLocation = single[0];
     return ADUMP_SUCCESS;
+}
+
+void KernelSymbolLocator::PrintClassificationSummary(const std::vector<ErrorLocation>& locations)
+{
+    if (locations.empty()) {
+        return;
+    }
+    // 按 (oFilePath, fixedPCOffset) 聚类：同一 .o 同一偏移的多核归为一组。
+    const std::vector<SummaryGroup> groups = BuildSummaryGroups(locations);
+    IDE_LOGE("[Dump][Exception][Symbolize] classification summary. cores=%zu, groups=%zu.",
+        locations.size(), groups.size());
+    for (size_t i = 0; i < groups.size(); ++i) {
+        PrintSummaryGroup(i, groups[i]);
+    }
 }
 
 uint64_t KernelSymbolLocator::FixPcByErrorRegs(const rtExceptionErrRegInfo_t& coreInfo)
@@ -674,7 +818,21 @@ std::string KernelSymbolLocator::GetErrorRegisters(const rtExceptionErrRegInfo_t
     return fixer->GetErrorRegisters(coreInfo.errReg, RT_ERR_REG_NUMS);
 }
 
-void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception, ExceptionRegInfo& exceptionRegInfo)
+std::string KernelSymbolLocator::ResolveOFilePath(const std::string& hostOPath)
+{
+    if (hostOPath.empty()) {
+        return "";
+    }
+    // _host.o 含 .debug_line 时直接使用；否则留空，由调用方决定是否回退到 kernel_meta 的 .o。
+    if (KernelSourceSymbolizer::HasDebugLine(hostOPath)) {
+        return hostOPath;
+    }
+    IDE_LOGW("Host kernel .o has no .debug_line, source location unavailable, oFile=%s.", hostOPath.c_str());
+    return "";
+}
+
+void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception, ExceptionRegInfo& exceptionRegInfo,
+    const std::string& dumpPath)
 {
     rtExceptionArgsInfo_t exceptionArgsInfo{};
     int32_t ret = ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo);
@@ -691,15 +849,33 @@ void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception, Exc
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return, "Parse kernel symbols failed, skip dump error symbols.");
     locator.UpdateStartPCFromDeviceAddr(kernelInfo.bin);
 
-    ret = locator.LocateAndPrintErrorSymbols(exceptionRegInfo);
+    // _host.o 已由调用方（DumpHostKernelBinBeforeSymbolize / 回调路径）提前无条件落盘，
+    // 此处只复用其路径决定实际 symbolize 用的 .o，不再重复落盘：避免把落盘可靠性绑定到
+    // 本函数前面的符号解析步骤（GetBinData/InitFromBinBuffer 失败时提前 return 会漏落盘）。
+    KernelInfoCollector collector;
+    collector.LoadKernelInfo(exceptionArgsInfo);
+    std::string hostOPath = collector.GetHostOFilePath(dumpPath);
+    // hostOPath 为空说明 kernelName 缺失/路径拼接失败，符号解析将无 .o 可用，仅告警不阻断后续流程。
+    if (hostOPath.empty()) {
+        IDE_LOGW("Host .o path is empty, symbolize may fall back without source location.");
+    } else {
+        locator.SetOFilePath(ResolveOFilePath(hostOPath));
+    }
+
+    std::vector<ErrorLocation> locations;
+    ret = locator.LocateErrorSymbols(exceptionRegInfo, locations);
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return, "Locate kernel error symbols failed, ret=%d.", ret);
+    // 未找到 llvm-symbolizer 时不打印聚类汇总（无源码信息时该汇总无增量价值）。
+    if (KernelSourceSymbolizer::IsAvailable()) {
+        PrintClassificationSummary(locations);
+    }
 }
 
-void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception)
+void KernelSymbolLocator::DumpErrorSymbols(const rtExceptionInfo& exception, const std::string& dumpPath)
 {
     ExceptionRegInfo exceptionRegInfo{0, nullptr};
     if (ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo) == ADUMP_SUCCESS) {
-        DumpErrorSymbols(exception, exceptionRegInfo);
+        DumpErrorSymbols(exception, exceptionRegInfo, dumpPath);
     }
 }
 

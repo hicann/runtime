@@ -45,8 +45,8 @@ int32_t DumpArgsCallback::DumpKernelBin()
     IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "Init for dump kernel bin failed. ret=%d, bin=%p, kernelName=%s.", ret, info_.bin, kernelName.c_str());
 
-    // 先同步落 _host.o，再做慢的 kernel_meta 搜索拷贝。落盘失败需传播，保持与拆分前一致的错误可观测性。
-    ret = collector.DumpHostKernelBin(dumpPath_);
+    std::string hostOPath;
+    ret = collector.DumpHostKernelBin(dumpPath_, hostOPath);
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "DumpHostKernelBin failed, kernelName=%s.", kernelName.c_str());
 
@@ -58,7 +58,7 @@ int32_t DumpArgsCallback::DumpKernelBin()
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpArgsCallback::DumpKernelErrorSymbols()
+int32_t DumpArgsCallback::DumpKernelErrorSymbols(ErrorLocation &outLocation)
 {
     if (info_.bin == nullptr) {
         return ADUMP_SUCCESS;
@@ -69,14 +69,23 @@ int32_t DumpArgsCallback::DumpKernelErrorSymbols()
         "KernelSymbolLocator InitFromBinHandle failed for callback exception. ret=%d", ret);
     locator.UpdateStartPCFromDeviceAddr(info_.bin);
 
+    // 回调路径的 _host.o 已由 DumpKernelBin 同步落盘，此处复用其路径决定 symbolize 用的 .o。
+    // kernelName 是定长数组成员，不会为 nullptr；std::string 构造依赖其内部 '\0' 结尾。
+    KernelInfoCollector collector;
+    if (collector.InitFromBinHandle(info_.bin, std::string(info_.kernelName)) == ADUMP_SUCCESS) {
+        const std::string hostOPath = collector.GetHostOFilePath(dumpPath_);
+        locator.SetOFilePath(KernelSymbolLocator::ResolveOFilePath(hostOPath));
+    }
+
     ExceptionRegInfo exceptionRegInfo{0, nullptr};
     ret = ExceptionInfoCommon::GetExceptionRegInfo(exception_, exceptionRegInfo);
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
         "Get exception register information failed for callback exception. ret=%d", ret);
 
-    ret = locator.LocateAndPrintErrorSymbolsForCore(info_.coreId, info_.coreType, exceptionRegInfo);
+    // 构建 ErrorLocation：LocateErrorSymbolsForCore 内部定位偏移后对该 .o 批量 symbolize 并回填 src。
+    ret = locator.LocateErrorSymbolsForCore(info_.coreId, info_.coreType, exceptionRegInfo, outLocation);
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
-        "LocateAndPrintErrorSymbolsForCore failed for callback exception. ret=%d, coreId=%u, coreType=%u.",
+        "LocateErrorSymbolsForCore failed for callback exception. ret=%d, coreId=%u, coreType=%u.",
             ret, info_.coreId, info_.coreType);
 
     return ADUMP_SUCCESS;
@@ -136,7 +145,9 @@ int32_t DumpArgsCallback::QueryDfxInfo(std::vector<uint8_t> &dfxBuffer)
 
 int32_t DumpArgsCallback::DumpDfxArgs()
 {
-    if (info_.argAddr == nullptr || info_.argSize == 0 || info_.bin == nullptr || info_.kernelName[0] == '\0') {
+    // kernelName 是定长数组成员，不会为 nullptr，直接判首字节是否为空串。
+    if (info_.argAddr == nullptr || info_.argSize == 0 || info_.bin == nullptr ||
+        info_.kernelName[0] == '\0') {
         return ADUMP_SUCCESS;
     }
 

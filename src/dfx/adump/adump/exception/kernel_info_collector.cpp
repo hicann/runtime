@@ -39,8 +39,8 @@ constexpr uint64_t JSON_SUFFIX_LEN = 5;  // length of ".json"
 
 int32_t StartCollectKernelAsync(std::shared_ptr<KernelInfoCollector> collector, const std::string &dumpPath) {
     int32_t ret = collector->LoadKernelBinBuffer();
-    // 先同步落 _host.o（纯内存 buffer 写，快），再把慢的 kernel_meta 搜索丢到异步线程。
-    (void)collector->DumpHostKernelBin(dumpPath);
+    // _host.o 已由编排层（DumpHostKernelBinBeforeSymbolize）在符号化前无条件同步落盘，
+    // 这里不再重复落盘，只把慢的 kernel_meta 搜索拷贝丢到异步线程。
     IDE_LOGD("Start collecting kernel file.");
     std::thread collectKernel([collector, dumpPath](){
         int32_t tid = mmGetTid();
@@ -224,14 +224,25 @@ std::string KernelInfoCollector::SearchJsonFiles(const std::string &rootPath, co
     return "";
 }
 
+std::string KernelInfoCollector::GetHostOFilePath(const std::string &dumpPath) const
+{
+    std::string kernelName = GetProcessedKernelName();
+    Path hostKernelBinPath(dumpPath);
+    std::string hostKernelBinName = StrUtils::Replace(kernelName, INVALID_FILE_NAME_CHAR, '_') + "_host.o";
+    hostKernelBinPath.Concat(hostKernelBinName);
+    return hostKernelBinPath.GetString();
+}
+
 /**
  * @brief       : dump the kernel bin file runtime load from host
  * @param [in]  : dumpPath      path of the exception dump file
+ * @param [out] : outHostOPath  绝对/拼接后的 _host.o 落盘路径，供后续 symbolize 使用
  * @return      : ADUMP_SUCCESS succeed; ADUMP_FAILED failed
  * @note        : 从 StartCollectKernel 拆出，供调用方在慢搜索/修正 PC 之前单独同步落 _host.o。
  */
-int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath) const
+int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath, std::string &outHostOPath) const
 {
+    outHostOPath.clear();
     // 与拆分前 StartCollectKernel 入口保持一致的前置校验：kernelName 为空会退化成非唯一的 "_host.o"，
     // 不同异常/算子会互相覆盖并污染幂等判断，故此处直接跳过。
     if (kernelName_.empty() || kernelBinHandle_ == nullptr || kernelBinSize_ == 0) {
@@ -242,22 +253,20 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath) cons
         IDE_LOGE("Kernel bin data is empty.");
         return ADUMP_FAILED;
     }
-    std::string kernelName = GetProcessedKernelName();
-    Path hostKernelBinPath(dumpPath);
-    std::string hostKernelBinName = StrUtils::Replace(kernelName, INVALID_FILE_NAME_CHAR, '_') + "_host.o";
-    hostKernelBinPath.Concat(hostKernelBinName);
+    std::string hostKernelBinPath = GetHostOFilePath(dumpPath);
     // 幂等:_host.o 可能已由调用方在符号化前提前同步落盘。仅当磁盘上文件大小与待写入一致时才跳过，
     // 避免上次部分写(如磁盘满)残留的截断/空文件被 Exist() 误判为已完成而永久跳过重写。
     struct stat hostBinStat;
-    if (hostKernelBinPath.Exist() && stat(hostKernelBinPath.GetCString(), &hostBinStat) == 0 &&
+    if (stat(hostKernelBinPath.c_str(), &hostBinStat) == 0 &&
         static_cast<uint64_t>(hostBinStat.st_size) == static_cast<uint64_t>(kernelBinSize_)) {
-        IDE_LOGI("[Dump][Exception] host kernel bin already dumped, skip. file: %s", hostKernelBinPath.GetCString());
+        IDE_LOGI("[Dump][Exception] host kernel bin already dumped, skip. file: %s", hostKernelBinPath.c_str());
+        outHostOPath = hostKernelBinPath;
         return ADUMP_SUCCESS;
     }
-    File hostKernelBinFile(hostKernelBinPath.GetString(), M_WRONLY | M_CREAT | M_TRUNC);
+    File hostKernelBinFile(hostKernelBinPath, M_WRONLY | M_CREAT | M_TRUNC);
     int32_t ret = hostKernelBinFile.IsFileOpen();
     if (ret != ADUMP_SUCCESS) {
-        IDE_LOGE("Open host kernel bin file[%s] failed.", hostKernelBinPath.GetCString());
+        IDE_LOGE("Open host kernel bin file[%s] failed.", hostKernelBinPath.c_str());
         return ADUMP_FAILED;
     }
     static std::mutex KernelBinLock;
@@ -267,21 +276,22 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string &dumpPath) cons
         // 不清理残留文件(与拆分前行为一致):M_TRUNC 已把文件截为 0,失败后盘上会留下空/截断的 _host.o。
         // 下次调用因大小不匹配会重写,不会误判为完整;但符号化阶段若在此期间读取会拿到残缺文件,故打印告警提醒。
         IDE_LOGE("Write host kernel bin file[%s] failed, an incomplete _host.o may remain on disk.",
-            hostKernelBinPath.GetCString());
+            hostKernelBinPath.c_str());
         return ADUMP_FAILED;
     }
     // File::Write 内部循环处理短写、返回的是最后一次 mmWrite 的长度而非累计值，不能用它判完整性；
     // 改为写后 stat 校验最终文件大小,截断/短写(如磁盘满)时文件大小不足即判失败,避免残留截断文件被幂等误判为完整。
-    if (stat(hostKernelBinPath.GetCString(), &hostBinStat) != 0 ||
+    if (stat(hostKernelBinPath.c_str(), &hostBinStat) != 0 ||
         static_cast<uint64_t>(hostBinStat.st_size) != static_cast<uint64_t>(kernelBinSize_)) {
         // 同上:残留的截断文件不主动删除,靠下次大小校验重写;此处打印告警提醒盘上存在不完整的 _host.o。
         IDE_LOGE("Write host kernel bin file[%s] incomplete, fileSize=%lld, expect=%u, "
             "an incomplete _host.o may remain on disk.",
-            hostKernelBinPath.GetCString(), static_cast<long long>(hostBinStat.st_size), kernelBinSize_);
+            hostKernelBinPath.c_str(), static_cast<long long>(hostBinStat.st_size), kernelBinSize_);
         return ADUMP_FAILED;
     }
-    IDE_LOGE("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.GetCString());
-    (void)mmChmod(hostKernelBinPath.GetCString(), M_IRUSR);  // 安全要求,落盘文件置为最小权限:用户只读, 400
+    IDE_LOGE("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.c_str());
+    (void)mmChmod(hostKernelBinPath.c_str(), M_IRUSR);  // 安全要求,落盘文件置为最小权限:用户只读, 400
+    outHostOPath = hostKernelBinPath;
 
     return ADUMP_SUCCESS;
 }

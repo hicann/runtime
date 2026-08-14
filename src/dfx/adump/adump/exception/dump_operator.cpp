@@ -291,7 +291,8 @@ int32_t DumpOperator::DumpException(const uint32_t deviceId, const std::string &
         ret = ADUMP_FAILED;
     }
     // 先同步落 _host.o，再做慢的 kernel_meta 搜索拷贝。落盘失败需传播，保持与拆分前一致的错误可观测性。
-    if (kernelCollector_.DumpHostKernelBin(dumpPath) != ADUMP_SUCCESS) {
+    std::string hostOPath;
+    if (kernelCollector_.DumpHostKernelBin(dumpPath, hostOPath) != ADUMP_SUCCESS) {
         ret = ADUMP_FAILED;
     }
     if (kernelCollector_.StartCollectKernel(dumpPath) != ADUMP_SUCCESS) {

@@ -37,6 +37,7 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/exception/exception_info_common.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_info_collector.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_symbol_locator.cpp
+    ${ADUMP_ADUMP_DIR}/exception/kernel_source_symbolizer.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_pc_fixer.cpp
     ${ADUMP_ADUMP_DIR}/exception/register_config/register_config.cpp
     ${ADUMP_ADUMP_DIR}/exception/thread_manager.cpp

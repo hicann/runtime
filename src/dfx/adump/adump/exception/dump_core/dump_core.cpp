@@ -22,7 +22,7 @@ namespace Adx {
 int32_t DumpCore::DumpCoreFile(const rtExceptionInfo &exception)
 {
     if (ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo_) == ADUMP_SUCCESS) {
-        KernelSymbolLocator::DumpErrorSymbols(exception, exceptionRegInfo_);
+        KernelSymbolLocator::DumpErrorSymbols(exception, exceptionRegInfo_, path_);
     }
     DumpCoreInfo(exception.deviceid);
     DumpGlobalMemory(exception);

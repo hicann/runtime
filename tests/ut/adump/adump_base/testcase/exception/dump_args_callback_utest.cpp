@@ -327,7 +327,8 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_Basic)
     ExceptionDumpInfo info = {0};
 
     DumpArgsCallback callback(exception, info, ws.Root());
-    EXPECT_EQ(callback.DumpKernelErrorSymbols(), ADUMP_SUCCESS);
+    ErrorLocation location;
+    EXPECT_EQ(callback.DumpKernelErrorSymbols(location), ADUMP_SUCCESS);
 }
 
 TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_InitFailed)
@@ -341,7 +342,8 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_InitFailed)
     MOCKER(&KernelSymbolLocator::InitFromBinHandle).stubs().will(returnValue(ADUMP_FAILED));
 
     DumpArgsCallback callback(exception, info, ws.Root());
-    EXPECT_EQ(callback.DumpKernelErrorSymbols(), ADUMP_FAILED);
+    ErrorLocation location;
+    EXPECT_EQ(callback.DumpKernelErrorSymbols(location), ADUMP_FAILED);
 }
 
 TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_GetRegInfoFailed)
@@ -356,7 +358,8 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_GetRegInfoFailed)
     MOCKER_CPP(&ExceptionInfoCommon::GetExceptionRegInfo).stubs().will(returnValue(ADUMP_FAILED));
 
     DumpArgsCallback callback(exception, info, ws.Root());
-    EXPECT_EQ(callback.DumpKernelErrorSymbols(), ADUMP_FAILED);
+    ErrorLocation location;
+    EXPECT_EQ(callback.DumpKernelErrorSymbols(location), ADUMP_FAILED);
 }
 
 TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_LocateFailed)
@@ -369,10 +372,11 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_LocateFailed)
 
     MOCKER(&KernelSymbolLocator::InitFromBinHandle).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER_CPP(&ExceptionInfoCommon::GetExceptionRegInfo).stubs().will(returnValue(ADUMP_SUCCESS));
-    MOCKER(&KernelSymbolLocator::LocateAndPrintErrorSymbolsForCore).stubs().will(returnValue(ADUMP_FAILED));
+    MOCKER(&KernelSymbolLocator::LocateErrorSymbolsForCore).stubs().will(returnValue(ADUMP_FAILED));
 
     DumpArgsCallback callback(exception, info, ws.Root());
-    EXPECT_EQ(callback.DumpKernelErrorSymbols(), ADUMP_FAILED);
+    ErrorLocation location;
+    EXPECT_EQ(callback.DumpKernelErrorSymbols(location), ADUMP_FAILED);
 }
 
 TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_LocateSuccess)
@@ -385,10 +389,11 @@ TEST_F(DumpArgsCallbackUtest, Test_DumpKernelErrorSymbols_LocateSuccess)
 
     MOCKER(&KernelSymbolLocator::InitFromBinHandle).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER_CPP(&ExceptionInfoCommon::GetExceptionRegInfo).stubs().will(returnValue(ADUMP_SUCCESS));
-    MOCKER(&KernelSymbolLocator::LocateAndPrintErrorSymbolsForCore).stubs().will(returnValue(ADUMP_SUCCESS));
+    MOCKER(&KernelSymbolLocator::LocateErrorSymbolsForCore).stubs().will(returnValue(ADUMP_SUCCESS));
 
     DumpArgsCallback callback(exception, info, ws.Root());
-    EXPECT_EQ(callback.DumpKernelErrorSymbols(), ADUMP_SUCCESS);
+    ErrorLocation location;
+    EXPECT_EQ(callback.DumpKernelErrorSymbols(location), ADUMP_SUCCESS);
 }
 
 TEST_F(DumpArgsCallbackUtest, Test_DumpDfxArgs_QueryDfxInfoGetFunctionFailed)

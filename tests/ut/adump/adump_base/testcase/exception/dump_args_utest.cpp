@@ -2563,14 +2563,17 @@ TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_Idempotent)
     ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), kernelName), ADUMP_SUCCESS);
 
     // 首次落盘：文件不存在，正常写入。
-    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    std::string hostOPath;
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root(), hostOPath), ADUMP_SUCCESS);
     Path hostBinPath(ws.Root());
     hostBinPath.Concat(kernelName + "_host.o");
     EXPECT_TRUE(hostBinPath.Exist());
+    // 出参应回填实际落盘路径，且与文件系统上的 _host.o 一致。
+    EXPECT_EQ(hostOPath, hostBinPath.GetString());
 
     // 二次落盘：文件已存在且大小一致。即使 File::Write 被打桩为失败，幂等守卫也应跳过写并返回成功。
     MOCKER_CPP(&File::Write).expects(never());
-    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root(), hostOPath), ADUMP_SUCCESS);
     GlobalMockObject::verify();
 }
 
@@ -2586,7 +2589,8 @@ TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_EmptyKernelNameSkip)
     ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), ""), ADUMP_SUCCESS);
 
     // 前置守卫命中，跳过写、返回成功，且不产生 "_host.o"。
-    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    std::string hostOPath;
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root(), hostOPath), ADUMP_SUCCESS);
     Path hostBinPath(ws.Root());
     hostBinPath.Concat("_host.o");
     EXPECT_FALSE(hostBinPath.Exist());
@@ -2613,7 +2617,9 @@ TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_TruncatedFileRewrite)
     ASSERT_TRUE(hostBinPath.Exist());
 
     // 大小不匹配，幂等守卫不跳过，应重写为完整内容。
-    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_SUCCESS);
+    std::string hostOPath;
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root(), hostOPath), ADUMP_SUCCESS);
+    EXPECT_EQ(hostOPath, hostBinPath.GetString());
     std::ifstream rewritten(hostBinPath.GetString(), std::ios::binary);
     std::string content((std::istreambuf_iterator<char>(rewritten)), std::istreambuf_iterator<char>());
     EXPECT_EQ(content, g_idemHostBinContent);
@@ -2632,6 +2638,7 @@ TEST_F(DumpArgsUtest, Test_DumpHostKernelBin_ShortWriteFail)
     char fakeHandle[] = "fake_bin_handle";
     ASSERT_EQ(collector.InitFromBinHandle(static_cast<rtBinHandle>(fakeHandle), kernelName), ADUMP_SUCCESS);
 
-    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root()), ADUMP_FAILED);
+    std::string hostOPath;
+    EXPECT_EQ(collector.DumpHostKernelBin(ws.Root(), hostOPath), ADUMP_FAILED);
     GlobalMockObject::verify();
 }

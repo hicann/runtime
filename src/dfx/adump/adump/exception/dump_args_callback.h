@@ -19,6 +19,7 @@
 #include "dump_args.h"
 #include "dump_file.h"
 #include "dump_tensor.h"
+#include "kernel_symbol_locator.h"
 #include "runtime/base.h"
 #include "sys_utils.h"
 #include "log/hdc_log.h"
@@ -32,7 +33,7 @@ public:
     int32_t DumpExtraTensors();
     int32_t Dump();
     int32_t DumpKernelBin();
-    int32_t DumpKernelErrorSymbols();
+    int32_t DumpKernelErrorSymbols(ErrorLocation &outLocation);
 
 private:
     int32_t QueryDfxInfo(std::vector<uint8_t> &dfxBuffer);

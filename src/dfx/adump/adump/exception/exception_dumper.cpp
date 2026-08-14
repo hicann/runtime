@@ -22,6 +22,7 @@
 #include "exception_info_common.h"
 #include "kernel_symbol_locator.h"
 #include "kernel_info_collector.h"
+#include "kernel_source_symbolizer.h"
 #include "exception_dumper.h"
 
 namespace Adx {
@@ -378,16 +379,20 @@ void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(const rtExceptionInfo &ex
     IDE_CTRL_VALUE_WARN(ret == ADUMP_SUCCESS, return,
         "Load kernel bin buffer failed, skip early dump host kernel bin.");
 
-    // 提前同步落 _host.o；DumpHostKernelBin 幂等，后置慢搜索路径已存在则会跳过。
-    (void)collector.DumpHostKernelBin(dumpPath);
+    // 提前无条件同步落 _host.o（只依赖 kernel bin buffer，不依赖 ELF 符号解析），
+    // 保证符号表损坏等场景下 _host.o 仍能落盘供事后分析；DumpHostKernelBin 幂等，
+    // 后续 symbolize/慢搜索路径复用已落盘文件不会重复写。
+    std::string hostOPath;
+    (void)collector.DumpHostKernelBin(dumpPath, hostOPath);
 }
 
 int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath)
 {
     IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
         return ADUMP_FAILED, "Exception is not support default dump.");
+    // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
-    KernelSymbolLocator::DumpErrorSymbols(exception);
+    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
     DumpOperator excOp;
     bool find = FindExceptionOperator(exception, excOp);
     if (!find) {
@@ -414,8 +419,9 @@ int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo &excepti
 {
     IDE_CTRL_VALUE_WARN(ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception),
         return ADUMP_FAILED, "Exception is not support default dump.");
+    // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
     DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
-    KernelSymbolLocator::DumpErrorSymbols(exception);
+    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
     DumpArgs args;
     if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {
         return ADUMP_FAILED;
@@ -520,6 +526,8 @@ void ExceptionDumper::DumpCallbackData(const rtExceptionInfo &exception,
                                        const std::vector<ExceptionDumpInfo> &dumpInfos,
                                        const std::string &dumpPath)
 {
+    // 收集每个回调 info(单核) 的定位结果，循环结束后按 (.o, 偏移) 聚类打印。
+    std::vector<ErrorLocation> allLocations;
     for (const auto &info : dumpInfos) {
         IDE_LOGE("[Dump][Exception] Begin to dump callback exception. coreType=%u, coreId=%u, "
             "argAddr=%p, argSize=%u, binHandle=%p, extraTensorNum=%u, kernelName=%s.",
@@ -541,17 +549,26 @@ void ExceptionDumper::DumpCallbackData(const rtExceptionInfo &exception,
             IDE_LOGW("Dump callback data to file failed.");
         }
 
+        // 先落 _host.o(同步)，DumpKernelErrorSymbols 内定位偏移后对其批量 symbolize。
         ret = argsCallback.DumpKernelBin();
         if (ret != ADUMP_SUCCESS) {
             IDE_LOGW("Dump callback kernel bin failed.");
         }
 
-        ret = argsCallback.DumpKernelErrorSymbols();
+        ErrorLocation location;
+        ret = argsCallback.DumpKernelErrorSymbols(location);
         if (ret != ADUMP_SUCCESS) {
             IDE_LOGW("Dump callback kernel error symbols failed.");
+        } else {
+            allLocations.push_back(location);
         }
 
         IDE_LOGI("Dump callback data finished, kernelName=%s.", info.kernelName);
+    }
+    // 各 core 的源码解析已在 DumpKernelErrorSymbols → 批量 symbolize 内完成并回填，
+    // 此处只在工具可用时统一打印聚类汇总（工具不可用时汇总无源码信息、无增量价值）。
+    if (KernelSourceSymbolizer::IsAvailable()) {
+        KernelSymbolLocator::PrintClassificationSummary(allLocations);
     }
     KernelSymbolLocator::ClearCache();
     IDE_LOGI("Dump all callback data success.");

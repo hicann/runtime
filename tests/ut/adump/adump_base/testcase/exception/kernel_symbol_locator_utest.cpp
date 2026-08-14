@@ -455,15 +455,18 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintRejectsInvalidStateAndInputs)
 {
     KernelSymbolLocator locator;
     ExceptionRegInfo regInfo{0U, nullptr};
-    EXPECT_EQ(ADUMP_FAILED, locator.LocateAndPrintErrorSymbols(regInfo));
-    EXPECT_EQ(ADUMP_FAILED, locator.LocateAndPrintErrorSymbolsForCore(0U, RT_CORE_TYPE_AIC, regInfo));
+    std::vector<ErrorLocation> locations;
+    ErrorLocation singleLocation;
+    EXPECT_EQ(ADUMP_FAILED, locator.LocateErrorSymbols(regInfo, locations));
+    EXPECT_EQ(ADUMP_FAILED, locator.LocateErrorSymbolsForCore(0U, RT_CORE_TYPE_AIC, regInfo, singleLocation));
 
     ASSERT_EQ(ADUMP_SUCCESS, locator.InitFromBinBuffer(MakeElf(ValidSymbols())));
-    EXPECT_EQ(ADUMP_FAILED, locator.LocateAndPrintErrorSymbols(regInfo));
+    EXPECT_EQ(ADUMP_FAILED, locator.LocateErrorSymbols(regInfo, locations));
 
     rtExceptionErrRegInfo_t core = MakeCore(1U, RT_CORE_TYPE_AIC, 0x1000ULL, 0x1010ULL);
     ExceptionRegInfo singleCoreRegInfo{1U, &core};
-    EXPECT_EQ(ADUMP_FAILED, locator.LocateAndPrintErrorSymbolsForCore(2U, RT_CORE_TYPE_AIC, singleCoreRegInfo));
+    EXPECT_EQ(ADUMP_FAILED,
+        locator.LocateErrorSymbolsForCore(2U, RT_CORE_TYPE_AIC, singleCoreRegInfo, singleLocation));
 }
 
 TEST_F(KernelSymbolLocatorUTest, LocateAndPrintCoversMatchedNoMatchedAndLowFixedPcBranches)
@@ -480,8 +483,10 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintCoversMatchedNoMatchedAndLowFixed
         MakeCore(2U, RT_CORE_TYPE_AIC, 0x2000ULL, 0x1000ULL),
     };
     ExceptionRegInfo regInfo{3U, cores};
-    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateAndPrintErrorSymbols(regInfo));
-    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateAndPrintErrorSymbolsForCore(1U, RT_CORE_TYPE_AIV, regInfo));
+    std::vector<ErrorLocation> locations;
+    ErrorLocation singleLocation;
+    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateErrorSymbols(regInfo, locations));
+    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateErrorSymbolsForCore(1U, RT_CORE_TYPE_AIV, regInfo, singleLocation));
 }
 
 TEST_F(KernelSymbolLocatorUTest, LocateAndPrintNormalCloudV2)
@@ -496,7 +501,8 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintNormalCloudV2)
     core.errReg[RT_V100_AIC_ERR_0] = 1U << 9U;
     core.errReg[RT_V100_CUBE_ERR_0] = 0U;
     ExceptionRegInfo regInfo{1U, &core};
-    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateAndPrintErrorSymbols(regInfo));
+    std::vector<ErrorLocation> locations;
+    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateErrorSymbols(regInfo, locations));
 }
 
 TEST_F(KernelSymbolLocatorUTest, LocateAndPrintNormalCloudV4)
@@ -511,7 +517,8 @@ TEST_F(KernelSymbolLocatorUTest, LocateAndPrintNormalCloudV4)
     core.errReg[RT_V200_SU_ERROR_T0_0] = 1U;
     core.errReg[RT_V200_SU_ERR_INFO_T0_0] = 0U;
     ExceptionRegInfo regInfo{1U, &core};
-    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateAndPrintErrorSymbols(regInfo));
+    std::vector<ErrorLocation> locations;
+    EXPECT_EQ(ADUMP_SUCCESS, locator.LocateErrorSymbols(regInfo, locations));
 }
 
 TEST_F(KernelSymbolLocatorUTest, StaticPcHelpersUseFactoryResult)
@@ -536,8 +543,9 @@ TEST_F(KernelSymbolLocatorUTest, DumpErrorSymbolsCoversFailureAndSuccessPaths)
     rtExceptionErrRegInfo_t core = MakeCore(0U, RT_CORE_TYPE_AIC, 0ULL, 0ULL);
     ExceptionRegInfo regInfo{1U, &core};
 
+    const std::string dumpPath = "./";
     MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(returnValue(ADUMP_FAILED));
-    KernelSymbolLocator::DumpErrorSymbols(exception, regInfo);
+    KernelSymbolLocator::DumpErrorSymbols(exception, regInfo, dumpPath);
     GlobalMockObject::verify();
 
     g_mockElf = MakeElf(ValidSymbols());
@@ -546,9 +554,9 @@ TEST_F(KernelSymbolLocatorUTest, DumpErrorSymbolsCoversFailureAndSuccessPaths)
         .will(invoke(MockGetBinDataFromHandle));
     uint32_t v2Type = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(v2Type)).will(returnValue(true));
-    KernelSymbolLocator::DumpErrorSymbols(exception, regInfo);
+    KernelSymbolLocator::DumpErrorSymbols(exception, regInfo, dumpPath);
     GlobalMockObject::verify();
 
     MOCKER_CPP(&ExceptionInfoCommon::GetExceptionRegInfo).stubs().will(returnValue(ADUMP_FAILED));
-    KernelSymbolLocator::DumpErrorSymbols(exception);
+    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
 }

@@ -371,7 +371,7 @@ void InitV200CubeAndL1PcFixGroups(std::vector<std::vector<PcFixGroup>>& table)
 std::string BuildErrorRegistersStr(
     const char* const regNames[], size_t regNameNum, const uint32_t errReg[], size_t errRegLen)
 {
-    constexpr size_t REG_ITEM_BUF_LEN = 128U;
+    constexpr size_t REG_ITEM_BUF_LEN = 256U;
     std::string result;
     for (size_t i = 0; i < regNameNum && i < errRegLen; i++) {
         char item[REG_ITEM_BUF_LEN] = {0};

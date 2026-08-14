@@ -28,8 +28,11 @@ public:
     int32_t InitFromBinHandle(rtBinHandle BinHandle, const std::string &kernelName);
     int32_t LoadKernelBinBuffer();
     int32_t StartCollectKernel(const std::string &dumpPath) const;
-    // 快速同步落 _host.o（纯内存 buffer 写），从 StartCollectKernel 拆出、供调用方单独同步调用。
-    int32_t DumpHostKernelBin(const std::string &dumpPath) const;
+    // 快速同步落 _host.o（纯内存 buffer 写），从 StartCollectKernel 拆出、供调用方单独同步调用；
+    // outHostOPath 回传落盘绝对路径，供后续 symbolize 使用。
+    int32_t DumpHostKernelBin(const std::string &dumpPath, std::string &outHostOPath) const;
+    // 拼出 _host.o 落盘路径（不落盘），供回退/校验使用。
+    std::string GetHostOFilePath(const std::string &dumpPath) const;
     std::string GetProcessedKernelName() const;
     std::vector<std::string> GetSearchPath() const;
     std::string SearchJsonFiles(const std::string &rootPath, const std::string &targetString) const;
