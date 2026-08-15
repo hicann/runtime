@@ -334,6 +334,7 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/hwts_engine.cc

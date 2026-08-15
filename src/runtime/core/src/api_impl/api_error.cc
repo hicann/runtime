@@ -7720,6 +7720,12 @@ rtError_t ApiErrorDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, 
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
+rtError_t ApiErrorDecorator::RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
+{
+    // 不校验func是否为nullptr，允许客户端传nullptr清除回调
+    return impl_->RegisterParseDfxInfoFunc(func);
+}
+
 rtError_t ApiErrorDecorator::ModelGetStreams(const Model* const mdl, Stream** streams, uint32_t* numStreams)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

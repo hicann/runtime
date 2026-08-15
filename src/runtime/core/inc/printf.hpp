@@ -111,6 +111,8 @@ rtError_t InitPrintf(void* addr, const size_t blockSize, const Device* const dev
 rtError_t InitSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv);
 rtError_t ParsePrintf(void* addr, const size_t blockSize, Driver* curDrv);
 rtError_t ParseSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv, const Device* const dev);
+rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId);
+rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId);
 } // namespace runtime
 } // namespace cce
 

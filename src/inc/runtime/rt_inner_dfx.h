@@ -40,6 +40,50 @@ using rtKernelDfxInfoProFunc =
  */
 RTS_API rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func);
 
+/**
+ * @brief rtDfxParseParam struct
+ * @param data      Pointer to Host-side block snapshot (includes BlockInfo + ReadInfo + data area +
+ * WriteInfo)
+ * @param datalen   Total block length in bytes (blockSize)
+ * @param readIdx   Ring buffer read position
+ * @param writeIdx  Ring buffer write position
+ * @param coreType  Core type: 0=AIC, 1=AIV, 2=SIMT
+ * @param coreId    Core ID
+ * @param deviceId  User device ID (converted from driver device ID via GetUserDevIdByDeviceId)
+ */
+typedef struct rtDfxParseParam {
+    void* data;
+    uint64_t datalen;
+    uint64_t readIdx;
+    uint64_t writeIdx;
+    uint32_t coreType;
+    uint32_t coreId;
+    uint32_t deviceId;
+} rtDfxParseParam;
+
+/**
+ * @brief Callback function invoked by runtime to deliver AI core dump block data
+ * @param [in] param       Pointer to rtDfxParseParam containing block data and ring buffer info
+ * @param [out] consumedLen Bytes consumed by callback.
+ *             SIMD: consumedLen is treated as a flag (0=not processed, non-zero=processed).
+ *                   readIdx is advanced to writeIdx regardless of the actual value.
+ *             SIMT: consumedLen is the actual number of bytes consumed.
+ *                   readIdx is advanced by consumedLen (clamped to availableData).
+ *             Set to 0 if no data consumed (data retained for next round).
+ * @note This callback is invoked synchronously in the PRINTF thread.
+ *       The data pointer remains valid during callback invocation.
+ *       The callback must not block or perform long-running operations.
+ */
+using rtParseDfxInfoFunc = void (*)(const rtDfxParseParam* param, uint64_t* consumedLen);
+
+/**
+ * @brief Register callback function for AI core dump block data delivery
+ * @param [in] func  Callback function pointer. Pass nullptr to clear existing callback.
+ *                   Duplicate registration is allowed (overwrites existing callback).
+ * @return RT_ERROR_NONE on success
+ */
+RTS_API rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func);
+
 #if defined(__cplusplus)
 }
 #endif

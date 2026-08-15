@@ -24,6 +24,7 @@
 #include "runtime/rt_inner_dfx.h"
 #include "npu_driver.hpp"
 #include "device.hpp"
+#include "parse_kernel_dfx_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1267,6 +1268,190 @@ rtError_t ParseSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv, co
     }
     ret = ExecuteKernelDfxInfoFunc(blockAddr, dumpReadStartAddr, totalReadBufLen, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Execute kernel dfx info func failed, ret=%u", ret);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    auto props = curDrv->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    // blockSize 最大 64MB(2^26) × totalCoreNum 最大 1024(2^10) = 64GB(2^36)，不会溢出 uint64_t
+    const uint64_t totalLen = blockSize * totalCoreNum;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    rtError_t ret = curDrv->MemCopySync(hostData.data(), totalLen, addr, totalLen, RT_MEMCPY_DEVICE_TO_HOST, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u, deviceId=%u", ret, userDeviceId);
+
+    for (size_t i = 0U; i < totalCoreNum; i++) {
+        uint8_t* blockAddr = hostData.data() + blockSize * i;
+        BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+        const BlockWriteInfo* writeInfo =
+            RtPtrToPtr<const BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+        const BlockInfo* blockInfo = RtPtrToPtr<const BlockInfo*>(blockAddr);
+
+        // 校验readIdx和writeIdx在合法的范围内
+        COND_RETURN_AND_MSG_INNER(
+            (readInfo->readIdx > blockInfo->remainLen), RT_ERROR_INVALID_VALUE,
+            "Read idx %" PRIu64 " is invalid. The value of readIdx must be less than or equal to that of remainLen %u.",
+            readInfo->readIdx, blockInfo->remainLen);
+        COND_RETURN_AND_MSG_INNER(
+            (writeInfo->writeIdx > blockInfo->remainLen), RT_ERROR_INVALID_VALUE,
+            "Write idx %" PRIu64
+            " is invalid. The value of writeIdx must be less than or equal to that of remainLen %u.",
+            writeInfo->writeIdx, blockInfo->remainLen);
+        // 表示没有信息更新
+        if (readInfo->readIdx == writeInfo->writeIdx) {
+            RT_LOG(
+                RT_LOG_INFO,
+                "block[%zu] no data updates, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+                ", coreType=%u, coreId=%u, deviceId=%u",
+                i, readInfo->readIdx, writeInfo->writeIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
+            continue;
+        }
+
+        const uint64_t readIdx = readInfo->readIdx;
+        // SIMD 全量消费：readIdx 无条件对齐 writeIdx，先推进 + H2D 回写，后调 cb。
+        // 原因：SIMD 单核独占 block，kernel 侧 check_ringbuf_space 要求 reader 全量消费（w==r），
+        // 若部分消费（readIdx 停在中间）会导致 kernel 等待超时丢数据。
+        // consumedLen 仅用于日志记录 cb 处理情况，不参与控制流。
+        readInfo->readIdx = writeInfo->writeIdx;
+        void* deviceAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + blockSize * i + sizeof(BlockInfo));
+        ret = curDrv->MemCopySync(
+            deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
+        COND_RETURN_ERROR(
+            (ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
+
+        rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+        if (cb != nullptr) {
+            uint64_t consumedLen = 0U;
+            rtDfxParseParam param = {blockAddr,       static_cast<uint64_t>(blockSize),
+                                     readIdx,         writeInfo->writeIdx,
+                                     blockInfo->flag, blockInfo->coreId,
+                                     userDeviceId};
+            // 调用回调将整个block交付给adump，adump自行遍历DumpInfoHead并解析打印，返回实际消费的字节数consumedLen
+            cb(&param, &consumedLen);
+            RT_LOG(
+                RT_LOG_INFO,
+                "block[%zu] callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
+                i, consumedLen, readIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
+        } else {
+            RT_LOG(
+                RT_LOG_WARNING,
+                "block[%zu] no callback registered, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", deviceId=%u", i, readIdx,
+                writeInfo->writeIdx, userDeviceId);
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    // D2H拷贝
+    std::vector<uint8_t> hostData(blockSize, 0);
+    rtError_t ret = curDrv->MemCopySync(hostData.data(), blockSize, addr, blockSize, RT_MEMCPY_DEVICE_TO_HOST, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u, deviceId=%u", ret, userDeviceId);
+
+    // 解析头部信息
+    uint8_t* blockAddr = hostData.data();
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    const BlockWriteInfo* writeInfo = RtPtrToPtr<const BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    const BlockInfo* blockInfo = RtPtrToPtr<const BlockInfo*>(blockAddr);
+    // 校验readIdx和writeIdx在合法的范围内
+    COND_RETURN_AND_MSG_INNER(
+        (readInfo->readIdx > writeInfo->writeIdx), RT_ERROR_INVALID_VALUE,
+        "The value of readIdx %" PRIu64 " must be less than or equal to that of writeIdx %" PRIu64 ".",
+        readInfo->readIdx, writeInfo->writeIdx);
+    // 校验remainLen合法性（防止后续取模除0）
+    COND_RETURN_AND_MSG_INNER(
+        (blockInfo->remainLen == 0U), RT_ERROR_INVALID_VALUE, "remainLen is 0, invalid block configuration.");
+    // 表示没有信息更新
+    if (readInfo->readIdx == writeInfo->writeIdx) {
+        RT_LOG(
+            RT_LOG_INFO,
+            "no data updates, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
+            readInfo->readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
+        return RT_ERROR_NONE;
+    }
+
+    const uint64_t readIdx = readInfo->readIdx;
+    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    if (cb != nullptr) {
+        uint64_t consumedLen = 0U;
+        rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),  readIdx,
+                                 writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U,
+                                 userDeviceId};
+        // 调用回调将整个block交付给adump，adump自行线性化+pack
+        // walk+遍历DumpInfoHead并解析打印，返回实际消费的字节数consumedLen
+        // runtime根据consumedLen清零已读区并推进readIdx，未消费的数据（半包）留存待下一轮
+        cb(&param, &consumedLen);
+        COND_RETURN_DEBUG(
+            (consumedLen == 0U), RT_ERROR_NONE,
+            "consumedLen=0, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", data retained for next round", readIdx,
+            writeInfo->writeIdx);
+        // SIMT: writeIdx 单调递增，用绝对值差判断溢出，取模判断回绕
+        const uint64_t readIdxMod = readIdx % blockInfo->remainLen;
+        uint64_t availableData;
+        if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
+            availableData = blockInfo->remainLen;
+        } else {
+            const uint64_t writeIdxMod = writeInfo->writeIdx % blockInfo->remainLen;
+            if (readIdxMod > writeIdxMod) {
+                availableData = blockInfo->remainLen - readIdxMod + writeIdxMod;
+            } else {
+                availableData = writeIdxMod - readIdxMod;
+            }
+        }
+        if (consumedLen > availableData) {
+            RT_LOG(
+                RT_LOG_WARNING, "consumedLen=%" PRIu64 " exceeds availableData=%" PRIu64 ", fallback to availableData.",
+                consumedLen, availableData);
+            consumedLen = availableData;
+        }
+
+        RT_LOG(
+            RT_LOG_INFO,
+            "callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+            ", coreType=%u, coreId=%u, deviceId=%u",
+            consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
+
+        /* clear readed field */
+        const void* clearBufAddr = RtValueToPtr<const void*>(blockInfo->dumpAddr + readIdxMod);
+        if (readIdxMod + consumedLen > blockInfo->remainLen) {
+            const uint64_t clearLen = blockInfo->remainLen - readIdxMod;
+            ret = curDrv->MemSetSync(clearBufAddr, clearLen, 0U, clearLen);
+            COND_RETURN_ERROR(
+                (ret != RT_ERROR_NONE), ret, "MemSetSync proc step1 failed, ret=%u, deviceId=%u", ret, userDeviceId);
+            ret = curDrv->MemSetSync(
+                RtValueToPtr<void*>(blockInfo->dumpAddr), consumedLen - clearLen, 0U, consumedLen - clearLen);
+            COND_RETURN_ERROR(
+                (ret != RT_ERROR_NONE), ret, "MemSetSync proc step2 failed, ret=%u, deviceId=%u", ret, userDeviceId);
+        } else {
+            ret = curDrv->MemSetSync(clearBufAddr, consumedLen, 0U, consumedLen);
+            COND_RETURN_ERROR(
+                (ret != RT_ERROR_NONE), ret, "MemSetSync proc failed, ret=%u, deviceId=%u", ret, userDeviceId);
+        }
+
+        RT_LOG(
+            RT_LOG_INFO,
+            "cleared consumedLen=%" PRIu64 " bytes, readIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
+            consumedLen, readIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
+
+        // 更新读指针
+        readInfo->readIdx = readIdx + consumedLen;
+    } else {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "no callback registered, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
+            readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
+        // 更新读指针
+        readInfo->readIdx = writeInfo->writeIdx;
+    }
+    void* deviceAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
+    ret = curDrv->MemCopySync(
+        deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
 
     return RT_ERROR_NONE;
 }

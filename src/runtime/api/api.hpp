@@ -925,6 +925,7 @@ public:
         rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue) = 0;
 
     virtual rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) = 0;
+    virtual rtError_t RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) = 0;
 };
 } // namespace runtime
 } // namespace cce

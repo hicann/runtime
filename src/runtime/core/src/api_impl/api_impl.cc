@@ -80,6 +80,7 @@
 #include "task_enum_desc.hpp"
 #include "rt_inner_mem.h"
 #include "kernel_dfx_info.hpp"
+#include "parse_kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
 #include "event_task.h"
 #include "kernel_utils.hpp"
@@ -9638,6 +9639,15 @@ rtError_t ApiImpl::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDf
         RT_LOG(RT_LOG_ERROR, "SetKernelDfxInfoCallback failed, retCode=%#x", error);
         return error;
     }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
+{
+    ParseKernelDfxInfo* parseKernelDfxInfoInstance = ParseKernelDfxInfo::Instance();
+    NULL_PTR_RETURN(parseKernelDfxInfoInstance, RT_ERROR_INSTANCE_NULL);
+    const rtError_t error = parseKernelDfxInfoInstance->SetCallback(func);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "RegisterParseDfxInfoFunc failed, retCode=%#x", error);
     return RT_ERROR_NONE;
 }
 

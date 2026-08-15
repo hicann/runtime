@@ -2308,6 +2308,11 @@ rtError_t ApiDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKer
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
+rtError_t ApiDecorator::RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
+{
+    return impl_->RegisterParseDfxInfoFunc(func);
+}
+
 rtError_t ApiDecorator::ModelGetStreams(const Model* const mdl, Stream** streams, uint32_t* numStreams)
 {
     return impl_->ModelGetStreams(mdl, streams, numStreams);

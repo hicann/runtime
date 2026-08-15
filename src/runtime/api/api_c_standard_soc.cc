@@ -1785,6 +1785,16 @@ rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoPr
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->RegisterParseDfxInfoFunc(func);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void* ptr)
 {
     Api* const apiInstance = Api::Instance();

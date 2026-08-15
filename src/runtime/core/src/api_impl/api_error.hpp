@@ -792,6 +792,7 @@ public:
     rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, Kernel** const funcHandle) override;
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
+    rtError_t RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) override;
 
 private:
     rtError_t CheckArgs(const rtArgsEx_t* const argsInfo) const;

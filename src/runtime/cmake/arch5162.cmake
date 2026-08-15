@@ -244,6 +244,7 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/dfx/atrace_log.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fast_recover.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
     ${RUNTIME_CORE_DIR}/src/engine/engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc

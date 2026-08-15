@@ -43,6 +43,7 @@
 #include "device_sq_cq_pool.hpp"
 #include "sq_addr_memory_pool.hpp"
 #include "printf.hpp"
+#include "parse_kernel_dfx_info.hpp"
 #include "runtime_task_manager.h"
 #include "maintenance_task.h"
 #include "timeout_set_task.h"
@@ -2306,7 +2307,17 @@ rtError_t RawDevice::ParseSimtPrintInfo()
             (ret != RT_ERROR_NONE), ret, "InitSimtPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
     }
 
-    ret = ParseSimtPrintf(simtPrintfAddr_, simtPrintLen_, driver_, this);
+    uint32_t userDeviceId = deviceId_;
+    if (Runtime::Instance()->GetUserDevIdByDeviceId(deviceId_, &userDeviceId) != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "GetUserDevIdByDeviceId failed, fallback to driver deviceId=%u.", deviceId_);
+        userDeviceId = deviceId_;
+    }
+    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    if (cb != nullptr) {
+        ret = ParseSimtPrintfV2(simtPrintfAddr_, simtPrintLen_, driver_, userDeviceId);
+    } else {
+        ret = ParseSimtPrintf(simtPrintfAddr_, simtPrintLen_, driver_, this);
+    }
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ParseSimtPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
     return RT_ERROR_NONE;
 }
@@ -2323,7 +2334,17 @@ rtError_t RawDevice::ParseSimdPrintInfo()
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
     }
 
-    ret = ParsePrintf(printfAddr_, printblockLen_, driver_);
+    uint32_t userDeviceId = deviceId_;
+    if (Runtime::Instance()->GetUserDevIdByDeviceId(deviceId_, &userDeviceId) != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "GetUserDevIdByDeviceId failed, fallback to driver deviceId=%u.", deviceId_);
+        userDeviceId = deviceId_;
+    }
+    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    if (cb != nullptr) {
+        ret = ParsePrintfV2(printfAddr_, printblockLen_, driver_, userDeviceId);
+    } else {
+        ret = ParsePrintf(printfAddr_, printblockLen_, driver_);
+    }
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ParsePrintf failed, device_id=%u, ret=%u.", deviceId_, ret);
     return RT_ERROR_NONE;
 }

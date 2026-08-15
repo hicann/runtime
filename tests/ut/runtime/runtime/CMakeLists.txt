@@ -467,6 +467,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/engine/engine_factory_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/binary_loader_tiny_stub.cc
@@ -640,6 +641,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
@@ -766,6 +768,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
@@ -1267,6 +1270,7 @@ add_executable(runtime_utest_dfx
     test/main.cc
     test/rt_utest_dfx_api.cc
     test/rt_utest_printf.cc
+    test/rt_utest_parse_dfx_info.cc
 )
 
 target_compile_definitions(runtime_utest_dfx PUBLIC
@@ -1658,6 +1662,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc
+    ${TOP_DIR}/src/runtime/core/src/dfx/parse_kernel_dfx_info.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc

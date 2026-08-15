@@ -45,5 +45,23 @@ rtError_t ParseSimtPrintf(void* addr, const size_t blockSize, Driver* curDrv, co
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    UNUSED(addr);
+    UNUSED(blockSize);
+    UNUSED(curDrv);
+    UNUSED(userDeviceId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint32_t userDeviceId)
+{
+    UNUSED(addr);
+    UNUSED(blockSize);
+    UNUSED(curDrv);
+    UNUSED(userDeviceId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

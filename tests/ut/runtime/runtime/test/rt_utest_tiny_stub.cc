@@ -1432,3 +1432,21 @@ TEST_F(TinyStubTest, stream_ub_db_stub)
     rtError_t ret = StreamUbDbSend(nullptr, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
+
+TEST_F(TinyStubTest, ParsePrintfV2_ExpectFeatureNotSupport)
+{
+    rtError_t error = ParsePrintfV2(nullptr, 0U, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, ParseSimtPrintfV2_ExpectFeatureNotSupport)
+{
+    rtError_t error = ParseSimtPrintfV2(nullptr, 0U, nullptr, 0U);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, rtRegisterParseDfxInfoFunc_ExpectFeatureNotSupport)
+{
+    rtError_t error = rtRegisterParseDfxInfoFunc(nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
