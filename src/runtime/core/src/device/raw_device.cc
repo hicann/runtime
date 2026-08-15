@@ -253,6 +253,8 @@ rtError_t RawDevice::InitRawDriver()
     isDrvSupportRegisterQueryAndGetAttr_ =
         NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR);
 
+    isDrvSupportPinRegister_ = NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_SVM_MEM_REGISTER_HOST_PINNED);
+
     driver_ = devDrv;
     return error;
 }

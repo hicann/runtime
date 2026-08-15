@@ -2011,12 +2011,10 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void* ptr, uint64_t size, uint32_t f
         "The valid flag is an OR combination of RT_MEM_HOST_REGISTER_MAPPED(0x2U), RT_MEM_HOST_REGISTER_IOMEMORY(0x4U),"
         " RT_MEM_HOST_REGISTER_READONLY(0x8U), and RT_MEM_HOST_REGISTER_PINNED(0x10000000U)");
 
-    rtError_t error = CheckMemoryRangeRegistered(ptr, size);
+    const rtError_t error = impl_->HostRegisterV2(ptr, size, flag);
     COND_RETURN_AND_MSG_OUTER(
-        error != RT_ERROR_NONE, error, ErrorCode::EE1018, "Host memory address registration",
+        error == RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED, error, ErrorCode::EE1018, "Host memory address registration",
         "The memory range has already been registered");
-
-    error = impl_->HostRegisterV2(ptr, size, flag);
     ERROR_RETURN(error, "Register host memory failed, MemSize=%" PRIu64 "(bytes), flag=%#x.", size, flag);
     return error;
 }
@@ -2026,6 +2024,9 @@ rtError_t ApiErrorDecorator::HostUnregister(void* ptr)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Host memory deregistration");
 
     const rtError_t error = impl_->HostUnregister(ptr);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_HOST_MEMORY_NOT_REGISTERED, error, ErrorCode::EE1018, "Unregistering host memory",
+        "The host pointer has not been registered for device memory mapping");
     ERROR_RETURN(error, "Unregister host memory failed.");
     return error;
 }

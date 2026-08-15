@@ -1211,6 +1211,12 @@ void MockHostGetDevPointerFeatureNotSupport()
     MOCKER_CPP_VIRTUAL(driver, &Driver::HostGetDevPointer).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 }
 
+static void MockDriverIsSupportPinRegister(bool value)
+{
+    Device* device = Runtime::Instance()->CurrentContext()->Device_();
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportPinRegister).stubs().will(returnValue(value));
+}
+
 TEST_F(RtApiTest, host_register_pinned)
 {
     rtError_t error;
@@ -1219,6 +1225,7 @@ TEST_F(RtApiTest, host_register_pinned)
     void** devPtr = (void**)&value;
 
     MockHostGetDevPointerFeatureNotSupport();
+    MockDriverIsSupportPinRegister(false);
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1274,6 +1281,7 @@ TEST_F(RtApiTest, host_register_pinned_mapped)
 
     MOCKER(&halHostRegister).stubs().will(invoke(halHostRegister_stub));
     MockHostGetDevPointerFeatureNotSupport();
+    MockDriverIsSupportPinRegister(false);
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1330,6 +1338,7 @@ TEST_F(RtApiTest, host_get_device_pointer_hal_not_support)
     uintptr_t value = 0x123U;
     void** devPtr = (void**)&value;
 
+    MockDriverIsSupportPinRegister(false);
     MOCKER(&halHostRegister).stubs().will(invoke(halHostRegister_stub));
     MOCKER(&halMemHostGetDevPointer).stubs().will(invoke(halMemHostGetDevPointer_not_support_stub));
 
@@ -1350,6 +1359,7 @@ TEST_F(RtApiTest, host_register_atomic)
     uintptr_t value = 0x123U;
     void** devPtr = (void**)&value;
 
+    MockDriverIsSupportPinRegister(false);
     MOCKER(&halHostRegister).stubs().will(invoke(halHostRegister_stub));
     MockHostGetDevPointerFeatureNotSupport();
 
@@ -1369,6 +1379,7 @@ TEST_F(RtApiTest, host_register_iomemory_readonly)
     rtError_t error;
     uintptr_t value = 0x123U;
 
+    MockDriverIsSupportPinRegister(false);
     MOCKER(&halHostRegister).stubs().will(invoke(halHostRegister_flag_stub));
     MockHostGetDevPointerFeatureNotSupport();
 
@@ -1416,6 +1427,7 @@ TEST_F(RtApiTest, pin_memory_attribute)
     auto ptr = std::make_unique<uint32_t>();
     rtPointerAttributes_t attributes;
 
+    MockDriverIsSupportPinRegister(false);
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 

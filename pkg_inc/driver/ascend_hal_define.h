@@ -857,15 +857,17 @@ struct MEMCPY2D {
 };
 
 #define MEM_REGISTER_READ_ONLY 0X1UL << 28UL
+#define MEM_REGISTER_HOST_PINNED 0X1UL << 29UL
 /* enables different options to be specified that affect the host register */
 enum drvRegisterTpye {
-    HOST_MEM_MAP_DEV = 0,     /* HOST_MEM map to device */
-    HOST_SVM_MAP_DEV,         /* HOST_SVM_MEM map to device */
-    DEV_SVM_MAP_HOST,         /* DEV_SVM_MEM map to host */
-    HOST_MEM_MAP_DEV_PCIE_TH, /* HOST_MEM map to device, accessed by pcie_through */
-    DEV_MEM_MAP_HOST,         /* DEV_MEM map to host */
-    HOST_MEM_MAP_DMA,         /* Host va preprocess into dma addr to improve memcpy performance */
-    HOST_IO_MAP_DEV,          /* Host va io memory map to device */
+    HOST_MEM_MAP_DEV = 0,                           /* HOST_MEM map to device */
+    HOST_SVM_MAP_DEV,                               /* HOST_SVM_MEM map to device */
+    DEV_SVM_MAP_HOST,                               /* DEV_SVM_MEM map to host */
+    HOST_MEM_MAP_DEV_PCIE_TH,                       /* HOST_MEM map to device, accessed by pcie_through */
+    HOST_MEM_MAP_DEV_V2 = HOST_MEM_MAP_DEV_PCIE_TH, /* Host mem map to device of new version */
+    DEV_MEM_MAP_HOST,                               /* DEV_MEM map to host */
+    HOST_MEM_MAP_DMA,                               /* Host va preprocess into dma addr to improve memcpy performance */
+    HOST_IO_MAP_DEV,                                /* Host va io memory map to device */
     HOST_REGISTER_MAX_TPYE
 };
 
@@ -1520,6 +1522,7 @@ typedef enum tagDrvFeature {
     FEATURE_DMS_QUERY_CHIP_DIE_ID = 10, /* Query by physical device id */
     FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR = 11,
     FEATURE_APM_RES_MAP_REMOTE = 12,
+    FEATURE_SVM_MEM_REGISTER_HOST_PINNED = 13,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

@@ -431,6 +431,7 @@ public:
     virtual void SetAixErrRecoverCnt() = 0;
     virtual uint32_t GetAixErrRecoverCnt() const = 0;
     virtual bool IsSupportUserMem() const = 0;
+    virtual bool IsSupportPinRegister() const = 0;
     virtual rtError_t EnableP2PWithOtherDevice(const uint32_t peerPhyDeviceId) = 0;
     virtual bool IsSupportFeature(RtOptionalFeatureType f) const = 0;
     virtual IDeviceSnapshotOps* GetDeviceSnapShot(void) = 0;

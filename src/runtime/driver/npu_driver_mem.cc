@@ -196,25 +196,35 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in, co
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::HostRegister(
-    void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr, const uint32_t deviceId)
+rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void** devPtr, const uint32_t deviceId)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
+    const bool isIOMemory = ((type & RT_MEM_HOST_REGISTER_IOMEMORY) != 0U);
+    const bool isReadOnly = ((type & RT_MEM_HOST_REGISTER_READONLY) != 0U);
 
-    rtError_t error = RT_ERROR_NONE;
     uint32_t flag = HOST_MEM_MAP_DEV_PCIE_TH;
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
         flag = static_cast<uint32_t>(HOST_MEM_MAP_DEV);
     }
-    const uint32_t typeMask = static_cast<uint32_t>(type);
-    if ((typeMask & static_cast<uint32_t>(RT_HOST_REGISTER_IOMEMORY)) != 0U) {
+
+    if (isIOMemory) {
         flag = static_cast<uint32_t>(HOST_IO_MAP_DEV);
     }
-    if ((typeMask & static_cast<uint32_t>(RT_HOST_REGISTER_READONLY)) != 0U) {
+    if (isReadOnly) {
         flag |= static_cast<uint32_t>(MEM_REGISTER_READ_ONLY);
+    }
+
+    // 需要pin且无IO memory语义
+    if (((type & RT_MEM_HOST_REGISTER_PINNED) != 0U) && (!isIOMemory)) {
+        // 有map或readonly语义
+        if (((type & RT_MEM_HOST_REGISTER_MAPPED) != 0U) || (isReadOnly)) {
+            flag |= static_cast<uint32_t>(MEM_REGISTER_HOST_PINNED);
+        } else {
+            flag = static_cast<uint32_t>(MEM_REGISTER_HOST_PINNED);
+        }
     }
 
     RT_LOG(RT_LOG_INFO, "memory type %u.", flag);
@@ -228,39 +238,44 @@ rtError_t NpuDriver::HostRegister(
         DRV_ERROR_PROCESS(
             drvRet, "Call driver api halHostRegister failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet),
             deviceId);
-        error = RT_GET_DRV_ERRCODE(drvRet);
-    } else {
-        InsertMappedMemory(ptr, size, *devPtr);
+        // Driver will return error 'BUSY' when ptr re-registered. But 'BUSY' has different meaning in other interface.
+        return (drvRet == DRV_ERROR_BUSY) ? RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED : RT_GET_DRV_ERRCODE(drvRet);
     }
-
-    return error;
+    return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId)
+rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    /* 1980c wide&&deep temp code */
     drvError_t drvRet = DRV_ERROR_NONE;
-    uint32_t flag = HOST_MEM_MAP_DEV_PCIE_TH;
-    if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
-        flag = static_cast<uint32_t>(HOST_MEM_MAP_DEV);
+    if (!supportDrvPinReg) {
+        /* 1980c wide&&deep temp code */
+        uint32_t flag = HOST_MEM_MAP_DEV_PCIE_TH;
+        if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
+            flag = static_cast<uint32_t>(HOST_MEM_MAP_DEV);
+        }
+        COND_RETURN_WARN(
+            &halHostUnregisterEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+            "[drv api] halHostUnregisterEx does not exist");
+        drvRet = halHostUnregisterEx(ptr, deviceId, static_cast<UINT32>(flag));
+    } else {
+        // driver will use this interface to unregister without flag in new version
+        drvRet = halHostUnregister(ptr, deviceId);
+        RT_LOG(RT_LOG_INFO, "call halHostUnregister return %d", static_cast<int32_t>(drvRet));
     }
-    COND_RETURN_WARN(
-        &halHostUnregisterEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostUnregisterEx does not exist");
 
-    drvRet = halHostUnregisterEx(ptr, deviceId, static_cast<UINT32>(flag));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halHostUnregisterEx failed, drvRetCode=%d, drvDevId=%u.",
+            drvRet, "Call driver api halHostUnregister/halHostUnregisterEx failed, drvRetCode=%d, drvDevId=%u.",
             static_cast<int32_t>(drvRet), deviceId);
-        return RT_GET_DRV_ERRCODE(drvRet);
+        return (drvRet == DRV_ERROR_NOT_EXIST) ? RT_ERROR_HOST_MEMORY_NOT_REGISTERED : RT_GET_DRV_ERRCODE(drvRet);
     }
-    EraseMappedMemory(ptr);
-    RT_LOG(RT_LOG_DEBUG, "halHostUnregister: device_id=%u, drvRetCode=%d!", deviceId, static_cast<int32_t>(drvRet));
+
+    RT_LOG(RT_LOG_DEBUG, "HostUnregister: device_id=%u, drvRetCode=%d!", deviceId, static_cast<int32_t>(drvRet));
     return RT_ERROR_NONE;
 }
 

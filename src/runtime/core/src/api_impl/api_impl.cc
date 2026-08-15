@@ -2560,8 +2560,16 @@ rtError_t ApiImpl::HostRegister(void* ptr, uint64_t size, rtHostRegisterType typ
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 "u, type=%d.", size, type);
     Context* const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
 
-    return curCtx->Device_()->Driver_()->HostRegister(ptr, size, type, devPtr, curCtx->Device_()->Id_());
+    const rtError_t error =
+        dev->Driver_()->HostRegister(ptr, size, static_cast<uint32_t>(type), devPtr, curCtx->Device_()->Id_());
+    if ((!dev->IsSupportPinRegister()) && (error == RT_ERROR_NONE)) {
+        (void)InsertMappedMemory(ptr, size, *devPtr);
+    }
+
+    return error;
 }
 
 rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
@@ -2574,25 +2582,32 @@ rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
     const uint32_t deviceId = dev->Id_();
 
     rtError_t error = RT_ERROR_NONE;
+    const bool isPinned = ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U);
+    const bool isMapped =
+        ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) != 0U);
+    const bool supportDrvPinReg = dev->IsSupportPinRegister();
+
     void* devPtr = nullptr;
-    void** pDevice = &devPtr;
+    void** devPtrAddr = &devPtr;
 
-    if ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) != 0U) {
-        uint32_t typeMask = static_cast<uint32_t>(RT_HOST_REGISTER_MAPPED);
-        if ((flag & RT_MEM_HOST_REGISTER_IOMEMORY) != 0U) {
-            typeMask |= static_cast<uint32_t>(RT_HOST_REGISTER_IOMEMORY);
-        }
-        if ((flag & RT_MEM_HOST_REGISTER_READONLY) != 0U) {
-            typeMask |= static_cast<uint32_t>(RT_HOST_REGISTER_READONLY);
-        }
-        error = dev->Driver_()->HostRegister(ptr, size, static_cast<rtHostRegisterType>(typeMask), pDevice, deviceId);
+    if (supportDrvPinReg) {
+        error = dev->Driver_()->HostRegister(ptr, size, flag, devPtrAddr, deviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    } else {
+        // Check range once driver not support pin register
+        error = CheckMemoryRangeRegistered(ptr, size);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+        if (isMapped) {
+            // Only pass pin semantics only when driver supports pin
+            flag &= ~RT_MEM_HOST_REGISTER_PINNED;
+            error = dev->Driver_()->HostRegister(ptr, size, flag, devPtrAddr, deviceId);
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+            (void)InsertMappedMemory(ptr, size, devPtr);
+        }
+        if (isPinned) {
+            (void)InsertPinnedMemory(ptr, size);
+        }
     }
-
-    if ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U) {
-        (void)InsertPinnedMemory(ptr, size);
-    }
-
     return error;
 }
 
@@ -2600,23 +2615,34 @@ rtError_t ApiImpl::HostUnregister(void* ptr)
 {
     Context* const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    const uint32_t deviceId = dev->Id_();
 
-    bool isRegister = false;
-    if (IsMappedMemoryBase(ptr)) {
-        isRegister = true;
-        const uint32_t deviceId = curCtx->Device_()->Id_();
-        const rtError_t error = curCtx->Device_()->Driver_()->HostUnregister(ptr, deviceId);
+    rtError_t error = RT_ERROR_NONE;
+    const bool isMapped = IsMappedMemoryBase(ptr);
+    const bool isPinned = IsPinnedMemoryBase(ptr);
+    const bool supportDrvPinReg = dev->IsSupportPinRegister();
+
+    if (supportDrvPinReg) {
+        error = dev->Driver_()->HostUnregister(ptr, deviceId, supportDrvPinReg);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    } else {
+        if (isMapped) {
+            error = dev->Driver_()->HostUnregister(ptr, deviceId, supportDrvPinReg);
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+            EraseMappedMemory(ptr);
+        }
+        if (isPinned) {
+            ErasePinnedMemory(ptr);
+        }
+        if ((!isMapped) && (!isPinned)) {
+            RT_LOG(RT_LOG_INFO, "set to error RT_ERROR_HOST_MEMORY_NOT_REGISTERED because of not registered.");
+            error = RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
+        }
     }
 
-    if (IsPinnedMemoryBase(ptr)) {
-        isRegister = true;
-        ErasePinnedMemory(ptr);
-    }
-    COND_RETURN_AND_MSG_OUTER(
-        !isRegister, RT_ERROR_HOST_MEMORY_NOT_REGISTERED, ErrorCode::EE1018, "Unregistering host memory",
-        "The host pointer has not been registered for device memory mapping");
-    return RT_ERROR_NONE;
+    return error;
 }
 
 rtError_t ApiImpl::HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag)
