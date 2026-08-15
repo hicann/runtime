@@ -548,7 +548,7 @@ static std::string QueryAndFormatRasFaultDavid(
 // 格式化 David 核心 error 信息到 aicoreBuffer，并根据 RAS 命中情况走 EZ2001 或 EZ9999 路径
 static void PrintDavidCoreInfo(
     const StarsDeviceErrorInfo* const info, const uint32_t coreIdx, const uint64_t errorNumber,
-    const std::string& errorString, const std::string& errorCode, std::string& rasFaultDesc)
+    const std::string& errorString, const std::string& errorCode, const std::string& rasFaultDesc)
 {
     constexpr size_t AICORE_BUF_LEN = 4096U;
     std::array<char, AICORE_BUF_LEN> aicoreBuffer{};
@@ -578,7 +578,6 @@ static void PrintDavidCoreInfo(
         info->u.davidCoreErrorInfo.info[coreIdx].subErrType);
     if (!rasFaultDesc.empty()) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EZ2001, aicoreBuffer.data(), "RAS", rasFaultDesc);
-        rasFaultDesc.clear();
     } else {
         RT_LOG_CALL_MSG(
             ERR_MODULE_TBE,

@@ -1859,8 +1859,8 @@ TEST_F(DavidTaskTest, aicore_ras_mte_poison_ras_miss_ez9999_fallback)
     GlobalMockObject::verify();
 }
 
-// 多 core 场景：首 core 命中 RAS 走 EZ2001，rasFaultDesc.clear() 后第二 core 走 EZ9999
-TEST_F(DavidTaskTest, aicore_ras_multi_core_ez2001_only_first_core)
+// 多 core 场景：所有 core 共享同一 rasFaultDesc，均走 EZ2001
+TEST_F(DavidTaskTest, aicore_ras_multi_core_ez2001_all_cores)
 {
     DeviceErrorProc errorProc(dev_);
     StarsDeviceErrorInfo errorInfo = {};
@@ -1877,10 +1877,10 @@ TEST_F(DavidTaskTest, aicore_ras_multi_core_ez2001_only_first_core)
     ClearLastDlogRecordLine();
     rtError_t ret = ProcessDavidStarsCoreErrorInfo(&errorInfo, 0, dev_, nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    // RAS 命中后首 core 走 EZ2001（打印 "RAS event detail"）
-    EXPECT_TRUE(DlogRecordContains("RAS event detail")) << "RAS should hit on first core";
-    // 第二 core 因 rasFaultDesc.clear() 走 EZ9999（打印 "AI Core Error"）
-    EXPECT_TRUE(DlogRecordContains("AI Core Error")) << "EZ9999 should be used for second core";
+    // RAS 命中后所有 core 均走 EZ2001（打印 "RAS event detail"）
+    EXPECT_TRUE(DlogRecordContains("RAS event detail")) << "RAS should hit on all cores";
+    // rasFaultDesc 不再被 clear，第二 core 同样走 EZ2001，不回退 EZ9999
+    EXPECT_FALSE(DlogRecordContains("AI Core Error")) << "EZ9999 fallback should not be triggered";
     g_deviceCurrentTimeStub = 0;
     faultEventFlag = 0;
     GlobalMockObject::verify();

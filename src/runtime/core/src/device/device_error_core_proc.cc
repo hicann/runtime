@@ -1539,9 +1539,6 @@ rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(
         std::string headMsg = GetStarsRingBufferHeadMsg(info->u.coreErrorInfo.comm.type);
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
         PrintCoreInfo(info, coreIdx, errorNumber, errorString, headMsg, rasFaultDesc);
-        if (!rasFaultDesc.empty()) {
-            rasFaultDesc.clear();
-        }
         ProcessMteAndFfts(info, coreIdx, isMteErr, isSupportFastRecover, isFftsPlusTask, errTaskPtr);
     }
     CheckAndSetLinkError(dev, errTaskPtr, isMteErr);
