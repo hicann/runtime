@@ -856,8 +856,8 @@ struct MEMCPY2D {
     };
 };
 
-#define MEM_REGISTER_READ_ONLY 0X1UL << 28UL
-#define MEM_REGISTER_HOST_PINNED 0X1UL << 29UL
+#define MEM_REGISTER_READ_ONLY (0X1UL << 28UL)
+#define MEM_REGISTER_HOST_PINNED (0X1UL << 29UL)
 /* enables different options to be specified that affect the host register */
 enum drvRegisterTpye {
     HOST_MEM_MAP_DEV = 0,                           /* HOST_MEM map to device */
