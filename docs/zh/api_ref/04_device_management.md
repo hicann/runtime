@@ -2225,7 +2225,7 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 <!-- npu="IPV350" id3269 -->
 - IPV350：不支持
 <!-- end id3269 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id25 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id38 -->
 
 ### 功能说明
 
@@ -2289,7 +2289,7 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 <!-- npu="IPV350" id3275 -->
 - IPV350：不支持
 <!-- end id3275 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id26 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id39 -->
 
 ### 功能说明
 

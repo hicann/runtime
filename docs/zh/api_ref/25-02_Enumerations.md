@@ -2435,6 +2435,8 @@ typedef enum tagAclrtDeviceLimit {
 
 <!-- npu="950" id106 -->
 对于Ascend 950PR/Ascend 950DT，以上选项都支持。
+
+`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时设置为0，否则接口返回`ACL_ERROR_RT_PARAM_INVALID`。
 <!-- end id106 -->
 
 <!-- npu="A3,910b" id107 -->
