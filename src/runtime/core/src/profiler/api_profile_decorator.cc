@@ -1550,21 +1550,5 @@ rtError_t ApiProfileDecorator::CacheLastTaskExtendInfo(const char* const extendI
     return error;
 }
 
-rtError_t ApiProfileDecorator::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
-{
-    CallApiBegin(RT_PROF_API_GET_EVENT_HANDLE);
-    const rtError_t error = impl_->IpcGetEventHandle(evt, handle);
-    CallApiEnd(error);
-    return error;
-}
-
-rtError_t ApiProfileDecorator::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
-{
-    CallApiBegin(RT_PROF_API_OPEN_EVENT_HANDLE);
-    const rtError_t error = impl_->IpcOpenEventHandle(handle, event);
-    CallApiEnd(error);
-    return error;
-}
-
 } // namespace runtime
 } // namespace cce

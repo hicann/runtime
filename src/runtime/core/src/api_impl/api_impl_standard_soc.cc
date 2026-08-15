@@ -45,7 +45,6 @@
 #include "args_handle_allocator.hpp"
 #include "para_convertor.hpp"
 #include "soc_info.h"
-#include "ipc_event.hpp"
 #include "inner_thread_local.hpp"
 #include "soma.hpp"
 #include "memset_common.h"
@@ -370,26 +369,6 @@ rtError_t ApiImpl::EventWorkModeSet(uint8_t mode)
 rtError_t ApiImpl::EventWorkModeGet(uint8_t* mode)
 {
     *mode = GlobalContainer::GetEventWorkMode();
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
-{
-    return evt->IpcGetEventHandle(handle);
-}
-
-rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
-{
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device* const dev = curCtx->Device_();
-    *event = new (std::nothrow) IpcEvent(dev, RT_EVENT_IPC, curCtx);
-    COND_RETURN_AND_MSG_OUTER((*event == nullptr), RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(IpcEvent), "new");
-    RT_LOG(RT_LOG_INFO, "new event success");
-    const rtError_t error = (*event)->IpcOpenEventHandle(handle);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*event);
-                           , "IpcOpenEventHandle failed, retCode=%#x", error);
-    InitEmbeddedInnerHandle<Event>(*event);
     return RT_ERROR_NONE;
 }
 

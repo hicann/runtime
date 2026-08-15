@@ -1941,47 +1941,6 @@ TEST_F(ApiImplTest, rtSetDeviceWithFlags_04)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-TEST_F(ApiImplTest, IpcGetEventHandle_Test)
-{
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    rtEvent_t event;
-    rtIpcEventHandle_t handle;
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-
-    Profiler profiler(nullptr);
-    ApiProfileDecorator profileApi(&impl, &profiler);
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcGetEventHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profileApi.IpcGetEventHandle(static_cast<IpcEvent*>(event), &handle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiDecorator.IpcGetEventHandle(static_cast<IpcEvent*>(event), &handle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete apiDecorator_;
-}
-
-TEST_F(ApiImplTest, OpenEventHandle_Test)
-{
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    rtEvent_t event;
-    rtIpcEventHandle_t handle;
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-
-    Profiler profiler(nullptr);
-    ApiProfileDecorator profileApi(&impl, &profiler);
-    rtIpcEventHandle_t* eventHandle = &handle;
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcOpenEventHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profileApi.IpcOpenEventHandle(eventHandle, static_cast<IpcEvent**>(event));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiDecorator.IpcOpenEventHandle(eventHandle, static_cast<IpcEvent**>(event));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete apiDecorator_;
-}
-
 TEST_F(ApiImplTest, ipc_open_event_handle_invalid_parameter)
 {
     ApiImplEvent impl;

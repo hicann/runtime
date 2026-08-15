@@ -539,27 +539,6 @@ rtError_t ApiErrorDecorator::EventWorkModeGet(uint8_t* mode)
     return impl_->EventWorkModeGet(mode);
 }
 
-rtError_t ApiErrorDecorator::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(handle, RT_ERROR_INVALID_VALUE, "Obtaining the IPC event handle");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Obtaining the IPC event handle");
-    COND_RETURN_AND_MSG_OUTER(
-        evt->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-        "Obtaining the IPC event handle", RtFmtMsg("Parameter evt.eventFlag_ value %" PRIu64, evt->GetEventFlag()),
-        "Only IPC events are supported");
-    return impl_->IpcGetEventHandle(evt, handle);
-}
-
-rtError_t ApiErrorDecorator::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        event, RT_ERROR_INVALID_VALUE, "Obtaining the event handle information and event pointer");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        handle, RT_ERROR_INVALID_VALUE, "Obtaining the event handle information and event pointer");
-    RT_LOG(RT_LOG_INFO, "IpcOpenEventHandle start");
-    return impl_->IpcOpenEventHandle(handle, event);
-}
-
 rtError_t ApiErrorDecorator::DeviceL2CacheFlush()
 {
     const rtError_t error = impl_->DeviceL2CacheFlush();

@@ -99,8 +99,6 @@ public:
     rtError_t EventRecord(Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;
     rtError_t EventSynchronize(Event* const evt, const int32_t timeout) override;
     rtError_t GetEventID(Event* const evt, uint32_t* const evtId) override;
-    rtError_t IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle) override;
-    rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) override;
     // memory API
     rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, const rtMemType_t type,

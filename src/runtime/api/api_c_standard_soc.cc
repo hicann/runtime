@@ -11,6 +11,7 @@
 #include "api.hpp"
 #include "api_event.hpp"
 #include "api_handle_guard.h"
+#include "ipc_event.hpp"
 #include "base.hpp"
 #include "device_enum_desc.hpp"
 #include "enum_desc.hpp"

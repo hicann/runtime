@@ -175,8 +175,6 @@ public:
     rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) override;
     rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) override;
     rtError_t GetEventID(Event* const evt, uint32_t* const evtId) override;
-    rtError_t IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle) override;
-    rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) override;
     // memory API
     rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, const rtMemType_t type,

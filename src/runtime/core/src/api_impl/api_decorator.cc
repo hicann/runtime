@@ -446,16 +446,6 @@ rtError_t ApiDecorator::EventGetTimeStamp(uint64_t* const retTime, Event* const 
     return impl_->EventGetTimeStamp(retTime, evt);
 }
 
-rtError_t ApiDecorator::IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle)
-{
-    return impl_->IpcGetEventHandle(evt, handle);
-}
-
-rtError_t ApiDecorator::IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event)
-{
-    return impl_->IpcOpenEventHandle(handle, event);
-}
-
 rtError_t ApiDecorator::DevMalloc(
     void** const devPtr, const uint64_t size, const rtMemType_t type, const uint16_t moduleId)
 {

@@ -280,8 +280,6 @@ public:
     virtual rtError_t EventElapsedTime(float32_t* const retTime, Event* const startEvt, Event* const endEvt) = 0;
     virtual rtError_t EventGetTimeStamp(uint64_t* const retTime, Event* const evt) = 0;
     virtual rtError_t GetEventID(Event* const evt, uint32_t* const evtId) = 0;
-    virtual rtError_t IpcGetEventHandle(IpcEvent* const evt, rtIpcEventHandle_t* handle) = 0;
-    virtual rtError_t IpcOpenEventHandle(rtIpcEventHandle_t* handle, IpcEvent** const event) = 0;
     // memory API
     virtual rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, const rtMemType_t type,

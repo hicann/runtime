@@ -284,10 +284,6 @@ TEST_F(TinyStubTest, api_error_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.EventWorkModeGet(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.IpcGetEventHandle(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.IpcOpenEventHandle(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.XpuSetTaskFailCallback(RT_DEV_TYPE_DPU, "", nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtMemManagedLocation location;
@@ -367,10 +363,6 @@ TEST_F(TinyStubTest, api_impl_stub)
     ret = impl.EventWorkModeSet(0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.EventWorkModeGet(nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.IpcGetEventHandle(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.IpcOpenEventHandle(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = eventImpl.IpcGetEventHandle(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

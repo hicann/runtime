@@ -53,7 +53,6 @@ ApiEvent* ApiEvent::Instance()
         RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
         return nullptr;
     }
-    ThreadLocalContainer::SetEnvFlags(API_ENV_FLAGS_DEFAULT);
     return rtInstance->ApiEvent_();
 }
 

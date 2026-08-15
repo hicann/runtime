@@ -92,7 +92,7 @@ TEST_F(ApiEventRouteTest, RoutesIpcGetEventHandleToApiEvent)
     EXPECT_TRUE(apiEvent_.isGetCalled_);
     EXPECT_EQ(apiEvent_.getEvent_, &ipcEvent);
     EXPECT_EQ(handle.reserved[0], 1);
-    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_DEFAULT);
+    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_NO_TSD);
 }
 
 TEST_F(ApiEventRouteTest, RoutesIpcOpenEventHandleToApiEvent)
@@ -108,5 +108,5 @@ TEST_F(ApiEventRouteTest, RoutesIpcOpenEventHandleToApiEvent)
     EXPECT_TRUE(apiEvent_.isOpenCalled_);
     EXPECT_EQ(apiEvent_.openHandleFirstByte_, 1);
     EXPECT_EQ(event, ExportEmbeddedHandle<rtEvent_t>(&ipcEvent));
-    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_DEFAULT);
+    EXPECT_EQ(ThreadLocalContainer::GetEnvFlags(), API_ENV_FLAGS_NO_TSD);
 }
