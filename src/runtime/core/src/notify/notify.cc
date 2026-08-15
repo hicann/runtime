@@ -412,7 +412,7 @@ rtError_t Notify::CreateIpcNotify(char_t* const ipcNotifyName, const uint32_t le
     isIpcNotify_ = true;
     (void)ipcName_.assign(ipcNotifyName);
 
-    RT_LOG(RT_LOG_INFO, "name=%s notify_id=%u", ipcNotifyName, notifyid_);
+    RT_LOG(RT_LOG_INFO, "name=%s, notify_id=%u", ipcNotifyName, notifyid_);
     return RT_ERROR_NONE;
 }
 

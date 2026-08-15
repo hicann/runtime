@@ -672,13 +672,15 @@ rtError_t NpuDriver::CreateIpcNotifyWithFlag(
         (notifyFlag == static_cast<uint32_t>(RT_NOTIFY_MC2)) ? static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
 
     RT_LOG(
-        RT_LOG_INFO, "create ipc notify begin, deviceId=%u, notifyId=%u, tsId=%u, remote_notifyId=%u", drvInfo.devid,
+        RT_LOG_INFO, "create ipc notify begin, deviceId=%u, notifyId=%u, tsId=%u, flag=%u", drvInfo.devid,
         drvInfo.shrid, drvInfo.tsid, drvInfo.flag);
     const drvError_t drvRet = halShrIdCreate(&drvInfo, name, len);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "Call driver api halShrIdCreate failed, drvRetCode=%d, name=%s, drvDevId=%d, tsId=%u, notifyId=%u.",
-            static_cast<int32_t>(drvRet), name, devId, tsId, *notifyId);
+            drvRet,
+            "Call driver api halShrIdCreate failed, drvRetCode=%d, name=%s, drvDevId=%d, tsId=%u, notifyId=%u, "
+            "notifyFlag=%u.",
+            static_cast<int32_t>(drvRet), name, devId, tsId, *notifyId, notifyFlag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     RT_LOG(
