@@ -139,12 +139,12 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
     DELETE_O(taskFactory_);
     DELETE_O(modulesAllocator_);
     DELETE_O(deviceErrorProc_);
-    if (DestroyAicpuErrMsg != nullptr) {
+    if (&DestroyAicpuErrMsg != nullptr) {
         DestroyAicpuErrMsg(errMsgObj_);
     }
     errMsgObj_ = nullptr;
     DELETE_O(engine_);
-    if (DestroyDeviceSnapshot != nullptr) {
+    if (&DestroyDeviceSnapshot != nullptr) {
         DestroyDeviceSnapshot(deviceSnapshot_);
     }
     deviceSnapshot_ = nullptr;
@@ -684,9 +684,9 @@ rtError_t RawDevice::Init()
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        if (CreateDeviceSnapshot != nullptr) {
+        if (&CreateDeviceSnapshot != nullptr) {
             deviceSnapshot_ = CreateDeviceSnapshot(this);
-            const size_t snapshotSize = (GetDeviceSnapshotSize != nullptr) ? GetDeviceSnapshotSize() : 0U;
+            const size_t snapshotSize = (&GetDeviceSnapshotSize != nullptr) ? GetDeviceSnapshotSize() : 0U;
             COND_GOTO_MSG_OUTER(
                 deviceSnapshot_ == nullptr, EVENT_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
                 snapshotSize, "new");
@@ -799,7 +799,7 @@ LOADER_FREE:
 EVENT_EXE_FREE:
     DELETE_O(eventExpandingPool_);
 SNAPSHOT_FREE:
-    if (DestroyDeviceSnapshot != nullptr) {
+    if (&DestroyDeviceSnapshot != nullptr) {
         DestroyDeviceSnapshot(deviceSnapshot_);
     }
     deviceSnapshot_ = nullptr;
@@ -1175,9 +1175,9 @@ rtError_t RawDevice::Start()
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_AICPU_ERROR_MESSAGE)) {
-        if (InitAicpuErrMsg != nullptr) {
+        if (&InitAicpuErrMsg != nullptr) {
             InitAicpuErrMsg(this, &errMsgObj_);
-            const size_t errMsgSize = (GetAicpuErrMsgSize != nullptr) ? GetAicpuErrMsgSize() : 0U;
+            const size_t errMsgSize = (&GetAicpuErrMsgSize != nullptr) ? GetAicpuErrMsgSize() : 0U;
             COND_GOTO_MSG_OUTER(
                 errMsgObj_ == nullptr, ERROR_STOP, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, errMsgSize,
                 "new");
