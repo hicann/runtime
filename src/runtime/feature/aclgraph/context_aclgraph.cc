@@ -834,7 +834,17 @@ rtError_t Context::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
         (stm->GetCaptureStatus() == RT_STREAM_CAPTURE_STATUS_INVALIDATED)) {
         taskGrp.reset();
         *handle = nullptr;
-        errorCode = (errorCode != RT_ERROR_NONE) ? errorCode : RT_ERROR_STREAM_CAPTURE_INVALIDATED;
+        if (errorCode != RT_ERROR_NONE) {
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1017, "Marks the end of the task group", RtFmtMsg("stream (stream_id=%d)", stm->Id_()),
+                "The ACL Graph associated with the stream has errors. The previous API may report an error. "
+                "Handle the error reported by the previous API first");
+        } else {
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1017, "Marks the end of the task group", RtFmtMsg("stream (stream_id=%d)", stm->Id_()),
+                "The ACL Graph capture associated with the stream has been invalidated");
+            errorCode = RT_ERROR_STREAM_CAPTURE_INVALIDATED;
+        }
     } else {
         *handle = taskGrp.get();
         mdl->AddTaskGroupList(taskGrp);

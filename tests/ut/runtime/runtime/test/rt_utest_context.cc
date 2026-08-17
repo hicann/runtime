@@ -20,6 +20,7 @@
 #define protected public
 #include "runtime.hpp"
 #include "context.hpp"
+#include "capture_model.hpp"
 #include "cond_c.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
@@ -5809,4 +5810,82 @@ TEST_F(ContextTest, CheckTaskSend_device_abnormal_without_failure_error)
 
     GlobalMockObject::verify();
     ReleasePrimaryContext(devId);
+}
+
+TEST_F(ContextTest, StreamEndTaskGrpReportsPreviousApiError)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t captureStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&captureStream, 0), RT_ERROR_NONE);
+
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    Stream* const captureStm = rt_ut::UnwrapOrNull<Stream>(captureStream);
+    ASSERT_NE(stm, nullptr);
+    ASSERT_NE(captureStm, nullptr);
+    Context* const ctx = stm->Context_();
+    ASSERT_NE(ctx, nullptr);
+
+    CaptureModel captureModel;
+    captureModel.context_ = ctx;
+    captureStm->SetModel(&captureModel);
+    stm->UpdateCaptureStream(captureStm);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::SAMPLE), RT_ERROR_NONE);
+    std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
+    captureStm->UpdateCurrentTaskGroup(taskGroup);
+    captureModel.InsertTaskGroupStreamId(static_cast<uint16_t>(captureStm->Id_()));
+    captureModel.SetTaskGroupErrCode(RT_ERROR_TASK_NOT_SUPPORT);
+
+    TaskGroup* handle = nullptr;
+    EXPECT_EQ(ctx->StreamEndTaskGrp(stm, &handle), RT_ERROR_TASK_NOT_SUPPORT);
+    EXPECT_EQ(handle, nullptr);
+    EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
+    EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
+    EXPECT_TRUE(captureModel.GetTaskGroupStreamIds().empty());
+
+    captureStm->SetModel(nullptr);
+    stm->UpdateCaptureStream(nullptr);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ContextTest, StreamEndTaskGrpReportsInvalidatedCapture)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t captureStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&captureStream, 0), RT_ERROR_NONE);
+
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    Stream* const captureStm = rt_ut::UnwrapOrNull<Stream>(captureStream);
+    ASSERT_NE(stm, nullptr);
+    ASSERT_NE(captureStm, nullptr);
+    Context* const ctx = stm->Context_();
+    ASSERT_NE(ctx, nullptr);
+
+    CaptureModel captureModel;
+    captureModel.context_ = ctx;
+    captureModel.SetCaptureModelStatus(RtCaptureModelStatus::CAPTURE_INVALIDATED);
+    captureStm->SetModel(&captureModel);
+    stm->UpdateCaptureStream(captureStm);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::SAMPLE), RT_ERROR_NONE);
+    std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
+    captureStm->UpdateCurrentTaskGroup(taskGroup);
+    captureModel.InsertTaskGroupStreamId(static_cast<uint16_t>(captureStm->Id_()));
+
+    TaskGroup* handle = nullptr;
+    EXPECT_EQ(ctx->StreamEndTaskGrp(stm, &handle), RT_ERROR_STREAM_CAPTURE_INVALIDATED);
+    EXPECT_EQ(handle, nullptr);
+    EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
+    EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
+    EXPECT_TRUE(captureModel.GetTaskGroupStreamIds().empty());
+
+    captureStm->SetModel(nullptr);
+    stm->UpdateCaptureStream(nullptr);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
