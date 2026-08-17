@@ -14,6 +14,7 @@
 #include "osal.hpp"
 #include "rts/rts.h"
 #include "global_state_manager.hpp"
+#include "program.hpp"
 
 using namespace cce::runtime;
 

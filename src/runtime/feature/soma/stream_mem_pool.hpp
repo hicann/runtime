@@ -29,6 +29,8 @@
 #include "event.hpp"
 #include "stream_state_callback_manager.hpp"
 #include "event_state_callback_manager.hpp"
+#include <functional>
+#include <utility>
 
 namespace cce {
 
@@ -74,10 +76,10 @@ struct SegmentComparator {
 };
 
 struct PairHash {
-    size_t operator()(const pair<int32_t, int32_t>& p) const
+    size_t operator()(const std::pair<int32_t, int32_t>& p) const
     {
-        const size_t h1 = hash<int32_t>()(p.first);
-        const size_t h2 = hash<int32_t>()(p.second);
+        const size_t h1 = std::hash<int32_t>()(p.first);
+        const size_t h2 = std::hash<int32_t>()(p.second);
         return h1 ^ (h2 + HASH_GOLDEN_RATIO + (h1 << 6U) + (h1 >> 2U));
     }
 };

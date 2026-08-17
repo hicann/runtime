@@ -15,6 +15,9 @@
 #include "ipc_event.hpp"
 #include "npu_driver.hpp"
 #include "runtime.hpp"
+#include "context.hpp"
+#include "context_manage.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

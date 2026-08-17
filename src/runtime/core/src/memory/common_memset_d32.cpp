@@ -13,6 +13,8 @@
 #include "api_impl.hpp"
 #include "api.hpp"
 #include "memcpy_c.hpp"
+#include "context.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

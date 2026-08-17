@@ -22,6 +22,7 @@
 #include "task_submit.hpp"
 #include "task_recycle.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "context.hpp"
 namespace cce {
 namespace runtime {
 

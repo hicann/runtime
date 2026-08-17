@@ -29,6 +29,7 @@
 #include "capture_model_utils.hpp"
 #include "program.hpp"
 #include "runtime_handle_guard.h"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

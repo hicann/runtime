@@ -13,6 +13,7 @@
 #include "task_info.hpp"
 #include "memory_task.h"
 #include "capture_model.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

@@ -13,6 +13,7 @@
 #include "inner_thread_local.hpp"
 #include "thread_local_container.hpp"
 #include "common_task.h"
+#include "error_message_manage.hpp"
 namespace cce {
 namespace runtime {
 rtError_t IpcEvent::IpcEventRecordStarsV2(Stream* const stm)

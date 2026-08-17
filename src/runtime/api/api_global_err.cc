@@ -11,6 +11,7 @@
 #include "errcode_manage.hpp"
 #include "thread_local_container.hpp"
 #include "runtime.hpp"
+#include "error_message_manage.hpp"
 namespace cce {
 namespace runtime {
 rtError_t GetRtExtErrCodeAndSetGlobalErr(const rtError_t errCode)

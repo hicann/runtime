@@ -22,6 +22,7 @@
 #include "thread_local_container.hpp"
 #include "aic_aiv_sqe_common.hpp"
 #include "aicpu_timeout_manager.h"
+#include "program.hpp"
 
 namespace cce {
 namespace runtime {

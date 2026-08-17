@@ -14,6 +14,8 @@
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "stub_task.hpp"
+#include "capture_model.hpp"
+#include "runtime_task_manager.h"
 
 namespace cce {
 namespace runtime {

@@ -11,6 +11,8 @@
 #include "stream_mem_pool.hpp"
 #include "npu_driver.hpp"
 #include "driver/ascend_hal_define.h"
+#include "context.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

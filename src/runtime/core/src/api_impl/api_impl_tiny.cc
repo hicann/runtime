@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
+#include "context.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

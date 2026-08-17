@@ -12,6 +12,8 @@
 #include "task_info.hpp"
 #include "capture_model.hpp"
 #include "thread_local_container.hpp"
+#include "task.hpp"
+
 namespace cce {
 namespace runtime {
 

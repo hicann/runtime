@@ -13,6 +13,7 @@
 #include "profiler.hpp"
 #include "npu_driver.hpp"
 #include "uvm_callback.hpp"
+#include "context.hpp"
 
 namespace cce {
 namespace runtime {

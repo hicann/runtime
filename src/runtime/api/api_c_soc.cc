@@ -17,6 +17,7 @@
 #include "thread_local_container.hpp"
 #include "heterogenous.h"
 #include "soc_info.h"
+#include "context.hpp"
 
 using namespace cce::runtime;
 

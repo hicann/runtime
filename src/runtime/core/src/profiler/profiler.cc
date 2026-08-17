@@ -22,6 +22,8 @@
 #include "api_profile_log_decorator.hpp"
 #include "capture_model.hpp"
 #include "stub_task.hpp"
+#include "context.hpp"
+#include "context_manage.hpp"
 
 namespace cce {
 namespace runtime {

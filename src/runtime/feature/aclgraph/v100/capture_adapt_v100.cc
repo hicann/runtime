@@ -13,6 +13,9 @@
 #include "capture_model.hpp"
 #include "thread_local_container.hpp"
 #include "error_message_manage.hpp"
+#include "context.hpp"
+#include "task.hpp"
+
 namespace cce {
 namespace runtime {
 

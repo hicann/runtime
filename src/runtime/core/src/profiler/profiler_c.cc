@@ -15,6 +15,7 @@
 #include "toolchain/prof_acl_api.h"
 #include "stream_david.hpp"
 #include "stream_task.h"
+#include "context.hpp"
 
 namespace cce {
 namespace runtime {

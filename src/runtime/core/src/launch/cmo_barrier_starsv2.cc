@@ -15,6 +15,7 @@
 #include "inner_thread_local.hpp"
 #include "rt_log.h"
 #include "cmo_task.h"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

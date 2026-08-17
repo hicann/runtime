@@ -26,6 +26,8 @@
 #include "memory_task.h"
 #include "event_task.h"
 #include "event_state_callback_manager.hpp"
+#include "context.hpp"
+#include "stream.hpp"
 
 namespace cce {
 namespace runtime {

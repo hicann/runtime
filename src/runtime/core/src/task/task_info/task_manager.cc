@@ -33,6 +33,9 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "context_manage.hpp"
+#include "error_message_manage.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

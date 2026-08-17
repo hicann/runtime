@@ -14,6 +14,7 @@
 #include "enum_desc.hpp"
 #include "arg_loader.hpp"
 #include "task_res.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

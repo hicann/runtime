@@ -17,6 +17,8 @@
 #include "soma.hpp"
 #include "aicpu_c.hpp"
 #include "enum_desc.hpp"
+#include "context.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {

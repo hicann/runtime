@@ -10,6 +10,8 @@
 #include "common/internal_error_define.hpp"
 #include "stream_mem_pool.hpp"
 #include "npu_driver.hpp"
+#include <algorithm>
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -168,7 +170,7 @@ rtError_t SegmentManager::SegmentAlloc(Segment*& ret, uint64_t size, int streamI
         ret->streamId = streamId;
         (void)allocedMap_.insert(std::make_pair(ret->basePtr, ret));
         reserveSize_ += size;
-        maxReservedSize_ = max(maxReservedSize_, reserveSize_);
+        maxReservedSize_ = std::max(maxReservedSize_, reserveSize_);
     } else {
         RT_LOG(
             RT_LOG_DEBUG,
@@ -189,7 +191,7 @@ rtError_t SegmentManager::SegmentAlloc(Segment*& ret, uint64_t size, int streamI
         }
     }
     busySize_ += size;
-    maxBusySize_ = max(maxBusySize_, busySize_);
+    maxBusySize_ = std::max(maxBusySize_, busySize_);
     return RT_ERROR_NONE;
 }
 
@@ -691,7 +693,7 @@ void PoolRegistry::UpdateSeqMap(const int32_t streamId, const int32_t eventId)
     std::pair<int32_t, uint64_t>& record = it->second;
     int32_t recordStreamId = record.first; // the stream that recorded this event
     uint64_t recordSeqId = record.second;  // the index of the event record in stream
-    sequenceMap_[{streamId, recordStreamId}] = max(sequenceMap_[{streamId, recordStreamId}], recordSeqId);
+    sequenceMap_[{streamId, recordStreamId}] = std::max(sequenceMap_[{streamId, recordStreamId}], recordSeqId);
 }
 
 void PoolRegistry::UpdateEventMap(const int32_t streamId, const int32_t eventId)

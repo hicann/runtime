@@ -18,6 +18,7 @@
 #include "event_task.h"
 #include "rt_inner_event.h"
 #include "thread_local_container.hpp"
+#include "error_message_manage.hpp"
 namespace cce {
 namespace runtime {
 #if F_DESC("EventRecordTask")

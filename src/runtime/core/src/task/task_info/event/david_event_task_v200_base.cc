@@ -18,6 +18,7 @@
 #include "task_david.hpp"
 #include "device.hpp"
 #include "error_code.h"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {

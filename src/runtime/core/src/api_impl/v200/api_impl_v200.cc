@@ -15,6 +15,7 @@
 #include "para_convertor.hpp"
 #include "aix_c.hpp"
 #include "stream_c.hpp"
+#include "context.hpp"
 #include "xpu_aicpu_c.hpp"
 #include "task_fail_callback_manager.hpp"
 

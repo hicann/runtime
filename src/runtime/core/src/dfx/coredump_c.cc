@@ -13,6 +13,9 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "inner_kernel.h"
+#include "context.hpp"
+#include "program.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

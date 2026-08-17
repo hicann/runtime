@@ -16,6 +16,7 @@
 #include "rts/rts.h"
 #include "global_state_manager.hpp"
 #include "api_handle_guard.h"
+#include "label.hpp"
 
 using namespace cce::runtime;
 

@@ -15,6 +15,8 @@
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "stub_task.hpp"
+#include "error_message_manage.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

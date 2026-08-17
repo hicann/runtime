@@ -17,6 +17,7 @@
 #include "stream_c.hpp"
 #include "thread_local_container.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "task.hpp"
 
 namespace cce {
 namespace runtime {

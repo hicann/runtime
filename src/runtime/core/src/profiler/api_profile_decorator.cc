@@ -13,6 +13,7 @@
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
 #include "mem_type.hpp"
+#include "context.hpp"
 
 namespace cce {
 namespace runtime {

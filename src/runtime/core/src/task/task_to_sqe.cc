@@ -11,6 +11,7 @@
 #include <cinttypes>
 #include "event.hpp"
 #include "task_enum_desc.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
