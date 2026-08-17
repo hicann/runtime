@@ -15,36 +15,16 @@
 #define private public
 #define protected public
 #include "runtime.hpp"
-#include "raw_device.hpp"
-#include "module.hpp"
-#include "notify.hpp"
-#include "event.hpp"
-#include "task_info.hpp"
-#include "task/task_info.hpp"
 #include "stream_c.hpp"
 #include "task_recycle.hpp"
 #include "ccu_task.hpp"
-#include "ffts_task.h"
 #include "device/device_error_proc.hpp"
 #include "device_error_proc_c.hpp"
-#include "program.hpp"
-#include "uma_arg_loader.hpp"
-#include "npu_driver.hpp"
-#include "ctrl_res_pool.hpp"
-#include "stream_sqcq_manage.hpp"
-#include "davinci_kernel_task.h"
-#include "api_impl.hpp"
-#include "aicpu_err_msg.hpp"
-#include "profiler.hpp"
 #include "thread_local_container.hpp"
 #include "stars_david.hpp"
 #include "rt_unwrap.h"
-#include "runtime_task_manager.h"
 #undef private
 #undef protected
-#include "rdma_task.h"
-#include "device_sq_cq_pool.hpp"
-#include "sq_addr_memory_pool.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -116,9 +96,6 @@ protected:
     virtual void SetUp()
     {
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        oldChipType = rtInstance->GetChipType();
-        rtInstance->SetChipType(CHIP_CLOUD_V5);
-        GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
         rtSetDevice(0);
     }
 
@@ -126,13 +103,8 @@ protected:
     {
         rtDeviceReset(0);
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        rtInstance->SetChipType(oldChipType);
-        GlobalContainer::SetRtChipType(oldChipType);
         GlobalMockObject::verify();
     }
-
-private:
-    rtChipType_t oldChipType{CHIP_BEGIN};
 };
 
 // ============================================================================
@@ -360,7 +332,6 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
         EXPECT_EQ(g_printErrCnt, 1U);
         EXPECT_EQ(g_callCnt, 0U);
-        GlobalMockObject::verify();
     }
 
     // --- AICPU：仅 PrintErrorInfo(1)，不触发回调 ---
@@ -382,7 +353,6 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
         EXPECT_EQ(g_printErrCnt, 1U);
         EXPECT_EQ(g_callCnt, 0U);
-        GlobalMockObject::verify();
     }
 
     // --- FUSION_KERNEL_ERROR：PrintErrorInfo(1)，子任务 aicError 处理 ---
@@ -409,7 +379,6 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
         EXPECT_EQ(g_printErrCnt, 1U);
         EXPECT_EQ(g_callCnt, 0U);
-        GlobalMockObject::verify();
     }
 
     // --- AICORE + FUSION_KERNEL task type → PrintErrorInfo(1) + TaskFailCallBackForFusionKernelTask(3) ---
@@ -442,8 +411,6 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
         EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1, 1), RT_ERROR_NONE);
         EXPECT_EQ(g_printErrCnt, 1U);
         EXPECT_EQ(g_callCnt, 3U);
-
-        GlobalMockObject::verify();
     }
 
     rtStreamDestroy(streamHandle);

@@ -12,6 +12,7 @@
 #include "stream.hpp"
 #include "device.hpp"
 #include "enum_desc.hpp"
+#include "model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -21,32 +22,7 @@ void ConstructDavidCmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe
     UNUSED(sqBaseAddr);
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
     RtDavidStarsCmoSqe* const sqe = &(davidSqe->cmoSqe);
-    CmoTaskInfo* const cmoTsk = &(taskInfo->u.cmoTask);
-    sqe->header.type = RT_DAVID_SQE_TYPE_CMO;
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-    sqe->cmoType = cmoTsk->cmoSqeInfo.cmoType;
-    // The cmoid is not used in the cmo task, but is used in the cmo task kill process.
-    sqe->cmoId = static_cast<uint8_t>(static_cast<uint32_t>(taskInfo->stream->Id_()) + 1U);
-    sqe->opcode = cmoTsk->cmoSqeInfo.opCode;
-    sqe->u.strideMode0.lengthMove = cmoTsk->cmoSqeInfo.lengthInner;
-    sqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(cmoTsk->cmoSqeInfo.sourceAddr & 0x00000000FFFFFFFFU);
-    sqe->u.strideMode0.srcAddrHigh =
-        static_cast<uint32_t>((cmoTsk->cmoSqeInfo.sourceAddr & 0xFFFFFFFF00000000U) >> UINT32_BIT_NUM);
-    sqe->qos = cmoTsk->cmoSqeInfo.qos;
-    sqe->mapamPartId = cmoTsk->cmoSqeInfo.partId;
-    sqe->srcStreamId = 0U;
-    sqe->srcSubStreamId = 0U;
-    sqe->ie2 = 0U;
-    sqe->sssv = 1U;
-    sqe->dssv = 1U;
-    sqe->sns = 1U;
-    sqe->dns = 1U;
-    sqe->sro = 0U;
-    sqe->dro = 0U;
-    sqe->mpamns = 0U;
-    sqe->stride = 0U;
-    sqe->compEn = 0U;
-    sqe->pmg = cmoTsk->cmoSqeInfo.pmg;
+    SetCommonCmoParameters(sqe, taskInfo);
     RT_LOG(
         RT_LOG_INFO,
         "ptr_mode=%u, length_inner=%u, op_code=0x%x, device_id=%u, stream_id=%d, task_id=%hu, "
@@ -149,5 +125,6 @@ void PrintErrorInfoForDavidCmoTask(TaskInfo* taskInfo, const uint32_t devId)
             cmoInfo[i + 2U], cmoInfo[i + 3U], cmoInfo[i + 4U], cmoInfo[i + 5U], cmoInfo[i + 6U], cmoInfo[i + 7U]);
     }
 }
+
 } // namespace runtime
 } // namespace cce

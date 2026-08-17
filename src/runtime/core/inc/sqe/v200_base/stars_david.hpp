@@ -503,6 +503,37 @@ void PrintDavidSqe(T const sqe, const char* desc, size_t size = 64)
     }
 }
 
+template <typename SqeType>
+void SetCommonCmoParameters(SqeType* sqe, TaskInfo* const taskInfo)
+{
+    CmoTaskInfo* const cmoTsk = &(taskInfo->u.cmoTask);
+    sqe->header.type = RT_DAVID_SQE_TYPE_CMO;
+    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+    sqe->cmoType = cmoTsk->cmoSqeInfo.cmoType;
+    // The cmoid is not used in the cmo task, but is used in the cmo task kill process.
+    sqe->cmoId = static_cast<uint8_t>(static_cast<uint32_t>(taskInfo->stream->Id_()) + 1U);
+    sqe->opcode = cmoTsk->cmoSqeInfo.opCode;
+    sqe->u.strideMode0.lengthMove = cmoTsk->cmoSqeInfo.lengthInner;
+    sqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(cmoTsk->cmoSqeInfo.sourceAddr & 0x00000000FFFFFFFFU);
+    sqe->u.strideMode0.srcAddrHigh =
+        static_cast<uint32_t>((cmoTsk->cmoSqeInfo.sourceAddr & 0xFFFFFFFF00000000U) >> UINT32_BIT_NUM);
+    sqe->qos = cmoTsk->cmoSqeInfo.qos;
+    sqe->mapamPartId = cmoTsk->cmoSqeInfo.partId;
+    sqe->srcStreamId = 0U;
+    sqe->srcSubStreamId = 0U;
+    sqe->ie2 = 0U;
+    sqe->sssv = 1U;
+    sqe->dssv = 1U;
+    sqe->sns = 1U;
+    sqe->dns = 1U;
+    sqe->sro = 0U;
+    sqe->dro = 0U;
+    sqe->mpamns = 0U;
+    sqe->stride = 0U;
+    sqe->compEn = 0U;
+    sqe->pmg = cmoTsk->cmoSqeInfo.pmg;
+}
+
 const char_t* GetNotifySubType(const uint16_t subType);
 void InitWriteValueSqe(RtDavidStarsWriteValueSqe* const writeValueSqe, const rtWriteValueInfo_t* const writeValueInfo);
 void AicpuMsgVersionTaskInit(TaskInfo* taskInfo);
@@ -538,6 +569,9 @@ void ConstructDavidAICpuSqeForDavinciTaskResFieldPart(
 void FillTopicType(RtDavidStarsAicpuKernelSqe* const sqe, const uint32_t kernelFlag);
 void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidSqeForCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+using CmoSqeConstructor = void (*)(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForCmoTaskCommon(
+    TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo, CmoSqeConstructor cmoSqeConstructor);
 void ConstructDavidSqeForProfilingEnableTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidSqeForProfilerTraceExTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);

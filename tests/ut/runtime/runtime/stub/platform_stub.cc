@@ -213,6 +213,14 @@ const std::map<std::string, StubFieldMap> kSocInfoMap = {
       {"normal_stream_depth", "8192"},
       {"huge_stream_num", "16"},
       {"huge_stream_depth", "4096"}}},
+    {"Ascend910_9699",
+     {{"normal_stream_num", "65535"},
+      {"normal_stream_depth", "2049"},
+      {"huge_stream_num", "0"},
+      {"huge_stream_depth", "0"},
+      {"ai_core_cnt", "36"},
+      {"vector_core_cnt", "72"},
+      {"ai_cpu_cnt", "8"}}},
 };
 
 int32_t GetVersionSocSpec(const std::string& socVersion, const std::string& key, std::string& value)

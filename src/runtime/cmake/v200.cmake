@@ -127,6 +127,7 @@ set(libruntime_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_arch9201.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc

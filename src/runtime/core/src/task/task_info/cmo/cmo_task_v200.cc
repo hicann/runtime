@@ -16,7 +16,8 @@
 namespace cce {
 namespace runtime {
 
-void ConstructDavidSqeForCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+void ConstructDavidSqeForCmoTaskCommon(
+    TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo, CmoSqeConstructor cmoSqeConstructor)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     uint64_t sqBaseAddr = sqeInfo.sqBaseAddr;
@@ -28,11 +29,16 @@ void ConstructDavidSqeForCmoTask(TaskInfo* const taskInfo, void* const sqe, cons
         ConstructDavidCmoAddrSqe(taskInfo, davidSqe, sqBaseAddr);
     } else {
         if ((cmoTsk->cmoSqeInfo.opCode == RT_CMO_PREFETCH) || (cmoTsk->cmoSqeInfo.opCode == RT_CMO_WRITEBACK)) {
-            ConstructDavidCmoSqe(taskInfo, davidSqe, sqBaseAddr);
+            cmoSqeConstructor(taskInfo, davidSqe, sqBaseAddr);
         } else {
             ConstructDavidCmoSdmaSqe(taskInfo, davidSqe, sqBaseAddr);
         }
     }
+}
+
+void ConstructDavidSqeForCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    ConstructDavidSqeForCmoTaskCommon(taskInfo, sqe, sqeInfo, &ConstructDavidCmoSqe);
 }
 
 static bool CmoTaskRegister()
@@ -48,7 +54,7 @@ static bool CmoTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
 
-    const auto& chips = GetV200Chips();
+    const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_ASCEND_350};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);

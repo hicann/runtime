@@ -17,30 +17,17 @@
 #include "runtime.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
-#include "notify.hpp"
-#include "event.hpp"
 #include "task_info.hpp"
 #include "task/task_info.hpp"
 #include "stream_c.hpp"
 #include "task_recycle.hpp"
 #include "ccu_task.hpp"
-#include "ffts_task.h"
-#include "device/device_error_proc.hpp"
-#include "device_error_proc_c.hpp"
-#include "program.hpp"
-#include "uma_arg_loader.hpp"
 #include "npu_driver.hpp"
-#include "ctrl_res_pool.hpp"
-#include "stream_sqcq_manage.hpp"
 #include "davinci_kernel_task.h"
-#include "api_impl.hpp"
-#include "aicpu_err_msg.hpp"
-#include "profiler.hpp"
-#include "thread_local_container.hpp"
 #include "stars_david.hpp"
+#include "cmo_task.h"
 #include "rt_unwrap.h"
 #include "runtime_task_manager.h"
-#include "task_res_da.hpp"
 #include "../../rt_utest_config_define.hpp"
 #include "../../task_test_helper.h"
 #include "arch9201/aic_aiv_sqe.h"
@@ -562,4 +549,165 @@ TEST_F(Arch9201TaskTest, construct_arch9201sqe_for_fusion_kernel_launch_3)
     EXPECT_EQ(sqe[1].ccuSqe.header.type, 0x3F);
 
     TaskUnInitProc(&kernTask);
+}
+
+// ==================== arch9201 CMO Task UT ====================
+
+TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_prefetch)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    cmoTask.qos = 1;
+    cmoTask.lengthInner = 128;
+    cmoTask.sourceAddr = 0x1000;
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
+
+    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_writeback)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_WRITEBACK;
+    cmoTask.qos = 2;
+    cmoTask.lengthInner = 256;
+    cmoTask.sourceAddr = 0x2000;
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
+
+    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_invalid)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_INVALID;
+    cmoTask.lengthInner = 64;
+    cmoTask.sourceAddr = 0x3000;
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.memcpyAsyncSqe.header.type, RT_DAVID_SQE_TYPE_SDMA);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_model_stream)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* realModel = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(realModel, nullptr);
+    stream_->SetModel(realModel);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    cmoTask.lengthInner = 128;
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.memcpyAsyncPtrSqe.header.type, RT_DAVID_SQE_TYPE_SDMA);
+
+    stream_->SetModel(nullptr);
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(Arch9201TaskTest, cmotask_init_arch9201_success)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    EXPECT_NE(task.stream, nullptr);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    cmoTask.cmoType = RT_CMO_PREFETCH;
+    cmoTask.qos = 3;
+    cmoTask.partId = 1;
+    cmoTask.pmg = 1;
+    cmoTask.lengthInner = 512;
+    cmoTask.sourceAddr = 0xABCDEF;
+    cmoTask.numOuter = 2;
+    cmoTask.numInner = 4;
+    cmoTask.striderOuter = 64;
+    cmoTask.striderInner = 32;
+
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
+    EXPECT_STREQ(task.typeName, "CMO");
+    EXPECT_EQ(task.u.cmoTask.cmoSqeInfo.opCode, RT_CMO_PREFETCH);
+    EXPECT_EQ(task.u.cmoTask.cmoSqeInfo.qos, 3);
+    EXPECT_EQ(task.u.cmoTask.cmoSqeInfo.lengthInner, 512);
+    EXPECT_EQ(task.u.cmoTask.cmoSqeInfo.sourceAddr, 0xABCDEF);
+
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, cmotask_init_arch9201_memcpy_fail)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    EXPECT_NE(task.stream, nullptr);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_SEC_HANDLE);
+
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_complete_and_print)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    cmoTask.qos = 1;
+    cmoTask.lengthInner = 128;
+    cmoTask.sourceAddr = 0x1000;
+    rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+
+    uint32_t errorCode = 0;
+    SetResult(&task, &errorCode, 1);
+    Complete(&task, 0);
 }

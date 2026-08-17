@@ -150,6 +150,7 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_arch9201.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_arch9201.cc
