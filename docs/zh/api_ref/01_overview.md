@@ -93,6 +93,10 @@ CANN支持以下几类显式同步，调用此类接口后，主机线程会阻�
 
     此接口后续版本会废弃，请使用[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口。
 
+- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback_deprecated)接口
+
+    此接口后续版本会废弃，请使用[aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister)接口或[aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister)。
+
 ### 返回码
 
 - [ACL\_ERROR\_NONE](25-01_aclError.md#aclError)返回码

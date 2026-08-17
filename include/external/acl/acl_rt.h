@@ -1189,6 +1189,7 @@ ACL_FUNC_VISIBILITY aclError aclrtGetLastError(aclrtLastErrLevel level);
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
+ACL_DEPRECATED_MESSAGE("aclrtSetExceptionInfoCallback is deprecated, use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead")
 ACL_FUNC_VISIBILITY aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback);
 
 /**
