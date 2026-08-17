@@ -122,12 +122,14 @@ set(libruntime_v200_task_src_files
 
     # david & solomon 专用差异化文件
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
+    ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_arch9201.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
 )
 
 set(libruntime_v201_task_src_files
@@ -519,6 +521,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch9201
 )
 
 set(RUNTIME_INC_DIR

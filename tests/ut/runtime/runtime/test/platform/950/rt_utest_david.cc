@@ -181,20 +181,6 @@ rtError_t stubGetHardVerBySocVerNoDevice(const uint32_t deviceId, int64_t& hardw
     return DRV_ERROR_NONE;
 }
 
-static drvError_t stubSolomonGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
-{
-    if (value) {
-        if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_ASCEND_910_5591;
-        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
-            *value = g_device_driver_version_stub;
-        } else {
-            *value = 0;
-        }
-    }
-    return DRV_ERROR_NONE;
-}
-
 class DavidTaskTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "DavidTaskTest start" << std::endl; }
@@ -425,48 +411,6 @@ protected:
     rtStream_t streamHandle_ = nullptr;
 };
 
-class SolomonTaskTest : public testing::Test {
-protected:
-    static void SetUpTestCase() { std::cout << "SolomonTaskTest start" << std::endl; }
-
-    static void TearDownTestCase() { std::cout << "SolomonTaskTest end" << std::endl; }
-
-    virtual void SetUp()
-    {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(stubSolomonGetDeviceInfo));
-        MOCKER(halGetSocVersion).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        g_chipType = rtInstance->GetChipType();
-        rtInstance->SetChipType(CHIP_CLOUD_V5);
-        GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
-        rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910SOLMON");
-        ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetChipType(CHIP_CLOUD_V5);
-        rtStreamCreate(&streamHandle_, 0);
-        stream_ = (DavidStream*)streamHandle_;
-        MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
-    }
-
-    virtual void TearDown()
-    {
-        rtStreamDestroy(streamHandle_);
-        Runtime* rtInstance = (Runtime*)Runtime::Instance();
-        rtInstance->DeviceRelease(dev_);
-        ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        rtDeviceReset(0);
-        rtInstance->SetChipType(g_chipType);
-        GlobalContainer::SetRtChipType(g_chipType);
-        GlobalMockObject::verify();
-    }
-
-protected:
-    DavidStream* stream_ = nullptr;
-    Device* dev_ = nullptr;
-    rtStream_t streamHandle_ = nullptr;
-};
-
 class DavidTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "DavidTest start" << std::endl; }
@@ -588,13 +532,6 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 0);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
-}
-
-TEST_F(SolomonTaskTest, macroinit_for_chip_cloud_v5)
-{
-    Runtime* rt = ((Runtime*)Runtime::Instance());
-    rt->UpdateDevProperties(CHIP_CLOUD_V5, "Ascend910_5591");
-    rt->GetSocVersionByHardwareVer(0, 1, 1);
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)

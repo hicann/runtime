@@ -130,7 +130,7 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_ASCEND_910_5591;
+            *value = PLATFORMCONFIG_ASCEND_910_9691;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {
@@ -1116,7 +1116,7 @@ drvError_t halReadFaultEvent(
 
 drvError_t halGetChipInfo(unsigned int devId, halChipInfo* chipInfo)
 {
-    (void)strcpy(reinterpret_cast<char*>(chipInfo->name), "910_5591");
+    (void)strcpy(reinterpret_cast<char*>(chipInfo->name), "910_9691");
     return DRV_ERROR_NONE;
 }
 

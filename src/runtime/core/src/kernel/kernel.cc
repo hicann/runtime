@@ -406,7 +406,7 @@ rtError_t GetPrefetchCntAndMixTypeWithKernel(
             return RT_ERROR_INVALID_VALUE;
     }
     // Icache_prefetch_cnt:aic aiv prefetch instruction length, the unit is 2KB, K=1024
-    constexpr uint32_t prefetchUnits = 2048U;
+    uint32_t prefetchUnits = Runtime::Instance()->GetCurChipProperties().icachePrefetchUnits;
     uint32_t restSizeCnt1 = restSize1 / prefetchUnits;
     const uint32_t prefetchMaxSizeCnt1 = prefetchMaxSize1 / prefetchUnits;
     if (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC)) {

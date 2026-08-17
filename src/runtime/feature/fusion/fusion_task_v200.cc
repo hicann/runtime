@@ -48,7 +48,7 @@ static bool FusionKernelTaskRegister()
         .setStarsResultFunc = &SetStarsResultForFusionKernelTask,
     };
 
-    const auto& chips = GetV200Chips();
+    constexpr rtChipType_t chips[] = {CHIP_DAVID, CHIP_ASCEND_350};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, &ConstructDavidSqeForFusionKernelTask);

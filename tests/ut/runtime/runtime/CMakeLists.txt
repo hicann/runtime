@@ -152,6 +152,8 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
+    ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_arch9201.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
 )
 
 set(runtimeut_src_api_list
@@ -957,7 +959,6 @@ add_executable(runtime_utest
     test/platform/others/rt_utest_elf.cc
     test/platform/others/rt_utest_npu_driver.cc
     test/platform/others/rt_utest_runtime.cc
-    test/platform/others/rt_utest_kernel.cc
     test/platform/others/rt_utest_driver.cc
     test/platform/others/rt_utest_arg_loader.cc
     test/platform/others/rt_utest_context.cc
@@ -1467,6 +1468,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/pkg_inc/platform
     ${TOP_DIR}/src/platform
     ${C_SEC_INCLUDE}
+    ${TOP_DIR}/src/runtime/core/inc/sqe/
 )
 
 set(RUNTIME_TEST_INC_DIR

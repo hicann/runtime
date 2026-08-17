@@ -93,12 +93,16 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MEM_H2D_MANAGER_POLICY_SYNC_FORCE,
     RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL,
-    RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT};
+    RtOptionalFeatureType::RT_FEATURE_STARS_MONITOR_AICPU_TIMEOUT,
+    RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
+    RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
+};
 
 REGISTER_CHIP_FEATURE_SET(CHIP_CLOUD_V5, CHIP_CLOUD_V5_FEATURE);
 
 constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP = 23U;
 constexpr uint32_t TASK_RATION = 1U;
+constexpr uint32_t ICACHE_PREFETCH_UNIT = 512U;
 
 static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .engineType = "STARS",
@@ -123,15 +127,15 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .mc2FeatureFlag = TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP,
     .stackPhyBase = RT_SCALAR_BUFFER_SIZE_32K_75,
     .maxCustomerStackSize = DEFAULT_CUSTOM_STACK_SIZE_MAX,
-    .aicNum = RT_AICORE_NUM_25,
-    .aivNum = RT_AIVECTOR_NUM_50,
+    .aicNum = RT_DAVID_AICORE_NUM_PER_DIE * RT_DAVID_DIE_MAX_NUM,
+    .aivNum = RT_DAVID_AIVECTOR_NUM_PER_DIE * RT_DAVID_DIE_MAX_NUM,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE_ON_95_96,
     .hugeManagedFlag = SVM_HOST_AGENT,
     .memInfoType = RT_MEM_INFO_TYPE_HBM_SIZE,
     .taskPrefetchCount = PREFETCH_CNT_8,
     .maxAllocHugeStreamNum = DEFAULT,
     .reduceAicNum = false,
-    .timeoutUpdateMethod = TimeoutUpdateMethod::DEFAULT_METHOD,
+    .timeoutUpdateMethod = TimeoutUpdateMethod::TIMEOUT_WITHOUT_UPDATE,
     .hugePolicyFlag = DEFAULT,
     .memInfoMapType = DEFAULT,
     .resAllocRange = TSDRV_RES_RANGE_ID,
@@ -190,7 +194,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .rtsqShamt = 0x7FFU,
     .supportCreateTaskRes = SupportCreateTaskRes::CREATE_TASK_RES_SUPPORT_WITH_OFFLINE,
     .physicalMemTypePolicy = PhysicalMemTypePolicy::DEFAULT,
-    .aicNumForCoreStack = RT_AICORE_NUM_25,
+    .aicNumForCoreStack = RT_DAVID_AICORE_NUM_PER_DIE,
     .aivNumPerDie = RT_DAVID_AIVECTOR_NUM_PER_DIE,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
@@ -232,6 +236,9 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
     .sqSwapShift = 7U,
     .swapBufferProfCfgOffset = 64U,
+    .taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT,
+    .memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT,
+    .icachePrefetchUnits = ICACHE_PREFETCH_UNIT,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);

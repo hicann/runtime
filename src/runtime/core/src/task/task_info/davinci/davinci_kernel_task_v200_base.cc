@@ -294,7 +294,20 @@ static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, rtDavidSqe
     Stream* const stm = taskInfo->stream;
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     ConstructDavidSqeForHeadCommon(taskInfo, command);
-    ConstructCommonAicAivSqePart(&(aicTaskInfo->comm), sqe, taskInfo, stm);
+    ConstructCommonAicAivSqeWord(&(aicTaskInfo->comm), sqe, taskInfo, stm);
+
+    const Kernel* kernelPtr = GetKernelByTaskType(taskInfo);
+    uint32_t minStackSize = 0U;
+    if (kernelPtr != nullptr) {
+        minStackSize = kernelPtr->GetMinStackSize1();
+    }
+    uint64_t stackPhyBase = RtPtrToValue(stm->Device_()->GetStackPhyBase32k());
+    if (unlikely(minStackSize > KERNEL_STACK_SIZE_32K)) {
+        stackPhyBase = RtPtrToValue(stm->Device_()->GetCustomerStackPhyBase());
+    }
+    sqe->stackPhyBaseLow = static_cast<uint32_t>(stackPhyBase);
+    sqe->stackPhyBaseHigh = static_cast<uint32_t>(stackPhyBase >> UINT32_BIT_NUM);
+    sqe->res4 = 0U;
     return;
 }
 
@@ -324,63 +337,11 @@ static void ConstructDavidAivSqeForDavinciTask(TaskInfo* taskInfo, rtDavidSqe_t*
     return;
 }
 
-static void SetMixStartPcAndParam(TaskInfo* taskInfo, rtDavidSqe_t* const command)
-{
-    RtDavidStarsAicAivKernelSqe* sqe = &(command->aicAivSqe);
-    AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
-    ConstructMixSqePart(aicTaskInfo, sqe, addr);
-    return;
-}
-
 static void ConstructDavidMixSqeForDavinciTask(TaskInfo* taskInfo, rtDavidSqe_t* const command, uint64_t sqBaseAddr)
 {
     ConstructDavidCommonSqeForDavinciTask(taskInfo, command, sqBaseAddr);
     RtDavidStarsAicAivKernelSqe* sqe = &(command->aicAivSqe);
-    Stream* const stm = taskInfo->stream;
-    AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    uint8_t taskRation = 0U;
-    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
-    const uint8_t schemMode = aicTaskInfo->schemMode;
-    const Kernel* kernel = aicTaskInfo->kernel;
-    if (kernel != nullptr) {
-        taskRation = static_cast<uint8_t>(kernel->GetTaskRation());
-        mixType = kernel->GetMixType();
-        Program* programPtr = kernel->Program_();
-        if (programPtr != nullptr && programPtr->IsDcacheLockOp()) {
-            sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-            sqe->header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-            sqe->featureFlag |= SQE_DCACHE_LOCK_FLAG;
-        }
-    }
-
-    /* word0-1 */
-    if ((mixType == static_cast<uint8_t>(MIX_AIC)) || (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC))) {
-        sqe->header.type = RT_DAVID_SQE_TYPE_AIC;
-    } else {
-        sqe->header.type = RT_DAVID_SQE_TYPE_AIV;
-    }
-
-    SetMixStartPcAndParam(taskInfo, command);
-    sqe->schem = schemMode;
-    if (schemMode == RT_SCHEM_MODE_BATCH) {
-        const uint16_t sqeType = sqe->header.type;
-        const uint16_t blockDim = sqe->header.blockDim;
-        CheckBlockDim(stm, sqeType, blockDim);
-    }
-    sqe->ratio = 1U;             // only ratio is 1.
-    if (sqe->mix == 1U) {
-        sqe->ratio = taskRation; // ratio from elf
-        if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == DEFAULT_TASK_RATION)) {
-            sqe->loose = 0U;
-        }
-    }
-    RT_LOG(
-        RT_LOG_INFO,
-        "set cfgInfo schemMode=%u, sqe_schem=%u, taskType=%u, ratio=%u, mix=%u, loose=%u, piMix=%u,"
-        "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
-        schemMode, sqe->schem, taskInfo->type, sqe->ratio, sqe->mix, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize,
-        sqe->featureFlag);
+    ConstructMixSqeCommonForDavinciTask(taskInfo, sqe);
 
     PrintDavidSqe(command, "MIX Task");
 

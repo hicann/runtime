@@ -58,6 +58,7 @@ constexpr int32_t TIMELINE_EVENT_ID_DEFAULT = 1023;
 constexpr uint8_t OVERFLOW_MODE_SATURATION = 0x1U;
 constexpr uint8_t OVERFLOW_MODE_INFNAN = 0x2U;
 constexpr uint32_t RT_ATOMIC_OPERATION_MAX_VAL = static_cast<uint32_t>(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + 1U;
+constexpr uint32_t ICACHE_PREFETCH_DEFAULT_UNIT = 2048U;
 
 enum class MemsetTaskSupportType : uint8_t {
     MEMSET_TASK_NOT_SUPPORT = 0U,
@@ -313,6 +314,7 @@ struct DevProperties final {
     uint32_t swapBufferProfCfgOffset;
     uint32_t taskFailPrintFlushTimeoutMs = TASK_FAIL_PRINT_FLUSH_TIMEOUT_DEFAULT;
     MemsetTaskSupportType memsetTaskSupport = MemsetTaskSupportType::MEMSET_TASK_NOT_SUPPORT;
+    uint32_t icachePrefetchUnits = ICACHE_PREFETCH_DEFAULT_UNIT;
 };
 } // namespace runtime
 } // namespace cce

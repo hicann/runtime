@@ -32,7 +32,7 @@ rtError_t GetPrefetchCnt(Kernel* const kernel)
     constexpr uint32_t aicoreIcachePrefetchSizeMax = 32768U;
     // 16KB, K=1024. aivector can prefetch 16KB at most.
     constexpr uint32_t aivectorIcachePrefetchSizeMax = 16384U;
-    constexpr uint32_t prefetchUnits = 2048U;
+    uint32_t prefetchUnits = Runtime::Instance()->GetCurChipProperties().icachePrefetchUnits;
 
     uint32_t restSize1 = 0U;
     uint32_t restSize2 = 0U;

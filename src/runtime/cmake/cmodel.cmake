@@ -173,11 +173,13 @@ set(libruntime_cmodel_v200_task_src_files
     # david & solomon 专用差异化文件
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_v200.cc
+    ${RUNTIME_FEATURE_DIR}/fusion/fusion_task_arch9201.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch9201.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel
@@ -737,6 +739,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch9201
 )
 
 set(RUNTIME_CMODEL_INC_DIR
@@ -752,7 +755,7 @@ set(libruntime_model_dev_info_src_files
 if(NOT ${TARGET_SYSTEM_NAME} STREQUAL "Windows")
 
 # ---------------------------------- runtime_cmodel runtime_camodel ----------------------------------
-SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend950pr_9599 ascend350 mc62cm12a mc32dm11a)
+SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend950pr_9599 ascend350 mc62cm12a mc32dm11a ascend910_9691)
 
 add_library(runtime_model OBJECT EXCLUDE_FROM_ALL
     ${libruntime_cmodel_src_files}
@@ -881,7 +884,7 @@ target_link_libraries(runtime_model_v200 PRIVATE
 
 foreach(product_type ${PRODUCT_TYPE_LIST})
     # ---------------------------------- runtime_cmodel ----------------------------------
-    if("${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "ascend350")
+    if("${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "ascend350" OR "${product_type}" STREQUAL "ascend910_9691")
     add_library(runtime_cmodel_${product_type}
         SHARED EXCLUDE_FROM_ALL
         $<TARGET_OBJECTS:runtime_model_v200>
@@ -932,7 +935,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
             )
 
     # -------------------------------- runtime_camodel --------------------------------
-    if("${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "ascend350" OR "${product_type}" STREQUAL "mc62cm12a" OR "${product_type}" STREQUAL "mc32dm11a")
+    if("${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "ascend350" OR "${product_type}" STREQUAL "mc62cm12a" OR "${product_type}" STREQUAL "mc32dm11a" OR "${product_type}" STREQUAL "ascend910_9691")
     add_library(runtime_camodel_${product_type}
         SHARED EXCLUDE_FROM_ALL
         $<TARGET_OBJECTS:runtime_model_v200>

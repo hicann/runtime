@@ -15,6 +15,8 @@ add_executable(runtime_utest_arch9201
     stub/hal_stub.cc
     main.cc
     rt_utest_arch9201_error_proc.cc
+    rt_utest_arch9201_task.cc
+    rt_utest_arch9201_kernel.cc
 )
 
 target_compile_definitions(runtime_utest_arch9201 PUBLIC

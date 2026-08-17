@@ -901,6 +901,23 @@ TEST_F(NpuDriverTest, memory_dev_alloc_online_11)
     free(ptr);
 }
 
+TEST_F(NpuDriverTest, memory_dev_alloc_online_12)
+{
+    rtError_t error;
+    uint32_t size = 100;
+    void* ptr = malloc(size);
+    NpuDriver* rawDrv = new NpuDriver();
+    auto chip = rawDrv->chipType_;
+    rawDrv->chipType_ = CHIP_CLOUD_V5;
+
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
+    error = rawDrv->DevMemAllocHugePageManaged(&ptr, size, RT_MEMORY_HOST_SVM, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rawDrv->chipType_ = chip;
+    delete rawDrv;
+    free(ptr);
+}
+
 TEST_F(NpuDriverTest, DevMemAllocManaged_11)
 {
     rtError_t error;
@@ -3079,6 +3096,22 @@ TEST_F(NpuDriverTest5, memory_dev_alloc_online_10)
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
     auto chip = rawDrv->chipType_;
     rawDrv->chipType_ = CHIP_910_B_93;
+    error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HOST_SVM, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rawDrv->chipType_ = chip;
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest5, memory_dev_alloc_online_11)
+{
+    rtError_t error;
+    uint32_t size = 100;
+    void* ptr = NULL;
+    NpuDriver* rawDrv = new NpuDriver();
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
+    auto chip = rawDrv->chipType_;
+    rawDrv->chipType_ = CHIP_CLOUD_V5;
     error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HOST_SVM, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rawDrv->chipType_ = chip;

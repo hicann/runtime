@@ -11,6 +11,7 @@
 #include "stars_david.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
+#include "arch9201/aic_aiv_sqe.h"
 
 namespace cce {
 namespace runtime {
@@ -51,7 +52,8 @@ void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe* const
     return;
 }
 
-void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe* const sqe, const Stream* const stm)
+template <typename SqeType>
+void ConfigSqeDieFriendly(SqeType* const sqe, const Stream* const stm)
 {
 #ifndef CFG_DEV_PLATFORM_PC
     const uint8_t dieNum = stm->Device_()->GetDavidDieNum();
@@ -89,7 +91,7 @@ static bool DavinciKernelTaskRegister()
         .setStarsResultFunc = &StarsV2SetStarsResultForDavinciTask,
     };
 
-    const auto& chips = GetV200Chips();
+    constexpr rtChipType_t chips[] = {CHIP_DAVID, CHIP_ASCEND_350};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, aicpuFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, aicAivFuncs);
@@ -103,7 +105,10 @@ static bool DavinciKernelTaskRegister()
 }
 
 static bool g_davinciKernelTaskRegister = DavinciKernelTaskRegister();
-
+template void ConfigSqeDieFriendly<RtDavidStarsAicAivKernelSqe>(
+    RtDavidStarsAicAivKernelSqe* const, const Stream* const);
+template void ConfigSqeDieFriendly<RtArch9201StarsAicAivKernelSqe>(
+    RtArch9201StarsAicAivKernelSqe* const, const Stream* const);
 #endif
 
 } // namespace runtime

@@ -87,6 +87,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
     ${RUNTIME_DIR}/include/external/acl/error_codes
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch9201
 )
 
 #------------------------- runtime platform -------------------------

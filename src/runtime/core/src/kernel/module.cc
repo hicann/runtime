@@ -282,7 +282,7 @@ rtError_t Module::GetPrefetchCnt(const Kernel* const kernelIn, uint32_t& icacheP
     constexpr uint32_t aicoreIcachePrefetchSizeMax = 32768U;
     // 16KB, K=1024. aivector can prefetch 16KB at most.
     constexpr uint32_t aivectorIcachePrefetchSizeMax = 16384U;
-    constexpr uint32_t prefetchUnits = 2048U;
+    uint32_t prefetchUnits = Runtime::Instance()->GetCurChipProperties().icachePrefetchUnits;
 
     uint32_t restSize = 0U;
     uint32_t prefetchMaxSize = 0U;
@@ -331,7 +331,7 @@ rtError_t Module::GetPrefetchCnt(
     constexpr uint32_t aicoreIcachePrefetchSizeMax = 32768U;
     // 16KB, K=1024. aivector can prefetch 16KB at most.
     constexpr uint32_t aivectorIcachePrefetchSizeMax = 16384U;
-    constexpr uint32_t prefetchUnits = 2048U;
+    uint32_t prefetchUnits = Runtime::Instance()->GetCurChipProperties().icachePrefetchUnits;
     icachePrefetchCnt2 = 0U;
 
     uint32_t restSize1 = 0U;

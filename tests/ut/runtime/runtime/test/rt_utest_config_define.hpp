@@ -180,7 +180,7 @@ typedef enum tagRtArchType {
     PLAT_COMBINE(                       \
         (static_cast<uint32_t>(ARCH_V100)), (static_cast<uint32_t>(CHIP_DAVID)), (static_cast<uint32_t>(PG_VER_BIN7)))
 
-#define PLATFORMCONFIG_ASCEND_910_5591 \
+#define PLATFORMCONFIG_ASCEND_910_9691 \
     PLAT_COMBINE(                      \
         (static_cast<uint32_t>(ARCH_V100)), (static_cast<uint32_t>(CHIP_CLOUD_V5)), (static_cast<uint32_t>(VER_NA)))
 

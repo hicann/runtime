@@ -132,7 +132,19 @@ static void ConstructCommonAicAivSubSqe(const TaskInfo* taskInfo, rtDavidSqe_t* 
     RtDavidStarsAicAivKernelSqe* sqe = &(davidSqe->aicAivSqe);
     const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
     Stream* const stm = taskInfo->stream;
-    ConstructCommonAicAivSqePart(&(fusionKernelTask->aicPart), sqe, taskInfo, stm);
+    ConstructCommonAicAivSqeWord(&(fusionKernelTask->aicPart), sqe, taskInfo, stm);
+    const Kernel* kernelPtr = GetKernelByTaskType(taskInfo);
+    uint32_t minStackSize = 0U;
+    if (kernelPtr != nullptr) {
+        minStackSize = kernelPtr->GetMinStackSize1();
+    }
+    uint64_t stackPhyBase = RtPtrToValue(stm->Device_()->GetStackPhyBase32k());
+    if (unlikely(minStackSize > KERNEL_STACK_SIZE_32K)) {
+        stackPhyBase = RtPtrToValue(stm->Device_()->GetCustomerStackPhyBase());
+    }
+    sqe->stackPhyBaseLow = static_cast<uint32_t>(stackPhyBase);
+    sqe->stackPhyBaseHigh = static_cast<uint32_t>(stackPhyBase >> UINT32_BIT_NUM);
+    sqe->res4 = 0U;
 }
 
 static void ConstructAicSubSqe(
@@ -174,14 +186,6 @@ static void ConstructAivSubSqe(
     PrintDavidSqe(sqeAddr, "FusionKernelTask-Aiv");
 }
 
-static void SetMixStartPcAndParamForFusionKernel(const TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe)
-{
-    RtDavidStarsAicAivKernelSqe* sqe = &(davidSqe->aicAivSqe);
-    const FusionTaskInfo* const fusionKernelTask = &(taskInfo->u.fusionKernelTask);
-    const uint64_t addr = RtPtrToValue(fusionKernelTask->args);
-    ConstructMixSqePart(&(fusionKernelTask->aicPart), sqe, addr);
-}
-
 static void ConstructMixSubSqe(
     const TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint32_t idx, uint64_t sqBaseAddr)
 {
@@ -199,31 +203,19 @@ static void ConstructMixSubSqe(
     const FusionTaskInfoAicPart* aicPart = &(fusionKernelTask->aicPart);
     uint8_t taskRation = 0U;
     uint8_t mixType = static_cast<uint8_t>(NO_MIX);
-    const uint8_t schemMode = aicPart->schemMode;
     const Kernel* kernel = aicPart->kernel;
     if (kernel != nullptr) {
         taskRation = static_cast<uint8_t>(kernel->GetTaskRation());
         mixType = kernel->GetMixType();
     }
 
-    if ((mixType == static_cast<uint8_t>(MIX_AIC)) || (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC))) {
-        sqe->header.type = RT_DAVID_SQE_TYPE_AIC;
-    } else {
-        sqe->header.type = RT_DAVID_SQE_TYPE_AIV;
-    }
-
-    SetMixStartPcAndParamForFusionKernel(taskInfo, sqeAddr);
-
-    sqe->schem = schemMode;
-    if (schemMode == RT_SCHEM_MODE_BATCH) {
-        const uint16_t sqeType = sqe->header.type;
-        const uint16_t blockDim = sqe->header.blockDim;
-        CheckBlockDim(stm, sqeType, blockDim);
-    }
+    const uint64_t addr = RtPtrToValue(fusionKernelTask->args);
+    ConstructMixSqePart(&(fusionKernelTask->aicPart), sqe, mixType, addr, stm);
     sqe->ratio = 1U;
     if (sqe->mix == 1U) {
         sqe->ratio = taskRation;
-        if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == DEFAULT_TASK_RATION)) {
+        const uint32_t defaultTaskRatio = Runtime::Instance()->GetCurChipProperties().defaultTaskRatio;
+        if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == defaultTaskRatio)) {
             sqe->loose = 0U;
         }
     }
@@ -231,7 +223,7 @@ static void ConstructMixSubSqe(
         RT_LOG_INFO,
         "sqeIndex=%u, mixType=%u, cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
         "aivSimtDcuSmSize=%u.",
-        idx, mixType, schemMode, sqe->schem, sqe->ratio, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize);
+        idx, mixType, aicPart->schemMode, sqe->schem, sqe->ratio, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize);
 
     PrintDavidSqe(sqeAddr, "FusionKernelTask-Mix");
 }

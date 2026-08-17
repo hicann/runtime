@@ -13,12 +13,14 @@
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "task_execute_time.h"
+#include "program.hpp"
 
 namespace cce {
 namespace runtime {
 
 bool IsAicAivBiuPerfStreamSupported(const Stream* const stm);
-void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe* const sqe, const Stream* const stm);
+template <typename SqeType>
+void ConfigSqeDieFriendly(SqeType* const sqe, const Stream* const stm);
 
 inline void CheckBlockDim(const Stream* const stm, const uint16_t sqeType, const uint16_t blockDim)
 {
@@ -48,8 +50,8 @@ inline Kernel* GetKernelByTaskType(const TaskInfo* const taskInfo)
     return kernelPtr;
 }
 
-inline void ConfigDieFriendly(
-    const TaskInfo* const taskInfo, RtDavidStarsAicAivKernelSqe* const sqe, const Stream* const stm)
+template <typename SqeType>
+inline void ConfigDieFriendly(const TaskInfo* const taskInfo, SqeType* const sqe, const Stream* const stm)
 {
     sqe->dieFriendly = 1U;
     ConfigSqeDieFriendly(sqe, stm);
@@ -80,9 +82,8 @@ inline void ConfigDieFriendly(
     sqe->groupBlockdim = (static_cast<uint16_t>(sqe->header.blockDim % sqe->groupDim) == 0U) ? value : (value + 1U);
 }
 
-template <typename T>
-inline void ConstructAivSqePart(
-    const T* const kernelInfo, RtDavidStarsAicAivKernelSqe* const sqe, uint64_t addr, const Stream* const stm)
+template <typename T, typename SqeType>
+inline void ConstructAivSqePart(const T* const kernelInfo, SqeType* const sqe, uint64_t addr, const Stream* const stm)
 {
     const uint64_t funcAddr = kernelInfo->funcAddr;
     uint8_t schemMode = kernelInfo->schemMode;
@@ -127,10 +128,9 @@ inline void ConstructAivSqePart(
         sqe->ratio, sqe->aivSimtDcuSmSize);
 }
 
-template <typename T>
-inline void ConstructCommonAicAivSqePart(
-    const T* const kernelInfo, RtDavidStarsAicAivKernelSqe* const sqe, const TaskInfo* taskInfo,
-    const Stream* const stm)
+template <typename T, typename SqeType>
+inline void ConstructCommonAicAivSqeWord(
+    const T* const kernelInfo, SqeType* const sqe, const TaskInfo* taskInfo, const Stream* const stm)
 {
     const Kernel* kernelPtr = GetKernelByTaskType(taskInfo);
     uint32_t minStackSize = 0U;
@@ -169,35 +169,49 @@ inline void ConstructCommonAicAivSqePart(
         sqe->featureFlag = static_cast<uint8_t>(sqe->featureFlag | SQE_BIZ_FLAG_L2CACHE);
     }
 
-    RT_LOG(
-        RT_LOG_INFO, "sqe dieFriendly=%u, blockdim=%u, groupDim=%u, groupBlockDim=%u, featureFlag=%u,kernelcredit=%u.",
-        sqe->dieFriendly, sqe->header.blockDim, sqe->groupDim, sqe->groupBlockdim, sqe->featureFlag, sqe->kernelCredit);
-    uint64_t stackPhyBase = RtPtrToValue(stm->Device_()->GetStackPhyBase32k());
     if (unlikely(minStackSize > KERNEL_STACK_SIZE_32K)) {
-        stackPhyBase = RtPtrToValue(stm->Device_()->GetCustomerStackPhyBase());
         const uint32_t stackLevel = stm->Device_()->GetDeviceCustomerStackLevel();
         sqe->aicTaskParamPtrHigh = (sqe->aicTaskParamPtrHigh & 0x000FFFFFU) | (stackLevel << 20U);
         sqe->aivTaskParamPtrHigh = (sqe->aivTaskParamPtrHigh & 0x000FFFFFU) | (stackLevel << 20U);
     }
-    sqe->stackPhyBaseLow = static_cast<uint32_t>(stackPhyBase);
-    sqe->stackPhyBaseHigh = static_cast<uint32_t>(stackPhyBase >> UINT32_BIT_NUM);
+    RT_LOG(
+        RT_LOG_INFO, "sqe dieFriendly=%u, blockdim=%u, groupDim=%u, groupBlockDim=%u, featureFlag=%u,kernelcredit=%u.",
+        sqe->dieFriendly, sqe->header.blockDim, sqe->groupDim, sqe->groupBlockdim, sqe->featureFlag, sqe->kernelCredit);
 }
 
-template <typename T>
-inline void ConstructMixSqePart(T* const kernelInfo, RtDavidStarsAicAivKernelSqe* const sqe, uint64_t addr)
+template <typename KernelT, typename SqeType>
+inline void ConstructMixSqePart(
+    KernelT* const kernelInfo, SqeType* const sqe, const uint8_t mixType, uint64_t addr, const Stream* const stm)
 {
-    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
+    const uint8_t schemMode = kernelInfo->schemMode;
     const uint64_t funcAddr = kernelInfo->funcAddr;
     const uint64_t funcAddr2 = kernelInfo->funcAddr1;
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
-    if (kernelInfo->kernel != nullptr) {
-        mixType = kernelInfo->kernel->GetMixType();
-        prefetchCnt1 = kernelInfo->kernel->PrefetchCnt1_();
-        prefetchCnt2 = kernelInfo->kernel->PrefetchCnt2_();
+    const Kernel* kernel = kernelInfo->kernel;
+    if (kernel != nullptr) {
+        Program* programPtr = kernel->Program_();
+        if ((programPtr != nullptr) && (programPtr->IsDcacheLockOp())) {
+            sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
+            sqe->header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
+            sqe->featureFlag |= SQE_DCACHE_LOCK_FLAG;
+        }
+        prefetchCnt1 = kernel->PrefetchCnt1_();
+        prefetchCnt2 = kernel->PrefetchCnt2_();
     }
-    sqe->mix = 0U;
+    /* word0-1 */
+    if ((mixType == static_cast<uint8_t>(MIX_AIC)) || (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC))) {
+        sqe->header.type = RT_DAVID_SQE_TYPE_AIC;
+    } else {
+        sqe->header.type = RT_DAVID_SQE_TYPE_AIV;
+    }
     sqe->piMix = 0U;
+    sqe->schem = schemMode;
+    if (schemMode == RT_SCHEM_MODE_BATCH) {
+        const uint16_t sqeType = sqe->header.type;
+        const uint16_t blockDim = sqe->header.blockDim;
+        CheckBlockDim(stm, sqeType, blockDim);
+    }
     sqe->aivSimtDcuSmSize = kernelInfo->simtDcuSmSize;
     switch (mixType) {
         case MIX_AIC:
@@ -210,7 +224,6 @@ inline void ConstructMixSqePart(T* const kernelInfo, RtDavidStarsAicAivKernelSqe
             sqe->aivIcachePrefetchCnt = 0U;
             sqe->aivPmg = 0U;
             sqe->aivPartId = 0U;
-            sqe->res4 = 0U;
             sqe->aivQos = 0U;
             sqe->aivWrrRd = 0U;
             sqe->aivWrrWr = 0U;
@@ -234,7 +247,6 @@ inline void ConstructMixSqePart(T* const kernelInfo, RtDavidStarsAicAivKernelSqe
             sqe->aivIcachePrefetchCnt = static_cast<uint16_t>(prefetchCnt1);
             sqe->aivPmg = 0U;
             sqe->aivPartId = kernelInfo->partId;
-            sqe->res4 = 0U;
             sqe->aivQos = kernelInfo->qos;
             sqe->aivWrrRd = RT_DAVID_AIV_WRR_RD;
             sqe->aivWrrWr = RT_DAVID_AIV_WRR_WR;
@@ -261,7 +273,6 @@ inline void ConstructMixSqePart(T* const kernelInfo, RtDavidStarsAicAivKernelSqe
             sqe->aivIcachePrefetchCnt = static_cast<uint16_t>(prefetchCnt2);
             sqe->aivPmg = 0U;
             sqe->aivPartId = kernelInfo->partId;
-            sqe->res4 = 0U;
             sqe->aivQos = kernelInfo->qos;
             sqe->aivWrrRd = RT_DAVID_AIV_WRR_RD;
             sqe->aivWrrWr = RT_DAVID_AIV_WRR_WR;
@@ -282,9 +293,8 @@ inline void ConstructMixSqePart(T* const kernelInfo, RtDavidStarsAicAivKernelSqe
     }
 }
 
-template <typename T>
-inline void ConstructAicSqePart(
-    T* const kernelInfo, RtDavidStarsAicAivKernelSqe* const sqe, uint64_t addr, const Stream* const stm)
+template <typename T, typename SqeType>
+inline void ConstructAicSqePart(T* const kernelInfo, SqeType* const sqe, uint64_t addr, const Stream* const stm)
 {
     uint8_t schemMode = kernelInfo->schemMode;
     const Kernel* kernel = kernelInfo->kernel;
@@ -304,7 +314,6 @@ inline void ConstructAicSqePart(
     sqe->aivIcachePrefetchCnt = 0U;
     sqe->aivPmg = 0U;
     sqe->aivPartId = 0U;
-    sqe->res4 = 0U;
     sqe->aivQos = 0U;
     sqe->aivWrrRd = 0U;
     sqe->aivWrrWr = 0U;
@@ -327,6 +336,34 @@ inline void ConstructAicSqePart(
     RT_LOG(
         RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u, aivSimtDcuSmSize=%u.", schemMode, sqe->schem,
         sqe->ratio, sqe->aivSimtDcuSmSize);
+}
+
+template <typename SqeType>
+inline void ConstructMixSqeCommonForDavinciTask(TaskInfo* const taskInfo, SqeType* const sqe)
+{
+    Stream* const stm = taskInfo->stream;
+    AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
+    const Kernel* kernel = aicTaskInfo->kernel;
+    uint8_t mixType = (kernel != nullptr) ? kernel->GetMixType() : static_cast<uint8_t>(NO_MIX);
+    uint8_t taskRation = (kernel != nullptr) ? static_cast<uint8_t>(kernel->GetTaskRation()) : 0U;
+    ConstructMixSqePart(aicTaskInfo, sqe, mixType, addr, stm);
+
+    sqe->ratio = 1U; // only ratio is 1.
+    if (sqe->mix == 1U) {
+        sqe->ratio = taskRation;
+        static const uint32_t defaultTaskRatio = Runtime::Instance()->GetCurChipProperties().defaultTaskRatio;
+        if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == defaultTaskRatio)) {
+            sqe->loose = 0U;
+        }
+    }
+
+    RT_LOG(
+        RT_LOG_INFO,
+        "set cfgInfo schemMode=%u, sqe_schem=%u, taskType=%u, ratio=%u, mix=%u, loose=%u, piMix=%u,"
+        "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
+        aicTaskInfo->schemMode, sqe->schem, taskInfo->type, sqe->ratio, sqe->mix, sqe->loose, sqe->piMix,
+        sqe->aivSimtDcuSmSize, sqe->featureFlag);
 }
 
 } // namespace runtime

@@ -30,7 +30,7 @@ protected:
     virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(ChipKernelTest, kernel_create_for_solomon)
+TEST_F(ChipKernelTest, kernel_create_for_arch9201)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t curChipType = rtInstance->GetChipType();
@@ -52,7 +52,7 @@ TEST_F(ChipKernelTest, kernel_create_for_solomon)
     delete k1;
 }
 
-TEST_F(ChipKernelTest, kernel_create_for_second_solomon)
+TEST_F(ChipKernelTest, kernel_create_for_second_arch9201)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t curChipType = rtInstance->GetChipType();

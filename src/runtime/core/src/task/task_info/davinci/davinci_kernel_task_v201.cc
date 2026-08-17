@@ -66,7 +66,8 @@ void UpdateDavidAICpuKernelSqeForDavinciTask(RtDavidStarsAicpuKernelSqe* const s
     return;
 }
 
-void ConfigSqeDieFriendly(RtDavidStarsAicAivKernelSqe* const sqe, const Stream* const stm)
+template <typename SqeType>
+void ConfigSqeDieFriendly(SqeType* const sqe, const Stream* const stm)
 {
     UNUSED(stm);
     sqe->dieFriendly = 0U;
@@ -111,7 +112,8 @@ static bool DavinciKernelTaskRegister()
 }
 
 static bool g_davinciKernelTaskRegister = DavinciKernelTaskRegister();
-
+template void ConfigSqeDieFriendly<RtDavidStarsAicAivKernelSqe>(
+    RtDavidStarsAicAivKernelSqe* const, const Stream* const);
 #endif
 
 } // namespace runtime
