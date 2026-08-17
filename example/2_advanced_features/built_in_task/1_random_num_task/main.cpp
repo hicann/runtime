@@ -73,9 +73,11 @@ int main()
     // 准备 Host 数据
     auto hostOutput = std::unique_ptr<void, decltype(&free)>(malloc(size), free);
 
-    // 申请存放随机数状态 counter 的device内存 （要求 16Byte)
-    void* counterAddr = NULL;
-    CHECK_ERROR(aclrtMalloc((void**)&counterAddr, 16, ACL_MEM_MALLOC_HUGE_FIRST));
+    // 申请并初始化存放随机数状态 counter 的 Device 内存（要求 16 Byte）
+    constexpr size_t kCounterSize = 16U;
+    void* counterAddr = nullptr;
+    CHECK_ERROR(aclrtMalloc(&counterAddr, kCounterSize, ACL_MEM_MALLOC_HUGE_FIRST));
+    CHECK_ERROR(aclrtMemset(counterAddr, kCounterSize, 0, kCounterSize));
 
     printf("Gen normal distribution random num, data type: float \n");
     float mean = 3.0;
