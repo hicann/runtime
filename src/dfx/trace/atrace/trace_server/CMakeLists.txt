@@ -29,10 +29,11 @@ set(libutraceserverHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}/session_mgr
     ${CMAKE_CURRENT_SOURCE_DIR}/utrace_server
     ${CMAKE_CURRENT_SOURCE_DIR}/../utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/utrace
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/trace_server
+    ${ATRACE_DIR}/inc/toolchain
     ${ATRACE_DIR}/common
-    ${RUNTIME_DIR}/inc/driver
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/pkg_inc/driver
+    ${ATRACE_DIR}/../../../pkg_inc/trace
 )
 
 add_library(utrace_server_share
@@ -80,7 +81,9 @@ target_link_libraries(utrace_server_share
         $<BUILD_INTERFACE:adump_headers>
         mmpa
         unified_dlog
-        ascend_hal
+        $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<STREQUAL:${PRODUCT},pegasus>>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<NOT:$<STREQUAL:${PRODUCT},pegasus>>>:ascend_hal>
         adcore
     PUBLIC
         atrace_headers
@@ -98,7 +101,7 @@ set_target_properties(utrace_server_share
 
 install_package(
     TARGETS utrace_server_share atrace_headers
-    FILES   ${ATRACE_DIR}/../../include/trace_server/trace_server.h
-            ${ATRACE_DIR}/../../include/utrace/atrace_types.h
+    FILES   ${RUNTIME_DIR}/src/dfx/trace/inc/toolchain/trace_server.h
+            ${RUNTIME_DIR}/pkg_inc/trace/atrace_types.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/atrace/utrace
 )

@@ -14,10 +14,10 @@
 #include "securec.h"
 #include "trace_msg.h"
 
-#define MSG_MAX_LEN     1024U
+#define MSG_MAX_LEN 1024U
 
-STATIC TraStatus AtraceClientCreatePacket(int32_t devId, const char *value, uint32_t valueLen,
-    void **buf, uint32_t *bufLen)
+STATIC TraStatus
+AtraceClientCreatePacket(int32_t devId, const char* value, uint32_t valueLen, void** buf, uint32_t* bufLen)
 {
     if (value == NULL || buf == NULL || bufLen == NULL) {
         ADIAG_ERR("input invalid parameter");
@@ -31,7 +31,7 @@ STATIC TraStatus AtraceClientCreatePacket(int32_t devId, const char *value, uint
 
     uint32_t mallocValueLen = valueLen + 1U;
     uint32_t sendLen = (uint32_t)sizeof(struct tlv_req) + mallocValueLen;
-    char *sendBuf = (char *)AdiagMalloc(sendLen);
+    char* sendBuf = (char*)AdiagMalloc(sendLen);
     if (sendBuf == NULL) {
         ADIAG_ERR("malloc memory failed");
         return TRACE_FAILURE;
@@ -47,15 +47,15 @@ STATIC TraStatus AtraceClientCreatePacket(int32_t devId, const char *value, uint
         return TRACE_FAILURE;
     }
 
-    *buf = (void *)sendBuf;
+    *buf = (void*)sendBuf;
     *bufLen = (uint32_t)sizeof(struct tlv_req) + valueLen;
 
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus AtraceClientSendMsg(const struct tlv_req *req, char *result, uint32_t resultLen)
+STATIC TraStatus AtraceClientSendMsg(const struct tlv_req* req, char* result, uint32_t resultLen)
 {
-    char *resultBuf = (char *)AdiagMalloc(MSG_MAX_LEN);
+    char* resultBuf = (char*)AdiagMalloc(MSG_MAX_LEN);
     if (resultBuf == NULL) {
         ADIAG_ERR("malloc failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
@@ -81,16 +81,14 @@ STATIC TraStatus AtraceClientSendMsg(const struct tlv_req *req, char *result, ui
     return ret;
 }
 
-STATIC TraStatus AtraceClientCheckHelloMsg(char *buffer, uint32_t len)
+STATIC TraStatus AtraceClientCheckHelloMsg(char* buffer, uint32_t len)
 {
     if (len < sizeof(TraceHelloMsg)) {
         ADIAG_ERR("check hello msg failed, len=%u bytes, size=%zu bytes.", len, sizeof(TraceHelloMsg));
         return TRACE_FAILURE;
     }
-    TraceHelloMsg *msg = (TraceHelloMsg *)buffer;
-    if ((msg->msgType != TRACE_HELLO_MSG) ||
-        (msg->magic != TRACE_HEAD_MAGIC) ||
-        (msg->version != TRACE_HEAD_VERSION)) {
+    TraceHelloMsg* msg = (TraceHelloMsg*)buffer;
+    if ((msg->msgType != TRACE_HELLO_MSG) || (msg->magic != TRACE_HEAD_MAGIC) || (msg->version != TRACE_HEAD_VERSION)) {
         ADIAG_ERR("msgType=%hhu, magic=%hu, version=%hu.", msg->msgType, msg->magic, msg->version);
         return TRACE_FAILURE;
     }
@@ -101,23 +99,23 @@ STATIC TraStatus AtraceClientCheckHelloMsg(char *buffer, uint32_t len)
 TraStatus AtraceClientSendHello(int32_t devId)
 {
     ADIAG_INF("send [hello] msg.");
-    TraceHelloMsg msg = { 0 };
+    TraceHelloMsg msg = {0};
     msg.msgType = TRACE_HELLO_MSG;
     msg.magic = TRACE_HEAD_MAGIC;
     msg.version = TRACE_HEAD_VERSION;
 
     uint32_t sendLen = 0;
-    void *reqBuf = NULL;
+    void* reqBuf = NULL;
 
-    TraStatus ret = AtraceClientCreatePacket(devId, (const char *)&msg, (uint32_t)sizeof(msg), &reqBuf, &sendLen);
+    TraStatus ret = AtraceClientCreatePacket(devId, (const char*)&msg, (uint32_t)sizeof(msg), &reqBuf, &sendLen);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("create [hello] msg failed, ret=%d", ret);
         ADIAG_SAFE_FREE(reqBuf);
         return TRACE_FAILURE;
     }
 
-    struct tlv_req *req = (struct tlv_req *)reqBuf;
-    char result[MSG_MAX_LEN] = { 0 };
+    struct tlv_req* req = (struct tlv_req*)reqBuf;
+    char result[MSG_MAX_LEN] = {0};
     ret = AtraceClientSendMsg(req, result, MSG_MAX_LEN);
     if (ret != TRACE_SUCCESS) {
         ADIAG_WAR("can not send [hello] msg, ret=%d", ret);
@@ -139,20 +137,20 @@ TraStatus AtraceClientSendHello(int32_t devId)
 TraStatus AtraceClientSendEnd(int32_t devId)
 {
     ADIAG_INF("send [end] msg.");
-    TraceEndMsg msg = { 0 };
+    TraceEndMsg msg = {0};
     msg.msgType = TRACE_END_MSG;
 
     uint32_t sendLen = 0;
-    void *reqBuf = NULL;
+    void* reqBuf = NULL;
 
-    TraStatus ret = AtraceClientCreatePacket(devId, (const char *)&msg, (uint32_t)sizeof(msg), &reqBuf, &sendLen);
+    TraStatus ret = AtraceClientCreatePacket(devId, (const char*)&msg, (uint32_t)sizeof(msg), &reqBuf, &sendLen);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("create [end] msg failed, ret=%d", ret);
         ADIAG_SAFE_FREE(reqBuf);
         return TRACE_FAILURE;
     }
 
-    struct tlv_req *req = (struct tlv_req *)reqBuf;
+    struct tlv_req* req = (struct tlv_req*)reqBuf;
     int32_t err = AdxSendMsgAndNoResultByType(HDC_SERVICE_TYPE_BBOX, req);
     if (err != IDE_DAEMON_OK) {
         ADIAG_WAR("can not send [end] message, ret=%d.", err);
@@ -165,17 +163,17 @@ TraStatus AtraceClientSendEnd(int32_t devId)
     return TRACE_SUCCESS;
 }
 
-TraStatus AtraceClientCreateLongLink(int32_t devId, int32_t timeout, void **handle)
+TraStatus AtraceClientCreateLongLink(int32_t devId, int32_t timeout, void** handle)
 {
     AdxCommHandle adxHandle = AdxCreateCommHandle(HDC_SERVICE_TYPE_BBOX, devId, COMPONENT_TRACE);
     int32_t ret = AdxIsCommHandleValid(adxHandle);
     if (ret != IDE_DAEMON_OK) {
-        ADIAG_ERR("adx create handle failed, ret=%d", ret);
+        ADIAG_WAR("adx create handle failed, ret=%d", ret);
         return TRACE_FAILURE;
     }
 
     ADIAG_INF("send [start] msg.");
-    TraceStartMsg msg = { 0 };
+    TraceStartMsg msg = {0};
     msg.msgType = TRACE_START_MSG;
     msg.timeout = timeout;
     ret = AdxSendMsg(adxHandle, (const char*)&msg, (uint32_t)sizeof(TraceStartMsg));
@@ -185,12 +183,12 @@ TraStatus AtraceClientCreateLongLink(int32_t devId, int32_t timeout, void **hand
         return TRACE_FAILURE;
     }
 
-    *handle = (void *)adxHandle;
+    *handle = (void*)adxHandle;
     ADIAG_INF("send [start] msg successfully.");
     return TRACE_SUCCESS;
 }
 
-bool AtraceClientIsHandleValid(void *handle)
+bool AtraceClientIsHandleValid(void* handle)
 {
     AdxCommHandle adxHandle = (AdxCommHandle)handle;
     if (AdxIsCommHandleValid(adxHandle) == IDE_DAEMON_OK) {
@@ -198,7 +196,7 @@ bool AtraceClientIsHandleValid(void *handle)
     }
     return false;
 }
-TraStatus AtraceClientRecv(void *handle, char **data, uint32_t *len, int32_t timeout)
+TraStatus AtraceClientRecv(void* handle, char** data, uint32_t* len, int32_t timeout)
 {
     int32_t ret = AdxRecvMsg((AdxCommHandle)handle, data, len, (uint32_t)timeout);
     if (ret != IDE_DAEMON_OK) {
@@ -207,44 +205,45 @@ TraStatus AtraceClientRecv(void *handle, char **data, uint32_t *len, int32_t tim
     return TRACE_SUCCESS;
 }
 
-void AtraceClientReleaseHandle(void **handle)
+void AtraceClientReleaseHandle(void** handle)
 {
     AdxDestroyCommHandle((AdxCommHandle)(*handle));
     *handle = NULL;
 }
 
-bool AtraceClientIsEventMsg(char *data, uint32_t len)
+bool AtraceClientIsEventMsg(char* data, uint32_t len)
 {
     if (len < sizeof(TraceEventMsg)) {
         return false;
     }
-    TraceEventMsg *msg = (TraceEventMsg *)data;
+    TraceEventMsg* msg = (TraceEventMsg*)data;
     if (msg->msgType == TRACE_EVENT_MSG) {
         return true;
     }
     return false;
 }
 
-bool AtraceClientIsEndMsg(char *data, uint32_t len)
+bool AtraceClientIsEndMsg(char* data, uint32_t len)
 {
     if (len < sizeof(TraceEndMsg)) {
         return false;
     }
-    TraceEndMsg *msg = (TraceEndMsg *)data;
+    TraceEndMsg* msg = (TraceEndMsg*)data;
     if (msg->msgType == TRACE_END_MSG) {
         return true;
     }
     return false;
 }
 
-TraStatus AtraceClientParseEventMsg(char *data, uint32_t len, TraceMsgInfo *info)
+TraStatus AtraceClientParseEventMsg(char* data, uint32_t len, TraceMsgInfo* info)
 {
     if (len < sizeof(TraceEventMsg)) {
-        ADIAG_ERR("AtraceClientParseEventMsg receive length(%u bytes) < msg min length(%zu bytes).",
-            len, sizeof(TraceEventMsg));
+        ADIAG_ERR(
+            "AtraceClientParseEventMsg receive length(%u bytes) < msg min length(%zu bytes).", len,
+            sizeof(TraceEventMsg));
         return TRACE_FAILURE;
     }
-    TraceEventMsg *msg = (TraceEventMsg *)data;
+    TraceEventMsg* msg = (TraceEventMsg*)data;
     info->eventName = msg->eventName;
     info->eventTime = msg->eventTime;
     info->buf = msg->buf;
@@ -256,7 +255,8 @@ TraStatus AtraceClientParseEventMsg(char *data, uint32_t len, TraceMsgInfo *info
     } else {
         info->endFlag = false;
     }
-    ADIAG_DBG("AtraceClientParseEventMsg: info->eventName=%s, info->eventTime=%s, info->saveType=%u.",
-        info->eventName, info->eventTime, (uint32_t)info->saveType);
+    ADIAG_DBG(
+        "AtraceClientParseEventMsg: info->eventName=%s, info->eventTime=%s, info->saveType=%u.", info->eventName,
+        info->eventTime, (uint32_t)info->saveType);
     return TRACE_SUCCESS;
 }

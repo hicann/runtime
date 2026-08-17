@@ -16,7 +16,7 @@ set(libawatchdogSrcFiles
 set(libawatchdogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ATRACE_DIR}/common
-    ${ATRACE_DIR}/../../../pkg_inc/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${ATRACE_DIR}/../../../pkg_inc/mmpa
 )
 
@@ -27,7 +27,7 @@ add_library(awatchdog_share
 
 target_include_directories(awatchdog_share
     PRIVATE
-        ${ATRACE_DIR}/../../../pkg_inc/driver
+        ${RUNTIME_DIR}/pkg_inc/driver
         ${libawatchdogHeaderDir})
 
 target_compile_definitions(awatchdog_share
@@ -78,13 +78,13 @@ set_target_properties(awatchdog_share
     OUTPUT_NAME ascend_watchdog
 )
 
-# install_package(
-#     PACKAGE awatchdog
-#     TARGETS awatchdog_share awatchdog_headers
-#     FILES   ${ATRACE_DIR}/../../include/awatchdog/awatchdog_types.h
-#             ${ATRACE_DIR}/../../include/awatchdog/awatchdog.h
-#     DESTINATION ${INSTALL_INCLUDE_DIR}/awatchdog
-# )
+install_package(
+    PACKAGE awatchdog
+    TARGETS awatchdog_share awatchdog_headers
+    FILES   ${RUNTIME_DIR}/pkg_inc/watchdog/awatchdog_types.h
+            ${RUNTIME_DIR}/pkg_inc/watchdog/awatchdog.h
+    DESTINATION ${INSTALL_INCLUDE_DIR}/awatchdog
+)
 
 ############################# libascend_watchdog_stub.so(linux)   #############################
 

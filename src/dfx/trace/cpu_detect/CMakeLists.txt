@@ -137,7 +137,7 @@ set(torinoCpuDetectTestSrcFiles
 set(libcpudetecttestSrcFiles ${milanCpuDetectTestSrcFiles})
 set(CPU_DETECT_STL_MARCH "-march=armv8.3-a+crc+crypto+fp16")
 if(PRODUCT)
-    if(${PRODUCT} STREQUAL "ascend910_95")
+    if(${PRODUCT} STREQUAL "ascend950")
         set(libcpudetecttestSrcFiles ${torinoCpuDetectTestSrcFiles})
         set(CPU_DETECT_STL_MARCH "-march=armv8.3-a+crc+fp+simd+lse+fp16+crypto")
     endif()
@@ -158,8 +158,9 @@ target_compile_options(cpu_detect_testcase_share
 
 set(libcpudetectHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/cpu_detect
-    ${RUNTIME_DIR}/inc/driver
+    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/toolchain
+    ${ATRACE_DIR}/common
+    ${RUNTIME_DIR}/pkg_inc/driver
 )
 
 add_library(cpu_detect_share
@@ -168,7 +169,7 @@ add_library(cpu_detect_share
 
 target_include_directories(cpu_detect_share
     PRIVATE
-        ${RUNTIME_DIR}/abl/libc_sec/include
+        ${LIBC_SEC_HEADER}
         ${libcpudetectHeaderDir})
 
 target_compile_definitions(cpu_detect_share
@@ -209,15 +210,17 @@ target_link_libraries(cpu_detect_share
         $<BUILD_INTERFACE:intf_pub>
         $<BUILD_INTERFACE:slog_headers>
         cpu_detect_testcase_share
-        ascend_hal
-        ${ATRACE_DIR}/slog.so
-        ${ATRACE_DIR}/libc_sec.so
+        $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<STREQUAL:${PRODUCT},pegasus>>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<NOT:$<STREQUAL:${PRODUCT},pegasus>>>:ascend_hal>
+        unified_dlog
+        c_sec
 )
 
 target_compile_definitions(cpu_detect_share
     PRIVATE
         OS_TYPE=0
-        $<$<STREQUAL:${PRODUCT},ascend910_95>:CPU_DETECT_LINX_CORE>
+        $<$<STREQUAL:${PRODUCT},ascend950>:CPU_DETECT_LINX_CORE>
 )
 set_target_properties(cpu_detect_share
     PROPERTIES
@@ -227,7 +230,7 @@ set_target_properties(cpu_detect_share
 
 install_package(
     TARGETS cpu_detect_share
-    FILES   ${ATRACE_DIR}/../../include/cpu_detect/cpu_detect.h
-            ${ATRACE_DIR}/../../include/cpu_detect/cpu_detect_types.h
+    FILES   ${RUNTIME_DIR}/src/dfx/trace/inc/toolchain/cpu_detect.h
+            ${RUNTIME_DIR}/src/dfx/trace/inc/toolchain/cpu_detect_types.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/cpu_detect
 )

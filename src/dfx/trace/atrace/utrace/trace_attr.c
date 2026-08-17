@@ -14,10 +14,10 @@
 #include "trace_driver_api.h"
 #include "trace_system_api.h"
 
-#define DEFAULT_ENV_TIMEOUT    0 // timeout default is 0
-#define MAX_ENV_TIMEOUT        (3 * 60 * 1000) // max timeout 180s
+#define DEFAULT_ENV_TIMEOUT 0           // timeout default is 0
+#define MAX_ENV_TIMEOUT (3 * 60 * 1000) // max timeout 180s
 
-STATIC TraceInnerAttr g_traceAttr = { 0 };
+STATIC TraceInnerAttr g_traceAttr = {0};
 
 STATIC void TraceAttrPlatformInit(void)
 {
@@ -46,11 +46,8 @@ STATIC void TraceAttrPlatformInit(void)
     }
 }
 
-#ifdef ATRACE_API
-STATIC uint32_t TraceAttrGetPlatform(void)
-{
-    return g_traceAttr.systemAttr.platform;
-}
+#ifdef ATRACE_HOST
+STATIC uint32_t TraceAttrGetPlatform(void) { return g_traceAttr.systemAttr.platform; }
 #endif
 
 /**
@@ -63,7 +60,7 @@ STATIC uint32_t TraceAttrGetPlatform(void)
  */
 bool AtraceCheckSupported(void)
 {
-#ifdef ATRACE_API
+#ifdef ATRACE_HOST
     if (TraceAttrGetPlatform() == PLATFORM_DEVICE_SIDE) {
         return false;
     }
@@ -80,7 +77,7 @@ bool AtraceCheckSupported(void)
  */
 bool AtraceCheckDeviceSupported(void)
 {
-#ifdef ATRACE_API
+#ifdef ATRACE_HOST
     if (TraceAttrGetPlatform() != PLATFORM_HOST_SIDE) {
         return false;
     }
@@ -92,7 +89,7 @@ STATIC TraStatus TraceAttrIdInit(void)
 {
     g_traceAttr.systemAttr.pid = getpid();
     uint32_t uid = getuid();
-    const struct passwd *userInfo = getpwuid(uid);
+    const struct passwd* userInfo = getpwuid(uid);
     if (userInfo != NULL) {
         g_traceAttr.systemAttr.uid = userInfo->pw_uid;
         g_traceAttr.systemAttr.gid = userInfo->pw_gid;
@@ -115,10 +112,12 @@ STATIC TraStatus TraceAttrTimeInit(void)
 STATIC void TraceAttrEnvInit(void)
 {
     g_traceAttr.systemAttr.envTimeout = DEFAULT_ENV_TIMEOUT;
-    const char *env = NULL;
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_LOG_DEVICE_FLUSH_TIMEOUT, (env));
     if (env == NULL) {
-        ADIAG_INF("doesn't set env ASCEND_LOG_DEVICE_FLUSH_TIMEOUT, use default timeout=%dms.", g_traceAttr.systemAttr.envTimeout);
+        ADIAG_INF(
+            "doesn't set env ASCEND_LOG_DEVICE_FLUSH_TIMEOUT, use default timeout=%dms.",
+            g_traceAttr.systemAttr.envTimeout);
         return;
     }
 
@@ -127,41 +126,25 @@ STATIC void TraceAttrEnvInit(void)
         ADIAG_INF("set timeout %dms by env ASCEND_LOG_DEVICE_FLUSH_TIMEOUT.", g_traceAttr.systemAttr.envTimeout);
         g_traceAttr.systemAttr.envTimeout = value;
     } else {
-        ADIAG_WAR("env ASCEND_LOG_DEVICE_FLUSH_TIMEOUT is invalid, use default timeout=%dms.", g_traceAttr.systemAttr.envTimeout);
+        ADIAG_WAR(
+            "env ASCEND_LOG_DEVICE_FLUSH_TIMEOUT is invalid, use default timeout=%dms.",
+            g_traceAttr.systemAttr.envTimeout);
     }
 }
 
-int32_t TraceGetTimeout(void)
-{
-    return g_traceAttr.systemAttr.envTimeout;
-}
+int32_t TraceGetTimeout(void) { return g_traceAttr.systemAttr.envTimeout; }
 
-int32_t TraceAttrGetPid(void)
-{
-    return g_traceAttr.systemAttr.pid;
-}
+int32_t TraceAttrGetPid(void) { return g_traceAttr.systemAttr.pid; }
 
-int32_t TraceAttrGetPgid(void)
-{
-    return g_traceAttr.systemAttr.pgid;
-}
+int32_t TraceAttrGetPgid(void) { return g_traceAttr.systemAttr.pgid; }
 
-const char *TraceAttrGetTime(void)
-{
-    return (const char *)g_traceAttr.systemAttr.timeStamp;
-}
+const char* TraceAttrGetTime(void) { return (const char*)g_traceAttr.systemAttr.timeStamp; }
 
-uint32_t TraceAttrGetUid(void)
-{
-    return g_traceAttr.systemAttr.uid;
-}
+uint32_t TraceAttrGetUid(void) { return g_traceAttr.systemAttr.uid; }
 
-uint32_t TraceAttrGetGid(void)
-{
-    return g_traceAttr.systemAttr.gid;
-}
+uint32_t TraceAttrGetGid(void) { return g_traceAttr.systemAttr.gid; }
 
-TraStatus TraceSetGlobalAttr(const TraceGlobalAttr *attr)
+TraStatus TraceSetGlobalAttr(const TraceGlobalAttr* attr)
 {
     if (attr == NULL) {
         return TRACE_FAILURE;
@@ -169,24 +152,16 @@ TraStatus TraceSetGlobalAttr(const TraceGlobalAttr *attr)
     g_traceAttr.userAttr.saveMode = attr->saveMode;
     g_traceAttr.userAttr.deviceId = attr->deviceId;
     g_traceAttr.userAttr.pid = attr->pid;
-    ADIAG_INF("set global attr successfully, saveMode=%u, device id=%u, pid=%u.", attr->saveMode, attr->deviceId, attr->pid);
+    ADIAG_INF(
+        "set global attr successfully, saveMode=%u, device id=%u, pid=%u.", attr->saveMode, attr->deviceId, attr->pid);
     return TRACE_SUCCESS;
 }
- 
-uint8_t TraceAttrGetSaveMode(void)
-{
-    return g_traceAttr.userAttr.saveMode;
-}
- 
-uint8_t TraceAttrGetGlobalDevId(void)
-{
-    return g_traceAttr.userAttr.deviceId;
-}
- 
-uint32_t TraceAttrGetGlobalPid(void)
-{
-    return g_traceAttr.userAttr.pid;
-}
+
+uint8_t TraceAttrGetSaveMode(void) { return g_traceAttr.userAttr.saveMode; }
+
+uint8_t TraceAttrGetGlobalDevId(void) { return g_traceAttr.userAttr.deviceId; }
+
+uint32_t TraceAttrGetGlobalPid(void) { return g_traceAttr.userAttr.pid; }
 
 TraStatus TraceAttrInit(void)
 {
@@ -212,7 +187,4 @@ TraStatus TraceAttrInit(void)
     return TRACE_SUCCESS;
 }
 
-void TraceAttrExit(void)
-{
-    TraceDriverExit();
-}
+void TraceAttrExit(void) { TraceDriverExit(); }

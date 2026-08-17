@@ -31,14 +31,14 @@
  * @param [in]  objName:       objName object name
  * @return      atrace handle
  */
-TraHandle TRACE_API(Create)(TracerType tracerType, const char *objName)
+TraHandle TRACE_API(Create)(TracerType tracerType, const char* objName)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceCreate is not supported on device side");
         return TRACE_UNSUPPORTED_HANDLE;
     }
-    ADIAG_CHK_EXPR_ACTION(tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE,
-        "tracer type %d is invalid.", (int32_t)tracerType);
+    ADIAG_CHK_EXPR_ACTION(
+        tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE, "tracer type %d is invalid.", (int32_t)tracerType);
     ADIAG_CHK_NULL_PTR(objName, return TRACE_INVALID_HANDLE);
 
     TraceAttr attr = {0};
@@ -55,14 +55,14 @@ TraHandle TRACE_API(Create)(TracerType tracerType, const char *objName)
  * @param [in]  attr:          object attribute
  * @return      atrace handle
  */
-TraHandle TRACE_API(CreateWithAttr)(TracerType tracerType, const char *objName, const TraceAttr *attr)
+TraHandle TRACE_API(CreateWithAttr)(TracerType tracerType, const char* objName, const TraceAttr* attr)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceCreate is not supported on device side");
         return TRACE_UNSUPPORTED_HANDLE;
     }
-    ADIAG_CHK_EXPR_ACTION(tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE,
-        "tracer type %d is invalid.", (int32_t)tracerType);
+    ADIAG_CHK_EXPR_ACTION(
+        tracerType >= TRACER_TYPE_MAX, return TRACE_INVALID_HANDLE, "tracer type %d is invalid.", (int32_t)tracerType);
     ADIAG_CHK_NULL_PTR(objName, return TRACE_INVALID_HANDLE);
 
     TraHandle ret = TracerObjCreate(tracerType, objName, attr);
@@ -76,7 +76,7 @@ TraHandle TRACE_API(CreateWithAttr)(TracerType tracerType, const char *objName, 
  * @param [in]  objName:       objName object name
  * @return      atrace handle
  */
-TraHandle TRACE_API(GetHandle)(TracerType tracerType, const char *objName)
+TraHandle TRACE_API(GetHandle)(TracerType tracerType, const char* objName)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceGetHandle is not supported on device side");
@@ -92,11 +92,11 @@ TraHandle TRACE_API(GetHandle)(TracerType tracerType, const char *objName)
  * @param [in]  bufSize:   size of buffer
  * @return      TraStatus
  */
-TraStatus TRACE_API(Submit)(TraHandle handle, const void *buffer, uint32_t bufSize)
+TraStatus TRACE_API(Submit)(TraHandle handle, const void* buffer, uint32_t bufSize)
 {
     return TracerObjSubmit(handle, 0, buffer, bufSize);
 }
- 
+
 /**
  * @brief       Submit trace info by buffer type
  * @param [in]  handle:         trace handle
@@ -105,7 +105,7 @@ TraStatus TRACE_API(Submit)(TraHandle handle, const void *buffer, uint32_t bufSi
  * @param [in]  bufSize:        size of buffer
  * @return      TraStatus
  */
-TraStatus TRACE_API(SubmitByType)(TraHandle handle, uint8_t bufferType, const void *buffer, uint32_t bufSize)
+TraStatus TRACE_API(SubmitByType)(TraHandle handle, uint8_t bufferType, const void* buffer, uint32_t bufSize)
 {
     return TracerObjSubmit(handle, bufferType, buffer, bufSize);
 }
@@ -147,10 +147,7 @@ TraStatus TRACE_API(Save)(TracerType tracerType, bool syncFlag)
  * @brief       init atrace struct entry list
  * @return      atrace entry list
  */
-void *TRACE_API(StructEntryListInit)(void)
-{
-    return TracerStructEntryListInit();
-}
+void* TRACE_API(StructEntryListInit)(void) { return TracerStructEntryListInit(); }
 
 /**
  * @brief       set atrace entry name
@@ -158,7 +155,7 @@ void *TRACE_API(StructEntryListInit)(void)
  * @param [in]  name:       entry name
  * @return      NA
  */
-void TRACE_API(StructEntryName)(TraceStructEntry *entry, const char *name)
+void TRACE_API(StructEntryName)(TraceStructEntry* entry, const char* name)
 {
     return TracerStructEntryName(entry, name);
 }
@@ -173,7 +170,7 @@ void TRACE_API(StructEntryName)(TraceStructEntry *entry, const char *name)
  * @param [in]  length:         bytes occupied by this item
  * @return      NA
  */
-void TRACE_API(StructItemSet)(TraceStructEntry *entry, const char *name, uint8_t type, uint8_t mode, uint16_t length)
+void TRACE_API(StructItemSet)(TraceStructEntry* entry, const char* name, uint8_t type, uint8_t mode, uint16_t length)
 {
     return TracerStructItemSet(entry, name, type, mode, length);
 }
@@ -183,32 +180,23 @@ void TRACE_API(StructItemSet)(TraceStructEntry *entry, const char *name, uint8_t
  * @param [in]  entry:      trace struct entry
  * @return      NA
  */
-void TRACE_API(StructEntryExit)(TraceStructEntry *entry)
-{
-    return TracerStructEntryExit(entry);
-}
+void TRACE_API(StructEntryExit)(TraceStructEntry* entry) { return TracerStructEntryExit(entry); }
 
-TraceStructEntry *TRACE_API(StructEntryCreate)(const char *name)
-{
-    return TraceStructEntryCreate(name);
-}
+TraceStructEntry* TRACE_API(StructEntryCreate)(const char* name) { return TraceStructEntryCreate(name); }
 
-void TRACE_API(StructEntryDestroy)(TraceStructEntry *en)
-{
-    TraceStructEntryDestroy(en);
-}
+void TRACE_API(StructEntryDestroy)(TraceStructEntry* en) { TraceStructEntryDestroy(en); }
 
-void TRACE_API(StructItemFieldSet)(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len)
+void TRACE_API(StructItemFieldSet)(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len)
 {
     TraceStructItemFieldSet(en, item, type, mode, len);
 }
 
-void TRACE_API(StructItemArraySet)(TraceStructEntry *en, const char *item, uint8_t type, uint8_t mode, uint16_t len)
+void TRACE_API(StructItemArraySet)(TraceStructEntry* en, const char* item, uint8_t type, uint8_t mode, uint16_t len)
 {
     TraceStructItemArraySet(en, item, type, mode, len);
 }
 
-void TRACE_API(StructSetAttr)(TraceStructEntry *en, uint8_t type, TraceAttr *attr)
+void TRACE_API(StructSetAttr)(TraceStructEntry* en, uint8_t type, TraceAttr* attr)
 {
     TraceStructSetAttr(en, type, attr);
 }
@@ -218,7 +206,7 @@ void TRACE_API(StructSetAttr)(TraceStructEntry *en, uint8_t type, TraceAttr *att
  * @param [in]  eventName:     event name
  * @return      event handle
  */
-TraEventHandle TRACE_API(EventCreate)(const char *eventName)
+TraEventHandle TRACE_API(EventCreate)(const char* eventName)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceEventCreate is not supported on device side");
@@ -232,7 +220,7 @@ TraEventHandle TRACE_API(EventCreate)(const char *eventName)
  * @param [in]  eventName:     event name
  * @return      event handle
  */
-TraEventHandle TRACE_API(EventGetHandle)(const char *eventName)
+TraEventHandle TRACE_API(EventGetHandle)(const char* eventName)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceEventGetHandle is not supported on device side");
@@ -240,7 +228,6 @@ TraEventHandle TRACE_API(EventGetHandle)(const char *eventName)
     }
     return TraceEventGetHandle(eventName);
 }
-
 
 /**
  * @brief       Destroy event handle
@@ -277,7 +264,7 @@ TraStatus TRACE_API(EventBindTrace)(TraEventHandle eventHandle, TraHandle handle
  * @param [in]  attr:           event attribute
  * @return      TraStatus
  */
-TraStatus TRACE_API(EventSetAttr)(TraEventHandle eventHandle, const TraceEventAttr *attr)
+TraStatus TRACE_API(EventSetAttr)(TraEventHandle eventHandle, const TraceEventAttr* attr)
 {
     if (!AtraceCheckSupported()) {
         ADIAG_WAR("AtraceEventSetAttr is not supported on device side");
@@ -314,14 +301,9 @@ TraStatus TRACE_API(EventReportSync)(TraEventHandle eventHandle)
     return TraceEventReport(eventHandle);
 }
 
-#ifdef UTRACE_API
 /**
  * @brief       set global attribute
  * @param [in]  attr:           global attribute
  * @return      TraStatus
  */
-TraStatus UtraceSetGlobalAttr(const TraceGlobalAttr *attr)
-{
-    return TraceSetGlobalAttr(attr);
-}
-#endif
+TraStatus TRACE_API(SetGlobalAttr)(const TraceGlobalAttr* attr) { return TraceSetGlobalAttr(attr); }

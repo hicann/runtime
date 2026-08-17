@@ -12,18 +12,18 @@
 #include "adiag_utils.h"
 #include "trace_types.h"
 
-void XFreeTraceNode(TraceNode **node)
+void XFreeTraceNode(TraceNode** node)
 {
     ADIAG_CHK_NULL_PTR(node, return);
     ADIAG_CHK_NULL_PTR(*node, return);
 
-    TraceNode *tmp = (TraceNode *)*node;
+    TraceNode* tmp = (TraceNode*)*node;
     ADIAG_SAFE_FREE(tmp->data);
     ADIAG_SAFE_FREE(tmp);
     *node = NULL;
 }
 
-TraStatus TraceQueueInit(TraceQueue *queue)
+TraStatus TraceQueueInit(TraceQueue* queue)
 {
     ADIAG_CHK_NULL_PTR(queue, return TRACE_INVALID_PTR);
 
@@ -35,11 +35,11 @@ TraStatus TraceQueueInit(TraceQueue *queue)
 }
 
 // not free trace_queue
-TraStatus TraceQueueFree(TraceQueue *queue)
+TraStatus TraceQueueFree(TraceQueue* queue)
 {
     ADIAG_CHK_NULL_PTR(queue, return TRACE_INVALID_PTR);
 
-    TraceNode *tmp = NULL;
+    TraceNode* tmp = NULL;
     int32_t num = (int32_t)queue->count;
     for (int32_t i = 0; i < num; i++) {
         TraStatus ret = TraceQueueDequeue(queue, &tmp);
@@ -52,27 +52,25 @@ TraStatus TraceQueueFree(TraceQueue *queue)
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceQueueFull(const TraceQueue *queue)
+STATIC TraStatus TraceQueueFull(const TraceQueue* queue)
 {
-    if ((queue->count >= MAX_QUEUE_COUNT) ||
-        (queue->size >= MAX_QUEUE_SIZE)) {
+    if ((queue->count >= MAX_QUEUE_COUNT) || (queue->size >= MAX_QUEUE_SIZE)) {
         return TRACE_QUEUE_FULL;
     }
 
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TraceQueueNULL(const TraceQueue *queue)
+STATIC TraStatus TraceQueueNULL(const TraceQueue* queue)
 {
-    if ((queue->count == 0) || (queue->size == 0) ||
-        ((queue->head == NULL) && (queue->rear == NULL))) {
+    if ((queue->count == 0) || (queue->size == 0) || ((queue->head == NULL) && (queue->rear == NULL))) {
         return TRACE_QUEUE_NULL;
     }
 
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceQueueEnqueue(TraceQueue *queue, TraceNode *node)
+TraStatus TraceQueueEnqueue(TraceQueue* queue, TraceNode* node)
 {
     ADIAG_CHK_NULL_PTR(queue, return TRACE_INVALID_PTR);
     ADIAG_CHK_NULL_PTR(node, return TRACE_INVALID_PTR);
@@ -80,7 +78,6 @@ TraStatus TraceQueueEnqueue(TraceQueue *queue, TraceNode *node)
 
     // queue would be more than max_size, but node max_count
     if (TraceQueueFull(queue) != TRACE_SUCCESS) {
-        ADIAG_RUN_INF("queue is full.");
         return TRACE_QUEUE_FULL;
     }
 
@@ -91,7 +88,7 @@ TraStatus TraceQueueEnqueue(TraceQueue *queue, TraceNode *node)
         queue->size = node->dataLen;
     } else {
         queue->rear->next = node; // firstly, join the node to list
-        queue->rear = node; // secondly, mv rear to listRear
+        queue->rear = node;       // secondly, mv rear to listRear
         queue->count++;
         queue->size += node->dataLen;
     }
@@ -99,7 +96,7 @@ TraStatus TraceQueueEnqueue(TraceQueue *queue, TraceNode *node)
     return TRACE_SUCCESS;
 }
 
-TraStatus TraceQueueDequeue(TraceQueue *queue, TraceNode **node)
+TraStatus TraceQueueDequeue(TraceQueue* queue, TraceNode** node)
 {
     ADIAG_CHK_NULL_PTR(queue, return TRACE_INVALID_PTR);
     ADIAG_CHK_NULL_PTR(node, return TRACE_INVALID_PTR);
@@ -112,7 +109,7 @@ TraStatus TraceQueueDequeue(TraceQueue *queue, TraceNode **node)
     if (queue->count == 1) {
         (void)TraceQueueInit(queue);
     } else {
-        TraceNode *tmp = queue->head;
+        TraceNode* tmp = queue->head;
         queue->count--;
         queue->size -= tmp->dataLen;
         queue->head = tmp->next;

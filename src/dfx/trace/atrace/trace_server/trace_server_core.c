@@ -18,15 +18,9 @@
 
 STATIC int32_t g_devId = -1;
 
-void TraceServerSetDevId(int32_t devId)
-{
-    g_devId = devId;
-}
+void TraceServerSetDevId(int32_t devId) { g_devId = devId; }
 
-STATIC INLINE int32_t TraceServerGetDevId(void)
-{
-    return g_devId;
-}
+STATIC INLINE int32_t TraceServerGetDevId(void) { return g_devId; }
 
 TraStatus TraceServerMgrProcess(void)
 {
@@ -44,35 +38,33 @@ TraStatus TraceServerMgrProcess(void)
     return TRACE_SUCCESS;
 }
 
-void TraceServerMgrExit(void)
-{
-    TraceServerSessionExit();
-}
+void TraceServerMgrExit(void) { TraceServerSessionExit(); }
 
-STATIC TraStatus GetDevNumIDs(uint32_t *deviceNum, uint32_t *deviceIdArray)
+STATIC TraStatus GetDevNumIDs(uint32_t* deviceNum, uint32_t* deviceIdArray, uint32_t idArraySize)
 {
-    int32_t devNum = 0;
-    int32_t devId[MAX_DEV_NUM] = { 0 };
-    int32_t ret = log_get_device_id(devId, &devNum, MAX_DEV_NUM);
-    if ((ret != 0) || (devNum > MAX_DEV_NUM) || (devNum < 0)) {
-        ADIAG_ERR("get device id failed, result=%d, device_number=%d.", ret, devNum);
+    ADIAG_CHK_EXPR_ACTION(deviceNum == NULL, return TRACE_FAILURE, "input device number pointer is null.");
+    ADIAG_CHK_EXPR_ACTION(deviceIdArray == NULL, return TRACE_FAILURE, "input device id array pointer is null.");
+
+    drvError_t drvErr = halGetDevNumEx(0, deviceNum);
+    if ((drvErr != 0) || (*deviceNum > idArraySize)) {
+        ADIAG_ERR(
+            "get device num failed, result=%d, device_number=%u, device id array size=%u.", (int32_t)drvErr, *deviceNum,
+            idArraySize);
         return TRACE_FAILURE;
     }
-    *deviceNum = (uint32_t)devNum;
-    int32_t idx = 0;
-    for (; idx < devNum; idx++) {
-        if ((devId[idx] >= 0) && (devId[idx] < MAX_DEV_NUM)) {
-            deviceIdArray[idx] = (uint32_t)devId[idx];
-        }
+    drvErr = halGetDevIDsEx(0, deviceIdArray, idArraySize);
+    if (drvErr != 0) {
+        ADIAG_ERR("get device id array failed, result=%d.", (int32_t)drvErr);
+        return TRACE_FAILURE;
     }
     return TRACE_SUCCESS;
 }
 
 STATIC TraStatus TraceServerPfProcess(void)
 {
-    uint32_t deviceIdArray[MAX_DEV_NUM] = { 0U };    // device-side device id array
+    uint32_t deviceIdArray[MAX_DEV_NUM] = {0U}; // device-side device id array
     uint32_t devNum = 0;
-    TraStatus ret = GetDevNumIDs(&devNum, deviceIdArray);
+    TraStatus ret = GetDevNumIDs(&devNum, deviceIdArray, MAX_DEV_NUM);
     if (ret != TRACE_SUCCESS) {
         return TRACE_FAILURE;
     }
@@ -92,7 +84,7 @@ STATIC TraStatus TraceServerPfProcess(void)
 
 STATIC TraStatus TraceServerVfProcess(uint32_t devId)
 {
-    uint32_t deviceIdArray[1] = { devId };
+    uint32_t deviceIdArray[1] = {devId};
     TraStatus ret = KtraceTsCreateThread(1U, deviceIdArray);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("create trace ts thread failed.");
@@ -125,12 +117,6 @@ void TraceServerRecvExit(void)
     KtraceTsDestroyThread();
 }
 
-TraStatus TraceServerSendProcess(void)
-{
-    return TraceServerCreateSendThread();
-}
+TraStatus TraceServerSendProcess(void) { return TraceServerCreateSendThread(); }
 
-void TraceServerSendExit(void)
-{
-    TraceServerDestroySendThread();
-}
+void TraceServerSendExit(void) { TraceServerDestroySendThread(); }

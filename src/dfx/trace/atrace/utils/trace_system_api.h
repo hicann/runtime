@@ -20,9 +20,13 @@
 extern "C" {
 #endif // __cplusplus
 
-#define TRACE_MAX_PATH              MMPA_MAX_PATH
-#define TRACE_PATH_SEPERATOR        MMPA_PATH_SEPARATOR_STR
-#define TRACE_THREAD_STACK_SIZE     128 * 1024
+#define TRACE_MAX_PATH MMPA_MAX_PATH
+#define TRACE_PATH_SEPERATOR MMPA_PATH_SEPARATOR_STR
+#define TRACE_THREAD_STACK_SIZE 128 * 1024
+
+#define TRACE_MKDIR_FAIL (-100)
+#define TRACE_CHMOD_FAIL (-101)
+#define TRACE_CHOWN_FAIL (-102)
 
 typedef mmThread TraceThread;
 typedef mmUserBlock_t TraceUserBlock;
@@ -36,46 +40,45 @@ typedef mmTimezone TraceTimeZone;
 #define TRACE_MUTEX_INITIALIZER MM_MUTEX_INITIALIZER
 
 // load library
-void *TraceDlopen(const char *libPath, int32_t mode);
-void *TraceDlsym(void *handle, const char *funcName);
-int32_t TraceDlclose(void *handle);
+void* TraceDlopen(const char* libPath, int32_t mode);
+void* TraceDlsym(void* handle, const char* funcName);
+int32_t TraceDlclose(void* handle);
 
 int32_t TraceGetPid(void);
 
 int32_t TraceRaise(int32_t signo);
-int32_t TraceChmod(const char *dirPath, uint32_t mode);
-int32_t TraceChown(const char *dirPath, uint32_t uid, uint32_t gid);
-TraStatus TraceMkdir(const char *dirPath, uint32_t mode, uint32_t uid, uint32_t gid);
-int32_t TraceRmdir(const char *pathName);
-int32_t TraceOpen(const char *filePath, int32_t flag, uint32_t mode);
-void TraceClose(int32_t *fd);
+int32_t TraceChmod(const char* dirPath, uint32_t mode);
+int32_t TraceChown(const char* dirPath, uint32_t uid, uint32_t gid);
+TraStatus TraceMkdir(const char* dirPath, uint32_t mode, uint32_t uid, uint32_t gid);
+int32_t TraceRmdir(const char* pathName);
+int32_t TraceOpen(const char* filePath, int32_t flag, uint32_t mode);
+void TraceClose(int32_t* fd);
 
-TraStatus TraceHandleEnvString(const char *env, char *buf, uint32_t len);
-int32_t TraceRealPath(const char *path, char *realPath, int32_t realPathLen);
-int32_t TraceAccess(const char *path, int32_t mode);
+TraStatus TraceHandleEnvString(const char* env, char* buf, uint32_t len);
+int32_t TraceRealPath(const char* path, char* realPath, int32_t realPathLen);
+int32_t TraceAccess(const char* path, int32_t mode);
 
 // thread
-int32_t TraceCreateTaskWithThreadAttr(TraceThread *threadHandle, const TraceUserBlock *funcBlock,
-    const TraceThreadAttr *threadAttr);
-int32_t TraceJoinTask(TraceThread *threadHandle);
-int32_t TraceSetThreadName(const char *threadName);
+int32_t TraceCreateTaskWithThreadAttr(
+    TraceThread* threadHandle, const TraceUserBlock* funcBlock, const TraceThreadAttr* threadAttr);
+int32_t TraceJoinTask(TraceThread* threadHandle);
+int32_t TraceSetThreadName(const char* threadName);
 
-int32_t TraceGetTimeOfDay(TraceTimeVal *timeVal, TraceTimeZone *timeZone);
-int32_t TraceLocalTimeR(const time_t *timep, struct tm *result);
+int32_t TraceGetTimeOfDay(TraceTimeVal* timeVal, TraceTimeZone* timeZone);
+int32_t TraceLocalTimeR(const time_t* timep, struct tm* result);
 
 int32_t TraceSocket(int32_t sockFamily, int32_t type, int32_t protocol);
-int32_t TraceBind(int32_t sockFd, TraceSockAddr *addr, size_t addrLen);
+int32_t TraceBind(int32_t sockFd, TraceSockAddr* addr, size_t addrLen);
 int32_t TraceCloseSocket(int32_t sockFd);
-int32_t TraceConnect(int32_t sockFd, struct sockaddr *addr, size_t addrLen);
+int32_t TraceConnect(int32_t sockFd, struct sockaddr* addr, size_t addrLen);
 
 TraStatus TraceTimeDstInit(void);
-TraStatus TimestampToStr(uint64_t timestamp, char *buffer, uint32_t bufSize);
-TraStatus TimestampToFileStr(uint64_t timestamp, char *buffer, uint32_t bufSize);
-TraStatus TraceGetTimeOffset(int32_t *offset);
+TraStatus TimestampToStr(uint64_t timestamp, char* buffer, uint32_t bufSize);
+TraStatus TimestampToFileStr(uint64_t timestamp, char* buffer, uint32_t bufSize);
+TraStatus TraceGetTimeOffset(int32_t* offset);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #endif
-

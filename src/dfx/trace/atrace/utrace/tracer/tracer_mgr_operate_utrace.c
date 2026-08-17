@@ -17,9 +17,9 @@
 #include "utrace_socket.h"
 #include "trace_attr.h"
 
-#define SOCKET_MAX_DATA_SIZE    524288
+#define SOCKET_MAX_DATA_SIZE 524288
 
-STATIC TraStatus TracerGetMsgHead(UtraceMsg *traceHead, uint8_t saveType, const char *objName, const char *timeStr)
+STATIC TraStatus TracerGetMsgHead(UtraceMsg* traceHead, uint8_t saveType, const char* objName, const char* timeStr)
 {
     traceHead->magic = UTRACE_HEAD_MAGIC;
     traceHead->version = UTRACE_HEAD_VERSION;
@@ -42,13 +42,13 @@ STATIC TraStatus TracerGetMsgHead(UtraceMsg *traceHead, uint8_t saveType, const 
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TracerGetMsgData(struct RbLog *newRb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerGetMsgData(struct RbLog* newRb, char* data, uint32_t len, uint32_t* dataPos)
 {
-    char *txt = NULL;
+    char* txt = NULL;
     TraStatus ret = TRACE_SUCCESS;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
     do {
-        ret = TraceRbLogReadRbMsg(newRb, (char *)&timestamp, TIMESTAMP_MAX_LENGTH, &txt);
+        ret = TraceRbLogReadRbMsg(newRb, (char*)&timestamp, TIMESTAMP_MAX_LENGTH, &txt);
         if (ret == TRACE_RING_BUFFER_EMPTY) {
             break;
         }
@@ -81,13 +81,13 @@ STATIC TraStatus TracerGetMsgData(struct RbLog *newRb, char *data, uint32_t len,
  * @param [in] objName:         object name
  * @return     NA
  */
-void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName)
+void TracerScheduleSaveObjData(struct RbLog* newRb, const char* timeStr, const char* eventName, const char* objName)
 {
     (void)eventName;
     if (TraceAttrGetSaveMode() != 1) {
         return;
     }
-    UtraceMsg *buffer = (UtraceMsg *)AdiagMalloc(SOCKET_MAX_DATA_SIZE);
+    UtraceMsg* buffer = (UtraceMsg*)AdiagMalloc(SOCKET_MAX_DATA_SIZE);
     if (buffer == NULL) {
         ADIAG_ERR("malloc for send msg to utrace server failed, strerr = %s.", strerror(AdiagGetErrorCode()));
         return;
@@ -100,8 +100,8 @@ void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const c
     }
 
     uint32_t pos = 0;
-    if ((TracerGetMsgData(newRb, buffer->data,
-        SOCKET_MAX_DATA_SIZE - (uint32_t)sizeof(UtraceMsg), &pos) != TRACE_SUCCESS)) {
+    if ((TracerGetMsgData(newRb, buffer->data, SOCKET_MAX_DATA_SIZE - (uint32_t)sizeof(UtraceMsg), &pos) !=
+         TRACE_SUCCESS)) {
         ADIAG_SAFE_FREE(buffer);
         ADIAG_ERR("get msg data failed, objName = %s.", objName);
         return;
@@ -123,10 +123,10 @@ void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const c
             return;
         }
     }
-    if (TraceRecorderWrite(UtraceGetSocketFd(), (char *)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
+    if (TraceRecorderWrite(UtraceGetSocketFd(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
         ADIAG_SAFE_FREE(buffer);
-        ADIAG_ERR("write trace data to socket failed, objName = %s. strerror %s.",
-            objName, strerror(AdiagGetErrorCode()));
+        ADIAG_ERR(
+            "write trace data to socket failed, objName = %s. strerror %s.", objName, strerror(AdiagGetErrorCode()));
         return;
     }
     ADIAG_SAFE_FREE(buffer);
@@ -134,9 +134,9 @@ void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const c
     return;
 }
 
-STATIC TraStatus TracerGetTraceCtrl(const struct RbLog *rb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerGetTraceCtrl(const struct RbLog* rb, char* data, uint32_t len, uint32_t* dataPos)
 {
-    TraceCtrlHead traceCtrl = { 0 };
+    TraceCtrlHead traceCtrl = {0};
     traceCtrl.magic = TRACE_MAGIC;
     traceCtrl.version = TRACE_VERSION;
     traceCtrl.pos = TRACE_POS_DEVICE;
@@ -147,13 +147,13 @@ STATIC TraStatus TracerGetTraceCtrl(const struct RbLog *rb, char *data, uint32_t
     traceCtrl.cpuFreq = rb->head.cpuFreq;
     traceCtrl.structSize = (uint32_t)sizeof(TraceStructSegmentHead);
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
-        if ((rb->entry[i].list == NULL) || (ListEmpty(&((struct AdiagList *)rb->entry[i].list)->list))) {
+        if ((rb->entry[i].list == NULL) || (ListEmpty(&((struct AdiagList*)rb->entry[i].list)->list))) {
             continue;
         }
         traceCtrl.structSize += (uint32_t)sizeof(TraceStructHead) +
-            ((struct AdiagList *)rb->entry[i].list)->cnt * (uint32_t)sizeof(TraceStructField);
+                                ((struct AdiagList*)rb->entry[i].list)->cnt * (uint32_t)sizeof(TraceStructField);
     }
-    if (memcpy_s(data + *dataPos, len - *dataPos, (char *)&traceCtrl, sizeof(TraceCtrlHead)) != EOK) {
+    if (memcpy_s(data + *dataPos, len - *dataPos, (char*)&traceCtrl, sizeof(TraceCtrlHead)) != EOK) {
         ADIAG_ERR("memcpy log ctrl failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
     }
@@ -161,49 +161,52 @@ STATIC TraStatus TracerGetTraceCtrl(const struct RbLog *rb, char *data, uint32_t
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TracerScheduleSaveStructSegment(const struct RbLog *rb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerScheduleSaveStructSegment(const struct RbLog* rb, char* data, uint32_t len, uint32_t* dataPos)
 {
-    TraceStructSegmentHead structSegmentHead = { 0 };
+    TraceStructSegmentHead structSegmentHead = {0};
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
-        if ((rb->entry[i].list == NULL) || (ListEmpty(&((struct AdiagList *)rb->entry[i].list)->list))) {
+        if ((rb->entry[i].list == NULL) || (ListEmpty(&((struct AdiagList*)rb->entry[i].list)->list))) {
             continue;
         }
         structSegmentHead.structCount++;
     }
-    if (memcpy_s(data + *dataPos, len - *dataPos, (char *)&structSegmentHead, sizeof(TraceStructSegmentHead)) != EOK) {
+    if (memcpy_s(data + *dataPos, len - *dataPos, (char*)&structSegmentHead, sizeof(TraceStructSegmentHead)) != EOK) {
         ADIAG_ERR("memcpy struct segment head failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
     }
     *dataPos += (uint32_t)sizeof(TraceStructSegmentHead);
- 
+
     for (uint32_t i = 0; i < TRACE_STRUCT_ENTRY_MAX_NUM; i++) {
-        struct AdiagList *traList = (struct AdiagList *)(rb->entry[i].list);
+        struct AdiagList* traList = (struct AdiagList*)(rb->entry[i].list);
         if ((traList == NULL) || (ListEmpty(&traList->list))) {
             continue;
         }
-        TraceStructHead structHead = { 0 };
-        structHead.structType = i;
-        structHead.itemNum = ((struct AdiagList *)rb->entry[i].list)->cnt;
+        TraceStructHead structHead = {0};
+        structHead.structType = (uint8_t)i;
+        structHead.itemNum = ((struct AdiagList*)rb->entry[i].list)->cnt;
         errno_t err = strcpy_s(structHead.structName, TRACE_NAME_LENGTH, rb->entry[i].name);
         if (err != EOK) {
             ADIAG_ERR("copy struct name failed, struct name=%s.", rb->entry[i].name);
         }
-        if (memcpy_s(data + *dataPos, len - *dataPos, (char *)&structHead, sizeof(TraceStructHead)) != EOK) {
-            ADIAG_ERR("memcpy struct head failed, entry name=%s, struct name=%s, strerr=%s.",
-                rb->entry[i].name, structHead.structName, strerror(AdiagGetErrorCode()));
+        if (memcpy_s(data + *dataPos, len - *dataPos, (char*)&structHead, sizeof(TraceStructHead)) != EOK) {
+            ADIAG_ERR(
+                "memcpy struct head failed, entry name=%s, struct name=%s, strerr=%s.", rb->entry[i].name,
+                structHead.structName, strerror(AdiagGetErrorCode()));
             continue;
         }
         *dataPos += (uint32_t)sizeof(TraceStructHead);
- 
-        struct AdiagListNode *node = NULL;
-        struct ListHead *pos = NULL;
- 
-        LIST_FOR_EACH(pos, &traList->list) {
+
+        struct AdiagListNode* node = NULL;
+        struct ListHead* pos = NULL;
+
+        LIST_FOR_EACH(pos, &traList->list)
+        {
             node = LIST_ENTRY(pos, struct AdiagListNode, list);
             if ((node == NULL) ||
                 (memcpy_s(data + *dataPos, len - *dataPos, node->data, sizeof(TraceStructField)) != EOK)) {
-                ADIAG_ERR("get trace struct field failed, struct name=%s, strerr=%s.",
-                    rb->entry[i].name, strerror(AdiagGetErrorCode()));
+                ADIAG_ERR(
+                    "get trace struct field failed, struct name=%s, strerr=%s.", rb->entry[i].name,
+                    strerror(AdiagGetErrorCode()));
                 return TRACE_FAILURE;
             }
             *dataPos += (uint32_t)sizeof(TraceStructField);
@@ -212,13 +215,13 @@ STATIC TraStatus TracerScheduleSaveStructSegment(const struct RbLog *rb, char *d
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TracerScheduleSaveDataHead(const struct RbLog *rb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerScheduleSaveDataHead(const struct RbLog* rb, char* data, uint32_t len, uint32_t* dataPos)
 {
-    TraceStructDataHead dataHead = { 0 };
+    TraceStructDataHead dataHead = {0};
     dataHead.msgSize = rb->head.msgSize;
     dataHead.msgTxtSize = rb->head.msgTxtSize;
     dataHead.msgNum = TracerRbLogGetMsgNum(rb);
-    if (memcpy_s(data + *dataPos, len - *dataPos, (char *)&dataHead, sizeof(TraceStructDataHead)) != EOK) {
+    if (memcpy_s(data + *dataPos, len - *dataPos, (char*)&dataHead, sizeof(TraceStructDataHead)) != EOK) {
         ADIAG_ERR("memcpy data head failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
     }
@@ -226,18 +229,18 @@ STATIC TraStatus TracerScheduleSaveDataHead(const struct RbLog *rb, char *data, 
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TracerGetDataStruct(const struct RbLog *newRb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerGetDataStruct(const struct RbLog* newRb, char* data, uint32_t len, uint32_t* dataPos)
 {
     if (TracerGetTraceCtrl(newRb, data, len, dataPos) != TRACE_SUCCESS) {
         ADIAG_ERR("get log ctrl failed.");
         return TRACE_FAILURE;
     }
- 
+
     if (TracerScheduleSaveStructSegment(newRb, data, len, dataPos) != TRACE_SUCCESS) {
         ADIAG_ERR("write struct segment failed.");
         return TRACE_FAILURE;
     }
- 
+
     if (TracerScheduleSaveDataHead(newRb, data, len, dataPos) != TRACE_SUCCESS) {
         ADIAG_ERR("write data head failed.");
         return TRACE_FAILURE;
@@ -245,14 +248,14 @@ STATIC TraStatus TracerGetDataStruct(const struct RbLog *newRb, char *data, uint
     return TRACE_SUCCESS;
 }
 
-STATIC TraStatus TracerGetOriMsgData(struct RbLog *newRb, char *data, uint32_t len, uint32_t *dataPos)
+STATIC TraStatus TracerGetOriMsgData(struct RbLog* newRb, char* data, uint32_t len, uint32_t* dataPos)
 {
     if (TracerGetDataStruct(newRb, data, len, dataPos) != TRACE_SUCCESS) {
         ADIAG_ERR("get data struct failed.");
         return TRACE_FAILURE;
     }
 
-    char *txt = NULL;
+    char* txt = NULL;
     uint32_t txtLen = 0;
     TraStatus ret = TRACE_SUCCESS;
     uint32_t dataLen = *dataPos;
@@ -281,13 +284,13 @@ STATIC TraStatus TracerGetOriMsgData(struct RbLog *newRb, char *data, uint32_t l
  * @param [in] objName:         object name
  * @return     NA
  */
-void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName)
+void TracerScheduleSaveObjBinData(struct RbLog* newRb, const char* timeStr, const char* eventName, const char* objName)
 {
     (void)eventName;
     if (TraceAttrGetSaveMode() != 1) {
         return;
     }
-    UtraceMsg *buffer = (UtraceMsg *)AdiagMalloc(SOCKET_MAX_DATA_SIZE);
+    UtraceMsg* buffer = (UtraceMsg*)AdiagMalloc(SOCKET_MAX_DATA_SIZE);
     if (buffer == NULL) {
         ADIAG_ERR("malloc for send msg to utrace server failed, strerr = %s.", strerror(AdiagGetErrorCode()));
         return;
@@ -299,8 +302,8 @@ void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, cons
         return;
     }
     uint32_t pos = 0;
-    if ((TracerGetOriMsgData(newRb, buffer->data,
-        SOCKET_MAX_DATA_SIZE - (uint32_t)sizeof(UtraceMsg), &pos) != TRACE_SUCCESS)) {
+    if ((TracerGetOriMsgData(newRb, buffer->data, SOCKET_MAX_DATA_SIZE - (uint32_t)sizeof(UtraceMsg), &pos) !=
+         TRACE_SUCCESS)) {
         ADIAG_SAFE_FREE(buffer);
         ADIAG_ERR("get msg data failed, objName = %s.", objName);
         return;
@@ -322,7 +325,7 @@ void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, cons
             return;
         }
     }
-    if (TraceRecorderWrite(UtraceGetSocketFd(), (char *)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
+    if (TraceRecorderWrite(UtraceGetSocketFd(), (char*)buffer, (uint32_t)sizeof(UtraceMsg) + pos) != TRACE_SUCCESS) {
         ADIAG_SAFE_FREE(buffer);
         ADIAG_ERR("write trace data to socket failed, objName = %s.", objName);
         return;
@@ -331,7 +334,7 @@ void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, cons
     return;
 }
 
-TraStatus TracerScheduleSafeSave(Tracer *tracer, uint64_t timeStamp)
+TraStatus TracerScheduleSafeSave(Tracer* tracer, uint64_t timeStamp)
 {
     (void)tracer;
     (void)timeStamp;

@@ -16,11 +16,11 @@
 #include "trace_system_api.h"
 #include "stacktrace_monitor.h"
 
-#define TRACE_STACK_SIGNAL_ENV              "ASCEND_COREDUMP_SIGNAL"
-#define TRACE_STACK_SIGNAL_ENV_LENGTH       256U
-#define TRACE_STACK_SIGNAL_NONE             "none"
-#define TRACE_STACK_SIGNAL_ALL              "all"
-#define TRACE_STACK_SIGNAL_SLEEP            100000U  // 100ms
+#define TRACE_STACK_SIGNAL_ENV "ASCEND_COREDUMP_SIGNAL"
+#define TRACE_STACK_SIGNAL_ENV_LENGTH 256U
+#define TRACE_STACK_SIGNAL_NONE "none"
+#define TRACE_STACK_SIGNAL_ALL "all"
+#define TRACE_STACK_SIGNAL_SLEEP 100000U // 100ms
 
 // Dedicated alternate signal stack. A stack-overflow SIGSEGV exhausts the
 // thread stack, so the handler must run on a separate stack (sigaltstack +
@@ -47,26 +47,26 @@
 //    is not re-interrupted mid-handler.
 // A true per-thread alt stack would need to intercept host thread creation,
 // which a passively-loaded library cannot do; tracked as a follow-up.
-#define TRACE_ALT_STACK_SIZE                (64U * 1024U)
+#define TRACE_ALT_STACK_SIZE (64U * 1024U)
 STATIC char g_traceAltStack[TRACE_ALT_STACK_SIZE];
 
 typedef struct {
     TraceSignalHandle func;
-    const void *data;
+    const void* data;
 } TraceSigFuncNode;
 struct TraceSigAction {
-    bool registerFlag; // has registered to system or not
-    int32_t signo; // signal number
+    bool registerFlag;          // has registered to system or not
+    int32_t signo;              // signal number
     TraceSignalHandle callbackFunc;
-    struct sigaction sigAct; // the new action for signo
+    struct sigaction sigAct;    // the new action for signo
     struct sigaction oldSigAct; // the previous action for signo
 };
 
 struct TraceSigMgr {
-    uint64_t timeStamp; // timestamp of signal handle callback
-    atomic_bool exitFlag; // exit is running or not
+    uint64_t timeStamp;     // timestamp of signal handle callback
+    atomic_bool exitFlag;   // exit is running or not
     atomic_bool handleFlag; // signal_handle is running or not
-    int32_t handlePid; // signal_handle is running in which process
+    int32_t handlePid;      // signal_handle is running in which process
     struct TraceSigAction sigAct[REGISTER_SIGNAL_NUM];
 };
 
@@ -75,21 +75,20 @@ STATIC struct TraceSigMgr g_sigMgr = {
     .exitFlag = false,
     .handleFlag = false,
     .sigAct = {
-        {.registerFlag = false, .signo = SIGINT  }, // 2
-        {.registerFlag = false, .signo = SIGTERM }, // 15
-        {.registerFlag = false, .signo = SIGQUIT }, // 3
-        {.registerFlag = false, .signo = SIGILL  }, // 4
-        {.registerFlag = false, .signo = SIGTRAP }, // 5
-        {.registerFlag = false, .signo = SIGABRT }, // 6
-        {.registerFlag = false, .signo = SIGBUS  }, // 7
-        {.registerFlag = false, .signo = SIGFPE  }, // 8
-        {.registerFlag = false, .signo = SIGSEGV }, // 11
-        {.registerFlag = false, .signo = SIGXCPU }, // 24
-        {.registerFlag = false, .signo = SIGXFSZ }, // 25
-        {.registerFlag = false, .signo = SIGSYS  }, // 31
-        {.registerFlag = false, .signo = SIG_ATRACE  }  // 35
-        }
-};
+        {.registerFlag = false, .signo = SIGINT},    // 2
+        {.registerFlag = false, .signo = SIGTERM},   // 15
+        {.registerFlag = false, .signo = SIGQUIT},   // 3
+        {.registerFlag = false, .signo = SIGILL},    // 4
+        {.registerFlag = false, .signo = SIGTRAP},   // 5
+        {.registerFlag = false, .signo = SIGABRT},   // 6
+        {.registerFlag = false, .signo = SIGBUS},    // 7
+        {.registerFlag = false, .signo = SIGFPE},    // 8
+        {.registerFlag = false, .signo = SIGSEGV},   // 11
+        {.registerFlag = false, .signo = SIGXCPU},   // 24
+        {.registerFlag = false, .signo = SIGXFSZ},   // 25
+        {.registerFlag = false, .signo = SIGSYS},    // 31
+        {.registerFlag = false, .signo = SIG_ATRACE} // 35
+    }};
 
 /**
  * @brief       : set timestamp
@@ -109,16 +108,16 @@ STATIC void TraceSignalSetTime(void)
  */
 STATIC bool TraceSignalCheckEnv(void)
 {
-    char envSignal[TRACE_STACK_SIGNAL_ENV_LENGTH] = { 0 };
-    const char *env = NULL;
+    char envSignal[TRACE_STACK_SIGNAL_ENV_LENGTH] = {0};
+    const char* env = NULL;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_COREDUMP_SIGNAL, (env));
     TraStatus ret = TraceHandleEnvString(env, envSignal, TRACE_STACK_SIGNAL_ENV_LENGTH);
     if (ret != TRACE_SUCCESS) {
         return true;
     }
     if (strcmp(envSignal, TRACE_STACK_SIGNAL_NONE) == 0) {
-        ADIAG_RUN_INF("get env %s = %s, close the signal capture function",
-            TRACE_STACK_SIGNAL_ENV, TRACE_STACK_SIGNAL_NONE);
+        ADIAG_RUN_INF(
+            "get env %s = %s, close the signal capture function", TRACE_STACK_SIGNAL_ENV, TRACE_STACK_SIGNAL_NONE);
         return false;
     } else {
         ADIAG_WAR("env %s is invalid, use default signal capture function.", TRACE_STACK_SIGNAL_ENV);
@@ -133,12 +132,12 @@ STATIC bool TraceSignalCheckEnv(void)
  * @param [in]  ucontext:      no use
  * @return      NA
  */
-STATIC void TraceSignalHandler(int32_t signo, siginfo_t *siginfo, void *ucontext)
+STATIC void TraceSignalHandler(int32_t signo, siginfo_t* siginfo, void* ucontext)
 {
     STACKTRACE_LOG_RUN("receive signal(%d).", signo);
     TraceSignalSetTime();
     StacktraceMonitorStartUpdate();
-    TraceSignalInfo info = { signo, siginfo, ucontext, g_sigMgr.timeStamp };
+    TraceSignalInfo info = {signo, siginfo, ucontext, g_sigMgr.timeStamp};
     for (uint32_t i = 0; i < REGISTER_SIGNAL_NUM; i++) {
         if ((signo != g_sigMgr.sigAct[i].signo) || (g_sigMgr.sigAct[i].registerFlag != true)) {
             continue;
@@ -176,9 +175,9 @@ STATIC void TraceSignalHandler(int32_t signo, siginfo_t *siginfo, void *ucontext
  * @param [in]  func:       func pointer
  * @return      TraStatus
  */
-TraStatus TraceSignalAddFunc(const int32_t *signo, uint32_t size, TraceSignalHandle func)
+TraStatus TraceSignalAddFunc(const int32_t* signo, uint32_t size, TraceSignalHandle func)
 {
-    for (uint32_t i = 0 ; i < size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         for (uint32_t j = 0; j < REGISTER_SIGNAL_NUM; j++) {
             if (signo[i] != g_sigMgr.sigAct[j].signo) {
                 continue;
@@ -190,7 +189,6 @@ TraStatus TraceSignalAddFunc(const int32_t *signo, uint32_t size, TraceSignalHan
     return TRACE_SUCCESS;
 }
 
-#ifdef ATRACE_API
 /**
  * @brief       register signal callback to system
  * @return      TraStatus
@@ -199,8 +197,9 @@ STATIC TraStatus TraceSignalRegister(void)
 {
     for (uint32_t i = 0; i < REGISTER_SIGNAL_NUM; i++) {
         if (sigaction(g_sigMgr.sigAct[i].signo, &g_sigMgr.sigAct[i].sigAct, &g_sigMgr.sigAct[i].oldSigAct) < 0) {
-            ADIAG_ERR("register signal handler for signal %d failed, info: %s",
-                g_sigMgr.sigAct[i].signo, strerror(AdiagGetErrorCode()));
+            ADIAG_ERR(
+                "register signal handler for signal %d failed, info: %s", g_sigMgr.sigAct[i].signo,
+                strerror(AdiagGetErrorCode()));
             return TRACE_FAILURE;
         }
         ADIAG_INF("register signal handler for signal %d succeed.", g_sigMgr.sigAct[i].signo);
@@ -221,29 +220,16 @@ STATIC void TraceSignalUnregister(void)
             continue;
         }
         if (sigaction(g_sigMgr.sigAct[i].signo, &g_sigMgr.sigAct[i].oldSigAct, NULL) < 0) {
-            ADIAG_ERR("recover signal handler for signal %d failed, info: %s",
-                g_sigMgr.sigAct[i].signo, strerror(AdiagGetErrorCode()));
+            ADIAG_ERR(
+                "recover signal handler for signal %d failed, info: %s", g_sigMgr.sigAct[i].signo,
+                strerror(AdiagGetErrorCode()));
         }
         g_sigMgr.sigAct[i].registerFlag = false;
     }
     ADIAG_RUN_INF("unregister all signal handlers, can not capture signal.");
 }
-#else
-STATIC TraStatus TraceSignalRegister(void)
-{
-    return TRACE_SUCCESS;
-}
 
-STATIC void TraceSignalUnregister(void)
-{
-    return;
-}
-#endif
-
-bool TraceSignalCheckExit(void)
-{
-    return atomic_load(&g_sigMgr.exitFlag);
-}
+bool TraceSignalCheckExit(void) { return atomic_load(&g_sigMgr.exitFlag); }
 
 void TraceSignalSetHandleFlag(bool value)
 {
@@ -267,7 +253,8 @@ STATIC void TraceSignalSetupAltStack(void)
     altStack.ss_size = sizeof(g_traceAltStack);
     altStack.ss_flags = 0;
     if (sigaltstack(&altStack, NULL) != 0) {
-        ADIAG_WAR("set alternate signal stack failed, info: %s, stack overflow may not be captured.",
+        ADIAG_WAR(
+            "set alternate signal stack failed, info: %s, stack overflow may not be captured.",
             strerror(AdiagGetErrorCode()));
     }
 }
@@ -276,7 +263,7 @@ TraStatus TraceSignalInit(void)
 {
     TraceSignalSetupAltStack();
     for (uint32_t i = 0; i < REGISTER_SIGNAL_NUM; i++) {
-        struct TraceSigAction *sigAct = &g_sigMgr.sigAct[i];
+        struct TraceSigAction* sigAct = &g_sigMgr.sigAct[i];
         (void)memset_s(&sigAct->sigAct, sizeof(struct sigaction), 0, sizeof(struct sigaction));
         // sa_mask is per-thread: while this handler runs, block every managed
         // fatal signal on the *handling* thread so a second fatal signal cannot

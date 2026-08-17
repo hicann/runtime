@@ -22,7 +22,7 @@
 #include "ascend_hal.h"
 #include "slog.h"
 
-#define DEVICE_MAX_CPU_NUM  64U
+#define DEVICE_MAX_CPU_NUM 64U
 
 typedef struct {
     int32_t cpuId;
@@ -46,11 +46,11 @@ typedef struct {
 } CpuDetectMgr;
 
 extern "C" {
-    extern CpuDetectMgr g_cpuDetectMgr;
-    extern int32_t CpuDetectGetCpuInfo(uint32_t deviceNum, int32_t moduleType, CpuDetectThreadMgr *thread, uint32_t size);
-    extern int32_t CpuDetectGetCcpuInfo(uint32_t deviceNum, CpuDetectThreadMgr *thread, uint32_t size);
-    extern int32_t CpuDetectGetAicpuInfo(uint32_t deviceNum, CpuDetectThreadMgr *thread, uint32_t size);
-    extern int32_t CpuDetectGetDcpuInfo(uint32_t deviceNum, CpuDetectThreadMgr *thread, uint32_t size); 
+extern CpuDetectMgr g_cpuDetectMgr;
+extern int32_t CpuDetectGetCpuInfo(uint32_t deviceNum, int32_t moduleType, CpuDetectThreadMgr* thread, uint32_t size);
+extern int32_t CpuDetectGetCcpuInfo(uint32_t deviceNum, CpuDetectThreadMgr* thread, uint32_t size);
+extern int32_t CpuDetectGetAicpuInfo(uint32_t deviceNum, CpuDetectThreadMgr* thread, uint32_t size);
+extern int32_t CpuDetectGetDcpuInfo(uint32_t deviceNum, CpuDetectThreadMgr* thread, uint32_t size);
 }
 
 enum UTEST_TYPE {
@@ -61,12 +61,12 @@ enum UTEST_TYPE {
     UTEST_TESTCASE_FAIL,
 };
 
-class CpuDetectCoreUtest: public testing::Test {
+class CpuDetectCoreUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
         system("rm -rf " LLT_TEST_DIR "/*");
-        system("mkdir -p " LLT_TEST_DIR );
+        system("mkdir -p " LLT_TEST_DIR);
         system("echo [DBG][CpuDetectCore][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
 
@@ -77,56 +77,47 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static void SetUpTestCase()
-    {
-        system("echo [DBG][CpuDetectCore][`date +%Y-%m-%d-%H-%M-%S`] Start test suite");
-    }
+    static void SetUpTestCase() { system("echo [DBG][CpuDetectCore][`date +%Y-%m-%d-%H-%M-%S`] Start test suite"); }
 
-    static void TearDownTestCase()
-    {
-        system("echo [DBG][CpuDetectCore][`date +%Y-%m-%d-%H-%M-%S`] End test suite");
-    }
- 
+    static void TearDownTestCase() { system("echo [DBG][CpuDetectCore][`date +%Y-%m-%d-%H-%M-%S`] End test suite"); }
+
     static void UtestEnvPrepara(int32_t envType, int32_t devNum)
     {
         if (envType == UTEST_NORMAL) {
-            MOCKER(halBindCgroup).stubs().will(returnValue(0));
+            // 不给 halBindCgroup 打桩：ascend_hal_stub.c 中它已返回 DRV_ERROR_NONE，
+            // 与本场景期望一致，打桩是多余的。而在 aarch64 上给它打桩会越界破坏
+            // 紧邻的 halGetDeviceInfo（二者入口仅相隔 28 字节），使其返回全零，
+            // 导致 CpuDetectGetCpuNum 读到 cpuNum=0 而令用例失败。
+            // 同套件中 UTEST_BIND_CGROUP_FAIL 等场景因同一限制已 GTEST_SKIP。
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(0));
         } else if (envType == UTEST_CREATE_THREAD_FAIL) {
             MOCKER(halBindCgroup).stubs().will(returnValue(0));
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(0));
-            MOCKER(pthread_create)
-                .stubs()
-                .will(returnValue(10));
+            MOCKER(pthread_create).stubs().will(returnValue(10));
         } else if (envType == UTEST_BIND_CGROUP_FAIL) {
             MOCKER(halBindCgroup).stubs().will(returnValue(11));
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(0));
         } else if (envType == UTEST_SETAFFINITY_FAIL) {
             MOCKER(halBindCgroup).stubs().will(returnValue(0));
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(1));
-        }  else if (envType == UTEST_TESTCASE_FAIL) {
+        } else if (envType == UTEST_TESTCASE_FAIL) {
             MOCKER(halBindCgroup).stubs().will(returnValue(0));
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(0));
-            MOCKER(CpuDetectGroup)
-                .stubs()
-                .will(returnValue(100));
+            MOCKER(CpuDetectGroup).stubs().will(returnValue(100));
         } else {
             MOCKER(halBindCgroup).stubs().will(returnValue(0));
             MOCKER(pthread_setaffinity_np).stubs().will(returnValue(0));
             MOCKER(CpuDetectGroup).stubs().will(returnValue(0));
         }
- 
+
         if (devNum >= 0) {
             static uint32_t devNum_ = devNum;
-            MOCKER(drvGetDevNum)
-                .stubs()
-                .with(outBoundP(&devNum_, sizeof(uint32_t)))
-                .will(returnValue((drvError_t)0));
+            MOCKER(drvGetDevNum).stubs().with(outBoundP(&devNum_, sizeof(uint32_t))).will(returnValue((drvError_t)0));
         } else {
             MOCKER(drvGetDevNum).expects(once()).will(returnValue((drvError_t)100));
         }
     }
- 
+
     static void UtestExitCheck()
     {
         EXPECT_EQ(g_cpuDetectMgr.stop, 0);
@@ -237,15 +228,15 @@ TEST_F(CpuDetectCoreUtest, UtestCpuDetectProcess_MallocBufferFail)
     GTEST_SKIP() << "malloc mock causes crashes on aarch64 due to glibc interference";
     // malloc regs failed
     UtestEnvPrepara(UTEST_NORMAL, 1);
-    MOCKER(malloc).stubs().will(returnValue((void *)NULL));
+    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
     CpudStatus ret = CpuDetectProcess(1);
     EXPECT_EQ(ret, CPUD_ERROR_MALLOC);
 
     // malloc loadStoreBuf  failed
     GlobalMockObject::verify();
-    uint32_t *regValues = (uint32_t *)malloc(64 * 512);
+    uint32_t* regValues = (uint32_t*)malloc(64 * 512);
     UtestEnvPrepara(UTEST_NORMAL, 1);
-    MOCKER(malloc).stubs().will(returnValue((void *)regValues)).then(returnValue((void *)NULL));
+    MOCKER(malloc).stubs().will(returnValue((void*)regValues)).then(returnValue((void*)NULL));
     ret = CpuDetectProcess(1);
     EXPECT_EQ(ret, CPUD_ERROR_MALLOC);
 }

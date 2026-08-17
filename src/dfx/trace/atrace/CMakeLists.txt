@@ -8,4 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 add_subdirectory(utrace)
-# add_subdirectory(trace_server)
+if (NOT ENABLE_OPEN_SRC)
+    add_subdirectory(trace_server)
+endif()

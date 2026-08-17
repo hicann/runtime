@@ -9,21 +9,22 @@
  */
 
 #include "cpu_detect_test.h"
+#include <stdbool.h>
 #include "cpu_detect_print.h"
 
-#define GROUP_GAP_TIME 1000  // 1000us
+#define GROUP_GAP_TIME 1000 // 1000us
 
-typedef CpudStatus (*GroupDetectFunc)(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu);
-typedef void (*TestcaseDetectFuncA)(uint32_t *regValues);
-typedef void (*TestcaseDetectFuncB)(uint32_t *regValues, uint32_t *loadStoreBuf);
+typedef CpudStatus (*GroupDetectFunc)(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu);
+typedef void (*TestcaseDetectFuncA)(uint32_t* regValues);
+typedef void (*TestcaseDetectFuncB)(uint32_t* regValues, uint32_t* loadStoreBuf);
 
 typedef struct {
-    const char *name;
+    const char* name;
     GroupDetectFunc func;
 } CpuGroupDetectSets;
 
 typedef struct {
-    const char *name;
+    const char* name;
     TestcaseDetectFuncA funcA;
     TestcaseDetectFuncB funcB;
 } CpuTestcaseDetectSets;
@@ -232,20 +233,21 @@ STATIC CpuTestcaseDetectSets g_cpuGroupHDetectSets[] = {
 
 #endif
 
-//print the debug info of CPU
-STATIC void CpuDetectDumpBuf(uint32_t *regValues, int32_t len, int32_t cpu)
+// print the debug info of CPU
+STATIC void CpuDetectDumpBuf(uint32_t* regValues, int32_t len, int32_t cpu)
 {
     const int32_t regSize = 4;
     const int32_t regNum = len / regSize;
-    uint32_t *p = regValues;
+    uint32_t* p = regValues;
     for (int32_t idx = 0; idx < regNum; idx++) {
         int32_t v = idx * regSize;
-        ADETECT_ERR("cpu(%d) detect failed, X%02d:0x%08x_%08x X%02d:0x%08x_%08x",
-                    cpu, (v / 2 + 1), p[v + 1], p[v], (v / 2 + 2), p[v + 3], p[v + 2]);  // 一个寄存器有4个字节，分别打印0\1\2\3字节
+        ADETECT_ERR(
+            "cpu(%d) detect failed, X%02d:0x%08x_%08x X%02d:0x%08x_%08x", cpu, (v / 2 + 1), p[v + 1], p[v], (v / 2 + 2),
+            p[v + 3], p[v + 2]); // 一个寄存器有4个字节，分别打印0\1\2\3字节
     }
 }
 
-STATIC bool CpuDetectCheckBuf(uint32_t *regValues, int32_t len)
+STATIC bool CpuDetectCheckBuf(uint32_t* regValues, int32_t len)
 {
     // if test fail, buf[1][0] will not be zero
     const int32_t retReg = 2;
@@ -255,8 +257,8 @@ STATIC bool CpuDetectCheckBuf(uint32_t *regValues, int32_t len)
     return true;
 }
 
-STATIC CpudStatus CpuDetectGroupComm(const CpuTestcaseDetectSets *detectSet, uint32_t num, uint32_t *regValues,
-                                     uint32_t *loadStoreBuf, int cpu)
+STATIC CpudStatus CpuDetectGroupComm(
+    const CpuTestcaseDetectSets* detectSet, uint32_t num, uint32_t* regValues, uint32_t* loadStoreBuf, int cpu)
 {
     for (uint32_t i = 0; i < num; i++) {
         if ((detectSet[i].funcA == NULL) && (detectSet[i].funcB == NULL)) {
@@ -275,8 +277,9 @@ STATIC CpudStatus CpuDetectGroupComm(const CpuTestcaseDetectSets *detectSet, uin
         // check
         bool result = CpuDetectCheckBuf(regValues, TEMP_BUF_SIZE);
         if (!result) {
-            ADETECT_ERR("cpu(%d) detection run testcase(%s) failed, reg[0] = %d, reg[1] = %d.", cpu, detectSet[i].name,
-                        regValues[0], regValues[1]);
+            ADETECT_ERR(
+                "cpu(%d) detection run testcase(%s) failed, reg[0] = %d, reg[1] = %d.", cpu, detectSet[i].name,
+                regValues[0], regValues[1]);
             CpuDetectDumpBuf(regValues, PRINT_TEMP_BUF_LEN, cpu);
             return CPUD_ERROR_TESTCASE;
         }
@@ -285,64 +288,64 @@ STATIC CpudStatus CpuDetectGroupComm(const CpuTestcaseDetectSets *detectSet, uin
     return CPUD_SUCCESS;
 }
 
-CpudStatus CpuDetectGroupTaiShan(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupTaiShan(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupTaiShanDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupTaiShanDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupA(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupA(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupADetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupADetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupB(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupB(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupBDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupBDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupC(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupC(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupCDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupCDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupD(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupD(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupDDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupDDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupE(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupE(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupEDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupEDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupF(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupF(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupFDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupFDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupG(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupG(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupGDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupGDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroupH(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroupH(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
     const uint32_t num = sizeof(g_cpuGroupHDetectSets) / sizeof(CpuTestcaseDetectSets);
     return CpuDetectGroupComm(g_cpuGroupHDetectSets, num, regValues, loadStoreBuf, cpu);
 }
 
-CpudStatus CpuDetectGroup(uint32_t *regValues, uint32_t *loadStoreBuf, int32_t cpu)
+CpudStatus CpuDetectGroup(uint32_t* regValues, uint32_t* loadStoreBuf, int32_t cpu)
 {
-    ADETECT_CHK_EXPR_ACTION((regValues == NULL) || (loadStoreBuf == NULL), return CPUD_ERROR_PARAM,
-                            "invalid input param.");
+    ADETECT_CHK_EXPR_ACTION(
+        (regValues == NULL) || (loadStoreBuf == NULL), return CPUD_ERROR_PARAM, "invalid input param.");
     int32_t num = sizeof(g_cpuDetectSets) / sizeof(CpuGroupDetectSets);
     for (int32_t i = 0; i < num; i++) {
         if (g_cpuDetectSets[i].func == NULL) {

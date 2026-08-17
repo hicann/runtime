@@ -12,15 +12,15 @@
 #include "adiag_print.h"
 #include "trace_system_api.h"
 
-#define MAX_DEV_NUM         64
+#define MAX_DEV_NUM 64
 
-TraStatus TraceTsPushNode(SessionNode *sessionNode, uint8_t flag, void *data, uint32_t len)
+TraStatus TraceTsPushNode(SessionNode* sessionNode, uint8_t flag, void* data, uint32_t len)
 {
     if ((sessionNode == NULL) || (data == NULL)) {
         ADIAG_ERR("invalid input for node searching");
         return TRACE_INVALID_PARAM;
     }
-    TraceNode *node = (TraceNode *)AdiagMalloc(sizeof(TraceNode));
+    TraceNode* node = (TraceNode*)AdiagMalloc(sizeof(TraceNode));
     if (node == NULL) {
         ADIAG_ERR("malloc node failed, strerr=%s.", strerror(AdiagGetErrorCode()));
         return TRACE_FAILURE;
@@ -31,19 +31,22 @@ TraStatus TraceTsPushNode(SessionNode *sessionNode, uint8_t flag, void *data, ui
     TraStatus ret = TraceQueueEnqueue(sessionNode->queue, node);
     if (ret != TRACE_SUCCESS) {
         ADIAG_SAFE_FREE(node);
+        if (ret == TRACE_QUEUE_FULL) {
+            return ret;
+        }
         ADIAG_ERR("enqueue failed, ret = %d.", ret);
         return TRACE_FAILURE;
     }
     return TRACE_SUCCESS;
 }
 
-TraceNode *TraceTsPopNode(SessionNode *sessionNode)
+TraceNode* TraceTsPopNode(SessionNode* sessionNode)
 {
     if (sessionNode == NULL) {
         ADIAG_ERR("invalid input for node searching.");
         return NULL;
     }
-    TraceNode *node = NULL;
+    TraceNode* node = NULL;
     TraStatus ret = TraceQueueDequeue(sessionNode->queue, &node);
     if ((ret != TRACE_SUCCESS) && (ret != TRACE_QUEUE_NULL)) {
         ADIAG_ERR("trace node dequeue failed, ret = %d.", ret);

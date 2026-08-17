@@ -11,7 +11,6 @@ add_subdirectory(stacktrace)
 
 set(libtraceSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/atrace_api.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/atrace_stackcore_api.c
     ${CMAKE_CURRENT_SOURCE_DIR}/trace_core.c
     ${CMAKE_CURRENT_SOURCE_DIR}/trace_attr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/event/trace_event.c
@@ -54,125 +53,10 @@ set(libtraceHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}/../utils
     ${ATRACE_DIR}/common
     ${LIBC_SEC_HEADER}
-    ${ATRACE_DIR}/../../../pkg_inc/driver
+    ${RUNTIME_DIR}/pkg_inc/driver
     ${ATRACE_DIR}/../../../pkg_inc/trace
     ${ATRACE_DIR}/inc/toolchain
 )
-
-############################# libascend_trace.so(linux)   #############################
-set(libatraceSrcFiles
-    ${CMAKE_CURRENT_SOURCE_DIR}/tracer/tracer_mgr_operate_atrace.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_api.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_core.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_thread.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_communication.c
-)
-
-set(libatraceStackcoreSrcFiles
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_dwarf.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory_local.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory_remote.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_dl.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_elf.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_frame.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_frames.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_layout.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_map.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_maps.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_process.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_ptrace.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_regs_arm_64.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_regs_x86_64.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_thread.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_threads.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_util.c
-)
-
-set(libatraceHeaderDir
-    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client
-)
-
-add_library(atrace_share
-    SHARED
-        ${libtraceSrcFiles}
-        ${libatraceStackcoreSrcFiles}
-        ${libatraceSrcFiles}
-        ${adiagCommonFiles})
-
-target_include_directories(atrace_share
-    PRIVATE
-        ${LIBC_SEC_HEADER}
-        ${libtraceHeaderDir}
-        ${libatraceHeaderDir})
-
-target_compile_definitions(atrace_share
-    PRIVATE
-    PUBLIC
-        ADX_LIB_C
-        ATRACE_API
-)
-
-target_compile_options(atrace_share
-    PRIVATE
-        -Wcast-qual
-        ${ADIAG_COMMON_COMPILE_OPTIONS}
-        $<$<CONFIG:Debug>:-g -O0>
-        $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
-        -std=gnu11
-        -fPIC
-        -fstack-protector-strong
-        -fno-common
-        -fsigned-char
-        -fno-strict-aliasing
-        -fdata-sections
-        -ffunction-sections
-        -fvisibility=hidden
-)
-
-target_link_options(atrace_share
-    PRIVATE
-        -Wl,-z,relro,-z,now,-z,noexecstack
-        -Wl,--gc-sections
-)
-
-target_link_libraries(atrace_share
-    PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        $<BUILD_INTERFACE:slog_headers>
-        $<BUILD_INTERFACE:mmpa_headers>
-        $<BUILD_INTERFACE:adump_headers>
-        $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
-        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<STREQUAL:${PRODUCT},pegasus>>:ascend_hal_stub>
-        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<NOT:$<STREQUAL:${PRODUCT},pegasus>>>:ascend_hal>
-        adcore
-        mmpa
-        unified_dlog
-    PUBLIC
-        atrace_headers
-)
-
-target_compile_definitions(atrace_share
-    PRIVATE
-        OS_TYPE=0
-        _GNU_SOURCE
-        ENABLE_UNWIND
-)
-set_target_properties(atrace_share
-    PROPERTIES
-    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
-    OUTPUT_NAME ascend_trace
-)
-
-# install_package(
-#     PACKAGE atrace
-#     TARGETS atrace_share atrace_headers
-#     FILES   ${ATRACE_DIR}/../../include/utrace/atrace_api.h
-#             ${ATRACE_DIR}/../../include/utrace/atrace_pub.h
-#             ${ATRACE_DIR}/../../include/utrace/atrace_types.h
-#             ${ATRACE_DIR}/../../include/utrace/atrace_stackcore_api.h
-#     DESTINATION ${INSTALL_INCLUDE_DIR}/atrace/utrace
-# )
 
 ############################# libutrace.so(linux)   #############################
 set(libutraceSrcFiles
@@ -231,9 +115,7 @@ target_link_libraries(utrace_share
         $<BUILD_INTERFACE:intf_pub>
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:mmpa_headers>
-        $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
-        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<STREQUAL:${PRODUCT},pegasus>>:ascend_hal_stub>
-        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<NOT:$<STREQUAL:${PRODUCT},pegasus>>>:ascend_hal>
+        $<BUILD_INTERFACE:adcore_headers>
         adcore
         mmpa
         unified_dlog
@@ -253,7 +135,215 @@ set_target_properties(utrace_share
     OUTPUT_NAME utrace
 )
 
-# install_package(
-#     TARGETS utrace_share
-#     DESTINATION ${INSTALL_INCLUDE_DIR}/atrace/utrace
-# )
+install_package(
+    TARGETS utrace_share
+    DESTINATION ${INSTALL_INCLUDE_DIR}/atrace/utrace
+)
+
+############################# libascend_trace.so(linux)   #############################
+set(libtrace_type "default")
+############################# [device] ########################################
+if (${PRODUCT_SIDE} STREQUAL "device")
+if(PRODUCT)
+if(${PRODUCT} STREQUAL "pegasus")
+    set(libtrace_type "device_mdc")
+else()
+set(libtrace_type "device_default")
+endif()
+endif()
+
+############################# [ host ] ########################################
+elseif (${PRODUCT_SIDE} STREQUAL "host")
+    set(libtrace_type "host_default")
+endif()
+
+
+if (${libtrace_type} STREQUAL "device_default")
+######################### libascend_trace.so(driver)  ###########################
+add_library(atrace_share
+    SHARED
+        ${libtraceSrcFiles}
+        ${libutraceSrcFiles}
+        ${adiagCommonFiles})
+
+target_include_directories(atrace_share
+    PRIVATE
+         ${LIBC_SEC_HEADER}
+        ${libtraceHeaderDir}
+        ${libutraceHeaderDir})
+
+target_compile_definitions(atrace_share
+    PRIVATE
+    PUBLIC
+        ADX_LIB_C
+        ATRACE_API
+)
+
+target_compile_options(atrace_share
+    PRIVATE
+        -Wcast-qual
+        ${ADIAG_COMMON_COMPILE_OPTIONS}
+        $<$<CONFIG:Debug>:-g -O0>
+        $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
+        -std=gnu11
+        -fPIC
+        -fstack-protector-strong
+        -fno-common
+        -fsigned-char
+        -fno-strict-aliasing
+        -fdata-sections
+        -ffunction-sections
+        -fvisibility=hidden
+)
+
+target_link_options(atrace_share
+    PRIVATE
+        -Wl,-z,relro,-z,now,-z,noexecstack
+        -Wl,--gc-sections
+)
+
+target_link_libraries(atrace_share
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:slog_headers>
+        $<BUILD_INTERFACE:mmpa_headers>
+        $<BUILD_INTERFACE:adcore_headers>
+        adcore
+        mmpa
+        unified_dlog
+    PUBLIC
+        atrace_headers
+)
+
+target_compile_definitions(atrace_share
+    PRIVATE
+        OS_TYPE=0
+        ATRACE_ROOT_PATH="/var/log/npu/slog"
+        _GNU_SOURCE
+)
+set_target_properties(atrace_share
+    PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    OUTPUT_NAME ascend_trace
+)
+
+install_package(
+    TARGETS atrace_share
+    DESTINATION ${INSTALL_INCLUDE_DIR}/atrace/utrace
+)
+
+else ()
+######################### libascend_trace.so(cann(mdc+dc_runtime))    #########################
+set(libatraceSrcFiles
+    ${CMAKE_CURRENT_SOURCE_DIR}/tracer/tracer_mgr_operate_atrace.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_api.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_thread.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client/atrace_client_communication.c
+)
+
+set(libatraceStackcoreSrcFiles
+    # AtraceStackcoreParse 仅转调 scd_process.c 的 ScdProcessParseCore，
+    # 故与 scd_* 一同编入，不能放在 libtraceSrcFiles：
+    # 后者被 libutrace.so 与 device_default 的 libascend_trace.so 复用，
+    # 而这两者不含 scd_process.c，会留下无法解析的 ScdProcessParseCore，
+    # 导致整个 so 连 dlopen 都失败。
+    ${CMAKE_CURRENT_SOURCE_DIR}/atrace_stackcore_api.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_dwarf.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory_local.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_memory_remote.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_dl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_elf.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_frame.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_frames.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_layout.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_map.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_maps.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_process.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_ptrace.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_regs_arm_64.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_regs_x86_64.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_thread.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_threads.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace/stacktrace_dumper/scd_util.c
+)
+
+set(libatraceHeaderDir
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace_client
+)
+
+add_library(atrace_share
+    SHARED
+        ${libtraceSrcFiles}
+        ${libatraceStackcoreSrcFiles}
+        ${libatraceSrcFiles}
+        ${adiagCommonFiles})
+
+target_include_directories(atrace_share
+    PRIVATE
+        ${LIBC_SEC_HEADER}
+        ${libtraceHeaderDir}
+        ${libatraceHeaderDir})
+
+target_compile_definitions(atrace_share
+    PRIVATE
+    PUBLIC
+        HOST_ALOG
+        ADX_LIB_C
+        ATRACE_API
+        ATRACE_HOST
+)
+
+target_compile_options(atrace_share
+    PRIVATE
+        -Wcast-qual
+        ${ADIAG_COMMON_COMPILE_OPTIONS}
+        $<$<CONFIG:Debug>:-g -O0>
+        $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
+        -std=gnu11
+        -fPIC
+        -fstack-protector-strong
+        -fno-common
+        -fsigned-char
+        -fno-strict-aliasing
+        -fdata-sections
+        -ffunction-sections
+        -fvisibility=hidden
+)
+
+target_link_options(atrace_share
+    PRIVATE
+        -Wl,-z,relro,-z,now,-z,noexecstack
+        -Wl,--gc-sections
+)
+
+target_link_libraries(atrace_share
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:slog_headers>
+        $<BUILD_INTERFACE:mmpa_headers>
+        $<BUILD_INTERFACE:adump_headers>
+        $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<STREQUAL:${PRODUCT},pegasus>>:ascend_hal_stub>
+        $<$<AND:$<STREQUAL:${PRODUCT_SIDE},device>,$<NOT:$<STREQUAL:${PRODUCT},pegasus>>>:ascend_hal>
+        adcore
+        mmpa
+        unified_dlog
+    PUBLIC
+        atrace_headers
+)
+
+target_compile_definitions(atrace_share
+    PRIVATE
+        OS_TYPE=0
+        _GNU_SOURCE
+        ENABLE_UNWIND
+)
+set_target_properties(atrace_share
+    PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    OUTPUT_NAME ascend_trace
+)
+
+endif ()

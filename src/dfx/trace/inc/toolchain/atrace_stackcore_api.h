@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef ATRACE_STACKCORE_API_H
 #define ATRACE_STACKCORE_API_H
 
@@ -18,7 +17,7 @@
 extern "C" {
 #endif
 
-TRACE_EXPORT TraStatus AtraceStackcoreParse(const char *filePath, uint32_t len);
+TRACE_EXPORT TraStatus AtraceStackcoreParse(const char* filePath, uint32_t len);
 
 #ifdef __cplusplus
 }

@@ -17,7 +17,7 @@
 #include "stacktrace_signal.h"
 #include "trace_recorder.h"
 
-#ifdef ATRACE_API
+#ifdef ATRACE_HOST
 #include "atrace_client_core.h"
 /**
  * @brief       : initialize dynamic library
@@ -88,9 +88,6 @@ STATIC CONSTRUCTOR void TraceInit(void)
     ret = TraceEventInit();
     ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return, "init event failed, ret=%d.", ret);
 
-    ret = TraceSignalInit();
-    ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return, "init signal failed, ret=%d.", ret);
-
     ret = TracerInit();
     ADIAG_CHK_EXPR_ACTION(ret != TRACE_SUCCESS, return, "init tracer failed, ret=%d.", ret);
 
@@ -105,7 +102,6 @@ STATIC DESTRUCTOR void TraceExit(void)
 {
     if (AtraceCheckSupported()) {
         TracerExit();
-        TraceSignalExit();
         TraceEventExit();
         TraceRecorderExit();
         UtraceCloseSocket();

@@ -17,10 +17,10 @@
 extern "C" {
 #endif
 
-#define TRACE_POS_HOST      (0b00000000U) // first bit stands for trace pos
-#define TRACE_POS_DEVICE    (0b10000000U)
+#define TRACE_POS_HOST (0b00000000U) // first bit stands for trace pos
+#define TRACE_POS_DEVICE (0b10000000U)
 
-#define TRACE_TYPE_BIN      0U
+#define TRACE_TYPE_BIN 0U
 
 typedef struct TraceCtrlHead {
     uint32_t magic;
@@ -30,24 +30,24 @@ typedef struct TraceCtrlHead {
     uint8_t traceType;
     uint32_t structSize;
     uint32_t dataSize;
-    int32_t minutesWest;            // minutes west of Greenwich
+    int32_t minutesWest; // minutes west of Greenwich
     uint64_t realTime;
     uint64_t cpuFreq;
     int8_t reserve[8];
 } TraceCtrlHead;
- 
+
 typedef struct TraceStructHead {
     char structName[TRACE_NAME_LENGTH];
     uint32_t itemNum;
-    uint8_t structType;
+    uint8_t structType; // if TRACE_STRUCT_ENTRY_MAX_NUM exceeds UINT8_MAX, the bit length needs to be extended.
     int8_t reserve[3];
 } TraceStructHead;
- 
+
 typedef struct TraceStructSegmentHead {
     uint32_t structCount;
     int8_t reserve[36];
 } TraceStructSegmentHead;
- 
+
 typedef struct TraceStructDataHead {
     uint32_t msgSize;
     uint32_t msgTxtSize;
@@ -55,9 +55,9 @@ typedef struct TraceStructDataHead {
     int8_t reserve[4];
 } TraceStructDataHead;
 
-void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName);
-void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName);
-bool TracerScheduleCheckListEmpty(struct RbLog *newRb);
+void TracerScheduleSaveObjData(struct RbLog* newRb, const char* timeStr, const char* eventName, const char* objName);
+void TracerScheduleSaveObjBinData(struct RbLog* newRb, const char* timeStr, const char* eventName, const char* objName);
+bool TracerScheduleCheckListEmpty(struct RbLog* newRb);
 
 #ifdef __cplusplus
 }

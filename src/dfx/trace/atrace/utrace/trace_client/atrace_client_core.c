@@ -18,18 +18,18 @@
 #include "trace_types.h"
 #include "trace_system_api.h"
 
-#define HOST_AI_DEVID       64
-#define MAX_RETRY_TIME      3
-#define TEN_MILLISECOND     (10 * 1000) // 10 milliseconds
-#define RECV_BUFF_SIZE      (512U * 1024U + (uint32_t)sizeof(TraceEventMsg)) // 512K + head
+#define HOST_AI_DEVID 64
+#define MAX_RETRY_TIME 3
+#define TEN_MILLISECOND (10 * 1000)                                     // 10 milliseconds
+#define RECV_BUFF_SIZE (512U * 1024U + (uint32_t)sizeof(TraceEventMsg)) // 512K + head
 
-STATIC void AtraceClientWriteEventLog(char *data, uint32_t len)
+STATIC void AtraceClientWriteEventLog(char* data, uint32_t len)
 {
-    TraceMsgInfo info = { 0 };
+    TraceMsgInfo info = {0};
     (void)AtraceClientParseEventMsg(data, len, &info);
     // write to file
-    TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, TraceGetPid(), info.eventTime, true };
-    TraceFileInfo fileInfo = { 0 };
+    TraceDirInfo dirInfo = {TRACER_SCHEDULE_NAME, TraceGetPid(), info.eventTime, true};
+    TraceFileInfo fileInfo = {0};
     fileInfo.tracerName = TRACER_SCHEDULE_NAME;
     fileInfo.objName = info.eventName;
     if (info.saveType == FILE_SAVE_MODE_BIN) {
@@ -49,9 +49,9 @@ STATIC void AtraceClientWriteEventLog(char *data, uint32_t len)
     TraceClose(&fd);
 }
 
-STATIC void AtraceClientRecvAndWrite(int32_t devId, int32_t timeout, void **handle)
+STATIC void AtraceClientRecvAndWrite(int32_t devId, int32_t timeout, void** handle)
 {
-    char *data = (char *)AdiagMalloc(RECV_BUFF_SIZE);
+    char* data = (char*)AdiagMalloc(RECV_BUFF_SIZE);
     if (data == NULL) {
         ADIAG_ERR("malloc buffer failed, devId=%d.", devId);
         return;
@@ -74,7 +74,7 @@ STATIC void AtraceClientRecvAndWrite(int32_t devId, int32_t timeout, void **hand
             continue;
         }
         bufLen = RECV_BUFF_SIZE;
-        ret = AtraceClientRecv(*handle, (char **)&data, &bufLen, recvTimeout);
+        ret = AtraceClientRecv(*handle, (char**)&data, &bufLen, recvTimeout);
         if (AtraceThreadGetStatus(devId) == THREAD_STATUS_WAIT_EXIT) {
             retryTime++;
         }
@@ -103,7 +103,7 @@ STATIC void AtraceClientRecvAndWrite(int32_t devId, int32_t timeout, void **hand
  * @param [in]  : pArgs          pointer of thread args
  * @return      : NA
  */
-STATIC void* AtraceClientRecvThread(void *pArgs)
+STATIC void* AtraceClientRecvThread(void* pArgs)
 {
     if (pArgs == NULL) {
         ADIAG_ERR("args is null.");
@@ -112,16 +112,16 @@ STATIC void* AtraceClientRecvThread(void *pArgs)
     if (TraceSetThreadName("TraceClientRecv") != TRACE_SUCCESS) {
         ADIAG_WAR("can not set thread name(TraceClientRecv) but continue.");
     }
-    const int32_t devId = ((TraceThreadArgs *)pArgs)->devId;
+    const int32_t devId = ((TraceThreadArgs*)pArgs)->devId;
 
     int32_t timeout = TraceGetTimeout();
-    void *handle = NULL;
+    void* handle = NULL;
     TraStatus ret = AtraceClientCreateLongLink(devId, timeout, &handle);
     if (ret != TRACE_SUCCESS) {
-        ADIAG_ERR("create long link failed, devId=%d.", devId);
+        ADIAG_WAR("create long link failed, devId=%d.", devId);
         return NULL;
     }
-    const int32_t timeReserve = 1000; // 1s for receive thread waiting device timeout exit
+    const int32_t timeReserve = 2000; // 2s for receive thread waiting device timeout exit
     AtraceClientRecvAndWrite(devId, timeout + timeReserve, &handle);
     AtraceClientReleaseHandle(&handle);
     ADIAG_RUN_INF("atrace receive thread exited, devId=%d.", devId);
@@ -150,7 +150,7 @@ TraStatus AtraceClientStart(int32_t devId)
         return TRACE_UNSUPPORTED;
     }
     // create thread to receive device trace log
-    TraceThreadArgs args = { devId };
+    TraceThreadArgs args = {devId};
     ret = AtraceThreadCreate(devId, &args, AtraceClientRecvThread);
     if (ret != TRACE_SUCCESS) {
         ADIAG_ERR("create thread failed, devId=%d, ret=%d.", devId, ret);
